@@ -1,67 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:39040 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387685AbeKGBuN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Nov 2018 20:50:13 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wA6GJY6e190259
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 16:24:15 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2nh4aqp6qb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 06 Nov 2018 16:24:15 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wA6GOEtm031735
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 16:24:14 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wA6GOEG9018406
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 16:24:14 GMT
-Date: Tue, 6 Nov 2018 08:24:13 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 837514f7a4ca
-Message-ID: <20181106162413.GV4135@magnolia>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:49985 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726083AbeKCIqH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Nov 2018 04:46:07 -0400
+Date: Sat, 3 Nov 2018 10:36:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [GIT PULL] vfs: fix many problems in vfs clone/dedupe
+ implementation
+Message-ID: <20181102233651.GH19305@dastard>
+References: <20181102051459.GS6311@dastard>
+ <CAHk-=whrpyMSWM4wxYE+E4fSbpkD3yBATjLnzvvAKBfhGwUaAw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <CAHk-=whrpyMSWM4wxYE+E4fSbpkD3yBATjLnzvvAKBfhGwUaAw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: djwong@kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
 
-Hi folks,
+On Fri, Nov 02, 2018 at 09:35:23AM -0700, Linus Torvalds wrote:
+> On Thu, Nov 1, 2018 at 10:15 PM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > Can you please pull update containing a rework of the VFS clone and
+> > dedupe file range infrastructure from the tag listed below?
+> 
+> I don't love the timing of this at the end of the merge window, but pulled,
 
-The for-next branch of the xfs-linux repository at:
+When would have been a better time? It's too big for a late -rc, and
+it contains stuff that needs fixing pretty urgently. So if the merge
+window is not appropriate, what should we have done here?
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Cheers,
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  As of this message, I am taking the reins back from
 Dave.
-
-The new head of the for-next branch is commit:
-
-837514f7a4ca xfs: fix overflow in xfs_attr3_leaf_verify
-
-New Commits:
-
-Christophe JAILLET (1):
-      [132bf6723749] xfs: Fix error code in 'xfs_ioc_getbmap()'
-
-Darrick J. Wong (1):
-      [bdec055bb9f2] xfs: print buffer offsets when dumping corrupt buffers
-
-Dave Chinner (1):
-      [837514f7a4ca] xfs: fix overflow in xfs_attr3_leaf_verify
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_attr_leaf.c | 11 +++++++++--
- fs/xfs/xfs_ioctl.c            |  2 +-
- fs/xfs/xfs_message.c          |  2 +-
- 3 files changed, 11 insertions(+), 4 deletions(-)
+-- 
+Dave Chinner
+david@fromorbit.com
