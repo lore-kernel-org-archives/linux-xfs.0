@@ -1,70 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:40532 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728961AbeKFNbV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Nov 2018 08:31:21 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wA640DR4024520
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:08 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2nh33ttues-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 06 Nov 2018 04:08:08 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wA6487V4011706
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:07 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id wA6487AX026880
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:07 GMT
-Subject: [PATCH 0/8] xfs-5.0: inode btree scrub fixes
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 05 Nov 2018 20:08:06 -0800
-Message-ID: <154147728649.32496.4515247239602322709.stgit@magnolia>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:13907 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726705AbeKCIGg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Nov 2018 04:06:36 -0400
+Date: Sat, 3 Nov 2018 09:57:29 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/2] xfsdump whitespace changes
+Message-ID: <20181102225729.GF19305@dastard>
+References: <20181101110130.19489-1-jtulak@redhat.com>
+ <20181102013618.GD19305@dastard>
+ <CACj3i71FUf84iUCFKVhVPQVhjUOdb-_TDTsPVvrFe8hC_zLMeg@mail.gmail.com>
+ <CACj3i73OTSmFYgonAhazAWO3fhH4LRgg6Lu7BQtVmK2jfPnZ4g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CACj3i73OTSmFYgonAhazAWO3fhH4LRgg6Lu7BQtVmK2jfPnZ4g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi all,
+On Fri, Nov 02, 2018 at 05:54:59PM +0100, Jan Tulak wrote:
+> On Fri, Nov 2, 2018 at 12:43 PM Jan Tulak <jtulak@redhat.com> wrote:
+> >
+> > On Fri, Nov 2, 2018 at 2:36 AM Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > On Thu, Nov 01, 2018 at 12:01:28PM +0100, Jan Tulak wrote:
+> > > > (I'm splitting the previous set into smaller ones, so changes doesn't
+> > > >  have to wait.)
+> > > >
+> > > > This set is dealing with whitespaces only, no functional change, code
+> > > > shuffling, etc. should be present. The first patch clears out trailing
+> > > > whitespaces, the second one sorts out the crazy mishmash of tabs and
+> > > > spaces.
+> > >
+> > > patch 2 Didn't come through - it'll be too large for the list.
+> >
+> > Ah, I see.
+> >
+> > >
+> > > However, it's is the same change as what you originally posted to a
+> >
+> > Yes, it is the same thing, with changes where I found something
+> > misaligned on top.
+> >
+> > > git tree, then it needs revision. basically, most of the change was
+> > > converting vertically aligned function call parameters to use tabs,
+> > > and that broke the vertical alignment.
+> >
+> > It is "s/    /\t/" limited to the beginning of the line. The function
+> > parameters were caught in it too, but I don't think they would make
+> > the most of the lines.
+> >
+> > >
+> > > I'd suggest that this is the least of the whitespace sins of
+> > > xfsdump. yes, it's easy to script, but I don't think it's the right
+> > > thing to do. The biggest problems I think we need to start with are:
+> > >
+> > > - reformat all the function definitions according to common XFS style
+> > > - get rid of all the "( foo )" style white space aroudn parenthesis
+> >
+> > I already started working on it. It is too complex for awk/sed, so I'm
+> > trying to find some better way through IDEs with autoformatting
+> > capabilities.
+> >
+> > > - convert all the code with 4 space indents to tabs, leaving
+> > >   vertically aligned function call parameters alone.
+> >
+> > Part of the issue is that xfsdump is not even consistently using the
+> > number of spaces. E.g. just a two random functions in
+> > invutil/stobj.c:335-486 in master, you find that both 2 and 4 spaces
+> > per indent level are used and even stuff like \t<space*4> inside of
+> > "if", without it being a function parameter.
+> >
+> > And the indentation of the parameters will change anyway, as we have
+> > parameters indented with tabs only, and with spaces only, and with
+> > some mix that makes no sense unless you configure your editor to show
+> > \t as an odd number of spaces except on the first Thursday of a month,
+> > but only on years that make a power of 2... Same as the rest of the
+> > code. :-) So I expect the resulting set to be roughly the same size as
+> > it is now. But I will break the patch by component, it should pass
+> > through then.
+> >
+> > Thanks,
+> > Jan
+> >
+> 
+> Update: I found a reasonably working code prettifier with kernel-style
+> config. The disadvantage is that I'm not really able to split the
+> patches by type of change (indentation, spaces inside of parentheses,
+> vertical align...) and it did it all at once, but hopefully that is
+> not a big issue. You can look at it here [1] - it is 2,4MB in size of
+> the patch files (only the formatting changes) and I want to check it a
+> bit better before sending it here as emails, whether there is no new
+> warning in gcc, etc. But it compiles and passes xfstests, so feel free
+> to peek at it - I will be back online in the Monday.
+> 
+> [1] https://github.com/jtulak/xfsdump/tree/for-review  (git clone
+> https://github.com/jtulak/xfsdump.git)
 
-This series fixes some problems with the inode btree scrub code, namely
-that the existing code does not handle the case where a single inode
-cluster is mapped by multiple inobt records.  The series also cleans up
-the rather confusing variable names.
+IMO, it's largely unreviewable because not only does whitespace
+change, so does the way the code is laid out.
 
-Patch 1 teaches the inode record block counting code to handle the case
-where there's more than one inobt record per inode cluster.  We do this
-by counting inodes and converting to blocks only at the end.
+e.g it removes {} around single line if/for/while, so that could
+introduce bugs if there are multi-expression macros that aren't
+correctly encapsulated (and there are!).
 
-Patch 2 starts moving the inode geometry stuff to the xchk_iallocbt
-context so that we only calculate those things once.
+And that's really hard to see in amongst all the indenting changes,
+the whitespace removal, etc.  I'd much prefer "one type of
+change at a time" patches because they are much easier to review.
 
-Patches 3-4 move the inobt record alignment checks to a separate
-function and enhance the function to check that when we have more than
-one inobt record per cluster we actually check that *all* of the
-necessary records are present and in the correct order.
+Cheers,
 
-Patches 5-7 reorganize the inobt free data checks to deal with the
-"multiple inobt records per icluster" situation.  In restructuring the
-code to do so, we also rename variables and functions to be less
-confusing about what they're there for.
-
-Patch 8 fixes the 'is the inode free?' check to calculate dinode buffer
-offsets correctly in the "multiple inobt records per icluster"
-situation.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees.  The kernel patches[1] should apply against
-4.20-rc1.
-
-This is an extraordinary way to eat your data.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
