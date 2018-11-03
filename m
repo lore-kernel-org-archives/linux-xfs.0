@@ -1,52 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:57156 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726145AbeKCOC7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Nov 2018 10:02:59 -0400
-Date: Fri, 2 Nov 2018 21:52:53 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: xfsprogs-4.16; scrubbing and files w/o /usr dependencies...
-Message-ID: <20181103045253.GT4135@magnolia>
-References: <5BDD1D19.7030208@tlinx.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5BDD1D19.7030208@tlinx.org>
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:33841 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727100AbeKDC13 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Nov 2018 22:27:29 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH] xfs: truncate transaction does not modify the inobt
+Date: Sat,  3 Nov 2018 19:15:24 +0200
+Message-Id: <20181103171524.2740-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "L.A. Walsh" <xfs@tlinx.org>
-Cc: Linux-Xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: Eryu Guan <guaneryu@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Fri, Nov 02, 2018 at 08:59:21PM -0700, L.A. Walsh wrote:
-> I was noticing in a newer version of xfsprogs that it puts some non-/usr-lib
-> dependent files in /sbin, specifically fsck.mfs(shell), mkfs.xfs, xfs_repair
-> xfs_scrub, and xfs_scrub_all.
-> 
-> What was the decider for putting these files in /sbin?  The reason I ask is
-> that the last one 'xfs_scrub_all' has a heavy dependency on /usr as it needs
-> #!/usr/bin/python3 to run.  So wouldn't it be happier in /usr/sbin?
+From: Brian Foster <bfoster@redhat.com>
 
-Hmm, good point, scrub should move to /usr/sbin.
+The truncate transaction does not ever modify the inode btree, but
+includes an associated log reservation. Update
+xfs_calc_itruncate_reservation() to remove the reservation
+associated with inobt updates.
 
-(Granted with many of the distros moving towards /sbin -> /usr/sbin
-these days it might not make that much difference... :/ )
+[Amir:	This commit was merged for kernel v4.16 and a twin commit was
+	merged for xfsprogs v4.16. As a result, a small xfs filesystem
+	formatted with features -m rmapbt=1,reflink=1 using mkfs.xfs
+	version >= v4.16 cannot be mounted with kernel < v4.16.
 
-> I also note that it has dependencies on systemd.  Will it work for
-> systems not running systemd or will systemd be required for newer-versioned
-> xfs maintenance?
+	For example, xfstests generic/17{1,2,3} format a small fs and
+	when trying to mount it, they fail with an assert on this very
+	demonic line:
 
-/usr/lib/xfsprogs/xfs_scrub_all.cron is a sample cronjob that will get
-installed automatically some years from now when scrub is stable and
-ready to be autoconfigured as a background job.  The goal is to be able
-to handle both systemd and cron environments, and I'm not picking sides.
-:)
+ XFS (vdc): Log size 3075 blocks too small, minimum size is 3717 blocks
+ XFS (vdc): AAIEEE! Log failed size checks. Abort!
+ XFS: Assertion failed: 0, file: src/linux/fs/xfs/xfs_log.c, line: 666
 
-(Note that xfs_scrub is still experimental...)
+	The simple solution for stable kernels is to apply this patch,
+	because mkfs.xfs v4.16 is already in the wild, so we have to
+	assume that xfs filesystems with a "too small" log exist.
+	Regardless, xfsprogs maintainers should also consider reverting
+	the twin patch to stop creating those filesystems for the sake
+	of users with unpatched kernels.]
 
---D
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: <stable@vger.kernel.org> # v4.9+
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
 
-> Thnx...
-> 
-> 
-> 
+Darrick/Dave,
+
+It took me a while to figure out what was going on with my test systems
+when small test partitions (10G) stopped working with older kernels.
+
+Please bless this change for stable and consider the remedie for mkfs.xfs
+I verified that patch cleanly applies to stable kernels 4.14.y and 4.9.y
+and that I can mount a filsystem created with new mkfs.xfs.
+
+I am now running quick tests on stable 4.14.y with configs 4k, 1k,
+reflink,reflink+overlay to verify no regressions from this patch.
+
+Thanks,
+Amir.
+
+
+ fs/xfs/libxfs/xfs_trans_resv.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 6bd916bd35e2..48eff18c5496 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -232,8 +232,6 @@ xfs_calc_write_reservation(
+  *    the super block to reflect the freed blocks: sector size
+  *    worst case split in allocation btrees per extent assuming 4 extents:
+  *		4 exts * 2 trees * (2 * max depth - 1) * block size
+- *    the inode btree: max depth * blocksize
+- *    the allocation btrees: 2 trees * (max depth - 1) * block size
+  */
+ STATIC uint
+ xfs_calc_itruncate_reservation(
+@@ -245,12 +243,7 @@ xfs_calc_itruncate_reservation(
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+ 		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
+-				      XFS_FSB_TO_B(mp, 1)) +
+-		    xfs_calc_buf_res(5, 0) +
+-		    xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+-				     XFS_FSB_TO_B(mp, 1)) +
+-		    xfs_calc_buf_res(2 + mp->m_ialloc_blks +
+-				     mp->m_in_maxlevels, 0)));
++				      XFS_FSB_TO_B(mp, 1))));
+ }
+ 
+ /*
+-- 
+2.17.1
