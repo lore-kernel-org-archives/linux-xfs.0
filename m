@@ -1,56 +1,138 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:64366 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729223AbeKEH1c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Nov 2018 02:27:32 -0500
-Date: Mon, 5 Nov 2018 09:11:00 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [GIT PULL] vfs: fix many problems in vfs clone/dedupe
- implementation
-Message-ID: <20181104221100.GI19305@dastard>
-References: <20181102051459.GS6311@dastard>
- <CAHk-=whrpyMSWM4wxYE+E4fSbpkD3yBATjLnzvvAKBfhGwUaAw@mail.gmail.com>
- <20181102233651.GH19305@dastard>
- <CAHk-=wiJdzKEq2RsQCe5R1X2W0AEiOYOt8womcyTfkD=mgQAug@mail.gmail.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:57344 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725924AbeKCMVD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Nov 2018 08:21:03 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 2D5802B4DA
+        for <linux-xfs@vger.kernel.org>; Sat,  3 Nov 2018 03:11:16 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201259] [xfstests shared/010]: maybe pagecache contents is
+ mutated after cycle mount
+Date: Sat, 03 Nov 2018 03:11:15 +0000
+Message-ID: <bug-201259-201763-PZKXCu3xFh@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-201259-201763@https.bugzilla.kernel.org/>
+References: <bug-201259-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHk-=wiJdzKEq2RsQCe5R1X2W0AEiOYOt8womcyTfkD=mgQAug@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: djwong@kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs@vger.kernel.org
 
-On Sat, Nov 03, 2018 at 10:13:37AM -0700, Linus Torvalds wrote:
-> On Fri, Nov 2, 2018 at 4:36 PM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > On Fri, Nov 02, 2018 at 09:35:23AM -0700, Linus Torvalds wrote:
-> > >
-> > > I don't love the timing of this at the end of the merge window, but pulled,
-> >
-> > When would have been a better time? It's too big for a late -rc, and
-> > it contains stuff that needs fixing pretty urgently. So if the merge
-> > window is not appropriate, what should we have done here?
+https://bugzilla.kernel.org/show_bug.cgi?id=201259
+
+--- Comment #7 from Zorro Lang (zlang@redhat.com) ---
+(In reply to Zorro Lang from comment #6)
+> After upstream merged the patch of this bug, I still can reproduce a
+> shared/010 failure:
+
+It's not duperemove related, I've removed all duperemove related part from
+shared/010, still can reproduce this bug. On the other word, use fsstress and
+md5sum can reproduce this bug.
+
+But if set 'fsstress -f deduperange=0', can't reproduce this bug (at least I
+can't reproduce it until now by loop running shared/010 200 times).
+
+Hmm... maybe I should report a new bug, if this's a different bug with this
+one.
+
+Thanks,
+Zorro
+
 > 
-> No, I think that with the timing of the problem finding, it was
-> probably the only thing to do, but generally I like these kinds of
-> somewhat scary and disruptive patches (just because it touches
-> multiple filesystems) _early_ in the merge window if at all possible,
-> and showing that the development was done before and not some rushed
-> thing..
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 xxxxxxxx 4.19.0+
+> MKFS_OPTIONS  -- -f -m reflink=1 -b size=1024 /dev/mapper/xxxxxxxx-xfscratch
+> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0
+> /dev/mapper/xxxxxxxxx-xfscratch /mnt/scratch
+>  
+> shared/010 160s ... - output mismatch (see
+> /home/xfstests-dev/results//shared/010.out.bad)
+>     --- tests/shared/010.out    2018-10-16 23:31:53.924269141 -0400
+>     +++ /home/xfstests-dev/results//shared/010.out.bad  2018-11-02
+> 12:20:39.858510419 -0400
+>     @@ -1,2 +1,4 @@
+>      QA output created by 010
+>     +/mnt/scratch/dir/p0/da/d51XX/f6dXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:
+> FAILED
+>     +md5sum: WARNING: 1 computed checksum did NOT match
+>      Silence is golden
+>     ...
+>     (Run 'diff -u tests/shared/010.out
+> /home/xfstests-dev/results//shared/010.out.bad'  to see the entire diff)
+> Ran: shared/010
+> Failures: shared/010
+> Failed 1 of 1 tests
+> 
+> But maybe it's a new issue, due to I can't reproduce this bug by the
+> reproducer on comment#1:
+> 
+> # bash reproducer.sh
+> umount: /mnt/scratch: not mounted.
+> wrote 17179869184/17179869184 bytes at offset 0
+> 16.000 GiB, 4194304 ops; 0:16:47.88 (16.256 MiB/sec and 4161.4915 ops/sec)
+> meta-data=/dev/mapper/xxxxxxxx-xfscratch isize=512    agcount=16,
+> agsize=8192000 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=1
+> data     =                       bsize=4096   blocks=131072000, imaxpct=25
+>          =                       sunit=64     swidth=64 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=64000, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> wrote 1772544/1772544 bytes at offset 0
+> 2 MiB, 433 ops; 0.0170 sec (99.111 MiB/sec and 25386.9606 ops/sec)
+> wrote 840263/840263 bytes at offset 0
+> 821 KiB, 206 ops; 0.0083 sec (96.419 MiB/sec and 24786.4276 ops/sec)
+> linked 57344/57344 bytes at offset 212992
+> 56 KiB, 1 ops; 0.0030 sec (17.698 MiB/sec and 323.6246 ops/sec)
+> wrote 74240/74240 bytes at offset 1662464
+> 72 KiB, 19 ops; 0.0010 sec (65.984 MiB/sec and 17707.3625 ops/sec)
+> linked 122880/122880 bytes at offset 5357568
+> 120 KiB, 1 ops; 0.0037 sec (31.477 MiB/sec and 268.6006 ops/sec)
+> a42583dd3f7edb0c00e7356c89d3e58c  /mnt/scratch/file
+> a42583dd3f7edb0c00e7356c89d3e58c  /mnt/scratch/file
+> /mnt/scratch/file:
+>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+>    0: [0..415]:        hole                                   416
+>    1: [416..527]:      4880..4991        0 (4880..4991)       112 101111
+>    2: [528..1215]:     hole                                   688
+>    3: [1216..2863]:    1024..2671        0 (1024..2671)      1648 010101
+>    4: [2864..3239]:    hole                                   376
+>    5: [3240..3583]:    2672..3015        0 (2672..3015)       344 001111
+>    6: [3584..10463]:   hole                                  6880
+>    7: [10464..10703]:  7800..8039        0 (7800..8039)       240 101111
+>  FLAG Values:
+>     0100000 Shared extent
+>     0010000 Unwritten preallocated extent
+>     0001000 Doesn't begin on stripe unit
+>     0000100 Doesn't end   on stripe unit
+>     0000010 Doesn't begin on stripe width
+>     0000001 Doesn't end   on stripe width
+> 00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+> |................|
+> *
+> 00034000  72 72 72 72 72 72 72 72  72 72 72 72 72 72 72 72 
+> |rrrrrrrrrrrrrrrr|
+> *
+> 00042000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+> |................|
+> *
+> 00195e00  57 57 57 57 57 57 57 57  57 57 57 57 57 57 57 57 
+> |WWWWWWWWWWWWWWWW|
+> *
+> 001a8000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+> |................|
+> *
+> 0051c000  52 52 52 52 52 52 52 52  52 52 52 52 52 52 52 52 
+> |RRRRRRRRRRRRRRRR|
+> *
+> 0053a000
 
-Fair enough. That was partly my fault - I forgot to add sob's to the
-commits when I pulled the final version in for testing in the middle
-of the first week of the merge window. I didn't realise that until
-after I'd soak and stress tested it and was getting ready to push it
-out to linux-next a week later. So I had to rewrite all the commits
-and so they would have looked an awful lot more recent than they
-really were. I should have mentioned this in the pull request...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+You are receiving this mail because:
+You are watching the assignee of the bug.
