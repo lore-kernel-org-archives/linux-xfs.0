@@ -1,69 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:46819 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730522AbeKEBRX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Nov 2018 20:17:23 -0500
-Date: Mon, 5 Nov 2018 00:01:49 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 0/8] fstests: fix quota failures on xfs
-Message-ID: <20181104160149.GD12788@desktop>
-References: <154111434286.6577.15010861884505931015.stgit@magnolia>
+Received: from ishtar.tlinx.org ([173.164.175.65]:49690 "EHLO
+        Ishtar.sc.tlinx.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726099AbeKCNbW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Nov 2018 09:31:22 -0400
+Received: from [192.168.3.12] (Athenae [192.168.3.12])
+        by Ishtar.sc.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id wA33xLcP042450
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Nov 2018 20:59:23 -0700
+Message-ID: <5BDD1D19.7030208@tlinx.org>
+Date: Fri, 02 Nov 2018 20:59:21 -0700
+From: "L.A. Walsh" <xfs@tlinx.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154111434286.6577.15010861884505931015.stgit@magnolia>
+Subject: xfsprogs-4.16; scrubbing and files w/o /usr dependencies...
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Linux-Xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Nov 01, 2018 at 04:19:02PM -0700, Darrick J. Wong wrote:
-> Hi all,
-> 
-> Several months ago I tried testing xfs with quotas enabled and was
-> surprised at the number of failures.  Since then I've been on a bug hunt
-> to triage the mess, and the following series fixes some of the low
-> hanging fruit.  Some of these are minor behavioral variations when quota
-> are enabled, and other fixes upgrade old v4 tests to work on v5
-> filesystems.
-> 
-> To reproduce the results, run xfstests with
-> 'MOUNT_OPTIONS="-o usrquota,grpquota,prjquota"' on a v5 filesystem.
-> Strike the ',grpquota' on a v4 filesystem.
+I was noticing in a newer version of xfsprogs that it puts some non-/usr-lib
+dependent files in /sbin, specifically fsck.mfs(shell), mkfs.xfs, xfs_repair
+xfs_scrub, and xfs_scrub_all.
 
-I merged all patches but patch 3 and 8, because ..
+What was the decider for putting these files in /sbin?  The reason I ask is
+that the last one 'xfs_scrub_all' has a heavy dependency on /usr as it needs
+#!/usr/bin/python3 to run.  So wouldn't it be happier in /usr/sbin? 
 
-> 
-> The first patch fixes the sporadic quota count failures when testing XFS
-> with quotas by replacing the xfs_spaceman call that cleans out (only)
-> speculative preallocations with a umount/mount pair that forcibly cleans
-> out /all/ preallocations and delayed allocations.
-> 
-> The second patch fixes bugs in a couple of tests that use error
-> injection to test log recovery paths but don't succeed in directly
-> causing the error to trip.
-> 
-> The third patch works around the fact that mounting xfs with quotas
-> requires a writable block device even for a ro mount, which leads to
-> a slightly different error message from the mount call.
+I also note that it has dependencies on systemd.  Will it work for
+systems not running systemd or will systemd be required for newer-versioned
+xfs maintenance?
 
-The test still fails and patch needs further tweaks.
-
-> 
-> Patch 4 and 5 fix the dump and restore tests to handle the case that
-> quota inodes get sent along with dumps when quotas are enabled.
-> 
-> Patch 6 updates xfs/205 to work with v5 filesystems.
-> 
-> Patch 7 changes tests that require specific quota mount options to clear
-> out the background quota mount options so that we test with /exactly/
-> the set of mount options.
-> 
-> Patch 8 filters v5 mount options out of tests that format v4
-> filesystems on the scratch device.
-
-This patch touches _scratch_mkfs_xfs() and needs more careful testing.
-
-Thanks,
-Eryu
+Thnx...
