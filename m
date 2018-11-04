@@ -1,120 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:40854 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728961AbeKFNbt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Nov 2018 08:31:49 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wA63x2Wp023753
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:36 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2nh33ttufh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 06 Nov 2018 04:08:36 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wA648ZEG009543
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:36 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id wA648Z0d010919
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:35 GMT
-Subject: [PATCH 4/8] xfs: check inobt record alignment on big block
- filesystems
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 05 Nov 2018 20:08:31 -0800
-Message-ID: <154147731114.32496.5929393143346043196.stgit@magnolia>
-In-Reply-To: <154147728649.32496.4515247239602322709.stgit@magnolia>
-References: <154147728649.32496.4515247239602322709.stgit@magnolia>
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:46819 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730522AbeKEBRX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Nov 2018 20:17:23 -0500
+Date: Mon, 5 Nov 2018 00:01:49 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 0/8] fstests: fix quota failures on xfs
+Message-ID: <20181104160149.GD12788@desktop>
+References: <154111434286.6577.15010861884505931015.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <154111434286.6577.15010861884505931015.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Nov 01, 2018 at 04:19:02PM -0700, Darrick J. Wong wrote:
+> Hi all,
+> 
+> Several months ago I tried testing xfs with quotas enabled and was
+> surprised at the number of failures.  Since then I've been on a bug hunt
+> to triage the mess, and the following series fixes some of the low
+> hanging fruit.  Some of these are minor behavioral variations when quota
+> are enabled, and other fixes upgrade old v4 tests to work on v5
+> filesystems.
+> 
+> To reproduce the results, run xfstests with
+> 'MOUNT_OPTIONS="-o usrquota,grpquota,prjquota"' on a v5 filesystem.
+> Strike the ',grpquota' on a v4 filesystem.
 
-On a big block filesystem, there may be multiple inobt records covering
-a single inode cluster.  These records obviously won't be aligned to
-cluster alignment rules, and they must cover the entire cluster.  Teach
-scrub to check for these things.
+I merged all patches but patch 3 and 8, because ..
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/ialloc.c |   40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+> 
+> The first patch fixes the sporadic quota count failures when testing XFS
+> with quotas by replacing the xfs_spaceman call that cleans out (only)
+> speculative preallocations with a umount/mount pair that forcibly cleans
+> out /all/ preallocations and delayed allocations.
+> 
+> The second patch fixes bugs in a couple of tests that use error
+> injection to test log recovery paths but don't succeed in directly
+> causing the error to trip.
+> 
+> The third patch works around the fact that mounting xfs with quotas
+> requires a writable block device even for a ro mount, which leads to
+> a slightly different error message from the mount call.
 
+The test still fails and patch needs further tweaks.
 
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index f498dfca3312..4fadea892440 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -57,6 +57,12 @@ struct xchk_iallocbt {
- 
- 	/* Block alignment of inode clusters. */
- 	unsigned int		cluster_align;
-+
-+	/* Expected next startino, for big block filesystems. */
-+	xfs_agino_t		next_startino;
-+
-+	/* Expected end of the current inode cluster. */
-+	xfs_agino_t		next_cluster_ino;
- };
- 
- /*
-@@ -288,6 +294,27 @@ xchk_iallocbt_rec_alignment(
- 	struct xchk_iallocbt		*iabt = bs->private;
- 	xfs_agino_t			imask;
- 
-+	if (iabt->next_startino != NULLAGINO) {
-+		/*
-+		 * We're midway through a cluster of inodes that is mapped by
-+		 * multiple inobt records.  Did we get the record for the next
-+		 * irec in the sequence?
-+		 */
-+		if (irec->ir_startino != iabt->next_startino) {
-+			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-+			return;
-+		}
-+
-+		iabt->next_startino += XFS_INODES_PER_CHUNK;
-+
-+		/* Are we done with the cluster? */
-+		if (iabt->next_startino >= iabt->next_cluster_ino) {
-+			iabt->next_startino = NULLAGINO;
-+			iabt->next_cluster_ino = NULLAGINO;
-+		}
-+		return;
-+	}
-+
- 	imask = XFS_OFFBNO_TO_AGINO(mp, iabt->cluster_align, 0) - 1;
- 	if (irec->ir_startino & imask) {
- 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-@@ -299,6 +326,17 @@ xchk_iallocbt_rec_alignment(
- 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
- 		return;
- 	}
-+
-+	if (iabt->inodes_per_cluster <= XFS_INODES_PER_CHUNK)
-+		return;
-+
-+	/*
-+	 * If this is the start of an inode cluster that can be mapped by
-+	 * multiple inobt records, the next inobt record must follow exactly
-+	 * after this one.
-+	 */
-+	iabt->next_startino = irec->ir_startino + XFS_INODES_PER_CHUNK;
-+	iabt->next_cluster_ino = irec->ir_startino + iabt->inodes_per_cluster;
- }
- 
- /* Scrub an inobt/finobt record. */
-@@ -470,6 +508,8 @@ xchk_iallocbt(
- 		.inodes		= 0,
- 		.cluster_align	= xfs_ialloc_cluster_alignment(sc->mp),
- 		.blocks_per_cluster = xfs_icluster_size_fsb(sc->mp),
-+		.next_startino	= NULLAGINO,
-+		.next_cluster_ino = NULLAGINO,
- 	};
- 	int			error;
- 
+> 
+> Patch 4 and 5 fix the dump and restore tests to handle the case that
+> quota inodes get sent along with dumps when quotas are enabled.
+> 
+> Patch 6 updates xfs/205 to work with v5 filesystems.
+> 
+> Patch 7 changes tests that require specific quota mount options to clear
+> out the background quota mount options so that we test with /exactly/
+> the set of mount options.
+> 
+> Patch 8 filters v5 mount options out of tests that format v4
+> filesystems on the scratch device.
+
+This patch touches _scratch_mkfs_xfs() and needs more careful testing.
+
+Thanks,
+Eryu
