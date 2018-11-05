@@ -1,197 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:32930 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728961AbeKFNb4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Nov 2018 08:31:56 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wA640jw2031438
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:43 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2nh3mpjt2a-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 06 Nov 2018 04:08:43 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wA648fig001815
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:42 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wA648f9I018598
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:41 GMT
-Subject: [PATCH 5/8] xfs: hoist inode cluster checks out of loop
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 05 Nov 2018 20:08:40 -0800
-Message-ID: <154147732071.32496.10360183009741260995.stgit@magnolia>
-In-Reply-To: <154147728649.32496.4515247239602322709.stgit@magnolia>
-References: <154147728649.32496.4515247239602322709.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mail.kernel.org ([198.145.29.99]:50538 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728961AbeKEUeH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Nov 2018 15:34:07 -0500
+From: fdmanana@kernel.org
+Subject: [PATCH 1/3] generic: test attempt to dedup eof block into the middle of a file
+Date: Mon,  5 Nov 2018 11:14:45 +0000
+Message-Id: <20181105111445.11870-1-fdmanana@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, Filipe Manana <fdmanana@suse.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Filipe Manana <fdmanana@suse.com>
 
-Hoist the inode cluster checks out of the inobt record check loop into
-a separate function in preparation for refactoring of that loop.  No
-functional changes here; that's in the next patch.
+Test that deduplication of an entire file that has a size that is not
+aligned to the filesystem's block size into the middle of a different
+file does not corrupt the destination's file data by reflinking the last
+(eof) block.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+This test is motivated by a bug recently found that affects both Btrfs
+and XFS, and is fixed by the following commits/patches for the linux
+kernel:
+
+ 07d19dc9fbe9 ("vfs: avoid problematic remapping requests into partial EOF block")
+ dceeb47b0ed6 ("xfs: fix data corruption w/ unaligned dedupe ranges")
+ de02b9f6bb65 ("Btrfs: fix data corruption when deduplicating between different files")
+ Btrfs: fix infinite loop on inode eviction after deduplication of eof block
+
+The VFS patch was added to kernel 4.20-rc1 and the XFS and first Btrfs
+patches were added to kernel 4.19. The second patch for Btrfs is very
+recent and it is not yet in Linus' tree.
+
+Signed-off-by: Filipe Manana <fdmanana@suse.com>
 ---
- fs/xfs/scrub/ialloc.c |  120 +++++++++++++++++++++++++++----------------------
- 1 file changed, 66 insertions(+), 54 deletions(-)
+ tests/generic/517     | 98 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/517.out | 45 +++++++++++++++++++++++
+ tests/generic/group   |  1 +
+ 3 files changed, 144 insertions(+)
+ create mode 100755 tests/generic/517
+ create mode 100644 tests/generic/517.out
 
-
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 4fadea892440..12158ed8ad29 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -201,12 +201,13 @@ xchk_iallocbt_check_cluster_freemask(
- 	return 0;
- }
- 
--/* Make sure the free mask is consistent with what the inodes think. */
-+/* Check an inode cluster. */
- STATIC int
--xchk_iallocbt_check_freemask(
-+xchk_iallocbt_check_cluster(
- 	struct xchk_btree		*bs,
- 	struct xchk_iallocbt		*iabt,
--	struct xfs_inobt_rec_incore	*irec)
-+	struct xfs_inobt_rec_incore	*irec,
-+	xfs_agino_t			agino)
- {
- 	struct xfs_imap			imap;
- 	struct xfs_mount		*mp = bs->cur->bc_mp;
-@@ -214,7 +215,6 @@ xchk_iallocbt_check_freemask(
- 	struct xfs_buf			*bp;
- 	xfs_ino_t			fsino;
- 	unsigned int			nr_inodes;
--	xfs_agino_t			agino;
- 	xfs_agino_t			chunkino;
- 	xfs_agino_t			clusterino;
- 	xfs_agblock_t			agbno;
-@@ -226,59 +226,71 @@ xchk_iallocbt_check_freemask(
- 	nr_inodes = min_t(unsigned int, iabt->inodes_per_cluster,
- 			XFS_INODES_PER_CHUNK);
- 
--	for (agino = irec->ir_startino;
--	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
--	     agino += iabt->blocks_per_cluster * mp->m_sb.sb_inopblock) {
--		fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
--		chunkino = agino - irec->ir_startino;
--		agbno = XFS_AGINO_TO_AGBNO(mp, agino);
--
--		/* Compute the holemask mask for this cluster. */
--		for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
--		     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
--			holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
--					XFS_INODES_PER_HOLEMASK_BIT);
--
--		/* The whole cluster must be a hole or not a hole. */
--		ir_holemask = (irec->ir_holemask & holemask);
--		if (ir_holemask != holemask && ir_holemask != 0) {
--			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
--			continue;
--		}
-+	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
-+	chunkino = agino - irec->ir_startino;
-+	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
- 
--		/* If any part of this is a hole, skip it. */
--		if (ir_holemask) {
--			xchk_xref_is_not_owned_by(bs->sc, agbno,
--					iabt->blocks_per_cluster, &iabt->oinfo);
--			continue;
--		}
-+	/* Compute the holemask mask for this cluster. */
-+	for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
-+	     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
-+		holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
-+				XFS_INODES_PER_HOLEMASK_BIT);
- 
--		xchk_xref_is_owned_by(bs->sc, agbno, iabt->blocks_per_cluster,
--				&iabt->oinfo);
--
--		/* Grab the inode cluster buffer. */
--		imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno,
--				agbno);
--		imap.im_len = XFS_FSB_TO_BB(mp, iabt->blocks_per_cluster);
--		imap.im_boffset = 0;
--
--		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
--				&dip, &bp, 0, 0);
--		if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0,
--				&error))
--			continue;
--
--		/* Which inodes are free? */
--		for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
--			error = xchk_iallocbt_check_cluster_freemask(bs,
--					fsino, chunkino, clusterino, irec, bp);
--			if (error) {
--				xfs_trans_brelse(bs->cur->bc_tp, bp);
--				return error;
--			}
--		}
-+	/* The whole cluster must be a hole or not a hole. */
-+	ir_holemask = (irec->ir_holemask & holemask);
-+	if (ir_holemask != holemask && ir_holemask != 0) {
-+		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-+		return 0;
-+	}
+diff --git a/tests/generic/517 b/tests/generic/517
+new file mode 100755
+index 00000000..601bb24e
+--- /dev/null
++++ b/tests/generic/517
+@@ -0,0 +1,98 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (C) 2018 SUSE Linux Products GmbH. All Rights Reserved.
++#
++# FS QA Test No. 517
++#
++# Test that deduplication of an entire file that has a size that is not aligned
++# to the filesystem's block size into the middle of a different file does not
++# corrupt the destination's file data by reflinking the last (eof) block.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+	/* If any part of this is a hole, skip it. */
-+	if (ir_holemask) {
-+		xchk_xref_is_not_owned_by(bs->sc, agbno,
-+				iabt->blocks_per_cluster, &iabt->oinfo);
-+		return 0;
-+	}
-+
-+	xchk_xref_is_owned_by(bs->sc, agbno, iabt->blocks_per_cluster,
-+			&iabt->oinfo);
-+
-+	/* Grab the inode cluster buffer. */
-+	imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno, agbno);
-+	imap.im_len = XFS_FSB_TO_BB(mp, iabt->blocks_per_cluster);
-+	imap.im_boffset = 0;
- 
--		xfs_trans_brelse(bs->cur->bc_tp, bp);
-+	error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap, &dip, &bp, 0, 0);
-+	if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0, &error))
-+		return 0;
-+
-+	/* Which inodes are free? */
-+	for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
-+		error = xchk_iallocbt_check_cluster_freemask(bs, fsino,
-+				chunkino, clusterino, irec, bp);
-+		if (error)
-+			break;
-+	}
-+
-+	xfs_trans_brelse(bs->cur->bc_tp, bp);
-+	return error;
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
 +}
 +
-+/* Make sure the free mask is consistent with what the inodes think. */
-+STATIC int
-+xchk_iallocbt_check_freemask(
-+	struct xchk_btree		*bs,
-+	struct xchk_iallocbt		*iabt,
-+	struct xfs_inobt_rec_incore	*irec)
-+{
-+	struct xfs_mount		*mp = bs->cur->bc_mp;
-+	xfs_agino_t			agino;
-+	int				error = 0;
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
 +
-+	for (agino = irec->ir_startino;
-+	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
-+	     agino += iabt->blocks_per_cluster * mp->m_sb.sb_inopblock) {
-+		error = xchk_iallocbt_check_cluster(bs, iabt, irec, agino);
-+		if (error)
-+			break;
- 	}
- 
- 	return error;
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch_dedupe
++
++rm -f $seqres.full
++
++_scratch_mkfs >>$seqres.full 2>&1
++_scratch_mount
++
++# The first byte with a value of 0xae starts at an offset (2518890) which is not
++# a multiple of the block size.
++$XFS_IO_PROG -f \
++	-c "pwrite -S 0x6b 0 2518890" \
++	-c "pwrite -S 0xae 2518890 102398" \
++	$SCRATCH_MNT/foo | _filter_xfs_io
++
++# Create a second file with a length not aligned to the block size, whose bytes
++# all have the value 0x6b, so that its extent(s) can be deduplicated with the
++# first file.
++$XFS_IO_PROG -f -c "pwrite -S 0x6b 0 557771" $SCRATCH_MNT/bar | _filter_xfs_io
++
++# The file is filled with bytes having the value 0x6b from offset 0 to offset
++# 2518889 and with the value 0xae from offset 2518890 to offset 2621287.
++echo "File content before first deduplication:"
++od -t x1 $SCRATCH_MNT/foo
++
++# Now deduplicate the entire second file into a range of the first file that
++# also has all bytes with the value 0x6b. The destination range's end offset
++# must not be aligned to the block size and must be less then the offset of
++# the first byte with the value 0xae (byte at offset 2518890).
++$XFS_IO_PROG -c "dedupe $SCRATCH_MNT/bar 0 1957888 557771" $SCRATCH_MNT/foo \
++	| _filter_xfs_io
++
++# We should have exactly the same data we had before we asked for deduplication.
++echo "File content after first deduplication and before unmounting:"
++od -A d -t x1 $SCRATCH_MNT/foo
++
++# Unmount the filesystem and mount it again. This guarantees any file data in
++# the page cache is dropped.
++_scratch_cycle_mount
++
++# We should have exactly the same data we had before we asked for deduplication.
++echo "File content after first unmount:"
++od -A d -t x1 $SCRATCH_MNT/foo
++
++# Now do a similar test when trying to dedup just the last (eof) block of a file
++# into the middle of another file. This triggered a different bug on btrfs.
++$XFS_IO_PROG -f -c "pwrite -S 0xae 0 100" $SCRATCH_MNT/baz | _filter_xfs_io
++
++# Unmount the filesystem and mount it again before attempting to dedupe baz's
++# last block into foo. This is necessary to trigger that btrfs bug mentioned
++# before.
++_scratch_cycle_mount
++
++# Now attempt to dedupe the single block of baz into foo.
++$XFS_IO_PROG -c "dedupe $SCRATCH_MNT/baz 0 2519040 100" $SCRATCH_MNT/foo \
++    | _filter_xfs_io
++
++# Now attempt to unmount the filesystem before reading from the file. This is
++# meant to trigger the btrfs bug which caused an infinite loop during inode
++# eviction.
++_scratch_cycle_mount
++
++# We should have exactly the same data we had before we asked for deduplication.
++echo "File content after second deduplication:"
++od -A d -t x1 $SCRATCH_MNT/foo
++
++status=0
++exit
+diff --git a/tests/generic/517.out b/tests/generic/517.out
+new file mode 100644
+index 00000000..137a9719
+--- /dev/null
++++ b/tests/generic/517.out
+@@ -0,0 +1,45 @@
++QA output created by 517
++wrote 2518890/2518890 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 102398/102398 bytes at offset 2518890
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 557771/557771 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++File content before first deduplication:
++0000000 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b
++*
++11467540 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b ae ae ae ae ae ae
++11467560 ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae
++*
++11777540 ae ae ae ae ae ae ae ae
++11777550
++deduped 557771/557771 bytes at offset 1957888
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++File content after first deduplication and before unmounting:
++0000000 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b
++*
++2518880 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b ae ae ae ae ae ae
++2518896 ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae
++*
++2621280 ae ae ae ae ae ae ae ae
++2621288
++File content after first unmount:
++0000000 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b
++*
++2518880 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b ae ae ae ae ae ae
++2518896 ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae
++*
++2621280 ae ae ae ae ae ae ae ae
++2621288
++wrote 100/100 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++deduped 100/100 bytes at offset 2519040
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++File content after second deduplication:
++0000000 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b
++*
++2518880 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b ae ae ae ae ae ae
++2518896 ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae
++*
++2621280 ae ae ae ae ae ae ae ae
++2621288
+diff --git a/tests/generic/group b/tests/generic/group
+index 54d71d55..326d3a1d 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -519,3 +519,4 @@
+ 514 auto quick clone
+ 515 auto quick clone
+ 516 auto quick dedupe clone
++517 auto quick dedupe clone
+-- 
+2.11.0
