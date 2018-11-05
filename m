@@ -1,138 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:57344 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725924AbeKCMVD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Nov 2018 08:21:03 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 2D5802B4DA
-        for <linux-xfs@vger.kernel.org>; Sat,  3 Nov 2018 03:11:16 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201259] [xfstests shared/010]: maybe pagecache contents is
- mutated after cycle mount
-Date: Sat, 03 Nov 2018 03:11:15 +0000
-Message-ID: <bug-201259-201763-PZKXCu3xFh@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201259-201763@https.bugzilla.kernel.org/>
-References: <bug-201259-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:45134 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387595AbeKFDbN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Nov 2018 22:31:13 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 7977B307DAB1
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Nov 2018 18:10:22 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 2F63C17CCB
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Nov 2018 18:10:22 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: defer online discard submission to a workqueue
+Date: Mon,  5 Nov 2018 13:10:21 -0500
+Message-Id: <20181105181021.8174-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201259
+When online discard is enabled, discards of busy extents are
+submitted asynchronously as a bio chain. bio completion and
+resulting busy extent cleanup is deferred to a workqueue. Async
+discard submission is intended to avoid blocking log forces on a
+full discard sequence which can take a noticeable amount of time in
+some cases.
 
---- Comment #7 from Zorro Lang (zlang@redhat.com) ---
-(In reply to Zorro Lang from comment #6)
-> After upstream merged the patch of this bug, I still can reproduce a
-> shared/010 failure:
+We've had reports of this still producing log force stalls with XFS
+on VDO, which executes discards synchronously and relies on online
+discard in XFS. In particular, there appears to be a limit on how
+many discards can execute at one time. When this limit is hit,
+discard submission blocks and affects XFS up through log completion.
 
-It's not duperemove related, I've removed all duperemove related part from
-shared/010, still can reproduce this bug. On the other word, use fsstress and
-md5sum can reproduce this bug.
+There is no need for XFS to ever block in this path as busy extents
+are cleared on discard completion. Since we already have a workqueue
+for discard bio completion, reuse that workqueue for discard
+submission and completely separate online discard processing from
+iclog completion processing. With this change, the only path that
+should ever block on discard completion is the allocation path if it
+determines a need to wait on busy extents.
 
-But if set 'fsstress -f deduperange=0', can't reproduce this bug (at least I
-can't reproduce it until now by loop running shared/010 200 times).
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log_cil.c  | 13 ++++++++-----
+ fs/xfs/xfs_log_priv.h |  1 +
+ 2 files changed, 9 insertions(+), 5 deletions(-)
 
-Hmm... maybe I should report a new bug, if this's a different bug with this
-one.
-
-Thanks,
-Zorro
-
-> 
-> FSTYP         -- xfs (non-debug)
-> PLATFORM      -- Linux/x86_64 xxxxxxxx 4.19.0+
-> MKFS_OPTIONS  -- -f -m reflink=1 -b size=1024 /dev/mapper/xxxxxxxx-xfscratch
-> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0
-> /dev/mapper/xxxxxxxxx-xfscratch /mnt/scratch
->  
-> shared/010 160s ... - output mismatch (see
-> /home/xfstests-dev/results//shared/010.out.bad)
->     --- tests/shared/010.out    2018-10-16 23:31:53.924269141 -0400
->     +++ /home/xfstests-dev/results//shared/010.out.bad  2018-11-02
-> 12:20:39.858510419 -0400
->     @@ -1,2 +1,4 @@
->      QA output created by 010
->     +/mnt/scratch/dir/p0/da/d51XX/f6dXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:
-> FAILED
->     +md5sum: WARNING: 1 computed checksum did NOT match
->      Silence is golden
->     ...
->     (Run 'diff -u tests/shared/010.out
-> /home/xfstests-dev/results//shared/010.out.bad'  to see the entire diff)
-> Ran: shared/010
-> Failures: shared/010
-> Failed 1 of 1 tests
-> 
-> But maybe it's a new issue, due to I can't reproduce this bug by the
-> reproducer on comment#1:
-> 
-> # bash reproducer.sh
-> umount: /mnt/scratch: not mounted.
-> wrote 17179869184/17179869184 bytes at offset 0
-> 16.000 GiB, 4194304 ops; 0:16:47.88 (16.256 MiB/sec and 4161.4915 ops/sec)
-> meta-data=/dev/mapper/xxxxxxxx-xfscratch isize=512    agcount=16,
-> agsize=8192000 blks
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->          =                       reflink=1
-> data     =                       bsize=4096   blocks=131072000, imaxpct=25
->          =                       sunit=64     swidth=64 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=64000, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> wrote 1772544/1772544 bytes at offset 0
-> 2 MiB, 433 ops; 0.0170 sec (99.111 MiB/sec and 25386.9606 ops/sec)
-> wrote 840263/840263 bytes at offset 0
-> 821 KiB, 206 ops; 0.0083 sec (96.419 MiB/sec and 24786.4276 ops/sec)
-> linked 57344/57344 bytes at offset 212992
-> 56 KiB, 1 ops; 0.0030 sec (17.698 MiB/sec and 323.6246 ops/sec)
-> wrote 74240/74240 bytes at offset 1662464
-> 72 KiB, 19 ops; 0.0010 sec (65.984 MiB/sec and 17707.3625 ops/sec)
-> linked 122880/122880 bytes at offset 5357568
-> 120 KiB, 1 ops; 0.0037 sec (31.477 MiB/sec and 268.6006 ops/sec)
-> a42583dd3f7edb0c00e7356c89d3e58c  /mnt/scratch/file
-> a42583dd3f7edb0c00e7356c89d3e58c  /mnt/scratch/file
-> /mnt/scratch/file:
->  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
->    0: [0..415]:        hole                                   416
->    1: [416..527]:      4880..4991        0 (4880..4991)       112 101111
->    2: [528..1215]:     hole                                   688
->    3: [1216..2863]:    1024..2671        0 (1024..2671)      1648 010101
->    4: [2864..3239]:    hole                                   376
->    5: [3240..3583]:    2672..3015        0 (2672..3015)       344 001111
->    6: [3584..10463]:   hole                                  6880
->    7: [10464..10703]:  7800..8039        0 (7800..8039)       240 101111
->  FLAG Values:
->     0100000 Shared extent
->     0010000 Unwritten preallocated extent
->     0001000 Doesn't begin on stripe unit
->     0000100 Doesn't end   on stripe unit
->     0000010 Doesn't begin on stripe width
->     0000001 Doesn't end   on stripe width
-> 00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
-> |................|
-> *
-> 00034000  72 72 72 72 72 72 72 72  72 72 72 72 72 72 72 72 
-> |rrrrrrrrrrrrrrrr|
-> *
-> 00042000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
-> |................|
-> *
-> 00195e00  57 57 57 57 57 57 57 57  57 57 57 57 57 57 57 57 
-> |WWWWWWWWWWWWWWWW|
-> *
-> 001a8000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
-> |................|
-> *
-> 0051c000  52 52 52 52 52 52 52 52  52 52 52 52 52 52 52 52 
-> |RRRRRRRRRRRRRRRR|
-> *
-> 0053a000
-
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index d3884e08b43c..087e99e80edd 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -529,9 +529,11 @@ xlog_discard_endio(
+ 
+ static void
+ xlog_discard_busy_extents(
+-	struct xfs_mount	*mp,
+-	struct xfs_cil_ctx	*ctx)
++	struct work_struct	*work)
+ {
++	struct xfs_cil_ctx	*ctx = container_of(work, struct xfs_cil_ctx,
++						    discard_work);
++	struct xfs_mount	*mp = ctx->cil->xc_log->l_mp;
+ 	struct list_head	*list = &ctx->busy_extents;
+ 	struct xfs_extent_busy	*busyp;
+ 	struct bio		*bio = NULL;
+@@ -603,9 +605,10 @@ xlog_cil_committed(
+ 
+ 	xlog_cil_free_logvec(ctx->lv_chain);
+ 
+-	if (!list_empty(&ctx->busy_extents))
+-		xlog_discard_busy_extents(mp, ctx);
+-	else
++	if (!list_empty(&ctx->busy_extents)) {
++		INIT_WORK(&ctx->discard_work, xlog_discard_busy_extents);
++		queue_work(xfs_discard_wq, &ctx->discard_work);
++	} else
+ 		kmem_free(ctx);
+ }
+ 
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index b5f82cb36202..085bebd51135 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -245,6 +245,7 @@ struct xfs_cil_ctx {
+ 	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
+ 	struct xfs_log_callback	log_cb;		/* completion callback hook. */
+ 	struct list_head	committing;	/* ctx committing list */
++	struct work_struct	discard_work;
+ 	struct work_struct	discard_endio_work;
+ };
+ 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.17.2
