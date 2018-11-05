@@ -1,115 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:37925 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387580AbeKFGyV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Nov 2018 01:54:21 -0500
-Received: by mail-wm1-f67.google.com with SMTP id l2-v6so9544757wmh.3
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Nov 2018 13:32:39 -0800 (PST)
-Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
-        by smtp.gmail.com with ESMTPSA id x18-v6sm38861711wrs.50.2018.11.05.13.32.37
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 05 Nov 2018 13:32:37 -0800 (PST)
-From: Stefan Ring <stefanrin@gmail.com>
-Subject: [PATCH 3/5] xfs_metadump: Zap freeindex blocks in directory inodes
-Date: Mon,  5 Nov 2018 22:31:43 +0100
-Message-Id: <20181105213145.7560-4-stefanrin@gmail.com>
-In-Reply-To: <20181105213145.7560-1-stefanrin@gmail.com>
-References: <20181105213145.7560-1-stefanrin@gmail.com>
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:41092 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726319AbeKEThG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Nov 2018 14:37:06 -0500
+Received: by mail-wr1-f66.google.com with SMTP id x12-v6so8812908wrw.8
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Nov 2018 02:18:07 -0800 (PST)
+MIME-Version: 1.0
+References: <20181101110130.19489-1-jtulak@redhat.com> <20181102013618.GD19305@dastard>
+ <CACj3i71FUf84iUCFKVhVPQVhjUOdb-_TDTsPVvrFe8hC_zLMeg@mail.gmail.com>
+ <CACj3i73OTSmFYgonAhazAWO3fhH4LRgg6Lu7BQtVmK2jfPnZ4g@mail.gmail.com> <20181102225729.GF19305@dastard>
+In-Reply-To: <20181102225729.GF19305@dastard>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Mon, 5 Nov 2018 11:17:55 +0100
+Message-ID: <CACj3i70K9sJMqtToJ8skVKWBopBiomSBA3ch9c_Azs6tPYfR4g@mail.gmail.com>
+Subject: Re: [PATCH 0/2] xfsdump whitespace changes
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Chinner, Dave" <david@fromorbit.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Signed-off-by: Stefan Ring <stefanrin@gmail.com>
----
- db/metadump.c | 46 ++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 40 insertions(+), 6 deletions(-)
+On Fri, Nov 2, 2018 at 11:57 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Fri, Nov 02, 2018 at 05:54:59PM +0100, Jan Tulak wrote:
+> >
+> > Update: I found a reasonably working code prettifier with kernel-style
+> > config. The disadvantage is that I'm not really able to split the
+> > patches by type of change (indentation, spaces inside of parentheses,
+> > vertical align...) and it did it all at once, but hopefully that is
+> > not a big issue. You can look at it here [1] - it is 2,4MB in size of
+> > the patch files (only the formatting changes) and I want to check it a
+> > bit better before sending it here as emails, whether there is no new
+> > warning in gcc, etc. But it compiles and passes xfstests, so feel free
+> > to peek at it - I will be back online in the Monday.
+> >
+> > [1] https://github.com/jtulak/xfsdump/tree/for-review  (git clone
+> > https://github.com/jtulak/xfsdump.git)
+>
+> IMO, it's largely unreviewable because not only does whitespace
+> change, so does the way the code is laid out.
+>
+> e.g it removes {} around single line if/for/while, so that could
+> introduce bugs if there are multi-expression macros that aren't
+> correctly encapsulated (and there are!).
 
-diff --git a/db/metadump.c b/db/metadump.c
-index be7cf360..d4c751c0 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1421,6 +1421,43 @@ process_sf_attr(
- 		memset(asfep, 0, XFS_DFORK_ASIZE(dip, mp) - ino_attr_size);
- }
- 
-+static void
-+process_dir_free_block(
-+	char				*block)
-+{
-+	struct xfs_dir2_free		*free;
-+	struct xfs_dir3_icfree_hdr	freehdr;
-+
-+	if (!zero_stale_data)
-+		return;
-+
-+	free = (struct xfs_dir2_free *)block;
-+	M_DIROPS(mp)->free_hdr_from_disk(&freehdr, free);
-+
-+	switch (freehdr.magic) {
-+	case XFS_DIR2_FREE_MAGIC:
-+	case XFS_DIR3_FREE_MAGIC: {
-+		__be16			*bests;
-+		char			*high;
-+		int			used;
-+
-+		/* Zero out space from end of bests[] to end of block */
-+		bests = M_DIROPS(mp)->free_bests_p(free);
-+		high = (char *)&bests[freehdr.nvalid];
-+		used = high - (char*)free;
-+		memset(high, 0, mp->m_dir_geo->blksize - used);
-+		iocur_top->need_crc = 1;
-+		break;
-+	}
-+	default:
-+		if (show_warnings)
-+			print_warning("invalid magic in dir inode %llu "
-+				      "free block",
-+				      (unsigned long long)cur_ino);
-+		break;
-+	}
-+}
-+
- static void
- process_dir_leaf_block(
- 	char				*block)
-@@ -1518,7 +1555,7 @@ process_dir_data_block(
- 		if (show_warnings)
- 			print_warning(
- 		"invalid magic in dir inode %llu block %ld",
--					(long long)cur_ino, (long)offset);
-+					(unsigned long long)cur_ino, (long)offset);
- 		return;
- 	}
- 
-@@ -1832,8 +1869,7 @@ process_single_fsb_objects(
- 		switch (btype) {
- 		case TYP_DIR2:
- 			if (o >= mp->m_dir_geo->freeblk) {
--				/* TODO, zap any stale data */
--				break;
-+				process_dir_free_block(dp);
- 			} else if (o >= mp->m_dir_geo->leafblk) {
- 				process_dir_leaf_block(dp);
- 			} else {
-@@ -1924,8 +1960,7 @@ process_multi_fsb_objects(
- 
- 			dp = iocur_top->data;
- 			if (o >= mp->m_dir_geo->freeblk) {
--				/* TODO, zap any stale data */
--				goto write;
-+				process_dir_free_block(dp);
- 			} else if (o >= mp->m_dir_geo->leafblk) {
- 				process_dir_leaf_block(dp);
- 			} else {
-@@ -1934,7 +1969,6 @@ process_multi_fsb_objects(
- 			}
- 
- 			iocur_top->need_crc = obfuscate || zero_stale_data;
--write:
- 			ret = write_buf(iocur_top);
- out_pop:
- 			pop_cur();
+I didn't realize that possibility. Fixing...
+
+>
+> And that's really hard to see in amongst all the indenting changes,
+> the whitespace removal, etc.  I'd much prefer "one type of
+> change at a time" patches because they are much easier to review.
+
+Yeah, I understand. Let's see what I can do... Anyway, thanks for the feedback.
+
+Cheers,
+Jan
+
+
+
 -- 
-2.14.5
+Jan Tulak
