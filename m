@@ -1,44 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:39350 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387420AbeKFCqb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Nov 2018 21:46:31 -0500
-Date: Mon, 5 Nov 2018 09:25:47 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] populate: fix leafn creation test for v4 filesystems
-Message-ID: <20181105172547.GD4131@magnolia>
+Received: from mail-yw1-f65.google.com ([209.85.161.65]:46201 "EHLO
+        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387687AbeKFDSB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Nov 2018 22:18:01 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20181103171524.2740-1-amir73il@gmail.com>
+In-Reply-To: <20181103171524.2740-1-amir73il@gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 5 Nov 2018 19:57:01 +0200
+Message-ID: <CAOQ4uxjTo_8fpasmVtc2j6zRTnBpUvaNQ0edQwtbv79VgrNqXQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs: truncate transaction does not modify the inobt
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: Eryu Guan <guaneryu@gmail.com>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, Nov 3, 2018 at 7:15 PM Amir Goldstein <amir73il@gmail.com> wrote:
+>
+> From: Brian Foster <bfoster@redhat.com>
+>
+> The truncate transaction does not ever modify the inode btree, but
+> includes an associated log reservation. Update
+> xfs_calc_itruncate_reservation() to remove the reservation
+> associated with inobt updates.
+>
+> [Amir:  This commit was merged for kernel v4.16 and a twin commit was
+>         merged for xfsprogs v4.16. As a result, a small xfs filesystem
+>         formatted with features -m rmapbt=1,reflink=1 using mkfs.xfs
+>         version >= v4.16 cannot be mounted with kernel < v4.16.
+>
+>         For example, xfstests generic/17{1,2,3} format a small fs and
+>         when trying to mount it, they fail with an assert on this very
+>         demonic line:
+>
+>  XFS (vdc): Log size 3075 blocks too small, minimum size is 3717 blocks
+>  XFS (vdc): AAIEEE! Log failed size checks. Abort!
+>  XFS: Assertion failed: 0, file: src/linux/fs/xfs/xfs_log.c, line: 666
+>
+>         The simple solution for stable kernels is to apply this patch,
+>         because mkfs.xfs v4.16 is already in the wild, so we have to
+>         assume that xfs filesystems with a "too small" log exist.
+>         Regardless, xfsprogs maintainers should also consider reverting
+>         the twin patch to stop creating those filesystems for the sake
+>         of users with unpatched kernels.]
+>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Cc: <stable@vger.kernel.org> # v4.9+
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>
+> Darrick/Dave,
+>
+> It took me a while to figure out what was going on with my test systems
+> when small test partitions (10G) stopped working with older kernels.
+>
+> Please bless this change for stable and consider the remedie for mkfs.xfs
+> I verified that patch cleanly applies to stable kernels 4.14.y and 4.9.y
+> and that I can mount a filsystem created with new mkfs.xfs.
+>
+> I am now running quick tests on stable 4.14.y with configs 4k, 1k,
+> reflink,reflink+overlay to verify no regressions from this patch.
+>
 
-The leafn creation test doesn't work on some v4 filesystems
-because the field names change.  Rearrange the code somewhat so that it
-works properly.
+FYI no regressions detected.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/populate |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Thoughts?
 
-diff --git a/common/populate b/common/populate
-index 610425f9..d49fbc29 100644
---- a/common/populate
-+++ b/common/populate
-@@ -444,7 +444,9 @@ __populate_check_xfs_dir() {
- 		(test "${datab}" -eq 1 && test "${leafb}" -eq 1 && test "${freeb}" -eq 0) || _fail "failed to create ${dtype} dir ino ${inode} datab ${datab} leafb ${leafb} freeb ${freeb}"
- 		;;
- 	"leafn")
--		_scratch_xfs_db -x -c "inode ${inode}" -c "dblock ${leaf_lblk}" -c "p lhdr.info.hdr.magic" | egrep -q '(0x3dff|0xd2ff)' || _fail "failed to create ${dtype} dir ino ${inode} datab ${datab} leafb ${leafb} freeb ${freeb}"
-+		_scratch_xfs_db -x -c "inode ${inode}" -c "dblock ${leaf_lblk}" -c "p lhdr.info.hdr.magic" | grep -q '0x3dff' && return
-+		_scratch_xfs_db -x -c "inode ${inode}" -c "dblock ${leaf_lblk}" -c "p lhdr.info.magic" | grep -q '0xd2ff' && return
-+		_fail "failed to create ${dtype} dir ino ${inode} datab ${datab} leafb ${leafb} freeb ${freeb}"
- 		;;
- 	"node"|"btree")
- 		(test "${datab}" -eq 1 && test "${leafb}" -eq 1 && test "${freeb}" -eq 1) || _fail "failed to create ${dtype} dir ino ${inode} datab ${datab} leafb ${leafb} freeb ${freeb}"
+Thanks,
+Amir.
+
+>
+>
+>  fs/xfs/libxfs/xfs_trans_resv.c | 9 +--------
+>  1 file changed, 1 insertion(+), 8 deletions(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> index 6bd916bd35e2..48eff18c5496 100644
+> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> @@ -232,8 +232,6 @@ xfs_calc_write_reservation(
+>   *    the super block to reflect the freed blocks: sector size
+>   *    worst case split in allocation btrees per extent assuming 4 extents:
+>   *             4 exts * 2 trees * (2 * max depth - 1) * block size
+> - *    the inode btree: max depth * blocksize
+> - *    the allocation btrees: 2 trees * (max depth - 1) * block size
+>   */
+>  STATIC uint
+>  xfs_calc_itruncate_reservation(
+> @@ -245,12 +243,7 @@ xfs_calc_itruncate_reservation(
+>                                       XFS_FSB_TO_B(mp, 1))),
+>                     (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+>                      xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
+> -                                     XFS_FSB_TO_B(mp, 1)) +
+> -                   xfs_calc_buf_res(5, 0) +
+> -                   xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+> -                                    XFS_FSB_TO_B(mp, 1)) +
+> -                   xfs_calc_buf_res(2 + mp->m_ialloc_blks +
+> -                                    mp->m_in_maxlevels, 0)));
+> +                                     XFS_FSB_TO_B(mp, 1))));
+>  }
+>
+>  /*
+> --
+> 2.17.1
+>
