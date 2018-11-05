@@ -1,111 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f65.google.com ([209.85.161.65]:46201 "EHLO
-        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387687AbeKFDSB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Nov 2018 22:18:01 -0500
-MIME-Version: 1.0
-References: <20181103171524.2740-1-amir73il@gmail.com>
-In-Reply-To: <20181103171524.2740-1-amir73il@gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 5 Nov 2018 19:57:01 +0200
-Message-ID: <CAOQ4uxjTo_8fpasmVtc2j6zRTnBpUvaNQ0edQwtbv79VgrNqXQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: truncate transaction does not modify the inobt
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:37925 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387580AbeKFGyV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Nov 2018 01:54:21 -0500
+Received: by mail-wm1-f67.google.com with SMTP id l2-v6so9544757wmh.3
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Nov 2018 13:32:39 -0800 (PST)
+Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
+        by smtp.gmail.com with ESMTPSA id x18-v6sm38861711wrs.50.2018.11.05.13.32.37
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 05 Nov 2018 13:32:37 -0800 (PST)
+From: Stefan Ring <stefanrin@gmail.com>
+Subject: [PATCH 3/5] xfs_metadump: Zap freeindex blocks in directory inodes
+Date: Mon,  5 Nov 2018 22:31:43 +0100
+Message-Id: <20181105213145.7560-4-stefanrin@gmail.com>
+In-Reply-To: <20181105213145.7560-1-stefanrin@gmail.com>
+References: <20181105213145.7560-1-stefanrin@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
-Cc: Eryu Guan <guaneryu@gmail.com>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-On Sat, Nov 3, 2018 at 7:15 PM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> From: Brian Foster <bfoster@redhat.com>
->
-> The truncate transaction does not ever modify the inode btree, but
-> includes an associated log reservation. Update
-> xfs_calc_itruncate_reservation() to remove the reservation
-> associated with inobt updates.
->
-> [Amir:  This commit was merged for kernel v4.16 and a twin commit was
->         merged for xfsprogs v4.16. As a result, a small xfs filesystem
->         formatted with features -m rmapbt=1,reflink=1 using mkfs.xfs
->         version >= v4.16 cannot be mounted with kernel < v4.16.
->
->         For example, xfstests generic/17{1,2,3} format a small fs and
->         when trying to mount it, they fail with an assert on this very
->         demonic line:
->
->  XFS (vdc): Log size 3075 blocks too small, minimum size is 3717 blocks
->  XFS (vdc): AAIEEE! Log failed size checks. Abort!
->  XFS: Assertion failed: 0, file: src/linux/fs/xfs/xfs_log.c, line: 666
->
->         The simple solution for stable kernels is to apply this patch,
->         because mkfs.xfs v4.16 is already in the wild, so we have to
->         assume that xfs filesystems with a "too small" log exist.
->         Regardless, xfsprogs maintainers should also consider reverting
->         the twin patch to stop creating those filesystems for the sake
->         of users with unpatched kernels.]
->
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Cc: <stable@vger.kernel.org> # v4.9+
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->
-> Darrick/Dave,
->
-> It took me a while to figure out what was going on with my test systems
-> when small test partitions (10G) stopped working with older kernels.
->
-> Please bless this change for stable and consider the remedie for mkfs.xfs
-> I verified that patch cleanly applies to stable kernels 4.14.y and 4.9.y
-> and that I can mount a filsystem created with new mkfs.xfs.
->
-> I am now running quick tests on stable 4.14.y with configs 4k, 1k,
-> reflink,reflink+overlay to verify no regressions from this patch.
->
+Signed-off-by: Stefan Ring <stefanrin@gmail.com>
+---
+ db/metadump.c | 46 ++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 40 insertions(+), 6 deletions(-)
 
-FYI no regressions detected.
-
-Thoughts?
-
-Thanks,
-Amir.
-
->
->
->  fs/xfs/libxfs/xfs_trans_resv.c | 9 +--------
->  1 file changed, 1 insertion(+), 8 deletions(-)
->
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index 6bd916bd35e2..48eff18c5496 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -232,8 +232,6 @@ xfs_calc_write_reservation(
->   *    the super block to reflect the freed blocks: sector size
->   *    worst case split in allocation btrees per extent assuming 4 extents:
->   *             4 exts * 2 trees * (2 * max depth - 1) * block size
-> - *    the inode btree: max depth * blocksize
-> - *    the allocation btrees: 2 trees * (max depth - 1) * block size
->   */
->  STATIC uint
->  xfs_calc_itruncate_reservation(
-> @@ -245,12 +243,7 @@ xfs_calc_itruncate_reservation(
->                                       XFS_FSB_TO_B(mp, 1))),
->                     (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
->                      xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
-> -                                     XFS_FSB_TO_B(mp, 1)) +
-> -                   xfs_calc_buf_res(5, 0) +
-> -                   xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
-> -                                    XFS_FSB_TO_B(mp, 1)) +
-> -                   xfs_calc_buf_res(2 + mp->m_ialloc_blks +
-> -                                    mp->m_in_maxlevels, 0)));
-> +                                     XFS_FSB_TO_B(mp, 1))));
->  }
->
->  /*
-> --
-> 2.17.1
->
+diff --git a/db/metadump.c b/db/metadump.c
+index be7cf360..d4c751c0 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1421,6 +1421,43 @@ process_sf_attr(
+ 		memset(asfep, 0, XFS_DFORK_ASIZE(dip, mp) - ino_attr_size);
+ }
+ 
++static void
++process_dir_free_block(
++	char				*block)
++{
++	struct xfs_dir2_free		*free;
++	struct xfs_dir3_icfree_hdr	freehdr;
++
++	if (!zero_stale_data)
++		return;
++
++	free = (struct xfs_dir2_free *)block;
++	M_DIROPS(mp)->free_hdr_from_disk(&freehdr, free);
++
++	switch (freehdr.magic) {
++	case XFS_DIR2_FREE_MAGIC:
++	case XFS_DIR3_FREE_MAGIC: {
++		__be16			*bests;
++		char			*high;
++		int			used;
++
++		/* Zero out space from end of bests[] to end of block */
++		bests = M_DIROPS(mp)->free_bests_p(free);
++		high = (char *)&bests[freehdr.nvalid];
++		used = high - (char*)free;
++		memset(high, 0, mp->m_dir_geo->blksize - used);
++		iocur_top->need_crc = 1;
++		break;
++	}
++	default:
++		if (show_warnings)
++			print_warning("invalid magic in dir inode %llu "
++				      "free block",
++				      (unsigned long long)cur_ino);
++		break;
++	}
++}
++
+ static void
+ process_dir_leaf_block(
+ 	char				*block)
+@@ -1518,7 +1555,7 @@ process_dir_data_block(
+ 		if (show_warnings)
+ 			print_warning(
+ 		"invalid magic in dir inode %llu block %ld",
+-					(long long)cur_ino, (long)offset);
++					(unsigned long long)cur_ino, (long)offset);
+ 		return;
+ 	}
+ 
+@@ -1832,8 +1869,7 @@ process_single_fsb_objects(
+ 		switch (btype) {
+ 		case TYP_DIR2:
+ 			if (o >= mp->m_dir_geo->freeblk) {
+-				/* TODO, zap any stale data */
+-				break;
++				process_dir_free_block(dp);
+ 			} else if (o >= mp->m_dir_geo->leafblk) {
+ 				process_dir_leaf_block(dp);
+ 			} else {
+@@ -1924,8 +1960,7 @@ process_multi_fsb_objects(
+ 
+ 			dp = iocur_top->data;
+ 			if (o >= mp->m_dir_geo->freeblk) {
+-				/* TODO, zap any stale data */
+-				goto write;
++				process_dir_free_block(dp);
+ 			} else if (o >= mp->m_dir_geo->leafblk) {
+ 				process_dir_leaf_block(dp);
+ 			} else {
+@@ -1934,7 +1969,6 @@ process_multi_fsb_objects(
+ 			}
+ 
+ 			iocur_top->need_crc = obfuscate || zero_stale_data;
+-write:
+ 			ret = write_buf(iocur_top);
+ out_pop:
+ 			pop_cur();
+-- 
+2.14.5
