@@ -1,210 +1,513 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50538 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728961AbeKEUeH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Nov 2018 15:34:07 -0500
-From: fdmanana@kernel.org
-Subject: [PATCH 1/3] generic: test attempt to dedup eof block into the middle of a file
-Date: Mon,  5 Nov 2018 11:14:45 +0000
-Message-Id: <20181105111445.11870-1-fdmanana@kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:39704 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727048AbeKEWF7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Nov 2018 17:05:59 -0500
+Subject: Re: [PATCH 3/3] btrfs: add new filter for file cloning error
+ translation
+References: <20181105111524.11970-1-fdmanana@kernel.org>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <6f310c3b-0076-104f-f843-d5a91fef62af@suse.com>
+Date: Mon, 5 Nov 2018 14:46:19 +0200
+MIME-Version: 1.0
+In-Reply-To: <20181105111524.11970-1-fdmanana@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
+To: fdmanana@kernel.org, fstests@vger.kernel.org
 Cc: linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, Filipe Manana <fdmanana@suse.com>
 
-From: Filipe Manana <fdmanana@suse.com>
 
-Test that deduplication of an entire file that has a size that is not
-aligned to the filesystem's block size into the middle of a different
-file does not corrupt the destination's file data by reflinking the last
-(eof) block.
 
-This test is motivated by a bug recently found that affects both Btrfs
-and XFS, and is fixed by the following commits/patches for the linux
-kernel:
+On 5.11.18 г. 13:15 ч., fdmanana@kernel.org wrote:
+> From: Filipe Manana <fdmanana@suse.com>
+> 
+> A bug in file cloning/reflinking was recently found that afftected both
+> Btrfs and XFS, which was caused by allowing the cloning of an eof block
+> into the middle of a file when the eof is not aligned to the filesystem's
+> block size.
+> 
+> The fix consists of returning the errno -EINVAL to user space when the
+> arguments passed to the system call lead to the scenario of data
+> corruption. However this overlaps with some cases where the system call,
+> in Btrfs, returned -EOPNOTSUPP, which means we are trying to reflink
+> inline extents. That is unsupported in Btrfs due to the huge complexity
+> of supporting it (due to copying and trimming inline extents, deal with
+> eventual compression, etc).
+> 
+> We have a few btrfs test cases that verify that attempts to clone inline
+> extents result in a failure, and are currently expecting an -EINVAL error
+> message from the output of the cloner program. So create a filter that
+> converts error messages related to the -EOPNOTSUPP error to messages
+> related to the -EINVAL error, so that the test can run both on patched
+> and non-patched linux kernels.
+> 
+> The corresponding btrfs patch for the linux kernel is titled:
+> 
+>  "Btrfs: fix data corruption due to cloning of eof block"
+> 
+> And the VFS change that introduces the -EINVAL error return was introduced
+> by the following linux kernel commit (landed in 4.20-rc1):
+> 
+>  07d19dc9fbe9 ("vfs: avoid problematic remapping requests into partial EOF block")
+> 
+> The btrfs patch is not yet in Linus' tree (it was submitted around the
+> same time as this change) and the VFS change was introduced in 4.10-rc1.
+> 
+> Signed-off-by: Filipe Manana <fdmanana@suse.com>
 
- 07d19dc9fbe9 ("vfs: avoid problematic remapping requests into partial EOF block")
- dceeb47b0ed6 ("xfs: fix data corruption w/ unaligned dedupe ranges")
- de02b9f6bb65 ("Btrfs: fix data corruption when deduplicating between different files")
- Btrfs: fix infinite loop on inode eviction after deduplication of eof block
+Reviewed-by: Nikolay Borisov <nborisov@suse.com>
 
-The VFS patch was added to kernel 4.20-rc1 and the XFS and first Btrfs
-patches were added to kernel 4.19. The second patch for Btrfs is very
-recent and it is not yet in Linus' tree.
-
-Signed-off-by: Filipe Manana <fdmanana@suse.com>
----
- tests/generic/517     | 98 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/517.out | 45 +++++++++++++++++++++++
- tests/generic/group   |  1 +
- 3 files changed, 144 insertions(+)
- create mode 100755 tests/generic/517
- create mode 100644 tests/generic/517.out
-
-diff --git a/tests/generic/517 b/tests/generic/517
-new file mode 100755
-index 00000000..601bb24e
---- /dev/null
-+++ b/tests/generic/517
-@@ -0,0 +1,98 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (C) 2018 SUSE Linux Products GmbH. All Rights Reserved.
-+#
-+# FS QA Test No. 517
-+#
-+# Test that deduplication of an entire file that has a size that is not aligned
-+# to the filesystem's block size into the middle of a different file does not
-+# corrupt the destination's file data by reflinking the last (eof) block.
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch_dedupe
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs >>$seqres.full 2>&1
-+_scratch_mount
-+
-+# The first byte with a value of 0xae starts at an offset (2518890) which is not
-+# a multiple of the block size.
-+$XFS_IO_PROG -f \
-+	-c "pwrite -S 0x6b 0 2518890" \
-+	-c "pwrite -S 0xae 2518890 102398" \
-+	$SCRATCH_MNT/foo | _filter_xfs_io
-+
-+# Create a second file with a length not aligned to the block size, whose bytes
-+# all have the value 0x6b, so that its extent(s) can be deduplicated with the
-+# first file.
-+$XFS_IO_PROG -f -c "pwrite -S 0x6b 0 557771" $SCRATCH_MNT/bar | _filter_xfs_io
-+
-+# The file is filled with bytes having the value 0x6b from offset 0 to offset
-+# 2518889 and with the value 0xae from offset 2518890 to offset 2621287.
-+echo "File content before first deduplication:"
-+od -t x1 $SCRATCH_MNT/foo
-+
-+# Now deduplicate the entire second file into a range of the first file that
-+# also has all bytes with the value 0x6b. The destination range's end offset
-+# must not be aligned to the block size and must be less then the offset of
-+# the first byte with the value 0xae (byte at offset 2518890).
-+$XFS_IO_PROG -c "dedupe $SCRATCH_MNT/bar 0 1957888 557771" $SCRATCH_MNT/foo \
-+	| _filter_xfs_io
-+
-+# We should have exactly the same data we had before we asked for deduplication.
-+echo "File content after first deduplication and before unmounting:"
-+od -A d -t x1 $SCRATCH_MNT/foo
-+
-+# Unmount the filesystem and mount it again. This guarantees any file data in
-+# the page cache is dropped.
-+_scratch_cycle_mount
-+
-+# We should have exactly the same data we had before we asked for deduplication.
-+echo "File content after first unmount:"
-+od -A d -t x1 $SCRATCH_MNT/foo
-+
-+# Now do a similar test when trying to dedup just the last (eof) block of a file
-+# into the middle of another file. This triggered a different bug on btrfs.
-+$XFS_IO_PROG -f -c "pwrite -S 0xae 0 100" $SCRATCH_MNT/baz | _filter_xfs_io
-+
-+# Unmount the filesystem and mount it again before attempting to dedupe baz's
-+# last block into foo. This is necessary to trigger that btrfs bug mentioned
-+# before.
-+_scratch_cycle_mount
-+
-+# Now attempt to dedupe the single block of baz into foo.
-+$XFS_IO_PROG -c "dedupe $SCRATCH_MNT/baz 0 2519040 100" $SCRATCH_MNT/foo \
-+    | _filter_xfs_io
-+
-+# Now attempt to unmount the filesystem before reading from the file. This is
-+# meant to trigger the btrfs bug which caused an infinite loop during inode
-+# eviction.
-+_scratch_cycle_mount
-+
-+# We should have exactly the same data we had before we asked for deduplication.
-+echo "File content after second deduplication:"
-+od -A d -t x1 $SCRATCH_MNT/foo
-+
-+status=0
-+exit
-diff --git a/tests/generic/517.out b/tests/generic/517.out
-new file mode 100644
-index 00000000..137a9719
---- /dev/null
-+++ b/tests/generic/517.out
-@@ -0,0 +1,45 @@
-+QA output created by 517
-+wrote 2518890/2518890 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 102398/102398 bytes at offset 2518890
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 557771/557771 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+File content before first deduplication:
-+0000000 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b
-+*
-+11467540 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b ae ae ae ae ae ae
-+11467560 ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae
-+*
-+11777540 ae ae ae ae ae ae ae ae
-+11777550
-+deduped 557771/557771 bytes at offset 1957888
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+File content after first deduplication and before unmounting:
-+0000000 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b
-+*
-+2518880 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b ae ae ae ae ae ae
-+2518896 ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae
-+*
-+2621280 ae ae ae ae ae ae ae ae
-+2621288
-+File content after first unmount:
-+0000000 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b
-+*
-+2518880 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b ae ae ae ae ae ae
-+2518896 ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae
-+*
-+2621280 ae ae ae ae ae ae ae ae
-+2621288
-+wrote 100/100 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+deduped 100/100 bytes at offset 2519040
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+File content after second deduplication:
-+0000000 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b
-+*
-+2518880 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b ae ae ae ae ae ae
-+2518896 ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae ae
-+*
-+2621280 ae ae ae ae ae ae ae ae
-+2621288
-diff --git a/tests/generic/group b/tests/generic/group
-index 54d71d55..326d3a1d 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -519,3 +519,4 @@
- 514 auto quick clone
- 515 auto quick clone
- 516 auto quick dedupe clone
-+517 auto quick dedupe clone
--- 
-2.11.0
+> ---
+>  common/filter.btrfs | 17 +++++++++++++++++
+>  tests/btrfs/035     |  3 ++-
+>  tests/btrfs/035.out |  2 +-
+>  tests/btrfs/096     |  7 ++++---
+>  tests/btrfs/096.out |  2 +-
+>  tests/btrfs/112     | 25 +++++++++++++++++--------
+>  tests/btrfs/112.out | 48 ++++++++++++++++++++++++------------------------
+>  tests/btrfs/113     |  4 +++-
+>  tests/btrfs/113.out |  2 +-
+>  9 files changed, 70 insertions(+), 40 deletions(-)
+> 
+> diff --git a/common/filter.btrfs b/common/filter.btrfs
+> index dda85776..d4169cc6 100644
+> --- a/common/filter.btrfs
+> +++ b/common/filter.btrfs
+> @@ -97,5 +97,22 @@ _filter_btrfs_qgroup_assign_warnings()
+>  	    -e "/quotas may be inconsistent, rescan needed/d"
+>  }
+>  
+> +# Long ago we found that attempting to clone inline extents resulted in hitting
+> +# a BUG_ON() and then decided to not support such use cases by returning errno
+> +# -EOPNOTSUPP to user space. Later on, clone/reflink became a VFS API too, since
+> +# other filesystems (such as XFS) implemented this feature. After that we found
+> +# one scenario of data corruption due to allowing cloning an EOF block into the
+> +# middle of a file, and started to reject such scenario by returning the errno
+> +# -EINVAL to user space (this affected both Btrfs and XFS). Such scenario often
+> +# overlaps the detection of attempts to clone inline extents, since it is done
+> +# early on based only on the arguments passed to the clone system call (and
+> +# btrfs' specific ioctl) before processing the source file extents.
+> +# So replace error messages related to errno -EOPNOTSUPP to be the same as the
+> +# one we get from a -EINVAL errno.
+> +_filter_btrfs_cloner_error()
+> +{
+> +	sed -e "s/\(clone failed:\) Operation not supported/\1 Invalid argument/g"
+> +}
+> +
+>  # make sure this script returns success
+>  /bin/true
+> diff --git a/tests/btrfs/035 b/tests/btrfs/035
+> index c9c09e16..a6f67d4f 100755
+> --- a/tests/btrfs/035
+> +++ b/tests/btrfs/035
+> @@ -24,6 +24,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+>  # get standard environment, filters and checks
+>  . ./common/rc
+>  . ./common/filter
+> +. ./common/filter.btrfs
+>  
+>  # real QA test starts here
+>  _supported_fs btrfs
+> @@ -49,7 +50,7 @@ $CLONER_PROG $SCRATCH_MNT/src $SCRATCH_MNT/src.clone2
+>  snap_src_sz=`ls -lah $SCRATCH_MNT/src.clone1 | awk '{print $5}'`
+>  echo "attempting ioctl (src.clone1 src)"
+>  $CLONER_PROG -s 0 -d 0 -l ${snap_src_sz} \
+> -	$SCRATCH_MNT/src.clone1 $SCRATCH_MNT/src
+> +	$SCRATCH_MNT/src.clone1 $SCRATCH_MNT/src | _filter_btrfs_cloner_error
+>  
+>  # The clone operation should have failed. If it did not it meant we had data
+>  # loss, because file "src.clone1" has an inline extent which is 10 bytes long
+> diff --git a/tests/btrfs/035.out b/tests/btrfs/035.out
+> index 3ea7d779..d810bb2b 100644
+> --- a/tests/btrfs/035.out
+> +++ b/tests/btrfs/035.out
+> @@ -1,6 +1,6 @@
+>  QA output created by 035
+>  attempting ioctl (src.clone1 src)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File src data after attempt to clone from src.clone1 into src:
+>  0000000 62 62 62 62 62 62 62 62 62 62 63 63 63 63 63 63
+>  0000020 63 63 63 63
+> diff --git a/tests/btrfs/096 b/tests/btrfs/096
+> index e8552947..b9188e6e 100755
+> --- a/tests/btrfs/096
+> +++ b/tests/btrfs/096
+> @@ -21,6 +21,7 @@ _cleanup()
+>  # get standard environment, filters and checks
+>  . ./common/rc
+>  . ./common/filter
+> +. ./common/filter.btrfs
+>  
+>  # real QA test starts here
+>  _supported_fs btrfs
+> @@ -52,11 +53,11 @@ $XFS_IO_PROG -f -s -c "pwrite -S 0xbb 0 2k" \
+>  # deal with in future IO operations because all inline extents are
+>  # supposed to start at an offset of 0, resulting in all sorts of
+>  # chaos.
+> -# So here we validate that the clone ioctl returns an EOPNOTSUPP,
+> -# which is what it returns for other cases dealing with inlined
+> +# So here we validate that the clone ioctl returns an EOPNOTSUPP or
+> +# EINVAL which is what it returns for other cases dealing with inlined
+>  # extents.
+>  $CLONER_PROG -s 0 -d $BLOCK_SIZE -l 2048 \
+> -	$SCRATCH_MNT/bar $SCRATCH_MNT/foo
+> +	$SCRATCH_MNT/bar $SCRATCH_MNT/foo | _filter_btrfs_cloner_error
+>  
+>  # Because of the inline extent at offset $BLOCK_SIZE, the following
+>  # write made the kernel crash with a BUG_ON().
+> diff --git a/tests/btrfs/096.out b/tests/btrfs/096.out
+> index 2a4251eb..2710f33e 100644
+> --- a/tests/btrfs/096.out
+> +++ b/tests/btrfs/096.out
+> @@ -3,5 +3,5 @@ Blocks modified: [0 - 0]
+>  Blocks modified: [1 - 1]
+>  Blocks modified: [2 - 2]
+>  Blocks modified: [0 - 0]
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  Blocks modified: [1 - 1]
+> diff --git a/tests/btrfs/112 b/tests/btrfs/112
+> index 6ecb1c79..e4e9d322 100755
+> --- a/tests/btrfs/112
+> +++ b/tests/btrfs/112
+> @@ -23,6 +23,7 @@ _cleanup()
+>  # get standard environment, filters and checks
+>  . ./common/rc
+>  . ./common/filter
+> +. ./common/filter.btrfs
+>  
+>  # real QA test starts here
+>  _supported_fs btrfs
+> @@ -53,7 +54,8 @@ test_cloning_inline_extents()
+>  	# clone the inline extent from file bar into this file.
+>  	$XFS_IO_PROG -f -c "pwrite -S 0xaa 0K 16K" $SCRATCH_MNT/foo \
+>  		| _filter_xfs_io
+> -	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo
+> +	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo \
+> +		| _filter_btrfs_cloner_error
+>  
+>  	# Doing IO against any range in the first 4K of the file should work.
+>  	# Due to a past clone ioctl bug which allowed cloning the inline extent,
+> @@ -69,7 +71,8 @@ test_cloning_inline_extents()
+>  	# as well to clone the inline extent from file bar into this file.
+>  	$XFS_IO_PROG -f -c "pwrite -S 0xdd 4K 12K" $SCRATCH_MNT/foo2 \
+>  		| _filter_xfs_io
+> -	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo2
+> +	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo2 \
+> +		| _filter_btrfs_cloner_error
+>  
+>  	# Doing IO against any range in the first 4K of the file should work.
+>  	# Due to a past clone ioctl bug which allowed cloning the inline extent,
+> @@ -84,7 +87,8 @@ test_cloning_inline_extents()
+>  	# but has a prealloc extent. It should not be possible as well to clone
+>  	# the inline extent from file bar into this file.
+>  	$XFS_IO_PROG -f -c "falloc -k 0 1M" $SCRATCH_MNT/foo3 | _filter_xfs_io
+> -	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo3
+> +	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo3 \
+> +		| _filter_btrfs_cloner_error
+>  
+>  	# Doing IO against any range in the first 4K of the file should work.
+>  	# Due to a past clone ioctl bug which allowed cloning the inline extent,
+> @@ -101,7 +105,8 @@ test_cloning_inline_extents()
+>  	# It should be possible to do the extent cloning from bar to this file.
+>  	$XFS_IO_PROG -f -c "pwrite -S 0x01 0 40" $SCRATCH_MNT/foo4 \
+>  		| _filter_xfs_io
+> -	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo4
+> +	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo4 \
+> +		| _filter_btrfs_cloner_error
+>  
+>  	# Doing IO against any range in the first 4K of the file should work.
+>  	echo "File foo4 data after clone operation:"
+> @@ -116,7 +121,8 @@ test_cloning_inline_extents()
+>  	# into this file.
+>  	$XFS_IO_PROG -f -c "pwrite -S 0x03 0 60" $SCRATCH_MNT/foo5 \
+>  		| _filter_xfs_io
+> -	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo5
+> +	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo5 \
+> +		| _filter_btrfs_cloner_error
+>  
+>  	# Reading the file should not fail.
+>  	echo "File foo5 data after clone operation:"
+> @@ -129,7 +135,8 @@ test_cloning_inline_extents()
+>  	# It should not be possible to clone the inline extent from file bar
+>  	# into this file.
+>  	$XFS_IO_PROG -f -c "truncate 16K" $SCRATCH_MNT/foo6 | _filter_xfs_io
+> -	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo6
+> +	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo6 \
+> +		| _filter_btrfs_cloner_error
+>  
+>  	# Reading the file should not fail.
+>  	echo "File foo6 data after clone operation:"
+> @@ -142,7 +149,8 @@ test_cloning_inline_extents()
+>  	# It should be possible to clone the inline extent from file bar into
+>  	# this file.
+>  	$XFS_IO_PROG -f -c "truncate 30" $SCRATCH_MNT/foo7 | _filter_xfs_io
+> -	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo7
+> +	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo7 \
+> +		| _filter_btrfs_cloner_error
+>  
+>  	# Reading the file should not fail.
+>  	echo "File foo7 data after clone operation:"
+> @@ -156,7 +164,8 @@ test_cloning_inline_extents()
+>  	$XFS_IO_PROG -f -c "falloc -k 0 1M" \
+>  			-c "pwrite -S 0x88 0 20" \
+>  			$SCRATCH_MNT/foo8 | _filter_xfs_io
+> -	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo8
+> +	$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/bar $SCRATCH_MNT/foo8 \
+> +		| _filter_btrfs_cloner_error
+>  
+>  	echo "File foo8 data after clone operation:"
+>  	# Must have a size of 20 bytes, with all bytes having a value of 0x88
+> diff --git a/tests/btrfs/112.out b/tests/btrfs/112.out
+> index 23b0d097..3a95e14d 100644
+> --- a/tests/btrfs/112.out
+> +++ b/tests/btrfs/112.out
+> @@ -6,7 +6,7 @@ wrote 50/50 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 16384/16384 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo data after clone operation:
+>  0000000 aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
+>  *
+> @@ -15,7 +15,7 @@ wrote 100/100 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 12288/12288 bytes at offset 4096
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo2 data after clone operation:
+>  0000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  *
+> @@ -24,7 +24,7 @@ File foo2 data after clone operation:
+>  0040000
+>  wrote 90/90 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  First 50 bytes of foo3 after clone operation:
+>  0000000
+>  wrote 90/90 bytes at offset 0
+> @@ -40,13 +40,13 @@ wrote 90/90 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 60/60 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo5 data after clone operation:
+>  0000000 03 03 03 03 03 03 03 03 03 03 03 03 03 03 03 03
+>  *
+>  0000060 03 03 03 03 03 03 03 03 03 03 03 03
+>  0000074
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo6 data after clone operation:
+>  0000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  *
+> @@ -58,7 +58,7 @@ File foo7 data after clone operation:
+>  0000062
+>  wrote 20/20 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo8 data after clone operation:
+>  0000000 88 88 88 88 88 88 88 88 88 88 88 88 88 88 88 88
+>  0000020 88 88 88 88
+> @@ -70,7 +70,7 @@ wrote 50/50 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 16384/16384 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo data after clone operation:
+>  0000000 aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
+>  *
+> @@ -79,7 +79,7 @@ wrote 100/100 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 12288/12288 bytes at offset 4096
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo2 data after clone operation:
+>  0000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  *
+> @@ -88,7 +88,7 @@ File foo2 data after clone operation:
+>  0040000
+>  wrote 90/90 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  First 50 bytes of foo3 after clone operation:
+>  0000000
+>  wrote 90/90 bytes at offset 0
+> @@ -104,13 +104,13 @@ wrote 90/90 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 60/60 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo5 data after clone operation:
+>  0000000 03 03 03 03 03 03 03 03 03 03 03 03 03 03 03 03
+>  *
+>  0000060 03 03 03 03 03 03 03 03 03 03 03 03
+>  0000074
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo6 data after clone operation:
+>  0000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  *
+> @@ -122,7 +122,7 @@ File foo7 data after clone operation:
+>  0000062
+>  wrote 20/20 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo8 data after clone operation:
+>  0000000 88 88 88 88 88 88 88 88 88 88 88 88 88 88 88 88
+>  0000020 88 88 88 88
+> @@ -134,7 +134,7 @@ wrote 50/50 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 16384/16384 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo data after clone operation:
+>  0000000 aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
+>  *
+> @@ -143,7 +143,7 @@ wrote 100/100 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 12288/12288 bytes at offset 4096
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo2 data after clone operation:
+>  0000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  *
+> @@ -152,7 +152,7 @@ File foo2 data after clone operation:
+>  0040000
+>  wrote 90/90 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  First 50 bytes of foo3 after clone operation:
+>  0000000
+>  wrote 90/90 bytes at offset 0
+> @@ -168,13 +168,13 @@ wrote 90/90 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 60/60 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo5 data after clone operation:
+>  0000000 03 03 03 03 03 03 03 03 03 03 03 03 03 03 03 03
+>  *
+>  0000060 03 03 03 03 03 03 03 03 03 03 03 03
+>  0000074
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo6 data after clone operation:
+>  0000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  *
+> @@ -186,7 +186,7 @@ File foo7 data after clone operation:
+>  0000062
+>  wrote 20/20 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo8 data after clone operation:
+>  0000000 88 88 88 88 88 88 88 88 88 88 88 88 88 88 88 88
+>  0000020 88 88 88 88
+> @@ -198,7 +198,7 @@ wrote 50/50 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 16384/16384 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo data after clone operation:
+>  0000000 aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
+>  *
+> @@ -207,7 +207,7 @@ wrote 100/100 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 12288/12288 bytes at offset 4096
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo2 data after clone operation:
+>  0000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  *
+> @@ -216,7 +216,7 @@ File foo2 data after clone operation:
+>  0040000
+>  wrote 90/90 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  First 50 bytes of foo3 after clone operation:
+>  0000000
+>  wrote 90/90 bytes at offset 0
+> @@ -232,13 +232,13 @@ wrote 90/90 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 60/60 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo5 data after clone operation:
+>  0000000 03 03 03 03 03 03 03 03 03 03 03 03 03 03 03 03
+>  *
+>  0000060 03 03 03 03 03 03 03 03 03 03 03 03
+>  0000074
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo6 data after clone operation:
+>  0000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  *
+> @@ -250,7 +250,7 @@ File foo7 data after clone operation:
+>  0000062
+>  wrote 20/20 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File foo8 data after clone operation:
+>  0000000 88 88 88 88 88 88 88 88 88 88 88 88 88 88 88 88
+>  0000020 88 88 88 88
+> diff --git a/tests/btrfs/113 b/tests/btrfs/113
+> index 416406df..6400a7c9 100755
+> --- a/tests/btrfs/113
+> +++ b/tests/btrfs/113
+> @@ -25,6 +25,7 @@ _cleanup()
+>  # get standard environment, filters and checks
+>  . ./common/rc
+>  . ./common/filter
+> +. ./common/filter.btrfs
+>  
+>  # real QA test starts here
+>  _supported_fs btrfs
+> @@ -78,7 +79,8 @@ $XFS_IO_PROG -c "truncate 128" $SCRATCH_MNT/foo
+>  # it's normally not a very common case to clone very small files (only case
+>  # where we get inline extents) and copying inline extents does not save any
+>  # space (unlike for normal, non-inlined extents).
+> -$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/foo $SCRATCH_MNT/bar
+> +$CLONER_PROG -s 0 -d 0 -l 0 $SCRATCH_MNT/foo $SCRATCH_MNT/bar \
+> +	| _filter_btrfs_cloner_error
+>  
+>  # Now because the above clone operation used to succeed, and due to foo's inline
+>  # extent not being shinked by the truncate operation, our file bar got the whole
+> diff --git a/tests/btrfs/113.out b/tests/btrfs/113.out
+> index 3847b35f..ed2688db 100644
+> --- a/tests/btrfs/113.out
+> +++ b/tests/btrfs/113.out
+> @@ -5,7 +5,7 @@ wrote 384/384 bytes at offset 128
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+>  wrote 256/256 bytes at offset 0
+>  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> -clone failed: Operation not supported
+> +clone failed: Invalid argument
+>  File bar's content after the clone operation:
+>  0000000 bb bb bb bb bb bb bb bb bb bb bb bb bb bb bb bb
+>  *
+> 
