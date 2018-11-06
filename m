@@ -1,117 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vs1-f65.google.com ([209.85.217.65]:45227 "EHLO
-        mail-vs1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725728AbeKCENl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Nov 2018 00:13:41 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:33326 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728961AbeKFNcW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Nov 2018 08:32:22 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wA6499lM037005
+        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:09:09 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2120.oracle.com with ESMTP id 2nh3mpjt39-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 06 Nov 2018 04:09:09 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wA6495cB010414
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:09:05 GMT
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id wA6495ii011115
+        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:09:05 GMT
+Subject: [PATCH 8/8] xfs: scrub big block inode btrees correctly
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 05 Nov 2018 20:08:59 -0800
+Message-ID: <154147733964.32496.6293258964746388898.stgit@magnolia>
+In-Reply-To: <154147728649.32496.4515247239602322709.stgit@magnolia>
+References: <154147728649.32496.4515247239602322709.stgit@magnolia>
 MIME-Version: 1.0
-References: <153923113649.5546.9840926895953408273.stgit@magnolia>
- <153923117420.5546.13317703807467393934.stgit@magnolia> <CAL3q7H7mLvCGpyitJhQ=To-aDvG9k9rxSVi2jSpcALQVj3myzg@mail.gmail.com>
- <20181015003139.GZ6311@dastard> <CAL3q7H5ofBmjh0DmbPH6Rmm523JV9byuBiYj=Jxpc44Kbh+Haw@mail.gmail.com>
- <20181102174229.GA4127@magnolia> <CAL3q7H4MaphXQYnn3rRvc3YQZtiBBq1z61c91-LdNZZVzzLWJg@mail.gmail.com>
-In-Reply-To: <CAL3q7H4MaphXQYnn3rRvc3YQZtiBBq1z61c91-LdNZZVzzLWJg@mail.gmail.com>
-Reply-To: fdmanana@gmail.com
-From: Filipe Manana <fdmanana@gmail.com>
-Date: Fri, 2 Nov 2018 19:05:09 +0000
-Message-ID: <CAL3q7H4mMUqpVr=N5a=ChPBDGNy95VRzfSPX-oB5rzm0yshofQ@mail.gmail.com>
-Subject: Re: [PATCH 05/25] vfs: avoid problematic remapping requests into
- partial EOF block
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Nov 2, 2018 at 6:18 PM Filipe Manana <fdmanana@gmail.com> wrote:
->
-> On Fri, Nov 2, 2018 at 5:42 PM Darrick J. Wong <darrick.wong@oracle.com> =
-wrote:
-> >
-> > On Fri, Nov 02, 2018 at 12:04:39PM +0000, Filipe Manana wrote:
-> > > On Mon, Oct 15, 2018 at 1:31 AM Dave Chinner <david@fromorbit.com> wr=
-ote:
-> > > >
-> > > > On Fri, Oct 12, 2018 at 09:22:18PM +0100, Filipe Manana wrote:
-> > > > > On Thu, Oct 11, 2018 at 5:13 AM Darrick J. Wong <darrick.wong@ora=
-cle.com> wrote:
-> > > > > >
-> > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > >
-> > > > > > A deduplication data corruption is exposed by fstests generic/5=
-05 on
-> > > > > > XFS.
-> > > > >
-> > > > > (and btrfs)
-> > > > >
-> > > > > Btw, the generic test I wrote was indeed numbered 505, however it=
- was
-> > > > > never committed and there's now a generic/505 which has nothing t=
-o do
-> > > > > with deduplication.
-> > > > > So you should update the changelog to avoid confusion.
-> > > >
-> > > > What test is it now? And if it hasn't been committed, are you going
-> > > > to update it and repost as it clearly had value....
-> > >
-> > > Sorry, I lost track of this.
-> > >
-> > > So what was the conclusion of the thread where discussion about this
-> > > problem started?
-> > > It wasn't clear to me if a consensus was reached and got lost on that
-> > > long user space dedupe tools discussion between you and Zygo.
-> > >
-> > > The test assumed a fix of rounding down the range and deduping less
-> > > bytes then requested (which ended up included in 4.19 for btrfs).
-> > >
-> > > From this vfs patch it seems it was decided to return errno -EDADE in=
-stead.
-> > > Is this the final decision?
-> >
-> > No, I reworked the whole mess to match btrfs-4.19 behavior of deduping
-> > fewer bytes than requested.
->
-> What about cloning?
-> For cloning the issue is still not fixed in btrfs either.
->
-> So was that done in a later version of this patchset or somewhere else?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Never mind, found it, it returns -EINVAL.
+Teach scrub how to handle the case that there are one or more inobt
+records covering a given inode cluster.  This fixes the operation on big
+block filesystems (e.g. 64k blocks, 512 byte inodes).
 
->
-> thanks
->
-> >
-> > --D
-> >
-> > > >
-> > > > Cheers,
-> > > >
-> > > > Dave.
-> > > > --
-> > > > Dave Chinner
-> > > > david@fromorbit.com
-> > >
-> > >
-> > >
-> > > --
-> > > Filipe David Manana,
-> > >
-> > > =E2=80=9CWhether you think you can, or you think you can't =E2=80=94 =
-you're right.=E2=80=9D
->
->
->
-> --
-> Filipe David Manana,
->
-> =E2=80=9CWhether you think you can, or you think you can't =E2=80=94 you'=
-re right.=E2=80=9D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/ialloc.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 
-
---=20
-Filipe David Manana,
-
-=E2=80=9CWhether you think you can, or you think you can't =E2=80=94 you're=
- right.=E2=80=9D
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 10c3aaefc2a3..5a5f8ae31803 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -169,6 +169,7 @@ xchk_iallocbt_check_cluster_ifree(
+ 	xfs_ino_t			fsino;
+ 	xfs_agino_t			agino;
+ 	unsigned int			offset;
++	unsigned int			cluster_ioff;
+ 	bool				irec_free;
+ 	bool				ino_inuse;
+ 	bool				freemask_ok;
+@@ -181,11 +182,13 @@ xchk_iallocbt_check_cluster_ifree(
+ 	 * Given an inobt record, an offset of a cluster within the record,
+ 	 * and an offset of an inode within a cluster, compute which fs inode
+ 	 * we're talking about and the offset of the inode record within the
+-	 * inode buffer.
++	 * inode buffer, being careful about inobt records that don't align
++	 * with the start of the inode buffer when block sizes are large.
+ 	 */
+ 	agino = irec->ir_startino + chunk_ioff + loop_ioff;
+ 	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
+-	offset = loop_ioff * mp->m_sb.sb_inodesize;
++	cluster_ioff = XFS_INO_TO_OFFSET(mp, irec->ir_startino + chunk_ioff);
++	offset = (cluster_ioff + loop_ioff) * mp->m_sb.sb_inodesize;
+ 	if (offset >= BBTOB(bp->b_length)) {
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+ 		goto out;
