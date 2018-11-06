@@ -1,118 +1,197 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34918 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387420AbeKFB4o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Nov 2018 20:56:44 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] mm: don't break integrity writeback on ->writepage() error
-Date: Mon,  5 Nov 2018 11:36:13 -0500
-Message-Id: <20181105163613.7542-1-bfoster@redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:32930 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728961AbeKFNb4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Nov 2018 08:31:56 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wA640jw2031438
+        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:43 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2nh3mpjt2a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 06 Nov 2018 04:08:43 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wA648fig001815
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:42 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wA648f9I018598
+        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:41 GMT
+Subject: [PATCH 5/8] xfs: hoist inode cluster checks out of loop
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 05 Nov 2018 20:08:40 -0800
+Message-ID: <154147732071.32496.10360183009741260995.stgit@magnolia>
+In-Reply-To: <154147728649.32496.4515247239602322709.stgit@magnolia>
+References: <154147728649.32496.4515247239602322709.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
-Cc: Dave Chinner <david@fromorbit.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-write_cache_pages() currently breaks out of the writepage loop in
-the event of a ->writepage() error. This causes problems for
-integrity writeback on XFS in the event of a persistent error as XFS
-expects to process every dirty+delalloc page such that it can
-discard delalloc blocks when real block allocation fails.  Failure
-to handle all delalloc pages leaves the filesystem in an
-inconsistent state if the integrity writeback happens to be due to
-an unmount, for example.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Update write_cache_pages() to continue processing pages for
-integrity writeback regardless of ->writepage() errors. Save the
-first encountered error and return it once complete. This
-facilitates XFS or any other fs that expects integrity writeback to
-process the entire set of dirty pages regardless of errors.
-Background writeback continues to exit on the first error
-encountered.
+Hoist the inode cluster checks out of the inobt record check loop into
+a separate function in preparation for refactoring of that loop.  No
+functional changes here; that's in the next patch.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ fs/xfs/scrub/ialloc.c |  120 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 66 insertions(+), 54 deletions(-)
 
-Hi all,
 
-This was actually first posted[1] as a patch in XFS to not return errors
-from ->writepage() when called via write_cache_pages(). After some
-discussion with Dave, it was suggested that this is a
-write_cache_pages() bug rather than one in XFS. I think that could go
-either way, so I'm floating this patch as an alternative. FWIW, that
-same thread also includes a supporting patch for an fstests test[2] that
-demonstrates the original problem this patch attempts to resolve.
-
-This applies on top of v4.19 and I've tested it against XFS and ext4
-(defaults) and not seen any regressions. Note that it's not clear to me
-if ext4 is affected by the same or similar problem and I skipped btrfs
-since it seems to duplicate all of the associated writeback code.
-
-Finally, I'm not totally sure about the ->for_sync bit in the error
-handling logic. I included it out of caution to try and handle any sort
-of potential (->sync_mode == WB_SYNC_NONE && ->for_sync == 1)
-combination, but that doesn't appear to be used anywhere that I can see.
-Instead, ->for_sync seems more like an exceptional case of ->sync_mode
-== WB_SYNC ALL.
-
-Thoughts?
-
-Brian
-
-[1] https://marc.info/?l=linux-xfs&m=154102085505264&w=2
-[2] https://marc.info/?l=fstests&m=154031860022439&w=2
-
- mm/page-writeback.c | 19 ++++++++++++-------
- 1 file changed, 12 insertions(+), 7 deletions(-)
-
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 84ae9bf5858a..9dbbf9465ff9 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -2156,6 +2156,7 @@ int write_cache_pages(struct address_space *mapping,
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 4fadea892440..12158ed8ad29 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -201,12 +201,13 @@ xchk_iallocbt_check_cluster_freemask(
+ 	return 0;
+ }
+ 
+-/* Make sure the free mask is consistent with what the inodes think. */
++/* Check an inode cluster. */
+ STATIC int
+-xchk_iallocbt_check_freemask(
++xchk_iallocbt_check_cluster(
+ 	struct xchk_btree		*bs,
+ 	struct xchk_iallocbt		*iabt,
+-	struct xfs_inobt_rec_incore	*irec)
++	struct xfs_inobt_rec_incore	*irec,
++	xfs_agino_t			agino)
  {
- 	int ret = 0;
- 	int done = 0;
-+	int error;
- 	struct pagevec pvec;
- 	int nr_pages;
- 	pgoff_t uninitialized_var(writeback_index);
-@@ -2236,25 +2237,29 @@ int write_cache_pages(struct address_space *mapping,
- 				goto continue_unlock;
+ 	struct xfs_imap			imap;
+ 	struct xfs_mount		*mp = bs->cur->bc_mp;
+@@ -214,7 +215,6 @@ xchk_iallocbt_check_freemask(
+ 	struct xfs_buf			*bp;
+ 	xfs_ino_t			fsino;
+ 	unsigned int			nr_inodes;
+-	xfs_agino_t			agino;
+ 	xfs_agino_t			chunkino;
+ 	xfs_agino_t			clusterino;
+ 	xfs_agblock_t			agbno;
+@@ -226,59 +226,71 @@ xchk_iallocbt_check_freemask(
+ 	nr_inodes = min_t(unsigned int, iabt->inodes_per_cluster,
+ 			XFS_INODES_PER_CHUNK);
  
- 			trace_wbc_writepage(wbc, inode_to_bdi(mapping->host));
--			ret = (*writepage)(page, wbc, data);
--			if (unlikely(ret)) {
--				if (ret == AOP_WRITEPAGE_ACTIVATE) {
-+			error = (*writepage)(page, wbc, data);
-+			if (unlikely(error)) {
-+				if (error == AOP_WRITEPAGE_ACTIVATE) {
- 					unlock_page(page);
--					ret = 0;
--				} else {
-+					error = 0;
-+				} else if (wbc->sync_mode != WB_SYNC_ALL &&
-+					   !wbc->for_sync) {
- 					/*
--					 * done_index is set past this page,
--					 * so media errors will not choke
-+					 * done_index is set past this page, so
-+					 * media errors will not choke
- 					 * background writeout for the entire
- 					 * file. This has consequences for
- 					 * range_cyclic semantics (ie. it may
- 					 * not be suitable for data integrity
- 					 * writeout).
- 					 */
-+					ret = error;
- 					done_index = page->index + 1;
- 					done = 1;
- 					break;
- 				}
-+				if (!ret)
-+					ret = error;
- 			}
+-	for (agino = irec->ir_startino;
+-	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
+-	     agino += iabt->blocks_per_cluster * mp->m_sb.sb_inopblock) {
+-		fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
+-		chunkino = agino - irec->ir_startino;
+-		agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+-
+-		/* Compute the holemask mask for this cluster. */
+-		for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
+-		     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
+-			holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
+-					XFS_INODES_PER_HOLEMASK_BIT);
+-
+-		/* The whole cluster must be a hole or not a hole. */
+-		ir_holemask = (irec->ir_holemask & holemask);
+-		if (ir_holemask != holemask && ir_holemask != 0) {
+-			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+-			continue;
+-		}
++	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
++	chunkino = agino - irec->ir_startino;
++	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
  
- 			/*
--- 
-2.17.2
+-		/* If any part of this is a hole, skip it. */
+-		if (ir_holemask) {
+-			xchk_xref_is_not_owned_by(bs->sc, agbno,
+-					iabt->blocks_per_cluster, &iabt->oinfo);
+-			continue;
+-		}
++	/* Compute the holemask mask for this cluster. */
++	for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
++	     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
++		holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
++				XFS_INODES_PER_HOLEMASK_BIT);
+ 
+-		xchk_xref_is_owned_by(bs->sc, agbno, iabt->blocks_per_cluster,
+-				&iabt->oinfo);
+-
+-		/* Grab the inode cluster buffer. */
+-		imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno,
+-				agbno);
+-		imap.im_len = XFS_FSB_TO_BB(mp, iabt->blocks_per_cluster);
+-		imap.im_boffset = 0;
+-
+-		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
+-				&dip, &bp, 0, 0);
+-		if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0,
+-				&error))
+-			continue;
+-
+-		/* Which inodes are free? */
+-		for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
+-			error = xchk_iallocbt_check_cluster_freemask(bs,
+-					fsino, chunkino, clusterino, irec, bp);
+-			if (error) {
+-				xfs_trans_brelse(bs->cur->bc_tp, bp);
+-				return error;
+-			}
+-		}
++	/* The whole cluster must be a hole or not a hole. */
++	ir_holemask = (irec->ir_holemask & holemask);
++	if (ir_holemask != holemask && ir_holemask != 0) {
++		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
++		return 0;
++	}
++
++	/* If any part of this is a hole, skip it. */
++	if (ir_holemask) {
++		xchk_xref_is_not_owned_by(bs->sc, agbno,
++				iabt->blocks_per_cluster, &iabt->oinfo);
++		return 0;
++	}
++
++	xchk_xref_is_owned_by(bs->sc, agbno, iabt->blocks_per_cluster,
++			&iabt->oinfo);
++
++	/* Grab the inode cluster buffer. */
++	imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno, agbno);
++	imap.im_len = XFS_FSB_TO_BB(mp, iabt->blocks_per_cluster);
++	imap.im_boffset = 0;
+ 
+-		xfs_trans_brelse(bs->cur->bc_tp, bp);
++	error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap, &dip, &bp, 0, 0);
++	if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0, &error))
++		return 0;
++
++	/* Which inodes are free? */
++	for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
++		error = xchk_iallocbt_check_cluster_freemask(bs, fsino,
++				chunkino, clusterino, irec, bp);
++		if (error)
++			break;
++	}
++
++	xfs_trans_brelse(bs->cur->bc_tp, bp);
++	return error;
++}
++
++/* Make sure the free mask is consistent with what the inodes think. */
++STATIC int
++xchk_iallocbt_check_freemask(
++	struct xchk_btree		*bs,
++	struct xchk_iallocbt		*iabt,
++	struct xfs_inobt_rec_incore	*irec)
++{
++	struct xfs_mount		*mp = bs->cur->bc_mp;
++	xfs_agino_t			agino;
++	int				error = 0;
++
++	for (agino = irec->ir_startino;
++	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
++	     agino += iabt->blocks_per_cluster * mp->m_sb.sb_inopblock) {
++		error = xchk_iallocbt_check_cluster(bs, iabt, irec, agino);
++		if (error)
++			break;
+ 	}
+ 
+ 	return error;
