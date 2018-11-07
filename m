@@ -1,97 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:31993 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726926AbeKIJ7n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Nov 2018 04:59:43 -0500
-Date: Fri, 9 Nov 2018 11:21:36 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/16] xfs: finobt AG reserves don't consider last AG can
- be a runt
-Message-ID: <20181109002136.GF19305@dastard>
-References: <20181107063127.3902-1-david@fromorbit.com>
- <20181107063127.3902-4-david@fromorbit.com>
- <20181107165508.GA4135@magnolia>
+Received: from mail.kernel.org ([198.145.29.99]:42204 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727031AbeKHI2z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Nov 2018 03:28:55 -0500
+Date: Wed, 7 Nov 2018 17:56:20 -0500
+From: Sasha Levin <sashal@kernel.org>
+Subject: Re: [PATCH] xfs: truncate transaction does not modify the inobt
+Message-ID: <20181107225620.GD2644@sasha-vm>
+References: <20181103171524.2740-1-amir73il@gmail.com>
+ <CAOQ4uxjTo_8fpasmVtc2j6zRTnBpUvaNQ0edQwtbv79VgrNqXQ@mail.gmail.com>
+ <CAOQ4uxgVFm7CyhseKtNMOcf8ipTJWD+YJSaG6am1xo0F1hcTDQ@mail.gmail.com>
+ <20181107051821.GZ4135@magnolia>
+ <CAOQ4uxjVqxn39zW9xKEpxcCOOT8L26dWW1uy5CC4FAGhadSd3Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20181107165508.GA4135@magnolia>
+In-Reply-To: <CAOQ4uxjVqxn39zW9xKEpxcCOOT8L26dWW1uy5CC4FAGhadSd3Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Eryu Guan <guaneryu@gmail.com>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Sasha Levin <alexander.levin@microsoft.com>
 
-On Wed, Nov 07, 2018 at 08:55:08AM -0800, Darrick J. Wong wrote:
-> On Wed, Nov 07, 2018 at 05:31:14PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The last AG may be very small comapred to all other AGs, and hence
-> > AG reservations based on the superblock AG size may actually consume
-> > more space than the AG actually has. This results on assert failures
-> > like:
-> > 
-> > XFS: Assertion failed: xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved + xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <= pag->pagf_freeblks + pag->pagf_flcount, file: fs/xfs/libxfs/xfs_ag_resv.c, line: 319
-> > [   48.932891]  xfs_ag_resv_init+0x1bd/0x1d0
-> > [   48.933853]  xfs_fs_reserve_ag_blocks+0x37/0xb0
-> > [   48.934939]  xfs_mountfs+0x5b3/0x920
-> > [   48.935804]  xfs_fs_fill_super+0x462/0x640
-> > [   48.936784]  ? xfs_test_remount_options+0x60/0x60
-> > [   48.937908]  mount_bdev+0x178/0x1b0
-> > [   48.938751]  mount_fs+0x36/0x170
-> > [   48.939533]  vfs_kern_mount.part.43+0x54/0x130
-> > [   48.940596]  do_mount+0x20e/0xcb0
-> > [   48.941396]  ? memdup_user+0x3e/0x70
-> > [   48.942249]  ksys_mount+0xba/0xd0
-> > [   48.943046]  __x64_sys_mount+0x21/0x30
-> > [   48.943953]  do_syscall_64+0x54/0x170
-> > [   48.944835]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> > 
-> > Hence we need to ensure the finobt per-ag space reservations take
-> > into account the size of the last AG rather than treat it like all
-> > the other full size AGs.
-> > 
-> > Note that both refcountbt and rmapbt already take the size of the AG
-> > into account via reading the AGF length directly.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_ialloc_btree.c | 17 +++++++++++++----
-> >  1 file changed, 13 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > index 86c50208a143..62014780d5e4 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > @@ -538,15 +538,24 @@ xfs_inobt_rec_check_count(
-> >  
-> >  static xfs_extlen_t
-> >  xfs_inobt_max_size(
-> > -	struct xfs_mount	*mp)
-> > +	struct xfs_mount	*mp,
-> > +	xfs_agnumber_t		agno)
-> >  {
-> > +	uint32_t		agblocks = mp->m_sb.sb_agblocks;
-> > +
-> >  	/* Bail out if we're uninitialized, which can happen in mkfs. */
-> >  	if (mp->m_inobt_mxr[0] == 0)
-> >  		return 0;
-> >  
-> > +	/* last AG can be a runt */
-> > +	if (agno == mp->m_sb.sb_agcount - 1) {
-> > +		div_u64_rem(mp->m_sb.sb_dblocks, mp->m_sb.sb_agblocks,
-> > +				&agblocks);
-> > +	}
-> 
-> Why not: agblocks = xfs_ag_block_count(mp, agno); ?
-> 
+On Wed, Nov 07, 2018 at 07:31:31AM +0200, Amir Goldstein wrote:
+>On Wed, Nov 7, 2018 at 7:18 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>>
+>> On Wed, Nov 07, 2018 at 07:09:42AM +0200, Amir Goldstein wrote:
+>> > On Mon, Nov 5, 2018 at 7:57 PM Amir Goldstein <amir73il@gmail.com> wrote:
+>> > >
+>> > > On Sat, Nov 3, 2018 at 7:15 PM Amir Goldstein <amir73il@gmail.com> wrote:
+>> > > >
+>> > > > From: Brian Foster <bfoster@redhat.com>
+>> > > >
+>> > > > The truncate transaction does not ever modify the inode btree, but
+>> > > > includes an associated log reservation. Update
+>> > > > xfs_calc_itruncate_reservation() to remove the reservation
+>> > > > associated with inobt updates.
+>> > > >
+>> > > > [Amir:  This commit was merged for kernel v4.16 and a twin commit was
+>> > > >         merged for xfsprogs v4.16. As a result, a small xfs filesystem
+>> > > >         formatted with features -m rmapbt=1,reflink=1 using mkfs.xfs
+>> > > >         version >= v4.16 cannot be mounted with kernel < v4.16.
+>> > > >
+>> > > >         For example, xfstests generic/17{1,2,3} format a small fs and
+>> > > >         when trying to mount it, they fail with an assert on this very
+>> > > >         demonic line:
+>> > > >
+>> > > >  XFS (vdc): Log size 3075 blocks too small, minimum size is 3717 blocks
+>> > > >  XFS (vdc): AAIEEE! Log failed size checks. Abort!
+>> > > >  XFS: Assertion failed: 0, file: src/linux/fs/xfs/xfs_log.c, line: 666
+>> > > >
+>> > > >         The simple solution for stable kernels is to apply this patch,
+>> > > >         because mkfs.xfs v4.16 is already in the wild, so we have to
+>> > > >         assume that xfs filesystems with a "too small" log exist.
+>> > > >         Regardless, xfsprogs maintainers should also consider reverting
+>> > > >         the twin patch to stop creating those filesystems for the sake
+>> > > >         of users with unpatched kernels.]
+>> > > >
+>> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+>> > > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+>> > > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>> > > > Cc: <stable@vger.kernel.org> # v4.9+
+>> > > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+>> > > > ---
+>> > > >
+>> > > > Darrick/Dave,
+>> > > >
+>> > > > It took me a while to figure out what was going on with my test systems
+>> > > > when small test partitions (10G) stopped working with older kernels.
+>> > > >
+>> > > > Please bless this change for stable and consider the remedie for mkfs.xfs
+>> > > > I verified that patch cleanly applies to stable kernels 4.14.y and 4.9.y
+>> > > > and that I can mount a filsystem created with new mkfs.xfs.
+>> > > >
+>> > > > I am now running quick tests on stable 4.14.y with configs 4k, 1k,
+>> > > > reflink,reflink+overlay to verify no regressions from this patch.
+>> > > >
+>> > >
+>> > > FYI no regressions detected.
+>> > >
+>> > > Thoughts?
+>> > >
+>> >
+>> > Maybe you'd want to chalk it up to reflink/rmapbt being Experimental
+>> > before kernel 4.16? so the change in "minimum log size" is an on-disk format
+>> > change prior to removing the Experimental label??
+>>
+>> TBH nobody should be using reflink/rmap on 4.14 kernels, ever. :D
+>
+>I agree, as these error messages try to express:
+>[    4.982926] XFS (vdd): EXPERIMENTAL reverse mapping btree feature
+>enabled. Use at your own risk!
+>[    4.984843] XFS (vdd): EXPERIMENTAL reflink feature enabled. Use at
+>your own risk!
+>[    4.987259] XFS (vdd): Log size 3693 blocks too small, minimum size
+>is 4473 blocks
+>
+>But it is still a regression, because as I understand some where using
+>reflink back from
+>stable 4.9, while it was still maintained...
+>
+>>
+>> That said... does it change the minimum log size for (finobt, !reflink,
+>> !rmap) filesystems?  That might be a bigger worry.  I /think/ the
+>
+>No problem on my systems mounting small fs with (finobt, !reflink,!rmap)
+>formatted with mkfs.xfs 4.18.
+>
+>> transaction reservation change is fine, though I defer to Amir on
+>> testing... :)
+>>
+>
+>Testing passed as I wrote, for configs 4k,1k,reflink,reflink+overlay.
+>
+>Sasha, please consider the fix patch for 4.14.y,4.9.y.
 
-forgot about that function :)
+Queued for 4.9 and 4.14, thank you.
 
-Will fix.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--
+Thanks,
+Sasha
