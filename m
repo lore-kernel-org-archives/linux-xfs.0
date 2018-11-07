@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:63760 "EHLO
         ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726298AbeKGQBL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Nov 2018 11:01:11 -0500
+        by vger.kernel.org with ESMTP id S1726779AbeKGQBM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Nov 2018 11:01:12 -0500
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/16] xfs: finobt AG reserves don't consider last AG can be a runt
-Date: Wed,  7 Nov 2018 17:31:14 +1100
-Message-Id: <20181107063127.3902-4-david@fromorbit.com>
+Subject: [PATCH 11/16] iomap: Don't mark partial pages zeroing uptodate for zero-around
+Date: Wed,  7 Nov 2018 17:31:22 +1100
+Message-Id: <20181107063127.3902-12-david@fromorbit.com>
 In-Reply-To: <20181107063127.3902-1-david@fromorbit.com>
 References: <20181107063127.3902-1-david@fromorbit.com>
 MIME-Version: 1.0
@@ -19,79 +19,44 @@ Cc: linux-fsdevel@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The last AG may be very small comapred to all other AGs, and hence
-AG reservations based on the superblock AG size may actually consume
-more space than the AG actually has. This results on assert failures
-like:
+When zero-around stops short of a full block, such as when zeroing
+to a new EOF, iomap_zero() triggers the partial page read code in
+__iomap_write_begin.
 
-XFS: Assertion failed: xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved + xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <= pag->pagf_freeblks + pag->pagf_flcount, file: fs/xfs/libxfs/xfs_ag_resv.c, line: 319
-[   48.932891]  xfs_ag_resv_init+0x1bd/0x1d0
-[   48.933853]  xfs_fs_reserve_ag_blocks+0x37/0xb0
-[   48.934939]  xfs_mountfs+0x5b3/0x920
-[   48.935804]  xfs_fs_fill_super+0x462/0x640
-[   48.936784]  ? xfs_test_remount_options+0x60/0x60
-[   48.937908]  mount_bdev+0x178/0x1b0
-[   48.938751]  mount_fs+0x36/0x170
-[   48.939533]  vfs_kern_mount.part.43+0x54/0x130
-[   48.940596]  do_mount+0x20e/0xcb0
-[   48.941396]  ? memdup_user+0x3e/0x70
-[   48.942249]  ksys_mount+0xba/0xd0
-[   48.943046]  __x64_sys_mount+0x21/0x30
-[   48.943953]  do_syscall_64+0x54/0x170
-[   48.944835]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+Because we are over an unmapped range, the code will zero the
+portion that we would have read and then marks the page up to date.
+Unfortunately, this defeats the zero-around code that looks for
+pages that are not up to date for zeroing, and hence the zero-around
+fails to zero the "unread" portion of the page and exposes stale
+data.
 
-Hence we need to ensure the finobt per-ag space reservations take
-into account the size of the last AG rather than treat it like all
-the other full size AGs.
-
-Note that both refcountbt and rmapbt already take the size of the AG
-into account via reading the AGF length directly.
+Hence if we are doing read-around and we zero a partial page, do
+not mark it up to date so that the zero-around will zero the
+remaining section of the page.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc_btree.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+ fs/iomap.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 86c50208a143..62014780d5e4 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -538,15 +538,24 @@ xfs_inobt_rec_check_count(
+diff --git a/fs/iomap.c b/fs/iomap.c
+index d572e57c5caa..41922fc775c4 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -592,7 +592,13 @@ iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
  
- static xfs_extlen_t
- xfs_inobt_max_size(
--	struct xfs_mount	*mp)
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno)
- {
-+	uint32_t		agblocks = mp->m_sb.sb_agblocks;
-+
- 	/* Bail out if we're uninitialized, which can happen in mkfs. */
- 	if (mp->m_inobt_mxr[0] == 0)
+ 	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
+ 		zero_user_segments(page, poff, from, to, poff + plen);
+-		iomap_set_range_uptodate(page, poff, plen);
++		/*
++		 * if this is zero-around, we don't want to mark the page
++		 * uptodate here  because this is only a partial page zeroing
++		 * and there's still more data to be written into the page.
++		 */
++		if (!(iomap->flags & IOMAP_F_ZERO_AROUND))
++			iomap_set_range_uptodate(page, poff, plen);
  		return 0;
+ 	}
  
-+	/* last AG can be a runt */
-+	if (agno == mp->m_sb.sb_agcount - 1) {
-+		div_u64_rem(mp->m_sb.sb_dblocks, mp->m_sb.sb_agblocks,
-+				&agblocks);
-+	}
-+
- 	return xfs_btree_calc_size(mp->m_inobt_mnr,
--		(uint64_t)mp->m_sb.sb_agblocks * mp->m_sb.sb_inopblock /
--				XFS_INODES_PER_CHUNK);
-+				(uint64_t)agblocks * mp->m_sb.sb_inopblock /
-+					XFS_INODES_PER_CHUNK);
- }
- 
- static int
-@@ -594,7 +603,7 @@ xfs_finobt_calc_reserves(
- 	if (error)
- 		return error;
- 
--	*ask += xfs_inobt_max_size(mp);
-+	*ask += xfs_inobt_max_size(mp, agno);
- 	*used += tree_len;
- 	return 0;
- }
 -- 
 2.19.1
