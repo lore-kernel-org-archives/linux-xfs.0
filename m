@@ -1,40 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:41025 "EHLO
-        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727223AbeKIJeM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Nov 2018 04:34:12 -0500
-Received: by mail-lj1-f196.google.com with SMTP id z80-v6so50742ljb.8
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Nov 2018 15:56:13 -0800 (PST)
-Received: from mail-lj1-f174.google.com (mail-lj1-f174.google.com. [209.85.208.174])
-        by smtp.gmail.com with ESMTPSA id v17-v6sm954167ljg.32.2018.11.08.15.56.11
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 08 Nov 2018 15:56:11 -0800 (PST)
-Received: by mail-lj1-f174.google.com with SMTP id t9-v6so56994ljh.6
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Nov 2018 15:56:11 -0800 (PST)
-MIME-Version: 1.0
-References: <20181108224000.GB15721@magnolia>
-In-Reply-To: <20181108224000.GB15721@magnolia>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 8 Nov 2018 17:55:54 -0600
-Message-ID: <CAHk-=wgd6HgnbLZ8ngvBj-WS9X5Mi01jhRqbG-zvg4UsA6nHNg@mail.gmail.com>
-Subject: Re: [GIT PULL] xfs: fixes for v4.20-rc2
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-yb1-f178.google.com ([209.85.219.178]:38221 "EHLO
+        mail-yb1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726421AbeKHFmz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Nov 2018 00:42:55 -0500
+Received: by mail-yb1-f178.google.com with SMTP id u103-v6so5822774ybi.5
+        for <linux-xfs@vger.kernel.org>; Wed, 07 Nov 2018 12:11:00 -0800 (PST)
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: [PATCH 0/2] xfs: fix panics seen with error injection
+Date: Wed,  7 Nov 2018 15:10:53 -0500
+Message-Id: <20181107201055.25883-1-josef@toxicpanda.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: david@fromorbit.com, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
+To: kernel-team@fb.com, linux-xfs@vger.kernel.org
 
-On Thu, Nov 8, 2018 at 4:40 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> - fix incorrect dropping of error code from bmap
->
-> - print buffer offsets instead of useless hashed pointers when dumping
->   corrupt metadata
->
-> - fix integer overflow in attribute verifier
+I have been trying to debug a xfs hang that happens sometimes when NBD
+disconnects, but when trying to do error injection the box just falls over right
+away with a panic trying to access an xfs_buf that has been freed.  I hit this
+consistently with the reproducer you can find here
 
-Pulled,
+https://github.com/josefbacik/debug-scripts/tree/master/xfs-hang
 
-              Linus
+You need to have bcc installed, have the error injection stuff turned on, and
+just run
+
+./reproducer.sh
+
+You'll want to modify test.sh to point at wherever your fsstress is, and
+whatever device you want it to use.  It'll walk through functions injecting
+errors and usually craps out when it hits xfs_btree_log_recs.
+
+What the script does is triggers on whatever function you are looking at
+(xfs_btree_log_recs for example) and then anything that dirties a xfs_buf in
+that path will save that xfs_buf for later.  Then when we go to do
+xfs_buf_ioapply_map on that buf (which eventually calls submit_bio) we'll fail
+that bio.  Xfs errors out and things carry on.
+
+In my testing however it seems like we're dropping the ref on failed xfs_buf's
+prematurely, so they get freed before we're able to add them to the delwri list
+to be retried.  The 2/2 patch fixes this problem.  The 1/2 patch makes it
+possible for the reproducer to work, as it relies on being able to attach a
+kprobe/kretprobe at xfs_buf_ioapply_map.
+
+With this patch xfs doesn't fall over as soon as I start trying to reproduce the
+hang I'm actually trying to find.  Thanks,
+
+Josef
