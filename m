@@ -1,147 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44888 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726252AbeKHVDx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Nov 2018 16:03:53 -0500
-Subject: Re: [PATCH 06/16] iomap: support block size > page size for direct IO
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:14483 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727945AbeKHHhG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Nov 2018 02:37:06 -0500
+Date: Thu, 8 Nov 2018 09:04:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 00/16] xfs: Block size > PAGE_SIZE support
+Message-ID: <20181107220441.GX19305@dastard>
 References: <20181107063127.3902-1-david@fromorbit.com>
- <20181107063127.3902-7-david@fromorbit.com>
-From: Nikolay Borisov <nborisov@suse.com>
-Message-ID: <ef5a8148-fff2-d323-8b69-01a2062dde9d@suse.com>
-Date: Thu, 8 Nov 2018 13:28:46 +0200
+ <20181107171405.GB4135@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20181107063127.3902-7-david@fromorbit.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181107171405.GB4135@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-
-
-On 7.11.18 г. 8:31 ч., Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Nov 07, 2018 at 09:14:05AM -0800, Darrick J. Wong wrote:
+> On Wed, Nov 07, 2018 at 05:31:11PM +1100, Dave Chinner wrote:
+> > Hi folks,
+> > 
+> > We've had a fair number of problems reported on 64k block size
+> > filesystems of late, but none of the XFS developers have Power or
+> > ARM machines handy to reproduce them or even really test the fixes.
+> > 
+> > The iomap infrastructure we introduced a while back was designed
+> > with the capabity of block size > page size support in mind, but we
+> > hadn't tried to implement it.
+> > 
+> > So after another 64k block size bug report late last week I said to
+> > Darrick "How hard could it be"?
 > 
-> iomap_dio_rw() has all the infrastructure in place to support block
-> size > page size filesystems because it is essentially just
-> sub-block DIO. It needs help, however, with the sub-block zeroing
-> code (needs multi-page IOs) page cache invalidation over the block
-> being written.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/iomap.c | 65 ++++++++++++++++++++++++++++++++++++++++--------------
->  1 file changed, 49 insertions(+), 16 deletions(-)
-> 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 16d16596b00f..8878b1f1f9c7 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -1548,21 +1548,34 @@ static void iomap_dio_bio_end_io(struct bio *bio)
->  	}
->  }
->  
-> +/*
-> + * With zeroing for block size larger than page size, the zeroing length can
-> + * span multiple pages.
-> + */
-> +#define howmany(x, y) (((x)+((y)-1))/(y))
+> "Nothing is ever simple" :)
 
-nit: This could be replaced by DIV_ROUND_UP
+"It'll only take a couple of minutes!"
 
->  static blk_qc_t
->  iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
->  		unsigned len)
->  {
->  	struct page *page = ZERO_PAGE(0);
->  	struct bio *bio;
-> +	int npages = howmany(len, PAGE_SIZE);
-> +
-> +	WARN_ON_ONCE(npages > 16);
->  
-> -	bio = bio_alloc(GFP_KERNEL, 1);
-> +	bio = bio_alloc(GFP_KERNEL, npages);
->  	bio_set_dev(bio, iomap->bdev);
->  	bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
->  	bio->bi_private = dio;
->  	bio->bi_end_io = iomap_dio_bio_end_io;
->  
-> -	get_page(page);
-> -	__bio_add_page(bio, page, len, 0);
-> +	while (npages-- > 0) {
-> +		unsigned plen = min_t(unsigned, PAGE_SIZE, len);
-> +		get_page(page);
-> +		__bio_add_page(bio, page, plen, 0);
-> +		len -= plen;
-> +	}
-> +	WARN_ON(len != 0);
->  	bio_set_op_attrs(bio, REQ_OP_WRITE, REQ_SYNC | REQ_IDLE);
->  
->  	atomic_inc(&dio->ref);
-> @@ -1752,6 +1765,38 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
->  	}
->  }
->  
-> +/*
-> + * This is lifted almost straight from xfs_flush_unmap_range(). Need a generic
-> + * version of the block size rounding for these purposes.
-> + */
-> +static int
-> +iomap_flush_unmap_range(struct file *f, loff_t offset, loff_t len)
-> +{
-> +	struct inode *inode = file_inode(f);
-> +	loff_t rounding, start, end;
-> +	int ret;
-> +
-> +	rounding = max_t(loff_t, i_blocksize(inode), PAGE_SIZE);
-> +	start = round_down(offset, rounding);
-> +	end = round_up(offset + len, rounding) - 1;
-> +
-> +	ret = filemap_write_and_wait_range(inode->i_mapping, start, end);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/*
-> +	 * Try to invalidate cache pages for the range we're direct
-> +	 * writing.  If this invalidation fails, tough, the write will
-> +	 * still work, but racing two incompatible write paths is a
-> +	 * pretty crazy thing to do, so we don't support it 100%.
-> +	 */
-> +	ret = invalidate_inode_pages2_range(inode->i_mapping,
-> +			start >> PAGE_SHIFT, end >> PAGE_SHIFT);
-> +	if (ret)
-> +		dio_warn_stale_pagecache(f);
-> +	return 0;
-> +}
-> +
->  /*
->   * iomap_dio_rw() always completes O_[D]SYNC writes regardless of whether the IO
->   * is being issued as AIO or not.  This allows us to optimise pure data writes
-> @@ -1829,22 +1874,10 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		flags |= IOMAP_NOWAIT;
->  	}
->  
-> -	ret = filemap_write_and_wait_range(mapping, start, end);
-> +	ret = iomap_flush_unmap_range(iocb->ki_filp, start, end);
->  	if (ret)
->  		goto out_free_dio;
->  
-> -	/*
-> -	 * Try to invalidate cache pages for the range we're direct
-> -	 * writing.  If this invalidation fails, tough, the write will
-> -	 * still work, but racing two incompatible write paths is a
-> -	 * pretty crazy thing to do, so we don't support it 100%.
-> -	 */
-> -	ret = invalidate_inode_pages2_range(mapping,
-> -			start >> PAGE_SHIFT, end >> PAGE_SHIFT);
-> -	if (ret)
-> -		dio_warn_stale_pagecache(iocb->ki_filp);
-> -	ret = 0;
-> -
->  	if (iov_iter_rw(iter) == WRITE && !dio->wait_for_completion &&
->  	    !inode->i_sb->s_dio_done_wq) {
->  		ret = sb_init_dio_done_wq(inode->i_sb);
+> > About 6 billion (yes, B) fsx ops later, I have most of the XFS
+> > functionality working on 64k block sizes on x86_64.  Buffered
+> > read/write, mmap read/write and direct IO read/write all work. All
+> > the fallocate() operations work correctly, as does truncate. xfsdump
+> > and xfs_restore are happy with it, as is xfs_repair. xfs-scrub
+> > needed some help, but I've tested Darrick's fixes for that quite a
+> > bit over the past few days.
+> > 
+> > It passes most of xfstests - there's some test failures that I have
+> > to determine whether they are code bugs or test problems (i.e. some
+> > tests don't deal with 64k block sizes correctly or assume block size
+> > <= page size).
+> > 
+> > What I haven't tested yet is shared extents - the COW path,
+> > clone_file_range and dedupe_file_range. I discovered earlier today
+> > that fsx doesn't support copy/clone/dedupe_file_operations
+> > operations, so before I go any further I need to enxpahnce fsx. Then
 > 
+> I assume that means you only tested this on reflink=0 filesystems?
+
+Correct.
+
+> Looking at fsstress, it looks like we don't test copy_file_range either.
+> I can try adding the missing clone/dedupe/copy to both programs, but
+> maybe you've already done that while I was asleep?
+
+No, I haven't started on this yet. I've been sleeping. :P
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
