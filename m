@@ -1,160 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:17964 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727031AbeKHI1n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Nov 2018 03:27:43 -0500
-Date: Thu, 8 Nov 2018 09:55:05 +1100
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:26347 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727196AbeKHJKe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Nov 2018 04:10:34 -0500
+Date: Thu, 8 Nov 2018 10:37:40 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/2] xfs: fix panics seen with error injection
-Message-ID: <20181107225505.GY19305@dastard>
+Subject: Re: [PATCH 2/2] xfs: take a ref on failed bufs in xfs_inode_item_push
+Message-ID: <20181107233740.GZ19305@dastard>
 References: <20181107201055.25883-1-josef@toxicpanda.com>
+ <20181107201055.25883-3-josef@toxicpanda.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181107201055.25883-1-josef@toxicpanda.com>
+In-Reply-To: <20181107201055.25883-3-josef@toxicpanda.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Josef Bacik <josef@toxicpanda.com>
 Cc: kernel-team@fb.com, linux-xfs@vger.kernel.org
 
-On Wed, Nov 07, 2018 at 03:10:53PM -0500, Josef Bacik wrote:
-> I have been trying to debug a xfs hang that happens sometimes when NBD
-> disconnects, but when trying to do error injection the box just falls over right
-> away with a panic trying to access an xfs_buf that has been freed.  I hit this
-> consistently with the reproducer you can find here
+On Wed, Nov 07, 2018 at 03:10:55PM -0500, Josef Bacik wrote:
+> If we failed to writeout a xfs_buf we'll grab a ref for it and put it on
+> li->li_buf.  Then when submitting the failed bufs we'll clear LI_FAILED
+> on the li, which clears the LI_FAILED flag, but also drops the ref on
+> the buf.  Since it isn't on a IO list at this point this could very well
+> be the last ref on the buf, which wreaks havoc when we go to add the buf
+> to the delwrite list.  Fix this by holding a ref on the buf before we
+> call xfs_buf_resubmit_failed_buffers in order to make sure the buf
+> doesn't disappear before we're able to clear the error and add it to the
+> delwri list.  This fixes the panics I was seeing with error injection.
 > 
-> https://github.com/josefbacik/debug-scripts/tree/master/xfs-hang
+> Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+> ---
+>  fs/xfs/xfs_inode_item.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
 > 
-> You need to have bcc installed, have the error injection stuff turned on, and
-> just run
-> 
-> ./reproducer.sh
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index fa1c4fe2ffbf..df49adf1989c 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -503,13 +503,16 @@ xfs_inode_item_push(
+>  	 * previously. Resubmit the buffer for IO.
+>  	 */
+>  	if (test_bit(XFS_LI_FAILED, &lip->li_flags)) {
+> -		if (!xfs_buf_trylock(bp))
+> +		xfs_buf_hold(bp);
+> +		if (!xfs_buf_trylock(bp)) {
+> +			xfs_buf_rele(bp);
+>  			return XFS_ITEM_LOCKED;
+> +		}
+>  
+>  		if (!xfs_buf_resubmit_failed_buffers(bp, buffer_list))
+>  			rval = XFS_ITEM_FLUSHING;
+>  
+> -		xfs_buf_unlock(bp);
+> +		xfs_buf_relse(bp);
+>  		return rval;
+>  	}
 
-Oh, custom error injection, not the XFS error injection
-infrastructure.
+This just doesn't smell right to me.
 
-> You'll want to modify test.sh to point at wherever your fsstress is, and
-> whatever device you want it to use.  It'll walk through functions injecting
-> errors and usually craps out when it hits xfs_btree_log_recs.
-> 
-> What the script does is triggers on whatever function you are looking at
-> (xfs_btree_log_recs for example) and then anything that dirties a xfs_buf in
-> that path will save that xfs_buf for later. i
+/me rummages around in the code
 
-Ok, I see that xfs-log-paths.txt file that contains the trigger
-functions contains basically every path that can modify a buffer.
+Ok, so I think the bug is in xfs_buf_resubmit_failed_buffers() in
+that it removes all the "failed" reference counts from the buffer
+before it adds the delwri reference count back to the buffer. Taking
+a high level reference count like above just papers over the
+transient reference counting error in
+xfs_buf_resubmit_failed_buffers().
 
-> Then when we go to do
-> xfs_buf_ioapply_map on that buf (which eventually calls submit_bio) we'll fail
-> that bio.  Xfs errors out and things carry on.
+It also fails to fix the other xfs_buf_resubmit_failed_buffers()
+caller, which has exactly the same problem (dquot writeback).
 
-IOWs, it shoots down every buffer write after a delay period.
-
-Which basically is no different from just erroring out in
-xfs_buf_iodone_callbacks() in buffer write IO completion. i.e.
-there's no need to trigger on functions that modify the buffers,
-because they all end up in the same function and error handling code
-on IO completion.
-
-In fact, we have error injection mechanisms in XFS that can be used
-for this which are triggered by sysfs attributes on
-CONFIG_XFS_DEBUG=y kernels. i.e:
-
-$ ls -1 /sys/fs/xfs/vdb/errortag/
-ag_resv_critical
-bad_summary
-bmap_finish_one
-bmapifmt
-btree_chk_lblk
-btree_chk_sblk
-buf_lru_ref
-bulkstat
-dareadbuf
-diowrite
-dirinovalid
-drop_writes
-force_repair
-free_extent
-iflush1
-iflush2
-iflush3
-iflush4
-iflush5
-iflush6
-itobp
-iunlink
-iunlinkrm
-log_bad_crc
-logiodone
-log_item_pin
-noerror
-readagf
-readagi
-refcount_continue_update
-refcount_finish_one
-rmap_finish_one
-stratcmpl
-stratread
-$
-
-The injection tag of note is logiodone -  it fails log IO to
-simulate log IO failure shutdowns.
-
-static void
-xlog_iodone(xfs_buf_t *bp)
-{
-        struct xlog_in_core     *iclog = bp->b_log_item;
-        struct xlog             *l = iclog->ic_log;
-        int                     aborted = 0;
-
-        /*
-         * Race to shutdown the filesystem if we see an error or the iclog is in
-         * IOABORT state. The IOABORT state is only set in DEBUG mode to inject
-         * CRC errors into log recovery.
-         */
->>>>>    if (XFS_TEST_ERROR(bp->b_error, l->l_mp, XFS_ERRTAG_IODONE_IOERR) ||
-	     iclog->ic_state & XLOG_STATE_IOABORT) {
-
-
-So if you want to catch logged buffers that are being written to
-error them out and hence test the error retry paths, then replicate
-xlog_iodone injection into xfs_buf_iodone_callbacks(). All modified
-buffers have this iodone function attached to them - it does all the
-post-io completion error handling and log item cleaning. i.e. this
-small change will basically do the same sort of testing:
-
-void
-xfs_buf_iodone_callbacks(
-        struct xfs_buf          *bp)
-{
-        /*
-         * If there is an error, process it. Some errors require us
-         * to run callbacks after failure processing is done so we
-         * detect that and take appropriate action.
-         */
--	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
-+	if (XFS_TEST_ERROR(bp->b_error, bp->b_mount, XFS_ERRTAG_IODONE_IOERR) &&
-+	    xfs_buf_iodone_callback_error(bp))
-                return;
-
-It would probably be better to add a separate "buffer_write" error
-tag to sysfs so you don't shut down the filesystem by induced log Io
-errors, but essentially this will do exactly what your custom error
-injection is doing.
-
-And, by using the built in error injection, you can write a fstest
-to exercise the buffer write error handling....
-
-
-> In my testing however it seems like we're dropping the ref on failed xfs_buf's
-> prematurely, so they get freed before we're able to add them to the delwri list
-> to be retried.  The 2/2 patch fixes this problem.  The 1/2 patch makes it
-> possible for the reproducer to work, as it relies on being able to attach a
-> kprobe/kretprobe at xfs_buf_ioapply_map.
-
-Use the built in error injection, and there's no need for hacking
-code just so you can place one-off debug probes.
+Perhaps something like the patch below?
 
 Cheers,
 
@@ -162,3 +80,82 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
+
+
+xfs: fix transient reference count error in xfs_buf_resubmit_failed_buffers
+
+From: Dave Chinner <dchinner@redhat.com>
+
+When retrying a failed inode or dquot buffer,
+xfs_buf_resubmit_failed_buffers() clears all the failed flags from
+the inode/dquot log items. In doing so, it also drops all the
+reference counts on the buffer that the failed log items hold. This
+means it can drop all the active references on the buffer and hence
+free the buffer before it queues it for write again.
+
+Putting the buffer on the delwri queue takes a reference to the
+buffer (so that it hangs around until it has been written and
+completed), but this goes bang if the buffer has already been freed.
+
+Hence we need to add the buffer to the delwri queue before we remove
+the failed flags from the log items attached to the buffer to ensure
+it always remains referenced during the resubmit process.
+
+Reported-by: Josef Bacik <josef@toxicpanda.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_buf_item.c | 28 +++++++++++++++++++++-------
+ 1 file changed, 21 insertions(+), 7 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 12d8455bfbb2..010db5f8fb00 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1233,9 +1233,23 @@ xfs_buf_iodone(
+ }
+ 
+ /*
+- * Requeue a failed buffer for writeback
++ * Requeue a failed buffer for writeback.
+  *
+- * Return true if the buffer has been re-queued properly, false otherwise
++ * We clear the log item failed state here as well, but we have to be careful
++ * about reference counts because the only active reference counts on the buffer
++ * may be the failed log items. Hence if we clear the log item failed state
++ * before queuing the buffer for IO we can release all active references to
++ * the buffer and free it, leading to use after free problems in
++ * xfs_buf_delwri_queue. It makes no difference to the buffer or log items which
++ * order we process them in - the buffer is locked, and we own the buffer list
++ * so nothing on them is going to change while we are performing this action.
++ *
++ * Hence we can safely queue the buffer for IO before we clear the failed log
++ * item state, therefore  always having an active reference to the buffer and
++ * avoiding the transient zero-reference state that leads to use-after-free.
++ *
++ * Return true if the buffer was added to the buffer list, false if it was
++ * already on the buffer list.
+  */
+ bool
+ xfs_buf_resubmit_failed_buffers(
+@@ -1243,16 +1257,16 @@ xfs_buf_resubmit_failed_buffers(
+ 	struct list_head	*buffer_list)
+ {
+ 	struct xfs_log_item	*lip;
++	bool			ret;
++
++	ret = xfs_buf_delwri_queue(bp, buffer_list);
+ 
+ 	/*
+-	 * Clear XFS_LI_FAILED flag from all items before resubmit
+-	 *
+-	 * XFS_LI_FAILED set/clear is protected by ail_lock, caller  this
++	 * XFS_LI_FAILED set/clear is protected by ail_lock, caller of this
+ 	 * function already have it acquired
+ 	 */
+ 	list_for_each_entry(lip, &bp->b_li_list, li_bio_list)
+ 		xfs_clear_li_failed(lip);
+ 
+-	/* Add this buffer back to the delayed write list */
+-	return xfs_buf_delwri_queue(bp, buffer_list);
++	return ret;
+ }
