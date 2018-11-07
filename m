@@ -1,177 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56210 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43436 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725935AbeKBUic (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 2 Nov 2018 16:38:32 -0400
-Date: Fri, 2 Nov 2018 07:31:38 -0400
+        id S1726762AbeKGXMw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 7 Nov 2018 18:12:52 -0500
+Date: Wed, 7 Nov 2018 08:42:24 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/7] cache: prevent expansion races
-Message-ID: <20181102113138.GA6794@bfoster>
-References: <20181030112043.6034-1-david@fromorbit.com>
- <20181030112043.6034-4-david@fromorbit.com>
- <20181031171302.GA16769@bfoster>
- <20181101012739.GY19305@dastard>
- <20181101131732.GB21654@bfoster>
- <20181101212344.GZ19305@dastard>
+Subject: Re: [PATCH] xfs: defer online discard submission to a workqueue
+Message-ID: <20181107134223.GA50224@bfoster>
+References: <20181105181021.8174-1-bfoster@redhat.com>
+ <20181105215139.GA3160@infradead.org>
+ <20181106142310.GA2773@bfoster>
+ <20181106211802.GN19305@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181101212344.GZ19305@dastard>
+In-Reply-To: <20181106211802.GN19305@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Fri, Nov 02, 2018 at 08:23:44AM +1100, Dave Chinner wrote:
-> On Thu, Nov 01, 2018 at 09:17:32AM -0400, Brian Foster wrote:
-> > On Thu, Nov 01, 2018 at 12:27:39PM +1100, Dave Chinner wrote:
-> > > On Wed, Oct 31, 2018 at 01:13:02PM -0400, Brian Foster wrote:
-> > > > On Tue, Oct 30, 2018 at 10:20:39PM +1100, Dave Chinner wrote:
-> > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > 
-> > > > > When a sudden buffer cache growth demand occurs from multiple
-> > > > > concurrent sources, they can all fail shaking the cache at the same
-> > > > > time and expand the cache. This results in the cache doubling in
-> > > > > size multiple times when only a single expansion was really
-> > > > > necessary. The resultant massive cache can cause repair to OOM as
-> > > > > the cache will grow to much larger than memory can actually hold.
-> > > > > 
-> > > > > Prevent this sudden and unnecessary expansion by rate limiting cache
-> > > > > growth to one size increase every tens seconds. This is sufficient
-> > > > > to prevent racing expansion calls from doing the wrong thing, but
-> > > > > not too long to prevent necesary cache growth when it is undersized.
-> > > > > 
-> > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > > ---
+On Wed, Nov 07, 2018 at 08:18:02AM +1100, Dave Chinner wrote:
+> On Tue, Nov 06, 2018 at 09:23:11AM -0500, Brian Foster wrote:
+> > On Mon, Nov 05, 2018 at 01:51:39PM -0800, Christoph Hellwig wrote:
+> > > On Mon, Nov 05, 2018 at 01:10:21PM -0500, Brian Foster wrote:
+> > > > When online discard is enabled, discards of busy extents are
+> > > > submitted asynchronously as a bio chain. bio completion and
+> > > > resulting busy extent cleanup is deferred to a workqueue. Async
+> > > > discard submission is intended to avoid blocking log forces on a
+> > > > full discard sequence which can take a noticeable amount of time in
+> > > > some cases.
 > > > > 
-> > > > This seems fairly harmless, but I'm not really a fan of this kind of
-> > > > time-based algorithm in general. Could we do something similarly
-> > > > effective that doesn't require a magic time value?
-> > > > 
-> > > > For example, suppose we sample the current cache size at the top of the
-> > > > function, pass that value along to cache_expand() and have the latter
-> > > > only bump ->c_maxcount if it still matches the parameter value. Then
-> > > > return-assign the local var with the latest value:
-> > > > 
-> > > > 	max_sample = cache_expand(cache, max_sample);
-> > > > 
-> > > > The end result is that an allocator must shake every mru under a given
-> > > > cache size before it's allowed to grow the cache. Hm?
+> > > > We've had reports of this still producing log force stalls with XFS
+> > > > on VDO,
 > > > 
-> > > I tried that and it still causes excessive cache expansion on my
-> > > really fast IO subsystem.  I'm seeing peaks of 300,000 IOPS when cache
-> > > expansion bursts occur. They are lasting for up to 20s on my machine
-> > > and it's enough to cause the cache to double in size multiple times.
-> > > Once the initial bursts have run their course, demand drops to a
-> > > steady state of 130-150kiops which the original cache size is quite
-> > > capable of sustaining.
-> > > 
+> > > Please fix this in VDO instead.  We should not work around out of
+> > > tree code making stupid decisions.
 > > 
-> > Interesting.
-> > 
-> > > These bursts are driven by the initial read-ahead queues being
-> > > filled and stop when the queues fill up.  If the IO is slow, then
-> > > there isn't cache pressure because processing keeps up with
-> > > readahead. If IO is fast, it fills the RA queues and then throttles
-> > > back to processing speed. It's filling the RA queues that causes the
-> > > buffer cache growth pressure, and it's really not necessary - the RA
-> > > queues are already full enough to maximise performance in phase 6,
-> > > and so growing memory footprint doesn't gain us anything.
-> > > 
-> > 
-> > Makes sense..
-> > 
-> > > i.e. the buffer cache on large filesystems like this is used as a
-> > > prefetch buffer. It is not a cache that stores anything for repeated
-> > > use - there's 500GB of metadata (>450 million inodes) in this
-> > > filesystem and we're only running w/ 128GB RAM, so we have no hope
-> > > of caching the entire working set in RAM. Hence we want to keep the
-> > > cache size down to just what is necessary to sustain effective
-> > > prefetch.
-> > > 
-> > > The problem with throttling on "scanned the whole cache" is that
-> > > this happens really quickly when you have a buffer demand of ~300k/s
-> > > When I start with a cache size of 800k buffers (-o bhash=101031)
-> > > doubling the cache size from 800k objects to 1.6m objects occurs
-> > > within a couple of seconds of phase 6 starting. A couple of seconds
-> > > later it doubles again, and by the time the initial 20s burst has
-> > > finished, it's doubled 3 or 4 times.
-> > > 
-> > 
-> > Ok, but I'm curious how much of this boils down to lock contention
-> > exacerbated by the fast I/O.
+> > I assume the "stupid decision" refers to sync discard execution. I'm not
+> > familiar with the internals of VDO, this is just what I was told.
 > 
-> There is a fair bit of lock contention during the expansion period
-> at the start of phase 6, but that appears to mostly due to memory
-> allocation causing serialisation on the process mmap_sem in page
-> faults.  The time spent contending on userspace locks and shaking
-> caches appears to be small compared to, say, the CPU time we spend
-> CRCing the metadata being pulled in from disk. The lock contention
-> slowly reduces as the heap footprint grows large enough not to
-> require frequent memory allocation....
+> IMO, what VDO does is irrelevant - any call to submit_bio() can
+> block if the request queue is full. Hence if we've drowned the queue
+> in discards and the device is slow at discards, then we are going to
+> block submitting discards.
 > 
-> > I can see how reduced I/O latency could
-> > contribute to the rapid growth rate. At the same time, it looks like all
-> > the shaker does in this pattern is flush buffers if dirty (which seems
-> > unlikely if we're in some kind of prefetch overload?) and move them to
-> > another list (for potential reuse of memory). 
-> > 
-> > We clearly have multiple lookup/fail/expand races going on as evidenced
-> > by the need for this patch in the first place. The cache growth is
-> > driven by cache misses (i.e. prefetch). The buffer lookups acquire hash
-> > locks and the cache lock (for the node allocation attempt). If the alloc
-> > is allowed, we read the buf and add it to the hash. If not, we shake the
-> > mru and retry the same mru or next. The shake trylocks each node (buf)
-> > and hash lock in the mru. If either lock fails, we skip to the next
-> > buffer.
-> > 
-> > I'm not sure how likely this is, but what are the chances the shakes are
-> > contending with eachother such that lock contention prevents real work
-> > from being done in the shaker?
+> > My
+> > understanding is that these discards can stack up and take enough time
+> > that a limit on outstanding discards is required, which now that I think
+> > of it makes me somewhat skeptical of the whole serial execution thing.
+> > Hitting that outstanding discard request limit is what bubbles up the
+> > stack and affects XFS by holding up log forces, since new discard
+> > submissions are presumably blocked on completion of the oldest
+> > outstanding request.
 > 
-> Yes, it's definitely a possibility - the cache infrastructure needs
-> an overhaul to scale beyond about 8 AGs concurrently prefetching.
-> I've had a long term plan to replace the global hash based cache
-> with something closer to the kernel per-ag cache code to get rid
-> of a lot of the cross-ag cache contention (because most of the
-> processing is per-ag in repair).
+> Exactly.
+> 
+> > I'm not quite sure what happens in the block layer if that limit were
+> > lifted. Perhaps it assumes throttling responsibility directly via
+> > queues/plugs? I'd guess that at minimum we'd end up blocking indirectly
+> > somewhere (via memory allocation pressure?) anyways, so ISTM that some
+> > kind of throttling is inevitable in this situation. What am I missing?
+> 
+> We still need to throttle discards - they have to play nice with all
+> the other IO we need to dispatch concurrently.
+> 
+> I have two issues with the proposed patch:
+> 
+> 1. it puts both discard dispatch and completion processing on the
+> one work qeueue, so if the queue is filled with dispatch requests,
+> IO completion queuing gets blocked. That's not the best thing to be
+> doing.
 > 
 
-Ok.
+This is an unbound workqueue with max_active == 0. AIUI, that means we
+can have something like 256 execution contexts (worker threads?) per
+cpu. Given that, plus the batching that occurs in XFS due to delayed
+logging and discard bio chaining, that seems rather unlikely. Unless I'm
+misunderstanding the mechanism, I think that means filling the queue as
+such and blocking discard submission basically consumes one of those
+contexts.
 
-> > That seems like a reasonable possibility
-> > to me given that you're clearly reproducing enough parallel shakes to
-> > explode the cache rather quickly. Each shake is essentially iterating
-> > through the same dataset, right? Of course, I don't have the complete
-> > picture so perhaps there are other factors at play. I think it's at
-> > least worth looking into if you haven't already because if something
-> > like that is going on, it could be more likely that the time-based
-> > implementation basically trades one kind of resource (memory) wastage
-> > for another (cpu).
+Of course, the CIL context structure appears to be technically unbound
+as well and it's trivial to just add a separate submission workqueue,
+but I'd like to at least make sure we're on the same page as to the need
+(so it can be documented clearly as well).
+
+> 2. log forces no longer wait for discards to be dispatched - they
+> just queue them. This means the mechanism xfs_extent_busy_flush()
+> uses to dispatch pending discards (synchrnous log force) can return
+> before discards have even been dispatched to disk. Hence we can
+> expect to see longer wait and tail latencies when busy extents are
+> encountered by the allocator. Whether this is a problem or not needs
+> further investigation.
 > 
-> Given that we are talking about filesystems that take hours/days to
-> run repair over, 10s here or there is just noise. It's a simple,
-> easy fix that doesn't require a massive amount of investment of time
-> or resources to avoid. It's a trade off - I've got way more things
-> to do than I have time for, so if a simple "throttle to one change
-> per 10s" avoids a gnarly OOM-killer death hours later for a user
-> with an immediate "can't repair a broken filesystem because...",
-> then that's a no-brainer...
-> 
 
-Fair enough, but I'm still curious if doing something like changing the
-hash trylock in the shaker to a blocking lock would improve shaker
-effectiveness enough to avoid the need for the time-based hackery. It's
-possible it has no effect or just replaces one problem with a set of
-others, but it's an even more trivial change than this patch is.
+Firstly, I think latency is kind of moot in the problematic case. The
+queue is already drowning in requests that presumably are going to take
+minutes to complete. In that case, the overhead of kicking a workqueue
+to do the submission is probably negligible.
 
-Another approach may be to lift the cache shaker from a per-lookup-miss
-execution context to something more central (like its own thread(s))
-such that lookups can block on (bounded) shakes without introducing too
-much concurrency therein. That is certainly more involved than bolting a
-throttle onto cache expansion and may not be worth the effort if the
-long term plan is to replace the whole cache mechanism.
+That leaves the normal/active case. I suspect that the overhead here may
+still be hard to notice given the broader overhead of online discard in
+the first place. The aforementioned batching means we could be sending a
+good number of discards all at once that ultimately need to be processed
+(with no priority to the particular one an allocator could be waiting
+on). The larger the chain, the longer the whole sequence is going to
+take to clear a particular busy extent relative to the additional
+latency of a workqueue. We could also just be sending one discard,
+though waiting on that one particular extent could mean that we're
+either not being as smart as we could be in extent selection or that
+we're simply running low on free space.
+
+I suppose if this approach is ultimately problemic for whatever reason,
+we could look into some kind of heuristic to track outstanding
+discards/chains and continue to do direct submission until we cross some
+magic threshold. I'm not sure it's worth that complexity given the
+limited use cases for online discard unless there's some serious
+unforeseen problem, though. IIRC, this was all doing synchronous,
+serialized submission not too long ago after all.
+
+Anyways, I'll run some file creation/deletion tests against an SSD
+and/or a thin vol and see what falls out..
 
 Brian
 
