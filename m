@@ -1,85 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:63760 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728024AbeKGQBU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Nov 2018 11:01:20 -0500
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 13/16] xfs: add zero-around controls to iomap
-Date: Wed,  7 Nov 2018 17:31:24 +1100
-Message-Id: <20181107063127.3902-14-david@fromorbit.com>
-In-Reply-To: <20181107063127.3902-1-david@fromorbit.com>
-References: <20181107063127.3902-1-david@fromorbit.com>
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:36902 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727353AbeKGPNr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Nov 2018 10:13:47 -0500
+Received: by mail-wm1-f67.google.com with SMTP id p2-v6so14458699wmc.2
+        for <linux-xfs@vger.kernel.org>; Tue, 06 Nov 2018 21:44:57 -0800 (PST)
+Received: from amb.local ([194.99.105.109])
+        by smtp.gmail.com with ESMTPSA id 137-v6sm5830472wmo.43.2018.11.06.21.44.55
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 06 Nov 2018 21:44:55 -0800 (PST)
+Subject: Re: [PATCH 0/7] xfs_repair: scale to 150,000 iops
+References: <20181030112043.6034-1-david@fromorbit.com>
+From: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
+Message-ID: <d025a410-bd8d-03c7-e738-5da019dfe818@gmail.com>
+Date: Wed, 7 Nov 2018 06:44:54 +0100
 MIME-Version: 1.0
+In-Reply-To: <20181030112043.6034-1-david@fromorbit.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On 30/10/2018 12:20, Dave Chinner wrote:
+> Hi folks,
+> 
+> This patchset enables me to successfully repair a rather large
+> metadump image (~500GB of metadata) that was provided to us because
+> it crashed xfs_repair. Darrick and Eric have already posted patches
+> to fix the crash bugs, and this series is built on top of them.
 
-For buffered writes into block size > page size filesystems, XFS
-will need to trigger zero-around for delayed allocation mappings
-and writes over unwritten extents.
+I was finally able to repair my big fs using for-next + these patches.
 
-Unwritten extents will only remain unwritten until the first data
-gets written back, so we have to ensure that any write mapping
-triggers zero-around for them.
+But it wasn't as easy as just running repair.
 
-Delayed allocation occurs over holes, which then require the data in
-the page cache to completely cover them at write-out time. Hence we
-have to trigger write-around for these mappings, too.
+With default bhash OOM killed repair in ~1/3 of phase6 (128GB of ram +
+50GB of ssd swap). bhash=256000 worked.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_iomap.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+Sometimes segfault happens but I don't have any stack trace
+unfortunately and trying to reproduce on my other test machine
+gave me no luck.
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 27c93b5f029d..35626855e207 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -575,6 +575,15 @@ xfs_file_iomap_begin_delay(
- 				goto out_unlock;
- 		}
- 
-+		/*
-+		 * If we are about to write to an unwritten extent and the
-+		 * the block size is larger than page size, then we need to make sure
-+		 * that the caller zeroes blocks partially covered by data.
-+		 */
-+		if (got.br_state == XFS_EXT_UNWRITTEN &&
-+		    mp->m_sb.sb_blocksize > PAGE_SIZE)
-+			iomap->flags |= IOMAP_F_ZERO_AROUND;
-+
- 		trace_xfs_iomap_found(ip, offset, count, 0, &got);
- 		goto done;
- 	}
-@@ -647,6 +656,8 @@ xfs_file_iomap_begin_delay(
- 	 * them out if the write happens to fail.
- 	 */
- 	iomap->flags |= IOMAP_F_NEW;
-+	if (mp->m_sb.sb_blocksize > PAGE_SIZE)
-+		iomap->flags |= IOMAP_F_ZERO_AROUND;
- 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
- done:
- 	if (isnullstartblock(got.br_startblock))
-@@ -1107,6 +1118,15 @@ xfs_file_iomap_begin(
- 	if (flags & IOMAP_ZERO)
- 		goto out_found;
- 
-+	/*
-+	 * If we are about to write to an unwritten extent and the
-+	 * the block size is larger than page size, then we need to make sure
-+	 * that the caller zeroes blocks partially covered by data.
-+	 */
-+	if (imap.br_state == XFS_EXT_UNWRITTEN &&
-+	    mp->m_sb.sb_blocksize > PAGE_SIZE)
-+		iomap->flags |= IOMAP_F_ZERO_AROUND;
-+
- 	if (!imap_needs_alloc(inode, &imap, nimaps))
- 		goto out_found;
- 
+One time I got:
+xfs_repair: workqueue.c:142: workqueue_add: Assertion `wq->item_count ==
+0' failed.
+
 -- 
-2.19.1
+Arkadiusz Miśkiewicz, arekm / ( maven.pl | pld-linux.org )
