@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:1838 "EHLO
         ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729969AbeKGQBV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Nov 2018 11:01:21 -0500
+        by vger.kernel.org with ESMTP id S1730268AbeKGQBW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Nov 2018 11:01:22 -0500
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/16] iomap: mode iomap_zero_range and friends
-Date: Wed,  7 Nov 2018 17:31:19 +1100
-Message-Id: <20181107063127.3902-9-david@fromorbit.com>
+Subject: [PATCH 12/16] iomap: zero-around in iomap_page_mkwrite
+Date: Wed,  7 Nov 2018 17:31:23 +1100
+Message-Id: <20181107063127.3902-13-david@fromorbit.com>
 In-Reply-To: <20181107063127.3902-1-david@fromorbit.com>
 References: <20181107063127.3902-1-david@fromorbit.com>
 MIME-Version: 1.0
@@ -19,190 +19,69 @@ Cc: linux-fsdevel@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We're going to need access to zeroing from within the iomap_write
-and iomap_page_mkwrite paths for block size > page size support,
-so move it higher up in the file.
+When we take a write fault over a page in a block size > page size
+filesystem, we may have to issue zero-around to initialise all the
+pages in the block that mmap is writing to. This is essentially the
+same as the zero-around in the buffered write path, with the added
+complexity that we have to drop the page lock on the page that
+was passed to iomap_page_mkwrite_actor().
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/iomap.c | 158 ++++++++++++++++++++++++++---------------------------
- 1 file changed, 79 insertions(+), 79 deletions(-)
+ fs/iomap.c | 41 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 40 insertions(+), 1 deletion(-)
 
 diff --git a/fs/iomap.c b/fs/iomap.c
-index dd6aa6b403a6..e417a5911239 100644
+index 41922fc775c4..7aacd48c593e 100644
 --- a/fs/iomap.c
 +++ b/fs/iomap.c
-@@ -769,6 +769,85 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
- 	return ret;
- }
- 
-+static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
-+		unsigned bytes, struct iomap *iomap)
-+{
-+	struct page *page;
-+	int status;
-+
-+	status = iomap_write_begin(inode, pos, bytes, AOP_FLAG_NOFS, &page,
-+				   iomap);
-+	if (status)
-+		return status;
-+
-+	zero_user(page, offset, bytes);
-+	mark_page_accessed(page);
-+
-+	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
-+}
-+
-+static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
-+		struct iomap *iomap)
-+{
-+	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev,
-+			iomap_sector(iomap, pos & PAGE_MASK), offset, bytes);
-+}
-+
-+static loff_t
-+iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
-+		void *data, struct iomap *iomap)
-+{
-+	bool *did_zero = data;
-+	loff_t written = 0;
-+	int status;
-+
-+	/* already zeroed?  we're done. */
-+	if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
-+		return count;
-+
-+	do {
-+		unsigned offset, bytes;
-+
-+		offset = offset_in_page(pos);
-+		bytes = min_t(loff_t, PAGE_SIZE - offset, count);
-+
-+		if (IS_DAX(inode))
-+			status = iomap_dax_zero(pos, offset, bytes, iomap);
-+		else
-+			status = iomap_zero(inode, pos, offset, bytes, iomap);
-+		if (status < 0)
-+			return status;
-+
-+		pos += bytes;
-+		count -= bytes;
-+		written += bytes;
-+		if (did_zero)
-+			*did_zero = true;
-+	} while (count > 0);
-+
-+	return written;
-+}
-+
-+int
-+iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
-+		const struct iomap_ops *ops)
-+{
+@@ -1183,7 +1183,46 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
+ 		void *data, struct iomap *iomap)
+ {
+ 	struct page *page = data;
+-	int ret;
 +	loff_t ret;
 +
-+	while (len > 0) {
-+		ret = iomap_apply(inode, pos, len, IOMAP_ZERO,
-+				ops, did_zero, iomap_zero_range_actor);
-+		if (ret <= 0)
++	/*
++	 * if we need to zero-around, we have to unlock the page we were given.
++	 * No big deal, we just have to repeat the "is this page ours" checks
++	 * after relocking it
++	 */
++	if (iomap_need_zero_around(iomap)) {
++		loff_t size;
++
++		/*
++		 * This only happens for block size > page size, so the file
++		 * offset of a page fault should always be page aligned.
++		 */
++		WARN_ON(offset_in_page(pos));
++
++		unlock_page(page);
++		ret = iomap_zero_around(inode, pos, length, iomap);
++		lock_page(page);
++		size = i_size_read(inode);
++		if ((page->mapping != inode->i_mapping) ||
++		    (page_offset(page) > size)) {
++			/* We overload EFAULT to mean page got truncated */
++			return -EFAULT;
++		}
++
++		if (page_offset(page) != pos) {
++			/* it moved in the file! */
++			return -EFAULT;
++		}
++
++		/* return failure now if zeroing had an error */
++		if (ret)
 +			return ret;
 +
-+		pos += ret;
-+		len -= ret;
++		/* trim down the length is we straddle EOF. */
++		if (((page->index + 1) << PAGE_SHIFT) > size)
++			length = offset_in_page(size);
++
 +	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iomap_zero_range);
-+
- static loff_t
- iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		struct iomap *iomap)
-@@ -951,85 +1030,6 @@ iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
- }
- EXPORT_SYMBOL_GPL(iomap_file_dirty);
  
--static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
--		unsigned bytes, struct iomap *iomap)
--{
--	struct page *page;
--	int status;
--
--	status = iomap_write_begin(inode, pos, bytes, AOP_FLAG_NOFS, &page,
--				   iomap);
--	if (status)
--		return status;
--
--	zero_user(page, offset, bytes);
--	mark_page_accessed(page);
--
--	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
--}
--
--static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
--		struct iomap *iomap)
--{
--	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev,
--			iomap_sector(iomap, pos & PAGE_MASK), offset, bytes);
--}
--
--static loff_t
--iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
--		void *data, struct iomap *iomap)
--{
--	bool *did_zero = data;
--	loff_t written = 0;
--	int status;
--
--	/* already zeroed?  we're done. */
--	if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
--	    	return count;
--
--	do {
--		unsigned offset, bytes;
--
--		offset = offset_in_page(pos);
--		bytes = min_t(loff_t, PAGE_SIZE - offset, count);
--
--		if (IS_DAX(inode))
--			status = iomap_dax_zero(pos, offset, bytes, iomap);
--		else
--			status = iomap_zero(inode, pos, offset, bytes, iomap);
--		if (status < 0)
--			return status;
--
--		pos += bytes;
--		count -= bytes;
--		written += bytes;
--		if (did_zero)
--			*did_zero = true;
--	} while (count > 0);
--
--	return written;
--}
--
--int
--iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
--		const struct iomap_ops *ops)
--{
--	loff_t ret;
--
--	while (len > 0) {
--		ret = iomap_apply(inode, pos, len, IOMAP_ZERO,
--				ops, did_zero, iomap_zero_range_actor);
--		if (ret <= 0)
--			return ret;
--
--		pos += ret;
--		len -= ret;
--	}
--
--	return 0;
--}
--EXPORT_SYMBOL_GPL(iomap_zero_range);
--
- /*
-  * Zero the truncated tail of the page provided.
-  *
+ 	if (iomap->flags & IOMAP_F_BUFFER_HEAD) {
+ 		ret = __block_write_begin_int(page, pos, length, NULL, iomap);
 -- 
 2.19.1
