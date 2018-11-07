@@ -1,123 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42204 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727031AbeKHI2z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Nov 2018 03:28:55 -0500
-Date: Wed, 7 Nov 2018 17:56:20 -0500
-From: Sasha Levin <sashal@kernel.org>
-Subject: Re: [PATCH] xfs: truncate transaction does not modify the inobt
-Message-ID: <20181107225620.GD2644@sasha-vm>
-References: <20181103171524.2740-1-amir73il@gmail.com>
- <CAOQ4uxjTo_8fpasmVtc2j6zRTnBpUvaNQ0edQwtbv79VgrNqXQ@mail.gmail.com>
- <CAOQ4uxgVFm7CyhseKtNMOcf8ipTJWD+YJSaG6am1xo0F1hcTDQ@mail.gmail.com>
- <20181107051821.GZ4135@magnolia>
- <CAOQ4uxjVqxn39zW9xKEpxcCOOT8L26dWW1uy5CC4FAGhadSd3Q@mail.gmail.com>
+Received: from mail-qk1-f195.google.com ([209.85.222.195]:45443 "EHLO
+        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727260AbeKHJPs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Nov 2018 04:15:48 -0500
+Received: by mail-qk1-f195.google.com with SMTP id d135so23576279qkc.12
+        for <linux-xfs@vger.kernel.org>; Wed, 07 Nov 2018 15:43:05 -0800 (PST)
+Date: Wed, 7 Nov 2018 18:43:03 -0500
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: Re: [PATCH 2/2] xfs: take a ref on failed bufs in xfs_inode_item_push
+Message-ID: <20181107234302.lfr7toyoxzuh2z2s@macbook-pro-91.dhcp.thefacebook.com>
+References: <20181107201055.25883-1-josef@toxicpanda.com>
+ <20181107201055.25883-3-josef@toxicpanda.com>
+ <20181107233740.GZ19305@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjVqxn39zW9xKEpxcCOOT8L26dWW1uy5CC4FAGhadSd3Q@mail.gmail.com>
+In-Reply-To: <20181107233740.GZ19305@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Eryu Guan <guaneryu@gmail.com>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Sasha Levin <alexander.levin@microsoft.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-xfs@vger.kernel.org
 
-On Wed, Nov 07, 2018 at 07:31:31AM +0200, Amir Goldstein wrote:
->On Wed, Nov 7, 2018 at 7:18 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->>
->> On Wed, Nov 07, 2018 at 07:09:42AM +0200, Amir Goldstein wrote:
->> > On Mon, Nov 5, 2018 at 7:57 PM Amir Goldstein <amir73il@gmail.com> wrote:
->> > >
->> > > On Sat, Nov 3, 2018 at 7:15 PM Amir Goldstein <amir73il@gmail.com> wrote:
->> > > >
->> > > > From: Brian Foster <bfoster@redhat.com>
->> > > >
->> > > > The truncate transaction does not ever modify the inode btree, but
->> > > > includes an associated log reservation. Update
->> > > > xfs_calc_itruncate_reservation() to remove the reservation
->> > > > associated with inobt updates.
->> > > >
->> > > > [Amir:  This commit was merged for kernel v4.16 and a twin commit was
->> > > >         merged for xfsprogs v4.16. As a result, a small xfs filesystem
->> > > >         formatted with features -m rmapbt=1,reflink=1 using mkfs.xfs
->> > > >         version >= v4.16 cannot be mounted with kernel < v4.16.
->> > > >
->> > > >         For example, xfstests generic/17{1,2,3} format a small fs and
->> > > >         when trying to mount it, they fail with an assert on this very
->> > > >         demonic line:
->> > > >
->> > > >  XFS (vdc): Log size 3075 blocks too small, minimum size is 3717 blocks
->> > > >  XFS (vdc): AAIEEE! Log failed size checks. Abort!
->> > > >  XFS: Assertion failed: 0, file: src/linux/fs/xfs/xfs_log.c, line: 666
->> > > >
->> > > >         The simple solution for stable kernels is to apply this patch,
->> > > >         because mkfs.xfs v4.16 is already in the wild, so we have to
->> > > >         assume that xfs filesystems with a "too small" log exist.
->> > > >         Regardless, xfsprogs maintainers should also consider reverting
->> > > >         the twin patch to stop creating those filesystems for the sake
->> > > >         of users with unpatched kernels.]
->> > > >
->> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
->> > > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
->> > > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
->> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->> > > > Cc: <stable@vger.kernel.org> # v4.9+
->> > > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->> > > > ---
->> > > >
->> > > > Darrick/Dave,
->> > > >
->> > > > It took me a while to figure out what was going on with my test systems
->> > > > when small test partitions (10G) stopped working with older kernels.
->> > > >
->> > > > Please bless this change for stable and consider the remedie for mkfs.xfs
->> > > > I verified that patch cleanly applies to stable kernels 4.14.y and 4.9.y
->> > > > and that I can mount a filsystem created with new mkfs.xfs.
->> > > >
->> > > > I am now running quick tests on stable 4.14.y with configs 4k, 1k,
->> > > > reflink,reflink+overlay to verify no regressions from this patch.
->> > > >
->> > >
->> > > FYI no regressions detected.
->> > >
->> > > Thoughts?
->> > >
->> >
->> > Maybe you'd want to chalk it up to reflink/rmapbt being Experimental
->> > before kernel 4.16? so the change in "minimum log size" is an on-disk format
->> > change prior to removing the Experimental label??
->>
->> TBH nobody should be using reflink/rmap on 4.14 kernels, ever. :D
+On Thu, Nov 08, 2018 at 10:37:40AM +1100, Dave Chinner wrote:
+> On Wed, Nov 07, 2018 at 03:10:55PM -0500, Josef Bacik wrote:
+> > If we failed to writeout a xfs_buf we'll grab a ref for it and put it on
+> > li->li_buf.  Then when submitting the failed bufs we'll clear LI_FAILED
+> > on the li, which clears the LI_FAILED flag, but also drops the ref on
+> > the buf.  Since it isn't on a IO list at this point this could very well
+> > be the last ref on the buf, which wreaks havoc when we go to add the buf
+> > to the delwrite list.  Fix this by holding a ref on the buf before we
+> > call xfs_buf_resubmit_failed_buffers in order to make sure the buf
+> > doesn't disappear before we're able to clear the error and add it to the
+> > delwri list.  This fixes the panics I was seeing with error injection.
+> > 
+> > Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+> > ---
+> >  fs/xfs/xfs_inode_item.c | 7 +++++--
+> >  1 file changed, 5 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> > index fa1c4fe2ffbf..df49adf1989c 100644
+> > --- a/fs/xfs/xfs_inode_item.c
+> > +++ b/fs/xfs/xfs_inode_item.c
+> > @@ -503,13 +503,16 @@ xfs_inode_item_push(
+> >  	 * previously. Resubmit the buffer for IO.
+> >  	 */
+> >  	if (test_bit(XFS_LI_FAILED, &lip->li_flags)) {
+> > -		if (!xfs_buf_trylock(bp))
+> > +		xfs_buf_hold(bp);
+> > +		if (!xfs_buf_trylock(bp)) {
+> > +			xfs_buf_rele(bp);
+> >  			return XFS_ITEM_LOCKED;
+> > +		}
+> >  
+> >  		if (!xfs_buf_resubmit_failed_buffers(bp, buffer_list))
+> >  			rval = XFS_ITEM_FLUSHING;
+> >  
+> > -		xfs_buf_unlock(bp);
+> > +		xfs_buf_relse(bp);
+> >  		return rval;
+> >  	}
+> 
+> This just doesn't smell right to me.
+> 
+> /me rummages around in the code
+> 
+> Ok, so I think the bug is in xfs_buf_resubmit_failed_buffers() in
+> that it removes all the "failed" reference counts from the buffer
+> before it adds the delwri reference count back to the buffer. Taking
+> a high level reference count like above just papers over the
+> transient reference counting error in
+> xfs_buf_resubmit_failed_buffers().
+> 
+> It also fails to fix the other xfs_buf_resubmit_failed_buffers()
+> caller, which has exactly the same problem (dquot writeback).
 >
->I agree, as these error messages try to express:
->[    4.982926] XFS (vdd): EXPERIMENTAL reverse mapping btree feature
->enabled. Use at your own risk!
->[    4.984843] XFS (vdd): EXPERIMENTAL reflink feature enabled. Use at
->your own risk!
->[    4.987259] XFS (vdd): Log size 3693 blocks too small, minimum size
->is 4473 blocks
->
->But it is still a regression, because as I understand some where using
->reflink back from
->stable 4.9, while it was still maintained...
->
->>
->> That said... does it change the minimum log size for (finobt, !reflink,
->> !rmap) filesystems?  That might be a bigger worry.  I /think/ the
->
->No problem on my systems mounting small fs with (finobt, !reflink,!rmap)
->formatted with mkfs.xfs 4.18.
->
->> transaction reservation change is fine, though I defer to Amir on
->> testing... :)
->>
->
->Testing passed as I wrote, for configs 4k,1k,reflink,reflink+overlay.
->
->Sasha, please consider the fix patch for 4.14.y,4.9.y.
 
-Queued for 4.9 and 4.14, thank you.
+Hrm I thought it was weird cscope showed only one caller, turns out my cscope.db
+was messed up from all the switching between branches.
+ 
+> Perhaps something like the patch below?
+> 
 
---
-Thanks,
-Sasha
+I thought about this, but I was worried that clearing the XFS_LI_FAILED may race
+with submitting the IO and having it fail again, so we end up clearing it when
+we need it set to resubmit again.  But you are the expert here, if that isn't
+possible then I'm happy with this patch.  Thanks,
+
+Josef
