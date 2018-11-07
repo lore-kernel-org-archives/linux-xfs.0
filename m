@@ -1,74 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49044 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726552AbeKGNSp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Nov 2018 08:18:45 -0500
-Date: Tue, 6 Nov 2018 19:50:03 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/8] xfs: check the ir_startino alignment directly
-Message-ID: <20181107035003.GY4135@magnolia>
-References: <154147728649.32496.4515247239602322709.stgit@magnolia>
- <154147730502.32496.4086322277755351139.stgit@magnolia>
- <20181106213447.GQ19305@dastard>
+Received: from mail-yb1-f194.google.com ([209.85.219.194]:36251 "EHLO
+        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727076AbeKGOik (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Nov 2018 09:38:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181106213447.GQ19305@dastard>
+References: <20181103171524.2740-1-amir73il@gmail.com> <CAOQ4uxjTo_8fpasmVtc2j6zRTnBpUvaNQ0edQwtbv79VgrNqXQ@mail.gmail.com>
+In-Reply-To: <CAOQ4uxjTo_8fpasmVtc2j6zRTnBpUvaNQ0edQwtbv79VgrNqXQ@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 7 Nov 2018 07:09:42 +0200
+Message-ID: <CAOQ4uxgVFm7CyhseKtNMOcf8ipTJWD+YJSaG6am1xo0F1hcTDQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs: truncate transaction does not modify the inobt
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: Eryu Guan <guaneryu@gmail.com>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Sasha Levin <alexander.levin@microsoft.com>
 
-On Wed, Nov 07, 2018 at 08:34:47AM +1100, Dave Chinner wrote:
-> On Mon, Nov 05, 2018 at 08:08:25PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > In xchk_iallocbt_rec, check the alignment of ir_startino by converting
-> > the inode cluster block alignment into units of inodes instead of the
-> > other way around (converting ir_startino to blocks).  This prevents us
-> > from tripping over off-by-one errors in ir_startino which are obscured
-> > by the inode -> block conversion.
-> > 
+On Mon, Nov 5, 2018 at 7:57 PM Amir Goldstein <amir73il@gmail.com> wrote:
+>
+> On Sat, Nov 3, 2018 at 7:15 PM Amir Goldstein <amir73il@gmail.com> wrote:
+> >
+> > From: Brian Foster <bfoster@redhat.com>
+> >
+> > The truncate transaction does not ever modify the inode btree, but
+> > includes an associated log reservation. Update
+> > xfs_calc_itruncate_reservation() to remove the reservation
+> > associated with inobt updates.
+> >
+> > [Amir:  This commit was merged for kernel v4.16 and a twin commit was
+> >         merged for xfsprogs v4.16. As a result, a small xfs filesystem
+> >         formatted with features -m rmapbt=1,reflink=1 using mkfs.xfs
+> >         version >= v4.16 cannot be mounted with kernel < v4.16.
+> >
+> >         For example, xfstests generic/17{1,2,3} format a small fs and
+> >         when trying to mount it, they fail with an assert on this very
+> >         demonic line:
+> >
+> >  XFS (vdc): Log size 3075 blocks too small, minimum size is 3717 blocks
+> >  XFS (vdc): AAIEEE! Log failed size checks. Abort!
+> >  XFS: Assertion failed: 0, file: src/linux/fs/xfs/xfs_log.c, line: 666
+> >
+> >         The simple solution for stable kernels is to apply this patch,
+> >         because mkfs.xfs v4.16 is already in the wild, so we have to
+> >         assume that xfs filesystems with a "too small" log exist.
+> >         Regardless, xfsprogs maintainers should also consider reverting
+> >         the twin patch to stop creating those filesystems for the sake
+> >         of users with unpatched kernels.]
+> >
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Cc: <stable@vger.kernel.org> # v4.9+
+> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 > > ---
-> >  fs/xfs/scrub/ialloc.c |   32 ++++++++++++++++++++++++++------
-> >  1 file changed, 26 insertions(+), 6 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> > index 3c12a0fe3b38..f498dfca3312 100644
-> > --- a/fs/xfs/scrub/ialloc.c
-> > +++ b/fs/xfs/scrub/ialloc.c
-> > @@ -278,6 +278,29 @@ xchk_iallocbt_check_freemask(
-> >  	return error;
-> >  }
-> >  
-> > +/* Make sure this record is aligned to cluster and inoalignmnt size. */
-> > +STATIC void
-> > +xchk_iallocbt_rec_alignment(
-> > +	struct xchk_btree		*bs,
-> > +	struct xfs_inobt_rec_incore	*irec)
-> > +{
-> > +	struct xfs_mount		*mp = bs->cur->bc_mp;
-> > +	struct xchk_iallocbt		*iabt = bs->private;
-> > +	xfs_agino_t			imask;
-> > +
-> > +	imask = XFS_OFFBNO_TO_AGINO(mp, iabt->cluster_align, 0) - 1;
-> 
-> Again, this seems obtuse.
-> 
-> 	imask = (iabt->cluster_align << mp->m_sb.sb_inopblog) - 1;
+> >
+> > Darrick/Dave,
+> >
+> > It took me a while to figure out what was going on with my test systems
+> > when small test partitions (10G) stopped working with older kernels.
+> >
+> > Please bless this change for stable and consider the remedie for mkfs.xfs
+> > I verified that patch cleanly applies to stable kernels 4.14.y and 4.9.y
+> > and that I can mount a filsystem created with new mkfs.xfs.
+> >
+> > I am now running quick tests on stable 4.14.y with configs 4k, 1k,
+> > reflink,reflink+overlay to verify no regressions from this patch.
+> >
+>
+> FYI no regressions detected.
+>
+> Thoughts?
+>
 
-Or I'll just add another field to xchk_iallocbt for "inode cluster
-alignment in inodes" and use that here and elsewhere.
+Maybe you'd want to chalk it up to reflink/rmapbt being Experimental
+before kernel 4.16? so the change in "minimum log size" is an on-disk format
+change prior to removing the Experimental label??
 
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Thanks,
+Amir.
