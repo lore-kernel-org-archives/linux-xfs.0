@@ -1,136 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:14149 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726145AbeKHSjH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Nov 2018 13:39:07 -0500
-Date: Thu, 8 Nov 2018 20:04:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 00/16] xfs: Block size > PAGE_SIZE support
-Message-ID: <20181108090432.GC19305@dastard>
-References: <20181107063127.3902-1-david@fromorbit.com>
- <20181107171405.GB4135@magnolia>
- <20181107220441.GX19305@dastard>
- <20181108013843.GB4127@magnolia>
+Received: from mail-qk1-f194.google.com ([209.85.222.194]:38531 "EHLO
+        mail-qk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725739AbeKIFM7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Nov 2018 00:12:59 -0500
+Received: by mail-qk1-f194.google.com with SMTP id d19so28610037qkg.5
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Nov 2018 11:36:04 -0800 (PST)
+Date: Thu, 8 Nov 2018 14:36:02 -0500
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: Re: [PATCH 2/2] xfs: take a ref on failed bufs in xfs_inode_item_push
+Message-ID: <20181108193600.sojpzfomf3fvzwzr@macbook-pro-91.dhcp.thefacebook.com>
+References: <20181107201055.25883-1-josef@toxicpanda.com>
+ <20181107201055.25883-3-josef@toxicpanda.com>
+ <20181107233740.GZ19305@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181108013843.GB4127@magnolia>
+In-Reply-To: <20181107233740.GZ19305@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-xfs@vger.kernel.org
 
-On Wed, Nov 07, 2018 at 05:38:43PM -0800, Darrick J. Wong wrote:
-> On Thu, Nov 08, 2018 at 09:04:41AM +1100, Dave Chinner wrote:
-> > On Wed, Nov 07, 2018 at 09:14:05AM -0800, Darrick J. Wong wrote:
-> > > On Wed, Nov 07, 2018 at 05:31:11PM +1100, Dave Chinner wrote:
-> > > > Hi folks,
-> > > > 
-> > > > We've had a fair number of problems reported on 64k block size
-> > > > filesystems of late, but none of the XFS developers have Power or
-> > > > ARM machines handy to reproduce them or even really test the fixes.
-> > > > 
-> > > > The iomap infrastructure we introduced a while back was designed
-> > > > with the capabity of block size > page size support in mind, but we
-> > > > hadn't tried to implement it.
-> > > > 
-> > > > So after another 64k block size bug report late last week I said to
-> > > > Darrick "How hard could it be"?
-> > > 
-> > > "Nothing is ever simple" :)
+On Thu, Nov 08, 2018 at 10:37:40AM +1100, Dave Chinner wrote:
+> On Wed, Nov 07, 2018 at 03:10:55PM -0500, Josef Bacik wrote:
+> > If we failed to writeout a xfs_buf we'll grab a ref for it and put it on
+> > li->li_buf.  Then when submitting the failed bufs we'll clear LI_FAILED
+> > on the li, which clears the LI_FAILED flag, but also drops the ref on
+> > the buf.  Since it isn't on a IO list at this point this could very well
+> > be the last ref on the buf, which wreaks havoc when we go to add the buf
+> > to the delwrite list.  Fix this by holding a ref on the buf before we
+> > call xfs_buf_resubmit_failed_buffers in order to make sure the buf
+> > doesn't disappear before we're able to clear the error and add it to the
+> > delwri list.  This fixes the panics I was seeing with error injection.
 > > 
-> > "It'll only take a couple of minutes!"
+> > Signed-off-by: Josef Bacik <josef@toxicpanda.com>
+> > ---
+> >  fs/xfs/xfs_inode_item.c | 7 +++++--
+> >  1 file changed, 5 insertions(+), 2 deletions(-)
 > > 
-> > > > About 6 billion (yes, B) fsx ops later, I have most of the XFS
-> > > > functionality working on 64k block sizes on x86_64.  Buffered
-> > > > read/write, mmap read/write and direct IO read/write all work. All
-> > > > the fallocate() operations work correctly, as does truncate. xfsdump
-> > > > and xfs_restore are happy with it, as is xfs_repair. xfs-scrub
-> > > > needed some help, but I've tested Darrick's fixes for that quite a
-> > > > bit over the past few days.
-> > > > 
-> > > > It passes most of xfstests - there's some test failures that I have
-> > > > to determine whether they are code bugs or test problems (i.e. some
-> > > > tests don't deal with 64k block sizes correctly or assume block size
-> > > > <= page size).
-> > > > 
-> > > > What I haven't tested yet is shared extents - the COW path,
-> > > > clone_file_range and dedupe_file_range. I discovered earlier today
-> > > > that fsx doesn't support copy/clone/dedupe_file_operations
-> > > > operations, so before I go any further I need to enxpahnce fsx. Then
-> > > 
-> > > I assume that means you only tested this on reflink=0 filesystems?
-> > 
-> > Correct.
-> > 
-> > > Looking at fsstress, it looks like we don't test copy_file_range either.
-> > > I can try adding the missing clone/dedupe/copy to both programs, but
-> > > maybe you've already done that while I was asleep?
-> > 
-> > No, I haven't started on this yet. I've been sleeping. :P
+> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> > index fa1c4fe2ffbf..df49adf1989c 100644
+> > --- a/fs/xfs/xfs_inode_item.c
+> > +++ b/fs/xfs/xfs_inode_item.c
+> > @@ -503,13 +503,16 @@ xfs_inode_item_push(
+> >  	 * previously. Resubmit the buffer for IO.
+> >  	 */
+> >  	if (test_bit(XFS_LI_FAILED, &lip->li_flags)) {
+> > -		if (!xfs_buf_trylock(bp))
+> > +		xfs_buf_hold(bp);
+> > +		if (!xfs_buf_trylock(bp)) {
+> > +			xfs_buf_rele(bp);
+> >  			return XFS_ITEM_LOCKED;
+> > +		}
+> >  
+> >  		if (!xfs_buf_resubmit_failed_buffers(bp, buffer_list))
+> >  			rval = XFS_ITEM_FLUSHING;
+> >  
+> > -		xfs_buf_unlock(bp);
+> > +		xfs_buf_relse(bp);
+> >  		return rval;
+> >  	}
 > 
-> I started wondering if we were missing anything from not having fsx
-> support clone/dedupe and ended up with:
+> This just doesn't smell right to me.
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fsstress-clone
+> /me rummages around in the code
+> 
+> Ok, so I think the bug is in xfs_buf_resubmit_failed_buffers() in
+> that it removes all the "failed" reference counts from the buffer
+> before it adds the delwri reference count back to the buffer. Taking
+> a high level reference count like above just papers over the
+> transient reference counting error in
+> xfs_buf_resubmit_failed_buffers().
+> 
+> It also fails to fix the other xfs_buf_resubmit_failed_buffers()
+> caller, which has exactly the same problem (dquot writeback).
+> 
+> Perhaps something like the patch below?
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> 
+> xfs: fix transient reference count error in xfs_buf_resubmit_failed_buffers
+> 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When retrying a failed inode or dquot buffer,
+> xfs_buf_resubmit_failed_buffers() clears all the failed flags from
+> the inode/dquot log items. In doing so, it also drops all the
+> reference counts on the buffer that the failed log items hold. This
+> means it can drop all the active references on the buffer and hence
+> free the buffer before it queues it for write again.
+> 
+> Putting the buffer on the delwri queue takes a reference to the
+> buffer (so that it hangs around until it has been written and
+> completed), but this goes bang if the buffer has already been freed.
+> 
+> Hence we need to add the buffer to the delwri queue before we remove
+> the failed flags from the log items attached to the buffer to ensure
+> it always remains referenced during the resubmit process.
+> 
+> Reported-by: Josef Bacik <josef@toxicpanda.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Some fixes to that below.
+You can add Tested-by as well, this survives everything (ufortunately still no
+hang, so it's back to the drawing board for that.)  Thanks,
 
-I haven't got to testing dedupe or clone - copy_file_range explodes
-in under 40 operations in on generic/263. do_splice_direct() looks
-to be broken in several different waysat this point.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-fsx: clean up copy/dedupe file range support.
-
-From: Dave Chinner <dchinner@redhat.com>
-
-copy_file_range() needs to obey read/write constraints otherwise is
-blows up when direct IO is used.
-
-FIDEDUPERANGE has a completely screwed up API for error reporting.
-The ioctl succeeds even if dedupe fails, so you have to check
-every individual dedupe operations for failure. Without this, dedupe
-"succeeds" on kernels filesystems that don't even support dedupe...
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- ltp/fsx.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index fad50e0022af..b51910b8b2e1 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -1382,7 +1382,11 @@ do_dedupe_range(unsigned offset, unsigned length, unsigned dest)
- 	fdr->info[0].dest_fd = fd;
- 	fdr->info[0].dest_offset = dest;
- 
--	if (ioctl(fd, FIDEDUPERANGE, fdr) == -1) {
-+	if (ioctl(fd, FIDEDUPERANGE, fdr) == -1 ||
-+	    fdr->info[0].status < 0) {
-+		if (fdr->info[0].status < 0)
-+			errno = -fdr->info[0].status;
-+
- 		if (errno == EOPNOTSUPP || errno == ENOTTY) {
- 			if (!quiet && testcalls > simulatedopcount)
- 				prt("skipping unsupported dedupe range\n");
-@@ -1416,6 +1420,11 @@ do_copy_range(unsigned offset, unsigned length, unsigned dest)
- 	loff_t o1, o2;
- 	ssize_t nr;
- 
-+	offset -= offset % readbdy;
-+	dest -= dest % writebdy;
-+	if (o_direct)
-+		length -= length % readbdy;
-+
- 	if (length == 0) {
- 		if (!quiet && testcalls > simulatedopcount)
- 			prt("skipping zero length copy range\n");
+Josef
