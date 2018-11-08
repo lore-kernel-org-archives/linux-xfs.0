@@ -1,59 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43740 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728027AbeKIIRr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Nov 2018 03:17:47 -0500
-Date: Thu, 8 Nov 2018 14:40:00 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [GIT PULL] xfs: fixes for v4.20-rc2
-Message-ID: <20181108224000.GB15721@magnolia>
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:41025 "EHLO
+        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727223AbeKIJeM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Nov 2018 04:34:12 -0500
+Received: by mail-lj1-f196.google.com with SMTP id z80-v6so50742ljb.8
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Nov 2018 15:56:13 -0800 (PST)
+Received: from mail-lj1-f174.google.com (mail-lj1-f174.google.com. [209.85.208.174])
+        by smtp.gmail.com with ESMTPSA id v17-v6sm954167ljg.32.2018.11.08.15.56.11
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 08 Nov 2018 15:56:11 -0800 (PST)
+Received: by mail-lj1-f174.google.com with SMTP id t9-v6so56994ljh.6
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Nov 2018 15:56:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20181108224000.GB15721@magnolia>
+In-Reply-To: <20181108224000.GB15721@magnolia>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 8 Nov 2018 17:55:54 -0600
+Message-ID: <CAHk-=wgd6HgnbLZ8ngvBj-WS9X5Mi01jhRqbG-zvg4UsA6nHNg@mail.gmail.com>
+Subject: Re: [GIT PULL] xfs: fixes for v4.20-rc2
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: darrick.wong@oracle.com
+Cc: david@fromorbit.com, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
 
-Hi Linus,
+On Thu, Nov 8, 2018 at 4:40 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> - fix incorrect dropping of error code from bmap
+>
+> - print buffer offsets instead of useless hashed pointers when dumping
+>   corrupt metadata
+>
+> - fix integer overflow in attribute verifier
 
-Here's the start of the stabilization fixes for 4.20.  Let me know if
-there are any problems merging; I just did it against current master and
-saw no issues.
+Pulled,
 
---D
-
-The following changes since commit 651022382c7f8da46cb4872a545ee1da6d097d2a:
-
-  Linux 4.20-rc1 (2018-11-04 15:37:52 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.20-fixes-1
-
-for you to fetch changes up to 837514f7a4ca4aca06aec5caa5ff56d33ef06976:
-
-  xfs: fix overflow in xfs_attr3_leaf_verify (2018-11-06 07:50:50 -0800)
-
-----------------------------------------------------------------
-Changes since last update:
-- fix incorrect dropping of error code from bmap
-- print buffer offsets instead of useless hashed pointers when dumping
-  corrupt metadata
-- fix integer overflow in attribute verifier
-
-----------------------------------------------------------------
-Christophe JAILLET (1):
-      xfs: Fix error code in 'xfs_ioc_getbmap()'
-
-Darrick J. Wong (1):
-      xfs: print buffer offsets when dumping corrupt buffers
-
-Dave Chinner (1):
-      xfs: fix overflow in xfs_attr3_leaf_verify
-
- fs/xfs/libxfs/xfs_attr_leaf.c | 11 +++++++++--
- fs/xfs/xfs_ioctl.c            |  2 +-
- fs/xfs/xfs_message.c          |  2 +-
- 3 files changed, 11 insertions(+), 4 deletions(-)
+              Linus
