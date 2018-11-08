@@ -1,83 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56674 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727724AbeKHLLs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Nov 2018 06:11:48 -0500
-Date: Wed, 7 Nov 2018 17:38:43 -0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:45182 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725922AbeKIIll (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Nov 2018 03:41:41 -0500
+Date: Thu, 8 Nov 2018 15:03:49 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH 00/16] xfs: Block size > PAGE_SIZE support
-Message-ID: <20181108013843.GB4127@magnolia>
-References: <20181107063127.3902-1-david@fromorbit.com>
- <20181107171405.GB4135@magnolia>
- <20181107220441.GX19305@dastard>
+Subject: Re: [PATCH 1/2] vfs: vfs_dedupe_file_range() doesn't return
+ EOPNOTSUPP
+Message-ID: <20181108230349.GC15721@magnolia>
+References: <20181108221909.27602-1-david@fromorbit.com>
+ <20181108221909.27602-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181107220441.GX19305@dastard>
+In-Reply-To: <20181108221909.27602-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Thu, Nov 08, 2018 at 09:04:41AM +1100, Dave Chinner wrote:
-> On Wed, Nov 07, 2018 at 09:14:05AM -0800, Darrick J. Wong wrote:
-> > On Wed, Nov 07, 2018 at 05:31:11PM +1100, Dave Chinner wrote:
-> > > Hi folks,
-> > > 
-> > > We've had a fair number of problems reported on 64k block size
-> > > filesystems of late, but none of the XFS developers have Power or
-> > > ARM machines handy to reproduce them or even really test the fixes.
-> > > 
-> > > The iomap infrastructure we introduced a while back was designed
-> > > with the capabity of block size > page size support in mind, but we
-> > > hadn't tried to implement it.
-> > > 
-> > > So after another 64k block size bug report late last week I said to
-> > > Darrick "How hard could it be"?
-> > 
-> > "Nothing is ever simple" :)
+On Fri, Nov 09, 2018 at 09:19:08AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> "It'll only take a couple of minutes!"
+> It returns EINVAL when the operation is not supported by the
+> filesystem. Fix it to return EOPNOTSUPP to be consistent with
+> the man page and clone_file_range().
 > 
-> > > About 6 billion (yes, B) fsx ops later, I have most of the XFS
-> > > functionality working on 64k block sizes on x86_64.  Buffered
-> > > read/write, mmap read/write and direct IO read/write all work. All
-> > > the fallocate() operations work correctly, as does truncate. xfsdump
-> > > and xfs_restore are happy with it, as is xfs_repair. xfs-scrub
-> > > needed some help, but I've tested Darrick's fixes for that quite a
-> > > bit over the past few days.
-> > > 
-> > > It passes most of xfstests - there's some test failures that I have
-> > > to determine whether they are code bugs or test problems (i.e. some
-> > > tests don't deal with 64k block sizes correctly or assume block size
-> > > <= page size).
-> > > 
-> > > What I haven't tested yet is shared extents - the COW path,
-> > > clone_file_range and dedupe_file_range. I discovered earlier today
-> > > that fsx doesn't support copy/clone/dedupe_file_operations
-> > > operations, so before I go any further I need to enxpahnce fsx. Then
-> > 
-> > I assume that means you only tested this on reflink=0 filesystems?
+> Clean up the inconsistent error return handling while I'm there.
+> (I know, lipstick on a pig, but every little bit helps...)
 > 
-> Correct.
-> 
-> > Looking at fsstress, it looks like we don't test copy_file_range either.
-> > I can try adding the missing clone/dedupe/copy to both programs, but
-> > maybe you've already done that while I was asleep?
-> 
-> No, I haven't started on this yet. I've been sleeping. :P
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-I started wondering if we were missing anything from not having fsx
-support clone/dedupe and ended up with:
+Looks ok, would rather just shred this ioctl and make a better one. :P
 
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fsstress-clone
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> Cheers,
+> ---
+>  fs/read_write.c | 15 +++++++--------
+>  1 file changed, 7 insertions(+), 8 deletions(-)
 > 
-> Dave.
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index bfcb4ced5664..aa43224bcec6 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -2094,17 +2094,18 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
+>  	off = same->src_offset;
+>  	len = same->src_length;
+>  
+> -	ret = -EISDIR;
+> +	if (!file->f_op->remap_file_range)
+> +		return -EOPNOTSUPP;
+> +
+>  	if (S_ISDIR(src->i_mode))
+> -		goto out;
+> +		return -EISDIR;
+>  
+> -	ret = -EINVAL;
+>  	if (!S_ISREG(src->i_mode))
+> -		goto out;
+> +		return -EINVAL;
+>  
+>  	ret = remap_verify_area(file, off, len, false);
+>  	if (ret < 0)
+> -		goto out;
+> +		return ret;
+>  	ret = 0;
+>  
+>  	if (off + len > i_size_read(src))
+> @@ -2147,10 +2148,8 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
+>  		fdput(dst_fd);
+>  next_loop:
+>  		if (fatal_signal_pending(current))
+> -			goto out;
+> +			break;
+>  	}
+> -
+> -out:
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL(vfs_dedupe_file_range);
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.19.1
+> 
