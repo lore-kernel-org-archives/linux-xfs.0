@@ -1,87 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45596 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388314AbeKGGpP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Nov 2018 01:45:15 -0500
-Date: Wed, 7 Nov 2018 08:18:02 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: defer online discard submission to a workqueue
-Message-ID: <20181106211802.GN19305@dastard>
-References: <20181105181021.8174-1-bfoster@redhat.com>
- <20181105215139.GA3160@infradead.org>
- <20181106142310.GA2773@bfoster>
+Received: from userp2120.oracle.com ([156.151.31.85]:55132 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726599AbeKII6c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Nov 2018 03:58:32 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wA8NJalw066249
+        for <linux-xfs@vger.kernel.org>; Thu, 8 Nov 2018 23:20:40 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2nh4ar47w9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Nov 2018 23:20:40 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wA8NKdur030015
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 8 Nov 2018 23:20:40 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id wA8NKdpW007734
+        for <linux-xfs@vger.kernel.org>; Thu, 8 Nov 2018 23:20:39 GMT
+Subject: [PATCH 5/5] xfs: precalculate cluster alignment in inodes and blocks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 08 Nov 2018 15:20:39 -0800
+Message-ID: <154171923920.30818.16202775253577895387.stgit@magnolia>
+In-Reply-To: <154171920164.30818.2178553842722589349.stgit@magnolia>
+References: <154171920164.30818.2178553842722589349.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181106142310.GA2773@bfoster>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 06, 2018 at 09:23:11AM -0500, Brian Foster wrote:
-> On Mon, Nov 05, 2018 at 01:51:39PM -0800, Christoph Hellwig wrote:
-> > On Mon, Nov 05, 2018 at 01:10:21PM -0500, Brian Foster wrote:
-> > > When online discard is enabled, discards of busy extents are
-> > > submitted asynchronously as a bio chain. bio completion and
-> > > resulting busy extent cleanup is deferred to a workqueue. Async
-> > > discard submission is intended to avoid blocking log forces on a
-> > > full discard sequence which can take a noticeable amount of time in
-> > > some cases.
-> > > 
-> > > We've had reports of this still producing log force stalls with XFS
-> > > on VDO,
-> > 
-> > Please fix this in VDO instead.  We should not work around out of
-> > tree code making stupid decisions.
-> 
-> I assume the "stupid decision" refers to sync discard execution. I'm not
-> familiar with the internals of VDO, this is just what I was told.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-IMO, what VDO does is irrelevant - any call to submit_bio() can
-block if the request queue is full. Hence if we've drowned the queue
-in discards and the device is slow at discards, then we are going to
-block submitting discards.
+Store the inode cluster alignment information in units of inodes and
+blocks in the mount data so that we don't have to keep recalculating
+them.
 
-> My
-> understanding is that these discards can stack up and take enough time
-> that a limit on outstanding discards is required, which now that I think
-> of it makes me somewhat skeptical of the whole serial execution thing.
-> Hitting that outstanding discard request limit is what bubbles up the
-> stack and affects XFS by holding up log forces, since new discard
-> submissions are presumably blocked on completion of the oldest
-> outstanding request.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_ialloc.c |    8 ++++----
+ fs/xfs/libxfs/xfs_types.c  |    5 ++---
+ fs/xfs/scrub/ialloc.c      |    2 +-
+ fs/xfs/xfs_mount.c         |    2 ++
+ fs/xfs/xfs_mount.h         |    2 ++
+ 5 files changed, 11 insertions(+), 8 deletions(-)
 
-Exactly.
 
-> I'm not quite sure what happens in the block layer if that limit were
-> lifted. Perhaps it assumes throttling responsibility directly via
-> queues/plugs? I'd guess that at minimum we'd end up blocking indirectly
-> somewhere (via memory allocation pressure?) anyways, so ISTM that some
-> kind of throttling is inevitable in this situation. What am I missing?
-
-We still need to throttle discards - they have to play nice with all
-the other IO we need to dispatch concurrently.
-
-I have two issues with the proposed patch:
-
-1. it puts both discard dispatch and completion processing on the
-one work qeueue, so if the queue is filled with dispatch requests,
-IO completion queuing gets blocked. That's not the best thing to be
-doing.
-
-2. log forces no longer wait for discards to be dispatched - they
-just queue them. This means the mechanism xfs_extent_busy_flush()
-uses to dispatch pending discards (synchrnous log force) can return
-before discards have even been dispatched to disk. Hence we can
-expect to see longer wait and tail latencies when busy extents are
-encountered by the allocator. Whether this is a problem or not needs
-further investigation.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index dfcd739edcec..e69ce96e83e1 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -690,7 +690,7 @@ xfs_ialloc_ag_alloc(
+ 		 * but not to use them in the actual exact allocation.
+ 		 */
+ 		args.alignment = 1;
+-		args.minalignslop = xfs_ialloc_cluster_alignment(args.mp) - 1;
++		args.minalignslop = args.mp->m_cluster_align - 1;
+ 
+ 		/* Allow space for the inode btree to split. */
+ 		args.minleft = args.mp->m_in_maxlevels - 1;
+@@ -725,7 +725,7 @@ xfs_ialloc_ag_alloc(
+ 			args.alignment = args.mp->m_dalign;
+ 			isaligned = 1;
+ 		} else
+-			args.alignment = xfs_ialloc_cluster_alignment(args.mp);
++			args.alignment = args.mp->m_cluster_align;
+ 		/*
+ 		 * Need to figure out where to allocate the inode blocks.
+ 		 * Ideally they should be spaced out through the a.g.
+@@ -754,7 +754,7 @@ xfs_ialloc_ag_alloc(
+ 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+ 		args.agbno = be32_to_cpu(agi->agi_root);
+ 		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
+-		args.alignment = xfs_ialloc_cluster_alignment(args.mp);
++		args.alignment = args.mp->m_cluster_align;
+ 		if ((error = xfs_alloc_vextent(&args)))
+ 			return error;
+ 	}
+@@ -1017,7 +1017,7 @@ xfs_ialloc_ag_select(
+ 		 */
+ 		ineed = mp->m_ialloc_min_blks;
+ 		if (flags && ineed > 1)
+-			ineed += xfs_ialloc_cluster_alignment(mp);
++			ineed += mp->m_cluster_align;
+ 		longest = pag->pagf_longest;
+ 		if (!longest)
+ 			longest = pag->pagf_flcount > 0;
+diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+index 895c232d63b7..3306fc42cfad 100644
+--- a/fs/xfs/libxfs/xfs_types.c
++++ b/fs/xfs/libxfs/xfs_types.c
+@@ -87,15 +87,14 @@ xfs_agino_range(
+ 	 * Calculate the first inode, which will be in the first
+ 	 * cluster-aligned block after the AGFL.
+ 	 */
+-	bno = round_up(XFS_AGFL_BLOCK(mp) + 1,
+-			xfs_ialloc_cluster_alignment(mp));
++	bno = round_up(XFS_AGFL_BLOCK(mp) + 1, mp->m_cluster_align);
+ 	*first = XFS_AGB_TO_AGINO(mp, bno);
+ 
+ 	/*
+ 	 * Calculate the last inode, which will be at the end of the
+ 	 * last (aligned) cluster that can be allocated in the AG.
+ 	 */
+-	bno = round_down(eoag, xfs_ialloc_cluster_alignment(mp));
++	bno = round_down(eoag, mp->m_cluster_align);
+ 	*last = XFS_AGB_TO_AGINO(mp, bno) - 1;
+ }
+ 
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 332ac7b61789..26b07e0abc0c 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -300,7 +300,7 @@ xchk_iallocbt_rec(
+ 
+ 	/* Make sure this record is aligned to cluster and inoalignmnt size. */
+ 	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
+-	if ((agbno & (xfs_ialloc_cluster_alignment(mp) - 1)) ||
++	if ((agbno & (mp->m_cluster_align - 1)) ||
+ 	    (agbno & (mp->m_blocks_per_cluster - 1)))
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+ 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 56d374675fd5..b4d8c318be3c 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -800,6 +800,8 @@ xfs_mountfs(
+ 	}
+ 	mp->m_blocks_per_cluster = xfs_icluster_size_fsb(mp);
+ 	mp->m_inodes_per_cluster = XFS_FSB_TO_INO(mp, mp->m_blocks_per_cluster);
++	mp->m_cluster_align = xfs_ialloc_cluster_alignment(mp);
++	mp->m_cluster_align_inodes = XFS_FSB_TO_INO(mp, mp->m_cluster_align);
+ 
+ 	/*
+ 	 * If enabled, sparse inode chunk alignment is expected to match the
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 58a037bfac22..0ad025e7f3cf 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -103,6 +103,8 @@ typedef struct xfs_mount {
+ 	uint			m_inode_cluster_size;/* min inode buf size */
+ 	unsigned int		m_inodes_per_cluster;
+ 	unsigned int		m_blocks_per_cluster;
++	unsigned int		m_cluster_align;
++	unsigned int		m_cluster_align_inodes;
+ 	uint			m_blockmask;	/* sb_blocksize-1 */
+ 	uint			m_blockwsize;	/* sb_blocksize in words */
+ 	uint			m_blockwmask;	/* blockwsize-1 */
