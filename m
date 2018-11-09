@@ -1,315 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:35854 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728983AbeKJVgD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 16:36:03 -0500
-Received: from 089144211136.atnat0020.highway.a1.net ([89.144.211.136] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gLRnJ-0000WA-HU
-        for linux-xfs@vger.kernel.org; Sat, 10 Nov 2018 11:51:18 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/3] xfs: merge COW handling into xfs_file_iomap_begin_delay
-Date: Sat, 10 Nov 2018 12:51:03 +0100
-Message-Id: <20181110115104.30293-3-hch@lst.de>
-In-Reply-To: <20181110115104.30293-1-hch@lst.de>
-References: <20181110115104.30293-1-hch@lst.de>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: from mail.linuxfoundation.org ([140.211.169.12]:43136 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726688AbeKJJZp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 04:25:45 -0500
+Date: Fri, 9 Nov 2018 15:42:51 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] mm: don't break integrity writeback on ->writepage()
+ error
+Message-Id: <20181109154251.d35772bb1cdc314a70aa90a1@linux-foundation.org>
+In-Reply-To: <20181105163613.7542-1-bfoster@redhat.com>
+References: <20181105163613.7542-1-bfoster@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, Dave Chinner <david@fromorbit.com>
 
-Besides simplifying the code a bit this allows to actually implement
-the behavior of using COW preallocation for non-COW data mentioned
-in the current comments.
+On Mon,  5 Nov 2018 11:36:13 -0500 Brian Foster <bfoster@redhat.com> wrote:
 
-Note that this breaks the current version of xfs/420, but that is
-because the test is broken.  A separate fix will be sent for it.
+> write_cache_pages() currently breaks out of the writepage loop in
+> the event of a ->writepage() error. This causes problems for
+> integrity writeback on XFS
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_iomap.c   | 135 +++++++++++++++++++++++++++++--------------
- fs/xfs/xfs_reflink.c |  66 ---------------------
- 2 files changed, 92 insertions(+), 109 deletions(-)
+For the uninitiated, please define the term "integrity writeback". 
+Quite carefully ;) I'm not sure what it actually means.  grepping
+fs/xfs for "integrity" doesn't reveal anything.
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index f982b183e05b..3e7f0ca78669 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -522,15 +522,16 @@ xfs_file_iomap_begin_delay(
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
- 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	xfs_fileoff_t		maxbytes_fsb =
- 		XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
- 	xfs_fileoff_t		end_fsb;
--	int			error = 0, eof = 0;
--	struct xfs_bmbt_irec	got;
--	struct xfs_iext_cursor	icur;
-+	struct xfs_bmbt_irec	imap, cmap;
-+	struct xfs_iext_cursor	icur, ccur;
- 	xfs_fsblock_t		prealloc_blocks = 0;
-+	bool			eof = false, cow_eof = false, shared;
-+	int			whichfork = XFS_DATA_FORK;
-+	int			error = 0;
- 
- 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
- 	ASSERT(!xfs_get_extsz_hint(ip));
-@@ -548,7 +549,7 @@ xfs_file_iomap_begin_delay(
- 
- 	XFS_STATS_INC(mp, xs_blk_mapw);
- 
--	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+	if (!(ip->i_df.if_flags & XFS_IFEXTENTS)) {
- 		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
- 		if (error)
- 			goto out_unlock;
-@@ -556,51 +557,97 @@ xfs_file_iomap_begin_delay(
- 
- 	end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
- 
--	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got);
-+	/*
-+	 * Search the data fork fork first to look up our source mapping.  We
-+	 * always need the data fork map, as we have to return it to the
-+	 * iomap code so that the higher level write code can read data in to
-+	 * perform read-modify-write cycles for unaligned writes.
-+	 */
-+	eof = !xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap);
- 	if (eof)
--		got.br_startoff = end_fsb; /* fake hole until the end */
-+		imap.br_startoff = end_fsb; /* fake hole until the end */
- 
--	if (got.br_startoff <= offset_fsb) {
-+	/* We never need to allocate blocks for zeroing a hole. */
-+	if ((flags & IOMAP_ZERO) && imap.br_startoff > offset_fsb) {
-+		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
-+		goto out_unlock;
-+	}
-+
-+	/*
-+	 * Search the COW fork extent list even if we did not find a data fork
-+	 * extent.  This serves two purposes: first this implements the
-+	 * speculative preallocation using cowextisze, so that we also unshare
-+	 * block adjacent to shared blocks instead of just the shared blocks
-+	 * themselves.  Second the lookup in the extent list is generally faster
-+	 * than going out to the shared extent tree.
-+	 */
-+	if (xfs_is_reflink_inode(ip)) {
-+		cow_eof = !xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb,
-+				&ccur, &cmap);
-+		if (!cow_eof && cmap.br_startoff <= offset_fsb) {
-+			if (imap.br_startoff <= offset_fsb) {
-+				xfs_trim_extent(&imap, cmap.br_startoff,
-+						cmap.br_blockcount);
-+			} else {
-+				xfs_trim_extent(&cmap, offset_fsb,
-+						imap.br_startoff - offset_fsb);
-+				imap = cmap;
-+			}
-+			trace_xfs_reflink_cow_found(ip, &imap);
-+			goto done;
-+		}
-+	}
-+
-+	if (imap.br_startoff <= offset_fsb) {
- 		/*
- 		 * For reflink files we may need a delalloc reservation when
- 		 * overwriting shared extents.   This includes zeroing of
- 		 * existing extents that contain data.
- 		 */
--		if (xfs_is_reflink_inode(ip) &&
--		    ((flags & IOMAP_WRITE) ||
--		     got.br_state != XFS_EXT_UNWRITTEN)) {
--			xfs_trim_extent(&got, offset_fsb, end_fsb - offset_fsb);
--			error = xfs_reflink_reserve_cow(ip, &got);
--			if (error)
--				goto out_unlock;
-+		if (!xfs_is_reflink_inode(ip) ||
-+		    ((flags & IOMAP_ZERO) && imap.br_state != XFS_EXT_NORM)) {
-+			trace_xfs_iomap_found(ip, offset, count, 0, &imap);
-+			goto done;
- 		}
- 
--		trace_xfs_iomap_found(ip, offset, count, 0, &got);
--		goto done;
--	}
-+		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
- 
--	if (flags & IOMAP_ZERO) {
--		xfs_hole_to_iomap(ip, iomap, offset_fsb, got.br_startoff);
--		goto out_unlock;
-+		/* Trim the mapping to the nearest shared extent boundary. */
-+		error = xfs_reflink_trim_around_shared(ip, &imap, &shared);
-+		if (error)
-+			goto out_unlock;
-+
-+		/* Not shared?  Just report the (potentially capped) extent. */
-+		if (!shared) {
-+			trace_xfs_iomap_found(ip, offset, count, 0, &imap);
-+			goto done;
-+		}
-+
-+		/*
-+		 * Fork all the shared blocks from our write offset until the
-+		 * end of the extent.
-+		 */
-+		whichfork = XFS_COW_FORK;
-+		end_fsb = imap.br_startoff + imap.br_blockcount;
-+	} else {
-+		/*
-+		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
-+		 * pages to keep the chunks of work done where somewhat
-+		 * symmetric with the work writeback does.  This is a completely
-+		 * arbitrary number pulled out of thin air.
-+		 *
-+		 * Note that the values needs to be less than 32-bits wide until
-+		 * the lower level functions are updated.
-+		 */
-+		count = min_t(loff_t, count, 1024 * PAGE_SIZE);
-+		end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
- 	}
- 
- 	error = xfs_qm_dqattach_locked(ip, false);
- 	if (error)
- 		goto out_unlock;
- 
--	/*
--	 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES pages
--	 * to keep the chunks of work done where somewhat symmetric with the
--	 * work writeback does. This is a completely arbitrary number pulled
--	 * out of thin air as a best guess for initial testing.
--	 *
--	 * Note that the values needs to be less than 32-bits wide until
--	 * the lower level functions are updated.
--	 */
--	count = min_t(loff_t, count, 1024 * PAGE_SIZE);
--	end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
--
--	if (eof) {
-+	if (eof && whichfork == XFS_DATA_FORK) {
- 		prealloc_blocks = xfs_iomap_prealloc_size(ip, offset, count,
- 				&icur);
- 		if (prealloc_blocks) {
-@@ -623,9 +670,11 @@ xfs_file_iomap_begin_delay(
- 	}
- 
- retry:
--	error = xfs_bmapi_reserve_delalloc(ip, XFS_DATA_FORK, offset_fsb,
--			end_fsb - offset_fsb, prealloc_blocks, &got, &icur,
--			eof);
-+	error = xfs_bmapi_reserve_delalloc(ip, whichfork, offset_fsb,
-+			end_fsb - offset_fsb, prealloc_blocks,
-+			whichfork == XFS_DATA_FORK ? &imap : &cmap,
-+			whichfork == XFS_DATA_FORK ? &icur : &ccur,
-+			whichfork == XFS_DATA_FORK ? eof : cow_eof);
- 	switch (error) {
- 	case 0:
- 		break;
-@@ -647,18 +696,18 @@ xfs_file_iomap_begin_delay(
- 	 * them out if the write happens to fail.
- 	 */
- 	iomap->flags |= IOMAP_F_NEW;
--	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
-+	trace_xfs_iomap_alloc(ip, offset, count, 0, &imap);
- done:
--	if (isnullstartblock(got.br_startblock))
--		got.br_startblock = DELAYSTARTBLOCK;
-+	if (isnullstartblock(imap.br_startblock))
-+		imap.br_startblock = DELAYSTARTBLOCK;
- 
--	if (!got.br_startblock) {
--		error = xfs_alert_fsblock_zero(ip, &got);
-+	if (!imap.br_startblock) {
-+		error = xfs_alert_fsblock_zero(ip, &imap);
- 		if (error)
- 			goto out_unlock;
- 	}
- 
--	xfs_bmbt_to_iomap(ip, iomap, &got);
-+	xfs_bmbt_to_iomap(ip, iomap, &imap);
- 
- out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 31d7c3e62bbc..6a002f024349 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -234,72 +234,6 @@ xfs_reflink_trim_around_shared(
- 	}
- }
- 
--/*
-- * Trim the passed in imap to the next shared/unshared extent boundary, and
-- * if imap->br_startoff points to a shared extent reserve space for it in the
-- * COW fork.
-- *
-- * Note that imap will always contain the block numbers for the existing blocks
-- * in the data fork, as the upper layers need them for read-modify-write
-- * operations.
-- */
--int
--xfs_reflink_reserve_cow(
--	struct xfs_inode	*ip,
--	struct xfs_bmbt_irec	*imap)
--{
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
--	struct xfs_bmbt_irec	got;
--	int			error = 0;
--	bool			eof = false;
--	struct xfs_iext_cursor	icur;
--	bool			shared;
--
--	/*
--	 * Search the COW fork extent list first.  This serves two purposes:
--	 * first this implement the speculative preallocation using cowextisze,
--	 * so that we also unshared block adjacent to shared blocks instead
--	 * of just the shared blocks themselves.  Second the lookup in the
--	 * extent list is generally faster than going out to the shared extent
--	 * tree.
--	 */
--
--	if (!xfs_iext_lookup_extent(ip, ifp, imap->br_startoff, &icur, &got))
--		eof = true;
--	if (!eof && got.br_startoff <= imap->br_startoff) {
--		trace_xfs_reflink_cow_found(ip, imap);
--		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
--		return 0;
--	}
--
--	/* Trim the mapping to the nearest shared extent boundary. */
--	error = xfs_reflink_trim_around_shared(ip, imap, &shared);
--	if (error)
--		return error;
--
--	/* Not shared?  Just report the (potentially capped) extent. */
--	if (!shared)
--		return 0;
--
--	/*
--	 * Fork all the shared blocks from our write offset until the end of
--	 * the extent.
--	 */
--	error = xfs_qm_dqattach_locked(ip, false);
--	if (error)
--		return error;
--
--	error = xfs_bmapi_reserve_delalloc(ip, XFS_COW_FORK, imap->br_startoff,
--			imap->br_blockcount, 0, &got, &icur, eof);
--	if (error == -ENOSPC || error == -EDQUOT)
--		trace_xfs_reflink_cow_enospc(ip, imap);
--	if (error)
--		return error;
--
--	trace_xfs_reflink_cow_alloc(ip, &got);
--	return 0;
--}
--
- /* Convert part of an unwritten CoW extent to a real one. */
- STATIC int
- xfs_reflink_convert_cow_extent(
--- 
-2.19.1
+<reads the code>
+
+OK, it appears the term means "to sync data to disk" as opposed to
+"periodic dirty memory cleaning".  I guess we don't have particularly
+well-established terms for the two concepts.
+
+> in the event of a persistent error as XFS
+> expects to process every dirty+delalloc page such that it can
+> discard delalloc blocks when real block allocation fails.  Failure
+> to handle all delalloc pages leaves the filesystem in an
+> inconsistent state if the integrity writeback happens to be due to
+> an unmount, for example.
+> 
+> Update write_cache_pages() to continue processing pages for
+> integrity writeback regardless of ->writepage() errors. Save the
+> first encountered error and return it once complete. This
+> facilitates XFS or any other fs that expects integrity writeback to
+> process the entire set of dirty pages regardless of errors.
+> Background writeback continues to exit on the first error
+> encountered.
+> 
+> ...
+>
+> --- a/mm/page-writeback.c
+> +++ b/mm/page-writeback.c
+> @@ -2156,6 +2156,7 @@ int write_cache_pages(struct address_space *mapping,
+>  {
+>  	int ret = 0;
+>  	int done = 0;
+> +	int error;
+>  	struct pagevec pvec;
+>  	int nr_pages;
+>  	pgoff_t uninitialized_var(writeback_index);
+> @@ -2236,25 +2237,29 @@ int write_cache_pages(struct address_space *mapping,
+>  				goto continue_unlock;
+>  
+>  			trace_wbc_writepage(wbc, inode_to_bdi(mapping->host));
+> -			ret = (*writepage)(page, wbc, data);
+> -			if (unlikely(ret)) {
+> -				if (ret == AOP_WRITEPAGE_ACTIVATE) {
+> +			error = (*writepage)(page, wbc, data);
+> +			if (unlikely(error)) {
+> +				if (error == AOP_WRITEPAGE_ACTIVATE) {
+>  					unlock_page(page);
+> -					ret = 0;
+> -				} else {
+> +					error = 0;
+> +				} else if (wbc->sync_mode != WB_SYNC_ALL &&
+> +					   !wbc->for_sync) {
+
+And here we're determining that it is not a sync-data-to-disk
+operation, hence it must be a clean-dirty-pages operation.
+
+This isn't very well-controlled, is it?  It's an inference which was
+put together by examining current callers, I assume?
+
+It would be good if we could force callers to be explicit about their
+intent here.  But I'm not sure that adding a new writeback_sync_mode is
+the way to do this.
+
+At a minimum it would be good to have careful comments in here
+explaining what is going on, justifying the above inference, explaining
+the xfs requirement (hopefully in a way which isn't xfs-specific).
+
+>  					/*
+> -					 * done_index is set past this page,
+> -					 * so media errors will not choke
+> +					 * done_index is set past this page, so
+> +					 * media errors will not choke
+>  					 * background writeout for the entire
+>  					 * file. This has consequences for
+>  					 * range_cyclic semantics (ie. it may
+>  					 * not be suitable for data integrity
+>  					 * writeout).
+>  					 */
