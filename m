@@ -1,64 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:49640 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:45906 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728396AbeKJK2s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 05:28:48 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wAA0hlqu088253
-        for <linux-xfs@vger.kernel.org>; Sat, 10 Nov 2018 00:45:42 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2120.oracle.com with ESMTP id 2nh3mq9tr3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 10 Nov 2018 00:45:42 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wAA0jfYo017667
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 10 Nov 2018 00:45:41 GMT
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wAA0jfXP029348
-        for <linux-xfs@vger.kernel.org>; Sat, 10 Nov 2018 00:45:41 GMT
-Subject: [PATCH 4/6] xfs_scrub: handle totally empty inode chunks
+        with ESMTP id S1726572AbeKJFcl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 00:32:41 -0500
+Date: Fri, 9 Nov 2018 11:50:33 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 09 Nov 2018 16:45:39 -0800
-Message-ID: <154181073901.3727.3960278646297663354.stgit@magnolia>
-In-Reply-To: <154181071499.3727.3910572718199592407.stgit@magnolia>
-References: <154181071499.3727.3910572718199592407.stgit@magnolia>
+Subject: Re: [PATCH] make: don't spray static check failures all over the
+ subdir build
+Message-ID: <20181109195033.GG15721@magnolia>
+References: <20181109192822.GF15721@magnolia>
+ <267751ec-88d1-cdbb-a6f2-74d6b8b437da@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <267751ec-88d1-cdbb-a6f2-74d6b8b437da@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Nov 09, 2018 at 01:34:44PM -0600, Eric Sandeen wrote:
+> On 11/9/18 1:28 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Debian package building is special -- it directly calls make -C libxfs
+> > when building the debian-installer packages.  This means that any
+> > variables we define in the top level Makefile don't get passed down to
+> > subdir make processes.
+> > 
+> > This means that the new static checker support effectively runs the
+> > first argument in $(CFLAGS) as a command, which is surprising.  Fix up
+> > buildrules to patch out CHECK_CMD if nobody's defined it, so that direct
+> > subdir make works again.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  include/buildrules |    4 ++++
+> >  1 file changed, 4 insertions(+)
+> > 
+> > diff --git a/include/buildrules b/include/buildrules
+> > index 83dfe05b..5c3e6eb9 100644
+> > --- a/include/buildrules
+> > +++ b/include/buildrules
+> > @@ -36,6 +36,10 @@ $(SUBDIRS):
+> >  	$(Q)$(MAKE) $(MAKEOPTS) -q -C $@ || $(MAKE) $(MAKEOPTS) -C $@
+> >  endif
+> >  
+> > +ifndef CHECK_CMD
+> > +CHECK_CMD = @true
+> > +endif
+> > +
+> 
+> Hm, ok, not quite clear if this is a hack or a proper fix - maybe
+> all the check stuff should have gone into buildrules in the first
+> place?  But at this late stage in the game, it's probably good enough.
 
-We try to load a single inobt record with each FSINUMBERS call.  If the
-chunk is totally empty (which can happen when there are more than one
-inobt record per block) we should skip to the next INUMBERS call since
-there are no inodes to bulkstat.
+It's a stupid hack, but if CFLAGS=-g -O2 -Wall and someone runs "make -C
+repair" instead of "make repair" then make will foolishly run "g -O2
+-Wall", whatever that does.  command-not-found tells me there's no known
+"g" command.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/inodes.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+As for debian builds we probably should just update debian/rules to
+something more modern.
 
+--D
 
-diff --git a/scrub/inodes.c b/scrub/inodes.c
-index 693f21ec..442a5978 100644
---- a/scrub/inodes.c
-+++ b/scrub/inodes.c
-@@ -139,6 +139,12 @@ xfs_iterate_inodes_range(
- 		/* Load the inodes. */
- 		ino = inogrp.xi_startino - 1;
- 		bulkreq.icount = inogrp.xi_alloccount;
-+		/*
-+		 * We can have totally empty inode chunks on filesystems where
-+		 * there are more than 64 inodes per block.  Skip these.
-+		 */
-+		if (inogrp.xi_alloccount == 0)
-+			goto igrp_retry;
- 		error = ioctl(ctx->mnt_fd, XFS_IOC_FSBULKSTAT, &bulkreq);
- 		if (error)
- 			str_info(ctx, descr, "%s", strerror_r(errno,
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> Thanks,
+> -eric
