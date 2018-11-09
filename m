@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33660 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36678 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727995AbeKJAN0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Nov 2018 19:13:26 -0500
+        id S1727802AbeKJAMi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Nov 2018 19:12:38 -0500
 Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6D8343082DDC
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Nov 2018 14:32:35 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id B71353078AAA
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Nov 2018 14:31:47 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 23/24] xfsdump: (style) add stars to multiline comments
-Date: Fri,  9 Nov 2018 15:30:03 +0100
-Message-Id: <20181109143004.24963-24-jtulak@redhat.com>
+Subject: [PATCH 07/24] xfsdump: (style) remove a space in front of comma/semicolon
+Date: Fri,  9 Nov 2018 15:29:47 +0100
+Message-Id: <20181109143004.24963-8-jtulak@redhat.com>
 In-Reply-To: <20181109143004.24963-1-jtulak@redhat.com>
 References: <20181109143004.24963-1-jtulak@redhat.com>
 MIME-Version: 1.0
@@ -22,1536 +22,2658 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Jan Tulak <jtulak@redhat.com>
 
-All lines of multiline comments should begin with a star.
+Turn all the "x , y , z" into "x, y, z" and "for (moo ; foo ; bar)"
+to "for (moo; foo; bar)".
 
-Created by Uncrustify with this config file:
+Created by this script:
 
-#
-# uncrustify config, add stars to multiline comments
-#
+#!/usr/bin/env bash
+# remove the space before , and ;
 
-indent_with_tabs	= 2		# 1=indent with tabs, align with spaces, 2=use all tabs
-input_tab_size		= 8		# original tab size
-output_tab_size		= 8		# new tab size
-indent_columns		= output_tab_size
-
-indent_label		= 1		# pos: absolute col, neg: relative column
-
-#
-# inter-symbol newlines
-#
-
-nl_enum_brace		= remove	# "enum {" vs "enum
- {"
-nl_union_brace		= remove	# "union {" vs "union
- {"
-nl_struct_brace		= remove	# "struct {" vs "struct
- {"
-nl_do_brace 		= remove	# "do {" vs "do
- {"
-nl_if_brace 		= remove	# "if () {" vs "if ()
- {"
-nl_for_brace 		= remove	# "for () {" vs "for ()
- {"
-nl_else_brace 		= remove	# "else {" vs "else
- {"
-nl_while_brace 		= remove	# "while () {" vs "while ()
- {"
-nl_switch_brace 	= remove	# "switch () {" vs "switch ()
- {"
-nl_brace_while		= remove	# "} while" vs "}
- while" - cuddle while
-nl_brace_else		= remove	# "} else" vs "}
- else" - cuddle else
-sp_brace_else		= force
-sp_else_brace		= force
-nl_func_var_def_blk	= 1
-nl_fcall_brace		= remove	# "list_for_each() {" vs "list_for_each()
-{"
-nl_fdef_brace		= add		# "int foo() {" vs "int foo()
-{"
-nl_after_label_colon	= true		# "fail:
-free(foo);" vs "fail: free(foo);"
-
-#
-# Source code modifications
-#
-
-mod_paren_on_return	= ignore	# "return 1;" vs "return (1);"
-mod_full_brace_for	= ignore	# "for () a--;" vs "for () { a--; }"
-mod_full_brace_do	= ignore	# "do a--; while ();" vs "do { a--; } while ();"
-mod_full_brace_while	= ignore	# "while (a) a--;" vs "while (a) { a--; }"
-
-#
-# inter-character spacing options
-#
-
-sp_return_paren		= force		# "return (1);" vs "return(1);"
-sp_sizeof_paren		= remove	# "sizeof (int)" vs "sizeof(int)"
-sp_before_sparen	= force		# "if (" vs "if("
-sp_after_sparen		= force		# "if () {" vs "if (){"
-sp_after_cast		= remove	# "(int) a" vs "(int)a"
-sp_inside_braces	= force		# "{ 1 }" vs "{1}"
-sp_inside_braces_struct	= force	# "{ 1 }" vs "{1}"
-sp_inside_braces_enum	= force	# "{ 1 }" vs "{1}"
-sp_assign		= force
-sp_arith		= force
-sp_bool			= force
-sp_compare		= force
-sp_assign		= force
-sp_after_comma		= force
-sp_func_def_paren	= remove	# "int foo (){" vs "int foo(){"
-sp_func_call_paren	= remove	# "foo (" vs "foo("
-sp_func_proto_paren	= remove	# "int foo ();" vs "int foo();"
-
-#
-# Aligning stuff
-#
-
-align_with_tabs		= TRUE		# use tabs to align
-align_on_tabstop	= TRUE 		# align on tabstops
-align_enum_equ_span	= 4		# '=' in enum definition
-align_var_def_colon	= TRUE
-align_struct_init_span	= 3		# align stuff in a structure init '= { }'
-align_right_cmt_span	= 3
-
-cmt_star_cont = true
-
-#
-# other
-#
-
-nl_func_paren = remove
-nl_func_decl_start = ignore
-nl_func_decl_empty = remove
-nl_func_decl_args = ignore
-nl_func_decl_end = remove
-
-sp_inside_paren = remove
-sp_inside_square = remove
-sp_inside_paren_cast = remove
-sp_inside_fparen = remove
-sp_inside_sparen = remove
-sp_paren_paren = remove
-sp_before_ptr_star = force
-sp_after_ptr_star = remove
-sp_between_ptr_star = remove
-align_func_params = true
-align_var_struct_span = 6
-
-eat_blanks_after_open_brace   = true
-eat_blanks_before_close_brace = true
-pp_indent = ignore
-
-nl_start_of_file   = remove
-nl_end_of_file     = force
-nl_end_of_file_min = 1
-nl_comment_func_def = 1
+find . -name '*.[ch]' ! -type d -exec bash -c '
+sed -i \
+    -e "s/ ,/,/g" \
+    -e "s/ ;/;/g" \
+    $0
+' {} \;
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- common/drive_minrmt.c |  8 ++--
- common/getdents.c     | 24 ++++++------
- common/hsmapi.c       | 26 ++++++-------
- common/inventory.c    | 16 ++++----
- common/inventory.h    |  6 +--
- common/main.c         |  6 +--
- common/media.c        |  4 +-
- common/ts_mtio.h      | 76 +++++++++++++++++++-------------------
- dump/content.c        |  6 +--
- dump/inomap.c         |  2 +-
- inventory/inv_api.c   | 54 +++++++++++++--------------
- inventory/inv_core.c  |  2 +-
- inventory/inv_fstab.c |  6 +--
- inventory/inv_idx.c   | 56 ++++++++++++++--------------
- inventory/inv_mgr.c   | 22 +++++------
- inventory/inv_oref.c  |  6 +--
- inventory/inv_oref.h  |  2 +-
- inventory/inv_priv.h  | 44 +++++++++++-----------
- inventory/inv_stobj.c | 86 +++++++++++++++++++++----------------------
- inventory/inventory.h | 12 +++---
- inventory/testmain.c  |  2 +-
- invutil/invidx.c      |  4 +-
- restore/content.c     |  2 +-
- 23 files changed, 236 insertions(+), 236 deletions(-)
+ common/cldmgr.c         |   8 +-
+ common/cleanup.c        |   4 +-
+ common/dlog.c           |  14 ++--
+ common/drive.c          |  10 +--
+ common/drive_minrmt.c   |  40 ++++-----
+ common/drive_scsitape.c |  42 +++++-----
+ common/drive_simple.c   |   4 +-
+ common/fs.c             |   8 +-
+ common/global.c         |   4 +-
+ common/hsmapi.c         |   2 +-
+ common/main.c           |  34 ++++----
+ common/media.c          |   8 +-
+ common/mlog.c           |  18 ++--
+ common/path.c           |  10 +--
+ common/ring.c           |   6 +-
+ common/stream.c         |  12 +--
+ common/ts_mtio.h        |   2 +-
+ common/util.c           |  10 +--
+ dump/content.c          |  64 +++++++-------
+ dump/inomap.c           |  18 ++--
+ include/swab.h          |   6 +-
+ inventory/inv_api.c     |   8 +-
+ inventory/inv_idx.c     |   4 +-
+ inventory/inv_oref.c    |   2 +-
+ inventory/inv_stobj.c   |  20 ++---
+ invutil/invutil.c       |   8 +-
+ librmt/rmtfstat.c       |   2 +-
+ librmt/rmtioctl.c       |   2 +-
+ restore/bag.c           |   4 +-
+ restore/content.c       | 182 ++++++++++++++++++++--------------------
+ restore/dirattr.c       |   6 +-
+ restore/inomap.c        |  36 ++++----
+ restore/namreg.c        |   4 +-
+ restore/node.c          |   2 +-
+ restore/tree.c          |  46 +++++-----
+ 35 files changed, 325 insertions(+), 325 deletions(-)
 
+diff --git a/common/cldmgr.c b/common/cldmgr.c
+index ba931f1..ebe9101 100644
+--- a/common/cldmgr.c
++++ b/common/cldmgr.c
+@@ -133,7 +133,7 @@ cldmgr_join(void)
+ 	int xc = EXIT_NORMAL;
+ 
+ 	lock();
+-	for (; p < ep ; p++) {
++	for (; p < ep; p++) {
+ 		if (p->c_state == C_EXITED) {
+ 			if ((int)(p->c_streamix) >= 0) {
+ 				stream_dead(p->c_tid);
+@@ -173,7 +173,7 @@ cldmgr_remainingcnt(void)
+ 
+ 	cnt = 0;
+ 	lock();
+-	for (; p < ep ; p++) {
++	for (; p < ep; p++) {
+ 		if (p->c_state == C_ALIVE) {
+ 			cnt++;
+ 		}
+@@ -190,7 +190,7 @@ cldmgr_otherstreamsremain(ix_t streamix)
+ 	cld_t *ep = cld + sizeof(cld) / sizeof(cld[0]);
+ 
+ 	lock();
+-	for (; p < ep ; p++) {
++	for (; p < ep; p++) {
+ 		if (p->c_state == C_ALIVE && p->c_streamix != streamix) {
+ 			unlock();
+ 			return BOOL_TRUE;
+@@ -208,7 +208,7 @@ cldmgr_getcld(void)
+ 	cld_t *ep = cld + sizeof(cld) / sizeof(cld[0]);
+ 
+ 	lock();
+-	for (; p < ep ; p++) {
++	for (; p < ep; p++) {
+ 		if (p->c_state == C_AVAIL) {
+ 			p->c_state = C_ALIVE;
+ 			break;
+diff --git a/common/cleanup.c b/common/cleanup.c
+index 5248f3c..572355f 100644
+--- a/common/cleanup.c
++++ b/common/cleanup.c
+@@ -98,9 +98,9 @@ cleanup_cancel(cleanup_t *cleanupp)
+ 	assert(cu_rootp);
+ 
+ 	for (prevp = 0, nextp = cu_rootp
+-	      ;
++	     ;
+ 	      nextp && nextp != p
+-	      ;
++	     ;
+ 	      prevp = nextp, nextp = nextp->cu_nextp)
+ 	;
+ 
+diff --git a/common/dlog.c b/common/dlog.c
+index 47940f4..f62f374 100644
+--- a/common/dlog.c
++++ b/common/dlog.c
+@@ -88,7 +88,7 @@ dlog_init(int argc, char *argv[])
+ 	}
+ #ifdef RESTORE
+ 	/* look to see if restore source coming in on
+-	 * stdin. If so , try to open /dev/tty for dialogs.
++	 * stdin. If so, try to open /dev/tty for dialogs.
+ 	 */
+ 	if (optind < argc && ! strcmp(argv[optind], "-")) {
+ 		dlog_ttyfd = open("/dev/tty", O_RDWR);
+@@ -150,7 +150,7 @@ dlog_begin(char *preamblestr[], size_t preamblecnt)
+ 	size_t ix;
+ 
+ 	mlog_lock();
+-	for (ix = 0 ; ix < preamblecnt ; ix++) {
++	for (ix = 0; ix < preamblecnt; ix++) {
+ 		mlog(MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
+ 		      preamblestr[ix]);
+ 	}
+@@ -161,7 +161,7 @@ dlog_end(char *postamblestr[], size_t postamblecnt)
+ {
+ 	size_t ix;
+ 
+-	for (ix = 0 ; ix < postamblecnt ; ix++) {
++	for (ix = 0; ix < postamblecnt; ix++) {
+ 		mlog(MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
+ 		      postamblestr[ix]);
+ 	}
+@@ -193,14 +193,14 @@ dlog_multi_query(char *querystr[],
+ 
+ 	/* display query description strings
+ 	 */
+-	for (ix = 0 ; ix < querycnt ; ix++) {
++	for (ix = 0; ix < querycnt; ix++) {
+ 		mlog(MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
+ 		      querystr[ix]);
+ 	}
+ 
+ 	/* display the choices: NOTE: display is 1-based, code intfs 0-based!
+ 	 */
+-	for (ix = 0 ; ix < choicecnt ; ix++) {
++	for (ix = 0; ix < choicecnt; ix++) {
+ 		mlog(MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
+ 		      "%u: %s",
+ 		      ix + 1,
+@@ -231,7 +231,7 @@ dlog_multi_query(char *querystr[],
+ 	/* read the tty until we get a proper answer or are interrupted
+ 	 */
+ 	prepromptstr = "";
+-	for (; ;) {
++	for (;;) {
+ 		ix_t exceptionix;
+ 		bool_t ok;
+ 
+@@ -275,7 +275,7 @@ dlog_multi_ack(char *ackstr[], size_t ackcnt)
+ {
+ 	size_t ix;
+ 
+-	for (ix = 0 ; ix < ackcnt ; ix++) {
++	for (ix = 0; ix < ackcnt; ix++) {
+ 		mlog(MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
+ 		      ackstr[ix]);
+ 	}
+diff --git a/common/drive.c b/common/drive.c
+index c7a80a1..17aae6c 100644
+--- a/common/drive.c
++++ b/common/drive.c
+@@ -199,7 +199,7 @@ drive_init1(int argc, char *argv[])
+ 	/* run each drive past each strategy, pick the best match
+ 	 * and instantiate a drive manager.
+ 	 */
+-	for (driveix = 0 ; driveix < drivecnt ; driveix++) {
++	for (driveix = 0; driveix < drivecnt; driveix++) {
+ 		drive_t *drivep = drivepp[driveix];
+ 		int bestscore = 0 - INTGENMAX;
+ 		ix_t six;
+@@ -207,7 +207,7 @@ drive_init1(int argc, char *argv[])
+ 		drive_strategy_t *bestsp = 0;
+ 		bool_t ok;
+ 
+-		for (six = 0 ; six < scnt ; six++) {
++		for (six = 0; six < scnt; six++) {
+ 			drive_strategy_t *sp = strategypp[six];
+ 			int score;
+ 			score = (* sp->ds_match)(argc,
+@@ -250,7 +250,7 @@ drive_init2(int argc,
+ {
+ 	ix_t driveix;
+ 
+-	for (driveix = 0 ; driveix < drivecnt ; driveix++) {
++	for (driveix = 0; driveix < drivecnt; driveix++) {
+ 		drive_t *drivep = drivepp[driveix];
+ 		bool_t ok;
+ 
+@@ -273,7 +273,7 @@ drive_init3(void)
+ {
+ 	ix_t driveix;
+ 
+-	for (driveix = 0 ; driveix < drivecnt ; driveix++) {
++	for (driveix = 0; driveix < drivecnt; driveix++) {
+ 		drive_t *drivep = drivepp[driveix];
+ 		bool_t ok;
+ 
+@@ -335,7 +335,7 @@ drive_display_metrics(void)
+ {
+ 	ix_t driveix;
+ 
+-	for (driveix = 0 ; driveix < drivecnt ; driveix++) {
++	for (driveix = 0; driveix < drivecnt; driveix++) {
+ 		drive_t *drivep = drivepp[driveix];
+ 		drive_ops_t *dop = drivep->d_opsp;
+ 		if (dop->do_display_metrics) {
 diff --git a/common/drive_minrmt.c b/common/drive_minrmt.c
-index 28dd7d1..dc6d502 100644
+index 0581781..d0d1e09 100644
 --- a/common/drive_minrmt.c
 +++ b/common/drive_minrmt.c
-@@ -3098,7 +3098,7 @@ determine_write_error(int nwritten, int saved_errno)
- 		(saved_errno == EIO)
- 		||
- 		((saved_errno == 0) && (nwritten >= 0))          /* short
--	                                                            write indicates EOM */
-+	                                                          * write indicates EOM */
- 		) {
- 		mlog(MLOG_NORMAL,
- 		     _("tape media error on write operation\n"));
-@@ -4171,9 +4171,9 @@ erase_and_verify(drive_t *drivep)
+@@ -269,7 +269,7 @@ static int ds_instantiate(int, char *[], drive_t *);
+ static bool_t do_init(drive_t *);
+ static bool_t do_sync(drive_t *);
+ static int do_begin_read(drive_t *);
+-static char *do_read(drive_t *, size_t , size_t *, int *);
++static char *do_read(drive_t *, size_t, size_t *, int *);
+ static void do_return_read_buf(drive_t *, char *, size_t);
+ static void do_get_mark(drive_t *, drive_mark_t *);
+ static int do_seek_mark(drive_t *, drive_mark_t *);
+@@ -278,12 +278,12 @@ static void do_get_mark(drive_t *, drive_mark_t *);
+ static void do_end_read(drive_t *);
+ static int do_begin_write(drive_t *);
+ static void do_set_mark(drive_t *, drive_mcbfp_t, void *, drive_markrec_t *);
+-static char * do_get_write_buf(drive_t *, size_t , size_t *);
++static char * do_get_write_buf(drive_t *, size_t, size_t *);
+ static int do_write(drive_t *, char *, size_t);
+ static size_t do_get_align_cnt(drive_t *);
+ static int do_end_write(drive_t *, off64_t *);
+-static int do_fsf(drive_t *, int , int *);
+-static int do_bsf(drive_t *, int , int *);
++static int do_fsf(drive_t *, int, int *);
++static int do_bsf(drive_t *, int, int *);
+ static int do_rewind(drive_t *);
+ static int do_erase(drive_t *);
+ static int do_eject_media(drive_t *);
+@@ -293,7 +293,7 @@ static void do_quit(drive_t *);
  
- 	/*
- 	 * Erase is not standard rmt. So we cannot use the line below.
--
--	   (void)mt_op(contextp->dc_fd, MTERASE, 0);
--
-+	 *
-+	 * (void)mt_op(contextp->dc_fd, MTERASE, 0);
-+	 *
- 	 * So write a record of zeros to fake erase . Poor man's erase!
- 	 * We put the ERASE_MAGIC string at the beginning so we can
+ /* misc. local utility funcs
+  */
+-static int	mt_op(int , int , int);
++static int	mt_op(int, int, int);
+ static int determine_write_error(int, int);
+ static int read_label(drive_t *);
+ static bool_t tape_rec_checksum_check(drive_context_t *, char *);
+@@ -423,7 +423,7 @@ ds_match(int argc, char *argv[], drive_t *drivep)
+ 
+ 	/* Check if the min rmt flag and block size have
+ 	 * been specified.
+-	 * If so , this is a non-SGI drive and this is the right
++	 * If so, this is a non-SGI drive and this is the right
+ 	 * strategy.
+ 	 */
+ 	{
+@@ -653,7 +653,7 @@ ds_instantiate(int argc, char *argv[], drive_t *drivep)
+ 				 DRIVE_CAP_ERASE
+ 				 |
+ 				 DRIVE_CAP_EJECT
+-				 ;
++				;
+ 
+ 	return BOOL_TRUE;
+ }
+@@ -757,7 +757,7 @@ do_begin_read(drive_t *drivep)
+ 			return rval;
+ 		}
+ 	} else {
+-		rval = read_label(drivep) ;
++		rval = read_label(drivep);
+ 		if (rval) {
+ 			if (! contextp->dc_singlethreadedpr) {
+ 			    Ring_reset(contextp->dc_ringp, contextp->dc_msgp);
+@@ -1330,7 +1330,7 @@ do_next_mark(drive_t *drivep)
+ 	}
+ 
+ noerrorsearch:
+-	for (; ;) {
++	for (;;) {
+ 		rval = getrec(drivep);
+ 		if (rval == DRIVE_ERROR_CORRUPTION) {
+ 			goto resetring;
+@@ -1516,9 +1516,9 @@ huntQIC:
+ 	 * to read the remaining blocks in the record.
+ 	 */
+ 	for (p = contextp->dc_recp + QIC_BLKSZ
+-	      ;
++	     ;
+ 	      p < contextp->dc_recendp
+-	      ;
++	     ;
+ 	      p += QIC_BLKSZ) {
+ 		if (*(uint64_t *)p == STAPE_MAGIC) {
+ 			goto adjustQIC;
+@@ -2230,7 +2230,7 @@ do_fsf(drive_t *drivep, int count, int *statp)
+ 	assert(count);
+ 	assert(contextp->dc_mode == OM_NONE);
+ 
+-	for (i = 0 ; i < count; i++) {
++	for (i = 0; i < count; i++) {
+ 		done = 0;
+ 		opcount = 2;
+ 
+@@ -2328,7 +2328,7 @@ do_bsf(drive_t *drivep, int count, int *statp)
+ 
+ 	/* now loop, skipping media files
+ 	 */
+-	for (skipped = 0 ; skipped < count ; skipped++) {
++	for (skipped = 0; skipped < count; skipped++) {
+ 
+ 		/* move to the left of the next file mark on the left.
+ 		 * check for BOT.
+@@ -2932,7 +2932,7 @@ tape_rec_checksum_set(drive_context_t *contextp, char *bufp)
+ 	INT_SET(rechdrp->ischecksum, ARCH_CONVERT, 1);
+ 	rechdrp->checksum = 0;
+ 	accum = 0;
+-	for (p = beginp ; p < endp ; p++) {
++	for (p = beginp; p < endp; p++) {
+ 	        accum += INT_GET(*p, ARCH_CONVERT);
+ 	}
+ 	INT_SET(rechdrp->checksum, ARCH_CONVERT, (int32_t)(~accum + 1));
+@@ -2949,7 +2949,7 @@ tape_rec_checksum_check(drive_context_t *contextp, char *bufp)
+ 
+ 	if (contextp->dc_recchksumpr && INT_GET(rechdrp->ischecksum, ARCH_CONVERT)) {
+ 		accum = 0;
+-		for (p = beginp ; p < endp ; p++) {
++		for (p = beginp; p < endp; p++) {
+ 	       		accum += INT_GET(*p, ARCH_CONVERT);
+ 		}
+ 		return accum == 0 ? BOOL_TRUE : BOOL_FALSE;
+@@ -3088,7 +3088,7 @@ prepare_drive(drive_t *drivep)
+ 	 * if not present or write-protected during dump, return.
+ 	 */
+ 	maxtries = 15;
+-	for (try = 1 ; ; sleep(10), try++) {
++	for (try = 1;; sleep(10), try++) {
+ 		if (cldmgr_stop_requested()) {
+ 			return DRIVE_ERROR_STOP;
+ 		}
+@@ -3139,7 +3139,7 @@ prepare_drive(drive_t *drivep)
+ 	else
+ 		tape_recsz = tape_blksz;
+ 
+-	/* if the overwrite option was specified , return.
++	/* if the overwrite option was specified, return.
+ 	 */
+ 	if (contextp->dc_overwritepr) {
+ 		mlog(MLOG_DEBUG | MLOG_DRIVE,
+@@ -3157,7 +3157,7 @@ prepare_drive(drive_t *drivep)
+ 	maxtries = 5;
+ 	changedblkszpr = BOOL_FALSE;
+ 
+-	for (try = 1 ; ; try++) {
++	for (try = 1;; try++) {
+ 		int nread;
+ 		int saved_errno;
+ 
+@@ -3896,7 +3896,7 @@ rewind_and_verify(drive_t *drivep)
+ 	int rval;
+ 
+ 	rval = mt_op(contextp->dc_fd, MTREW, 0);
+-	for (try = 1 ; ; try++) {
++	for (try = 1;; try++) {
+ 		if (rval) {
+ 			sleep(1);
+ 			rval = mt_op(contextp->dc_fd, MTREW, 0);
+@@ -3935,7 +3935,7 @@ erase_and_verify(drive_t *drivep)
  	 * detect if we have erased the tape.
-diff --git a/common/getdents.c b/common/getdents.c
-index 0f10741..9c9ed99 100644
---- a/common/getdents.c
-+++ b/common/getdents.c
-@@ -45,13 +45,13 @@ struct kernel_dirent64 {
+ 	 */
  
- /*
-  * The problem here is that we cannot simply read the next NBYTES
--   bytes.  We need to take the additional field into account.  We use
--   some heuristic.  Assuming the directory contains names with 14
--   characters on average we can compute an estimated number of entries
--   which fit in the buffer.  Taking this number allows us to specify a
--   reasonable number of bytes to read.  If we should be wrong, we can
--   reset the file descriptor.  In practice the kernel is limiting the
--   amount of data returned much more then the reduced buffer size.  */
-+ * bytes.  We need to take the additional field into account.  We use
-+ * some heuristic.  Assuming the directory contains names with 14
-+ * characters on average we can compute an estimated number of entries
-+ * which fit in the buffer.  Taking this number allows us to specify a
-+ * reasonable number of bytes to read.  If we should be wrong, we can
-+ * reset the file descriptor.  In practice the kernel is limiting the
-+ * amount of data returned much more then the reduced buffer size.  */
- int
- getdents_wrap(int fd, char *buf, size_t nbytes)
+-	tempbufp = (char *) calloc(1 , (size_t)tape_recsz);
++	tempbufp = (char *) calloc(1, (size_t)tape_recsz);
+ 	strcpy(tempbufp, ERASE_MAGIC);
+ 	Write(drivep, tempbufp, tape_recsz, &saved_errno);
+ 	free(tempbufp);
+diff --git a/common/drive_scsitape.c b/common/drive_scsitape.c
+index 4be1291..c9ba0cf 100644
+--- a/common/drive_scsitape.c
++++ b/common/drive_scsitape.c
+@@ -311,7 +311,7 @@ static int ds_instantiate(int, char *[], drive_t *);
+ static bool_t do_init(drive_t *);
+ static bool_t do_sync(drive_t *);
+ static int do_begin_read(drive_t *);
+-static char *do_read(drive_t *, size_t , size_t *, int *);
++static char *do_read(drive_t *, size_t, size_t *, int *);
+ static void do_return_read_buf(drive_t *, char *, size_t);
+ static void do_get_mark(drive_t *, drive_mark_t *);
+ static int do_seek_mark(drive_t *, drive_mark_t *);
+@@ -320,12 +320,12 @@ static void do_get_mark(drive_t *, drive_mark_t *);
+ static void do_end_read(drive_t *);
+ static int do_begin_write(drive_t *);
+ static void do_set_mark(drive_t *, drive_mcbfp_t, void *, drive_markrec_t *);
+-static char * do_get_write_buf(drive_t *, size_t , size_t *);
++static char * do_get_write_buf(drive_t *, size_t, size_t *);
+ static int do_write(drive_t *, char *, size_t);
+ static size_t do_get_align_cnt(drive_t *);
+ static int do_end_write(drive_t *, off64_t *);
+-static int do_fsf(drive_t *, int , int *);
+-static int do_bsf(drive_t *, int , int *);
++static int do_fsf(drive_t *, int, int *);
++static int do_bsf(drive_t *, int, int *);
+ static int do_rewind(drive_t *);
+ static int do_erase(drive_t *);
+ static int do_eject_media(drive_t *);
+@@ -335,8 +335,8 @@ static void do_quit(drive_t *);
+ 
+ /* misc. local utility funcs
+  */
+-static int	mt_op(int , int , int);
+-static int mt_blkinfo(int , struct mtblkinfo *);
++static int	mt_op(int, int, int);
++static int mt_blkinfo(int, struct mtblkinfo *);
+ static bool_t mt_get_fileno(drive_t *, long *);
+ static bool_t mt_get_status(drive_t *, mtstat_t *);
+ static int determine_write_error(drive_t *, int, int);
+@@ -762,7 +762,7 @@ ds_instantiate(int argc, char *argv[], drive_t *drivep)
+ 				 DRIVE_CAP_REMOVABLE
+ 				 |
+ 				 DRIVE_CAP_ERASE
+-				 ;
++				;
+ 
+ 	/* initialize origcurblksz so we only save it once
+ 	 */
+@@ -1445,7 +1445,7 @@ do_next_mark(drive_t *drivep)
+ 	}
+ 
+ noerrorsearch:
+-	for (; ;) {
++	for (;;) {
+ 		rval = getrec(drivep);
+ 		if (rval == DRIVE_ERROR_CORRUPTION) {
+ 			goto resetring;
+@@ -1659,9 +1659,9 @@ huntQIC:
+ 	 * to read the remaining blocks in the record.
+ 	 */
+ 	for (p = contextp->dc_recp + QIC_BLKSZ
+-	      ;
++	     ;
+ 	      p < contextp->dc_recendp
+-	      ;
++	     ;
+ 	      p += QIC_BLKSZ) {
+ 		if (*(uint64_t *)p == STAPE_MAGIC) {
+ 			goto adjustQIC;
+@@ -2403,7 +2403,7 @@ do_fsf(drive_t *drivep, int count, int *statp)
+ 		return 0;
+ 	}
+ 
+-	for (i = 0 ; i < count; i++) {
++	for (i = 0; i < count; i++) {
+ 		done = 0;
+ 		opcount = 2;
+ 
+@@ -2559,7 +2559,7 @@ do_bsf(drive_t *drivep, int count, int *statp)
+ 
+ 	/* now loop, skipping media files
+ 	 */
+-	for (skipped = 0 ; skipped < count ; skipped++) {
++	for (skipped = 0; skipped < count; skipped++) {
+ 
+ 		/* move to the left of the next file mark on the left.
+ 		 * check for BOT.
+@@ -3146,7 +3146,7 @@ set_fixed_blksz(drive_t *drivep, size_t blksz)
+ 
+ 	/* give it two tries: first without rewinding, second with rewinding
+ 	 */
+-	for (try = 1 ; try <= 2 ; try++) {
++	for (try = 1; try <= 2; try++) {
+ 		struct mtblkinfo mtinfo;
+ 
+ 		/* set the tape block size. requires re-open
+@@ -3624,7 +3624,7 @@ tape_rec_checksum_set(drive_context_t *contextp, char *bufp)
+ 	INT_SET(rechdrp->ischecksum, ARCH_CONVERT, 1);
+ 	rechdrp->checksum = 0;
+ 	accum = 0;
+-	for (p = beginp ; p < endp ; p++) {
++	for (p = beginp; p < endp; p++) {
+ 	        accum += INT_GET(*p, ARCH_CONVERT);
+ 	}
+ 	INT_SET(rechdrp->checksum, ARCH_CONVERT, (int32_t)(~accum + 1));
+@@ -3641,7 +3641,7 @@ tape_rec_checksum_check(drive_context_t *contextp, char *bufp)
+ 
+ 	if (contextp->dc_recchksumpr && INT_GET(rechdrp->ischecksum, ARCH_CONVERT)) {
+ 		accum = 0;
+-		for (p = beginp ; p < endp ; p++) {
++		for (p = beginp; p < endp; p++) {
+ 	       		accum += INT_GET(*p, ARCH_CONVERT);
+ 		}
+ 		return accum == 0 ? BOOL_TRUE : BOOL_FALSE;
+@@ -3878,7 +3878,7 @@ retry:
+ 	 * if not present or write-protected during dump, return.
+ 	 */
+ 	maxtries = 15;
+-	for (try = 1 ; ; sleep(10), try++) {
++	for (try = 1;; sleep(10), try++) {
+ 		if (cldmgr_stop_requested()) {
+ 			return DRIVE_ERROR_STOP;
+ 		}
+@@ -3990,7 +3990,7 @@ retry:
+ 		return DRIVE_ERROR_INVAL;
+ 	}
+ 
+-	/* if the overwrite option was specified , set the best blocksize
++	/* if the overwrite option was specified, set the best blocksize
+ 	 * we can and return.
+ 	 */
+ 	if (contextp->dc_overwritepr) {
+@@ -4051,7 +4051,7 @@ retry:
+  	 */
+ 	maxtries = 5;
+ 	changedblkszpr = BOOL_FALSE;
+-	for (try = 1 ; ; try++) {
++	for (try = 1;; try++) {
+ 		bool_t wasatbotpr;
+ 		int nread;
+ 		int saved_errno;
+@@ -5175,7 +5175,7 @@ rewind_and_verify(drive_t *drivep)
+ 	int rval;
+ 
+ 	rval = mt_op(contextp->dc_fd, MTREW, 0);
+-	for (try = 1 ; ; try++) {
++	for (try = 1;; try++) {
+ 		mtstat_t mtstat;
+ 		bool_t ok;
+ 
+@@ -5231,7 +5231,7 @@ bsf_and_verify(drive_t *drivep)
+ 	/* Can't do with LINUX ST driver, as GMT_EOF never set for left of fmk */
+ 	if (TS_ISDRIVER) {
+ 		(void)mt_op(contextp->dc_fd, MTBSF, 1);
+-		for (try = 1 ; ; try++) {
++		for (try = 1;; try++) {
+ 			mtstat_t mtstat;
+ 
+ 			ok = mt_get_status(drivep, &mtstat);
+@@ -5301,7 +5301,7 @@ fsf_and_verify(drive_t *drivep)
+ 	ix_t try;
+ 
+ 	(void)mt_op(contextp->dc_fd, MTFSF, 1);
+-	for (try = 1 ; ; try++) {
++	for (try = 1;; try++) {
+ 		mtstat_t mtstat;
+ 		bool_t ok;
+ 
+diff --git a/common/drive_simple.c b/common/drive_simple.c
+index 81d75d4..697a597 100644
+--- a/common/drive_simple.c
++++ b/common/drive_simple.c
+@@ -116,7 +116,7 @@ static int ds_instantiate(int, char *[], drive_t *);
+ static bool_t do_init(drive_t *);
+ static bool_t do_sync(drive_t *);
+ static int do_begin_read(drive_t *);
+-static char *do_read(drive_t *, size_t , size_t *, int *);
++static char *do_read(drive_t *, size_t, size_t *, int *);
+ static void do_return_read_buf(drive_t *, char *, size_t);
+ static void do_get_mark(drive_t *, drive_mark_t *);
+ static int do_seek_mark(drive_t *, drive_mark_t *);
+@@ -125,7 +125,7 @@ static void do_get_mark(drive_t *, drive_mark_t *);
+ static void do_end_read(drive_t *);
+ static int do_begin_write(drive_t *);
+ static void do_set_mark(drive_t *, drive_mcbfp_t, void *, drive_markrec_t *);
+-static char * do_get_write_buf(drive_t *, size_t , size_t *);
++static char * do_get_write_buf(drive_t *, size_t, size_t *);
+ static int do_write(drive_t *, char *, size_t);
+ static size_t do_get_align_cnt(drive_t *);
+ static int do_end_write(drive_t *, off64_t *);
+diff --git a/common/fs.c b/common/fs.c
+index 04cb7c4..1bb0c2c 100644
+--- a/common/fs.c
++++ b/common/fs.c
+@@ -271,9 +271,9 @@ fs_tab_free(void)
+ 	fs_tab_ent_t *otep;
+ 
+ 	for (tep = fs_tabp
+-	      ;
++	     ;
+ 	      tep
+-	      ;
++	     ;
+ 	      otep = tep, tep = tep->fte_nextp, fs_tab_ent_free(otep) )
+ 
+ 		;
+@@ -333,7 +333,7 @@ fs_tab_lookup_blk(char *blks)
  {
-@@ -77,7 +77,7 @@ getdents_wrap(int fd, char *buf, size_t nbytes)
+ 	fs_tab_ent_t *tep;
  
- 	/*
- 	 * If the structure returned by the kernel is identical to what we
--	   need, don't do any conversions.  */
-+	 * need, don't do any conversions.  */
- 	if (offsetof(struct dirent, d_name)
- 	    == offsetof(struct kernel_dirent64, d_name)
- 	    && sizeof(dp->d_ino) == sizeof(kdp->d_ino)
-@@ -90,8 +90,8 @@ getdents_wrap(int fd, char *buf, size_t nbytes)
- 		const size_t alignment = __alignof__(struct dirent);
- 		/*
- 		 * Since kdp->d_reclen is already aligned for the kernel
--		   structure this may compute a value that is bigger
--		   than necessary.  */
-+		 * structure this may compute a value that is bigger
-+		 * than necessary.  */
- 		size_t old_reclen = kdp->d_reclen;
- 		size_t new_reclen = ((old_reclen - size_diff + alignment - 1)
- 				     & ~(alignment - 1));
-@@ -105,8 +105,8 @@ getdents_wrap(int fd, char *buf, size_t nbytes)
- 		    || (sizeof(dp->d_off) != sizeof(kdp->d_off))) {
- 			/*
- 			 * Overflow.  If there was at least one entry
--			   before this one, return them without error,
--			   otherwise signal overflow.  */
-+			 * before this one, return them without error,
-+			 * otherwise signal overflow.  */
- 			if (last_offset != -1) {
- 				lseek64(fd, last_offset, SEEK_SET);
- 				return (char *)dp - buf;
+-	for (tep = fs_tabp ; tep ; tep = tep->fte_nextp) {
++	for (tep = fs_tabp; tep; tep = tep->fte_nextp) {
+ 		struct stat64 stata;
+ 		bool_t aok;
+ 		struct stat64 statb;
+@@ -361,7 +361,7 @@ fs_tab_lookup_mnt(char *mnts)
+ {
+ 	fs_tab_ent_t *tep;
+ 
+-	for (tep = fs_tabp ; tep ; tep = tep->fte_nextp) {
++	for (tep = fs_tabp; tep; tep = tep->fte_nextp) {
+ 		if (tep->fte_mnts && ! strcmp(tep->fte_mnts, mnts)) {
+ 			return tep;
+ 		}
+diff --git a/common/global.c b/common/global.c
+index 6971e2b..42bfc3d 100644
+--- a/common/global.c
++++ b/common/global.c
+@@ -250,7 +250,7 @@ global_hdr_checksum_set(global_hdr_t *hdrp)
+ 
+ 	hdrp->gh_checksum = 0;
+ 	accum = 0;
+-	for (p = beginp ; p < endp ; p++) {
++	for (p = beginp; p < endp; p++) {
+ 		accum += INT_GET(*p, ARCH_CONVERT);
+ 	}
+ 	INT_SET(hdrp->gh_checksum, ARCH_CONVERT, (int32_t)(~accum + 1));
+@@ -269,7 +269,7 @@ global_hdr_checksum_check(global_hdr_t *hdrp)
+ 	uint32_t accum;
+ 
+ 	accum = 0;
+-	for (p = beginp ; p < endp ; p++) {
++	for (p = beginp; p < endp; p++) {
+ 		accum += INT_GET(*p, ARCH_CONVERT);
+ 	}
+ 	return accum == 0 ? BOOL_TRUE : BOOL_FALSE;
 diff --git a/common/hsmapi.c b/common/hsmapi.c
-index 4ffc1fd..738edf9 100644
+index 24bb924..e3e18a7 100644
 --- a/common/hsmapi.c
 +++ b/common/hsmapi.c
-@@ -45,7 +45,7 @@
- 
- /*
-  * DMF attribute name, size, and format as stored within XFS. (Stolen directly
--   from "dmfsapi/dmf_dmattr.H".
-+ * from "dmfsapi/dmf_dmattr.H".
-  */
- 
- #define DMF_ATTR_NAME   "SGI_DMI_DMFATTR"       /* name of DMF's attr */
-@@ -126,7 +126,7 @@ typedef struct {
- 
- /*
-  * The following definitions provide the internal format of the hsm_fs_ctxt_t
--   and hsm_f_ctxt_t structures, respectively.
-+ * and hsm_f_ctxt_t structures, respectively.
-  */
- 
- typedef struct  {
-@@ -217,7 +217,7 @@ HsmInitFsysContext(
- 
- 	/*
- 	 * Malloc space for a filesystem context, and initialize any fields
--	   needed later by other routines.
-+	 * needed later by other routines.
+@@ -871,7 +871,7 @@ HsmEndRestoreFile(
  	 */
- 
- 	if ((dmf_fs_ctxtp = malloc(sizeof(dmf_fs_ctxt_t))) == NULL) {
-@@ -227,7 +227,7 @@ HsmInitFsysContext(
- 
- 	/*
- 	 * Get the filesystem's handle for later use in building file
--	   handles in HsmInitFileContext.
-+	 * handles in HsmInitFileContext.
- 	 */
- 	dmf_fs_ctxtp->fshanp = jdm_getfshandle((char *)mountpoint);
- 	if (dmf_fs_ctxtp->fshanp == NULL) {
-@@ -321,9 +321,9 @@ HsmEstimateFileSpace(
- 	} else {
- 		/*
- 		 * This code is assuming that there are no MIG files, and so any
--		   file with DMAPI event bits set will be dumped as OFL. The
--		   non-dir dump size estimation will be somewhat low if there
--		   are MIG files.
-+		 * file with DMAPI event bits set will be dumped as OFL. The
-+		 * non-dir dump size estimation will be somewhat low if there
-+		 * are MIG files.
- 		 */
- 		if ((statp->bs_mode & S_IFMT) != S_IFREG) {
- 			return 0;       /* not a regular file */
-@@ -486,8 +486,8 @@ HsmInitFileContext(
- 
- 	/*
- 	 * We have a likely candidate, so we have to pay the price and look
--	   for the DMF attribute.  (It could be in a disk block separate from
--	   the inode.)
-+	 * for the DMF attribute.  (It could be in a disk block separate from
-+	 * the inode.)
- 	 */
- 	attr_op.am_opcode = ATTR_OP_GET;
- 	attr_op.am_error = 0;
-@@ -600,9 +600,9 @@ HsmModifyExtentMap(
- 
- 	/*
- 	 * We are dumping a dualstate file.  Make it look like there is only
--	   one getbmapx extent and that it contains a hole which extends from
--	   the current offset to the end of the file.  The bmap[1].bmv_offset
--	   should already be correct.
-+	 * one getbmapx extent and that it contains a hole which extends from
-+	 * the current offset to the end of the file.  The bmap[1].bmv_offset
-+	 * should already be correct.
- 	 */
- 
- 	length = BTOBB(dmf_f_ctxtp->filesize) - bmap[1].bmv_offset;
-@@ -670,7 +670,7 @@ HsmFilterExistingAttribute(
- 
- 	/*
- 	 * Remove the existing DMF attribute, as we will later replace it with
--	   our own version.
-+	 * our own version.
- 	 */
- 
- 	*skip_entry = 1;
-diff --git a/common/inventory.c b/common/inventory.c
-index 7346ddd..d7609c0 100644
---- a/common/inventory.c
-+++ b/common/inventory.c
-@@ -58,7 +58,7 @@ inv_open(inv_predicate_t bywhat, void *pred)
- 
- 	/*
- 	 * XXX also, see if it is too full. if so, make another and leave a
--	   reference to the new file in the old one */
-+	 * reference to the new file in the old one */
- 
- 	stobjfd = get_storageobj(fd, &index);
- 	if (stobjfd < 0) {
-@@ -81,7 +81,7 @@ inv_open(inv_predicate_t bywhat, void *pred)
- 	}
- 	/*
- 	 * create another storage object (and, an inv_index entry for it too)
--	   if we've filled this one up */
-+	 * if we've filled this one up */
- 	if ((uint)num >= sescnt->ic_maxnum) {
- #ifdef INVT_DEBUG
- 		printf("$ creating a new storage obj & index entry. \n");
-@@ -277,7 +277,7 @@ inv_writesession_open(
- 
- 	/*
- 	 * we need to put the new session in the appropriate place in
--	   storage object. So first find out howmany sessions are there */
-+	 * storage object. So first find out howmany sessions are there */
- 
- 	INVLOCK(fd, LOCK_EX);
- 	if (GET_SESCOUNTERS(fd, &sescnt) < 0) {
-@@ -289,7 +289,7 @@ inv_writesession_open(
- 
- 	/*
- 	 * create the writesession, and get ready for the streams to come
--	   afterwards */
-+	 * afterwards */
- 	rval = create_session(sestok, fd, sescnt, ses, &hdr);
- 	assert(rval > 0);
- 
-@@ -463,7 +463,7 @@ inv_stream_close(
- 
- 	/*
- 	 * get the last media file to figure out what our last ino was.
--	   we have a pointer to that in the stream token */
-+	 * we have a pointer to that in the stream token */
- 	if (tok->md_lastmfile) {
- 		if (strm.st_endino.ino != tok->md_lastmfile->mf_endino.ino ||
- 		    strm.st_endino.offset != tok->md_lastmfile->mf_endino.offset) {
-@@ -530,8 +530,8 @@ inv_put_mediafile(
- 
- 	/*
- 	 * we dont free the mfile here. we always keep the last mfile
--	   around, inside the inv_stmtoken, and when we add a new mfile,
--	   we free the previous one. The last one is freed in stream_close()
-+	 * around, inside the inv_stmtoken, and when we add a new mfile,
-+	 * we free the previous one. The last one is freed in stream_close()
- 	 */
- 
- 	return (rval < 0) ? BOOL_FALSE : BOOL_TRUE;
-@@ -636,7 +636,7 @@ inv_get_session(
- 
- 	/*
- 	 * First get the session header, and the session information. Then
--	   we can figure out how much space to allocate */
-+	 * we can figure out how much space to allocate */
- }
- 
- 
-diff --git a/common/inventory.h b/common/inventory.h
-index 7f81643..6d7c94e 100644
---- a/common/inventory.h
-+++ b/common/inventory.h
-@@ -82,8 +82,8 @@ typedef struct inv_stream {
- 	xfs_ino_t	st_startino;    /* the starting pt */
- 	off64_t		st_startino_off;
- 	xfs_ino_t	st_endino;      /* where we actually ended up. this means
--	                                   we've written upto but not including
--	                                   this breakpoint. */
-+	                                 * we've written upto but not including
-+	                                 * this breakpoint. */
- 	off64_t		st_endino_off;
- 	int		st_nmediafiles; /* number of mediafiles */
- } inv_stream_t;
-@@ -104,7 +104,7 @@ typedef struct inv_session {
- 	time32_t	s_time;                 /* time of the dump */
- 	u_char		s_level;                /* dump level */
- 	char		s_label[INV_STRLEN];    /* session label, assigned by the
--	                                           operator */
-+	                                         * operator */
- 	char		s_mountpt[INV_STRLEN];  /* path to the mount point */
- 	char		s_devpath[INV_STRLEN];  /* path to the device */
- } inv_session_t;
+ 	if (*hsm_flagp) {
+ 		int rv;
+-		rv = attr_removef(fd, DMF_ATTR_NAME , ATTR_ROOT);
++		rv = attr_removef(fd, DMF_ATTR_NAME, ATTR_ROOT);
+ 		if (rv) {
+ 			mlog(MLOG_NORMAL | MLOG_WARNING,
+ 			     _("error removing temp DMF attr on %s: %s\n"),
 diff --git a/common/main.c b/common/main.c
-index 16dee52..ee3c2bd 100644
+index a9affe2..3f3ce0c 100644
 --- a/common/main.c
 +++ b/common/main.c
-@@ -780,9 +780,9 @@ main(int argc, char *argv[])
- 					(void)sigint_dialog();
+@@ -656,7 +656,7 @@ main(int argc, char *argv[])
+ 	 * drive.h, initialized by drive_init[12]
+ 	 */
+ 	if (! init_error) {
+-		for (stix = 0 ; stix < drivecnt ; stix++) {
++		for (stix = 0; stix < drivecnt; stix++) {
+ 			ok = cldmgr_create(childmain,
+ 					    stix,
+ 					    "child",
+@@ -673,7 +673,7 @@ main(int argc, char *argv[])
+ 	if (progrpt_enabledpr) {
+ 		(void)alarm((uint)progrpt_interval);
+ 	}
+-	for (; ;) {
++	for (;;) {
+ 		time32_t now;
+ 		bool_t stop_requested = BOOL_FALSE;
+ 		int stop_timeout = -1;
+@@ -839,7 +839,7 @@ main(int argc, char *argv[])
+ 				char **statline;
+ 				ix_t i;
+ 				statlinecnt = content_statline(&statline);
+-				for (i = 0 ; i < statlinecnt ; i++) {
++				for (i = 0; i < statlinecnt; i++) {
+ 					mlog(MLOG_NORMAL,
+ 					      statline[i]);
  				}
- 				/*
--				   mlog(MLOG_NORMAL,
--				      _("session interrupt in progress: "
--				      "please wait\n"));
-+				 * mlog(MLOG_NORMAL,
-+				 *    _("session interrupt in progress: "
-+				 *    "please wait\n"));
- 				 */
- 			} else {
- 				if (dlog_allowed()) {
+@@ -1054,7 +1054,7 @@ preemptchk(int flg)
+ 			char **statline;
+ 			ix_t i;
+ 			statlinecnt = content_statline(&statline);
+-			for (i = 0 ; i < statlinecnt ; i++) {
++			for (i = 0; i < statlinecnt; i++) {
+ 				mlog(MLOG_NORMAL,
+ 				      statline[i]);
+ 			}
+@@ -1217,7 +1217,7 @@ loadoptfile(int *argcp, char ***argvp)
+ 	 * skip the GETOPT_OPTFILE option which put us here!
+ 	 */
+ 	sz = 0;
+-	for (i =  0 ; i < *argcp ; i++) {
++	for (i =  0; i < *argcp; i++) {
+ 		if (i == (int)optfileix) {
+ 			i++; /* to skip option argument */
+ 			continue;
+@@ -1261,7 +1261,7 @@ loadoptfile(int *argcp, char ***argvp)
+ 
+ 	/* copy the remaining command line args into the buffer
+ 	 */
+-	for (; i < *argcp ; i++) {
++	for (; i < *argcp; i++) {
+ 		if (i == (int)optfileix) {
+ 			i++; /* to skip option argument */
+ 			continue;
+@@ -1277,7 +1277,7 @@ loadoptfile(int *argcp, char ***argvp)
+ 
+ 	/* change newlines and carriage returns into spaces
+ 	 */
+-	for (p = argbuf ; *p ; p++) {
++	for (p = argbuf; *p; p++) {
+ 		if (strchr("\n\r", (int)(*p))) {
+ 			*p = ' ';
+ 		}
+@@ -1287,7 +1287,7 @@ loadoptfile(int *argcp, char ***argvp)
+ 	 */
+ 	tokencnt = 0;
+ 	p = argbuf;
+-	for (; ;) {
++	for (;;) {
+ 		/* start at the first non-separator character
+ 		 */
+ 		while (*p && strchr(sep, (int)(*p))) {
+@@ -1331,7 +1331,7 @@ loadoptfile(int *argcp, char ***argvp)
+ 	 * extracting quotes and escapes
+ 	 */
+ 	p = argbuf;
+-	for (i = 0 ; ; i++) {
++	for (i = 0;; i++) {
+ 		char *endp = 0;
+ 
+ 		/* start at the first non-separator character
+@@ -1547,7 +1547,7 @@ sigint_dialog(void)
+ 	preamblestr[preamblecnt++] = fold;
+ 	preamblestr[preamblecnt++] = "\n";
+ 	preamblestr[preamblecnt++] = "\n";
+-	for (i = 0 ; i < statlinecnt ; i++) {
++	for (i = 0; i < statlinecnt; i++) {
+ 		preamblestr[preamblecnt++] = statline[i];
+ 	}
+ 	if (stop_in_progress) {
+@@ -1649,7 +1649,7 @@ sigint_dialog(void)
+ 		choicecnt = 0;
+ 		/* number of lines must match number of subsystems
+ 		 */
+-		for (choicecnt = 0 ; choicecnt < MLOG_SS_CNT ; choicecnt++) {
++		for (choicecnt = 0; choicecnt < MLOG_SS_CNT; choicecnt++) {
+ 			choicestr[choicecnt] = mlog_ss_names[choicecnt];
+ 		}
+ 		allix = choicecnt;
+@@ -1732,9 +1732,9 @@ sigint_dialog(void)
+ 					ix_t ssix;
+ 					assert(ssselected == -1);
+ 					for (ssix = 0
+-					      ;
++					     ;
+ 					      ssix < MLOG_SS_CNT
+-					      ;
++					     ;
+ 					      ssix++) {
+ 						mlog_level_ss[ssix] =
+ 							(int)responseix;
+@@ -2264,7 +2264,7 @@ sig_numstring(int num)
+ 			       (sizeof(sig_printmap)
+ 			         /
+ 			         sizeof(sig_printmap[0]));
+-	for (; p < endp ; p++) {
++	for (; p < endp; p++) {
+ 		if (p->num == num) {
+ 			return p->string;
+ 		}
+@@ -2279,7 +2279,7 @@ strpbrkquotes(char *p, const char *sep)
+ 	bool_t prevcharwasbackslash = BOOL_FALSE;
+ 	bool_t inquotes = BOOL_FALSE;
+ 
+-	for (; ; p++) {
++	for (;; p++) {
+ 		if (*p == 0) {
+ 			return 0;
+ 		}
+@@ -2337,7 +2337,7 @@ stripquotes(char *p)
+ 	endp = p + len;
+ 	justremovedbackslash = BOOL_FALSE;
+ 
+-	for (nextp = p ; nextp < endp ;) {
++	for (nextp = p; nextp < endp;) {
+ 		if (*nextp == '\\' && ! justremovedbackslash) {
+ 			shiftleftby1(nextp, endp);
+ 			endp--;
+@@ -2354,7 +2354,7 @@ stripquotes(char *p)
+ static void
+ shiftleftby1(char *p, char *endp)
+ {
+-	for (; p < endp ; p++) {
++	for (; p < endp; p++) {
+ 		*p = p[1];
+ 	}
+ }
 diff --git a/common/media.c b/common/media.c
-index bb7835f..c1d2b27 100644
+index 15c0478..2337a84 100644
 --- a/common/media.c
 +++ b/common/media.c
-@@ -138,8 +138,8 @@ media_create(int argc, char *argv[], drive_strategy_t *dsp)
- 	if (! medialabel) {
- 		/*
- 		 * not useful
--		   mlog(MLOG_VERBOSE,
--		      _("WARNING: no media label specified\n"));
-+		 * mlog(MLOG_VERBOSE,
-+		 *    _("WARNING: no media label specified\n"));
- 		 */
- 		medialabel = "";
+@@ -144,7 +144,7 @@ media_create(int argc, char *argv[], drive_strategy_t *dsp)
+ 	mediacnt = dsp->ds_drivecnt;
+ 	mediapp = (media_t **)calloc(mediacnt, sizeof(media_t *));
+ 	assert(mediapp);
+-	for (mediaix = 0 ; mediaix < mediacnt ; mediaix++) {
++	for (mediaix = 0; mediaix < mediacnt; mediaix++) {
+ 		mediapp[mediaix] = media_alloc(dsp->ds_drivep[mediaix],
+ 					 	  medialabel);
  	}
+@@ -156,7 +156,7 @@ media_create(int argc, char *argv[], drive_strategy_t *dsp)
+ 	 * media_strategy_t as well as the write headers.
+ 	 */
+ 	chosen_sp = 0;
+-	for (id = 0 ; spp < epp ; spp++, id++) {
++	for (id = 0; spp < epp; spp++, id++) {
+ 		(*spp)->ms_id = id;
+ 		if (! chosen_sp) {
+ 			/* lend the media_t array to the strategy
+@@ -164,7 +164,7 @@ media_create(int argc, char *argv[], drive_strategy_t *dsp)
+ 			(*spp)->ms_mediap = mediapp;
+ 			(*spp)->ms_dsp = dsp;
+ 			(*spp)->ms_mediacnt = mediacnt;
+-			for (mediaix = 0 ; mediaix < mediacnt ; mediaix++) {
++			for (mediaix = 0; mediaix < mediacnt; mediaix++) {
+ 				media_t *mediap = mediapp[mediaix];
+ 				mediap->m_strategyp = *spp;
+ 				mediap->m_writehdrp->mh_strategyid = id;
+@@ -191,7 +191,7 @@ media_create(int argc, char *argv[], drive_strategy_t *dsp)
+ 
+ 	/* give the media_t array to the chosen strategy
+ 	 */
+-	for (mediaix = 0 ; mediaix < mediacnt ; mediaix++) {
++	for (mediaix = 0; mediaix < mediacnt; mediaix++) {
+ 		media_t *mediap = mediapp[mediaix];
+ 		mediap->m_strategyp = chosen_sp;
+ 		mediap->m_writehdrp->mh_strategyid = chosen_sp->ms_id;
+diff --git a/common/mlog.c b/common/mlog.c
+index db38290..e09c16c 100644
+--- a/common/mlog.c
++++ b/common/mlog.c
+@@ -138,7 +138,7 @@ mlog_init0(void)
+ 	 */
+ 	mlog_streamcnt = 1;
+ 
+-	for(i = 0 ; i < MLOG_SS_CNT ; i++) {
++	for(i = 0; i < MLOG_SS_CNT; i++) {
+ 		mlog_level_ss[i] = MLOG_VERBOSE;
+ 	}
+ }
+@@ -160,12 +160,12 @@ mlog_init1(int argc, char *argv[])
+ 	suboptstrs = (char **)calloc(MLOG_SS_CNT + vsymcnt + 1,
+ 					sizeof(char *));
+ 	assert(suboptstrs);
+-	for (soix = 0 ; soix < MLOG_SS_CNT ; soix++) {
++	for (soix = 0; soix < MLOG_SS_CNT; soix++) {
+ 		assert(strlen(mlog_ss_names[soix]) <= MLOG_SS_NAME_MAX);
+ 			/* unrelated, but opportunity to chk */
+ 		suboptstrs[soix] = mlog_ss_names[soix];
+ 	}
+-	for (; soix < MLOG_SS_CNT + vsymcnt ; soix++) {
++	for (; soix < MLOG_SS_CNT + vsymcnt; soix++) {
+ 		suboptstrs[soix] = mlog_sym[soix - MLOG_SS_CNT].sym;
+ 	}
+ 	suboptstrs[soix] = 0;
+@@ -174,7 +174,7 @@ mlog_init1(int argc, char *argv[])
+ 	 * subsystems where explicitly called out. those which weren't will
+ 	 * be given the "general" level.
+ 	 */
+-	for (ssix = 0 ; ssix < MLOG_SS_CNT ; ssix++) {
++	for (ssix = 0; ssix < MLOG_SS_CNT; ssix++) {
+ 		mlog_level_ss[ssix] = -1;
+ 	}
+ 	mlog_level_ss[MLOG_SS_GEN] = MLOG_VERBOSE;
+@@ -273,7 +273,7 @@ mlog_init1(int argc, char *argv[])
+ 
+ 	/* give subsystems not explicitly called out the "general" verbosity
+ 	 */
+-	for (ssix = 0 ; ssix < MLOG_SS_CNT ; ssix++) {
++	for (ssix = 0; ssix < MLOG_SS_CNT; ssix++) {
+ 		if (mlog_level_ss[ssix] < 0) {
+ 			assert(mlog_level_ss[ssix] == -1);
+ 			assert(mlog_level_ss[MLOG_SS_GEN] >= 0);
+@@ -350,7 +350,7 @@ mlog_override_level(int levelarg)
+ 	ss = (ix_t)((levelarg & MLOG_SS_MASK) >> MLOG_SS_SHIFT);
+ 
+ 	if (ss == MLOG_SS_GEN) { /* do level for all subsys */
+-	    for (ss = 0 ; ss < MLOG_SS_CNT ; ss++) {
++	    for (ss = 0; ss < MLOG_SS_CNT; ss++) {
+ 		mlog_level_ss[ss] = level;
+ 	    }
+ 	}
+@@ -792,7 +792,7 @@ mlog_sym_lookup(char *sym)
+ 			 +
+ 			 sizeof(mlog_sym) / sizeof(mlog_sym[0]);
+ 
+-	for (; p < ep ; p++) {
++	for (; p < ep; p++) {
+ 		if (! strcmp(sym, p->sym)) {
+ 			return p->level;
+ 		}
+@@ -827,7 +827,7 @@ fold_init(fold_t fold, char *infostr, char c)
+ 
+ 	assert(p < endp);
+ 	*p++ = ' ';
+-	for (cnt = 0 ; cnt < predashlen && p < endp ; cnt++, p++) {
++	for (cnt = 0; cnt < predashlen && p < endp; cnt++, p++) {
+ 		*p = c;
+ 	}
+ 	assert(p < endp);
+@@ -839,7 +839,7 @@ fold_init(fold_t fold, char *infostr, char c)
+ 	assert(p < endp);
+ 	*p++ = ' ';
+ 	assert(p < endp);
+-	for (cnt = 0 ; cnt < postdashlen && p < endp ; cnt++, p++) {
++	for (cnt = 0; cnt < postdashlen && p < endp; cnt++, p++) {
+ 		*p = c;
+ 	}
+ 	assert(p <= endp);
+diff --git a/common/path.c b/common/path.c
+index ea97ee9..1c275e4 100644
+--- a/common/path.c
++++ b/common/path.c
+@@ -64,7 +64,7 @@ path_diff(char *path, char *base)
+ 		return 0;
+ 	}
+ 
+-	for (; *base && *path == *base ; path++, base++)
++	for (; *base && *path == *base; path++, base++)
+ 		;
+ 
+ 	if (*path == 0) {
+@@ -202,7 +202,7 @@ pem_next(pem_t *pemp)
+ 	/* if end of string encountered, place next next at end of string
+ 	 */
+ 	if (! nextnext) {
+-		for (nextnext = pemp->pem_next ; *nextnext ; nextnext++)
++		for (nextnext = pemp->pem_next; *nextnext; nextnext++)
+ 			;
+ 	}
+ 
+@@ -246,7 +246,7 @@ pa_free(pa_t *pap)
+ {
+ 	int i;
+ 
+-	for (i = 0 ; i < pap->pa_cnt ; i++) {
++	for (i = 0; i < pap->pa_cnt; i++) {
+ 		free((void *)pap->pa_array[i]);
+ 	}
+ 
+@@ -288,7 +288,7 @@ pa_gen(pa_t *pap)
+ 	char *p;
+ 
+ 	sz = 0;
+-	for (i = 0 ; i < pap->pa_cnt ; i++) {
++	for (i = 0; i < pap->pa_cnt; i++) {
+ 		sz += strlen(pap->pa_array[i]) + 1;
+ 	}
+ 	if (i == 0)
+@@ -302,7 +302,7 @@ pa_gen(pa_t *pap)
+ 		sprintf(retp, "/");
+ 	} else {
+ 		p = retp;
+-		for (i = 0 ; i < pap->pa_cnt ; i++) {
++		for (i = 0; i < pap->pa_cnt; i++) {
+ 			sprintf(p, "/%s", pap->pa_array[i]);
+ 			p += strlen(p);
+ 		}
+diff --git a/common/ring.c b/common/ring.c
+index d1fbcb7..faef34f 100644
+--- a/common/ring.c
++++ b/common/ring.c
+@@ -90,7 +90,7 @@ ring_create(size_t ringlen,
+ 
+ 	/* allocate the buffers and initialize the messages
+ 	 */
+-	for (mix = 0 ; mix < ringlen ; mix++) {
++	for (mix = 0; mix < ringlen; mix++) {
+ 		ring_msg_t *msgp = &ringp->r_msgp[mix];
+ 		msgp->rm_mix = mix;
+ 		msgp->rm_op = RING_OP_NONE;
+@@ -264,7 +264,7 @@ ring_reset(ring_t *ringp, ring_msg_t *msgp)
+ 	ringp->r_active_out_ix = 0;
+ 	ringp->r_client_cnt = 0;
+ 	ringp->r_slave_cnt = 0;
+-	for (mix = 0 ; mix < ringp->r_len ; mix++) {
++	for (mix = 0; mix < ringp->r_len; mix++) {
+ 		ring_msg_t *msgp = &ringp->r_msgp[mix];
+ 		msgp->rm_mix = mix;
+ 		msgp->rm_op = RING_OP_NONE;
+@@ -420,7 +420,7 @@ ring_slave_entry(void *ringctxp)
+ 
+ 	/* loop reading and precessing messages until told to die
+ 	 */
+-	for (loopmode = LOOPMODE_NORMAL ; loopmode != LOOPMODE_DIE ;) {
++	for (loopmode = LOOPMODE_NORMAL; loopmode != LOOPMODE_DIE;) {
+ 		ring_msg_t *msgp;
+ 		int rval;
+ 
+diff --git a/common/stream.c b/common/stream.c
+index 67a3c81..f7a0cce 100644
+--- a/common/stream.c
++++ b/common/stream.c
+@@ -69,7 +69,7 @@ stream_register(pthread_t tid, int streamix)
+ 	assert(streamix < STREAM_SIMMAX);
+ 
+ 	lock();
+-	for (; p < ep ; p++) {
++	for (; p < ep; p++) {
+ 		if (p->s_state == S_FREE) {
+ 			p->s_state = S_RUNNING;
+ 			break;
+@@ -94,7 +94,7 @@ stream_dead(pthread_t tid)
+ 	spm_t *p = spm;
+ 	spm_t *ep = spm + N(spm);
+ 
+-	for (; p < ep ; p++)
++	for (; p < ep; p++)
+ 		if (pthread_equal(p->s_tid, tid) ) {
+ 			p->s_state = S_ZOMBIE;
+ 			break;
+@@ -109,7 +109,7 @@ stream_free(pthread_t tid)
+ 	spm_t *ep = spm + N(spm);
+ 
+ 	lock();
+-	for (; p < ep ; p++) {
++	for (; p < ep; p++) {
+ 		if (pthread_equal(p->s_tid, tid) ) {
+ 			(void) memset((void *) p, 0, sizeof(spm_t));
+ 			p->s_state = S_FREE;
+@@ -154,7 +154,7 @@ stream_find(pthread_t tid, stream_state_t s[], int nstates)
+ 	assert(nstates > 0);
+ 
+ 	/* note we don't lock the stream array in this function */
+-	for (; p < ep ; p++)
++	for (; p < ep; p++)
+ 		if (pthread_equal(p->s_tid, tid) ) {
+ 			/* check state */
+ 			for (i = 0; i < nstates; i++)
+@@ -279,7 +279,7 @@ stream_cnt(void)
+ 	assert(sizeof(ixmap) * NBBY >= STREAM_SIMMAX);
+ 
+ 	lock();
+-	for (; p < ep ; p++) {
++	for (; p < ep; p++) {
+ 		if (p->s_state == S_RUNNING) {
+ 			ixmap |= (size_t)1 << p->s_ix;
+ 		}
+@@ -287,7 +287,7 @@ stream_cnt(void)
+ 	unlock();
+ 
+ 	ixcnt = 0;
+-	for (bitix = 0 ; bitix < STREAM_SIMMAX ; bitix++) {
++	for (bitix = 0; bitix < STREAM_SIMMAX; bitix++) {
+ 		if (ixmap & ((size_t)1 << bitix)) {
+ 			ixcnt++;
+ 		}
 diff --git a/common/ts_mtio.h b/common/ts_mtio.h
-index 87faa15..5487a3f 100644
+index 9e4ae4c..9b31d25 100644
 --- a/common/ts_mtio.h
 +++ b/common/ts_mtio.h
-@@ -92,7 +92,7 @@ typedef unsigned int minor_t;
- #define MTSCSI_CIPHER_SEC_OFF   0x6002  /* disable recovered error report */
- /*
-  * These are meaningful only for Exabyte.  Default is to return
--        errors if read length is less than the block length */
-+ *      errors if read length is less than the block length */
- #define MTSCSI_SILI             0x6003  /* suppress illegal length indication */
- #define MTSCSI_EILI             0x6004  /* enable illegal length indication.
- 	                                 * currently implemented only for
-@@ -242,27 +242,27 @@ struct  mtvid {
+@@ -146,7 +146,7 @@ struct	mtget_sgi	{
+ 	int	mt_blkno;	/* block number of current position */
  };
  
- /*	structure for MTIOCGETBLKINFO - all quantities in bytes.
--        A value of 0 indicates no limit
--        When using the variable block size device, the lastread
--        field is determined by reading one block and then spacing
--        backwards, if no i/o has yet been done to this tape.  Unlike
--        MTIOCGETBLKSIZE, all quantities are in bytes.
-+ *      A value of 0 indicates no limit
-+ *      When using the variable block size device, the lastread
-+ *      field is determined by reading one block and then spacing
-+ *      backwards, if no i/o has yet been done to this tape.  Unlike
-+ *      MTIOCGETBLKSIZE, all quantities are in bytes.
-  */
- struct mtblkinfo {
- 	unsigned	minblksz;       /* minimum block size */
- 	unsigned	maxblksz;       /* maximum block size */
- 	unsigned	curblksz;       /* size of block at last i/o.  For fixed
--	                                   mode, all requests must be a multiple of this. */
-+	                                 * mode, all requests must be a multiple of this. */
- 	unsigned	recblksz;       /* "recommended" size for i/o.  Mostly
--	                                   based on compatibility with earlier releases and/or
--	                                   other vendors */
-+	                                 * based on compatibility with earlier releases and/or
-+	                                 * other vendors */
- };
+-/* old mtget structure , still keep it around for compatibility reason */
++/* old mtget structure, still keep it around for compatibility reason */
+ /* the librmt and /etc/rmt code uses it */
+ struct	old_mtget	{
+ 	short	mt_type;	/* type of magtape device */
+diff --git a/common/util.c b/common/util.c
+index 4a7826a..621d340 100644
+--- a/common/util.c
++++ b/common/util.c
+@@ -175,7 +175,7 @@ bigstat_iter(jdm_fshandle_t *fshandlep,
+ 		      "bulkstat returns buflen %d ino %llu\n",
+ 		      buflenout,
+ 		      buf->bs_ino);
+-		for (p = buf, endp = buf + buflenout ; p < endp ; p++) {
++		for (p = buf, endp = buf + buflenout; p < endp; p++) {
+ 			int rval;
  
+ 			if (p->bs_ino == 0)
+@@ -308,7 +308,7 @@ inogrp_iter(int fsfd,
+ 			free(igrp);
+ 			return 0;
+ 		}
+-		for (p = igrp, endp = igrp + inogrpcnt ; p < endp ; p++) {
++		for (p = igrp, endp = igrp + inogrpcnt; p < endp; p++) {
+ 			int rval;
  
- /*	structure for MTSCSI_RDLOG
--        The fields in this structure reflect the values required in
--        the SCSI Log Sense command.  See a product manual for an
--        explanation of the fields.
-+ *      The fields in this structure reflect the values required in
-+ *      the SCSI Log Sense command.  See a product manual for an
-+ *      explanation of the fields.
-  */
- 
- #define MTSCSI_LOGLEN   4096
-@@ -329,7 +329,7 @@ struct mtaudio {
- 	uchar_t			zero2	: 4, pno2 : 4;  /* fields should always be 0, or 0xA, when the */
- 	uchar_t			zero3	: 4, pno3 : 4;  /* pno field is also 0xA, indicating not valid */
- 	uchar_t			indexhi : 4, index : 4; /* index number within program; hi is the
--	                                                   most significant BCD digit, index the least. */
-+	                                                 * most significant BCD digit, index the least. */
- 	struct mtaudtimecode	ptime;                  /* program time */
- 	struct mtaudtimecode	atime;                  /* absolute time */
- 	struct mtaudtimecode	rtime;                  /* running time */
-@@ -341,9 +341,9 @@ struct mtaudio {
- /* structure for MTCAPABILITY */
- struct mt_capablity {
- 	int	mtsubtype;      /* this is NOT the same as mt_type, this is
--	                           the actual tape type, from invent.h, such as 9track, or DAT;
--	                           otherwise it is difficult to associate a particular device
--	                           with its type from a program. */
-+	                         * the actual tape type, from invent.h, such as 9track, or DAT;
-+	                         * otherwise it is difficult to associate a particular device
-+	                         * with its type from a program. */
- 	uint_t	mtcapablity;    /* the MTCAN* bits */
- 	uint_t	mtfuture[8];    /* for future additions */
- };
-@@ -355,21 +355,21 @@ struct mt_capablity {
- 
- /*
-  *      values for mt_dposn; values chosen for compatiblity with
--        existing programs!  Note that these bits and the gaps between
--        are also used in tpsc.h */
-+ *      existing programs!  Note that these bits and the gaps between
-+ *      are also used in tpsc.h */
- 
- /*
-  * The expected relative behaviour of MT_EW, MT_EOT and MTANSI can be
--   described as follows.
--   - writing from BOT, with MTANSI disabled, when LEOT is encountered,
--     MT_EW and MT_EOT are set. If MTANSI is now enabled, MT_EOT will be
--     reset and writing will be permitted until PEOT is encountered,
--     whereupon MT_EOT will again be set and will remain so until the
--     tape is repositioned.
--   - reading from BOT, MT_EOT will be set when PEOT is
--     encountered. LEOT is not normally reported by the drive, and therefore
--     MT_EW will normally not be set, unless the drive supports the REW mode
--     bit. (few do)
-+ * described as follows.
-+ * - writing from BOT, with MTANSI disabled, when LEOT is encountered,
-+ *   MT_EW and MT_EOT are set. If MTANSI is now enabled, MT_EOT will be
-+ *   reset and writing will be permitted until PEOT is encountered,
-+ *   whereupon MT_EOT will again be set and will remain so until the
-+ *   tape is repositioned.
-+ * - reading from BOT, MT_EOT will be set when PEOT is
-+ *   encountered. LEOT is not normally reported by the drive, and therefore
-+ *   MT_EW will normally not be set, unless the drive supports the REW mode
-+ *   bit. (few do)
-  */
- 
- #define MT_EOT          0x01    /* tape is at end of media */
-@@ -614,12 +614,12 @@ struct mt_capablity {
- #define MTCAN_SEEK      0x20000         /* drive supports seeking to a particular
- 	                                 * block (or sometimes program # if AUDIO supported) */
- #define MTCAN_CHTYPEANY 0x40000         /* drive can change density
--	                                   and/or fixed to variable at any point (if it can change at all).
--	                                   Otherwise it can change only at BOT */
-+	                                 * and/or fixed to variable at any point (if it can change at all).
-+	                                 * Otherwise it can change only at BOT */
- #define MTCANT_IMM      0x80000         /* drive doesn't work correctly when
--	                                   immediate mode rewind, etc. is enabled.  Setting this bit
--	                                   will disable immediate mode rewind on the drive, independent
--	                                   of the setting of tpsc_immediate_rewind (in master.d/tpsc) */
-+	                                 * immediate mode rewind, etc. is enabled.  Setting this bit
-+	                                 * will disable immediate mode rewind on the drive, independent
-+	                                 * of the setting of tpsc_immediate_rewind (in master.d/tpsc) */
- #define MTCAN_COMPRESS  0x100000        /* drive supports compression */
- #define MTCAN_BUFFM     0x200000        /* drive supports writing of
- 	                                 * buffered filemarks */
-@@ -672,11 +672,11 @@ struct mt_fpmsg {
- 			char	msg_type	: 3,    /* Message type: 0x00 = General
- 			                                 * Status message */
- 				msg_cntrl	: 3,    /* Message control:
--			                                   0 = Display message 0
--			                                   1 = Display message 1
--			                                   2 = Flash message 0
--			                                   3 = Flash message 1
--			                                   4 = Alternate message 0 and 1
-+			                                 * 0 = Display message 0
-+			                                 * 1 = Display message 1
-+			                                 * 2 = Flash message 0
-+			                                 * 3 = Flash message 1
-+			                                 * 4 = Alternate message 0 and 1
- 			                                 */
- 				rsvd1 : 2;
- 			char	rsvd2[4];
+ 			rval = (* fp)(arg1, fsfd, p);
+@@ -388,7 +388,7 @@ diriter(jdm_fshandle_t *fshandlep,
+ 	 */
+ 	scrval = 0;
+ 	cbrval = 0;
+-	for (gdcnt = 1 ; ; gdcnt++) {
++	for (gdcnt = 1;; gdcnt++) {
+ 		struct dirent *p;
+ 		int nread;
+ 		register size_t reclen;
+@@ -421,9 +421,9 @@ diriter(jdm_fshandle_t *fshandlep,
+ 		 */
+ 		for (p = gdp,
+ 		      reclen = (size_t)p->d_reclen
+-		      ;
++		     ;
+ 		      nread > 0
+-		      ;
++		     ;
+ 		      nread -= (int)reclen,
+ 		      assert(nread >= 0),
+ 		      p = (struct dirent *)((char *)p + reclen),
 diff --git a/dump/content.c b/dump/content.c
-index ddda3df..64f6029 100644
+index 81159ee..7627b8a 100644
 --- a/dump/content.c
 +++ b/dump/content.c
-@@ -172,8 +172,8 @@ struct context {
- 	hsm_f_ctxt_t *	cc_hsm_f_ctxtp;
- 	/*
- 	 * pre-allocated HSM context used for holding HSM
--	   state information about a file across subroutine
--	   calls.
-+	 * state information about a file across subroutine
-+	 * calls.
+@@ -888,7 +888,7 @@ content_init(int argc,
+ 			return BOOL_FALSE;
+ 		}
+ 		strcnt =  (ix_t)sessp->s_nstreams;
+-		for (strix = 0 ; strix < strcnt ; strix++) {
++		for (strix = 0; strix < strcnt; strix++) {
+ 			bsp = &sessp->s_streams[strix];
+ 			if (bsp->st_interrupted) {
+ 				interruptedpr = BOOL_TRUE;
+@@ -908,7 +908,7 @@ content_init(int argc,
+ 			sc_resumerangep = (drange_t *)calloc(sc_resumerangecnt,
+ 								sizeof(drange_t));
+ 			assert(sc_resumerangep);
+-			for (strmix = 0 ; strmix < sc_resumerangecnt ; strmix++) {
++			for (strmix = 0; strmix < sc_resumerangecnt; strmix++) {
+ 				inv_stream_t *bsp;
+ 				inv_stream_t *esp;
+ 				drange_t *p = &sc_resumerangep[strmix];
+@@ -1009,7 +1009,7 @@ content_init(int argc,
+ 			underpartialpr = sessp->s_ispartial;
+ 			underinterruptedpr = BOOL_FALSE;
+ 			strcnt =  (ix_t)sessp->s_nstreams;
+-			for (strix = 0 ; strix < strcnt ; strix++) {
++			for (strix = 0; strix < strcnt; strix++) {
+ 				bsp = &sessp->s_streams[strix];
+ 				if (bsp->st_interrupted) {
+ 					underinterruptedpr = BOOL_TRUE;
+@@ -1054,7 +1054,7 @@ content_init(int argc,
+ 		sc_resumerangep = (drange_t *)calloc(sc_resumerangecnt,
+ 						        sizeof(drange_t));
+ 		assert(sc_resumerangep);
+-		for (strmix = 0 ; strmix < sc_resumerangecnt ; strmix++) {
++		for (strmix = 0; strmix < sc_resumerangecnt; strmix++) {
+ 			inv_stream_t *bsp;
+ 			inv_stream_t *esp;
+ 			drange_t *p = &sc_resumerangep[strmix];
+@@ -1578,7 +1578,7 @@ baseuuidbypass:
  	 */
- 	char *		cc_readlinkbufp;
- 	size_t		cc_readlinkbufsz;
-@@ -4139,7 +4139,7 @@ dump_file(void *		arg1,
- 		return RV_OK;
- 		/*
- 		 * not yet implemented
--		   case S_IFMNT:
-+		 * case S_IFMNT:
+ 	sc_contextp = (context_t *)calloc(drivecnt, sizeof(context_t));
+ 	assert(sc_contextp);
+-	for (strmix = 0 ; strmix < drivecnt ; strmix++) {
++	for (strmix = 0; strmix < drivecnt; strmix++) {
+ 		context_t *contextp = &sc_contextp[strmix];
+ 
+ 		contextp->cc_filehdrp =
+@@ -1720,7 +1720,7 @@ baseuuidbypass:
+ 		ix_t endix = sizeof(sc_mcflag)
+ 			     /
+ 			     sizeof(sc_mcflag[0]);
+-		for (ix = 0 ; ix < endix ; ix++) {
++		for (ix = 0; ix < endix; ix++) {
+ 			sc_mcflag[ix] = BOOL_FALSE;
+ 		}
+ 	}
+@@ -1730,7 +1730,7 @@ baseuuidbypass:
+ 	 */
+ 	{
+ 		ix_t driveix;
+-		for (driveix = 0 ; driveix < STREAM_SIMMAX ; driveix++) {
++		for (driveix = 0; driveix < STREAM_SIMMAX; driveix++) {
+ 			sc_stat_pds[driveix].pds_phase = PDS_NULL;
+ 		}
+ 	}
+@@ -1756,7 +1756,7 @@ content_statline(char **linespp[])
+ 
+ 	/* build and supply the line array
+ 	 */
+-	for (i = 0 ; i < STREAM_SIMMAX + 1 ; i++) {
++	for (i = 0; i < STREAM_SIMMAX + 1; i++) {
+ 		statline[i] = &statlinebuf[i][0];
+ 	}
+ 	*linespp = statline;
+@@ -1864,7 +1864,7 @@ content_statline(char **linespp[])
+ 	/* optionally create stat lines for each drive
+ 	 */
+ 	statlinecnt = 1;
+-	for (i = 0 ; i < drivecnt ; i++) {
++	for (i = 0; i < drivecnt; i++) {
+ 		pds_t *pdsp = &sc_stat_pds[i];
+ 		if (pdsp->pds_phase == PDS_NULL
+ 		     ||
+@@ -1968,7 +1968,7 @@ create_inv_session(
+ 	sc_inv_stmtokenp = (inv_stmtoken_t *)
+ 				calloc(drivecnt, sizeof(inv_stmtoken_t));
+ 	assert(sc_inv_stmtokenp);
+-	for (strmix = 0 ; strmix < drivecnt ; strmix++) {
++	for (strmix = 0; strmix < drivecnt; strmix++) {
+ 		drive_t *drivep = drivepp[strmix];
+ 		char *drvpath;
+ 
+@@ -2195,7 +2195,7 @@ content_stream_dump(ix_t strmix)
+ 	 * The current startpoint will be updated each time a media mark
+ 	 * is committed.
+ 	 */
+-	for (; ;) {
++	for (;;) {
+ 		xfs_ino_t startino;
+ 		bool_t stop_requested;
+ 		bool_t hit_eom;
+@@ -2747,7 +2747,7 @@ content_mediachange_query(void)
+ 	querystr[querycnt++] = "select a drive to acknowledge media change\n";
+ 	choicecnt = 0;
+ 	maxdrvchoiceix = 0;
+-	for (thrdix = 0 ; thrdix < STREAM_SIMMAX ; thrdix++) {
++	for (thrdix = 0; thrdix < STREAM_SIMMAX; thrdix++) {
+ 		if (sc_mcflag[thrdix]) {
+ 			choicetothrdmap[choicecnt].thrdix = thrdix;
+ 			sprintf(choicetothrdmap[choicecnt].choicestr,
+@@ -2819,7 +2819,7 @@ dump_dirs(ix_t strmix,
+ 	/* begin iteration at ino zero
+ 	 */
+ 	lastino = 0;
+-	for (bulkstatcallcnt = 0 ; ; bulkstatcallcnt++) {
++	for (bulkstatcallcnt = 0;; bulkstatcallcnt++) {
+ 		xfs_bstat_t *p;
+ 		xfs_bstat_t *endp;
+ 		__s32 buflenout;
+@@ -2873,9 +2873,9 @@ dump_dirs(ix_t strmix,
+ 		 * appropriate
  		 */
+ 		for (p = bstatbufp, endp = bstatbufp + buflenout
+-		      ;
++		     ;
+ 		      p < endp
+-		      ;
++		     ;
+ 		      p++) {
+ 			rv_t rv;
+ 
+@@ -3024,7 +3024,7 @@ dump_dir(ix_t strmix,
+ 	/* dump dirents - lots of buffering done here, to achieve OS-
+ 	 * independence. if proves to be to much overhead, can streamline.
+ 	 */
+-	for (gdcnt = 1, rv = RV_OK ; rv == RV_OK ; gdcnt++) {
++	for (gdcnt = 1, rv = RV_OK; rv == RV_OK; gdcnt++) {
+ 		struct dirent *p;
+ 		int nread;
+ 		register size_t reclen;
+@@ -3061,9 +3061,9 @@ dump_dir(ix_t strmix,
+ 		 */
+ 		for (p = gdp,
+ 		      reclen = (size_t)p->d_reclen
+-		      ;
++		     ;
+ 		      nread > 0
+-		      ;
++		     ;
+ 		      nread -= (int)reclen,
+ 		      assert(nread >= 0),
+ 		      p = (struct dirent *)((char *)p + reclen),
+@@ -3295,7 +3295,7 @@ dump_extattr_list(drive_t *drivep,
+ 	 */
+ 	dumpbufp = contextp->cc_extattrdumpbufp;
+ 	endp = dumpbufp;
+-	for (nameix = 0 ; nameix < listlen ;) {
++	for (nameix = 0; nameix < listlen;) {
+ 		ix_t rtrvix;
+ 		size_t rtrvcnt;
+ 
+@@ -3382,7 +3382,7 @@ dump_extattr_list(drive_t *drivep,
+ 				return RV_OK;
+ 			}
+ 
+-			for (rtrvix = 0 ; rtrvix < rtrvcnt ; rtrvix++) {
++			for (rtrvix = 0; rtrvix < rtrvcnt; rtrvix++) {
+ 				attr_multiop_t *opp;
+ 				opp = &contextp->cc_extattrrtrvarrayp[rtrvix];
+ 				if (opp->am_error) {
+@@ -3976,7 +3976,7 @@ dump_file_reg(drive_t *drivep,
+ 		size_t drangecnt = sc_resumerangecnt;
+ 		size_t drangeix;
+ 
+-		for (drangeix = 0 ; drangeix < drangecnt ; drangeix++) {
++		for (drangeix = 0; drangeix < drangecnt; drangeix++) {
+ 			drange_t *rp = &drangep[drangeix];
+ 			if (statp->bs_ino == rp->dr_begin.sp_ino) {
+ 				register time32_t mtime = statp->bs_mtime.tv_sec;
+@@ -4051,7 +4051,7 @@ dump_file_reg(drive_t *drivep,
+ 	cmpltflg = BOOL_FALSE;
+ 
+ 	rv = RV_OK;
+-	for (; ;) {
++	for (;;) {
+ 		off64_t bytecnt = 0;
+ 		off64_t bc;
+ 
+@@ -4377,7 +4377,7 @@ dump_extent_group(drive_t *drivep,
+ 	bytecnt = 0;
+ 	assert((nextoffset & (BBSIZE - 1)) == 0);
+ 
+-	for (; ;) {
++	for (;;) {
+ 		off64_t offset;
+ 		off64_t extsz;
+ 
+@@ -4829,7 +4829,7 @@ dump_extent_group(drive_t *drivep,
+ 				     ((s.f_flag & ST_LOCAL) != 0))
+ 				   mlog(MLOG_NORMAL, _(
+ 		"can't read ino %llu at offset %d (act=%d req=%d) rt=%d\n"),
+-		statp->bs_ino, new_off, actualsz , reqsz, isrealtime);
++		statp->bs_ino, new_off, actualsz, reqsz, isrealtime);
+ #endif /* HIDDEN */
+ 
+ 				nread = 0;
+@@ -5240,7 +5240,7 @@ dump_session_inv(drive_t *drivep,
+ 	 * until we are successful or until the media layer
+ 	 * tells us to give up.
+ 	 */
+-	for (done = BOOL_FALSE ; ! done ;) {
++	for (done = BOOL_FALSE; ! done;) {
+ 		uuid_t mediaid;
+ 		char medialabel[GLOBAL_HDR_STRING_SZ];
+ 		bool_t partial;
+@@ -5390,7 +5390,7 @@ dump_terminator(drive_t *drivep, context_t *contextp, media_hdr_t *mwhdrp)
+ 	 * until we are successful or until the media layer
+ 	 * tells us to give up.
+ 	 */
+-	for (done = BOOL_FALSE ; ! done ;) {
++	for (done = BOOL_FALSE; ! done;) {
+ 		bool_t partial;
+ 		rv_t rv;
+ 
+@@ -5504,9 +5504,9 @@ inv_cleanup(void)
+ 		for (strmix = 0,
+ 		      inv_stmtp = sc_inv_stmtokenp,
+ 		      contextp = sc_contextp
+-		      ;
++		     ;
+ 		      strmix < drivecnt
+-		      ;
++		     ;
+ 		      strmix++,
+ 		      inv_stmtp++,
+ 		      contextp++) {
+@@ -5626,7 +5626,7 @@ position:
+ 	 * be concatenated but not jumbled. a dump stream must be virtually
+ 	 * contiguous.
+ 	 */
+-	for (; ;) {
++	for (;;) {
+ 		/* check if a stop has been requested
+ 		 */
+ 		if (intr_allowed && cldmgr_stop_requested()) {
+@@ -5963,7 +5963,7 @@ changemedia:
+ 		return RV_QUIT; /* this return value will cause approp. msg */
  	}
  
+-	/* If an alert program has been specified , run it
++	/* If an alert program has been specified, run it
+ 	 */
+ 	if (media_change_alert_program != NULL)
+ 	   system(media_change_alert_program);
+@@ -6549,7 +6549,7 @@ clr_mcflag(ix_t thrdix)
+ {
+ 	lock();
+ 	sc_mcflag[thrdix] = BOOL_FALSE;
+-	for (thrdix = 0 ; thrdix < drivecnt ; thrdix++) {
++	for (thrdix = 0; thrdix < drivecnt; thrdix++) {
+ 		if (sc_mcflag[thrdix]) {
+ 			unlock();
+ 			return;
+@@ -6565,7 +6565,7 @@ check_complete_flags(void)
+ 	ix_t strmix;
+ 	bool_t completepr = BOOL_TRUE;
+ 
+-	for (strmix = 0 ; strmix < drivecnt ; strmix++) {
++	for (strmix = 0; strmix < drivecnt; strmix++) {
+ 		context_t *contextp = &sc_contextp[strmix];
+ 		if (! contextp->cc_completepr) {
+ 			completepr = BOOL_FALSE;
 diff --git a/dump/inomap.c b/dump/inomap.c
-index 44d3724..12b3d2c 100644
+index 75e26e2..182d99e 100644
 --- a/dump/inomap.c
 +++ b/dump/inomap.c
-@@ -1790,7 +1790,7 @@ estimate_dump_space(xfs_bstat_t *statp)
- 	case S_IFLNK:
- 		/*
- 		 * not yet
--		   case S_IFUUID:
-+		 * case S_IFUUID:
- 		 */
+@@ -363,7 +363,7 @@ inomap_build(jdm_fshandle_t *fshandlep,
+ 
+ 	if (startptcnt > 1) {
+ 		ix_t startptix;
+-		for (startptix = 0 ; startptix < startptcnt ; startptix++) {
++		for (startptix = 0; startptix < startptcnt; startptix++) {
+ 			startpt_t *p;
+ 			startpt_t *ep;
+ 
+@@ -643,7 +643,7 @@ cb_inoinresumerange(xfs_ino_t ino)
+ {
+ 	register size_t streamix;
+ 
+-	for (streamix = 0 ; streamix < cb_resumerangecnt ; streamix++) {
++	for (streamix = 0; streamix < cb_resumerangecnt; streamix++) {
+ 		register drange_t *rp = &cb_resumerangep[streamix];
+ 		if (! (rp->dr_begin.sp_flags & STARTPT_FLAGS_END)
+ 		     &&
+@@ -668,7 +668,7 @@ cb_inoresumed(xfs_ino_t ino)
+ {
+ 	size_t streamix;
+ 
+-	for (streamix = 0 ; streamix < cb_resumerangecnt ; streamix++) {
++	for (streamix = 0; streamix < cb_resumerangecnt; streamix++) {
+ 		drange_t *rp = &cb_resumerangep[streamix];
+ 		if (! (rp->dr_begin.sp_flags & STARTPT_FLAGS_END)
+ 		     &&
+@@ -1283,7 +1283,7 @@ inomap_iter(void *contextp, int statemask)
+ 
+ 			ino = segp->base + addrp->inooff;
+ 			endino = segp->base + INOPERSEG;
+-			for (; ino < endino ; ino++, addrp->inooff++) {
++			for (; ino < endino; ino++, addrp->inooff++) {
+ 				int st;
+ 				st = SEG_GET_BITS(segp, ino);
+ 				if (statemask & (1 << st)) {
+@@ -1427,8 +1427,8 @@ inomap_dump(drive_t *drivep)
+ 
+ 	/* use write_buf to dump the hunks
+ 	 */
+-	for (addr.hnkoff = 0 ;
+-	      addr.hnkoff <= inomap.lastseg.hnkoff ;
++	for (addr.hnkoff = 0;
++	      addr.hnkoff <= inomap.lastseg.hnkoff;
+ 	      addr.hnkoff++) {
+ 		int rval;
+ 		rv_t rv;
+@@ -1484,7 +1484,7 @@ subtreelist_parse(jdm_fshandle_t *fshandlep,
+ 
+ 	/* do a recursive descent for each subtree specified
+ 	 */
+-	for (subtreeix = 0 ; subtreeix < subtreecnt ; subtreeix++) {
++	for (subtreeix = 0; subtreeix < subtreecnt; subtreeix++) {
+ 		int cbrval = 0;
+ 		char *currentpath = subtreebuf[subtreeix];
+ 		assert(*currentpath != '/');
+@@ -1658,7 +1658,7 @@ quantity2offset(jdm_fshandle_t *fshandlep, xfs_bstat_t *statp, off64_t qty)
  		return 0;
- 	default:
+ 	}
+ 
+-	for (; ;) {
++	for (;;) {
+ 		int eix;
+ 		int rval;
+ 
+@@ -1678,7 +1678,7 @@ quantity2offset(jdm_fshandle_t *fshandlep, xfs_bstat_t *statp, off64_t qty)
+ 			return offset_next;
+ 		}
+ 
+-		for (eix = 1 ; eix <= bmap[0].bmv_entries ; eix++) {
++		for (eix = 1; eix <= bmap[0].bmv_entries; eix++) {
+ 			getbmapx_t *bmapp = &bmap[eix];
+ 			off64_t qty_new;
+ 			if (bmapp->bmv_block == -1) {
+diff --git a/include/swab.h b/include/swab.h
+index abfeeb6..234e7d8 100644
+--- a/include/swab.h
++++ b/include/swab.h
+@@ -61,13 +61,13 @@
+  * provide defaults when no architecture-specific optimization is detected
+  */
+ #ifndef __arch__swab16
+-#  define __arch__swab16(x) ({ __u16 __tmp = (x) ; ___swab16(__tmp); })
++#  define __arch__swab16(x) ({ __u16 __tmp = (x); ___swab16(__tmp); })
+ #endif
+ #ifndef __arch__swab32
+-#  define __arch__swab32(x) ({ __u32 __tmp = (x) ; ___swab32(__tmp); })
++#  define __arch__swab32(x) ({ __u32 __tmp = (x); ___swab32(__tmp); })
+ #endif
+ #ifndef __arch__swab64
+-#  define __arch__swab64(x) ({ __u64 __tmp = (x) ; ___swab64(__tmp); })
++#  define __arch__swab64(x) ({ __u64 __tmp = (x); ___swab64(__tmp); })
+ #endif
+ 
+ #ifndef __arch__swab16p
 diff --git a/inventory/inv_api.c b/inventory/inv_api.c
-index 3d684f2..2494978 100644
+index 6473811..b9ff239 100644
 --- a/inventory/inv_api.c
 +++ b/inventory/inv_api.c
-@@ -63,7 +63,7 @@ inv_open(inv_predicate_t bywhat, inv_oflag_t forwhat, void *pred)
- 
- 	/*
- 	 * if we just want to search the db, all we need is the invidx.
--	   at this point, we know that a tok wasnt created in init_idb() */
-+	 * at this point, we know that a tok wasnt created in init_idb() */
- 	if (forwhat == INV_SEARCH_ONLY) {
- 		/* fd == I_EMPTYINV or fd == valid fd */
- 		tok = get_token(fd, -1);
-@@ -73,7 +73,7 @@ inv_open(inv_predicate_t bywhat, inv_oflag_t forwhat, void *pred)
- 
- 	/*
- 	 * XXX also, see if it is too full. if so, make another and leave a
--	   reference to the new file in the old one */
-+	 * reference to the new file in the old one */
- 
- 	stobjfd = idx_get_stobj(fd, forwhat, &index);
- 	if (stobjfd < 0) {
-@@ -96,7 +96,7 @@ inv_open(inv_predicate_t bywhat, inv_oflag_t forwhat, void *pred)
- 
- 	/*
- 	 * create another storage object (and, an inv_index entry for it
--	   too) if we've filled this one up */
-+	 * too) if we've filled this one up */
- 
- 	if ((uint)num >= sescnt->ic_maxnum) {
- 		mlog(MLOG_DEBUG | MLOG_INV, "$ INV: creating a new storage obj & "
-@@ -216,7 +216,7 @@ inv_writesession_open(
- 
- 	/*
- 	 * we need to put the new session in the appropriate place in
--	   storage object. So first find out howmany sessions are there */
-+	 * storage object. So first find out howmany sessions are there */
- 
- 	INVLOCK(fd, LOCK_EX);
- 	if (GET_SESCOUNTERS(fd, &sescnt) < 0) {
-@@ -227,7 +227,7 @@ inv_writesession_open(
- 
- 	/*
- 	 * create the writesession, and get ready for the streams to come
--	   afterwards */
-+	 * afterwards */
- 	rval = stobj_create_session(sestok, fd, sescnt, &ses, &hdr);
- 	assert(rval > 0);
- 
-@@ -397,7 +397,7 @@ inv_stream_close(
- 
- 		/*
- 		 * get the last media file to figure out what our last
--		   ino was. we have a pointer to that in the stream token */
-+		 * ino was. we have a pointer to that in the stream token */
- 		if (tok->md_lastmfile) {
- 			if (strm.st_endino.ino !=
- 			    tok->md_lastmfile->mf_endino.ino ||
-@@ -475,8 +475,8 @@ inv_put_mediafile(
- 
- 	/*
- 	 * This flag is used to indicate the media file that contains the
--	   dump of the sessioninfo structure that contains all but this
--	   media file */
-+	 * dump of the sessioninfo structure that contains all but this
-+	 * media file */
- 	if (isinvdump)
- 		mf->mf_flag |= INVT_MFILE_INVDUMP;
- 
-@@ -486,8 +486,8 @@ inv_put_mediafile(
- 
- 	/*
- 	 * we dont free the mfile here. we always keep the last mfile
--	   around, inside the inv_stmtoken, and when we add a new mfile,
--	   we free the previous one. The last one is freed in stream_close()
-+	 * around, inside the inv_stmtoken, and when we add a new mfile,
-+	 * we free the previous one. The last one is freed in stream_close()
+@@ -301,7 +301,7 @@ inv_stream_open(
+ 	 * starting/ending inodes or offsets. This can be misleading.
+ 	 * See bug #463702 for an example.
  	 */
+-	memset((void *)&stream, 0 , sizeof(invt_stream_t));
++	memset((void *)&stream, 0, sizeof(invt_stream_t));
  
- 	return (rval < 0) ? BOOL_FALSE : BOOL_TRUE;
-@@ -531,7 +531,7 @@ inv_get_sessioninfo(
+ 	stream.st_nmediafiles = 0;
+ 	stream.st_interrupted = BOOL_TRUE; /* fix for 353197 */
+@@ -706,7 +706,7 @@ inv_lastsession_level_equalto(
+ /*----------------------------------------------------------------------*/
+ /* inv_getsession_byuuid                                                */
+ /*                                                                      */
+-/* Given a file system uuid and a session uuid , ses is populated with	*/
++/* Given a file system uuid and a session uuid, ses is populated with	*/
+ /* the session that contains the matching system uuid.			*/
+ /*									*/
+ /* Returns FALSE on an error, TRUE if the session was found.		*/
+@@ -903,7 +903,7 @@ inv_getopt(int argc, char **argv, invt_pr_ctx_t *prctx)
+ 			switch (c) {
+ 			case GETOPT_INVPRINT:
+ 				prctx->depth = 0;
+-				rval |= I_IFOUND ;
++				rval |= I_IFOUND;
+ 				break;
+ 			}
+ 		}
+@@ -915,7 +915,7 @@ inv_getopt(int argc, char **argv, invt_pr_ctx_t *prctx)
+ 	while ((c = getopt(argc, argv, GETOPT_CMDSTRING)) != EOF) {
+ 		switch (c) {
+ 		case GETOPT_INVPRINT:
+-			rval |= I_IFOUND ;
++			rval |= I_IFOUND;
+ 			if ((options = optarg) == NULL)
+ 				break;
  
- 	/*
- 	 * Next we get the session header, and the session information. Then
--	   we can figure out how much space to allocate */
-+	 * we can figure out how much space to allocate */
- 	if (stobj_get_sessinfo(tok, &hdr, &ses) <= 0) {
- 		INVLOCK(fd, LOCK_UN);
- 		return BOOL_FALSE;
-@@ -766,22 +766,22 @@ inv_delete_mediaobj(uuid_t *moid)
- 
- 	/*
- 	 * forall fsids (fs) in fstab {
--	       open invindex table (t)
--	       forall indices (i) in t {
--	          open stobj (st)
--	          forall sessions (s) in st {
--	              forall streams (strm) in s {
--	                 forall mediafiles (m) in strm {
--	                     if (m.mediaobj == moid) {
--	                     // delete m
--	                     if (--strm.nmediafiles == 0)
--	                        if (--s.nstreams == 0)
--	                            delete-session (s)
--	                     }
--	                 }
--	              }
--	         }
--	      }
-+	 *     open invindex table (t)
-+	 *     forall indices (i) in t {
-+	 *        open stobj (st)
-+	 *        forall sessions (s) in st {
-+	 *            forall streams (strm) in s {
-+	 *               forall mediafiles (m) in strm {
-+	 *                   if (m.mediaobj == moid) {
-+	 *                   // delete m
-+	 *                   if (--strm.nmediafiles == 0)
-+	 *                      if (--s.nstreams == 0)
-+	 *                          delete-session (s)
-+	 *                   }
-+	 *               }
-+	 *            }
-+	 *       }
-+	 *    }
- 	 */
- 
- 	invt_counter_t *cnt;
-diff --git a/inventory/inv_core.c b/inventory/inv_core.c
-index 00e8d1a..340c75e 100644
---- a/inventory/inv_core.c
-+++ b/inventory/inv_core.c
-@@ -221,7 +221,7 @@ get_lastheader(int fd, void **ent, size_t hdrsz, size_t cntsz)
- 
- 	/*
- 	 * if there's space anywhere at all, then it must be in the last
--	   entry */
-+	 * entry */
- 	*ent = malloc(hdrsz);
- 	pos = (char *)arr + ((uint)nindices - 1) * hdrsz;
- 	memcpy(*ent, pos, hdrsz);
-diff --git a/inventory/inv_fstab.c b/inventory/inv_fstab.c
-index 17ff6d7..3f1cbf0 100644
---- a/inventory/inv_fstab.c
-+++ b/inventory/inv_fstab.c
-@@ -74,7 +74,7 @@ fstab_getall(invt_fstab_t **arr, invt_counter_t **cnt, int *numfs,
- #endif
- 	/*
- 	 * fstab is left locked EX on exit. The caller takes does
--	   the unlocking */
-+	 * the unlocking */
- 	return fd;
- }
- 
-@@ -122,7 +122,7 @@ fstab_put_entry(uuid_t *fsidp, char *mntpt, char *dev, inv_oflag_t forwhat)
- 		for (i = 0; i < numfs; i++) {
- 			if (uuid_compare(*fsidp, arr[i].ft_uuid) == 0) {
- /*			if ((STREQL(arr[i].ft_mountpt, mntpt) ) &&
--                            (STREQL(arr[i].ft_devpath, dev) ))
-+ *                          (STREQL(arr[i].ft_devpath, dev) ))
-  */
- 				free(arr);
- 				free(cnt);
-@@ -136,7 +136,7 @@ fstab_put_entry(uuid_t *fsidp, char *mntpt, char *dev, inv_oflag_t forwhat)
- 
- 	/*
- 	 * make a new fstab entry and insert it at the end. the table
--	   is locked EXclusively at this point */
-+	 * is locked EXclusively at this point */
- 	{
- 		invt_fstab_t ent;
- 		off64_t hoff;
 diff --git a/inventory/inv_idx.c b/inventory/inv_idx.c
-index 907cab3..edafe28 100644
+index 7b36cd6..313cb70 100644
 --- a/inventory/inv_idx.c
 +++ b/inventory/inv_idx.c
-@@ -53,11 +53,11 @@ idx_insert_newentry(int fd,             /* kept locked EX by caller */
- 	inv_oflag_t forwhat = INV_SEARCH_N_MOD;
+@@ -191,7 +191,7 @@ idx_put_newentry(
+ 				  sizeof(invt_counter_t) ) < 0) ) {
+ 			/* XXX delete the stobj that we just created */
  
- /*	invt_entry_t ient;
--        ient.ie_timeperiod.tp_start = ient.ie_timeperiod.tp_end = tm; */
-+ *      ient.ie_timeperiod.tp_start = ient.ie_timeperiod.tp_end = tm; */
- 
- 	/*
- 	 * If time period of the new entry is before our first invindex,
--	   we have to insert a new invindex in the first slot */
-+	 * we have to insert a new invindex in the first slot */
- 	if (iarr[0].ie_timeperiod.tp_start > tm) {
- 		/* *stobjfd = idx_put_newentry(fd, 0, iarr, icnt, &ient); */
- 		*stobjfd = open(iarr[0].ie_filename, INV_OFLAG(forwhat));
-@@ -67,7 +67,7 @@ idx_insert_newentry(int fd,             /* kept locked EX by caller */
- 	for (i = 0; i < icnt->ic_curnum; i++) {
- 		/*
- 		 * if our time is nicely within an existing entry's time
--		   period, hellalujah */
-+		 * period, hellalujah */
- 		if (IS_WITHIN(&iarr[i].ie_timeperiod, tm)) {
- #ifdef INVT_DEBUG
- 			mlog(MLOG_DEBUG | MLOG_INV, "INV: is_within %d\n", i);
-@@ -102,21 +102,21 @@ idx_insert_newentry(int fd,             /* kept locked EX by caller */
- 
- 		/*
- 		 * if it is beyond the end of this timeperiod, see if we
--		   belong to a timeperiod that doesn't have an entry */
-+		 * belong to a timeperiod that doesn't have an entry */
- 		if (iarr[i].ie_timeperiod.tp_end < tm) {
- 			/* see if we're the last entry here */
- 			if (i == icnt->ic_curnum - 1) {
- 				/*
- 				 * our slot is (i+1)th entry. Make the
--				   timeperiod's the same as it was. As far
--				   as I can see there is no way that
--				   timeperiods can overlap.
--
--				   insert the new entry and write back
--				   icnt and invindex entry */
-+				 * timeperiod's the same as it was. As far
-+				 * as I can see there is no way that
-+				 * timeperiods can overlap.
-+				 *
-+				 * insert the new entry and write back
-+				 * icnt and invindex entry */
- 				/*
- 				 * *stobjfd = idx_put_newentry(fd, i+1, iarr,
--				                             icnt, &ient); */
-+				 *                           icnt, &ient); */
- 				*stobjfd = open(iarr[i].ie_filename, INV_OFLAG(forwhat));
- 				return i;
- 			}
-@@ -124,10 +124,10 @@ idx_insert_newentry(int fd,             /* kept locked EX by caller */
- 			if (iarr[i + 1].ie_timeperiod.tp_start > tm) {
- 				/*
- 				 * We have the option of pushing entries
--				   after (i) forward by one slot, and
--				   taking the (i+1)th slot, OR just hooking
--				   up with the next entry.
--				   We choose the former. */
-+				 * after (i) forward by one slot, and
-+				 * taking the (i+1)th slot, OR just hooking
-+				 * up with the next entry.
-+				 * We choose the former. */
- 
- 				/* the timeperiods had better not overlap */
- 				assert((tm > iarr[i].ie_timeperiod.tp_end) &&
-@@ -135,11 +135,11 @@ idx_insert_newentry(int fd,             /* kept locked EX by caller */
- 
- 				/*
- 				 * shift everything from (i+1) onwards by
--				   one. Then insert the new entry and write
--				   back icnt and invindex entries */
-+				 * one. Then insert the new entry and write
-+				 * back icnt and invindex entries */
- 				/*
- 				 * *stobjfd = idx_put_newentry(fd, i+1, iarr,
--				                             icnt, &ient); */
-+				 *                           icnt, &ient); */
- 				*stobjfd = open(iarr[i].ie_filename, INV_OFLAG(forwhat));
- 				return i;
- 			}
-@@ -224,8 +224,8 @@ idx_find_stobj(invt_idxinfo_t * idx,
- 
- 	/*
- 	 * since sessions can be inserted in random order, the invindex
--	   table can contain time-periods that don't have corresponding
--	   entries for */
-+	 * table can contain time-periods that don't have corresponding
-+	 * entries for */
- 	if (GET_ALLHDRS_N_CNTS_NOLOCK(idx->invfd, (void **)&idx->iarr,
- 				      (void **)&idx->icnt,
- 				      sizeof(invt_entry_t),
-@@ -240,7 +240,7 @@ idx_find_stobj(invt_idxinfo_t * idx,
- 
- 	/*
- 	 * Now figure out where we are going to insert this stobj among the
--	   invindices and put it there */
-+	 * invindices and put it there */
- 	idx->index = idx_insert_newentry(idx->invfd, &stobjfd, idx->iarr,
- 					 idx->icnt, tm);
- 
-@@ -266,7 +266,7 @@ idx_create(char *fname, inv_oflag_t forwhat)
- 
- 	/*
- 	 * This is not to be called when the user wants to open
--	   the db for SEARCH_ONLY. */
-+	 * the db for SEARCH_ONLY. */
+-			memset(ient->ie_filename, 0 , INV_STRLEN);
++			memset(ient->ie_filename, 0, INV_STRLEN);
+ 			free(idxarr);
+ 			return -1;
+ 		}
+@@ -263,7 +263,7 @@ idx_create(char *fname, inv_oflag_t forwhat)
+ 	   the db for SEARCH_ONLY. */
  	assert(forwhat != INV_SEARCH_ONLY);
  
- 	if ((fd = open(fname, INV_OFLAG(forwhat) | O_CREAT, S_IRUSR | S_IWUSR)) < 0) {
-@@ -377,9 +377,9 @@ idx_put_sesstime(inv_sestoken_t tok, bool_t whichtime)
- 
- /*
-  * an inventory index entry keeps track of a single storage object;
--   it knows about its name (ie filename) and the timeperiod that the
--   it contains dump sessions for.
--   note that each file system has its own (set of) inventory indices.
-+ * it knows about its name (ie filename) and the timeperiod that the
-+ * it contains dump sessions for.
-+ * note that each file system has its own (set of) inventory indices.
-  */
- 
- /*----------------------------------------------------------------------*/
-@@ -433,7 +433,7 @@ idx_create_entry(
- 
- 		/*
- 		 * XXX check if there are too many indices. if so, create
--		   another and leave a pointer to that in here */
-+		 * another and leave a pointer to that in here */
- 
- 		/* create the new storage object */
- 		fd = stobj_create(ent.ie_filename);
-@@ -483,7 +483,7 @@ idx_get_stobj(int invfd, inv_oflag_t forwhat, int *index)
- 
- 	/*
- 	 * if there's space anywhere at all, then it must be in the last
--	   entry. get_lastheader() does the locking */
-+	 * entry. get_lastheader() does the locking */
- 
- 	if ((*index = get_lastheader(invfd, (void **)&ent,
- 				     sizeof(invt_entry_t),
-@@ -491,7 +491,7 @@ idx_get_stobj(int invfd, inv_oflag_t forwhat, int *index)
- 		return -1;
- 	/*
- 	 * at this point we know that there should be at least one invindex
--	   entry present */
-+	 * entry present */
- 	assert(ent != NULL);
- 	assert(ent->ie_filename);
- 
-diff --git a/inventory/inv_mgr.c b/inventory/inv_mgr.c
-index e332295..2ac1323 100644
---- a/inventory/inv_mgr.c
-+++ b/inventory/inv_mgr.c
-@@ -59,7 +59,7 @@ init_idb(void *pred, inv_predicate_t bywhat, inv_oflag_t forwhat,
- 
- 	/*
- 	 * come up with the unique file suffix that refers to this
--	   filesystem */
-+	 * filesystem */
- 	if (fstab_get_fname(pred, uuname, bywhat, forwhat) < 0) {
- 		return I_DONE;
+-	if ((fd = open (fname , INV_OFLAG(forwhat) | O_CREAT, S_IRUSR|S_IWUSR) ) < 0) {
++	if ((fd = open (fname, INV_OFLAG(forwhat) | O_CREAT, S_IRUSR|S_IWUSR) ) < 0) {
+ 		INV_PERROR (fname);
+ 		return INV_TOKEN_NULL;
  	}
-@@ -76,7 +76,7 @@ init_idb(void *pred, inv_predicate_t bywhat, inv_oflag_t forwhat,
- 		} else {
- 			/*
- 			 * this happens when the inv is empty and the user
--			   wants to do a search. this is legal - not an error */
-+			 * wants to do a search. this is legal - not an error */
- 			return I_EMPTYINV;
- 		}
- 		return I_DONE; /* we are done whether token's NULL or not */
-@@ -209,7 +209,7 @@ invmgr_query_all_sessions(
- 
- 	/*
- 	 * return val indicates if there was an error or not. *buf
--	   says whether the search was successful */
-+	 * says whether the search was successful */
- 	return ret;
- }
- 
-@@ -260,7 +260,7 @@ search_invt(
- 
- 	/*
- 	 * we need to get all the invindex headers and seshdrs in reverse
--	   order */
-+	 * order */
- 	for (i = nindices - 1; i >= 0; i--) {
- 		int nsess, j;
- 		invt_sescounter_t *scnt = NULL;
-@@ -292,7 +292,7 @@ search_invt(
- 
- 			/*
- 			 * fd is kept locked until we return from the
--			   callback routine */
-+			 * callback routine */
- 
- 			/*
- 			 * Check to see if this session has been pruned
-@@ -405,7 +405,7 @@ invmgr_inv_print(
- 		for (s = 0; s < nsess; s++) {
- 			/*
- 			 * fd is kept locked until we return from the
--			   callback routine */
-+			 * callback routine */
- 
- 			/*
- 			 * Check to see if this session has been pruned
-@@ -630,11 +630,11 @@ insert_session(invt_sessinfo_t *s)
- 
- 	/*
- 	 * at this point we know that invindex has at least one entry
--
--	   First we need to find out if this session is in the inventory
--	   already. To find the storage object that can possibly
--	   contain this session, it suffices to sequentially search the
--	   inventory indices of this filesystem for the particular invt-entry
-+	 *
-+	 * First we need to find out if this session is in the inventory
-+	 * already. To find the storage object that can possibly
-+	 * contain this session, it suffices to sequentially search the
-+	 * inventory indices of this filesystem for the particular invt-entry
- 	 */
- 	INVLOCK(invfd, LOCK_EX);
- 	idx.invfd = invfd;
 diff --git a/inventory/inv_oref.c b/inventory/inv_oref.c
-index 7260da7..26bf8bd 100644
+index 70fc634..d2f1515 100644
 --- a/inventory/inv_oref.c
 +++ b/inventory/inv_oref.c
-@@ -317,7 +317,7 @@ oref_resolve(
+@@ -432,7 +432,7 @@ oref_resolve_new_invidx(
+ 	int stobjfd, fd;
+ 	inv_idbtoken_t tok;
  
- 	/*
- 	 * come up with the unique file suffix that refers to this
--	   filesystem */
-+	 * filesystem */
- 	if (fstab_get_fname(pred, uuname, bywhat) < 0) {
+-	if ((fd = open (fname , O_RDWR | O_CREAT, S_IRUSR|S_IWUSR) ) < 0) {
++	if ((fd = open (fname, O_RDWR | O_CREAT, S_IRUSR|S_IWUSR) ) < 0) {
+ 		INV_PERROR (fname);
  		return INV_ERR;
  	}
-@@ -355,7 +355,7 @@ oref_resolve(
- 
- 	/*
- 	 * create another storage object (and, an inv_index entry for it
--	   too) if we've filled this one up */
-+	 * too) if we've filled this one up */
- 	if (OREF_CNT_CURNUM(stobj) >= OREF_CNT_MAXNUM(stobj)) {
- 		int rval;
- #ifdef INVT_DEBUG
-@@ -401,7 +401,7 @@ oref_resolve_child(
- 
- 	/*
- 	 * at this point we know that there should be at least one invindex
--	   entry present */
-+	 * entry present */
- 	assert(ent != NULL);
- 	assert(ent->ie_filename);
- 
-diff --git a/inventory/inv_oref.h b/inventory/inv_oref.h
-index 7de9441..f5c9515 100644
---- a/inventory/inv_oref.h
-+++ b/inventory/inv_oref.h
-@@ -40,7 +40,7 @@
- 
- /*
-  * Indicates if either its child or its parent has been resolved.
--   Only one kin per object can exist. i.e. a child cant have children.*/
-+ * Only one kin per object can exist. i.e. a child cant have children.*/
- #define INVT_RES_CHILD          0x1000
- #define INVT_RES_PARENT         0x2000
- #define INVT_RES_KIN            INVT_RES_PARENT | INVT_RES_CHILD
-diff --git a/inventory/inv_priv.h b/inventory/inv_priv.h
-index 63fd785..1cd90f9 100644
---- a/inventory/inv_priv.h
-+++ b/inventory/inv_priv.h
-@@ -109,16 +109,16 @@ typedef struct invt_session {
- 	char	s_mountpt[INV_STRLEN];  /* path to the mount point */
- 	char	s_devpath[INV_STRLEN];  /* path to the device */
- 	uint	s_cur_nstreams;         /* number of streams created under
--	                                   this session so far */
-+	                                 * this session so far */
- 	uint	s_max_nstreams;         /* number of media streams in
--	                                   the session */
-+	                                 * the session */
- 	char	s_padding[16];
- } invt_session_t;
- 
- typedef struct invt_seshdr {
- 	off64_t		sh_sess_off;    /* offset to rest of the sessioninfo */
- 	off64_t		sh_streams_off; /* offset to start of the set of
--	                                   stream hdrs */
-+	                                 * stream hdrs */
- 	time32_t	sh_time;        /* time of the dump */
- 	uint32_t	sh_flag;        /* for misc flags */
- 	u_char		sh_level;       /* dump level */
-@@ -129,10 +129,10 @@ typedef struct invt_seshdr {
- 
- /*
-  * Each session consists of a number of media streams. While it is given that
--   there won't be multiple writesessions (ie. dumpsessions) concurrently,
--   there can be multiple media streams operating on a single file system,
--   each writing media files within its own stream. Hence, we have a linked
--   list of media files, that the stream keeps track of. */
-+ * there won't be multiple writesessions (ie. dumpsessions) concurrently,
-+ * there can be multiple media streams operating on a single file system,
-+ * each writing media files within its own stream. Hence, we have a linked
-+ * list of media files, that the stream keeps track of. */
- 
- 
- typedef struct invt_breakpt {
-@@ -144,8 +144,8 @@ typedef struct invt_stream {
- 	/* duplicate info from mediafiles for speed */
- 	invt_breakpt_t	st_startino;            /* the starting pt */
- 	invt_breakpt_t	st_endino;              /* where we actually ended up. this
--	                                           means we've written upto but not
--	                                           including this breakpoint. */
-+	                                         * means we've written upto but not
-+	                                         * including this breakpoint. */
- 	off64_t		st_firstmfile;          /*offsets to the start and end of*/
- 	off64_t		st_lastmfile;           /* .. linked list of mediafiles */
- 	char		st_cmdarg[INV_STRLEN];  /* drive path */
-@@ -161,7 +161,7 @@ typedef struct invt_mediafile {
- 	char		mf_label[INV_STRLEN];   /* media file label */
- 	invt_breakpt_t	mf_startino;            /* file that we started out with */
- 	invt_breakpt_t	mf_endino;              /* the dump file we ended this
--	                                           media file with */
-+	                                         * media file with */
- 	off64_t		mf_nextmf;              /* links to other mfiles */
- 	off64_t		mf_prevmf;
- 	uint		mf_mfileidx;            /* index within the media object */
-@@ -187,9 +187,9 @@ typedef struct invt_entry {
- #define INVT_COUNTER_FIELDS  \
- 	uint32_t ic_vernum;     /* on disk version number for posterity */ \
- 	uint ic_curnum;         /* number of sessions/invindices recorded \
--	                           so far */                              \
-+	                         * so far */                              \
- 	uint ic_maxnum;         /* maximum number of sessions/inv_indices \
--	                           that we can record on this stobj */
-+	                         * that we can record on this stobj */
- #define INVT_COUNTER_FIELDS_SIZE 0xc
- 
- typedef struct invt_counter {
-@@ -200,7 +200,7 @@ typedef struct invt_counter {
- typedef struct invt_sescounter {
- 	INVT_COUNTER_FIELDS
- 	off64_t ic_eof;          /* current end of the file, where the next
--	                            media file or stream will be written to */
-+	                         *  media file or stream will be written to */
- 	char	ic_padding[0x20 - (INVT_COUNTER_FIELDS_SIZE +
- 				   sizeof(off64_t))];
- } invt_sescounter_t;
-@@ -223,12 +223,12 @@ typedef struct invt_desc_entry {
- 	int		d_invindex_fd;  /* open file descriptor of inv index */
- 	int		d_stobj_fd;     /* fd of storage object */
- 	u_char		d_update_flag;  /* indicates whether fstab was updated with
--	                                   this file system or not and also if
--	                                   we had to create a new invindex file */
-+	                                 * this file system or not and also if
-+	                                 * we had to create a new invindex file */
- 	inv_oflag_t	d_oflag;        /* the open mode (SEARCH_ONLY, SEARCH_N_MOD) */
- 	off64_t		d_invindex_off; /* for every session, we need a reference
--	                                   to its invindex entry, so that when we
--	                                   close a session, we know which one */
-+	                                 * to its invindex entry, so that when we
-+	                                 * close a session, we know which one */
- } invt_desc_entry_t;
- 
- 
-@@ -237,7 +237,7 @@ typedef struct invt_sesdesc_entry {
- 	off64_t			sd_session_off;
- 	off64_t			sd_sesshdr_off;
- 	time32_t		sd_sesstime; /* time that session started.
--	                                        needed for closing the session */
-+	                                      * needed for closing the session */
- } invt_sesdesc_entry_t;
- 
- struct invt_mediafile;
-@@ -245,11 +245,11 @@ struct invt_mediafile;
- typedef struct invt_strdesc_entry {
- 	invt_sesdesc_entry_t *	md_sesstok;     /* the session token */
- 	off64_t			md_stream_off;  /* offset to the media stream
--	                                           header */
-+	                                         * header */
- 	struct invt_mediafile * md_lastmfile;   /* just so that we dont have
--	                                           to get it back from disk
--	                                           when we add the next mfile
--	                                           to the linked list */
-+	                                         * to get it back from disk
-+	                                         * when we add the next mfile
-+	                                         * to the linked list */
- } invt_strdesc_entry_t;
- 
- 
 diff --git a/inventory/inv_stobj.c b/inventory/inv_stobj.c
-index 6956850..648f53d 100644
+index 235e621..022e9b2 100644
 --- a/inventory/inv_stobj.c
 +++ b/inventory/inv_stobj.c
-@@ -62,7 +62,7 @@ stobj_insert_session(invt_idxinfo_t *	idx,
- 
- 	/*
- 	 * Check the existing sessions to make sure that we're not
--	   duplicating this session */
-+	 * duplicating this session */
- 	if (sescnt->ic_curnum > 0) {
- 		uint i;
- 		invt_session_t *sessions = calloc(sescnt->ic_curnum,
-@@ -139,9 +139,9 @@ stobj_find_splitpoint(int fd, invt_seshdr_t *harr, uint ns, time32_t tm)
- 
- 	/*
- 	 * All the entries have the same sh_time. It's not clear if that's
--	   really possible, but either way, we split at the last entry.
--	   This will impact the guarantee that invindex tries to give - that
--	   there's always a unique stobj for every session. */
-+	 * really possible, but either way, we split at the last entry.
-+	 * This will impact the guarantee that invindex tries to give - that
-+	 * there's always a unique stobj for every session. */
- 	mlog(MLOG_VERBOSE | MLOG_INV, _(
- 		     "INV: failed to find a different sh_time to split\n")
- 	     );
-@@ -193,8 +193,8 @@ stobj_split(invt_idxinfo_t *idx, int fd, invt_sescounter_t *sescnt,
- 
- 	/*
- 	 * Get the new stobj to put the 'spilling' sessinfo in. We know the
--	   idx of the current stobj, and by definition, the new stobj
--	   should come right afterwards. */
-+	 * idx of the current stobj, and by definition, the new stobj
-+	 * should come right afterwards. */
- 	newsess->stobjfd = idx_put_newentry(idx, &ient);
- 	if (newsess->stobjfd < 0)
- 		return -1;
-@@ -205,7 +205,7 @@ stobj_split(invt_idxinfo_t *idx, int fd, invt_sescounter_t *sescnt,
- 
- 		/*
- 		 * We dont need to split. So, just put the new session in
--		   the new stobj, and rest in peace */
-+		 * the new stobj, and rest in peace */
- 		idx->index++;
- 
- 		if (GET_SESCOUNTERS(newsess->stobjfd, &scnt) < 0)
-@@ -236,7 +236,7 @@ stobj_split(invt_idxinfo_t *idx, int fd, invt_sescounter_t *sescnt,
- 			return -1;
- 		/*
- 		 * Now we need to put this in the new StObj. So, first
--		   unpack it. */
-+		 * unpack it. */
- 		if (! stobj_unpack_sessinfo(bufpp, bufszp, &sesinfo))
- 			return -1;
- 
-@@ -253,9 +253,9 @@ stobj_split(invt_idxinfo_t *idx, int fd, invt_sescounter_t *sescnt,
- 	}
- 	/*
- 	 * Put the new session in the stobj that we just split. Make
--	   sure that we use the updated sescnt and not the stale stuff
--	   from disk. stobj_put_session() writes sescnt and sessinfo to
--	   disk */
-+	 * sure that we use the updated sescnt and not the stale stuff
-+	 * from disk. stobj_put_session() writes sescnt and sessinfo to
-+	 * disk */
- 	if (stobj_put_session(fd, sescnt, newsess->ses, newsess->seshdr,
- 			      newsess->strms, newsess->mfiles) < 0) {
- 		free(sescnt);
-@@ -288,13 +288,13 @@ stobj_delete_sessinfo(int fd, /* kept locked EX by caller */
+@@ -909,7 +909,7 @@ stobj_getsession_bylabel(
+ bool_t
+ stobj_delete_mobj(int fd,
+ 		  invt_seshdr_t *hdr,
+-		  void *arg ,
++		  void *arg,
+ 		  void **buf)
  {
- 	/*
- 	 * we change the sescnt here, but dont write it back to disk
--	   until later */
-+	 * until later */
- 	sescnt->ic_curnum--;
+ 	/* XXX fd needs to be locked EX, not SH */
+@@ -977,7 +977,7 @@ stobj_delete_mobj(int fd,
+ 				       mfiles[j-1].mf_nextmf = mf->mf_nextmf;
  
- 	/*
- 	 * there is really no need to take out / zero out the deleted
--	   session. The seshdr and session will be over-written, but
--	   space taken by the streams and mediafiles will be wasted. */
-+	 * session. The seshdr and session will be over-written, but
-+	 * space taken by the streams and mediafiles will be wasted. */
- 	return BOOL_TRUE;
- }
- 
-@@ -336,7 +336,7 @@ stobj_put_session(
- 
- 	/*
- 	 * we need to know where the streams begin, and where the
--	   media files will begin, at the end of the streams */
-+	 * media files will begin, at the end of the streams */
- 	hdr->sh_streams_off = sescnt->ic_eof;
- 
- 	if (strms == NULL) {
-@@ -468,7 +468,7 @@ stobj_put_streams(int fd, invt_seshdr_t *hdr, invt_session_t *ses,
- 
- 		/*
- 		 * adjust the offsets of the first and the last elements
--		   in the mediafile chain */
-+		 * in the mediafile chain */
- 		mfiles[nmfiles].mf_prevmf = 0;
- 		nmfiles += strms[i].st_nmediafiles;
- 		mfiles[nmfiles - 1].mf_nextmf = 0;
-@@ -612,8 +612,8 @@ stobj_put_mediafile(inv_stmtoken_t tok, invt_mediafile_t *mf)
- 
- 	/*
- 	 * first we need to find out where the current write-position is.
--	   so, we first read the sescounter that is at the top of this
--	   storage object */
-+	 * so, we first read the sescounter that is at the top of this
-+	 * storage object */
- 	if (GET_SESCOUNTERS(fd, &sescnt) < 0)
- 		return -1;
- 
-@@ -627,8 +627,8 @@ stobj_put_mediafile(inv_stmtoken_t tok, invt_mediafile_t *mf)
- 
- 	/*
- 	 * get the stream information, and update number of mediafiles.
--	   we also need to link the new mediafile into the linked-list of
--	   media files of this stream */
-+	 * we also need to link the new mediafile into the linked-list of
-+	 * media files of this stream */
- 
- 	if (GET_REC_NOLOCK(fd, &stream, sizeof(stream),
- 			   tok->md_stream_off) < 0)
-@@ -636,9 +636,9 @@ stobj_put_mediafile(inv_stmtoken_t tok, invt_mediafile_t *mf)
- 
- 	/*
- 	 * We need to update the last ino of this STREAM, which is now the
--	   last ino of the new mediafile. If this is the first mediafile, we
--	   have to update the startino as well. Note that ino is a <ino, off>
--	   tuple */
-+	 * last ino of the new mediafile. If this is the first mediafile, we
-+	 * have to update the startino as well. Note that ino is a <ino, off>
-+	 * tuple */
- 	if (!(mf->mf_flag & INVT_MFILE_INVDUMP)) {
- 		if (stream.st_nmediafiles == 0)
- 			stream.st_startino = mf->mf_startino;
-@@ -771,13 +771,13 @@ stobj_pack_sessinfo(int fd, invt_session_t *ses, invt_seshdr_t *hdr,
- 
- 	/*
- 	 * Copy everything. Note that we don't bother to adjust the offsets
--	   either in the seshdr or in the mediafiles, because we don't need
--	   those in order to restore this session (since everything's
--	   contiguous) */
-+	 * either in the seshdr or in the mediafiles, because we don't need
-+	 * those in order to restore this session (since everything's
-+	 * contiguous) */
- 
- 	/*
- 	 * magic cookie that we put for sanity checking in case of an
--	   earthquake or something :) */
-+	 * earthquake or something :) */
- 	strcpy(sesbuf, INVTSESS_COOKIE);
- 	sesbuf += (size_t)(strlen(INVTSESS_COOKIE) * sizeof(char));
- 
-@@ -860,7 +860,7 @@ stobj_getsession_byuuid(
- 
- 	/*
- 	 * yay. we found the session. so, make the session struct and
--	   put it in the buffer */
-+	 * put it in the buffer */
- 	stobj_copy_invsess(fd, hdr, &ses, (inv_session_t **)buf);
- 
- 	return BOOL_TRUE;
-@@ -896,7 +896,7 @@ stobj_getsession_bylabel(
- 
- 	/*
- 	 * yay. we found the session. so, make the session struct and
--	   put it in the buffer */
-+	 * put it in the buffer */
- 	stobj_copy_invsess(fd, hdr, &ses, (inv_session_t **)buf);
- 
- 	return BOOL_TRUE;
-@@ -950,7 +950,7 @@ stobj_delete_mobj(int			fd,
- 		     mf++) {
- /*
-  *  The prob is that we need to keep track of where we got these mfiles from
--    as we get them, or we wont know how to put them back if they are dirty.
-+ *  as we get them, or we wont know how to put them back if they are dirty.
-  */
- 			assert(off);
- 			if (GET_REC_NOLOCK(fd, mf,
-@@ -964,7 +964,7 @@ stobj_delete_mobj(int			fd,
- 
- 		/*
- 		 * We have all the media files of this stream. Make another
--		   pass, checking to see if we need to remove any mfiles */
-+		 * pass, checking to see if we need to remove any mfiles */
- 		dirty = BOOL_FALSE;
- 
- 		for (j = 0; j < nmfiles; j++) {
-@@ -976,14 +976,14 @@ stobj_delete_mobj(int			fd,
- 
- /*
-  *                                dirty = BOOL_TRUE;
--
--                                if (j == 0)
--                                       strms[i].st_firstmfile = mf->mf_nextmf;
--                                else
--                                       mfiles[j-1].mf_nextmf = mf->mf_nextmf;
--
--                                if (j == nmfiles - 1)
--                                       strms[i].st_lastmfile =;
-+ *
-+ *                              if (j == 0)
-+ *                                     strms[i].st_firstmfile = mf->mf_nextmf;
-+ *                              else
-+ *                                     mfiles[j-1].mf_nextmf = mf->mf_nextmf;
-+ *
-+ *                              if (j == nmfiles - 1)
-+ *                                     strms[i].st_lastmfile =;
-  */
+ 				if (j == nmfiles - 1)
+-				       strms[i].st_lastmfile = ;
++				       strms[i].st_lastmfile =;
+ */
  			}
+ 
+@@ -1026,7 +1026,7 @@ stobj_unpack_sessinfo(
+ 	/* skip the cookie */
+ 	p += strlen(INVTSESS_COOKIE) * sizeof(char);
+ 
+-	/* Check the packing version number. In version 1 , this was the only version number.
++	/* Check the packing version number. In version 1, this was the only version number.
+ 	 * see the comment in stobj_pack_sessinfo().
+ 	 */
+ 	if (INT_GET(*(inv_version_t *) p, ARCH_CONVERT) == PACKED_INV_VERSION_1) {
+@@ -1040,15 +1040,15 @@ stobj_unpack_sessinfo(
+ 		/* We hit a 64 bit alignment issue at this point leading to a
+ 		 * SIGBUS and core dump. The best way to handle it is to
+ 		 * bcopy the remaining part of bufp to a new malloc'ed area
+-		 * which will be 64 bit aligned. This is a memory leak , but not much.
++		 * which will be 64 bit aligned. This is a memory leak, but not much.
+ 		 * Have to do this because xfsrestore does another round of
+-		 * unpack later , so can't disturb the original data.
++		 * unpack later, so can't disturb the original data.
+ 		 * This is fixed in PACKED_INV_VERSION_2 by adding another (inv_version_t) to
+ 		 * have the INV_VERSION. This makes everything 64 bit aligned.
+ 		 */
+ 
+ 		tempsz = bufsz - (strlen(INVTSESS_COOKIE) * sizeof(char))
+-			       - sizeof(inv_version_t) ;
++			       - sizeof(inv_version_t);
+ 		temp_p = calloc(1, tempsz);
+ 		bcopy(p, temp_p, tempsz);
+ 		p = temp_p;
+@@ -1056,7 +1056,7 @@ stobj_unpack_sessinfo(
+ 	        mlog(MLOG_DEBUG | MLOG_INV,"INV: packed inventory version = 2\n");
+ 
+ 		p += sizeof(inv_version_t); /* skip the packed inventory version */
+-		/* At this point , don't care about the INV_VERSION. Maybe in future */
++		/* At this point, don't care about the INV_VERSION. Maybe in future */
+ 		p += sizeof(inv_version_t); /* skip the inventory version */
+ 	} else {
+ 	        mlog(MLOG_NORMAL | MLOG_INV, _(
+@@ -1303,7 +1303,7 @@ stobj_convert_sessinfo(inv_session_t **buf, invt_sessinfo_t *sinfo)
+ 	ises->s_streams = calloc(ises->s_nstreams, sizeof(inv_stream_t) );
+ 	mf = sinfo->mfiles;
+ 	nstreams = (int) ises->s_nstreams;
+-	for (i = 0 ; i < nstreams ; i++) {
++	for (i = 0; i < nstreams; i++) {
+ 		stobj_convert_strm(&ises->s_streams[i], &sinfo->strms[i]);
+ 		nmf = (int) ises->s_streams[i].st_nmediafiles;
+ 		ises->s_streams[i].st_mediafiles = calloc((uint) nmf,
+@@ -1377,7 +1377,7 @@ check_for_mobj (inv_session_t *ses, invt_mobjinfo_t *mobj)
+ 	inv_mediafile_t *mfp;
+ 
+ 	for (i = 0; i < (int) ses->s_nstreams; i++) {
+-		for (j = 0 ; j < ses->s_streams[i].st_nmediafiles ; j++) {
++		for (j = 0; j < ses->s_streams[i].st_nmediafiles; j++) {
+ 			mfp = &ses->s_streams[i].st_mediafiles[j];
+ 			if (mobj_eql(mfp, mobj))
+ 				return BOOL_TRUE;
+@@ -1453,7 +1453,7 @@ DEBUG_sessionprint(inv_session_t *ses, uint ref, invt_pr_ctx_t *prctx)
+ 		if (prctx->depth == PR_STRMSONLY)
+ 			continue;
+ 
+-		for (j = 0 ; j < ses->s_streams[i].st_nmediafiles ; j++) {
++		for (j = 0; j < ses->s_streams[i].st_nmediafiles; j++) {
+ 			mfp = &ses->s_streams[i].st_mediafiles[j];
+ 			if (moidsearch) {
+ 				if (! mobj_eql(mfp, mobj) )
+diff --git a/invutil/invutil.c b/invutil/invutil.c
+index 242574f..a002d56 100644
+--- a/invutil/invutil.c
++++ b/invutil/invutil.c
+@@ -260,7 +260,7 @@ main(int argc, char *argv[])
+     }
+     else if (session_option) {
+ 	CheckAndPruneFstab(
+-		    inventory_path, BOOL_FALSE , mntPoint, &uuid,
++		    inventory_path, BOOL_FALSE, mntPoint, &uuid,
+ 		    &session, (time32_t)0, r_mf_label);
+     }
+     else if (uuid_option || mntpnt_option) {
+@@ -272,7 +272,7 @@ main(int argc, char *argv[])
+ 	}
+ 	else {
+ 	    CheckAndPruneFstab(
+-		    inventory_path, BOOL_FALSE , mntPoint, &uuid,
++		    inventory_path, BOOL_FALSE, mntPoint, &uuid,
+ 		    &session, timeSecs, r_mf_label);
+ 	}
+     }
+@@ -496,9 +496,9 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt,
+     {
+ 	removeflag = BOOL_FALSE;
+ 
+-	printf("   Found entry for %s\n" , fstabentry[i].ft_mountpt);
++	printf("   Found entry for %s\n", fstabentry[i].ft_mountpt);
+ 
+-	for (j = i +1 ; j < counter->ic_curnum ; j++) {
++	for (j = i +1; j < counter->ic_curnum; j++) {
+ 	    if (uuid_compare(fstabentry[i].ft_uuid, fstabentry[j].ft_uuid) == 0)
+ 	    {
+ 		printf("     duplicate fstab entry\n");
+diff --git a/librmt/rmtfstat.c b/librmt/rmtfstat.c
+index 8bfaea7..7c21219 100644
+--- a/librmt/rmtfstat.c
++++ b/librmt/rmtfstat.c
+@@ -73,7 +73,7 @@ _rmt_fstat(int fildes, char *arg)
+ 
+ 	/* adjust read count to prevent overflow */
+ 
+-	adj_rc = (rc > sizeof(struct stat)) ? sizeof(struct stat) : rc ;
++	adj_rc = (rc > sizeof(struct stat)) ? sizeof(struct stat) : rc;
+ 	rc -= adj_rc;
+ 
+ 	for (; adj_rc > 0; adj_rc -= cnt, arg += cnt)
+diff --git a/librmt/rmtioctl.c b/librmt/rmtioctl.c
+index 84932a5..536069c 100644
+--- a/librmt/rmtioctl.c
++++ b/librmt/rmtioctl.c
+@@ -391,7 +391,7 @@ _rmt_ioctl(int fildes, unsigned int op, void *arg)
+ 			if (status & IRIX_MT_FMK)
+ 			    dstp->mt_gstat |= GMT_EOF(0xffffffff);
+ 			if (status & IRIX_MT_EW)
+-			    ;/* No GMT_ to map it to */
++			   ;/* No GMT_ to map it to */
  		}
-@@ -1023,7 +1023,7 @@ stobj_unpack_sessinfo(
+ 		else if (islinux32) {
+ 			struct mtget *dstp = (struct mtget *)arg;
+diff --git a/restore/bag.c b/restore/bag.c
+index d35f8b8..8a8bda4 100644
+--- a/restore/bag.c
++++ b/restore/bag.c
+@@ -111,9 +111,9 @@ bag_find(bag_t *bagp,
+ 	register bagelem_t *p;
  
- 	/*
- 	 * first make sure that the magic cookie at the beginning is right.
--	   this isn't null-terminated */
-+	 * this isn't null-terminated */
- 	if (strncmp(p, INVTSESS_COOKIE, strlen(INVTSESS_COOKIE)) != 0) {
- 		mlog(MLOG_NORMAL | MLOG_INV, _(
- 			     "INV: inv_put_session: unknown cookie\n"));
-@@ -1119,7 +1119,7 @@ stobj_unpack_sessinfo(
- 
- 	/*
- 	 * sanity check the size of the buffer given to us vs. the size it
--	   should be */
-+	 * should be */
- 	if ((size_t)(p - (char *)bufp) != bufsz) {
- 		mlog(MLOG_DEBUG | MLOG_INV, "p-bufp %d != bufsz %d entsz %d\n",
- 		     (int)(p - (char *)bufp), (int)bufsz,
-@@ -1467,8 +1467,8 @@ DEBUG_sessionprint(inv_session_t *ses, uint ref, invt_pr_ctx_t *prctx)
- 			}
- 			printf("\t\t\tmedia file %d:", j);
- 			/*
--			   if (mfp->m_isinvdump)
--			        printf(" SESSION INVENTORY");
-+			 * if (mfp->m_isinvdump)
-+			 *      printf(" SESSION INVENTORY");
- 			 */
- 			printf("\n");
- 			printf("\t\t\t\tmfile index:\t%d\n", mfp->m_mfile_index);
-diff --git a/inventory/inventory.h b/inventory/inventory.h
-index ea61bb9..6e866e1 100644
---- a/inventory/inventory.h
-+++ b/inventory/inventory.h
-@@ -126,7 +126,7 @@ typedef struct inv_mediafile {
- 	off64_t		m_size;                 /* size of mediafile in bytes */
- 	bool_t		m_isgood;               /* distinguishes good mfiles */
- 	bool_t		m_isinvdump;            /* is this the mfile that has the dump
--	                                           of the rest of the session? */
-+	                                         * of the rest of the session? */
- 	char		m_label[INV_STRLEN];    /* media file label */
- } inv_mediafile_t;
- 
-@@ -138,8 +138,8 @@ typedef struct inv_stream {
- 	xfs_ino_t		st_startino;            /* the starting pt */
- 	off64_t			st_startino_off;
- 	xfs_ino_t		st_endino;              /* where we actually ended up. this
--	                                                   means we've written upto but not
--	                                                   including this breakpoint. */
-+	                                                 * means we've written upto but not
-+	                                                 * including this breakpoint. */
- 	off64_t			st_endino_off;
- 	char			st_cmdarg[INV_STRLEN];  /* the driver path user entered */
- 	uint			st_nmediafiles;         /* number of mediafiles */
-@@ -167,8 +167,8 @@ typedef struct inv_session {
- 	uint		s_nstreams;             /* num of media streams recorded */
- 	inv_stream_t *	s_streams;              /* array of streams */
- 	uint		s_refnum;               /* storage location dependent ref.
--	                                            used in displaying the session and
--	                                            nowhere else */
-+	                                         *  used in displaying the session and
-+	                                         *  nowhere else */
- } inv_session_t;
- 
- 
-@@ -240,7 +240,7 @@ inv_put_mediafile(
- 	off64_t		endino_offset,
- 	off64_t		size,           /* size of the mediafile in bytes */
- 	bool_t		isgood,         /* to distinguish unimportant media
--                                           files from others */
-+                                         * files from others */
- 	bool_t		isinv_dump);
- 
- /*
-diff --git a/inventory/testmain.c b/inventory/testmain.c
-index 8ac9053..47c43ea 100644
---- a/inventory/testmain.c
-+++ b/inventory/testmain.c
-@@ -298,7 +298,7 @@ write_test(int nsess, int nstreams, int nmedia, int dumplevel)
- 	for (i = 0; i < nsess; i++) {
- 		j = i % 8;
- 		/*mnt = mnt_str[j];
--		   dev = dev_str[7-j]; */
-+		 * dev = dev_str[7-j]; */
- 		mnt = mnt_str[0];
- 		dev = dev_str[7];
- 		fsidp = &fsidarr[0]; /* j */
-diff --git a/invutil/invidx.c b/invutil/invidx.c
-index 2482e74..ec72dd2 100644
---- a/invutil/invidx.c
-+++ b/invutil/invidx.c
-@@ -640,7 +640,7 @@ stobj_put_streams(int fd, invt_seshdr_t *hdr, invt_session_t *ses,
- 
- 		/*
- 		 * adjust the offsets of the first and the last elements
--		   in the mediafile chain */
-+		 * in the mediafile chain */
- 		mfiles[nmfiles].mf_prevmf = 0;
- 		nmfiles += strms[i].st_nmediafiles;
- 		mfiles[nmfiles - 1].mf_nextmf = 0;
-@@ -788,7 +788,7 @@ get_inventry_stobjfile(data_t *d)
- 
- 	/*
- 	 * all the children will be from the same stobj file, so we can just
--	   get the name for the first */
-+	 * get the name for the first */
- 
- 	child_data = d->children[0]->data;
+ 	for (p = bagp->b_headp
+-	      ;
++	     ;
+ 	      p && p->be_nextp != bagp->b_headp && p->be_key != key
+-	      ;
++	     ;
+ 	      p = p->be_nextp)
+ 		;
  
 diff --git a/restore/content.c b/restore/content.c
-index 09080c3..7ede958 100644
+index ac76028..8da57ed 100644
 --- a/restore/content.c
 +++ b/restore/content.c
-@@ -5008,7 +5008,7 @@ newmedia:
- 		    DEVICE_NONREMOVABLE) {
- 			/*
- 			 * if no error has already been detected then don't log
--			   a failure */
-+			 * a failure */
- 			if (mlog_get_hint() == RV_NONE)
- 				mlog_exit_hint(RV_OK);
- 			return RV_QUIT;
+@@ -344,7 +344,7 @@ typedef struct stdesc stdesc_t;
+ struct bytespan {
+ 	off64_t	offset;
+ 	off64_t	endoffset;
+-} ;
++};
+ 
+ typedef struct bytespan bytespan_t;
+ 
+@@ -1902,7 +1902,7 @@ content_init(int argc, char *argv[], size64_t vmsz)
+ 		ix_t endix = sizeof(mcflag)
+ 			     /
+ 			     sizeof(mcflag[0]);
+-		for (ix = 0 ; ix < endix ; ix++) {
++		for (ix = 0; ix < endix; ix++) {
+ 			mcflag[ix] = BOOL_FALSE;
+ 		}
+ 	}
+@@ -2715,7 +2715,7 @@ content_statline(char **linespp[])
+ 
+ 	/* build and supply the line array
+ 	 */
+-	for (i = 0 ; i < 1 ; i++) {
++	for (i = 0; i < 1; i++) {
+ 		statline[i] = &statlinebuf[i][0];
+ 	}
+ 	*linespp = statline;
+@@ -2868,7 +2868,7 @@ content_mediachange_query(void)
+ 		_("select a drive to acknowledge media change\n");
+ 	choicecnt = 0;
+ 	maxdrvchoiceix = 0;
+-	for (thrdix = 0 ; thrdix < STREAM_SIMMAX ; thrdix++) {
++	for (thrdix = 0; thrdix < STREAM_SIMMAX; thrdix++) {
+ 		if (mcflag[thrdix]) {
+ 			choicetothrdmap[choicecnt].thrdix = thrdix;
+ 			sprintf(choicetothrdmap[choicecnt].choicestr,
+@@ -3050,12 +3050,12 @@ applydirdump(drive_t *drivep,
+ 				return RV_INTR;
+ 			}
+ 
+-			/* if in a pipeline , call preemptchk() to
++			/* if in a pipeline, call preemptchk() to
+ 			 * print status reports
+ 			 */
+ 			if (pipeline)
+ 			{
+-				mlog(MLOG_DEBUG ,
++				mlog(MLOG_DEBUG,
+ 					"preemptchk()\n");
+ 				preemptchk();
+ 			}
+@@ -3091,7 +3091,7 @@ applydirdump(drive_t *drivep,
+ 			 * tree with them. we can tell when we are done
+ 			 * by looking for a null dirent.
+ 			 */
+-			for (; ;) {
++			for (;;) {
+ 				register direnthdr_t *dhdrp =
+ 						    (direnthdr_t *)direntbuf;
+ 				register size_t namelen;
+@@ -3247,7 +3247,7 @@ eatdirdump(drive_t *drivep,
+ 		 * we can tell when we are done
+ 		 * by looking for a null dirent.
+ 		 */
+-		for (; ;) {
++		for (;;) {
+ 			register direnthdr_t *dhdrp =
+ 					    (direnthdr_t *)direntbuf;
+ 			/* REFERENCED */
+@@ -3354,9 +3354,9 @@ treepost(char *path1, char *path2)
+ 		 */
+ 		for (stix = 0,
+ 		      stdescp = (stdesc_t *)((char *)persp + perssz)
+-		      ;
++		     ;
+ 		      stix < persp->a.stcnt
+-		      ;
++		     ;
+ 		      stix++,
+ 		      stdescp = (stdesc_t *)((char *)stdescp
+ 						+
+@@ -3448,7 +3448,7 @@ applynondirdump(drive_t *drivep,
+ 	strctxp->sc_ownerset = BOOL_FALSE;
+ 
+ 
+-	for (; ;) {
++	for (;;) {
+ 		drive_ops_t *dop = drivep->d_opsp;
+ 		drive_mark_t drivemark;
+ 		bstat_t *bstatp = &fhdrp->fh_stat;
+@@ -3590,12 +3590,12 @@ applynondirdump(drive_t *drivep,
+ 				       fhdrp->fh_offset);
+ 		}
+ 
+-		/* if in a pipeline , call preemptchk() to
++		/* if in a pipeline, call preemptchk() to
+ 		 * print status reports
+ 		 */
+ 		if (pipeline)
+ 		{
+-			mlog(MLOG_DEBUG ,
++			mlog(MLOG_DEBUG,
+ 				"preemptchk()\n");
+ 			preemptchk();
+ 		}
+@@ -3936,7 +3936,7 @@ Media_mfile_next(Media_t *Mediap,
+ 	/* loop searching for an acceptable media file.
+ 	 * change media as necessary.
+ 	 */
+-	for (; ;) {
++	for (;;) {
+ 		bool_t emptypr; /* begin_read says drive empty */
+ 		bool_t partofdumppr;
+ 		bool_t hassomepr;
+@@ -4791,7 +4791,7 @@ newmedia:
+ 		 * which may contain useful media files
+ 		 */
+ 		if (dlog_allowed()) {
+-			/* If an alert program has been specified , run it.
++			/* If an alert program has been specified, run it.
+ 			 */
+ 			if (media_change_alert_program != NULL)
+ 				system(media_change_alert_program);
+@@ -4966,9 +4966,9 @@ pi_allocdesc(dh_t *deschp)
+ 		}
+ 		persp->s.descfreeh = (dh_t)(olddescpgcnt * pgsz + 1);
+ 		for (descix = 0, desch = persp->s.descfreeh
+-		      ;
++		     ;
+ 		      descix < (DAU * descppg) - 1
+-		      ;
++		     ;
+ 		      descix++, desch += PERS_DESCSZ) {
+ 			DH2D(desch)->d_nexth = desch + PERS_DESCSZ;
+ 		}
+@@ -5026,7 +5026,7 @@ pi_insertfile(ix_t drivecnt,
+ 	/* first alloc stream descriptors if needed
+ 	 */
+ 	if (persp->s.strmheadh == DH_NULL) {
+-		for (strmix = 0 ; strmix < drivecnt ; strmix++) {
++		for (strmix = 0; strmix < drivecnt; strmix++) {
+ 			ok = pi_allocdesc(&strmh);
+ 			if (! ok) {
+ 				pi_unlock();
+@@ -5041,9 +5041,9 @@ pi_insertfile(ix_t drivecnt,
+ 	 */
+ 	for (strmix = 0,
+ 	      strmh = persp->s.strmheadh
+-	      ;
++	     ;
+ 	      strmix < driveix
+-	      ;
++	     ;
+ 	      strmix++,
+ 	      strmh = DH2S(strmh)->s_nexth)
+ 		;
+@@ -5053,7 +5053,7 @@ pi_insertfile(ix_t drivecnt,
+ 	 * object list, up to the desired object
+ 	 */
+ 	objh = prevobjh = DH_NULL;
+-	for (objix = 0 ; objix <= mediaix ; objix++) {
++	for (objix = 0; objix <= mediaix; objix++) {
+ 		prevobjh = objh;
+ 		if (objix == 0) {
+ 			objh = DH2S(strmh)->s_cldh;
+@@ -5171,7 +5171,7 @@ pi_insertfile(ix_t drivecnt,
+ 	 * file list, up to the desired file
+ 	 */
+ 	fileh = DH_NULL;
+-	for (fileix = 0 ; fileix <= dumpmediafileix ; fileix++) {
++	for (fileix = 0; fileix <= dumpmediafileix; fileix++) {
+ 		prevfileh = fileh;
+ 		if (fileix == 0) {
+ 			fileh = DH2O(objh)->o_cldh;
+@@ -5516,7 +5516,7 @@ pi_transcribe(inv_session_t *sessp)
+ 	/* traverse inventory, transcribing into pers inv.
+ 	 */
+ 	strmcnt =  (size_t)sessp->s_nstreams;
+-	for (strmix = 0 ; strmix < strmcnt ; strmix++) {
++	for (strmix = 0; strmix < strmcnt; strmix++) {
+ 		inv_stream_t *strmp;
+ 		size_t fileix;
+ 		size_t filecnt;
+@@ -5535,7 +5535,7 @@ pi_transcribe(inv_session_t *sessp)
+ 		/* insert all media files from this stream. note that
+ 		 * the media object representation is inverted
+ 		 */
+-		for (fileix = 0 ; fileix < filecnt ; fileix++) {
++		for (fileix = 0; fileix < filecnt; fileix++) {
+ 			inv_mediafile_t *filep;
+ 			bool_t fileszvalpr;
+ 
+@@ -5604,20 +5604,20 @@ pi_preclean(void)
+ 	dh_t fileh;
+ 
+ 	for (strmh = persp->s.strmheadh
+-	      ;
++	     ;
+ 	      strmh != DH_NULL
+-	      ;
++	     ;
+ 	      strmh = DH2S(strmh)->s_nexth) {
+ 		for (objh = DH2S(strmh)->s_cldh
+-		      ;
++		     ;
+ 		      objh != DH_NULL
+-		      ;
++		     ;
+ 		      objh = DH2O(objh)->o_nexth) {
+ 			DH2O(objh)->o_indrivepr = BOOL_FALSE;
+ 			for (fileh = DH2O(objh)->o_cldh
+-			      ;
++			     ;
+ 			      fileh != DH_NULL
+-			      ;
++			     ;
+ 			      fileh = DH2F(fileh)->f_nexth) {
+ 				DH2F(fileh)->f_underheadpr = BOOL_FALSE;
+ 			}
+@@ -5637,23 +5637,23 @@ pi_driveempty(ix_t driveix)
+ 	pi_lock();
+ 
+ 	for (strmh = persp->s.strmheadh
+-	      ;
++	     ;
+ 	      strmh != DH_NULL
+-	      ;
++	     ;
+ 	      strmh = DH2S(strmh)->s_nexth) {
+ 		for (objh = DH2S(strmh)->s_cldh
+-		      ;
++		     ;
+ 		      objh != DH_NULL
+-		      ;
++		     ;
+ 		      objh = DH2O(objh)->o_nexth) {
+ 			if (DH2O(objh)->o_indrivepr
+ 			     &&
+ 			     DH2O(objh)->o_indriveix == driveix) {
+ 				DH2O(objh)->o_indrivepr = BOOL_FALSE;
+ 				for (fileh = DH2O(objh)->o_cldh
+-				      ;
++				     ;
+ 				      fileh != DH_NULL
+-				      ;
++				     ;
+ 				      fileh = DH2F(fileh)->f_nexth) {
+ 					DH2F(fileh)->f_underheadpr =
+ 								    BOOL_FALSE;
+@@ -5676,14 +5676,14 @@ pi_note_indrive(ix_t driveix, uuid_t media_id)
+ 	pi_lock();
+ 
+ 	for (strmh = persp->s.strmheadh
+-	      ;
++	     ;
+ 	      strmh != DH_NULL
+-	      ;
++	     ;
+ 	      strmh = DH2S(strmh)->s_nexth) {
+ 		for (objh = DH2S(strmh)->s_cldh
+-		      ;
++		     ;
+ 		      objh != DH_NULL
+-		      ;
++		     ;
+ 		      objh = DH2O(objh)->o_nexth) {
+ 			if (DH2O(objh)->o_idlabvalpr
+ 			     &&
+@@ -5717,9 +5717,9 @@ pi_note_underhead(dh_t thisobjh, dh_t thisfileh)
+ 	}
+ 
+ 	for (fileh = DH2O(thisobjh)->o_cldh
+-	      ;
++	     ;
+ 	      fileh != DH_NULL
+-	      ;
++	     ;
+ 	      fileh = DH2F(fileh)->f_nexth) {
+ 		if (fileh != thisfileh) {
+ 			DH2F(fileh)->f_underheadpr = BOOL_FALSE;
+@@ -5743,9 +5743,9 @@ pi_seestrmend(ix_t strmix)
+ 	 */
+ 	for (ix = 0,
+ 	      strmh = persp->s.strmheadh
+-	      ;
++	     ;
+ 	      strmh != DH_NULL && ix < strmix
+-	      ;
++	     ;
+ 	      ix++,
+ 	      strmh = DH2S(strmh)->s_nexth)
+ 		;
+@@ -5781,9 +5781,9 @@ pi_seeobjstrmend(ix_t strmix, ix_t mediaix)
+ 	 */
+ 	for (ix = 0,
+ 	      strmh = persp->s.strmheadh
+-	      ;
++	     ;
+ 	      strmh != DH_NULL && ix < strmix
+-	      ;
++	     ;
+ 	      ix++,
+ 	      strmh = DH2S(strmh)->s_nexth)
+ 		;
+@@ -5801,9 +5801,9 @@ pi_seeobjstrmend(ix_t strmix, ix_t mediaix)
+ 	 */
+ 	for (ix = 0,
+ 	      objh = DH2S(strmh)->s_cldh
+-	      ;
++	     ;
+ 	      objh != DH_NULL && ix < mediaix
+-	      ;
++	     ;
+ 	      ix++,
+ 	      objh = DH2O(objh)->o_nexth)
+ 		;
+@@ -5840,23 +5840,23 @@ pi_scanfileendino(dh_t fileh)
+ 	/* traverse the pi tree, looking for the next media file after
+ 	 */
+ 	for (strmh = persp->s.strmheadh
+-	      ;
++	     ;
+ 	      strmh != DH_NULL
+-	      ;
++	     ;
+ 	      strmh = DH2S(strmh)->s_nexth) {
+ 	    dh_t objh;
+ 
+ 	    for (objh = DH2S(strmh)->s_cldh
+-		  ;
++		 ;
+ 		  objh != DH_NULL
+-		  ;
++		 ;
+ 		  objh = DH2O(objh)->o_nexth) {
+ 		dh_t nexth;
+ 
+ 		for (nexth = DH2O(objh)->o_cldh
+-		      ;
++		     ;
+ 		      nexth != DH_NULL
+-		      ;
++		     ;
+ 		      nexth = DH2F(nexth)->f_nexth) {
+ 
+ 		    switch(mode) {
+@@ -5908,23 +5908,23 @@ pi_bracketneededegrps(dh_t thisfileh, egrp_t *first_egrp, egrp_t *next_egrp)
+ 	assert(DH2F(thisfileh)->f_valpr);
+ 
+ 	for (strmh = persp->s.strmheadh
+-	      ;
++	     ;
+ 	      strmh != DH_NULL
+-	      ;
++	     ;
+ 	      strmh = DH2S(strmh)->s_nexth) {
+ 	    dh_t objh;
+ 
+ 	    for (objh = DH2S(strmh)->s_cldh
+-		  ;
++		 ;
+ 		  objh != DH_NULL
+-		  ;
++		 ;
+ 		  objh = DH2O(objh)->o_nexth) {
+ 		dh_t fileh;
+ 
+ 		for (fileh = DH2O(objh)->o_cldh
+-		      ;
++		     ;
+ 		      fileh != DH_NULL
+-		      ;
++		     ;
+ 		      fileh = DH2F(fileh)->f_nexth) {
+ 		    if (! thisfoundpr) {
+ 			if (fileh == thisfileh) {
+@@ -6441,9 +6441,9 @@ pi_hiteod(ix_t strmix, ix_t objix)
+ 	 */
+ 	for (ix = 0,
+ 	      strmh = persp->s.strmheadh
+-	      ;
++	     ;
+ 	      strmh != DH_NULL && ix < strmix
+-	      ;
++	     ;
+ 	      ix++,
+ 	      strmh = DH2S(strmh)->s_nexth)
+ 		;
+@@ -6452,9 +6452,9 @@ pi_hiteod(ix_t strmix, ix_t objix)
+ 	/* get index to last object in stream
+ 	 */
+ 	for (objcnt = 0, objh = DH2S(strmh)->s_cldh
+-	      ;
++	     ;
+ 	      objh != DH_NULL
+-	      ;
++	     ;
+ 	      objh = DH2O(objh)->o_nexth, objcnt++)
+ 		;
+ 	assert(objcnt != 0);
+@@ -6504,9 +6504,9 @@ pi_hitnextdump(ix_t strmix, ix_t objix, ix_t lastfileix)
+ 	 */
+ 	for (ix = 0,
+ 	      strmh = persp->s.strmheadh
+-	      ;
++	     ;
+ 	      strmh != DH_NULL && ix < strmix
+-	      ;
++	     ;
+ 	      ix++,
+ 	      strmh = DH2S(strmh)->s_nexth)
+ 		;
+@@ -6515,9 +6515,9 @@ pi_hitnextdump(ix_t strmix, ix_t objix, ix_t lastfileix)
+ 	/* get index to last object in stream
+ 	 */
+ 	for (objcnt = 0, objh = DH2S(strmh)->s_cldh
+-	      ;
++	     ;
+ 	      objh != DH_NULL
+-	      ;
++	     ;
+ 	      objh = DH2O(objh)->o_nexth, objcnt++)
+ 		;
+ 	assert(objcnt != 0);
+@@ -6563,9 +6563,9 @@ pi_know_no_more_on_object(purp_t purp, ix_t strmix, ix_t objix)
+ 	 */
+ 	for (ix = 0,
+ 	      strmh = persp->s.strmheadh
+-	      ;
++	     ;
+ 	      strmh != DH_NULL && ix < strmix
+-	      ;
++	     ;
+ 	      ix++,
+ 	      strmh = DH2S(strmh)->s_nexth)
+ 		;
+@@ -6574,9 +6574,9 @@ pi_know_no_more_on_object(purp_t purp, ix_t strmix, ix_t objix)
+ 	/* get handle to indexed object
+ 	 */
+ 	for (ix = 0, objh = DH2S(strmh)->s_cldh
+-	      ;
++	     ;
+ 	      objh != DH_NULL && ix < objix
+-	      ;
++	     ;
+ 	      ix++,
+ 	      objh = DH2O(objh)->o_nexth)
+ 		;
+@@ -6593,9 +6593,9 @@ pi_know_no_more_on_object(purp_t purp, ix_t strmix, ix_t objix)
+ 	 * return FALSE.
+ 	 */
+ 	for (fileh = DH2O(objh)->o_cldh
+-	      ;
++	     ;
+ 	      fileh != DH_NULL
+-	      ;
++	     ;
+ 	      fileh = DH2F(fileh)->f_nexth) {
+ 		if (DH2F(fileh)->f_flags & PF_INV) {
+ 			continue;
+@@ -6641,9 +6641,9 @@ pi_know_no_more_beyond_on_object(purp_t purp,
+ 	 */
+ 	for (ix = 0,
+ 	      strmh = persp->s.strmheadh
+-	      ;
++	     ;
+ 	      strmh != DH_NULL && ix < strmix
+-	      ;
++	     ;
+ 	      ix++,
+ 	      strmh = DH2S(strmh)->s_nexth)
+ 		;
+@@ -6653,9 +6653,9 @@ pi_know_no_more_beyond_on_object(purp_t purp,
+ 	 */
+ 	for (ix = 0,
+ 	      objh = DH2S(strmh)->s_cldh
+-	      ;
++	     ;
+ 	      objh != DH_NULL && ix < objix
+-	      ;
++	     ;
+ 	      ix++,
+ 	      objh = DH2O(objh)->o_nexth)
+ 		;
+@@ -6673,9 +6673,9 @@ pi_know_no_more_beyond_on_object(purp_t purp,
+ 	 */
+ 	for (ix = 0,
+ 	      fileh = DH2O(objh)->o_cldh
+-	      ;
++	     ;
+ 	      fileh != DH_NULL
+-	      ;
++	     ;
+ 	      ix++,
+ 	      fileh = DH2F(fileh)->f_nexth) {
+ 		if (ix <= fileix) {
+@@ -7579,7 +7579,7 @@ restore_extent_group(drive_t *drivep,
+ 
+ 	/* copy data extents from media to the file
+ 	 */
+-	for (; ;) {
++	for (;;) {
+ 		/* read the extent header
+ 		 */
+ 		rv = read_extenthdr(drivep, &ehdr, ehcs);
+@@ -8557,11 +8557,11 @@ restore_extent(filehdr_t *fhdrp,
+ 				      tries = 0,
+ 				      remaining = ntowrite,
+ 				      tmp_off = off
+-				      ;
++				     ;
+ 				      nwritten < (int)ntowrite
+ 				      &&
+ 				      tries < WRITE_TRIES_MAX
+-				      ;
++				     ;
+ 				      nwritten += rval,
+ 				      tries++,
+ 				      remaining -= (size_t)rval,
+@@ -8734,7 +8734,7 @@ restore_extattr(drive_t *drivep,
+ 
+ 	/* peel off extattrs until null hdr hit
+ 	 */
+-	for (; ;) {
++	for (;;) {
+ 		size_t recsz;
+ 		/* REFERENCED */
+ 		int nread;
+@@ -9274,7 +9274,7 @@ clr_mcflag(ix_t thrdix)
+ {
+ 	lock();
+ 	mcflag[thrdix] = BOOL_FALSE;
+-	for (thrdix = 0 ; thrdix < drivecnt ; thrdix++) {
++	for (thrdix = 0; thrdix < drivecnt; thrdix++) {
+ 		if (mcflag[thrdix]) {
+ 			unlock();
+ 			return;
+@@ -9340,9 +9340,9 @@ pi_show_nomloglock(void)
+ 	/* iterate over all streams
+ 	 */
+ 	for (strmh = persp->s.strmheadh, strmix = 0
+-	      ;
++	     ;
+ 	      strmh != DH_NULL
+-	      ;
++	     ;
+ 	      strmh = DH2S(strmh)->s_nexth, strmix++) {
+ 		dh_t objh;
+ 		int objix;
+@@ -9358,9 +9358,9 @@ pi_show_nomloglock(void)
+ 		/* iterate over all objects
+ 		 */
+ 		for (objh = DH2S(strmh)->s_cldh, objix = 0
+-		      ;
++		     ;
+ 		      objh != DH_NULL
+-		      ;
++		     ;
+ 		      objh = DH2O(objh)->o_nexth, objix++) {
+ 			dh_t fileh;
+ 			ix_t fileix;
+@@ -9425,9 +9425,9 @@ pi_show_nomloglock(void)
+ 			/* iterate over all files
+ 			 */
+ 			for (fileh = DH2O(objh)->o_cldh, fileix = 0
+-			      ;
++			     ;
+ 			      fileh != DH_NULL
+-			      ;
++			     ;
+ 			      fileh = DH2F(fileh)->f_nexth, fileix++) {
+ 			    mlog(MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_MEDIA,
+ 				  _("\n        media file %u"),
+diff --git a/restore/dirattr.c b/restore/dirattr.c
+index 5368664..864facb 100644
+--- a/restore/dirattr.c
++++ b/restore/dirattr.c
+@@ -268,9 +268,9 @@ dirattr_init(char *hkdir, bool_t resume, uint64_t dircnt)
+ 		      successpr = BOOL_FALSE,
+ 		      ioctlcmd = XFS_IOC_RESVSP64,
+ 		      loglevel = MLOG_VERBOSE
+-		      ;
++		     ;
+ 		      ! successpr && trycnt < 2
+-		      ;
++		     ;
+ 		      trycnt++,
+ 		      ioctlcmd = XFS_IOC_ALLOCSP64,
+ 		      loglevel = max(MLOG_NORMAL, loglevel - 1)) {
+@@ -1114,7 +1114,7 @@ calcdixcum(dix_t dix)
+ 
+ 	nibcnt = (sizeof(dah_t) / HDLSUMCNT) - 1;
+ 	sum = 0;
+-	for (nibix = 0 ; nibix < nibcnt ; nibix++) {
++	for (nibix = 0; nibix < nibcnt; nibix++) {
+ 		sum += (uint16_t)(dix & HDLSUMLOMASK);
+ 		dix >>= HDLSUMCNT;
+ 	}
+diff --git a/restore/inomap.c b/restore/inomap.c
+index 1b03779..8ab588d 100644
+--- a/restore/inomap.c
++++ b/restore/inomap.c
+@@ -410,9 +410,9 @@ inomap_sync_pers(char *hkdir)
+ 	/* correct the next pointers
+ 	 */
+ 	for (hnkp = roothnkp
+-	      ;
++	     ;
+ 	      hnkp < roothnkp + (int)hnkcnt - 1
+-	      ;
++	     ;
+ 	      hnkp++) {
+ 		hnkp->nextp = hnkp + 1;
+ 	}
+@@ -454,23 +454,23 @@ inomap_sanitize(void)
+ 	/* step through all hunks, segs, and inos
+ 	 */
+ 	for (hnkp = roothnkp
+-	      ;
++	     ;
+ 	      hnkp != 0
+-	      ;
++	     ;
+ 	      hnkp = hnkp->nextp) {
+ 		for (segp = hnkp->seg
+-		      ;
++		     ;
+ 		      segp < hnkp->seg + SEGPERHNK
+-		      ;
++		     ;
+ 		      segp++) {
+ 			xfs_ino_t ino;
+ 			if (hnkp == tailhnkp && segp > lastsegp) {
+ 				return;
+ 			}
+ 			for (ino = segp->base
+-			      ;
++			     ;
+ 			      ino < segp->base + INOPERSEG
+-			      ;
++			     ;
+ 			      ino++) {
+ 				int state;
+ 				if (ino > last_ino_added) {
+@@ -527,11 +527,11 @@ inomap_rst_needed(xfs_ino_t firstino, xfs_ino_t lastino)
+ 
+ 	/* find the hunk/seg containing first ino or any ino beyond
+ 	 */
+-	for (hnkp = roothnkp ; hnkp != 0 ; hnkp = hnkp->nextp) {
++	for (hnkp = roothnkp; hnkp != 0; hnkp = hnkp->nextp) {
+ 		if (firstino > hnkp->maxino) {
+ 			continue;
+ 		}
+-		for (segp = hnkp->seg; segp < hnkp->seg + SEGPERHNK ; segp++){
++		for (segp = hnkp->seg; segp < hnkp->seg + SEGPERHNK; segp++){
+ 			if (hnkp == tailhnkp && segp > lastsegp) {
+ 				return BOOL_FALSE;
+ 			}
+@@ -545,13 +545,13 @@ inomap_rst_needed(xfs_ino_t firstino, xfs_ino_t lastino)
+ begin:
+ 	/* search until at least one ino is needed or until beyond last ino
+ 	 */
+-	for (; ;) {
++	for (;;) {
+ 		xfs_ino_t ino;
+ 
+ 		if (segp->base > lastino) {
+ 			return BOOL_FALSE;
+ 		}
+-		for (ino = segp->base ; ino < segp->base + INOPERSEG ; ino++){
++		for (ino = segp->base; ino < segp->base + INOPERSEG; ino++){
+ 			int state;
+ 			if (ino < firstino) {
+ 				continue;
+@@ -594,23 +594,23 @@ inomap_cbiter(int statemask,
+ 	/* step through all hunks, segs, and inos
+ 	 */
+ 	for (hnkp = roothnkp
+-	      ;
++	     ;
+ 	      hnkp != 0
+-	      ;
++	     ;
+ 	      hnkp = hnkp->nextp) {
+ 		for (segp = hnkp->seg
+-		      ;
++		     ;
+ 		      segp < hnkp->seg + SEGPERHNK
+-		      ;
++		     ;
+ 		      segp++) {
+ 			xfs_ino_t ino;
+ 			if (hnkp == tailhnkp && segp > lastsegp) {
+ 				return;
+ 			}
+ 			for (ino = segp->base
+-			      ;
++			     ;
+ 			      ino < segp->base + INOPERSEG
+-			      ;
++			     ;
+ 			      ino++) {
+ 				int state;
+ 				if (ino > last_ino_added) {
+diff --git a/restore/namreg.c b/restore/namreg.c
+index 45c8099..b6c4724 100644
+--- a/restore/namreg.c
++++ b/restore/namreg.c
+@@ -183,9 +183,9 @@ namreg_init(char *hkdir, bool_t resume, uint64_t inocnt)
+ 		      successpr = BOOL_FALSE,
+ 		      ioctlcmd = XFS_IOC_RESVSP64,
+ 		      loglevel = MLOG_VERBOSE
+-		      ;
++		     ;
+ 		      ! successpr && trycnt < 2
+-		      ;
++		     ;
+ 		      trycnt++,
+ 		      ioctlcmd = XFS_IOC_ALLOCSP64,
+ 		      loglevel = max(MLOG_NORMAL, loglevel - 1)) {
+diff --git a/restore/node.c b/restore/node.c
+index 3d0e0b4..b7f2b1b 100644
+--- a/restore/node.c
++++ b/restore/node.c
+@@ -513,7 +513,7 @@ node_alloc(void)
+ 		return NH_NULL;
+ 	}
+ #ifdef NODECHK
+-	node_map_internal(nh , (void **)&p);
++	node_map_internal(nh, (void **)&p);
+ 	if (p == NULL)
+ 		abort();
+ 	hkpp = p + (int)node_hdrp->nh_nodehkix;
+diff --git a/restore/tree.c b/restore/tree.c
+index 0e5ae71..58b88ff 100644
+--- a/restore/tree.c
++++ b/restore/tree.c
+@@ -1769,7 +1769,7 @@ tree_cb_links(xfs_ino_t ino,
+ 	/* loop through all hard links, attempting to restore/link
+ 	 */
+ 	path = path1;
+-	for (nh = hardh ; nh != NH_NULL ; nh = link_nexth(nh)) {
++	for (nh = hardh; nh != NH_NULL; nh = link_nexth(nh)) {
+ 		node_t *np;
+ 		u_char_t flags;
+ 		char *reasonstr;
+@@ -2811,7 +2811,7 @@ restart:
+          * any selected directories and return */
+ 	if (cmdp == tsi_cmd_quit) {
+ 		mlog(MLOG_NORMAL, _("Unmark and quit\n"));
+-		selsubtree(persp->p_rooth , BOOL_FALSE);
++		selsubtree(persp->p_rooth, BOOL_FALSE);
+ 	}
+ 
+ 	return BOOL_TRUE;
+@@ -3149,7 +3149,7 @@ tsi_cmd_match(void)
+ 		return 0;
+ 	}
+ 
+-	for (; tblp < tblendp ; tblp++) {
++	for (; tblp < tblendp; tblp++) {
+ 		if (! strncmp(tranp->t_inter.i_argv[0],
+ 				tblp->tct_pattern,
+ 				strlen(tranp->t_inter.i_argv[0]))) {
+@@ -3187,7 +3187,7 @@ tsi_cmd_help(void *ctxp,
+ 				 sizeof(tsi_cmd_tbl[0]);
+ 
+ 	(* pcb)(pctxp, _("the following commands are available:\n"));
+-	for (; tblp < tblendp ; tblp++) {
++	for (; tblp < tblendp; tblp++) {
+ 		(* pcb)(pctxp,
+ 			   "\t%s %s\n",
+ 			   tblp->tct_pattern,
+@@ -3259,7 +3259,7 @@ tsi_walkpath(char *arg, nh_t rooth, nh_t cwdh,
+ 	 *	isdirpr - TRUE if named node is a directory;
+ 	 *	cldh - the first child in the named node's cld list.
+ 	 */
+-	for (; ;) {
++	for (;;) {
+ 		size_t namelen;
+ 		char *strpatchp;
+ 		nh_t sibh;
+@@ -3796,9 +3796,9 @@ selsubtree_recurse_down(nh_t nh, bool_t sensepr)
+ 				nh_t nh;
+ 				bool_t neededpr = BOOL_FALSE;
+ 				for (nh = link_hardh(ino, gen)
+-				      ;
++				     ;
+ 				      nh != NH_NULL
+-				      ;
++				     ;
+ 				      nh = link_nexth(nh)) {
+ 					node_t *np;
+ 					u_char_t flags;
+@@ -4134,9 +4134,9 @@ hash_init(size64_t vmsz,
+ 	hashlen = min(hashlen, hashlenmax);
+ 
+ 	for (loghashlen = 0
+-	      ;
++	     ;
+ 	      ((size64_t)1 << loghashlen) <= hashlen
+-	      ;
++	     ;
+ 	      loghashlen++)
+ 		;
+ 	assert(loghashlen > 0);
+@@ -4168,7 +4168,7 @@ hash_init(size64_t vmsz,
+ 
+ 	/* initialize the hash array to all NULL node handles
+ 	 */
+-	for (hix = 0 ; hix < (ix_t)hashlen ; hix++) {
++	for (hix = 0; hix < (ix_t)hashlen; hix++) {
+ 		tranp->t_hashp[hix] = NH_NULL;
+ 	}
+ 
+@@ -4374,7 +4374,7 @@ hash_iter(bool_t (* cbfp)(void *contextp, nh_t hashh), void *contextp)
+ 	ix_t hix;
+ 	size64_t hashlen = persp->p_hashsz / sizeof(nh_t);
+ 
+-	for (hix = 0 ; hix < (ix_t)hashlen ; hix++) {
++	for (hix = 0; hix < (ix_t)hashlen; hix++) {
+ 		nh_t nh = tranp->t_hashp[hix];
+ 
+ 		while (nh != NH_NULL) {
+@@ -4491,7 +4491,7 @@ tree_chk(void)
+ 
+ 	okaccum = BOOL_TRUE;
+ 
+-	for (hix = 0 ; hix < (ix_t)hashlen ; hix++) {
++	for (hix = 0; hix < (ix_t)hashlen; hix++) {
+ 		nh_t hashh = tranp->t_hashp[hix];
+ 
+ 		mlog(MLOG_NITTY + 1 | MLOG_TREE,
+@@ -4653,7 +4653,7 @@ parse(int slotcnt, char **slotbuf, char *string)
+ 	/* pass 1: collapse escape sequences, identifying characters which
+ 	 * are to be interpreted literally
+ 	 */
+-	for (s = string, l = liter ; *s ; s++, l++) {
++	for (s = string, l = liter; *s; s++, l++) {
+ 		if (*s == '\\' && ! *l) {
+ 			fix_escape(s, l);
+ 		}
+@@ -4662,7 +4662,7 @@ parse(int slotcnt, char **slotbuf, char *string)
+ 	/* pass 2: collapse quoted spans, identifying characters which
+ 	 * are to be interpreted literally
+ 	 */
+-	for (s = string, l = liter ; *s ; s++, l++) {
++	for (s = string, l = liter; *s; s++, l++) {
+ 		if (*s == '\"' && ! *l) {
+ 			fix_quoted_span(s, l);
+ 		}
+@@ -4670,7 +4670,7 @@ parse(int slotcnt, char **slotbuf, char *string)
+ 
+ 	/* pass 3: collapse white space spans into a single space
+ 	 */
+-	for (s = string, l = liter ; *s ; s++, l++) {
++	for (s = string, l = liter; *s; s++, l++) {
+ 		if (is_white(*s) && ! *l) {
+ 			collapse_white(s, l);
+ 		}
+@@ -4737,7 +4737,7 @@ fix_escape(char *string, char *liter)
+ 	endep = escape_table + (sizeof(escape_table)
+ 			         /
+ 			         sizeof(escape_table[0]));
+-	for (; ep < endep ; ep++) {
++	for (; ep < endep; ep++) {
+ 		if (string[1] == ep->sequence) {
+ 			string[0] = ep->substitute;
+ 			liter[0] = (char)1;
+@@ -4763,9 +4763,9 @@ fix_escape(char *string, char *liter)
+ 		size_t accum;
+ 		accum = 0;
+ 		for (hexlen = 0
+-		      ;
++		     ;
+ 		      hexlen < 2 && is_hex(string[2 + hexlen])
+-		      ;
++		     ;
+ 		      hexlen++) {
+ 			accum *= 16;
+ 			accum += hex_to_size(string[2 + hexlen]);
+@@ -4786,9 +4786,9 @@ fix_escape(char *string, char *liter)
+ 		size_t accum;
+ 		accum = octal_to_size(string[1]);
+ 		for (octallen = 1
+-		      ;
++		     ;
+ 		      octallen < 3 && is_octal(string[1 + octallen])
+-		      ;
++		     ;
+ 		      octallen++) {
+ 			accum *= 8;
+ 			accum += octal_to_size(string[1 + octallen]);
+@@ -4821,7 +4821,7 @@ fix_quoted_span(char *string, char *liter)
+ 	/* scan for the next non-literal quote, marking all
+ 	 * characters in between as literal
+ 	 */
+-	for (s = string, l = liter ; *s && (*s != '\"' || *l) ; s++, l++) {
++	for (s = string, l = liter; *s && (*s != '\"' || *l); s++, l++) {
+ 		*l = (char)1;
+ 	}
+ 
+@@ -4839,7 +4839,7 @@ collapse_white(char *string, char *liter)
+ 	size_t cnt;
+ 
+ 	cnt = 0;
+-	for (s = string, l = liter ; is_white(*s) && ! *l ; s++, l++) {
++	for (s = string, l = liter; is_white(*s) && ! *l; s++, l++) {
+ 		cnt++;
+ 	}
+ 
+@@ -4856,7 +4856,7 @@ distance_to_space(char *s, char *l)
+ {
+ 	size_t cnt;
+ 
+-	for (cnt = 0 ; *s && (! is_white(*s) || *l) ; s++, l++) {
++	for (cnt = 0; *s && (! is_white(*s) || *l); s++, l++) {
+ 		cnt++;
+ 	}
+ 
 -- 
 2.19.1
