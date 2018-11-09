@@ -1,87 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45182 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725922AbeKIIll (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Nov 2018 03:41:41 -0500
-Date: Thu, 8 Nov 2018 15:03:49 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] vfs: vfs_dedupe_file_range() doesn't return
- EOPNOTSUPP
-Message-ID: <20181108230349.GC15721@magnolia>
-References: <20181108221909.27602-1-david@fromorbit.com>
- <20181108221909.27602-2-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:37953 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727781AbeKJAMa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Nov 2018 19:12:30 -0500
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1EC5E3002E00
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Nov 2018 14:31:40 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 02/24] xfsdump: do not split function call with ifdef
+Date: Fri,  9 Nov 2018 15:29:42 +0100
+Message-Id: <20181109143004.24963-3-jtulak@redhat.com>
+In-Reply-To: <20181109143004.24963-1-jtulak@redhat.com>
+References: <20181109143004.24963-1-jtulak@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181108221909.27602-2-david@fromorbit.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Fri, Nov 09, 2018 at 09:19:08AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> It returns EINVAL when the operation is not supported by the
-> filesystem. Fix it to return EOPNOTSUPP to be consistent with
-> the man page and clone_file_range().
-> 
-> Clean up the inconsistent error return handling while I'm there.
-> (I know, lipstick on a pig, but every little bit helps...)
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+In two files in xfsdump, a function call is split in half by an ifdef
+macro to conditionally pick an argument at compile time. This causes the
+code to be a bit less obvious and some analysis tools have trouble with
+understanding it.
 
-Looks ok, would rather just shred this ioctl and make a better one. :P
+So, instead of splitting the function in half, move the whole function
+call into each of the ifdef macros.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ common/drive_minrmt.c | 3 ++-
+ common/main.c         | 8 ++++++--
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
---D
-
-> ---
->  fs/read_write.c | 15 +++++++--------
->  1 file changed, 7 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index bfcb4ced5664..aa43224bcec6 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -2094,17 +2094,18 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
->  	off = same->src_offset;
->  	len = same->src_length;
->  
-> -	ret = -EISDIR;
-> +	if (!file->f_op->remap_file_range)
-> +		return -EOPNOTSUPP;
-> +
->  	if (S_ISDIR(src->i_mode))
-> -		goto out;
-> +		return -EISDIR;
->  
-> -	ret = -EINVAL;
->  	if (!S_ISREG(src->i_mode))
-> -		goto out;
-> +		return -EINVAL;
->  
->  	ret = remap_verify_area(file, off, len, false);
->  	if (ret < 0)
-> -		goto out;
-> +		return ret;
->  	ret = 0;
->  
->  	if (off + len > i_size_read(src))
-> @@ -2147,10 +2148,8 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
->  		fdput(dst_fd);
->  next_loop:
->  		if (fatal_signal_pending(current))
-> -			goto out;
-> +			break;
->  	}
-> -
-> -out:
->  	return ret;
->  }
->  EXPORT_SYMBOL(vfs_dedupe_file_range);
-> -- 
-> 2.19.1
-> 
+diff --git a/common/drive_minrmt.c b/common/drive_minrmt.c
+index 59a40a7..04fed3e 100644
+--- a/common/drive_minrmt.c
++++ b/common/drive_minrmt.c
+@@ -2585,11 +2585,12 @@ read_label( drive_t *drivep )
+ 	if (( nread == 0 )  /* takes care of sun */
+ 	      ||            /* now handle SGI */
+ 	      (nread < 0 && saved_errno == ENOSPC )) {
+-		mlog( MLOG_NORMAL | MLOG_DRIVE,
+ #ifdef DUMP
++		mlog( MLOG_NORMAL | MLOG_DRIVE,
+ 		      _("encountered EOD : assuming blank media\n") );
+ #endif
+ #ifdef RESTORE
++		mlog( MLOG_NORMAL | MLOG_DRIVE,
+ 		      _("encountered EOD : end of data\n") );
+ #endif
+ 		( void )rewind_and_verify( drivep );
+diff --git a/common/main.c b/common/main.c
+index b3605d1..0c23eb4 100644
+--- a/common/main.c
++++ b/common/main.c
+@@ -581,12 +581,14 @@ main( int argc, char *argv[] )
+ 		sigaction( SIGTERM, &sa, NULL );
+ 		sigaction( SIGQUIT, &sa, NULL );
+ 
++#ifdef DUMP
+ 		ok = drive_init2( argc,
+ 				  argv,
+-#ifdef DUMP
+ 				  gwhdrtemplatep );
+ #endif /* DUMP */
+ #ifdef RESTORE
++		ok = drive_init2( argc,
++				  argv,
+ 				  ( global_hdr_t * )0 );
+ #endif /* RESTORE */
+ 		if ( ! ok ) {
+@@ -629,12 +631,14 @@ main( int argc, char *argv[] )
+ 	 * time-consuming chore. drive_init3 will synchronize with each slave.
+ 	 */
+ 	if ( ! init_error ) {
++#ifdef DUMP
+ 		ok = drive_init2( argc,
+ 				  argv,
+-#ifdef DUMP
+ 				  gwhdrtemplatep );
+ #endif /* DUMP */
+ #ifdef RESTORE
++		ok = drive_init2( argc,
++				  argv,
+ 				  ( global_hdr_t * )0 );
+ #endif /* RESTORE */
+ 		if ( ! ok ) {
+-- 
+2.19.1
