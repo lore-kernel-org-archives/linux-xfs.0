@@ -1,40 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtprelay0111.hostedemail.com ([216.40.44.111]:57608 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725928AbeKLMz1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Nov 2018 07:55:27 -0500
-Message-ID: <9b618d0aa0e7c0db78e3dcaf4d3ffe2e22b92a12.camel@perches.com>
-Subject: Re: [PATCH] Fix coding style issue in xfs_acl.c and xfs_aops.c
-From: Joe Perches <joe@perches.com>
-Date: Sun, 11 Nov 2018 19:04:17 -0800
-In-Reply-To: <20181111233305.GL19305@dastard>
-References: <20181111003603.7598-1-weizhefix@gmail.com>
-         <20181111233305.GL19305@dastard>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from aserp2120.oracle.com ([141.146.126.78]:43016 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728001AbeKJJXv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 04:23:51 -0500
+Date: Fri, 9 Nov 2018 15:40:56 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] Fix misspelling issue in fs/xfs/kmem.c
+Message-ID: <20181109234056.GH15721@magnolia>
+References: <20181109232301.19977-1-weizhefix@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181109232301.19977-1-weizhefix@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, hmsjwzb <weizhefix@gmail.com>
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kerticrnel@vger.kernel.org
+To: hmsjwzb <weizhefix@gmail.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2018-11-12 at 10:33 +1100, Dave Chinner wrote:
-> On Sun, Nov 11, 2018 at 08:36:03AM +0800, hmsjwzb wrote:
-> > Possible unwrapped commit description (prefer a maximum 75 chars per line)
+On Sat, Nov 10, 2018 at 07:23:01AM +0800, hmsjwzb wrote:
+
+Sorry, but all submissions must have a Signed-off-by: to be reviewed.
+
+Also, there's no To: header on this message??
+
+NAK.
+
+--D
+
+> ---
+>  fs/xfs/kmem.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> NACK. Our preference is (and always has been) for comments to fill
-> the entire 80 columns, just like the rest of the kernel. I have no
-> idea who told you "75 columns is preferred" but they are wrong.
-
-75 column is the preferred commit description length
-as the general 'git log' style is indented a few chars.
-
-This particular commit description is odd because the
-comments in the code is being wrapped, not the commit
-description.
-
-Wei Zhe, can you please resubmit this with a better
-commit description?  Something like:
-
-	Wrap comments to 80 columns where appropriate.
+> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> index fdd9d6ede25c..73ec1f84e591 100644
+> --- a/fs/xfs/kmem.c
+> +++ b/fs/xfs/kmem.c
+> @@ -45,7 +45,7 @@ kmem_alloc_large(size_t size, xfs_km_flags_t flags)
+>  		return ptr;
+>  
+>  	/*
+> -	 * __vmalloc() will allocate data pages and auxillary structures (e.g.
+> +	 * __vmalloc() will allocate data pages and auxiliary structures (e.g.
+>  	 * pagetables) with GFP_KERNEL, yet we may be under GFP_NOFS context
+>  	 * here. Hence we need to tell memory reclaim that we are in such a
+>  	 * context via PF_MEMALLOC_NOFS to prevent memory reclaim re-entering
+> -- 
+> 2.17.1
+> 
