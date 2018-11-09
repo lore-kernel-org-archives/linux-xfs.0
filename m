@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57883 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:27049 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727939AbeKJAMn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Nov 2018 19:12:43 -0500
+        id S1727958AbeKJAMq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Nov 2018 19:12:46 -0500
 Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C029930841DE
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Nov 2018 14:31:52 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id AFC972D7E5
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Nov 2018 14:31:55 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 11/24] xfsdump: (style) add a space after if, switch, for, do, while
-Date: Fri,  9 Nov 2018 15:29:51 +0100
-Message-Id: <20181109143004.24963-12-jtulak@redhat.com>
+Subject: [PATCH 13/24] xfsdump: (2/4)(style) add first empty line for multiline comments
+Date: Fri,  9 Nov 2018 15:29:53 +0100
+Message-Id: <20181109143004.24963-14-jtulak@redhat.com>
 In-Reply-To: <20181109143004.24963-1-jtulak@redhat.com>
 References: <20181109143004.24963-1-jtulak@redhat.com>
 MIME-Version: 1.0
@@ -22,2684 +22,3262 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Jan Tulak <jtulak@redhat.com>
 
-There should be a space in "if(" -> "if (", etc...
+Change the multiline comment style from /* foo to /*
+ * foo
 
 Created by this script:
 
 #!/usr/bin/env bash
-# add a space after some keywords: for, while, ... so we get 'for (' instead of 'for('
+# change the multiline comment style from /* foo to /*
+ * foo
 
 find . -name '*.[ch]' ! -type d -exec bash -c '
 sed -i \
-    -e "s/\(for\|while\|if\|switch\)(/\1 (/g" \
-    -e "s/do{/do {/g" \
+    -e "s/^\(\s*\)\/\* \(.\+[^*][^/]\)$/\1\/*
+\1 * \2/g" \
     $0
 ' {} \;
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- common/arch_xlate.c     |   2 +-
- common/drive_minrmt.c   |   8 +--
- common/drive_scsitape.c |  10 +--
- common/drive_simple.c   |   4 +-
- common/hsmapi.c         |   2 +-
- common/mlog.c           |   2 +-
- common/ring.c           |   2 +-
- common/util.c           |   2 +-
- dump/content.c          |  56 +++++++--------
- dump/inomap.c           |   2 +-
- inventory/inv_api.c     |   2 +-
- inventory/inv_mgr.c     |   4 +-
- inventory/inv_stobj.c   |   2 +-
- inventory/testmain.c    |   2 +-
- invutil/cmenu.c         | 106 +++++++++++++--------------
- invutil/fstab.c         |  72 +++++++++----------
- invutil/invidx.c        | 154 ++++++++++++++++++++--------------------
- invutil/invutil.c       |  28 ++++----
- invutil/list.c          |  34 ++++-----
- invutil/menu.c          |  70 +++++++++---------
- invutil/screen.c        |   6 +-
- invutil/stobj.c         |  82 ++++++++++-----------
- librmt/rmtopen.c        |   2 +-
- restore/content.c       |  34 ++++-----
- restore/inomap.c        |   8 +--
- 25 files changed, 348 insertions(+), 348 deletions(-)
+ dump/content.c | 885 ++++++++++++++++++++++++++++++++-----------------
+ dump/getopt.h  |   3 +-
+ dump/inomap.c  | 168 ++++++----
+ dump/inomap.h  |  27 +-
+ dump/var.c     |   9 +-
+ 5 files changed, 728 insertions(+), 364 deletions(-)
 
-diff --git a/common/arch_xlate.c b/common/arch_xlate.c
-index 46d525f..1844836 100644
---- a/common/arch_xlate.c
-+++ b/common/arch_xlate.c
-@@ -290,7 +290,7 @@ xlate_hnk(hnk_t *h1, hnk_t *h2, int dir)
- 
- 	mlog(MLOG_NITTY, "pre - xlate_hnk\n");
- 
--	for(i = 0; i < SEGPERHNK; i++) {
-+	for (i = 0; i < SEGPERHNK; i++) {
- 		IXLATE(h1, h2, seg[i].base);
- 		IXLATE(h1, h2, seg[i].lobits);
- 		IXLATE(h1, h2, seg[i].mebits);
-diff --git a/common/drive_minrmt.c b/common/drive_minrmt.c
-index 89d3f5e..01bbd74 100644
---- a/common/drive_minrmt.c
-+++ b/common/drive_minrmt.c
-@@ -1914,7 +1914,7 @@ do_write(drive_t *drivep, char *bufp, size_t retcnt)
- 		contextp->dc_msgp = Ring_get(contextp->dc_ringp);
- 		contextp->dc_recp = contextp->dc_msgp->rm_bufp;
- 		last_rec_wrtn_wo_err = contextp->dc_msgp->rm_user;
--		switch(contextp->dc_msgp->rm_stat) {
-+		switch (contextp->dc_msgp->rm_stat) {
- 		case RING_STAT_OK:
- 		case RING_STAT_INIT:
- 			rval = 0;
-@@ -2087,7 +2087,7 @@ do_end_write(drive_t *drivep, off64_t *ncommittedp)
- 				  contextp->dc_msgp);
- 			contextp->dc_msgp = 0;
- 			contextp->dc_msgp = Ring_get(contextp->dc_ringp);
--			switch(contextp->dc_msgp->rm_stat) {
-+			switch (contextp->dc_msgp->rm_stat) {
- 			case RING_STAT_OK:
- 			case RING_STAT_INIT:
- 				rval = 0;
-@@ -2132,7 +2132,7 @@ do_end_write(drive_t *drivep, off64_t *ncommittedp)
- 			if (contextp->dc_msgp->rm_op == RING_OP_TRACE) {
- 				break;
- 			}
--			switch(contextp->dc_msgp->rm_stat) {
-+			switch (contextp->dc_msgp->rm_stat) {
- 			case RING_STAT_OK:
- 			case RING_STAT_INIT:
- 				assert(rval == 0);
-@@ -3719,7 +3719,7 @@ getrec(drive_t *drivep)
- 			}
- 		} else {
- 			contextp->dc_msgp = Ring_get(contextp->dc_ringp);
--			switch(contextp->dc_msgp->rm_stat) {
-+			switch (contextp->dc_msgp->rm_stat) {
- 			case RING_STAT_OK:
- 				contextp->dc_recp = contextp->dc_msgp->rm_bufp;
- 				break;
-diff --git a/common/drive_scsitape.c b/common/drive_scsitape.c
-index 54a6797..79a21f2 100644
---- a/common/drive_scsitape.c
-+++ b/common/drive_scsitape.c
-@@ -2065,7 +2065,7 @@ do_write(drive_t *drivep, char *bufp, size_t retcnt)
- 		contextp->dc_msgp = Ring_get(contextp->dc_ringp);
- 		contextp->dc_recp = contextp->dc_msgp->rm_bufp;
- 		last_rec_wrtn_wo_err = contextp->dc_msgp->rm_user;
--		switch(contextp->dc_msgp->rm_stat) {
-+		switch (contextp->dc_msgp->rm_stat) {
- 		case RING_STAT_OK:
- 		case RING_STAT_INIT:
- 			rval = 0;
-@@ -2238,7 +2238,7 @@ do_end_write(drive_t *drivep, off64_t *ncommittedp)
- 				  contextp->dc_msgp);
- 			contextp->dc_msgp = 0;
- 			contextp->dc_msgp = Ring_get(contextp->dc_ringp);
--			switch(contextp->dc_msgp->rm_stat) {
-+			switch (contextp->dc_msgp->rm_stat) {
- 			case RING_STAT_OK:
- 			case RING_STAT_INIT:
- 				rval = 0;
-@@ -2283,7 +2283,7 @@ do_end_write(drive_t *drivep, off64_t *ncommittedp)
- 			if (contextp->dc_msgp->rm_op == RING_OP_TRACE) {
- 				break;
- 			}
--			switch(contextp->dc_msgp->rm_stat) {
-+			switch (contextp->dc_msgp->rm_stat) {
- 			case RING_STAT_OK:
- 			case RING_STAT_INIT:
- 				assert(rval == 0);
-@@ -2585,7 +2585,7 @@ do_bsf(drive_t *drivep, int count, int *statp)
- 	/* finally, move to the right side of the file mark
- 	 */
- 	mtstat = fsf_and_verify(drivep);
--	if(IS_EOT(mtstat)) {
-+	if (IS_EOT(mtstat)) {
- 		*statp = DRIVE_ERROR_EOM;
- 	}
- 	if (! IS_FMK(mtstat)) {
-@@ -4999,7 +4999,7 @@ getrec(drive_t *drivep)
- 			}
- 		} else {
- 			contextp->dc_msgp = Ring_get(contextp->dc_ringp);
--			switch(contextp->dc_msgp->rm_stat) {
-+			switch (contextp->dc_msgp->rm_stat) {
- 			case RING_STAT_OK:
- 				contextp->dc_recp = contextp->dc_msgp->rm_bufp;
- 				break;
-diff --git a/common/drive_simple.c b/common/drive_simple.c
-index f71a2cf..28e6e5b 100644
---- a/common/drive_simple.c
-+++ b/common/drive_simple.c
-@@ -309,7 +309,7 @@ ds_instantiate(int argc, char *argv[], drive_t *drivep)
- 			oflags = O_RDWR | O_CREAT;
- 
- 		} else {
--			switch(statbuf.st_mode & S_IFMT) {
-+			switch (statbuf.st_mode & S_IFMT) {
- 			case S_IFREG:
- 				drivep->d_capabilities |= DRIVE_CAP_ERASE;
- 				drivep->d_capabilities |= DRIVE_CAP_REWIND;
-@@ -345,7 +345,7 @@ ds_instantiate(int argc, char *argv[], drive_t *drivep)
- 
- 		}
- 		oflags = O_RDONLY;
--		switch(statbuf.st_mode & S_IFMT) {
-+		switch (statbuf.st_mode & S_IFMT) {
- 		case S_IFREG:
- 		case S_IFCHR:
- 		case S_IFBLK:
-diff --git a/common/hsmapi.c b/common/hsmapi.c
-index e3e18a7..2762aa4 100644
---- a/common/hsmapi.c
-+++ b/common/hsmapi.c
-@@ -505,7 +505,7 @@ const	xfs_bstat_t	*statp)
- 	if (dmfattrp->fsys != FSYS_TYPE_XFS)
- 		return 0; /* unsupported filesystem version */
- 
--	switch(dmfattrp->version) {
-+	switch (dmfattrp->version) {
- 	case DMF_ATTR_FORMAT_0:
- 		if (dmf_f_ctxtp->attrlen != sizeof(XFSattrvalue0_t))
- 			return 0; /* wrong size */
-diff --git a/common/mlog.c b/common/mlog.c
-index e09c16c..5dc8dd9 100644
---- a/common/mlog.c
-+++ b/common/mlog.c
-@@ -138,7 +138,7 @@ mlog_init0(void)
- 	 */
- 	mlog_streamcnt = 1;
- 
--	for(i = 0; i < MLOG_SS_CNT; i++) {
-+	for (i = 0; i < MLOG_SS_CNT; i++) {
- 		mlog_level_ss[i] = MLOG_VERBOSE;
- 	}
- }
-diff --git a/common/ring.c b/common/ring.c
-index faef34f..1b3b51b 100644
---- a/common/ring.c
-+++ b/common/ring.c
-@@ -427,7 +427,7 @@ ring_slave_entry(void *ringctxp)
- 		msgp = ring_slave_get(ringp);
- 		msgp->rm_rval = 0;
- 
--		switch(msgp->rm_op) {
-+		switch (msgp->rm_op) {
- 		case RING_OP_READ:
- 			if (loopmode == LOOPMODE_IGNORE) {
- 				msgp->rm_stat = RING_STAT_IGNORE;
-diff --git a/common/util.c b/common/util.c
-index 7ca5fbe..6443489 100644
---- a/common/util.c
-+++ b/common/util.c
-@@ -187,7 +187,7 @@ bigstat_iter(jdm_fshandle_t *fshandlep,
- 				      "ino %llu needed second bulkstat\n",
- 				      p->bs_ino);
- 
--				if(bigstat_one(fsfd, p->bs_ino, p) < 0) {
-+				if (bigstat_one(fsfd, p->bs_ino, p) < 0) {
- 				    mlog(MLOG_WARNING,
- 					  _("failed to get bulkstat information for inode %llu\n"),
- 					  p->bs_ino);
 diff --git a/dump/content.c b/dump/content.c
-index 0f46563..f351e78 100644
+index f351e78..fe52a70 100644
 --- a/dump/content.c
 +++ b/dump/content.c
-@@ -831,16 +831,16 @@ content_init(int argc,
- 	uuid_copy(cwhdrtemplatep->ch_fsid, fsid);
+@@ -71,16 +71,19 @@
+ #include "getdents.h"
+ #include "arch_xlate.h"
  
- 	/* write quota information */
--	if(sc_savequotas) {
-+	if (sc_savequotas) {
+-/* max "unsigned long long int"
++/*
++ * max "unsigned long long int"
+  */
+ #define ULONGLONG_MAX	18446744073709551615LLU
  
- 		sc_savequotas = BOOL_FALSE;
--		for(i = 0; i < (sizeof(quotas) / sizeof(quotas[0])); i++) {
-+		for (i = 0; i < (sizeof(quotas) / sizeof(quotas[0])); i++) {
- 			quotas[i].savequotas = BOOL_FALSE;
- 			qstat = getxfsqstat(fsdevice);
- 			if (qstat > 0 && (qstat & quotas[i].statflag)) {
- 				sprintf(quotas[i].quotapath, "%s/%s", mntpnt, quotas[i].quotafile);
--				if(save_quotas(mntpnt, &quotas[i])) {
--					if(subtreecnt) {
-+				if (save_quotas(mntpnt, &quotas[i])) {
-+					if (subtreecnt) {
- 						subtreecnt++;
- 						subtreep = (char **) realloc(subtreep,
- 								subtreecnt * sizeof(char *));
-@@ -1897,7 +1897,7 @@ content_statline(char **linespp[])
- 				 "drive %u: ",
- 				 (unsigned int)i);
- 		}
--		switch(pdsp->pds_phase) {
-+		switch (pdsp->pds_phase) {
- 		case PDS_INOMAP:
- 			strcat(statline[statlinecnt],
- 				"dumping inomap");
-@@ -2701,9 +2701,9 @@ content_complete(void)
- 	      sc_stat_datadone);
+-/* legal range of dump levels
++/*
++ * legal range of dump levels
+  */
+ #define LEVEL_DEFAULT	0
+ #define LEVEL_MAX	9
  
- 	if (completepr) {
--		if(sc_savequotas) {
--			for(i = 0; i < (sizeof(quotas) / sizeof(quotas[0])); i++) {
--				if(quotas[i].savequotas && unlink(quotas[i].quotapath) < 0) {
-+		if (sc_savequotas) {
-+			for (i = 0; i < (sizeof(quotas) / sizeof(quotas[0])); i++) {
-+				if (quotas[i].savequotas && unlink(quotas[i].quotapath) < 0) {
- 					mlog(MLOG_ERROR, _(
- 					"unable to remove %s: %s\n"),
- 					quotas[i].quotapath,
-@@ -3857,7 +3857,7 @@ dump_file(void *arg1,
+-/* ordinary files as big or bigger than this many pages will be
++/*
++ * ordinary files as big or bigger than this many pages will be
+  * preceeded in the dump by enough padding to align the first byte
+  * of that file's data to a page boundary
+  */
+@@ -89,15 +92,18 @@
  
- 	/* pass on to specific dump function
- 	 */
--	switch(statp->bs_mode & S_IFMT) {
-+	switch (statp->bs_mode & S_IFMT) {
- 	case S_IFREG:
- 		/* ordinary file
- 		 */
-@@ -5046,7 +5046,7 @@ dump_extenthdr(drive_t *drivep,
- 	rv_t rv;
- 	char typestr[20];
+ /* structure definitions used locally ****************************************/
  
--	switch(type)  {
-+	switch (type)  {
- 		case EXTENTHDR_TYPE_LAST:
- 			strcpy(typestr, "LAST");
- 			break;
-@@ -5273,7 +5273,7 @@ dump_session_inv(drive_t *drivep,
+-/* number of bstats bstat_iter fetches at a time
++/*
++ * number of bstats bstat_iter fetches at a time
+  */
+ #define BSTATBUFLEN	4096
  
- 		partial = BOOL_FALSE;
- 		rv = Media_mfile_begin(drivep, contextp, BOOL_FALSE);
--		switch(rv) {
-+		switch (rv) {
- 		case RV_OK:
- 			break;
- 		case RV_TIMEOUT:
-@@ -5331,7 +5331,7 @@ dump_session_inv(drive_t *drivep,
- 				      mwhdrp,
- 				      &ncommitted,
- 				      partial);
--		switch(rv) {
-+		switch (rv) {
- 		case RV_OK:
- 			break;
- 		case RV_EOM:
-@@ -5419,7 +5419,7 @@ dump_terminator(drive_t *drivep, context_t *contextp, media_hdr_t *mwhdrp)
+-/* if the source file system type can't be determined, assume it is this
++/*
++ * if the source file system type can't be determined, assume it is this
+  */
+ #define FS_DEFAULT	"xfs"
  
- 		partial = BOOL_FALSE;
- 		rv = Media_mfile_begin(drivep, contextp, BOOL_FALSE);
--		switch(rv) {
-+		switch (rv) {
- 		case RV_OK:
- 			break;
- 		case RV_TIMEOUT:
-@@ -5453,7 +5453,7 @@ dump_terminator(drive_t *drivep, context_t *contextp, media_hdr_t *mwhdrp)
- 				      mwhdrp,
- 				      &ncommitted,
- 				      BOOL_FALSE);
--		switch(rv) {
-+		switch (rv) {
- 		case RV_OK:
- 			break;
- 		case RV_EOM:
-@@ -5663,7 +5663,7 @@ position:
- 		 */
- 		update_cc_Media_useterminatorpr(drivep, contextp);
+-/* marks consist of a opaque drive layer cookie and a startpoint.
++/*
++ * marks consist of a opaque drive layer cookie and a startpoint.
+  * the drive layer requires that it be passed a pointer to a drive_markrec_t.
+  * we tack on content-specific baggage (startpt_t). this works because we
+  * allocate and free mark_t's here.
+@@ -109,7 +115,8 @@ struct mark {
  
--		switch(rval) {
-+		switch (rval) {
- 		case 0:
- 			mlog_lock();
- 			mlog(MLOG_VERBOSE | MLOG_NOLOCK | MLOG_MEDIA, _(
-@@ -5701,7 +5701,7 @@ position:
+ typedef struct mark mark_t;
+ 
+-/* Media_mfile_begin() entry state.
++/*
++ * Media_mfile_begin() entry state.
+  */
+ enum bes { BES_INIT,	/* in the beginning */
+ 	   BES_ENDOK,   /* last media file successfully flushed to media */
+@@ -118,81 +125,100 @@ enum bes { BES_INIT,	/* in the beginning */
+ 
+ typedef enum bes bes_t;
+ 
+-/* per-stream context
++/*
++ * per-stream context
+  */
+ struct context {
+ 	filehdr_t *cc_filehdrp;
+-			/* pre-allocated buffer: heads each dumped file
++			/*
++			 * pre-allocated buffer: heads each dumped file
  			 */
- 			(*dop->do_end_read)(drivep);
+ 	extenthdr_t *cc_extenthdrp;
+-			/* pre-allocated buffer: heads each dumped file extent
++			/*
++			 * pre-allocated buffer: heads each dumped file extent
+ 			 */
+ 	void *cc_inomap_contextp;
+-			/* pre-allocated context to speed inomap iteration
++			/*
++			 * pre-allocated context to speed inomap iteration
+ 			 */
+ 	char *cc_getdentsbufp;
+ 	size_t cc_getdentsbufsz;
+-			/* pre-allocated buffer for getdents() syscall
++			/*
++			 * pre-allocated buffer for getdents() syscall
+ 			 */
+ 	char *cc_mdirentbufp;
+ 	size_t cc_mdirentbufsz;
+-			/* pre-allocated buffer for on-media dirent
++			/*
++			 * pre-allocated buffer for on-media dirent
+ 			 */
+ 	char *cc_extattrlistbufp;
+ 	size_t cc_extattrlistbufsz;
+-			/* pre-allocated buffer for retrieving a
++			/*
++			 * pre-allocated buffer for retrieving a
+ 			 * list of extended file attributes
+ 			 */
+ 	attr_multiop_t *cc_extattrrtrvarrayp;
+ 	size_t cc_extattrrtrvarraylen;
+-			/* pre-allocated array of ops for retrieving the
++			/*
++			 * pre-allocated array of ops for retrieving the
+ 			 * values for a list of extended file attributes
+ 			 */
+ 	char *cc_extattrdumpbufp;
+ 	size_t cc_extattrdumpbufsz;
+-			/* pre-allocated buffer for dumping the names and
++			/*
++			 * pre-allocated buffer for dumping the names and
+ 			 * values for a list of extended file attributes
+ 			 */
+ 	hsm_f_ctxt_t *cc_hsm_f_ctxtp;
+-			/* pre-allocated HSM context used for holding HSM
++			/*
++			 * pre-allocated HSM context used for holding HSM
+ 			   state information about a file across subroutine
+ 			   calls.
+ 			*/
+ 	char *cc_readlinkbufp;
+ 	size_t cc_readlinkbufsz;
+-			/* pre-allocated buffer for readlink()
++			/*
++			 * pre-allocated buffer for readlink()
+ 			 */
+ 	off64_t cc_mfilesz;
+-			/* total bytes dumped to media file
++			/*
++			 * total bytes dumped to media file
+ 			 */
+ 	size_t cc_markscommitted;
+-			/* number of marks committed in mfile. only useful
++			/*
++			 * number of marks committed in mfile. only useful
+ 			 * info is if greater than zero.
+ 			 */
+ 	xfs_ino_t cc_stat_lastino;
+-			/* monotonic strm nondir ino dumped
++			/*
++			 * monotonic strm nondir ino dumped
+ 			 */
+ 	bool_t cc_completepr;
+-			/* set if stream completely dumped. useful for
++			/*
++			 * set if stream completely dumped. useful for
+ 			 * determining if dump was interrupted
+ 			 */
+ 	bool_t cc_Media_useterminatorpr;
+-			/* true if stream terminators are expected and
++			/*
++			 * true if stream terminators are expected and
+ 			 * will be used
+ 			 */
+ 	char *cc_Media_firstlabel;
+-			/* optional command line media label. only used
++			/*
++			 * optional command line media label. only used
+ 			 * for first media object in stream, and only if
+ 			 * media object does not already have a label
+ 			 */
+ 	bes_t cc_Media_begin_entrystate;
+-			/* Media_mfile_begin context entry state
++			/*
++			 * Media_mfile_begin context entry state
+ 			 */
+ };
  
--			switch(Media_erasechk(drivep,
-+			switch (Media_erasechk(drivep,
- 						dcaps,
- 						intr_allowed,
- 						prevmediapresentpr)) {
-@@ -5755,7 +5755,7 @@ position:
- 			      "at beginning of media\n"));
- 			mlog_exit_hint(RV_CORRUPT);
+ typedef struct context context_t;
  
--			switch(Media_erasechk(drivep,
-+			switch (Media_erasechk(drivep,
- 						dcaps,
- 						intr_allowed,
- 						prevmediapresentpr)) {
-@@ -5836,7 +5836,7 @@ position:
+-/* extent group context, used by dump_file()
++/*
++ * extent group context, used by dump_file()
+  */
+ #define BMAP_LEN	512
+ 
+@@ -208,29 +234,34 @@ struct extent_group_context {
+ typedef struct extent_group_context extent_group_context_t;
+ 
+ 
+-/* minimum getdents() buffer size
++/*
++ * minimum getdents() buffer size
+  */
+ #define GETDENTSBUF_SZ_MIN	(2 * pgsz)
+ 
+ 
+-/* minimum sizes for extended attributes buffers
++/*
++ * minimum sizes for extended attributes buffers
+  */
+ #define EXTATTR_LISTBUF_SZ	(XATTR_LIST_MAX)
+ #define EXTATTR_RTRVARRAY_LEN	(1 * pgsz)
+ #define EXTATTR_DUMPBUF_SZ	(4 * pgsz)
+ 
+-/* for printing ext attr namespace
++/*
++ * for printing ext attr namespace
+  */
+ #define EXTATTR_NAMESPACE(flag)	(((flag) & ATTR_ROOT) ? _("root") : \
+ 				(((flag) & ATTR_SECURE) ? _("secure") : \
+ 				  _("non-root")) )
+ 
+-/* for printing file type
++/*
++ * for printing file type
+  */
+ #define FILETYPE(statp)		(((statp)->bs_mode & S_IFMT) == S_IFDIR \
+ 				  ? _("dir") : _("nondir"))
+ 
+-/* per-drive status descriptor
++/*
++ * per-drive status descriptor
+  */
+ struct pds {
+ 	enum { PDS_NULL,		/* per-drive activity not begun */
+@@ -259,7 +290,8 @@ extern size_t pgsz;
+ 
+ /* forward declarations of locally defined static functions ******************/
+ 
+-/* file dumpers
++/*
++ * file dumpers
+  */
+ static rv_t
+ dump_dirs(ix_t strmix,
+@@ -413,28 +445,35 @@ bool_t allowexcludefiles_pr = BOOL_FALSE;
+ /* definition of locally defined static variables *****************************/
+ 
+ static bool_t sc_preerasepr = BOOL_FALSE;
+-	/* pre-erase media
++	/*
++	 * pre-erase media
+ 	 */
+ static inv_idbtoken_t sc_inv_idbtoken = INV_TOKEN_NULL;
+-	/* handle to inventory
++	/*
++	 * handle to inventory
+ 	 */
+ static inv_sestoken_t sc_inv_sestoken = INV_TOKEN_NULL;
+-	/* handle to inventory session
++	/*
++	 * handle to inventory session
+ 	 */
+ static inv_stmtoken_t *sc_inv_stmtokenp = 0;
+-	/* array of inventory session stream handles
++	/*
++	 * array of inventory session stream handles
+ 	 */
+ static bool_t sc_inv_updatepr = BOOL_TRUE;
+-	/* set if ok to update online inventory with stats of this dump
++	/*
++	 * set if ok to update online inventory with stats of this dump
+ 	 */
+ static ix_t sc_level = LEVEL_DEFAULT;
+-	/* dump level requested
++	/*
++	 * dump level requested
+ 	 */
+ static bool_t sc_incrpr = BOOL_FALSE;
+ static time32_t sc_incrbasetime;
+ static ix_t sc_incrbaselevel;
+ static uuid_t sc_incrbaseid;
+-	/* if an incremental dump, the base, level and time of the incremental
++	/*
++	 * if an incremental dump, the base, level and time of the incremental
+ 	 * base dump. TRICKY: if resuming an incremental dump, this is the
+ 	 * base of the original incremental.
+ 	 */
+@@ -443,75 +482,95 @@ static time32_t sc_resumebasetime = 0;
+ static uuid_t sc_resumebaseid;
+ static size_t sc_resumerangecnt = 0;
+ static drange_t *sc_resumerangep = 0;
+-	/* if a resumed dump, the id, time and undumped ino/offset ranges
++	/*
++	 * if a resumed dump, the id, time and undumped ino/offset ranges
+ 	 * of the interrupted dump being resumed.
+ 	 */
+ static jdm_fshandle_t *sc_fshandlep = 0;
+-	/* dmi file system handle
++	/*
++	 * dmi file system handle
+ 	 */
+ static int sc_fsfd = -1;
+-	/* open file descriptor for root directory
++	/*
++	 * open file descriptor for root directory
+ 	 */
+ static xfs_bstat_t *sc_rootxfsstatp = 0;
+-	/* pointer to loaded bulkstat for root directory
++	/*
++	 * pointer to loaded bulkstat for root directory
+ 	 */
+ static startpt_t *sc_startptp = 0;
+-	/* an array of stream ino/offset start points
++	/*
++	 * an array of stream ino/offset start points
+ 	 */
+ static time32_t sc_stat_starttime = 0;
+-	/* for cacluating elapsed time
++	/*
++	 * for cacluating elapsed time
+ 	 */
+ static ix_t sc_stat_inomapphase = 0;
+ static ix_t sc_stat_inomappass = 0;
+ static size64_t sc_stat_inomapcnt;
+ static size64_t sc_stat_inomapdone;
+ static size64_t sc_stat_dircnt = 0;
+-	/* total number of directory inodes to be dumped (strm 0)
++	/*
++	 * total number of directory inodes to be dumped (strm 0)
+ 	 */
+ static pds_t sc_stat_pds[STREAM_SIMMAX];
+-	/* per-drive stream status
++	/*
++	 * per-drive stream status
+ 	 */
+ static size64_t sc_stat_nondircnt = 0;
+-	/* total number of non-directory inodes to be dumped (all strms)
++	/*
++	 * total number of non-directory inodes to be dumped (all strms)
+ 	 */
+ static size64_t sc_stat_nondirdone = 0;
+-	/* total number of non-directory inodes dumped (all strms)
++	/*
++	 * total number of non-directory inodes dumped (all strms)
+ 	 */
+ static size64_t sc_stat_datasz = 0;
+-	/* total size in bytes of non-dirs to be dumped (all strms)
++	/*
++	 * total size in bytes of non-dirs to be dumped (all strms)
+ 	 */
+ static size64_t sc_stat_datadone = 0;
+-	/* total size in bytes of non-dirs dumped (all strms)
++	/*
++	 * total size in bytes of non-dirs dumped (all strms)
+ 	 */
+ static size_t sc_thrdsarrivedcnt = 0;
+-	/* each thread checks in by bumping this count under lock.
++	/*
++	 * each thread checks in by bumping this count under lock.
+ 	 * used to decide when its ok to begin waiting for all threads
+ 	 * to arrive at sync pt for session inventory dump.
+ 	 */
+ static size_t sc_thrdsdonecnt = 0;
+-	/* number of threads which are ready to dump the session inventory.
++	/*
++	 * number of threads which are ready to dump the session inventory.
+ 	 * when equal to the number of streams remaining (stream_cnt()),
+ 	 * can proceed with inventory dumps
+ 	 */
+ static context_t *sc_contextp;
+-	/* an array of per-stream context descriptors
++	/*
++	 * an array of per-stream context descriptors
+ 	 */
+ static bool_t sc_mcflag[STREAM_SIMMAX];
+-	/* media change flag
++	/*
++	 * media change flag
+ 	 */
+ static bool_t sc_dumpextattrpr = BOOL_TRUE;
+-	/* dump extended attributes
++	/*
++	 * dump extended attributes
+ 	 */
+ static bool_t sc_dumpasoffline = BOOL_FALSE;
+-	/* dump dual-residency HSM files as offline
++	/*
++	 * dump dual-residency HSM files as offline
+ 	 */
+ static bool_t sc_use_old_direntpr = BOOL_FALSE;
+-	/* dump dirents as dirent_v1_t instead of dirent_t
++	/*
++	 * dump dirents as dirent_v1_t instead of dirent_t
+ 	 * (for compat with dump format 2)
+ 	 */
+ 
+ static bool_t sc_savequotas = BOOL_TRUE;
+-/* save quota information in dump
++/*
++ * save quota information in dump
+  */
+ static quota_info_t quotas[] = {
+ 	{ "user quota",		BOOL_TRUE,	CONTENT_QUOTAFILE,	"", "-uf", XFS_QUOTA_UDQ_ACCT, 0 },
+@@ -584,7 +643,8 @@ content_init(int argc,
+ 	uint64_t filesz;
+ 	uint64_t size_estimate;
+ 
+-	/* basic sanity checks
++	/*
++	 * basic sanity checks
+ 	 */
+ 	assert(sizeof(mode_t) == MODE_SZ);
+ 	assert(sizeof(timestruct_t) == TIMESTRUCT_SZ);
+@@ -599,7 +659,8 @@ content_init(int argc,
+ 		sizeof(content_inode_hdr_t));
+ 	assert(sizeof(extattrhdr_t) == EXTATTRHDR_SZ);
+ 
+-	/* calculate offsets of portions of the write hdr template
++	/*
++	 * calculate offsets of portions of the write hdr template
+ 	 */
+ 	dwhdrtemplatep = (drive_hdr_t *)gwhdrtemplatep->gh_upper;
+ 	mwhdrtemplatep = (media_hdr_t *)dwhdrtemplatep->dh_upper;
+@@ -610,7 +671,8 @@ content_init(int argc,
+ 		sc_use_old_direntpr = BOOL_TRUE;
+ 	}
+ 
+-	/* process command line args
++	/*
++	 * process command line args
+ 	 */
+ 	optind = 1;
+ 	opterr = 0;
+@@ -736,7 +798,8 @@ content_init(int argc,
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* the user may specify stdout as the destination, by a single
++	/*
++	 * the user may specify stdout as the destination, by a single
+ 	 * dash ('-') with no option letter. This must appear between
+ 	 * all lettered arguments and the source file system pathname.
+ 	 */
+@@ -744,7 +807,8 @@ content_init(int argc,
+ 		optind++;
+ 	}
+ 
+-	/* the last argument must be either the mount point or a
++	/*
++	 * the last argument must be either the mount point or a
+ 	 * device pathname of the file system to be dumped.
+ 	 */
+ 	if (optind >= argc) {
+@@ -760,7 +824,8 @@ content_init(int argc,
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* allocate space for the subtree pointer array and load it
++	/*
++	 * allocate space for the subtree pointer array and load it
+ 	 */
+ 	if (subtreecnt) {
+ 		subtreep = (char **)calloc(subtreecnt, sizeof(char *));
+@@ -782,7 +847,8 @@ content_init(int argc,
+ 		subtreep = 0;
+ 	}
+ 
+-	/* call a magic function to figure out if the last argument is
++	/*
++	 * call a magic function to figure out if the last argument is
+ 	 * a mount point or a device pathname, and retrieve the file
+ 	 * system type, full pathname of the character special device
+ 	 * containing the file system, the latest mount point, and the file
+@@ -806,7 +872,8 @@ content_init(int argc,
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* verify that the file system is mounted. This must be enhanced
++	/*
++	 * verify that the file system is mounted. This must be enhanced
+ 	 * to mount an unmounted file system on a temporary mount point,
+ 	 * if it is not currently mounted.
+ 	 */
+@@ -817,7 +884,8 @@ content_init(int argc,
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* place the fs info in the write hdr template
++	/*
++	 * place the fs info in the write hdr template
+ 	 */
+ 	(void)strncpyterm(cwhdrtemplatep->ch_mntpnt,
+ 			     mntpnt,
+@@ -859,11 +927,13 @@ content_init(int argc,
+ 	}
+ 
+ 
+-	/* create my /var directory if it doesn't already exist.
++	/*
++	 * create my /var directory if it doesn't already exist.
+ 	 */
+ 	var_create();
+ 
+-	/* get two session descriptors from the inventory: one for the last
++	/*
++	 * get two session descriptors from the inventory: one for the last
+ 	 * dump at this level, and one for the last dump at a lower level.
+ 	 * the former will be used to check if the last dump at this level
+ 	 * was prematurely terminated; if so, for those inos already dumped
+@@ -875,14 +945,16 @@ content_init(int argc,
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* briefly open the online dump inventory, so it can be used
++	/*
++	 * briefly open the online dump inventory, so it can be used
+ 	 * to calculate incremental and resumed dumps.
+ 	 */
+ 	inv_idbt = inv_open((inv_predicate_t)INV_BY_UUID,
+ 			     INV_SEARCH_ONLY,
+ 			     (void *)&fsid);
+ 
+-	/* if a based request, look for the indicated session.
++	/*
++	 * if a based request, look for the indicated session.
+ 	 * if found, and not interrupted, this will be used as an
+ 	 * incremental base. if interrupted, will be used as
+ 	 * resume base.
+@@ -966,7 +1038,8 @@ content_init(int argc,
+ 						      p->dr_begin.sp_offset);
+ 					}
+ 				} else {
+-					/* set the range start pt's END flag to
++					/*
++					 * set the range start pt's END flag to
+ 					 * indicate the range was not interrupted.
+ 					 */
+ 					p->dr_begin.sp_flags = STARTPT_FLAGS_END;
+@@ -998,7 +1071,8 @@ content_init(int argc,
+ 		goto baseuuidbypass;
+ 	}
+ 
+-	/* look for the most recent dump at a level less than the level
++	/*
++	 * look for the most recent dump at a level less than the level
+ 	 * of this dump. extract the time, level, id, and predicates partial
+ 	 * and interrupted.
+ 	 */
+@@ -1042,7 +1116,8 @@ content_init(int argc,
+ 		}
+ 	}
+ 
+-	/* look for the most recent dump at a level equal to the level
++	/*
++	 * look for the most recent dump at a level equal to the level
+ 	 * of this dump. extract the time, level, id, and predicates partial
+ 	 * and interrupted, and for each stream the range of ino/offset
+ 	 * values not dumped.
+@@ -1112,7 +1187,8 @@ content_init(int argc,
+ 					      p->dr_begin.sp_offset);
+ 				}
+ 			} else {
+-				/* set the range start pt's END flag to
++				/*
++				 * set the range start pt's END flag to
+ 				 * indicate the range was not interrupted.
+ 				 */
+ 				p->dr_begin.sp_flags = STARTPT_FLAGS_END;
+@@ -1125,7 +1201,8 @@ content_init(int argc,
+ 
+ baseuuidbypass:
+ 
+-	/* now determine the incremental and resume bases, if any.
++	/*
++	 * now determine the incremental and resume bases, if any.
+ 	 */
+ 	if (samefoundpr && ! sameinterruptedpr) {
+ 		free((void *)sc_resumerangep);
+@@ -1292,7 +1369,8 @@ baseuuidbypass:
+ 		}
+ 	}
+ 
+-	/* don't allow interrupted dumps of a lesser level to be bases
++	/*
++	 * don't allow interrupted dumps of a lesser level to be bases
+ 	 */
+ 	if (sc_incrpr && underinterruptedpr) {
+ 		mlog(MLOG_NORMAL | MLOG_ERROR, _(
+@@ -1303,7 +1381,8 @@ baseuuidbypass:
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* reject if resume (-R) specified, but base was not interrupted
++	/*
++	 * reject if resume (-R) specified, but base was not interrupted
+ 	 */
+ 	if (! sc_resumepr && resumereqpr) {
+ 		mlog(MLOG_NORMAL | MLOG_ERROR, _(
+@@ -1313,7 +1392,8 @@ baseuuidbypass:
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* announce the dump characteristics
++	/*
++	 * announce the dump characteristics
+ 	 */
+ 	if (sc_incrpr) {
+ 		if (sc_resumepr) {
+@@ -1366,13 +1446,15 @@ baseuuidbypass:
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* announce the dump time
++	/*
++	 * announce the dump time
+ 	 */
+ 	mlog(MLOG_VERBOSE, _(
+ 	      "dump date: %s\n"),
+ 	      ctimennl(&gwhdrtemplatep->gh_timestamp));
+ 
+-	/* display the session UUID
++	/*
++	 * display the session UUID
+ 	 */
+ 	{
+ 		char string_uuid[UUID_STR_LEN + 1];
+@@ -1382,13 +1464,15 @@ baseuuidbypass:
+ 		      string_uuid);
+ 	}
+ 
+-	/* display the session label
++	/*
++	 * display the session label
+ 	 */
+ 	mlog(MLOG_VERBOSE, _(
+ 	      "session label: \"%s\"\n"),
+ 	      gwhdrtemplatep->gh_dumplabel);
+ 
+-	/* get a file descriptor for the file system. any file
++	/*
++	 * get a file descriptor for the file system. any file
+ 	 * contained in the file system will do; use the mntpnt.
+ 	 * needed by bigstat.
+ 	 */
+@@ -1401,7 +1485,8 @@ baseuuidbypass:
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* figure out the ino for the root directory of the fs
++	/*
++	 * figure out the ino for the root directory of the fs
+ 	 * and get its xfs_bstat_t for inomap_build().  This could
+ 	 * be a bind mount; don't ask for the mount point inode,
+ 	 * find the actual lowest inode number in the filesystem.
+@@ -1441,7 +1526,8 @@ baseuuidbypass:
+ 			         sc_rootxfsstatp->bs_ino, rootstat.st_ino);
+ 	}
+ 
+-	/* alloc a file system handle, to be used with the jdm_open()
++	/*
++	 * alloc a file system handle, to be used with the jdm_open()
+ 	 * functions.
+ 	 */
+ 	sc_fshandlep = jdm_getfshandle(mntpnt);
+@@ -1457,7 +1543,8 @@ baseuuidbypass:
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* If GETOPT_DUMPASOFFLINE was specified, allocate a filesystem context
++	/*
++	 * If GETOPT_DUMPASOFFLINE was specified, allocate a filesystem context
+ 	 * for use by the HSM routines.
+ 	 */
+ 
+@@ -1465,11 +1552,13 @@ baseuuidbypass:
+ 		hsm_fs_ctxtp = HsmInitFsysContext(mntpnt, HSM_API_VERSION_1);
+ 	}
+ 
+-	/* set now so statline can be displayed
++	/*
++	 * set now so statline can be displayed
+ 	 */
+ 	sc_stat_starttime = gwhdrtemplatep->gh_timestamp;
+ 
+-	/* allocate storage for the stream startpoints, and build inomap.
++	/*
++	 * allocate storage for the stream startpoints, and build inomap.
+ 	 * inomap_build() also fills in the start points. storage only needed
+ 	 * until the startpoints are copied into each streams header. will
+ 	 * be freed at the end of this function.
+@@ -1502,12 +1591,14 @@ baseuuidbypass:
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* ask var to ask inomap to skip files under var if var is in
++	/*
++	 * ask var to ask inomap to skip files under var if var is in
+ 	 * the fs being dumped
+ 	 */
+ 	var_skip(&fsid, inomap_skip);
+ 
+-	/* fill in write header template content info. always produce
++	/*
++	 * fill in write header template content info. always produce
+ 	 * an inomap for each media file. the dirdump flag will be set
+ 	 * in content_stream_dump() for streams which dump the directories.
+ 	 */
+@@ -1548,7 +1639,8 @@ baseuuidbypass:
+ 	scwhdrtemplatep->cih_rootino = sc_rootxfsstatp->bs_ino;
+ 	inomap_writehdr(scwhdrtemplatep);
+ 
+-	/* log the dump size. just a rough approx.
++	/*
++	 * log the dump size. just a rough approx.
+ 	 */
+ 	dircnt = scwhdrtemplatep->cih_inomap_dircnt;
+ 	nondircnt = scwhdrtemplatep->cih_inomap_nondircnt;
+@@ -1587,14 +1679,16 @@ baseuuidbypass:
+ 	      GLOBAL_HDR_SZ, inomapsz, direntsz,
+ 	      filesz, datasz);
+ 
+-	/* extract the progress stat denominators from the write hdr
++	/*
++	 * extract the progress stat denominators from the write hdr
+ 	 * template. placed there by inomap_writehdr()
+ 	 */
+ 	sc_stat_dircnt = scwhdrtemplatep->cih_inomap_dircnt;
+ 	sc_stat_nondircnt = scwhdrtemplatep->cih_inomap_nondircnt;
+ 	sc_stat_datasz = scwhdrtemplatep->cih_inomap_datasz;
+ 
+-	/* allocate and populate per-stream context descriptors
++	/*
++	 * allocate and populate per-stream context descriptors
+ 	 */
+ 	sc_contextp = (context_t *)calloc(drivecnt, sizeof(context_t));
+ 	assert(sc_contextp);
+@@ -1660,7 +1754,8 @@ baseuuidbypass:
+ 		contextp->cc_inomap_contextp = inomap_alloc_context();
+ 	}
+ 
+-	/* look for command line media labels. these will be assigned
++	/*
++	 * look for command line media labels. these will be assigned
+ 	 * to each stream as found. this label is only for the media
+ 	 * object currently in the drive. subsequently inserted media
+ 	 * objects must get a label via prompting.
+@@ -1709,7 +1804,8 @@ baseuuidbypass:
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* open the dump inventory and a dump inventory write session
++	/*
++	 * open the dump inventory and a dump inventory write session
+ 	 * if an inventory update is to be done.
+ 	 */
+ 	if (sc_inv_updatepr) {
+@@ -1733,7 +1829,8 @@ baseuuidbypass:
+ 		}
+ 	}
+ 
+-	/* set media change flags to FALSE;
++	/*
++	 * set media change flags to FALSE;
+ 	 */
+ 	{
+ 		ix_t ix;
+@@ -1746,7 +1843,8 @@ baseuuidbypass:
+ 	}
+ 	content_media_change_needed = BOOL_FALSE;
+ 
+-	/* initialize the per-drive status
++	/*
++	 * initialize the per-drive status
+ 	 */
+ 	{
+ 		ix_t driveix;
+@@ -1774,7 +1872,8 @@ content_statline(char **linespp[])
+ 	struct tm *tmp;
+ 	ix_t i;
+ 
+-	/* build and supply the line array
++	/*
++	 * build and supply the line array
+ 	 */
+ 	for (i = 0; i < STREAM_SIMMAX + 1; i++) {
+ 		statline[i] = &statlinebuf[i][0];
+@@ -1782,22 +1881,26 @@ content_statline(char **linespp[])
+ 	*linespp = statline;
+ 	statlinecnt = 0;
+ 
+-	/* if start time not initialized, return no strings
++	/*
++	 * if start time not initialized, return no strings
+ 	 */
+ 	if (! sc_stat_starttime) {
+ 		return 0;
+ 	}
+ 
+-	/* calculate the elapsed time
++	/*
++	 * calculate the elapsed time
+ 	 */
+ 	now = time(0);
+ 	elapsed = now - sc_stat_starttime;
+ 
+-	/* get local time
++	/*
++	 * get local time
+ 	 */
+ 	tmp = localtime(&now);
+ 
+-	/* if inomap phase indicated, report on that
++	/*
++	 * if inomap phase indicated, report on that
+ 	 */
+ 	if (sc_stat_inomapphase && sc_stat_inomapcnt) {
+ 		if (sc_stat_inomappass) {
+@@ -1833,7 +1936,8 @@ content_statline(char **linespp[])
+ 		return 1;
+ 	}
+ 
+-	/* get the accumulated totals for non-dir inos and data bytes dumped
++	/*
++	 * get the accumulated totals for non-dir inos and data bytes dumped
+ 	 */
+ 	lock();
+ 	nondirdone = sc_stat_nondirdone;
+@@ -1842,7 +1946,8 @@ content_statline(char **linespp[])
+ 
+ 	/* non-dir dump phase */
+ 	if (nondirdone || datadone) {
+-		/* calculate percentage of data dumped
++		/*
++		 * calculate percentage of data dumped
+ 		*/
+ 		if (sc_stat_datasz) {
+ 			percent = (double)datadone
+@@ -1856,7 +1961,8 @@ content_statline(char **linespp[])
+ 			percent = 100.0;
+ 		}
+ 
+-		/* format the status line in a local static buffer (non-re-entrant!)
++		/*
++		 * format the status line in a local static buffer (non-re-entrant!)
+ 		*/
+ 		sprintf(statline[0],
+ 				"status at %02d:%02d:%02d: %llu/%llu files dumped, "
+@@ -1881,7 +1987,8 @@ content_statline(char **linespp[])
+ 
+ 	assert(strlen(statline[0]) < STATLINESZ);
+ 
+-	/* optionally create stat lines for each drive
++	/*
++	 * optionally create stat lines for each drive
+ 	 */
+ 	statlinecnt = 1;
+ 	for (i = 0; i < drivecnt; i++) {
+@@ -1983,7 +2090,8 @@ create_inv_session(
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* open an inventory stream for each stream
++	/*
++	 * open an inventory stream for each stream
+ 	*/
+ 	sc_inv_stmtokenp = (inv_stmtoken_t *)
+ 				calloc(drivecnt, sizeof(inv_stmtoken_t));
+@@ -2043,7 +2151,8 @@ mark_set(drive_t *drivep, xfs_ino_t ino, off64_t offset, int32_t flags)
+ static void
+ mark_callback(void *p, drive_markrec_t *dmp, bool_t committed)
+ {
+-	/* get context
++	/*
++	 * get context
+ 	 */
+ 	ix_t strmix = (ix_t)p;
+ 	context_t *contextp = &sc_contextp[strmix];
+@@ -2055,21 +2164,25 @@ mark_callback(void *p, drive_markrec_t *dmp, bool_t committed)
+ 				       (void *)
+ 				       cwhdrp->ch_specific;
+ 
+-	/* this is really a mark_t, allocated by mark_set()
++	/*
++	 * this is really a mark_t, allocated by mark_set()
+ 	 */
+ 	mark_t *markp = (mark_t *)dmp;
+ 
+ 	if (committed) {
+-		/* bump the per-mfile mark committed count
++		/*
++		 * bump the per-mfile mark committed count
+ 		 */
+ 		contextp->cc_markscommitted++;
+ 
+-		/* copy the mark into the write header: this establishes the
++		/*
++		 * copy the mark into the write header: this establishes the
+ 		 * starting point should we need to retry the non-dir portion
+ 		 * of the dump
+ 		 */
+ 
+-		/* log the mark commit
++		/*
++		 * log the mark commit
+ 		 */
+ 		if (markp->startpt.sp_flags & STARTPT_FLAGS_NULL) {
+ 			mlog(MLOG_DEBUG,
+@@ -2100,7 +2213,8 @@ mark_callback(void *p, drive_markrec_t *dmp, bool_t committed)
+ 			scwhdrp->cih_startpt = markp->startpt;
+ 		}
+ 	} else {
+-		/* note the mark was not committed
++		/*
++		 * note the mark was not committed
+ 		 */
+ 		if (markp->startpt.sp_flags & STARTPT_FLAGS_NULL) {
+ 			mlog(MLOG_DEBUG,
+@@ -2117,12 +2231,14 @@ mark_callback(void *p, drive_markrec_t *dmp, bool_t committed)
+ 		}
+ 	}
+ 
+-	/* get rid of this mark (it was allocated by mark_set())
++	/*
++	 * get rid of this mark (it was allocated by mark_set())
+ 	 */
+ 	free((void *)markp);
+ }
+ 
+-/* begin - called by stream process to invoke the dump stream
++/*
++ * begin - called by stream process to invoke the dump stream
+  */
+ int
+ content_stream_dump(ix_t strmix)
+@@ -2144,11 +2260,13 @@ content_stream_dump(ix_t strmix)
+ 	int rval;
+ 	rv_t rv;
+ 
+-	/* sanity checks
++	/*
++	 * sanity checks
+ 	 */
+ 	assert(RV_OK == 0); /* bigstat_iter depends on this */
+ 
+-	/* allocate a buffer for use by bstat_iter
++	/*
++	 * allocate a buffer for use by bstat_iter
+ 	 */
+ 	bstatbufp = (xfs_bstat_t *)calloc(bstatbuflen,
+ 					     sizeof(xfs_bstat_t));
+@@ -2158,18 +2276,21 @@ content_stream_dump(ix_t strmix)
+ 	inomap_contextp = inomap_alloc_context();
+ 	assert(inomap_contextp);
+ 
+-	/* determine if stream terminators will be used and are expected.
++	/*
++	 * determine if stream terminators will be used and are expected.
+ 	 * this will be revised each time a new media file is begun.
+ 	 */
+ 	update_cc_Media_useterminatorpr(drivep, contextp);
+ 
+-	/* check in
++	/*
++	 * check in
+ 	 */
+ 	lock();
+ 	sc_thrdsarrivedcnt++;
+ 	unlock();
+ 
+-	/* fill in write hdr stream start and end points
++	/*
++	 * fill in write hdr stream start and end points
+ 	 */
+ 	scwhdrp->cih_startpt = sc_startptp[strmix];
+ 	if (strmix < drivecnt - 1) {
+@@ -2183,25 +2304,30 @@ content_stream_dump(ix_t strmix)
+ 		scwhdrp->cih_dumpattr |= CIH_DUMPATTR_DIRDUMP;
+ 	}
+ 
+-	/* fill in inomap fields of write hdr
++	/*
++	 * fill in inomap fields of write hdr
+ 	 */
+ 	inomap_writehdr(scwhdrp);
+ 
+-	/* used to decide if any non-dirs not yet on media
++	/*
++	 * used to decide if any non-dirs not yet on media
+ 	 */
+ 	all_nondirs_committed = BOOL_FALSE;
+ 
+-	/* used to guarantee we don't count the same ino more than once
++	/*
++	 * used to guarantee we don't count the same ino more than once
+ 	 * in the progress stats
+ 	 */
+ 	contextp->cc_stat_lastino = 0;
+ 
+-	/* used to detect generation of an empty media file;
++	/*
++	 * used to detect generation of an empty media file;
+ 	 * contains at most an inomap and dirdump and null file hdr.
+ 	 */
+ 	empty_mediafile = BOOL_FALSE;
+ 
+-	/* get the inventory stream token
++	/*
++	 * get the inventory stream token
+ 	 */
+ 	if (sc_inv_stmtokenp) {
+ 		inv_stmt = sc_inv_stmtokenp[strmix];
+@@ -2209,7 +2335,8 @@ content_stream_dump(ix_t strmix)
+ 		inv_stmt = INV_TOKEN_NULL;
+ 	}
+ 
+-	/* loop, dumping media files, until the entire stream is dumped.
++	/*
++	 * loop, dumping media files, until the entire stream is dumped.
+ 	 * each time we hit EOM/EOF, repeat the inomap and directory dump.
+ 	 * dump the non-dirs beginning with the current startpoint.
+ 	 * The current startpoint will be updated each time a media mark
+@@ -2225,37 +2352,44 @@ content_stream_dump(ix_t strmix)
+ 		off64_t ncommitted;
+ 		bool_t done;
+ 
+-		/* used to decide whether or not to go back for more.
++		/*
++		 * used to decide whether or not to go back for more.
+ 		 */
+ 		stop_requested = BOOL_FALSE;
+ 
+-		/* TRUE if hit EOM while dumping
++		/*
++		 * TRUE if hit EOM while dumping
+ 		 */
+ 		hit_eom = BOOL_FALSE;
+ 
+-		/* used to decide if the media file contains all
++		/*
++		 * used to decide if the media file contains all
+ 		 * of the inomap and dirdump.
+ 		 */
+ 		all_dirs_committed = BOOL_FALSE;
+ 
+-		/* used to decide if all non-dirs were sent (not necessarily
++		/*
++		 * used to decide if all non-dirs were sent (not necessarily
+ 		 * committed)
+ 		 */
+ 		all_nondirs_sent = BOOL_FALSE;
+ 
+-		/* always clear the NULL flag from the stream startpoint
++		/*
++		 * always clear the NULL flag from the stream startpoint
+ 		 * before beginning the media file. allows detection
+ 		 * of null file hdr commit.
+ 		 */
+ 		scwhdrp->cih_startpt.sp_flags &= ~STARTPT_FLAGS_NULL;
+ 
+-		/* save the original start points, to be given to
++		/*
++		 * save the original start points, to be given to
+ 		 * the inventory at the end of each media file.
+ 		 */
+ 		startino = scwhdrp->cih_startpt.sp_ino;
+ 		startoffset = scwhdrp->cih_startpt.sp_offset;
+ 
+-		/* set the accumulated file size to zero.
++		/*
++		 * set the accumulated file size to zero.
+ 		 * this will be monitored by dump_file() to decide
+ 		 * if the current dump file is too long. if so,
+ 		 * it will set a startpoint and spoof an EOF.
+@@ -2264,7 +2398,8 @@ content_stream_dump(ix_t strmix)
+ 		 */
+ 		contextp->cc_mfilesz = 0;
+ 
+-		/* tell the Media abstraction to position a media object
++		/*
++		 * tell the Media abstraction to position a media object
+ 		 * and begin a new media file. This will dump the media
+ 		 * file header if successful.
+ 		 */
+@@ -2302,7 +2437,8 @@ content_stream_dump(ix_t strmix)
+ 			return mlog_exit(EXIT_FAULT, rv);
+ 		}
+ 
+-		/* sync up here with other streams if reasonable
++		/*
++		 * sync up here with other streams if reasonable
+ 		 */
+ 		mlog(MLOG_VERBOSE, _(
+ 		      "creating dump session media file %u "
+@@ -2311,12 +2447,14 @@ content_stream_dump(ix_t strmix)
+ 		      mwhdrp->mh_mediaix,
+ 		      mwhdrp->mh_mediafileix);
+ 
+-		/* initialize the count of marks committed in the media file.
++		/*
++		 * initialize the count of marks committed in the media file.
+ 		 * will be bumped by mark_callback().
+ 		 */
+ 		contextp->cc_markscommitted = 0;
+ 
+-		/* first dump the inomap
++		/*
++		 * first dump the inomap
+ 		 */
+ 		mlog(MLOG_VERBOSE, _(
+ 		      "dumping ino map\n"));
+@@ -2348,7 +2486,8 @@ content_stream_dump(ix_t strmix)
+ 			return mlog_exit(EXIT_FAULT, rv);
+ 		}
+ 
+-		/* now dump the directories, if this is a stream that dumps
++		/*
++		 * now dump the directories, if this is a stream that dumps
+ 		 * directories. use the bigstat iterator capability to call
+ 		 * my dump_dir function for each directory in the bitmap.
+ 		 */
+@@ -2385,7 +2524,8 @@ content_stream_dump(ix_t strmix)
+ 			}
+ 		}
+ 
+-		/* finally, dump the non-directory files beginning with this
++		/*
++		 * finally, dump the non-directory files beginning with this
+ 		 * stream's startpoint. Note that dump_file will set one or
+ 		 * more media marks; the callback will update the hdr's
+ 		 * startpoint; thus each time a demarcated portion of a
+@@ -2445,7 +2585,8 @@ content_stream_dump(ix_t strmix)
+ 			}
+ 		}
+ 
+-		/* if we got here, all files were sent without hitting
++		/*
++		 * if we got here, all files were sent without hitting
+ 		 * the end of the current media object, or hitting the
+ 		 * media file size limit. send the special END mark.
+ 		 * this is only send at the end of the last media file in the
+@@ -2461,7 +2602,8 @@ content_stream_dump(ix_t strmix)
+ 			  STARTPT_FLAGS_END);
+ 
+ decision_more:
+-		/* write a null file hdr, to let restore recognize
++		/*
++		 * write a null file hdr, to let restore recognize
+ 		 * the end of the media file. the flags indicate
+ 		 * whether or not this is intended to be the last
+ 		 * media file in the stream. don't bother if we hit
+@@ -2492,7 +2634,8 @@ decision_more:
+ 				return mlog_exit(EXIT_ERROR, rv);
+ 			}
+ 
+-			/* send a mark to detect if the null file header made
++			/*
++			 * send a mark to detect if the null file header made
+ 			 * it. mark callback will adjust start pt before this
+ 			 * call returns if the null file header made it.
+ 			 */
+@@ -2506,7 +2649,8 @@ decision_more:
+ 				  STARTPT_FLAGS_NULL);
+ 		}
+ 
+-		/* tell the Media abstraction to end the media file.
++		/*
++		 * tell the Media abstraction to end the media file.
+ 		 * this is done before the inventory update, to
+ 		 * see how much was actually committed to media.
+ 		 * will invoke drive end_write, which will flush
+@@ -2532,12 +2676,14 @@ decision_more:
+ 		      "media file size %lld bytes\n"),
+ 		      ncommitted);
+ 
+-		/* if at least one mark committed, we know all of
++		/*
++		 * if at least one mark committed, we know all of
+ 		 * the inomap and dirdump was committed.
+ 		 */
+ 		all_dirs_committed = (contextp->cc_markscommitted > 0);
+ 
+-		/* at this point we can check the new start point
++		/*
++		 * at this point we can check the new start point
+ 		 * to determine if all nondirs have been committed.
+ 		 * if this flag was already set, then this is a
+ 		 * inomap and dirdump-only media file.
+@@ -2549,13 +2695,15 @@ decision_more:
+ 			all_nondirs_committed = BOOL_TRUE;
+ 		}
+ 
+-		/* we are done if all nondirs have been committed.
++		/*
++		 * we are done if all nondirs have been committed.
+ 		 * it is not necessary for the null file header to have
+ 		 * been committed.
+ 		 */
+ 		done = all_nondirs_committed;
+ 
+-		/* tell the inventory about the media file
++		/*
++		 * tell the inventory about the media file
+ 		 */
+ 		if (inv_stmt != INV_TOKEN_NULL) {
+ 			bool_t ok;
+@@ -2596,7 +2744,8 @@ decision_more:
+ 				       scwhdrp->cih_startpt.sp_offset);
+ 			}
+ 
+-			/* already thread-safe, don't need to lock
++			/*
++			 * already thread-safe, don't need to lock
+ 			 */
+ 			ok = inv_put_mediafile(inv_stmt,
+ 						&mwhdrp->mh_mediaid,
+@@ -2618,24 +2767,28 @@ decision_more:
+ 		}
+ 		if (done) {
+ 			contextp->cc_completepr = BOOL_TRUE;
+-			    /* so inv_end_stream and main will know
++			    /*
++			     * so inv_end_stream and main will know
+ 			     */
+ 		}
+ 
+-		/* don't go back for more if done or stop was requested
++		/*
++		 * don't go back for more if done or stop was requested
+ 		 */
+ 		if (done || stop_requested) {
+ 			break;
+ 		}
+ 	} /* end main dump loop */
+ 
+-	/* check in
++	/*
++	 * check in
+ 	 */
+ 	lock();
+ 	sc_thrdsdonecnt++;
+ 	unlock();
+ 
+-	/* dump the session inventory and terminator here, if the drive
++	/*
++	 * dump the session inventory and terminator here, if the drive
+ 	 * supports multiple media files. must wait until all
+ 	 * streams have completed or given up, so all media files
+ 	 * from all streams have been registered.
+@@ -2648,17 +2801,20 @@ decision_more:
+ 			sc_stat_pds[strmix].pds_phase = PDS_INVSYNC;
+ 		}
+ 
+-		/* first be sure all threads have begun
++		/*
++		 * first be sure all threads have begun
+ 		*/
+ 		while (sc_thrdsarrivedcnt < drivecnt) {
+ 			sleep(1);
+ 		}
+-		/* now wait for survivors to checkin
++		/*
++		 * now wait for survivors to checkin
+ 		*/
+ 		while (sc_thrdsdonecnt < stream_cnt()) {
+ 			sleep(1);
+ 		}
+-		/* proceeed
++		/*
++		 * proceeed
+ 		 */
+ 		sc_stat_pds[strmix].pds_phase = PDS_INVDUMP;
+ 		if (dump_session_inv(drivep, contextp, mwhdrp, scwhdrp)) {
+@@ -2680,7 +2836,8 @@ decision_more:
+ 	return mlog_exit(EXIT_NORMAL, rv);
+ }
+ 
+-/* indicates if the dump was complete.
++/*
++ * indicates if the dump was complete.
+  * easy to tell: initially contextp->cc_completepr is false for each stream.
+  * only set true if stream complete. if any stream NOT complete,
+  * dump is not complete.
+@@ -2836,7 +2993,8 @@ dump_dirs(ix_t strmix,
+ 
+ 	inomap_reset_context(inomap_contextp);
+ 
+-	/* begin iteration at ino zero
++	/*
++	 * begin iteration at ino zero
+ 	 */
+ 	lastino = 0;
+ 	for (bulkstatcallcnt = 0;; bulkstatcallcnt++) {
+@@ -2851,13 +3009,15 @@ dump_dirs(ix_t strmix,
+ 		}
+ 		sc_stat_pds[strmix].pds_phase = PDS_DIRDUMP;
+ 
+-		/* check for interruption
++		/*
++		 * check for interruption
+ 		 */
+ 		if (cldmgr_stop_requested()) {
+ 			return RV_INTR;
+ 		}
+ 
+-		/* get a bunch of bulkstats
++		/*
++		 * get a bunch of bulkstats
+ 		 */
+ 		mlog(MLOG_NITTY,
+ 		      "dump_dirs SGI_FS_BULKSTAT %u buf len %u\n",
+@@ -2883,13 +3043,15 @@ dump_dirs(ix_t strmix,
+ 		      "dump_dirs SGI_FS_BULKSTAT returns %d entries\n",
+ 		      buflenout);
+ 
+-		/* check if done
++		/*
++		 * check if done
+ 		 */
+ 		if (buflenout == 0) {
+ 			return RV_OK;
+ 		}
+ 
+-		/* step through each node, dumping if
++		/*
++		 * step through each node, dumping if
+ 		 * appropriate
+ 		 */
+ 		for (p = bstatbufp, endp = bstatbufp + buflenout
+@@ -2961,24 +3123,28 @@ dump_dir(ix_t strmix,
+ 	gen_t gen;
+ 	rv_t rv;
+ 
+-	/* no way this can be non-dir, but check anyway
++	/*
++	 * no way this can be non-dir, but check anyway
+ 	 */
+ 	assert((statp->bs_mode & S_IFMT) == S_IFDIR);
+ 	if ((statp->bs_mode & S_IFMT) != S_IFDIR) {
+ 		return RV_OK;
+ 	}
+ 
+-	/* skip if no links
++	/*
++	 * skip if no links
+ 	 */
+ 	if (statp->bs_nlink < 1) {
+ 		return RV_OK;
+ 	}
+ 
+-	/* see what the inomap says about this ino
++	/*
++	 * see what the inomap says about this ino
+ 	 */
+ 	state = inomap_get_state(inomap_contextp, statp->bs_ino);
+ 
+-	/* skip if not in inomap
++	/*
++	 * skip if not in inomap
+ 	 */
+ 	if (state == MAP_INO_UNUSED
+ 	     ||
+@@ -2994,7 +3160,8 @@ dump_dir(ix_t strmix,
+ 		return RV_OK;
+ 	}
+ 
+-	/* note if map says a non-dir
++	/*
++	 * note if map says a non-dir
+ 	 */
+ 	if (state == MAP_NDR_CHANGE) {
+ 		mlog(MLOG_DEBUG,
+@@ -3004,11 +3171,13 @@ dump_dir(ix_t strmix,
+ 		return RV_OK;
+ 	}
+ 
+-	/* bump the stats now. a bit early, but fewer lines of code
++	/*
++	 * bump the stats now. a bit early, but fewer lines of code
+ 	 */
+ 	sc_stat_pds[strmix].pds_dirdone++;
+ 
+-        /* if bulkstat ino# occupied more than 32 bits and
++        /*
++         * if bulkstat ino# occupied more than 32 bits and
+          * linux ino# for getdents is 32 bits then
+          * warn and skip.
+          */
+@@ -3023,7 +3192,8 @@ dump_dir(ix_t strmix,
+ 	      "dumping directory ino %llu\n",
+ 	      statp->bs_ino);
+ 
+-	/* open the directory named by statp
++	/*
++	 * open the directory named by statp
+ 	 */
+ 	fd = jdm_open(fshandlep, statp, O_RDONLY);
+ 	if (fd < 0) {
+@@ -3033,7 +3203,8 @@ dump_dir(ix_t strmix,
+ 		return RV_OK; /* continue anyway */
+ 	}
+ 
+-	/* dump the file header.
++	/*
++	 * dump the file header.
+ 	 */
+ 	rv = dump_filehdr(drivep, contextp, statp, 0, 0);
+ 	if (rv != RV_OK) {
+@@ -3041,7 +3212,8 @@ dump_dir(ix_t strmix,
+ 		return rv;
+ 	}
+ 
+-	/* dump dirents - lots of buffering done here, to achieve OS-
++	/*
++	 * dump dirents - lots of buffering done here, to achieve OS-
+ 	 * independence. if proves to be to much overhead, can streamline.
+ 	 */
+ 	for (gdcnt = 1, rv = RV_OK; rv == RV_OK; gdcnt++) {
+@@ -3051,7 +3223,8 @@ dump_dir(ix_t strmix,
+ 
+ 		nread = getdents_wrap(fd, (char *)gdp, gdsz);
+ 
+-		/* negative count indicates something very bad happened;
++		/*
++		 * negative count indicates something very bad happened;
+ 		 * try to gracefully end this dir.
+ 		 */
+ 		if (nread < 0) {
+@@ -3061,7 +3234,8 @@ dump_dir(ix_t strmix,
+ 			      gdcnt,
+ 			      statp->bs_ino,
+ 			      strerror(errno));
+-			/* !!! curtis looked at this, and pointed out that
++			/*
++			 * !!! curtis looked at this, and pointed out that
+ 			 * we could take some recovery action here. if the
+ 			 * errno is appropriate, lseek64 to the value of
+ 			 * doff field of the last dirent successfully
+@@ -3070,13 +3244,15 @@ dump_dir(ix_t strmix,
+ 			nread = 0; /* pretend we are done */
+ 		}
+ 
+-		/* no more directory entries: break;
++		/*
++		 * no more directory entries: break;
+ 		 */
+ 		if (nread == 0) {
+ 			break;
+ 		}
+ 
+-		/* translate and dump each entry: skip "." and ".."
++		/*
++		 * translate and dump each entry: skip "." and ".."
+ 		 * and null entries.
+ 		 */
+ 		for (p = gdp,
+@@ -3096,14 +3272,16 @@ dump_dir(ix_t strmix,
+ 						    offsetofmember(struct dirent,
+ 								    d_name);
+ 
+-			/* getdents(2) guarantees that the string will
++			/*
++			 * getdents(2) guarantees that the string will
+ 			 * be null-terminated, but the record may have
+ 			 * padding after the null-termination.
+ 			 */
+ 			assert(namelen < nameszmax);
+ #endif
+ 
+-			/* skip "." and ".."
++			/*
++			 * skip "." and ".."
+ 			 */
+ 			if (*(p->d_name + 0) == '.'
+ 			     &&
+@@ -3126,7 +3304,8 @@ dump_dir(ix_t strmix,
+ 				continue;
+ 			}
+ 
+-			/* lookup the gen number in the ino-to-gen map.
++			/*
++			 * lookup the gen number in the ino-to-gen map.
+ 			 * if it's not there, we have to get it the slow way.
+ 			 */
+ 			if (inomap_get_gen(NULL, p->d_ino, &gen)) {
+@@ -3164,7 +3343,8 @@ dump_dir(ix_t strmix,
+ 		}
+ 	}
+ 
+-	/* write a null dirent hdr, unless trouble encountered in the loop
++	/*
++	 * write a null dirent hdr, unless trouble encountered in the loop
+ 	 */
+ 	if (rv == RV_OK) {
+ 		rv = dump_dirent(drivep, contextp, statp, 0, 0, 0, 0);
+@@ -3180,7 +3360,8 @@ dump_dir(ix_t strmix,
+ 
+ 	close(fd);
+ 
+-	/* if an error occurred, just return the error
++	/*
++	 * if an error occurred, just return the error
+ 	 */
+ 	return rv;
+ }
+@@ -3197,7 +3378,8 @@ dump_extattrs(drive_t *drivep,
+ 	rv_t rv;
+ 	bool_t abort;
+ 
+-	/* dump a file header specially marked as heading extended attributes
++	/*
++	 * dump a file header specially marked as heading extended attributes
+ 	 */
+ 	mlog(MLOG_NITTY,
+ 	      "dumping %s ino %llu extended attributes filehdr\n",
+@@ -3209,7 +3391,8 @@ dump_extattrs(drive_t *drivep,
+ 		return rv;
+ 	}
+ 
+-	/* loop three times: once for the non-root, once for root, and
++	/*
++	 * loop three times: once for the non-root, once for root, and
+ 	 * again for the secure attributes.
+ 	 */
+ 	for (pass = 0; pass < 3; pass++) {
+@@ -3228,7 +3411,8 @@ dump_extattrs(drive_t *drivep,
+ 		      FILETYPE(statp),
+ 		      statp->bs_ino);
+ 
+-		/* loop dumping the extended attributes from the namespace
++		/*
++		 * loop dumping the extended attributes from the namespace
+ 		 * selected by the outer loop
+ 		 */
+ 		memset(&cursor, 0, sizeof(cursor));
+@@ -3270,7 +3454,8 @@ dump_extattrs(drive_t *drivep,
+ 		} while (more && !abort);
+ 	}
+ 
+-	/* finally, dump a dummy extattr hdr so restore will know
++	/*
++	 * finally, dump a dummy extattr hdr so restore will know
+ 	 * we're done.
+ 	 */
+ 	/*DBG*/mlog(MLOG_NITTY,
+@@ -3305,11 +3490,13 @@ dump_extattr_list(drive_t *drivep,
+ 			    +
+ 			    contextp->cc_extattrdumpbufsz;
+ 
+-	/* sanity checks
++	/*
++	 * sanity checks
+ 	 */
+ 	assert(listp->al_count >= 0);
+ 
+-	/* fill up a retrieve array and build a dump buffer;
++	/*
++	 * fill up a retrieve array and build a dump buffer;
+ 	 * can run out of entries in the name list, space in the
+ 	 * retrieve buffer, or space in the dump buffer
+ 	 */
+@@ -3328,7 +3515,8 @@ dump_extattr_list(drive_t *drivep,
+ 			entp = ATTR_ENTRY(listp, nameix);
+ 			opp = &contextp->cc_extattrrtrvarrayp[rtrvix];
+ 
+-			/* Offer the HSM a chance to avoid dumping certain
++			/*
++			 * Offer the HSM a chance to avoid dumping certain
+ 			 * attributes.
+ 			 */
+ 
+@@ -3378,7 +3566,8 @@ dump_extattr_list(drive_t *drivep,
+ 			nameix++;
+ 		}
+ 
+-		/* Either the retrieve buffer is full, the dump buffer is full,
++		/*
++		 * Either the retrieve buffer is full, the dump buffer is full,
+ 		 * or we just put the last attribute into the dump buffer.  In
+ 		 * any case, fill in the values for any attributes added so far.
+ 		 */
+@@ -3408,7 +3597,8 @@ dump_extattr_list(drive_t *drivep,
+ 				if (opp->am_error) {
+ 					if (opp->am_error == ENOATTR &&
+ 					     flag & ATTR_SECURE) {
+-				/* Security attributes are supported by
++				/*
++				 * Security attributes are supported by
+ 				 * the kernel but jdm_attr_multi() returns
+ 				 * ENOATTR for every 'user' space attribute
+ 				 * during the 'security' pass of the extended
+@@ -3433,7 +3623,8 @@ dump_extattr_list(drive_t *drivep,
+ 			}
+ 		}
+ 
+-		/* The values for all attributes in the dump buffer have been
++		/*
++		 * The values for all attributes in the dump buffer have been
+ 		 * filled in.  If the dump buffer isn't full yet, let's wait
+ 		 * and put some more attributes in.
+ 		 */
+@@ -3473,7 +3664,8 @@ dump_extattr_list(drive_t *drivep,
+ 		endp = dumpbufp;
+ 	}
+ 
+-	/* All existing attributes are in the dump buffer.  See if the HSM
++	/*
++	 * All existing attributes are in the dump buffer.  See if the HSM
+ 	 * needs to add any addtional attributes.
+ 	 */
+ 
+@@ -3553,7 +3745,8 @@ dump_extattr_list(drive_t *drivep,
+ 		}
+ 	}
+ 
+-	/* If any attributes remain unwritten in the dump buffer, write them
++	/*
++	 * If any attributes remain unwritten in the dump buffer, write them
+ 	 * now.
+ 	 */
+ 
+@@ -3720,7 +3913,8 @@ dump_extattrhdr(drive_t *drivep,
+ 	return rv;
+ }
+ 
+-/* this function is called by the bigstat iterator for all non-directory
++/*
++ * this function is called by the bigstat iterator for all non-directory
+  * files. it passes the buck to file type-specific dump functions.
+  * return value is RV_EOF if the media file is getting too big,
+  * RV_... if trouble encountered with the media/drive,
+@@ -3749,7 +3943,8 @@ dump_file(void *arg1,
+ 	int state;
+ 	rv_t rv;
+ 
+-	/* skip if no links
++	/*
++	 * skip if no links
+ 	 */
+ 	if (statp->bs_nlink < 1) {
+ 		if (statp->bs_ino > contextp->cc_stat_lastino) {
+@@ -3760,7 +3955,8 @@ dump_file(void *arg1,
+ 		return RV_OK;
+ 	}
+ 
+-	/* skip if prior to startpoint
++	/*
++	 * skip if prior to startpoint
+ 	 */
+ 	if (statp->bs_ino < startptp->sp_ino) {
+ 		if (statp->bs_ino > contextp->cc_stat_lastino) {
+@@ -3771,7 +3967,8 @@ dump_file(void *arg1,
+ 		return RV_OK;
+ 	}
+ 
+-	/* skip if at or beyond next startpoint. return non-zero to
++	/*
++	 * skip if at or beyond next startpoint. return non-zero to
+ 	 * abort iteration.
+ 	 */
+ 	if (! (endptp->sp_flags & STARTPT_FLAGS_END)) {
+@@ -3796,11 +3993,13 @@ dump_file(void *arg1,
+ 		}
+ 	}
+ 
+-	/* see what the inomap says about this ino
++	/*
++	 * see what the inomap says about this ino
+ 	 */
+ 	state = inomap_get_state(contextp->cc_inomap_contextp, statp->bs_ino);
+ 
+-	/* skip if not in inomap
++	/*
++	 * skip if not in inomap
+ 	 */
+ 	if (state == MAP_INO_UNUSED
+ 	     ||
+@@ -3823,7 +4022,8 @@ dump_file(void *arg1,
+ 		return RV_OK;
+ 	}
+ 
+-	/* note if map says a dir
++	/*
++	 * note if map says a dir
+ 	 */
+ 	if (state == MAP_DIR_CHANGE || state == MAP_DIR_SUPPRT) {
+ 		mlog(MLOG_NORMAL | MLOG_WARNING, _(
+@@ -3837,7 +4037,8 @@ dump_file(void *arg1,
+ 		      "map says unchanged dir");
+ 	}
+ 
+-	/* if GETOPT_DUMPASOFFLINE was specified, initialize the HSM's file
++	/*
++	 * if GETOPT_DUMPASOFFLINE was specified, initialize the HSM's file
+ 	 * context for use in other routines.  If the context can't be
+ 	 * initialized, don't dump the file.
+ 	 */
+@@ -3855,14 +4056,17 @@ dump_file(void *arg1,
+ 		}
+ 	}
+ 
+-	/* pass on to specific dump function
++	/*
++	 * pass on to specific dump function
+ 	 */
+ 	switch (statp->bs_mode & S_IFMT) {
+ 	case S_IFREG:
+-		/* ordinary file
++		/*
++		 * ordinary file
+ 		 */
+ 
+-		/* filter out any files that have grown beyond the
++		/*
++		 * filter out any files that have grown beyond the
+ 		 * max file size since the initial scan.
+ 		 */
+ 		if (maxdumpfilesize) {
+@@ -3908,7 +4112,8 @@ dump_file(void *arg1,
+ #endif
+ 	case S_IFLNK:
+ 	case S_IFSOCK:
+-		/* only need a filehdr_t; no data
++		/*
++		 * only need a filehdr_t; no data
+ 		 */
+ 		rv = dump_file_spec(drivep, contextp, fshandlep, statp);
+ 		if (statp->bs_ino > contextp->cc_stat_lastino) {
+@@ -3920,7 +4125,8 @@ dump_file(void *arg1,
+ 		break; /* drop out of switch to extattr dump */
+ 	case S_IFDIR:
+ 	default:
+-		/* don't know how to dump these
++		/*
++		 * don't know how to dump these
+ 		 */
+ 		mlog(MLOG_VERBOSE, _(
+ 		      "don't know how to dump ino %llu: mode %08x\n"),
+@@ -3933,7 +4139,8 @@ dump_file(void *arg1,
+ 			contextp->cc_stat_lastino = statp->bs_ino;
+ 		}
+ 		return RV_OK;
+-	/* not yet implemented
++	/*
++	 * not yet implemented
+ 	case S_IFMNT:
+ 	 */
+ 	}
+@@ -3951,7 +4158,8 @@ dump_file(void *arg1,
+ 	return rv;
+ }
+ 
+-/* a regular file may be broken into several portions if its size
++/*
++ * a regular file may be broken into several portions if its size
+  * is large. Each portion begins with a filehdr_t and is followed by
+  * several extents. each extent begins with an extenthdr_t. returns RV_OK
+  * if all extents dumped, RV_... on drive errors, or RV_INTR if
+@@ -3975,7 +4183,8 @@ dump_file_reg(drive_t *drivep,
+ 	off64_t maxextentcnt;
+ 	rv_t rv;
+ 
+-	/* determine the offset within the file where the dump should begin.
++	/*
++	 * determine the offset within the file where the dump should begin.
+ 	 * it must have been aligned to the basic fs block size by the
+ 	 * startpoint calculations done during strategy initialization.
+ 	 */
+@@ -3986,7 +4195,8 @@ dump_file_reg(drive_t *drivep,
+ 		offset = 0;
+ 	}
+ 
+-	/* if this is a resumed dump and the resumption begins somewhere
++	/*
++	 * if this is a resumed dump and the resumption begins somewhere
+ 	 * within this file, and that point is greater than offset set
+ 	 * above, and that file hasn't changed since the resumed dump,
+ 	 * modify offset.
+@@ -4013,7 +4223,8 @@ dump_file_reg(drive_t *drivep,
+ 		assert((offset & (off64_t)(BBSIZE - 1)) == 0);
+ 	}
+ 
+-	/* determine the offset within the file where the dump should end.
++	/*
++	 * determine the offset within the file where the dump should end.
+ 	 * only significant if this is an inode spanning a startpoint.
+ 	 */
+ 	if (endptp->sp_flags & STARTPT_FLAGS_END) {
+@@ -4037,13 +4248,15 @@ dump_file_reg(drive_t *drivep,
+ 	      sosig ? stopoffset : statp->bs_size,
+ 	      statp->bs_size);
+ 
+-	/* calculate the maximum extent group size. files larger than this
++	/*
++	 * calculate the maximum extent group size. files larger than this
+ 	 * will be broken into multiple extent groups, each with its own
+ 	 * filehdr_t.
+ 	 */
+ 	maxextentcnt = drivep->d_recmarksep;
+ 
+-	/* initialize the extent group context. if fails, just return,
++	/*
++	 * initialize the extent group context. if fails, just return,
+ 	 * pretending the dump succeeded.
+ 	 */
+ 	rv = init_extent_group_context(fshandlep,
+@@ -4060,7 +4273,8 @@ dump_file_reg(drive_t *drivep,
+ 		return RV_OK;
+ 	}
+ 
+-	/* loop here, dumping marked groups of extents. each extent group
++	/*
++	 * loop here, dumping marked groups of extents. each extent group
+ 	 * is preceeded by a filehdr_t. this is required so that the
+ 	 * recovery side can identify the fs file at each marked point
+ 	 * in the stream. it sets by reference offset, bytecnt, and cmpltflg.
+@@ -4075,21 +4289,24 @@ dump_file_reg(drive_t *drivep,
+ 		off64_t bytecnt = 0;
+ 		off64_t bc;
+ 
+-		/* see if we are done.
++		/*
++		 * see if we are done.
+ 		 */
+ 		if (cmpltflg) {
+ 			assert(rv == RV_OK);
+ 			break;
+ 		}
+ 
+-		/* set a mark - important to do this now, before deciding
++		/*
++		 * set a mark - important to do this now, before deciding
+ 		 * the media file is to big or the operator asked to
+ 		 * interrupt the dump. this mark, if committed, indicates
+ 		 * the previous fs file / extent group was completely dumped.
+ 		 */
+ 		mark_set(drivep, statp->bs_ino, offset, 0);
+ 
+-		/* spoof EOF if the media file size is getting too big.
++		/*
++		 * spoof EOF if the media file size is getting too big.
+ 		 * note that the most we can go over is d_recmarksep.
+ 		 */
+ 		if (contextp->cc_mfilesz >= drivep->d_recmfilesz){
+@@ -4097,7 +4314,8 @@ dump_file_reg(drive_t *drivep,
+ 			break;
+ 		}
+ 
+-		/* check if the operator has requested to interrupt the dump.
++		/*
++		 * check if the operator has requested to interrupt the dump.
+ 		 */
+ 		if (cldmgr_stop_requested()) {
+ 			mlog(MLOG_NORMAL, _(
+@@ -4109,7 +4327,8 @@ dump_file_reg(drive_t *drivep,
+ 			break;
+ 		}
+ 
+-		/* dump the file header
++		/*
++		 * dump the file header
+ 		 */
+ 		mlog(MLOG_DEBUG,
+ 		      "dumping extent group ino %llu offset %lld\n",
+@@ -4121,7 +4340,8 @@ dump_file_reg(drive_t *drivep,
+ 		}
+ 		bytecnt += sizeof(filehdr_t);
+ 
+-		/* dump a group of extents. returns by reference
++		/*
++		 * dump a group of extents. returns by reference
+ 		 * the offset of the next extent group (to be placed
+ 		 * in the next mark), the total number of bytes written
+ 		 * to media (headers and all), and a flag indicating
+@@ -4144,13 +4364,15 @@ dump_file_reg(drive_t *drivep,
+ 			break;
+ 		}
+ 
+-		/* update global stat
++		/*
++		 * update global stat
+ 		 */
+ 		lock();
+ 		sc_stat_datadone += (size64_t)bc;
+ 		unlock();
+ 
+-		/* dump LAST extent hdr. one of these is placed at the
++		/*
++		 * dump LAST extent hdr. one of these is placed at the
+ 		 * end of each dumped file. necessary to detect the
+ 		 * end of the file.
+ 		 */
+@@ -4165,7 +4387,8 @@ dump_file_reg(drive_t *drivep,
+ 		}
+ 		bytecnt += sizeof(extenthdr_t);
+ 
+-		/* update the media file size
++		/*
++		 * update the media file size
+ 		 */
+ 		contextp->cc_mfilesz += bytecnt;
+ 
+@@ -4175,7 +4398,8 @@ dump_file_reg(drive_t *drivep,
+ 	return rv;
+ }
+ 
+-/* dumps character, block, and fifo - special files. no data, just meta-data,
++/*
++ * dumps character, block, and fifo - special files. no data, just meta-data,
+  * all contained within the filehdr_t. also handles symbolic link files:
+  * appends a variable-length string after the filehdr_t.
+  */
+@@ -4193,24 +4417,28 @@ dump_file_spec(drive_t *drivep,
+ 	      statp->bs_ino,
+ 	      statp->bs_mode);
+ 
+-	/* set a mark - important to do this now, before deciding
++	/*
++	 * set a mark - important to do this now, before deciding
+ 	 * the media file is to big. this mark, if committed,
+ 	 * indicates the previous fs file was completely dumped.
+ 	 */
+ 	mark_set(drivep, statp->bs_ino, 0, 0);
+ 
+-	/* dump the file header
++	/*
++	 * dump the file header
+ 	 */
+ 	rv = dump_filehdr(drivep, contextp, statp, 0, 0);
+ 	if (rv != RV_OK) {
+ 		return rv;
+ 	}
+ 
+-	/* update the media file size
++	/*
++	 * update the media file size
+ 	 */
+ 	contextp->cc_mfilesz += sizeof(filehdr_t);
+ 
+-	/* if a symbolic link, also dump the link pathname.
++	/*
++	 * if a symbolic link, also dump the link pathname.
+ 	 * use an extent header to represent the pathname. the
+ 	 * extent sz will always be a multiple of SYMLINK_ALIGN.
+ 	 * the symlink pathname char string will always  be NULL-terminated.
+@@ -4219,7 +4447,8 @@ dump_file_spec(drive_t *drivep,
+ 		int nread;
+ 		size_t extentsz;
+ 
+-		/* read the link path. if error, dump a zero-length
++		/*
++		 * read the link path. if error, dump a zero-length
+ 		 * extent. in any case, nread will contain the number of
+ 		 * bytes to dump, and contextp->cc_direntbufp will contain
+ 		 * the bytes.
+@@ -4235,12 +4464,14 @@ dump_file_spec(drive_t *drivep,
+ 			nread = 0;
+ 		}
+ 
+-		/* null-terminate the string
++		/*
++		 * null-terminate the string
+ 		 */
+ 		assert((size_t)nread < contextp->cc_readlinkbufsz);
+ 		contextp->cc_readlinkbufp[nread] = 0;
+ 
+-		/* calculate the extent size - be sure to include room
++		/*
++		 * calculate the extent size - be sure to include room
+ 		 * for the null-termination.
+ 		 */
+ 		extentsz = ((size_t)nread + 1 + (SYMLINK_ALIGN - 1))
+@@ -4248,7 +4479,8 @@ dump_file_spec(drive_t *drivep,
+ 			   ~ (SYMLINK_ALIGN - 1);
+ 		assert(extentsz <= contextp->cc_readlinkbufsz);
+ 
+-		/* dump an extent header
++		/*
++		 * dump an extent header
+ 		 */
+ 		rv = dump_extenthdr(drivep,
+ 				     contextp,
+@@ -4260,7 +4492,8 @@ dump_file_spec(drive_t *drivep,
+ 			return rv;
+ 		}
+ 
+-		/* dump the link path extent
++		/*
++		 * dump the link path extent
+ 		 */
+ 		rval = write_buf(contextp->cc_readlinkbufp,
+ 				  extentsz,
+@@ -4291,7 +4524,8 @@ dump_file_spec(drive_t *drivep,
+ 	return RV_OK;
+ }
+ 
+-/* contrives the initial state of the extent group context such that
++/*
++ * contrives the initial state of the extent group context such that
+  * dump_extent_group() will fetch some extents from the kernel before it
+  * does anything else.
+  */
+@@ -4323,7 +4557,8 @@ init_extent_group_context(jdm_fshandle_t *fshandlep,
+ 		return RV_ERROR;
+ 	}
+ 
+-	/* Check if a mandatory lock is set on the file to try and
++	/*
++	 * Check if a mandatory lock is set on the file to try and
+ 	 * avoid blocking indefinitely on the reads later. Note that
+ 	 * someone could still set a mandatory lock and hose xfsdump
+ 	 * after this check but before all reads have completed.
+@@ -4391,7 +4626,8 @@ dump_extent_group(drive_t *drivep,
+ 		}
+ 	}
+ 
+-	/* dump extents until the recommended extent length is achieved
++	/*
++	 * dump extents until the recommended extent length is achieved
+ 	 */
+ 	nextoffset = *nextoffsetp;
+ 	bytecnt = 0;
+@@ -4401,7 +4637,8 @@ dump_extent_group(drive_t *drivep,
+ 		off64_t offset;
+ 		off64_t extsz;
+ 
+-		/* if we've dumped to the stop point return.
++		/*
++		 * if we've dumped to the stop point return.
+ 		 */
+ 		if (sosig && nextoffset >= stopoffset) {
+ 			mlog(MLOG_NITTY,
+@@ -4412,7 +4649,8 @@ dump_extent_group(drive_t *drivep,
+ 			return RV_OK;
+ 		}
+ 
+-		/* if we've dumped the entire file, return
++		/*
++		 * if we've dumped the entire file, return
+ 		 */
+ 		if (nextoffset >= statp->bs_size) {
+ 			mlog(MLOG_NITTY,
+@@ -4423,7 +4661,8 @@ dump_extent_group(drive_t *drivep,
+ 			return RV_OK;
+ 		}
+ 
+-		/* if we've exceeded the desired per-extent group byte count,
++		/*
++		 * if we've exceeded the desired per-extent group byte count,
+ 		 * call it quits. we'll be called back for more because the
+ 		 * completion flag is set FALSE.
+ 		 */
+@@ -4436,7 +4675,8 @@ dump_extent_group(drive_t *drivep,
+ 			return RV_OK;
+ 		}
+ 
+-		/* if we are not looking at a valid bmap entry,
++		/*
++		 * if we are not looking at a valid bmap entry,
+ 		 * get one.
+ 		 */
+ 		if (gcp->eg_nextbmapp >= gcp->eg_endbmapp) {
+@@ -4444,7 +4684,8 @@ dump_extent_group(drive_t *drivep,
+ 
+ 			assert(gcp->eg_nextbmapp == gcp->eg_endbmapp);
+ 
+-			/* get a new extent block
++			/*
++			 * get a new extent block
+ 			 */
+ 			mlog(MLOG_NITTY,
+ 			      "calling getbmapx for ino %llu\n",
+@@ -4482,7 +4723,8 @@ dump_extent_group(drive_t *drivep,
+ 				return RV_OK;
+ 			}
+ 
+-			/* The F_GETBMAPX call succeeded.  Give the HSM a chance
++			/*
++			 * The F_GETBMAPX call succeeded.  Give the HSM a chance
+ 			 * to massage the extents.  (It can change the number
+ 			 * of extents remaining, even setting them to zero.
+ 			 */
+@@ -4525,14 +4767,16 @@ dump_extent_group(drive_t *drivep,
+ 		      gcp->eg_nextbmapp->bmv_offset,
+ 		      gcp->eg_nextbmapp->bmv_length);
+ 
+-		/* if the next bmap entry represents a hole, go to the next
++		/*
++		 * if the next bmap entry represents a hole, go to the next
+ 		 * one in the bmap, and rescan to check above assumptions.
+ 		 * bump nextoffset to after the hole, if beyond current value.
+ 		 */
+ 		if (gcp->eg_nextbmapp->bmv_block == -1) {
+ 			off64_t tmpoffset;
+ 
+-			/* extract the offset and extent size from this
++			/*
++			 * extract the offset and extent size from this
+ 			 * entry
+ 			 */
+ 			offset = gcp->eg_nextbmapp->bmv_offset
+@@ -4544,7 +4788,8 @@ dump_extent_group(drive_t *drivep,
+ 			      "hole extent offset = %lld size = %lld\n",
+ 			      offset, extsz);
+ 
+-			/* Encode the hole - dump the extent header
++			/*
++			 * Encode the hole - dump the extent header
+ 			 * with the right extent type.
+ 			 */
+ 			rv = dump_extenthdr(drivep,
+@@ -4574,7 +4819,8 @@ dump_extent_group(drive_t *drivep,
+ 			continue;
+ 		}
+ 
+-		/* if the next bmap entry has a zero size, go to the next
++		/*
++		 * if the next bmap entry has a zero size, go to the next
+ 		 * one in the bmap, and rescan to check above assumptions.
+ 		 */
+ 		if (gcp->eg_nextbmapp->bmv_length <= 0) {
+@@ -4593,7 +4839,8 @@ dump_extent_group(drive_t *drivep,
+ 			continue;
+ 		}
+ 
+-		/* extract the offset and extent size from this
++		/*
++		 * extract the offset and extent size from this
+ 		 * entry
+ 		 */
+ 		offset = gcp->eg_nextbmapp->bmv_offset * (off64_t)BBSIZE;
+@@ -4604,7 +4851,8 @@ dump_extent_group(drive_t *drivep,
+ 		      extsz,
+ 		      nextoffset);
+ 
+-		/* if the new bmap entry begins below the stop offset
++		/*
++		 * if the new bmap entry begins below the stop offset
+ 		 * but does not contain any data above the current
+ 		 * offset, go to the next one and rescan.
+ 		 */
+@@ -4618,7 +4866,8 @@ dump_extent_group(drive_t *drivep,
+ 			}
+ 		}
+ 
+-		/* if the new bmap entry begins beyond the end of the file,
++		/*
++		 * if the new bmap entry begins beyond the end of the file,
+ 		 * we are done.
+ 		 */
+ 		if (offset >= statp->bs_size) {
+@@ -4630,7 +4879,8 @@ dump_extent_group(drive_t *drivep,
+ 			return RV_OK;
+ 		}
+ 
+-		/* if the new bmap entry begins at or above the stop offset,
++		/*
++		 * if the new bmap entry begins at or above the stop offset,
+ 		 * stop. we are done.
+ 		 */
+ 		if (sosig && offset >= stopoffset) {
+@@ -4642,7 +4892,8 @@ dump_extent_group(drive_t *drivep,
+ 			return RV_OK;
+ 		}
+ 
+-		/* if the new entry begins below the range of
++		/*
++		 * if the new entry begins below the range of
+ 		 * interest, modify offset to begin at the
+ 		 * beginning of the range of interest, and shorten
+ 		 * extsz accordingly.
+@@ -4659,7 +4910,8 @@ dump_extent_group(drive_t *drivep,
+ 		}
+ 		assert(extsz > 0);
+ 
+-		/* if the resultant extent would put us over maxcnt,
++		/*
++		 * if the resultant extent would put us over maxcnt,
+ 		 * shorten it, and round up to the next BBSIZE (round
+ 		 * upto d_miniosz for realtime).
+ 		 */
+@@ -4684,7 +4936,8 @@ dump_extent_group(drive_t *drivep,
+ 			      maxcnt);
+ 		}
+ 
+-		/* if the shortened extent is too small, return; we'll
++		/*
++		 * if the shortened extent is too small, return; we'll
+ 		 * pick it up next time around. exception: if the file
+ 		 * size is zero, indicate we are done.
+ 		 * !!! I don't believe this rule can ever fire!
+@@ -4705,7 +4958,8 @@ dump_extent_group(drive_t *drivep,
+ 			return RV_OK;
+ 		}
+ 
+-		/* if the resultant extent extends beyond the end of the
++		/*
++		 * if the resultant extent extends beyond the end of the
+ 		 * file, shorten the extent to the nearest BBSIZE alignment
+ 		 * at or beyond EOF.  (Shorten to d_miniosz for realtime
+ 		 * files).
+@@ -4731,7 +4985,8 @@ dump_extent_group(drive_t *drivep,
+ 			      statp->bs_size);
+ 		}
+ 
+-		/* if the extent extends beyond the stop offset,
++		/*
++		 * if the extent extends beyond the stop offset,
+ 		 * shorten it to the stop offset.
+ 		 */
+ 		if (sosig && (extsz > stopoffset - offset)) {
+@@ -4747,7 +5002,8 @@ dump_extent_group(drive_t *drivep,
+ 			      statp->bs_size);
+ 		}
+ 
+-		/* I/O performance is better if we align the media write
++		/*
++		 * I/O performance is better if we align the media write
+ 		 * buffer to a page boundary. do this if the extent is
+ 		 * at least a page in length. Also, necessary for real time
+ 		 * files
+@@ -4759,7 +5015,8 @@ dump_extent_group(drive_t *drivep,
+ 				cnt_to_align += PGSZ;
+ 			}
+ 
+-			/* account for the DATA header following the alignment
++			/*
++			 * account for the DATA header following the alignment
+ 			 */
+ 			cnt_to_align -= sizeof(extenthdr_t);
+ 
+@@ -4789,13 +5046,15 @@ dump_extent_group(drive_t *drivep,
+ 			}
+ 			bytecnt += (off64_t)cnt_to_align;
+ 		}
+-		/* adjust the next offset
++		/*
++		 * adjust the next offset
+ 		 */
+ 		assert((offset & (off64_t)(BBSIZE - 1)) == 0);
+ 		assert((extsz & (off64_t)(BBSIZE - 1)) == 0);
+ 		nextoffset = offset + extsz;
+ 
+-		/* dump the extent header
++		/*
++		 * dump the extent header
+ 		 */
+ 		rv = dump_extenthdr(drivep,
+ 				     contextp,
+@@ -4811,7 +5070,8 @@ dump_extent_group(drive_t *drivep,
+ 		}
+ 		bytecnt += sizeof(extenthdr_t);
+ 
+-		/* dump the extent. if read fails to return all
++		/*
++		 * dump the extent. if read fails to return all
+ 		 * asked for, pad out the extent with zeros. necessary
+ 		 * because the extent hdr is already out there!
+ 		 */
+@@ -4862,7 +5122,8 @@ dump_extent_group(drive_t *drivep,
+ 			      actualsz,
+ 			      nread);
+ 
+-			/* must return entire buffer supplied by call to
++			/*
++			 * must return entire buffer supplied by call to
+ 			 * do_get_write_buf; so pad end with zeros. below
+ 			 * we assume the short read implies EOF, so will
+ 			 * then pad out remainder of extent as well.
+@@ -4902,7 +5163,8 @@ dump_extent_group(drive_t *drivep,
+ 			extsz -= (off64_t)actualsz;
+ 			offset += (off64_t)actualsz;
+ 
+-			/* if we got a short read, assume we are at the
++			/*
++			 * if we got a short read, assume we are at the
+ 			 * end of the file; pad out the remainder of the
+ 			 * extent to match the header.
+ 			 */
+@@ -4931,7 +5193,8 @@ dump_extent_group(drive_t *drivep,
+ 			}
+ 		}
+ 
+-		/* made it! advance to the next extent if the current
++		/*
++		 * made it! advance to the next extent if the current
+ 		 * extent is completely dumped.
+ 		 * !!! not be necessary, taken care of near the
+ 		 * !!! top of the loop.
+@@ -5231,7 +5494,8 @@ dump_session_inv(drive_t *drivep,
+ 	bool_t ok;
+ 	bool_t done;
+ 
+-	/* if the inventory session token is null, skip
++	/*
++	 * if the inventory session token is null, skip
+ 	 */
+ 	if (sc_inv_sestoken == INV_TOKEN_NULL) {
+ 		return BOOL_TRUE;
+@@ -5240,7 +5504,8 @@ dump_session_inv(drive_t *drivep,
+ 	mlog(MLOG_VERBOSE, _(
+ 	      "dumping session inventory\n"));
+ 
+-	/* get a buffer from the inventory manager
++	/*
++	 * get a buffer from the inventory manager
+ 	 */
+ 	inv_sbufp = 0;
+ 	inv_sbufsz = 0;
+@@ -5252,11 +5517,13 @@ dump_session_inv(drive_t *drivep,
+ 	}
+ 	assert(inv_sbufp);
+ 
+-	/* modify the write header to indicate the media file type.
++	/*
++	 * modify the write header to indicate the media file type.
+ 	 */
+ 	scwhdrp->cih_mediafiletype = CIH_MEDIAFILETYPE_INVENTORY;
+ 
+-	/* loop attempting to write a complete media file,
++	/*
++	 * loop attempting to write a complete media file,
+ 	 * until we are successful or until the media layer
+ 	 * tells us to give up.
+ 	 */
+@@ -5393,7 +5660,8 @@ dump_terminator(drive_t *drivep, context_t *contextp, media_hdr_t *mwhdrp)
+ 	off64_t ncommitted;
+ 	bool_t done;
+ 
+-	/* if the drive doesn't support use of stream terminators, don't bother
++	/*
++	 * if the drive doesn't support use of stream terminators, don't bother
+ 	 */
+ 	if (! contextp->cc_Media_useterminatorpr) {
+ 		return;
+@@ -5402,11 +5670,13 @@ dump_terminator(drive_t *drivep, context_t *contextp, media_hdr_t *mwhdrp)
+ 	mlog(MLOG_VERBOSE, _(
+ 	      "writing stream terminator\n"));
+ 
+-	/* modify the write header to indicate a terminator
++	/*
++	 * modify the write header to indicate a terminator
+ 	 */
+ 	MEDIA_TERMINATOR_SET(mwhdrp);
+ 
+-	/* loop attempting to write a complete media file header
++	/*
++	 * loop attempting to write a complete media file header
+ 	 * until we are successful or until the media layer
+ 	 * tells us to give up.
+ 	 */
+@@ -5556,7 +5826,8 @@ inv_cleanup(void)
+ 	}
+ }
+ 
+-/* This function returns with the proper media positioned at the proper place
++/*
++ * This function returns with the proper media positioned at the proper place
+  * in the specified drive, with a write header layed down. The caller can
+  * immediately dump. The caller is expected to call Media_mfile_end when
+  * the media file is complete or EOM is encountered.
+@@ -5584,14 +5855,16 @@ Media_mfile_begin(drive_t *drivep, context_t *contextp, bool_t intr_allowed)
+ 	int rval;
+ 	bool_t ok;
+ 
+-	/* sanity checks
++	/*
++	 * sanity checks
+ 	 */
+ 	assert(BES_INIT == 0);
+ 
+ 	mlog(MLOG_DEBUG | MLOG_MEDIA,
+ 	      "Media op: begin media file\n");
+ 
+-	/* the command line-specified media label is good only for the
++	/*
++	 * the command line-specified media label is good only for the
+ 	 * first media object written to. after that, the operator will
+ 	 * be prompted for a label. To enforce this, cc_Media_firstlabel
+ 	 * is saved in a temp var and NULLed.
+@@ -5599,7 +5872,8 @@ Media_mfile_begin(drive_t *drivep, context_t *contextp, bool_t intr_allowed)
+ 	cmdlinemedialabel = contextp->cc_Media_firstlabel;
+ 	contextp->cc_Media_firstlabel = 0;
+ 
+-	/* dispatch based on entry state. invalidate entry state to assert
++	/*
++	 * dispatch based on entry state. invalidate entry state to assert
+ 	 * each Media_mfile_begin is followed by and Media_mfile_end.
+ 	 */
+ 	prevmediapresentpr = BOOL_UNKNOWN;
+@@ -5638,7 +5912,8 @@ Media_mfile_begin(drive_t *drivep, context_t *contextp, bool_t intr_allowed)
+ 	}
+ 
+ position:
+-	/* loop until we are positioned either at end of recorded data
++	/*
++	 * loop until we are positioned either at end of recorded data
+ 	 * or at a terminator, as appropriate, of some media object, or hit EOM.
+ 	 * goto write or changemedia to get out of loop (or return on
+ 	 * catastrophic condition). ensure that all but the first media file
+@@ -5647,17 +5922,20 @@ position:
+ 	 * contiguous.
+ 	 */
+ 	for (;;) {
+-		/* check if a stop has been requested
++		/*
++		 * check if a stop has been requested
+ 		 */
+ 		if (intr_allowed && cldmgr_stop_requested()) {
+ 			return RV_INTR;
+ 		}
+ 
+-		/* do a begin_read to see the disposition of the drive/media.
++		/*
++		 * do a begin_read to see the disposition of the drive/media.
+ 		 */
+ 		rval = (*dop->do_begin_read)(drivep);
+ 
+-		/* update cc_Media_useterminatorpr after every begin_read,
++		/*
++		 * update cc_Media_useterminatorpr after every begin_read,
+ 		 * since begin_read will cause some unknown drive params
+ 		 * to be resolved.
+ 		 */
+@@ -5681,7 +5959,8 @@ position:
+ 			      mrhdrp->mh_mediaix);
+ 			mlog_unlock();
+ 
+-			/* successfully read media file header.
++			/*
++			 * successfully read media file header.
+ 			 * we know media must be present in drive, and
+ 			 * contains at least one valid xfsdump, hence
+ 			 * is not virgin.
+@@ -5690,7 +5969,8 @@ position:
  			mediapresentpr = BOOL_TRUE;
  			virginmediapr = BOOL_FALSE;
  
--			switch(Media_erasechk(drivep,
-+			switch (Media_erasechk(drivep,
- 						dcaps,
- 						intr_allowed,
- 						prevmediapresentpr)) {
-@@ -5864,7 +5864,7 @@ position:
- 			mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_MEDIA, _(
- 			      "encountered EOM: media is full\n"));
+-			/* do an end_read. the next begin_read will
++			/*
++			 * do an end_read. the next begin_read will
+ 			 * position in preparation for appending.
+ 			 * if terminator, back up, we'll overwrite it.
+ 			 * also be sure we can append dumps.
+@@ -5959,13 +6239,15 @@ erasemedia:
+ 	goto position;
  
--			switch(Media_erasechk(drivep,
-+			switch (Media_erasechk(drivep,
- 						dcaps,
- 						intr_allowed,
- 						prevmediapresentpr)) {
-@@ -5889,7 +5889,7 @@ position:
- 			      "assuming corrupted media\n"));
- 			mlog_exit_hint(RV_CORRUPT);
+ changemedia:
+-	/* if the drive does not support media change, quit.
++	/*
++	 * if the drive does not support media change, quit.
+ 	 */
+ 	if (! (dcaps & DRIVE_CAP_REMOVABLE)) {
+ 		return RV_ERROR;
+ 	}
  
--			switch(Media_erasechk(drivep,
-+			switch (Media_erasechk(drivep,
- 						dcaps,
- 						intr_allowed,
- 						prevmediapresentpr)) {
-@@ -6150,7 +6150,7 @@ write:
+-	/* first eject the current media object if capability supported
++	/*
++	 * first eject the current media object if capability supported
+ 	 */
+ 	assert(mediapresentpr != BOOL_UNKNOWN);
+ 	if (mediapresentpr == BOOL_TRUE) {
+@@ -5977,18 +6259,21 @@ changemedia:
+ 		}
+ 	}
+ 
+-	/* if dialogs not allowed, we are done.
++	/*
++	 * if dialogs not allowed, we are done.
+ 	 */
+ 	if (! dlog_allowed()) {
+ 		return RV_QUIT; /* this return value will cause approp. msg */
+ 	}
+ 
+-	/* If an alert program has been specified, run it
++	/*
++	 * If an alert program has been specified, run it
+ 	 */
+ 	if (media_change_alert_program != NULL)
+ 	   system(media_change_alert_program);
+ 
+-	/* if media change prompt declined or times out,
++	/*
++	 * if media change prompt declined or times out,
+ 	 * we are done
+ 	 */
+ 	if (drivecnt > 1 && ! stdoutpiped) {
+@@ -6017,7 +6302,8 @@ changemedia:
+ 		return RV_QUIT;
+ 	}
+ 
+-	/* we know nothing about the media after a media change
++	/*
++	 * we know nothing about the media after a media change
+ 	 */
+ 	prevmediapresentpr = mediapresentpr;
+ 	mediapresentpr = BOOL_UNKNOWN;
+@@ -6034,7 +6320,8 @@ write:
  		return RV_INTR;
  	}
- 	rval = (*dop->do_begin_write)(drivep);
--	switch(rval) {
-+	switch (rval) {
- 	case 0:
- 		return RV_OK;
- 	case DRIVE_ERROR_EOM:
-@@ -6194,7 +6194,7 @@ Media_mfile_end(drive_t *drivep,
- 		contextp->cc_Media_begin_entrystate = BES_ENDEOM;
- 		return RV_EOM;
+ 
+-	/* bump the media header indices here. NOTE: will rescind these
++	/*
++	 * bump the media header indices here. NOTE: will rescind these
+ 	 * if the subsequent do_begin_write fails. this will be done by
+ 	 * making a copy of the global write header, and copying it
+ 	 * back on failure.
+@@ -6071,7 +6358,8 @@ write:
+ 	assert(mwhdrp->mh_mediaix != (uint32_t)(-1));
+ 	assert(mwhdrp->mh_dumpfileix != (uint32_t)(-1));
+ 
+-	/* do not allow interleaving of media files from different xfsdumps.
++	/*
++	 * do not allow interleaving of media files from different xfsdumps.
+ 	 */
+ 	if (mwhdrp->mh_mediaix != 0
+ 	     &&
+@@ -6085,7 +6373,8 @@ write:
+ 		goto changemedia;
  	}
--	switch(rval) {
-+	switch (rval) {
- 	case 0:
- 		contextp->cc_Media_begin_entrystate = BES_ENDOK;
- 		return RV_OK;
-@@ -6601,7 +6601,7 @@ is_quota_file(ino_t ino)
+ 
+-	/* update the media object previous id and label
++	/*
++	 * update the media object previous id and label
+ 	 */
+ 	if (! mediawrittentopr && mwhdrp->mh_dumpfileix != 0) {
+ 		uuid_copy(mwhdrp->mh_prevmediaid, mwhdrp->mh_mediaid);
+@@ -6094,7 +6383,8 @@ write:
+ 				     sizeof(mwhdrp->mh_medialabel));
+ 	}
+ 
+-	/* update the media object current id and label
++	/*
++	 * update the media object current id and label
+ 	 */
+ 	if (! mediawrittentopr) {
+ 		if (mwhdrp->mh_mediafileix == 0) {
+@@ -6144,7 +6434,8 @@ write:
+ 
+ 	mediawrittentopr = BOOL_TRUE;
+ 
+-	/* write hdr is prepared. place it on media
++	/*
++	 * write hdr is prepared. place it on media
+ 	 */
+ 	if (intr_allowed && cldmgr_stop_requested()) {
+ 		return RV_INTR;
+@@ -6185,7 +6476,8 @@ Media_mfile_end(drive_t *drivep,
+ 
+ 	assert(contextp->cc_Media_begin_entrystate == BES_INVAL);
+ 
+-	/* call drive's end_write op to flush the tail of the media file
++	/*
++	 * call drive's end_write op to flush the tail of the media file
+ 	 * if has previously hit EOM, this is moot.
+ 	 */
+ 	rval = (dop->do_end_write)(drivep, ncommittedp);
+@@ -6245,7 +6537,8 @@ retry:
+ 	assert(preamblecnt <= PREAMBLEMAX);
+ 	dlog_begin(preamblestr, preamblecnt);
+ 
+-	/* query: ask if overwrite ok
++	/*
++	 * query: ask if overwrite ok
+ 	 */
+ 	sprintf(question,
+ 		 "overwrite data on media in "
+@@ -6383,7 +6676,8 @@ retry:
+ 	assert(preamblecnt <= PREAMBLEMAX);
+ 	dlog_begin(preamblestr, preamblecnt);
+ 
+-	/* query: ask if overwrite ok
++	/*
++	 * query: ask if overwrite ok
+ 	 */
+ 	sprintf(question,
+ 		 "pre-erase (-%c) option specified "
+@@ -6462,7 +6756,8 @@ Media_prompt_label_cb(void *uctxp, dlog_pcbp_t pcb, void *pctxp)
  {
- 	int i;
+ 	drive_t *drivep = (drive_t *)uctxp;
  
--	for(i = 0; i < (sizeof(quotas) / sizeof(quotas[0])); i++) {
-+	for (i = 0; i < (sizeof(quotas) / sizeof(quotas[0])); i++) {
- 		if (quotas[i].savequotas && ino == quotas[i].quotaino)
- 			return BOOL_TRUE;
- 	}
-@@ -6622,11 +6622,11 @@ save_quotas(char *mntpnt, quota_info_t *quotainfo)
-         mlog(MLOG_VERBOSE, _(
- 		"saving %s information for: %s\n"), quotainfo->desc, mntpnt);
+-	/* query: ask for a label
++	/*
++	 * query: ask for a label
+ 	 */
+ 	(*pcb)(pctxp,
+ 		   "please enter label for media in "
+diff --git a/dump/getopt.h b/dump/getopt.h
+index dd798d8..06c9ab0 100644
+--- a/dump/getopt.h
++++ b/dump/getopt.h
+@@ -18,7 +18,8 @@
+ #ifndef GETOPT_H
+ #define GETOPT_H
  
--        if(unlink(quotainfo->quotapath) == 0) {
-+        if (unlink(quotainfo->quotapath) == 0) {
-             mlog(MLOG_WARNING, _("overwriting: %s\n"), quotainfo->quotapath);
-         }
-         else {
--            if(errno != ENOENT) {
-+            if (errno != ENOENT) {
-                 mlog(MLOG_ERROR, _(
-                       "unable to remove %s: %s\n"),
-                       quotainfo->quotapath,
-@@ -6645,20 +6645,20 @@ save_quotas(char *mntpnt, quota_info_t *quotainfo)
-         mlog(MLOG_NITTY, "saving quotas: %s\n", buf);
- 
-         sts = system(buf);
--        if(sts != 0) {
-+        if (sts != 0) {
-             mlog(MLOG_ERROR, _(
-                   "%s failed with exit status: %d\n"), REPQUOTA,
- 		  sts == -1 ? -1 : WEXITSTATUS(sts));
-             return BOOL_FALSE;
-         }
--        if((fd = open(quotainfo->quotapath, O_RDONLY|O_DSYNC)) < 0) {
-+        if ((fd = open(quotainfo->quotapath, O_RDONLY|O_DSYNC)) < 0) {
-             mlog(MLOG_ERROR, _(
-                   "open failed %s: %s\n"),
-                   quotainfo->quotapath,
-                   strerror(errno));
-             return BOOL_FALSE;
-         }
--        if(fstat(fd, &statb) < 0) {
-+        if (fstat(fd, &statb) < 0) {
-             mlog(MLOG_ERROR, _(
-                   "stat failed %s: %s\n"),
-                   quotainfo->quotapath,
+-/* getopt.h	common getopt  command string
++/*
++ * getopt.h	common getopt  command string
+  *
+  * several modules parse the command line looking for arguments specific to
+  * that module. Unfortunately, each of the getopt(3) calls needs the
 diff --git a/dump/inomap.c b/dump/inomap.c
-index b6acd3c..ca287d8 100644
+index ca287d8..7280ad4 100644
 --- a/dump/inomap.c
 +++ b/dump/inomap.c
-@@ -980,7 +980,7 @@ SEG_SET_BITS(seg_t *segp, xfs_ino_t ino, int state)
- 	relino = ino - segp->base;
- 	mask = (uint64_t)1 << relino;
- 	clrmask = ~mask;
--	switch(state) {
-+	switch (state) {
- 	case 0:
- 		segp->lobits &= clrmask;
- 		segp->mebits &= clrmask;
-diff --git a/inventory/inv_api.c b/inventory/inv_api.c
-index 3a9cc5a..f34b92a 100644
---- a/inventory/inv_api.c
-+++ b/inventory/inv_api.c
-@@ -924,7 +924,7 @@ inv_getopt(int argc, char **argv, invt_pr_ctx_t *prctx)
- 				if (value == NULL && d != OPT_FSTAB &&
- 				     d != OPT_INVIDX && d != OPT_INVCHECK)
- 					continue;
--				switch(d) {
-+				switch (d) {
- 					/* process mntpt option */
- 				      case OPT_MNT:
- 					bywhat = (inv_predicate_t) INV_BY_MOUNTPT;
-diff --git a/inventory/inv_mgr.c b/inventory/inv_mgr.c
-index 7e73667..b2664ab 100644
---- a/inventory/inv_mgr.c
-+++ b/inventory/inv_mgr.c
-@@ -396,7 +396,7 @@ invmgr_inv_print(
- 			continue;
- 		}
- 		free (scnt);
--		for(s = 0; s < nsess; s++) {
-+		for (s = 0; s < nsess; s++) {
- 			/* fd is kept locked until we return from the
- 			   callback routine */
+@@ -48,11 +48,13 @@
+ /* structure definitions used locally ****************************************/
  
-@@ -485,7 +485,7 @@ invmgr_inv_check(
- 			       i+1,
- 			       iarr[i].ie_timeperiod.tp_start,
- 			       iarr[i].ie_timeperiod.tp_end);
--			for(s = 0; s < nsess; s++) {
-+			for (s = 0; s < nsess; s++) {
- 				printf(_("tm (%d)\t%d\n"), s, harr[s].sh_time);
+ #define BSTATBUFLEN	pgsz
+-	/* length (in bstat_t's) of buf passed to bigstat_iter
++	/*
++	 * length (in bstat_t's) of buf passed to bigstat_iter
+ 	 */
+ 
+ #define GETDENTBUFSZ	pgsz
+-	/* size (in bytes) of buf passed to diriter (when not recursive)
++	/*
++	 * size (in bytes) of buf passed to diriter (when not recursive)
+ 	 */
+ 
+ /* declarations of externally defined global symbols *************************/
+@@ -65,7 +67,8 @@ extern bool_t allowexcludefiles_pr;
+ 
+ /* forward declarations of locally defined static functions ******************/
+ 
+-/* inomap construction callbacks
++/*
++ * inomap construction callbacks
+  */
+ static int
+ cb_context(bool_t last,
+@@ -101,14 +104,16 @@ supprt_prune(void *,
+ static off64_t quantity2offset(jdm_fshandle_t *, xfs_bstat_t *, off64_t);
+ static off64_t estimate_dump_space(xfs_bstat_t *);
+ 
+-/* inomap primitives
++/*
++ * inomap primitives
+  */
+ static int inomap_init(int igrpcnt);
+ static void inomap_add(void *, xfs_ino_t ino, gen_t gen, int);
+ static int inomap_set_state(void *, xfs_ino_t ino, int);
+ static void inomap_set_gen(void *, xfs_ino_t, gen_t);
+ 
+-/* subtree abstraction
++/*
++ * subtree abstraction
+  */
+ static int
+ subtree_descend_cb(void *,
+@@ -142,7 +147,8 @@ static uint64_t inomap_exclude_skipattr = 0;
+ 
+ /* definition of locally defined global functions ****************************/
+ 
+-/* inomap_build - build an in-core image of the inode map for the
++/*
++ * inomap_build - build an in-core image of the inode map for the
+  * specified file system. identify startpoints in the non-dir inodes,
+  * such that the total dump media required is divided into startptcnt segments.
+  */
+@@ -174,7 +180,8 @@ inomap_build(jdm_fshandle_t *fshandlep,
+ 	int stat;
+ 	int rval;
+ 
+-        /* do a sync so that bulkstat will pick up inode changes
++        /*
++         * do a sync so that bulkstat will pick up inode changes
+          * that are currently in the inode cache. this is necessary
+          * for incremental dumps in order to have the dump time
+          * accurately reflect what inodes were included in this dump.
+@@ -182,13 +189,15 @@ inomap_build(jdm_fshandle_t *fshandlep,
+          */
+ 	sync();
+ 
+-	/* copy stat ptrs
++	/*
++	 * copy stat ptrs
+ 	 */
+ 	inomap_statphasep = statphasep;
+ 	inomap_statpassp = statpassp;
+ 	inomap_statdonep = statdonep;
+ 
+-	/* allocate a bulkstat buf
++	/*
++	 * allocate a bulkstat buf
+ 	 */
+ 	bstatbuflen = BSTATBUFLEN;
+ 	bstatbufp = (xfs_bstat_t *)memalign(pgsz,
+@@ -197,7 +206,8 @@ inomap_build(jdm_fshandle_t *fshandlep,
+ 					       sizeof(xfs_bstat_t));
+ 	assert(bstatbufp);
+ 
+-	/* count the number of inode groups, which will serve as a
++	/*
++	 * count the number of inode groups, which will serve as a
+ 	 * starting point for the size of the inomap.
+ 	 */
+ 	rval = inogrp_iter(fsfd, cb_count_inogrp, (void *)&igrpcnt, &stat);
+@@ -206,7 +216,8 @@ inomap_build(jdm_fshandle_t *fshandlep,
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* initialize the callback context
++	/*
++	 * initialize the callback context
+ 	 */
+ 	rval = cb_context(last,
+ 			   lasttime,
+@@ -224,7 +235,8 @@ inomap_build(jdm_fshandle_t *fshandlep,
+  		return BOOL_FALSE;
+  	}
+ 
+-	/* the inode map requires that inodes are added in increasing
++	/*
++	 * the inode map requires that inodes are added in increasing
+ 	 * ino order. in the case of a subtree dump, inodes would be
+ 	 * added in whatever order they were discovered when walking the
+ 	 * subtrees. so pre-populate the inomap with all the inode groups
+@@ -238,7 +250,8 @@ inomap_build(jdm_fshandle_t *fshandlep,
+  		return BOOL_FALSE;
+  	}
+ 
+-	/* construct the ino map, based on the last dump time, resumed
++	/*
++	 * construct the ino map, based on the last dump time, resumed
+ 	 * dump info, and subtree list. place all unchanged directories
+ 	 * in the "needed for children" state (MAP_DIR_SUPPRT). these will be
+ 	 * dumped even though they have not changed. a later pass will move
+@@ -297,7 +310,8 @@ inomap_build(jdm_fshandle_t *fshandlep,
+ 		      inomap_exclude_skipattr);
+ 	}
+ 
+-	/* prune directories unchanged since the last dump and containing
++	/*
++	 * prune directories unchanged since the last dump and containing
+ 	 * no children needing dumping.
+ 	 */
+ 	if (pruneneeded) {
+@@ -329,11 +343,13 @@ inomap_build(jdm_fshandle_t *fshandlep,
+ 		      "skipping (no pruning necessary)\n"));
+ 	}
+ 
+-	/* initialize the callback context for startpoint calculation
++	/*
++	 * initialize the callback context for startpoint calculation
+ 	 */
+ 	cb_spinit();
+ 
+-	/* identify dump stream startpoints
++	/*
++	 * identify dump stream startpoints
+ 	 */
+ 	if (startptcnt > 1) {
+ 		mlog(MLOG_VERBOSE | MLOG_INOMAP, _(
+@@ -424,7 +440,8 @@ inomap_skip(xfs_ino_t ino)
+ 
+ /* definition of locally defined static functions ****************************/
+ 
+-/* callback context and operators - inomap_build makes extensive use
++/*
++ * callback context and operators - inomap_build makes extensive use
+  * of iterators. below are the callbacks given to these iterators.
+  */
+ static bool_t cb_last;		/* set by cb_context() */
+@@ -447,7 +464,8 @@ static off64_t cb_nondircnt;	/* number of non-dirs CHANGED */
+ static bool_t *cb_pruneneededp; /* set by cb_context() */
+ static bool_t cb_skip_unchanged_dirs;	/* set by cb_context() */
+ 
+-/* cb_context - initializes the call back context for the add and prune
++/*
++ * cb_context - initializes the call back context for the add and prune
+  * phases of inomap_build().
+  */
+ static int
+@@ -501,7 +519,8 @@ cb_count_inogrp(void *arg1, int fsfd, xfs_inogrp_t *inogrp)
+ 	return 0;
+ }
+ 
+-/* cb_add - called for all inodes in the file system. checks
++/*
++ * cb_add - called for all inodes in the file system. checks
+  * mod and create times to decide if should be dumped. sets all
+  * unmodified directories to be dumped for supprt. notes if any
+  * files or directories have not been modified.
+@@ -524,13 +543,15 @@ cb_add(void *arg1,
+ 
+ 	(*inomap_statdonep)++;
+ 
+-	/* skip if no links
++	/*
++	 * skip if no links
+ 	 */
+ 	if (statp->bs_nlink == 0) {
+ 		return 0;
+ 	}
+ 
+-	/* if no portion of this ino is in the resume range,
++	/*
++	 * if no portion of this ino is in the resume range,
+ 	 * then only dump it if it has changed since the interrupted
+ 	 * dump.
+ 	 *
+@@ -555,7 +576,8 @@ cb_add(void *arg1,
+ 		changed = BOOL_TRUE;
+ 	}
+ 
+-	/* this is redundant: make sure any ino partially dumped
++	/*
++	 * this is redundant: make sure any ino partially dumped
+ 	 * is completed.
+ 	 */
+ 	if (cb_resume && cb_inoresumed(ino)) {
+@@ -574,7 +596,8 @@ cb_add(void *arg1,
+ 		} else {
+ 			estimated_size = estimate_dump_space(statp);
+ 
+-			/* skip if size is greater than prune size. quota
++			/*
++			 * skip if size is greater than prune size. quota
+ 			 * files are exempt from the check.
+ 			 */
+ 			if (maxdumpfilesize > 0 &&
+@@ -688,7 +711,8 @@ cb_inoresumed(xfs_ino_t ino)
+ 	return BOOL_FALSE;
+ }
+ 
+-/* supprt_prune -  does supprt directory entry pruning.
++/*
++ * supprt_prune -  does supprt directory entry pruning.
+  * recurses downward looking for modified inodes, & clears supprt
+  * (-> nochng) on the way back up after examining all descendents.
+  */
+@@ -781,7 +805,8 @@ cb_accuminit_sz(void)
+ 	cb_hdrsz = 0;
+ }
+ 
+-/* cb_spinit - initializes context for the startpoint calculation phase of
++/*
++ * cb_spinit - initializes context for the startpoint calculation phase of
+  * inomap_build. cb_startptix is the index of the next startpoint to
+  * record. cb_incr is the dump space distance between each startpoint.
+  * cb_target is the target accum value for the next startpoint.
+@@ -796,7 +821,8 @@ cb_spinit(void)
+ 	cb_accum = 0;
+ }
+ 
+-/* cb_startpt - called for each non-directory inode. accumulates the
++/*
++ * cb_startpt - called for each non-directory inode. accumulates the
+  * require dump space, and notes startpoints. encodes a heuristic for
+  * selecting startpoints. decides for each file whether to include it
+  * in the current stream, start a new stream beginning with that file,
+@@ -829,13 +855,15 @@ cb_startpt(void *arg1,
+ 
+ 	(*inomap_statdonep)++;
+ 
+-	/* skip if no links
++	/*
++	 * skip if no links
+ 	 */
+ 	if (statp->bs_nlink == 0) {
+ 		return 0;
+ 	}
+ 
+-	/* skip if not in inomap or not a non-dir
++	/*
++	 * skip if not in inomap or not a non-dir
+ 	 */
+ 	state = inomap_get_state(cb_inomap_contextp, statp->bs_ino);
+ 	if (state != MAP_NDR_CHANGE) {
+@@ -847,13 +875,15 @@ cb_startpt(void *arg1,
+ 	estimate = estimate_dump_space(statp);
+ 	cb_accum += estimate + (EXTENTHDR_SZ * (statp->bs_extents + 1));
+ 
+-	/* loop until no new start points found. loop is necessary
++	/*
++	 * loop until no new start points found. loop is necessary
+ 	 * to handle the pathological case of a huge file so big it
+ 	 * spans several streams.
+ 	 */
+ 	action = (action_t)HOLD; /* irrelevant, but demanded by lint */
+ 	do {
+-		/* decide what to do: hold, bump, or split. there are
++		/*
++		 * decide what to do: hold, bump, or split. there are
+ 		 * 8 valid cases to consider:
+ 		 * 1) accum prior to this file is way too short of the
+ 		 *    target, and accum incl. this file is also shy: HOLD;
+@@ -907,7 +937,8 @@ cb_startpt(void *arg1,
  			}
  		}
-diff --git a/inventory/inv_stobj.c b/inventory/inv_stobj.c
-index 2b86376..f86c978 100644
---- a/inventory/inv_stobj.c
-+++ b/inventory/inv_stobj.c
-@@ -75,7 +75,7 @@ stobj_insert_session(invt_idxinfo_t *idx,
- 			return -1;
- 		}
  
--		for(i = 0; i <  sescnt->ic_curnum; i++) {
-+		for (i = 0; i <  sescnt->ic_curnum; i++) {
- 			if (uuid_compare(sessions[i].s_sesid,
- 					   s->ses->s_sesid) == 0)
- 				break;
-diff --git a/inventory/testmain.c b/inventory/testmain.c
-index 09b9bd6..273fe37 100644
---- a/inventory/testmain.c
-+++ b/inventory/testmain.c
-@@ -428,7 +428,7 @@ main(int argc, char *argv[])
- 	optind = 1;
- 	optarg = 0;
+-		/* perform the action selected above
++		/*
++		 * perform the action selected above
+ 		 */
+ 		switch (action) {
+ 		case (action_t)HOLD:
+@@ -947,10 +978,12 @@ cb_startpt(void *arg1,
+ 	return 0;
+ }
  
--	while((cc = getopt(argc, argv, GETOPT_CMDSTRING)) != EOF) {
-+	while ((cc = getopt(argc, argv, GETOPT_CMDSTRING)) != EOF) {
- 		switch (cc) {
- 		      case 'w':
- 			op = WRI;
-diff --git a/invutil/cmenu.c b/invutil/cmenu.c
-index e60fd22..a1704ed 100644
---- a/invutil/cmenu.c
-+++ b/invutil/cmenu.c
-@@ -60,7 +60,7 @@ menukey_t keyv[] = {
+-/* map context and operators
++/*
++ * map context and operators
+  */
+ 
+-/* define structure for ino to gen mapping.
++/*
++ * define structure for ino to gen mapping.
+  */
+ struct i2gseg {
+ 	uint64_t s_valid;
+@@ -1047,14 +1080,16 @@ SEG_GET_BITS(seg_t *segp, xfs_ino_t ino)
+ 	return state;
+ }
+ 
+-/* context for inomap construction - initialized by map_init
++/*
++ * context for inomap construction - initialized by map_init
+  */
+ static int
+ inomap_init(int igrpcnt)
+ {
+ 	assert(sizeof(hnk_t) == HNKSZ);
+ 
+-	/* lastseg must be initialized with -1 offsets since
++	/*
++	 * lastseg must be initialized with -1 offsets since
+ 	 * no segments have been added yet */
+ 	inomap.lastseg.hnkoff = -1;
+ 	inomap.lastseg.segoff = -1;
+@@ -1118,7 +1153,8 @@ inomap_lastseg(int hnkoff)
+ 		return SEGPERHNK - 1;
+ }
+ 
+-/* called for every inode group in the filesystem in increasing inode
++/*
++ * called for every inode group in the filesystem in increasing inode
+  * order. adds a new segment to the inomap and ino-to-gen map.
+  */
+ static int
+@@ -1167,7 +1203,8 @@ cb_add_inogrp(void *arg1, int fsfd, xfs_inogrp_t *inogrp)
+ 	return 0;
+ }
+ 
+-/* called for every ino to be added to the map.
++/*
++ * called for every ino to be added to the map.
+  */
+ static void
+ inomap_add(void *contextp, xfs_ino_t ino, gen_t gen, int state)
+@@ -1200,7 +1237,8 @@ inomap_free_context(void *p)
+ 	free(p);
+ }
+ 
+-/* use binary search to find the hunk containing the given inode.
++/*
++ * use binary search to find the hunk containing the given inode.
+  * use the supplied addr as the starting point for the search.
+  */
+ static bool_t
+@@ -1230,7 +1268,8 @@ inomap_find_hnk(seg_addr_t *addrp, xfs_ino_t ino)
+ 	return BOOL_FALSE;
+ }
+ 
+-/* use binary search to find the hunk containing the given
++/*
++ * use binary search to find the hunk containing the given
+  * inode, and then binary search the hunk to find the correct
+  * segment, if any. use the supplied addr as the starting
+  * point for the search.
+@@ -1413,7 +1452,8 @@ inomap_get_gen(void *contextp, xfs_ino_t ino, gen_t *gen)
  void
- signal_handler(int s)
+ inomap_writehdr(content_inode_hdr_t *scwhdrp)
  {
--    switch(s) {
-+    switch (s) {
-     case SIGWINCH:
- 	signal(SIGWINCH, signal_handler);
- 	delwin(mainmenu);
-@@ -88,9 +88,9 @@ menu_commit(WINDOW *win, node_t *current, node_t *list)
-     data_t *d;
+-	/* update the inomap info in the content header
++	/*
++	 * update the inomap info in the content header
+ 	 */
+ 	scwhdrp->cih_inomap_hnkcnt = inomap.lastseg.hnkoff + 1;
+ 	scwhdrp->cih_inomap_segcnt = inomap_addr2segix(&inomap.lastseg) + 1;
+@@ -1431,7 +1471,8 @@ inomap_dump(drive_t *drivep)
+ 	hnk_t *hnkp;
+ 	hnk_t tmphnkp;
  
-     n = list;
--    while(n != NULL && n->data != NULL) {
-+    while (n != NULL && n->data != NULL) {
- 	d = n->data;
--	if(d->ops != NULL && d->ops->op_commit != NULL && d->commited == BOOL_FALSE) {
-+	if (d->ops != NULL && d->ops->op_commit != NULL && d->commited == BOOL_FALSE) {
- 	    d->ops->op_commit(win, n, list);
- 	    d->commited = BOOL_TRUE;
- 	}
-@@ -98,7 +98,7 @@ menu_commit(WINDOW *win, node_t *current, node_t *list)
-     }
- 
-     n = list;
--    while(n != NULL) {
-+    while (n != NULL) {
- 	next = n->next;
- 	node_free(list_del(n));
- 	n = next;
-@@ -110,7 +110,7 @@ menu_commit(WINDOW *win, node_t *current, node_t *list)
- node_t *
- get_lastnode(node_t *node)
+-	/* use write_buf to dump the hunks
++	/*
++	 * use write_buf to dump the hunks
+ 	 */
+ 	for (addr.hnkoff = 0;
+ 	      addr.hnkoff <= inomap.lastseg.hnkoff;
+@@ -1484,11 +1525,13 @@ subtreelist_parse(jdm_fshandle_t *fshandlep,
  {
--    while(node->next != NULL) {
-+    while (node->next != NULL) {
- 	node = node->next;
-     }
+ 	ix_t subtreeix;
  
-@@ -126,36 +126,36 @@ menu_import(WINDOW *win, node_t *current, node_t *list)
-     char *fstabname;
-     data_t *d;
+-	/* add the root ino to the dump
++	/*
++	 * add the root ino to the dump
+ 	 */
+ 	cb_add(NULL, fshandlep, fsfd, rootstatp);
  
--    for(;;) {
-+    for (;;) {
- 	inv_path[0] = '\0';
- 
--	if(get_string(win, "Path to inventory to be imported: ", inv_path, MAXPATHLEN) == ERR) {
-+	if (get_string(win, "Path to inventory to be imported: ", inv_path, MAXPATHLEN) == ERR) {
- 	    put_error("Error: invalid input");
- 	    continue;
- 	}
--	if(strlen(inv_path) == 0) {
-+	if (strlen(inv_path) == 0) {
- 	    clear_line(stdscr, LINES - 1);
- 	    return BOOL_FALSE;
- 	}
--	if(stat(inv_path, &s) < 0 || !S_ISDIR(s.st_mode)) {
-+	if (stat(inv_path, &s) < 0 || !S_ISDIR(s.st_mode)) {
- 	    put_error("Error: invalid path");
- 	    continue;
- 	}
- 	clear_line(stdscr, LINES - 1);
- 
- 	fstabname = GetFstabFullPath(inv_path);
--	if(fstabname == NULL) {
-+	if (fstabname == NULL) {
- 	    put_footer("internal memory error: import inventory", ALIGN_LEFT);
- 	    exit(1);
- 	}
- 
--	while(current->next != NULL) {
-+	while (current->next != NULL) {
- 	    current = current->next;
- 	}
- 	generate_fstab_menu(inv_path, current, 0, fstabname);
- 	free(fstabname);
- 
--	while(current->next != NULL) {
-+	while (current->next != NULL) {
- 	    current = current->next;
- 	    d = current->data;
- 	    d->text[1] = 'I';
-@@ -182,12 +182,12 @@ menu_select(WINDOW *win, node_t *current, node_t *list)
+-	/* do a recursive descent for each subtree specified
++	/*
++	 * do a recursive descent for each subtree specified
+ 	 */
+ 	for (subtreeix = 0; subtreeix < subtreecnt; subtreeix++) {
+ 		int cbrval = 0;
+@@ -1524,18 +1567,21 @@ subtreelist_parse_cb(void *arg1,
  {
-     data_t *d;
+ 	int cbrval = 0;
  
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return BOOL_FALSE;
-     }
-     d = (data_t *)(current->data);
+-	/* arg1 is used to carry the tail of the subtree path
++	/*
++	 * arg1 is used to carry the tail of the subtree path
+ 	 */
+ 	char *subpath = (char *)arg1;
  
--    if(d->ops != NULL && d->ops->op_select != NULL) {
-+    if (d->ops != NULL && d->ops->op_select != NULL) {
- 	return d->ops->op_select(win, current, list);
-     }
- 
-@@ -201,14 +201,14 @@ expand_node(node_t *node)
-     int i;
-     data_t *d;
- 
--    if(node == NULL || node->data == NULL) {
-+    if (node == NULL || node->data == NULL) {
- 	return NULL;
-     }
-     d = node->data;
- 
-     d->expanded = BOOL_TRUE;
- 
--    for(i = 0; i < d->nbr_children; i++) {
-+    for (i = 0; i < d->nbr_children; i++) {
- 	((data_t *)(d->children[i]->data))->hidden = BOOL_FALSE;
-     }
- 
-@@ -220,12 +220,12 @@ menu_expand(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return BOOL_FALSE;
-     }
-     d = current->data;
- 
--    if(d->ops != NULL && d->ops->op_expand != NULL) {
-+    if (d->ops != NULL && d->ops->op_expand != NULL) {
- 	return d->ops->op_expand(win, current, list);
-     }
- 
-@@ -242,7 +242,7 @@ expand_tree(node_t *node)
-     int i;
-     data_t *d;
- 
--    if(node == NULL || node->data == NULL) {
-+    if (node == NULL || node->data == NULL) {
- 	return NULL;
-     }
-     d = node->data;
-@@ -250,7 +250,7 @@ expand_tree(node_t *node)
-     d->hidden = BOOL_FALSE;
-     d->expanded = BOOL_TRUE;
- 
--    for(i = 0; i < d->nbr_children; i++) {
-+    for (i = 0; i < d->nbr_children; i++) {
- 	expand_tree(d->children[i]);
-     }
- 
-@@ -262,12 +262,12 @@ menu_expandall(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return BOOL_FALSE;
-     }
-     d = (data_t *)(current->data);
- 
--    if(d->ops != NULL && d->ops->op_expandall != NULL) {
-+    if (d->ops != NULL && d->ops->op_expandall != NULL) {
- 	return d->ops->op_expandall(win, current, list);
-     }
- 
-@@ -284,17 +284,17 @@ collapse_node(node_t *node)
-     int i;
-     data_t *d;
- 
--    if(node == NULL || node->data == NULL) {
-+    if (node == NULL || node->data == NULL) {
- 	return NULL;
-     }
-     d = node->data;
- 
--    if(d->expanded == BOOL_FALSE)
-+    if (d->expanded == BOOL_FALSE)
- 	return node;
- 
-     d->expanded = BOOL_FALSE;
- 
--    for(i = 0; i < d->nbr_children; i++) {
-+    for (i = 0; i < d->nbr_children; i++) {
- 	((data_t *)(d->children[i]->data))->hidden = BOOL_TRUE;
- 	collapse_node(d->children[i]);
-     }
-@@ -307,12 +307,12 @@ menu_collapse(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return BOOL_FALSE;
-     }
-     d = current->data;
- 
--    if(d->ops != NULL && d->ops->op_collapse != NULL) {
-+    if (d->ops != NULL && d->ops->op_collapse != NULL) {
- 	return d->ops->op_collapse(win, current, list);
-     }
- 
-@@ -329,17 +329,17 @@ menu_collapseall(WINDOW *win, node_t *current, node_t *list)
-     data_t *d;
-     node_t *n;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return BOOL_FALSE;
-     }
-     d = current->data;
- 
--    if(d->ops != NULL && d->ops->op_collapseall != NULL) {
-+    if (d->ops != NULL && d->ops->op_collapseall != NULL) {
- 	return d->ops->op_collapseall(win, current, list);
-     }
- 
-     n = current;
--    while(d->parent != NULL) {
-+    while (d->parent != NULL) {
- 	n = d->parent;
- 	d = n->data;
-     }
-@@ -356,12 +356,12 @@ menu_delete(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return BOOL_FALSE;
-     }
-     d = (data_t *)(current->data);
- 
--    if(d->ops != NULL && d->ops->op_delete != NULL) {
-+    if (d->ops != NULL && d->ops->op_delete != NULL) {
- 	return d->ops->op_delete(win, current, list);
-     }
- 
-@@ -376,12 +376,12 @@ menu_undelete(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return BOOL_FALSE;
-     }
-     d = (data_t *)(current->data);
- 
--    if(d->ops != NULL && d->ops->op_undelete != NULL) {
-+    if (d->ops != NULL && d->ops->op_undelete != NULL) {
- 	return d->ops->op_undelete(win, current, list);
-     }
- 
-@@ -397,12 +397,12 @@ menu_saveexit(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return BOOL_TRUE;
-     }
-     d = (data_t *)(current->data);
- 
--    if(d->ops != NULL && d->ops->op_saveexit != NULL) {
-+    if (d->ops != NULL && d->ops->op_saveexit != NULL) {
- 	return d->ops->op_saveexit(win, current, list);
-     }
- 
-@@ -415,7 +415,7 @@ delete_node(node_t *node)
-     int i;
-     data_t *d;
- 
--    if(node == NULL || node->data == NULL) {
-+    if (node == NULL || node->data == NULL) {
- 	return NULL;
-     }
-     d = node->data;
-@@ -423,7 +423,7 @@ delete_node(node_t *node)
-     d->deleted = BOOL_TRUE;
-     d->text[0] = 'D';
- 
--    for(i = 0; i < d->nbr_children; i++) {
-+    for (i = 0; i < d->nbr_children; i++) {
- 	delete_node(d->children[i]);
-     }
- 
-@@ -434,7 +434,7 @@ delete_node(node_t *node)
- int
- list_delete(node_t *current, node_t *list)
- {
--    if(current == NULL && current->data == NULL) {
-+    if (current == NULL && current->data == NULL) {
- 	return 0;
-     }
- 
-@@ -448,7 +448,7 @@ undelete_node(node_t *node)
- {
-     data_t *d;
- 
--    if(node == NULL || node->data == NULL) {
-+    if (node == NULL || node->data == NULL) {
- 	return NULL;
-     }
-     d = node->data;
-@@ -456,7 +456,7 @@ undelete_node(node_t *node)
-     d->deleted = BOOL_FALSE;
-     d->text[0] = ' ';
- 
--    if(d->parent != NULL) {
-+    if (d->parent != NULL) {
- 	undelete_node(d->parent);
-     }
- 
-@@ -467,7 +467,7 @@ undelete_node(node_t *node)
- void
- list_undelete(node_t *current, node_t *list)
- {
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return;
-     }
- 
-@@ -481,12 +481,12 @@ list_prune(node_t *menulist, char *mountpt, uuid_t *uuidp, time32_t prunetime)
-     data_t *d;
- 
-     n = menulist;
--    while(n != NULL) {
-+    while (n != NULL) {
- 	d = (data_t *)(n->data);
- 
--	if(d != NULL && d->ops != NULL && d->ops->op_prune != NULL) {
--	    if(d->ops->op_prune(mountpt, uuidp, prunetime, n, menulist) == BOOL_TRUE) {
--		if(d->ops->op_delete == NULL) {
-+	if (d != NULL && d->ops != NULL && d->ops->op_prune != NULL) {
-+	    if (d->ops->op_prune(mountpt, uuidp, prunetime, n, menulist) == BOOL_TRUE) {
-+		if (d->ops->op_delete == NULL) {
- 		    list_delete(n, menulist);
- 		}
- 		else {
-@@ -494,7 +494,7 @@ list_prune(node_t *menulist, char *mountpt, uuid_t *uuidp, time32_t prunetime)
- 		}
- 	    }
- 	    else {
--		if(d->ops->op_undelete == NULL) {
-+		if (d->ops->op_undelete == NULL) {
- 		    list_undelete(n, menulist);
- 		}
- 		else {
-@@ -515,7 +515,7 @@ generate_menu(char *inv_path)
-     node_t *list;
- 
-     fstabname = GetFstabFullPath(inv_path);
--    if(fstabname == NULL) {
-+    if (fstabname == NULL) {
- 	fprintf(stderr, "%s: internal memory error: general_menu\n",
- 		g_programName);
- 	exit(1);
-@@ -538,7 +538,7 @@ create_windows()
-     keypad(stdscr, TRUE);
-     signal(SIGWINCH, signal_handler);
- 
--    if(LINES < 7) {
-+    if (LINES < 7) {
- 	endwin();
- 	fprintf(stderr, "%s: window too small for curses interactive mode: LINES = %d\n",
- 		g_programName, LINES);
-@@ -550,7 +550,7 @@ create_windows()
-     notimeout(mainmenu, TRUE);
- 
-     menusize = (LINES - 2) - INFO_SIZE;
--    if(menusize <= 0)
-+    if (menusize <= 0)
- 	menusize = 1;
- 
-     prefresh(mainmenu,
-@@ -559,7 +559,7 @@ create_windows()
- 	     menusize, COLS - 1);
- 
-     infosize = INFO_SIZE;
--    if(infosize <= 0)
-+    if (infosize <= 0)
- 	infosize = 1;
- 
-     infowin = newwin(infosize, COLS, menusize + 1, 0);
-@@ -576,12 +576,12 @@ invutil_interactive(char *inv_path, char *mountpt, uuid_t *uuidp, time32_t timeS
-     node_t	*menulist;
- 
-     menulist = generate_menu(inv_path);
--    if(menulist == NULL) {
-+    if (menulist == NULL) {
- 	fprintf(stderr, "%s: abnormal termination\n", g_programName);
- 	exit(1);
-     }
- 
--    if(timeSecs > 0) {
-+    if (timeSecs > 0) {
- 	list_prune(menulist, mountpt, uuidp, timeSecs);
-     }
- 
-diff --git a/invutil/fstab.c b/invutil/fstab.c
-index 88d849e..3dcb9bf 100644
---- a/invutil/fstab.c
-+++ b/invutil/fstab.c
-@@ -68,15 +68,15 @@ fstab_commit(WINDOW *win, node_t *current, node_t *list)
-     int fstabentry_idx;
- 
-     n = current;
--    if(n == NULL || n->data == NULL)
-+    if (n == NULL || n->data == NULL)
- 	return 0;
- 
-     d = ((data_t *)(n->data));
-     fidx = d->file_idx;
-     fstabentry = fstab_file[fidx].data[d->data_idx];
- 
--    if(d->deleted == BOOL_TRUE && d->imported == BOOL_FALSE) {
--	for(i = 0; i < d->nbr_children; i++) {
-+    if (d->deleted == BOOL_TRUE && d->imported == BOOL_FALSE) {
-+	for (i = 0; i < d->nbr_children; i++) {
- 	    invidx_commit(win, d->children[i], list);
- 	}
- 	mark_all_children_commited(current);
-@@ -90,26 +90,26 @@ fstab_commit(WINDOW *win, node_t *current, node_t *list)
- 
- 	    fstab_file[fidx].data[d->data_idx] = NULL;
- 
--	    for(i = d->data_idx + 1; i < fstab_file[fidx].numrecords; i++) {
--		if(fstab_file[fidx].data[i] != NULL)
-+	    for (i = d->data_idx + 1; i < fstab_file[fidx].numrecords; i++) {
-+		if (fstab_file[fidx].data[i] != NULL)
- 		    fstab_file[fidx].data[i]--;
- 	    }
- 	}
- 	fstab_file[fidx].counter->ic_curnum--;
-     }
--    else if(d->imported == BOOL_TRUE) {
-+    else if (d->imported == BOOL_TRUE) {
- 	invt_fstab_t *dest;
- 
--	for(i = 0; i < d->nbr_children; i++) {
-+	for (i = 0; i < d->nbr_children; i++) {
- 	    invidx_commit(win, d->children[i], list);
- 	}
- 	mark_all_children_commited(current);
- 
--	if(find_matching_fstab(0, fstabentry) >= 0) {
-+	if (find_matching_fstab(0, fstabentry) >= 0) {
- 	    return 0;
+-	/* temporarily terminate the subpath at the next slash
++	/*
++	 * temporarily terminate the subpath at the next slash
+ 	 */
+ 	char *nextslash = strchr(subpath, '/');
+ 	if (nextslash) {
+ 		*nextslash = 0;
  	}
  
--	if(fstab_file[0].counter->ic_curnum < fstab_file[0].nEntries) {
-+	if (fstab_file[0].counter->ic_curnum < fstab_file[0].nEntries) {
- 	    dest = fstab_file[0].data[fstab_file[0].counter->ic_curnum - 1] + 1;
- 	}
- 	else {
-@@ -133,12 +133,12 @@ fstab_select(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
- 
--    if(d->expanded == TRUE) {
-+    if (d->expanded == TRUE) {
- 	return menu_collapse(win, current, list);
-     }
- 
-@@ -154,7 +154,7 @@ fstab_highlight(WINDOW *win, node_t *current, node_t *list)
-     data_t *d;
-     invt_fstab_t *fstabentry;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
-@@ -181,17 +181,17 @@ fstab_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node
-     data_t		*d;
-     invt_fstab_t	*fstabentry;
- 
--    if(node == NULL || node->data == NULL) {
-+    if (node == NULL || node->data == NULL) {
- 	return BOOL_FALSE;
-     }
- 
-     d = (data_t *)(node->data);
-     fstabentry = fstab_file[d->file_idx].data[d->data_idx];
- 
--    if(mountpt != NULL && mntpnt_equal(mountpt, fstabentry->ft_mountpt)) {
-+    if (mountpt != NULL && mntpnt_equal(mountpt, fstabentry->ft_mountpt)) {
- 	return BOOL_TRUE;
-     }
--    if((!uuid_is_null(*uuidp))
-+    if ((!uuid_is_null(*uuidp))
-        && (uuid_compare(*uuidp, fstabentry->ft_uuid) == 0)) {
- 	return BOOL_TRUE;
-     }
-@@ -202,9 +202,9 @@ fstab_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node
- int
- add_fstab_data(int fidx, invt_fstab_t *data)
- {
--    if(fstab_file[fidx].numrecords == 0) {
-+    if (fstab_file[fidx].numrecords == 0) {
- 	fstab_file[fidx].data = malloc(sizeof(*fstab_file[fidx].data));
--	if(fstab_file[fidx].data == NULL) {
-+	if (fstab_file[fidx].data == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: fstab data allocation\n", g_programName);
- 	    exit(1);
- 	}
-@@ -213,7 +213,7 @@ add_fstab_data(int fidx, invt_fstab_t *data)
- 	fstab_file[fidx].data = realloc(fstab_file[fidx].data,
- 					sizeof(*fstab_file[fidx].data)
- 					* (fstab_file[fidx].numrecords + 1));
--	if(fstab_file[fidx].data == NULL) {
-+	if (fstab_file[fidx].data == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: fstab data reallocation\n", g_programName);
- 	    exit(1);
- 	}
-@@ -236,16 +236,16 @@ generate_fstab_menu(char * inv_path, node_t *startnode, int level, char *fstabna
-     node_t	*n;
-     invt_fstab_t *fstab_entry;
- 
--    if((idx = open_fstab(fstabname)) < 0) {
-+    if ((idx = open_fstab(fstabname)) < 0) {
- 	return NULL;
-     }
-     fstab_entry = (invt_fstab_t *)(fstab_file[idx].mapaddr + sizeof(invt_counter_t));
- 
-     n = startnode;
--    for(i=0; i < fstab_file[idx].counter->ic_curnum; i++) {
-+    for (i=0; i < fstab_file[idx].counter->ic_curnum; i++) {
- 	len = strlen(fstab_entry[i].ft_mountpt) + strlen(fstab_entry[i].ft_devpath) + 40;
- 	txt = malloc(len);
--	if(txt == NULL) {
-+	if (txt == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: fstab_text\n", g_programName);
- 	    exit(1);
- 	}
-@@ -262,10 +262,10 @@ generate_fstab_menu(char * inv_path, node_t *startnode, int level, char *fstabna
- 				    NULL,	/* children */
- 				    0,		/* nbr_children */
- 				    i));	/* data_idx */
--	if(i == 0) {
-+	if (i == 0) {
- 	    list = n;
- 	}
--	if(n == NULL) {
-+	if (n == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: list_add: node_create: fstab\n", g_programName);
- 	    exit(1);
- 	}
-@@ -284,19 +284,19 @@ add_fstab(char *name, int fd, int nEntries, char *mapaddr, invt_counter_t *count
- {
-     static int highwatermark = 10;
- 
--    if(fstab_numfiles == 0) {
-+    if (fstab_numfiles == 0) {
- 	fstab_file = malloc(sizeof(*fstab_file) * highwatermark);
--	if(fstab_file == NULL) {
-+	if (fstab_file == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: malloc fstab_file\n", g_programName);
- 	    exit(1);
- 	}
-     }
-     else {
--	if(fstab_numfiles >= highwatermark - 1) {
-+	if (fstab_numfiles >= highwatermark - 1) {
- 	    highwatermark += highwatermark;
- 
- 	    fstab_file = realloc(fstab_file, sizeof(*fstab_file) * highwatermark);
--	    if(fstab_file == NULL) {
-+	    if (fstab_file == NULL) {
- 		fprintf(stderr, "%s: internal memory error: realloc fstab\n", g_programName);
- 		exit(1);
- 	    }
-@@ -319,13 +319,13 @@ add_fstab(char *name, int fd, int nEntries, char *mapaddr, invt_counter_t *count
- int
- fstab_equal(invt_fstab_t *f1, invt_fstab_t *f2)
- {
--    if(strcmp(f1->ft_mountpt, f2->ft_mountpt) != 0)
-+    if (strcmp(f1->ft_mountpt, f2->ft_mountpt) != 0)
- 	return BOOL_FALSE;
- 
--    if(strcmp(f1->ft_devpath, f2->ft_devpath) != 0)
-+    if (strcmp(f1->ft_devpath, f2->ft_devpath) != 0)
- 	return BOOL_FALSE;
- 
--    if(uuid_compare(f1->ft_uuid, f2->ft_uuid) != 0)
-+    if (uuid_compare(f1->ft_uuid, f2->ft_uuid) != 0)
- 	return BOOL_FALSE;
- 
-     return BOOL_TRUE;
-@@ -336,8 +336,8 @@ find_matching_fstab(int fidx, invt_fstab_t *fstabentry)
- {
-     int i;
- 
--    for(i = 0; i < fstab_file[fidx].numrecords; i++) {
--	if(fstab_equal(fstab_file[fidx].data[i], fstabentry) == BOOL_TRUE) {
-+    for (i = 0; i < fstab_file[fidx].numrecords; i++) {
-+	if (fstab_equal(fstab_file[fidx].data[i], fstabentry) == BOOL_TRUE) {
- 	    return i;
- 	}
-     }
-@@ -374,8 +374,8 @@ remmap_fstab(int fidx, int num)
- 
-     /* regenerate the data index for the file given the new mapping */
-     fstab_entry = (invt_fstab_t *)(fstab_file[fidx].mapaddr + sizeof(invt_counter_t));
--    for(i=0; i < nEntries; i++) {
--    	if(i >= fstab_file[fidx].numrecords) {
-+    for (i=0; i < nEntries; i++) {
-+    	if (i >= fstab_file[fidx].numrecords) {
- 	    add_fstab_data(fidx, &(fstab_entry[i]));
- 	}
- 	else {
-@@ -402,7 +402,7 @@ open_fstab(char *fstabname)
-     }
- 
-     name = strdup(fstabname);
--    if(name == NULL) {
-+    if (name == NULL) {
- 	fprintf(stderr, "%s: internal memory error:  strdup fstabname\n", g_programName);
- 	exit(1);
-     }
-@@ -451,7 +451,7 @@ close_all_fstab()
- {
-     int i;
- 
--    for(i = 0; i < fstab_numfiles; i++) {
-+    for (i = 0; i < fstab_numfiles; i++) {
- 	close_fstab(i);
-     }
- 
-diff --git a/invutil/invidx.c b/invutil/invidx.c
-index c8caa48..e723110 100644
---- a/invutil/invidx.c
-+++ b/invutil/invidx.c
-@@ -77,7 +77,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
-     invt_entry_t *inv_entry;
- 
-     n = current;
--    if(n == NULL || n->data == NULL)
-+    if (n == NULL || n->data == NULL)
- 	return 0;
- 
-     d = ((data_t *)(n->data));
-@@ -87,9 +87,9 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
-     idx = (int)(((long)inv_entry - (long)invidx_file[fidx].mapaddr - sizeof(invt_counter_t)) / sizeof(invt_entry_t));
- 
- 
--    if(d->deleted == BOOL_TRUE && d->imported == BOOL_FALSE) {
-+    if (d->deleted == BOOL_TRUE && d->imported == BOOL_FALSE) {
- 	/* shortcut - just close and unlink stobj files */
--	for(i = 0; i < d->nbr_children; i++) {
-+	for (i = 0; i < d->nbr_children; i++) {
- 	    close_stobj_file(((data_t *)(d->children[i]->data))->file_idx, BOOL_TRUE);
- 	}
- 	mark_all_children_commited(current);
-@@ -100,14 +100,14 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 		    (sizeof(invt_entry_t) * (invidx_file[fidx].counter->ic_curnum - idx - 1)));
- 
- 	    invidx_file[fidx].data[idx]=NULL;
--	    for(i = idx + 1; i < invidx_file[fidx].numrecords; i++) {
--		if(invidx_file[fidx].data[i] != NULL)
-+	    for (i = idx + 1; i < invidx_file[fidx].numrecords; i++) {
-+		if (invidx_file[fidx].data[i] != NULL)
- 		    invidx_file[fidx].data[i]--;
- 	    }
- 	}
- 	invidx_file[fidx].counter->ic_curnum--;
-     }
--    else if(d->imported == BOOL_TRUE) {
-+    else if (d->imported == BOOL_TRUE) {
- 	int dst_fileidx;
- 	int dst_invpos;
- 	int dst_invidx;
-@@ -120,10 +120,10 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 	snprintf(dst_idxfile, sizeof(dst_idxfile), "%s/%s", inventory_path, basename(invidx_file[fidx].name));
- 
- 	/* append if we have the target open already, else write to a possibly new file */
--	if((dst_fileidx = find_matching_invidxfile(dst_idxfile)) >= 0) {
-+	if ((dst_fileidx = find_matching_invidxfile(dst_idxfile)) >= 0) {
- 	    invt_entry_t *dest = NULL;
- 
--	    if((dst_invidx = find_overlapping_invidx(dst_fileidx, inv_entry)) >= 0) {
-+	    if ((dst_invidx = find_overlapping_invidx(dst_fileidx, inv_entry)) >= 0) {
- 	    	char *stobj_filename = NULL;
- 		int stobj_fd = -1;
- 		int stobj_fileidx;
-@@ -140,7 +140,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 		last_dst_invidx = -1;
- 		i = d->nbr_children - 1;
- 		do {
--		    if(dst_invidx != last_dst_invidx) {
-+		    if (dst_invidx != last_dst_invidx) {
- 			stobj_fileidx = find_matching_stobjfile(invidx_file[dst_fileidx].data[dst_invidx]->ie_filename);
- 			stobj_filename = stobj_file[stobj_fileidx].name;
- 			stobj_fd = stobj_file[stobj_fileidx].fd;
-@@ -167,10 +167,10 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 
- 		    free(hdr); free(ses); free(strms); free(mfiles);
- 
--		    if(--i < 0)
-+		    if (--i < 0)
- 		    	break;
- 		}
--		while((dst_invidx = find_overlapping_invidx(dst_fileidx, inv_entry)) >= 0);
-+		while ((dst_invidx = find_overlapping_invidx(dst_fileidx, inv_entry)) >= 0);
- 
- 		mark_all_children_commited(current);
- 
-@@ -178,13 +178,13 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 		/* find node for dst_fileidx */
- 		dst_n = find_invidx_node(list, dst_fileidx);
- 		tmp_parent = ((data_t *)(dst_n->data))->parent;
--		while(dst_n != NULL) {
-+		while (dst_n != NULL) {
- 		    node_t *tmp_n1;
- 
- 		    dst_d = dst_n->data;
- 
- 		    /* close affected invidx file and stobj files */
--		    for(i = 0; i < dst_d->nbr_children; i++) {
-+		    for (i = 0; i < dst_d->nbr_children; i++) {
- 		        close_stobj_file(((data_t *)(dst_d->children[i]->data))->file_idx, BOOL_FALSE);
- 		    }
- 
-@@ -199,7 +199,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 		/* generate invidx menu for the parent node */
- 		dst_n = generate_invidx_menu(inventory_path, tmp_parent, 1, dst_idxfile);
- 
--		if(dst_n != tmp_parent) {
-+		if (dst_n != tmp_parent) {
- 		    /* mark all its children commited */
- 		    mark_all_children_commited(dst_n);
- 		}
-@@ -208,12 +208,12 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 	    }
- 	    else {
- 		/* insert new invidx entry, and copy over stobj file */
--		if(invidx_file[dst_fileidx].counter->ic_curnum >= invidx_file[dst_fileidx].nEntries) {
-+		if (invidx_file[dst_fileidx].counter->ic_curnum >= invidx_file[dst_fileidx].nEntries) {
- 		    dest = remmap_invidx(dst_fileidx, 1);
- 		}
- 
- 		dst_invpos = find_invidx_insert_pos(dst_fileidx, inv_entry);
--		if(dst_invpos >= 0) {
-+		if (dst_invpos >= 0) {
- 		    memmove(invidx_file[dst_fileidx].data[dst_invpos + 1],
- 			    invidx_file[dst_fileidx].data[dst_invpos],
- 			    sizeof(*inv_entry) * (invidx_file[dst_fileidx].counter->ic_curnum - dst_invpos));
-@@ -232,15 +232,15 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 
- 		/* shortcut - just copy stobj file over */
- 		stobjfile = get_inventry_stobjfile(d);
--		if(stobjfile == NULL) {
-+		if (stobjfile == NULL) {
- 		    put_error("Error: unable to work out stobj filename");
- 		    return 0;
- 		}
- 
- 		snprintf(dst_stobjfile, sizeof(dst_stobjfile), "%s/%s", inventory_path, basename(stobjfile));
- 
--		if(stat(dst_stobjfile, &s) < 0) {
--		    if(errno != ENOENT) {
-+		if (stat(dst_stobjfile, &s) < 0) {
-+		    if (errno != ENOENT) {
- 			put_error("Error: unable to copy stobj file: stat error");
- 			return 0;
- 		    }
-@@ -251,7 +251,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 		}
- 
- 		snprintf(cmd, sizeof(cmd), "cp %s %s", stobjfile, dst_stobjfile);
--		if(system(cmd) != 0) {
-+		if (system(cmd) != 0) {
- 		    put_error("Error: unable to copy stobj file: cp failed");
- 		    return 0;
- 		}
-@@ -272,8 +272,8 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 
- 	    mark_all_children_commited(current);
- 
--	    if(stat(dst_idxfile, &s) < 0) {
--		if(errno != ENOENT) {
-+	    if (stat(dst_idxfile, &s) < 0) {
-+		if (errno != ENOENT) {
- 		    put_error("Error: unable to stat inventory index file");
- 		    return 0;
- 		}
-@@ -284,7 +284,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 	    }
- 
- 	    new_fd = open(dst_idxfile, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
--	    if(new_fd < 0) {
-+	    if (new_fd < 0) {
- 		put_error("Error: unable to open inventory index file");
+-	/* if the first element of the subpath doesn't match this
++	/*
++	 * if the first element of the subpath doesn't match this
+ 	 * directory entry, try the next entry.
+ 	 */
+ 	if (strcmp(subpath, name)) {
+@@ -1545,13 +1591,15 @@ subtreelist_parse_cb(void *arg1,
  		return 0;
- 	    }
-@@ -302,15 +302,15 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 
- 	    /* shortcut - just copy stobj file over */
- 	    stobjfile = get_inventry_stobjfile(d);
--	    if(stobjfile == NULL) {
-+	    if (stobjfile == NULL) {
- 		put_error("Error: unable to work out stobj filename");
- 		return 0;
- 	    }
- 
- 	    snprintf(dst_stobjfile, sizeof(dst_stobjfile), "%s/%s", inventory_path, basename(stobjfile));
- 
--	    if(stat(dst_stobjfile, &s) < 0) {
--		if(errno != ENOENT) {
-+	    if (stat(dst_stobjfile, &s) < 0) {
-+		if (errno != ENOENT) {
- 		    put_error("Error: unable to copy stobj file: stat error");
- 		    return 0;
- 		}
-@@ -321,7 +321,7 @@ invidx_commit(WINDOW *win, node_t *current, node_t *list)
- 	    }
- 
- 	    snprintf(cmd, sizeof(cmd), "cp %s %s", stobjfile, dst_stobjfile);
--	    if(system(cmd) != 0) {
-+	    if (system(cmd) != 0) {
- 		put_error("Error: unable to copy stobj file: cp failed");
- 		return 0;
- 	    }
-@@ -369,17 +369,17 @@ read_stobj_info(int fd, int idx, invt_seshdr_t **out_hdr,
-     ses = malloc(sizeof(*ses));
-     read_n_bytes(fd, (char *)ses, sizeof(*ses), "stobj file");
- 
--    if(ses->s_cur_nstreams > 0) {
-+    if (ses->s_cur_nstreams > 0) {
- 	lseek(fd, hdr->sh_streams_off, SEEK_SET);
- 	strms = malloc(sizeof(*strms) * ses->s_cur_nstreams);
- 	read_n_bytes(fd, (char *)strms, sizeof(*strms) * ses->s_cur_nstreams, "stobj file");
- 
- 	nmfiles = 0;
--	for(i = 0; i < ses->s_cur_nstreams; i++) {
-+	for (i = 0; i < ses->s_cur_nstreams; i++) {
- 	    nmfiles += strms[i].st_nmediafiles;
  	}
  
--	if(nmfiles > 0) {
-+	if (nmfiles > 0) {
- 	    mfiles = malloc(sizeof(*mfiles) * nmfiles);
- 	    read_n_bytes(fd, (char *)mfiles, sizeof(*mfiles) * nmfiles, "stobj file");
- 	}
-@@ -435,9 +435,9 @@ find_stobj_insert_point(int fd, invt_seshdr_t *hdr)
-     lseek(fd, 0, SEEK_SET);
-     read_n_bytes(fd, (char *)&sescnt, sizeof(sescnt), "stobj file");
- 
--    for(i = 0; i < sescnt.ic_curnum; i++) {
-+    for (i = 0; i < sescnt.ic_curnum; i++) {
- 	read_n_bytes(fd, (char *)&tmphdr, sizeof(tmphdr), "stobj file");
--	if(hdr->sh_time <= tmphdr.sh_time) {
-+	if (hdr->sh_time <= tmphdr.sh_time) {
- 	    break;
- 	}
-     }
-@@ -477,10 +477,10 @@ update_invidx_entry(int fd, char *filename, int stobj_fd)
-     lseek(fd, 0, SEEK_SET);
-     read_n_bytes(fd, &cnt, sizeof(cnt), "invidx file");
- 
--    for(i = 0; i < cnt.ic_curnum; i++) {
-+    for (i = 0; i < cnt.ic_curnum; i++) {
-     	lseek(fd, IDX_HDR_OFFSET(i), SEEK_SET);
- 	read_n_bytes(fd, &entry, sizeof(entry), "invidx file");
--	if(strcmp(entry.ie_filename, filename) == 0) {
-+	if (strcmp(entry.ie_filename, filename) == 0) {
- 	    entry.ie_timeperiod.tp_start = start_time;
- 	    entry.ie_timeperiod.tp_end = end_time;
- 	    lseek(fd, IDX_HDR_OFFSET(i), SEEK_SET);
-@@ -513,7 +513,7 @@ insert_stobj_into_stobjfile(int invidx_fileidx, char *filename, int fd,
-     char *buf;
-     int invidx_fd = invidx_file[invidx_fileidx].fd;
- 
--    if(hdr == NULL || ses == NULL || strms == NULL || mfiles == NULL)
-+    if (hdr == NULL || ses == NULL || strms == NULL || mfiles == NULL)
- 	return 0;
- 
-     lseek(fd, 0, SEEK_SET);
-@@ -522,7 +522,7 @@ insert_stobj_into_stobjfile(int invidx_fileidx, char *filename, int fd,
-     pos = find_stobj_insert_point(fd, hdr);
- 
-     /* if stobj file is full, we need to split it */
--    if(sescnt.ic_curnum >= sescnt.ic_maxnum) {
-+    if (sescnt.ic_curnum >= sescnt.ic_maxnum) {
- 	int new_fd;
- 	char new_filename[INV_STRLEN];
- 	invt_seshdr_t *s_hdr;
-@@ -532,7 +532,7 @@ insert_stobj_into_stobjfile(int invidx_fileidx, char *filename, int fd,
- 
- 	new_fd = create_stobjfile(invidx_fileidx, new_filename, sizeof(new_filename), hdr, ses, strms, mfiles);
- 
--	for(i = pos; i < sescnt.ic_curnum; i++) {
-+	for (i = pos; i < sescnt.ic_curnum; i++) {
- 	    read_stobj_info(fd, i, &s_hdr, &s_ses, &s_strms, &s_mfiles);
- 
- 	    insert_stobj_into_stobjfile(invidx_fileidx, new_filename, new_fd, s_hdr, s_ses, s_strms, s_mfiles);
-@@ -672,12 +672,12 @@ invidx_select(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
- 
--    if(d->expanded == TRUE) {
-+    if (d->expanded == TRUE) {
- 	return menu_collapse(win, current, list);
-     }
- 
-@@ -692,7 +692,7 @@ invidx_highlight(WINDOW *win, node_t *current, node_t *list)
-     data_t *d;
-     invt_entry_t *invtentry;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
-@@ -723,7 +723,7 @@ invidx_undelete(WINDOW *win, node_t *current, node_t *list)
-     node_t *n;
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return BOOL_FALSE;
-     }
- 
-@@ -731,7 +731,7 @@ invidx_undelete(WINDOW *win, node_t *current, node_t *list)
- 
-     d = ((data_t *)(current->data));
-     n = current->next;
--    while(n != NULL && n->data != NULL && ((data_t *)(n->data))->level > d->level) {
-+    while (n != NULL && n->data != NULL && ((data_t *)(n->data))->level > d->level) {
- 	((data_t *)(n->data))->deleted = BOOL_FALSE;
- 	((data_t *)(n->data))->text[0] = ' ';
- 	n = n->next;
-@@ -749,17 +749,17 @@ invidx_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, nod
-     data_t *d;
-     invt_entry_t *invidx_entry;
- 
--    if(node == NULL || node->data == NULL) {
-+    if (node == NULL || node->data == NULL) {
- 	return BOOL_FALSE;
-     }
-     d = ((data_t *)(node->data));
- 
-     invidx_entry = invidx_file[d->file_idx].data[d->data_idx];
--    if(invidx_entry == NULL) {
-+    if (invidx_entry == NULL) {
- 	return BOOL_FALSE;
-     }
- 
--    if(invidx_entry->ie_timeperiod.tp_start < prunetime) {
-+    if (invidx_entry->ie_timeperiod.tp_start < prunetime) {
- 	return BOOL_TRUE;
-     }
- 
-@@ -773,11 +773,11 @@ find_invidx_node(node_t *list, int inv_fileidx)
-     data_t *d;
- 
-     n = list;
--    while(n != NULL && n->data != NULL) {
-+    while (n != NULL && n->data != NULL) {
-     	d = n->data;
- 	/* is this an invidx entry we're looking at? */
--	if(d->ops == &invidx_ops) {
--	    if(d->file_idx == inv_fileidx) {
-+	if (d->ops == &invidx_ops) {
-+	    if (d->file_idx == inv_fileidx) {
- 	    	return n;
- 	    }
- 	}
-@@ -792,7 +792,7 @@ get_inventry_stobjfile(data_t *d)
- {
-     data_t *child_data;
- 
--    if(d->nbr_children <= 0) {
-+    if (d->nbr_children <= 0) {
- 	return NULL;
-     }
- 
-@@ -810,9 +810,9 @@ find_overlapping_invidx(int fidx, invt_entry_t *inv_entry)
-     int i = 0;
-     invt_entry_t *entry;
- 
--    for(i = 0; i < invidx_file[fidx].numrecords; i++) {
-+    for (i = 0; i < invidx_file[fidx].numrecords; i++) {
- 	entry = invidx_file[fidx].data[i];
--	if(entry->ie_timeperiod.tp_end < inv_entry->ie_timeperiod.tp_start
-+	if (entry->ie_timeperiod.tp_end < inv_entry->ie_timeperiod.tp_start
- 	   || entry->ie_timeperiod.tp_start > inv_entry->ie_timeperiod.tp_end) {
- 	    continue;
- 	}
-@@ -829,11 +829,11 @@ find_invidx_insert_pos(int fidx, invt_entry_t *inv_entry)
-     invt_entry_t *entry;
-     invt_entry_t *next_entry;
- 
--    for(i = 0; i < invidx_file[fidx].numrecords - 1; i++) {
-+    for (i = 0; i < invidx_file[fidx].numrecords - 1; i++) {
- 	entry = invidx_file[fidx].data[i];
- 	next_entry = invidx_file[fidx].data[i+1];
- 
--	if(inv_entry->ie_timeperiod.tp_start > entry->ie_timeperiod.tp_end
-+	if (inv_entry->ie_timeperiod.tp_start > entry->ie_timeperiod.tp_end
- 	   && inv_entry->ie_timeperiod.tp_end < next_entry->ie_timeperiod.tp_start) {
- 	    return i;
- 	}
-@@ -847,10 +847,10 @@ find_matching_stobjfile(char *filename)
- {
-     int i = 0;
- 
--    for(i = 0; i < stobj_numfiles; i++) {
--	if(stobj_file[i].name == NULL)
-+    for (i = 0; i < stobj_numfiles; i++) {
-+	if (stobj_file[i].name == NULL)
- 	    continue;
--	if(strcmp(stobj_file[i].name, filename) == 0) {
-+	if (strcmp(stobj_file[i].name, filename) == 0) {
- 	    return i;
- 	}
-     }
-@@ -863,10 +863,10 @@ find_matching_invidxfile(char *filename)
- {
-     int i = 0;
- 
--    for(i = 0; i < invidx_numfiles; i++) {
--	if(invidx_file[i].name == NULL)
-+    for (i = 0; i < invidx_numfiles; i++) {
-+	if (invidx_file[i].name == NULL)
- 	    continue;
--	if(strcmp(invidx_file[i].name, filename) == 0) {
-+	if (strcmp(invidx_file[i].name, filename) == 0) {
- 	    return i;
- 	}
-     }
-@@ -877,9 +877,9 @@ find_matching_invidxfile(char *filename)
- int
- add_invidx_data(int fidx, invt_entry_t *data)
- {
--    if(invidx_file[fidx].numrecords == 0) {
-+    if (invidx_file[fidx].numrecords == 0) {
- 	invidx_file[fidx].data = malloc(sizeof(*invidx_file[fidx].data));
--	if(invidx_file[fidx].data == NULL) {
-+	if (invidx_file[fidx].data == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: invidx data allocation\n",
- 		    g_programName);
- 	    exit(1);
-@@ -889,7 +889,7 @@ add_invidx_data(int fidx, invt_entry_t *data)
- 	invidx_file[fidx].data = realloc(invidx_file[fidx].data,
- 					 sizeof(*invidx_file[fidx].data)
- 					 * (invidx_file[fidx].numrecords + 1));
--	if(invidx_file[fidx].data == NULL) {
-+	if (invidx_file[fidx].data == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: invidx data reallocation\n",
- 		    g_programName);
- 	    exit(1);
-@@ -912,7 +912,7 @@ generate_invidx_menu(char * inv_path, node_t *startnode, int level, char *idxFil
-     invt_entry_t	*invidx_entry;
-     char		*stobjname;
- 
--    if((idx = open_invidx(idxFileName)) < 0) {
-+    if ((idx = open_invidx(idxFileName)) < 0) {
- 	return startnode;
-     }
- 
-@@ -922,7 +922,7 @@ generate_invidx_menu(char * inv_path, node_t *startnode, int level, char *idxFil
-     for (i=0; i < invidx_file[idx].counter->ic_curnum; i++) {
- 	len = strlen(invidx_entry[i].ie_filename) + 54;
- 	txt = malloc(len);
--	if(txt == NULL) {
-+	if (txt == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: invidx_text\n", g_programName);
- 	    exit(1);
- 	}
-@@ -939,7 +939,7 @@ generate_invidx_menu(char * inv_path, node_t *startnode, int level, char *idxFil
- 				    NULL,	/* children */
- 				    0,		/* nbr_children */
- 				    i));	/* data_idx */
--	if(n == NULL) {
-+	if (n == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: list_add: node_create: invidx\n",
- 		    g_programName);
- 	    exit(1);
-@@ -959,19 +959,19 @@ add_invidx(char *name, int fd, int nEntries, char *mapaddr, invt_counter_t *coun
- {
-     static int highwatermark = 10;
- 
--    if(invidx_numfiles == 0) {
-+    if (invidx_numfiles == 0) {
- 	invidx_file = malloc(sizeof(*invidx_file) * highwatermark);
--	if(invidx_file == NULL) {
-+	if (invidx_file == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: malloc invidx_file\n", g_programName);
- 	    exit(1);
- 	}
-     }
-     else {
--	if(invidx_numfiles >= highwatermark - 1) {
-+	if (invidx_numfiles >= highwatermark - 1) {
- 	    highwatermark += highwatermark;
- 
- 	    invidx_file = realloc(invidx_file, sizeof(*invidx_file) * highwatermark);
--	    if(invidx_file == NULL) {
-+	    if (invidx_file == NULL) {
- 		fprintf(stderr, "%s: internal memory error: realloc invidx\n", g_programName);
- 		exit(1);
- 	    }
-@@ -1020,8 +1020,8 @@ remmap_invidx(int fidx, int num)
- 
-     /* regenerate the data index for the file given the new mapping */
-     inv_entry = (invt_entry_t *)(invidx_file[fidx].mapaddr + sizeof(invt_counter_t));
--    for(i=0; i < nEntries; i++) {
--    	if(i >= invidx_file[fidx].numrecords) {
-+    for (i=0; i < nEntries; i++) {
-+    	if (i >= invidx_file[fidx].numrecords) {
- 	    add_invidx_data(fidx, &(inv_entry[i]));
- 	}
- 	else {
-@@ -1048,7 +1048,7 @@ open_invidx(char *idxFileName)
-     }
- 
-     name = strdup(idxFileName);
--    if(name == NULL) {
-+    if (name == NULL) {
- 	fprintf(stderr, "%s: internal memory error:  strdup idxFileName\n", g_programName);
- 	exit(1);
-     }
-@@ -1071,21 +1071,21 @@ close_invidx(int idx)
- {
-     int nEntries;
- 
--    if(idx >= invidx_numfiles || invidx_file[idx].fd < 0)
-+    if (idx >= invidx_numfiles || invidx_file[idx].fd < 0)
- 	return 0;
- 
-     nEntries = invidx_file[idx].counter->ic_curnum;
-     munmap(invidx_file[idx].mapaddr,
- 	    (invidx_file[idx].nEntries*sizeof(invt_entry_t)) + sizeof(invt_counter_t));
- 
--    if(nEntries != 0 && nEntries != invidx_file[idx].nEntries) {
-+    if (nEntries != 0 && nEntries != invidx_file[idx].nEntries) {
- 	ftruncate(invidx_file[idx].fd,
- 		  sizeof(invt_counter_t) + (nEntries * sizeof(invt_entry_t)));
-     }
- 
-     close(invidx_file[idx].fd);
- 
--    if(nEntries == 0) {
-+    if (nEntries == 0) {
- 	unlink(invidx_file[idx].name);
-     }
-     free(invidx_file[idx].name);
-@@ -1103,8 +1103,8 @@ close_all_invidx()
- {
-     int i;
- 
--    for(i = 0; i < invidx_numfiles; i++) {
--	if(invidx_file[i].fd < 0)
-+    for (i = 0; i < invidx_numfiles; i++) {
-+	if (invidx_file[i].fd < 0)
- 	    continue;
- 	close_invidx(i);
-     }
-diff --git a/invutil/invutil.c b/invutil/invutil.c
-index a744d58..26fb630 100644
---- a/invutil/invutil.c
-+++ b/invutil/invutil.c
-@@ -78,8 +78,8 @@ main(int argc, char *argv[])
-     uuid_clear(uuid);
-     uuid_clear(session);
- 
--    while((c = getopt(argc, argv, GETOPT_CMDSTRING)) != EOF) {
--	switch(c) {
-+    while ((c = getopt(argc, argv, GETOPT_CMDSTRING)) != EOF) {
-+	switch (c) {
- 	case GETOPT_DEBUG:
- 	    debug = BOOL_TRUE;
- 	    break;
-@@ -297,7 +297,7 @@ get_mntpnt(char *txt)
-     char *p;
- 
-     p = strchr(txt, ':');
--    if(p == NULL)
-+    if (p == NULL)
-         return txt;
- 
-     return p+1;
-@@ -306,7 +306,7 @@ get_mntpnt(char *txt)
- int
- mntpnt_equal(char *s1, char *s2)
- {
--    if(strchr(s1, ':') == NULL || strchr(s2, ':') == NULL) {
-+    if (strchr(s1, ':') == NULL || strchr(s2, ':') == NULL) {
-         s1 = get_mntpnt(s1);
-         s2 = get_mntpnt(s2);
-     }
-@@ -520,16 +520,16 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt,
- #endif
- 
- 	    if (checkonly == BOOL_FALSE) {
--		if(mountPt != NULL && strcmp(mountPt, fstabentry[i].ft_mountpt) == 0) {
-+		if (mountPt != NULL && strcmp(mountPt, fstabentry[i].ft_mountpt) == 0) {
- 		    printf("     Match on hostname and path\n");
- 		    IdxCheckOnly = BOOL_FALSE;
- 		}
--		else if((!uuid_is_null(*uuidp))
-+		else if ((!uuid_is_null(*uuidp))
- 		   && (uuid_compare(*uuidp, fstabentry[i].ft_uuid) == 0)) {
- 		    printf("     Match on UUID only\n");
- 		    IdxCheckOnly = BOOL_FALSE;
- 		}
--		else if(mountPt != NULL && mntpnt_equal(mountPt, fstabentry[i].ft_mountpt)) {
-+		else if (mountPt != NULL && mntpnt_equal(mountPt, fstabentry[i].ft_mountpt)) {
- 		    printf("     Match on directory name only: %s\n", mountPt);
- 		    IdxCheckOnly = BOOL_FALSE;
- 		}
-@@ -570,7 +570,7 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt,
- 	    (nEntries*sizeof(invt_fstab_t)) + sizeof(invt_counter_t));
- 
-     if ((fstabEntries != 0)  && (fstabEntries != nEntries)) {
--	if(debug) {
-+	if (debug) {
- 	    printf("ftruncate fstab from %d to %d (%ld bytes)\n",
- 		   nEntries,
- 		   fstabEntries,
-@@ -585,7 +585,7 @@ CheckAndPruneFstab(char *inv_path, bool_t checkonly, char *mountPt,
- 
-     if (fstabEntries == 0)
-     {
--	if(debug) {
-+	if (debug) {
- 	    printf("unlink fstab file %s\n", fstabname);
- 	}
- 	unlink(fstabname);
-@@ -676,7 +676,7 @@ CheckAndPruneInvIndexFile(bool_t checkonly,
-     munmap(temp, (nEntries*sizeof(invt_entry_t)) + sizeof(invt_counter_t));
- 
-     if ((validEntries != 0)  && (validEntries != nEntries)) {
--	if(debug) {
-+	if (debug) {
- 	    printf("ftruncate idx from %d to %d (%ld bytes)\n",
- 		   nEntries,
- 		   validEntries,
-@@ -697,7 +697,7 @@ CheckAndPruneInvIndexFile(bool_t checkonly,
- 
-     if (validEntries == 0)
-     {
--	if(debug) {
-+	if (debug) {
- 	    printf("unlink idx file %s\n", idxFileName);
- 	}
- 	unlink(idxFileName);
-@@ -844,7 +844,7 @@ CheckAndPruneStObjFile(bool_t checkonly,
- 
- 	    uuid_unparse(StObjses->s_sesid, str);
- 
--	    if(force) {
-+	    if (force) {
- 		printf("-------------------------------------------------\n");
- 		printf("Pruning this matching entry:\n");
- 		printf("UUID\t\t:\t%s\nMOUNT POINT\t:\t%s\n"
-@@ -994,7 +994,7 @@ inv_DEBUG_lock_str(int c)
-     };
- 
-     for (i = 0; lockinfo[i].str; i++) {
--	if(lockinfo[i].cmd == c) {
-+	if (lockinfo[i].cmd == c) {
- 	    return lockinfo[i].str;
- 	}
-     }
-@@ -1088,7 +1088,7 @@ open_and_lock(char * path, Open_t open_type, uint lock_wait_flag)
-     if (debug) {
- 	char    *lstr;
- 
--	switch(lock_mode) {
-+	switch (lock_mode) {
- 	case LOCK_EX: lstr = inv_DEBUG_lock_str(lock_mode); break;
- 	default:       lstr = "NO_LOCK";
- 	}
-diff --git a/invutil/list.c b/invutil/list.c
-index 46fb291..f8e1b07 100644
---- a/invutil/list.c
-+++ b/invutil/list.c
-@@ -28,7 +28,7 @@ parent_add_child(node_t *parent, node_t *child)
- {
-     data_t *d;
- 
--    if(parent == NULL || child == NULL)
-+    if (parent == NULL || child == NULL)
- 	return parent;
- 
-     d = parent->data;
-@@ -48,11 +48,11 @@ node_create(int hidden, int expanded, int level, int deleted, int file_idx, char
-     data_t *newdata;
- 
-     newnode = malloc(sizeof(*newnode));
--    if(newnode == NULL)
-+    if (newnode == NULL)
- 	return NULL;
- 
-     newdata = malloc(sizeof(*newdata));
--    if(newdata == NULL)
-+    if (newdata == NULL)
- 	return NULL;
- 
-     newdata->hidden = hidden;
-@@ -69,7 +69,7 @@ node_create(int hidden, int expanded, int level, int deleted, int file_idx, char
-     newdata->commited = BOOL_FALSE;
-     newdata->imported = BOOL_FALSE;
- 
--    if(deleted == BOOL_TRUE) {
-+    if (deleted == BOOL_TRUE) {
- 	newdata->text[0] = 'D';
-     }
- 
-@@ -83,9 +83,9 @@ node_create(int hidden, int expanded, int level, int deleted, int file_idx, char
- void
- node_free(node_t *node)
- {
--    if(node != NULL) {
--	if(node->data != NULL) {
--	    if(((data_t *)(node->data))->text != NULL) {
-+    if (node != NULL) {
-+	if (node->data != NULL) {
-+	    if (((data_t *)(node->data))->text != NULL) {
- 	        free(((data_t *)(node->data))->text);
- 	        free(((data_t *)(node->data))->children);
- 	    }
-@@ -98,15 +98,15 @@ node_free(node_t *node)
- node_t *
- list_add(node_t *prevnode, node_t *newnode)
- {
--    if(newnode == NULL)
-+    if (newnode == NULL)
- 	return NULL;
- 
--    if(prevnode != NULL) {
-+    if (prevnode != NULL) {
- 	newnode->next = prevnode->next;
- 	prevnode->next = newnode;
- 
- 	newnode->prev = prevnode;
--	if(newnode->next != NULL) {
-+	if (newnode->next != NULL) {
- 	    newnode->next->prev = newnode;
- 	}
-     }
-@@ -115,7 +115,7 @@ list_add(node_t *prevnode, node_t *newnode)
- 	newnode->prev = NULL;
-     }
- 
--    if(((data_t *)(newnode->data))->parent != NULL) {
-+    if (((data_t *)(newnode->data))->parent != NULL) {
- 	parent_add_child(((data_t *)(newnode->data))->parent, newnode);
-     }
- 
-@@ -125,10 +125,10 @@ list_add(node_t *prevnode, node_t *newnode)
- node_t *
- list_del(node_t *node)
- {
--    if(node->prev != NULL) {
-+    if (node->prev != NULL) {
- 	node->prev->next = node->next;
-     }
--    if(node->next != NULL) {
-+    if (node->next != NULL) {
- 	node->next->prev = node->prev;
-     }
-     node->next = NULL;
-@@ -143,12 +143,12 @@ free_all_children(node_t *node)
-     int i;
-     data_t *d;
- 
--    if(node == NULL || node->data == NULL)
-+    if (node == NULL || node->data == NULL)
- 	return NULL;
- 
-     d = (data_t *)(node->data);
- 
--    for(i = 0; i < d->nbr_children; i++) {
-+    for (i = 0; i < d->nbr_children; i++) {
- 	node_free(list_del(free_all_children(d->children[i])));
-     }
-     d->children = NULL;
-@@ -164,12 +164,12 @@ mark_all_children_commited(node_t *node)
-     int i;
-     data_t *d;
- 
--    if(node == NULL || node->data == NULL)
-+    if (node == NULL || node->data == NULL)
- 	return NULL;
- 
-     d = (data_t *)(node->data);
- 
--    for(i = 0; i < d->nbr_children; i++) {
-+    for (i = 0; i < d->nbr_children; i++) {
- 	mark_all_children_commited(d->children[i]);
-     }
-     d->commited = BOOL_TRUE;
-diff --git a/invutil/menu.c b/invutil/menu.c
-index 81baa42..c167bf1 100644
---- a/invutil/menu.c
-+++ b/invutil/menu.c
-@@ -36,13 +36,13 @@ put_all_options(WINDOW *win, node_t *list, node_t *current)
- 
-     i = 0;
-     node = list;
--    while(node != NULL) {
-+    while (node != NULL) {
- 	d = ((data_t *)(node->data));
--	if(d->hidden == BOOL_TRUE) {
-+	if (d->hidden == BOOL_TRUE) {
- 	    node = node->next;
- 	    continue;
- 	}
--	if(node == current) {
-+	if (node == current) {
- 	    attr = A_REVERSE;
-         }
-         else {
-@@ -65,7 +65,7 @@ put_helpscreen(int keyc, menukey_t *keyv)
-     WINDOW *helpscreen;
- 
-     winline = LINES - (keyc + 5);
--    if(winline < 0)
-+    if (winline < 0)
- 	winline = 0;
- 
-     helpscreen = newwin(keyc + 4, 29, winline, COLS - 30);
-@@ -78,8 +78,8 @@ put_helpscreen(int keyc, menukey_t *keyv)
-     wmove(helpscreen, 2, 0);
-     waddstr(helpscreen, "|                           |");
-     l = 3;
--    for(k = 0; k < keyc + 1; k++) {
--	if(keyv[k].text == NULL)
-+    for (k = 0; k < keyc + 1; k++) {
-+	if (keyv[k].text == NULL)
- 	    continue;
- 	wmove(helpscreen, l, 0);
- 	waddstr(helpscreen, keyv[k].text);
-@@ -117,17 +117,17 @@ menu(WINDOW *win, int line, int col, node_t *list, int keyc, menukey_t *keyv)
-     redraw_screen = BOOL_TRUE;
- 
-     quit = BOOL_FALSE;
--    while(quit != BOOL_TRUE) {
--	if(current == NULL && current->data == NULL) {
-+    while (quit != BOOL_TRUE) {
-+	if (current == NULL && current->data == NULL) {
- 	    current = list;
- 	}
- 	d = (data_t *)(current->data);
- 
--	if(redraw_screen == BOOL_TRUE) {
-+	if (redraw_screen == BOOL_TRUE) {
- 	    wclear(win);
- 	    snprintf(txt, sizeof(txt), "%s: %s", g_programName, g_programVersion);
- 	    put_header(txt, ALIGN_LEFT);
--	    if(d->hidden == BOOL_TRUE) {
-+	    if (d->hidden == BOOL_TRUE) {
- 		current = list;
- 		current_line = 0;
- 		d = (data_t *)(current->data);
-@@ -135,7 +135,7 @@ menu(WINDOW *win, int line, int col, node_t *list, int keyc, menukey_t *keyv)
- 	    put_all_options(win, list, current);
- 	    redraw_screen = BOOL_FALSE;
- 
--	    if(d->ops != NULL && d->ops->op_highlight != NULL) {
-+	    if (d->ops != NULL && d->ops->op_highlight != NULL) {
- 		quit = d->ops->op_highlight(win, current, list);
- 	    }
- 	}
-@@ -145,11 +145,11 @@ menu(WINDOW *win, int line, int col, node_t *list, int keyc, menukey_t *keyv)
- 
- 	    redraw_options = BOOL_FALSE;
- 
--	    if(((data_t *)(last->data))->ops != NULL
-+	    if (((data_t *)(last->data))->ops != NULL
- 	       && ((data_t *)(last->data))->ops->op_unhighlight != NULL) {
- 		quit = ((data_t *)(last->data))->ops->op_unhighlight(win, current, list);
- 	    }
--	    if(d->ops != NULL && d->ops->op_highlight != NULL) {
-+	    if (d->ops != NULL && d->ops->op_highlight != NULL) {
- 		quit = d->ops->op_highlight(win, current, list);
- 	    }
- 	}
-@@ -165,11 +165,11 @@ menu(WINDOW *win, int line, int col, node_t *list, int keyc, menukey_t *keyv)
- 		 line, col,
- 		 size, COLS - 1);
- 
--	if(quit == BOOL_TRUE)
-+	if (quit == BOOL_TRUE)
- 	    continue;
- 
- 	c=wgetch(win);
--	switch(c) {
-+	switch (c) {
-         case '?':
- 	case KEY_F(1):
- 	    /* online help */
-@@ -183,18 +183,18 @@ menu(WINDOW *win, int line, int col, node_t *list, int keyc, menukey_t *keyv)
- 		data_t *d;
- 		node_t *n = current->prev;
- 
--		while(n != NULL) {
-+		while (n != NULL) {
- 		    d = ((data_t *)(n->data));
--		    if(d == NULL) {
-+		    if (d == NULL) {
- 			n = n->prev;
- 			continue;
- 		    }
--		    if(d->hidden == BOOL_FALSE) {
-+		    if (d->hidden == BOOL_FALSE) {
- 			break;
- 		    }
- 		    n = n->prev;
- 		}
--		if(n != NULL) {
-+		if (n != NULL) {
- 		    current = n;
- 		    current_line--;
- 		}
-@@ -207,18 +207,18 @@ menu(WINDOW *win, int line, int col, node_t *list, int keyc, menukey_t *keyv)
- 		data_t *d;
- 		node_t *n = current->next;
- 
--		while(n != NULL) {
-+		while (n != NULL) {
- 		    d = ((data_t *)(n->data));
--		    if(d == NULL) {
-+		    if (d == NULL) {
- 			n = n->next;
- 			continue;
- 		    }
--		    if(d->hidden == BOOL_FALSE) {
-+		    if (d->hidden == BOOL_FALSE) {
- 			break;
- 		    }
- 		    n = n->next;
- 		}
--		if(n != NULL) {
-+		if (n != NULL) {
- 		    current = n;
- 		    current_line++;
- 		}
-@@ -231,12 +231,12 @@ menu(WINDOW *win, int line, int col, node_t *list, int keyc, menukey_t *keyv)
- 		node_t *n = current->next;
- 		int l;
- 
--		if(current != NULL && ((data_t *)(current->data)) == NULL) {
-+		if (current != NULL && ((data_t *)(current->data)) == NULL) {
- 		    break;
- 		}
- 		l = ((data_t *)(current->data))->level;
--		if(n != NULL && ((data_t *)(n->data)) != NULL && ((data_t *)(n->data))->level > l) {
--		    if(((data_t *)(n->data))->hidden == BOOL_TRUE) {
-+		if (n != NULL && ((data_t *)(n->data)) != NULL && ((data_t *)(n->data))->level > l) {
-+		    if (((data_t *)(n->data))->hidden == BOOL_TRUE) {
- 			menu_expand(win, current, list);
- 		    }
- 		    current = n;
-@@ -253,41 +253,41 @@ menu(WINDOW *win, int line, int col, node_t *list, int keyc, menukey_t *keyv)
- 		int l = 0;
- 		int i;
- 
--		if(current != NULL && ((data_t *)(current->data)) != NULL) {
-+		if (current != NULL && ((data_t *)(current->data)) != NULL) {
- 		    l = ((data_t *)(current->data))->level;
- 		}
- 		i = current_line - 1;
--		while(n != NULL) {
-+		while (n != NULL) {
- 		    d = ((data_t *)(n->data));
--		    if(d == NULL) {
-+		    if (d == NULL) {
- 			n = n->prev;
- 			continue;
- 		    }
--		    if(d->hidden == BOOL_TRUE) {
-+		    if (d->hidden == BOOL_TRUE) {
- 			n = n->prev;
- 			continue;
- 		    }
--		    if(d->level < l) {
-+		    if (d->level < l) {
- 			break;
- 		    }
- 		    n = n->prev;
- 		    i--;
- 		}
--		if(n != NULL) {
-+		if (n != NULL) {
- 		    current = n;
- 		    current_line = i;;
- 		}
- 	    }
- 	    break;
- 	case ERR:
--	    if(errno == EINTR) {
-+	    if (errno == EINTR) {
- 		/* mainmenu window has been recreated - use new one */
- 		win = mainmenu;
- 	    }
- 	    break;
- 	default:
--	    for(k = 0; k < keyc; k++) {
--		if(c == keyv[k].key || tolower(c) == keyv[k].key) {
-+	    for (k = 0; k < keyc; k++) {
-+		if (c == keyv[k].key || tolower(c) == keyv[k].key) {
- 		    if (keyv[k].fn != NULL) {
- 			quit = keyv[k].fn(win, current, list);
- 			break;
-diff --git a/invutil/screen.c b/invutil/screen.c
-index 5e478c9..923552a 100644
---- a/invutil/screen.c
-+++ b/invutil/screen.c
-@@ -36,14 +36,14 @@ put_line(WINDOW *win, int line, char *msg, int attr, alignment_t alignment)
- 
-     cols = getmaxx(win);
-     cols--;
--    if(cols > 255) {
-+    if (cols > 255) {
- 	cols = 255;
-     }
-     msglen = strlen(msg);
--    if(msglen > cols)
-+    if (msglen > cols)
- 	msglen = cols;
- 
--    switch(alignment) {
-+    switch (alignment) {
-     case ALIGN_CENTRE:
- 	c = (cols - msglen) / 2;
- 	break;
-diff --git a/invutil/stobj.c b/invutil/stobj.c
-index 2912e0c..2931ddc 100644
---- a/invutil/stobj.c
-+++ b/invutil/stobj.c
-@@ -92,7 +92,7 @@ stobjmed_commit(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
-@@ -106,7 +106,7 @@ stobjstrm_commit(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
-@@ -120,7 +120,7 @@ stobjmed_delete(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
-@@ -134,7 +134,7 @@ stobjstrm_delete(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
-@@ -149,7 +149,7 @@ stobjsess_commit(WINDOW *win, node_t *current, node_t *list)
-     data_t *d;
-     invt_seshdr_t *stobjhdr;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
-@@ -157,7 +157,7 @@ stobjsess_commit(WINDOW *win, node_t *current, node_t *list)
- 
-     mark_all_children_commited(current);
- 
--    if(d->deleted == BOOL_TRUE) {
-+    if (d->deleted == BOOL_TRUE) {
- 	stobjhdr->sh_pruned = 1;
-     }
-     else {
-@@ -177,7 +177,7 @@ stobjsess_highlight(WINDOW *win, node_t *current, node_t *list)
-     invt_seshdr_t *stobjhdr;
-     invt_session_t *stobjses;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
-@@ -214,7 +214,7 @@ stobjstrm_highlight(WINDOW *win, node_t *current, node_t *list)
-     data_t *d;
-     invt_stream_t *stobjstrm;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
-@@ -251,7 +251,7 @@ stobjmed_highlight(WINDOW *win, node_t *current, node_t *list)
-     data_t *d;
-     invt_mediafile_t *stobjmed;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
-@@ -284,12 +284,12 @@ stobj_select(WINDOW *win, node_t *current, node_t *list)
- {
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return 0;
-     }
-     d = (data_t *)(current->data);
- 
--    if(d->expanded == TRUE) {
-+    if (d->expanded == TRUE) {
- 	return menu_collapse(win, current, list);
-     }
- 
-@@ -305,7 +305,7 @@ stobj_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node
-     invt_seshdr_t *stobj_header;
-     invt_session_t *stobj_session;
- 
--    if(node == NULL || node->data == NULL) {
-+    if (node == NULL || node->data == NULL) {
- 	return BOOL_FALSE;
-     }
-     d = (data_t *)(node->data);
-@@ -313,17 +313,17 @@ stobj_prune(char *mountpt, uuid_t *uuidp, time32_t prunetime, node_t *node, node
-     stobj_header = stobj->header;
-     stobj_session = stobj->session;
- 
--    if(stobj_header == NULL || stobj_session == NULL) {
-+    if (stobj_header == NULL || stobj_session == NULL) {
- 	return BOOL_FALSE;
-     }
--    if(stobj_header->sh_pruned) {
-+    if (stobj_header->sh_pruned) {
- 	return BOOL_TRUE;
-     }
--    if(stobj_header->sh_time < prunetime) {
--	if(mountpt != NULL && mntpnt_equal(mountpt, stobj_session->s_mountpt)) {
-+    if (stobj_header->sh_time < prunetime) {
-+	if (mountpt != NULL && mntpnt_equal(mountpt, stobj_session->s_mountpt)) {
- 	    return BOOL_TRUE;
- 	}
--	if((!uuid_is_null(*uuidp))
-+	if ((!uuid_is_null(*uuidp))
- 	   && (uuid_compare(*uuidp, stobj_session->s_fsid) == 0)) {
- 	    return BOOL_TRUE;
- 	}
-@@ -339,7 +339,7 @@ stobj_undelete(WINDOW *win, node_t *current, node_t *list)
-     node_t *n;
-     data_t *d;
- 
--    if(current == NULL || current->data == NULL) {
-+    if (current == NULL || current->data == NULL) {
- 	return BOOL_FALSE;
-     }
- 
-@@ -347,7 +347,7 @@ stobj_undelete(WINDOW *win, node_t *current, node_t *list)
- 
-     d = ((data_t *)(current->data));
-     n = current->next;
--    while(n != NULL && n->data != NULL && ((data_t *)(n->data))->level > d->level) {
-+    while (n != NULL && n->data != NULL && ((data_t *)(n->data))->level > d->level) {
- 	((data_t *)(n->data))->deleted = BOOL_FALSE;
- 	((data_t *)(n->data))->text[0] = ' ';
- 	n = n->next;
-@@ -361,9 +361,9 @@ stobj_undelete(WINDOW *win, node_t *current, node_t *list)
- int
- add_stobj_data(int fidx, void *data)
- {
--    if(stobj_file[fidx].numrecords == 0) {
-+    if (stobj_file[fidx].numrecords == 0) {
- 	stobj_file[fidx].data = malloc(sizeof(*stobj_file[fidx].data));
--	if(stobj_file[fidx].data == NULL) {
-+	if (stobj_file[fidx].data == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: stobj data allocation\n",
- 		    g_programName);
- 	    exit(1);
-@@ -373,7 +373,7 @@ add_stobj_data(int fidx, void *data)
- 	stobj_file[fidx].data = realloc(stobj_file[fidx].data,
- 					sizeof(*stobj_file[fidx].data)
- 					* (stobj_file[fidx].numrecords + 1));
--	if(stobj_file[fidx].data == NULL) {
-+	if (stobj_file[fidx].data == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: stobj data reallocation\n",
- 		    g_programName);
- 	    exit(1);
-@@ -405,7 +405,7 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
-     invt_stream_t	*StObjstrm;
-     invt_mediafile_t	*StObjmed;
- 
--    if((idx = open_stobj(StObjFileName)) < 0) {
-+    if ((idx = open_stobj(StObjFileName)) < 0) {
- 	return startnode;
-     }
- 
-@@ -416,7 +416,7 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
-     n = startnode;
-     for (i=0; i < stobj_file[idx].counter->ic_curnum;) {
- 	session = malloc(sizeof(*session));
--	if(session == NULL) {
-+	if (session == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: session malloc\n", g_programName);
- 	    exit(1);
- 	}
-@@ -425,7 +425,7 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
- 
- 	len = 60+strlen(session->session->s_label);
- 	txt = malloc(len);
--	if(txt == NULL) {
-+	if (txt == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: invidx_text\n", g_programName);
- 	    exit(1);
- 	}
-@@ -444,7 +444,7 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
- 				    NULL,	/* children */
- 				    0,		/* nbr_children */
- 				    data_idx));
--	if(n == NULL) {
-+	if (n == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: list_add: node_create: session\n", g_programName);
- 	    exit(1);
- 	}
-@@ -460,7 +460,7 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
- 
- 	    len = strlen(StObjstrm->st_cmdarg) + 33;
- 	    txt = malloc(len);
--	    if(txt == NULL) {
-+	    if (txt == NULL) {
- 		fprintf(stderr, "%s: internal memory error: invidx_text\n", g_programName);
- 		exit(1);
- 	    }
-@@ -477,7 +477,7 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
- 					NULL,		/* children */
- 					0,		/* nbr_children */
- 					data_idx));
--	    if(n == NULL) {
-+	    if (n == NULL) {
- 		fprintf(stderr, "%s: internal memory error: list_add: node_create: StObjstrm\n", g_programName);
- 		exit(1);
- 	    }
-@@ -493,7 +493,7 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
- 
- 		len = strlen(StObjmed->mf_label) + 26;
- 		txt = malloc(len);
--		if(txt == NULL) {
-+		if (txt == NULL) {
- 		    fprintf(stderr, "%s: internal memory error: invidx_text\n", g_programName);
- 		    exit(1);
- 		}
-@@ -510,7 +510,7 @@ generate_stobj_menu(node_t *startnode, int level, char *StObjFileName)
- 					    NULL,	/* children */
- 					    0,		/* nbr_children */
- 					    data_idx));
--		if(n == NULL) {
-+		if (n == NULL) {
- 		    fprintf(stderr, "%s: internal memory error: list_add: node_create: StObjmed\n", g_programName);
- 		    exit(1);
- 		}
-@@ -535,19 +535,19 @@ add_stobj(char *name, int fd, off_t size, char *mapaddr, invt_sescounter_t *coun
- {
-     static int highwatermark = 20;
- 
--    if(stobj_numfiles == 0) {
-+    if (stobj_numfiles == 0) {
- 	stobj_file     = malloc(sizeof(*stobj_file) * highwatermark);
--	if(stobj_file == NULL) {
-+	if (stobj_file == NULL) {
- 	    fprintf(stderr, "%s: internal memory error: malloc stobj_file\n", g_programName);
- 	    exit(1);
- 	}
-     }
-     else {
--	if(stobj_numfiles >= highwatermark - 1) {
-+	if (stobj_numfiles >= highwatermark - 1) {
- 	    highwatermark += highwatermark;
- 
- 	    stobj_file = realloc(stobj_file, sizeof(*stobj_file) * highwatermark);
--	    if(stobj_file == NULL) {
-+	    if (stobj_file == NULL) {
- 		fprintf(stderr, "%s: internal memory error: realloc stobj_file\n", g_programName);
- 		exit(1);
- 	    }
-@@ -596,7 +596,7 @@ open_stobj(char *StObjFileName)
-     mapaddr = mmap_n_bytes(fd, size, BOOL_FALSE, StObjFileName);
- 
-     name = strdup(StObjFileName);
--    if(name == NULL) {
-+    if (name == NULL) {
- 	fprintf(stderr, "%s: internal memory error: strdup stobj_name\n", g_programName);
- 	exit(1);
-     }
-@@ -607,14 +607,14 @@ open_stobj(char *StObjFileName)
- int
- close_stobj_file(int fidx, int unlink_ok)
- {
--    if(fidx >= stobj_numfiles || stobj_file[fidx].fd < 0)
-+    if (fidx >= stobj_numfiles || stobj_file[fidx].fd < 0)
- 	return 0;
- 
-     munmap(stobj_file[fidx].mapaddr, stobj_file[fidx].size);
-     close(stobj_file[fidx].fd);
-     stobj_file[fidx].fd = -1;
- 
--    if(unlink_ok == BOOL_TRUE) {
-+    if (unlink_ok == BOOL_TRUE) {
- 	unlink(stobj_file[fidx].name);
-     }
- 
-@@ -635,15 +635,15 @@ close_all_stobj()
-     invt_seshdr_t *StObjhdr;
-     int unlink_ok;
- 
--    for(i = 0; i < stobj_numfiles; i++) {
-+    for (i = 0; i < stobj_numfiles; i++) {
- 
--	if(stobj_file[i].fd < 0)
-+	if (stobj_file[i].fd < 0)
- 	    continue;
- 
- 	unlink_ok = BOOL_TRUE;
- 	StObjhdr = (invt_seshdr_t *)(stobj_file[i].mapaddr + sizeof(invt_sescounter_t));
--	for(j = 0; j < stobj_file[i].counter->ic_curnum;) {
--	    if(StObjhdr->sh_pruned != 1) {
-+	for (j = 0; j < stobj_file[i].counter->ic_curnum;) {
-+	    if (StObjhdr->sh_pruned != 1) {
- 		unlink_ok = BOOL_FALSE;
- 		break;
- 	    }
-diff --git a/librmt/rmtopen.c b/librmt/rmtopen.c
-index 2f46324..ea6e218 100644
---- a/librmt/rmtopen.c
-+++ b/librmt/rmtopen.c
-@@ -197,7 +197,7 @@ static int _rmt_open (char *path, int oflag, int mode)
- 		    uname[len-1] = '\0'; /* chomp the '\n' */
- 	    }
- 
--	    for(p = &uname_table[0]; p->name != 0; p++) {
-+	    for (p = &uname_table[0]; p->name != 0; p++) {
- 		if (strncmp(p->name, uname, strlen(p->name)) == 0)
- 		    break;
- 	    }
-diff --git a/restore/content.c b/restore/content.c
-index 5b45906..b616eda 100644
---- a/restore/content.c
-+++ b/restore/content.c
-@@ -1812,7 +1812,7 @@ content_init(int argc, char *argv[], size64_t vmsz)
- 		void	*fshanp;
- 		size_t	fshlen=0;
- 
--		if(path_to_fshandle(persp->a.dstdir, &fshanp, &fshlen)) {
-+		if (path_to_fshandle(persp->a.dstdir, &fshanp, &fshlen)) {
- 			mlog(MLOG_NORMAL,
- 				_("unable to construct a file "
- 				  "system handle for %s: %s\n"),
-@@ -3516,7 +3516,7 @@ applynondirdump(drive_t *drivep,
- 					      &rv);
+-	/* it matches, so add ino to list and continue down the path
++	/*
++	 * it matches, so add ino to list and continue down the path
+ 	 */
+ 	cb_add(NULL, fshandlep, fsfd, statp);
+ 
+ 	if (nextslash) {
+ 
+-		/* if we're not at the end of the path, yet the current
++		/*
++		 * if we're not at the end of the path, yet the current
+ 		 * path element is not a directory, complain and abort the
+ 		 * iteration in a way which terminates the application
+ 		 */
+@@ -1560,11 +1608,13 @@ subtreelist_parse_cb(void *arg1,
+ 			return 2;
  		}
  
--		switch(rv) {
-+		switch (rv) {
- 		case RV_OK:
- 			break;
- 		case RV_EOD:
-@@ -3571,7 +3571,7 @@ applynondirdump(drive_t *drivep,
- 			/* read the file header.
+-		/* repair the subpath
++		/*
++		 * repair the subpath
+ 		*/
+ 		*nextslash = '/';
+ 
+-		/* peel the first element of the subpath and recurse
++		/*
++		 * peel the first element of the subpath and recurse
+ 		*/
+ 		(void)diriter(fshandlep,
+ 				 fsfd,
+@@ -1577,7 +1627,8 @@ subtreelist_parse_cb(void *arg1,
+ 		return cbrval;
+ 
+ 	} else {
+-		/* we've reached the specified subpath, so if we're
++		/*
++		 * we've reached the specified subpath, so if we're
+ 		 * at a directory, recurse down and add all children
+ 		 * to the inomap.
+ 		 */
+@@ -1624,7 +1675,8 @@ subtree_descend_cb(void *arg1,
+ 	return cbrval;
+ }
+ 
+-/* uses the extent map to figure the first offset in the file
++/*
++ * uses the extent map to figure the first offset in the file
+  * with qty real (non-hole) bytes behind it
+  */
+ #define BMAP_LEN	512
+@@ -1638,7 +1690,8 @@ quantity2offset(jdm_fshandle_t *fshandlep, xfs_bstat_t *statp, off64_t qty)
+ 	off64_t offset_next;
+ 	off64_t qty_accum;
+ 
+-	/* If GETOPT_DUMPASOFFLINE was specified and the HSM provided an
++	/*
++	 * If GETOPT_DUMPASOFFLINE was specified and the HSM provided an
+ 	 * estimate, then use it.
+ 	 */
+ 
+@@ -1709,14 +1762,16 @@ estimate_dump_space(xfs_bstat_t *statp)
+ {
+ 	switch (statp->bs_mode & S_IFMT) {
+ 	case S_IFREG:
+-		/* very rough: must improve this.  If GETOPT_DUMPASOFFLINE was
++		/*
++		 * very rough: must improve this.  If GETOPT_DUMPASOFFLINE was
+ 		 * specified and the HSM provided an estimate, then use it.
+ 		 */
+ 		if (hsm_fs_ctxtp) {
+ 			off64_t	bytes;
+ 			int accurate;
+ 
+-			/* if -z or multiple streams are being used,
++			/*
++			 * if -z or multiple streams are being used,
+ 			 * we need an accurate estimate. otherwise a
+ 			 * quick estimate will do.
  			 */
- 			rv = read_filehdr(drivep, fhdrp, fhcs);
--			switch(rv) {
-+			switch (rv) {
- 			case RV_OK:
- 				break;
- 			case RV_EOD:
-@@ -4578,7 +4578,7 @@ validate:
- 		       :
- 		       BOOL_FALSE;
- 		canseeknextpr = dcaps & DRIVE_CAP_NEXTMARK;
--		switch(Mediap->M_pos) {
-+		switch (Mediap->M_pos) {
- 		case POS_ATHDR:
- 		case POS_INDIR:
- 			if (resumepr) {
-@@ -4741,7 +4741,7 @@ newmedia:
+@@ -1735,7 +1790,8 @@ estimate_dump_space(xfs_bstat_t *statp)
+ 	case S_IFBLK:
+ 	case S_IFSOCK:
+ 	case S_IFLNK:
+-	/* not yet
++	/*
++	 * not yet
+ 	case S_IFUUID:
+ 	*/
+ 		return 0;
+diff --git a/dump/inomap.h b/dump/inomap.h
+index 64b769a..b9619f6 100644
+--- a/dump/inomap.h
++++ b/dump/inomap.h
+@@ -18,7 +18,8 @@
+ #ifndef INOMAP_H
+ #define INOMAP_H
  
- 		/* check if we are done.
- 		 */
--		switch(purp) {
-+		switch (purp) {
- 		case PURP_SEARCH:
- 			knownholespr = BOOL_TRUE;
- 			maybeholespr = BOOL_FALSE;
-@@ -5458,7 +5458,7 @@ pi_addfile(Media_t *Mediap,
- 						  (rfp_t)dop->do_read,
- 					    (rrbfp_t)dop->do_return_read_buf,
- 						  &rval);
--				switch(rval) {
-+				switch (rval) {
- 				case 0:
- 					assert(nread == (int)bufszincr);
- 					buflen += (size_t)nread;
-@@ -5880,7 +5880,7 @@ pi_scanfileendino(dh_t fileh)
- 		     ;
- 		      nexth = DH2F(nexth)->f_nexth) {
+-/* inomap.[hc] - inode map abstraction
++/*
++ * inomap.[hc] - inode map abstraction
+  *
+  * an inode map describes the inode numbers (inos) in a file system dump.
+  * the map identifies which inos are in-use by the fs, which of those are
+@@ -31,7 +32,8 @@
+  */
+ struct xfs_bstat;
  
--		    switch(mode) {
-+		    switch (mode) {
- 		    case 0:
- 			if (nexth == fileh) {
- 				mode = 1;
-@@ -7309,7 +7309,7 @@ restore_file_cb(void *cp, bool_t linkpr, char *path1, char *path2)
+-/* inomap_build - this function allocates and constructs an in-memory
++/*
++ * inomap_build - this function allocates and constructs an in-memory
+  * representation of the bitmap. it prunes from the map inos of files not
+  * changed since the last dump, inos not identified by the subtree list,
+  * and directories not needed to represent a hierarchy containing
+@@ -68,25 +70,29 @@ extern bool_t inomap_build(void *fshandlep,
  
- 		/* call type-specific function to create the file
- 		 */
--		switch(bstatp->bs_mode & S_IFMT) {
-+		switch (bstatp->bs_mode & S_IFMT) {
- 		case S_IFREG:
- 			ok = restore_reg(drivep, fhdrp, rvp, path1);
- 			if (!ok)
-@@ -8014,7 +8014,7 @@ restore_symlink(drive_t *drivep,
- 			  (rrbfp_t)dop->do_return_read_buf,
- 			  &rval);
+ extern uint64_t inomap_getsz(void);
+ 
+-/* inomap_skip - tell inomap about inodes to skip in the dump
++/*
++ * inomap_skip - tell inomap about inodes to skip in the dump
+  */
+ extern void inomap_skip(xfs_ino_t ino);
+ 
+ 
+-/* inomap_writehdr - updates the write header with inomap-private info
++/*
++ * inomap_writehdr - updates the write header with inomap-private info
+  * to be communicated to the restore side
+  */
+ extern void inomap_writehdr(content_inode_hdr_t *scwhdrp);
+ 
+ 
+-/* inomap_dump - dumps the map to media - content-abstraction-knowledgable
++/*
++ * inomap_dump - dumps the map to media - content-abstraction-knowledgable
+  *
+  * returns error from media write op
+  */
+ extern rv_t inomap_dump(drive_t *drivep);
+ 
+ 
+-/* map state values
++/*
++ * map state values
+  */
+ #define MAP_INO_UNUSED	0       /* ino not in use by fs */
+ #define MAP_DIR_NOCHNG	1       /* dir, ino in use by fs, but not dumped */
+@@ -97,7 +103,8 @@ extern rv_t inomap_dump(drive_t *drivep);
+ #define MAP_RESERVED1	6       /* this state currently not used */
+ #define MAP_RESERVED2	7       /* this state currently not used */
+ 
+-/* the inomap is implemented as a linked list of chunks. each chunk contains
++/*
++ * the inomap is implemented as a linked list of chunks. each chunk contains
+  * an array of map segments. a map segment contains a start ino and a
+  * bitmap of 64 3-bit state values (see MAP_... in inomap.h). the SEG_macros
+  * index and manipulate the 3-bit state values.
+@@ -125,7 +132,8 @@ struct hnk {
+ 
+ typedef struct hnk hnk_t;
+ 
+-/* functions to get state and gen information from the inomap.
++/*
++ * functions to get state and gen information from the inomap.
+  * requires a pointer to a context block, obtained from
+  * inomap_alloc_context(), and released by inomap_free_context().
+  */
+@@ -136,7 +144,8 @@ extern int inomap_get_state(void *contextp, xfs_ino_t ino);
+ extern int inomap_get_gen(void *contextp, xfs_ino_t ino, gen_t *gen);
+ 
+ 
+-/* generators returning the next dir or non-dir ino selected in this dump.
++/*
++ * generators returning the next dir or non-dir ino selected in this dump.
+  * returns INO64MAX when no more inos.
+  * requires a pointer to a context block, obtained from
+  * inomap_alloc_context(), and released by inomap_free_context().
+diff --git a/dump/var.c b/dump/var.c
+index 8ea38af..a195693 100644
+--- a/dump/var.c
++++ b/dump/var.c
+@@ -85,7 +85,8 @@ var_skip(uuid_t *dumped_fsidp, void (*cb)(xfs_ino_t ino))
+ 	uuid_t fsid;
+ 	int rval;
+ 
+-	/* see if the fs uuid's match
++	/*
++	 * see if the fs uuid's match
+ 	 */
+ 	rval = fs_getid(XFSDUMP_DIRPATH, &fsid);
  	if (rval) {
--		switch(rval) {
-+		switch (rval) {
- 		case DRIVE_ERROR_EOF:
- 		case DRIVE_ERROR_EOD:
- 		case DRIVE_ERROR_EOM:
-@@ -8120,7 +8120,7 @@ read_filehdr(drive_t *drivep, filehdr_t *fhdrp, bool_t fhcs)
- 			  &rval);
- 	xlate_filehdr(&tmpfh, fhdrp, 1);
- 
--	switch(rval) {
-+	switch (rval) {
- 	case 0:
- 		break;
- 	case DRIVE_ERROR_EOD:
-@@ -8179,7 +8179,7 @@ read_extenthdr(drive_t *drivep, extenthdr_t *ehdrp, bool_t ehcs)
- 			  &rval);
- 	xlate_extenthdr(&tmpeh, ehdrp, 1);
- 
--	switch(rval) {
-+	switch (rval) {
- 	case 0:
- 		break;
- 	case DRIVE_ERROR_EOD:
-@@ -8247,7 +8247,7 @@ read_dirent(drive_t *drivep,
- 			  (rrbfp_t)
- 			  dop->do_return_read_buf,
- 			  &rval);
--	switch(rval) {
-+	switch (rval) {
- 	case 0:
- 		break;
- 	case DRIVE_ERROR_EOD:
-@@ -8324,7 +8324,7 @@ read_dirent(drive_t *drivep,
- 				  (rrbfp_t)
- 				  dop->do_return_read_buf,
- 				  &rval);
--		switch(rval) {
-+		switch (rval) {
- 		case 0:
- 			break;
- 		case DRIVE_ERROR_EOD:
-@@ -8364,7 +8364,7 @@ read_extattrhdr(drive_t *drivep, extattrhdr_t *ahdrp, bool_t ahcs)
- 			  &rval);
- 	xlate_extattrhdr(&tmpah, ahdrp, 1);
- 
--	switch(rval) {
-+	switch (rval) {
- 	case 0:
- 		break;
- 	case DRIVE_ERROR_EOD:
-@@ -8433,7 +8433,7 @@ discard_padding(size_t sz, drive_t *drivep)
- 			  (rfp_t)dop->do_read,
- 			  (rrbfp_t)dop->do_return_read_buf,
- 			  &rval);
--	switch(rval) {
-+	switch (rval) {
- 	case 0:
- 		assert((size_t)nread == sz);
- 		return RV_OK;
-@@ -8519,7 +8519,7 @@ restore_extent(filehdr_t *fhdrp,
- 		if (rval) {
- 			rv_t rv;
- 			char *reasonstr;
--			switch(rval) {
-+			switch (rval) {
- 			case DRIVE_ERROR_EOF:
- 				rv = RV_EOD;
- 				reasonstr = _("end of media file");
-@@ -8780,7 +8780,7 @@ restore_extattr(drive_t *drivep,
- 				  (rfp_t)dop->do_read,
- 				  (rrbfp_t)dop->do_return_read_buf,
- 				  &rval);
--		switch(rval) {
-+		switch (rval) {
- 		case 0:
- 			break;
- 		case DRIVE_ERROR_EOD:
-diff --git a/restore/inomap.c b/restore/inomap.c
-index 22142cd..44083ca 100644
---- a/restore/inomap.c
-+++ b/restore/inomap.c
-@@ -111,7 +111,7 @@ SEG_SET_BITS(seg_t *segp, xfs_ino_t ino, int state)
- 	relino = ino - segp->base;
- 	mask = (uint64_t)1 << relino;
- 	clrmask = ~mask;
--	switch(state) {
-+	switch (state) {
- 	case 0:
- 		segp->lobits &= clrmask;
- 		segp->mebits &= clrmask;
-@@ -261,7 +261,7 @@ inomap_restore_pers(drive_t *drivep,
- 			  &rval);
- 
- 	pershnkp = (hnk_t *)((char *)persp + PERSSZ);
--	for(i = 0; i < hnkcnt; i++) {
-+	for (i = 0; i < hnkcnt; i++) {
- 		xlate_hnk(&tmphnkp[i], &pershnkp[i], 1);
+@@ -105,7 +106,8 @@ var_skip(uuid_t *dumped_fsidp, void (*cb)(xfs_ino_t ino))
+ 		return;
  	}
- 	free(tmphnkp);
-@@ -282,7 +282,7 @@ inomap_restore_pers(drive_t *drivep,
  
- 	/* check the return code from read
+-	/* traverse the xfsdump directory, getting inode numbers of it
++	/*
++	 * traverse the xfsdump directory, getting inode numbers of it
+ 	 * and all of its children, and reporting those to the callback.
  	 */
--	switch(rval) {
-+	switch (rval) {
- 	case 0:
- 		assert((size_t)nread == sizeof(hnk_t) * (size_t)hnkcnt);
- 		ok = inomap_sync_pers(hkdir);
-@@ -329,7 +329,7 @@ inomap_discard(drive_t *drivep, content_inode_hdr_t *scrhdrp)
- 			  &rval);
- 	/* check the return code from read
- 	 */
--	switch(rval) {
-+	switch (rval) {
- 	case 0:
- 		assert((size_t)nread == sizeof(hnk_t) * (size_t)hnkcnt);
- 		return RV_OK;
+ 	var_skip_recurse(XFSDUMP_DIRPATH, cb);
+@@ -149,7 +151,8 @@ var_skip_recurse(char *base, void (*cb)(xfs_ino_t ino))
+ 	while ((direntp = readdir(dirp)) != NULL) {
+ 		char *path;
+ 
+-		/* skip "." and ".."
++		/*
++		 * skip "." and ".."
+ 		 */
+ 		if (*(direntp->d_name + 0) == '.'
+ 		     &&
 -- 
 2.19.1
