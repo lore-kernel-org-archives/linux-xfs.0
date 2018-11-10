@@ -1,116 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f193.google.com ([209.85.219.193]:42260 "EHLO
-        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726385AbeKMARU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Nov 2018 19:17:20 -0500
-Received: by mail-yb1-f193.google.com with SMTP id o204-v6so3939229yba.9
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Nov 2018 06:23:51 -0800 (PST)
-Date: Mon, 12 Nov 2018 09:23:48 -0500
-From: Josef Bacik <josef@toxicpanda.com>
-Subject: Re: [PATCH 2/2] xfs: take a ref on failed bufs in xfs_inode_item_push
-Message-ID: <20181112142347.gh2biojf6suzngjr@MacBook-Pro-91.local>
-References: <20181107201055.25883-1-josef@toxicpanda.com>
- <20181107201055.25883-3-josef@toxicpanda.com>
- <20181107233740.GZ19305@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:40444 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726068AbeKKBEb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 10 Nov 2018 20:04:31 -0500
+Date: Sat, 10 Nov 2018 10:19:07 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] mm: don't break integrity writeback on ->writepage()
+ error
+Message-ID: <20181110151907.GA10691@bfoster>
+References: <20181105163613.7542-1-bfoster@redhat.com>
+ <20181109154251.d35772bb1cdc314a70aa90a1@linux-foundation.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181107233740.GZ19305@dastard>
+In-Reply-To: <20181109154251.d35772bb1cdc314a70aa90a1@linux-foundation.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Josef Bacik <josef@toxicpanda.com>, kernel-team@fb.com, linux-xfs@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, Dave Chinner <david@fromorbit.com>
 
-On Thu, Nov 08, 2018 at 10:37:40AM +1100, Dave Chinner wrote:
-> On Wed, Nov 07, 2018 at 03:10:55PM -0500, Josef Bacik wrote:
-> > If we failed to writeout a xfs_buf we'll grab a ref for it and put it on
-> > li->li_buf.  Then when submitting the failed bufs we'll clear LI_FAILED
-> > on the li, which clears the LI_FAILED flag, but also drops the ref on
-> > the buf.  Since it isn't on a IO list at this point this could very well
-> > be the last ref on the buf, which wreaks havoc when we go to add the buf
-> > to the delwrite list.  Fix this by holding a ref on the buf before we
-> > call xfs_buf_resubmit_failed_buffers in order to make sure the buf
-> > doesn't disappear before we're able to clear the error and add it to the
-> > delwri list.  This fixes the panics I was seeing with error injection.
+On Fri, Nov 09, 2018 at 03:42:51PM -0800, Andrew Morton wrote:
+> On Mon,  5 Nov 2018 11:36:13 -0500 Brian Foster <bfoster@redhat.com> wrote:
+> 
+> > write_cache_pages() currently breaks out of the writepage loop in
+> > the event of a ->writepage() error. This causes problems for
+> > integrity writeback on XFS
+> 
+> For the uninitiated, please define the term "integrity writeback". 
+> Quite carefully ;) I'm not sure what it actually means.  grepping
+> fs/xfs for "integrity" doesn't reveal anything.
+> 
+> <reads the code>
+> 
+> OK, it appears the term means "to sync data to disk" as opposed to
+> "periodic dirty memory cleaning".  I guess we don't have particularly
+> well-established terms for the two concepts.
+> 
+
+Indeed. The intent is basically to describe any writeback that is
+intended to persist data and so so before returning (i.e., fsync(),
+etc.). That was the best term I came across to describe it ("integrity
+sync" is used in some of the existing comments), but I can try to be
+more descriptive in the commit log.
+
+> > in the event of a persistent error as XFS
+> > expects to process every dirty+delalloc page such that it can
+> > discard delalloc blocks when real block allocation fails.  Failure
+> > to handle all delalloc pages leaves the filesystem in an
+> > inconsistent state if the integrity writeback happens to be due to
+> > an unmount, for example.
 > > 
-> > Signed-off-by: Josef Bacik <josef@toxicpanda.com>
-> > ---
-> >  fs/xfs/xfs_inode_item.c | 7 +++++--
-> >  1 file changed, 5 insertions(+), 2 deletions(-)
+> > Update write_cache_pages() to continue processing pages for
+> > integrity writeback regardless of ->writepage() errors. Save the
+> > first encountered error and return it once complete. This
+> > facilitates XFS or any other fs that expects integrity writeback to
+> > process the entire set of dirty pages regardless of errors.
+> > Background writeback continues to exit on the first error
+> > encountered.
 > > 
-> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> > index fa1c4fe2ffbf..df49adf1989c 100644
-> > --- a/fs/xfs/xfs_inode_item.c
-> > +++ b/fs/xfs/xfs_inode_item.c
-> > @@ -503,13 +503,16 @@ xfs_inode_item_push(
-> >  	 * previously. Resubmit the buffer for IO.
-> >  	 */
-> >  	if (test_bit(XFS_LI_FAILED, &lip->li_flags)) {
-> > -		if (!xfs_buf_trylock(bp))
-> > +		xfs_buf_hold(bp);
-> > +		if (!xfs_buf_trylock(bp)) {
-> > +			xfs_buf_rele(bp);
-> >  			return XFS_ITEM_LOCKED;
-> > +		}
+> > ...
+> >
+> > --- a/mm/page-writeback.c
+> > +++ b/mm/page-writeback.c
+> > @@ -2156,6 +2156,7 @@ int write_cache_pages(struct address_space *mapping,
+> >  {
+> >  	int ret = 0;
+> >  	int done = 0;
+> > +	int error;
+> >  	struct pagevec pvec;
+> >  	int nr_pages;
+> >  	pgoff_t uninitialized_var(writeback_index);
+> > @@ -2236,25 +2237,29 @@ int write_cache_pages(struct address_space *mapping,
+> >  				goto continue_unlock;
 > >  
-> >  		if (!xfs_buf_resubmit_failed_buffers(bp, buffer_list))
-> >  			rval = XFS_ITEM_FLUSHING;
-> >  
-> > -		xfs_buf_unlock(bp);
-> > +		xfs_buf_relse(bp);
-> >  		return rval;
-> >  	}
+> >  			trace_wbc_writepage(wbc, inode_to_bdi(mapping->host));
+> > -			ret = (*writepage)(page, wbc, data);
+> > -			if (unlikely(ret)) {
+> > -				if (ret == AOP_WRITEPAGE_ACTIVATE) {
+> > +			error = (*writepage)(page, wbc, data);
+> > +			if (unlikely(error)) {
+> > +				if (error == AOP_WRITEPAGE_ACTIVATE) {
+> >  					unlock_page(page);
+> > -					ret = 0;
+> > -				} else {
+> > +					error = 0;
+> > +				} else if (wbc->sync_mode != WB_SYNC_ALL &&
+> > +					   !wbc->for_sync) {
 > 
-> This just doesn't smell right to me.
+> And here we're determining that it is not a sync-data-to-disk
+> operation, hence it must be a clean-dirty-pages operation.
 > 
-> /me rummages around in the code
+> This isn't very well-controlled, is it?  It's an inference which was
+> put together by examining current callers, I assume?
 > 
-> Ok, so I think the bug is in xfs_buf_resubmit_failed_buffers() in
-> that it removes all the "failed" reference counts from the buffer
-> before it adds the delwri reference count back to the buffer. Taking
-> a high level reference count like above just papers over the
-> transient reference counting error in
-> xfs_buf_resubmit_failed_buffers().
-> 
-> It also fails to fix the other xfs_buf_resubmit_failed_buffers()
-> caller, which has exactly the same problem (dquot writeback).
-> 
-> Perhaps something like the patch below?
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> 
-> xfs: fix transient reference count error in xfs_buf_resubmit_failed_buffers
-> 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When retrying a failed inode or dquot buffer,
-> xfs_buf_resubmit_failed_buffers() clears all the failed flags from
-> the inode/dquot log items. In doing so, it also drops all the
-> reference counts on the buffer that the failed log items hold. This
-> means it can drop all the active references on the buffer and hence
-> free the buffer before it queues it for write again.
-> 
-> Putting the buffer on the delwri queue takes a reference to the
-> buffer (so that it hangs around until it has been written and
-> completed), but this goes bang if the buffer has already been freed.
-> 
-> Hence we need to add the buffer to the delwri queue before we remove
-> the failed flags from the log items attached to the buffer to ensure
-> it always remains referenced during the resubmit process.
-> 
-> Reported-by: Josef Bacik <josef@toxicpanda.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Dave,
+Yeah, sort of. Some of the comments do already explain how WB_SYNC_ALL
+refers to "integrity" writeback/sync (above write_cache_pages(), for
+example). The ->for_sync thing is more of an inference based on its use
+in __writeback_single_inode() and the comment where it is defined.
 
-Are you planning on sending this along as is?  I'm going to throw it in our
-kernel if you are happy with it.  Thanks,
+> It would be good if we could force callers to be explicit about their
+> intent here.  But I'm not sure that adding a new writeback_sync_mode is
+> the way to do this.
+> 
 
-Josef
+The more I look at it, however, I think I could probably drop the
+for_sync bit here. It appears only be used for a special case of
+WB_SYNC_ALL that isn't relevant to this patch, so it only serves to
+complicate in this context.
+
+I'm not sure if you had more in mind beyond that..? There are a lot of
+knobs on the wbc in general. It might be interesting to see if some of
+that could be cleaned up to factor out some of those seemingly bolt-on
+knobs, but I'd have to stare at the code more and think about it. Even
+still, any such change is probably better as a follow on patch to this
+one, which is intended to be an isolated bug fix. Thoughts on any of
+that is appreciated.
+
+> At a minimum it would be good to have careful comments in here
+> explaining what is going on, justifying the above inference, explaining
+> the xfs requirement (hopefully in a way which isn't xfs-specific).
+> 
+
+Ok, I can add a comment here that covers such details. Thanks for the
+feedback.
+
+Brian
+
+> >  					/*
+> > -					 * done_index is set past this page,
+> > -					 * so media errors will not choke
+> > +					 * done_index is set past this page, so
+> > +					 * media errors will not choke
+> >  					 * background writeout for the entire
+> >  					 * file. This has consequences for
+> >  					 * range_cyclic semantics (ie. it may
+> >  					 * not be suitable for data integrity
+> >  					 * writeout).
+> >  					 */
+> 
