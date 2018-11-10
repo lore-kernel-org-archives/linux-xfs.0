@@ -1,51 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37684 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725758AbeKJFKf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 00:10:35 -0500
-Date: Fri, 9 Nov 2018 11:28:22 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] make: don't spray static check failures all over the subdir
- build
-Message-ID: <20181109192822.GF15721@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:35900 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728983AbeKJVgm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 16:36:42 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/5] generic: don't assume preallocation is supported when reflinks are supported
+Date: Sat, 10 Nov 2018 12:51:42 +0100
+Message-Id: <20181110115145.30356-3-hch@lst.de>
+In-Reply-To: <20181110115145.30356-1-hch@lst.de>
+References: <20181110115145.30356-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: guaneryu@gmail.com
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Various reflink tests currently use fallocate to preallocate space without
+first checking that preallocations are supported.  Add explicit checks.
 
-Debian package building is special -- it directly calls make -C libxfs
-when building the debian-installer packages.  This means that any
-variables we define in the top level Makefile don't get passed down to
-subdir make processes.
-
-This means that the new static checker support effectively runs the
-first argument in $(CFLAGS) as a command, which is surprising.  Fix up
-buildrules to patch out CHECK_CMD if nobody's defined it, so that direct
-subdir make works again.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/buildrules |    4 ++++
- 1 file changed, 4 insertions(+)
+ tests/generic/176 | 1 +
+ tests/generic/372 | 1 +
+ tests/generic/414 | 1 +
+ tests/generic/415 | 1 +
+ tests/generic/447 | 1 +
+ tests/generic/515 | 1 +
+ 6 files changed, 6 insertions(+)
 
-diff --git a/include/buildrules b/include/buildrules
-index 83dfe05b..5c3e6eb9 100644
---- a/include/buildrules
-+++ b/include/buildrules
-@@ -36,6 +36,10 @@ $(SUBDIRS):
- 	$(Q)$(MAKE) $(MAKEOPTS) -q -C $@ || $(MAKE) $(MAKEOPTS) -C $@
- endif
+diff --git a/tests/generic/176 b/tests/generic/176
+index e0c0f225..a084578a 100755
+--- a/tests/generic/176
++++ b/tests/generic/176
+@@ -31,6 +31,7 @@ _cleanup()
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_cp_reflink
++_require_xfs_io_command "fpunch"
+ _require_test_program "punch-alternating"
  
-+ifndef CHECK_CMD
-+CHECK_CMD = @true
-+endif
-+
- #
- # Standard targets
- #
+ rm -f "$seqres.full"
+diff --git a/tests/generic/372 b/tests/generic/372
+index 44914453..21cf283b 100755
+--- a/tests/generic/372
++++ b/tests/generic/372
+@@ -31,6 +31,7 @@ _cleanup()
+ _supported_os Linux
+ _supported_fs generic
+ _require_scratch_reflink
++_require_xfs_io_command "falloc"
+ _require_xfs_io_command "fiemap"
+ _require_scratch_explicit_shared_extents
+ 
+diff --git a/tests/generic/414 b/tests/generic/414
+index 7c76d580..f9f26744 100755
+--- a/tests/generic/414
++++ b/tests/generic/414
+@@ -32,6 +32,7 @@ _cleanup()
+ _supported_os Linux
+ _supported_fs generic
+ _require_scratch_reflink
++_require_xfs_io_command "falloc"
+ _require_xfs_io_command "fiemap"
+ 
+ echo "Format and mount"
+diff --git a/tests/generic/415 b/tests/generic/415
+index 14fbc232..0b7554ff 100755
+--- a/tests/generic/415
++++ b/tests/generic/415
+@@ -34,6 +34,7 @@ _supported_fs generic
+ _supported_os Linux
+ _require_scratch_reflink
+ _require_cp_reflink
++_require_xfs_io_command "fpunch"
+ 
+ _scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+ _scratch_mount || _fail "mount failed"
+diff --git a/tests/generic/447 b/tests/generic/447
+index 3775e49f..1e7cb3c8 100755
+--- a/tests/generic/447
++++ b/tests/generic/447
+@@ -32,6 +32,7 @@ _supported_os Linux
+ _require_scratch_reflink
+ _require_cp_reflink
+ _require_test_program "punch-alternating"
++_require_xfs_io_command "fpunch"
+ 
+ rm -f "$seqres.full"
+ 
+diff --git a/tests/generic/515 b/tests/generic/515
+index 1ae9fbfe..f9e0b3be 100755
+--- a/tests/generic/515
++++ b/tests/generic/515
+@@ -31,6 +31,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
+ _require_scratch_reflink
++_require_xfs_io_command "falloc"
+ 
+ rm -f $seqres.full
+ 
+-- 
+2.19.1
