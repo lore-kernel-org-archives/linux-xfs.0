@@ -1,142 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40444 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726068AbeKKBEb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 10 Nov 2018 20:04:31 -0500
-Date: Sat, 10 Nov 2018 10:19:07 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] mm: don't break integrity writeback on ->writepage()
- error
-Message-ID: <20181110151907.GA10691@bfoster>
-References: <20181105163613.7542-1-bfoster@redhat.com>
- <20181109154251.d35772bb1cdc314a70aa90a1@linux-foundation.org>
+Received: from userp2130.oracle.com ([156.151.31.86]:51652 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728310AbeKJK3C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 05:29:02 -0500
+Subject: [PATCH 6/6] xfs_scrub: move everything to /usr/sbin
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 09 Nov 2018 16:45:52 -0800
+Message-ID: <154181075273.3727.12563703121689677996.stgit@magnolia>
+In-Reply-To: <154181071499.3727.3910572718199592407.stgit@magnolia>
+References: <154181071499.3727.3910572718199592407.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181109154251.d35772bb1cdc314a70aa90a1@linux-foundation.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, xfs@tlinx.org
 
-On Fri, Nov 09, 2018 at 03:42:51PM -0800, Andrew Morton wrote:
-> On Mon,  5 Nov 2018 11:36:13 -0500 Brian Foster <bfoster@redhat.com> wrote:
-> 
-> > write_cache_pages() currently breaks out of the writepage loop in
-> > the event of a ->writepage() error. This causes problems for
-> > integrity writeback on XFS
-> 
-> For the uninitiated, please define the term "integrity writeback". 
-> Quite carefully ;) I'm not sure what it actually means.  grepping
-> fs/xfs for "integrity" doesn't reveal anything.
-> 
-> <reads the code>
-> 
-> OK, it appears the term means "to sync data to disk" as opposed to
-> "periodic dirty memory cleaning".  I guess we don't have particularly
-> well-established terms for the two concepts.
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Indeed. The intent is basically to describe any writeback that is
-intended to persist data and so so before returning (i.e., fsync(),
-etc.). That was the best term I came across to describe it ("integrity
-sync" is used in some of the existing comments), but I can try to be
-more descriptive in the commit log.
+Recently, it was pointed out that xfs_scrub{,_all} depend on components
+and libraries (libicu, python) that live in /usr.  /sbin binaries
+shouldn't depend on /usr, so let's move the scrub binaries to /usr/sbin.
 
-> > in the event of a persistent error as XFS
-> > expects to process every dirty+delalloc page such that it can
-> > discard delalloc blocks when real block allocation fails.  Failure
-> > to handle all delalloc pages leaves the filesystem in an
-> > inconsistent state if the integrity writeback happens to be due to
-> > an unmount, for example.
-> > 
-> > Update write_cache_pages() to continue processing pages for
-> > integrity writeback regardless of ->writepage() errors. Save the
-> > first encountered error and return it once complete. This
-> > facilitates XFS or any other fs that expects integrity writeback to
-> > process the entire set of dirty pages regardless of errors.
-> > Background writeback continues to exit on the first error
-> > encountered.
-> > 
-> > ...
-> >
-> > --- a/mm/page-writeback.c
-> > +++ b/mm/page-writeback.c
-> > @@ -2156,6 +2156,7 @@ int write_cache_pages(struct address_space *mapping,
-> >  {
-> >  	int ret = 0;
-> >  	int done = 0;
-> > +	int error;
-> >  	struct pagevec pvec;
-> >  	int nr_pages;
-> >  	pgoff_t uninitialized_var(writeback_index);
-> > @@ -2236,25 +2237,29 @@ int write_cache_pages(struct address_space *mapping,
-> >  				goto continue_unlock;
-> >  
-> >  			trace_wbc_writepage(wbc, inode_to_bdi(mapping->host));
-> > -			ret = (*writepage)(page, wbc, data);
-> > -			if (unlikely(ret)) {
-> > -				if (ret == AOP_WRITEPAGE_ACTIVATE) {
-> > +			error = (*writepage)(page, wbc, data);
-> > +			if (unlikely(error)) {
-> > +				if (error == AOP_WRITEPAGE_ACTIVATE) {
-> >  					unlock_page(page);
-> > -					ret = 0;
-> > -				} else {
-> > +					error = 0;
-> > +				} else if (wbc->sync_mode != WB_SYNC_ALL &&
-> > +					   !wbc->for_sync) {
-> 
-> And here we're determining that it is not a sync-data-to-disk
-> operation, hence it must be a clean-dirty-pages operation.
-> 
-> This isn't very well-controlled, is it?  It's an inference which was
-> put together by examining current callers, I assume?
-> 
+Reported-by: xfs@tlinx.org
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/Makefile |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Yeah, sort of. Some of the comments do already explain how WB_SYNC_ALL
-refers to "integrity" writeback/sync (above write_cache_pages(), for
-example). The ->for_sync thing is more of an inference based on its use
-in __writeback_single_inode() and the comment where it is defined.
 
-> It would be good if we could force callers to be explicit about their
-> intent here.  But I'm not sure that adding a new writeback_sync_mode is
-> the way to do this.
-> 
-
-The more I look at it, however, I think I could probably drop the
-for_sync bit here. It appears only be used for a special case of
-WB_SYNC_ALL that isn't relevant to this patch, so it only serves to
-complicate in this context.
-
-I'm not sure if you had more in mind beyond that..? There are a lot of
-knobs on the wbc in general. It might be interesting to see if some of
-that could be cleaned up to factor out some of those seemingly bolt-on
-knobs, but I'd have to stare at the code more and think about it. Even
-still, any such change is probably better as a follow on patch to this
-one, which is intended to be an isolated bug fix. Thoughts on any of
-that is appreciated.
-
-> At a minimum it would be good to have careful comments in here
-> explaining what is going on, justifying the above inference, explaining
-> the xfs requirement (hopefully in a way which isn't xfs-specific).
-> 
-
-Ok, I can add a comment here that covers such details. Thanks for the
-feedback.
-
-Brian
-
-> >  					/*
-> > -					 * done_index is set past this page,
-> > -					 * so media errors will not choke
-> > +					 * done_index is set past this page, so
-> > +					 * media errors will not choke
-> >  					 * background writeout for the entire
-> >  					 * file. This has consequences for
-> >  					 * range_cyclic semantics (ie. it may
-> >  					 * not be suitable for data integrity
-> >  					 * writeout).
-> >  					 */
-> 
+diff --git a/scrub/Makefile b/scrub/Makefile
+index aebc7e43..c6473c12 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -103,7 +103,7 @@ default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(OPTIONAL_TARGETS)
+ 
+ xfs_scrub_all: xfs_scrub_all.in
+ 	@echo "    [SED]    $@"
+-	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
++	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" \
+ 		   -e "s|@pkg_version@|$(PKG_VERSION)|g" \
+ 		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" < $< > $@
+ 	$(Q)chmod a+x $@
+@@ -116,14 +116,14 @@ install: $(INSTALL_SCRUB)
+ 
+ %.service: %.service.in
+ 	@echo "    [SED]    $@"
+-	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
++	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" \
+ 		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" \
+ 		   -e "s|@pkg_lib_dir@|$(PKG_LIB_DIR)|g" \
+ 		   -e "s|@pkg_name@|$(PKG_NAME)|g" < $< > $@
+ 
+ %.cron: %.cron.in
+ 	@echo "    [SED]    $@"
+-	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" < $< > $@
++	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" < $< > $@
+ 
+ install-systemd: default $(SYSTEMD_SERVICES)
+ 	$(INSTALL) -m 755 -d $(SYSTEMD_SYSTEM_UNIT_DIR)
+@@ -136,9 +136,9 @@ install-crond: default $(CRONTABS)
+ 	$(INSTALL) -m 644 $(CRONTABS) $(CROND_DIR)
+ 
+ install-scrub: default
+-	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+-	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
+-	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_ROOT_SBIN_DIR)
++	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
++	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
++	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_SBIN_DIR)
+ 
+ install-dev:
+ 
