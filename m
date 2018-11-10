@@ -1,158 +1,184 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:28201
-        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727068AbeKSKsE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Nov 2018 05:48:04 -0500
-Date: Mon, 19 Nov 2018 11:26:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH] xfs: flush posteof zeroing before reflink truncation
-Message-ID: <20181119002611.GH19305@dastard>
-References: <20181116190724.GW4235@magnolia>
- <20181116203756.GF19305@dastard>
- <20181118141205.GA40476@bfoster>
+Received: from userp2130.oracle.com ([156.151.31.86]:59530 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726323AbeKKDiv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 22:38:51 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wAAHnwIh088138
+        for <linux-xfs@vger.kernel.org>; Sat, 10 Nov 2018 17:53:00 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2nnwg10jqm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 10 Nov 2018 17:53:00 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wAAHqtdO023877
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 10 Nov 2018 17:52:55 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wAAHqshX024812
+        for <linux-xfs@vger.kernel.org>; Sat, 10 Nov 2018 17:52:54 GMT
+Date: Sat, 10 Nov 2018 09:52:54 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/6] xfs_scrub: fix fractional reporting of single inodes
+Message-ID: <20181110175254.GB4235@magnolia>
+References: <154181071499.3727.3910572718199592407.stgit@magnolia>
+ <154181074665.3727.1071882240761223896.stgit@magnolia>
+ <8955f764-8876-034a-310d-19473374c88e@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181118141205.GA40476@bfoster>
+In-Reply-To: <8955f764-8876-034a-310d-19473374c88e@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Sun, Nov 18, 2018 at 09:12:06AM -0500, Brian Foster wrote:
-> On Sat, Nov 17, 2018 at 07:37:56AM +1100, Dave Chinner wrote:
-> > On Fri, Nov 16, 2018 at 11:07:24AM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > If we're remapping into a range that starts beyond EOF, we have to zero
-> > > the memory between EOF and the start of the target range, as established
-> > > in 410fdc72b05af.  However, in 4918ef4ea008, we extended the pagecache
-> > > truncation range downwards to a page boundary to guarantee that
-> > > pagecache pages are removed and that there's no possibility that we end
-> > > up zeroing subpage blocks within a page.  Unfortunately, we never commit
-> > > the posteof zeroing to disk, so on a filesystem where page size > block
-> > > size the truncation partially undoes the zeroing and we end up with
-> > > stale disk contents.
-> > > 
-> > > Brian and I reproduced this problem by running generic/091 on a 1k block
-> > > xfs filesystem, assuming fsx in fstests supports clone/dedupe/copyrange.
-> > > 
-> > > Fixes: 410fdc72b05a ("xfs: zero posteof blocks when cloning above eof")
-> > > Fixes: 4918ef4ea008 ("xfs: fix pagecache truncation prior to reflink")
-> > > Simultaneously-diagnosed-by: Brian Foster <bfoster@redhat.com>
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Ok, I have a different fix for this again.
-> > 
-> > > ---
-> > > Note: I haven't tested this thoroughly but wanted to push this out for
-> > > everyone to look at ASAP.
-> > > ---
-> > >  fs/xfs/xfs_reflink.c |    8 +++++++-
-> > >  1 file changed, 7 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > > index c56bdbfcf7ae..8ea09a7e550c 100644
-> > > --- a/fs/xfs/xfs_reflink.c
-> > > +++ b/fs/xfs/xfs_reflink.c
-> > > @@ -1255,13 +1255,19 @@ xfs_reflink_zero_posteof(
-> > >  	loff_t			pos)
-> > >  {
-> > >  	loff_t			isize = i_size_read(VFS_I(ip));
-> > > +	int			error;
-> > >  
-> > >  	if (pos <= isize)
-> > >  		return 0;
-> > >  
-> > >  	trace_xfs_zero_eof(ip, isize, pos - isize);
-> > > -	return iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
-> > > +	error = iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
-> > >  			&xfs_iomap_ops);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	return filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
-> > > +			isize, pos - 1);
-> > 
-> > This doesn't work on block size > page size setups, unfortunately.
-> > 
-> > Immediately after this we truncate the page cache, which also
-> > doesn't do the right thing on block size > page cache setups.
-> > So there's a couple of bugs here.
-> > 
-> > IMO, the truncate needs fixing, not the zeroing. Flushing after
-> > zeroing leaves a potential landmine of other dirty data not getting
-> > flushed properly before the truncate, so we should fix the truncate
-> > to do a flush first. And we should fix it in a way that doesn't mean
-> > we need to fix it again in the very near future. i.e. the patch
-> > below that uses xfs_flush_unmap_range().
-> > 
-> > FWIW, I'm workng on cleaning up the ~10 patches I have for various
-> > fsx and other corruption fixes so I can post them - it'll be monday
-> > before I get that done - but if you're having fsx failures w/
-> > copy/dedupe/clone on fsx I've probably already got a fix for it...
-> > 
+On Sat, Nov 10, 2018 at 12:15:49AM -0700, Allison Henderson wrote:
 > 
-> Ok, so FYI this doesn't actually address the writeback issue I
-> reproduced because the added flush targets the start of the destination
-> offset.
+> 
+> On 11/9/18 5:45 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > When there are fewer than 1024 inodes in the filesystem, scrub reports
+> > fractional inodes in its final report:
+> > 
+> > 35.2MiB data used;  5.0 inodes used.
+> > 34.2MiB data found; 5.0 inodes found.
+> > 5.0 inodes counted; 5.0 inodes checked.
+> > 
+> > Inodes are indivisible, so only report the fractional part when we have
+> > a large enough number of inodes to perform a unit conversion:
+> > 
+> > 35.2MiB data used;  5 inodes used.
+> > 34.2MiB data found; 5 inodes found.
+> > 5 inodes counted; 5 inodes checked.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >   scrub/common.c |    5 ++++-
+> >   scrub/common.h |    2 +-
+> >   scrub/phase7.c |   34 ++++++++++++++++++----------------
+> >   3 files changed, 23 insertions(+), 18 deletions(-)
+> > 
+> > 
+> > diff --git a/scrub/common.c b/scrub/common.c
+> > index 96b86a26..78afc4bf 100644
+> > --- a/scrub/common.c
+> > +++ b/scrub/common.c
+> > @@ -200,10 +200,12 @@ auto_space_units(
+> >   double
+> >   auto_units(
+> >   	unsigned long long	number,
+> > -	char			**units)
+> > +	char			**units,
+> > +	int			*precision)
+> >   {
+> >   	if (debug > 1)
+> >   		goto no_prefix;
+> > +	*precision = 1;
+> >   	if (number > 1000000000000ULL) {
+> >   		*units = "T";
+> >   		return number / 1000000000000.0;
+> > @@ -220,6 +222,7 @@ auto_units(
+> >   no_prefix:
+> >   	*units = "";
+> > +	*precision = 0;
+> >   	return number;
+> >   }
+> > diff --git a/scrub/common.h b/scrub/common.h
+> > index 5a43ac0c..e85a0333 100644
+> > --- a/scrub/common.h
+> > +++ b/scrub/common.h
+> > @@ -62,7 +62,7 @@ debug_tweak_on(
+> >   double timeval_subtract(struct timeval *tv1, struct timeval *tv2);
+> >   double auto_space_units(unsigned long long kilobytes, char **units);
+> > -double auto_units(unsigned long long number, char **units);
+> > +double auto_units(unsigned long long number, char **units, int *precision);
+> >   unsigned int scrub_nproc(struct scrub_ctx *ctx);
+> >   unsigned int scrub_nproc_workqueue(struct scrub_ctx *ctx);
+> > diff --git a/scrub/phase7.c b/scrub/phase7.c
+> > index cac0c75a..504a6927 100644
+> > --- a/scrub/phase7.c
+> > +++ b/scrub/phase7.c
+> > @@ -107,6 +107,7 @@ xfs_scan_summary(
+> >   	unsigned long long		f_free;
+> >   	bool				moveon;
+> >   	bool				complain;
+> > +	int				ip;
+> >   	int				error;
+> >   	/* Flush everything out to disk before we start counting. */
+> > @@ -176,27 +177,27 @@ xfs_scan_summary(
+> >   		if (used_rt || stat_rt) {
+> >   			d = auto_space_units(used_data, &du);
+> >   			r = auto_space_units(used_rt, &ru);
+> > -			i = auto_units(used_files, &iu);
+> > +			i = auto_units(used_files, &iu, &ip);
+> >   			fprintf(stdout,
+> > -_("%.1f%s data used;  %.1f%s realtime data used;  %.2f%s inodes used.\n"),
+> > -					d, du, r, ru, i, iu);
+> > +_("%.1f%s data used;  %.1f%s realtime data used;  %.*f%s inodes used.\n"),
+> > +					d, du, r, ru, ip, i, iu);
+> >   			d = auto_space_units(stat_data, &du);
+> >   			r = auto_space_units(stat_rt, &ru);
+> > -			i = auto_units(counted_inodes, &iu);
+> > +			i = auto_units(counted_inodes, &iu, &ip);
+> >   			fprintf(stdout,
+> > -_("%.1f%s data found; %.1f%s realtime data found; %.2f%s inodes found.\n"),
+> > -					d, du, r, ru, i, iu);
+> > +_("%.1f%s data found; %.1f%s realtime data found; %.*f%s inodes found.\n"),
+> > +					d, du, r, ru, ip, i, iu);
+> 
+> Just a suggestion:
+> Is plumbing in the extra precision parameter really preferable to just doing
+> something like (i == (int)i ? 0 : 1)  Or maybe a precision macro or
+> something.
 
-Oh, sorry, I didn't notice that difference. Fixed that now. That
-might actually be one(*) of the fsx bugs I've been chasing for
-several days.
+auto_units() is supposed to turn a big number into something more
+human-friendly for display, so it's in charge of figuring out all the
+formatting stuff (label, precision, unit converted number).  Better to
+keep all that in a single function than open-code it everywhere.
 
-> Note again that I think this is distinct from the issue both you
-> and Darrick have documented in each commit log. Darrick's patch
-> addresses it because the flush targets the range that has been zeroed
-> (isize to dest offset) and thus potentially dirtied in cache. The
-> zeroing is what leads to sharing a block with an active dirty page (and
-> eventually leads to writeback of a page to a shared block).
+--D
 
-Yes, we may be seeing *different symptoms* but the underlying
-problem is the same - we are not writing back pages over the range
-we are about to share, and so we don't trigger a COW on the range
-before writeback occurs.
-
-IMO, using xfs_flush_unmap_range() is still the right change to make
-here, even if my initial patch didn't address this specific problem
-but a different flush/inval problem with this code.
-
-Cheers.
-
-Dave.
-
-(*) I've still got several different fsx variants that fail on either
-default configs and/or 1k block size with different signatures.
-Problem is they take between 370,000 ops and 5 million ops to
-trigger, and so generate tens to hundreds of GB of trace data....
-
-e.g. on a default 4k filesystem on pmem, this fails after 377k ops:
-
-# ltp/fsx -q -p50000 -l 500000 -r 4096 -t 512 -w 512 -Z -R -W /mnt/scratch/foo
-....
-READ BAD DATA: offset = 0x31000, size = 0xa000, fname = /mnt/scratch/foo
-OFFSET  GOOD    BAD     RANGE
-0x36000 0x9084  0x7940  0x00000
-....
-
-and this slight variant (buffered IO rather than direct IO) fails
-after 2.17 million ops:
-
-# ltp/fsx -q -p50000 -l 500000 -r 4096 -t 512 -w 512 -R -W /mnt/scratch/foo
-....
-READ BAD DATA: offset = 0xf000, size = 0xf318, fname = /mnt/scratch/foo
-OFFSET  GOOD    BAD     RANGE
-0x15000 0x990b  0x6c0b  0x00000
-....
-
-I'm also seeing MAPREAD failures with data after EOF on several
-different configs, and there's a couple of other failures that show
-up every so often, too.
-
-If I turn off copy/dedupe/clone file range, they all run for
-billions of ops without failure....
-
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Otherwise looks fine.
+> 
+> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> >   		} else {
+> >   			d = auto_space_units(used_data, &du);
+> > -			i = auto_units(used_files, &iu);
+> > +			i = auto_units(used_files, &iu, &ip);
+> >   			fprintf(stdout,
+> > -_("%.1f%s data used;  %.1f%s inodes used.\n"),
+> > -					d, du, i, iu);
+> > +_("%.1f%s data used;  %.*f%s inodes used.\n"),
+> > +					d, du, ip, i, iu);
+> >   			d = auto_space_units(stat_data, &du);
+> > -			i = auto_units(counted_inodes, &iu);
+> > +			i = auto_units(counted_inodes, &iu, &ip);
+> >   			fprintf(stdout,
+> > -_("%.1f%s data found; %.1f%s inodes found.\n"),
+> > -					d, du, i, iu);
+> > +_("%.1f%s data found; %.*f%s inodes found.\n"),
+> > +					d, du, ip, i, iu);
+> >   		}
+> >   		fflush(stdout);
+> >   	}
+> > @@ -210,12 +211,13 @@ _("%.1f%s data found; %.1f%s inodes found.\n"),
+> >   			_("checked inodes"))) {
+> >   		double		i1, i2;
+> >   		char		*i1u, *i2u;
+> > +		int		i1p, i2p;
+> > -		i1 = auto_units(counted_inodes, &i1u);
+> > -		i2 = auto_units(ctx->inodes_checked, &i2u);
+> > +		i1 = auto_units(counted_inodes, &i1u, &i1p);
+> > +		i2 = auto_units(ctx->inodes_checked, &i2u, &i2p);
+> >   		fprintf(stdout,
+> > -_("%.1f%s inodes counted; %.1f%s inodes checked.\n"),
+> > -				i1, i1u, i2, i2u);
+> > +_("%.*f%s inodes counted; %.*f%s inodes checked.\n"),
+> > +				i1p, i1, i1u, i2p, i2, i2u);
+> >   		fflush(stdout);
+> >   	}
+> > 
