@@ -1,85 +1,182 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:8012 "EHLO
-        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725991AbeKMLNw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 06:13:52 -0500
-Date: Tue, 13 Nov 2018 12:18:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Remove noinline from #define STATIC
-Message-ID: <20181113011804.GP19305@dastard>
-References: <7302f4a13c1cbf62b07f636878ce25fcca84b6c4.camel@perches.com>
- <6420cf91-89c8-a876-7a0d-25ab8ba428b8@sandeen.net>
- <20181112214515.GN19305@dastard>
- <bd3806ccc911989c7ef1fed9e8d26a4a5ad347a9.camel@perches.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:35692 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728644AbeKJQ75 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 11:59:57 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wAA6wYM9054553
+        for <linux-xfs@vger.kernel.org>; Sat, 10 Nov 2018 07:15:57 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2120.oracle.com with ESMTP id 2nnqyq868r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 10 Nov 2018 07:15:57 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wAA7Fp3U000799
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 10 Nov 2018 07:15:51 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wAA7FpR5025253
+        for <linux-xfs@vger.kernel.org>; Sat, 10 Nov 2018 07:15:51 GMT
+Subject: Re: [PATCH 5/6] xfs_scrub: fix fractional reporting of single inodes
+References: <154181071499.3727.3910572718199592407.stgit@magnolia>
+ <154181074665.3727.1071882240761223896.stgit@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <8955f764-8876-034a-310d-19473374c88e@oracle.com>
+Date: Sat, 10 Nov 2018 00:15:49 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bd3806ccc911989c7ef1fed9e8d26a4a5ad347a9.camel@perches.com>
+In-Reply-To: <154181074665.3727.1071882240761223896.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Joe Perches <joe@perches.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Nov 12, 2018 at 02:30:01PM -0800, Joe Perches wrote:
-> On Tue, 2018-11-13 at 08:45 +1100, Dave Chinner wrote:
-> > On Mon, Nov 12, 2018 at 02:12:08PM -0600, Eric Sandeen wrote:
-> > > On 11/10/18 7:21 PM, Joe Perches wrote:
-> > > > Reduce total object size quite a bit (~32KB) and presumably
-> > > > improve performance at the same time.
-> > > > 
-> > > > Total object size old vs new (x86-64 defconfig with xfs)
-> > > > 
-> > > >     text	   data	    bss	    dec	    hex	filename
-> > > > - 959351	 165573	    632	1125556	 112cb4	(TOTALS) (old)
-> > > > + 924683	 165669	    632	1090984	 10a5a8	(TOTALS) (new)
-> > > 
-> > > And what does it do to maximum stack excursions?
-> > 
-> > Better yet: what does it do to corruption stack traces and debugging
-> > tools like profiling traces?
-> > 
-> > i.e. this noinline directive isn't about stack usage, this is about
-> > being able to debug production code. Basically the compiler inliner
-> > is so agressive on static functions that it makes it impossible to
-> > decipher the stack traces. It flattens them way too much to
-> > be able to tell how we got to a specific location in the code.
-> > 
-> > In reality, being able to find problems quickly and efficiently is
-> > far more important to us than being able to run everything at
-> > ludicrous speed....
+
+
+On 11/9/18 5:45 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Is that really a compelling argument given thw ~50:50
-> split of static/STATIC uses in xfs?
+> When there are fewer than 1024 inodes in the filesystem, scrub reports
+> fractional inodes in its final report:
+> 
+> 35.2MiB data used;  5.0 inodes used.
+> 34.2MiB data found; 5.0 inodes found.
+> 5.0 inodes counted; 5.0 inodes checked.
+> 
+> Inodes are indivisible, so only report the fractional part when we have
+> a large enough number of inodes to perform a unit conversion:
+> 
+> 35.2MiB data used;  5 inodes used.
+> 34.2MiB data found; 5 inodes found.
+> 5 inodes counted; 5 inodes checked.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>   scrub/common.c |    5 ++++-
+>   scrub/common.h |    2 +-
+>   scrub/phase7.c |   34 ++++++++++++++++++----------------
+>   3 files changed, 23 insertions(+), 18 deletions(-)
+> 
+> 
+> diff --git a/scrub/common.c b/scrub/common.c
+> index 96b86a26..78afc4bf 100644
+> --- a/scrub/common.c
+> +++ b/scrub/common.c
+> @@ -200,10 +200,12 @@ auto_space_units(
+>   double
+>   auto_units(
+>   	unsigned long long	number,
+> -	char			**units)
+> +	char			**units,
+> +	int			*precision)
+>   {
+>   	if (debug > 1)
+>   		goto no_prefix;
+> +	*precision = 1;
+>   	if (number > 1000000000000ULL) {
+>   		*units = "T";
+>   		return number / 1000000000000.0;
+> @@ -220,6 +222,7 @@ auto_units(
+>   
+>   no_prefix:
+>   	*units = "";
+> +	*precision = 0;
+>   	return number;
+>   }
+>   
+> diff --git a/scrub/common.h b/scrub/common.h
+> index 5a43ac0c..e85a0333 100644
+> --- a/scrub/common.h
+> +++ b/scrub/common.h
+> @@ -62,7 +62,7 @@ debug_tweak_on(
+>   
+>   double timeval_subtract(struct timeval *tv1, struct timeval *tv2);
+>   double auto_space_units(unsigned long long kilobytes, char **units);
+> -double auto_units(unsigned long long number, char **units);
+> +double auto_units(unsigned long long number, char **units, int *precision);
+>   unsigned int scrub_nproc(struct scrub_ctx *ctx);
+>   unsigned int scrub_nproc_workqueue(struct scrub_ctx *ctx);
+>   
+> diff --git a/scrub/phase7.c b/scrub/phase7.c
+> index cac0c75a..504a6927 100644
+> --- a/scrub/phase7.c
+> +++ b/scrub/phase7.c
+> @@ -107,6 +107,7 @@ xfs_scan_summary(
+>   	unsigned long long		f_free;
+>   	bool				moveon;
+>   	bool				complain;
+> +	int				ip;
+>   	int				error;
+>   
+>   	/* Flush everything out to disk before we start counting. */
+> @@ -176,27 +177,27 @@ xfs_scan_summary(
+>   		if (used_rt || stat_rt) {
+>   			d = auto_space_units(used_data, &du);
+>   			r = auto_space_units(used_rt, &ru);
+> -			i = auto_units(used_files, &iu);
+> +			i = auto_units(used_files, &iu, &ip);
+>   			fprintf(stdout,
+> -_("%.1f%s data used;  %.1f%s realtime data used;  %.2f%s inodes used.\n"),
+> -					d, du, r, ru, i, iu);
+> +_("%.1f%s data used;  %.1f%s realtime data used;  %.*f%s inodes used.\n"),
+> +					d, du, r, ru, ip, i, iu);
+>   			d = auto_space_units(stat_data, &du);
+>   			r = auto_space_units(stat_rt, &ru);
+> -			i = auto_units(counted_inodes, &iu);
+> +			i = auto_units(counted_inodes, &iu, &ip);
+>   			fprintf(stdout,
+> -_("%.1f%s data found; %.1f%s realtime data found; %.2f%s inodes found.\n"),
+> -					d, du, r, ru, i, iu);
+> +_("%.1f%s data found; %.1f%s realtime data found; %.*f%s inodes found.\n"),
+> +					d, du, r, ru, ip, i, iu);
 
-Historically, yes. We're talking about code with call chains that
-can go 50-60 functions deep here. If that gets flattened to 10-20
-functions by compiler inlining (which is the sort of thing that
-happens) then we lose a huge amount of visibility into the workings
-of the code. This affects profiling, stack traces on corruption,
-dynamic debug probes, kernel crash dump analysis, etc.
+Just a suggestion:
+Is plumbing in the extra precision parameter really preferable to just 
+doing something like (i == (int)i ? 0 : 1)  Or maybe a precision macro 
+or something.
 
-I'm not interested in making code fast if distro support engineers
-can't debug problems on user systems easily. Optimising for
-performance over debuggability is a horrible trade off for us to
-make because it means users and distros end up much more reliant on
-single points of expertise for debugging problems. And that means
-the majority of the load of problem triage falls directly on very
-limited resources - the core XFS development team. A little bit of
-thought about how to make code easier to triage and debug goes a
-long, long way....
+Otherwise looks fine.
 
-Indeed, this is not a new problem - we've been using techniques like
-STATIC in one form or another to stop compiler inlining and/or
-function hiding since XFS was first ported to linux 20 years ago.
-In fact, STATIC was inherited from Irix because it helped with
-debugging via the userspace simulator that the initial XFS code was
-developed on. i.e.  STATIC was present in the initial XFS commit
-made way back in 1993, and we've been using it ever since...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+>   		} else {
+>   			d = auto_space_units(used_data, &du);
+> -			i = auto_units(used_files, &iu);
+> +			i = auto_units(used_files, &iu, &ip);
+>   			fprintf(stdout,
+> -_("%.1f%s data used;  %.1f%s inodes used.\n"),
+> -					d, du, i, iu);
+> +_("%.1f%s data used;  %.*f%s inodes used.\n"),
+> +					d, du, ip, i, iu);
+>   			d = auto_space_units(stat_data, &du);
+> -			i = auto_units(counted_inodes, &iu);
+> +			i = auto_units(counted_inodes, &iu, &ip);
+>   			fprintf(stdout,
+> -_("%.1f%s data found; %.1f%s inodes found.\n"),
+> -					d, du, i, iu);
+> +_("%.1f%s data found; %.*f%s inodes found.\n"),
+> +					d, du, ip, i, iu);
+>   		}
+>   		fflush(stdout);
+>   	}
+> @@ -210,12 +211,13 @@ _("%.1f%s data found; %.1f%s inodes found.\n"),
+>   			_("checked inodes"))) {
+>   		double		i1, i2;
+>   		char		*i1u, *i2u;
+> +		int		i1p, i2p;
+>   
+> -		i1 = auto_units(counted_inodes, &i1u);
+> -		i2 = auto_units(ctx->inodes_checked, &i2u);
+> +		i1 = auto_units(counted_inodes, &i1u, &i1p);
+> +		i2 = auto_units(ctx->inodes_checked, &i2u, &i2p);
+>   		fprintf(stdout,
+> -_("%.1f%s inodes counted; %.1f%s inodes checked.\n"),
+> -				i1, i1u, i2, i2u);
+> +_("%.*f%s inodes counted; %.*f%s inodes checked.\n"),
+> +				i1p, i1, i1u, i2p, i2, i2u);
+>   		fflush(stdout);
+>   	}
+>   
+> 
