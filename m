@@ -1,42 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:53178 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726068AbeK1KPS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 05:15:18 -0500
-Date: Tue, 27 Nov 2018 15:15:45 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 7/6] xfs_db: add missing string name for DBM_COWDATA
-Message-ID: <20181127231545.GA8125@magnolia>
-References: <154181071499.3727.3910572718199592407.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:35842 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728983AbeKJVf6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 16:35:58 -0500
+Received: from 089144211136.atnat0020.highway.a1.net ([89.144.211.136] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1gLRnD-0000Vj-RJ
+        for linux-xfs@vger.kernel.org; Sat, 10 Nov 2018 11:51:12 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: COW improvements and always_cow support
+Date: Sat, 10 Nov 2018 12:51:01 +0100
+Message-Id: <20181110115104.30293-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154181071499.3727.3910572718199592407.stgit@magnolia>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-In db/check.c, typename[] is supposed to have strings for every DBM_
-type, but we forgot one.  Add it now.
+this series adds the always_cow mode support after improving our COW
+write support a little bit first.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- db/check.c |    1 +
- 1 file changed, 1 insertion(+)
+The always_cow mode stresses the COW path a lot, but with a few xfstests
+fixups it generall looks good, except for:
 
-diff --git a/db/check.c b/db/check.c
-index 352aab3f..f5b5e845 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -164,6 +164,7 @@ static const char	*typename[] = {
- 	"btrmap",
- 	"btrefcnt",
- 	"rldata",
-+	"cowdata",
- 	NULL
- };
- static int		verbose;
+ - a few tests that complain about fragmentation, which is rather inherent
+   in this mode
+ - generic/208 crashing a lot (and generic/095 with 1k block similarly)
+   because a COW fork extent has changed under writeback.  As far as I can
+   tell this is because nothing prevents another thread from moving a COW
+   fork extent to the data fork while we are under writeback.  I'm currently
+   fully root causing this and looking into a potential fix
+ - xfs/017 crashes occasionally in log recovery because we can't find
+   a refcount tree record that we try to free.
+   I haven't really fully understood this one yet.
