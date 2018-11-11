@@ -1,46 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50990 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727351AbeK1Owo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 09:52:44 -0500
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v1 6/7] xfs: Rewrite retried read
-Date: Tue, 27 Nov 2018 20:49:50 -0700
-Message-Id: <1543376991-5764-7-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
-References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:3710 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731254AbeKLJX2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Nov 2018 04:23:28 -0500
+Date: Mon, 12 Nov 2018 10:33:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] Fix coding style issue in xfs_acl.c and xfs_aops.c
+Message-ID: <20181111233305.GL19305@dastard>
+References: <20181111003603.7598-1-weizhefix@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181111003603.7598-1-weizhefix@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: martin.petersen@oracle.com, shirley.ma@oracle.com, bob.liu@oracle.com, allison.henderson@oracle.com
+To: hmsjwzb <weizhefix@gmail.com>
+Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-If we had to try more than one mirror to get a successful
-read, then write that buffer back to correct the bad mirro
+On Sun, Nov 11, 2018 at 08:36:03AM +0800, hmsjwzb wrote:
+> Possible unwrapped commit description (prefer a maximum 75 chars per line)
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/xfs_buf.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+NACK. Our preference is (and always has been) for comments to fill
+the entire 80 columns, just like the rest of the kernel. I have no
+idea who told you "75 columns is preferred" but they are wrong.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index f102d01..81f6491 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -847,6 +847,14 @@ xfs_buf_read_map(
- 
- 		}
- retry_done:
-+
-+		/*
-+		 * if we had to try more than one mirror to sucessfully read
-+		 * the buffer, write the buffer back
-+		 */
-+		if (!bp->b_error && i > 0)
-+			xfs_bwrite(bp);
-+
- 		return bp;
- 	}
- 
+Cheers,
+
+Dave.
 -- 
-2.7.4
+Dave Chinner
+david@fromorbit.com
