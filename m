@@ -1,219 +1,167 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:46600 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726416AbeK2K3s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:29:48 -0500
-Subject: [PATCH 2/4] xfs: add a block to inode count converter
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 28 Nov 2018 15:26:24 -0800
-Message-ID: <154344758480.3700.17420481547235335104.stgit@magnolia>
-In-Reply-To: <154344757198.3700.16167533135011546878.stgit@magnolia>
-References: <154344757198.3700.16167533135011546878.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from smtprelay0238.hostedemail.com ([216.40.44.238]:41478 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727047AbeKKKrH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Nov 2018 05:47:07 -0500
+Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
+        by smtpgrave03.hostedemail.com (Postfix) with ESMTP id 0024C180206CD
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Nov 2018 00:54:26 +0000 (UTC)
+Message-ID: <eed85a91c5181b1c3cfd54e3fd9d128f686ada89.camel@perches.com>
+Subject: Re: [PATCH] Fix coding style issue in xfs_acl.c and xfs_aops.c
+From: Joe Perches <joe@perches.com>
+Date: Sat, 10 Nov 2018 16:54:22 -0800
+In-Reply-To: <20181111003603.7598-1-weizhefix@gmail.com>
+References: <20181111003603.7598-1-weizhefix@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: hmsjwzb <weizhefix@gmail.com>, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sun, 2018-11-11 at 08:36 +0800, hmsjwzb wrote:
+> Possible unwrapped commit description (prefer a maximum 75 chars per line)
 
-Add new helpers to convert units of fs blocks into inodes, and AG blocks
-into AG inodes, respectively.  Convert all the open-coded conversions
-and XFS_OFFBNO_TO_AGINO(, , 0) calls to use them, as appropriate.  The
-OFFBNO_TO_AGINO macro is retained for xfs_repair.
+This commit message makes no sense.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_format.h |    2 ++
- fs/xfs/libxfs/xfs_ialloc.c |   17 ++++++++---------
- fs/xfs/libxfs/xfs_types.c  |    4 ++--
- fs/xfs/scrub/ialloc.c      |    2 +-
- fs/xfs/xfs_fsops.c         |    2 +-
- fs/xfs/xfs_inode.c         |    2 +-
- fs/xfs/xfs_itable.c        |    2 +-
- fs/xfs/xfs_super.c         |    4 ++--
- 8 files changed, 18 insertions(+), 17 deletions(-)
+Do say what you do to the code in the commit description.
 
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 9995d5ae380b..b15412e4c535 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1083,6 +1083,8 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
- 	((i) & XFS_INO_MASK(XFS_INO_OFFSET_BITS(mp)))
- #define	XFS_OFFBNO_TO_AGINO(mp,b,o)	\
- 	((xfs_agino_t)(((b) << XFS_INO_OFFSET_BITS(mp)) | (o)))
-+#define	XFS_FSB_TO_INO(mp, b)	((xfs_ino_t)((b) << XFS_INO_OFFSET_BITS(mp)))
-+#define	XFS_AGB_TO_AGINO(mp, b)	((xfs_agino_t)((b) << XFS_INO_OFFSET_BITS(mp)))
- 
- #define	XFS_MAXINUMBER		((xfs_ino_t)((1ULL << 56) - 1ULL))
- #define	XFS_MAXINUMBER_32	((xfs_ino_t)((1ULL << 32) - 1ULL))
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index fcf0d17405d8..3ac4a836428d 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -300,7 +300,7 @@ xfs_ialloc_inode_init(
- 	 * blocks size.
- 	 */
- 	blks_per_cluster = xfs_icluster_size_fsb(mp);
--	inodes_per_cluster = blks_per_cluster << mp->m_sb.sb_inopblog;
-+	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
- 	nbufs = length / blks_per_cluster;
- 
- 	/*
-@@ -312,7 +312,7 @@ xfs_ialloc_inode_init(
- 	 *
- 	 * For v3 inodes, we also need to write the inode number into the inode,
- 	 * so calculate the first inode number of the chunk here as
--	 * XFS_OFFBNO_TO_AGINO() only works within a filesystem block, not
-+	 * XFS_AGB_TO_AGINO() only works within a filesystem block, not
- 	 * across multiple filesystem blocks (such as a cluster) and so cannot
- 	 * be used in the cluster buffer loop below.
- 	 *
-@@ -324,8 +324,7 @@ xfs_ialloc_inode_init(
- 	 */
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		version = 3;
--		ino = XFS_AGINO_TO_INO(mp, agno,
--				       XFS_OFFBNO_TO_AGINO(mp, agbno, 0));
-+		ino = XFS_AGINO_TO_INO(mp, agno, XFS_AGB_TO_AGINO(mp, agbno));
- 
- 		/*
- 		 * log the initialisation that is about to take place as an
-@@ -445,7 +444,7 @@ xfs_align_sparse_ino(
- 		return;
- 
- 	/* calculate the inode offset and align startino */
--	offset = mod << mp->m_sb.sb_inopblog;
-+	offset = XFS_AGB_TO_AGINO(mp, mod);
- 	*startino -= offset;
- 
- 	/*
-@@ -797,7 +796,7 @@ xfs_ialloc_ag_alloc(
- 		if (error)
- 			return error;
- 
--		newlen = args.len << args.mp->m_sb.sb_inopblog;
-+		newlen = XFS_AGB_TO_AGINO(args.mp, args.len);
- 		ASSERT(newlen <= XFS_INODES_PER_CHUNK);
- 		allocmask = (1 << (newlen / XFS_INODES_PER_HOLEMASK_BIT)) - 1;
- 	}
-@@ -825,7 +824,7 @@ xfs_ialloc_ag_alloc(
- 	/*
- 	 * Convert the results.
- 	 */
--	newino = XFS_OFFBNO_TO_AGINO(args.mp, args.agbno, 0);
-+	newino = XFS_AGB_TO_AGINO(args.mp, args.agbno);
- 
- 	if (xfs_inobt_issparse(~allocmask)) {
- 		/*
-@@ -2724,8 +2723,8 @@ xfs_ialloc_has_inodes_at_extent(
- 	xfs_agino_t		low;
- 	xfs_agino_t		high;
- 
--	low = XFS_OFFBNO_TO_AGINO(cur->bc_mp, bno, 0);
--	high = XFS_OFFBNO_TO_AGINO(cur->bc_mp, bno + len, 0) - 1;
-+	low = XFS_AGB_TO_AGINO(cur->bc_mp, bno);
-+	high = XFS_AGB_TO_AGINO(cur->bc_mp, bno + len) - 1;
- 
- 	return xfs_ialloc_has_inode_record(cur, low, high, exists);
- }
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index 33a5ca346baf..895c232d63b7 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -89,14 +89,14 @@ xfs_agino_range(
- 	 */
- 	bno = round_up(XFS_AGFL_BLOCK(mp) + 1,
- 			xfs_ialloc_cluster_alignment(mp));
--	*first = XFS_OFFBNO_TO_AGINO(mp, bno, 0);
-+	*first = XFS_AGB_TO_AGINO(mp, bno);
- 
- 	/*
- 	 * Calculate the last inode, which will be at the end of the
- 	 * last (aligned) cluster that can be allocated in the AG.
- 	 */
- 	bno = round_down(eoag, xfs_ialloc_cluster_alignment(mp));
--	*last = XFS_OFFBNO_TO_AGINO(mp, bno, 0) - 1;
-+	*last = XFS_AGB_TO_AGINO(mp, bno) - 1;
- }
- 
- /*
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 72f45b298fa5..426eb1a5503c 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -200,7 +200,7 @@ xchk_iallocbt_check_freemask(
- 
- 	/* Make sure the freemask matches the inode records. */
- 	blks_per_cluster = xfs_icluster_size_fsb(mp);
--	nr_inodes = XFS_OFFBNO_TO_AGINO(mp, blks_per_cluster, 0);
-+	nr_inodes = XFS_FSB_TO_INO(mp, blks_per_cluster);
- 
- 	for (agino = irec->ir_startino;
- 	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 093c2b8d7e20..ec2e63a7963b 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -252,7 +252,7 @@ xfs_growfs_data(
- 	if (mp->m_sb.sb_imax_pct) {
- 		uint64_t icount = mp->m_sb.sb_dblocks * mp->m_sb.sb_imax_pct;
- 		do_div(icount, 100);
--		mp->m_maxicount = icount << mp->m_sb.sb_inopblog;
-+		mp->m_maxicount = XFS_FSB_TO_INO(mp, icount);
- 	} else
- 		mp->m_maxicount = 0;
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index f21756751540..801eb891d0fd 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2200,7 +2200,7 @@ xfs_ifree_cluster(
- 	inum = xic->first_ino;
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, inum));
- 	blks_per_cluster = xfs_icluster_size_fsb(mp);
--	inodes_per_cluster = blks_per_cluster << mp->m_sb.sb_inopblog;
-+	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
- 	nbufs = mp->m_ialloc_blks / blks_per_cluster;
- 
- 	for (j = 0; j < nbufs; j++, inum += inodes_per_cluster) {
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index e9508ba01ed1..18d8d3b812a7 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -173,7 +173,7 @@ xfs_bulkstat_ichunk_ra(
- 
- 	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
- 	blks_per_cluster = xfs_icluster_size_fsb(mp);
--	inodes_per_cluster = blks_per_cluster << mp->m_sb.sb_inopblog;
-+	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
- 
- 	blk_start_plug(&plug);
- 	for (i = 0; i < XFS_INODES_PER_CHUNK;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index a2e944b80d2a..c9097cb0b955 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -608,7 +608,7 @@ xfs_set_inode_alloc(
- 	}
- 
- 	/* Get the last possible inode in the filesystem */
--	agino =	XFS_OFFBNO_TO_AGINO(mp, sbp->sb_agblocks - 1, 0);
-+	agino =	XFS_AGB_TO_AGINO(mp, sbp->sb_agblocks - 1);
- 	ino = XFS_AGINO_TO_INO(mp, agcount - 1, agino);
- 
- 	/*
-@@ -1150,7 +1150,7 @@ xfs_fs_statfs(
- 	statp->f_bfree = fdblocks - mp->m_alloc_set_aside;
- 	statp->f_bavail = statp->f_bfree;
- 
--	fakeinos = statp->f_bfree << sbp->sb_inopblog;
-+	fakeinos = XFS_FSB_TO_INO(mp, statp->f_bfree);
- 	statp->f_files = min(icount + fakeinos, (uint64_t)XFS_MAXINUMBER);
- 	if (mp->m_maxicount)
- 		statp->f_files = min_t(typeof(statp->f_files),
+> Signed-off-by: hmsjwzb <weizhefix@gmail.com>
+> ---
+>  fs/xfs/xfs_acl.c  |  4 +--
+>  fs/xfs/xfs_aops.c | 73 ++++++++++++++++++++++++-----------------------
+>  2 files changed, 39 insertions(+), 38 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> index 8039e35147dd..5c779c161727 100644
+> --- a/fs/xfs/xfs_acl.c
+> +++ b/fs/xfs/xfs_acl.c
+> @@ -19,8 +19,8 @@
+>  
+>  /*
+>   * Locking scheme:
+> - *  - all ACL updates are protected by inode->i_mutex, which is taken before
+> - *    calling into this file.
+> + *  - all ACL updates are protected by inode->i_mutex,
+> + *    which is taken before calling into this file.
+>   */
+>  
+>  STATIC struct posix_acl *
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 338b9d9984e0..1a6cb88ffdb7 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -81,8 +81,8 @@ xfs_finish_page_writeback(
+>  
+>  /*
+>   * We're now finished for good with this ioend structure.  Update the page
+> - * state, release holds on bios, and finally free up memory.  Do not use the
+> - * ioend after this.
+> + * state, release holds on bios, and finally free up memory.
+> + * Do not use the ioend after this.
+>   */
+>  STATIC void
+>  xfs_destroy_ioend(
+> @@ -464,18 +464,18 @@ xfs_map_blocks(
+>  }
+>  
+>  /*
+> - * Submit the bio for an ioend. We are passed an ioend with a bio attached to
+> - * it, and we submit that bio. The ioend may be used for multiple bio
+> - * submissions, so we only want to allocate an append transaction for the ioend
+> - * once. In the case of multiple bio submission, each bio will take an IO
+> - * reference to the ioend to ensure that the ioend completion is only done once
+> - * all bios have been submitted and the ioend is really done.
+> + * Submit the bio for an ioend. We are passed an ioend with a bio attached
+> + * to it, and we submit that bio. The ioend may be used for multiple bio
+> + * submissions, so we only want to allocate an append transaction for the
+> + * ioend once. In the case of multiple bio submission, each bio will take
+> + * an IO reference to the ioend to ensure that the ioend completion is only
+> + * done once all bios have been submitted and the ioend is really done.
+>   *
+> - * If @fail is non-zero, it means that we have a situation where some part of
+> - * the submission process has failed after we have marked paged for writeback
+> - * and unlocked them. In this situation, we need to fail the bio and ioend
+> - * rather than submit it to IO. This typically only happens on a filesystem
+> - * shutdown.
+> + * If @fail is non-zero, it means that we have a situation where some part
+> + * of the submission process has failed after we have marked paged for
+> + * writeback and unlocked them. In this situation, we need to fail the bio
+> + * and ioend rather than submit it to IO. This typically only happens
+> + * on a filesystem shutdown.
+>   */
+>  STATIC int
+>  xfs_submit_ioend(
+> @@ -583,8 +583,8 @@ xfs_chain_bio(
+>  }
+>  
+>  /*
+> - * Test to see if we have an existing ioend structure that we could append to
+> - * first, otherwise finish off the current ioend and start another.
+> + * Test to see if we have an existing ioend structure that we could append
+> + * to first, otherwise finish off the current ioend and start another.
+>   */
+>  STATIC void
+>  xfs_add_to_ioend(
+> @@ -637,15 +637,16 @@ xfs_vm_invalidatepage(
+>  }
+>  
+>  /*
+> - * If the page has delalloc blocks on it, we need to punch them out before we
+> - * invalidate the page.  If we don't, we leave a stale delalloc mapping on the
+> - * inode that can trip up a later direct I/O read operation on the same region.
+> + * If the page has delalloc blocks on it, we need to punch them out before
+> + * we invalidate the page.  If we don't, we leave a stale delalloc mapping
+> + * on the inode that can trip up a later direct I/O read operation on
+> + * the same region.
+>   *
+> - * We prevent this by truncating away the delalloc regions on the page.  Because
+> - * they are delalloc, we can do this without needing a transaction. Indeed - if
+> - * we get ENOSPC errors, we have to be able to do this truncation without a
+> - * transaction as there is no space left for block reservation (typically why we
+> - * see a ENOSPC in writeback).
+> + * We prevent this by truncating away the delalloc regions on the page.
+> + * Because they are delalloc, we can do this without needing a transaction.
+> + * Indeed - if we get ENOSPC errors, we have to be able to do this
+> + * truncation without a transaction as there is no space left for block
+> + * reservation (typically why we see a ENOSPC in writeback).
+>   */
+>  STATIC void
+>  xfs_aops_discard_page(
+> @@ -674,20 +675,20 @@ xfs_aops_discard_page(
+>  }
+>  
+>  /*
+> - * We implement an immediate ioend submission policy here to avoid needing to
+> - * chain multiple ioends and hence nest mempool allocations which can violate
+> - * forward progress guarantees we need to provide. The current ioend we are
+> - * adding blocks to is cached on the writepage context, and if the new block
+> - * does not append to the cached ioend it will create a new ioend and cache that
+> - * instead.
+> + * We implement an immediate ioend submission policy here to avoid needing
+> + * to chain multiple ioends and hence nest mempool allocations which can
+> + * violate forward progress guarantees we need to provide. The current
+> + * ioend we are adding blocks to is cached on the writepage context,
+> + * and if the new block does not append to the cached ioend it will create
+> + * a new ioend and cache that instead.
+>   *
+> - * If a new ioend is created and cached, the old ioend is returned and queued
+> - * locally for submission once the entire page is processed or an error has been
+> - * detected.  While ioends are submitted immediately after they are completed,
+> - * batching optimisations are provided by higher level block plugging.
+> - *
+> - * At the end of a writeback pass, there will be a cached ioend remaining on the
+> - * writepage context that the caller will need to submit.
+> + * If a new ioend is created and cached, the old ioend is returned and
+> + * queued locally for submission once the entire page is processed or an
+> + * error has been detected.  While ioends are submitted immediately
+> + * after they are completed, batching optimisations are provided by higher
+> + * level block plugging.
+> + * At the end of a writeback pass, there will be a cached ioend remaining
+> + * on the writepage context that the caller will need to submit.
+>   */
+>  static int
+>  xfs_writepage_map(
