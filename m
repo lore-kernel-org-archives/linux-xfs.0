@@ -1,46 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:55728 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727781AbeKJArH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Nov 2018 19:47:07 -0500
-Date: Fri, 9 Nov 2018 07:06:10 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: defer online discard submission to a workqueue
-Message-ID: <20181109150610.GB9153@infradead.org>
-References: <20181105181021.8174-1-bfoster@redhat.com>
- <20181105215139.GA3160@infradead.org>
- <20181106142310.GA2773@bfoster>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:55528 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725817AbeKMHDl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 02:03:41 -0500
+Date: Tue, 13 Nov 2018 08:08:39 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/16] xfs: drop ->writepage completely
+Message-ID: <20181112210839.GM19305@dastard>
+References: <20181107063127.3902-1-david@fromorbit.com>
+ <20181107063127.3902-2-david@fromorbit.com>
+ <20181109151239.GD9153@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181106142310.GA2773@bfoster>
+In-Reply-To: <20181109151239.GD9153@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Tue, Nov 06, 2018 at 09:23:11AM -0500, Brian Foster wrote:
-> My
-> understanding is that these discards can stack up and take enough time
-> that a limit on outstanding discards is required, which now that I think
-> of it makes me somewhat skeptical of the whole serial execution thing.
-> Hitting that outstanding discard request limit is what bubbles up the
-> stack and affects XFS by holding up log forces, since new discard
-> submissions are presumably blocked on completion of the oldest
-> outstanding request.
+On Fri, Nov 09, 2018 at 07:12:39AM -0800, Christoph Hellwig wrote:
+> [adding linux-mm to the CC list]
+> 
+> On Wed, Nov 07, 2018 at 05:31:12PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > ->writepage is only used in one place - single page writeback from
+> > memory reclaim. We only allow such writeback from kswapd, not from
+> > direct memory reclaim, and so it is rarely used. When it comes from
+> > kswapd, it is effectively random dirty page shoot-down, which is
+> > horrible for IO patterns. We will already have background writeback
+> > trying to clean all the dirty pages in memory as efficiently as
+> > possible, so having kswapd interrupt our well formed IO stream only
+> > slows things down. So get rid of xfs_vm_writepage() completely.
+> 
+> Interesting.  IFF we can pull this off it would simplify a lot of
+> things, so I'm generally in favor of it.
 
-We don't do strict ordering or request, but eventually requests
-waiting for completion will block others from being submitted.
+Over the past few days of hammeringon this, the only thing I've
+noticed is that page reclaim hangs up less, but it's also putting a
+bit more pressure on the shrinkers. Filesystem intensive workloads
+that drive the machine into reclaim via the page cache seem to hit
+breakdown conditions slightly earlier and the impact is that the
+shrinkers are run harder. Mostly I see this as the XFS buffer cache
+having a much harder time keeping a working set active.
 
-> I'm not quite sure what happens in the block layer if that limit were
-> lifted. Perhaps it assumes throttling responsibility directly via
-> queues/plugs? I'd guess that at minimum we'd end up blocking indirectly
-> somewhere (via memory allocation pressure?) anyways, so ISTM that some
-> kind of throttling is inevitable in this situation. What am I missing?
+However, while the workloads hit the working set cache, writeback
+performance does seem to be slightly higher. It is, however, being
+offset by the deeper lows that come from the cache being turned
+over.
 
-We'll still block new allocations waiting for these blocks and
-other bits.  Or to put it another way - if your discard implementation
-is slow (independent of synchronous or not) your are going to be in
-a world of pain with online discard.  That is what it's not default
-to start with.
+So there's a bit of rebalancing to be done here as a followup, but
+I've been unable to drive the system into unexepected OOM kills or
+other bad behaviour as a result of removing ->writepage.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
