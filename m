@@ -1,48 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:35942 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729060AbeKJVgt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 16:36:49 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/5] xfs/420: only check the extent layout after syncing
-Date: Sat, 10 Nov 2018 12:51:45 +0100
-Message-Id: <20181110115145.30356-6-hch@lst.de>
-In-Reply-To: <20181110115145.30356-1-hch@lst.de>
-References: <20181110115145.30356-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:59392 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725834AbeKMGG5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Nov 2018 01:06:57 -0500
+Subject: Re: [PATCH] xfs: Remove noinline from #define STATIC
+References: <7302f4a13c1cbf62b07f636878ce25fcca84b6c4.camel@perches.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6420cf91-89c8-a876-7a0d-25ab8ba428b8@sandeen.net>
+Date: Mon, 12 Nov 2018 14:12:08 -0600
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <7302f4a13c1cbf62b07f636878ce25fcca84b6c4.camel@perches.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Joe Perches <joe@perches.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-This tests validates the correct extent layout for some hairy reflink
-related issues.  But until we called sync or fsync we have no gurantee
-of any data fork layout, as only writeback moves the extents from the
-COW for to the data fork.
+On 11/10/18 7:21 PM, Joe Perches wrote:
+> Reduce total object size quite a bit (~32KB) and presumably
+> improve performance at the same time.
+> 
+> Total object size old vs new (x86-64 defconfig with xfs)
+> 
+>     text	   data	    bss	    dec	    hex	filename
+> - 959351	 165573	    632	1125556	 112cb4	(TOTALS) (old)
+> + 924683	 165669	    632	1090984	 10a5a8	(TOTALS) (new)
 
-Without this we'll see an error if we use COW fork speculative
-preallocations for non-overwrites, which is useful to reduce
-fragmentation.
+And what does it do to maximum stack excursions?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- tests/xfs/420 | 2 ++
- 1 file changed, 2 insertions(+)
+-Eric
 
-diff --git a/tests/xfs/420 b/tests/xfs/420
-index a083a12b..aea95c7b 100755
---- a/tests/xfs/420
-+++ b/tests/xfs/420
-@@ -93,6 +93,8 @@ $XFS_IO_PROG -c "pwrite -S 0x63 $((blksz * 3)) $blksz" $testdir/file2 >> $seqres
- $XFS_IO_PROG -c "pwrite -S 0x63 0 $blksz" $testdir/file3 >> $seqres.full
- $XFS_IO_PROG -c "pwrite -S 0x63 $((blksz * 3)) $blksz" $testdir/file3 >> $seqres.full
- 
-+sync
-+
- $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file1 >> $seqres.full 2>&1
- $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file2 >> $seqres.full 2>&1
- $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file3 >> $seqres.full 2>&1
--- 
-2.19.1
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  fs/xfs/xfs_linux.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> index edbd5a210df2..f33c8b626bca 100644
+> --- a/fs/xfs/xfs_linux.h
+> +++ b/fs/xfs/xfs_linux.h
+> @@ -242,7 +242,7 @@ static inline uint64_t howmany_64(uint64_t x, uint32_t y)
+>  #endif /* XFS_WARN */
+>  #endif /* DEBUG */
+>  
+> -#define STATIC static noinline
+> +#define STATIC static
+>  
+>  #ifdef CONFIG_XFS_RT
+>  
+> 
