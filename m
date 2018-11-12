@@ -1,346 +1,295 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:35916 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728983AbeKJVgo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 16:36:44 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/5] xfs: don't assume preallocation is always supported on XFS
-Date: Sat, 10 Nov 2018 12:51:43 +0100
-Message-Id: <20181110115145.30356-4-hch@lst.de>
-In-Reply-To: <20181110115145.30356-1-hch@lst.de>
-References: <20181110115145.30356-1-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Received: from smtprelay0069.hostedemail.com ([216.40.44.69]:52859 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725817AbeKMHAb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 02:00:31 -0500
+Message-ID: <cd6650d08304418a25f3e51ad910cce6d15b8716.camel@perches.com>
+Subject: Re: [PATCH] xfs: Remove noinline from #define STATIC
+From: Joe Perches <joe@perches.com>
+In-Reply-To: <6420cf91-89c8-a876-7a0d-25ab8ba428b8@sandeen.net>
+References: <7302f4a13c1cbf62b07f636878ce25fcca84b6c4.camel@perches.com>
+         <6420cf91-89c8-a876-7a0d-25ab8ba428b8@sandeen.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Date: Mon, 12 Nov 2018 13:05:02 -0800
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-The always_cow mode can't usefull preallocate space gіven that it always
-has to write out of place, and thus will reject falloc or ioctl calls to
-preallocate space in a file.  Add explicit checks for preallocation
-support in various XFS-specific tests to support this.
----
- tests/xfs/009 | 1 +
- tests/xfs/072 | 3 +--
- tests/xfs/084 | 1 +
- tests/xfs/104 | 1 +
- tests/xfs/128 | 1 +
- tests/xfs/164 | 1 +
- tests/xfs/165 | 1 +
- tests/xfs/166 | 2 ++
- tests/xfs/167 | 1 +
- tests/xfs/231 | 1 +
- tests/xfs/232 | 1 +
- tests/xfs/242 | 1 +
- tests/xfs/250 | 1 +
- tests/xfs/280 | 1 +
- tests/xfs/294 | 2 ++
- tests/xfs/312 | 1 +
- tests/xfs/313 | 1 +
- tests/xfs/316 | 1 +
- tests/xfs/324 | 1 +
- tests/xfs/326 | 1 +
- tests/xfs/328 | 1 +
- tests/xfs/330 | 1 +
- tests/xfs/444 | 1 +
- tests/xfs/445 | 1 +
- 24 files changed, 26 insertions(+), 2 deletions(-)
+On Mon, 2018-11-12 at 14:12 -0600, Eric Sandeen wrote:
+> On 11/10/18 7:21 PM, Joe Perches wrote:
+> > Reduce total object size quite a bit (~32KB) and presumably
+> > improve performance at the same time.
+> > 
+> > Total object size old vs new (x86-64 defconfig with xfs)
+> > 
+> >     text	   data	    bss	    dec	    hex	filename
+> > - 959351	 165573	    632	1125556	 112cb4	(TOTALS) (old)
+> > + 924683	 165669	    632	1090984	 10a5a8	(TOTALS) (new)
+> 
+> And what does it do to maximum stack excursions?
 
-diff --git a/tests/xfs/009 b/tests/xfs/009
-index 7f95156c..9385d3b9 100755
---- a/tests/xfs/009
-+++ b/tests/xfs/009
-@@ -48,6 +48,7 @@ _supported_fs xfs
- _supported_os Linux
- 
- _require_scratch
-+_require_xfs_io_command "falloc"
- 
- _filesize()
- {
-diff --git a/tests/xfs/072 b/tests/xfs/072
-index 735260b7..f86e4003 100755
---- a/tests/xfs/072
-+++ b/tests/xfs/072
-@@ -30,9 +30,8 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- _supported_fs xfs
- _supported_os Linux
- 
--[ -n "$XFS_IO_PROG" ] || _notrun "xfs_io executable not found"
--
- _require_scratch
-+_require_xfs_io_command "falloc"
- 
- rm -f $seqres.full
- _scratch_unmount >/dev/null 2>&1
-diff --git a/tests/xfs/084 b/tests/xfs/084
-index 8e9aff3c..fcdfc185 100755
---- a/tests/xfs/084
-+++ b/tests/xfs/084
-@@ -35,6 +35,7 @@ pgsize=`$here/src/feature -s`
- # real QA test starts here
- _supported_fs xfs
- _supported_os Linux
-+_require_xfs_io_command "falloc"
- _require_test
- 
- echo
-diff --git a/tests/xfs/104 b/tests/xfs/104
-index 218e2b60..bc38f969 100755
---- a/tests/xfs/104
-+++ b/tests/xfs/104
-@@ -55,6 +55,7 @@ _stress_scratch()
- # real QA test starts here
- _supported_fs xfs
- _require_scratch
-+_require_xfs_io_command "falloc"
- 
- rm -f $seqres.full
- _scratch_mkfs_xfs | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
-diff --git a/tests/xfs/128 b/tests/xfs/128
-index 40ea0f04..f1b4fb4f 100755
---- a/tests/xfs/128
-+++ b/tests/xfs/128
-@@ -32,6 +32,7 @@ _supported_fs xfs
- _require_test_lsattr
- _require_scratch_reflink
- _require_cp_reflink
-+_require_xfs_io_command "falloc"
- 
- echo "Format and mount"
- _scratch_mkfs > $seqres.full 2>&1
-diff --git a/tests/xfs/164 b/tests/xfs/164
-index fdd9293d..b0ec6df5 100755
---- a/tests/xfs/164
-+++ b/tests/xfs/164
-@@ -52,6 +52,7 @@ _filter_bmap()
- _supported_fs xfs
- _supported_os Linux
- _require_test
-+_require_xfs_io_command "falloc"
- 
- testfile=$TEST_DIR/file.$seq
- rm -f $seqres.full
-diff --git a/tests/xfs/165 b/tests/xfs/165
-index 4f6738d4..990d054c 100755
---- a/tests/xfs/165
-+++ b/tests/xfs/165
-@@ -49,6 +49,7 @@ _filter_bmap()
- _supported_fs xfs
- _supported_os Linux
- _require_test
-+_require_xfs_io_command "falloc"
- 
- # io tests 
- testfile=$TEST_DIR/file.$seq
-diff --git a/tests/xfs/166 b/tests/xfs/166
-index 9814e4a3..8dc7e080 100755
---- a/tests/xfs/166
-+++ b/tests/xfs/166
-@@ -60,6 +60,8 @@ _supported_fs xfs
- _supported_os Linux
- 
- _require_scratch
-+_require_xfs_io_command "falloc"
-+
- _scratch_mkfs_xfs >/dev/null 2>&1
- _scratch_mount
- 
-diff --git a/tests/xfs/167 b/tests/xfs/167
-index 40b45e86..015002d4 100755
---- a/tests/xfs/167
-+++ b/tests/xfs/167
-@@ -41,6 +41,7 @@ _supported_fs xfs
- _supported_os Linux
- 
- _require_command "$KILLALL_PROG" killall
-+_require_xfs_io_command "falloc"
- 
- _require_scratch
- _scratch_mkfs_xfs >/dev/null 2>&1
-diff --git a/tests/xfs/231 b/tests/xfs/231
-index 865c0331..12fdc490 100755
---- a/tests/xfs/231
-+++ b/tests/xfs/231
-@@ -38,6 +38,7 @@ _supported_fs xfs
- _require_scratch_reflink
- _require_cp_reflink
- _require_xfs_io_command "cowextsize"
-+_require_xfs_io_command "falloc"
- _require_xfs_io_command "fiemap"
- 
- old_cow_lifetime=$(cat /proc/sys/fs/xfs/speculative_cow_prealloc_lifetime)
-diff --git a/tests/xfs/232 b/tests/xfs/232
-index 3a88cc33..e768fa27 100755
---- a/tests/xfs/232
-+++ b/tests/xfs/232
-@@ -39,6 +39,7 @@ _supported_fs xfs
- _require_xfs_io_command "cowextsize"
- _require_scratch_reflink
- _require_cp_reflink
-+_require_xfs_io_command "falloc"
- _require_xfs_io_command "fiemap"
- 
- old_cow_lifetime=$(cat /proc/sys/fs/xfs/speculative_cow_prealloc_lifetime)
-diff --git a/tests/xfs/242 b/tests/xfs/242
-index 9ae1aebd..5ce2c6f0 100755
---- a/tests/xfs/242
-+++ b/tests/xfs/242
-@@ -31,6 +31,7 @@ _supported_fs xfs
- _supported_os Linux
- _require_test
- 
-+_require_xfs_io_command "falloc"
- _require_xfs_io_command "zero"
- 
- testfile=$TEST_DIR/242.$$
-diff --git a/tests/xfs/250 b/tests/xfs/250
-index f8b800e4..1f4d818e 100755
---- a/tests/xfs/250
-+++ b/tests/xfs/250
-@@ -32,6 +32,7 @@ _supported_fs xfs
- _supported_os Linux
- _require_test
- _require_loop
-+_require_xfs_io_command "falloc"
- 
- LOOP_DEV=$TEST_DIR/$seq.fs
- LOOP_MNT=$TEST_DIR/$seq.mnt
-diff --git a/tests/xfs/280 b/tests/xfs/280
-index 172eee21..76287c85 100755
---- a/tests/xfs/280
-+++ b/tests/xfs/280
-@@ -31,6 +31,7 @@ _supported_os Linux
- _supported_fs xfs
- _require_scratch_reflink
- _require_xfs_io_command "bmap"
-+_require_xfs_io_command "falloc"
- 
- echo "Format and mount"
- _scratch_mkfs > $seqres.full 2>&1
-diff --git a/tests/xfs/294 b/tests/xfs/294
-index 4c919432..bce4d07b 100755
---- a/tests/xfs/294
-+++ b/tests/xfs/294
-@@ -42,6 +42,8 @@ _supported_fs xfs
- _supported_os Linux
- _require_scratch
- _require_test_program "punch-alternating"
-+_require_xfs_io_command "falloc"
-+_require_xfs_io_command "fpunch"
- 
- # We want to mkfs with a very specific geometry
- MKFS_OPTIONS=""
-diff --git a/tests/xfs/312 b/tests/xfs/312
-index cdec9233..fa05754e 100755
---- a/tests/xfs/312
-+++ b/tests/xfs/312
-@@ -34,6 +34,7 @@ _supported_os Linux
- _supported_fs xfs
- _require_cp_reflink
- _require_scratch_reflink
-+_require_xfs_io_command "fpunch"
- _require_xfs_io_error_injection "bmap_finish_one"
- 
- rm -f $seqres.full
-diff --git a/tests/xfs/313 b/tests/xfs/313
-index 47ef7ec8..97c24f0a 100755
---- a/tests/xfs/313
-+++ b/tests/xfs/313
-@@ -34,6 +34,7 @@ _supported_os Linux
- _supported_fs xfs
- _require_cp_reflink
- _require_scratch_reflink
-+_require_xfs_io_command "fpunch"
- _require_xfs_io_error_injection "refcount_finish_one"
- 
- rm -f $seqres.full
-diff --git a/tests/xfs/316 b/tests/xfs/316
-index d0cd1e2f..063f0e43 100755
---- a/tests/xfs/316
-+++ b/tests/xfs/316
-@@ -35,6 +35,7 @@ _supported_fs xfs
- _require_cp_reflink
- _require_scratch_reflink
- _require_error_injection
-+_require_xfs_io_command "fpunch"
- _require_xfs_io_error_injection "refcount_continue_update"
- 
- rm -f $seqres.full
-diff --git a/tests/xfs/324 b/tests/xfs/324
-index a1be3318..e8ed2fc5 100755
---- a/tests/xfs/324
-+++ b/tests/xfs/324
-@@ -35,6 +35,7 @@ _supported_fs xfs
- _require_cp_reflink
- _require_scratch_reflink
- _require_error_injection
-+_require_xfs_io_command "fpunch"
- _require_xfs_io_error_injection "refcount_continue_update"
- 
- rm -f $seqres.full
-diff --git a/tests/xfs/326 b/tests/xfs/326
-index b6e01862..bb7e5590 100755
---- a/tests/xfs/326
-+++ b/tests/xfs/326
-@@ -37,6 +37,7 @@ _supported_fs xfs
- _require_cp_reflink
- _require_scratch_reflink
- _require_xfs_io_command "cowextsize"
-+_require_xfs_io_command "fpunch"
- _require_xfs_io_error_injection "refcount_finish_one"
- 
- rm -f $seqres.full
-diff --git a/tests/xfs/328 b/tests/xfs/328
-index ab8af12f..55fe3ec9 100755
---- a/tests/xfs/328
-+++ b/tests/xfs/328
-@@ -33,6 +33,7 @@ _supported_fs xfs
- _require_scratch_reflink
- _require_cp_reflink
- _require_test_program "punch-alternating"
-+_require_xfs_io_command "falloc" # used in FSR
- _require_command "$XFS_FSR_PROG" "xfs_fsr"
- 
- rm -f "$seqres.full"
-diff --git a/tests/xfs/330 b/tests/xfs/330
-index 3682525d..66a9b6e2 100755
---- a/tests/xfs/330
-+++ b/tests/xfs/330
-@@ -33,6 +33,7 @@ _supported_os Linux
- _supported_fs xfs
- _require_scratch_reflink
- _require_cp_reflink
-+_require_xfs_io_command "falloc" # used in FSR
- _require_command "$XFS_FSR_PROG" "xfs_fsr"
- _require_quota
- _require_nobody
-diff --git a/tests/xfs/444 b/tests/xfs/444
-index f1c0ed03..7a33b9e9 100755
---- a/tests/xfs/444
-+++ b/tests/xfs/444
-@@ -38,6 +38,7 @@ _supported_os Linux
- _require_check_dmesg
- _require_scratch
- _require_test_program "punch-alternating"
-+_require_xfs_io_command "falloc"
- _require_xfs_db_write_array
- 
- # This is only a v5 filesystem problem
-diff --git a/tests/xfs/445 b/tests/xfs/445
-index 2d205a40..800d5d28 100755
---- a/tests/xfs/445
-+++ b/tests/xfs/445
-@@ -53,6 +53,7 @@ drop_caches()
- _supported_fs generic
- _supported_os Linux
- _require_scratch_size $((2*1024*1024)) # kb
-+_require_xfs_io_command "falloc"
- 
- # check for filestreams
- _check_filestreams_support || _notrun "filestreams not available"
--- 
-2.19.1
+It seems to add a maximum of 40 bytes in xfs_reclaim_inodes_ag
+and xfs_readdir, but I didn't do more than visually scan
+checkstack output.
+
+Using scripts/checkstack.pl on defconfig x86-64 with xfs
+and cutting out absolute addresses
+
+ diff -urN xfs_cs_old_2 xfs_cs_new_2 
+--- xfs_cs_old_2	2018-11-12 12:55:03.195282512 -0800
++++ xfs_cs_new_2	2018-11-12 12:55:09.219168923 -0800
+@@ -1,18 +1,20 @@
+ xfs_ag_init_headers [vmlinux]:	464
+ xfs_ag_init_headers [vmlinux]:	464
+-xfs_inode_ag_walk.isra.19 [vmlinux]:	416
+-xfs_inode_ag_walk.isra.19 [vmlinux]:	416
++xfs_inode_ag_walk.isra.21 [vmlinux]:	424
++xfs_inode_ag_walk.isra.21 [vmlinux]:	424
++xfs_reclaim_inodes_ag [vmlinux]:	368
++xfs_reclaim_inodes_ag [vmlinux]:	368
+ xfs_trans_committed_bulk [vmlinux]:	336
+-xfs_reclaim_inodes_ag [vmlinux]:	328
+-xfs_reclaim_inodes_ag [vmlinux]:	328
+ xfs_ioc_getfsmap.isra.23 [vmlinux]:	320
+ xfs_ioc_getfsmap.isra.23 [vmlinux]:	320
++xfs_file_ioctl [vmlinux]:		320
++xfs_file_ioctl [vmlinux]:		320
++xfs_bmapi_write [vmlinux]:		312
+ xfs_getfsmap [vmlinux]:		304
+ xfs_qm_dquot_walk.isra.11 [vmlinux]:	296
+ xfs_qm_dquot_walk.isra.11 [vmlinux]:	296
+-xfs_bmapi_write [vmlinux]:		288
+-xfs_file_ioctl [vmlinux]:		288
+-xfs_file_ioctl [vmlinux]:		288
++xfs_file_compat_ioctl [vmlinux]:	288
++xfs_file_compat_ioctl [vmlinux]:	288
+ xfs_sb_read_verify [vmlinux]:	280
+ xfs_sb_read_verify [vmlinux]:	280
+ xfs_sb_write_verify [vmlinux]:	272
+@@ -21,36 +23,38 @@
+ xfs_rmap_convert [vmlinux]:		264
+ xfs_rmap_convert_shared [vmlinux]:	256
+ xfs_rmap_convert_shared [vmlinux]:	256
+-xfs_file_compat_ioctl [vmlinux]:	256
+-xfs_file_compat_ioctl [vmlinux]:	256
+ xfs_bmap_extents_to_btree [vmlinux]:	248
+ xfs_bmap_extents_to_btree [vmlinux]:	248
++xfs_bmap_del_extent_real [vmlinux]:	240
++xfs_alloc_fix_freelist [vmlinux]:	224
++xfs_alloc_fix_freelist [vmlinux]:	224
++xfs_bmap_add_extent_unwritten_real [vmlinux]:224
+ xfs_symlink [vmlinux]:		224
+ xfs_symlink [vmlinux]:		224
+-xfs_alloc_fix_freelist [vmlinux]:	216
+-xfs_alloc_fix_freelist [vmlinux]:	216
+-xfs_bmap_local_to_extents.constprop.27 [vmlinux]:208
+-xfs_bmap_local_to_extents.constprop.27 [vmlinux]:208
+-xfs_ialloc_ag_alloc [vmlinux]:	208
+-xfs_ialloc_ag_alloc [vmlinux]:	208
+-xfs_bmap_add_extent_unwritten_real [vmlinux]:192
+-xfs_bmap_add_extent_unwritten_real [vmlinux]:192
+-xfs_bmap_add_extent_delay_real [vmlinux]:192
+-xfs_bmap_add_extent_delay_real [vmlinux]:192
+-xfs_bmap_del_extent_real [vmlinux]:	192
+-xfs_bmap_del_extent_real [vmlinux]:	192
+-xfs_bmap_btalloc [vmlinux]:		192
+-xfs_bmap_btalloc [vmlinux]:		192
++xfs_bmap_btalloc [vmlinux]:		216
++xfs_bmap_btalloc [vmlinux]:		216
++xfs_attr_rmtval_set [vmlinux]:	208
++xfs_bmap_add_extent_delay_real [vmlinux]:208
++xfs_bmap_local_to_extents.constprop.28 [vmlinux]:208
++xfs_bmap_local_to_extents.constprop.28 [vmlinux]:208
++xfs_bulkstat [vmlinux]:		208
++xfs_ialloc_ag_alloc [vmlinux]:	200
++xfs_ialloc_ag_alloc [vmlinux]:	200
+ xfs_refcountbt_alloc_block [vmlinux]:192
+ xfs_refcountbt_alloc_block [vmlinux]:192
++xfs_reflink_remap_blocks [vmlinux]:	192
++xfs_reflink_remap_blocks [vmlinux]:	192
+ __xfs_bunmapi [vmlinux]:		184
+ __xfs_bunmapi [vmlinux]:		184
+ xfs_rmap_map [vmlinux]:		184
+ xfs_rmap_map [vmlinux]:		184
++xfs_readdir [vmlinux]:		184
++xfs_readdir [vmlinux]:		184
+ xfs_attr_set [vmlinux]:		176
+ xfs_attr_set [vmlinux]:		176
+ xfs_attr3_leaf_to_shortform [vmlinux]:176
+ xfs_attr3_leaf_to_shortform [vmlinux]:176
++xfs_bmap_add_extent_hole_real [vmlinux]:176
+ xfs_attr_shortform_to_leaf [vmlinux]:168
+ xfs_attr_shortform_to_leaf [vmlinux]:168
+ xfs_btree_delrec [vmlinux]:		168
+@@ -59,89 +63,99 @@
+ xfs_rmap_unmap [vmlinux]:		168
+ xfs_rmap_map_shared [vmlinux]:	168
+ xfs_rmap_map_shared [vmlinux]:	168
+-xfs_bulkstat [vmlinux]:		168
+-xfs_bulkstat [vmlinux]:		168
+ xfs_scrub_metadata [vmlinux]:	168
+ xfs_scrub_metadata [vmlinux]:	168
+ xfs_free_extent_fix_freelist [vmlinux]:160
+ xfs_free_extent_fix_freelist [vmlinux]:160
+-xfs_bmap_add_extent_hole_real [vmlinux]:160
+-xfs_bmap_add_extent_hole_real [vmlinux]:160
++xfs_attr3_leaf_split [vmlinux]:	160
++xfs_attr3_leaf_split [vmlinux]:	160
+ xfs_bmap_insert_extents [vmlinux]:	160
+ xfs_bmap_insert_extents [vmlinux]:	160
+ xfs_bmbt_alloc_block [vmlinux]:	160
+ xfs_bmbt_alloc_block [vmlinux]:	160
+ xfs_btree_overlapped_query_range [vmlinux]:160
+ xfs_btree_overlapped_query_range [vmlinux]:160
++xfs_dialloc [vmlinux]:		160
++xfs_dialloc [vmlinux]:		160
+ __xfs_inobt_alloc_block.isra.9 [vmlinux]:160
+ __xfs_inobt_alloc_block.isra.9 [vmlinux]:160
+ xfs_ag_resv_rmapbt_alloc [vmlinux]:	160
+ xfs_ag_resv_rmapbt_alloc [vmlinux]:	160
++xfs_do_writepage [vmlinux]:		160
++xfs_do_writepage [vmlinux]:		160
+ xfs_dir2_leaf_readbuf [vmlinux]:	160
+ xfs_readlink_bmap_ilocked [vmlinux]:	160
+ xfs_readlink_bmap_ilocked [vmlinux]:	160
+ xfs_ag_resv_rmapbt_alloc [vmlinux]:	160
+ xfs_ag_resv_rmapbt_alloc [vmlinux]:	160
++xfs_da3_split [vmlinux]:		152
++xfs_da3_split [vmlinux]:		152
+ xfs_getbmap [vmlinux]:		152
+ xfs_getbmap [vmlinux]:		152
+ trace_raw_output_xfs_loggrant_class [vmlinux]:144
+ trace_raw_output_xfs_alloc_class [vmlinux]:144
+ xfs_attr_remove [vmlinux]:		144
+ xfs_attr_remove [vmlinux]:		144
+-xfs_dialloc_ag_inobt [vmlinux]:	144
+-xfs_dialloc_ag_inobt [vmlinux]:	144
++xfs_bmap_split_extent_at [vmlinux]:	144
++__xfs_btree_split.isra.45 [vmlinux]:	144
++__xfs_btree_split.isra.45 [vmlinux]:	144
++xfs_btree_insrec [vmlinux]:		144
++xfs_btree_insrec [vmlinux]:		144
++xfs_da_shrink_inode [vmlinux]:	144
++xfs_da_shrink_inode [vmlinux]:	144
++xfs_attr_list_int_ilocked [vmlinux]:	144
++xfs_attr_list_int_ilocked [vmlinux]:	144
+ xfs_swap_extent_rmap [vmlinux]:	144
+ xfs_swap_extent_rmap [vmlinux]:	144
+-xfs_readdir [vmlinux]:		144
+-xfs_readdir [vmlinux]:		144
++xfs_ioc_trim [vmlinux]:		144
++xfs_ioc_trim [vmlinux]:		144
+ xfs_inactive_symlink_rmt [vmlinux]:	144
+ xfs_inactive_symlink_rmt [vmlinux]:	144
+ xfs_attr_get [vmlinux]:		136
+ xfs_attr_get [vmlinux]:		136
++xfs_attr_rmtval_get [vmlinux]:	136
++xfs_attr_rmtval_get [vmlinux]:	136
+ xfs_bmap_add_attrfork_local [vmlinux]:136
+ xfs_bmap_add_attrfork_local [vmlinux]:136
+-__xfs_btree_split.isra.38 [vmlinux]:	136
+-__xfs_btree_split.isra.38 [vmlinux]:	136
+ xfs_btree_split [vmlinux]:		136
+ xfs_btree_split [vmlinux]:		136
+-xfs_btree_insrec [vmlinux]:		136
+-xfs_btree_insrec [vmlinux]:		136
++xfs_rmap_finish_one [vmlinux]:	136
++xfs_rmap_finish_one [vmlinux]:	136
++xfs_attr3_leaf_inactive [vmlinux]:	136
++xfs_attr3_leaf_inactive [vmlinux]:	136
+ xfs_rename [vmlinux]:		136
+ xfs_rename [vmlinux]:		136
+ xfs_attr3_leaf_unbalance [vmlinux]:	120
+ xfs_attr3_leaf_unbalance [vmlinux]:	120
+-xfs_attr_rmtval_set [vmlinux]:	120
+-xfs_attr_rmtval_set [vmlinux]:	120
+-xfs_ioc_fsgeometry_v1 [vmlinux]:	120
+-xfs_ioc_fsgeometry_v1 [vmlinux]:	120
+-xfs_ioc_fsgeometry [vmlinux]:	120
+-xfs_ioc_fsgeometry [vmlinux]:	120
++xfs_refcount_merge_extents [vmlinux]:120
++xfs_refcount_merge_extents [vmlinux]:120
+ xfs_file_iomap_begin [vmlinux]:	120
+ xfs_file_iomap_begin [vmlinux]:	120
+-xfs_compat_ioc_fsgeometry_v1 [vmlinux]:120
+-xfs_compat_ioc_fsgeometry_v1 [vmlinux]:120
++xfs_ifree [vmlinux]:			120
++xfs_ifree [vmlinux]:			120
++xfs_qm_reset_dqcounts_buf.part.15 [vmlinux]:120
++xfs_qm_reset_dqcounts_buf.part.15 [vmlinux]:120
++xfs_rtallocate_extent [vmlinux]:	120
++xfs_rtallocate_extent [vmlinux]:	120
++xfs_free_ag_extent [vmlinux]:	112
+ xfs_attr3_leaf_toosmall [vmlinux]:	112
+ xfs_attr3_leaf_toosmall [vmlinux]:	112
+-xfs_attr3_leaf_rebalance [vmlinux]:	112
+-xfs_attr3_leaf_rebalance [vmlinux]:	112
++xfs_bmap_del_extent_delay [vmlinux]:	112
++xfs_bmap_del_extent_delay [vmlinux]:	112
+ xfs_iread_extents [vmlinux]:		112
+ xfs_iread_extents [vmlinux]:		112
+-xfs_bmap_split_extent_at [vmlinux]:	112
+-xfs_bmap_split_extent_at [vmlinux]:	112
+ xfs_btree_insert [vmlinux]:		112
+ xfs_btree_query_range [vmlinux]:	112
+-xfs_da3_swap_lastblock [vmlinux]:	112
+-xfs_da3_swap_lastblock [vmlinux]:	112
+ xfs_dir2_node_addname [vmlinux]:	112
+ xfs_dir2_node_addname [vmlinux]:	112
+ xfs_dir2_node_removename [vmlinux]:	112
+ xfs_dir2_node_removename [vmlinux]:	112
+-xfs_trim_extents [vmlinux]:		112
+-xfs_trim_extents [vmlinux]:		112
++xfs_difree [vmlinux]:		112
++xfs_difree [vmlinux]:		112
+ xfs_growfs_data [vmlinux]:		112
+ xfs_growfs_data [vmlinux]:		112
+-xfs_ifree_cluster.isra.21 [vmlinux]:	112
+-xfs_ifree_cluster.isra.21 [vmlinux]:	112
++xfs_iget [vmlinux]:			112
++xfs_iget [vmlinux]:			112
+ xfs_inumbers [vmlinux]:		112
+ xfs_inumbers [vmlinux]:		112
+ xfs_reflink_end_cow [vmlinux]:	112
+@@ -149,17 +163,19 @@
+ xfs_vn_listxattr [vmlinux]:		112
+ xfs_vn_listxattr [vmlinux]:		112
+ xfsaild [vmlinux]:			112
++xfs_growfs_rt [vmlinux]:		112
++xfs_growfs_rt [vmlinux]:		112
+ trace_raw_output_xfs_dquot_class [vmlinux]:104
+ xfs_bmapi_reserve_delalloc [vmlinux]:104
+ xfs_bmapi_reserve_delalloc [vmlinux]:104
++xfs_btree_lshift [vmlinux]:		104
++xfs_btree_lshift [vmlinux]:		104
+ xfs_da_grow_inode_int [vmlinux]:	104
+ xfs_da_grow_inode_int [vmlinux]:	104
+ xfs_dir2_leaf_removename [vmlinux]:	104
+ xfs_dir2_leaf_removename [vmlinux]:	104
+ xfs_dir2_leafn_split [vmlinux]:	104
+ xfs_dir2_leafn_split [vmlinux]:	104
+-xfs_iget [vmlinux]:			104
+-xfs_iget [vmlinux]:			104
+ xfs_ioc_space [vmlinux]:		104
+ xfs_ioc_space [vmlinux]:		104
+ xfs_emerg [vmlinux]:			104
+@@ -169,15 +185,9 @@
+ xfs_warn [vmlinux]:			104
+ xfs_notice [vmlinux]:		104
+ xfs_info [vmlinux]:			104
+-xfs_reflink_remap_extent [vmlinux]:	104
+-xfs_reflink_remap_extent [vmlinux]:	104
+-xfs_reflink_dirty_extents [vmlinux]:	104
+-xfs_reflink_dirty_extents [vmlinux]:	104
+ xfs_reflink_cancel_cow_blocks [vmlinux]:104
+ xfs_reflink_cancel_cow_blocks [vmlinux]:104
+ xfs_log_quiesce [vmlinux]:		104
+ xfs_log_quiesce [vmlinux]:		104
+-xfs_rtallocate_extent_near [vmlinux]:104
+-xfs_rtallocate_extent_near [vmlinux]:104
+ xfs_set_acl [vmlinux]:		104
+ xfs_set_acl [vmlinux]:		104
