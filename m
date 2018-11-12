@@ -1,65 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40096 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728527AbeKOTDV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Nov 2018 14:03:21 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V10 11/19] bcache: avoid to use bio_for_each_segment_all() in bch_bio_alloc_pages()
-Date: Thu, 15 Nov 2018 16:52:58 +0800
-Message-Id: <20181115085306.9910-12-ming.lei@redhat.com>
-In-Reply-To: <20181115085306.9910-1-ming.lei@redhat.com>
-References: <20181115085306.9910-1-ming.lei@redhat.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:11109 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725817AbeKMHkV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 02:40:21 -0500
+Date: Tue, 13 Nov 2018 08:45:15 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: Remove noinline from #define STATIC
+Message-ID: <20181112214515.GN19305@dastard>
+References: <7302f4a13c1cbf62b07f636878ce25fcca84b6c4.camel@perches.com>
+ <6420cf91-89c8-a876-7a0d-25ab8ba428b8@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6420cf91-89c8-a876-7a0d-25ab8ba428b8@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Joe Perches <joe@perches.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-bch_bio_alloc_pages() is always called on one new bio, so it is safe
-to access the bvec table directly. Given it is the only kind of this
-case, open code the bvec table access since bio_for_each_segment_all()
-will be changed to support for iterating over multipage bvec.
+On Mon, Nov 12, 2018 at 02:12:08PM -0600, Eric Sandeen wrote:
+> On 11/10/18 7:21 PM, Joe Perches wrote:
+> > Reduce total object size quite a bit (~32KB) and presumably
+> > improve performance at the same time.
+> > 
+> > Total object size old vs new (x86-64 defconfig with xfs)
+> > 
+> >     text	   data	    bss	    dec	    hex	filename
+> > - 959351	 165573	    632	1125556	 112cb4	(TOTALS) (old)
+> > + 924683	 165669	    632	1090984	 10a5a8	(TOTALS) (new)
+> 
+> And what does it do to maximum stack excursions?
 
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>
-Acked-by: Coly Li <colyli@suse.de>
-Cc: Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Cc: linux-erofs@lists.ozlabs.org
-Cc: David Sterba <dsterba@suse.com>
-Cc: linux-btrfs@vger.kernel.org
-Cc: Darrick J. Wong <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
-Cc: Gao Xiang <gaoxiang25@huawei.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-ext4@vger.kernel.org
-Cc: Coly Li <colyli@suse.de>
-Cc: linux-bcache@vger.kernel.org
-Cc: Boaz Harrosh <ooo@electrozaur.com>
-Cc: Bob Peterson <rpeterso@redhat.com>
-Cc: cluster-devel@redhat.com
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/md/bcache/util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Better yet: what does it do to corruption stack traces and debugging
+tools like profiling traces?
 
-diff --git a/drivers/md/bcache/util.c b/drivers/md/bcache/util.c
-index 20eddeac1531..8517aebcda2d 100644
---- a/drivers/md/bcache/util.c
-+++ b/drivers/md/bcache/util.c
-@@ -270,7 +270,7 @@ int bch_bio_alloc_pages(struct bio *bio, gfp_t gfp_mask)
- 	int i;
- 	struct bio_vec *bv;
- 
--	bio_for_each_segment_all(bv, bio, i) {
-+	for (i = 0, bv = bio->bi_io_vec; i < bio->bi_vcnt; bv++) {
- 		bv->bv_page = alloc_page(gfp_mask);
- 		if (!bv->bv_page) {
- 			while (--bv >= bio->bi_io_vec)
+i.e. this noinline directive isn't about stack usage, this is about
+being able to debug production code. Basically the compiler inliner
+is so agressive on static functions that it makes it impossible to
+decipher the stack traces. It flattens them way too much to
+be able to tell how we got to a specific location in the code.
+
+In reality, being able to find problems quickly and efficiently is
+far more important to us than being able to run everything at
+ludicrous speed....
+
+Cheers,
+
+Dave.
 -- 
-2.9.5
+Dave Chinner
+david@fromorbit.com
