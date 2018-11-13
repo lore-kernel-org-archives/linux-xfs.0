@@ -1,84 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57862 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728519AbeKOTEk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Nov 2018 14:04:40 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V10 16/19] block: document usage of bio iterator helpers
-Date: Thu, 15 Nov 2018 16:53:03 +0800
-Message-Id: <20181115085306.9910-17-ming.lei@redhat.com>
-In-Reply-To: <20181115085306.9910-1-ming.lei@redhat.com>
-References: <20181115085306.9910-1-ming.lei@redhat.com>
+Received: from smtprelay0090.hostedemail.com ([216.40.44.90]:48502 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726217AbeKMP2j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 10:28:39 -0500
+Message-ID: <678d66cc417323f248f721cc8e4d271fe8ac80fb.camel@perches.com>
+Subject: Re: [PATCH] xfs: Remove noinline from #define STATIC
+From: Joe Perches <joe@perches.com>
+Date: Mon, 12 Nov 2018 21:31:51 -0800
+In-Reply-To: <20181113052651.GR19305@dastard>
+References: <7302f4a13c1cbf62b07f636878ce25fcca84b6c4.camel@perches.com>
+         <6420cf91-89c8-a876-7a0d-25ab8ba428b8@sandeen.net>
+         <20181112214515.GN19305@dastard>
+         <bd3806ccc911989c7ef1fed9e8d26a4a5ad347a9.camel@perches.com>
+         <20181113011804.GP19305@dastard> <20181113015410.GB30750@thunk.org>
+         <20181113030926.GQ19305@dastard>
+         <b03fda08ee4ca4b488c6f67e64bfc94f49be4e83.camel@perches.com>
+         <20181113052651.GR19305@dastard>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Theodore Y. Ts'o" <tytso@mit.edu>, Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Now multi-page bvec is supported, some helpers may return page by
-page, meantime some may return segment by segment, this patch
-documents the usage.
+On Tue, 2018-11-13 at 16:26 +1100, Dave Chinner wrote:
+> On Mon, Nov 12, 2018 at 08:23:42PM -0800, Joe Perches wrote:
+> > On Tue, 2018-11-13 at 14:09 +1100, Dave Chinner wrote:
+> > > On Mon, Nov 12, 2018 at 08:54:10PM -0500, Theodore Y. Ts'o wrote:
+> > > > On Tue, Nov 13, 2018 at 12:18:05PM +1100, Dave Chinner wrote:
+> > > > > I'm not interested in making code fast if distro support engineers
+> > > > > can't debug problems on user systems easily. Optimising for
+> > > > > performance over debuggability is a horrible trade off for us to
+> > > > > make because it means users and distros end up much more reliant on
+> > > > > single points of expertise for debugging problems. And that means
+> > > > > the majority of the load of problem triage falls directly on very
+> > > > > limited resources - the core XFS development team. A little bit of
+> > > > > thought about how to make code easier to triage and debug goes a
+> > > > > long, long way....
+> > > > 
+> > > > So at least in my experience, if the kernels are compiled with
+> > > > CONFIG_DEBUG_INFO and/or CONFIG_DEBUG_INFO_REDUCED,
+> > > > scripts/decode_stracktrace.sh seems to do a very nice job with inlined
+> > > 
+> > > That doesn't help with kernel profiling and other such things that
+> > > are based on callgraphs...
+> > 
+> > If that's really the case:
+> > 
+> > I rather suspect the xfs static v STATIC function marking is not
+> > particularly curated and the marking is somewhat arbitrary.
+> 
+> That's a common opinion for an outsider to form when they come
+> across something unfamiliar they don't really understand. "I don't
+> understand this, so I must rewrite it" is an unfortunate habit that
+> programmers have.
 
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Cc: linux-erofs@lists.ozlabs.org
-Cc: David Sterba <dsterba@suse.com>
-Cc: linux-btrfs@vger.kernel.org
-Cc: Darrick J. Wong <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
-Cc: Gao Xiang <gaoxiang25@huawei.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-ext4@vger.kernel.org
-Cc: Coly Li <colyli@suse.de>
-Cc: linux-bcache@vger.kernel.org
-Cc: Boaz Harrosh <ooo@electrozaur.com>
-Cc: Bob Peterson <rpeterso@redhat.com>
-Cc: cluster-devel@redhat.com
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- Documentation/block/biovecs.txt | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+Silly.
 
-diff --git a/Documentation/block/biovecs.txt b/Documentation/block/biovecs.txt
-index 25689584e6e0..bfafb70d0d9e 100644
---- a/Documentation/block/biovecs.txt
-+++ b/Documentation/block/biovecs.txt
-@@ -117,3 +117,29 @@ Other implications:
-    size limitations and the limitations of the underlying devices. Thus
-    there's no need to define ->merge_bvec_fn() callbacks for individual block
-    drivers.
-+
-+Usage of helpers:
-+=================
-+
-+* The following helpers whose names have the suffix of "_all" can only be used
-+on non-BIO_CLONED bio, and usually they are used by filesystem code, and driver
-+shouldn't use them because bio may have been split before they got to the driver:
-+
-+	bio_for_each_segment_all()
-+	bio_first_bvec_all()
-+	bio_first_page_all()
-+	bio_last_bvec_all()
-+
-+* The following helpers iterate over single-page bvec, and the local
-+variable of 'struct bio_vec' or the reference records single-page IO
-+vector during the itearation:
-+
-+	bio_for_each_segment()
-+	bio_for_each_segment_all()
-+
-+* The following helper iterates over multi-page bvec, and each bvec may
-+include multiple physically contiguous pages, and the local variable of
-+'struct bio_vec' or the reference records multi-page IO vector during the
-+itearation:
-+
-+	bio_for_each_bvec()
--- 
-2.9.5
+> > So perhaps given the large number of static, but not STATIC
+> > functions, perhaps a sed of s/static/STATIC/ should be done
+> > when it's not inline for all xfs functions.
+> 
+> That's just as bad as removing them all, if not worse. 
+
+Why?
+
+> If you are writing new code or reworking existing code, then we'll
+> consider the usage of STATIC/static in the context of that work.
+> Otherwise, we leave it alone.
+
+If your statement is as described above, and
+the STATIC use to enable call stack tracing i
+useful, why shouldn't it be systemic?
+
+> It if ain't broke, don't fix it.
+
+A generically lazy statement.
