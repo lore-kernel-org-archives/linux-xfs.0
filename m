@@ -1,160 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:33812 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728699AbeKOWsW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 17:48:22 -0500
-Received: by mail-wr1-f65.google.com with SMTP id j26-v6so21067445wre.1
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 04:40:39 -0800 (PST)
-MIME-Version: 1.0
-References: <20181109143004.24963-1-jtulak@redhat.com> <9a951869-5852-2689-a6ef-084c770f16fb@sandeen.net>
-In-Reply-To: <9a951869-5852-2689-a6ef-084c770f16fb@sandeen.net>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 15 Nov 2018 13:40:26 +0100
-Message-ID: <CACj3i70u6hS2RgSRwHMqLZtKexdEz6GnSH10tyYF6DiHXimnug@mail.gmail.com>
-Subject: Re: [PATCH 00/24] xfsdump: code style change
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:48922 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730730AbeKNDHS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Nov 2018 22:07:18 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8F11A3C2CC5
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Nov 2018 17:08:20 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 58C255D9C8
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Nov 2018 17:08:20 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: fix shared extent data corruption due to missing cow reservation
+Date: Tue, 13 Nov 2018 12:08:19 -0500
+Message-Id: <20181113170819.15220-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Wed, Nov 14, 2018 at 9:36 PM Eric Sandeen <sandeen@sandeen.net> wrote:
->
-> On 11/9/18 8:29 AM, Jan Tulak wrote:
-> > This set is dealing with whitespaces only, no functional change, code
-> > shuffling, etc. should be present (with one small exception in patch no. 2).
-> > From the previous set I split the changes into multiple patches, one type of
-> > change at a time, and tried to make the code fully compliant with xfs style,
-> > so the number of changes is way bigger than in the first set.
-> >
-> > The only patch with code shuffling (but no behavioral change) is: "xfsdump: do
-> > not split function call with ifdef." See the patch for details.
-> >
-> > For patch 21 - xfsdump: (style) format intercharacter spaces, I think whether
-> > it is still to much agregated and I should separate the changes. Some other
-> > patches I had to split to multiple files as they are too big to pass through
-> > to the mailing list - it is in their name. The largest one is 660K now, so I
-> > will check if that passed through, or it is still too big.
-> >
-> > The whole set is created mechanically from scratch. Scripts used for the
-> > specific change are part of the commit message and I can easily put it all
-> > together. So there is no need to worry about rebase conflicts, etc. when
-> > pointing out issues.
-> >
-> > The tools used to make these changes are sed and uncrustify.
-> > http://uncrustify.sourceforge.net/
-> >
-> > A git tree with these patches is also on Github:
-> > https://github.com/jtulak/xfsdump/tree/style-nov-9th
-> > or
-> > git clone --single-branch -b style-nov-9th https://github.com/jtulak/xfsdump.git
->
-> Thanks for doing this.  I do think it's useful in the long run.
->
-> NB: not all patches came through, apparently they were too big for the list.
+Page writeback indirectly handles shared extents via the existence
+of overlapping COW fork blocks. If COW fork blocks exist, writeback
+always performs the associated copy-on-write regardless if the
+underlying blocks are actually shared. If the blocks are shared,
+then overlapping COW fork blocks must always exist.
 
-Thanks for looking at it. And sorry for the missing mails, I checked
-it in my mailbox and there they arrived all. But apparently, Gmail and
-its deduplication made it look like it came through both mailing list
-and me in cc, even if I received CCed version only.
+fstests shared/010 reproduces a case where a buffered write occurs
+over a shared block without performing the requisite COW fork
+reservation.  This ultimately causes writeback to the shared extent
+and data corruption that is detected across md5 checks of the
+filesystem across a mount cycle.
 
->
-> A few issues I notice:
->
-> 1) we now get warnings like:
->
-> In file included from content.c:44:0:
-> types.h:30:0: warning: "sizeofmember" redefined [enabled by default]
->  #define sizeofmember(t, m)      sizeof(((t *)0)->m)
->  ^
-> In file included from content.c:40:0:
-> /usr/include/xfs/jdm.h:65:0: note: this is the location of the previous definition
->  #define sizeofmember( t, m ) sizeof( ( ( t * )0 )->m )
->  ^
->
-> because xfsprogs headers have the definitions w/ the spaces in them.  So
-> I'd just leave sizeofmember and offsetofmember defines alone for now to
-> avoid this.  Or, wrap them in #ifndef's.  Or if we require xfsprogs headers
-> to build anyway, perhaps just drop the defines altogether.
+The problem occurs when a buffered write lands over a shared extent
+that crosses an extent size hint boundary and that also happens to
+have a partial COW reservation that doesn't cover the start and end
+blocks of the data fork extent.
 
-Ok, I will drop it out.
+For example, a buffered write occurs across the file offset (in FSB
+units) range of [29, 57]. A shared extent exists at blocks [29, 35]
+and COW reservation already exists at blocks [32, 34]. After
+accommodating a COW extent size hint of 32 blocks and the existing
+reservation at offset 32, xfs_reflink_reserve_cow() allocates 32
+blocks of reservation at offset 0 and returns with COW reservation
+across the range of [0, 34]. The associated data fork extent is
+still [29, 35], however, which isn't fully covered by the COW
+reservation.
 
->
-> 2) I think we probably do not want to change any user-facing strings,
-> or at least they should be carefully examined.  This will break some
-> translations (fixable) but it's also more of a functional change, and
-> should be done with care if at all, and maybe left for a separate patch
-> if it's warranted.
->
-> 3) This creates /many/ more > 80 char lines.  Per:
->
-> # for F in */*.[ch]; do expand $F | grep '.\{81\}'; done
->
-> the codebase goes from 794 such lines to 1806.  IOWs, some of the "missing"
-> whitespace may have been intentional, to stay under 80 cols.  New lines
-> vs. compressed lines is a judgement call, I guess.  Bleah.
->
-> So... sorry about that, but if the goal is to format better, let's be
-> sure to keep observing other basic rules like "< 80 cols"
+This leads to a buffered write at file offset 35 over a shared
+extent without associated COW reservation. Writeback eventually
+kicks in, performs an overwrite of the underlying shared block and
+causes the associated data corruption.
 
-Yeah. I'm not sure there is an easy way to automate that...
+Update xfs_reflink_reserve_cow() to accommodate the fact that a
+delalloc allocation request may not fully cover the extent in the
+data fork. Trim the data fork extent appropriately, just as is done
+for shared extent boundaries and/or existing COW reservations that
+happen to overlap the start of the data fork extent. This prevents
+shared/010 failures due to data corruption on reflink enabled
+filesystems.
 
->
-> 4) related, there are places where we intentionally dropped a space to
-> keep things well aligned, for example:
->
->         ULO(_("<file> (restore only if newer than)"),   GETOPT_NEWER);
->         ULO(_("(restore owner/group even if not root)"),GETOPT_OWNER);
->         ULO(_("<seconds between progress reports>"),    GETOPT_PROGRESS);
->
-> this "breaks the rule" but it's fairly common to line up columns that way
-> if it's just off by 1 char.
->
-> Other things like this:
->
->  struct quota_info {
-> -       char *  desc;           /* Quotas type (user, project, etc) */
-> -       bool_t  savequotas;     /* Quotas saved OK */
-> -       char *  quotafile;      /* Filename quota info is stored in */
-> -       char    quotapath[MAXPATHLEN]; /* Full path to quotafile */
-> -       char *  repquotaargs;   /* Args to repquota to create this quotafile */
-> -       int     statflag;       /* quota stats flag for this type */
-> -       ino_t   quotaino;       /* ino of the quota file */
-> +       char *  desc;                   /* Quotas type (user, project, etc) */
-> +       bool_t  savequotas;             /* Quotas saved OK */
-> +       char *  quotafile;              /* Filename quota info is stored in */
-> +       char    quotapath[MAXPATHLEN];  /* Full path to quotafile */
-> +       char *  repquotaargs;           /* Args to repquota to create this quotafile */
-> +       int     statflag;               /* quota stats flag for this type */
-> +       ino_t   quotaino;               /* ino of the quota file */
->  };
->
-> probably shouldn't happen either, it's better to keep stuff < 80cols
-> and have 1 oddball comment remaining.
->
-> I was trying to compare objdump -d to ensure there were no other unintended
-> runtime changes, but unfortunately there are changes
-> which will affect that even if it's whitespace; for example whitespace
-> changes within an assert() will change strings (the text of the assert)
-> and their locations, and so will change the disassembly.  So I'm not sure
-> it's possible to validate "no functional changes" by binary inspection...
->
-> I suppose we could try to limit whitespace changes to things that won't
-> change disassembly first (for example, no string or assert changes) and
-> then go back and do them, so that we could ge the bulk of the changes in
-> with no modifications to the binary code, but ... I'm not sure if it's
-> worth it.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-I'll look at these issues and see what can be done/if that helps with
-disassembly.
+This is not fully tested yet beyond verification that it solves the
+problem reproduced by shared/010. I'll be running more tests today, but
+I'm sending sooner for review and testing due to the nature of the
+problem and the fact that it's a fairly isolated change. I'll follow up
+if I discover any resulting regressions..
 
->
-> Sorry for the hassle, but even though it's "only whitespace" I think we
-> want to be as careful as possible to not move anything backwards...
+Brian
 
-Yup, I agree. We are not talking about a web form that will work even
-if the layout breaks a bit.
+ fs/xfs/xfs_reflink.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Jan
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index ecdb086bc23e..c56bdbfcf7ae 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -296,6 +296,7 @@ xfs_reflink_reserve_cow(
+ 	if (error)
+ 		return error;
+ 
++	xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
+ 	trace_xfs_reflink_cow_alloc(ip, &got);
+ 	return 0;
+ }
+-- 
+2.17.2
