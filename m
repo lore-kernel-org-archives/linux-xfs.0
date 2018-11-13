@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55314 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:55328 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726408AbeKNJku (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Nov 2018 04:40:50 -0500
-Subject: [PATCH 4/6] fsx: add copy_file_range support
+        with ESMTP id S1727770AbeKNJkv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Nov 2018 04:40:51 -0500
+Subject: [PATCH 3/6] fsstress: add copy_file_range support
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 13 Nov 2018 15:40:05 -0800
-Message-ID: <154215240539.21151.10456496832542456055.stgit@magnolia>
+Date: Tue, 13 Nov 2018 15:39:59 -0800
+Message-ID: <154215239907.21151.16590308915145355962.stgit@magnolia>
 In-Reply-To: <154215237717.21151.11976488103599724788.stgit@magnolia>
 References: <154215237717.21151.11976488103599724788.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,167 +20,254 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
+Support the copy_file_range syscall.
+
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- ltp/fsx.c |   98 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 98 insertions(+)
+ configure.ac          |    2 +
+ include/builddefs.in  |    1 
+ ltp/Makefile          |    4 +
+ ltp/fsstress.c        |  133 +++++++++++++++++++++++++++++++++++++++++++++++++
+ m4/package_libcdev.m4 |   19 +++++++
+ 5 files changed, 159 insertions(+)
 
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 6f2b3364..3161ba12 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -34,6 +34,7 @@
- #ifdef AIO
+diff --git a/configure.ac b/configure.ac
+index aede4f59..19798824 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -68,6 +68,8 @@ AC_PACKAGE_WANT_OPEN_BY_HANDLE_AT
+ AC_PACKAGE_WANT_LINUX_PRCTL_H
+ AC_PACKAGE_WANT_LINUX_FS_H
+ 
++AC_HAVE_COPY_FILE_RANGE
++
+ AC_CHECK_FUNCS([renameat2])
+ 
+ AC_CONFIG_HEADER(include/config.h)
+diff --git a/include/builddefs.in b/include/builddefs.in
+index fb8e912b..2605e42d 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -67,6 +67,7 @@ HAVE_DMAPI = @have_dmapi@
+ HAVE_ATTR_LIST = @have_attr_list@
+ HAVE_FIEMAP = @have_fiemap@
+ HAVE_FALLOCATE = @have_fallocate@
++HAVE_COPY_FILE_RANGE = @have_copy_file_range@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ 
+diff --git a/ltp/Makefile b/ltp/Makefile
+index 5f784ecf..e4ca45f4 100644
+--- a/ltp/Makefile
++++ b/ltp/Makefile
+@@ -28,6 +28,10 @@ ifeq ($(HAVE_FALLOCATE), true)
+ LCFLAGS += -DFALLOCATE
+ endif
+ 
++ifeq ($(HAVE_COPY_FILE_RANGE),yes)
++LCFLAGS += -DHAVE_COPY_FILE_RANGE
++endif
++
+ default: depend $(TARGETS)
+ 
+ depend: .dep
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index edbb3f2f..dded0cf7 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -26,6 +26,7 @@
  #include <libaio.h>
+ io_context_t	io_ctx;
  #endif
 +#include <sys/syscall.h>
  
- #ifndef MAP_FILE
- # define MAP_FILE 0
-@@ -105,6 +106,7 @@ enum {
- 	OP_INSERT_RANGE,
- 	OP_CLONE_RANGE,
- 	OP_DEDUPE_RANGE,
-+	OP_COPY_RANGE,
- 	OP_MAX_FULL,
- 
- 	/* integrity operations */
-@@ -261,6 +263,7 @@ static const char *op_names[] = {
- 	[OP_INSERT_RANGE] = "insert_range",
- 	[OP_CLONE_RANGE] = "clone_range",
- 	[OP_DEDUPE_RANGE] = "dedupe_range",
-+	[OP_COPY_RANGE] = "copy_range",
- 	[OP_FSYNC] = "fsync",
- };
- 
-@@ -457,6 +460,13 @@ logdump(void)
- 			if (overlap)
- 				prt("\t******IIII");
- 			break;
-+		case OP_COPY_RANGE:
-+			prt("COPY 0x%x thru 0x%x\t(0x%x bytes) to 0x%x",
-+			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-+			    lp->args[1], lp->args[2]);
-+			if (overlap)
-+				prt("\t******IIII");
-+			break;
- 		case OP_FSYNC:
- 			prt("FSYNC");
- 			break;
-@@ -1400,6 +1410,73 @@ do_dedupe_range(unsigned offset, unsigned length, unsigned dest)
- }
+ #ifndef FS_IOC_GETFLAGS
+ #define FS_IOC_GETFLAGS                 _IOR('f', 1, long)
+@@ -55,6 +56,7 @@ typedef enum {
+ 	OP_BULKSTAT1,
+ 	OP_CHOWN,
+ 	OP_CLONERANGE,
++	OP_COPYRANGE,
+ 	OP_CREAT,
+ 	OP_DEDUPERANGE,
+ 	OP_DREAD,
+@@ -163,6 +165,7 @@ void	bulkstat_f(int, long);
+ void	bulkstat1_f(int, long);
+ void	chown_f(int, long);
+ void	clonerange_f(int, long);
++void	copyrange_f(int, long);
+ void	creat_f(int, long);
+ void	deduperange_f(int, long);
+ void	dread_f(int, long);
+@@ -212,6 +215,7 @@ opdesc_t	ops[] = {
+ 	{ OP_BULKSTAT1, "bulkstat1", bulkstat1_f, 1, 0 },
+ 	{ OP_CHOWN, "chown", chown_f, 3, 1 },
+ 	{ OP_CLONERANGE, "clonerange", clonerange_f, 4, 1 },
++	{ OP_COPYRANGE, "copyrange", copyrange_f, 4, 1 },
+ 	{ OP_CREAT, "creat", creat_f, 4, 1 },
+ 	{ OP_DEDUPERANGE, "deduperange", deduperange_f, 4, 1},
+ 	{ OP_DREAD, "dread", dread_f, 4, 0 },
+@@ -2329,6 +2333,135 @@ clonerange_f(
  #endif
+ }
  
++/* copy some arbitrary range of f1 to f2. */
++void
++copyrange_f(
++	int			opno,
++	long			r)
++{
 +#ifdef HAVE_COPY_FILE_RANGE
-+void
-+do_copy_range(unsigned offset, unsigned length, unsigned dest)
-+{
-+	loff_t o1, o2;
-+	ssize_t nr;
++	struct pathname		fpath1;
++	struct pathname		fpath2;
++	struct stat64		stat1;
++	struct stat64		stat2;
++	char			inoinfo1[1024];
++	char			inoinfo2[1024];
++	loff_t			lr;
++	loff_t			off1;
++	loff_t			off2;
++	loff_t			max_off2;
++	size_t			len;
++	int			v1;
++	int			v2;
++	int			fd1;
++	int			fd2;
++	int			ret;
++	int			e;
 +
-+	if (length == 0) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping zero length copy range\n");
-+		log5(OP_COPY_RANGE, offset, length, dest, FL_SKIPPED);
-+		return;
++	/* Load paths */
++	init_pathname(&fpath1);
++	if (!get_fname(FT_REGm, r, &fpath1, NULL, NULL, &v1)) {
++		if (v1)
++			printf("%d/%d: copyrange read - no filename\n",
++				procid, opno);
++		goto out_fpath1;
 +	}
 +
-+	if ((loff_t)offset >= file_size) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping copy range behind EOF\n");
-+		log5(OP_COPY_RANGE, offset, length, dest, FL_SKIPPED);
-+		return;
++	init_pathname(&fpath2);
++	if (!get_fname(FT_REGm, random(), &fpath2, NULL, NULL, &v2)) {
++		if (v2)
++			printf("%d/%d: copyrange write - no filename\n",
++				procid, opno);
++		goto out_fpath2;
 +	}
 +
-+	log5(OP_COPY_RANGE, offset, length, dest, FL_NONE);
-+
-+	if (testcalls <= simulatedopcount)
-+		return;
-+
-+	if ((progressinterval && testcalls % progressinterval == 0) ||
-+	    (debug && (monitorstart == -1 || monitorend == -1 ||
-+		       dest <= monitorstart || dest + length <= monitorend))) {
-+		prt("%lu copy\tfrom 0x%x to 0x%x, (0x%x bytes) at 0x%x\n",
-+			testcalls, offset, offset+length, length, dest);
++	/* Open files */
++	fd1 = open_path(&fpath1, O_RDONLY);
++	e = fd1 < 0 ? errno : 0;
++	check_cwd();
++	if (fd1 < 0) {
++		if (v1)
++			printf("%d/%d: copyrange read - open %s failed %d\n",
++				procid, opno, fpath1.path, e);
++		goto out_fpath2;
 +	}
 +
-+	o1 = offset;
-+	o2 = dest;
-+
-+	nr = copy_file_range(fd, &o1, fd, &o2, length, 0);
-+	if (nr == -1) {
-+		if (errno == EOPNOTSUPP || errno == ENOTTY) {
-+			if (!quiet && testcalls > simulatedopcount)
-+				prt("skipping unsupported copy range\n");
-+			logptr--;
-+			log5(OP_COPY_RANGE, offset, length, dest, FL_SKIPPED);
-+			return;
-+		}
-+
-+		prt("copy range: 0x%x to 0x%x at 0x%x\n", offset,
-+				offset + length, dest);
-+		prterr("do_copy_range:");
-+		report_failure(161);
++	fd2 = open_path(&fpath2, O_WRONLY);
++	e = fd2 < 0 ? errno : 0;
++	check_cwd();
++	if (fd2 < 0) {
++		if (v2)
++			printf("%d/%d: copyrange write - open %s failed %d\n",
++				procid, opno, fpath2.path, e);
++		goto out_fd1;
 +	}
 +
-+	memcpy(good_buf + dest, good_buf + offset, nr);
-+	if (dest > file_size)
-+		memset(good_buf + file_size, '\0', dest - file_size);
-+	if (dest + nr > file_size)
-+		file_size = dest + nr;
-+}
++	/* Get file stats */
++	if (fstat64(fd1, &stat1) < 0) {
++		if (v1)
++			printf("%d/%d: copyrange read - fstat64 %s failed %d\n",
++				procid, opno, fpath1.path, errno);
++		goto out_fd2;
++	}
++	inode_info(inoinfo1, sizeof(inoinfo1), &stat1, v1);
 +
-+#else
-+void
-+do_copy_range(unsigned offset, unsigned length, unsigned dest)
-+{
-+	return;
-+}
++	if (fstat64(fd2, &stat2) < 0) {
++		if (v2)
++			printf("%d/%d: copyrange write - fstat64 %s failed %d\n",
++				procid, opno, fpath2.path, errno);
++		goto out_fd2;
++	}
++	inode_info(inoinfo2, sizeof(inoinfo2), &stat2, v2);
++
++	/* Calculate offsets */
++	len = (random() % FILELEN_MAX) + 1;
++	if (len == 0)
++		len = stat1.st_blksize;
++	if (len > stat1.st_size)
++		len = stat1.st_size;
++
++	lr = ((int64_t)random() << 32) + random();
++	if (stat1.st_size == len)
++		off1 = 0;
++	else
++		off1 = (off64_t)(lr % MIN(stat1.st_size - len, MAXFSIZE));
++	off1 %= maxfsize;
++
++	/*
++	 * If srcfile == destfile, randomly generate destination ranges
++	 * until we find one that doesn't overlap the source range.
++	 */
++	max_off2 = MIN(stat2.st_size + (1024ULL * stat2.st_blksize), MAXFSIZE);
++	do {
++		lr = ((int64_t)random() << 32) + random();
++		off2 = (off64_t)(lr % max_off2);
++		off2 %= maxfsize;
++	} while (stat1.st_ino == stat2.st_ino && llabs(off2 - off1) < len);
++
++	ret = copy_file_range(fd1, &off1, fd2, &off2, len, 0);
++	e = ret < 0 ? errno : 0;
++	if (v1 || v2) {
++		printf("%d/%d: copyrange %s%s [%lld,%lld] -> %s%s [%lld,%lld]",
++			procid, opno,
++			fpath1.path, inoinfo1, (long long)off1, (long long)len,
++			fpath2.path, inoinfo2, (long long)off2, (long long)len);
++
++		if (ret < 0)
++			printf(" error %d", e);
++		printf("\n");
++	}
++
++out_fd2:
++	close(fd2);
++out_fd1:
++	close(fd1);
++out_fpath2:
++	free_pathname(&fpath2);
++out_fpath1:
++	free_pathname(&fpath1);
 +#endif
++}
 +
- #ifdef HAVE_LINUX_FALLOC_H
- /* fallocate is basically a no-op unless extending, then a lot like a truncate */
+ /* dedupe some arbitrary range of f1 to f2...fn. */
  void
-@@ -1719,6 +1796,14 @@ test(void)
- 				 offset2 + size > file_size);
- 			break;
- 		}
-+	case OP_COPY_RANGE:
-+		TRIM_OFF_LEN(offset, size, file_size);
-+		do {
-+			offset2 = random();
-+			TRIM_OFF(offset2, maxfilelen);
-+		} while (llabs(offset2 - offset) < size ||
-+			 offset2 + size > maxfilelen);
-+		break;
- 	}
- 
- have_op:
-@@ -1764,6 +1849,7 @@ test(void)
- 		break;
- 	case OP_CLONE_RANGE:
- 	case OP_DEDUPE_RANGE:
-+	case OP_COPY_RANGE:
- 		if (!remap_calls) {
- 			log5(op, offset, size, offset2, FL_SKIPPED);
- 			goto out;
-@@ -1859,6 +1945,18 @@ test(void)
- 
- 		do_dedupe_range(offset, size, offset2);
- 		break;
-+	case OP_COPY_RANGE:
-+		if (size == 0) {
-+			log5(OP_COPY_RANGE, offset, size, offset2, FL_SKIPPED);
-+			goto out;
-+		}
-+		if (offset2 + size > maxfilelen) {
-+			log5(OP_COPY_RANGE, offset, size, offset2, FL_SKIPPED);
-+			goto out;
-+		}
+ deduperange_f(
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index fb123f33..14e67e18 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -98,3 +98,22 @@ AC_DEFUN([AC_HAVE_GETMNTINFO],
+        AC_MSG_RESULT(no))
+     AC_SUBST(have_getmntinfo)
+   ])
 +
-+		do_copy_range(offset, size, offset2);
-+		break;
- 	case OP_FSYNC:
- 		dofsync();
- 		break;
++#
++#
++# Check if we have a copy_file_range system call (Linux)
++#
++AC_DEFUN([AC_HAVE_COPY_FILE_RANGE],
++  [ AC_MSG_CHECKING([for copy_file_range])
++    AC_TRY_LINK([
++#define _GNU_SOURCE
++#include <sys/syscall.h>
++#include <unistd.h>
++    ], [
++         syscall(__NR_copy_file_range, 0, 0, 0, 0, 0, 0);
++    ], have_copy_file_range=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_copy_file_range)
++  ])
++
