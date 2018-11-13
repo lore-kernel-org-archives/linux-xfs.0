@@ -1,90 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48922 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730730AbeKNDHS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Nov 2018 22:07:18 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8F11A3C2CC5
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Nov 2018 17:08:20 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 58C255D9C8
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Nov 2018 17:08:20 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: fix shared extent data corruption due to missing cow reservation
-Date: Tue, 13 Nov 2018 12:08:19 -0500
-Message-Id: <20181113170819.15220-1-bfoster@redhat.com>
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:45817 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730995AbeKNEAk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 23:00:40 -0500
+Received: by mail-pl1-f195.google.com with SMTP id a14so1781537plm.12
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Nov 2018 10:01:29 -0800 (PST)
+Date: Tue, 13 Nov 2018 10:01:26 -0800
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH v2] xfs: cache minimum realtime summary level
+Message-ID: <20181113180126.GA3253@vader>
+References: <49a31389f88ab40b11f07afa5c728a1368e39a45.1541908447.git.osandov@fb.com>
+ <20181113174234.GI4235@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181113174234.GI4235@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, kernel-team@fb.com
 
-Page writeback indirectly handles shared extents via the existence
-of overlapping COW fork blocks. If COW fork blocks exist, writeback
-always performs the associated copy-on-write regardless if the
-underlying blocks are actually shared. If the blocks are shared,
-then overlapping COW fork blocks must always exist.
+On Tue, Nov 13, 2018 at 09:42:34AM -0800, Darrick J. Wong wrote:
+> On Sat, Nov 10, 2018 at 07:59:58PM -0800, Omar Sandoval wrote:
+> > From: Omar Sandoval <osandov@fb.com>
+> > 
+> > The realtime summary is a two-dimensional array on disk, effectively:
+> > 
+> > u32 rsum[log2(number of realtime extents) + 1][number of blocks in the bitmap]
+> > 
+> > rsum[log][bbno] is the number of extents of size 2**log which start in
+> > bitmap block bbno.
+> > 
+> > xfs_rtallocate_extent_near() uses xfs_rtany_summary() to check whether
+> > rsum[log][bbno] != 0 for any log level. However, the summary array is
+> > stored in row-major order (i.e., like an array in C), so all of these
+> > entries are not adjacent, but rather spread across the entire summary
+> > file. In the worst case (a full bitmap block), xfs_rtany_summary() has
+> > to check every level.
+> > 
+> > This means that on a moderately-used realtime device, an allocation will
+> > waste a lot of time finding, reading, and releasing buffers for the
+> > realtime summary. In particular, one of our storage services (which runs
+> > on servers with 8 very slow CPUs and 15 8 TB XFS realtime filesystems)
+> > spends almost 5% of its CPU cycles in xfs_rtbuf_get() and
+> > xfs_trans_brelse() called from xfs_rtany_summary().
+> > 
+> > One solution would be to also store the summary with the dimensions
+> > swapped. However, this would require a disk format change to a very old
+> > component of XFS.
+> > 
+> > Instead, we can cache the minimum size which contains any extents. We do
+> > so lazily; rather than guaranteeing that the cache contains the precise
+> > minimum, it always contains a loose lower bound which we tighten when we
+> > read or update a summary block. This only uses a few kilobytes of memory
+> > and is already serialized via the realtime bitmap and summary inode
+> > locks, so the cost is minimal. With this change, the same workload only
+> > spends 0.2% of its CPU cycles in the realtime allocator.
+> > 
+> > Signed-off-by: Omar Sandoval <osandov@fb.com>
+> > ---
 
-fstests shared/010 reproduces a case where a buffered write occurs
-over a shared block without performing the requisite COW fork
-reservation.  This ultimately causes writeback to the shared extent
-and data corruption that is detected across md5 checks of the
-filesystem across a mount cycle.
+[snip]
 
-The problem occurs when a buffered write lands over a shared extent
-that crosses an extent size hint boundary and that also happens to
-have a partial COW reservation that doesn't cover the start and end
-blocks of the data fork extent.
+> Hmmm, how much memory does this require?
+> 
+> Let's say I had a 64TB realtime volume on a 4k block filesystem and 1
+> block per rt extent.
+> 
+> That's ... 2^(46 - 12) = 2^34 rt blocks.
+> 
+> Each rtbitmap block tracks 2^(12+3) = 2^15 blocks, which means that
+> there are 2^(34-15) = 2^19 rtbitmap blocks.
+> 
+> The cache requires 1 byte per rtbitmap block (2^19) which means it
+> requires ~512k of memory?  And if I had 1EB that would be 8MB of RAM?
+> 
+> (Granted you said you use 256K rt extents, which cuts down the memory
+> requirements by 64x, but I don't want to assume everyone will do this.)
 
-For example, a buffered write occurs across the file offset (in FSB
-units) range of [29, 57]. A shared extent exists at blocks [29, 35]
-and COW reservation already exists at blocks [32, 34]. After
-accommodating a COW extent size hint of 32 blocks and the existing
-reservation at offset 32, xfs_reflink_reserve_cow() allocates 32
-blocks of reservation at offset 0 and returns with COW reservation
-across the range of [0, 34]. The associated data fork extent is
-still [29, 35], however, which isn't fully covered by the COW
-reservation.
+Yup, that math looks right.
 
-This leads to a buffered write at file offset 35 over a shared
-extent without associated COW reservation. Writeback eventually
-kicks in, performs an overwrite of the underlying shared block and
-causes the associated data corruption.
+> > +	if (!mp->m_rsum_cache) {
+> > +		xfs_irele(mp->m_rbmip);
+> > +		xfs_irele(mp->m_rsumip);
+> > +		return -ENOMEM;
+> > +	}
+> 
+> That's a pretty high order memory allocation and it seem unfortunate to
+> fail the mount because we couldn't cobble together enough [kv]memory to
+> set up a rtsummary cache.
+> 
+> One option would be to fall back to reading the rtsummary file if
+> m_rsum_cache == NULL (i.e. we couldn't get enough memory to set up the
+> cache).
 
-Update xfs_reflink_reserve_cow() to accommodate the fact that a
-delalloc allocation request may not fully cover the extent in the
-data fork. Trim the data fork extent appropriately, just as is done
-for shared extent boundaries and/or existing COW reservations that
-happen to overlap the start of the data fork extent. This prevents
-shared/010 failures due to data corruption on reflink enabled
-filesystems.
+Good idea, I'll make this continue without the cache if it can't be
+allocated.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+Thanks for the review.
 
-This is not fully tested yet beyond verification that it solves the
-problem reproduced by shared/010. I'll be running more tests today, but
-I'm sending sooner for review and testing due to the nature of the
-problem and the fact that it's a fairly isolated change. I'll follow up
-if I discover any resulting regressions..
-
-Brian
-
- fs/xfs/xfs_reflink.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index ecdb086bc23e..c56bdbfcf7ae 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -296,6 +296,7 @@ xfs_reflink_reserve_cow(
- 	if (error)
- 		return error;
- 
-+	xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
- 	trace_xfs_reflink_cow_alloc(ip, &got);
- 	return 0;
- }
--- 
-2.17.2
+> Another option could be to use the xfs big memory array that
+> I've been developing for the xfs online repair patchset which uses a
+> memfd to create a byte-addressable array whose pages can be swapped out.
+> The downside of xfbma is that array accesses are pretty heavyweight.
+> 
+> --D
