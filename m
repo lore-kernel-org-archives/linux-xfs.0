@@ -1,69 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:7720 "EHLO
-        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726729AbeKCIf2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Nov 2018 04:35:28 -0400
-Date: Sat, 3 Nov 2018 10:26:13 +1100
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:7348 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726217AbeKMPXT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 10:23:19 -0500
+Date: Tue, 13 Nov 2018 16:26:51 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/7] cache: prevent expansion races
-Message-ID: <20181102232613.GG19305@dastard>
-References: <20181030112043.6034-1-david@fromorbit.com>
- <20181030112043.6034-4-david@fromorbit.com>
- <20181031171302.GA16769@bfoster>
- <20181101012739.GY19305@dastard>
- <20181101131732.GB21654@bfoster>
- <20181101212344.GZ19305@dastard>
- <20181102113138.GA6794@bfoster>
+Subject: Re: [PATCH] xfs: Remove noinline from #define STATIC
+Message-ID: <20181113052651.GR19305@dastard>
+References: <7302f4a13c1cbf62b07f636878ce25fcca84b6c4.camel@perches.com>
+ <6420cf91-89c8-a876-7a0d-25ab8ba428b8@sandeen.net>
+ <20181112214515.GN19305@dastard>
+ <bd3806ccc911989c7ef1fed9e8d26a4a5ad347a9.camel@perches.com>
+ <20181113011804.GP19305@dastard>
+ <20181113015410.GB30750@thunk.org>
+ <20181113030926.GQ19305@dastard>
+ <b03fda08ee4ca4b488c6f67e64bfc94f49be4e83.camel@perches.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181102113138.GA6794@bfoster>
+In-Reply-To: <b03fda08ee4ca4b488c6f67e64bfc94f49be4e83.camel@perches.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: "Theodore Y. Ts'o" <tytso@mit.edu>, Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Fri, Nov 02, 2018 at 07:31:38AM -0400, Brian Foster wrote:
-> Fair enough, but I'm still curious if doing something like changing the
-> hash trylock in the shaker to a blocking lock would improve shaker
-> effectiveness enough to avoid the need for the time-based hackery. It's
-> possible it has no effect or just replaces one problem with a set of
-> others, but it's an even more trivial change than this patch is.
+On Mon, Nov 12, 2018 at 08:23:42PM -0800, Joe Perches wrote:
+> On Tue, 2018-11-13 at 14:09 +1100, Dave Chinner wrote:
+> > On Mon, Nov 12, 2018 at 08:54:10PM -0500, Theodore Y. Ts'o wrote:
+> > > On Tue, Nov 13, 2018 at 12:18:05PM +1100, Dave Chinner wrote:
+> > > > I'm not interested in making code fast if distro support engineers
+> > > > can't debug problems on user systems easily. Optimising for
+> > > > performance over debuggability is a horrible trade off for us to
+> > > > make because it means users and distros end up much more reliant on
+> > > > single points of expertise for debugging problems. And that means
+> > > > the majority of the load of problem triage falls directly on very
+> > > > limited resources - the core XFS development team. A little bit of
+> > > > thought about how to make code easier to triage and debug goes a
+> > > > long, long way....
+> > > 
+> > > So at least in my experience, if the kernels are compiled with
+> > > CONFIG_DEBUG_INFO and/or CONFIG_DEBUG_INFO_REDUCED,
+> > > scripts/decode_stracktrace.sh seems to do a very nice job with inlined
+> > 
+> > That doesn't help with kernel profiling and other such things that
+> > are based on callgraphs...
 > 
-> Another approach may be to lift the cache shaker from a per-lookup-miss
-> execution context to something more central (like its own thread(s))
-> such that lookups can block on (bounded) shakes without introducing too
-> much concurrency therein. That is certainly more involved than bolting a
-> throttle onto cache expansion and may not be worth the effort if the
-> long term plan is to replace the whole cache mechanism.
+> If that's really the case:
+> 
+> I rather suspect the xfs static v STATIC function marking is not
+> particularly curated and the marking is somewhat arbitrary.
 
-I'm more inclined to kill the entire libxfs buffer cache
-implementation and MRUs and port the kernel code across with it's
-reference based LRU and shrinker. And with that, use AIO so that we
-don't need huge numbers of prefetch threads to keep IO in flight.
+That's a common opinion for an outsider to form when they come
+across something unfamiliar they don't really understand. "I don't
+understand this, so I must rewrite it" is an unfortunate habit that
+programmers have.
 
-Getting rid of the repair prefetcher threads removes the major
-concurrency component that is placed on the cache. Using the kernel
-infrastrucutre also moves from a global cache to a per-ag cache
-which matches how xfs_repair operates and hence further reduces lock
-contention. i.e. it allows threads working within an AG to work
-without interfence from other AGs.
+> So perhaps given the large number of static, but not STATIC
+> functions, perhaps a sed of s/static/STATIC/ should be done
+> when it's not inline for all xfs functions.
 
-Basically, we are hitting on the scalability limits of the libxfs
-architecture right now, and we have an architecure in the kernel
-that scales way beyond what we have in userspace. And it fits right
-in with the way userspace algorithms operate.
+That's just as bad as removing them all, if not worse.
 
-Add to that the need for AIO and delwri lists to scale mkfs to
-really large filesystems, and it really comes down to "we need to
-port the kernel code and move to AIO" rather than tinker around the
-edges with an architecture that we can't easily scale further that
-it current does...
+If you are writing new code or reworking existing code, then we'll
+consider the usage of STATIC/static in the context of that work.
+Otherwise, we leave it alone.
 
-Cheers,
+It if ain't broke, don't fix it. And it sure as hell isn't broken
+right now. We've got more than enough bugs to fix without having to
+deal with drive-by bikeshed painting...
 
-Dave
+-Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
