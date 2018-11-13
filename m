@@ -1,113 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:41034 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725888AbeKPIeH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 03:34:07 -0500
-Date: Thu, 15 Nov 2018 14:24:19 -0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:36178 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727475AbeKNClc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 21:41:32 -0500
+Date: Tue, 13 Nov 2018 08:42:32 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] block: fix 32 bit overflow in __blkdev_issue_discard()
-Message-ID: <20181115222419.GV4235@magnolia>
-References: <20181113214337.20581-1-david@fromorbit.com>
- <10a8dd78-7c00-8593-9f4e-b20eb1161b92@kernel.dk>
- <20181115010651.GD32603@ming.t460p>
- <20181115012201.GX19305@dastard>
- <20181115031035.GE32603@ming.t460p>
- <20181115221337.GY19305@dastard>
+Subject: Re: [RFC] xfs: save buffer offset when verifiers fail
+Message-ID: <20181113164232.GH4235@magnolia>
+References: <f2695097-0728-e525-43a5-d9f183ecba3e@sandeen.net>
+ <20181107192900.GB50224@bfoster>
+ <b976998f-d1a9-e8d5-e9d2-41ec730fd8e5@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181115221337.GY19305@dastard>
+In-Reply-To: <b976998f-d1a9-e8d5-e9d2-41ec730fd8e5@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Nov 16, 2018 at 09:13:37AM +1100, Dave Chinner wrote:
-> On Thu, Nov 15, 2018 at 11:10:36AM +0800, Ming Lei wrote:
-> > On Thu, Nov 15, 2018 at 12:22:01PM +1100, Dave Chinner wrote:
-> > > On Thu, Nov 15, 2018 at 09:06:52AM +0800, Ming Lei wrote:
-> > > > On Wed, Nov 14, 2018 at 08:18:24AM -0700, Jens Axboe wrote:
-> > > > > On 11/13/18 2:43 PM, Dave Chinner wrote:
-> > > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > > 
-> > > > > > A discard cleanup merged into 4.20-rc2 causes fstests xfs/259 to
-> > > > > > fall into an endless loop in the discard code. The test is creating
-> > > > > > a device that is exactly 2^32 sectors in size to test mkfs boundary
-> > > > > > conditions around the 32 bit sector overflow region.
-> > > > > > 
-> > > > > > mkfs issues a discard for the entire device size by default, and
-> > > > > > hence this throws a sector count of 2^32 into
-> > > > > > blkdev_issue_discard(). It takes the number of sectors to discard as
-> > > > > > a sector_t - a 64 bit value.
-> > > > > > 
-> > > > > > The commit ba5d73851e71 ("block: cleanup __blkdev_issue_discard")
-> > > > > > takes this sector count and casts it to a 32 bit value before
-> > > > > > comapring it against the maximum allowed discard size the device
-> > > > > > has. This truncates away the upper 32 bits, and so if the lower 32
-> > > > > > bits of the sector count is zero, it starts issuing discards of
-> > > > > > length 0. This causes the code to fall into an endless loop, issuing
-> > > > > > a zero length discards over and over again on the same sector.
-> > > > > 
-> > > > > Applied, thanks. Ming, can you please add a blktests test for
-> > > > > this case? This is the 2nd time it's been broken.
-> > > > 
-> > > > OK, I will add zram discard test in blktests, which should cover the
-> > > > 1st report. For the xfs/259, I need to investigate if it is easy to
-> > > > do in blktests.
-> > > 
-> > > Just write a test that creates block devices of 2^32 + (-1,0,1)
-> > > sectors and runs a discard across the entire device. That's all that
-> > > xfs/259 it doing - exercising mkfs on 2TB, 4TB and 16TB boundaries.
-> > > i.e. the boundaries where sectors and page cache indexes (on 4k page
-> > > size systems) overflow 32 bit int and unsigned int sizes. mkfs
-> > > issues a discard for the entire device, so it's testing that as
-> > > well...
-> > 
-> > Indeed, I can reproduce this issue via the following commands:
-> > 
-> > modprobe scsi_debug virtual_gb=2049 sector_size=512 lbpws10=1 dev_size_mb=512
-> > blkdiscard /dev/sde
-> > 
-> > > 
-> > > You need to write tests that exercise write_same, write_zeros and
-> > > discard operations around these boundaries, because they all take
-> > > a 64 bit sector count and stuff them into 32 bit size fields in
-> > > the bio tha tis being submitted.
-> > 
-> > write_same/write_zeros are usually used by driver directly, so we
-> > may need make the test case on some specific device.
+On Wed, Nov 07, 2018 at 01:59:39PM -0600, Eric Sandeen wrote:
+> On 11/7/18 1:29 PM, Brian Foster wrote:
+> > On Wed, Nov 07, 2018 at 11:49:31AM -0600, Eric Sandeen wrote:
+> >> I'd like to propose an addition to our current metadata verifier error reporting that I believe will allow us to more quickly identify, and more efficiently classify, metadata validation errors when they occur.
+> ...
 > 
-> My local linux iscsi server and client advertise support for them.
-> It definitely does not ships zeros across the wire(*) when I use
-> things like FALLOC_FL_ZERO_RANGE, but fstests does not have block
-> device fallocate() tests for zeroing or punching...
+> >> 3) It would allow us to ensure that the hexdump actually contains the
+> >>    region where the corruption was discovered.
+> >>
+> > 
+> > Yep, though I still think the "first 64 bytes" or whatever of a
+> > particular buffer is useful to help establish sanity (i.e., is the magic
+> > sane? is the whole buffer zeroed out? etc.).
+> 
+> Yeah I think we should always print the beginning as well.
+>  
+> ...
+> 
+>  
+> > Did we consider some kind of error context structure in the past? I
+> > don't recall if there were unrelated issues with that, but that seems
+> > slightly more elegant than an xfs_buf field. Otherwise, the high level
+> > approach seems reasonable.
+> 
+> Darrick made the same suggestion, and it's a good one thanks.
+> 
+> ...
+> 
+> >> We /could/ even go so far as to macrify tests like this, and do:
+> >>
+> >>         XFS_VALIDATE_EQ(agf, agf_magicnum, XFS_AGF_MAGIC);
+> >>         if (!XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)))
+> >>                 XFS_VERIFIER_FAIL_RETURN(struct xfs_agf, agf_versionnum);
+> >>         XFS_VALIDATE_EQ(agf, agf_versionnum, XFS_AGF_VERSION);
+> >>         ...
+> >>
+> > 
+> > This one makes my eyes cross a bit. ;) Though I think it's because now I
+> > have to wonder a bit about what each macro does. I wouldn't be against
+> > something like this if we could condense it into something more generic
+> > and straightforward. For example:
+> > 
+> > 	XFS_VERIFY(agf->agf_magicnum == XFS_AGF_MAGIC,
+> > 		   offsetof(struct xfs_agf, agf_magicnum));
+> > 	XFS_VERIFY(XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)),
+> > 		   offsetof(struct xfs_agf, agf_versionnum));
+> > 	...
+> > 
+> > I guess you'd need to stick the buffer or whatever stores the bad offset
+> > value in there somewhere as well, but seeing the explicit logic makes
+> > this easier to read than following it into a macro. Just my .02.
+> 
+> hah, yeah, that's much better.  Thanks.
 
-fstests does (generic/{349,350,351}) but those basic functionality tests
-don't include creating a 2^32 block device and seeing if overflows
-happen... :/
+<nod> To reiterate a conversation we had on IRC:
 
-...I also see that Eryu succeeded in kicking those tests out of the
-quick group, so they probably don't run that often either.
+I tried the "one giant macro to test, record error state, and return"
+strategy for xfs_scrub and was shot down hiding control flow in
+something that looks like a "regular" function call.  TBH I wouldn't
+necessarily be able to tell that XFS_VERIFY() actually *returns* from
+the function just by looking at the call sites.
+
+So what I propose instead is something sort of like what I did for
+scrub.  In some header file you have:
+
+static inline xfs_failaddr_t
+xfs_buf_record_error(
+	struct xfs_buf		*bp,
+	unsigned int		offset,
+	xfs_failaddr_t		fa,
+	int			error)
+{
+	bp->b_bad_offset = offset;
+	bp->b_error = error;
+	return fa;
+}
+
+and then in xfs_alloc.c you have:
+
+static xfs_failaddr_t
+xfs_agf_verify(
+	struct xfs_buf	*bp)
+{
+	struct xfs_agf	*agfp = XFS_BUF_TO_AGF(bp);
+
+#define XFS_AGF_CORRUPT(bp, field) \
+	xfs_buf_record_error((bp), offsetof(struct xfs_agf, (field)), \
+			__this_address, -EFSCORRUPTED)
+
+	if (agf->agf_magicnum != cpu_to_be32(XFS_AGF_MAGIC))
+		return XFS_AGF_CORRUPT(bp, agf_magicnum);
+
+	if (!XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)))
+		return XFS_AGF_CORRUPT(bp, agf_versionnum);
+	...
+
+#undef XFS_AGFL_ERROR
+}
 
 --D
 
-> 
-> Cheers,
-> 
-> Dave.
-> 
-> (*) but the back end storage is a sparse file on an XFS filesystem,
-> and the iscsi server fails to translate write_zeroes or
-> WRITE_SAME(0) to FALLOC_FL_ZERO_RANGE on the storage side and hence
-> is really slow because it physically writes zeros to the XFS file.
-> i.e. the client offloads the operation to the server to minimise
-> wire traffic, but then the server doesn't offload the operation to
-> the storage....
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> -Eric
