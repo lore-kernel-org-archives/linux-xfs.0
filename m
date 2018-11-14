@@ -1,89 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from longisland.ops.eusc.inter.net ([84.23.254.153]:38891 "EHLO
-        longisland.ops.eusc.inter.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728015AbeKNVpq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Nov 2018 16:45:46 -0500
-Received: from longisland.ops.eusc.inter.net ([10.153.10.49] helo=localhost)
-        by longisland.ops.eusc.inter.net with esmtpsa (Exim 4.91)
-        id 1gMtZK-000NRy-Cr
-        for linux-xfs@vger.kernel.org; Wed, 14 Nov 2018 12:42:50 +0100
-From: Michael Arndt <Michael.Arndt@berlin.de>
-Content-Type: text/plain;
-        charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Mime-Version: 1.0 (Mac OS X Mail 11.5 \(3445.9.1\))
-Subject: Fwd: xfs remove / unlink extremely slow ?
-Message-Id: <14251045-1CCF-4E35-95F1-F6597FD8FD8C@berlin.de>
-References: <3927644F-734A-4A2A-BACB-DE44CBC812EB@berlin.de>
-Date: Wed, 14 Nov 2018 12:42:49 +0100
+Received: from mx1.redhat.com ([209.132.183.28]:42022 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725892AbeKOAWy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Nov 2018 19:22:54 -0500
+Date: Wed, 14 Nov 2018 09:19:26 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 14/16] xfs: align writepages to large block sizes
+Message-ID: <20181114141925.GA19257@bfoster>
+References: <20181107063127.3902-1-david@fromorbit.com>
+ <20181107063127.3902-15-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181107063127.3902-15-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Hello XFS Gurus,
+On Wed, Nov 07, 2018 at 05:31:25PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> For data integrity purposes, we need to write back the entire
+> filesystem block when asked to sync a sub-block range of the file.
+> When the filesystem block size is larger than the page size, this
+> means we need to convert single page integrity writes into whole
+> block integrity writes. We do this by extending the writepage range
+> to filesystem block granularity and alignment.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_aops.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index f6ef9e0a7312..5334f16be166 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -900,6 +900,7 @@ xfs_vm_writepages(
+>  		.io_type = XFS_IO_HOLE,
+>  	};
+>  	int			ret;
+> +	unsigned		bsize =	i_blocksize(mapping->host);
+>  
+>  	/*
+>  	 * Refuse to write pages out if we are called from reclaim context.
+> @@ -922,6 +923,19 @@ xfs_vm_writepages(
+>  	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
+>  		return 0;
+>  
+> +	/*
+> +	 * If the block size is larger than page size, extent the incoming write
+> +	 * request to fsb granularity and alignment. This is a requirement for
+> +	 * data integrity operations and it doesn't hurt for other write
+> +	 * operations, so do it unconditionally.
+> +	 */
+> +	if (wbc->range_start)
+> +		wbc->range_start = round_down(wbc->range_start, bsize);
+> +	if (wbc->range_end != LLONG_MAX)
+> +		wbc->range_end = round_up(wbc->range_end, bsize);
+> +	if (wbc->nr_to_write < wbc->range_end - wbc->range_start)
+> +		wbc->nr_to_write = round_up(wbc->nr_to_write, bsize);
+> +
 
-Problem: /bin/rm extremely slow on a major xfs (SSD based) HPC Storage
-slow == 90 seconds for unlink of an empty file without any extents
-strace says: time completely used for unlink call
+This latter bit causes endless writeback loops in tests such as
+generic/475 (I think I reproduced it with xfs/141 as well). The
+writeback infrastructure samples ->nr_to_write before and after
+->writepages() calls to identify progress. Unconditionally bumping it to
+something larger than the original value can lead to an underflow in the
+writeback code that seems to throw things off. E.g., see the following
+wb tracepoints (w/ 4k block and page size):
 
-Question; Is there any issue resolution ?
+   kworker/u8:13-189   [003] ...1   317.968147: writeback_single_inode_start: bdi 253:9: ino=8389005 state=I_DIRTY_PAGES|I_SYNC dirtied_when=4294773087 age=211 index=0 to_write=1024 wrote=0 cgroup_ino=4294967295
+   kworker/u8:13-189   [003] ...1   317.968150: writeback_single_inode: bdi 253:9: ino=8389005 state=I_DIRTY_PAGES|I_SYNC dirtied_when=4294773087 age=211 index=0 to_write=1024 wrote=18446744073709548544 cgroup_ino=4294967295
 
-Information re XFS Version and OS at end of this Post
+The wrote value goes from 0 to garbage and writeback_sb_inodes() uses
+the same basic calculation for 'wrote.'
 
-Example of issue:
+BTW, I haven't gone through the broader set, but just looking at this
+bit what's the purpose of rounding ->nr_to_write (which is a page count)
+to a block size in the first place?
 
+Brian
 
-[root@atgrzsl3150 DOM_0]# xfs_bmap -a .AN_720.0000122.fl3step_0.lock 
-
-.AN_720.0000122.fl3step_0.lock: no extents
-[root@atgrzsl3150 DOM_0]# ls -laFtr .AN_720.0000122.fl3step_0.lock 
-
--rw-rw-r-- 1 user group 0 Oct 22 14:14 .AN_720.0000122.fl3step_0.lock
-
-
-strace -T -tt /bin/rm .AN_720.0000122.fl3step_0.lock 
-
-
-1:41:11.621005 execve("/bin/rm", ["/bin/rm", ".AN_720.0000122.fl3step_0.lock"], [/* 31 vars */]) = 0 <0.000169>11:41:11.621312 brk(NULL)               = 0x6f5000 <0.000023>11:41:11.621378 mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f4d96017000 <0.000058>
-…….
-11:41:11.622485 newfstatat(AT_FDCWD, ".AN_720.0000122.fl3step_0.lock", {st_mode=S_IFREG|0664, st_size=0, ...}, AT_SYMLINK_NOFOLLOW) = 0 <0.000009>
-11:41:11.622522 geteuid()               = 0 <0.000009>
--> 11:41:11.622546 unlinkat(AT_FDCWD, ".AN_720.0000122.fl3step_0.lock", 0) = 0 <89.612833>
--> 11:42:41.235428 lseek(0, 0, SEEK_CUR)   = -1 ESPIPE (Illegal seek) <0.000065>
-11:42:41.235548 close(0)                = 0 <0.000052>
-11:42:41.235689 close(1)                = 0 <0.000011>
-11:42:41.235738 close(2)                = 0 <0.000055>
-11:42:41.235830 exit_group(0)           = ?
-11:42:41.235941 +++ exited with 0 +++
-
-xfs_info /dev/mapper/vg_calc2-calc2
-meta-data=/dev/mapper/vg_calc2-calc2 isize=512    agcount=50, agsize=268435448 blks
-        =                       sectsz=512   attr=2, projid32bit=1
-        =                       crc=1        finobt=0 spinodes=0
-data     =                       bsize=4096   blocks=13421711360, imaxpct=20
-        =                       sunit=8      swidth=40 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =internal               bsize=4096   blocks=521728, version=2
-        =                       sectsz=512   sunit=8 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-Issue on:
-
-xfsprogs-4.5.0-18.el7.x86_64
-xfsdump-3.1.7-1.el7.x86_64
-Red Hat Enterprise Linux Server release 7.4 (Maipo)
-df -kh .
-Filesystem                  Size  Used Avail Use% Mounted on
-/dev/mapper/vg_calc2        50T   20T   31T  40% /calc2
-
-Layers: 
-
-SSD based commercial Storage exports many small LUN’s -> LUN#s striped via LVM2 for speed, xfs with default opts on top of LVM
-Currently no discard Option for mount and no fstrim manually called
-
-Mount Options used
-/dev/mapper/vg_calc2-calc2 /calc2 xfs noatime,delaylog,nobarrier,nodiratime,logbsize=256k,logbufs=8 0 0 
-
-thanks for any tip / hint / question
-Micha
+>  	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
+>  	ret = write_cache_pages(mapping, wbc, xfs_do_writepage, &wpc);
+>  	if (wpc.ioend)
+> -- 
+> 2.19.1
+> 
