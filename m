@@ -1,130 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50152 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729024AbeKOXDc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Nov 2018 18:03:32 -0500
-Date: Thu, 15 Nov 2018 07:55:44 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 14/16] xfs: align writepages to large block sizes
-Message-ID: <20181115125544.GC22958@bfoster>
-References: <20181107063127.3902-1-david@fromorbit.com>
- <20181107063127.3902-15-david@fromorbit.com>
- <20181114141925.GA19257@bfoster>
- <20181114211818.GW19305@dastard>
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:39779 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727005AbeKNMyg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Nov 2018 07:54:36 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181114211818.GW19305@dastard>
+References: <20181113214337.20581-1-david@fromorbit.com>
+In-Reply-To: <20181113214337.20581-1-david@fromorbit.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Date: Wed, 14 Nov 2018 10:53:11 +0800
+Message-ID: <CACVXFVPS8RRYw4g-UjaDFW1Mrx_tv5V6SsSyKeQ9pyBLi2zrFA@mail.gmail.com>
+Subject: Re: [PATCH] block: fix 32 bit overflow in __blkdev_issue_discard()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>
 
-On Thu, Nov 15, 2018 at 08:18:18AM +1100, Dave Chinner wrote:
-> On Wed, Nov 14, 2018 at 09:19:26AM -0500, Brian Foster wrote:
-> > On Wed, Nov 07, 2018 at 05:31:25PM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > For data integrity purposes, we need to write back the entire
-> > > filesystem block when asked to sync a sub-block range of the file.
-> > > When the filesystem block size is larger than the page size, this
-> > > means we need to convert single page integrity writes into whole
-> > > block integrity writes. We do this by extending the writepage range
-> > > to filesystem block granularity and alignment.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_aops.c | 14 ++++++++++++++
-> > >  1 file changed, 14 insertions(+)
-> > > 
-> > > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > > index f6ef9e0a7312..5334f16be166 100644
-> > > --- a/fs/xfs/xfs_aops.c
-> > > +++ b/fs/xfs/xfs_aops.c
-> > > @@ -900,6 +900,7 @@ xfs_vm_writepages(
-> > >  		.io_type = XFS_IO_HOLE,
-> > >  	};
-> > >  	int			ret;
-> > > +	unsigned		bsize =	i_blocksize(mapping->host);
-> > >  
-> > >  	/*
-> > >  	 * Refuse to write pages out if we are called from reclaim context.
-> > > @@ -922,6 +923,19 @@ xfs_vm_writepages(
-> > >  	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
-> > >  		return 0;
-> > >  
-> > > +	/*
-> > > +	 * If the block size is larger than page size, extent the incoming write
-> > > +	 * request to fsb granularity and alignment. This is a requirement for
-> > > +	 * data integrity operations and it doesn't hurt for other write
-> > > +	 * operations, so do it unconditionally.
-> > > +	 */
-> > > +	if (wbc->range_start)
-> > > +		wbc->range_start = round_down(wbc->range_start, bsize);
-> > > +	if (wbc->range_end != LLONG_MAX)
-> > > +		wbc->range_end = round_up(wbc->range_end, bsize);
-> > > +	if (wbc->nr_to_write < wbc->range_end - wbc->range_start)
-> > > +		wbc->nr_to_write = round_up(wbc->nr_to_write, bsize);
-> > > +
-> > 
-> > This latter bit causes endless writeback loops in tests such as
-> > generic/475 (I think I reproduced it with xfs/141 as well). The
-> 
-> Yup, I've seen that, but haven't fixed it yet because I still
-> haven't climbed out of the dedupe/clone/copy file range data
-> corruption hole that fsx pulled the lid of.
-> 
-> Basically, I can't get back to working on bs > ps until I get the
-> stuff we actually support working correctly first...
-> 
-> > writeback infrastructure samples ->nr_to_write before and after
-> > ->writepages() calls to identify progress. Unconditionally bumping it to
-> > something larger than the original value can lead to an underflow in the
-> > writeback code that seems to throw things off. E.g., see the following
-> > wb tracepoints (w/ 4k block and page size):
-> > 
-> >    kworker/u8:13-189   [003] ...1   317.968147: writeback_single_inode_start: bdi 253:9: ino=8389005 state=I_DIRTY_PAGES|I_SYNC dirtied_when=4294773087 age=211 index=0 to_write=1024 wrote=0 cgroup_ino=4294967295
-> >    kworker/u8:13-189   [003] ...1   317.968150: writeback_single_inode: bdi 253:9: ino=8389005 state=I_DIRTY_PAGES|I_SYNC dirtied_when=4294773087 age=211 index=0 to_write=1024 wrote=18446744073709548544 cgroup_ino=4294967295
-> > 
-> > The wrote value goes from 0 to garbage and writeback_sb_inodes() uses
-> > the same basic calculation for 'wrote.'
-> 
-> Easy enough to fix, just stash the originals and restore them once
-> done.
-> 
-> > 
-> > BTW, I haven't gone through the broader set, but just looking at this
-> > bit what's the purpose of rounding ->nr_to_write (which is a page count)
-> > to a block size in the first place?
-> 
-> fsync on a single page range.
-> 
-> We write that page, allocate the block (which spans 16 pages), and
-> then return from writeback leaving 15/16 pages on that block still
-> dirty in memory.  Then we force the log, pushing the allocation and
-> metadata to disk.  Crash.
-> 
-> On recovery, we expose 15/16 pages of stale data because we only
-> wrote one of the pages over the block during fsync.
-> 
+On Wed, Nov 14, 2018 at 5:44 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> A discard cleanup merged into 4.20-rc2 causes fstests xfs/259 to
+> fall into an endless loop in the discard code. The test is creating
+> a device that is exactly 2^32 sectors in size to test mkfs boundary
+> conditions around the 32 bit sector overflow region.
+>
+> mkfs issues a discard for the entire device size by default, and
+> hence this throws a sector count of 2^32 into
+> blkdev_issue_discard(). It takes the number of sectors to discard as
+> a sector_t - a 64 bit value.
+>
+> The commit ba5d73851e71 ("block: cleanup __blkdev_issue_discard")
+> takes this sector count and casts it to a 32 bit value before
+> comapring it against the maximum allowed discard size the device
+> has. This truncates away the upper 32 bits, and so if the lower 32
+> bits of the sector count is zero, it starts issuing discards of
+> length 0. This causes the code to fall into an endless loop, issuing
+> a zero length discards over and over again on the same sector.
+>
+> Fixes: ba5d73851e71 ("block: cleanup __blkdev_issue_discard")
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  block/blk-lib.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> diff --git a/block/blk-lib.c b/block/blk-lib.c
+> index e8b3bb9bf375..144e156ed341 100644
+> --- a/block/blk-lib.c
+> +++ b/block/blk-lib.c
+> @@ -55,9 +55,12 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+>                 return -EINVAL;
+>
+>         while (nr_sects) {
+> -               unsigned int req_sects = min_t(unsigned int, nr_sects,
+> +               sector_t req_sects = min_t(sector_t, nr_sects,
+>                                 bio_allowed_max_sectors(q));
 
-But why the block size and not something that represents pages per
-block? Note again that ->nr_to_write is a page count and you're
-comparing and aligning it with fields that are byte offsets.
+bio_allowed_max_sectors(q) is always < UINT_MAX, and 'sector_t' is only
+required during the comparison, so another simpler fix might be the following,
+could you test if it is workable?
 
-Also, it looks like nr_to_write is set to LONG_MAX regardless of the
-fsync range (whereas range_start/end are set appropriately). IOW, an
-integrity write isn't limited by page count since it's critical to flush
-the specified range. Unless I'm misunderstanding how this field is used
-in the writeback code, ISTM that there shouldn't be any need to muck
-with nr_to_write here for the purposes of fsync.
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index e8b3bb9bf375..6ef44f99e83f 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -55,7 +55,7 @@ int __blkdev_issue_discard(struct block_device
+*bdev, sector_t sector,
+                return -EINVAL;
 
-Brian
+        while (nr_sects) {
+-               unsigned int req_sects = min_t(unsigned int, nr_sects,
++               unsigned int req_sects = min_t(sector_t, nr_sects,
+                                bio_allowed_max_sectors(q));
+>
+> +               WARN_ON_ONCE(req_sects == 0);
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+The above line isn't necessary given 'nr_sects' can't be zero.
+
+
+Thanks,
+Ming Lei
