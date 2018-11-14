@@ -1,117 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:37988 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729008AbeKOUWP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 15:22:15 -0500
-Date: Thu, 15 Nov 2018 02:15:03 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] iomap: dio data corruption and spurious errors when
- pipes fill
-Message-ID: <20181115101503.GB13913@infradead.org>
-References: <20181108221909.27602-1-david@fromorbit.com>
- <20181108221909.27602-3-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34500 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727822AbeKOAso (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Nov 2018 19:48:44 -0500
+Date: Wed, 14 Nov 2018 09:45:11 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Fwd: xfs remove / unlink extremely slow ?
+Message-ID: <20181114144511.GB19257@bfoster>
+References: <3927644F-734A-4A2A-BACB-DE44CBC812EB@berlin.de>
+ <14251045-1CCF-4E35-95F1-F6597FD8FD8C@berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20181108221909.27602-3-david@fromorbit.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <14251045-1CCF-4E35-95F1-F6597FD8FD8C@berlin.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Michael Arndt <Michael.Arndt@berlin.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Nov 09, 2018 at 09:19:09AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Nov 14, 2018 at 12:42:49PM +0100, Michael Arndt wrote:
+> Hello XFS Gurus,
 > 
-> When doing direct IO to a pipe for do_splice_direct(), then pipe is
-> trivial to fill up and overflow as it can only hold 16 pages. At
-> this point bio_iov_iter_get_pages() then returns -EFAULT, and we
-> abort the IO submission process. Unfortunately, iomap_dio_rw()
-> propagates the error back up the stack.
+> Problem: /bin/rm extremely slow on a major xfs (SSD based) HPC Storage
+> slow == 90 seconds for unlink of an empty file without any extents
+> strace says: time completely used for unlink call
 > 
-> The error is converted from the EFAULT to EAGAIN in
-> generic_file_splice_read() to tell the splice layers that the pipe
-> is full. do_splice_direct() completely fails to handle EAGAIN errors
-> (it aborts on error) and returns EAGAIN to the caller.
+> Question; Is there any issue resolution ?
 > 
-> copy_file_write() then compeltely fails to handle EAGAIN as well,
-> and so returns EAGAIN to userspace, having failed to copy the data
-> it was asked to.
+> Information re XFS Version and OS at end of this Post
 > 
-> Avoid this whole steaming pile of fail by having iomap_dio_rw()
-> silently swallow EFAULT errors and so do short reads.
+> Example of issue:
 > 
-> To make matters worse, iomap_dio_actor() has a stale data exposure
-> bug bio_iov_iter_get_pages() fails - it does not zero the tail block
-> that it may have been left uncovered by partial IO. Fix the error
-> handling case to drop to the sub-block zeroing rather than
-> immmediately returning the -EFAULT error.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/iomap.c | 22 +++++++++++++++++++---
->  1 file changed, 19 insertions(+), 3 deletions(-)
+> [root@atgrzsl3150 DOM_0]# xfs_bmap -a .AN_720.0000122.fl3step_0.lock 
 > 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 7aacd48c593e..2fda13bc37d8 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -1775,7 +1775,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
->  	struct bio *bio;
->  	bool need_zeroout = false;
->  	bool use_fua = false;
-> -	int nr_pages, ret;
-> +	int nr_pages, ret = 0;
->  	size_t copied = 0;
->  
->  	if ((pos | length | align) & ((1 << blkbits) - 1))
-> @@ -1839,8 +1839,14 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
->  
->  		ret = bio_iov_iter_get_pages(bio, &iter);
->  		if (unlikely(ret)) {
-> +			/*
-> +			 * We have to stop part way through an IO. We must fall through
+> .AN_720.0000122.fl3step_0.lock: no extents
+> [root@atgrzsl3150 DOM_0]# ls -laFtr .AN_720.0000122.fl3step_0.lock 
+> 
+> -rw-rw-r-- 1 user group 0 Oct 22 14:14 .AN_720.0000122.fl3step_0.lock
+> 
+> 
+> strace -T -tt /bin/rm .AN_720.0000122.fl3step_0.lock 
+> 
+> 
+> 1:41:11.621005 execve("/bin/rm", ["/bin/rm", ".AN_720.0000122.fl3step_0.lock"], [/* 31 vars */]) = 0 <0.000169>11:41:11.621312 brk(NULL)               = 0x6f5000 <0.000023>11:41:11.621378 mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f4d96017000 <0.000058>
+> …….
+> 11:41:11.622485 newfstatat(AT_FDCWD, ".AN_720.0000122.fl3step_0.lock", {st_mode=S_IFREG|0664, st_size=0, ...}, AT_SYMLINK_NOFOLLOW) = 0 <0.000009>
+> 11:41:11.622522 geteuid()               = 0 <0.000009>
+> -> 11:41:11.622546 unlinkat(AT_FDCWD, ".AN_720.0000122.fl3step_0.lock", 0) = 0 <89.612833>
+> -> 11:42:41.235428 lseek(0, 0, SEEK_CUR)   = -1 ESPIPE (Illegal seek) <0.000065>
+> 11:42:41.235548 close(0)                = 0 <0.000052>
+> 11:42:41.235689 close(1)                = 0 <0.000011>
+> 11:42:41.235738 close(2)                = 0 <0.000055>
+> 11:42:41.235830 exit_group(0)           = ?
+> 11:42:41.235941 +++ exited with 0 +++
+> 
 
-Overly long line.
+It might be useful to do something like:
 
-> +			 * to the sub-block tail zeroing here, otherwise this
-> +			 * short IO may expose stale data in the tail of the
-> +			 * block we haven't written data to.
-> +			 */
->  			bio_put(bio);
-> -			return copied ? copied : ret;
-> +			goto zero_tail;
->  		}
->  
->  		n = bio->bi_iter.bi_size;
-> @@ -1877,6 +1883,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
->  	 * the block tail in the latter case, we can expose stale data via mmap
->  	 * reads of the EOF block.
->  	 */
-> +zero_tail:
->  	if (need_zeroout ||
->  	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
->  		/* zero out from the end of the write to the end of the block */
-> @@ -1884,7 +1891,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
->  		if (pad)
->  			iomap_dio_zero(dio, iomap, pos, fs_block_size - pad);
->  	}
-> -	return copied;
-> +	return copied ? copied : ret;
->  }
->  
->  static loff_t
-> @@ -2079,6 +2086,15 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  				dio->wait_for_completion = true;
->  				ret = 0;
->  			}
-> +
-> +			/*
-> +			 * splicing to pipes can fail on a full pipe. We have to
+  trace-cmd record -e xfs:* <rm command>
 
-Please start comments that contains full sentences with an uppercase
-letter.
+... and either put the resulting trace.dat somewhere where it can be
+downloaded or if not too large, run 'trace-cmd report' and copy the text
+into a mail (without reformatting it).
 
-Thse nitpicks aside this looks fine to me:
+Brian
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> xfs_info /dev/mapper/vg_calc2-calc2
+> meta-data=/dev/mapper/vg_calc2-calc2 isize=512    agcount=50, agsize=268435448 blks
+>         =                       sectsz=512   attr=2, projid32bit=1
+>         =                       crc=1        finobt=0 spinodes=0
+> data     =                       bsize=4096   blocks=13421711360, imaxpct=20
+>         =                       sunit=8      swidth=40 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> log      =internal               bsize=4096   blocks=521728, version=2
+>         =                       sectsz=512   sunit=8 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> Issue on:
+> 
+> xfsprogs-4.5.0-18.el7.x86_64
+> xfsdump-3.1.7-1.el7.x86_64
+> Red Hat Enterprise Linux Server release 7.4 (Maipo)
+> df -kh .
+> Filesystem                  Size  Used Avail Use% Mounted on
+> /dev/mapper/vg_calc2        50T   20T   31T  40% /calc2
+> 
+> Layers: 
+> 
+> SSD based commercial Storage exports many small LUN’s -> LUN#s striped via LVM2 for speed, xfs with default opts on top of LVM
+> Currently no discard Option for mount and no fstrim manually called
+> 
+> Mount Options used
+> /dev/mapper/vg_calc2-calc2 /calc2 xfs noatime,delaylog,nobarrier,nodiratime,logbsize=256k,logbufs=8 0 0 
+> 
+> thanks for any tip / hint / question
+> Micha
+> 
