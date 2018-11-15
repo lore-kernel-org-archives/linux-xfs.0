@@ -1,129 +1,185 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:46740 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726682AbeKNCYv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 21:24:51 -0500
-Date: Tue, 13 Nov 2018 08:25:57 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] iomap: dio data corruption and spurious errors when
- pipes fill
-Message-ID: <20181113162557.GG4235@magnolia>
-References: <20181108221909.27602-1-david@fromorbit.com>
- <20181108221909.27602-3-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181108221909.27602-3-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:58492 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728564AbeKOTFr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Nov 2018 14:05:47 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V10 19/19] block: kill BLK_MQ_F_SG_MERGE
+Date: Thu, 15 Nov 2018 16:53:06 +0800
+Message-Id: <20181115085306.9910-20-ming.lei@redhat.com>
+In-Reply-To: <20181115085306.9910-1-ming.lei@redhat.com>
+References: <20181115085306.9910-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Fri, Nov 09, 2018 at 09:19:09AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When doing direct IO to a pipe for do_splice_direct(), then pipe is
-> trivial to fill up and overflow as it can only hold 16 pages. At
-> this point bio_iov_iter_get_pages() then returns -EFAULT, and we
-> abort the IO submission process. Unfortunately, iomap_dio_rw()
-> propagates the error back up the stack.
-> 
-> The error is converted from the EFAULT to EAGAIN in
-> generic_file_splice_read() to tell the splice layers that the pipe
-> is full. do_splice_direct() completely fails to handle EAGAIN errors
-> (it aborts on error) and returns EAGAIN to the caller.
-> 
-> copy_file_write() then compeltely fails to handle EAGAIN as well,
+QUEUE_FLAG_NO_SG_MERGE has been killed, so kill BLK_MQ_F_SG_MERGE too.
 
-"completely"...
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>
+Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: dm-devel@redhat.com
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Cc: linux-erofs@lists.ozlabs.org
+Cc: David Sterba <dsterba@suse.com>
+Cc: linux-btrfs@vger.kernel.org
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Cc: Gao Xiang <gaoxiang25@huawei.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-ext4@vger.kernel.org
+Cc: Coly Li <colyli@suse.de>
+Cc: linux-bcache@vger.kernel.org
+Cc: Boaz Harrosh <ooo@electrozaur.com>
+Cc: Bob Peterson <rpeterso@redhat.com>
+Cc: cluster-devel@redhat.com
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-mq-debugfs.c       | 1 -
+ drivers/block/loop.c         | 2 +-
+ drivers/block/nbd.c          | 2 +-
+ drivers/block/rbd.c          | 2 +-
+ drivers/block/skd_main.c     | 1 -
+ drivers/block/xen-blkfront.c | 2 +-
+ drivers/md/dm-rq.c           | 2 +-
+ drivers/mmc/core/queue.c     | 3 +--
+ drivers/scsi/scsi_lib.c      | 2 +-
+ include/linux/blk-mq.h       | 1 -
+ 10 files changed, 7 insertions(+), 11 deletions(-)
 
-> and so returns EAGAIN to userspace, having failed to copy the data
-> it was asked to.
-> 
-> Avoid this whole steaming pile of fail by having iomap_dio_rw()
-> silently swallow EFAULT errors and so do short reads.
-> 
-> To make matters worse, iomap_dio_actor() has a stale data exposure
-> bug bio_iov_iter_get_pages() fails - it does not zero the tail block
-> that it may have been left uncovered by partial IO. Fix the error
-> handling case to drop to the sub-block zeroing rather than
-> immmediately returning the -EFAULT error.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Other than that it looks ok and I'll give it a spin,
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  fs/iomap.c | 22 +++++++++++++++++++---
->  1 file changed, 19 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 7aacd48c593e..2fda13bc37d8 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -1775,7 +1775,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
->  	struct bio *bio;
->  	bool need_zeroout = false;
->  	bool use_fua = false;
-> -	int nr_pages, ret;
-> +	int nr_pages, ret = 0;
->  	size_t copied = 0;
->  
->  	if ((pos | length | align) & ((1 << blkbits) - 1))
-> @@ -1839,8 +1839,14 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
->  
->  		ret = bio_iov_iter_get_pages(bio, &iter);
->  		if (unlikely(ret)) {
-> +			/*
-> +			 * We have to stop part way through an IO. We must fall through
-> +			 * to the sub-block tail zeroing here, otherwise this
-> +			 * short IO may expose stale data in the tail of the
-> +			 * block we haven't written data to.
-> +			 */
->  			bio_put(bio);
-> -			return copied ? copied : ret;
-> +			goto zero_tail;
->  		}
->  
->  		n = bio->bi_iter.bi_size;
-> @@ -1877,6 +1883,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
->  	 * the block tail in the latter case, we can expose stale data via mmap
->  	 * reads of the EOF block.
->  	 */
-> +zero_tail:
->  	if (need_zeroout ||
->  	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
->  		/* zero out from the end of the write to the end of the block */
-> @@ -1884,7 +1891,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
->  		if (pad)
->  			iomap_dio_zero(dio, iomap, pos, fs_block_size - pad);
->  	}
-> -	return copied;
-> +	return copied ? copied : ret;
->  }
->  
->  static loff_t
-> @@ -2079,6 +2086,15 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  				dio->wait_for_completion = true;
->  				ret = 0;
->  			}
-> +
-> +			/*
-> +			 * splicing to pipes can fail on a full pipe. We have to
-> +			 * swallow this to make it look like a short IO
-> +			 * otherwise the higher splice layers will completely
-> +			 * mishandle the error and stop moving data.
-> +			 */
-> +			if (ret == -EFAULT)
-> +				ret = 0;
->  			break;
->  		}
->  		pos += ret;
-> -- 
-> 2.19.1
-> 
+diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+index e188b1090759..e1c12358391a 100644
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -250,7 +250,6 @@ static const char *const alloc_policy_name[] = {
+ static const char *const hctx_flag_name[] = {
+ 	HCTX_FLAG_NAME(SHOULD_MERGE),
+ 	HCTX_FLAG_NAME(TAG_SHARED),
+-	HCTX_FLAG_NAME(SG_MERGE),
+ 	HCTX_FLAG_NAME(BLOCKING),
+ 	HCTX_FLAG_NAME(NO_SCHED),
+ };
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index a3fd418ec637..d509902a8046 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -1907,7 +1907,7 @@ static int loop_add(struct loop_device **l, int i)
+ 	lo->tag_set.queue_depth = 128;
+ 	lo->tag_set.numa_node = NUMA_NO_NODE;
+ 	lo->tag_set.cmd_size = sizeof(struct loop_cmd);
+-	lo->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
++	lo->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
+ 	lo->tag_set.driver_data = lo;
+ 
+ 	err = blk_mq_alloc_tag_set(&lo->tag_set);
+diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
+index 08696f5f00bb..999c94de78e5 100644
+--- a/drivers/block/nbd.c
++++ b/drivers/block/nbd.c
+@@ -1570,7 +1570,7 @@ static int nbd_dev_add(int index)
+ 	nbd->tag_set.numa_node = NUMA_NO_NODE;
+ 	nbd->tag_set.cmd_size = sizeof(struct nbd_cmd);
+ 	nbd->tag_set.flags = BLK_MQ_F_SHOULD_MERGE |
+-		BLK_MQ_F_SG_MERGE | BLK_MQ_F_BLOCKING;
++		BLK_MQ_F_BLOCKING;
+ 	nbd->tag_set.driver_data = nbd;
+ 
+ 	err = blk_mq_alloc_tag_set(&nbd->tag_set);
+diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
+index 8e5140bbf241..3dfd300b5283 100644
+--- a/drivers/block/rbd.c
++++ b/drivers/block/rbd.c
+@@ -3988,7 +3988,7 @@ static int rbd_init_disk(struct rbd_device *rbd_dev)
+ 	rbd_dev->tag_set.ops = &rbd_mq_ops;
+ 	rbd_dev->tag_set.queue_depth = rbd_dev->opts->queue_depth;
+ 	rbd_dev->tag_set.numa_node = NUMA_NO_NODE;
+-	rbd_dev->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
++	rbd_dev->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
+ 	rbd_dev->tag_set.nr_hw_queues = 1;
+ 	rbd_dev->tag_set.cmd_size = sizeof(struct work_struct);
+ 
+diff --git a/drivers/block/skd_main.c b/drivers/block/skd_main.c
+index a10d5736d8f7..a7040f9a1b1b 100644
+--- a/drivers/block/skd_main.c
++++ b/drivers/block/skd_main.c
+@@ -2843,7 +2843,6 @@ static int skd_cons_disk(struct skd_device *skdev)
+ 		skdev->sgs_per_request * sizeof(struct scatterlist);
+ 	skdev->tag_set.numa_node = NUMA_NO_NODE;
+ 	skdev->tag_set.flags = BLK_MQ_F_SHOULD_MERGE |
+-		BLK_MQ_F_SG_MERGE |
+ 		BLK_ALLOC_POLICY_TO_MQ_FLAG(BLK_TAG_ALLOC_FIFO);
+ 	skdev->tag_set.driver_data = skdev;
+ 	rc = blk_mq_alloc_tag_set(&skdev->tag_set);
+diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
+index 56452cabce5b..297412bf23e1 100644
+--- a/drivers/block/xen-blkfront.c
++++ b/drivers/block/xen-blkfront.c
+@@ -977,7 +977,7 @@ static int xlvbd_init_blk_queue(struct gendisk *gd, u16 sector_size,
+ 	} else
+ 		info->tag_set.queue_depth = BLK_RING_SIZE(info);
+ 	info->tag_set.numa_node = NUMA_NO_NODE;
+-	info->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
++	info->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
+ 	info->tag_set.cmd_size = sizeof(struct blkif_req);
+ 	info->tag_set.driver_data = info;
+ 
+diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+index 7cd36e4d1310..140ada0b99fc 100644
+--- a/drivers/md/dm-rq.c
++++ b/drivers/md/dm-rq.c
+@@ -536,7 +536,7 @@ int dm_mq_init_request_queue(struct mapped_device *md, struct dm_table *t)
+ 	md->tag_set->ops = &dm_mq_ops;
+ 	md->tag_set->queue_depth = dm_get_blk_mq_queue_depth();
+ 	md->tag_set->numa_node = md->numa_node_id;
+-	md->tag_set->flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
++	md->tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
+ 	md->tag_set->nr_hw_queues = dm_get_blk_mq_nr_hw_queues();
+ 	md->tag_set->driver_data = md;
+ 
+diff --git a/drivers/mmc/core/queue.c b/drivers/mmc/core/queue.c
+index 6edffeed9953..6a0e9f6b6412 100644
+--- a/drivers/mmc/core/queue.c
++++ b/drivers/mmc/core/queue.c
+@@ -387,8 +387,7 @@ static int mmc_mq_init_queue(struct mmc_queue *mq, int q_depth,
+ 	mq->tag_set.ops = mq_ops;
+ 	mq->tag_set.queue_depth = q_depth;
+ 	mq->tag_set.numa_node = NUMA_NO_NODE;
+-	mq->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE |
+-			    BLK_MQ_F_BLOCKING;
++	mq->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_BLOCKING;
+ 	mq->tag_set.nr_hw_queues = 1;
+ 	mq->tag_set.cmd_size = sizeof(struct mmc_queue_req);
+ 	mq->tag_set.driver_data = mq;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 5d83a162d03b..c7b0e4ff5e6d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1883,7 +1883,7 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+ 	shost->tag_set.queue_depth = shost->can_queue;
+ 	shost->tag_set.cmd_size = cmd_size;
+ 	shost->tag_set.numa_node = NUMA_NO_NODE;
+-	shost->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
++	shost->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
+ 	shost->tag_set.flags |=
+ 		BLK_ALLOC_POLICY_TO_MQ_FLAG(shost->hostt->tag_alloc_policy);
+ 	shost->tag_set.driver_data = shost;
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 929e8abc5535..ca7389d7e04f 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -211,7 +211,6 @@ struct blk_mq_ops {
+ enum {
+ 	BLK_MQ_F_SHOULD_MERGE	= 1 << 0,
+ 	BLK_MQ_F_TAG_SHARED	= 1 << 1,
+-	BLK_MQ_F_SG_MERGE	= 1 << 2,
+ 	BLK_MQ_F_BLOCKING	= 1 << 5,
+ 	BLK_MQ_F_NO_SCHED	= 1 << 6,
+ 	BLK_MQ_F_ALLOC_POLICY_START_BIT = 8,
+-- 
+2.9.5
