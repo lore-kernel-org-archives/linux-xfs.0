@@ -1,27 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47532 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727067AbeKOQLD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 11:11:03 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wAF63wlS148427
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:04:36 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2nr7cs7jjq-1
+Received: from userp2120.oracle.com ([156.151.31.85]:37228 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726574AbeKOQLr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 11:11:47 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wAF63wQn106096
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:05:19 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2nr7cs7hue-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:04:36 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wAF64ZUr021755
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:05:19 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wAF65ImJ014775
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:04:35 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id wAF64ZKW027534
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:04:35 GMT
-Subject: [PATCH 2/9] xfs: never try to scrub more than 64 inodes per inobt
- record
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:05:18 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wAF65I6P021601
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:05:18 GMT
+Subject: [PATCH 9/9] xfs: scrub should flag dir/attr offsets that aren't
+ mappable with xfs_dablk_t
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 14 Nov 2018 22:04:34 -0800
-Message-ID: <154226187415.13280.16593356573868407559.stgit@magnolia>
+Date: Wed, 14 Nov 2018 22:05:17 -0800
+Message-ID: <154226191736.13280.3332791816850530065.stgit@magnolia>
 In-Reply-To: <154226186169.13280.4536602352984659736.stgit@magnolia>
 References: <154226186169.13280.4536602352984659736.stgit@magnolia>
 MIME-Version: 1.0
@@ -35,27 +35,89 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Make sure we never check more than XFS_INODES_PER_CHUNK inodes for any
-given inobt record since there can be more than one inobt record mapped
-to an inode cluster.
+Teach scrub to flag extent maps that exceed the range that can be mapped
+with a xfs_dablk_t.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/ialloc.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_types.c |   11 +++++++++++
+ fs/xfs/libxfs/xfs_types.h |    1 +
+ fs/xfs/scrub/bmap.c       |   27 +++++++++++++++++++++++++++
+ 3 files changed, 39 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 31ec0c16be4a..b06a0b4de070 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -203,7 +203,8 @@ xchk_iallocbt_check_freemask(
- 	int				error = 0;
+diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+index 3306fc42cfad..8e03e88a2f1a 100644
+--- a/fs/xfs/libxfs/xfs_types.c
++++ b/fs/xfs/libxfs/xfs_types.c
+@@ -204,3 +204,14 @@ xfs_verify_icount(
+ 	xfs_icount_range(mp, &min, &max);
+ 	return icount >= min && icount <= max;
+ }
++
++/* Sanity-checking of dir/attr block offsets. */
++bool
++xfs_verify_dablk(
++	struct xfs_mount	*mp,
++	xfs_fileoff_t		dabno)
++{
++	xfs_dablk_t		max_dablk = -1U;
++
++	return dabno < max_dablk;
++}
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index b9e6c89284c3..05e8fa558f3e 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -166,5 +166,6 @@ bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
+ bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
+ bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
+ bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
++bool xfs_verify_dablk(struct xfs_mount *mp, xfs_fileoff_t off);
  
- 	/* Make sure the freemask matches the inode records. */
--	nr_inodes = mp->m_inodes_per_cluster;
-+	nr_inodes = min_t(unsigned int, XFS_INODES_PER_CHUNK,
-+			mp->m_inodes_per_cluster);
+ #endif	/* __XFS_TYPES_H__ */
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index e1d11f3223e3..a703cd58a90e 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -281,6 +281,31 @@ xchk_bmap_extent_xref(
+ 	xchk_ag_free(info->sc, &info->sc->sa);
+ }
  
- 	for (agino = irec->ir_startino;
- 	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
++/*
++ * Directories and attr forks should never have blocks that can't be addressed
++ * by a xfs_dablk_t.
++ */
++STATIC void
++xchk_bmap_dirattr_extent(
++	struct xfs_inode	*ip,
++	struct xchk_bmap_info	*info,
++	struct xfs_bmbt_irec	*irec)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_fileoff_t		off;
++
++	if (!S_ISDIR(VFS_I(ip)->i_mode) && info->whichfork != XFS_ATTR_FORK)
++		return;
++
++	if (!xfs_verify_dablk(mp, irec->br_startoff))
++		xchk_fblock_set_corrupt(info->sc, info->whichfork,
++				irec->br_startoff);
++
++	off = irec->br_startoff + irec->br_blockcount - 1;
++	if (!xfs_verify_dablk(mp, off))
++		xchk_fblock_set_corrupt(info->sc, info->whichfork, off);
++}
++
+ /* Scrub a single extent record. */
+ STATIC int
+ xchk_bmap_extent(
+@@ -305,6 +330,8 @@ xchk_bmap_extent(
+ 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
+ 				irec->br_startoff);
+ 
++	xchk_bmap_dirattr_extent(ip, info, irec);
++
+ 	/* There should never be a "hole" extent in either extent list. */
+ 	if (irec->br_startblock == HOLESTARTBLOCK)
+ 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
