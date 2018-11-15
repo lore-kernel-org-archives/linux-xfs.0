@@ -1,57 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:63760 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726298AbeKGQBJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Nov 2018 11:01:09 -0500
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/16] xfs: extent shifting doesn't fully invalidate page cache
-Date: Wed,  7 Nov 2018 17:31:15 +1100
-Message-Id: <20181107063127.3902-5-david@fromorbit.com>
-In-Reply-To: <20181107063127.3902-1-david@fromorbit.com>
-References: <20181107063127.3902-1-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51604 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725895AbeKOLMq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Nov 2018 06:12:46 -0500
+Date: Thu, 15 Nov 2018 09:06:52 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH] block: fix 32 bit overflow in __blkdev_issue_discard()
+Message-ID: <20181115010651.GD32603@ming.t460p>
+References: <20181113214337.20581-1-david@fromorbit.com>
+ <10a8dd78-7c00-8593-9f4e-b20eb1161b92@kernel.dk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <10a8dd78-7c00-8593-9f4e-b20eb1161b92@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Nov 14, 2018 at 08:18:24AM -0700, Jens Axboe wrote:
+> On 11/13/18 2:43 PM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > A discard cleanup merged into 4.20-rc2 causes fstests xfs/259 to
+> > fall into an endless loop in the discard code. The test is creating
+> > a device that is exactly 2^32 sectors in size to test mkfs boundary
+> > conditions around the 32 bit sector overflow region.
+> > 
+> > mkfs issues a discard for the entire device size by default, and
+> > hence this throws a sector count of 2^32 into
+> > blkdev_issue_discard(). It takes the number of sectors to discard as
+> > a sector_t - a 64 bit value.
+> > 
+> > The commit ba5d73851e71 ("block: cleanup __blkdev_issue_discard")
+> > takes this sector count and casts it to a 32 bit value before
+> > comapring it against the maximum allowed discard size the device
+> > has. This truncates away the upper 32 bits, and so if the lower 32
+> > bits of the sector count is zero, it starts issuing discards of
+> > length 0. This causes the code to fall into an endless loop, issuing
+> > a zero length discards over and over again on the same sector.
+> 
+> Applied, thanks. Ming, can you please add a blktests test for
+> this case? This is the 2nd time it's been broken.
 
-The extent shifting code uses a flush and invalidate mechainsm prior
-to shifting extents around. This is similar to what
-xfs_free_file_space() does, but it doesn't take into account things
-like page cache vs block size differences, and it will fail if there
-is a page that it currently busy.
+OK, I will add zram discard test in blktests, which should cover the
+1st report. For the xfs/259, I need to investigate if it is easy to
+do in blktests.
 
-xfs_flush_unmap_range() handles all of these cases, so just convert
-xfs_prepare_shift() to us that mechanism rather than having it's own
-special sauce.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_bmap_util.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 5d263dfdb3bc..167ff4297e5c 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1195,13 +1195,7 @@ xfs_prepare_shift(
- 	 * Writeback and invalidate cache for the remainder of the file as we're
- 	 * about to shift down every extent from offset to EOF.
- 	 */
--	error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping, offset, -1);
--	if (error)
--		return error;
--	error = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
--					offset >> PAGE_SHIFT, -1);
--	if (error)
--		return error;
-+	error = xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip));
- 
- 	/*
- 	 * Clean out anything hanging around in the cow fork now that
--- 
-2.19.1
+Thanks,
+Ming
