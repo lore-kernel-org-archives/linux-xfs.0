@@ -1,46 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55424 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726408AbeKNJk5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Nov 2018 04:40:57 -0500
-Subject: [PATCH 6/6] common/dump: disable copyrange
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 13 Nov 2018 15:40:17 -0800
-Message-ID: <154215241795.21151.2305359735347835725.stgit@magnolia>
-In-Reply-To: <154215237717.21151.11976488103599724788.stgit@magnolia>
-References: <154215237717.21151.11976488103599724788.stgit@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:46058 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725916AbeKPFa2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 00:30:28 -0500
+Subject: Re: [PATCH] xfs: make xfs_file_remap_range() static
+References: <20181115011217.104363-1-ebiggers@kernel.org>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <b2537174-6c2e-b7a4-9ad8-93bbc9001c53@oracle.com>
+Date: Thu, 15 Nov 2018 12:21:19 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20181115011217.104363-1-ebiggers@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Eric Biggers <ebiggers@kernel.org>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 11/14/18 6:12 PM, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
+> 
+> xfs_file_remap_range() is only used in fs/xfs/xfs_file.c, so make it
+> static.
+> 
+> This addresses a gcc warning when -Wmissing-prototypes is enabled.
+> 
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> ---
+>   fs/xfs/xfs_file.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 53c9ab8fb777f..e47425071e654 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -920,7 +920,7 @@ xfs_file_fallocate(
+>   }
+>   
+>   
+> -loff_t
+> +STATIC loff_t
+>   xfs_file_remap_range(
+>   	struct file		*file_in,
+>   	loff_t			pos_in,
+> 
 
-In _create_dumpdir_stress_num, disable copyrange in fsstress so that we
-dump exactly the same set of files and directories no matter how the xfs
-is configured.
+Looks ok to me.  You can add my review:
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/dump |    3 +++
- 1 file changed, 3 insertions(+)
-
-
-diff --git a/common/dump b/common/dump
-index c45b8a5a..4d1a1607 100644
---- a/common/dump
-+++ b/common/dump
-@@ -307,6 +307,9 @@ _create_dumpdir_stress_num()
-     if $FSSTRESS_PROG | grep -q deduperange; then
-         FSSTRESS_AVOID="-f deduperange=0 $FSSTRESS_AVOID"
-     fi
-+    if $FSSTRESS_PROG | grep -q copyrange; then
-+        FSSTRESS_AVOID="-f copyrange=0 $FSSTRESS_AVOID"
-+    fi
- 
-     echo ""
-     echo "-----------------------------------------------"
+Thanks!
+Allison
