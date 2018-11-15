@@ -1,124 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:36178 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727475AbeKNClc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 21:41:32 -0500
-Date: Tue, 13 Nov 2018 08:42:32 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC] xfs: save buffer offset when verifiers fail
-Message-ID: <20181113164232.GH4235@magnolia>
-References: <f2695097-0728-e525-43a5-d9f183ecba3e@sandeen.net>
- <20181107192900.GB50224@bfoster>
- <b976998f-d1a9-e8d5-e9d2-41ec730fd8e5@sandeen.net>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:42612 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725888AbeKPIiY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 03:38:24 -0500
+Date: Fri, 16 Nov 2018 09:28:39 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Fwd: xfs remove / unlink extremely slow ?
+Message-ID: <20181115222839.GZ19305@dastard>
+References: <3927644F-734A-4A2A-BACB-DE44CBC812EB@berlin.de>
+ <14251045-1CCF-4E35-95F1-F6597FD8FD8C@berlin.de>
+ <20181114144511.GB19257@bfoster>
+ <20181115153815.GA27512@bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <b976998f-d1a9-e8d5-e9d2-41ec730fd8e5@sandeen.net>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20181115153815.GA27512@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Michael Arndt <Michael.Arndt@berlin.de>, linux-xfs@vger.kernel.org
 
-On Wed, Nov 07, 2018 at 01:59:39PM -0600, Eric Sandeen wrote:
-> On 11/7/18 1:29 PM, Brian Foster wrote:
-> > On Wed, Nov 07, 2018 at 11:49:31AM -0600, Eric Sandeen wrote:
-> >> I'd like to propose an addition to our current metadata verifier error reporting that I believe will allow us to more quickly identify, and more efficiently classify, metadata validation errors when they occur.
+On Thu, Nov 15, 2018 at 10:38:16AM -0500, Brian Foster wrote:
+> On Wed, Nov 14, 2018 at 09:45:11AM -0500, Brian Foster wrote:
+> > On Wed, Nov 14, 2018 at 12:42:49PM +0100, Michael Arndt wrote:
+> > > Hello XFS Gurus,
+> > > 
+> > > Problem: /bin/rm extremely slow on a major xfs (SSD based) HPC Storage
+> > > slow == 90 seconds for unlink of an empty file without any extents
+> > > strace says: time completely used for unlink call
+> > > 
+> > > Question; Is there any issue resolution ?
+> > > 
+> > > Information re XFS Version and OS at end of this Post
+> > > 
+> > > Example of issue:
+> > > 
+> > > 
+> > > [root@atgrzsl3150 DOM_0]# xfs_bmap -a .AN_720.0000122.fl3step_0.lock 
+> > > 
+> > > .AN_720.0000122.fl3step_0.lock: no extents
+> > > [root@atgrzsl3150 DOM_0]# ls -laFtr .AN_720.0000122.fl3step_0.lock 
+> > > 
+> > > -rw-rw-r-- 1 user group 0 Oct 22 14:14 .AN_720.0000122.fl3step_0.lock
+> > > 
+> > > 
+> > > strace -T -tt /bin/rm .AN_720.0000122.fl3step_0.lock 
+> > > 
+> > > 
+> > > 1:41:11.621005 execve("/bin/rm", ["/bin/rm", ".AN_720.0000122.fl3step_0.lock"], [/* 31 vars */]) = 0 <0.000169>11:41:11.621312 brk(NULL)               = 0x6f5000 <0.000023>11:41:11.621378 mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f4d96017000 <0.000058>
+> > > …….
+> > > 11:41:11.622485 newfstatat(AT_FDCWD, ".AN_720.0000122.fl3step_0.lock", {st_mode=S_IFREG|0664, st_size=0, ...}, AT_SYMLINK_NOFOLLOW) = 0 <0.000009>
+> > > 11:41:11.622522 geteuid()               = 0 <0.000009>
+> > > -> 11:41:11.622546 unlinkat(AT_FDCWD, ".AN_720.0000122.fl3step_0.lock", 0) = 0 <89.612833>
+> > > -> 11:42:41.235428 lseek(0, 0, SEEK_CUR)   = -1 ESPIPE (Illegal seek) <0.000065>
+> > > 11:42:41.235548 close(0)                = 0 <0.000052>
+> > > 11:42:41.235689 close(1)                = 0 <0.000011>
+> > > 11:42:41.235738 close(2)                = 0 <0.000055>
+> > > 11:42:41.235830 exit_group(0)           = ?
+> > > 11:42:41.235941 +++ exited with 0 +++
+> > > 
+> > 
+> > It might be useful to do something like:
+> > 
+> >   trace-cmd record -e xfs:* <rm command>
+> > 
+> > ... and either put the resulting trace.dat somewhere where it can be
+> > downloaded or if not too large, run 'trace-cmd report' and copy the text
+> > into a mail (without reformatting it).
+> > 
+> > Brian
+> > 
+> 
+> Michael provided the tracepoint data requested above privately. In
+> short, it shows the delay but doesn't provide enough context to root
+> cause. The relevant snippets are shown below.
+> 
+> rm-23740 [003] 1902680.707761: xfs_filemap_fault:    dev 253:0 ino 0x8e392
 > ...
-> 
-> >> 3) It would allow us to ensure that the hexdump actually contains the
-> >>    region where the corruption was discovered.
-> >>
-> > 
-> > Yep, though I still think the "first 64 bytes" or whatever of a
-> > particular buffer is useful to help establish sanity (i.e., is the magic
-> > sane? is the whole buffer zeroed out? etc.).
-> 
-> Yeah I think we should always print the beginning as well.
->  
+> rm-23740 [042] 1902680.708246: xfs_iunlock:          dev 253:0 ino 0x201b46a flags MMAPLOCK_SHARED caller xfs_filemap_fault
+> rm-23740 [022] 1902770.759100: xfs_remove:           dev 253:84 dp ino 0xb00a143cd name .AN_718.0000122.fl3step_0.lock
 > ...
-> 
->  
-> > Did we consider some kind of error context structure in the past? I
-> > don't recall if there were unrelated issues with that, but that seems
-> > slightly more elegant than an xfs_buf field. Otherwise, the high level
-> > approach seems reasonable.
-> 
-> Darrick made the same suggestion, and it's a good one thanks.
-> 
-> ...
-> 
-> >> We /could/ even go so far as to macrify tests like this, and do:
-> >>
-> >>         XFS_VALIDATE_EQ(agf, agf_magicnum, XFS_AGF_MAGIC);
-> >>         if (!XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)))
-> >>                 XFS_VERIFIER_FAIL_RETURN(struct xfs_agf, agf_versionnum);
-> >>         XFS_VALIDATE_EQ(agf, agf_versionnum, XFS_AGF_VERSION);
-> >>         ...
-> >>
-> > 
-> > This one makes my eyes cross a bit. ;) Though I think it's because now I
-> > have to wonder a bit about what each macro does. I wouldn't be against
-> > something like this if we could condense it into something more generic
-> > and straightforward. For example:
-> > 
-> > 	XFS_VERIFY(agf->agf_magicnum == XFS_AGF_MAGIC,
-> > 		   offsetof(struct xfs_agf, agf_magicnum));
-> > 	XFS_VERIFY(XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)),
-> > 		   offsetof(struct xfs_agf, agf_versionnum));
-> > 	...
-> > 
-> > I guess you'd need to stick the buffer or whatever stores the bad offset
-> > value in there somewhere as well, but seeing the explicit logic makes
-> > this easier to read than following it into a macro. Just my .02.
-> 
-> hah, yeah, that's much better.  Thanks.
+> rm-23740 [022] 1902770.759276: xfs_iunlock:          dev 253:0 ino 0x201b463 flags IOLOCK_EXCL caller xfs_release
 
-<nod> To reiterate a conversation we had on IRC:
+This kinda reminds me of what happens where then is a memory
+allocation stall. You just see a long delay between XFS tracepoints
+and there's nothing else in the trace. But that's unlikely, because
+the brk() call was not delayed at all..
 
-I tried the "one giant macro to test, record error state, and return"
-strategy for xfs_scrub and was shot down hiding control flow in
-something that looks like a "regular" function call.  TBH I wouldn't
-necessarily be able to tell that XFS_VERIFY() actually *returns* from
-the function just by looking at the call sites.
+There could be multiple things going on here, though. For example,
+before calling ->unlink and getting into XFS, the vfs calls
+try_break_deleg() to break delegation leases. If that fails, it
+backs out, breaks the delegation and waits on it before retrying the
+unlink.
 
-So what I propose instead is something sort of like what I did for
-scrub.  In some header file you have:
+So if the filesystem is exported by NFS, or it's some kind of
+userspace delegation lock file, could could see this sort of delay
+occurring while the delegation is recalled and released. Indeed,
+89.6s is strikingly close to the default NFS reponse timeouts
+of 90s.
 
-static inline xfs_failaddr_t
-xfs_buf_record_error(
-	struct xfs_buf		*bp,
-	unsigned int		offset,
-	xfs_failaddr_t		fa,
-	int			error)
-{
-	bp->b_bad_offset = offset;
-	bp->b_error = error;
-	return fa;
-}
+Food for thought...
 
-and then in xfs_alloc.c you have:
+Cheers,
 
-static xfs_failaddr_t
-xfs_agf_verify(
-	struct xfs_buf	*bp)
-{
-	struct xfs_agf	*agfp = XFS_BUF_TO_AGF(bp);
-
-#define XFS_AGF_CORRUPT(bp, field) \
-	xfs_buf_record_error((bp), offsetof(struct xfs_agf, (field)), \
-			__this_address, -EFSCORRUPTED)
-
-	if (agf->agf_magicnum != cpu_to_be32(XFS_AGF_MAGIC))
-		return XFS_AGF_CORRUPT(bp, agf_magicnum);
-
-	if (!XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)))
-		return XFS_AGF_CORRUPT(bp, agf_versionnum);
-	...
-
-#undef XFS_AGFL_ERROR
-}
-
---D
-
-> -Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
