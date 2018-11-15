@@ -1,92 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42022 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725892AbeKOAWy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Nov 2018 19:22:54 -0500
-Date: Wed, 14 Nov 2018 09:19:26 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 14/16] xfs: align writepages to large block sizes
-Message-ID: <20181114141925.GA19257@bfoster>
-References: <20181107063127.3902-1-david@fromorbit.com>
- <20181107063127.3902-15-david@fromorbit.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:37988 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729008AbeKOUWP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 15:22:15 -0500
+Date: Thu, 15 Nov 2018 02:15:03 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] iomap: dio data corruption and spurious errors when
+ pipes fill
+Message-ID: <20181115101503.GB13913@infradead.org>
+References: <20181108221909.27602-1-david@fromorbit.com>
+ <20181108221909.27602-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181107063127.3902-15-david@fromorbit.com>
+In-Reply-To: <20181108221909.27602-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Wed, Nov 07, 2018 at 05:31:25PM +1100, Dave Chinner wrote:
+On Fri, Nov 09, 2018 at 09:19:09AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> For data integrity purposes, we need to write back the entire
-> filesystem block when asked to sync a sub-block range of the file.
-> When the filesystem block size is larger than the page size, this
-> means we need to convert single page integrity writes into whole
-> block integrity writes. We do this by extending the writepage range
-> to filesystem block granularity and alignment.
+> When doing direct IO to a pipe for do_splice_direct(), then pipe is
+> trivial to fill up and overflow as it can only hold 16 pages. At
+> this point bio_iov_iter_get_pages() then returns -EFAULT, and we
+> abort the IO submission process. Unfortunately, iomap_dio_rw()
+> propagates the error back up the stack.
+> 
+> The error is converted from the EFAULT to EAGAIN in
+> generic_file_splice_read() to tell the splice layers that the pipe
+> is full. do_splice_direct() completely fails to handle EAGAIN errors
+> (it aborts on error) and returns EAGAIN to the caller.
+> 
+> copy_file_write() then compeltely fails to handle EAGAIN as well,
+> and so returns EAGAIN to userspace, having failed to copy the data
+> it was asked to.
+> 
+> Avoid this whole steaming pile of fail by having iomap_dio_rw()
+> silently swallow EFAULT errors and so do short reads.
+> 
+> To make matters worse, iomap_dio_actor() has a stale data exposure
+> bug bio_iov_iter_get_pages() fails - it does not zero the tail block
+> that it may have been left uncovered by partial IO. Fix the error
+> handling case to drop to the sub-block zeroing rather than
+> immmediately returning the -EFAULT error.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_aops.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
+>  fs/iomap.c | 22 +++++++++++++++++++---
+>  1 file changed, 19 insertions(+), 3 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index f6ef9e0a7312..5334f16be166 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -900,6 +900,7 @@ xfs_vm_writepages(
->  		.io_type = XFS_IO_HOLE,
->  	};
->  	int			ret;
-> +	unsigned		bsize =	i_blocksize(mapping->host);
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 7aacd48c593e..2fda13bc37d8 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -1775,7 +1775,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+>  	struct bio *bio;
+>  	bool need_zeroout = false;
+>  	bool use_fua = false;
+> -	int nr_pages, ret;
+> +	int nr_pages, ret = 0;
+>  	size_t copied = 0;
 >  
->  	/*
->  	 * Refuse to write pages out if we are called from reclaim context.
-> @@ -922,6 +923,19 @@ xfs_vm_writepages(
->  	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
->  		return 0;
+>  	if ((pos | length | align) & ((1 << blkbits) - 1))
+> @@ -1839,8 +1839,14 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
 >  
-> +	/*
-> +	 * If the block size is larger than page size, extent the incoming write
-> +	 * request to fsb granularity and alignment. This is a requirement for
-> +	 * data integrity operations and it doesn't hurt for other write
-> +	 * operations, so do it unconditionally.
-> +	 */
-> +	if (wbc->range_start)
-> +		wbc->range_start = round_down(wbc->range_start, bsize);
-> +	if (wbc->range_end != LLONG_MAX)
-> +		wbc->range_end = round_up(wbc->range_end, bsize);
-> +	if (wbc->nr_to_write < wbc->range_end - wbc->range_start)
-> +		wbc->nr_to_write = round_up(wbc->nr_to_write, bsize);
+>  		ret = bio_iov_iter_get_pages(bio, &iter);
+>  		if (unlikely(ret)) {
+> +			/*
+> +			 * We have to stop part way through an IO. We must fall through
+
+Overly long line.
+
+> +			 * to the sub-block tail zeroing here, otherwise this
+> +			 * short IO may expose stale data in the tail of the
+> +			 * block we haven't written data to.
+> +			 */
+>  			bio_put(bio);
+> -			return copied ? copied : ret;
+> +			goto zero_tail;
+>  		}
+>  
+>  		n = bio->bi_iter.bi_size;
+> @@ -1877,6 +1883,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+>  	 * the block tail in the latter case, we can expose stale data via mmap
+>  	 * reads of the EOF block.
+>  	 */
+> +zero_tail:
+>  	if (need_zeroout ||
+>  	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
+>  		/* zero out from the end of the write to the end of the block */
+> @@ -1884,7 +1891,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+>  		if (pad)
+>  			iomap_dio_zero(dio, iomap, pos, fs_block_size - pad);
+>  	}
+> -	return copied;
+> +	return copied ? copied : ret;
+>  }
+>  
+>  static loff_t
+> @@ -2079,6 +2086,15 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  				dio->wait_for_completion = true;
+>  				ret = 0;
+>  			}
 > +
+> +			/*
+> +			 * splicing to pipes can fail on a full pipe. We have to
 
-This latter bit causes endless writeback loops in tests such as
-generic/475 (I think I reproduced it with xfs/141 as well). The
-writeback infrastructure samples ->nr_to_write before and after
-->writepages() calls to identify progress. Unconditionally bumping it to
-something larger than the original value can lead to an underflow in the
-writeback code that seems to throw things off. E.g., see the following
-wb tracepoints (w/ 4k block and page size):
+Please start comments that contains full sentences with an uppercase
+letter.
 
-   kworker/u8:13-189   [003] ...1   317.968147: writeback_single_inode_start: bdi 253:9: ino=8389005 state=I_DIRTY_PAGES|I_SYNC dirtied_when=4294773087 age=211 index=0 to_write=1024 wrote=0 cgroup_ino=4294967295
-   kworker/u8:13-189   [003] ...1   317.968150: writeback_single_inode: bdi 253:9: ino=8389005 state=I_DIRTY_PAGES|I_SYNC dirtied_when=4294773087 age=211 index=0 to_write=1024 wrote=18446744073709548544 cgroup_ino=4294967295
+Thse nitpicks aside this looks fine to me:
 
-The wrote value goes from 0 to garbage and writeback_sb_inodes() uses
-the same basic calculation for 'wrote.'
-
-BTW, I haven't gone through the broader set, but just looking at this
-bit what's the purpose of rounding ->nr_to_write (which is a page count)
-to a block size in the first place?
-
-Brian
-
->  	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
->  	ret = write_cache_pages(mapping, wbc, xfs_do_writepage, &wpc);
->  	if (wpc.ioend)
-> -- 
-> 2.19.1
-> 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
