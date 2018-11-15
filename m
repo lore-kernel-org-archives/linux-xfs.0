@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39404 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57862 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728950AbeKOTE0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Nov 2018 14:04:26 -0500
+        id S1728519AbeKOTEk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Nov 2018 14:04:40 -0500
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V10 15/19] block: always define BIO_MAX_PAGES as 256
-Date: Thu, 15 Nov 2018 16:53:02 +0800
-Message-Id: <20181115085306.9910-16-ming.lei@redhat.com>
+Subject: [PATCH V10 16/19] block: document usage of bio iterator helpers
+Date: Thu, 15 Nov 2018 16:53:03 +0800
+Message-Id: <20181115085306.9910-17-ming.lei@redhat.com>
 In-Reply-To: <20181115085306.9910-1-ming.lei@redhat.com>
 References: <20181115085306.9910-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,8 +15,9 @@ List-Id: xfs
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-Now multi-page bvec can cover CONFIG_THP_SWAP, so we don't need to
-increase BIO_MAX_PAGES for it.
+Now multi-page bvec is supported, some helpers may return page by
+page, meantime some may return segment by segment, this patch
+documents the usage.
 
 Cc: Dave Chinner <dchinner@redhat.com>
 Cc: Kent Overstreet <kent.overstreet@gmail.com>
@@ -42,28 +43,42 @@ Cc: Bob Peterson <rpeterso@redhat.com>
 Cc: cluster-devel@redhat.com
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- include/linux/bio.h | 8 --------
- 1 file changed, 8 deletions(-)
+ Documentation/block/biovecs.txt | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 5040e9a2eb09..277921ad42e7 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -34,15 +34,7 @@
- #define BIO_BUG_ON
- #endif
- 
--#ifdef CONFIG_THP_SWAP
--#if HPAGE_PMD_NR > 256
--#define BIO_MAX_PAGES		HPAGE_PMD_NR
--#else
- #define BIO_MAX_PAGES		256
--#endif
--#else
--#define BIO_MAX_PAGES		256
--#endif
- 
- #define bio_prio(bio)			(bio)->bi_ioprio
- #define bio_set_prio(bio, prio)		((bio)->bi_ioprio = prio)
+diff --git a/Documentation/block/biovecs.txt b/Documentation/block/biovecs.txt
+index 25689584e6e0..bfafb70d0d9e 100644
+--- a/Documentation/block/biovecs.txt
++++ b/Documentation/block/biovecs.txt
+@@ -117,3 +117,29 @@ Other implications:
+    size limitations and the limitations of the underlying devices. Thus
+    there's no need to define ->merge_bvec_fn() callbacks for individual block
+    drivers.
++
++Usage of helpers:
++=================
++
++* The following helpers whose names have the suffix of "_all" can only be used
++on non-BIO_CLONED bio, and usually they are used by filesystem code, and driver
++shouldn't use them because bio may have been split before they got to the driver:
++
++	bio_for_each_segment_all()
++	bio_first_bvec_all()
++	bio_first_page_all()
++	bio_last_bvec_all()
++
++* The following helpers iterate over single-page bvec, and the local
++variable of 'struct bio_vec' or the reference records single-page IO
++vector during the itearation:
++
++	bio_for_each_segment()
++	bio_for_each_segment_all()
++
++* The following helper iterates over multi-page bvec, and each bvec may
++include multiple physically contiguous pages, and the local variable of
++'struct bio_vec' or the reference records multi-page IO vector during the
++itearation:
++
++	bio_for_each_bvec()
 -- 
 2.9.5
