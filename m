@@ -1,103 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:35260 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726689AbeKOP4v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 10:56:51 -0500
-Date: Wed, 14 Nov 2018 21:50:20 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix shared extent data corruption due to missing
- cow reservation
-Message-ID: <20181115055020.GS4235@magnolia>
-References: <20181113170819.15220-1-bfoster@redhat.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:6139 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725895AbeKOL1q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 06:27:46 -0500
+Date: Thu, 15 Nov 2018 12:22:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] block: fix 32 bit overflow in __blkdev_issue_discard()
+Message-ID: <20181115012201.GX19305@dastard>
+References: <20181113214337.20581-1-david@fromorbit.com>
+ <10a8dd78-7c00-8593-9f4e-b20eb1161b92@kernel.dk>
+ <20181115010651.GD32603@ming.t460p>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181113170819.15220-1-bfoster@redhat.com>
+In-Reply-To: <20181115010651.GD32603@ming.t460p>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On Tue, Nov 13, 2018 at 12:08:19PM -0500, Brian Foster wrote:
-> Page writeback indirectly handles shared extents via the existence
-> of overlapping COW fork blocks. If COW fork blocks exist, writeback
-> always performs the associated copy-on-write regardless if the
-> underlying blocks are actually shared. If the blocks are shared,
-> then overlapping COW fork blocks must always exist.
+On Thu, Nov 15, 2018 at 09:06:52AM +0800, Ming Lei wrote:
+> On Wed, Nov 14, 2018 at 08:18:24AM -0700, Jens Axboe wrote:
+> > On 11/13/18 2:43 PM, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > A discard cleanup merged into 4.20-rc2 causes fstests xfs/259 to
+> > > fall into an endless loop in the discard code. The test is creating
+> > > a device that is exactly 2^32 sectors in size to test mkfs boundary
+> > > conditions around the 32 bit sector overflow region.
+> > > 
+> > > mkfs issues a discard for the entire device size by default, and
+> > > hence this throws a sector count of 2^32 into
+> > > blkdev_issue_discard(). It takes the number of sectors to discard as
+> > > a sector_t - a 64 bit value.
+> > > 
+> > > The commit ba5d73851e71 ("block: cleanup __blkdev_issue_discard")
+> > > takes this sector count and casts it to a 32 bit value before
+> > > comapring it against the maximum allowed discard size the device
+> > > has. This truncates away the upper 32 bits, and so if the lower 32
+> > > bits of the sector count is zero, it starts issuing discards of
+> > > length 0. This causes the code to fall into an endless loop, issuing
+> > > a zero length discards over and over again on the same sector.
+> > 
+> > Applied, thanks. Ming, can you please add a blktests test for
+> > this case? This is the 2nd time it's been broken.
 > 
-> fstests shared/010 reproduces a case where a buffered write occurs
-> over a shared block without performing the requisite COW fork
-> reservation.  This ultimately causes writeback to the shared extent
-> and data corruption that is detected across md5 checks of the
-> filesystem across a mount cycle.
-> 
-> The problem occurs when a buffered write lands over a shared extent
-> that crosses an extent size hint boundary and that also happens to
-> have a partial COW reservation that doesn't cover the start and end
-> blocks of the data fork extent.
-> 
-> For example, a buffered write occurs across the file offset (in FSB
-> units) range of [29, 57]. A shared extent exists at blocks [29, 35]
-> and COW reservation already exists at blocks [32, 34]. After
-> accommodating a COW extent size hint of 32 blocks and the existing
-> reservation at offset 32, xfs_reflink_reserve_cow() allocates 32
-> blocks of reservation at offset 0 and returns with COW reservation
-> across the range of [0, 34]. The associated data fork extent is
-> still [29, 35], however, which isn't fully covered by the COW
-> reservation.
-> 
-> This leads to a buffered write at file offset 35 over a shared
-> extent without associated COW reservation. Writeback eventually
-> kicks in, performs an overwrite of the underlying shared block and
-> causes the associated data corruption.
-> 
-> Update xfs_reflink_reserve_cow() to accommodate the fact that a
-> delalloc allocation request may not fully cover the extent in the
-> data fork. Trim the data fork extent appropriately, just as is done
-> for shared extent boundaries and/or existing COW reservations that
-> happen to overlap the start of the data fork extent. This prevents
-> shared/010 failures due to data corruption on reflink enabled
-> filesystems.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> This is not fully tested yet beyond verification that it solves the
-> problem reproduced by shared/010. I'll be running more tests today, but
-> I'm sending sooner for review and testing due to the nature of the
-> problem and the fact that it's a fairly isolated change. I'll follow up
-> if I discover any resulting regressions..
+> OK, I will add zram discard test in blktests, which should cover the
+> 1st report. For the xfs/259, I need to investigate if it is easy to
+> do in blktests.
 
-Did you find any regressions?
+Just write a test that creates block devices of 2^32 + (-1,0,1)
+sectors and runs a discard across the entire device. That's all that
+xfs/259 it doing - exercising mkfs on 2TB, 4TB and 16TB boundaries.
+i.e. the boundaries where sectors and page cache indexes (on 4k page
+size systems) overflow 32 bit int and unsigned int sizes. mkfs
+issues a discard for the entire device, so it's testing that as
+well...
 
-I ran this through my overnight tests and saw no adverse effects, though
-Dave was complaining yesterday about continuing generic/091 corruptions
-(which I didn't see with this patch applied...)
+You need to write tests that exercise write_same, write_zeros and
+discard operations around these boundaries, because they all take
+a 64 bit sector count and stuff them into 32 bit size fields in
+the bio tha tis being submitted.
 
-Anyway it looks reasonable to me...
+Cheers,
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> Brian
-> 
->  fs/xfs/xfs_reflink.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index ecdb086bc23e..c56bdbfcf7ae 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -296,6 +296,7 @@ xfs_reflink_reserve_cow(
->  	if (error)
->  		return error;
->  
-> +	xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
->  	trace_xfs_reflink_cow_alloc(ip, &got);
->  	return 0;
->  }
-> -- 
-> 2.17.2
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
