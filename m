@@ -1,99 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:47612 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726612AbeKMPl3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 10:41:29 -0500
-Date: Mon, 12 Nov 2018 21:44:48 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: Remove noinline from #define STATIC
-Message-ID: <20181113054447.GE4235@magnolia>
-References: <7302f4a13c1cbf62b07f636878ce25fcca84b6c4.camel@perches.com>
- <6420cf91-89c8-a876-7a0d-25ab8ba428b8@sandeen.net>
- <20181112214515.GN19305@dastard>
- <bd3806ccc911989c7ef1fed9e8d26a4a5ad347a9.camel@perches.com>
- <20181113011804.GP19305@dastard>
- <20181113015410.GB30750@thunk.org>
- <20181113030926.GQ19305@dastard>
- <b03fda08ee4ca4b488c6f67e64bfc94f49be4e83.camel@perches.com>
- <20181113052651.GR19305@dastard>
- <678d66cc417323f248f721cc8e4d271fe8ac80fb.camel@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <678d66cc417323f248f721cc8e4d271fe8ac80fb.camel@perches.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60946 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728748AbeKOTFI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Nov 2018 14:05:08 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V10 17/19] block: don't use bio->bi_vcnt to figure out segment number
+Date: Thu, 15 Nov 2018 16:53:04 +0800
+Message-Id: <20181115085306.9910-18-ming.lei@redhat.com>
+In-Reply-To: <20181115085306.9910-1-ming.lei@redhat.com>
+References: <20181115085306.9910-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Joe Perches <joe@perches.com>
-Cc: Dave Chinner <david@fromorbit.com>, "Theodore Y. Ts'o" <tytso@mit.edu>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Mon, Nov 12, 2018 at 09:31:51PM -0800, Joe Perches wrote:
-> On Tue, 2018-11-13 at 16:26 +1100, Dave Chinner wrote:
-> > On Mon, Nov 12, 2018 at 08:23:42PM -0800, Joe Perches wrote:
-> > > On Tue, 2018-11-13 at 14:09 +1100, Dave Chinner wrote:
-> > > > On Mon, Nov 12, 2018 at 08:54:10PM -0500, Theodore Y. Ts'o wrote:
-> > > > > On Tue, Nov 13, 2018 at 12:18:05PM +1100, Dave Chinner wrote:
-> > > > > > I'm not interested in making code fast if distro support engineers
-> > > > > > can't debug problems on user systems easily. Optimising for
-> > > > > > performance over debuggability is a horrible trade off for us to
-> > > > > > make because it means users and distros end up much more reliant on
-> > > > > > single points of expertise for debugging problems. And that means
-> > > > > > the majority of the load of problem triage falls directly on very
-> > > > > > limited resources - the core XFS development team. A little bit of
-> > > > > > thought about how to make code easier to triage and debug goes a
-> > > > > > long, long way....
-> > > > > 
-> > > > > So at least in my experience, if the kernels are compiled with
-> > > > > CONFIG_DEBUG_INFO and/or CONFIG_DEBUG_INFO_REDUCED,
-> > > > > scripts/decode_stracktrace.sh seems to do a very nice job with inlined
-> > > > 
-> > > > That doesn't help with kernel profiling and other such things that
-> > > > are based on callgraphs...
-> > > 
-> > > If that's really the case:
-> > > 
-> > > I rather suspect the xfs static v STATIC function marking is not
-> > > particularly curated and the marking is somewhat arbitrary.
+It is wrong to use bio->bi_vcnt to figure out how many segments
+there are in the bio even though CLONED flag isn't set on this bio,
+because this bio may be splitted or advanced.
 
-I disagree.  I've added plenty of code over the past couple of years.
-Short functions with few or no branches (e.g. converters) are 'static';
-longer functions (loops, iterators, "decide what to do with this"
-functions, etc.) with many branches are STATIC to make it easier for me
-to ftrace their decisions over a given dataset.
+So always use bio_segments() in blk_recount_segments(), and it shouldn't
+cause any performance loss now because the physical segment number is figured
+out in blk_queue_split() and BIO_SEG_VALID is set meantime since
+bdced438acd83ad83a6c ("block: setup bi_phys_segments after splitting").
 
-> > That's a common opinion for an outsider to form when they come
-> > across something unfamiliar they don't really understand. "I don't
-> > understand this, so I must rewrite it" is an unfortunate habit that
-> > programmers have.
-> 
-> Silly.
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>
+Fixes: 7f60dcaaf91 ("block: blk-merge: fix blk_recount_segments()")
+Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: dm-devel@redhat.com
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Cc: linux-erofs@lists.ozlabs.org
+Cc: David Sterba <dsterba@suse.com>
+Cc: linux-btrfs@vger.kernel.org
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Cc: Gao Xiang <gaoxiang25@huawei.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-ext4@vger.kernel.org
+Cc: Coly Li <colyli@suse.de>
+Cc: linux-bcache@vger.kernel.org
+Cc: Boaz Harrosh <ooo@electrozaur.com>
+Cc: Bob Peterson <rpeterso@redhat.com>
+Cc: cluster-devel@redhat.com
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-merge.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-Yet frequent.
-
-> > > So perhaps given the large number of static, but not STATIC
-> > > functions, perhaps a sed of s/static/STATIC/ should be done
-> > > when it's not inline for all xfs functions.
-> > 
-> > That's just as bad as removing them all, if not worse. 
-> 
-> Why?
-> 
-> > If you are writing new code or reworking existing code, then we'll
-> > consider the usage of STATIC/static in the context of that work.
-> > Otherwise, we leave it alone.
-> 
-> If your statement is as described above, and
-> the STATIC use to enable call stack tracing i
-> useful, why shouldn't it be systemic?
-> 
-> > It if ain't broke, don't fix it.
-> 
-> A generically lazy statement.
-
-Please everyone let's take a breather from this thread for a few hours.
-A 3.7% reduction in code size is not worth getting worked up over, IMO.
-
---D
-
-> 
-> 
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index cb9f49bcfd36..153a659fde74 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -429,13 +429,7 @@ void blk_recalc_rq_segments(struct request *rq)
+ 
+ void blk_recount_segments(struct request_queue *q, struct bio *bio)
+ {
+-	unsigned short seg_cnt;
+-
+-	/* estimate segment number by bi_vcnt for non-cloned bio */
+-	if (bio_flagged(bio, BIO_CLONED))
+-		seg_cnt = bio_segments(bio);
+-	else
+-		seg_cnt = bio->bi_vcnt;
++	unsigned short seg_cnt = bio_segments(bio);
+ 
+ 	if (test_bit(QUEUE_FLAG_NO_SG_MERGE, &q->queue_flags) &&
+ 			(seg_cnt < queue_max_segments(q)))
+-- 
+2.9.5
