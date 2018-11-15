@@ -1,71 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:6139 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725895AbeKOL1q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 06:27:46 -0500
-Date: Thu, 15 Nov 2018 12:22:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] block: fix 32 bit overflow in __blkdev_issue_discard()
-Message-ID: <20181115012201.GX19305@dastard>
-References: <20181113214337.20581-1-david@fromorbit.com>
- <10a8dd78-7c00-8593-9f4e-b20eb1161b92@kernel.dk>
- <20181115010651.GD32603@ming.t460p>
+Received: from userp2130.oracle.com ([156.151.31.86]:47532 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727067AbeKOQLD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 11:11:03 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wAF63wlS148427
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:04:36 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2nr7cs7jjq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:04:36 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wAF64ZUr021755
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:04:35 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id wAF64ZKW027534
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:04:35 GMT
+Subject: [PATCH 2/9] xfs: never try to scrub more than 64 inodes per inobt
+ record
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 14 Nov 2018 22:04:34 -0800
+Message-ID: <154226187415.13280.16593356573868407559.stgit@magnolia>
+In-Reply-To: <154226186169.13280.4536602352984659736.stgit@magnolia>
+References: <154226186169.13280.4536602352984659736.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181115010651.GD32603@ming.t460p>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 15, 2018 at 09:06:52AM +0800, Ming Lei wrote:
-> On Wed, Nov 14, 2018 at 08:18:24AM -0700, Jens Axboe wrote:
-> > On 11/13/18 2:43 PM, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > A discard cleanup merged into 4.20-rc2 causes fstests xfs/259 to
-> > > fall into an endless loop in the discard code. The test is creating
-> > > a device that is exactly 2^32 sectors in size to test mkfs boundary
-> > > conditions around the 32 bit sector overflow region.
-> > > 
-> > > mkfs issues a discard for the entire device size by default, and
-> > > hence this throws a sector count of 2^32 into
-> > > blkdev_issue_discard(). It takes the number of sectors to discard as
-> > > a sector_t - a 64 bit value.
-> > > 
-> > > The commit ba5d73851e71 ("block: cleanup __blkdev_issue_discard")
-> > > takes this sector count and casts it to a 32 bit value before
-> > > comapring it against the maximum allowed discard size the device
-> > > has. This truncates away the upper 32 bits, and so if the lower 32
-> > > bits of the sector count is zero, it starts issuing discards of
-> > > length 0. This causes the code to fall into an endless loop, issuing
-> > > a zero length discards over and over again on the same sector.
-> > 
-> > Applied, thanks. Ming, can you please add a blktests test for
-> > this case? This is the 2nd time it's been broken.
-> 
-> OK, I will add zram discard test in blktests, which should cover the
-> 1st report. For the xfs/259, I need to investigate if it is easy to
-> do in blktests.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Just write a test that creates block devices of 2^32 + (-1,0,1)
-sectors and runs a discard across the entire device. That's all that
-xfs/259 it doing - exercising mkfs on 2TB, 4TB and 16TB boundaries.
-i.e. the boundaries where sectors and page cache indexes (on 4k page
-size systems) overflow 32 bit int and unsigned int sizes. mkfs
-issues a discard for the entire device, so it's testing that as
-well...
+Make sure we never check more than XFS_INODES_PER_CHUNK inodes for any
+given inobt record since there can be more than one inobt record mapped
+to an inode cluster.
 
-You need to write tests that exercise write_same, write_zeros and
-discard operations around these boundaries, because they all take
-a 64 bit sector count and stuff them into 32 bit size fields in
-the bio tha tis being submitted.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/ialloc.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 31ec0c16be4a..b06a0b4de070 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -203,7 +203,8 @@ xchk_iallocbt_check_freemask(
+ 	int				error = 0;
+ 
+ 	/* Make sure the freemask matches the inode records. */
+-	nr_inodes = mp->m_inodes_per_cluster;
++	nr_inodes = min_t(unsigned int, XFS_INODES_PER_CHUNK,
++			mp->m_inodes_per_cluster);
+ 
+ 	for (agino = irec->ir_startino;
+ 	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
