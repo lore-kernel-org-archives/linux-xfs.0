@@ -1,64 +1,183 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:1838 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726604AbeKGQBL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Nov 2018 11:01:11 -0500
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 15/16] xfs: expose block size in stat
-Date: Wed,  7 Nov 2018 17:31:26 +1100
-Message-Id: <20181107063127.3902-16-david@fromorbit.com>
-In-Reply-To: <20181107063127.3902-1-david@fromorbit.com>
-References: <20181107063127.3902-1-david@fromorbit.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:47966 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726821AbeKOQLe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 11:11:34 -0500
+Subject: [PATCH 5/9] xfs: hoist inode cluster checks out of loop
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 14 Nov 2018 22:04:52 -0800
+Message-ID: <154226189262.13280.15556413939766042771.stgit@magnolia>
+In-Reply-To: <154226186169.13280.4536602352984659736.stgit@magnolia>
+References: <154226186169.13280.4536602352984659736.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-For block size larger than page size, the unit of efficient IO is
-the block size, not the page size. Leaving stat() to report
-PAGE_SIZE as the block size causes test programs like fsx to issue
-illegal ranges for operations that require block size alignemnt
-(e.g. fallocate() insert range). Hence update the preferred IO size
-to reflect the block size in this case.
+Hoist the inode cluster checks out of the inobt record check loop into
+a separate function in preparation for refactoring of that loop.  No
+functional changes here; that's in the next patch.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_mount.h | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+ fs/xfs/scrub/ialloc.c |  119 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 65 insertions(+), 54 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 7964513c3128..a323e362aeb6 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -266,13 +266,18 @@ typedef struct xfs_mount {
- static inline unsigned long
- xfs_preferred_iosize(xfs_mount_t *mp)
- {
-+	unsigned long	default_size = max_t(unsigned long, PAGE_SIZE,
-+						mp->m_sb.sb_blocksize);
-+
- 	if (mp->m_flags & XFS_MOUNT_COMPAT_IOSIZE)
--		return PAGE_SIZE;
--	return (mp->m_swidth ?
--		(mp->m_swidth << mp->m_sb.sb_blocklog) :
--		((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ?
--			(1 << (int)max(mp->m_readio_log, mp->m_writeio_log)) :
--			PAGE_SIZE));
-+		return default_size;
-+
-+	if (mp->m_swidth)
-+		return mp->m_swidth << mp->m_sb.sb_blocklog;
-+	if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
-+		return 1UL << max_t(int, mp->m_readio_log, mp->m_writeio_log);
-+	return default_size;
-+
+
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 5a33661e0656..475f930e0daa 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -188,19 +188,19 @@ xchk_iallocbt_check_cluster_freemask(
+ 	return 0;
  }
  
- #define XFS_LAST_UNMOUNT_WAS_CLEAN(mp)	\
--- 
-2.19.1
+-/* Make sure the free mask is consistent with what the inodes think. */
++/* Check an inode cluster. */
+ STATIC int
+-xchk_iallocbt_check_freemask(
++xchk_iallocbt_check_cluster(
+ 	struct xchk_btree		*bs,
+-	struct xfs_inobt_rec_incore	*irec)
++	struct xfs_inobt_rec_incore	*irec,
++	xfs_agino_t			agino)
+ {
+ 	struct xfs_imap			imap;
+ 	struct xfs_mount		*mp = bs->cur->bc_mp;
+ 	struct xfs_dinode		*dip;
+ 	struct xfs_buf			*bp;
+ 	xfs_ino_t			fsino;
+-	xfs_agino_t			nr_inodes;
+-	xfs_agino_t			agino;
++	unsigned int			nr_inodes;
+ 	xfs_agino_t			chunkino;
+ 	xfs_agino_t			clusterino;
+ 	xfs_agblock_t			agbno;
+@@ -212,60 +212,71 @@ xchk_iallocbt_check_freemask(
+ 	nr_inodes = min_t(unsigned int, XFS_INODES_PER_CHUNK,
+ 			mp->m_inodes_per_cluster);
+ 
+-	for (agino = irec->ir_startino;
+-	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
+-	     agino += mp->m_blocks_per_cluster * mp->m_sb.sb_inopblock) {
+-		fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
+-		chunkino = agino - irec->ir_startino;
+-		agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+-
+-		/* Compute the holemask mask for this cluster. */
+-		for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
+-		     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
+-			holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
+-					XFS_INODES_PER_HOLEMASK_BIT);
+-
+-		/* The whole cluster must be a hole or not a hole. */
+-		ir_holemask = (irec->ir_holemask & holemask);
+-		if (ir_holemask != holemask && ir_holemask != 0) {
+-			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+-			continue;
+-		}
++	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
++	chunkino = agino - irec->ir_startino;
++	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+ 
+-		/* If any part of this is a hole, skip it. */
+-		if (ir_holemask) {
+-			xchk_xref_is_not_owned_by(bs->sc, agbno,
+-					mp->m_blocks_per_cluster,
+-					&XFS_RMAP_OINFO_INODES);
+-			continue;
+-		}
++	/* Compute the holemask mask for this cluster. */
++	for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
++	     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
++		holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
++				XFS_INODES_PER_HOLEMASK_BIT);
++
++	/* The whole cluster must be a hole or not a hole. */
++	ir_holemask = (irec->ir_holemask & holemask);
++	if (ir_holemask != holemask && ir_holemask != 0) {
++		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
++		return 0;
++	}
+ 
+-		xchk_xref_is_owned_by(bs->sc, agbno, mp->m_blocks_per_cluster,
++	/* If any part of this is a hole, skip it. */
++	if (ir_holemask) {
++		xchk_xref_is_not_owned_by(bs->sc, agbno,
++				mp->m_blocks_per_cluster,
+ 				&XFS_RMAP_OINFO_INODES);
++		return 0;
++	}
+ 
+-		/* Grab the inode cluster buffer. */
+-		imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno,
+-				agbno);
+-		imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
+-		imap.im_boffset = 0;
+-
+-		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
+-				&dip, &bp, 0, 0);
+-		if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0,
+-				&error))
+-			continue;
+-
+-		/* Which inodes are free? */
+-		for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
+-			error = xchk_iallocbt_check_cluster_freemask(bs,
+-					fsino, chunkino, clusterino, irec, bp);
+-			if (error) {
+-				xfs_trans_brelse(bs->cur->bc_tp, bp);
+-				return error;
+-			}
+-		}
++	xchk_xref_is_owned_by(bs->sc, agbno, mp->m_blocks_per_cluster,
++			&XFS_RMAP_OINFO_INODES);
++
++	/* Grab the inode cluster buffer. */
++	imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno, agbno);
++	imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
++	imap.im_boffset = 0;
+ 
+-		xfs_trans_brelse(bs->cur->bc_tp, bp);
++	error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap, &dip, &bp, 0, 0);
++	if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0, &error))
++		return 0;
++
++	/* Which inodes are free? */
++	for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
++		error = xchk_iallocbt_check_cluster_freemask(bs, fsino,
++				chunkino, clusterino, irec, bp);
++		if (error)
++			break;
++	}
++
++	xfs_trans_brelse(bs->cur->bc_tp, bp);
++	return error;
++}
++
++/* Make sure the free mask is consistent with what the inodes think. */
++STATIC int
++xchk_iallocbt_check_freemask(
++	struct xchk_btree		*bs,
++	struct xfs_inobt_rec_incore	*irec)
++{
++	struct xfs_mount		*mp = bs->cur->bc_mp;
++	xfs_agino_t			agino;
++	int				error = 0;
++
++	for (agino = irec->ir_startino;
++	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
++	     agino += mp->m_blocks_per_cluster * mp->m_sb.sb_inopblock) {
++		error = xchk_iallocbt_check_cluster(bs, irec, agino);
++		if (error)
++			break;
+ 	}
+ 
+ 	return error;
