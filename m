@@ -1,32 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:38052 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728699AbeKOUYr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 15:24:47 -0500
-Date: Thu, 15 Nov 2018 02:17:35 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/2] splice: increase pipe size in
- splice_direct_to_actor()
-Message-ID: <20181115101735.GC13913@infradead.org>
-References: <20181108221909.27602-1-david@fromorbit.com>
- <20181109005410.GG19305@dastard>
+Received: from mail.kernel.org ([198.145.29.99]:36192 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725895AbeKOLSh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Nov 2018 06:18:37 -0500
+Received: from ebiggers.mtv.corp.google.com (unknown [104.132.1.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A7D6B2147C
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 01:12:58 +0000 (UTC)
+From: Eric Biggers <ebiggers@kernel.org>
+Subject: [PATCH] xfs: make xfs_file_remap_range() static
+Date: Wed, 14 Nov 2018 17:12:17 -0800
+Message-Id: <20181115011217.104363-1-ebiggers@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181109005410.GG19305@dastard>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-> +long pipe_set_max_safe_size(struct pipe_inode_info *pipe)
-> +{
-> +	pipe_set_size(pipe, pipe_max_size);
-> +	return pipe->buffers * PAGE_SIZE;
-> +}
+From: Eric Biggers <ebiggers@google.com>
 
-This should probably return an unsigned value, given that we don't return
-errors.  Then again the callers ignores the return value entirely.
-Wouldn't it be easier to just call pipe_set_size from splice.c after
-removing the static marker?
+xfs_file_remap_range() is only used in fs/xfs/xfs_file.c, so make it
+static.
+
+This addresses a gcc warning when -Wmissing-prototypes is enabled.
+
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ fs/xfs/xfs_file.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 53c9ab8fb777f..e47425071e654 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -920,7 +920,7 @@ xfs_file_fallocate(
+ }
+ 
+ 
+-loff_t
++STATIC loff_t
+ xfs_file_remap_range(
+ 	struct file		*file_in,
+ 	loff_t			pos_in,
+-- 
+2.19.1.930.g4563a0d9d0-goog
