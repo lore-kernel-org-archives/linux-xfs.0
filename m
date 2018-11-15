@@ -1,114 +1,199 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33776 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726535AbeKNCVe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 21:21:34 -0500
-Date: Tue, 13 Nov 2018 08:22:37 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/2] splice: increase pipe size in
- splice_direct_to_actor()
-Message-ID: <20181113162237.GF4235@magnolia>
-References: <20181108221909.27602-1-david@fromorbit.com>
- <20181109005410.GG19305@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181109005410.GG19305@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:50664 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728564AbeKOTFS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Nov 2018 14:05:18 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V10 18/19] block: kill QUEUE_FLAG_NO_SG_MERGE
+Date: Thu, 15 Nov 2018 16:53:05 +0800
+Message-Id: <20181115085306.9910-19-ming.lei@redhat.com>
+In-Reply-To: <20181115085306.9910-1-ming.lei@redhat.com>
+References: <20181115085306.9910-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Fri, Nov 09, 2018 at 11:54:10AM +1100, Dave Chinner wrote:
-> 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When copy_file_range() is called on files that have been opened with
-> O_DIRECT, do_splice_direct() does a manual copy of the range one
-> pipe buffer at a time. The default is 16 pages, which means on
-> x86_64 it is limited to 64kB IO. This is extremely slow - 64k
-> synchrnous read/write will run at maybe 5-10MB/s on a spinning disk
-> and be seek bound. It will be faster on SSDs, but still very
-> inefficient.
-> 
-> Increase the pipe size to the maximum allowed user size so that we
-> can get decent throughput for this highly sub-optimal copy loop. Add
-> a new function to the pipe code that lets us set the pipe size to
-> the maximum allowed without root permissions to keep things really
-> simple. We also don't care if changing the pipe size fails - that
-> will just result in a slower copy.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/pipe.c                 | 10 ++++++++++
->  fs/splice.c               |  7 +++++++
->  include/linux/pipe_fs_i.h |  1 +
->  3 files changed, 18 insertions(+)
-> 
-> diff --git a/fs/pipe.c b/fs/pipe.c
-> index bdc5d3c0977d..436bc0464569 100644
-> --- a/fs/pipe.c
-> +++ b/fs/pipe.c
-> @@ -1109,6 +1109,16 @@ static long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg)
->  	return ret;
->  }
->  
-> +/*
-> + * Set the pipe to the maximum allowable user size. Advisory only, will
-> + * swallow any errors and return the resultant pipe size.
-> + */
-> +long pipe_set_max_safe_size(struct pipe_inode_info *pipe)
-> +{
-> +	pipe_set_size(pipe, pipe_max_size);
-> +	return pipe->buffers * PAGE_SIZE;
-> +}
-> +
->  /*
->   * After the inode slimming patch, i_pipe/i_bdev/i_cdev share the same
->   * location, so checking ->i_pipe is not enough to verify that this is a
-> diff --git a/fs/splice.c b/fs/splice.c
-> index 3553f1956508..9749139da731 100644
-> --- a/fs/splice.c
-> +++ b/fs/splice.c
-> @@ -931,6 +931,13 @@ ssize_t splice_direct_to_actor(struct file *in, struct splice_desc *sd,
->  		current->splice_pipe = pipe;
->  	}
->  
-> +	/*
-> +	 * Try to increase the data holding capacity of the pipe so we can do
-> +	 * larger IOs. This may not increase the size at all because maximum
-> +	 * user pipe size is administrator controlled, but we still should try.
-> +	 */
-> +	pipe_set_max_safe_size(pipe);
+Since bdced438acd83ad83a6c ("block: setup bi_phys_segments after splitting"),
+physical segment number is mainly figured out in blk_queue_split() for
+fast path, and the flag of BIO_SEG_VALID is set there too.
 
-I get where you're going with this, but I have two questions:
+Now only blk_recount_segments() and blk_recalc_rq_segments() use this
+flag.
 
-- Is it safe to be enlarging the pipe buffer size unconditionally?
+Basically blk_recount_segments() is bypassed in fast path given BIO_SEG_VALID
+is set in blk_queue_split().
 
-- Especially if we didn't just create the splice pipe?  Suppose someone
-  comes along later trying to splice things and doesn't realize the pipe
-  is now 1MB...
+For another user of blk_recalc_rq_segments():
 
-Then I started wondering about the splice_pipe lifetime and couldn't
-figure out if it ever gets detached from current prior to do_exit.
-I don't think it does, which means that we're stuck with the 1MB
-kernel memory allocation until the process dies.
+- run in partial completion branch of blk_update_request, which is an unusual case
 
---D
+- run in blk_cloned_rq_check_limits(), still not a big problem if the flag is killed
+since dm-rq is the only user.
 
-> +
->  	/*
->  	 * Do the splice.
->  	 */
-> diff --git a/include/linux/pipe_fs_i.h b/include/linux/pipe_fs_i.h
-> index 5a3bb3b7c9ad..962ba4cfcb74 100644
-> --- a/include/linux/pipe_fs_i.h
-> +++ b/include/linux/pipe_fs_i.h
-> @@ -191,5 +191,6 @@ struct pipe_inode_info *get_pipe_info(struct file *file);
->  
->  int create_pipe_files(struct file **, int);
->  unsigned int round_pipe_size(unsigned long size);
-> +long pipe_set_max_safe_size(struct pipe_inode_info *pipe);
->  
->  #endif
+Multi-page bvec is enabled now, QUEUE_FLAG_NO_SG_MERGE doesn't make sense any more.
+
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>
+Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: dm-devel@redhat.com
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Cc: linux-erofs@lists.ozlabs.org
+Cc: David Sterba <dsterba@suse.com>
+Cc: linux-btrfs@vger.kernel.org
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Cc: Gao Xiang <gaoxiang25@huawei.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-ext4@vger.kernel.org
+Cc: Coly Li <colyli@suse.de>
+Cc: linux-bcache@vger.kernel.org
+Cc: Boaz Harrosh <ooo@electrozaur.com>
+Cc: Bob Peterson <rpeterso@redhat.com>
+Cc: cluster-devel@redhat.com
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-merge.c      | 31 ++++++-------------------------
+ block/blk-mq-debugfs.c |  1 -
+ block/blk-mq.c         |  3 ---
+ drivers/md/dm-table.c  | 13 -------------
+ include/linux/blkdev.h |  1 -
+ 5 files changed, 6 insertions(+), 43 deletions(-)
+
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 153a659fde74..06be298be332 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -351,8 +351,7 @@ void blk_queue_split(struct request_queue *q, struct bio **bio)
+ EXPORT_SYMBOL(blk_queue_split);
+ 
+ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+-					     struct bio *bio,
+-					     bool no_sg_merge)
++					     struct bio *bio)
+ {
+ 	struct bio_vec bv, bvprv = { NULL };
+ 	int cluster, prev = 0;
+@@ -379,13 +378,6 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+ 	nr_phys_segs = 0;
+ 	for_each_bio(bio) {
+ 		bio_for_each_bvec(bv, bio, iter) {
+-			/*
+-			 * If SG merging is disabled, each bio vector is
+-			 * a segment
+-			 */
+-			if (no_sg_merge)
+-				goto new_segment;
+-
+ 			if (prev && cluster) {
+ 				if (seg_size + bv.bv_len
+ 				    > queue_max_segment_size(q))
+@@ -420,27 +412,16 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+ 
+ void blk_recalc_rq_segments(struct request *rq)
+ {
+-	bool no_sg_merge = !!test_bit(QUEUE_FLAG_NO_SG_MERGE,
+-			&rq->q->queue_flags);
+-
+-	rq->nr_phys_segments = __blk_recalc_rq_segments(rq->q, rq->bio,
+-			no_sg_merge);
++	rq->nr_phys_segments = __blk_recalc_rq_segments(rq->q, rq->bio);
+ }
+ 
+ void blk_recount_segments(struct request_queue *q, struct bio *bio)
+ {
+-	unsigned short seg_cnt = bio_segments(bio);
+-
+-	if (test_bit(QUEUE_FLAG_NO_SG_MERGE, &q->queue_flags) &&
+-			(seg_cnt < queue_max_segments(q)))
+-		bio->bi_phys_segments = seg_cnt;
+-	else {
+-		struct bio *nxt = bio->bi_next;
++	struct bio *nxt = bio->bi_next;
+ 
+-		bio->bi_next = NULL;
+-		bio->bi_phys_segments = __blk_recalc_rq_segments(q, bio, false);
+-		bio->bi_next = nxt;
+-	}
++	bio->bi_next = NULL;
++	bio->bi_phys_segments = __blk_recalc_rq_segments(q, bio);
++	bio->bi_next = nxt;
+ 
+ 	bio_set_flag(bio, BIO_SEG_VALID);
+ }
+diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+index f021f4817b80..e188b1090759 100644
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -128,7 +128,6 @@ static const char *const blk_queue_flag_name[] = {
+ 	QUEUE_FLAG_NAME(SAME_FORCE),
+ 	QUEUE_FLAG_NAME(DEAD),
+ 	QUEUE_FLAG_NAME(INIT_DONE),
+-	QUEUE_FLAG_NAME(NO_SG_MERGE),
+ 	QUEUE_FLAG_NAME(POLL),
+ 	QUEUE_FLAG_NAME(WC),
+ 	QUEUE_FLAG_NAME(FUA),
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 411be60d0cb6..ed484af5744b 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2755,9 +2755,6 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+ 
+ 	q->queue_flags |= QUEUE_FLAG_MQ_DEFAULT;
+ 
+-	if (!(set->flags & BLK_MQ_F_SG_MERGE))
+-		queue_flag_set_unlocked(QUEUE_FLAG_NO_SG_MERGE, q);
+-
+ 	q->sg_reserved_size = INT_MAX;
+ 
+ 	INIT_DELAYED_WORK(&q->requeue_work, blk_mq_requeue_work);
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index 9038c302d5c2..22fed6987aea 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -1698,14 +1698,6 @@ static int device_is_not_random(struct dm_target *ti, struct dm_dev *dev,
+ 	return q && !blk_queue_add_random(q);
+ }
+ 
+-static int queue_supports_sg_merge(struct dm_target *ti, struct dm_dev *dev,
+-				   sector_t start, sector_t len, void *data)
+-{
+-	struct request_queue *q = bdev_get_queue(dev->bdev);
+-
+-	return q && !test_bit(QUEUE_FLAG_NO_SG_MERGE, &q->queue_flags);
+-}
+-
+ static bool dm_table_all_devices_attribute(struct dm_table *t,
+ 					   iterate_devices_callout_fn func)
+ {
+@@ -1902,11 +1894,6 @@ void dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
+ 	if (!dm_table_supports_write_zeroes(t))
+ 		q->limits.max_write_zeroes_sectors = 0;
+ 
+-	if (dm_table_all_devices_attribute(t, queue_supports_sg_merge))
+-		blk_queue_flag_clear(QUEUE_FLAG_NO_SG_MERGE, q);
+-	else
+-		blk_queue_flag_set(QUEUE_FLAG_NO_SG_MERGE, q);
+-
+ 	dm_table_verify_integrity(t);
+ 
+ 	/*
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index e67ad2dd025e..c5c7799e88c2 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -604,7 +604,6 @@ struct request_queue {
+ #define QUEUE_FLAG_SAME_FORCE  15	/* force complete on same CPU */
+ #define QUEUE_FLAG_DEAD        16	/* queue tear-down finished */
+ #define QUEUE_FLAG_INIT_DONE   17	/* queue is initialized */
+-#define QUEUE_FLAG_NO_SG_MERGE 18	/* don't attempt to merge SG segments*/
+ #define QUEUE_FLAG_POLL	       19	/* IO polling enabled if set */
+ #define QUEUE_FLAG_WC	       20	/* Write back caching */
+ #define QUEUE_FLAG_FUA	       21	/* device supports FUA writes */
+-- 
+2.9.5
