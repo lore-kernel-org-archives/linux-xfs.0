@@ -1,47 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from m12-16.163.com ([220.181.12.16]:57191 "EHLO m12-16.163.com"
+Received: from sandeen.net ([63.231.237.45]:34708 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725878AbeKXUe0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 24 Nov 2018 15:34:26 -0500
-From: Pan Bian <bianpan2016@163.com>
-Subject: [PATCH] xfs: libxfs: move xfs_perag_put late
-Date: Sat, 24 Nov 2018 17:44:20 +0800
-Message-Id: <1543052660-58625-1-git-send-email-bianpan2016@163.com>
+        id S1725860AbeKPIcd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Nov 2018 03:32:33 -0500
+Subject: Re: file write that exceeds thin device capacity
+References: <18125274-1c2e-6171-a597-4e2ffb165162@redhat.com>
+ <20181113221004.GT19305@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3759a449-5bc8-5fa8-1a6e-1ecf714c847d@sandeen.net>
+Date: Thu, 15 Nov 2018 16:22:51 -0600
+MIME-Version: 1.0
+In-Reply-To: <20181113221004.GT19305@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Carlos Maiolino <cmaiolino@redhat.com>, linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
+To: Dave Chinner <david@fromorbit.com>, Todd Gill <tgill@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-The function xfs_alloc_get_freelist calls xfs_perag_put to drop the
-reference. In this case, pag may be released. However,
-pag->pagf_btreeblks is read and write after the put operation. This may
-result in a use-after-free bug. This patch moves the put operation late.
+On 11/13/18 4:10 PM, Dave Chinner wrote:
+> On Tue, Nov 13, 2018 at 02:57:18PM -0500, Todd Gill wrote:
+>> Hi,
+>>
+>> This script creates a 1 TB thin device (device mapper)  backed by 1 GB
+>> of physical space.  The script then writes more than 1 GB via
+>> $BLOCK_SIZE files to XFS.  I'm testing to see if recovery can be
+>> automated.
+>>
+>> https://paste.fedoraproject.org/paste/ropelNyOQWCjk3hfK0jltA
+>>
+>> When the $BLOCK_SIZE passed to dd is 4k - dd gets an error on the file
+>> write that exceeds the physical capacity that backs the thin device.
+>> XFS doesn't indicate any problems.
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> user data write error.
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index e1c0c0d..4be387d 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2435,7 +2435,6 @@ xfs_alloc_get_freelist(
- 	be32_add_cpu(&agf->agf_flcount, -1);
- 	xfs_trans_agflist_delta(tp, -1);
- 	pag->pagf_flcount--;
--	xfs_perag_put(pag);
- 
- 	logflags = XFS_AGF_FLFIRST | XFS_AGF_FLCOUNT;
- 	if (btreeblk) {
-@@ -2443,6 +2442,7 @@ xfs_alloc_get_freelist(
- 		pag->pagf_btreeblks++;
- 		logflags |= XFS_AGF_BTREEBLKS;
- 	}
-+	xfs_perag_put(pag);
- 
- 	xfs_alloc_log_agf(tp, agbp, logflags);
- 	*bnop = bno;
--- 
-2.7.4
+To put a finer point on this, because it's a user data write error, it
+is up to userspace to cope, and xfs isn't going to indicate that it has an
+internal error (as it would for metadata writes).
+
+i.e. dd should have seen an error bubbled up, and you
+would then know to retry, error handle, take evasive action, etc as you
+see fit.
+
+-Eric
