@@ -1,123 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37228 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726574AbeKOQLr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 11:11:47 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wAF63wQn106096
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:05:19 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2nr7cs7hue-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:05:19 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wAF65ImJ014775
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:05:18 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wAF65I6P021601
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:05:18 GMT
-Subject: [PATCH 9/9] xfs: scrub should flag dir/attr offsets that aren't
- mappable with xfs_dablk_t
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 14 Nov 2018 22:05:17 -0800
-Message-ID: <154226191736.13280.3332791816850530065.stgit@magnolia>
-In-Reply-To: <154226186169.13280.4536602352984659736.stgit@magnolia>
-References: <154226186169.13280.4536602352984659736.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:49292 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728699AbeKOTCw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Nov 2018 14:02:52 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V10 10/19] block: loop: pass multi-page bvec to iov_iter
+Date: Thu, 15 Nov 2018 16:52:57 +0800
+Message-Id: <20181115085306.9910-11-ming.lei@redhat.com>
+In-Reply-To: <20181115085306.9910-1-ming.lei@redhat.com>
+References: <20181115085306.9910-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+
+iov_iter is implemented with bvec itererator, so it is safe to pass
+multipage bvec to it, and this way is much more efficient than
+passing one page in each bvec.
+
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>
+Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: dm-devel@redhat.com
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Cc: linux-erofs@lists.ozlabs.org
+Cc: David Sterba <dsterba@suse.com>
+Cc: linux-btrfs@vger.kernel.org
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
-
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Teach scrub to flag extent maps that exceed the range that can be mapped
-with a xfs_dablk_t.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: Gao Xiang <gaoxiang25@huawei.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-ext4@vger.kernel.org
+Cc: Coly Li <colyli@suse.de>
+Cc: linux-bcache@vger.kernel.org
+Cc: Boaz Harrosh <ooo@electrozaur.com>
+Cc: Bob Peterson <rpeterso@redhat.com>
+Cc: cluster-devel@redhat.com
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- fs/xfs/libxfs/xfs_types.c |   11 +++++++++++
- fs/xfs/libxfs/xfs_types.h |    1 +
- fs/xfs/scrub/bmap.c       |   27 +++++++++++++++++++++++++++
- 3 files changed, 39 insertions(+)
+ drivers/block/loop.c | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
 
-
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index 3306fc42cfad..8e03e88a2f1a 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -204,3 +204,14 @@ xfs_verify_icount(
- 	xfs_icount_range(mp, &min, &max);
- 	return icount >= min && icount <= max;
- }
-+
-+/* Sanity-checking of dir/attr block offsets. */
-+bool
-+xfs_verify_dablk(
-+	struct xfs_mount	*mp,
-+	xfs_fileoff_t		dabno)
-+{
-+	xfs_dablk_t		max_dablk = -1U;
-+
-+	return dabno < max_dablk;
-+}
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index b9e6c89284c3..05e8fa558f3e 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -166,5 +166,6 @@ bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
- bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
-+bool xfs_verify_dablk(struct xfs_mount *mp, xfs_fileoff_t off);
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index bf6bc35aaf88..a3fd418ec637 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -515,16 +515,16 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 	struct bio *bio = rq->bio;
+ 	struct file *file = lo->lo_backing_file;
+ 	unsigned int offset;
+-	int segments = 0;
++	int nr_bvec = 0;
+ 	int ret;
  
- #endif	/* __XFS_TYPES_H__ */
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index e1d11f3223e3..a703cd58a90e 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -281,6 +281,31 @@ xchk_bmap_extent_xref(
- 	xchk_ag_free(info->sc, &info->sc->sa);
- }
+ 	if (rq->bio != rq->biotail) {
+-		struct req_iterator iter;
++		struct bvec_iter iter;
+ 		struct bio_vec tmp;
  
-+/*
-+ * Directories and attr forks should never have blocks that can't be addressed
-+ * by a xfs_dablk_t.
-+ */
-+STATIC void
-+xchk_bmap_dirattr_extent(
-+	struct xfs_inode	*ip,
-+	struct xchk_bmap_info	*info,
-+	struct xfs_bmbt_irec	*irec)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fileoff_t		off;
-+
-+	if (!S_ISDIR(VFS_I(ip)->i_mode) && info->whichfork != XFS_ATTR_FORK)
-+		return;
-+
-+	if (!xfs_verify_dablk(mp, irec->br_startoff))
-+		xchk_fblock_set_corrupt(info->sc, info->whichfork,
-+				irec->br_startoff);
-+
-+	off = irec->br_startoff + irec->br_blockcount - 1;
-+	if (!xfs_verify_dablk(mp, off))
-+		xchk_fblock_set_corrupt(info->sc, info->whichfork, off);
-+}
-+
- /* Scrub a single extent record. */
- STATIC int
- xchk_bmap_extent(
-@@ -305,6 +330,8 @@ xchk_bmap_extent(
- 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
- 				irec->br_startoff);
+ 		__rq_for_each_bio(bio, rq)
+-			segments += bio_segments(bio);
+-		bvec = kmalloc_array(segments, sizeof(struct bio_vec),
++			nr_bvec += bio_bvecs(bio);
++		bvec = kmalloc_array(nr_bvec, sizeof(struct bio_vec),
+ 				     GFP_NOIO);
+ 		if (!bvec)
+ 			return -EIO;
+@@ -533,13 +533,14 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		/*
+ 		 * The bios of the request may be started from the middle of
+ 		 * the 'bvec' because of bio splitting, so we can't directly
+-		 * copy bio->bi_iov_vec to new bvec. The rq_for_each_segment
++		 * copy bio->bi_iov_vec to new bvec. The bio_for_each_bvec
+ 		 * API will take care of all details for us.
+ 		 */
+-		rq_for_each_segment(tmp, rq, iter) {
+-			*bvec = tmp;
+-			bvec++;
+-		}
++		__rq_for_each_bio(bio, rq)
++			bio_for_each_bvec(tmp, bio, iter) {
++				*bvec = tmp;
++				bvec++;
++			}
+ 		bvec = cmd->bvec;
+ 		offset = 0;
+ 	} else {
+@@ -550,11 +551,11 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		 */
+ 		offset = bio->bi_iter.bi_bvec_done;
+ 		bvec = __bvec_iter_bvec(bio->bi_io_vec, bio->bi_iter);
+-		segments = bio_segments(bio);
++		nr_bvec = bio_bvecs(bio);
+ 	}
+ 	atomic_set(&cmd->ref, 2);
  
-+	xchk_bmap_dirattr_extent(ip, info, irec);
-+
- 	/* There should never be a "hole" extent in either extent list. */
- 	if (irec->br_startblock == HOLESTARTBLOCK)
- 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
+-	iov_iter_bvec(&iter, rw, bvec, segments, blk_rq_bytes(rq));
++	iov_iter_bvec(&iter, rw, bvec, nr_bvec, blk_rq_bytes(rq));
+ 	iter.iov_offset = offset;
+ 
+ 	cmd->iocb.ki_pos = pos;
+-- 
+2.9.5
