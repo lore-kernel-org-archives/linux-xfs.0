@@ -1,52 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtprelay0253.hostedemail.com ([216.40.44.253]:58479 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726103AbeKMOUC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 09:20:02 -0500
-Message-ID: <b03fda08ee4ca4b488c6f67e64bfc94f49be4e83.camel@perches.com>
-Subject: Re: [PATCH] xfs: Remove noinline from #define STATIC
-From: Joe Perches <joe@perches.com>
-Date: Mon, 12 Nov 2018 20:23:42 -0800
-In-Reply-To: <20181113030926.GQ19305@dastard>
-References: <7302f4a13c1cbf62b07f636878ce25fcca84b6c4.camel@perches.com>
-         <6420cf91-89c8-a876-7a0d-25ab8ba428b8@sandeen.net>
-         <20181112214515.GN19305@dastard>
-         <bd3806ccc911989c7ef1fed9e8d26a4a5ad347a9.camel@perches.com>
-         <20181113011804.GP19305@dastard> <20181113015410.GB30750@thunk.org>
-         <20181113030926.GQ19305@dastard>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from aserp2120.oracle.com ([141.146.126.78]:38334 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726574AbeKOQKw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 11:10:52 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wAF63lbX113262
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:04:24 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2nr7cs7hc9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:04:24 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wAF64N6Y011880
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:04:23 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wAF64M91023431
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:04:22 GMT
+Subject: [PATCH v2 0/9] xfs-5.0: inode btree scrub fixes
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 14 Nov 2018 22:04:21 -0800
+Message-ID: <154226186169.13280.4536602352984659736.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, "Theodore Y. Ts'o" <tytso@mit.edu>, Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, 2018-11-13 at 14:09 +1100, Dave Chinner wrote:
-> On Mon, Nov 12, 2018 at 08:54:10PM -0500, Theodore Y. Ts'o wrote:
-> > On Tue, Nov 13, 2018 at 12:18:05PM +1100, Dave Chinner wrote:
-> > > I'm not interested in making code fast if distro support engineers
-> > > can't debug problems on user systems easily. Optimising for
-> > > performance over debuggability is a horrible trade off for us to
-> > > make because it means users and distros end up much more reliant on
-> > > single points of expertise for debugging problems. And that means
-> > > the majority of the load of problem triage falls directly on very
-> > > limited resources - the core XFS development team. A little bit of
-> > > thought about how to make code easier to triage and debug goes a
-> > > long, long way....
-> > 
-> > So at least in my experience, if the kernels are compiled with
-> > CONFIG_DEBUG_INFO and/or CONFIG_DEBUG_INFO_REDUCED,
-> > scripts/decode_stracktrace.sh seems to do a very nice job with inlined
-> 
-> That doesn't help with kernel profiling and other such things that
-> are based on callgraphs...
+Hi all,
 
-If that's really the case:
+This series fixes some problems with the inode btree scrub code, namely
+that the existing code does not handle the case where a single inode
+cluster is mapped by multiple inobt records.  The series cleans up the
+rather confusing variable names and depends on "miscellaneous cleanups"
+series from a few days ago.
 
-I rather suspect the xfs static v STATIC function marking is not
-particularly curated and the marking is somewhat arbitrary.
+Patch 1 teaches the inode record block counting code to handle the case
+where there's more than one inobt record per inode cluster.  We do this
+by counting inodes and converting to blocks only at the end.
 
-So perhaps given the large number of static, but not STATIC
-functions, perhaps a sed of s/static/STATIC/ should be done
-when it's not inline for all xfs functions.
+Patch 2 corrects a condition where we needed to clamp the number of
+inodes checked for a given inobt record to the inode chunk size.
+
+Patches 3-4 move the inobt record alignment checks to a separate
+function and enhance the function to check that when we have more than
+one inobt record per cluster we actually check that *all* of the
+necessary records are present and in the correct order.
+
+Patches 5-7 reorganize the inobt free data checks to deal with the
+"multiple inobt records per icluster" situation.  In restructuring the
+code to do so, we also rename variables and functions to be less
+confusing about what they're there for.  We also fix the 'is the inode
+free?' check to calculate dinode buffer offsets correctly in the
+"multiple inobt records per icluster" situation.
+
+Patch 8 aborts the xattr scrub loop if there are pending fatal signals.
+
+Patch 9 checks that for any directory or attr fork there are no extent
+maps that stretch beyond what a xfs_dablk_t can map.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.20-rc2.
+
+This is an extraordinary way to eat your data.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
