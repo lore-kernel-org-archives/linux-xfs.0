@@ -1,22 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:50172 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727999AbeKQAPt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Nov 2018 19:15:49 -0500
-Date: Fri, 16 Nov 2018 15:03:14 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V10 00/19] block: support multi-page bvec
-Message-ID: <20181116140314.GA7735@lst.de>
-References: <20181115085306.9910-1-ming.lei@redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:60724 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726574AbeKOQEk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 11:04:40 -0500
+Date: Wed, 14 Nov 2018 21:58:09 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: make xfs_file_remap_range() static
+Message-ID: <20181115055809.GT4235@magnolia>
+References: <20181115011217.104363-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181115085306.9910-1-ming.lei@redhat.com>
+In-Reply-To: <20181115011217.104363-1-ebiggers@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-It seems like bi_phys_segments is still around of this series.
-Shouldn't it be superflous now?
+On Wed, Nov 14, 2018 at 05:12:17PM -0800, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
+> 
+> xfs_file_remap_range() is only used in fs/xfs/xfs_file.c, so make it
+> static.
+> 
+> This addresses a gcc warning when -Wmissing-prototypes is enabled.
+> 
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_file.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 53c9ab8fb777f..e47425071e654 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -920,7 +920,7 @@ xfs_file_fallocate(
+>  }
+>  
+>  
+> -loff_t
+> +STATIC loff_t
+>  xfs_file_remap_range(
+>  	struct file		*file_in,
+>  	loff_t			pos_in,
+> -- 
+> 2.19.1.930.g4563a0d9d0-goog
+> 
