@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59216 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39404 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728564AbeKOTBT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Nov 2018 14:01:19 -0500
+        id S1728950AbeKOTE0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Nov 2018 14:04:26 -0500
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V10 04/19] block: use bio_for_each_bvec() to map sg
-Date: Thu, 15 Nov 2018 16:52:51 +0800
-Message-Id: <20181115085306.9910-5-ming.lei@redhat.com>
+Subject: [PATCH V10 15/19] block: always define BIO_MAX_PAGES as 256
+Date: Thu, 15 Nov 2018 16:53:02 +0800
+Message-Id: <20181115085306.9910-16-ming.lei@redhat.com>
 In-Reply-To: <20181115085306.9910-1-ming.lei@redhat.com>
 References: <20181115085306.9910-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,8 +15,8 @@ List-Id: xfs
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-It is more efficient to use bio_for_each_bvec() to map sg, meantime
-we have to consider splitting multipage bvec as done in blk_bio_segment_split().
+Now multi-page bvec can cover CONFIG_THP_SWAP, so we don't need to
+increase BIO_MAX_PAGES for it.
 
 Cc: Dave Chinner <dchinner@redhat.com>
 Cc: Kent Overstreet <kent.overstreet@gmail.com>
@@ -42,105 +42,28 @@ Cc: Bob Peterson <rpeterso@redhat.com>
 Cc: cluster-devel@redhat.com
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-merge.c | 72 +++++++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 52 insertions(+), 20 deletions(-)
+ include/linux/bio.h | 8 --------
+ 1 file changed, 8 deletions(-)
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 6f7deb94a23f..cb9f49bcfd36 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -473,6 +473,56 @@ static int blk_phys_contig_segment(struct request_queue *q, struct bio *bio,
- 	return biovec_phys_mergeable(q, &end_bv, &nxt_bv);
- }
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 5040e9a2eb09..277921ad42e7 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -34,15 +34,7 @@
+ #define BIO_BUG_ON
+ #endif
  
-+static struct scatterlist *blk_next_sg(struct scatterlist **sg,
-+		struct scatterlist *sglist)
-+{
-+	if (!*sg)
-+		return sglist;
-+	else {
-+		/*
-+		 * If the driver previously mapped a shorter
-+		 * list, we could see a termination bit
-+		 * prematurely unless it fully inits the sg
-+		 * table on each mapping. We KNOW that there
-+		 * must be more entries here or the driver
-+		 * would be buggy, so force clear the
-+		 * termination bit to avoid doing a full
-+		 * sg_init_table() in drivers for each command.
-+		 */
-+		sg_unmark_end(*sg);
-+		return sg_next(*sg);
-+	}
-+}
-+
-+static unsigned blk_bvec_map_sg(struct request_queue *q,
-+		struct bio_vec *bvec, struct scatterlist *sglist,
-+		struct scatterlist **sg)
-+{
-+	unsigned nbytes = bvec->bv_len;
-+	unsigned nsegs = 0, total = 0;
-+
-+	while (nbytes > 0) {
-+		unsigned seg_size;
-+		struct page *pg;
-+		unsigned offset, idx;
-+
-+		*sg = blk_next_sg(sg, sglist);
-+
-+		seg_size = min(nbytes, queue_max_segment_size(q));
-+		offset = (total + bvec->bv_offset) % PAGE_SIZE;
-+		idx = (total + bvec->bv_offset) / PAGE_SIZE;
-+		pg = nth_page(bvec->bv_page, idx);
-+
-+		sg_set_page(*sg, pg, seg_size, offset);
-+
-+		total += seg_size;
-+		nbytes -= seg_size;
-+		nsegs++;
-+	}
-+
-+	return nsegs;
-+}
-+
- static inline void
- __blk_segment_map_sg(struct request_queue *q, struct bio_vec *bvec,
- 		     struct scatterlist *sglist, struct bio_vec *bvprv,
-@@ -490,25 +540,7 @@ __blk_segment_map_sg(struct request_queue *q, struct bio_vec *bvec,
- 		(*sg)->length += nbytes;
- 	} else {
- new_segment:
--		if (!*sg)
--			*sg = sglist;
--		else {
--			/*
--			 * If the driver previously mapped a shorter
--			 * list, we could see a termination bit
--			 * prematurely unless it fully inits the sg
--			 * table on each mapping. We KNOW that there
--			 * must be more entries here or the driver
--			 * would be buggy, so force clear the
--			 * termination bit to avoid doing a full
--			 * sg_init_table() in drivers for each command.
--			 */
--			sg_unmark_end(*sg);
--			*sg = sg_next(*sg);
--		}
--
--		sg_set_page(*sg, bvec->bv_page, nbytes, bvec->bv_offset);
--		(*nsegs)++;
-+		(*nsegs) += blk_bvec_map_sg(q, bvec, sglist, sg);
- 	}
- 	*bvprv = *bvec;
- }
-@@ -530,7 +562,7 @@ static int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
- 	int cluster = blk_queue_cluster(q), nsegs = 0;
+-#ifdef CONFIG_THP_SWAP
+-#if HPAGE_PMD_NR > 256
+-#define BIO_MAX_PAGES		HPAGE_PMD_NR
+-#else
+ #define BIO_MAX_PAGES		256
+-#endif
+-#else
+-#define BIO_MAX_PAGES		256
+-#endif
  
- 	for_each_bio(bio)
--		bio_for_each_segment(bvec, bio, iter)
-+		bio_for_each_bvec(bvec, bio, iter)
- 			__blk_segment_map_sg(q, &bvec, sglist, &bvprv, sg,
- 					     &nsegs, &cluster);
- 
+ #define bio_prio(bio)			(bio)->bi_ioprio
+ #define bio_set_prio(bio, prio)		((bio)->bi_ioprio = prio)
 -- 
 2.9.5
