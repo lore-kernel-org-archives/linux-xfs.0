@@ -1,115 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47488 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726960AbeKOQLD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 11:11:03 -0500
-Subject: [PATCH 1/9] xfs: count inode blocks correctly in inobt scrub
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 14 Nov 2018 22:04:28 -0800
-Message-ID: <154226186795.13280.11786366772230007150.stgit@magnolia>
-In-Reply-To: <154226186169.13280.4536602352984659736.stgit@magnolia>
-References: <154226186169.13280.4536602352984659736.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:46402 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728634AbeKOTBG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Nov 2018 14:01:06 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V10 03/19] block: use bio_for_each_bvec() to compute multi-page bvec count
+Date: Thu, 15 Nov 2018 16:52:50 +0800
+Message-Id: <20181115085306.9910-4-ming.lei@redhat.com>
+In-Reply-To: <20181115085306.9910-1-ming.lei@redhat.com>
+References: <20181115085306.9910-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+First it is more efficient to use bio_for_each_bvec() in both
+blk_bio_segment_split() and __blk_recalc_rq_segments() to compute how
+many multi-page bvecs there are in the bio.
 
-A big block filesystem might require more than one inobt record to cover
-all the inodes in the block.  In these cases it is not correct to round
-the irec count up to the nearest block because this causes us to
-overestimate the number of inode blocks we expect to find.
+Secondly once bio_for_each_bvec() is used, the bvec may need to be
+splitted because its length can be very longer than max segment size,
+so we have to split the big bvec into several segments.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Thirdly when splitting multi-page bvec into segments, the max segment
+limit may be reached, so the bio split need to be considered under
+this situation too.
+
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>
+Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: dm-devel@redhat.com
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org
+Cc: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Cc: linux-erofs@lists.ozlabs.org
+Cc: David Sterba <dsterba@suse.com>
+Cc: linux-btrfs@vger.kernel.org
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Cc: Gao Xiang <gaoxiang25@huawei.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-ext4@vger.kernel.org
+Cc: Coly Li <colyli@suse.de>
+Cc: linux-bcache@vger.kernel.org
+Cc: Boaz Harrosh <ooo@electrozaur.com>
+Cc: Bob Peterson <rpeterso@redhat.com>
+Cc: cluster-devel@redhat.com
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- fs/xfs/scrub/ialloc.c |   22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+ block/blk-merge.c | 90 ++++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 76 insertions(+), 14 deletions(-)
 
-
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 26b07e0abc0c..31ec0c16be4a 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -44,6 +44,11 @@ xchk_setup_ag_iallocbt(
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 91b2af332a84..6f7deb94a23f 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -160,6 +160,62 @@ static inline unsigned get_max_io_size(struct request_queue *q,
+ 	return sectors;
+ }
  
- /* Inode btree scrubber. */
- 
-+struct xchk_iallocbt {
-+	/* Number of inodes we see while scanning inobt. */
-+	unsigned long long	inodes;
-+};
++/*
++ * Split the bvec @bv into segments, and update all kinds of
++ * variables.
++ */
++static bool bvec_split_segs(struct request_queue *q, struct bio_vec *bv,
++		unsigned *nsegs, unsigned *last_seg_size,
++		unsigned *front_seg_size, unsigned *sectors)
++{
++	bool need_split = false;
++	unsigned len = bv->bv_len;
++	unsigned total_len = 0;
++	unsigned new_nsegs = 0, seg_size = 0;
 +
- /*
-  * If we're checking the finobt, cross-reference with the inobt.
-  * Otherwise we're checking the inobt; if there is an finobt, make sure
-@@ -266,7 +271,7 @@ xchk_iallocbt_rec(
- 	union xfs_btree_rec		*rec)
- {
- 	struct xfs_mount		*mp = bs->cur->bc_mp;
--	xfs_filblks_t			*inode_blocks = bs->private;
-+	struct xchk_iallocbt		*iabt = bs->private;
- 	struct xfs_inobt_rec_incore	irec;
- 	uint64_t			holes;
- 	xfs_agnumber_t			agno = bs->cur->bc_private.a.agno;
-@@ -304,8 +309,7 @@ xchk_iallocbt_rec(
- 	    (agbno & (mp->m_blocks_per_cluster - 1)))
- 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
++	if ((*nsegs >= queue_max_segments(q)) || !len)
++		return need_split;
++
++	/*
++	 * Multipage bvec may be too big to hold in one segment,
++	 * so the current bvec has to be splitted as multiple
++	 * segments.
++	 */
++	while (new_nsegs + *nsegs < queue_max_segments(q)) {
++		seg_size = min(queue_max_segment_size(q), len);
++
++		new_nsegs++;
++		total_len += seg_size;
++		len -= seg_size;
++
++		if ((queue_virt_boundary(q) && ((bv->bv_offset +
++		    total_len) & queue_virt_boundary(q))) || !len)
++			break;
++	}
++
++	/* split in the middle of the bvec */
++	if (len)
++		need_split = true;
++
++	/* update front segment size */
++	if (!*nsegs) {
++		unsigned first_seg_size = seg_size;
++
++		if (new_nsegs > 1)
++			first_seg_size = queue_max_segment_size(q);
++		if (*front_seg_size < first_seg_size)
++			*front_seg_size = first_seg_size;
++	}
++
++	/* update other varibles */
++	*last_seg_size = seg_size;
++	*nsegs += new_nsegs;
++	if (sectors)
++		*sectors += total_len >> 9;
++
++	return need_split;
++}
++
+ static struct bio *blk_bio_segment_split(struct request_queue *q,
+ 					 struct bio *bio,
+ 					 struct bio_set *bs,
+@@ -173,7 +229,7 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+ 	struct bio *new = NULL;
+ 	const unsigned max_sectors = get_max_io_size(q, bio);
  
--	*inode_blocks += XFS_B_TO_FSB(mp,
--			irec.ir_count * mp->m_sb.sb_inodesize);
-+	iabt->inodes += irec.ir_count;
+-	bio_for_each_segment(bv, bio, iter) {
++	bio_for_each_bvec(bv, bio, iter) {
+ 		/*
+ 		 * If the queue doesn't support SG gaps and adding this
+ 		 * offset would create a gap, disallow it.
+@@ -188,8 +244,12 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+ 			 */
+ 			if (nsegs < queue_max_segments(q) &&
+ 			    sectors < max_sectors) {
+-				nsegs++;
+-				sectors = max_sectors;
++				/* split in the middle of bvec */
++				bv.bv_len = (max_sectors - sectors) << 9;
++				bvec_split_segs(q, &bv, &nsegs,
++						&seg_size,
++						&front_seg_size,
++						&sectors);
+ 			}
+ 			goto split;
+ 		}
+@@ -214,11 +274,12 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+ 		if (nsegs == 1 && seg_size > front_seg_size)
+ 			front_seg_size = seg_size;
  
- 	/* Handle non-sparse inodes */
- 	if (!xfs_inobt_issparse(irec.ir_holemask)) {
-@@ -397,9 +401,10 @@ STATIC void
- xchk_iallocbt_xref_rmap_inodes(
- 	struct xfs_scrub	*sc,
- 	int			which,
--	xfs_filblks_t		inode_blocks)
-+	unsigned long long	inodes)
- {
- 	xfs_filblks_t		blocks;
-+	xfs_filblks_t		inode_blocks;
- 	int			error;
+-		nsegs++;
+ 		bvprv = bv;
+ 		bvprvp = &bvprv;
+-		seg_size = bv.bv_len;
+-		sectors += bv.bv_len >> 9;
++
++		if (bvec_split_segs(q, &bv, &nsegs, &seg_size,
++					&front_seg_size, &sectors))
++			goto split;
  
- 	if (!sc->sa.rmap_cur || xchk_skip_xref(sc->sm))
-@@ -410,6 +415,7 @@ xchk_iallocbt_xref_rmap_inodes(
- 			&XFS_RMAP_OINFO_INODES, &blocks);
- 	if (!xchk_should_check_xref(sc, &error, &sc->sa.rmap_cur))
- 		return;
-+	inode_blocks = XFS_B_TO_FSB(sc->mp, inodes * sc->mp->m_sb.sb_inodesize);
- 	if (blocks != inode_blocks)
- 		xchk_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
- }
-@@ -421,12 +427,14 @@ xchk_iallocbt(
- 	xfs_btnum_t		which)
- {
- 	struct xfs_btree_cur	*cur;
--	xfs_filblks_t		inode_blocks = 0;
-+	struct xchk_iallocbt	iabt = {
-+		.inodes		= 0,
-+	};
- 	int			error;
+ 	}
  
- 	cur = which == XFS_BTNUM_INO ? sc->sa.ino_cur : sc->sa.fino_cur;
- 	error = xchk_btree(sc, cur, xchk_iallocbt_rec, &XFS_RMAP_OINFO_INOBT,
--			&inode_blocks);
-+			&iabt);
- 	if (error)
- 		return error;
+@@ -296,6 +357,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+ 	struct bio_vec bv, bvprv = { NULL };
+ 	int cluster, prev = 0;
+ 	unsigned int seg_size, nr_phys_segs;
++	unsigned front_seg_size = bio->bi_seg_front_size;
+ 	struct bio *fbio, *bbio;
+ 	struct bvec_iter iter;
  
-@@ -440,7 +448,7 @@ xchk_iallocbt(
- 	 * to inode chunks with free inodes.
- 	 */
- 	if (which == XFS_BTNUM_INO)
--		xchk_iallocbt_xref_rmap_inodes(sc, which, inode_blocks);
-+		xchk_iallocbt_xref_rmap_inodes(sc, which, iabt.inodes);
+@@ -316,7 +378,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+ 	seg_size = 0;
+ 	nr_phys_segs = 0;
+ 	for_each_bio(bio) {
+-		bio_for_each_segment(bv, bio, iter) {
++		bio_for_each_bvec(bv, bio, iter) {
+ 			/*
+ 			 * If SG merging is disabled, each bio vector is
+ 			 * a segment
+@@ -336,20 +398,20 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+ 				continue;
+ 			}
+ new_segment:
+-			if (nr_phys_segs == 1 && seg_size >
+-			    fbio->bi_seg_front_size)
+-				fbio->bi_seg_front_size = seg_size;
++			if (nr_phys_segs == 1 && seg_size > front_seg_size)
++				front_seg_size = seg_size;
  
- 	return error;
- }
+-			nr_phys_segs++;
+ 			bvprv = bv;
+ 			prev = 1;
+-			seg_size = bv.bv_len;
++			bvec_split_segs(q, &bv, &nr_phys_segs, &seg_size,
++					&front_seg_size, NULL);
+ 		}
+ 		bbio = bio;
+ 	}
+ 
+-	if (nr_phys_segs == 1 && seg_size > fbio->bi_seg_front_size)
+-		fbio->bi_seg_front_size = seg_size;
++	if (nr_phys_segs == 1 && seg_size > front_seg_size)
++		front_seg_size = seg_size;
++	fbio->bi_seg_front_size = front_seg_size;
+ 	if (seg_size > bbio->bi_seg_back_size)
+ 		bbio->bi_seg_back_size = seg_size;
+ 
+-- 
+2.9.5
