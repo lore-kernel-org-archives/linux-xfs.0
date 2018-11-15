@@ -1,208 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:53268 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730730AbeKNDlu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 22:41:50 -0500
-Date: Tue, 13 Nov 2018 09:42:34 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: cache minimum realtime summary level
-Message-ID: <20181113174234.GI4235@magnolia>
-References: <49a31389f88ab40b11f07afa5c728a1368e39a45.1541908447.git.osandov@fb.com>
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:33812 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728699AbeKOWsW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 17:48:22 -0500
+Received: by mail-wr1-f65.google.com with SMTP id j26-v6so21067445wre.1
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 04:40:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <49a31389f88ab40b11f07afa5c728a1368e39a45.1541908447.git.osandov@fb.com>
+References: <20181109143004.24963-1-jtulak@redhat.com> <9a951869-5852-2689-a6ef-084c770f16fb@sandeen.net>
+In-Reply-To: <9a951869-5852-2689-a6ef-084c770f16fb@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Thu, 15 Nov 2018 13:40:26 +0100
+Message-ID: <CACj3i70u6hS2RgSRwHMqLZtKexdEz6GnSH10tyYF6DiHXimnug@mail.gmail.com>
+Subject: Re: [PATCH 00/24] xfsdump: code style change
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Omar Sandoval <osandov@osandov.com>
-Cc: linux-xfs@vger.kernel.org, kernel-team@fb.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sat, Nov 10, 2018 at 07:59:58PM -0800, Omar Sandoval wrote:
-> From: Omar Sandoval <osandov@fb.com>
-> 
-> The realtime summary is a two-dimensional array on disk, effectively:
-> 
-> u32 rsum[log2(number of realtime extents) + 1][number of blocks in the bitmap]
-> 
-> rsum[log][bbno] is the number of extents of size 2**log which start in
-> bitmap block bbno.
-> 
-> xfs_rtallocate_extent_near() uses xfs_rtany_summary() to check whether
-> rsum[log][bbno] != 0 for any log level. However, the summary array is
-> stored in row-major order (i.e., like an array in C), so all of these
-> entries are not adjacent, but rather spread across the entire summary
-> file. In the worst case (a full bitmap block), xfs_rtany_summary() has
-> to check every level.
-> 
-> This means that on a moderately-used realtime device, an allocation will
-> waste a lot of time finding, reading, and releasing buffers for the
-> realtime summary. In particular, one of our storage services (which runs
-> on servers with 8 very slow CPUs and 15 8 TB XFS realtime filesystems)
-> spends almost 5% of its CPU cycles in xfs_rtbuf_get() and
-> xfs_trans_brelse() called from xfs_rtany_summary().
-> 
-> One solution would be to also store the summary with the dimensions
-> swapped. However, this would require a disk format change to a very old
-> component of XFS.
-> 
-> Instead, we can cache the minimum size which contains any extents. We do
-> so lazily; rather than guaranteeing that the cache contains the precise
-> minimum, it always contains a loose lower bound which we tighten when we
-> read or update a summary block. This only uses a few kilobytes of memory
-> and is already serialized via the realtime bitmap and summary inode
-> locks, so the cost is minimal. With this change, the same workload only
-> spends 0.2% of its CPU cycles in the realtime allocator.
-> 
-> Signed-off-by: Omar Sandoval <osandov@fb.com>
-> ---
-> Based on Linus' master branch.
-> 
-> Changes from v1:
-> - Clarify comment in xfs_rtmount_inodes().
-> - Use kmem_* instead of kvmalloc/kvfree
-> 
->  fs/xfs/libxfs/xfs_rtbitmap.c |  4 ++++
->  fs/xfs/xfs_mount.h           |  6 ++++++
->  fs/xfs/xfs_rtalloc.c         | 27 +++++++++++++++++++++++----
->  3 files changed, 33 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-> index b228c821bae6..6d4990717cee 100644
-> --- a/fs/xfs/libxfs/xfs_rtbitmap.c
-> +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-> @@ -505,6 +505,10 @@ xfs_rtmodify_summary_int(
->  		uint first = (uint)((char *)sp - (char *)bp->b_addr);
->  
->  		*sp += delta;
-> +		if (*sp == 0 && log == mp->m_rsum_cache[bbno])
-> +			mp->m_rsum_cache[bbno]++;
-> +		if (*sp != 0 && log < mp->m_rsum_cache[bbno])
-> +			mp->m_rsum_cache[bbno] = log;
->  		xfs_trans_log_buf(tp, bp, first, first + sizeof(*sp) - 1);
->  	}
->  	if (sum)
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 7964513c3128..2b626a4b4824 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -89,6 +89,12 @@ typedef struct xfs_mount {
->  	int			m_logbsize;	/* size of each log buffer */
->  	uint			m_rsumlevels;	/* rt summary levels */
->  	uint			m_rsumsize;	/* size of rt summary, bytes */
-> +	/*
-> +	 * Cache of rt summary level per bitmap block with the invariant that
-> +	 * m_rsum_cache[bbno] <= the minimum i for which rsum[i][bbno] != 0.
-> +	 * Reads and writes are serialized by the rsumip inode lock.
-> +	 */
-> +	uint8_t			*m_rsum_cache;
->  	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
->  	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
->  	struct xfs_inode	*m_rootip;	/* pointer to root directory */
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index 926ed314ffba..330406e0af14 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -64,8 +64,12 @@ xfs_rtany_summary(
->  	int		log;		/* loop counter, log2 of ext. size */
->  	xfs_suminfo_t	sum;		/* summary data */
->  
-> +	/* There are no extents at levels < m_rsum_cache[bbno]. */
-> +	if (low < mp->m_rsum_cache[bbno])
-> +		low = mp->m_rsum_cache[bbno];
-> +
->  	/*
-> -	 * Loop over logs of extent sizes.  Order is irrelevant.
-> +	 * Loop over logs of extent sizes.
->  	 */
->  	for (log = low; log <= high; log++) {
->  		/*
-> @@ -80,13 +84,17 @@ xfs_rtany_summary(
->  		 */
->  		if (sum) {
->  			*stat = 1;
-> -			return 0;
-> +			goto out;
->  		}
->  	}
->  	/*
->  	 * Found nothing, return failure.
->  	 */
->  	*stat = 0;
-> +out:
-> +	/* There were no extents at levels < log. */
-> +	if (log > mp->m_rsum_cache[bbno])
-> +		mp->m_rsum_cache[bbno] = log;
->  	return 0;
->  }
->  
-> @@ -1187,8 +1195,8 @@ xfs_rtmount_init(
->  }
->  
->  /*
-> - * Get the bitmap and summary inodes into the mount structure
-> - * at mount time.
-> + * Get the bitmap and summary inodes and the summary cache into the mount
-> + * structure at mount time.
->   */
->  int					/* error */
->  xfs_rtmount_inodes(
-> @@ -1211,6 +1219,16 @@ xfs_rtmount_inodes(
->  		return error;
->  	}
->  	ASSERT(mp->m_rsumip != NULL);
-> +	/*
-> +	 * The rsum cache is initialized to all zeroes, which is trivially a
-> +	 * lower bound on the minimum level with any free extents.
-> +	 */
-> +	mp->m_rsum_cache = kmem_zalloc_large(sbp->sb_rbmblocks, KM_SLEEP);
+On Wed, Nov 14, 2018 at 9:36 PM Eric Sandeen <sandeen@sandeen.net> wrote:
+>
+> On 11/9/18 8:29 AM, Jan Tulak wrote:
+> > This set is dealing with whitespaces only, no functional change, code
+> > shuffling, etc. should be present (with one small exception in patch no. 2).
+> > From the previous set I split the changes into multiple patches, one type of
+> > change at a time, and tried to make the code fully compliant with xfs style,
+> > so the number of changes is way bigger than in the first set.
+> >
+> > The only patch with code shuffling (but no behavioral change) is: "xfsdump: do
+> > not split function call with ifdef." See the patch for details.
+> >
+> > For patch 21 - xfsdump: (style) format intercharacter spaces, I think whether
+> > it is still to much agregated and I should separate the changes. Some other
+> > patches I had to split to multiple files as they are too big to pass through
+> > to the mailing list - it is in their name. The largest one is 660K now, so I
+> > will check if that passed through, or it is still too big.
+> >
+> > The whole set is created mechanically from scratch. Scripts used for the
+> > specific change are part of the commit message and I can easily put it all
+> > together. So there is no need to worry about rebase conflicts, etc. when
+> > pointing out issues.
+> >
+> > The tools used to make these changes are sed and uncrustify.
+> > http://uncrustify.sourceforge.net/
+> >
+> > A git tree with these patches is also on Github:
+> > https://github.com/jtulak/xfsdump/tree/style-nov-9th
+> > or
+> > git clone --single-branch -b style-nov-9th https://github.com/jtulak/xfsdump.git
+>
+> Thanks for doing this.  I do think it's useful in the long run.
+>
+> NB: not all patches came through, apparently they were too big for the list.
 
-Hmmm, how much memory does this require?
+Thanks for looking at it. And sorry for the missing mails, I checked
+it in my mailbox and there they arrived all. But apparently, Gmail and
+its deduplication made it look like it came through both mailing list
+and me in cc, even if I received CCed version only.
 
-Let's say I had a 64TB realtime volume on a 4k block filesystem and 1
-block per rt extent.
+>
+> A few issues I notice:
+>
+> 1) we now get warnings like:
+>
+> In file included from content.c:44:0:
+> types.h:30:0: warning: "sizeofmember" redefined [enabled by default]
+>  #define sizeofmember(t, m)      sizeof(((t *)0)->m)
+>  ^
+> In file included from content.c:40:0:
+> /usr/include/xfs/jdm.h:65:0: note: this is the location of the previous definition
+>  #define sizeofmember( t, m ) sizeof( ( ( t * )0 )->m )
+>  ^
+>
+> because xfsprogs headers have the definitions w/ the spaces in them.  So
+> I'd just leave sizeofmember and offsetofmember defines alone for now to
+> avoid this.  Or, wrap them in #ifndef's.  Or if we require xfsprogs headers
+> to build anyway, perhaps just drop the defines altogether.
 
-That's ... 2^(46 - 12) = 2^34 rt blocks.
+Ok, I will drop it out.
 
-Each rtbitmap block tracks 2^(12+3) = 2^15 blocks, which means that
-there are 2^(34-15) = 2^19 rtbitmap blocks.
+>
+> 2) I think we probably do not want to change any user-facing strings,
+> or at least they should be carefully examined.  This will break some
+> translations (fixable) but it's also more of a functional change, and
+> should be done with care if at all, and maybe left for a separate patch
+> if it's warranted.
+>
+> 3) This creates /many/ more > 80 char lines.  Per:
+>
+> # for F in */*.[ch]; do expand $F | grep '.\{81\}'; done
+>
+> the codebase goes from 794 such lines to 1806.  IOWs, some of the "missing"
+> whitespace may have been intentional, to stay under 80 cols.  New lines
+> vs. compressed lines is a judgement call, I guess.  Bleah.
+>
+> So... sorry about that, but if the goal is to format better, let's be
+> sure to keep observing other basic rules like "< 80 cols"
 
-The cache requires 1 byte per rtbitmap block (2^19) which means it
-requires ~512k of memory?  And if I had 1EB that would be 8MB of RAM?
+Yeah. I'm not sure there is an easy way to automate that...
 
-(Granted you said you use 256K rt extents, which cuts down the memory
-requirements by 64x, but I don't want to assume everyone will do this.)
+>
+> 4) related, there are places where we intentionally dropped a space to
+> keep things well aligned, for example:
+>
+>         ULO(_("<file> (restore only if newer than)"),   GETOPT_NEWER);
+>         ULO(_("(restore owner/group even if not root)"),GETOPT_OWNER);
+>         ULO(_("<seconds between progress reports>"),    GETOPT_PROGRESS);
+>
+> this "breaks the rule" but it's fairly common to line up columns that way
+> if it's just off by 1 char.
+>
+> Other things like this:
+>
+>  struct quota_info {
+> -       char *  desc;           /* Quotas type (user, project, etc) */
+> -       bool_t  savequotas;     /* Quotas saved OK */
+> -       char *  quotafile;      /* Filename quota info is stored in */
+> -       char    quotapath[MAXPATHLEN]; /* Full path to quotafile */
+> -       char *  repquotaargs;   /* Args to repquota to create this quotafile */
+> -       int     statflag;       /* quota stats flag for this type */
+> -       ino_t   quotaino;       /* ino of the quota file */
+> +       char *  desc;                   /* Quotas type (user, project, etc) */
+> +       bool_t  savequotas;             /* Quotas saved OK */
+> +       char *  quotafile;              /* Filename quota info is stored in */
+> +       char    quotapath[MAXPATHLEN];  /* Full path to quotafile */
+> +       char *  repquotaargs;           /* Args to repquota to create this quotafile */
+> +       int     statflag;               /* quota stats flag for this type */
+> +       ino_t   quotaino;               /* ino of the quota file */
+>  };
+>
+> probably shouldn't happen either, it's better to keep stuff < 80cols
+> and have 1 oddball comment remaining.
+>
+> I was trying to compare objdump -d to ensure there were no other unintended
+> runtime changes, but unfortunately there are changes
+> which will affect that even if it's whitespace; for example whitespace
+> changes within an assert() will change strings (the text of the assert)
+> and their locations, and so will change the disassembly.  So I'm not sure
+> it's possible to validate "no functional changes" by binary inspection...
+>
+> I suppose we could try to limit whitespace changes to things that won't
+> change disassembly first (for example, no string or assert changes) and
+> then go back and do them, so that we could ge the bulk of the changes in
+> with no modifications to the binary code, but ... I'm not sure if it's
+> worth it.
 
-> +	if (!mp->m_rsum_cache) {
-> +		xfs_irele(mp->m_rbmip);
-> +		xfs_irele(mp->m_rsumip);
-> +		return -ENOMEM;
-> +	}
+I'll look at these issues and see what can be done/if that helps with
+disassembly.
 
-That's a pretty high order memory allocation and it seem unfortunate to
-fail the mount because we couldn't cobble together enough [kv]memory to
-set up a rtsummary cache.
+>
+> Sorry for the hassle, but even though it's "only whitespace" I think we
+> want to be as careful as possible to not move anything backwards...
 
-One option would be to fall back to reading the rtsummary file if
-m_rsum_cache == NULL (i.e. we couldn't get enough memory to set up the
-cache).  Another option could be to use the xfs big memory array that
-I've been developing for the xfs online repair patchset which uses a
-memfd to create a byte-addressable array whose pages can be swapped out.
-The downside of xfbma is that array accesses are pretty heavyweight.
+Yup, I agree. We are not talking about a web form that will work even
+if the layout breaks a bit.
 
---D
-
->  	return 0;
->  }
->  
-> @@ -1218,6 +1236,7 @@ void
->  xfs_rtunmount_inodes(
->  	struct xfs_mount	*mp)
->  {
-> +	kmem_free(mp->m_rsum_cache);
->  	if (mp->m_rbmip)
->  		xfs_irele(mp->m_rbmip);
->  	if (mp->m_rsumip)
-> -- 
-> 2.19.1
-> 
+Thanks,
+Jan
