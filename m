@@ -1,114 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:17029 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728501AbeKOHXP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 02:23:15 -0500
-Date: Thu, 15 Nov 2018 08:18:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 14/16] xfs: align writepages to large block sizes
-Message-ID: <20181114211818.GW19305@dastard>
-References: <20181107063127.3902-1-david@fromorbit.com>
- <20181107063127.3902-15-david@fromorbit.com>
- <20181114141925.GA19257@bfoster>
+Received: from userp2120.oracle.com ([156.151.31.85]:37110 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726574AbeKOQLk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 11:11:40 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wAF63lu9105760
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:05:12 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2nr7cs7hu1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:05:12 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wAF656jP014258
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:05:06 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wAF6565X023793
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 06:05:06 GMT
+Subject: [PATCH 7/9] xfs: scrub big block inode btrees correctly
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 14 Nov 2018 22:05:05 -0800
+Message-ID: <154226190517.13280.4528455687301041275.stgit@magnolia>
+In-Reply-To: <154226186169.13280.4536602352984659736.stgit@magnolia>
+References: <154226186169.13280.4536602352984659736.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181114141925.GA19257@bfoster>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Nov 14, 2018 at 09:19:26AM -0500, Brian Foster wrote:
-> On Wed, Nov 07, 2018 at 05:31:25PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > For data integrity purposes, we need to write back the entire
-> > filesystem block when asked to sync a sub-block range of the file.
-> > When the filesystem block size is larger than the page size, this
-> > means we need to convert single page integrity writes into whole
-> > block integrity writes. We do this by extending the writepage range
-> > to filesystem block granularity and alignment.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_aops.c | 14 ++++++++++++++
-> >  1 file changed, 14 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index f6ef9e0a7312..5334f16be166 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -900,6 +900,7 @@ xfs_vm_writepages(
-> >  		.io_type = XFS_IO_HOLE,
-> >  	};
-> >  	int			ret;
-> > +	unsigned		bsize =	i_blocksize(mapping->host);
-> >  
-> >  	/*
-> >  	 * Refuse to write pages out if we are called from reclaim context.
-> > @@ -922,6 +923,19 @@ xfs_vm_writepages(
-> >  	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
-> >  		return 0;
-> >  
-> > +	/*
-> > +	 * If the block size is larger than page size, extent the incoming write
-> > +	 * request to fsb granularity and alignment. This is a requirement for
-> > +	 * data integrity operations and it doesn't hurt for other write
-> > +	 * operations, so do it unconditionally.
-> > +	 */
-> > +	if (wbc->range_start)
-> > +		wbc->range_start = round_down(wbc->range_start, bsize);
-> > +	if (wbc->range_end != LLONG_MAX)
-> > +		wbc->range_end = round_up(wbc->range_end, bsize);
-> > +	if (wbc->nr_to_write < wbc->range_end - wbc->range_start)
-> > +		wbc->nr_to_write = round_up(wbc->nr_to_write, bsize);
-> > +
-> 
-> This latter bit causes endless writeback loops in tests such as
-> generic/475 (I think I reproduced it with xfs/141 as well). The
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yup, I've seen that, but haven't fixed it yet because I still
-haven't climbed out of the dedupe/clone/copy file range data
-corruption hole that fsx pulled the lid of.
+Teach scrub how to handle the case that there are one or more inobt
+records covering a given inode cluster.  This fixes the operation on big
+block filesystems (e.g. 64k blocks, 512 byte inodes).
 
-Basically, I can't get back to working on bs > ps until I get the
-stuff we actually support working correctly first...
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/ialloc.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-> writeback infrastructure samples ->nr_to_write before and after
-> ->writepages() calls to identify progress. Unconditionally bumping it to
-> something larger than the original value can lead to an underflow in the
-> writeback code that seems to throw things off. E.g., see the following
-> wb tracepoints (w/ 4k block and page size):
-> 
->    kworker/u8:13-189   [003] ...1   317.968147: writeback_single_inode_start: bdi 253:9: ino=8389005 state=I_DIRTY_PAGES|I_SYNC dirtied_when=4294773087 age=211 index=0 to_write=1024 wrote=0 cgroup_ino=4294967295
->    kworker/u8:13-189   [003] ...1   317.968150: writeback_single_inode: bdi 253:9: ino=8389005 state=I_DIRTY_PAGES|I_SYNC dirtied_when=4294773087 age=211 index=0 to_write=1024 wrote=18446744073709548544 cgroup_ino=4294967295
-> 
-> The wrote value goes from 0 to garbage and writeback_sb_inodes() uses
-> the same basic calculation for 'wrote.'
 
-Easy enough to fix, just stash the originals and restore them once
-done.
-
-> 
-> BTW, I haven't gone through the broader set, but just looking at this
-> bit what's the purpose of rounding ->nr_to_write (which is a page count)
-> to a block size in the first place?
-
-fsync on a single page range.
-
-We write that page, allocate the block (which spans 16 pages), and
-then return from writeback leaving 15/16 pages on that block still
-dirty in memory.  Then we force the log, pushing the allocation and
-metadata to disk.  Crash.
-
-On recovery, we expose 15/16 pages of stale data because we only
-wrote one of the pages over the block during fsync.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 1d79f12dfce5..26bcf359b326 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -162,6 +162,7 @@ xchk_iallocbt_check_cluster_ifree(
+ 	xfs_ino_t			fsino;
+ 	xfs_agino_t			agino;
+ 	unsigned int			offset;
++	unsigned int			cluster_buf_base;
+ 	bool				irec_free;
+ 	bool				ino_inuse;
+ 	bool				freemask_ok;
+@@ -174,11 +175,14 @@ xchk_iallocbt_check_cluster_ifree(
+ 	 * Given an inobt record, an offset of a cluster within the record,
+ 	 * and an offset of an inode within a cluster, compute which fs inode
+ 	 * we're talking about and the offset of the inode record within the
+-	 * inode buffer.
++	 * inode buffer, being careful about inobt records that don't align
++	 * with the start of the inode buffer when block sizes are large.
+ 	 */
+ 	agino = irec->ir_startino + cluster_base + cluster_index;
+ 	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
+-	offset = cluster_index * mp->m_sb.sb_inodesize;
++	cluster_buf_base = XFS_INO_TO_OFFSET(mp, irec->ir_startino +
++					     cluster_base);
++	offset = (cluster_buf_base + cluster_index) * mp->m_sb.sb_inodesize;
+ 	if (offset >= BBTOB(cluster_bp->b_length)) {
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+ 		goto out;
