@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58708 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41854 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728634AbeKOTBB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Nov 2018 14:01:01 -0500
+        id S1728719AbeKOTDi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Nov 2018 14:03:38 -0500
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V10 02/19] block: introduce bio_for_each_bvec()
-Date: Thu, 15 Nov 2018 16:52:49 +0800
-Message-Id: <20181115085306.9910-3-ming.lei@redhat.com>
+Subject: [PATCH V10 13/19] iomap & xfs: only account for new added page
+Date: Thu, 15 Nov 2018 16:53:00 +0800
+Message-Id: <20181115085306.9910-14-ming.lei@redhat.com>
 In-Reply-To: <20181115085306.9910-1-ming.lei@redhat.com>
 References: <20181115085306.9910-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,8 +15,11 @@ List-Id: xfs
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-This helper is used for iterating over multi-page bvec for bio
-split & merge code.
+After multi-page is enabled, one new page may be merged to a segment
+even though it is a new added page.
+
+This patch deals with this issue by post-check in case of merge, and
+only a freshly new added page need to be dealt with for iomap & xfs.
 
 Cc: Dave Chinner <dchinner@redhat.com>
 Cc: Kent Overstreet <kent.overstreet@gmail.com>
@@ -42,138 +45,116 @@ Cc: Bob Peterson <rpeterso@redhat.com>
 Cc: cluster-devel@redhat.com
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- include/linux/bio.h  | 34 +++++++++++++++++++++++++++++++---
- include/linux/bvec.h | 36 ++++++++++++++++++++++++++++++++----
- 2 files changed, 63 insertions(+), 7 deletions(-)
+ fs/iomap.c          | 22 ++++++++++++++--------
+ fs/xfs/xfs_aops.c   | 10 ++++++++--
+ include/linux/bio.h | 11 +++++++++++
+ 3 files changed, 33 insertions(+), 10 deletions(-)
 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 056fb627edb3..1f0dcf109841 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -76,6 +76,9 @@
- #define bio_data_dir(bio) \
- 	(op_is_write(bio_op(bio)) ? WRITE : READ)
+diff --git a/fs/iomap.c b/fs/iomap.c
+index df0212560b36..a1b97a5c726a 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -288,6 +288,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 	loff_t orig_pos = pos;
+ 	unsigned poff, plen;
+ 	sector_t sector;
++	bool need_account = false;
  
-+#define bio_iter_mp_iovec(bio, iter)				\
-+	mp_bvec_iter_bvec((bio)->bi_io_vec, (iter))
-+
- /*
-  * Check whether this bio carries any data or not. A NULL bio is allowed.
-  */
-@@ -135,18 +138,33 @@ static inline bool bio_full(struct bio *bio)
- #define bio_for_each_segment_all(bvl, bio, i)				\
- 	for (i = 0, bvl = (bio)->bi_io_vec; i < (bio)->bi_vcnt; i++, bvl++)
- 
--static inline void bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
--				    unsigned bytes)
-+static inline void __bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
-+				      unsigned bytes, bool mp)
- {
- 	iter->bi_sector += bytes >> 9;
- 
- 	if (bio_no_advance_iter(bio))
- 		iter->bi_size -= bytes;
- 	else
--		bvec_iter_advance(bio->bi_io_vec, iter, bytes);
-+		if (!mp)
-+			bvec_iter_advance(bio->bi_io_vec, iter, bytes);
-+		else
-+			mp_bvec_iter_advance(bio->bi_io_vec, iter, bytes);
- 		/* TODO: It is reasonable to complete bio with error here. */
- }
- 
-+static inline void bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
-+				    unsigned bytes)
-+{
-+	__bio_advance_iter(bio, iter, bytes, false);
-+}
-+
-+static inline void bio_advance_mp_iter(struct bio *bio, struct bvec_iter *iter,
-+				       unsigned bytes)
-+{
-+	__bio_advance_iter(bio, iter, bytes, true);
-+}
-+
- #define __bio_for_each_segment(bvl, bio, iter, start)			\
- 	for (iter = (start);						\
- 	     (iter).bi_size &&						\
-@@ -156,6 +174,16 @@ static inline void bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
- #define bio_for_each_segment(bvl, bio, iter)				\
- 	__bio_for_each_segment(bvl, bio, iter, (bio)->bi_iter)
- 
-+#define __bio_for_each_bvec(bvl, bio, iter, start)		\
-+	for (iter = (start);						\
-+	     (iter).bi_size &&						\
-+		((bvl = bio_iter_mp_iovec((bio), (iter))), 1);	\
-+	     bio_advance_mp_iter((bio), &(iter), (bvl).bv_len))
-+
-+/* returns one real segment(multipage bvec) each time */
-+#define bio_for_each_bvec(bvl, bio, iter)			\
-+	__bio_for_each_bvec(bvl, bio, iter, (bio)->bi_iter)
-+
- #define bio_iter_last(bvec, iter) ((iter).bi_size == (bvec).bv_len)
- 
- static inline unsigned bio_segments(struct bio *bio)
-diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-index 8ef904a50577..3d61352cd8cf 100644
---- a/include/linux/bvec.h
-+++ b/include/linux/bvec.h
-@@ -124,8 +124,16 @@ struct bvec_iter {
- 	.bv_offset	= bvec_iter_offset((bvec), (iter)),	\
- })
- 
--static inline bool bvec_iter_advance(const struct bio_vec *bv,
--		struct bvec_iter *iter, unsigned bytes)
-+#define mp_bvec_iter_bvec(bvec, iter)				\
-+((struct bio_vec) {							\
-+	.bv_page	= mp_bvec_iter_page((bvec), (iter)),	\
-+	.bv_len		= mp_bvec_iter_len((bvec), (iter)),	\
-+	.bv_offset	= mp_bvec_iter_offset((bvec), (iter)),	\
-+})
-+
-+static inline bool __bvec_iter_advance(const struct bio_vec *bv,
-+				       struct bvec_iter *iter,
-+				       unsigned bytes, bool mp)
- {
- 	if (WARN_ONCE(bytes > iter->bi_size,
- 		     "Attempted to advance past end of bvec iter\n")) {
-@@ -134,8 +142,14 @@ static inline bool bvec_iter_advance(const struct bio_vec *bv,
+ 	if (iomap->type == IOMAP_INLINE) {
+ 		WARN_ON_ONCE(pos);
+@@ -313,18 +314,15 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 	 */
+ 	sector = iomap_sector(iomap, pos);
+ 	if (ctx->bio && bio_end_sector(ctx->bio) == sector) {
+-		if (__bio_try_merge_page(ctx->bio, page, plen, poff))
++		if (__bio_try_merge_page(ctx->bio, page, plen, poff)) {
++			need_account = iop && bio_is_last_segment(ctx->bio,
++					page, plen, poff);
+ 			goto done;
++		}
+ 		is_contig = true;
  	}
  
- 	while (bytes) {
--		unsigned iter_len = bvec_iter_len(bv, *iter);
--		unsigned len = min(bytes, iter_len);
-+		unsigned len;
-+
-+		if (mp)
-+			len = mp_bvec_iter_len(bv, *iter);
-+		else
-+			len = bvec_iter_len(bv, *iter);
-+
-+		len = min(bytes, len);
+-	/*
+-	 * If we start a new segment we need to increase the read count, and we
+-	 * need to do so before submitting any previous full bio to make sure
+-	 * that we don't prematurely unlock the page.
+-	 */
+-	if (iop)
+-		atomic_inc(&iop->read_count);
++	need_account = true;
  
- 		bytes -= len;
- 		iter->bi_size -= len;
-@@ -173,6 +187,20 @@ static inline bool bvec_iter_rewind(const struct bio_vec *bv,
- 	return true;
+ 	if (!ctx->bio || !is_contig || bio_full(ctx->bio)) {
+ 		gfp_t gfp = mapping_gfp_constraint(page->mapping, GFP_KERNEL);
+@@ -347,6 +345,14 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 	__bio_add_page(ctx->bio, page, plen, poff);
+ done:
+ 	/*
++	 * If we add a new page we need to increase the read count, and we
++	 * need to do so before submitting any previous full bio to make sure
++	 * that we don't prematurely unlock the page.
++	 */
++	if (iop && need_account)
++		atomic_inc(&iop->read_count);
++
++	/*
+ 	 * Move the caller beyond our range so that it keeps making progress.
+ 	 * For that we have to include any leading non-uptodate ranges, but
+ 	 * we can skip trailing ones as they will be handled in the next
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 1f1829e506e8..d8e9cc9f751a 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -603,6 +603,7 @@ xfs_add_to_ioend(
+ 	unsigned		len = i_blocksize(inode);
+ 	unsigned		poff = offset & (PAGE_SIZE - 1);
+ 	sector_t		sector;
++	bool			need_account;
+ 
+ 	sector = xfs_fsb_to_db(ip, wpc->imap.br_startblock) +
+ 		((offset - XFS_FSB_TO_B(mp, wpc->imap.br_startoff)) >> 9);
+@@ -617,13 +618,18 @@ xfs_add_to_ioend(
+ 	}
+ 
+ 	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff)) {
+-		if (iop)
+-			atomic_inc(&iop->write_count);
++		need_account = true;
+ 		if (bio_full(wpc->ioend->io_bio))
+ 			xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
+ 		__bio_add_page(wpc->ioend->io_bio, page, len, poff);
++	} else {
++		need_account = iop && bio_is_last_segment(wpc->ioend->io_bio,
++				page, len, poff);
+ 	}
+ 
++	if (iop && need_account)
++		atomic_inc(&iop->write_count);
++
+ 	wpc->ioend->io_size += len;
  }
  
-+static inline bool bvec_iter_advance(const struct bio_vec *bv,
-+				     struct bvec_iter *iter,
-+				     unsigned bytes)
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 1a2430a8b89d..5040e9a2eb09 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -341,6 +341,17 @@ static inline struct bio_vec *bio_last_bvec_all(struct bio *bio)
+ 	return &bio->bi_io_vec[bio->bi_vcnt - 1];
+ }
+ 
++/* iomap needs this helper to deal with sub-pagesize bvec */
++static inline bool bio_is_last_segment(struct bio *bio, struct page *page,
++		unsigned int len, unsigned int off)
 +{
-+	return __bvec_iter_advance(bv, iter, bytes, false);
++	struct bio_vec bv;
++
++	bvec_last_segment(bio_last_bvec_all(bio), &bv);
++
++	return bv.bv_page == page && bv.bv_len == len && bv.bv_offset == off;
 +}
 +
-+static inline bool mp_bvec_iter_advance(const struct bio_vec *bv,
-+					struct bvec_iter *iter,
-+					unsigned bytes)
-+{
-+	return __bvec_iter_advance(bv, iter, bytes, true);
-+}
-+
- #define for_each_bvec(bvl, bio_vec, iter, start)			\
- 	for (iter = (start);						\
- 	     (iter).bi_size &&						\
+ enum bip_flags {
+ 	BIP_BLOCK_INTEGRITY	= 1 << 0, /* block layer owns integrity data */
+ 	BIP_MAPPED_INTEGRITY	= 1 << 1, /* ref tag has been remapped */
 -- 
 2.9.5
