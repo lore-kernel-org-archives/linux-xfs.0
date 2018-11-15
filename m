@@ -1,63 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:57344 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726111AbeKMNFe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 08:05:34 -0500
-Date: Tue, 13 Nov 2018 14:09:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Remove noinline from #define STATIC
-Message-ID: <20181113030926.GQ19305@dastard>
-References: <7302f4a13c1cbf62b07f636878ce25fcca84b6c4.camel@perches.com>
- <6420cf91-89c8-a876-7a0d-25ab8ba428b8@sandeen.net>
- <20181112214515.GN19305@dastard>
- <bd3806ccc911989c7ef1fed9e8d26a4a5ad347a9.camel@perches.com>
- <20181113011804.GP19305@dastard>
- <20181113015410.GB30750@thunk.org>
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:40251 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725895AbeKOL5g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 06:57:36 -0500
+Received: by mail-pf1-f194.google.com with SMTP id x2-v6so8841802pfm.7
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Nov 2018 17:51:50 -0800 (PST)
+Subject: Re: [PATCH] block: fix 32 bit overflow in __blkdev_issue_discard()
+References: <20181113214337.20581-1-david@fromorbit.com>
+ <10a8dd78-7c00-8593-9f4e-b20eb1161b92@kernel.dk>
+ <20181115010651.GD32603@ming.t460p>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <80b9c4b7-1625-a1b6-0f1e-94de9d8b446b@kernel.dk>
+Date: Wed, 14 Nov 2018 18:51:47 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181113015410.GB30750@thunk.org>
+In-Reply-To: <20181115010651.GD32603@ming.t460p>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Theodore Y. Ts'o" <tytso@mit.edu>, Joe Perches <joe@perches.com>, Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On Mon, Nov 12, 2018 at 08:54:10PM -0500, Theodore Y. Ts'o wrote:
-> On Tue, Nov 13, 2018 at 12:18:05PM +1100, Dave Chinner wrote:
-> > I'm not interested in making code fast if distro support engineers
-> > can't debug problems on user systems easily. Optimising for
-> > performance over debuggability is a horrible trade off for us to
-> > make because it means users and distros end up much more reliant on
-> > single points of expertise for debugging problems. And that means
-> > the majority of the load of problem triage falls directly on very
-> > limited resources - the core XFS development team. A little bit of
-> > thought about how to make code easier to triage and debug goes a
-> > long, long way....
+On 11/14/18 6:06 PM, Ming Lei wrote:
+> On Wed, Nov 14, 2018 at 08:18:24AM -0700, Jens Axboe wrote:
+>> On 11/13/18 2:43 PM, Dave Chinner wrote:
+>>> From: Dave Chinner <dchinner@redhat.com>
+>>>
+>>> A discard cleanup merged into 4.20-rc2 causes fstests xfs/259 to
+>>> fall into an endless loop in the discard code. The test is creating
+>>> a device that is exactly 2^32 sectors in size to test mkfs boundary
+>>> conditions around the 32 bit sector overflow region.
+>>>
+>>> mkfs issues a discard for the entire device size by default, and
+>>> hence this throws a sector count of 2^32 into
+>>> blkdev_issue_discard(). It takes the number of sectors to discard as
+>>> a sector_t - a 64 bit value.
+>>>
+>>> The commit ba5d73851e71 ("block: cleanup __blkdev_issue_discard")
+>>> takes this sector count and casts it to a 32 bit value before
+>>> comapring it against the maximum allowed discard size the device
+>>> has. This truncates away the upper 32 bits, and so if the lower 32
+>>> bits of the sector count is zero, it starts issuing discards of
+>>> length 0. This causes the code to fall into an endless loop, issuing
+>>> a zero length discards over and over again on the same sector.
+>>
+>> Applied, thanks. Ming, can you please add a blktests test for
+>> this case? This is the 2nd time it's been broken.
 > 
-> So at least in my experience, if the kernels are compiled with
-> CONFIG_DEBUG_INFO and/or CONFIG_DEBUG_INFO_REDUCED,
-> scripts/decode_stracktrace.sh seems to do a very nice job with inlined
+> OK, I will add zram discard test in blktests, which should cover the
+> 1st report. For the xfs/259, I need to investigate if it is easy to
+> do in blktests.
 
-That doesn't help with kernel profiling and other such things that
-are based on callgraphs...
+null_blk has discard support, might be an easier target in terms
+of blktests.
 
-> functions.  Now, ext4 generally only has about 3 or 4 nested inlines,
-> and so I don't know how it works with 20 or 30 nested inlined
-> functions, so perhaps this is not applicable for XFS.
-> 
-> But it perhaps toolchain technology has advanced since the Irix days
-> such that it's no longer as necessary to force the non-inlining of
-> functions for easing debugging?
-
-Not that I've noticed.
-
-Indeed, modern toolchains are moving the opposite direction - have
-you ever tried to debug a binary with gdb that was compiled with LTO
-enabled? Or maybe even just tried to profile it with perf?
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Jens Axboe
