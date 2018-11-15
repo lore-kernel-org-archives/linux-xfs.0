@@ -1,83 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41482 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53864 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728564AbeKOTBf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Nov 2018 14:01:35 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V10 05/19] block: introduce bvec_last_segment()
-Date: Thu, 15 Nov 2018 16:52:52 +0800
-Message-Id: <20181115085306.9910-6-ming.lei@redhat.com>
-In-Reply-To: <20181115085306.9910-1-ming.lei@redhat.com>
-References: <20181115085306.9910-1-ming.lei@redhat.com>
+        id S1728757AbeKOWkw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Nov 2018 17:40:52 -0500
+Date: Thu, 15 Nov 2018 07:33:10 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: fix shared extent data corruption due to missing
+ cow reservation
+Message-ID: <20181115123310.GB22958@bfoster>
+References: <20181113170819.15220-1-bfoster@redhat.com>
+ <20181115055020.GS4235@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181115055020.GS4235@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
-
-BTRFS and guard_bio_eod() need to get the last singlepage segment
-from one multipage bvec, so introduce this helper to make them happy.
-
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org
-Cc: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Cc: linux-erofs@lists.ozlabs.org
-Cc: David Sterba <dsterba@suse.com>
-Cc: linux-btrfs@vger.kernel.org
-Cc: Darrick J. Wong <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
-Cc: Gao Xiang <gaoxiang25@huawei.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-ext4@vger.kernel.org
-Cc: Coly Li <colyli@suse.de>
-Cc: linux-bcache@vger.kernel.org
-Cc: Boaz Harrosh <ooo@electrozaur.com>
-Cc: Bob Peterson <rpeterso@redhat.com>
-Cc: cluster-devel@redhat.com
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- include/linux/bvec.h | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
 
-diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-index 3d61352cd8cf..01616a0b6220 100644
---- a/include/linux/bvec.h
-+++ b/include/linux/bvec.h
-@@ -216,4 +216,29 @@ static inline bool mp_bvec_iter_advance(const struct bio_vec *bv,
- 	.bi_bvec_done	= 0,						\
- }
- 
-+/*
-+ * Get the last singlepage segment from the multipage bvec and store it
-+ * in @seg
-+ */
-+static inline void bvec_last_segment(const struct bio_vec *bvec,
-+		struct bio_vec *seg)
-+{
-+	unsigned total = bvec->bv_offset + bvec->bv_len;
-+	unsigned last_page = total / PAGE_SIZE;
-+
-+	if (last_page * PAGE_SIZE == total)
-+		last_page--;
-+
-+	seg->bv_page = nth_page(bvec->bv_page, last_page);
-+
-+	/* the whole segment is inside the last page */
-+	if (bvec->bv_offset >= last_page * PAGE_SIZE) {
-+		seg->bv_offset = bvec->bv_offset % PAGE_SIZE;
-+		seg->bv_len = bvec->bv_len;
-+	} else {
-+		seg->bv_offset = 0;
-+		seg->bv_len = total - last_page * PAGE_SIZE;
-+	}
-+}
-+
- #endif /* __LINUX_BVEC_ITER_H */
--- 
-2.9.5
+On Wed, Nov 14, 2018 at 09:50:20PM -0800, Darrick J. Wong wrote:
+> On Tue, Nov 13, 2018 at 12:08:19PM -0500, Brian Foster wrote:
+> > Page writeback indirectly handles shared extents via the existence
+> > of overlapping COW fork blocks. If COW fork blocks exist, writeback
+> > always performs the associated copy-on-write regardless if the
+> > underlying blocks are actually shared. If the blocks are shared,
+> > then overlapping COW fork blocks must always exist.
+> > 
+> > fstests shared/010 reproduces a case where a buffered write occurs
+> > over a shared block without performing the requisite COW fork
+> > reservation.  This ultimately causes writeback to the shared extent
+> > and data corruption that is detected across md5 checks of the
+> > filesystem across a mount cycle.
+> > 
+> > The problem occurs when a buffered write lands over a shared extent
+> > that crosses an extent size hint boundary and that also happens to
+> > have a partial COW reservation that doesn't cover the start and end
+> > blocks of the data fork extent.
+> > 
+> > For example, a buffered write occurs across the file offset (in FSB
+> > units) range of [29, 57]. A shared extent exists at blocks [29, 35]
+> > and COW reservation already exists at blocks [32, 34]. After
+> > accommodating a COW extent size hint of 32 blocks and the existing
+> > reservation at offset 32, xfs_reflink_reserve_cow() allocates 32
+> > blocks of reservation at offset 0 and returns with COW reservation
+> > across the range of [0, 34]. The associated data fork extent is
+> > still [29, 35], however, which isn't fully covered by the COW
+> > reservation.
+> > 
+> > This leads to a buffered write at file offset 35 over a shared
+> > extent without associated COW reservation. Writeback eventually
+> > kicks in, performs an overwrite of the underlying shared block and
+> > causes the associated data corruption.
+> > 
+> > Update xfs_reflink_reserve_cow() to accommodate the fact that a
+> > delalloc allocation request may not fully cover the extent in the
+> > data fork. Trim the data fork extent appropriately, just as is done
+> > for shared extent boundaries and/or existing COW reservations that
+> > happen to overlap the start of the data fork extent. This prevents
+> > shared/010 failures due to data corruption on reflink enabled
+> > filesystems.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > This is not fully tested yet beyond verification that it solves the
+> > problem reproduced by shared/010. I'll be running more tests today, but
+> > I'm sending sooner for review and testing due to the nature of the
+> > problem and the fact that it's a fairly isolated change. I'll follow up
+> > if I discover any resulting regressions..
+> 
+> Did you find any regressions?
+> 
+
+I ended up having to restart my test run because I was hitting writeback
+livelocks reported in the other large blocksize series. The testing
+otherwise finished last night with no regressions. I do see what look
+like corruption failures on generic/127 and generic/091 with fstests
+patched with your fsx enhancements, but I see those same failures on
+for-next so I suspect that is an independent issue.
+
+> I ran this through my overnight tests and saw no adverse effects, though
+> Dave was complaining yesterday about continuing generic/091 corruptions
+> (which I didn't see with this patch applied...)
+> 
+> Anyway it looks reasonable to me...
+> 
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+
+Thanks for the review and additional testing.
+
+Brian
+
+> --D
+> 
+> > Brian
+> > 
+> >  fs/xfs/xfs_reflink.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index ecdb086bc23e..c56bdbfcf7ae 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -296,6 +296,7 @@ xfs_reflink_reserve_cow(
+> >  	if (error)
+> >  		return error;
+> >  
+> > +	xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
+> >  	trace_xfs_reflink_cow_alloc(ip, &got);
+> >  	return 0;
+> >  }
+> > -- 
+> > 2.17.2
+> > 
