@@ -1,116 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:50112 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:33270 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727854AbeKQAKh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Nov 2018 19:10:37 -0500
-Date: Fri, 16 Nov 2018 14:58:03 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V10 18/19] block: kill QUEUE_FLAG_NO_SG_MERGE
-Message-ID: <20181116135803.GN3165@lst.de>
-References: <20181115085306.9910-1-ming.lei@redhat.com> <20181115085306.9910-19-ming.lei@redhat.com>
+        id S2388293AbeKPDoE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Nov 2018 22:44:04 -0500
+Date: Thu, 15 Nov 2018 12:35:17 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xfs remove / unlink extremely slow ?
+Message-ID: <20181115173516.GC27656@bfoster>
+References: <3927644F-734A-4A2A-BACB-DE44CBC812EB@berlin.de>
+ <14251045-1CCF-4E35-95F1-F6597FD8FD8C@berlin.de>
+ <20181114144511.GB19257@bfoster>
+ <20181115153815.GA27512@bfoster>
+ <6102464C-F8C6-4BB0-AB98-FD11310BDF5E@berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20181115085306.9910-19-ming.lei@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <6102464C-F8C6-4BB0-AB98-FD11310BDF5E@berlin.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Michael Arndt <Michael.Arndt@berlin.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 15, 2018 at 04:53:05PM +0800, Ming Lei wrote:
-> Since bdced438acd83ad83a6c ("block: setup bi_phys_segments after splitting"),
-> physical segment number is mainly figured out in blk_queue_split() for
-> fast path, and the flag of BIO_SEG_VALID is set there too.
+On Thu, Nov 15, 2018 at 06:07:46PM +0100, Michael Arndt wrote:
+> Brian,
 > 
-> Now only blk_recount_segments() and blk_recalc_rq_segments() use this
-> flag.
+> Info, supporting your remark about VFS layer: 
 > 
-> Basically blk_recount_segments() is bypassed in fast path given BIO_SEG_VALID
-> is set in blk_queue_split().
+> I did a reboot of cluster headnode and after that the remove was „fast“ meanig the typical millsecond /single file  to seconds /  removal of whole trees.
 > 
-> For another user of blk_recalc_rq_segments():
+> What does your intuition say, what could be suspected in the VFS layer / lvm2 layer or below to trigger this problem 
+> ( just to collect ideas, where to search). ?
 > 
-> - run in partial completion branch of blk_update_request, which is an unusual case
-> 
-> - run in blk_cloned_rq_check_limits(), still not a big problem if the flag is killed
-> since dm-rq is the only user.
-> 
-> Multi-page bvec is enabled now, QUEUE_FLAG_NO_SG_MERGE doesn't make sense any more.
-> 
-> Cc: Dave Chinner <dchinner@redhat.com>
-> Cc: Kent Overstreet <kent.overstreet@gmail.com>
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Cc: dm-devel@redhat.com
-> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> Cc: linux-fsdevel@vger.kernel.org
-> Cc: Shaohua Li <shli@kernel.org>
-> Cc: linux-raid@vger.kernel.org
-> Cc: linux-erofs@lists.ozlabs.org
-> Cc: David Sterba <dsterba@suse.com>
-> Cc: linux-btrfs@vger.kernel.org
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org
-> Cc: Gao Xiang <gaoxiang25@huawei.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Theodore Ts'o <tytso@mit.edu>
-> Cc: linux-ext4@vger.kernel.org
-> Cc: Coly Li <colyli@suse.de>
-> Cc: linux-bcache@vger.kernel.org
-> Cc: Boaz Harrosh <ooo@electrozaur.com>
-> Cc: Bob Peterson <rpeterso@redhat.com>
-> Cc: cluster-devel@redhat.com
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  block/blk-merge.c      | 31 ++++++-------------------------
->  block/blk-mq-debugfs.c |  1 -
->  block/blk-mq.c         |  3 ---
->  drivers/md/dm-table.c  | 13 -------------
->  include/linux/blkdev.h |  1 -
->  5 files changed, 6 insertions(+), 43 deletions(-)
-> 
-> diff --git a/block/blk-merge.c b/block/blk-merge.c
-> index 153a659fde74..06be298be332 100644
-> --- a/block/blk-merge.c
-> +++ b/block/blk-merge.c
-> @@ -351,8 +351,7 @@ void blk_queue_split(struct request_queue *q, struct bio **bio)
->  EXPORT_SYMBOL(blk_queue_split);
->  
->  static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
-> -					     struct bio *bio,
-> -					     bool no_sg_merge)
-> +					     struct bio *bio)
->  {
->  	struct bio_vec bv, bvprv = { NULL };
->  	int cluster, prev = 0;
-> @@ -379,13 +378,6 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
->  	nr_phys_segs = 0;
->  	for_each_bio(bio) {
->  		bio_for_each_bvec(bv, bio, iter) {
-> -			/*
-> -			 * If SG merging is disabled, each bio vector is
-> -			 * a segment
-> -			 */
-> -			if (no_sg_merge)
-> -				goto new_segment;
-> -
->  			if (prev && cluster) {
->  				if (seg_size + bv.bv_len
->  				    > queue_max_segment_size(q))
-> @@ -420,27 +412,16 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
->  
->  void blk_recalc_rq_segments(struct request *rq)
->  {
-> -	bool no_sg_merge = !!test_bit(QUEUE_FLAG_NO_SG_MERGE,
-> -			&rq->q->queue_flags);
-> -
-> -	rq->nr_phys_segments = __blk_recalc_rq_segments(rq->q, rq->bio,
-> -			no_sg_merge);
-> +	rq->nr_phys_segments = __blk_recalc_rq_segments(rq->q, rq->bio);
 
-Can we rename __blk_recalc_rq_segments to blk_recalc_rq_segments
-can kill the old blk_recalc_rq_segments now?
+If the problem only occurs after a period of time like this, I suppose
+that could suggest some kind of cache effect is contributing to it. You
+could see if an 'echo 2 > /proc/sys/vm/drop_caches' clears the problem
+once it occurs, for example, but note that will clear all cached
+dentries/inodes on the system.
 
-Otherwise looks fine:
+I'm not familiar enough with the VFS code and associated caching to
+speculate much beyond that. Other things that might be interesting are
+whether other operations on said file take the same amount of time
+(i.e., an mv before an rm?), whether this is a common filename pattern
+that sees a lot of create/delete operations (perhaps polluting a lookup
+cache with unlinked entries? i.e., does changing the filename have any
+effect?), whether a relocation of the file to another directory changes
+anything, whether other operations in the same dir on unrelated files
+show the same problem, etc.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Your best bet is probably to collect as much trace data as you can and
+then possibly report this to the general linux-fsdevel mailing list.
+Note that if you're using a distro kernel, it might be more appropriate
+to report an issue with your distro vendor than an upstream list.
+
+Brian
+
+> Caused by the fact, that the problem was seen also two times before, the issue will reappear after some time.
+> 
+> Off topic: is the mount option delaylog still functional or obsoleted, because already default behaviour ?
+> 
+> best
+> Micha
+> thx for extremely friendly help
+> 
