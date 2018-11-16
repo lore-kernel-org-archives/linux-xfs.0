@@ -1,97 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:39622 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389019AbeKPKcI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 05:32:08 -0500
-Received: by mail-pl1-f194.google.com with SMTP id b5-v6so10263336pla.6
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 16:22:01 -0800 (PST)
-Date: Thu, 15 Nov 2018 16:21:57 -0800
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V10 07/19] btrfs: use bvec_last_segment to get bio's last
- page
-Message-ID: <20181116002157.GB23828@vader>
-References: <20181115085306.9910-1-ming.lei@redhat.com>
- <20181115085306.9910-8-ming.lei@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33948 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725763AbeKQFpI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 17 Nov 2018 00:45:08 -0500
+Date: Fri, 16 Nov 2018 14:31:24 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH] xfs: flush posteof zeroing before reflink truncation
+Message-ID: <20181116193124.GA32290@bfoster>
+References: <20181116190724.GW4235@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181115085306.9910-8-ming.lei@redhat.com>
+In-Reply-To: <20181116190724.GW4235@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Nov 15, 2018 at 04:52:54PM +0800, Ming Lei wrote:
-> Preparing for supporting multi-page bvec.
+On Fri, Nov 16, 2018 at 11:07:24AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Cc: Dave Chinner <dchinner@redhat.com>
-> Cc: Kent Overstreet <kent.overstreet@gmail.com>
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Cc: dm-devel@redhat.com
-> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> Cc: linux-fsdevel@vger.kernel.org
-> Cc: Shaohua Li <shli@kernel.org>
-> Cc: linux-raid@vger.kernel.org
-> Cc: linux-erofs@lists.ozlabs.org
-> Cc: David Sterba <dsterba@suse.com>
-> Cc: linux-btrfs@vger.kernel.org
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org
-> Cc: Gao Xiang <gaoxiang25@huawei.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Theodore Ts'o <tytso@mit.edu>
-> Cc: linux-ext4@vger.kernel.org
-> Cc: Coly Li <colyli@suse.de>
-> Cc: linux-bcache@vger.kernel.org
-> Cc: Boaz Harrosh <ooo@electrozaur.com>
-> Cc: Bob Peterson <rpeterso@redhat.com>
-> Cc: cluster-devel@redhat.com
+> If we're remapping into a range that starts beyond EOF, we have to zero
+> the memory between EOF and the start of the target range, as established
+> in 410fdc72b05af.  However, in 4918ef4ea008, we extended the pagecache
+> truncation range downwards to a page boundary to guarantee that
+> pagecache pages are removed and that there's no possibility that we end
+> up zeroing subpage blocks within a page.  Unfortunately, we never commit
+> the posteof zeroing to disk, so on a filesystem where page size > block
+> size the truncation partially undoes the zeroing and we end up with
+> stale disk contents.
+> 
+> Brian and I reproduced this problem by running generic/091 on a 1k block
+> xfs filesystem, assuming fsx in fstests supports clone/dedupe/copyrange.
+> 
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
+Note that I think we might have hit different manifestations of the same
+problem. I actually reproduced an assert failure via shared/010 with the
+writeback patch I just posted that checks that we don't write to shared
+extents. A trace focused on the problematic range showed:
 
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+        fsstress-12966 [002] 14464.404582: xfs_zero_eof:         dev 253:3 ino 0x80009b isize 0x14070 disize 0x14070 offset 0x14070 count 655248
+        fsstress-12966 [002] 14464.404583: xfs_ilock:            dev 253:3 ino 0x80009b flags ILOCK_EXCL caller xfs_file_iomap_begin
+        fsstress-12966 [002] 14464.404585: xfs_reflink_trim_around_shared: dev 253:3 ino 0x80009b lblk 0x14 len 0x1 pblk 1048635 st 0
+        fsstress-12966 [002] 14464.404641: xfs_iomap_found:      dev 253:3 ino 0x80009b size 0x14070 offset 0x14070 count 655248 type 0x0 startoff 0x14 startblock 1048635 blockcount 0x1
+        fsstress-12966 [002] 14464.404642: xfs_iunlock:          dev 253:3 ino 0x80009b flags ILOCK_EXCL caller xfs_file_iomap_begin
+        fsstress-12966 [002] 14464.404704: writeback_dirty_page: bdi 253:3: ino=8388763 index=20
+
+... which implies that the eof zeroing associated with the remap dirties
+the page that ends up being written back to a shared block. As a quick
+hack, I just swapped the order of the zeroing and the existing flush
+calls and that made the problem disappear.
+
+> Fixes: 410fdc72b05a ("xfs: zero posteof blocks when cloning above eof")
+> Fixes: 4918ef4ea008 ("xfs: fix pagecache truncation prior to reflink")
+> Simultaneously-diagnosed-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/btrfs/compression.c | 5 ++++-
->  fs/btrfs/extent_io.c   | 5 +++--
->  2 files changed, 7 insertions(+), 3 deletions(-)
+> Note: I haven't tested this thoroughly but wanted to push this out for
+> everyone to look at ASAP.
+> ---
+
+This addresses the problem that I reproduce with shared/010 as well, and
+looks Ok to me pending further testing:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_reflink.c |    8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/btrfs/compression.c b/fs/btrfs/compression.c
-> index 2955a4ea2fa8..161e14b8b180 100644
-> --- a/fs/btrfs/compression.c
-> +++ b/fs/btrfs/compression.c
-> @@ -400,8 +400,11 @@ blk_status_t btrfs_submit_compressed_write(struct inode *inode, u64 start,
->  static u64 bio_end_offset(struct bio *bio)
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index c56bdbfcf7ae..8ea09a7e550c 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -1255,13 +1255,19 @@ xfs_reflink_zero_posteof(
+>  	loff_t			pos)
 >  {
->  	struct bio_vec *last = bio_last_bvec_all(bio);
-> +	struct bio_vec bv;
+>  	loff_t			isize = i_size_read(VFS_I(ip));
+> +	int			error;
 >  
-> -	return page_offset(last->bv_page) + last->bv_len + last->bv_offset;
-> +	bvec_last_segment(last, &bv);
+>  	if (pos <= isize)
+>  		return 0;
+>  
+>  	trace_xfs_zero_eof(ip, isize, pos - isize);
+> -	return iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
+> +	error = iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
+>  			&xfs_iomap_ops);
+> +	if (error)
+> +		return error;
 > +
-> +	return page_offset(bv.bv_page) + bv.bv_len + bv.bv_offset;
+> +	return filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+> +			isize, pos - 1);
+
+Random nit: any particular reason we use ->i_data in the page truncate
+call in xfs_reflink_remap_prep() and ->i_mapping everywhere else?
+
+Brian
+
 >  }
 >  
->  static noinline int add_ra_bio_pages(struct inode *inode,
-> diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-> index d228f706ff3e..5d5965297e7e 100644
-> --- a/fs/btrfs/extent_io.c
-> +++ b/fs/btrfs/extent_io.c
-> @@ -2720,11 +2720,12 @@ static int __must_check submit_one_bio(struct bio *bio, int mirror_num,
->  {
->  	blk_status_t ret = 0;
->  	struct bio_vec *bvec = bio_last_bvec_all(bio);
-> -	struct page *page = bvec->bv_page;
-> +	struct bio_vec bv;
->  	struct extent_io_tree *tree = bio->bi_private;
->  	u64 start;
->  
-> -	start = page_offset(page) + bvec->bv_offset;
-> +	bvec_last_segment(bvec, &bv);
-> +	start = page_offset(bv.bv_page) + bv.bv_offset;
->  
->  	bio->bi_private = NULL;
->  
-> -- 
-> 2.9.5
-> 
+>  /*
