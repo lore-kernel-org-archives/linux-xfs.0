@@ -1,60 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:43649 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727634AbeK0Jfp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 04:35:45 -0500
-Received: by mail-pl1-f195.google.com with SMTP id gn14so14570688plb.10
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 14:40:05 -0800 (PST)
-Date: Mon, 26 Nov 2018 14:40:03 -0800
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V12 14/20] bcache: avoid to use
- bio_for_each_segment_all() in bch_bio_alloc_pages()
-Message-ID: <20181126224003.GK30411@vader>
-References: <20181126021720.19471-1-ming.lei@redhat.com>
- <20181126021720.19471-15-ming.lei@redhat.com>
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:33665 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728169AbeKQBcA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 20:32:00 -0500
+Received: by mail-wr1-f67.google.com with SMTP id u9-v6so25261383wrr.0
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Nov 2018 07:19:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181126021720.19471-15-ming.lei@redhat.com>
+References: <20181109143004.24963-1-jtulak@redhat.com> <9a951869-5852-2689-a6ef-084c770f16fb@sandeen.net>
+ <CACj3i70u6hS2RgSRwHMqLZtKexdEz6GnSH10tyYF6DiHXimnug@mail.gmail.com> <c242400e-bd0b-404a-ec49-226fde9a23db@sandeen.net>
+In-Reply-To: <c242400e-bd0b-404a-ec49-226fde9a23db@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Fri, 16 Nov 2018 16:19:00 +0100
+Message-ID: <CACj3i72_TEELRcRuLCFvxOc0trhpKjztn3AwBUmmbTX-K-eorQ@mail.gmail.com>
+Subject: Re: [PATCH 00/24] xfsdump: code style change
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Nov 26, 2018 at 10:17:14AM +0800, Ming Lei wrote:
-> bch_bio_alloc_pages() is always called on one new bio, so it is safe
-> to access the bvec table directly. Given it is the only kind of this
-> case, open code the bvec table access since bio_for_each_segment_all()
-> will be changed to support for iterating over multipage bvec.
-> 
-> Acked-by: Coly Li <colyli@suse.de>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+On Thu, Nov 15, 2018 at 5:12 PM Eric Sandeen <sandeen@sandeen.net> wrote:
+>
+> On 11/15/18 6:40 AM, Jan Tulak wrote:
+> > On Wed, Nov 14, 2018 at 9:36 PM Eric Sandeen <sandeen@sandeen.net> wrote:
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
+...
 
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  drivers/md/bcache/util.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/bcache/util.c b/drivers/md/bcache/util.c
-> index 20eddeac1531..62fb917f7a4f 100644
-> --- a/drivers/md/bcache/util.c
-> +++ b/drivers/md/bcache/util.c
-> @@ -270,7 +270,11 @@ int bch_bio_alloc_pages(struct bio *bio, gfp_t gfp_mask)
->  	int i;
->  	struct bio_vec *bv;
->  
-> -	bio_for_each_segment_all(bv, bio, i) {
-> +	/*
-> +	 * This is called on freshly new bio, so it is safe to access the
-> +	 * bvec table directly.
-> +	 */
-> +	for (i = 0, bv = bio->bi_io_vec; i < bio->bi_vcnt; bv++, i++) {
->  		bv->bv_page = alloc_page(gfp_mask);
->  		if (!bv->bv_page) {
->  			while (--bv >= bio->bi_io_vec)
-> -- 
-> 2.9.5
-> 
+> >> 3) This creates /many/ more > 80 char lines.  Per:
+> >>
+> >> # for F in */*.[ch]; do expand $F | grep '.\{81\}'; done
+> >>
+> >> the codebase goes from 794 such lines to 1806.  IOWs, some of the "missing"
+> >> whitespace may have been intentional, to stay under 80 cols.  New lines
+> >> vs. compressed lines is a judgement call, I guess.  Bleah.
+> >>
+> >> So... sorry about that, but if the goal is to format better, let's be
+> >> sure to keep observing other basic rules like "< 80 cols"
+> >
+> > Yeah. I'm not sure there is an easy way to automate that...
+>
+> Well, I think that's kind of the point here.  Do your automated replacement,
+> but then manually inspect the result - you can look for 80col problems with
+> the example above.  Then manually fix up as needed.  Then proceed to the next
+> patch.
+>
+> Reviewers will need to look at the changes closely nyway, so you may as well
+> do it before submission.  ;)
+>
+
+It's about all the rebase conflicts that arises after any change in
+previous patches. If it was a thing I write once, then so be it. But
+if I have to rewrite it again after any change in one of the previous
+patches, well, that doesn't scale. :-) But I hope I can solve this
+somehow.
+
+Thanks,
+Jan
+
+
+-- 
+Jan Tulak
