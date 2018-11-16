@@ -1,94 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50744 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:49948 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725809AbeKPHOs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Nov 2018 02:14:48 -0500
-Date: Thu, 15 Nov 2018 16:05:10 -0500
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH V10 03/19] block: use bio_for_each_bvec() to compute
- multi-page bvec count
-Message-ID: <20181115210510.GA24908@redhat.com>
-References: <20181115085306.9910-1-ming.lei@redhat.com>
- <20181115085306.9910-4-ming.lei@redhat.com>
- <20181115202028.GC9348@vader>
+        id S1727997AbeKPX6L (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Nov 2018 18:58:11 -0500
+Date: Fri, 16 Nov 2018 14:45:41 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH V10 09/19] block: introduce bio_bvecs()
+Message-ID: <20181116134541.GH3165@lst.de>
+References: <20181115085306.9910-1-ming.lei@redhat.com> <20181115085306.9910-10-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181115202028.GC9348@vader>
+In-Reply-To: <20181115085306.9910-10-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Omar Sandoval <osandov@osandov.com>
-Cc: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Thu, Nov 15 2018 at  3:20pm -0500,
-Omar Sandoval <osandov@osandov.com> wrote:
+On Thu, Nov 15, 2018 at 04:52:56PM +0800, Ming Lei wrote:
+> There are still cases in which we need to use bio_bvecs() for get the
+> number of multi-page segment, so introduce it.
 
-> On Thu, Nov 15, 2018 at 04:52:50PM +0800, Ming Lei wrote:
-> > First it is more efficient to use bio_for_each_bvec() in both
-> > blk_bio_segment_split() and __blk_recalc_rq_segments() to compute how
-> > many multi-page bvecs there are in the bio.
-> > 
-> > Secondly once bio_for_each_bvec() is used, the bvec may need to be
-> > splitted because its length can be very longer than max segment size,
-> > so we have to split the big bvec into several segments.
-> > 
-> > Thirdly when splitting multi-page bvec into segments, the max segment
-> > limit may be reached, so the bio split need to be considered under
-> > this situation too.
-> > 
-> > Cc: Dave Chinner <dchinner@redhat.com>
-> > Cc: Kent Overstreet <kent.overstreet@gmail.com>
-> > Cc: Mike Snitzer <snitzer@redhat.com>
-> > Cc: dm-devel@redhat.com
-> > Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> > Cc: linux-fsdevel@vger.kernel.org
-> > Cc: Shaohua Li <shli@kernel.org>
-> > Cc: linux-raid@vger.kernel.org
-> > Cc: linux-erofs@lists.ozlabs.org
-> > Cc: David Sterba <dsterba@suse.com>
-> > Cc: linux-btrfs@vger.kernel.org
-> > Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> > Cc: linux-xfs@vger.kernel.org
-> > Cc: Gao Xiang <gaoxiang25@huawei.com>
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: Theodore Ts'o <tytso@mit.edu>
-> > Cc: linux-ext4@vger.kernel.org
-> > Cc: Coly Li <colyli@suse.de>
-> > Cc: linux-bcache@vger.kernel.org
-> > Cc: Boaz Harrosh <ooo@electrozaur.com>
-> > Cc: Bob Peterson <rpeterso@redhat.com>
-> > Cc: cluster-devel@redhat.com
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > ---
-> >  block/blk-merge.c | 90 ++++++++++++++++++++++++++++++++++++++++++++++---------
-> >  1 file changed, 76 insertions(+), 14 deletions(-)
-> > 
-> > diff --git a/block/blk-merge.c b/block/blk-merge.c
-> > index 91b2af332a84..6f7deb94a23f 100644
-> > --- a/block/blk-merge.c
-> > +++ b/block/blk-merge.c
-> > @@ -160,6 +160,62 @@ static inline unsigned get_max_io_size(struct request_queue *q,
-> >  	return sectors;
-> >  }
-> >  
-> > +/*
-> > + * Split the bvec @bv into segments, and update all kinds of
-> > + * variables.
-> > + */
-> > +static bool bvec_split_segs(struct request_queue *q, struct bio_vec *bv,
-> > +		unsigned *nsegs, unsigned *last_seg_size,
-> > +		unsigned *front_seg_size, unsigned *sectors)
-> > +{
-> > +	bool need_split = false;
-> > +	unsigned len = bv->bv_len;
-> > +	unsigned total_len = 0;
-> > +	unsigned new_nsegs = 0, seg_size = 0;
-> 
-> "unsigned int" here and everywhere else.
+The only user in your final tree seems to be the loop driver, and
+even that one only uses the helper for read/write bios.
 
-Curious why?  I've wondered what govens use of "unsigned" vs "unsigned
-int" recently and haven't found _the_ reason to pick one over the other.
+I think something like this would be much simpler in the end:
 
-Thanks,
-Mike
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index d509902a8046..712511815ac6 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -514,16 +514,18 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 	struct request *rq = blk_mq_rq_from_pdu(cmd);
+ 	struct bio *bio = rq->bio;
+ 	struct file *file = lo->lo_backing_file;
++	struct bvec_iter bvec_iter;
++	struct bio_vec tmp;
+ 	unsigned int offset;
+ 	int nr_bvec = 0;
+ 	int ret;
+ 
++	__rq_for_each_bio(bio, rq)
++		bio_for_each_bvec(tmp, bio, bvec_iter)
++			nr_bvec++;
++
+ 	if (rq->bio != rq->biotail) {
+-		struct bvec_iter iter;
+-		struct bio_vec tmp;
+ 
+-		__rq_for_each_bio(bio, rq)
+-			nr_bvec += bio_bvecs(bio);
+ 		bvec = kmalloc_array(nr_bvec, sizeof(struct bio_vec),
+ 				     GFP_NOIO);
+ 		if (!bvec)
+@@ -537,7 +539,7 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		 * API will take care of all details for us.
+ 		 */
+ 		__rq_for_each_bio(bio, rq)
+-			bio_for_each_bvec(tmp, bio, iter) {
++			bio_for_each_bvec(tmp, bio, bvec_iter) {
+ 				*bvec = tmp;
+ 				bvec++;
+ 			}
+@@ -551,7 +553,6 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		 */
+ 		offset = bio->bi_iter.bi_bvec_done;
+ 		bvec = __bvec_iter_bvec(bio->bi_io_vec, bio->bi_iter);
+-		nr_bvec = bio_bvecs(bio);
+ 	}
+ 	atomic_set(&cmd->ref, 2);
+ 
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index dcad0b69f57a..379440d1ced0 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -200,30 +200,6 @@ static inline unsigned bio_segments(struct bio *bio)
+ 	}
+ }
+ 
+-static inline unsigned bio_bvecs(struct bio *bio)
+-{
+-	unsigned bvecs = 0;
+-	struct bio_vec bv;
+-	struct bvec_iter iter;
+-
+-	/*
+-	 * We special case discard/write same/write zeroes, because they
+-	 * interpret bi_size differently:
+-	 */
+-	switch (bio_op(bio)) {
+-	case REQ_OP_DISCARD:
+-	case REQ_OP_SECURE_ERASE:
+-	case REQ_OP_WRITE_ZEROES:
+-		return 0;
+-	case REQ_OP_WRITE_SAME:
+-		return 1;
+-	default:
+-		bio_for_each_bvec(bv, bio, iter)
+-			bvecs++;
+-		return bvecs;
+-	}
+-}
+-
+ /*
+  * get a reference to a bio, so it won't disappear. the intended use is
+  * something like:
