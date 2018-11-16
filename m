@@ -1,68 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:39053 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726269AbeKSAJq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Nov 2018 19:09:46 -0500
-Date: Sun, 18 Nov 2018 21:49:16 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 5/5] xfs/420: only check the extent layout after syncing
-Message-ID: <20181118134916.GD3889@desktop>
-References: <20181110115145.30356-1-hch@lst.de>
- <20181110115145.30356-6-hch@lst.de>
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:39478 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727350AbeKPMKE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 07:10:04 -0500
+Received: by mail-pg1-f195.google.com with SMTP id r9-v6so9857156pgv.6
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 17:59:38 -0800 (PST)
+Date: Thu, 15 Nov 2018 17:59:36 -0800
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH V10 15/19] block: always define BIO_MAX_PAGES as 256
+Message-ID: <20181116015936.GJ23828@vader>
+References: <20181115085306.9910-1-ming.lei@redhat.com>
+ <20181115085306.9910-16-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181110115145.30356-6-hch@lst.de>
+In-Reply-To: <20181115085306.9910-16-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Sat, Nov 10, 2018 at 12:51:45PM +0100, Christoph Hellwig wrote:
-> This tests validates the correct extent layout for some hairy reflink
-> related issues.  But until we called sync or fsync we have no gurantee
-> of any data fork layout, as only writeback moves the extents from the
-> COW for to the data fork.
-> 
-> Without this we'll see an error if we use COW fork speculative
-> preallocations for non-overwrites, which is useful to reduce
-> fragmentation.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Thu, Nov 15, 2018 at 04:53:02PM +0800, Ming Lei wrote:
+> Now multi-page bvec can cover CONFIG_THP_SWAP, so we don't need to
+> increase BIO_MAX_PAGES for it.
+
+You mentioned to it in the cover letter, but this needs more explanation
+in the commit message. Why did CONFIG_THP_SWAP require > 256? Why does
+multipage bvecs remove that requirement?
+
+> Cc: Dave Chinner <dchinner@redhat.com>
+> Cc: Kent Overstreet <kent.overstreet@gmail.com>
+> Cc: Mike Snitzer <snitzer@redhat.com>
+> Cc: dm-devel@redhat.com
+> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+> Cc: linux-fsdevel@vger.kernel.org
+> Cc: Shaohua Li <shli@kernel.org>
+> Cc: linux-raid@vger.kernel.org
+> Cc: linux-erofs@lists.ozlabs.org
+> Cc: David Sterba <dsterba@suse.com>
+> Cc: linux-btrfs@vger.kernel.org
+> Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> Cc: linux-xfs@vger.kernel.org
+> Cc: Gao Xiang <gaoxiang25@huawei.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Theodore Ts'o <tytso@mit.edu>
+> Cc: linux-ext4@vger.kernel.org
+> Cc: Coly Li <colyli@suse.de>
+> Cc: linux-bcache@vger.kernel.org
+> Cc: Boaz Harrosh <ooo@electrozaur.com>
+> Cc: Bob Peterson <rpeterso@redhat.com>
+> Cc: cluster-devel@redhat.com
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
 > ---
->  tests/xfs/420 | 2 ++
->  1 file changed, 2 insertions(+)
+>  include/linux/bio.h | 8 --------
+>  1 file changed, 8 deletions(-)
 > 
-> diff --git a/tests/xfs/420 b/tests/xfs/420
-> index a083a12b..aea95c7b 100755
-> --- a/tests/xfs/420
-> +++ b/tests/xfs/420
-> @@ -93,6 +93,8 @@ $XFS_IO_PROG -c "pwrite -S 0x63 $((blksz * 3)) $blksz" $testdir/file2 >> $seqres
->  $XFS_IO_PROG -c "pwrite -S 0x63 0 $blksz" $testdir/file3 >> $seqres.full
->  $XFS_IO_PROG -c "pwrite -S 0x63 $((blksz * 3)) $blksz" $testdir/file3 >> $seqres.full
+> diff --git a/include/linux/bio.h b/include/linux/bio.h
+> index 5040e9a2eb09..277921ad42e7 100644
+> --- a/include/linux/bio.h
+> +++ b/include/linux/bio.h
+> @@ -34,15 +34,7 @@
+>  #define BIO_BUG_ON
+>  #endif
 >  
-> +sync
-> +
-
-There's another round of the same checks after
-
-  echo "sync filesystem" | tee -a $seqres.full
-
-I think we could just remove the checks before this sync, otherwise we
-end up doing the same checks twice.
-
-Thanks,
-Eryu
-
-P.S.
-
-Patch 2/3/4 in this patchset look good to me, I've applied them, so
-there's no need to resend them when resending patch 1 and 5.
-
->  $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file1 >> $seqres.full 2>&1
->  $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file2 >> $seqres.full 2>&1
->  $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file3 >> $seqres.full 2>&1
+> -#ifdef CONFIG_THP_SWAP
+> -#if HPAGE_PMD_NR > 256
+> -#define BIO_MAX_PAGES		HPAGE_PMD_NR
+> -#else
+>  #define BIO_MAX_PAGES		256
+> -#endif
+> -#else
+> -#define BIO_MAX_PAGES		256
+> -#endif
+>  
+>  #define bio_prio(bio)			(bio)->bi_ioprio
+>  #define bio_set_prio(bio, prio)		((bio)->bi_ioprio = prio)
 > -- 
-> 2.19.1
+> 2.9.5
 > 
