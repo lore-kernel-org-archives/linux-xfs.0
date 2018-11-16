@@ -1,90 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:45661 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389333AbeKPMWL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 07:22:11 -0500
-Received: by mail-pf1-f196.google.com with SMTP id g62so7350730pfd.12
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 18:11:43 -0800 (PST)
-Date: Thu, 15 Nov 2018 18:11:40 -0800
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V10 17/19] block: don't use bio->bi_vcnt to figure out
- segment number
-Message-ID: <20181116021140.GL23828@vader>
-References: <20181115085306.9910-1-ming.lei@redhat.com>
- <20181115085306.9910-18-ming.lei@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181115085306.9910-18-ming.lei@redhat.com>
+Received: from mx7.valuehost.ru ([217.112.42.214]:32154 "EHLO mx7.valuehost.ru"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728175AbeKQCqM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Nov 2018 21:46:12 -0500
+Received: from mx7.valuehost.ru (unknown [127.0.0.255])
+        by mx7.valuehost.ru (Postfix) with ESMTP id 456255382F
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Nov 2018 19:23:46 +0300 (MSK)
+From: <info@mobile-stream.com>
+Date: Fri, 16 Nov 2018 19:10:00 +0000
+Subject: xfsprogs: MAP_SYNC detection/usage problems with musl
+Message-Id: <20181116162346.456255382F@mx7.valuehost.ru>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: linux-xfs@vger.kernel.org
 
-On Thu, Nov 15, 2018 at 04:53:04PM +0800, Ming Lei wrote:
-> It is wrong to use bio->bi_vcnt to figure out how many segments
-> there are in the bio even though CLONED flag isn't set on this bio,
-> because this bio may be splitted or advanced.
-> 
-> So always use bio_segments() in blk_recount_segments(), and it shouldn't
-> cause any performance loss now because the physical segment number is figured
-> out in blk_queue_split() and BIO_SEG_VALID is set meantime since
-> bdced438acd83ad83a6c ("block: setup bi_phys_segments after splitting").
-> 
-> Cc: Dave Chinner <dchinner@redhat.com>
-> Cc: Kent Overstreet <kent.overstreet@gmail.com>
-> Fixes: 7f60dcaaf91 ("block: blk-merge: fix blk_recount_segments()")
+xfsprogs configure script tries to detect the MAP_SYNC mmap() flag support in kernel
+by looking for the symbol in <asm-generic/mman{-common}.h> files. But some architectures
+(e.g. mips) do not use the generic files and define all the mman bits in <asm/mman.h>.
+Thus xfs_io ends up with the incorrectly detected MAP_SYNC support. Not a big deal, just
+no graceful exit on 'xfs_io mmap -S'.
 
->From what I can tell, the problem was originally introduced by
-76d8137a3113 ("blk-merge: recaculate segment if it isn't less than max segments")
+Worse problem is related to the MAP_SYNC handling in the musl library. They first define
+MAP_SYNC unconditionally in <sys/mman.h> then undefine it in mips-specific <bits/mman.h>.
+So io/mmap.c compilation fails since <sys/mman.h> (which undefines MAP_SYNC) is included
+after "linux.h" (which either defines fallback values or pulls <asm-generic/mman{-common.h}>).
 
-Is that right?
+The diff below is not really a suggested patch (though it works for me in alpine/mipsel) but
+merely an additional illustration of the above.
 
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Cc: dm-devel@redhat.com
-> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> Cc: linux-fsdevel@vger.kernel.org
-> Cc: Shaohua Li <shli@kernel.org>
-> Cc: linux-raid@vger.kernel.org
-> Cc: linux-erofs@lists.ozlabs.org
-> Cc: David Sterba <dsterba@suse.com>
-> Cc: linux-btrfs@vger.kernel.org
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org
-> Cc: Gao Xiang <gaoxiang25@huawei.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Theodore Ts'o <tytso@mit.edu>
-> Cc: linux-ext4@vger.kernel.org
-> Cc: Coly Li <colyli@suse.de>
-> Cc: linux-bcache@vger.kernel.org
-> Cc: Boaz Harrosh <ooo@electrozaur.com>
-> Cc: Bob Peterson <rpeterso@redhat.com>
-> Cc: cluster-devel@redhat.com
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  block/blk-merge.c | 8 +-------
->  1 file changed, 1 insertion(+), 7 deletions(-)
-> 
-> diff --git a/block/blk-merge.c b/block/blk-merge.c
-> index cb9f49bcfd36..153a659fde74 100644
-> --- a/block/blk-merge.c
-> +++ b/block/blk-merge.c
-> @@ -429,13 +429,7 @@ void blk_recalc_rq_segments(struct request *rq)
->  
->  void blk_recount_segments(struct request_queue *q, struct bio *bio)
->  {
-> -	unsigned short seg_cnt;
-> -
-> -	/* estimate segment number by bi_vcnt for non-cloned bio */
-> -	if (bio_flagged(bio, BIO_CLONED))
-> -		seg_cnt = bio_segments(bio);
-> -	else
-> -		seg_cnt = bio->bi_vcnt;
-> +	unsigned short seg_cnt = bio_segments(bio);
->  
->  	if (test_bit(QUEUE_FLAG_NO_SG_MERGE, &q->queue_flags) &&
->  			(seg_cnt < queue_max_segments(q)))
-> -- 
-> 2.9.5
-> 
+--- a/include/linux.h
++++ b/include/linux.h
+@@ -327,12 +327,4 @@
+ #define HAVE_GETFSMAP
+ #endif /* HAVE_GETFSMAP */
+ 
+-#ifndef HAVE_MAP_SYNC
+-#define MAP_SYNC 0
+-#define MAP_SHARED_VALIDATE 0
+-#else
+-#include <asm-generic/mman.h>
+-#include <asm-generic/mman-common.h>
+-#endif /* HAVE_MAP_SYNC */
+-
+ #endif	/* __XFS_LINUX_H__ */
+--- a/io/mmap.c
++++ b/io/mmap.c
+@@ -23,6 +23,11 @@
+ #include "init.h"
+ #include "io.h"
+ 
++#ifndef HAVE_MAP_SYNC
++#define MAP_SYNC 0
++#define MAP_SHARED_VALIDATE 0
++#endif
++
+ static cmdinfo_t mmap_cmd;
+ static cmdinfo_t mread_cmd;
+ static cmdinfo_t msync_cmd;
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -335,8 +335,7 @@
+ AC_DEFUN([AC_HAVE_MAP_SYNC],
+   [ AC_MSG_CHECKING([for MAP_SYNC])
+     AC_TRY_COMPILE([
+-#include <asm-generic/mman.h>
+-#include <asm-generic/mman-common.h>
++#include <asm/mman.h>
+     ], [
+         int flags = MAP_SYNC | MAP_SHARED_VALIDATE;
+     ], have_map_sync=yes
