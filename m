@@ -1,103 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:41091 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725998AbeKPJdz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 04:33:55 -0500
-Received: by mail-pg1-f194.google.com with SMTP id 70so9697301pgh.8
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 15:24:00 -0800 (PST)
-Date: Thu, 15 Nov 2018 15:23:56 -0800
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V10 05/19] block: introduce bvec_last_segment()
-Message-ID: <20181115232356.GA23238@vader>
-References: <20181115085306.9910-1-ming.lei@redhat.com>
- <20181115085306.9910-6-ming.lei@redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:42950 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725729AbeKQFVI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Nov 2018 00:21:08 -0500
+Date: Fri, 16 Nov 2018 11:07:24 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [RFC PATCH] xfs: flush posteof zeroing before reflink truncation
+Message-ID: <20181116190724.GW4235@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181115085306.9910-6-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Nov 15, 2018 at 04:52:52PM +0800, Ming Lei wrote:
-> BTRFS and guard_bio_eod() need to get the last singlepage segment
-> from one multipage bvec, so introduce this helper to make them happy.
-> 
-> Cc: Dave Chinner <dchinner@redhat.com>
-> Cc: Kent Overstreet <kent.overstreet@gmail.com>
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Cc: dm-devel@redhat.com
-> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> Cc: linux-fsdevel@vger.kernel.org
-> Cc: Shaohua Li <shli@kernel.org>
-> Cc: linux-raid@vger.kernel.org
-> Cc: linux-erofs@lists.ozlabs.org
-> Cc: David Sterba <dsterba@suse.com>
-> Cc: linux-btrfs@vger.kernel.org
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org
-> Cc: Gao Xiang <gaoxiang25@huawei.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Theodore Ts'o <tytso@mit.edu>
-> Cc: linux-ext4@vger.kernel.org
-> Cc: Coly Li <colyli@suse.de>
-> Cc: linux-bcache@vger.kernel.org
-> Cc: Boaz Harrosh <ooo@electrozaur.com>
-> Cc: Bob Peterson <rpeterso@redhat.com>
-> Cc: cluster-devel@redhat.com
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
+If we're remapping into a range that starts beyond EOF, we have to zero
+the memory between EOF and the start of the target range, as established
+in 410fdc72b05af.  However, in 4918ef4ea008, we extended the pagecache
+truncation range downwards to a page boundary to guarantee that
+pagecache pages are removed and that there's no possibility that we end
+up zeroing subpage blocks within a page.  Unfortunately, we never commit
+the posteof zeroing to disk, so on a filesystem where page size > block
+size the truncation partially undoes the zeroing and we end up with
+stale disk contents.
 
-Minor comments below.
+Brian and I reproduced this problem by running generic/091 on a 1k block
+xfs filesystem, assuming fsx in fstests supports clone/dedupe/copyrange.
 
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  include/linux/bvec.h | 25 +++++++++++++++++++++++++
->  1 file changed, 25 insertions(+)
-> 
-> diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-> index 3d61352cd8cf..01616a0b6220 100644
-> --- a/include/linux/bvec.h
-> +++ b/include/linux/bvec.h
-> @@ -216,4 +216,29 @@ static inline bool mp_bvec_iter_advance(const struct bio_vec *bv,
->  	.bi_bvec_done	= 0,						\
->  }
->  
-> +/*
-> + * Get the last singlepage segment from the multipage bvec and store it
-> + * in @seg
-> + */
-> +static inline void bvec_last_segment(const struct bio_vec *bvec,
-> +		struct bio_vec *seg)
+Fixes: 410fdc72b05a ("xfs: zero posteof blocks when cloning above eof")
+Fixes: 4918ef4ea008 ("xfs: fix pagecache truncation prior to reflink")
+Simultaneously-diagnosed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+Note: I haven't tested this thoroughly but wanted to push this out for
+everyone to look at ASAP.
+---
+ fs/xfs/xfs_reflink.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Indentation is all messed up here.
-
-> +{
-> +	unsigned total = bvec->bv_offset + bvec->bv_len;
-> +	unsigned last_page = total / PAGE_SIZE;
-> +
-> +	if (last_page * PAGE_SIZE == total)
-> +		last_page--;
-
-I think this could just be
-
-	unsigned int last_page = (total - 1) / PAGE_SIZE;
-
-> +	seg->bv_page = nth_page(bvec->bv_page, last_page);
-> +
-> +	/* the whole segment is inside the last page */
-> +	if (bvec->bv_offset >= last_page * PAGE_SIZE) {
-> +		seg->bv_offset = bvec->bv_offset % PAGE_SIZE;
-> +		seg->bv_len = bvec->bv_len;
-> +	} else {
-> +		seg->bv_offset = 0;
-> +		seg->bv_len = total - last_page * PAGE_SIZE;
-> +	}
-> +}
-> +
->  #endif /* __LINUX_BVEC_ITER_H */
-> -- 
-> 2.9.5
-> 
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index c56bdbfcf7ae..8ea09a7e550c 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1255,13 +1255,19 @@ xfs_reflink_zero_posteof(
+ 	loff_t			pos)
+ {
+ 	loff_t			isize = i_size_read(VFS_I(ip));
++	int			error;
+ 
+ 	if (pos <= isize)
+ 		return 0;
+ 
+ 	trace_xfs_zero_eof(ip, isize, pos - isize);
+-	return iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
++	error = iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
+ 			&xfs_iomap_ops);
++	if (error)
++		return error;
++
++	return filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
++			isize, pos - 1);
+ }
+ 
+ /*
