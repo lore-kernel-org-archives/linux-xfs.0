@@ -1,157 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:44679 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725998AbeKPInp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 03:43:45 -0500
-Received: by mail-pl1-f193.google.com with SMTP id s5-v6so10131684plq.11
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 14:34:02 -0800 (PST)
-Date: Thu, 15 Nov 2018 14:33:58 -0800
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:42779 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390040AbeKQCxh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 21:53:37 -0500
+Received: by mail-pf1-f195.google.com with SMTP id 64so7181757pfr.9
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Nov 2018 08:40:31 -0800 (PST)
+Date: Fri, 16 Nov 2018 08:40:28 -0800
 From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V10 04/19] block: use bio_for_each_bvec() to map sg
-Message-ID: <20181115223358.GE9348@vader>
+Subject: Re: [PATCH V10 18/19] block: kill QUEUE_FLAG_NO_SG_MERGE
+Message-ID: <20181116164028.GW23828@vader>
 References: <20181115085306.9910-1-ming.lei@redhat.com>
- <20181115085306.9910-5-ming.lei@redhat.com>
+ <20181115085306.9910-19-ming.lei@redhat.com>
+ <20181116021811.GM23828@vader>
+ <20181116135922.GO3165@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181115085306.9910-5-ming.lei@redhat.com>
+In-Reply-To: <20181116135922.GO3165@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Thu, Nov 15, 2018 at 04:52:51PM +0800, Ming Lei wrote:
-> It is more efficient to use bio_for_each_bvec() to map sg, meantime
-> we have to consider splitting multipage bvec as done in blk_bio_segment_split().
+On Fri, Nov 16, 2018 at 02:59:22PM +0100, Christoph Hellwig wrote:
+> On Thu, Nov 15, 2018 at 06:18:11PM -0800, Omar Sandoval wrote:
+> > This commit message wasn't very clear. Is it the case that
+> > QUEUE_FLAG_NO_SG_MERGE is no longer set by any drivers?
 > 
-> Cc: Dave Chinner <dchinner@redhat.com>
-> Cc: Kent Overstreet <kent.overstreet@gmail.com>
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Cc: dm-devel@redhat.com
-> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> Cc: linux-fsdevel@vger.kernel.org
-> Cc: Shaohua Li <shli@kernel.org>
-> Cc: linux-raid@vger.kernel.org
-> Cc: linux-erofs@lists.ozlabs.org
-> Cc: David Sterba <dsterba@suse.com>
-> Cc: linux-btrfs@vger.kernel.org
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org
-> Cc: Gao Xiang <gaoxiang25@huawei.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Theodore Ts'o <tytso@mit.edu>
-> Cc: linux-ext4@vger.kernel.org
-> Cc: Coly Li <colyli@suse.de>
-> Cc: linux-bcache@vger.kernel.org
-> Cc: Boaz Harrosh <ooo@electrozaur.com>
-> Cc: Bob Peterson <rpeterso@redhat.com>
-> Cc: cluster-devel@redhat.com
+> I think he wants to say that not doing S/G merging is rather pointless
+> with the current setup of the I/O path, as it isn't going to save
+> you a significant amount of cycles.
+
+Okay, that makes sense. Ming, you can add
 
 Reviewed-by: Omar Sandoval <osandov@fb.com>
-
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  block/blk-merge.c | 72 +++++++++++++++++++++++++++++++++++++++----------------
->  1 file changed, 52 insertions(+), 20 deletions(-)
-> 
-> diff --git a/block/blk-merge.c b/block/blk-merge.c
-> index 6f7deb94a23f..cb9f49bcfd36 100644
-> --- a/block/blk-merge.c
-> +++ b/block/blk-merge.c
-> @@ -473,6 +473,56 @@ static int blk_phys_contig_segment(struct request_queue *q, struct bio *bio,
->  	return biovec_phys_mergeable(q, &end_bv, &nxt_bv);
->  }
->  
-> +static struct scatterlist *blk_next_sg(struct scatterlist **sg,
-> +		struct scatterlist *sglist)
-> +{
-> +	if (!*sg)
-> +		return sglist;
-> +	else {
-> +		/*
-> +		 * If the driver previously mapped a shorter
-> +		 * list, we could see a termination bit
-> +		 * prematurely unless it fully inits the sg
-> +		 * table on each mapping. We KNOW that there
-> +		 * must be more entries here or the driver
-> +		 * would be buggy, so force clear the
-> +		 * termination bit to avoid doing a full
-> +		 * sg_init_table() in drivers for each command.
-> +		 */
-> +		sg_unmark_end(*sg);
-> +		return sg_next(*sg);
-> +	}
-> +}
-> +
-> +static unsigned blk_bvec_map_sg(struct request_queue *q,
-> +		struct bio_vec *bvec, struct scatterlist *sglist,
-> +		struct scatterlist **sg)
-> +{
-> +	unsigned nbytes = bvec->bv_len;
-> +	unsigned nsegs = 0, total = 0;
-> +
-> +	while (nbytes > 0) {
-> +		unsigned seg_size;
-> +		struct page *pg;
-> +		unsigned offset, idx;
-> +
-> +		*sg = blk_next_sg(sg, sglist);
-> +
-> +		seg_size = min(nbytes, queue_max_segment_size(q));
-> +		offset = (total + bvec->bv_offset) % PAGE_SIZE;
-> +		idx = (total + bvec->bv_offset) / PAGE_SIZE;
-> +		pg = nth_page(bvec->bv_page, idx);
-> +
-> +		sg_set_page(*sg, pg, seg_size, offset);
-> +
-> +		total += seg_size;
-> +		nbytes -= seg_size;
-> +		nsegs++;
-> +	}
-> +
-> +	return nsegs;
-> +}
-> +
->  static inline void
->  __blk_segment_map_sg(struct request_queue *q, struct bio_vec *bvec,
->  		     struct scatterlist *sglist, struct bio_vec *bvprv,
-> @@ -490,25 +540,7 @@ __blk_segment_map_sg(struct request_queue *q, struct bio_vec *bvec,
->  		(*sg)->length += nbytes;
->  	} else {
->  new_segment:
-> -		if (!*sg)
-> -			*sg = sglist;
-> -		else {
-> -			/*
-> -			 * If the driver previously mapped a shorter
-> -			 * list, we could see a termination bit
-> -			 * prematurely unless it fully inits the sg
-> -			 * table on each mapping. We KNOW that there
-> -			 * must be more entries here or the driver
-> -			 * would be buggy, so force clear the
-> -			 * termination bit to avoid doing a full
-> -			 * sg_init_table() in drivers for each command.
-> -			 */
-> -			sg_unmark_end(*sg);
-> -			*sg = sg_next(*sg);
-> -		}
-> -
-> -		sg_set_page(*sg, bvec->bv_page, nbytes, bvec->bv_offset);
-> -		(*nsegs)++;
-> +		(*nsegs) += blk_bvec_map_sg(q, bvec, sglist, sg);
->  	}
->  	*bvprv = *bvec;
->  }
-> @@ -530,7 +562,7 @@ static int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
->  	int cluster = blk_queue_cluster(q), nsegs = 0;
->  
->  	for_each_bio(bio)
-> -		bio_for_each_segment(bvec, bio, iter)
-> +		bio_for_each_bvec(bvec, bio, iter)
->  			__blk_segment_map_sg(q, &bvec, sglist, &bvprv, sg,
->  					     &nsegs, &cluster);
->  
-> -- 
-> 2.9.5
-> 
