@@ -1,69 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:42950 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725729AbeKQFVI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Nov 2018 00:21:08 -0500
-Date: Fri, 16 Nov 2018 11:07:24 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [RFC PATCH] xfs: flush posteof zeroing before reflink truncation
-Message-ID: <20181116190724.GW4235@magnolia>
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:35598 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726407AbeKPKaa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 05:30:30 -0500
+Received: by mail-pl1-f194.google.com with SMTP id v1-v6so3117593plo.2
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 16:20:24 -0800 (PST)
+Date: Thu, 15 Nov 2018 16:20:20 -0800
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH V10 06/19] fs/buffer.c: use bvec iterator to truncate the
+ bio
+Message-ID: <20181116002020.GA23828@vader>
+References: <20181115085306.9910-1-ming.lei@redhat.com>
+ <20181115085306.9910-7-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20181115085306.9910-7-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Nov 15, 2018 at 04:52:53PM +0800, Ming Lei wrote:
+> Once multi-page bvec is enabled, the last bvec may include more than one
+> page, this patch use bvec_last_segment() to truncate the bio.
+> 
+> Cc: Dave Chinner <dchinner@redhat.com>
+> Cc: Kent Overstreet <kent.overstreet@gmail.com>
+> Cc: Mike Snitzer <snitzer@redhat.com>
+> Cc: dm-devel@redhat.com
+> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+> Cc: linux-fsdevel@vger.kernel.org
+> Cc: Shaohua Li <shli@kernel.org>
+> Cc: linux-raid@vger.kernel.org
+> Cc: linux-erofs@lists.ozlabs.org
+> Cc: David Sterba <dsterba@suse.com>
+> Cc: linux-btrfs@vger.kernel.org
+> Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> Cc: linux-xfs@vger.kernel.org
+> Cc: Gao Xiang <gaoxiang25@huawei.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Theodore Ts'o <tytso@mit.edu>
+> Cc: linux-ext4@vger.kernel.org
+> Cc: Coly Li <colyli@suse.de>
+> Cc: linux-bcache@vger.kernel.org
+> Cc: Boaz Harrosh <ooo@electrozaur.com>
+> Cc: Bob Peterson <rpeterso@redhat.com>
+> Cc: cluster-devel@redhat.com
 
-If we're remapping into a range that starts beyond EOF, we have to zero
-the memory between EOF and the start of the target range, as established
-in 410fdc72b05af.  However, in 4918ef4ea008, we extended the pagecache
-truncation range downwards to a page boundary to guarantee that
-pagecache pages are removed and that there's no possibility that we end
-up zeroing subpage blocks within a page.  Unfortunately, we never commit
-the posteof zeroing to disk, so on a filesystem where page size > block
-size the truncation partially undoes the zeroing and we end up with
-stale disk contents.
+Reviewed-by: Omar Sandoval <osandov@fb.com>
 
-Brian and I reproduced this problem by running generic/091 on a 1k block
-xfs filesystem, assuming fsx in fstests supports clone/dedupe/copyrange.
-
-Fixes: 410fdc72b05a ("xfs: zero posteof blocks when cloning above eof")
-Fixes: 4918ef4ea008 ("xfs: fix pagecache truncation prior to reflink")
-Simultaneously-diagnosed-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-Note: I haven't tested this thoroughly but wanted to push this out for
-everyone to look at ASAP.
----
- fs/xfs/xfs_reflink.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index c56bdbfcf7ae..8ea09a7e550c 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1255,13 +1255,19 @@ xfs_reflink_zero_posteof(
- 	loff_t			pos)
- {
- 	loff_t			isize = i_size_read(VFS_I(ip));
-+	int			error;
- 
- 	if (pos <= isize)
- 		return 0;
- 
- 	trace_xfs_zero_eof(ip, isize, pos - isize);
--	return iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
-+	error = iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
- 			&xfs_iomap_ops);
-+	if (error)
-+		return error;
-+
-+	return filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
-+			isize, pos - 1);
- }
- 
- /*
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  fs/buffer.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index 1286c2b95498..fa37ad52e962 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -3032,7 +3032,10 @@ void guard_bio_eod(int op, struct bio *bio)
+>  
+>  	/* ..and clear the end of the buffer for reads */
+>  	if (op == REQ_OP_READ) {
+> -		zero_user(bvec->bv_page, bvec->bv_offset + bvec->bv_len,
+> +		struct bio_vec bv;
+> +
+> +		bvec_last_segment(bvec, &bv);
+> +		zero_user(bv.bv_page, bv.bv_offset + bv.bv_len,
+>  				truncated_bytes);
+>  	}
+>  }
+> -- 
+> 2.9.5
+> 
