@@ -1,134 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49787 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:47474 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727727AbeKPXmz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Nov 2018 18:42:55 -0500
-Date: Fri, 16 Nov 2018 14:30:28 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V10 02/19] block: introduce bio_for_each_bvec()
-Message-ID: <20181116133028.GB3165@lst.de>
-References: <20181115085306.9910-1-ming.lei@redhat.com> <20181115085306.9910-3-ming.lei@redhat.com>
+        id S1727854AbeKPXou (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Nov 2018 18:44:50 -0500
+Date: Fri, 16 Nov 2018 08:32:23 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: fix shared extent data corruption due to missing
+ cow reservation
+Message-ID: <20181116133222.GB31603@bfoster>
+References: <20181113170819.15220-1-bfoster@redhat.com>
+ <20181115055020.GS4235@magnolia>
+ <20181116043507.GB19305@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181115085306.9910-3-ming.lei@redhat.com>
+In-Reply-To: <20181116043507.GB19305@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-> +static inline void __bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
-> +				      unsigned bytes, bool mp)
+On Fri, Nov 16, 2018 at 03:35:08PM +1100, Dave Chinner wrote:
+> On Wed, Nov 14, 2018 at 09:50:20PM -0800, Darrick J. Wong wrote:
+> > On Tue, Nov 13, 2018 at 12:08:19PM -0500, Brian Foster wrote:
+> > > Page writeback indirectly handles shared extents via the existence
+> > > of overlapping COW fork blocks. If COW fork blocks exist, writeback
+> > > always performs the associated copy-on-write regardless if the
+> > > underlying blocks are actually shared. If the blocks are shared,
+> > > then overlapping COW fork blocks must always exist.
+> > > 
+> > > fstests shared/010 reproduces a case where a buffered write occurs
+> > > over a shared block without performing the requisite COW fork
+> > > reservation.  This ultimately causes writeback to the shared extent
+> > > and data corruption that is detected across md5 checks of the
+> > > filesystem across a mount cycle.
+> > > 
+> > > The problem occurs when a buffered write lands over a shared extent
+> > > that crosses an extent size hint boundary and that also happens to
+> > > have a partial COW reservation that doesn't cover the start and end
+> > > blocks of the data fork extent.
+> > > 
+> > > For example, a buffered write occurs across the file offset (in FSB
+> > > units) range of [29, 57]. A shared extent exists at blocks [29, 35]
+> > > and COW reservation already exists at blocks [32, 34]. After
+> > > accommodating a COW extent size hint of 32 blocks and the existing
+> > > reservation at offset 32, xfs_reflink_reserve_cow() allocates 32
+> > > blocks of reservation at offset 0 and returns with COW reservation
+> > > across the range of [0, 34]. The associated data fork extent is
+> > > still [29, 35], however, which isn't fully covered by the COW
+> > > reservation.
+> > > 
+> > > This leads to a buffered write at file offset 35 over a shared
+> > > extent without associated COW reservation. Writeback eventually
+> > > kicks in, performs an overwrite of the underlying shared block and
+> > > causes the associated data corruption.
+> > > 
+> > > Update xfs_reflink_reserve_cow() to accommodate the fact that a
+> > > delalloc allocation request may not fully cover the extent in the
+> > > data fork. Trim the data fork extent appropriately, just as is done
+> > > for shared extent boundaries and/or existing COW reservations that
+> > > happen to overlap the start of the data fork extent. This prevents
+> > > shared/010 failures due to data corruption on reflink enabled
+> > > filesystems.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > > 
+> > > This is not fully tested yet beyond verification that it solves the
+> > > problem reproduced by shared/010. I'll be running more tests today, but
+> > > I'm sending sooner for review and testing due to the nature of the
+> > > problem and the fact that it's a fairly isolated change. I'll follow up
+> > > if I discover any resulting regressions..
+> > 
+> > Did you find any regressions?
+> > 
+> > I ran this through my overnight tests and saw no adverse effects, though
+> > Dave was complaining yesterday about continuing generic/091 corruptions
+> > (which I didn't see with this patch applied...)
+> 
+> I can say now that this patch hasn't caused any new corruptions. It
+> hasn't fixed any of the (many) corruptions that I'm hitting, either,
+> so from that perspective it's no better or worse than what we have
+> now :P
+> 
 
-I think these magic 'bool np' arguments and wrappers over wrapper
-don't help anyone to actually understand the code.  I'd vote for
-removing as many wrappers as we really don't need, and passing the
-actual segment limit instead of the magic bool flag.  Something like
-this untested patch:
+So were you reproducing the shared/010 corruption or no? I suppose it
+would be nice if this fixed some other problems, but it was only
+intended to fix the problem Zorro was reproducing with shared/010.
 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 277921ad42e7..dcad0b69f57a 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -138,30 +138,21 @@ static inline bool bio_full(struct bio *bio)
- 		bvec_for_each_segment(bvl, &((bio)->bi_io_vec[iter_all.idx]), i, iter_all)
- 
- static inline void __bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
--				      unsigned bytes, bool mp)
-+				      unsigned bytes, unsigned max_segment)
- {
- 	iter->bi_sector += bytes >> 9;
- 
- 	if (bio_no_advance_iter(bio))
- 		iter->bi_size -= bytes;
- 	else
--		if (!mp)
--			bvec_iter_advance(bio->bi_io_vec, iter, bytes);
--		else
--			mp_bvec_iter_advance(bio->bi_io_vec, iter, bytes);
-+		__bvec_iter_advance(bio->bi_io_vec, iter, bytes, max_segment);
- 		/* TODO: It is reasonable to complete bio with error here. */
- }
- 
- static inline void bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
- 				    unsigned bytes)
- {
--	__bio_advance_iter(bio, iter, bytes, false);
--}
--
--static inline void bio_advance_mp_iter(struct bio *bio, struct bvec_iter *iter,
--				       unsigned bytes)
--{
--	__bio_advance_iter(bio, iter, bytes, true);
-+	__bio_advance_iter(bio, iter, bytes, PAGE_SIZE);
- }
- 
- #define __bio_for_each_segment(bvl, bio, iter, start)			\
-@@ -177,7 +168,7 @@ static inline void bio_advance_mp_iter(struct bio *bio, struct bvec_iter *iter,
- 	for (iter = (start);						\
- 	     (iter).bi_size &&						\
- 		((bvl = bio_iter_mp_iovec((bio), (iter))), 1);	\
--	     bio_advance_mp_iter((bio), &(iter), (bvl).bv_len))
-+	     __bio_advance_iter((bio), &(iter), (bvl).bv_len, 0))
- 
- /* returns one real segment(multipage bvec) each time */
- #define bio_for_each_bvec(bvl, bio, iter)			\
-diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-index 02f26d2b59ad..5e2ed46c1c88 100644
---- a/include/linux/bvec.h
-+++ b/include/linux/bvec.h
-@@ -138,8 +138,7 @@ struct bvec_iter_all {
- })
- 
- static inline bool __bvec_iter_advance(const struct bio_vec *bv,
--				       struct bvec_iter *iter,
--				       unsigned bytes, bool mp)
-+		struct bvec_iter *iter, unsigned bytes, unsigned max_segment)
- {
- 	if (WARN_ONCE(bytes > iter->bi_size,
- 		     "Attempted to advance past end of bvec iter\n")) {
-@@ -148,18 +147,18 @@ static inline bool __bvec_iter_advance(const struct bio_vec *bv,
- 	}
- 
- 	while (bytes) {
--		unsigned len;
-+		unsigned segment_len = mp_bvec_iter_len(bv, *iter);
- 
--		if (mp)
--			len = mp_bvec_iter_len(bv, *iter);
--		else
--			len = bvec_iter_len(bv, *iter);
-+		if (max_segment) {
-+			max_segment -= bvec_iter_offset(bv, *iter);
-+			segment_len = min(segment_len, max_segment);
-+		}
- 
--		len = min(bytes, len);
-+		segment_len = min(bytes, segment_len);
- 
--		bytes -= len;
--		iter->bi_size -= len;
--		iter->bi_bvec_done += len;
-+		bytes -= segment_len;
-+		iter->bi_size -= segment_len;
-+		iter->bi_bvec_done += segment_len;
- 
- 		if (iter->bi_bvec_done == __bvec_iter_bvec(bv, *iter)->bv_len) {
- 			iter->bi_bvec_done = 0;
-@@ -197,14 +196,7 @@ static inline bool bvec_iter_advance(const struct bio_vec *bv,
- 				     struct bvec_iter *iter,
- 				     unsigned bytes)
- {
--	return __bvec_iter_advance(bv, iter, bytes, false);
--}
--
--static inline bool mp_bvec_iter_advance(const struct bio_vec *bv,
--					struct bvec_iter *iter,
--					unsigned bytes)
--{
--	return __bvec_iter_advance(bv, iter, bytes, true);
-+	return __bvec_iter_advance(bv, iter, bytes, PAGE_SIZE);
- }
- 
- #define for_each_bvec(bvl, bio_vec, iter, start)			\
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
