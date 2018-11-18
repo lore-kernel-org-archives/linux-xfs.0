@@ -1,113 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:39995 "EHLO
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:39053 "EHLO
         mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726518AbeKPMGy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 07:06:54 -0500
-Received: by mail-pg1-f193.google.com with SMTP id z10so9855784pgp.7
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 17:56:29 -0800 (PST)
-Date: Thu, 15 Nov 2018 17:56:27 -0800
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V10 14/19] block: enable multipage bvecs
-Message-ID: <20181116015627.GI23828@vader>
-References: <20181115085306.9910-1-ming.lei@redhat.com>
- <20181115085306.9910-15-ming.lei@redhat.com>
+        with ESMTP id S1726269AbeKSAJq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Nov 2018 19:09:46 -0500
+Date: Sun, 18 Nov 2018 21:49:16 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 5/5] xfs/420: only check the extent layout after syncing
+Message-ID: <20181118134916.GD3889@desktop>
+References: <20181110115145.30356-1-hch@lst.de>
+ <20181110115145.30356-6-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181115085306.9910-15-ming.lei@redhat.com>
+In-Reply-To: <20181110115145.30356-6-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, Nov 15, 2018 at 04:53:01PM +0800, Ming Lei wrote:
-> This patch pulls the trigger for multi-page bvecs.
+On Sat, Nov 10, 2018 at 12:51:45PM +0100, Christoph Hellwig wrote:
+> This tests validates the correct extent layout for some hairy reflink
+> related issues.  But until we called sync or fsync we have no gurantee
+> of any data fork layout, as only writeback moves the extents from the
+> COW for to the data fork.
 > 
-> Now any request queue which supports queue cluster will see multi-page
-> bvecs.
+> Without this we'll see an error if we use COW fork speculative
+> preallocations for non-overwrites, which is useful to reduce
+> fragmentation.
 > 
-> Cc: Dave Chinner <dchinner@redhat.com>
-> Cc: Kent Overstreet <kent.overstreet@gmail.com>
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Cc: dm-devel@redhat.com
-> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> Cc: linux-fsdevel@vger.kernel.org
-> Cc: Shaohua Li <shli@kernel.org>
-> Cc: linux-raid@vger.kernel.org
-> Cc: linux-erofs@lists.ozlabs.org
-> Cc: David Sterba <dsterba@suse.com>
-> Cc: linux-btrfs@vger.kernel.org
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org
-> Cc: Gao Xiang <gaoxiang25@huawei.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Theodore Ts'o <tytso@mit.edu>
-> Cc: linux-ext4@vger.kernel.org
-> Cc: Coly Li <colyli@suse.de>
-> Cc: linux-bcache@vger.kernel.org
-> Cc: Boaz Harrosh <ooo@electrozaur.com>
-> Cc: Bob Peterson <rpeterso@redhat.com>
-> Cc: cluster-devel@redhat.com
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  block/bio.c | 24 ++++++++++++++++++------
->  1 file changed, 18 insertions(+), 6 deletions(-)
+>  tests/xfs/420 | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/block/bio.c b/block/bio.c
-> index 6486722d4d4b..ed6df6f8e63d 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-
-This comment above __bio_try_merge_page() doesn't make sense after this
-change:
-
- This is a
- a useful optimisation for file systems with a block size smaller than the
- page size.
-
-Can you please get rid of it in this patch?
-
-> @@ -767,12 +767,24 @@ bool __bio_try_merge_page(struct bio *bio, struct page *page,
+> diff --git a/tests/xfs/420 b/tests/xfs/420
+> index a083a12b..aea95c7b 100755
+> --- a/tests/xfs/420
+> +++ b/tests/xfs/420
+> @@ -93,6 +93,8 @@ $XFS_IO_PROG -c "pwrite -S 0x63 $((blksz * 3)) $blksz" $testdir/file2 >> $seqres
+>  $XFS_IO_PROG -c "pwrite -S 0x63 0 $blksz" $testdir/file3 >> $seqres.full
+>  $XFS_IO_PROG -c "pwrite -S 0x63 $((blksz * 3)) $blksz" $testdir/file3 >> $seqres.full
 >  
->  	if (bio->bi_vcnt > 0) {
->  		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
-> -
-> -		if (page == bv->bv_page && off == bv->bv_offset + bv->bv_len) {
-> -			bv->bv_len += len;
-> -			bio->bi_iter.bi_size += len;
-> -			return true;
-> -		}
-> +		struct request_queue *q = NULL;
+> +sync
 > +
-> +		if (page == bv->bv_page && off == (bv->bv_offset + bv->bv_len)
-> +				&& (off + len) <= PAGE_SIZE)
-> +			goto merge;
 
-The parentheses around (bv->bv_offset + bv->bv_len) and (off + len) are
-unnecessary noise.
+There's another round of the same checks after
 
-What's the point of the new (off + len) <= PAGE_SIZE check?
+  echo "sync filesystem" | tee -a $seqres.full
 
-> +
-> +		if (bio->bi_disk)
-> +			q = bio->bi_disk->queue;
-> +
-> +		/* disable multi-page bvec too if cluster isn't enabled */
-> +		if (!q || !blk_queue_cluster(q) ||
-> +		    ((page_to_phys(bv->bv_page) + bv->bv_offset + bv->bv_len) !=
-> +		     (page_to_phys(page) + off)))
+I think we could just remove the checks before this sync, otherwise we
+end up doing the same checks twice.
 
-More unnecessary parentheses here.
+Thanks,
+Eryu
 
-> +			return false;
-> + merge:
-> +		bv->bv_len += len;
-> +		bio->bi_iter.bi_size += len;
-> +		return true;
->  	}
->  	return false;
->  }
+P.S.
+
+Patch 2/3/4 in this patchset look good to me, I've applied them, so
+there's no need to resend them when resending patch 1 and 5.
+
+>  $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file1 >> $seqres.full 2>&1
+>  $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file2 >> $seqres.full 2>&1
+>  $XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file3 >> $seqres.full 2>&1
 > -- 
-> 2.9.5
+> 2.19.1
 > 
