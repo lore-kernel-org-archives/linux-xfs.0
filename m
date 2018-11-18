@@ -1,179 +1,513 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:40868 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727110AbeKPL5Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 06:57:24 -0500
-Received: by mail-pf1-f194.google.com with SMTP id x2-v6so10580905pfm.7
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Nov 2018 17:47:01 -0800 (PST)
-Date: Thu, 15 Nov 2018 17:46:58 -0800
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V10 13/19] iomap & xfs: only account for new added page
-Message-ID: <20181116014658.GH23828@vader>
-References: <20181115085306.9910-1-ming.lei@redhat.com>
- <20181115085306.9910-14-ming.lei@redhat.com>
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:39859 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726935AbeKSAF0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Nov 2018 19:05:26 -0500
+Date: Sun, 18 Nov 2018 21:44:56 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 1/5] generic: move prealloc-enabled fsx to separate tests
+Message-ID: <20181118134456.GC3889@desktop>
+References: <20181110115145.30356-1-hch@lst.de>
+ <20181110115145.30356-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181115085306.9910-14-ming.lei@redhat.com>
+In-Reply-To: <20181110115145.30356-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, Nov 15, 2018 at 04:53:00PM +0800, Ming Lei wrote:
-> After multi-page is enabled, one new page may be merged to a segment
-> even though it is a new added page.
+On Sat, Nov 10, 2018 at 12:51:41PM +0100, Christoph Hellwig wrote:
+> Currently generic/075 and generic/112 have two extra fsx passes each that
+> exercise fsx with preallocation, which are only enabled for XFS.
 > 
-> This patch deals with this issue by post-check in case of merge, and
-> only a freshly new added page need to be dealt with for iomap & xfs.
+> These tests can also be run with other file systems, given that the XFS
+> prealloc ioctls are implemented in generic code since the addition of
+> the fallocate system call.  This also means a version of XFS that does
+> not support preallocation (e.g. because it always writes out of place)
+> can skip the prealloc tests while still completing the normal fsx tests
+> just fine.
 > 
-> Cc: Dave Chinner <dchinner@redhat.com>
-> Cc: Kent Overstreet <kent.overstreet@gmail.com>
-> Cc: Mike Snitzer <snitzer@redhat.com>
-> Cc: dm-devel@redhat.com
-> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> Cc: linux-fsdevel@vger.kernel.org
-> Cc: Shaohua Li <shli@kernel.org>
-> Cc: linux-raid@vger.kernel.org
-> Cc: linux-erofs@lists.ozlabs.org
-> Cc: David Sterba <dsterba@suse.com>
-> Cc: linux-btrfs@vger.kernel.org
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org
-> Cc: Gao Xiang <gaoxiang25@huawei.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Theodore Ts'o <tytso@mit.edu>
-> Cc: linux-ext4@vger.kernel.org
-> Cc: Coly Li <colyli@suse.de>
-> Cc: linux-bcache@vger.kernel.org
-> Cc: Boaz Harrosh <ooo@electrozaur.com>
-> Cc: Bob Peterson <rpeterso@redhat.com>
-> Cc: cluster-devel@redhat.com
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/iomap.c          | 22 ++++++++++++++--------
->  fs/xfs/xfs_aops.c   | 10 ++++++++--
->  include/linux/bio.h | 11 +++++++++++
->  3 files changed, 33 insertions(+), 10 deletions(-)
+>  tests/generic/075     |   7 +--
+>  tests/generic/075.out |  10 +--
+>  tests/generic/112     |  13 +---
+>  tests/generic/112.out |  10 +--
+>  tests/generic/601     | 136 +++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/601.out |  10 +++
+>  tests/generic/602     | 137 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/602.out |  10 +++
+>  tests/generic/group   |   2 +
+>  9 files changed, 299 insertions(+), 36 deletions(-)
+>  create mode 100755 tests/generic/601
+>  create mode 100644 tests/generic/601.out
+>  create mode 100755 tests/generic/602
+>  create mode 100644 tests/generic/602.out
 > 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index df0212560b36..a1b97a5c726a 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -288,6 +288,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  	loff_t orig_pos = pos;
->  	unsigned poff, plen;
->  	sector_t sector;
-> +	bool need_account = false;
+> diff --git a/tests/generic/075 b/tests/generic/075
+> index 2b957891..424ec485 100755
+> --- a/tests/generic/075
+> +++ b/tests/generic/075
+> @@ -48,14 +48,11 @@ _do_test()
+>      echo "fsx.$_n : $_filter_param"
+>      echo "-----------------------------------------------"
 >  
->  	if (iomap->type == IOMAP_INLINE) {
->  		WARN_ON_ONCE(pos);
-> @@ -313,18 +314,15 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  	 */
->  	sector = iomap_sector(iomap, pos);
->  	if (ctx->bio && bio_end_sector(ctx->bio) == sector) {
-> -		if (__bio_try_merge_page(ctx->bio, page, plen, poff))
-> +		if (__bio_try_merge_page(ctx->bio, page, plen, poff)) {
-> +			need_account = iop && bio_is_last_segment(ctx->bio,
-> +					page, plen, poff);
+> -    if [ "$FSTYP" != "xfs" ]
+> -    then
+>  	if [ "$_n" = "1" -o "$_n" = "3" ]
+>  	then
+>  	    # HACK: only xfs handles preallocation (-x) so just skip this test
+>  	    return
+>  	fi
+> -    fi
 
-It's redundant to make this iop && ... since you already check
-iop && need_account below. Maybe rename it to added_page? Also, this
-indentation is wack.
+Looks like the whole hunk should be removed here.
 
->  			goto done;
-> +		}
->  		is_contig = true;
->  	}
 >  
-> -	/*
-> -	 * If we start a new segment we need to increase the read count, and we
-> -	 * need to do so before submitting any previous full bio to make sure
-> -	 * that we don't prematurely unlock the page.
-> -	 */
-> -	if (iop)
-> -		atomic_inc(&iop->read_count);
-> +	need_account = true;
+>      # This cd and use of -P gets full debug on $here (not TEST_DEV)
+>      cd $out
+> @@ -138,9 +135,7 @@ _check_test_fs
+>  # -x: pre-allocate file space, exercising unwritten extents
 >  
->  	if (!ctx->bio || !is_contig || bio_full(ctx->bio)) {
->  		gfp_t gfp = mapping_gfp_constraint(page->mapping, GFP_KERNEL);
-> @@ -347,6 +345,14 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  	__bio_add_page(ctx->bio, page, plen, poff);
->  done:
->  	/*
-> +	 * If we add a new page we need to increase the read count, and we
-> +	 * need to do so before submitting any previous full bio to make sure
-> +	 * that we don't prematurely unlock the page.
-> +	 */
-> +	if (iop && need_account)
-> +		atomic_inc(&iop->read_count);
+>  _do_test 0 "-d -N $numops1 -S 0"
+> -_do_test 1 "-d -N $numops1 -S 0 -x"
+> -_do_test 2 "-d -N $numops2 -l $filelen -S 0"
+> -_do_test 3 "-d -N $numops2 -l $filelen -S 0 -x"
+> +_do_test 1 "-d -N $numops2 -l $filelen -S 0"
+>  
+>  rm -f $seq.*.fsx{good,log}
+>  exit 0
+> diff --git a/tests/generic/075.out b/tests/generic/075.out
+> index 1f81cdf0..3ad4ae95 100644
+> --- a/tests/generic/075.out
+> +++ b/tests/generic/075.out
+> @@ -6,13 +6,5 @@ fsx.0 : -d -N numops -S 0
+>  -----------------------------------------------
+>  
+>  -----------------------------------------------
+> -fsx.1 : -d -N numops -S 0 -x
+> ------------------------------------------------
+> -
+> ------------------------------------------------
+> -fsx.2 : -d -N numops -l filelen -S 0
+> ------------------------------------------------
+> -
+> ------------------------------------------------
+> -fsx.3 : -d -N numops -l filelen -S 0 -x
+> +fsx.1 : -d -N numops -l filelen -S 0
+>  -----------------------------------------------
+> diff --git a/tests/generic/112 b/tests/generic/112
+> index 1879e7b5..c9c5e194 100755
+> --- a/tests/generic/112
+> +++ b/tests/generic/112
+> @@ -48,15 +48,6 @@ _do_test()
+>      echo "fsx.$_n : $_filter_param"
+>      echo "-----------------------------------------------"
+>  
+> -    if [ "$FSTYP" != "xfs" ]
+> -    then
+> -        if [ "$_n" = "1" -o "$_n" = "3" ]
+> -        then
+> -            # HACK: only xfs handles preallocation (-x) so just skip this test
+> -            return
+> -        fi
+> -    fi
+> -
+>      # This cd and use of -P gets full debug on $here (not TEST_DEV)
+>      cd $out
+>      if ! $here/ltp/fsx $_param -P $here $FSX_AVOID $seq.$_n &>/dev/null
+> @@ -139,9 +130,7 @@ _check_test_fs
+>  # -A: use the AIO system calls
+>  
+>  _do_test 0 "-A -d -N $numops1 -S 0"
+> -_do_test 1 "-A -d -N $numops1 -S 0 -x"
+> -_do_test 2 "-A -d -N $numops2 -l $filelen -S 0"
+> -_do_test 3 "-A -d -N $numops2 -l $filelen -S 0 -x"
+> +_do_test 1 "-A -d -N $numops2 -l $filelen -S 0"
+>  
+>  rm -f $seq.*.fsx{good,log}
+>  exit 0
+> diff --git a/tests/generic/112.out b/tests/generic/112.out
+> index 7d1709cf..488ec682 100644
+> --- a/tests/generic/112.out
+> +++ b/tests/generic/112.out
+> @@ -6,13 +6,5 @@ fsx.0 : -A -d -N numops -S 0
+>  -----------------------------------------------
+>  
+>  -----------------------------------------------
+> -fsx.1 : -A -d -N numops -S 0 -x
+> ------------------------------------------------
+> -
+> ------------------------------------------------
+> -fsx.2 : -A -d -N numops -l filelen -S 0
+> ------------------------------------------------
+> -
+> ------------------------------------------------
+> -fsx.3 : -A -d -N numops -l filelen -S 0 -x
+> +fsx.1 : -A -d -N numops -l filelen -S 0
+>  -----------------------------------------------
+> diff --git a/tests/generic/601 b/tests/generic/601
+> new file mode 100755
+> index 00000000..3fb785a1
+> --- /dev/null
+> +++ b/tests/generic/601
+> @@ -0,0 +1,136 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2000-2003 Silicon Graphics, Inc.  All Rights Reserved.
+
+Hmm, I think it's better to write proper Copyright information for new
+tests, also it's better to follow new code style instead of copying the
+old test. Some examples inline..
+
+> +#
+> +# FS QA Test No. 601
+> +#
+> +# fsx (non-AIO variant, with preallocation)
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
 > +
-> +	/*
->  	 * Move the caller beyond our range so that it keeps making progress.
->  	 * For that we have to include any leading non-uptodate ranges, but
->  	 * we can skip trailing ones as they will be handled in the next
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 1f1829e506e8..d8e9cc9f751a 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -603,6 +603,7 @@ xfs_add_to_ioend(
->  	unsigned		len = i_blocksize(inode);
->  	unsigned		poff = offset & (PAGE_SIZE - 1);
->  	sector_t		sector;
-> +	bool			need_account;
->  
->  	sector = xfs_fsb_to_db(ip, wpc->imap.br_startblock) +
->  		((offset - XFS_FSB_TO_B(mp, wpc->imap.br_startoff)) >> 9);
-> @@ -617,13 +618,18 @@ xfs_add_to_ioend(
->  	}
->  
->  	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff)) {
-> -		if (iop)
-> -			atomic_inc(&iop->write_count);
-> +		need_account = true;
->  		if (bio_full(wpc->ioend->io_bio))
->  			xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
->  		__bio_add_page(wpc->ioend->io_bio, page, len, poff);
-> +	} else {
-> +		need_account = iop && bio_is_last_segment(wpc->ioend->io_bio,
-> +				page, len, poff);
-
-Same here, no need for iop &&, rename it added_page, indentation is off.
-
->  	}
->  
-> +	if (iop && need_account)
-> +		atomic_inc(&iop->write_count);
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=0	# success is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
 > +
->  	wpc->ioend->io_size += len;
->  }
->  
-> diff --git a/include/linux/bio.h b/include/linux/bio.h
-> index 1a2430a8b89d..5040e9a2eb09 100644
-> --- a/include/linux/bio.h
-> +++ b/include/linux/bio.h
-> @@ -341,6 +341,17 @@ static inline struct bio_vec *bio_last_bvec_all(struct bio *bio)
->  	return &bio->bi_io_vec[bio->bi_vcnt - 1];
->  }
->  
-> +/* iomap needs this helper to deal with sub-pagesize bvec */
-> +static inline bool bio_is_last_segment(struct bio *bio, struct page *page,
-> +		unsigned int len, unsigned int off)
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -rf $TEST_DIR/fsx.* $tmp.*
+> +}
 
-Indentation.
+Use tab as indention. Please ./new to generate new test template, so all
+has been taken care of.
+
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +_do_test()
+
+No leading underscore for local functions. But I'm wondering if we could
+just use "run_fsx" from common/rc
 
 > +{
-> +	struct bio_vec bv;
+> +    _n="$1"
+> +    _param="$2"
+
+Similarly, local variables without "_". And declare local variables as
+"local".
+
 > +
-> +	bvec_last_segment(bio_last_bvec_all(bio), &bv);
+> +    out=$TEST_DIR/fsx
+> +    rm -rf $out
+> +    if ! mkdir $out
+> +    then
+> +	echo "    failed to mkdir $out"
+> +	status=1
+> +	exit
+> +    fi
 > +
-> +	return bv.bv_page == page && bv.bv_len == len && bv.bv_offset == off;
+> +    _filter_param=`echo "$_param" | sed\
+> +	-e 's/-N [0-9][0-9]*/-N numops/' \
+> +	-e 's/-l [0-9][0-9]*/-l filelen/'`
+> +
+> +    echo ""
+> +    echo "-----------------------------------------------"
+> +    echo "fsx.$_n : $_filter_param"
+> +    echo "-----------------------------------------------"
+> +
+> +    # This cd and use of -P gets full debug on $here (not TEST_DEV)
+> +    cd $out
+> +    if ! $here/ltp/fsx $_param -P $here $seq.$_n $FSX_AVOID &>/dev/null
+> +    then
+> +	echo "    fsx ($_param) failed, $? - compare $seqres.$_n.{good,bad,fsxlog}"
+> +	mv $out/$seq.$_n $seqres.$_n.full
+> +	mv $here/$seq.$_n.fsxlog $seqres.$_n.fsxlog
+> +	od -xAx $seqres.$_n.full > $seqres.$_n.bad
+> +	od -xAx $here/$seq.$_n.fsxgood > $seqres.$_n.good
+> +	rm -f $here/$seq.$_n.fsxgood
+> +	status=1
+> +	exit
+> +    fi
+> +
+> +    cd $here
+> +    _check_test_fs
 > +}
 > +
->  enum bip_flags {
->  	BIP_BLOCK_INTEGRITY	= 1 << 0, /* block layer owns integrity data */
->  	BIP_MAPPED_INTEGRITY	= 1 << 1, /* ref tag has been remapped */
+> +_usage()
+> +{
+> +    echo "$0: [-l filelen] [-n numops1] [-N numops2]"
+> +}
+> +
+> +_process_args()
+> +{
+> +    OPTIND=1
+> +    while getopts "l:n:N:?" c $@
+> +    do
+> +        case $c
+> +        in
+> +            l)
+> +                filelen=$OPTARG
+> +		param_type="$param_type, overidde -l"
+> +                ;;
+> +            N)
+> +                numops2=$OPTARG
+> +		param_type="$param_type, overidde -N"
+> +                ;;
+> +            n)
+> +                numops1=$OPTARG
+> +		param_type="$param_type, overidde -n"
+> +                ;;
+> +	    ?)
+> +		_usage
+> +		exit	
+> +		;;
+> +	esac
+> +    done
+> +}
+
+Above two functions doesn't seem that useful in new tests, I think we
+can just remove them.
+
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_test
+> +_require_xfs_io_command "falloc"
+> +
+> +size10=`expr 10 \* 1024 \* 1024`	# 10 megabytes
+> +filelen=$size10
+> +numops1=1000
+> +numops2=10000
+> +
+> +# can override the params here
+> +_process_args "$@"
+> +
+> +echo "Params are for $param_type" >>$seqres.full
+> +echo "Params: n = $numops1 N = $numops2 l = $filelen" >>$seqres.full
+> +
+> +rm -f $seqres.full
+> +echo "brevity is wit..."
+
+"Silence is golden"
+
+> +
+> +_check_test_fs
+
+We do fsck after each test, no need to check fs before test.
+
+And generic/602 has similar problems as well.
+
+Thanks,
+Eryu
+
+> +
+> +# Options:
+> +# -d: debug output for all operations
+> +# -l flen: the upper bound on file size (default 262144)
+> +# -o oplen: the upper bound on operation size
+> +# -N numops: total # operations to do (default infinity)
+> +# -P: save .fsxlog and .fsxgood files in dirpath (default ./)
+> +# -S seed: for random # generator (default 1) 0 gets timestamp
+> +# -x: pre-allocate file space, exercising unwritten extents
+> +
+> +_do_test 0 "-d -N $numops1 -S 0 -x"
+> +_do_test 1 "-d -N $numops2 -l $filelen -S 0 -x"
+> +
+> +rm -f $seq.*.fsx{good,log}
+> +exit 0
+> diff --git a/tests/generic/601.out b/tests/generic/601.out
+> new file mode 100644
+> index 00000000..d1346da2
+> --- /dev/null
+> +++ b/tests/generic/601.out
+> @@ -0,0 +1,10 @@
+> +QA output created by 601
+> +brevity is wit...
+> +
+> +-----------------------------------------------
+> +fsx.0 : -d -N numops -S 0 -x
+> +-----------------------------------------------
+> +
+> +-----------------------------------------------
+> +fsx.1 : -d -N numops -l filelen -S 0 -x
+> +-----------------------------------------------
+> diff --git a/tests/generic/602 b/tests/generic/602
+> new file mode 100755
+> index 00000000..ec853eb1
+> --- /dev/null
+> +++ b/tests/generic/602
+> @@ -0,0 +1,137 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2005 Silicon Graphics, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 602
+> +#
+> +# fsx (AIO variant, with preallocation, based on 601)
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=0	# success is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -rf $TEST_DIR/fsx.* $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +_do_test()
+> +{
+> +    _n="$1"
+> +    _param="$2"
+> +
+> +    out=$TEST_DIR/fsx
+> +    rm -rf $out
+> +    if ! mkdir $out
+> +    then
+> +	echo "    failed to mkdir $out"
+> +	status=1
+> +	exit
+> +    fi
+> +
+> +    _filter_param=`echo "$_param" | sed\
+> +	-e 's/-N [0-9][0-9]*/-N numops/' \
+> +	-e 's/-l [0-9][0-9]*/-l filelen/'`
+> +
+> +    echo ""
+> +    echo "-----------------------------------------------"
+> +    echo "fsx.$_n : $_filter_param"
+> +    echo "-----------------------------------------------"
+> +
+> +    # This cd and use of -P gets full debug on $here (not TEST_DEV)
+> +    cd $out
+> +    if ! $here/ltp/fsx $_param -P $here $FSX_AVOID $seq.$_n &>/dev/null
+> +    then
+> +	echo "    fsx ($_param) returned $? - see $seq.$_n.full"
+> +	mv $here/$seq.$_n.fsxlog $seqres.$_n.full
+> +	status=1
+> +	exit
+> +    fi
+> +
+> +    cd $here
+> +    _check_test_fs
+> +}
+> +
+> +_usage()
+> +{
+> +    echo "$0: [-l filelen] [-n numops1] [-N numops2]"
+> +}
+> +
+> +_process_args()
+> +{
+> +    OPTIND=1
+> +    while getopts "l:n:N:?" c $@
+> +    do
+> +        case $c
+> +        in
+> +            l)
+> +                filelen=$OPTARG
+> +		param_type="$param_type, overidde -l"
+> +                ;;
+> +            N)
+> +                numops2=$OPTARG
+> +		param_type="$param_type, overidde -N"
+> +                ;;
+> +            n)
+> +                numops1=$OPTARG
+> +		param_type="$param_type, overidde -n"
+> +                ;;
+> +	    ?)
+> +		_usage
+> +		exit	
+> +		;;
+> +	esac
+> +    done
+> +}
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_test
+> +_require_aio
+> +_require_xfs_io_command "falloc"
+> +
+> +[ -x $here/ltp/aio-stress ] || \
+> +	_notrun "fsx not built with AIO for this platform"
+> +
+> +size10=`expr 10 \* 1024 \* 1024`	# 10 megabytes
+> +filelen=$size10
+> +numops1=1000
+> +numops2=10000
+> +
+> +# can override the params here
+> +_process_args "$@"
+> +
+> +echo "Params are for $param_type" >>$seqres.full
+> +echo "Params: n = $numops1 N = $numops2 l = $filelen" >>$seqres.full
+> +
+> +rm -f $seqres.full
+> +echo "brevity is wit..."
+> +
+> +_check_test_fs
+> +
+> +# Options:
+> +# -d: debug output for all operations
+> +# -l flen: the upper bound on file size (default 262144)
+> +# -o oplen: the upper bound on operation size
+> +# -N numops: total # operations to do (default infinity)
+> +# -P: save .fsxlog and .fsxgood files in dirpath (default ./)
+> +# -S seed: for random # generator (default 1) 0 gets timestamp
+> +# -x: pre-allocate file space, exercising unwritten extents
+> +# -A: use the AIO system calls
+> +
+> +_do_test 0 "-A -d -N $numops1 -S 0 -x"
+> +_do_test 1 "-A -d -N $numops2 -l $filelen -S 0 -x"
+> +
+> +rm -f $seq.*.fsx{good,log}
+> +exit 0
+> diff --git a/tests/generic/602.out b/tests/generic/602.out
+> new file mode 100644
+> index 00000000..bf771f04
+> --- /dev/null
+> +++ b/tests/generic/602.out
+> @@ -0,0 +1,10 @@
+> +QA output created by 602
+> +brevity is wit...
+> +
+> +-----------------------------------------------
+> +fsx.0 : -A -d -N numops -S 0 -x
+> +-----------------------------------------------
+> +
+> +-----------------------------------------------
+> +fsx.1 : -A -d -N numops -l filelen -S 0 -x
+> +-----------------------------------------------
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 54d71d55..b01e1cb0 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -519,3 +519,5 @@
+>  514 auto quick clone
+>  515 auto quick clone
+>  516 auto quick dedupe clone
+> +601 auto rw
+> +602 auto aio rw
 > -- 
-> 2.9.5
+> 2.19.1
 > 
