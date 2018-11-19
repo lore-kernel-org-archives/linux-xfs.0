@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:55865 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729428AbeKTHa5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 02:30:57 -0500
+        by vger.kernel.org with ESMTP id S1730845AbeKTHbA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 02:31:00 -0500
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1gOqj7-0000XR-3J
+        id 1gOqj7-0000XO-0R
         for linux-xfs@vger.kernel.org; Tue, 20 Nov 2018 08:05:01 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.91)
         (envelope-from <david@fromorbit.com>)
-        id 1gOqj7-0002G2-22
-        for linux-xfs@vger.kernel.org; Tue, 20 Nov 2018 08:05:01 +1100
+        id 1gOqj6-0002Ft-VV
+        for linux-xfs@vger.kernel.org; Tue, 20 Nov 2018 08:05:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/7] xfs: extent shifting doesn't fully invalidate page cache
-Date: Tue, 20 Nov 2018 08:04:57 +1100
-Message-Id: <20181119210459.8506-6-david@fromorbit.com>
+Subject: [PATCH 2/7] xfs: uncached buffer tracing needs to print bno
+Date: Tue, 20 Nov 2018 08:04:54 +1100
+Message-Id: <20181119210459.8506-3-david@fromorbit.com>
 In-Reply-To: <20181119210459.8506-1-david@fromorbit.com>
 References: <20181119210459.8506-1-david@fromorbit.com>
 MIME-Version: 1.0
@@ -27,39 +27,49 @@ To: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The extent shifting code uses a flush and invalidate mechainsm prior
-to shifting extents around. This is similar to what
-xfs_free_file_space() does, but it doesn't take into account things
-like page cache vs block size differences, and it will fail if there
-is a page that it currently busy.
+Useless:
 
-xfs_flush_unmap_range() handles all of these cases, so just convert
-xfs_prepare_shift() to us that mechanism rather than having it's own
-special sauce.
+xfs_buf_get_uncached: dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+xfs_buf_unlock:       dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+xfs_buf_submit:       dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+xfs_buf_hold:         dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+xfs_buf_iowait:       dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+xfs_buf_iodone:       dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+xfs_buf_iowait_done:  dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+xfs_buf_rele:         dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+
+Useful:
+
+
+xfs_buf_get_uncached: dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+xfs_buf_unlock:       dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+xfs_buf_submit:       dev 253:32 bno 0x200b5 nblks 0x1 ...
+xfs_buf_hold:         dev 253:32 bno 0x200b5 nblks 0x1 ...
+xfs_buf_iowait:       dev 253:32 bno 0x200b5 nblks 0x1 ...
+xfs_buf_iodone:       dev 253:32 bno 0x200b5 nblks 0x1 ...
+xfs_buf_iowait_done:  dev 253:32 bno 0x200b5 nblks 0x1 ...
+xfs_buf_rele:         dev 253:32 bno 0x200b5 nblks 0x1 ...
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_bmap_util.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ fs/xfs/xfs_trace.h | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 5d263dfdb3bc..167ff4297e5c 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1195,13 +1195,7 @@ xfs_prepare_shift(
- 	 * Writeback and invalidate cache for the remainder of the file as we're
- 	 * about to shift down every extent from offset to EOF.
- 	 */
--	error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping, offset, -1);
--	if (error)
--		return error;
--	error = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
--					offset >> PAGE_SHIFT, -1);
--	if (error)
--		return error;
-+	error = xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip));
- 
- 	/*
- 	 * Clean out anything hanging around in the cow fork now that
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 3043e5ed6495..8a6532aae779 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -280,7 +280,10 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = bp->b_target->bt_dev;
+-		__entry->bno = bp->b_bn;
++		if (bp->b_bn == XFS_BUF_DADDR_NULL)
++			__entry->bno = bp->b_maps[0].bm_bn;
++		else
++			__entry->bno = bp->b_bn;
+ 		__entry->nblks = bp->b_length;
+ 		__entry->hold = atomic_read(&bp->b_hold);
+ 		__entry->pincount = atomic_read(&bp->b_pin_count);
 -- 
 2.19.1
