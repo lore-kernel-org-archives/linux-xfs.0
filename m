@@ -1,114 +1,253 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52422 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51456 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725828AbeKSPnJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Nov 2018 10:43:09 -0500
-Date: Mon, 19 Nov 2018 13:22:52 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH 0/6] xfstests: add copy/dedupe/clone to fsx/fsstress
-Message-ID: <20181119052251.GQ2279@dhcp-12-117.nay.redhat.com>
-References: <154215237717.21151.11976488103599724788.stgit@magnolia>
+        id S1726348AbeKSSNp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Nov 2018 13:13:45 -0500
+Date: Mon, 19 Nov 2018 15:50:25 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V10 03/19] block: use bio_for_each_bvec() to compute
+ multi-page bvec count
+Message-ID: <20181119075024.GA16519@ming.t460p>
+References: <20181115085306.9910-1-ming.lei@redhat.com>
+ <20181115085306.9910-4-ming.lei@redhat.com>
+ <20181115202028.GC9348@vader>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <154215237717.21151.11976488103599724788.stgit@magnolia>
+In-Reply-To: <20181115202028.GC9348@vader>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Omar Sandoval <osandov@osandov.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Tue, Nov 13, 2018 at 03:39:37PM -0800, Darrick J. Wong wrote:
-> Hi all,
+On Thu, Nov 15, 2018 at 12:20:28PM -0800, Omar Sandoval wrote:
+> On Thu, Nov 15, 2018 at 04:52:50PM +0800, Ming Lei wrote:
+> > First it is more efficient to use bio_for_each_bvec() in both
+> > blk_bio_segment_split() and __blk_recalc_rq_segments() to compute how
+> > many multi-page bvecs there are in the bio.
+> > 
+> > Secondly once bio_for_each_bvec() is used, the bvec may need to be
+> > splitted because its length can be very longer than max segment size,
+> > so we have to split the big bvec into several segments.
+> > 
+> > Thirdly when splitting multi-page bvec into segments, the max segment
+> > limit may be reached, so the bio split need to be considered under
+> > this situation too.
+> > 
+> > Cc: Dave Chinner <dchinner@redhat.com>
+> > Cc: Kent Overstreet <kent.overstreet@gmail.com>
+> > Cc: Mike Snitzer <snitzer@redhat.com>
+> > Cc: dm-devel@redhat.com
+> > Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+> > Cc: linux-fsdevel@vger.kernel.org
+> > Cc: Shaohua Li <shli@kernel.org>
+> > Cc: linux-raid@vger.kernel.org
+> > Cc: linux-erofs@lists.ozlabs.org
+> > Cc: David Sterba <dsterba@suse.com>
+> > Cc: linux-btrfs@vger.kernel.org
+> > Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> > Cc: linux-xfs@vger.kernel.org
+> > Cc: Gao Xiang <gaoxiang25@huawei.com>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Theodore Ts'o <tytso@mit.edu>
+> > Cc: linux-ext4@vger.kernel.org
+> > Cc: Coly Li <colyli@suse.de>
+> > Cc: linux-bcache@vger.kernel.org
+> > Cc: Boaz Harrosh <ooo@electrozaur.com>
+> > Cc: Bob Peterson <rpeterso@redhat.com>
+> > Cc: cluster-devel@redhat.com
+> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > ---
+> >  block/blk-merge.c | 90 ++++++++++++++++++++++++++++++++++++++++++++++---------
+> >  1 file changed, 76 insertions(+), 14 deletions(-)
+> > 
+> > diff --git a/block/blk-merge.c b/block/blk-merge.c
+> > index 91b2af332a84..6f7deb94a23f 100644
+> > --- a/block/blk-merge.c
+> > +++ b/block/blk-merge.c
+> > @@ -160,6 +160,62 @@ static inline unsigned get_max_io_size(struct request_queue *q,
+> >  	return sectors;
+> >  }
+> >  
+> > +/*
+> > + * Split the bvec @bv into segments, and update all kinds of
+> > + * variables.
+> > + */
+> > +static bool bvec_split_segs(struct request_queue *q, struct bio_vec *bv,
+> > +		unsigned *nsegs, unsigned *last_seg_size,
+> > +		unsigned *front_seg_size, unsigned *sectors)
+> > +{
+> > +	bool need_split = false;
+> > +	unsigned len = bv->bv_len;
+> > +	unsigned total_len = 0;
+> > +	unsigned new_nsegs = 0, seg_size = 0;
 > 
-> This series adds to fsx support for FICLONERANGE, FIDEDUPERANGE, and
-> copy_file_range.  It adds to fsstress support for copy_file_range.
-> There are known failures in 4.20-rc2, particularly with copy_file_range,
-> so these patches provide a fstests base for everyone to start/continue
-> looking for bugs.
+> "unsigned int" here and everywhere else.
+> 
+> > +	if ((*nsegs >= queue_max_segments(q)) || !len)
+> > +		return need_split;
+> > +
+> > +	/*
+> > +	 * Multipage bvec may be too big to hold in one segment,
+> > +	 * so the current bvec has to be splitted as multiple
+> > +	 * segments.
+> > +	 */
+> > +	while (new_nsegs + *nsegs < queue_max_segments(q)) {
+> > +		seg_size = min(queue_max_segment_size(q), len);
+> > +
+> > +		new_nsegs++;
+> > +		total_len += seg_size;
+> > +		len -= seg_size;
+> > +
+> > +		if ((queue_virt_boundary(q) && ((bv->bv_offset +
+> > +		    total_len) & queue_virt_boundary(q))) || !len)
+> > +			break;
+> 
+> Checking queue_virt_boundary(q) != 0 is superfluous, and the len check
+> could just control the loop, i.e.,
+> 
+> 	while (len && new_nsegs + *nsegs < queue_max_segments(q)) {
+> 		seg_size = min(queue_max_segment_size(q), len);
+> 
+> 		new_nsegs++;
+> 		total_len += seg_size;
+> 		len -= seg_size;
+> 
+> 		if ((bv->bv_offset + total_len) & queue_virt_boundary(q))
+> 			break;
+> 	}
+> 
+> And if you rewrite it this way, I _think_ you can get rid of this
+> special case:
+> 
+> 	if ((*nsegs >= queue_max_segments(q)) || !len)
+> 		return need_split;
+> 
+> above.
 
-Hi Darrick,
+Good point, will do in next version.
 
-Your patches triggered 2 new failures on g/091 and g/263, refer to [1]. I can't
-reproduce these failures on original xfstests [2]. I saw you were talking about g/091
-in #xfs. Are these two failures same issue?
+> 
+> > +	}
+> > +
+> > +	/* split in the middle of the bvec */
+> > +	if (len)
+> > +		need_split = true;
+> 
+> need_split is unnecessary, just return len != 0.
+
+OK.
+
+> 
+> > +
+> > +	/* update front segment size */
+> > +	if (!*nsegs) {
+> > +		unsigned first_seg_size = seg_size;
+> > +
+> > +		if (new_nsegs > 1)
+> > +			first_seg_size = queue_max_segment_size(q);
+> > +		if (*front_seg_size < first_seg_size)
+> > +			*front_seg_size = first_seg_size;
+> > +	}
+> > +
+> > +	/* update other varibles */
+> > +	*last_seg_size = seg_size;
+> > +	*nsegs += new_nsegs;
+> > +	if (sectors)
+> > +		*sectors += total_len >> 9;
+> > +
+> > +	return need_split;
+> > +}
+> > +
+> >  static struct bio *blk_bio_segment_split(struct request_queue *q,
+> >  					 struct bio *bio,
+> >  					 struct bio_set *bs,
+> > @@ -173,7 +229,7 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+> >  	struct bio *new = NULL;
+> >  	const unsigned max_sectors = get_max_io_size(q, bio);
+> >  
+> > -	bio_for_each_segment(bv, bio, iter) {
+> > +	bio_for_each_bvec(bv, bio, iter) {
+> >  		/*
+> >  		 * If the queue doesn't support SG gaps and adding this
+> >  		 * offset would create a gap, disallow it.
+> > @@ -188,8 +244,12 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+> >  			 */
+> >  			if (nsegs < queue_max_segments(q) &&
+> >  			    sectors < max_sectors) {
+> > -				nsegs++;
+> > -				sectors = max_sectors;
+> > +				/* split in the middle of bvec */
+> > +				bv.bv_len = (max_sectors - sectors) << 9;
+> > +				bvec_split_segs(q, &bv, &nsegs,
+> > +						&seg_size,
+> > +						&front_seg_size,
+> > +						&sectors);
+> >  			}
+> >  			goto split;
+> >  		}
+> > @@ -214,11 +274,12 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+> >  		if (nsegs == 1 && seg_size > front_seg_size)
+> >  			front_seg_size = seg_size;
+> 
+> Hm, do we still need to check this here now that we're updating
+> front_seg_size inside of bvec_split_segs()?
+
+Right, the check & update can be removed.
+
+> 
+> >  
+> > -		nsegs++;
+> >  		bvprv = bv;
+> >  		bvprvp = &bvprv;
+> > -		seg_size = bv.bv_len;
+> > -		sectors += bv.bv_len >> 9;
+> > +
+> > +		if (bvec_split_segs(q, &bv, &nsegs, &seg_size,
+> > +					&front_seg_size, &sectors))
+> 
+> What happened to the indent alignment here?
+
+Will fix it in next version.
+
+> 
+> > +			goto split;
+> >  
+> >  	}
+> >  
+> > @@ -296,6 +357,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+> >  	struct bio_vec bv, bvprv = { NULL };
+> >  	int cluster, prev = 0;
+> >  	unsigned int seg_size, nr_phys_segs;
+> > +	unsigned front_seg_size = bio->bi_seg_front_size;
+> >  	struct bio *fbio, *bbio;
+> >  	struct bvec_iter iter;
+> >  
+> > @@ -316,7 +378,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+> >  	seg_size = 0;
+> >  	nr_phys_segs = 0;
+> >  	for_each_bio(bio) {
+> > -		bio_for_each_segment(bv, bio, iter) {
+> > +		bio_for_each_bvec(bv, bio, iter) {
+> >  			/*
+> >  			 * If SG merging is disabled, each bio vector is
+> >  			 * a segment
+> > @@ -336,20 +398,20 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+> >  				continue;
+> >  			}
+> >  new_segment:
+> > -			if (nr_phys_segs == 1 && seg_size >
+> > -			    fbio->bi_seg_front_size)
+> > -				fbio->bi_seg_front_size = seg_size;
+> > +			if (nr_phys_segs == 1 && seg_size > front_seg_size)
+> > +				front_seg_size = seg_size;
+> 
+> Same comment as in blk_bio_segment_split(), do we still need to check
+> this if we're updating front_seg_size in bvec_split_segs()?
+
+I think we can remove it too.
+
 
 Thanks,
-Zorro
-
-[1]
-# ./check --large-fs generic/075 generic/127 generic/112 generic/263 generic/091 generic/231 generic/499 generic/511 generic/469 generic/455 generic/456 generic/4
-57 xfs/207
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 hp-dl580g7-04 4.18.0-39.el8.x86_64
-MKFS_OPTIONS  -- -f -b size=2048 /dev/mapper/VG500T-LV500T
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/VG500T-LV500T /mnt/scratch
-
-generic/075      15s
-generic/091     [failed, exit status 1]- output mismatch (see /root/git/xfstests/results//generic/091.out.bad)                                                                                
-    --- tests/generic/091.out   2018-11-16 22:51:29.117927437 +0800
-    +++ /root/git/xfstests/results//generic/091.out.bad 2018-11-19 11:18:21.618028378 +0800
-    @@ -5,3 +5,31 @@
-     fsx -N 10000 -o 8192 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
-     fsx -N 10000 -o 32768 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -R -W
-     fsx -N 10000 -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z -W
-    +mapped writes DISABLED
-    +Seed set to 1
-    +skipping zero size read
-    +truncating to largest ever: 0xe400
-    ...
-    (Run 'diff -u tests/generic/091.out /root/git/xfstests/results//generic/091.out.bad'  to see the entire diff)                                                                             
-generic/112      16s
-generic/127      225s
-generic/231      179s
-generic/263     [failed, exit status 1]- output mismatch (see /root/git/xfstests/results//generic/263.out.bad)                                                                                
-    --- tests/generic/263.out   2018-11-16 22:51:29.172929902 +0800
-    +++ /root/git/xfstests/results//generic/263.out.bad 2018-11-19 11:25:24.841385577 +0800
-    @@ -1,3 +1,52 @@
-     QA output created by 263
-     fsx -N 10000 -o 8192 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z
-     fsx -N 10000 -o 128000 -l 500000 -r PSIZE -t BSIZE -w BSIZE -Z
-    +Seed set to 1
-    +skipping zero size read
-    +truncating to largest ever: 0xe400
-    +fallocating to largest ever: 0x49915
-    ...
-    (Run 'diff -u tests/generic/263.out /root/git/xfstests/results//generic/263.out.bad'  to see the entire diff)                                                                             
-generic/455      2024s
-generic/456      27s
-generic/457      350s
-generic/469      1s
-generic/499      26s
-generic/511      2s
-xfs/207  47s
-Ran: generic/075 generic/091 generic/112 generic/127 generic/231 generic/263 generic/455 generic/456 generic/457 generic/469 generic/499 generic/511 xfs/207
-Failures: generic/091 generic/263
-Failed 2 of 13 tests
-
-[2]
-# ./check --large-fs generic/075 generic/127 generic/112 generic/263 generic/091 generic/231 generic/499 generic/511 generic/469 generic/455 generic/456 generic/457 xfs/207
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 hp-dl580g7-04 4.18.0-39.el8.x86_64
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/mapper/VG500T-LV500T
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/VG500T-LV500T /mnt/scratch
-
-generic/075 18s ...  17s
-generic/091 24s ...  16s
-generic/112 18s ...  18s
-generic/127 267s ...  214s
-generic/231 199s ...  198s
-generic/263 10s ...  9s
-generic/455      2728s
-generic/456 27s ...  26s
-generic/457      367s
-generic/469 1s ...  2s
-generic/499 27s ...  24s
-generic/511      3s
-xfs/207  47s
-Ran: generic/075 generic/091 generic/112 generic/127 generic/231 generic/263 generic/455 generic/456 generic/457 generic/469 generic/499 generic/511 xfs/207
-Passed all 13 tests
-
-
-
-> 
-> --D
+Ming
