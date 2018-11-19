@@ -1,50 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:54858 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725770AbeKTSQa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 13:16:30 -0500
-Date: Mon, 19 Nov 2018 23:48:32 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/5] iomap: FUA is wrong for DIO O_DSYNC writes into
- unwritten extents
-Message-ID: <20181120074832.GA25418@infradead.org>
-References: <20181119211742.8824-1-david@fromorbit.com>
- <20181119211742.8824-2-david@fromorbit.com>
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:60562 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730469AbeKTIaJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 03:30:09 -0500
+Date: Tue, 20 Nov 2018 09:04:22 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH] xfs: flush posteof zeroing before reflink truncation
+Message-ID: <20181119220422.GL19305@dastard>
+References: <20181116190724.GW4235@magnolia>
+ <20181116203756.GF19305@dastard>
+ <20181118141205.GA40476@bfoster>
+ <20181119002611.GH19305@dastard>
+ <20181119190513.GA2841@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181119211742.8824-2-david@fromorbit.com>
+In-Reply-To: <20181119190513.GA2841@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Nov 20, 2018 at 08:17:38AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Nov 19, 2018 at 02:05:13PM -0500, Brian Foster wrote:
+> On Mon, Nov 19, 2018 at 11:26:11AM +1100, Dave Chinner wrote:
+> > (*) I've still got several different fsx variants that fail on either
+> > default configs and/or 1k block size with different signatures.
+> > Problem is they take between 370,000 ops and 5 million ops to
+> > trigger, and so generate tens to hundreds of GB of trace data....
+> > 
 > 
-> When we write into an unwritten extent via direct IO, we dirty
-> metadata on IO completion to convert the unwritten extent to
-> written. However, when we do the FUA optimisation checks, the inode
-> may be clean and so we issue a FUA write into the unwritten extent.
-> This means we then bypass the generic_write_sync() call after
-> unwritten extent conversion has ben done and we don't force the
-> modified metadata to stable storage.
-> 
-> This violates O_DSYNC semantics. The window of exposure is a single
-> IO, as the next DIO write will see the inode has dirty metadata and
-> hence will not use the FUA optimisation. Calling
-> generic_write_sync() after completion of the second IO will also
-> sync the first write and it's metadata.
-> 
-> Fix this by avoiding the FUA optimisation when writing to unwritten
-> extents.
+> Have you tried 1.) further reducing the likely unrelated operations
+> (i.e., fallocs, insert/collapse range, etc.) from the test
 
-Ouch, yes.  We can't skip the log force when converting unwritten
-extent.  If we really cared we could try to use FUA and only do
-the log force vs needing a full device flush, but that would require
-a fair amount of of work.
+Yes. The test cases I have cut out all the unnecessary ops.
 
-So this looks good:
+Oh, look, I just found a new failure on a default 4k block size
+filesystem:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+# src/xfstests-dev/ltp/fsx -q -p 10000  -o 128000   -l 500000 -r 4096 -t 512 -w 512 -Z -R -W -F -H -z -C -I  /mnt/scratch/foo
+20000 clone     from 0x46000 to 0x48000, (0x2000 bytes) at 0x2c000
+100000 clone    from 0x44000 to 0x51000, (0xd000 bytes) at 0x1e000
+110000 clone    from 0x54000 to 0x5b000, (0x7000 bytes) at 0xf000
+READ BAD DATA: offset = 0x1000, size = 0xb000, fname = /mnt/scratch/foo
+OFFSET  GOOD    BAD     RANGE
+0x07000 0xa2d9  0x711b  0x00000
+....
+
+
+> and 2.)
+> manually trimming down and replaying the op record file fsx dumps out on
+> failure?
+
+I've mostly been unable to get that to reliably reproduce the
+problems. The failures I'm getting smell like race conditions -
+turning on tracing makes a couple of them go away - and I haven't
+found a reliable set of cut-down ops to reproduce them.
+
+> I usually don't bother with fs level tracing for this kind of
+> thing until I get a repeatable and somewhat manageable set of operations
+> to work with.
+
+Neither do I, but there's little choice when the failures aren't
+reliable.
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
