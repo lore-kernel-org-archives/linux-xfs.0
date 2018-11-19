@@ -1,76 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:34563 "EHLO
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:50307 "EHLO
         ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725898AbeKTHnV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 02:43:21 -0500
+        by vger.kernel.org with ESMTP id S1725898AbeKTHzH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 02:55:07 -0500
+Date: Tue, 20 Nov 2018 08:29:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/5] vfs: vfs_dedupe_file_range() doesn't return EOPNOTSUPP
-Date: Tue, 20 Nov 2018 08:17:42 +1100
-Message-Id: <20181119211742.8824-6-david@fromorbit.com>
-In-Reply-To: <20181119211742.8824-1-david@fromorbit.com>
-References: <20181119211742.8824-1-david@fromorbit.com>
+Subject: Re: [PATCH 0/6] xfstests: add copy/dedupe/clone to fsx/fsstress
+Message-ID: <20181119212931.GJ19305@dastard>
+References: <154215237717.21151.11976488103599724788.stgit@magnolia>
+ <20181119052251.GQ2279@dhcp-12-117.nay.redhat.com>
+ <20181119104547.GR2279@dhcp-12-117.nay.redhat.com>
+ <20181119163809.GX4235@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181119163809.GX4235@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, Nov 19, 2018 at 08:38:09AM -0800, Darrick J. Wong wrote:
+> On Mon, Nov 19, 2018 at 06:45:47PM +0800, Zorro Lang wrote:
+> > On Mon, Nov 19, 2018 at 01:22:52PM +0800, Zorro Lang wrote:
+> > > On Tue, Nov 13, 2018 at 03:39:37PM -0800, Darrick J. Wong wrote:
+> > > > Hi all,
+> > > > 
+> > > > This series adds to fsx support for FICLONERANGE, FIDEDUPERANGE, and
+> > > > copy_file_range.  It adds to fsstress support for copy_file_range.
+> > > > There are known failures in 4.20-rc2, particularly with copy_file_range,
+> > > > so these patches provide a fstests base for everyone to start/continue
+> > > > looking for bugs.
+> > > 
+> > > Hi Darrick,
+> > > 
+> > > Your patches triggered 2 new failures on g/091 and g/263, refer to [1]. I can't
+> > > reproduce these failures on original xfstests [2]. I saw you were talking about g/091
+> > > in #xfs. Are these two failures same issue?
+> 
+> Most probably.  Dave and I are still digging through all the new
+> failures that show up in g/091, g/263, and g/127 once clonerange starts
+> happening.
 
-It returns EINVAL when the operation is not supported by the
-filesystem. Fix it to return EOPNOTSUPP to be consistent with
-the man page and clone_file_range().
+Yup, there's lots of bugs in the code that fsx now exercises. These
+tests will now fail until we get the fixes into the upstream kernel.
 
-Clean up the inconsistent error return handling while I'm there.
-(I know, lipstick on a pig, but every little bit helps...)
+And, really, even when these tests pass (as they do on my machines
+now) fsx still fails. I have at least 4 different failures which
+occur at between 350k and 5m ops that I can reproduce. These tests
+only run about 10-100k ops, so they don't trip over the bugs I
+haven't found and fixed yet.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/read_write.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+Cheers,
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index bfcb4ced5664..4dae0399c75a 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -2094,17 +2094,18 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
- 	off = same->src_offset;
- 	len = same->src_length;
- 
--	ret = -EISDIR;
- 	if (S_ISDIR(src->i_mode))
--		goto out;
-+		return -EISDIR;
- 
--	ret = -EINVAL;
- 	if (!S_ISREG(src->i_mode))
--		goto out;
-+		return -EINVAL;
-+
-+	if (!file->f_op->remap_file_range)
-+		return -EOPNOTSUPP;
- 
- 	ret = remap_verify_area(file, off, len, false);
- 	if (ret < 0)
--		goto out;
-+		return ret;
- 	ret = 0;
- 
- 	if (off + len > i_size_read(src))
-@@ -2147,10 +2148,8 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
- 		fdput(dst_fd);
- next_loop:
- 		if (fatal_signal_pending(current))
--			goto out;
-+			break;
- 	}
--
--out:
- 	return ret;
- }
- EXPORT_SYMBOL(vfs_dedupe_file_range);
+Dave.
 -- 
-2.19.1
+Dave Chinner
+david@fromorbit.com
