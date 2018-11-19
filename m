@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:45937 "EHLO
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:34563 "EHLO
         ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726501AbeKTHnX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 02:43:23 -0500
+        by vger.kernel.org with ESMTP id S1725898AbeKTHnV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 02:43:21 -0500
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/5] splice: increase pipe size in splice_direct_to_actor()
-Date: Tue, 20 Nov 2018 08:17:41 +1100
-Message-Id: <20181119211742.8824-5-david@fromorbit.com>
+Subject: [PATCH 5/5] vfs: vfs_dedupe_file_range() doesn't return EOPNOTSUPP
+Date: Tue, 20 Nov 2018 08:17:42 +1100
+Message-Id: <20181119211742.8824-6-david@fromorbit.com>
 In-Reply-To: <20181119211742.8824-1-david@fromorbit.com>
 References: <20181119211742.8824-1-david@fromorbit.com>
 MIME-Version: 1.0
@@ -19,75 +19,58 @@ Cc: linux-fsdevel@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When copy_file_range() is called on files that have been opened with
-O_DIRECT, do_splice_direct() does a manual copy of the range one
-pipe buffer at a time. The default is 16 pages, which means on
-x86_64 it is limited to 64kB IO. This is extremely slow - 64k
-synchrnous read/write will run at maybe 5-10MB/s on a spinning disk
-and be seek bound. It will be faster on SSDs, but still very
-inefficient.
+It returns EINVAL when the operation is not supported by the
+filesystem. Fix it to return EOPNOTSUPP to be consistent with
+the man page and clone_file_range().
 
-Increase the pipe size to the maximum allowed user size so that we
-can get decent throughput for this highly sub-optimal copy loop.  We
-also don't care if changing the pipe size fails - that will just
-result in a slower copy.
+Clean up the inconsistent error return handling while I'm there.
+(I know, lipstick on a pig, but every little bit helps...)
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/pipe.c                 | 2 +-
- fs/splice.c               | 8 ++++++++
- include/linux/pipe_fs_i.h | 1 +
- 3 files changed, 10 insertions(+), 1 deletion(-)
+ fs/read_write.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/fs/pipe.c b/fs/pipe.c
-index bdc5d3c0977d..5885d29cdaa6 100644
---- a/fs/pipe.c
-+++ b/fs/pipe.c
-@@ -1025,7 +1025,7 @@ unsigned int round_pipe_size(unsigned long size)
-  * Allocate a new array of pipe buffers and copy the info over. Returns the
-  * pipe size if successful, or return -ERROR on error.
-  */
--static long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg)
-+long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg)
- {
- 	struct pipe_buffer *bufs;
- 	unsigned int size, nr_pages;
-diff --git a/fs/splice.c b/fs/splice.c
-index 3553f1956508..64dcc622db8d 100644
---- a/fs/splice.c
-+++ b/fs/splice.c
-@@ -34,6 +34,7 @@
- #include <linux/socket.h>
- #include <linux/compat.h>
- #include <linux/sched/signal.h>
-+#include <linux/pipe_fs_i.h>
+diff --git a/fs/read_write.c b/fs/read_write.c
+index bfcb4ced5664..4dae0399c75a 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -2094,17 +2094,18 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
+ 	off = same->src_offset;
+ 	len = same->src_length;
  
- #include "internal.h"
+-	ret = -EISDIR;
+ 	if (S_ISDIR(src->i_mode))
+-		goto out;
++		return -EISDIR;
  
-@@ -931,6 +932,13 @@ ssize_t splice_direct_to_actor(struct file *in, struct splice_desc *sd,
- 		current->splice_pipe = pipe;
- 	}
- 
-+	/*
-+	 * Try to increase the data holding capacity of the pipe so we can do
-+	 * larger IOs. This may not increase the size at all because maximum
-+	 * user pipe size is administrator controlled, but we still should try.
-+	 */
-+	pipe_set_size(pipe, pipe_max_size);
+-	ret = -EINVAL;
+ 	if (!S_ISREG(src->i_mode))
+-		goto out;
++		return -EINVAL;
 +
- 	/*
- 	 * Do the splice.
- 	 */
-diff --git a/include/linux/pipe_fs_i.h b/include/linux/pipe_fs_i.h
-index 5a3bb3b7c9ad..e7d728e5b5f8 100644
---- a/include/linux/pipe_fs_i.h
-+++ b/include/linux/pipe_fs_i.h
-@@ -191,5 +191,6 @@ struct pipe_inode_info *get_pipe_info(struct file *file);
++	if (!file->f_op->remap_file_range)
++		return -EOPNOTSUPP;
  
- int create_pipe_files(struct file **, int);
- unsigned int round_pipe_size(unsigned long size);
-+long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg);
+ 	ret = remap_verify_area(file, off, len, false);
+ 	if (ret < 0)
+-		goto out;
++		return ret;
+ 	ret = 0;
  
- #endif
+ 	if (off + len > i_size_read(src))
+@@ -2147,10 +2148,8 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
+ 		fdput(dst_fd);
+ next_loop:
+ 		if (fatal_signal_pending(current))
+-			goto out;
++			break;
+ 	}
+-
+-out:
+ 	return ret;
+ }
+ EXPORT_SYMBOL(vfs_dedupe_file_range);
 -- 
 2.19.1
