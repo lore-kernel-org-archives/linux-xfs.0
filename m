@@ -1,129 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40350 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:13312 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728322AbeKSNx4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Nov 2018 08:53:56 -0500
-Date: Mon, 19 Nov 2018 11:31:11 +0800
+        id S1727816AbeKSN56 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Nov 2018 08:57:58 -0500
+Date: Mon, 19 Nov 2018 11:35:14 +0800
 From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V10 02/19] block: introduce bio_for_each_bvec()
-Message-ID: <20181119033110.GE10838@ming.t460p>
+Subject: Re: [PATCH V10 01/19] block: introduce multi-page page bvec helpers
+Message-ID: <20181119033513.GF10838@ming.t460p>
 References: <20181115085306.9910-1-ming.lei@redhat.com>
- <20181115085306.9910-3-ming.lei@redhat.com>
- <20181116133028.GB3165@lst.de>
+ <20181115085306.9910-2-ming.lei@redhat.com>
+ <20181116131305.GA3165@lst.de>
+ <20181119022327.GC10838@ming.t460p>
+ <83fb4102-bffe-41f1-c8d0-3bdf61fe0ba8@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181116133028.GB3165@lst.de>
+In-Reply-To: <83fb4102-bffe-41f1-c8d0-3bdf61fe0ba8@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Fri, Nov 16, 2018 at 02:30:28PM +0100, Christoph Hellwig wrote:
-> > +static inline void __bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
-> > +				      unsigned bytes, bool mp)
+On Sun, Nov 18, 2018 at 08:10:14PM -0700, Jens Axboe wrote:
+> On 11/18/18 7:23 PM, Ming Lei wrote:
+> > On Fri, Nov 16, 2018 at 02:13:05PM +0100, Christoph Hellwig wrote:
+> >>> -#define bvec_iter_page(bvec, iter)				\
+> >>> +#define mp_bvec_iter_page(bvec, iter)				\
+> >>>  	(__bvec_iter_bvec((bvec), (iter))->bv_page)
+> >>>  
+> >>> -#define bvec_iter_len(bvec, iter)				\
+> >>> +#define mp_bvec_iter_len(bvec, iter)				\
+> >>
+> >> I'd much prefer if we would stick to the segment naming that
+> >> we also use in the higher level helper.
+> >>
+> >> So segment_iter_page, segment_iter_len, etc.
+> > 
+> > We discussed the naming problem before, one big problem is that the 'segment'
+> > in bio_for_each_segment*() means one single page segment actually.
+> > 
+> > If we use segment_iter_page() here for multi-page segment, it may
+> > confuse people.
+> > 
+> > Of course, I prefer to the naming of segment/page, 
+> > 
+> > And Jens didn't agree to rename bio_for_each_segment*() before.
 > 
-> I think these magic 'bool np' arguments and wrappers over wrapper
-> don't help anyone to actually understand the code.  I'd vote for
-> removing as many wrappers as we really don't need, and passing the
-> actual segment limit instead of the magic bool flag.  Something like
-> this untested patch:
+> I didn't like frivolous renaming (and I still don't), but mp_
+> is horrible imho. Don't name these after the fact that they
+> are done in conjunction with supporting multipage bvecs. That
+> very fact will be irrelevant very soon
 
-I think this way is fine, just a little comment.
+OK, so what is your suggestion for the naming issue?
 
-> 
-> diff --git a/include/linux/bio.h b/include/linux/bio.h
-> index 277921ad42e7..dcad0b69f57a 100644
-> --- a/include/linux/bio.h
-> +++ b/include/linux/bio.h
-> @@ -138,30 +138,21 @@ static inline bool bio_full(struct bio *bio)
->  		bvec_for_each_segment(bvl, &((bio)->bi_io_vec[iter_all.idx]), i, iter_all)
->  
->  static inline void __bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
-> -				      unsigned bytes, bool mp)
-> +				      unsigned bytes, unsigned max_segment)
+Are you fine to use segment_iter_page() here? Then the term of 'segment'
+may be interpreted as multi-page segment here, but as single-page in
+bio_for_each_segment*().
 
-The new parameter should have been named as 'max_segment_len' or
-'max_seg_len'.
-
->  {
->  	iter->bi_sector += bytes >> 9;
->  
->  	if (bio_no_advance_iter(bio))
->  		iter->bi_size -= bytes;
->  	else
-> -		if (!mp)
-> -			bvec_iter_advance(bio->bi_io_vec, iter, bytes);
-> -		else
-> -			mp_bvec_iter_advance(bio->bi_io_vec, iter, bytes);
-> +		__bvec_iter_advance(bio->bi_io_vec, iter, bytes, max_segment);
->  		/* TODO: It is reasonable to complete bio with error here. */
->  }
->  
->  static inline void bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
->  				    unsigned bytes)
->  {
-> -	__bio_advance_iter(bio, iter, bytes, false);
-> -}
-> -
-> -static inline void bio_advance_mp_iter(struct bio *bio, struct bvec_iter *iter,
-> -				       unsigned bytes)
-> -{
-> -	__bio_advance_iter(bio, iter, bytes, true);
-> +	__bio_advance_iter(bio, iter, bytes, PAGE_SIZE);
->  }
->  
->  #define __bio_for_each_segment(bvl, bio, iter, start)			\
-> @@ -177,7 +168,7 @@ static inline void bio_advance_mp_iter(struct bio *bio, struct bvec_iter *iter,
->  	for (iter = (start);						\
->  	     (iter).bi_size &&						\
->  		((bvl = bio_iter_mp_iovec((bio), (iter))), 1);	\
-> -	     bio_advance_mp_iter((bio), &(iter), (bvl).bv_len))
-> +	     __bio_advance_iter((bio), &(iter), (bvl).bv_len, 0))
-
-Even we might pass '-1' for multi-page segment.
-
->  
->  /* returns one real segment(multipage bvec) each time */
->  #define bio_for_each_bvec(bvl, bio, iter)			\
-> diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-> index 02f26d2b59ad..5e2ed46c1c88 100644
-> --- a/include/linux/bvec.h
-> +++ b/include/linux/bvec.h
-> @@ -138,8 +138,7 @@ struct bvec_iter_all {
->  })
->  
->  static inline bool __bvec_iter_advance(const struct bio_vec *bv,
-> -				       struct bvec_iter *iter,
-> -				       unsigned bytes, bool mp)
-> +		struct bvec_iter *iter, unsigned bytes, unsigned max_segment)
->  {
->  	if (WARN_ONCE(bytes > iter->bi_size,
->  		     "Attempted to advance past end of bvec iter\n")) {
-> @@ -148,18 +147,18 @@ static inline bool __bvec_iter_advance(const struct bio_vec *bv,
->  	}
->  
->  	while (bytes) {
-> -		unsigned len;
-> +		unsigned segment_len = mp_bvec_iter_len(bv, *iter);
->  
-> -		if (mp)
-> -			len = mp_bvec_iter_len(bv, *iter);
-> -		else
-> -			len = bvec_iter_len(bv, *iter);
-> +		if (max_segment) {
-> +			max_segment -= bvec_iter_offset(bv, *iter);
-> +			segment_len = min(segment_len, max_segment);
-
-Looks 'max_segment' needs to be constant, shouldn't be updated.
-
-If '-1' is passed for multipage case, the above change may become:
-
-		segment_len = min_t(segment_len, max_seg_len - bvec_iter_offset(bv, *iter));
-
-This way is more clean, but with extra cost of the above line for multipage
-case.
-
-Thanks,
+thanks
 Ming
