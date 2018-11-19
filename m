@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:33088 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:33094 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728800AbeKTAKL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Nov 2018 19:10:11 -0500
+        with ESMTP id S1727332AbeKTAKN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Nov 2018 19:10:13 -0500
 Received: from 089144201193.atnat0010.highway.a1.net ([89.144.201.193] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gOjsk-0004td-LK
-        for linux-xfs@vger.kernel.org; Mon, 19 Nov 2018 13:46:31 +0000
+        id 1gOjsn-0004tt-9q
+        for linux-xfs@vger.kernel.org; Mon, 19 Nov 2018 13:46:33 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/9] xfs: avoid an extent tree lookup in xfs_iomap_write_allocate
-Date: Mon, 19 Nov 2018 14:46:13 +0100
-Message-Id: <20181119134619.16812-4-hch@lst.de>
+Subject: [PATCH 4/9] xfs: make xfs_bmbt_to_iomap more useful
+Date: Mon, 19 Nov 2018 14:46:14 +0100
+Message-Id: <20181119134619.16812-5-hch@lst.de>
 In-Reply-To: <20181119134619.16812-1-hch@lst.de>
 References: <20181119134619.16812-1-hch@lst.de>
 MIME-Version: 1.0
@@ -20,212 +20,183 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Instead of checking for the offset of the last extent to reduce the
-size passed into xfs_bmapi_write reuse the existing code to deal with
-that case for the COW fork in xfs_bmapi_write.
+Move checking for invalid zero blocks and setting of various iomap flags
+into this helper.  Also make it deal with "raw" delalloc extents to
+avoid clutter in the callers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c |  27 +++------
- fs/xfs/xfs_iomap.c       | 127 ++++++++++++++-------------------------
- 2 files changed, 55 insertions(+), 99 deletions(-)
+ fs/xfs/xfs_iomap.c | 84 +++++++++++++++++++++-------------------------
+ fs/xfs/xfs_iomap.h |  4 +--
+ fs/xfs/xfs_pnfs.c  |  2 +-
+ 3 files changed, 41 insertions(+), 49 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 74d7228e755b..ec48652e6325 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4313,28 +4313,21 @@ xfs_bmapi_write(
- 		/* in hole or beyond EOF? */
- 		if (eof || bma.got.br_startoff > bno) {
- 			/*
--			 * CoW fork conversions should /never/ hit EOF or
--			 * holes.  There should always be something for us
--			 * to work on.
-+			 * It is possible that the extents have changed since
-+			 * we did the read call as we dropped the ilock for a
-+			 * while.  We have to be careful about truncates or hole
-+			 * punchs here - we are not allowed to allocate
-+			 * non-delalloc blocks here.
-+			 *
-+			 * The only protection against truncation is the pages
-+			 * for the range we are being asked to convert are
-+			 * locked and hence a truncate will block on them
-+			 * first.
- 			 */
- 			ASSERT(!((flags & XFS_BMAPI_CONVERT) &&
- 			         (flags & XFS_BMAPI_COWFORK)));
- 
- 			if (flags & XFS_BMAPI_DELALLOC) {
--				/*
--				 * For the COW fork we can reasonably get a
--				 * request for converting an extent that races
--				 * with other threads already having converted
--				 * part of it, as there converting COW to
--				 * regular blocks is not protected using the
--				 * IOLOCK.
--				 */
--				ASSERT(flags & XFS_BMAPI_COWFORK);
--				if (!(flags & XFS_BMAPI_COWFORK)) {
--					error = -EIO;
--					goto error0;
--				}
--
- 				if (eof || bno >= end)
- 					break;
- 			} else {
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 27c93b5f029d..c45fe427be4a 100644
+index c45fe427be4a..2ece2363a2a0 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -685,7 +685,7 @@ xfs_iomap_write_allocate(
- {
- 	xfs_mount_t	*mp = ip->i_mount;
- 	struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
--	xfs_fileoff_t	offset_fsb, last_block;
-+	xfs_fileoff_t	offset_fsb;
- 	xfs_fileoff_t	end_fsb, map_start_fsb;
- 	xfs_filblks_t	count_fsb;
- 	xfs_trans_t	*tp;
-@@ -711,96 +711,59 @@ xfs_iomap_write_allocate(
- 	XFS_STATS_ADD(mp, xs_xstrat_bytes, XFS_FSB_TO_B(mp, count_fsb));
+@@ -35,18 +35,40 @@
+ #define XFS_WRITEIO_ALIGN(mp,off)	(((off) >> mp->m_writeio_log) \
+ 						<< mp->m_writeio_log)
  
- 	while (count_fsb != 0) {
-+		nres = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
- 		/*
--		 * Set up a transaction with which to allocate the
--		 * backing store for the file.  Do allocations in a
--		 * loop until we get some space in the range we are
--		 * interested in.  The other space that might be allocated
--		 * is in the delayed allocation extent on which we sit
--		 * but before our buffer starts.
-+		 * We have already reserved space for the extent and any
-+		 * indirect blocks when creating the delalloc extent,
-+		 * there is no need to reserve space in this transaction
-+		 * again.
- 		 */
--		nimaps = 0;
--		while (nimaps == 0) {
--			nres = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
--			/*
--			 * We have already reserved space for the extent and any
--			 * indirect blocks when creating the delalloc extent,
--			 * there is no need to reserve space in this transaction
--			 * again.
--			 */
--			error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0,
--					0, XFS_TRANS_RESERVE, &tp);
--			if (error)
--				return error;
-+		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0,
-+				0, XFS_TRANS_RESERVE, &tp);
-+		if (error)
-+			return error;
- 
--			xfs_ilock(ip, XFS_ILOCK_EXCL);
--			xfs_trans_ijoin(tp, ip, 0);
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, ip, 0);
- 
--			/*
--			 * it is possible that the extents have changed since
--			 * we did the read call as we dropped the ilock for a
--			 * while. We have to be careful about truncates or hole
--			 * punchs here - we are not allowed to allocate
--			 * non-delalloc blocks here.
--			 *
--			 * The only protection against truncation is the pages
--			 * for the range we are being asked to convert are
--			 * locked and hence a truncate will block on them
--			 * first.
--			 *
--			 * As a result, if we go beyond the range we really
--			 * need and hit an delalloc extent boundary followed by
--			 * a hole while we have excess blocks in the map, we
--			 * will fill the hole incorrectly and overrun the
--			 * transaction reservation.
--			 *
--			 * Using a single map prevents this as we are forced to
--			 * check each map we look for overlap with the desired
--			 * range and abort as soon as we find it. Also, given
--			 * that we only return a single map, having one beyond
--			 * what we can return is probably a bit silly.
--			 *
--			 * We also need to check that we don't go beyond EOF;
--			 * this is a truncate optimisation as a truncate sets
--			 * the new file size before block on the pages we
--			 * currently have locked under writeback. Because they
--			 * are about to be tossed, we don't need to write them
--			 * back....
--			 */
--			nimaps = 1;
--			end_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
--			error = xfs_bmap_last_offset(ip, &last_block,
--							XFS_DATA_FORK);
--			if (error)
-+		/*
-+		 * We also need to check that we don't go beyond EOF;
-+		 * this is a truncate optimisation as a truncate sets
-+		 * the new file size before block on the pages we
-+		 * currently have locked under writeback. Because they
-+		 * are about to be tossed, we don't need to write them
-+		 * back....
-+		 */
-+		nimaps = 1;
-+		end_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
-+		if (map_start_fsb + count_fsb > end_fsb) {
-+			count_fsb = end_fsb - map_start_fsb;
-+			if (count_fsb == 0) {
-+				error = -EAGAIN;
- 				goto trans_cancel;
--
--			last_block = XFS_FILEOFF_MAX(last_block, end_fsb);
--			if ((map_start_fsb + count_fsb) > last_block) {
--				count_fsb = last_block - map_start_fsb;
--				if (count_fsb == 0) {
--					error = -EAGAIN;
--					goto trans_cancel;
--				}
- 			}
-+		}
- 
--			/*
--			 * From this point onwards we overwrite the imap
--			 * pointer that the caller gave to us.
--			 */
--			error = xfs_bmapi_write(tp, ip, map_start_fsb,
--						count_fsb, flags, nres, imap,
--						&nimaps);
--			if (error)
--				goto trans_cancel;
-+		/*
-+		 * From this point onwards we overwrite the imap
-+		 * pointer that the caller gave to us.
-+		 */
-+		error = xfs_bmapi_write(tp, ip, map_start_fsb,
-+					count_fsb, flags, nres, imap,
-+					&nimaps);
-+		if (error)
-+			goto trans_cancel;
- 
--			error = xfs_trans_commit(tp);
--			if (error)
--				goto error0;
-+		error = xfs_trans_commit(tp);
-+		if (error)
-+			goto error0;
- 
--			if (whichfork == XFS_COW_FORK)
--				*cow_seq = READ_ONCE(ifp->if_seq);
--			xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		}
-+		if (whichfork == XFS_COW_FORK)
-+			*cow_seq = READ_ONCE(ifp->if_seq);
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-void
++static int
++xfs_alert_fsblock_zero(
++	xfs_inode_t	*ip,
++	xfs_bmbt_irec_t	*imap)
++{
++	xfs_alert_tag(ip->i_mount, XFS_PTAG_FSBLOCK_ZERO,
++			"Access to block zero in inode %llu "
++			"start_block: %llx start_off: %llx "
++			"blkcnt: %llx extent-state: %x",
++		(unsigned long long)ip->i_ino,
++		(unsigned long long)imap->br_startblock,
++		(unsigned long long)imap->br_startoff,
++		(unsigned long long)imap->br_blockcount,
++		imap->br_state);
++	return -EFSCORRUPTED;
++}
 +
-+		if (nimaps == 0 || imap->br_startblock == HOLESTARTBLOCK)
-+			return -EAGAIN;
++int
+ xfs_bmbt_to_iomap(
+ 	struct xfs_inode	*ip,
+ 	struct iomap		*iomap,
+-	struct xfs_bmbt_irec	*imap)
++	struct xfs_bmbt_irec	*imap,
++	bool			shared)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
  
- 		/*
- 		 * See if we were able to allocate an extent that
++	if (unlikely(!imap->br_startblock && !XFS_IS_REALTIME_INODE(ip)))
++		return xfs_alert_fsblock_zero(ip, imap);
++
+ 	if (imap->br_startblock == HOLESTARTBLOCK) {
+ 		iomap->addr = IOMAP_NULL_ADDR;
+ 		iomap->type = IOMAP_HOLE;
+-	} else if (imap->br_startblock == DELAYSTARTBLOCK) {
++	} else if (imap->br_startblock == DELAYSTARTBLOCK ||
++		   isnullstartblock(imap->br_startblock)) {
+ 		iomap->addr = IOMAP_NULL_ADDR;
+ 		iomap->type = IOMAP_DELALLOC;
+ 	} else {
+@@ -60,6 +82,13 @@ xfs_bmbt_to_iomap(
+ 	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
+ 	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
+ 	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
++
++	if (xfs_ipincount(ip) &&
++	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
++		iomap->flags |= IOMAP_F_DIRTY;
++	if (shared)
++		iomap->flags |= IOMAP_F_SHARED;
++	return 0;
+ }
+ 
+ static void
+@@ -138,23 +167,6 @@ xfs_iomap_eof_align_last_fsb(
+ 	return 0;
+ }
+ 
+-STATIC int
+-xfs_alert_fsblock_zero(
+-	xfs_inode_t	*ip,
+-	xfs_bmbt_irec_t	*imap)
+-{
+-	xfs_alert_tag(ip->i_mount, XFS_PTAG_FSBLOCK_ZERO,
+-			"Access to block zero in inode %llu "
+-			"start_block: %llx start_off: %llx "
+-			"blkcnt: %llx extent-state: %x",
+-		(unsigned long long)ip->i_ino,
+-		(unsigned long long)imap->br_startblock,
+-		(unsigned long long)imap->br_startoff,
+-		(unsigned long long)imap->br_blockcount,
+-		imap->br_state);
+-	return -EFSCORRUPTED;
+-}
+-
+ int
+ xfs_iomap_write_direct(
+ 	xfs_inode_t	*ip,
+@@ -649,17 +661,7 @@ xfs_file_iomap_begin_delay(
+ 	iomap->flags |= IOMAP_F_NEW;
+ 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
+ done:
+-	if (isnullstartblock(got.br_startblock))
+-		got.br_startblock = DELAYSTARTBLOCK;
+-
+-	if (!got.br_startblock) {
+-		error = xfs_alert_fsblock_zero(ip, &got);
+-		if (error)
+-			goto out_unlock;
+-	}
+-
+-	xfs_bmbt_to_iomap(ip, iomap, &got);
+-
++	error = xfs_bmbt_to_iomap(ip, iomap, &got, false);
+ out_unlock:
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+@@ -1105,15 +1107,7 @@ xfs_file_iomap_begin(
+ 	trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
+ 
+ out_finish:
+-	if (xfs_ipincount(ip) && (ip->i_itemp->ili_fsync_fields
+-				& ~XFS_ILOG_TIMESTAMP))
+-		iomap->flags |= IOMAP_F_DIRTY;
+-
+-	xfs_bmbt_to_iomap(ip, iomap, &imap);
+-
+-	if (shared)
+-		iomap->flags |= IOMAP_F_SHARED;
+-	return 0;
++	return xfs_bmbt_to_iomap(ip, iomap, &imap, shared);
+ 
+ out_found:
+ 	ASSERT(nimaps);
+@@ -1236,12 +1230,10 @@ xfs_xattr_iomap_begin(
+ out_unlock:
+ 	xfs_iunlock(ip, lockmode);
+ 
+-	if (!error) {
+-		ASSERT(nimaps);
+-		xfs_bmbt_to_iomap(ip, iomap, &imap);
+-	}
+-
+-	return error;
++	if (error)
++		return error;
++	ASSERT(nimaps);
++	return xfs_bmbt_to_iomap(ip, iomap, &imap, false);
+ }
+ 
+ const struct iomap_ops xfs_xattr_iomap_ops = {
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index c6170548831b..ed27e41b687c 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -17,8 +17,8 @@ int xfs_iomap_write_allocate(struct xfs_inode *, int, xfs_off_t,
+ 			struct xfs_bmbt_irec *, unsigned int *);
+ int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
+ 
+-void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
+-		struct xfs_bmbt_irec *);
++int xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
++		struct xfs_bmbt_irec *, bool shared);
+ xfs_extlen_t xfs_eof_alignment(struct xfs_inode *ip, xfs_extlen_t extsize);
+ 
+ static inline xfs_filblks_t
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index f44c3599527d..bde2c9f56a46 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -185,7 +185,7 @@ xfs_fs_map_blocks(
+ 	}
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 
+-	xfs_bmbt_to_iomap(ip, iomap, &imap);
++	error = xfs_bmbt_to_iomap(ip, iomap, &imap, false);
+ 	*device_generation = mp->m_generation;
+ 	return error;
+ out_unlock:
 -- 
 2.19.1
