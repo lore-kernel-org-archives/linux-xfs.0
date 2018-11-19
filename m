@@ -1,203 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59486 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725904AbeKUCw7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Nov 2018 21:52:59 -0500
-Date: Tue, 20 Nov 2018 11:23:00 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/5] xfs: precalculate inodes and blocks per inode cluster
-Message-ID: <20181120162300.GD48509@bfoster>
-References: <154171920164.30818.2178553842722589349.stgit@magnolia>
- <154171923320.30818.4183266629971056462.stgit@magnolia>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:45937 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726501AbeKTHnX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 02:43:23 -0500
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 4/5] splice: increase pipe size in splice_direct_to_actor()
+Date: Tue, 20 Nov 2018 08:17:41 +1100
+Message-Id: <20181119211742.8824-5-david@fromorbit.com>
+In-Reply-To: <20181119211742.8824-1-david@fromorbit.com>
+References: <20181119211742.8824-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154171923320.30818.4183266629971056462.stgit@magnolia>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
 
-On Thu, Nov 08, 2018 at 03:20:33PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Store the number of inodes and blocks per inode cluster in the mount
-> data so that we don't have to keep recalculating them.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_ialloc.c |   23 ++++++++++-------------
->  fs/xfs/scrub/ialloc.c      |   14 ++++++--------
->  fs/xfs/xfs_inode.c         |   14 +++++---------
->  fs/xfs/xfs_itable.c        |   14 ++++++--------
->  fs/xfs/xfs_log_recover.c   |    8 +++-----
->  fs/xfs/xfs_mount.c         |    2 ++
->  fs/xfs/xfs_mount.h         |    2 ++
->  7 files changed, 34 insertions(+), 43 deletions(-)
-> 
-> 
-...
-> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> index 426eb1a5503c..332ac7b61789 100644
-> --- a/fs/xfs/scrub/ialloc.c
-> +++ b/fs/xfs/scrub/ialloc.c
-> @@ -193,18 +193,16 @@ xchk_iallocbt_check_freemask(
->  	xfs_agino_t			chunkino;
->  	xfs_agino_t			clusterino;
->  	xfs_agblock_t			agbno;
-> -	int				blks_per_cluster;
->  	uint16_t			holemask;
->  	uint16_t			ir_holemask;
->  	int				error = 0;
->  
->  	/* Make sure the freemask matches the inode records. */
-> -	blks_per_cluster = xfs_icluster_size_fsb(mp);
-> -	nr_inodes = XFS_FSB_TO_INO(mp, blks_per_cluster);
-> +	nr_inodes = mp->m_inodes_per_cluster;
+From: Dave Chinner <dchinner@redhat.com>
 
-Why keep nr_inodes? Doesn't look like it changes anywhere..
+When copy_file_range() is called on files that have been opened with
+O_DIRECT, do_splice_direct() does a manual copy of the range one
+pipe buffer at a time. The default is 16 pages, which means on
+x86_64 it is limited to 64kB IO. This is extremely slow - 64k
+synchrnous read/write will run at maybe 5-10MB/s on a spinning disk
+and be seek bound. It will be faster on SSDs, but still very
+inefficient.
 
->  
->  	for (agino = irec->ir_startino;
->  	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
-> -	     agino += blks_per_cluster * mp->m_sb.sb_inopblock) {
-> +	     agino += mp->m_blocks_per_cluster * mp->m_sb.sb_inopblock) {
+Increase the pipe size to the maximum allowed user size so that we
+can get decent throughput for this highly sub-optimal copy loop.  We
+also don't care if changing the pipe size fails - that will just
+result in a slower copy.
 
-... and this looks like m_inodes_per_cluster.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/pipe.c                 | 2 +-
+ fs/splice.c               | 8 ++++++++
+ include/linux/pipe_fs_i.h | 1 +
+ 3 files changed, 10 insertions(+), 1 deletion(-)
 
->  		fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
->  		chunkino = agino - irec->ir_startino;
->  		agbno = XFS_AGINO_TO_AGBNO(mp, agino);
-> @@ -225,18 +223,18 @@ xchk_iallocbt_check_freemask(
->  		/* If any part of this is a hole, skip it. */
->  		if (ir_holemask) {
->  			xchk_xref_is_not_owned_by(bs->sc, agbno,
-> -					blks_per_cluster,
-> +					mp->m_blocks_per_cluster,
->  					&XFS_RMAP_OINFO_INODES);
->  			continue;
->  		}
->  
-> -		xchk_xref_is_owned_by(bs->sc, agbno, blks_per_cluster,
-> +		xchk_xref_is_owned_by(bs->sc, agbno, mp->m_blocks_per_cluster,
->  				&XFS_RMAP_OINFO_INODES);
->  
->  		/* Grab the inode cluster buffer. */
->  		imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno,
->  				agbno);
-> -		imap.im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
-> +		imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
->  		imap.im_boffset = 0;
->  
->  		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
-> @@ -303,7 +301,7 @@ xchk_iallocbt_rec(
->  	/* Make sure this record is aligned to cluster and inoalignmnt size. */
->  	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
->  	if ((agbno & (xfs_ialloc_cluster_alignment(mp) - 1)) ||
-> -	    (agbno & (xfs_icluster_size_fsb(mp) - 1)))
-> +	    (agbno & (mp->m_blocks_per_cluster - 1)))
->  		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
->  
->  	*inode_blocks += XFS_B_TO_FSB(mp,
-...
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index 18d8d3b812a7..00828b57e1f8 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -167,20 +167,18 @@ xfs_bulkstat_ichunk_ra(
->  {
->  	xfs_agblock_t			agbno;
->  	struct blk_plug			plug;
-> -	int				blks_per_cluster;
-> -	int				inodes_per_cluster;
->  	int				i;	/* inode chunk index */
->  
->  	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
-> -	blks_per_cluster = xfs_icluster_size_fsb(mp);
-> -	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
->  
->  	blk_start_plug(&plug);
->  	for (i = 0; i < XFS_INODES_PER_CHUNK;
-> -	     i += inodes_per_cluster, agbno += blks_per_cluster) {
-> -		if (xfs_inobt_maskn(i, inodes_per_cluster) & ~irec->ir_free) {
-> -			xfs_btree_reada_bufs(mp, agno, agbno, blks_per_cluster,
-> -					     &xfs_inode_buf_ops);
-> +	     i += mp->m_inodes_per_cluster, agbno += mp->m_blocks_per_cluster) {
-> +		if (xfs_inobt_maskn(i, mp->m_inodes_per_cluster) &
-> +				~irec->ir_free) {
-
-Just another nit, this should probably be aligned like so:
-
-		if (xfs_inobt_maskn(i, mp->m_inodes_per_cluster) &
-		    ~irec->ir_free) {
-			...
-		}
-
-... right?
-
-Brian
-
-> +			xfs_btree_reada_bufs(mp, agno, agbno,
-> +					mp->m_blocks_per_cluster,
-> +					&xfs_inode_buf_ops);
->  		}
->  	}
->  	blk_finish_plug(&plug);
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 1fc9e9042e0e..9fe88d125f0a 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3850,7 +3850,6 @@ xlog_recover_do_icreate_pass2(
->  	unsigned int		count;
->  	unsigned int		isize;
->  	xfs_agblock_t		length;
-> -	int			blks_per_cluster;
->  	int			bb_per_cluster;
->  	int			cancel_count;
->  	int			nbufs;
-> @@ -3918,14 +3917,13 @@ xlog_recover_do_icreate_pass2(
->  	 * buffers for cancellation so we don't overwrite anything written after
->  	 * a cancellation.
->  	 */
-> -	blks_per_cluster = xfs_icluster_size_fsb(mp);
-> -	bb_per_cluster = XFS_FSB_TO_BB(mp, blks_per_cluster);
-> -	nbufs = length / blks_per_cluster;
-> +	bb_per_cluster = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
-> +	nbufs = length / mp->m_blocks_per_cluster;
->  	for (i = 0, cancel_count = 0; i < nbufs; i++) {
->  		xfs_daddr_t	daddr;
->  
->  		daddr = XFS_AGB_TO_DADDR(mp, agno,
-> -					 agbno + i * blks_per_cluster);
-> +					 agbno + i * mp->m_blocks_per_cluster);
->  		if (xlog_check_buffer_cancelled(log, daddr, bb_per_cluster, 0))
->  			cancel_count++;
->  	}
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 02d15098dbee..56d374675fd5 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -798,6 +798,8 @@ xfs_mountfs(
->  		if (mp->m_sb.sb_inoalignmt >= XFS_B_TO_FSBT(mp, new_size))
->  			mp->m_inode_cluster_size = new_size;
->  	}
-> +	mp->m_blocks_per_cluster = xfs_icluster_size_fsb(mp);
-> +	mp->m_inodes_per_cluster = XFS_FSB_TO_INO(mp, mp->m_blocks_per_cluster);
->  
->  	/*
->  	 * If enabled, sparse inode chunk alignment is expected to match the
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 7964513c3128..58a037bfac22 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -101,6 +101,8 @@ typedef struct xfs_mount {
->  	uint8_t			m_agno_log;	/* log #ag's */
->  	uint8_t			m_agino_log;	/* #bits for agino in inum */
->  	uint			m_inode_cluster_size;/* min inode buf size */
-> +	unsigned int		m_inodes_per_cluster;
-> +	unsigned int		m_blocks_per_cluster;
->  	uint			m_blockmask;	/* sb_blocksize-1 */
->  	uint			m_blockwsize;	/* sb_blocksize in words */
->  	uint			m_blockwmask;	/* blockwsize-1 */
-> 
+diff --git a/fs/pipe.c b/fs/pipe.c
+index bdc5d3c0977d..5885d29cdaa6 100644
+--- a/fs/pipe.c
++++ b/fs/pipe.c
+@@ -1025,7 +1025,7 @@ unsigned int round_pipe_size(unsigned long size)
+  * Allocate a new array of pipe buffers and copy the info over. Returns the
+  * pipe size if successful, or return -ERROR on error.
+  */
+-static long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg)
++long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg)
+ {
+ 	struct pipe_buffer *bufs;
+ 	unsigned int size, nr_pages;
+diff --git a/fs/splice.c b/fs/splice.c
+index 3553f1956508..64dcc622db8d 100644
+--- a/fs/splice.c
++++ b/fs/splice.c
+@@ -34,6 +34,7 @@
+ #include <linux/socket.h>
+ #include <linux/compat.h>
+ #include <linux/sched/signal.h>
++#include <linux/pipe_fs_i.h>
+ 
+ #include "internal.h"
+ 
+@@ -931,6 +932,13 @@ ssize_t splice_direct_to_actor(struct file *in, struct splice_desc *sd,
+ 		current->splice_pipe = pipe;
+ 	}
+ 
++	/*
++	 * Try to increase the data holding capacity of the pipe so we can do
++	 * larger IOs. This may not increase the size at all because maximum
++	 * user pipe size is administrator controlled, but we still should try.
++	 */
++	pipe_set_size(pipe, pipe_max_size);
++
+ 	/*
+ 	 * Do the splice.
+ 	 */
+diff --git a/include/linux/pipe_fs_i.h b/include/linux/pipe_fs_i.h
+index 5a3bb3b7c9ad..e7d728e5b5f8 100644
+--- a/include/linux/pipe_fs_i.h
++++ b/include/linux/pipe_fs_i.h
+@@ -191,5 +191,6 @@ struct pipe_inode_info *get_pipe_info(struct file *file);
+ 
+ int create_pipe_files(struct file **, int);
+ unsigned int round_pipe_size(unsigned long size);
++long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg);
+ 
+ #endif
+-- 
+2.19.1
