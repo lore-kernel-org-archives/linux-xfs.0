@@ -1,35 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:46161 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727733AbeKUCqr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Nov 2018 21:46:47 -0500
-Date: Tue, 20 Nov 2018 17:16:51 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V10 09/19] block: introduce bio_bvecs()
-Message-ID: <20181120161651.GB2629@lst.de>
-References: <20181115085306.9910-1-ming.lei@redhat.com> <20181115085306.9910-10-ming.lei@redhat.com> <20181116134541.GH3165@lst.de> <002fe56b-25e4-573e-c09b-bb12c3e8d25a@grimberg.me>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:15953 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730913AbeKTHbC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 02:31:02 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1gOqj7-0000XW-4V
+        for linux-xfs@vger.kernel.org; Tue, 20 Nov 2018 08:05:01 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1gOqj7-0002G5-33
+        for linux-xfs@vger.kernel.org; Tue, 20 Nov 2018 08:05:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 6/7] xfs: don't ENOSPC on writeback when punching holes
+Date: Tue, 20 Nov 2018 08:04:58 +1100
+Message-Id: <20181119210459.8506-7-david@fromorbit.com>
+In-Reply-To: <20181119210459.8506-1-david@fromorbit.com>
+References: <20181119210459.8506-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <002fe56b-25e4-573e-c09b-bb12c3e8d25a@grimberg.me>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sagi Grimberg <sagi@grimberg.me>
-Cc: Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: linux-xfs@vger.kernel.org
 
-On Mon, Nov 19, 2018 at 04:49:27PM -0800, Sagi Grimberg wrote:
->
->> The only user in your final tree seems to be the loop driver, and
->> even that one only uses the helper for read/write bios.
->>
->> I think something like this would be much simpler in the end:
->
-> The recently submitted nvme-tcp host driver should also be a user
-> of this. Does it make sense to keep it as a helper then?
+From: Dave Chinner <dchinner@redhat.com>
 
-I did take a brief look at the code, and I really don't understand
-why the heck it even deals with bios to start with.  Like all the
-other nvme transports it is a blk-mq driver and should iterate
-over segments in a request and more or less ignore bios.  Something
-is horribly wrong in the design.
+Just tried to punch a 40T sparse file when enospc was triggered due
+to extent size hints consuming more space than expected. It failed
+with:
+
+# sudo xfs_io -c "fpunch 0 40t" /mnt/fast/xfs-arekm.img
+fallocate: No space left on device
+#
+
+because the writeback error of ENOSPC was being reported. We're
+going to free that space, so we don't care if there was a ENOSPC
+writeback error. So ignore ENOSPC errors and punch anyway.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_bmap_util.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 167ff4297e5c..cc7a0d47c529 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1060,8 +1060,13 @@ xfs_flush_unmap_range(
+ 	start = round_down(offset, rounding);
+ 	end = round_up(offset + len, rounding) - 1;
+ 
++	/*
++	 * We're going to trash the data in this range, so if writeback reports
++	 * an enospc error, don't let it stop us from /freeing the space/ in the
++	 * range to alleviate the ENOSPC condition.
++	 */
+ 	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
+-	if (error)
++	if (error && error != -ENOSPC)
+ 		return error;
+ 	truncate_pagecache_range(inode, start, end);
+ 	return 0;
+-- 
+2.19.1
