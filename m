@@ -1,135 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33856 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726205AbeKUAOy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Nov 2018 19:14:54 -0500
-Date: Tue, 20 Nov 2018 08:45:38 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 8/7] xfs: delalloc -> unwritten COW fork allocation can
- go wrong
-Message-ID: <20181120134537.GB47711@bfoster>
+Received: from bombadil.infradead.org ([198.137.202.133]:54996 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725968AbeKTSk1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 13:40:27 -0500
+Date: Tue, 20 Nov 2018 00:12:35 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/7] xfs: zero length symlinks are not valid
+Message-ID: <20181120081235.GA30481@infradead.org>
 References: <20181119210459.8506-1-david@fromorbit.com>
- <20181120063605.GN19305@dastard>
+ <20181119210459.8506-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181120063605.GN19305@dastard>
+In-Reply-To: <20181119210459.8506-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 20, 2018 at 05:36:05PM +1100, Dave Chinner wrote:
-> 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Long saga. There have been days spent following this through dead end
-> after dead end in multi-GB event traces. This morning, after writing
-> a trace-cmd wrapper that enabled me to be more selective about XFS
-> trace points, I discovered that I could get just enough essential
-> tracepoints enabled that there was a 50:50 chance the fsx config
-> would fail at ~115k ops. If it didn't fail at op 115547, I stopped
-> fsx at op 115548 anyway.
-> 
-> That gave me two traces - one where the problem manifested, and one
-> where it didn't. After refining the traces to have the necessary
-> information, I found that in the failing case there was a real
-> extent in the COW fork compared to an unwritten extent in the
-> working case.
-> 
-> Walking back through the two traces to the point where the CWO fork
-> extents actually diverged, I found that the bad case had an extra
-> unwritten extent in it. This is likely because the bug it led me to
-> had triggered multiple times in those 115k ops, leaving stray
-> COW extents around. What I saw was a COW delalloc conversion to an
-> unwritten extent (as they should always be through
-> xfs_iomap_write_allocate()) resulted in a /written extent/:
-> 
-> xfs_writepage:        dev 259:0 ino 0x83 pgoff 0x17000 size 0x79a00 offset 0 length 0
-> xfs_iext_remove:      dev 259:0 ino 0x83 state RC|LF|RF|COW cur 0xffff888247b899c0/2 offset 32 block 152 count 20 flag 1 caller xfs_bmap_add_extent_delay_real
-> xfs_bmap_pre_update:  dev 259:0 ino 0x83 state RC|LF|RF|COW cur 0xffff888247b899c0/1 offset 1 block 4503599627239429 count 31 flag 0 caller xfs_bmap_add_extent_delay_real
-> xfs_bmap_post_update: dev 259:0 ino 0x83 state RC|LF|RF|COW cur 0xffff888247b899c0/1 offset 1 block 121 count 51 flag 0 caller xfs_bmap_add_ex
-> 
-> Basically, Cow fork before:
-> 
-> 	0 1            32          52
-> 	+H+DDDDDDDDDDDD+UUUUUUUUUUU+
-> 	   PREV		RIGHT
-> 
-> COW delalloc conversion allocates:
-> 
-> 	  1	       32
-> 	  +uuuuuuuuuuuu+
-> 	  NEW
-> 
-> And the result according to the xfs_bmap_post_update trace was:
-> 
-> 	0 1            32          52
-> 	+H+wwwwwwwwwwwwwwwwwwwwwwww+
-> 	   PREV
-> 
-> Which is clearly wrong - it should be a merged unwritten extent,
-> not an unwritten extent.
-> 
-> That lead me to look at the LEFT_FILLING|RIGHT_FILLING|RIGHT_CONTIG
-> case in xfs_bmap_add_extent_delay_real(), and sure enough, there's
-> the bug.
-> 
-> It takes the old delalloc extent (PREV) and adds the length of the
-> RIGHT extent to it, takes the start block from NEW, removes the
-> RIGHT extent and then updates PREV with the new extent.
-> 
-> What it fails to do is update PREV.br_state. For delalloc, this is
-> always XFS_EXT_NORM, while in this case we are converting the
-> delayed allocation to unwritten, so it needs to be updated to
-> XFS_EXT_UNWRITTEN. This LF|RF|RC case does not do this, and so
-> the resultant extent is always written.
-> 
-> And that's the bug I've been chasing for a week - a bmap btree bug,
-> not a reflink/dedupe/copy_file_range bug, but a BMBT bug introduced
-> with the recent in core extent tree scalability enhancements.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 2d78fd53e822..39eaa2b86060 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1694,10 +1694,13 @@ xfs_bmap_add_extent_delay_real(
->  	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING | BMAP_RIGHT_CONTIG:
->  		/*
->  		 * Filling in all of a previously delayed allocation extent.
-> -		 * The right neighbor is contiguous, the left is not.
-> +		 * The right neighbor is contiguous, the left is not. Take care
-> +		 * with delay -> unwritten extent allocation here because the
-> +		 * delalloc record we are overwriting is always written.
->  		 */
->  		PREV.br_startblock = new->br_startblock;
->  		PREV.br_blockcount += RIGHT.br_blockcount;
-> +		PREV.br_state = new->br_state;
->  
->  		xfs_iext_next(ifp, &bma->icur);
->  		xfs_iext_remove(bma->ip, &bma->icur, state);
+>  	/*
+> -	 * Lock the inode, fix the size, and join it to the transaction.
+> -	 * Hold it so in the normal path, we still have it locked for
+> -	 * the second transaction.  In the error paths we need it
+> +	 * Lock the inode, fix the size, turn it into a regular file and join it
+> +	 * to the transaction.  Hold it so in the normal path, we still have it
+> +	 * locked for the second transaction.  In the error paths we need it
+>  	 * held so the cancel won't rele it, see below.
+>  	 */
 
-Fix looks sane to me, though I'm a little curious why this doesn't
-follow the "contiguous extent extension" pattern that most of the other
-contig cases seem to follow. For example, something like the following
-for the right contig case:
+Most of this comment seems rather pointless as it explains the how and
+not the why.  Additionally it is out of data (we don't hold inodes for
+transactions anymore), and partially below the code it claims to
+document.  Given that you explain the why pretty well in the top of the
+function document I'd drop this entirely.
 
-                old = RIGHT;
-                RIGHT.br_startoff = new->br_startoff;
-                RIGHT.br_startblock = new->br_startblock;
-                RIGHT.br_blockcount += new.br_blockcount;
+> +	/*
+> +	 * Inline fork state gets removed by xfs_difree() so we have nothing to
+> +	 * do here in that case.
+> +	 */
+>  	if (ip->i_df.if_flags & XFS_IFINLINE) {
+> -		if (ip->i_df.if_bytes > 0) 
+> -			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
+> -					  XFS_DATA_FORK);
+>  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -		ASSERT(ip->i_df.if_bytes == 0);
+>  		return 0;
+>  	}
 
-                xfs_iext_remove(bma->ip, &bma->icur, state); /* PREV */
-                xfs_iext_next(ifp, &bma->icur);
-                xfs_iext_update_extent(bma->ip, state, &bma->icur, &RIGHT);
+The ilock here is rather pointless now that we do nothing underneath
+it but checking two different integral values.
 
-... and change the subsequent btree update to use old/RIGHT. Maybe
-Christoph has thoughts on that.
+Something like this additional cleanup might be nice now, with
+the function split being rather pointless now:
 
-Brian
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index b2c1177c717f..8e2e12e34098 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -386,29 +386,41 @@ xfs_symlink(
+  * userspace cannot find this inode anymore, so this change is not user visible
+  * but allows us to catch corrupt zero-length symlinks in the verifiers.
+  */
+-STATIC int
+-xfs_inactive_symlink_rmt(
+-	struct xfs_inode *ip)
++
++int
++xfs_inactive_symlink(
++	struct xfs_inode	*ip)
+ {
+-	xfs_buf_t	*bp;
+-	int		done;
+-	int		error;
+-	int		i;
+-	xfs_mount_t	*mp;
+-	xfs_bmbt_irec_t	mval[XFS_SYMLINK_MAPS];
+-	int		nmaps;
+-	int		size;
+-	xfs_trans_t	*tp;
+-
+-	mp = ip->i_mount;
+-	ASSERT(ip->i_df.if_flags & XFS_IFEXTENTS);
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_buf		*bp;
++	int			done;
++	int			error;
++	int			i;
++	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
++	int			nmaps;
++	int			size;
++	struct xfs_trans	*tp;
++
++	trace_xfs_inactive_symlink(ip);
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return -EIO;
++
++	ASSERT(ip->i_d.di_size > 0 && ip->i_d.di_size <= XFS_SYMLINK_MAXLEN);
++
+ 	/*
+-	 * We're freeing a symlink that has some
+-	 * blocks allocated to it.  Free the
+-	 * blocks here.  We know that we've got
+-	 * either 1 or 2 extents and that we can
+-	 * free them all in one bunmapi call.
++	 * Inline fork state gets removed by xfs_difree() so we have nothing to
++	 * do here in that case.
+ 	 */
++	if (ip->i_df.if_flags & XFS_IFINLINE)
++		return 0;
++
++	/*
++	 * We're freeing a symlink that has some blocks allocated to it.  Free
++	 * the blocks here.  We know that we've got either 1 or 2 extents and
++	 * that we can free them all in one bunmapi call.
++	 */
++	ASSERT(ip->i_df.if_flags & XFS_IFEXTENTS);
+ 	ASSERT(ip->i_d.di_nextents > 0 && ip->i_d.di_nextents <= 2);
+ 
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
+@@ -419,10 +431,7 @@ xfs_inactive_symlink_rmt(
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+ 	/*
+-	 * Lock the inode, fix the size, turn it into a regular file and join it
+-	 * to the transaction.  Hold it so in the normal path, we still have it
+-	 * locked for the second transaction.  In the error paths we need it
+-	 * held so the cancel won't rele it, see below.
++	 * Fix the size, turn it into a regular file in the same transaction.
+ 	 */
+ 	size = (int)ip->i_d.di_size;
+ 	ip->i_d.di_size = 0;
+@@ -485,45 +494,3 @@ xfs_inactive_symlink_rmt(
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+ }
+-
+-/*
+- * xfs_inactive_symlink - free a symlink
+- */
+-int
+-xfs_inactive_symlink(
+-	struct xfs_inode	*ip)
+-{
+-	struct xfs_mount	*mp = ip->i_mount;
+-	int			pathlen;
+-
+-	trace_xfs_inactive_symlink(ip);
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return -EIO;
+-
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	pathlen = (int)ip->i_d.di_size;
+-	ASSERT(pathlen);
+-
+-	if (pathlen <= 0 || pathlen > XFS_SYMLINK_MAXLEN) {
+-		xfs_alert(mp, "%s: inode (0x%llx) bad symlink length (%d)",
+-			 __func__, (unsigned long long)ip->i_ino, pathlen);
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		ASSERT(0);
+-		return -EFSCORRUPTED;
+-	}
+-
+-	/*
+-	 * Inline fork state gets removed by xfs_difree() so we have nothing to
+-	 * do here in that case.
+-	 */
+-	if (ip->i_df.if_flags & XFS_IFINLINE) {
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		return 0;
+-	}
+-
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-
+-	/* remove the remote symlink */
+-	return xfs_inactive_symlink_rmt(ip);
+-}
