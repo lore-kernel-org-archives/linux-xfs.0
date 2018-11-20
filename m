@@ -1,68 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:45750 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725887AbeKUJZp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 04:25:45 -0500
-Date: Tue, 20 Nov 2018 14:53:55 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:44682 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725887AbeKUJ2T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 04:28:19 -0500
+Date: Tue, 20 Nov 2018 14:56:40 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/7] xfs: extent shifting doesn't fully invalidate page
- cache
-Message-ID: <20181120225355.GI6792@magnolia>
+Subject: Re: [PATCH 7/7] xfs: flush removing page cache in
+ xfs_reflink_remap_prep
+Message-ID: <20181120225640.GJ6792@magnolia>
 References: <20181119210459.8506-1-david@fromorbit.com>
- <20181119210459.8506-6-david@fromorbit.com>
+ <20181119210459.8506-8-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181119210459.8506-6-david@fromorbit.com>
+In-Reply-To: <20181119210459.8506-8-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 20, 2018 at 08:04:57AM +1100, Dave Chinner wrote:
+On Tue, Nov 20, 2018 at 08:04:59AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The extent shifting code uses a flush and invalidate mechainsm prior
-> to shifting extents around. This is similar to what
-> xfs_free_file_space() does, but it doesn't take into account things
-> like page cache vs block size differences, and it will fail if there
-> is a page that it currently busy.
+> On a sub-page block size filesystem, fsx is failing with a data
+> corruption after a series of operations involving copying a file
+> with the destination offset beyond EOF of the destination of the file:
 > 
-> xfs_flush_unmap_range() handles all of these cases, so just convert
-> xfs_prepare_shift() to us that mechanism rather than having it's own
-> special sauce.
+> 8093(157 mod 256): TRUNCATE DOWN        from 0x7a120 to 0x50000 ******WWWW
+> 8094(158 mod 256): INSERT 0x25000 thru 0x25fff  (0x1000 bytes)
+> 8095(159 mod 256): COPY 0x18000 thru 0x1afff    (0x3000 bytes) to 0x2f400
+> 8096(160 mod 256): WRITE    0x5da00 thru 0x651ff        (0x7800 bytes) HOLE
+> 8097(161 mod 256): COPY 0x2000 thru 0x5fff      (0x4000 bytes) to 0x6fc00
+> 
+> The second copy here is beyond EOF, and it is to sub-page (4k) but
+> block aligned (1k) offset. The clone runs the EOF zeroing, landing
+> in a pre-existing post-eof delalloc extent. This zeroes the post-eof
+> extents in the page cache just fine, dirtying the pages correctly.
+> 
+> The problem is that xfs_reflink_remap_prep() now truncates the page
+> cache over the range that it is copying it to, and rounds that down
+> to cover the entire start page. This removes the dirty page over the
+> delalloc extent from the page cache without having written it back.
+> Hence later, when the page cache is flushed, the page at offset
+> 0x6f000 has not been written back and hence exposes stale data,
+> which fsx trips over less than 10 operations later.
+> 
+> Fix this by changing xfs_reflink_remap_prep() to use
+> xfs_flush_unmap_range().
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_bmap_util.c |  2 +-
+>  fs/xfs/xfs_bmap_util.h |  3 +++
+>  fs/xfs/xfs_reflink.c   | 17 +++++++++++++----
+>  3 files changed, 17 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index cc7a0d47c529..3e66cf0520a9 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1042,7 +1042,7 @@ xfs_unmap_extent(
+>  	goto out_unlock;
+>  }
+>  
+> -static int
+> +int
+>  xfs_flush_unmap_range(
+>  	struct xfs_inode	*ip,
+>  	xfs_off_t		offset,
+> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> index 87363d136bb6..7a78229cf1a7 100644
+> --- a/fs/xfs/xfs_bmap_util.h
+> +++ b/fs/xfs/xfs_bmap_util.h
+> @@ -80,4 +80,7 @@ int xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
+>  			  int whichfork, xfs_extnum_t *nextents,
+>  			  xfs_filblks_t *count);
+>  
+> +int	xfs_flush_unmap_range(struct xfs_inode *ip, xfs_off_t offset,
+> +			      xfs_off_t len);
+> +
+>  #endif	/* __XFS_BMAP_UTIL_H__ */
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index ecdb086bc23e..a41590b7c229 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -1351,10 +1351,19 @@ xfs_reflink_remap_prep(
+>  	if (ret)
+>  		goto out_unlock;
+>  
+> -	/* Zap any page cache for the destination file's range. */
+> -	truncate_inode_pages_range(&inode_out->i_data,
+> -			round_down(pos_out, PAGE_SIZE),
+> -			round_up(pos_out + *len, PAGE_SIZE) - 1);
+> +	/*
+> +	 * If pos_out > EOF, we make have dirtied blocks between EOF and
 
-Looks ok,
+Looks ok, will s/make/may/ on the way in (unless you send a new
+version);
+
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> ---
->  fs/xfs/xfs_bmap_util.c | 8 +-------
->  1 file changed, 1 insertion(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 5d263dfdb3bc..167ff4297e5c 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1195,13 +1195,7 @@ xfs_prepare_shift(
->  	 * Writeback and invalidate cache for the remainder of the file as we're
->  	 * about to shift down every extent from offset to EOF.
->  	 */
-> -	error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping, offset, -1);
-> -	if (error)
-> -		return error;
-> -	error = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
-> -					offset >> PAGE_SHIFT, -1);
-> -	if (error)
-> -		return error;
-> +	error = xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip));
+> +	 * pos_out. In that case, we need to extend the flush and unmap to cover
+> +	 * from EOF to the end of the copy length.
+> +	 */
+> +	if (pos_out > XFS_ISIZE(dest)) {
+> +		loff_t	flen = *len + (pos_out - XFS_ISIZE(dest));
+> +		ret = xfs_flush_unmap_range(dest, XFS_ISIZE(dest), flen);
+> +	} else {
+> +		ret = xfs_flush_unmap_range(dest, pos_out, *len);
+> +	}
+> +	if (ret)
+> +		goto out_unlock;
 >  
->  	/*
->  	 * Clean out anything hanging around in the cow fork now that
+>  	return 1;
+>  out_unlock:
 > -- 
 > 2.19.1
 > 
