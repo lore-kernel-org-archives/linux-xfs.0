@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49298 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725889AbeKUI3I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 03:29:08 -0500
-Subject: [PATCH 09/10] fsx: clean up copy/dedupe file range support.
+Received: from aserp2120.oracle.com ([141.146.126.78]:33806 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725889AbeKUI3M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 03:29:12 -0500
+Subject: [PATCH 10/10] common/dump: disable copyrange
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 20 Nov 2018 13:57:45 -0800
-Message-ID: <154275106538.8611.5991693163854449275.stgit@magnolia>
+Date: Tue, 20 Nov 2018 13:57:51 -0800
+Message-ID: <154275107150.8611.15972158351495348017.stgit@magnolia>
 In-Reply-To: <154275100143.8611.10235098565750994724.stgit@magnolia>
 References: <154275100143.8611.10235098565750994724.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,52 +16,31 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-copy_file_range() needs to obey read/write constraints otherwise is
-blows up when direct IO is used.
+In _create_dumpdir_stress_num, disable copyrange in fsstress so that we
+dump exactly the same set of files and directories no matter how the xfs
+is configured.
 
-FIDEDUPERANGE has a completely screwed up API for error reporting.
-The ioctl succeeds even if dedupe fails, so you have to check
-every individual dedupe operations for failure. Without this, dedupe
-"succeeds" on kernels filesystems that don't even support dedupe...
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- ltp/fsx.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ common/dump |    3 +++
+ 1 file changed, 3 insertions(+)
 
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index ec3defad..cea765d8 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -1452,7 +1452,11 @@ do_dedupe_range(unsigned offset, unsigned length, unsigned dest)
- 	fdr->info[0].dest_fd = fd;
- 	fdr->info[0].dest_offset = dest;
+diff --git a/common/dump b/common/dump
+index c45b8a5a..4d1a1607 100644
+--- a/common/dump
++++ b/common/dump
+@@ -307,6 +307,9 @@ _create_dumpdir_stress_num()
+     if $FSSTRESS_PROG | grep -q deduperange; then
+         FSSTRESS_AVOID="-f deduperange=0 $FSSTRESS_AVOID"
+     fi
++    if $FSSTRESS_PROG | grep -q copyrange; then
++        FSSTRESS_AVOID="-f copyrange=0 $FSSTRESS_AVOID"
++    fi
  
--	if (ioctl(fd, FIDEDUPERANGE, fdr) == -1) {
-+	if (ioctl(fd, FIDEDUPERANGE, fdr) == -1 ||
-+	    fdr->info[0].status < 0) {
-+		if (fdr->info[0].status < 0)
-+			errno = -fdr->info[0].status;
-+
- 		if (errno == EOPNOTSUPP || errno == ENOTTY) {
- 			if (!quiet && testcalls > simulatedopcount)
- 				prt("skipping unsupported dedupe range\n");
-@@ -1486,6 +1490,11 @@ do_copy_range(unsigned offset, unsigned length, unsigned dest)
- 	loff_t o1, o2;
- 	ssize_t nr;
- 
-+	offset -= offset % readbdy;
-+	dest -= dest % writebdy;
-+	if (o_direct)
-+		length -= length % readbdy;
-+
- 	if (length == 0) {
- 		if (!quiet && testcalls > simulatedopcount)
- 			prt("skipping zero length copy range\n");
+     echo ""
+     echo "-----------------------------------------------"
