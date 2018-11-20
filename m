@@ -1,46 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:33806 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:52438 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725889AbeKUI3M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 03:29:12 -0500
-Subject: [PATCH 10/10] common/dump: disable copyrange
+        with ESMTP id S1725960AbeKUJSK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 04:18:10 -0500
+Date: Tue, 20 Nov 2018 14:46:34 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 20 Nov 2018 13:57:51 -0800
-Message-ID: <154275107150.8611.15972158351495348017.stgit@magnolia>
-In-Reply-To: <154275100143.8611.10235098565750994724.stgit@magnolia>
-References: <154275100143.8611.10235098565750994724.stgit@magnolia>
+Subject: Re: [PATCH 2/7] xfs: uncached buffer tracing needs to print bno
+Message-ID: <20181120224634.GF6792@magnolia>
+References: <20181119210459.8506-1-david@fromorbit.com>
+ <20181119210459.8506-3-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181119210459.8506-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Nov 20, 2018 at 08:04:54AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Useless:
+> 
+> xfs_buf_get_uncached: dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+> xfs_buf_unlock:       dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+> xfs_buf_submit:       dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+> xfs_buf_hold:         dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+> xfs_buf_iowait:       dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+> xfs_buf_iodone:       dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+> xfs_buf_iowait_done:  dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+> xfs_buf_rele:         dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+> 
+> Useful:
+> 
+> 
+> xfs_buf_get_uncached: dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+> xfs_buf_unlock:       dev 253:32 bno 0xffffffffffffffff nblks 0x1 ...
+> xfs_buf_submit:       dev 253:32 bno 0x200b5 nblks 0x1 ...
+> xfs_buf_hold:         dev 253:32 bno 0x200b5 nblks 0x1 ...
+> xfs_buf_iowait:       dev 253:32 bno 0x200b5 nblks 0x1 ...
+> xfs_buf_iodone:       dev 253:32 bno 0x200b5 nblks 0x1 ...
+> xfs_buf_iowait_done:  dev 253:32 bno 0x200b5 nblks 0x1 ...
+> xfs_buf_rele:         dev 253:32 bno 0x200b5 nblks 0x1 ...
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-In _create_dumpdir_stress_num, disable copyrange in fsstress so that we
-dump exactly the same set of files and directories no matter how the xfs
-is configured.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/dump |    3 +++
- 1 file changed, 3 insertions(+)
+--D
 
-
-diff --git a/common/dump b/common/dump
-index c45b8a5a..4d1a1607 100644
---- a/common/dump
-+++ b/common/dump
-@@ -307,6 +307,9 @@ _create_dumpdir_stress_num()
-     if $FSSTRESS_PROG | grep -q deduperange; then
-         FSSTRESS_AVOID="-f deduperange=0 $FSSTRESS_AVOID"
-     fi
-+    if $FSSTRESS_PROG | grep -q copyrange; then
-+        FSSTRESS_AVOID="-f copyrange=0 $FSSTRESS_AVOID"
-+    fi
- 
-     echo ""
-     echo "-----------------------------------------------"
+> ---
+>  fs/xfs/xfs_trace.h | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 3043e5ed6495..8a6532aae779 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -280,7 +280,10 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
+>  	),
+>  	TP_fast_assign(
+>  		__entry->dev = bp->b_target->bt_dev;
+> -		__entry->bno = bp->b_bn;
+> +		if (bp->b_bn == XFS_BUF_DADDR_NULL)
+> +			__entry->bno = bp->b_maps[0].bm_bn;
+> +		else
+> +			__entry->bno = bp->b_bn;
+>  		__entry->nblks = bp->b_length;
+>  		__entry->hold = atomic_read(&bp->b_hold);
+>  		__entry->pincount = atomic_read(&bp->b_pin_count);
+> -- 
+> 2.19.1
+> 
