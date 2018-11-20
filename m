@@ -1,106 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:38002 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725887AbeKUJU0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 04:20:26 -0500
-Date: Tue, 20 Nov 2018 14:48:46 -0800
+Received: from userp2120.oracle.com ([156.151.31.85]:41234 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725887AbeKUJUo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 04:20:44 -0500
+Date: Tue, 20 Nov 2018 14:49:08 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/7] xfs: fix transient reference count error in
- xfs_buf_resubmit_failed_buffers
-Message-ID: <20181120224846.GG6792@magnolia>
+Subject: Re: [PATCH 4/7] xfs: finobt AG reserves don't consider last AG can
+ be a runt
+Message-ID: <20181120224908.GH6792@magnolia>
 References: <20181119210459.8506-1-david@fromorbit.com>
- <20181119210459.8506-4-david@fromorbit.com>
+ <20181119210459.8506-5-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181119210459.8506-4-david@fromorbit.com>
+In-Reply-To: <20181119210459.8506-5-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 20, 2018 at 08:04:55AM +1100, Dave Chinner wrote:
+On Tue, Nov 20, 2018 at 08:04:56AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When retrying a failed inode or dquot buffer,
-> xfs_buf_resubmit_failed_buffers() clears all the failed flags from
-> the inde/dquot log items. In doing so, it also drops all the
-> reference counts on the buffer that the failed log items hold. This
-> means it can drop all the active references on the buffer and hence
-> free the buffer before it queues it for write again.
+> The last AG may be very small comapred to all other AGs, and hence
+> AG reservations based on the superblock AG size may actually consume
+> more space than the AG actually has. This results on assert failures
+> like:
 > 
-> Putting the buffer on the delwri queue takes a reference to the
-> buffer (so that it hangs around until it has been written and
-> completed), but this goes bang if the buffer has already been freed.
+> XFS: Assertion failed: xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved + xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <= pag->pagf_freeblks + pag->pagf_flcount, file: fs/xfs/libxfs/xfs_ag_resv.c, line: 319
+> [   48.932891]  xfs_ag_resv_init+0x1bd/0x1d0
+> [   48.933853]  xfs_fs_reserve_ag_blocks+0x37/0xb0
+> [   48.934939]  xfs_mountfs+0x5b3/0x920
+> [   48.935804]  xfs_fs_fill_super+0x462/0x640
+> [   48.936784]  ? xfs_test_remount_options+0x60/0x60
+> [   48.937908]  mount_bdev+0x178/0x1b0
+> [   48.938751]  mount_fs+0x36/0x170
+> [   48.939533]  vfs_kern_mount.part.43+0x54/0x130
+> [   48.940596]  do_mount+0x20e/0xcb0
+> [   48.941396]  ? memdup_user+0x3e/0x70
+> [   48.942249]  ksys_mount+0xba/0xd0
+> [   48.943046]  __x64_sys_mount+0x21/0x30
+> [   48.943953]  do_syscall_64+0x54/0x170
+> [   48.944835]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
 > 
-> Hence we need to add the buffer to the delwri queue before we remove
-> the failed flags from the log items attached to the buffer to ensure
-> it always remains referenced during the resubmit process.
+> Hence we need to ensure the finobt per-ag space reservations take
+> into account the size of the last AG rather than treat it like all
+> the other full size AGs.
 > 
-> Reported-by: Josef Bacik <josef@toxicpanda.com>
+> Note that both refcountbt and rmapbt already take the size of the AG
+> into account via reading the AGF length directly.
+> 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Looks ok,
+Looks ok now,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/xfs_buf_item.c | 28 +++++++++++++++++++++-------
->  1 file changed, 21 insertions(+), 7 deletions(-)
+>  fs/xfs/libxfs/xfs_ialloc_btree.c | 11 +++++++----
+>  1 file changed, 7 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 12d8455bfbb2..010db5f8fb00 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -1233,9 +1233,23 @@ xfs_buf_iodone(
+> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> index 86c50208a143..7fbf8af0b159 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> @@ -538,15 +538,18 @@ xfs_inobt_rec_check_count(
+>  
+>  static xfs_extlen_t
+>  xfs_inobt_max_size(
+> -	struct xfs_mount	*mp)
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno)
+>  {
+> +	xfs_agblock_t		agblocks = xfs_ag_block_count(mp, agno);
+> +
+>  	/* Bail out if we're uninitialized, which can happen in mkfs. */
+>  	if (mp->m_inobt_mxr[0] == 0)
+>  		return 0;
+>  
+>  	return xfs_btree_calc_size(mp->m_inobt_mnr,
+> -		(uint64_t)mp->m_sb.sb_agblocks * mp->m_sb.sb_inopblock /
+> -				XFS_INODES_PER_CHUNK);
+> +				(uint64_t)agblocks * mp->m_sb.sb_inopblock /
+> +					XFS_INODES_PER_CHUNK);
 >  }
 >  
->  /*
-> - * Requeue a failed buffer for writeback
-> + * Requeue a failed buffer for writeback.
->   *
-> - * Return true if the buffer has been re-queued properly, false otherwise
-> + * We clear the log item failed state here as well, but we have to be careful
-> + * about reference counts because the only active reference counts on the buffer
-> + * may be the failed log items. Hence if we clear the log item failed state
-> + * before queuing the buffer for IO we can release all active references to
-> + * the buffer and free it, leading to use after free problems in
-> + * xfs_buf_delwri_queue. It makes no difference to the buffer or log items which
-> + * order we process them in - the buffer is locked, and we own the buffer list
-> + * so nothing on them is going to change while we are performing this action.
-> + *
-> + * Hence we can safely queue the buffer for IO before we clear the failed log
-> + * item state, therefore  always having an active reference to the buffer and
-> + * avoiding the transient zero-reference state that leads to use-after-free.
-> + *
-> + * Return true if the buffer was added to the buffer list, false if it was
-> + * already on the buffer list.
->   */
->  bool
->  xfs_buf_resubmit_failed_buffers(
-> @@ -1243,16 +1257,16 @@ xfs_buf_resubmit_failed_buffers(
->  	struct list_head	*buffer_list)
->  {
->  	struct xfs_log_item	*lip;
-> +	bool			ret;
-> +
-> +	ret = xfs_buf_delwri_queue(bp, buffer_list);
+>  static int
+> @@ -594,7 +597,7 @@ xfs_finobt_calc_reserves(
+>  	if (error)
+>  		return error;
 >  
->  	/*
-> -	 * Clear XFS_LI_FAILED flag from all items before resubmit
-> -	 *
-> -	 * XFS_LI_FAILED set/clear is protected by ail_lock, caller  this
-> +	 * XFS_LI_FAILED set/clear is protected by ail_lock, caller of this
->  	 * function already have it acquired
->  	 */
->  	list_for_each_entry(lip, &bp->b_li_list, li_bio_list)
->  		xfs_clear_li_failed(lip);
->  
-> -	/* Add this buffer back to the delayed write list */
-> -	return xfs_buf_delwri_queue(bp, buffer_list);
-> +	return ret;
+> -	*ask += xfs_inobt_max_size(mp);
+> +	*ask += xfs_inobt_max_size(mp, agno);
+>  	*used += tree_len;
+>  	return 0;
 >  }
 > -- 
 > 2.19.1
