@@ -1,122 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:44682 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725887AbeKUJ2T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 04:28:19 -0500
-Date: Tue, 20 Nov 2018 14:56:40 -0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:35484 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725913AbeKUJab (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 04:30:31 -0500
+Date: Tue, 20 Nov 2018 14:58:53 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/7] xfs: flush removing page cache in
- xfs_reflink_remap_prep
-Message-ID: <20181120225640.GJ6792@magnolia>
+Subject: Re: [PATCH 8/7] xfs: delalloc -> unwritten COW fork allocation can
+ go wrong
+Message-ID: <20181120225853.GK6792@magnolia>
 References: <20181119210459.8506-1-david@fromorbit.com>
- <20181119210459.8506-8-david@fromorbit.com>
+ <20181120063605.GN19305@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181119210459.8506-8-david@fromorbit.com>
+In-Reply-To: <20181120063605.GN19305@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 20, 2018 at 08:04:59AM +1100, Dave Chinner wrote:
+On Tue, Nov 20, 2018 at 05:36:05PM +1100, Dave Chinner wrote:
+> 
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> On a sub-page block size filesystem, fsx is failing with a data
-> corruption after a series of operations involving copying a file
-> with the destination offset beyond EOF of the destination of the file:
+> Long saga. There have been days spent following this through dead end
+> after dead end in multi-GB event traces. This morning, after writing
+> a trace-cmd wrapper that enabled me to be more selective about XFS
+> trace points, I discovered that I could get just enough essential
+> tracepoints enabled that there was a 50:50 chance the fsx config
+> would fail at ~115k ops. If it didn't fail at op 115547, I stopped
+> fsx at op 115548 anyway.
 > 
-> 8093(157 mod 256): TRUNCATE DOWN        from 0x7a120 to 0x50000 ******WWWW
-> 8094(158 mod 256): INSERT 0x25000 thru 0x25fff  (0x1000 bytes)
-> 8095(159 mod 256): COPY 0x18000 thru 0x1afff    (0x3000 bytes) to 0x2f400
-> 8096(160 mod 256): WRITE    0x5da00 thru 0x651ff        (0x7800 bytes) HOLE
-> 8097(161 mod 256): COPY 0x2000 thru 0x5fff      (0x4000 bytes) to 0x6fc00
+> That gave me two traces - one where the problem manifested, and one
+> where it didn't. After refining the traces to have the necessary
+> information, I found that in the failing case there was a real
+> extent in the COW fork compared to an unwritten extent in the
+> working case.
 > 
-> The second copy here is beyond EOF, and it is to sub-page (4k) but
-> block aligned (1k) offset. The clone runs the EOF zeroing, landing
-> in a pre-existing post-eof delalloc extent. This zeroes the post-eof
-> extents in the page cache just fine, dirtying the pages correctly.
+> Walking back through the two traces to the point where the CWO fork
+> extents actually diverged, I found that the bad case had an extra
+> unwritten extent in it. This is likely because the bug it led me to
+> had triggered multiple times in those 115k ops, leaving stray
+> COW extents around. What I saw was a COW delalloc conversion to an
+> unwritten extent (as they should always be through
+> xfs_iomap_write_allocate()) resulted in a /written extent/:
 > 
-> The problem is that xfs_reflink_remap_prep() now truncates the page
-> cache over the range that it is copying it to, and rounds that down
-> to cover the entire start page. This removes the dirty page over the
-> delalloc extent from the page cache without having written it back.
-> Hence later, when the page cache is flushed, the page at offset
-> 0x6f000 has not been written back and hence exposes stale data,
-> which fsx trips over less than 10 operations later.
+> xfs_writepage:        dev 259:0 ino 0x83 pgoff 0x17000 size 0x79a00 offset 0 length 0
+> xfs_iext_remove:      dev 259:0 ino 0x83 state RC|LF|RF|COW cur 0xffff888247b899c0/2 offset 32 block 152 count 20 flag 1 caller xfs_bmap_add_extent_delay_real
+> xfs_bmap_pre_update:  dev 259:0 ino 0x83 state RC|LF|RF|COW cur 0xffff888247b899c0/1 offset 1 block 4503599627239429 count 31 flag 0 caller xfs_bmap_add_extent_delay_real
+> xfs_bmap_post_update: dev 259:0 ino 0x83 state RC|LF|RF|COW cur 0xffff888247b899c0/1 offset 1 block 121 count 51 flag 0 caller xfs_bmap_add_ex
 > 
-> Fix this by changing xfs_reflink_remap_prep() to use
-> xfs_flush_unmap_range().
+> Basically, Cow fork before:
+> 
+> 	0 1            32          52
+> 	+H+DDDDDDDDDDDD+UUUUUUUUUUU+
+> 	   PREV		RIGHT
+> 
+> COW delalloc conversion allocates:
+> 
+> 	  1	       32
+> 	  +uuuuuuuuuuuu+
+> 	  NEW
+> 
+> And the result according to the xfs_bmap_post_update trace was:
+> 
+> 	0 1            32          52
+> 	+H+wwwwwwwwwwwwwwwwwwwwwwww+
+> 	   PREV
+> 
+> Which is clearly wrong - it should be a merged unwritten extent,
+> not an unwritten extent.
+> 
+> That lead me to look at the LEFT_FILLING|RIGHT_FILLING|RIGHT_CONTIG
+> case in xfs_bmap_add_extent_delay_real(), and sure enough, there's
+> the bug.
+> 
+> It takes the old delalloc extent (PREV) and adds the length of the
+> RIGHT extent to it, takes the start block from NEW, removes the
+> RIGHT extent and then updates PREV with the new extent.
+> 
+> What it fails to do is update PREV.br_state. For delalloc, this is
+> always XFS_EXT_NORM, while in this case we are converting the
+> delayed allocation to unwritten, so it needs to be updated to
+> XFS_EXT_UNWRITTEN. This LF|RF|RC case does not do this, and so
+> the resultant extent is always written.
+> 
+> And that's the bug I've been chasing for a week - a bmap btree bug,
+> not a reflink/dedupe/copy_file_range bug, but a BMBT bug introduced
+> with the recent in core extent tree scalability enhancements.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_bmap_util.c |  2 +-
->  fs/xfs/xfs_bmap_util.h |  3 +++
->  fs/xfs/xfs_reflink.c   | 17 +++++++++++++----
->  3 files changed, 17 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index cc7a0d47c529..3e66cf0520a9 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1042,7 +1042,7 @@ xfs_unmap_extent(
->  	goto out_unlock;
->  }
->  
-> -static int
-> +int
->  xfs_flush_unmap_range(
->  	struct xfs_inode	*ip,
->  	xfs_off_t		offset,
-> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-> index 87363d136bb6..7a78229cf1a7 100644
-> --- a/fs/xfs/xfs_bmap_util.h
-> +++ b/fs/xfs/xfs_bmap_util.h
-> @@ -80,4 +80,7 @@ int xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
->  			  int whichfork, xfs_extnum_t *nextents,
->  			  xfs_filblks_t *count);
->  
-> +int	xfs_flush_unmap_range(struct xfs_inode *ip, xfs_off_t offset,
-> +			      xfs_off_t len);
-> +
->  #endif	/* __XFS_BMAP_UTIL_H__ */
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index ecdb086bc23e..a41590b7c229 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1351,10 +1351,19 @@ xfs_reflink_remap_prep(
->  	if (ret)
->  		goto out_unlock;
->  
-> -	/* Zap any page cache for the destination file's range. */
-> -	truncate_inode_pages_range(&inode_out->i_data,
-> -			round_down(pos_out, PAGE_SIZE),
-> -			round_up(pos_out + *len, PAGE_SIZE) - 1);
-> +	/*
-> +	 * If pos_out > EOF, we make have dirtied blocks between EOF and
 
-Looks ok, will s/make/may/ on the way in (unless you send a new
-version);
+Looks ok, seems to fix the fsx failures I know how to reproduce... :P
 
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> +	 * pos_out. In that case, we need to extend the flush and unmap to cover
-> +	 * from EOF to the end of the copy length.
-> +	 */
-> +	if (pos_out > XFS_ISIZE(dest)) {
-> +		loff_t	flen = *len + (pos_out - XFS_ISIZE(dest));
-> +		ret = xfs_flush_unmap_range(dest, XFS_ISIZE(dest), flen);
-> +	} else {
-> +		ret = xfs_flush_unmap_range(dest, pos_out, *len);
-> +	}
-> +	if (ret)
-> +		goto out_unlock;
->  
->  	return 1;
->  out_unlock:
-> -- 
-> 2.19.1
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
 > 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 2d78fd53e822..39eaa2b86060 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -1694,10 +1694,13 @@ xfs_bmap_add_extent_delay_real(
+>  	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING | BMAP_RIGHT_CONTIG:
+>  		/*
+>  		 * Filling in all of a previously delayed allocation extent.
+> -		 * The right neighbor is contiguous, the left is not.
+> +		 * The right neighbor is contiguous, the left is not. Take care
+> +		 * with delay -> unwritten extent allocation here because the
+> +		 * delalloc record we are overwriting is always written.
+>  		 */
+>  		PREV.br_startblock = new->br_startblock;
+>  		PREV.br_blockcount += RIGHT.br_blockcount;
+> +		PREV.br_state = new->br_state;
+>  
+>  		xfs_iext_next(ifp, &bma->icur);
+>  		xfs_iext_remove(bma->ip, &bma->icur, state);
