@@ -1,78 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:36626 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728127AbeKUDDu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 22:03:50 -0500
-Date: Tue, 20 Nov 2018 08:33:49 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 8/7] xfs: delalloc -> unwritten COW fork allocation can
- go wrong
-Message-ID: <20181120163349.GB7805@infradead.org>
-References: <20181119210459.8506-1-david@fromorbit.com>
- <20181120063605.GN19305@dastard>
- <20181120134537.GB47711@bfoster>
+Received: from userp2120.oracle.com ([156.151.31.85]:33932 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727155AbeKUD0j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 22:26:39 -0500
+Date: Tue, 20 Nov 2018 08:56:28 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/5] xfs: precalculate cluster alignment in inodes and
+ blocks
+Message-ID: <20181120165628.GE6792@magnolia>
+References: <154171920164.30818.2178553842722589349.stgit@magnolia>
+ <154171923920.30818.16202775253577895387.stgit@magnolia>
+ <20181120162330.GE48509@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181120134537.GB47711@bfoster>
+In-Reply-To: <20181120162330.GE48509@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 20, 2018 at 08:45:38AM -0500, Brian Foster wrote:
-> >  		 * Filling in all of a previously delayed allocation extent.
-> > -		 * The right neighbor is contiguous, the left is not.
-> > +		 * The right neighbor is contiguous, the left is not. Take care
-> > +		 * with delay -> unwritten extent allocation here because the
-> > +		 * delalloc record we are overwriting is always written.
-> >  		 */
-> >  		PREV.br_startblock = new->br_startblock;
-> >  		PREV.br_blockcount += RIGHT.br_blockcount;
-> > +		PREV.br_state = new->br_state;
-> >  
-> >  		xfs_iext_next(ifp, &bma->icur);
-> >  		xfs_iext_remove(bma->ip, &bma->icur, state);
+On Tue, Nov 20, 2018 at 11:23:30AM -0500, Brian Foster wrote:
+> On Thu, Nov 08, 2018 at 03:20:39PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Store the inode cluster alignment information in units of inodes and
+> > blocks in the mount data so that we don't have to keep recalculating
+> > them.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_ialloc.c |    8 ++++----
+> >  fs/xfs/libxfs/xfs_types.c  |    5 ++---
+> >  fs/xfs/scrub/ialloc.c      |    2 +-
+> >  fs/xfs/xfs_mount.c         |    2 ++
+> >  fs/xfs/xfs_mount.h         |    2 ++
+> >  5 files changed, 11 insertions(+), 8 deletions(-)
+> > 
+> > 
+> ...
+> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > index 58a037bfac22..0ad025e7f3cf 100644
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -103,6 +103,8 @@ typedef struct xfs_mount {
+> >  	uint			m_inode_cluster_size;/* min inode buf size */
+> >  	unsigned int		m_inodes_per_cluster;
+> >  	unsigned int		m_blocks_per_cluster;
+> > +	unsigned int		m_cluster_align;
+> > +	unsigned int		m_cluster_align_inodes;
 > 
-> Fix looks sane to me, though I'm a little curious why this doesn't
-> follow the "contiguous extent extension" pattern that most of the other
-> contig cases seem to follow. For example, something like the following
-> for the right contig case:
+> The m_cluster_align change looks fine:
 > 
->                 old = RIGHT;
->                 RIGHT.br_startoff = new->br_startoff;
->                 RIGHT.br_startblock = new->br_startblock;
->                 RIGHT.br_blockcount += new.br_blockcount;
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 > 
->                 xfs_iext_remove(bma->ip, &bma->icur, state); /* PREV */
->                 xfs_iext_next(ifp, &bma->icur);
->                 xfs_iext_update_extent(bma->ip, state, &bma->icur, &RIGHT);
-> 
-> ... and change the subsequent btree update to use old/RIGHT. Maybe
-> Christoph has thoughts on that.
+> ... but no users of m_cluster_align_inodes?
 
-Not sure the above looks much better.  If I had to do something
-different I'd apply something like this (untested) on top of Daves patch:
+We'll get there in the inode scrub fixes patchset.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 91b94c5c0cae..efe9e554fd0d 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1698,14 +1698,12 @@ xfs_bmap_add_extent_delay_real(
- 		 * with delay -> unwritten extent allocation here because the
- 		 * delalloc record we are overwriting is always written.
- 		 */
--		PREV.br_startblock = new->br_startblock;
--		PREV.br_blockcount += RIGHT.br_blockcount;
--		PREV.br_state = new->br_state;
-+		new->br_blockcount += RIGHT.br_blockcount;
- 
- 		xfs_iext_next(ifp, &bma->icur);
- 		xfs_iext_remove(bma->ip, &bma->icur, state);
- 		xfs_iext_prev(ifp, &bma->icur);
--		xfs_iext_update_extent(bma->ip, state, &bma->icur, &PREV);
-+		xfs_iext_update_extent(bma->ip, state, &bma->icur, new);
- 
- 		if (bma->cur == NULL)
- 			rval = XFS_ILOG_DEXT;
+--D
+
+> >  	uint			m_blockmask;	/* sb_blocksize-1 */
+> >  	uint			m_blockwsize;	/* sb_blocksize in words */
+> >  	uint			m_blockwmask;	/* blockwsize-1 */
+> > 
