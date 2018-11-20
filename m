@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48958 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:49218 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725889AbeKUI2j (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 03:28:39 -0500
-Subject: [PATCH 06/10] fsx: add FIDEDUPERANGE support
+        with ESMTP id S1725889AbeKUI2y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 03:28:54 -0500
+Subject: [PATCH 07/10] fsstress: add copy_file_range support
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 20 Nov 2018 13:57:18 -0800
-Message-ID: <154275103811.8611.6606584641150172917.stgit@magnolia>
+Date: Tue, 20 Nov 2018 13:57:24 -0800
+Message-ID: <154275104427.8611.12901910984808681102.stgit@magnolia>
 In-Reply-To: <154275100143.8611.10235098565750994724.stgit@magnolia>
 References: <154275100143.8611.10235098565750994724.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,245 +20,254 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
+Support the copy_file_range syscall.
+
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- ltp/fsx.c |  141 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 139 insertions(+), 2 deletions(-)
+ configure.ac          |    2 +
+ include/builddefs.in  |    1 
+ ltp/Makefile          |    4 +
+ ltp/fsstress.c        |  133 +++++++++++++++++++++++++++++++++++++++++++++++++
+ m4/package_libcdev.m4 |   19 +++++++
+ 5 files changed, 159 insertions(+)
 
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index a1a44b23..6f6263e2 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -105,6 +105,7 @@ enum {
- 	OP_COLLAPSE_RANGE,
- 	OP_INSERT_RANGE,
- 	OP_CLONE_RANGE,
-+	OP_DEDUPE_RANGE,
- 	OP_MAX_FULL,
+diff --git a/configure.ac b/configure.ac
+index aede4f59..19798824 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -68,6 +68,8 @@ AC_PACKAGE_WANT_OPEN_BY_HANDLE_AT
+ AC_PACKAGE_WANT_LINUX_PRCTL_H
+ AC_PACKAGE_WANT_LINUX_FS_H
  
- 	/* integrity operations */
-@@ -167,6 +168,7 @@ int	insert_range_calls = 1;		/* -I flag disables */
- int	mapped_reads = 1;		/* -R flag disables it */
- int	check_file = 1;			/* -X flag disables */
- int	clone_range_calls = 1;		/* -J flag disables */
-+int	dedupe_range_calls = 1;		/* -B flag disables */
- int	integrity = 0;			/* -i flag */
- int	fsxgoodfd = 0;
- int	o_direct;			/* -Z */
-@@ -261,6 +263,7 @@ static const char *op_names[] = {
- 	[OP_COLLAPSE_RANGE] = "collapse_range",
- 	[OP_INSERT_RANGE] = "insert_range",
- 	[OP_CLONE_RANGE] = "clone_range",
-+	[OP_DEDUPE_RANGE] = "dedupe_range",
- 	[OP_FSYNC] = "fsync",
- };
++AC_HAVE_COPY_FILE_RANGE
++
+ AC_CHECK_FUNCS([renameat2])
  
-@@ -460,6 +463,20 @@ logdump(void)
- 			else if (overlap2)
- 				prt("\t******JJJJ");
- 			break;
-+		case OP_DEDUPE_RANGE:
-+			prt("DEDUPE 0x%x thru 0x%x\t(0x%x bytes) to 0x%x thru 0x%x",
-+			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-+			    lp->args[1],
-+			    lp->args[2], lp->args[2] + lp->args[1] - 1);
-+			overlap2 = badoff >= lp->args[2] &&
-+				  badoff < lp->args[2] + lp->args[1];
-+			if (overlap && overlap2)
-+				prt("\tBBBB**BBBB");
-+			else if (overlap)
-+				prt("\tBBBB******");
-+			else if (overlap2)
-+				prt("\t******BBBB");
-+			break;
- 		case OP_FSYNC:
- 			prt("FSYNC");
- 			break;
-@@ -1368,6 +1385,82 @@ do_clone_range(unsigned offset, unsigned length, unsigned dest)
+ AC_CONFIG_HEADER(include/config.h)
+diff --git a/include/builddefs.in b/include/builddefs.in
+index fb8e912b..2605e42d 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -67,6 +67,7 @@ HAVE_DMAPI = @have_dmapi@
+ HAVE_ATTR_LIST = @have_attr_list@
+ HAVE_FIEMAP = @have_fiemap@
+ HAVE_FALLOCATE = @have_fallocate@
++HAVE_COPY_FILE_RANGE = @have_copy_file_range@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ 
+diff --git a/ltp/Makefile b/ltp/Makefile
+index 5f784ecf..e4ca45f4 100644
+--- a/ltp/Makefile
++++ b/ltp/Makefile
+@@ -28,6 +28,10 @@ ifeq ($(HAVE_FALLOCATE), true)
+ LCFLAGS += -DFALLOCATE
+ endif
+ 
++ifeq ($(HAVE_COPY_FILE_RANGE),yes)
++LCFLAGS += -DHAVE_COPY_FILE_RANGE
++endif
++
+ default: depend $(TARGETS)
+ 
+ depend: .dep
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index edbb3f2f..dded0cf7 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -26,6 +26,7 @@
+ #include <libaio.h>
+ io_context_t	io_ctx;
+ #endif
++#include <sys/syscall.h>
+ 
+ #ifndef FS_IOC_GETFLAGS
+ #define FS_IOC_GETFLAGS                 _IOR('f', 1, long)
+@@ -55,6 +56,7 @@ typedef enum {
+ 	OP_BULKSTAT1,
+ 	OP_CHOWN,
+ 	OP_CLONERANGE,
++	OP_COPYRANGE,
+ 	OP_CREAT,
+ 	OP_DEDUPERANGE,
+ 	OP_DREAD,
+@@ -163,6 +165,7 @@ void	bulkstat_f(int, long);
+ void	bulkstat1_f(int, long);
+ void	chown_f(int, long);
+ void	clonerange_f(int, long);
++void	copyrange_f(int, long);
+ void	creat_f(int, long);
+ void	deduperange_f(int, long);
+ void	dread_f(int, long);
+@@ -212,6 +215,7 @@ opdesc_t	ops[] = {
+ 	{ OP_BULKSTAT1, "bulkstat1", bulkstat1_f, 1, 0 },
+ 	{ OP_CHOWN, "chown", chown_f, 3, 1 },
+ 	{ OP_CLONERANGE, "clonerange", clonerange_f, 4, 1 },
++	{ OP_COPYRANGE, "copyrange", copyrange_f, 4, 1 },
+ 	{ OP_CREAT, "creat", creat_f, 4, 1 },
+ 	{ OP_DEDUPERANGE, "deduperange", deduperange_f, 4, 1},
+ 	{ OP_DREAD, "dread", dread_f, 4, 0 },
+@@ -2329,6 +2333,135 @@ clonerange_f(
+ #endif
  }
- #endif
  
-+#ifdef FIDEDUPERANGE
++/* copy some arbitrary range of f1 to f2. */
 +void
-+do_dedupe_range(unsigned offset, unsigned length, unsigned dest)
++copyrange_f(
++	int			opno,
++	long			r)
 +{
-+	struct file_dedupe_range *fdr;
++#ifdef HAVE_COPY_FILE_RANGE
++	struct pathname		fpath1;
++	struct pathname		fpath2;
++	struct stat64		stat1;
++	struct stat64		stat2;
++	char			inoinfo1[1024];
++	char			inoinfo2[1024];
++	loff_t			lr;
++	loff_t			off1;
++	loff_t			off2;
++	loff_t			max_off2;
++	size_t			len;
++	int			v1;
++	int			v2;
++	int			fd1;
++	int			fd2;
++	int			ret;
++	int			e;
 +
-+	if (length == 0) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping zero length dedupe range\n");
-+		log5(OP_DEDUPE_RANGE, offset, length, dest, FL_SKIPPED);
-+		return;
++	/* Load paths */
++	init_pathname(&fpath1);
++	if (!get_fname(FT_REGm, r, &fpath1, NULL, NULL, &v1)) {
++		if (v1)
++			printf("%d/%d: copyrange read - no filename\n",
++				procid, opno);
++		goto out_fpath1;
 +	}
 +
-+	if ((loff_t)offset >= file_size) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping dedupe range behind EOF\n");
-+		log5(OP_DEDUPE_RANGE, offset, length, dest, FL_SKIPPED);
-+		return;
++	init_pathname(&fpath2);
++	if (!get_fname(FT_REGm, random(), &fpath2, NULL, NULL, &v2)) {
++		if (v2)
++			printf("%d/%d: copyrange write - no filename\n",
++				procid, opno);
++		goto out_fpath2;
 +	}
 +
-+	log5(OP_DEDUPE_RANGE, offset, length, dest, FL_NONE);
-+
-+	if (testcalls <= simulatedopcount)
-+		return;
-+
-+	if ((progressinterval && testcalls % progressinterval == 0) ||
-+	    (debug && (monitorstart == -1 || monitorend == -1 ||
-+		       dest <= monitorstart || dest + length <= monitorend))) {
-+		prt("%lu dedupe\tfrom 0x%x to 0x%x, (0x%x bytes) at 0x%x\n",
-+			testcalls, offset, offset+length, length, dest);
++	/* Open files */
++	fd1 = open_path(&fpath1, O_RDONLY);
++	e = fd1 < 0 ? errno : 0;
++	check_cwd();
++	if (fd1 < 0) {
++		if (v1)
++			printf("%d/%d: copyrange read - open %s failed %d\n",
++				procid, opno, fpath1.path, e);
++		goto out_fpath2;
 +	}
 +
-+	/* Alloc memory */
-+	fdr = malloc(sizeof(struct file_dedupe_range_info) +
-+		     sizeof(struct file_dedupe_range));
-+	if (!fdr) {
-+		prterr("do_dedupe_range: malloc");
-+		report_failure(161);
-+	}
-+	memset(fdr, 0, (sizeof(struct file_dedupe_range_info) +
-+			sizeof(struct file_dedupe_range)));
-+
-+	/* Dedupe data blocks */
-+	fdr->src_offset = offset;
-+	fdr->src_length = length;
-+	fdr->dest_count = 1;
-+	fdr->info[0].dest_fd = fd;
-+	fdr->info[0].dest_offset = dest;
-+
-+	if (ioctl(fd, FIDEDUPERANGE, fdr) == -1) {
-+		if (errno == EOPNOTSUPP || errno == ENOTTY) {
-+			if (!quiet && testcalls > simulatedopcount)
-+				prt("skipping unsupported dedupe range\n");
-+			logptr--;
-+			log5(OP_DEDUPE_RANGE, offset, length, dest, FL_SKIPPED);
-+			free(fdr);
-+			return;
-+		}
-+
-+		prt("dedupe range: 0x%x to 0x%x at 0x%x\n", offset,
-+				offset + length, dest);
-+		prterr("do_dedupe_range: FIDEDUPERANGE");
-+		report_failure(161);
++	fd2 = open_path(&fpath2, O_WRONLY);
++	e = fd2 < 0 ? errno : 0;
++	check_cwd();
++	if (fd2 < 0) {
++		if (v2)
++			printf("%d/%d: copyrange write - open %s failed %d\n",
++				procid, opno, fpath2.path, e);
++		goto out_fd1;
 +	}
 +
-+	free(fdr);
-+}
++	/* Get file stats */
++	if (fstat64(fd1, &stat1) < 0) {
++		if (v1)
++			printf("%d/%d: copyrange read - fstat64 %s failed %d\n",
++				procid, opno, fpath1.path, errno);
++		goto out_fd2;
++	}
++	inode_info(inoinfo1, sizeof(inoinfo1), &stat1, v1);
 +
-+#else
-+void
-+do_dedupe_range(unsigned offset, unsigned length, unsigned dest)
-+{
-+	return;
-+}
++	if (fstat64(fd2, &stat2) < 0) {
++		if (v2)
++			printf("%d/%d: copyrange write - fstat64 %s failed %d\n",
++				procid, opno, fpath2.path, errno);
++		goto out_fd2;
++	}
++	inode_info(inoinfo2, sizeof(inoinfo2), &stat2, v2);
++
++	/* Calculate offsets */
++	len = (random() % FILELEN_MAX) + 1;
++	if (len == 0)
++		len = stat1.st_blksize;
++	if (len > stat1.st_size)
++		len = stat1.st_size;
++
++	lr = ((int64_t)random() << 32) + random();
++	if (stat1.st_size == len)
++		off1 = 0;
++	else
++		off1 = (off64_t)(lr % MIN(stat1.st_size - len, MAXFSIZE));
++	off1 %= maxfsize;
++
++	/*
++	 * If srcfile == destfile, randomly generate destination ranges
++	 * until we find one that doesn't overlap the source range.
++	 */
++	max_off2 = MIN(stat2.st_size + (1024ULL * stat2.st_blksize), MAXFSIZE);
++	do {
++		lr = ((int64_t)random() << 32) + random();
++		off2 = (off64_t)(lr % max_off2);
++		off2 %= maxfsize;
++	} while (stat1.st_ino == stat2.st_ino && llabs(off2 - off1) < len);
++
++	ret = copy_file_range(fd1, &off1, fd2, &off2, len, 0);
++	e = ret < 0 ? errno : 0;
++	if (v1 || v2) {
++		printf("%d/%d: copyrange %s%s [%lld,%lld] -> %s%s [%lld,%lld]",
++			procid, opno,
++			fpath1.path, inoinfo1, (long long)off1, (long long)len,
++			fpath2.path, inoinfo2, (long long)off2, (long long)len);
++
++		if (ret < 0)
++			printf(" error %d", e);
++		printf("\n");
++	}
++
++out_fd2:
++	close(fd2);
++out_fd1:
++	close(fd1);
++out_fpath2:
++	free_pathname(&fpath2);
++out_fpath1:
++	free_pathname(&fpath1);
 +#endif
++}
 +
- #ifdef HAVE_LINUX_FALLOC_H
- /* fallocate is basically a no-op unless extending, then a lot like a truncate */
+ /* dedupe some arbitrary range of f1 to f2...fn. */
  void
-@@ -1526,6 +1619,7 @@ op_args_count(int operation)
- {
- 	switch (operation) {
- 	case OP_CLONE_RANGE:
-+	case OP_DEDUPE_RANGE:
- 		return 4;
- 	default:
- 		return 3;
-@@ -1682,6 +1776,25 @@ test(void)
- 		} while (llabs(offset2 - offset) < size ||
- 			 offset2 + size > maxfilelen);
- 		break;
-+	case OP_DEDUPE_RANGE:
-+		{
-+			int tries = 0;
+ deduperange_f(
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index fb123f33..14e67e18 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -98,3 +98,22 @@ AC_DEFUN([AC_HAVE_GETMNTINFO],
+        AC_MSG_RESULT(no))
+     AC_SUBST(have_getmntinfo)
+   ])
 +
-+			TRIM_OFF_LEN(offset, size, file_size);
-+			offset = offset & ~(block_size - 1);
-+			size = size & ~(block_size - 1);
-+			do {
-+				if (tries++ >= 30) {
-+					size = 0;
-+					break;
-+				}
-+				offset2 = random();
-+				TRIM_OFF(offset2, file_size);
-+				offset2 = offset2 & ~(block_size - 1);
-+			} while (llabs(offset2 - offset) < size ||
-+				 offset2 + size > file_size);
-+			break;
-+		}
- 	}
- 
- have_op:
-@@ -1731,6 +1844,12 @@ test(void)
- 			goto out;
- 		}
- 		break;
-+	case OP_DEDUPE_RANGE:
-+		if (!dedupe_range_calls) {
-+			log5(op, offset, size, offset2, FL_SKIPPED);
-+			goto out;
-+		}
-+		break;
- 	}
- 
- 	switch (op) {
-@@ -1809,6 +1928,18 @@ test(void)
- 
- 		do_clone_range(offset, size, offset2);
- 		break;
-+	case OP_DEDUPE_RANGE:
-+		if (size == 0) {
-+			log5(OP_DEDUPE_RANGE, offset, size, offset2, FL_SKIPPED);
-+			goto out;
-+		}
-+		if (offset2 + size > maxfilelen) {
-+			log5(OP_DEDUPE_RANGE, offset, size, offset2, FL_SKIPPED);
-+			goto out;
-+		}
++#
++#
++# Check if we have a copy_file_range system call (Linux)
++#
++AC_DEFUN([AC_HAVE_COPY_FILE_RANGE],
++  [ AC_MSG_CHECKING([for copy_file_range])
++    AC_TRY_LINK([
++#define _GNU_SOURCE
++#include <sys/syscall.h>
++#include <unistd.h>
++    ], [
++         syscall(__NR_copy_file_range, 0, 0, 0, 0, 0, 0);
++    ], have_copy_file_range=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_copy_file_range)
++  ])
 +
-+		do_dedupe_range(offset, size, offset2);
-+		break;
- 	case OP_FSYNC:
- 		dofsync();
- 		break;
-@@ -1834,7 +1965,7 @@ void
- usage(void)
- {
- 	fprintf(stdout, "usage: %s",
--		"fsx [-dknqxAFJLOWZ] [-b opnum] [-c Prob] [-g filldata] [-i logdev] [-j logid] [-l flen] [-m start:end] [-o oplen] [-p progressinterval] [-r readbdy] [-s style] [-t truncbdy] [-w writebdy] [-D startingop] [-N numops] [-P dirpath] [-S seed] fname\n\
-+		"fsx [-dknqxABFJLOWZ] [-b opnum] [-c Prob] [-g filldata] [-i logdev] [-j logid] [-l flen] [-m start:end] [-o oplen] [-p progressinterval] [-r readbdy] [-s style] [-t truncbdy] [-w writebdy] [-D startingop] [-N numops] [-P dirpath] [-S seed] fname\n\
- 	-b opnum: beginning operation number (default 1)\n\
- 	-c P: 1 in P chance of file close+open at each op (default infinity)\n\
- 	-d: debug output for all operations\n\
-@@ -1878,6 +2009,9 @@ usage(void)
- #ifdef FICLONERANGE
- "	-J: Do not use clone range calls\n"
- #endif
-+#ifdef FIDEDUPERANGE
-+"	-B: Do not use dedupe range calls\n"
-+#endif
- "	-L: fsxLite - no file creations & no file size changes\n\
- 	-N numops: total # operations to do (default infinity)\n\
- 	-O: use oplen (see -o flag) for every op (default random)\n\
-@@ -2081,7 +2215,7 @@ main(int argc, char **argv)
- 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
- 
- 	while ((ch = getopt_long(argc, argv,
--				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyAD:FJKHzCILN:OP:RS:WXZ",
-+				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyABD:FJKHzCILN:OP:RS:WXZ",
- 				 longopts, NULL)) != EOF)
- 		switch (ch) {
- 		case 'b':
-@@ -2214,6 +2348,9 @@ main(int argc, char **argv)
- 		case 'J':
- 			clone_range_calls = 0;
- 			break;
-+		case 'B':
-+			dedupe_range_calls = 0;
-+			break;
- 		case 'L':
- 		        lite = 1;
- 			o_flags &= ~(O_CREAT|O_TRUNC);
