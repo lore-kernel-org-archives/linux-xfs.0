@@ -1,58 +1,203 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:34563 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725898AbeKTHnT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 02:43:19 -0500
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/5] iomap: sub-block dio needs to zeroout beyond EOF
-Date: Tue, 20 Nov 2018 08:17:39 +1100
-Message-Id: <20181119211742.8824-3-david@fromorbit.com>
-In-Reply-To: <20181119211742.8824-1-david@fromorbit.com>
-References: <20181119211742.8824-1-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:59486 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725904AbeKUCw7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Nov 2018 21:52:59 -0500
+Date: Tue, 20 Nov 2018 11:23:00 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/5] xfs: precalculate inodes and blocks per inode cluster
+Message-ID: <20181120162300.GD48509@bfoster>
+References: <154171920164.30818.2178553842722589349.stgit@magnolia>
+ <154171923320.30818.4183266629971056462.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <154171923320.30818.4183266629971056462.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Nov 08, 2018 at 03:20:33PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Store the number of inodes and blocks per inode cluster in the mount
+> data so that we don't have to keep recalculating them.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c |   23 ++++++++++-------------
+>  fs/xfs/scrub/ialloc.c      |   14 ++++++--------
+>  fs/xfs/xfs_inode.c         |   14 +++++---------
+>  fs/xfs/xfs_itable.c        |   14 ++++++--------
+>  fs/xfs/xfs_log_recover.c   |    8 +++-----
+>  fs/xfs/xfs_mount.c         |    2 ++
+>  fs/xfs/xfs_mount.h         |    2 ++
+>  7 files changed, 34 insertions(+), 43 deletions(-)
+> 
+> 
+...
+> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> index 426eb1a5503c..332ac7b61789 100644
+> --- a/fs/xfs/scrub/ialloc.c
+> +++ b/fs/xfs/scrub/ialloc.c
+> @@ -193,18 +193,16 @@ xchk_iallocbt_check_freemask(
+>  	xfs_agino_t			chunkino;
+>  	xfs_agino_t			clusterino;
+>  	xfs_agblock_t			agbno;
+> -	int				blks_per_cluster;
+>  	uint16_t			holemask;
+>  	uint16_t			ir_holemask;
+>  	int				error = 0;
+>  
+>  	/* Make sure the freemask matches the inode records. */
+> -	blks_per_cluster = xfs_icluster_size_fsb(mp);
+> -	nr_inodes = XFS_FSB_TO_INO(mp, blks_per_cluster);
+> +	nr_inodes = mp->m_inodes_per_cluster;
 
-If we are soing sub-block dio that extends EOF, we need to zero
-the unused tail of the block to initialise the data in it it. If we
-do not zero the tail of the block, then an immediate mmap read of
-the EOF block will expose stale data beyond EOF to userspace. Found
-with fsx running sub-block DIO sizes vs MAPREAD/MAPWRITE operations.
+Why keep nr_inodes? Doesn't look like it changes anywhere..
 
-Fix this by detecting if the end of the DIO write is beyond EOF
-and zeroing the tail if necessary.
+>  
+>  	for (agino = irec->ir_startino;
+>  	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
+> -	     agino += blks_per_cluster * mp->m_sb.sb_inopblock) {
+> +	     agino += mp->m_blocks_per_cluster * mp->m_sb.sb_inopblock) {
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+... and this looks like m_inodes_per_cluster.
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 72f3864a2e6b..77c214194edf 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -1677,7 +1677,14 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
- 		dio->submit.cookie = submit_bio(bio);
- 	} while (nr_pages);
- 
--	if (need_zeroout) {
-+	/*
-+	 * We need to zeroout the tail of a sub-block write if the extent type
-+	 * requires zeroing or the write extends beyond EOF. If we don't zero
-+	 * the block tail in the latter case, we can expose stale data via mmap
-+	 * reads of the EOF block.
-+	 */
-+	if (need_zeroout ||
-+	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
- 		/* zero out from the end of the write to the end of the block */
- 		pad = pos & (fs_block_size - 1);
- 		if (pad)
--- 
-2.19.1
+>  		fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
+>  		chunkino = agino - irec->ir_startino;
+>  		agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+> @@ -225,18 +223,18 @@ xchk_iallocbt_check_freemask(
+>  		/* If any part of this is a hole, skip it. */
+>  		if (ir_holemask) {
+>  			xchk_xref_is_not_owned_by(bs->sc, agbno,
+> -					blks_per_cluster,
+> +					mp->m_blocks_per_cluster,
+>  					&XFS_RMAP_OINFO_INODES);
+>  			continue;
+>  		}
+>  
+> -		xchk_xref_is_owned_by(bs->sc, agbno, blks_per_cluster,
+> +		xchk_xref_is_owned_by(bs->sc, agbno, mp->m_blocks_per_cluster,
+>  				&XFS_RMAP_OINFO_INODES);
+>  
+>  		/* Grab the inode cluster buffer. */
+>  		imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno,
+>  				agbno);
+> -		imap.im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
+> +		imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
+>  		imap.im_boffset = 0;
+>  
+>  		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
+> @@ -303,7 +301,7 @@ xchk_iallocbt_rec(
+>  	/* Make sure this record is aligned to cluster and inoalignmnt size. */
+>  	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
+>  	if ((agbno & (xfs_ialloc_cluster_alignment(mp) - 1)) ||
+> -	    (agbno & (xfs_icluster_size_fsb(mp) - 1)))
+> +	    (agbno & (mp->m_blocks_per_cluster - 1)))
+>  		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+>  
+>  	*inode_blocks += XFS_B_TO_FSB(mp,
+...
+> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> index 18d8d3b812a7..00828b57e1f8 100644
+> --- a/fs/xfs/xfs_itable.c
+> +++ b/fs/xfs/xfs_itable.c
+> @@ -167,20 +167,18 @@ xfs_bulkstat_ichunk_ra(
+>  {
+>  	xfs_agblock_t			agbno;
+>  	struct blk_plug			plug;
+> -	int				blks_per_cluster;
+> -	int				inodes_per_cluster;
+>  	int				i;	/* inode chunk index */
+>  
+>  	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
+> -	blks_per_cluster = xfs_icluster_size_fsb(mp);
+> -	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
+>  
+>  	blk_start_plug(&plug);
+>  	for (i = 0; i < XFS_INODES_PER_CHUNK;
+> -	     i += inodes_per_cluster, agbno += blks_per_cluster) {
+> -		if (xfs_inobt_maskn(i, inodes_per_cluster) & ~irec->ir_free) {
+> -			xfs_btree_reada_bufs(mp, agno, agbno, blks_per_cluster,
+> -					     &xfs_inode_buf_ops);
+> +	     i += mp->m_inodes_per_cluster, agbno += mp->m_blocks_per_cluster) {
+> +		if (xfs_inobt_maskn(i, mp->m_inodes_per_cluster) &
+> +				~irec->ir_free) {
+
+Just another nit, this should probably be aligned like so:
+
+		if (xfs_inobt_maskn(i, mp->m_inodes_per_cluster) &
+		    ~irec->ir_free) {
+			...
+		}
+
+... right?
+
+Brian
+
+> +			xfs_btree_reada_bufs(mp, agno, agbno,
+> +					mp->m_blocks_per_cluster,
+> +					&xfs_inode_buf_ops);
+>  		}
+>  	}
+>  	blk_finish_plug(&plug);
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 1fc9e9042e0e..9fe88d125f0a 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -3850,7 +3850,6 @@ xlog_recover_do_icreate_pass2(
+>  	unsigned int		count;
+>  	unsigned int		isize;
+>  	xfs_agblock_t		length;
+> -	int			blks_per_cluster;
+>  	int			bb_per_cluster;
+>  	int			cancel_count;
+>  	int			nbufs;
+> @@ -3918,14 +3917,13 @@ xlog_recover_do_icreate_pass2(
+>  	 * buffers for cancellation so we don't overwrite anything written after
+>  	 * a cancellation.
+>  	 */
+> -	blks_per_cluster = xfs_icluster_size_fsb(mp);
+> -	bb_per_cluster = XFS_FSB_TO_BB(mp, blks_per_cluster);
+> -	nbufs = length / blks_per_cluster;
+> +	bb_per_cluster = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
+> +	nbufs = length / mp->m_blocks_per_cluster;
+>  	for (i = 0, cancel_count = 0; i < nbufs; i++) {
+>  		xfs_daddr_t	daddr;
+>  
+>  		daddr = XFS_AGB_TO_DADDR(mp, agno,
+> -					 agbno + i * blks_per_cluster);
+> +					 agbno + i * mp->m_blocks_per_cluster);
+>  		if (xlog_check_buffer_cancelled(log, daddr, bb_per_cluster, 0))
+>  			cancel_count++;
+>  	}
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 02d15098dbee..56d374675fd5 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -798,6 +798,8 @@ xfs_mountfs(
+>  		if (mp->m_sb.sb_inoalignmt >= XFS_B_TO_FSBT(mp, new_size))
+>  			mp->m_inode_cluster_size = new_size;
+>  	}
+> +	mp->m_blocks_per_cluster = xfs_icluster_size_fsb(mp);
+> +	mp->m_inodes_per_cluster = XFS_FSB_TO_INO(mp, mp->m_blocks_per_cluster);
+>  
+>  	/*
+>  	 * If enabled, sparse inode chunk alignment is expected to match the
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 7964513c3128..58a037bfac22 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -101,6 +101,8 @@ typedef struct xfs_mount {
+>  	uint8_t			m_agno_log;	/* log #ag's */
+>  	uint8_t			m_agino_log;	/* #bits for agino in inum */
+>  	uint			m_inode_cluster_size;/* min inode buf size */
+> +	unsigned int		m_inodes_per_cluster;
+> +	unsigned int		m_blocks_per_cluster;
+>  	uint			m_blockmask;	/* sb_blocksize-1 */
+>  	uint			m_blockwsize;	/* sb_blocksize in words */
+>  	uint			m_blockwmask;	/* blockwsize-1 */
+> 
