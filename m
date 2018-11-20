@@ -1,60 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:50307 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725898AbeKTHzH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 02:55:07 -0500
-Date: Tue, 20 Nov 2018 08:29:31 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/6] xfstests: add copy/dedupe/clone to fsx/fsstress
-Message-ID: <20181119212931.GJ19305@dastard>
-References: <154215237717.21151.11976488103599724788.stgit@magnolia>
- <20181119052251.GQ2279@dhcp-12-117.nay.redhat.com>
- <20181119104547.GR2279@dhcp-12-117.nay.redhat.com>
- <20181119163809.GX4235@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:47954 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725904AbeKUCx3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Nov 2018 21:53:29 -0500
+Date: Tue, 20 Nov 2018 11:23:30 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 5/5] xfs: precalculate cluster alignment in inodes and
+ blocks
+Message-ID: <20181120162330.GE48509@bfoster>
+References: <154171920164.30818.2178553842722589349.stgit@magnolia>
+ <154171923920.30818.16202775253577895387.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181119163809.GX4235@magnolia>
+In-Reply-To: <154171923920.30818.16202775253577895387.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Nov 19, 2018 at 08:38:09AM -0800, Darrick J. Wong wrote:
-> On Mon, Nov 19, 2018 at 06:45:47PM +0800, Zorro Lang wrote:
-> > On Mon, Nov 19, 2018 at 01:22:52PM +0800, Zorro Lang wrote:
-> > > On Tue, Nov 13, 2018 at 03:39:37PM -0800, Darrick J. Wong wrote:
-> > > > Hi all,
-> > > > 
-> > > > This series adds to fsx support for FICLONERANGE, FIDEDUPERANGE, and
-> > > > copy_file_range.  It adds to fsstress support for copy_file_range.
-> > > > There are known failures in 4.20-rc2, particularly with copy_file_range,
-> > > > so these patches provide a fstests base for everyone to start/continue
-> > > > looking for bugs.
-> > > 
-> > > Hi Darrick,
-> > > 
-> > > Your patches triggered 2 new failures on g/091 and g/263, refer to [1]. I can't
-> > > reproduce these failures on original xfstests [2]. I saw you were talking about g/091
-> > > in #xfs. Are these two failures same issue?
+On Thu, Nov 08, 2018 at 03:20:39PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Most probably.  Dave and I are still digging through all the new
-> failures that show up in g/091, g/263, and g/127 once clonerange starts
-> happening.
+> Store the inode cluster alignment information in units of inodes and
+> blocks in the mount data so that we don't have to keep recalculating
+> them.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c |    8 ++++----
+>  fs/xfs/libxfs/xfs_types.c  |    5 ++---
+>  fs/xfs/scrub/ialloc.c      |    2 +-
+>  fs/xfs/xfs_mount.c         |    2 ++
+>  fs/xfs/xfs_mount.h         |    2 ++
+>  5 files changed, 11 insertions(+), 8 deletions(-)
+> 
+> 
+...
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 58a037bfac22..0ad025e7f3cf 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -103,6 +103,8 @@ typedef struct xfs_mount {
+>  	uint			m_inode_cluster_size;/* min inode buf size */
+>  	unsigned int		m_inodes_per_cluster;
+>  	unsigned int		m_blocks_per_cluster;
+> +	unsigned int		m_cluster_align;
+> +	unsigned int		m_cluster_align_inodes;
 
-Yup, there's lots of bugs in the code that fsx now exercises. These
-tests will now fail until we get the fixes into the upstream kernel.
+The m_cluster_align change looks fine:
 
-And, really, even when these tests pass (as they do on my machines
-now) fsx still fails. I have at least 4 different failures which
-occur at between 350k and 5m ops that I can reproduce. These tests
-only run about 10-100k ops, so they don't trip over the bugs I
-haven't found and fixed yet.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Cheers,
+... but no users of m_cluster_align_inodes?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  	uint			m_blockmask;	/* sb_blocksize-1 */
+>  	uint			m_blockwsize;	/* sb_blocksize in words */
+>  	uint			m_blockwmask;	/* blockwsize-1 */
+> 
