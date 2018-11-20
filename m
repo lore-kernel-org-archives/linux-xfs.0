@@ -1,102 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41234 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:45750 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725887AbeKUJUo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 04:20:44 -0500
-Date: Tue, 20 Nov 2018 14:49:08 -0800
+        with ESMTP id S1725887AbeKUJZp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 04:25:45 -0500
+Date: Tue, 20 Nov 2018 14:53:55 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/7] xfs: finobt AG reserves don't consider last AG can
- be a runt
-Message-ID: <20181120224908.GH6792@magnolia>
+Subject: Re: [PATCH 5/7] xfs: extent shifting doesn't fully invalidate page
+ cache
+Message-ID: <20181120225355.GI6792@magnolia>
 References: <20181119210459.8506-1-david@fromorbit.com>
- <20181119210459.8506-5-david@fromorbit.com>
+ <20181119210459.8506-6-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181119210459.8506-5-david@fromorbit.com>
+In-Reply-To: <20181119210459.8506-6-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 20, 2018 at 08:04:56AM +1100, Dave Chinner wrote:
+On Tue, Nov 20, 2018 at 08:04:57AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The last AG may be very small comapred to all other AGs, and hence
-> AG reservations based on the superblock AG size may actually consume
-> more space than the AG actually has. This results on assert failures
-> like:
+> The extent shifting code uses a flush and invalidate mechainsm prior
+> to shifting extents around. This is similar to what
+> xfs_free_file_space() does, but it doesn't take into account things
+> like page cache vs block size differences, and it will fail if there
+> is a page that it currently busy.
 > 
-> XFS: Assertion failed: xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved + xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <= pag->pagf_freeblks + pag->pagf_flcount, file: fs/xfs/libxfs/xfs_ag_resv.c, line: 319
-> [   48.932891]  xfs_ag_resv_init+0x1bd/0x1d0
-> [   48.933853]  xfs_fs_reserve_ag_blocks+0x37/0xb0
-> [   48.934939]  xfs_mountfs+0x5b3/0x920
-> [   48.935804]  xfs_fs_fill_super+0x462/0x640
-> [   48.936784]  ? xfs_test_remount_options+0x60/0x60
-> [   48.937908]  mount_bdev+0x178/0x1b0
-> [   48.938751]  mount_fs+0x36/0x170
-> [   48.939533]  vfs_kern_mount.part.43+0x54/0x130
-> [   48.940596]  do_mount+0x20e/0xcb0
-> [   48.941396]  ? memdup_user+0x3e/0x70
-> [   48.942249]  ksys_mount+0xba/0xd0
-> [   48.943046]  __x64_sys_mount+0x21/0x30
-> [   48.943953]  do_syscall_64+0x54/0x170
-> [   48.944835]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> 
-> Hence we need to ensure the finobt per-ag space reservations take
-> into account the size of the last AG rather than treat it like all
-> the other full size AGs.
-> 
-> Note that both refcountbt and rmapbt already take the size of the AG
-> into account via reading the AGF length directly.
+> xfs_flush_unmap_range() handles all of these cases, so just convert
+> xfs_prepare_shift() to us that mechanism rather than having it's own
+> special sauce.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Looks ok now,
+Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_ialloc_btree.c | 11 +++++++----
->  1 file changed, 7 insertions(+), 4 deletions(-)
+>  fs/xfs/xfs_bmap_util.c | 8 +-------
+>  1 file changed, 1 insertion(+), 7 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> index 86c50208a143..7fbf8af0b159 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> @@ -538,15 +538,18 @@ xfs_inobt_rec_check_count(
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 5d263dfdb3bc..167ff4297e5c 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1195,13 +1195,7 @@ xfs_prepare_shift(
+>  	 * Writeback and invalidate cache for the remainder of the file as we're
+>  	 * about to shift down every extent from offset to EOF.
+>  	 */
+> -	error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping, offset, -1);
+> -	if (error)
+> -		return error;
+> -	error = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+> -					offset >> PAGE_SHIFT, -1);
+> -	if (error)
+> -		return error;
+> +	error = xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip));
 >  
->  static xfs_extlen_t
->  xfs_inobt_max_size(
-> -	struct xfs_mount	*mp)
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno)
->  {
-> +	xfs_agblock_t		agblocks = xfs_ag_block_count(mp, agno);
-> +
->  	/* Bail out if we're uninitialized, which can happen in mkfs. */
->  	if (mp->m_inobt_mxr[0] == 0)
->  		return 0;
->  
->  	return xfs_btree_calc_size(mp->m_inobt_mnr,
-> -		(uint64_t)mp->m_sb.sb_agblocks * mp->m_sb.sb_inopblock /
-> -				XFS_INODES_PER_CHUNK);
-> +				(uint64_t)agblocks * mp->m_sb.sb_inopblock /
-> +					XFS_INODES_PER_CHUNK);
->  }
->  
->  static int
-> @@ -594,7 +597,7 @@ xfs_finobt_calc_reserves(
->  	if (error)
->  		return error;
->  
-> -	*ask += xfs_inobt_max_size(mp);
-> +	*ask += xfs_inobt_max_size(mp, agno);
->  	*used += tree_len;
->  	return 0;
->  }
+>  	/*
+>  	 * Clean out anything hanging around in the cow fork now that
 > -- 
 > 2.19.1
 > 
