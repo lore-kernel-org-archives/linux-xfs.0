@@ -1,43 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:57296 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731835AbeKVUnQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Nov 2018 15:43:16 -0500
-Date: Thu, 22 Nov 2018 11:04:28 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V11 14/19] block: handle non-cluster bio out of
- blk_bio_segment_split
-Message-ID: <20181122100427.GA28871@lst.de>
-References: <20181121032327.8434-1-ming.lei@redhat.com> <20181121032327.8434-15-ming.lei@redhat.com> <20181121143355.GB2594@lst.de> <20181121153726.GC19111@ming.t460p> <20181121174621.GA6961@lst.de> <20181122093259.GA27007@ming.t460p>
+Received: from userp2130.oracle.com ([156.151.31.86]:48336 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725851AbeKUI2I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 03:28:08 -0500
+Subject: [PATCH 01/10] fsx: shut up compiler warnings
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 20 Nov 2018 13:56:47 -0800
+Message-ID: <154275100761.8611.14831629844790867009.stgit@magnolia>
+In-Reply-To: <154275100143.8611.10235098565750994724.stgit@magnolia>
+References: <154275100143.8611.10235098565750994724.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181122093259.GA27007@ming.t460p>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Nov 22, 2018 at 05:33:00PM +0800, Ming Lei wrote:
-> However, using virt boundary limit on non-cluster seems over-kill,
-> because the bio will be over-split(each small bvec may be split as one bio)
-> if it includes lots of small segment.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The combination of the virt boundary of PAGE_SIZE - 1 and a
-max_segment_size of PAGE_SIZE will only split if the to me merged
-segment is in a different page than the previous one, which is exactly
-what we need here.  Multiple small bvec inside the same page (e.g.
-512 byte buffer_heads) will still be merged.
+Fix unused variables and potential filename overflows in fsx.
 
-> What we want to do is just to avoid to merge bvecs to segment, which
-> should have been done by NO_SG_MERGE simply. However, after multi-page
-> is enabled, two adjacent bvecs won't be merged any more, I just forget
-> to remove the bvec merge code in V11.
-> 
-> So seems we can simply avoid to use virt boundary limit for non-cluster
-> after multipage bvec is enabled?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ ltp/fsx.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-No, we can't just remove it.  As explained in the patch there is one very
-visible difference of setting the flag amd that is no segment will span a
-page boundary, and at least the iSCSI code seems to rely on that.
+
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index b0157ba3..5601c70c 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -121,7 +121,7 @@ char	*bname;				/* basename of our test file */
+ char	*logdev;			/* -i flag */
+ char	*logid;				/* -j flag */
+ char	dname[1024];			/* -P flag */
+-char	goodfile[1024];
++char	goodfile[PATH_MAX];
+ int	dirpath = 0;			/* -P flag */
+ int	fd;				/* fd for our test file */
+ 
+@@ -185,7 +185,7 @@ const char *replayops = NULL;
+ const char *recordops = NULL;
+ FILE *	fsxlogf = NULL;
+ FILE *	replayopsf = NULL;
+-char opsfile[1024];
++char opsfile[PATH_MAX];
+ int badoff = -1;
+ int closeopen = 0;
+ 
+@@ -541,13 +541,13 @@ mark_log(void)
+ void
+ dump_fsync_buffer(void)
+ {
+-	char fname_buffer[1024];
++	char fname_buffer[PATH_MAX];
+ 	int good_fd;
+ 
+ 	if (!good_buf)
+ 		return;
+ 
+-	snprintf(fname_buffer, 1024, "%s%s.mark%d", dname,
++	snprintf(fname_buffer, sizeof(fname_buffer), "%s%s.mark%d", dname,
+ 		 bname, mark_nr);
+ 	good_fd = open(fname_buffer, O_WRONLY|O_CREAT|O_TRUNC, 0666);
+ 	if (good_fd < 0) {
+@@ -1865,7 +1865,7 @@ main(int argc, char **argv)
+ {
+ 	int	i, style, ch;
+ 	char	*endp, *tmp;
+-	char logfile[1024];
++	char logfile[PATH_MAX];
+ 	struct stat statbuf;
+ 	int o_flags = O_RDWR|O_CREAT|O_TRUNC;
+ 
