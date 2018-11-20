@@ -1,101 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:54868 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:54874 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725970AbeKTSRJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 13:17:09 -0500
-Date: Mon, 19 Nov 2018 23:49:20 -0800
+        with ESMTP id S1725970AbeKTSRl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 13:17:41 -0500
+Date: Mon, 19 Nov 2018 23:49:56 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/5] splice: increase pipe size in
- splice_direct_to_actor()
-Message-ID: <20181120074920.GB25418@infradead.org>
+Subject: Re: [PATCH 5/5] vfs: vfs_dedupe_file_range() doesn't return
+ EOPNOTSUPP
+Message-ID: <20181120074956.GC25418@infradead.org>
 References: <20181119211742.8824-1-david@fromorbit.com>
- <20181119211742.8824-5-david@fromorbit.com>
+ <20181119211742.8824-6-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181119211742.8824-5-david@fromorbit.com>
+In-Reply-To: <20181119211742.8824-6-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-[adding Al for pipe bits]
-
-On Tue, Nov 20, 2018 at 08:17:41AM +1100, Dave Chinner wrote:
+On Tue, Nov 20, 2018 at 08:17:42AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When copy_file_range() is called on files that have been opened with
-> O_DIRECT, do_splice_direct() does a manual copy of the range one
-> pipe buffer at a time. The default is 16 pages, which means on
-> x86_64 it is limited to 64kB IO. This is extremely slow - 64k
-> synchrnous read/write will run at maybe 5-10MB/s on a spinning disk
-> and be seek bound. It will be faster on SSDs, but still very
-> inefficient.
+> It returns EINVAL when the operation is not supported by the
+> filesystem. Fix it to return EOPNOTSUPP to be consistent with
+> the man page and clone_file_range().
 > 
-> Increase the pipe size to the maximum allowed user size so that we
-> can get decent throughput for this highly sub-optimal copy loop.  We
-> also don't care if changing the pipe size fails - that will just
-> result in a slower copy.
+> Clean up the inconsistent error return handling while I'm there.
+> (I know, lipstick on a pig, but every little bit helps...)
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/pipe.c                 | 2 +-
->  fs/splice.c               | 8 ++++++++
->  include/linux/pipe_fs_i.h | 1 +
->  3 files changed, 10 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/pipe.c b/fs/pipe.c
-> index bdc5d3c0977d..5885d29cdaa6 100644
-> --- a/fs/pipe.c
-> +++ b/fs/pipe.c
-> @@ -1025,7 +1025,7 @@ unsigned int round_pipe_size(unsigned long size)
->   * Allocate a new array of pipe buffers and copy the info over. Returns the
->   * pipe size if successful, or return -ERROR on error.
->   */
-> -static long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg)
-> +long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg)
->  {
->  	struct pipe_buffer *bufs;
->  	unsigned int size, nr_pages;
-> diff --git a/fs/splice.c b/fs/splice.c
-> index 3553f1956508..64dcc622db8d 100644
-> --- a/fs/splice.c
-> +++ b/fs/splice.c
-> @@ -34,6 +34,7 @@
->  #include <linux/socket.h>
->  #include <linux/compat.h>
->  #include <linux/sched/signal.h>
-> +#include <linux/pipe_fs_i.h>
->  
->  #include "internal.h"
->  
-> @@ -931,6 +932,13 @@ ssize_t splice_direct_to_actor(struct file *in, struct splice_desc *sd,
->  		current->splice_pipe = pipe;
->  	}
->  
-> +	/*
-> +	 * Try to increase the data holding capacity of the pipe so we can do
-> +	 * larger IOs. This may not increase the size at all because maximum
-> +	 * user pipe size is administrator controlled, but we still should try.
-> +	 */
-> +	pipe_set_size(pipe, pipe_max_size);
-> +
->  	/*
->  	 * Do the splice.
->  	 */
-> diff --git a/include/linux/pipe_fs_i.h b/include/linux/pipe_fs_i.h
-> index 5a3bb3b7c9ad..e7d728e5b5f8 100644
-> --- a/include/linux/pipe_fs_i.h
-> +++ b/include/linux/pipe_fs_i.h
-> @@ -191,5 +191,6 @@ struct pipe_inode_info *get_pipe_info(struct file *file);
->  
->  int create_pipe_files(struct file **, int);
->  unsigned int round_pipe_size(unsigned long size);
-> +long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg);
->  
->  #endif
-> -- 
-> 2.19.1
-> 
----end quoted text---
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Looks good.  And I really like the removal of the pointless goto
+out uses..
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
