@@ -1,64 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49112 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387669AbeKVUMQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Nov 2018 15:12:16 -0500
-Date: Thu, 22 Nov 2018 17:33:00 +0800
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V11 14/19] block: handle non-cluster bio out of
- blk_bio_segment_split
-Message-ID: <20181122093259.GA27007@ming.t460p>
-References: <20181121032327.8434-1-ming.lei@redhat.com>
- <20181121032327.8434-15-ming.lei@redhat.com>
- <20181121143355.GB2594@lst.de>
- <20181121153726.GC19111@ming.t460p>
- <20181121174621.GA6961@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:48396 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725851AbeKUI2G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 03:28:06 -0500
+Subject: [PATCH v2 00/10] xfstests: add copy/dedupe/clone to fsx/fsstress
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 20 Nov 2018 13:56:41 -0800
+Message-ID: <154275100143.8611.10235098565750994724.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181121174621.GA6961@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Wed, Nov 21, 2018 at 06:46:21PM +0100, Christoph Hellwig wrote:
-> Actually..
-> 
-> I think we can kill this code entirely.  If we look at what the
-> clustering setting is really about it is to avoid ever merging a
-> segement that spans a page boundary.  And we should be able to do
-> that with something like this before your series:
-> 
-> ---
-> From 0d46fa76c376493a74ea0dbe77305bd5fa2cf011 Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch@lst.de>
-> Date: Wed, 21 Nov 2018 18:39:47 +0100
-> Subject: block: remove the "cluster" flag
-> 
-> The cluster flag implements some very old SCSI behavior.  As far as I
-> can tell the original intent was to enable or disable any kind of
-> segment merging.  But the actually visible effect to the LLDD is that
-> it limits each segments to be inside a single page, which we can
-> also affect by setting the maximum segment size and the virt
-> boundary.
+Hi all,
 
-This approach is pretty good given we can do post-split during mapping
-sg.
+This series adds to fsx and fsstress support for FICLONERANGE,
+FIDEDUPERANGE, and copy_file_range.
 
-However, using virt boundary limit on non-cluster seems over-kill,
-because the bio will be over-split(each small bvec may be split as one bio)
-if it includes lots of small segment.
+First, I fix some gcc warnings in fsx.
 
-What we want to do is just to avoid to merge bvecs to segment, which
-should have been done by NO_SG_MERGE simply. However, after multi-page
-is enabled, two adjacent bvecs won't be merged any more, I just forget
-to remove the bvec merge code in V11.
+Then, I teach fsx to read the fsx file after every operation to compare
+it to the good buffer.  This made it easier for me to find corruption
+problem as soon as they happen, though I'm not sure it really makes
+sense to have this enabled by default because of the behavior change
+that it makes.
 
-So seems we can simply avoid to use virt boundary limit for non-cluster
-after multipage bvec is enabled?
+Next come a couple of generic reworks to fsx that we need to support the
+new clone/dedupe/copy commands.
 
+Patches 5-6 add clone and dedupe to fsx.
 
-thanks,
-Ming
+Patches 7-8 add copy_file_range support to fsstress and fsx.
+
+Dave Chinner contributed some cleanups to the fsx patches as the 9th
+patch.
+
+The last patch fixes the common/dump tests to disable the new commands
+so that the dump/restore tests continue to function exactly as they have
+for years.
+
+There are known failures in 4.20-rc3, particularly with copy_file_range,
+which hopefully have been fixed by the patch series that Dave Chinner
+posted to the xfs list yesterday.  Branch can be downloaded here[1].
+
+--D
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fsstress-clone
