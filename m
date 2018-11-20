@@ -1,125 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38760 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35094 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726164AbeKUCrF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Nov 2018 21:47:05 -0500
-Date: Tue, 20 Nov 2018 11:17:08 -0500
+        id S1726119AbeKUANz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Nov 2018 19:13:55 -0500
+Date: Tue, 20 Nov 2018 08:44:39 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/5] xfs: const-ify xfs_owner_info arguments
-Message-ID: <20181120161708.GA48509@bfoster>
-References: <154171920164.30818.2178553842722589349.stgit@magnolia>
- <154171920773.30818.10284610883734405907.stgit@magnolia>
+Subject: Re: [PATCH 1/7] xfs: zero length symlinks are not valid
+Message-ID: <20181120134439.GA47711@bfoster>
+References: <20181119210459.8506-1-david@fromorbit.com>
+ <20181119210459.8506-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <154171920773.30818.10284610883734405907.stgit@magnolia>
+In-Reply-To: <20181119210459.8506-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 08, 2018 at 03:20:07PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Nov 20, 2018 at 08:04:53AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Only certain functions actually change the contents of an
-> xfs_owner_info; the rest can accept a const struct pointer.  This will
-> enable us to save stack space by hoisting static owner info types to
-> be const global variables.
+> A log recovery failure has been reproduced where a symlink inode has
+> a zero length in extent form. It was caused by a shutdown during a
+> combined fstress+fsmark workload.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> The underlying problem is the issue in xfs_inactive_symlink(): the
+> inode is unlocked between the symlink inactivation/truncation and
+> the inode being freed. This opens a window for the inode to be
+> written to disk before it xfs_ifree() removes it from the unlinked
+> list, marks it free in the inobt and zeros the mode.
+> 
+> For shortform inodes, the fix is simple. xfs_ifree() clears the data
+> fork state, so there's no need to do it in xfs_inactive_symlink().
+> This means the shortform fork verifier will not see a zero length
+> data fork as it mirrors the inode size through to xfs_ifree()), and
+> hence if the inode gets written back and the fork verifiers are run
+> they will still see a fork that matches the on-disk inode size.
+> 
+> For extent form (remote) symlinks, it is a little more tricky. Here
+> we explicitly set the inode size to zero, so the above race can lead
+> to zero length symlinks on disk. Because the inode is unlinked at
+> this point (i.e. on the unlinked list) and unreferenced, it can
+> never be seen again by a user. Hence when we set the inode size to
+> zeor, also change the type to S_IFREG. xfs_ifree() expects S_IFREG
+> inodes to be of zero length, and so this avoids all the problems of
+> zero length symlinks ever hitting the disk. It also avoids the
+> problem of needing to handle zero length symlink inodes in log
+> recovery to replay the extent free intents and the remaining
+> deferops to free the extents the symlink used.
+> 
+> Also add a couple of asserts to warn us if zero length symlinks end
+> up in either the symlink create or inactivation paths.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_alloc.c  |    4 -
->  fs/xfs/libxfs/xfs_alloc.h  |    4 -
->  fs/xfs/libxfs/xfs_bmap.c   |    2 
->  fs/xfs/libxfs/xfs_bmap.h   |    4 -
->  fs/xfs/libxfs/xfs_rmap.c   |  212 ++++++++++++++++++++++----------------------
->  fs/xfs/libxfs/xfs_rmap.h   |   12 +-
->  fs/xfs/scrub/btree.c       |   45 +++++----
->  fs/xfs/scrub/btree.h       |   22 ++---
->  fs/xfs/scrub/common.c      |   14 +--
->  fs/xfs/scrub/common.h      |    2 
->  fs/xfs/scrub/refcount.c    |   11 +-
->  fs/xfs/scrub/repair.c      |   50 +++++-----
->  fs/xfs/scrub/repair.h      |    7 +
->  fs/xfs/scrub/rmap.c        |   30 +++---
->  fs/xfs/scrub/scrub.h       |    4 -
->  fs/xfs/xfs_trace.h         |    4 -
->  fs/xfs/xfs_trans.h         |    3 -
->  fs/xfs/xfs_trans_extfree.c |    2 
->  18 files changed, 218 insertions(+), 214 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index e1c0c0d2f1b0..bce46fa0ee38 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -1699,7 +1699,7 @@ xfs_free_ag_extent(
->  	xfs_agnumber_t		agno,
->  	xfs_agblock_t		bno,
->  	xfs_extlen_t		len,
-> -	struct xfs_owner_info	*oinfo,
-> +	const struct xfs_owner_info	*oinfo,
->  	enum xfs_ag_resv_type	type)
->  {
->  	xfs_btree_cur_t	*bno_cur;	/* cursor for by-block btree */
-> @@ -3013,7 +3013,7 @@ __xfs_free_extent(
->  	struct xfs_trans	*tp,	/* transaction pointer */
->  	xfs_fsblock_t		bno,	/* starting block number of extent */
->  	xfs_extlen_t		len,	/* length of extent */
-> -	struct xfs_owner_info	*oinfo,	/* extent owner */
-> +	const struct xfs_owner_info	*oinfo,	/* extent owner */
->  	enum xfs_ag_resv_type	type,	/* block reservation type */
->  	bool			skip_discard)
->  {
 
-Looks like we missed some function arg alignment fixups here.
+Hmm, I saw this and thought this was something we had already fixed.
+Looking back, I see this was actually posted[1] months ago and there was
+a fairly nuanced discussion. On a quick skim, that appears to have
+concluded with the patch being mostly sane, but requiring a couple minor
+tweaks and commit log updates. This patch looks exactly the same to me,
+however. Hm?
 
-...
-> diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-> index 157dc722ad35..00e38505037f 100644
-> --- a/fs/xfs/libxfs/xfs_rmap.h
-> +++ b/fs/xfs/libxfs/xfs_rmap.h
-> @@ -52,7 +52,7 @@ xfs_rmap_skip_owner_update(
->  
->  static inline bool
->  xfs_rmap_should_skip_owner_update(
-> -	struct xfs_owner_info	*oi)
-> +	const struct xfs_owner_info	*oi)
->  {
->  	return oi->oi_owner == XFS_RMAP_OWN_NULL;
+Brian
+
+[1] https://marc.info/?l=linux-xfs&m=152930146405930&w=2
+
+>  fs/xfs/libxfs/xfs_symlink_remote.c | 14 +++++++++----
+>  fs/xfs/xfs_symlink.c               | 33 +++++++++++++++---------------
+>  2 files changed, 27 insertions(+), 20 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+> index 95374ab2dee7..77d80106f989 100644
+> --- a/fs/xfs/libxfs/xfs_symlink_remote.c
+> +++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+> @@ -199,7 +199,10 @@ xfs_symlink_local_to_remote(
+>  					ifp->if_bytes - 1);
 >  }
-> @@ -103,7 +103,7 @@ xfs_rmap_irec_offset_unpack(
 >  
->  static inline void
->  xfs_owner_info_unpack(
-> -	struct xfs_owner_info	*oinfo,
-> +	const struct xfs_owner_info	*oinfo,
->  	uint64_t		*owner,
->  	uint64_t		*offset,
->  	unsigned int		*flags)
-
-... and here.
-
-...
-> diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
-> index 73b11ed6795e..5210f86a9114 100644
-> --- a/fs/xfs/xfs_trans_extfree.c
-> +++ b/fs/xfs/xfs_trans_extfree.c
-> @@ -57,7 +57,7 @@ xfs_trans_free_extent(
->  	struct xfs_efd_log_item	*efdp,
->  	xfs_fsblock_t		start_block,
->  	xfs_extlen_t		ext_len,
-> -	struct xfs_owner_info	*oinfo,
-> +	const struct xfs_owner_info	*oinfo,
->  	bool			skip_discard)
-
-... and here.
-
-With those fixed up:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  {
->  	struct xfs_mount	*mp = tp->t_mountp;
+> -/* Verify the consistency of an inline symlink. */
+> +/*
+> + * Verify the in-memory consistency of an inline symlink data fork. This
+> + * does not do on-disk format checks.
+> + */
+>  xfs_failaddr_t
+>  xfs_symlink_shortform_verify(
+>  	struct xfs_inode	*ip)
+> @@ -215,9 +218,12 @@ xfs_symlink_shortform_verify(
+>  	size = ifp->if_bytes;
+>  	endp = sfp + size;
+>  
+> -	/* Zero length symlinks can exist while we're deleting a remote one. */
+> -	if (size == 0)
+> -		return NULL;
+> +	/*
+> +	 * Zero length symlinks should never occur in memory as they are
+> +	 * never alllowed to exist on disk.
+> +	 */
+> +	if (!size)
+> +		return __this_address;
+>  
+>  	/* No negative sizes or overly long symlink targets. */
+>  	if (size < 0 || size > XFS_SYMLINK_MAXLEN)
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index a3e98c64b6e3..b2c1177c717f 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -192,6 +192,7 @@ xfs_symlink(
+>  	pathlen = strlen(target_path);
+>  	if (pathlen >= XFS_SYMLINK_MAXLEN)      /* total string too long */
+>  		return -ENAMETOOLONG;
+> +	ASSERT(pathlen > 0);
+>  
+>  	udqp = gdqp = NULL;
+>  	prid = xfs_get_initial_prid(dp);
+> @@ -378,6 +379,12 @@ xfs_symlink(
+>  
+>  /*
+>   * Free a symlink that has blocks associated with it.
+> + *
+> + * Note: zero length symlinks are not allowed to exist. When we set the size to
+> + * zero, also change it to a regular file so that it does not get written to
+> + * disk as a zero length symlink. The inode is on the unlinked list already, so
+> + * userspace cannot find this inode anymore, so this change is not user visible
+> + * but allows us to catch corrupt zero-length symlinks in the verifiers.
+>   */
+>  STATIC int
+>  xfs_inactive_symlink_rmt(
+> @@ -412,13 +419,14 @@ xfs_inactive_symlink_rmt(
+>  	xfs_trans_ijoin(tp, ip, 0);
+>  
+>  	/*
+> -	 * Lock the inode, fix the size, and join it to the transaction.
+> -	 * Hold it so in the normal path, we still have it locked for
+> -	 * the second transaction.  In the error paths we need it
+> +	 * Lock the inode, fix the size, turn it into a regular file and join it
+> +	 * to the transaction.  Hold it so in the normal path, we still have it
+> +	 * locked for the second transaction.  In the error paths we need it
+>  	 * held so the cancel won't rele it, see below.
+>  	 */
+>  	size = (int)ip->i_d.di_size;
+>  	ip->i_d.di_size = 0;
+> +	VFS_I(ip)->i_mode = (VFS_I(ip)->i_mode & ~S_IFMT) | S_IFREG;
+>  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>  	/*
+>  	 * Find the block(s) so we can inval and unmap them.
+> @@ -494,17 +502,10 @@ xfs_inactive_symlink(
+>  		return -EIO;
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -
+> -	/*
+> -	 * Zero length symlinks _can_ exist.
+> -	 */
+>  	pathlen = (int)ip->i_d.di_size;
+> -	if (!pathlen) {
+> -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -		return 0;
+> -	}
+> +	ASSERT(pathlen);
+>  
+> -	if (pathlen < 0 || pathlen > XFS_SYMLINK_MAXLEN) {
+> +	if (pathlen <= 0 || pathlen > XFS_SYMLINK_MAXLEN) {
+>  		xfs_alert(mp, "%s: inode (0x%llx) bad symlink length (%d)",
+>  			 __func__, (unsigned long long)ip->i_ino, pathlen);
+>  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> @@ -512,12 +513,12 @@ xfs_inactive_symlink(
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> +	/*
+> +	 * Inline fork state gets removed by xfs_difree() so we have nothing to
+> +	 * do here in that case.
+> +	 */
+>  	if (ip->i_df.if_flags & XFS_IFINLINE) {
+> -		if (ip->i_df.if_bytes > 0) 
+> -			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
+> -					  XFS_DATA_FORK);
+>  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -		ASSERT(ip->i_df.if_bytes == 0);
+>  		return 0;
+>  	}
+>  
+> -- 
+> 2.19.1
 > 
