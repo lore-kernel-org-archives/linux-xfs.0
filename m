@@ -1,88 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:3432 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725977AbeKUHlK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 02:41:10 -0500
-Date: Wed, 21 Nov 2018 08:08:44 +1100
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:15295 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725828AbeKUHub (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 02:50:31 -0500
+Date: Wed, 21 Nov 2018 08:19:18 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 8/7] xfs: delalloc -> unwritten COW fork allocation can
- go wrong
-Message-ID: <20181120210844.GQ19305@dastard>
+Subject: Re: [PATCH 1/7] xfs: zero length symlinks are not valid
+Message-ID: <20181120211918.GR19305@dastard>
 References: <20181119210459.8506-1-david@fromorbit.com>
- <20181120063605.GN19305@dastard>
- <20181120134537.GB47711@bfoster>
- <20181120163349.GB7805@infradead.org>
+ <20181119210459.8506-2-david@fromorbit.com>
+ <20181120134439.GA47711@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181120163349.GB7805@infradead.org>
+In-Reply-To: <20181120134439.GA47711@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 20, 2018 at 08:33:49AM -0800, Christoph Hellwig wrote:
-> On Tue, Nov 20, 2018 at 08:45:38AM -0500, Brian Foster wrote:
-> > >  		 * Filling in all of a previously delayed allocation extent.
-> > > -		 * The right neighbor is contiguous, the left is not.
-> > > +		 * The right neighbor is contiguous, the left is not. Take care
-> > > +		 * with delay -> unwritten extent allocation here because the
-> > > +		 * delalloc record we are overwriting is always written.
-> > >  		 */
-> > >  		PREV.br_startblock = new->br_startblock;
-> > >  		PREV.br_blockcount += RIGHT.br_blockcount;
-> > > +		PREV.br_state = new->br_state;
-> > >  
-> > >  		xfs_iext_next(ifp, &bma->icur);
-> > >  		xfs_iext_remove(bma->ip, &bma->icur, state);
+On Tue, Nov 20, 2018 at 08:44:39AM -0500, Brian Foster wrote:
+> On Tue, Nov 20, 2018 at 08:04:53AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Fix looks sane to me, though I'm a little curious why this doesn't
-> > follow the "contiguous extent extension" pattern that most of the other
-> > contig cases seem to follow. For example, something like the following
-> > for the right contig case:
+> > A log recovery failure has been reproduced where a symlink inode has
+> > a zero length in extent form. It was caused by a shutdown during a
+> > combined fstress+fsmark workload.
 > > 
-> >                 old = RIGHT;
-> >                 RIGHT.br_startoff = new->br_startoff;
-> >                 RIGHT.br_startblock = new->br_startblock;
-> >                 RIGHT.br_blockcount += new.br_blockcount;
+> > The underlying problem is the issue in xfs_inactive_symlink(): the
+> > inode is unlocked between the symlink inactivation/truncation and
+> > the inode being freed. This opens a window for the inode to be
+> > written to disk before it xfs_ifree() removes it from the unlinked
+> > list, marks it free in the inobt and zeros the mode.
 > > 
-> >                 xfs_iext_remove(bma->ip, &bma->icur, state); /* PREV */
-> >                 xfs_iext_next(ifp, &bma->icur);
-> >                 xfs_iext_update_extent(bma->ip, state, &bma->icur, &RIGHT);
+> > For shortform inodes, the fix is simple. xfs_ifree() clears the data
+> > fork state, so there's no need to do it in xfs_inactive_symlink().
+> > This means the shortform fork verifier will not see a zero length
+> > data fork as it mirrors the inode size through to xfs_ifree()), and
+> > hence if the inode gets written back and the fork verifiers are run
+> > they will still see a fork that matches the on-disk inode size.
 > > 
-> > ... and change the subsequent btree update to use old/RIGHT. Maybe
-> > Christoph has thoughts on that.
+> > For extent form (remote) symlinks, it is a little more tricky. Here
+> > we explicitly set the inode size to zero, so the above race can lead
+> > to zero length symlinks on disk. Because the inode is unlinked at
+> > this point (i.e. on the unlinked list) and unreferenced, it can
+> > never be seen again by a user. Hence when we set the inode size to
+> > zeor, also change the type to S_IFREG. xfs_ifree() expects S_IFREG
+> > inodes to be of zero length, and so this avoids all the problems of
+> > zero length symlinks ever hitting the disk. It also avoids the
+> > problem of needing to handle zero length symlink inodes in log
+> > recovery to replay the extent free intents and the remaining
+> > deferops to free the extents the symlink used.
+> > 
+> > Also add a couple of asserts to warn us if zero length symlinks end
+> > up in either the symlink create or inactivation paths.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
 > 
-> Not sure the above looks much better.  If I had to do something
-> different I'd apply something like this (untested) on top of Daves patch:
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 91b94c5c0cae..efe9e554fd0d 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1698,14 +1698,12 @@ xfs_bmap_add_extent_delay_real(
->  		 * with delay -> unwritten extent allocation here because the
->  		 * delalloc record we are overwriting is always written.
->  		 */
-> -		PREV.br_startblock = new->br_startblock;
-> -		PREV.br_blockcount += RIGHT.br_blockcount;
-> -		PREV.br_state = new->br_state;
-> +		new->br_blockcount += RIGHT.br_blockcount;
->  
->  		xfs_iext_next(ifp, &bma->icur);
->  		xfs_iext_remove(bma->ip, &bma->icur, state);
->  		xfs_iext_prev(ifp, &bma->icur);
-> -		xfs_iext_update_extent(bma->ip, state, &bma->icur, &PREV);
-> +		xfs_iext_update_extent(bma->ip, state, &bma->icur, new);
->  
->  		if (bma->cur == NULL)
->  			rval = XFS_ILOG_DEXT;
+> Hmm, I saw this and thought this was something we had already fixed.
+> Looking back, I see this was actually posted[1] months ago and there was
+> a fairly nuanced discussion. On a quick skim, that appears to have
+> concluded with the patch being mostly sane, but requiring a couple minor
+> tweaks and commit log updates. This patch looks exactly the same to me,
+> however. Hm?
 
-And that's buggy because it doesn't update the BMBT record
-correctly - it uses PREV to overwrite RIGHT, and so this will write
-the delalloc record into the BMBT, not the new merged unwritten
-extent...
+Hmmm, I did all that, months ago. The code barely changed, it was
+all just commit message updates. maybe I picked up the wrong version
+of the patch - it had been sitting around for a while. I had even
+gone back and checked the discussion before concluding that "it 
+doesn't need code changes" before adding it to this stack...
+
+I'll go back and see if I can find a more recent version...
 
 Cheers,
 
