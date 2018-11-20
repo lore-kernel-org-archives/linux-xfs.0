@@ -1,180 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:54996 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725968AbeKTSk1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 13:40:27 -0500
-Date: Tue, 20 Nov 2018 00:12:35 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/7] xfs: zero length symlinks are not valid
-Message-ID: <20181120081235.GA30481@infradead.org>
-References: <20181119210459.8506-1-david@fromorbit.com>
- <20181119210459.8506-2-david@fromorbit.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:47552 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725977AbeKUC6C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 21:58:02 -0500
+Date: Tue, 20 Nov 2018 08:27:58 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/5] xfs: const-ify xfs_owner_info arguments
+Message-ID: <20181120162758.GA6792@magnolia>
+References: <154171920164.30818.2178553842722589349.stgit@magnolia>
+ <154171920773.30818.10284610883734405907.stgit@magnolia>
+ <20181120161708.GA48509@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181119210459.8506-2-david@fromorbit.com>
+In-Reply-To: <20181120161708.GA48509@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
->  	/*
-> -	 * Lock the inode, fix the size, and join it to the transaction.
-> -	 * Hold it so in the normal path, we still have it locked for
-> -	 * the second transaction.  In the error paths we need it
-> +	 * Lock the inode, fix the size, turn it into a regular file and join it
-> +	 * to the transaction.  Hold it so in the normal path, we still have it
-> +	 * locked for the second transaction.  In the error paths we need it
->  	 * held so the cancel won't rele it, see below.
->  	 */
+On Tue, Nov 20, 2018 at 11:17:08AM -0500, Brian Foster wrote:
+> On Thu, Nov 08, 2018 at 03:20:07PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Only certain functions actually change the contents of an
+> > xfs_owner_info; the rest can accept a const struct pointer.  This will
+> > enable us to save stack space by hoisting static owner info types to
+> > be const global variables.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_alloc.c  |    4 -
+> >  fs/xfs/libxfs/xfs_alloc.h  |    4 -
+> >  fs/xfs/libxfs/xfs_bmap.c   |    2 
+> >  fs/xfs/libxfs/xfs_bmap.h   |    4 -
+> >  fs/xfs/libxfs/xfs_rmap.c   |  212 ++++++++++++++++++++++----------------------
+> >  fs/xfs/libxfs/xfs_rmap.h   |   12 +-
+> >  fs/xfs/scrub/btree.c       |   45 +++++----
+> >  fs/xfs/scrub/btree.h       |   22 ++---
+> >  fs/xfs/scrub/common.c      |   14 +--
+> >  fs/xfs/scrub/common.h      |    2 
+> >  fs/xfs/scrub/refcount.c    |   11 +-
+> >  fs/xfs/scrub/repair.c      |   50 +++++-----
+> >  fs/xfs/scrub/repair.h      |    7 +
+> >  fs/xfs/scrub/rmap.c        |   30 +++---
+> >  fs/xfs/scrub/scrub.h       |    4 -
+> >  fs/xfs/xfs_trace.h         |    4 -
+> >  fs/xfs/xfs_trans.h         |    3 -
+> >  fs/xfs/xfs_trans_extfree.c |    2 
+> >  18 files changed, 218 insertions(+), 214 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > index e1c0c0d2f1b0..bce46fa0ee38 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > @@ -1699,7 +1699,7 @@ xfs_free_ag_extent(
+> >  	xfs_agnumber_t		agno,
+> >  	xfs_agblock_t		bno,
+> >  	xfs_extlen_t		len,
+> > -	struct xfs_owner_info	*oinfo,
+> > +	const struct xfs_owner_info	*oinfo,
+> >  	enum xfs_ag_resv_type	type)
+> >  {
+> >  	xfs_btree_cur_t	*bno_cur;	/* cursor for by-block btree */
+> > @@ -3013,7 +3013,7 @@ __xfs_free_extent(
+> >  	struct xfs_trans	*tp,	/* transaction pointer */
+> >  	xfs_fsblock_t		bno,	/* starting block number of extent */
+> >  	xfs_extlen_t		len,	/* length of extent */
+> > -	struct xfs_owner_info	*oinfo,	/* extent owner */
+> > +	const struct xfs_owner_info	*oinfo,	/* extent owner */
+> >  	enum xfs_ag_resv_type	type,	/* block reservation type */
+> >  	bool			skip_discard)
+> >  {
+> 
+> Looks like we missed some function arg alignment fixups here.
 
-Most of this comment seems rather pointless as it explains the how and
-not the why.  Additionally it is out of data (we don't hold inodes for
-transactions anymore), and partially below the code it claims to
-document.  Given that you explain the why pretty well in the top of the
-function document I'd drop this entirely.
+Oops, yeah, I'll fix those.
 
-> +	/*
-> +	 * Inline fork state gets removed by xfs_difree() so we have nothing to
-> +	 * do here in that case.
-> +	 */
->  	if (ip->i_df.if_flags & XFS_IFINLINE) {
-> -		if (ip->i_df.if_bytes > 0) 
-> -			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
-> -					  XFS_DATA_FORK);
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -		ASSERT(ip->i_df.if_bytes == 0);
->  		return 0;
->  	}
+> ...
+> > diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+> > index 157dc722ad35..00e38505037f 100644
+> > --- a/fs/xfs/libxfs/xfs_rmap.h
+> > +++ b/fs/xfs/libxfs/xfs_rmap.h
+> > @@ -52,7 +52,7 @@ xfs_rmap_skip_owner_update(
+> >  
+> >  static inline bool
+> >  xfs_rmap_should_skip_owner_update(
+> > -	struct xfs_owner_info	*oi)
+> > +	const struct xfs_owner_info	*oi)
+> >  {
+> >  	return oi->oi_owner == XFS_RMAP_OWN_NULL;
+> >  }
+> > @@ -103,7 +103,7 @@ xfs_rmap_irec_offset_unpack(
+> >  
+> >  static inline void
+> >  xfs_owner_info_unpack(
+> > -	struct xfs_owner_info	*oinfo,
+> > +	const struct xfs_owner_info	*oinfo,
+> >  	uint64_t		*owner,
+> >  	uint64_t		*offset,
+> >  	unsigned int		*flags)
+> 
+> ... and here.
+> 
+> ...
+> > diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
+> > index 73b11ed6795e..5210f86a9114 100644
+> > --- a/fs/xfs/xfs_trans_extfree.c
+> > +++ b/fs/xfs/xfs_trans_extfree.c
+> > @@ -57,7 +57,7 @@ xfs_trans_free_extent(
+> >  	struct xfs_efd_log_item	*efdp,
+> >  	xfs_fsblock_t		start_block,
+> >  	xfs_extlen_t		ext_len,
+> > -	struct xfs_owner_info	*oinfo,
+> > +	const struct xfs_owner_info	*oinfo,
+> >  	bool			skip_discard)
+> 
+> ... and here.
 
-The ilock here is rather pointless now that we do nothing underneath
-it but checking two different integral values.
+And those.
 
-Something like this additional cleanup might be nice now, with
-the function split being rather pointless now:
+> With those fixed up:
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index b2c1177c717f..8e2e12e34098 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -386,29 +386,41 @@ xfs_symlink(
-  * userspace cannot find this inode anymore, so this change is not user visible
-  * but allows us to catch corrupt zero-length symlinks in the verifiers.
-  */
--STATIC int
--xfs_inactive_symlink_rmt(
--	struct xfs_inode *ip)
-+
-+int
-+xfs_inactive_symlink(
-+	struct xfs_inode	*ip)
- {
--	xfs_buf_t	*bp;
--	int		done;
--	int		error;
--	int		i;
--	xfs_mount_t	*mp;
--	xfs_bmbt_irec_t	mval[XFS_SYMLINK_MAPS];
--	int		nmaps;
--	int		size;
--	xfs_trans_t	*tp;
--
--	mp = ip->i_mount;
--	ASSERT(ip->i_df.if_flags & XFS_IFEXTENTS);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_buf		*bp;
-+	int			done;
-+	int			error;
-+	int			i;
-+	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
-+	int			nmaps;
-+	int			size;
-+	struct xfs_trans	*tp;
-+
-+	trace_xfs_inactive_symlink(ip);
-+
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return -EIO;
-+
-+	ASSERT(ip->i_d.di_size > 0 && ip->i_d.di_size <= XFS_SYMLINK_MAXLEN);
-+
- 	/*
--	 * We're freeing a symlink that has some
--	 * blocks allocated to it.  Free the
--	 * blocks here.  We know that we've got
--	 * either 1 or 2 extents and that we can
--	 * free them all in one bunmapi call.
-+	 * Inline fork state gets removed by xfs_difree() so we have nothing to
-+	 * do here in that case.
- 	 */
-+	if (ip->i_df.if_flags & XFS_IFINLINE)
-+		return 0;
-+
-+	/*
-+	 * We're freeing a symlink that has some blocks allocated to it.  Free
-+	 * the blocks here.  We know that we've got either 1 or 2 extents and
-+	 * that we can free them all in one bunmapi call.
-+	 */
-+	ASSERT(ip->i_df.if_flags & XFS_IFEXTENTS);
- 	ASSERT(ip->i_d.di_nextents > 0 && ip->i_d.di_nextents <= 2);
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
-@@ -419,10 +431,7 @@ xfs_inactive_symlink_rmt(
- 	xfs_trans_ijoin(tp, ip, 0);
- 
- 	/*
--	 * Lock the inode, fix the size, turn it into a regular file and join it
--	 * to the transaction.  Hold it so in the normal path, we still have it
--	 * locked for the second transaction.  In the error paths we need it
--	 * held so the cancel won't rele it, see below.
-+	 * Fix the size, turn it into a regular file in the same transaction.
- 	 */
- 	size = (int)ip->i_d.di_size;
- 	ip->i_d.di_size = 0;
-@@ -485,45 +494,3 @@ xfs_inactive_symlink_rmt(
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return error;
- }
--
--/*
-- * xfs_inactive_symlink - free a symlink
-- */
--int
--xfs_inactive_symlink(
--	struct xfs_inode	*ip)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	int			pathlen;
--
--	trace_xfs_inactive_symlink(ip);
--
--	if (XFS_FORCED_SHUTDOWN(mp))
--		return -EIO;
--
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	pathlen = (int)ip->i_d.di_size;
--	ASSERT(pathlen);
--
--	if (pathlen <= 0 || pathlen > XFS_SYMLINK_MAXLEN) {
--		xfs_alert(mp, "%s: inode (0x%llx) bad symlink length (%d)",
--			 __func__, (unsigned long long)ip->i_ino, pathlen);
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		ASSERT(0);
--		return -EFSCORRUPTED;
--	}
--
--	/*
--	 * Inline fork state gets removed by xfs_difree() so we have nothing to
--	 * do here in that case.
--	 */
--	if (ip->i_df.if_flags & XFS_IFINLINE) {
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		return 0;
--	}
--
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--
--	/* remove the remote symlink */
--	return xfs_inactive_symlink_rmt(ip);
--}
+Thank you for the review! :)
+
+--D
+
+> 
+> >  {
+> >  	struct xfs_mount	*mp = tp->t_mountp;
+> > 
