@@ -1,68 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:34563 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725898AbeKTHnS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 02:43:18 -0500
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45232 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726883AbeKTRDh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Nov 2018 12:03:37 -0500
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1gOzdl-0001BP-O5
+        for linux-xfs@vger.kernel.org; Tue, 20 Nov 2018 17:36:05 +1100
+Date: Tue, 20 Nov 2018 17:36:05 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/5] iomap: FUA is wrong for DIO O_DSYNC writes into unwritten extents
-Date: Tue, 20 Nov 2018 08:17:38 +1100
-Message-Id: <20181119211742.8824-2-david@fromorbit.com>
-In-Reply-To: <20181119211742.8824-1-david@fromorbit.com>
-References: <20181119211742.8824-1-david@fromorbit.com>
+Subject: [PATCH 8/7] xfs: delalloc -> unwritten COW fork allocation can go
+ wrong
+Message-ID: <20181120063605.GN19305@dastard>
+References: <20181119210459.8506-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181119210459.8506-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we write into an unwritten extent via direct IO, we dirty
-metadata on IO completion to convert the unwritten extent to
-written. However, when we do the FUA optimisation checks, the inode
-may be clean and so we issue a FUA write into the unwritten extent.
-This means we then bypass the generic_write_sync() call after
-unwritten extent conversion has ben done and we don't force the
-modified metadata to stable storage.
+Long saga. There have been days spent following this through dead end
+after dead end in multi-GB event traces. This morning, after writing
+a trace-cmd wrapper that enabled me to be more selective about XFS
+trace points, I discovered that I could get just enough essential
+tracepoints enabled that there was a 50:50 chance the fsx config
+would fail at ~115k ops. If it didn't fail at op 115547, I stopped
+fsx at op 115548 anyway.
 
-This violates O_DSYNC semantics. The window of exposure is a single
-IO, as the next DIO write will see the inode has dirty metadata and
-hence will not use the FUA optimisation. Calling
-generic_write_sync() after completion of the second IO will also
-sync the first write and it's metadata.
+That gave me two traces - one where the problem manifested, and one
+where it didn't. After refining the traces to have the necessary
+information, I found that in the failing case there was a real
+extent in the COW fork compared to an unwritten extent in the
+working case.
 
-Fix this by avoiding the FUA optimisation when writing to unwritten
-extents.
+Walking back through the two traces to the point where the CWO fork
+extents actually diverged, I found that the bad case had an extra
+unwritten extent in it. This is likely because the bug it led me to
+had triggered multiple times in those 115k ops, leaving stray
+COW extents around. What I saw was a COW delalloc conversion to an
+unwritten extent (as they should always be through
+xfs_iomap_write_allocate()) resulted in a /written extent/:
+
+xfs_writepage:        dev 259:0 ino 0x83 pgoff 0x17000 size 0x79a00 offset 0 length 0
+xfs_iext_remove:      dev 259:0 ino 0x83 state RC|LF|RF|COW cur 0xffff888247b899c0/2 offset 32 block 152 count 20 flag 1 caller xfs_bmap_add_extent_delay_real
+xfs_bmap_pre_update:  dev 259:0 ino 0x83 state RC|LF|RF|COW cur 0xffff888247b899c0/1 offset 1 block 4503599627239429 count 31 flag 0 caller xfs_bmap_add_extent_delay_real
+xfs_bmap_post_update: dev 259:0 ino 0x83 state RC|LF|RF|COW cur 0xffff888247b899c0/1 offset 1 block 121 count 51 flag 0 caller xfs_bmap_add_ex
+
+Basically, Cow fork before:
+
+	0 1            32          52
+	+H+DDDDDDDDDDDD+UUUUUUUUUUU+
+	   PREV		RIGHT
+
+COW delalloc conversion allocates:
+
+	  1	       32
+	  +uuuuuuuuuuuu+
+	  NEW
+
+And the result according to the xfs_bmap_post_update trace was:
+
+	0 1            32          52
+	+H+wwwwwwwwwwwwwwwwwwwwwwww+
+	   PREV
+
+Which is clearly wrong - it should be a merged unwritten extent,
+not an unwritten extent.
+
+That lead me to look at the LEFT_FILLING|RIGHT_FILLING|RIGHT_CONTIG
+case in xfs_bmap_add_extent_delay_real(), and sure enough, there's
+the bug.
+
+It takes the old delalloc extent (PREV) and adds the length of the
+RIGHT extent to it, takes the start block from NEW, removes the
+RIGHT extent and then updates PREV with the new extent.
+
+What it fails to do is update PREV.br_state. For delalloc, this is
+always XFS_EXT_NORM, while in this case we are converting the
+delayed allocation to unwritten, so it needs to be updated to
+XFS_EXT_UNWRITTEN. This LF|RF|RC case does not do this, and so
+the resultant extent is always written.
+
+And that's the bug I've been chasing for a week - a bmap btree bug,
+not a reflink/dedupe/copy_file_range bug, but a BMBT bug introduced
+with the recent in core extent tree scalability enhancements.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/iomap.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 64ce240217a1..72f3864a2e6b 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -1596,12 +1596,13 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
- 
- 	if (iomap->flags & IOMAP_F_NEW) {
- 		need_zeroout = true;
--	} else {
-+	} else if (iomap->type == IOMAP_MAPPED) {
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 2d78fd53e822..39eaa2b86060 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1694,10 +1694,13 @@ xfs_bmap_add_extent_delay_real(
+ 	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING | BMAP_RIGHT_CONTIG:
  		/*
--		 * Use a FUA write if we need datasync semantics, this
--		 * is a pure data IO that doesn't require any metadata
--		 * updates and the underlying device supports FUA. This
--		 * allows us to avoid cache flushes on IO completion.
-+		 * Use a FUA write if we need datasync semantics, this is a pure
-+		 * data IO that doesn't require any metadata updates (including
-+		 * after IO completion such as unwritten extent conversion) and
-+		 * the underlying device supports FUA. This allows us to avoid
-+		 * cache flushes on IO completion.
+ 		 * Filling in all of a previously delayed allocation extent.
+-		 * The right neighbor is contiguous, the left is not.
++		 * The right neighbor is contiguous, the left is not. Take care
++		 * with delay -> unwritten extent allocation here because the
++		 * delalloc record we are overwriting is always written.
  		 */
- 		if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
- 		    (dio->flags & IOMAP_DIO_WRITE_FUA) &&
--- 
-2.19.1
+ 		PREV.br_startblock = new->br_startblock;
+ 		PREV.br_blockcount += RIGHT.br_blockcount;
++		PREV.br_state = new->br_state;
+ 
+ 		xfs_iext_next(ifp, &bma->icur);
+ 		xfs_iext_remove(bma->ip, &bma->icur, state);
