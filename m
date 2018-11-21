@@ -1,80 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:52266 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726894AbeK1Owo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 09:52:44 -0500
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v1 5/7] xfs: Add device retry
-Date: Tue, 27 Nov 2018 20:49:49 -0700
-Message-Id: <1543376991-5764-6-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
-References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:7031 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2390411AbeKVJgc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 04:36:32 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1gPbTV-0003nh-E1
+        for linux-xfs@vger.kernel.org; Thu, 22 Nov 2018 10:00:01 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1gPbTV-0008FG-Al
+        for linux-xfs@vger.kernel.org; Thu, 22 Nov 2018 10:00:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 0/3] xfs: enums don't work with __print_symbolic
+Date: Thu, 22 Nov 2018 09:59:55 +1100
+Message-Id: <20181121225958.30947-1-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: martin.petersen@oracle.com, shirley.ma@oracle.com, bob.liu@oracle.com, allison.henderson@oracle.com
+To: linux-xfs@vger.kernel.org
 
-Check to see if the _xfs_buf_read fails.  If so loop over the
-available mirrors and retry the read
+Hi folks,
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/xfs_buf.c | 28 +++++++++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
+When trying to read traces from fsx failurs, I kept coming across
+fields in the traces that had no output what-so-ever. The common
+theme was that they all were tables that were parsed by
+__print_symbolic() and the value definitions were enums.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index dd8ba59..f102d01 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -21,6 +21,7 @@
- #include <linux/migrate.h>
- #include <linux/backing-dev.h>
- #include <linux/freezer.h>
-+#include <linux/blkdev.h>
- 
- #include "xfs_format.h"
- #include "xfs_log_format.h"
-@@ -808,6 +809,8 @@ xfs_buf_read_map(
- 	const struct xfs_buf_ops *ops)
- {
- 	struct xfs_buf		*bp;
-+	struct request_queue	*q;
-+	unsigned short		i;
- 
- 	flags |= XBF_READ;
- 
-@@ -820,7 +823,30 @@ xfs_buf_read_map(
- 	if (!(bp->b_flags & XBF_DONE)) {
- 		XFS_STATS_INC(target->bt_mount, xb_get_read);
- 		bp->b_ops = ops;
--		_xfs_buf_read(bp, flags);
-+		q = bdev_get_queue(bp->b_target->bt_bdev);
-+
-+		/*
-+		 * Mirrors are indexed 1 - n, specified through the rw_hint.
-+		 * Setting the hint to 0 is unspecified and allows the block
-+		 * layer to decide.
-+		 */
-+		for (i = 0; i <= blk_queue_get_mirrors(q); i++) {
-+			bp->b_error = 0;
-+			bp->b_rw_hint = i;
-+			_xfs_buf_read(bp, flags);
-+
-+			switch (bp->b_error) {
-+			case -EIO:
-+			case -EFSCORRUPTED:
-+			case -EFSBADCRC:
-+				/* loop again */
-+				continue;
-+			default:
-+				goto retry_done;
-+			}
-+
-+		}
-+retry_done:
- 		return bp;
- 	}
- 
--- 
-2.7.4
+Unfortunately, __print_symbolic() does some crazy stuff involving
+stringification of the table that is passed to it, which means
+the enums are turned into strings and so their never get treated as
+enums after pre-processing. The result is a format string that looks
+like:
+
+# cat /sys/kernel/debug/tracing/events/xfs/xfs_iomap_alloc/format
+.....
+print fmt: ..... __print_symbolic(REC->type, { XFS_IO_INVALID, "invalid" }, { XFS_IO_DELALLOC, "delalloc" }, { XFS_IO_UNWRITTEN, "unwritten" }, { XFS_IO_OVERWRITE, "overwrite" }, { XFS_IO_COW, "CoW" }, { XFS_IO_HOLE, "hole" }), ....
+#
+
+And, well, XFS_IO_OVERWRITE is a string, not an integer value of 3.
+Hence __print_symbolic never prints out the correct value.
+
+The way to fix this is to turn all the enums into defined macros,
+that way the preprocessor still substitutes the value for the
+stringified table as the it does string matches. The result is:
+
+__print_symbolic(REC->type, { 0, "hole" }, { 1, "delalloc" }, { 2, "unwritten" }, { 3, "overwrite" }, { 4, "CoW" })
+
+And the trace events now print the type correctly in the trace.
+
+This series fixes the cases I noticed by removing the various enums
+that end up in trace format tables.
+
+Cheers,
+
+Dave.
