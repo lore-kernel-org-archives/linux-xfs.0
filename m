@@ -1,95 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34656 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46666 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728289AbeKVCYI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Nov 2018 21:24:08 -0500
-Date: Wed, 21 Nov 2018 23:48:13 +0800
+        id S1727069AbeKUN7r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Nov 2018 08:59:47 -0500
 From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V11 15/19] block: enable multipage bvecs
-Message-ID: <20181121154812.GD19111@ming.t460p>
+Subject: [PATCH V11 10/19] block: loop: pass multi-page bvec to iov_iter
+Date: Wed, 21 Nov 2018 11:23:18 +0800
+Message-Id: <20181121032327.8434-11-ming.lei@redhat.com>
+In-Reply-To: <20181121032327.8434-1-ming.lei@redhat.com>
 References: <20181121032327.8434-1-ming.lei@redhat.com>
- <20181121032327.8434-16-ming.lei@redhat.com>
- <20181121145502.GA3241@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181121145502.GA3241@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-On Wed, Nov 21, 2018 at 03:55:02PM +0100, Christoph Hellwig wrote:
-> On Wed, Nov 21, 2018 at 11:23:23AM +0800, Ming Lei wrote:
-> >  	if (bio->bi_vcnt > 0) {
-> > -		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
-> > +		struct bio_vec bv;
-> > +		struct bio_vec *seg = &bio->bi_io_vec[bio->bi_vcnt - 1];
-> >  
-> > -		if (page == bv->bv_page && off == bv->bv_offset + bv->bv_len) {
-> > -			bv->bv_len += len;
-> > +		bvec_last_segment(seg, &bv);
-> > +
-> > +		if (page == bv.bv_page && off == bv.bv_offset + bv.bv_len) {
-> 
-> I think this we can simplify the try to merge into bio case a bit,
-> and also document it better with something like this:
-> 
-> diff --git a/block/bio.c b/block/bio.c
-> index 854676edc438..cc913281a723 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -822,54 +822,40 @@ EXPORT_SYMBOL(bio_add_pc_page);
->   * @page: page to add
->   * @len: length of the data to add
->   * @off: offset of the data in @page
-> + * @same_page: if %true only merge if the new data is in the same physical
-> + *		page as the last segment of the bio.
->   *
-> - * Try to add the data at @page + @off to the last page of @bio.  This is a
-> + * Try to add the data at @page + @off to the last bvec of @bio.  This is a
->   * a useful optimisation for file systems with a block size smaller than the
->   * page size.
->   *
->   * Return %true on success or %false on failure.
->   */
->  bool __bio_try_merge_page(struct bio *bio, struct page *page,
-> -		unsigned int len, unsigned int off)
-> +		unsigned int len, unsigned int off, bool same_page)
->  {
->  	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
->  		return false;
->  
->  	if (bio->bi_vcnt > 0) {
-> -		struct bio_vec bv;
-> -		struct bio_vec *seg = &bio->bi_io_vec[bio->bi_vcnt - 1];
-> -
-> -		bvec_last_segment(seg, &bv);
-> -
-> -		if (page == bv.bv_page && off == bv.bv_offset + bv.bv_len) {
-> -			seg->bv_len += len;
-> -			bio->bi_iter.bi_size += len;
-> -			return true;
-> -		}
-> +		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
-> +		phys_addr_t vec_addr = page_to_phys(bv->bv_page);
-> +		phys_addr_t page_addr = page_to_phys(page);
-> +
-> +		if (vec_addr + bv->bv_offset + bv->bv_len != page_addr + off)
-> +			return false;
-> +		if (same_page &&
-> +		    (vec_addr & PAGE_SIZE) != (page_addr & PAGE_SIZE))
-> +			return false;
+iov_iter is implemented on bvec itererator helpers, so it is safe to pass
+multi-page bvec to it, and this way is much more efficient than passing one
+page in each bvec.
 
-I guess the correct check should be:
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/block/loop.c   | 20 ++++++++++----------
+ include/linux/blkdev.h |  4 ++++
+ 2 files changed, 14 insertions(+), 10 deletions(-)
 
-		end_addr = vec_addr + bv->bv_offset + bv->bv_len;
-		if (same_page &&
-		    (end_addr & PAGE_MASK) != (page_addr & PAGE_MASK))
-			return false;
-
-And this approach is good, will take it in V12.
-
-Thanks,
-Ming
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index 176ab1f28eca..e3683211f12d 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -510,21 +510,22 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		     loff_t pos, bool rw)
+ {
+ 	struct iov_iter iter;
++	struct req_iterator rq_iter;
+ 	struct bio_vec *bvec;
+ 	struct request *rq = blk_mq_rq_from_pdu(cmd);
+ 	struct bio *bio = rq->bio;
+ 	struct file *file = lo->lo_backing_file;
++	struct bio_vec tmp;
+ 	unsigned int offset;
+-	int segments = 0;
++	int nr_bvec = 0;
+ 	int ret;
+ 
++	rq_for_each_bvec(tmp, rq, rq_iter)
++		nr_bvec++;
++
+ 	if (rq->bio != rq->biotail) {
+-		struct req_iterator iter;
+-		struct bio_vec tmp;
+ 
+-		__rq_for_each_bio(bio, rq)
+-			segments += bio_segments(bio);
+-		bvec = kmalloc_array(segments, sizeof(struct bio_vec),
++		bvec = kmalloc_array(nr_bvec, sizeof(struct bio_vec),
+ 				     GFP_NOIO);
+ 		if (!bvec)
+ 			return -EIO;
+@@ -533,10 +534,10 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		/*
+ 		 * The bios of the request may be started from the middle of
+ 		 * the 'bvec' because of bio splitting, so we can't directly
+-		 * copy bio->bi_iov_vec to new bvec. The rq_for_each_segment
++		 * copy bio->bi_iov_vec to new bvec. The rq_for_each_bvec
+ 		 * API will take care of all details for us.
+ 		 */
+-		rq_for_each_segment(tmp, rq, iter) {
++		rq_for_each_bvec(tmp, rq, rq_iter) {
+ 			*bvec = tmp;
+ 			bvec++;
+ 		}
+@@ -550,11 +551,10 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		 */
+ 		offset = bio->bi_iter.bi_bvec_done;
+ 		bvec = __bvec_iter_bvec(bio->bi_io_vec, bio->bi_iter);
+-		segments = bio_segments(bio);
+ 	}
+ 	atomic_set(&cmd->ref, 2);
+ 
+-	iov_iter_bvec(&iter, rw, bvec, segments, blk_rq_bytes(rq));
++	iov_iter_bvec(&iter, rw, bvec, nr_bvec, blk_rq_bytes(rq));
+ 	iter.iov_offset = offset;
+ 
+ 	cmd->iocb.ki_pos = pos;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 1ad6eafc43f2..a281b6737b61 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -805,6 +805,10 @@ struct req_iterator {
+ 	__rq_for_each_bio(_iter.bio, _rq)			\
+ 		bio_for_each_segment(bvl, _iter.bio, _iter.iter)
+ 
++#define rq_for_each_bvec(bvl, _rq, _iter)			\
++	__rq_for_each_bio(_iter.bio, _rq)			\
++		bio_for_each_bvec(bvl, _iter.bio, _iter.iter)
++
+ #define rq_iter_last(bvec, _iter)				\
+ 		(_iter.bio->bi_next == NULL &&			\
+ 		 bio_iter_last(bvec, _iter.iter))
+-- 
+2.9.5
