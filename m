@@ -1,103 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46666 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:52268 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727069AbeKUN7r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Nov 2018 08:59:47 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V11 10/19] block: loop: pass multi-page bvec to iov_iter
-Date: Wed, 21 Nov 2018 11:23:18 +0800
-Message-Id: <20181121032327.8434-11-ming.lei@redhat.com>
-In-Reply-To: <20181121032327.8434-1-ming.lei@redhat.com>
-References: <20181121032327.8434-1-ming.lei@redhat.com>
+        id S1730072AbeKVCnQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Nov 2018 21:43:16 -0500
+Date: Wed, 21 Nov 2018 17:08:11 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH V11 02/19] block: introduce multi-page bvec helpers
+Message-ID: <20181121160811.GA4977@lst.de>
+References: <20181121032327.8434-1-ming.lei@redhat.com> <20181121032327.8434-3-ming.lei@redhat.com> <20181121131928.GA1640@lst.de> <20181121150610.GA19111@ming.t460p>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181121150610.GA19111@ming.t460p>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-iov_iter is implemented on bvec itererator helpers, so it is safe to pass
-multi-page bvec to it, and this way is much more efficient than passing one
-page in each bvec.
+On Wed, Nov 21, 2018 at 11:06:11PM +0800, Ming Lei wrote:
+> bvec_iter_* is used for single-page bvec in current linus tree, and there are
+> lots of users now:
+> 
+> [linux]$ git grep -n "bvec_iter_*" ./ | wc
+>     191     995   13242
+> 
+> If we have to switch it first, it can be a big change, just wondering if Jens
+> is happy with that?
 
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/block/loop.c   | 20 ++++++++++----------
- include/linux/blkdev.h |  4 ++++
- 2 files changed, 14 insertions(+), 10 deletions(-)
+Your above grep statement seems to catch every use of struct bvec_iter,
+due to the *.
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index 176ab1f28eca..e3683211f12d 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -510,21 +510,22 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
- 		     loff_t pos, bool rw)
- {
- 	struct iov_iter iter;
-+	struct req_iterator rq_iter;
- 	struct bio_vec *bvec;
- 	struct request *rq = blk_mq_rq_from_pdu(cmd);
- 	struct bio *bio = rq->bio;
- 	struct file *file = lo->lo_backing_file;
-+	struct bio_vec tmp;
- 	unsigned int offset;
--	int segments = 0;
-+	int nr_bvec = 0;
- 	int ret;
- 
-+	rq_for_each_bvec(tmp, rq, rq_iter)
-+		nr_bvec++;
-+
- 	if (rq->bio != rq->biotail) {
--		struct req_iterator iter;
--		struct bio_vec tmp;
- 
--		__rq_for_each_bio(bio, rq)
--			segments += bio_segments(bio);
--		bvec = kmalloc_array(segments, sizeof(struct bio_vec),
-+		bvec = kmalloc_array(nr_bvec, sizeof(struct bio_vec),
- 				     GFP_NOIO);
- 		if (!bvec)
- 			return -EIO;
-@@ -533,10 +534,10 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
- 		/*
- 		 * The bios of the request may be started from the middle of
- 		 * the 'bvec' because of bio splitting, so we can't directly
--		 * copy bio->bi_iov_vec to new bvec. The rq_for_each_segment
-+		 * copy bio->bi_iov_vec to new bvec. The rq_for_each_bvec
- 		 * API will take care of all details for us.
- 		 */
--		rq_for_each_segment(tmp, rq, iter) {
-+		rq_for_each_bvec(tmp, rq, rq_iter) {
- 			*bvec = tmp;
- 			bvec++;
- 		}
-@@ -550,11 +551,10 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
- 		 */
- 		offset = bio->bi_iter.bi_bvec_done;
- 		bvec = __bvec_iter_bvec(bio->bi_io_vec, bio->bi_iter);
--		segments = bio_segments(bio);
- 	}
- 	atomic_set(&cmd->ref, 2);
- 
--	iov_iter_bvec(&iter, rw, bvec, segments, blk_rq_bytes(rq));
-+	iov_iter_bvec(&iter, rw, bvec, nr_bvec, blk_rq_bytes(rq));
- 	iter.iov_offset = offset;
- 
- 	cmd->iocb.ki_pos = pos;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 1ad6eafc43f2..a281b6737b61 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -805,6 +805,10 @@ struct req_iterator {
- 	__rq_for_each_bio(_iter.bio, _rq)			\
- 		bio_for_each_segment(bvl, _iter.bio, _iter.iter)
- 
-+#define rq_for_each_bvec(bvl, _rq, _iter)			\
-+	__rq_for_each_bio(_iter.bio, _rq)			\
-+		bio_for_each_bvec(bvl, _iter.bio, _iter.iter)
-+
- #define rq_iter_last(bvec, _iter)				\
- 		(_iter.bio->bi_next == NULL &&			\
- 		 bio_iter_last(bvec, _iter.iter))
--- 
-2.9.5
+Most uses of bvec_iter_ are either in the block headers, or are
+ceph wrappers that match the above and can easily be redefined.
