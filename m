@@ -1,105 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50316 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725913AbeKUJeL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Nov 2018 04:34:11 -0500
-Date: Tue, 20 Nov 2018 15:02:31 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/5] splice: increase pipe size in
- splice_direct_to_actor()
-Message-ID: <20181120230231.GN6792@magnolia>
-References: <20181119211742.8824-1-david@fromorbit.com>
- <20181119211742.8824-5-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33684 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726135AbeKULbi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Nov 2018 06:31:38 -0500
+Date: Wed, 21 Nov 2018 08:59:03 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V10 09/19] block: introduce bio_bvecs()
+Message-ID: <20181121005902.GA31748@ming.t460p>
+References: <20181115085306.9910-1-ming.lei@redhat.com>
+ <20181115085306.9910-10-ming.lei@redhat.com>
+ <20181116134541.GH3165@lst.de>
+ <002fe56b-25e4-573e-c09b-bb12c3e8d25a@grimberg.me>
+ <20181120161651.GB2629@lst.de>
+ <53526aae-fb9b-ee38-0a01-e5899e2d4e4d@grimberg.me>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181119211742.8824-5-david@fromorbit.com>
+In-Reply-To: <53526aae-fb9b-ee38-0a01-e5899e2d4e4d@grimberg.me>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Sagi Grimberg <sagi@grimberg.me>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, linux-erofs@lists.ozlabs.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Theodore Ts'o <tytso@mit.edu>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Tue, Nov 20, 2018 at 08:17:41AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Nov 20, 2018 at 12:11:35PM -0800, Sagi Grimberg wrote:
 > 
-> When copy_file_range() is called on files that have been opened with
-> O_DIRECT, do_splice_direct() does a manual copy of the range one
-> pipe buffer at a time. The default is 16 pages, which means on
-> x86_64 it is limited to 64kB IO. This is extremely slow - 64k
-> synchrnous read/write will run at maybe 5-10MB/s on a spinning disk
-> and be seek bound. It will be faster on SSDs, but still very
-> inefficient.
+> > > > The only user in your final tree seems to be the loop driver, and
+> > > > even that one only uses the helper for read/write bios.
+> > > > 
+> > > > I think something like this would be much simpler in the end:
+> > > 
+> > > The recently submitted nvme-tcp host driver should also be a user
+> > > of this. Does it make sense to keep it as a helper then?
+> > 
+> > I did take a brief look at the code, and I really don't understand
+> > why the heck it even deals with bios to start with.  Like all the
+> > other nvme transports it is a blk-mq driver and should iterate
+> > over segments in a request and more or less ignore bios.  Something
+> > is horribly wrong in the design.
 > 
-> Increase the pipe size to the maximum allowed user size so that we
-> can get decent throughput for this highly sub-optimal copy loop.  We
-> also don't care if changing the pipe size fails - that will just
-> result in a slower copy.
+> Can you explain a little more? I'm more than happy to change that but
+> I'm not completely clear how...
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Before we begin a data transfer, we need to set our own iterator that
+> will advance with the progression of the data transfer. We also need to
+> keep in mind that all the data transfer (both send and recv) are
+> completely non blocking (and zero-copy when we send).
+> 
+> That means that every data movement needs to be able to suspend
+> and resume asynchronously. i.e. we cannot use the following pattern:
+> rq_for_each_segment(bvec, rq, rq_iter) {
+> 	iov_iter_bvec(&iov_iter, WRITE, &bvec, 1, bvec.bv_len);
+> 	send(sock, iov_iter);
+> }
 
-Looks fine to me but what do I know about pipe administration policy? :)
+Not sure I understand the 'blocking' problem in this case.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+We can build a bvec table from this req, and send them all
+in send(), can this way avoid your blocking issue? You may see this
+example in branch 'rq->bio != rq->biotail' of lo_rw_aio().
 
---D
+If this way is what you need, I think you are right, even we may
+introduce the following helpers:
 
-> ---
->  fs/pipe.c                 | 2 +-
->  fs/splice.c               | 8 ++++++++
->  include/linux/pipe_fs_i.h | 1 +
->  3 files changed, 10 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/pipe.c b/fs/pipe.c
-> index bdc5d3c0977d..5885d29cdaa6 100644
-> --- a/fs/pipe.c
-> +++ b/fs/pipe.c
-> @@ -1025,7 +1025,7 @@ unsigned int round_pipe_size(unsigned long size)
->   * Allocate a new array of pipe buffers and copy the info over. Returns the
->   * pipe size if successful, or return -ERROR on error.
->   */
-> -static long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg)
-> +long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg)
->  {
->  	struct pipe_buffer *bufs;
->  	unsigned int size, nr_pages;
-> diff --git a/fs/splice.c b/fs/splice.c
-> index 3553f1956508..64dcc622db8d 100644
-> --- a/fs/splice.c
-> +++ b/fs/splice.c
-> @@ -34,6 +34,7 @@
->  #include <linux/socket.h>
->  #include <linux/compat.h>
->  #include <linux/sched/signal.h>
-> +#include <linux/pipe_fs_i.h>
->  
->  #include "internal.h"
->  
-> @@ -931,6 +932,13 @@ ssize_t splice_direct_to_actor(struct file *in, struct splice_desc *sd,
->  		current->splice_pipe = pipe;
->  	}
->  
-> +	/*
-> +	 * Try to increase the data holding capacity of the pipe so we can do
-> +	 * larger IOs. This may not increase the size at all because maximum
-> +	 * user pipe size is administrator controlled, but we still should try.
-> +	 */
-> +	pipe_set_size(pipe, pipe_max_size);
-> +
->  	/*
->  	 * Do the splice.
->  	 */
-> diff --git a/include/linux/pipe_fs_i.h b/include/linux/pipe_fs_i.h
-> index 5a3bb3b7c9ad..e7d728e5b5f8 100644
-> --- a/include/linux/pipe_fs_i.h
-> +++ b/include/linux/pipe_fs_i.h
-> @@ -191,5 +191,6 @@ struct pipe_inode_info *get_pipe_info(struct file *file);
->  
->  int create_pipe_files(struct file **, int);
->  unsigned int round_pipe_size(unsigned long size);
-> +long pipe_set_size(struct pipe_inode_info *pipe, unsigned long arg);
->  
->  #endif
-> -- 
-> 2.19.1
-> 
+	rq_for_each_bvec()
+	rq_bvecs()
+
+So looks nvme-tcp host driver might be the 2nd driver which benefits
+from multi-page bvec directly.
+
+The multi-page bvec V11 has passed my tests and addressed almost
+all the comments during review on V10. I removed bio_vecs() in V11,
+but it won't be big deal, we can introduce them anytime when there
+is the requirement.
+
+Thanks,
+Ming
