@@ -1,119 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44324 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:52342 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726705AbeKUOBC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Nov 2018 09:01:02 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V11 15/19] block: enable multipage bvecs
-Date: Wed, 21 Nov 2018 11:23:23 +0800
-Message-Id: <20181121032327.8434-16-ming.lei@redhat.com>
-In-Reply-To: <20181121032327.8434-1-ming.lei@redhat.com>
-References: <20181121032327.8434-1-ming.lei@redhat.com>
+        id S1731667AbeKVCrN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Nov 2018 21:47:13 -0500
+Date: Wed, 21 Nov 2018 17:12:06 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH V11 15/19] block: enable multipage bvecs
+Message-ID: <20181121161206.GD4977@lst.de>
+References: <20181121032327.8434-1-ming.lei@redhat.com> <20181121032327.8434-16-ming.lei@redhat.com> <20181121145502.GA3241@lst.de> <20181121154812.GD19111@ming.t460p>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181121154812.GD19111@ming.t460p>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-This patch pulls the trigger for multi-page bvecs.
+On Wed, Nov 21, 2018 at 11:48:13PM +0800, Ming Lei wrote:
+> I guess the correct check should be:
+> 
+> 		end_addr = vec_addr + bv->bv_offset + bv->bv_len;
+> 		if (same_page &&
+> 		    (end_addr & PAGE_MASK) != (page_addr & PAGE_MASK))
+> 			return false;
 
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- block/bio.c       | 32 +++++++++++++++++++++++++++-----
- fs/iomap.c        |  2 +-
- fs/xfs/xfs_aops.c |  2 +-
- 3 files changed, 29 insertions(+), 7 deletions(-)
-
-diff --git a/block/bio.c b/block/bio.c
-index 0f1635b9ec50..854676edc438 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -823,7 +823,7 @@ EXPORT_SYMBOL(bio_add_pc_page);
-  * @len: length of the data to add
-  * @off: offset of the data in @page
-  *
-- * Try to add the data at @page + @off to the last bvec of @bio.  This is a
-+ * Try to add the data at @page + @off to the last page of @bio.  This is a
-  * a useful optimisation for file systems with a block size smaller than the
-  * page size.
-  *
-@@ -836,10 +836,13 @@ bool __bio_try_merge_page(struct bio *bio, struct page *page,
- 		return false;
- 
- 	if (bio->bi_vcnt > 0) {
--		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
-+		struct bio_vec bv;
-+		struct bio_vec *seg = &bio->bi_io_vec[bio->bi_vcnt - 1];
- 
--		if (page == bv->bv_page && off == bv->bv_offset + bv->bv_len) {
--			bv->bv_len += len;
-+		bvec_last_segment(seg, &bv);
-+
-+		if (page == bv.bv_page && off == bv.bv_offset + bv.bv_len) {
-+			seg->bv_len += len;
- 			bio->bi_iter.bi_size += len;
- 			return true;
- 		}
-@@ -848,6 +851,25 @@ bool __bio_try_merge_page(struct bio *bio, struct page *page,
- }
- EXPORT_SYMBOL_GPL(__bio_try_merge_page);
- 
-+static bool bio_try_merge_segment(struct bio *bio, struct page *page,
-+				  unsigned int len, unsigned int off)
-+{
-+	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
-+		return false;
-+
-+	if (bio->bi_vcnt > 0) {
-+		struct bio_vec *seg = &bio->bi_io_vec[bio->bi_vcnt - 1];
-+
-+		if (page_to_phys(seg->bv_page) + seg->bv_offset + seg->bv_len ==
-+		    page_to_phys(page) + off) {
-+			seg->bv_len += len;
-+			bio->bi_iter.bi_size += len;
-+			return true;
-+		}
-+	}
-+	return false;
-+}
-+
- /**
-  * __bio_add_page - add page to a bio in a new segment
-  * @bio: destination bio
-@@ -888,7 +910,7 @@ EXPORT_SYMBOL_GPL(__bio_add_page);
- int bio_add_page(struct bio *bio, struct page *page,
- 		 unsigned int len, unsigned int offset)
- {
--	if (!__bio_try_merge_page(bio, page, len, offset)) {
-+	if (!bio_try_merge_segment(bio, page, len, offset)) {
- 		if (bio_full(bio))
- 			return 0;
- 		__bio_add_page(bio, page, len, offset);
-diff --git a/fs/iomap.c b/fs/iomap.c
-index f5fb8bf75cc8..ccc2ba115f4d 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -344,7 +344,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		ctx->bio->bi_end_io = iomap_read_end_io;
- 	}
- 
--	__bio_add_page(ctx->bio, page, plen, poff);
-+	bio_add_page(ctx->bio, page, plen, poff);
- done:
- 	/*
- 	 * Move the caller beyond our range so that it keeps making progress.
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 1f1829e506e8..5c2190216614 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -621,7 +621,7 @@ xfs_add_to_ioend(
- 			atomic_inc(&iop->write_count);
- 		if (bio_full(wpc->ioend->io_bio))
- 			xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
--		__bio_add_page(wpc->ioend->io_bio, page, len, poff);
-+		bio_add_page(wpc->ioend->io_bio, page, len, poff);
- 	}
- 
- 	wpc->ioend->io_size += len;
--- 
-2.9.5
+Indeed.
