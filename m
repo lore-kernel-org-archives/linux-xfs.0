@@ -1,45 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45050 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726091AbeKZNMt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Nov 2018 08:12:49 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V12 12/20] fs/buffer.c: use bvec iterator to truncate the bio
-Date: Mon, 26 Nov 2018 10:17:12 +0800
-Message-Id: <20181126021720.19471-13-ming.lei@redhat.com>
-In-Reply-To: <20181126021720.19471-1-ming.lei@redhat.com>
-References: <20181126021720.19471-1-ming.lei@redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:36764 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726758AbeKVFMW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 00:12:22 -0500
+Date: Wed, 21 Nov 2018 10:36:50 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 8c110d43c6bc
+Message-ID: <20181121183650.GT6792@magnolia>
+References: <20181121183515.GS6792@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181121183515.GS6792@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-Once multi-page bvec is enabled, the last bvec may include more than one
-page, this patch use bvec_last_segment() to truncate the bio.
+[cc fsdevel this time...]
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- fs/buffer.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Hi folks,
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 1286c2b95498..fa37ad52e962 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -3032,7 +3032,10 @@ void guard_bio_eod(int op, struct bio *bio)
- 
- 	/* ..and clear the end of the buffer for reads */
- 	if (op == REQ_OP_READ) {
--		zero_user(bvec->bv_page, bvec->bv_offset + bvec->bv_len,
-+		struct bio_vec bv;
-+
-+		bvec_last_segment(bvec, &bv);
-+		zero_user(bv.bv_page, bv.bv_offset + bv.bv_len,
- 				truncated_bytes);
- 	}
- }
--- 
-2.9.5
+The for-next branch of the xfs-linux repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.  These are all the reflink, mmap, and blocksize <
+pagesize corruption fixes that I've collected and tested over the past
+couple of weeks.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the for-next branch is commit:
+
+8c110d43c6bc iomap: readpages doesn't zero page tail beyond EOF
+
+New Commits:
+
+Brian Foster (1):
+      [59e429314910] xfs: fix shared extent data corruption due to missing cow reservation
+
+Dave Chinner (11):
+      [d61fa8cbf3da] xfs: uncached buffer tracing needs to print bno
+      [d43aaf1685aa] xfs: fix transient reference count error in xfs_buf_resubmit_failed_buffers
+      [c08768977b9a] xfs: finobt AG reserves don't consider last AG can be a runt
+      [7f9f71be84bc] xfs: extent shifting doesn't fully invalidate page cache
+      [2c307174ab77] xfs: flush removing page cache in xfs_reflink_remap_prep
+      [9230a0b65b47] xfs: delalloc -> unwritten COW fork allocation can go wrong
+      [0929d8580071] iomap: FUA is wrong for DIO O_DSYNC writes into unwritten extents
+      [b450672fb66b] iomap: sub-block dio needs to zeroout beyond EOF
+      [4721a6010990] iomap: dio data corruption and spurious errors when pipes fill
+      [494633fac789] vfs: vfs_dedupe_file_range() doesn't return EOPNOTSUPP
+      [8c110d43c6bc] iomap: readpages doesn't zero page tail beyond EOF
+
+Eric Biggers (1):
+      [da034bcc6aaa] xfs: make xfs_file_remap_range() static
+
+
+Code Diffstat:
+
+ fs/iomap.c                       | 53 +++++++++++++++++++++++++++++++---------
+ fs/read_write.c                  | 15 ++++++------
+ fs/xfs/libxfs/xfs_bmap.c         |  5 +++-
+ fs/xfs/libxfs/xfs_ialloc_btree.c | 11 ++++++---
+ fs/xfs/xfs_bmap_util.c           | 10 ++------
+ fs/xfs/xfs_bmap_util.h           |  3 +++
+ fs/xfs/xfs_buf_item.c            | 28 +++++++++++++++------
+ fs/xfs/xfs_file.c                |  2 +-
+ fs/xfs/xfs_reflink.c             | 18 +++++++++++---
+ fs/xfs/xfs_trace.h               |  5 +++-
+ 10 files changed, 104 insertions(+), 46 deletions(-)
