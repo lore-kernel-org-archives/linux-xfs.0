@@ -1,46 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47982 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34656 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727069AbeKUN7Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Nov 2018 08:59:16 -0500
+        id S1728289AbeKVCYI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Nov 2018 21:24:08 -0500
+Date: Wed, 21 Nov 2018 23:48:13 +0800
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V11 08/19] btrfs: use bvec_last_segment to get bio's last page
-Date: Wed, 21 Nov 2018 11:23:16 +0800
-Message-Id: <20181121032327.8434-9-ming.lei@redhat.com>
-In-Reply-To: <20181121032327.8434-1-ming.lei@redhat.com>
+Subject: Re: [PATCH V11 15/19] block: enable multipage bvecs
+Message-ID: <20181121154812.GD19111@ming.t460p>
 References: <20181121032327.8434-1-ming.lei@redhat.com>
+ <20181121032327.8434-16-ming.lei@redhat.com>
+ <20181121145502.GA3241@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181121145502.GA3241@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-Preparing for supporting multi-page bvec.
+On Wed, Nov 21, 2018 at 03:55:02PM +0100, Christoph Hellwig wrote:
+> On Wed, Nov 21, 2018 at 11:23:23AM +0800, Ming Lei wrote:
+> >  	if (bio->bi_vcnt > 0) {
+> > -		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+> > +		struct bio_vec bv;
+> > +		struct bio_vec *seg = &bio->bi_io_vec[bio->bi_vcnt - 1];
+> >  
+> > -		if (page == bv->bv_page && off == bv->bv_offset + bv->bv_len) {
+> > -			bv->bv_len += len;
+> > +		bvec_last_segment(seg, &bv);
+> > +
+> > +		if (page == bv.bv_page && off == bv.bv_offset + bv.bv_len) {
+> 
+> I think this we can simplify the try to merge into bio case a bit,
+> and also document it better with something like this:
+> 
+> diff --git a/block/bio.c b/block/bio.c
+> index 854676edc438..cc913281a723 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -822,54 +822,40 @@ EXPORT_SYMBOL(bio_add_pc_page);
+>   * @page: page to add
+>   * @len: length of the data to add
+>   * @off: offset of the data in @page
+> + * @same_page: if %true only merge if the new data is in the same physical
+> + *		page as the last segment of the bio.
+>   *
+> - * Try to add the data at @page + @off to the last page of @bio.  This is a
+> + * Try to add the data at @page + @off to the last bvec of @bio.  This is a
+>   * a useful optimisation for file systems with a block size smaller than the
+>   * page size.
+>   *
+>   * Return %true on success or %false on failure.
+>   */
+>  bool __bio_try_merge_page(struct bio *bio, struct page *page,
+> -		unsigned int len, unsigned int off)
+> +		unsigned int len, unsigned int off, bool same_page)
+>  {
+>  	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
+>  		return false;
+>  
+>  	if (bio->bi_vcnt > 0) {
+> -		struct bio_vec bv;
+> -		struct bio_vec *seg = &bio->bi_io_vec[bio->bi_vcnt - 1];
+> -
+> -		bvec_last_segment(seg, &bv);
+> -
+> -		if (page == bv.bv_page && off == bv.bv_offset + bv.bv_len) {
+> -			seg->bv_len += len;
+> -			bio->bi_iter.bi_size += len;
+> -			return true;
+> -		}
+> +		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+> +		phys_addr_t vec_addr = page_to_phys(bv->bv_page);
+> +		phys_addr_t page_addr = page_to_phys(page);
+> +
+> +		if (vec_addr + bv->bv_offset + bv->bv_len != page_addr + off)
+> +			return false;
+> +		if (same_page &&
+> +		    (vec_addr & PAGE_SIZE) != (page_addr & PAGE_SIZE))
+> +			return false;
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- fs/btrfs/extent_io.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+I guess the correct check should be:
 
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index d228f706ff3e..5d5965297e7e 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -2720,11 +2720,12 @@ static int __must_check submit_one_bio(struct bio *bio, int mirror_num,
- {
- 	blk_status_t ret = 0;
- 	struct bio_vec *bvec = bio_last_bvec_all(bio);
--	struct page *page = bvec->bv_page;
-+	struct bio_vec bv;
- 	struct extent_io_tree *tree = bio->bi_private;
- 	u64 start;
- 
--	start = page_offset(page) + bvec->bv_offset;
-+	bvec_last_segment(bvec, &bv);
-+	start = page_offset(bv.bv_page) + bv.bv_offset;
- 
- 	bio->bi_private = NULL;
- 
--- 
-2.9.5
+		end_addr = vec_addr + bv->bv_offset + bv->bv_len;
+		if (same_page &&
+		    (end_addr & PAGE_MASK) != (page_addr & PAGE_MASK))
+			return false;
+
+And this approach is good, will take it in V12.
+
+Thanks,
+Ming
