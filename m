@@ -1,50 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36152 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733028AbeKWMaz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Nov 2018 07:30:55 -0500
-Date: Fri, 23 Nov 2018 09:48:21 +0800
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V11 07/19] fs/buffer.c: use bvec iterator to truncate the
- bio
-Message-ID: <20181123014820.GA20110@ming.t460p>
-References: <20181121032327.8434-1-ming.lei@redhat.com>
- <20181121032327.8434-8-ming.lei@redhat.com>
- <20181122105849.GA30066@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:49106 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2395487AbeKWEjb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 23:39:31 -0500
+Date: Thu, 22 Nov 2018 09:58:01 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] fs/xfs: fix f_ffree value for statfs when project quota
+ is set
+Message-ID: <20181122175801.GV6792@magnolia>
+References: <6EC51EE77FA0264BB8DAD779E0C341C9014BD77C91@EXMBX-SZMAIL003.tencent.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20181122105849.GA30066@lst.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <6EC51EE77FA0264BB8DAD779E0C341C9014BD77C91@EXMBX-SZMAIL003.tencent.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: =?utf-8?B?ZGJ5aW4o5bC554OoKQ==?= <dbyin@tencent.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Thu, Nov 22, 2018 at 11:58:49AM +0100, Christoph Hellwig wrote:
-> Btw, given that this is the last user of bvec_last_segment after my
-> other patches I think we should kill bvec_last_segment and do something
-> like this here:
+On Thu, Nov 22, 2018 at 01:28:04PM +0000, dbyin(尹烨) wrote:
+> When project is set, we should use inode limit minus the used count
 > 
+> Signed-off-by: Ye Yin <dbyin@tencent.com>
+
+This makes sense to me, but ... it's been broken like this since 2006.
+Is there a reason why (someone named Glen) wrote it this way?
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_qm_bhv.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/fs/buffer.c b/fs/buffer.c
-> index fa37ad52e962..af5e135d2b83 100644
-> --- a/fs/buffer.c
-> +++ b/fs/buffer.c
-> @@ -2981,6 +2981,14 @@ static void end_bio_bh_io_sync(struct bio *bio)
->  	bio_put(bio);
+> diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+> index 73a1d77ec187..3091e4bc04ef 100644
+> --- a/fs/xfs/xfs_qm_bhv.c
+> +++ b/fs/xfs/xfs_qm_bhv.c
+> @@ -40,7 +40,7 @@ xfs_fill_statvfs_from_dquot(
+>                 statp->f_files = limit;
+>                 statp->f_ffree =
+>                         (statp->f_files > dqp->q_res_icount) ?
+> -                        (statp->f_ffree - dqp->q_res_icount) : 0;
+> +                        (statp->f_files - dqp->q_res_icount) : 0;
+>         }
 >  }
 >  
-> +static void zero_trailing_sectors(struct bio_vec *bvec, unsigned bytes)
-> +{
-> +	unsigned last_page = (bvec->bv_offset + bvec->bv_len - 1) >> PAGE_SHIFT;
-> +
-> +	zero_user(nth_page(bvec->bv_page, last_page),
-> +		  bvec->bv_offset % PAGE_SIZE + bvec->bv_len, bytes);
-> +}
-
-The above 'start' parameter is figured out as wrong, and the computation
-isn't very obvious, so I'd suggest to keep bvec_last_segment().
-
-Thanks,
-Ming
+> -- 
+> 2.16.2
