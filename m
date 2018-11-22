@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:36856 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:37072 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2395487AbeKWEjR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 23:39:17 -0500
-Subject: [PATCH 03/12] fsx: shut up compiler warnings
+        with ESMTP id S2395487AbeKWEj3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 23:39:29 -0500
+Subject: [PATCH 04/12] fsx: always check buffer after each operation
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 22 Nov 2018 09:58:47 -0800
-Message-ID: <154290952722.1218.5031880474187869562.stgit@magnolia>
+Date: Thu, 22 Nov 2018 09:58:53 -0800
+Message-ID: <154290953356.1218.995241000619100958.stgit@magnolia>
 In-Reply-To: <154290950237.1218.9937108728673485814.stgit@magnolia>
 References: <154290950237.1218.9937108728673485814.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,58 +20,154 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Fix unused variables and potential filename overflows in fsx.
+Add a new option to make fsx read the file after each operation and
+compare it with the good buffer to try to catch corruptions as soon as
+they occur.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- ltp/fsx.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ ltp/fsx.c |   65 +++++++++++++++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 56 insertions(+), 9 deletions(-)
 
 
 diff --git a/ltp/fsx.c b/ltp/fsx.c
-index b0157ba3..5601c70c 100644
+index 5601c70c..7fb8b3ab 100644
 --- a/ltp/fsx.c
 +++ b/ltp/fsx.c
-@@ -121,7 +121,7 @@ char	*bname;				/* basename of our test file */
- char	*logdev;			/* -i flag */
- char	*logid;				/* -j flag */
- char	dname[1024];			/* -P flag */
--char	goodfile[1024];
-+char	goodfile[PATH_MAX];
- int	dirpath = 0;			/* -P flag */
- int	fd;				/* fd for our test file */
+@@ -160,7 +160,8 @@ int     punch_hole_calls = 1;           /* -H flag disables */
+ int     zero_range_calls = 1;           /* -z flag disables */
+ int	collapse_range_calls = 1;	/* -C flag disables */
+ int	insert_range_calls = 1;		/* -I flag disables */
+-int 	mapped_reads = 1;		/* -R flag disables it */
++int	mapped_reads = 1;		/* -R flag disables it */
++int	check_file = 0;			/* -X flag enables */
+ int	integrity = 0;			/* -i flag */
+ int	fsxgoodfd = 0;
+ int	o_direct;			/* -Z */
+@@ -561,7 +562,7 @@ dump_fsync_buffer(void)
+ }
  
-@@ -185,7 +185,7 @@ const char *replayops = NULL;
- const char *recordops = NULL;
- FILE *	fsxlogf = NULL;
- FILE *	replayopsf = NULL;
--char opsfile[1024];
-+char opsfile[PATH_MAX];
- int badoff = -1;
- int closeopen = 0;
- 
-@@ -541,13 +541,13 @@ mark_log(void)
  void
- dump_fsync_buffer(void)
+-check_buffers(unsigned offset, unsigned size)
++check_buffers(char *buf, unsigned offset, unsigned size)
  {
--	char fname_buffer[1024];
-+	char fname_buffer[PATH_MAX];
- 	int good_fd;
+ 	unsigned char c, t;
+ 	unsigned i = 0;
+@@ -569,19 +570,19 @@ check_buffers(unsigned offset, unsigned size)
+ 	unsigned op = 0;
+ 	unsigned bad = 0;
  
- 	if (!good_buf)
- 		return;
+-	if (memcmp(good_buf + offset, temp_buf, size) != 0) {
++	if (memcmp(good_buf + offset, buf, size) != 0) {
+ 		prt("READ BAD DATA: offset = 0x%x, size = 0x%x, fname = %s\n",
+ 		    offset, size, fname);
+ 		prt("OFFSET\tGOOD\tBAD\tRANGE\n");
+ 		while (size > 0) {
+ 			c = good_buf[offset];
+-			t = temp_buf[i];
++			t = buf[i];
+ 			if (c != t) {
+ 			        if (n < 16) {
+-					bad = short_at(&temp_buf[i]);
++					bad = short_at(&buf[i]);
+ 				        prt("0x%05x\t0x%04x\t0x%04x", offset,
+ 				            short_at(&good_buf[offset]), bad);
+-					op = temp_buf[offset & 1 ? i+1 : i];
++					op = buf[offset & 1 ? i+1 : i];
+ 				        prt("\t0x%05x\n", n);
+ 					if (op)
+ 						prt("operation# (mod 256) for "
+@@ -725,7 +726,46 @@ doread(unsigned offset, unsigned size)
+ 			    iret, size);
+ 		report_failure(141);
+ 	}
+-	check_buffers(offset, size);
++	check_buffers(temp_buf, offset, size);
++}
++
++void
++check_contents(void)
++{
++	static char *check_buf;
++	unsigned offset = 0;
++	unsigned size = file_size;
++	off_t ret;
++	unsigned iret;
++
++	if (!check_buf) {
++		check_buf = (char *) malloc(maxfilelen + writebdy);
++		assert(check_buf != NULL);
++		check_buf = round_ptr_up(check_buf, writebdy, 0);
++		memset(check_buf, '\0', maxfilelen);
++	}
++
++	if (o_direct)
++		size -= size % readbdy;
++	if (size == 0)
++		return;
++
++	ret = lseek(fd, (off_t)offset, SEEK_SET);
++	if (ret == (off_t)-1) {
++		prterr("doread: lseek");
++		report_failure(140);
++	}
++
++	iret = fsxread(fd, check_buf, size, offset);
++	if (iret != size) {
++		if (iret == -1)
++			prterr("check_contents: read");
++		else
++			prt("short check read: 0x%x bytes instead of 0x%x\n",
++			    iret, size);
++		report_failure(141);
++	}
++	check_buffers(check_buf, offset, size);
+ }
  
--	snprintf(fname_buffer, 1024, "%s%s.mark%d", dname,
-+	snprintf(fname_buffer, sizeof(fname_buffer), "%s%s.mark%d", dname,
- 		 bname, mark_nr);
- 	good_fd = open(fname_buffer, O_WRONLY|O_CREAT|O_TRUNC, 0666);
- 	if (good_fd < 0) {
-@@ -1865,7 +1865,7 @@ main(int argc, char **argv)
- {
- 	int	i, style, ch;
- 	char	*endp, *tmp;
--	char logfile[1024];
-+	char logfile[PATH_MAX];
- 	struct stat statbuf;
- 	int o_flags = O_RDWR|O_CREAT|O_TRUNC;
  
+@@ -808,7 +848,7 @@ domapread(unsigned offset, unsigned size)
+ 		report_failure(191);
+ 	}
+ 
+-	check_buffers(offset, size);
++	check_buffers(temp_buf, offset, size);
+ }
+ 
+ 
+@@ -1624,6 +1664,9 @@ test(void)
+ 		break;
+ 	}
+ 
++	if (check_file && testcalls > simulatedopcount)
++		check_contents();
++
+ out:
+ 	if (sizechecks && testcalls > simulatedopcount)
+ 		check_size();
+@@ -1684,6 +1727,7 @@ usage(void)
+ 	-P: save .fsxlog .fsxops and .fsxgood files in dirpath (default ./)\n\
+ 	-S seed: for random # generator (default 1) 0 gets timestamp\n\
+ 	-W: mapped write operations DISabled\n\
++	-X: Read file and compare to good buffer after every operation.\n\
+         -R: read() system calls only (mapped reads disabled)\n\
+         -Z: O_DIRECT (use -R, -W, -r and -w too)\n\
+ 	--replay-ops opsfile: replay ops from recorded .fsxops file\n\
+@@ -1880,7 +1924,7 @@ main(int argc, char **argv)
+ 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
+ 
+ 	while ((ch = getopt_long(argc, argv,
+-				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyAD:FKHzCILN:OP:RS:WZ",
++				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyAD:FKHzCILN:OP:RS:WXZ",
+ 				 longopts, NULL)) != EOF)
+ 		switch (ch) {
+ 		case 'b':
+@@ -2044,6 +2088,9 @@ main(int argc, char **argv)
+ 			if (!quiet)
+ 				prt("mapped writes DISABLED\n");
+ 			break;
++		case 'X':
++			check_file = 1;
++			break;
+ 		case 'Z':
+ 			o_direct = O_DIRECT;
+ 			o_flags |= O_DIRECT;
