@@ -1,115 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f195.google.com ([209.85.219.195]:33907 "EHLO
-        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726470AbeKGPAb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Nov 2018 10:00:31 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:49948 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387638AbeKWEyW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 23:54:22 -0500
+Date: Thu, 22 Nov 2018 10:13:46 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 2/6] xfs_repair: don't error out on dirs with a single
+ leafn block
+Message-ID: <20181122181346.GW6792@magnolia>
+References: <154181071499.3727.3910572718199592407.stgit@magnolia>
+ <154181072709.3727.17020900125846885320.stgit@magnolia>
 MIME-Version: 1.0
-References: <20181103171524.2740-1-amir73il@gmail.com> <CAOQ4uxjTo_8fpasmVtc2j6zRTnBpUvaNQ0edQwtbv79VgrNqXQ@mail.gmail.com>
- <CAOQ4uxgVFm7CyhseKtNMOcf8ipTJWD+YJSaG6am1xo0F1hcTDQ@mail.gmail.com> <20181107051821.GZ4135@magnolia>
-In-Reply-To: <20181107051821.GZ4135@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 7 Nov 2018 07:31:31 +0200
-Message-ID: <CAOQ4uxjVqxn39zW9xKEpxcCOOT8L26dWW1uy5CC4FAGhadSd3Q@mail.gmail.com>
-Subject: Re: [PATCH] xfs: truncate transaction does not modify the inobt
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <154181072709.3727.17020900125846885320.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eryu Guan <guaneryu@gmail.com>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Sasha Levin <alexander.levin@microsoft.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Nov 7, 2018 at 7:18 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> On Wed, Nov 07, 2018 at 07:09:42AM +0200, Amir Goldstein wrote:
-> > On Mon, Nov 5, 2018 at 7:57 PM Amir Goldstein <amir73il@gmail.com> wrote:
-> > >
-> > > On Sat, Nov 3, 2018 at 7:15 PM Amir Goldstein <amir73il@gmail.com> wrote:
-> > > >
-> > > > From: Brian Foster <bfoster@redhat.com>
-> > > >
-> > > > The truncate transaction does not ever modify the inode btree, but
-> > > > includes an associated log reservation. Update
-> > > > xfs_calc_itruncate_reservation() to remove the reservation
-> > > > associated with inobt updates.
-> > > >
-> > > > [Amir:  This commit was merged for kernel v4.16 and a twin commit was
-> > > >         merged for xfsprogs v4.16. As a result, a small xfs filesystem
-> > > >         formatted with features -m rmapbt=1,reflink=1 using mkfs.xfs
-> > > >         version >= v4.16 cannot be mounted with kernel < v4.16.
-> > > >
-> > > >         For example, xfstests generic/17{1,2,3} format a small fs and
-> > > >         when trying to mount it, they fail with an assert on this very
-> > > >         demonic line:
-> > > >
-> > > >  XFS (vdc): Log size 3075 blocks too small, minimum size is 3717 blocks
-> > > >  XFS (vdc): AAIEEE! Log failed size checks. Abort!
-> > > >  XFS: Assertion failed: 0, file: src/linux/fs/xfs/xfs_log.c, line: 666
-> > > >
-> > > >         The simple solution for stable kernels is to apply this patch,
-> > > >         because mkfs.xfs v4.16 is already in the wild, so we have to
-> > > >         assume that xfs filesystems with a "too small" log exist.
-> > > >         Regardless, xfsprogs maintainers should also consider reverting
-> > > >         the twin patch to stop creating those filesystems for the sake
-> > > >         of users with unpatched kernels.]
-> > > >
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > Cc: <stable@vger.kernel.org> # v4.9+
-> > > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > > > ---
-> > > >
-> > > > Darrick/Dave,
-> > > >
-> > > > It took me a while to figure out what was going on with my test systems
-> > > > when small test partitions (10G) stopped working with older kernels.
-> > > >
-> > > > Please bless this change for stable and consider the remedie for mkfs.xfs
-> > > > I verified that patch cleanly applies to stable kernels 4.14.y and 4.9.y
-> > > > and that I can mount a filsystem created with new mkfs.xfs.
-> > > >
-> > > > I am now running quick tests on stable 4.14.y with configs 4k, 1k,
-> > > > reflink,reflink+overlay to verify no regressions from this patch.
-> > > >
-> > >
-> > > FYI no regressions detected.
-> > >
-> > > Thoughts?
-> > >
-> >
-> > Maybe you'd want to chalk it up to reflink/rmapbt being Experimental
-> > before kernel 4.16? so the change in "minimum log size" is an on-disk format
-> > change prior to removing the Experimental label??
->
-> TBH nobody should be using reflink/rmap on 4.14 kernels, ever. :D
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I agree, as these error messages try to express:
-[    4.982926] XFS (vdd): EXPERIMENTAL reverse mapping btree feature
-enabled. Use at your own risk!
-[    4.984843] XFS (vdd): EXPERIMENTAL reflink feature enabled. Use at
-your own risk!
-[    4.987259] XFS (vdd): Log size 3693 blocks too small, minimum size
-is 4473 blocks
+In process_node_dir2, we need to distinguish between a directory with a
+single leafn block (yes, they exist) having no interior da nodes, and a
+directory with a da tree that incorrectly points to dablk 0.  If we
+happened to fill out any part of the da cursor then we have a da btree
+with garbage in it; otherwise, we have a single leafn block.
 
-But it is still a regression, because as I understand some where using
-reflink back from
-stable 4.9, while it was still maintained...
+This was found by repair repeatedly rebuilding a directory containing a
+single leafn block (xfs/495).
 
->
-> That said... does it change the minimum log size for (finobt, !reflink,
-> !rmap) filesystems?  That might be a bigger worry.  I /think/ the
+Fixes: 67a79e2cc932 ("xfs_repair: treat zero da btree pointers as corruption")
+Reported-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: now that the regression test has landed, mention that in the
+changelog
+---
+ repair/dir2.c |   15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-No problem on my systems mounting small fs with (finobt, !reflink,!rmap)
-formatted with mkfs.xfs 4.18.
-
-> transaction reservation change is fine, though I defer to Amir on
-> testing... :)
->
-
-Testing passed as I wrote, for configs 4k,1k,reflink,reflink+overlay.
-
-Sasha, please consider the fix patch for 4.14.y,4.9.y.
-
-Thanks,
-Amir.
+diff --git a/repair/dir2.c b/repair/dir2.c
+index ba5763ed..e67ec590 100644
+--- a/repair/dir2.c
++++ b/repair/dir2.c
+@@ -1243,10 +1243,21 @@ process_node_dir2(
+ 
+ 	/*
+ 	 * Skip directories with a root marked XFS_DIR2_LEAFN_MAGIC
++	 *
++	 * Be careful here: If any level of the da cursor was filled out then
++	 * the directory has a da btree containing an invalid before pointer to
++	 * dblock 0, and we should move on to rebuilding the directory.  If no
++	 * levels in the da cursor got filled out, then we just have a single
++	 * leafn block and we're done.
+ 	 */
+ 	if (bno == 0) {
+-		release_da_cursor(mp, &da_cursor, 0);
+-		return 0;
++		if (da_cursor.active > 0) {
++			err_release_da_cursor(mp, &da_cursor, 0);
++			return 1;
++		} else {
++			release_da_cursor(mp, &da_cursor, 0);
++			return 0;
++		}
+ 	} else {
+ 		/*
+ 		 * Now pass cursor and bno into leaf-block processing routine.
