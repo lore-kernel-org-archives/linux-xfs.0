@@ -1,82 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:21770 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2391732AbeKVN3h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 08:29:37 -0500
-Date: Thu, 22 Nov 2018 13:31:29 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/7] xfs: don't ENOSPC on writeback when punching holes
-Message-ID: <20181122023128.GV19305@dastard>
-References: <20181119210459.8506-1-david@fromorbit.com>
- <20181119210459.8506-7-david@fromorbit.com>
- <20181121180936.GR6792@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:49112 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387669AbeKVUMQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Nov 2018 15:12:16 -0500
+Date: Thu, 22 Nov 2018 17:33:00 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V11 14/19] block: handle non-cluster bio out of
+ blk_bio_segment_split
+Message-ID: <20181122093259.GA27007@ming.t460p>
+References: <20181121032327.8434-1-ming.lei@redhat.com>
+ <20181121032327.8434-15-ming.lei@redhat.com>
+ <20181121143355.GB2594@lst.de>
+ <20181121153726.GC19111@ming.t460p>
+ <20181121174621.GA6961@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181121180936.GR6792@magnolia>
+In-Reply-To: <20181121174621.GA6961@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Wed, Nov 21, 2018 at 10:09:36AM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 20, 2018 at 08:04:58AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Just tried to punch a 40T sparse file when enospc was triggered due
-> > to extent size hints consuming more space than expected. It failed
-> > with:
-> > 
-> > # sudo xfs_io -c "fpunch 0 40t" /mnt/fast/xfs-arekm.img
-> > fallocate: No space left on device
-> > #
-> > 
-> > because the writeback error of ENOSPC was being reported. We're
-> > going to free that space, so we don't care if there was a ENOSPC
-> > writeback error. So ignore ENOSPC errors and punch anyway.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_bmap_util.c | 7 ++++++-
-> >  1 file changed, 6 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > index 167ff4297e5c..cc7a0d47c529 100644
-> > --- a/fs/xfs/xfs_bmap_util.c
-> > +++ b/fs/xfs/xfs_bmap_util.c
-> > @@ -1060,8 +1060,13 @@ xfs_flush_unmap_range(
-> >  	start = round_down(offset, rounding);
-> >  	end = round_up(offset + len, rounding) - 1;
-> >  
-> > +	/*
-> > +	 * We're going to trash the data in this range, so if writeback reports
-> > +	 * an enospc error, don't let it stop us from /freeing the space/ in the
-> > +	 * range to alleviate the ENOSPC condition.
-> > +	 */
-> >  	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
-> > -	if (error)
-> > +	if (error && error != -ENOSPC)
+On Wed, Nov 21, 2018 at 06:46:21PM +0100, Christoph Hellwig wrote:
+> Actually..
 > 
-> I think there's a bug here -- COLLAPSE_RANGE and INSERT_RANGE call
-> xfs_prepare_shift to writeback and invalidate the pagecache from a
-> selected offset to EOF, and _prepare_shift calls _flush_unmap_range.
+> I think we can kill this code entirely.  If we look at what the
+> clustering setting is really about it is to avoid ever merging a
+> segement that spans a page boundary.  And we should be able to do
+> that with something like this before your series:
 > 
-> So if we have a dirty 100 block file and we ask xfs to collapse 3 blocks
-> at block 17, it'll _prepare_shift blocks 20-99 before shifting them down
-> by 3 blocks.  If we instead asked to insert 3 blocks at block 17, it'll
-> _prepare_shift blocks 17-99 before shifting them up by 3 blocks.
+> ---
+> From 0d46fa76c376493a74ea0dbe77305bd5fa2cf011 Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Wed, 21 Nov 2018 18:39:47 +0100
+> Subject: block: remove the "cluster" flag
 > 
-> Unlike the punch/reflink cases, the _prepare_shift ranges aren't doomed,
-> so the user might want to know if the write fails.
+> The cluster flag implements some very old SCSI behavior.  As far as I
+> can tell the original intent was to enable or disable any kind of
+> segment merging.  But the actually visible effect to the LLDD is that
+> it limits each segments to be inside a single page, which we can
+> also affect by setting the maximum segment size and the virt
+> boundary.
 
-Hmmm, yeah, the _prepare_shift changes came after this patch, so I
-didn't consider that when originally writing this patch. Drop it for
-now, will have to rethink what to do here....
+This approach is pretty good given we can do post-split during mapping
+sg.
 
-Cheers,
+However, using virt boundary limit on non-cluster seems over-kill,
+because the bio will be over-split(each small bvec may be split as one bio)
+if it includes lots of small segment.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+What we want to do is just to avoid to merge bvecs to segment, which
+should have been done by NO_SG_MERGE simply. However, after multi-page
+is enabled, two adjacent bvecs won't be merged any more, I just forget
+to remove the bvec merge code in V11.
+
+So seems we can simply avoid to use virt boundary limit for non-cluster
+after multipage bvec is enabled?
+
+
+thanks,
+Ming
