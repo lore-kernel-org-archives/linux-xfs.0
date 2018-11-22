@@ -1,59 +1,311 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38064 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732495AbeKVLy0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Nov 2018 06:54:26 -0500
-Date: Thu, 22 Nov 2018 09:17:06 +0800
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V11 03/19] block: introduce bio_for_each_bvec()
-Message-ID: <20181122011705.GC20814@ming.t460p>
-References: <20181121032327.8434-1-ming.lei@redhat.com>
- <20181121032327.8434-4-ming.lei@redhat.com>
- <20181121133244.GB1640@lst.de>
- <20181121153135.GB19111@ming.t460p>
- <20181121161025.GB4977@lst.de>
+Received: from aserp2120.oracle.com ([141.146.126.78]:47276 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731534AbeKVMvS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 07:51:18 -0500
+Date: Wed, 21 Nov 2018 18:14:06 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 05/10] fsx: add clone range
+Message-ID: <20181122021406.GC6783@magnolia>
+References: <154275100143.8611.10235098565750994724.stgit@magnolia>
+ <154275103196.8611.2152558129471909566.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181121161025.GB4977@lst.de>
+In-Reply-To: <154275103196.8611.2152558129471909566.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: guaneryu@gmail.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Wed, Nov 21, 2018 at 05:10:25PM +0100, Christoph Hellwig wrote:
-> On Wed, Nov 21, 2018 at 11:31:36PM +0800, Ming Lei wrote:
-> > > But while looking over this I wonder why we even need the max_seg_len
-> > > here.  The only thing __bvec_iter_advance does it to move bi_bvec_done
-> > > and bi_idx forward, with corresponding decrements of bi_size.  As far
-> > > as I can tell the only thing that max_seg_len does is that we need
-> > > to more iterations of the while loop to archive the same thing.
-> > > 
-> > > And actual bvec used by the caller will be obtained using
-> > > bvec_iter_bvec or segment_iter_bvec depending on if they want multi-page
-> > > or single-page variants.
-> > 
-> > Right, we let __bvec_iter_advance() serve for both multi-page and single-page
-> > case, then we have to tell it via one way or another, now we use the constant
-> > of 'max_seg_len'.
-> > 
-> > Or you suggest to implement two versions of __bvec_iter_advance()?
+On Tue, Nov 20, 2018 at 01:57:12PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> No - I think we can always use the code without any segment in
-> bvec_iter_advance.  Because bvec_iter_advance only operates on the
-> iteractor, the generation of an actual single-page or multi-page
-> bvec is left to the caller using the bvec_iter_bvec or segment_iter_bvec
-> helpers.  The only difference is how many bytes you can move the
-> iterator forward in a single loop iteration - so if you pass in
-> PAGE_SIZE as the max_seg_len you just will have to loop more often
-> for a large enough bytes, but not actually do anything different.
+> Add support for FICLONERANGE to fsx.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  ltp/fsx.c |  133 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 128 insertions(+), 5 deletions(-)
+> 
+> 
+> diff --git a/ltp/fsx.c b/ltp/fsx.c
+> index 2372964d..a1a44b23 100644
+> --- a/ltp/fsx.c
+> +++ b/ltp/fsx.c
+> @@ -104,6 +104,7 @@ enum {
+>  	OP_ZERO_RANGE,
+>  	OP_COLLAPSE_RANGE,
+>  	OP_INSERT_RANGE,
+> +	OP_CLONE_RANGE,
+>  	OP_MAX_FULL,
+>  
+>  	/* integrity operations */
+> @@ -165,6 +166,7 @@ int	collapse_range_calls = 1;	/* -C flag disables */
+>  int	insert_range_calls = 1;		/* -I flag disables */
+>  int	mapped_reads = 1;		/* -R flag disables it */
+>  int	check_file = 1;			/* -X flag disables */
+> +int	clone_range_calls = 1;		/* -J flag disables */
+>  int	integrity = 0;			/* -i flag */
+>  int	fsxgoodfd = 0;
+>  int	o_direct;			/* -Z */
+> @@ -258,6 +260,7 @@ static const char *op_names[] = {
+>  	[OP_ZERO_RANGE] = "zero_range",
+>  	[OP_COLLAPSE_RANGE] = "collapse_range",
+>  	[OP_INSERT_RANGE] = "insert_range",
+> +	[OP_CLONE_RANGE] = "clone_range",
+>  	[OP_FSYNC] = "fsync",
+>  };
+>  
+> @@ -320,7 +323,6 @@ log4(int operation, int arg0, int arg1, enum opflags flags)
+>  		logptr = 0;
+>  }
+>  
+> -
+>  void
+>  logdump(void)
+>  {
+> @@ -342,7 +344,7 @@ logdump(void)
+>  		count = LOGSIZE;
+>  	}
+>  	for ( ; count > 0; count--) {
+> -		bool overlap;
+> +		bool overlap, overlap2;
+>  		int opnum;
+>  
+>  		opnum = i+1 + (logcount/LOGSIZE)*LOGSIZE;
+> @@ -444,6 +446,20 @@ logdump(void)
+>  			if (overlap)
+>  				prt("\t******IIII");
+>  			break;
+> +		case OP_CLONE_RANGE:
+> +			prt("CLONE 0x%x thru 0x%x\t(0x%x bytes) to 0x%x thru 0x%x",
+> +			    lp->args[0], lp->args[0] + lp->args[1] - 1,
+> +			    lp->args[1],
+> +			    lp->args[2], lp->args[2] + lp->args[1] - 1);
+> +			overlap2 = badoff >= lp->args[2] &&
+> +				  badoff < lp->args[2] + lp->args[1];
+> +			if (overlap && overlap2)
+> +				prt("\tJJJJ**JJJJ");
+> +			else if (overlap)
+> +				prt("\tJJJJ******");
+> +			else if (overlap2)
+> +				prt("\t******JJJJ");
+> +			break;
+>  		case OP_FSYNC:
+>  			prt("FSYNC");
+>  			break;
+> @@ -1285,6 +1301,73 @@ do_insert_range(unsigned offset, unsigned length)
+>  }
+>  #endif
+>  
+> +#ifdef FICLONERANGE
+> +void
+> +do_clone_range(unsigned offset, unsigned length, unsigned dest)
+> +{
+> +	struct file_clone_range	fcr;
+> +
+> +	if (length == 0) {
+> +		if (!quiet && testcalls > simulatedopcount)
+> +			prt("skipping zero length clone range\n");
+> +		log5(OP_CLONE_RANGE, offset, length, dest, FL_SKIPPED);
+> +		return;
+> +	}
+> +
+> +	if ((loff_t)offset >= file_size) {
+> +		if (!quiet && testcalls > simulatedopcount)
+> +			prt("skipping clone range behind EOF\n");
+> +		log5(OP_CLONE_RANGE, offset, length, dest, FL_SKIPPED);
+> +		return;
+> +	}
+> +
+> +	log5(OP_CLONE_RANGE, offset, length, dest, FL_NONE);
+> +
+> +	if (testcalls <= simulatedopcount)
+> +		return;
+> +
+> +	if ((progressinterval && testcalls % progressinterval == 0) ||
+> +	    (debug && (monitorstart == -1 || monitorend == -1 ||
+> +		       dest <= monitorstart || dest + length <= monitorend))) {
+> +		prt("%lu clone\tfrom 0x%x to 0x%x, (0x%x bytes) at 0x%x\n",
+> +			testcalls, offset, offset+length, length, dest);
+> +	}
+> +
+> +	fcr.src_fd = fd;
+> +	fcr.src_offset = offset;
+> +	fcr.src_length = length;
+> +	fcr.dest_offset = dest;
+> +
+> +	if (ioctl(fd, FICLONERANGE, &fcr) == -1) {
+> +		if (errno == EOPNOTSUPP || errno == ENOTTY) {
+> +			if (!quiet && testcalls > simulatedopcount)
+> +				prt("skipping unsupported clone range\n");
+> +			logptr--;
 
-Yeah, I see that.
+NAK, we should just have a test_clone_range that we can use to disable
+clone range calls before we start generating calls, because oplog[] is a
+rolling buffer and this can cause internal memory corruption if logptr
+is 0.
 
-The difference is made by bio_iter_iovec()/bio_iter_mp_iovec() in
-__bio_for_each_segment()/__bio_for_each_bvec().
+--D
 
-
-Thanks,
-Ming
+> +			log5(OP_CLONE_RANGE, offset, length, dest, FL_SKIPPED);
+> +			return;
+> +		}
+> +
+> +		prt("clone range: 0x%x to 0x%x at 0x%x\n", offset,
+> +				offset + length, dest);
+> +		prterr("do_clone_range: FICLONERANGE");
+> +		report_failure(161);
+> +	}
+> +
+> +	memcpy(good_buf + dest, good_buf + offset, length);
+> +	if (dest > file_size)
+> +		memset(good_buf + file_size, '\0', dest - file_size);
+> +	if (dest + length > file_size)
+> +		file_size = dest + length;
+> +}
+> +
+> +#else
+> +void
+> +do_clone_range(unsigned offset, unsigned length, unsigned dest)
+> +{
+> +	return;
+> +}
+> +#endif
+> +
+>  #ifdef HAVE_LINUX_FALLOC_H
+>  /* fallocate is basically a no-op unless extending, then a lot like a truncate */
+>  void
+> @@ -1442,6 +1525,8 @@ static int
+>  op_args_count(int operation)
+>  {
+>  	switch (operation) {
+> +	case OP_CLONE_RANGE:
+> +		return 4;
+>  	default:
+>  		return 3;
+>  	}
+> @@ -1450,6 +1535,7 @@ op_args_count(int operation)
+>  static int
+>  read_op(struct log_entry *log_entry)
+>  {
+> +	char *end;
+>  	char line[256];
+>  
+>  	memset(log_entry, 0, sizeof(*log_entry));
+> @@ -1515,7 +1601,7 @@ read_op(struct log_entry *log_entry)
+>  int
+>  test(void)
+>  {
+> -	unsigned long	offset;
+> +	unsigned long	offset, offset2;
+>  	unsigned long	size;
+>  	unsigned long	rv;
+>  	unsigned long	op;
+> @@ -1546,6 +1632,7 @@ test(void)
+>  			op = log_entry.operation;
+>  			offset = log_entry.args[0];
+>  			size = log_entry.args[1];
+> +			offset2 = log_entry.args[2];
+>  			closeopen = !!(log_entry.flags & FL_CLOSE_OPEN);
+>  			keep_size = !!(log_entry.flags & FL_KEEP_SIZE);
+>  			goto have_op;
+> @@ -1558,6 +1645,7 @@ test(void)
+>  		closeopen = (rv >> 3) < (1 << 28) / closeprob;
+>  
+>  	offset = random();
+> +	offset2 = 0;
+>  	size = maxoplen;
+>  	if (randomoplen)
+>  		size = random() % (maxoplen + 1);
+> @@ -1583,6 +1671,17 @@ test(void)
+>  		if (zero_range_calls && size && keep_size_calls)
+>  			keep_size = random() % 2;
+>  		break;
+> +	case OP_CLONE_RANGE:
+> +		TRIM_OFF_LEN(offset, size, file_size);
+> +		offset = offset & ~(block_size - 1);
+> +		size = size & ~(block_size - 1);
+> +		do {
+> +			offset2 = random();
+> +			TRIM_OFF(offset2, maxfilelen);
+> +			offset2 = offset2 & ~(block_size - 1);
+> +		} while (llabs(offset2 - offset) < size ||
+> +			 offset2 + size > maxfilelen);
+> +		break;
+>  	}
+>  
+>  have_op:
+> @@ -1626,6 +1725,12 @@ test(void)
+>  			goto out;
+>  		}
+>  		break;
+> +	case OP_CLONE_RANGE:
+> +		if (!clone_range_calls) {
+> +			log5(op, offset, size, offset2, FL_SKIPPED);
+> +			goto out;
+> +		}
+> +		break;
+>  	}
+>  
+>  	switch (op) {
+> @@ -1692,6 +1797,18 @@ test(void)
+>  
+>  		do_insert_range(offset, size);
+>  		break;
+> +	case OP_CLONE_RANGE:
+> +		if (size == 0) {
+> +			log5(OP_CLONE_RANGE, offset, size, offset2, FL_SKIPPED);
+> +			goto out;
+> +		}
+> +		if (offset2 + size > maxfilelen) {
+> +			log5(OP_CLONE_RANGE, offset, size, offset2, FL_SKIPPED);
+> +			goto out;
+> +		}
+> +
+> +		do_clone_range(offset, size, offset2);
+> +		break;
+>  	case OP_FSYNC:
+>  		dofsync();
+>  		break;
+> @@ -1717,7 +1834,7 @@ void
+>  usage(void)
+>  {
+>  	fprintf(stdout, "usage: %s",
+> -		"fsx [-dknqxAFLOWZ] [-b opnum] [-c Prob] [-g filldata] [-i logdev] [-j logid] [-l flen] [-m start:end] [-o oplen] [-p progressinterval] [-r readbdy] [-s style] [-t truncbdy] [-w writebdy] [-D startingop] [-N numops] [-P dirpath] [-S seed] fname\n\
+> +		"fsx [-dknqxAFJLOWZ] [-b opnum] [-c Prob] [-g filldata] [-i logdev] [-j logid] [-l flen] [-m start:end] [-o oplen] [-p progressinterval] [-r readbdy] [-s style] [-t truncbdy] [-w writebdy] [-D startingop] [-N numops] [-P dirpath] [-S seed] fname\n\
+>  	-b opnum: beginning operation number (default 1)\n\
+>  	-c P: 1 in P chance of file close+open at each op (default infinity)\n\
+>  	-d: debug output for all operations\n\
+> @@ -1758,6 +1875,9 @@ usage(void)
+>  #ifdef FALLOC_FL_INSERT_RANGE
+>  "	-I: Do not use insert range calls\n"
+>  #endif
+> +#ifdef FICLONERANGE
+> +"	-J: Do not use clone range calls\n"
+> +#endif
+>  "	-L: fsxLite - no file creations & no file size changes\n\
+>  	-N numops: total # operations to do (default infinity)\n\
+>  	-O: use oplen (see -o flag) for every op (default random)\n\
+> @@ -1961,7 +2081,7 @@ main(int argc, char **argv)
+>  	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
+>  
+>  	while ((ch = getopt_long(argc, argv,
+> -				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyAD:FKHzCILN:OP:RS:WXZ",
+> +				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyAD:FJKHzCILN:OP:RS:WXZ",
+>  				 longopts, NULL)) != EOF)
+>  		switch (ch) {
+>  		case 'b':
+> @@ -2091,6 +2211,9 @@ main(int argc, char **argv)
+>  		case 'I':
+>  			insert_range_calls = 0;
+>  			break;
+> +		case 'J':
+> +			clone_range_calls = 0;
+> +			break;
+>  		case 'L':
+>  		        lite = 1;
+>  			o_flags &= ~(O_CREAT|O_TRUNC);
+> 
