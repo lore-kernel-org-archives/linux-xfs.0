@@ -1,183 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42718 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731618AbeKVMwd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 07:52:33 -0500
-Date: Wed, 21 Nov 2018 18:15:15 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/10] fsx: always check buffer after each operation
-Message-ID: <20181122021515.GD6783@magnolia>
-References: <154275100143.8611.10235098565750994724.stgit@magnolia>
- <154275101368.8611.120389888153356093.stgit@magnolia>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:24857 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731067AbeKVN1s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 08:27:48 -0500
+Date: Thu, 22 Nov 2018 13:29:39 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/3] xfs: enums don't work with __print_symbolic
+Message-ID: <20181122022939.GU19305@dastard>
+References: <20181121225958.30947-1-david@fromorbit.com>
+ <20181121234253.GU6792@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <154275101368.8611.120389888153356093.stgit@magnolia>
+In-Reply-To: <20181121234253.GU6792@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 20, 2018 at 01:56:53PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Nov 21, 2018 at 03:42:53PM -0800, Darrick J. Wong wrote:
+> On Thu, Nov 22, 2018 at 09:59:55AM +1100, Dave Chinner wrote:
+> > Hi folks,
+> > 
+> > When trying to read traces from fsx failurs, I kept coming across
+> > fields in the traces that had no output what-so-ever. The common
+> > theme was that they all were tables that were parsed by
+> > __print_symbolic() and the value definitions were enums.
+> > 
+> > Unfortunately, __print_symbolic() does some crazy stuff involving
+> > stringification of the table that is passed to it, which means
+> > the enums are turned into strings and so their never get treated as
+> > enums after pre-processing. The result is a format string that looks
+> > like:
+> > 
+> > # cat /sys/kernel/debug/tracing/events/xfs/xfs_iomap_alloc/format
+> > .....
+> > print fmt: ..... __print_symbolic(REC->type, { XFS_IO_INVALID, "invalid" }, { XFS_IO_DELALLOC, "delalloc" }, { XFS_IO_UNWRITTEN, "unwritten" }, { XFS_IO_OVERWRITE, "overwrite" }, { XFS_IO_COW, "CoW" }, { XFS_IO_HOLE, "hole" }), ....
+> > #
+> > 
+> > And, well, XFS_IO_OVERWRITE is a string, not an integer value of 3.
+> > Hence __print_symbolic never prints out the correct value.
+> > 
+> > The way to fix this is to turn all the enums into defined macros,
+> > that way the preprocessor still substitutes the value for the
+> > stringified table as the it does string matches. The result is:
+> > 
+> > __print_symbolic(REC->type, { 0, "hole" }, { 1, "delalloc" }, { 2, "unwritten" }, { 3, "overwrite" }, { 4, "CoW" })
+> > 
+> > And the trace events now print the type correctly in the trace.
+> > 
+> > This series fixes the cases I noticed by removing the various enums
+> > that end up in trace format tables.
 > 
-> Add a new option to make fsx read the file after each operation and
-> compare it with the good buffer to try to catch corruptions as soon as
-> they occur.
+> According to the documentation provided in
+> samples/trace_events/trace-events-sample.h, you're supposed to wrap all
+> the enum members in the trace header file so that they're encoded in the
+> trace output:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  ltp/fsx.c |   65 +++++++++++++++++++++++++++++++++++++++++++++++++++++--------
->  1 file changed, 56 insertions(+), 9 deletions(-)
-> 
-> 
-> diff --git a/ltp/fsx.c b/ltp/fsx.c
-> index 5601c70c..4b3a5d5a 100644
-> --- a/ltp/fsx.c
-> +++ b/ltp/fsx.c
-> @@ -160,7 +160,8 @@ int     punch_hole_calls = 1;           /* -H flag disables */
->  int     zero_range_calls = 1;           /* -z flag disables */
->  int	collapse_range_calls = 1;	/* -C flag disables */
->  int	insert_range_calls = 1;		/* -I flag disables */
-> -int 	mapped_reads = 1;		/* -R flag disables it */
-> +int	mapped_reads = 1;		/* -R flag disables it */
-> +int	check_file = 1;			/* -X flag disables */
->  int	integrity = 0;			/* -i flag */
->  int	fsxgoodfd = 0;
->  int	o_direct;			/* -Z */
-> @@ -561,7 +562,7 @@ dump_fsync_buffer(void)
->  }
->  
->  void
-> -check_buffers(unsigned offset, unsigned size)
-> +check_buffers(char *buf, unsigned offset, unsigned size)
->  {
->  	unsigned char c, t;
->  	unsigned i = 0;
-> @@ -569,19 +570,19 @@ check_buffers(unsigned offset, unsigned size)
->  	unsigned op = 0;
->  	unsigned bad = 0;
->  
-> -	if (memcmp(good_buf + offset, temp_buf, size) != 0) {
-> +	if (memcmp(good_buf + offset, buf, size) != 0) {
->  		prt("READ BAD DATA: offset = 0x%x, size = 0x%x, fname = %s\n",
->  		    offset, size, fname);
->  		prt("OFFSET\tGOOD\tBAD\tRANGE\n");
->  		while (size > 0) {
->  			c = good_buf[offset];
-> -			t = temp_buf[i];
-> +			t = buf[i];
->  			if (c != t) {
->  			        if (n < 16) {
-> -					bad = short_at(&temp_buf[i]);
-> +					bad = short_at(&buf[i]);
->  				        prt("0x%05x\t0x%04x\t0x%04x", offset,
->  				            short_at(&good_buf[offset]), bad);
-> -					op = temp_buf[offset & 1 ? i+1 : i];
-> +					op = buf[offset & 1 ? i+1 : i];
->  				        prt("\t0x%05x\n", n);
->  					if (op)
->  						prt("operation# (mod 256) for "
-> @@ -725,7 +726,46 @@ doread(unsigned offset, unsigned size)
->  			    iret, size);
->  		report_failure(141);
->  	}
-> -	check_buffers(offset, size);
-> +	check_buffers(temp_buf, offset, size);
-> +}
-> +
-> +void
-> +check_contents(void)
-> +{
-> +	static char *check_buf;
-> +	unsigned offset = 0;
-> +	unsigned size = file_size;
-> +	off_t ret;
-> +	unsigned iret;
-> +
-> +	if (!check_buf) {
-> +		check_buf = (char *) malloc(maxfilelen + writebdy);
-> +		assert(check_buf != NULL);
-> +		check_buf = round_ptr_up(check_buf, writebdy, 0);
-> +		memset(check_buf, '\0', maxfilelen);
-> +	}
-> +
-> +	if (o_direct)
-> +		size -= size % readbdy;
-> +	if (size == 0)
-> +		return;
-> +
-> +	ret = lseek(fd, (off_t)offset, SEEK_SET);
-> +	if (ret == (off_t)-1) {
-> +		prterr("doread: lseek");
-> +		report_failure(140);
-> +	}
-> +
-> +	iret = fsxread(fd, check_buf, size, offset);
-> +	if (iret != size) {
-> +		if (iret == -1)
-> +			prterr("check_contents: read");
-> +		else
-> +			prt("short check read: 0x%x bytes instead of 0x%x\n",
-> +			    iret, size);
-> +		report_failure(141);
-> +	}
-> +	check_buffers(check_buf, offset, size);
->  }
->  
->  
-> @@ -808,7 +848,7 @@ domapread(unsigned offset, unsigned size)
->  		report_failure(191);
->  	}
->  
-> -	check_buffers(offset, size);
-> +	check_buffers(temp_buf, offset, size);
->  }
->  
->  
-> @@ -1624,6 +1664,9 @@ test(void)
->  		break;
->  	}
->  
-> +	if (check_file)
+> TRACE_DEFINE_ENUM(XFS_IO_HOLE);
+> TRACE_DEFINE_ENUM(XFS_IO_DELALLOC);
+> TRACE_DEFINE_ENUM(XFS_IO_UNWRITTEN);
+> TRACE_DEFINE_ENUM(XFS_IO_OVERWRITE);
+> TRACE_DEFINE_ENUM(XFS_IO_COW);
 
-NAK, this needs to be "if (check_file && testcalls > simulatedopcount)"
-or else we end up reading the file before we actually made any
-modifications to it (e.g. if -S XXX is given).
+That's horrible. Essentially, we have to declare all enums twice,
+and they can't be in the same place?
 
---D
+> I'd rather add that weird and unexpectedly documented kludge to
+> xfs_trace.h than go changing things treewide.  Frankly, why not just
+> move XFS_IO_TYPES to xfs_trace.h?
 
-> +		check_contents();
-> +
->  out:
->  	if (sizechecks && testcalls > simulatedopcount)
->  		check_size();
-> @@ -1684,6 +1727,7 @@ usage(void)
->  	-P: save .fsxlog .fsxops and .fsxgood files in dirpath (default ./)\n\
->  	-S seed: for random # generator (default 1) 0 gets timestamp\n\
->  	-W: mapped write operations DISabled\n\
-> +	-X: Do not read file and compare to good buffer after every operation.\n\
->          -R: read() system calls only (mapped reads disabled)\n\
->          -Z: O_DIRECT (use -R, -W, -r and -w too)\n\
->  	--replay-ops opsfile: replay ops from recorded .fsxops file\n\
-> @@ -1880,7 +1924,7 @@ main(int argc, char **argv)
->  	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
->  
->  	while ((ch = getopt_long(argc, argv,
-> -				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyAD:FKHzCILN:OP:RS:WZ",
-> +				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyAD:FKHzCILN:OP:RS:WXZ",
->  				 longopts, NULL)) != EOF)
->  		switch (ch) {
->  		case 'b':
-> @@ -2044,6 +2088,9 @@ main(int argc, char **argv)
->  			if (!quiet)
->  				prt("mapped writes DISABLED\n");
->  			break;
-> +		case 'X':
-> +			check_file = 0;
-> +			break;
->  		case 'Z':
->  			o_direct = O_DIRECT;
->  			o_flags |= O_DIRECT;
-> 
+Well, we originally put all these type arrays next to the place
+where there are defined so it's easy to remind ourselves that
+whenever we add a new enum/type we have to update the tracing output
+array, too....
+
+> ((Seriously, why are key ftrace calls documented only in the sample
+> code??))
+
+Code is all the docmentation you need, right? :P
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
