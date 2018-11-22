@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49160 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406364AbeKWEjf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 23:39:35 -0500
-Subject: [PATCH 05/12] fsx: use an enum to define the operation commands
+Received: from userp2120.oracle.com ([156.151.31.85]:37878 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2406388AbeKWEjh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 23:39:37 -0500
+Subject: [PATCH 06/12] fsx: add five-argument logging function
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 22 Nov 2018 09:58:59 -0800
-Message-ID: <154290953980.1218.7605730679708903723.stgit@magnolia>
+Date: Thu, 22 Nov 2018 09:59:06 -0800
+Message-ID: <154290954603.1218.7246941650070239499.stgit@magnolia>
 In-Reply-To: <154290950237.1218.9937108728673485814.stgit@magnolia>
 References: <154290950237.1218.9937108728673485814.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,64 +20,104 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use an enum to define operation codes and the boundaries between
-operation classes so that we can add new commands without having to
-change a bunch of unrelated #defines.
+Add a five-argument logging function to support new operations.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- ltp/fsx.c |   40 +++++++++++++++++++++-------------------
- 1 file changed, 21 insertions(+), 19 deletions(-)
+ ltp/fsx.c |   45 ++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 40 insertions(+), 5 deletions(-)
 
 
 diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 7fb8b3ab..dabad302 100644
+index dabad302..c525ba13 100644
 --- a/ltp/fsx.c
 +++ b/ltp/fsx.c
-@@ -88,25 +88,27 @@ int			logcount = 0;	/* total ops */
-  * mode being run.
-  */
+@@ -51,7 +51,8 @@ enum opflags { FL_NONE = 0, FL_SKIPPED = 1, FL_CLOSE_OPEN = 2, FL_KEEP_SIZE = 4
  
--/* common operations */
--#define	OP_READ		0
--#define OP_WRITE	1
--#define OP_MAPREAD	2
--#define OP_MAPWRITE	3
--#define OP_MAX_LITE	4
--
--/* !lite operations */
--#define OP_TRUNCATE		4
--#define OP_FALLOCATE		5
--#define OP_PUNCH_HOLE		6
--#define OP_ZERO_RANGE		7
--#define OP_COLLAPSE_RANGE	8
--#define OP_INSERT_RANGE	9
--#define OP_MAX_FULL		10
--
--/* integrity operations */
--#define OP_FSYNC		10
--#define OP_MAX_INTEGRITY	11
-+enum {
-+	/* common operations */
-+	OP_READ = 0,
-+	OP_WRITE,
-+	OP_MAPREAD,
-+	OP_MAPWRITE,
-+	OP_MAX_LITE,
-+
-+	/* !lite operations */
-+	OP_TRUNCATE = OP_MAX_LITE,
-+	OP_FALLOCATE,
-+	OP_PUNCH_HOLE,
-+	OP_ZERO_RANGE,
-+	OP_COLLAPSE_RANGE,
-+	OP_INSERT_RANGE,
-+	OP_MAX_FULL,
-+
-+	/* integrity operations */
-+	OP_FSYNC = OP_MAX_FULL,
-+	OP_MAX_INTEGRITY,
-+};
+ struct log_entry {
+ 	int	operation;
+-	int	args[3];
++	int	nr_args;
++	int	args[4];
+ 	enum opflags flags;
+ };
  
- #undef PAGE_SIZE
- #define PAGE_SIZE       getpagesize()
+@@ -278,6 +279,27 @@ static int op_code(const char *name)
+ 	return -1;
+ }
+ 
++void
++log5(int operation, int arg0, int arg1, int arg2, enum opflags flags)
++{
++	struct log_entry *le;
++
++	le = &oplog[logptr];
++	le->operation = operation;
++	if (closeopen)
++		flags |= FL_CLOSE_OPEN;
++	le->args[0] = arg0;
++	le->args[1] = arg1;
++	le->args[2] = arg2;
++	le->args[3] = file_size;
++	le->nr_args = 4;
++	le->flags = flags;
++	logptr++;
++	logcount++;
++	if (logptr >= LOGSIZE)
++		logptr = 0;
++}
++
+ void
+ log4(int operation, int arg0, int arg1, enum opflags flags)
+ {
+@@ -290,6 +312,7 @@ log4(int operation, int arg0, int arg1, enum opflags flags)
+ 	le->args[0] = arg0;
+ 	le->args[1] = arg1;
+ 	le->args[2] = file_size;
++	le->nr_args = 3;
+ 	le->flags = flags;
+ 	logptr++;
+ 	logcount++;
+@@ -439,11 +462,13 @@ logdump(void)
+ 			i = 0;
+ 
+ 		if (logopsf) {
++			int j;
++
+ 			if (lp->flags & FL_SKIPPED)
+ 				fprintf(logopsf, "skip ");
+-			fprintf(logopsf, "%s 0x%x 0x%x 0x%x",
+-				op_name(lp->operation),
+-				lp->args[0], lp->args[1], lp->args[2]);
++			fprintf(logopsf, "%s", op_name(lp->operation));
++			for (j = 0; j < lp->nr_args; j++)
++				fprintf(logopsf, " 0x%x", lp->args[j]);
+ 			if (lp->flags & FL_KEEP_SIZE)
+ 				fprintf(logopsf, " keep_size");
+ 			if (lp->flags & FL_CLOSE_OPEN)
+@@ -1413,6 +1438,15 @@ cleanup(int sig)
+ 	exit(sig);
+ }
+ 
++static int
++op_args_count(int operation)
++{
++	switch (operation) {
++	default:
++		return 3;
++	}
++}
++
+ static int
+ read_op(struct log_entry *log_entry)
+ {
+@@ -1445,7 +1479,8 @@ read_op(struct log_entry *log_entry)
+ 		log_entry->operation = op_code(str);
+ 		if (log_entry->operation == -1)
+ 			goto fail;
+-		for (i = 0; i < 3; i++) {
++		log_entry->nr_args = op_args_count(log_entry->operation);
++		for (i = 0; i < log_entry->nr_args; i++) {
+ 			char *end;
+ 
+ 			str = strtok(NULL, " \t\n");
