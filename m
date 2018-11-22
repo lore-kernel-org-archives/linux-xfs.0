@@ -1,134 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34462 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388992AbeKWBiB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Nov 2018 20:38:01 -0500
-Date: Thu, 22 Nov 2018 22:57:50 +0800
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V11 03/19] block: introduce bio_for_each_bvec()
-Message-ID: <20181122145749.GA22146@ming.t460p>
-References: <20181121032327.8434-1-ming.lei@redhat.com>
- <20181121032327.8434-4-ming.lei@redhat.com>
- <20181121133244.GB1640@lst.de>
- <20181121153135.GB19111@ming.t460p>
- <20181121161025.GB4977@lst.de>
- <20181121171217.GA6259@lst.de>
- <20181122101527.GB27273@ming.t460p>
- <20181122102309.GA29295@lst.de>
- <20181122103033.GA29418@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:37236 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2405989AbeKWEix (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 23:38:53 -0500
+Subject: [PATCH v3 00/12] xfstests: add copy/dedupe/clone to fsx/fsstress
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 22 Nov 2018 09:58:22 -0800
+Message-ID: <154290950237.1218.9937108728673485814.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181122103033.GA29418@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Nov 22, 2018 at 11:30:33AM +0100, Christoph Hellwig wrote:
-> Btw, this patch instead of the plain rever might make it a little
-> more clear what is going on by skipping the confusing helper altogher
-> and operating on the raw bvec array:
-> 
-> 
-> diff --git a/include/linux/bio.h b/include/linux/bio.h
-> index e5b975fa0558..926550ce2d21 100644
-> --- a/include/linux/bio.h
-> +++ b/include/linux/bio.h
-> @@ -137,24 +137,18 @@ static inline bool bio_full(struct bio *bio)
->  	for (i = 0, iter_all.idx = 0; iter_all.idx < (bio)->bi_vcnt; iter_all.idx++)	\
->  		bvec_for_each_segment(bvl, &((bio)->bi_io_vec[iter_all.idx]), i, iter_all)
->  
-> -static inline void __bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
-> -				      unsigned bytes, unsigned max_seg_len)
-> +static inline void bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
-> +				    unsigned bytes)
->  {
->  	iter->bi_sector += bytes >> 9;
->  
->  	if (bio_no_advance_iter(bio))
->  		iter->bi_size -= bytes;
->  	else
-> -		__bvec_iter_advance(bio->bi_io_vec, iter, bytes, max_seg_len);
-> +		bvec_iter_advance(bio->bi_io_vec, iter, bytes);
->  		/* TODO: It is reasonable to complete bio with error here. */
->  }
->  
-> -static inline void bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
-> -				    unsigned bytes)
-> -{
-> -	__bio_advance_iter(bio, iter, bytes, PAGE_SIZE);
-> -}
-> -
->  #define __bio_for_each_segment(bvl, bio, iter, start)			\
->  	for (iter = (start);						\
->  	     (iter).bi_size &&						\
-> @@ -168,7 +162,7 @@ static inline void bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
->  	for (iter = (start);						\
->  	     (iter).bi_size &&						\
->  		((bvl = bio_iter_mp_iovec((bio), (iter))), 1);	\
-> -	     __bio_advance_iter((bio), &(iter), (bvl).bv_len, BVEC_MAX_LEN))
-> +	     bio_advance_iter((bio), &(iter), (bvl).bv_len))
->  
->  /* returns one real segment(multi-page bvec) each time */
->  #define bio_for_each_bvec(bvl, bio, iter)			\
-> diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-> index cab36d838ed0..7d0f9bdb6f05 100644
-> --- a/include/linux/bvec.h
-> +++ b/include/linux/bvec.h
-> @@ -25,8 +25,6 @@
->  #include <linux/errno.h>
->  #include <linux/mm.h>
->  
-> -#define BVEC_MAX_LEN  ((unsigned int)-1)
-> -
->  /*
->   * was unsigned short, but we might as well be ready for > 64kB I/O pages
->   */
-> @@ -102,8 +100,8 @@ struct bvec_iter_all {
->  	.bv_offset	= segment_iter_offset((bvec), (iter)),	\
->  })
->  
-> -static inline bool __bvec_iter_advance(const struct bio_vec *bv,
-> -		struct bvec_iter *iter, unsigned bytes, unsigned max_seg_len)
-> +static inline bool bvec_iter_advance(const struct bio_vec *bv,
-> +		struct bvec_iter *iter, unsigned bytes)
->  {
->  	if (WARN_ONCE(bytes > iter->bi_size,
->  		     "Attempted to advance past end of bvec iter\n")) {
-> @@ -112,20 +110,15 @@ static inline bool __bvec_iter_advance(const struct bio_vec *bv,
->  	}
->  
->  	while (bytes) {
-> -		unsigned segment_len = segment_iter_len(bv, *iter);
-> -
-> -		if (max_seg_len < BVEC_MAX_LEN)
-> -			segment_len = min_t(unsigned, segment_len,
-> -					    max_seg_len -
-> -					    bvec_iter_offset(bv, *iter));
-> +		const struct bio_vec *cur = bv + iter->bi_idx;
-> +		unsigned len = min3(bytes, iter->bi_size,
-> +				    cur->bv_len - iter->bi_bvec_done);
->  
-> -		segment_len = min(bytes, segment_len);
-> -
-> -		bytes -= segment_len;
-> -		iter->bi_size -= segment_len;
-> -		iter->bi_bvec_done += segment_len;
-> +		bytes -= len;
-> +		iter->bi_size -= len;
-> +		iter->bi_bvec_done += len;
->  
-> -		if (iter->bi_bvec_done == __bvec_iter_bvec(bv, *iter)->bv_len) {
-> +		if (iter->bi_bvec_done == cur->bv_len) {
->  			iter->bi_bvec_done = 0;
->  			iter->bi_idx++;
->  		}
+Hi all,
 
-I'd rather not do the optimization part in this patchset, given it doesn't
-belong to this patchset, and it may decrease readability. So I plan to revert
-the delta part in V12 first.
+This series adds to fsx and fsstress support for FICLONERANGE,
+FIDEDUPERANGE, and copy_file_range.
 
-Thanks,
-Ming
+The first three patches fix gcc warnings in fsx and fsstress.
+
+Patch 4 adds an -X option to fsx that causes it to re-read the fsx file
+after every operation to compare it to the good buffer.  This made it
+easier for me to find corruption problem as soon as they happen, though
+it slows down fsx and perturbs in-core state considerably.
+
+Patche 5-6 are a couple of generic reworks to fsx that we need to
+support the new clone/dedupe/copy commands.
+
+Patches 7-8 add clone and dedupe to fsx.
+
+Patches 9-10 add copy_file_range support to fsstress and fsx.
+
+Patch 11 fixes the common/dump tests to disable the new commands so that
+the dump/restore tests continue to function exactly as they have for
+years.
+
+Patch 12 contains long-soak fsx tests designed to draw out corruption
+problems by running (1 million * TIME_FACTOR) operations.  These will be
+running all weekend during the US Thanksgiving holiday, though I hope
+we've sorted out all the problems.
+
+There are known failures in XFS on 4.20-rc3, particularly with
+copy_file_range and reflink, all of which hopefully have been fixed by
+the patch series that Dave Chinner posted to the xfs list yesterday.
+A branch with the fstests patches can be downloaded here[1].
+
+--D
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fsstress-clone
