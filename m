@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41370 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:42024 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725744AbeKYFMq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Nov 2018 00:12:46 -0500
+        with ESMTP id S1725744AbeKYFNs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Nov 2018 00:13:48 -0500
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 06/12] fsx: add five-argument logging function
+Subject: Re: [PATCH 04/12] fsx: always check buffer after each operation
 References: <154290950237.1218.9937108728673485814.stgit@magnolia>
- <154290954603.1218.7246941650070239499.stgit@magnolia>
-Message-ID: <d5378b1b-3995-1918-8424-6b7ed21dda97@oracle.com>
-Date: Sat, 24 Nov 2018 11:23:39 -0700
+ <154290953356.1218.995241000619100958.stgit@magnolia>
+Message-ID: <51725164-e7af-4bf7-8c6b-f907730322bc@oracle.com>
+Date: Sat, 24 Nov 2018 11:24:44 -0700
 MIME-Version: 1.0
-In-Reply-To: <154290954603.1218.7246941650070239499.stgit@magnolia>
+In-Reply-To: <154290953356.1218.995241000619100958.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -20,112 +20,167 @@ List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>, guaneryu@gmail.com
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Ok, you can add my review:
 
-Reviewed-By: Allison Henderson <allison.henderson@oracle.com>
 
-On 11/22/18 10:59 AM, Darrick J. Wong wrote:
+On 11/22/18 10:58 AM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Add a five-argument logging function to support new operations.
+> Add a new option to make fsx read the file after each operation and
+> compare it with the good buffer to try to catch corruptions as soon as
+> they occur.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->   ltp/fsx.c |   45 ++++++++++++++++++++++++++++++++++++++++-----
->   1 file changed, 40 insertions(+), 5 deletions(-)
+>   ltp/fsx.c |   65 +++++++++++++++++++++++++++++++++++++++++++++++++++++--------
+>   1 file changed, 56 insertions(+), 9 deletions(-)
 > 
 > 
 > diff --git a/ltp/fsx.c b/ltp/fsx.c
-> index dabad302..c525ba13 100644
+> index 5601c70c..7fb8b3ab 100644
 > --- a/ltp/fsx.c
 > +++ b/ltp/fsx.c
-> @@ -51,7 +51,8 @@ enum opflags { FL_NONE = 0, FL_SKIPPED = 1, FL_CLOSE_OPEN = 2, FL_KEEP_SIZE = 4
->   
->   struct log_entry {
->   	int	operation;
-> -	int	args[3];
-> +	int	nr_args;
-> +	int	args[4];
->   	enum opflags flags;
->   };
->   
-> @@ -278,6 +279,27 @@ static int op_code(const char *name)
->   	return -1;
+> @@ -160,7 +160,8 @@ int     punch_hole_calls = 1;           /* -H flag disables */
+>   int     zero_range_calls = 1;           /* -z flag disables */
+>   int	collapse_range_calls = 1;	/* -C flag disables */
+>   int	insert_range_calls = 1;		/* -I flag disables */
+> -int 	mapped_reads = 1;		/* -R flag disables it */
+> +int	mapped_reads = 1;		/* -R flag disables it */
+> +int	check_file = 0;			/* -X flag enables */
+>   int	integrity = 0;			/* -i flag */
+>   int	fsxgoodfd = 0;
+>   int	o_direct;			/* -Z */
+> @@ -561,7 +562,7 @@ dump_fsync_buffer(void)
 >   }
 >   
-> +void
-> +log5(int operation, int arg0, int arg1, int arg2, enum opflags flags)
-> +{
-> +	struct log_entry *le;
-> +
-> +	le = &oplog[logptr];
-> +	le->operation = operation;
-> +	if (closeopen)
-> +		flags |= FL_CLOSE_OPEN;
-> +	le->args[0] = arg0;
-> +	le->args[1] = arg1;
-> +	le->args[2] = arg2;
-> +	le->args[3] = file_size;
-> +	le->nr_args = 4;
-> +	le->flags = flags;
-> +	logptr++;
-> +	logcount++;
-> +	if (logptr >= LOGSIZE)
-> +		logptr = 0;
-> +}
-> +
 >   void
->   log4(int operation, int arg0, int arg1, enum opflags flags)
+> -check_buffers(unsigned offset, unsigned size)
+> +check_buffers(char *buf, unsigned offset, unsigned size)
 >   {
-> @@ -290,6 +312,7 @@ log4(int operation, int arg0, int arg1, enum opflags flags)
->   	le->args[0] = arg0;
->   	le->args[1] = arg1;
->   	le->args[2] = file_size;
-> +	le->nr_args = 3;
->   	le->flags = flags;
->   	logptr++;
->   	logcount++;
-> @@ -439,11 +462,13 @@ logdump(void)
->   			i = 0;
+>   	unsigned char c, t;
+>   	unsigned i = 0;
+> @@ -569,19 +570,19 @@ check_buffers(unsigned offset, unsigned size)
+>   	unsigned op = 0;
+>   	unsigned bad = 0;
 >   
->   		if (logopsf) {
-> +			int j;
-> +
->   			if (lp->flags & FL_SKIPPED)
->   				fprintf(logopsf, "skip ");
-> -			fprintf(logopsf, "%s 0x%x 0x%x 0x%x",
-> -				op_name(lp->operation),
-> -				lp->args[0], lp->args[1], lp->args[2]);
-> +			fprintf(logopsf, "%s", op_name(lp->operation));
-> +			for (j = 0; j < lp->nr_args; j++)
-> +				fprintf(logopsf, " 0x%x", lp->args[j]);
->   			if (lp->flags & FL_KEEP_SIZE)
->   				fprintf(logopsf, " keep_size");
->   			if (lp->flags & FL_CLOSE_OPEN)
-> @@ -1413,6 +1438,15 @@ cleanup(int sig)
->   	exit(sig);
->   }
->   
-> +static int
-> +op_args_count(int operation)
-> +{
-> +	switch (operation) {
-> +	default:
-> +		return 3;
-> +	}
+> -	if (memcmp(good_buf + offset, temp_buf, size) != 0) {
+> +	if (memcmp(good_buf + offset, buf, size) != 0) {
+>   		prt("READ BAD DATA: offset = 0x%x, size = 0x%x, fname = %s\n",
+>   		    offset, size, fname);
+>   		prt("OFFSET\tGOOD\tBAD\tRANGE\n");
+>   		while (size > 0) {
+>   			c = good_buf[offset];
+> -			t = temp_buf[i];
+> +			t = buf[i];
+>   			if (c != t) {
+>   			        if (n < 16) {
+> -					bad = short_at(&temp_buf[i]);
+> +					bad = short_at(&buf[i]);
+>   				        prt("0x%05x\t0x%04x\t0x%04x", offset,
+>   				            short_at(&good_buf[offset]), bad);
+> -					op = temp_buf[offset & 1 ? i+1 : i];
+> +					op = buf[offset & 1 ? i+1 : i];
+>   				        prt("\t0x%05x\n", n);
+>   					if (op)
+>   						prt("operation# (mod 256) for "
+> @@ -725,7 +726,46 @@ doread(unsigned offset, unsigned size)
+>   			    iret, size);
+>   		report_failure(141);
+>   	}
+> -	check_buffers(offset, size);
+> +	check_buffers(temp_buf, offset, size);
 > +}
 > +
->   static int
->   read_op(struct log_entry *log_entry)
->   {
-> @@ -1445,7 +1479,8 @@ read_op(struct log_entry *log_entry)
->   		log_entry->operation = op_code(str);
->   		if (log_entry->operation == -1)
->   			goto fail;
-> -		for (i = 0; i < 3; i++) {
-> +		log_entry->nr_args = op_args_count(log_entry->operation);
-> +		for (i = 0; i < log_entry->nr_args; i++) {
->   			char *end;
+> +void
+> +check_contents(void)
+> +{
+> +	static char *check_buf;
+> +	unsigned offset = 0;
+> +	unsigned size = file_size;
+> +	off_t ret;
+> +	unsigned iret;
+> +
+> +	if (!check_buf) {
+
+Just following the logic here:
+Did you maybe mean to malloc check_buf before checking to see if it's 
+null in the condition above?
+
+Allison
+
+> +		check_buf = (char *) malloc(maxfilelen + writebdy);
+> +		assert(check_buf != NULL);
+> +		check_buf = round_ptr_up(check_buf, writebdy, 0);
+> +		memset(check_buf, '\0', maxfilelen);
+> +	}
+> +
+> +	if (o_direct)
+> +		size -= size % readbdy;
+> +	if (size == 0)
+> +		return;
+> +
+> +	ret = lseek(fd, (off_t)offset, SEEK_SET);
+> +	if (ret == (off_t)-1) {
+> +		prterr("doread: lseek");
+> +		report_failure(140);
+> +	}
+> +
+> +	iret = fsxread(fd, check_buf, size, offset);
+> +	if (iret != size) {
+> +		if (iret == -1)
+> +			prterr("check_contents: read");
+> +		else
+> +			prt("short check read: 0x%x bytes instead of 0x%x\n",
+> +			    iret, size);
+> +		report_failure(141);
+> +	}
+> +	check_buffers(check_buf, offset, size);
+>   }
 >   
->   			str = strtok(NULL, " \t\n");
+>   
+> @@ -808,7 +848,7 @@ domapread(unsigned offset, unsigned size)
+>   		report_failure(191);
+>   	}
+>   
+> -	check_buffers(offset, size);
+> +	check_buffers(temp_buf, offset, size);
+>   }
+>   
+>   
+> @@ -1624,6 +1664,9 @@ test(void)
+>   		break;
+>   	}
+>   
+> +	if (check_file && testcalls > simulatedopcount)
+> +		check_contents();
+> +
+>   out:
+>   	if (sizechecks && testcalls > simulatedopcount)
+>   		check_size();
+> @@ -1684,6 +1727,7 @@ usage(void)
+>   	-P: save .fsxlog .fsxops and .fsxgood files in dirpath (default ./)\n\
+>   	-S seed: for random # generator (default 1) 0 gets timestamp\n\
+>   	-W: mapped write operations DISabled\n\
+> +	-X: Read file and compare to good buffer after every operation.\n\
+>           -R: read() system calls only (mapped reads disabled)\n\
+>           -Z: O_DIRECT (use -R, -W, -r and -w too)\n\
+>   	--replay-ops opsfile: replay ops from recorded .fsxops file\n\
+> @@ -1880,7 +1924,7 @@ main(int argc, char **argv)
+>   	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
+>   
+>   	while ((ch = getopt_long(argc, argv,
+> -				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyAD:FKHzCILN:OP:RS:WZ",
+> +				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyAD:FKHzCILN:OP:RS:WXZ",
+>   				 longopts, NULL)) != EOF)
+>   		switch (ch) {
+>   		case 'b':
+> @@ -2044,6 +2088,9 @@ main(int argc, char **argv)
+>   			if (!quiet)
+>   				prt("mapped writes DISABLED\n");
+>   			break;
+> +		case 'X':
+> +			check_file = 1;
+> +			break;
+>   		case 'Z':
+>   			o_direct = O_DIRECT;
+>   			o_flags |= O_DIRECT;
 > 
