@@ -1,32 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:38086 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388069AbeKOU0l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Nov 2018 15:26:41 -0500
-Date: Thu, 15 Nov 2018 02:19:28 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] xfs: change xfs_buf_ioapply_map to STATIC
-Message-ID: <20181115101928.GD13913@infradead.org>
-References: <20181107201055.25883-1-josef@toxicpanda.com>
- <20181107201055.25883-2-josef@toxicpanda.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181107201055.25883-2-josef@toxicpanda.com>
+Received: from m12-16.163.com ([220.181.12.16]:57191 "EHLO m12-16.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725878AbeKXUe0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 24 Nov 2018 15:34:26 -0500
+From: Pan Bian <bianpan2016@163.com>
+Subject: [PATCH] xfs: libxfs: move xfs_perag_put late
+Date: Sat, 24 Nov 2018 17:44:20 +0800
+Message-Id: <1543052660-58625-1-git-send-email-bianpan2016@163.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: kernel-team@fb.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Carlos Maiolino <cmaiolino@redhat.com>, linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
 
-On Wed, Nov 07, 2018 at 03:10:54PM -0500, Josef Bacik wrote:
-> In order to make error injection triggering easier make
-> xfs_buf_ioapply_map STATIC so it's noinline and can be kprobe'ed.
+The function xfs_alloc_get_freelist calls xfs_perag_put to drop the
+reference. In this case, pag may be released. However,
+pag->pagf_btreeblks is read and write after the put operation. This may
+result in a use-after-free bug. This patch moves the put operation late.
 
-So per the whole STATIC discussion how about throwing in an explicit
-noinline instead?
+Signed-off-by: Pan Bian <bianpan2016@163.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Then again if you really are about error injection we should probably
-have a real tag here.  Either explicit error injection like we have
-in many places in XFS, or a trace point which should give a really
-nice hook, too.
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index e1c0c0d..4be387d 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2435,7 +2435,6 @@ xfs_alloc_get_freelist(
+ 	be32_add_cpu(&agf->agf_flcount, -1);
+ 	xfs_trans_agflist_delta(tp, -1);
+ 	pag->pagf_flcount--;
+-	xfs_perag_put(pag);
+ 
+ 	logflags = XFS_AGF_FLFIRST | XFS_AGF_FLCOUNT;
+ 	if (btreeblk) {
+@@ -2443,6 +2442,7 @@ xfs_alloc_get_freelist(
+ 		pag->pagf_btreeblks++;
+ 		logflags |= XFS_AGF_BTREEBLKS;
+ 	}
++	xfs_perag_put(pag);
+ 
+ 	xfs_alloc_log_agf(tp, agbp, logflags);
+ 	*bnop = bno;
+-- 
+2.7.4
