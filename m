@@ -1,29 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37768 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726503AbeKYEn6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 24 Nov 2018 23:43:58 -0500
-Subject: Re: [GIT PULL] xfs: fixes for v4.20-rc4
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20181124170540.GY6792@magnolia>
-References: <20181124170540.GY6792@magnolia>
-Message-Id: <20181124175502.27639.50602.pr-tracker-bot@pdx-korg-gitolite-1.ci.codeaurora.org>
-Date: Sat, 24 Nov 2018 17:55:02 +0000
+Received: from aserp2120.oracle.com ([141.146.126.78]:60408 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725744AbeKYFLe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Nov 2018 00:11:34 -0500
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH 01/12] fsstress: fix compiler warnings
+References: <154290950237.1218.9937108728673485814.stgit@magnolia>
+ <154290950874.1218.16162093723366805081.stgit@magnolia>
+Message-ID: <d60f04c8-9e77-dc93-1cc6-082118f66ba7@oracle.com>
+Date: Sat, 24 Nov 2018 11:22:31 -0700
+MIME-Version: 1.0
+In-Reply-To: <154290950874.1218.16162093723366805081.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: torvalds@linux-foundation.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, guaneryu@gmail.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-The pull request you sent on Sat, 24 Nov 2018 09:05:40 -0800:
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.20-fixes-2
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/abe72ff4134028ff2189d29629c40a40bee0a989
+On 11/22/18 10:58 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Fix all the gcc warnings in fsstress.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>   ltp/fsstress.c |    4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+> index edbb3f2f..8d0734fc 100644
+> --- a/ltp/fsstress.c
+> +++ b/ltp/fsstress.c
+> @@ -499,7 +499,7 @@ int main(int argc, char **argv)
+>   		exit(1);
+>   	}
+>   	if (logname) {
+> -		char path[PATH_MAX];
+> +		char path[PATH_MAX + NAME_MAX + 1];
+>   		snprintf(path, sizeof(path), "%s/%s", rpath, logname);
+>   		if (freopen(path, "a", stdout) == NULL) {
+>   			perror("freopen logfile failed");
+> @@ -583,7 +583,7 @@ int main(int argc, char **argv)
+>   				return 0;
+>   #endif
+>   			if (logname) {
+> -				char path[PATH_MAX];
+> +				char path[PATH_MAX + NAME_MAX + 2 + 11];
+>   				snprintf(path, sizeof(path), "%s/%s.%d",
+>   					 rpath, logname, i);
+>   				if (freopen(path, "a", stdout) == NULL) {
+> 
 
-Thank you!
+Looks ok.  I'm assuming the 2 and the 11 are for the slash, dot and 
+logname?  Maybe just a comment or two in the commit.  Otherwise looks 
+good to me, you can add my review.  Thx!  :-)
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+Reviewed-By: Allison Henderson <allison.henderson@oracle.com>
+
+Allison
