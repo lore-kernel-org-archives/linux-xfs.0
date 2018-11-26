@@ -1,82 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:25172 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726894AbeK1Qkr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 11:40:47 -0500
-Date: Wed, 28 Nov 2018 16:40:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v1 6/7] xfs: Rewrite retried read
-Message-ID: <20181128054019.GN6311@dastard>
-References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
- <1543376991-5764-7-git-send-email-allison.henderson@oracle.com>
- <20181128051719.GK6311@dastard>
- <20181128052604.GE8125@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:45928 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727066AbeK0JfK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Nov 2018 04:35:10 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id E010D1390C
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 22:39:31 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] mkfs.xfs: null-terminate symlinks created via protofile
+Message-ID: <a7246562-e851-dfc4-ea3f-3b4dd64aca5b@redhat.com>
+Date: Mon, 26 Nov 2018 16:39:30 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181128052604.GE8125@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Allison Henderson <allison.henderson@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, bob.liu@oracle.com
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Zorro Lang <zlang@redhat.com>
 
-On Tue, Nov 27, 2018 at 09:26:04PM -0800, Darrick J. Wong wrote:
-> On Wed, Nov 28, 2018 at 04:17:19PM +1100, Dave Chinner wrote:
-> > On Tue, Nov 27, 2018 at 08:49:50PM -0700, Allison Henderson wrote:
-> > > If we had to try more than one mirror to get a successful
-> > > read, then write that buffer back to correct the bad mirro
-> > > 
-> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > > ---
-> > >  fs/xfs/xfs_buf.c | 8 ++++++++
-> > >  1 file changed, 8 insertions(+)
-> > > 
-> > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > index f102d01..81f6491 100644
-> > > --- a/fs/xfs/xfs_buf.c
-> > > +++ b/fs/xfs/xfs_buf.c
-> > > @@ -847,6 +847,14 @@ xfs_buf_read_map(
-> > >  
-> > >  		}
-> > >  retry_done:
-> > > +
-> > > +		/*
-> > > +		 * if we had to try more than one mirror to sucessfully read
-> > > +		 * the buffer, write the buffer back
-> > > +		 */
-> > > +		if (!bp->b_error && i > 0)
-> > > +			xfs_bwrite(bp);
-> > > +
-> > 
-> > This can go in the case statement on retry and then you don't need
-> > to check for i > 0 or, well, bp->b_error. i.e.
-> > 
-> > 		swtich (bp->b_error) {
-> > 		case -EBADCRC:
-> > 		case -EIO:
-> > 		case -EFSCORRUPTED:
-> > 			/* try again from different copy */
-> > 			continue;
-> > 		0:
-> > 			/* good copy, rewrite it to repair bad copy */
-> > 			xfs_bwrite(bp);
-> 
-> Some day we might want to provide some controls for how long we'll retry
-> these reads and whether or not we automatically rewrite buffers, since
-> some administrators might prefer fast fail to get failover started.
+Now that we have a symlink verifier which checks that in-memory
+symlink names are null-terminated, be sure we do that when we
+create them via the mkfs protofile.
 
-Sure, but if the recovery code is trewn all through the read code,
-it becomes a mess to untangle. isolate the recovery code as much as
-possible, that way we can factor it out as it becomes more complex.
+We only want to null-terminate inline data if it's a symlink;
+we only ever /call/ newfile() with "dolocal" for symlinks, so
+rename that function argument for clarity.
 
-> (Not now though)
+Zorro found this by running xfs/019 on an s390x machine, it
+failed with:
 
-Which is exactly my point about future recovery complexity.... :P
+ Metadata corruption detected at 0x101214a, inode 0x89 data fork
 
-Cheers,
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reported-by: Zorro Lang <zlang@redhat.com>
+---
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 1cd5436..d76c80d 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -15,7 +15,7 @@ static char *getstr(char **pp);
+ static void fail(char *msg, int i);
+ static struct xfs_trans * getres(struct xfs_mount *mp, uint blocks);
+ static void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
+-static int newfile(xfs_trans_t *tp, xfs_inode_t *ip, int dolocal, int logit,
++static int newfile(xfs_trans_t *tp, xfs_inode_t *ip, int symlink, int logit,
+ 			char *buf, int len);
+ static char *newregfile(char **pp, int *len);
+ static void rtinit(xfs_mount_t *mp);
+@@ -220,7 +220,7 @@ static int
+ newfile(
+ 	xfs_trans_t	*tp,
+ 	xfs_inode_t	*ip,
+-	int		dolocal,
++	int		symlink,
+ 	int		logit,
+ 	char		*buf,
+ 	int		len)
+@@ -236,7 +236,9 @@ newfile(
+ 
+ 	flags = 0;
+ 	mp = ip->i_mount;
+-	if (dolocal && len <= XFS_IFORK_DSIZE(ip)) {
++	if (symlink && len <= XFS_IFORK_DSIZE(ip)) {
++		/* Copy the name's trailing NULL as well */
++		len += 1;
+ 		libxfs_idata_realloc(ip, len, XFS_DATA_FORK);
+ 		if (buf)
+ 			memmove(ip->i_df.if_u1.if_data, buf, len);
