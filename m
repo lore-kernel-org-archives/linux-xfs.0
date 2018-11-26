@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42754 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36054 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726053AbeKZNKu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Nov 2018 08:10:50 -0500
+        id S1726456AbeKZNLY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Nov 2018 08:11:24 -0500
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V12 03/20] block: remove the "cluster" flag
-Date: Mon, 26 Nov 2018 10:17:03 +0800
-Message-Id: <20181126021720.19471-4-ming.lei@redhat.com>
+Subject: [PATCH V12 06/20] block: rename bvec helpers
+Date: Mon, 26 Nov 2018 10:17:06 +0800
+Message-Id: <20181126021720.19471-7-ming.lei@redhat.com>
 In-Reply-To: <20181126021720.19471-1-ming.lei@redhat.com>
 References: <20181126021720.19471-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,220 +15,272 @@ List-Id: xfs
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-From: Christoph Hellwig <hch@lst.de>
+We will support multi-page bvec soon, and have to deal with
+single-page vs multi-page bvec. This patch follows Christoph's
+suggestion to rename all the following helpers:
 
-The cluster flag implements some very old SCSI behavior.  As far as I
-can tell the original intent was to enable or disable any kind of
-segment merging.  But the actually visible effect to the LLDD is that
-it limits each segments to be inside a single page, which we can
-also affect by setting the maximum segment size and the segment
-boundary.
+	for_each_bvec
+	bvec_iter_bvec
+	bvec_iter_len
+	bvec_iter_page
+	bvec_iter_offset
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+into:
+	for_each_segment
+	segment_iter_bvec
+	segment_iter_len
+	segment_iter_page
+	segment_iter_offset
 
-Replace virt boundary with segment boundary limit.
+so that these helpers named with 'segment' only deal with single-page
+bvec, or called segment. We will introduce helpers named with 'bvec'
+for multi-page bvec.
 
+bvec_iter_advance() isn't renamed becasue this helper is always operated
+on real bvec even though multi-page bvec is supported.
+
+Suggested-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-merge.c       | 20 ++++++++------------
- block/blk-settings.c    |  3 ---
- block/blk-sysfs.c       |  5 +----
- drivers/scsi/scsi_lib.c | 20 ++++++++++++++++----
- include/linux/blkdev.h  |  6 ------
- 5 files changed, 25 insertions(+), 29 deletions(-)
+ .clang-format                  |  2 +-
+ drivers/md/dm-integrity.c      |  2 +-
+ drivers/md/dm-io.c             |  4 ++--
+ drivers/nvdimm/blk.c           |  4 ++--
+ drivers/nvdimm/btt.c           |  4 ++--
+ include/linux/bio.h            | 10 +++++-----
+ include/linux/bvec.h           | 20 +++++++++++---------
+ include/linux/ceph/messenger.h |  2 +-
+ lib/iov_iter.c                 |  2 +-
+ net/ceph/messenger.c           | 14 +++++++-------
+ 10 files changed, 33 insertions(+), 31 deletions(-)
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 6be04ef8da5b..e69d8f8ba819 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -195,7 +195,7 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
- 			goto split;
- 		}
+diff --git a/.clang-format b/.clang-format
+index e6080f5834a3..049200fbab94 100644
+--- a/.clang-format
++++ b/.clang-format
+@@ -120,7 +120,7 @@ ForEachMacros:
+   - 'for_each_available_child_of_node'
+   - 'for_each_bio'
+   - 'for_each_board_func_rsrc'
+-  - 'for_each_bvec'
++  - 'for_each_segment'
+   - 'for_each_child_of_node'
+   - 'for_each_clear_bit'
+   - 'for_each_clear_bit_from'
+diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
+index bb3096bf2cc6..bb037ed2b4eb 100644
+--- a/drivers/md/dm-integrity.c
++++ b/drivers/md/dm-integrity.c
+@@ -1574,7 +1574,7 @@ static bool __journal_read_write(struct dm_integrity_io *dio, struct bio *bio,
+ 				char *tag_ptr = journal_entry_tag(ic, je);
  
--		if (bvprvp && blk_queue_cluster(q)) {
-+		if (bvprvp) {
- 			if (seg_size + bv.bv_len > queue_max_segment_size(q))
- 				goto new_segment;
- 			if (!biovec_phys_mergeable(q, bvprvp, &bv))
-@@ -295,10 +295,10 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
- 					     bool no_sg_merge)
+ 				if (bip) do {
+-					struct bio_vec biv = bvec_iter_bvec(bip->bip_vec, bip->bip_iter);
++					struct bio_vec biv = segment_iter_bvec(bip->bip_vec, bip->bip_iter);
+ 					unsigned tag_now = min(biv.bv_len, tag_todo);
+ 					char *tag_addr;
+ 					BUG_ON(PageHighMem(biv.bv_page));
+diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
+index 81ffc59d05c9..d72ec2bdd333 100644
+--- a/drivers/md/dm-io.c
++++ b/drivers/md/dm-io.c
+@@ -208,8 +208,8 @@ static void list_dp_init(struct dpages *dp, struct page_list *pl, unsigned offse
+ static void bio_get_page(struct dpages *dp, struct page **p,
+ 			 unsigned long *len, unsigned *offset)
  {
- 	struct bio_vec bv, bvprv = { NULL };
--	int cluster, prev = 0;
- 	unsigned int seg_size, nr_phys_segs;
- 	struct bio *fbio, *bbio;
- 	struct bvec_iter iter;
-+	bool prev = false;
+-	struct bio_vec bvec = bvec_iter_bvec((struct bio_vec *)dp->context_ptr,
+-					     dp->context_bi);
++	struct bio_vec bvec = segment_iter_bvec((struct bio_vec *)dp->context_ptr,
++						dp->context_bi);
  
- 	if (!bio)
- 		return 0;
-@@ -313,7 +313,6 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
- 	}
+ 	*p = bvec.bv_page;
+ 	*len = bvec.bv_len;
+diff --git a/drivers/nvdimm/blk.c b/drivers/nvdimm/blk.c
+index db45c6bbb7bb..dfae945216bb 100644
+--- a/drivers/nvdimm/blk.c
++++ b/drivers/nvdimm/blk.c
+@@ -89,9 +89,9 @@ static int nd_blk_rw_integrity(struct nd_namespace_blk *nsblk,
+ 		struct bio_vec bv;
+ 		void *iobuf;
  
- 	fbio = bio;
--	cluster = blk_queue_cluster(q);
- 	seg_size = 0;
- 	nr_phys_segs = 0;
- 	for_each_bio(bio) {
-@@ -325,7 +324,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
- 			if (no_sg_merge)
- 				goto new_segment;
+-		bv = bvec_iter_bvec(bip->bip_vec, bip->bip_iter);
++		bv = segment_iter_bvec(bip->bip_vec, bip->bip_iter);
+ 		/*
+-		 * The 'bv' obtained from bvec_iter_bvec has its .bv_len and
++		 * The 'bv' obtained from segment_iter_bvec has its .bv_len and
+ 		 * .bv_offset already adjusted for iter->bi_bvec_done, and we
+ 		 * can use those directly
+ 		 */
+diff --git a/drivers/nvdimm/btt.c b/drivers/nvdimm/btt.c
+index b123b0dcf274..2bbbc90c7b91 100644
+--- a/drivers/nvdimm/btt.c
++++ b/drivers/nvdimm/btt.c
+@@ -1154,9 +1154,9 @@ static int btt_rw_integrity(struct btt *btt, struct bio_integrity_payload *bip,
+ 		struct bio_vec bv;
+ 		void *mem;
  
--			if (prev && cluster) {
-+			if (prev) {
- 				if (seg_size + bv.bv_len
- 				    > queue_max_segment_size(q))
- 					goto new_segment;
-@@ -343,7 +342,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+-		bv = bvec_iter_bvec(bip->bip_vec, bip->bip_iter);
++		bv = segment_iter_bvec(bip->bip_vec, bip->bip_iter);
+ 		/*
+-		 * The 'bv' obtained from bvec_iter_bvec has its .bv_len and
++		 * The 'bv' obtained from segment_iter_bvec has its .bv_len and
+ 		 * .bv_offset already adjusted for iter->bi_bvec_done, and we
+ 		 * can use those directly
+ 		 */
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 6f6bc331a5d1..6a0ff02f4d1c 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -48,14 +48,14 @@
+ #define bio_set_prio(bio, prio)		((bio)->bi_ioprio = prio)
  
- 			nr_phys_segs++;
- 			bvprv = bv;
--			prev = 1;
-+			prev = true;
- 			seg_size = bv.bv_len;
- 		}
- 		bbio = bio;
-@@ -396,9 +395,6 @@ static int blk_phys_contig_segment(struct request_queue *q, struct bio *bio,
+ #define bio_iter_iovec(bio, iter)				\
+-	bvec_iter_bvec((bio)->bi_io_vec, (iter))
++	segment_iter_bvec((bio)->bi_io_vec, (iter))
+ 
+ #define bio_iter_page(bio, iter)				\
+-	bvec_iter_page((bio)->bi_io_vec, (iter))
++	segment_iter_page((bio)->bi_io_vec, (iter))
+ #define bio_iter_len(bio, iter)					\
+-	bvec_iter_len((bio)->bi_io_vec, (iter))
++	segment_iter_len((bio)->bi_io_vec, (iter))
+ #define bio_iter_offset(bio, iter)				\
+-	bvec_iter_offset((bio)->bi_io_vec, (iter))
++	segment_iter_offset((bio)->bi_io_vec, (iter))
+ 
+ #define bio_page(bio)		bio_iter_page((bio), (bio)->bi_iter)
+ #define bio_offset(bio)		bio_iter_offset((bio), (bio)->bi_iter)
+@@ -733,7 +733,7 @@ static inline bool bioset_initialized(struct bio_set *bs)
+ #if defined(CONFIG_BLK_DEV_INTEGRITY)
+ 
+ #define bip_for_each_vec(bvl, bip, iter)				\
+-	for_each_bvec(bvl, (bip)->bip_vec, iter, (bip)->bip_iter)
++	for_each_segment(bvl, (bip)->bip_vec, iter, (bip)->bip_iter)
+ 
+ #define bio_for_each_integrity_vec(_bvl, _bio, _iter)			\
+ 	for_each_bio(_bio)						\
+diff --git a/include/linux/bvec.h b/include/linux/bvec.h
+index ba0ae40e77c9..716a87b26a6a 100644
+--- a/include/linux/bvec.h
++++ b/include/linux/bvec.h
+@@ -50,23 +50,25 @@ struct bvec_iter {
+  */
+ #define __bvec_iter_bvec(bvec, iter)	(&(bvec)[(iter).bi_idx])
+ 
+-#define bvec_iter_page(bvec, iter)				\
++#define segment_iter_page(bvec, iter)				\
+ 	(__bvec_iter_bvec((bvec), (iter))->bv_page)
+ 
+-#define bvec_iter_len(bvec, iter)				\
++#define segment_iter_len(bvec, iter)				\
+ 	min((iter).bi_size,					\
+ 	    __bvec_iter_bvec((bvec), (iter))->bv_len - (iter).bi_bvec_done)
+ 
+-#define bvec_iter_offset(bvec, iter)				\
++#define segment_iter_offset(bvec, iter)				\
+ 	(__bvec_iter_bvec((bvec), (iter))->bv_offset + (iter).bi_bvec_done)
+ 
+-#define bvec_iter_bvec(bvec, iter)				\
++#define segment_iter_bvec(bvec, iter)				\
+ ((struct bio_vec) {						\
+-	.bv_page	= bvec_iter_page((bvec), (iter)),	\
+-	.bv_len		= bvec_iter_len((bvec), (iter)),	\
+-	.bv_offset	= bvec_iter_offset((bvec), (iter)),	\
++	.bv_page	= segment_iter_page((bvec), (iter)),	\
++	.bv_len		= segment_iter_len((bvec), (iter)),	\
++	.bv_offset	= segment_iter_offset((bvec), (iter)),	\
+ })
+ 
++#define bvec_iter_len  segment_iter_len
++
+ static inline bool bvec_iter_advance(const struct bio_vec *bv,
+ 		struct bvec_iter *iter, unsigned bytes)
  {
- 	struct bio_vec end_bv = { NULL }, nxt_bv;
- 
--	if (!blk_queue_cluster(q))
--		return 0;
--
- 	if (bio->bi_seg_back_size + nxt->bi_seg_front_size >
- 	    queue_max_segment_size(q))
- 		return 0;
-@@ -415,12 +411,12 @@ static int blk_phys_contig_segment(struct request_queue *q, struct bio *bio,
- static inline void
- __blk_segment_map_sg(struct request_queue *q, struct bio_vec *bvec,
- 		     struct scatterlist *sglist, struct bio_vec *bvprv,
--		     struct scatterlist **sg, int *nsegs, int *cluster)
-+		     struct scatterlist **sg, int *nsegs)
- {
- 
- 	int nbytes = bvec->bv_len;
- 
--	if (*sg && *cluster) {
-+	if (*sg) {
- 		if ((*sg)->length + nbytes > queue_max_segment_size(q))
- 			goto new_segment;
- 		if (!biovec_phys_mergeable(q, bvprv, bvec))
-@@ -466,12 +462,12 @@ static int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
- {
- 	struct bio_vec bvec, bvprv = { NULL };
- 	struct bvec_iter iter;
--	int cluster = blk_queue_cluster(q), nsegs = 0;
-+	int nsegs = 0;
- 
- 	for_each_bio(bio)
- 		bio_for_each_segment(bvec, bio, iter)
- 			__blk_segment_map_sg(q, &bvec, sglist, &bvprv, sg,
--					     &nsegs, &cluster);
-+					     &nsegs);
- 
- 	return nsegs;
- }
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 3abe831e92c8..3e7038e475ee 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -56,7 +56,6 @@ void blk_set_default_limits(struct queue_limits *lim)
- 	lim->alignment_offset = 0;
- 	lim->io_opt = 0;
- 	lim->misaligned = 0;
--	lim->cluster = 1;
- 	lim->zoned = BLK_ZONED_NONE;
- }
- EXPORT_SYMBOL(blk_set_default_limits);
-@@ -547,8 +546,6 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 	t->io_min = max(t->io_min, b->io_min);
- 	t->io_opt = lcm_not_zero(t->io_opt, b->io_opt);
- 
--	t->cluster &= b->cluster;
--
- 	/* Physical block size a multiple of the logical block size? */
- 	if (t->physical_block_size & (t->logical_block_size - 1)) {
- 		t->physical_block_size = t->logical_block_size;
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 80eef48fddc8..ef7b844a3e00 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -132,10 +132,7 @@ static ssize_t queue_max_integrity_segments_show(struct request_queue *q, char *
- 
- static ssize_t queue_max_segment_size_show(struct request_queue *q, char *page)
- {
--	if (blk_queue_cluster(q))
--		return queue_var_show(queue_max_segment_size(q), (page));
--
--	return queue_var_show(PAGE_SIZE, (page));
-+	return queue_var_show(queue_max_segment_size(q), page);
- }
- 
- static ssize_t queue_logical_block_size_show(struct request_queue *q, char *page)
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0df15cb738d2..78d6d05992b0 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1810,6 +1810,8 @@ static int scsi_map_queues(struct blk_mq_tag_set *set)
- void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
- {
- 	struct device *dev = shost->dma_dev;
-+	unsigned max_segment_size = dma_get_max_seg_size(dev);
-+	unsigned long segment_boundary = shost->dma_boundary;
- 
- 	/*
- 	 * this limit is imposed by hardware restrictions
-@@ -1828,13 +1830,23 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
- 	blk_queue_max_hw_sectors(q, shost->max_sectors);
- 	if (shost->unchecked_isa_dma)
- 		blk_queue_bounce_limit(q, BLK_BOUNCE_ISA);
--	blk_queue_segment_boundary(q, shost->dma_boundary);
- 	dma_set_seg_boundary(dev, shost->dma_boundary);
- 
--	blk_queue_max_segment_size(q, dma_get_max_seg_size(dev));
-+	/*
-+	 * Clustering is a really old concept from the stone age of Linux
-+	 * SCSI support.  But the basic idea is that we never give the
-+	 * driver a segment that spans multiple pages.  For that we need
-+	 * to limit the segment size, and set the segment boundary so that
-+	 * we never merge a second segment which is no page aligned.
-+	 */
-+	if (!shost->use_clustering) {
-+		max_segment_size = min_t(unsigned, max_segment_size, PAGE_SIZE);
-+		segment_boundary = min_t(unsigned, segment_boundary,
-+					 PAGE_SIZE - 1);
-+	}
- 
--	if (!shost->use_clustering)
--		q->limits.cluster = 0;
-+	blk_queue_max_segment_size(q, max_segment_size);
-+	blk_queue_segment_boundary(q, segment_boundary);
- 
- 	/*
- 	 * Set a reasonable default alignment:  The larger of 32-byte (dword),
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 9b53db06ad08..399a7a415609 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -341,7 +341,6 @@ struct queue_limits {
- 
- 	unsigned char		misaligned;
- 	unsigned char		discard_misaligned;
--	unsigned char		cluster;
- 	unsigned char		raid_partial_stripes_expensive;
- 	enum blk_zoned_model	zoned;
- };
-@@ -660,11 +659,6 @@ static inline bool queue_is_mq(struct request_queue *q)
- 	return q->mq_ops;
+@@ -92,10 +94,10 @@ static inline bool bvec_iter_advance(const struct bio_vec *bv,
+ 	return true;
  }
  
--static inline unsigned int blk_queue_cluster(struct request_queue *q)
--{
--	return q->limits.cluster;
--}
--
- static inline enum blk_zoned_model
- blk_queue_zoned_model(struct request_queue *q)
+-#define for_each_bvec(bvl, bio_vec, iter, start)			\
++#define for_each_segment(bvl, bio_vec, iter, start)			\
+ 	for (iter = (start);						\
+ 	     (iter).bi_size &&						\
+-		((bvl = bvec_iter_bvec((bio_vec), (iter))), 1);	\
++		((bvl = segment_iter_bvec((bio_vec), (iter))), 1);	\
+ 	     bvec_iter_advance((bio_vec), &(iter), (bvl).bv_len))
+ 
+ /* for iterating one bio from start to end */
+diff --git a/include/linux/ceph/messenger.h b/include/linux/ceph/messenger.h
+index 800a2128d411..c7e37a7229c4 100644
+--- a/include/linux/ceph/messenger.h
++++ b/include/linux/ceph/messenger.h
+@@ -155,7 +155,7 @@ struct ceph_bvec_iter {
+ 									      \
+ 		__cur_iter = (it)->iter;				      \
+ 		__cur_iter.bi_size = (n);				      \
+-		for_each_bvec(bv, (it)->bvecs, __cur_iter, __cur_iter)	      \
++		for_each_segment(bv, (it)->bvecs, __cur_iter, __cur_iter)     \
+ 			(void)(BVEC_STEP);				      \
+ 	}))
+ 
+diff --git a/lib/iov_iter.c b/lib/iov_iter.c
+index 7ebccb5c1637..e34eef12740f 100644
+--- a/lib/iov_iter.c
++++ b/lib/iov_iter.c
+@@ -65,7 +65,7 @@
+ 	__start.bi_size = n;				\
+ 	__start.bi_bvec_done = skip;			\
+ 	__start.bi_idx = 0;				\
+-	for_each_bvec(__v, i->bvec, __bi, __start) {	\
++	for_each_segment(__v, i->bvec, __bi, __start) {	\
+ 		if (!__v.bv_len)			\
+ 			continue;			\
+ 		(void)(STEP);				\
+diff --git a/net/ceph/messenger.c b/net/ceph/messenger.c
+index 57fcc6b4bf6e..c543426ace9f 100644
+--- a/net/ceph/messenger.c
++++ b/net/ceph/messenger.c
+@@ -889,17 +889,17 @@ static void ceph_msg_data_bvecs_cursor_init(struct ceph_msg_data_cursor *cursor,
+ 	cursor->bvec_iter = data->bvec_pos.iter;
+ 	cursor->bvec_iter.bi_size = cursor->resid;
+ 
+-	BUG_ON(cursor->resid < bvec_iter_len(bvecs, cursor->bvec_iter));
++	BUG_ON(cursor->resid < segment_iter_len(bvecs, cursor->bvec_iter));
+ 	cursor->last_piece =
+-	    cursor->resid == bvec_iter_len(bvecs, cursor->bvec_iter);
++	    cursor->resid == segment_iter_len(bvecs, cursor->bvec_iter);
+ }
+ 
+ static struct page *ceph_msg_data_bvecs_next(struct ceph_msg_data_cursor *cursor,
+ 						size_t *page_offset,
+ 						size_t *length)
  {
+-	struct bio_vec bv = bvec_iter_bvec(cursor->data->bvec_pos.bvecs,
+-					   cursor->bvec_iter);
++	struct bio_vec bv = segment_iter_bvec(cursor->data->bvec_pos.bvecs,
++					      cursor->bvec_iter);
+ 
+ 	*page_offset = bv.bv_offset;
+ 	*length = bv.bv_len;
+@@ -912,7 +912,7 @@ static bool ceph_msg_data_bvecs_advance(struct ceph_msg_data_cursor *cursor,
+ 	struct bio_vec *bvecs = cursor->data->bvec_pos.bvecs;
+ 
+ 	BUG_ON(bytes > cursor->resid);
+-	BUG_ON(bytes > bvec_iter_len(bvecs, cursor->bvec_iter));
++	BUG_ON(bytes > segment_iter_len(bvecs, cursor->bvec_iter));
+ 	cursor->resid -= bytes;
+ 	bvec_iter_advance(bvecs, &cursor->bvec_iter, bytes);
+ 
+@@ -925,9 +925,9 @@ static bool ceph_msg_data_bvecs_advance(struct ceph_msg_data_cursor *cursor,
+ 		return false;	/* more bytes to process in this segment */
+ 
+ 	BUG_ON(cursor->last_piece);
+-	BUG_ON(cursor->resid < bvec_iter_len(bvecs, cursor->bvec_iter));
++	BUG_ON(cursor->resid < segment_iter_len(bvecs, cursor->bvec_iter));
+ 	cursor->last_piece =
+-	    cursor->resid == bvec_iter_len(bvecs, cursor->bvec_iter);
++	    cursor->resid == segment_iter_len(bvecs, cursor->bvec_iter);
+ 	return true;
+ }
+ 
 -- 
 2.9.5
