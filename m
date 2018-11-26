@@ -1,73 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:40588 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391644AbeKXEkH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Nov 2018 23:40:07 -0500
-Date: Fri, 23 Nov 2018 09:54:48 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: reserve blocks for rmapbt changes in xfs_reflink_end_cow
-Message-ID: <20181123175448.GX6792@magnolia>
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:34838 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726201AbeKZUZP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Nov 2018 15:25:15 -0500
+Received: by mail-wr1-f65.google.com with SMTP id 96so18102414wrb.2
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 01:31:43 -0800 (PST)
+Date: Mon, 26 Nov 2018 10:31:39 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: libxfs: move xfs_perag_put late
+Message-ID: <20181126093139.cgojlmtubzuzdb23@hades.usersys.redhat.com>
+References: <1543052660-58625-1-git-send-email-bianpan2016@163.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <1543052660-58625-1-git-send-email-bianpan2016@163.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Pan Bian <bianpan2016@163.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, Nov 24, 2018 at 05:44:20PM +0800, Pan Bian wrote:
+> The function xfs_alloc_get_freelist calls xfs_perag_put to drop the
+> reference. In this case, pag may be released. However,
+> pag->pagf_btreeblks is read and write after the put operation. This may
+> result in a use-after-free bug. This patch moves the put operation late.
+> 
 
-In xfs_reflink_end_cow, we have to swap written extents from the CoW
-fork into the data fork, which can require extensive rmapbt updates.
-The transaction block reservation calculation forgot that part of the
-calculation, which lead to a shutdown during an end_cow transaction roll
-during fsx exercises:
+The patch looks reasonable, can you detail more how did you find it? Via code
+inspection of you hit this user-after-free in some way?
 
-XFS: Assertion failed: tp->t_blk_res >= tp->t_blk_res_used, file: fs/xfs/xfs_trans.c, line: 116
-<machine registers snipped>
-Call Trace:
- xfs_trans_dup+0x211/0x250 [xfs]
- xfs_trans_roll+0x6d/0x180 [xfs]
- xfs_defer_trans_roll+0x10c/0x3b0 [xfs]
- xfs_defer_finish_noroll+0xdf/0x740 [xfs]
- xfs_defer_finish+0x13/0x70 [xfs]
- xfs_reflink_end_cow+0x2c6/0x680 [xfs]
- xfs_dio_write_end_io+0x115/0x220 [xfs]
- iomap_dio_complete+0x3f/0x130
- iomap_dio_rw+0x3c3/0x420
- xfs_file_dio_aio_write+0x132/0x3c0 [xfs]
- xfs_file_write_iter+0x8b/0xc0 [xfs]
- __vfs_write+0x193/0x1f0
- vfs_write+0xba/0x1c0
- ksys_write+0x52/0xc0
- do_syscall_64+0x50/0x160
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
+Cheers
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_reflink.c |   11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+> Signed-off-by: Pan Bian <bianpan2016@163.com>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index e1c0c0d..4be387d 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2435,7 +2435,6 @@ xfs_alloc_get_freelist(
+>  	be32_add_cpu(&agf->agf_flcount, -1);
+>  	xfs_trans_agflist_delta(tp, -1);
+>  	pag->pagf_flcount--;
+> -	xfs_perag_put(pag);
+>  
+>  	logflags = XFS_AGF_FLFIRST | XFS_AGF_FLCOUNT;
+>  	if (btreeblk) {
+> @@ -2443,6 +2442,7 @@ xfs_alloc_get_freelist(
+>  		pag->pagf_btreeblks++;
+>  		logflags |= XFS_AGF_BTREEBLKS;
+>  	}
+> +	xfs_perag_put(pag);
+>  
+>  	xfs_alloc_log_agf(tp, agbp, logflags);
+>  	*bnop = bno;
+> -- 
+> 2.7.4
+> 
+> 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 322a852ce284..c706d7791479 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -663,9 +663,14 @@ xfs_reflink_end_cow(
- 		ASSERT(0);
- 		goto out;
- 	}
--	resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
--			(unsigned int)(end_fsb - offset_fsb),
--			XFS_DATA_FORK);
-+	if (xfs_sb_version_hasrmapbt(&ip->i_mount->m_sb))
-+		resblks = XFS_SWAP_RMAP_SPACE_RES(ip->i_mount,
-+				(unsigned int)(end_fsb - offset_fsb),
-+				XFS_DATA_FORK);
-+	else
-+		resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
-+				(unsigned int)(end_fsb - offset_fsb),
-+				XFS_DATA_FORK);
- 	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
- 			resblks, 0, XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
- 	if (error)
+-- 
+Carlos
