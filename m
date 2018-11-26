@@ -1,147 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:35490 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727087AbeK0Jwf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 04:52:35 -0500
-Received: by mail-pf1-f196.google.com with SMTP id z9so7322249pfi.2
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 14:56:53 -0800 (PST)
-Date: Mon, 26 Nov 2018 14:56:49 -0800
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V12 16/20] block: enable multipage bvecs
-Message-ID: <20181126225649.GP30411@vader>
-References: <20181126021720.19471-1-ming.lei@redhat.com>
- <20181126021720.19471-17-ming.lei@redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:39050 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727222AbeK0Jxp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 04:53:45 -0500
+Date: Mon, 26 Nov 2018 14:57:57 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3] xfs: cache minimum realtime summary level
+Message-ID: <20181126225757.GC6792@magnolia>
+References: <95c54025014c6d5d3944924b52637cdc2b50cf4e.1542137269.git.osandov@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181126021720.19471-17-ming.lei@redhat.com>
+In-Reply-To: <95c54025014c6d5d3944924b52637cdc2b50cf4e.1542137269.git.osandov@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Omar Sandoval <osandov@osandov.com>
+Cc: linux-xfs@vger.kernel.org, kernel-team@fb.com
 
-On Mon, Nov 26, 2018 at 10:17:16AM +0800, Ming Lei wrote:
-> This patch pulls the trigger for multi-page bvecs.
-
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  block/bio.c         | 22 +++++++++++++++-------
->  fs/iomap.c          |  4 ++--
->  fs/xfs/xfs_aops.c   |  4 ++--
->  include/linux/bio.h |  2 +-
->  4 files changed, 20 insertions(+), 12 deletions(-)
+On Tue, Nov 13, 2018 at 11:28:59AM -0800, Omar Sandoval wrote:
+> From: Omar Sandoval <osandov@fb.com>
 > 
-> diff --git a/block/bio.c b/block/bio.c
-> index 75fde30af51f..8bf9338d4783 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -753,6 +753,8 @@ EXPORT_SYMBOL(bio_add_pc_page);
->   * @page: page to add
->   * @len: length of the data to add
->   * @off: offset of the data in @page
-> + * @same_page: if %true only merge if the new data is in the same physical
-> + *		page as the last segment of the bio.
->   *
->   * Try to add the data at @page + @off to the last bvec of @bio.  This is a
->   * a useful optimisation for file systems with a block size smaller than the
-> @@ -761,19 +763,25 @@ EXPORT_SYMBOL(bio_add_pc_page);
->   * Return %true on success or %false on failure.
->   */
->  bool __bio_try_merge_page(struct bio *bio, struct page *page,
-> -		unsigned int len, unsigned int off)
-> +		unsigned int len, unsigned int off, bool same_page)
->  {
->  	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
->  		return false;
+> The realtime summary is a two-dimensional array on disk, effectively:
+> 
+> u32 rsum[log2(number of realtime extents) + 1][number of blocks in the bitmap]
+> 
+> rsum[log][bbno] is the number of extents of size 2**log which start in
+> bitmap block bbno.
+> 
+> xfs_rtallocate_extent_near() uses xfs_rtany_summary() to check whether
+> rsum[log][bbno] != 0 for any log level. However, the summary array is
+> stored in row-major order (i.e., like an array in C), so all of these
+> entries are not adjacent, but rather spread across the entire summary
+> file. In the worst case (a full bitmap block), xfs_rtany_summary() has
+> to check every level.
+> 
+> This means that on a moderately-used realtime device, an allocation will
+> waste a lot of time finding, reading, and releasing buffers for the
+> realtime summary. In particular, one of our storage services (which runs
+> on servers with 8 very slow CPUs and 15 8 TB XFS realtime filesystems)
+> spends almost 5% of its CPU cycles in xfs_rtbuf_get() and
+> xfs_trans_brelse() called from xfs_rtany_summary().
+> 
+> One solution would be to also store the summary with the dimensions
+> swapped. However, this would require a disk format change to a very old
+> component of XFS.
+> 
+> Instead, we can cache the minimum size which contains any extents. We do
+> so lazily; rather than guaranteeing that the cache contains the precise
+> minimum, it always contains a loose lower bound which we tighten when we
+> read or update a summary block. This only uses a few kilobytes of memory
+> and is already serialized via the realtime bitmap and summary inode
+> locks, so the cost is minimal. With this change, the same workload only
+> spends 0.2% of its CPU cycles in the realtime allocator.
+> 
+> Signed-off-by: Omar Sandoval <osandov@fb.com>
+
+Looks good, will put this in my tree for 4.21/5.0.
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+> Based on Linus' master branch.
+> 
+> Changes from v2:
+> - Allow the cache allocation to fail, in which case we just don't use it
+> 
+> Changes from v1:
+> - Clarify comment in xfs_rtmount_inodes().
+> - Use kmem_* instead of kvmalloc/kvfree
+> 
+>  fs/xfs/libxfs/xfs_rtbitmap.c |  6 ++++++
+>  fs/xfs/xfs_mount.h           |  7 +++++++
+>  fs/xfs/xfs_rtalloc.c         | 25 +++++++++++++++++++++----
+>  3 files changed, 34 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+> index b228c821bae6..eaaff67e9626 100644
+> --- a/fs/xfs/libxfs/xfs_rtbitmap.c
+> +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+> @@ -505,6 +505,12 @@ xfs_rtmodify_summary_int(
+>  		uint first = (uint)((char *)sp - (char *)bp->b_addr);
 >  
->  	if (bio->bi_vcnt > 0) {
->  		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
-> +		phys_addr_t vec_end_addr = page_to_phys(bv->bv_page) +
-> +			bv->bv_offset + bv->bv_len;
-> +		phys_addr_t page_addr = page_to_phys(page);
+>  		*sp += delta;
+> +		if (mp->m_rsum_cache) {
+> +			if (*sp == 0 && log == mp->m_rsum_cache[bbno])
+> +				mp->m_rsum_cache[bbno]++;
+> +			if (*sp != 0 && log < mp->m_rsum_cache[bbno])
+> +				mp->m_rsum_cache[bbno] = log;
+> +		}
+>  		xfs_trans_log_buf(tp, bp, first, first + sizeof(*sp) - 1);
+>  	}
+>  	if (sum)
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 7964513c3128..39f04aca8c3a 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -89,6 +89,13 @@ typedef struct xfs_mount {
+>  	int			m_logbsize;	/* size of each log buffer */
+>  	uint			m_rsumlevels;	/* rt summary levels */
+>  	uint			m_rsumsize;	/* size of rt summary, bytes */
+> +	/*
+> +	 * Optional cache of rt summary level per bitmap block with the
+> +	 * invariant that m_rsum_cache[bbno] <= the minimum i for which
+> +	 * rsum[i][bbno] != 0. Reads and writes are serialized by the rsumip
+> +	 * inode lock.
+> +	 */
+> +	uint8_t			*m_rsum_cache;
+>  	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
+>  	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
+>  	struct xfs_inode	*m_rootip;	/* pointer to root directory */
+> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> index 926ed314ffba..aefd63d46397 100644
+> --- a/fs/xfs/xfs_rtalloc.c
+> +++ b/fs/xfs/xfs_rtalloc.c
+> @@ -64,8 +64,12 @@ xfs_rtany_summary(
+>  	int		log;		/* loop counter, log2 of ext. size */
+>  	xfs_suminfo_t	sum;		/* summary data */
 >  
-> -		if (page == bv->bv_page && off == bv->bv_offset + bv->bv_len) {
-> -			bv->bv_len += len;
-> -			bio->bi_iter.bi_size += len;
-> -			return true;
-> -		}
-> +		if (vec_end_addr != page_addr + off)
-> +			return false;
-> +		if (same_page && ((vec_end_addr - 1) & PAGE_MASK) != page_addr)
-> +			return false;
+> +	/* There are no extents at levels < m_rsum_cache[bbno]. */
+> +	if (mp->m_rsum_cache && low < mp->m_rsum_cache[bbno])
+> +		low = mp->m_rsum_cache[bbno];
 > +
-> +		bv->bv_len += len;
-> +		bio->bi_iter.bi_size += len;
-> +		return true;
->  	}
->  	return false;
->  }
-> @@ -819,7 +827,7 @@ EXPORT_SYMBOL_GPL(__bio_add_page);
->  int bio_add_page(struct bio *bio, struct page *page,
->  		 unsigned int len, unsigned int offset)
->  {
-> -	if (!__bio_try_merge_page(bio, page, len, offset)) {
-> +	if (!__bio_try_merge_page(bio, page, len, offset, false)) {
->  		if (bio_full(bio))
->  			return 0;
->  		__bio_add_page(bio, page, len, offset);
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 1f648d098a3b..ec5527b0fba4 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -313,7 +313,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  	 */
->  	sector = iomap_sector(iomap, pos);
->  	if (ctx->bio && bio_end_sector(ctx->bio) == sector) {
-> -		if (__bio_try_merge_page(ctx->bio, page, plen, poff))
-> +		if (__bio_try_merge_page(ctx->bio, page, plen, poff, true))
->  			goto done;
->  		is_contig = true;
->  	}
-> @@ -344,7 +344,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  		ctx->bio->bi_end_io = iomap_read_end_io;
->  	}
->  
-> -	__bio_add_page(ctx->bio, page, plen, poff);
-> +	bio_add_page(ctx->bio, page, plen, poff);
->  done:
 >  	/*
->  	 * Move the caller beyond our range so that it keeps making progress.
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 1f1829e506e8..b9fd44168f61 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -616,12 +616,12 @@ xfs_add_to_ioend(
->  				bdev, sector);
+> -	 * Loop over logs of extent sizes.  Order is irrelevant.
+> +	 * Loop over logs of extent sizes.
+>  	 */
+>  	for (log = low; log <= high; log++) {
+>  		/*
+> @@ -80,13 +84,17 @@ xfs_rtany_summary(
+>  		 */
+>  		if (sum) {
+>  			*stat = 1;
+> -			return 0;
+> +			goto out;
+>  		}
 >  	}
+>  	/*
+>  	 * Found nothing, return failure.
+>  	 */
+>  	*stat = 0;
+> +out:
+> +	/* There were no extents at levels < log. */
+> +	if (mp->m_rsum_cache && log > mp->m_rsum_cache[bbno])
+> +		mp->m_rsum_cache[bbno] = log;
+>  	return 0;
+>  }
 >  
-> -	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff)) {
-> +	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff, true)) {
->  		if (iop)
->  			atomic_inc(&iop->write_count);
->  		if (bio_full(wpc->ioend->io_bio))
->  			xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
-> -		__bio_add_page(wpc->ioend->io_bio, page, len, poff);
-> +		bio_add_page(wpc->ioend->io_bio, page, len, poff);
+> @@ -1187,8 +1195,8 @@ xfs_rtmount_init(
+>  }
+>  
+>  /*
+> - * Get the bitmap and summary inodes into the mount structure
+> - * at mount time.
+> + * Get the bitmap and summary inodes and the summary cache into the mount
+> + * structure at mount time.
+>   */
+>  int					/* error */
+>  xfs_rtmount_inodes(
+> @@ -1211,6 +1219,14 @@ xfs_rtmount_inodes(
+>  		return error;
 >  	}
+>  	ASSERT(mp->m_rsumip != NULL);
+> +	/*
+> +	 * The rsum cache is initialized to all zeroes, which is trivially a
+> +	 * lower bound on the minimum level with any free extents. We can
+> +	 * continue without the cache if it couldn't be allocated.
+> +	 */
+> +	mp->m_rsum_cache = kmem_zalloc_large(sbp->sb_rbmblocks, KM_SLEEP);
+> +	if (!mp->m_rsum_cache)
+> +		xfs_warn(mp, "could not allocate realtime summary cache");
+>  	return 0;
+>  }
 >  
->  	wpc->ioend->io_size += len;
-> diff --git a/include/linux/bio.h b/include/linux/bio.h
-> index c35997dd02c2..5505f74aef8b 100644
-> --- a/include/linux/bio.h
-> +++ b/include/linux/bio.h
-> @@ -441,7 +441,7 @@ extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
->  extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
->  			   unsigned int, unsigned int);
->  bool __bio_try_merge_page(struct bio *bio, struct page *page,
-> -		unsigned int len, unsigned int off);
-> +		unsigned int len, unsigned int off, bool same_page);
->  void __bio_add_page(struct bio *bio, struct page *page,
->  		unsigned int len, unsigned int off);
->  int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter);
+> @@ -1218,6 +1234,7 @@ void
+>  xfs_rtunmount_inodes(
+>  	struct xfs_mount	*mp)
+>  {
+> +	kmem_free(mp->m_rsum_cache);
+>  	if (mp->m_rbmip)
+>  		xfs_irele(mp->m_rbmip);
+>  	if (mp->m_rsumip)
 > -- 
-> 2.9.5
+> 2.19.1
 > 
