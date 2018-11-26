@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58694 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43610 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726112AbeKZNLy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Nov 2018 08:11:54 -0500
+        id S1726101AbeKZNNF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Nov 2018 08:13:05 -0500
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V12 08/20] block: introduce bio_for_each_bvec() and rq_for_each_bvec()
-Date: Mon, 26 Nov 2018 10:17:08 +0800
-Message-Id: <20181126021720.19471-9-ming.lei@redhat.com>
+Subject: [PATCH V12 14/20] bcache: avoid to use bio_for_each_segment_all() in bch_bio_alloc_pages()
+Date: Mon, 26 Nov 2018 10:17:14 +0800
+Message-Id: <20181126021720.19471-15-ming.lei@redhat.com>
 In-Reply-To: <20181126021720.19471-1-ming.lei@redhat.com>
 References: <20181126021720.19471-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,73 +15,34 @@ List-Id: xfs
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-bio_for_each_bvec() is used for iterating over multi-page bvec for bio
-split & merge code.
+bch_bio_alloc_pages() is always called on one new bio, so it is safe
+to access the bvec table directly. Given it is the only kind of this
+case, open code the bvec table access since bio_for_each_segment_all()
+will be changed to support for iterating over multipage bvec.
 
-rq_for_each_bvec() can be used for drivers which may handle the
-multi-page bvec directly, so far loop is one perfect use case.
-
-Reviewed-by: Omar Sandoval <osandov@fb.com>
+Acked-by: Coly Li <colyli@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- include/linux/bio.h    | 10 ++++++++++
- include/linux/blkdev.h |  4 ++++
- include/linux/bvec.h   |  7 +++++++
- 3 files changed, 21 insertions(+)
+ drivers/md/bcache/util.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 6a0ff02f4d1c..46fd0e03233b 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -156,6 +156,16 @@ static inline void bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
- #define bio_for_each_segment(bvl, bio, iter)				\
- 	__bio_for_each_segment(bvl, bio, iter, (bio)->bi_iter)
+diff --git a/drivers/md/bcache/util.c b/drivers/md/bcache/util.c
+index 20eddeac1531..62fb917f7a4f 100644
+--- a/drivers/md/bcache/util.c
++++ b/drivers/md/bcache/util.c
+@@ -270,7 +270,11 @@ int bch_bio_alloc_pages(struct bio *bio, gfp_t gfp_mask)
+ 	int i;
+ 	struct bio_vec *bv;
  
-+#define __bio_for_each_bvec(bvl, bio, iter, start)		\
-+	for (iter = (start);						\
-+	     (iter).bi_size &&						\
-+		((bvl = bvec_iter_bvec((bio)->bi_io_vec, (iter))), 1); \
-+	     bio_advance_iter((bio), &(iter), (bvl).bv_len))
-+
-+/* iterate over multi-page bvec */
-+#define bio_for_each_bvec(bvl, bio, iter)			\
-+	__bio_for_each_bvec(bvl, bio, iter, (bio)->bi_iter)
-+
- #define bio_iter_last(bvec, iter) ((iter).bi_size == (bvec).bv_len)
- 
- static inline unsigned bio_segments(struct bio *bio)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 399a7a415609..fa263de3f1d1 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -799,6 +799,10 @@ struct req_iterator {
- 	__rq_for_each_bio(_iter.bio, _rq)			\
- 		bio_for_each_segment(bvl, _iter.bio, _iter.iter)
- 
-+#define rq_for_each_bvec(bvl, _rq, _iter)			\
-+	__rq_for_each_bio(_iter.bio, _rq)			\
-+		bio_for_each_bvec(bvl, _iter.bio, _iter.iter)
-+
- #define rq_iter_last(bvec, _iter)				\
- 		(_iter.bio->bi_next == NULL &&			\
- 		 bio_iter_last(bvec, _iter.iter))
-diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-index babc6316c117..d441486db605 100644
---- a/include/linux/bvec.h
-+++ b/include/linux/bvec.h
-@@ -65,6 +65,13 @@ struct bvec_iter {
- #define bvec_iter_page_idx(bvec, iter)			\
- 	(bvec_iter_offset((bvec), (iter)) / PAGE_SIZE)
- 
-+#define bvec_iter_bvec(bvec, iter)				\
-+((struct bio_vec) {						\
-+	.bv_page	= bvec_iter_page((bvec), (iter)),	\
-+	.bv_len		= bvec_iter_len((bvec), (iter)),	\
-+	.bv_offset	= bvec_iter_offset((bvec), (iter)),	\
-+})
-+
- /* For building single-page bvec(segment) in flight */
-  #define segment_iter_offset(bvec, iter)				\
- 	(bvec_iter_offset((bvec), (iter)) % PAGE_SIZE)
+-	bio_for_each_segment_all(bv, bio, i) {
++	/*
++	 * This is called on freshly new bio, so it is safe to access the
++	 * bvec table directly.
++	 */
++	for (i = 0, bv = bio->bi_io_vec; i < bio->bi_vcnt; bv++, i++) {
+ 		bv->bv_page = alloc_page(gfp_mask);
+ 		if (!bv->bv_page) {
+ 			while (--bv >= bio->bi_io_vec)
 -- 
 2.9.5
