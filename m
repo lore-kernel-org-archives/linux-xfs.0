@@ -1,84 +1,215 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38108 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728567AbeKJQ3F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Nov 2018 11:29:05 -0500
-Subject: Re: [PATCH 6/6] xfs_scrub: move everything to /usr/sbin
-References: <154181071499.3727.3910572718199592407.stgit@magnolia>
- <154181075273.3727.12563703121689677996.stgit@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <e97f4f2c-9978-96cc-0589-90942e2f4188@oracle.com>
-Date: Fri, 9 Nov 2018 23:45:07 -0700
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:37005 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727244AbeK0Jcv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 04:32:51 -0500
+Received: by mail-pf1-f193.google.com with SMTP id u3-v6so7301348pfm.4
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 14:37:12 -0800 (PST)
+Date: Mon, 26 Nov 2018 14:37:09 -0800
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH V12 09/20] block: use bio_for_each_bvec() to compute
+ multi-page bvec count
+Message-ID: <20181126223709.GI30411@vader>
+References: <20181126021720.19471-1-ming.lei@redhat.com>
+ <20181126021720.19471-10-ming.lei@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <154181075273.3727.12563703121689677996.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181126021720.19471-10-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, xfs@tlinx.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-Looks ok to me.  You can add my review:
-
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-
-On 11/9/18 5:45 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Nov 26, 2018 at 10:17:09AM +0800, Ming Lei wrote:
+> First it is more efficient to use bio_for_each_bvec() in both
+> blk_bio_segment_split() and __blk_recalc_rq_segments() to compute how
+> many multi-page bvecs there are in the bio.
 > 
-> Recently, it was pointed out that xfs_scrub{,_all} depend on components
-> and libraries (libicu, python) that live in /usr.  /sbin binaries
-> shouldn't depend on /usr, so let's move the scrub binaries to /usr/sbin.
+> Secondly once bio_for_each_bvec() is used, the bvec may need to be
+> splitted because its length can be very longer than max segment size,
+> so we have to split the big bvec into several segments.
 > 
-> Reported-by: xfs@tlinx.org
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Thirdly when splitting multi-page bvec into segments, the max segment
+> limit may be reached, so the bio split need to be considered under
+> this situation too.
+
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
 > ---
->   scrub/Makefile |   12 ++++++------
->   1 file changed, 6 insertions(+), 6 deletions(-)
+>  block/blk-merge.c | 100 +++++++++++++++++++++++++++++++++++++++++++-----------
+>  1 file changed, 80 insertions(+), 20 deletions(-)
 > 
-> 
-> diff --git a/scrub/Makefile b/scrub/Makefile
-> index aebc7e43..c6473c12 100644
-> --- a/scrub/Makefile
-> +++ b/scrub/Makefile
-> @@ -103,7 +103,7 @@ default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(OPTIONAL_TARGETS)
->   
->   xfs_scrub_all: xfs_scrub_all.in
->   	@echo "    [SED]    $@"
-> -	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
-> +	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" \
->   		   -e "s|@pkg_version@|$(PKG_VERSION)|g" \
->   		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" < $< > $@
->   	$(Q)chmod a+x $@
-> @@ -116,14 +116,14 @@ install: $(INSTALL_SCRUB)
->   
->   %.service: %.service.in
->   	@echo "    [SED]    $@"
-> -	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
-> +	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" \
->   		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" \
->   		   -e "s|@pkg_lib_dir@|$(PKG_LIB_DIR)|g" \
->   		   -e "s|@pkg_name@|$(PKG_NAME)|g" < $< > $@
->   
->   %.cron: %.cron.in
->   	@echo "    [SED]    $@"
-> -	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" < $< > $@
-> +	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" < $< > $@
->   
->   install-systemd: default $(SYSTEMD_SERVICES)
->   	$(INSTALL) -m 755 -d $(SYSTEMD_SYSTEM_UNIT_DIR)
-> @@ -136,9 +136,9 @@ install-crond: default $(CRONTABS)
->   	$(INSTALL) -m 644 $(CRONTABS) $(CROND_DIR)
->   
->   install-scrub: default
-> -	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
-> -	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
-> -	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_ROOT_SBIN_DIR)
-> +	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
-> +	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
-> +	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_SBIN_DIR)
->   
->   install-dev:
->   
+> diff --git a/block/blk-merge.c b/block/blk-merge.c
+> index 51ec6ca56a0a..2d8f388d43de 100644
+> --- a/block/blk-merge.c
+> +++ b/block/blk-merge.c
+> @@ -161,6 +161,70 @@ static inline unsigned get_max_io_size(struct request_queue *q,
+>  	return sectors;
+>  }
+>  
+> +static unsigned get_max_segment_size(struct request_queue *q,
+> +				     unsigned offset)
+> +{
+> +	unsigned long mask = queue_segment_boundary(q);
+> +
+> +	return min_t(unsigned long, mask - (mask & offset) + 1,
+> +		     queue_max_segment_size(q));
+> +}
+> +
+> +/*
+> + * Split the bvec @bv into segments, and update all kinds of
+> + * variables.
+> + */
+> +static bool bvec_split_segs(struct request_queue *q, struct bio_vec *bv,
+> +		unsigned *nsegs, unsigned *last_seg_size,
+> +		unsigned *front_seg_size, unsigned *sectors)
+> +{
+> +	unsigned len = bv->bv_len;
+> +	unsigned total_len = 0;
+> +	unsigned new_nsegs = 0, seg_size = 0;
+> +
+> +	/*
+> +	 * Multipage bvec may be too big to hold in one segment,
+> +	 * so the current bvec has to be splitted as multiple
+> +	 * segments.
+> +	 */
+> +	while (len && new_nsegs + *nsegs < queue_max_segments(q)) {
+> +		seg_size = get_max_segment_size(q, bv->bv_offset + total_len);
+> +		seg_size = min(seg_size, len);
+> +
+> +		new_nsegs++;
+> +		total_len += seg_size;
+> +		len -= seg_size;
+> +
+> +		if ((bv->bv_offset + total_len) & queue_virt_boundary(q))
+> +			break;
+> +	}
+> +
+> +	if (!new_nsegs)
+> +		return !!len;
+> +
+> +	/* update front segment size */
+> +	if (!*nsegs) {
+> +		unsigned first_seg_size;
+> +
+> +		if (new_nsegs == 1)
+> +			first_seg_size = get_max_segment_size(q, bv->bv_offset);
+> +		else
+> +			first_seg_size = queue_max_segment_size(q);
+> +
+> +		if (*front_seg_size < first_seg_size)
+> +			*front_seg_size = first_seg_size;
+> +	}
+> +
+> +	/* update other varibles */
+> +	*last_seg_size = seg_size;
+> +	*nsegs += new_nsegs;
+> +	if (sectors)
+> +		*sectors += total_len >> 9;
+> +
+> +	/* split in the middle of the bvec if len != 0 */
+> +	return !!len;
+> +}
+> +
+>  static struct bio *blk_bio_segment_split(struct request_queue *q,
+>  					 struct bio *bio,
+>  					 struct bio_set *bs,
+> @@ -174,7 +238,7 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+>  	struct bio *new = NULL;
+>  	const unsigned max_sectors = get_max_io_size(q, bio);
+>  
+> -	bio_for_each_segment(bv, bio, iter) {
+> +	bio_for_each_bvec(bv, bio, iter) {
+>  		/*
+>  		 * If the queue doesn't support SG gaps and adding this
+>  		 * offset would create a gap, disallow it.
+> @@ -189,8 +253,12 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+>  			 */
+>  			if (nsegs < queue_max_segments(q) &&
+>  			    sectors < max_sectors) {
+> -				nsegs++;
+> -				sectors = max_sectors;
+> +				/* split in the middle of bvec */
+> +				bv.bv_len = (max_sectors - sectors) << 9;
+> +				bvec_split_segs(q, &bv, &nsegs,
+> +						&seg_size,
+> +						&front_seg_size,
+> +						&sectors);
+>  			}
+>  			goto split;
+>  		}
+> @@ -212,14 +280,12 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+>  		if (nsegs == queue_max_segments(q))
+>  			goto split;
+>  
+> -		if (nsegs == 1 && seg_size > front_seg_size)
+> -			front_seg_size = seg_size;
+> -
+> -		nsegs++;
+>  		bvprv = bv;
+>  		bvprvp = &bvprv;
+> -		seg_size = bv.bv_len;
+> -		sectors += bv.bv_len >> 9;
+> +
+> +		if (bvec_split_segs(q, &bv, &nsegs, &seg_size,
+> +				    &front_seg_size, &sectors))
+> +			goto split;
+>  
+>  	}
+>  
+> @@ -233,8 +299,6 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+>  			bio = new;
+>  	}
+>  
+> -	if (nsegs == 1 && seg_size > front_seg_size)
+> -		front_seg_size = seg_size;
+>  	bio->bi_seg_front_size = front_seg_size;
+>  	if (seg_size > bio->bi_seg_back_size)
+>  		bio->bi_seg_back_size = seg_size;
+> @@ -296,6 +360,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+>  {
+>  	struct bio_vec bv, bvprv = { NULL };
+>  	unsigned int seg_size, nr_phys_segs;
+> +	unsigned front_seg_size = bio->bi_seg_front_size;
+>  	struct bio *fbio, *bbio;
+>  	struct bvec_iter iter;
+>  	bool prev = false;
+> @@ -316,7 +381,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+>  	seg_size = 0;
+>  	nr_phys_segs = 0;
+>  	for_each_bio(bio) {
+> -		bio_for_each_segment(bv, bio, iter) {
+> +		bio_for_each_bvec(bv, bio, iter) {
+>  			/*
+>  			 * If SG merging is disabled, each bio vector is
+>  			 * a segment
+> @@ -336,20 +401,15 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+>  				continue;
+>  			}
+>  new_segment:
+> -			if (nr_phys_segs == 1 && seg_size >
+> -			    fbio->bi_seg_front_size)
+> -				fbio->bi_seg_front_size = seg_size;
+> -
+> -			nr_phys_segs++;
+>  			bvprv = bv;
+>  			prev = true;
+> -			seg_size = bv.bv_len;
+> +			bvec_split_segs(q, &bv, &nr_phys_segs, &seg_size,
+> +					&front_seg_size, NULL);
+>  		}
+>  		bbio = bio;
+>  	}
+>  
+> -	if (nr_phys_segs == 1 && seg_size > fbio->bi_seg_front_size)
+> -		fbio->bi_seg_front_size = seg_size;
+> +	fbio->bi_seg_front_size = front_seg_size;
+>  	if (seg_size > bbio->bi_seg_back_size)
+>  		bbio->bi_seg_back_size = seg_size;
+>  
+> -- 
+> 2.9.5
 > 
