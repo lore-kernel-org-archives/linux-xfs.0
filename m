@@ -1,72 +1,162 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49874 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727275AbeK1Own (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 09:52:43 -0500
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v1 4/7] xfs: Add b_rw_hint to xfs_buf
-Date: Tue, 27 Nov 2018 20:49:48 -0700
-Message-Id: <1543376991-5764-5-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
-References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:39848 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726219AbeKZWgO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Nov 2018 17:36:14 -0500
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id wAQBdPlr179536
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 06:42:20 -0500
+Received: from e06smtp02.uk.ibm.com (e06smtp02.uk.ibm.com [195.75.94.98])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2p0enpca49-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 06:42:18 -0500
+Received: from localhost
+        by e06smtp02.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Mon, 26 Nov 2018 11:42:16 -0000
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: Re: COW improvements and always_cow support V2
+Date: Mon, 26 Nov 2018 17:12:16 +0530
+In-Reply-To: <4455584.hbaYzlDTmr@localhost.localdomain>
+References: <20181119134619.16812-1-hch@lst.de> <4455584.hbaYzlDTmr@localhost.localdomain>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+Message-Id: <1984636.oWepG2GJO6@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: martin.petersen@oracle.com, shirley.ma@oracle.com, bob.liu@oracle.com, allison.henderson@oracle.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-This patch adds a new field b_rw_hint to xfs_buf.  We will
-need this to properly initialize the new bio->bi_rw_hint when
-submitting the read request.  When the read completes, we
-then store the returned mirror in the b_rw_hint.
+On Sunday, November 25, 2018 7:09:33 PM IST Chandan Rajendra wrote:
+> On Monday, November 19, 2018 7:16:10 PM IST Christoph Hellwig wrote:
+> > Hi all,
+> > 
+> > this series adds the always_cow mode support after improving our COW
+> > write support a little bit first.
+> > 
+> > The always_cow mode stresses the COW path a lot, but with a few xfstests
+> > fixups it generall looks good, except for:
+> > 
+> >  - a few tests that complain about fragmentation, which is rather inherent
+> >    in this mode
+> >  - generic/208 crashing a lot (and generic/095 with 1k block similarly)
+> >    because a COW fork extent has changed under writeback.  As far as I can
+> >    tell this is because nothing prevents another thread from moving a COW
+> >    fork extent to the data fork while we are under writeback.  I'm currently
+> >    fully root causing this and looking into a potential fix
+> >  - xfs/017 crashes occasionally in log recovery because we can't find
+> >    a refcount tree record that we try to free.
+> >    I haven't really fully understood this one yet.
+> > 
+> > Changes since v1:
+> >  - make delalloc and unwritten extent conversions simpler and more robust
+> >  - add a few additional cleanups
+> >  - support all fallocate modes but actual preallocation
+> >  - rebase on top of a fix from Brian (which is included as first patch
+> >    to make the patch set more usable)
+> > 
+> 
+> Hi Christoph,
+> 
+> On ppc64le (with 4k block size), xfs/017 causes the following call trace,
+> 
+> WARNING: CPU: 2 PID: 7865 at /root/repos/linux/fs/xfs/xfs_aops.c:352 xfs_map_blocks+0x154/0xc44
+> Modules linked in:
+> CPU: 2 PID: 7865 Comm: fsstress Not tainted 4.20.0-rc3-next-20181123-00008-gbb319d33d6c5-dirty #7
+> NIP:  c00000000069f924 LR: c00000000069f88c CTR: 0000000000000000
+> REGS: c000000630dc3520 TRAP: 0700   Not tainted  (4.20.0-rc3-next-20181123-00008-gbb319d33d6c5-dirty)
+> MSR:  8000000000029033 <SF,EE,ME,IR,DR,RI,LE>  CR: 44004484  XER: 00000000
+> CFAR: c00000000000e6d4 IRQMASK: 0
+> GPR00: c00000000069f88c c000000630dc37b0 c0000000017a3100 c000000630dc3b80
+> GPR04: 0000000000000000 000000000000008f 0000000000000008 fffffffffffffffe
+> GPR08: 000000000000002b 0000000000000001 0000000000000009 c000000623040080
+> GPR12: c0000000003113a0 c00000003fffdf00 0000000000000000 0000000000000000
+> GPR16: 0000000100030780 00007fffffffb2c0 00000001000136a8 0000000000000001
+> GPR20: 0000000000000000 0000000000010000 c000000630dc3c20 0000000000001000
+> GPR24: 0000000000000008 f000000000d79a00 c000000630dc3b80 c000000624320300
+> GPR28: c000000100733f48 0000000000000000 0000000000009000 c000000630dc37b0
+> NIP [c00000000069f924] xfs_map_blocks+0x154/0xc44
+> LR [c00000000069f88c] xfs_map_blocks+0xbc/0xc44
+> Call Trace:
+> [c000000630dc37b0] [c00000000069f88c] xfs_map_blocks+0xbc/0xc44 (unreliable)
+> [c000000630dc3960] [c0000000006a0e88] xfs_writepage_map+0x174/0x428
+> [c000000630dc39f0] [c0000000006a12ac] xfs_do_writepage+0x170/0x2c0
+> [c000000630dc3a40] [c0000000003257f0] write_cache_pages+0x350/0x540
+> [c000000630dc3b60] [c0000000006a1508] xfs_vm_writepages+0x98/0xd4
+> [c000000630dc3bd0] [c000000000326c2c] do_writepages+0x5c/0xcc
+> [c000000630dc3c00] [c00000000030e338] __filemap_fdatawrite_range+0xc4/0xd4
+> [c000000630dc3c60] [c00000000030e460] filemap_flush+0x30/0x40
+> [c000000630dc3c80] [c0000000006d0538] xfs_release+0x12c/0x298
+> [c000000630dc3cc0] [c0000000006b4ca4] xfs_file_release+0x24/0x38
+> [c000000630dc3ce0] [c0000000003f68f8] __fput+0xc8/0x280
+> [c000000630dc3d40] [c0000000003f6b40] ____fput+0x20/0x30
+> [c000000630dc3d60] [c00000000014bef4] task_work_run+0xb8/0x100
+> [c000000630dc3da0] [c0000000000231cc] do_notify_resume+0x184/0x18c
+> [c000000630dc3e20] [c00000000000e544] ret_from_except_lite+0x70/0x74
+> Instruction dump:
+> 39290002 7d290074 7929d182 5529063e 913f005c 813f005c 7d290034 5529d97e
+> 69290001 5529063e 2fa90000 419e0008 <0fe00000> 813f005c 7d290034 5529d97e
+> 
+> 
+> This corresponds to the following code inside xfs_map_blocks(),
+> 
+> imap_valid = offset_fsb >= wpc->imap.br_startoff &&
+> 	     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
+> if (imap_valid &&
+>     !WARN_ON_ONCE(wpc->imap.br_startblock == HOLESTARTBLOCK) &&
+>     (!xfs_inode_has_cow_data(ip) ||
+>      wpc->io_type == XFS_IO_COW ||
+>      wpc->cow_seq == READ_ONCE(ip->i_cowfp->if_seq)))
+> 	return 0;
+> 
+> 
+> I did some debugging and the following provides an explaination as to why 
+> the condition passed to WARN_ON_ONCE() evaluated to true,
+> 
+> 148854:fsstress 19867 [001] 178758.940803:  probe:xfs_file_buffered_aio_write: (c0000000006b71f0) ki_pos=1301686 i_ino=8388710
+> 149023:fsstress 19867 [001] 178758.940968:            probe:__iomap_write_end: (c00000000049720c) i_ino=8388710 len_u32=9034 copied_u32=9034 pos_u64=1301686
+> 149191:fsstress 19867 [001] 178758.941167:            probe:__iomap_write_end: (c00000000049720c) i_ino=8388710 len_u32=65536 copied_u32=65536 pos_u64=1310720
+> 150133:fsstress 19867 [001] 178758.941566:            probe:__iomap_write_end: (c00000000049720c) i_ino=8388710 len_u32=8475 copied_u32=8475 pos_u64=1376256
+> 
+> An "Extended write" is performed at a 4k block which maps file offset
+> 1298432. Hence the file range before 1298431 maps to a hole.
+> 
+> 
+> 
+> 123854:fsstress 19867 [001] 178758.896306:  probe:xfs_file_buffered_aio_write: (c0000000006b71f0) ki_pos=434109 i_ino=8388710
+> 124223:fsstress 19867 [001] 178758.896549:            probe:__iomap_write_end: (c00000000049720c) i_ino=8388710 len_u32=24643 copied_u32=24643 pos_u64=434109
+> 124583:fsstress 19867 [001] 178758.896719:            probe:__iomap_write_end: (c00000000049720c) i_ino=8388710 len_u32=65536 copied_u32=65536 pos_u64=458752
+> 125875:fsstress 19867 [001] 178758.897266:            probe:__iomap_write_end: (c00000000049720c) i_ino=8388710 len_u32=38283 copied_u32=38283 pos_u64=524288
+> 
+> The 8th 64k page now has data written to it in the file offset range [524288,
+> 565247]. So there is a hole in the range [565248, 589823] mapped by the page. 
+> 
+> 
+> 154474:fsstress 19867 [001] 178758.947596:     probe:iomap_set_range_uptodate: (c000000000495a40) index=8 i_ino=8388710 last=0xf first=0xa
+> 
+> The above event occurs when fsstress invokes a buffered read operation at 10
+> block of 8th page i.e. file offset 565248. Hence the blocks mapping the file
+> offset range  [565248, 589823] are marked uptodate in iop->uptodate.
+> 
+> 
+> 238888:fsstress 19867 [001] 178759.134993: probe:xfs_map_blocks_found_new_map: (c00000000069fefc) blockcount=27 startblock=18446744073709551614 startoff=138 i_ino=8388710 offset_fsb_u64=138 imap_valid_u8=0
+> 238913:fsstress 19867 [001] 178759.135003:               probe:xfs_map_blocks: (c00000000069f87c) blockcount=27 startblock=18446744073709551614 startoff=138 i_ino=8388710 offset_fsb_u64=139 offset_u64=569344
+> 238938:fsstress 19867 [001] 178759.135012:    probe:xfs_map_blocks_imap_valid: (c00000000069f8e0) startoff=138 startblock=18446744073709551614 blockcount=27 i_ino=8388710 offset_fsb_u64=139 offset_u64=569344 imap_valid_u8=1
+> 238963:fsstress 19867 [001] 178759.135054:  probe:xfs_map_blocks_imap_valid_1: (c00000000069f93c) startoff=138 startblock=18446744073709551614 blockcount=27 i_ino=8388710 offset_fsb_u64=139 offset_u64=569344 imap_valid_u8=1
+> 238988:fsstress 19867 [001] 178759.135065:               probe:xfs_map_blocks: (c00000000069f87c) blockcount=27 startblock=18446744073709551614 startoff=138 i_ino=8388710 offset_fsb_u64=140 offset_u64=573440
+> 
+> When writing the dirty page which maps the 4k block starting at file offset
+> 565248 (138th block) we would encounter a hole with HOLESTARTBLOCK (i.e. -2)
+> as the value of startblock. xfs_map_blocks() assigns this imap to
+> xfs_writepage_ctx->imap and returns. xfs_writepage_map() loops once again
+> since iop->uptodate has the corresponding bit set.
+> 
+> 
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/xfs_buf.c | 5 ++++-
- fs/xfs/xfs_buf.h | 7 +++++++
- 2 files changed, 11 insertions(+), 1 deletion(-)
+IMHO, we should track the dirty blocks within the iomap_page structure and
+invoke xfs_map_blocks() only on those dirty blocks.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index b21ea2b..dd8ba59 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1322,8 +1322,10 @@ xfs_buf_bio_end_io(
- 	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
- 		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
- 
--	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
-+	if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
-+		bp->b_rw_hint = bio->bi_rw_hint;
- 		xfs_buf_ioend_async(bp);
-+	}
- 	bio_put(bio);
- }
- 
-@@ -1369,6 +1371,7 @@ xfs_buf_ioapply_map(
- 	bio->bi_iter.bi_sector = sector;
- 	bio->bi_end_io = xfs_buf_bio_end_io;
- 	bio->bi_private = bp;
-+	bio->bi_rw_hint = bp->b_rw_hint;
- 	bio_set_op_attrs(bio, op, op_flags);
- 
- 	for (; size && nr_pages; nr_pages--, page_index++) {
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index b9f5511..db138e5 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -197,6 +197,13 @@ typedef struct xfs_buf {
- 	unsigned long		b_first_retry_time; /* in jiffies */
- 	int			b_last_error;
- 
-+	/*
-+	 * If b_rw_hint is set before a read, it specifies an alternate mirror
-+	 * to read from.  Upon bio completion, b_rw_hint stores the last mirror
-+	 * that was read from
-+	 */
-+	unsigned short		b_rw_hint;
-+
- 	const struct xfs_buf_ops	*b_ops;
- } xfs_buf_t;
- 
 -- 
-2.7.4
+chandan
