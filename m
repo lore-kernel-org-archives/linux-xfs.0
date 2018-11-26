@@ -1,234 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:35942 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727180AbeK0HpY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 02:45:24 -0500
-Date: Mon, 26 Nov 2018 12:50:00 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 12/12] generic: long fsx soak tests
-Message-ID: <20181126205000.GG6783@magnolia>
-References: <154290950237.1218.9937108728673485814.stgit@magnolia>
- <154290958406.1218.8922234236895263233.stgit@magnolia>
- <20181125162741.GN3889@desktop>
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:33924 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726403AbeK0JIe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 04:08:34 -0500
+Received: by mail-pf1-f196.google.com with SMTP id h3so7276567pfg.1
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 14:12:59 -0800 (PST)
+Date: Mon, 26 Nov 2018 14:12:56 -0800
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH V12 03/20] block: remove the "cluster" flag
+Message-ID: <20181126221256.GD30411@vader>
+References: <20181126021720.19471-1-ming.lei@redhat.com>
+ <20181126021720.19471-4-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181125162741.GN3889@desktop>
+In-Reply-To: <20181126021720.19471-4-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Mon, Nov 26, 2018 at 12:27:41AM +0800, Eryu Guan wrote:
-> On Thu, Nov 22, 2018 at 09:59:44AM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add a few tests to implement long soak tests of fsx.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  tests/generic/938     |   65 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/938.out |    2 ++
-> >  tests/generic/939     |   60 +++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/939.out |    2 ++
-> >  tests/generic/group   |    2 ++
-> >  5 files changed, 131 insertions(+)
-> >  create mode 100644 tests/generic/938
+On Mon, Nov 26, 2018 at 10:17:03AM +0800, Ming Lei wrote:
+> From: Christoph Hellwig <hch@lst.de>
 > 
-> The file mode should be 755.
+> The cluster flag implements some very old SCSI behavior.  As far as I
+> can tell the original intent was to enable or disable any kind of
+> segment merging.  But the actually visible effect to the LLDD is that
+> it limits each segments to be inside a single page, which we can
+> also affect by setting the maximum segment size and the segment
+> boundary.
 
-Fixed.
+Reviewed-by: Omar Sandoval <osandov@fb.com>
 
-> >  create mode 100644 tests/generic/938.out
-> >  create mode 100644 tests/generic/939
+One comment typo below.
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Same here.
-
-Fixed.
-
-> >  create mode 100644 tests/generic/939.out
-> > 
-> > 
-> > diff --git a/tests/generic/938 b/tests/generic/938
-> > new file mode 100644
-> > index 00000000..a85a6472
-> > --- /dev/null
-> > +++ b/tests/generic/938
-> > @@ -0,0 +1,65 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2018 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 938
-> > +#
-> > +# Long-soak directio fsx test
-> > +#
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1        # failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +        cd /
-> > +        rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# remove previous $seqres.full before test
-> > +rm -f $seqres.full
-> > +
-> > +# real QA test starts here
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +_require_test
+> Replace virt boundary with segment boundary limit.
 > 
-> _require_odirect ?
-
-Fixed.
-
-> > +
-> > +# Run fsx for a million ops or more
-> > +nr_ops=$((1000000 * TIME_FACTOR))
-> > +op_sz=$((128000 * LOAD_FACTOR))
-> > +file_sz=$((600000 * LOAD_FACTOR))
-> > +fsx_file=$TEST_DIR/fsx.$seq
-> > +min_dio_sz=$(_min_dio_alignment)
-> > +
-> > +fsx_args=(-q)
-> > +fsx_args+=(-N $nr_ops)
-> > +fsx_args+=(-p $((nr_ops / 100)))
-> > +fsx_args+=(-o $op_sz)
-> > +fsx_args+=(-l $file_sz)
-> > +fsx_args+=(-r $min_dio_sz)
-> > +fsx_args+=(-t $min_dio_sz)
-> > +fsx_args+=(-w $min_dio_sz)
-> > +fsx_args+=(-Z)
-> > +fsx_args+=($fsx_file)
-> > +
-> > +echo "ltp ${fsx_args[@]} $FSX_ARGS" >> $seqres.full
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  block/blk-merge.c       | 20 ++++++++------------
+>  block/blk-settings.c    |  3 ---
+>  block/blk-sysfs.c       |  5 +----
+>  drivers/scsi/scsi_lib.c | 20 ++++++++++++++++----
+>  include/linux/blkdev.h  |  6 ------
+>  5 files changed, 25 insertions(+), 29 deletions(-)
 > 
-> FSX_ARGS is not a global variable. Perhaps you mean FSX_AVOID?
-> 
-> > +
-> > +if ! ltp/fsx "${fsx_args[@]}" $FSX_ARGS > $tmp.fsx 2>&1; then
-> > +	cat $tmp.fsx | tee -a $seqres.full
-> > +fi
-> 
-> And maybe "run_fsx" from common/rc could do all the trick?
 
-Good suggestion, thank you.
+[snip]
 
---D
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 0df15cb738d2..78d6d05992b0 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1810,6 +1810,8 @@ static int scsi_map_queues(struct blk_mq_tag_set *set)
+>  void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+>  {
+>  	struct device *dev = shost->dma_dev;
+> +	unsigned max_segment_size = dma_get_max_seg_size(dev);
+> +	unsigned long segment_boundary = shost->dma_boundary;
+>  
+>  	/*
+>  	 * this limit is imposed by hardware restrictions
+> @@ -1828,13 +1830,23 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+>  	blk_queue_max_hw_sectors(q, shost->max_sectors);
+>  	if (shost->unchecked_isa_dma)
+>  		blk_queue_bounce_limit(q, BLK_BOUNCE_ISA);
+> -	blk_queue_segment_boundary(q, shost->dma_boundary);
+>  	dma_set_seg_boundary(dev, shost->dma_boundary);
+>  
+> -	blk_queue_max_segment_size(q, dma_get_max_seg_size(dev));
+> +	/*
+> +	 * Clustering is a really old concept from the stone age of Linux
+> +	 * SCSI support.  But the basic idea is that we never give the
+> +	 * driver a segment that spans multiple pages.  For that we need
+> +	 * to limit the segment size, and set the segment boundary so that
+> +	 * we never merge a second segment which is no page aligned.
 
-> Thanks,
-> Eryu
-> 
-> > +
-> > +# success, all done
-> > +echo Silence is golden
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/938.out b/tests/generic/938.out
-> > new file mode 100644
-> > index 00000000..11b565ee
-> > --- /dev/null
-> > +++ b/tests/generic/938.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 938
-> > +Silence is golden
-> > diff --git a/tests/generic/939 b/tests/generic/939
-> > new file mode 100644
-> > index 00000000..5e341e30
-> > --- /dev/null
-> > +++ b/tests/generic/939
-> > @@ -0,0 +1,60 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2018 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 938
-> > +#
-> > +# Long-soak buffered fsx test
-> > +#
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1        # failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +        cd /
-> > +        rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# remove previous $seqres.full before test
-> > +rm -f $seqres.full
-> > +
-> > +# real QA test starts here
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +_require_test
-> > +
-> > +# Run fsx for a million ops or more
-> > +nr_ops=$((1000000 * TIME_FACTOR))
-> > +op_sz=$((128000 * LOAD_FACTOR))
-> > +file_sz=$((600000 * LOAD_FACTOR))
-> > +fsx_file=$TEST_DIR/fsx.$seq
-> > +
-> > +fsx_args=(-q)
-> > +fsx_args+=(-N $nr_ops)
-> > +fsx_args+=(-p $((nr_ops / 100)))
-> > +fsx_args+=(-o $op_sz)
-> > +fsx_args+=(-l $file_sz)
-> > +fsx_args+=($fsx_file)
-> > +
-> > +echo "ltp ${fsx_args[@]} $FSX_ARGS" >> $seqres.full
-> > +
-> > +if ! ltp/fsx "${fsx_args[@]}" $FSX_ARGS > $tmp.fsx 2>&1; then
-> > +	cat $tmp.fsx | tee -a $seqres.full
-> > +fi
-> > +
-> > +# success, all done
-> > +echo Silence is golden
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/939.out b/tests/generic/939.out
-> > new file mode 100644
-> > index 00000000..a86e90c5
-> > --- /dev/null
-> > +++ b/tests/generic/939.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 939
-> > +Silence is golden
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index 92330b52..16e5cc17 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -522,3 +522,5 @@
-> >  517 auto quick dedupe clone
-> >  518 auto quick clone
-> >  519 auto quick
-> > +938 soak long_rw
-> > +939 soak long_rw
-> > 
+Typo, "which is not page aligned".
