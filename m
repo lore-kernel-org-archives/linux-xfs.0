@@ -1,125 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:57750 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727033AbeK1Qiu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 11:38:50 -0500
-Date: Wed, 28 Nov 2018 16:38:22 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v1 5/7] xfs: Add device retry
-Message-ID: <20181128053821.GM6311@dastard>
-References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
- <1543376991-5764-6-git-send-email-allison.henderson@oracle.com>
- <20181128050850.GJ6311@dastard>
- <20181128052245.GD8125@magnolia>
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:35490 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727087AbeK0Jwf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 04:52:35 -0500
+Received: by mail-pf1-f196.google.com with SMTP id z9so7322249pfi.2
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 14:56:53 -0800 (PST)
+Date: Mon, 26 Nov 2018 14:56:49 -0800
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH V12 16/20] block: enable multipage bvecs
+Message-ID: <20181126225649.GP30411@vader>
+References: <20181126021720.19471-1-ming.lei@redhat.com>
+ <20181126021720.19471-17-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181128052245.GD8125@magnolia>
+In-Reply-To: <20181126021720.19471-17-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Allison Henderson <allison.henderson@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, bob.liu@oracle.com
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Tue, Nov 27, 2018 at 09:22:45PM -0800, Darrick J. Wong wrote:
-> On Wed, Nov 28, 2018 at 04:08:50PM +1100, Dave Chinner wrote:
-> > On Tue, Nov 27, 2018 at 08:49:49PM -0700, Allison Henderson wrote:
-> > > Check to see if the _xfs_buf_read fails.  If so loop over the
-> > > available mirrors and retry the read
-> > > 
-> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > > ---
-> > >  fs/xfs/xfs_buf.c | 28 +++++++++++++++++++++++++++-
-> > >  1 file changed, 27 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > index dd8ba59..f102d01 100644
-> > > --- a/fs/xfs/xfs_buf.c
-> > > +++ b/fs/xfs/xfs_buf.c
-> > > @@ -21,6 +21,7 @@
-> > >  #include <linux/migrate.h>
-> > >  #include <linux/backing-dev.h>
-> > >  #include <linux/freezer.h>
-> > > +#include <linux/blkdev.h>
-> > >  
-> > >  #include "xfs_format.h"
-> > >  #include "xfs_log_format.h"
-> > > @@ -808,6 +809,8 @@ xfs_buf_read_map(
-> > >  	const struct xfs_buf_ops *ops)
-> > >  {
-> > >  	struct xfs_buf		*bp;
-> > > +	struct request_queue	*q;
-> > > +	unsigned short		i;
-> > >  
-> > >  	flags |= XBF_READ;
-> > >  
-> > > @@ -820,7 +823,30 @@ xfs_buf_read_map(
-> > >  	if (!(bp->b_flags & XBF_DONE)) {
-> > >  		XFS_STATS_INC(target->bt_mount, xb_get_read);
-> > >  		bp->b_ops = ops;
-> > > -		_xfs_buf_read(bp, flags);
-> > > +		q = bdev_get_queue(bp->b_target->bt_bdev);
-> > > +
-> > > +		/*
-> > > +		 * Mirrors are indexed 1 - n, specified through the rw_hint.
-> > > +		 * Setting the hint to 0 is unspecified and allows the block
-> > > +		 * layer to decide.
-> > > +		 */
-> > > +		for (i = 0; i <= blk_queue_get_mirrors(q); i++) {
-> > > +			bp->b_error = 0;
-> > > +			bp->b_rw_hint = i;
-> > > +			_xfs_buf_read(bp, flags);
-> > 
-> > So the first time through this loop the block layer devices what
-> > device to read from, then we iterate devices 1..n on error.
-> > 
-> > Whihc means if device 0 is the only one with good information in it,
-> > we may not ever actually read from it.
-> > 
-> > I'd suggest that a hint of "-1" (or equivalent max value) should be
-> > used for "device selects mirror leg" rather than 0, so we can
-> > actually read from the first device on command.
+On Mon, Nov 26, 2018 at 10:17:16AM +0800, Ming Lei wrote:
+> This patch pulls the trigger for multi-page bvecs.
+
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  block/bio.c         | 22 +++++++++++++++-------
+>  fs/iomap.c          |  4 ++--
+>  fs/xfs/xfs_aops.c   |  4 ++--
+>  include/linux/bio.h |  2 +-
+>  4 files changed, 20 insertions(+), 12 deletions(-)
 > 
-> "read from the first device on command" => "set bio.bi_rw_hint = 1"...
-
-Landmine.
-
-> > i.e.
-> > 		bp->b_error = 0;
-> > 		bp->b_rw_hint = -1;
+> diff --git a/block/bio.c b/block/bio.c
+> index 75fde30af51f..8bf9338d4783 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -753,6 +753,8 @@ EXPORT_SYMBOL(bio_add_pc_page);
+>   * @page: page to add
+>   * @len: length of the data to add
+>   * @off: offset of the data in @page
+> + * @same_page: if %true only merge if the new data is in the same physical
+> + *		page as the last segment of the bio.
+>   *
+>   * Try to add the data at @page + @off to the last bvec of @bio.  This is a
+>   * a useful optimisation for file systems with a block size smaller than the
+> @@ -761,19 +763,25 @@ EXPORT_SYMBOL(bio_add_pc_page);
+>   * Return %true on success or %false on failure.
+>   */
+>  bool __bio_try_merge_page(struct bio *bio, struct page *page,
+> -		unsigned int len, unsigned int off)
+> +		unsigned int len, unsigned int off, bool same_page)
+>  {
+>  	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
+>  		return false;
+>  
+>  	if (bio->bi_vcnt > 0) {
+>  		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+> +		phys_addr_t vec_end_addr = page_to_phys(bv->bv_page) +
+> +			bv->bv_offset + bv->bv_len;
+> +		phys_addr_t page_addr = page_to_phys(page);
+>  
+> -		if (page == bv->bv_page && off == bv->bv_offset + bv->bv_len) {
+> -			bv->bv_len += len;
+> -			bio->bi_iter.bi_size += len;
+> -			return true;
+> -		}
+> +		if (vec_end_addr != page_addr + off)
+> +			return false;
+> +		if (same_page && ((vec_end_addr - 1) & PAGE_MASK) != page_addr)
+> +			return false;
+> +
+> +		bv->bv_len += len;
+> +		bio->bi_iter.bi_size += len;
+> +		return true;
+>  	}
+>  	return false;
+>  }
+> @@ -819,7 +827,7 @@ EXPORT_SYMBOL_GPL(__bio_add_page);
+>  int bio_add_page(struct bio *bio, struct page *page,
+>  		 unsigned int len, unsigned int offset)
+>  {
+> -	if (!__bio_try_merge_page(bio, page, len, offset)) {
+> +	if (!__bio_try_merge_page(bio, page, len, offset, false)) {
+>  		if (bio_full(bio))
+>  			return 0;
+>  		__bio_add_page(bio, page, len, offset);
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 1f648d098a3b..ec5527b0fba4 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -313,7 +313,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  	 */
+>  	sector = iomap_sector(iomap, pos);
+>  	if (ctx->bio && bio_end_sector(ctx->bio) == sector) {
+> -		if (__bio_try_merge_page(ctx->bio, page, plen, poff))
+> +		if (__bio_try_merge_page(ctx->bio, page, plen, poff, true))
+>  			goto done;
+>  		is_contig = true;
+>  	}
+> @@ -344,7 +344,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  		ctx->bio->bi_end_io = iomap_read_end_io;
+>  	}
+>  
+> -	__bio_add_page(ctx->bio, page, plen, poff);
+> +	bio_add_page(ctx->bio, page, plen, poff);
+>  done:
+>  	/*
+>  	 * Move the caller beyond our range so that it keeps making progress.
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 1f1829e506e8..b9fd44168f61 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -616,12 +616,12 @@ xfs_add_to_ioend(
+>  				bdev, sector);
+>  	}
+>  
+> -	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff)) {
+> +	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff, true)) {
+>  		if (iop)
+>  			atomic_inc(&iop->write_count);
+>  		if (bio_full(wpc->ioend->io_bio))
+>  			xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
+> -		__bio_add_page(wpc->ioend->io_bio, page, len, poff);
+> +		bio_add_page(wpc->ioend->io_bio, page, len, poff);
+>  	}
+>  
+>  	wpc->ioend->io_size += len;
+> diff --git a/include/linux/bio.h b/include/linux/bio.h
+> index c35997dd02c2..5505f74aef8b 100644
+> --- a/include/linux/bio.h
+> +++ b/include/linux/bio.h
+> @@ -441,7 +441,7 @@ extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
+>  extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
+>  			   unsigned int, unsigned int);
+>  bool __bio_try_merge_page(struct bio *bio, struct page *page,
+> -		unsigned int len, unsigned int off);
+> +		unsigned int len, unsigned int off, bool same_page);
+>  void __bio_add_page(struct bio *bio, struct page *page,
+>  		unsigned int len, unsigned int off);
+>  int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter);
+> -- 
+> 2.9.5
 > 
-> ...which is confusing.  The intended behavior for this RFC (though not
-> so well documented) is that bi_rw_hint == 0 means "let the device
-> choose", and rw_hint > 1 means "choose mirror (rw_hint - 1)".  That's
-> sort of an odd behavior because now we have:
-> 
-> blk_queue_get_mirrors(q) returns 5 (as in 5 mirrors) but we access the
-> 5 mirrors as indices 1-5, not 0-4 like most programmers would probably
-> expect.
-
-Yeah, that's not nice, and will lead to bugs in future as it trips
-up people who have forgotten about this quirk.
-
-> Also, I think it's probably necessary to create a #define to attach a
-> name to the "let the device choose" value...
-> 
-> #define BIO_RW_HINT_ANY_MIRROR	(0)
-> 
-> for (i = BIO_RW_HINT_ANY_MIRROR; i <= blk_queue_get_mirrors(q); i++) {
-> 	...
-> 	bp->b_rw_hint = i;
-> 	...
-> 	_xfs_buf_read(bp, flags);
-> 	...
-> }
-
-The recovery algorithms are only going to get more complex as
-time goes on, so I'd really like to see an explicit separation of
-the simple, unchanging fast path and the fallback recovery code.
-
-Cheers,
-
-dave.
--- 
-Dave Chinner
-david@fromorbit.com
