@@ -1,50 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail2.tencent.com ([163.177.67.195]:56467 "EHLO
-        mail2.tencent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733249AbeKWMwx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Nov 2018 07:52:53 -0500
-From: =?utf-8?B?ZGJ5aW4o5bC554OoKQ==?= <dbyin@tencent.com>
-Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0hdIGZzL3hmczogZml4IGZfZmZyZWUgdmFsdWUgZm9y?=
- =?utf-8?B?IHN0YXRmcyB3aGVuIHByb2plY3QgcXVvdGEgaXMgc2V0KEludGVybmV0IG1h?=
- =?utf-8?Q?il)?=
-Date: Fri, 23 Nov 2018 02:10:34 +0000
-Message-ID: <6EC51EE77FA0264BB8DAD779E0C341C9014BD78CB5@EXMBX-SZMAIL003.tencent.com>
-References: <6EC51EE77FA0264BB8DAD779E0C341C9014BD77C91@EXMBX-SZMAIL003.tencent.com>
- <20181122175801.GV6792@magnolia>
-In-Reply-To: <20181122175801.GV6792@magnolia>
-Content-Language: zh-CN
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Received: from sandeen.net ([63.231.237.45]:60730 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726627AbeK0KAE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Nov 2018 05:00:04 -0500
+Subject: [PATCH V2] mkfs.xfs: null-terminate symlinks created via protofile
+References: <a7246562-e851-dfc4-ea3f-3b4dd64aca5b@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ca4c95cc-c8c5-c876-9ca4-a50794a4bb4f@sandeen.net>
+Date: Mon, 26 Nov 2018 17:04:20 -0600
 MIME-Version: 1.0
+In-Reply-To: <a7246562-e851-dfc4-ea3f-3b4dd64aca5b@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Zorro Lang <zlang@redhat.com>
 
-V2Ugc2V0IHhmcyBwcm9qZWN0IHF1b3RhIHdpdGggb3ZlcmxheWZzIGZvciBkb2NrZXIgY29udGFp
-bmVyLiBXaGVuIEkgZW50ZXIgaW50byB0aGUgY29udGFpbmVyIGFuZCBydW4gdGhlIGNvbW1hbmQg
-J2RmIC1paCcsIHRoZSAnSUZyZWUnIGFuZCAnSVVzZWQnIGFyZSB1bmNvcnJlY3Q6DQoNCiNkZiAt
-aWgNCkZpbGVzeXN0ZW0gICAgICAgICAgICBJbm9kZXMgICBJVXNlZCAgIElGcmVlIElVc2UlIE1v
-dW50ZWQgb24NCm92ZXJsYXkgICAgICAgICAgICAgICAgIDEwMDAgICAtMjM1TSAgICAyMzVNICAg
-IC0gIC8NCg0KU28gSSB3YW50IHRvIGZpeCB0aGlzIGZsYXcsIGFuZCB0aGlzIGlzIHZlcnkgbWVh
-bmluZ2Z1bCBmb3Igb3VyIGFwcGxpY2F0aW9ucy4NClllDQoNCj4gDQo+IE9uIFRodSwgTm92IDIy
-LCAyMDE4IGF0IDAxOjI4OjA0UE0gKzAwMDAsIGRieWluKOWwueeDqCkgd3JvdGU6DQo+ID4gV2hl
-biBwcm9qZWN0IGlzIHNldCwgd2Ugc2hvdWxkIHVzZSBpbm9kZSBsaW1pdCBtaW51cyB0aGUgdXNl
-ZCBjb3VudA0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogWWUgWWluIDxkYnlpbkB0ZW5jZW50LmNv
-bT4NCj4gDQo+IFRoaXMgbWFrZXMgc2Vuc2UgdG8gbWUsIGJ1dCAuLi4gaXQncyBiZWVuIGJyb2tl
-biBsaWtlIHRoaXMgc2luY2UgMjAwNi4NCj4gSXMgdGhlcmUgYSByZWFzb24gd2h5IChzb21lb25l
-IG5hbWVkIEdsZW4pIHdyb3RlIGl0IHRoaXMgd2F5Pw0KPiANCj4gUmV2aWV3ZWQtYnk6IERhcnJp
-Y2sgSi4gV29uZyA8ZGFycmljay53b25nQG9yYWNsZS5jb20+DQo+IA0KPiAtLUQNCj4gDQo+ID4g
-LS0tDQo+ID4gIGZzL3hmcy94ZnNfcW1fYmh2LmMgfCAyICstDQo+ID4gIDEgZmlsZSBjaGFuZ2Vk
-LCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2Zz
-L3hmcy94ZnNfcW1fYmh2LmMgYi9mcy94ZnMveGZzX3FtX2Jodi5jIGluZGV4DQo+ID4gNzNhMWQ3
-N2VjMTg3Li4zMDkxZTRiYzA0ZWYgMTAwNjQ0DQo+ID4gLS0tIGEvZnMveGZzL3hmc19xbV9iaHYu
-Yw0KPiA+ICsrKyBiL2ZzL3hmcy94ZnNfcW1fYmh2LmMNCj4gPiBAQCAtNDAsNyArNDAsNyBAQCB4
-ZnNfZmlsbF9zdGF0dmZzX2Zyb21fZHF1b3QoDQo+ID4gICAgICAgICAgICAgICAgIHN0YXRwLT5m
-X2ZpbGVzID0gbGltaXQ7DQo+ID4gICAgICAgICAgICAgICAgIHN0YXRwLT5mX2ZmcmVlID0NCj4g
-PiAgICAgICAgICAgICAgICAgICAgICAgICAoc3RhdHAtPmZfZmlsZXMgPiBkcXAtPnFfcmVzX2lj
-b3VudCkgPw0KPiA+IC0gICAgICAgICAgICAgICAgICAgICAgICAoc3RhdHAtPmZfZmZyZWUgLSBk
-cXAtPnFfcmVzX2ljb3VudCkgOiAwOw0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgICAoc3Rh
-dHAtPmZfZmlsZXMgLSBkcXAtPnFfcmVzX2ljb3VudCkgOiAwOw0KPiA+ICAgICAgICAgfQ0KPiA+
-ICB9DQo+ID4NCj4gPiAtLQ0KPiA+IDIuMTYuMg0KDQo=
+Now that we have a symlink verifier which checks that in-memory
+symlink names are null-terminated, be sure we do that when we
+create them via the mkfs protofile.
+
+We only want to null-terminate inline data if it's a symlink;
+we only ever /call/ newfile() with "dolocal" for symlinks, so
+rename that function argument for clarity.
+
+Zorro found this by running xfs/019 on an s390x machine, it
+failed with:
+
+ Metadata corruption detected at 0x101214a, inode 0x89 data fork
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reported-by: Zorro Lang <zlang@redhat.com>
+---
+
+V2: don't increase len, it gets set into i_size.  Just bump
+the allocation/copy by 1.  Thanks, Darrick.
+
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 1cd5436..103795f 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -15,7 +15,7 @@ static char *getstr(char **pp);
+ static void fail(char *msg, int i);
+ static struct xfs_trans * getres(struct xfs_mount *mp, uint blocks);
+ static void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
+-static int newfile(xfs_trans_t *tp, xfs_inode_t *ip, int dolocal, int logit,
++static int newfile(xfs_trans_t *tp, xfs_inode_t *ip, int symlink, int logit,
+ 			char *buf, int len);
+ static char *newregfile(char **pp, int *len);
+ static void rtinit(xfs_mount_t *mp);
+@@ -220,7 +220,7 @@ static int
+ newfile(
+ 	xfs_trans_t	*tp,
+ 	xfs_inode_t	*ip,
+-	int		dolocal,
++	int		symlink,
+ 	int		logit,
+ 	char		*buf,
+ 	int		len)
+@@ -236,10 +236,11 @@ newfile(
+ 
+ 	flags = 0;
+ 	mp = ip->i_mount;
+-	if (dolocal && len <= XFS_IFORK_DSIZE(ip)) {
+-		libxfs_idata_realloc(ip, len, XFS_DATA_FORK);
++	if (symlink && len <= XFS_IFORK_DSIZE(ip)) {
++		/* Copy the name's trailing NULL as well */
++		libxfs_idata_realloc(ip, len + 1, XFS_DATA_FORK);
+ 		if (buf)
+-			memmove(ip->i_df.if_u1.if_data, buf, len);
++			memmove(ip->i_df.if_u1.if_data, buf, len + 1);
+ 		ip->i_d.di_size = len;
+ 		ip->i_df.if_flags &= ~XFS_IFEXTENTS;
+ 		ip->i_df.if_flags |= XFS_IFINLINE;
