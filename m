@@ -1,141 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:60938 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726894AbeK1QXN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 11:23:13 -0500
-Date: Tue, 27 Nov 2018 21:22:45 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v1 5/7] xfs: Add device retry
-Message-ID: <20181128052245.GD8125@magnolia>
-References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
- <1543376991-5764-6-git-send-email-allison.henderson@oracle.com>
- <20181128050850.GJ6311@dastard>
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:43649 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727634AbeK0Jfp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 04:35:45 -0500
+Received: by mail-pl1-f195.google.com with SMTP id gn14so14570688plb.10
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 14:40:05 -0800 (PST)
+Date: Mon, 26 Nov 2018 14:40:03 -0800
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH V12 14/20] bcache: avoid to use
+ bio_for_each_segment_all() in bch_bio_alloc_pages()
+Message-ID: <20181126224003.GK30411@vader>
+References: <20181126021720.19471-1-ming.lei@redhat.com>
+ <20181126021720.19471-15-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181128050850.GJ6311@dastard>
+In-Reply-To: <20181126021720.19471-15-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Allison Henderson <allison.henderson@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, bob.liu@oracle.com
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Wed, Nov 28, 2018 at 04:08:50PM +1100, Dave Chinner wrote:
-> On Tue, Nov 27, 2018 at 08:49:49PM -0700, Allison Henderson wrote:
-> > Check to see if the _xfs_buf_read fails.  If so loop over the
-> > available mirrors and retry the read
-> > 
-> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > ---
-> >  fs/xfs/xfs_buf.c | 28 +++++++++++++++++++++++++++-
-> >  1 file changed, 27 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index dd8ba59..f102d01 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -21,6 +21,7 @@
-> >  #include <linux/migrate.h>
-> >  #include <linux/backing-dev.h>
-> >  #include <linux/freezer.h>
-> > +#include <linux/blkdev.h>
-> >  
-> >  #include "xfs_format.h"
-> >  #include "xfs_log_format.h"
-> > @@ -808,6 +809,8 @@ xfs_buf_read_map(
-> >  	const struct xfs_buf_ops *ops)
-> >  {
-> >  	struct xfs_buf		*bp;
-> > +	struct request_queue	*q;
-> > +	unsigned short		i;
-> >  
-> >  	flags |= XBF_READ;
-> >  
-> > @@ -820,7 +823,30 @@ xfs_buf_read_map(
-> >  	if (!(bp->b_flags & XBF_DONE)) {
-> >  		XFS_STATS_INC(target->bt_mount, xb_get_read);
-> >  		bp->b_ops = ops;
-> > -		_xfs_buf_read(bp, flags);
-> > +		q = bdev_get_queue(bp->b_target->bt_bdev);
-> > +
-> > +		/*
-> > +		 * Mirrors are indexed 1 - n, specified through the rw_hint.
-> > +		 * Setting the hint to 0 is unspecified and allows the block
-> > +		 * layer to decide.
-> > +		 */
-> > +		for (i = 0; i <= blk_queue_get_mirrors(q); i++) {
-> > +			bp->b_error = 0;
-> > +			bp->b_rw_hint = i;
-> > +			_xfs_buf_read(bp, flags);
+On Mon, Nov 26, 2018 at 10:17:14AM +0800, Ming Lei wrote:
+> bch_bio_alloc_pages() is always called on one new bio, so it is safe
+> to access the bvec table directly. Given it is the only kind of this
+> case, open code the bvec table access since bio_for_each_segment_all()
+> will be changed to support for iterating over multipage bvec.
 > 
-> So the first time through this loop the block layer devices what
-> device to read from, then we iterate devices 1..n on error.
+> Acked-by: Coly Li <colyli@suse.de>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  drivers/md/bcache/util.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
 > 
-> Whihc means if device 0 is the only one with good information in it,
-> we may not ever actually read from it.
-> 
-> I'd suggest that a hint of "-1" (or equivalent max value) should be
-> used for "device selects mirror leg" rather than 0, so we can
-> actually read from the first device on command.
-
-"read from the first device on command" => "set bio.bi_rw_hint = 1"...
-
-> i.e.
-> 		bp->b_error = 0;
-> 		bp->b_rw_hint = -1;
-
-...which is confusing.  The intended behavior for this RFC (though not
-so well documented) is that bi_rw_hint == 0 means "let the device
-choose", and rw_hint > 1 means "choose mirror (rw_hint - 1)".  That's
-sort of an odd behavior because now we have:
-
-blk_queue_get_mirrors(q) returns 5 (as in 5 mirrors) but we access the
-5 mirrors as indices 1-5, not 0-4 like most programmers would probably
-expect.
-
-Also, I think it's probably necessary to create a #define to attach a
-name to the "let the device choose" value...
-
-#define BIO_RW_HINT_ANY_MIRROR	(0)
-
-for (i = BIO_RW_HINT_ANY_MIRROR; i <= blk_queue_get_mirrors(q); i++) {
-	...
-	bp->b_rw_hint = i;
-	...
-	_xfs_buf_read(bp, flags);
-	...
-}
-
-(or offset things -1 like you propose)
-
---D
-
-> 		_xfs_buf_read(bp, flags);
-> 
-> 		if (!bp->b_error)
-> 			return bp;
-> 
-> 		/* manual iteration to find a good copy */
-> 		for (i = 0; i <= blk_queue_get_mirrors(q); i++) {
-> 			bp->b_error = 0;
-> 			bp->b_rw_hint = i;
-> 			_xfs_buf_read(bp, flags);
-> ......
-> > +
-> > +			switch (bp->b_error) {
-> > +			case -EIO:
-> > +			case -EFSCORRUPTED:
-> > +			case -EFSBADCRC:
-> > +				/* loop again */
-> > +				continue;
-> > +			default:
-> > +				goto retry_done;
-> 
-> Just return bp here, don't need a jump label for it.
-> 
-> Cheers,
-> 
-> Dave.
+> diff --git a/drivers/md/bcache/util.c b/drivers/md/bcache/util.c
+> index 20eddeac1531..62fb917f7a4f 100644
+> --- a/drivers/md/bcache/util.c
+> +++ b/drivers/md/bcache/util.c
+> @@ -270,7 +270,11 @@ int bch_bio_alloc_pages(struct bio *bio, gfp_t gfp_mask)
+>  	int i;
+>  	struct bio_vec *bv;
+>  
+> -	bio_for_each_segment_all(bv, bio, i) {
+> +	/*
+> +	 * This is called on freshly new bio, so it is safe to access the
+> +	 * bvec table directly.
+> +	 */
+> +	for (i = 0, bv = bio->bi_io_vec; i < bio->bi_vcnt; bv++, i++) {
+>  		bv->bv_page = alloc_page(gfp_mask);
+>  		if (!bv->bv_page) {
+>  			while (--bv >= bio->bi_io_vec)
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.9.5
+> 
