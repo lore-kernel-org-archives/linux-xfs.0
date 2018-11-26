@@ -1,23 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:51996 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726225AbeK0AGD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Nov 2018 19:06:03 -0500
-Date: Mon, 26 Nov 2018 14:11:54 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V12 10/20] block: use bio_for_each_bvec() to map sg
-Message-ID: <20181126131154.GB6757@lst.de>
-References: <20181126021720.19471-1-ming.lei@redhat.com> <20181126021720.19471-11-ming.lei@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181126021720.19471-11-ming.lei@redhat.com>
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:45877 "EHLO
+        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726210AbeK0AX6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Nov 2018 19:23:58 -0500
+Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
+        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
+        (envelope-from <l.stach@pengutronix.de>)
+        id 1gRGxR-0003N0-3r
+        for linux-xfs@vger.kernel.org; Mon, 26 Nov 2018 14:29:49 +0100
+Message-ID: <1543238989.2507.33.camel@pengutronix.de>
+Subject: Regular FS shutdown while rsync is running
+From: Lucas Stach <l.stach@pengutronix.de>
+Date: Mon, 26 Nov 2018 14:29:49 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: linux-xfs@vger.kernel.org
 
-Looks good,
+Hi all,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+we have a XFS filesystem which is used to backup data from others
+servers via rsync. While rsync is running the filesystem is regularly
+shutting itself down. Sometimes the FS will last for 3 days until the
+shutdown happens, sometimes it's after only 3 hours.
+
+The issue was spotted on a 4.17 kernel, but I'm not sure that's the
+first version with this issue, as that was the kernel version used when
+setting up the backup system. We also checked that the issue is still
+present in a 4.19.4 vanilla kernel, backtrace from this kernel version
+is provided below.
+
+The block stack below the XFS is a LVM on a software RAID10.
+
+I can provide more information as needed, but I'm not sure at this
+point which information would be appropriate to further debug this
+issue. Any pointers appreciated.
+
+Please keep me in CC, as I'm not subscribed to the XFS list.
+
+Regards,
+Lucas
+
+
+
+[50013.593883] XFS (dm-2): Internal error xfs_btree_check_sblock at line 179 of file fs/xfs/libxfs/xfs_btree.c.  Caller xfs_btree_lastrec+0x41/0x90 [xfs]
+[50013.594365] CPU: 4 PID: 31839 Comm: rsync Not tainted 4.19.4-holodeck10 #1
+[50013.594365] Hardware name: Dell Inc. PowerEdge R730/0H21J3, BIOS 2.6.0 10/26/2017
+[50013.594366] Call Trace:
+[50013.594372]  dump_stack+0x5c/0x7b
+[50013.594391]  xfs_btree_check_sblock+0x5a/0xb0 [xfs]
+[50013.594409]  xfs_btree_lastrec+0x41/0x90 [xfs]
+[50013.594427]  xfs_btree_delrec+0xa48/0xdf0 [xfs]
+[50013.594446]  ? xfs_inobt_get_maxrecs+0x20/0x20 [xfs]
+[50013.594463]  ? xfs_lookup_get_search_key+0x49/0x60 [xfs]
+[50013.594480]  xfs_btree_delete+0x43/0x110 [xfs]
+[50013.594500]  xfs_dialloc_ag+0x16a/0x290 [xfs]
+[50013.594540]  xfs_dialloc+0x5b/0x270 [xfs]
+[50013.594562]  xfs_ialloc+0x6c/0x5b0 [xfs]
+[50013.594583]  xfs_dir_ialloc+0x68/0x1d0 [xfs]
+[50013.594615]  xfs_create+0x3df/0x5e0 [xfs]
+[50013.594633]  xfs_generic_create+0x241/0x2e0 [xfs]
+[50013.594636]  vfs_mkdir+0x10c/0x1a0
+[50013.594638]  do_mkdirat+0xd3/0x110
+[50013.594641]  do_syscall_64+0x55/0xf0
+[50013.594644]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[50013.594645] RIP: 0033:0x7fda0e896447
+[50013.594647] Code: 00 b8 ff ff ff ff c3 0f 1f 40 00 48 8b 05 49 da 2b 00 64 c7 00 5f 00 00 00 b8 ff ff ff ff c3 0f 1f 40 00 b8 53 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 21 da 2b 00 f7 d8 64 89 01 48
+[50013.594647] RSP: 002b:00007ffdedc1a118 EFLAGS: 00000202 ORIG_RAX: 0000000000000053
+[50013.594649] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007fda0e896447
+[50013.594649] RDX: 0000000000000008 RSI: 00000000000001c0 RDI: 00007ffdedc1c470
+[50013.594650] RBP: 0000560fd94b5c70 R08: 0000000000000080 R09: 00000000ffffffff
+[50013.594661] R10: 0000000000000000 R11: 0000000000000202 R12: 0000000000000002
+[50013.594662] R13: 0000000000000000 R14: 00007ffdedc1c470 R15: 00000000ffffffff
+[50013.594681] XFS (dm-2): Internal error XFS_WANT_CORRUPTED_GOTO at line 3889 of file fs/xfs/libxfs/xfs_btree.c.  Caller xfs_btree_delete+0x43/0x110 [xfs]
+[50013.595138] CPU: 4 PID: 31839 Comm: rsync Not tainted 4.19.4-holodeck10 #1
+[50013.595138] Hardware name: Dell Inc. PowerEdge R730/0H21J3, BIOS 2.6.0 10/26/2017
+[50013.595138] Call Trace:
+[50013.595141]  dump_stack+0x5c/0x7b
+[50013.595157]  xfs_btree_delrec+0xc1c/0xdf0 [xfs]
+[50013.595174]  ? xfs_inobt_get_maxrecs+0x20/0x20 [xfs]
+[50013.595188]  ? xfs_lookup_get_search_key+0x49/0x60 [xfs]
+[50013.595203]  xfs_btree_delete+0x43/0x110 [xfs]
+[50013.595220]  xfs_dialloc_ag+0x16a/0x290 [xfs]
+[50013.595236]  xfs_dialloc+0x5b/0x270 [xfs]
+[50013.595255]  xfs_ialloc+0x6c/0x5b0 [xfs]
+[50013.595274]  xfs_dir_ialloc+0x68/0x1d0 [xfs]
+[50013.595291]  xfs_create+0x3df/0x5e0 [xfs]
+[50013.595309]  xfs_generic_create+0x241/0x2e0 [xfs]
+[50013.595311]  vfs_mkdir+0x10c/0x1a0
+[50013.595313]  do_mkdirat+0xd3/0x110
+[50013.595314]  do_syscall_64+0x55/0xf0
+[50013.595316]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[50013.595317] RIP: 0033:0x7fda0e896447
+[50013.595318] Code: 00 b8 ff ff ff ff c3 0f 1f 40 00 48 8b 05 49 da 2b 00 64 c7 00 5f 00 00 00 b8 ff ff ff ff c3 0f 1f 40 00 b8 53 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 21 da 2b 00 f7 d8 64 89 01 48
+[50013.595319] RSP: 002b:00007ffdedc1a118 EFLAGS: 00000202 ORIG_RAX: 0000000000000053
+[50013.595320] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007fda0e896447
+[50013.595320] RDX: 0000000000000008 RSI: 00000000000001c0 RDI: 00007ffdedc1c470
+[50013.595321] RBP: 0000560fd94b5c70 R08: 0000000000000080 R09: 00000000ffffffff
+[50013.595322] R10: 0000000000000000 R11: 0000000000000202 R12: 0000000000000002
+[50013.595322] R13: 0000000000000000 R14: 00007ffdedc1c470 R15: 00000000ffffffff
+[50013.595365] XFS (dm-2): Internal error xfs_trans_cancel at line 1041 of file fs/xfs/xfs_trans.c.  Caller xfs_create+0x3f1/0x5e0 [xfs]
+[50013.595750] CPU: 4 PID: 31839 Comm: rsync Not tainted 4.19.4-holodeck10 #1
+[50013.595751] Hardware name: Dell Inc. PowerEdge R730/0H21J3, BIOS 2.6.0 10/26/2017
+[50013.595751] Call Trace:
+[50013.595753]  dump_stack+0x5c/0x7b
+[50013.595774]  xfs_trans_cancel+0x133/0x160 [xfs]
+[50013.595793]  xfs_create+0x3f1/0x5e0 [xfs]
+[50013.595812]  xfs_generic_create+0x241/0x2e0 [xfs]
+[50013.595814]  vfs_mkdir+0x10c/0x1a0
+[50013.595815]  do_mkdirat+0xd3/0x110
+[50013.595817]  do_syscall_64+0x55/0xf0
+[50013.595819]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[50013.595820] RIP: 0033:0x7fda0e896447
+[50013.595820] Code: 00 b8 ff ff ff ff c3 0f 1f 40 00 48 8b 05 49 da 2b 00 64 c7 00 5f 00 00 00 b8 ff ff ff ff c3 0f 1f 40 00 b8 53 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 21 da 2b 00 f7 d8 64 89 01 48
+[50013.595821] RSP: 002b:00007ffdedc1a118 EFLAGS: 00000202 ORIG_RAX: 0000000000000053
+[50013.595822] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007fda0e896447
+[50013.595823] RDX: 0000000000000008 RSI: 00000000000001c0 RDI: 00007ffdedc1c470
+[50013.595824] RBP: 0000560fd94b5c70 R08: 0000000000000080 R09: 00000000ffffffff
+[50013.595824] R10: 0000000000000000 R11: 0000000000000202 R12: 0000000000000002
+[50013.595825] R13: 0000000000000000 R14: 00007ffdedc1c470 R15: 00000000ffffffff
+[50013.595827] XFS (dm-2): xfs_do_force_shutdown(0x8) called from line 1042 of file fs/xfs/xfs_trans.c.  Return address = 00000000fd4adc21
+[50013.667040] XFS (dm-2): Corruption of in-memory data detected.  Shutting down filesystem
+[50013.667303] XFS (dm-2): Please umount the filesystem and rectify the problem(s)
+[50013.671838] XFS (dm-2): xfs_imap_to_bp: xfs_trans_read_buf() returned error -5.
+[50013.671842] XFS (dm-2): xfs_do_force_shutdown(0x8) called from line 3403 of file fs/xfs/xfs_inode.c.  Return address = 0000000062cd5dba
