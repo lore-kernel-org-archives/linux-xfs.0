@@ -1,122 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51018 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727303AbeK1Owq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 09:52:46 -0500
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v1 7/7] xfs: Add tracepoints and logging to alternate device retry
-Date: Tue, 27 Nov 2018 20:49:51 -0700
-Message-Id: <1543376991-5764-8-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
-References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:38779 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726253AbeK0E2i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Nov 2018 23:28:38 -0500
+Received: by mail-pg1-f194.google.com with SMTP id g189so6486557pgc.5
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 09:33:51 -0800 (PST)
+Date: Mon, 26 Nov 2018 09:33:47 -0800
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH v3] xfs: cache minimum realtime summary level
+Message-ID: <20181126173347.GB17512@vader>
+References: <95c54025014c6d5d3944924b52637cdc2b50cf4e.1542137269.git.osandov@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <95c54025014c6d5d3944924b52637cdc2b50cf4e.1542137269.git.osandov@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: martin.petersen@oracle.com, shirley.ma@oracle.com, bob.liu@oracle.com, allison.henderson@oracle.com
+To: linux-xfs@vger.kernel.org
+Cc: kernel-team@fb.com
 
-This patch adds new log entries and trace points to the
-alternate device retry error path
+On Tue, Nov 13, 2018 at 11:28:59AM -0800, Omar Sandoval wrote:
+> From: Omar Sandoval <osandov@fb.com>
+> 
+> The realtime summary is a two-dimensional array on disk, effectively:
+> 
+> u32 rsum[log2(number of realtime extents) + 1][number of blocks in the bitmap]
+> 
+> rsum[log][bbno] is the number of extents of size 2**log which start in
+> bitmap block bbno.
+> 
+> xfs_rtallocate_extent_near() uses xfs_rtany_summary() to check whether
+> rsum[log][bbno] != 0 for any log level. However, the summary array is
+> stored in row-major order (i.e., like an array in C), so all of these
+> entries are not adjacent, but rather spread across the entire summary
+> file. In the worst case (a full bitmap block), xfs_rtany_summary() has
+> to check every level.
+> 
+> This means that on a moderately-used realtime device, an allocation will
+> waste a lot of time finding, reading, and releasing buffers for the
+> realtime summary. In particular, one of our storage services (which runs
+> on servers with 8 very slow CPUs and 15 8 TB XFS realtime filesystems)
+> spends almost 5% of its CPU cycles in xfs_rtbuf_get() and
+> xfs_trans_brelse() called from xfs_rtany_summary().
+> 
+> One solution would be to also store the summary with the dimensions
+> swapped. However, this would require a disk format change to a very old
+> component of XFS.
+> 
+> Instead, we can cache the minimum size which contains any extents. We do
+> so lazily; rather than guaranteeing that the cache contains the precise
+> minimum, it always contains a loose lower bound which we tighten when we
+> read or update a summary block. This only uses a few kilobytes of memory
+> and is already serialized via the realtime bitmap and summary inode
+> locks, so the cost is minimal. With this change, the same workload only
+> spends 0.2% of its CPU cycles in the realtime allocator.
+> 
+> Signed-off-by: Omar Sandoval <osandov@fb.com>
+> ---
+> Based on Linus' master branch.
+> 
+> Changes from v2:
+> - Allow the cache allocation to fail, in which case we just don't use it
+> 
+> Changes from v1:
+> - Clarify comment in xfs_rtmount_inodes().
+> - Use kmem_* instead of kvmalloc/kvfree
+> 
+>  fs/xfs/libxfs/xfs_rtbitmap.c |  6 ++++++
+>  fs/xfs/xfs_mount.h           |  7 +++++++
+>  fs/xfs/xfs_rtalloc.c         | 25 +++++++++++++++++++++----
+>  3 files changed, 34 insertions(+), 4 deletions(-)
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/xfs_buf.c   | 14 +++++++++++++-
- fs/xfs/xfs_buf.h   |  1 +
- fs/xfs/xfs_trace.h |  6 +++++-
- 3 files changed, 19 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 81f6491..f203ddebe 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -833,6 +833,10 @@ xfs_buf_read_map(
- 		for (i = 0; i <= blk_queue_get_mirrors(q); i++) {
- 			bp->b_error = 0;
- 			bp->b_rw_hint = i;
-+
-+			if (i > 0)
-+				xfs_alert(bp->b_target->bt_mount,
-+					  "Retrying read from disk %hu",i);
- 			_xfs_buf_read(bp, flags);
- 
- 			switch (bp->b_error) {
-@@ -840,6 +844,11 @@ xfs_buf_read_map(
- 			case -EFSCORRUPTED:
- 			case -EFSBADCRC:
- 				/* loop again */
-+				trace_xfs_buf_ioretry(bp, _RET_IP_);
-+				xfs_alert(bp->b_target->bt_mount,
-+					  "Read error:%d from disk number %hu",
-+					   bp->b_error, bp->b_rw_hint);
-+
- 				continue;
- 			default:
- 				goto retry_done;
-@@ -852,8 +861,11 @@ xfs_buf_read_map(
- 		 * if we had to try more than one mirror to sucessfully read
- 		 * the buffer, write the buffer back
- 		 */
--		if (!bp->b_error && i > 0)
-+		if (!bp->b_error && i > 0) {
-+			xfs_alert(bp->b_target->bt_mount,
-+				"Re-writeing verified data");
- 			xfs_bwrite(bp);
-+		}
- 
- 		return bp;
- 	}
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index db138e5..23c9c3e 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -300,6 +300,7 @@ extern void __xfs_buf_ioerror(struct xfs_buf *bp, int error,
- 		xfs_failaddr_t failaddr);
- #define xfs_buf_ioerror(bp, err) __xfs_buf_ioerror((bp), (err), __this_address)
- extern void xfs_buf_ioerror_alert(struct xfs_buf *, const char *func);
-+extern void xfs_buf_ioretry_alert(struct xfs_buf *, const char *func);
- 
- extern int __xfs_buf_submit(struct xfs_buf *bp, bool);
- static inline int xfs_buf_submit(struct xfs_buf *bp)
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 3043e5e..1d98a3e 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -276,6 +276,7 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
- 		__field(int, pincount)
- 		__field(unsigned, lockval)
- 		__field(unsigned, flags)
-+		__field(unsigned short, rw_hint)
- 		__field(unsigned long, caller_ip)
- 	),
- 	TP_fast_assign(
-@@ -286,10 +287,11 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
- 		__entry->pincount = atomic_read(&bp->b_pin_count);
- 		__entry->lockval = bp->b_sema.count;
- 		__entry->flags = bp->b_flags;
-+		__entry->rw_hint = bp->b_rw_hint;
- 		__entry->caller_ip = caller_ip;
- 	),
- 	TP_printk("dev %d:%d bno 0x%llx nblks 0x%x hold %d pincount %d "
--		  "lock %d flags %s caller %pS",
-+		  "lock %d flags %s rw_hint %hu caller %pS",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  (unsigned long long)__entry->bno,
- 		  __entry->nblks,
-@@ -297,6 +299,7 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
- 		  __entry->pincount,
- 		  __entry->lockval,
- 		  __print_flags(__entry->flags, "|", XFS_BUF_FLAGS),
-+		  __entry->rw_hint,
- 		  (void *)__entry->caller_ip)
- )
- 
-@@ -309,6 +312,7 @@ DEFINE_BUF_EVENT(xfs_buf_free);
- DEFINE_BUF_EVENT(xfs_buf_hold);
- DEFINE_BUF_EVENT(xfs_buf_rele);
- DEFINE_BUF_EVENT(xfs_buf_iodone);
-+DEFINE_BUF_EVENT(xfs_buf_ioretry);
- DEFINE_BUF_EVENT(xfs_buf_submit);
- DEFINE_BUF_EVENT(xfs_buf_lock);
- DEFINE_BUF_EVENT(xfs_buf_lock_done);
--- 
-2.7.4
+Ping.
