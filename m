@@ -1,75 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:38779 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726253AbeK0E2i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Nov 2018 23:28:38 -0500
-Received: by mail-pg1-f194.google.com with SMTP id g189so6486557pgc.5
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 09:33:51 -0800 (PST)
-Date: Mon, 26 Nov 2018 09:33:47 -0800
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH v3] xfs: cache minimum realtime summary level
-Message-ID: <20181126173347.GB17512@vader>
-References: <95c54025014c6d5d3944924b52637cdc2b50cf4e.1542137269.git.osandov@fb.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:41220 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725199AbeK0FBd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 00:01:33 -0500
+Date: Mon, 26 Nov 2018 10:06:34 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: reserve blocks for rmapbt changes in
+ xfs_reflink_end_cow
+Message-ID: <20181126180634.GZ6792@magnolia>
+References: <20181123175448.GX6792@magnolia>
+ <20181126144456.GB14585@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <95c54025014c6d5d3944924b52637cdc2b50cf4e.1542137269.git.osandov@fb.com>
+In-Reply-To: <20181126144456.GB14585@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: kernel-team@fb.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Nov 13, 2018 at 11:28:59AM -0800, Omar Sandoval wrote:
-> From: Omar Sandoval <osandov@fb.com>
+On Mon, Nov 26, 2018 at 09:44:56AM -0500, Brian Foster wrote:
+> On Fri, Nov 23, 2018 at 09:54:48AM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > In xfs_reflink_end_cow, we have to swap written extents from the CoW
+> > fork into the data fork, which can require extensive rmapbt updates.
+> > The transaction block reservation calculation forgot that part of the
+> > calculation, which lead to a shutdown during an end_cow transaction roll
+> > during fsx exercises:
+> > 
+> > XFS: Assertion failed: tp->t_blk_res >= tp->t_blk_res_used, file: fs/xfs/xfs_trans.c, line: 116
+> > <machine registers snipped>
+> > Call Trace:
+> >  xfs_trans_dup+0x211/0x250 [xfs]
+> >  xfs_trans_roll+0x6d/0x180 [xfs]
+> >  xfs_defer_trans_roll+0x10c/0x3b0 [xfs]
+> >  xfs_defer_finish_noroll+0xdf/0x740 [xfs]
+> >  xfs_defer_finish+0x13/0x70 [xfs]
+> >  xfs_reflink_end_cow+0x2c6/0x680 [xfs]
+> >  xfs_dio_write_end_io+0x115/0x220 [xfs]
+> >  iomap_dio_complete+0x3f/0x130
+> >  iomap_dio_rw+0x3c3/0x420
+> >  xfs_file_dio_aio_write+0x132/0x3c0 [xfs]
+> >  xfs_file_write_iter+0x8b/0xc0 [xfs]
+> >  __vfs_write+0x193/0x1f0
+> >  vfs_write+0xba/0x1c0
+> >  ksys_write+0x52/0xc0
+> >  do_syscall_64+0x50/0x160
+> >  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
 > 
-> The realtime summary is a two-dimensional array on disk, effectively:
-> 
-> u32 rsum[log2(number of realtime extents) + 1][number of blocks in the bitmap]
-> 
-> rsum[log][bbno] is the number of extents of size 2**log which start in
-> bitmap block bbno.
-> 
-> xfs_rtallocate_extent_near() uses xfs_rtany_summary() to check whether
-> rsum[log][bbno] != 0 for any log level. However, the summary array is
-> stored in row-major order (i.e., like an array in C), so all of these
-> entries are not adjacent, but rather spread across the entire summary
-> file. In the worst case (a full bitmap block), xfs_rtany_summary() has
-> to check every level.
-> 
-> This means that on a moderately-used realtime device, an allocation will
-> waste a lot of time finding, reading, and releasing buffers for the
-> realtime summary. In particular, one of our storage services (which runs
-> on servers with 8 very slow CPUs and 15 8 TB XFS realtime filesystems)
-> spends almost 5% of its CPU cycles in xfs_rtbuf_get() and
-> xfs_trans_brelse() called from xfs_rtany_summary().
-> 
-> One solution would be to also store the summary with the dimensions
-> swapped. However, this would require a disk format change to a very old
-> component of XFS.
-> 
-> Instead, we can cache the minimum size which contains any extents. We do
-> so lazily; rather than guaranteeing that the cache contains the precise
-> minimum, it always contains a loose lower bound which we tighten when we
-> read or update a summary block. This only uses a few kilobytes of memory
-> and is already serialized via the realtime bitmap and summary inode
-> locks, so the cost is minimal. With this change, the same workload only
-> spends 0.2% of its CPU cycles in the realtime allocator.
-> 
-> Signed-off-by: Omar Sandoval <osandov@fb.com>
-> ---
-> Based on Linus' master branch.
-> 
-> Changes from v2:
-> - Allow the cache allocation to fail, in which case we just don't use it
-> 
-> Changes from v1:
-> - Clarify comment in xfs_rtmount_inodes().
-> - Use kmem_* instead of kvmalloc/kvfree
-> 
->  fs/xfs/libxfs/xfs_rtbitmap.c |  6 ++++++
->  fs/xfs/xfs_mount.h           |  7 +++++++
->  fs/xfs/xfs_rtalloc.c         | 25 +++++++++++++++++++++----
->  3 files changed, 34 insertions(+), 4 deletions(-)
+> It's a bit interesting that we only seem to use XFS_NRMAPADD_SPACE_RES()
+> in XFS_SWAP_RMAP_SPACE_RES(), and then the latter (more expectedly) is
+> only used in the swap extent operation. Any particular reason for that?
+> IOW, we don't seem to include this res in places where we do extent
+> allocs and whatnot, which also (defer) rmap updates..
 
-Ping.
+<scrubs all the cobwebs out of his brain>
+
+Normally the per-AG reservation is supposed to handle expansions of the
+rmap and refcount btrees, so I think this patch isn't correct.
+
+OTOH, looking again at the code, I see...
+
+	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
+
+	resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
+			(unsigned int)(end_fsb - offset_fsb),
+			XFS_DATA_FORK);
+
+So if, say, blocksize = 4096, offset = 512 and count = 1024, then
+offset_fsb = 0 and end_fsb = 2, so this reserves enough blocks for
+swapping 2 - 0 blocks, whereas the range covers three different blocks.
+
+Hmm, I guess I'll try that, though the overflow took a while to hit. :)
+
+--D
+
+> Brian
+> 
+> >  fs/xfs/xfs_reflink.c |   11 ++++++++---
+> >  1 file changed, 8 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index 322a852ce284..c706d7791479 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -663,9 +663,14 @@ xfs_reflink_end_cow(
+> >  		ASSERT(0);
+> >  		goto out;
+> >  	}
+> > -	resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
+> > -			(unsigned int)(end_fsb - offset_fsb),
+> > -			XFS_DATA_FORK);
+> > +	if (xfs_sb_version_hasrmapbt(&ip->i_mount->m_sb))
+> > +		resblks = XFS_SWAP_RMAP_SPACE_RES(ip->i_mount,
+> > +				(unsigned int)(end_fsb - offset_fsb),
+> > +				XFS_DATA_FORK);
+> > +	else
+> > +		resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
+> > +				(unsigned int)(end_fsb - offset_fsb),
+> > +				XFS_DATA_FORK);
+> >  	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
+> >  			resblks, 0, XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
+> >  	if (error)
