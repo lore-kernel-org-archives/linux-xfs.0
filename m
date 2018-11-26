@@ -1,76 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:36764 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726758AbeKVFMW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 00:12:22 -0500
-Date: Wed, 21 Nov 2018 10:36:50 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 8c110d43c6bc
-Message-ID: <20181121183650.GT6792@magnolia>
-References: <20181121183515.GS6792@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181121183515.GS6792@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:59110 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726091AbeKZNMw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Nov 2018 08:12:52 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V12 13/20] block: loop: pass multi-page bvec to iov_iter
+Date: Mon, 26 Nov 2018 10:17:13 +0800
+Message-Id: <20181126021720.19471-14-ming.lei@redhat.com>
+In-Reply-To: <20181126021720.19471-1-ming.lei@redhat.com>
+References: <20181126021720.19471-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-[cc fsdevel this time...]
+iov_iter is implemented on bvec itererator helpers, so it is safe to pass
+multi-page bvec to it, and this way is much more efficient than passing one
+page in each bvec.
 
-Hi folks,
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/block/loop.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-The for-next branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.  These are all the reflink, mmap, and blocksize <
-pagesize corruption fixes that I've collected and tested over the past
-couple of weeks.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-8c110d43c6bc iomap: readpages doesn't zero page tail beyond EOF
-
-New Commits:
-
-Brian Foster (1):
-      [59e429314910] xfs: fix shared extent data corruption due to missing cow reservation
-
-Dave Chinner (11):
-      [d61fa8cbf3da] xfs: uncached buffer tracing needs to print bno
-      [d43aaf1685aa] xfs: fix transient reference count error in xfs_buf_resubmit_failed_buffers
-      [c08768977b9a] xfs: finobt AG reserves don't consider last AG can be a runt
-      [7f9f71be84bc] xfs: extent shifting doesn't fully invalidate page cache
-      [2c307174ab77] xfs: flush removing page cache in xfs_reflink_remap_prep
-      [9230a0b65b47] xfs: delalloc -> unwritten COW fork allocation can go wrong
-      [0929d8580071] iomap: FUA is wrong for DIO O_DSYNC writes into unwritten extents
-      [b450672fb66b] iomap: sub-block dio needs to zeroout beyond EOF
-      [4721a6010990] iomap: dio data corruption and spurious errors when pipes fill
-      [494633fac789] vfs: vfs_dedupe_file_range() doesn't return EOPNOTSUPP
-      [8c110d43c6bc] iomap: readpages doesn't zero page tail beyond EOF
-
-Eric Biggers (1):
-      [da034bcc6aaa] xfs: make xfs_file_remap_range() static
-
-
-Code Diffstat:
-
- fs/iomap.c                       | 53 +++++++++++++++++++++++++++++++---------
- fs/read_write.c                  | 15 ++++++------
- fs/xfs/libxfs/xfs_bmap.c         |  5 +++-
- fs/xfs/libxfs/xfs_ialloc_btree.c | 11 ++++++---
- fs/xfs/xfs_bmap_util.c           | 10 ++------
- fs/xfs/xfs_bmap_util.h           |  3 +++
- fs/xfs/xfs_buf_item.c            | 28 +++++++++++++++------
- fs/xfs/xfs_file.c                |  2 +-
- fs/xfs/xfs_reflink.c             | 18 +++++++++++---
- fs/xfs/xfs_trace.h               |  5 +++-
- 10 files changed, 104 insertions(+), 46 deletions(-)
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index 176ab1f28eca..e3683211f12d 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -510,21 +510,22 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		     loff_t pos, bool rw)
+ {
+ 	struct iov_iter iter;
++	struct req_iterator rq_iter;
+ 	struct bio_vec *bvec;
+ 	struct request *rq = blk_mq_rq_from_pdu(cmd);
+ 	struct bio *bio = rq->bio;
+ 	struct file *file = lo->lo_backing_file;
++	struct bio_vec tmp;
+ 	unsigned int offset;
+-	int segments = 0;
++	int nr_bvec = 0;
+ 	int ret;
+ 
++	rq_for_each_bvec(tmp, rq, rq_iter)
++		nr_bvec++;
++
+ 	if (rq->bio != rq->biotail) {
+-		struct req_iterator iter;
+-		struct bio_vec tmp;
+ 
+-		__rq_for_each_bio(bio, rq)
+-			segments += bio_segments(bio);
+-		bvec = kmalloc_array(segments, sizeof(struct bio_vec),
++		bvec = kmalloc_array(nr_bvec, sizeof(struct bio_vec),
+ 				     GFP_NOIO);
+ 		if (!bvec)
+ 			return -EIO;
+@@ -533,10 +534,10 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		/*
+ 		 * The bios of the request may be started from the middle of
+ 		 * the 'bvec' because of bio splitting, so we can't directly
+-		 * copy bio->bi_iov_vec to new bvec. The rq_for_each_segment
++		 * copy bio->bi_iov_vec to new bvec. The rq_for_each_bvec
+ 		 * API will take care of all details for us.
+ 		 */
+-		rq_for_each_segment(tmp, rq, iter) {
++		rq_for_each_bvec(tmp, rq, rq_iter) {
+ 			*bvec = tmp;
+ 			bvec++;
+ 		}
+@@ -550,11 +551,10 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		 */
+ 		offset = bio->bi_iter.bi_bvec_done;
+ 		bvec = __bvec_iter_bvec(bio->bi_io_vec, bio->bi_iter);
+-		segments = bio_segments(bio);
+ 	}
+ 	atomic_set(&cmd->ref, 2);
+ 
+-	iov_iter_bvec(&iter, rw, bvec, segments, blk_rq_bytes(rq));
++	iov_iter_bvec(&iter, rw, bvec, nr_bvec, blk_rq_bytes(rq));
+ 	iter.iov_offset = offset;
+ 
+ 	cmd->iocb.ki_pos = pos;
+-- 
+2.9.5
