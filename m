@@ -1,48 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43610 "EHLO mx1.redhat.com"
+Received: from m12-17.163.com ([220.181.12.17]:43797 "EHLO m12-17.163.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726101AbeKZNNF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Nov 2018 08:13:05 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V12 14/20] bcache: avoid to use bio_for_each_segment_all() in bch_bio_alloc_pages()
-Date: Mon, 26 Nov 2018 10:17:14 +0800
-Message-Id: <20181126021720.19471-15-ming.lei@redhat.com>
-In-Reply-To: <20181126021720.19471-1-ming.lei@redhat.com>
-References: <20181126021720.19471-1-ming.lei@redhat.com>
+        id S1726176AbeKZVaO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Nov 2018 16:30:14 -0500
+Date: Mon, 26 Nov 2018 18:36:19 +0800
+From: PanBian <bianpan2016@163.com>
+Subject: Re: [PATCH] xfs: libxfs: move xfs_perag_put late
+Message-ID: <20181126103619.GA95394@bp>
+Reply-To: PanBian <bianpan2016@163.com>
+References: <1543052660-58625-1-git-send-email-bianpan2016@163.com>
+ <20181126093139.cgojlmtubzuzdb23@hades.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181126093139.cgojlmtubzuzdb23@hades.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org
 
-bch_bio_alloc_pages() is always called on one new bio, so it is safe
-to access the bvec table directly. Given it is the only kind of this
-case, open code the bvec table access since bio_for_each_segment_all()
-will be changed to support for iterating over multipage bvec.
+On Mon, Nov 26, 2018 at 10:31:39AM +0100, Carlos Maiolino wrote:
+> On Sat, Nov 24, 2018 at 05:44:20PM +0800, Pan Bian wrote:
+> > The function xfs_alloc_get_freelist calls xfs_perag_put to drop the
+> > reference. In this case, pag may be released. However,
+> > pag->pagf_btreeblks is read and write after the put operation. This may
+> > result in a use-after-free bug. This patch moves the put operation late.
+> > 
+> 
+> The patch looks reasonable, can you detail more how did you find it? Via code
+> inspection of you hit this user-after-free in some way?
 
-Acked-by: Coly Li <colyli@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/md/bcache/util.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+I wrote a tool to check such bugs statically. It first scans the source code 
+to extract paired alloc/free functions. Equipped with such functions, it
+performs an intra-procedural data flow analysis to detect mismatched
+alloc/free bugs and use-after-free bugs.
 
-diff --git a/drivers/md/bcache/util.c b/drivers/md/bcache/util.c
-index 20eddeac1531..62fb917f7a4f 100644
---- a/drivers/md/bcache/util.c
-+++ b/drivers/md/bcache/util.c
-@@ -270,7 +270,11 @@ int bch_bio_alloc_pages(struct bio *bio, gfp_t gfp_mask)
- 	int i;
- 	struct bio_vec *bv;
- 
--	bio_for_each_segment_all(bv, bio, i) {
-+	/*
-+	 * This is called on freshly new bio, so it is safe to access the
-+	 * bvec table directly.
-+	 */
-+	for (i = 0, bv = bio->bi_io_vec; i < bio->bi_vcnt; bv++, i++) {
- 		bv->bv_page = alloc_page(gfp_mask);
- 		if (!bv->bv_page) {
- 			while (--bv >= bio->bi_io_vec)
--- 
-2.9.5
+Best regards,
+Pan Bian
