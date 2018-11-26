@@ -1,111 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50934 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726847AbeK1Owk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 09:52:40 -0500
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v1 1/7] block: add nr_mirrors to request_queue
-Date: Tue, 27 Nov 2018 20:49:45 -0700
-Message-Id: <1543376991-5764-2-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
-References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46098 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726200AbeK0BjS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Nov 2018 20:39:18 -0500
+Date: Mon, 26 Nov 2018 09:44:56 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: reserve blocks for rmapbt changes in
+ xfs_reflink_end_cow
+Message-ID: <20181126144456.GB14585@bfoster>
+References: <20181123175448.GX6792@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181123175448.GX6792@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: martin.petersen@oracle.com, shirley.ma@oracle.com, bob.liu@oracle.com, allison.henderson@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
 
-From: Bob Liu <bob.liu@oracle.com>
+On Fri, Nov 23, 2018 at 09:54:48AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> In xfs_reflink_end_cow, we have to swap written extents from the CoW
+> fork into the data fork, which can require extensive rmapbt updates.
+> The transaction block reservation calculation forgot that part of the
+> calculation, which lead to a shutdown during an end_cow transaction roll
+> during fsx exercises:
+> 
+> XFS: Assertion failed: tp->t_blk_res >= tp->t_blk_res_used, file: fs/xfs/xfs_trans.c, line: 116
+> <machine registers snipped>
+> Call Trace:
+>  xfs_trans_dup+0x211/0x250 [xfs]
+>  xfs_trans_roll+0x6d/0x180 [xfs]
+>  xfs_defer_trans_roll+0x10c/0x3b0 [xfs]
+>  xfs_defer_finish_noroll+0xdf/0x740 [xfs]
+>  xfs_defer_finish+0x13/0x70 [xfs]
+>  xfs_reflink_end_cow+0x2c6/0x680 [xfs]
+>  xfs_dio_write_end_io+0x115/0x220 [xfs]
+>  iomap_dio_complete+0x3f/0x130
+>  iomap_dio_rw+0x3c3/0x420
+>  xfs_file_dio_aio_write+0x132/0x3c0 [xfs]
+>  xfs_file_write_iter+0x8b/0xc0 [xfs]
+>  __vfs_write+0x193/0x1f0
+>  vfs_write+0xba/0x1c0
+>  ksys_write+0x52/0xc0
+>  do_syscall_64+0x50/0x160
+>  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-When fs data/metadata checksum mismatch, lower block devices may have other
-correct copies. e.g if we did raid1 for protecting fs metadata.
-Then fs could try other copies of metadata instead of panic, but fs need be
-awared how many mirrors the block devices have and specify which mirror/copy to
-retry.
+It's a bit interesting that we only seem to use XFS_NRMAPADD_SPACE_RES()
+in XFS_SWAP_RMAP_SPACE_RES(), and then the latter (more expectedly) is
+only used in the swap extent operation. Any particular reason for that?
+IOW, we don't seem to include this res in places where we do extent
+allocs and whatnot, which also (defer) rmap updates..
 
-This patch add @nr_mirrors to struct request_queue which is similar as
-blk_queue_nonrot(), filesystem can grab device request queue and check the
-number of mirrors of this block device.
+Brian
 
-@nr_mirrors is 0 by default which means no mirrors, drivers e.g raid1 are
-responsible for setting the right value.
-
-Also added helper functions for get/set the number of mirrors for a specific
-device request queue.
-
-Todo:
-* Export nr_mirrors through /sysfs.
-
-Signed-off-by: Bob Liu <bob.liu@oracle.com>
----
- block/blk-core.c       |  3 +++
- block/blk-settings.c   | 18 ++++++++++++++++++
- include/linux/blkdev.h |  3 +++
- 3 files changed, 24 insertions(+)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index ce12515f..50779c8 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1082,6 +1082,9 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id,
- 	if (blkcg_init_queue(q))
- 		goto fail_ref;
- 
-+	/* Set queue default mirrors to 0 explicitly. */
-+	blk_queue_set_mirrors(q, 0);
-+
- 	return q;
- 
- fail_ref:
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 696c04c..6f4f9c7 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -904,6 +904,24 @@ void blk_queue_write_cache(struct request_queue *q, bool wc, bool fua)
- }
- EXPORT_SYMBOL_GPL(blk_queue_write_cache);
- 
-+/*
-+ * Get the number of read redundant mirrors.
-+ */
-+unsigned short blk_queue_get_mirrors(struct request_queue *q)
-+{
-+	return q->nr_mirrors;
-+}
-+EXPORT_SYMBOL(blk_queue_get_mirrors);
-+
-+/*
-+ * Set the number of read redundant mirrors.
-+ */
-+void blk_queue_set_mirrors(struct request_queue *q, unsigned short mirrors)
-+{
-+	q->nr_mirrors = mirrors;
-+}
-+EXPORT_SYMBOL(blk_queue_set_mirrors);
-+
- static int __init blk_settings_init(void)
- {
- 	blk_max_low_pfn = max_low_pfn - 1;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 4293dc1..fac35da 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -680,6 +680,7 @@ struct request_queue {
- 
- #define BLK_MAX_WRITE_HINTS	5
- 	u64			write_hints[BLK_MAX_WRITE_HINTS];
-+	unsigned short		nr_mirrors; /* Default value is zero */
- };
- 
- #define QUEUE_FLAG_QUEUED	0	/* uses generic tag queueing */
-@@ -1267,6 +1268,8 @@ extern void blk_queue_rq_timed_out(struct request_queue *, rq_timed_out_fn *);
- extern void blk_queue_rq_timeout(struct request_queue *, unsigned int);
- extern void blk_queue_flush_queueable(struct request_queue *q, bool queueable);
- extern void blk_queue_write_cache(struct request_queue *q, bool enabled, bool fua);
-+extern unsigned short blk_queue_get_mirrors(struct request_queue *q);
-+extern void blk_queue_set_mirrors(struct request_queue *q, unsigned short mirrors);
- 
- /*
-  * Number of physical segments as sent to the device.
--- 
-2.7.4
+>  fs/xfs/xfs_reflink.c |   11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 322a852ce284..c706d7791479 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -663,9 +663,14 @@ xfs_reflink_end_cow(
+>  		ASSERT(0);
+>  		goto out;
+>  	}
+> -	resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
+> -			(unsigned int)(end_fsb - offset_fsb),
+> -			XFS_DATA_FORK);
+> +	if (xfs_sb_version_hasrmapbt(&ip->i_mount->m_sb))
+> +		resblks = XFS_SWAP_RMAP_SPACE_RES(ip->i_mount,
+> +				(unsigned int)(end_fsb - offset_fsb),
+> +				XFS_DATA_FORK);
+> +	else
+> +		resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
+> +				(unsigned int)(end_fsb - offset_fsb),
+> +				XFS_DATA_FORK);
+>  	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
+>  			resblks, 0, XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
+>  	if (error)
