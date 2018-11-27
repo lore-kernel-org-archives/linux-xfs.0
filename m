@@ -1,32 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:43630 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727230AbeK1SiE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 13:38:04 -0500
-Date: Tue, 27 Nov 2018 23:37:22 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH v1 0/7] Block/XFS: Support alternative mirror device
- retry
-Message-ID: <20181128073722.GB7084@infradead.org>
-References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
- <20181128053303.GL6311@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:33828 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727625AbeK0NWC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Nov 2018 08:22:02 -0500
+Date: Tue, 27 Nov 2018 10:25:19 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V12 16/20] block: enable multipage bvecs
+Message-ID: <20181127022517.GC25199@ming.t460p>
+References: <20181126021720.19471-1-ming.lei@redhat.com>
+ <20181126021720.19471-17-ming.lei@redhat.com>
+ <20181126125842.GE6383@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181128053303.GL6311@dastard>
+In-Reply-To: <20181126125842.GE6383@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Allison Henderson <allison.henderson@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, bob.liu@oracle.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Wed, Nov 28, 2018 at 04:33:03PM +1100, Dave Chinner wrote:
-> One thing that is going to make this more complex at the XFS layer
-> is discontiguous buffers. They require multiple IOs (and therefore
-> bios) and so we are going to need to ensure that all the bios use
-> the same bi_rw_hint.
+On Mon, Nov 26, 2018 at 01:58:42PM +0100, Christoph Hellwig wrote:
+> > +		phys_addr_t vec_end_addr = page_to_phys(bv->bv_page) +
+> > +			bv->bv_offset + bv->bv_len;
+> 
+> The name is a little confusing, as the real end addr would be -1.  Maybe
+> throw the -1 in here, and adjust for it in the contigous check below?
 
-Well, in case of raid 1 the load balancing code might actually
-map different bios to different initial legs.   What we really need
-is to keep the 'index' or each bio.  One good way to archive that
-is to just reuse the bio for the retry instead of allocating a new one.
+Yeah, it makes sense.
+
+thanks,
+Ming
