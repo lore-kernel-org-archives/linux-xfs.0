@@ -1,71 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:45056 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727313AbeK0Jje (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 04:39:34 -0500
-Received: by mail-pl1-f193.google.com with SMTP id a14so14552936plm.12
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 14:43:54 -0800 (PST)
-Date: Mon, 26 Nov 2018 14:43:51 -0800
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V12 18/20] block: document usage of bio iterator helpers
-Message-ID: <20181126224351.GM30411@vader>
-References: <20181126021720.19471-1-ming.lei@redhat.com>
- <20181126021720.19471-19-ming.lei@redhat.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:55442 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728303AbeK0O0f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 09:26:35 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 0FAA72A8FA
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Nov 2018 03:30:09 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201793] New: [xfstests generic/299] XFS corruption found:
+ sb_fdblocks 7302443, counted 7302451
+Date: Tue, 27 Nov 2018 03:30:09 +0000
+Message-ID: <bug-201793-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181126021720.19471-19-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: linux-xfs@vger.kernel.org
 
-On Mon, Nov 26, 2018 at 10:17:18AM +0800, Ming Lei wrote:
-> Now multi-page bvec is supported, some helpers may return page by
-> page, meantime some may return segment by segment, this patch
-> documents the usage.
+https://bugzilla.kernel.org/show_bug.cgi?id=201793
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
+            Bug ID: 201793
+           Summary: [xfstests generic/299] XFS corruption found:
+                    sb_fdblocks 7302443, counted 7302451
+           Product: File System
+           Version: 2.5
+    Kernel Version: xfs-4.20-fixes-2
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: zlang@redhat.com
+        Regression: No
 
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  Documentation/block/biovecs.txt | 25 +++++++++++++++++++++++++
->  1 file changed, 25 insertions(+)
-> 
-> diff --git a/Documentation/block/biovecs.txt b/Documentation/block/biovecs.txt
-> index 25689584e6e0..ce6eccaf5df7 100644
-> --- a/Documentation/block/biovecs.txt
-> +++ b/Documentation/block/biovecs.txt
-> @@ -117,3 +117,28 @@ Other implications:
->     size limitations and the limitations of the underlying devices. Thus
->     there's no need to define ->merge_bvec_fn() callbacks for individual block
->     drivers.
-> +
-> +Usage of helpers:
-> +=================
-> +
-> +* The following helpers whose names have the suffix of "_all" can only be used
-> +on non-BIO_CLONED bio. They are usually used by filesystem code. Drivers
-> +shouldn't use them because the bio may have been split before it reached the
-> +driver.
-> +
-> +	bio_for_each_segment_all()
-> +	bio_first_bvec_all()
-> +	bio_first_page_all()
-> +	bio_last_bvec_all()
-> +
-> +* The following helpers iterate over single-page segment. The passed 'struct
-> +bio_vec' will contain a single-page IO vector during the iteration
-> +
-> +	bio_for_each_segment()
-> +	bio_for_each_segment_all()
-> +
-> +* The following helpers iterate over multi-page bvec. The passed 'struct
-> +bio_vec' will contain a multi-page IO vector during the iteration
-> +
-> +	bio_for_each_bvec()
-> +	rq_for_each_bvec()
-> -- 
-> 2.9.5
-> 
+Description of problem:
+I hit a XFS corruption several times on ppc64le, by running generic/299 on 2k
+blocksize XFS (reflink=1,rmapbt=1):
+#
+# FSQA Test No. 299
+#
+# AIO/DIO stress test
+# Run random AIO/DIO activity and fallocate/truncate simultaneously
+# Test will operate on huge sparsed files so ENOSPC is expected.
+#
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/ppc64le xxxxxxx 4.20.0-rc1.kasan
+MKFS_OPTIONS  -- -f -b size=2048 -m crc=1,finobt=1,reflink=1,rmapbt=1 -i
+sparse=1 /dev/vda5
+MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/vda5
+/mnt/xfstests/mnt2
+
+generic/299 176s ... _check_xfs_filesystem: filesystem on /dev/vda5 is
+inconsistent (r)
+(see /var/lib/xfstests/results//generic/299.full for details)
+
+Ran: generic/299
+Failures: generic/299
+Failed 1 of 1 tests
+
+Version-Release number of selected component (if applicable):
+https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+xfs-4.20-fixes-2
+
+How reproducible:
+1~2% on my ppc64le kvm machine. But it's hard to reproduce on my x86_64 real
+machine.
+
+Steps to Reproduce:
+Loop running generic/299, but maybe not easy to hit it
+
+Actual results:
+XFS corruption
+
+Expected results:
+test always pass
+
+Additional info:
+Please check the full output and xfs metadump from attachments.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
