@@ -1,54 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33596 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726627AbeK0JyO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 04:54:14 -0500
-Date: Mon, 26 Nov 2018 14:58:25 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: clean up indentation issues, remove an unwanted
- space
-Message-ID: <20181126225825.GD6792@magnolia>
-References: <20181123165913.26671-1-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181123165913.26671-1-colin.king@canonical.com>
+Received: from m12-15.163.com ([220.181.12.15]:56401 "EHLO m12-15.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727456AbeK0LbV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Nov 2018 06:31:21 -0500
+From: Pan Bian <bianpan2016@163.com>
+Subject: [PATCH V2] xfs: libxfs: move xfs_perag_put late
+Date: Tue, 27 Nov 2018 08:33:38 +0800
+Message-Id: <1543278818-117362-1-git-send-email-bianpan2016@163.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Colin King <colin.king@canonical.com>
-Cc: linux-xfs@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
 
-On Fri, Nov 23, 2018 at 04:59:13PM +0000, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> There is a statement that has an unwanted space in the indentation.
-> Remove it.
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+The function xfs_alloc_get_freelist calls xfs_perag_put to drop the
+reference. However, pag->pagf_btreeblks is read and write after the 
+put operation. This patch moves the put operation late.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Pan Bian <bianpan2016@163.com>
+---
+V2: correct the commit log
+---
+ fs/xfs/libxfs/xfs_alloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---D
-
-> ---
->  fs/xfs/xfs_inode.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 05db9540e459..f21756751540 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2242,7 +2242,7 @@ xfs_ifree_cluster(
->  		 * want it to fail. We can acheive this by adding a write
->  		 * verifier to the buffer.
->  		 */
-> -		 bp->b_ops = &xfs_inode_buf_ops;
-> +		bp->b_ops = &xfs_inode_buf_ops;
->  
->  		/*
->  		 * Walk the inodes already attached to the buffer and mark them
-> -- 
-> 2.19.1
-> 
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index e1c0c0d..4be387d 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2435,7 +2435,6 @@ xfs_alloc_get_freelist(
+ 	be32_add_cpu(&agf->agf_flcount, -1);
+ 	xfs_trans_agflist_delta(tp, -1);
+ 	pag->pagf_flcount--;
+-	xfs_perag_put(pag);
+ 
+ 	logflags = XFS_AGF_FLFIRST | XFS_AGF_FLCOUNT;
+ 	if (btreeblk) {
+@@ -2443,6 +2442,7 @@ xfs_alloc_get_freelist(
+ 		pag->pagf_btreeblks++;
+ 		logflags |= XFS_AGF_BTREEBLKS;
+ 	}
++	xfs_perag_put(pag);
+ 
+ 	xfs_alloc_log_agf(tp, agbp, logflags);
+ 	*bnop = bno;
+-- 
+2.7.4
