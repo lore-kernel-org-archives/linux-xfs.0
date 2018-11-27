@@ -1,47 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:47382 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727247AbeK1Sq1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 13:46:27 -0500
-Date: Tue, 27 Nov 2018 23:45:44 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH v1 0/7] Block/XFS: Support alternative mirror device
- retry
-Message-ID: <20181128074544.GA20702@infradead.org>
-References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
- <20181128053303.GL6311@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:33828 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725752AbeK1Gka (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Nov 2018 01:40:30 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2EE433DDBE
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Nov 2018 19:41:33 +0000 (UTC)
+Received: from Liberator-5.local (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id ECE155D75C
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Nov 2018 19:41:32 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfsprogs: don't install xfs_scrub man pages if config'd off
+Message-ID: <0ba2607c-9954-94fc-fcf0-c6fe8579a2c8@redhat.com>
+Date: Tue, 27 Nov 2018 13:41:31 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181128053303.GL6311@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Allison Henderson <allison.henderson@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, bob.liu@oracle.com
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Nov 28, 2018 at 04:33:03PM +1100, Dave Chinner wrote:
-> 	- how does propagation through stacked layers work?
+Don't install man pages for xfs_scrub if it's turned off
+in the config.
 
-The only way it works is by each layering driving it.  Thus my
-recommendation above bilding on your earlier one to use an index
-that is filled by the driver at I/O completion time.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-E.g.
-
-	bio_init:		bi_leg = -1
-
-	raid1:			submit bio to lower driver
-	raid 1 completion:	set bi_leg to 0 or 1
-
-Now if we want to allow stacking we need to save/restore bi_leg
-before submitting to the underlying device.  Which is possible,
-but quite a bit of work in the drivers.
-
-> 	- is it generic/abstract enough to be able to work with
-> 	  RAID5/6 to trigger verification/recovery from the parity
-> 	  information in the stripe?
-
-If we get the non -1 bi_leg for paritity raid this is an inidicator
-that parity rebuild needs to happen.  For multi-parity setups we could
-also use different levels there.
+diff --git a/man/man8/Makefile b/man/man8/Makefile
+index 36620da..e6a5572 100644
+--- a/man/man8/Makefile
++++ b/man/man8/Makefile
+@@ -7,7 +7,11 @@ include $(TOPDIR)/include/builddefs
+ 
+ MAN_SECTION	= 8
+ 
+-MAN_PAGES	= $(shell echo *.$(MAN_SECTION))
++ifneq ("$(ENABLE_SCRUB)","yes")
++  MAN_PAGES = $(filter-out xfs_scrub%,$(shell echo *.$(MAN_SECTION)))
++else
++  MAN_PAGES = $(shell echo *.$(MAN_SECTION))
++endif
+ MAN_DEST	= $(PKG_MAN_DIR)/man$(MAN_SECTION)
+ LSRCFILES	= $(MAN_PAGES)
+ 
