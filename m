@@ -1,39 +1,219 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:60081 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726006AbeKMIDZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Nov 2018 03:03:25 -0500
-Date: Tue, 13 Nov 2018 09:08:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Bug 200063] XFS corruption: mismatch between format (2) and
- size (0) in symlink
-Message-ID: <20181112220816.GO19305@dastard>
-References: <bug-200063-201763@https.bugzilla.kernel.org/>
- <bug-200063-201763-KTWUnqKC4W@https.bugzilla.kernel.org/>
+Received: from userp2130.oracle.com ([156.151.31.86]:46600 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726416AbeK2K3s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:29:48 -0500
+Subject: [PATCH 2/4] xfs: add a block to inode count converter
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 28 Nov 2018 15:26:24 -0800
+Message-ID: <154344758480.3700.17420481547235335104.stgit@magnolia>
+In-Reply-To: <154344757198.3700.16167533135011546878.stgit@magnolia>
+References: <154344757198.3700.16167533135011546878.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bug-200063-201763-KTWUnqKC4W@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Mon, Nov 12, 2018 at 01:31:26PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=200063
-> 
-> --- Comment #4 from Zorro Lang (zlang@redhat.com) ---
-> I still can reproduce this bug on linux v4.20-rc1. So we haven't merged this
-> patch (in comment 3), right?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Patch was superceded, and I never got around to posting the new
-version. It's still sitting in my stack, I'll try to get it out in
-the next coupel of days.
+Add new helpers to convert units of fs blocks into inodes, and AG blocks
+into AG inodes, respectively.  Convert all the open-coded conversions
+and XFS_OFFBNO_TO_AGINO(, , 0) calls to use them, as appropriate.  The
+OFFBNO_TO_AGINO macro is retained for xfs_repair.
 
-Cheers,
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_format.h |    2 ++
+ fs/xfs/libxfs/xfs_ialloc.c |   17 ++++++++---------
+ fs/xfs/libxfs/xfs_types.c  |    4 ++--
+ fs/xfs/scrub/ialloc.c      |    2 +-
+ fs/xfs/xfs_fsops.c         |    2 +-
+ fs/xfs/xfs_inode.c         |    2 +-
+ fs/xfs/xfs_itable.c        |    2 +-
+ fs/xfs/xfs_super.c         |    4 ++--
+ 8 files changed, 18 insertions(+), 17 deletions(-)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 9995d5ae380b..b15412e4c535 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1083,6 +1083,8 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+ 	((i) & XFS_INO_MASK(XFS_INO_OFFSET_BITS(mp)))
+ #define	XFS_OFFBNO_TO_AGINO(mp,b,o)	\
+ 	((xfs_agino_t)(((b) << XFS_INO_OFFSET_BITS(mp)) | (o)))
++#define	XFS_FSB_TO_INO(mp, b)	((xfs_ino_t)((b) << XFS_INO_OFFSET_BITS(mp)))
++#define	XFS_AGB_TO_AGINO(mp, b)	((xfs_agino_t)((b) << XFS_INO_OFFSET_BITS(mp)))
+ 
+ #define	XFS_MAXINUMBER		((xfs_ino_t)((1ULL << 56) - 1ULL))
+ #define	XFS_MAXINUMBER_32	((xfs_ino_t)((1ULL << 32) - 1ULL))
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index fcf0d17405d8..3ac4a836428d 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -300,7 +300,7 @@ xfs_ialloc_inode_init(
+ 	 * blocks size.
+ 	 */
+ 	blks_per_cluster = xfs_icluster_size_fsb(mp);
+-	inodes_per_cluster = blks_per_cluster << mp->m_sb.sb_inopblog;
++	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
+ 	nbufs = length / blks_per_cluster;
+ 
+ 	/*
+@@ -312,7 +312,7 @@ xfs_ialloc_inode_init(
+ 	 *
+ 	 * For v3 inodes, we also need to write the inode number into the inode,
+ 	 * so calculate the first inode number of the chunk here as
+-	 * XFS_OFFBNO_TO_AGINO() only works within a filesystem block, not
++	 * XFS_AGB_TO_AGINO() only works within a filesystem block, not
+ 	 * across multiple filesystem blocks (such as a cluster) and so cannot
+ 	 * be used in the cluster buffer loop below.
+ 	 *
+@@ -324,8 +324,7 @@ xfs_ialloc_inode_init(
+ 	 */
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		version = 3;
+-		ino = XFS_AGINO_TO_INO(mp, agno,
+-				       XFS_OFFBNO_TO_AGINO(mp, agbno, 0));
++		ino = XFS_AGINO_TO_INO(mp, agno, XFS_AGB_TO_AGINO(mp, agbno));
+ 
+ 		/*
+ 		 * log the initialisation that is about to take place as an
+@@ -445,7 +444,7 @@ xfs_align_sparse_ino(
+ 		return;
+ 
+ 	/* calculate the inode offset and align startino */
+-	offset = mod << mp->m_sb.sb_inopblog;
++	offset = XFS_AGB_TO_AGINO(mp, mod);
+ 	*startino -= offset;
+ 
+ 	/*
+@@ -797,7 +796,7 @@ xfs_ialloc_ag_alloc(
+ 		if (error)
+ 			return error;
+ 
+-		newlen = args.len << args.mp->m_sb.sb_inopblog;
++		newlen = XFS_AGB_TO_AGINO(args.mp, args.len);
+ 		ASSERT(newlen <= XFS_INODES_PER_CHUNK);
+ 		allocmask = (1 << (newlen / XFS_INODES_PER_HOLEMASK_BIT)) - 1;
+ 	}
+@@ -825,7 +824,7 @@ xfs_ialloc_ag_alloc(
+ 	/*
+ 	 * Convert the results.
+ 	 */
+-	newino = XFS_OFFBNO_TO_AGINO(args.mp, args.agbno, 0);
++	newino = XFS_AGB_TO_AGINO(args.mp, args.agbno);
+ 
+ 	if (xfs_inobt_issparse(~allocmask)) {
+ 		/*
+@@ -2724,8 +2723,8 @@ xfs_ialloc_has_inodes_at_extent(
+ 	xfs_agino_t		low;
+ 	xfs_agino_t		high;
+ 
+-	low = XFS_OFFBNO_TO_AGINO(cur->bc_mp, bno, 0);
+-	high = XFS_OFFBNO_TO_AGINO(cur->bc_mp, bno + len, 0) - 1;
++	low = XFS_AGB_TO_AGINO(cur->bc_mp, bno);
++	high = XFS_AGB_TO_AGINO(cur->bc_mp, bno + len) - 1;
+ 
+ 	return xfs_ialloc_has_inode_record(cur, low, high, exists);
+ }
+diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+index 33a5ca346baf..895c232d63b7 100644
+--- a/fs/xfs/libxfs/xfs_types.c
++++ b/fs/xfs/libxfs/xfs_types.c
+@@ -89,14 +89,14 @@ xfs_agino_range(
+ 	 */
+ 	bno = round_up(XFS_AGFL_BLOCK(mp) + 1,
+ 			xfs_ialloc_cluster_alignment(mp));
+-	*first = XFS_OFFBNO_TO_AGINO(mp, bno, 0);
++	*first = XFS_AGB_TO_AGINO(mp, bno);
+ 
+ 	/*
+ 	 * Calculate the last inode, which will be at the end of the
+ 	 * last (aligned) cluster that can be allocated in the AG.
+ 	 */
+ 	bno = round_down(eoag, xfs_ialloc_cluster_alignment(mp));
+-	*last = XFS_OFFBNO_TO_AGINO(mp, bno, 0) - 1;
++	*last = XFS_AGB_TO_AGINO(mp, bno) - 1;
+ }
+ 
+ /*
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 72f45b298fa5..426eb1a5503c 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -200,7 +200,7 @@ xchk_iallocbt_check_freemask(
+ 
+ 	/* Make sure the freemask matches the inode records. */
+ 	blks_per_cluster = xfs_icluster_size_fsb(mp);
+-	nr_inodes = XFS_OFFBNO_TO_AGINO(mp, blks_per_cluster, 0);
++	nr_inodes = XFS_FSB_TO_INO(mp, blks_per_cluster);
+ 
+ 	for (agino = irec->ir_startino;
+ 	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 093c2b8d7e20..ec2e63a7963b 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -252,7 +252,7 @@ xfs_growfs_data(
+ 	if (mp->m_sb.sb_imax_pct) {
+ 		uint64_t icount = mp->m_sb.sb_dblocks * mp->m_sb.sb_imax_pct;
+ 		do_div(icount, 100);
+-		mp->m_maxicount = icount << mp->m_sb.sb_inopblog;
++		mp->m_maxicount = XFS_FSB_TO_INO(mp, icount);
+ 	} else
+ 		mp->m_maxicount = 0;
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index f21756751540..801eb891d0fd 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2200,7 +2200,7 @@ xfs_ifree_cluster(
+ 	inum = xic->first_ino;
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, inum));
+ 	blks_per_cluster = xfs_icluster_size_fsb(mp);
+-	inodes_per_cluster = blks_per_cluster << mp->m_sb.sb_inopblog;
++	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
+ 	nbufs = mp->m_ialloc_blks / blks_per_cluster;
+ 
+ 	for (j = 0; j < nbufs; j++, inum += inodes_per_cluster) {
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index e9508ba01ed1..18d8d3b812a7 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -173,7 +173,7 @@ xfs_bulkstat_ichunk_ra(
+ 
+ 	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
+ 	blks_per_cluster = xfs_icluster_size_fsb(mp);
+-	inodes_per_cluster = blks_per_cluster << mp->m_sb.sb_inopblog;
++	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
+ 
+ 	blk_start_plug(&plug);
+ 	for (i = 0; i < XFS_INODES_PER_CHUNK;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index a2e944b80d2a..c9097cb0b955 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -608,7 +608,7 @@ xfs_set_inode_alloc(
+ 	}
+ 
+ 	/* Get the last possible inode in the filesystem */
+-	agino =	XFS_OFFBNO_TO_AGINO(mp, sbp->sb_agblocks - 1, 0);
++	agino =	XFS_AGB_TO_AGINO(mp, sbp->sb_agblocks - 1);
+ 	ino = XFS_AGINO_TO_INO(mp, agcount - 1, agino);
+ 
+ 	/*
+@@ -1150,7 +1150,7 @@ xfs_fs_statfs(
+ 	statp->f_bfree = fdblocks - mp->m_alloc_set_aside;
+ 	statp->f_bavail = statp->f_bfree;
+ 
+-	fakeinos = statp->f_bfree << sbp->sb_inopblog;
++	fakeinos = XFS_FSB_TO_INO(mp, statp->f_bfree);
+ 	statp->f_files = min(icount + fakeinos, (uint64_t)XFS_MAXINUMBER);
+ 	if (mp->m_maxicount)
+ 		statp->f_files = min_t(typeof(statp->f_files),
