@@ -1,109 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:31278 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726014AbeLAPqu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Dec 2018 10:46:50 -0500
-Date: Sat, 1 Dec 2018 15:35:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: block layer API for file system creation - when to use multidisk
- mode
-Message-ID: <20181201043509.GZ6311@dastard>
-References: <67627995-714c-5c38-a796-32b503de7d13@sandeen.net>
- <20181005232710.GH12041@dastard>
- <CAOi1vP-Z7xZk1YvWHYWQGOHfyWccFCkyn8je0HBvGhGuUrXmaQ@mail.gmail.com>
- <20181006232037.GB18095@dastard>
- <36bc3f17-e7d1-ce8b-2088-36ff5d7b1e8b@sandeen.net>
- <0290ec9f-ab2b-7c1b-faaf-409d72f99e5f@gmail.com>
- <20181129214851.GU6311@dastard>
- <39031e68-3936-b5e1-bcb6-6fdecc5988c1@gmail.com>
- <20181130022510.GW6311@dastard>
- <3da04164-a89f-f4c0-1529-eab12b3226e1@gmail.com>
+Received: from sandeen.net ([63.231.237.45]:46138 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726964AbeK2Ktx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Nov 2018 05:49:53 -0500
+Subject: Re: [PATCH 1/6] xfs_io.8: rearrange command listings by section
+References: <154181071499.3727.3910572718199592407.stgit@magnolia>
+ <154181072098.3727.12783001969841425328.stgit@magnolia>
+ <8c568cb2-4931-288c-0be3-68bd5caef634@sandeen.net>
+ <20181128233459.GD8131@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <65174e05-0c7e-f524-3bce-25d59ea5773f@sandeen.net>
+Date: Wed, 28 Nov 2018 17:46:31 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+In-Reply-To: <20181128233459.GD8131@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <3da04164-a89f-f4c0-1529-eab12b3226e1@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Ilya Dryomov <idryomov@gmail.com>, xfs <linux-xfs@vger.kernel.org>, Mark Nelson <mnelson@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Jens Axboe <axboe@kernel.dk>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Nov 30, 2018 at 01:00:52PM -0500, Ric Wheeler wrote:
-> On 11/30/18 7:55 AM, Dave Chinner wrote:
-> >On Thu, Nov 29, 2018 at 06:53:14PM -0500, Ric Wheeler wrote:
-> >>Other file systems also need to
-> >>accommodate/probe behind the fictitious visible storage device
-> >>layer... Specifically, is there something we can add per block
-> >>device to help here? Number of independent devices
-> >That's how mkfs.xfs used to do stripe unit/stripe width calculations
-> >automatically on MD devices back in the 2000s. We got rid of that
-> >for more generaly applicable configuration information such as
-> >minimum/optimal IO sizes so we could expose equivalent alignment
-> >information from lots of different types of storage device....
-> >
-> >>or a map of
-> >>those regions?
-> >Not sure what this means or how we'd use it.
-> >Dave.
+
+
+On 11/28/18 5:34 PM, Darrick J. Wong wrote:
+> On Wed, Nov 28, 2018 at 04:39:47PM -0600, Eric Sandeen wrote:
+>> On 11/9/18 6:45 PM, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>
+>>> Most of the commands listed under "OTHER COMMANDS" apply to files or
+>>> filesystems.  Create two new sections for that and populate them
+>>> appropriately.
+>>>
+>>> Here's what moves:
+>>>
+>>> fsmap: moves from file io commands to filesystem commands
+>>> utimes: moves from file io commands to file commands
+>>>
+>>> >From the OTHER COMMANDS section:
+>>>
+>>> lsattr/chattr: moves to file commands
+>>> flink: moves to file commands
+>>> stat/statx: moves to file commands
+>>> lsproj/chproj: moves to file commands
+>>> parent: moves to file commands
+>>> [gs]et_encpolicy: moves to file io commands
+>>> freeze/thaw: move to filesystem commands
+>>> inject: move to filesystem commands
+>>> resblks: move to filesystem commands
+>>> shutdown: move to filesystem commands
+>>> statfs: move to filesystem commands
+>>> label: move to filesystem commands
+>>
+>> Thank you for getting this better organized.  Of course, I have
+>> some questions.  :)
+>>
+>> What does "FILE COMMANDS" vs. "FILE I/O COMMANDS" mean, exactly?
+>> I ask because for example bmap & fiemap are still under FILE IO but
+>> they... really don't do file IO.  What's your intended distinction
+>> with these new sections?
 > 
-> What I was thinking of was a way of giving up a good outline of how
-> many independent regions that are behind one "virtual" block device
-> like a ceph rbd or device mapper device. My assumption is that we
-> are trying to lay down (at least one) allocation group per region.
-> 
-> What we need to optimize for includes:
-> 
->     * how many independent regions are there?
-> 
->     * what are the boundaries of those regions?
-> 
->     * optimal IO size/alignment/etc
-> 
-> Some of that we have, but the current assumptions don't work well
-> for all device types.
+> Admittedly, it's been a looong time since I wrote this patch.
 
-Oh, so essential "independent regions" of the storage device. I
-wrote this in 2008:
+yeah, that's my fault, sorry.
 
-http://xfs.org/index.php/Reliable_Detection_and_Repair_of_Metadata_Corruption#Failure_Domains
+> Um... I think my intent was for FILE COMMANDS to pertain to file
+> attributes, whereas FILE I/O COMMANDS would pertain to reading, writing,
+> encoding, mapping, and otherwise messing with the contents of a file.
 
-This was derived from the ideas in prototype code I wrote in ~2007
-to try to optimise file layout and load distribution across linear
-concats of multi-TB RAID6 luns. Some of that work was published
-long after I left SGI:
+Because the distinction requires a fair bit of explanation I think it'd be
+better to just lump them all into FILE OPERATIONS i.e. "these operate
+on individual files not the filesystem in general."
 
-https://marc.info/?l=linux-xfs&m=123441191222714&w=2
+Explicitly re-categorizing into rather vague categories doesn't seem
+overly helpful.  :)
 
-Essentially, independent regions - called "Logical
-Extension Groups", or "legs" of the filesystem - and would
-essentially be an aggregation of AGs in that region. The
-concept was that we'd move the geometry information from the
-superblock into the legs, and so we could have different AG
-geoemetry optimies for each independent leg of the filesystem.
-
-eg the SSD region could have numerous small AGs, the large,
-contiguous RAID6 part could have maximally size AGs or even make use
-of the RT allocator for free space management instead of the
-AG/btree allocator. Basically it was seen as a mechanism for getting
-rid of needing to specify block devices as command line or mount
-options.
-
-Fundamentally, though, it was based on the concept that Linux would
-eventually grow an interface for the block device/volume manager to
-tell the filesystem where the independent regions in the device
-were(*), but that's not something that has ever appeared. If you can
-provide an indepedent region map in an easy to digest format (e.g. a
-set of {offset, len, geometry} tuples), then we can obviously make
-use of it in XFS....
-
-Cheers,
-
-Dave.
-
-(*) Basically provide a linux version of the functionality Irix
-volume managers had provided filesystems since the late 80s....
-
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
