@@ -1,53 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-eopbgr50126.outbound.protection.outlook.com ([40.107.5.126]:6170
-        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726521AbeK3XIb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Nov 2018 18:08:31 -0500
-From: Albert Duato <albert@kumori.systems>
-Subject: How to avoid xfs_do_force_shutdown on xlog_iodone error
-Date: Fri, 30 Nov 2018 11:59:25 +0000
-Message-ID: <VI1P192MB028894DF21C722001901A488A9D30@VI1P192MB0288.EURP192.PROD.OUTLOOK.COM>
-References: <VI1P192MB0288B67B92CE171B34ABBB1AA9D30@VI1P192MB0288.EURP192.PROD.OUTLOOK.COM>
-In-Reply-To: <VI1P192MB0288B67B92CE171B34ABBB1AA9D30@VI1P192MB0288.EURP192.PROD.OUTLOOK.COM>
-Content-Language: es-ES
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Received: from userp2120.oracle.com ([156.151.31.85]:45246 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726416AbeK2K3c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:29:32 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wASNN1Zh153084
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:26:14 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2nxy9rd70d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:26:14 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wASNQDgv003126
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:26:13 GMT
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wASNQDBB026632
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:26:13 GMT
+Subject: [PATCH 0/4] xfs-5.0: cleanups
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 28 Nov 2018 15:26:12 -0800
+Message-ID: <154344757198.3700.16167533135011546878.stgit@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Hi,
+Hi all,
 
-This is my first message here, so please bear with me.
+Here are some cleanups I made against the rmap code and the inode
+geometry code, which came up as part of review comments on the scrub
+inode fixes posted earlier.  It then fixes some problems with the inode
+btree scrub code, namely that the existing code does not handle the case
+where a single inode cluster is mapped by multiple inobt records.
 
-I'm looking for a way of avoiding  xfs_do_force_shutdown when there is a te=
-mporary disconnection of the underlying block device.=A0max_retries and ret=
-ry_timeout_seconds are set to -1, but xlog_iodone operations seem to ignore=
- that. Other operations like=A0xfs_trans_read_buf_map are correctly retried=
-.
+The first patch creates some global const XFS_RMAP_OINFO_* objects for
+static fs metadata.  This enables us to reduce stack usage here and
+there, and remove a surprising amount of oinfo setup clutter in the
+scrub code.
 
-My intention is to be transparent (i.e. freezing disk operations temporaril=
-y) to network disconnections to NBD server, but it should be equivalent to =
-pulling the plug of a USB block device, reconnect and that everything conti=
-nues to work as expected, without the physical corruption issues.
+The next three patches add some inode <-> block conversion macros and
+adds precomputed inode cluster size and alignment geometry information
+in struct xfs_mount instead of calculating it over and over.
 
-Is there a way of achieving that?
+Comments and questions are, as always, welcome.
 
-Thank you,
+--D
 
-Albert
-
-[92740.572442] XFS (nbd0): metadata I/O error: block 0x2806100 ("xlog_iodon=
-e") error 5 numblks 256
-[92740.572450] XFS (nbd0): xfs_do_force_shutdown(0x2) called from line 1233=
- of file fs/xfs/xfs_log.c.=A0 Return address =3D 0xffffffffc0567a48
-[92740.572502] XFS (nbd0): Log I/O Error Detected.=A0 Shutting down filesys=
-tem
-[92740.572504] XFS (nbd0): Please umount the filesystem and rectify the pro=
-blem(s)
-
-
-     =
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
