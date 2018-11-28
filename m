@@ -1,78 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60730 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726627AbeK0KAE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Nov 2018 05:00:04 -0500
-Subject: [PATCH V2] mkfs.xfs: null-terminate symlinks created via protofile
-References: <a7246562-e851-dfc4-ea3f-3b4dd64aca5b@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ca4c95cc-c8c5-c876-9ca4-a50794a4bb4f@sandeen.net>
-Date: Mon, 26 Nov 2018 17:04:20 -0600
+Received: from userp2120.oracle.com ([156.151.31.85]:47308 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726382AbeK2KcO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:32:14 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wASNStHQ157120
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:28:55 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2120.oracle.com with ESMTP id 2nxy9rd782-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:28:55 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wASNSsj8027209
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:28:54 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wASNSrhj027396
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:28:53 GMT
+Subject: [PATCH 0/6] xfs-5.0: ftrace cleanups
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 28 Nov 2018 15:28:52 -0800
+Message-ID: <154344773243.4341.5458822684407979916.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <a7246562-e851-dfc4-ea3f-3b4dd64aca5b@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Zorro Lang <zlang@redhat.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Now that we have a symlink verifier which checks that in-memory
-symlink names are null-terminated, be sure we do that when we
-create them via the mkfs protofile.
+Hi all,
 
-We only want to null-terminate inline data if it's a symlink;
-we only ever /call/ newfile() with "dolocal" for symlinks, so
-rename that function argument for clarity.
+This series fixes symbolic decoding in ftrace tracepoints in xfs, and
+introduces decoding of xfs_btnum_t and scrub types.
 
-Zorro found this by running xfs/019 on an s390x machine, it
-failed with:
+The first four patches fix some problems with the current ftrace usage
+so that symbolic decoding of enum -> string mappings works again, and
+fixes function pointer printing.
 
- Metadata corruption detected at 0x101214a, inode 0x89 data fork
+The two patches after that add symbolic decoding to btree cursor types
+and scrub types.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reported-by: Zorro Lang <zlang@redhat.com>
----
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.20-rc4.
 
-V2: don't increase len, it gets set into i_size.  Just bump
-the allocation/copy by 1.  Thanks, Darrick.
+Comments and questions are, as always, welcome.
 
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 1cd5436..103795f 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -15,7 +15,7 @@ static char *getstr(char **pp);
- static void fail(char *msg, int i);
- static struct xfs_trans * getres(struct xfs_mount *mp, uint blocks);
- static void rsvfile(xfs_mount_t *mp, xfs_inode_t *ip, long long len);
--static int newfile(xfs_trans_t *tp, xfs_inode_t *ip, int dolocal, int logit,
-+static int newfile(xfs_trans_t *tp, xfs_inode_t *ip, int symlink, int logit,
- 			char *buf, int len);
- static char *newregfile(char **pp, int *len);
- static void rtinit(xfs_mount_t *mp);
-@@ -220,7 +220,7 @@ static int
- newfile(
- 	xfs_trans_t	*tp,
- 	xfs_inode_t	*ip,
--	int		dolocal,
-+	int		symlink,
- 	int		logit,
- 	char		*buf,
- 	int		len)
-@@ -236,10 +236,11 @@ newfile(
- 
- 	flags = 0;
- 	mp = ip->i_mount;
--	if (dolocal && len <= XFS_IFORK_DSIZE(ip)) {
--		libxfs_idata_realloc(ip, len, XFS_DATA_FORK);
-+	if (symlink && len <= XFS_IFORK_DSIZE(ip)) {
-+		/* Copy the name's trailing NULL as well */
-+		libxfs_idata_realloc(ip, len + 1, XFS_DATA_FORK);
- 		if (buf)
--			memmove(ip->i_df.if_u1.if_data, buf, len);
-+			memmove(ip->i_df.if_u1.if_data, buf, len + 1);
- 		ip->i_d.di_size = len;
- 		ip->i_df.if_flags &= ~XFS_IFEXTENTS;
- 		ip->i_df.if_flags |= XFS_IFINLINE;
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
