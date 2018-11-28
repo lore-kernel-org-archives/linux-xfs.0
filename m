@@ -1,60 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45446 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726382AbeK2KhZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Nov 2018 05:37:25 -0500
-Subject: Re: [PATCH 3/6] xfs_repair: skip block reservation when fixing
- freelist
-References: <154181071499.3727.3910572718199592407.stgit@magnolia>
- <154181073309.3727.6459189318125795042.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7fda49c8-8bae-940f-b1ae-144a1d3533ee@sandeen.net>
-Date: Wed, 28 Nov 2018 17:34:05 -0600
+Received: from aserp2120.oracle.com ([141.146.126.78]:32862 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728217AbeK2DPD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 22:15:03 -0500
+Date: Wed, 28 Nov 2018 08:12:48 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfsprogs: don't install xfs_scrub man pages if config'd
+ off
+Message-ID: <20181128161248.GH8125@magnolia>
+References: <0ba2607c-9954-94fc-fcf0-c6fe8579a2c8@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <154181073309.3727.6459189318125795042.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0ba2607c-9954-94fc-fcf0-c6fe8579a2c8@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-
-
-On 11/9/18 6:45 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Nov 27, 2018 at 01:41:31PM -0600, Eric Sandeen wrote:
+> Don't install man pages for xfs_scrub if it's turned off
+> in the config.
 > 
-> AGFL blocks are considered to be part of the fdblocks count, so there's
-> no need to obtain a block reservation when fixing the AGFL as part of
-> repair.  Asking for a reservation can cause repair to fail if the
-> superblock claims zero fdblocks because we haven't gotten far enough
-> into phase 5 to have reset the superblock counters.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-OK, makes sense to me.
+Looks ok to me,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+--D
 
 > ---
->  repair/rmap.c |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> 
-> diff --git a/repair/rmap.c b/repair/rmap.c
-> index ebb5a3ad..c5a86646 100644
-> --- a/repair/rmap.c
-> +++ b/repair/rmap.c
-> @@ -1374,8 +1374,7 @@ fix_freelist(
->  	args.agno = agno;
->  	args.alignment = 1;
->  	args.pag = libxfs_perag_get(mp, agno);
-> -	error = -libxfs_trans_alloc_rollable(mp,
-> -			libxfs_alloc_min_freelist(mp, args.pag), &tp);
-> +	error = -libxfs_trans_alloc_rollable(mp, 0, &tp);
->  	if (error)
->  		do_error(_("failed to fix AGFL on AG %d, error %d\n"),
->  				agno, error);
+> diff --git a/man/man8/Makefile b/man/man8/Makefile
+> index 36620da..e6a5572 100644
+> --- a/man/man8/Makefile
+> +++ b/man/man8/Makefile
+> @@ -7,7 +7,11 @@ include $(TOPDIR)/include/builddefs
+>  
+>  MAN_SECTION	= 8
+>  
+> -MAN_PAGES	= $(shell echo *.$(MAN_SECTION))
+> +ifneq ("$(ENABLE_SCRUB)","yes")
+> +  MAN_PAGES = $(filter-out xfs_scrub%,$(shell echo *.$(MAN_SECTION)))
+> +else
+> +  MAN_PAGES = $(shell echo *.$(MAN_SECTION))
+> +endif
+>  MAN_DEST	= $(PKG_MAN_DIR)/man$(MAN_SECTION)
+>  LSRCFILES	= $(MAN_PAGES)
+>  
 > 
