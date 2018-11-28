@@ -1,59 +1,336 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt1-f193.google.com ([209.85.160.193]:40967 "EHLO
-        mail-qt1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726736AbeK3A7J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 19:59:09 -0500
-Received: by mail-qt1-f193.google.com with SMTP id d18so1977190qto.8
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Nov 2018 05:53:42 -0800 (PST)
-Subject: Re: [PATCH] mkfs.xfs: don't go into multidisk mode if there is only
- one stripe
-References: <20181004175839.18736-1-idryomov@gmail.com>
- <24d229f3-1a75-a65d-5ad3-c8565cb32e76@sandeen.net>
- <20181004222952.GV31060@dastard>
- <CAOi1vP_U-QpABgs+a9oYpYvLWs4D2qVmff=-JEikn7S_=eCAXQ@mail.gmail.com>
- <67627995-714c-5c38-a796-32b503de7d13@sandeen.net>
- <20181005232710.GH12041@dastard>
- <CAOi1vP-Z7xZk1YvWHYWQGOHfyWccFCkyn8je0HBvGhGuUrXmaQ@mail.gmail.com>
- <20181006232037.GB18095@dastard>
- <36bc3f17-e7d1-ce8b-2088-36ff5d7b1e8b@sandeen.net>
-From: Ric Wheeler <ricwheeler@gmail.com>
-Message-ID: <0290ec9f-ab2b-7c1b-faaf-409d72f99e5f@gmail.com>
-Date: Thu, 29 Nov 2018 08:53:39 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:34800 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726416AbeK2K35 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:29:57 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wASNOE6J156958
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:26:38 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2nxxkqn6tb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:26:37 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wASNQWWg022820
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:26:32 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wASNQWfX026750
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:26:32 GMT
+Subject: [PATCH 3/4] xfs: precalculate inodes and blocks per inode cluster
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 28 Nov 2018 15:26:31 -0800
+Message-ID: <154344759118.3700.6267447494975241717.stgit@magnolia>
+In-Reply-To: <154344757198.3700.16167533135011546878.stgit@magnolia>
+References: <154344757198.3700.16167533135011546878.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <36bc3f17-e7d1-ce8b-2088-36ff5d7b1e8b@sandeen.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>, Ilya Dryomov <idryomov@gmail.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Mark Nelson <mnelson@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On 10/6/18 8:14 PM, Eric Sandeen wrote:
-> On 10/6/18 6:20 PM, Dave Chinner wrote:
->>> Can you give an example of a use case that would be negatively affected
->>> if this heuristic was switched from "sunit" to "sunit < swidth"?
->> Any time you only know a single alignment characteristic of the
->> underlying multi-disk storage. e.g. hardware RAID0/5/6 that sets
->> iomin = ioopt, multi-level RAID constructs where only the largest
->> alignment requirement is exposed, RAID1 devices exposing their chunk
->> size, remote replication chunk alignment (because remote rep. is
->> slow and so we need more concurrency to keep the pipeline full),
->> etc.
-> So the tl;dr here is "given any iomin > 512, we should infer low seek
-> latency and parallelism and adjust geometry accordingly?"
->
-> -Eric
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Chiming in late here, but I do think that every decade or two (no disrespect to 
-xfs!), it is worth having a second look at how the storage has changed under us.
+Store the number of inodes and blocks per inode cluster in the mount
+data so that we don't have to keep recalculating them.
 
-The workload that has lots of file systems pounding on a shared device for 
-example is one way to lay out container storage.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_ialloc.c |   23 ++++++++++-------------
+ fs/xfs/scrub/ialloc.c      |   14 ++++++--------
+ fs/xfs/xfs_inode.c         |   14 +++++---------
+ fs/xfs/xfs_itable.c        |   14 ++++++--------
+ fs/xfs/xfs_log_recover.c   |    8 +++-----
+ fs/xfs/xfs_mount.c         |    2 ++
+ fs/xfs/xfs_mount.h         |    2 ++
+ 7 files changed, 34 insertions(+), 43 deletions(-)
 
-No argument about documenting how to fix this with command line tweaks for now, 
-but maybe this would be a good topic for the next LSF/MM shared track of file & 
-storage people to debate?
 
-Ric
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 3ac4a836428d..c7b2579a8e73 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -288,7 +288,7 @@ xfs_ialloc_inode_init(
+ {
+ 	struct xfs_buf		*fbuf;
+ 	struct xfs_dinode	*free;
+-	int			nbufs, blks_per_cluster, inodes_per_cluster;
++	int			nbufs;
+ 	int			version;
+ 	int			i, j;
+ 	xfs_daddr_t		d;
+@@ -299,9 +299,7 @@ xfs_ialloc_inode_init(
+ 	 * sizes, manipulate the inodes in buffers  which are multiples of the
+ 	 * blocks size.
+ 	 */
+-	blks_per_cluster = xfs_icluster_size_fsb(mp);
+-	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
+-	nbufs = length / blks_per_cluster;
++	nbufs = length / mp->m_blocks_per_cluster;
+ 
+ 	/*
+ 	 * Figure out what version number to use in the inodes we create.  If
+@@ -344,9 +342,10 @@ xfs_ialloc_inode_init(
+ 		/*
+ 		 * Get the block.
+ 		 */
+-		d = XFS_AGB_TO_DADDR(mp, agno, agbno + (j * blks_per_cluster));
++		d = XFS_AGB_TO_DADDR(mp, agno, agbno +
++				(j * mp->m_blocks_per_cluster));
+ 		fbuf = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
+-					 mp->m_bsize * blks_per_cluster,
++					 mp->m_bsize * mp->m_blocks_per_cluster,
+ 					 XBF_UNMAPPED);
+ 		if (!fbuf)
+ 			return -ENOMEM;
+@@ -354,7 +353,7 @@ xfs_ialloc_inode_init(
+ 		/* Initialize the inode buffers and log them appropriately. */
+ 		fbuf->b_ops = &xfs_inode_buf_ops;
+ 		xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
+-		for (i = 0; i < inodes_per_cluster; i++) {
++		for (i = 0; i < mp->m_inodes_per_cluster; i++) {
+ 			int	ioffset = i << mp->m_sb.sb_inodelog;
+ 			uint	isize = xfs_dinode_size(version);
+ 
+@@ -2289,7 +2288,6 @@ xfs_imap(
+ 	xfs_agblock_t	agbno;	/* block number of inode in the alloc group */
+ 	xfs_agino_t	agino;	/* inode number within alloc group */
+ 	xfs_agnumber_t	agno;	/* allocation group number */
+-	int		blks_per_cluster; /* num blocks per inode cluster */
+ 	xfs_agblock_t	chunk_agbno;	/* first block in inode chunk */
+ 	xfs_agblock_t	cluster_agbno;	/* first block in inode cluster */
+ 	int		error;	/* error code */
+@@ -2335,8 +2333,6 @@ xfs_imap(
+ 		return -EINVAL;
+ 	}
+ 
+-	blks_per_cluster = xfs_icluster_size_fsb(mp);
+-
+ 	/*
+ 	 * For bulkstat and handle lookups, we have an untrusted inode number
+ 	 * that we have to verify is valid. We cannot do this just by reading
+@@ -2356,7 +2352,7 @@ xfs_imap(
+ 	 * If the inode cluster size is the same as the blocksize or
+ 	 * smaller we get to the buffer by simple arithmetics.
+ 	 */
+-	if (blks_per_cluster == 1) {
++	if (mp->m_blocks_per_cluster == 1) {
+ 		offset = XFS_INO_TO_OFFSET(mp, ino);
+ 		ASSERT(offset < mp->m_sb.sb_inopblock);
+ 
+@@ -2385,12 +2381,13 @@ xfs_imap(
+ out_map:
+ 	ASSERT(agbno >= chunk_agbno);
+ 	cluster_agbno = chunk_agbno +
+-		((offset_agbno / blks_per_cluster) * blks_per_cluster);
++		((offset_agbno / mp->m_blocks_per_cluster) *
++		 mp->m_blocks_per_cluster);
+ 	offset = ((agbno - cluster_agbno) * mp->m_sb.sb_inopblock) +
+ 		XFS_INO_TO_OFFSET(mp, ino);
+ 
+ 	imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, cluster_agbno);
+-	imap->im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
++	imap->im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
+ 	imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
+ 
+ 	/*
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 426eb1a5503c..596a02b8efdc 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -193,18 +193,16 @@ xchk_iallocbt_check_freemask(
+ 	xfs_agino_t			chunkino;
+ 	xfs_agino_t			clusterino;
+ 	xfs_agblock_t			agbno;
+-	int				blks_per_cluster;
+ 	uint16_t			holemask;
+ 	uint16_t			ir_holemask;
+ 	int				error = 0;
+ 
+ 	/* Make sure the freemask matches the inode records. */
+-	blks_per_cluster = xfs_icluster_size_fsb(mp);
+-	nr_inodes = XFS_FSB_TO_INO(mp, blks_per_cluster);
++	nr_inodes = mp->m_inodes_per_cluster;
+ 
+ 	for (agino = irec->ir_startino;
+ 	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
+-	     agino += blks_per_cluster * mp->m_sb.sb_inopblock) {
++	     agino += mp->m_inodes_per_cluster) {
+ 		fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
+ 		chunkino = agino - irec->ir_startino;
+ 		agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+@@ -225,18 +223,18 @@ xchk_iallocbt_check_freemask(
+ 		/* If any part of this is a hole, skip it. */
+ 		if (ir_holemask) {
+ 			xchk_xref_is_not_owned_by(bs->sc, agbno,
+-					blks_per_cluster,
++					mp->m_blocks_per_cluster,
+ 					&XFS_RMAP_OINFO_INODES);
+ 			continue;
+ 		}
+ 
+-		xchk_xref_is_owned_by(bs->sc, agbno, blks_per_cluster,
++		xchk_xref_is_owned_by(bs->sc, agbno, mp->m_blocks_per_cluster,
+ 				&XFS_RMAP_OINFO_INODES);
+ 
+ 		/* Grab the inode cluster buffer. */
+ 		imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno,
+ 				agbno);
+-		imap.im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
++		imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
+ 		imap.im_boffset = 0;
+ 
+ 		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
+@@ -303,7 +301,7 @@ xchk_iallocbt_rec(
+ 	/* Make sure this record is aligned to cluster and inoalignmnt size. */
+ 	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
+ 	if ((agbno & (xfs_ialloc_cluster_alignment(mp) - 1)) ||
+-	    (agbno & (xfs_icluster_size_fsb(mp) - 1)))
++	    (agbno & (mp->m_blocks_per_cluster - 1)))
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+ 
+ 	*inode_blocks += XFS_B_TO_FSB(mp,
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 801eb891d0fd..ae667ba74a1c 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2184,8 +2184,6 @@ xfs_ifree_cluster(
+ 	struct xfs_icluster	*xic)
+ {
+ 	xfs_mount_t		*mp = free_ip->i_mount;
+-	int			blks_per_cluster;
+-	int			inodes_per_cluster;
+ 	int			nbufs;
+ 	int			i, j;
+ 	int			ioffset;
+@@ -2199,11 +2197,9 @@ xfs_ifree_cluster(
+ 
+ 	inum = xic->first_ino;
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, inum));
+-	blks_per_cluster = xfs_icluster_size_fsb(mp);
+-	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
+-	nbufs = mp->m_ialloc_blks / blks_per_cluster;
++	nbufs = mp->m_ialloc_blks / mp->m_blocks_per_cluster;
+ 
+-	for (j = 0; j < nbufs; j++, inum += inodes_per_cluster) {
++	for (j = 0; j < nbufs; j++, inum += mp->m_inodes_per_cluster) {
+ 		/*
+ 		 * The allocation bitmap tells us which inodes of the chunk were
+ 		 * physically allocated. Skip the cluster if an inode falls into
+@@ -2211,7 +2207,7 @@ xfs_ifree_cluster(
+ 		 */
+ 		ioffset = inum - xic->first_ino;
+ 		if ((xic->alloc & XFS_INOBT_MASK(ioffset)) == 0) {
+-			ASSERT(ioffset % inodes_per_cluster == 0);
++			ASSERT(ioffset % mp->m_inodes_per_cluster == 0);
+ 			continue;
+ 		}
+ 
+@@ -2227,7 +2223,7 @@ xfs_ifree_cluster(
+ 		 * to mark all the active inodes on the buffer stale.
+ 		 */
+ 		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, blkno,
+-					mp->m_bsize * blks_per_cluster,
++					mp->m_bsize * mp->m_blocks_per_cluster,
+ 					XBF_UNMAPPED);
+ 
+ 		if (!bp)
+@@ -2274,7 +2270,7 @@ xfs_ifree_cluster(
+ 		 * transaction stale above, which means there is no point in
+ 		 * even trying to lock them.
+ 		 */
+-		for (i = 0; i < inodes_per_cluster; i++) {
++		for (i = 0; i < mp->m_inodes_per_cluster; i++) {
+ retry:
+ 			rcu_read_lock();
+ 			ip = radix_tree_lookup(&pag->pag_ici_root,
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 18d8d3b812a7..942e4aa5e729 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -167,20 +167,18 @@ xfs_bulkstat_ichunk_ra(
+ {
+ 	xfs_agblock_t			agbno;
+ 	struct blk_plug			plug;
+-	int				blks_per_cluster;
+-	int				inodes_per_cluster;
+ 	int				i;	/* inode chunk index */
+ 
+ 	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
+-	blks_per_cluster = xfs_icluster_size_fsb(mp);
+-	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
+ 
+ 	blk_start_plug(&plug);
+ 	for (i = 0; i < XFS_INODES_PER_CHUNK;
+-	     i += inodes_per_cluster, agbno += blks_per_cluster) {
+-		if (xfs_inobt_maskn(i, inodes_per_cluster) & ~irec->ir_free) {
+-			xfs_btree_reada_bufs(mp, agno, agbno, blks_per_cluster,
+-					     &xfs_inode_buf_ops);
++	     i += mp->m_inodes_per_cluster, agbno += mp->m_blocks_per_cluster) {
++		if (xfs_inobt_maskn(i, mp->m_inodes_per_cluster) &
++		    ~irec->ir_free) {
++			xfs_btree_reada_bufs(mp, agno, agbno,
++					mp->m_blocks_per_cluster,
++					&xfs_inode_buf_ops);
+ 		}
+ 	}
+ 	blk_finish_plug(&plug);
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 1fc9e9042e0e..9fe88d125f0a 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3850,7 +3850,6 @@ xlog_recover_do_icreate_pass2(
+ 	unsigned int		count;
+ 	unsigned int		isize;
+ 	xfs_agblock_t		length;
+-	int			blks_per_cluster;
+ 	int			bb_per_cluster;
+ 	int			cancel_count;
+ 	int			nbufs;
+@@ -3918,14 +3917,13 @@ xlog_recover_do_icreate_pass2(
+ 	 * buffers for cancellation so we don't overwrite anything written after
+ 	 * a cancellation.
+ 	 */
+-	blks_per_cluster = xfs_icluster_size_fsb(mp);
+-	bb_per_cluster = XFS_FSB_TO_BB(mp, blks_per_cluster);
+-	nbufs = length / blks_per_cluster;
++	bb_per_cluster = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
++	nbufs = length / mp->m_blocks_per_cluster;
+ 	for (i = 0, cancel_count = 0; i < nbufs; i++) {
+ 		xfs_daddr_t	daddr;
+ 
+ 		daddr = XFS_AGB_TO_DADDR(mp, agno,
+-					 agbno + i * blks_per_cluster);
++					 agbno + i * mp->m_blocks_per_cluster);
+ 		if (xlog_check_buffer_cancelled(log, daddr, bb_per_cluster, 0))
+ 			cancel_count++;
+ 	}
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 02d15098dbee..56d374675fd5 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -798,6 +798,8 @@ xfs_mountfs(
+ 		if (mp->m_sb.sb_inoalignmt >= XFS_B_TO_FSBT(mp, new_size))
+ 			mp->m_inode_cluster_size = new_size;
+ 	}
++	mp->m_blocks_per_cluster = xfs_icluster_size_fsb(mp);
++	mp->m_inodes_per_cluster = XFS_FSB_TO_INO(mp, mp->m_blocks_per_cluster);
+ 
+ 	/*
+ 	 * If enabled, sparse inode chunk alignment is expected to match the
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 7964513c3128..58a037bfac22 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -101,6 +101,8 @@ typedef struct xfs_mount {
+ 	uint8_t			m_agno_log;	/* log #ag's */
+ 	uint8_t			m_agino_log;	/* #bits for agino in inum */
+ 	uint			m_inode_cluster_size;/* min inode buf size */
++	unsigned int		m_inodes_per_cluster;
++	unsigned int		m_blocks_per_cluster;
+ 	uint			m_blockmask;	/* sb_blocksize-1 */
+ 	uint			m_blockwsize;	/* sb_blocksize in words */
+ 	uint			m_blockwmask;	/* blockwsize-1 */
