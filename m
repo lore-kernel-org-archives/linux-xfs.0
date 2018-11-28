@@ -1,63 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:33665 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728169AbeKQBcA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Nov 2018 20:32:00 -0500
-Received: by mail-wr1-f67.google.com with SMTP id u9-v6so25261383wrr.0
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Nov 2018 07:19:12 -0800 (PST)
+Received: from userp2130.oracle.com ([156.151.31.86]:33604 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726972AbeK1Q0h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 11:26:37 -0500
+Date: Tue, 27 Nov 2018 21:26:04 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v1 6/7] xfs: Rewrite retried read
+Message-ID: <20181128052604.GE8125@magnolia>
+References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
+ <1543376991-5764-7-git-send-email-allison.henderson@oracle.com>
+ <20181128051719.GK6311@dastard>
 MIME-Version: 1.0
-References: <20181109143004.24963-1-jtulak@redhat.com> <9a951869-5852-2689-a6ef-084c770f16fb@sandeen.net>
- <CACj3i70u6hS2RgSRwHMqLZtKexdEz6GnSH10tyYF6DiHXimnug@mail.gmail.com> <c242400e-bd0b-404a-ec49-226fde9a23db@sandeen.net>
-In-Reply-To: <c242400e-bd0b-404a-ec49-226fde9a23db@sandeen.net>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Fri, 16 Nov 2018 16:19:00 +0100
-Message-ID: <CACj3i72_TEELRcRuLCFvxOc0trhpKjztn3AwBUmmbTX-K-eorQ@mail.gmail.com>
-Subject: Re: [PATCH 00/24] xfsdump: code style change
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181128051719.GK6311@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Allison Henderson <allison.henderson@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, bob.liu@oracle.com
 
-On Thu, Nov 15, 2018 at 5:12 PM Eric Sandeen <sandeen@sandeen.net> wrote:
->
-> On 11/15/18 6:40 AM, Jan Tulak wrote:
-> > On Wed, Nov 14, 2018 at 9:36 PM Eric Sandeen <sandeen@sandeen.net> wrote:
+On Wed, Nov 28, 2018 at 04:17:19PM +1100, Dave Chinner wrote:
+> On Tue, Nov 27, 2018 at 08:49:50PM -0700, Allison Henderson wrote:
+> > If we had to try more than one mirror to get a successful
+> > read, then write that buffer back to correct the bad mirro
+> > 
+> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> > ---
+> >  fs/xfs/xfs_buf.c | 8 ++++++++
+> >  1 file changed, 8 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index f102d01..81f6491 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -847,6 +847,14 @@ xfs_buf_read_map(
+> >  
+> >  		}
+> >  retry_done:
+> > +
+> > +		/*
+> > +		 * if we had to try more than one mirror to sucessfully read
+> > +		 * the buffer, write the buffer back
+> > +		 */
+> > +		if (!bp->b_error && i > 0)
+> > +			xfs_bwrite(bp);
+> > +
+> 
+> This can go in the case statement on retry and then you don't need
+> to check for i > 0 or, well, bp->b_error. i.e.
+> 
+> 		swtich (bp->b_error) {
+> 		case -EBADCRC:
+> 		case -EIO:
+> 		case -EFSCORRUPTED:
+> 			/* try again from different copy */
+> 			continue;
+> 		0:
+> 			/* good copy, rewrite it to repair bad copy */
+> 			xfs_bwrite(bp);
 
-...
+Some day we might want to provide some controls for how long we'll retry
+these reads and whether or not we automatically rewrite buffers, since
+some administrators might prefer fast fail to get failover started.
 
-> >> 3) This creates /many/ more > 80 char lines.  Per:
-> >>
-> >> # for F in */*.[ch]; do expand $F | grep '.\{81\}'; done
-> >>
-> >> the codebase goes from 794 such lines to 1806.  IOWs, some of the "missing"
-> >> whitespace may have been intentional, to stay under 80 cols.  New lines
-> >> vs. compressed lines is a judgement call, I guess.  Bleah.
-> >>
-> >> So... sorry about that, but if the goal is to format better, let's be
-> >> sure to keep observing other basic rules like "< 80 cols"
-> >
-> > Yeah. I'm not sure there is an easy way to automate that...
->
-> Well, I think that's kind of the point here.  Do your automated replacement,
-> but then manually inspect the result - you can look for 80col problems with
-> the example above.  Then manually fix up as needed.  Then proceed to the next
-> patch.
->
-> Reviewers will need to look at the changes closely nyway, so you may as well
-> do it before submission.  ;)
->
+(Not now though)
 
-It's about all the rebase conflicts that arises after any change in
-previous patches. If it was a thing I write once, then so be it. But
-if I have to rewrite it again after any change in one of the previous
-patches, well, that doesn't scale. :-) But I hope I can solve this
-somehow.
+--D
 
-Thanks,
-Jan
-
-
--- 
-Jan Tulak
+> 			/* fallthrough */
+> 		default:
+> 			return bp;
+> 		}
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
