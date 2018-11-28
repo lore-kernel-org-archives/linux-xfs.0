@@ -1,215 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:37005 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727244AbeK0Jcv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Nov 2018 04:32:51 -0500
-Received: by mail-pf1-f193.google.com with SMTP id u3-v6so7301348pfm.4
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Nov 2018 14:37:12 -0800 (PST)
-Date: Mon, 26 Nov 2018 14:37:09 -0800
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH V12 09/20] block: use bio_for_each_bvec() to compute
- multi-page bvec count
-Message-ID: <20181126223709.GI30411@vader>
-References: <20181126021720.19471-1-ming.lei@redhat.com>
- <20181126021720.19471-10-ming.lei@redhat.com>
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:46139 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726847AbeK1ODx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 09:03:53 -0500
+Date: Wed, 28 Nov 2018 11:03:46 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 3/8] generic/050: fix ro blockdev mount of xfs with quota
+Message-ID: <20181128030346.GP3889@desktop>
+References: <154111434286.6577.15010861884505931015.stgit@magnolia>
+ <154111436126.6577.15057711037961689350.stgit@magnolia>
+ <20181104153236.GC12788@desktop>
+ <20181127231955.GA8115@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181126021720.19471-10-ming.lei@redhat.com>
+In-Reply-To: <20181127231955.GA8115@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Nov 26, 2018 at 10:17:09AM +0800, Ming Lei wrote:
-> First it is more efficient to use bio_for_each_bvec() in both
-> blk_bio_segment_split() and __blk_recalc_rq_segments() to compute how
-> many multi-page bvecs there are in the bio.
+On Tue, Nov 27, 2018 at 03:19:55PM -0800, Darrick J. Wong wrote:
+> On Sun, Nov 04, 2018 at 11:32:36PM +0800, Eryu Guan wrote:
+> > On Thu, Nov 01, 2018 at 04:19:21PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > In XFS, mounting with quota always require a writable device.  If the
+> > > block device is read only, the mount fails, which fails this test.
+> > > Since this is expected, work around this.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  tests/generic/050 |   23 +++++++++++++++++++----
+> > >  1 file changed, 19 insertions(+), 4 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/tests/generic/050 b/tests/generic/050
+> > > index 90e924db..33da228d 100755
+> > > --- a/tests/generic/050
+> > > +++ b/tests/generic/050
+> > > @@ -36,6 +36,21 @@ _require_norecovery
+> > >  
+> > >  _scratch_mkfs >/dev/null 2>&1
+> > >  
+> > > +filter_ro_mount() {
+> > > +	local arg=""
+> > > +
+> > > +	# Mounting with quota on XFS requires a writable fs, which means
+> > > +	# we fail the ro blockdev test with with EPERM.
+> > > +	if [ "$FSTYP" = "xfs" ] && echo "$MOUNT_OPTIONS" | grep -q quota ; then
+> > > +		arg="s|mount: $SCRATCH_MNT: permission denied|mount: device write-protected, mounting read-only|g"
+> > > +	fi
+> > > +	sed -e "$arg" | _filter_ro_mount
+> > > +}
+> > > +
+> > > +filter_umount() {
+> > > +	sed -e "\|umount: $SCRATCH_DEV: not mounted.|d" | _filter_scratch
+> > > +}
+> > > +
+> > >  #
+> > >  # Mark the device read-only
+> > >  #
+> > > @@ -46,7 +61,7 @@ blockdev --setro $SCRATCH_DEV
+> > >  # Mount it, and make sure we can't write to it, and we can unmount it again
+> > >  #
+> > >  echo "mounting read-only block device:"
+> > > -_try_scratch_mount 2>&1 | _filter_ro_mount
+> > > +_try_scratch_mount 2>&1 | filter_ro_mount
+> > >  
+> > >  echo "touching file on read-only filesystem (should fail)"
+> > >  touch $SCRATCH_MNT/foo 2>&1 | _filter_scratch
+> > 
+> > This touch expects a failure message, but with this change applied, test
+> > still failed when testing with "-o usrquota,grpquota,prjquota" mount
+> > options as
+> > 
+> >     --- tests/generic/050.out   2018-07-01 20:36:05.796146192 +0800
+> >     +++ /root/workspace/xfstests/results//generic/050.out.bad   2018-11-04 23:25:34.551700377 +0800
+> >     @@ -3,7 +3,6 @@
+> >      mounting read-only block device:
+> >      mount: device write-protected, mounting read-only
+> >      touching file on read-only filesystem (should fail)
+> >     -touch: cannot touch 'SCRATCH_MNT/foo': Read-only file system
 > 
-> Secondly once bio_for_each_bvec() is used, the bvec may need to be
-> splitted because its length can be very longer than max segment size,
-> so we have to split the big bvec into several segments.
-> 
-> Thirdly when splitting multi-page bvec into segments, the max segment
-> limit may be reached, so the bio split need to be considered under
-> this situation too.
+> Hmm, what kernel is this on?  I've never seen this problem, but maybe I
+> just have too many patches everywhere. :/
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
+I cannot remember.. But I think the problem here is that, ro mount with
+quota failed but we amended & hid the failure by filter_ro_mount, then
+the 'touch' expected a ro-mounted fs, but it actually created a new file
+on rootfs without hitting the EROFS error.
 
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  block/blk-merge.c | 100 +++++++++++++++++++++++++++++++++++++++++++-----------
->  1 file changed, 80 insertions(+), 20 deletions(-)
-> 
-> diff --git a/block/blk-merge.c b/block/blk-merge.c
-> index 51ec6ca56a0a..2d8f388d43de 100644
-> --- a/block/blk-merge.c
-> +++ b/block/blk-merge.c
-> @@ -161,6 +161,70 @@ static inline unsigned get_max_io_size(struct request_queue *q,
->  	return sectors;
->  }
->  
-> +static unsigned get_max_segment_size(struct request_queue *q,
-> +				     unsigned offset)
-> +{
-> +	unsigned long mask = queue_segment_boundary(q);
-> +
-> +	return min_t(unsigned long, mask - (mask & offset) + 1,
-> +		     queue_max_segment_size(q));
-> +}
-> +
-> +/*
-> + * Split the bvec @bv into segments, and update all kinds of
-> + * variables.
-> + */
-> +static bool bvec_split_segs(struct request_queue *q, struct bio_vec *bv,
-> +		unsigned *nsegs, unsigned *last_seg_size,
-> +		unsigned *front_seg_size, unsigned *sectors)
-> +{
-> +	unsigned len = bv->bv_len;
-> +	unsigned total_len = 0;
-> +	unsigned new_nsegs = 0, seg_size = 0;
-> +
-> +	/*
-> +	 * Multipage bvec may be too big to hold in one segment,
-> +	 * so the current bvec has to be splitted as multiple
-> +	 * segments.
-> +	 */
-> +	while (len && new_nsegs + *nsegs < queue_max_segments(q)) {
-> +		seg_size = get_max_segment_size(q, bv->bv_offset + total_len);
-> +		seg_size = min(seg_size, len);
-> +
-> +		new_nsegs++;
-> +		total_len += seg_size;
-> +		len -= seg_size;
-> +
-> +		if ((bv->bv_offset + total_len) & queue_virt_boundary(q))
-> +			break;
-> +	}
-> +
-> +	if (!new_nsegs)
-> +		return !!len;
-> +
-> +	/* update front segment size */
-> +	if (!*nsegs) {
-> +		unsigned first_seg_size;
-> +
-> +		if (new_nsegs == 1)
-> +			first_seg_size = get_max_segment_size(q, bv->bv_offset);
-> +		else
-> +			first_seg_size = queue_max_segment_size(q);
-> +
-> +		if (*front_seg_size < first_seg_size)
-> +			*front_seg_size = first_seg_size;
-> +	}
-> +
-> +	/* update other varibles */
-> +	*last_seg_size = seg_size;
-> +	*nsegs += new_nsegs;
-> +	if (sectors)
-> +		*sectors += total_len >> 9;
-> +
-> +	/* split in the middle of the bvec if len != 0 */
-> +	return !!len;
-> +}
-> +
->  static struct bio *blk_bio_segment_split(struct request_queue *q,
->  					 struct bio *bio,
->  					 struct bio_set *bs,
-> @@ -174,7 +238,7 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
->  	struct bio *new = NULL;
->  	const unsigned max_sectors = get_max_io_size(q, bio);
->  
-> -	bio_for_each_segment(bv, bio, iter) {
-> +	bio_for_each_bvec(bv, bio, iter) {
->  		/*
->  		 * If the queue doesn't support SG gaps and adding this
->  		 * offset would create a gap, disallow it.
-> @@ -189,8 +253,12 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
->  			 */
->  			if (nsegs < queue_max_segments(q) &&
->  			    sectors < max_sectors) {
-> -				nsegs++;
-> -				sectors = max_sectors;
-> +				/* split in the middle of bvec */
-> +				bv.bv_len = (max_sectors - sectors) << 9;
-> +				bvec_split_segs(q, &bv, &nsegs,
-> +						&seg_size,
-> +						&front_seg_size,
-> +						&sectors);
->  			}
->  			goto split;
->  		}
-> @@ -212,14 +280,12 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
->  		if (nsegs == queue_max_segments(q))
->  			goto split;
->  
-> -		if (nsegs == 1 && seg_size > front_seg_size)
-> -			front_seg_size = seg_size;
-> -
-> -		nsegs++;
->  		bvprv = bv;
->  		bvprvp = &bvprv;
-> -		seg_size = bv.bv_len;
-> -		sectors += bv.bv_len >> 9;
-> +
-> +		if (bvec_split_segs(q, &bv, &nsegs, &seg_size,
-> +				    &front_seg_size, &sectors))
-> +			goto split;
->  
->  	}
->  
-> @@ -233,8 +299,6 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
->  			bio = new;
->  	}
->  
-> -	if (nsegs == 1 && seg_size > front_seg_size)
-> -		front_seg_size = seg_size;
->  	bio->bi_seg_front_size = front_seg_size;
->  	if (seg_size > bio->bi_seg_back_size)
->  		bio->bi_seg_back_size = seg_size;
-> @@ -296,6 +360,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
->  {
->  	struct bio_vec bv, bvprv = { NULL };
->  	unsigned int seg_size, nr_phys_segs;
-> +	unsigned front_seg_size = bio->bi_seg_front_size;
->  	struct bio *fbio, *bbio;
->  	struct bvec_iter iter;
->  	bool prev = false;
-> @@ -316,7 +381,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
->  	seg_size = 0;
->  	nr_phys_segs = 0;
->  	for_each_bio(bio) {
-> -		bio_for_each_segment(bv, bio, iter) {
-> +		bio_for_each_bvec(bv, bio, iter) {
->  			/*
->  			 * If SG merging is disabled, each bio vector is
->  			 * a segment
-> @@ -336,20 +401,15 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
->  				continue;
->  			}
->  new_segment:
-> -			if (nr_phys_segs == 1 && seg_size >
-> -			    fbio->bi_seg_front_size)
-> -				fbio->bi_seg_front_size = seg_size;
-> -
-> -			nr_phys_segs++;
->  			bvprv = bv;
->  			prev = true;
-> -			seg_size = bv.bv_len;
-> +			bvec_split_segs(q, &bv, &nr_phys_segs, &seg_size,
-> +					&front_seg_size, NULL);
->  		}
->  		bbio = bio;
->  	}
->  
-> -	if (nr_phys_segs == 1 && seg_size > fbio->bi_seg_front_size)
-> -		fbio->bi_seg_front_size = seg_size;
-> +	fbio->bi_seg_front_size = front_seg_size;
->  	if (seg_size > bbio->bi_seg_back_size)
->  		bbio->bi_seg_back_size = seg_size;
->  
-> -- 
-> 2.9.5
-> 
+Thanks,
+Eryu
