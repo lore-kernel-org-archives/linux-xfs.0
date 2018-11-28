@@ -1,65 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37334 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727024AbeK2Q2a (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Nov 2018 11:28:30 -0500
-Subject: Re: [PATCH v2 7/6] xfs_db: add missing string name for DBM_COWDATA
-References: <154181071499.3727.3910572718199592407.stgit@magnolia>
- <20181127231545.GA8125@magnolia> <20181129005454.GK8125@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <1d279b25-13b3-08a0-fe16-9060a231dd09@sandeen.net>
-Date: Wed, 28 Nov 2018 23:24:22 -0600
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:41355 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727008AbeK1QDq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 11:03:46 -0500
+Date: Wed, 28 Nov 2018 16:03:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v1 4/7] xfs: Add b_rw_hint to xfs_buf
+Message-ID: <20181128050323.GI6311@dastard>
+References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
+ <1543376991-5764-5-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <20181129005454.GK8125@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1543376991-5764-5-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, bob.liu@oracle.com
 
-
-
-On 11/28/18 6:54 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Nov 27, 2018 at 08:49:48PM -0700, Allison Henderson wrote:
+> This patch adds a new field b_rw_hint to xfs_buf.  We will
+> need this to properly initialize the new bio->bi_rw_hint when
+> submitting the read request.  When the read completes, we
+> then store the returned mirror in the b_rw_hint.
 > 
-> In db/check.c, typename[] is supposed to have strings for every DBM_
-> type, but we forgot one.  Add it now.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
-> v2: add build time check
-> ---
->  db/check.c |   11 +++++++++++
->  1 file changed, 11 insertions(+)
+>  fs/xfs/xfs_buf.c | 5 ++++-
+>  fs/xfs/xfs_buf.h | 7 +++++++
+>  2 files changed, 11 insertions(+), 1 deletion(-)
 > 
-> diff --git a/db/check.c b/db/check.c
-> index 352aab3f..442600be 100644
-> --- a/db/check.c
-> +++ b/db/check.c
-> @@ -164,8 +164,19 @@ static const char	*typename[] = {
->  	"btrmap",
->  	"btrefcnt",
->  	"rldata",
-> +	"cowdata",
->  	NULL
->  };
-> +
-> +/*
-> + * Make sure typename has the same number of elements as there are DBM types.
-> + * This function isn't called anywhere; we just use it to trip up the compiler.
-> + */
-> +static inline void check_typename(void)
-> +{
-> +	BUILD_BUG_ON(ARRAY_SIZE(typename) != DBM_NDBM + 1);
-> +}
-> +
->  static int		verbose;
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index b21ea2b..dd8ba59 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1322,8 +1322,10 @@ xfs_buf_bio_end_io(
+>  	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
+>  		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
 >  
->  #define	CHECK_BLIST(b)	(blist_size && check_blist(b))
+> -	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
+> +	if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
+> +		bp->b_rw_hint = bio->bi_rw_hint;
+>  		xfs_buf_ioend_async(bp);
+> +	}
+>  	bio_put(bio);
+>  }
+>  
 
-Seems ok, if it won't cause unused warnings ...
+This will miss setting bp->b_rw_hint for IO that completes before
+submission returns to __xfs_buf_submit() (i.e. b_io_remaining is 2
+at IO completion).
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+So I suspect it won't do the right thing on fast or synchronous
+block devices like pmem. You should be able to tst this with a RAID1
+made from two ramdisks...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
