@@ -1,201 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38472 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732278AbeKWEkO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Nov 2018 23:40:14 -0500
-Subject: [PATCH 12/12] generic: long fsx soak tests
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 22 Nov 2018 09:59:44 -0800
-Message-ID: <154290958406.1218.8922234236895263233.stgit@magnolia>
-In-Reply-To: <154290950237.1218.9937108728673485814.stgit@magnolia>
-References: <154290950237.1218.9937108728673485814.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:42296 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726328AbeK2JnA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Nov 2018 04:43:00 -0500
+Subject: Re: [PATCH 1/6] xfs_io.8: rearrange command listings by section
+References: <154181071499.3727.3910572718199592407.stgit@magnolia>
+ <154181072098.3727.12783001969841425328.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <8c568cb2-4931-288c-0be3-68bd5caef634@sandeen.net>
+Date: Wed, 28 Nov 2018 16:39:47 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <154181072098.3727.12783001969841425328.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 11/9/18 6:45 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Most of the commands listed under "OTHER COMMANDS" apply to files or
+> filesystems.  Create two new sections for that and populate them
+> appropriately.
+> 
+> Here's what moves:
+> 
+> fsmap: moves from file io commands to filesystem commands
+> utimes: moves from file io commands to file commands
+> 
+>>From the OTHER COMMANDS section:
+> 
+> lsattr/chattr: moves to file commands
+> flink: moves to file commands
+> stat/statx: moves to file commands
+> lsproj/chproj: moves to file commands
+> parent: moves to file commands
+> [gs]et_encpolicy: moves to file io commands
+> freeze/thaw: move to filesystem commands
+> inject: move to filesystem commands
+> resblks: move to filesystem commands
+> shutdown: move to filesystem commands
+> statfs: move to filesystem commands
+> label: move to filesystem commands
 
-Add a few tests to implement long soak tests of fsx.
+Thank you for getting this better organized.  Of course, I have
+some questions.  :)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/generic/938     |   65 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/938.out |    2 ++
- tests/generic/939     |   60 +++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/939.out |    2 ++
- tests/generic/group   |    2 ++
- 5 files changed, 131 insertions(+)
- create mode 100644 tests/generic/938
- create mode 100644 tests/generic/938.out
- create mode 100644 tests/generic/939
- create mode 100644 tests/generic/939.out
+What does "FILE COMMANDS" vs. "FILE I/O COMMANDS" mean, exactly?
+I ask because for example bmap & fiemap are still under FILE IO but
+they... really don't do file IO.  What's your intended distinction
+with these new sections?
 
-
-diff --git a/tests/generic/938 b/tests/generic/938
-new file mode 100644
-index 00000000..a85a6472
---- /dev/null
-+++ b/tests/generic/938
-@@ -0,0 +1,65 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2018 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 938
-+#
-+# Long-soak directio fsx test
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1        # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+        cd /
-+        rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+_require_test
-+
-+# Run fsx for a million ops or more
-+nr_ops=$((1000000 * TIME_FACTOR))
-+op_sz=$((128000 * LOAD_FACTOR))
-+file_sz=$((600000 * LOAD_FACTOR))
-+fsx_file=$TEST_DIR/fsx.$seq
-+min_dio_sz=$(_min_dio_alignment)
-+
-+fsx_args=(-q)
-+fsx_args+=(-N $nr_ops)
-+fsx_args+=(-p $((nr_ops / 100)))
-+fsx_args+=(-o $op_sz)
-+fsx_args+=(-l $file_sz)
-+fsx_args+=(-r $min_dio_sz)
-+fsx_args+=(-t $min_dio_sz)
-+fsx_args+=(-w $min_dio_sz)
-+fsx_args+=(-Z)
-+fsx_args+=($fsx_file)
-+
-+echo "ltp ${fsx_args[@]} $FSX_ARGS" >> $seqres.full
-+
-+if ! ltp/fsx "${fsx_args[@]}" $FSX_ARGS > $tmp.fsx 2>&1; then
-+	cat $tmp.fsx | tee -a $seqres.full
-+fi
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/generic/938.out b/tests/generic/938.out
-new file mode 100644
-index 00000000..11b565ee
---- /dev/null
-+++ b/tests/generic/938.out
-@@ -0,0 +1,2 @@
-+QA output created by 938
-+Silence is golden
-diff --git a/tests/generic/939 b/tests/generic/939
-new file mode 100644
-index 00000000..5e341e30
---- /dev/null
-+++ b/tests/generic/939
-@@ -0,0 +1,60 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2018 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 938
-+#
-+# Long-soak buffered fsx test
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1        # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+        cd /
-+        rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+_require_test
-+
-+# Run fsx for a million ops or more
-+nr_ops=$((1000000 * TIME_FACTOR))
-+op_sz=$((128000 * LOAD_FACTOR))
-+file_sz=$((600000 * LOAD_FACTOR))
-+fsx_file=$TEST_DIR/fsx.$seq
-+
-+fsx_args=(-q)
-+fsx_args+=(-N $nr_ops)
-+fsx_args+=(-p $((nr_ops / 100)))
-+fsx_args+=(-o $op_sz)
-+fsx_args+=(-l $file_sz)
-+fsx_args+=($fsx_file)
-+
-+echo "ltp ${fsx_args[@]} $FSX_ARGS" >> $seqres.full
-+
-+if ! ltp/fsx "${fsx_args[@]}" $FSX_ARGS > $tmp.fsx 2>&1; then
-+	cat $tmp.fsx | tee -a $seqres.full
-+fi
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/generic/939.out b/tests/generic/939.out
-new file mode 100644
-index 00000000..a86e90c5
---- /dev/null
-+++ b/tests/generic/939.out
-@@ -0,0 +1,2 @@
-+QA output created by 939
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index 92330b52..16e5cc17 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -522,3 +522,5 @@
- 517 auto quick dedupe clone
- 518 auto quick clone
- 519 auto quick
-+938 soak long_rw
-+939 soak long_rw
+Thanks,
+-Eric
