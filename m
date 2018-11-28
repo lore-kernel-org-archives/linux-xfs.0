@@ -1,159 +1,205 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55012 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727040AbeK3AFX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Nov 2018 19:05:23 -0500
-Date: Thu, 29 Nov 2018 14:00:02 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH RFC] Ext4: fix deadlock on dirty pages between fault and
- writeback
-Message-ID: <20181129130002.GM31087@quack2.suse.cz>
-References: <1540858969-75803-1-git-send-email-bo.liu@linux.alibaba.com>
- <20181127114249.GH16301@quack2.suse.cz>
- <20181128201122.r4sec265cnlxgj2x@US-160370MP2.local>
- <20181129085238.GD31087@quack2.suse.cz>
- <20181129120253.GR6311@dastard>
+Received: from userp2120.oracle.com ([156.151.31.85]:47770 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726382AbeK2Kco (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:32:44 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wASNSg5T157097
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:29:25 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2nxy9rd79y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:29:25 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wASNTOi1016861
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:29:24 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id wASNTOSE011477
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:29:24 GMT
+Subject: [PATCH 5/6] xfs: stringify btree cursor types in ftrace output
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 28 Nov 2018 15:29:23 -0800
+Message-ID: <154344776323.4341.3184468728000538253.stgit@magnolia>
+In-Reply-To: <154344773243.4341.5458822684407979916.stgit@magnolia>
+References: <154344773243.4341.5458822684407979916.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181129120253.GR6311@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, Liu Bo <bo.liu@linux.alibaba.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu 29-11-18 23:02:53, Dave Chinner wrote:
-> On Thu, Nov 29, 2018 at 09:52:38AM +0100, Jan Kara wrote:
-> > On Wed 28-11-18 12:11:23, Liu Bo wrote:
-> > > On Tue, Nov 27, 2018 at 12:42:49PM +0100, Jan Kara wrote:
-> > > > CCed fsdevel since this may be interesting to other filesystem developers
-> > > > as well.
-> > > > 
-> > > > On Tue 30-10-18 08:22:49, Liu Bo wrote:
-> > > > > mpage_prepare_extent_to_map() tries to build up a large bio to stuff down
-> > > > > the pipe.  But if it needs to wait for a page lock, it needs to make sure
-> > > > > and send down any pending writes so we don't deadlock with anyone who has
-> > > > > the page lock and is waiting for writeback of things inside the bio.
-> > > > 
-> > > > Thanks for report! I agree the current code has a deadlock possibility you
-> > > > describe. But I think the problem reaches a bit further than what your
-> > > > patch fixes.  The problem is with pages that are unlocked but have
-> > > > PageWriteback set.  Page reclaim may end up waiting for these pages and
-> > > > thus any memory allocation with __GFP_FS set can block on these. So in our
-> > > > current setting page writeback must not block on anything that can be held
-> > > > while doing memory allocation with __GFP_FS set. Page lock is just one of
-> > > > these possibilities, wait_on_page_writeback() in
-> > > > mpage_prepare_extent_to_map() is another suspect and there mat be more. Or
-> > > > to say it differently, if there's lock A and GFP_KERNEL allocation can
-> > > > happen under lock A, then A cannot be taken by the writeback path. This is
-> > > > actually pretty subtle deadlock possibility and our current lockdep
-> > > > instrumentation isn't going to catch this.
-> > > >
-> > > 
-> > > Thanks for the nice summary, it's true that a lock A held in both
-> > > writeback path and memory reclaim can end up with deadlock.
-> > > 
-> > > Fortunately, by far there're only deadlock reports of page's lock bit
-> > > and writeback bit in both ext4 and btrfs[1].  I think
-> > > wait_on_page_writeback() would be OK as it's been protected by page
-> > > lock.
-> > > 
-> > > [1]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=01d658f2ca3c85c1ffb20b306e30d16197000ce7
-> > 
-> > Yes, but that may just mean that the other deadlocks are just harder to
-> > hit...
-> > 
-> > > > So I see two ways how to fix this properly:
-> > > > 
-> > > > 1) Change ext4 code to always submit the bio once we have a full page
-> > > > prepared for writing. This may be relatively simple but has a higher CPU
-> > > > overhead for bio allocation & freeing (actual IO won't really differ since
-> > > > the plugging code should take care of merging the submitted bios). XFS
-> > > > seems to be doing this.
-> > > 
-> > > Seems that that's the safest way to do it, but as you said there's
-> > > some tradeoff.
-> > > 
-> > > (Just took a look at xfs's writepages, xfs also did the page
-> > > collection if there're adjacent pages in xfs_add_to_ioend(), and since
-> > > xfs_vm_writepages() is using the generic helper write_cache_pages()
-> > > which calls lock_page() as well, it's still possible to run into the
-> > > above kind of deadlock.)
-> > 
-> > Originally I thought XFS doesn't have this problem but now when I look
-> > again, you are right that their ioend may accumulate more pages to write
-> > and so they are prone to the same deadlock ext4 is. Added XFS list to CC.
-> 
-> I don't think XFS has a problem here, because the deadlock is
-> dependent on holding a lock that writeback might take and then doing
-> a GFP_KERNEL allocation. I don't think we do that anywhere in XFS -
-> the only lock that is of concern here is the ip->i_ilock, and I
-> think we always do GFP_NOFS allocations inside that lock.
-> 
-> As it is, this sort of lock vs reclaim inversion should be caught by
-> lockdep - allocations and reclaim contexts are recorded by lockdep
-> we get reports if we do lock A - alloc and then do reclaim - lock A.
-> We've always had problems with false positives from lockdep for
-> these situations where common XFS code can be called from GFP_KERNEL
-> valid contexts as well as reclaim or GFP_NOFS-only contexts, but I
-> don't recall ever seeing such a report for the writeback path....
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I think for A == page lock, XFS may have the problem (and lockdep won't
-notice because it does not track page locks). There are some parts of
-kernel which do GFP_KERNEL allocations under page lock - pte_alloc_one() is
-one such function which allocates page tables with GFP_KERNEL and gets
-called with the faulted page locked. And I believe there are others.
+Use __print_symbolic to print the btree type in ftrace output.
 
-So direct reclaim from pte_alloc_one() can wait for writeback on page B
-while holding lock on page A. And if B is just prepared (added to bio,
-under writeback, unlocked) but not submitted in xfs_writepages() and we
-block on lock_page(A), we have a deadlock.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_types.h |    9 +++++++++
+ fs/xfs/scrub/trace.h      |   38 ++++++++++++++++++++++++++------------
+ fs/xfs/xfs_trace.h        |   12 ++++++++++--
+ 3 files changed, 45 insertions(+), 14 deletions(-)
 
-Generally deadlocks like these will be invisible to lockdep because it does
-not track either PageWriteback or PageLocked as a dependency.
 
-> > > > 2) Change the code to unlock the page only when we submit the bio.
-> 
-> > > This sounds doable but not good IMO, the concern is that page locks
-> > > can be held for too long, or if we do 2), submitting one bio per page
-> > > in 1) is also needed.
-> > 
-> > Hum, you're right that page lock hold times may increase noticeably and
-> > that's not very good. Ideally we'd need a way to submit whatever we have
-> > prepared when we are going to sleep but there's no easy way to do that.
-> 
-> XFS unlocks the page after it has been added to the bio and marked
-> as under writeback, not when the bio is submitted. i.e.
-> 
-> writepage w/ locked page dirty
-> lock ilock
-> <mapping, allocation>
-> unlock ilock
-> bio_add_page
-> clear_page_dirty_for_io
-> set_page_writeback
-> unlock_page
-> .....
-> <gather more dirty pages into bio>
-> .....
-> <bio is full or discontiguous page to be written>
-> submit_bio()
-
-Yes, ext4 works the same way. But thanks for confirmation.
-
-> If we switch away which holding a partially built bio, the only page
-> we have locked is the one we are currently trying to add to the bio.
-> Lock ordering prevents deadlocks on that one page, and all other
-> pages in the bio being built are marked as under writeback and are
-> not locked. Hence anything that wants to modify a page held in the
-> bio will block waiting for page writeback to clear, not the page
-> lock.
-
-Yes, and the blocking on writeback of such page in direct reclaim is
-exactly one link in the deadlock chain...
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 297cf2318f83..eb04afe9cce0 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -114,6 +114,15 @@ typedef enum {
+ 	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_MAX
+ } xfs_btnum_t;
+ 
++#define XFS_BTNUM_STRINGS \
++	{ XFS_BTNUM_BNOi,	"bnobt" }, \
++	{ XFS_BTNUM_CNTi,	"cntbt" }, \
++	{ XFS_BTNUM_RMAPi,	"rmapbt" }, \
++	{ XFS_BTNUM_BMAPi,	"bmbt" }, \
++	{ XFS_BTNUM_INOi,	"inobt" }, \
++	{ XFS_BTNUM_FINOi,	"finobt" }, \
++	{ XFS_BTNUM_REFCi,	"refcbt" }
++
+ struct xfs_name {
+ 	const unsigned char	*name;
+ 	int			len;
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index d67e915cf91a..0141eb1ac091 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -12,6 +12,20 @@
+ #include <linux/tracepoint.h>
+ #include "xfs_bit.h"
+ 
++/*
++ * ftrace's __print_symbolic requires that all enum values be wrapped in the
++ * TRACE_DEFINE_ENUM macro so that the enum value can be encoded in the ftrace
++ * ring buffer.  Somehow this was only worth mentioning in the ftrace sample
++ * code.
++ */
++TRACE_DEFINE_ENUM(XFS_BTNUM_BNOi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_CNTi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_BMAPi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_INOi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_FINOi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_RMAPi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_REFCi);
++
+ DECLARE_EVENT_CLASS(xchk_class,
+ 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
+ 		 int error),
+@@ -278,10 +292,10 @@ TRACE_EVENT(xchk_btree_op_error,
+ 		__entry->error = error;
+ 		__entry->ret_ip = ret_ip;
+ 	),
+-	TP_printk("dev %d:%d type %u btnum %d level %d ptr %d agno %u agbno %u error %d ret_ip %pS",
++	TP_printk("dev %d:%d type %u btree %s level %d ptr %d agno %u agbno %u error %d ret_ip %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->type,
+-		  __entry->btnum,
++		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+ 		  __entry->level,
+ 		  __entry->ptr,
+ 		  __entry->agno,
+@@ -321,12 +335,12 @@ TRACE_EVENT(xchk_ifork_btree_op_error,
+ 		__entry->error = error;
+ 		__entry->ret_ip = ret_ip;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx fork %d type %u btnum %d level %d ptr %d agno %u agbno %u error %d ret_ip %pS",
++	TP_printk("dev %d:%d ino 0x%llx fork %d type %u btree %s level %d ptr %d agno %u agbno %u error %d ret_ip %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->whichfork,
+ 		  __entry->type,
+-		  __entry->btnum,
++		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+ 		  __entry->level,
+ 		  __entry->ptr,
+ 		  __entry->agno,
+@@ -360,10 +374,10 @@ TRACE_EVENT(xchk_btree_error,
+ 		__entry->ptr = cur->bc_ptrs[level];
+ 		__entry->ret_ip = ret_ip;
+ 	),
+-	TP_printk("dev %d:%d type %u btnum %d level %d ptr %d agno %u agbno %u ret_ip %pS",
++	TP_printk("dev %d:%d type %u btree %s level %d ptr %d agno %u agbno %u ret_ip %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->type,
+-		  __entry->btnum,
++		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+ 		  __entry->level,
+ 		  __entry->ptr,
+ 		  __entry->agno,
+@@ -400,12 +414,12 @@ TRACE_EVENT(xchk_ifork_btree_error,
+ 		__entry->ptr = cur->bc_ptrs[level];
+ 		__entry->ret_ip = ret_ip;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx fork %d type %u btnum %d level %d ptr %d agno %u agbno %u ret_ip %pS",
++	TP_printk("dev %d:%d ino 0x%llx fork %d type %u btree %s level %d ptr %d agno %u agbno %u ret_ip %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->whichfork,
+ 		  __entry->type,
+-		  __entry->btnum,
++		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+ 		  __entry->level,
+ 		  __entry->ptr,
+ 		  __entry->agno,
+@@ -439,10 +453,10 @@ DECLARE_EVENT_CLASS(xchk_sbtree_class,
+ 		__entry->nlevels = cur->bc_nlevels;
+ 		__entry->ptr = cur->bc_ptrs[level];
+ 	),
+-	TP_printk("dev %d:%d type %u btnum %d agno %u agbno %u level %d nlevels %d ptr %d",
++	TP_printk("dev %d:%d type %u btree %s agno %u agbno %u level %d nlevels %d ptr %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->type,
+-		  __entry->btnum,
++		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+ 		  __entry->agno,
+ 		  __entry->bno,
+ 		  __entry->level,
+@@ -643,11 +657,11 @@ TRACE_EVENT(xrep_init_btblock,
+ 		__entry->agbno = agbno;
+ 		__entry->btnum = btnum;
+ 	),
+-	TP_printk("dev %d:%d agno %u agbno %u btnum %d",
++	TP_printk("dev %d:%d agno %u agbno %u btree %s",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->agno,
+ 		  __entry->agbno,
+-		  __entry->btnum)
++		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS))
+ )
+ TRACE_EVENT(xrep_findroot_block,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 94e289aca220..6fcc893dfc91 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2194,6 +2194,14 @@ DEFINE_DISCARD_EVENT(xfs_discard_exclude);
+ DEFINE_DISCARD_EVENT(xfs_discard_busy);
+ 
+ /* btree cursor events */
++TRACE_DEFINE_ENUM(XFS_BTNUM_BNOi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_CNTi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_BMAPi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_INOi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_FINOi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_RMAPi);
++TRACE_DEFINE_ENUM(XFS_BTNUM_REFCi);
++
+ DECLARE_EVENT_CLASS(xfs_btree_cur_class,
+ 	TP_PROTO(struct xfs_btree_cur *cur, int level, struct xfs_buf *bp),
+ 	TP_ARGS(cur, level, bp),
+@@ -2213,9 +2221,9 @@ DECLARE_EVENT_CLASS(xfs_btree_cur_class,
+ 		__entry->ptr = cur->bc_ptrs[level];
+ 		__entry->daddr = bp ? bp->b_bn : -1;
+ 	),
+-	TP_printk("dev %d:%d btnum %d level %d/%d ptr %d daddr 0x%llx",
++	TP_printk("dev %d:%d btree %s level %d/%d ptr %d daddr 0x%llx",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __entry->btnum,
++		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+ 		  __entry->level,
+ 		  __entry->nlevels,
+ 		  __entry->ptr,
