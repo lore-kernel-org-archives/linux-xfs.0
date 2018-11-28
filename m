@@ -1,49 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40210 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726401AbeK3N4J (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Nov 2018 08:56:09 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 95F77659AC
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Nov 2018 02:48:26 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 64A7F604CF
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Nov 2018 02:48:26 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: fix inverted return from xfs_btree_sblock_verify_crc
-Message-ID: <28345031-dfa2-1d73-a36c-400e3c2333d1@redhat.com>
-Date: Thu, 29 Nov 2018 20:48:25 -0600
+Received: from aserp2120.oracle.com ([141.146.126.78]:35798 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726588AbeK2KbP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:31:15 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wASNNtc8156813
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:56 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2nxxkqn6xc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:56 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wASNRt6M013491
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:55 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id wASNRtK8010710
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:55 GMT
+Subject: [PATCH 9/9] xfs: scrub should flag dir/attr offsets that aren't
+ mappable with xfs_dablk_t
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 28 Nov 2018 15:27:54 -0800
+Message-ID: <154344767468.3835.13052378017840578886.stgit@magnolia>
+In-Reply-To: <154344761877.3835.7785580513047409388.stgit@magnolia>
+References: <154344761877.3835.7785580513047409388.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-xfs_btree_sblock_verify_crc is a bool so should not be returning
-a failaddr_t; worse, if xfs_log_check_lsn fails it returns
-__this_address which looks like a boolean true (i.e. success)
-to the caller.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-(interestingly xfs_btree_lblock_verify_crc doesn't have the issue)
+Teach scrub to flag extent maps that exceed the range that can be mapped
+with a xfs_dablk_t.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ fs/xfs/libxfs/xfs_types.c |   11 +++++++++++
+ fs/xfs/libxfs/xfs_types.h |    1 +
+ fs/xfs/scrub/bmap.c       |   27 +++++++++++++++++++++++++++
+ 3 files changed, 39 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 34c6d7bd4d18..bbdae2b4559f 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -330,7 +330,7 @@ xfs_btree_sblock_verify_crc(
+
+diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+index 3306fc42cfad..8e03e88a2f1a 100644
+--- a/fs/xfs/libxfs/xfs_types.c
++++ b/fs/xfs/libxfs/xfs_types.c
+@@ -204,3 +204,14 @@ xfs_verify_icount(
+ 	xfs_icount_range(mp, &min, &max);
+ 	return icount >= min && icount <= max;
+ }
++
++/* Sanity-checking of dir/attr block offsets. */
++bool
++xfs_verify_dablk(
++	struct xfs_mount	*mp,
++	xfs_fileoff_t		dabno)
++{
++	xfs_dablk_t		max_dablk = -1U;
++
++	return dabno < max_dablk;
++}
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index b9e6c89284c3..05e8fa558f3e 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -166,5 +166,6 @@ bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
+ bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
+ bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
+ bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
++bool xfs_verify_dablk(struct xfs_mount *mp, xfs_fileoff_t off);
  
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		if (!xfs_log_check_lsn(mp, be64_to_cpu(block->bb_u.s.bb_lsn)))
--			return __this_address;
-+			return false;
- 		return xfs_buf_verify_cksum(bp, XFS_BTREE_SBLOCK_CRC_OFF);
- 	}
+ #endif	/* __XFS_TYPES_H__ */
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index e1d11f3223e3..a703cd58a90e 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -281,6 +281,31 @@ xchk_bmap_extent_xref(
+ 	xchk_ag_free(info->sc, &info->sc->sa);
+ }
  
++/*
++ * Directories and attr forks should never have blocks that can't be addressed
++ * by a xfs_dablk_t.
++ */
++STATIC void
++xchk_bmap_dirattr_extent(
++	struct xfs_inode	*ip,
++	struct xchk_bmap_info	*info,
++	struct xfs_bmbt_irec	*irec)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_fileoff_t		off;
++
++	if (!S_ISDIR(VFS_I(ip)->i_mode) && info->whichfork != XFS_ATTR_FORK)
++		return;
++
++	if (!xfs_verify_dablk(mp, irec->br_startoff))
++		xchk_fblock_set_corrupt(info->sc, info->whichfork,
++				irec->br_startoff);
++
++	off = irec->br_startoff + irec->br_blockcount - 1;
++	if (!xfs_verify_dablk(mp, off))
++		xchk_fblock_set_corrupt(info->sc, info->whichfork, off);
++}
++
+ /* Scrub a single extent record. */
+ STATIC int
+ xchk_bmap_extent(
+@@ -305,6 +330,8 @@ xchk_bmap_extent(
+ 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
+ 				irec->br_startoff);
+ 
++	xchk_bmap_dirattr_extent(ip, info, irec);
++
+ 	/* There should never be a "hole" extent in either extent list. */
+ 	if (irec->br_startblock == HOLESTARTBLOCK)
+ 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
