@@ -1,336 +1,183 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:34800 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726416AbeK2K35 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:29:57 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wASNOE6J156958
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:26:38 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2nxxkqn6tb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:26:37 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wASNQWWg022820
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:26:32 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wASNQWfX026750
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:26:32 GMT
-Subject: [PATCH 3/4] xfs: precalculate inodes and blocks per inode cluster
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 28 Nov 2018 15:26:31 -0800
-Message-ID: <154344759118.3700.6267447494975241717.stgit@magnolia>
-In-Reply-To: <154344757198.3700.16167533135011546878.stgit@magnolia>
-References: <154344757198.3700.16167533135011546878.stgit@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:40609 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726192AbeK3I1W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Nov 2018 03:27:22 -0500
+Date: Fri, 30 Nov 2018 08:20:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Non-blocking socket stuck for multiple seconds on
+ xfs_reclaim_inodes_ag()
+Message-ID: <20181129212031.GT6311@dastard>
+References: <CABWYdi1YZp+baxpON2R6mP09pjkUz5D-OE7Z2KmwVGycYTN-AA@mail.gmail.com>
+ <20181129021800.GQ6311@dastard>
+ <20181129143647.GA8246@sbohrer-cf-dell>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181129143647.GA8246@sbohrer-cf-dell>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Shawn Bohrer <sbohrer@cloudflare.com>
+Cc: Ivan Babrou <ivan@cloudflare.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Nov 29, 2018 at 08:36:48AM -0600, Shawn Bohrer wrote:
+> Hi Dave,
+> 
+> I've got a few follow up questions below based on your response about
+> this.
+> 
+> On Thu, Nov 29, 2018 at 01:18:00PM +1100, Dave Chinner wrote:
+> > On Wed, Nov 28, 2018 at 04:36:25PM -0800, Ivan Babrou wrote:
+> > > The catalyst of our issue is terrible disks. It's not uncommon to see
+> > > the following stack in hung task detector:
+> > > 
+> > > Nov 15 21:55:13 21m21 kernel: INFO: task some-task:156314 blocked for
+> > > more than 10 seconds.
+> > > Nov 15 21:55:13 21m21 kernel:       Tainted: G           O
+> > > 4.14.59-cloudflare-2018.7.5 #1
+> > > Nov 15 21:55:13 21m21 kernel: "echo 0 >
+> > > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> > > Nov 15 21:55:13 21m21 kernel: some-task     D11792 156314 156183 0x00000080
+> > > Nov 15 21:55:13 21m21 kernel: Call Trace:
+> > > Nov 15 21:55:13 21m21 kernel:  ? __schedule+0x21a/0x820
+> > > Nov 15 21:55:13 21m21 kernel:  schedule+0x28/0x80
+> > > Nov 15 21:55:13 21m21 kernel:  schedule_preempt_disabled+0xa/0x10
+> > > Nov 15 21:55:13 21m21 kernel:  __mutex_lock.isra.2+0x16a/0x490
+> > > Nov 15 21:55:13 21m21 kernel:  ? xfs_reclaim_inodes_ag+0x265/0x2d0
+> > > Nov 15 21:55:13 21m21 kernel:  xfs_reclaim_inodes_ag+0x265/0x2d0
+> > > Nov 15 21:55:13 21m21 kernel:  ? kmem_cache_alloc+0x14d/0x1b0
+> > > Nov 15 21:55:13 21m21 kernel:  ? radix_tree_gang_lookup_tag+0xc4/0x130
+> > > Nov 15 21:55:13 21m21 kernel:  ? __list_lru_walk_one.isra.5+0x33/0x130
+> > > Nov 15 21:55:13 21m21 kernel:  xfs_reclaim_inodes_nr+0x31/0x40
+> > > Nov 15 21:55:13 21m21 kernel:  super_cache_scan+0x156/0x1a0
+> > > Nov 15 21:55:13 21m21 kernel:  shrink_slab.part.51+0x1d2/0x3a0
+> > > Nov 15 21:55:13 21m21 kernel:  shrink_node+0x113/0x2e0
+> > > Nov 15 21:55:13 21m21 kernel:  do_try_to_free_pages+0xb3/0x310
+> > > Nov 15 21:55:13 21m21 kernel:  try_to_free_pages+0xd2/0x190
+> > > Nov 15 21:55:13 21m21 kernel:  __alloc_pages_slowpath+0x3a3/0xdc0
+> > > Nov 15 21:55:13 21m21 kernel:  ? ip_output+0x5c/0xc0
+> > > Nov 15 21:55:13 21m21 kernel:  ? update_curr+0x141/0x1a0
+> > > Nov 15 21:55:13 21m21 kernel:  __alloc_pages_nodemask+0x223/0x240
+> > > Nov 15 21:55:13 21m21 kernel:  skb_page_frag_refill+0x93/0xb0
+> > > Nov 15 21:55:13 21m21 kernel:  sk_page_frag_refill+0x19/0x80
+> > > Nov 15 21:55:13 21m21 kernel:  tcp_sendmsg_locked+0x247/0xdc0
+> > > Nov 15 21:55:13 21m21 kernel:  tcp_sendmsg+0x27/0x40
+> > > Nov 15 21:55:13 21m21 kernel:  sock_sendmsg+0x36/0x40
+> > > Nov 15 21:55:13 21m21 kernel:  sock_write_iter+0x84/0xd0
+> > > Nov 15 21:55:13 21m21 kernel:  __vfs_write+0xdd/0x140
+> > > Nov 15 21:55:13 21m21 kernel:  vfs_write+0xad/0x1a0
+> > > Nov 15 21:55:13 21m21 kernel:  SyS_write+0x42/0x90
+> > > Nov 15 21:55:13 21m21 kernel:  do_syscall_64+0x60/0x110
+> > > Nov 15 21:55:13 21m21 kernel:  entry_SYSCALL_64_after_hwframe+0x3d/0xa2
+> > > 
+> > > Here "some-task" is trying to send some bytes over network and it's
+> > > stuck in direct reclaim. Naturally, kswapd is not keeping up with its
+> > > duties.
+> > 
+> > That's not kswapd causing the problem here, that's direct reclaim.
+> 
+> It is understood that the above is direct reclaim.  When this happens
+> kswapd is also blocked as below.  As I'm sure you can imagine many
+> other tasks get blocked in direct reclaim as well.
 
-Store the number of inodes and blocks per inode cluster in the mount
-data so that we don't have to keep recalculating them.
+Kswapd is allowed to block waiting for IO - it runs in GFP_KERNEL
+context and so can both issue write back of dirty page cache pages
+and wait for them to complete IO. With that reclaim context
+(GFP_KERNEL) we can also issue and wait for IO from
+the filesystem shrinkers.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_ialloc.c |   23 ++++++++++-------------
- fs/xfs/scrub/ialloc.c      |   14 ++++++--------
- fs/xfs/xfs_inode.c         |   14 +++++---------
- fs/xfs/xfs_itable.c        |   14 ++++++--------
- fs/xfs/xfs_log_recover.c   |    8 +++-----
- fs/xfs/xfs_mount.c         |    2 ++
- fs/xfs/xfs_mount.h         |    2 ++
- 7 files changed, 34 insertions(+), 43 deletions(-)
+Blocking kswapd is less than ideal; facebook hit this particular
+"kswapd is blocked" issue to but their proposed "don't block kswapd
+during inode reclaim" patch caused an increase in OOM kills on my
+low memory test VMs as well as small, repeatable performance
+regressions on my benchmark workloads so it wasn't merged.
 
+> > > One solution to this is to not go into direct reclaim by keeping more
+> > > free pages with vm.watermark_scale_factor,  but I'd like to discard
+> > > this and argue that we're going to hit direct reclaim at some point
+> > > anyway.
+> > 
+> > Right, but the problem is that the mm/ subsystem allows effectively
+> > unbound direct reclaim concurrency. At some point, having tens to
+> > hundreds of direct reclaimers all trying to write dirty inodes to
+> > disk causes catastrophic IO breakdown and everything grinds to a
+> > halt forever. We have to prevent that breakdown from occurring.
+> > 
+> > i.e. we have to throttle direct reclaim to before it reaches IO
+> > breakdown /somewhere/. The memory reclaim subsystem does not do it,
+> > so we have to do it in XFS itself. The problem here is that if we
+> > ignore direct reclaim (i.e do nothing rather than block waiting on
+> > reclaim progress) then the mm/ reclaim algorithms will eventually
+> > think they aren't making progress and unleash the OOM killer.
+> 
+> Here is my naive question.  Why does kswapd block?  Wouldn't it make
+> sense for kswapd to asynchronously start the xfs_reclaim_inodes
+> process and then continue looking for other pages (perhaps page cache)
+> that it can easily free?
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 3ac4a836428d..c7b2579a8e73 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -288,7 +288,7 @@ xfs_ialloc_inode_init(
- {
- 	struct xfs_buf		*fbuf;
- 	struct xfs_dinode	*free;
--	int			nbufs, blks_per_cluster, inodes_per_cluster;
-+	int			nbufs;
- 	int			version;
- 	int			i, j;
- 	xfs_daddr_t		d;
-@@ -299,9 +299,7 @@ xfs_ialloc_inode_init(
- 	 * sizes, manipulate the inodes in buffers  which are multiples of the
- 	 * blocks size.
- 	 */
--	blks_per_cluster = xfs_icluster_size_fsb(mp);
--	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
--	nbufs = length / blks_per_cluster;
-+	nbufs = length / mp->m_blocks_per_cluster;
- 
- 	/*
- 	 * Figure out what version number to use in the inodes we create.  If
-@@ -344,9 +342,10 @@ xfs_ialloc_inode_init(
- 		/*
- 		 * Get the block.
- 		 */
--		d = XFS_AGB_TO_DADDR(mp, agno, agbno + (j * blks_per_cluster));
-+		d = XFS_AGB_TO_DADDR(mp, agno, agbno +
-+				(j * mp->m_blocks_per_cluster));
- 		fbuf = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
--					 mp->m_bsize * blks_per_cluster,
-+					 mp->m_bsize * mp->m_blocks_per_cluster,
- 					 XBF_UNMAPPED);
- 		if (!fbuf)
- 			return -ENOMEM;
-@@ -354,7 +353,7 @@ xfs_ialloc_inode_init(
- 		/* Initialize the inode buffers and log them appropriately. */
- 		fbuf->b_ops = &xfs_inode_buf_ops;
- 		xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
--		for (i = 0; i < inodes_per_cluster; i++) {
-+		for (i = 0; i < mp->m_inodes_per_cluster; i++) {
- 			int	ioffset = i << mp->m_sb.sb_inodelog;
- 			uint	isize = xfs_dinode_size(version);
- 
-@@ -2289,7 +2288,6 @@ xfs_imap(
- 	xfs_agblock_t	agbno;	/* block number of inode in the alloc group */
- 	xfs_agino_t	agino;	/* inode number within alloc group */
- 	xfs_agnumber_t	agno;	/* allocation group number */
--	int		blks_per_cluster; /* num blocks per inode cluster */
- 	xfs_agblock_t	chunk_agbno;	/* first block in inode chunk */
- 	xfs_agblock_t	cluster_agbno;	/* first block in inode cluster */
- 	int		error;	/* error code */
-@@ -2335,8 +2333,6 @@ xfs_imap(
- 		return -EINVAL;
- 	}
- 
--	blks_per_cluster = xfs_icluster_size_fsb(mp);
--
- 	/*
- 	 * For bulkstat and handle lookups, we have an untrusted inode number
- 	 * that we have to verify is valid. We cannot do this just by reading
-@@ -2356,7 +2352,7 @@ xfs_imap(
- 	 * If the inode cluster size is the same as the blocksize or
- 	 * smaller we get to the buffer by simple arithmetics.
- 	 */
--	if (blks_per_cluster == 1) {
-+	if (mp->m_blocks_per_cluster == 1) {
- 		offset = XFS_INO_TO_OFFSET(mp, ino);
- 		ASSERT(offset < mp->m_sb.sb_inopblock);
- 
-@@ -2385,12 +2381,13 @@ xfs_imap(
- out_map:
- 	ASSERT(agbno >= chunk_agbno);
- 	cluster_agbno = chunk_agbno +
--		((offset_agbno / blks_per_cluster) * blks_per_cluster);
-+		((offset_agbno / mp->m_blocks_per_cluster) *
-+		 mp->m_blocks_per_cluster);
- 	offset = ((agbno - cluster_agbno) * mp->m_sb.sb_inopblock) +
- 		XFS_INO_TO_OFFSET(mp, ino);
- 
- 	imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, cluster_agbno);
--	imap->im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
-+	imap->im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
- 	imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
- 
- 	/*
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 426eb1a5503c..596a02b8efdc 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -193,18 +193,16 @@ xchk_iallocbt_check_freemask(
- 	xfs_agino_t			chunkino;
- 	xfs_agino_t			clusterino;
- 	xfs_agblock_t			agbno;
--	int				blks_per_cluster;
- 	uint16_t			holemask;
- 	uint16_t			ir_holemask;
- 	int				error = 0;
- 
- 	/* Make sure the freemask matches the inode records. */
--	blks_per_cluster = xfs_icluster_size_fsb(mp);
--	nr_inodes = XFS_FSB_TO_INO(mp, blks_per_cluster);
-+	nr_inodes = mp->m_inodes_per_cluster;
- 
- 	for (agino = irec->ir_startino;
- 	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
--	     agino += blks_per_cluster * mp->m_sb.sb_inopblock) {
-+	     agino += mp->m_inodes_per_cluster) {
- 		fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
- 		chunkino = agino - irec->ir_startino;
- 		agbno = XFS_AGINO_TO_AGBNO(mp, agino);
-@@ -225,18 +223,18 @@ xchk_iallocbt_check_freemask(
- 		/* If any part of this is a hole, skip it. */
- 		if (ir_holemask) {
- 			xchk_xref_is_not_owned_by(bs->sc, agbno,
--					blks_per_cluster,
-+					mp->m_blocks_per_cluster,
- 					&XFS_RMAP_OINFO_INODES);
- 			continue;
- 		}
- 
--		xchk_xref_is_owned_by(bs->sc, agbno, blks_per_cluster,
-+		xchk_xref_is_owned_by(bs->sc, agbno, mp->m_blocks_per_cluster,
- 				&XFS_RMAP_OINFO_INODES);
- 
- 		/* Grab the inode cluster buffer. */
- 		imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno,
- 				agbno);
--		imap.im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
-+		imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
- 		imap.im_boffset = 0;
- 
- 		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
-@@ -303,7 +301,7 @@ xchk_iallocbt_rec(
- 	/* Make sure this record is aligned to cluster and inoalignmnt size. */
- 	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
- 	if ((agbno & (xfs_ialloc_cluster_alignment(mp) - 1)) ||
--	    (agbno & (xfs_icluster_size_fsb(mp) - 1)))
-+	    (agbno & (mp->m_blocks_per_cluster - 1)))
- 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
- 
- 	*inode_blocks += XFS_B_TO_FSB(mp,
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 801eb891d0fd..ae667ba74a1c 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2184,8 +2184,6 @@ xfs_ifree_cluster(
- 	struct xfs_icluster	*xic)
- {
- 	xfs_mount_t		*mp = free_ip->i_mount;
--	int			blks_per_cluster;
--	int			inodes_per_cluster;
- 	int			nbufs;
- 	int			i, j;
- 	int			ioffset;
-@@ -2199,11 +2197,9 @@ xfs_ifree_cluster(
- 
- 	inum = xic->first_ino;
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, inum));
--	blks_per_cluster = xfs_icluster_size_fsb(mp);
--	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
--	nbufs = mp->m_ialloc_blks / blks_per_cluster;
-+	nbufs = mp->m_ialloc_blks / mp->m_blocks_per_cluster;
- 
--	for (j = 0; j < nbufs; j++, inum += inodes_per_cluster) {
-+	for (j = 0; j < nbufs; j++, inum += mp->m_inodes_per_cluster) {
- 		/*
- 		 * The allocation bitmap tells us which inodes of the chunk were
- 		 * physically allocated. Skip the cluster if an inode falls into
-@@ -2211,7 +2207,7 @@ xfs_ifree_cluster(
- 		 */
- 		ioffset = inum - xic->first_ino;
- 		if ((xic->alloc & XFS_INOBT_MASK(ioffset)) == 0) {
--			ASSERT(ioffset % inodes_per_cluster == 0);
-+			ASSERT(ioffset % mp->m_inodes_per_cluster == 0);
- 			continue;
- 		}
- 
-@@ -2227,7 +2223,7 @@ xfs_ifree_cluster(
- 		 * to mark all the active inodes on the buffer stale.
- 		 */
- 		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, blkno,
--					mp->m_bsize * blks_per_cluster,
-+					mp->m_bsize * mp->m_blocks_per_cluster,
- 					XBF_UNMAPPED);
- 
- 		if (!bp)
-@@ -2274,7 +2270,7 @@ xfs_ifree_cluster(
- 		 * transaction stale above, which means there is no point in
- 		 * even trying to lock them.
- 		 */
--		for (i = 0; i < inodes_per_cluster; i++) {
-+		for (i = 0; i < mp->m_inodes_per_cluster; i++) {
- retry:
- 			rcu_read_lock();
- 			ip = radix_tree_lookup(&pag->pag_ici_root,
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 18d8d3b812a7..942e4aa5e729 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -167,20 +167,18 @@ xfs_bulkstat_ichunk_ra(
- {
- 	xfs_agblock_t			agbno;
- 	struct blk_plug			plug;
--	int				blks_per_cluster;
--	int				inodes_per_cluster;
- 	int				i;	/* inode chunk index */
- 
- 	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
--	blks_per_cluster = xfs_icluster_size_fsb(mp);
--	inodes_per_cluster = XFS_FSB_TO_INO(mp, blks_per_cluster);
- 
- 	blk_start_plug(&plug);
- 	for (i = 0; i < XFS_INODES_PER_CHUNK;
--	     i += inodes_per_cluster, agbno += blks_per_cluster) {
--		if (xfs_inobt_maskn(i, inodes_per_cluster) & ~irec->ir_free) {
--			xfs_btree_reada_bufs(mp, agno, agbno, blks_per_cluster,
--					     &xfs_inode_buf_ops);
-+	     i += mp->m_inodes_per_cluster, agbno += mp->m_blocks_per_cluster) {
-+		if (xfs_inobt_maskn(i, mp->m_inodes_per_cluster) &
-+		    ~irec->ir_free) {
-+			xfs_btree_reada_bufs(mp, agno, agbno,
-+					mp->m_blocks_per_cluster,
-+					&xfs_inode_buf_ops);
- 		}
- 	}
- 	blk_finish_plug(&plug);
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 1fc9e9042e0e..9fe88d125f0a 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3850,7 +3850,6 @@ xlog_recover_do_icreate_pass2(
- 	unsigned int		count;
- 	unsigned int		isize;
- 	xfs_agblock_t		length;
--	int			blks_per_cluster;
- 	int			bb_per_cluster;
- 	int			cancel_count;
- 	int			nbufs;
-@@ -3918,14 +3917,13 @@ xlog_recover_do_icreate_pass2(
- 	 * buffers for cancellation so we don't overwrite anything written after
- 	 * a cancellation.
- 	 */
--	blks_per_cluster = xfs_icluster_size_fsb(mp);
--	bb_per_cluster = XFS_FSB_TO_BB(mp, blks_per_cluster);
--	nbufs = length / blks_per_cluster;
-+	bb_per_cluster = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
-+	nbufs = length / mp->m_blocks_per_cluster;
- 	for (i = 0, cancel_count = 0; i < nbufs; i++) {
- 		xfs_daddr_t	daddr;
- 
- 		daddr = XFS_AGB_TO_DADDR(mp, agno,
--					 agbno + i * blks_per_cluster);
-+					 agbno + i * mp->m_blocks_per_cluster);
- 		if (xlog_check_buffer_cancelled(log, daddr, bb_per_cluster, 0))
- 			cancel_count++;
- 	}
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 02d15098dbee..56d374675fd5 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -798,6 +798,8 @@ xfs_mountfs(
- 		if (mp->m_sb.sb_inoalignmt >= XFS_B_TO_FSBT(mp, new_size))
- 			mp->m_inode_cluster_size = new_size;
- 	}
-+	mp->m_blocks_per_cluster = xfs_icluster_size_fsb(mp);
-+	mp->m_inodes_per_cluster = XFS_FSB_TO_INO(mp, mp->m_blocks_per_cluster);
- 
- 	/*
- 	 * If enabled, sparse inode chunk alignment is expected to match the
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 7964513c3128..58a037bfac22 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -101,6 +101,8 @@ typedef struct xfs_mount {
- 	uint8_t			m_agno_log;	/* log #ag's */
- 	uint8_t			m_agino_log;	/* #bits for agino in inum */
- 	uint			m_inode_cluster_size;/* min inode buf size */
-+	unsigned int		m_inodes_per_cluster;
-+	unsigned int		m_blocks_per_cluster;
- 	uint			m_blockmask;	/* sb_blocksize-1 */
- 	uint			m_blockwsize;	/* sb_blocksize in words */
- 	uint			m_blockwmask;	/* blockwsize-1 */
+kswapd blocks because it is the only thing that (almost) guarantees
+forwards progress in memory reclaim. If the memory is full of dirty
+pages, it *must* block and wait for writeback to complete and clean
+the pages it needs to reclaim for the waiting allocators. If it does
+not block, we trigger the OOM killer prematurely. i.e. waiting a
+short time for IO to complete avoids false positive transient ENOMEM
+detection.
+
+> In my mind this might prevent us from ever getting to the point of
+> direct reclaim.
+
+Direct reclaim happens first. kswapd is only kicked when direct
+reclaim isn't making enough progress - kswapd happens in the
+background. The problem we have is that the primary memory
+reclaimer is the thundering heard of direct reclaim, and kswapd can
+then get stuck behind the thundering heard.
+
+> And if we did get to that point then yes I can see
+> that you might need to synchronously block all tasks in direct reclaim
+> in xfs_reclaim_inodes to prevent the thundering herd problem.
+
+We already had to deal with the thundering heard before kswapd
+starts working.
+
+> My other question is why does the mm/ reclaim algorithms think that
+> that they need to force this metadata reclaim?  I think Ivan's main
+> question was we have 95GB of page cache maybe 2-3GB of total slab
+> memory in use, and maybe 1GB of dirty pages.
+
+The kernel keeps a balance between the caches. If it scans 1% of
+the page cache, it also needs to scan 1% of the other caches to keep
+them in balance.
+
+> Blocking the world for
+> any disk I/O at this point seems insane when there is other quickly
+> freeable memory.  I assume the answer is LRU?  Our page cache pages
+> are newer or more frequently accesses then this filesystem metadata?
+
+Not blocking for IO in the shrinkers is even worse. I made some mods
+yesterday to make inode reclaim block less to do the same work
+(more efficient IO dispatch == less waiting) and the only thing I
+succeeded in doing is slowing down my benchmark workloads by 30-40%.
+
+Why? because blocking less in inode reclaim meant that the memory
+reclaim did more scanning, and so reclaimed /other caches faster/.
+That meant it was trashing the working set in the xfs bufffer cache
+(which holds all the metadata buffers) and so that cause a
+substantial increase in metadata read IO on a /write-only workload/.
+IOWs, metadata buffers were being reclaimed far too quickly because
+I made inode cache reclaim faster.
+
+All the caches must be balanced for the system to perform well
+across a wide range of workloads. And it's an unfortunate fact that
+the only way we can maintain that balance right now is via harsh
+throttling of the inode cache. I'll keep trying to find a different
+solution, but the reality is that memory reclaim subsystem has
+fairly major limitations in what we can and can't do to maintain
+balance across related and/or dependent caches....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
