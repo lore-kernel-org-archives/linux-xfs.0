@@ -1,18 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:46138 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:47898 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726964AbeK2Ktx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Nov 2018 05:49:53 -0500
-Subject: Re: [PATCH 1/6] xfs_io.8: rearrange command listings by section
+        id S1726328AbeK2LUD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Nov 2018 06:20:03 -0500
+Subject: Re: [PATCH 4/6] xfs_scrub: handle totally empty inode chunks
 References: <154181071499.3727.3910572718199592407.stgit@magnolia>
- <154181072098.3727.12783001969841425328.stgit@magnolia>
- <8c568cb2-4931-288c-0be3-68bd5caef634@sandeen.net>
- <20181128233459.GD8131@magnolia>
+ <154181073901.3727.3960278646297663354.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <65174e05-0c7e-f524-3bce-25d59ea5773f@sandeen.net>
-Date: Wed, 28 Nov 2018 17:46:31 -0600
+Message-ID: <8de9dcd7-4bcd-2f4b-0043-835611317bed@sandeen.net>
+Date: Wed, 28 Nov 2018 18:16:37 -0600
 MIME-Version: 1.0
-In-Reply-To: <20181128233459.GD8131@magnolia>
+In-Reply-To: <154181073901.3727.3960278646297663354.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -22,58 +20,40 @@ List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-
-
-On 11/28/18 5:34 PM, Darrick J. Wong wrote:
-> On Wed, Nov 28, 2018 at 04:39:47PM -0600, Eric Sandeen wrote:
->> On 11/9/18 6:45 PM, Darrick J. Wong wrote:
->>> From: Darrick J. Wong <darrick.wong@oracle.com>
->>>
->>> Most of the commands listed under "OTHER COMMANDS" apply to files or
->>> filesystems.  Create two new sections for that and populate them
->>> appropriately.
->>>
->>> Here's what moves:
->>>
->>> fsmap: moves from file io commands to filesystem commands
->>> utimes: moves from file io commands to file commands
->>>
->>> >From the OTHER COMMANDS section:
->>>
->>> lsattr/chattr: moves to file commands
->>> flink: moves to file commands
->>> stat/statx: moves to file commands
->>> lsproj/chproj: moves to file commands
->>> parent: moves to file commands
->>> [gs]et_encpolicy: moves to file io commands
->>> freeze/thaw: move to filesystem commands
->>> inject: move to filesystem commands
->>> resblks: move to filesystem commands
->>> shutdown: move to filesystem commands
->>> statfs: move to filesystem commands
->>> label: move to filesystem commands
->>
->> Thank you for getting this better organized.  Of course, I have
->> some questions.  :)
->>
->> What does "FILE COMMANDS" vs. "FILE I/O COMMANDS" mean, exactly?
->> I ask because for example bmap & fiemap are still under FILE IO but
->> they... really don't do file IO.  What's your intended distinction
->> with these new sections?
+On 11/9/18 6:45 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Admittedly, it's been a looong time since I wrote this patch.
+> We try to load a single inobt record with each FSINUMBERS call.  If the
+> chunk is totally empty (which can happen when there are more than one
+> inobt record per block) we should skip to the next INUMBERS call since
+> there are no inodes to bulkstat.
 
-yeah, that's my fault, sorry.
+It's not clear to me if this is a bugfix or an optimization, but meh,
+seems like the right thing to do :)
 
-> Um... I think my intent was for FILE COMMANDS to pertain to file
-> attributes, whereas FILE I/O COMMANDS would pertain to reading, writing,
-> encoding, mapping, and otherwise messing with the contents of a file.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Because the distinction requires a fair bit of explanation I think it'd be
-better to just lump them all into FILE OPERATIONS i.e. "these operate
-on individual files not the filesystem in general."
-
-Explicitly re-categorizing into rather vague categories doesn't seem
-overly helpful.  :)
-
--Eric
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  scrub/inodes.c |    6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> 
+> diff --git a/scrub/inodes.c b/scrub/inodes.c
+> index 693f21ec..442a5978 100644
+> --- a/scrub/inodes.c
+> +++ b/scrub/inodes.c
+> @@ -139,6 +139,12 @@ xfs_iterate_inodes_range(
+>  		/* Load the inodes. */
+>  		ino = inogrp.xi_startino - 1;
+>  		bulkreq.icount = inogrp.xi_alloccount;
+> +		/*
+> +		 * We can have totally empty inode chunks on filesystems where
+> +		 * there are more than 64 inodes per block.  Skip these.
+> +		 */
+> +		if (inogrp.xi_alloccount == 0)
+> +			goto igrp_retry;
+>  		error = ioctl(ctx->mnt_fd, XFS_IOC_FSBULKSTAT, &bulkreq);
+>  		if (error)
+>  			str_info(ctx, descr, "%s", strerror_r(errno,
+> 
