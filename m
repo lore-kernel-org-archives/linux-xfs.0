@@ -1,141 +1,216 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49498 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725799AbeK2Hky (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 02:40:54 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wASKTTMG061912
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 20:38:00 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2nxx2uckuu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 20:37:59 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wASKbxMK005207
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 20:37:59 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id wASKbxST019372
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 20:37:59 GMT
-Date: Wed, 28 Nov 2018 12:37:58 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: fix transaction block reservation in
- xfs_reflink_end_cow
-Message-ID: <20181128203758.GI8125@magnolia>
-References: <20181127161652.GE6792@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:47114 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728776AbeK3DE0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Nov 2018 22:04:26 -0500
+Date: Thu, 29 Nov 2018 16:58:30 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH RFC] Ext4: fix deadlock on dirty pages between fault and
+ writeback
+Message-ID: <20181129155830.GQ31087@quack2.suse.cz>
+References: <1540858969-75803-1-git-send-email-bo.liu@linux.alibaba.com>
+ <20181127114249.GH16301@quack2.suse.cz>
+ <20181128201122.r4sec265cnlxgj2x@US-160370MP2.local>
+ <20181129085238.GD31087@quack2.suse.cz>
+ <20181129120253.GR6311@dastard>
+ <20181129130002.GM31087@quack2.suse.cz>
+ <CALXdtC7R=J3EdBgUeY5QzTEcPwUVvWdiDprMnV-aO3BZX-3rdg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20181127161652.GE6792@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CALXdtC7R=J3EdBgUeY5QzTEcPwUVvWdiDprMnV-aO3BZX-3rdg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Zhengping Zhou <johnzzpcrystal@gmail.com>
+Cc: jack@suse.cz, david@fromorbit.com, bo.liu@linux.alibaba.com, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, Nov 27, 2018 at 08:16:52AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu 29-11-18 22:07:44, Zhengping Zhou wrote:
+> in kenrel 4.20-rc1 , function shrink_page_list：
 > 
-> In xfs_reflink_end_cow, we have to swap written extents from the CoW
-> fork into the data fork, which can require extensive block map updates.
-> The block calculation has an off-by-one underflow, which can lead to
-> following shutdown:
+> 1227         if (PageWriteback(page)) {
+> 1228             /* Case 1 above */
+> 1229             if (current_is_kswapd() &&
+> 1230                 PageReclaim(page) &&
+> 1231                 test_bit(PGDAT_WRITEBACK, &pgdat->flags)) {
+> 1232                 nr_immediate++;
+> 1233                 goto activate_locked;
+> 1234
+> 1235             /* Case 2 above */
+> 1236             } else if (sane_reclaim(sc) ||
+> 1237                 !PageReclaim(page) || !may_enter_fs) {
+> 1238                 /*
+> 1239                  * This is slightly racy - end_page_writeback()
+> 1240                  * might have just cleared PageReclaim, then
+> 1241                  * setting PageReclaim here end up interpreted
+> 1242                  * as PageReadahead - but that does not matter
+> 1243                  * enough to care.  What we do want is for this
+> 1244                  * page to have PageReclaim set next time memcg
+> 1245                  * reclaim reaches the tests above, so it will
+> 1246                  * then wait_on_page_writeback() to avoid OOM;
+> 1247                  * and it's also appropriate in global reclaim.
+> 1248                  */
+> 1249                 SetPageReclaim(page);
+> 1250                 nr_writeback++;
+> 1251                 goto activate_locked;
+> 1252
+> 1253             /* Case 3 above */
+> 1254             } else {
+> 1255                 unlock_page(page);
+> 1256                 wait_on_page_writeback(page);
+> 1257                 /* then go back and try same page again */
+> 1258                 list_add_tail(&page->lru, page_list);
+> 1259                 continue;
+> 1260             }
+> 1261         }
 > 
-> XFS: Assertion failed: tp->t_blk_res >= tp->t_blk_res_used, file: fs/xfs/xfs_trans.c, line: 116
-> <machine registers snipped>
-> Call Trace:
->  xfs_trans_dup+0x211/0x250 [xfs]
->  xfs_trans_roll+0x6d/0x180 [xfs]
->  xfs_defer_trans_roll+0x10c/0x3b0 [xfs]
->  xfs_defer_finish_noroll+0xdf/0x740 [xfs]
->  xfs_defer_finish+0x13/0x70 [xfs]
->  xfs_reflink_end_cow+0x2c6/0x680 [xfs]
->  xfs_dio_write_end_io+0x115/0x220 [xfs]
->  iomap_dio_complete+0x3f/0x130
->  iomap_dio_rw+0x3c3/0x420
->  xfs_file_dio_aio_write+0x132/0x3c0 [xfs]
->  xfs_file_write_iter+0x8b/0xc0 [xfs]
->  __vfs_write+0x193/0x1f0
->  vfs_write+0xba/0x1c0
->  ksys_write+0x52/0xc0
->  do_syscall_64+0x50/0x160
->  entry_SYSCALL_64_after_hwframe+0x49/0xbe
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_reflink.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 322a852ce284..d7a451e8b0b9 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -657,14 +657,14 @@ xfs_reflink_end_cow(
->  	 * Stick a warning in just in case, and avoid 64-bit division.
->  	 */
->  	BUILD_BUG_ON(MAX_RW_COUNT > UINT_MAX);
-> -	if (end_fsb - offset_fsb > UINT_MAX) {
-> +	if (end_fsb - offset_fsb >= UINT_MAX) {
->  		error = -EFSCORRUPTED;
->  		xfs_force_shutdown(ip->i_mount, SHUTDOWN_CORRUPT_INCORE);
->  		ASSERT(0);
->  		goto out;
->  	}
->  	resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
-> -			(unsigned int)(end_fsb - offset_fsb),
-> +			(unsigned int)(end_fsb - offset_fsb + 1),
+> What's your kernel version ? Seems we won't  wait_page_writeback with
+> holding page lock in latest kernel version.
 
-This isn't it either.  I managed to reproduce the ASSERT with some
-debugging enabled, and noticed that just prior to the directio write the
-data fork looked like this:
+The page lock we hold is the page lock that is already held when doing
+memory allocation. So it is not the one that is acquired and released by
+the page reclaim code.
 
-D: ABCDEFGH
+								Honza
 
-where A-H are each single-block mappings.  The COW fork for whatever
-reason was pretty fragmented too:
-
-C: IJKLMNOP
-
-where I-P are also single block mappings.  The log showed that there was
-a chain of transactions with EFIs and block allocations, and I observed
-that the number of extents was just enough that the mappings wouldn't
-fit in an extents format data fork.  I surmised that the end_cow loop
-would punch out the last block of the range:
-
-D: ABCDEFG-
-C: IJKLMNOP
-
-which causes the bmap code to collapse the bmbt block into extents
-format, freeing the bmbt block.  Then, we remap out of the COW fork:
-
-D: ABCDEFGP
-C: IJKLMNO-
-
-which causes the bmap code to convert the data fork from extents format
-back into bmbt format, which allocates a block.  We then repeat this
-process to replace block G with block O, which causes yet another
-collapse and convert cycle.  The NEXTENTADD block reservation macro only
-reserves enough blocks to add I-P (8 blocks) to a data fork where A-H have
-*already* been cleared out, which means that we assume 1 bmbt split.
-
-Therefore, we only reserve 5 blocks for that split (max bmbt height for
-this fs), and we use up all 5 of them mapping blocks P-L into the data
-fork.  The extents -> btree conversion for remapping block K overflows
-the transaction block reservation and down goes the filesystem.  Note
-that in the vast majority of cases the extents are bigger or we don't
-ping-pong the reservation, so we've never hit this until now.
-
-I /think/ the solution is to push the transaction allocation into the
-loop so that each transaction roll-chain only moves one extent and
-therefore we only have to reserve enough blocks for a single btree
-split, which should be enough for us.  The downside is that we drop the
-ilock during end_cow, which I think(?) is fine since all CoW write paths
-go through _reflink_end_cow, and it isn't picky about holes.  As a
-bonus, this will also remove the restriction on the number of bytes you
-can _reflink_end_cow in a single call.  Not that anyone's complained
-about not being able to CoW 16T in a single operation...
-
---D
-
->  			XFS_DATA_FORK);
->  	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
->  			resblks, 0, XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
+> Jan Kara <jack@suse.cz> 于2018年11月29日周四 下午9:01写道：
+> >
+> > On Thu 29-11-18 23:02:53, Dave Chinner wrote:
+> > > On Thu, Nov 29, 2018 at 09:52:38AM +0100, Jan Kara wrote:
+> > > > On Wed 28-11-18 12:11:23, Liu Bo wrote:
+> > > > > On Tue, Nov 27, 2018 at 12:42:49PM +0100, Jan Kara wrote:
+> > > > > > CCed fsdevel since this may be interesting to other filesystem developers
+> > > > > > as well.
+> > > > > >
+> > > > > > On Tue 30-10-18 08:22:49, Liu Bo wrote:
+> > > > > > > mpage_prepare_extent_to_map() tries to build up a large bio to stuff down
+> > > > > > > the pipe.  But if it needs to wait for a page lock, it needs to make sure
+> > > > > > > and send down any pending writes so we don't deadlock with anyone who has
+> > > > > > > the page lock and is waiting for writeback of things inside the bio.
+> > > > > >
+> > > > > > Thanks for report! I agree the current code has a deadlock possibility you
+> > > > > > describe. But I think the problem reaches a bit further than what your
+> > > > > > patch fixes.  The problem is with pages that are unlocked but have
+> > > > > > PageWriteback set.  Page reclaim may end up waiting for these pages and
+> > > > > > thus any memory allocation with __GFP_FS set can block on these. So in our
+> > > > > > current setting page writeback must not block on anything that can be held
+> > > > > > while doing memory allocation with __GFP_FS set. Page lock is just one of
+> > > > > > these possibilities, wait_on_page_writeback() in
+> > > > > > mpage_prepare_extent_to_map() is another suspect and there mat be more. Or
+> > > > > > to say it differently, if there's lock A and GFP_KERNEL allocation can
+> > > > > > happen under lock A, then A cannot be taken by the writeback path. This is
+> > > > > > actually pretty subtle deadlock possibility and our current lockdep
+> > > > > > instrumentation isn't going to catch this.
+> > > > > >
+> > > > >
+> > > > > Thanks for the nice summary, it's true that a lock A held in both
+> > > > > writeback path and memory reclaim can end up with deadlock.
+> > > > >
+> > > > > Fortunately, by far there're only deadlock reports of page's lock bit
+> > > > > and writeback bit in both ext4 and btrfs[1].  I think
+> > > > > wait_on_page_writeback() would be OK as it's been protected by page
+> > > > > lock.
+> > > > >
+> > > > > [1]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=01d658f2ca3c85c1ffb20b306e30d16197000ce7
+> > > >
+> > > > Yes, but that may just mean that the other deadlocks are just harder to
+> > > > hit...
+> > > >
+> > > > > > So I see two ways how to fix this properly:
+> > > > > >
+> > > > > > 1) Change ext4 code to always submit the bio once we have a full page
+> > > > > > prepared for writing. This may be relatively simple but has a higher CPU
+> > > > > > overhead for bio allocation & freeing (actual IO won't really differ since
+> > > > > > the plugging code should take care of merging the submitted bios). XFS
+> > > > > > seems to be doing this.
+> > > > >
+> > > > > Seems that that's the safest way to do it, but as you said there's
+> > > > > some tradeoff.
+> > > > >
+> > > > > (Just took a look at xfs's writepages, xfs also did the page
+> > > > > collection if there're adjacent pages in xfs_add_to_ioend(), and since
+> > > > > xfs_vm_writepages() is using the generic helper write_cache_pages()
+> > > > > which calls lock_page() as well, it's still possible to run into the
+> > > > > above kind of deadlock.)
+> > > >
+> > > > Originally I thought XFS doesn't have this problem but now when I look
+> > > > again, you are right that their ioend may accumulate more pages to write
+> > > > and so they are prone to the same deadlock ext4 is. Added XFS list to CC.
+> > >
+> > > I don't think XFS has a problem here, because the deadlock is
+> > > dependent on holding a lock that writeback might take and then doing
+> > > a GFP_KERNEL allocation. I don't think we do that anywhere in XFS -
+> > > the only lock that is of concern here is the ip->i_ilock, and I
+> > > think we always do GFP_NOFS allocations inside that lock.
+> > >
+> > > As it is, this sort of lock vs reclaim inversion should be caught by
+> > > lockdep - allocations and reclaim contexts are recorded by lockdep
+> > > we get reports if we do lock A - alloc and then do reclaim - lock A.
+> > > We've always had problems with false positives from lockdep for
+> > > these situations where common XFS code can be called from GFP_KERNEL
+> > > valid contexts as well as reclaim or GFP_NOFS-only contexts, but I
+> > > don't recall ever seeing such a report for the writeback path....
+> >
+> > I think for A == page lock, XFS may have the problem (and lockdep won't
+> > notice because it does not track page locks). There are some parts of
+> > kernel which do GFP_KERNEL allocations under page lock - pte_alloc_one() is
+> > one such function which allocates page tables with GFP_KERNEL and gets
+> > called with the faulted page locked. And I believe there are others.
+> >
+> > So direct reclaim from pte_alloc_one() can wait for writeback on page B
+> > while holding lock on page A. And if B is just prepared (added to bio,
+> > under writeback, unlocked) but not submitted in xfs_writepages() and we
+> > block on lock_page(A), we have a deadlock.
+> >
+> > Generally deadlocks like these will be invisible to lockdep because it does
+> > not track either PageWriteback or PageLocked as a dependency.
+> >
+> > > > > > 2) Change the code to unlock the page only when we submit the bio.
+> > >
+> > > > > This sounds doable but not good IMO, the concern is that page locks
+> > > > > can be held for too long, or if we do 2), submitting one bio per page
+> > > > > in 1) is also needed.
+> > > >
+> > > > Hum, you're right that page lock hold times may increase noticeably and
+> > > > that's not very good. Ideally we'd need a way to submit whatever we have
+> > > > prepared when we are going to sleep but there's no easy way to do that.
+> > >
+> > > XFS unlocks the page after it has been added to the bio and marked
+> > > as under writeback, not when the bio is submitted. i.e.
+> > >
+> > > writepage w/ locked page dirty
+> > > lock ilock
+> > > <mapping, allocation>
+> > > unlock ilock
+> > > bio_add_page
+> > > clear_page_dirty_for_io
+> > > set_page_writeback
+> > > unlock_page
+> > > .....
+> > > <gather more dirty pages into bio>
+> > > .....
+> > > <bio is full or discontiguous page to be written>
+> > > submit_bio()
+> >
+> > Yes, ext4 works the same way. But thanks for confirmation.
+> >
+> > > If we switch away which holding a partially built bio, the only page
+> > > we have locked is the one we are currently trying to add to the bio.
+> > > Lock ordering prevents deadlocks on that one page, and all other
+> > > pages in the bio being built are marked as under writeback and are
+> > > not locked. Hence anything that wants to modify a page held in the
+> > > bio will block waiting for page writeback to clear, not the page
+> > > lock.
+> >
+> > Yes, and the blocking on writeback of such page in direct reclaim is
+> > exactly one link in the deadlock chain...
+> >
+> >                                                                 Honza
+> > --
+> > Jan Kara <jack@suse.com>
+> > SUSE Labs, CR
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
