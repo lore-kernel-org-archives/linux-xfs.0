@@ -1,61 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:35302 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726588AbeK2Kag (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:30:36 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wASNOo01157344
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:18 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2nxxkqn6vn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:18 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wASNRCWx023998
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:13 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wASNRCV7026787
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:12 GMT
-Subject: [PATCH 2/9] xfs: never try to scrub more than 64 inodes per inobt
- record
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 28 Nov 2018 15:27:11 -0800
-Message-ID: <154344763127.3835.18426913692184041622.stgit@magnolia>
-In-Reply-To: <154344761877.3835.7785580513047409388.stgit@magnolia>
-References: <154344761877.3835.7785580513047409388.stgit@magnolia>
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:35240 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726872AbeK2NYk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 08:24:40 -0500
+Received: by mail-pf1-f194.google.com with SMTP id z9so231647pfi.2
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 18:20:57 -0800 (PST)
+Subject: Re: [PATCH V12 00/20] block: support multi-page bvec
+References: <20181126021720.19471-1-ming.lei@redhat.com>
+ <7096bc4e-0617-29d0-a90d-ae7caf09a16d@kernel.dk>
+ <20181129012959.GC23249@ming.t460p>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <1983a2f5-07be-4102-fedc-54e2ad2e16dc@kernel.dk>
+Date: Wed, 28 Nov 2018 19:20:51 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20181129012959.GC23249@ming.t460p>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "Ewan D. Milne" <emilne@redhat.com>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 11/28/18 6:30 PM, Ming Lei wrote:
+>> I'm going back and forth on those one a bit. Any concerns with
+>> pushing this to 4.22?
+> 
+> My only one concern is about the warning of
+> "blk_cloned_rq_check_limits: over max segments limit" on dm multipath,
+> and seems Ewan and Mike is waiting for this fix.
 
-Make sure we never check more than XFS_INODES_PER_CHUNK inodes for any
-given inobt record since there can be more than one inobt record mapped
-to an inode cluster.
+Not familiar with this issue, can you post a link to it? I'd be fine
+working around anything until 4.22, it's not going to be a new issue.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/ialloc.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 882dc56c5c21..fd431682db0b 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -203,7 +203,8 @@ xchk_iallocbt_check_freemask(
- 	int				error = 0;
- 
- 	/* Make sure the freemask matches the inode records. */
--	nr_inodes = mp->m_inodes_per_cluster;
-+	nr_inodes = min_t(unsigned int, XFS_INODES_PER_CHUNK,
-+			mp->m_inodes_per_cluster);
- 
- 	for (agino = irec->ir_startino;
- 	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
+-- 
+Jens Axboe
