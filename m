@@ -1,32 +1,170 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:41968 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2387965AbeKFIGz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Nov 2018 03:06:55 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id BEC7229F76
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Nov 2018 22:44:56 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201259] [xfstests shared/010]: maybe pagecache contents is
- mutated after cycle mount
-Date: Mon, 05 Nov 2018 22:44:56 +0000
-Message-ID: <bug-201259-201763-F6nWM6wnKa@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201259-201763@https.bugzilla.kernel.org/>
-References: <bug-201259-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:55871 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726190AbeK3HrF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Nov 2018 02:47:05 -0500
+Date: Fri, 30 Nov 2018 07:40:19 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RFC] Ext4: fix deadlock on dirty pages between fault and
+ writeback
+Message-ID: <20181129204019.GS6311@dastard>
+References: <1540858969-75803-1-git-send-email-bo.liu@linux.alibaba.com>
+ <20181127114249.GH16301@quack2.suse.cz>
+ <20181128201122.r4sec265cnlxgj2x@US-160370MP2.local>
+ <20181129085238.GD31087@quack2.suse.cz>
+ <20181129120253.GR6311@dastard>
+ <20181129130002.GM31087@quack2.suse.cz>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181129130002.GM31087@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Liu Bo <bo.liu@linux.alibaba.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201259
+On Thu, Nov 29, 2018 at 02:00:02PM +0100, Jan Kara wrote:
+> On Thu 29-11-18 23:02:53, Dave Chinner wrote:
+> > On Thu, Nov 29, 2018 at 09:52:38AM +0100, Jan Kara wrote:
+> > > On Wed 28-11-18 12:11:23, Liu Bo wrote:
+> > > > On Tue, Nov 27, 2018 at 12:42:49PM +0100, Jan Kara wrote:
+> > > > > CCed fsdevel since this may be interesting to other filesystem developers
+> > > > > as well.
+> > > > > 
+> > > > > On Tue 30-10-18 08:22:49, Liu Bo wrote:
+> > > > > > mpage_prepare_extent_to_map() tries to build up a large bio to stuff down
+> > > > > > the pipe.  But if it needs to wait for a page lock, it needs to make sure
+> > > > > > and send down any pending writes so we don't deadlock with anyone who has
+> > > > > > the page lock and is waiting for writeback of things inside the bio.
+> > > > > 
+> > > > > Thanks for report! I agree the current code has a deadlock possibility you
+> > > > > describe. But I think the problem reaches a bit further than what your
+> > > > > patch fixes.  The problem is with pages that are unlocked but have
+> > > > > PageWriteback set.  Page reclaim may end up waiting for these pages and
+> > > > > thus any memory allocation with __GFP_FS set can block on these. So in our
+> > > > > current setting page writeback must not block on anything that can be held
+> > > > > while doing memory allocation with __GFP_FS set. Page lock is just one of
+> > > > > these possibilities, wait_on_page_writeback() in
+> > > > > mpage_prepare_extent_to_map() is another suspect and there mat be more. Or
+> > > > > to say it differently, if there's lock A and GFP_KERNEL allocation can
+> > > > > happen under lock A, then A cannot be taken by the writeback path. This is
+> > > > > actually pretty subtle deadlock possibility and our current lockdep
+> > > > > instrumentation isn't going to catch this.
+> > > > >
+> > > > 
+> > > > Thanks for the nice summary, it's true that a lock A held in both
+> > > > writeback path and memory reclaim can end up with deadlock.
+> > > > 
+> > > > Fortunately, by far there're only deadlock reports of page's lock bit
+> > > > and writeback bit in both ext4 and btrfs[1].  I think
+> > > > wait_on_page_writeback() would be OK as it's been protected by page
+> > > > lock.
+> > > > 
+> > > > [1]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=01d658f2ca3c85c1ffb20b306e30d16197000ce7
+> > > 
+> > > Yes, but that may just mean that the other deadlocks are just harder to
+> > > hit...
+> > > 
+> > > > > So I see two ways how to fix this properly:
+> > > > > 
+> > > > > 1) Change ext4 code to always submit the bio once we have a full page
+> > > > > prepared for writing. This may be relatively simple but has a higher CPU
+> > > > > overhead for bio allocation & freeing (actual IO won't really differ since
+> > > > > the plugging code should take care of merging the submitted bios). XFS
+> > > > > seems to be doing this.
+> > > > 
+> > > > Seems that that's the safest way to do it, but as you said there's
+> > > > some tradeoff.
+> > > > 
+> > > > (Just took a look at xfs's writepages, xfs also did the page
+> > > > collection if there're adjacent pages in xfs_add_to_ioend(), and since
+> > > > xfs_vm_writepages() is using the generic helper write_cache_pages()
+> > > > which calls lock_page() as well, it's still possible to run into the
+> > > > above kind of deadlock.)
+> > > 
+> > > Originally I thought XFS doesn't have this problem but now when I look
+> > > again, you are right that their ioend may accumulate more pages to write
+> > > and so they are prone to the same deadlock ext4 is. Added XFS list to CC.
+> > 
+> > I don't think XFS has a problem here, because the deadlock is
+> > dependent on holding a lock that writeback might take and then doing
+> > a GFP_KERNEL allocation. I don't think we do that anywhere in XFS -
+> > the only lock that is of concern here is the ip->i_ilock, and I
+> > think we always do GFP_NOFS allocations inside that lock.
+> > 
+> > As it is, this sort of lock vs reclaim inversion should be caught by
+> > lockdep - allocations and reclaim contexts are recorded by lockdep
+> > we get reports if we do lock A - alloc and then do reclaim - lock A.
+> > We've always had problems with false positives from lockdep for
+> > these situations where common XFS code can be called from GFP_KERNEL
+> > valid contexts as well as reclaim or GFP_NOFS-only contexts, but I
+> > don't recall ever seeing such a report for the writeback path....
+> 
+> I think for A == page lock, XFS may have the problem (and lockdep won't
+> notice because it does not track page locks). There are some parts of
+> kernel which do GFP_KERNEL allocations under page lock - pte_alloc_one() is
+> one such function which allocates page tables with GFP_KERNEL and gets
+> called with the faulted page locked. And I believe there are others.
 
---- Comment #8 from Eric Sandeen (sandeen@sandeen.net) ---
-Zorro, I see that your new report is using a smaller blocksize (-b 1024) - was
-that used in the initial report?
+Where in direct reclaim are we doing writeback to XFS?
 
+It doesn't happen, and I've recently proposed we remove ->writepage
+support from XFS altogether so that memory reclaim never, ever
+tries to write pages to XFS filesystems, even from kswapd.
+
+> So direct reclaim from pte_alloc_one() can wait for writeback on page B
+> while holding lock on page A. And if B is just prepared (added to bio,
+> under writeback, unlocked) but not submitted in xfs_writepages() and we
+> block on lock_page(A), we have a deadlock.
+
+Fundamentally, doing GFP_KERNEL allocations with a page lock
+held violates any ordering rules we might have for multiple page
+locking order. This is asking for random ABBA reclaim deadlocks to
+occur, and it's not a filesystem bug - that's a bug in the page
+table code. e.g if we are doing this in a filesystem/page cache
+context, it's always in ascending page->index order for pages
+referenced by the inode's mapping. Memory reclaim provides none of
+these lock ordering guarantees.
+
+Indeed, pte_alloc_one() doing hard coded GFP_KERNEL allocations is a
+problem we've repeatedly tried to get fixed over the past 15 years
+because of the need to call vmalloc in GFP_NOFS contexts. What we've
+got now is just a "blessed hack" of using task based NOFS context
+via memalloc_nofs_save() to override the hard coded pte allocation
+context.
+
+But that doesn't work with calls direct from page faults - it has no
+idea filesystems or page locking orders for multiple page locking.
+Using GFP_KERNEL while holding a page lock is a bug. Fix the damn
+bug, not force everyone else who is doing things safely and
+correctly to change their code.
+
+> Generally deadlocks like these will be invisible to lockdep because it does
+> not track either PageWriteback or PageLocked as a dependency.
+
+And, because lockdep doesn't report it, it's not a bug that needs
+fixing, eh?
+
+> > If we switch away which holding a partially built bio, the only page
+> > we have locked is the one we are currently trying to add to the bio.
+> > Lock ordering prevents deadlocks on that one page, and all other
+> > pages in the bio being built are marked as under writeback and are
+> > not locked. Hence anything that wants to modify a page held in the
+> > bio will block waiting for page writeback to clear, not the page
+> > lock.
+> 
+> Yes, and the blocking on writeback of such page in direct reclaim is
+> exactly one link in the deadlock chain...
+
+So, like preventing explicit writeback in direct reclaim, we either
+need to prevent direct reclaim from waiting on writeback or use
+GFP_NOFS allocation context when holding a page lock. The bug is not
+in the filesystem code here.
+
+Cheers,
+
+Dave.
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Dave Chinner
+david@fromorbit.com
