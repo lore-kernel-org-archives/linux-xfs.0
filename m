@@ -1,115 +1,228 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46040 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726588AbeK2Kac (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:30:32 -0500
-Subject: [PATCH 1/9] xfs: count inode blocks correctly in inobt scrub
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 28 Nov 2018 15:27:05 -0800
-Message-ID: <154344762508.3835.18425020796453840809.stgit@magnolia>
-In-Reply-To: <154344761877.3835.7785580513047409388.stgit@magnolia>
-References: <154344761877.3835.7785580513047409388.stgit@magnolia>
+Received: from out30-130.freemail.mail.aliyun.com ([115.124.30.130]:53604 "EHLO
+        out30-130.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725788AbeK3GbQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Nov 2018 01:31:16 -0500
+Date: Thu, 29 Nov 2018 11:24:29 -0800
+From: Liu Bo <bo.liu@linux.alibaba.com>
+Subject: Re: [PATCH RFC] Ext4: fix deadlock on dirty pages between fault and
+ writeback
+Message-ID: <20181129192428.j7o63zrz6dm6lez3@US-160370MP2.local>
+Reply-To: bo.liu@linux.alibaba.com
+References: <1540858969-75803-1-git-send-email-bo.liu@linux.alibaba.com>
+ <20181127114249.GH16301@quack2.suse.cz>
+ <20181128201122.r4sec265cnlxgj2x@US-160370MP2.local>
+ <20181129085238.GD31087@quack2.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181129085238.GD31087@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Nov 29, 2018 at 09:52:38AM +0100, Jan Kara wrote:
+> On Wed 28-11-18 12:11:23, Liu Bo wrote:
+> > On Tue, Nov 27, 2018 at 12:42:49PM +0100, Jan Kara wrote:
+> > > CCed fsdevel since this may be interesting to other filesystem developers
+> > > as well.
+> > > 
+> > > On Tue 30-10-18 08:22:49, Liu Bo wrote:
+> > > > mpage_prepare_extent_to_map() tries to build up a large bio to stuff down
+> > > > the pipe.  But if it needs to wait for a page lock, it needs to make sure
+> > > > and send down any pending writes so we don't deadlock with anyone who has
+> > > > the page lock and is waiting for writeback of things inside the bio.
+> > > 
+> > > Thanks for report! I agree the current code has a deadlock possibility you
+> > > describe. But I think the problem reaches a bit further than what your
+> > > patch fixes.  The problem is with pages that are unlocked but have
+> > > PageWriteback set.  Page reclaim may end up waiting for these pages and
+> > > thus any memory allocation with __GFP_FS set can block on these. So in our
+> > > current setting page writeback must not block on anything that can be held
+> > > while doing memory allocation with __GFP_FS set. Page lock is just one of
+> > > these possibilities, wait_on_page_writeback() in
+> > > mpage_prepare_extent_to_map() is another suspect and there mat be more. Or
+> > > to say it differently, if there's lock A and GFP_KERNEL allocation can
+> > > happen under lock A, then A cannot be taken by the writeback path. This is
+> > > actually pretty subtle deadlock possibility and our current lockdep
+> > > instrumentation isn't going to catch this.
+> > >
+> > 
+> > Thanks for the nice summary, it's true that a lock A held in both
+> > writeback path and memory reclaim can end up with deadlock.
+> > 
+> > Fortunately, by far there're only deadlock reports of page's lock bit
+> > and writeback bit in both ext4 and btrfs[1].  I think
+> > wait_on_page_writeback() would be OK as it's been protected by page
+> > lock.
+> > 
+> > [1]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=01d658f2ca3c85c1ffb20b306e30d16197000ce7
+> 
+> Yes, but that may just mean that the other deadlocks are just harder to
+> hit...
+>
 
-A big block filesystem might require more than one inobt record to cover
-all the inodes in the block.  In these cases it is not correct to round
-the irec count up to the nearest block because this causes us to
-overestimate the number of inode blocks we expect to find.
+Yes, we hit the "page lock&writeback" deadlock when charging pte
+memory to memcg rather than when not charging, but even with it, I
+failed to work out a reproducer.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/scrub/ialloc.c |   22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+(Anyway we took a workaround of disabling charging pte memory to memcg
+in order to avoid other lock inversion.)
 
+> > > So I see two ways how to fix this properly:
+> > > 
+> > > 1) Change ext4 code to always submit the bio once we have a full page
+> > > prepared for writing. This may be relatively simple but has a higher CPU
+> > > overhead for bio allocation & freeing (actual IO won't really differ since
+> > > the plugging code should take care of merging the submitted bios). XFS
+> > > seems to be doing this.
+> > 
+> > Seems that that's the safest way to do it, but as you said there's
+> > some tradeoff.
+> > 
+> > (Just took a look at xfs's writepages, xfs also did the page
+> > collection if there're adjacent pages in xfs_add_to_ioend(), and since
+> > xfs_vm_writepages() is using the generic helper write_cache_pages()
+> > which calls lock_page() as well, it's still possible to run into the
+> > above kind of deadlock.)
+> 
+> Originally I thought XFS doesn't have this problem but now when I look
+> again, you are right that their ioend may accumulate more pages to write
+> and so they are prone to the same deadlock ext4 is. Added XFS list to CC.
+> 
+> > > 2) Change the code to unlock the page only when we submit the bio.
+> > 
+> > This sounds doable but not good IMO, the concern is that page locks
+> > can be held for too long, or if we do 2), submitting one bio per page
+> > in 1) is also needed.
+> 
+> Hum, you're right that page lock hold times may increase noticeably and
+> that's not very good. Ideally we'd need a way to submit whatever we have
+> prepared when we are going to sleep but there's no easy way to do that.
+> Hum... except if we somehow hooked the bio plugging mechanism we have. And
+> actually it seems there already is implemented a mechanism for unplug
+> callbacks (blk_check_plugged()) so our writepages() functions could just
+> add their callback there, on schedule unplug callbacks will get called and
+> we can submit the bio we have accumulated so far in our writepages context.
+> So I think using this will be the best option. We might just add a variant
+> of blk_check_plugged() that will just add passed in blk_plug_cb structure
+> as all filesystems will likely just want to embed this in their writepages
+> context structure instead of allocating it with GFP_ATOMIC...
+>
 
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 9b5287a0e8ba..882dc56c5c21 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -44,6 +44,11 @@ xchk_setup_ag_iallocbt(
- 
- /* Inode btree scrubber. */
- 
-+struct xchk_iallocbt {
-+	/* Number of inodes we see while scanning inobt. */
-+	unsigned long long	inodes;
-+};
-+
- /*
-  * If we're checking the finobt, cross-reference with the inobt.
-  * Otherwise we're checking the inobt; if there is an finobt, make sure
-@@ -266,7 +271,7 @@ xchk_iallocbt_rec(
- 	union xfs_btree_rec		*rec)
- {
- 	struct xfs_mount		*mp = bs->cur->bc_mp;
--	xfs_filblks_t			*inode_blocks = bs->private;
-+	struct xchk_iallocbt		*iabt = bs->private;
- 	struct xfs_inobt_rec_incore	irec;
- 	uint64_t			holes;
- 	xfs_agnumber_t			agno = bs->cur->bc_private.a.agno;
-@@ -304,8 +309,7 @@ xchk_iallocbt_rec(
- 	    (agbno & (mp->m_blocks_per_cluster - 1)))
- 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
- 
--	*inode_blocks += XFS_B_TO_FSB(mp,
--			irec.ir_count * mp->m_sb.sb_inodesize);
-+	iabt->inodes += irec.ir_count;
- 
- 	/* Handle non-sparse inodes */
- 	if (!xfs_inobt_issparse(irec.ir_holemask)) {
-@@ -397,9 +401,10 @@ STATIC void
- xchk_iallocbt_xref_rmap_inodes(
- 	struct xfs_scrub	*sc,
- 	int			which,
--	xfs_filblks_t		inode_blocks)
-+	unsigned long long	inodes)
- {
- 	xfs_filblks_t		blocks;
-+	xfs_filblks_t		inode_blocks;
- 	int			error;
- 
- 	if (!sc->sa.rmap_cur || xchk_skip_xref(sc->sm))
-@@ -410,6 +415,7 @@ xchk_iallocbt_xref_rmap_inodes(
- 			&XFS_RMAP_OINFO_INODES, &blocks);
- 	if (!xchk_should_check_xref(sc, &error, &sc->sa.rmap_cur))
- 		return;
-+	inode_blocks = XFS_B_TO_FSB(sc->mp, inodes * sc->mp->m_sb.sb_inodesize);
- 	if (blocks != inode_blocks)
- 		xchk_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
- }
-@@ -421,12 +427,14 @@ xchk_iallocbt(
- 	xfs_btnum_t		which)
- {
- 	struct xfs_btree_cur	*cur;
--	xfs_filblks_t		inode_blocks = 0;
-+	struct xchk_iallocbt	iabt = {
-+		.inodes		= 0,
-+	};
- 	int			error;
- 
- 	cur = which == XFS_BTNUM_INO ? sc->sa.ino_cur : sc->sa.fino_cur;
- 	error = xchk_btree(sc, cur, xchk_iallocbt_rec, &XFS_RMAP_OINFO_INOBT,
--			&inode_blocks);
-+			&iabt);
- 	if (error)
- 		return error;
- 
-@@ -440,7 +448,7 @@ xchk_iallocbt(
- 	 * to inode chunks with free inodes.
- 	 */
- 	if (which == XFS_BTNUM_INO)
--		xchk_iallocbt_xref_rmap_inodes(sc, which, inode_blocks);
-+		xchk_iallocbt_xref_rmap_inodes(sc, which, iabt.inodes);
- 
- 	return error;
- }
+Great, the blk_check_plugged way really makes sense to me.
+
+I was wondering if it was just OK to use the existing blk_check_unplug
+helper with GFP_ATOMIC inside because calling blk_check_unplug is
+supposed to happen when we initial ioend and ext4_writepages() itself
+has used GFP_KERNEL to allocate memory for ioend.
+
+> Will you look into this or should I try to write the patch?
+>
+
+I'm kind of engaged in some backport stuff recently, so much
+appreciated if you could give it a shot.
+
+thanks,
+-liubo
+
+> 								Honza
+> 
+> > > > task1:
+> > > > [<ffffffff811aaa52>] wait_on_page_bit+0x82/0xa0
+> > > > [<ffffffff811c5777>] shrink_page_list+0x907/0x960
+> > > > [<ffffffff811c6027>] shrink_inactive_list+0x2c7/0x680
+> > > > [<ffffffff811c6ba4>] shrink_node_memcg+0x404/0x830
+> > > > [<ffffffff811c70a8>] shrink_node+0xd8/0x300
+> > > > [<ffffffff811c73dd>] do_try_to_free_pages+0x10d/0x330
+> > > > [<ffffffff811c7865>] try_to_free_mem_cgroup_pages+0xd5/0x1b0
+> > > > [<ffffffff8122df2d>] try_charge+0x14d/0x720
+> > > > [<ffffffff812320cc>] memcg_kmem_charge_memcg+0x3c/0xa0
+> > > > [<ffffffff812321ae>] memcg_kmem_charge+0x7e/0xd0
+> > > > [<ffffffff811b68a8>] __alloc_pages_nodemask+0x178/0x260
+> > > > [<ffffffff8120bff5>] alloc_pages_current+0x95/0x140
+> > > > [<ffffffff81074247>] pte_alloc_one+0x17/0x40
+> > > > [<ffffffff811e34de>] __pte_alloc+0x1e/0x110
+> > > > [<ffffffffa06739de>] alloc_set_pte+0x5fe/0xc20
+> > > > [<ffffffff811e5d93>] do_fault+0x103/0x970
+> > > > [<ffffffff811e6e5e>] handle_mm_fault+0x61e/0xd10
+> > > > [<ffffffff8106ea02>] __do_page_fault+0x252/0x4d0
+> > > > [<ffffffff8106ecb0>] do_page_fault+0x30/0x80
+> > > > [<ffffffff8171bce8>] page_fault+0x28/0x30
+> > > > [<ffffffffffffffff>] 0xffffffffffffffff
+> > > > 
+> > > > task2:
+> > > > [<ffffffff811aadc6>] __lock_page+0x86/0xa0
+> > > > [<ffffffffa02f1e47>] mpage_prepare_extent_to_map+0x2e7/0x310 [ext4]
+> > > > [<ffffffffa08a2689>] ext4_writepages+0x479/0xd60
+> > > > [<ffffffff811bbede>] do_writepages+0x1e/0x30
+> > > > [<ffffffff812725e5>] __writeback_single_inode+0x45/0x320
+> > > > [<ffffffff81272de2>] writeback_sb_inodes+0x272/0x600
+> > > > [<ffffffff81273202>] __writeback_inodes_wb+0x92/0xc0
+> > > > [<ffffffff81273568>] wb_writeback+0x268/0x300
+> > > > [<ffffffff81273d24>] wb_workfn+0xb4/0x390
+> > > > [<ffffffff810a2f19>] process_one_work+0x189/0x420
+> > > > [<ffffffff810a31fe>] worker_thread+0x4e/0x4b0
+> > > > [<ffffffff810a9786>] kthread+0xe6/0x100
+> > > > [<ffffffff8171a9a1>] ret_from_fork+0x41/0x50
+> > > > [<ffffffffffffffff>] 0xffffffffffffffff
+> > > > 
+> > > > task1 is waiting for the PageWriteback bit of the page that task2 has
+> > > > collected in mpd->io_submit->io_bio, and tasks2 is waiting for the LOCKED
+> > > > bit the page which tasks1 has locked.
+> > > > 
+> > > > It seems that this deadlock only happens when those pages are mapped pages
+> > > > so that mpage_prepare_extent_to_map() can have pages queued in io_bio and
+> > > > when waiting to lock the subsequent page.
+> > > > 
+> > > > Signed-off-by: Liu Bo <bo.liu@linux.alibaba.com>
+> > > > ---
+> > > > 
+> > > > Only did build test.
+> > > > 
+> > > >  fs/ext4/inode.c | 21 ++++++++++++++++++++-
+> > > >  1 file changed, 20 insertions(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> > > > index c3d9a42c561e..becbfb292bf0 100644
+> > > > --- a/fs/ext4/inode.c
+> > > > +++ b/fs/ext4/inode.c
+> > > > @@ -2681,7 +2681,26 @@ static int mpage_prepare_extent_to_map(struct mpage_da_data *mpd)
+> > > >  			if (mpd->map.m_len > 0 && mpd->next_page != page->index)
+> > > >  				goto out;
+> > > >  
+> > > > -			lock_page(page);
+> > > > +			if (!trylock_page(page)) {
+> > > > +				/*
+> > > > +				 * A rare race may happen between fault and
+> > > > +				 * writeback,
+> > > > +				 *
+> > > > +				 * 1. fault may have raced in and locked this
+> > > > +				 * page ahead of us, and if fault needs to
+> > > > +				 * reclaim memory via shrink_page_list(), it may
+> > > > +				 * also wait on the writeback pages we've
+> > > > +				 * collected in our mpd->io_submit.
+> > > > +				 *
+> > > > +				 * 2. We have to submit mpd->io_submit->io_bio
+> > > > +				 * to let memory reclaim make progress in order
+> > > > +				 * to avoid the deadlock between fault and
+> > > > +				 * ourselves(writeback).
+> > > > +				 */
+> > > > +				ext4_io_submit(&mpd->io_submit);
+> > > > +				lock_page(page);
+> > > > +			}
+> > > > +
+> > > >  			/*
+> > > >  			 * If the page is no longer dirty, or its mapping no
+> > > >  			 * longer corresponds to inode we are writing (which
+> > > > -- 
+> > > > 1.8.3.1
+> > > > 
+> > > -- 
+> > > Jan Kara <jack@suse.com>
+> > > SUSE Labs, CR
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
