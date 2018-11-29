@@ -1,51 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54354 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726609AbeLADG3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Nov 2018 22:06:29 -0500
-Date: Fri, 30 Nov 2018 07:56:39 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix inverted return from xfs_btree_sblock_verify_crc
-Message-ID: <20181130155639.GL8125@magnolia>
-References: <28345031-dfa2-1d73-a36c-400e3c2333d1@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:44458 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727120AbeK2OfM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Nov 2018 09:35:12 -0500
+Date: Thu, 29 Nov 2018 11:30:47 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V12 00/20] block: support multi-page bvec
+Message-ID: <20181129033046.GE23390@ming.t460p>
+References: <20181126021720.19471-1-ming.lei@redhat.com>
+ <7096bc4e-0617-29d0-a90d-ae7caf09a16d@kernel.dk>
+ <20181129012959.GC23249@ming.t460p>
+ <1983a2f5-07be-4102-fedc-54e2ad2e16dc@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <28345031-dfa2-1d73-a36c-400e3c2333d1@redhat.com>
+In-Reply-To: <1983a2f5-07be-4102-fedc-54e2ad2e16dc@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Mike Snitzer <snitzer@redhat.com>, "Ewan D. Milne" <emilne@redhat.com>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-On Thu, Nov 29, 2018 at 08:48:25PM -0600, Eric Sandeen wrote:
-> xfs_btree_sblock_verify_crc is a bool so should not be returning
-> a failaddr_t; worse, if xfs_log_check_lsn fails it returns
-> __this_address which looks like a boolean true (i.e. success)
-> to the caller.
+On Wed, Nov 28, 2018 at 07:20:51PM -0700, Jens Axboe wrote:
+> On 11/28/18 6:30 PM, Ming Lei wrote:
+> >> I'm going back and forth on those one a bit. Any concerns with
+> >> pushing this to 4.22?
+> > 
+> > My only one concern is about the warning of
+> > "blk_cloned_rq_check_limits: over max segments limit" on dm multipath,
+> > and seems Ewan and Mike is waiting for this fix.
 > 
-> (interestingly xfs_btree_lblock_verify_crc doesn't have the issue)
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Not familiar with this issue, can you post a link to it? I'd be fine
+> working around anything until 4.22, it's not going to be a new issue.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+https://marc.info/?t=153303425700002&r=1&w=2
 
---D
-
-> ---
-> 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index 34c6d7bd4d18..bbdae2b4559f 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -330,7 +330,7 @@ xfs_btree_sblock_verify_crc(
->  
->  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
->  		if (!xfs_log_check_lsn(mp, be64_to_cpu(block->bb_u.s.bb_lsn)))
-> -			return __this_address;
-> +			return false;
->  		return xfs_buf_verify_cksum(bp, XFS_BTREE_SBLOCK_CRC_OFF);
->  	}
->  
-> 
+thanks,
+Ming
