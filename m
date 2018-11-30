@@ -1,93 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f194.google.com ([209.85.219.194]:45571 "EHLO
-        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726084AbeLAAkY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Nov 2018 19:40:24 -0500
+Received: from mail-eopbgr50126.outbound.protection.outlook.com ([40.107.5.126]:6170
+        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726521AbeK3XIb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Nov 2018 18:08:31 -0500
+From: Albert Duato <albert@kumori.systems>
+Subject: How to avoid xfs_do_force_shutdown on xlog_iodone error
+Date: Fri, 30 Nov 2018 11:59:25 +0000
+Message-ID: <VI1P192MB028894DF21C722001901A488A9D30@VI1P192MB0288.EURP192.PROD.OUTLOOK.COM>
+References: <VI1P192MB0288B67B92CE171B34ABBB1AA9D30@VI1P192MB0288.EURP192.PROD.OUTLOOK.COM>
+In-Reply-To: <VI1P192MB0288B67B92CE171B34ABBB1AA9D30@VI1P192MB0288.EURP192.PROD.OUTLOOK.COM>
+Content-Language: es-ES
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <20181130051253.GB7100@sh-el5.eng.rdu2.redhat.com> <20181130121506.GI2299@dhcp-12-149.nay.redhat.com>
-In-Reply-To: <20181130121506.GI2299@dhcp-12-149.nay.redhat.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 30 Nov 2018 15:30:54 +0200
-Message-ID: <CAOQ4uxg9MdMbkM5+CuXK-VmmqxF8UmNkNqeKTHoxOtTnQ2=LnQ@mail.gmail.com>
-Subject: Re: [4.20-rc4 regression] generic/095 Concurrent mixed I/O hang on
- xfs based overlayfs
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: jencce.kernel@gmail.com, linux-xfs <linux-xfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, Zorro Lang <zlang@redhat.com>, fstests <fstests@vger.kernel.org>
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Fri, Nov 30, 2018 at 2:13 PM Zorro Lang <zlang@redhat.com> wrote:
->
-> On Fri, Nov 30, 2018 at 12:12:53AM -0500, Murphy Zhou wrote:
-> > Hi,
-> >
-> > Hit a xfs regression issue by generic/095 on overlayfs.
-> >
-> > It's easy to reproduce. Tests processes hang there and never return.
-> > There are some warning in the dmesg.
-> >
-> > SIGINT (Ctrl+C) can't kill the tests, neither does SIGTERM (kill).
-> > However, SIGKILL (kill -9) can clean them up.
-> >
-> > This happens when testing on v4 or v5 or reflink, with the same behaviour.
-> > -m crc=0
-> > -m crc=1,finobt=1,rmapbt=0,reflink=0 -i sparse=1
-> > -m crc=1,finobt=1,rmapbt=1,reflink=1 -i sparse=1
-> >
-> > This does not happen if ext4 as base fs for overlayfs.
-> >
-> > Bisecting points to this commit:
-> >       4721a601 iomap: dio data corruption and spurious errors when pipes fill
-> >
-> > Test pass soon after this commit reverted.
-> >
-> > # ps axjf
-> >  1839  1862   S+    0:00  |  \_ /bin/bash ./bin/single -o -t generic/095
-> >  1862  2005   S+    0:00  |      \_ /bin/bash ./check -T -overlay generic/095
-> >  2005  2292   S+    0:00  |          \_ /bin/bash ./tests/generic/095
-> >  2292  2516   Sl+   0:01  |              \_ /usr/bin/fio /tmp/2292.fio
-> >  2516  2565   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
-> >  2516  2566   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
-> >  2516  2567   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
-> >  2516  2568   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
-> >  2516  2569   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
->
-> Nice catch! I didn't tried overlayfs on XFS regression test this time. I never hit
-> issue on XFS singly, even on glusterfs(XFS underlying).
->
-> I just gave it a try. This bug is reproducible on xfs-linux git tree
-> xfs-4.20-fixes-2 HEAD. And by strace all fio processes, they all
-> keep outputing [1]. More details as [2]. Only overlayfs on XFS can
-> reproduce this bug, overlayfs on Ext4 can't.
->
+Hi,
 
-Darrick,
+This is my first message here, so please bear with me.
 
-This is my cue to insert a rant. You already know what I am going to rant about.
+I'm looking for a way of avoiding  xfs_do_force_shutdown when there is a te=
+mporary disconnection of the underlying block device.=A0max_retries and ret=
+ry_timeout_seconds are set to -1, but xlog_iodone operations seem to ignore=
+ that. Other operations like=A0xfs_trans_read_buf_map are correctly retried=
+.
 
-I cannot force you to add a check -overlay xfstests run to your pull
-request validation
-routine. I can offer assistance in any questions you may have and I can offer
-support for check -overlay infrastructure if it breaks or if it needs
-improvements.
+My intention is to be transparent (i.e. freezing disk operations temporaril=
+y) to network disconnections to NBD server, but it should be equivalent to =
+pulling the plug of a USB block device, reconnect and that everything conti=
+nues to work as expected, without the physical corruption issues.
 
-I have checked on several recent point releases that check -overlay does not
-regress any tests compared to xfs reflink configuration, and when I
-found a regression
-(mostly in overlayfs code, but also in xfs code sometimes) I reported
-and/or fixed it.
-But I do not have the resources to validate every xfs merge and
-certainly not xfs-next.
+Is there a way of achieving that?
 
-There is a large group of tests that is expected to notrun, which
-makes running the
--overlay test a lot faster than any given xfs configuration and IMO
-running just a single
-xfs reflink config with -overlay would give a pretty good test coverage.
+Thank you,
 
-So what do you say?...
+Albert
 
-Thanks,
-Amir.
+[92740.572442] XFS (nbd0): metadata I/O error: block 0x2806100 ("xlog_iodon=
+e") error 5 numblks 256
+[92740.572450] XFS (nbd0): xfs_do_force_shutdown(0x2) called from line 1233=
+ of file fs/xfs/xfs_log.c.=A0 Return address =3D 0xffffffffc0567a48
+[92740.572502] XFS (nbd0): Log I/O Error Detected.=A0 Shutting down filesys=
+tem
+[92740.572504] XFS (nbd0): Please umount the filesystem and rectify the pro=
+blem(s)
+
+
+     =
