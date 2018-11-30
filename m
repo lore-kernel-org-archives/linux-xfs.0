@@ -1,207 +1,200 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38424 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726521AbeK3XWP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Nov 2018 18:22:15 -0500
-Date: Fri, 30 Nov 2018 20:15:06 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [4.20-rc4 regression] generic/095 Concurrent mixed I/O hang on
- xfs based overlayfs
-Message-ID: <20181130121506.GI2299@dhcp-12-149.nay.redhat.com>
-References: <20181130051253.GB7100@sh-el5.eng.rdu2.redhat.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:24657 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726472AbeK3R5d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Nov 2018 12:57:33 -0500
+Date: Fri, 30 Nov 2018 17:49:08 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Non-blocking socket stuck for multiple seconds on
+ xfs_reclaim_inodes_ag()
+Message-ID: <20181130064908.GX6311@dastard>
+References: <CABWYdi1YZp+baxpON2R6mP09pjkUz5D-OE7Z2KmwVGycYTN-AA@mail.gmail.com>
+ <20181129021800.GQ6311@dastard>
+ <CABWYdi0Bd6sMAaTPkfHKupMGpw1QPSf_VohPF_Wg7Mm=W=j2bA@mail.gmail.com>
+ <20181130021840.GV6311@dastard>
+ <CABWYdi0nSJAV-RPdUSwGbRwqeoKo-83_X=ptuQwwH1CnPXCYmQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181130051253.GB7100@sh-el5.eng.rdu2.redhat.com>
+In-Reply-To: <CABWYdi0nSJAV-RPdUSwGbRwqeoKo-83_X=ptuQwwH1CnPXCYmQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Murphy Zhou <jencce.kernel@gmail.com>
-Cc: linux-xfs@vger.kernel.org, linux-unionfs@vger.kernel.org
+To: Ivan Babrou <ivan@cloudflare.com>
+Cc: linux-xfs@vger.kernel.org, Shawn Bohrer <sbohrer@cloudflare.com>
 
-On Fri, Nov 30, 2018 at 12:12:53AM -0500, Murphy Zhou wrote:
-> Hi,
+On Thu, Nov 29, 2018 at 07:31:44PM -0800, Ivan Babrou wrote:
+> On Thu, Nov 29, 2018 at 6:18 PM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Thu, Nov 29, 2018 at 02:22:53PM -0800, Ivan Babrou wrote:
+> > > On Wed, Nov 28, 2018 at 6:18 PM Dave Chinner <david@fromorbit.com> wrote:
+> > > >
+> > > > On Wed, Nov 28, 2018 at 04:36:25PM -0800, Ivan Babrou wrote:
+> > > > > Hello,
+> > > > >
+> > > > > We're experiencing some interesting issues with memory reclaim, both
+> > > > > kswapd and direct reclaim.
+> > > > >
+> > > > > A typical machine is 2 x NUMA with 128GB of RAM and 6 XFS filesystems.
+> > > > > Page cache is around 95GB and dirty pages hover around 50MB, rarely
+> > > > > jumping up to 1GB.
+> > > >
+> > > > What is your workload?
+> > >
+> > > My test setup is an empty machine with 256GB of RAM booted from
+> > > network into memory with just systemd essentials running.
+> >
+> > What is your root filesystem?
 > 
-> Hit a xfs regression issue by generic/095 on overlayfs.
+> It's whatever initramfs unpacks into, there is no storage involved:
 > 
-> It's easy to reproduce. Tests processes hang there and never return.
-> There are some warning in the dmesg.
+> rootfs / rootfs rw,size=131930052k,nr_inodes=32982513 0 0
 > 
-> SIGINT (Ctrl+C) can't kill the tests, neither does SIGTERM (kill).
-> However, SIGKILL (kill -9) can clean them up.
+> > > I create XFS on a 10TB drive (via LUKS), mount the drive and write
+> > > 300GiB of randomness:
+> > >
+> > > $ sudo mkfs.xfs /dev/mapper/luks-sda
+> > > $ sudo mount /dev/mapper/luks-sda /mnt
+> > > $ sudo dd if=/dev/urandom of=/mnt/300g.random bs=1M count=300K status=progress
+> > >
+> > > Then I reboot and just mount the drive again to run my test workload:
+> > >
+> > > $ dd if=/mnt/300g.random of=/dev/null bs=1M status=progress
+> > >
+> > > After running it once and populating page cache I restart it to collect traces.
+> >
+> > This isn't your production workload that is demonstrating problems -
+> > it's your interpretation of the problem based on how you think
+> > everything should work.
 > 
-> This happens when testing on v4 or v5 or reflink, with the same behaviour.
-> -m crc=0
-> -m crc=1,finobt=1,rmapbt=0,reflink=0 -i sparse=1
-> -m crc=1,finobt=1,rmapbt=1,reflink=1 -i sparse=1
-> 
-> This does not happen if ext4 as base fs for overlayfs.
-> 
-> Bisecting points to this commit:
-> 	4721a601 iomap: dio data corruption and spurious errors when pipes fill
-> 
-> Test pass soon after this commit reverted.
-> 
-> # ps axjf
->  1839  1862   S+    0:00  |  \_ /bin/bash ./bin/single -o -t generic/095
->  1862  2005   S+    0:00  |      \_ /bin/bash ./check -T -overlay generic/095
->  2005  2292   S+    0:00  |          \_ /bin/bash ./tests/generic/095
->  2292  2516   Sl+   0:01  |              \_ /usr/bin/fio /tmp/2292.fio
->  2516  2565   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
->  2516  2566   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
->  2516  2567   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
->  2516  2568   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
->  2516  2569   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
+> This is the simplest workload that exhibits the issue. My production
+> workload is similar: serve most of the data from page cache,
+> occasionally write some data on disk.
 
-Nice catch! I didn't tried overlayfs on XFS regression test this time. I never hit
-issue on XFS singly, even on glusterfs(XFS underlying).
+That's not a description of the workload that is generating delays
+in the order of tens of seconds....
 
-I just gave it a try. This bug is reproducible on xfs-linux git tree
-xfs-4.20-fixes-2 HEAD. And by strace all fio processes, they all
-keep outputing [1]. More details as [2]. Only overlayfs on XFS can
-reproduce this bug, overlayfs on Ext4 can't.
+> To make it more real in terms of how I think things work, let's add a
+> bit more fun with the following systemtap script:
 
-Thanks,
-Zorro
+Stop it already. I know exactly what can happen in that path and
+you're not helping me at all by trying to tell me what you think the
+problem is over and over again. I don't care what you think is the
+problem - I want to know how to reproduce the symptoms you are
+seeing.
 
-[1]
-# strace -p $running_fio_process
-...
-...
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-splice(3, NULL, 5, [147456], 8192, 0)   = 0
-...
-...
+I need to know what load your systems are being placed under when
+they demonstrate the worst case latencies. I need to know about
+about CPU load, memory pressure, concurrency, read rates, write
+rates, the actual physical IO rates and patterns. It also helps to
+know about the hardware, your storage setup and the type of physical
+disks you are using.
 
-[2]
-# mount -l
-...
-/dev/sda3 on /mnt/ovl/test type xfs (rw,relatime,seclabel,attr2,inode64,sunit=512,swidth=512,noquota)
-/dev/sda5 on /mnt/ovl/scratch type xfs (rw,relatime,seclabel,attr2,inode64,sunit=512,swidth=512,noquota)
-/mnt/ovl/test on /mnt/xfstests/mnt1 type overlay (rw,relatime,context=system_u:object_r:nfs_t:s0,lowerdir=/mnt/ovl/test/ovl-lower,upperdir=/mnt/ovl/test/ovl-upper,workdir=/mnt/ovl/test/ovl-work)
-/mnt/ovl/scratch on /mnt/xfstests/mnt2 type overlay (rw,relatime,context=system_u:object_r:nfs_t:s0,lowerdir=/mnt/ovl/scratch/ovl-lower,upperdir=/mnt/ovl/scratch/ovl-upper,workdir=/mnt/ovl/scratch/ovl-work)
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-# xfs_info /mnt/ovl/test
-meta-data=/dev/sda3              isize=512    agcount=16, agsize=245760 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=0
-         =                       reflink=0
-data     =                       bsize=4096   blocks=3932160, imaxpct=25
-         =                       sunit=64     swidth=64 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-# xfs_info /mnt/ovl/scratch
-meta-data=/dev/sda5              isize=512    agcount=16, agsize=245760 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=0
-         =                       reflink=0
-data     =                       bsize=4096   blocks=3932160, imaxpct=25
-         =                       sunit=64     swidth=64 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+[snip traces]
 
+> The way I read this: kswapd got stuck behind one stalled io, that
+> triggered later direct reclaim from dd, which also got stuck.
 
+No, that's a stall waiting for the per-cpu free page magazines to
+drain back into the free list. i.e. it's waiting on other CPUs to do
+scheduled work that has absolutely nothing to do with kswapd and
+the XFS shrinker waiting on IO to complete. Indeed:
+
+/*
+ * Spill all the per-cpu pages from all CPUs back into the buddy allocator.
+ *
+ * When zone parameter is non-NULL, spill just the single zone's pages.
+ *
+ * Note that this can be extremely slow as the draining happens in a workqueue.
+ */
+void drain_all_pages(struct zone *zone)
+....
+
+> 250GB of page cache to reclaim and yet one unlucky write made
+> everything sad. Stack trace is somewhat different, but it illustrates
+> the idea of one write blocking reclaim.
+
+No, they aren't related at all. There are a lot of places where
+memory reclaim can block, and very few of them have anything to do
+with shrinkers and filesystems.
+
+> > the latency problems myself. I do have some clue abou thow this is
+> > all supposed to work, and I have abunch of workloads that are known
+> > to trigger severe memory-reclaim based IO breakdowns if memory
+> > reclaim doesn't balance and throttle appropriately.
 > 
-> # dmesg
-> [   50.285345] run fstests generic/095 at 2018-11-29 23:25:24
-> [   50.441180] XFS (loop1): Unmounting Filesystem
-> [   51.126243] XFS (loop1): Mounting V5 Filesystem
-> [   51.133348] XFS (loop1): Ending clean mount
-> [   51.646769] Page cache invalidation failure on direct I/O.  Possible data corruption due to collision with buffered I/O!
-> [   51.646878] Page cache invalidation failure on direct I/O.  Possible data corruption due to collision with buffered I/O!
-> [   51.647776] Page cache invalidation failure on direct I/O.  Possible data corruption due to collision with buffered I/O!
-> [   51.647779] File: /loopsch/ovl-mnt/file1 PID: 2568 Comm: fio
-> [   51.648148] Page cache invalidation failure on direct I/O.  Possible data corruption due to collision with buffered I/O!
-> [   51.648151] File: /loopsch/ovl-mnt/file1 PID: 2568 Comm: fio
-> [   51.657721] File: /loopsch/ovl-mnt/file1 PID: 2551 Comm: fio
-> [   51.707667] File: /loopsch/ovl-mnt/file2 PID: 2599 Comm: fio
+> I believe that you do have a clue and workloads. The problem is: those
+> workloads are not mine.
+
+Yes, but you won't tell me what your workload is.
+
+> > > I'm only assuming things because documentation leaves room for
+> > > interpretation. I would love to this worded in a way that's crystal
+> > > clear and mentions possibility of IO.
+> >
+> > Send a patch. I wrote that years ago when all the people reviewing
+> > the changes understood what "freeable" meant in the shrinker context.
 > 
-> # local.config
-> TEST_DEV=/dev/loop0
-> TEST_DIR=/loopmnt
-> SCRATCH_DEV=/dev/loop1
-> SCRATCH_MNT=/loopsch
-> FSTYP=xfs
-> MOUNT_OPTIONS=""
-> TEST_FS_MOUNT_OPTS=""
-> MKFS_OPTIONS=""
+> Would you be happy with this patch?
+
+No objections here. Send it to -fsdevel with the appropriate
+sign-off.
+
+> > > > above - this just means that when you have no easily reclaimable
+> > > > page cache the system will OOM kill rather than wait for inodes to
+> > > > be reclaimed. i.e. it looks good until everything suddenly goes
+> > > > wrong and then everything dies a horrible death.
+> > >
+> > > We have hundreds of gigabytes of page cache, dirty pages are not
+> > > allowed to go near that mark. There's a separate limit for dirty data.
+> >
+> > Well, yes, but we're not talking about dirty data here - I'm
+> > talking about what happens when we turn off reclaim for a cache
+> > that can grow without bound.  I can only say "this is a bad idea in
+> > general because...." as I have to make the code work for lots of
+> > different workloads.
+> >
+> > So while it might be a solution work for your specific workload -
+> > which I know nothing about because you haven't described it to me -
+> > it's not a solution we can use for the general case.
 > 
-> # cmd
-> ./check -T -overlay generic/095
-> 
-> # xfstests version: git log --oneline -1
-> 15b13f7f (HEAD -> master, origin/master, origin/imaster, origin/HEAD) ext4/021: Work with 64k block size
-> 
-> # xfsprogs version: git log --oneline -1
-> caa91046 (HEAD -> for-next, tag: v4.19.0, origin/master, origin/for-next, origin/HEAD) xfsprogs: Release v4.19.0
-> 
-> # xfs_io -V
-> xfs_io version 4.19.0
-> 
-> # xfs on loop device as base fs for overlayfs
-> /dev/loop1 on /loopsch type xfs (rw,relatime,seclabel,attr2,inode64,noquota)
-> meta-data=/dev/loop1             isize=512    agcount=4, agsize=983040 blks
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->          =                       reflink=0
-> data     =                       bsize=4096   blocks=3932160, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=2560, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> # overlayfs mount info:
-> /dev/loop0 on /loopmnt type xfs (rw,relatime,seclabel,attr2,inode64,noquota)
-> /loopmnt on /loopmnt/ovl-mnt type overlay (rw,relatime,context=system_u:object_r:root_t:s0,lowerdir=/loopmnt/ovl-lower,upperdir=/loopmnt/ovl-upper,workdir=/loopmnt/ovl-work)
-> 
-> # cat bs-log
-> git bisect start
-> # good: [edeca3a769ad28a9477798c3b1d8e0701db728e4] Merge tag 'sound-4.20-rc4' of git://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound
-> git bisect good edeca3a769ad28a9477798c3b1d8e0701db728e4
-> # bad: [d6d460b89378b1bc6715574cdafd748ba59d5a27] Merge tag 'dma-mapping-4.20-3' of git://git.infradead.org/users/hch/dma-mapping
-> git bisect bad d6d460b89378b1bc6715574cdafd748ba59d5a27
-> # good: [07093b76476903f820d83d56c3040e656fb4d9e3] net: gemini: Fix copy/paste error
-> git bisect good 07093b76476903f820d83d56c3040e656fb4d9e3
-> # good: [7c98a42618271210c60b79128b220107d35938d9] Merge tag 'ceph-for-4.20-rc4' of https://github.com/ceph/ceph-client
-> git bisect good 7c98a42618271210c60b79128b220107d35938d9
-> # bad: [e195ca6cb6f21633e56322d5aa11ed59cdb22fb2] Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/hid/hid
-> git bisect bad e195ca6cb6f21633e56322d5aa11ed59cdb22fb2
-> # bad: [d146194f31c96f9b260c5a1cf1592d2e7f82a2e2] Merge tag 'arm64-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux
-> git bisect bad d146194f31c96f9b260c5a1cf1592d2e7f82a2e2
-> # good: [0929d8580071c6a1cec1a7916a8f674c243ceee1] iomap: FUA is wrong for DIO O_DSYNC writes into unwritten extents
-> git bisect good 0929d8580071c6a1cec1a7916a8f674c243ceee1
-> # bad: [8c110d43c6bca4b24dd13272a9d4e0ba6f2ec957] iomap: readpages doesn't zero page tail beyond EOF
-> git bisect bad 8c110d43c6bca4b24dd13272a9d4e0ba6f2ec957
-> # bad: [4721a6010990971440b4ffefbdf014976b8eda2f] iomap: dio data corruption and spurious errors when pipes fill
-> git bisect bad 4721a6010990971440b4ffefbdf014976b8eda2f
-> # good: [b450672fb66b4a991a5b55ee24209ac7ae7690ce] iomap: sub-block dio needs to zeroout beyond EOF
-> git bisect good b450672fb66b4a991a5b55ee24209ac7ae7690ce
-> # first bad commit: [4721a6010990971440b4ffefbdf014976b8eda2f] iomap: dio data corruption and spurious errors when pipes fill
+> Facebook is still running with their patch that does async reclaim, so
+> my workload is not that special.
+
+Your workload is (apparently) *very different* to the FB workload.
+Their workload was that filesystem traversal was causing severe
+fluctuations in inode cache pressure - the huge numbers of inodes
+that were being cycled in and out memory were causing problems when
+kswapd occassionally blocked on a single inode out of millions. They
+were chasing occasional long tail latencies on heavy loaded, highly
+concurrent workloads, not delays that measured in multiples of tens
+of seconds. i.e. their latency spikes were 50-100ms instead of
+typical 5ms. That's very, very different to what you are reporting
+and the worklaod you are implying is causing them.
+
+And, really, I know exactly what the FB workload is because the FB
+devs wrote a workload simulator to reproduce the problem offline. So
+while I could reproduce the latency spikes they saw and could make
+changes to get rid of them, it always came at the expense of
+dramatic regressions on other memory pressure workloads I have.
+
+IOWs, the change that FB made for their specific workload hid the
+latency issue for their workload, but did not benefit any other
+workloads. Maybe that change would also work for you, but it may not
+and it may, in fact, make things worse. But I can't say, because I
+don't know how to reproduce your problem so I can't test the FB
+change against it.
+
+Seriously: describe your workload in detail for me so I can write a
+reproducer for it. Without that I cannot help you any further and I
+am just wasting my time asking you to describe the workload over
+and over again.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
