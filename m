@@ -1,183 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:35522 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726588AbeK2Kax (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:30:53 -0500
-Subject: [PATCH 5/9] xfs: hoist inode cluster checks out of loop
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 28 Nov 2018 15:27:29 -0800
-Message-ID: <154344764982.3835.15567497840030787548.stgit@magnolia>
-In-Reply-To: <154344761877.3835.7785580513047409388.stgit@magnolia>
-References: <154344761877.3835.7785580513047409388.stgit@magnolia>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:22151 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726161AbeK3Ncx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Nov 2018 08:32:53 -0500
+Date: Fri, 30 Nov 2018 13:25:10 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] mkfs.xfs: don't go into multidisk mode if there is only
+ one stripe
+Message-ID: <20181130022510.GW6311@dastard>
+References: <20181004222952.GV31060@dastard>
+ <CAOi1vP_U-QpABgs+a9oYpYvLWs4D2qVmff=-JEikn7S_=eCAXQ@mail.gmail.com>
+ <67627995-714c-5c38-a796-32b503de7d13@sandeen.net>
+ <20181005232710.GH12041@dastard>
+ <CAOi1vP-Z7xZk1YvWHYWQGOHfyWccFCkyn8je0HBvGhGuUrXmaQ@mail.gmail.com>
+ <20181006232037.GB18095@dastard>
+ <36bc3f17-e7d1-ce8b-2088-36ff5d7b1e8b@sandeen.net>
+ <0290ec9f-ab2b-7c1b-faaf-409d72f99e5f@gmail.com>
+ <20181129214851.GU6311@dastard>
+ <39031e68-3936-b5e1-bcb6-6fdecc5988c1@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <39031e68-3936-b5e1-bcb6-6fdecc5988c1@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Ric Wheeler <ricwheeler@gmail.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Ilya Dryomov <idryomov@gmail.com>, xfs <linux-xfs@vger.kernel.org>, Mark Nelson <mnelson@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Mike Snitzer <snitzer@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Nov 29, 2018 at 06:53:14PM -0500, Ric Wheeler wrote:
+> On 11/29/18 4:48 PM, Dave Chinner wrote:
+> >On Thu, Nov 29, 2018 at 08:53:39AM -0500, Ric Wheeler wrote:
+> >>On 10/6/18 8:14 PM, Eric Sandeen wrote:
+> >>>On 10/6/18 6:20 PM, Dave Chinner wrote:
+> >>>>>Can you give an example of a use case that would be negatively affected
+> >>>>>if this heuristic was switched from "sunit" to "sunit < swidth"?
+> >>>>Any time you only know a single alignment characteristic of the
+> >>>>underlying multi-disk storage. e.g. hardware RAID0/5/6 that sets
+> >>>>iomin = ioopt, multi-level RAID constructs where only the largest
+> >>>>alignment requirement is exposed, RAID1 devices exposing their chunk
+> >>>>size, remote replication chunk alignment (because remote rep. is
+> >>>>slow and so we need more concurrency to keep the pipeline full),
+> >>>>etc.
+> >>>So the tl;dr here is "given any iomin > 512, we should infer low seek
+> >>>latency and parallelism and adjust geometry accordingly?"
+> >>>
+> >>>-Eric
+> >>Chiming in late here, but I do think that every decade or two (no
+> >>disrespect to xfs!), it is worth having a second look at how the
+> >>storage has changed under us.
+> >>
+> >>The workload that has lots of file systems pounding on a shared
+> >>device for example is one way to lay out container storage.
+> >The problem is that defaults can't cater for every use case.
+> >And in this case, we've got nothing to tell us that this is
+> >aggregated/shared storage rather than "the fileystem owns the
+> >entire device".
+> >
+> >>No argument about documenting how to fix this with command line
+> >>tweaks for now, but maybe this would be a good topic for the next
+> >>LSF/MM shared track of file & storage people to debate?
+> >Doubt it - this is really only an XFS problem at this point.
+> >
+> >i.e. if we can't infer what the user wants from existing
+> >information, then I don't see how the storage is going to be able to
+> >tell us anything different, either.  i.e. somewhere in the stack the
+> >user is going to have to tell the block device that this is
+> >aggregated storage.
+> >
+> >But even then, if it's aggregated solid state storage, we still want
+> >to make use of the concurency on increased AG count because there is
+> >no seek penalty like spinning drives end up with. Or if the
+> >aggregated storage is thinly provisioned, the AG count of filesystem
+> >just doesn't matter because the IO is going to be massively
+> >randomised (i.e take random seek penalties) by the thinp layout.
+> >
+> >So there's really no good way of "guessing" whether aggregated
+> >storage should or shouldn't use elevated AG counts even if the
+> >storage says "this is aggregated storage". The user still has to
+> >give us some kind of explict hint about how the filesystem should
+> >be configured.
+> >
+> >What we need is for a solid, reliable detection hueristic to be
+> >suggested by the people that need this functionality before there's
+> >anything we can talk about.
+> 
+> I think that is exactly the kind of discussion that the shared
+> file/storage track is good for.
 
-Hoist the inode cluster checks out of the inobt record check loop into
-a separate function in preparation for refactoring of that loop.  No
-functional changes here; that's in the next patch.
+Yes, but why on earth do we need to wait 6 months to have that
+conversation. Start it now...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/scrub/ialloc.c |  119 +++++++++++++++++++++++++++----------------------
- 1 file changed, 65 insertions(+), 54 deletions(-)
+> Other file systems also need to
+> accommodate/probe behind the fictitious visible storage device
+> layer... Specifically, is there something we can add per block
+> device to help here? Number of independent devices
 
+That's how mkfs.xfs used to do stripe unit/stripe width calculations
+automatically on MD devices back in the 2000s. We got rid of that
+for more generaly applicable configuration information such as
+minimum/optimal IO sizes so we could expose equivalent alignment
+information from lots of different types of storage device....
 
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index b03f5f04b056..475f930e0daa 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -188,19 +188,19 @@ xchk_iallocbt_check_cluster_freemask(
- 	return 0;
- }
- 
--/* Make sure the free mask is consistent with what the inodes think. */
-+/* Check an inode cluster. */
- STATIC int
--xchk_iallocbt_check_freemask(
-+xchk_iallocbt_check_cluster(
- 	struct xchk_btree		*bs,
--	struct xfs_inobt_rec_incore	*irec)
-+	struct xfs_inobt_rec_incore	*irec,
-+	xfs_agino_t			agino)
- {
- 	struct xfs_imap			imap;
- 	struct xfs_mount		*mp = bs->cur->bc_mp;
- 	struct xfs_dinode		*dip;
- 	struct xfs_buf			*bp;
- 	xfs_ino_t			fsino;
--	xfs_agino_t			nr_inodes;
--	xfs_agino_t			agino;
-+	unsigned int			nr_inodes;
- 	xfs_agino_t			chunkino;
- 	xfs_agino_t			clusterino;
- 	xfs_agblock_t			agbno;
-@@ -212,60 +212,71 @@ xchk_iallocbt_check_freemask(
- 	nr_inodes = min_t(unsigned int, XFS_INODES_PER_CHUNK,
- 			mp->m_inodes_per_cluster);
- 
--	for (agino = irec->ir_startino;
--	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
--	     agino += mp->m_inodes_per_cluster) {
--		fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
--		chunkino = agino - irec->ir_startino;
--		agbno = XFS_AGINO_TO_AGBNO(mp, agino);
--
--		/* Compute the holemask mask for this cluster. */
--		for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
--		     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
--			holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
--					XFS_INODES_PER_HOLEMASK_BIT);
--
--		/* The whole cluster must be a hole or not a hole. */
--		ir_holemask = (irec->ir_holemask & holemask);
--		if (ir_holemask != holemask && ir_holemask != 0) {
--			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
--			continue;
--		}
-+	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
-+	chunkino = agino - irec->ir_startino;
-+	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
- 
--		/* If any part of this is a hole, skip it. */
--		if (ir_holemask) {
--			xchk_xref_is_not_owned_by(bs->sc, agbno,
--					mp->m_blocks_per_cluster,
--					&XFS_RMAP_OINFO_INODES);
--			continue;
--		}
-+	/* Compute the holemask mask for this cluster. */
-+	for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
-+	     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
-+		holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
-+				XFS_INODES_PER_HOLEMASK_BIT);
- 
--		xchk_xref_is_owned_by(bs->sc, agbno, mp->m_blocks_per_cluster,
-+	/* The whole cluster must be a hole or not a hole. */
-+	ir_holemask = (irec->ir_holemask & holemask);
-+	if (ir_holemask != holemask && ir_holemask != 0) {
-+		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-+		return 0;
-+	}
-+
-+	/* If any part of this is a hole, skip it. */
-+	if (ir_holemask) {
-+		xchk_xref_is_not_owned_by(bs->sc, agbno,
-+				mp->m_blocks_per_cluster,
- 				&XFS_RMAP_OINFO_INODES);
-+		return 0;
-+	}
- 
--		/* Grab the inode cluster buffer. */
--		imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno,
--				agbno);
--		imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
--		imap.im_boffset = 0;
--
--		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
--				&dip, &bp, 0, 0);
--		if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0,
--				&error))
--			continue;
--
--		/* Which inodes are free? */
--		for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
--			error = xchk_iallocbt_check_cluster_freemask(bs,
--					fsino, chunkino, clusterino, irec, bp);
--			if (error) {
--				xfs_trans_brelse(bs->cur->bc_tp, bp);
--				return error;
--			}
--		}
-+	xchk_xref_is_owned_by(bs->sc, agbno, mp->m_blocks_per_cluster,
-+			&XFS_RMAP_OINFO_INODES);
-+
-+	/* Grab the inode cluster buffer. */
-+	imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno, agbno);
-+	imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
-+	imap.im_boffset = 0;
- 
--		xfs_trans_brelse(bs->cur->bc_tp, bp);
-+	error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap, &dip, &bp, 0, 0);
-+	if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0, &error))
-+		return 0;
-+
-+	/* Which inodes are free? */
-+	for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
-+		error = xchk_iallocbt_check_cluster_freemask(bs, fsino,
-+				chunkino, clusterino, irec, bp);
-+		if (error)
-+			break;
-+	}
-+
-+	xfs_trans_brelse(bs->cur->bc_tp, bp);
-+	return error;
-+}
-+
-+/* Make sure the free mask is consistent with what the inodes think. */
-+STATIC int
-+xchk_iallocbt_check_freemask(
-+	struct xchk_btree		*bs,
-+	struct xfs_inobt_rec_incore	*irec)
-+{
-+	struct xfs_mount		*mp = bs->cur->bc_mp;
-+	xfs_agino_t			agino;
-+	int				error = 0;
-+
-+	for (agino = irec->ir_startino;
-+	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
-+	     agino += mp->m_blocks_per_cluster * mp->m_sb.sb_inopblock) {
-+		error = xchk_iallocbt_check_cluster(bs, irec, agino);
-+		if (error)
-+			break;
- 	}
- 
- 	return error;
+> or a map of
+> those regions?
+
+Not sure what this means or how we'd use it.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
