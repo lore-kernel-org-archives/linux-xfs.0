@@ -1,123 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:35798 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726588AbeK2KbP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:31:15 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wASNNtc8156813
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:56 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2nxxkqn6xc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:56 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wASNRt6M013491
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:55 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id wASNRtK8010710
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:55 GMT
-Subject: [PATCH 9/9] xfs: scrub should flag dir/attr offsets that aren't
- mappable with xfs_dablk_t
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 28 Nov 2018 15:27:54 -0800
-Message-ID: <154344767468.3835.13052378017840578886.stgit@magnolia>
-In-Reply-To: <154344761877.3835.7785580513047409388.stgit@magnolia>
-References: <154344761877.3835.7785580513047409388.stgit@magnolia>
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:15492
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726386AbeK3SyO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Nov 2018 13:54:14 -0500
+Date: Fri, 30 Nov 2018 18:45:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Non-blocking socket stuck for multiple seconds on
+ xfs_reclaim_inodes_ag()
+Message-ID: <20181130074547.GY6311@dastard>
+References: <CABWYdi1YZp+baxpON2R6mP09pjkUz5D-OE7Z2KmwVGycYTN-AA@mail.gmail.com>
+ <20181129021800.GQ6311@dastard>
+ <CABWYdi0Bd6sMAaTPkfHKupMGpw1QPSf_VohPF_Wg7Mm=W=j2bA@mail.gmail.com>
+ <20181130021840.GV6311@dastard>
+ <CABWYdi0nSJAV-RPdUSwGbRwqeoKo-83_X=ptuQwwH1CnPXCYmQ@mail.gmail.com>
+ <20181130064908.GX6311@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181130064908.GX6311@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Ivan Babrou <ivan@cloudflare.com>
+Cc: linux-xfs@vger.kernel.org, Shawn Bohrer <sbohrer@cloudflare.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Nov 30, 2018 at 05:49:08PM +1100, Dave Chinner wrote:
+> Seriously: describe your workload in detail for me so I can write a
+> reproducer for it. Without that I cannot help you any further and I
+> am just wasting my time asking you to describe the workload over
+> and over again.
 
-Teach scrub to flag extent maps that exceed the range that can be mapped
-with a xfs_dablk_t.
+FWIW, here's the discussion that about the FB issue. Go read it,
+the first few emails are pretty much the same as this thread so far.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_types.c |   11 +++++++++++
- fs/xfs/libxfs/xfs_types.h |    1 +
- fs/xfs/scrub/bmap.c       |   27 +++++++++++++++++++++++++++
- 3 files changed, 39 insertions(+)
+https://www.spinics.net/lists/linux-xfs/msg01541.html
 
+Cheers,
 
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index 3306fc42cfad..8e03e88a2f1a 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -204,3 +204,14 @@ xfs_verify_icount(
- 	xfs_icount_range(mp, &min, &max);
- 	return icount >= min && icount <= max;
- }
-+
-+/* Sanity-checking of dir/attr block offsets. */
-+bool
-+xfs_verify_dablk(
-+	struct xfs_mount	*mp,
-+	xfs_fileoff_t		dabno)
-+{
-+	xfs_dablk_t		max_dablk = -1U;
-+
-+	return dabno < max_dablk;
-+}
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index b9e6c89284c3..05e8fa558f3e 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -166,5 +166,6 @@ bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
- bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
-+bool xfs_verify_dablk(struct xfs_mount *mp, xfs_fileoff_t off);
- 
- #endif	/* __XFS_TYPES_H__ */
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index e1d11f3223e3..a703cd58a90e 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -281,6 +281,31 @@ xchk_bmap_extent_xref(
- 	xchk_ag_free(info->sc, &info->sc->sa);
- }
- 
-+/*
-+ * Directories and attr forks should never have blocks that can't be addressed
-+ * by a xfs_dablk_t.
-+ */
-+STATIC void
-+xchk_bmap_dirattr_extent(
-+	struct xfs_inode	*ip,
-+	struct xchk_bmap_info	*info,
-+	struct xfs_bmbt_irec	*irec)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fileoff_t		off;
-+
-+	if (!S_ISDIR(VFS_I(ip)->i_mode) && info->whichfork != XFS_ATTR_FORK)
-+		return;
-+
-+	if (!xfs_verify_dablk(mp, irec->br_startoff))
-+		xchk_fblock_set_corrupt(info->sc, info->whichfork,
-+				irec->br_startoff);
-+
-+	off = irec->br_startoff + irec->br_blockcount - 1;
-+	if (!xfs_verify_dablk(mp, off))
-+		xchk_fblock_set_corrupt(info->sc, info->whichfork, off);
-+}
-+
- /* Scrub a single extent record. */
- STATIC int
- xchk_bmap_extent(
-@@ -305,6 +330,8 @@ xchk_bmap_extent(
- 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
- 				irec->br_startoff);
- 
-+	xchk_bmap_dirattr_extent(ip, info, irec);
-+
- 	/* There should never be a "hole" extent in either extent list. */
- 	if (irec->br_startblock == HOLESTARTBLOCK)
- 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
