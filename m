@@ -1,60 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:60716 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728798AbeK2Dtw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Nov 2018 22:49:52 -0500
-Subject: Re: [PATCH v1 5/7] xfs: Add device retry
-References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
- <1543376991-5764-6-git-send-email-allison.henderson@oracle.com>
- <20181128050850.GJ6311@dastard> <20181128073520.GA7084@infradead.org>
- <f30fd190-28e5-938a-1cb9-3690559a60f0@oracle.com>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <b24bdf13-e5b3-3793-54fe-5eca5b10915a@oracle.com>
-Date: Wed, 28 Nov 2018 09:47:13 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:55594 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726111AbeLAHxN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Dec 2018 02:53:13 -0500
+Date: Fri, 30 Nov 2018 12:42:38 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] vfs: allow remap flags to be passed to vfs_clone_file_range
+Message-ID: <20181130204238.GE8131@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <f30fd190-28e5-938a-1cb9-3690559a60f0@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bob Liu <bob.liu@oracle.com>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
-Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, amir73il@gmail.com, linux-unionfs@vger.kernel.org
 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
+In overlayfs, ovl_remap_file_range calls vfs_clone_file_range on the
+lower filesystem's inode, passing through whatever remap flags it got
+from its caller.  Since vfs_copy_file_range first tries a filesystem's
+remap function with REMAP_FILE_CAN_SHORTEN, this can get passed through
+to the second vfs_copy_file_range call, which isn't an issue.
+Remove the WARN_ON because it's unnecessary.
 
-On 11/28/18 5:41 AM, Bob Liu wrote:
-> On 11/28/18 3:35 PM, Christoph Hellwig wrote:
->> On Wed, Nov 28, 2018 at 04:08:50PM +1100, Dave Chinner wrote:
->>> So the first time through this loop the block layer devices what
->>> device to read from, then we iterate devices 1..n on error.
->>>
->>> Whihc means if device 0 is the only one with good information in it,
->>> we may not ever actually read from it.
->>>
->>> I'd suggest that a hint of "-1" (or equivalent max value) should be
->>> used for "device selects mirror leg" rather than 0, so we can
->>> actually read from the first device on command.
->>
->> Yes.  For one thing I think we really need to split this retry counter
->> of sorts from the write hints.  I.e. make both u8 types and keep them
->> separate.  Then start out with (u8)-1 as initialized by the block layer
->> for the first attempt.  The device then fills out which leg it used
->> (in the completion path, so that another underlying driver doesn't
->> override it!), and then the file system just preserves this value on
->> a resumit, leaving the driver to chose a new value when it gets a
->> non -1 value.
->>
-> 
-> Will update as suggested, thank you for all your feedback :)
-> 
-> -Bob
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/read_write.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-Yes, thanks everyone for your feed back.  Maybe Bob and I can come up 
-with some test cases that recreate the problem scenarios described here 
-and see if we can work out a solution to the multi bio complexities. 
-Thanks!
-
-Allison
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 4dae0399c75a..2d9fed57e7dd 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1956,8 +1956,6 @@ loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
+ 	struct inode *inode_out = file_inode(file_out);
+ 	loff_t ret;
+ 
+-	WARN_ON_ONCE(remap_flags);
+-
+ 	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
+ 		return -EISDIR;
+ 	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
