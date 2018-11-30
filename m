@@ -1,61 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46508 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726588AbeK2KbJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Nov 2018 05:31:09 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wASNN2r3153137
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:51 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2nxy9rd75g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:51 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wASNRoA3013389
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:50 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wASNRnqD026998
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Nov 2018 23:27:49 GMT
-Subject: [PATCH 8/9] xfs: abort xattr scrub if fatal signals are pending
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 28 Nov 2018 15:27:48 -0800
-Message-ID: <154344766854.3835.16512582384417050622.stgit@magnolia>
-In-Reply-To: <154344761877.3835.7785580513047409388.stgit@magnolia>
-References: <154344761877.3835.7785580513047409388.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:40210 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726401AbeK3N4J (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Nov 2018 08:56:09 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 95F77659AC
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Nov 2018 02:48:26 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 64A7F604CF
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Nov 2018 02:48:26 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: fix inverted return from xfs_btree_sblock_verify_crc
+Message-ID: <28345031-dfa2-1d73-a36c-400e3c2333d1@redhat.com>
+Date: Thu, 29 Nov 2018 20:48:25 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+xfs_btree_sblock_verify_crc is a bool so should not be returning
+a failaddr_t; worse, if xfs_log_check_lsn fails it returns
+__this_address which looks like a boolean true (i.e. success)
+to the caller.
 
-The extended attribute scrubber should abort the "read all attrs" loop
-if there's a fatal signal pending on the process.
+(interestingly xfs_btree_lblock_verify_crc doesn't have the issue)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/scrub/attr.c |    5 +++++
- 1 file changed, 5 insertions(+)
 
-
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 81d5e90547a1..9960bc5b5d76 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -82,6 +82,11 @@ xchk_xattr_listent(
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 34c6d7bd4d18..bbdae2b4559f 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -330,7 +330,7 @@ xfs_btree_sblock_verify_crc(
  
- 	sx = container_of(context, struct xchk_xattr, context);
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		if (!xfs_log_check_lsn(mp, be64_to_cpu(block->bb_u.s.bb_lsn)))
+-			return __this_address;
++			return false;
+ 		return xfs_buf_verify_cksum(bp, XFS_BTREE_SBLOCK_CRC_OFF);
+ 	}
  
-+	if (xchk_should_terminate(sx->sc, &error)) {
-+		context->seen_enough = 1;
-+		return;
-+	}
-+
- 	if (flags & XFS_ATTR_INCOMPLETE) {
- 		/* Incomplete attr key, just mark the inode for preening. */
- 		xchk_ino_set_preen(sx->sc, context->dp->i_ino);
