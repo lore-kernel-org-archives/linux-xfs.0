@@ -1,176 +1,330 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33780 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725842AbeLAFdk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Dec 2018 00:33:40 -0500
-Date: Fri, 30 Nov 2018 10:23:22 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:57044 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725842AbeLAG3c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Dec 2018 01:29:32 -0500
+Date: Fri, 30 Nov 2018 11:19:10 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [4.20-rc4 regression] generic/095 Concurrent mixed I/O hang on
- xfs based overlayfs
-Message-ID: <20181130182322.GM8125@magnolia>
-References: <20181130051253.GB7100@sh-el5.eng.rdu2.redhat.com>
- <20181130121506.GI2299@dhcp-12-149.nay.redhat.com>
- <CAOQ4uxg9MdMbkM5+CuXK-VmmqxF8UmNkNqeKTHoxOtTnQ2=LnQ@mail.gmail.com>
+Subject: [PATCH] xfs: split up the xfs_reflink_end_cow work into smaller
+ transactions
+Message-ID: <20181130191910.GN8125@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxg9MdMbkM5+CuXK-VmmqxF8UmNkNqeKTHoxOtTnQ2=LnQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>
-Cc: jencce.kernel@gmail.com, linux-xfs <linux-xfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, Zorro Lang <zlang@redhat.com>, fstests <fstests@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-[add dave to cc]
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-On Fri, Nov 30, 2018 at 03:30:54PM +0200, Amir Goldstein wrote:
-> On Fri, Nov 30, 2018 at 2:13 PM Zorro Lang <zlang@redhat.com> wrote:
-> >
-> > On Fri, Nov 30, 2018 at 12:12:53AM -0500, Murphy Zhou wrote:
-> > > Hi,
-> > >
-> > > Hit a xfs regression issue by generic/095 on overlayfs.
-> > >
-> > > It's easy to reproduce. Tests processes hang there and never return.
-> > > There are some warning in the dmesg.
-> > >
-> > > SIGINT (Ctrl+C) can't kill the tests, neither does SIGTERM (kill).
-> > > However, SIGKILL (kill -9) can clean them up.
-> > >
-> > > This happens when testing on v4 or v5 or reflink, with the same behaviour.
-> > > -m crc=0
-> > > -m crc=1,finobt=1,rmapbt=0,reflink=0 -i sparse=1
-> > > -m crc=1,finobt=1,rmapbt=1,reflink=1 -i sparse=1
-> > >
-> > > This does not happen if ext4 as base fs for overlayfs.
-> > >
-> > > Bisecting points to this commit:
-> > >       4721a601 iomap: dio data corruption and spurious errors when pipes fill
-> > >
-> > > Test pass soon after this commit reverted.
+In xfs_reflink_end_cow, we allocate a single transaction for the entire
+end_cow operation and then loop the CoW fork mappings to move them to
+the data fork.  This design fails on a heavily fragmented filesystem
+where an inode's data fork has exactly one more extent than would fit in
+an extents-format fork, because the unmap can collapse the data fork
+into extents format (freeing the bmbt block) but the remap can expand
+the data fork back into a (newly allocated) bmbt block.  If the number
+of extents we end up remapping is large, we can overflow the block
+reservation because we reserved blocks assuming that we were adding
+mappings into an already-cleared area of the data fork.
 
-UGH.
+Let's say we have 8 extents in the data fork, 8 extents in the CoW fork,
+and the data fork can hold at most 7 extents before needing to convert
+to btree format; and that blocks A-P are discontiguous single-block
+extents:
 
-Ok, I ran g/095 on overlayfs and saw tons of this in the output:
+   0......7
+D: ABCDEFGH
+C: IJKLMNOP
 
-XFS: Assertion failed: ret < 0 || ret == count, file: fs/xfs/xfs_file.c, line: 558
+When a write to file blocks 0-7 completes, we must remap I-P into the
+data fork.  We start by removing H from the btree-format data fork.  Now
+we have 7 extents, so we convert the fork to extents format, freeing the
+bmbt block.   We then move P into the data fork and it now has 8 extents
+again.  We must convert the data fork back to btree format, requiring a
+block allocation.  If we repeat this sequence for blocks 6-5-4-3-2-1-0,
+we'll need a total of 8 block allocations to remap all 8 blocks.  We
+reserved only enough blocks to handle one btree split (5 blocks on a 4k
+block filesystem), which means we overflow the block reservation.
 
-So, revert just this part of 4721a601:
+To fix this issue, create a separate helper function to remap a single
+extent, and change _reflink_end_cow to call it in a tight loop over the
+entire range we're completing.  As a side effect this also removes the
+size restrictions on how many extents we can end_cow at a time, though
+nobody ever hit that.  It is not reasonable to reserve N blocks to remap
+N blocks.
 
-	/*
-	 * Splicing to pipes can fail on a full pipe. We have to
-	 * swallow this to make it look like a short IO
-	 * otherwise the higher splice layers will completely
-	 * mishandle the error and stop moving data.
-	 */
-	if (ret == -EFAULT)
-		ret = 0;
+Note that this can be reproduced after ~320 million fsx ops while
+running generic/938 (long soak directio fsx exerciser):
 
-Does it work then?
+XFS: Assertion failed: tp->t_blk_res >= tp->t_blk_res_used, file: fs/xfs/xfs_trans.c, line: 116
+<machine registers snipped>
+Call Trace:
+ xfs_trans_dup+0x211/0x250 [xfs]
+ xfs_trans_roll+0x6d/0x180 [xfs]
+ xfs_defer_trans_roll+0x10c/0x3b0 [xfs]
+ xfs_defer_finish_noroll+0xdf/0x740 [xfs]
+ xfs_defer_finish+0x13/0x70 [xfs]
+ xfs_reflink_end_cow+0x2c6/0x680 [xfs]
+ xfs_dio_write_end_io+0x115/0x220 [xfs]
+ iomap_dio_complete+0x3f/0x130
+ iomap_dio_rw+0x3c3/0x420
+ xfs_file_dio_aio_write+0x132/0x3c0 [xfs]
+ xfs_file_write_iter+0x8b/0xc0 [xfs]
+ __vfs_write+0x193/0x1f0
+ vfs_write+0xba/0x1c0
+ ksys_write+0x52/0xc0
+ do_syscall_64+0x50/0x160
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
-No, because now we just bounce the EAGAIN out to userspace, recreating
-the original problem where fsx dies.  I then stapled on some trace
-printks to monitor what was going on, noticing that every time we tried
-to do a directio read into the pipe, the stack trace was:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_reflink.c |  202 ++++++++++++++++++++++++++------------------------
+ 1 file changed, 105 insertions(+), 97 deletions(-)
 
-=> xfs_file_dio_aio_read (ffffffffa01b92a4)
-=> xfs_file_read_iter (ffffffffa01b976a)
-=> generic_file_splice_read (ffffffff812686da)
-=> splice_direct_to_actor (ffffffff812689b6)
-=> do_splice_direct (ffffffff81268b9f)
-=> vfs_copy_file_range (ffffffff81230217)
-=> __x64_sys_copy_file_range (ffffffff812305b1)
-=> do_syscall_64 (ffffffff81002850)
-=> entry_SYSCALL_64_after_hwframe (ffffffff8180007d)
-
-Next I began looking at what those three splice functions actually do.
-splice_direct_to_actor does (very roughly paraphrased):
-
-while (len) {
-	ret = do_splice_to(...len...) /* read data into pipe */
-	if (ret < 0)
-		goto out_release;
-	actor(...ret) /* write data from pipe into file */
-	len -= ret;
-}
-
-I observed that the pipe size is 64k.  The call do_splice_to() has a
-length of 720k, so we allocate all the pipe buffers available, then
-return EFAULT/EAGAIN.  We bounce straight out of this to userspace,
-having not called ->actor (which empties the pipe by writing the
-data), so we immediately EFAULT again, and now *anything* trying to use
-current->pipe finds it is all jam up.
-
-I think the solution here is that splice_direct_to_actor must clamp the
-length argument to do_splice_to() to (buffers - nr_bufs) << PAGE_SHIFT.
-It doesn't make sense to try to read more data than will fit in the
-pipe, since the emptying process is synchronous with the reads.
-
-So I tried it, and it seems to work with fsx and it makes generic/095
-pass on overlayfs again.  I'll send that patch to the list shortly.
-
-> > > # ps axjf
-> > >  1839  1862   S+    0:00  |  \_ /bin/bash ./bin/single -o -t generic/095
-> > >  1862  2005   S+    0:00  |      \_ /bin/bash ./check -T -overlay generic/095
-> > >  2005  2292   S+    0:00  |          \_ /bin/bash ./tests/generic/095
-> > >  2292  2516   Sl+   0:01  |              \_ /usr/bin/fio /tmp/2292.fio
-> > >  2516  2565   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
-> > >  2516  2566   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
-> > >  2516  2567   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
-> > >  2516  2568   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
-> > >  2516  2569   Rs    6:02  |                  \_ /usr/bin/fio /tmp/2292.fio
-> >
-> > Nice catch! I didn't tried overlayfs on XFS regression test this time. I never hit
-> > issue on XFS singly, even on glusterfs(XFS underlying).
-> >
-> > I just gave it a try. This bug is reproducible on xfs-linux git tree
-> > xfs-4.20-fixes-2 HEAD. And by strace all fio processes, they all
-> > keep outputing [1]. More details as [2]. Only overlayfs on XFS can
-> > reproduce this bug, overlayfs on Ext4 can't.
-> >
-> 
-> Darrick,
-> 
-> This is my cue to insert a rant. You already know what I am going to rant about.
-> 
-> I cannot force you to add a check -overlay xfstests run to your pull
-> request validation
-> routine. I can offer assistance in any questions you may have and I can offer
-> support for check -overlay infrastructure if it breaks or if it needs
-> improvements.
-> 
-> I have checked on several recent point releases that check -overlay does not
-> regress any tests compared to xfs reflink configuration, and when I
-> found a regression
-> (mostly in overlayfs code, but also in xfs code sometimes) I reported
-> and/or fixed it.
-> But I do not have the resources to validate every xfs merge and
-> certainly not xfs-next.
-> 
-> There is a large group of tests that is expected to notrun, which
-> makes running the
-> -overlay test a lot faster than any given xfs configuration and IMO
-> running just a single
-> xfs reflink config with -overlay would give a pretty good test coverage.
-> 
-> So what do you say?...
-
-Frankly I'd rather push the kernelci/0day/lf/whoever folks to kick off
-fstests across all the major filesystems after the daily for-next merge
-so that we can all see if there are regressions over the previous day's
-test.  IOWs, rather than loading ourselves down with more testing
-burden, let's make it more public.
-
-I've received occasional reports from the 0day robot, but I'm not sure
-if it's testing consistently because it only ever seems to emit
-complaints, not "I love your branch and even better nothing regressed!".
-
-That said, this *does* confirm Zorro's earlier point that I should give
-him a week to test xfs for-next before pushing to Linus.
-
-Sorry everyone, and especially Zorro & Amir...
-
---D
-
-> Thanks,
-> Amir.
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 322a852ce284..af0b2da76adf 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -623,53 +623,41 @@ xfs_reflink_cancel_cow_range(
+ }
+ 
+ /*
+- * Remap parts of a file's data fork after a successful CoW.
++ * Remap part of the CoW fork into the data fork.
++ *
++ * We aim to remap the range starting at @offset_fsb and ending at @end_fsb
++ * into the data fork; this function will remap what it can (at the end of the
++ * range) and update @end_fsb appropriately.  Each remap gets its own
++ * transaction because we can end up merging and splitting bmbt blocks for
++ * every remap operation and we'd like to keep the block reservation
++ * requirements as low as possible.
+  */
+-int
+-xfs_reflink_end_cow(
+-	struct xfs_inode		*ip,
+-	xfs_off_t			offset,
+-	xfs_off_t			count)
++STATIC int
++xfs_reflink_end_cow_extent(
++	struct xfs_inode	*ip,
++	xfs_fileoff_t		offset_fsb,
++	xfs_fileoff_t		*end_fsb)
+ {
+-	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+-	struct xfs_bmbt_irec		got, del;
+-	struct xfs_trans		*tp;
+-	xfs_fileoff_t			offset_fsb;
+-	xfs_fileoff_t			end_fsb;
+-	int				error;
+-	unsigned int			resblks;
+-	xfs_filblks_t			rlen;
+-	struct xfs_iext_cursor		icur;
+-
+-	trace_xfs_reflink_end_cow(ip, offset, count);
++	struct xfs_bmbt_irec	got, del;
++	struct xfs_iext_cursor	icur;
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
++	xfs_filblks_t		rlen;
++	unsigned int		resblks;
++	int			error;
+ 
+ 	/* No COW extents?  That's easy! */
+-	if (ifp->if_bytes == 0)
++	if (ifp->if_bytes == 0) {
++		*end_fsb = offset_fsb;
+ 		return 0;
+-
+-	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+-	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
+-
+-	/*
+-	 * Start a rolling transaction to switch the mappings.  We're
+-	 * unlikely ever to have to remap 16T worth of single-block
+-	 * extents, so just cap the worst case extent count to 2^32-1.
+-	 * Stick a warning in just in case, and avoid 64-bit division.
+-	 */
+-	BUILD_BUG_ON(MAX_RW_COUNT > UINT_MAX);
+-	if (end_fsb - offset_fsb > UINT_MAX) {
+-		error = -EFSCORRUPTED;
+-		xfs_force_shutdown(ip->i_mount, SHUTDOWN_CORRUPT_INCORE);
+-		ASSERT(0);
+-		goto out;
+ 	}
+-	resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
+-			(unsigned int)(end_fsb - offset_fsb),
+-			XFS_DATA_FORK);
+-	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
+-			resblks, 0, XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
++
++	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0,
++			XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
+ 	if (error)
+-		goto out;
++		goto out_err;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
+@@ -679,80 +667,100 @@ xfs_reflink_end_cow(
+ 	 * left by the time I/O completes for the loser of the race.  In that
+ 	 * case we are done.
+ 	 */
+-	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
++	if (!xfs_iext_lookup_extent_before(ip, ifp, end_fsb, &icur, &got) ||
++	    got.br_startoff + got.br_blockcount <= offset_fsb) {
++		*end_fsb = offset_fsb;
+ 		goto out_cancel;
++	}
+ 
+-	/* Walk backwards until we're out of the I/O range... */
+-	while (got.br_startoff + got.br_blockcount > offset_fsb) {
+-		del = got;
+-		xfs_trim_extent(&del, offset_fsb, end_fsb - offset_fsb);
+-
+-		/* Extent delete may have bumped ext forward */
+-		if (!del.br_blockcount)
+-			goto prev_extent;
++	/*
++	 * Structure copy @got into @del, then trim @del to the range that we
++	 * were asked to remap.  We preserve @got for the eventual CoW fork
++	 * deletion; from now on @del represents the mapping that we're
++	 * actually remapping.
++	 */
++	del = got;
++	xfs_trim_extent(&del, offset_fsb, *end_fsb - offset_fsb);
+ 
+-		/*
+-		 * Only remap real extent that contain data.  With AIO
+-		 * speculatively preallocations can leak into the range we
+-		 * are called upon, and we need to skip them.
+-		 */
+-		if (!xfs_bmap_is_real_extent(&got))
+-			goto prev_extent;
++	ASSERT(del.br_blockcount > 0);
+ 
+-		/* Unmap the old blocks in the data fork. */
+-		ASSERT(tp->t_firstblock == NULLFSBLOCK);
+-		rlen = del.br_blockcount;
+-		error = __xfs_bunmapi(tp, ip, del.br_startoff, &rlen, 0, 1);
+-		if (error)
+-			goto out_cancel;
++	/*
++	 * Only remap real extents that contain data.  With AIO, speculative
++	 * preallocations can leak into the range we are called upon, and we
++	 * need to skip them.
++	 */
++	if (!xfs_bmap_is_real_extent(&got)) {
++		*end_fsb = del.br_startoff;
++		goto out_cancel;
++	}
+ 
+-		/* Trim the extent to whatever got unmapped. */
+-		if (rlen) {
+-			xfs_trim_extent(&del, del.br_startoff + rlen,
+-				del.br_blockcount - rlen);
+-		}
+-		trace_xfs_reflink_cow_remap(ip, &del);
++	/* Unmap the old blocks in the data fork. */
++	rlen = del.br_blockcount;
++	error = __xfs_bunmapi(tp, ip, del.br_startoff, &rlen, 0, 1);
++	if (error)
++		goto out_cancel;
+ 
+-		/* Free the CoW orphan record. */
+-		error = xfs_refcount_free_cow_extent(tp, del.br_startblock,
+-				del.br_blockcount);
+-		if (error)
+-			goto out_cancel;
++	/* Trim the extent to whatever got unmapped. */
++	xfs_trim_extent(&del, del.br_startoff + rlen, del.br_blockcount - rlen);
++	trace_xfs_reflink_cow_remap(ip, &del);
+ 
+-		/* Map the new blocks into the data fork. */
+-		error = xfs_bmap_map_extent(tp, ip, &del);
+-		if (error)
+-			goto out_cancel;
++	/* Free the CoW orphan record. */
++	error = xfs_refcount_free_cow_extent(tp, del.br_startblock,
++			del.br_blockcount);
++	if (error)
++		goto out_cancel;
+ 
+-		/* Charge this new data fork mapping to the on-disk quota. */
+-		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_DELBCOUNT,
+-				(long)del.br_blockcount);
++	/* Map the new blocks into the data fork. */
++	error = xfs_bmap_map_extent(tp, ip, &del);
++	if (error)
++		goto out_cancel;
+ 
+-		/* Remove the mapping from the CoW fork. */
+-		xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
++	/* Charge this new data fork mapping to the on-disk quota. */
++	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_DELBCOUNT,
++			(long)del.br_blockcount);
+ 
+-		error = xfs_defer_finish(&tp);
+-		if (error)
+-			goto out_cancel;
+-		if (!xfs_iext_get_extent(ifp, &icur, &got))
+-			break;
+-		continue;
+-prev_extent:
+-		if (!xfs_iext_prev_extent(ifp, &icur, &got))
+-			break;
+-	}
++	/* Remove the mapping from the CoW fork. */
++	xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
+ 
+ 	error = xfs_trans_commit(tp);
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	if (error)
+-		goto out;
+-	return 0;
++		goto out_unlock;
+ 
++	/* Update the caller about how much progress we made. */
++	*end_fsb = del.br_startoff;
++	goto out_unlock;
+ out_cancel:
+ 	xfs_trans_cancel(tp);
++out_unlock:
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-out:
+-	trace_xfs_reflink_end_cow_error(ip, error, _RET_IP_);
++out_err:
++	return error;
++}
++
++/*
++ * Remap parts of a file's data fork after a successful CoW.
++ */
++int
++xfs_reflink_end_cow(
++	struct xfs_inode		*ip,
++	xfs_off_t			offset,
++	xfs_off_t			count)
++{
++	xfs_fileoff_t			offset_fsb;
++	xfs_fileoff_t			end_fsb;
++	int				error = 0;
++
++	trace_xfs_reflink_end_cow(ip, offset, count);
++
++	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
++	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
++
++	/* Walk backwards until we're out of the I/O range... */
++	while (end_fsb > offset_fsb && !error)
++		error = xfs_reflink_end_cow_extent(ip, offset_fsb, &end_fsb);
++
++	if (error)
++		trace_xfs_reflink_end_cow_error(ip, error, _RET_IP_);
+ 	return error;
+ }
+ 
