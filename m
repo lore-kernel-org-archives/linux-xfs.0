@@ -1,58 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:36978 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726586AbeLCQfR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 11:35:17 -0500
-Date: Mon, 3 Dec 2018 08:34:57 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] fs/xfs: Add support for passing write life-time hint
- with log
-Message-ID: <20181203163457.GW8125@magnolia>
-References: <CGME20181203131558epcas2p14b6b38cb67d4915b1ba782e11ce7ffe6@epcas2p1.samsung.com>
- <1543842769-6363-1-git-send-email-joshi.k@samsung.com>
- <f3d25c5b-6a96-397c-d947-370867401a83@applied-asynchrony.com>
+Received: from mail-yb1-f195.google.com ([209.85.219.195]:46047 "EHLO
+        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726263AbeLAUVW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Dec 2018 15:21:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <f3d25c5b-6a96-397c-d947-370867401a83@applied-asynchrony.com>
+References: <20181129060110.159878-1-sashal@kernel.org> <20181129060110.159878-25-sashal@kernel.org>
+ <20181129121458.GK19305@dastard> <20181129124756.GA25945@kroah.com>
+ <20181129224019.GM19305@dastard> <20181130082203.GA26830@kroah.com>
+ <20181130101441.GA213156@sasha-vm> <20181130215005.GP19305@dastard> <20181201074909.GC213156@sasha-vm>
+In-Reply-To: <20181201074909.GC213156@sasha-vm>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sat, 1 Dec 2018 11:09:05 +0200
+Message-ID: <CAOQ4uxhCH3oxVWDMVRcXMZO3JSTCA1Pp5AYnHP5pDxyNktqONw@mail.gmail.com>
+Subject: Re: XFS patches for stable
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>
-Cc: Kanchan Joshi <joshi.k@samsung.com>, linux-xfs@vger.kernel.org
+To: sashal@kernel.org
+Cc: Dave Chinner <david@fromorbit.com>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Luis R. Chamberlain" <mcgrof@kernel.org>
 
-On Mon, Dec 03, 2018 at 04:48:12PM +0100, Holger Hoffstätte wrote:
-> On 12/3/18 2:12 PM, Kanchan Joshi wrote:
-> > Log gets updated in a circular fashion, and that makes life-time
-> > of log-data different from other types of meta/user-data.
-> > By passing a write life-time hint with log, GC efficiency of multi-stream SSD
-> > gets improved, leading to endurance/performance benefits.
-> > It is described in greater detail (along with results) in this "FAST 2018"
-> > paper -
-> > https://www.usenix.org/conference/fast18/presentation/rho
-> > This patch introduces new mount option "logwritehint" to pass write hint
-> > with XFS log.
-> 
-> Is there any downside to passing the hints unconditionally?
+> >> It's getting to the point that with the amount of known issues with XFS
+> >> on LTS kernels it makes sense to mark it as CONFIG_BROKEN.
+> >
+> >Really? Where are the bug reports?
+>
+> In 'git log'! You report these every time you fix something in upstream
+> xfs but don't backport it to stable trees:
+>
+> $ git log --oneline v4.18-rc1..v4.18 fs/xfs
+> d4a34e165557 xfs: properly handle free inodes in extent hint validators
+> 9991274fddb9 xfs: Initialize variables in xfs_alloc_get_rec before using them
+> d8cb5e423789 xfs: fix fdblocks accounting w/ RMAPBT per-AG reservation
+> e53c4b598372 xfs: ensure post-EOF zeroing happens after zeroing part of a file
+> a3a374bf1889 xfs: fix off-by-one error in xfs_rtalloc_query_range
+> 232d0a24b0fc xfs: fix uninitialized field in rtbitmap fsmap backend
+> 5bd88d153998 xfs: recheck reflink state after grabbing ILOCK_SHARED for a write
+> f62cb48e4319 xfs: don't allow insert-range to shift extents past the maximum offset
+> aafe12cee0b1 xfs: don't trip over negative free space in xfs_reserve_blocks
+> 10ee25268e1f xfs: allow empty transactions while frozen
+> e53946dbd31a xfs: xfs_iflush_abort() can be called twice on cluster writeback failure
+> 23fcb3340d03 xfs: More robust inode extent count validation
+> e2ac836307e3 xfs: simplify xfs_bmap_punch_delalloc_range
+>
+> Since I'm assuming that at least some of them are based on actual issues
+> users hit, and some of those apply to stable kernels, why would users
+> want to use an XFS version which is knowingly buggy?
+>
 
-Why wouldn't we always pass LIFE_EXTREME?  Do people have setups where,
-say, hint <= LIFE_MEDIUM gets a disk but anything longer than that gets
-a big slow stone tablet, which is not where we'd want the metadata log?
+Sasha,
 
-For that matter, should we be passing write hints for other fs metadata?
-Fixed AG headers never move, should they be LIFE_whateverthelogis ?  How
-about space and file metadata, which aren't fixed to certain locations?
+There is one more point to consider.
+Until v4.16, reflink and rmapbt features were experimental:
+76883f7988e6 xfs: remove experimental tag for reverse mapping
+1e369b0e199b xfs: remove experimental tag for reflinks
 
-> Introducing a new mount option which depends on the internals of
-> an SSD seems .. unlikely to gain many friends.
-> Otherwise a great idea. :)
+And MANY of the bug fixes flowing in through XFS tree to master
+are related to those new XFS features and also to vfs functionality
+that depends on them (e.g. clone/dedupe), so there MAY be no
+bug reports at all for XFS in stable trees.
 
-Likewise, I'm not wild about adding mount options or passing raw
-integers via mount(8) command line:
+IMO users should NOT be expecting XFS to be stable with those
+features enabled (they are still disabled by default)
+when running on stable kernels below v4.16.
 
-mount /dev/fd0 /mnt -o logwritehint=3 # ???
+Allow me to act as a self-appointed mediator here and say:
+There is obviously some bad blood between xfs developers and stable
+tree maintainers.
+The conflicts are caused by long standing frustration on both sides.
+We would all be better off with looking forward on how to improve the
+situation instead dwelling on past mistakes.
+This issue was on the agenda at the XFS team meeting on last LSF/MM.
+The path towards compliance has been laid out by xfs maintainers.
+Luis, Sasha and myself have been working to improve the filesystem
+test coverage for stable tree candidate patches.
+We have still some way to go.
 
---D
+The stable candidate patches that triggered the recent flames
+was outside of the fs/xfs subsystem, which AUTOSEL already know
+to stay away from, so nobody had any intention to stir things up.
 
-> -h
+At the end of the day, most xfs developers work for companies that
+ship enterprise distros and need to maintain stable trees, so I would
+hope that it is in the best interest of everyone involved to cooperate
+on the goal of better stable-xfs ecosystem.
+
+On my part, I would be happy if AUTOSEL could point me at
+candidate patch *series* for review instead of single patches.
+For that matter, it sure wouldn't hurt if an xfs developer sending
+out a patch series would cc:stable on the cover letter and if a developer
+would be kind enough to add some backporting hints to the cover letter
+text that would be very helpful indeed.
+
+Thanks,
+Amir.
