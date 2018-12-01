@@ -1,77 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vs1-f66.google.com ([209.85.217.66]:46403 "EHLO
-        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725916AbeLCReK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 12:34:10 -0500
-MIME-Version: 1.0
-References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-8-david@fromorbit.com>
- <CAOQ4uxiCi9qJ15J=L6fNjuLGykQm5CDuJ-=Y=TwTP5c=jx-_fA@mail.gmail.com>
-In-Reply-To: <CAOQ4uxiCi9qJ15J=L6fNjuLGykQm5CDuJ-=Y=TwTP5c=jx-_fA@mail.gmail.com>
-From: Olga Kornievskaia <olga.kornievskaia@gmail.com>
-Date: Mon, 3 Dec 2018 12:33:50 -0500
-Message-ID: <CAN-5tyFMDnjm5cMneYyRTveyJ-6ddLCt1za-kk5eemOO2ngq=A@mail.gmail.com>
-Subject: Re: [PATCH 07/11] vfs: copy_file_range should update file timestamps
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:58362 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725729AbeLBJ57 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 04:57:59 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 0A8A12BC87
+        for <linux-xfs@vger.kernel.org>; Sat,  1 Dec 2018 22:44:24 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201823] inconsistent behaviour of xfs_db, xfs_repair and
+ xfs_scrub
+Date: Sat, 01 Dec 2018 22:44:24 +0000
+Message-ID: <bug-201823-201763-DhDYfNjKKH@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-201823-201763@https.bugzilla.kernel.org/>
+References: <bug-201823-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: david@fromorbit.com, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Dec 3, 2018 at 5:47 AM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> On Mon, Dec 3, 2018 at 10:34 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > From: Dave Chinner <dchinner@redhat.com>
-> >
-> > Timestamps are not updated right now, so programs looking for
-> > timestamp updates for file modifications (like rsync) will not
-> > detect that files have changed. We are also accessing the source
-> > data when doing a copy (but not when cloning) so we need to update
-> > atime on the source file as well.
-> >
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/read_write.c | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> >
-> > diff --git a/fs/read_write.c b/fs/read_write.c
-> > index 3b101183ea19..3288db1d5f21 100644
-> > --- a/fs/read_write.c
-> > +++ b/fs/read_write.c
-> > @@ -1576,6 +1576,16 @@ static ssize_t do_copy_file_range(struct file *file_in, loff_t pos_in,
-> >  {
-> >         ssize_t ret;
-> >
-> > +       /* Update source timestamps, because we are accessing file data */
-> > +       file_accessed(file_in);
-> > +
-> > +       /* Update destination timestamps, since we can alter file contents. */
-> > +       if (!(file_out->f_mode & FMODE_NOCMTIME)) {
-> > +               ret = file_update_time(file_out);
-> > +               if (ret)
-> > +                       return ret;
-> > +       }
-> > +
->
-> If there is a consistency about who is responsible of calling file_accessed()
-> and file_update_time() it eludes me. grep tells me that they are mostly
-> handled by filesystem code or generic helpers called by filesystem code
-> and not in the vfs helpers.
->
-> FMODE_NOCMTIME seems like an xfs specific flag (for DMAPI?), which
-> most generic callers of file_update_time() completely ignore.
-> This seems like another argument in favor of leaving the responsibility
-> of the timestamp updates to the filesystem.
->
-> Maybe I am missing something?
->
+https://bugzilla.kernel.org/show_bug.cgi?id=201823
 
-I had similar question before about who is responsible for doing the
-checks. I agree that attributes should be updated for the case when no
-filesystem support exist for copy_file_range() but this code does it
-for all the cases. I also wonder if it's appropriate to update the
-attributes before the copy is actually done?
+--- Comment #2 from Dave Chinner (david@fromorbit.com) ---
+On Sat, Dec 01, 2018 at 08:16:13AM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=201823
+> 
+>             Bug ID: 201823
+>            Summary: inconsistent behaviour of xfs_db, xfs_repair and
+>                     xfs_scrub
+>            Product: File System
+>            Version: 2.5
+>     Kernel Version: 4.19.5
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: XFS
+>           Assignee: filesystem_xfs@kernel-bugs.kernel.org
+>           Reporter: matthias@bodenbinder.de
+>         Regression: No
+> 
+> Hi,
+> 
+> I am using xfs on Manjaro with kernel 4.19 and latest xfsprogs 4.19.0-1.
+> 
+> I checked my root filesystem with xfs_db for fragmentation and got metadata
+> corruption messages:
+> 
+> 5# xfs_db -c frag -r /dev/sde1
+> Metadata corruption detected at 0x558ed74133f3, xfs_inode block
+> 0x7faac0/0x8000
+> Metadata corruption detected at 0x558ed74133f3, xfs_inode block
+> 0x20cb300/0x8000
+> Metadata corruption detected at 0x558ed74133f3, xfs_inode block
+> 0x2341340/0x8000
+> aktuell 976616, ideal 970547, Unterteilungsfaktor 0,62%
+> Note, this number is largely meaningless.
+> Files on this filesystem average 1,01 extents per file
 
-> Thanks,
-> Amir.
+That is expected if you are running xfs_db on a mounted filesystem.
+What is on disk at any given instant is not consistent. The combined
+in-memory state, the journal and what is on-disk is consistent, but
+you cannot see all that extra in-memory state from xfs_db. If the
+system crashes, journal replay is what brings it back to being
+consistent on disk. IOWs, this is expected behaviour.
+
+> But xfs_repiar is not mentioning anything and hence not repairing anything.
+
+xfs_repair won't run on a mounted filesystem.
+
+> Also, xfs_scrub is not complaining:
+> 
+> 8# xfs_scrub -v /    
+> EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
+> Phase 1: Find filesystem geometry.
+> /: using 8 threads to scrub.
+> Phase 2: Check internal metadata.
+> Phase 3: Scan all inodes.
+> Phase 5: Check directory tree.
+> Phase 7: Check summary counters.
+> 41,6GiB data used;  1,3M inodes used.
+> 41,5GiB data found; 1,3M inodes found.
+> 1,3M inodes counted; 1,3M inodes checked.
+
+Scrub runs online, so sees the in-memory state of the filesystem
+along with what is on disk, and hence it doesn't find any
+corruptions because there are none.
+
+IOWs, there are no problems and everything is behaving as expected.
+
+-Dave.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
