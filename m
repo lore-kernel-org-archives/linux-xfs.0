@@ -1,96 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f195.google.com ([209.85.219.195]:46047 "EHLO
-        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726263AbeLAUVW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Dec 2018 15:21:22 -0500
+Received: from mail-yb1-f193.google.com ([209.85.219.193]:43707 "EHLO
+        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726209AbeLAUg6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Dec 2018 15:36:58 -0500
 MIME-Version: 1.0
-References: <20181129060110.159878-1-sashal@kernel.org> <20181129060110.159878-25-sashal@kernel.org>
- <20181129121458.GK19305@dastard> <20181129124756.GA25945@kroah.com>
- <20181129224019.GM19305@dastard> <20181130082203.GA26830@kroah.com>
- <20181130101441.GA213156@sasha-vm> <20181130215005.GP19305@dastard> <20181201074909.GC213156@sasha-vm>
-In-Reply-To: <20181201074909.GC213156@sasha-vm>
+References: <20181130051253.GB7100@sh-el5.eng.rdu2.redhat.com>
+ <20181130121506.GI2299@dhcp-12-149.nay.redhat.com> <CAOQ4uxg9MdMbkM5+CuXK-VmmqxF8UmNkNqeKTHoxOtTnQ2=LnQ@mail.gmail.com>
+ <20181130182322.GM8125@magnolia>
+In-Reply-To: <20181130182322.GM8125@magnolia>
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Sat, 1 Dec 2018 11:09:05 +0200
-Message-ID: <CAOQ4uxhCH3oxVWDMVRcXMZO3JSTCA1Pp5AYnHP5pDxyNktqONw@mail.gmail.com>
-Subject: Re: XFS patches for stable
+Date: Sat, 1 Dec 2018 11:24:41 +0200
+Message-ID: <CAOQ4uxjxTXZ14pcvy5wkJrwP012BdStx8gSNL=dkkOW1BXKT-g@mail.gmail.com>
+Subject: Re: [4.20-rc4 regression] generic/095 Concurrent mixed I/O hang on
+ xfs based overlayfs
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sashal@kernel.org
-Cc: Dave Chinner <david@fromorbit.com>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Luis R. Chamberlain" <mcgrof@kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, jencce.kernel@gmail.com, linux-xfs <linux-xfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, Zorro Lang <zlang@redhat.com>, fstests <fstests@vger.kernel.org>
 
-> >> It's getting to the point that with the amount of known issues with XFS
-> >> on LTS kernels it makes sense to mark it as CONFIG_BROKEN.
+> > Darrick,
 > >
-> >Really? Where are the bug reports?
+> > This is my cue to insert a rant. You already know what I am going to rant about.
+> >
+> > I cannot force you to add a check -overlay xfstests run to your pull
+> > request validation
+> > routine. I can offer assistance in any questions you may have and I can offer
+> > support for check -overlay infrastructure if it breaks or if it needs
+> > improvements.
+> >
+> > I have checked on several recent point releases that check -overlay does not
+> > regress any tests compared to xfs reflink configuration, and when I
+> > found a regression
+> > (mostly in overlayfs code, but also in xfs code sometimes) I reported
+> > and/or fixed it.
+> > But I do not have the resources to validate every xfs merge and
+> > certainly not xfs-next.
+> >
+> > There is a large group of tests that is expected to notrun, which
+> > makes running the
+> > -overlay test a lot faster than any given xfs configuration and IMO
+> > running just a single
+> > xfs reflink config with -overlay would give a pretty good test coverage.
+> >
+> > So what do you say?...
 >
-> In 'git log'! You report these every time you fix something in upstream
-> xfs but don't backport it to stable trees:
+> Frankly I'd rather push the kernelci/0day/lf/whoever folks to kick off
+> fstests across all the major filesystems after the daily for-next merge
+> so that we can all see if there are regressions over the previous day's
+> test.  IOWs, rather than loading ourselves down with more testing
+> burden, let's make it more public.
 >
-> $ git log --oneline v4.18-rc1..v4.18 fs/xfs
-> d4a34e165557 xfs: properly handle free inodes in extent hint validators
-> 9991274fddb9 xfs: Initialize variables in xfs_alloc_get_rec before using them
-> d8cb5e423789 xfs: fix fdblocks accounting w/ RMAPBT per-AG reservation
-> e53c4b598372 xfs: ensure post-EOF zeroing happens after zeroing part of a file
-> a3a374bf1889 xfs: fix off-by-one error in xfs_rtalloc_query_range
-> 232d0a24b0fc xfs: fix uninitialized field in rtbitmap fsmap backend
-> 5bd88d153998 xfs: recheck reflink state after grabbing ILOCK_SHARED for a write
-> f62cb48e4319 xfs: don't allow insert-range to shift extents past the maximum offset
-> aafe12cee0b1 xfs: don't trip over negative free space in xfs_reserve_blocks
-> 10ee25268e1f xfs: allow empty transactions while frozen
-> e53946dbd31a xfs: xfs_iflush_abort() can be called twice on cluster writeback failure
-> 23fcb3340d03 xfs: More robust inode extent count validation
-> e2ac836307e3 xfs: simplify xfs_bmap_punch_delalloc_range
->
-> Since I'm assuming that at least some of them are based on actual issues
-> users hit, and some of those apply to stable kernels, why would users
-> want to use an XFS version which is knowingly buggy?
+> I've received occasional reports from the 0day robot, but I'm not sure
+> if it's testing consistently because it only ever seems to emit
+> complaints, not "I love your branch and even better nothing regressed!".
 >
 
-Sasha,
+That would indeed be great if we had some more knowledge about
+what is being tested by 0day and friends.
 
-There is one more point to consider.
-Until v4.16, reflink and rmapbt features were experimental:
-76883f7988e6 xfs: remove experimental tag for reverse mapping
-1e369b0e199b xfs: remove experimental tag for reflinks
+Regardless, check -overlay had already found several bugs in XFS code
+(I can look it up, but you know what I mean), so I argue that it would be
+beneficial to you as XFS maintainer and not only to overlayfs users if
+you run check -overlay on pull request branches.
+Consider overlayfs as a unit test for some of the XFS VFS interfaces
+that are harder (or impossible) to hit from userspace.
+Besides, as I said, the cost of running check -overlay on a single reflink
+config is relatively cheap, so please consider running it occasionally to be
+a head of those type of bugs.
 
-And MANY of the bug fixes flowing in through XFS tree to master
-are related to those new XFS features and also to vfs functionality
-that depends on them (e.g. clone/dedupe), so there MAY be no
-bug reports at all for XFS in stable trees.
+> That said, this *does* confirm Zorro's earlier point that I should give
+> him a week to test xfs for-next before pushing to Linus.
+>
 
-IMO users should NOT be expecting XFS to be stable with those
-features enabled (they are still disabled by default)
-when running on stable kernels below v4.16.
-
-Allow me to act as a self-appointed mediator here and say:
-There is obviously some bad blood between xfs developers and stable
-tree maintainers.
-The conflicts are caused by long standing frustration on both sides.
-We would all be better off with looking forward on how to improve the
-situation instead dwelling on past mistakes.
-This issue was on the agenda at the XFS team meeting on last LSF/MM.
-The path towards compliance has been laid out by xfs maintainers.
-Luis, Sasha and myself have been working to improve the filesystem
-test coverage for stable tree candidate patches.
-We have still some way to go.
-
-The stable candidate patches that triggered the recent flames
-was outside of the fs/xfs subsystem, which AUTOSEL already know
-to stay away from, so nobody had any intention to stir things up.
-
-At the end of the day, most xfs developers work for companies that
-ship enterprise distros and need to maintain stable trees, so I would
-hope that it is in the best interest of everyone involved to cooperate
-on the goal of better stable-xfs ecosystem.
-
-On my part, I would be happy if AUTOSEL could point me at
-candidate patch *series* for review instead of single patches.
-For that matter, it sure wouldn't hurt if an xfs developer sending
-out a patch series would cc:stable on the cover letter and if a developer
-would be kind enough to add some backporting hints to the cover letter
-text that would be very helpful indeed.
+It looks like between Zorro and yourself, overlayfs+xfs bugs should not
+be slipping in to master anymore, so I'm happy with the way things are :-)
 
 Thanks,
 Amir.
