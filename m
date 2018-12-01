@@ -1,35 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp-out002.kontent.com ([81.88.40.216]:46421 "EHLO
-        smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725385AbeLBR2Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 12:28:25 -0500
-Subject: Re: [Bug 201823] inconsistent behaviour of xfs_db, xfs_repair and
- xfs_scrub
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:38469 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725729AbeLBJ54 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 04:57:56 -0500
+Date: Sun, 2 Dec 2018 09:44:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Bug 201823] New: inconsistent behaviour of xfs_db, xfs_repair
+ and xfs_scrub
+Message-ID: <20181201224418.GA6311@dastard>
 References: <bug-201823-201763@https.bugzilla.kernel.org/>
- <bug-201823-201763-SQxbGgt1ty@https.bugzilla.kernel.org/>
-From: Matthias Bodenbinder <matthias@bodenbinder.de>
-Message-ID: <05431fde-455e-13f3-650d-dcc218d9c22b@bodenbinder.de>
-Date: Sun, 2 Dec 2018 18:28:19 +0100
 MIME-Version: 1.0
-In-Reply-To: <bug-201823-201763-SQxbGgt1ty@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset=utf-8
-Content-Language: de-DE
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bug-201823-201763@https.bugzilla.kernel.org/>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: bugzilla-daemon@bugzilla.kernel.org, linux-xfs@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-Am 02.12.18 um 18:02 schrieb bugzilla-daemon@bugzilla.kernel.org:
+On Sat, Dec 01, 2018 at 08:16:13AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=201823
 > 
-> --- Comment #5 from Eric Sandeen (sandeen@sandeen.net) ---
-> If you'd like to send me a compressed metadump image (offline for maximum
-> privacy) I'll take a look.
+>             Bug ID: 201823
+>            Summary: inconsistent behaviour of xfs_db, xfs_repair and
+>                     xfs_scrub
+>            Product: File System
+>            Version: 2.5
+>     Kernel Version: 4.19.5
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: XFS
+>           Assignee: filesystem_xfs@kernel-bugs.kernel.org
+>           Reporter: matthias@bodenbinder.de
+>         Regression: No
 > 
-> However, some of your messages above are a result user error: you are providing
-> a block number as an inode number to xfs_db, so it is trying to parse a
-> non-inode as an inode.
+> Hi,
 > 
+> I am using xfs on Manjaro with kernel 4.19 and latest xfsprogs 4.19.0-1.
+> 
+> I checked my root filesystem with xfs_db for fragmentation and got metadata
+> corruption messages:
+> 
+> 5# xfs_db -c frag -r /dev/sde1
+> Metadata corruption detected at 0x558ed74133f3, xfs_inode block 0x7faac0/0x8000
+> Metadata corruption detected at 0x558ed74133f3, xfs_inode block
+> 0x20cb300/0x8000
+> Metadata corruption detected at 0x558ed74133f3, xfs_inode block
+> 0x2341340/0x8000
+> aktuell 976616, ideal 970547, Unterteilungsfaktor 0,62%
+> Note, this number is largely meaningless.
+> Files on this filesystem average 1,01 extents per file
 
-I will send you a dropbox link to the metadump
+That is expected if you are running xfs_db on a mounted filesystem.
+What is on disk at any given instant is not consistent. The combined
+in-memory state, the journal and what is on-disk is consistent, but
+you cannot see all that extra in-memory state from xfs_db. If the
+system crashes, journal replay is what brings it back to being
+consistent on disk. IOWs, this is expected behaviour.
+
+> But xfs_repiar is not mentioning anything and hence not repairing anything.
+
+xfs_repair won't run on a mounted filesystem.
+
+> Also, xfs_scrub is not complaining:
+> 
+> 8# xfs_scrub -v /    
+> EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
+> Phase 1: Find filesystem geometry.
+> /: using 8 threads to scrub.
+> Phase 2: Check internal metadata.
+> Phase 3: Scan all inodes.
+> Phase 5: Check directory tree.
+> Phase 7: Check summary counters.
+> 41,6GiB data used;  1,3M inodes used.
+> 41,5GiB data found; 1,3M inodes found.
+> 1,3M inodes counted; 1,3M inodes checked.
+
+Scrub runs online, so sees the in-memory state of the filesystem
+along with what is on disk, and hence it doesn't find any
+corruptions because there are none.
+
+IOWs, there are no problems and everything is behaving as expected.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
