@@ -1,74 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:34838 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725983AbeLCKJZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 05:09:25 -0500
-Received: by mail-wr1-f68.google.com with SMTP id 96so11490946wrb.2
-        for <linux-xfs@vger.kernel.org>; Mon, 03 Dec 2018 02:09:03 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.99]:54232 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725730AbeLBUIX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 2 Dec 2018 15:08:23 -0500
+Date: Sun, 2 Dec 2018 21:08:19 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: XFS patches for stable
+Message-ID: <20181202200819.GA3932@kroah.com>
+References: <20181129121458.GK19305@dastard>
+ <20181129124756.GA25945@kroah.com>
+ <20181129224019.GM19305@dastard>
+ <20181130082203.GA26830@kroah.com>
+ <20181130101441.GA213156@sasha-vm>
+ <20181130215005.GP19305@dastard>
+ <20181201074909.GC213156@sasha-vm>
+ <CAOQ4uxhCH3oxVWDMVRcXMZO3JSTCA1Pp5AYnHP5pDxyNktqONw@mail.gmail.com>
+ <20181202152547.GI221015@sasha-vm>
+ <20181202161016.GA27696@infradead.org>
 MIME-Version: 1.0
-References: <20181202205343.7104-1-david@fromorbit.com> <20181203002036.GB6311@dastard>
-In-Reply-To: <20181203002036.GB6311@dastard>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Mon, 3 Dec 2018 11:08:51 +0100
-Message-ID: <CACj3i70DV-ugFQxMU5XPvmNF=VMZ5yvUOQS-EVHgCqGw95K2CA@mail.gmail.com>
-Subject: Re: [PATCH 3/2] xfs_io: copy_file_range length is a size_t
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181202161016.GA27696@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Chinner, Dave" <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Sasha Levin <sashal@kernel.org>, Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>, stable <stable@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Luis R. Chamberlain" <mcgrof@kernel.org>
 
-On Mon, Dec 3, 2018 at 1:20 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> From: Dave Chinner <dchinner@redhat.com>
->
-> copy_file_range() takes a size_t as it's length, not a "long long".
-> Therefore we need to be able to pass sizes larger than 8EB to it
-> to be able to test the interface fully and that requires copy_range
-> to accept all values except an explicit error value of "-1LL".
->
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+On Sun, Dec 02, 2018 at 08:10:16AM -0800, Christoph Hellwig wrote:
+> As someone who has done xfs stable backports for a while I really don't
+> think the autoselection is helpful at all.
 
-Reviewed-by: Jan Tulak <jtulak@redhat.com>
+autoselection for xfs patches has been turned off for a while, what
+triggered this email thread was a core vfs patch that was backported
+that was not obvious it was created by the xfs developers due to a
+problem they had found.
 
-> ---
->  io/copy_file_range.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-> index f118a3bfd506..4e2969c9ca47 100644
-> --- a/io/copy_file_range.c
-> +++ b/io/copy_file_range.c
-> @@ -34,7 +34,7 @@ copy_range_help(void)
->   * glibc buffered copy fallback.
->   */
->  static loff_t
-> -copy_file_range_cmd(int fd, long long *src, long long *dst, long long len)
-> +copy_file_range_cmd(int fd, long long *src, long long *dst, size_t len)
->  {
->         loff_t ret;
->
-> @@ -78,7 +78,7 @@ copy_range_f(int argc, char **argv)
->  {
->         long long src = 0;
->         long long dst = 0;
-> -       long long len = 0;
-> +       size_t len = 0;
->         int opt;
->         int ret;
->         int fd;
-> @@ -104,7 +104,7 @@ copy_range_f(int argc, char **argv)
->                         break;
->                 case 'l':
->                         len = cvtnum(fsblocksize, fssectsize, optarg);
-> -                       if (len < 0) {
-> +                       if (len == -1LL) {
->                                 printf(_("invalid length -- %s\n"), optarg);
->                                 return 0;
->                         }
->
+> Someone who is vaguely familiar with the code needs to manually select
+> the commits and QA them, which takes a fair amount of time, but just
+> needs some manual help if it should work ok.
+> 
+> I think we are about ready to have a new xfs stable maintainer lined up
+> if everything works well fortunately.
 
+That would be wonderful news.
 
--- 
-Jan Tulak
+thanks,
+
+greg k-h
