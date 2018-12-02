@@ -1,266 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:35634 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725767AbeLBI1w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 03:27:52 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 9C83C2AC29
-        for <linux-xfs@vger.kernel.org>; Sun,  2 Dec 2018 08:27:48 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201823] inconsistent behaviour of xfs_db, xfs_repair and
- xfs_scrub
-Date: Sun, 02 Dec 2018 08:27:48 +0000
-Message-ID: <bug-201823-201763-g0zFYvo6Gi@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201823-201763@https.bugzilla.kernel.org/>
-References: <bug-201823-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from mail.kernel.org ([198.145.29.99]:56102 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725856AbeLBPZ5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 2 Dec 2018 10:25:57 -0500
+Date: Sun, 2 Dec 2018 10:25:47 -0500
+From: Sasha Levin <sashal@kernel.org>
+Subject: Re: XFS patches for stable
+Message-ID: <20181202152547.GI221015@sasha-vm>
+References: <20181129060110.159878-1-sashal@kernel.org>
+ <20181129060110.159878-25-sashal@kernel.org>
+ <20181129121458.GK19305@dastard>
+ <20181129124756.GA25945@kroah.com>
+ <20181129224019.GM19305@dastard>
+ <20181130082203.GA26830@kroah.com>
+ <20181130101441.GA213156@sasha-vm>
+ <20181130215005.GP19305@dastard>
+ <20181201074909.GC213156@sasha-vm>
+ <CAOQ4uxhCH3oxVWDMVRcXMZO3JSTCA1Pp5AYnHP5pDxyNktqONw@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxhCH3oxVWDMVRcXMZO3JSTCA1Pp5AYnHP5pDxyNktqONw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Luis R. Chamberlain" <mcgrof@kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201823
+On Sat, Dec 01, 2018 at 11:09:05AM +0200, Amir Goldstein wrote:
+>> >> It's getting to the point that with the amount of known issues with XFS
+>> >> on LTS kernels it makes sense to mark it as CONFIG_BROKEN.
+>> >
+>> >Really? Where are the bug reports?
+>>
+>> In 'git log'! You report these every time you fix something in upstream
+>> xfs but don't backport it to stable trees:
+>>
+>> $ git log --oneline v4.18-rc1..v4.18 fs/xfs
+>> d4a34e165557 xfs: properly handle free inodes in extent hint validators
+>> 9991274fddb9 xfs: Initialize variables in xfs_alloc_get_rec before using them
+>> d8cb5e423789 xfs: fix fdblocks accounting w/ RMAPBT per-AG reservation
+>> e53c4b598372 xfs: ensure post-EOF zeroing happens after zeroing part of a file
+>> a3a374bf1889 xfs: fix off-by-one error in xfs_rtalloc_query_range
+>> 232d0a24b0fc xfs: fix uninitialized field in rtbitmap fsmap backend
+>> 5bd88d153998 xfs: recheck reflink state after grabbing ILOCK_SHARED for a write
+>> f62cb48e4319 xfs: don't allow insert-range to shift extents past the maximum offset
+>> aafe12cee0b1 xfs: don't trip over negative free space in xfs_reserve_blocks
+>> 10ee25268e1f xfs: allow empty transactions while frozen
+>> e53946dbd31a xfs: xfs_iflush_abort() can be called twice on cluster writeback failure
+>> 23fcb3340d03 xfs: More robust inode extent count validation
+>> e2ac836307e3 xfs: simplify xfs_bmap_punch_delalloc_range
+>>
+>> Since I'm assuming that at least some of them are based on actual issues
+>> users hit, and some of those apply to stable kernels, why would users
+>> want to use an XFS version which is knowingly buggy?
+>>
+>
+>Sasha,
+>
+>There is one more point to consider.
+>Until v4.16, reflink and rmapbt features were experimental:
+>76883f7988e6 xfs: remove experimental tag for reverse mapping
+>1e369b0e199b xfs: remove experimental tag for reflinks
+>
+>And MANY of the bug fixes flowing in through XFS tree to master
+>are related to those new XFS features and also to vfs functionality
+>that depends on them (e.g. clone/dedupe), so there MAY be no
+>bug reports at all for XFS in stable trees.
+>
+>IMO users should NOT be expecting XFS to be stable with those
+>features enabled (they are still disabled by default)
+>when running on stable kernels below v4.16.
+>
+>Allow me to act as a self-appointed mediator here and say:
+>There is obviously some bad blood between xfs developers and stable
+>tree maintainers.
+>The conflicts are caused by long standing frustration on both sides.
+>We would all be better off with looking forward on how to improve the
+>situation instead dwelling on past mistakes.
+>This issue was on the agenda at the XFS team meeting on last LSF/MM.
+>The path towards compliance has been laid out by xfs maintainers.
+>Luis, Sasha and myself have been working to improve the filesystem
+>test coverage for stable tree candidate patches.
+>We have still some way to go.
+>
+>The stable candidate patches that triggered the recent flames
+>was outside of the fs/xfs subsystem, which AUTOSEL already know
+>to stay away from, so nobody had any intention to stir things up.
+>
+>At the end of the day, most xfs developers work for companies that
+>ship enterprise distros and need to maintain stable trees, so I would
+>hope that it is in the best interest of everyone involved to cooperate
+>on the goal of better stable-xfs ecosystem.
+>
+>On my part, I would be happy if AUTOSEL could point me at
+>candidate patch *series* for review instead of single patches.
 
---- Comment #4 from matthias@bodenbinder.de ---
-The error occurs also with unmounted drive. Sorry for posting the output of the
-"xfs_db -r" command this is misleading.
+I'm afraid it's not smart enough to do that :(
 
-The first thing I did is checking it with a KNOPPIX 8.2 live CD. xfs_db is
-showing the erros but xfs_repair does not repair anything.
+I can grab an entire series if it selects a single patch in a series,
+but from my experience it's usually the wrong thing to do.
 
-Here the relevant outputs. /dev/sde1 is not mounted:
+>For that matter, it sure wouldn't hurt if an xfs developer sending
+>out a patch series would cc:stable on the cover letter and if a developer
+>would be kind enough to add some backporting hints to the cover letter
+>text that would be very helpful indeed.
 
-######
+Given that we have folks (Luis, Amir, etc) working on it already, maybe
+a step in the right direction would be having the XFS folks tag fixes
+some other way ("#wants-a-backport"?) where this would give a hint that
+this should be backported after sufficient testing?
 
-knoppix@Microknoppix:~$ uname -a
-Linux Microknoppix 4.16.5-64 #1 SMP PREEMPT Sun Apr 29 17:09:15 CEST 2018
-x86_64 GNU/Linux
+We won't pick these commits to stable ourselves, but only after the XFS
+maintainers are satisfied that the commit was sufficiently tested on LTS
+trees?
 
-######
-
-knoppix@Microknoppix:~$ xfs_db /dev/sde1
-xfs_db> frag
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x7faac0/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x20cb300/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-Metadata corruption detected at xfs_inode block 0x2341340/0x8000
-aktuell 977134, ideal 970700, Unterteilungsfaktor 0,66%
-Note, this number is largely meaningless.
-Files on this filesystem average 1,01 extents per file
-xfs_db> inode 0x2341340
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata corruption detected at xfs_inode block 0x1bab340/0x2000
-Metadata CRC error detected for ino 36967232
-xfs_db> p
-core.magic = 0x3132
-core.mode = 033062
-core.version = 32
-core.format = 56
-core.nlinkv2 = 775108409
-core.onlink = 14649
-core.projid_lo = 12597
-core.projid_hi = 8268
-core.uid = 775371058
-core.gid = 925645104
-core.flushiter = 13361
-core.atime.sec = Wed May 24 22:18:58 2000
-core.atime.nsec = 775173426
-core.mtime.sec = Thu Aug 17 12:56:03 1995
-core.mtime.nsec = 540555575
-core.ctime.sec = Fri Jul 29 00:54:45 1994
-core.ctime.nsec = 875313459
-core.size = 3328777196389539896
-core.nblocks = 4123096260573147948
-core.extsize = 959655481
-core.nextents = 942880825
-core.naextents = 8248
-core.forkoff = 57
-core.aformat = 57
-core.dmevmask = 0x2e343530
-core.dmstate = 13612
-core.newrtbm = 0
-core.prealloc = 1
-core.realtime = 1
-core.immutable = 0
-core.append = 1
-core.sync = 1
-core.noatime = 0
-core.nodump = 0
-core.rtinherit = 1
-core.projinherit = 0
-core.nosymlinks = 0
-core.extsz = 1
-core.extszinherit = 1
-core.nodefrag = 1
-core.filestream = 0
-core.gen = 775371064
-next_unlinked = 959717452
-v3.crc = 0x20393031 (bad)
-v3.change_count = 3330188947660289070
-v3.lsn = 0x3130373037204320
-v3.flags2 = 0x3930322e33333631
-v3.cowextsize = 741946158
-v3.crtime.sec = Wed Mar 26 15:01:29 1997
-v3.crtime.nsec = 858665010
-v3.inumber = 4123108269418885678
-v3.uuid = 34333636-2c39-322e-3238-333338203930
-v3.reflink = 0
-v3.cowextsz = 0
-u3 = (leer)
-a = (leer)
-xfs_db> q
-
-######
-
-knoppix@Microknoppix:~$ xfs_repair -V
-xfs_repair Version 4.9.0
-
-######
-
-knoppix@Microknoppix:~$ xfs_repair /dev/sde1
-Phase 1 - Superblock finden und überprüfen...
-Phase 2 - ein internes Protokoll benutzen
-        - Null-Protokoll...
-        - freier Speicher und Inode-Karten des Dateisystems werden
-gescannt...
-        - Wurzel-Inode-Stück gefunden
-Phase 3 - für jedes AG...
-        - agi unverknüpfte Listen werden gescannt und bereinigt...
-        - bekannte Inodes werden behandelt und Inode-Entdeckung wird
-durchgeführt...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - neu entdeckte Inodes werden behandelt...
-Phase 4 - auf doppelte Blöcke überprüfen...
-        - Liste mit doppeltem Ausmaß wird eingerichtet...
-        - es wird geprüft ob Inodes Blocks doppelt beanspruchen...
-        - agno = 3
-        - agno = 2
-        - agno = 1
-        - agno = 0
-Phase 5 - AG-Köpfe und Bäume werden erneut gebildet...
-        - Superblock wird zurückgesetzt...
-Phase 6 - Inode-Verbindbarkeit wird geprüft...
-        - Inhalte der Echtzeit-Bitmaps und Zusammenfassungs-Inodes werden
-zurückgesetzt
-        - Dateisystem wird durchquert ...
-        - durchqueren beendet ...
-        - nicht verbundene Inodes werden nach lost+found verschoben ...
-Phase 7 - Verweisanzahl wird geprüft und berichtigt...
-erledigt
-
-######
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+--
+Thanks,
+Sasha
