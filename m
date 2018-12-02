@@ -1,45 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f51.google.com ([209.85.128.51]:38406 "EHLO
-        mail-wm1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725918AbeLCOm5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 09:42:57 -0500
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:63558 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725781AbeLBUx4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 15:53:56 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1gTYkM-0002gB-AA
+        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 07:53:46 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1gTYkM-0001s9-8O
+        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 07:53:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/2] io: open pipes in non-blocking mode
+Date: Mon,  3 Dec 2018 07:53:42 +1100
+Message-Id: <20181202205343.7104-2-david@fromorbit.com>
+In-Reply-To: <20181202205343.7104-1-david@fromorbit.com>
+References: <20181202205343.7104-1-david@fromorbit.com>
 MIME-Version: 1.0
-References: <20181129121458.GK19305@dastard> <20181129124756.GA25945@kroah.com>
- <20181129224019.GM19305@dastard> <20181130082203.GA26830@kroah.com>
- <20181130101441.GA213156@sasha-vm> <20181130215005.GP19305@dastard>
- <20181201074909.GC213156@sasha-vm> <CAOQ4uxhCH3oxVWDMVRcXMZO3JSTCA1Pp5AYnHP5pDxyNktqONw@mail.gmail.com>
- <20181202152547.GI221015@sasha-vm> <20181202161016.GA27696@infradead.org> <20181202200819.GA3932@kroah.com>
-In-Reply-To: <20181202200819.GA3932@kroah.com>
-From: Richard Weinberger <richard.weinberger@gmail.com>
-Date: Mon, 3 Dec 2018 15:41:27 +0100
-Message-ID: <CAFLxGvyx-n4fUbsv+PrAebAPRe=yGV1zLRA44XnOwtMaubS8cg@mail.gmail.com>
-Subject: Re: XFS patches for stable
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, sashal@kernel.org, amir73il@gmail.com, Dave Chinner <david@fromorbit.com>, stable <stable@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, dchinner@redhat.com, darrick.wong@oracle.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, mcgrof@kernel.org, linux-mtd@lists.infradead.org, boris.brezillon@bootlin.com
+To: linux-xfs@vger.kernel.org
 
-On Sun, Dec 2, 2018 at 9:09 PM Greg KH <gregkh@linuxfoundation.org> wrote:
->
-> On Sun, Dec 02, 2018 at 08:10:16AM -0800, Christoph Hellwig wrote:
-> > As someone who has done xfs stable backports for a while I really don't
-> > think the autoselection is helpful at all.
->
-> autoselection for xfs patches has been turned off for a while, what
-> triggered this email thread was a core vfs patch that was backported
-> that was not obvious it was created by the xfs developers due to a
-> problem they had found.
+From: Dave Chinner <dchinner@redhat.com>
 
-Sorry for hijacking this thread.
-Can you please also disable autoselection for MTD, UBI and UBIFS?
+So that O_RDONLY open commands (such as from copy_range) do not
+block forever waiting on a non-existent writer.
 
-fs/ubifs/
-drivers/mtd/
-include/linux/mtd/
-include/uapi/mtd/
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ io/open.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
+diff --git a/io/open.c b/io/open.c
+index 6ea3e9a2019f..b1d9a0fa317c 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -56,6 +56,7 @@ openfile(
+ 	struct fs_path	*fs_path)
+ {
+ 	struct fs_path	*fsp;
++	struct stat	st;
+ 	int		fd;
+ 	int		oflags;
+ 
+@@ -79,6 +80,18 @@ openfile(
+ 	if (flags & IO_NOFOLLOW)
+ 		oflags |= O_NOFOLLOW;
+ 
++	/*
++	 * if we've been passed a pipe to open, don't block waiting for a
++	 * reader or writer to appear. We want to either succeed or error out
++	 * immediately.
++	 */
++	if (stat(path, &st) < 0 && errno != ENOENT) {
++		perror("stat");
++		return -1;
++	}
++	if (S_ISFIFO(st.st_mode))
++		oflags |= O_NONBLOCK;
++
+ 	fd = open(path, oflags, mode);
+ 	if (fd < 0) {
+ 		if (errno == EISDIR &&
 -- 
-Thanks,
-//richard
+2.19.1
