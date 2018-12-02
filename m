@@ -1,33 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:54138 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:54166 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725896AbeLBQGL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 11:06:11 -0500
-Date: Sun, 2 Dec 2018 08:06:06 -0800
+        with ESMTP id S1725894AbeLBQIU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 11:08:20 -0500
+Date: Sun, 2 Dec 2018 08:08:16 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH] splice: don't read more than available pipe space
-Message-ID: <20181202160606.GB15501@infradead.org>
-References: <20181130192047.GO8125@magnolia>
+Subject: Re: How to avoid xfs_do_force_shutdown on xlog_iodone error
+Message-ID: <20181202160816.GD15501@infradead.org>
+References: <VI1P192MB0288B67B92CE171B34ABBB1AA9D30@VI1P192MB0288.EURP192.PROD.OUTLOOK.COM>
+ <VI1P192MB028894DF21C722001901A488A9D30@VI1P192MB0288.EURP192.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181130192047.GO8125@magnolia>
+In-Reply-To: <VI1P192MB028894DF21C722001901A488A9D30@VI1P192MB0288.EURP192.PROD.OUTLOOK.COM>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>, jencce.kernel@gmail.com, linux-xfs <linux-xfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, Zorro Lang <zlang@redhat.com>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Albert Duato <albert@kumori.systems>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Fri, Nov 30, 2018 at 11:20:47AM -0800, Darrick J. Wong wrote:
-> Therefore, teach splice_direct_to_actor to clamp its requests to the
-> amount of free space in the pipe and remove the simulated short read
-> from the iomap directio code.
-
-Seems like this should be two different commits?  E.g. fix the splice
-code first, remove the hack from XFS next?  (and yes, I know we already
-have a similar but slightly different suggestion from Amir, but I
-don't think explicit reverts buy us anything).
-
-Otherwise this looks good to me:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+You can try an xfs_freeze first and the unfreeze later after your
+reconnected.  However unplugging and replugging a usb stick is generally
+not just going to smoothly work, so I don't think that is a valid
+equivalent.
