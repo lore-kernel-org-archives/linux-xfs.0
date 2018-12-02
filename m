@@ -1,59 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:40978 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726615AbeLCQXq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 11:23:46 -0500
-Received: from [8.46.75.6] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gTr0S-0002G9-PC
-        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 16:23:37 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/11] xfs: remove the s_maxbytes checks in xfs_map_blocks
-Date: Mon,  3 Dec 2018 11:21:23 -0500
-Message-Id: <20181203162131.11652-4-hch@lst.de>
-In-Reply-To: <20181203162131.11652-1-hch@lst.de>
-References: <20181203162131.11652-1-hch@lst.de>
+Received: from aserp2120.oracle.com ([141.146.126.78]:40300 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725535AbeLBSLJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 13:11:09 -0500
+Date: Sun, 2 Dec 2018 10:10:45 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 2/2] iomap: partially revert 4721a601099 (simulated
+ directio short read on EFAULT)
+Message-ID: <20181202181045.GS8125@magnolia>
+References: <20181202180832.GR8125@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181202180832.GR8125@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>
+Cc: jencce.kernel@gmail.com, linux-xfs <linux-xfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, Zorro Lang <zlang@redhat.com>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-We already ensure all data fits into s_maxbytes in the write / fault
-path.  The only reason we have them here is that they were copy and
-pasted from xfs_bmapi_read when we stopped using that function.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+In commit 4721a601099, we tried to fix a problem wherein directio reads
+into a splice pipe will bounce EFAULT/EAGAIN all the way out to
+userspace by simulating a zero-byte short read.  This happens because
+some directio read implementations (xfs) will call
+bio_iov_iter_get_pages to grab pipe buffer pages and issue asynchronous
+reads, but as soon as we run out of pipe buffers that _get_pages call
+returns EFAULT, which the splice code translates to EAGAIN and bounces
+out to userspace.
+
+In that commit, the iomap code catches the EFAULT and simulates a
+zero-byte read, but that causes assertion errors on regular splice reads
+because xfs doesn't allow short directio reads.  This causes infinite
+splice() loops and assertion failures on generic/095 on overlayfs
+because xfs only permit total success or total failure of a directio
+operation.  The underlying issue in the pipe splice code has now been
+fixed by changing the pipe splice loop to avoid avoid reading more data
+than there is space in the pipe.
+
+Therefore, it's no longer necessary to simulate the short directio, so
+remove the hack from iomap.
+
+Fixes: 4721a601099 ("iomap: dio data corruption and spurious errors when pipes fill")
+Reported-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+v2: split into two patches per hch request
+---
+ fs/iomap.c |    9 ---------
+ 1 file changed, 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 8fec6fd4c632..5b6fab283316 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -301,7 +301,8 @@ xfs_map_blocks(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	ssize_t			count = i_blocksize(inode);
--	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset), end_fsb;
-+	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
- 	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
- 	struct xfs_bmbt_irec	imap;
- 	struct xfs_iext_cursor	icur;
-@@ -356,11 +357,6 @@ xfs_map_blocks(
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
- 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
--	ASSERT(offset <= mp->m_super->s_maxbytes);
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 3ffb776fbebe..d6bc98ae8d35 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1877,15 +1877,6 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 				dio->wait_for_completion = true;
+ 				ret = 0;
+ 			}
 -
--	if (offset > mp->m_super->s_maxbytes - count)
--		count = mp->m_super->s_maxbytes - offset;
--	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
- 
- 	/*
- 	 * Check if this is offset is covered by a COW extents, and if yes use
--- 
-2.19.1
+-			/*
+-			 * Splicing to pipes can fail on a full pipe. We have to
+-			 * swallow this to make it look like a short IO
+-			 * otherwise the higher splice layers will completely
+-			 * mishandle the error and stop moving data.
+-			 */
+-			if (ret == -EFAULT)
+-				ret = 0;
+ 			break;
+ 		}
+ 		pos += ret;
