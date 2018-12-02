@@ -1,42 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:39534 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726560AbeLCQXS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 11:23:18 -0500
-Received: from [8.46.75.6] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gTr01-00021X-0H
-        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 16:23:09 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: COW improvements and always_cow support V3
-Date: Mon,  3 Dec 2018 11:21:20 -0500
-Message-Id: <20181203162131.11652-1-hch@lst.de>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:55562 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725379AbeLBRCt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 12:02:49 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 332872A99F
+        for <linux-xfs@vger.kernel.org>; Sun,  2 Dec 2018 17:02:47 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201823] inconsistent behaviour of xfs_db, xfs_repair and
+ xfs_scrub
+Date: Sun, 02 Dec 2018 17:02:47 +0000
+Message-ID: <bug-201823-201763-SQxbGgt1ty@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-201823-201763@https.bugzilla.kernel.org/>
+References: <bug-201823-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Hi all,
+https://bugzilla.kernel.org/show_bug.cgi?id=201823
 
-this series adds the always_cow mode support after improving our COW
-write support a little bit first.
+--- Comment #5 from Eric Sandeen (sandeen@sandeen.net) ---
+If you'd like to send me a compressed metadump image (offline for maximum
+privacy) I'll take a look.
 
-The always_cow mode stresses the COW path a lot, but with a few xfstests
-fixups it generall looks good, except for a few tests that complain about
-fragmentation, which is rather inherent in this mode, and xfs/326 which
-inserts error tags into the COW path not getting the expected result.
+However, some of your messages above are a result user error: you are providing
+a block number as an inode number to xfs_db, so it is trying to parse a
+non-inode as an inode.
 
-Changes since v2:
- - add a patch to remove xfs_trim_extent_eof
- - add a patch to remove the separate io_type and rely on existing state
-   in the writeback path
- - rework the truncate race handling in the writeback path a little more
-
-Changes since v1:
- - make delalloc and unwritten extent conversions simpler and more robust
- - add a few additional cleanups
- - support all fallocate modes but actual preallocation
- - rebase on top of a fix from Brian (which is included as first patch
-   to make the patch set more usable)
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
