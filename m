@@ -1,80 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:15073 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725903AbeLCUJR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 15:09:17 -0500
-Date: Tue, 4 Dec 2018 07:09:09 +1100
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:4879 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725778AbeLBUxy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 15:53:54 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1gTYkM-0002gC-AG
+        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 07:53:46 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1gTYkM-0001sC-9C
+        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 07:53:46 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] fs/xfs: Add support for passing write life-time hint
- with log
-Message-ID: <20181203200909.GD6311@dastard>
-References: <CGME20181203131558epcas2p14b6b38cb67d4915b1ba782e11ce7ffe6@epcas2p1.samsung.com>
- <1543842769-6363-1-git-send-email-joshi.k@samsung.com>
- <f3d25c5b-6a96-397c-d947-370867401a83@applied-asynchrony.com>
- <20181203163457.GW8125@magnolia>
+Subject: [PATCH 2/2] xfs_io: allow open file permissions to be changed
+Date: Mon,  3 Dec 2018 07:53:43 +1100
+Message-Id: <20181202205343.7104-3-david@fromorbit.com>
+In-Reply-To: <20181202205343.7104-1-david@fromorbit.com>
+References: <20181202205343.7104-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20181203163457.GW8125@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>, Kanchan Joshi <joshi.k@samsung.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Dec 03, 2018 at 08:34:57AM -0800, Darrick J. Wong wrote:
-> On Mon, Dec 03, 2018 at 04:48:12PM +0100, Holger Hoffstätte wrote:
-> > On 12/3/18 2:12 PM, Kanchan Joshi wrote:
-> > > Log gets updated in a circular fashion, and that makes life-time
-> > > of log-data different from other types of meta/user-data.
-> > > By passing a write life-time hint with log, GC efficiency of multi-stream SSD
-> > > gets improved, leading to endurance/performance benefits.
-> > > It is described in greater detail (along with results) in this "FAST 2018"
-> > > paper -
-> > > https://www.usenix.org/conference/fast18/presentation/rho
-> > > This patch introduces new mount option "logwritehint" to pass write hint
-> > > with XFS log.
-> > 
-> > Is there any downside to passing the hints unconditionally?
-> 
-> Why wouldn't we always pass LIFE_EXTREME?  Do people have setups where,
-> say, hint <= LIFE_MEDIUM gets a disk but anything longer than that gets
-> a big slow stone tablet, which is not where we'd want the metadata log?
-> 
-> For that matter, should we be passing write hints for other fs metadata?
-> Fixed AG headers never move, should they be LIFE_whateverthelogis ?  How
-> about space and file metadata, which aren't fixed to certain locations?
+From: Dave Chinner <dchinner@redhat.com>
 
-I started looking at this recently because of the problems that were
-being had with the XFS allocator interleaving short term and long
-term data for certain applications. Part of this was getting the
-userspace hints plumbed through to the inode, which then canbe used
-by the allocator to make high level placement decisions (e.g. AG
-level) and then the hint gets plumbed through to the user data bios
-as well.
+I need to be able to open a file read-write, then change the
+permissions on the file to read-only to check that copy_file_range
+returns EPERM correctly in that case. This can't be done as root,
+because root ignores file permissions, but as a normal user we can't
+open a 0444 file for writing and so can't actually test writing to
+a read-only file without some method of "open read-write, change
+permissions to read-only, try to write to file through open
+read-write file".
 
-Metadata is largely static, even the dynamic metadata, because we
-overwrite in place and it doesn't move about all that much in common
-workloads. So it was just looking at treating all the metadata as
-the same, given that there are only 4 or 5 hint levels available.
+So, allow adding or removing write permissions on an open file.
 
-> > Introducing a new mount option which depends on the internals of
-> > an SSD seems .. unlikely to gain many friends.
-> > Otherwise a great idea. :)
-> 
-> Likewise, I'm not wild about adding mount options or passing raw
-> integers via mount(8) command line:
-> 
-> mount /dev/fd0 /mnt -o logwritehint=3 # ???
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ io/open.c | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
 
-No mount option, please. Fix the log and metadata as "always
-overwritten in place" write type hints, let user data be specified
-by the dynamic per-inode hinting interface we already have.
-
-Cheers,
-
-Dave.
+diff --git a/io/open.c b/io/open.c
+index b1d9a0fa317c..153d4a836d4c 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -44,6 +44,7 @@ static cmdinfo_t chproj_cmd;
+ static cmdinfo_t lsproj_cmd;
+ static cmdinfo_t extsize_cmd;
+ static cmdinfo_t inode_cmd;
++static cmdinfo_t chmod_cmd;
+ static prid_t prid;
+ static long extsize;
+ 
+@@ -809,6 +810,48 @@ inode_f(
+ 	return 0;
+ }
+ 
++static void
++chmod_help(void)
++{
++	printf(_(
++"\n"
++" Change the read/write permissions on the current file\n"
++"\n"
++" Options:\n"
++" -r -- make the file read only (0444 permissions)\n"
++" -w -- make the file read/write (0664 permissions)\n"
++"\n"));
++}
++
++static int
++chmod_f(
++	int		argc,
++	char		**argv)
++{
++	mode_t		mode = S_IRUSR | S_IRGRP | S_IROTH;
++	int		c;
++
++	while ((c = getopt(argc, argv, "rw")) != EOF) {
++		switch (c) {
++		case 'r':
++			break;
++		case 'w':
++			mode |= S_IWUSR | S_IWGRP;
++			break;
++		default:
++			return command_usage(&chmod_cmd);
++		}
++	}
++
++	if (argc != optind)
++		return command_usage(&chmod_cmd);
++
++	if (fchmod(file->fd, mode) < 0) {
++		exitcode = 1;
++		perror("fchmod");
++	}
++	return 0;
++}
+ void
+ open_init(void)
+ {
+@@ -871,10 +914,21 @@ open_init(void)
+ 		_("Query inode number usage in the filesystem");
+ 	inode_cmd.help = inode_help;
+ 
++	chmod_cmd.name = "chmod";
++	chmod_cmd.cfunc = chmod_f;
++	chmod_cmd.args = _("-r | -w");
++	chmod_cmd.argmin = 1;
++	chmod_cmd.argmax = 1;
++	chmod_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK | CMD_FLAG_ONESHOT;
++	chmod_cmd.oneline =
++		_("change the read/write permissios on the currently open file");
++	chmod_cmd.help = chmod_help;
++
+ 	add_command(&open_cmd);
+ 	add_command(&close_cmd);
+ 	add_command(&chproj_cmd);
+ 	add_command(&lsproj_cmd);
+ 	add_command(&extsize_cmd);
+ 	add_command(&inode_cmd);
++	add_command(&chmod_cmd);
+ }
 -- 
-Dave Chinner
-david@fromorbit.com
+2.19.1
