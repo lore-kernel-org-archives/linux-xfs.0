@@ -1,66 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:49545 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725785AbeLCAUm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 19:20:42 -0500
-Received: from dave by dastard with local (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1gTbyW-0002tt-Td
-        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 11:20:37 +1100
-Date: Mon, 3 Dec 2018 11:20:36 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/2] xfs_io: copy_file_range length is a size_t
-Message-ID: <20181203002036.GB6311@dastard>
-References: <20181202205343.7104-1-david@fromorbit.com>
+Received: from mail-yb1-f194.google.com ([209.85.219.194]:35037 "EHLO
+        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725616AbeLBTiM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 14:38:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181202205343.7104-1-david@fromorbit.com>
+References: <20181202180832.GR8125@magnolia> <20181202181045.GS8125@magnolia>
+In-Reply-To: <20181202181045.GS8125@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sun, 2 Dec 2018 21:37:55 +0200
+Message-ID: <CAOQ4uxieA_e1_Fvbw8Svr8PA+DBim4W_FpYm8VOYRM4AsZ9S8Q@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] iomap: partially revert 4721a601099 (simulated
+ directio short read on EFAULT)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, jencce.kernel@gmail.com, linux-xfs <linux-xfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, Zorro Lang <zlang@redhat.com>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Sun, Dec 2, 2018 at 8:10 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> In commit 4721a601099, we tried to fix a problem wherein directio reads
+> into a splice pipe will bounce EFAULT/EAGAIN all the way out to
+> userspace by simulating a zero-byte short read.  This happens because
+> some directio read implementations (xfs) will call
+> bio_iov_iter_get_pages to grab pipe buffer pages and issue asynchronous
+> reads, but as soon as we run out of pipe buffers that _get_pages call
+> returns EFAULT, which the splice code translates to EAGAIN and bounces
+> out to userspace.
+>
+> In that commit, the iomap code catches the EFAULT and simulates a
+> zero-byte read, but that causes assertion errors on regular splice reads
+> because xfs doesn't allow short directio reads.  This causes infinite
+> splice() loops and assertion failures on generic/095 on overlayfs
+> because xfs only permit total success or total failure of a directio
+> operation.  The underlying issue in the pipe splice code has now been
+> fixed by changing the pipe splice loop to avoid avoid reading more data
+> than there is space in the pipe.
+>
+> Therefore, it's no longer necessary to simulate the short directio, so
+> remove the hack from iomap.
+>
+> Fixes: 4721a601099 ("iomap: dio data corruption and spurious errors when pipes fill")
+> Reported-by: Amir Goldstein <amir73il@gmail.com>
 
-copy_file_range() takes a size_t as it's length, not a "long long".
-Therefore we need to be able to pass sizes larger than 8EB to it
-to be able to test the interface fully and that requires copy_range
-to accept all values except an explicit error value of "-1LL".
+Wasn't me. I believe it was Murphy Zhou <jencce.kernel@gmail.com>.
+If you want you can add Ranted-by Amir ;-)
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- io/copy_file_range.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Anyway, looks fine.
 
-diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-index f118a3bfd506..4e2969c9ca47 100644
---- a/io/copy_file_range.c
-+++ b/io/copy_file_range.c
-@@ -34,7 +34,7 @@ copy_range_help(void)
-  * glibc buffered copy fallback.
-  */
- static loff_t
--copy_file_range_cmd(int fd, long long *src, long long *dst, long long len)
-+copy_file_range_cmd(int fd, long long *src, long long *dst, size_t len)
- {
- 	loff_t ret;
- 
-@@ -78,7 +78,7 @@ copy_range_f(int argc, char **argv)
- {
- 	long long src = 0;
- 	long long dst = 0;
--	long long len = 0;
-+	size_t len = 0;
- 	int opt;
- 	int ret;
- 	int fd;
-@@ -104,7 +104,7 @@ copy_range_f(int argc, char **argv)
- 			break;
- 		case 'l':
- 			len = cvtnum(fsblocksize, fssectsize, optarg);
--			if (len < 0) {
-+			if (len == -1LL) {
- 				printf(_("invalid length -- %s\n"), optarg);
- 				return 0;
- 			}
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: split into two patches per hch request
+> ---
+>  fs/iomap.c |    9 ---------
+>  1 file changed, 9 deletions(-)
+>
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 3ffb776fbebe..d6bc98ae8d35 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -1877,15 +1877,6 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>                                 dio->wait_for_completion = true;
+>                                 ret = 0;
+>                         }
+> -
+> -                       /*
+> -                        * Splicing to pipes can fail on a full pipe. We have to
+> -                        * swallow this to make it look like a short IO
+> -                        * otherwise the higher splice layers will completely
+> -                        * mishandle the error and stop moving data.
+> -                        */
+> -                       if (ret == -EFAULT)
+> -                               ret = 0;
+>                         break;
+>                 }
+>                 pos += ret;
