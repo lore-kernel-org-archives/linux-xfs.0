@@ -1,41 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-eopbgr00127.outbound.protection.outlook.com ([40.107.0.127]:29508
-        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725957AbeLCJIx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Dec 2018 04:08:53 -0500
-From: Albert Duato <albert@kumori.systems>
-Subject: Re: How to avoid xfs_do_force_shutdown on xlog_iodone error
-Date: Mon, 3 Dec 2018 09:08:40 +0000
-Message-ID: <VI1P192MB02881322EC7B4A0624515B01A9AE0@VI1P192MB0288.EURP192.PROD.OUTLOOK.COM>
-References: <VI1P192MB0288B67B92CE171B34ABBB1AA9D30@VI1P192MB0288.EURP192.PROD.OUTLOOK.COM>
- <VI1P192MB028894DF21C722001901A488A9D30@VI1P192MB0288.EURP192.PROD.OUTLOOK.COM>,<20181202160816.GD15501@infradead.org>
-In-Reply-To: <20181202160816.GD15501@infradead.org>
-Content-Language: es-ES
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Received: from aserp2120.oracle.com ([141.146.126.78]:44712 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726608AbeLCQUq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 11:20:46 -0500
+Date: Mon, 3 Dec 2018 08:20:30 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] io: open pipes in non-blocking mode
+Message-ID: <20181203162030.GT8125@magnolia>
+References: <20181202205343.7104-1-david@fromorbit.com>
+ <20181202205343.7104-2-david@fromorbit.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181202205343.7104-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Thanks.
+On Mon, Dec 03, 2018 at 07:53:42AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> So that O_RDONLY open commands (such as from copy_range) do not
+> block forever waiting on a non-existent writer.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  io/open.c | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
+> 
+> diff --git a/io/open.c b/io/open.c
+> index 6ea3e9a2019f..b1d9a0fa317c 100644
+> --- a/io/open.c
+> +++ b/io/open.c
+> @@ -56,6 +56,7 @@ openfile(
+>  	struct fs_path	*fs_path)
+>  {
+>  	struct fs_path	*fsp;
+> +	struct stat	st;
+>  	int		fd;
+>  	int		oflags;
+>  
+> @@ -79,6 +80,18 @@ openfile(
+>  	if (flags & IO_NOFOLLOW)
+>  		oflags |= O_NOFOLLOW;
+>  
+> +	/*
+> +	 * if we've been passed a pipe to open, don't block waiting for a
+> +	 * reader or writer to appear. We want to either succeed or error out
+> +	 * immediately.
+> +	 */
+> +	if (stat(path, &st) < 0 && errno != ENOENT) {
+> +		perror("stat");
+> +		return -1;
+> +	}
+> +	if (S_ISFIFO(st.st_mode))
 
-I didn't know about that command, but after reading its man and trying it,
-it seems to require to freeze the XFS before a disconnection, and that's
-nothing that could be predicted.
+Hmm... does stat() set st.st_mode even if it returns ENOENT?  Or are we
+possibly branching on an uninitialized st here?
 
-I should have said it on the initial mail, that the temporary disconnection=
-s
-are not scheduled, but arbitrary, as they depend on network availability.
+struct stat	st = { 0 }; ?
 
-As long as all operations were retried, network gaps would only cause
-delays, but not fatal failures.
+The rest seems fine to me.
 
-Is that something I can configure?
+--D
 
-Thanks again,
-
-Albert=
+> +		oflags |= O_NONBLOCK;
+> +
+>  	fd = open(path, oflags, mode);
+>  	if (fd < 0) {
+>  		if (errno == EISDIR &&
+> -- 
+> 2.19.1
+> 
