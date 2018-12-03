@@ -1,36 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:55562 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725379AbeLBRCt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 12:02:49 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 332872A99F
-        for <linux-xfs@vger.kernel.org>; Sun,  2 Dec 2018 17:02:47 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201823] inconsistent behaviour of xfs_db, xfs_repair and
- xfs_scrub
-Date: Sun, 02 Dec 2018 17:02:47 +0000
-Message-ID: <bug-201823-201763-SQxbGgt1ty@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201823-201763@https.bugzilla.kernel.org/>
-References: <bug-201823-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:45861 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726369AbeLCMzj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 07:55:39 -0500
 MIME-Version: 1.0
+References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-11-david@fromorbit.com>
+In-Reply-To: <20181203083416.28978-11-david@fromorbit.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 3 Dec 2018 14:54:31 +0200
+Message-ID: <CAOQ4uxhsVfqGkYi1v1Gd6BnzGsCb5=sOcByB0Nwp_ZGaFTmOPw@mail.gmail.com>
+Subject: Re: [PATCH 10/11] vfs: allow generic_copy_file_range to copy across devices
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201823
+On Mon, Dec 3, 2018 at 10:34 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> do_splice_direct() can copy across superblocks without problems.
+> Remove the same superblock restriction on this fallback code.
+>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
---- Comment #5 from Eric Sandeen (sandeen@sandeen.net) ---
-If you'd like to send me a compressed metadump image (offline for maximum
-privacy) I'll take a look.
+Looks good.
 
-However, some of your messages above are a result user error: you are providing
-a block number as an inode number to xfs_db, so it is trying to parse a
-non-inode as an inode.
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Thanks,
+Amir.
