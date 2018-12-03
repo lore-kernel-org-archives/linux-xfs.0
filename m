@@ -1,43 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vs1-f68.google.com ([209.85.217.68]:42411 "EHLO
-        mail-vs1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725875AbeLDXen (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Dec 2018 18:34:43 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:36450 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726104AbeLCWZI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 17:25:08 -0500
+Received: from ip-64-134-180-251.public.wayport.net ([64.134.180.251] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1gTweJ-0004Jj-Ve
+        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 22:25:08 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/11] xfs: remove the s_maxbytes checks in xfs_map_blocks
+Date: Mon,  3 Dec 2018 17:24:55 -0500
+Message-Id: <20181203222503.30649-4-hch@lst.de>
+In-Reply-To: <20181203222503.30649-1-hch@lst.de>
+References: <20181203222503.30649-1-hch@lst.de>
 MIME-Version: 1.0
-References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-10-david@fromorbit.com>
- <20181204154347.GA6925@infradead.org> <20181204221847.GQ6311@dastard>
-In-Reply-To: <20181204221847.GQ6311@dastard>
-From: Olga Kornievskaia <olga.kornievskaia@gmail.com>
-Date: Tue, 4 Dec 2018 18:33:42 -0500
-Message-ID: <CAN-5tyG7avm_qiZxzmHYjRL_OYN1meLv-SPmDYUX6vAdGBkc-Q@mail.gmail.com>
-Subject: Re: [PATCH 09/11] vfs: push copy_file_ranges -EXDEV checks down
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Dec 4, 2018 at 5:18 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Tue, Dec 04, 2018 at 07:43:47AM -0800, Christoph Hellwig wrote:
-> > Well, this isn't bugfixes anymore, but adding new features..
->
-> I made that perfectly clear in the cover description. I called it
-> twice, one of them explicitly stating that this series made these
-> infrastructure changes because we have pending functionality that
-> dependents on cross-device copies being supported in a sane manner.
->
-> I'll drop it if you want, but then I'll just have to come back after
-> all the NFS code is merged and do yet more cleanup work.
+We already ensure all data fits into s_maxbytes in the write / fault
+path.  The only reason we have them here is that they were copy and
+pasted from xfs_bmapi_read when we stopped using that function.
 
-This doesn't needs to be fixed in this patch series. I think Anna was
-pointing out to me for something to take a look at.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 8fec6fd4c632..5b6fab283316 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -301,7 +301,8 @@ xfs_map_blocks(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	ssize_t			count = i_blocksize(inode);
+-	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset), end_fsb;
++	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
+ 	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
+ 	struct xfs_bmbt_irec	imap;
+ 	struct xfs_iext_cursor	icur;
+@@ -356,11 +357,6 @@ xfs_map_blocks(
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
+-	ASSERT(offset <= mp->m_super->s_maxbytes);
+-
+-	if (offset > mp->m_super->s_maxbytes - count)
+-		count = mp->m_super->s_maxbytes - offset;
+-	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
+ 
+ 	/*
+ 	 * Check if this is offset is covered by a COW extents, and if yes use
+-- 
+2.19.1
