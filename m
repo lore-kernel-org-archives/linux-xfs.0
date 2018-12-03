@@ -1,15 +1,15 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f65.google.com ([209.85.161.65]:41553 "EHLO
-        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725888AbeLCLEy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 06:04:54 -0500
+Received: from mail-yb1-f194.google.com ([209.85.219.194]:33033 "EHLO
+        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725907AbeLCKsX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 05:48:23 -0500
 MIME-Version: 1.0
-References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-9-david@fromorbit.com>
-In-Reply-To: <20181203083416.28978-9-david@fromorbit.com>
+References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-8-david@fromorbit.com>
+In-Reply-To: <20181203083416.28978-8-david@fromorbit.com>
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 3 Dec 2018 13:04:07 +0200
-Message-ID: <CAOQ4uxgwZLsO1yV37_CHaZ-O+-+-OggSP9g6m9YE57kLPc5yDw@mail.gmail.com>
-Subject: Re: [PATCH 08/11] vfs: push EXDEV check down into ->remap_file_range
+Date: Mon, 3 Dec 2018 12:47:39 +0200
+Message-ID: <CAOQ4uxiCi9qJ15J=L6fNjuLGykQm5CDuJ-=Y=TwTP5c=jx-_fA@mail.gmail.com>
+Subject: Re: [PATCH 07/11] vfs: copy_file_range should update file timestamps
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
@@ -21,61 +21,47 @@ On Mon, Dec 3, 2018 at 10:34 AM Dave Chinner <david@fromorbit.com> wrote:
 >
 > From: Dave Chinner <dchinner@redhat.com>
 >
-> before we can enable cross-device copies into copy_file_range(),
-> we have to ensure that ->remap_file_range() implemenations will
-> correctly reject attempts to do cross filesystem clones. Currently
-
-But you only fixed remap_file_range() implemenations of xfs and ocfs2...
-
-> these checks are done above calls to ->remap_file_range(), but
-> we need to drive them inwards so that we get EXDEV protection for all
-> callers of ->remap_file_range().
+> Timestamps are not updated right now, so programs looking for
+> timestamp updates for file modifications (like rsync) will not
+> detect that files have changed. We are also accessing the source
+> data when doing a copy (but not when cloning) so we need to update
+> atime on the source file as well.
 >
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/read_write.c | 21 +++++++++++++--------
->  1 file changed, 13 insertions(+), 8 deletions(-)
+>  fs/read_write.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
 >
 > diff --git a/fs/read_write.c b/fs/read_write.c
-> index 3288db1d5f21..174cf92eea1d 100644
+> index 3b101183ea19..3288db1d5f21 100644
 > --- a/fs/read_write.c
 > +++ b/fs/read_write.c
-> @@ -1909,6 +1909,19 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
->         bool same_inode = (inode_in == inode_out);
->         int ret;
+> @@ -1576,6 +1576,16 @@ static ssize_t do_copy_file_range(struct file *file_in, loff_t pos_in,
+>  {
+>         ssize_t ret;
 >
-> +       /*
-> +        * FICLONE/FICLONERANGE ioctls enforce that src and dest files are on
-> +        * the same mount. Practically, they only need to be on the same file
-> +        * system. We check this here rather than at the ioctl layers because
-> +        * this is effectively a limitation of the fielsystem implementations,
-> +        * not so much the API itself. Further, ->remap_file_range() can be
-> +        * called from syscalls that don't have cross device copy restrictions
-> +        * (such as copy_file_range()) and so we need to catch them before we
-> +        * do any damage.
-> +        */
-> +       if (inode_in->i_sb != inode_out->i_sb)
-> +               return -EXDEV;
+> +       /* Update source timestamps, because we are accessing file data */
+> +       file_accessed(file_in);
 > +
->         /* Don't touch certain kinds of inodes */
->         if (IS_IMMUTABLE(inode_out))
->                 return -EPERM;
-> @@ -2013,14 +2026,6 @@ loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
->         if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
->                 return -EINVAL;
->
-> -       /*
-> -        * FICLONE/FICLONERANGE ioctls enforce that src and dest files are on
-> -        * the same mount. Practically, they only need to be on the same file
-> -        * system.
-> -        */
-> -       if (inode_in->i_sb != inode_out->i_sb)
-> -               return -EXDEV;
-> -
+> +       /* Update destination timestamps, since we can alter file contents. */
+> +       if (!(file_out->f_mode & FMODE_NOCMTIME)) {
+> +               ret = file_update_time(file_out);
+> +               if (ret)
+> +                       return ret;
+> +       }
+> +
 
-That leaves {nfs42,cifs,btrfs}_remap_file_range() exposed to passing
-files not of their own fs type let alone same sb when do_clone_file_range()
-is called from ovl_copy_up_data().
+If there is a consistency about who is responsible of calling file_accessed()
+and file_update_time() it eludes me. grep tells me that they are mostly
+handled by filesystem code or generic helpers called by filesystem code
+and not in the vfs helpers.
+
+FMODE_NOCMTIME seems like an xfs specific flag (for DMAPI?), which
+most generic callers of file_update_time() completely ignore.
+This seems like another argument in favor of leaving the responsibility
+of the timestamp updates to the filesystem.
+
+Maybe I am missing something?
 
 Thanks,
 Amir.
