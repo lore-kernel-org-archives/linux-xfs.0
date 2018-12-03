@@ -1,76 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:52120 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725888AbeLCKIC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 05:08:02 -0500
-Received: by mail-wm1-f67.google.com with SMTP id s14so5104842wmh.1
-        for <linux-xfs@vger.kernel.org>; Mon, 03 Dec 2018 02:07:40 -0800 (PST)
+Received: from mail-yb1-f193.google.com ([209.85.219.193]:40623 "EHLO
+        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726334AbeLCMr1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 07:47:27 -0500
 MIME-Version: 1.0
-References: <20181202205343.7104-1-david@fromorbit.com> <20181202205343.7104-2-david@fromorbit.com>
-In-Reply-To: <20181202205343.7104-2-david@fromorbit.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Mon, 3 Dec 2018 11:07:28 +0100
-Message-ID: <CACj3i703dhKvL+M8FFJLQBhO87fsqhLu6owwYYCG9V-8xBfDmQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] io: open pipes in non-blocking mode
+References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-2-david@fromorbit.com>
+In-Reply-To: <20181203083416.28978-2-david@fromorbit.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 3 Dec 2018 14:46:20 +0200
+Message-ID: <CAOQ4uxhOQY8M5rbgHKREN5qpeDGHv0-xK3r37Lj6XfqFoE4qjg@mail.gmail.com>
+Subject: Re: [PATCH 01/11] vfs: copy_file_range source range over EOF should fail
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Chinner, Dave" <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Sun, Dec 2, 2018 at 9:54 PM Dave Chinner <david@fromorbit.com> wrote:
+On Mon, Dec 3, 2018 at 10:34 AM Dave Chinner <david@fromorbit.com> wrote:
 >
 > From: Dave Chinner <dchinner@redhat.com>
 >
-> So that O_RDONLY open commands (such as from copy_range) do not
-> block forever waiting on a non-existent writer.
+> The man page says:
+>
+> EINVAL Requested range extends beyond the end of the source file
+>
+> But the current behaviour is that copy_file_range does a short
+> copy up to the source file EOF. Fix the kernel behaviour to match
+> the behaviour described in the man page.
 >
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Looks good.
-
-Reviewed-by: Jan Tulak <jtulak@redhat.com>
-
 > ---
->  io/open.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
+>  fs/read_write.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 >
-> diff --git a/io/open.c b/io/open.c
-> index 6ea3e9a2019f..b1d9a0fa317c 100644
-> --- a/io/open.c
-> +++ b/io/open.c
-> @@ -56,6 +56,7 @@ openfile(
->         struct fs_path  *fs_path)
->  {
->         struct fs_path  *fsp;
-> +       struct stat     st;
->         int             fd;
->         int             oflags;
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index 4dae0399c75a..09d1816cf3cf 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1581,6 +1581,10 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+>         if (len == 0)
+>                 return 0;
 >
-> @@ -79,6 +80,18 @@ openfile(
->         if (flags & IO_NOFOLLOW)
->                 oflags |= O_NOFOLLOW;
->
-> +       /*
-> +        * if we've been passed a pipe to open, don't block waiting for a
-> +        * reader or writer to appear. We want to either succeed or error out
-> +        * immediately.
-> +        */
-> +       if (stat(path, &st) < 0 && errno != ENOENT) {
-> +               perror("stat");
-> +               return -1;
-> +       }
-> +       if (S_ISFIFO(st.st_mode))
-> +               oflags |= O_NONBLOCK;
+> +       /* If the source range crosses EOF, fail the copy */
+> +       if (pos_in >= i_size(inode_in) || pos_in + len > i_size(inode_in))
+> +               return -EINVAL;
 > +
->         fd = open(path, oflags, mode);
->         if (fd < 0) {
->                 if (errno == EISDIR &&
+
+i_size_read()...
+
+Otherwise
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+
+Thanks,
+Amir.
+
+
 > --
 > 2.19.1
 >
-
-
--- 
-Jan Tulak
