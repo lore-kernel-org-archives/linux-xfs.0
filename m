@@ -1,81 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot1-f49.google.com ([209.85.210.49]:37195 "EHLO
-        mail-ot1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726016AbeLCTJh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 14:09:37 -0500
-Received: by mail-ot1-f49.google.com with SMTP id 40so12699387oth.4
-        for <linux-xfs@vger.kernel.org>; Mon, 03 Dec 2018 11:09:35 -0800 (PST)
+Received: from userp2120.oracle.com ([156.151.31.85]:47130 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725987AbeLCTLj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 14:11:39 -0500
+Date: Mon, 3 Dec 2018 11:11:30 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 08/11] vfs: push EXDEV check down into ->remap_file_range
+Message-ID: <20181203191130.GD24487@magnolia>
+References: <20181203083416.28978-1-david@fromorbit.com>
+ <20181203083416.28978-9-david@fromorbit.com>
+ <CAOQ4uxgwZLsO1yV37_CHaZ-O+-+-OggSP9g6m9YE57kLPc5yDw@mail.gmail.com>
 MIME-Version: 1.0
-References: <CAHjZ2x7pVC+XU2BqXk2O4mEHAcH8bPsJzZsSdvBHqhCiMd0OQw@mail.gmail.com>
- <20181203183832.GB24487@magnolia>
-In-Reply-To: <20181203183832.GB24487@magnolia>
-From: Vincenzo Romano <vincenzo.romano@notorand.it>
-Date: Mon, 3 Dec 2018 20:08:58 +0100
-Message-ID: <CAHjZ2x6-Z1RKx3Qn4tuYZa6E1R1jqXmuUS2BsxBZ9mMS51=0DQ@mail.gmail.com>
-Subject: Re: [QUESTION] XFS inode allocation policy
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxgwZLsO1yV37_CHaZ-O+-+-OggSP9g6m9YE57kLPc5yDw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-Il giorno lun 3 dic 2018 alle ore 19:38 Darrick J. Wong
-<darrick.wong@oracle.com> ha scritto:
->
-> On Mon, Dec 03, 2018 at 03:31:46PM +0100, Vincenzo Romano wrote:
-> > Hi all.
-> > I am trying to recover a Linux XFS file system that has been partially
-> > overwritten in its beginning part with an improper run of dd (disk
-> > dump).
-> > The original FS had been created from scratch (mkfs.xfs) and then
-> > filled with a single TAR file.
-> > I'd need to be pointed to the proper documentation (if any) to better
-> > understand how the disk space has been used while writing that TAR
-> > file.
-> > I aim to reconstruct the surviving inode list to try to rescue as much
-> > as possible of that TAR file.
->
-> In general, directories are spread across the allocation groups, and
-> files are allocated near the directory in which they were created.  The
-> one huge tarball was probably in AG 0 along with the root directory,
-> which means that both are likely unrecoverable.  That said, xfs_repair
-> could be able to reconstruct the primary sb from a secondary copy (make
-> a working copy and run xfs_repair -n against the working copy)... but
-> the data might be still be unrecoverable.
->
-> Definitely make a working copy of the disk and run your recovery tools
-> against that working copy, leaving the original alone.  Good luck!
-
-Thanks Darrick for the feedback.
-
-I'd like to put some data here in order to get a more realistic
-estimate from you (provided it's possible).
-The device that's been freshly XFS-formatted is a 2TB disk.
-The data that's been put onto it is a 1.3TB uncompressed TAR file.
-The first 586MB of the XFS file system got overwitten with an UEFI boot image.
-Do you think there's still some chance to recover a (trailing) part of
-the TAR file?
-Should I restore the original DOS partition table (with just one partition)?
-
-Thanks again.
-
-> --D
->
-> > Many thanks in advance.
+On Mon, Dec 03, 2018 at 01:04:07PM +0200, Amir Goldstein wrote:
+> On Mon, Dec 3, 2018 at 10:34 AM Dave Chinner <david@fromorbit.com> wrote:
 > >
-> > --
-> > Vincenzo Romano - NotOrAnd.IT
-> > Information Technologies
-> > --
-> > NON QVIETIS MARIBVS NAVTA PERITVS
+> > From: Dave Chinner <dchinner@redhat.com>
+> >
+> > before we can enable cross-device copies into copy_file_range(),
+> > we have to ensure that ->remap_file_range() implemenations will
+> > correctly reject attempts to do cross filesystem clones. Currently
+> 
+> But you only fixed remap_file_range() implemenations of xfs and ocfs2...
+> 
+> > these checks are done above calls to ->remap_file_range(), but
+> > we need to drive them inwards so that we get EXDEV protection for all
+> > callers of ->remap_file_range().
+> >
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/read_write.c | 21 +++++++++++++--------
+> >  1 file changed, 13 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/fs/read_write.c b/fs/read_write.c
+> > index 3288db1d5f21..174cf92eea1d 100644
+> > --- a/fs/read_write.c
+> > +++ b/fs/read_write.c
+> > @@ -1909,6 +1909,19 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+> >         bool same_inode = (inode_in == inode_out);
+> >         int ret;
+> >
+> > +       /*
+> > +        * FICLONE/FICLONERANGE ioctls enforce that src and dest files are on
+> > +        * the same mount. Practically, they only need to be on the same file
+> > +        * system. We check this here rather than at the ioctl layers because
+> > +        * this is effectively a limitation of the fielsystem implementations,
+> > +        * not so much the API itself. Further, ->remap_file_range() can be
+> > +        * called from syscalls that don't have cross device copy restrictions
+> > +        * (such as copy_file_range()) and so we need to catch them before we
+> > +        * do any damage.
+> > +        */
+> > +       if (inode_in->i_sb != inode_out->i_sb)
+> > +               return -EXDEV;
+> > +
+> >         /* Don't touch certain kinds of inodes */
+> >         if (IS_IMMUTABLE(inode_out))
+> >                 return -EPERM;
+> > @@ -2013,14 +2026,6 @@ loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
+> >         if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
+> >                 return -EINVAL;
+> >
+> > -       /*
+> > -        * FICLONE/FICLONERANGE ioctls enforce that src and dest files are on
+> > -        * the same mount. Practically, they only need to be on the same file
+> > -        * system.
+> > -        */
+> > -       if (inode_in->i_sb != inode_out->i_sb)
+> > -               return -EXDEV;
+> > -
+> 
 
+I think this is sort of backwards -- the checks should stay in
+do_clone_file_range, and vfs_copy_file_range should be calling that
+instead of directly calling ->remap_range():
 
+vfs_copy_file_range()
+{
+	file_start_write(...);
+	ret = do_clone_file_range(...);
+	if (ret > 0)
+		return ret;
+	ret = do_copy_file_range(...);
+	file_end_write(...);
+	return ret;
+}
 
--- 
-Vincenzo Romano - NotOrAnd.IT
-Information Technologies
---
-cel. +39 3398083886
---
-NON QVIETIS MARIBVS NAVTA PERITVS
+> That leaves {nfs42,cifs,btrfs}_remap_file_range() exposed to passing
+> files not of their own fs type let alone same sb when do_clone_file_range()
+> is called from ovl_copy_up_data().
+
+...and then I think this problem goes away.
+
+--D
+
+> Thanks,
+> Amir.
