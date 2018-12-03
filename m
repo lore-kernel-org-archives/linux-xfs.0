@@ -1,39 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:47855 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725875AbeLDWS6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Dec 2018 17:18:58 -0500
-Date: Wed, 5 Dec 2018 09:18:47 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 09/11] vfs: push copy_file_ranges -EXDEV checks down
-Message-ID: <20181204221847.GQ6311@dastard>
+Received: from mail.kernel.org ([198.145.29.99]:60894 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725973AbeLCSxK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Dec 2018 13:53:10 -0500
+Date: Mon, 3 Dec 2018 10:53:06 -0800
+From: Eric Biggers <ebiggers@kernel.org>
+Subject: Re: [PATCH 05/11] vfs: use inode_permission in copy_file_range()
+Message-ID: <20181203185305.GA32539@gmail.com>
 References: <20181203083416.28978-1-david@fromorbit.com>
- <20181203083416.28978-10-david@fromorbit.com>
- <20181204154347.GA6925@infradead.org>
+ <20181203083416.28978-6-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181204154347.GA6925@infradead.org>
+In-Reply-To: <20181203083416.28978-6-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, olga.kornievskaia@gmail.com, linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Tue, Dec 04, 2018 at 07:43:47AM -0800, Christoph Hellwig wrote:
-> Well, this isn't bugfixes anymore, but adding new features..
+On Mon, Dec 03, 2018 at 07:34:10PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Similar to FI_DEDUPERANGE, make copy_file_range() check that we have
+> write permissions to the destination inode.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  mm/filemap.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 0a170425935b..876df5275514 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -3013,6 +3013,11 @@ int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
+>  	    (file_out->f_flags & O_APPEND))
+>  		return -EBADF;
+>  
+> +	/* may sure we really are allowed to write to the destination inode */
+> +	ret = inode_permission(inode_out, MAY_WRITE);
+> +	if (ret < 0)
+> +		return ret;
+> +
+>  	/* Ensure offsets don't wrap. */
+>  	if (pos_in + count < pos_in || pos_out + count < pos_out)
+>  		return -EOVERFLOW;
+> -- 
+> 2.19.1
+> 
 
-I made that perfectly clear in the cover description. I called it
-twice, one of them explicitly stating that this series made these
-infrastructure changes because we have pending functionality that
-dependents on cross-device copies being supported in a sane manner.
+Why?  The file descriptor was already checked for write permission above:
 
-I'll drop it if you want, but then I'll just have to come back after
-all the NFS code is merged and do yet more cleanup work.
+       if (!(file_in->f_mode & FMODE_READ) ||
+            !(file_out->f_mode & FMODE_WRITE) ||
+            (file_out->f_flags & O_APPEND))
+                return -EBADF;
 
-Cheers,
+Yes, that doesn't detect removing write permission from the *inode*, but write()
+doesn't either.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+- Eric
