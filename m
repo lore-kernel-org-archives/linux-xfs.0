@@ -1,100 +1,219 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vs1-f66.google.com ([209.85.217.66]:42338 "EHLO
+Received: from mail-vs1-f66.google.com ([209.85.217.66]:45409 "EHLO
         mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725875AbeLDVrc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Dec 2018 16:47:32 -0500
+        with ESMTP id S1726310AbeLCVdo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 16:33:44 -0500
 MIME-Version: 1.0
-References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-2-david@fromorbit.com>
- <CAOQ4uxhOQY8M5rbgHKREN5qpeDGHv0-xK3r37Lj6XfqFoE4qjg@mail.gmail.com>
- <20181204151332.GA32245@infradead.org> <20181204212948.GO6311@dastard>
-In-Reply-To: <20181204212948.GO6311@dastard>
+References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-5-david@fromorbit.com>
+In-Reply-To: <20181203083416.28978-5-david@fromorbit.com>
 From: Olga Kornievskaia <olga.kornievskaia@gmail.com>
-Date: Tue, 4 Dec 2018 16:47:18 -0500
-Message-ID: <CAN-5tyGU=y5JO5UNcmn3rX1gRyK_UxjQvQ+kCsP34_NT2-mQ_A@mail.gmail.com>
-Subject: Re: [PATCH 01/11] vfs: copy_file_range source range over EOF should fail
+Date: Mon, 3 Dec 2018 16:33:30 -0500
+Message-ID: <CAN-5tyH2RX_7SkvipnKkM2EF6_cHJ9qG6g9W+Ufb9+5r-Zb4hg@mail.gmail.com>
+Subject: Re: [PATCH 04/11] vfs: add missing checks to copy_file_range
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com
-Cc: Christoph Hellwig <hch@infradead.org>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Tue, Dec 4, 2018 at 4:35 PM Dave Chinner <david@fromorbit.com> wrote:
+On Mon, Dec 3, 2018 at 3:34 AM Dave Chinner <david@fromorbit.com> wrote:
 >
-> On Tue, Dec 04, 2018 at 07:13:32AM -0800, Christoph Hellwig wrote:
-> > On Mon, Dec 03, 2018 at 02:46:20PM +0200, Amir Goldstein wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > >
-> > > > The man page says:
-> > > >
-> > > > EINVAL Requested range extends beyond the end of the source file
-> > > >
-> > > > But the current behaviour is that copy_file_range does a short
-> > > > copy up to the source file EOF. Fix the kernel behaviour to match
-> > > > the behaviour described in the man page.
-> >
-> > I think the behavior implemented is a lot more useful than the one
-> > documented..
+> From: Dave Chinner <dchinner@redhat.com>
 >
-> The current behaviour is really nasty. Because copy_file_range() can
-> return short copies, the caller has to implement a loop to ensure
-> the range hey want get copied.  When the source range you are
-> trying to copy overlaps source EOF, this loop:
+> Like the clone and dedupe interfaces we've recently fixed, the
+> copy_file_range() implementation is missing basic sanity, limits and
+> boundary condition tests on the parameters that are passed to it
+> from userspace. Create a new "generic_copy_file_checks()" function
+> modelled on the generic_remap_checks() function to provide this
+> missing functionality.
 >
->         while (len > 0) {
->                 ret = copy_file_range(... len ...)
->                 ...
->                 off_in += ret;
->                 off_out += ret;
->                 len -= ret;
->         }
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/read_write.c    | 27 ++++++------------
+>  include/linux/fs.h |  3 ++
+>  mm/filemap.c       | 69 ++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 81 insertions(+), 18 deletions(-)
 >
-> Currently the fallback code copies up to the end of the source file
-> on the first copy and then fails the second copy with EINVAL because
-> the source range is now completely beyond EOF.
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index 44339b44accc..69809345977e 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1578,7 +1578,7 @@ static ssize_t do_copy_file_range(struct file *file=
+_in, loff_t pos_in,
+>                 return file_out->f_op->copy_file_range(file_in, pos_in, f=
+ile_out,
+>                                                       pos_out, len, flags=
+);
 >
-> So, from an application perspective, did the copy succeed or did it
-> fail?
+> -       return generic_copy_file_range(file_in, &pos_in, file_out, &pos_o=
+ut,
+> +       return generic_copy_file_range(file_in, pos_in, file_out, pos_out=
+,
+>                                         len, flags);
+>  }
 >
-> Existing tools that exercise copy_file_range (like xfs_io) consider
-> this a failure, because the second copy_file_range() call returns
-> EINVAL and not some "there is no more to copy" marker like read()
-> returning 0 bytes when attempting to read beyond EOF.
+> @@ -1598,10 +1598,14 @@ ssize_t vfs_copy_file_range(struct file *file_in,=
+ loff_t pos_in,
+>         if (flags !=3D 0)
+>                 return -EINVAL;
 >
-> IOWs, we cannot tell the difference between a real error and a short
-> copy because the input range spans EOF and it was silently
-> shortened. That's the API problem we need to fix here - the existing
-> behaviour is really crappy for applications. Erroring out
-> immmediately is one solution, and it's what the man page says should
-> happen so that is what I implemented.
+> -       if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
+> -               return -EISDIR;
+> -       if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
+> -               return -EINVAL;
+> +       /* this could be relaxed once a method supports cross-fs copies *=
+/
+> +       if (inode_in->i_sb !=3D inode_out->i_sb)
+> +               return -EXDEV;
+> +
+> +       ret =3D generic_copy_file_checks(file_in, pos_in, file_out, pos_o=
+ut, &len,
+> +                                       flags);
+> +       if (ret < 0)
+> +               return ret;
 >
-> Realistically, though, I think an attempt to read beyond EOF for the
-> copy should result in behaviour like read() (i.e. return 0 bytes),
-> not EINVAL. The existing behaviour needs to change, though.
+>         ret =3D rw_verify_area(READ, file_in, &pos_in, len);
+>         if (unlikely(ret))
+> @@ -1611,22 +1615,9 @@ ssize_t vfs_copy_file_range(struct file *file_in, =
+loff_t pos_in,
+>         if (unlikely(ret))
+>                 return ret;
+>
+> -       if (!(file_in->f_mode & FMODE_READ) ||
+> -           !(file_out->f_mode & FMODE_WRITE) ||
+> -           (file_out->f_flags & O_APPEND))
+> -               return -EBADF;
+> -
+> -       /* this could be relaxed once a method supports cross-fs copies *=
+/
+> -       if (inode_in->i_sb !=3D inode_out->i_sb)
+> -               return -EXDEV;
+> -
+>         if (len =3D=3D 0)
+>                 return 0;
+>
+> -       /* If the source range crosses EOF, fail the copy */
+> -       if (pos_in >=3D i_size(inode_in) || pos_in + len > i_size(inode_i=
+n))
+> -               return -EINVAL;
+> -
+>         file_start_write(file_out);
+>
+>         /*
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index a4478764cf63..0d9d2d93d4df 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -3022,6 +3022,9 @@ extern ssize_t generic_write_checks(struct kiocb *,=
+ struct iov_iter *);
+>  extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
+>                                 struct file *file_out, loff_t pos_out,
+>                                 loff_t *count, unsigned int remap_flags);
+> +extern int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
+> +                               struct file *file_out, loff_t pos_out,
+> +                               size_t *count, unsigned int flags);
+>  extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *)=
+;
+>  extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter=
+ *);
+>  extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *=
+);
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 81adec8ee02c..0a170425935b 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -2975,6 +2975,75 @@ int generic_remap_checks(struct file *file_in, lof=
+f_t pos_in,
+>         return 0;
+>  }
+>
+> +
+> +/*
+> + * Performs necessary checks before doing a file copy
+> + *
+> + * Can adjust amount of bytes to copy
+> + * Returns appropriate error code that caller should return or
+> + * zero in case the copy should be allowed.
+> + */
+> +int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
+> +                        struct file *file_out, loff_t pos_out,
+> +                        size_t *req_count, unsigned int flags)
+> +{
+> +       struct inode *inode_in =3D file_inode(file_in);
+> +       struct inode *inode_out =3D file_inode(file_out);
+> +       uint64_t count =3D *req_count;
+> +       uint64_t bcount;
+> +       loff_t size_in, size_out;
+> +       loff_t bs =3D inode_out->i_sb->s_blocksize;
+> +       int ret;
 
-There are two checks to consider
-1. pos_in >= EOF should return EINVAL
-2. however what's perhaps should be relaxed is pos_in+len >= EOF
-should return a short copy.
+I got compile warnings:
 
-Having check#1 enforced allows to us to differentiate between a real
-error and a short copy.
+mm/filemap.c: In function =E2=80=98generic_copy_file_checks=E2=80=99:
+mm/filemap.c:2995:9: warning: unused variable =E2=80=98bs=E2=80=99 [-Wunuse=
+d-variable]
+  loff_t bs =3D inode_out->i_sb->s_blocksize;
+         ^
+mm/filemap.c:2993:11: warning: unused variable =E2=80=98bcount=E2=80=99 [-W=
+unused-variable]
+  uint64_t bcount;
 
->
-> > > i_size_read()...
-> > >
-> > > Otherwise
-> > > Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-> >
-> > Looks like this doesn't even compile?
->
-> It's fixed in a later patch that consolidates the checks into a
-> generic check function, but I'm not sure why my "compile every
-> patch" script didn't catch this.
->
-> Cheers,
->
-> -Dave.
+> +
+> +       /* Don't touch certain kinds of inodes */
+> +       if (IS_IMMUTABLE(inode_out))
+> +               return -EPERM;
+> +
+> +       if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
+> +               return -ETXTBSY;
+> +
+> +       /* Don't copy dirs, pipes, sockets... */
+> +       if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
+> +               return -EISDIR;
+> +       if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
+> +               return -EINVAL;
+> +
+> +       if (!(file_in->f_mode & FMODE_READ) ||
+> +           !(file_out->f_mode & FMODE_WRITE) ||
+> +           (file_out->f_flags & O_APPEND))
+> +               return -EBADF;
+> +
+> +       /* Ensure offsets don't wrap. */
+> +       if (pos_in + count < pos_in || pos_out + count < pos_out)
+> +               return -EOVERFLOW;
+> +
+> +       size_in =3D i_size_read(inode_in);
+> +       size_out =3D i_size_read(inode_out);
+> +
+> +       /* If the source range crosses EOF, fail the copy */
+> +       if (pos_in >=3D size_in)
+> +               return -EINVAL;
+> +       if (pos_in + count > size_in)
+> +               return -EINVAL;
+> +
+> +       ret =3D generic_access_check_limits(file_in, pos_in, &count);
+> +       if (ret)
+> +               return ret;
+> +
+> +       ret =3D generic_write_check_limits(file_out, pos_out, &count);
+> +       if (ret)
+> +               return ret;
+> +
+> +       /* Don't allow overlapped copying within the same file. */
+> +       if (inode_in =3D=3D inode_out &&
+> +           pos_out + count > pos_in &&
+> +           pos_out < pos_in + count)
+> +               return -EINVAL;
+> +
+> +       *req_count =3D count;
+> +       return 0;
+> +}
+> +
+>  int pagecache_write_begin(struct file *file, struct address_space *mappi=
+ng,
+>                                 loff_t pos, unsigned len, unsigned flags,
+>                                 struct page **pagep, void **fsdata)
 > --
-> Dave Chinner
-> david@fromorbit.com
+> 2.19.1
+>
