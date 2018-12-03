@@ -1,33 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:56798 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:36436 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727025AbeLEOJ0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Dec 2018 09:09:26 -0500
-Date: Wed, 5 Dec 2018 06:09:25 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 09/11] vfs: push copy_file_ranges -EXDEV checks down
-Message-ID: <20181205140925.GA21109@infradead.org>
-References: <20181203083416.28978-1-david@fromorbit.com>
- <20181203083416.28978-10-david@fromorbit.com>
- <20181204154347.GA6925@infradead.org>
- <20181204221847.GQ6311@dastard>
+        with ESMTP id S1726103AbeLCWZF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 17:25:05 -0500
+Received: from ip-64-134-180-251.public.wayport.net ([64.134.180.251] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1gTweH-0003ub-47
+        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 22:25:05 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: COW improvements and always_cow support V3
+Date: Mon,  3 Dec 2018 17:24:52 -0500
+Message-Id: <20181203222503.30649-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181204221847.GQ6311@dastard>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, olga.kornievskaia@gmail.com, linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Dec 05, 2018 at 09:18:47AM +1100, Dave Chinner wrote:
-> I'll drop it if you want, but then I'll just have to come back after
-> all the NFS code is merged and do yet more cleanup work.
+Hi all,
 
-IFF we want these NFS "features" we'll have to get it right before
-merging the code.  But even with that I'd rather fix the glaring
-issues you are fixing in your first patches as a priority before
-adding more features.  In other words:  don't worry about NFS, lets
-get the existing code right before worrying about the next round
-of potential issues.
+this series adds the always_cow mode support after improving our COW
+write support a little bit first.
+
+The always_cow mode stresses the COW path a lot, but with a few xfstests
+fixups it generall looks good, except for a few tests that complain about
+fragmentation, which is rather inherent in this mode, and xfs/326 which
+inserts error tags into the COW path not getting the expected result.
+
+Changes since v2:
+ - add a patch to remove xfs_trim_extent_eof
+ - add a patch to remove the separate io_type and rely on existing state
+   in the writeback path
+ - rework the truncate race handling in the writeback path a little more
+
+Changes since v1:
+ - make delalloc and unwritten extent conversions simpler and more robust
+ - add a few additional cleanups
+ - support all fallocate modes but actual preallocation
+ - rebase on top of a fix from Brian (which is included as first patch
+   to make the patch set more usable)
