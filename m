@@ -1,50 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54232 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725730AbeLBUIX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 2 Dec 2018 15:08:23 -0500
-Date: Sun, 2 Dec 2018 21:08:19 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: XFS patches for stable
-Message-ID: <20181202200819.GA3932@kroah.com>
-References: <20181129121458.GK19305@dastard>
- <20181129124756.GA25945@kroah.com>
- <20181129224019.GM19305@dastard>
- <20181130082203.GA26830@kroah.com>
- <20181130101441.GA213156@sasha-vm>
- <20181130215005.GP19305@dastard>
- <20181201074909.GC213156@sasha-vm>
- <CAOQ4uxhCH3oxVWDMVRcXMZO3JSTCA1Pp5AYnHP5pDxyNktqONw@mail.gmail.com>
- <20181202152547.GI221015@sasha-vm>
- <20181202161016.GA27696@infradead.org>
+Received: from mail-yb1-f196.google.com ([209.85.219.196]:38152 "EHLO
+        mail-yb1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726334AbeLCMsr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 07:48:47 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181202161016.GA27696@infradead.org>
+References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-6-david@fromorbit.com>
+In-Reply-To: <20181203083416.28978-6-david@fromorbit.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 3 Dec 2018 14:47:40 +0200
+Message-ID: <CAOQ4uxgbFA_T_U53kM-HJH0mYMw3mF205TMgnKWDX-xZ5LrABg@mail.gmail.com>
+Subject: Re: [PATCH 05/11] vfs: use inode_permission in copy_file_range()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Sasha Levin <sashal@kernel.org>, Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>, stable <stable@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Luis R. Chamberlain" <mcgrof@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Sun, Dec 02, 2018 at 08:10:16AM -0800, Christoph Hellwig wrote:
-> As someone who has done xfs stable backports for a while I really don't
-> think the autoselection is helpful at all.
+On Mon, Dec 3, 2018 at 10:34 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> Similar to FI_DEDUPERANGE, make copy_file_range() check that we have
+> write permissions to the destination inode.
+>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-autoselection for xfs patches has been turned off for a while, what
-triggered this email thread was a core vfs patch that was backported
-that was not obvious it was created by the xfs developers due to a
-problem they had found.
+Looks good.
 
-> Someone who is vaguely familiar with the code needs to manually select
-> the commits and QA them, which takes a fair amount of time, but just
-> needs some manual help if it should work ok.
-> 
-> I think we are about ready to have a new xfs stable maintainer lined up
-> if everything works well fortunately.
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
-That would be wonderful news.
-
-thanks,
-
-greg k-h
+Thanks,
+Amir.
