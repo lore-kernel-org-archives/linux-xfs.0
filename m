@@ -1,70 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:63558 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725781AbeLBUx4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 15:53:56 -0500
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1gTYkM-0002gB-AA
-        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 07:53:46 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1gTYkM-0001s9-8O
-        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 07:53:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] io: open pipes in non-blocking mode
-Date: Mon,  3 Dec 2018 07:53:42 +1100
-Message-Id: <20181202205343.7104-2-david@fromorbit.com>
-In-Reply-To: <20181202205343.7104-1-david@fromorbit.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:54042 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726649AbeLCQ1m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 11:27:42 -0500
+Date: Mon, 3 Dec 2018 08:27:32 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/2] xfs_io: copy_file_range length is a size_t
+Message-ID: <20181203162732.GV8125@magnolia>
 References: <20181202205343.7104-1-david@fromorbit.com>
+ <20181203002036.GB6311@dastard>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181203002036.GB6311@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, Dec 03, 2018 at 11:20:36AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> copy_file_range() takes a size_t as it's length, not a "long long".
+> Therefore we need to be able to pass sizes larger than 8EB to it
+> to be able to test the interface fully and that requires copy_range
+> to accept all values except an explicit error value of "-1LL".
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-So that O_RDONLY open commands (such as from copy_range) do not
-block forever waiting on a non-existent writer.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- io/open.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+--D
 
-diff --git a/io/open.c b/io/open.c
-index 6ea3e9a2019f..b1d9a0fa317c 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -56,6 +56,7 @@ openfile(
- 	struct fs_path	*fs_path)
- {
- 	struct fs_path	*fsp;
-+	struct stat	st;
- 	int		fd;
- 	int		oflags;
- 
-@@ -79,6 +80,18 @@ openfile(
- 	if (flags & IO_NOFOLLOW)
- 		oflags |= O_NOFOLLOW;
- 
-+	/*
-+	 * if we've been passed a pipe to open, don't block waiting for a
-+	 * reader or writer to appear. We want to either succeed or error out
-+	 * immediately.
-+	 */
-+	if (stat(path, &st) < 0 && errno != ENOENT) {
-+		perror("stat");
-+		return -1;
-+	}
-+	if (S_ISFIFO(st.st_mode))
-+		oflags |= O_NONBLOCK;
-+
- 	fd = open(path, oflags, mode);
- 	if (fd < 0) {
- 		if (errno == EISDIR &&
--- 
-2.19.1
+> ---
+>  io/copy_file_range.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> index f118a3bfd506..4e2969c9ca47 100644
+> --- a/io/copy_file_range.c
+> +++ b/io/copy_file_range.c
+> @@ -34,7 +34,7 @@ copy_range_help(void)
+>   * glibc buffered copy fallback.
+>   */
+>  static loff_t
+> -copy_file_range_cmd(int fd, long long *src, long long *dst, long long len)
+> +copy_file_range_cmd(int fd, long long *src, long long *dst, size_t len)
+>  {
+>  	loff_t ret;
+>  
+> @@ -78,7 +78,7 @@ copy_range_f(int argc, char **argv)
+>  {
+>  	long long src = 0;
+>  	long long dst = 0;
+> -	long long len = 0;
+> +	size_t len = 0;
+>  	int opt;
+>  	int ret;
+>  	int fd;
+> @@ -104,7 +104,7 @@ copy_range_f(int argc, char **argv)
+>  			break;
+>  		case 'l':
+>  			len = cvtnum(fsblocksize, fssectsize, optarg);
+> -			if (len < 0) {
+> +			if (len == -1LL) {
+>  				printf(_("invalid length -- %s\n"), optarg);
+>  				return 0;
+>  			}
+> 
