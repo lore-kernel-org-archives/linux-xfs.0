@@ -1,133 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:58738 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726560AbeLCQYV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 11:24:21 -0500
-Date: Mon, 3 Dec 2018 08:24:11 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs_io: allow open file permissions to be changed
-Message-ID: <20181203162411.GU8125@magnolia>
-References: <20181202205343.7104-1-david@fromorbit.com>
- <20181202205343.7104-3-david@fromorbit.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:58694 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725909AbeLCXi6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 18:38:58 -0500
+Date: Tue, 4 Dec 2018 10:34:02 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 08/11] vfs: push EXDEV check down into ->remap_file_range
+Message-ID: <20181203233402.GK6311@dastard>
+References: <20181203083416.28978-1-david@fromorbit.com>
+ <20181203083416.28978-9-david@fromorbit.com>
+ <CAOQ4uxgwZLsO1yV37_CHaZ-O+-+-OggSP9g6m9YE57kLPc5yDw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181202205343.7104-3-david@fromorbit.com>
+In-Reply-To: <CAOQ4uxgwZLsO1yV37_CHaZ-O+-+-OggSP9g6m9YE57kLPc5yDw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Mon, Dec 03, 2018 at 07:53:43AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Dec 03, 2018 at 01:04:07PM +0200, Amir Goldstein wrote:
+> On Mon, Dec 3, 2018 at 10:34 AM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > From: Dave Chinner <dchinner@redhat.com>
+> >
+> > before we can enable cross-device copies into copy_file_range(),
+> > we have to ensure that ->remap_file_range() implemenations will
+> > correctly reject attempts to do cross filesystem clones. Currently
 > 
-> I need to be able to open a file read-write, then change the
-> permissions on the file to read-only to check that copy_file_range
-> returns EPERM correctly in that case. This can't be done as root,
-> because root ignores file permissions, but as a normal user we can't
-> open a 0444 file for writing and so can't actually test writing to
-> a read-only file without some method of "open read-write, change
-> permissions to read-only, try to write to file through open
-> read-write file".
+> But you only fixed remap_file_range() implemenations of xfs and ocfs2...
 > 
-> So, allow adding or removing write permissions on an open file.
+> > these checks are done above calls to ->remap_file_range(), but
+> > we need to drive them inwards so that we get EXDEV protection for all
+> > callers of ->remap_file_range().
+> >
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/read_write.c | 21 +++++++++++++--------
+> >  1 file changed, 13 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/fs/read_write.c b/fs/read_write.c
+> > index 3288db1d5f21..174cf92eea1d 100644
+> > --- a/fs/read_write.c
+> > +++ b/fs/read_write.c
+> > @@ -1909,6 +1909,19 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+> >         bool same_inode = (inode_in == inode_out);
+> >         int ret;
+> >
+> > +       /*
+> > +        * FICLONE/FICLONERANGE ioctls enforce that src and dest files are on
+> > +        * the same mount. Practically, they only need to be on the same file
+> > +        * system. We check this here rather than at the ioctl layers because
+> > +        * this is effectively a limitation of the fielsystem implementations,
+> > +        * not so much the API itself. Further, ->remap_file_range() can be
+> > +        * called from syscalls that don't have cross device copy restrictions
+> > +        * (such as copy_file_range()) and so we need to catch them before we
+> > +        * do any damage.
+> > +        */
+> > +       if (inode_in->i_sb != inode_out->i_sb)
+> > +               return -EXDEV;
+> > +
+> >         /* Don't touch certain kinds of inodes */
+> >         if (IS_IMMUTABLE(inode_out))
+> >                 return -EPERM;
+> > @@ -2013,14 +2026,6 @@ loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
+> >         if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
+> >                 return -EINVAL;
+> >
+> > -       /*
+> > -        * FICLONE/FICLONERANGE ioctls enforce that src and dest files are on
+> > -        * the same mount. Practically, they only need to be on the same file
+> > -        * system.
+> > -        */
+> > -       if (inode_in->i_sb != inode_out->i_sb)
+> > -               return -EXDEV;
+> > -
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  io/open.c | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 54 insertions(+)
-> 
-> diff --git a/io/open.c b/io/open.c
-> index b1d9a0fa317c..153d4a836d4c 100644
-> --- a/io/open.c
-> +++ b/io/open.c
-> @@ -44,6 +44,7 @@ static cmdinfo_t chproj_cmd;
->  static cmdinfo_t lsproj_cmd;
->  static cmdinfo_t extsize_cmd;
->  static cmdinfo_t inode_cmd;
-> +static cmdinfo_t chmod_cmd;
->  static prid_t prid;
->  static long extsize;
->  
-> @@ -809,6 +810,48 @@ inode_f(
->  	return 0;
->  }
->  
-> +static void
-> +chmod_help(void)
-> +{
-> +	printf(_(
-> +"\n"
-> +" Change the read/write permissions on the current file\n"
-> +"\n"
-> +" Options:\n"
-> +" -r -- make the file read only (0444 permissions)\n"
-> +" -w -- make the file read/write (0664 permissions)\n"
-> +"\n"));
-> +}
-> +
-> +static int
-> +chmod_f(
-> +	int		argc,
-> +	char		**argv)
-> +{
-> +	mode_t		mode = S_IRUSR | S_IRGRP | S_IROTH;
-> +	int		c;
-> +
-> +	while ((c = getopt(argc, argv, "rw")) != EOF) {
-> +		switch (c) {
-> +		case 'r':
-> +			break;
-> +		case 'w':
-> +			mode |= S_IWUSR | S_IWGRP;
-> +			break;
-> +		default:
-> +			return command_usage(&chmod_cmd);
-> +		}
-> +	}
-> +
-> +	if (argc != optind)
-> +		return command_usage(&chmod_cmd);
-> +
-> +	if (fchmod(file->fd, mode) < 0) {
-> +		exitcode = 1;
-> +		perror("fchmod");
-> +	}
-> +	return 0;
-> +}
->  void
->  open_init(void)
->  {
-> @@ -871,10 +914,21 @@ open_init(void)
->  		_("Query inode number usage in the filesystem");
->  	inode_cmd.help = inode_help;
->  
-> +	chmod_cmd.name = "chmod";
-> +	chmod_cmd.cfunc = chmod_f;
-> +	chmod_cmd.args = _("-r | -w");
-> +	chmod_cmd.argmin = 1;
-> +	chmod_cmd.argmax = 1;
-> +	chmod_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK | CMD_FLAG_ONESHOT;
-> +	chmod_cmd.oneline =
-> +		_("change the read/write permissios on the currently open file");
+> That leaves {nfs42,cifs,btrfs}_remap_file_range() exposed to passing
+> files not of their own fs type let alone same sb when do_clone_file_range()
+> is called from ovl_copy_up_data().
 
-"permissions"...
+For some reason I thought everyone called
+generic_remap_file_range_prep() so they behaved the same way. My
+mistake.
 
-Also, there needs to be a manpage update for this, or else xfs/293 fails.
+Really, though, I'm of the opinion that those filesystems should be
+changed to call the generic checks rather than open code their own
+incomplete/incompatible set of checks. This is exactly what I'm
+trying to avoid with copy_file_range() - checks are done in one
+place, all filesystems have the same checks done - so that future
+modification and maintenance is so much easier.
 
---D
+We need to do the same thing to the remap_file_range()
+implementations.
 
-> +	chmod_cmd.help = chmod_help;
-> +
->  	add_command(&open_cmd);
->  	add_command(&close_cmd);
->  	add_command(&chproj_cmd);
->  	add_command(&lsproj_cmd);
->  	add_command(&extsize_cmd);
->  	add_command(&inode_cmd);
-> +	add_command(&chmod_cmd);
->  }
-> -- 
-> 2.19.1
-> 
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
