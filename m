@@ -1,156 +1,221 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41532 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726031AbeLEEXc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Dec 2018 23:23:32 -0500
-Subject: Re: [PATCH 2/2 V2] xfs_io: allow open file permissions to be changed
-References: <20181202205343.7104-1-david@fromorbit.com>
- <20181202205343.7104-3-david@fromorbit.com> <20181205040226.GS6311@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <93a60f06-f539-b068-faaa-c965fa666ba4@sandeen.net>
-Date: Tue, 4 Dec 2018 22:23:31 -0600
-MIME-Version: 1.0
-In-Reply-To: <20181205040226.GS6311@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Received: from mail-io1-f65.google.com ([209.85.166.65]:37556 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726051AbeLCSxk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 13:53:40 -0500
+Message-ID: <679f1cda1b43fc4cfcd6cdf6dbac223b42db24c2.camel@gmail.com>
+Subject: Re: [PATCH 09/11] vfs: push copy_file_ranges -EXDEV checks down
+From: Anna Schumaker <schumaker.anna@gmail.com>
+Date: Mon, 03 Dec 2018 13:53:35 -0500
+In-Reply-To: <20181203083416.28978-10-david@fromorbit.com>
+References: <20181203083416.28978-1-david@fromorbit.com>
+         <20181203083416.28978-10-david@fromorbit.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: olga.kornievskaia@gmail.com, linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On 12/4/18 10:02 PM, Dave Chinner wrote:
-> 
+On Mon, 2018-12-03 at 19:34 +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> I need to be able to open a file read-write, then change the
-> permissions on the file to read-only to check that copy_file_range
-> returns EPERM correctly in that case. This can't be done as root,
-> because root ignores file permissions, but as a normal user we can't
-> open a 0444 file for writing and so can't actually test writing to
-> a read-only file without some method of "open read-write, change
-> permissions to read-only, try to write to file through open
-> read-write file".
-> 
-> So, allow adding or removing write permissions on an open file.
+> We want to enable cross-filesystem copy_file_range functionality
+> where possible, so push the "same superblock only" checks down to
+> the individual filesystem callouts so they can make their own
+> decisions about cross-superblock copy offload.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-whooops we crossed the streams :D
-
-I'll move the man update to the file command section, but:
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
 > ---
-> Version 2:
-> - include a man page update from the new function
+>  fs/ceph/file.c      |  4 +++-
+>  fs/cifs/cifsfs.c    |  8 +++++++-
+>  fs/fuse/file.c      |  5 ++++-
+>  fs/nfs/nfs4file.c   | 16 ++++++++++------
+>  fs/overlayfs/file.c | 10 +++++++++-
+>  fs/read_write.c     | 10 ++++------
+>  6 files changed, 37 insertions(+), 16 deletions(-)
 > 
->  io/open.c         | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  man/man8/xfs_io.8 |  9 +++++++++
->  2 files changed, 63 insertions(+)
-> 
-> diff --git a/io/open.c b/io/open.c
-> index 21c0e054f8d2..2663c38e9681 100644
-> --- a/io/open.c
-> +++ b/io/open.c
-> @@ -44,6 +44,7 @@ static cmdinfo_t chproj_cmd;
->  static cmdinfo_t lsproj_cmd;
->  static cmdinfo_t extsize_cmd;
->  static cmdinfo_t inode_cmd;
-> +static cmdinfo_t chmod_cmd;
->  static prid_t prid;
->  static long extsize;
+> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+> index cf29f0410dcb..eb876e19c1dc 100644
+> --- a/fs/ceph/file.c
+> +++ b/fs/ceph/file.c
+> @@ -1905,6 +1905,8 @@ static ssize_t __ceph_copy_file_range(struct file
+> *src_file, loff_t src_off,
 >  
-> @@ -809,6 +810,48 @@ inode_f(
->  	return 0;
->  }
+>  	if (src_inode == dst_inode)
+>  		return -EINVAL;
+> +	if (src_inode->i_sb != dst_inode->i_sb)
+> +		return -EXDEV;
+>  	if (ceph_snap(dst_inode) != CEPH_NOSNAP)
+>  		return -EROFS;
 >  
-> +static void
-> +chmod_help(void)
-> +{
-> +	printf(_(
-> +"\n"
-> +" Change the read/write permissions on the current file\n"
-> +"\n"
-> +" Options:\n"
-> +" -r -- make the file read only (0444 permissions)\n"
-> +" -w -- make the file read/write (0664 permissions)\n"
-> +"\n"));
-> +}
-> +
-> +static int
-> +chmod_f(
-> +	int		argc,
-> +	char		**argv)
-> +{
-> +	mode_t		mode = S_IRUSR | S_IRGRP | S_IROTH;
-> +	int		c;
-> +
-> +	while ((c = getopt(argc, argv, "rw")) != EOF) {
-> +		switch (c) {
-> +		case 'r':
-> +			break;
-> +		case 'w':
-> +			mode |= S_IWUSR | S_IWGRP;
-> +			break;
-> +		default:
-> +			return command_usage(&chmod_cmd);
-> +		}
+> @@ -2105,7 +2107,7 @@ static ssize_t ceph_copy_file_range(struct file
+> *src_file, loff_t src_off,
+>  	ret = __ceph_copy_file_range(src_file, src_off, dst_file, dst_off,
+>  					len, flags);
+>  
+> -	if (ret == -EOPNOTSUPP)
+> +	if (ret == -EOPNOTSUPP || ret == -EXDEV)
+>  		ret = generic_copy_file_range(src_file, src_off, dst_file,
+>  					dst_off, len, flags);
+>  	return ret;
+> diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
+> index 5ef4baec6234..03e4b9eacbd1 100644
+> --- a/fs/cifs/cifsfs.c
+> +++ b/fs/cifs/cifsfs.c
+> @@ -1072,6 +1072,12 @@ ssize_t cifs_file_copychunk_range(unsigned int xid,
+>  		goto out;
+>  	}
+>  
+> +	if (src_inode->i_sb != target_inode->i_sb) {
+> +		rc = -EXDEV;
+> +		goto out;
 > +	}
 > +
-> +	if (argc != optind)
-> +		return command_usage(&chmod_cmd);
 > +
-> +	if (fchmod(file->fd, mode) < 0) {
-> +		exitcode = 1;
-> +		perror("fchmod");
-> +	}
-> +	return 0;
-> +}
->  void
->  open_init(void)
+>  	if (!src_file->private_data || !dst_file->private_data) {
+>  		rc = -EBADF;
+>  		cifs_dbg(VFS, "missing cifsFileInfo on copy range src file\n");
+> @@ -1142,7 +1148,7 @@ static ssize_t cifs_copy_file_range(struct file
+> *src_file, loff_t off,
+>  					len, flags);
+>  	free_xid(xid);
+>  
+> -	if (rc == -EOPNOTSUPP)
+> +	if (rc == -EOPNOTSUPP || rc == -EXDEV)
+>  		rc = generic_copy_file_range(src_file, off, dst_file,
+>  					destoff, len, flags);
+>  	return rc;
+> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+> index b86fb0298739..0758f831a4eb 100644
+> --- a/fs/fuse/file.c
+> +++ b/fs/fuse/file.c
+> @@ -3053,6 +3053,9 @@ static ssize_t __fuse_copy_file_range(struct file
+> *file_in, loff_t pos_in,
+>  	if (fc->no_copy_file_range)
+>  		return -EOPNOTSUPP;
+>  
+> +	if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
+> +		return -EXDEV;
+> +
+>  	inode_lock(inode_out);
+>  
+>  	if (fc->writeback_cache) {
+> @@ -3109,7 +3112,7 @@ static ssize_t fuse_copy_file_range(struct file
+> *src_file, loff_t src_off,
+>  	ret = __fuse_copy_file_range(src_file, src_off, dst_file, dst_off,
+>  					len, flags);
+>  
+> -	if (ret == -EOPNOTSUPP)
+> +	if (ret == -EOPNOTSUPP || ret == -EXDEV)
+>  		ret = generic_copy_file_range(src_file, src_off, dst_file,
+>  					dst_off, len, flags);
+>  	return ret;
+> diff --git a/fs/nfs/nfs4file.c b/fs/nfs/nfs4file.c
+> index d7766a6eb0f4..4783c0c1c49e 100644
+> --- a/fs/nfs/nfs4file.c
+> +++ b/fs/nfs/nfs4file.c
+> @@ -133,16 +133,20 @@ static ssize_t nfs4_copy_file_range(struct file
+> *file_in, loff_t pos_in,
+>  				    struct file *file_out, loff_t pos_out,
+>  				    size_t count, unsigned int flags)
 >  {
-> @@ -871,10 +914,21 @@ open_init(void)
->  		_("Query inode number usage in the filesystem");
->  	inode_cmd.help = inode_help;
+> -	ssize_t ret;
+> +	ssize_t ret = -EXDEV;
 >  
-> +	chmod_cmd.name = "chmod";
-> +	chmod_cmd.cfunc = chmod_f;
-> +	chmod_cmd.args = _("-r | -w");
-> +	chmod_cmd.argmin = 1;
-> +	chmod_cmd.argmax = 1;
-> +	chmod_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK | CMD_FLAG_ONESHOT;
-> +	chmod_cmd.oneline =
-> +		_("change the read/write permissios on the currently open file");
-> +	chmod_cmd.help = chmod_help;
+>  	if (file_inode(file_in) == file_inode(file_out))
+>  		return -EINVAL;
+> -retry:
+> -	ret = nfs42_proc_copy(file_in, pos_in, file_out, pos_out, count);
+> -	if (ret == -EAGAIN)
+> -		goto retry;
+>  
+> -	if (ret == -EOPNOTSUPP)
+> +	/* only offload copy if superblock is the same */
+> +	if (file_inode(file_in)->i_sb == file_inode(file_out)->i_sb) {
+> +		do {
+> +			ret = nfs42_proc_copy(file_in, pos_in, file_out,
+> +					pos_out, count);
+> +		} while (ret == -EAGAIN);
+
+I'm not convinced we can actually return -EAGAIN from nfs42_proc_copy().  The
+nfs_get_lock_context() function doesn't return it, and if _nfs42_proc_copy()
+returns -EAGAIN it's immediately retried by nfs42_proc_copy() instead of
+returning.
+
+Olga, am I missing something here?
+Anna
+
+> +	}
 > +
->  	add_command(&open_cmd);
->  	add_command(&close_cmd);
->  	add_command(&chproj_cmd);
->  	add_command(&lsproj_cmd);
->  	add_command(&extsize_cmd);
->  	add_command(&inode_cmd);
-> +	add_command(&chmod_cmd);
+> +	if (ret == -EOPNOTSUPP || ret == -EXDEV)
+>  		ret = generic_copy_file_range(file_in, pos_in, file_out,
+>  					pos_out, count, flags);
+>  	return ret;
+> diff --git a/fs/overlayfs/file.c b/fs/overlayfs/file.c
+> index 68736e5d6a56..34fb0398d016 100644
+> --- a/fs/overlayfs/file.c
+> +++ b/fs/overlayfs/file.c
+> @@ -443,6 +443,14 @@ static loff_t ovl_copyfile(struct file *file_in, loff_t
+> pos_in,
+>  	const struct cred *old_cred;
+>  	loff_t ret;
+>  
+> +	/*
+> +	 * Temporary. Cross device copy checks should be left to the copy file
+> +	 * call on the real inodes, but existing behaviour checks the upper
+> +	 * files only.
+> +	 */
+> +	if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
+> +		return -EXDEV;
+> +
+>  	ret = ovl_real_fdget(file_out, &real_out);
+>  	if (ret)
+>  		return ret;
+> @@ -491,7 +499,7 @@ static ssize_t ovl_copy_file_range(struct file *file_in,
+> loff_t pos_in,
+>  	ret =  ovl_copyfile(file_in, pos_in, file_out, pos_out, len, flags,
+>  			    OVL_COPY);
+>  
+> -	if (ret == -EOPNOTSUPP)
+> +	if (ret == -EOPNOTSUPP || ret == -EXDEV)
+>  		ret = generic_copy_file_range(file_in, pos_in, file_out,
+>  					pos_out, len, flags);
+>  	return ret;
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index 174cf92eea1d..4e0666de0d69 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1565,6 +1565,10 @@ ssize_t generic_copy_file_range(struct file *file_in,
+> loff_t pos_in,
+>  			    struct file *file_out, loff_t pos_out,
+>  			    size_t len, unsigned int flags)
+>  {
+> +	/* Temporary, do_splice_direct supports cross-sb copies */
+> +	if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
+> +		return -EXDEV;
+> +
+>  	return do_splice_direct(file_in, &pos_in, file_out, &pos_out,
+>  			len > MAX_RW_COUNT ? MAX_RW_COUNT : len, 0);
 >  }
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index f1099c32de66..68e03b4558b9 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -1226,6 +1226,15 @@ characters long.
->  .B crc32cselftest
->  Test the internal crc32c implementation to make sure that it computes results
->  correctly.
-> +.TP
-> +.B chmod \-r | \-w
-> +Change the mode of the currently open file. The
-> +.B \-r
-> +option will set the file permissions to read-only (0444), whilst the
-> +.B \-w
-> +option will set the file permissions to read-write (0644). This allows xfs_io to
-> +set up mismatches between the file permissions and the open file descriptor
-> +read/write mode to exercise permission checks inside various syscalls.
->  .SH SEE ALSO
->  .BR mkfs.xfs (8),
->  .BR xfsctl (3),
-> 
+> @@ -1611,17 +1615,11 @@ ssize_t vfs_copy_file_range(struct file *file_in,
+> loff_t pos_in,
+>  			    struct file *file_out, loff_t pos_out,
+>  			    size_t len, unsigned int flags)
+>  {
+> -	struct inode *inode_in = file_inode(file_in);
+> -	struct inode *inode_out = file_inode(file_out);
+>  	ssize_t ret;
+>  
+>  	if (flags != 0)
+>  		return -EINVAL;
+>  
+> -	/* this could be relaxed once a method supports cross-fs copies */
+> -	if (inode_in->i_sb != inode_out->i_sb)
+> -		return -EXDEV;
+> -
+>  	ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
+>  					flags);
+>  	if (ret < 0)
