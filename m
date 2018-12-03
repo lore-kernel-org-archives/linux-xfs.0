@@ -1,72 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:54042 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726649AbeLCQ1m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 11:27:42 -0500
-Date: Mon, 3 Dec 2018 08:27:32 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/2] xfs_io: copy_file_range length is a size_t
-Message-ID: <20181203162732.GV8125@magnolia>
-References: <20181202205343.7104-1-david@fromorbit.com>
- <20181203002036.GB6311@dastard>
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:60959
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725922AbeLCIeb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 03:34:31 -0500
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 06/11] vfs: copy_file_range needs to strip setuid bits
+Date: Mon,  3 Dec 2018 19:34:11 +1100
+Message-Id: <20181203083416.28978-7-david@fromorbit.com>
+In-Reply-To: <20181203083416.28978-1-david@fromorbit.com>
+References: <20181203083416.28978-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181203002036.GB6311@dastard>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: olga.kornievskaia@gmail.com, linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Mon, Dec 03, 2018 at 11:20:36AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> copy_file_range() takes a size_t as it's length, not a "long long".
-> Therefore we need to be able to pass sizes larger than 8EB to it
-> to be able to test the interface fully and that requires copy_range
-> to accept all values except an explicit error value of "-1LL".
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+The file we are copying data into needs to have its setuid bit
+stripped before we start the data copy so that unprivileged users
+can't copy data into executables that are run with root privs.
 
---D
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/read_write.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-> ---
->  io/copy_file_range.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-> index f118a3bfd506..4e2969c9ca47 100644
-> --- a/io/copy_file_range.c
-> +++ b/io/copy_file_range.c
-> @@ -34,7 +34,7 @@ copy_range_help(void)
->   * glibc buffered copy fallback.
->   */
->  static loff_t
-> -copy_file_range_cmd(int fd, long long *src, long long *dst, long long len)
-> +copy_file_range_cmd(int fd, long long *src, long long *dst, size_t len)
->  {
->  	loff_t ret;
->  
-> @@ -78,7 +78,7 @@ copy_range_f(int argc, char **argv)
->  {
->  	long long src = 0;
->  	long long dst = 0;
-> -	long long len = 0;
-> +	size_t len = 0;
->  	int opt;
->  	int ret;
->  	int fd;
-> @@ -104,7 +104,7 @@ copy_range_f(int argc, char **argv)
->  			break;
->  		case 'l':
->  			len = cvtnum(fsblocksize, fssectsize, optarg);
-> -			if (len < 0) {
-> +			if (len == -1LL) {
->  				printf(_("invalid length -- %s\n"), optarg);
->  				return 0;
->  			}
-> 
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 69809345977e..3b101183ea19 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1574,6 +1574,16 @@ static ssize_t do_copy_file_range(struct file *file_in, loff_t pos_in,
+ 			    struct file *file_out, loff_t pos_out,
+ 			    size_t len, unsigned int flags)
+ {
++	ssize_t ret;
++
++	/*
++	 * Clear the security bits if the process is not being run by root.
++	 * This keeps people from modifying setuid and setgid binaries.
++	 */
++	ret = file_remove_privs(file_out);
++	if (ret)
++		return ret;
++
+ 	if (file_out->f_op->copy_file_range)
+ 		return file_out->f_op->copy_file_range(file_in, pos_in, file_out,
+ 						      pos_out, len, flags);
+-- 
+2.19.1
