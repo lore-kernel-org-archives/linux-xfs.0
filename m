@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:36446 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:36460 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726108AbeLCWZG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 17:25:06 -0500
+        with ESMTP id S1726036AbeLCWZL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 17:25:11 -0500
 Received: from ip-64-134-180-251.public.wayport.net ([64.134.180.251] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gTweI-00043Y-2S
-        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 22:25:06 +0000
+        id 1gTweM-0004sH-Qr
+        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 22:25:10 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/11] xfs: remove xfs_trim_extent_eof
-Date: Mon,  3 Dec 2018 17:24:53 -0500
-Message-Id: <20181203222503.30649-2-hch@lst.de>
+Subject: [PATCH 06/11] xfs: don't use delalloc extents for COW on files with extsize hints
+Date: Mon,  3 Dec 2018 17:24:58 -0500
+Message-Id: <20181203222503.30649-7-hch@lst.de>
 In-Reply-To: <20181203222503.30649-1-hch@lst.de>
 References: <20181203222503.30649-1-hch@lst.de>
 MIME-Version: 1.0
@@ -20,62 +20,101 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Opencoding this function in the only caller makes it blindly obvious
-what is going on instead of having to look at two files for that.
+While using delalloc for extsize hints is generally a good idea, the
+current code that does so only for COW doesn't help us much and creates
+a lot of special cases.  Switch it to use real allocations like we
+do for direct I/O.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 11 -----------
- fs/xfs/libxfs/xfs_bmap.h |  1 -
- fs/xfs/xfs_aops.c        |  2 +-
- 3 files changed, 1 insertion(+), 13 deletions(-)
+ fs/xfs/xfs_iomap.c   | 28 +++++++++++++++++-----------
+ fs/xfs/xfs_reflink.c |  5 ++++-
+ fs/xfs/xfs_reflink.h |  5 ++---
+ 3 files changed, 23 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 19e921d1586f..f16d42abc500 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3685,17 +3685,6 @@ xfs_trim_extent(
- 	}
- }
- 
--/* trim extent to within eof */
--void
--xfs_trim_extent_eof(
--	struct xfs_bmbt_irec	*irec,
--	struct xfs_inode	*ip)
--
--{
--	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
--					      i_size_read(VFS_I(ip))));
--}
--
- /*
-  * Trim the returned map to the required bounds
-  */
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 488dc8860fd7..f9a925caa70e 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -181,7 +181,6 @@ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
- 
- void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
- 		xfs_filblks_t len);
--void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
- int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
- int	xfs_bmap_set_attrforkoff(struct xfs_inode *ip, int size, int *version);
- void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 338b9d9984e0..d7275075878e 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -329,7 +329,7 @@ xfs_map_blocks(
- 	 * mechanism to protect us from arbitrary extent modifying contexts, not
- 	 * just eofblocks.
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 9f1fd224bb06..d851abac16a9 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1039,22 +1039,28 @@ xfs_file_iomap_begin(
+ 	 * been done up front, so we don't need to do them here.
  	 */
--	xfs_trim_extent_eof(&wpc->imap, ip);
-+	xfs_trim_extent(&wpc->imap, 0, XFS_B_TO_FSB(mp, i_size_read(inode)));
+ 	if (xfs_is_reflink_inode(ip)) {
++		struct xfs_bmbt_irec	orig = imap;
++
+ 		/* if zeroing doesn't need COW allocation, then we are done. */
+ 		if ((flags & IOMAP_ZERO) &&
+ 		    !needs_cow_for_zeroing(&imap, nimaps))
+ 			goto out_found;
  
- 	/*
- 	 * COW fork blocks can overlap data fork blocks even if the blocks
+-		if (flags & IOMAP_DIRECT) {
+-			/* may drop and re-acquire the ilock */
+-			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
+-					&lockmode);
+-			if (error)
+-				goto out_unlock;
+-		} else {
+-			error = xfs_reflink_reserve_cow(ip, &imap);
+-			if (error)
+-				goto out_unlock;
+-		}
++		error = xfs_reflink_allocate_cow(ip, &imap, &shared, &lockmode,
++						 flags);
++		if (error)
++			goto out_unlock;
++
++		/*
++		 * For buffered writes we need to report the address of the
++		 * previous block (if there was any) so that the higher level
++		 * write code can perform read-modify-write operations.  For
++		 * direct I/O code, which must be block aligned we need to
++		 * report the newly allocated address.
++		 */
++		if (!(flags & IOMAP_DIRECT) &&
++		    orig.br_startblock != HOLESTARTBLOCK)
++			imap = orig;
+ 
+ 		end_fsb = imap.br_startoff + imap.br_blockcount;
+ 		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index a8c32632090c..bdbaff1b3fb7 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -397,7 +397,8 @@ xfs_reflink_allocate_cow(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_bmbt_irec	*imap,
+ 	bool			*shared,
+-	uint			*lockmode)
++	uint			*lockmode,
++	unsigned		flags)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+@@ -471,6 +472,8 @@ xfs_reflink_allocate_cow(
+ 	if (nimaps == 0)
+ 		return -ENOSPC;
+ convert:
++	if (!(flags & IOMAP_DIRECT))
++		return 0;
+ 	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
+ 
+ out_unreserve:
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 6d73daef1f13..d76fc520cac8 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -12,10 +12,9 @@ extern int xfs_reflink_find_shared(struct xfs_mount *mp, struct xfs_trans *tp,
+ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+ 		struct xfs_bmbt_irec *irec, bool *shared);
+ 
+-extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
+-		struct xfs_bmbt_irec *imap);
+ extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
+-		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
++		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode,
++		unsigned flags);
+ extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t count);
+ 
 -- 
 2.19.1
