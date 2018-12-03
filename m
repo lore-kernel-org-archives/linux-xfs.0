@@ -1,37 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:54218 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:39534 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725894AbeLBQKV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Dec 2018 11:10:21 -0500
-Date: Sun, 2 Dec 2018 08:10:16 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS patches for stable
-Message-ID: <20181202161016.GA27696@infradead.org>
-References: <20181129060110.159878-25-sashal@kernel.org>
- <20181129121458.GK19305@dastard>
- <20181129124756.GA25945@kroah.com>
- <20181129224019.GM19305@dastard>
- <20181130082203.GA26830@kroah.com>
- <20181130101441.GA213156@sasha-vm>
- <20181130215005.GP19305@dastard>
- <20181201074909.GC213156@sasha-vm>
- <CAOQ4uxhCH3oxVWDMVRcXMZO3JSTCA1Pp5AYnHP5pDxyNktqONw@mail.gmail.com>
- <20181202152547.GI221015@sasha-vm>
+        with ESMTP id S1726560AbeLCQXS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 11:23:18 -0500
+Received: from [8.46.75.6] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1gTr01-00021X-0H
+        for linux-xfs@vger.kernel.org; Mon, 03 Dec 2018 16:23:09 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: COW improvements and always_cow support V3
+Date: Mon,  3 Dec 2018 11:21:20 -0500
+Message-Id: <20181203162131.11652-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181202152547.GI221015@sasha-vm>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sasha Levin <sashal@kernel.org>
-Cc: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Luis R. Chamberlain" <mcgrof@kernel.org>
+To: linux-xfs@vger.kernel.org
 
-As someone who has done xfs stable backports for a while I really don't
-think the autoselection is helpful at all.  Someone who is vaguely
-familiar with the code needs to manually select the commits and QA them,
-which takes a fair amount of time, but just needs some manual help if it
-should work ok.
+Hi all,
 
-I think we are about ready to have a new xfs stable maintainer lined up
-if everything works well fortunately.
+this series adds the always_cow mode support after improving our COW
+write support a little bit first.
+
+The always_cow mode stresses the COW path a lot, but with a few xfstests
+fixups it generall looks good, except for a few tests that complain about
+fragmentation, which is rather inherent in this mode, and xfs/326 which
+inserts error tags into the COW path not getting the expected result.
+
+Changes since v2:
+ - add a patch to remove xfs_trim_extent_eof
+ - add a patch to remove the separate io_type and rely on existing state
+   in the writeback path
+ - rework the truncate race handling in the writeback path a little more
+
+Changes since v1:
+ - make delalloc and unwritten extent conversions simpler and more robust
+ - add a few additional cleanups
+ - support all fallocate modes but actual preallocation
+ - rebase on top of a fix from Brian (which is included as first patch
+   to make the patch set more usable)
