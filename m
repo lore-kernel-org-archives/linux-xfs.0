@@ -1,62 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:62120 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725890AbeLCUOT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 15:14:19 -0500
-Date: Tue, 4 Dec 2018 07:14:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs_io: allow open file permissions to be changed
-Message-ID: <20181203201414.GE6311@dastard>
-References: <20181202205343.7104-1-david@fromorbit.com>
- <20181202205343.7104-3-david@fromorbit.com>
- <CACj3i73vnbe7P_HcdjGyBjThSZ-hMUCvTuVCzfMHMO_W7m2rxA@mail.gmail.com>
+Received: from mail-yb1-f193.google.com ([209.85.219.193]:35267 "EHLO
+        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726238AbeLCMhE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 07:37:04 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACj3i73vnbe7P_HcdjGyBjThSZ-hMUCvTuVCzfMHMO_W7m2rxA@mail.gmail.com>
+References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-10-david@fromorbit.com>
+In-Reply-To: <20181203083416.28978-10-david@fromorbit.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 3 Dec 2018 14:36:00 +0200
+Message-ID: <CAOQ4uxhiWGXrdzvXzsYcaTGL06xipDUC8KWMwGTBfcM+hZoekA@mail.gmail.com>
+Subject: Re: [PATCH 09/11] vfs: push copy_file_ranges -EXDEV checks down
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Mon, Dec 03, 2018 at 11:17:05AM +0100, Jan Tulak wrote:
-> On Sun, Dec 2, 2018 at 9:54 PM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > From: Dave Chinner <dchinner@redhat.com>
-> >
-> > I need to be able to open a file read-write, then change the
-> > permissions on the file to read-only to check that copy_file_range
-> > returns EPERM correctly in that case. This can't be done as root,
-> > because root ignores file permissions, but as a normal user we can't
-> > open a 0444 file for writing and so can't actually test writing to
-> > a read-only file without some method of "open read-write, change
-> > permissions to read-only, try to write to file through open
-> > read-write file".
-> >
-> > So, allow adding or removing write permissions on an open file.
-> >
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Should there be a man page update as well? Other commands from open.c
-> have a corresponding man section, but:
-> $ grep -c chmod man/man8/xfs_io.8
-> 0
+On Mon, Dec 3, 2018 at 10:34 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> We want to enable cross-filesystem copy_file_range functionality
+> where possible, so push the "same superblock only" checks down to
+> the individual filesystem callouts so they can make their own
+> decisions about cross-superblock copy offload.
+>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-I forgot that, thanks. So many other things to deal with.
+Looks good.
+You may add
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
-> And I wonder if the two permissions (0444 and 0664) are enough, or we
-> might want to add other modes as well. But maybe that can be added
-> when the need comes... Otherwise it looks good.
+Similar comment about overlayfs as patch 3.
 
-If we need more than "make read-only" or "make read-write" then we
-can do something more. But for pretty much all the cases where fine
-grained permissions are needed, the chmod command itself should
-suffice....
+ diff --git a/fs/overlayfs/file.c b/fs/overlayfs/file.c
+> index 68736e5d6a56..34fb0398d016 100644
+> --- a/fs/overlayfs/file.c
+> +++ b/fs/overlayfs/file.c
+> @@ -443,6 +443,14 @@ static loff_t ovl_copyfile(struct file *file_in, loff_t pos_in,
+>         const struct cred *old_cred;
+>         loff_t ret;
+>
+> +       /*
+> +        * Temporary. Cross device copy checks should be left to the copy file
+> +        * call on the real inodes, but existing behaviour checks the upper
+> +        * files only.
+> +        */
+> +       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
+> +               return -EXDEV;
+> +
+>         ret = ovl_real_fdget(file_out, &real_out);
+>         if (ret)
+>                 return ret;
+> @@ -491,7 +499,7 @@ static ssize_t ovl_copy_file_range(struct file *file_in, loff_t pos_in,
+>         ret =  ovl_copyfile(file_in, pos_in, file_out, pos_out, len, flags,
+>                             OVL_COPY);
+>
+> -       if (ret == -EOPNOTSUPP)
+> +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
+>                 ret = generic_copy_file_range(file_in, pos_in, file_out,
+>                                         pos_out, len, flags);
 
-Cheers,
+This fallback is already provided by vfs_copy_file_range().
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Amir.
