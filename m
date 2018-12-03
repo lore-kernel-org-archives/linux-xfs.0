@@ -1,100 +1,181 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:50580 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727242AbeLER2K (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Dec 2018 12:28:10 -0500
-Date: Wed, 5 Dec 2018 12:28:09 -0500
-Subject: Re: [PATCH 05/11] vfs: use inode_permission in copy_file_range()
-Message-ID: <20181205172809.GC5182@fieldses.org>
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:23697
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726001AbeLCIj7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 03:39:59 -0500
+Date: Mon, 3 Dec 2018 19:39:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 12/11] man-pages: copy_file_range updates
+Message-ID: <20181203083952.GC6311@dastard>
 References: <20181203083416.28978-1-david@fromorbit.com>
- <20181203083416.28978-6-david@fromorbit.com>
- <20181203181803.GX8125@magnolia>
- <20181203235517.GN6311@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181203235517.GN6311@dastard>
-From: bfields@fieldses.org (J. Bruce Fields)
+In-Reply-To: <20181203083416.28978-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, olga.kornievskaia@gmail.com, linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: olga.kornievskaia@gmail.com, linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
 
-On Tue, Dec 04, 2018 at 10:55:17AM +1100, Dave Chinner wrote:
-> On Mon, Dec 03, 2018 at 10:18:03AM -0800, Darrick J. Wong wrote:
-> > On Mon, Dec 03, 2018 at 07:34:10PM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Similar to FI_DEDUPERANGE, make copy_file_range() check that we have
-> > 
-> > TLDR: No, it's not similar to FIDEDUPERANGE -- the use of
-> > inode_permission() in allow_file_dedupe() is to enable callers to dedupe
-> > into a file for which the caller has write permissions but opened the
-> > file O_RDONLY.
-> 
-> What a grotty, nasty hack.
-> 
-> > [Please keep reading...]
-> > 
-> > > write permissions to the destination inode.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >  mm/filemap.c | 5 +++++
-> > >  1 file changed, 5 insertions(+)
-> > > 
-> > > diff --git a/mm/filemap.c b/mm/filemap.c
-> > > index 0a170425935b..876df5275514 100644
-> > > --- a/mm/filemap.c
-> > > +++ b/mm/filemap.c
-> > > @@ -3013,6 +3013,11 @@ int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
-> > >  	    (file_out->f_flags & O_APPEND))
-> > >  		return -EBADF;
-> > >  
-> > > +	/* may sure we really are allowed to write to the destination inode */
-> > > +	ret = inode_permission(inode_out, MAY_WRITE);
-> > 
-> > What's the difference between security_file_permission and
-> > inode_permission, and when do we call them for a regular
-> > open-write-close sequence?  Hmmm, let me take a look:
-> .....
-> > We also cannot dedupe into a file that becomes immutable after we open
-> > it for write, but we can dedupe into a file that loses its write
-> > permissions after we open it.
-> 
-> It's more nuanced than that - dedupe will proceed after write
-> permissions have been removed only if you are root or own the file,
-> otherwise it will fail.
-> 
-> Updated summary:
-> 
-> > op:		after +immutable?	after chmod a-w?
-> > write		yes			yes
-> > clonerange	no			yes
-> > dedupe	no			maybe
-> > newcopyrange	no			no
-> >
-> > My reaction: I don't think that writes should be allowed after an
-> > administrator marks a file immutable (but that's a separate issue) but I
-> > do think we should be consistent in allowing copying into a file that
-> > has lost its write permissions after we opened the file for write, like
-> > we do for write() and the remap ioct....
-> 
-> If we want to allow copying to files we don't actually have
-> permission to write to anymore, then I'll remove this from the test,
-> the man page and the code. But, quite frankly, I don't trust remote
-> server side copies to follow the same permission models as the
-> client side OS, so I think we have to treat copy_file_range
-> differently to a normal write syscall....
+From: Dave Chinner <dchinner@redhat.com>
 
-The NFS COPY command takes references to the protocol's equivalent to
-open files, and I'd expect permission checks should depend on the open
-mode, not the current file permissions.
+Update with all the missing errors the syscall can return, the
+behaviour the syscall should have w.r.t. to copies within single
+files, etc.
 
-But server behavior may vary.  I'm not sure that's a good guide for what
-to do locally.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ man2/copy_file_range.2 | 94 +++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 77 insertions(+), 17 deletions(-)
 
-In general I'm more comfortable the closer copy is to read & write.
-
---b.
+diff --git a/man2/copy_file_range.2 b/man2/copy_file_range.2
+index 20374abb21f0..23b00c2f3fea 100644
+--- a/man2/copy_file_range.2
++++ b/man2/copy_file_range.2
+@@ -42,9 +42,9 @@ without the additional cost of transferring data from the kernel to user space
+ and then back into the kernel.
+ It copies up to
+ .I len
+-bytes of data from file descriptor
++bytes of data from the source file descriptor
+ .I fd_in
+-to file descriptor
++to target file descriptor
+ .IR fd_out ,
+ overwriting any data that exists within the requested range of the target file.
+ .PP
+@@ -74,6 +74,11 @@ is not changed, but
+ .I off_in
+ is adjusted appropriately.
+ .PP
++.I fd_in
++and
++.I fd_out
++can refer to the same file. If they refer to the same file, then the source and
++target ranges are not allowed to overlap.
+ .PP
+ The
+ .I flags
+@@ -93,34 +98,73 @@ is set to indicate the error.
+ .SH ERRORS
+ .TP
+ .B EBADF
+-One or more file descriptors are not valid; or
++One or more file descriptors are not valid.
++.TP
++.B EBADF
+ .I fd_in
+ is not open for reading; or
+ .I fd_out
+-is not open for writing; or
+-the
++is not open for writing.
++.TP
++.B EBADF
++The
+ .B O_APPEND
+ flag is set for the open file description referred to by
+ .IR fd_out .
+ .TP
+ .B EFBIG
+-An attempt was made to write a file that exceeds the implementation-defined
+-maximum file size or the process's file size limit,
+-or to write at a position past the maximum allowed offset.
++An attempt was made to write at a position past the maximum file offset the
++kernel supports.
++.TP
++.B EFBIG
++An attempt was made to write a range that exceeds the allowed maximum file size.
++The maximum file size differs between filesystem implemenations and can be
++different to the maximum allowed file offset.
++.TP
++.B EFBIG
++An attempt was made to write beyond the process's file size resource
++limit. This may also result in the process receiving a
++.I SIGXFSZ
++signal.
+ .TP
+ .B EINVAL
+-Requested range extends beyond the end of the source file; or the
+-.I flags
+-argument is not 0.
++.I (off_in + len)
++spans the end of the source file.
+ .TP
+-.B EIO
+-A low-level I/O error occurred while copying.
++.B EINVAL
++.I fd_in
++and
++.I fd_out
++refer to the same file and the source and target ranges overlap.
++.TP
++.B EINVAL
++.I fd_in
++or
++.I fd_out
++is not a regular file.
+ .TP
+ .B EISDIR
+ .I fd_in
+ or
+ .I fd_out
+ refers to a directory.
++.B EINVAL
++The
++.I flags
++argument is not 0.
++.TP
++.B EINVAL
++.I off_in
++or
++.I (off_in + len)
++is beyond the maximum valid file offset.
++.TP
++.B EOVERFLOW
++The requested source or destination range is too large to represent in the
++specified data types.
++.TP
++.B EIO
++A low-level I/O error occurred while copying.
+ .TP
+ .B ENOMEM
+ Out of memory.
+@@ -128,16 +172,32 @@ Out of memory.
+ .B ENOSPC
+ There is not enough space on the target filesystem to complete the copy.
+ .TP
+-.B EXDEV
+-The files referred to by
+-.IR file_in " and " file_out
+-are not on the same mounted filesystem.
++.B TXTBSY
++.I fd_in
++or
++.I fd_out
++refers to an active swap file.
++.TP
++.B EPERM
++.I fd_out
++refers to an immutable file.
++.TP
++.B EACCES
++The user does not have write permissions for the destination file.
+ .SH VERSIONS
+ The
+ .BR copy_file_range ()
+ system call first appeared in Linux 4.5, but glibc 2.27 provides a user-space
+ emulation when it is not available.
+ .\" https://sourceware.org/git/?p=glibc.git;a=commit;f=posix/unistd.h;h=bad7a0c81f501fbbcc79af9eaa4b8254441c4a1f
++.PP
++A major rework of the kernel implementation occurred in 4.21. Areas of the API
++that weren't clearly defined were clarified and the API bounds are much more
++strictly checked than on earlier kernels. Applications should target the
++behaviour and requirements of 4.21 kernels.
++.PP
++First support for cross-filesystem copies was introduced in Linux 4.21. Older
++kernels will return -EXDEV when cross-filesystem copies are attempted.
+ .SH CONFORMING TO
+ The
+ .BR copy_file_range ()
