@@ -1,118 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49248 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:33100 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726151AbeLDNdK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Dec 2018 08:33:10 -0500
-Date: Tue, 4 Dec 2018 08:32:56 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_db: teach the frag command about sparse inode chunks
-Message-ID: <20181204133256.GA63916@bfoster>
-References: <d1f68754-46e9-e3d1-c8cc-e76d4accf974@redhat.com>
+        id S1725831AbeLDTYj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Dec 2018 14:24:39 -0500
+Subject: Re: [PATCH 1/4] xfsdump: (style) remove trailing whitespaces
+References: <20181128165649.56853-1-jtulak@redhat.com>
+ <20181128165649.56853-2-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d4ae9b40-5cc1-32c4-0b18-b57502c8a5a1@sandeen.net>
+Date: Tue, 4 Dec 2018 13:24:37 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d1f68754-46e9-e3d1-c8cc-e76d4accf974@redhat.com>
+In-Reply-To: <20181128165649.56853-2-jtulak@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Matthias Bodenbinder <matthias@bodenbinder.de>
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+Cc: sandeen@redhat.com
 
-On Mon, Dec 03, 2018 at 05:01:33PM -0600, Eric Sandeen wrote:
-> This is the equivalent of:
+On 11/28/18 10:56 AM, Jan Tulak wrote:
+> There were many trailing whitespaces through the whole code. As the rate
+> of changes in xfsdump is low, it should not cause trouble if we fix it
+> in all files at once and avoid issues (unintended changes) with sensibly
+> configured editors that automatically remove these on a file save.
 > 
-> ea8a48f xfs_check: process sparse inode chunks correctly
+> Can be tested with objdump.
 > 
-> for the frag_f() command in xfs_db.
+> Created by this script:
 > 
-> Without this, the xfs_db frag command shows corruption as it
-> wanders into blocks that are not inodes.
+> #!/usr/bin/env bash
+> # remove trailing whitespaces
 > 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=201823
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> find . -name '*.[ch]' ! -type d -exec bash -c '
+> sed -i \
+>     -e "s/\s*$//" \
+>     $0
+> ' {} \;
+> 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-Looks good to me, thanks.
+Hi Jan - 
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Finally got to looking at these, but this patch doesn't apply for me
+(even if retrieved from patchwork)
 
-> 
-> diff --git a/db/frag.c b/db/frag.c
-> index 6792d47..5f33cb7 100644
-> --- a/db/frag.c
-> +++ b/db/frag.c
-> @@ -466,29 +466,56 @@ scanfunc_ino(
->  	int			off;
->  	xfs_inobt_ptr_t		*pp;
->  	xfs_inobt_rec_t		*rp;
-> +	xfs_agblock_t		agbno;
-> +	xfs_agblock_t		end_agbno;
-> +	struct xfs_dinode	*dip;
-> +	int			blks_per_buf;
-> +	int			inodes_per_buf;
-> +	int			ioff;
-> +
-> +	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
-> +		blks_per_buf = xfs_icluster_size_fsb(mp);
-> +	else
-> +		blks_per_buf = mp->m_ialloc_blks;
-> +	inodes_per_buf = min(blks_per_buf << mp->m_sb.sb_inopblog,
-> +			     XFS_INODES_PER_CHUNK);
->  
->  	if (level == 0) {
->  		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
->  		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
->  			agino = be32_to_cpu(rp[i].ir_startino);
-> -			off = XFS_INO_TO_OFFSET(mp, agino);
-> +			agbno = XFS_AGINO_TO_AGBNO(mp, agino);
-> +			off = XFS_AGINO_TO_OFFSET(mp, agino);
-> +			end_agbno = agbno + mp->m_ialloc_blks;
-> +
->  			push_cur();
-> -			set_cur(&typtab[TYP_INODE],
-> -				XFS_AGB_TO_DADDR(mp, seqno,
-> -						 XFS_AGINO_TO_AGBNO(mp, agino)),
-> -				XFS_FSB_TO_BB(mp, mp->m_ialloc_blks),
-> -				DB_RING_IGN, NULL);
-> -			if (iocur_top->data == NULL) {
-> -				dbprintf(_("can't read inode block %u/%u\n"),
-> -					seqno, XFS_AGINO_TO_AGBNO(mp, agino));
-> -				continue;
-> -			}
-> -			for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-> -				if (XFS_INOBT_IS_FREE_DISK(&rp[i], j))
-> -					continue;
-> -				process_inode(agf, agino + j, (xfs_dinode_t *)
-> -					((char *)iocur_top->data +
-> -					((off + j) << mp->m_sb.sb_inodelog)));
-> +			ioff = 0;
-> +			while (agbno < end_agbno &&
-> +			       ioff < XFS_INODES_PER_CHUNK) {
-> +				if (xfs_inobt_is_sparse_disk(&rp[i], ioff))
-> +					goto next_buf;
-> +
-> +				set_cur(&typtab[TYP_INODE],
-> +					XFS_AGB_TO_DADDR(mp, seqno, agbno),
-> +					XFS_FSB_TO_BB(mp, blks_per_buf),
-> +					DB_RING_IGN, NULL);
-> +				if (iocur_top->data == NULL) {
-> +					dbprintf(_("can't read inode block %u/%u\n"),
-> +						 seqno, agbno);
-> +					goto next_buf;
-> +				}
-> +
-> +				for (j = 0; j < inodes_per_buf; j++) {
-> +					if (XFS_INOBT_IS_FREE_DISK(&rp[i], ioff + j))
-> +						goto next_buf;
-> +					dip = (xfs_dinode_t *)((char *)iocur_top->data +
-> +						((off + j) << mp->m_sb.sb_inodelog));
-> +					process_inode(agf, agino + ioff + j, dip);
-> +				}
-> +
-> +next_buf:
-> +				agbno += blks_per_buf;
-> +				ioff += inodes_per_buf;
->  			}
->  			pop_cur();
->  		}
-> 
+...
+
+
+> diff --git a/common/arch_xlate.c b/common/arch_xlate.c
+> index 1b8e687..4043a9d 100644
+> --- a/common/arch_xlate.c
+> +++ b/common/arch_xlate.c
+> @@ -135,12 +135,12 @@ xlate_drive_hdr(drive_hdr_t *dh1, drive_hdr_t *dh2, int dir)
+>  	     "\tdh_pad1 %s\n"
+>  	     "\tdh_specific %s\n"
+>  	     "\tdh_upper %s\n",
+> -	     ptr1->dh_drivecnt,
+> +	     ptr1->dh_drivecnt,
+>  	     ptr1->dh_driveix,
+>  	     ptr1->dh_strategyid,
+>  	     ptr1->dh_pad1,
+>  	     ptr1->dh_specific,
+> -	     ptr1->dh_upper);
+> +	     ptr1->dh_upper);
+
+
+...
+
+there seems to be no actual trailing whitespace on the "-" lines?
+
+-Eric
