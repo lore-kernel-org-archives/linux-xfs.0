@@ -1,63 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60894 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725973AbeLCSxK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Dec 2018 13:53:10 -0500
-Date: Mon, 3 Dec 2018 10:53:06 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-Subject: Re: [PATCH 05/11] vfs: use inode_permission in copy_file_range()
-Message-ID: <20181203185305.GA32539@gmail.com>
-References: <20181203083416.28978-1-david@fromorbit.com>
- <20181203083416.28978-6-david@fromorbit.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:42354 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726087AbeLDR7u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Dec 2018 12:59:50 -0500
+Date: Tue, 4 Dec 2018 09:59:31 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 8f67b5adc030
+Message-ID: <20181204175931.GH24487@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181203083416.28978-6-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, olga.kornievskaia@gmail.com, linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Zorro Lang <zlang@redhat.com>
 
-On Mon, Dec 03, 2018 at 07:34:10PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Similar to FI_DEDUPERANGE, make copy_file_range() check that we have
-> write permissions to the destination inode.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  mm/filemap.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 0a170425935b..876df5275514 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -3013,6 +3013,11 @@ int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
->  	    (file_out->f_flags & O_APPEND))
->  		return -EBADF;
->  
-> +	/* may sure we really are allowed to write to the destination inode */
-> +	ret = inode_permission(inode_out, MAY_WRITE);
-> +	if (ret < 0)
-> +		return ret;
-> +
->  	/* Ensure offsets don't wrap. */
->  	if (pos_in + count < pos_in || pos_out + count < pos_out)
->  		return -EOVERFLOW;
-> -- 
-> 2.19.1
-> 
+Hi folks,
 
-Why?  The file descriptor was already checked for write permission above:
+The for-next branch of the xfs-linux repository at:
 
-       if (!(file_in->f_mode & FMODE_READ) ||
-            !(file_out->f_mode & FMODE_WRITE) ||
-            (file_out->f_flags & O_APPEND))
-                return -EBADF;
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Yes, that doesn't detect removing write permission from the *inode*, but write()
-doesn't either.
+has just been updated.
 
-- Eric
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  Hopefully this will be the last of the 4.20 fixes
+so I can actually get on to reviewing things for 5.0.
+
+The new head of the for-next branch is commit:
+
+8f67b5adc030 iomap: partially revert 4721a601099 (simulated directio short read on EFAULT)
+
+New Commits:
+
+Darrick J. Wong (4):
+      [a579121f94ab] xfs: fix PAGE_MASK usage in xfs_free_file_space
+      [6744557b53a2] vfs: allow some remap flags to be passed to vfs_clone_file_range
+      [17614445576b] splice: don't read more than available pipe space
+      [8f67b5adc030] iomap: partially revert 4721a601099 (simulated directio short read on EFAULT)
+
+Eric Sandeen (1):
+      [7d048df4e9b0] xfs: fix inverted return from xfs_btree_sblock_verify_crc
+
+Ye Yin (1):
+      [de7243057e7c] fs/xfs: fix f_ffree value for statfs when project quota is set
+
+
+Code Diffstat:
+
+ fs/iomap.c                | 9 ---------
+ fs/read_write.c           | 2 +-
+ fs/splice.c               | 7 ++++++-
+ fs/xfs/libxfs/xfs_btree.c | 2 +-
+ fs/xfs/xfs_bmap_util.c    | 4 ++--
+ fs/xfs/xfs_qm_bhv.c       | 2 +-
+ 6 files changed, 11 insertions(+), 15 deletions(-)
