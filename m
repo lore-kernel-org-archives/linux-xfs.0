@@ -1,105 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:47130 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725987AbeLCTLj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 14:11:39 -0500
-Date: Mon, 3 Dec 2018 11:11:30 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/11] vfs: push EXDEV check down into ->remap_file_range
-Message-ID: <20181203191130.GD24487@magnolia>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:20643 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725887AbeLDVfx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Dec 2018 16:35:53 -0500
+Date: Wed, 5 Dec 2018 08:29:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/11] vfs: copy_file_range source range over EOF should
+ fail
+Message-ID: <20181204212948.GO6311@dastard>
 References: <20181203083416.28978-1-david@fromorbit.com>
- <20181203083416.28978-9-david@fromorbit.com>
- <CAOQ4uxgwZLsO1yV37_CHaZ-O+-+-OggSP9g6m9YE57kLPc5yDw@mail.gmail.com>
+ <20181203083416.28978-2-david@fromorbit.com>
+ <CAOQ4uxhOQY8M5rbgHKREN5qpeDGHv0-xK3r37Lj6XfqFoE4qjg@mail.gmail.com>
+ <20181204151332.GA32245@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgwZLsO1yV37_CHaZ-O+-+-OggSP9g6m9YE57kLPc5yDw@mail.gmail.com>
+In-Reply-To: <20181204151332.GA32245@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Amir Goldstein <amir73il@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Mon, Dec 03, 2018 at 01:04:07PM +0200, Amir Goldstein wrote:
-> On Mon, Dec 3, 2018 at 10:34 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > From: Dave Chinner <dchinner@redhat.com>
-> >
-> > before we can enable cross-device copies into copy_file_range(),
-> > we have to ensure that ->remap_file_range() implemenations will
-> > correctly reject attempts to do cross filesystem clones. Currently
+On Tue, Dec 04, 2018 at 07:13:32AM -0800, Christoph Hellwig wrote:
+> On Mon, Dec 03, 2018 at 02:46:20PM +0200, Amir Goldstein wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > >
+> > > The man page says:
+> > >
+> > > EINVAL Requested range extends beyond the end of the source file
+> > >
+> > > But the current behaviour is that copy_file_range does a short
+> > > copy up to the source file EOF. Fix the kernel behaviour to match
+> > > the behaviour described in the man page.
 > 
-> But you only fixed remap_file_range() implemenations of xfs and ocfs2...
+> I think the behavior implemented is a lot more useful than the one
+> documented..
+
+The current behaviour is really nasty. Because copy_file_range() can
+return short copies, the caller has to implement a loop to ensure
+the range hey want get copied.  When the source range you are
+trying to copy overlaps source EOF, this loop:
+
+	while (len > 0) {
+		ret = copy_file_range(... len ...)
+		...
+		off_in += ret;
+		off_out += ret;
+		len -= ret;
+	}
+
+Currently the fallback code copies up to the end of the source file
+on the first copy and then fails the second copy with EINVAL because
+the source range is now completely beyond EOF.
+
+So, from an application perspective, did the copy succeed or did it
+fail?
+
+Existing tools that exercise copy_file_range (like xfs_io) consider
+this a failure, because the second copy_file_range() call returns
+EINVAL and not some "there is no more to copy" marker like read()
+returning 0 bytes when attempting to read beyond EOF.
+
+IOWs, we cannot tell the difference between a real error and a short
+copy because the input range spans EOF and it was silently
+shortened. That's the API problem we need to fix here - the existing
+behaviour is really crappy for applications. Erroring out
+immmediately is one solution, and it's what the man page says should
+happen so that is what I implemented.
+
+Realistically, though, I think an attempt to read beyond EOF for the
+copy should result in behaviour like read() (i.e. return 0 bytes),
+not EINVAL. The existing behaviour needs to change, though.
+
+> > i_size_read()...
+> > 
+> > Otherwise
+> > Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 > 
-> > these checks are done above calls to ->remap_file_range(), but
-> > we need to drive them inwards so that we get EXDEV protection for all
-> > callers of ->remap_file_range().
-> >
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/read_write.c | 21 +++++++++++++--------
-> >  1 file changed, 13 insertions(+), 8 deletions(-)
-> >
-> > diff --git a/fs/read_write.c b/fs/read_write.c
-> > index 3288db1d5f21..174cf92eea1d 100644
-> > --- a/fs/read_write.c
-> > +++ b/fs/read_write.c
-> > @@ -1909,6 +1909,19 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> >         bool same_inode = (inode_in == inode_out);
-> >         int ret;
-> >
-> > +       /*
-> > +        * FICLONE/FICLONERANGE ioctls enforce that src and dest files are on
-> > +        * the same mount. Practically, they only need to be on the same file
-> > +        * system. We check this here rather than at the ioctl layers because
-> > +        * this is effectively a limitation of the fielsystem implementations,
-> > +        * not so much the API itself. Further, ->remap_file_range() can be
-> > +        * called from syscalls that don't have cross device copy restrictions
-> > +        * (such as copy_file_range()) and so we need to catch them before we
-> > +        * do any damage.
-> > +        */
-> > +       if (inode_in->i_sb != inode_out->i_sb)
-> > +               return -EXDEV;
-> > +
-> >         /* Don't touch certain kinds of inodes */
-> >         if (IS_IMMUTABLE(inode_out))
-> >                 return -EPERM;
-> > @@ -2013,14 +2026,6 @@ loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
-> >         if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-> >                 return -EINVAL;
-> >
-> > -       /*
-> > -        * FICLONE/FICLONERANGE ioctls enforce that src and dest files are on
-> > -        * the same mount. Practically, they only need to be on the same file
-> > -        * system.
-> > -        */
-> > -       if (inode_in->i_sb != inode_out->i_sb)
-> > -               return -EXDEV;
-> > -
-> 
+> Looks like this doesn't even compile?
 
-I think this is sort of backwards -- the checks should stay in
-do_clone_file_range, and vfs_copy_file_range should be calling that
-instead of directly calling ->remap_range():
+It's fixed in a later patch that consolidates the checks into a
+generic check function, but I'm not sure why my "compile every
+patch" script didn't catch this.
 
-vfs_copy_file_range()
-{
-	file_start_write(...);
-	ret = do_clone_file_range(...);
-	if (ret > 0)
-		return ret;
-	ret = do_copy_file_range(...);
-	file_end_write(...);
-	return ret;
-}
+Cheers,
 
-> That leaves {nfs42,cifs,btrfs}_remap_file_range() exposed to passing
-> files not of their own fs type let alone same sb when do_clone_file_range()
-> is called from ovl_copy_up_data().
-
-...and then I think this problem goes away.
-
---D
-
-> Thanks,
-> Amir.
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
