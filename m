@@ -1,201 +1,371 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:35798 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725964AbeLCTEk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 14:04:40 -0500
-Date: Mon, 3 Dec 2018 11:04:24 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 04/11] vfs: add missing checks to copy_file_range
-Message-ID: <20181203190424.GC24487@magnolia>
-References: <20181203083416.28978-1-david@fromorbit.com>
- <20181203083416.28978-5-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52848 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725797AbeLDSYb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Dec 2018 13:24:31 -0500
+Date: Tue, 4 Dec 2018 13:24:29 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: split up the xfs_reflink_end_cow work into
+ smaller transactions
+Message-ID: <20181204182428.GC63916@bfoster>
+References: <20181130191910.GN8125@magnolia>
+ <20181204180833.GI24487@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181203083416.28978-5-david@fromorbit.com>
+In-Reply-To: <20181204180833.GI24487@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, olga.kornievskaia@gmail.com, linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Dec 03, 2018 at 07:34:09PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Dec 04, 2018 at 10:08:33AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Like the clone and dedupe interfaces we've recently fixed, the
-> copy_file_range() implementation is missing basic sanity, limits and
-> boundary condition tests on the parameters that are passed to it
-> from userspace. Create a new "generic_copy_file_checks()" function
-> modelled on the generic_remap_checks() function to provide this
-> missing functionality.
+> In xfs_reflink_end_cow, we allocate a single transaction for the entire
+> end_cow operation and then loop the CoW fork mappings to move them to
+> the data fork.  This design fails on a heavily fragmented filesystem
+> where an inode's data fork has exactly one more extent than would fit in
+> an extents-format fork, because the unmap can collapse the data fork
+> into extents format (freeing the bmbt block) but the remap can expand
+> the data fork back into a (newly allocated) bmbt block.  If the number
+> of extents we end up remapping is large, we can overflow the block
+> reservation because we reserved blocks assuming that we were adding
+> mappings into an already-cleared area of the data fork.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Let's say we have 8 extents in the data fork, 8 extents in the CoW fork,
+> and the data fork can hold at most 7 extents before needing to convert
+> to btree format; and that blocks A-P are discontiguous single-block
+> extents:
+> 
+>    0......7
+> D: ABCDEFGH
+> C: IJKLMNOP
+> 
+> When a write to file blocks 0-7 completes, we must remap I-P into the
+> data fork.  We start by removing H from the btree-format data fork.  Now
+> we have 7 extents, so we convert the fork to extents format, freeing the
+> bmbt block.   We then move P into the data fork and it now has 8 extents
+> again.  We must convert the data fork back to btree format, requiring a
+> block allocation.  If we repeat this sequence for blocks 6-5-4-3-2-1-0,
+> we'll need a total of 8 block allocations to remap all 8 blocks.  We
+> reserved only enough blocks to handle one btree split (5 blocks on a 4k
+> block filesystem), which means we overflow the block reservation.
+> 
+> To fix this issue, create a separate helper function to remap a single
+> extent, and change _reflink_end_cow to call it in a tight loop over the
+> entire range we're completing.  As a side effect this also removes the
+> size restrictions on how many extents we can end_cow at a time, though
+> nobody ever hit that.  It is not reasonable to reserve N blocks to remap
+> N blocks.
+> 
+> Note that this can be reproduced after ~320 million fsx ops while
+> running generic/938 (long soak directio fsx exerciser):
+> 
+> XFS: Assertion failed: tp->t_blk_res >= tp->t_blk_res_used, file: fs/xfs/xfs_trans.c, line: 116
+> <machine registers snipped>
+> Call Trace:
+>  xfs_trans_dup+0x211/0x250 [xfs]
+>  xfs_trans_roll+0x6d/0x180 [xfs]
+>  xfs_defer_trans_roll+0x10c/0x3b0 [xfs]
+>  xfs_defer_finish_noroll+0xdf/0x740 [xfs]
+>  xfs_defer_finish+0x13/0x70 [xfs]
+>  xfs_reflink_end_cow+0x2c6/0x680 [xfs]
+>  xfs_dio_write_end_io+0x115/0x220 [xfs]
+>  iomap_dio_complete+0x3f/0x130
+>  iomap_dio_rw+0x3c3/0x420
+>  xfs_file_dio_aio_write+0x132/0x3c0 [xfs]
+>  xfs_file_write_iter+0x8b/0xc0 [xfs]
+>  __vfs_write+0x193/0x1f0
+>  vfs_write+0xba/0x1c0
+>  ksys_write+0x52/0xc0
+>  do_syscall_64+0x50/0x160
+>  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/read_write.c    | 27 ++++++------------
->  include/linux/fs.h |  3 ++
->  mm/filemap.c       | 69 ++++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 81 insertions(+), 18 deletions(-)
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_reflink.c |  232 ++++++++++++++++++++++++++++++--------------------
+>  1 file changed, 138 insertions(+), 94 deletions(-)
 > 
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index 44339b44accc..69809345977e 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -1578,7 +1578,7 @@ static ssize_t do_copy_file_range(struct file *file_in, loff_t pos_in,
->  		return file_out->f_op->copy_file_range(file_in, pos_in, file_out,
->  						      pos_out, len, flags);
->  
-> -	return generic_copy_file_range(file_in, &pos_in, file_out, &pos_out,
-> +	return generic_copy_file_range(file_in, pos_in, file_out, pos_out,
->  					len, flags);
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 322a852ce284..c5b4fa004ca4 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -623,54 +623,47 @@ xfs_reflink_cancel_cow_range(
 >  }
 >  
-> @@ -1598,10 +1598,14 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
->  	if (flags != 0)
->  		return -EINVAL;
->  
-> -	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
-> -		return -EISDIR;
-> -	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-> -		return -EINVAL;
-> +	/* this could be relaxed once a method supports cross-fs copies */
-> +	if (inode_in->i_sb != inode_out->i_sb)
-> +		return -EXDEV;
-> +
-> +	ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
-> +					flags);
-> +	if (ret < 0)
-> +		return ret;
->  
->  	ret = rw_verify_area(READ, file_in, &pos_in, len);
->  	if (unlikely(ret))
-> @@ -1611,22 +1615,9 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
->  	if (unlikely(ret))
->  		return ret;
->  
-> -	if (!(file_in->f_mode & FMODE_READ) ||
-> -	    !(file_out->f_mode & FMODE_WRITE) ||
-> -	    (file_out->f_flags & O_APPEND))
-> -		return -EBADF;
+>  /*
+> - * Remap parts of a file's data fork after a successful CoW.
+> + * Remap part of the CoW fork into the data fork.
+> + *
+> + * We aim to remap the range starting at @offset_fsb and ending at @end_fsb
+> + * into the data fork; this function will remap what it can (at the end of the
+> + * range) and update @end_fsb appropriately.  Each remap gets its own
+> + * transaction because we can end up merging and splitting bmbt blocks for
+> + * every remap operation and we'd like to keep the block reservation
+> + * requirements as low as possible.
+>   */
+> -int
+> -xfs_reflink_end_cow(
+> -	struct xfs_inode		*ip,
+> -	xfs_off_t			offset,
+> -	xfs_off_t			count)
+> +STATIC int
+> +xfs_reflink_end_cow_extent(
+> +	struct xfs_inode	*ip,
+> +	xfs_fileoff_t		offset_fsb,
+> +	xfs_fileoff_t		*end_fsb)
+>  {
+> -	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+> -	struct xfs_bmbt_irec		got, del;
+> -	struct xfs_trans		*tp;
+> -	xfs_fileoff_t			offset_fsb;
+> -	xfs_fileoff_t			end_fsb;
+> -	int				error;
+> -	unsigned int			resblks;
+> -	xfs_filblks_t			rlen;
+> -	struct xfs_iext_cursor		icur;
 > -
-> -	/* this could be relaxed once a method supports cross-fs copies */
-> -	if (inode_in->i_sb != inode_out->i_sb)
-> -		return -EXDEV;
-> -
->  	if (len == 0)
+> -	trace_xfs_reflink_end_cow(ip, offset, count);
+> +	struct xfs_bmbt_irec	got, del;
+> +	struct xfs_iext_cursor	icur;
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_trans	*tp;
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+> +	xfs_filblks_t		rlen;
+> +	unsigned int		resblks;
+> +	int			error;
+>  
+>  	/* No COW extents?  That's easy! */
+> -	if (ifp->if_bytes == 0)
+> +	if (ifp->if_bytes == 0) {
+> +		*end_fsb = offset_fsb;
 >  		return 0;
+> +	}
 >  
-> -	/* If the source range crosses EOF, fail the copy */
-> -	if (pos_in >= i_size(inode_in) || pos_in + len > i_size(inode_in))
-> -		return -EINVAL;
-> -
->  	file_start_write(file_out);
+> -	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+> -	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
+> +	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
+> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0,
+> +			XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
+> +	if (error)
+> +		return error;
 >  
 >  	/*
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index a4478764cf63..0d9d2d93d4df 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -3022,6 +3022,9 @@ extern ssize_t generic_write_checks(struct kiocb *, struct iov_iter *);
->  extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
->  				struct file *file_out, loff_t pos_out,
->  				loff_t *count, unsigned int remap_flags);
-> +extern int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
-> +				struct file *file_out, loff_t pos_out,
-> +				size_t *count, unsigned int flags);
->  extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
->  extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
->  extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 81adec8ee02c..0a170425935b 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -2975,6 +2975,75 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
->  	return 0;
->  }
+> -	 * Start a rolling transaction to switch the mappings.  We're
+> -	 * unlikely ever to have to remap 16T worth of single-block
+> -	 * extents, so just cap the worst case extent count to 2^32-1.
+> -	 * Stick a warning in just in case, and avoid 64-bit division.
+> +	 * Lock the inode.  We have to ijoin without automatic unlock because
+> +	 * the lead transaction is the refcountbt record deletion; the data
+> +	 * fork update follows as a deferred log item.
+>  	 */
+> -	BUILD_BUG_ON(MAX_RW_COUNT > UINT_MAX);
+> -	if (end_fsb - offset_fsb > UINT_MAX) {
+> -		error = -EFSCORRUPTED;
+> -		xfs_force_shutdown(ip->i_mount, SHUTDOWN_CORRUPT_INCORE);
+> -		ASSERT(0);
+> -		goto out;
+> -	}
+> -	resblks = XFS_NEXTENTADD_SPACE_RES(ip->i_mount,
+> -			(unsigned int)(end_fsb - offset_fsb),
+> -			XFS_DATA_FORK);
+> -	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
+> -			resblks, 0, XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
+> -	if (error)
+> -		goto out;
+> -
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ijoin(tp, ip, 0);
 >  
+> @@ -679,80 +672,131 @@ xfs_reflink_end_cow(
+>  	 * left by the time I/O completes for the loser of the race.  In that
+>  	 * case we are done.
+>  	 */
+> -	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
+> +	if (!xfs_iext_lookup_extent_before(ip, ifp, end_fsb, &icur, &got) ||
+> +	    got.br_startoff + got.br_blockcount <= offset_fsb) {
+> +		*end_fsb = offset_fsb;
+>  		goto out_cancel;
+> +	}
+>  
+> -	/* Walk backwards until we're out of the I/O range... */
+> -	while (got.br_startoff + got.br_blockcount > offset_fsb) {
+> -		del = got;
+> -		xfs_trim_extent(&del, offset_fsb, end_fsb - offset_fsb);
+> -
+> -		/* Extent delete may have bumped ext forward */
+> -		if (!del.br_blockcount)
+> -			goto prev_extent;
+> +	/*
+> +	 * Structure copy @got into @del, then trim @del to the range that we
+> +	 * were asked to remap.  We preserve @got for the eventual CoW fork
+> +	 * deletion; from now on @del represents the mapping that we're
+> +	 * actually remapping.
+> +	 */
+> +	del = got;
+> +	xfs_trim_extent(&del, offset_fsb, *end_fsb - offset_fsb);
+>  
+> -		/*
+> -		 * Only remap real extent that contain data.  With AIO
+> -		 * speculatively preallocations can leak into the range we
+> -		 * are called upon, and we need to skip them.
+> -		 */
+> -		if (!xfs_bmap_is_real_extent(&got))
+> -			goto prev_extent;
+> +	ASSERT(del.br_blockcount > 0);
+>  
+> -		/* Unmap the old blocks in the data fork. */
+> -		ASSERT(tp->t_firstblock == NULLFSBLOCK);
+> -		rlen = del.br_blockcount;
+> -		error = __xfs_bunmapi(tp, ip, del.br_startoff, &rlen, 0, 1);
+> -		if (error)
+> -			goto out_cancel;
+> +	/*
+> +	 * Only remap real extents that contain data.  With AIO, speculative
+> +	 * preallocations can leak into the range we are called upon, and we
+> +	 * need to skip them.
+> +	 */
+> +	if (!xfs_bmap_is_real_extent(&got)) {
+> +		*end_fsb = del.br_startoff;
+> +		goto out_cancel;
+> +	}
+>  
+> -		/* Trim the extent to whatever got unmapped. */
+> -		if (rlen) {
+> -			xfs_trim_extent(&del, del.br_startoff + rlen,
+> -				del.br_blockcount - rlen);
+> -		}
+> -		trace_xfs_reflink_cow_remap(ip, &del);
+> +	/* Unmap the old blocks in the data fork. */
+> +	rlen = del.br_blockcount;
+> +	error = __xfs_bunmapi(tp, ip, del.br_startoff, &rlen, 0, 1);
+> +	if (error)
+> +		goto out_cancel;
+>  
+> -		/* Free the CoW orphan record. */
+> -		error = xfs_refcount_free_cow_extent(tp, del.br_startblock,
+> -				del.br_blockcount);
+> -		if (error)
+> -			goto out_cancel;
+> +	/* Trim the extent to whatever got unmapped. */
+> +	xfs_trim_extent(&del, del.br_startoff + rlen, del.br_blockcount - rlen);
+> +	trace_xfs_reflink_cow_remap(ip, &del);
+>  
+> -		/* Map the new blocks into the data fork. */
+> -		error = xfs_bmap_map_extent(tp, ip, &del);
+> -		if (error)
+> -			goto out_cancel;
+> +	/* Free the CoW orphan record. */
+> +	error = xfs_refcount_free_cow_extent(tp, del.br_startblock,
+> +			del.br_blockcount);
+> +	if (error)
+> +		goto out_cancel;
+>  
+> -		/* Charge this new data fork mapping to the on-disk quota. */
+> -		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_DELBCOUNT,
+> -				(long)del.br_blockcount);
+> +	/* Map the new blocks into the data fork. */
+> +	error = xfs_bmap_map_extent(tp, ip, &del);
+> +	if (error)
+> +		goto out_cancel;
+>  
+> -		/* Remove the mapping from the CoW fork. */
+> -		xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
+> +	/* Charge this new data fork mapping to the on-disk quota. */
+> +	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_DELBCOUNT,
+> +			(long)del.br_blockcount);
+>  
+> -		error = xfs_defer_finish(&tp);
+> -		if (error)
+> -			goto out_cancel;
+> -		if (!xfs_iext_get_extent(ifp, &icur, &got))
+> -			break;
+> -		continue;
+> -prev_extent:
+> -		if (!xfs_iext_prev_extent(ifp, &icur, &got))
+> -			break;
+> -	}
+> +	/* Remove the mapping from the CoW fork. */
+> +	xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
+>  
+>  	error = xfs_trans_commit(tp);
+>  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  	if (error)
+> -		goto out;
+> +		return error;
 > +
-> +/*
-> + * Performs necessary checks before doing a file copy
-> + *
-> + * Can adjust amount of bytes to copy
-> + * Returns appropriate error code that caller should return or
-> + * zero in case the copy should be allowed.
-> + */
-> +int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
-> +			 struct file *file_out, loff_t pos_out,
-> +			 size_t *req_count, unsigned int flags)
-> +{
-> +	struct inode *inode_in = file_inode(file_in);
-> +	struct inode *inode_out = file_inode(file_out);
-> +	uint64_t count = *req_count;
-> +	uint64_t bcount;
-> +	loff_t size_in, size_out;
-> +	loff_t bs = inode_out->i_sb->s_blocksize;
-> +	int ret;
-> +
-> +	/* Don't touch certain kinds of inodes */
-> +	if (IS_IMMUTABLE(inode_out))
-> +		return -EPERM;
-> +
-> +	if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
-> +		return -ETXTBSY;
-> +
-> +	/* Don't copy dirs, pipes, sockets... */
-> +	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
-> +		return -EISDIR;
-> +	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-> +		return -EINVAL;
-> +
-> +	if (!(file_in->f_mode & FMODE_READ) ||
-> +	    !(file_out->f_mode & FMODE_WRITE) ||
-> +	    (file_out->f_flags & O_APPEND))
-> +		return -EBADF;
-
-These five checks are the same as the ones that are split between
-do_clone_file_range and generic_remap_file_range_prep.  Perhaps they
-should be factored into a single function that can be called from the
-do_clone_file_range function as well as do_copy_file_range?
-
-(I suspect also vfs_dedupe_file_range_one() should call it too, but the
-dedupe code is so grotty and weird...)
-
---D
-
-> +
-> +	/* Ensure offsets don't wrap. */
-> +	if (pos_in + count < pos_in || pos_out + count < pos_out)
-> +		return -EOVERFLOW;
-> +
-> +	size_in = i_size_read(inode_in);
-> +	size_out = i_size_read(inode_out);
-> +
-> +	/* If the source range crosses EOF, fail the copy */
-> +	if (pos_in >= size_in)
-> +		return -EINVAL;
-> +	if (pos_in + count > size_in)
-> +		return -EINVAL;
-> +
-> +	ret = generic_access_check_limits(file_in, pos_in, &count);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret = generic_write_check_limits(file_out, pos_out, &count);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* Don't allow overlapped copying within the same file. */
-> +	if (inode_in == inode_out &&
-> +	    pos_out + count > pos_in &&
-> +	    pos_out < pos_in + count)
-> +		return -EINVAL;
-> +
-> +	*req_count = count;
-> +	return 0;
+> +	/* Update the caller about how much progress we made. */
+> +	*end_fsb = del.br_startoff;
+>  	return 0;
+>  
+>  out_cancel:
+>  	xfs_trans_cancel(tp);
+>  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -out:
+> -	trace_xfs_reflink_end_cow_error(ip, error, _RET_IP_);
+> +	return error;
 > +}
 > +
->  int pagecache_write_begin(struct file *file, struct address_space *mapping,
->  				loff_t pos, unsigned len, unsigned flags,
->  				struct page **pagep, void **fsdata)
-> -- 
-> 2.19.1
-> 
+> +/*
+> + * Remap parts of a file's data fork after a successful CoW.
+> + */
+> +int
+> +xfs_reflink_end_cow(
+> +	struct xfs_inode		*ip,
+> +	xfs_off_t			offset,
+> +	xfs_off_t			count)
+> +{
+> +	xfs_fileoff_t			offset_fsb;
+> +	xfs_fileoff_t			end_fsb;
+> +	int				error = 0;
+> +
+> +	trace_xfs_reflink_end_cow(ip, offset, count);
+> +
+> +	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+> +	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
+> +
+> +	/*
+> +	 * Walk backwards until we're out of the I/O range.  The loop function
+> +	 * repeatedly cycles the ILOCK to allocate one transaction per remapped
+> +	 * extent.
+> +	 *
+> +	 * If we're being called by writeback then the the pages will still
+> +	 * have PageWriteback set, which prevents races with reflink remapping
+> +	 * and truncate.  Reflink remapping prevents races with writeback by
+> +	 * taking the iolock and mmaplock before flushing the pages and
+> +	 * remapping, which means there won't be any further writeback or page
+> +	 * cache dirtying until the reflink completes.
+> +	 *
+> +	 * We should never have two threads issuing writeback for the same file
+> +	 * region.  There are also have post-eof checks in the writeback
+> +	 * preparation code so that we don't bother writing out pages that are
+> +	 * about to be truncated.
+> +	 *
+> +	 * If we're being called as part of directio write completion, the dio
+> +	 * count is still elevated, which reflink and truncate will wait for.
+> +	 * Reflink remapping takes the iolock and mmaplock and waits for
+> +	 * pending dio to finish, which should prevent any directio until the
+> +	 * remap completes.  Multiple concurrent directio writes to the same
+> +	 * region are handled by end_cow processing only occurring for the
+> +	 * threads which succeed; the outcome of multiple overlapping direct
+> +	 * writes is not well defined anyway.
+> +	 *
+> +	 * It's possible that a buffered write and a direct write could collide
+> +	 * here (the buffered write stumbles in after the dio flushes and
+> +	 * invalidates the page cache and immediately queues writeback), but we
+> +	 * have never supported this 100%.  If either disk write succeeds the
+> +	 * blocks will be remapped.
+> +	 */
+> +	while (end_fsb > offset_fsb && !error)
+> +		error = xfs_reflink_end_cow_extent(ip, offset_fsb, &end_fsb);
+> +
+> +	if (error)
+> +		trace_xfs_reflink_end_cow_error(ip, error, _RET_IP_);
+>  	return error;
+>  }
+>  
