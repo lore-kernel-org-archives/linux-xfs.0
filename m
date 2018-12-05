@@ -1,307 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:34536 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725952AbeLGGYp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Dec 2018 01:24:45 -0500
-Subject: [PATCH 10/12] fsx: add copy_file_range support
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 06 Dec 2018 22:24:33 -0800
-Message-ID: <154416387314.15344.2165201747424065702.stgit@magnolia>
-In-Reply-To: <154416379233.15344.4377231692638417530.stgit@magnolia>
-References: <154416379233.15344.4377231692638417530.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:46992 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728238AbeLEVDM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Dec 2018 16:03:12 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id A98CC2F3D
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Dec 2018 21:03:12 +0000 (UTC)
+Subject: [PATCH 02/10] xfs: make checksum verifiers consistently return bools
+References: <542b81dc-b564-c5fa-86b4-b4dc8ac50b63@redhat.com>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <fb3cd029-89d0-4e4a-0795-6c109254546b@redhat.com>
+Date: Wed, 5 Dec 2018 15:03:05 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <542b81dc-b564-c5fa-86b4-b4dc8ac50b63@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+xfs_verify_cksum returns the result of a comparison, so make it
+a bool. xfs_buf_verify_cksum calls it, so make it a bool as well.
+Other callers up the callchain from here are already bools.
 
-Add support for the copy_file_range system call to fsx.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-[dchinner: copy_file_range() needs to obey read/write constraints
-otherwise is blows up when direct IO is used]
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- ltp/fsx.c |  165 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 163 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_cksum.h | 2 +-
+ fs/xfs/xfs_buf.h          | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index e7a88c04..316f08eb 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -34,6 +34,7 @@
- #ifdef AIO
- #include <libaio.h>
- #endif
-+#include <sys/syscall.h>
- 
- #ifndef MAP_FILE
- # define MAP_FILE 0
-@@ -106,6 +107,7 @@ enum {
- 	OP_INSERT_RANGE,
- 	OP_CLONE_RANGE,
- 	OP_DEDUPE_RANGE,
-+	OP_COPY_RANGE,
- 	OP_MAX_FULL,
- 
- 	/* integrity operations */
-@@ -169,6 +171,7 @@ int	mapped_reads = 1;		/* -R flag disables it */
- int	check_file = 0;			/* -X flag enables */
- int	clone_range_calls = 1;		/* -J flag disables */
- int	dedupe_range_calls = 1;		/* -B flag disables */
-+int	copy_range_calls = 1;		/* -E flag disables */
- int	integrity = 0;			/* -i flag */
- int	fsxgoodfd = 0;
- int	o_direct;			/* -Z */
-@@ -264,6 +267,7 @@ static const char *op_names[] = {
- 	[OP_INSERT_RANGE] = "insert_range",
- 	[OP_CLONE_RANGE] = "clone_range",
- 	[OP_DEDUPE_RANGE] = "dedupe_range",
-+	[OP_COPY_RANGE] = "copy_range",
- 	[OP_FSYNC] = "fsync",
- };
- 
-@@ -477,6 +481,20 @@ logdump(void)
- 			else if (overlap2)
- 				prt("\t******BBBB");
- 			break;
-+		case OP_COPY_RANGE:
-+			prt("COPY 0x%x thru 0x%x\t(0x%x bytes) to 0x%x thru 0x%x",
-+			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-+			    lp->args[1],
-+			    lp->args[2], lp->args[2] + lp->args[1] - 1);
-+			overlap2 = badoff >= lp->args[2] &&
-+				  badoff < lp->args[2] + lp->args[1];
-+			if (overlap && overlap2)
-+				prt("\tEEEE**EEEE");
-+			else if (overlap)
-+				prt("\tEEEE******");
-+			else if (overlap2)
-+				prt("\t******EEEE");
-+			break;
- 		case OP_FSYNC:
- 			prt("FSYNC");
- 			break;
-@@ -1558,6 +1576,110 @@ do_dedupe_range(unsigned offset, unsigned length, unsigned dest)
- }
- #endif
- 
-+#ifdef HAVE_COPY_FILE_RANGE
-+int
-+test_copy_range(void)
-+{
-+	loff_t o1 = 0, o2 = 0;
-+
-+	if (syscall(__NR_copy_file_range, fd, &o1, fd, &o2, 0, 0) == -1 &&
-+	    (errno == EOPNOTSUPP || errno == ENOTTY)) {
-+		if (!quiet)
-+			fprintf(stderr,
-+				"main: filesystem does not support "
-+				"copy range, disabling!\n");
-+		return 0;
-+	}
-+
-+	return 1;
-+}
-+
-+void
-+do_copy_range(unsigned offset, unsigned length, unsigned dest)
-+{
-+	loff_t o1, o2;
-+	size_t olen;
-+	ssize_t nr;
-+	int tries = 0;
-+
-+	if (length == 0) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping zero length copy range\n");
-+		log5(OP_COPY_RANGE, offset, length, dest, FL_SKIPPED);
-+		return;
-+	}
-+
-+	if ((loff_t)offset >= file_size) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping copy range behind EOF\n");
-+		log5(OP_COPY_RANGE, offset, length, dest, FL_SKIPPED);
-+		return;
-+	}
-+
-+	if (dest + length > biggest) {
-+		biggest = dest + length;
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("copying to largest ever: 0x%x\n", dest + length);
-+	}
-+
-+	log5(OP_COPY_RANGE, offset, length, dest, FL_NONE);
-+
-+	if (testcalls <= simulatedopcount)
-+		return;
-+
-+	if ((progressinterval && testcalls % progressinterval == 0) ||
-+	    (debug && (monitorstart == -1 || monitorend == -1 ||
-+		       dest <= monitorstart || dest + length <= monitorend))) {
-+		prt("%lu copy\tfrom 0x%x to 0x%x, (0x%x bytes) at 0x%x\n",
-+			testcalls, offset, offset+length, length, dest);
-+	}
-+
-+	o1 = offset;
-+	o2 = dest;
-+	olen = length;
-+
-+	while (olen > 0) {
-+		nr = syscall(__NR_copy_file_range, fd, &o1, fd, &o2, olen, 0);
-+		if (nr < 0) {
-+			if (errno != EAGAIN || tries++ >= 300)
-+				break;
-+		} else if (nr > olen) {
-+			prt("copy range: 0x%x to 0x%x at 0x%x\n", offset,
-+					offset + length, dest);
-+			prt("do_copy_range: asked %u, copied %u??\n",
-+					nr, olen);
-+			report_failure(161);
-+		} else if (nr > 0)
-+			olen -= nr;
-+	}
-+	if (nr < 0) {
-+		prt("copy range: 0x%x to 0x%x at 0x%x\n", offset,
-+				offset + length, dest);
-+		prterr("do_copy_range:");
-+		report_failure(161);
-+	}
-+
-+	memcpy(good_buf + dest, good_buf + offset, length);
-+	if (dest > file_size)
-+		memset(good_buf + file_size, '\0', dest - file_size);
-+	if (dest + length > file_size)
-+		file_size = dest + length;
-+}
-+
-+#else
-+int
-+test_copy_range(void)
-+{
-+	return 0;
-+}
-+
-+void
-+do_copy_range(unsigned offset, unsigned length, unsigned dest)
-+{
-+	return;
-+}
-+#endif
-+
- #ifdef HAVE_LINUX_FALLOC_H
- /* fallocate is basically a no-op unless extending, then a lot like a truncate */
- void
-@@ -1717,6 +1839,7 @@ op_args_count(int operation)
- 	switch (operation) {
- 	case OP_CLONE_RANGE:
- 	case OP_DEDUPE_RANGE:
-+	case OP_COPY_RANGE:
- 		return 4;
- 	default:
- 		return 3;
-@@ -1891,6 +2014,18 @@ test(void)
- 				 offset2 + size > file_size);
- 			break;
- 		}
-+	case OP_COPY_RANGE:
-+		TRIM_OFF_LEN(offset, size, file_size);
-+		offset -= offset % readbdy;
-+		if (o_direct)
-+			size -= size % readbdy;
-+		do {
-+			offset2 = random();
-+			TRIM_OFF(offset2, maxfilelen);
-+			offset2 -= offset2 % writebdy;
-+		} while (llabs(offset2 - offset) < size ||
-+			 offset2 + size > maxfilelen);
-+		break;
- 	}
- 
- have_op:
-@@ -1946,6 +2081,12 @@ test(void)
- 			goto out;
- 		}
- 		break;
-+	case OP_COPY_RANGE:
-+		if (!copy_range_calls) {
-+			log5(op, offset, size, offset2, FL_SKIPPED);
-+			goto out;
-+		}
-+		break;
- 	}
- 
- 	switch (op) {
-@@ -2036,6 +2177,18 @@ test(void)
- 
- 		do_dedupe_range(offset, size, offset2);
- 		break;
-+	case OP_COPY_RANGE:
-+		if (size == 0) {
-+			log5(OP_COPY_RANGE, offset, size, offset2, FL_SKIPPED);
-+			goto out;
-+		}
-+		if (offset2 + size > maxfilelen) {
-+			log5(OP_COPY_RANGE, offset, size, offset2, FL_SKIPPED);
-+			goto out;
-+		}
-+
-+		do_copy_range(offset, size, offset2);
-+		break;
- 	case OP_FSYNC:
- 		dofsync();
- 		break;
-@@ -2061,7 +2214,7 @@ void
- usage(void)
+diff --git a/fs/xfs/libxfs/xfs_cksum.h b/fs/xfs/libxfs/xfs_cksum.h
+index 999a290cfd72..1e3802a99867 100644
+--- a/fs/xfs/libxfs/xfs_cksum.h
++++ b/fs/xfs/libxfs/xfs_cksum.h
+@@ -71,7 +71,7 @@ xfs_update_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+ /*
+  * Helper to verify the checksum for a buffer.
+  */
+-static inline int
++static inline bool
+ xfs_verify_cksum(char *buffer, size_t length, unsigned long cksum_offset)
  {
- 	fprintf(stdout, "usage: %s",
--		"fsx [-dknqxABFJLOWZ] [-b opnum] [-c Prob] [-g filldata] [-i logdev] [-j logid] [-l flen] [-m start:end] [-o oplen] [-p progressinterval] [-r readbdy] [-s style] [-t truncbdy] [-w writebdy] [-D startingop] [-N numops] [-P dirpath] [-S seed] fname\n\
-+		"fsx [-dknqxABEFJLOWZ] [-b opnum] [-c Prob] [-g filldata] [-i logdev] [-j logid] [-l flen] [-m start:end] [-o oplen] [-p progressinterval] [-r readbdy] [-s style] [-t truncbdy] [-w writebdy] [-D startingop] [-N numops] [-P dirpath] [-S seed] fname\n\
- 	-b opnum: beginning operation number (default 1)\n\
- 	-c P: 1 in P chance of file close+open at each op (default infinity)\n\
- 	-d: debug output for all operations\n\
-@@ -2108,6 +2261,9 @@ usage(void)
- #ifdef FIDEDUPERANGE
- "	-B: Do not use dedupe range calls\n"
- #endif
-+#ifdef HAVE_COPY_FILE_RANGE
-+"	-E: Do not use copy range calls\n"
-+#endif
- "	-L: fsxLite - no file creations & no file size changes\n\
- 	-N numops: total # operations to do (default infinity)\n\
- 	-O: use oplen (see -o flag) for every op (default random)\n\
-@@ -2311,7 +2467,7 @@ main(int argc, char **argv)
- 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
+ 	uint32_t crc = xfs_start_cksum_safe(buffer, length, cksum_offset);
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index b9f5511ea998..5015255b5ede 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -359,7 +359,7 @@ static inline void xfs_buf_relse(xfs_buf_t *bp)
+ 	xfs_buf_rele(bp);
+ }
  
- 	while ((ch = getopt_long(argc, argv,
--				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyABD:FJKHzCILN:OP:RS:WXZ",
-+				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyABD:EFJKHzCILN:OP:RS:WXZ",
- 				 longopts, NULL)) != EOF)
- 		switch (ch) {
- 		case 'b':
-@@ -2447,6 +2603,9 @@ main(int argc, char **argv)
- 		case 'B':
- 			dedupe_range_calls = 0;
- 			break;
-+		case 'E':
-+			copy_range_calls = 0;
-+			break;
- 		case 'L':
- 		        lite = 1;
- 			o_flags &= ~(O_CREAT|O_TRUNC);
-@@ -2669,6 +2828,8 @@ main(int argc, char **argv)
- 		clone_range_calls = test_clone_range();
- 	if (dedupe_range_calls)
- 		dedupe_range_calls = test_dedupe_range();
-+	if (copy_range_calls)
-+		copy_range_calls = test_copy_range();
- 
- 	while (numops == -1 || numops--)
- 		if (!test())
+-static inline int
++static inline bool
+ xfs_buf_verify_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
+ {
+ 	return xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+-- 
+2.17.0
