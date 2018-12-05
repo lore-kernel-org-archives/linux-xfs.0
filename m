@@ -1,91 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42524 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726029AbeLGLUk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Dec 2018 06:20:40 -0500
-Date: Fri, 7 Dec 2018 12:20:36 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH RFC] Ext4: fix deadlock on dirty pages between fault and
- writeback
-Message-ID: <20181207112036.GA1286@dhcp22.suse.cz>
-References: <1540858969-75803-1-git-send-email-bo.liu@linux.alibaba.com>
- <20181127114249.GH16301@quack2.suse.cz>
- <20181128201122.r4sec265cnlxgj2x@US-160370MP2.local>
- <20181129085238.GD31087@quack2.suse.cz>
- <20181129120253.GR6311@dastard>
- <20181129130002.GM31087@quack2.suse.cz>
- <20181129204019.GS6311@dastard>
- <20181205170656.GJ30615@quack2.suse.cz>
- <20181207052051.GB6311@dastard>
- <20181207071615.GO1286@dhcp22.suse.cz>
+Received: from mx1.redhat.com ([209.132.183.28]:44910 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727575AbeLEVG4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Dec 2018 16:06:56 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 238B9308A958
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Dec 2018 21:06:56 +0000 (UTC)
+Subject: [PATCH 06/10] xfs: teach xfs_btree_[sl]block_verify_crc to populate
+ verifier context
+References: <542b81dc-b564-c5fa-86b4-b4dc8ac50b63@redhat.com>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <d45b96da-4ad1-3099-756e-8970934742f5@redhat.com>
+Date: Wed, 5 Dec 2018 15:06:51 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181207071615.GO1286@dhcp22.suse.cz>
+In-Reply-To: <542b81dc-b564-c5fa-86b4-b4dc8ac50b63@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, Liu Bo <bo.liu@linux.alibaba.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri 07-12-18 08:16:15, Michal Hocko wrote:
-[...]
-> Memcg v1 indeed doesn't have any dirty IO throttling and this is a
-> poor's man workaround. We still do not have that AFAIK and I do not know
-> of an elegant way around that. Fortunatelly we shouldn't have that many
-> GFP_KERNEL | __GFP_ACCOUNT allocations under page lock and we can work
-> around this specific one quite easily. I haven't tested this yet but the
-> following should work
-> 
-> diff --git a/mm/memory.c b/mm/memory.c
-> index 4ad2d293ddc2..59c98eeb0260 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-> @@ -2993,6 +2993,16 @@ static vm_fault_t __do_fault(struct vm_fault *vmf)
->  	struct vm_area_struct *vma = vmf->vma;
->  	vm_fault_t ret;
->  
-> +	/*
-> +	 * Preallocate pte before we take page_lock because this might lead to
-> +	 * deadlocks for memcg reclaim which waits for pages under writeback.
-> +	 */
-> +	if (!vmf->prealloc_pte) {
-> +		vmf->prealloc_pte = pte_alloc_one(vmf->vma->vm>mm, vmf->address);
-> +		if (!vmf->prealloc_pte)
-> +			return VM_FAULT_OOM;
-> +	}
-> +
->  	ret = vma->vm_ops->fault(vmf);
->  	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE | VM_FAULT_RETRY |
->  			    VM_FAULT_DONE_COW)))
+Rather than simply returning true/false, populate the verifier
+context as well.
 
-This is too eager to allocate pte even when it is not really needed.
-Jack has also pointed out that I am missing a write barrier. So here we
-go with an updated patch. This is essentially what fault around code
-does.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ fs/xfs/libxfs/xfs_btree.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/mm/memory.c b/mm/memory.c
-index 4ad2d293ddc2..1a73d2d4659e 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -2993,6 +2993,17 @@ static vm_fault_t __do_fault(struct vm_fault *vmf)
- 	struct vm_area_struct *vma = vmf->vma;
- 	vm_fault_t ret;
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index d4728f70fcc3..0b88cb04a719 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -297,11 +297,11 @@ xfs_btree_lblock_verify_crc(
  
-+	/*
-+	 * Preallocate pte before we take page_lock because this might lead to
-+	 * deadlocks for memcg reclaim which waits for pages under writeback.
-+	 */
-+	if (pmd_none(*vmf->pmd) && !vmf->prealloc_pte) {
-+		vmf->prealloc_pte = pte_alloc_one(vmf->vma->vm>mm, vmf->address);
-+		if (!vmf->prealloc_pte)
-+			return VM_FAULT_OOM;
-+		smp_wmb(); /* See comment in __pte_alloc() */
-+	}
-+
- 	ret = vma->vm_ops->fault(vmf);
- 	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE | VM_FAULT_RETRY |
- 			    VM_FAULT_DONE_COW)))
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		if (!xfs_log_check_lsn(mp, be64_to_cpu(block->bb_u.l.bb_lsn)))
+-			return false;
++			return XFS_CORRUPTED_RETURN(vc);
+ 		return xfs_buf_verify_cksum(vc, bp, XFS_BTREE_LBLOCK_CRC_OFF);
+ 	}
+ 
+-	return true;
++	return XFS_VERIFIED_RETURN(vc);
+ }
+ 
+ /*
+@@ -336,11 +336,11 @@ xfs_btree_sblock_verify_crc(
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		if (!xfs_log_check_lsn(mp, be64_to_cpu(block->bb_u.s.bb_lsn)))
+-			return false;
++			return XFS_CORRUPTED_RETURN(vc);
+ 		return xfs_buf_verify_cksum(vc, bp, XFS_BTREE_SBLOCK_CRC_OFF);
+ 	}
+ 
+-	return true;
++	return XFS_VERIFIED_RETURN(vc);
+ }
+ 
+ static int
 -- 
-Michal Hocko
-SUSE Labs
+2.17.0
