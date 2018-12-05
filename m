@@ -1,287 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:57342 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725952AbeLGGYg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Dec 2018 01:24:36 -0500
-Subject: [PATCH 09/12] fsstress: add copy_file_range support
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 06 Dec 2018 22:24:26 -0800
-Message-ID: <154416386688.15344.13463990940166415616.stgit@magnolia>
-In-Reply-To: <154416379233.15344.4377231692638417530.stgit@magnolia>
-References: <154416379233.15344.4377231692638417530.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:46226 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728156AbeLEVBa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Dec 2018 16:01:30 -0500
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 666EE613C
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Dec 2018 21:01:30 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2BD3618952
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Dec 2018 21:01:30 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH RFC 0/10] xfs: add verifier context structure
+Message-ID: <542b81dc-b564-c5fa-86b4-b4dc8ac50b63@redhat.com>
+Date: Wed, 5 Dec 2018 15:01:28 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+This patchset adds and uses an "xfs verifier context" structure
+in the callchains that lead into metadata verifiers and other
+validators.
 
-Support the copy_file_range syscall in fsstress.
+The high-level goal of this is twofold:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- configure.ac          |    2 +
- include/builddefs.in  |    1 
- ltp/Makefile          |    4 +
- ltp/fsstress.c        |  147 +++++++++++++++++++++++++++++++++++++++++++++++++
- m4/package_libcdev.m4 |   19 ++++++
- 5 files changed, 173 insertions(+)
+1) It lets us return whatever information we want about the point
+   of failure by populating the structure.  We /could/ add file, line,
+   function, code address, buffer offset, text description, whatever
+   we'd like.  For now it only contains the same info as we have today,
+   failaddr and errno.  For many of these options, we could easily
+   encapsulate it in a macro used at each failure point.
 
+1a) this hopefully may lead to more consistent error messages that don't
+    change depending on the compiler used, etc (which IMHO is a problem
+    with failaddr today).
 
-diff --git a/configure.ac b/configure.ac
-index aede4f59..19798824 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -68,6 +68,8 @@ AC_PACKAGE_WANT_OPEN_BY_HANDLE_AT
- AC_PACKAGE_WANT_LINUX_PRCTL_H
- AC_PACKAGE_WANT_LINUX_FS_H
- 
-+AC_HAVE_COPY_FILE_RANGE
-+
- AC_CHECK_FUNCS([renameat2])
- 
- AC_CONFIG_HEADER(include/config.h)
-diff --git a/include/builddefs.in b/include/builddefs.in
-index fb8e912b..2605e42d 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -67,6 +67,7 @@ HAVE_DMAPI = @have_dmapi@
- HAVE_ATTR_LIST = @have_attr_list@
- HAVE_FIEMAP = @have_fiemap@
- HAVE_FALLOCATE = @have_fallocate@
-+HAVE_COPY_FILE_RANGE = @have_copy_file_range@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- 
-diff --git a/ltp/Makefile b/ltp/Makefile
-index 5f784ecf..e4ca45f4 100644
---- a/ltp/Makefile
-+++ b/ltp/Makefile
-@@ -28,6 +28,10 @@ ifeq ($(HAVE_FALLOCATE), true)
- LCFLAGS += -DFALLOCATE
- endif
- 
-+ifeq ($(HAVE_COPY_FILE_RANGE),yes)
-+LCFLAGS += -DHAVE_COPY_FILE_RANGE
-+endif
-+
- default: depend $(TARGETS)
- 
- depend: .dep
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index af5d125f..99a1d733 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -26,6 +26,7 @@
- #include <libaio.h>
- io_context_t	io_ctx;
- #endif
-+#include <sys/syscall.h>
- 
- #ifndef FS_IOC_GETFLAGS
- #define FS_IOC_GETFLAGS                 _IOR('f', 1, long)
-@@ -55,6 +56,7 @@ typedef enum {
- 	OP_BULKSTAT1,
- 	OP_CHOWN,
- 	OP_CLONERANGE,
-+	OP_COPYRANGE,
- 	OP_CREAT,
- 	OP_DEDUPERANGE,
- 	OP_DREAD,
-@@ -163,6 +165,7 @@ void	bulkstat_f(int, long);
- void	bulkstat1_f(int, long);
- void	chown_f(int, long);
- void	clonerange_f(int, long);
-+void	copyrange_f(int, long);
- void	creat_f(int, long);
- void	deduperange_f(int, long);
- void	dread_f(int, long);
-@@ -212,6 +215,7 @@ opdesc_t	ops[] = {
- 	{ OP_BULKSTAT1, "bulkstat1", bulkstat1_f, 1, 0 },
- 	{ OP_CHOWN, "chown", chown_f, 3, 1 },
- 	{ OP_CLONERANGE, "clonerange", clonerange_f, 4, 1 },
-+	{ OP_COPYRANGE, "copyrange", copyrange_f, 4, 1 },
- 	{ OP_CREAT, "creat", creat_f, 4, 1 },
- 	{ OP_DEDUPERANGE, "deduperange", deduperange_f, 4, 1},
- 	{ OP_DREAD, "dread", dread_f, 4, 0 },
-@@ -2333,6 +2337,149 @@ clonerange_f(
- #endif
- }
- 
-+/* copy some arbitrary range of f1 to f2. */
-+void
-+copyrange_f(
-+	int			opno,
-+	long			r)
-+{
-+#ifdef HAVE_COPY_FILE_RANGE
-+	struct pathname		fpath1;
-+	struct pathname		fpath2;
-+	struct stat64		stat1;
-+	struct stat64		stat2;
-+	char			inoinfo1[1024];
-+	char			inoinfo2[1024];
-+	loff_t			lr;
-+	loff_t			off1;
-+	loff_t			off2;
-+	loff_t			max_off2;
-+	size_t			len;
-+	int			tries = 0;
-+	int			v1;
-+	int			v2;
-+	int			fd1;
-+	int			fd2;
-+	size_t			ret;
-+	int			e;
-+
-+	/* Load paths */
-+	init_pathname(&fpath1);
-+	if (!get_fname(FT_REGm, r, &fpath1, NULL, NULL, &v1)) {
-+		if (v1)
-+			printf("%d/%d: copyrange read - no filename\n",
-+				procid, opno);
-+		goto out_fpath1;
-+	}
-+
-+	init_pathname(&fpath2);
-+	if (!get_fname(FT_REGm, random(), &fpath2, NULL, NULL, &v2)) {
-+		if (v2)
-+			printf("%d/%d: copyrange write - no filename\n",
-+				procid, opno);
-+		goto out_fpath2;
-+	}
-+
-+	/* Open files */
-+	fd1 = open_path(&fpath1, O_RDONLY);
-+	e = fd1 < 0 ? errno : 0;
-+	check_cwd();
-+	if (fd1 < 0) {
-+		if (v1)
-+			printf("%d/%d: copyrange read - open %s failed %d\n",
-+				procid, opno, fpath1.path, e);
-+		goto out_fpath2;
-+	}
-+
-+	fd2 = open_path(&fpath2, O_WRONLY);
-+	e = fd2 < 0 ? errno : 0;
-+	check_cwd();
-+	if (fd2 < 0) {
-+		if (v2)
-+			printf("%d/%d: copyrange write - open %s failed %d\n",
-+				procid, opno, fpath2.path, e);
-+		goto out_fd1;
-+	}
-+
-+	/* Get file stats */
-+	if (fstat64(fd1, &stat1) < 0) {
-+		if (v1)
-+			printf("%d/%d: copyrange read - fstat64 %s failed %d\n",
-+				procid, opno, fpath1.path, errno);
-+		goto out_fd2;
-+	}
-+	inode_info(inoinfo1, sizeof(inoinfo1), &stat1, v1);
-+
-+	if (fstat64(fd2, &stat2) < 0) {
-+		if (v2)
-+			printf("%d/%d: copyrange write - fstat64 %s failed %d\n",
-+				procid, opno, fpath2.path, errno);
-+		goto out_fd2;
-+	}
-+	inode_info(inoinfo2, sizeof(inoinfo2), &stat2, v2);
-+
-+	/* Calculate offsets */
-+	len = (random() % FILELEN_MAX) + 1;
-+	if (len == 0)
-+		len = stat1.st_blksize;
-+	if (len > stat1.st_size)
-+		len = stat1.st_size;
-+
-+	lr = ((int64_t)random() << 32) + random();
-+	if (stat1.st_size == len)
-+		off1 = 0;
-+	else
-+		off1 = (off64_t)(lr % MIN(stat1.st_size - len, MAXFSIZE));
-+	off1 %= maxfsize;
-+
-+	/*
-+	 * If srcfile == destfile, randomly generate destination ranges
-+	 * until we find one that doesn't overlap the source range.
-+	 */
-+	max_off2 = MIN(stat2.st_size + (1024ULL * stat2.st_blksize), MAXFSIZE);
-+	do {
-+		lr = ((int64_t)random() << 32) + random();
-+		off2 = (off64_t)(lr % max_off2);
-+		off2 %= maxfsize;
-+	} while (stat1.st_ino == stat2.st_ino && llabs(off2 - off1) < len);
-+
-+	while (len > 0) {
-+		ret = syscall(__NR_copy_file_range, fd1, &off1, fd2, &off2,
-+			      len, 0);
-+		if (ret < 0) {
-+			if (errno != EAGAIN || tries++ >= 300)
-+				break;
-+		} else if (ret > len)
-+			break;
-+		else if (ret > 0)
-+			len -= ret;
-+	}
-+	e = ret < 0 ? errno : 0;
-+	if (v1 || v2) {
-+		printf("%d/%d: copyrange %s%s [%lld,%lld] -> %s%s [%lld,%lld]",
-+			procid, opno,
-+			fpath1.path, inoinfo1, (long long)off1, (long long)len,
-+			fpath2.path, inoinfo2, (long long)off2, (long long)len);
-+
-+		if (ret < 0)
-+			printf(" error %d", e);
-+		else if (len && ret > len)
-+			printf(" asked for %lld, copied %lld??\n",
-+				(long long)len, (long long)ret);
-+		printf("\n");
-+	}
-+
-+out_fd2:
-+	close(fd2);
-+out_fd1:
-+	close(fd1);
-+out_fpath2:
-+	free_pathname(&fpath2);
-+out_fpath1:
-+	free_pathname(&fpath1);
-+#endif
-+}
-+
- /* dedupe some arbitrary range of f1 to f2...fn. */
- void
- deduperange_f(
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index fb123f33..14e67e18 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -98,3 +98,22 @@ AC_DEFUN([AC_HAVE_GETMNTINFO],
-        AC_MSG_RESULT(no))
-     AC_SUBST(have_getmntinfo)
-   ])
-+
-+#
-+#
-+# Check if we have a copy_file_range system call (Linux)
-+#
-+AC_DEFUN([AC_HAVE_COPY_FILE_RANGE],
-+  [ AC_MSG_CHECKING([for copy_file_range])
-+    AC_TRY_LINK([
-+#define _GNU_SOURCE
-+#include <sys/syscall.h>
-+#include <unistd.h>
-+    ], [
-+         syscall(__NR_copy_file_range, 0, 0, 0, 0, 0, 0);
-+    ], have_copy_file_range=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_copy_file_range)
-+  ])
-+
+2) By passing the verifier context by reference, we can move the
+   verifiers back to booleans, instead of having the somewhat odd
+   bool / failaddr_t dichotomy depending on what we're calling.  This
+   then lets us condense some of the code.
+
+So now we have macros that let us do things like:
+
+	return XFS_CORRUPTED_RETURN(vc);
+or
+	return XFS_VERIFIED_RETURN(vc);
+
+which populate the context and return true or false.  We can also
+turn things like:
+
+        if (xfs_sb_version_hascrc(&mp->m_sb) &&
+            !xfs_buf_verify_cksum(bp, XFS_AGF_CRC_OFF))
+                xfs_verifier_error(bp, -EFSBADCRC, __this_address);
+        else {
+                fa = xfs_agf_verify(bp);
+                if (XFS_TEST_ERROR(fa, mp, XFS_ERRTAG_ALLOC_READ_AGF))
+                        xfs_verifier_error(bp, -EFSCORRUPTED, fa);
+        }
+
+into:
+
+       if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+                       !xfs_buf_verify_cksum(vc, bp, XFS_AGF_CRC_OFF)) ||
+           XFS_TEST_ERROR(!xfs_agf_verify(vc, bp),
+                       mp, XFS_ERRTAG_ALLOC_READ_AGF))
+                xfs_verifier_error(bp, vc);
+
+(is that better?)
+(I've wondered about moving the hascrc check into the verify_cksum f'n)
+
+when the failaddr return is changed to a bool.  Because all of the info
+is in vc, we don't have to explicitly pass in the errno because the failure
+point set it; this cleans up some other places as well.
+
+There are definitely things to improve; my (ab)use of macros probably
+isn't great, we should maybe have a verifier context initializer and
+checks that it was used properly (I had one bug in development where
+I forgot to set anything into the vc at failure and got back a garbage
+errno), it could maybe be pushed into more validators, maybe "context"
+is a bad name, etc.  Bikedshed away!
+
+But I wanted to throw this out there to see if people thought it was
+worth continuing on, and see what suggestions people have. 
+(the first patch or two are cleanups that could go now, I think).
+
+If the general approach seems good, I'll clean it up and then propose
+something that may be a bit more consistent but still as useful as the
+failaddr approach we have today.
+
+Thanks,
+-Eric
