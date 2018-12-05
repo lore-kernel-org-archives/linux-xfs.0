@@ -1,137 +1,254 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58304 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46985 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725989AbeLGNhx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Dec 2018 08:37:53 -0500
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        id S1727592AbeLEVMC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Dec 2018 16:12:02 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E6516C07455F
-        for <linux-xfs@vger.kernel.org>; Fri,  7 Dec 2018 13:37:52 +0000 (UTC)
-Date: Fri, 7 Dec 2018 08:37:47 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/10] xfs: set failaddr into vc for checksum failures
-Message-ID: <20181207133747.GC55482@bfoster>
+        by mx1.redhat.com (Postfix) with ESMTPS id 94FAD30026CB
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Dec 2018 21:12:01 +0000 (UTC)
+Subject: [PATCH 10/10] xfs: condense crc and verifier checks where possible
 References: <542b81dc-b564-c5fa-86b4-b4dc8ac50b63@redhat.com>
- <d380b0b8-b88f-fc96-8515-c5bd97918317@redhat.com>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <5ef4acb1-ce08-2246-8ac2-54da58e6c1b3@redhat.com>
+Date: Wed, 5 Dec 2018 15:11:51 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d380b0b8-b88f-fc96-8515-c5bd97918317@redhat.com>
+In-Reply-To: <542b81dc-b564-c5fa-86b4-b4dc8ac50b63@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Dec 05, 2018 at 03:09:48PM -0600, Eric Sandeen wrote:
-> Modify CRC checking functions to set __this_address into the
-> verifier context failaddr vc->fa using new macro XFS_BADCRC_RETURN,
-> and pass that to failure handlers as well.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c          |  4 ++--
->  fs/xfs/libxfs/xfs_alloc_btree.c    |  2 +-
->  fs/xfs/libxfs/xfs_attr_leaf.c      |  2 +-
->  fs/xfs/libxfs/xfs_bmap_btree.c     |  2 +-
->  fs/xfs/libxfs/xfs_cksum.h          |  5 ++++-
->  fs/xfs/libxfs/xfs_da_btree.c       |  3 +--
->  fs/xfs/libxfs/xfs_dir2_block.c     |  2 +-
->  fs/xfs/libxfs/xfs_dir2_data.c      |  2 +-
->  fs/xfs/libxfs/xfs_dir2_leaf.c      |  2 +-
->  fs/xfs/libxfs/xfs_dir2_node.c      |  2 +-
->  fs/xfs/libxfs/xfs_ialloc.c         |  2 +-
->  fs/xfs/libxfs/xfs_ialloc_btree.c   |  2 +-
->  fs/xfs/libxfs/xfs_refcount_btree.c |  2 +-
->  fs/xfs/libxfs/xfs_rmap_btree.c     |  2 +-
->  fs/xfs/libxfs/xfs_symlink_remote.c |  2 +-
->  fs/xfs/libxfs/xfs_types.h          | 12 ++++++++++--
->  fs/xfs/xfs_linux.h                 |  7 -------
->  17 files changed, 29 insertions(+), 26 deletions(-)
-> 
-...
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index 29b0d354d9b7..ab045e8dfcb9 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -45,8 +45,16 @@ struct xfs_vc {
->  	xfs_failaddr_t	fa;
->  };
->  
-> -#define XFS_CORRUPTED_RETURN(vc) ({(vc)->fa = __this_address; false;})
-> -#define XFS_VERIFIED_RETURN(vc) ({(vc)->fa = NULL; true;})
-> +/*
-> + * Return the address of a label.  Use barrier() so that the optimizer
-> + * won't reorder code to refactor the error jumpouts into a single
-> + * return, which throws off the reported address.
-> + */
-> +#define __this_address ({ __label__ __here; __here: barrier(); &&__here; })
-> + 
+Now that failaddr and errno are set within the validating functions, the
+if/else is unnecessary and we can do a compound test of crc || validated,
+i.e.
 
-FYI, minor whitespace damage on the line above.
+	if (!xfs_buf_verify_cksum(vc, bp, XFS_AGFL_CRC_OFF) ||
+	    !xfs_agfl_verify(vc, bp))
+		xfs_verifier_error(bp, vc);
 
-> +#define XFS_CORRUPTED_RETURN(vc)	({(vc)->fa = __this_address; false;})
-> +#define XFS_BADCRC_RETURN(vc)		({(vc)->fa = __this_address; false;})
-> +#define XFS_VERIFIED_RETURN(vc)		({(vc)->fa = NULL; true;})
->  
+This condenses the code a bit and makes it a little nicer.
 
-A couple high level comments..
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c          | 18 ++++++------------
+ fs/xfs/libxfs/xfs_alloc_btree.c    |  7 ++-----
+ fs/xfs/libxfs/xfs_attr_leaf.c      |  9 +++------
+ fs/xfs/libxfs/xfs_dir2_block.c     |  9 +++------
+ fs/xfs/libxfs/xfs_dir2_data.c      |  9 +++------
+ fs/xfs/libxfs/xfs_dir2_leaf.c      |  9 +++------
+ fs/xfs/libxfs/xfs_dir2_node.c      |  9 +++------
+ fs/xfs/libxfs/xfs_ialloc.c         | 11 ++++-------
+ fs/xfs/libxfs/xfs_symlink_remote.c |  7 ++-----
+ 9 files changed, 29 insertions(+), 59 deletions(-)
 
-I don't particularly care that much whether we bury function returns in
-the macro or open-code it, but the macro naming suggests the former
-(based on precedent of other such macros in XFS) while we implement the
-latter. If there's objection to a return within a macro, perhaps a
-reasonable compromise between this and the common pattern of having to
-return on a separate line is to tweak the macros to never clobber an
-existing error and update the verifiers to check/return failure state at
-opportune points. For example:
-
-	...
-	if (!uuid_equal(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid))
-		XFS_VC_CORRUPT(vc);
-	if (be32_to_cpu(agfl->agfl_magicnum) != XFS_AGFL_MAGIC)
-		XFS_VC_CORRUPT(vc);
-	if (bp->b_pag && be32_to_cpu(agfl->agfl_seqno) != bp->b_pag->pag_agno)
-		XFS_VC_CORRUPT(vc);
-	...
-
-	return vc->fa ? false : true;
-
-Of course, that assumes it's safe to keep checking the structure(s) as
-such in the event of corruption, which perhaps is not ideal. Anyways, we
-could also just return on a separate line or rename the macros. Just
-thinking out loud a bit.
-
-I'm also a little curious why we have the need for the success macro at
-all. I've only made a cursory pass at this point, but is there a
-particular need to set anything in the xfs_vc at the point of a
-successful return as opposed to just leaving the structure in the
-initialized state?
-
-Brian
-
->  /*
->   * Null values for the types.
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index edbd5a210df2..4141e70bb3fa 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -131,13 +131,6 @@ typedef __u32			xfs_nlink_t;
->  #define SYNCHRONIZE()	barrier()
->  #define __return_address __builtin_return_address(0)
->  
-> -/*
-> - * Return the address of a label.  Use barrier() so that the optimizer
-> - * won't reorder code to refactor the error jumpouts into a single
-> - * return, which throws off the reported address.
-> - */
-> -#define __this_address	({ __label__ __here; __here: barrier(); &&__here; })
-> -
->  #define XFS_PROJID_DEFAULT	0
->  
->  #define howmany(x, y)	(((x)+((y)-1))/(y))
-> -- 
-> 2.17.0
-> 
-> 
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 213a3078113c..5499438e6ee1 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -609,12 +609,9 @@ xfs_agfl_read_verify(
+ 	if (!xfs_sb_version_hascrc(&mp->m_sb))
+ 		return;
+ 
+-	if (!xfs_buf_verify_cksum(vc, bp, XFS_AGFL_CRC_OFF))
++	if (!xfs_buf_verify_cksum(vc, bp, XFS_AGFL_CRC_OFF) ||
++	    !xfs_agfl_verify(vc, bp))
+ 		xfs_verifier_error(bp, vc);
+-	else {
+-		if (!xfs_agfl_verify(vc, bp))
+-			xfs_verifier_error(bp, vc);
+-	}
+ }
+ 
+ static void
+@@ -2635,14 +2632,11 @@ xfs_agf_read_verify(
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-	    !xfs_buf_verify_cksum(vc, bp, XFS_AGF_CRC_OFF))
++	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
++			!xfs_buf_verify_cksum(vc, bp, XFS_AGF_CRC_OFF)) ||
++	    XFS_TEST_ERROR(!xfs_agf_verify(vc, bp),
++			mp, XFS_ERRTAG_ALLOC_READ_AGF))
+ 		xfs_verifier_error(bp, vc);
+-	else {
+-		if (XFS_TEST_ERROR(!xfs_agf_verify(vc, bp),
+-				   mp, XFS_ERRTAG_ALLOC_READ_AGF))
+-			xfs_verifier_error(bp, vc);
+-	}
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 9f56821b49af..84f3f9542279 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -346,12 +346,9 @@ xfs_allocbt_read_verify(
+ 	struct xfs_vc	*vc,
+ 	struct xfs_buf	*bp)
+ {
+-	if (!xfs_btree_sblock_verify_crc(vc, bp))
++	if (!xfs_btree_sblock_verify_crc(vc, bp) ||
++	    !xfs_allocbt_verify(vc, bp))
+ 		xfs_verifier_error(bp, vc);
+-	else {
+-		if (!xfs_allocbt_verify(vc, bp))
+-			xfs_verifier_error(bp, vc);
+-	}
+ 
+ 	if (bp->b_error)
+ 		trace_xfs_btree_corrupt(bp, _RET_IP_);
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 34958aa7fe5f..3f116f57c57d 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -357,13 +357,10 @@ xfs_attr3_leaf_read_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-	     !xfs_buf_verify_cksum(vc, bp, XFS_ATTR3_LEAF_CRC_OFF))
++	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
++			!xfs_buf_verify_cksum(vc, bp, XFS_ATTR3_LEAF_CRC_OFF)) ||
++	    !xfs_attr3_leaf_verify(vc, bp))
+ 		xfs_verifier_error(bp, vc);
+-	else {
+-		if (!xfs_attr3_leaf_verify(vc, bp))
+-			xfs_verifier_error(bp, vc);
+-	}
+ }
+ 
+ const struct xfs_buf_ops xfs_attr3_leaf_buf_ops = {
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 46db4a7269d8..b59d2331ee24 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -77,13 +77,10 @@ xfs_dir3_block_read_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-	     !xfs_buf_verify_cksum(vc, bp, XFS_DIR3_DATA_CRC_OFF))
++	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
++			!xfs_buf_verify_cksum(vc, bp, XFS_DIR3_DATA_CRC_OFF)) ||
++	    !xfs_dir3_block_verify(vc, bp))
+ 		xfs_verifier_error(bp, vc);
+-	else {
+-		if (!xfs_dir3_block_verify(vc, bp))
+-			xfs_verifier_error(bp, vc);
+-	}
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index 9904571a76d0..554d2b0f06b4 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -304,13 +304,10 @@ xfs_dir3_data_read_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-	    !xfs_buf_verify_cksum(vc, bp, XFS_DIR3_DATA_CRC_OFF))
++	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
++			!xfs_buf_verify_cksum(vc, bp, XFS_DIR3_DATA_CRC_OFF)) ||
++	    !xfs_dir3_data_verify(vc, bp))
+ 		xfs_verifier_error(bp, vc);
+-	else {
+-		if (!xfs_dir3_data_verify(vc, bp))
+-			xfs_verifier_error(bp, vc);
+-	}
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index aa423cd57bd7..b316f3d63e89 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -183,13 +183,10 @@ __read_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-	     !xfs_buf_verify_cksum(vc, bp, XFS_DIR3_LEAF_CRC_OFF))
++	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
++			!xfs_buf_verify_cksum(vc, bp, XFS_DIR3_LEAF_CRC_OFF)) ||
++	    !xfs_dir3_leaf_verify(vc, bp, magic))
+ 		xfs_verifier_error(bp, vc);
+-	else {
+-		if (!xfs_dir3_leaf_verify(vc, bp, magic))
+-			xfs_verifier_error(bp, vc);
+-	}
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 8a78233bff9d..b88452362247 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -116,13 +116,10 @@ xfs_dir3_free_read_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-	    !xfs_buf_verify_cksum(vc, bp, XFS_DIR3_FREE_CRC_OFF))
++	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
++			!xfs_buf_verify_cksum(vc, bp, XFS_DIR3_FREE_CRC_OFF)) ||
++	    !xfs_dir3_free_verify(vc, bp))
+ 		xfs_verifier_error(bp, vc);
+-	else {
+-		if (!xfs_dir3_free_verify(vc, bp))
+-			xfs_verifier_error(bp, vc);
+-	}
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 99df9cb8161e..ec6b32da1217 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2555,14 +2555,11 @@ xfs_agi_read_verify(
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-	    !xfs_buf_verify_cksum(vc, bp, XFS_AGI_CRC_OFF))
++	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
++			!xfs_buf_verify_cksum(vc, bp, XFS_AGI_CRC_OFF)) ||
++	    XFS_TEST_ERROR(!xfs_agi_verify(vc, bp),
++			   mp, XFS_ERRTAG_IALLOC_READ_AGI))
+ 		xfs_verifier_error(bp, vc);
+-	else {
+-		if (XFS_TEST_ERROR(!xfs_agi_verify(vc, bp),
+-				   mp, XFS_ERRTAG_IALLOC_READ_AGI))
+-			xfs_verifier_error(bp, vc);
+-	}
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+index 0c708fb92e89..9f251b5205a9 100644
+--- a/fs/xfs/libxfs/xfs_symlink_remote.c
++++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+@@ -124,12 +124,9 @@ xfs_symlink_read_verify(
+ 	if (!xfs_sb_version_hascrc(&mp->m_sb))
+ 		return;
+ 
+-	if (!xfs_buf_verify_cksum(vc, bp, XFS_SYMLINK_CRC_OFF))
++	if (!xfs_buf_verify_cksum(vc, bp, XFS_SYMLINK_CRC_OFF) ||
++	    !xfs_symlink_verify(vc, bp))
+ 		xfs_verifier_error(bp, vc);
+-	else {
+-		if (!xfs_symlink_verify(vc, bp))
+-			xfs_verifier_error(bp, vc);
+-	}
+ }
+ 
+ static void
+-- 
+2.17.0
