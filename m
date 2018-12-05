@@ -1,38 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f194.google.com ([209.85.219.194]:42386 "EHLO
-        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726238AbeLCM4y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 07:56:54 -0500
+Received: from sandeen.net ([63.231.237.45]:39386 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725909AbeLEDwt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Dec 2018 22:52:49 -0500
+Subject: Re: [PATCH 1/2] io: open pipes in non-blocking mode
+References: <20181202205343.7104-1-david@fromorbit.com>
+ <20181202205343.7104-2-david@fromorbit.com> <20181203162030.GT8125@magnolia>
+ <20181203201633.GF6311@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ae5b9e6a-3dd8-a58d-4225-7a21dccb3969@sandeen.net>
+Date: Tue, 4 Dec 2018 21:52:48 -0600
 MIME-Version: 1.0
-References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-12-david@fromorbit.com>
-In-Reply-To: <20181203083416.28978-12-david@fromorbit.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 3 Dec 2018 14:55:46 +0200
-Message-ID: <CAOQ4uxj9k6rHAXFrNPUDVD7Mw32JeK7T0HUaytxjvmguyjDjGw@mail.gmail.com>
-Subject: Re: [PATCH 11/11] ovl: allow cross-device copy_file_range calls
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20181203201633.GF6311@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Dec 3, 2018 at 10:34 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> From: Dave Chinner <dchinner@redhat.com>
->
-> Restrictions on cross-device copy_file_range() only affect the
-> vfs_copy_file_range() call to the lower filesystems. They will
-> handle the copy appropriately, so OVL will never see a EXDEV error
-> from them. Hence we can remove the EXDEV checks and error handling
-> from the ovl_copy_file_range() implementation.
->
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+On 12/3/18 2:16 PM, Dave Chinner wrote:
+> On Mon, Dec 03, 2018 at 08:20:30AM -0800, Darrick J. Wong wrote:
+>> On Mon, Dec 03, 2018 at 07:53:42AM +1100, Dave Chinner wrote:
+>>> From: Dave Chinner <dchinner@redhat.com>
+>>>
+>>> So that O_RDONLY open commands (such as from copy_range) do not
+>>> block forever waiting on a non-existent writer.
+>>>
+>>> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+>>> ---
+>>>  io/open.c | 13 +++++++++++++
+>>>  1 file changed, 13 insertions(+)
+>>>
+>>> diff --git a/io/open.c b/io/open.c
+>>> index 6ea3e9a2019f..b1d9a0fa317c 100644
+>>> --- a/io/open.c
+>>> +++ b/io/open.c
+>>> @@ -56,6 +56,7 @@ openfile(
+>>>  	struct fs_path	*fs_path)
+>>>  {
+>>>  	struct fs_path	*fsp;
+>>> +	struct stat	st;
+>>>  	int		fd;
+>>>  	int		oflags;
+>>>  
+>>> @@ -79,6 +80,18 @@ openfile(
+>>>  	if (flags & IO_NOFOLLOW)
+>>>  		oflags |= O_NOFOLLOW;
+>>>  
+>>> +	/*
+>>> +	 * if we've been passed a pipe to open, don't block waiting for a
+>>> +	 * reader or writer to appear. We want to either succeed or error out
+>>> +	 * immediately.
+>>> +	 */
+>>> +	if (stat(path, &st) < 0 && errno != ENOENT) {
+>>> +		perror("stat");
+>>> +		return -1;
+>>> +	}
+>>> +	if (S_ISFIFO(st.st_mode))
+>>
+>> Hmm... does stat() set st.st_mode even if it returns ENOENT?  Or are we
+>> possibly branching on an uninitialized st here?
+>>
+>> struct stat	st = { 0 }; ?
+> 
+> Yeah, I'll fix that.
 
-Looks good.
+I'll just do that on commit.
 
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-
-Thanks,
-Amir.
+-Eric
