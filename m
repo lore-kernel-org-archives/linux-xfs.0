@@ -1,324 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:41714 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725948AbeLGGYU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Dec 2018 01:24:20 -0500
-Subject: [PATCH 07/12] fsx: add FICLONERANGE support
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 06 Dec 2018 22:24:14 -0800
-Message-ID: <154416385390.15344.16754761288279379198.stgit@magnolia>
-In-Reply-To: <154416379233.15344.4377231692638417530.stgit@magnolia>
-References: <154416379233.15344.4377231692638417530.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:50996 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727195AbeLERHA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Dec 2018 12:07:00 -0500
+Date: Wed, 5 Dec 2018 18:06:56 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH RFC] Ext4: fix deadlock on dirty pages between fault and
+ writeback
+Message-ID: <20181205170656.GJ30615@quack2.suse.cz>
+References: <1540858969-75803-1-git-send-email-bo.liu@linux.alibaba.com>
+ <20181127114249.GH16301@quack2.suse.cz>
+ <20181128201122.r4sec265cnlxgj2x@US-160370MP2.local>
+ <20181129085238.GD31087@quack2.suse.cz>
+ <20181129120253.GR6311@dastard>
+ <20181129130002.GM31087@quack2.suse.cz>
+ <20181129204019.GS6311@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181129204019.GS6311@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Liu Bo <bo.liu@linux.alibaba.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Added MM people to CC since this starts to be relevant for them.
 
-Add support for the clone range (i.e. reflink) ioctl to fsx.
+On Fri 30-11-18 07:40:19, Dave Chinner wrote:
+> On Thu, Nov 29, 2018 at 02:00:02PM +0100, Jan Kara wrote:
+> > On Thu 29-11-18 23:02:53, Dave Chinner wrote:
+> > > On Thu, Nov 29, 2018 at 09:52:38AM +0100, Jan Kara wrote:
+> > > > On Wed 28-11-18 12:11:23, Liu Bo wrote:
+> > > > > On Tue, Nov 27, 2018 at 12:42:49PM +0100, Jan Kara wrote:
+> > > > > > CCed fsdevel since this may be interesting to other filesystem developers
+> > > > > > as well.
+> > > > > > 
+> > > > > > On Tue 30-10-18 08:22:49, Liu Bo wrote:
+> > > > > > > mpage_prepare_extent_to_map() tries to build up a large bio to stuff down
+> > > > > > > the pipe.  But if it needs to wait for a page lock, it needs to make sure
+> > > > > > > and send down any pending writes so we don't deadlock with anyone who has
+> > > > > > > the page lock and is waiting for writeback of things inside the bio.
+> > > > > > 
+> > > > > > Thanks for report! I agree the current code has a deadlock possibility you
+> > > > > > describe. But I think the problem reaches a bit further than what your
+> > > > > > patch fixes.  The problem is with pages that are unlocked but have
+> > > > > > PageWriteback set.  Page reclaim may end up waiting for these pages and
+> > > > > > thus any memory allocation with __GFP_FS set can block on these. So in our
+> > > > > > current setting page writeback must not block on anything that can be held
+> > > > > > while doing memory allocation with __GFP_FS set. Page lock is just one of
+> > > > > > these possibilities, wait_on_page_writeback() in
+> > > > > > mpage_prepare_extent_to_map() is another suspect and there mat be more. Or
+> > > > > > to say it differently, if there's lock A and GFP_KERNEL allocation can
+> > > > > > happen under lock A, then A cannot be taken by the writeback path. This is
+> > > > > > actually pretty subtle deadlock possibility and our current lockdep
+> > > > > > instrumentation isn't going to catch this.
+> > > > > >
+> > > > > 
+> > > > > Thanks for the nice summary, it's true that a lock A held in both
+> > > > > writeback path and memory reclaim can end up with deadlock.
+> > > > > 
+> > > > > Fortunately, by far there're only deadlock reports of page's lock bit
+> > > > > and writeback bit in both ext4 and btrfs[1].  I think
+> > > > > wait_on_page_writeback() would be OK as it's been protected by page
+> > > > > lock.
+> > > > > 
+> > > > > [1]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=01d658f2ca3c85c1ffb20b306e30d16197000ce7
+> > > > 
+> > > > Yes, but that may just mean that the other deadlocks are just harder to
+> > > > hit...
+> > > > 
+> > > > > > So I see two ways how to fix this properly:
+> > > > > > 
+> > > > > > 1) Change ext4 code to always submit the bio once we have a full page
+> > > > > > prepared for writing. This may be relatively simple but has a higher CPU
+> > > > > > overhead for bio allocation & freeing (actual IO won't really differ since
+> > > > > > the plugging code should take care of merging the submitted bios). XFS
+> > > > > > seems to be doing this.
+> > > > > 
+> > > > > Seems that that's the safest way to do it, but as you said there's
+> > > > > some tradeoff.
+> > > > > 
+> > > > > (Just took a look at xfs's writepages, xfs also did the page
+> > > > > collection if there're adjacent pages in xfs_add_to_ioend(), and since
+> > > > > xfs_vm_writepages() is using the generic helper write_cache_pages()
+> > > > > which calls lock_page() as well, it's still possible to run into the
+> > > > > above kind of deadlock.)
+> > > > 
+> > > > Originally I thought XFS doesn't have this problem but now when I look
+> > > > again, you are right that their ioend may accumulate more pages to write
+> > > > and so they are prone to the same deadlock ext4 is. Added XFS list to CC.
+> > > 
+> > > I don't think XFS has a problem here, because the deadlock is
+> > > dependent on holding a lock that writeback might take and then doing
+> > > a GFP_KERNEL allocation. I don't think we do that anywhere in XFS -
+> > > the only lock that is of concern here is the ip->i_ilock, and I
+> > > think we always do GFP_NOFS allocations inside that lock.
+> > > 
+> > > As it is, this sort of lock vs reclaim inversion should be caught by
+> > > lockdep - allocations and reclaim contexts are recorded by lockdep
+> > > we get reports if we do lock A - alloc and then do reclaim - lock A.
+> > > We've always had problems with false positives from lockdep for
+> > > these situations where common XFS code can be called from GFP_KERNEL
+> > > valid contexts as well as reclaim or GFP_NOFS-only contexts, but I
+> > > don't recall ever seeing such a report for the writeback path....
+> > 
+> > I think for A == page lock, XFS may have the problem (and lockdep won't
+> > notice because it does not track page locks). There are some parts of
+> > kernel which do GFP_KERNEL allocations under page lock - pte_alloc_one() is
+> > one such function which allocates page tables with GFP_KERNEL and gets
+> > called with the faulted page locked. And I believe there are others.
+> 
+> Where in direct reclaim are we doing writeback to XFS?
+> 
+> It doesn't happen, and I've recently proposed we remove ->writepage
+> support from XFS altogether so that memory reclaim never, ever
+> tries to write pages to XFS filesystems, even from kswapd.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- ltp/fsx.c |  157 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 152 insertions(+), 5 deletions(-)
+Direct reclaim will never do writeback but it may still wait for writeback
+that has been started by someone else. That is enough for the deadlock to
+happen. But from what you write below you seem to understand that so I just
+write this comment here so that others don't get confused.
 
+> > So direct reclaim from pte_alloc_one() can wait for writeback on page B
+> > while holding lock on page A. And if B is just prepared (added to bio,
+> > under writeback, unlocked) but not submitted in xfs_writepages() and we
+> > block on lock_page(A), we have a deadlock.
+> 
+> Fundamentally, doing GFP_KERNEL allocations with a page lock
+> held violates any ordering rules we might have for multiple page
+> locking order. This is asking for random ABBA reclaim deadlocks to
+> occur, and it's not a filesystem bug - that's a bug in the page
+> table code. e.g if we are doing this in a filesystem/page cache
+> context, it's always in ascending page->index order for pages
+> referenced by the inode's mapping. Memory reclaim provides none of
+> these lock ordering guarantees.
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 1907036e..d672925f 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -104,6 +104,7 @@ enum {
- 	OP_ZERO_RANGE,
- 	OP_COLLAPSE_RANGE,
- 	OP_INSERT_RANGE,
-+	OP_CLONE_RANGE,
- 	OP_MAX_FULL,
- 
- 	/* integrity operations */
-@@ -165,6 +166,7 @@ int	collapse_range_calls = 1;	/* -C flag disables */
- int	insert_range_calls = 1;		/* -I flag disables */
- int	mapped_reads = 1;		/* -R flag disables it */
- int	check_file = 0;			/* -X flag enables */
-+int	clone_range_calls = 1;		/* -J flag disables */
- int	integrity = 0;			/* -i flag */
- int	fsxgoodfd = 0;
- int	o_direct;			/* -Z */
-@@ -258,6 +260,7 @@ static const char *op_names[] = {
- 	[OP_ZERO_RANGE] = "zero_range",
- 	[OP_COLLAPSE_RANGE] = "collapse_range",
- 	[OP_INSERT_RANGE] = "insert_range",
-+	[OP_CLONE_RANGE] = "clone_range",
- 	[OP_FSYNC] = "fsync",
- };
- 
-@@ -320,7 +323,6 @@ log4(int operation, int arg0, int arg1, enum opflags flags)
- 		logptr = 0;
- }
- 
--
- void
- logdump(void)
- {
-@@ -342,7 +344,7 @@ logdump(void)
- 		count = LOGSIZE;
- 	}
- 	for ( ; count > 0; count--) {
--		bool overlap;
-+		bool overlap, overlap2;
- 		int opnum;
- 
- 		opnum = i+1 + (logcount/LOGSIZE)*LOGSIZE;
-@@ -444,6 +446,20 @@ logdump(void)
- 			if (overlap)
- 				prt("\t******IIII");
- 			break;
-+		case OP_CLONE_RANGE:
-+			prt("CLONE 0x%x thru 0x%x\t(0x%x bytes) to 0x%x thru 0x%x",
-+			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-+			    lp->args[1],
-+			    lp->args[2], lp->args[2] + lp->args[1] - 1);
-+			overlap2 = badoff >= lp->args[2] &&
-+				  badoff < lp->args[2] + lp->args[1];
-+			if (overlap && overlap2)
-+				prt("\tJJJJ**JJJJ");
-+			else if (overlap)
-+				prt("\tJJJJ******");
-+			else if (overlap2)
-+				prt("\t******JJJJ");
-+			break;
- 		case OP_FSYNC:
- 			prt("FSYNC");
- 			break;
-@@ -1304,6 +1320,96 @@ do_insert_range(unsigned offset, unsigned length)
- }
- #endif
- 
-+#ifdef FICLONERANGE
-+int
-+test_clone_range(void)
-+{
-+	struct file_clone_range	fcr = {
-+		.src_fd = fd,
-+	};
-+
-+	if (ioctl(fd, FICLONERANGE, &fcr) &&
-+	    (errno = EOPNOTSUPP || errno == ENOTTY)) {
-+		if (!quiet)
-+			fprintf(stderr,
-+				"main: filesystem does not support "
-+				"clone range, disabling!\n");
-+		return 0;
-+	}
-+
-+	return 1;
-+}
-+
-+void
-+do_clone_range(unsigned offset, unsigned length, unsigned dest)
-+{
-+	struct file_clone_range	fcr = {
-+		.src_fd = fd,
-+		.src_offset = offset,
-+		.src_length = length,
-+		.dest_offset = dest,
-+	};
-+
-+	if (length == 0) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping zero length clone range\n");
-+		log5(OP_CLONE_RANGE, offset, length, dest, FL_SKIPPED);
-+		return;
-+	}
-+
-+	if ((loff_t)offset >= file_size) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping clone range behind EOF\n");
-+		log5(OP_CLONE_RANGE, offset, length, dest, FL_SKIPPED);
-+		return;
-+	}
-+
-+	if (dest + length > biggest) {
-+		biggest = dest + length;
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("cloning to largest ever: 0x%x\n", dest + length);
-+	}
-+
-+	log5(OP_CLONE_RANGE, offset, length, dest, FL_NONE);
-+
-+	if (testcalls <= simulatedopcount)
-+		return;
-+
-+	if ((progressinterval && testcalls % progressinterval == 0) ||
-+	    (debug && (monitorstart == -1 || monitorend == -1 ||
-+		       dest <= monitorstart || dest + length <= monitorend))) {
-+		prt("%lu clone\tfrom 0x%x to 0x%x, (0x%x bytes) at 0x%x\n",
-+			testcalls, offset, offset+length, length, dest);
-+	}
-+
-+	if (ioctl(fd, FICLONERANGE, &fcr) == -1) {
-+		prt("clone range: 0x%x to 0x%x at 0x%x\n", offset,
-+				offset + length, dest);
-+		prterr("do_clone_range: FICLONERANGE");
-+		report_failure(161);
-+	}
-+
-+	memcpy(good_buf + dest, good_buf + offset, length);
-+	if (dest > file_size)
-+		memset(good_buf + file_size, '\0', dest - file_size);
-+	if (dest + length > file_size)
-+		file_size = dest + length;
-+}
-+
-+#else
-+int
-+test_clone_range(void)
-+{
-+	return 0;
-+}
-+
-+void
-+do_clone_range(unsigned offset, unsigned length, unsigned dest)
-+{
-+	return;
-+}
-+#endif
-+
- #ifdef HAVE_LINUX_FALLOC_H
- /* fallocate is basically a no-op unless extending, then a lot like a truncate */
- void
-@@ -1461,6 +1567,8 @@ static int
- op_args_count(int operation)
- {
- 	switch (operation) {
-+	case OP_CLONE_RANGE:
-+		return 4;
- 	default:
- 		return 3;
- 	}
-@@ -1534,7 +1642,7 @@ read_op(struct log_entry *log_entry)
- int
- test(void)
- {
--	unsigned long	offset;
-+	unsigned long	offset, offset2;
- 	unsigned long	size;
- 	unsigned long	rv;
- 	unsigned long	op;
-@@ -1565,6 +1673,7 @@ test(void)
- 			op = log_entry.operation;
- 			offset = log_entry.args[0];
- 			size = log_entry.args[1];
-+			offset2 = log_entry.args[2];
- 			closeopen = !!(log_entry.flags & FL_CLOSE_OPEN);
- 			keep_size = !!(log_entry.flags & FL_KEEP_SIZE);
- 			goto have_op;
-@@ -1577,6 +1686,7 @@ test(void)
- 		closeopen = (rv >> 3) < (1 << 28) / closeprob;
- 
- 	offset = random();
-+	offset2 = 0;
- 	size = maxoplen;
- 	if (randomoplen)
- 		size = random() % (maxoplen + 1);
-@@ -1602,6 +1712,17 @@ test(void)
- 		if (zero_range_calls && size && keep_size_calls)
- 			keep_size = random() % 2;
- 		break;
-+	case OP_CLONE_RANGE:
-+		TRIM_OFF_LEN(offset, size, file_size);
-+		offset = offset & ~(block_size - 1);
-+		size = size & ~(block_size - 1);
-+		do {
-+			offset2 = random();
-+			TRIM_OFF(offset2, maxfilelen);
-+			offset2 = offset2 & ~(block_size - 1);
-+		} while (llabs(offset2 - offset) < size ||
-+			 offset2 + size > maxfilelen);
-+		break;
- 	}
- 
- have_op:
-@@ -1645,6 +1766,12 @@ test(void)
- 			goto out;
- 		}
- 		break;
-+	case OP_CLONE_RANGE:
-+		if (!clone_range_calls) {
-+			log5(op, offset, size, offset2, FL_SKIPPED);
-+			goto out;
-+		}
-+		break;
- 	}
- 
- 	switch (op) {
-@@ -1711,6 +1838,18 @@ test(void)
- 
- 		do_insert_range(offset, size);
- 		break;
-+	case OP_CLONE_RANGE:
-+		if (size == 0) {
-+			log5(OP_CLONE_RANGE, offset, size, offset2, FL_SKIPPED);
-+			goto out;
-+		}
-+		if (offset2 + size > maxfilelen) {
-+			log5(OP_CLONE_RANGE, offset, size, offset2, FL_SKIPPED);
-+			goto out;
-+		}
-+
-+		do_clone_range(offset, size, offset2);
-+		break;
- 	case OP_FSYNC:
- 		dofsync();
- 		break;
-@@ -1736,7 +1875,7 @@ void
- usage(void)
- {
- 	fprintf(stdout, "usage: %s",
--		"fsx [-dknqxAFLOWZ] [-b opnum] [-c Prob] [-g filldata] [-i logdev] [-j logid] [-l flen] [-m start:end] [-o oplen] [-p progressinterval] [-r readbdy] [-s style] [-t truncbdy] [-w writebdy] [-D startingop] [-N numops] [-P dirpath] [-S seed] fname\n\
-+		"fsx [-dknqxAFJLOWZ] [-b opnum] [-c Prob] [-g filldata] [-i logdev] [-j logid] [-l flen] [-m start:end] [-o oplen] [-p progressinterval] [-r readbdy] [-s style] [-t truncbdy] [-w writebdy] [-D startingop] [-N numops] [-P dirpath] [-S seed] fname\n\
- 	-b opnum: beginning operation number (default 1)\n\
- 	-c P: 1 in P chance of file close+open at each op (default infinity)\n\
- 	-d: debug output for all operations\n\
-@@ -1777,6 +1916,9 @@ usage(void)
- #ifdef FALLOC_FL_INSERT_RANGE
- "	-I: Do not use insert range calls\n"
- #endif
-+#ifdef FICLONERANGE
-+"	-J: Do not use clone range calls\n"
-+#endif
- "	-L: fsxLite - no file creations & no file size changes\n\
- 	-N numops: total # operations to do (default infinity)\n\
- 	-O: use oplen (see -o flag) for every op (default random)\n\
-@@ -1980,7 +2122,7 @@ main(int argc, char **argv)
- 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
- 
- 	while ((ch = getopt_long(argc, argv,
--				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyAD:FKHzCILN:OP:RS:WXZ",
-+				 "b:c:dfg:i:j:kl:m:no:p:qr:s:t:w:xyAD:FJKHzCILN:OP:RS:WXZ",
- 				 longopts, NULL)) != EOF)
- 		switch (ch) {
- 		case 'b':
-@@ -2110,6 +2252,9 @@ main(int argc, char **argv)
- 		case 'I':
- 			insert_range_calls = 0;
- 			break;
-+		case 'J':
-+			clone_range_calls = 0;
-+			break;
- 		case 'L':
- 		        lite = 1;
- 			o_flags &= ~(O_CREAT|O_TRUNC);
-@@ -2328,6 +2473,8 @@ main(int argc, char **argv)
- 		collapse_range_calls = test_fallocate(FALLOC_FL_COLLAPSE_RANGE);
- 	if (insert_range_calls)
- 		insert_range_calls = test_fallocate(FALLOC_FL_INSERT_RANGE);
-+	if (clone_range_calls)
-+		clone_range_calls = test_clone_range();
- 
- 	while (numops == -1 || numops--)
- 		if (!test())
+So this is where I'd like MM people to tell their opinion. Reclaim code
+tries to avoid possible deadlocks on page lock by always doing trylock on
+the page. But as this example shows it is not enough once is blocks in
+wait_on_page_writeback().
+
+> Indeed, pte_alloc_one() doing hard coded GFP_KERNEL allocations is a
+> problem we've repeatedly tried to get fixed over the past 15 years
+> because of the need to call vmalloc in GFP_NOFS contexts. What we've
+> got now is just a "blessed hack" of using task based NOFS context
+> via memalloc_nofs_save() to override the hard coded pte allocation
+> context.
+> 
+> But that doesn't work with calls direct from page faults - it has no
+> idea filesystems or page locking orders for multiple page locking.
+> Using GFP_KERNEL while holding a page lock is a bug. Fix the damn
+> bug, not force everyone else who is doing things safely and
+> correctly to change their code.
+
+I'm fine with banning GFP_KERNEL allocations from under page lock. Life
+will be certainly easier for filesystems ... but harder for memory reclaim
+so let's see what other people think about this.
+
+> > Generally deadlocks like these will be invisible to lockdep because it does
+> > not track either PageWriteback or PageLocked as a dependency.
+> 
+> And, because lockdep doesn't report it, it's not a bug that needs
+> fixing, eh?
+
+The bug definitely needs fixing IMO. Real user hit it after all...
+
+> > > If we switch away which holding a partially built bio, the only page
+> > > we have locked is the one we are currently trying to add to the bio.
+> > > Lock ordering prevents deadlocks on that one page, and all other
+> > > pages in the bio being built are marked as under writeback and are
+> > > not locked. Hence anything that wants to modify a page held in the
+> > > bio will block waiting for page writeback to clear, not the page
+> > > lock.
+> > 
+> > Yes, and the blocking on writeback of such page in direct reclaim is
+> > exactly one link in the deadlock chain...
+> 
+> So, like preventing explicit writeback in direct reclaim, we either
+> need to prevent direct reclaim from waiting on writeback or use
+> GFP_NOFS allocation context when holding a page lock. The bug is not
+> in the filesystem code here.
+
+								Honza
+
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
