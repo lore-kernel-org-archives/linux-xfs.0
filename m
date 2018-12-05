@@ -1,84 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:41362 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725948AbeLGGX4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Dec 2018 01:23:56 -0500
-Subject: [PATCH 05/12] fsx: use an enum to define the operation commands
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 06 Dec 2018 22:23:52 -0800
-Message-ID: <154416383217.15344.12016288717012656827.stgit@magnolia>
-In-Reply-To: <154416379233.15344.4377231692638417530.stgit@magnolia>
-References: <154416379233.15344.4377231692638417530.stgit@magnolia>
+Received: from fieldses.org ([173.255.197.46]:50510 "EHLO fieldses.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727195AbeLEQvw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Dec 2018 11:51:52 -0500
+Date: Wed, 5 Dec 2018 11:51:51 -0500
+Subject: Re: [PATCH 01/11] vfs: copy_file_range source range over EOF should
+ fail
+Message-ID: <20181205165151.GB5182@fieldses.org>
+References: <20181203083416.28978-1-david@fromorbit.com>
+ <20181203083416.28978-2-david@fromorbit.com>
+ <CAOQ4uxhOQY8M5rbgHKREN5qpeDGHv0-xK3r37Lj6XfqFoE4qjg@mail.gmail.com>
+ <20181204151332.GA32245@infradead.org>
+ <20181204212948.GO6311@dastard>
+ <CAN-5tyGU=y5JO5UNcmn3rX1gRyK_UxjQvQ+kCsP34_NT2-mQ_A@mail.gmail.com>
+ <20181204223102.GR6311@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181204223102.GR6311@dastard>
+From: bfields@fieldses.org (J. Bruce Fields)
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Allison Henderson <allison.henderson@oracle.com>, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Olga Kornievskaia <olga.kornievskaia@gmail.com>, Christoph Hellwig <hch@infradead.org>, Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Dec 05, 2018 at 09:31:02AM +1100, Dave Chinner wrote:
+> That's what the code does right now and *exactly what I'm trying to
+> fix* because it EINVAL is ambiguous and not an indicator that we've
+> reached the end of the source file. EINVAL can indicate several
+> different errors, so it really has to be treated as a "copy failed"
+> error by applications.
+> 
+> Have a look at read/pread() - they return 0 in this case to indicate
+> a short read, and the value of zero is explicitly defined as meaning
+> "read position is beyond EOF".  Applications know straight away that
+> there is no more data to be read and there was no error, so can
+> terminate on a successful short read.
+> 
+> We need to allow applications to terminate copy loops on a
+> successful short copy.
 
-Use an enum to define operation codes and the boundaries between
-operation classes so that we can add new commands without having to
-change a bunch of unrelated #defines.
+I'm a little confused by your definition of "short copy" and "short
+read".  Are you using that to mean a copy/read that returns zero?  I
+usually see it used to mean any successful call that returned less than
+the requested amount.  I'd expect a zero return to terminate a copy
+loop, but not any positive return.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-By: Allison Henderson <allison.henderson@oracle.com>
----
- ltp/fsx.c |   40 +++++++++++++++++++++-------------------
- 1 file changed, 21 insertions(+), 19 deletions(-)
+--b.
 
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 191a5936..c3db62e4 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -88,25 +88,27 @@ int			logcount = 0;	/* total ops */
-  * mode being run.
-  */
- 
--/* common operations */
--#define	OP_READ		0
--#define OP_WRITE	1
--#define OP_MAPREAD	2
--#define OP_MAPWRITE	3
--#define OP_MAX_LITE	4
--
--/* !lite operations */
--#define OP_TRUNCATE		4
--#define OP_FALLOCATE		5
--#define OP_PUNCH_HOLE		6
--#define OP_ZERO_RANGE		7
--#define OP_COLLAPSE_RANGE	8
--#define OP_INSERT_RANGE	9
--#define OP_MAX_FULL		10
--
--/* integrity operations */
--#define OP_FSYNC		10
--#define OP_MAX_INTEGRITY	11
-+enum {
-+	/* common operations */
-+	OP_READ = 0,
-+	OP_WRITE,
-+	OP_MAPREAD,
-+	OP_MAPWRITE,
-+	OP_MAX_LITE,
-+
-+	/* !lite operations */
-+	OP_TRUNCATE = OP_MAX_LITE,
-+	OP_FALLOCATE,
-+	OP_PUNCH_HOLE,
-+	OP_ZERO_RANGE,
-+	OP_COLLAPSE_RANGE,
-+	OP_INSERT_RANGE,
-+	OP_MAX_FULL,
-+
-+	/* integrity operations */
-+	OP_FSYNC = OP_MAX_FULL,
-+	OP_MAX_INTEGRITY,
-+};
- 
- #undef PAGE_SIZE
- #define PAGE_SIZE       getpagesize()
+> IOWs, applications need to either:
+> 
+> 	- get an immediate error saying the range is invalid rather
+> 	  than doing a short copy (as per the man page); or
+> 	- have an explicit marker to say "no more data to be copied"
+> 
+> Applications need the "no more data to copy" case to be explicit and
+> unambiguous so they can make sane decisions about whether a short
+> copy was successful because the file was shorter than expected or
+> whether a short copy was a result of a real error being encountered.
+> The current behaviour is largely unusable for applications because
+> they have to guess at the reason for EINVAL part way through a
+> copy....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
