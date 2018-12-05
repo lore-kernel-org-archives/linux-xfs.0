@@ -1,53 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33638 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725952AbeLGGXR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Dec 2018 01:23:17 -0500
-Subject: [PATCH v4 00/12] xfstests: add copy/dedupe/clone to fsx/fsstress
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 06 Dec 2018 22:23:12 -0800
-Message-ID: <154416379233.15344.4377231692638417530.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:43806 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725909AbeLEE44 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Dec 2018 23:56:56 -0500
+Subject: Re: [PATCH] xfsdump: don't fail installation if /sbin is symlink of
+ /usr/sbin
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <20181101104732.19322-1-jtulak@redhat.com>
+ <1a662234-f71a-7208-76f9-9f2f89aa8255@sandeen.net>
+Message-ID: <c9bea20c-058c-d715-8b2b-9ac55e77c131@sandeen.net>
+Date: Tue, 4 Dec 2018 22:56:55 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1a662234-f71a-7208-76f9-9f2f89aa8255@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
 
-Hi all,
+On 12/4/18 10:48 PM, Eric Sandeen wrote:
+> On 11/1/18 5:47 AM, Jan Tulak wrote:
+>> Some distributions, like Fedora, have /bin and /sbin as symlinks
+>> pointing to /usr/* and this patch adds compatibility for these cases.
+> 
+> xfsdump builds fine on Fedora, but only because somebody (me) was
+> bad long long ago, in the spec file:
+> 
+> # Bit of a hack to move files from /sbin to /usr/sbin
+> (cd $RPM_BUILD_ROOT/%{_sbindir}; rm xfsdump xfsrestore)
+> (cd $RPM_BUILD_ROOT/%{_sbindir}; mv ../../sbin/xfsdump .)
+> (cd $RPM_BUILD_ROOT/%{_sbindir}; mv ../../sbin/xfsrestore .)
+> 
+> I ... don't know why that was done.  Seems like dump/restore /should/
+> just live in /sbin, no?  I'm not sure what the symlink is/was for
+> in the first place...
+> 
+> but I guess Debian does package it up that way:
+> 
+> # dpkg-query -L xfsdump | grep xfsrestore | xargs ls -l
+> -rwxr-xr-x 1 root root 246088 Aug  1  2014 /sbin/xfsrestore
+> lrwxrwxrwx 1 root root     16 Aug  1  2014 /usr/sbin/xfsrestore -> /sbin/xfsrestore
+> 
+> so, um, I guess this seems ok to handle the /sbin == /usr/sbin case.
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-This series adds to fsx and fsstress support for FICLONERANGE,
-FIDEDUPERANGE, and copy_file_range.  The only differences since v3 have
-been to deal with copy_file_range's short copies correctly...ish.
+Heh, ok, yes your fix is what I should have done 6 years ago :D
 
-The first three patches fix gcc warnings in fsx and fsstress.
-
-Patch 4 adds an -X option to fsx that causes it to re-read the fsx file
-after every operation to compare it to the good buffer.  This made it
-easier for me to find corruption problem as soon as they happen, though
-it slows down fsx and perturbs in-core state considerably.
-
-Patche 5-6 are a couple of generic reworks to fsx that we need to
-support the new clone/dedupe/copy commands.
-
-Patches 7-8 add clone and dedupe to fsx.
-
-Patches 9-10 add copy_file_range support to fsstress and fsx.
-
-Patch 11 fixes the common/dump tests to disable the new commands so that
-the dump/restore tests continue to function exactly as they have for
-years.
-
-Patch 12 contains long-soak fsx tests designed to draw out corruption
-problems by running (1 million * TIME_FACTOR) operations.  These will be
-running all weekend during the US Thanksgiving holiday, though I hope
-we've sorted out all the problems.
-
-There are known failures in XFS on 4.20-rc5, particularly with
-copy_file_range and reflink, all of which hopefully will have been fixed
-by the time 4.21 comes out.  Dave Chinner has more fixes in progress to
-correct various flaws of copy_file_range.
-
---D
+Thanks,
+-Eric
