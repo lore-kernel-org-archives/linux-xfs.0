@@ -1,85 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:62905 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725909AbeLCXAM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 18:00:12 -0500
-Date: Tue, 4 Dec 2018 10:00:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/11] vfs: introduce generic_copy_file_range()
-Message-ID: <20181203230007.GG6311@dastard>
-References: <20181203083416.28978-1-david@fromorbit.com>
- <20181203083416.28978-3-david@fromorbit.com>
- <CAOQ4uxiSjmmm5OBx+K5qff4mtL5jSih71izWGQKjA_WQSLe=AA@mail.gmail.com>
+Received: from mail-ua1-f66.google.com ([209.85.222.66]:41128 "EHLO
+        mail-ua1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727240AbeLERB7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Dec 2018 12:01:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxiSjmmm5OBx+K5qff4mtL5jSih71izWGQKjA_WQSLe=AA@mail.gmail.com>
+References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-10-david@fromorbit.com>
+ <20181204154347.GA6925@infradead.org> <20181204221847.GQ6311@dastard> <20181205140925.GA21109@infradead.org>
+In-Reply-To: <20181205140925.GA21109@infradead.org>
+From: Olga Kornievskaia <olga.kornievskaia@gmail.com>
+Date: Wed, 5 Dec 2018 12:01:45 -0500
+Message-ID: <CAN-5tyEuEidvyjmOUpc7zM=JgWsDpaoiBtzywDBC4TXmxVxxKw@mail.gmail.com>
+Subject: Re: [PATCH 09/11] vfs: push copy_file_ranges -EXDEV checks down
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: david@fromorbit.com, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Mon, Dec 03, 2018 at 12:03:41PM +0200, Amir Goldstein wrote:
-> On Mon, Dec 3, 2018 at 10:34 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > From: Dave Chinner <dchinner@redhat.com>
-> >
-> > Right now if vfs_copy_file_range() does not use any offload
-> > mechanism, it falls back to calling do_splice_direct(). This fails
-> > to do basic sanity checks on the files being copied. Before we
-> > start adding this necessarily functionality to the fallback path,
-> > separate it out into generic_copy_file_range().
-> >
-> > generic_copy_file_range() has the same prototype as
-> > ->copy_file_range() so that filesystems can use it in their custom
-> > ->copy_file_range() method if they so choose.
-> >
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> 
-> Looks good.
-> 
-> Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-> 
-> Question:
-> 2 years ago you suggested that I covert the overlayfs copy up
-> code that does a do_direct_splice() with a loop of vfs_copy_file_range():
-> https://marc.info/?l=linux-fsdevel&m=147369468521525&w=2
-> We ended up with a slightly different solution, but with your recent
-> changes, I can get back to your original proposal.
-> 
-> Back then, I wondered whether it makes sense to push the killable
-> loop of shorter do_direct_splice() calls into the vfs helper.
-> What do you think about adding this to generic_copy_file_range()
-> now? (I can do that after your changes are merged).
+On Wed, Dec 5, 2018 at 9:09 AM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Wed, Dec 05, 2018 at 09:18:47AM +1100, Dave Chinner wrote:
+> > I'll drop it if you want, but then I'll just have to come back after
+> > all the NFS code is merged and do yet more cleanup work.
+>
+> IFF we want these NFS "features" we'll have to get it right before
+> merging the code.  But even with that I'd rather fix the glaring
+> issues you are fixing in your first patches as a priority before
+> adding more features.  In other words:  don't worry about NFS, lets
+> get the existing code right before worrying about the next round
+> of potential issues.
 
-No. Adding another loop on top of all the loops already in the
-do_direct_splice() is just crazy. The code is hard enough to follow
-to begin with. If we are going to make do_splice_direct() killable,
-then it needs to be done the splice_direct_to_actor loop that
-already splits large splice ranges up into smaller chunks.
+Dave,
 
-As it is, addressing the flaws of do_splice_direct() is not
-something I'm about to do in this patchset. It has many issues, and
-it's yet another piece of work we need to undertake to make
-copy_file_range() somewhat user friendly.
+Do you mind in v2 removing the 'retry, ret=EAGAIN' piece and leave the
+call to the nfs42_copy_file_range() (with the superblock block check)?
+If not, I could provide the patch.
 
-> The fact that userspace *can* enter a very long unkillable loop
-> with current copy_file_range() syscall doesn't mean that we
-> *should* persist this situation. After all, fixing the brokenness
-> of the existing interface is what you set out to do.
+This is a piece of code that got in as a part of the async copy
+patches and it was meant for the upcoming server-to-server series.
+This code will go right back in with the next series. But since dead
+piece of code is glaring wrong currently by all means let's fix it.
 
-That's not an API issue - that's an implementation problem.
-
-Quite frankly, making copy offload implementations killable is going
-to "fun" for filesystems that offload the copy to remote servers, so
-whatever we do fo the fallback isn't going to prevent
-copy_file_range() from being unkillable.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thank you.
