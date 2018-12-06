@@ -1,101 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out30-130.freemail.mail.aliyun.com ([115.124.30.130]:48902 "EHLO
-        out30-130.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726045AbeLGSyw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Dec 2018 13:54:52 -0500
-Date: Fri, 7 Dec 2018 10:51:04 -0800
-From: Liu Bo <bo.liu@linux.alibaba.com>
-Subject: Re: [PATCH RFC] Ext4: fix deadlock on dirty pages between fault and
- writeback
-Message-ID: <20181207185102.2chvdfqwav5z6b7j@US-160370MP2.local>
-Reply-To: bo.liu@linux.alibaba.com
-References: <20181127114249.GH16301@quack2.suse.cz>
- <20181128201122.r4sec265cnlxgj2x@US-160370MP2.local>
- <20181129085238.GD31087@quack2.suse.cz>
- <20181129120253.GR6311@dastard>
- <20181129130002.GM31087@quack2.suse.cz>
- <20181129204019.GS6311@dastard>
- <20181205170656.GJ30615@quack2.suse.cz>
- <20181207052051.GB6311@dastard>
- <20181207071615.GO1286@dhcp22.suse.cz>
- <20181207112036.GA1286@dhcp22.suse.cz>
+Received: from sandeen.net ([63.231.237.45]:41806 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725935AbeLFWc3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Dec 2018 17:32:29 -0500
+Subject: Re: [PATCH 2/4] xfsdump: do not split function call with ifdef
+References: <20181128165649.56853-1-jtulak@redhat.com>
+ <20181128165649.56853-3-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <15f23dc5-5372-9866-a04b-3655d0def568@sandeen.net>
+Date: Thu, 6 Dec 2018 16:32:27 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181207112036.GA1286@dhcp22.suse.cz>
+In-Reply-To: <20181128165649.56853-3-jtulak@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+Cc: sandeen@redhat.com
 
-On Fri, Dec 07, 2018 at 12:20:36PM +0100, Michal Hocko wrote:
-> On Fri 07-12-18 08:16:15, Michal Hocko wrote:
-> [...]
-> > Memcg v1 indeed doesn't have any dirty IO throttling and this is a
-> > poor's man workaround. We still do not have that AFAIK and I do not know
-> > of an elegant way around that. Fortunatelly we shouldn't have that many
-> > GFP_KERNEL | __GFP_ACCOUNT allocations under page lock and we can work
-> > around this specific one quite easily. I haven't tested this yet but the
-> > following should work
-> > 
-> > diff --git a/mm/memory.c b/mm/memory.c
-> > index 4ad2d293ddc2..59c98eeb0260 100644
-> > --- a/mm/memory.c
-> > +++ b/mm/memory.c
-> > @@ -2993,6 +2993,16 @@ static vm_fault_t __do_fault(struct vm_fault *vmf)
-> >  	struct vm_area_struct *vma = vmf->vma;
-> >  	vm_fault_t ret;
-> >  
-> > +	/*
-> > +	 * Preallocate pte before we take page_lock because this might lead to
-> > +	 * deadlocks for memcg reclaim which waits for pages under writeback.
-> > +	 */
-> > +	if (!vmf->prealloc_pte) {
-> > +		vmf->prealloc_pte = pte_alloc_one(vmf->vma->vm>mm, vmf->address);
-> > +		if (!vmf->prealloc_pte)
-> > +			return VM_FAULT_OOM;
-> > +	}
-> > +
-> >  	ret = vma->vm_ops->fault(vmf);
-> >  	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE | VM_FAULT_RETRY |
-> >  			    VM_FAULT_DONE_COW)))
+On 11/28/18 10:56 AM, Jan Tulak wrote:
+> In two files in xfsdump, a function call is split in half by an ifdef
+> macro to conditionally pick an argument at compile time. This causes the
+> code to be a bit less obvious and some analysis tools have trouble with
+> understanding it.
 > 
-> This is too eager to allocate pte even when it is not really needed.
-> Jack has also pointed out that I am missing a write barrier. So here we
-> go with an updated patch. This is essentially what fault around code
-> does.
+> So, instead of splitting the function in half, move the whole function
+> call into each of the ifdef macros.
 > 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-Makes sense to me, unfortunately we don't have a local reproducer to verify it
-and we've disabled CONFIG_MEMCG_KMEM to workaround the problem.  Given the stack
-I put, the patch should address the deadlock at least.
+It's still #ifdef hell, now with 0.05% less hell ;)
 
-thanks,
--liubo
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-> diff --git a/mm/memory.c b/mm/memory.c
-> index 4ad2d293ddc2..1a73d2d4659e 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-> @@ -2993,6 +2993,17 @@ static vm_fault_t __do_fault(struct vm_fault *vmf)
->  	struct vm_area_struct *vma = vmf->vma;
->  	vm_fault_t ret;
+> ---
+>  common/drive_minrmt.c | 3 ++-
+>  common/main.c         | 8 ++++++--
+>  2 files changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/common/drive_minrmt.c b/common/drive_minrmt.c
+> index 59a40a7..04fed3e 100644
+> --- a/common/drive_minrmt.c
+> +++ b/common/drive_minrmt.c
+> @@ -2585,11 +2585,12 @@ read_label( drive_t *drivep )
+>  	if (( nread == 0 )  /* takes care of sun */
+>  	      ||            /* now handle SGI */
+>  	      (nread < 0 && saved_errno == ENOSPC )) {
+> -		mlog( MLOG_NORMAL | MLOG_DRIVE,
+>  #ifdef DUMP
+> +		mlog( MLOG_NORMAL | MLOG_DRIVE,
+>  		      _("encountered EOD : assuming blank media\n") );
+>  #endif
+>  #ifdef RESTORE
+> +		mlog( MLOG_NORMAL | MLOG_DRIVE,
+>  		      _("encountered EOD : end of data\n") );
+>  #endif
+>  		( void )rewind_and_verify( drivep );
+> diff --git a/common/main.c b/common/main.c
+> index b3605d1..0c23eb4 100644
+> --- a/common/main.c
+> +++ b/common/main.c
+> @@ -581,12 +581,14 @@ main( int argc, char *argv[] )
+>  		sigaction( SIGTERM, &sa, NULL );
+>  		sigaction( SIGQUIT, &sa, NULL );
 >  
-> +	/*
-> +	 * Preallocate pte before we take page_lock because this might lead to
-> +	 * deadlocks for memcg reclaim which waits for pages under writeback.
-> +	 */
-> +	if (pmd_none(*vmf->pmd) && !vmf->prealloc_pte) {
-> +		vmf->prealloc_pte = pte_alloc_one(vmf->vma->vm>mm, vmf->address);
-> +		if (!vmf->prealloc_pte)
-> +			return VM_FAULT_OOM;
-> +		smp_wmb(); /* See comment in __pte_alloc() */
-> +	}
-> +
->  	ret = vma->vm_ops->fault(vmf);
->  	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE | VM_FAULT_RETRY |
->  			    VM_FAULT_DONE_COW)))
-> -- 
-> Michal Hocko
-> SUSE Labs
+> +#ifdef DUMP
+>  		ok = drive_init2( argc,
+>  				  argv,
+> -#ifdef DUMP
+>  				  gwhdrtemplatep );
+>  #endif /* DUMP */
+>  #ifdef RESTORE
+> +		ok = drive_init2( argc,
+> +				  argv,
+>  				  ( global_hdr_t * )0 );
+>  #endif /* RESTORE */
+>  		if ( ! ok ) {
+> @@ -629,12 +631,14 @@ main( int argc, char *argv[] )
+>  	 * time-consuming chore. drive_init3 will synchronize with each slave.
+>  	 */
+>  	if ( ! init_error ) {
+> +#ifdef DUMP
+>  		ok = drive_init2( argc,
+>  				  argv,
+> -#ifdef DUMP
+>  				  gwhdrtemplatep );
+>  #endif /* DUMP */
+>  #ifdef RESTORE
+> +		ok = drive_init2( argc,
+> +				  argv,
+>  				  ( global_hdr_t * )0 );
+>  #endif /* RESTORE */
+>  		if ( ! ok ) {
+> 
