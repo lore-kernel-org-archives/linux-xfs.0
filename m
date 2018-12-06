@@ -1,54 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:35988 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729046AbeLEKCo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Dec 2018 05:02:44 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 8E87F2CD5C
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Dec 2018 10:02:43 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201897] [xfstests generic/482]: filesystem corruption after log
- replay
-Date: Wed, 05 Dec 2018 10:02:43 +0000
-Message-ID: <bug-201897-201763-7IkRplFf0g@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201897-201763@https.bugzilla.kernel.org/>
-References: <bug-201897-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:45082 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725889AbeLFREo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Dec 2018 12:04:44 -0500
+Received: by mail-lf1-f68.google.com with SMTP id b20so875942lfa.12
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Dec 2018 09:04:43 -0800 (PST)
 MIME-Version: 1.0
+References: <20181105213145.7560-1-stefanrin@gmail.com>
+In-Reply-To: <20181105213145.7560-1-stefanrin@gmail.com>
+From: Stefan Ring <stefanrin@gmail.com>
+Date: Thu, 6 Dec 2018 18:04:33 +0100
+Message-ID: <CAAxjCExC1iysfNx7PE-xd5yRhZiexA3vmoWyHRDb43pFBt8enQ@mail.gmail.com>
+Subject: Re: [PATCH v5 0/5] Try to squash metadump data leaks
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201897
+On Mon, Nov 5, 2018 at 10:32 PM Stefan Ring <stefanrin@gmail.com> wrote:
+>
+> Another round... I'm starting to feel quite confident about it this time.
+>
+> Since last time:
+>
+> - Fixed the attribute corruption in the last patch.
+> - Changed the accidental 'a' and 'b' I had left in the code back to zeroes.
+> - Brought the flag for crc recalc a tiny bit more in line with the single_fsb code.
+> - Fixed the wrong control flow in the interim patch which duplicates a TODO comment in the code only to get rid of it in the next patch.
+>
+>
+> Stefan Ring (5):
+>   xfs_metadump: Extend data zapping to XFS_DIR{2,3}_LEAFN_MAGIC blocks
+>   xfs_metadump: Zap multi fsb blocks
+>   xfs_metadump: Zap freeindex blocks in directory inodes
+>   xfs_metadump: Zap unused space in inode btrees
+>   xfs_metadump: Zap dev inodes
+>
+>  db/metadump.c | 128 +++++++++++++++++++++++++++++++++++++++++++++++++++-------
+>  1 file changed, 113 insertions(+), 15 deletions(-)
 
---- Comment #4 from Zorro Lang (zlang@redhat.com) ---
-V5 XFS without reflink feature test pass:
-# ./check generic/482
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 ibm-x3650m4-10 4.20.0-rc1
-MKFS_OPTIONS  -- -f -m reflink=0,rmapbt=0,finobt=0,crc=1 -i sparse=0
-/dev/mapper/rhel_ibm--x3650m4--10-xfscratch
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0
-/dev/mapper/rhel_ibm--x3650m4--10-xfscratch /mnt/scratch
-
-generic/482 1567s ...  774s
-Ran: generic/482
-Passed all 1 tests
-
-# ./check generic/482
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 ibm-x3650m4-10 4.20.0-rc1
-MKFS_OPTIONS  -- -f -m reflink=0,rmapbt=0,finobt=1,crc=1 -i sparse=1
-/dev/mapper/rhel_ibm--x3650m4--10-xfscratch                                     
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0
-/dev/mapper/rhel_ibm--x3650m4--10-xfscratch /mnt/scratch                        
-
-generic/482 774s ...  841s
-Ran: generic/482
-Passed all 1 tests
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Is this an appropriate time interval for pinging?
