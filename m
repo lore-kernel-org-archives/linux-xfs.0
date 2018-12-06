@@ -1,68 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44910 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:59292 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727575AbeLEVG4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Dec 2018 16:06:56 -0500
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 238B9308A958
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Dec 2018 21:06:56 +0000 (UTC)
-Subject: [PATCH 06/10] xfs: teach xfs_btree_[sl]block_verify_crc to populate
- verifier context
-References: <542b81dc-b564-c5fa-86b4-b4dc8ac50b63@redhat.com>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <d45b96da-4ad1-3099-756e-8970934742f5@redhat.com>
-Date: Wed, 5 Dec 2018 15:06:51 -0600
+        id S1725927AbeLFULH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Dec 2018 15:11:07 -0500
+Date: Thu, 6 Dec 2018 21:11:06 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2] xfs: use a dedicated SLAB cache for sector sized
+ buffer data
+Message-ID: <20181206201105.GB31797@lst.de>
+References: <20181205225147.12626-1-hch@lst.de> <20181206181139.GP24487@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <542b81dc-b564-c5fa-86b4-b4dc8ac50b63@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181206181139.GP24487@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, tom.leiming@gmail.com, vkuznets@redhat.com
 
-Rather than simply returning true/false, populate the verifier
-context as well.
+On Thu, Dec 06, 2018 at 10:11:39AM -0800, Darrick J. Wong wrote:
+> I think this has the same problem that Dave complained about back in
+> October -- if I have a hard disk with 512b sectors, a xfs with 4k
+> blocks, and mount it on a machine with 64k pages, then single-sector
+> buffers will get a small slab allocation, but single-fsb buffers will
+> now fall back to grabbing a 64k page to hold 4k worth of data.
+> 
+> Even if we add a second slab for single-fsb blocks, we'll run into the
+> same problem if the filesystem contains multi-block directory blocks, so
+> then we'd potentially need a third slab, and... is there a way to ask a
+> slab allocator for multiple contiguous objects totalling less than
+> PAGE_SIZE bytes?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- fs/xfs/libxfs/xfs_btree.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index d4728f70fcc3..0b88cb04a719 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -297,11 +297,11 @@ xfs_btree_lblock_verify_crc(
- 
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		if (!xfs_log_check_lsn(mp, be64_to_cpu(block->bb_u.l.bb_lsn)))
--			return false;
-+			return XFS_CORRUPTED_RETURN(vc);
- 		return xfs_buf_verify_cksum(vc, bp, XFS_BTREE_LBLOCK_CRC_OFF);
- 	}
- 
--	return true;
-+	return XFS_VERIFIED_RETURN(vc);
- }
- 
- /*
-@@ -336,11 +336,11 @@ xfs_btree_sblock_verify_crc(
- 
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		if (!xfs_log_check_lsn(mp, be64_to_cpu(block->bb_u.s.bb_lsn)))
--			return false;
-+			return XFS_CORRUPTED_RETURN(vc);
- 		return xfs_buf_verify_cksum(vc, bp, XFS_BTREE_SBLOCK_CRC_OFF);
- 	}
- 
--	return true;
-+	return XFS_VERIFIED_RETURN(vc);
- }
- 
- static int
--- 
-2.17.0
+No, unfortunately there is not.  And the sad part is that generally it
+will give you aligned ones, just with slub debugging turned on it won't.
