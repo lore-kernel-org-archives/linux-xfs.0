@@ -1,29 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:54464 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:57765 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727695AbeLFEQH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Dec 2018 23:16:07 -0500
-Date: Thu, 6 Dec 2018 05:16:06 +0100
+        id S1725871AbeLFPRR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Dec 2018 10:17:17 -0500
+Date: Thu, 6 Dec 2018 16:17:15 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: COW improvements and always_cow support V3
-Message-ID: <20181206041606.GA12563@lst.de>
-References: <20181203222503.30649-1-hch@lst.de> <20181206010550.GN24487@magnolia>
+Subject: Re: [PATCH v2] xfs: use a dedicated SLAB cache for sector sized
+ buffer data
+Message-ID: <20181206151715.GA25967@lst.de>
+References: <20181205225147.12626-1-hch@lst.de> <20181206125151.GA49273@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181206010550.GN24487@magnolia>
+In-Reply-To: <20181206125151.GA49273@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, tom.leiming@gmail.com, vkuznets@redhat.com
 
-On Wed, Dec 05, 2018 at 05:05:50PM -0800, Darrick J. Wong wrote:
-> Hmm, so I tried running xfstests with quota enabled and -g all and
-> always_cow=1, and saw a bunch of test failures.  Are these expected?
-> A always_cow=0 run seems to have run fine.
+On Thu, Dec 06, 2018 at 07:51:52AM -0500, Brian Foster wrote:
+> On Wed, Dec 05, 2018 at 02:51:47PM -0800, Christoph Hellwig wrote:
+> > XFS currently uses kmalloc for buffers smaller than the page size to
+> > avoid wasting too much memory.  But this can cause a problem with slub
+> > debugging turned on as the allocations might not be naturally aligned.
+> > On block devices that require sector size alignment this can lead to
+> > data corruption.
+> > 
+> > Give that our smaller than page size buffers are always sector sized
+> > on a live file system, we can just create a kmem_cache with an
+> > explicitly specified alignment requirement for this case to fix this
+> > case without much effort.
+> > 
 > 
-> (generic/050 might just be broken so don't spend too much energy on
-> that one)
+> What exactly is the data corruption related problem? Can you
+> characterize it in a couple sentences?
 
-What xfstests options are you using for this "quota enabled" run?
+Ming reported the actual occurance, so he can explain in detail.  But
+the summary is that various devices require a minimum alignment for DMA,
+and if we don't follow that bad things will happen.  What "bad things"
+are might vary from case to case.
