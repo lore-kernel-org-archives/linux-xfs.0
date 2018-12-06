@@ -1,39 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:59272 "EHLO newverein.lst.de"
+Received: from sandeen.net ([63.231.237.45]:44864 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725927AbeLFUJc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Dec 2018 15:09:32 -0500
-Date: Thu, 6 Dec 2018 21:09:30 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: COW improvements and always_cow support V3
-Message-ID: <20181206200930.GA31797@lst.de>
-References: <20181203222503.30649-1-hch@lst.de> <20181206010550.GN24487@magnolia>
+        id S1726119AbeLFXJG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Dec 2018 18:09:06 -0500
+Subject: Re: [PATCH 4/4] common/drive.c: include stdlib.h
+References: <20181128165649.56853-1-jtulak@redhat.com>
+ <20181128165649.56853-5-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <0d5c1f76-9e50-7e10-372b-9c8dc52b9361@sandeen.net>
+Date: Thu, 6 Dec 2018 17:09:03 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181206010550.GN24487@magnolia>
+In-Reply-To: <20181128165649.56853-5-jtulak@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+Cc: sandeen@redhat.com
 
-I see the 050 one, and it looks odd.
+On 11/28/18 10:56 AM, Jan Tulak wrote:
+> We are using calloc() inside of this file, but it is not included in any
+> way (resultin in "implicit declaration" warnings from the compiler). So,
+> add the include.
+> 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> ---
+>  common/drive.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/common/drive.c b/common/drive.c
+> index 4b0825f..edb63c0 100644
+> --- a/common/drive.c
+> +++ b/common/drive.c
+> @@ -17,6 +17,7 @@
+>   */
+>  
+>  #include <stdio.h>
+> +#include <stdlib.h>
+>  #include <unistd.h>
+>  #include <sys/stat.h>
+>  #include <time.h>
 
-> --- /tmp/xfstests/tests/generic/075.out	2017-02-28 09:23:56.049065953 -0800
-> +++ /var/tmp/xfstests//generic/075.out.bad	2018-12-03 22:11:12.392566688 -0800
 
-This and a few other fsx tests assume you can always fallocate
-on XFS.  I sent a series for this:
+Seems fine, but why don't these files complain too?
 
-https://www.spinics.net/lists/linux-xfs/msg23433.html
+# find . -name \*.c | xargs grep -lw calloc | xargs grep -L stdlib.h
 
-But I need to rework some of the patches a little more based on the
-review feedback.
+./inventory/inv_oref.c
+./inventory/inv_core.c
+./inventory/inv_mgr.c
+./inventory/testmain.c
+(ok, narrator: because they aren't built?)
 
-Similarly the badly fragmented warnings are simply expected, that
-is the nature of an always out of place write fs.  But the quota
-run turned up a few more failures than I expected for the always_cow
-mode, I can look into them.  But so far 95% of the always_cow bugs
-were either issues with the text, or genuine XFS COW path bugs not
-otherwise uncovered..
+./common/global.c
+./common/fs.c
+
+*shrug* 
+
+If it fixes a warning I'm not going dig too much, seems fine.
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+Thanks,
+-Eric
