@@ -1,42 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:57765 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:59272 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725871AbeLFPRR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Dec 2018 10:17:17 -0500
-Date: Thu, 6 Dec 2018 16:17:15 +0100
+        id S1725927AbeLFUJc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Dec 2018 15:09:32 -0500
+Date: Thu, 6 Dec 2018 21:09:30 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2] xfs: use a dedicated SLAB cache for sector sized
- buffer data
-Message-ID: <20181206151715.GA25967@lst.de>
-References: <20181205225147.12626-1-hch@lst.de> <20181206125151.GA49273@bfoster>
+Subject: Re: COW improvements and always_cow support V3
+Message-ID: <20181206200930.GA31797@lst.de>
+References: <20181203222503.30649-1-hch@lst.de> <20181206010550.GN24487@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181206125151.GA49273@bfoster>
+In-Reply-To: <20181206010550.GN24487@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, tom.leiming@gmail.com, vkuznets@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Thu, Dec 06, 2018 at 07:51:52AM -0500, Brian Foster wrote:
-> On Wed, Dec 05, 2018 at 02:51:47PM -0800, Christoph Hellwig wrote:
-> > XFS currently uses kmalloc for buffers smaller than the page size to
-> > avoid wasting too much memory.  But this can cause a problem with slub
-> > debugging turned on as the allocations might not be naturally aligned.
-> > On block devices that require sector size alignment this can lead to
-> > data corruption.
-> > 
-> > Give that our smaller than page size buffers are always sector sized
-> > on a live file system, we can just create a kmem_cache with an
-> > explicitly specified alignment requirement for this case to fix this
-> > case without much effort.
-> > 
-> 
-> What exactly is the data corruption related problem? Can you
-> characterize it in a couple sentences?
+I see the 050 one, and it looks odd.
 
-Ming reported the actual occurance, so he can explain in detail.  But
-the summary is that various devices require a minimum alignment for DMA,
-and if we don't follow that bad things will happen.  What "bad things"
-are might vary from case to case.
+> --- /tmp/xfstests/tests/generic/075.out	2017-02-28 09:23:56.049065953 -0800
+> +++ /var/tmp/xfstests//generic/075.out.bad	2018-12-03 22:11:12.392566688 -0800
+
+This and a few other fsx tests assume you can always fallocate
+on XFS.  I sent a series for this:
+
+https://www.spinics.net/lists/linux-xfs/msg23433.html
+
+But I need to rework some of the patches a little more based on the
+review feedback.
+
+Similarly the badly fragmented warnings are simply expected, that
+is the nature of an always out of place write fs.  But the quota
+run turned up a few more failures than I expected for the always_cow
+mode, I can look into them.  But so far 95% of the always_cow bugs
+were either issues with the text, or genuine XFS COW path bugs not
+otherwise uncovered..
