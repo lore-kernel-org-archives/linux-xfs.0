@@ -1,99 +1,168 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38236 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726201AbeLKWmj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Dec 2018 17:42:39 -0500
-Date: Tue, 11 Dec 2018 14:42:32 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] mkfs: fix symlink target if_bytes computation for
- protofile
-Message-ID: <20181211224232.GW24487@magnolia>
-References: <a7246562-e851-dfc4-ea3f-3b4dd64aca5b@redhat.com>
- <ca4c95cc-c8c5-c876-9ca4-a50794a4bb4f@sandeen.net>
- <20181211190256.GV24487@magnolia>
- <c1d6a79d-19c6-1257-f08b-b2cf1c308738@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:60678 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726027AbeLGPV0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Dec 2018 10:21:26 -0500
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: Re: [PATCH v2] xfs: use a dedicated SLAB cache for sector sized buffer data
+In-Reply-To: <20181205225147.12626-1-hch@lst.de>
+References: <20181205225147.12626-1-hch@lst.de>
+Date: Fri, 07 Dec 2018 16:21:23 +0100
+Message-ID: <87bm5xe51o.fsf@vitty.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c1d6a79d-19c6-1257-f08b-b2cf1c308738@sandeen.net>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Zorro Lang <zlang@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: tom.leiming@gmail.com, linux-xfs@vger.kernel.org
 
-On Tue, Dec 11, 2018 at 02:36:32PM -0600, Eric Sandeen wrote:
-> On 12/11/18 1:02 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > When creating a local format symlink, we expect the target buffer in the
-> > data fork to have enough space to contain the null, but we also expect
-> > if_bytes to reflect the length of the target /not/ including the null.
-> > If we don't adjust if_bytes down by one byte, we can run off into
-> > uninitialized memory.  Fix this, which should clean up the spurious
-> > xfs/019 failures for good.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Ugh.  Why do we even have protofiles?  I have never seen these in use
-> in real life.  Can we just deprecate this half-baked crap?  :/
-> 
-> You suggested on IRC that we just use xfs_init_local fork; I had looked
-> at that when I did the first patch and for some reason didn't use it,
+Christoph Hellwig <hch@lst.de> writes:
 
-Admittedly I wondered if we can leak memory that way, but AFAICT a new
-inode shouldn't really have if_bytes > 0, right?
+> XFS currently uses kmalloc for buffers smaller than the page size to
+> avoid wasting too much memory.  But this can cause a problem with slub
+> debugging turned on as the allocations might not be naturally aligned.
+> On block devices that require sector size alignment this can lead to
+> data corruption.
+>
+> Give that our smaller than page size buffers are always sector sized
+> on a live file system, we can just create a kmem_cache with an
+> explicitly specified alignment requirement for this case to fix this
+> case without much effort.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> but looking again it seems ... ok.  I hate how all of this stuff is
-> re-implemented in the protofile crap code and it seems like we can't
-> re-use too many of the libxfs functions directly but may as well use
-> this if we can, right?
+Thank you for taking care of this issue, the patch was verified with
+xen-blkfront driver when KASAN is enabled. So:
 
-Funny you mention it, but I've been quietly refactoring the xfs_inode.c
-code into libxfs as part of preparing for the metadata directory
-feature, which has enabled me to cut a considerable amount of opencoded
-crap out of mkfs and repair.  Granted, I still have to make sure it all
-/works/, but ... yes this all should be using libxfs functions. :)
+Tested-by: Xiao Liang <xiliang@redhat.com>
 
-Uh, I'll give this patch a spin and see what happens.
-
---D
-
-> =========
-> 
-> mkfs: don't open code local fork setup in protofile code
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
-> 
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index ad5d65de..c3792e12 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -149,5 +149,6 @@
->  #define xfs_dir_get_ops			libxfs_dir_get_ops
->  #define xfs_default_ifork_ops		libxfs_default_ifork_ops
->  #define xfs_fs_geometry			libxfs_fs_geometry
-> +#define xfs_init_local_fork		libxfs_init_local_fork
+>
+> Changes since v1:
+>  - document the decision to use a single cache per file system in
+>    a comment
+>  - update the commit log a bit
+>
+>  fs/xfs/xfs_buf.c   | 23 +++++++++--------------
+>  fs/xfs/xfs_mount.h |  2 ++
+>  fs/xfs/xfs_super.c | 28 ++++++++++++++++++++++++++++
+>  3 files changed, 39 insertions(+), 14 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index b21ea2ba768d..904d45f93ce7 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -339,8 +339,10 @@ xfs_buf_free(
 >  
->  #endif /* __LIBXFS_API_DEFS_H__ */
-> diff --git a/mkfs/proto.c b/mkfs/proto.c
-> index 103795f1..3bba4917 100644
-> --- a/mkfs/proto.c
-> +++ b/mkfs/proto.c
-> @@ -237,13 +237,7 @@ newfile(
->  	flags = 0;
->  	mp = ip->i_mount;
->  	if (symlink && len <= XFS_IFORK_DSIZE(ip)) {
-> -		/* Copy the name's trailing NULL as well */
-> -		libxfs_idata_realloc(ip, len + 1, XFS_DATA_FORK);
-> -		if (buf)
-> -			memmove(ip->i_df.if_u1.if_data, buf, len + 1);
-> -		ip->i_d.di_size = len;
-> -		ip->i_df.if_flags &= ~XFS_IFEXTENTS;
-> -		ip->i_df.if_flags |= XFS_IFINLINE;
-> +		libxfs_init_local_fork(ip, XFS_DATA_FORK, buf, len);
->  		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
->  		flags = XFS_ILOG_DDATA;
->  	} else if (len > 0) {
-> 
+>  			__free_page(page);
+>  		}
+> -	} else if (bp->b_flags & _XBF_KMEM)
+> -		kmem_free(bp->b_addr);
+> +	} else if (bp->b_flags & _XBF_KMEM) {
+> +		kmem_cache_free(bp->b_target->bt_mount->m_sector_cache,
+> +				bp->b_addr);
+> +	}
+>  	_xfs_buf_free_pages(bp);
+>  	xfs_buf_free_maps(bp);
+>  	kmem_zone_free(xfs_buf_zone, bp);
+> @@ -354,6 +356,7 @@ xfs_buf_allocate_memory(
+>  	xfs_buf_t		*bp,
+>  	uint			flags)
+>  {
+> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  	size_t			size;
+>  	size_t			nbytes, offset;
+>  	gfp_t			gfp_mask = xb_to_gfp(flags);
+> @@ -362,25 +365,17 @@ xfs_buf_allocate_memory(
+>  	int			error;
+>  
+>  	/*
+> -	 * for buffers that are contained within a single page, just allocate
+> -	 * the memory from the heap - there's no need for the complexity of
+> -	 * page arrays to keep allocation down to order 0.
+> +	 * Use a special slab cache for sector sized buffers when sectors are
+> +	 * small than a page to avoid wasting lots of memory.
+>  	 */
+>  	size = BBTOB(bp->b_length);
+> -	if (size < PAGE_SIZE) {
+> -		bp->b_addr = kmem_alloc(size, KM_NOFS);
+> +	if (size < PAGE_SIZE && size == mp->m_sb.sb_sectsize) {
+> +		bp->b_addr = kmem_cache_alloc(mp->m_sector_cache, GFP_NOFS);
+>  		if (!bp->b_addr) {
+>  			/* low memory - use alloc_page loop instead */
+>  			goto use_alloc_page;
+>  		}
+>  
+> -		if (((unsigned long)(bp->b_addr + size - 1) & PAGE_MASK) !=
+> -		    ((unsigned long)bp->b_addr & PAGE_MASK)) {
+> -			/* b_addr spans two pages - use alloc_page instead */
+> -			kmem_free(bp->b_addr);
+> -			bp->b_addr = NULL;
+> -			goto use_alloc_page;
+> -		}
+>  		bp->b_offset = offset_in_page(bp->b_addr);
+>  		bp->b_pages = bp->b_page_array;
+>  		bp->b_pages[0] = virt_to_page(bp->b_addr);
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 7964513c3128..83d76271c2d4 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -93,6 +93,8 @@ typedef struct xfs_mount {
+>  	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
+>  	struct xfs_inode	*m_rootip;	/* pointer to root directory */
+>  	struct xfs_quotainfo	*m_quotainfo;	/* disk quota information */
+> +	struct kmem_cache	*m_sector_cache;/* sector sized buf data */
+> +	char			*m_sector_cache_name;
+>  	xfs_buftarg_t		*m_ddev_targp;	/* saves taking the address */
+>  	xfs_buftarg_t		*m_logdev_targp;/* ptr to log device */
+>  	xfs_buftarg_t		*m_rtdev_targp;	/* ptr to rt device */
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index f4d34749505e..1d07d9c02c20 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -706,6 +706,10 @@ xfs_close_devices(
+>  		fs_put_dax(dax_rtdev);
+>  	}
+>  	xfs_free_buftarg(mp->m_ddev_targp);
+> +	if (mp->m_sector_cache) {
+> +		kmem_cache_destroy(mp->m_sector_cache);
+> +		kfree(mp->m_sector_cache_name);
+> +	}
+>  	fs_put_dax(dax_ddev);
+>  }
+>  
+> @@ -804,6 +808,30 @@ xfs_setup_devices(
+>  {
+>  	int			error;
+>  
+> +	/*
+> +	 * Create a SLAB cache for block sized buffer data.  This is to avoid
+> +	 * wasting a lot of memory given that XFS uses sector sized I/O for
+> +	 * metadata even if the file system otherwise uses a larger block size.
+> +	 * Note that we only create a single cache per filesystem even if the
+> +	 * log can optionally use a different, larger sector size.  The reason
+> +	 * for that is that the log code on a live file system uses its own
+> +	 * memory allocation, and log recovery only uses one buffer at a time,
+> +	 * so no memory is wasted there.
+> +	 */
+> +	if (mp->m_sb.sb_sectsize < PAGE_SIZE) {
+> +		mp->m_sector_cache_name = kasprintf(GFP_KERNEL, "%s-sector",
+> +				mp->m_fsname);
+> +		if (!mp->m_sector_cache_name)
+> +			return -ENOMEM;
+> +		mp->m_sector_cache = kmem_cache_create(mp->m_sector_cache_name,
+> +				mp->m_sb.sb_sectsize, mp->m_sb.sb_sectsize,
+> +				0, NULL);
+> +		if (!mp->m_sector_cache) {
+> +			kfree(mp->m_sector_cache_name);
+> +			return -ENOMEM;
+> +		}
+> +	}
+> +
+>  	error = xfs_setsize_buftarg(mp->m_ddev_targp, mp->m_sb.sb_sectsize);
+>  	if (error)
+>  		return error;
+
+-- 
+Vitaly
