@@ -1,46 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:18564 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727592AbeLEWvI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Dec 2018 17:51:08 -0500
-Date: Thu, 6 Dec 2018 09:51:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: use a dedicated SLAB cache for sector sized buffer
- data
-Message-ID: <20181205225104.GW6311@dastard>
-References: <20181205172023.5061-1-hch@lst.de>
- <20181205215000.GU6311@dastard>
- <20181205215651.GA4033@lst.de>
- <20181205223139.GV6311@dastard>
- <20181205223346.GA5145@lst.de>
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:32890 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725976AbeLGKOS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Dec 2018 05:14:18 -0500
+Received: by mail-wm1-f67.google.com with SMTP id r24so979131wmh.0
+        for <linux-xfs@vger.kernel.org>; Fri, 07 Dec 2018 02:14:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181205223346.GA5145@lst.de>
+References: <20181205225147.12626-1-hch@lst.de> <20181206181139.GP24487@magnolia>
+ <20181206201105.GB31797@lst.de>
+In-Reply-To: <20181206201105.GB31797@lst.de>
+From: Ming Lei <tom.leiming@gmail.com>
+Date: Fri, 7 Dec 2018 18:14:04 +0800
+Message-ID: <CACVXFVNGhK8tbayej4+aC8WcVFzweb2PsOm2m9BWpoYTxS6U_g@mail.gmail.com>
+Subject: Re: [PATCH v2] xfs: use a dedicated SLAB cache for sector sized
+ buffer data
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, tom.leiming@gmail.com, vkuznets@redhat.com
+Cc: darrick.wong@oracle.com, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Vitaly Kuznetsov <vkuznets@redhat.com>
 
-On Wed, Dec 05, 2018 at 11:33:46PM +0100, Christoph Hellwig wrote:
-> On Thu, Dec 06, 2018 at 09:31:39AM +1100, Dave Chinner wrote:
-> > > 
-> > > That's fine because log recovery is one I/O at a time, and we always
-> > > free the current buffer before allocating the next one, so we'd waste
-> > > the memory one way or another.
-> > 
-> > True. Can you mention this in the commit message so it gets recorded
-> > with the change and doesn't get lost in the mists of time?
-> 
-> How about a comment instead of the commit message?  Either way I can
-> document this decision for v2.
+On Fri, Dec 7, 2018 at 4:11 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Thu, Dec 06, 2018 at 10:11:39AM -0800, Darrick J. Wong wrote:
+> > I think this has the same problem that Dave complained about back in
+> > October -- if I have a hard disk with 512b sectors, a xfs with 4k
+> > blocks, and mount it on a machine with 64k pages, then single-sector
+> > buffers will get a small slab allocation, but single-fsb buffers will
+> > now fall back to grabbing a 64k page to hold 4k worth of data.
+> >
+> > Even if we add a second slab for single-fsb blocks, we'll run into the
+> > same problem if the filesystem contains multi-block directory blocks, so
+> > then we'd potentially need a third slab, and... is there a way to ask a
+> > slab allocator for multiple contiguous objects totalling less than
+> > PAGE_SIZE bytes?
+>
+> No, unfortunately there is not.  And the sad part is that generally it
+> will give you aligned ones, just with slub debugging turned on it won't.
 
-That's fine by me, too.
+page_frag_alloc() can support that, could we fix it for this use case?
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+thanks,
+Ming Lei
