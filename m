@@ -1,53 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40956 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725928AbeLFUj2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Dec 2018 15:39:28 -0500
-Date: Thu, 6 Dec 2018 15:39:25 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: use a dedicated SLAB cache for sector sized
- buffer data
-Message-ID: <20181206203925.GA50260@bfoster>
-References: <20181205225147.12626-1-hch@lst.de>
- <20181206181139.GP24487@magnolia>
- <20181206201105.GB31797@lst.de>
- <20181206202614.GQ24487@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:56896 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725948AbeLGGYL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Dec 2018 01:24:11 -0500
+Subject: [PATCH 06/12] fsx: add five-argument logging function
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 06 Dec 2018 22:23:58 -0800
+Message-ID: <154416383855.15344.9018861209951059097.stgit@magnolia>
+In-Reply-To: <154416379233.15344.4377231692638417530.stgit@magnolia>
+References: <154416379233.15344.4377231692638417530.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181206202614.GQ24487@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, tom.leiming@gmail.com, vkuznets@redhat.com
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Allison Henderson <allison.henderson@oracle.com>, fstests@vger.kernel.org
 
-On Thu, Dec 06, 2018 at 12:26:14PM -0800, Darrick J. Wong wrote:
-> On Thu, Dec 06, 2018 at 09:11:06PM +0100, Christoph Hellwig wrote:
-> > On Thu, Dec 06, 2018 at 10:11:39AM -0800, Darrick J. Wong wrote:
-> > > I think this has the same problem that Dave complained about back in
-> > > October -- if I have a hard disk with 512b sectors, a xfs with 4k
-> > > blocks, and mount it on a machine with 64k pages, then single-sector
-> > > buffers will get a small slab allocation, but single-fsb buffers will
-> > > now fall back to grabbing a 64k page to hold 4k worth of data.
-> > > 
-> > > Even if we add a second slab for single-fsb blocks, we'll run into the
-> > > same problem if the filesystem contains multi-block directory blocks, so
-> > > then we'd potentially need a third slab, and... is there a way to ask a
-> > > slab allocator for multiple contiguous objects totalling less than
-> > > PAGE_SIZE bytes?
-> > 
-> > No, unfortunately there is not.  And the sad part is that generally it
-> > will give you aligned ones, just with slub debugging turned on it won't.
-> 
-> Hmmm.  I guess we could declare three slabs then -- sector size, fsb size,
-> and dir fsb size?  This is getting kinda spidery now though.  Is three
-> too weird?
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-You can add inode cluster size into the mix as well (see the snipped off
-portion of my previous reply that I guess was missed). ;P
+Add a five-argument logging function to support new operations.
 
-Brian
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-By: Allison Henderson <allison.henderson@oracle.com>
+---
+ ltp/fsx.c |   45 ++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 40 insertions(+), 5 deletions(-)
 
-> --D
+
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index c3db62e4..1907036e 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -51,7 +51,8 @@ enum opflags { FL_NONE = 0, FL_SKIPPED = 1, FL_CLOSE_OPEN = 2, FL_KEEP_SIZE = 4
+ 
+ struct log_entry {
+ 	int	operation;
+-	int	args[3];
++	int	nr_args;
++	int	args[4];
+ 	enum opflags flags;
+ };
+ 
+@@ -278,6 +279,27 @@ static int op_code(const char *name)
+ 	return -1;
+ }
+ 
++void
++log5(int operation, int arg0, int arg1, int arg2, enum opflags flags)
++{
++	struct log_entry *le;
++
++	le = &oplog[logptr];
++	le->operation = operation;
++	if (closeopen)
++		flags |= FL_CLOSE_OPEN;
++	le->args[0] = arg0;
++	le->args[1] = arg1;
++	le->args[2] = arg2;
++	le->args[3] = file_size;
++	le->nr_args = 4;
++	le->flags = flags;
++	logptr++;
++	logcount++;
++	if (logptr >= LOGSIZE)
++		logptr = 0;
++}
++
+ void
+ log4(int operation, int arg0, int arg1, enum opflags flags)
+ {
+@@ -290,6 +312,7 @@ log4(int operation, int arg0, int arg1, enum opflags flags)
+ 	le->args[0] = arg0;
+ 	le->args[1] = arg1;
+ 	le->args[2] = file_size;
++	le->nr_args = 3;
+ 	le->flags = flags;
+ 	logptr++;
+ 	logcount++;
+@@ -439,11 +462,13 @@ logdump(void)
+ 			i = 0;
+ 
+ 		if (logopsf) {
++			int j;
++
+ 			if (lp->flags & FL_SKIPPED)
+ 				fprintf(logopsf, "skip ");
+-			fprintf(logopsf, "%s 0x%x 0x%x 0x%x",
+-				op_name(lp->operation),
+-				lp->args[0], lp->args[1], lp->args[2]);
++			fprintf(logopsf, "%s", op_name(lp->operation));
++			for (j = 0; j < lp->nr_args; j++)
++				fprintf(logopsf, " 0x%x", lp->args[j]);
+ 			if (lp->flags & FL_KEEP_SIZE)
+ 				fprintf(logopsf, " keep_size");
+ 			if (lp->flags & FL_CLOSE_OPEN)
+@@ -1432,6 +1457,15 @@ cleanup(int sig)
+ 	exit(sig);
+ }
+ 
++static int
++op_args_count(int operation)
++{
++	switch (operation) {
++	default:
++		return 3;
++	}
++}
++
+ static int
+ read_op(struct log_entry *log_entry)
+ {
+@@ -1464,7 +1498,8 @@ read_op(struct log_entry *log_entry)
+ 		log_entry->operation = op_code(str);
+ 		if (log_entry->operation == -1)
+ 			goto fail;
+-		for (i = 0; i < 3; i++) {
++		log_entry->nr_args = op_args_count(log_entry->operation);
++		for (i = 0; i < log_entry->nr_args; i++) {
+ 			char *end;
+ 
+ 			str = strtok(NULL, " \t\n");
