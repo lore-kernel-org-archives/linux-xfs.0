@@ -1,90 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40778 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725909AbeLEELw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Dec 2018 23:11:52 -0500
-Subject: Re: [PATCH v2 2/6] xfs_repair: don't error out on dirs with a single
- leafn block
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <154181071499.3727.3910572718199592407.stgit@magnolia>
- <154181072709.3727.17020900125846885320.stgit@magnolia>
- <20181122181346.GW6792@magnolia>
- <f3770fe4-1f20-42a0-4d13-6c2e19329f54@sandeen.net>
-Message-ID: <4580e90a-0040-6eb2-f499-7a45a6fe136c@sandeen.net>
-Date: Tue, 4 Dec 2018 22:11:50 -0600
+Received: from userp2130.oracle.com ([156.151.31.86]:41362 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725948AbeLGGX4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Dec 2018 01:23:56 -0500
+Subject: [PATCH 05/12] fsx: use an enum to define the operation commands
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 06 Dec 2018 22:23:52 -0800
+Message-ID: <154416383217.15344.12016288717012656827.stgit@magnolia>
+In-Reply-To: <154416379233.15344.4377231692638417530.stgit@magnolia>
+References: <154416379233.15344.4377231692638417530.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <f3770fe4-1f20-42a0-4d13-6c2e19329f54@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Allison Henderson <allison.henderson@oracle.com>, fstests@vger.kernel.org
+
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+Use an enum to define operation codes and the boundaries between
+operation classes so that we can add new commands without having to
+change a bunch of unrelated #defines.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-By: Allison Henderson <allison.henderson@oracle.com>
+---
+ ltp/fsx.c |   40 +++++++++++++++++++++-------------------
+ 1 file changed, 21 insertions(+), 19 deletions(-)
 
 
-
-On 12/4/18 9:48 PM, Eric Sandeen wrote:
-> On 11/22/18 12:13 PM, Darrick J. Wong wrote:
->> From: Darrick J. Wong <darrick.wong@oracle.com>
->>
->> In process_node_dir2, we need to distinguish between a directory with a
->> single leafn block (yes, they exist) having no interior da nodes, and a
->> directory with a da tree that incorrectly points to dablk 0.  If we
->> happened to fill out any part of the da cursor then we have a da btree
->> with garbage in it; otherwise, we have a single leafn block.
->>
->> This was found by repair repeatedly rebuilding a directory containing a
->> single leafn block (xfs/495).
->>
->> Fixes: 67a79e2cc932 ("xfs_repair: treat zero da btree pointers as corruption")
->> Reported-by: Dave Chinner <david@fromorbit.com>
->> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> I'm finding the commit log hard to parse/understand.
-> 
-> Let's reference
-> 
-> 71a6af8 Revert "xfs_repair: treat zero da btree pointers as corruption"
-> 
-> for starters, but can we do something like this....?
-> 
-> ===
-> 
-> As explained in
-> 
-> 71a6af8 Revert "xfs_repair: treat zero da btree pointers as corruption"
-> 
-> a single root LEAFN block can exist in a directory until it grows further.
-> 
-> This is why, normally, we skip directories with a root marked
-> XFS_DIR2_LEAFN_MAGIC, as detected by the left-most leaf block being 
-> found at file block 0.
-> 
-> However, if we traversed any level of a btree to get here (as
-> indicated by da_cursor.active > 0), then a leaf block claiming block
-> 0 indicates corruption, and we should handle it as such, and rebuild
-> the directory.
-> 
-> This was found by repair repeatedly rebuilding a directory containing a
-> single leafn block (xfs/495).
-> 
-> Fixes: 67a79e2cc932 ("xfs_repair: treat zero da btree pointers as corruption")
-> Reported-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> ===
-> 
-> I'm not hung up on rewriting the commit log, but if you like it give me
-> thumbs up.  I needed to think it through that way to grok the change.
-> Anyway, for the change now that I do grok it,
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-Uh, the summary is wrong too,  o?  We /already/ "don't error out"
-on dirs with a single leafn block.  Maybe:
-
-xfs_repair: rebuild directory when non-root leafn blocks claim block 0
-
-?
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index 191a5936..c3db62e4 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -88,25 +88,27 @@ int			logcount = 0;	/* total ops */
+  * mode being run.
+  */
+ 
+-/* common operations */
+-#define	OP_READ		0
+-#define OP_WRITE	1
+-#define OP_MAPREAD	2
+-#define OP_MAPWRITE	3
+-#define OP_MAX_LITE	4
+-
+-/* !lite operations */
+-#define OP_TRUNCATE		4
+-#define OP_FALLOCATE		5
+-#define OP_PUNCH_HOLE		6
+-#define OP_ZERO_RANGE		7
+-#define OP_COLLAPSE_RANGE	8
+-#define OP_INSERT_RANGE	9
+-#define OP_MAX_FULL		10
+-
+-/* integrity operations */
+-#define OP_FSYNC		10
+-#define OP_MAX_INTEGRITY	11
++enum {
++	/* common operations */
++	OP_READ = 0,
++	OP_WRITE,
++	OP_MAPREAD,
++	OP_MAPWRITE,
++	OP_MAX_LITE,
++
++	/* !lite operations */
++	OP_TRUNCATE = OP_MAX_LITE,
++	OP_FALLOCATE,
++	OP_PUNCH_HOLE,
++	OP_ZERO_RANGE,
++	OP_COLLAPSE_RANGE,
++	OP_INSERT_RANGE,
++	OP_MAX_FULL,
++
++	/* integrity operations */
++	OP_FSYNC = OP_MAX_FULL,
++	OP_MAX_INTEGRITY,
++};
+ 
+ #undef PAGE_SIZE
+ #define PAGE_SIZE       getpagesize()
