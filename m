@@ -1,91 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43802 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732660AbeLTWUY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Dec 2018 17:20:24 -0500
-Subject: Re: [PATCH 1/5] xfs_metadump: Extend data zapping to
- XFS_DIR{2,3}_LEAFN_MAGIC blocks
-References: <20181105213145.7560-1-stefanrin@gmail.com>
- <20181105213145.7560-2-stefanrin@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <42f07e6e-3625-0b89-7506-617c12a3f40f@sandeen.net>
-Date: Thu, 20 Dec 2018 16:20:22 -0600
+Received: from aserp2130.oracle.com ([141.146.126.79]:33638 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725952AbeLGGXR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Dec 2018 01:23:17 -0500
+Subject: [PATCH v4 00/12] xfstests: add copy/dedupe/clone to fsx/fsstress
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 06 Dec 2018 22:23:12 -0800
+Message-ID: <154416379233.15344.4377231692638417530.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20181105213145.7560-2-stefanrin@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>, linux-xfs@vger.kernel.org
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On 11/5/18 3:31 PM, Stefan Ring wrote:
-> Signed-off-by: Stefan Ring <stefanrin@gmail.com>
+Hi all,
 
-Sorry this took so long.  I didn't forget about you!
-And I really appreciate the work.
+This series adds to fsx and fsstress support for FICLONERANGE,
+FIDEDUPERANGE, and copy_file_range.  The only differences since v3 have
+been to deal with copy_file_range's short copies correctly...ish.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+The first three patches fix gcc warnings in fsx and fsstress.
 
-> ---
->  db/metadump.c | 27 +++++++++++++++++++++++----
->  1 file changed, 23 insertions(+), 4 deletions(-)
-> 
-> diff --git a/db/metadump.c b/db/metadump.c
-> index cc2ae9af..97d2a490 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -1426,7 +1426,7 @@ process_dir_leaf_block(
->  	char				*block)
->  {
->  	struct xfs_dir2_leaf		*leaf;
-> -	struct xfs_dir3_icleaf_hdr 	leafhdr;
-> +	struct xfs_dir3_icleaf_hdr	leafhdr;
->  
->  	if (!zero_stale_data)
->  		return;
-> @@ -1435,20 +1435,39 @@ process_dir_leaf_block(
->  	leaf = (struct xfs_dir2_leaf *)block;
->  	M_DIROPS(mp)->leaf_hdr_from_disk(&leafhdr, leaf);
->  
-> -	/* Zero out space from end of ents[] to bests */
-> -	if (leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
-> -	    leafhdr.magic == XFS_DIR3_LEAF1_MAGIC) {
-> +	switch (leafhdr.magic) {
-> +	case XFS_DIR2_LEAF1_MAGIC:
-> +	case XFS_DIR3_LEAF1_MAGIC: {
->  		struct xfs_dir2_leaf_tail	*ltp;
->  		__be16				*lbp;
->  		struct xfs_dir2_leaf_entry	*ents;
->  		char				*free; /* end of ents */
->  
-> +		/* Zero out space from end of ents[] to bests */
->  		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
->  		free = (char *)&ents[leafhdr.count];
->  		ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, leaf);
->  		lbp = xfs_dir2_leaf_bests_p(ltp);
->  		memset(free, 0, (char *)lbp - free);
->  		iocur_top->need_crc = 1;
-> +		break;
-> +	}
-> +	case XFS_DIR2_LEAFN_MAGIC:
-> +	case XFS_DIR3_LEAFN_MAGIC: {
-> +		struct xfs_dir2_leaf_entry	*ents;
-> +		char				*free;
-> +		int				used;
-> +
-> +		/* Zero out space from end of ents[] to end of block */
-> +		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
-> +		free = (char *)&ents[leafhdr.count];
-> +		used = free - (char*)leaf;
-> +		memset(free, 0, mp->m_dir_geo->blksize - used);
-> +		iocur_top->need_crc = 1;
-> +		break;
-> +	}
-> +	default:
-> +		break;
->  	}
->  }
->  
-> 
+Patch 4 adds an -X option to fsx that causes it to re-read the fsx file
+after every operation to compare it to the good buffer.  This made it
+easier for me to find corruption problem as soon as they happen, though
+it slows down fsx and perturbs in-core state considerably.
+
+Patche 5-6 are a couple of generic reworks to fsx that we need to
+support the new clone/dedupe/copy commands.
+
+Patches 7-8 add clone and dedupe to fsx.
+
+Patches 9-10 add copy_file_range support to fsstress and fsx.
+
+Patch 11 fixes the common/dump tests to disable the new commands so that
+the dump/restore tests continue to function exactly as they have for
+years.
+
+Patch 12 contains long-soak fsx tests designed to draw out corruption
+problems by running (1 million * TIME_FACTOR) operations.  These will be
+running all weekend during the US Thanksgiving holiday, though I hope
+we've sorted out all the problems.
+
+There are known failures in XFS on 4.20-rc5, particularly with
+copy_file_range and reflink, all of which hopefully will have been fixed
+by the time 4.21 comes out.  Dave Chinner has more fixes in progress to
+correct various flaws of copy_file_range.
+
+--D
