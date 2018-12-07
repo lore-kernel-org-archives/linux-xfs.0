@@ -1,83 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vs1-f65.google.com ([209.85.217.65]:34105 "EHLO
-        mail-vs1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726017AbeLDITI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Dec 2018 03:19:08 -0500
+Received: from out30-130.freemail.mail.aliyun.com ([115.124.30.130]:48902 "EHLO
+        out30-130.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726045AbeLGSyw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Dec 2018 13:54:52 -0500
+Date: Fri, 7 Dec 2018 10:51:04 -0800
+From: Liu Bo <bo.liu@linux.alibaba.com>
+Subject: Re: [PATCH RFC] Ext4: fix deadlock on dirty pages between fault and
+ writeback
+Message-ID: <20181207185102.2chvdfqwav5z6b7j@US-160370MP2.local>
+Reply-To: bo.liu@linux.alibaba.com
+References: <20181127114249.GH16301@quack2.suse.cz>
+ <20181128201122.r4sec265cnlxgj2x@US-160370MP2.local>
+ <20181129085238.GD31087@quack2.suse.cz>
+ <20181129120253.GR6311@dastard>
+ <20181129130002.GM31087@quack2.suse.cz>
+ <20181129204019.GS6311@dastard>
+ <20181205170656.GJ30615@quack2.suse.cz>
+ <20181207052051.GB6311@dastard>
+ <20181207071615.GO1286@dhcp22.suse.cz>
+ <20181207112036.GA1286@dhcp22.suse.cz>
 MIME-Version: 1.0
-References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-9-david@fromorbit.com>
-In-Reply-To: <20181203083416.28978-9-david@fromorbit.com>
-From: Olga Kornievskaia <olga.kornievskaia@gmail.com>
-Date: Tue, 4 Dec 2018 03:18:54 -0500
-Message-ID: <CAN-5tyEumh4A+74Xp+ywk0-73X8iqhrv81S+mfLLPExsp4SE8g@mail.gmail.com>
-Subject: Re: [PATCH 08/11] vfs: push EXDEV check down into ->remap_file_range
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181207112036.GA1286@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, Dec 3, 2018 at 3:34 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> From: Dave Chinner <dchinner@redhat.com>
->
-> before we can enable cross-device copies into copy_file_range(),
-> we have to ensure that ->remap_file_range() implemenations will
-> correctly reject attempts to do cross filesystem clones. Currently
-> these checks are done above calls to ->remap_file_range(), but
-> we need to drive them inwards so that we get EXDEV protection for all
-> callers of ->remap_file_range().
+On Fri, Dec 07, 2018 at 12:20:36PM +0100, Michal Hocko wrote:
+> On Fri 07-12-18 08:16:15, Michal Hocko wrote:
+> [...]
+> > Memcg v1 indeed doesn't have any dirty IO throttling and this is a
+> > poor's man workaround. We still do not have that AFAIK and I do not know
+> > of an elegant way around that. Fortunatelly we shouldn't have that many
+> > GFP_KERNEL | __GFP_ACCOUNT allocations under page lock and we can work
+> > around this specific one quite easily. I haven't tested this yet but the
+> > following should work
+> > 
+> > diff --git a/mm/memory.c b/mm/memory.c
+> > index 4ad2d293ddc2..59c98eeb0260 100644
+> > --- a/mm/memory.c
+> > +++ b/mm/memory.c
+> > @@ -2993,6 +2993,16 @@ static vm_fault_t __do_fault(struct vm_fault *vmf)
+> >  	struct vm_area_struct *vma = vmf->vma;
+> >  	vm_fault_t ret;
+> >  
+> > +	/*
+> > +	 * Preallocate pte before we take page_lock because this might lead to
+> > +	 * deadlocks for memcg reclaim which waits for pages under writeback.
+> > +	 */
+> > +	if (!vmf->prealloc_pte) {
+> > +		vmf->prealloc_pte = pte_alloc_one(vmf->vma->vm>mm, vmf->address);
+> > +		if (!vmf->prealloc_pte)
+> > +			return VM_FAULT_OOM;
+> > +	}
+> > +
+> >  	ret = vma->vm_ops->fault(vmf);
+> >  	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE | VM_FAULT_RETRY |
+> >  			    VM_FAULT_DONE_COW)))
+> 
+> This is too eager to allocate pte even when it is not really needed.
+> Jack has also pointed out that I am missing a write barrier. So here we
+> go with an updated patch. This is essentially what fault around code
+> does.
+> 
 
-If there is no check before calling ->remap_file_range() then NFS
-barfs. Perhaps it needs a check internally that checks that both file
-handles are from the NFS but this was not needed before. Or there
-needs to the a check in VFS.
+Makes sense to me, unfortunately we don't have a local reproducer to verify it
+and we've disabled CONFIG_MEMCG_KMEM to workaround the problem.  Given the stack
+I put, the patch should address the deadlock at least.
 
->
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/read_write.c | 21 +++++++++++++--------
->  1 file changed, 13 insertions(+), 8 deletions(-)
->
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index 3288db1d5f21..174cf92eea1d 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -1909,6 +1909,19 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
->         bool same_inode = (inode_in == inode_out);
->         int ret;
->
-> +       /*
-> +        * FICLONE/FICLONERANGE ioctls enforce that src and dest files are on
-> +        * the same mount. Practically, they only need to be on the same file
-> +        * system. We check this here rather than at the ioctl layers because
-> +        * this is effectively a limitation of the fielsystem implementations,
-> +        * not so much the API itself. Further, ->remap_file_range() can be
-> +        * called from syscalls that don't have cross device copy restrictions
-> +        * (such as copy_file_range()) and so we need to catch them before we
-> +        * do any damage.
-> +        */
-> +       if (inode_in->i_sb != inode_out->i_sb)
-> +               return -EXDEV;
+thanks,
+-liubo
+
+> diff --git a/mm/memory.c b/mm/memory.c
+> index 4ad2d293ddc2..1a73d2d4659e 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+> @@ -2993,6 +2993,17 @@ static vm_fault_t __do_fault(struct vm_fault *vmf)
+>  	struct vm_area_struct *vma = vmf->vma;
+>  	vm_fault_t ret;
+>  
+> +	/*
+> +	 * Preallocate pte before we take page_lock because this might lead to
+> +	 * deadlocks for memcg reclaim which waits for pages under writeback.
+> +	 */
+> +	if (pmd_none(*vmf->pmd) && !vmf->prealloc_pte) {
+> +		vmf->prealloc_pte = pte_alloc_one(vmf->vma->vm>mm, vmf->address);
+> +		if (!vmf->prealloc_pte)
+> +			return VM_FAULT_OOM;
+> +		smp_wmb(); /* See comment in __pte_alloc() */
+> +	}
 > +
->         /* Don't touch certain kinds of inodes */
->         if (IS_IMMUTABLE(inode_out))
->                 return -EPERM;
-> @@ -2013,14 +2026,6 @@ loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
->         if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
->                 return -EINVAL;
->
-> -       /*
-> -        * FICLONE/FICLONERANGE ioctls enforce that src and dest files are on
-> -        * the same mount. Practically, they only need to be on the same file
-> -        * system.
-> -        */
-> -       if (inode_in->i_sb != inode_out->i_sb)
-> -               return -EXDEV;
-> -
->         if (!(file_in->f_mode & FMODE_READ) ||
->             !(file_out->f_mode & FMODE_WRITE) ||
->             (file_out->f_flags & O_APPEND))
-> --
-> 2.19.1
->
+>  	ret = vma->vm_ops->fault(vmf);
+>  	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE | VM_FAULT_RETRY |
+>  			    VM_FAULT_DONE_COW)))
+> -- 
+> Michal Hocko
+> SUSE Labs
