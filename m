@@ -1,150 +1,170 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f66.google.com ([209.85.161.66]:45933 "EHLO
-        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725948AbeLGFiu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Dec 2018 00:38:50 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:33116 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725998AbeLGNlT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Dec 2018 08:41:19 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 3C876C049AFF
+        for <linux-xfs@vger.kernel.org>; Fri,  7 Dec 2018 13:41:19 +0000 (UTC)
+Date: Fri, 7 Dec 2018 08:41:14 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 09/10] xfs: add errno to verifier context and populate it
+Message-ID: <20181207134114.GD55482@bfoster>
+References: <542b81dc-b564-c5fa-86b4-b4dc8ac50b63@redhat.com>
+ <cc218ca1-a572-0dd0-d01b-89b33eeace4b@redhat.com>
 MIME-Version: 1.0
-References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-4-david@fromorbit.com>
- <CAOQ4uxjRErxoOTAr+yzu7s5S4SEYZuw6GcfQ-M7UXAasTG9Knw@mail.gmail.com>
- <20181203230222.GH6311@dastard> <CAOQ4uxgqaGoVs9t9NqWn-uVyeeZzZOUBSYX6=JFn2uCf3rKmUQ@mail.gmail.com>
- <20181206213058.GY6311@dastard>
-In-Reply-To: <20181206213058.GY6311@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 7 Dec 2018 07:38:36 +0200
-Message-ID: <CAOQ4uxjBadFK1MLj0uQvKkQYL=NmK1zqx29yASMH9bwMsTrmFw@mail.gmail.com>
-Subject: Re: [PATCH 03/11] vfs: no fallback for ->copy_file_range
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cc218ca1-a572-0dd0-d01b-89b33eeace4b@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Dec 6, 2018 at 11:31 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Thu, Dec 06, 2018 at 06:16:46AM +0200, Amir Goldstein wrote:
-> > On Tue, Dec 4, 2018 at 1:02 AM Dave Chinner <david@fromorbit.com> wrote:
-> > >
-> > > On Mon, Dec 03, 2018 at 12:22:21PM +0200, Amir Goldstein wrote:
-> > > > On Mon, Dec 3, 2018 at 10:34 AM Dave Chinner <david@fromorbit.com> wrote:
-> > > > >
-> > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > >
-> > > > > Now that we have generic_copy_file_range(), remove it as a fallback
-> > > > > case when offloads fail. This puts the responsibility for executing
-> > > > > fallbacks on the filesystems that implement ->copy_file_range and
-> > > > > allows us to add operational validity checks to
-> > > > > generic_copy_file_range().
-> > > > >
-> > > > > Rework vfs_copy_file_range() to call a new do_copy_file_range()
-> > > > > helper to exceute the copying callout, and move calls to
-> > > > > generic_file_copy_range() into filesystem methods where they
-> > > > > currently return failures.
-> > > > >
-> > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > >
-> > > > You may add
-> > > > Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-> > > >
-> > > > After fixing the overlayfs issue below.
-> > > > ...
-> > > >
-> > > > > diff --git a/fs/overlayfs/file.c b/fs/overlayfs/file.c
-> > > > > index 84dd957efa24..68736e5d6a56 100644
-> > > > > --- a/fs/overlayfs/file.c
-> > > > > +++ b/fs/overlayfs/file.c
-> > > > > @@ -486,8 +486,15 @@ static ssize_t ovl_copy_file_range(struct file *file_in, loff_t pos_in,
-> > > > >                                    struct file *file_out, loff_t pos_out,
-> > > > >                                    size_t len, unsigned int flags)
-> > > > >  {
-> > > > > -       return ovl_copyfile(file_in, pos_in, file_out, pos_out, len, flags,
-> > > > > +       ssize_t ret;
-> > > > > +
-> > > > > +       ret =  ovl_copyfile(file_in, pos_in, file_out, pos_out, len, flags,
-> > > > >                             OVL_COPY);
-> > > > > +
-> > > > > +       if (ret == -EOPNOTSUPP)
-> > > > > +               ret = generic_copy_file_range(file_in, pos_in, file_out,
-> > > > > +                                       pos_out, len, flags);
-> > > > > +       return ret;
-> > > > >  }
-> > > > >
-> > > >
-> > > > This is unneeded, because ovl_copyfile(OVL_COPY) is implemented
-> > > > by calling vfs_copy_file_range() (on the underlying files) and it is
-> > > > not possible
-> > > > to get EOPNOTSUPP from vfs_copy_file_range().
-> > >
-> > > Except that it is possible. e.g. If the underlying filesystem tries
-> > > a copy offload, gets a "not supported" failure from the remote
-> > > server and then doesn't implement a fallback.
-> > >
-> >
-> > I'm in the opinion that ovl_copy_file_range() and do_copy_file_range()
-> > are a like. If you choose not to fallback in the latter to
-> > generic_copy_file_range() for misbehaving filesystem and WARN_ON
-> > this case, there is no reason for overlayfs to cover up for the
-> > misbehaving underlying filesystem.
-> >
-> > If you want to cover up for misbehaving filesystem, please do it
-> > in do_copy_file_range() and drop the WARN_ON_ONCE().
-> > Come to think about it, I understand your reasoning for pushing
-> > generic_copy_file_range() down to filesystems so they can fallback to
-> > it in several error conditions.
-> > I do not follow the reasoning of NOT falling back to
-> > generic_copy_file_range() in vfs if EOPNOTSUPP is returned from
-> > filesystem. IOW, if we want to cover up for misbehaving filesystem,
-> > this would have been a more robust code:
->
-> Since when have we defined a filesystem returning -EOPNOTSUPP as a
-> "misbehaving filesystem"?
+On Wed, Dec 05, 2018 at 03:11:00PM -0600, Eric Sandeen wrote:
+> Add errno to verifier context and set it on verifier failures;
+> now rather than passing errno and vc->fa to xfs_verifier_error,
+> we pass vc directly and let xfs_verifier_error suss out the
+> errno and failaddr.
+> 
+> Also make 3 new macros, XFS_CORRUPTED, XFS_BADCRC, and
+> XFS_VERIFIED which set errno and failaddr into the verifier context
+> without returning.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c          | 12 ++++----
+>  fs/xfs/libxfs/xfs_alloc_btree.c    |  6 ++--
+>  fs/xfs/libxfs/xfs_attr_leaf.c      |  6 ++--
+>  fs/xfs/libxfs/xfs_attr_remote.c    | 49 ++++++++++++------------------
+>  fs/xfs/libxfs/xfs_bmap_btree.c     |  6 ++--
+>  fs/xfs/libxfs/xfs_da_btree.c       |  9 +++---
+>  fs/xfs/libxfs/xfs_dir2_block.c     |  6 ++--
+>  fs/xfs/libxfs/xfs_dir2_data.c      |  9 +++---
+>  fs/xfs/libxfs/xfs_dir2_leaf.c      |  6 ++--
+>  fs/xfs/libxfs/xfs_dir2_node.c      |  8 ++---
+>  fs/xfs/libxfs/xfs_ialloc.c         |  6 ++--
+>  fs/xfs/libxfs/xfs_ialloc_btree.c   |  6 ++--
+>  fs/xfs/libxfs/xfs_refcount_btree.c |  6 ++--
+>  fs/xfs/libxfs/xfs_rmap_btree.c     |  6 ++--
+>  fs/xfs/libxfs/xfs_sb.c             | 14 ++++++---
+>  fs/xfs/libxfs/xfs_symlink_remote.c |  6 ++--
+>  fs/xfs/libxfs/xfs_types.h          | 16 ++++++++--
+>  fs/xfs/xfs_error.c                 |  7 ++---
+>  fs/xfs/xfs_error.h                 |  3 +-
+>  19 files changed, 96 insertions(+), 91 deletions(-)
+> 
+...
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 07e866103dc2..50726c54c2ca 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -719,9 +719,13 @@ xfs_sb_read_verify(
+>  	error = xfs_validate_sb_read(mp, &sb);
+>  
+>  out_error:
+> -	if (error == -EFSCORRUPTED || error == -EFSBADCRC)
+> -		xfs_verifier_error(bp, error, __this_address);
+> -	else if (error)
+> +	if (error == -EFSCORRUPTED) {
+> +		XFS_CORRUPTED(vc);
 
-Since you wrote:
+Can't this clobber a previous corruption state in the vc, depending on
+how we get here?
 
-WARN_ON_ONCE(ret == -EOPNOTSUPP);
+> +		xfs_verifier_error(bp, vc);
+> +	} else if (error == -EFSBADCRC) {
+> +		XFS_BADCRC(vc);
+> +		xfs_verifier_error(bp, vc);
+> +	} else if (error)
+>  		xfs_buf_ioerror(bp, error);
+>  }
+>  
+> @@ -779,7 +783,9 @@ xfs_sb_write_verify(
+>  	return;
+>  
+>  out_error:
+> -	xfs_verifier_error(bp, error, __this_address);
+> +	vc->fa = __this_address;
+> +	vc->errno = error;
+> +	xfs_verifier_error(bp, vc);
+>  }
+>  
+>  const struct xfs_buf_ops xfs_sb_buf_ops = {
+...
+> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+> index ab045e8dfcb9..4f0b8c73b599 100644
+> --- a/fs/xfs/libxfs/xfs_types.h
+> +++ b/fs/xfs/libxfs/xfs_types.h
+...
+> @@ -51,10 +57,14 @@ struct xfs_vc {
+>   * return, which throws off the reported address.
+>   */
+>  #define __this_address ({ __label__ __here; __here: barrier(); &&__here; })
+> +
+> +#define XFS_CORRUPTED(vc)	({(vc)->fa = __this_address; (vc)->errno = -EFSCORRUPTED;})
+> +#define XFS_BADCRC(vc)		({(vc)->fa = __this_address; (vc)->errno = -EFSBADCRC;})
+> +#define XFS_VERIFIED(vc)	({(vc)->fa = NULL; (vc)->errno = 0;})
+>   
+> -#define XFS_CORRUPTED_RETURN(vc)	({(vc)->fa = __this_address; false;})
+> -#define XFS_BADCRC_RETURN(vc)		({(vc)->fa = __this_address; false;})
+> -#define XFS_VERIFIED_RETURN(vc)		({(vc)->fa = NULL; true;})
+> +#define XFS_CORRUPTED_RETURN(vc)	({(vc)->fa = __this_address; (vc)->errno = -EFSCORRUPTED; false;})
+> +#define XFS_BADCRC_RETURN(vc)		({(vc)->fa = __this_address; (vc)->errno = -EFSBADCRC; false;})
+> +#define XFS_VERIFIED_RETURN(vc)		({(vc)->fa = NULL; (vc)->errno = 0;  true;})
+>  
 
-If filesystem is allowed to return EOPNOTSUPP from ->copy_file_range()
-then what is this warning about?
+Case in point wrt the naming thoughts on the previous patch: what's the
+need for separate XFS_CORRUPTED() macros if the _RETURN() ones don't
+actually change execution flow? They just evaluate to a logical
+true/false, which should be perfectly fine outside of a return
+statement.
 
-> Userspace has to handle errors in
-> copy_file_range() with it's own fallback copy code (i.e. it cannot
-> rely on the kernel actually supporting copy_file_range at all).
-> Hence it's perfectly fine for a filesystem implementation to encode
-> "offload or fail entirely" semantics if they want.
->
-> Yes, I've been shouted at by developers quite recently who
-> *demanded* that copy_file_range (and other offloads like
-> fallocate(ZERO_RANGE)) *fail* if they cannot "offload" the operation
-> to make it "fast". The application developers want to use different
-> algorithms if the kernel offload isn't any faster than userspace
-> doing the dumb thing and phsyically pushing bytes around itself.
->
-> I've pushed back on this as much as I can, but it doesn't change the
-> fact that for many situations doing do_splice_direct() is exactly
-> the wrong thing to do (e.g. because copy_file_range() on a TB+ scale
-> file couldn't be offloaded by the filesystem because the server said
-> EOPNOTSUPP)
->
-> IOWs, for some filesystems or situations where it makes sense to
-> have fail-fast semantics and leave the decision of what to do next
-> in the hands of the userspace application that has the context
-> necessary to determine what the best action to take is.  And to do
-> that, we need to give control of the fallback to the filesystems.
->
-> Flexibility is what is needed here, not a dumb, hard coded "the VFS
-> always know what's right for you" policy that triggers when nobody
-> really wants it to.
->
+Hmm, maybe it would be better to stick with that "return value" model
+after all, but just drop the _RETURN() bit of the name and use the same
+macro in both contexts.
 
-You misunderstood me.
-Please remove the fallback to generic_copy_file_range() in
-ovl_copy_file_range() as I requested in initial review for the exact
-same reasons that you list above.
+Brian
 
-The overlayfs implementation of ovl_copy_file_range() is just
-handing over the call to underlying vfs_copy_file_range().
-If the latter is expected to return EOPNOTSUPP, so does the
-overlayfs implementation.
-
-Thanks,
-Amir.
+>  /*
+>   * Null values for the types.
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index 9866f542e77b..4d305287823c 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -381,11 +381,10 @@ xfs_buf_verifier_error(
+>  void
+>  xfs_verifier_error(
+>  	struct xfs_buf		*bp,
+> -	int			error,
+> -	xfs_failaddr_t		failaddr)
+> +	struct xfs_vc		*vc)
+>  {
+> -	return xfs_buf_verifier_error(bp, error, "", xfs_buf_offset(bp, 0),
+> -			XFS_CORRUPTION_DUMP_LEN, failaddr);
+> +	return xfs_buf_verifier_error(bp, vc->errno, "", xfs_buf_offset(bp, 0),
+> +			XFS_CORRUPTION_DUMP_LEN, vc->fa);
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+> index 246d3e989c6c..9b0ac387007d 100644
+> --- a/fs/xfs/xfs_error.h
+> +++ b/fs/xfs/xfs_error.h
+> @@ -18,8 +18,7 @@ extern void xfs_corruption_error(const char *tag, int level,
+>  extern void xfs_buf_verifier_error(struct xfs_buf *bp, int error,
+>  			const char *name, void *buf, size_t bufsz,
+>  			xfs_failaddr_t failaddr);
+> -extern void xfs_verifier_error(struct xfs_buf *bp, int error,
+> -			xfs_failaddr_t failaddr);
+> +extern void xfs_verifier_error(struct xfs_buf *bp, struct xfs_vc *vc);
+>  extern void xfs_inode_verifier_error(struct xfs_inode *ip, int error,
+>  			const char *name, void *buf, size_t bufsz,
+>  			xfs_failaddr_t failaddr);
+> -- 
+> 2.17.0
+> 
+> 
