@@ -1,72 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33948 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:39754 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726140AbeLHOuS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Dec 2018 09:50:18 -0500
-Subject: Re: [RFC PATCH v1 0/7] Block/XFS: Support alternative mirror device
- retry
-References: <1543376991-5764-1-git-send-email-allison.henderson@oracle.com>
- <20181128053303.GL6311@dastard> <20181128074544.GA20702@infradead.org>
-From: Bob Liu <bob.liu@oracle.com>
-Message-ID: <f7bf5329-e756-1edb-af3f-41aca02691fe@oracle.com>
-Date: Sat, 8 Dec 2018 22:49:44 +0800
+        with ESMTP id S1726176AbeLHQgp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Dec 2018 11:36:45 -0500
+Date: Sat, 8 Dec 2018 08:36:39 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [GIT PULL] xfs: fixes for v4.20-rc6
+Message-ID: <20181208163639.GR24487@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20181128074544.GA20702@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
-Cc: Allison Henderson <allison.henderson@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com
+To: torvalds@linux-foundation.org
+Cc: Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On 11/28/18 3:45 PM, Christoph Hellwig wrote:
-> On Wed, Nov 28, 2018 at 04:33:03PM +1100, Dave Chinner wrote:
->> 	- how does propagation through stacked layers work?
-> 
-> The only way it works is by each layering driving it.  Thus my
-> recommendation above bilding on your earlier one to use an index
-> that is filled by the driver at I/O completion time.
-> 
-> E.g.
-> 
-> 	bio_init:		bi_leg = -1
-> 
-> 	raid1:			submit bio to lower driver
-> 	raid 1 completion:	set bi_leg to 0 or 1
-> 
-> Now if we want to allow stacking we need to save/restore bi_leg
-> before submitting to the underlying device.  Which is possible,
-> but quite a bit of work in the drivers.
-> 
+Hi Linus,
 
-I found it's still very challenge while writing the code.
-save/restore bi_leg may not enough because the drivers don't know how to do fs-metadata verify.
+Here are hopefully the last set of fixes for 4.20.  There's a fix for a
+longstanding statfs reporting problem with project quotas, a correction
+for page cache invalidation behaviors when fallocating near EOF, and a
+fix for a broken metadata verifier return code.
 
-E.g two layer raid1 stacking
+Finally, the most important fix is to the pipe splicing code (aka the
+generic copy_file_range fallback) to avoid pointless short directio
+reads by only asking the filesystem for as much data as there are
+available pages in the pipe buffer.  Our previous fix (simulated short
+directio reads because the number of pages didn't match the length of
+the read requested) caused subtle problems on overlayfs, so that part is
+reverted.
 
-fs:                  md0(copies:2)
-                     /          \
-layer1/raid1   md1(copies:2)    md2(copies:2)
-                  /    \          /     \
-layer2/raid1   dev0   dev1      dev2    dev3
+Anyhow, this series passes fstests -g all on xfs and overlay+xfs, and
+has passed 17 billion fsx operations problem-free since I started
+testing; and merges cleanly with master as of last night, so please let
+me know if you encounter problems.
 
-Assume dev2 is corrupted
- => md2: don't know how to do fs-metadata verify. 
-   => md0: fs verify fail, retry md1(preserve md2).
-Then md2 will never be retried even dev3 may also has the right copy.
-Unless the upper layer device(md0) can know the amount of copy is 4 instead of 2? 
-And need a way to handle the mapping.
-Did I miss something? Thanks!
+--D
 
--Bob
+The following changes since commit 8c110d43c6bca4b24dd13272a9d4e0ba6f2ec957:
 
->> 	- is it generic/abstract enough to be able to work with
->> 	  RAID5/6 to trigger verification/recovery from the parity
->> 	  information in the stripe?
-> 
-> If we get the non -1 bi_leg for paritity raid this is an inidicator
-> that parity rebuild needs to happen.  For multi-parity setups we could
-> also use different levels there.
-> 
+  iomap: readpages doesn't zero page tail beyond EOF (2018-11-21 10:10:54 -0800)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.20-fixes-3
+
+for you to fetch changes up to 8f67b5adc030553fbc877124306f3f3bdab89aa8:
+
+  iomap: partially revert 4721a601099 (simulated directio short read on EFAULT) (2018-12-04 09:40:02 -0800)
+
+----------------------------------------------------------------
+Changes since last update:
+- Fix broken project quota inode counts
+- Fix incorrect PAGE_MASK/PAGE_SIZE usage
+- Fix incorrect return value in btree verifier
+- Fix WARN_ON remap flags false positive
+- Fix splice read overflows
+
+----------------------------------------------------------------
+Darrick J. Wong (4):
+      xfs: fix PAGE_MASK usage in xfs_free_file_space
+      vfs: allow some remap flags to be passed to vfs_clone_file_range
+      splice: don't read more than available pipe space
+      iomap: partially revert 4721a601099 (simulated directio short read on EFAULT)
+
+Eric Sandeen (1):
+      xfs: fix inverted return from xfs_btree_sblock_verify_crc
+
+Ye Yin (1):
+      fs/xfs: fix f_ffree value for statfs when project quota is set
+
+ fs/iomap.c                | 9 ---------
+ fs/read_write.c           | 2 +-
+ fs/splice.c               | 7 ++++++-
+ fs/xfs/libxfs/xfs_btree.c | 2 +-
+ fs/xfs/xfs_bmap_util.c    | 4 ++--
+ fs/xfs/xfs_qm_bhv.c       | 2 +-
+ 6 files changed, 11 insertions(+), 15 deletions(-)
