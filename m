@@ -1,167 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:18739 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725830AbeLCNRC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Dec 2018 08:17:02 -0500
-From: Kanchan Joshi <joshi.k@samsung.com>
-Subject: [PATCH] fs/xfs: Add support for passing write life-time hint with
- log
-Date: Mon, 03 Dec 2018 18:42:49 +0530
-Message-id: <1543842769-6363-1-git-send-email-joshi.k@samsung.com>
-References: <CGME20181203131558epcas2p14b6b38cb67d4915b1ba782e11ce7ffe6@epcas2p1.samsung.com>
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:36318 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726185AbeLHTZI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Dec 2018 14:25:08 -0500
+Received: by mail-lj1-f195.google.com with SMTP id g11-v6so6314613ljk.3
+        for <linux-xfs@vger.kernel.org>; Sat, 08 Dec 2018 11:25:07 -0800 (PST)
+Received: from mail-lj1-f179.google.com (mail-lj1-f179.google.com. [209.85.208.179])
+        by smtp.gmail.com with ESMTPSA id x18-v6sm1295144lji.27.2018.12.08.11.25.04
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 08 Dec 2018 11:25:05 -0800 (PST)
+Received: by mail-lj1-f179.google.com with SMTP id t9-v6so6305182ljh.6
+        for <linux-xfs@vger.kernel.org>; Sat, 08 Dec 2018 11:25:04 -0800 (PST)
+MIME-Version: 1.0
+References: <20181208163639.GR24487@magnolia>
+In-Reply-To: <20181208163639.GR24487@magnolia>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Sat, 8 Dec 2018 11:24:48 -0800
+Message-ID: <CAHk-=who9EqvvGaazise-dh7_DH6rLOULWXzysinyAPnHS4B0A@mail.gmail.com>
+Subject: Re: [GIT PULL] xfs: fixes for v4.20-rc6
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Kanchan Joshi <joshi.k@samsung.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Al Viro <viro@zeniv.linux.org.uk>
+Cc: david@fromorbit.com, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
 
-Log gets updated in a circular fashion, and that makes life-time   
-of log-data different from other types of meta/user-data.                            
-By passing a write life-time hint with log, GC efficiency of multi-stream SSD   
-gets improved, leading to endurance/performance benefits.                       
-It is described in greater detail (along with results) in this "FAST 2018"      
-paper -                                                                         
-https://www.usenix.org/conference/fast18/presentation/rho                       
-                                                                                
-This patch introduces new mount option "logwritehint" to pass write hint
-with XFS log.
-Among other Linux file-systems, F2FS supports passing down such write      
-hints. While for Ext4 journal, I am preparing similar proposal.
+On Sat, Dec 8, 2018 at 8:36 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> Finally, the most important fix is to the pipe splicing code (aka the
+> generic copy_file_range fallback) to avoid pointless short directio
+> reads by only asking the filesystem for as much data as there are
+> available pages in the pipe buffer.  Our previous fix (simulated short
+> directio reads because the number of pages didn't match the length of
+> the read requested) caused subtle problems on overlayfs, so that part is
+> reverted.
 
-Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
----
- fs/xfs/xfs_buf.c         |  2 ++
- fs/xfs/xfs_buf.h         |  1 +
- fs/xfs/xfs_log.c         |  3 +++
- fs/xfs/xfs_log_recover.c |  1 +
- fs/xfs/xfs_mount.h       |  2 ++
- fs/xfs/xfs_super.c       | 15 +++++++++++++--
- 6 files changed, 22 insertions(+), 2 deletions(-)
+Honestly, I really wish you simply wouldn't send me "xfs" fixes that
+aren't really xfs-specific at all.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index b21ea2b..00d17f6 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1370,6 +1370,8 @@ xfs_buf_ioapply_map(
- 	bio->bi_end_io = xfs_buf_bio_end_io;
- 	bio->bi_private = bp;
- 	bio_set_op_attrs(bio, op, op_flags);
-+	/* set write hint in bio */
-+	bio->bi_write_hint = bp->b_write_hint;
- 
- 	for (; size && nr_pages; nr_pages--, page_index++) {
- 		int	rbytes, nbytes = PAGE_SIZE - offset;
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index b9f5511..ba9c78c 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -196,6 +196,7 @@ typedef struct xfs_buf {
- 	int			b_retries;
- 	unsigned long		b_first_retry_time; /* in jiffies */
- 	int			b_last_error;
-+	enum rw_hint		b_write_hint;	/* write hint for I/O */
- 
- 	const struct xfs_buf_ops	*b_ops;
- } xfs_buf_t;
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index c3b610b..45e220d 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1881,6 +1881,8 @@ xlog_sync(
- 	XFS_BUF_SET_ADDR(bp, BLOCK_LSN(be64_to_cpu(iclog->ic_header.h_lsn)));
- 
- 	XFS_STATS_ADD(log->l_mp, xs_log_blocks, BTOBB(count));
-+	/* set write hint in buffer */
-+	bp->b_write_hint = log->l_mp->m_logwritehint;
- 
- 	/* Do we need to split this write into 2 parts? */
- 	if (XFS_BUF_ADDR(bp) + BTOBB(count) > log->l_logBBsize) {
-@@ -1971,6 +1973,7 @@ xlog_sync(
- 		bp->b_log_item = iclog;
- 		bp->b_flags &= ~XBF_FLUSH;
- 		bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE | XBF_FUA);
-+		bp->b_write_hint = log->l_mp->m_logwritehint;
- 
- 		ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
- 		ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 1fc9e90..8bf89fa 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -282,6 +282,7 @@ xlog_bwrite(
- 	xfs_buf_lock(bp);
- 	bp->b_io_length = nbblks;
- 	bp->b_error = 0;
-+	bp->b_write_hint = log->l_mp->m_logwritehint;
- 
- 	error = xfs_bwrite(bp);
- 	if (error)
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 7964513..7f6b2b8 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -171,6 +171,8 @@ typedef struct xfs_mount {
- 	struct workqueue_struct	*m_log_workqueue;
- 	struct workqueue_struct *m_eofblocks_workqueue;
- 	struct workqueue_struct	*m_sync_workqueue;
-+	/* To store write hint (for log writes) passed during mount */
-+	int			m_logwritehint;
- 
- 	/*
- 	 * Generation of the filesysyem layout.  This is incremented by each
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index d3e6cd0..6449d213 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -71,7 +71,7 @@ enum {
- 	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
- 	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
- 	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
--	Opt_discard, Opt_nodiscard, Opt_dax, Opt_err,
-+	Opt_discard, Opt_nodiscard, Opt_dax, Opt_logwritehint, Opt_err,
- };
- 
- static const match_table_t tokens = {
-@@ -119,6 +119,7 @@ static const match_table_t tokens = {
- 	{Opt_discard,	"discard"},	/* Discard unused blocks */
- 	{Opt_nodiscard,	"nodiscard"},	/* Do not discard unused blocks */
- 	{Opt_dax,	"dax"},		/* Enable direct access to bdev pages */
-+	{Opt_logwritehint, "logwritehint=%u"},/* Write-hint for log */
- 	{Opt_err,	NULL},
- };
- 
-@@ -225,6 +226,10 @@ xfs_parseargs(
- 			if (match_int(args, &mp->m_logbufs))
- 				return -EINVAL;
- 			break;
-+		case Opt_logwritehint:
-+			if (match_int(args, &mp->m_logwritehint))
-+				return -EINVAL;
-+			break;
- 		case Opt_logbsize:
- 			if (suffix_kstrtoint(args, 10, &mp->m_logbsize))
- 				return -EINVAL;
-@@ -405,7 +410,6 @@ xfs_parseargs(
- 		mp->m_dalign = dsunit;
- 		mp->m_swidth = dswidth;
- 	}
--
- 	if (mp->m_logbufs != -1 &&
- 	    mp->m_logbufs != 0 &&
- 	    (mp->m_logbufs < XLOG_MIN_ICLOGS ||
-@@ -438,6 +442,13 @@ xfs_parseargs(
- 		mp->m_readio_log = iosizelog;
- 		mp->m_writeio_log = iosizelog;
- 	}
-+	if (mp->m_logwritehint < WRITE_LIFE_NOT_SET ||
-+	    mp->m_logwritehint > WRITE_LIFE_EXTREME) {
-+		xfs_warn(mp, "invalid logwritehint value: %d [not %d-%d]",
-+			mp->m_logwritehint, WRITE_LIFE_NOT_SET, WRITE_LIFE_EXTREME);
-+		return -EINVAL;
-+
-+	}
- 
- 	return 0;
- }
--- 
-2.7.4
+All the splice patches (and honestly, I feel some of the iomap ones
+too) that have come in through the xfs tree should have been handled
+separately as actual VFS patches. Or at least had acks from Al or
+something.
+
+I'm looking at that splice patch, and my initial reaction was "Hmm.
+but that breaks 0 vs -EAGAIN". But then I realized that that's why
+you're validating pipe->nrbufs, because the special temporary
+per-thread pipe is always supposed to be empty on entry, so a zero
+length can't happen.
+
+But just the fact that I felt like I had to go and look at one of
+these commits makes me go "this is not an XFS fix at all, it shouldn't
+have been treated as an XFS patch, and the original commit that
+*caused* the problem shouldn't have been treated as one either".
+
+So please. I want to feel like when I get a XFS pull from the XFS
+maintainer, I don't need to worry about it, and I can just do the git
+pull without having to check details.
+
+But that means that when you do changes outside of XFS code, those
+changes need to be handled _differently_. And they shouldn't be
+bypassing Al etc. And even if you can't get an Ack from Al, send them
+separately, so that I can check them without there being any XFS
+issues that are mixed up with the pull.
+
+So the patch looks good, and I'm merging this, but I really really
+don't have to feel like I need to look at xfs pulls this way.
+
+                 Linus
