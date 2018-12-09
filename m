@@ -1,51 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f195.google.com ([209.85.208.195]:40860 "EHLO
-        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726457AbeLMVyA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 16:54:00 -0500
-Received: by mail-lj1-f195.google.com with SMTP id n18-v6so3137018lji.7
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 13:53:58 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20181213213921.GG6311@dastard>
-References: <20181210165020.GT24487@magnolia> <20181210174627.GD8356@bfoster>
- <CADyTPEzcjKO163RehVHtOo0=71=u515oHaeAnzmkfHtatpjhLg@mail.gmail.com>
- <20181210214115.GC6311@dastard> <CADyTPEyJkxM=YBwLudwPrTMFNpMtpfZ7ALjD0GrtrdCVTKa7+Q@mail.gmail.com>
- <20181211122701.GA2819@bfoster> <CADyTPEwXDtFRn5HciKwiGRPn4LSjAvLTK0HJ9UXKq6ZJTmj9pQ@mail.gmail.com>
- <20181213035352.GF6311@dastard> <CADyTPEwfeOhCOSn3-SQh+XCWOthj0ms5mpbiHEtkscQQSQU+aQ@mail.gmail.com>
- <CADyTPEyOD6jTQF1QEc8M753=KAjbnbHFTLERhJZdCLuzT9r21w@mail.gmail.com> <20181213213921.GG6311@dastard>
-From: Nick Bowler <nbowler@draconx.ca>
-Date: Thu, 13 Dec 2018 16:53:56 -0500
-Message-ID: <CADyTPExGkEzRvpcWevWGFDJkyvHe4KfZG4gOkDJcoWiNKDPJhA@mail.gmail.com>
-Subject: Re: Enlarging w/ xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed:
- Inappropriate ioctl for device
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:36604 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726131AbeLIMwb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Dec 2018 07:52:31 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 503042A6B7
+        for <linux-xfs@vger.kernel.org>; Sun,  9 Dec 2018 12:52:30 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201939] New: There is no 'no space' message when using xfs with
+ nfs.
+Date: Sun, 09 Dec 2018 12:52:29 +0000
+Message-ID: <bug-201939-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 2018-12-13, Dave Chinner <david@fromorbit.com> wrote:
-> On Wed, Dec 12, 2018 at 11:49:36PM -0500, Nick Bowler wrote:
->> To expand on this, for each structure which my RFC patchset feeds up to
->> the native handler, I first checked them by manual inspection and then
->> double checked using the following program; we can compile with both
->> -mx32 and -m64 and check that the output is identical.
->
-> So, turn that into an xfstest so that it is always run, diffs the
-> output between compat/native depending on which one is used complete
-> with guards that break the test when we add a new ioctl. We already
-> we have a test that is for explicitly checking that structures on disk
-> are the same for 32/64 bit architectures: tests/xfs/122
-[...]
-> Then we'll have tests that will fail if we ever change an ioctl or
-> add a new one and don't add it to the test. That guarantees we won't
-> ever forget about this....
+https://bugzilla.kernel.org/show_bug.cgi?id=201939
 
-OK, I will give it a shot to implement such a test.  A possible issue is
-that developers might not have a working x32 build or runtime environment
-so the test might not get run a lot.  But hopefully people adding brand
-new ioctls don't introduce brand new compat problems; one can dream, right?
+            Bug ID: 201939
+           Summary: There is no 'no space' message when using xfs with
+                    nfs.
+           Product: File System
+           Version: 2.5
+    Kernel Version: 3.4.113
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: gbkwon@gmail.com
+        Regression: No
 
-Thanks,
-  Nick
+hi all
+
+
+I use xfs filesystem over nfs
+
+
+I am using the xfs file system via NFS on two Linux servers.
+
+Even though xfs is full, you will not get a 'no space' message through nfs.
+
+The server's load average goes up and the kworker consumes the CPU.
+
+The server's nfs service is not responding.
+
+When ext3 is full in the same environment, I get a 'no space' message.
+
+Which part of nfs and xfs should be checked?
+
+
+Below is the environment I am using.
+
+
+kernel : nfs server 3.4.113 vanilla, nfs client 2.6.32-573.el6.x86_64
+
+nfs : nfs v3 with tcp
+
+
+==================================================================
+nfs server
+================================================================== 
+/dev/mapper/lv2  500G  500G   20K 100% /lv2
+
+/lv2   
+0.0.0.0/0.0.0.0(rw,async,wdelay,nohide,nocrossmnt,insecure,no_root_squash,no_all_squash,no_subtree_check,insecure_locks,no_acl,fsid=1543743056,anonuid=65534,anongid=65534)
+
+
+================================================================== 
+nfs client
+================================================================== 
+10.0.0.20:/lv2   500G  500G   32K 100% /mnt/2 
+
+nfsstat  -m
+/mnt/2 from 10.0.0.20:/lv2
+ Flags:
+rw,relatime,vers=3,rsize=32768,wsize=32768,namlen=255,hard,proto=udp,timeo=11,retrans=3,sec=sys,mountaddr=10.0.0.20,mountvers=3,mountport=2047,mountproto=udp,local_lock=none,addr=10.0.0.20
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
