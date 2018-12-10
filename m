@@ -1,61 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39678 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726442AbeLMV34 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Dec 2018 16:29:56 -0500
-Subject: Re: [PATCH] xfs: don't skip rtmount when there's a realtime device
-References: <20181213012436.GB24487@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d33a0150-e412-5089-5c60-333b3d9ae9a1@sandeen.net>
-Date: Thu, 13 Dec 2018 15:29:54 -0600
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:64255 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726687AbeLJVzM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Dec 2018 16:55:12 -0500
+Date: Tue, 11 Dec 2018 08:55:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: RFD: question/probe regarding adding dump-levels A-Z after 0-9
+ for xfs{dump,restore}
+Message-ID: <20181210215507.GD6311@dastard>
+References: <5C0A70FD.6080806@tlinx.org>
 MIME-Version: 1.0
-In-Reply-To: <20181213012436.GB24487@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5C0A70FD.6080806@tlinx.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: L A Walsh <xfs@tlinx.org>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
+On Fri, Dec 07, 2018 at 05:09:17AM -0800, L A Walsh wrote:
+> How difficult would it be to allow 26 more dump levels
+> in xfs dump/restore?  Theoretically anyone using 0-9
+> would see no change.  Would there be some "problem" or
+> "gotcha" in adding in what would _seem_ to be a simple
+> change?
 
+Everything _seems_ simple with xfsdump. e.g. the inventory
+session headers supports up to 255 levels in it's on-disk format,
+but the xfsdump command is limited to just 10 levels by a separate
+"max level" define. 
 
-On 12/12/18 7:24 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Don't ever skip the realtime bitmap / summary inode initialization if
-> there's a realtime device attached, because we'd rather fail the mount
-> if iget declines to retrieve a NULL inode pointer.  Right now, if
-> someone sets rbmino to NULLFSINO on a rt-capable filesystem, mounts it,
-> and writes a file to the rt device, we'll blow up.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_rtalloc.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index aefd63d46397..18ad31ded0bf 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -1206,7 +1206,8 @@ xfs_rtmount_inodes(
->  	xfs_sb_t	*sbp;
->  
->  	sbp = &mp->m_sb;
-> -	if (sbp->sb_rbmino == NULLFSINO)
-> +	if (!xfs_sb_version_hasrealtime(&mp->m_sb) &&
-> +	    sbp->sb_rbmino == NULLFSINO)
->  		return 0;
->  	error = xfs_iget(mp, NULL, sbp->sb_rbmino, 0, 0, &mp->m_rbmip);
->  	if (error)
-> 
+IOWs, on the surface it _seems_ simple to change it, but I don't
+know all the places that the dump level is stored, nor what would
+happen if an older xfsdump/xfsrestore binary tripped over an
+inventory with a dump level larger than they were compiled to
+handle.
 
-Seems fine as far as it goes, but now we have this weird situation where for
-a filesystem without the realtime feature, we'll just skip this part and
-mount if sb_rbmino is NULL, but if sb_rsumino is NULL, we'll fail the iget
-and fail the mount.
+I also don't know if there are scalability problems with resolving
+the contents of incremental dump levels. Certainly restoring from 30
+incremental dumps is more onerous than 6-7, but that's just time.
+What I don't know is how the invenetory scales to more than 10
+incremental and whether there's some exponential algorithm in there
+that falls apart. So there's a lot of testing that would be needed
+to validate what looks like a 1 line change to the code.
 
-So while there's noting really wrong with the fix, it seems like it could all
-be made a bit more consistent while you're here.  (classic move by me!) ;)
+So, yes, technically we could increase the dump level, but there's a
+*lot* of verification work after doing so and it's not a risk-free
+modification. 
 
--Eric
+FWIW, the idea behind 10 dump levels is that it is enough for a
+full dump every week w/ an incremental every night of the week until
+the next full dump is done on the weekend. What's the backup plan
+you want to use/need that requires a larger number of incrementals?
+Knowing what you want more dump levels for helps us understand how
+it would be used and what really needs to be testedi first....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
