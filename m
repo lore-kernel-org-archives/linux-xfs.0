@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41874 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726562AbeLJQzh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Dec 2018 11:55:37 -0500
-Date: Mon, 10 Dec 2018 08:55:25 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:37706 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727324AbeLJRqa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 Dec 2018 12:46:30 -0500
+Date: Mon, 10 Dec 2018 12:46:27 -0500
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: Enlarging w/ xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed:
  Inappropriate ioctl for device
-Message-ID: <20181210165525.GU24487@magnolia>
+Message-ID: <20181210174627.GD8356@bfoster>
 References: <20181210042842.GA16286@draconx.ca>
  <20181210143345.GB8356@bfoster>
  <CADyTPEw_RZCC2yodbJ6W0e9mwJgQW19UXCHhcw1-tF4b0=hMjg@mail.gmail.com>
@@ -20,7 +20,7 @@ In-Reply-To: <20181210165020.GT24487@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: Nick Bowler <nbowler@draconx.ca>, linux-xfs@vger.kernel.org
 
 On Mon, Dec 10, 2018 at 08:50:20AM -0800, Darrick J. Wong wrote:
@@ -82,6 +82,9 @@ On Mon, Dec 10, 2018 at 08:50:20AM -0800, Darrick J. Wong wrote:
 > x86, but the registers are 64 bits wide like on x64, and (except for
 > pointers being 4 bytes wide) the structure alignment rules follow x64.
 > 
+
+Thanks, I wasn't aware of that. I just read x32 as x86.
+
 > Normally xfs structures are explicitly padded to 8-byte boundaries and
 > pointers forced into u64 fields to avoid all of this compatibility
 > headache, but this wasn't done with struct xfs_growfs_data, so it needs
@@ -93,43 +96,25 @@ On Mon, Dec 10, 2018 at 08:50:20AM -0800, Darrick J. Wong wrote:
 > 
 > https://sites.google.com/site/x32abi/
 > 
-> $ cat b.c
-> struct moo {
->         unsigned long long a;
->         unsigned int b;
-> };
-> 
-> int bork(struct moo *m)
-> {
->         return m->b;
-> }
-> $ gcc -Wall -g -m64 -c -o b.o b.c	# x86_64
-> $ gdb b.o
-> Reading symbols from b.o...done.
-> (gdb) p sizeof(struct moo)
-> $1 = 12
-
-<sigh> paste error, that's supposed to be 16.
-
---D
-
-> (gdb) quit
-> $ gcc -Wall -g -m32 -c -o b.o b.c	# i386
-> $ gdb b.o
-> Reading symbols from b.o...done.
-> (gdb) p sizeof(struct moo)
-> $1 = 12
-> (gdb) quit
-> $ gcc -Wall -g -mx32 -c -o b.o b.c	# x32
-> $ gdb b.o
-> Reading symbols from b.o...done.
-> (gdb) p sizeof(struct moo)
-> $1 = 16
+...
 > 
 > So I guess someone needs to fix the headers to detect x32 and point it
 > at the x64 definitions ... or something.  Personally, I thought x32 was
 > basically dead at this point, but clearly not. :/
 > 
+
+Yeah, it seems to me that fundamentally conflicts with the whole
+BROKEN_X86_ALIGNMENT thing we have now. IIUC, compat_ioctl() on an
+x86_64 kernel needs to account for x86 userspace via all of the
+associated _32 ioctl commands as it already does, but at the same time
+x32 means we could get any of the traditional x86_64 commands through
+that path as well.
+
+I guess the short answer in the meantime is that XFS apparently doesn't
+support this architecture.
+
+Brian
+
 > --D
 > 
 > > Brian
