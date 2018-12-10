@@ -1,58 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50018 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726337AbeLMBYu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 20:24:50 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wBD1OmYS097704
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 01:24:48 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2pb3n731v2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 01:24:48 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wBD1Og8G000398
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 01:24:42 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wBD1OgrQ008450
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 01:24:42 GMT
-Date: Wed, 12 Dec 2018 17:24:36 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: don't skip rtmount when there's a realtime device
-Message-ID: <20181213012436.GB24487@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:34124 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726602AbeLJSAA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 Dec 2018 13:00:00 -0500
+Date: Mon, 10 Dec 2018 18:59:56 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH RFC] Ext4: fix deadlock on dirty pages between fault and
+ writeback
+Message-ID: <20181210175956.GW1286@dhcp22.suse.cz>
+References: <20181128201122.r4sec265cnlxgj2x@US-160370MP2.local>
+ <20181129085238.GD31087@quack2.suse.cz>
+ <20181129120253.GR6311@dastard>
+ <20181129130002.GM31087@quack2.suse.cz>
+ <20181129204019.GS6311@dastard>
+ <20181205170656.GJ30615@quack2.suse.cz>
+ <20181207052051.GB6311@dastard>
+ <20181207071615.GO1286@dhcp22.suse.cz>
+ <20181207112036.GA1286@dhcp22.suse.cz>
+ <20181207185102.2chvdfqwav5z6b7j@US-160370MP2.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20181207185102.2chvdfqwav5z6b7j@US-160370MP2.local>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Liu Bo <bo.liu@linux.alibaba.com>
+Cc: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri 07-12-18 10:51:04, Liu Bo wrote:
+> On Fri, Dec 07, 2018 at 12:20:36PM +0100, Michal Hocko wrote:
+> > On Fri 07-12-18 08:16:15, Michal Hocko wrote:
+> > [...]
+> > > Memcg v1 indeed doesn't have any dirty IO throttling and this is a
+> > > poor's man workaround. We still do not have that AFAIK and I do not know
+> > > of an elegant way around that. Fortunatelly we shouldn't have that many
+> > > GFP_KERNEL | __GFP_ACCOUNT allocations under page lock and we can work
+> > > around this specific one quite easily. I haven't tested this yet but the
+> > > following should work
+> > > 
+> > > diff --git a/mm/memory.c b/mm/memory.c
+> > > index 4ad2d293ddc2..59c98eeb0260 100644
+> > > --- a/mm/memory.c
+> > > +++ b/mm/memory.c
+> > > @@ -2993,6 +2993,16 @@ static vm_fault_t __do_fault(struct vm_fault *vmf)
+> > >  	struct vm_area_struct *vma = vmf->vma;
+> > >  	vm_fault_t ret;
+> > >  
+> > > +	/*
+> > > +	 * Preallocate pte before we take page_lock because this might lead to
+> > > +	 * deadlocks for memcg reclaim which waits for pages under writeback.
+> > > +	 */
+> > > +	if (!vmf->prealloc_pte) {
+> > > +		vmf->prealloc_pte = pte_alloc_one(vmf->vma->vm>mm, vmf->address);
+> > > +		if (!vmf->prealloc_pte)
+> > > +			return VM_FAULT_OOM;
+> > > +	}
+> > > +
+> > >  	ret = vma->vm_ops->fault(vmf);
+> > >  	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE | VM_FAULT_RETRY |
+> > >  			    VM_FAULT_DONE_COW)))
+> > 
+> > This is too eager to allocate pte even when it is not really needed.
+> > Jack has also pointed out that I am missing a write barrier. So here we
+> > go with an updated patch. This is essentially what fault around code
+> > does.
+> > 
+> 
+> Makes sense to me, unfortunately we don't have a local reproducer to verify it
+> and we've disabled CONFIG_MEMCG_KMEM to workaround the problem.  Given the stack
+> I put, the patch should address the deadlock at least.
 
-Don't ever skip the realtime bitmap / summary inode initialization if
-there's a realtime device attached, because we'd rather fail the mount
-if iget declines to retrieve a NULL inode pointer.  Right now, if
-someone sets rbmino to NULLFSINO on a rt-capable filesystem, mounts it,
-and writes a file to the rt device, we'll blow up.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_rtalloc.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index aefd63d46397..18ad31ded0bf 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1206,7 +1206,8 @@ xfs_rtmount_inodes(
- 	xfs_sb_t	*sbp;
- 
- 	sbp = &mp->m_sb;
--	if (sbp->sb_rbmino == NULLFSINO)
-+	if (!xfs_sb_version_hasrealtime(&mp->m_sb) &&
-+	    sbp->sb_rbmino == NULLFSINO)
- 		return 0;
- 	error = xfs_iget(mp, NULL, sbp->sb_rbmino, 0, 0, &mp->m_rbmip);
- 	if (error)
+OK, I will send a full patch with the changelog tomorrow.
+-- 
+Michal Hocko
+SUSE Labs
