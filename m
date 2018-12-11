@@ -1,80 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1563 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727304AbeLJQLY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Dec 2018 11:11:24 -0500
-Date: Mon, 10 Dec 2018 11:11:22 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Enlarging w/ xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed:
- Inappropriate ioctl for device
-Message-ID: <20181210161121.GC8356@bfoster>
-References: <20181210042842.GA16286@draconx.ca>
- <20181210143345.GB8356@bfoster>
- <CADyTPEw_RZCC2yodbJ6W0e9mwJgQW19UXCHhcw1-tF4b0=hMjg@mail.gmail.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:38236 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726201AbeLKWmj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Dec 2018 17:42:39 -0500
+Date: Tue, 11 Dec 2018 14:42:32 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] mkfs: fix symlink target if_bytes computation for
+ protofile
+Message-ID: <20181211224232.GW24487@magnolia>
+References: <a7246562-e851-dfc4-ea3f-3b4dd64aca5b@redhat.com>
+ <ca4c95cc-c8c5-c876-9ca4-a50794a4bb4f@sandeen.net>
+ <20181211190256.GV24487@magnolia>
+ <c1d6a79d-19c6-1257-f08b-b2cf1c308738@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CADyTPEw_RZCC2yodbJ6W0e9mwJgQW19UXCHhcw1-tF4b0=hMjg@mail.gmail.com>
+In-Reply-To: <c1d6a79d-19c6-1257-f08b-b2cf1c308738@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nick Bowler <nbowler@draconx.ca>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Zorro Lang <zlang@redhat.com>
 
-On Mon, Dec 10, 2018 at 10:39:14AM -0500, Nick Bowler wrote:
-> Hi Brian,
+On Tue, Dec 11, 2018 at 02:36:32PM -0600, Eric Sandeen wrote:
+> On 12/11/18 1:02 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > When creating a local format symlink, we expect the target buffer in the
+> > data fork to have enough space to contain the null, but we also expect
+> > if_bytes to reflect the length of the target /not/ including the null.
+> > If we don't adjust if_bytes down by one byte, we can run off into
+> > uninitialized memory.  Fix this, which should clean up the spurious
+> > xfs/019 failures for good.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> On 12/10/18, Brian Foster <bfoster@redhat.com> wrote:
-> > The only thing that comes to mind while poking through the code is
-> > perhaps xfsprogs is sending the traditional XFS_IOC_GROWFSDATA command
-> > into the compat_ioctl() path somehow or another (assuming
-> > BROKEN_X86_ALIGNMENT is set).
-> >
-> > What arch is your kernel/xfsprogs?
+> Ugh.  Why do we even have protofiles?  I have never seen these in use
+> in real life.  Can we just deprecate this half-baked crap?  :/
 > 
-> This system is running an amd64 kernel with x32 userspace (including
-> xfsprogs).
+> You suggested on IRC that we just use xfs_init_local fork; I had looked
+> at that when I did the first patch and for some reason didn't use it,
+
+Admittedly I wondered if we can leak memory that way, but AFAICT a new
+inode shouldn't really have if_bytes > 0, right?
+
+> but looking again it seems ... ok.  I hate how all of this stuff is
+> re-implemented in the protofile crap code and it seems like we can't
+> re-use too many of the libxfs functions directly but may as well use
+> this if we can, right?
+
+Funny you mention it, but I've been quietly refactoring the xfs_inode.c
+code into libxfs as part of preparing for the metadata directory
+feature, which has enabled me to cut a considerable amount of opencoded
+crap out of mkfs and repair.  Granted, I still have to make sure it all
+/works/, but ... yes this all should be using libxfs functions. :)
+
+Uh, I'll give this patch a spin and see what happens.
+
+--D
+
+> =========
 > 
-
-Ok, so I think that means BROKEN_X86_ALIGNMENT should be set since XFS
-defines it as:
-
-#if defined(CONFIG_IA64) || defined(CONFIG_X86_64)
-#define BROKEN_X86_ALIGNMENT
-...
-
-> > What does 'cat /sys/kernel/debug/trace/trace' show if you run
-> > 'trace-cmd start -e xfs:xfs_file*ioctl*' and then attempt the growfs?
+> mkfs: don't open code local fork setup in protofile code
 > 
-> Looks like I don't have the required tracing enabled in my kernel
-> configuration, but I can build a new one if needed.  Is CONFIG_FTRACE
-> sufficient for this?
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
-
-Not sure. I think you need to have CONFIG_TRACING enabled, which may
-require FTRACE and/or some other options. Hmm, perhaps you'd be covered
-if you make sure you have CONFIG_DYNAMIC_FTRACE enabled.
-
->From your strace output:
-
-ioctl(3, _IOC(_IOC_WRITE, 0x58, 0x6e, 0x10), 0xffcc9a80) = -1 ENOTTY (Inappropriate ioctl for device)
-
-0x6e corresponds to the GROWFSDATA[_32] cmd and I think 0x10 is the
-size, which is 16 bytes as opposed to the 12 bytes expected for
-GROWFSDATA_32 for struct compat_xfs_growfs_data:
-
-typedef struct compat_xfs_growfs_data {
-        __u64           newblocks;      /* new data subvol size, fsblocks */
-        __u32           imaxpct;        /* new inode space percentage limit */
-} __attribute__((packed)) compat_xfs_growfs_data_t;
-
-On a 64-bit kernel, that packed attribute is the difference between
-expecting a padded 16 byte struct vs. a 12 byte version presumably from
-a 32-bit application. So if you are calling into the ->compat_ioctl()
-path I think the question is why is your xfsprogs sending the 16 byte
-structure?
-
-Brian
-
-> Thanks,
->   Nick
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index ad5d65de..c3792e12 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -149,5 +149,6 @@
+>  #define xfs_dir_get_ops			libxfs_dir_get_ops
+>  #define xfs_default_ifork_ops		libxfs_default_ifork_ops
+>  #define xfs_fs_geometry			libxfs_fs_geometry
+> +#define xfs_init_local_fork		libxfs_init_local_fork
+>  
+>  #endif /* __LIBXFS_API_DEFS_H__ */
+> diff --git a/mkfs/proto.c b/mkfs/proto.c
+> index 103795f1..3bba4917 100644
+> --- a/mkfs/proto.c
+> +++ b/mkfs/proto.c
+> @@ -237,13 +237,7 @@ newfile(
+>  	flags = 0;
+>  	mp = ip->i_mount;
+>  	if (symlink && len <= XFS_IFORK_DSIZE(ip)) {
+> -		/* Copy the name's trailing NULL as well */
+> -		libxfs_idata_realloc(ip, len + 1, XFS_DATA_FORK);
+> -		if (buf)
+> -			memmove(ip->i_df.if_u1.if_data, buf, len + 1);
+> -		ip->i_d.di_size = len;
+> -		ip->i_df.if_flags &= ~XFS_IFEXTENTS;
+> -		ip->i_df.if_flags |= XFS_IFINLINE;
+> +		libxfs_init_local_fork(ip, XFS_DATA_FORK, buf, len);
+>  		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
+>  		flags = XFS_ILOG_DDATA;
+>  	} else if (len > 0) {
+> 
