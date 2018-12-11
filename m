@@ -1,44 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:34524 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727485AbeLKCGA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Dec 2018 21:06:00 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 47AA02A88C
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Dec 2018 02:05:59 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201939] There is no 'no space' message when using xfs with nfs.
-Date: Tue, 11 Dec 2018 02:05:59 +0000
-Message-ID: <bug-201939-201763-KpTMMm8fgY@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201939-201763@https.bugzilla.kernel.org/>
-References: <bug-201939-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:14099 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726136AbeLKV1H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Dec 2018 16:27:07 -0500
+Date: Wed, 12 Dec 2018 08:27:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: I got file system corruption with XFS
+Message-ID: <20181211212701.GE6311@dastard>
+References: <20181211183203.7fdbca0f@lud1.home>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181211183203.7fdbca0f@lud1.home>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Luciano ES <lucmove@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201939
+On Tue, Dec 11, 2018 at 06:32:03PM -0200, Luciano ES wrote:
+> I needed to restore something from my backups, an external hard disk 
+> that is kept separately, always disconnected until I really need it. 
+> 
+> But the file system refused to be mounted: "structure needs cleaning," 
+> it said.
+> 
+> I googled and didn't find much hope about it. I followed what little 
+> advice I found: I ran xfs_repair and it didn't work. So I ran it 
+> again with -L and it worked, but the software itself warned me that 
+> some files could not be recovered. I'll never know which ones.
+> 
+> I always liked XFS and thought those dreaded days of file system 
+> corruption and lost files were far behind. So my only question is: 
+> Why does that happen? The disk is not even used 99% of the time.
+> How does an XFS file system go belly up just like that?
 
---- Comment #3 from gbkwon@gmail.com ---
-Thanks for your reply.
+What was the actual error message?
 
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-The same problem does not occur in 3.18 kernels.
+Cheers,
 
-Unfortunately, I have must to use 3.4 kernel.
-
-If I add 'noac' to the nfs mount option, there is no such problem.
-
-However, the 'noac' option causes a performance penalty of more than 50%.
-
-I want to fix the problem without adding the 'noac' option.
-
-If I add the 'actimeo=0' option to the nfs mount option, the problem happens,
-but after about 5 minutes the problem disappears.
-
+Dave.
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Dave Chinner
+david@fromorbit.com
