@@ -1,100 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:39636 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728077AbeLMQaV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 11:30:21 -0500
-Date: Thu, 13 Dec 2018 08:30:08 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Enlarging w/ xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed:
- Inappropriate ioctl for device
-Message-ID: <20181213163008.GC24487@magnolia>
-References: <CADyTPEw_RZCC2yodbJ6W0e9mwJgQW19UXCHhcw1-tF4b0=hMjg@mail.gmail.com>
- <20181210161121.GC8356@bfoster>
- <20181210165020.GT24487@magnolia>
- <20181210174627.GD8356@bfoster>
- <CADyTPEzcjKO163RehVHtOo0=71=u515oHaeAnzmkfHtatpjhLg@mail.gmail.com>
- <20181210214115.GC6311@dastard>
- <CADyTPEyJkxM=YBwLudwPrTMFNpMtpfZ7ALjD0GrtrdCVTKa7+Q@mail.gmail.com>
- <20181211122701.GA2819@bfoster>
- <CADyTPEwXDtFRn5HciKwiGRPn4LSjAvLTK0HJ9UXKq6ZJTmj9pQ@mail.gmail.com>
- <20181213035352.GF6311@dastard>
+Received: from mail-qt1-f180.google.com ([209.85.160.180]:34941 "EHLO
+        mail-qt1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726218AbeLKWzF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Dec 2018 17:55:05 -0500
+Received: by mail-qt1-f180.google.com with SMTP id v11so18472102qtc.2
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Dec 2018 14:55:04 -0800 (PST)
+Received: from lud1.home ([177.98.82.44])
+        by smtp.gmail.com with ESMTPSA id y14sm7590799qkb.2.2018.12.11.14.55.02
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 11 Dec 2018 14:55:03 -0800 (PST)
+Date: Tue, 11 Dec 2018 20:54:59 -0200
+From: Luciano ES <lucmove@gmail.com>
+Subject: Re: I got file system corruption with XFS
+Message-ID: <20181211205459.106b35c9@lud1.home>
+In-Reply-To: <3daac366-6e0f-34c8-1a2f-e5d07ae4fee1@sandeen.net>
+References: <20181211183203.7fdbca0f@lud1.home>
+        <3daac366-6e0f-34c8-1a2f-e5d07ae4fee1@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181213035352.GF6311@dastard>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Nick Bowler <nbowler@draconx.ca>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Dec 13, 2018 at 02:53:52PM +1100, Dave Chinner wrote:
-> On Tue, Dec 11, 2018 at 11:56:33PM -0500, Nick Bowler wrote:
-> > On 12/11/18, Brian Foster <bfoster@redhat.com> wrote:
-> > > On Tue, Dec 11, 2018 at 02:04:48AM -0500, Nick Bowler wrote:
-> > >> Hi Dave,
-> > >>
-> > >> On 2018-12-10, Dave Chinner <david@fromorbit.com> wrote:
-> > >> > On Mon, Dec 10, 2018 at 03:54:47PM -0500, Nick Bowler wrote:
-> > >> >> I can have a go at fixing the FSGEOMETRY ioctl too (and submit it
-> > >> >> properly) if this approach seems reasonable.  Possibly other things
-> > >> >> may be broken too but I haven't hit any other issues yet in my XFS
-> > >> >> adventure.
-> > >> >
-> > >> > We really need to audit all the compat ioctls for this same
-> > >> > problem and fix all of them in one go, not just slap a bandaid on
-> > >> > the messenger and ignore the rest....
-> > >>
-> > >> OK then.  This patch should cover all of them.  However, I wouldn't know
-> > >> where to start with verification of a change like this, since I don't
-> > >> know what these ioctls actually do, but xfs_growfs does seem to work for
-> > >> me now on a test filesystem with this applied.
-> > >>
-> > >
-> > > Given that the structure size essentially changes the command value, I'm
-> > > kind of curious why we have this ifdeffery in the first place. That
-> > > aside, the patch seems reasonable to me at a glance (though some brief
-> > > comments around the ifdefs would be nice).
+On Tue, 11 Dec 2018 14:57:45 -0600, Eric Sandeen wrote:
+
+> On 12/11/18 2:32 PM, Luciano ES wrote:
+> > I needed to restore something from my backups, an external hard
+> > disk that is kept separately, always disconnected until I really
+> > need it. 
 > > 
-> > OK, xfstests has revealed some trouble with the three "bulkstat" ioctls,
-> > since while the xfs_bulkstat structure itself is fine, one of its members
-> > is used as a pointer to various structures which are not fine.  This
-> > wasn't too hard to fix though.
+> > But the file system refused to be mounted: "structure needs
+> > cleaning," it said.
+> > 
+> > I googled and didn't find much hope about it. I followed what
+> > little advice I found: I ran xfs_repair and it didn't work. So I
+> > ran it again with -L and it worked, but the software itself warned
+> > me that some files could not be recovered. I'll never know which
+> > ones.
+> > 
+> > I always liked XFS and thought those dreaded days of file system 
+> > corruption and lost files were far behind. So my only question is: 
+> > Why does that happen? The disk is not even used 99% of the time.
+> > How does an XFS file system go belly up just like that?  
 > 
-> IIRC, there's bigger problems than you realise here - the bulkstat
-> structure has embedded timestamps in them and on x32 struct timeval
-> doesn't match either ia32 or x86-64. i.e. on ia32, struct timeval is
-> 8 bytes, on x86-64 it is 16 bytes, and in x32 it is 12 bytes.
+> There is no way for us to know.  You didn't provide nearly enough
+> information to even hazard a guess.
 > 
-> IOWs, using the x86-64 handlers for bulkstat is wrong, as is using
-> the compat handlers. That's one of the reasons why x32 is such a
-> Charlie Foxtrot when it comes to compat handlers - we basically have
-> to audit ioctl structures one by one with pahole to determine which
-> arch version they *may* be compatible with.
+> But ok fine, I'll hazard a wild guess anyway: your external drive had
+> a corrupt log because the enclosure didn't honor a cache flush issued
+> by the filesystem after some previous mount.
 > 
-> And then there is testing that we get identical output from all
-> three versions for each ioctl.
-> 
-> Right now, I'd much prefer we simply put this at the start of
-> xfs_fs_fill_super():
-> 
-> #ifdef CONFIG_X86_X32
-> 	xfs_warn("XFS not supported on x32 architectures")
-> 	return -ENOSYS;
-> #endif
-> 
-> Or, alternatively, tag it as EXPERIMENTAL and "use at your own
-> risk".
+> -Eric
 
-You(r distro) can enable X32 in the x86_64 kernel even if you never use
-it, so this as proposed would break XFS on amd64.  I'd rather just have
-something like this in xfs_file_ioctl, and gated on is_x32_syscall().
 
---D
+**************************
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+I understand you don't have much to work with, but I can't tell you
+more than I have. It happened several days ago and I didn't write 
+anything down. As far as I can remember, there wasn't really much 
+to note. "Structure needs cleaning" was pretty much all I was ever 
+told. There must have been more when I ran xfs_repair, but it looked 
+incomprehensible to me and I thought I shouldn't bother anyone else 
+about it.
+
+Your theory about the enclosure sounds good. Do you think it is so 
+flawed that issuing a 'sync' command manually before umounting 
+wouldn't have made any difference?
+
+-- 
+Luciano ES
+>>
