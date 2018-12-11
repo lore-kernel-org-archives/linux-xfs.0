@@ -1,47 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f47.google.com ([209.85.167.47]:35761 "EHLO
-        mail-lf1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726125AbeLKUU0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Dec 2018 15:20:26 -0500
-Received: by mail-lf1-f47.google.com with SMTP id e26so11770378lfc.2
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Dec 2018 12:20:25 -0800 (PST)
+Received: from mail-qk1-f178.google.com ([209.85.222.178]:33558 "EHLO
+        mail-qk1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726134AbeLKUcI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Dec 2018 15:32:08 -0500
+Received: by mail-qk1-f178.google.com with SMTP id o89so9470567qko.0
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Dec 2018 12:32:07 -0800 (PST)
+Received: from lud1.home ([177.98.82.44])
+        by smtp.gmail.com with ESMTPSA id 205sm7982931qkf.22.2018.12.11.12.32.05
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 11 Dec 2018 12:32:06 -0800 (PST)
+Date: Tue, 11 Dec 2018 18:32:03 -0200
+From: Luciano ES <lucmove@gmail.com>
+Subject: I got file system corruption with XFS
+Message-ID: <20181211183203.7fdbca0f@lud1.home>
 MIME-Version: 1.0
-In-Reply-To: <CADyTPExoZigFSgzrVOEsXNk=ZGRd92AWyM5Lz_z==_xEnJt5cQ@mail.gmail.com>
-References: <20181210042842.GA16286@draconx.ca> <20181210143345.GB8356@bfoster>
- <CADyTPEw_RZCC2yodbJ6W0e9mwJgQW19UXCHhcw1-tF4b0=hMjg@mail.gmail.com>
- <20181210161121.GC8356@bfoster> <20181210165020.GT24487@magnolia>
- <20181210174627.GD8356@bfoster> <CADyTPEzcjKO163RehVHtOo0=71=u515oHaeAnzmkfHtatpjhLg@mail.gmail.com>
- <20181210214115.GC6311@dastard> <CADyTPEyJkxM=YBwLudwPrTMFNpMtpfZ7ALjD0GrtrdCVTKa7+Q@mail.gmail.com>
- <20181211122701.GA2819@bfoster> <CADyTPExoZigFSgzrVOEsXNk=ZGRd92AWyM5Lz_z==_xEnJt5cQ@mail.gmail.com>
-From: Nick Bowler <nbowler@draconx.ca>
-Date: Tue, 11 Dec 2018 15:20:23 -0500
-Message-ID: <CADyTPEw6DfRO_=RbmaQC2f-2QGNtXKjcmtpcuX9VaNnRXQkH6Q@mail.gmail.com>
-Subject: Re: Enlarging w/ xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed:
- Inappropriate ioctl for device
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 12/11/18, Nick Bowler <nbowler@draconx.ca> wrote:
-> On 12/11/18, Brian Foster <bfoster@redhat.com> wrote:
->> Given that the structure size essentially changes the command value, I'm
->> kind of curious why we have this ifdeffery in the first place. That
->> aside, the patch seems reasonable to me at a glance (though some brief
->> comments around the ifdefs would be nice).
-[...]
-> Current code has the ifdeffery.  Also since it's a syntax error to have
-> multiple case labels with the same value it'd be essential to validate
-> that all supported architectures architectures end up with different
-> values for each XFS_IOC_xyz and the corresponding XFS_IOC_xyz_32.
+I needed to restore something from my backups, an external hard disk 
+that is kept separately, always disconnected until I really need it. 
 
-Right after I write this, I realize that it's almost certainly
-the case that architectures which _don't_ define BROKEN_X86_ALIGNMENT
-will have matching ioctl numbers between e.g., XFS_IOC_ALLOCSP and
-XFS_IOC_ALLOCSP_32.  Thus the ifdeffery is essential for the above
-syntactic reason.
+But the file system refused to be mounted: "structure needs cleaning," 
+it said.
 
-Cheers,
-  Nick
+I googled and didn't find much hope about it. I followed what little 
+advice I found: I ran xfs_repair and it didn't work. So I ran it 
+again with -L and it worked, but the software itself warned me that 
+some files could not be recovered. I'll never know which ones.
+
+I always liked XFS and thought those dreaded days of file system 
+corruption and lost files were far behind. So my only question is: 
+Why does that happen? The disk is not even used 99% of the time.
+How does an XFS file system go belly up just like that?
+
+TIA
+
+-- 
+Luciano ES
+>>
