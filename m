@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:38350 "EHLO
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:43650 "EHLO
         mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727485AbeLKCcS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Dec 2018 21:32:18 -0500
+        by vger.kernel.org with ESMTP id S1727681AbeLLPcB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 10:32:01 -0500
 Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 4B4762ADE0
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Dec 2018 02:32:18 +0000 (UTC)
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 2A5582AB61
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Dec 2018 15:32:00 +0000 (UTC)
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201939] There is no 'no space' message when using xfs with nfs.
-Date: Tue, 11 Dec 2018 02:32:17 +0000
-Message-ID: <bug-201939-201763-5DhRoGKjsO@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201939-201763@https.bugzilla.kernel.org/>
-References: <bug-201939-201763@https.bugzilla.kernel.org/>
+Subject: [Bug 201973] File Size
+Date: Wed, 12 Dec 2018 15:31:59 +0000
+Message-ID: <bug-201973-201763-Quz2hz9ryF@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-201973-201763@https.bugzilla.kernel.org/>
+References: <bug-201973-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
@@ -20,7 +20,7 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201939
+https://bugzilla.kernel.org/show_bug.cgi?id=201973
 
 Eric Sandeen (sandeen@sandeen.net) changed:
 
@@ -28,29 +28,28 @@ Eric Sandeen (sandeen@sandeen.net) changed:
 ----------------------------------------------------------------------------
              Status|NEW                         |RESOLVED
                  CC|                            |sandeen@sandeen.net
-         Resolution|---                         |PATCH_ALREADY_AVAILABLE
+         Resolution|---                         |INVALID
 
---- Comment #4 from Eric Sandeen (sandeen@sandeen.net) ---
-(In reply to gbkwon from comment #3)
-> Thanks for your reply.
-> 
-> The same problem does not occur in 3.18 kernels.
-> 
-> Unfortunately, I have must to use 3.4 kernel.
+--- Comment #1 from Eric Sandeen (sandeen@sandeen.net) ---
+Hi, this is the upstream kernel bug tracker, and 3.10.0-862.el7.x86_64 is not
+an upstream kernel.  This is not the appropriate bug tracker for distribution
+kernels.
 
-So, it seems you have reported a bug in a 6 year old kernel which has already
-been fixed - 4 years ago.  Which means that it's not a bug now.
+Also, you've not provided any reproducer steps, just a screenshot of du & ls
+which shows no problem.
 
-This is an upstream bug tracker, not a user support forum.  You may wish to ask
-your distribution for further support of the old kernel, or possibly try a user
-mailing list.  You could also spot-check kernels in between, or do a full
-bisect, to look for the commit(s) which fixed the old bug.
+There is no expectation that du should match ls.  One reflects the maximum
+offset in a file, the other reflects the amount of space allocated to the file.
+ They are two different quantities.  Observe:
 
-But because this issue has apparently already been resolved in upstream
-kernels, I'm closing this bug.
+# fallocate -l 161m output.out
+# truncate --size 18g output.out
 
-Thanks,
--Eric
+# du -h output.out
+161M    output.out
+
+# ls -lh output.out
+-rw-r--r--. 1 root root 18G Dec 12 10:30 output.out
 
 -- 
 You are receiving this mail because:
