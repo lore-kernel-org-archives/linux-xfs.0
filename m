@@ -1,478 +1,359 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57100 "EHLO mx1.redhat.com"
+Received: from amazon.4net.rs ([159.69.148.70]:47790 "EHLO amazon.4net.rs"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731466AbeLNMe4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 Dec 2018 07:34:56 -0500
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 0BA799F748
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Dec 2018 12:34:55 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BAAED26E71
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Dec 2018 12:34:54 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH RFC 5/5] xfs: new cntbt based near allocation algorithm
-Date: Fri, 14 Dec 2018 07:34:52 -0500
-Message-Id: <20181214123452.20974-6-bfoster@redhat.com>
-In-Reply-To: <20181214123452.20974-1-bfoster@redhat.com>
-References: <20181214123452.20974-1-bfoster@redhat.com>
+        id S1727158AbeLLMiI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Dec 2018 07:38:08 -0500
+Received: from localhost (amazon.4net.co.rs [127.0.0.1])
+        by amazon.4net.rs (Postfix) with ESMTP id 5D20663BE0DD
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Dec 2018 13:26:08 +0100 (CET)
+Received: from amazon.4net.rs ([127.0.0.1])
+        by localhost (amazon.dyn.4net.co.rs [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id AnVz_DLDBpeX for <linux-xfs@vger.kernel.org>;
+        Wed, 12 Dec 2018 13:26:06 +0100 (CET)
+Received: from mail.4net.rs (green.4net.rs [10.188.221.8])
+        by amazon.4net.rs (Postfix) with ESMTP id C7A8D63BDF64
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Dec 2018 13:26:06 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+        by mail.4net.rs (Postfix) with ESMTP id 366A6CB7B7840
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Dec 2018 13:29:50 +0100 (CET)
+Received: from mail.4net.rs ([127.0.0.1])
+        by localhost (green.4net.rs [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id gJl-qcVNpX4q for <linux-xfs@vger.kernel.org>;
+        Wed, 12 Dec 2018 13:29:49 +0100 (CET)
+Received: from mail.4net.rs (localhost [127.0.0.1])
+        by mail.4net.rs (Postfix) with ESMTP id AC46DC9A6B019
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Dec 2018 13:29:49 +0100 (CET)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        by mail.4net.rs (Postfix) with ESMTPSA id 62B23CB7B7840
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Dec 2018 13:29:49 +0100 (CET)
+From: Sinisa <sinisa@4net.rs>
+Subject: XFS and RAID10 with o2 layout
+Message-ID: <d9fc0327-eef3-63bd-82a3-98545251bfe5@4net.rs>
+Date: Wed, 12 Dec 2018 13:29:49 +0100
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------C52B5CB9C1811297F385A6A1"
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Prototype a new NEAR type allocation algorithm. Use both the
-by-block and by-size btrees to allocate the largest available extent
-with ideal locality.
+This is a multi-part message in MIME format.
+--------------C52B5CB9C1811297F385A6A1
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 405 +++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_trace.h        |   1 +
- 2 files changed, 405 insertions(+), 1 deletion(-)
+Hello group,
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 95ee48e3fb9d..96aef9f9eaca 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1315,6 +1315,392 @@ xfs_alloc_ag_vextent_near_bnobt(
- 
- }
- 
-+enum xfs_alloc_cur {
-+	XFS_ALLOC_CNT = 0,
-+	XFS_ALLOC_BNOLT,
-+	XFS_ALLOC_BNOGT,
-+	XFS_ALLOC_MAX
-+};
-+
-+struct xfs_alloc_best {
-+	struct xfs_btree_cur	*cur[XFS_ALLOC_MAX];
-+	xfs_extlen_t		cur_len;	/* current search length */
-+	xfs_agblock_t		rec_bno;	/* record startblock */
-+	xfs_extlen_t		rec_len;	/* record length */
-+	xfs_agblock_t		bno;		/* alloc bno */
-+	xfs_extlen_t		len;		/* alloc len */
-+	xfs_extlen_t		diff;		/* diff from search bno */
-+	bool			done;
-+	bool			busy;
-+	unsigned		busy_gen;
-+};
-+
-+static int
-+xfs_alloc_best_setup(
-+	struct xfs_alloc_arg	*args,
-+	struct xfs_alloc_best	*best)
-+{
-+	int			error;
-+	int			i;
-+
-+	best->diff = -1;
-+
-+	best->cur[XFS_ALLOC_CNT] = xfs_allocbt_init_cursor(args->mp, args->tp,
-+					args->agbp, args->agno, XFS_BTNUM_CNT);
-+
-+	best->cur[XFS_ALLOC_BNOLT] = xfs_allocbt_init_cursor(args->mp, args->tp,
-+					args->agbp, args->agno, XFS_BTNUM_BNO);
-+	error = xfs_alloc_lookup_le(best->cur[XFS_ALLOC_BNOLT], args->agbno,
-+				    args->maxlen, &i);
-+	if (error)
-+		return error;
-+	if (!i) {
-+		best->cur[XFS_ALLOC_BNOGT] = best->cur[XFS_ALLOC_BNOLT];
-+		best->cur[XFS_ALLOC_BNOLT] = NULL;
-+	} else {
-+		xfs_btree_dup_cursor(best->cur[XFS_ALLOC_BNOLT],
-+				     &best->cur[XFS_ALLOC_BNOGT]);
-+	}
-+
-+	error = xfs_btree_increment(best->cur[XFS_ALLOC_BNOGT], 0, &i);
-+	if (error)
-+		return error;
-+	if (!i) {
-+		xfs_btree_del_cursor(best->cur[XFS_ALLOC_BNOGT],
-+				     XFS_BTREE_NOERROR);
-+		best->cur[XFS_ALLOC_BNOGT] = NULL;
-+	}
-+
-+	return error;
-+}
-+
-+static inline void
-+__xfs_alloc_best_close(
-+	struct xfs_alloc_best	*best,
-+	enum xfs_alloc_cur	cidx,
-+	int			error)
-+{
-+	if (!best->cur[cidx])
-+		return;
-+
-+	xfs_btree_del_cursor(best->cur[cidx], error);
-+	best->cur[cidx] = NULL;
-+}
-+
-+static void
-+xfs_alloc_best_close(
-+	struct xfs_alloc_best	*best,
-+	bool			error)
-+{
-+	int			cur_error = XFS_BTREE_NOERROR;
-+	int			i;
-+
-+	if (error)
-+		cur_error = XFS_BTREE_ERROR;
-+	for (i = 0; i < XFS_ALLOC_MAX; i++)
-+		__xfs_alloc_best_close(best, i, cur_error);
-+}
-+
-+static bool
-+xfs_alloc_best_check(
-+	struct xfs_alloc_arg	*args,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	struct xfs_alloc_best	*best,
-+	enum xfs_alloc_cur	cidx)
-+{
-+	xfs_agblock_t		bnoa, bnew;
-+	xfs_extlen_t		lena, diff = -1;
-+	bool			busy;
-+	unsigned		busy_gen = 0;
-+	bool			badrange = false;
-+	bool			isbnobt = false;
-+
-+	isbnobt = (cidx == XFS_ALLOC_BNOLT || cidx == XFS_ALLOC_BNOGT);
-+
-+	busy = xfs_alloc_compute_aligned(args, bno, len, &bnoa, &lena,
-+					 &busy_gen);
-+	best->busy |= busy;
-+	if (busy)
-+		best->busy_gen = busy_gen;
-+
-+	if (bnoa < args->min_agbno || bnoa > args->max_agbno) {
-+		badrange = true;
-+		goto fail;
-+	}
-+	if (lena < args->minlen)
-+		goto fail;
-+
-+	args->len = XFS_EXTLEN_MIN(lena, args->maxlen);
-+	xfs_alloc_fix_len(args);
-+	ASSERT(args->len >= args->minlen);
-+	if (args->len < best->len)
-+		goto fail;
-+
-+	diff = xfs_alloc_compute_diff(args->agbno, args->len,
-+				      args->alignment, args->datatype,
-+				      bnoa, lena, &bnew);
-+	if (bnew == NULLAGBLOCK)
-+		goto fail;
-+	if (diff > best->diff) {
-+		badrange = true;
-+		goto fail;
-+	}
-+	if (args->len < best->len)
-+		goto fail;
-+
-+	best->rec_bno = bno;
-+	best->rec_len = len;
-+	best->bno = bnew;
-+	best->len = args->len;
-+	best->diff = diff;
-+	return true;
-+
-+fail:
-+	/* close bnobt cursors once out of range to prevent further searching */
-+	if (isbnobt && badrange)
-+		__xfs_alloc_best_close(best, cidx, XFS_BTREE_NOERROR);
-+	return false;
-+}
-+
-+/*
-+ * Complete an allocation if we have a candidate extent.
-+ */
-+STATIC int
-+xfs_alloc_best_finish(
-+	struct xfs_alloc_arg	*args,
-+	struct xfs_alloc_best	*best,
-+	int			*stat)
-+{
-+	struct xfs_btree_cur	*bno_cur;
-+	int			error;
-+
-+	ASSERT(best->len);
-+	ASSERT(best->cur[XFS_ALLOC_CNT]);
-+
-+	/*
-+	 * Reuse or reopen a bnobt cursor if necessary. It will be closed as
-+	 * part of the xfs_alloc_best cleanup.
-+	 */
-+	if (best->cur[XFS_ALLOC_BNOLT]) {
-+		bno_cur = best->cur[XFS_ALLOC_BNOLT];
-+	} else if (best->cur[XFS_ALLOC_BNOGT]) {
-+		bno_cur = best->cur[XFS_ALLOC_BNOGT];
-+	} else {
-+		bno_cur = xfs_allocbt_init_cursor(args->mp, args->tp,
-+						  args->agbp, args->agno,
-+						  XFS_BTNUM_BNO);
-+		best->cur[XFS_ALLOC_BNOLT] = bno_cur;
-+	}
-+
-+	error = xfs_alloc_fixup_trees(best->cur[XFS_ALLOC_CNT], bno_cur,
-+				      best->rec_bno, best->rec_len, best->bno,
-+				      best->len, 0);
-+	if (error)
-+		return error;
-+
-+	args->agbno = best->bno;
-+	args->len = best->len;
-+	*stat = 1;
-+
-+	return 0;
-+}
-+
-+STATIC int
-+xfs_alloc_size_iter(
-+	struct xfs_alloc_arg	*args,
-+	struct xfs_alloc_best	*best,
-+	enum xfs_alloc_cur	cidx)
-+{
-+	struct xfs_btree_cur	*cur = best->cur[cidx];
-+	xfs_agblock_t		bno;
-+	xfs_extlen_t		len, cur_len;
-+	int			error;
-+	int			i;
-+
-+	/*
-+	 * Store the current search key and perform a locality optimized lookup.
-+	 */
-+	cur_len = best->cur_len;
-+	error = xfs_alloc_lookup_ge(cur, args->agbno, cur_len, &i);
-+	if (error)
-+		return error;
-+	if (i == 0) {
-+		best->done = true;
-+		return 0;
-+	}
-+	error = xfs_alloc_get_rec(cur, &bno, &len, &i);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Check the record and update the search key to the extent length we
-+	 * actually found in the tree.
-+	 */
-+	XFS_WANT_CORRUPTED_RETURN(args->mp, i == 1);
-+	xfs_alloc_best_check(args, bno, len, best, cidx);
-+	ASSERT(len >= best->cur_len);
-+	best->cur_len = len;
-+
-+	/*
-+	 * We looked up the first record >= [agbno, len] above. If this is a
-+	 * cntbt search, the agbno is a secondary key and so the record may not
-+	 * start beyond agbno if there are no such records for the particular
-+	 * length. If it is past agbno, check the previous record too so long as
-+	 * the length matches as it may be closer.
-+	 */
-+	if (bno > args->agbno) {
-+		error = xfs_btree_decrement(cur, 0, &i);
-+		if (error)
-+			return error;
-+		if (i) {
-+			error = xfs_alloc_get_rec(cur, &bno, &len, &i);
-+			if (error)
-+				return error;
-+			XFS_WANT_CORRUPTED_RETURN(args->mp, i == 1);
-+			if (len == best->cur_len)
-+				xfs_alloc_best_check(args, bno, len, best,
-+						     cidx);
-+		}
-+	}
-+
-+	/*
-+	 * Increment the search key if we haven't yet found a candidate extent
-+	 * or this lookup already significantly bumped the key. We have to make
-+	 * sure to not skip any records until we have at least one allocatable
-+	 * extent. Note that if the allocation ultimately fails due to busy
-+	 * extents, we'll flush the busy list and restart the whole thing.
-+	 *
-+	 * Otherwise, double the search key for the next lookup to optimize the
-+	 * search. This allows us to find good enough locality at the expense of
-+	 * absolute best locality. Max extent size and reasonable allocation
-+	 * efficiency are more important here than perfect locality.
-+	 */
-+	cur_len <<= 1;
-+	if (!best->len || best->cur_len >= cur_len)
-+		best->cur_len++;
-+	else
-+		best->cur_len = cur_len;
-+
-+	return error;
-+}
-+
-+STATIC int
-+xfs_alloc_bno_iter(
-+	struct xfs_alloc_arg	*args,
-+	struct xfs_alloc_best	*best,
-+	enum xfs_alloc_cur	cidx,
-+	int			iters,
-+	int			*stat)
-+{
-+	struct xfs_btree_cur	*cur;
-+	int			error;
-+	int			i;
-+	xfs_agblock_t		bno;
-+	xfs_extlen_t		len;
-+	bool			found = false;
-+
-+	*stat = 0;
-+	cur = best->cur[cidx];
-+	if (!cur)
-+		return 0;
-+
-+	for (; iters > 0; iters--) {
-+		error = xfs_alloc_get_rec(cur, &bno, &len, &i);
-+		if (error)
-+			return error;
-+		XFS_WANT_CORRUPTED_RETURN(args->mp, i == 1);
-+		found = xfs_alloc_best_check(args, bno, len, best, cidx);
-+		if (found) {
-+			*stat = 1;
-+			break;
-+		}
-+		if (!best->cur[cidx])
-+			break;
-+
-+		if (cidx == XFS_ALLOC_BNOLT)
-+			error = xfs_btree_decrement(cur, 0, &i);
-+		else if (cidx == XFS_ALLOC_BNOGT)
-+			error = xfs_btree_increment(cur, 0, &i);
-+		if (error)
-+			return error;
-+		if (i == 0) {
-+			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+			best->cur[cidx] = NULL;
-+			break;
-+		}
-+	}
-+
-+	return error;
-+}
-+
-+STATIC int
-+xfs_alloc_ag_vextent_new(
-+	struct xfs_alloc_arg	*args,
-+	struct xfs_alloc_best	*best,
-+	int			*stat)
-+{
-+	int			error;
-+	int			i;
-+	unsigned int		findbest = 0;
-+	enum xfs_alloc_cur	findbestc;
-+
-+	*stat = 0;
-+
-+	error = xfs_alloc_best_setup(args, best);
-+	if (error)
-+		goto out;
-+
-+	best->cur_len = args->maxlen;
-+	while (!best->done) {
-+		/*
-+		 * Search the bnobt left and right. If either of these find a
-+		 * suitable extent, we know we've found ideal locality. Do a
-+		 * capped search in the opposite direction and we're done.
-+		 */
-+		error = xfs_alloc_bno_iter(args, best, XFS_ALLOC_BNOLT, 1, &i);
-+		if (error)
-+			goto out;
-+		if (i) {
-+			best->done = true;
-+			findbest = args->mp->m_alloc_mxr[0];
-+			findbestc = XFS_ALLOC_BNOGT;
-+			break;
-+		}
-+
-+		error = xfs_alloc_bno_iter(args, best, XFS_ALLOC_BNOGT, 1, &i);
-+		if (error)
-+			goto out;
-+		if (i) {
-+			best->done = true;
-+			findbest = args->mp->m_alloc_mxr[0];
-+			findbestc = XFS_ALLOC_BNOLT;
-+			break;
-+		}
-+
-+		/*
-+		 * Search for an extent based on size. This only sets best.done
-+		 * if we hit the end of the tree.
-+		 */
-+		error = xfs_alloc_size_iter(args, best, XFS_ALLOC_CNT);
-+		if (error)
-+			goto out;
-+	}
-+
-+	if (findbest) {
-+		error = xfs_alloc_bno_iter(args, best, findbestc, findbest, &i);
-+		if (error)
-+			goto out;
-+	}
-+
-+	if (best->len)
-+		error = xfs_alloc_best_finish(args, best, stat);
-+
-+out:
-+	xfs_alloc_best_close(best, error);
-+	return error;
-+}
-+
- /*
-  * Allocate a variable extent near bno in the allocation group agno.
-  * Extent's length (returned in len) will be between minlen and maxlen,
-@@ -1326,7 +1712,7 @@ xfs_alloc_ag_vextent_near(
- 	struct xfs_alloc_arg	*args)	/* allocation argument structure */
- {
- 	struct xfs_btree_cur	*bno_cur = NULL;/* cursor for bno btree */
--	struct xfs_btree_cur	*cnt_cur;	/* cursor for count btree */
-+	struct xfs_btree_cur	*cnt_cur = NULL;/* cursor for count btree */
- 	int			error;		/* error code */
- 	int			i;		/* result code, temporary */
- 	xfs_agblock_t		bno;	      /* start bno of left side entry */
-@@ -1357,6 +1743,23 @@ xfs_alloc_ag_vextent_near(
- 	len = 0;
- 	busy = false;
- 
-+	if (args->agbno != NULLAGBLOCK) {
-+		struct xfs_alloc_best	best = {0,};
-+
-+		error = xfs_alloc_ag_vextent_new(args, &best, &i);
-+		if (error)
-+			goto error;
-+		if (i) {
-+			trace_xfs_alloc_near_new(args);
-+			return 0;
-+		}
-+		if (best.busy) {
-+			xfs_extent_busy_flush(args->mp, args->pag,
-+					      best.busy_gen);
-+			goto restart;
-+		}
-+	}
-+
- 	/*
- 	 * Get a cursor for the by-size btree and start with a lookup for maxlen
- 	 * free extents.
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 8a6532aae779..7a4e5829d594 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1626,6 +1626,7 @@ DEFINE_ALLOC_EVENT(xfs_alloc_exact_done);
- DEFINE_ALLOC_EVENT(xfs_alloc_exact_notfound);
- DEFINE_ALLOC_EVENT(xfs_alloc_exact_error);
- DEFINE_ALLOC_EVENT(xfs_alloc_near_nominleft);
-+DEFINE_ALLOC_EVENT(xfs_alloc_near_new);
- DEFINE_ALLOC_EVENT(xfs_alloc_near_first);
- DEFINE_ALLOC_EVENT(xfs_alloc_near_greater);
- DEFINE_ALLOC_EVENT(xfs_alloc_near_lesser);
+I have noticed something strange going on lately, but recently I have come to 
+conclusion that there is some unwanted interaction between XFS and Linux RAID10 
+with "offset" layout.
+
+So here is the problem: I create a Linux RAID10 mirror with 2 disks (HDD or 
+SSD) and "o2" layout (best choice for read and write speed):
+# mdadm -C -n2 -l10 -po2 /dev/mdX /dev/sdaX /dev/sdbX
+# mkfs.xfs /dev/mdX
+# mount /dev/mdX /mnt
+# rsync -avxDPHS / /mnt
+
+So we have RAID10 initializing:
+
+# cat /proc/mdstat
+Personalities : [raid1] [raid10]
+md2 : active raid10 sdb3[1] sda3[0]
+       314433536 blocks super 1.2 4096K chunks 2 offset-copies [2/2] [UU]
+       [==>..................]  resync = 11.7% (36917568/314433536) 
+finish=8678.2min speed=532K/sec
+       bitmap: 3/3 pages [12KB], 65536KB chunk
+
+but after a few minutes everything stops like you can see above. Rsync (or any 
+other process writing to that md device) also freezes. If I try to read already 
+copied files - freeze, usually with less that 2GB copied.
+
+Sometimes in dmesg I get some kernel messages about "task kworker/2:1:55 
+blocked for more than 480 seconds." (please see attached dmesg.txt and my 
+reports here: https://bugzilla.opensuse.org/show_bug.cgi?id=1111073), sometimes 
+nothing at all. When this happens, I can only reboot with SysRq-b or 
+"physically" with reset/power button.
+
+Same thing can happen with "far" layout, but it seems to me that it does not 
+happen every time (or that often). I might be wrong, because I never use "far" 
+layout in real life, only for testing.
+I was unable to reproduce the failure with "near" layout.
+
+Also with EXT4 or BTRFS and any layout everything works just as it should, that 
+is sync goes on until finished, and rsync, cp, or any other write work just 
+fine at the same time.
+
+Let me just add that I first saw this behavior in openSUSE LEAP 15.0 (kernel 
+4.12). In previous versions (up to kernel 4.4) I never had this problem. In the 
+meantime I have tested with kernels up to 4.20rc and it is the same. 
+Unfortunately I cannot go back to test kernels 4.5 - 4.11 to pinpoint the 
+moment the problem first appeared.
+
+
+
 -- 
-2.17.2
+Best regards,
+Siniša Bandin
+(excuse my English)
+
+
+--------------C52B5CB9C1811297F385A6A1
+Content-Type: text/plain; charset=UTF-8;
+ name="dmesg.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="dmesg.txt"
+
+WyAgMTgwLjk4MTQ5OV0gU0dJIFhGUyB3aXRoIEFDTHMsIHNlY3VyaXR5IGF0dHJpYnV0ZXMs
+IG5vIGRlYnVnIGVuYWJsZWQKWyAgMTgxLjAwNTAxOV0gWEZTIChtZDEpOiBNb3VudGluZyBW
+NSBGaWxlc3lzdGVtClsgIDE4MS4xMzIwNzZdIFhGUyAobWQxKTogU3RhcnRpbmcgcmVjb3Zl
+cnkgKGxvZ2RldjogaW50ZXJuYWwpClsgIDE4MS4yOTU2MDZdIFhGUyAobWQxKTogRW5kaW5n
+IHJlY292ZXJ5IChsb2dkZXY6IGludGVybmFsKQpbICAxODEuODA0MDExXSBYRlMgKG1kMSk6
+IFVubW91bnRpbmcgRmlsZXN5c3RlbQpbICAxODIuMjAxNzk0XSBYRlMgKG1kMTI3KTogTW91
+bnRpbmcgVjQgRmlsZXN5c3RlbQpbICAxODIuNzM2OTU4XSBtZDogcmVjb3Zlcnkgb2YgUkFJ
+RCBhcnJheSBtZDEyNwpbICAxODIuOTE1NDc5XSBYRlMgKG1kMTI3KTogRW5kaW5nIGNsZWFu
+IG1vdW50ClsgIDE4My44MTk3MDJdIFhGUyAobWQxMjcpOiBVbm1vdW50aW5nIEZpbGVzeXN0
+ZW0KWyAgMTg0Ljk0MzgzMV0gRVhUNC1mcyAobWQwKTogbW91bnRlZCBmaWxlc3lzdGVtIHdp
+dGggb3JkZXJlZCBkYXRhIG1vZGUuIE9wdHM6IChudWxsKQpbICA1MjkuNzg0NTU3XSBFWFQ0
+LWZzIChtZDApOiBtb3VudGVkIGZpbGVzeXN0ZW0gd2l0aCBvcmRlcmVkIGRhdGEgbW9kZS4g
+T3B0czogKG51bGwpClsgIDYwMS43ODk5NThdIG1kMTogZGV0ZWN0ZWQgY2FwYWNpdHkgY2hh
+bmdlIGZyb20gMzMyODQ5NDc5NjggdG8gMApbICA2MDEuNzg5OTczXSBtZDogbWQxIHN0b3Bw
+ZWQuClsgIDYwMi4zMTQxMTJdIG1kMDogZGV0ZWN0ZWQgY2FwYWNpdHkgY2hhbmdlIGZyb20g
+NTUwNDM2ODY0IHRvIDAKWyAgNjAyLjMxNDEyOF0gbWQ6IG1kMCBzdG9wcGVkLgpbICA2MDIu
+NzQ1MDMwXSBtZDogbWQxMjc6IHJlY292ZXJ5IGludGVycnVwdGVkLgpbICA2MDMuMTMxNjg0
+XSBtZDEyNzogZGV0ZWN0ZWQgY2FwYWNpdHkgY2hhbmdlIGZyb20gOTY2MjI5MjI5NTY4IHRv
+IDAKWyAgNjAzLjEzMjIzN10gbWQ6IG1kMTI3IHN0b3BwZWQuClsgIDYwMy40MzU4MDhdICBz
+ZGE6IHNkYTEgc2RhMgpbICA2MDMuNTk0MDc0XSB1ZGV2ZFs1MDExXTogaW5vdGlmeV9hZGRf
+d2F0Y2goMTEsIC9kZXYvc2RhMiwgMTApIGZhaWxlZDogTm8gc3VjaCBmaWxlIG9yIGRpcmVj
+dG9yeQpbICA2MDMuNjQzOTU5XSAgc2RhOgpbICA2MDMuODQ0NzI0XSAgc2RiOiBzZGIxIHNk
+YjIKWyAgNjA0LjI1NTQwN10gIHNkYjogc2RiMQpbICA2MDQuNDkwMjE0XSB1ZGV2ZFs1MDUw
+XTogaW5vdGlmeV9hZGRfd2F0Y2goMTEsIC9kZXYvc2RiMSwgMTApIGZhaWxlZDogTm8gc3Vj
+aCBmaWxlIG9yIGRpcmVjdG9yeQpbICA2MDUuMTQwOTUyXSAgc2RiOiBzZGIxClsgIDYwNS42
+Mjg2ODZdICBzZGI6IHNkYjEgc2RiMgpbICA2MDYuMjcxMTkyXSAgc2RiOiBzZGIxIHNkYjIg
+c2RiMwpbICA2MDcuMDc5NjI2XSAgc2RiOiBzZGIxIHNkYjIgc2RiMwpbICA2MDcuNjExMDky
+XSAgc2RhOgpbICA2MDguMjczMjAxXSAgc2RhOiBzZGExClsgIDYwOC42MTE5NTJdICBzZGE6
+IHNkYTEgc2RhMgpbICA2MDkuMDMxMzI2XSAgc2RhOiBzZGExIHNkYTIgc2RhMwpbICA2MDku
+NzUzMTQwXSBtZC9yYWlkMTA6bWQxOiBub3QgY2xlYW4gLS0gc3RhcnRpbmcgYmFja2dyb3Vu
+ZCByZWNvbnN0cnVjdGlvbgpbICA2MDkuNzUzMTQ1XSBtZC9yYWlkMTA6bWQxOiBhY3RpdmUg
+d2l0aCAyIG91dCBvZiAyIGRldmljZXMKWyAgNjA5Ljc2ODgwNF0gbWQxOiBkZXRlY3RlZCBj
+YXBhY2l0eSBjaGFuZ2UgZnJvbSAwIHRvIDMyMjEwMTU3NTY4ClsgIDYwOS43NzI2NzddIG1k
+OiByZXN5bmMgb2YgUkFJRCBhcnJheSBtZDEKWyAgNjE0LjU5MDEwN10gWEZTIChtZDEpOiBN
+b3VudGluZyBWNSBGaWxlc3lzdGVtClsgIDYxNS40NDkwMzVdIFhGUyAobWQxKTogRW5kaW5n
+IGNsZWFuIG1vdW50ClsgIDYxNy42Nzg0NjJdIG1kL3JhaWQxOm1kMDogbm90IGNsZWFuIC0t
+IHN0YXJ0aW5nIGJhY2tncm91bmQgcmVjb25zdHJ1Y3Rpb24KWyAgNjE3LjY3ODQ2OV0gbWQv
+cmFpZDE6bWQwOiBhY3RpdmUgd2l0aCAyIG91dCBvZiAyIG1pcnJvcnMKWyAgNjE3Ljc0MDcy
+OV0gbWQwOiBkZXRlY3RlZCBjYXBhY2l0eSBjaGFuZ2UgZnJvbSAwIHRvIDUyNDIyMjQ2NApb
+ICA2MTcuNzQ3MTA3XSBtZDogZGVsYXlpbmcgcmVzeW5jIG9mIG1kMCB1bnRpbCBtZDEgaGFz
+IGZpbmlzaGVkICh0aGV5IHNoYXJlIG9uZSBvciBtb3JlIHBoeXNpY2FsIHVuaXRzKQpbICA2
+MjAuMDM3ODE4XSBFWFQ0LWZzIChtZDApOiBtb3VudGVkIGZpbGVzeXN0ZW0gd2l0aCBvcmRl
+cmVkIGRhdGEgbW9kZS4gT3B0czogKG51bGwpClsgMTQ2My43NTQ3ODVdIElORk86IHRhc2sg
+a3dvcmtlci8wOjM6MjI3IGJsb2NrZWQgZm9yIG1vcmUgdGhhbiA0ODAgc2Vjb25kcy4KWyAx
+NDYzLjc1NDc5M10gICAgICAgTm90IHRhaW50ZWQgNC4xOS41LTEtZGVmYXVsdCAjMQpbIDE0
+NjMuNzU0Nzk1XSAiZWNobyAwID4gL3Byb2Mvc3lzL2tlcm5lbC9odW5nX3Rhc2tfdGltZW91
+dF9zZWNzIiBkaXNhYmxlcyB0aGlzIG1lc3NhZ2UuClsgMTQ2My43NTQ3OTldIGt3b3JrZXIv
+MDozICAgICBEICAgIDAgICAyMjcgICAgICAyIDB4ODAwMDAwMDAKWyAxNDYzLjc1NTAwMF0g
+V29ya3F1ZXVlOiB4ZnMtZW9mYmxvY2tzL21kMSB4ZnNfZW9mYmxvY2tzX3dvcmtlciBbeGZz
+XQpbIDE0NjMuNzU1MDA1XSBDYWxsIFRyYWNlOgpbIDE0NjMuNzU1MDI1XSAgPyBfX3NjaGVk
+dWxlKzB4MjlhLzB4ODgwClsgMTQ2My43NTUwMzJdICA/IHJ3c2VtX2Rvd25fd3JpdGVfZmFp
+bGVkKzB4MTk3LzB4MzUwClsgMTQ2My43NTUwMzhdICBzY2hlZHVsZSsweDc4LzB4MTEwClsg
+MTQ2My43NTUwNDRdICByd3NlbV9kb3duX3dyaXRlX2ZhaWxlZCsweDE5Ny8weDM1MApbIDE0
+NjMuNzU1MDU1XSAgY2FsbF9yd3NlbV9kb3duX3dyaXRlX2ZhaWxlZCsweDEzLzB4MjAKWyAx
+NDYzLjc1NTA2MV0gIGRvd25fd3JpdGUrMHgyMC8weDMwClsgMTQ2My43NTUxOTZdICB4ZnNf
+ZnJlZV9lb2ZibG9ja3MrMHgxMTQvMHgxYTAgW3hmc10KWyAxNDYzLjc1NTMzMF0gIHhmc19p
+bm9kZV9mcmVlX2VvZmJsb2NrcysweGQzLzB4MWUwIFt4ZnNdClsgMTQ2My43NTU0NTldICA/
+IHhmc19pbm9kZV9hZ193YWxrX2dyYWIrMHg1Yi8weDkwIFt4ZnNdClsgMTQ2My43NTU1ODZd
+ICB4ZnNfaW5vZGVfYWdfd2Fsay5pc3JhLjE1KzB4MWFhLzB4NDIwIFt4ZnNdClsgMTQ2My43
+NTU3MTRdICA/IF9feGZzX2lub2RlX2NsZWFyX2Jsb2Nrc190YWcrMHgxMjAvMHgxMjAgW3hm
+c10KWyAxNDYzLjc1NTcyN10gID8gdHJhY2VfaGFyZGlycXNfb25fdGh1bmsrMHgxYS8weDFj
+ClsgMTQ2My43NTU3MzRdICA/IF9fc3dpdGNoX3RvX2FzbSsweDQwLzB4NzAKWyAxNDYzLjc1
+NTczOF0gID8gX19zd2l0Y2hfdG9fYXNtKzB4MzQvMHg3MApbIDE0NjMuNzU1NzQzXSAgPyBf
+X3N3aXRjaF90b19hc20rMHg0MC8weDcwClsgMTQ2My43NTU3NDhdICA/IF9fc3dpdGNoX3Rv
+X2FzbSsweDM0LzB4NzAKWyAxNDYzLjc1NTc1Ml0gID8gX19zd2l0Y2hfdG9fYXNtKzB4NDAv
+MHg3MApbIDE0NjMuNzU1NzU3XSAgPyBfX3N3aXRjaF90b19hc20rMHgzNC8weDcwClsgMTQ2
+My43NTU3NjJdICA/IF9fc3dpdGNoX3RvX2FzbSsweDQwLzB4NzAKWyAxNDYzLjc1NTg5M10g
+ID8gX194ZnNfaW5vZGVfY2xlYXJfYmxvY2tzX3RhZysweDEyMC8weDEyMCBbeGZzXQpbIDE0
+NjMuNzU1OTAwXSAgPyByYWRpeF90cmVlX2dhbmdfbG9va3VwX3RhZysweGMyLzB4MTQwClsg
+MTQ2My43NTYwMzJdICA/IF9feGZzX2lub2RlX2NsZWFyX2Jsb2Nrc190YWcrMHgxMjAvMHgx
+MjAgW3hmc10KWyAxNDYzLjc1NjE1OF0gIHhmc19pbm9kZV9hZ19pdGVyYXRvcl90YWcrMHg3
+My8weGIwIFt4ZnNdClsgMTQ2My43NTYyODhdICB4ZnNfZW9mYmxvY2tzX3dvcmtlcisweDI5
+LzB4NDAgW3hmc10KWyAxNDYzLjc1NjI5OF0gIHByb2Nlc3Nfb25lX3dvcmsrMHgxZmQvMHg0
+MjAKWyAxNDYzLjc1NjMwNV0gIHdvcmtlcl90aHJlYWQrMHgyZC8weDNkMApbIDE0NjMuNzU2
+MzExXSAgPyByZXNjdWVyX3RocmVhZCsweDM0MC8weDM0MApbIDE0NjMuNzU2MzE2XSAga3Ro
+cmVhZCsweDExMi8weDEzMApbIDE0NjMuNzU2MzIyXSAgPyBrdGhyZWFkX2NyZWF0ZV93b3Jr
+ZXJfb25fY3B1KzB4NDAvMHg0MApbIDE0NjMuNzU2MzI5XSAgcmV0X2Zyb21fZm9yaysweDNh
+LzB4NTAKWyAxNDYzLjc1NjM3NV0gSU5GTzogdGFzayBrd29ya2VyL3U0OjA6NDYxNSBibG9j
+a2VkIGZvciBtb3JlIHRoYW4gNDgwIHNlY29uZHMuClsgMTQ2My43NTYzNzldICAgICAgIE5v
+dCB0YWludGVkIDQuMTkuNS0xLWRlZmF1bHQgIzEKWyAxNDYzLjc1NjM4MF0gImVjaG8gMCA+
+IC9wcm9jL3N5cy9rZXJuZWwvaHVuZ190YXNrX3RpbWVvdXRfc2VjcyIgZGlzYWJsZXMgdGhp
+cyBtZXNzYWdlLgpbIDE0NjMuNzU2MzgzXSBrd29ya2VyL3U0OjAgICAgRCAgICAwICA0NjE1
+ICAgICAgMiAweDgwMDAwMDAwClsgMTQ2My43NTYzOTVdIFdvcmtxdWV1ZTogd3JpdGViYWNr
+IHdiX3dvcmtmbiAoZmx1c2gtOToxKQpbIDE0NjMuNzU2NDAwXSBDYWxsIFRyYWNlOgpbIDE0
+NjMuNzU2NDA5XSAgPyBfX3NjaGVkdWxlKzB4MjlhLzB4ODgwClsgMTQ2My43NTY0MjBdICA/
+IHdhaXRfYmFycmllcisweGRkLzB4MTcwIFtyYWlkMTBdClsgMTQ2My43NTY0MjZdICBzY2hl
+ZHVsZSsweDc4LzB4MTEwClsgMTQ2My43NTY0MzNdICB3YWl0X2JhcnJpZXIrMHhkZC8weDE3
+MCBbcmFpZDEwXQpbIDE0NjMuNzU2NDQwXSAgPyB3YWl0X3dva2VuKzB4ODAvMHg4MApbIDE0
+NjMuNzU2NDQ4XSAgcmFpZDEwX3dyaXRlX3JlcXVlc3QrMHhmMi8weDkwMCBbcmFpZDEwXQpb
+IDE0NjMuNzU2NDU0XSAgPyB3YWl0X3dva2VuKzB4ODAvMHg4MApbIDE0NjMuNzU2NDU5XSAg
+PyBtZW1wb29sX2FsbG9jKzB4NTUvMHgxNjAKWyAxNDYzLjc1NjQ4M10gID8gbWRfd3JpdGVf
+c3RhcnQrMHhhOS8weDI3MCBbbWRfbW9kXQpbIDE0NjMuNzU2NDkyXSAgcmFpZDEwX21ha2Vf
+cmVxdWVzdCsweGMxLzB4MTIwIFtyYWlkMTBdClsgMTQ2My43NTY0OThdICA/IHdhaXRfd29r
+ZW4rMHg4MC8weDgwClsgMTQ2My43NTY1MTRdICBtZF9oYW5kbGVfcmVxdWVzdCsweDEyMS8w
+eDE5MCBbbWRfbW9kXQpbIDE0NjMuNzU2NTM1XSAgbWRfbWFrZV9yZXF1ZXN0KzB4NzgvMHgx
+OTAgW21kX21vZF0KWyAxNDYzLjc1NjU0NF0gIGdlbmVyaWNfbWFrZV9yZXF1ZXN0KzB4MWM2
+LzB4NDcwClsgMTQ2My43NTY1NTNdICBzdWJtaXRfYmlvKzB4NDUvMHgxNDAKWyAxNDYzLjc1
+NjcxNF0gIHhmc19zdWJtaXRfaW9lbmQrMHg5Yy8weDFlMCBbeGZzXQpbIDE0NjMuNzU2ODQ0
+XSAgeGZzX3ZtX3dyaXRlcGFnZXMrMHg2OC8weDgwIFt4ZnNdClsgMTQ2My43NTY4NTZdICBk
+b193cml0ZXBhZ2VzKzB4MzEvMHhiMApbIDE0NjMuNzU2ODY1XSAgPyByZWFkX2hwZXQrMHgx
+MjYvMHgxMzAKWyAxNDYzLjc1Njg3M10gID8ga3RpbWVfZ2V0KzB4MzYvMHhhMApbIDE0NjMu
+NzU2ODgxXSAgX193cml0ZWJhY2tfc2luZ2xlX2lub2RlKzB4M2QvMHgzZTAKWyAxNDYzLjc1
+Njg4OV0gIHdyaXRlYmFja19zYl9pbm9kZXMrMHgxYzQvMHg0MzAKWyAxNDYzLjc1NjkwMl0g
+IF9fd3JpdGViYWNrX2lub2Rlc193YisweDVkLzB4YjAKWyAxNDYzLjc1NjkxMF0gIHdiX3dy
+aXRlYmFjaysweDI2Yi8weDMxMApbIDE0NjMuNzU2OTIwXSAgd2Jfd29ya2ZuKzB4MzNhLzB4
+NDEwClsgMTQ2My43NTY5MzJdICBwcm9jZXNzX29uZV93b3JrKzB4MWZkLzB4NDIwClsgMTQ2
+My43NTY5NDBdICB3b3JrZXJfdGhyZWFkKzB4MmQvMHgzZDAKWyAxNDYzLjc1Njk0Nl0gID8g
+cmVzY3Vlcl90aHJlYWQrMHgzNDAvMHgzNDAKWyAxNDYzLjc1Njk1MV0gIGt0aHJlYWQrMHgx
+MTIvMHgxMzAKWyAxNDYzLjc1Njk1N10gID8ga3RocmVhZF9jcmVhdGVfd29ya2VyX29uX2Nw
+dSsweDQwLzB4NDAKWyAxNDYzLjc1Njk2NV0gIHJldF9mcm9tX2ZvcmsrMHgzYS8weDUwClsg
+MTQ2My43NTY5NzldIElORk86IHRhc2sga3dvcmtlci8wOjI6NDk5NCBibG9ja2VkIGZvciBt
+b3JlIHRoYW4gNDgwIHNlY29uZHMuClsgMTQ2My43NTY5ODJdICAgICAgIE5vdCB0YWludGVk
+IDQuMTkuNS0xLWRlZmF1bHQgIzEKWyAxNDYzLjc1Njk4NF0gImVjaG8gMCA+IC9wcm9jL3N5
+cy9rZXJuZWwvaHVuZ190YXNrX3RpbWVvdXRfc2VjcyIgZGlzYWJsZXMgdGhpcyBtZXNzYWdl
+LgpbIDE0NjMuNzU2OTg3XSBrd29ya2VyLzA6MiAgICAgRCAgICAwICA0OTk0ICAgICAgMiAw
+eDgwMDAwMDAwClsgMTQ2My43NTcwMTNdIFdvcmtxdWV1ZTogbWQgc3VibWl0X2ZsdXNoZXMg
+W21kX21vZF0KWyAxNDYzLjc1NzAxNl0gQ2FsbCBUcmFjZToKWyAxNDYzLjc1NzAyNF0gID8g
+X19zY2hlZHVsZSsweDI5YS8weDg4MApbIDE0NjMuNzU3MDM0XSAgPyB3YWl0X2JhcnJpZXIr
+MHhkZC8weDE3MCBbcmFpZDEwXQpbIDE0NjMuNzU3MDM5XSAgc2NoZWR1bGUrMHg3OC8weDEx
+MApbIDE0NjMuNzU3MDQ3XSAgd2FpdF9iYXJyaWVyKzB4ZGQvMHgxNzAgW3JhaWQxMF0KWyAx
+NDYzLjc1NzA1NF0gID8gd2FpdF93b2tlbisweDgwLzB4ODAKWyAxNDYzLjc1NzA2Ml0gIHJh
+aWQxMF93cml0ZV9yZXF1ZXN0KzB4ZjIvMHg5MDAgW3JhaWQxMF0KWyAxNDYzLjc1NzA2N10g
+ID8gd2FpdF93b2tlbisweDgwLzB4ODAKWyAxNDYzLjc1NzA3Ml0gID8gbWVtcG9vbF9hbGxv
+YysweDU1LzB4MTYwClsgMTQ2My43NTcwODhdICA/IG1kX3dyaXRlX3N0YXJ0KzB4YTkvMHgy
+NzAgW21kX21vZF0KWyAxNDYzLjc1NzA5NV0gID8gdHJhY2VfaGFyZGlycXNfb2ZmX3RodW5r
+KzB4MWEvMHgxYwpbIDE0NjMuNzU3MTA0XSAgcmFpZDEwX21ha2VfcmVxdWVzdCsweGMxLzB4
+MTIwIFtyYWlkMTBdClsgMTQ2My43NTcxMTBdICA/IHdhaXRfd29rZW4rMHg4MC8weDgwClsg
+MTQ2My43NTcxMjZdICBtZF9oYW5kbGVfcmVxdWVzdCsweDEyMS8weDE5MCBbbWRfbW9kXQpb
+IDE0NjMuNzU3MTMyXSAgPyBfcmF3X3NwaW5fdW5sb2NrX2lycSsweDIyLzB4NDAKWyAxNDYz
+Ljc1NzEzN10gID8gZmluaXNoX3Rhc2tfc3dpdGNoKzB4NzQvMHgyNjAKWyAxNDYzLjc1NzE1
+Nl0gIHN1Ym1pdF9mbHVzaGVzKzB4MjEvMHg0MCBbbWRfbW9kXQpbIDE0NjMuNzU3MTYzXSAg
+cHJvY2Vzc19vbmVfd29yaysweDFmZC8weDQyMApbIDE0NjMuNzU3MTcwXSAgd29ya2VyX3Ro
+cmVhZCsweDJkLzB4M2QwClsgMTQ2My43NTcxNzddICA/IHJlc2N1ZXJfdGhyZWFkKzB4MzQw
+LzB4MzQwClsgMTQ2My43NTcxODFdICBrdGhyZWFkKzB4MTEyLzB4MTMwClsgMTQ2My43NTcx
+ODZdICA/IGt0aHJlYWRfY3JlYXRlX3dvcmtlcl9vbl9jcHUrMHg0MC8weDQwClsgMTQ2My43
+NTcxOTNdICByZXRfZnJvbV9mb3JrKzB4M2EvMHg1MApbIDE0NjMuNzU3MjA1XSBJTkZPOiB0
+YXNrIG1kMV9yZXN5bmM6NTIxNSBibG9ja2VkIGZvciBtb3JlIHRoYW4gNDgwIHNlY29uZHMu
+ClsgMTQ2My43NTcyMDddICAgICAgIE5vdCB0YWludGVkIDQuMTkuNS0xLWRlZmF1bHQgIzEK
+WyAxNDYzLjc1NzIwOV0gImVjaG8gMCA+IC9wcm9jL3N5cy9rZXJuZWwvaHVuZ190YXNrX3Rp
+bWVvdXRfc2VjcyIgZGlzYWJsZXMgdGhpcyBtZXNzYWdlLgpbIDE0NjMuNzU3MjEyXSBtZDFf
+cmVzeW5jICAgICAgRCAgICAwICA1MjE1ICAgICAgMiAweDgwMDAwMDAwClsgMTQ2My43NTcy
+MTZdIENhbGwgVHJhY2U6ClsgMTQ2My43NTcyMjNdICA/IF9fc2NoZWR1bGUrMHgyOWEvMHg4
+ODAKWyAxNDYzLjc1NzIzMV0gID8gcmFpc2VfYmFycmllcisweDhkLzB4MTQwIFtyYWlkMTBd
+ClsgMTQ2My43NTcyMzZdICBzY2hlZHVsZSsweDc4LzB4MTEwClsgMTQ2My43NTcyNDNdICBy
+YWlzZV9iYXJyaWVyKzB4OGQvMHgxNDAgW3JhaWQxMF0KWyAxNDYzLjc1NzI0OF0gID8gd2Fp
+dF93b2tlbisweDgwLzB4ODAKWyAxNDYzLjc1NzI1N10gIHJhaWQxMF9zeW5jX3JlcXVlc3Qr
+MHgxZjYvMHgxZTMwIFtyYWlkMTBdClsgMTQ2My43NTcyNjVdICA/IF9yYXdfc3Bpbl91bmxv
+Y2tfaXJxKzB4MjIvMHg0MApbIDE0NjMuNzU3Mjg0XSAgPyBpc19tZGRldl9pZGxlKzB4MTI1
+LzB4MTM3IFttZF9tb2RdClsgMTQ2My43NTczMDJdICBtZF9kb19zeW5jLmNvbGQuNzgrMHg0
+MDQvMHg5NjkgW21kX21vZF0KWyAxNDYzLjc1NzMxMV0gID8gd2FpdF93b2tlbisweDgwLzB4
+ODAKWyAxNDYzLjc1NzMzNl0gID8gbWRfcmRldl9pbml0KzB4YjAvMHhiMCBbbWRfbW9kXQpb
+IDE0NjMuNzU3MzUxXSAgbWRfdGhyZWFkKzB4ZTkvMHgxNDAgW21kX21vZF0KWyAxNDYzLjc1
+NzM1OF0gID8gX3Jhd19zcGluX3VubG9ja19pcnFyZXN0b3JlKzB4MmUvMHg2MApbIDE0NjMu
+NzU3MzY0XSAgPyBfX2t0aHJlYWRfcGFya21lKzB4NGMvMHg3MApbIDE0NjMuNzU3MzY5XSAg
+a3RocmVhZCsweDExMi8weDEzMApbIDE0NjMuNzU3Mzc0XSAgPyBrdGhyZWFkX2NyZWF0ZV93
+b3JrZXJfb25fY3B1KzB4NDAvMHg0MApbIDE0NjMuNzU3MzgwXSAgcmV0X2Zyb21fZm9yaysw
+eDNhLzB4NTAKWyAxNDYzLjc1NzM5NV0gSU5GTzogdGFzayB4ZnNhaWxkL21kMTo1MjMzIGJs
+b2NrZWQgZm9yIG1vcmUgdGhhbiA0ODAgc2Vjb25kcy4KWyAxNDYzLjc1NzM5OF0gICAgICAg
+Tm90IHRhaW50ZWQgNC4xOS41LTEtZGVmYXVsdCAjMQpbIDE0NjMuNzU3NDAwXSAiZWNobyAw
+ID4gL3Byb2Mvc3lzL2tlcm5lbC9odW5nX3Rhc2tfdGltZW91dF9zZWNzIiBkaXNhYmxlcyB0
+aGlzIG1lc3NhZ2UuClsgMTQ2My43NTc0MDJdIHhmc2FpbGQvbWQxICAgICBEICAgIDAgIDUy
+MzMgICAgICAyIDB4ODAwMDAwMDAKWyAxNDYzLjc1NzQwNl0gQ2FsbCBUcmFjZToKWyAxNDYz
+Ljc1NzQxM10gID8gX19zY2hlZHVsZSsweDI5YS8weDg4MApbIDE0NjMuNzU3NDIxXSAgPyB3
+YWl0X2JhcnJpZXIrMHhkZC8weDE3MCBbcmFpZDEwXQpbIDE0NjMuNzU3NDI2XSAgc2NoZWR1
+bGUrMHg3OC8weDExMApbIDE0NjMuNzU3NDMzXSAgd2FpdF9iYXJyaWVyKzB4ZGQvMHgxNzAg
+W3JhaWQxMF0KWyAxNDYzLjc1NzQzOF0gID8gd2FpdF93b2tlbisweDgwLzB4ODAKWyAxNDYz
+Ljc1NzQ0Nl0gIHJhaWQxMF93cml0ZV9yZXF1ZXN0KzB4ZjIvMHg5MDAgW3JhaWQxMF0KWyAx
+NDYzLjc1NzQ1MV0gID8gd2FpdF93b2tlbisweDgwLzB4ODAKWyAxNDYzLjc1NzQ1NV0gID8g
+bWVtcG9vbF9hbGxvYysweDU1LzB4MTYwClsgMTQ2My43NTc0NzFdICA/IG1kX3dyaXRlX3N0
+YXJ0KzB4YTkvMHgyNzAgW21kX21vZF0KWyAxNDYzLjc1NzQ3N10gID8gdHJhY2VfaGFyZGly
+cXNfb25fdGh1bmsrMHgxYS8weDFjClsgMTQ2My43NTc0ODVdICByYWlkMTBfbWFrZV9yZXF1
+ZXN0KzB4YzEvMHgxMjAgW3JhaWQxMF0KWyAxNDYzLjc1NzQ5MV0gID8gd2FpdF93b2tlbisw
+eDgwLzB4ODAKWyAxNDYzLjc1NzUwN10gIG1kX2hhbmRsZV9yZXF1ZXN0KzB4MTIxLzB4MTkw
+IFttZF9tb2RdClsgMTQ2My43NTc1MjddICBtZF9tYWtlX3JlcXVlc3QrMHg3OC8weDE5MCBb
+bWRfbW9kXQpbIDE0NjMuNzU3NTM2XSAgZ2VuZXJpY19tYWtlX3JlcXVlc3QrMHgxYzYvMHg0
+NzAKWyAxNDYzLjc1NzU0NF0gIHN1Ym1pdF9iaW8rMHg0NS8weDE0MApbIDE0NjMuNzU3NTUy
+XSAgPyBiaW9fYWRkX3BhZ2UrMHg0OC8weDYwClsgMTQ2My43NTc3MTZdICBfeGZzX2J1Zl9p
+b2FwcGx5KzB4MmMxLzB4NDUwIFt4ZnNdClsgMTQ2My43NTc4NDldICA/IHhmc19idWZfZGVs
+d3JpX3N1Ym1pdF9idWZmZXJzKzB4ZWMvMHgyODAgW3hmc10KWyAxNDYzLjc1Nzk3NF0gIF9f
+eGZzX2J1Zl9zdWJtaXQrMHg2Ny8weDI3MCBbeGZzXQpbIDE0NjMuNzU4MTAyXSAgeGZzX2J1
+Zl9kZWx3cmlfc3VibWl0X2J1ZmZlcnMrMHhlYy8weDI4MCBbeGZzXQpbIDE0NjMuNzU4MjMy
+XSAgPyB4ZnNhaWxkKzB4Mjk0LzB4N2UwIFt4ZnNdClsgMTQ2My43NTgzNjRdICB4ZnNhaWxk
+KzB4Mjk0LzB4N2UwIFt4ZnNdClsgMTQ2My43NTgzNzddICA/IF9yYXdfc3Bpbl91bmxvY2tf
+aXJxcmVzdG9yZSsweDJlLzB4NjAKWyAxNDYzLjc1ODUwOF0gID8geGZzX3RyYW5zX2FpbF9j
+dXJzb3JfZmlyc3QrMHg4MC8weDgwIFt4ZnNdClsgMTQ2My43NTg1MTRdICBrdGhyZWFkKzB4
+MTEyLzB4MTMwClsgMTQ2My43NTg1MjBdICA/IGt0aHJlYWRfY3JlYXRlX3dvcmtlcl9vbl9j
+cHUrMHg0MC8weDQwClsgMTQ2My43NTg1MjddICByZXRfZnJvbV9mb3JrKzB4M2EvMHg1MApb
+IDE0NjMuNzU4NTQzXSBJTkZPOiB0YXNrIHJwbTo1MzY0IGJsb2NrZWQgZm9yIG1vcmUgdGhh
+biA0ODAgc2Vjb25kcy4KWyAxNDYzLjc1ODU0Nl0gICAgICAgTm90IHRhaW50ZWQgNC4xOS41
+LTEtZGVmYXVsdCAjMQpbIDE0NjMuNzU4NTQ3XSAiZWNobyAwID4gL3Byb2Mvc3lzL2tlcm5l
+bC9odW5nX3Rhc2tfdGltZW91dF9zZWNzIiBkaXNhYmxlcyB0aGlzIG1lc3NhZ2UuClsgMTQ2
+My43NTg1NTBdIHJwbSAgICAgICAgICAgICBEICAgIDAgIDUzNjQgICAzNzU3IDB4MDAwMDAw
+MDAKWyAxNDYzLjc1ODU1NF0gQ2FsbCBUcmFjZToKWyAxNDYzLjc1ODU2M10gID8gX19zY2hl
+ZHVsZSsweDI5YS8weDg4MApbIDE0NjMuNzU4NzAxXSAgPyB4bG9nX3dhaXQrMHg1Yy8weDcw
+IFt4ZnNdClsgMTQ2My43NTk4MjFdICBzY2hlZHVsZSsweDc4LzB4MTEwClsgMTQ2My43NjAw
+MjJdICB4bG9nX3dhaXQrMHg1Yy8weDcwIFt4ZnNdClsgMTQ2My43NjAwMzZdICA/IHdha2Vf
+dXBfcSsweDcwLzB4NzAKWyAxNDYzLjc2MDE2N10gIF9feGZzX2xvZ19mb3JjZV9sc24rMHgy
+MjMvMHgyMzAgW3hmc10KWyAxNDYzLjc2MDI5N10gID8geGZzX2ZpbGVfZnN5bmMrMHgxOTYv
+MHgxZDAgW3hmc10KWyAxNDYzLjc2MDQyNF0gIHhmc19sb2dfZm9yY2VfbHNuKzB4OTMvMHgx
+NDAgW3hmc10KWyAxNDYzLjc2MDU1Ml0gIHhmc19maWxlX2ZzeW5jKzB4MTk2LzB4MWQwIFt4
+ZnNdClsgMTQ2My43NjA1NjJdICA/IF9fc2JfZW5kX3dyaXRlKzB4MzYvMHg2MApbIDE0NjMu
+NzYwNTcxXSAgZG9fZnN5bmMrMHgzOC8weDcwClsgMTQ2My43NjA1NzhdICBfX3g2NF9zeXNf
+ZmRhdGFzeW5jKzB4MTMvMHgyMApbIDE0NjMuNzYwNTg1XSAgZG9fc3lzY2FsbF82NCsweDYw
+LzB4MTEwClsgMTQ2My43NjA1OTRdICBlbnRyeV9TWVNDQUxMXzY0X2FmdGVyX2h3ZnJhbWUr
+MHg0OS8weGJlClsgMTQ2My43NjA2MDNdIFJJUDogMDAzMzoweDdmOTc1N2ZhZThhNApbIDE0
+NjMuNzYwNjE2XSBDb2RlOiBCYWQgUklQIHZhbHVlLgpbIDE0NjMuNzYwNjE5XSBSU1A6IDAw
+MmI6MDAwMDdmZmY3NGZkYjQyOCBFRkxBR1M6IDAwMDAwMjQ2IE9SSUdfUkFYOiAwMDAwMDAw
+MDAwMDAwMDRiClsgMTQ2My43NjA2NTRdIFJBWDogZmZmZmZmZmZmZmZmZmZkYSBSQlg6IDAw
+MDAwMDAwMDAwMDAwNjQgUkNYOiAwMDAwN2Y5NzU3ZmFlOGE0ClsgMTQ2My43NjA2NTddIFJE
+WDogMDAwMDAwMDAwMTJjNGM2MCBSU0k6IDAwMDAwMDAwMDEyY2MxMzAgUkRJOiAwMDAwMDAw
+MDAwMDAwMDA0ClsgMTQ2My43NjA2NjBdIFJCUDogMDAwMDAwMDAwMDAwMDAwMCBSMDg6IDAw
+MDAwMDAwMDAwMDAwMDAgUjA5OiAwMDAwN2Y5NzU4NzA4YzAwClsgMTQ2My43NjA2NjJdIFIx
+MDogMDAwMDAwMDAwMDAwMDAwMCBSMTE6IDAwMDAwMDAwMDAwMDAyNDYgUjEyOiAwMDAwMDAw
+MDAxMmNjMTMwClsgMTQ2My43NjA2NjVdIFIxMzogMDAwMDAwMDAwMTIzYTNhMCBSMTQ6IDAw
+MDAwMDAwMDAwMTA4MzAgUjE1OiAwMDAwMDAwMDAwMDAwMDYyClsgMTQ2My43NjA2NzldIElO
+Rk86IHRhc2sga3dvcmtlci8wOjg6NTM2NyBibG9ja2VkIGZvciBtb3JlIHRoYW4gNDgwIHNl
+Y29uZHMuClsgMTQ2My43NjA2ODNdICAgICAgIE5vdCB0YWludGVkIDQuMTkuNS0xLWRlZmF1
+bHQgIzEKWyAxNDYzLjc2MDY4NF0gImVjaG8gMCA+IC9wcm9jL3N5cy9rZXJuZWwvaHVuZ190
+YXNrX3RpbWVvdXRfc2VjcyIgZGlzYWJsZXMgdGhpcyBtZXNzYWdlLgpbIDE0NjMuNzYwNjg3
+XSBrd29ya2VyLzA6OCAgICAgRCAgICAwICA1MzY3ICAgICAgMiAweDgwMDAwMDAwClsgMTQ2
+My43NjA3MThdIFdvcmtxdWV1ZTogbWQgc3VibWl0X2ZsdXNoZXMgW21kX21vZF0KWyAxNDYz
+Ljc2MDcyMV0gQ2FsbCBUcmFjZToKWyAxNDYzLjc2MDczMV0gID8gX19zY2hlZHVsZSsweDI5
+YS8weDg4MApbIDE0NjMuNzYwNzQxXSAgPyB3YWl0X2JhcnJpZXIrMHhkZC8weDE3MCBbcmFp
+ZDEwXQpbIDE0NjMuNzYwNzQ2XSAgc2NoZWR1bGUrMHg3OC8weDExMApbIDE0NjMuNzYwNzUz
+XSAgd2FpdF9iYXJyaWVyKzB4ZGQvMHgxNzAgW3JhaWQxMF0KWyAxNDYzLjc2MDc2MV0gID8g
+d2FpdF93b2tlbisweDgwLzB4ODAKWyAxNDYzLjc2MDc2OF0gIHJhaWQxMF93cml0ZV9yZXF1
+ZXN0KzB4ZjIvMHg5MDAgW3JhaWQxMF0KWyAxNDYzLjc2MDc3NF0gID8gd2FpdF93b2tlbisw
+eDgwLzB4ODAKWyAxNDYzLjc2MDc3OF0gID8gbWVtcG9vbF9hbGxvYysweDU1LzB4MTYwClsg
+MTQ2My43NjA3OTVdICA/IG1kX3dyaXRlX3N0YXJ0KzB4YTkvMHgyNzAgW21kX21vZF0KWyAx
+NDYzLjc2MDgwMV0gID8gdHJ5X3RvX3dha2VfdXArMHg0NC8weDQ3MApbIDE0NjMuNzYwODEw
+XSAgcmFpZDEwX21ha2VfcmVxdWVzdCsweGMxLzB4MTIwIFtyYWlkMTBdClsgMTQ2My43NjA4
+MTZdICA/IHdhaXRfd29rZW4rMHg4MC8weDgwClsgMTQ2My43NjA4MzFdICBtZF9oYW5kbGVf
+cmVxdWVzdCsweDEyMS8weDE5MCBbbWRfbW9kXQpbIDE0NjMuNzYwODUxXSAgbWRfbWFrZV9y
+ZXF1ZXN0KzB4NzgvMHgxOTAgW21kX21vZF0KWyAxNDYzLjc2MDg2MF0gIGdlbmVyaWNfbWFr
+ZV9yZXF1ZXN0KzB4MWM2LzB4NDcwClsgMTQ2My43NjA4NzBdICByYWlkMTBfd3JpdGVfcmVx
+dWVzdCsweDc3YS8weDkwMCBbcmFpZDEwXQpbIDE0NjMuNzYwODc1XSAgPyB3YWl0X3dva2Vu
+KzB4ODAvMHg4MApbIDE0NjMuNzYwODc5XSAgPyBtZW1wb29sX2FsbG9jKzB4NTUvMHgxNjAK
+WyAxNDYzLjc2MDg5NV0gID8gbWRfd3JpdGVfc3RhcnQrMHhhOS8weDI3MCBbbWRfbW9kXQpb
+IDE0NjMuNzYwOTA0XSAgcmFpZDEwX21ha2VfcmVxdWVzdCsweGMxLzB4MTIwIFtyYWlkMTBd
+ClsgMTQ2My43NjA5MTBdICA/IHdhaXRfd29rZW4rMHg4MC8weDgwClsgMTQ2My43NjA5MjZd
+ICBtZF9oYW5kbGVfcmVxdWVzdCsweDEyMS8weDE5MCBbbWRfbW9kXQpbIDE0NjMuNzYwOTMx
+XSAgPyBfcmF3X3NwaW5fdW5sb2NrX2lycSsweDIyLzB4NDAKWyAxNDYzLjc2MDkzNl0gID8g
+ZmluaXNoX3Rhc2tfc3dpdGNoKzB4NzQvMHgyNjAKWyAxNDYzLjc2MDk1NF0gIHN1Ym1pdF9m
+bHVzaGVzKzB4MjEvMHg0MCBbbWRfbW9kXQpbIDE0NjMuNzYwOTYyXSAgcHJvY2Vzc19vbmVf
+d29yaysweDFmZC8weDQyMApbIDE0NjMuNzYwOTcwXSAgd29ya2VyX3RocmVhZCsweDJkLzB4
+M2QwClsgMTQ2My43NjA5NzZdICA/IHJlc2N1ZXJfdGhyZWFkKzB4MzQwLzB4MzQwClsgMTQ2
+My43NjA5ODFdICBrdGhyZWFkKzB4MTEyLzB4MTMwClsgMTQ2My43NjA5ODZdICA/IGt0aHJl
+YWRfY3JlYXRlX3dvcmtlcl9vbl9jcHUrMHg0MC8weDQwClsgMTQ2My43NjA5OTJdICByZXRf
+ZnJvbV9mb3JrKzB4M2EvMHg1MAo=
+--------------C52B5CB9C1811297F385A6A1--
