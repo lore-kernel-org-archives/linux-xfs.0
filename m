@@ -1,106 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:34624 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726218AbeLLE4h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Dec 2018 23:56:37 -0500
-Received: by mail-lf1-f66.google.com with SMTP id p6so12535852lfc.1
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Dec 2018 20:56:35 -0800 (PST)
+Received: from aserp2130.oracle.com ([141.146.126.79]:47200 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726358AbeLLQmZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 11:42:25 -0500
+Date: Wed, 12 Dec 2018 08:42:15 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 04/11] vfs: add missing checks to copy_file_range
+Message-ID: <20181212164215.GY24487@magnolia>
+References: <20181203083416.28978-1-david@fromorbit.com>
+ <20181203083416.28978-5-david@fromorbit.com>
+ <87a7lbrng4.fsf@suse.com>
 MIME-Version: 1.0
-In-Reply-To: <20181211122701.GA2819@bfoster>
-References: <20181210042842.GA16286@draconx.ca> <20181210143345.GB8356@bfoster>
- <CADyTPEw_RZCC2yodbJ6W0e9mwJgQW19UXCHhcw1-tF4b0=hMjg@mail.gmail.com>
- <20181210161121.GC8356@bfoster> <20181210165020.GT24487@magnolia>
- <20181210174627.GD8356@bfoster> <CADyTPEzcjKO163RehVHtOo0=71=u515oHaeAnzmkfHtatpjhLg@mail.gmail.com>
- <20181210214115.GC6311@dastard> <CADyTPEyJkxM=YBwLudwPrTMFNpMtpfZ7ALjD0GrtrdCVTKa7+Q@mail.gmail.com>
- <20181211122701.GA2819@bfoster>
-From: Nick Bowler <nbowler@draconx.ca>
-Date: Tue, 11 Dec 2018 23:56:33 -0500
-Message-ID: <CADyTPEwXDtFRn5HciKwiGRPn4LSjAvLTK0HJ9UXKq6ZJTmj9pQ@mail.gmail.com>
-Subject: Re: Enlarging w/ xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed:
- Inappropriate ioctl for device
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87a7lbrng4.fsf@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Luis Henriques <lhenriques@suse.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, olga.kornievskaia@gmail.com, linux-nfs@vger.kernel.org, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On 12/11/18, Brian Foster <bfoster@redhat.com> wrote:
-> On Tue, Dec 11, 2018 at 02:04:48AM -0500, Nick Bowler wrote:
->> Hi Dave,
->>
->> On 2018-12-10, Dave Chinner <david@fromorbit.com> wrote:
->> > On Mon, Dec 10, 2018 at 03:54:47PM -0500, Nick Bowler wrote:
->> >> I can have a go at fixing the FSGEOMETRY ioctl too (and submit it
->> >> properly) if this approach seems reasonable.  Possibly other things
->> >> may be broken too but I haven't hit any other issues yet in my XFS
->> >> adventure.
->> >
->> > We really need to audit all the compat ioctls for this same
->> > problem and fix all of them in one go, not just slap a bandaid on
->> > the messenger and ignore the rest....
->>
->> OK then.  This patch should cover all of them.  However, I wouldn't know
->> where to start with verification of a change like this, since I don't
->> know what these ioctls actually do, but xfs_growfs does seem to work for
->> me now on a test filesystem with this applied.
->>
->
-> Given that the structure size essentially changes the command value, I'm
-> kind of curious why we have this ifdeffery in the first place. That
-> aside, the patch seems reasonable to me at a glance (though some brief
-> comments around the ifdefs would be nice).
+On Wed, Dec 12, 2018 at 11:31:23AM +0000, Luis Henriques wrote:
+> Dave Chinner <david@fromorbit.com> writes:
+> 
+> <snip>
+> 
+> > +int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
+> > +			 struct file *file_out, loff_t pos_out,
+> > +			 size_t *req_count, unsigned int flags)
+> > +{
+> 
+> <snip>
+> 
+> > +	/* Don't allow overlapped copying within the same file. */
+> > +	if (inode_in == inode_out &&
+> > +	    pos_out + count > pos_in &&
+> > +	    pos_out < pos_in + count)
+> > +		return -EINVAL;
+> 
+> I was wondering if, with the above check, it would make sense to also
+> have an extra patch changing some filesystems (ceph, nfs and cifs) to
+> simply return -EOPNOTSUPP (instead of -EINVAL) when inode_in ==
+> inode_out.  Something like the diff below (not tested!).
+> 
+> This caught my attention when I was running the latest generic xfstests
+> on ceph and realised that I had some new failures due to the recently
+> added copy_file_range support in fsx by Darrick.  The failures were
+> caused by the usage of the same fd both as source and destination.
 
-OK, xfstests has revealed some trouble with the three "bulkstat" ioctls,
-since while the xfs_bulkstat structure itself is fine, one of its members
-is used as a pointer to various structures which are not fine.  This
-wasn't too hard to fix though.
+Looks reasonable to /me/, since EOPNOTSUPP currently triggers the
+splice fallback.
 
-I'll keep testing and hope to get to submitting these properly.
+--D
 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 001b30605d45..eb6e80c7f2bd 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -241,6 +241,21 @@ xfs_compat_ioc_bulkstat(
- 	int			done;
- 	int			error;
-
-+	/* These functions and size are used later to handle individual
-+	 * entries; x32 is annoying and needs different functions. */
-+	inumbers_fmt_pf inumbers_func = xfs_inumbers_fmt_compat;
-+	bulkstat_one_pf	bs_one_func = xfs_bulkstat_one_compat;
-+	size_t bs_one_size = sizeof (compat_xfs_bstat_t);
-+
-+#ifdef CONFIG_X86_X32
-+	if (in_x32_syscall()) {
-+		/* x32 matches native amd64 bstat and inogrp layout */
-+		inumbers_func = xfs_inumbers_fmt;
-+		bs_one_func = xfs_bulkstat_one;
-+		bs_one_size = sizeof (xfs_bstat_t);
-+	}
-+#endif
-+
- 	/* done = 1 if there are more stats to get and if bulkstat */
- 	/* should be called again (unused here, but used in dmapi) */
-
-@@ -272,15 +287,15 @@ xfs_compat_ioc_bulkstat(
-
- 	if (cmd == XFS_IOC_FSINUMBERS_32) {
- 		error = xfs_inumbers(mp, &inlast, &count,
--				bulkreq.ubuffer, xfs_inumbers_fmt_compat);
-+				bulkreq.ubuffer, inumbers_func);
- 	} else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE_32) {
- 		int res;
-
--		error = xfs_bulkstat_one_compat(mp, inlast, bulkreq.ubuffer,
--				sizeof(compat_xfs_bstat_t), NULL, &res);
-+		error = bs_one_func(mp, inlast, bulkreq.ubuffer,
-+		                    bs_one_size, NULL, &res);
- 	} else if (cmd == XFS_IOC_FSBULKSTAT_32) {
- 		error = xfs_bulkstat(mp, &inlast, &count,
--			xfs_bulkstat_one_compat, sizeof(compat_xfs_bstat_t),
-+			bs_one_func, bs_one_size,
- 			bulkreq.ubuffer, &done);
- 	} else
- 		error = -EINVAL;
+> Cheers,
+> -- 
+> Luis
+> 
+> 
+> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+> index 189df668b6a0..c22ac60ec0ba 100644
+> --- a/fs/ceph/file.c
+> +++ b/fs/ceph/file.c
+> @@ -1904,7 +1904,7 @@ static ssize_t ceph_copy_file_range(struct file *src_file, loff_t src_off,
+>  	bool do_final_copy = false;
+>  
+>  	if (src_inode == dst_inode)
+> -		return -EINVAL;
+> +		return -EOPNOTSUPP;
+>  	if (ceph_snap(dst_inode) != CEPH_NOSNAP)
+>  		return -EROFS;
+>  
+> diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
+> index 865706edb307..d4f63eae531e 100644
+> --- a/fs/cifs/cifsfs.c
+> +++ b/fs/cifs/cifsfs.c
+> @@ -1068,7 +1068,7 @@ ssize_t cifs_file_copychunk_range(unsigned int xid,
+>  	cifs_dbg(FYI, "copychunk range\n");
+>  
+>  	if (src_inode == target_inode) {
+> -		rc = -EINVAL;
+> +		rc = -EOPNOTSUPP;
+>  		goto out;
+>  	}
+>  
+> diff --git a/fs/nfs/nfs4file.c b/fs/nfs/nfs4file.c
+> index 46d691ba04bc..910a2abade92 100644
+> --- a/fs/nfs/nfs4file.c
+> +++ b/fs/nfs/nfs4file.c
+> @@ -136,7 +136,7 @@ static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
+>  	ssize_t ret;
+>  
+>  	if (file_inode(file_in) == file_inode(file_out))
+> -		return -EINVAL;
+> +		return -EOPNOTSUPP;
+>  retry:
+>  	ret = nfs42_proc_copy(file_in, pos_in, file_out, pos_out, count);
+>  	if (ret == -EAGAIN)
