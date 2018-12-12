@@ -1,107 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:40805 "EHLO
-        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729208AbeLMRoV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 12:44:21 -0500
-Received: by mail-lj1-f196.google.com with SMTP id n18-v6so2525124lji.7
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 09:44:19 -0800 (PST)
+Received: from userp2120.oracle.com ([156.151.31.85]:47854 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727799AbeLLSOF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 13:14:05 -0500
+Date: Wed, 12 Dec 2018 10:13:57 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [GIT PULL] xfs: fixes for v4.20-rc6
+Message-ID: <20181212181357.GZ24487@magnolia>
+References: <20181208163639.GR24487@magnolia>
+ <CAHk-=who9EqvvGaazise-dh7_DH6rLOULWXzysinyAPnHS4B0A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20181213124129.GB2829@bfoster>
-References: <20181213013000.15716-1-nbowler@draconx.ca> <20181213013000.15716-2-nbowler@draconx.ca>
- <20181213124129.GB2829@bfoster>
-From: Nick Bowler <nbowler@draconx.ca>
-Date: Thu, 13 Dec 2018 12:44:16 -0500
-Message-ID: <CADyTPEy=vrcWKYksAyYi_-38KSxwFQ=gdxO4qRk4pvww4Dp7zQ@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/2] xfs: Fix bulkstat compat ioctls on x32 userspace.
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHk-=who9EqvvGaazise-dh7_DH6rLOULWXzysinyAPnHS4B0A@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, david@fromorbit.com, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
 
-On 2018-12-13, Brian Foster <bfoster@redhat.com> wrote:
-> On Wed, Dec 12, 2018 at 08:29:59PM -0500, Nick Bowler wrote:
->> The bulkstat family of ioctls are problematic on x32, because there is
->> a mixup of native 32-bit and 64-bit conventions: the xfs_bulkstat struct
->> contains pointers and 32-bit integers so that fits the native 32-bit
->> layout fine.  However, one of those pointers is subsequently used to
->> refer to one of several structs which, on x32, all follow the native
->> 64-bit way.
->>
->> Fortunately the pointer chasing seems to end there, and the functions to
->> deal with this abstract things pretty well.  We just need a little tweak
->> to pass the right formatting function if called from x32 mode.
->>
-> > Could you be a bit more specific on the problem? What
-> pointers/structures are problematic? What exactly is "the xfs_bulkstat
-> struct?"
+On Sat, Dec 08, 2018 at 11:24:48AM -0800, Linus Torvalds wrote:
+> On Sat, Dec 8, 2018 at 8:36 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >
+> > Finally, the most important fix is to the pipe splicing code (aka the
+> > generic copy_file_range fallback) to avoid pointless short directio
+> > reads by only asking the filesystem for as much data as there are
+> > available pages in the pipe buffer.  Our previous fix (simulated short
+> > directio reads because the number of pages didn't match the length of
+> > the read requested) caused subtle problems on overlayfs, so that part is
+> > reverted.
+> 
+> Honestly, I really wish you simply wouldn't send me "xfs" fixes that
+> aren't really xfs-specific at all.
+> 
+> All the splice patches (and honestly, I feel some of the iomap ones
+> too) that have come in through the xfs tree should have been handled
+> separately as actual VFS patches. Or at least had acks from Al or
+> something.
+> 
+> I'm looking at that splice patch, and my initial reaction was "Hmm.
+> but that breaks 0 vs -EAGAIN". But then I realized that that's why
+> you're validating pipe->nrbufs, because the special temporary
+> per-thread pipe is always supposed to be empty on entry, so a zero
+> length can't happen.
+> 
+> But just the fact that I felt like I had to go and look at one of
+> these commits makes me go "this is not an XFS fix at all, it shouldn't
+> have been treated as an XFS patch, and the original commit that
+> *caused* the problem shouldn't have been treated as one either".
+> 
+> So please. I want to feel like when I get a XFS pull from the XFS
+> maintainer, I don't need to worry about it, and I can just do the git
+> pull without having to check details.
+> 
+> But that means that when you do changes outside of XFS code, those
+> changes need to be handled _differently_. And they shouldn't be
+> bypassing Al etc. And even if you can't get an Ack from Al, send them
+> separately, so that I can check them without there being any XFS
+> issues that are mixed up with the pull.
 
-A mistake.  I meant struct xfs_fsop_bulkreq; I'll fix the commit message.
+Ok, I'll put xfs and vfs changesets in separate pull requests in the
+future.  Thanks for the feedback.
 
-The problem is:
+--D
 
-  - xfs_fsop_bulkreq on x32 matches IA-32 layout on x32, so the
-    ioctl cmd number matches and the implementation calls
-    xfs_compat_ioc_bulkstat.
-
-  - The 'ubuffer' pointer in that structure refers to either struct
-    xfs_bstat or struct xfs_inogrp.  On x32 both of these structures
-    match the native 64-bit layout; the compat path writes out the
-    IA-32 layout which is incorrectly formatted for x32 userspace.
-
-The proposed solution is:
-
-  - Use in_x32_syscall to distinguish the IA-32 and x32 cases, the
-    functions which do this have a easy way to select which output
-    format is required, so we just need to pick the right one on x32.
-
->> ---
->>  fs/xfs/xfs_ioctl32.c | 25 +++++++++++++++++++++----
->>  1 file changed, 21 insertions(+), 4 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
->> index fba115f4103a..6a759c0ffb54 100644
->> --- a/fs/xfs/xfs_ioctl32.c
->> +++ b/fs/xfs/xfs_ioctl32.c
->> @@ -241,6 +241,23 @@ xfs_compat_ioc_bulkstat(
->>  	int			done;
->>  	int			error;
->>
->> +	/*
->> +	 * These functions and size are used later to handle individual
->> +	 * entries; x32 is annoying and needs different functions.
->> +	 */
->
-> Same here, this describes the change but doesn't help me understand the
-> problem.
-
-I'll think about a better way to write this comment.
-
->> +	inumbers_fmt_pf inumbers_func = xfs_inumbers_fmt_compat;
->> +	bulkstat_one_pf	bs_one_func = xfs_bulkstat_one_compat;
->> +	size_t bs_one_size = sizeof(compat_xfs_bstat_t);
->> +
->> +#ifdef CONFIG_X86_X32
->> +	if (in_x32_syscall()) {
->> +		/* x32 matches native amd64 bstat and inogrp layout */
->> +		inumbers_func = xfs_inumbers_fmt;
->> +		bs_one_func = xfs_bulkstat_one;
->> +		bs_one_size = sizeof(xfs_bstat_t);
->> +	}
->> +#endif
->> +
->
-> Would this be necessary if the higher level x32 code called into
-> xfs_ioc_bulkstat() instead of the compat variant, or is there some
-> other reason x32 wouldn't work through that path?
-
-The xfs_compat_ioc_bulkstat function does two things: it reads in the
-xfs_fsop_bulkreq structure (matches ia-32 layout on x32), then it writes
-out the xfs_inorgp or xfs_bstat structures depending on what operation
-was requested; both of these structures match amd64 layout on x32.
-
-So the goal of the change is to adjust the second behaviour only.
-
-Cheers,
-  Nick
+> So the patch looks good, and I'm merging this, but I really really
+> don't have to feel like I need to look at xfs pulls this way.
+> 
+>                  Linus
