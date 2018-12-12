@@ -1,94 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48802 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727111AbeLLLSv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Dec 2018 06:18:51 -0500
-From: Luis Henriques <lhenriques@suse.com>
-Subject: Re: [PATCH v2 00/10] xfstests: add copy/dedupe/clone to fsx/fsstress
-References: <154275100143.8611.10235098565750994724.stgit@magnolia>
-        <874lblthkh.fsf@suse.com> <20181212045806.GD3306@magnolia>
-Date: Wed, 12 Dec 2018 11:19:03 +0000
-In-Reply-To: <20181212045806.GD3306@magnolia> (Darrick J. Wong's message of
-        "Tue, 11 Dec 2018 20:58:06 -0800")
-Message-ID: <87efanro0o.fsf@suse.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:52536 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727748AbeLLSR3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 13:17:29 -0500
+Date: Wed, 12 Dec 2018 10:16:58 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [GIT PULL] xfs: fixes for v4.20-rc6
+Message-ID: <20181212181658.GA24487@magnolia>
+References: <20181208163639.GR24487@magnolia>
+ <CAHk-=who9EqvvGaazise-dh7_DH6rLOULWXzysinyAPnHS4B0A@mail.gmail.com>
+ <20181211135818.GA29626@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181211135818.GA29626@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, david@fromorbit.com, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
 
-"Darrick J. Wong" <darrick.wong@oracle.com> writes:
+On Tue, Dec 11, 2018 at 05:58:18AM -0800, Christoph Hellwig wrote:
+> On Sat, Dec 08, 2018 at 11:24:48AM -0800, Linus Torvalds wrote:
+> > Honestly, I really wish you simply wouldn't send me "xfs" fixes that
+> > aren't really xfs-specific at all.
+> > 
+> > All the splice patches (and honestly, I feel some of the iomap ones
+> > too) that have come in through the xfs tree should have been handled
+> > separately as actual VFS patches. Or at least had acks from Al or
+> > something.
+> 
+> iomap came in through the XFS tree originally, and has been very much
+> maintained in combo, even though we now have another user with gfs.
+> 
+> Maybe we just need to make that official in MAINTAINERS?
 
-> On Mon, Dec 10, 2018 at 05:30:54PM +0000, Luis Henriques wrote:
->> "Darrick J. Wong" <darrick.wong@oracle.com> writes:
->> 
->> > Hi all,
->> >
->> > This series adds to fsx and fsstress support for FICLONERANGE,
->> > FIDEDUPERANGE, and copy_file_range.
->> >
->> > First, I fix some gcc warnings in fsx.
->> >
->> > Then, I teach fsx to read the fsx file after every operation to compare
->> > it to the good buffer.  This made it easier for me to find corruption
->> > problem as soon as they happen, though I'm not sure it really makes
->> > sense to have this enabled by default because of the behavior change
->> > that it makes.
->> >
->> > Next come a couple of generic reworks to fsx that we need to support the
->> > new clone/dedupe/copy commands.
->> >
->> > Patches 5-6 add clone and dedupe to fsx.
->> >
->> > Patches 7-8 add copy_file_range support to fsstress and fsx.
->> 
->> An annoying side-effect of these changes is that I now see a couple of
->> new generic tests failing on cephfs (for example, generic/075).  That's
->> because fsx does use copy_file_range with the same fd both as source and
->> destination.  We currently return -EINVAL in that case (as nfs and cifs
->> seem to be doing as well btw).
->> 
->> At least for the cephfs, this check could eventually be changed but I
->> would need to spend some time trying and testing the effects of
->> offloading object copies on the same file.  Of course that another
->> (easy!) option would be to simply return -EOPNOTSUPP instead and
->> fallback to the VFS implementation.
->
-> I think Dave Chinner's copy_file_range cleanup series fixes that, among
-> other problems.
+Yes, though who should be the official maintainer?  You wrote most of
+the iomap code; do you want to maintain it yourself?  Or have people
+funnel them wherever XFS patches go? :)
 
-No, unfortunately it doesn't because it's not really something that
-would make sense to do at the VFS level.  CephFS currently does not
-allow to offload a copy where the source and destination are the same
-file so it simply returns -EINVAL.
-
-But that could probably be changed with Chinner's patchset, because it
-adds some extra checks that make it safe to simply return -EOPNOTSUPP
-instead, and fallback to VFS implementation.  I'll follow-up on that in
-the copy_file_range thread.
-
-(And sorry for replying to the wrong email thread, I should have sent my
-email to the latest version that actually got merged into the fstests.)
-
-Cheers,
--- 
-Luis
-
->> >
->> > Dave Chinner contributed some cleanups to the fsx patches as the 9th
->> > patch.
->> >
->> > The last patch fixes the common/dump tests to disable the new commands
->> > so that the dump/restore tests continue to function exactly as they have
->> > for years.
->> >
->> > There are known failures in 4.20-rc3, particularly with copy_file_range,
->> > which hopefully have been fixed by the patch series that Dave Chinner
->> > posted to the xfs list yesterday.  Branch can be downloaded here[1].
->> >
->> > --D
->> >
->> > [1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fsstress-clone
->
+--D
