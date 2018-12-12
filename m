@@ -1,67 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:64119 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726355AbeLNC5Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 21:57:24 -0500
-Date: Fri, 14 Dec 2018 13:57:20 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] iomap: don't search past page end in
- iomap_is_partially_uptodate
-Message-ID: <20181214025720.GJ6311@dastard>
-References: <1544739929-21651-1-git-send-email-sandeen@sandeen.net>
- <1544739929-21651-3-git-send-email-sandeen@sandeen.net>
+Received: from bombadil.infradead.org ([198.137.202.133]:44874 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726243AbeLLTnB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 14:43:01 -0500
+Date: Wed, 12 Dec 2018 11:42:58 -0800
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 04/11] vfs: add missing checks to copy_file_range
+Message-ID: <20181212194258.GK6830@bombadil.infradead.org>
+References: <20181203083416.28978-1-david@fromorbit.com>
+ <20181203083416.28978-5-david@fromorbit.com>
+ <87a7lbrng4.fsf@suse.com>
+ <CAN-5tyHNGtLxeFyEO6qX_+8=K4tpkgYjB11OkfCTdWfokfAyEg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1544739929-21651-3-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <CAN-5tyHNGtLxeFyEO6qX_+8=K4tpkgYjB11OkfCTdWfokfAyEg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph@sandeen.net, Hellwig@sandeen.net, hch@lst.de
+To: Olga Kornievskaia <olga.kornievskaia@gmail.com>
+Cc: lhenriques@suse.com, david@fromorbit.com, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Thu, Dec 13, 2018 at 04:25:28PM -0600, Eric Sandeen wrote:
-> From: Eric Sandeen <sandeen@redhat.com>
+On Wed, Dec 12, 2018 at 01:55:28PM -0500, Olga Kornievskaia wrote:
+> On Wed, Dec 12, 2018 at 6:31 AM Luis Henriques <lhenriques@suse.com> wrote:
+> > I was wondering if, with the above check, it would make sense to also
+> > have an extra patch changing some filesystems (ceph, nfs and cifs) to
+> > simply return -EOPNOTSUPP (instead of -EINVAL) when inode_in ==
+> > inode_out.  Something like the diff below (not tested!).
+
+> > +++ b/fs/nfs/nfs4file.c
+> > @@ -136,7 +136,7 @@ static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
+> >         ssize_t ret;
+> >
+> >         if (file_inode(file_in) == file_inode(file_out))
+> > -               return -EINVAL;
+> > +               return -EOPNOTSUPP;
 > 
-> iomap_is_partially_uptodate() is intended to check wither blocks within
-> the selected range of a not-uptodate page are uptodate; if the range we
-> care about is up to date, it's an optimization.
+> Please don't change the NFS bits. This is against the NFS
+> specifications. RFC 7862 15.2.3
 > 
-> However, the iomap implementation continues to check all blocks up to
-> from+count, which is beyond the page, and can even be well beyond the
-> iop->uptodate bitmap.
+> (snippet)
+> SAVED_FH and CURRENT_FH must be different files.  If SAVED_FH and
+>    CURRENT_FH refer to the same file, the operation MUST fail with
+>    NFS4ERR_INVAL.
 
-The issue is that the caller does not limit the range to the page it
-is checking to see if it is up to date. Hence we have to clamp it.
+I don't see how that applies.  That refers to a requirement _in the
+protocol_ that determines what the server MUST do if the client sends
+it two FHs which refer to the same file.
 
-> I think the worst that will happen is that we may eventually find a zero
-> bit and return "not partially uptodate" when it would have otherwise
-> returned true, and skip the optimization.  Still, it's clearly an invalid
-> memory access that must be fixed.
-
-It depends on how far beyond the page the count extends. :P
-
-> So: fix this by limiting the search to within the page as is done in the
-> non-iomap variant, block_is_partially_uptodate().
-> 
-> Zorro noticed thiswhen KASAN went off for 512 byte blocks on a 64k
-> page system:
-> 
->  BUG: KASAN: slab-out-of-bounds in iomap_is_partially_uptodate+0x1a0/0x1e0
->  Read of size 8 at addr ffff800120c3a318 by task fsstress/22337
-> 
-> Reported-by: Zorro Lang <zlang@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-
-SOB issue. :)
-
-But hte code is the same as the patch I wrote yesterday for this and
-tested overnight, so
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+What we're talking about here is how a Linux filesystem behaves when
+receiving a copy_file_range() referring to the same file.  As long as
+the Linux filesystem doesn't react by sending out one of these invalid
+protocol messages, I don't see the problem.
