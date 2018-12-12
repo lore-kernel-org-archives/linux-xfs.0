@@ -1,81 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f196.google.com ([209.85.166.196]:40837 "EHLO
-        mail-it1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726337AbeLMB0q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 20:26:46 -0500
-Received: by mail-it1-f196.google.com with SMTP id h193so1387447ita.5
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Dec 2018 17:26:46 -0800 (PST)
-From: Nick Bowler <nbowler@draconx.ca>
-Subject: [RFC PATCH 0/2] Fixing xfs ioctls on x32
-Date: Wed, 12 Dec 2018 20:29:58 -0500
-Message-Id: <20181213013000.15716-1-nbowler@draconx.ca>
+Received: from mx1.redhat.com ([209.132.183.28]:54108 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726741AbeLLNJZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Dec 2018 08:09:25 -0500
+Date: Wed, 12 Dec 2018 08:09:22 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Enlarging w/ xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed:
+ Inappropriate ioctl for device
+Message-ID: <20181212130922.GA23261@bfoster>
+References: <CADyTPEw_RZCC2yodbJ6W0e9mwJgQW19UXCHhcw1-tF4b0=hMjg@mail.gmail.com>
+ <20181210161121.GC8356@bfoster>
+ <20181210165020.GT24487@magnolia>
+ <20181210174627.GD8356@bfoster>
+ <CADyTPEzcjKO163RehVHtOo0=71=u515oHaeAnzmkfHtatpjhLg@mail.gmail.com>
+ <20181210214115.GC6311@dastard>
+ <CADyTPEyJkxM=YBwLudwPrTMFNpMtpfZ7ALjD0GrtrdCVTKa7+Q@mail.gmail.com>
+ <20181211122701.GA2819@bfoster>
+ <CADyTPExoZigFSgzrVOEsXNk=ZGRd92AWyM5Lz_z==_xEnJt5cQ@mail.gmail.com>
+ <CADyTPEw6DfRO_=RbmaQC2f-2QGNtXKjcmtpcuX9VaNnRXQkH6Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CADyTPEw6DfRO_=RbmaQC2f-2QGNtXKjcmtpcuX9VaNnRXQkH6Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Nick Bowler <nbowler@draconx.ca>
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-An error I got running xfs_growfs on my x32 system opened this can of
-worms...
+On Tue, Dec 11, 2018 at 03:20:23PM -0500, Nick Bowler wrote:
+> On 12/11/18, Nick Bowler <nbowler@draconx.ca> wrote:
+> > On 12/11/18, Brian Foster <bfoster@redhat.com> wrote:
+> >> Given that the structure size essentially changes the command value, I'm
+> >> kind of curious why we have this ifdeffery in the first place. That
+> >> aside, the patch seems reasonable to me at a glance (though some brief
+> >> comments around the ifdefs would be nice).
+> [...]
+> > Current code has the ifdeffery.  Also since it's a syntax error to have
+> > multiple case labels with the same value it'd be essential to validate
+> > that all supported architectures architectures end up with different
+> > values for each XFS_IOC_xyz and the corresponding XFS_IOC_xyz_32.
+> 
+> Right after I write this, I realize that it's almost certainly
+> the case that architectures which _don't_ define BROKEN_X86_ALIGNMENT
+> will have matching ioctl numbers between e.g., XFS_IOC_ALLOCSP and
+> XFS_IOC_ALLOCSP_32.  Thus the ifdeffery is essential for the above
+> syntactic reason.
+> 
 
-This series is intended to fix all XFS ioctls which don't work from
-x32 userspace applications.
+So the two struct [compat_]xfs_flock64 variants are essentially the same
+with the exception of internal alignment padding that leaves a hole
+after the first 4 bytes in the 64-bit variant. So on x86_64, these are
+essentially two different (sized) structures and ioctl commands. On some
+non-broken alignment arch, the packing may be implied and thus these
+definitions evaluate down to the same ioctl command. If so, then having
+those separate but equivalent value commands in the same switch
+statement results in a compilation error. Am I following that correctly?
 
-Test is xfstests "check -g quick", excluding generic/081 and xfs/014
-which don't behave well for me and don't seem related to XFS ioctls.
+If so, then it does seem we need an ifdef to exlude those definitions so
+long as we follow the one huge switch statement implementation. But is
+there anything that fundamentally prevents a multiple switch statement
+implementation to avoid such syntax errors?
 
-Note that glibc's fallocate wrapper appears to be buggy on x32,
-which causes several test failures.  I hacked around that in xfs_io
-(the fallocate syscall itself appears to work perfectly fine on x32)
-to get a cleaner test run.  Obviously this bug should be fixed but
-it doesn't appear to be a kernel or xfsprogs problem.
+Note that in the end I don't care too much about whether we have an
+ifdef or not. I'm more interested in the most simple and elegant
+implementation and it just seemed that trying to dilute the existing
+ifdef may push us in the opposite direction (as opposed to something
+that for example called into the "native" ioctl and fell back to the _32
+variants on failure before returning an error). There may be technical
+complications to that or using some form of the ifdef may just end up
+being the more simple approach after all.
 
-All tests are running with the same 4.20-rc6 kernel, but different
-userspace installations (pure x32 versus pure i686).  The "After"
-results are obtained by reloading the xfs.ko kernel module with
-the patched version and running the same set of tests.
+Brian
 
-All the remaining failures on x32 appear to be aio related, or are
-also failing on the i686 tests.  I have no experience with aio but
-I'm going to assume those problems have nothing to do with ioctl.
-
-Before (i686 w/ 64bit kernel):
-
-  Failures: generic/484 xfs/191-input-validation xfs/269 xfs/495
-  Failed 4 of 656 tests
-
-Before (x32):
-
-  Failures: generic/018 generic/075 generic/079 generic/112 generic/113
-            generic/114 generic/198 generic/207 generic/210 generic/240
-            generic/252 generic/386 generic/427 generic/451 generic/465
-            generic/484 xfs/002 xfs/009 xfs/026 xfs/027 xfs/028 xfs/046
-            xfs/054 xfs/056 xfs/059 xfs/060 xfs/062 xfs/063 xfs/066
-            xfs/069 xfs/072 xfs/078 xfs/106 xfs/118 xfs/164 xfs/165
-            xfs/166 xfs/170 xfs/190 xfs/191-input-validation xfs/195
-            xfs/250 xfs/266 xfs/269 xfs/281 xfs/282 xfs/283 xfs/289
-            xfs/296 xfs/443 xfs/449 xfs/495
-  Failed 52 of 656 tests
-
-After (i686 w/ 64bit kernel):
-
-  Failures: generic/484 xfs/191-input-validation xfs/269 xfs/495
-  Failed 4 of 656 tests
-
-After (x32):
-
-  Failures: generic/112 generic/113 generic/114 generic/198 generic/207
-            generic/210 generic/240 generic/252 generic/427 generic/451
-            generic/465 generic/484 xfs/191-input-validation xfs/269
-            xfs/495
-  Failed 15 of 656 tests
-
-Nick Bowler (2):
-  xfs: Fix bulkstat compat ioctls on x32 userspace.
-  xfs: Fix x32 ioctls when cmd numbers differ from ia32.
-
- fs/xfs/xfs_ioctl32.c | 43 ++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 36 insertions(+), 7 deletions(-)
-
--- 
-2.16.1
+> Cheers,
+>   Nick
