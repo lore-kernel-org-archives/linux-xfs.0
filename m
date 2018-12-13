@@ -1,87 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f193.google.com ([209.85.166.193]:36511 "EHLO
-        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726337AbeLMB0v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 20:26:51 -0500
-Received: by mail-it1-f193.google.com with SMTP id c9so1429657itj.1
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Dec 2018 17:26:50 -0800 (PST)
+Received: from mail-lf1-f41.google.com ([209.85.167.41]:46118 "EHLO
+        mail-lf1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726226AbeLMEOc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 23:14:32 -0500
+Received: by mail-lf1-f41.google.com with SMTP id f23so460581lfc.13
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Dec 2018 20:14:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20181213035352.GF6311@dastard>
+References: <20181210143345.GB8356@bfoster> <CADyTPEw_RZCC2yodbJ6W0e9mwJgQW19UXCHhcw1-tF4b0=hMjg@mail.gmail.com>
+ <20181210161121.GC8356@bfoster> <20181210165020.GT24487@magnolia>
+ <20181210174627.GD8356@bfoster> <CADyTPEzcjKO163RehVHtOo0=71=u515oHaeAnzmkfHtatpjhLg@mail.gmail.com>
+ <20181210214115.GC6311@dastard> <CADyTPEyJkxM=YBwLudwPrTMFNpMtpfZ7ALjD0GrtrdCVTKa7+Q@mail.gmail.com>
+ <20181211122701.GA2819@bfoster> <CADyTPEwXDtFRn5HciKwiGRPn4LSjAvLTK0HJ9UXKq6ZJTmj9pQ@mail.gmail.com>
+ <20181213035352.GF6311@dastard>
 From: Nick Bowler <nbowler@draconx.ca>
-Subject: [RFC PATCH 2/2] xfs: Fix x32 ioctls when cmd numbers differ from ia32.
-Date: Wed, 12 Dec 2018 20:30:00 -0500
-Message-Id: <20181213013000.15716-3-nbowler@draconx.ca>
-In-Reply-To: <20181213013000.15716-1-nbowler@draconx.ca>
-References: <20181213013000.15716-1-nbowler@draconx.ca>
+Date: Wed, 12 Dec 2018 23:14:28 -0500
+Message-ID: <CADyTPEwfeOhCOSn3-SQh+XCWOthj0ms5mpbiHEtkscQQSQU+aQ@mail.gmail.com>
+Subject: Re: Enlarging w/ xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed:
+ Inappropriate ioctl for device
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-Several ioctl structs change size between native 32-bit (ia32) and x32
-applications, because x32 follows the native 64-bit (amd64) integer
-alignment rules and uses 64-bit time_t.  In these instances, the ioctl
-number changes so userspace simply gets -ENOTTY.  This scenario can be
-handled by simply adding more cases.
+On 2018-12-12, Dave Chinner <david@fromorbit.com> wrote:
+> On Tue, Dec 11, 2018 at 11:56:33PM -0500, Nick Bowler wrote:
+>> OK, xfstests has revealed some trouble with the three "bulkstat" ioctls,
+>> since while the xfs_bulkstat structure itself is fine, one of its members
+>> is used as a pointer to various structures which are not fine.  This
+>> wasn't too hard to fix though.
+>
+> IIRC, there's bigger problems than you realise here - the bulkstat
+> structure has embedded timestamps in them and on x32 struct timeval
+> doesn't match either ia32 or x86-64. i.e. on ia32, struct timeval is
+> 8 bytes, on x86-64 it is 16 bytes, and in x32 it is 12 bytes.
 
-Looking at the different ioctls implemented here:
+This is not the case: struct timeval is 16 bytes on x32:
 
-- All the ones marked 'No size or alignment issue on any arch' should
-  presumably all be fine.
+  sizeof (struct timeval): 16
+  tv_sec          size:   8 offset:   0
+  tv_usec         size:   8 offset:   8
 
-- All the ones under BROKEN_X86_ALIGNMENT are different under integer
-  alignment rules.  Since x32 matches amd64 here, we just need both
-  sets of cases handled.
+This is the same as what I get on native 64-bit compilations; but
+anyway the xfs_bstat structure has xfs_bstime members, with the
+following characteristics on x32:
 
-- XFS_IOC_SWAPEXT has both integer alignment differences and time_t
-  differences.  Since x32 matches amd64 here, we need to add a case
-  which calls the native implementation.
+  sizeof (struct xfs_bstime): 16
+  tv_sec          size:   8 offset:   0
+  tv_nsec         size:   4 offset:   8
 
-- The remaining ioctls have neither 64-bit integers nor time_t, so
-  x32 matches ia32 here and no change is required at this level.  The
-  bulkstat ioctl implementations have some pointer chasing which is
-  handled separately.
+which is also the same as native 64-bit (time_t is the same on x32 and
+native: 8 bytes with 8 byte alignment).
 
-Signed-off-by: Nick Bowler <nbowler@draconx.ca>
----
- fs/xfs/xfs_ioctl32.c | 18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 6a759c0ffb54..c5b48e1f46fe 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -564,8 +564,12 @@ xfs_file_compat_ioctl(
- 	case FS_IOC_GETFSMAP:
- 	case XFS_IOC_SCRUB_METADATA:
- 		return xfs_file_ioctl(filp, cmd, p);
--#ifndef BROKEN_X86_ALIGNMENT
--	/* These are handled fine if no alignment issues */
-+#if !defined(BROKEN_X86_ALIGNMENT) || defined(CONFIG_X86_X32)
-+	/*
-+	 * These are handled fine if no alignment issues.  To support x32
-+	 * which uses native 64-bit alignment we must emit these cases in
-+	 * addition to the ia-32 compat set below.
-+	 */
- 	case XFS_IOC_ALLOCSP:
- 	case XFS_IOC_FREESP:
- 	case XFS_IOC_RESVSP:
-@@ -578,8 +582,16 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_FSGROWFSDATA:
- 	case XFS_IOC_FSGROWFSRT:
- 	case XFS_IOC_ZERO_RANGE:
-+#ifdef CONFIG_X86_X32
-+	/*
-+	 * x32 special: this gets a different cmd number from the ia-32 compat
-+	 * case below; the associated data will match native 64-bit alignment.
-+	 */
-+	case XFS_IOC_SWAPEXT:
-+#endif
- 		return xfs_file_ioctl(filp, cmd, p);
--#else
-+#endif
-+#if defined(BROKEN_X86_ALIGNMENT)
- 	case XFS_IOC_ALLOCSP_32:
- 	case XFS_IOC_FREESP_32:
- 	case XFS_IOC_ALLOCSP64_32:
--- 
-2.16.1
+I manually verified every member of the xfs_bstat structure with sizeof
+and offsetof on -mx32 and -m64 compilations to ensure that this structure
+matches precisely between the x32 and native 64-bit cases.
