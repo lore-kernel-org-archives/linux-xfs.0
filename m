@@ -1,93 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:26130 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726298AbeLMDzE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 22:55:04 -0500
-Date: Thu, 13 Dec 2018 14:53:52 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Enlarging w/ xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed:
- Inappropriate ioctl for device
-Message-ID: <20181213035352.GF6311@dastard>
-References: <20181210143345.GB8356@bfoster>
- <CADyTPEw_RZCC2yodbJ6W0e9mwJgQW19UXCHhcw1-tF4b0=hMjg@mail.gmail.com>
- <20181210161121.GC8356@bfoster>
- <20181210165020.GT24487@magnolia>
- <20181210174627.GD8356@bfoster>
- <CADyTPEzcjKO163RehVHtOo0=71=u515oHaeAnzmkfHtatpjhLg@mail.gmail.com>
- <20181210214115.GC6311@dastard>
- <CADyTPEyJkxM=YBwLudwPrTMFNpMtpfZ7ALjD0GrtrdCVTKa7+Q@mail.gmail.com>
- <20181211122701.GA2819@bfoster>
- <CADyTPEwXDtFRn5HciKwiGRPn4LSjAvLTK0HJ9UXKq6ZJTmj9pQ@mail.gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:36318 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726442AbeLMVa4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 16:30:56 -0500
+Date: Thu, 13 Dec 2018 13:30:50 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs_scrub_all: walk the lsblk device/fs hierarchy correctly
+Message-ID: <20181213213050.GD24487@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <CADyTPEwXDtFRn5HciKwiGRPn4LSjAvLTK0HJ9UXKq6ZJTmj9pQ@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nick Bowler <nbowler@draconx.ca>
-Cc: Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Dec 11, 2018 at 11:56:33PM -0500, Nick Bowler wrote:
-> On 12/11/18, Brian Foster <bfoster@redhat.com> wrote:
-> > On Tue, Dec 11, 2018 at 02:04:48AM -0500, Nick Bowler wrote:
-> >> Hi Dave,
-> >>
-> >> On 2018-12-10, Dave Chinner <david@fromorbit.com> wrote:
-> >> > On Mon, Dec 10, 2018 at 03:54:47PM -0500, Nick Bowler wrote:
-> >> >> I can have a go at fixing the FSGEOMETRY ioctl too (and submit it
-> >> >> properly) if this approach seems reasonable.  Possibly other things
-> >> >> may be broken too but I haven't hit any other issues yet in my XFS
-> >> >> adventure.
-> >> >
-> >> > We really need to audit all the compat ioctls for this same
-> >> > problem and fix all of them in one go, not just slap a bandaid on
-> >> > the messenger and ignore the rest....
-> >>
-> >> OK then.  This patch should cover all of them.  However, I wouldn't know
-> >> where to start with verification of a change like this, since I don't
-> >> know what these ioctls actually do, but xfs_growfs does seem to work for
-> >> me now on a test filesystem with this applied.
-> >>
-> >
-> > Given that the structure size essentially changes the command value, I'm
-> > kind of curious why we have this ifdeffery in the first place. That
-> > aside, the patch seems reasonable to me at a glance (though some brief
-> > comments around the ifdefs would be nice).
-> 
-> OK, xfstests has revealed some trouble with the three "bulkstat" ioctls,
-> since while the xfs_bulkstat structure itself is fine, one of its members
-> is used as a pointer to various structures which are not fine.  This
-> wasn't too hard to fix though.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-IIRC, there's bigger problems than you realise here - the bulkstat
-structure has embedded timestamps in them and on x32 struct timeval
-doesn't match either ia32 or x86-64. i.e. on ia32, struct timeval is
-8 bytes, on x86-64 it is 16 bytes, and in x32 it is 12 bytes.
+Back when I was designing xfs_scrub_all, I naïvely assumed that the
+emitted output would always list physical storage before the virtual
+devices stacked atop it.  However, this is not actually true when one
+omits the "NAME" column, which is crucial to forcing the output (json or
+otherwise) to capture the block device hierarchy.  If the assumption is
+violated, the program crashes with a python exception.
 
-IOWs, using the x86-64 handlers for bulkstat is wrong, as is using
-the compat handlers. That's one of the reasons why x32 is such a
-Charlie Foxtrot when it comes to compat handlers - we basically have
-to audit ioctl structures one by one with pahole to determine which
-arch version they *may* be compatible with.
+To fix this, force the hierarchal json output and restructure the
+discovery routines to walk the json object that we receive, from the top
+(physical devices) downwards to wherever there are live xfs filesystems.
 
-And then there is testing that we get identical output from all
-three versions for each ioctl.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/xfs_scrub_all.in |   28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
 
-Right now, I'd much prefer we simply put this at the start of
-xfs_fs_fill_super():
-
-#ifdef CONFIG_X86_X32
-	xfs_warn("XFS not supported on x32 architectures")
-	return -ENOSYS;
-#endif
-
-Or, alternatively, tag it as EXPERIMENTAL and "use at your own
-risk".
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+index c4e9899d..5b76b49a 100644
+--- a/scrub/xfs_scrub_all.in
++++ b/scrub/xfs_scrub_all.in
+@@ -28,9 +28,21 @@ def DEVNULL():
+ 
+ def find_mounts():
+ 	'''Map mountpoints to physical disks.'''
++	def find_xfs_mounts(bdev, fs, lastdisk):
++		'''Attach lastdisk to each fs found under bdev.'''
++		if bdev['fstype'] == 'xfs' and bdev['mountpoint'] is not None:
++			mnt = bdev['mountpoint']
++			if mnt in fs:
++				fs[mnt].add(lastdisk)
++			else:
++				fs[mnt] = set([lastdisk])
++		if 'children' not in bdev:
++			return
++		for child in bdev['children']:
++			find_xfs_mounts(child, fs, lastdisk)
+ 
+ 	fs = {}
+-	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
++	cmd=['lsblk', '-o', 'NAME,KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
+ 	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+ 	result.wait()
+ 	if result.returncode != 0:
+@@ -38,18 +50,12 @@ def find_mounts():
+ 	sarray = [x.decode(sys.stdout.encoding) for x in result.stdout.readlines()]
+ 	output = ' '.join(sarray)
+ 	bdevdata = json.loads(output)
++
+ 	# The lsblk output had better be in disks-then-partitions order
+ 	for bdev in bdevdata['blockdevices']:
+-		if bdev['type'] in ('disk', 'loop'):
+-			lastdisk = bdev['kname']
+-		if bdev['fstype'] == 'xfs':
+-			mnt = bdev['mountpoint']
+-			if mnt is None:
+-				continue
+-			if mnt in fs:
+-				fs[mnt].add(lastdisk)
+-			else:
+-				fs[mnt] = set([lastdisk])
++		lastdisk = bdev['kname']
++		find_xfs_mounts(bdev, fs, lastdisk)
++
+ 	return fs
+ 
+ def kill_systemd(unit, proc):
