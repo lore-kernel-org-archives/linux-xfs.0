@@ -1,70 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:47854 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727799AbeLLSOF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 13:14:05 -0500
-Date: Wed, 12 Dec 2018 10:13:57 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [GIT PULL] xfs: fixes for v4.20-rc6
-Message-ID: <20181212181357.GZ24487@magnolia>
-References: <20181208163639.GR24487@magnolia>
- <CAHk-=who9EqvvGaazise-dh7_DH6rLOULWXzysinyAPnHS4B0A@mail.gmail.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:57914 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726435AbeLMWFh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 17:05:37 -0500
+Date: Fri, 14 Dec 2018 09:05:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS and RAID10 with o2 layout
+Message-ID: <20181213220533.GH6311@dastard>
+References: <d9fc0327-eef3-63bd-82a3-98545251bfe5@4net.rs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <CAHk-=who9EqvvGaazise-dh7_DH6rLOULWXzysinyAPnHS4B0A@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <d9fc0327-eef3-63bd-82a3-98545251bfe5@4net.rs>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, david@fromorbit.com, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
+To: Sinisa <sinisa@4net.rs>
+Cc: linux-xfs@vger.kernel.org
 
-On Sat, Dec 08, 2018 at 11:24:48AM -0800, Linus Torvalds wrote:
-> On Sat, Dec 8, 2018 at 8:36 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > Finally, the most important fix is to the pipe splicing code (aka the
-> > generic copy_file_range fallback) to avoid pointless short directio
-> > reads by only asking the filesystem for as much data as there are
-> > available pages in the pipe buffer.  Our previous fix (simulated short
-> > directio reads because the number of pages didn't match the length of
-> > the read requested) caused subtle problems on overlayfs, so that part is
-> > reverted.
+On Wed, Dec 12, 2018 at 01:29:49PM +0100, Sinisa wrote:
+> Hello group,
 > 
-> Honestly, I really wish you simply wouldn't send me "xfs" fixes that
-> aren't really xfs-specific at all.
+> I have noticed something strange going on lately, but recently I
+> have come to conclusion that there is some unwanted interaction
+> between XFS and Linux RAID10 with "offset" layout.
 > 
-> All the splice patches (and honestly, I feel some of the iomap ones
-> too) that have come in through the xfs tree should have been handled
-> separately as actual VFS patches. Or at least had acks from Al or
-> something.
+> So here is the problem: I create a Linux RAID10 mirror with 2 disks
+> (HDD or SSD) and "o2" layout (best choice for read and write speed):
+> # mdadm -C -n2 -l10 -po2 /dev/mdX /dev/sdaX /dev/sdbX
+> # mkfs.xfs /dev/mdX
+> # mount /dev/mdX /mnt
+> # rsync -avxDPHS / /mnt
 > 
-> I'm looking at that splice patch, and my initial reaction was "Hmm.
-> but that breaks 0 vs -EAGAIN". But then I realized that that's why
-> you're validating pipe->nrbufs, because the special temporary
-> per-thread pipe is always supposed to be empty on entry, so a zero
-> length can't happen.
+> So we have RAID10 initializing:
 > 
-> But just the fact that I felt like I had to go and look at one of
-> these commits makes me go "this is not an XFS fix at all, it shouldn't
-> have been treated as an XFS patch, and the original commit that
-> *caused* the problem shouldn't have been treated as one either".
+> # cat /proc/mdstat
+> Personalities : [raid1] [raid10]
+> md2 : active raid10 sdb3[1] sda3[0]
+>       314433536 blocks super 1.2 4096K chunks 2 offset-copies [2/2] [UU]
+>       [==>..................]  resync = 11.7% (36917568/314433536)
+> finish=8678.2min speed=532K/sec
+>       bitmap: 3/3 pages [12KB], 65536KB chunk
 > 
-> So please. I want to feel like when I get a XFS pull from the XFS
-> maintainer, I don't need to worry about it, and I can just do the git
-> pull without having to check details.
-> 
-> But that means that when you do changes outside of XFS code, those
-> changes need to be handled _differently_. And they shouldn't be
-> bypassing Al etc. And even if you can't get an Ack from Al, send them
-> separately, so that I can check them without there being any XFS
-> issues that are mixed up with the pull.
+> but after a few minutes everything stops like you can see above.
+> Rsync (or any other process writing to that md device) also freezes.
+> If I try to read already copied files - freeze, usually with less
+> that 2GB copied.
 
-Ok, I'll put xfs and vfs changesets in separate pull requests in the
-future.  Thanks for the feedback.
+Just a quick note:
 
---D
+> [ 1463.756426]  schedule+0x78/0x110
+> [ 1463.756433]  wait_barrier+0xdd/0x170 [raid10]
+> [ 1463.756448]  raid10_write_request+0xf2/0x900 [raid10]
+> [ 1463.756492]  raid10_make_request+0xc1/0x120 [raid10]
+> [ 1463.756514]  md_handle_request+0x121/0x190 [md_mod]
+> [ 1463.756535]  md_make_request+0x78/0x190 [md_mod]
+> [ 1463.756544]  generic_make_request+0x1c6/0x470
 
-> So the patch looks good, and I'm merging this, but I really really
-> don't have to feel like I need to look at xfs pulls this way.
-> 
->                  Linus
+This is XFS IO submission waiting on a MD sync barrier.
+
+> [ 1463.757013] Workqueue: md submit_flushes [md_mod]
+> [ 1463.757016] Call Trace:
+> [ 1463.757039]  schedule+0x78/0x110
+> [ 1463.757047]  wait_barrier+0xdd/0x170 [raid10]
+> [ 1463.757062]  raid10_write_request+0xf2/0x900 [raid10]
+> [ 1463.757104]  raid10_make_request+0xc1/0x120 [raid10]
+> [ 1463.757126]  md_handle_request+0x121/0x190 [md_mod]
+> [ 1463.757156]  submit_flushes+0x21/0x40 [md_mod]
+> [ 1463.757163]  process_one_work+0x1fd/0x420
+> [ 1463.757170]  worker_thread+0x2d/0x3d0
+> [ 1463.757177]  ? rescuer_thread+0x340/0x340
+> [ 1463.757181]  kthread+0x112/0x130
+
+This is an MD flush thread waiting on a MD sync barrier.
+
+> [ 1463.757212] md1_resync      D    0  5215      2 0x80000000
+> [ 1463.757216] Call Trace:
+> [ 1463.757236]  schedule+0x78/0x110
+> [ 1463.757243]  raise_barrier+0x8d/0x140 [raid10]
+> [ 1463.757257]  raid10_sync_request+0x1f6/0x1e30 [raid10]
+> [ 1463.757302]  md_do_sync.cold.78+0x404/0x969 [md_mod]
+> [ 1463.757351]  md_thread+0xe9/0x140 [md_mod]
+
+THis is the MD resync thread raising the sync barrier and waiting
+for all waiters to drain and pending IO to drain away.
+
+> [ 1463.757426]  schedule+0x78/0x110
+> [ 1463.757433]  wait_barrier+0xdd/0x170 [raid10]
+> [ 1463.757446]  raid10_write_request+0xf2/0x900 [raid10]
+> [ 1463.757485]  raid10_make_request+0xc1/0x120 [raid10]
+> [ 1463.757507]  md_handle_request+0x121/0x190 [md_mod]
+> [ 1463.757527]  md_make_request+0x78/0x190 [md_mod]
+> [ 1463.757536]  generic_make_request+0x1c6/0x470
+> [ 1463.757544]  submit_bio+0x45/0x140
+
+XFS waiting on MD sync barrier.
+
+> [ 1463.760718] Workqueue: md submit_flushes [md_mod]
+> [ 1463.760721] Call Trace:
+> [ 1463.760746]  schedule+0x78/0x110
+> [ 1463.760753]  wait_barrier+0xdd/0x170 [raid10]
+> [ 1463.760768]  raid10_write_request+0xf2/0x900 [raid10]
+> [ 1463.760810]  raid10_make_request+0xc1/0x120 [raid10]
+> [ 1463.760831]  md_handle_request+0x121/0x190 [md_mod]
+> [ 1463.760851]  md_make_request+0x78/0x190 [md_mod]
+> [ 1463.760860]  generic_make_request+0x1c6/0x470
+> [ 1463.760870]  raid10_write_request+0x77a/0x900 [raid10]
+> [ 1463.760904]  raid10_make_request+0xc1/0x120 [raid10]
+> [ 1463.760926]  md_handle_request+0x121/0x190 [md_mod]
+> [ 1463.760954]  submit_flushes+0x21/0x40 [md_mod]
+
+And another MD flush thread waiting on a MD sync barrier.
+
+Basically, this looks and smells like a MD sync barrier race
+condition, not an XFs problem.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
