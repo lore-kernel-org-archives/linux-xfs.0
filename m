@@ -1,58 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56136 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:44428 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726298AbeLNQIX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 Dec 2018 11:08:23 -0500
-Date: Fri, 14 Dec 2018 10:08:16 -0600
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH] xfs: require both realtime inodes to mount
-Message-ID: <20181214160816.GA31145@redhat.com>
-References: <20181214042932.GF24487@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181214042932.GF24487@magnolia>
+        id S1727911AbeLMWZn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Dec 2018 17:25:43 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH 3/3] iomap: optimize iomap_is_partially_uptodate for full page range
+Date: Thu, 13 Dec 2018 16:25:29 -0600
+Message-Id: <1544739929-21651-4-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <1544739929-21651-1-git-send-email-sandeen@sandeen.net>
+References: <1544739929-21651-1-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: Christoph@sandeen.net, Hellwig@sandeen.net, hch@lst.de
 
-On Thu, Dec 13, 2018 at 08:29:32PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Since mkfs always formats the filesystem with the realtime bitmap and
-> summary inodes immediately after the root directory, we should expect
-> that both of them are present and loadable, even if there isn't a
-> realtime volume attached.  There's no reason to skip this if rbmino ==
-> NULLFSINO; in fact, this causes an immediate crash if the there /is/ a
-> realtime volume and someone writes to it.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+From: Eric Sandeen <sandeen@redhat.com>
 
-Looks fine.
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+We only call ->is_partially_uptodate to look for an uptodate range
+within a not-uptodate page.
 
->  fs/xfs/xfs_rtalloc.c |    4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index aefd63d46397..afe4d29f7ab4 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -1206,13 +1206,11 @@ xfs_rtmount_inodes(
->  	xfs_sb_t	*sbp;
->  
->  	sbp = &mp->m_sb;
-> -	if (sbp->sb_rbmino == NULLFSINO)
-> -		return 0;
->  	error = xfs_iget(mp, NULL, sbp->sb_rbmino, 0, 0, &mp->m_rbmip);
->  	if (error)
->  		return error;
->  	ASSERT(mp->m_rbmip != NULL);
-> -	ASSERT(sbp->sb_rsumino != NULLFSINO);
-> +
->  	error = xfs_iget(mp, NULL, sbp->sb_rsumino, 0, 0, &mp->m_rsumip);
->  	if (error) {
->  		xfs_irele(mp->m_rbmip);
+If the range covers all blocks in the page, there is no point to checking
+each block individually - if the whole range (i.e. the whole page) were
+uptodate, the page would be uptodate as well.  Hence in this case, we
+can return early and skip the loop.
+
+This is similar to what is done in block_is_partially_uptodate().
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+ fs/iomap.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/fs/iomap.c b/fs/iomap.c
+index ce837d9..7d7d985 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -515,6 +515,10 @@ struct iomap_readpage_ctx {
+ 	first = from >> inode->i_blkbits;
+ 	last = (from + len - 1) >> inode->i_blkbits;
+ 
++	/* If page wasn't uptodate and range covers all blocks: no partial */
++	if (first == 0 && last == (PAGE_SIZE - 1) >> inode->i_blkbits)
++		return 0;
++
+ 	if (iop) {
+ 		for (i = first; i <= last; i++)
+ 			if (!test_bit(i, iop->uptodate))
+-- 
+1.8.3.1
