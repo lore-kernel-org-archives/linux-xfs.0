@@ -1,54 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44874 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726243AbeLLTnB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 14:43:01 -0500
-Date: Wed, 12 Dec 2018 11:42:58 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH 04/11] vfs: add missing checks to copy_file_range
-Message-ID: <20181212194258.GK6830@bombadil.infradead.org>
-References: <20181203083416.28978-1-david@fromorbit.com>
- <20181203083416.28978-5-david@fromorbit.com>
- <87a7lbrng4.fsf@suse.com>
- <CAN-5tyHNGtLxeFyEO6qX_+8=K4tpkgYjB11OkfCTdWfokfAyEg@mail.gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:50018 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726337AbeLMBYu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Dec 2018 20:24:50 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wBD1OmYS097704
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 01:24:48 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2pb3n731v2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 01:24:48 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wBD1Og8G000398
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 01:24:42 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wBD1OgrQ008450
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 01:24:42 GMT
+Date: Wed, 12 Dec 2018 17:24:36 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: don't skip rtmount when there's a realtime device
+Message-ID: <20181213012436.GB24487@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAN-5tyHNGtLxeFyEO6qX_+8=K4tpkgYjB11OkfCTdWfokfAyEg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Olga Kornievskaia <olga.kornievskaia@gmail.com>
-Cc: lhenriques@suse.com, david@fromorbit.com, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, linux-unionfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Dec 12, 2018 at 01:55:28PM -0500, Olga Kornievskaia wrote:
-> On Wed, Dec 12, 2018 at 6:31 AM Luis Henriques <lhenriques@suse.com> wrote:
-> > I was wondering if, with the above check, it would make sense to also
-> > have an extra patch changing some filesystems (ceph, nfs and cifs) to
-> > simply return -EOPNOTSUPP (instead of -EINVAL) when inode_in ==
-> > inode_out.  Something like the diff below (not tested!).
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-> > +++ b/fs/nfs/nfs4file.c
-> > @@ -136,7 +136,7 @@ static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
-> >         ssize_t ret;
-> >
-> >         if (file_inode(file_in) == file_inode(file_out))
-> > -               return -EINVAL;
-> > +               return -EOPNOTSUPP;
-> 
-> Please don't change the NFS bits. This is against the NFS
-> specifications. RFC 7862 15.2.3
-> 
-> (snippet)
-> SAVED_FH and CURRENT_FH must be different files.  If SAVED_FH and
->    CURRENT_FH refer to the same file, the operation MUST fail with
->    NFS4ERR_INVAL.
+Don't ever skip the realtime bitmap / summary inode initialization if
+there's a realtime device attached, because we'd rather fail the mount
+if iget declines to retrieve a NULL inode pointer.  Right now, if
+someone sets rbmino to NULLFSINO on a rt-capable filesystem, mounts it,
+and writes a file to the rt device, we'll blow up.
 
-I don't see how that applies.  That refers to a requirement _in the
-protocol_ that determines what the server MUST do if the client sends
-it two FHs which refer to the same file.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_rtalloc.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-What we're talking about here is how a Linux filesystem behaves when
-receiving a copy_file_range() referring to the same file.  As long as
-the Linux filesystem doesn't react by sending out one of these invalid
-protocol messages, I don't see the problem.
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index aefd63d46397..18ad31ded0bf 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1206,7 +1206,8 @@ xfs_rtmount_inodes(
+ 	xfs_sb_t	*sbp;
+ 
+ 	sbp = &mp->m_sb;
+-	if (sbp->sb_rbmino == NULLFSINO)
++	if (!xfs_sb_version_hasrealtime(&mp->m_sb) &&
++	    sbp->sb_rbmino == NULLFSINO)
+ 		return 0;
+ 	error = xfs_iget(mp, NULL, sbp->sb_rbmino, 0, 0, &mp->m_rbmip);
+ 	if (error)
