@@ -1,75 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt1-f180.google.com ([209.85.160.180]:34941 "EHLO
-        mail-qt1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726218AbeLKWzF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Dec 2018 17:55:05 -0500
-Received: by mail-qt1-f180.google.com with SMTP id v11so18472102qtc.2
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Dec 2018 14:55:04 -0800 (PST)
-Received: from lud1.home ([177.98.82.44])
-        by smtp.gmail.com with ESMTPSA id y14sm7590799qkb.2.2018.12.11.14.55.02
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 11 Dec 2018 14:55:03 -0800 (PST)
-Date: Tue, 11 Dec 2018 20:54:59 -0200
-From: Luciano ES <lucmove@gmail.com>
-Subject: Re: I got file system corruption with XFS
-Message-ID: <20181211205459.106b35c9@lud1.home>
-In-Reply-To: <3daac366-6e0f-34c8-1a2f-e5d07ae4fee1@sandeen.net>
-References: <20181211183203.7fdbca0f@lud1.home>
-        <3daac366-6e0f-34c8-1a2f-e5d07ae4fee1@sandeen.net>
+Received: from bombadil.infradead.org ([198.137.202.133]:49292 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727707AbeLMOZw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 09:25:52 -0500
+Date: Thu, 13 Dec 2018 06:25:49 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [GIT PULL] xfs: fixes for v4.20-rc6
+Message-ID: <20181213142549.GA6708@infradead.org>
+References: <20181208163639.GR24487@magnolia>
+ <CAHk-=who9EqvvGaazise-dh7_DH6rLOULWXzysinyAPnHS4B0A@mail.gmail.com>
+ <20181211135818.GA29626@infradead.org>
+ <20181212181658.GA24487@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181212181658.GA24487@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Linus Torvalds <torvalds@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, david@fromorbit.com, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
 
-On Tue, 11 Dec 2018 14:57:45 -0600, Eric Sandeen wrote:
-
-> On 12/11/18 2:32 PM, Luciano ES wrote:
-> > I needed to restore something from my backups, an external hard
-> > disk that is kept separately, always disconnected until I really
-> > need it. 
+On Wed, Dec 12, 2018 at 10:16:58AM -0800, Darrick J. Wong wrote:
+> On Tue, Dec 11, 2018 at 05:58:18AM -0800, Christoph Hellwig wrote:
+> > On Sat, Dec 08, 2018 at 11:24:48AM -0800, Linus Torvalds wrote:
+> > > Honestly, I really wish you simply wouldn't send me "xfs" fixes that
+> > > aren't really xfs-specific at all.
+> > > 
+> > > All the splice patches (and honestly, I feel some of the iomap ones
+> > > too) that have come in through the xfs tree should have been handled
+> > > separately as actual VFS patches. Or at least had acks from Al or
+> > > something.
 > > 
-> > But the file system refused to be mounted: "structure needs
-> > cleaning," it said.
+> > iomap came in through the XFS tree originally, and has been very much
+> > maintained in combo, even though we now have another user with gfs.
 > > 
-> > I googled and didn't find much hope about it. I followed what
-> > little advice I found: I ran xfs_repair and it didn't work. So I
-> > ran it again with -L and it worked, but the software itself warned
-> > me that some files could not be recovered. I'll never know which
-> > ones.
-> > 
-> > I always liked XFS and thought those dreaded days of file system 
-> > corruption and lost files were far behind. So my only question is: 
-> > Why does that happen? The disk is not even used 99% of the time.
-> > How does an XFS file system go belly up just like that?  
+> > Maybe we just need to make that official in MAINTAINERS?
 > 
-> There is no way for us to know.  You didn't provide nearly enough
-> information to even hazard a guess.
-> 
-> But ok fine, I'll hazard a wild guess anyway: your external drive had
-> a corrupt log because the enclosure didn't honor a cache flush issued
-> by the filesystem after some previous mount.
-> 
-> -Eric
+> Yes, though who should be the official maintainer?  You wrote most of
+> the iomap code; do you want to maintain it yourself?  Or have people
+> funnel them wherever XFS patches go? :)
 
-
-**************************
-
-I understand you don't have much to work with, but I can't tell you
-more than I have. It happened several days ago and I didn't write 
-anything down. As far as I can remember, there wasn't really much 
-to note. "Structure needs cleaning" was pretty much all I was ever 
-told. There must have been more when I ran xfs_repair, but it looked 
-incomprehensible to me and I thought I shouldn't bother anyone else 
-about it.
-
-Your theory about the enclosure sounds good. Do you think it is so 
-flawed that issuing a 'sync' command manually before umounting 
-wouldn't have made any difference?
-
--- 
-Luciano ES
->>
+Well, the original version is from Dave, although I'm not sure if much
+of that code is left.  I think just maintaining it with XFS is a good
+idea.  But if we need an explicit maintainer I can do it.
