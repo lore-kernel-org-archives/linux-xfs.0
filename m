@@ -1,32 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:33949 "EHLO
-        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726271AbeLRBYp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Dec 2018 20:24:45 -0500
-Received: by mail-lj1-f196.google.com with SMTP id u89-v6so2040562lje.1
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Dec 2018 17:24:44 -0800 (PST)
+Received: from userp2120.oracle.com ([156.151.31.85]:51144 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726445AbeLNE3h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 23:29:37 -0500
+Date: Thu, 13 Dec 2018 20:29:32 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: require both realtime inodes to mount
+Message-ID: <20181214042932.GF24487@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20181215012259.28358-1-nbowler@draconx.ca>
-References: <20181215012259.28358-1-nbowler@draconx.ca>
-From: Nick Bowler <nbowler@draconx.ca>
-Date: Mon, 17 Dec 2018 20:24:42 -0500
-Message-ID: <CADyTPEzBC2xnUjY30hSM_vLZ5C=w7kX+KZe6QXZqhEPp6-zjKQ@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 0/3] Fixing xfs ioctls on x32
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Bill O'Donnell <billodo@redhat.com>, Eric Sandeen <sandeen@redhat.com>
 
-On 2018-12-14, Nick Bowler <nbowler@draconx.ca> wrote:
-> Note that glibc's fallocate wrapper appears to be buggy on x32,
-> which causes several test failures.  I hacked around that in xfs_io
-> (the fallocate syscall itself appears to work perfectly fine on x32)
-> to get a cleaner test run.  Obviously this bug should be fixed but
-> it doesn't appear to be a kernel or xfsprogs problem.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Update: turns out this bug has already been fixed in glibc 2.27.
+Since mkfs always formats the filesystem with the realtime bitmap and
+summary inodes immediately after the root directory, we should expect
+that both of them are present and loadable, even if there isn't a
+realtime volume attached.  There's no reason to skip this if rbmino ==
+NULLFSINO; in fact, this causes an immediate crash if the there /is/ a
+realtime volume and someone writes to it.
 
-Cheers,
-  Nick
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_rtalloc.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index aefd63d46397..afe4d29f7ab4 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1206,13 +1206,11 @@ xfs_rtmount_inodes(
+ 	xfs_sb_t	*sbp;
+ 
+ 	sbp = &mp->m_sb;
+-	if (sbp->sb_rbmino == NULLFSINO)
+-		return 0;
+ 	error = xfs_iget(mp, NULL, sbp->sb_rbmino, 0, 0, &mp->m_rbmip);
+ 	if (error)
+ 		return error;
+ 	ASSERT(mp->m_rbmip != NULL);
+-	ASSERT(sbp->sb_rsumino != NULLFSINO);
++
+ 	error = xfs_iget(mp, NULL, sbp->sb_rsumino, 0, 0, &mp->m_rsumip);
+ 	if (error) {
+ 		xfs_irele(mp->m_rbmip);
