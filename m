@@ -1,75 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42634 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726236AbeLMXqy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 18:46:54 -0500
-Date: Thu, 13 Dec 2018 15:46:51 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: don't skip rtmount when there's a realtime device
-Message-ID: <20181213234651.GE24487@magnolia>
-References: <20181213012436.GB24487@magnolia>
- <d33a0150-e412-5089-5c60-333b3d9ae9a1@sandeen.net>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:34305 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728130AbeLNBoC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 20:44:02 -0500
+Date: Fri, 14 Dec 2018 12:43:58 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Enlarging w/ xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed:
+ Inappropriate ioctl for device
+Message-ID: <20181214014358.GI6311@dastard>
+References: <CADyTPEzcjKO163RehVHtOo0=71=u515oHaeAnzmkfHtatpjhLg@mail.gmail.com>
+ <20181210214115.GC6311@dastard>
+ <CADyTPEyJkxM=YBwLudwPrTMFNpMtpfZ7ALjD0GrtrdCVTKa7+Q@mail.gmail.com>
+ <20181211122701.GA2819@bfoster>
+ <CADyTPEwXDtFRn5HciKwiGRPn4LSjAvLTK0HJ9UXKq6ZJTmj9pQ@mail.gmail.com>
+ <20181213035352.GF6311@dastard>
+ <CADyTPEwfeOhCOSn3-SQh+XCWOthj0ms5mpbiHEtkscQQSQU+aQ@mail.gmail.com>
+ <CADyTPEyOD6jTQF1QEc8M753=KAjbnbHFTLERhJZdCLuzT9r21w@mail.gmail.com>
+ <20181213213921.GG6311@dastard>
+ <CADyTPExGkEzRvpcWevWGFDJkyvHe4KfZG4gOkDJcoWiNKDPJhA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d33a0150-e412-5089-5c60-333b3d9ae9a1@sandeen.net>
+In-Reply-To: <CADyTPExGkEzRvpcWevWGFDJkyvHe4KfZG4gOkDJcoWiNKDPJhA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Nick Bowler <nbowler@draconx.ca>
+Cc: Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Thu, Dec 13, 2018 at 03:29:54PM -0600, Eric Sandeen wrote:
+On Thu, Dec 13, 2018 at 04:53:56PM -0500, Nick Bowler wrote:
+> On 2018-12-13, Dave Chinner <david@fromorbit.com> wrote:
+> > On Wed, Dec 12, 2018 at 11:49:36PM -0500, Nick Bowler wrote:
+> >> To expand on this, for each structure which my RFC patchset feeds up to
+> >> the native handler, I first checked them by manual inspection and then
+> >> double checked using the following program; we can compile with both
+> >> -mx32 and -m64 and check that the output is identical.
+> >
+> > So, turn that into an xfstest so that it is always run, diffs the
+> > output between compat/native depending on which one is used complete
+> > with guards that break the test when we add a new ioctl. We already
+> > we have a test that is for explicitly checking that structures on disk
+> > are the same for 32/64 bit architectures: tests/xfs/122
+> [...]
+> > Then we'll have tests that will fail if we ever change an ioctl or
+> > add a new one and don't add it to the test. That guarantees we won't
+> > ever forget about this....
 > 
-> 
-> On 12/12/18 7:24 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Don't ever skip the realtime bitmap / summary inode initialization if
-> > there's a realtime device attached, because we'd rather fail the mount
-> > if iget declines to retrieve a NULL inode pointer.  Right now, if
-> > someone sets rbmino to NULLFSINO on a rt-capable filesystem, mounts it,
-> > and writes a file to the rt device, we'll blow up.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_rtalloc.c |    3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> > index aefd63d46397..18ad31ded0bf 100644
-> > --- a/fs/xfs/xfs_rtalloc.c
-> > +++ b/fs/xfs/xfs_rtalloc.c
-> > @@ -1206,7 +1206,8 @@ xfs_rtmount_inodes(
-> >  	xfs_sb_t	*sbp;
-> >  
-> >  	sbp = &mp->m_sb;
-> > -	if (sbp->sb_rbmino == NULLFSINO)
-> > +	if (!xfs_sb_version_hasrealtime(&mp->m_sb) &&
-> > +	    sbp->sb_rbmino == NULLFSINO)
-> >  		return 0;
-> >  	error = xfs_iget(mp, NULL, sbp->sb_rbmino, 0, 0, &mp->m_rbmip);
-> >  	if (error)
-> > 
-> 
-> Seems fine as far as it goes, but now we have this weird situation where for
-> a filesystem without the realtime feature, we'll just skip this part and
-> mount if sb_rbmino is NULL, but if sb_rsumino is NULL, we'll fail the iget
-> and fail the mount.
-> 
-> So while there's noting really wrong with the fix, it seems like it could all
-> be made a bit more consistent while you're here.  (classic move by me!) ;)
+> OK, I will give it a shot to implement such a test.  A possible issue is
+> that developers might not have a working x32 build or runtime environment
+> so the test might not get run a lot.
 
-Hmm.  Well if there /aren't supposed/ to be any XFSes out there with
-garbage/null realtime bitmap / summary inodes, then I'm happy to get rid
-of the "if (sbp->sb_rbmino == NULLFSINO) return 0;" logic.  The current
-logic is sorta weird, but I don't know if that was a deliberate design
-decision or just a logic bug that needs to go away.
+We generally test for the <thing> being supported first and only run
+the test if it is supported. for x86-64 systems, we should at least
+already support -m32/-m64, so we'll at least get coverage on that,
+and the reminder that...
 
-Though now that I see that we can indeed add a realtime section to a
-filesystem that didn't previously have one, I guess I should go look at
-the rtrmapbt growfs code a little more closely.
+> But hopefully people adding brand
+> new ioctls don't introduce brand new compat problems; one can dream, right?
 
---D
+... introducing new ioctls need thought to ensure we don't introduce
+new compat problems :)
 
-> -Eric
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
