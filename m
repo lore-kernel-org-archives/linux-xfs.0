@@ -1,95 +1,367 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54860 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726627AbeLRSlr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 13:41:47 -0500
-Date: Tue, 18 Dec 2018 10:41:41 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/6] xfs: stringify scrub types in ftrace output
-Message-ID: <20181218184141.GE27208@magnolia>
-References: <154344773243.4341.5458822684407979916.stgit@magnolia>
- <154344776951.4341.14323367177195315854.stgit@magnolia>
- <32a11dec-500d-1b18-49fa-86aa8c45f0f7@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <32a11dec-500d-1b18-49fa-86aa8c45f0f7@sandeen.net>
+Received: from mail-io1-f66.google.com ([209.85.166.66]:43888 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726465AbeLNDgv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 22:36:51 -0500
+Received: by mail-io1-f66.google.com with SMTP id l3so3391423ioc.10
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 19:36:50 -0800 (PST)
+From: Nick Bowler <nbowler@draconx.ca>
+Subject: [RFC PATCH xfstests] xfs: add tests to validate ioctl structure layout.
+Date: Thu, 13 Dec 2018 22:40:53 -0500
+Message-Id: <20181214034053.23795-1-nbowler@draconx.ca>
+In-Reply-To: <CADyTPEzrtDwSE9F1Ef+0xJDn4Fh15gDZOwz5J-ySorgM2WTjiw@mail.gmail.com>
+References: <CADyTPEzrtDwSE9F1Ef+0xJDn4Fh15gDZOwz5J-ySorgM2WTjiw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Tue, Dec 18, 2018 at 11:30:16AM -0600, Eric Sandeen wrote:
-> On 11/28/18 5:29 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Use __print_symbolic to print the scrub type in ftrace output.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/scrub/trace.h |  103 +++++++++++++++++++++++++++++++++++++-------------
-> >  1 file changed, 77 insertions(+), 26 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-> > index 0141eb1ac091..3c83e8b3b39c 100644
-> > --- a/fs/xfs/scrub/trace.h
-> > +++ b/fs/xfs/scrub/trace.h
-> > @@ -26,6 +26,57 @@ TRACE_DEFINE_ENUM(XFS_BTNUM_FINOi);
-> >  TRACE_DEFINE_ENUM(XFS_BTNUM_RMAPi);
-> >  TRACE_DEFINE_ENUM(XFS_BTNUM_REFCi);
-> >  
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PROBE);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_SB);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_AGF);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_AGFL);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_AGI);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_BNOBT);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_CNTBT);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_INOBT);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_FINOBT);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_RMAPBT);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_REFCNTBT);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_INODE);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_BMBTD);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_BMBTA);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_BMBTC);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_DIR);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_XATTR);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_SYMLINK);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PARENT);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_RTBITMAP);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_RTSUM);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_UQUOTA);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_GQUOTA);
-> > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PQUOTA);
-> > +
-> > +#define XFS_SCRUB_TYPE_STRINGS \
-> 
-> Hm I thought you just moved these sorts of #defines /out/ of the trace files
-> and adjacent to their type definitions in core header files; why not this one?
+Introduce two new test cases.  The first one greps xfs_fs.h to find
+any structure types possibly relevant to ioctls, then compares the
+structure layouts between 64-bit and 32-bit objects.  The goal is to
+ensure that any _new_ structure has the same characteristics on 32-bit
+versus 64-bit mode, ensuring a sane compat handler.  This requires a
+toolchain that can build both 64-bit and 32-bit objects, and hopefully
+works on non-x86 platforms with compat woes.
 
-[paraphrasing a conversation on irc]
+The whitelist was constructed by manually inspecting the current
+compat ioctl implementation.  The test validates that everything
+in the whitelist actually got found by the grepping as a sort of
+self-sanity check, but if older versions lacked some of these
+types then this might need tweaking a bit.
 
-So I'm becoming more convinced that these stringify things should all
-just move to xfs_trace.h and scrub/trace.h.  The /only/ users are the
-tracepoints, but (according to Dave, I think?) the reason for putting
-them next to the enum definition is so that we don't forget to update
-the string list when we update the enums.
+The second test validates that a well-known set of structures on x32
+crrectly match the ia32 or amd64 layouts as expected.  This requires
+a toolchain that can build for all three ABIs.
 
-However, now that we know we have to maintain this TRACE_DEFINE_ENUM
-hugpile (and it has to be in the trace header file) we might as well
-move the stringify crap to the trace headers and leave a comment in
-xfs_format.h.
+The idea is that new additions to the header where the structures
+differ in 32 and 64-bit x86 will be caught by the first test case
+and that will be sufficient to detect potential x32 problems too.
 
---D
+Signed-off-by: Nick Bowler <nbowler@draconx.ca>
+---
+ .gitignore           |   1 +
+ common/config        |   1 +
+ configure.ac         |   2 +-
+ include/build-env.in |   6 +++
+ tests/xfs/499        | 102 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/499.out    |  16 ++++++++
+ tests/xfs/500        | 105 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/500.out    |   2 +
+ tests/xfs/group      |   2 +
+ 9 files changed, 236 insertions(+), 1 deletion(-)
+ create mode 100644 include/build-env.in
+ create mode 100755 tests/xfs/499
+ create mode 100644 tests/xfs/499.out
+ create mode 100755 tests/xfs/500
+ create mode 100644 tests/xfs/500.out
 
-> > +	{ XFS_SCRUB_TYPE_PROBE,		"probe" }, \
-> > +	{ XFS_SCRUB_TYPE_SB,		"sb" }, \
-> > +	{ XFS_SCRUB_TYPE_AGF,		"agf" }, \
-> > +	{ XFS_SCRUB_TYPE_AGFL,		"agfl" }, \
-> > +	{ XFS_SCRUB_TYPE_AGI,		"agi" }, \
-> > +	{ XFS_SCRUB_TYPE_BNOBT,		"bnobt" }, \
-> 
-> -Eric
+diff --git a/.gitignore b/.gitignore
+index ea1aac8a..7bfd20fe 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -28,6 +28,7 @@
+ /ltmain.sh
+ 
+ # build system
++/include/build-env
+ /include/builddefs
+ /include/config.h
+ /include/config.h.in
+diff --git a/common/config b/common/config
+index a87cb4a2..707c5b2f 100644
+--- a/common/config
++++ b/common/config
+@@ -194,6 +194,7 @@ export GETCAP_PROG="$(type -P getcap)"
+ export CHECKBASHISMS_PROG="$(type -P checkbashisms)"
+ export XFS_INFO_PROG="$(type -P xfs_info)"
+ export DUPEREMOVE_PROG="$(type -P duperemove)"
++export PAHOLE_PROG="$(type -P pahole)"
+ 
+ # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
+ # newer systems have udevadm command but older systems like RHEL5 don't.
+diff --git a/configure.ac b/configure.ac
+index 19798824..69a4e396 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -73,5 +73,5 @@ AC_HAVE_COPY_FILE_RANGE
+ AC_CHECK_FUNCS([renameat2])
+ 
+ AC_CONFIG_HEADER(include/config.h)
+-AC_CONFIG_FILES([include/builddefs])
++AC_CONFIG_FILES([include/builddefs include/build-env])
+ AC_OUTPUT
+diff --git a/include/build-env.in b/include/build-env.in
+new file mode 100644
+index 00000000..9a9a6270
+--- /dev/null
++++ b/include/build-env.in
+@@ -0,0 +1,6 @@
++# Generated by config.status to export build toolchain information
++# for use in testcases.
++
++: "${CC_PROG=`command -v @CC@`}"
++: "${CPPFLAGS=@CPPFLAGS@}"
++: "${CFLAGS=@CFLAGS@}"
+diff --git a/tests/xfs/499 b/tests/xfs/499
+new file mode 100755
+index 00000000..48df2711
+--- /dev/null
++++ b/tests/xfs/499
+@@ -0,0 +1,102 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Nick Bowler.  All Rights Reserved.
++#
++# Scan header files for userspace-visible structures and look for newly
++# introduced compat problems between 32 and 64 bit flavours.  Anything
++# not on a whitelist is expected to have identical representation on
++# both versions.
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./include/build-env
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++_require_command "$CC_PROG" cc
++_require_command "$PAHOLE_PROG" pahole
++
++compile()
++{
++  $CC_PROG $CPPFLAGS $CFLAGS "$@"
++}
++
++# Toolchain check!
++compile -m64 -include xfs/xfs.h -gdwarf-2 -c -xc /dev/null -o /dev/null ||
++  _notrun 'cannot build 64-bit objects'
++compile -m32 -D_FILE_OFFSET_BITS=64 -include xfs/xfs.h -gdwarf-2 -c \
++  -xc /dev/null -o /dev/null || _notrun 'cannot build 32-bit objects'
++
++# Collect XFS types from "xfs/xfs_fs.h".  We look for struct tags and
++# identifiers that look like xfs_xyz_t under the assumption that all
++# ioctl-relevant structures are at least _named_ in this file.
++compile -E -include xfs/xfs_fs.h -xc /dev/null >"$tmp.hdump" ||
++  _notrun 'cannot #include "xfs/xfs_fs.h"'
++
++sed -nf- "$tmp.hdump" <<'EOF' | LC_ALL=C sort -u >"$tmp.types"
++  h
++  s/.*[^_[:alpha:]]\(xfs_[_[:alnum:]]*_t\).*/\1/p
++  g
++  s/.*struct \([_[:alpha:]][_[:alnum:]]*\).*/struct \1/p
++EOF
++
++# Create a source file containing definitions of objects for every type we
++# found, enabling pahole to report on those types.
++{ printf '#include "xfs/xfs.h"\n'
++
++  n=0
++  exec 3<"$tmp.types" 4>"$tmp.mustmatch"
++  while read t <&3; do
++    case $t in
++    # Whitelist structures known to potentially differ between
++    # 32-bit and 64-bit compilations.  NOTE: if new structures
++    # get added to this list it is probably necessary to update
++    # xfs/500 test case as well to set the expected x32 behaviour.
++    "struct xfs_attr_multiop" | \
++    "struct xfs_bstat" | \
++    "struct xfs_bstime" | \
++    "struct xfs_flock64" | \
++    "struct xfs_fsop_attrlist_handlereq" | \
++    "struct xfs_fsop_attrmulti_handlereq" | \
++    "struct xfs_fsop_bulkreq" | \
++    "struct xfs_fsop_geom_v1" | \
++    "struct xfs_fsop_handlereq" | \
++    "struct xfs_fsop_setdm_handlereq" | \
++    "struct xfs_growfs_data" | \
++    "struct xfs_growfs_rt" | \
++    "struct xfs_inogrp" | \
++    "struct xfs_swapext")
++       printf 'whitelist %s\n' "$t" 1>&2 ;;
++    *) printf '%s\n' "${t#struct }" >&4 ;; # everything else must match!
++    esac
++    printf '%s var%d = {0};\n' "$t" "$n"
++    n=$((n+1))
++  done
++  exec 3<&- 4>&-
++  } >"$tmp.test.c"
++
++compile -m32 -D_FILE_OFFSET_BITS=64 -gdwarf-2 -c "$tmp.test.c" -o "$tmp.32.o"
++$PAHOLE_PROG --class_name="file://$tmp.mustmatch" "$tmp.32.o" >"$tmp.32.dat"
++
++compile -m64 -gdwarf-2 -c "$tmp.test.c" -o "$tmp.64.o"
++$PAHOLE_PROG --class_name="file://$tmp.mustmatch" "$tmp.64.o" >"$tmp.64.dat"
++
++printf 'Silence is golden\n'
++diff -u "$tmp.32.dat" "$tmp.64.dat"
++status=$?
+diff --git a/tests/xfs/499.out b/tests/xfs/499.out
+new file mode 100644
+index 00000000..80e26046
+--- /dev/null
++++ b/tests/xfs/499.out
+@@ -0,0 +1,16 @@
++QA output created by 499
++whitelist struct xfs_attr_multiop
++whitelist struct xfs_bstat
++whitelist struct xfs_bstime
++whitelist struct xfs_flock64
++whitelist struct xfs_fsop_attrlist_handlereq
++whitelist struct xfs_fsop_attrmulti_handlereq
++whitelist struct xfs_fsop_bulkreq
++whitelist struct xfs_fsop_geom_v1
++whitelist struct xfs_fsop_handlereq
++whitelist struct xfs_fsop_setdm_handlereq
++whitelist struct xfs_growfs_data
++whitelist struct xfs_growfs_rt
++whitelist struct xfs_inogrp
++whitelist struct xfs_swapext
++Silence is golden
+diff --git a/tests/xfs/500 b/tests/xfs/500
+new file mode 100755
+index 00000000..80d37b0f
+--- /dev/null
++++ b/tests/xfs/500
+@@ -0,0 +1,105 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Nick Bowler.  All Rights Reserved.
++#
++# FS QA Test 500
++#
++# Check that x32 ioctl-related structures are aligned with the ia32 or
++# amd64 variants as expected.
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./include/build-env
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++_require_command "$CC_PROG" cc
++_require_command "$PAHOLE_PROG" pahole
++
++compile()
++{
++  $CC_PROG $CPPFLAGS $CFLAGS "$@"
++}
++
++# Toolchain check!
++compile -mx32 -include xfs/xfs.h -gdwarf-2 -c -xc /dev/null -o /dev/null ||
++  _notrun 'cannot build x32 objects'
++compile -m64 -include xfs/xfs.h -gdwarf-2 -c -xc /dev/null -o /dev/null ||
++  _notrun 'cannot build amd64 objects'
++compile -m32 -D_FILE_OFFSET_BITS=64 -include xfs/xfs.h -gdwarf-2 -c \
++  -xc /dev/null -o /dev/null || _notrun 'cannot build ia32 objects'
++
++# struct tags where x32 is expected to match ia32 layout ...
++cat >"$tmp.ia32structs" <<'EOF'
++fsdmidata
++xfs_attr_multiop
++xfs_attrlist_cursor
++xfs_fsop_attrlist_handlereq
++xfs_fsop_attrmulti_handlereq
++xfs_fsop_bulkreq
++xfs_fsop_handlereq
++xfs_fsop_setdm_handlereq
++EOF
++
++# ... and the tags where x32 is expected to match amd64.
++cat >"$tmp.amd64structs" <<'EOF'
++fsdmidata
++xfs_attrlist_cursor
++xfs_bstat
++xfs_bstime
++xfs_flock64
++xfs_fsop_geom_v1
++xfs_growfs_data
++xfs_growfs_rt
++xfs_inogrp
++xfs_swapext
++EOF
++
++# Create source file containing definitions of objects with each type we care
++# about, in order to produce relevant debug information which will be checked
++# by pahole.
++{ printf '#include "xfs/xfs.h"\n'
++
++  n=0
++  cat "$tmp.ia32structs" "$tmp.amd64structs" | while read l; do
++    printf 'struct %s var%d = {0};\n' "$l" "$n"
++    n=$((n+1))
++  done
++  } >"$tmp.test.c"
++
++compile -m32 -D_FILE_OFFSET_BITS=64 -gdwarf-2 -c "$tmp.test.c" -o "$tmp.ia32.o"
++compile -mx32 -gdwarf-2 -c "$tmp.test.c" -o "$tmp.x32.o"
++compile -m64 -gdwarf-2 -c "$tmp.test.c" -o "$tmp.amd64.o"
++
++$PAHOLE_PROG --class_name="file://$tmp.ia32structs" "$tmp.ia32.o" \
++  >"$tmp.ia32.dat"
++$PAHOLE_PROG --class_name="file://$tmp.ia32structs" "$tmp.x32.o" \
++  >"$tmp.x32-ia32.dat"
++
++$PAHOLE_PROG --class_name="file://$tmp.amd64structs" "$tmp.amd64.o" \
++  >"$tmp.amd64.dat"
++$PAHOLE_PROG --class_name="file://$tmp.amd64structs" "$tmp.x32.o" \
++  >"$tmp.x32-amd64.dat"
++
++printf 'Silence is golden\n'
++
++ret=0
++diff -u "$tmp.ia32.dat" "$tmp.x32-ia32.dat" || ret=1
++diff -u "$tmp.amd64.dat" "$tmp.x32-amd64.dat" || ret=1
++status=$ret
+diff --git a/tests/xfs/500.out b/tests/xfs/500.out
+new file mode 100644
+index 00000000..883b2caf
+--- /dev/null
++++ b/tests/xfs/500.out
+@@ -0,0 +1,2 @@
++QA output created by 500
++Silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index dfaae2bc..cb69d28a 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -496,3 +496,5 @@
+ 496 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 497 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 498 dangerous_fuzzers dangerous_norepair
++499 auto quick
++500 auto quick
+-- 
+2.16.1
