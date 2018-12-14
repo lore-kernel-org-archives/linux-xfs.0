@@ -1,84 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42908 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726446AbeLRTPY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 14:15:24 -0500
-Date: Tue, 18 Dec 2018 11:15:16 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: handle bad flags in
- xfs_recover_inode_owner_change
-Message-ID: <20181218191516.GF27208@magnolia>
-References: <81b35377-47d9-2421-ba5c-537ac6c8c021@redhat.com>
- <3898cc3a-be06-a29e-07f6-9daf52cb7545@sandeen.net>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:18414 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726437AbeLNDFt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 22:05:49 -0500
+Date: Fri, 14 Dec 2018 14:05:28 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] iomap: optimize iomap_is_partially_uptodate for full
+ page range
+Message-ID: <20181214030528.GK6311@dastard>
+References: <1544739929-21651-1-git-send-email-sandeen@sandeen.net>
+ <1544739929-21651-4-git-send-email-sandeen@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3898cc3a-be06-a29e-07f6-9daf52cb7545@sandeen.net>
+In-Reply-To: <1544739929-21651-4-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph@sandeen.net, Hellwig@sandeen.net, hch@lst.de
 
-On Tue, Dec 18, 2018 at 01:02:56PM -0600, Eric Sandeen wrote:
-> Today, xfs_recover_inode_owner_change() indicates that if XFS_ILOG_DOWNER
-> is set, XFS_ILOG_DBROOT must be as well, via an assert.  However, this 
-> could fail to be true due to fuzzing or corruption, so we really
-> should handle it gracefully rather than calling ASSERT() and crashing,
-> or blowing past it on a non-debug build and BUGging later.
+On Thu, Dec 13, 2018 at 04:25:29PM -0600, Eric Sandeen wrote:
+> From: Eric Sandeen <sandeen@redhat.com>
 > 
-> Return -EFSCORRUPTED and fail the log replay if we find this
-> inconsistent state.
+> We only call ->is_partially_uptodate to look for an uptodate range
+> within a not-uptodate page.
+> 
+> If the range covers all blocks in the page, there is no point to checking
+> each block individually - if the whole range (i.e. the whole page) were
+> uptodate, the page would be uptodate as well.  Hence in this case, we
+> can return early and skip the loop.
+> 
+> This is similar to what is done in block_is_partially_uptodate().
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 > ---
+>  fs/iomap.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 1fc9e9042e0e..56148a3083b8 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2964,7 +2964,10 @@ xfs_recover_inode_owner_change(
->  	}
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index ce837d9..7d7d985 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -515,6 +515,10 @@ struct iomap_readpage_ctx {
+>  	first = from >> inode->i_blkbits;
+>  	last = (from + len - 1) >> inode->i_blkbits;
 >  
->  	if (in_f->ilf_fields & XFS_ILOG_DOWNER) {
-> -		ASSERT(in_f->ilf_fields & XFS_ILOG_DBROOT);
-> +		if (!(in_f->ilf_fields & XFS_ILOG_DBROOT)) {
-> +			error = -EFSCORRUPTED;
-> +			goto out_free_ip;
-> +		}
->  		error = xfs_bmbt_change_owner(NULL, ip, XFS_DATA_FORK,
->  					      ip->i_ino, buffer_list);
->  		if (error)
-> @@ -2972,7 +2975,10 @@ xfs_recover_inode_owner_change(
->  	}
->  
->  	if (in_f->ilf_fields & XFS_ILOG_AOWNER) {
-> -		ASSERT(in_f->ilf_fields & XFS_ILOG_ABROOT);
-> +		if (!(in_f->ilf_fields & XFS_ILOG_ABROOT)) {
-> +			error = -EFSCORRUPTED;
-> +			goto out_free_ip;
+> +	/* If page wasn't uptodate and range covers all blocks: no partial */
+> +	if (first == 0 && last == (PAGE_SIZE - 1) >> inode->i_blkbits)
+> +		return 0;
+> +
 
-Are there any downsides to changing the data fork owner and bailing out
-afterwards if we encounter the combination of (DOWNER | DBROOT | AOWNER)?
+Even if the range covers the entire page, we still have to check
+that all the individual blocks in the page are up to date or not.
+Hence I think this is wrong....
 
-Thinking this through, the log won't continue recovering, so you have to
-run xfs_repair -L which zaps the log and checks everything.  We already
-finished the data fork bmbt update so (barring other problems) it should
-be fine.  The attr fork won't have been updated, but its log entries
-were unrecoverable, so at worst we lose the attr fork, right?
+Cheers,
 
-And we don't want the ABROOT check any earlier, because we don't want to
-forego a data fork owner update that might have succeeded anyway and
-we'll definitely lose it if we don't update it and xfs_repair encounters
-it.  Right?
-
-If so, then,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> +		}
->  		error = xfs_bmbt_change_owner(NULL, ip, XFS_ATTR_FORK,
->  					      ip->i_ino, buffer_list);
->  		if (error)
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
