@@ -1,367 +1,218 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f66.google.com ([209.85.166.66]:43888 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726465AbeLNDgv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 22:36:51 -0500
-Received: by mail-io1-f66.google.com with SMTP id l3so3391423ioc.10
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 19:36:50 -0800 (PST)
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:47086 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726520AbeLNDsA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Dec 2018 22:48:00 -0500
+Received: by mail-lj1-f193.google.com with SMTP id v15-v6so3665197ljh.13
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Dec 2018 19:47:57 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20181213013000.15716-1-nbowler@draconx.ca>
+References: <20181213013000.15716-1-nbowler@draconx.ca>
 From: Nick Bowler <nbowler@draconx.ca>
-Subject: [RFC PATCH xfstests] xfs: add tests to validate ioctl structure layout.
-Date: Thu, 13 Dec 2018 22:40:53 -0500
-Message-Id: <20181214034053.23795-1-nbowler@draconx.ca>
-In-Reply-To: <CADyTPEzrtDwSE9F1Ef+0xJDn4Fh15gDZOwz5J-ySorgM2WTjiw@mail.gmail.com>
-References: <CADyTPEzrtDwSE9F1Ef+0xJDn4Fh15gDZOwz5J-ySorgM2WTjiw@mail.gmail.com>
+Date: Thu, 13 Dec 2018 22:47:55 -0500
+Message-ID: <CADyTPEyq7iYSK6rV1o9GHVGykAt=qqxRDqFyMDg8arP+a_ANxA@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/2] Fixing xfs ioctls on x32
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-Introduce two new test cases.  The first one greps xfs_fs.h to find
-any structure types possibly relevant to ioctls, then compares the
-structure layouts between 64-bit and 32-bit objects.  The goal is to
-ensure that any _new_ structure has the same characteristics on 32-bit
-versus 64-bit mode, ensuring a sane compat handler.  This requires a
-toolchain that can build both 64-bit and 32-bit objects, and hopefully
-works on non-x86 platforms with compat woes.
+OK, I went through every single case in xfs_file_compat_ioctl, and wrote
+a brief justification for what, if any, changes appear to be be required
+to correctly support x32 userspace.  The analysis is done by inspecting
+how the implementation accesses userspace memory and what structures
+are involved.
 
-The whitelist was constructed by manually inspecting the current
-compat ioctl implementation.  The test validates that everything
-in the whitelist actually got found by the grepping as a sort of
-self-sanity check, but if older versions lacked some of these
-types then this might need tweaking a bit.
+There is a general assumption in this analysis that the current compat
+implementation is correct as written for IA-32 userspace.  However,
+during this inspection I may have found a problem in one of the ioctls
+which affects i686 (NOT x32!) today.  I am looking into this next.
 
-The second test validates that a well-known set of structures on x32
-crrectly match the ia32 or amd64 layouts as expected.  This requires
-a toolchain that can build for all three ABIs.
+Anyway, here's the complete list.
 
-The idea is that new additions to the header where the structures
-differ in 32 and 64-bit x86 will be caught by the first test case
-and that will be sufficient to detect potential x32 problems too.
+XFS_IOC_DIOINFO, XFS_IOC_FSGEOMETRY, XFS_IOC_FSGETXATTR,
+XFS_IOC_FSSETXATTR, XFS_IOC_FSGETXATTRA, XFS_IOC_FSSETDM,
+XFS_IOC_GETBMAP, XFS_IOC_GETBMAPA, XFS_IOC_GETBMAPX, XFS_IOC_FSCOUNTS,
+XFS_IOC_SET_RESBLKS, XFS_IOC_GET_RESBLKS, XFS_IOC_FSGROWFSLOG,
+XFS_IOC_GOINGDOWN, XFS_IOC_ERROR_INJECTION, XFS_IOC_ERROR_CLEARALL,
+FS_IOC_GETFSMAP, XFS_IOC_SCRUB_METADATA:
 
-Signed-off-by: Nick Bowler <nbowler@draconx.ca>
----
- .gitignore           |   1 +
- common/config        |   1 +
- configure.ac         |   2 +-
- include/build-env.in |   6 +++
- tests/xfs/499        | 102 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/499.out    |  16 ++++++++
- tests/xfs/500        | 105 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/500.out    |   2 +
- tests/xfs/group      |   2 +
- 9 files changed, 236 insertions(+), 1 deletion(-)
- create mode 100644 include/build-env.in
- create mode 100755 tests/xfs/499
- create mode 100644 tests/xfs/499.out
- create mode 100755 tests/xfs/500
- create mode 100644 tests/xfs/500.out
+  - All of these call directly the native implementation.  Since that
+    implementation is correct for both ia32 and amd64 it will also be
+    correct for x32.
 
-diff --git a/.gitignore b/.gitignore
-index ea1aac8a..7bfd20fe 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -28,6 +28,7 @@
- /ltmain.sh
- 
- # build system
-+/include/build-env
- /include/builddefs
- /include/config.h
- /include/config.h.in
-diff --git a/common/config b/common/config
-index a87cb4a2..707c5b2f 100644
---- a/common/config
-+++ b/common/config
-@@ -194,6 +194,7 @@ export GETCAP_PROG="$(type -P getcap)"
- export CHECKBASHISMS_PROG="$(type -P checkbashisms)"
- export XFS_INFO_PROG="$(type -P xfs_info)"
- export DUPEREMOVE_PROG="$(type -P duperemove)"
-+export PAHOLE_PROG="$(type -P pahole)"
- 
- # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
- # newer systems have udevadm command but older systems like RHEL5 don't.
-diff --git a/configure.ac b/configure.ac
-index 19798824..69a4e396 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -73,5 +73,5 @@ AC_HAVE_COPY_FILE_RANGE
- AC_CHECK_FUNCS([renameat2])
- 
- AC_CONFIG_HEADER(include/config.h)
--AC_CONFIG_FILES([include/builddefs])
-+AC_CONFIG_FILES([include/builddefs include/build-env])
- AC_OUTPUT
-diff --git a/include/build-env.in b/include/build-env.in
-new file mode 100644
-index 00000000..9a9a6270
---- /dev/null
-+++ b/include/build-env.in
-@@ -0,0 +1,6 @@
-+# Generated by config.status to export build toolchain information
-+# for use in testcases.
-+
-+: "${CC_PROG=`command -v @CC@`}"
-+: "${CPPFLAGS=@CPPFLAGS@}"
-+: "${CFLAGS=@CFLAGS@}"
-diff --git a/tests/xfs/499 b/tests/xfs/499
-new file mode 100755
-index 00000000..48df2711
---- /dev/null
-+++ b/tests/xfs/499
-@@ -0,0 +1,102 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2018 Nick Bowler.  All Rights Reserved.
-+#
-+# Scan header files for userspace-visible structures and look for newly
-+# introduced compat problems between 32 and 64 bit flavours.  Anything
-+# not on a whitelist is expected to have identical representation on
-+# both versions.
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./include/build-env
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+_require_command "$CC_PROG" cc
-+_require_command "$PAHOLE_PROG" pahole
-+
-+compile()
-+{
-+  $CC_PROG $CPPFLAGS $CFLAGS "$@"
-+}
-+
-+# Toolchain check!
-+compile -m64 -include xfs/xfs.h -gdwarf-2 -c -xc /dev/null -o /dev/null ||
-+  _notrun 'cannot build 64-bit objects'
-+compile -m32 -D_FILE_OFFSET_BITS=64 -include xfs/xfs.h -gdwarf-2 -c \
-+  -xc /dev/null -o /dev/null || _notrun 'cannot build 32-bit objects'
-+
-+# Collect XFS types from "xfs/xfs_fs.h".  We look for struct tags and
-+# identifiers that look like xfs_xyz_t under the assumption that all
-+# ioctl-relevant structures are at least _named_ in this file.
-+compile -E -include xfs/xfs_fs.h -xc /dev/null >"$tmp.hdump" ||
-+  _notrun 'cannot #include "xfs/xfs_fs.h"'
-+
-+sed -nf- "$tmp.hdump" <<'EOF' | LC_ALL=C sort -u >"$tmp.types"
-+  h
-+  s/.*[^_[:alpha:]]\(xfs_[_[:alnum:]]*_t\).*/\1/p
-+  g
-+  s/.*struct \([_[:alpha:]][_[:alnum:]]*\).*/struct \1/p
-+EOF
-+
-+# Create a source file containing definitions of objects for every type we
-+# found, enabling pahole to report on those types.
-+{ printf '#include "xfs/xfs.h"\n'
-+
-+  n=0
-+  exec 3<"$tmp.types" 4>"$tmp.mustmatch"
-+  while read t <&3; do
-+    case $t in
-+    # Whitelist structures known to potentially differ between
-+    # 32-bit and 64-bit compilations.  NOTE: if new structures
-+    # get added to this list it is probably necessary to update
-+    # xfs/500 test case as well to set the expected x32 behaviour.
-+    "struct xfs_attr_multiop" | \
-+    "struct xfs_bstat" | \
-+    "struct xfs_bstime" | \
-+    "struct xfs_flock64" | \
-+    "struct xfs_fsop_attrlist_handlereq" | \
-+    "struct xfs_fsop_attrmulti_handlereq" | \
-+    "struct xfs_fsop_bulkreq" | \
-+    "struct xfs_fsop_geom_v1" | \
-+    "struct xfs_fsop_handlereq" | \
-+    "struct xfs_fsop_setdm_handlereq" | \
-+    "struct xfs_growfs_data" | \
-+    "struct xfs_growfs_rt" | \
-+    "struct xfs_inogrp" | \
-+    "struct xfs_swapext")
-+       printf 'whitelist %s\n' "$t" 1>&2 ;;
-+    *) printf '%s\n' "${t#struct }" >&4 ;; # everything else must match!
-+    esac
-+    printf '%s var%d = {0};\n' "$t" "$n"
-+    n=$((n+1))
-+  done
-+  exec 3<&- 4>&-
-+  } >"$tmp.test.c"
-+
-+compile -m32 -D_FILE_OFFSET_BITS=64 -gdwarf-2 -c "$tmp.test.c" -o "$tmp.32.o"
-+$PAHOLE_PROG --class_name="file://$tmp.mustmatch" "$tmp.32.o" >"$tmp.32.dat"
-+
-+compile -m64 -gdwarf-2 -c "$tmp.test.c" -o "$tmp.64.o"
-+$PAHOLE_PROG --class_name="file://$tmp.mustmatch" "$tmp.64.o" >"$tmp.64.dat"
-+
-+printf 'Silence is golden\n'
-+diff -u "$tmp.32.dat" "$tmp.64.dat"
-+status=$?
-diff --git a/tests/xfs/499.out b/tests/xfs/499.out
-new file mode 100644
-index 00000000..80e26046
---- /dev/null
-+++ b/tests/xfs/499.out
-@@ -0,0 +1,16 @@
-+QA output created by 499
-+whitelist struct xfs_attr_multiop
-+whitelist struct xfs_bstat
-+whitelist struct xfs_bstime
-+whitelist struct xfs_flock64
-+whitelist struct xfs_fsop_attrlist_handlereq
-+whitelist struct xfs_fsop_attrmulti_handlereq
-+whitelist struct xfs_fsop_bulkreq
-+whitelist struct xfs_fsop_geom_v1
-+whitelist struct xfs_fsop_handlereq
-+whitelist struct xfs_fsop_setdm_handlereq
-+whitelist struct xfs_growfs_data
-+whitelist struct xfs_growfs_rt
-+whitelist struct xfs_inogrp
-+whitelist struct xfs_swapext
-+Silence is golden
-diff --git a/tests/xfs/500 b/tests/xfs/500
-new file mode 100755
-index 00000000..80d37b0f
---- /dev/null
-+++ b/tests/xfs/500
-@@ -0,0 +1,105 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2018 Nick Bowler.  All Rights Reserved.
-+#
-+# FS QA Test 500
-+#
-+# Check that x32 ioctl-related structures are aligned with the ia32 or
-+# amd64 variants as expected.
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./include/build-env
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+_require_command "$CC_PROG" cc
-+_require_command "$PAHOLE_PROG" pahole
-+
-+compile()
-+{
-+  $CC_PROG $CPPFLAGS $CFLAGS "$@"
-+}
-+
-+# Toolchain check!
-+compile -mx32 -include xfs/xfs.h -gdwarf-2 -c -xc /dev/null -o /dev/null ||
-+  _notrun 'cannot build x32 objects'
-+compile -m64 -include xfs/xfs.h -gdwarf-2 -c -xc /dev/null -o /dev/null ||
-+  _notrun 'cannot build amd64 objects'
-+compile -m32 -D_FILE_OFFSET_BITS=64 -include xfs/xfs.h -gdwarf-2 -c \
-+  -xc /dev/null -o /dev/null || _notrun 'cannot build ia32 objects'
-+
-+# struct tags where x32 is expected to match ia32 layout ...
-+cat >"$tmp.ia32structs" <<'EOF'
-+fsdmidata
-+xfs_attr_multiop
-+xfs_attrlist_cursor
-+xfs_fsop_attrlist_handlereq
-+xfs_fsop_attrmulti_handlereq
-+xfs_fsop_bulkreq
-+xfs_fsop_handlereq
-+xfs_fsop_setdm_handlereq
-+EOF
-+
-+# ... and the tags where x32 is expected to match amd64.
-+cat >"$tmp.amd64structs" <<'EOF'
-+fsdmidata
-+xfs_attrlist_cursor
-+xfs_bstat
-+xfs_bstime
-+xfs_flock64
-+xfs_fsop_geom_v1
-+xfs_growfs_data
-+xfs_growfs_rt
-+xfs_inogrp
-+xfs_swapext
-+EOF
-+
-+# Create source file containing definitions of objects with each type we care
-+# about, in order to produce relevant debug information which will be checked
-+# by pahole.
-+{ printf '#include "xfs/xfs.h"\n'
-+
-+  n=0
-+  cat "$tmp.ia32structs" "$tmp.amd64structs" | while read l; do
-+    printf 'struct %s var%d = {0};\n' "$l" "$n"
-+    n=$((n+1))
-+  done
-+  } >"$tmp.test.c"
-+
-+compile -m32 -D_FILE_OFFSET_BITS=64 -gdwarf-2 -c "$tmp.test.c" -o "$tmp.ia32.o"
-+compile -mx32 -gdwarf-2 -c "$tmp.test.c" -o "$tmp.x32.o"
-+compile -m64 -gdwarf-2 -c "$tmp.test.c" -o "$tmp.amd64.o"
-+
-+$PAHOLE_PROG --class_name="file://$tmp.ia32structs" "$tmp.ia32.o" \
-+  >"$tmp.ia32.dat"
-+$PAHOLE_PROG --class_name="file://$tmp.ia32structs" "$tmp.x32.o" \
-+  >"$tmp.x32-ia32.dat"
-+
-+$PAHOLE_PROG --class_name="file://$tmp.amd64structs" "$tmp.amd64.o" \
-+  >"$tmp.amd64.dat"
-+$PAHOLE_PROG --class_name="file://$tmp.amd64structs" "$tmp.x32.o" \
-+  >"$tmp.x32-amd64.dat"
-+
-+printf 'Silence is golden\n'
-+
-+ret=0
-+diff -u "$tmp.ia32.dat" "$tmp.x32-ia32.dat" || ret=1
-+diff -u "$tmp.amd64.dat" "$tmp.x32-amd64.dat" || ret=1
-+status=$ret
-diff --git a/tests/xfs/500.out b/tests/xfs/500.out
-new file mode 100644
-index 00000000..883b2caf
---- /dev/null
-+++ b/tests/xfs/500.out
-@@ -0,0 +1,2 @@
-+QA output created by 500
-+Silence is golden
-diff --git a/tests/xfs/group b/tests/xfs/group
-index dfaae2bc..cb69d28a 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -496,3 +496,5 @@
- 496 dangerous_fuzzers dangerous_scrub dangerous_repair
- 497 dangerous_fuzzers dangerous_scrub dangerous_online_repair
- 498 dangerous_fuzzers dangerous_norepair
-+499 auto quick
-+500 auto quick
--- 
-2.16.1
+XFS_IOC_ALLOCSP_32, XFS_IOC_FREESP_32, XFS_IOC_ALLOCSP64_32,
+XFS_IOC_FREESP64_32, XFS_IOC_RESVSP_32, XFS_IOC_UNRESVSP_32,
+XFS_IOC_RESVSP64_32, XFS_IOC_UNRESVSP64_32, XFS_IOC_ZERO_RANGE_32:
+
+  - The relevant struct is xfs_flock64.  On x32 this structure matches
+    exactly the amd64 layout, so the ioctl cmd number is changed.
+
+  - No other data in userspace is involved.
+
+  - Since the x32 structure matches the native layout exactly, it is
+    required to add new cases which pass the arguments onward to the
+    native implementation.  This is patch #2 in this series ("Fix x32
+    ioctls when cmd numbers differ from ia32.")
+
+XFS_IOC_FSGEOMETRY_V1_32:
+
+  - The relevant struct is xfs_fsop_geom_v1.  On x32 this structure
+    matches exactly the amd64 layout, so the ioctl cmd number is
+    changed.
+
+  - No other data in userspace is involved.
+
+  - Since the x32 structure matches the native layout exactly, it is
+    required to add a new case (XFS_IOC_FSGEOMETRY_V1) which passes the
+    arguments onward to the native implementation.  This is patch #2
+    in this series ("Fix x32 ioctls when cmd numbers differ from ia32.")
+
+XFS_IOC_FSGROWFSDATA_32:
+
+  - The relevant struct is xfs_growfs_data.  On x32 this structure
+    matches exactly the amd64 layout, so the ioctl cmd number is
+    changed.
+
+  - No other data in userspace is involved.
+
+  - Since the x32 structure matches the native layout exactly, it is
+    required to add a new case (XFS_IOC_FSGROWFSDATA) which passes the
+    arguments onward to the native implementation.  This is patch #2
+    in this series.  ("Fix x32 ioctls when cmd numbers differ from
+    ia32.")
+
+
+XFS_IOC_FSGROWFSRT_32:
+
+  - The relevant struct is xfs_growfs_rt.  On x32 this structure matches
+    exactly the amd64 layout, so the ioctl cmd number is changed.
+
+  - No other data in userspace is involved.
+
+  - Since the x32 structure matches the native layout exactly, it is
+    required to add a new case which passes the arguments onward to
+    the native implementation.  This is patch #2 in this series ("Fix
+    x32 ioctls when cmd numbers differ from ia32.")
+
+XFS_IOC_GETXFLAGS_32, XFS_IOC_SETXFLAGS_32, XFS_IOC_GETVERSION_32:
+
+  - Trivial, the only compat problem is the ioctl cmd number itself,
+    which on x32 will match the ia32 number so it will be handled
+    correctly.
+
+  - No change is required.
+
+XFS_IOC_SWAPEXT_32:
+
+  - The relevant struct is xfs_swapext.  On x32 this structure matches
+    exactly with the amd64 layout, so the ioctl cmd number is changed.
+
+  - No other data in userspace is involved.
+
+  - Since the x32 structure matches the native layout exactly, it is
+    required to add a new case (XFS_IOC_SWAPEXT) which passes the
+    arguments onward to the native implementation.  This is patch #2
+    in this series ("Fix x32 ioctls when cmd numbers differ from ia32.")
+
+XFS_IOC_FSBULKSTAT_32, XFS_IOC_FSBULKSTAT_SINGLE_32,
+XFS_IOC_FSINUMBERS_32:
+
+  - These three are all busted on x32 and patch #1 in this series
+    ("Fix bulkstat compat ioctls on x32") should fix them.  See the
+    patch thread for details.
+
+XFS_IOC_FD_TO_HANDLE_32, XFS_IOC_PATH_TO_HANDLE_32,
+XFS_IOC_PATH_TO_FSHANDLE_32, XFS_IOC_OPEN_BY_HANDLE_32,
+XFS_IOC_READLINK_BY_HANDLE_32:
+
+  - For all of these, The relevant struct is xfs_fsop_handlereq.  On
+    x32, this structure matches exactly the ia32 layout, so ioctl cmd
+    number will match.
+
+  - The current compat implementation reads in the structure according
+    to ia32 layout.  Thus it will be read correctly from x32 userspace.
+
+  - The existing implementation then calls the native implementation.
+    Since that is correct for both ia32 and amd64 it will also be
+    correct for x32.
+
+  - No change is required.
+
+XFS_IOC_ATTRLIST_BY_HANDLE_32:
+
+  - The relevant struct is xfs_fsop_attrlist_handlereq.  On x32, this
+    structure matches exactly the ia32 layout, so ioctl cmd number will
+    match.  The implementation calls xfs_compat_attrlist_by_handle.
+
+  - Since the xfs_fsop_attrlist_handlereq struct matches ia32, the
+    existing compat implementation will read it from x32 userspace
+    correctly.
+
+  - Something is strange here, the native implementation has an extra
+    copy_to_user which is not present in the compat implementation,
+    which writes the attrlist_cursor_kern struct back into the
+    xfs_fsop_attrlist_handlereq structure provided by the user.
+
+  - Other than that one difference, the existing compat implementation
+    does exactly the same thing as the native implementation.  Since
+    those parts are correct for both ia32 and amd64 they will also be
+    correct for x32.
+
+  - If any change is required, it may be that this ioctl is currently
+    broken on regular ia32 compat.
+
+  - This may be why xfstests xfs/269 is failing for me on i686, since
+    that test makes use of this very ioctl.  I will investigate.
+
+XFS_IOC_ATTRMULTI_BY_HANDLE_32:
+
+  - The relevant struct is xfs_fsop_attrmulti_handlereq.  On x32, this
+    structure matches exactly the ia32 layout, so ioctl cmd number will
+    match.  The implementation calls xfs_compat_attrmulti_by_handle.
+
+  - The main structure contains a pointer to another xfs struct,
+    xfs_attr_multiop (this is read as an array of these structs).
+    On x32, this structure also matches exactly the ia32 layout
+    (so the array does too).
+
+  - Since both these structures match ia32, the existing compat
+    implementation will read them in from x32 userspace correctly.
+
+  - The xfs_attr_multiop structure contains two pointers to strings
+    (am_attrname, am_attrvalue).  There are no compat issues with
+    strings so these will be read and/or written correctly by the
+    existing compat implementation.
+
+  - Finally, the implementation writes back to the xfs_attr_multiop
+    array.  Since the x32 version matches ia32, this will be correctly
+    formatted for x32 userspace.
+
+  - No change is required.
+
+XFS_IOC_FSSETDM_BY_HANDLE_32:
+
+  - The relevant struct is xfs_fsop_setdm_handlereq.  On x32, this
+    structure matches exactly the ia32 layout, so ioctl cmd number will
+    match.  The implementation calls xfs_compat_fssetdm_by_handle.
+
+  - Since the xfs_fsop_setdm_handlereq struct matches ia32, the existing
+    compat implementation will read it from x32 userspace correctly.
+
+  - The existing implementation then reads the pointed-to struct
+    fsdmidata.  This structure matches between ia32, x32, and amd64
+    layouts; the existing compat implementation just snarfs it in
+    directly and this will work as expected on x32.
+
+  - After this point the existing compat implementation is identical to
+    the native implementation.  Since that part is correct for both ia32
+    and amd64 it will also be correct for x32.
+
+  - No change is required.
+
+And that's a wrap.
+
+Cheers,
+  Nick
