@@ -1,104 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50718 "EHLO sandeen.net"
+Received: from mail.stoffel.org ([104.236.43.127]:53738 "EHLO mail.stoffel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726422AbeLRTXY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Dec 2018 14:23:24 -0500
-Subject: Re: [PATCH 1/2] xfs: handle bad flags in
- xfs_recover_inode_owner_change
-References: <81b35377-47d9-2421-ba5c-537ac6c8c021@redhat.com>
- <3898cc3a-be06-a29e-07f6-9daf52cb7545@sandeen.net>
- <20181218191516.GF27208@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <43d60dd7-896c-7537-1b59-0f79cf36c30e@sandeen.net>
-Date: Tue, 18 Dec 2018 13:23:22 -0600
+        id S1730734AbeLNUwp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 Dec 2018 15:52:45 -0500
 MIME-Version: 1.0
-In-Reply-To: <20181218191516.GF27208@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-ID: <23572.5681.810087.381496@quad.stoffel.home>
+Date: Fri, 14 Dec 2018 15:44:33 -0500
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: XFS and RAID10 with o2 layout
+In-Reply-To: <5C13694A.8070303@youngman.org.uk>
+References: <d9fc0327-eef3-63bd-82a3-98545251bfe5@4net.rs>
+        <20181213220533.GH6311@dastard>
+        <3e0e8def-2bb4-5e8a-56c1-d010ede059d4@4net.rs>
+        <5C13694A.8070303@youngman.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Sinisa <sinisa@4net.rs>, linux-raid@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 12/18/18 1:15 PM, Darrick J. Wong wrote:
-> On Tue, Dec 18, 2018 at 01:02:56PM -0600, Eric Sandeen wrote:
->> Today, xfs_recover_inode_owner_change() indicates that if XFS_ILOG_DOWNER
->> is set, XFS_ILOG_DBROOT must be as well, via an assert.  However, this 
->> could fail to be true due to fuzzing or corruption, so we really
->> should handle it gracefully rather than calling ASSERT() and crashing,
->> or blowing past it on a non-debug build and BUGging later.
->>
->> Return -EFSCORRUPTED and fail the log replay if we find this
->> inconsistent state.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
->> index 1fc9e9042e0e..56148a3083b8 100644
->> --- a/fs/xfs/xfs_log_recover.c
->> +++ b/fs/xfs/xfs_log_recover.c
->> @@ -2964,7 +2964,10 @@ xfs_recover_inode_owner_change(
->>  	}
->>  
->>  	if (in_f->ilf_fields & XFS_ILOG_DOWNER) {
->> -		ASSERT(in_f->ilf_fields & XFS_ILOG_DBROOT);
->> +		if (!(in_f->ilf_fields & XFS_ILOG_DBROOT)) {
->> +			error = -EFSCORRUPTED;
->> +			goto out_free_ip;
->> +		}
->>  		error = xfs_bmbt_change_owner(NULL, ip, XFS_DATA_FORK,
->>  					      ip->i_ino, buffer_list);
->>  		if (error)
->> @@ -2972,7 +2975,10 @@ xfs_recover_inode_owner_change(
->>  	}
->>  
->>  	if (in_f->ilf_fields & XFS_ILOG_AOWNER) {
->> -		ASSERT(in_f->ilf_fields & XFS_ILOG_ABROOT);
->> +		if (!(in_f->ilf_fields & XFS_ILOG_ABROOT)) {
->> +			error = -EFSCORRUPTED;
->> +			goto out_free_ip;
-> 
-> Are there any downsides to changing the data fork owner and bailing out
-> afterwards if we encounter the combination of (DOWNER | DBROOT | AOWNER)?
+>>>>> "Wols" == Wols Lists <antlists@youngman.org.uk> writes:
 
-Not sure I understand the Q.
+Wols> On 14/12/18 07:03, Sinisa wrote:
+>>> And another MD flush thread waiting on a MD sync barrier.
+>>> 
+>>> Basically, this looks and smells like a MD sync barrier race
+>>> condition, not an XFs problem.
+>>> 
+>>> Cheers,
+>>> 
+>>> Dave.
+>> 
+>> But why don't we see the same issue with other filesystems?
 
-(Maybe you mean DOWNER && !DBROOT?)
- 
-> Thinking this through, the log won't continue recovering, so you have to
-> run xfs_repair -L which zaps the log and checks everything.  We already
-> finished the data fork bmbt update so (barring other problems) it should
-> be fine.  The attr fork won't have been updated, but its log entries
-> were unrecoverable, so at worst we lose the attr fork, right?
+Wols> Possibly because, iirc, xfs is aware of the underlying raid?
 
-TBH, I hadn't really thought through "recover as much as we can before
-deciding we have a problem" - if we encounter this, it's an inconsistent
-state in the log for whatever, and we should stop.  I don't ... think
-we're in the business of trying to second guess or fix on the fly here,
-right?
+I don't think it's that in touch with the raid.  It can/does query for
+settings so it can optimize stuff, but I don't think it actually uses
+it other than as a block device.
 
-> And we don't want the ABROOT check any earlier, because we don't want to
-> forego a data fork owner update that might have succeeded anyway and
-> we'll definitely lose it if we don't update it and xfs_repair encounters
-> it.  Right?
+Wols> I don't know, but I seem to remember that from earlier discussions about
+Wols> "xfs over mdraid".
 
-Again, my caveman coder brain just said "inconsistent state -> stop now."
-
-Should we be doing more?
-
--Eric
-
-> If so, then,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> --D
-> 
->> +		}
->>  		error = xfs_bmbt_change_owner(NULL, ip, XFS_ATTR_FORK,
->>  					      ip->i_ino, buffer_list);
->>  		if (error)
->>
-> 
+Have you tried doing this with the absolute latest kernel?  
