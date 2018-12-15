@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f68.google.com ([209.85.166.68]:45307 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726448AbeLOBWW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Dec 2018 20:22:22 -0500
-Received: by mail-io1-f68.google.com with SMTP id n3so5882251iog.12
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Dec 2018 17:22:21 -0800 (PST)
+Received: from mail-it1-f194.google.com ([209.85.166.194]:35070 "EHLO
+        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726448AbeLOBWX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Dec 2018 20:22:23 -0500
+Received: by mail-it1-f194.google.com with SMTP id p197so12345377itp.0
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Dec 2018 17:22:23 -0800 (PST)
 From: Nick Bowler <nbowler@draconx.ca>
-Subject: [RFC PATCH v2 2/3] xfs: Fix bulkstat compat ioctls on x32 userspace.
-Date: Fri, 14 Dec 2018 20:22:58 -0500
-Message-Id: <20181215012259.28358-3-nbowler@draconx.ca>
+Subject: [RFC PATCH v2 3/3] xfs: Fix x32 ioctls when cmd numbers differ from ia32.
+Date: Fri, 14 Dec 2018 20:22:59 -0500
+Message-Id: <20181215012259.28358-4-nbowler@draconx.ca>
 In-Reply-To: <20181215012259.28358-1-nbowler@draconx.ca>
 References: <20181215012259.28358-1-nbowler@draconx.ca>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,84 +17,71 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-The bulkstat family of ioctls are problematic on x32, because there is
-a mixup of native 32-bit and 64-bit conventions.  The xfs_fsop_bulkreq
-struct contains pointers and 32-bit integers so that matches the native
-32-bit layout, and that means the ioctl implementation goes into the
-regular compat path on x32.
+Several ioctl structs change size between native 32-bit (ia32) and x32
+applications, because x32 follows the native 64-bit (amd64) integer
+alignment rules and uses 64-bit time_t.  In these instances, the ioctl
+number changes so userspace simply gets -ENOTTY.  This scenario can be
+handled by simply adding more cases.
 
-However, the 'ubuffer' member of that struct in turn refers to either
-struct xfs_inogrp or xfs_bstat (or an array of these).  On x32, those
-structures match the native 64-bit layout.  The compat implementation
-writes out the 32-bit version of these structures.  This is not the
-expected format for x32 userspace, causing problems.
+Looking at the different ioctls implemented here:
 
-Fortunately the functions which actually output these xfs_inogrp and
-xfs_bstat structures have an easy way to select which output format
-is required, so we just need a little tweak to select the right format
-on x32.
+- All the ones marked 'No size or alignment issue on any arch' should
+  presumably all be fine.
+
+- All the ones under BROKEN_X86_ALIGNMENT are different under integer
+  alignment rules.  Since x32 matches amd64 here, we just need both
+  sets of cases handled.
+
+- XFS_IOC_SWAPEXT has both integer alignment differences and time_t
+  differences.  Since x32 matches amd64 here, we need to add a case
+  which calls the native implementation.
+
+- The remaining ioctls have neither 64-bit integers nor time_t, so
+  x32 matches ia32 here and no change is required at this level.  The
+  bulkstat ioctl implementations have some pointer chasing which is
+  handled separately.
 
 Signed-off-by: Nick Bowler <nbowler@draconx.ca>
 ---
- fs/xfs/xfs_ioctl32.c | 34 ++++++++++++++++++++++++++++++----
- 1 file changed, 30 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_ioctl32.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
 diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 4c34efcbf7e8..1cdc75dca779 100644
+index 1cdc75dca779..bd9ffad0f65e 100644
 --- a/fs/xfs/xfs_ioctl32.c
 +++ b/fs/xfs/xfs_ioctl32.c
-@@ -241,6 +241,32 @@ xfs_compat_ioc_bulkstat(
- 	int			done;
- 	int			error;
- 
+@@ -579,8 +579,12 @@ xfs_file_compat_ioctl(
+ 	case FS_IOC_GETFSMAP:
+ 	case XFS_IOC_SCRUB_METADATA:
+ 		return xfs_file_ioctl(filp, cmd, p);
+-#ifndef BROKEN_X86_ALIGNMENT
+-	/* These are handled fine if no alignment issues */
++#if !defined(BROKEN_X86_ALIGNMENT) || defined(CONFIG_X86_X32)
 +	/*
-+	 * Output structure handling functions.  Depending on the command,
-+	 * either the xfs_bstat and xfs_inogrp structures are written out
-+	 * to userpace memory via bulkreq.ubuffer.  Normally the compat
-+	 * functions and structure size are the correct ones to use ...
++	 * These are handled fine if no alignment issues.  To support x32
++	 * which uses native 64-bit alignment we must emit these cases in
++	 * addition to the ia-32 compat set below.
 +	 */
-+	inumbers_fmt_pf inumbers_func = xfs_inumbers_fmt_compat;
-+	bulkstat_one_pf	bs_one_func = xfs_bulkstat_one_compat;
-+	size_t bs_one_size = sizeof(compat_xfs_bstat_t);
-+
+ 	case XFS_IOC_ALLOCSP:
+ 	case XFS_IOC_FREESP:
+ 	case XFS_IOC_RESVSP:
+@@ -593,8 +597,16 @@ xfs_file_compat_ioctl(
+ 	case XFS_IOC_FSGROWFSDATA:
+ 	case XFS_IOC_FSGROWFSRT:
+ 	case XFS_IOC_ZERO_RANGE:
 +#ifdef CONFIG_X86_X32
-+	if (in_x32_syscall()) {
-+		/*
-+		 * ... but on x32 the input xfs_fsop_bulkreq has pointers
-+		 * which must be handled in the "compat" (32-bit) way, while
-+		 * the xfs_bstat and xfs_inogrp structures follow native 64-
-+		 * bit layout convention.  So adjust accordingly, otherwise
-+		 * the data written out in compat layout will not match what
-+		 * x32 userspace expects.
-+		 */
-+		inumbers_func = xfs_inumbers_fmt;
-+		bs_one_func = xfs_bulkstat_one;
-+		bs_one_size = sizeof(xfs_bstat_t);
-+	}
++	/*
++	 * x32 special: this gets a different cmd number from the ia-32 compat
++	 * case below; the associated data will match native 64-bit alignment.
++	 */
++	case XFS_IOC_SWAPEXT:
 +#endif
-+
- 	/* done = 1 if there are more stats to get and if bulkstat */
- 	/* should be called again (unused here, but used in dmapi) */
- 
-@@ -272,15 +298,15 @@ xfs_compat_ioc_bulkstat(
- 
- 	if (cmd == XFS_IOC_FSINUMBERS_32) {
- 		error = xfs_inumbers(mp, &inlast, &count,
--				bulkreq.ubuffer, xfs_inumbers_fmt_compat);
-+				bulkreq.ubuffer, inumbers_func);
- 	} else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE_32) {
- 		int res;
- 
--		error = xfs_bulkstat_one_compat(mp, inlast, bulkreq.ubuffer,
--				sizeof(compat_xfs_bstat_t), NULL, &res);
-+		error = bs_one_func(mp, inlast, bulkreq.ubuffer,
-+				bs_one_size, NULL, &res);
- 	} else if (cmd == XFS_IOC_FSBULKSTAT_32) {
- 		error = xfs_bulkstat(mp, &inlast, &count,
--			xfs_bulkstat_one_compat, sizeof(compat_xfs_bstat_t),
-+			bs_one_func, bs_one_size,
- 			bulkreq.ubuffer, &done);
- 	} else
- 		error = -EINVAL;
+ 		return xfs_file_ioctl(filp, cmd, p);
+-#else
++#endif
++#if defined(BROKEN_X86_ALIGNMENT)
+ 	case XFS_IOC_ALLOCSP_32:
+ 	case XFS_IOC_FREESP_32:
+ 	case XFS_IOC_ALLOCSP64_32:
 -- 
 2.16.1
