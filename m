@@ -1,87 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f68.google.com ([209.85.166.68]:38822 "EHLO
+Received: from mail-io1-f68.google.com ([209.85.166.68]:45307 "EHLO
         mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726609AbeLOBWS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Dec 2018 20:22:18 -0500
-Received: by mail-io1-f68.google.com with SMTP id l14so5916672ioj.5
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Dec 2018 17:22:17 -0800 (PST)
+        with ESMTP id S1726448AbeLOBWW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Dec 2018 20:22:22 -0500
+Received: by mail-io1-f68.google.com with SMTP id n3so5882251iog.12
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Dec 2018 17:22:21 -0800 (PST)
 From: Nick Bowler <nbowler@draconx.ca>
-Subject: [RFC PATCH v2 0/3] Fixing xfs ioctls on x32
-Date: Fri, 14 Dec 2018 20:22:56 -0500
-Message-Id: <20181215012259.28358-1-nbowler@draconx.ca>
+Subject: [RFC PATCH v2 2/3] xfs: Fix bulkstat compat ioctls on x32 userspace.
+Date: Fri, 14 Dec 2018 20:22:58 -0500
+Message-Id: <20181215012259.28358-3-nbowler@draconx.ca>
+In-Reply-To: <20181215012259.28358-1-nbowler@draconx.ca>
+References: <20181215012259.28358-1-nbowler@draconx.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-v2: Add a new patch which fixes xfstests/269 on both x32 and IA-32
-    userspace.  Updated test results.
+The bulkstat family of ioctls are problematic on x32, because there is
+a mixup of native 32-bit and 64-bit conventions.  The xfs_fsop_bulkreq
+struct contains pointers and 32-bit integers so that matches the native
+32-bit layout, and that means the ioctl implementation goes into the
+regular compat path on x32.
 
-    Update commit message and comments in bulkstat patch based on
-    feedback.
+However, the 'ubuffer' member of that struct in turn refers to either
+struct xfs_inogrp or xfs_bstat (or an array of these).  On x32, those
+structures match the native 64-bit layout.  The compat implementation
+writes out the 32-bit version of these structures.  This is not the
+expected format for x32 userspace, causing problems.
 
-An error I got running xfs_growfs on my x32 system opened this can of
-worms...
+Fortunately the functions which actually output these xfs_inogrp and
+xfs_bstat structures have an easy way to select which output format
+is required, so we just need a little tweak to select the right format
+on x32.
 
-This series is intended to fix all XFS ioctls which don't work from
-x32 userspace applications.
+Signed-off-by: Nick Bowler <nbowler@draconx.ca>
+---
+ fs/xfs/xfs_ioctl32.c | 34 ++++++++++++++++++++++++++++++----
+ 1 file changed, 30 insertions(+), 4 deletions(-)
 
-Test is xfstests "check -g quick", excluding generic/081 and xfs/014
-which don't behave well for me and don't seem related to XFS ioctls.
-
-Note that glibc's fallocate wrapper appears to be buggy on x32,
-which causes several test failures.  I hacked around that in xfs_io
-(the fallocate syscall itself appears to work perfectly fine on x32)
-to get a cleaner test run.  Obviously this bug should be fixed but
-it doesn't appear to be a kernel or xfsprogs problem.
-
-All tests are running with the same 4.20-rc6 kernel, but different
-userspace installations (pure x32 versus pure i686).  The "After"
-results are obtained by reloading the xfs.ko kernel module with
-the patched version and running the same set of tests.
-
-All the remaining failures on x32 appear to be aio related, or are
-also failing on the i686 tests.  I have no experience with aio and
-there's probably something to be fixed here but it seems unrelated
-to XFS ioctls and I think that's a story for another day.
-
-Before (i686 w/ 64bit kernel):
-
-  Failures: generic/484 xfs/191-input-validation xfs/269 xfs/495
-  Failed 4 of 658 tests
-
-Before (x32):
-
-  Failures: generic/018 generic/075 generic/079 generic/112 generic/113
-            generic/114 generic/198 generic/207 generic/210 generic/240
-            generic/252 generic/386 generic/427 generic/451 generic/465
-            generic/484 xfs/002 xfs/009 xfs/026 xfs/027 xfs/028 xfs/046
-            xfs/054 xfs/056 xfs/059 xfs/060 xfs/062 xfs/063 xfs/066
-            xfs/069 xfs/072 xfs/078 xfs/106 xfs/118 xfs/164 xfs/165
-            xfs/166 xfs/170 xfs/190 xfs/191-input-validation xfs/195
-            xfs/250 xfs/266 xfs/269 xfs/281 xfs/282 xfs/283 xfs/289
-            xfs/296 xfs/443 xfs/449 xfs/495
-  Failed 52 of 658 tests
-
-After (i686 w/ 64bit kernel):
-
-  Failures: generic/484 xfs/191-input-validation xfs/495
-  Failed 3 of 658 tests
-
-After (x32):
-  Failures: generic/112 generic/113 generic/114 generic/198 generic/207
-            generic/210 generic/240 generic/252 generic/427 generic/451
-            generic/465 generic/484 xfs/191-input-validation xfs/495
-  Failed 14 of 658 tests
-
-Nick Bowler (3):
-  xfs: Align compat attrlist_by_handle with native implementation.
-  xfs: Fix bulkstat compat ioctls on x32 userspace.
-  xfs: Fix x32 ioctls when cmd numbers differ from ia32.
-
- fs/xfs/xfs_ioctl32.c | 58 +++++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 51 insertions(+), 7 deletions(-)
-
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 4c34efcbf7e8..1cdc75dca779 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -241,6 +241,32 @@ xfs_compat_ioc_bulkstat(
+ 	int			done;
+ 	int			error;
+ 
++	/*
++	 * Output structure handling functions.  Depending on the command,
++	 * either the xfs_bstat and xfs_inogrp structures are written out
++	 * to userpace memory via bulkreq.ubuffer.  Normally the compat
++	 * functions and structure size are the correct ones to use ...
++	 */
++	inumbers_fmt_pf inumbers_func = xfs_inumbers_fmt_compat;
++	bulkstat_one_pf	bs_one_func = xfs_bulkstat_one_compat;
++	size_t bs_one_size = sizeof(compat_xfs_bstat_t);
++
++#ifdef CONFIG_X86_X32
++	if (in_x32_syscall()) {
++		/*
++		 * ... but on x32 the input xfs_fsop_bulkreq has pointers
++		 * which must be handled in the "compat" (32-bit) way, while
++		 * the xfs_bstat and xfs_inogrp structures follow native 64-
++		 * bit layout convention.  So adjust accordingly, otherwise
++		 * the data written out in compat layout will not match what
++		 * x32 userspace expects.
++		 */
++		inumbers_func = xfs_inumbers_fmt;
++		bs_one_func = xfs_bulkstat_one;
++		bs_one_size = sizeof(xfs_bstat_t);
++	}
++#endif
++
+ 	/* done = 1 if there are more stats to get and if bulkstat */
+ 	/* should be called again (unused here, but used in dmapi) */
+ 
+@@ -272,15 +298,15 @@ xfs_compat_ioc_bulkstat(
+ 
+ 	if (cmd == XFS_IOC_FSINUMBERS_32) {
+ 		error = xfs_inumbers(mp, &inlast, &count,
+-				bulkreq.ubuffer, xfs_inumbers_fmt_compat);
++				bulkreq.ubuffer, inumbers_func);
+ 	} else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE_32) {
+ 		int res;
+ 
+-		error = xfs_bulkstat_one_compat(mp, inlast, bulkreq.ubuffer,
+-				sizeof(compat_xfs_bstat_t), NULL, &res);
++		error = bs_one_func(mp, inlast, bulkreq.ubuffer,
++				bs_one_size, NULL, &res);
+ 	} else if (cmd == XFS_IOC_FSBULKSTAT_32) {
+ 		error = xfs_bulkstat(mp, &inlast, &count,
+-			xfs_bulkstat_one_compat, sizeof(compat_xfs_bstat_t),
++			bs_one_func, bs_one_size,
+ 			bulkreq.ubuffer, &done);
+ 	} else
+ 		error = -EINVAL;
 -- 
 2.16.1
