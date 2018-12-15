@@ -1,210 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52284 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726651AbeLRSf7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 13:35:59 -0500
-Date: Tue, 18 Dec 2018 10:35:55 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/6] xfs: stringify btree cursor types in ftrace output
-Message-ID: <20181218183555.GD27208@magnolia>
-References: <154344773243.4341.5458822684407979916.stgit@magnolia>
- <154344776323.4341.3184468728000538253.stgit@magnolia>
- <e5a62cf6-baac-7652-dd5e-4e1cb1793030@sandeen.net>
+Received: from mail-lj1-f177.google.com ([209.85.208.177]:42128 "EHLO
+        mail-lj1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729245AbeLOFeh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 15 Dec 2018 00:34:37 -0500
+Received: by mail-lj1-f177.google.com with SMTP id l15-v6so6661110lja.9
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Dec 2018 21:34:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e5a62cf6-baac-7652-dd5e-4e1cb1793030@sandeen.net>
+From: =?UTF-8?B?5byg5pys6b6Z?= <zbl.lkml@gmail.com>
+Date: Sat, 15 Dec 2018 13:34:33 +0800
+Message-ID: <CAJDdQW1bUSZ+3p-4XMbtzU0y5SifQnnwmStKGhb5dkozCaExoA@mail.gmail.com>
+Subject: XFS: 3-way deadlock with xfs_dquot, xfs_buf and xfs_inode
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
 
-On Tue, Dec 18, 2018 at 11:27:42AM -0600, Eric Sandeen wrote:
-> On 11/28/18 5:29 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Use __print_symbolic to print the btree type in ftrace output.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Ignore my previous question.
-> 
-> (if scrub's trace file starts duplicating too much of the common trace stuff,
-> though, we may want a common include file?)
+Hi Developpers and XFS,
 
-I wasn't planning to expand any further than the scrub type.
+There seems to be a deadlock involving 3 threads: 1) the fsync thread
+has acquired the project quota lock, and is trying to get the xfs_buf
+(it's a an agf); 2) the xfs_buf is attached to a transaction, and
+xfs_end_io is trying to get the xfs_inode ilock; 3) the write thread
+has acquired the xfs_inode ilock, and tries to get the xfs_dquot.
+Below are the traces.
 
---D
+INFO: task xxx-super:14692 blocked for more than 120 seconds.
+---------------------------------------
+Call Trace:
+ schedule+0x29/0x70
+ schedule_timeout+0x239/0x2c0
+ ? kmem_cache_alloc+0x1ba/0x1e0
+ ? kmem_zone_alloc+0x97/0x130 [xfs]
+ ? kmem_zone_alloc+0x97/0x130 [xfs]
+ __down_common+0x108/0x154
+ ? i40e_xmit_frame_ring+0x3f0/0x12d0 [i40e]
+ ? _xfs_buf_find+0x176/0x340 [xfs]
+ __down+0x1d/0x1f
+ down+0x41/0x50
+ xfs_buf_lock+0x3c/0xd0 [xfs]
+ _xfs_buf_find+0x176/0x340 [xfs]
+ xfs_buf_get_map+0x2a/0x240 [xfs]
+ xfs_buf_read_map+0x30/0x160 [xfs]
+ xfs_trans_read_buf_map+0x211/0x400 [xfs]
+ xfs_read_agf+0x93/0x110 [xfs]
+ xfs_alloc_read_agf+0x4b/0x110 [xfs]
+ xfs_alloc_fix_freelist+0x34b/0x410 [xfs]
+ ? xfs_bmap_add_extent_hole_delay+0xe0/0x5e0 [xfs]
+ ? radix_tree_lookup+0xd/0x10
+ ? xfs_perag_get+0x2a/0xb0 [xfs]
+ ? radix_tree_lookup+0xd/0x10
+ ? xfs_perag_get+0x2a/0xb0 [xfs]
+ xfs_alloc_vextent+0x294/0x5f0 [xfs]
+ xfs_bmap_btalloc+0x3f3/0x780 [xfs]
+ xfs_bmap_alloc+0xe/0x10 [xfs]
+ xfs_bmapi_write+0x499/0xab0 [xfs]
+ xfs_iomap_write_allocate+0x177/0x390 [xfs] (xfs_qm_dqattach)
+ xfs_map_blocks+0x1a6/0x210 [xfs]
+ xfs_do_writepage+0x17b/0x550 [xfs]
+ write_cache_pages+0x251/0x4d0
+ ? xfs_aops_discard_page+0x150/0x150 [xfs]
+ ? try_to_wake_up+0x1c8/0x320
+ xfs_vm_writepages+0xc5/0xe0 [xfs]
+ do_writepages+0x1e/0x40
+__filemap_fdatawrite_range+0x65/0x80
+ filemap_write_and_wait_range+0x41/0x90
+ xfs_file_fsync+0x66/0x1e0 [xfs]
+ do_fsync+0x65/0xa0
+ ? SyS_write+0x9f/0xe0
+ SyS_fsync+0x10/0x20
+ system_call_fastpath+0x16/0x1b
 
-> But for now
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> > ---
-> >  fs/xfs/libxfs/xfs_types.h |    9 +++++++++
-> >  fs/xfs/scrub/trace.h      |   38 ++++++++++++++++++++++++++------------
-> >  fs/xfs/xfs_trace.h        |   12 ++++++++++--
-> >  3 files changed, 45 insertions(+), 14 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> > index 297cf2318f83..eb04afe9cce0 100644
-> > --- a/fs/xfs/libxfs/xfs_types.h
-> > +++ b/fs/xfs/libxfs/xfs_types.h
-> > @@ -114,6 +114,15 @@ typedef enum {
-> >  	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_MAX
-> >  } xfs_btnum_t;
-> >  
-> > +#define XFS_BTNUM_STRINGS \
-> > +	{ XFS_BTNUM_BNOi,	"bnobt" }, \
-> > +	{ XFS_BTNUM_CNTi,	"cntbt" }, \
-> > +	{ XFS_BTNUM_RMAPi,	"rmapbt" }, \
-> > +	{ XFS_BTNUM_BMAPi,	"bmbt" }, \
-> > +	{ XFS_BTNUM_INOi,	"inobt" }, \
-> > +	{ XFS_BTNUM_FINOi,	"finobt" }, \
-> > +	{ XFS_BTNUM_REFCi,	"refcbt" }
-> > +
-> >  struct xfs_name {
-> >  	const unsigned char	*name;
-> >  	int			len;
-> > diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-> > index d67e915cf91a..0141eb1ac091 100644
-> > --- a/fs/xfs/scrub/trace.h
-> > +++ b/fs/xfs/scrub/trace.h
-> > @@ -12,6 +12,20 @@
-> >  #include <linux/tracepoint.h>
-> >  #include "xfs_bit.h"
-> >  
-> > +/*
-> > + * ftrace's __print_symbolic requires that all enum values be wrapped in the
-> > + * TRACE_DEFINE_ENUM macro so that the enum value can be encoded in the ftrace
-> > + * ring buffer.  Somehow this was only worth mentioning in the ftrace sample
-> > + * code.
-> > + */
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_BNOi);
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_CNTi);
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_BMAPi);
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_INOi);
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_FINOi);
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_RMAPi);
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_REFCi);
-> > +
-> >  DECLARE_EVENT_CLASS(xchk_class,
-> >  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
-> >  		 int error),
-> > @@ -278,10 +292,10 @@ TRACE_EVENT(xchk_btree_op_error,
-> >  		__entry->error = error;
-> >  		__entry->ret_ip = ret_ip;
-> >  	),
-> > -	TP_printk("dev %d:%d type %u btnum %d level %d ptr %d agno %u agbno %u error %d ret_ip %pS",
-> > +	TP_printk("dev %d:%d type %u btree %s level %d ptr %d agno %u agbno %u error %d ret_ip %pS",
-> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> >  		  __entry->type,
-> > -		  __entry->btnum,
-> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
-> >  		  __entry->level,
-> >  		  __entry->ptr,
-> >  		  __entry->agno,
-> > @@ -321,12 +335,12 @@ TRACE_EVENT(xchk_ifork_btree_op_error,
-> >  		__entry->error = error;
-> >  		__entry->ret_ip = ret_ip;
-> >  	),
-> > -	TP_printk("dev %d:%d ino 0x%llx fork %d type %u btnum %d level %d ptr %d agno %u agbno %u error %d ret_ip %pS",
-> > +	TP_printk("dev %d:%d ino 0x%llx fork %d type %u btree %s level %d ptr %d agno %u agbno %u error %d ret_ip %pS",
-> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> >  		  __entry->ino,
-> >  		  __entry->whichfork,
-> >  		  __entry->type,
-> > -		  __entry->btnum,
-> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
-> >  		  __entry->level,
-> >  		  __entry->ptr,
-> >  		  __entry->agno,
-> > @@ -360,10 +374,10 @@ TRACE_EVENT(xchk_btree_error,
-> >  		__entry->ptr = cur->bc_ptrs[level];
-> >  		__entry->ret_ip = ret_ip;
-> >  	),
-> > -	TP_printk("dev %d:%d type %u btnum %d level %d ptr %d agno %u agbno %u ret_ip %pS",
-> > +	TP_printk("dev %d:%d type %u btree %s level %d ptr %d agno %u agbno %u ret_ip %pS",
-> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> >  		  __entry->type,
-> > -		  __entry->btnum,
-> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
-> >  		  __entry->level,
-> >  		  __entry->ptr,
-> >  		  __entry->agno,
-> > @@ -400,12 +414,12 @@ TRACE_EVENT(xchk_ifork_btree_error,
-> >  		__entry->ptr = cur->bc_ptrs[level];
-> >  		__entry->ret_ip = ret_ip;
-> >  	),
-> > -	TP_printk("dev %d:%d ino 0x%llx fork %d type %u btnum %d level %d ptr %d agno %u agbno %u ret_ip %pS",
-> > +	TP_printk("dev %d:%d ino 0x%llx fork %d type %u btree %s level %d ptr %d agno %u agbno %u ret_ip %pS",
-> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> >  		  __entry->ino,
-> >  		  __entry->whichfork,
-> >  		  __entry->type,
-> > -		  __entry->btnum,
-> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
-> >  		  __entry->level,
-> >  		  __entry->ptr,
-> >  		  __entry->agno,
-> > @@ -439,10 +453,10 @@ DECLARE_EVENT_CLASS(xchk_sbtree_class,
-> >  		__entry->nlevels = cur->bc_nlevels;
-> >  		__entry->ptr = cur->bc_ptrs[level];
-> >  	),
-> > -	TP_printk("dev %d:%d type %u btnum %d agno %u agbno %u level %d nlevels %d ptr %d",
-> > +	TP_printk("dev %d:%d type %u btree %s agno %u agbno %u level %d nlevels %d ptr %d",
-> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> >  		  __entry->type,
-> > -		  __entry->btnum,
-> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
-> >  		  __entry->agno,
-> >  		  __entry->bno,
-> >  		  __entry->level,
-> > @@ -643,11 +657,11 @@ TRACE_EVENT(xrep_init_btblock,
-> >  		__entry->agbno = agbno;
-> >  		__entry->btnum = btnum;
-> >  	),
-> > -	TP_printk("dev %d:%d agno %u agbno %u btnum %d",
-> > +	TP_printk("dev %d:%d agno %u agbno %u btree %s",
-> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> >  		  __entry->agno,
-> >  		  __entry->agbno,
-> > -		  __entry->btnum)
-> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS))
-> >  )
-> >  TRACE_EVENT(xrep_findroot_block,
-> >  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index 94e289aca220..6fcc893dfc91 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -2194,6 +2194,14 @@ DEFINE_DISCARD_EVENT(xfs_discard_exclude);
-> >  DEFINE_DISCARD_EVENT(xfs_discard_busy);
-> >  
-> >  /* btree cursor events */
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_BNOi);
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_CNTi);
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_BMAPi);
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_INOi);
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_FINOi);
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_RMAPi);
-> > +TRACE_DEFINE_ENUM(XFS_BTNUM_REFCi);
-> > +
-> >  DECLARE_EVENT_CLASS(xfs_btree_cur_class,
-> >  	TP_PROTO(struct xfs_btree_cur *cur, int level, struct xfs_buf *bp),
-> >  	TP_ARGS(cur, level, bp),
-> > @@ -2213,9 +2221,9 @@ DECLARE_EVENT_CLASS(xfs_btree_cur_class,
-> >  		__entry->ptr = cur->bc_ptrs[level];
-> >  		__entry->daddr = bp ? bp->b_bn : -1;
-> >  	),
-> > -	TP_printk("dev %d:%d btnum %d level %d/%d ptr %d daddr 0x%llx",
-> > +	TP_printk("dev %d:%d btree %s level %d/%d ptr %d daddr 0x%llx",
-> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > -		  __entry->btnum,
-> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
-> >  		  __entry->level,
-> >  		  __entry->nlevels,
-> >  		  __entry->ptr,
-> > 
+Workqueue: xfs-data/md1 xfs_end_io
+-------------------------------------
+Call Trace:
+ schedule+0x29/0x70
+ rwsem_down_write_failed+0x115/0x220
+ ? load_balance+0x1e2/0x990
+ ? xfs_setfilesize+0x2d/0x100 [xfs]
+ call_rwsem_down_write_failed+0x17/0x30
+ down_write+0x2d/0x30
+ xfs_ilock+0xc1/0x120 [xfs]
+ xfs_setfilesize+0x2d/0x100 [xfs]
+ xfs_setfilesize_ioend+0x4a/0x60 [xfs]
+ xfs_end_io+0x43/0x80 [xfs]
+ process_one_work+0x17b/0x470
+ worker_thread+0x126/0x410
+ ? rescuer_thread+0x460/0x460
+ kthread+0xcf/0xe0
+ ? kthread_create_on_node+0x140/0x140
+ ret_from_fork+0x58/0x90
+ kthread_create_on_node+0x140/0x140
+
+INFO: task java:39107 blocked for more than 120 seconds.
+-------------------------------------
+ Call Trace:
+ schedule_preempt_disabled+0x29/0x70
+ __mutex_lock_slowpath+0xc5/0x1c0
+ mutex_lock+0x1f/0x2f
+ xfs_trans_dqresv+0x44/0x470 [xfs]
+ xfs_trans_reserve_quota_bydquots+0x11e/0x180 [xfs]
+ xfs_trans_reserve_quota_nblks+0x5f/0x70 [xfs]
+ xfs_bmapi_reserve_delalloc+0x87/0x1f0 [xfs]
+ xfs_bmapi_delay+0x12b/0x2a0 [xfs]
+ xfs_iomap_write_delay+0x178/0x2e0 [xfs]
+ __xfs_get_blocks+0x4c3/0x7d0 [xfs] (xfs_ilock)
+ xfs_get_blocks+0x14/0x20 [xfs]
+ __block_write_begin+0x1a7/0x490
+ ? __xfs_get_blocks+0x7d0/0x7d0 [xfs]
+ ? grab_cache_page_write_begin+0x9b/0xd0
+ xfs_vm_write_begin+0x51/0xe0 [xfs]
+ ? xfs_vm_write_end+0x29/0x80 [xfs]
+ generic_file_buffered_write+0x11e/0x2a0
+ xfs_file_buffered_aio_write+0x10b/0x260 [xfs]
+ xfs_file_aio_write+0x18d/0x1a0 [xfs]
+ do_sync_write+0x8d/0xd0
+ vfs_write+0xbd/0x1e0
+ SyS_write+0x7f/0xe0
+ tracesys+0xdd/0xe2
+
+Once they lockup, kworkers are blocked on xfs_dquot, leading to dirty
+pages piling up on memory cgroup. Then a bunch of threads won't get
+pages in path:
+__alloc_pages_nodemask
+mem_cgoup_reclaim
+  shrink_zone
+    shrink_page_list
+      wait_on_page_writeback
+
+It's 3.10.0-514.16.1.el7.x86_64 kernel, met about 10-20 times a week
+on several hundred of servers.
+
+Actually I'm not quite sure about the scenario, or whether it has been
+fixed in mainline.
+
+Thank you very much,
+Benlong
