@@ -1,118 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50774 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727184AbeLRTau (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 14:30:50 -0500
-Date: Tue, 18 Dec 2018 11:30:38 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: handle bad flags in
- xfs_recover_inode_owner_change
-Message-ID: <20181218193038.GH27208@magnolia>
-References: <81b35377-47d9-2421-ba5c-537ac6c8c021@redhat.com>
- <3898cc3a-be06-a29e-07f6-9daf52cb7545@sandeen.net>
- <20181218191516.GF27208@magnolia>
- <43d60dd7-896c-7537-1b59-0f79cf36c30e@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <43d60dd7-896c-7537-1b59-0f79cf36c30e@sandeen.net>
+Received: from mail-it1-f196.google.com ([209.85.166.196]:37239 "EHLO
+        mail-it1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726609AbeLOBWU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Dec 2018 20:22:20 -0500
+Received: by mail-it1-f196.google.com with SMTP id b5so12326808iti.2
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Dec 2018 17:22:19 -0800 (PST)
+From: Nick Bowler <nbowler@draconx.ca>
+Subject: [RFC PATCH v2 1/3] xfs: Align compat attrlist_by_handle with native implementation.
+Date: Fri, 14 Dec 2018 20:22:57 -0500
+Message-Id: <20181215012259.28358-2-nbowler@draconx.ca>
+In-Reply-To: <20181215012259.28358-1-nbowler@draconx.ca>
+References: <20181215012259.28358-1-nbowler@draconx.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Tue, Dec 18, 2018 at 01:23:22PM -0600, Eric Sandeen wrote:
-> On 12/18/18 1:15 PM, Darrick J. Wong wrote:
-> > On Tue, Dec 18, 2018 at 01:02:56PM -0600, Eric Sandeen wrote:
-> >> Today, xfs_recover_inode_owner_change() indicates that if XFS_ILOG_DOWNER
-> >> is set, XFS_ILOG_DBROOT must be as well, via an assert.  However, this 
-> >> could fail to be true due to fuzzing or corruption, so we really
-> >> should handle it gracefully rather than calling ASSERT() and crashing,
-> >> or blowing past it on a non-debug build and BUGging later.
-> >>
-> >> Return -EFSCORRUPTED and fail the log replay if we find this
-> >> inconsistent state.
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> ---
-> >>
-> >> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> >> index 1fc9e9042e0e..56148a3083b8 100644
-> >> --- a/fs/xfs/xfs_log_recover.c
-> >> +++ b/fs/xfs/xfs_log_recover.c
-> >> @@ -2964,7 +2964,10 @@ xfs_recover_inode_owner_change(
-> >>  	}
-> >>  
-> >>  	if (in_f->ilf_fields & XFS_ILOG_DOWNER) {
-> >> -		ASSERT(in_f->ilf_fields & XFS_ILOG_DBROOT);
-> >> +		if (!(in_f->ilf_fields & XFS_ILOG_DBROOT)) {
-> >> +			error = -EFSCORRUPTED;
-> >> +			goto out_free_ip;
-> >> +		}
-> >>  		error = xfs_bmbt_change_owner(NULL, ip, XFS_DATA_FORK,
-> >>  					      ip->i_ino, buffer_list);
-> >>  		if (error)
-> >> @@ -2972,7 +2975,10 @@ xfs_recover_inode_owner_change(
-> >>  	}
-> >>  
-> >>  	if (in_f->ilf_fields & XFS_ILOG_AOWNER) {
-> >> -		ASSERT(in_f->ilf_fields & XFS_ILOG_ABROOT);
-> >> +		if (!(in_f->ilf_fields & XFS_ILOG_ABROOT)) {
-> >> +			error = -EFSCORRUPTED;
-> >> +			goto out_free_ip;
-> > 
-> > Are there any downsides to changing the data fork owner and bailing out
-> > afterwards if we encounter the combination of (DOWNER | DBROOT | AOWNER)?
-> 
-> Not sure I understand the Q.
-> 
-> (Maybe you mean DOWNER && !DBROOT?)
+While inspecting the ioctl implementations, I noticed that the compat
+implementation of XFS_IOC_ATTRLIST_BY_HANDLE does not do exactly the
+same thing as the native implementation.  Specifically, the "cursor"
+does not appear to be written out to userspace on the compat path,
+like it is on the native path.
 
-No, I really did mean the case where DOWNER and DBROOT are set properly,
-but it's the AOWNER/ABROOT flags that aren't set properly.  I was
-wondering why not check DOWNER/DBROOT and AOWNER/ABROOT before touching
-*anything* and was typing my way through it.
+This adjusts the compat implementation to copy out the cursor just
+like the native implementation does.  The attrlist cursor does not
+require any special compat handling.  This fixes xfstests xfs/269
+on both IA-32 and x32 userspace, when running on an amd64 kernel.
 
-> > Thinking this through, the log won't continue recovering, so you
-> > have to
-> > run xfs_repair -L which zaps the log and checks everything.  We already
-> > finished the data fork bmbt update so (barring other problems) it should
-> > be fine.  The attr fork won't have been updated, but its log entries
-> > were unrecoverable, so at worst we lose the attr fork, right?
-> 
-> TBH, I hadn't really thought through "recover as much as we can before
-> deciding we have a problem" - if we encounter this, it's an inconsistent
-> state in the log for whatever, and we should stop.  I don't ... think
-> we're in the business of trying to second guess or fix on the fly here,
-> right?
+Signed-off-by: Nick Bowler <nbowler@draconx.ca>
+---
+ fs/xfs/xfs_ioctl32.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-If that's true then we ought to validate all four flags before calling
-xfs_bmbt_change_owner(), right?
-
-> > And we don't want the ABROOT check any earlier, because we don't want to
-> > forego a data fork owner update that might have succeeded anyway and
-> > we'll definitely lose it if we don't update it and xfs_repair encounters
-> > it.  Right?
-> 
-> Again, my caveman coder brain just said "inconsistent state -> stop now."
-> 
-> Should we be doing more?
-
-See my reply to the second patch, sorry. :/
-
---D
-
-> -Eric
-> 
-> > If so, then,
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > --D
-> > 
-> >> +		}
-> >>  		error = xfs_bmbt_change_owner(NULL, ip, XFS_ATTR_FORK,
-> >>  					      ip->i_ino, buffer_list);
-> >>  		if (error)
-> >>
-> > 
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index fba115f4103a..4c34efcbf7e8 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -336,6 +336,7 @@ xfs_compat_attrlist_by_handle(
+ {
+ 	int			error;
+ 	attrlist_cursor_kern_t	*cursor;
++	compat_xfs_fsop_attrlist_handlereq_t __user *p = arg;
+ 	compat_xfs_fsop_attrlist_handlereq_t al_hreq;
+ 	struct dentry		*dentry;
+ 	char			*kbuf;
+@@ -370,6 +371,11 @@ xfs_compat_attrlist_by_handle(
+ 	if (error)
+ 		goto out_kfree;
+ 
++	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t))) {
++		error = -EFAULT;
++		goto out_kfree;
++	}
++
+ 	if (copy_to_user(compat_ptr(al_hreq.buffer), kbuf, al_hreq.buflen))
+ 		error = -EFAULT;
+ 
+-- 
+2.16.1
