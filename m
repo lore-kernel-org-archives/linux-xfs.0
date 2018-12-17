@@ -1,74 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:39222 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727203AbeLQRfJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Dec 2018 12:35:09 -0500
-Date: Mon, 17 Dec 2018 09:34:55 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:40688 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727650AbeLQR7e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Dec 2018 12:59:34 -0500
+Date: Mon, 17 Dec 2018 09:59:22 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH v2 1/3] xfs: Align compat attrlist_by_handle with
- native implementation.
-Message-ID: <20181217173455.GG24487@magnolia>
-References: <20181215012259.28358-1-nbowler@draconx.ca>
- <20181215012259.28358-2-nbowler@draconx.ca>
+Subject: Re: COW improvements and always_cow support V3
+Message-ID: <20181217175922.GI24487@magnolia>
+References: <20181203222503.30649-1-hch@lst.de>
+ <20181206010550.GN24487@magnolia>
+ <20181206200930.GA31797@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181215012259.28358-2-nbowler@draconx.ca>
+In-Reply-To: <20181206200930.GA31797@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nick Bowler <nbowler@draconx.ca>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 14, 2018 at 08:22:57PM -0500, Nick Bowler wrote:
-> While inspecting the ioctl implementations, I noticed that the compat
-> implementation of XFS_IOC_ATTRLIST_BY_HANDLE does not do exactly the
-> same thing as the native implementation.  Specifically, the "cursor"
-> does not appear to be written out to userspace on the compat path,
-> like it is on the native path.
+On Thu, Dec 06, 2018 at 09:09:30PM +0100, Christoph Hellwig wrote:
+> I see the 050 one, and it looks odd.
 > 
-> This adjusts the compat implementation to copy out the cursor just
-> like the native implementation does.  The attrlist cursor does not
-> require any special compat handling.  This fixes xfstests xfs/269
-> on both IA-32 and x32 userspace, when running on an amd64 kernel.
+> > --- /tmp/xfstests/tests/generic/075.out	2017-02-28 09:23:56.049065953 -0800
+> > +++ /var/tmp/xfstests//generic/075.out.bad	2018-12-03 22:11:12.392566688 -0800
+> 
+> This and a few other fsx tests assume you can always fallocate
+> on XFS.  I sent a series for this:
+> 
+> https://www.spinics.net/lists/linux-xfs/msg23433.html
+> 
+> But I need to rework some of the patches a little more based on the
+> review feedback.
 
-Craaap, I forgot that when I fixed the native attrlist_by_handle. :(
+"the patches"... as in the fstests patches, or the always_cow series?
 
-> Signed-off-by: Nick Bowler <nbowler@draconx.ca>
+> Similarly the badly fragmented warnings are simply expected, that
+> is the nature of an always out of place write fs.  But the quota
+> run turned up a few more failures than I expected for the always_cow
+> mode, I can look into them.  But so far 95% of the always_cow bugs
+> were either issues with the text, or genuine XFS COW path bugs not
+> otherwise uncovered..
 
-Fixes: 0facef7fb053b ("xfs: in _attrlist_by_handle, copy the cursor back to userspace")
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+<nod> generic/311 and generic/476 regularly trigger assertion warnings
+about negative quota counts, which I have yet to diagnose.  FWIW
+fstests' post-run quota checking never complains about problems, which
+means we're probably just moving quota accounting in the wrong order or
+something.
 
 --D
-
-> ---
->  fs/xfs/xfs_ioctl32.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index fba115f4103a..4c34efcbf7e8 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -336,6 +336,7 @@ xfs_compat_attrlist_by_handle(
->  {
->  	int			error;
->  	attrlist_cursor_kern_t	*cursor;
-> +	compat_xfs_fsop_attrlist_handlereq_t __user *p = arg;
->  	compat_xfs_fsop_attrlist_handlereq_t al_hreq;
->  	struct dentry		*dentry;
->  	char			*kbuf;
-> @@ -370,6 +371,11 @@ xfs_compat_attrlist_by_handle(
->  	if (error)
->  		goto out_kfree;
->  
-> +	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t))) {
-> +		error = -EFAULT;
-> +		goto out_kfree;
-> +	}
-> +
->  	if (copy_to_user(compat_ptr(al_hreq.buffer), kbuf, al_hreq.buflen))
->  		error = -EFAULT;
->  
-> -- 
-> 2.16.1
-> 
