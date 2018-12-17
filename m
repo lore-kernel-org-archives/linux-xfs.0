@@ -1,103 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49592 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727597AbeLQSSk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Dec 2018 13:18:40 -0500
-Date: Mon, 17 Dec 2018 10:18:32 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH v2 3/3] xfs: Fix x32 ioctls when cmd numbers differ
- from ia32.
-Message-ID: <20181217181832.GK24487@magnolia>
-References: <20181215012259.28358-1-nbowler@draconx.ca>
- <20181215012259.28358-4-nbowler@draconx.ca>
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:37368 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728129AbeLQUGr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Dec 2018 15:06:47 -0500
+Received: by mail-lf1-f66.google.com with SMTP id y11so10449892lfj.4
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Dec 2018 12:06:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181215012259.28358-4-nbowler@draconx.ca>
+In-Reply-To: <20181217174018.GH24487@magnolia>
+References: <20181215012259.28358-1-nbowler@draconx.ca> <20181215012259.28358-3-nbowler@draconx.ca>
+ <20181217174018.GH24487@magnolia>
+From: Nick Bowler <nbowler@draconx.ca>
+Date: Mon, 17 Dec 2018 15:06:43 -0500
+Message-ID: <CADyTPEwwbKq2KCcRU=Rj+66JKPemq+BhNRitR-uz_gu=fXp-Ng@mail.gmail.com>
+Subject: Re: [RFC PATCH v2 2/3] xfs: Fix bulkstat compat ioctls on x32 userspace.
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nick Bowler <nbowler@draconx.ca>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-On Fri, Dec 14, 2018 at 08:22:59PM -0500, Nick Bowler wrote:
-> Several ioctl structs change size between native 32-bit (ia32) and x32
-> applications, because x32 follows the native 64-bit (amd64) integer
-> alignment rules and uses 64-bit time_t.  In these instances, the ioctl
-> number changes so userspace simply gets -ENOTTY.  This scenario can be
-> handled by simply adding more cases.
-> 
-> Looking at the different ioctls implemented here:
-> 
-> - All the ones marked 'No size or alignment issue on any arch' should
->   presumably all be fine.
-> 
-> - All the ones under BROKEN_X86_ALIGNMENT are different under integer
->   alignment rules.  Since x32 matches amd64 here, we just need both
->   sets of cases handled.
-> 
-> - XFS_IOC_SWAPEXT has both integer alignment differences and time_t
->   differences.  Since x32 matches amd64 here, we need to add a case
->   which calls the native implementation.
-> 
-> - The remaining ioctls have neither 64-bit integers nor time_t, so
->   x32 matches ia32 here and no change is required at this level.  The
->   bulkstat ioctl implementations have some pointer chasing which is
->   handled separately.
-> 
-> Signed-off-by: Nick Bowler <nbowler@draconx.ca>
+On 2018-12-17 Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> On Fri, Dec 14, 2018 at 08:22:58PM -0500, Nick Bowler wrote:
+[...]
+>> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+>> index 4c34efcbf7e8..1cdc75dca779 100644
+>> --- a/fs/xfs/xfs_ioctl32.c
+>> +++ b/fs/xfs/xfs_ioctl32.c
+>> @@ -241,6 +241,32 @@ xfs_compat_ioc_bulkstat(
+>>  	int			done;
+>>  	int			error;
+>>
+>> +	/*
+>> +	 * Output structure handling functions.  Depending on the command,
+>> +	 * either the xfs_bstat and xfs_inogrp structures are written out
+>> +	 * to userpace memory via bulkreq.ubuffer.  Normally the compat
+>> +	 * functions and structure size are the correct ones to use ...
+>> +	 */
+>> +	inumbers_fmt_pf inumbers_func = xfs_inumbers_fmt_compat;
+>> +	bulkstat_one_pf	bs_one_func = xfs_bulkstat_one_compat;
+>> +	size_t bs_one_size = sizeof(compat_xfs_bstat_t);
+>> +
+>> +#ifdef CONFIG_X86_X32
+>> +	if (in_x32_syscall()) {
+>> +		/*
+>> +		 * ... but on x32 the input xfs_fsop_bulkreq has pointers
+>> +		 * which must be handled in the "compat" (32-bit) way, while
+>> +		 * the xfs_bstat and xfs_inogrp structures follow native 64-
+>> +		 * bit layout convention.  So adjust accordingly, otherwise
+>> +		 * the data written out in compat layout will not match what
+>> +		 * x32 userspace expects.
+>> +		 */
+>> +		inumbers_func = xfs_inumbers_fmt;
+>> +		bs_one_func = xfs_bulkstat_one;
+>> +		bs_one_size = sizeof(xfs_bstat_t);
+>
+> struct xfs_bstat, not xfs_bstat_t, because we're gradually getting rid
+> of the structure typedefs.  If I don't hear any other objections in the
+> next day or so I'll fix this when I pull in this patch.
 
-Looks mostly ok to me, provided they don't drop x32 this release.
+Makes sense.  I'll only change this on my end if I have to respin the
+series for some other reason then.  I guess the sizeof(compat_xfs_bstat_t)
+just before this should be similarly changed as well?
 
-(It doesn't sound to me like that's going to happen any time soon...)
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-(Will try to test all this... /me flexes his cross-arch muscles...)
-
---D
-
-> ---
->  fs/xfs/xfs_ioctl32.c | 18 +++++++++++++++---
->  1 file changed, 15 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index 1cdc75dca779..bd9ffad0f65e 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -579,8 +579,12 @@ xfs_file_compat_ioctl(
->  	case FS_IOC_GETFSMAP:
->  	case XFS_IOC_SCRUB_METADATA:
->  		return xfs_file_ioctl(filp, cmd, p);
-> -#ifndef BROKEN_X86_ALIGNMENT
-> -	/* These are handled fine if no alignment issues */
-> +#if !defined(BROKEN_X86_ALIGNMENT) || defined(CONFIG_X86_X32)
-> +	/*
-> +	 * These are handled fine if no alignment issues.  To support x32
-> +	 * which uses native 64-bit alignment we must emit these cases in
-> +	 * addition to the ia-32 compat set below.
-> +	 */
->  	case XFS_IOC_ALLOCSP:
->  	case XFS_IOC_FREESP:
->  	case XFS_IOC_RESVSP:
-> @@ -593,8 +597,16 @@ xfs_file_compat_ioctl(
->  	case XFS_IOC_FSGROWFSDATA:
->  	case XFS_IOC_FSGROWFSRT:
->  	case XFS_IOC_ZERO_RANGE:
-> +#ifdef CONFIG_X86_X32
-> +	/*
-> +	 * x32 special: this gets a different cmd number from the ia-32 compat
-> +	 * case below; the associated data will match native 64-bit alignment.
-> +	 */
-> +	case XFS_IOC_SWAPEXT:
-> +#endif
->  		return xfs_file_ioctl(filp, cmd, p);
-> -#else
-> +#endif
-> +#if defined(BROKEN_X86_ALIGNMENT)
->  	case XFS_IOC_ALLOCSP_32:
->  	case XFS_IOC_FREESP_32:
->  	case XFS_IOC_ALLOCSP64_32:
-> -- 
-> 2.16.1
-> 
+Thanks,
+  Nick
