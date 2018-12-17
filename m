@@ -1,61 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from amazon.4net.rs ([159.69.148.70]:54812 "EHLO amazon.4net.rs"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730269AbeLOPgP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 15 Dec 2018 10:36:15 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:39222 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727203AbeLQRfJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Dec 2018 12:35:09 -0500
+Date: Mon, 17 Dec 2018 09:34:55 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC PATCH v2 1/3] xfs: Align compat attrlist_by_handle with
+ native implementation.
+Message-ID: <20181217173455.GG24487@magnolia>
+References: <20181215012259.28358-1-nbowler@draconx.ca>
+ <20181215012259.28358-2-nbowler@draconx.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date: Sat, 15 Dec 2018 16:36:10 +0100
-From: =?UTF-8?Q?Sini=C5=A1a_Bandin?= <sinisa@4net.rs>
-Subject: Re: XFS and RAID10 with o2 layout
-In-Reply-To: <23572.5681.810087.381496@quad.stoffel.home>
-References: <d9fc0327-eef3-63bd-82a3-98545251bfe5@4net.rs>
- <20181213220533.GH6311@dastard>
- <3e0e8def-2bb4-5e8a-56c1-d010ede059d4@4net.rs>
- <5C13694A.8070303@youngman.org.uk>
- <23572.5681.810087.381496@quad.stoffel.home>
-Message-ID: <1a5643d5f68d3dfe1aaa472aac6bd398@4net.rs>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181215012259.28358-2-nbowler@draconx.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-raid@vger.kernel.org, linux-xfs@vger.kernel.org, linux-raid-owner@vger.kernel.org
+To: Nick Bowler <nbowler@draconx.ca>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-
-
-On 14.12.2018 21:44, John Stoffel wrote:
->>>>>> "Wols" == Wols Lists <antlists@youngman.org.uk> writes:
+On Fri, Dec 14, 2018 at 08:22:57PM -0500, Nick Bowler wrote:
+> While inspecting the ioctl implementations, I noticed that the compat
+> implementation of XFS_IOC_ATTRLIST_BY_HANDLE does not do exactly the
+> same thing as the native implementation.  Specifically, the "cursor"
+> does not appear to be written out to userspace on the compat path,
+> like it is on the native path.
 > 
-> Wols> On 14/12/18 07:03, Sinisa wrote:
->>>> And another MD flush thread waiting on a MD sync barrier.
->>>> 
->>>> Basically, this looks and smells like a MD sync barrier race
->>>> condition, not an XFs problem.
->>>> 
->>>> Cheers,
->>>> 
->>>> Dave.
->>> 
->>> But why don't we see the same issue with other filesystems?
-> 
-> Wols> Possibly because, iirc, xfs is aware of the underlying raid?
-> 
-> I don't think it's that in touch with the raid.  It can/does query for
-> settings so it can optimize stuff, but I don't think it actually uses
-> it other than as a block device.
-> 
-> Wols> I don't know, but I seem to remember that from earlier 
-> discussions about
-> Wols> "xfs over mdraid".
-> 
-> Have you tried doing this with the absolute latest kernel?
+> This adjusts the compat implementation to copy out the cursor just
+> like the native implementation does.  The attrlist cursor does not
+> require any special compat handling.  This fixes xfstests xfs/269
+> on both IA-32 and x32 userspace, when running on an amd64 kernel.
 
-Well, not "absolute" but relative :)
+Craaap, I forgot that when I fixed the native attrlist_by_handle. :(
 
-Absolute latest being 4.20-rc6, I have tried with 4.20-rc2 or -rc3
+> Signed-off-by: Nick Bowler <nbowler@draconx.ca>
 
+Fixes: 0facef7fb053b ("xfs: in _attrlist_by_handle, copy the cursor back to userspace")
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
--- 
-Srdačan pozdrav/Best regards,
-Siniša Bandin
+--D
+
+> ---
+>  fs/xfs/xfs_ioctl32.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+> index fba115f4103a..4c34efcbf7e8 100644
+> --- a/fs/xfs/xfs_ioctl32.c
+> +++ b/fs/xfs/xfs_ioctl32.c
+> @@ -336,6 +336,7 @@ xfs_compat_attrlist_by_handle(
+>  {
+>  	int			error;
+>  	attrlist_cursor_kern_t	*cursor;
+> +	compat_xfs_fsop_attrlist_handlereq_t __user *p = arg;
+>  	compat_xfs_fsop_attrlist_handlereq_t al_hreq;
+>  	struct dentry		*dentry;
+>  	char			*kbuf;
+> @@ -370,6 +371,11 @@ xfs_compat_attrlist_by_handle(
+>  	if (error)
+>  		goto out_kfree;
+>  
+> +	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t))) {
+> +		error = -EFAULT;
+> +		goto out_kfree;
+> +	}
+> +
+>  	if (copy_to_user(compat_ptr(al_hreq.buffer), kbuf, al_hreq.buflen))
+>  		error = -EFAULT;
+>  
+> -- 
+> 2.16.1
+> 
