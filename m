@@ -1,86 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49206 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727036AbeLRSae (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 13:30:34 -0500
-Date: Tue, 18 Dec 2018 10:30:30 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/6] xfs: move XFS_INODE_FORMAT_STR mappings to libxfs
-Message-ID: <20181218183030.GB27208@magnolia>
-References: <154344773243.4341.5458822684407979916.stgit@magnolia>
- <154344775711.4341.699323732443443292.stgit@magnolia>
- <6bc5bc8d-e795-aaa0-2f00-f9878160333f@sandeen.net>
+Received: from sandeen.net ([63.231.237.45]:50718 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726422AbeLRTXY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Dec 2018 14:23:24 -0500
+Subject: Re: [PATCH 1/2] xfs: handle bad flags in
+ xfs_recover_inode_owner_change
+References: <81b35377-47d9-2421-ba5c-537ac6c8c021@redhat.com>
+ <3898cc3a-be06-a29e-07f6-9daf52cb7545@sandeen.net>
+ <20181218191516.GF27208@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <43d60dd7-896c-7537-1b59-0f79cf36c30e@sandeen.net>
+Date: Tue, 18 Dec 2018 13:23:22 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6bc5bc8d-e795-aaa0-2f00-f9878160333f@sandeen.net>
+In-Reply-To: <20181218191516.GF27208@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Dec 18, 2018 at 11:24:45AM -0600, Eric Sandeen wrote:
-> On 11/28/18 5:29 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Move XFS_INODE_FORMAT_STR to libxfs so that we don't forget to keep it
-> > updated, and add necessary TRACE_DEFINE_ENUM.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On 12/18/18 1:15 PM, Darrick J. Wong wrote:
+> On Tue, Dec 18, 2018 at 01:02:56PM -0600, Eric Sandeen wrote:
+>> Today, xfs_recover_inode_owner_change() indicates that if XFS_ILOG_DOWNER
+>> is set, XFS_ILOG_DBROOT must be as well, via an assert.  However, this 
+>> could fail to be true due to fuzzing or corruption, so we really
+>> should handle it gracefully rather than calling ASSERT() and crashing,
+>> or blowing past it on a non-debug build and BUGging later.
+>>
+>> Return -EFSCORRUPTED and fail the log replay if we find this
+>> inconsistent state.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+>> index 1fc9e9042e0e..56148a3083b8 100644
+>> --- a/fs/xfs/xfs_log_recover.c
+>> +++ b/fs/xfs/xfs_log_recover.c
+>> @@ -2964,7 +2964,10 @@ xfs_recover_inode_owner_change(
+>>  	}
+>>  
+>>  	if (in_f->ilf_fields & XFS_ILOG_DOWNER) {
+>> -		ASSERT(in_f->ilf_fields & XFS_ILOG_DBROOT);
+>> +		if (!(in_f->ilf_fields & XFS_ILOG_DBROOT)) {
+>> +			error = -EFSCORRUPTED;
+>> +			goto out_free_ip;
+>> +		}
+>>  		error = xfs_bmbt_change_owner(NULL, ip, XFS_DATA_FORK,
+>>  					      ip->i_ino, buffer_list);
+>>  		if (error)
+>> @@ -2972,7 +2975,10 @@ xfs_recover_inode_owner_change(
+>>  	}
+>>  
+>>  	if (in_f->ilf_fields & XFS_ILOG_AOWNER) {
+>> -		ASSERT(in_f->ilf_fields & XFS_ILOG_ABROOT);
+>> +		if (!(in_f->ilf_fields & XFS_ILOG_ABROOT)) {
+>> +			error = -EFSCORRUPTED;
+>> +			goto out_free_ip;
 > 
-> Now that I think of it, just adding a /* for ftrace */ above the #define
-> might be nice here and for the others, if you think it's appropriate, but:
+> Are there any downsides to changing the data fork owner and bailing out
+> afterwards if we encounter the combination of (DOWNER | DBROOT | AOWNER)?
 
-Will do, and hopefully nobody else will trip over this silly ftrace bomb.
+Not sure I understand the Q.
 
---D
+(Maybe you mean DOWNER && !DBROOT?)
+ 
+> Thinking this through, the log won't continue recovering, so you have to
+> run xfs_repair -L which zaps the log and checks everything.  We already
+> finished the data fork bmbt update so (barring other problems) it should
+> be fine.  The attr fork won't have been updated, but its log entries
+> were unrecoverable, so at worst we lose the attr fork, right?
 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+TBH, I hadn't really thought through "recover as much as we can before
+deciding we have a problem" - if we encounter this, it's an inconsistent
+state in the log for whatever, and we should stop.  I don't ... think
+we're in the business of trying to second guess or fix on the fly here,
+right?
+
+> And we don't want the ABROOT check any earlier, because we don't want to
+> forego a data fork owner update that might have succeeded anyway and
+> we'll definitely lose it if we don't update it and xfs_repair encounters
+> it.  Right?
+
+Again, my caveman coder brain just said "inconsistent state -> stop now."
+
+Should we be doing more?
+
+-Eric
+
+> If so, then,
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> > ---
-> >  fs/xfs/libxfs/xfs_format.h |    7 +++++++
-> >  fs/xfs/xfs_trace.h         |   10 +++++-----
-> >  2 files changed, 12 insertions(+), 5 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > index b15412e4c535..d8902114786d 100644
-> > --- a/fs/xfs/libxfs/xfs_format.h
-> > +++ b/fs/xfs/libxfs/xfs_format.h
-> > @@ -925,6 +925,13 @@ typedef enum xfs_dinode_fmt {
-> >  	XFS_DINODE_FMT_UUID		/* added long ago, but never used */
-> >  } xfs_dinode_fmt_t;
-> >  
-> > +#define XFS_INODE_FORMAT_STR \
-> > +	{ XFS_DINODE_FMT_DEV,		"dev" }, \
-> > +	{ XFS_DINODE_FMT_LOCAL,		"local" }, \
-> > +	{ XFS_DINODE_FMT_EXTENTS,	"extent" }, \
-> > +	{ XFS_DINODE_FMT_BTREE,		"btree" }, \
-> > +	{ XFS_DINODE_FMT_UUID,		"uuid" }
-> > +
-> >  /*
-> >   * Inode minimum and maximum sizes.
-> >   */
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index 3f57002ca660..94e289aca220 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -1901,11 +1901,11 @@ TRACE_EVENT(xfs_dir2_leafn_moveents,
-> >  	{ 0,	"target" }, \
-> >  	{ 1,	"temp" }
-> >  
-> > -#define XFS_INODE_FORMAT_STR \
-> > -	{ 0,	"invalid" }, \
-> > -	{ 1,	"local" }, \
-> > -	{ 2,	"extent" }, \
-> > -	{ 3,	"btree" }
-> > +TRACE_DEFINE_ENUM(XFS_DINODE_FMT_DEV);
-> > +TRACE_DEFINE_ENUM(XFS_DINODE_FMT_LOCAL);
-> > +TRACE_DEFINE_ENUM(XFS_DINODE_FMT_EXTENTS);
-> > +TRACE_DEFINE_ENUM(XFS_DINODE_FMT_BTREE);
-> > +TRACE_DEFINE_ENUM(XFS_DINODE_FMT_UUID);
-> >  
-> >  DECLARE_EVENT_CLASS(xfs_swap_extent_class,
-> >  	TP_PROTO(struct xfs_inode *ip, int which),
-> > 
+> --D
+> 
+>> +		}
+>>  		error = xfs_bmbt_change_owner(NULL, ip, XFS_ATTR_FORK,
+>>  					      ip->i_ino, buffer_list);
+>>  		if (error)
+>>
+> 
