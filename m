@@ -1,61 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f196.google.com ([209.85.166.196]:37239 "EHLO
-        mail-it1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726609AbeLOBWU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Dec 2018 20:22:20 -0500
-Received: by mail-it1-f196.google.com with SMTP id b5so12326808iti.2
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Dec 2018 17:22:19 -0800 (PST)
-From: Nick Bowler <nbowler@draconx.ca>
-Subject: [RFC PATCH v2 1/3] xfs: Align compat attrlist_by_handle with native implementation.
-Date: Fri, 14 Dec 2018 20:22:57 -0500
-Message-Id: <20181215012259.28358-2-nbowler@draconx.ca>
-In-Reply-To: <20181215012259.28358-1-nbowler@draconx.ca>
-References: <20181215012259.28358-1-nbowler@draconx.ca>
+Received: from aserp2130.oracle.com ([141.146.126.79]:49970 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726614AbeLRT2J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 14:28:09 -0500
+Date: Tue, 18 Dec 2018 11:28:04 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] xfs: clear XFS_ILOG_[AD]OWNER for non-btree formats
+Message-ID: <20181218192804.GG27208@magnolia>
+References: <81b35377-47d9-2421-ba5c-537ac6c8c021@redhat.com>
+ <31aaeb46-8fb5-79f5-66bd-d594b9a6cc89@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <31aaeb46-8fb5-79f5-66bd-d594b9a6cc89@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-While inspecting the ioctl implementations, I noticed that the compat
-implementation of XFS_IOC_ATTRLIST_BY_HANDLE does not do exactly the
-same thing as the native implementation.  Specifically, the "cursor"
-does not appear to be written out to userspace on the compat path,
-like it is on the native path.
+On Tue, Dec 18, 2018 at 01:09:40PM -0600, Eric Sandeen wrote:
+> If an inode had been in btree format and had a data fork owner change
+> logged, that flag must be cleared if the inode changes format to
+> non-btree.  Otherwise we hit the old ASSERT (now changed to
+> corruption detection) in xfs_recover_inode_owner_change() which
+> enforces that if XFS_ILOG_[AD]OWNER is set, XFS_ILOG_[AD]BROOT
+> must be as well.
+> 
+> (Or, put more plainly, changing the fork owner is nonsensical
+> for inodes which have no such fork.)
 
-This adjusts the compat implementation to copy out the cursor just
-like the native implementation does.  The attrlist cursor does not
-require any special compat handling.  This fixes xfstests xfs/269
-on both IA-32 and x32 userspace, when running on an amd64 kernel.
+...and now I learn why not to review a series until all the patches show
+up. :(
 
-Signed-off-by: Nick Bowler <nbowler@draconx.ca>
----
- fs/xfs/xfs_ioctl32.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index fa1c4fe2ffbf..82a13b7ad321 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -144,7 +144,8 @@ xfs_inode_item_format_data_fork(
+>  	switch (ip->i_d.di_format) {
+>  	case XFS_DINODE_FMT_EXTENTS:
+>  		iip->ili_fields &=
+> -			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT | XFS_ILOG_DEV);
+> +			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
+> +			  XFS_ILOG_DEV | XFS_ILOG_DOWNER);
 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index fba115f4103a..4c34efcbf7e8 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -336,6 +336,7 @@ xfs_compat_attrlist_by_handle(
- {
- 	int			error;
- 	attrlist_cursor_kern_t	*cursor;
-+	compat_xfs_fsop_attrlist_handlereq_t __user *p = arg;
- 	compat_xfs_fsop_attrlist_handlereq_t al_hreq;
- 	struct dentry		*dentry;
- 	char			*kbuf;
-@@ -370,6 +371,11 @@ xfs_compat_attrlist_by_handle(
- 	if (error)
- 		goto out_kfree;
- 
-+	if (copy_to_user(&p->pos, cursor, sizeof(attrlist_cursor_kern_t))) {
-+		error = -EFAULT;
-+		goto out_kfree;
-+	}
-+
- 	if (copy_to_user(compat_ptr(al_hreq.buffer), kbuf, al_hreq.buflen))
- 		error = -EFAULT;
- 
--- 
-2.16.1
+So ... existing kernels could accidentally log an inode with an extents
+format data fork and (DOWNER | DBROOT).  If a kernel encounters such a
+log item, it would assert and kaboom, and now it'll fail the rest of log
+recovery, which forces the admin to zap the log.
+
+However, if the data fork is in extents format there isn't any work
+required to change the owner anyway, so why do we have to abort the log
+recovery in that case?
+
+IOWs, why doesn't the previous patch do:
+
+/*
+ * Some old kernels mistakenly log inode items with DOWNER set on a
+ * inode with a non-btree format data fork.  DBROOT won't be set in this
+ * non-btree case, but since the work that DOWNER does is only required
+ * for the btree case we can safely ignore this one weird combination.
+ */
+if ((ili_fields & DOWNER) && di_format == FMT_BTREE) {
+	if (!(ili_fields & DBROOT))
+		return -EFSCORRUPTED;
+	error = xfs_bmbt_change_owner(...);
+}
+
+--D
+
+>  
+>  		if ((iip->ili_fields & XFS_ILOG_DEXT) &&
+>  		    ip->i_d.di_nextents > 0 &&
+> @@ -185,7 +186,8 @@ xfs_inode_item_format_data_fork(
+>  		break;
+>  	case XFS_DINODE_FMT_LOCAL:
+>  		iip->ili_fields &=
+> -			~(XFS_ILOG_DEXT | XFS_ILOG_DBROOT | XFS_ILOG_DEV);
+> +			~(XFS_ILOG_DEXT | XFS_ILOG_DBROOT |
+> +			  XFS_ILOG_DEV | XFS_ILOG_DOWNER);
+>  		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
+>  		    ip->i_df.if_bytes > 0) {
+>  			/*
+> @@ -206,7 +208,8 @@ xfs_inode_item_format_data_fork(
+>  		break;
+>  	case XFS_DINODE_FMT_DEV:
+>  		iip->ili_fields &=
+> -			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT | XFS_ILOG_DEXT);
+> +			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
+> +			  XFS_ILOG_DEXT | XFS_ILOG_DOWNER);
+>  		if (iip->ili_fields & XFS_ILOG_DEV)
+>  			ilf->ilf_u.ilfu_rdev = sysv_encode_dev(VFS_I(ip)->i_rdev);
+>  		break;
+> @@ -229,7 +232,7 @@ xfs_inode_item_format_attr_fork(
+>  	switch (ip->i_d.di_aformat) {
+>  	case XFS_DINODE_FMT_EXTENTS:
+>  		iip->ili_fields &=
+> -			~(XFS_ILOG_ADATA | XFS_ILOG_ABROOT);
+> +			~(XFS_ILOG_ADATA | XFS_ILOG_ABROOT | XFS_ILOG_AOWNER);
+>  
+>  		if ((iip->ili_fields & XFS_ILOG_AEXT) &&
+>  		    ip->i_d.di_anextents > 0 &&
+> @@ -268,7 +271,7 @@ xfs_inode_item_format_attr_fork(
+>  		break;
+>  	case XFS_DINODE_FMT_LOCAL:
+>  		iip->ili_fields &=
+> -			~(XFS_ILOG_AEXT | XFS_ILOG_ABROOT);
+> +			~(XFS_ILOG_AEXT | XFS_ILOG_ABROOT | XFS_ILOG_AOWNER);
+>  
+>  		if ((iip->ili_fields & XFS_ILOG_ADATA) &&
+>  		    ip->i_afp->if_bytes > 0) {
+> 
