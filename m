@@ -1,69 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:37368 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728129AbeLQUGr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Dec 2018 15:06:47 -0500
-Received: by mail-lf1-f66.google.com with SMTP id y11so10449892lfj.4
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Dec 2018 12:06:46 -0800 (PST)
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:41972 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726305AbeLREgb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Dec 2018 23:36:31 -0500
+Date: Tue, 18 Dec 2018 15:36:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS: 3-way deadlock with xfs_dquot, xfs_buf and xfs_inode
+Message-ID: <20181218043626.GA31274@dastard>
+References: <CAJDdQW1bUSZ+3p-4XMbtzU0y5SifQnnwmStKGhb5dkozCaExoA@mail.gmail.com>
+ <20181217233343.GE10644@dastard>
+ <CAJDdQW2U5hE2W245iodcOF408DV8W1D1-MSRtSMvY8=TT9rnCg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20181217174018.GH24487@magnolia>
-References: <20181215012259.28358-1-nbowler@draconx.ca> <20181215012259.28358-3-nbowler@draconx.ca>
- <20181217174018.GH24487@magnolia>
-From: Nick Bowler <nbowler@draconx.ca>
-Date: Mon, 17 Dec 2018 15:06:43 -0500
-Message-ID: <CADyTPEwwbKq2KCcRU=Rj+66JKPemq+BhNRitR-uz_gu=fXp-Ng@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 2/3] xfs: Fix bulkstat compat ioctls on x32 userspace.
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJDdQW2U5hE2W245iodcOF408DV8W1D1-MSRtSMvY8=TT9rnCg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
+To: =?utf-8?B?5byg5pys6b6Z?= <zbl.lkml@gmail.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On 2018-12-17 Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> On Fri, Dec 14, 2018 at 08:22:58PM -0500, Nick Bowler wrote:
-[...]
->> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
->> index 4c34efcbf7e8..1cdc75dca779 100644
->> --- a/fs/xfs/xfs_ioctl32.c
->> +++ b/fs/xfs/xfs_ioctl32.c
->> @@ -241,6 +241,32 @@ xfs_compat_ioc_bulkstat(
->>  	int			done;
->>  	int			error;
->>
->> +	/*
->> +	 * Output structure handling functions.  Depending on the command,
->> +	 * either the xfs_bstat and xfs_inogrp structures are written out
->> +	 * to userpace memory via bulkreq.ubuffer.  Normally the compat
->> +	 * functions and structure size are the correct ones to use ...
->> +	 */
->> +	inumbers_fmt_pf inumbers_func = xfs_inumbers_fmt_compat;
->> +	bulkstat_one_pf	bs_one_func = xfs_bulkstat_one_compat;
->> +	size_t bs_one_size = sizeof(compat_xfs_bstat_t);
->> +
->> +#ifdef CONFIG_X86_X32
->> +	if (in_x32_syscall()) {
->> +		/*
->> +		 * ... but on x32 the input xfs_fsop_bulkreq has pointers
->> +		 * which must be handled in the "compat" (32-bit) way, while
->> +		 * the xfs_bstat and xfs_inogrp structures follow native 64-
->> +		 * bit layout convention.  So adjust accordingly, otherwise
->> +		 * the data written out in compat layout will not match what
->> +		 * x32 userspace expects.
->> +		 */
->> +		inumbers_func = xfs_inumbers_fmt;
->> +		bs_one_func = xfs_bulkstat_one;
->> +		bs_one_size = sizeof(xfs_bstat_t);
->
-> struct xfs_bstat, not xfs_bstat_t, because we're gradually getting rid
-> of the structure typedefs.  If I don't hear any other objections in the
-> next day or so I'll fix this when I pull in this patch.
+On Tue, Dec 18, 2018 at 10:41:48AM +0800, 张本龙 wrote:
+> Dave Chinner <david@fromorbit.com> 于2018年12月18日周二 上午7:33写道：
+> >
+> > On Sat, Dec 15, 2018 at 01:34:33PM +0800, 张本龙 wrote:
+> > > Hi Developpers and XFS,
+> > >
+> > > There seems to be a deadlock involving 3 threads: 1) the fsync thread
+> > > has acquired the project quota lock, and is trying to get the xfs_buf
+> > > (it's a an agf); 2) the xfs_buf is attached to a transaction, and
+> > > xfs_end_io is trying to get the xfs_inode ilock; 3) the write thread
+> > > has acquired the xfs_inode ilock, and tries to get the xfs_dquot.
+> > > Below are the traces.
+> >
+> > I don't see a deadlock here. What's holding the AGF lock and
+> > preventing progress from being made?
+> >
+> 
+> Oh, I was thinking the AGF is attached to a transaction.
 
-Makes sense.  I'll only change this on my end if I have to respin the
-series for some other reason then.  I guess the sizeof(compat_xfs_bstat_t)
-just before this should be similarly changed as well?
+it may be, but it has to be locked to be joined to a transaction.
 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> So between
+> xfs_trans_bjoin() and xfs_trans_commit(), a buf cannot be used by
+> others right? Then it should be released by xfs_end_io() in
+> xfs_trans_commit(),
 
-Thanks,
-  Nick
+No, because that transaction doesn't hold the AGF.
+
+> and the deadlock is like:
+> 
+> Thread          1                  2
+>          3
+>                    fsync()
+>                    dqlock P
+>                    agf lock
+>                    <blocks>
+>                                   xfs_end_io
+>                                   (agf locked by transaction)
+>                                   ilock A
+>                                   <blocks>
+>                                   unlock agf in trans commit
+				^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+				This is wrong.
+
+There is no AGF held in the ioend transaction in progress.
+xfs_setfilesize() only needs to lock the inode as that is all it
+modifies. It's also compeltely independent of the transaction being
+run in the fsync context unless they have ot modify the same
+metadata (which they don't).
+
+Use 'echo w > /proc/sysrq-trigger' to list all the blocked
+processes. Maybe one of them is holding the AGF locked and is
+waiting on something else...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
