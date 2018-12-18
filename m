@@ -1,19 +1,19 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40504 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:40048 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727277AbeLRRVq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Dec 2018 12:21:46 -0500
-Subject: Re: [PATCH 5/6] xfs: stringify btree cursor types in ftrace output
+        id S1726422AbeLRRQ1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Dec 2018 12:16:27 -0500
+Subject: Re: [PATCH 2/6] xfs: fix function pointer type in ftrace format
 References: <154344773243.4341.5458822684407979916.stgit@magnolia>
- <154344776323.4341.3184468728000538253.stgit@magnolia>
+ <154344774484.4341.10423896160201689613.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <64a9bdda-e5b9-bed8-5800-c5872ea5c8ce@sandeen.net>
-Date: Tue, 18 Dec 2018 11:21:44 -0600
+Message-ID: <44c11ff2-c9e3-9371-22cc-e3b0e5e9a680@sandeen.net>
+Date: Tue, 18 Dec 2018 11:16:26 -0600
 MIME-Version: 1.0
-In-Reply-To: <154344776323.4341.3184468728000538253.stgit@magnolia>
+In-Reply-To: <154344774484.4341.10423896160201689613.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -23,40 +23,29 @@ Cc: linux-xfs@vger.kernel.org
 On 11/28/18 5:29 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Use __print_symbolic to print the btree type in ftrace output.
+> Use %pS instead of %pF in ftrace strings so that we record the actual
+> function address instead of the function descriptor.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok, and because XFS_BTNUM_BNOi *shudder* et al are enums, you also
-need the fancy wrappers.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
->  fs/xfs/libxfs/xfs_types.h |    9 +++++++++
->  fs/xfs/scrub/trace.h      |   38 ++++++++++++++++++++++++++------------
->  fs/xfs/xfs_trace.h        |   12 ++++++++++--
->  3 files changed, 45 insertions(+), 14 deletions(-)
+>  fs/xfs/scrub/trace.h |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index 297cf2318f83..eb04afe9cce0 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -114,6 +114,15 @@ typedef enum {
->  	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_MAX
->  } xfs_btnum_t;
->  
-> +#define XFS_BTNUM_STRINGS \
-> +	{ XFS_BTNUM_BNOi,	"bnobt" }, \
-> +	{ XFS_BTNUM_CNTi,	"cntbt" }, \
-> +	{ XFS_BTNUM_RMAPi,	"rmapbt" }, \
-> +	{ XFS_BTNUM_BMAPi,	"bmbt" }, \
-> +	{ XFS_BTNUM_INOi,	"inobt" }, \
-> +	{ XFS_BTNUM_FINOi,	"finobt" }, \
-> +	{ XFS_BTNUM_REFCi,	"refcbt" }
-> +
-
-how do we decide whether to put these string translations for trace in common
-headers (as here) vs. in the the trace file itself (as with, say,
-XFS_AG_BTREE_CMP_FORMAT_STR) ?
-
--Eric
+> diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+> index f1c144c6dcc5..d67e915cf91a 100644
+> --- a/fs/xfs/scrub/trace.h
+> +++ b/fs/xfs/scrub/trace.h
+> @@ -473,7 +473,7 @@ TRACE_EVENT(xchk_xref_error,
+>  		__entry->error = error;
+>  		__entry->ret_ip = ret_ip;
+>  	),
+> -	TP_printk("dev %d:%d type %u xref error %d ret_ip %pF",
+> +	TP_printk("dev %d:%d type %u xref error %d ret_ip %pS",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->type,
+>  		  __entry->error,
+> 
