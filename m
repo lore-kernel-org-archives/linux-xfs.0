@@ -1,79 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41236 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726555AbeLRRaS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Dec 2018 12:30:18 -0500
-Subject: Re: [PATCH 6/6] xfs: stringify scrub types in ftrace output
-References: <154344773243.4341.5458822684407979916.stgit@magnolia>
- <154344776951.4341.14323367177195315854.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <32a11dec-500d-1b18-49fa-86aa8c45f0f7@sandeen.net>
-Date: Tue, 18 Dec 2018 11:30:16 -0600
+Received: from userp2130.oracle.com ([156.151.31.86]:50774 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727184AbeLRTau (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 14:30:50 -0500
+Date: Tue, 18 Dec 2018 11:30:38 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] xfs: handle bad flags in
+ xfs_recover_inode_owner_change
+Message-ID: <20181218193038.GH27208@magnolia>
+References: <81b35377-47d9-2421-ba5c-537ac6c8c021@redhat.com>
+ <3898cc3a-be06-a29e-07f6-9daf52cb7545@sandeen.net>
+ <20181218191516.GF27208@magnolia>
+ <43d60dd7-896c-7537-1b59-0f79cf36c30e@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <154344776951.4341.14323367177195315854.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <43d60dd7-896c-7537-1b59-0f79cf36c30e@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On 11/28/18 5:29 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Dec 18, 2018 at 01:23:22PM -0600, Eric Sandeen wrote:
+> On 12/18/18 1:15 PM, Darrick J. Wong wrote:
+> > On Tue, Dec 18, 2018 at 01:02:56PM -0600, Eric Sandeen wrote:
+> >> Today, xfs_recover_inode_owner_change() indicates that if XFS_ILOG_DOWNER
+> >> is set, XFS_ILOG_DBROOT must be as well, via an assert.  However, this 
+> >> could fail to be true due to fuzzing or corruption, so we really
+> >> should handle it gracefully rather than calling ASSERT() and crashing,
+> >> or blowing past it on a non-debug build and BUGging later.
+> >>
+> >> Return -EFSCORRUPTED and fail the log replay if we find this
+> >> inconsistent state.
+> >>
+> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >> ---
+> >>
+> >> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> >> index 1fc9e9042e0e..56148a3083b8 100644
+> >> --- a/fs/xfs/xfs_log_recover.c
+> >> +++ b/fs/xfs/xfs_log_recover.c
+> >> @@ -2964,7 +2964,10 @@ xfs_recover_inode_owner_change(
+> >>  	}
+> >>  
+> >>  	if (in_f->ilf_fields & XFS_ILOG_DOWNER) {
+> >> -		ASSERT(in_f->ilf_fields & XFS_ILOG_DBROOT);
+> >> +		if (!(in_f->ilf_fields & XFS_ILOG_DBROOT)) {
+> >> +			error = -EFSCORRUPTED;
+> >> +			goto out_free_ip;
+> >> +		}
+> >>  		error = xfs_bmbt_change_owner(NULL, ip, XFS_DATA_FORK,
+> >>  					      ip->i_ino, buffer_list);
+> >>  		if (error)
+> >> @@ -2972,7 +2975,10 @@ xfs_recover_inode_owner_change(
+> >>  	}
+> >>  
+> >>  	if (in_f->ilf_fields & XFS_ILOG_AOWNER) {
+> >> -		ASSERT(in_f->ilf_fields & XFS_ILOG_ABROOT);
+> >> +		if (!(in_f->ilf_fields & XFS_ILOG_ABROOT)) {
+> >> +			error = -EFSCORRUPTED;
+> >> +			goto out_free_ip;
+> > 
+> > Are there any downsides to changing the data fork owner and bailing out
+> > afterwards if we encounter the combination of (DOWNER | DBROOT | AOWNER)?
 > 
-> Use __print_symbolic to print the scrub type in ftrace output.
+> Not sure I understand the Q.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/trace.h |  103 +++++++++++++++++++++++++++++++++++++-------------
->  1 file changed, 77 insertions(+), 26 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-> index 0141eb1ac091..3c83e8b3b39c 100644
-> --- a/fs/xfs/scrub/trace.h
-> +++ b/fs/xfs/scrub/trace.h
-> @@ -26,6 +26,57 @@ TRACE_DEFINE_ENUM(XFS_BTNUM_FINOi);
->  TRACE_DEFINE_ENUM(XFS_BTNUM_RMAPi);
->  TRACE_DEFINE_ENUM(XFS_BTNUM_REFCi);
->  
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PROBE);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_SB);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_AGF);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_AGFL);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_AGI);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_BNOBT);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_CNTBT);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_INOBT);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_FINOBT);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_RMAPBT);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_REFCNTBT);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_INODE);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_BMBTD);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_BMBTA);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_BMBTC);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_DIR);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_XATTR);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_SYMLINK);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PARENT);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_RTBITMAP);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_RTSUM);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_UQUOTA);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_GQUOTA);
-> +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PQUOTA);
-> +
-> +#define XFS_SCRUB_TYPE_STRINGS \
+> (Maybe you mean DOWNER && !DBROOT?)
 
-Hm I thought you just moved these sorts of #defines /out/ of the trace files
-and adjacent to their type definitions in core header files; why not this one?
+No, I really did mean the case where DOWNER and DBROOT are set properly,
+but it's the AOWNER/ABROOT flags that aren't set properly.  I was
+wondering why not check DOWNER/DBROOT and AOWNER/ABROOT before touching
+*anything* and was typing my way through it.
 
-> +	{ XFS_SCRUB_TYPE_PROBE,		"probe" }, \
-> +	{ XFS_SCRUB_TYPE_SB,		"sb" }, \
-> +	{ XFS_SCRUB_TYPE_AGF,		"agf" }, \
-> +	{ XFS_SCRUB_TYPE_AGFL,		"agfl" }, \
-> +	{ XFS_SCRUB_TYPE_AGI,		"agi" }, \
-> +	{ XFS_SCRUB_TYPE_BNOBT,		"bnobt" }, \
+> > Thinking this through, the log won't continue recovering, so you
+> > have to
+> > run xfs_repair -L which zaps the log and checks everything.  We already
+> > finished the data fork bmbt update so (barring other problems) it should
+> > be fine.  The attr fork won't have been updated, but its log entries
+> > were unrecoverable, so at worst we lose the attr fork, right?
+> 
+> TBH, I hadn't really thought through "recover as much as we can before
+> deciding we have a problem" - if we encounter this, it's an inconsistent
+> state in the log for whatever, and we should stop.  I don't ... think
+> we're in the business of trying to second guess or fix on the fly here,
+> right?
 
--Eric
+If that's true then we ought to validate all four flags before calling
+xfs_bmbt_change_owner(), right?
+
+> > And we don't want the ABROOT check any earlier, because we don't want to
+> > forego a data fork owner update that might have succeeded anyway and
+> > we'll definitely lose it if we don't update it and xfs_repair encounters
+> > it.  Right?
+> 
+> Again, my caveman coder brain just said "inconsistent state -> stop now."
+> 
+> Should we be doing more?
+
+See my reply to the second patch, sorry. :/
+
+--D
+
+> -Eric
+> 
+> > If so, then,
+> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > --D
+> > 
+> >> +		}
+> >>  		error = xfs_bmbt_change_owner(NULL, ip, XFS_ATTR_FORK,
+> >>  					      ip->i_ino, buffer_list);
+> >>  		if (error)
+> >>
+> > 
