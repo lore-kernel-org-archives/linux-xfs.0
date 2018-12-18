@@ -1,30 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:57066 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725953AbeLUG13 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Dec 2018 01:27:29 -0500
-Date: Fri, 21 Dec 2018 07:27:27 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 11/11] xfs: introduce an always_cow mode
-Message-ID: <20181221062727.GA31373@lst.de>
-References: <20181203222503.30649-1-hch@lst.de> <20181203222503.30649-12-hch@lst.de> <20181218232437.GS27208@magnolia> <20181219224335.GB4205@dastard> <20181220070741.GA9803@lst.de> <20181220210309.GE4205@dastard>
+Received: from aserp2130.oracle.com ([141.146.126.79]:48278 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726714AbeLRWbO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 17:31:14 -0500
+Date: Tue, 18 Dec 2018 14:31:08 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 03/11] xfs: remove the s_maxbytes checks in xfs_map_blocks
+Message-ID: <20181218223108.GQ27208@magnolia>
+References: <20181203222503.30649-1-hch@lst.de>
+ <20181203222503.30649-4-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181220210309.GE4205@dastard>
+In-Reply-To: <20181203222503.30649-4-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 21, 2018 at 08:03:09AM +1100, Dave Chinner wrote:
-> Yes, I know it's not persistent, but do we care for always_cow mode?
-> Preallocation to prevent enospc is done just before the data is
-> written, and if we put it in the COW fork then it will mostly just
-> work and behave as expected for preventing ENOSPC on subsequent
-> writes. Preallocation to control data layout is largely irrelevant
-> to always_cow mode, so it really makes no difference to us if the
-> preallocation disappears when the inode is cycled out of cache....
+On Mon, Dec 03, 2018 at 05:24:55PM -0500, Christoph Hellwig wrote:
+> We already ensure all data fits into s_maxbytes in the write / fault
+> path.  The only reason we have them here is that they were copy and
+> pasted from xfs_bmapi_read when we stopped using that function.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I'll have to see if we can get the semantics for the right.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_aops.c | 8 ++------
+>  1 file changed, 2 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 8fec6fd4c632..5b6fab283316 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -301,7 +301,8 @@ xfs_map_blocks(
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	ssize_t			count = i_blocksize(inode);
+> -	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset), end_fsb;
+> +	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> +	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
+>  	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
+>  	struct xfs_bmbt_irec	imap;
+>  	struct xfs_iext_cursor	icur;
+> @@ -356,11 +357,6 @@ xfs_map_blocks(
+>  	xfs_ilock(ip, XFS_ILOCK_SHARED);
+>  	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+>  	       (ip->i_df.if_flags & XFS_IFEXTENTS));
+> -	ASSERT(offset <= mp->m_super->s_maxbytes);
+> -
+> -	if (offset > mp->m_super->s_maxbytes - count)
+> -		count = mp->m_super->s_maxbytes - offset;
+> -	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
+>  
+>  	/*
+>  	 * Check if this is offset is covered by a COW extents, and if yes use
+> -- 
+> 2.19.1
+> 
