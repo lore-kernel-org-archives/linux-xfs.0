@@ -1,47 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.stoffel.org ([104.236.43.127]:53738 "EHLO mail.stoffel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730734AbeLNUwp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 Dec 2018 15:52:45 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:56404 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726614AbeLRUj3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 15:39:29 -0500
+Subject: [PATCH 1/6] xfs: fix function pointer type in ftrace format
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 18 Dec 2018 12:39:22 -0800
+Message-ID: <154516556287.31776.14062881779871652355.stgit@magnolia>
+In-Reply-To: <154516555511.31776.9868161112615886200.stgit@magnolia>
+References: <154516555511.31776.9868161112615886200.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <23572.5681.810087.381496@quad.stoffel.home>
-Date: Fri, 14 Dec 2018 15:44:33 -0500
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: XFS and RAID10 with o2 layout
-In-Reply-To: <5C13694A.8070303@youngman.org.uk>
-References: <d9fc0327-eef3-63bd-82a3-98545251bfe5@4net.rs>
-        <20181213220533.GH6311@dastard>
-        <3e0e8def-2bb4-5e8a-56c1-d010ede059d4@4net.rs>
-        <5C13694A.8070303@youngman.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Sinisa <sinisa@4net.rs>, linux-raid@vger.kernel.org, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, sandeen@sandeen.net
 
->>>>> "Wols" == Wols Lists <antlists@youngman.org.uk> writes:
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Wols> On 14/12/18 07:03, Sinisa wrote:
->>> And another MD flush thread waiting on a MD sync barrier.
->>> 
->>> Basically, this looks and smells like a MD sync barrier race
->>> condition, not an XFs problem.
->>> 
->>> Cheers,
->>> 
->>> Dave.
->> 
->> But why don't we see the same issue with other filesystems?
+Use %pS instead of %pF in ftrace strings so that we record the actual
+function address instead of the function descriptor.
 
-Wols> Possibly because, iirc, xfs is aware of the underlying raid?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+---
+ fs/xfs/scrub/trace.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I don't think it's that in touch with the raid.  It can/does query for
-settings so it can optimize stuff, but I don't think it actually uses
-it other than as a block device.
 
-Wols> I don't know, but I seem to remember that from earlier discussions about
-Wols> "xfs over mdraid".
-
-Have you tried doing this with the absolute latest kernel?  
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index f1c144c6dcc5..d67e915cf91a 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -473,7 +473,7 @@ TRACE_EVENT(xchk_xref_error,
+ 		__entry->error = error;
+ 		__entry->ret_ip = ret_ip;
+ 	),
+-	TP_printk("dev %d:%d type %u xref error %d ret_ip %pF",
++	TP_printk("dev %d:%d type %u xref error %d ret_ip %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->type,
+ 		  __entry->error,
