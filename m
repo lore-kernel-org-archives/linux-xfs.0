@@ -1,76 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:39234 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727038AbeLQUJM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Dec 2018 15:09:12 -0500
-Date: Mon, 17 Dec 2018 12:09:06 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH v2 2/3] xfs: Fix bulkstat compat ioctls on x32
- userspace.
-Message-ID: <20181217200906.GA27176@magnolia>
-References: <20181215012259.28358-1-nbowler@draconx.ca>
- <20181215012259.28358-3-nbowler@draconx.ca>
- <20181217174018.GH24487@magnolia>
- <CADyTPEwwbKq2KCcRU=Rj+66JKPemq+BhNRitR-uz_gu=fXp-Ng@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:52328 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726832AbeLRTmv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Dec 2018 14:42:51 -0500
+Subject: Re: [PATCH 2/2] xfs: clear XFS_ILOG_[AD]OWNER for non-btree formats
+References: <81b35377-47d9-2421-ba5c-537ac6c8c021@redhat.com>
+ <31aaeb46-8fb5-79f5-66bd-d594b9a6cc89@redhat.com>
+ <20181218192804.GG27208@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6fc87cd3-7cef-89b4-42c0-43aa0f131ba5@sandeen.net>
+Date: Tue, 18 Dec 2018 13:42:48 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CADyTPEwwbKq2KCcRU=Rj+66JKPemq+BhNRitR-uz_gu=fXp-Ng@mail.gmail.com>
+In-Reply-To: <20181218192804.GG27208@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nick Bowler <nbowler@draconx.ca>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Dec 17, 2018 at 03:06:43PM -0500, Nick Bowler wrote:
-> On 2018-12-17 Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > On Fri, Dec 14, 2018 at 08:22:58PM -0500, Nick Bowler wrote:
-> [...]
-> >> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> >> index 4c34efcbf7e8..1cdc75dca779 100644
-> >> --- a/fs/xfs/xfs_ioctl32.c
-> >> +++ b/fs/xfs/xfs_ioctl32.c
-> >> @@ -241,6 +241,32 @@ xfs_compat_ioc_bulkstat(
-> >>  	int			done;
-> >>  	int			error;
-> >>
-> >> +	/*
-> >> +	 * Output structure handling functions.  Depending on the command,
-> >> +	 * either the xfs_bstat and xfs_inogrp structures are written out
-> >> +	 * to userpace memory via bulkreq.ubuffer.  Normally the compat
-> >> +	 * functions and structure size are the correct ones to use ...
-> >> +	 */
-> >> +	inumbers_fmt_pf inumbers_func = xfs_inumbers_fmt_compat;
-> >> +	bulkstat_one_pf	bs_one_func = xfs_bulkstat_one_compat;
-> >> +	size_t bs_one_size = sizeof(compat_xfs_bstat_t);
-> >> +
-> >> +#ifdef CONFIG_X86_X32
-> >> +	if (in_x32_syscall()) {
-> >> +		/*
-> >> +		 * ... but on x32 the input xfs_fsop_bulkreq has pointers
-> >> +		 * which must be handled in the "compat" (32-bit) way, while
-> >> +		 * the xfs_bstat and xfs_inogrp structures follow native 64-
-> >> +		 * bit layout convention.  So adjust accordingly, otherwise
-> >> +		 * the data written out in compat layout will not match what
-> >> +		 * x32 userspace expects.
-> >> +		 */
-> >> +		inumbers_func = xfs_inumbers_fmt;
-> >> +		bs_one_func = xfs_bulkstat_one;
-> >> +		bs_one_size = sizeof(xfs_bstat_t);
-> >
-> > struct xfs_bstat, not xfs_bstat_t, because we're gradually getting rid
-> > of the structure typedefs.  If I don't hear any other objections in the
-> > next day or so I'll fix this when I pull in this patch.
+
+
+On 12/18/18 1:28 PM, Darrick J. Wong wrote:
+> On Tue, Dec 18, 2018 at 01:09:40PM -0600, Eric Sandeen wrote:
+>> If an inode had been in btree format and had a data fork owner change
+>> logged, that flag must be cleared if the inode changes format to
+>> non-btree.  Otherwise we hit the old ASSERT (now changed to
+>> corruption detection) in xfs_recover_inode_owner_change() which
+>> enforces that if XFS_ILOG_[AD]OWNER is set, XFS_ILOG_[AD]BROOT
+>> must be as well.
+>>
+>> (Or, put more plainly, changing the fork owner is nonsensical
+>> for inodes which have no such fork.)
 > 
-> Makes sense.  I'll only change this on my end if I have to respin the
-> series for some other reason then.  I guess the sizeof(compat_xfs_bstat_t)
-> just before this should be similarly changed as well?
-
-Yep.
-
---D
-
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ...and now I learn why not to review a series until all the patches show
+> up. :(
 > 
-> Thanks,
->   Nick
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+>> index fa1c4fe2ffbf..82a13b7ad321 100644
+>> --- a/fs/xfs/xfs_inode_item.c
+>> +++ b/fs/xfs/xfs_inode_item.c
+>> @@ -144,7 +144,8 @@ xfs_inode_item_format_data_fork(
+>>  	switch (ip->i_d.di_format) {
+>>  	case XFS_DINODE_FMT_EXTENTS:
+>>  		iip->ili_fields &=
+>> -			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT | XFS_ILOG_DEV);
+>> +			~(XFS_ILOG_DDATA | XFS_ILOG_DBROOT |
+>> +			  XFS_ILOG_DEV | XFS_ILOG_DOWNER);
+> 
+> So ... existing kernels could accidentally log an inode with an extents
+> format data fork and (DOWNER | DBROOT).  If a kernel encounters such a
+> log item, it would assert and kaboom, and now it'll fail the rest of log
+> recovery, which forces the admin to zap the log.
+> 
+> However, if the data fork is in extents format there isn't any work
+> required to change the owner anyway, so why do we have to abort the log
+> recovery in that case?
+
+Because I didn't think we were in the business of guessing which bits of
+inconsistency indicate corruption and which bits are "probably ok"
+during log recovery...
+
+We have a mismatch between the logged fields and the format.  Your
+suggestion seems to put a lot of faith in the format being correct,
+and therefore deciding to ignore the inconsistency in the fields, no?
+
+i.e. if we don't see FMT_BTREE, what justification do we have for
+completely ignoring the flag inconsistency?  What if the format was
+wrong? 
+
+I don't really see how we can make that prioritization.  Maybe I'm
+not thinking creatively enough and you can convince me.  :)
+
+(Granted, the admin recovery path of "throw it all away" does suck,
+but such is life.)
+
+-Eric
+
+> IOWs, why doesn't the previous patch do:
+> 
+> /*
+>  * Some old kernels mistakenly log inode items with DOWNER set on a
+>  * inode with a non-btree format data fork.  DBROOT won't be set in this
+>  * non-btree case, but since the work that DOWNER does is only required
+>  * for the btree case we can safely ignore this one weird combination.
+>  */
+> if ((ili_fields & DOWNER) && di_format == FMT_BTREE) {
+> 	if (!(ili_fields & DBROOT))
+> 		return -EFSCORRUPTED;
+> 	error = xfs_bmbt_change_owner(...);
+> }
+> 
+> --D
