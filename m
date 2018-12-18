@@ -1,122 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:43004 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726330AbeLQXVj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Dec 2018 18:21:39 -0500
-Date: Tue, 18 Dec 2018 10:21:33 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] iomap: optimize iomap_is_partially_uptodate for full
- page range
-Message-ID: <20181217232133.GD10644@dastard>
-References: <1544739929-21651-1-git-send-email-sandeen@sandeen.net>
- <1544739929-21651-4-git-send-email-sandeen@sandeen.net>
- <20181214030528.GK6311@dastard>
- <568c811c-bfd5-216e-30a0-c54ebc2989a0@sandeen.net>
+Received: from userp2120.oracle.com ([156.151.31.85]:51728 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727892AbeLRSfZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 13:35:25 -0500
+Date: Tue, 18 Dec 2018 10:35:21 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/6] xfs: move XFS_INODE_FORMAT_STR mappings to libxfs
+Message-ID: <20181218183521.GC27208@magnolia>
+References: <154344773243.4341.5458822684407979916.stgit@magnolia>
+ <154344775711.4341.699323732443443292.stgit@magnolia>
+ <541758f7-3af9-1eb5-db21-a0c8de9a808f@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <568c811c-bfd5-216e-30a0-c54ebc2989a0@sandeen.net>
+In-Reply-To: <541758f7-3af9-1eb5-db21-a0c8de9a808f@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, hch@lst.de
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 14, 2018 at 08:10:19AM -0600, Eric Sandeen wrote:
-> On 12/13/18 9:05 PM, Dave Chinner wrote:
-> > On Thu, Dec 13, 2018 at 04:25:29PM -0600, Eric Sandeen wrote:
-> >> From: Eric Sandeen <sandeen@redhat.com>
-> >>
-> >> We only call ->is_partially_uptodate to look for an uptodate range
-> >> within a not-uptodate page.
-> >>
-> >> If the range covers all blocks in the page, there is no point to checking
-> >> each block individually - if the whole range (i.e. the whole page) were
-> >> uptodate, the page would be uptodate as well.  Hence in this case, we
-> >> can return early and skip the loop.
-> >>
-> >> This is similar to what is done in block_is_partially_uptodate().
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> >> ---
-> >>  fs/iomap.c | 4 ++++
-> >>  1 file changed, 4 insertions(+)
-> >>
-> >> diff --git a/fs/iomap.c b/fs/iomap.c
-> >> index ce837d9..7d7d985 100644
-> >> --- a/fs/iomap.c
-> >> +++ b/fs/iomap.c
-> >> @@ -515,6 +515,10 @@ struct iomap_readpage_ctx {
-> >>  	first = from >> inode->i_blkbits;
-> >>  	last = (from + len - 1) >> inode->i_blkbits;
-> >>  
-> >> +	/* If page wasn't uptodate and range covers all blocks: no partial */
-> >> +	if (first == 0 && last == (PAGE_SIZE - 1) >> inode->i_blkbits)
-> >> +		return 0;
-> >> +
+On Tue, Dec 18, 2018 at 11:25:41AM -0600, Eric Sandeen wrote:
+> On 11/28/18 5:29 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Even if the range covers the entire page, we still have to check
-> > that all the individual blocks in the page are up to date or not.
-> > Hence I think this is wrong....
+> > Move XFS_INODE_FORMAT_STR to libxfs so that we don't forget to keep it
+> > updated, and add necessary TRACE_DEFINE_ENUM.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Didn't PageUptodate(page) answer that question already in the caller?
-> 
-> The caller does:
-> 
->                         if (PageUptodate(page))
->                                 goto page_ok;
 > ...
->                         if (!mapping->a_ops->is_partially_uptodate(page,
->                                                         offset, iter->count))
->                                 goto page_not_up_to_date_locked;
 > 
+> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > index 3f57002ca660..94e289aca220 100644
+> > --- a/fs/xfs/xfs_trace.h
+> > +++ b/fs/xfs/xfs_trace.h
+> > @@ -1901,11 +1901,11 @@ TRACE_EVENT(xfs_dir2_leafn_moveents,
+> >  	{ 0,	"target" }, \
+> >  	{ 1,	"temp" }
 > 
-> So if it was found to be uptodate, we never called this op.  If we /were/
-> called (page was not uptodate) that can only be because at least one block in
-> the page is not uptodate.  So what's the need for checking them all again?
+> ^^^^ that context makes me wonder if we shouldn't move that #define
+> as well, and give 0 & 1 some meaningful macro names.  Patch 7/6? :)
 
-AFAIA, ->is_partially_uptodate() is supposed to use page private
-data to determine if the page is up to date, not assume that because
-the range spans the entire page it's not uptodate.
+Or just combine them into a single tracepoint that emits both inodes.
 
-i.e. if the method relies on the caller to perform certain
--undocumented- actions to ensure that the method does the right
-thing, then the API and method is broken. To then make undocumented
-optimisations in the method implementations to avoid checking
-private state based on the undocumented assumption that callers have
-all done some certain undocumented things, well, that's a pretty
-awful API and even worse documentation...
+--D
 
-> block_is_partially_uptodate does the same thing:
-> 
->         if (from < blocksize && to > PAGE_SIZE - blocksize)
->                 return 0;
-
-Which, again, assumes that the caller has done certain things and
-that there are specific, fixed, undocumented access and page private
-state initialisation assumptions made by the callers of
-->is_partially_uptodate().
-
-> Still, this also seems like maybe something the caller should do instead.
-
-*nod*
-
-IMO all the block size vs page size, page locking, truncation
-checks, etc should be wrapped up in the ->is_partially_uptodate()
-method. i.e. it's really a ->page_range_contains_data() check, and
-really has nothing to do with the overall PageUptodate() flag state.
-
-FWIW, if you look at how page_seek_hole_data() uses
-->is_partially_uptodate - it calls it multiple times on the same
-page asking whether each individual block on the page is up to date.
-It doesn't even check PageUptodate() for block size < page size, so
-assumptions in ->is_partially_uptodate that PageUptodate() has
-already been checked are clearly invalid...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> -Eric
