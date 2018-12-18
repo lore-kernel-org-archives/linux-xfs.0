@@ -1,77 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40614 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726868AbeLRRXa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Dec 2018 12:23:30 -0500
-Subject: Re: [PATCH 3/6] xfs: move XFS_AG_BTREE_CMP_FORMAT_STR mappings to
- libxfs
+Received: from userp2130.oracle.com ([156.151.31.86]:52284 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726651AbeLRSf7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 13:35:59 -0500
+Date: Tue, 18 Dec 2018 10:35:55 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/6] xfs: stringify btree cursor types in ftrace output
+Message-ID: <20181218183555.GD27208@magnolia>
 References: <154344773243.4341.5458822684407979916.stgit@magnolia>
- <154344775094.4341.5105915870413863379.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c554b1d7-41ce-40e8-5fee-33990e361c87@sandeen.net>
-Date: Tue, 18 Dec 2018 11:23:29 -0600
+ <154344776323.4341.3184468728000538253.stgit@magnolia>
+ <e5a62cf6-baac-7652-dd5e-4e1cb1793030@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <154344775094.4341.5105915870413863379.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e5a62cf6-baac-7652-dd5e-4e1cb1793030@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@vger.kernel.org
 
-On 11/28/18 5:29 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Dec 18, 2018 at 11:27:42AM -0600, Eric Sandeen wrote:
+> On 11/28/18 5:29 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Use __print_symbolic to print the btree type in ftrace output.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Move XFS_AG_BTREE_CMP_FORMAT_STR to libxfs so that we don't forget to
-> keep it updated, and TRACE_DEFINE_ENUM the values while we're at it.
+> Ignore my previous question.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> (if scrub's trace file starts duplicating too much of the common trace stuff,
+> though, we may want a common include file?)
 
-whoops I skipped right over this when I asked the question this answers
-in response to patch 5/6 sorry.
+I wasn't planning to expand any further than the scrub type.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+--D
 
-> ---
->  fs/xfs/libxfs/xfs_types.h |    5 +++++
->  fs/xfs/xfs_trace.h        |    7 +++----
->  2 files changed, 8 insertions(+), 4 deletions(-)
+> But for now
 > 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 > 
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index 05e8fa558f3e..297cf2318f83 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -104,6 +104,11 @@ typedef enum {
->  	XFS_LOOKUP_EQi, XFS_LOOKUP_LEi, XFS_LOOKUP_GEi
->  } xfs_lookup_t;
->  
-> +#define XFS_AG_BTREE_CMP_FORMAT_STR \
-> +	{ XFS_LOOKUP_EQi,	"eq" }, \
-> +	{ XFS_LOOKUP_LEi,	"le" }, \
-> +	{ XFS_LOOKUP_GEi,	"ge" }
-> +
->  typedef enum {
->  	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_RMAPi, XFS_BTNUM_BMAPi,
->  	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_MAX
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index dcde4e9907f7..3f57002ca660 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -2626,10 +2626,9 @@ DEFINE_AG_ERROR_EVENT(xfs_ag_resv_init_error);
->  #define DEFINE_AG_EXTENT_EVENT(name) DEFINE_DISCARD_EVENT(name)
->  
->  /* ag btree lookup tracepoint class */
-> -#define XFS_AG_BTREE_CMP_FORMAT_STR \
-> -	{ XFS_LOOKUP_EQ,	"eq" }, \
-> -	{ XFS_LOOKUP_LE,	"le" }, \
-> -	{ XFS_LOOKUP_GE,	"ge" }
-> +TRACE_DEFINE_ENUM(XFS_LOOKUP_EQi);
-> +TRACE_DEFINE_ENUM(XFS_LOOKUP_LEi);
-> +TRACE_DEFINE_ENUM(XFS_LOOKUP_GEi);
->  DECLARE_EVENT_CLASS(xfs_ag_btree_lookup_class,
->  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
->  		 xfs_agblock_t agbno, xfs_lookup_t dir),
-> 
+> > ---
+> >  fs/xfs/libxfs/xfs_types.h |    9 +++++++++
+> >  fs/xfs/scrub/trace.h      |   38 ++++++++++++++++++++++++++------------
+> >  fs/xfs/xfs_trace.h        |   12 ++++++++++--
+> >  3 files changed, 45 insertions(+), 14 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+> > index 297cf2318f83..eb04afe9cce0 100644
+> > --- a/fs/xfs/libxfs/xfs_types.h
+> > +++ b/fs/xfs/libxfs/xfs_types.h
+> > @@ -114,6 +114,15 @@ typedef enum {
+> >  	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_MAX
+> >  } xfs_btnum_t;
+> >  
+> > +#define XFS_BTNUM_STRINGS \
+> > +	{ XFS_BTNUM_BNOi,	"bnobt" }, \
+> > +	{ XFS_BTNUM_CNTi,	"cntbt" }, \
+> > +	{ XFS_BTNUM_RMAPi,	"rmapbt" }, \
+> > +	{ XFS_BTNUM_BMAPi,	"bmbt" }, \
+> > +	{ XFS_BTNUM_INOi,	"inobt" }, \
+> > +	{ XFS_BTNUM_FINOi,	"finobt" }, \
+> > +	{ XFS_BTNUM_REFCi,	"refcbt" }
+> > +
+> >  struct xfs_name {
+> >  	const unsigned char	*name;
+> >  	int			len;
+> > diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+> > index d67e915cf91a..0141eb1ac091 100644
+> > --- a/fs/xfs/scrub/trace.h
+> > +++ b/fs/xfs/scrub/trace.h
+> > @@ -12,6 +12,20 @@
+> >  #include <linux/tracepoint.h>
+> >  #include "xfs_bit.h"
+> >  
+> > +/*
+> > + * ftrace's __print_symbolic requires that all enum values be wrapped in the
+> > + * TRACE_DEFINE_ENUM macro so that the enum value can be encoded in the ftrace
+> > + * ring buffer.  Somehow this was only worth mentioning in the ftrace sample
+> > + * code.
+> > + */
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_BNOi);
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_CNTi);
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_BMAPi);
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_INOi);
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_FINOi);
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_RMAPi);
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_REFCi);
+> > +
+> >  DECLARE_EVENT_CLASS(xchk_class,
+> >  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
+> >  		 int error),
+> > @@ -278,10 +292,10 @@ TRACE_EVENT(xchk_btree_op_error,
+> >  		__entry->error = error;
+> >  		__entry->ret_ip = ret_ip;
+> >  	),
+> > -	TP_printk("dev %d:%d type %u btnum %d level %d ptr %d agno %u agbno %u error %d ret_ip %pS",
+> > +	TP_printk("dev %d:%d type %u btree %s level %d ptr %d agno %u agbno %u error %d ret_ip %pS",
+> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> >  		  __entry->type,
+> > -		  __entry->btnum,
+> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+> >  		  __entry->level,
+> >  		  __entry->ptr,
+> >  		  __entry->agno,
+> > @@ -321,12 +335,12 @@ TRACE_EVENT(xchk_ifork_btree_op_error,
+> >  		__entry->error = error;
+> >  		__entry->ret_ip = ret_ip;
+> >  	),
+> > -	TP_printk("dev %d:%d ino 0x%llx fork %d type %u btnum %d level %d ptr %d agno %u agbno %u error %d ret_ip %pS",
+> > +	TP_printk("dev %d:%d ino 0x%llx fork %d type %u btree %s level %d ptr %d agno %u agbno %u error %d ret_ip %pS",
+> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> >  		  __entry->ino,
+> >  		  __entry->whichfork,
+> >  		  __entry->type,
+> > -		  __entry->btnum,
+> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+> >  		  __entry->level,
+> >  		  __entry->ptr,
+> >  		  __entry->agno,
+> > @@ -360,10 +374,10 @@ TRACE_EVENT(xchk_btree_error,
+> >  		__entry->ptr = cur->bc_ptrs[level];
+> >  		__entry->ret_ip = ret_ip;
+> >  	),
+> > -	TP_printk("dev %d:%d type %u btnum %d level %d ptr %d agno %u agbno %u ret_ip %pS",
+> > +	TP_printk("dev %d:%d type %u btree %s level %d ptr %d agno %u agbno %u ret_ip %pS",
+> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> >  		  __entry->type,
+> > -		  __entry->btnum,
+> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+> >  		  __entry->level,
+> >  		  __entry->ptr,
+> >  		  __entry->agno,
+> > @@ -400,12 +414,12 @@ TRACE_EVENT(xchk_ifork_btree_error,
+> >  		__entry->ptr = cur->bc_ptrs[level];
+> >  		__entry->ret_ip = ret_ip;
+> >  	),
+> > -	TP_printk("dev %d:%d ino 0x%llx fork %d type %u btnum %d level %d ptr %d agno %u agbno %u ret_ip %pS",
+> > +	TP_printk("dev %d:%d ino 0x%llx fork %d type %u btree %s level %d ptr %d agno %u agbno %u ret_ip %pS",
+> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> >  		  __entry->ino,
+> >  		  __entry->whichfork,
+> >  		  __entry->type,
+> > -		  __entry->btnum,
+> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+> >  		  __entry->level,
+> >  		  __entry->ptr,
+> >  		  __entry->agno,
+> > @@ -439,10 +453,10 @@ DECLARE_EVENT_CLASS(xchk_sbtree_class,
+> >  		__entry->nlevels = cur->bc_nlevels;
+> >  		__entry->ptr = cur->bc_ptrs[level];
+> >  	),
+> > -	TP_printk("dev %d:%d type %u btnum %d agno %u agbno %u level %d nlevels %d ptr %d",
+> > +	TP_printk("dev %d:%d type %u btree %s agno %u agbno %u level %d nlevels %d ptr %d",
+> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> >  		  __entry->type,
+> > -		  __entry->btnum,
+> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+> >  		  __entry->agno,
+> >  		  __entry->bno,
+> >  		  __entry->level,
+> > @@ -643,11 +657,11 @@ TRACE_EVENT(xrep_init_btblock,
+> >  		__entry->agbno = agbno;
+> >  		__entry->btnum = btnum;
+> >  	),
+> > -	TP_printk("dev %d:%d agno %u agbno %u btnum %d",
+> > +	TP_printk("dev %d:%d agno %u agbno %u btree %s",
+> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> >  		  __entry->agno,
+> >  		  __entry->agbno,
+> > -		  __entry->btnum)
+> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS))
+> >  )
+> >  TRACE_EVENT(xrep_findroot_block,
+> >  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
+> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > index 94e289aca220..6fcc893dfc91 100644
+> > --- a/fs/xfs/xfs_trace.h
+> > +++ b/fs/xfs/xfs_trace.h
+> > @@ -2194,6 +2194,14 @@ DEFINE_DISCARD_EVENT(xfs_discard_exclude);
+> >  DEFINE_DISCARD_EVENT(xfs_discard_busy);
+> >  
+> >  /* btree cursor events */
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_BNOi);
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_CNTi);
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_BMAPi);
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_INOi);
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_FINOi);
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_RMAPi);
+> > +TRACE_DEFINE_ENUM(XFS_BTNUM_REFCi);
+> > +
+> >  DECLARE_EVENT_CLASS(xfs_btree_cur_class,
+> >  	TP_PROTO(struct xfs_btree_cur *cur, int level, struct xfs_buf *bp),
+> >  	TP_ARGS(cur, level, bp),
+> > @@ -2213,9 +2221,9 @@ DECLARE_EVENT_CLASS(xfs_btree_cur_class,
+> >  		__entry->ptr = cur->bc_ptrs[level];
+> >  		__entry->daddr = bp ? bp->b_bn : -1;
+> >  	),
+> > -	TP_printk("dev %d:%d btnum %d level %d/%d ptr %d daddr 0x%llx",
+> > +	TP_printk("dev %d:%d btree %s level %d/%d ptr %d daddr 0x%llx",
+> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> > -		  __entry->btnum,
+> > +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
+> >  		  __entry->level,
+> >  		  __entry->nlevels,
+> >  		  __entry->ptr,
+> > 
