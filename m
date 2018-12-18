@@ -1,74 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39872 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:40614 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727365AbeLRRO1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Dec 2018 12:14:27 -0500
-Subject: Re: [PATCH 1/6] xfs: fix symbolic enum printing in ftrace output
+        id S1726868AbeLRRXa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Dec 2018 12:23:30 -0500
+Subject: Re: [PATCH 3/6] xfs: move XFS_AG_BTREE_CMP_FORMAT_STR mappings to
+ libxfs
 References: <154344773243.4341.5458822684407979916.stgit@magnolia>
- <154344773868.4341.11083191144188175339.stgit@magnolia>
+ <154344775094.4341.5105915870413863379.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <833aab42-5b40-a896-937e-fda7a3cdfa53@sandeen.net>
-Date: Tue, 18 Dec 2018 11:14:25 -0600
+Message-ID: <c554b1d7-41ce-40e8-5fee-33990e361c87@sandeen.net>
+Date: Tue, 18 Dec 2018 11:23:29 -0600
 MIME-Version: 1.0
-In-Reply-To: <154344773868.4341.11083191144188175339.stgit@magnolia>
+In-Reply-To: <154344775094.4341.5105915870413863379.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 11/28/18 5:28 PM, Darrick J. Wong wrote:
+On 11/28/18 5:29 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> ftrace's __print_symbolic() has a (very poorly documented) requirement
-> that any enum values used in the symbol to string translation table be
-> wrapped in a TRACE_DEFINE_ENUM so that the enum value can be encoded in
-> the ftrace ring buffer.  Fix this unsatisfied requirement.
+> Move XFS_AG_BTREE_CMP_FORMAT_STR to libxfs so that we don't forget to
+> keep it updated, and TRACE_DEFINE_ENUM the values while we're at it.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+whoops I skipped right over this when I asked the question this answers
+in response to patch 5/6 sorry.
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
->  fs/xfs/xfs_trace.h |   16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
+>  fs/xfs/libxfs/xfs_types.h |    5 +++++
+>  fs/xfs/xfs_trace.h        |    7 +++----
+>  2 files changed, 8 insertions(+), 4 deletions(-)
 > 
 > 
+> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+> index 05e8fa558f3e..297cf2318f83 100644
+> --- a/fs/xfs/libxfs/xfs_types.h
+> +++ b/fs/xfs/libxfs/xfs_types.h
+> @@ -104,6 +104,11 @@ typedef enum {
+>  	XFS_LOOKUP_EQi, XFS_LOOKUP_LEi, XFS_LOOKUP_GEi
+>  } xfs_lookup_t;
+>  
+> +#define XFS_AG_BTREE_CMP_FORMAT_STR \
+> +	{ XFS_LOOKUP_EQi,	"eq" }, \
+> +	{ XFS_LOOKUP_LEi,	"le" }, \
+> +	{ XFS_LOOKUP_GEi,	"ge" }
+> +
+>  typedef enum {
+>  	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_RMAPi, XFS_BTNUM_BMAPi,
+>  	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_MAX
 > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index cabe5c8010b0..dcde4e9907f7 100644
+> index dcde4e9907f7..3f57002ca660 100644
 > --- a/fs/xfs/xfs_trace.h
 > +++ b/fs/xfs/xfs_trace.h
-> @@ -640,6 +640,16 @@ DEFINE_INODE_EVENT(xfs_inode_set_cowblocks_tag);
->  DEFINE_INODE_EVENT(xfs_inode_clear_cowblocks_tag);
->  DEFINE_INODE_EVENT(xfs_inode_free_cowblocks_invalid);
+> @@ -2626,10 +2626,9 @@ DEFINE_AG_ERROR_EVENT(xfs_ag_resv_init_error);
+>  #define DEFINE_AG_EXTENT_EVENT(name) DEFINE_DISCARD_EVENT(name)
 >  
-> +/*
-> + * ftrace's __print_symbolic requires that all enum values be wrapped in the
-> + * TRACE_DEFINE_ENUM macro so that the enum value can be encoded in the ftrace
-> + * ring buffer.  Somehow this was only worth mentioning in the ftrace sample
-> + * code.
-> + */
-> +TRACE_DEFINE_ENUM(PE_SIZE_PTE);
-> +TRACE_DEFINE_ENUM(PE_SIZE_PMD);
-> +TRACE_DEFINE_ENUM(PE_SIZE_PUD);
-> +
->  TRACE_EVENT(xfs_filemap_fault,
->  	TP_PROTO(struct xfs_inode *ip, enum page_entry_size pe_size,
->  		 bool write_fault),
-> @@ -1208,6 +1218,12 @@ DEFINE_EVENT(xfs_readpage_class, name,	\
->  DEFINE_READPAGE_EVENT(xfs_vm_readpage);
->  DEFINE_READPAGE_EVENT(xfs_vm_readpages);
->  
-> +TRACE_DEFINE_ENUM(XFS_IO_HOLE);
-> +TRACE_DEFINE_ENUM(XFS_IO_DELALLOC);
-> +TRACE_DEFINE_ENUM(XFS_IO_UNWRITTEN);
-> +TRACE_DEFINE_ENUM(XFS_IO_OVERWRITE);
-> +TRACE_DEFINE_ENUM(XFS_IO_COW);
-> +
->  DECLARE_EVENT_CLASS(xfs_imap_class,
->  	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
->  		 int type, struct xfs_bmbt_irec *irec),
+>  /* ag btree lookup tracepoint class */
+> -#define XFS_AG_BTREE_CMP_FORMAT_STR \
+> -	{ XFS_LOOKUP_EQ,	"eq" }, \
+> -	{ XFS_LOOKUP_LE,	"le" }, \
+> -	{ XFS_LOOKUP_GE,	"ge" }
+> +TRACE_DEFINE_ENUM(XFS_LOOKUP_EQi);
+> +TRACE_DEFINE_ENUM(XFS_LOOKUP_LEi);
+> +TRACE_DEFINE_ENUM(XFS_LOOKUP_GEi);
+>  DECLARE_EVENT_CLASS(xfs_ag_btree_lookup_class,
+>  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+>  		 xfs_agblock_t agbno, xfs_lookup_t dir),
 > 
