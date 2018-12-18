@@ -1,74 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54772 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727290AbeLRUgV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 15:36:21 -0500
-Subject: [PATCH 5/5] xfs: filter out mount options that don't work on v4
- filesystems
+Received: from userp2130.oracle.com ([156.151.31.86]:57714 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726614AbeLRUjV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 15:39:21 -0500
+Subject: [PATCH v2 0/6] xfs: ftrace cleanups
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 18 Dec 2018 12:36:16 -0800
-Message-ID: <154516537610.31115.1785062537646476692.stgit@magnolia>
-In-Reply-To: <154516534392.31115.7010578395334646479.stgit@magnolia>
-References: <154516534392.31115.7010578395334646479.stgit@magnolia>
+Date: Tue, 18 Dec 2018 12:39:15 -0800
+Message-ID: <154516555511.31776.9868161112615886200.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-A few tests require v4 filesystems and enforce this by disabling crc's
-in the _scratch_mkfs call.  However, if the user specified MOUNT_OPTIONS
-that only work with v5 filesystems, these tests fail.  If we detect a
-test creating a v4 scratch filesystem, filter out incompatible mount
-options that don't work on v4, such as simultaneous group/project quota.
+This series fixes symbolic decoding in ftrace tracepoints in xfs, and
+introduces decoding of xfs_btnum_t and scrub types.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/xfs |   24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+The first four patches fix some problems with the current ftrace usage
+so that symbolic decoding of enum -> string mappings works again, and
+fixes function pointer printing.
 
+The two patches after that add symbolic decoding to btree cursor types
+and scrub types.
 
-diff --git a/common/xfs b/common/xfs
-index 80340b0d..484e6ab6 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -89,6 +89,7 @@ _scratch_mkfs_xfs()
- 	_scratch_do_mkfs "$mkfs_cmd" "$mkfs_filter" $* 2>$tmp.mkfserr 1>$tmp.mkfsstd
- 	mkfs_status=$?
- 
-+	grep -q crc=0 $tmp.mkfsstd && _force_xfsv4_mount_options
- 
- 	if [ $mkfs_status -eq 0 -a "$LARGE_SCRATCH_DEV" = yes ]; then
- 		# manually parse the mkfs output to get the fs size in bytes
-@@ -779,3 +780,26 @@ _scratch_get_bmx_prefix() {
- 	_scratch_xfs_db -c "inode ${ino}" -c 'p' >> $seqres.full
- 	return 1
- }
-+
-+#
-+# Ensures that we don't pass any mount options incompatible with XFS v4
-+#
-+_force_xfsv4_mount_options()
-+{
-+	local gquota=0
-+	local pquota=0
-+
-+	# Can't have group and project quotas in XFS v4
-+	echo "$MOUNT_OPTIONS" | egrep -q "(gquota|grpquota|grpjquota=|gqnoenforce)" && gquota=1
-+	echo "$MOUNT_OPTIONS" | egrep -q "(\bpquota|prjquota|pqnoenforce)" && pquota=1
-+
-+	if [ $gquota -gt 0 ] && [ $pquota -gt 0 ]; then
-+		export MOUNT_OPTIONS=$(echo $MOUNT_OPTIONS \
-+			| sed   -e 's/gquota/QUOTA/g'      \
-+				-e 's/grpquota/QUOTA/g'    \
-+				-e 's/grpjquota=[^, ]/QUOTA/g' \
-+				-e 's/gqnoenforce/QUOTA/g' \
-+				-e "s/QUOTA/defaults/g")
-+	fi
-+	echo "MOUNT_OPTIONS = $MOUNT_OPTIONS" >>$seqres.full
-+}
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.20-rc6.  There's little change since the last version except for
+improving comments about TRACE_DEFINE_ENUM.
+
+Comments and questions are, as always, welcome.
+
+--D
