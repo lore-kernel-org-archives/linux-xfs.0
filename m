@@ -1,116 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39128 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:40716 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725864AbeLEDsL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Dec 2018 22:48:11 -0500
-Subject: Re: [PATCH v2 2/6] xfs_repair: don't error out on dirs with a single
- leafn block
-References: <154181071499.3727.3910572718199592407.stgit@magnolia>
- <154181072709.3727.17020900125846885320.stgit@magnolia>
- <20181122181346.GW6792@magnolia>
+        id S1726555AbeLRRYq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Dec 2018 12:24:46 -0500
+Subject: Re: [PATCH 4/6] xfs: move XFS_INODE_FORMAT_STR mappings to libxfs
+References: <154344773243.4341.5458822684407979916.stgit@magnolia>
+ <154344775711.4341.699323732443443292.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f3770fe4-1f20-42a0-4d13-6c2e19329f54@sandeen.net>
-Date: Tue, 4 Dec 2018 21:48:10 -0600
+Message-ID: <6bc5bc8d-e795-aaa0-2f00-f9878160333f@sandeen.net>
+Date: Tue, 18 Dec 2018 11:24:45 -0600
 MIME-Version: 1.0
-In-Reply-To: <20181122181346.GW6792@magnolia>
+In-Reply-To: <154344775711.4341.699323732443443292.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 11/22/18 12:13 PM, Darrick J. Wong wrote:
+On 11/28/18 5:29 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> In process_node_dir2, we need to distinguish between a directory with a
-> single leafn block (yes, they exist) having no interior da nodes, and a
-> directory with a da tree that incorrectly points to dablk 0.  If we
-> happened to fill out any part of the da cursor then we have a da btree
-> with garbage in it; otherwise, we have a single leafn block.
+> Move XFS_INODE_FORMAT_STR to libxfs so that we don't forget to keep it
+> updated, and add necessary TRACE_DEFINE_ENUM.
 > 
-> This was found by repair repeatedly rebuilding a directory containing a
-> single leafn block (xfs/495).
-> 
-> Fixes: 67a79e2cc932 ("xfs_repair: treat zero da btree pointers as corruption")
-> Reported-by: Dave Chinner <david@fromorbit.com>
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I'm finding the commit log hard to parse/understand.
-
-Let's reference
-
-71a6af8 Revert "xfs_repair: treat zero da btree pointers as corruption"
-
-for starters, but can we do something like this....?
-
-===
-
-As explained in
-
-71a6af8 Revert "xfs_repair: treat zero da btree pointers as corruption"
-
-a single root LEAFN block can exist in a directory until it grows further.
-
-This is why, normally, we skip directories with a root marked
-XFS_DIR2_LEAFN_MAGIC, as detected by the left-most leaf block being 
-found at file block 0.
-
-However, if we traversed any level of a btree to get here (as
-indicated by da_cursor.active > 0), then a leaf block claiming block
-0 indicates corruption, and we should handle it as such, and rebuild
-the directory.
-
-This was found by repair repeatedly rebuilding a directory containing a
-single leafn block (xfs/495).
-
-Fixes: 67a79e2cc932 ("xfs_repair: treat zero da btree pointers as corruption")
-Reported-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-===
-
-I'm not hung up on rewriting the commit log, but if you like it give me
-thumbs up.  I needed to think it through that way to grok the change.
-Anyway, for the change now that I do grok it,
+Now that I think of it, just adding a /* for ftrace */ above the #define
+might be nice here and for the others, if you think it's appropriate, but:
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
-> v2: now that the regression test has landed, mention that in the
-> changelog
-> ---
->  repair/dir2.c |   15 +++++++++++++--
->  1 file changed, 13 insertions(+), 2 deletions(-)
+>  fs/xfs/libxfs/xfs_format.h |    7 +++++++
+>  fs/xfs/xfs_trace.h         |   10 +++++-----
+>  2 files changed, 12 insertions(+), 5 deletions(-)
 > 
-> diff --git a/repair/dir2.c b/repair/dir2.c
-> index ba5763ed..e67ec590 100644
-> --- a/repair/dir2.c
-> +++ b/repair/dir2.c
-> @@ -1243,10 +1243,21 @@ process_node_dir2(
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index b15412e4c535..d8902114786d 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -925,6 +925,13 @@ typedef enum xfs_dinode_fmt {
+>  	XFS_DINODE_FMT_UUID		/* added long ago, but never used */
+>  } xfs_dinode_fmt_t;
 >  
->  	/*
->  	 * Skip directories with a root marked XFS_DIR2_LEAFN_MAGIC
-> +	 *
-> +	 * Be careful here: If any level of the da cursor was filled out then
-> +	 * the directory has a da btree containing an invalid before pointer to
-> +	 * dblock 0, and we should move on to rebuilding the directory.  If no
-> +	 * levels in the da cursor got filled out, then we just have a single
-> +	 * leafn block and we're done.
->  	 */
->  	if (bno == 0) {
-> -		release_da_cursor(mp, &da_cursor, 0);
-> -		return 0;
-> +		if (da_cursor.active > 0) {
-> +			err_release_da_cursor(mp, &da_cursor, 0);
-> +			return 1;
-> +		} else {
-> +			release_da_cursor(mp, &da_cursor, 0);
-> +			return 0;
-> +		}
->  	} else {
->  		/*
->  		 * Now pass cursor and bno into leaf-block processing routine.
+> +#define XFS_INODE_FORMAT_STR \
+> +	{ XFS_DINODE_FMT_DEV,		"dev" }, \
+> +	{ XFS_DINODE_FMT_LOCAL,		"local" }, \
+> +	{ XFS_DINODE_FMT_EXTENTS,	"extent" }, \
+> +	{ XFS_DINODE_FMT_BTREE,		"btree" }, \
+> +	{ XFS_DINODE_FMT_UUID,		"uuid" }
+> +
+>  /*
+>   * Inode minimum and maximum sizes.
+>   */
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 3f57002ca660..94e289aca220 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -1901,11 +1901,11 @@ TRACE_EVENT(xfs_dir2_leafn_moveents,
+>  	{ 0,	"target" }, \
+>  	{ 1,	"temp" }
+>  
+> -#define XFS_INODE_FORMAT_STR \
+> -	{ 0,	"invalid" }, \
+> -	{ 1,	"local" }, \
+> -	{ 2,	"extent" }, \
+> -	{ 3,	"btree" }
+> +TRACE_DEFINE_ENUM(XFS_DINODE_FMT_DEV);
+> +TRACE_DEFINE_ENUM(XFS_DINODE_FMT_LOCAL);
+> +TRACE_DEFINE_ENUM(XFS_DINODE_FMT_EXTENTS);
+> +TRACE_DEFINE_ENUM(XFS_DINODE_FMT_BTREE);
+> +TRACE_DEFINE_ENUM(XFS_DINODE_FMT_UUID);
+>  
+>  DECLARE_EVENT_CLASS(xfs_swap_extent_class,
+>  	TP_PROTO(struct xfs_inode *ip, int which),
 > 
