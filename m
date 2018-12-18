@@ -1,117 +1,396 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:38123 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729161AbeLTMX3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Dec 2018 07:23:29 -0500
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] iomap: Revert "fs/iomap.c: get/put the page in iomap_page_create/release()"
-Date: Thu, 20 Dec 2018 23:23:24 +1100
-Message-Id: <20181220122324.17082-1-david@fromorbit.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:41248 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726590AbeLRXYp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 18:24:45 -0500
+Date: Tue, 18 Dec 2018 15:24:37 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 11/11] xfs: introduce an always_cow mode
+Message-ID: <20181218232437.GS27208@magnolia>
+References: <20181203222503.30649-1-hch@lst.de>
+ <20181203222503.30649-12-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181203222503.30649-12-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, pjaroszynski@nvidia.com, william.kucharski@oracle.com, stable@vger.kernel.org, hch@lst.de, akpm@linux-foundation.org, torvalds@linux-foundation.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, Dec 03, 2018 at 05:25:03PM -0500, Christoph Hellwig wrote:
+> Add a mode where XFS never overwrites existing blocks in place.  This
+> is to aid debugging our COW code, and also put infatructure in place
+> for things like possible future support for zoned block devices, which
+> can't support overwrites.
+> 
+> This mode is enabled globally by doing a:
+> 
+>     echo 1 > /sys/fs/xfs/debug/always_cow
+> 
+> Note that the parameter is global to allow running all tests in xfstests
+> easily in this mode, which would not easily be possible with a per-fs
+> sysfs file.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_aops.c    |  2 +-
+>  fs/xfs/xfs_file.c    | 11 ++++++++++-
+>  fs/xfs/xfs_iomap.c   | 28 ++++++++++++++++++----------
+>  fs/xfs/xfs_reflink.c | 28 ++++++++++++++++++++++++----
+>  fs/xfs/xfs_reflink.h | 13 +++++++++++++
+>  fs/xfs/xfs_super.c   | 13 +++++++++----
+>  fs/xfs/xfs_sysctl.h  |  1 +
+>  fs/xfs/xfs_sysfs.c   | 24 ++++++++++++++++++++++++
+>  8 files changed, 100 insertions(+), 20 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 7d95a84064e7..a900924f16e1 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -986,7 +986,7 @@ xfs_vm_bmap(
+>  	 * Since we don't pass back blockdev info, we can't return bmap
+>  	 * information for rt files either.
+>  	 */
+> -	if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
+> +	if (xfs_is_cow_inode(ip) || XFS_IS_REALTIME_INODE(ip))
+>  		return 0;
+>  	return iomap_bmap(mapping, block, &xfs_iomap_ops);
+>  }
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index e47425071e65..8d2be043590a 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -507,7 +507,7 @@ xfs_file_dio_aio_write(
+>  		 * We can't properly handle unaligned direct I/O to reflink
+>  		 * files yet, as we can't unshare a partial block.
+>  		 */
+> -		if (xfs_is_reflink_inode(ip)) {
+> +		if (xfs_is_cow_inode(ip)) {
+>  			trace_xfs_reflink_bounce_dio_write(ip, iocb->ki_pos, count);
+>  			return -EREMCHG;
+>  		}
+> @@ -806,6 +806,15 @@ xfs_file_fallocate(
+>  		return -EOPNOTSUPP;
+>  
+>  	xfs_ilock(ip, iolock);
+> +	/*
+> +	 * If always_cow mode we can't use preallocation and thus should not
+> +	 * allow creating them.
+> +	 */
+> +	if (xfs_is_always_cow_inode(ip) && (mode & ~FALLOC_FL_KEEP_SIZE) == 0) {
+> +		error = -EOPNOTSUPP;
+> +		goto out_unlock;
 
-This reverts commit 61c6de667263184125d5ca75e894fcad632b0dd3.
+I think this screws up both UNSHARE and ZERO_RANGE here -- if the first
+mode is set, we'll cow the shared extents, but we'll also fill holes
+with unwritten extents, which the comment implies isn't allowed.  In the
+second set we'll punch the range but refill it with unwritten extents
+that we'll never actually overwrite.
 
-The reverted commit added page reference counting to iomap page
-structures that are used to track block size < page size state. This
-was supposed to align the code with page migration page accounting
-assumptions, but what it has done instead is break XFS filesystems.
-Every fstests run I've done on sub-page block size XFS filesystems
-has since picking up this commit 2 days ago has failed with bad page
-state errors such as:
+Granted, I'm still rather fuzzy on what exactly is supposed to happen
+with preallocating fallocate when all writes require an allocation to
+succeed?  btrfs fills holes with unwritten extents which the next write
+will overwrite, but non-holes cow like normal.  That only makes sense if
+you assume people only use fallocate to preallocate holes.  Maybe we
+don't want to follow that route.  It's probably simpler not to support
+creation of unwritten extents for always_cow files, in which case you'll
+have to neuter UNSHARE too.
 
-# ./run_check.sh "-m rmapbt=1,reflink=1 -i sparse=1 -b size=1k" "generic/038"
-....
-SECTION       -- xfs
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 test1 4.20.0-rc6-dgc+
-MKFS_OPTIONS  -- -f -m rmapbt=1,reflink=1 -i sparse=1 -b size=1k /dev/sdc
-MOUNT_OPTIONS -- /dev/sdc /mnt/scratch
+As for ZERO_RANGE, I think it's sufficient to punch the range, since we
+COW even the unwritten extents (which makes allocating them pointless),
+right?
 
-generic/038 454s ...
- run fstests generic/038 at 2018-12-20 18:43:05
- XFS (sdc): Unmounting Filesystem
- XFS (sdc): Mounting V5 Filesystem
- XFS (sdc): Ending clean mount
- BUG: Bad page state in process kswapd0  pfn:3a7fa
- page:ffffea0000ccbeb0 count:0 mapcount:0 mapping:ffff88800d9b6360 index:0x1
- flags: 0xfffffc0000000()
- raw: 000fffffc0000000 dead000000000100 dead000000000200 ffff88800d9b6360
- raw: 0000000000000001 0000000000000000 00000000ffffffff
- page dumped because: non-NULL mapping
- CPU: 0 PID: 676 Comm: kswapd0 Not tainted 4.20.0-rc6-dgc+ #915
- Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/2014
- Call Trace:
-  dump_stack+0x67/0x90
-  bad_page.cold.116+0x8a/0xbd
-  free_pcppages_bulk+0x4bf/0x6a0
-  free_unref_page_list+0x10f/0x1f0
-  shrink_page_list+0x49d/0xf50
-  shrink_inactive_list+0x19d/0x3b0
-  shrink_node_memcg.constprop.77+0x398/0x690
-  ? shrink_slab.constprop.81+0x278/0x3f0
-  shrink_node+0x7a/0x2f0
-  kswapd+0x34b/0x6d0
-  ? node_reclaim+0x240/0x240
-  kthread+0x11f/0x140
-  ? __kthread_bind_mask+0x60/0x60
-  ret_from_fork+0x24/0x30
- Disabling lock debugging due to kernel taint
-....
+What's the real goal here?  I assume you're targeting both O_ATOMIC in
+addition to being able to use SMR drives as realtime devices, right?  It
+would help to have a better idea of where we're going here before adding
+anything user visible, even if it's just a debug knob for now.
 
-The failures are from anyway that frees pages and empties the
-per-cpu page magazines, so it's not a predictable failure or an easy
-to debug failure.
+> +	}
+> +
+>  	error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
+>  	if (error)
+>  		goto out_unlock;
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index bbc5d2e06b06..244ea0007c09 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -395,12 +395,13 @@ xfs_quota_calc_throttle(
+>  STATIC xfs_fsblock_t
+>  xfs_iomap_prealloc_size(
+>  	struct xfs_inode	*ip,
+> +	int			whichfork,
+>  	loff_t			offset,
+>  	loff_t			count,
+>  	struct xfs_iext_cursor	*icur)
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+> -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+>  	struct xfs_bmbt_irec	prev;
+>  	int			shift = 0;
+> @@ -593,7 +594,11 @@ xfs_file_iomap_begin_delay(
+>  	 * themselves.  Second the lookup in the extent list is generally faster
+>  	 * than going out to the shared extent tree.
+>  	 */
+> -	if (xfs_is_reflink_inode(ip)) {
+> +	if (xfs_is_cow_inode(ip)) {
+> +		if (!ip->i_cowfp) {
+> +			ASSERT(!xfs_is_reflink_inode(ip));
+> +			xfs_ifork_init_cow(ip);
+> +		}
+>  		cow_eof = !xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb,
+>  				&ccur, &cmap);
+>  		if (!cow_eof && cmap.br_startoff <= offset_fsb) {
+> @@ -609,7 +614,7 @@ xfs_file_iomap_begin_delay(
+>  		 * overwriting shared extents.   This includes zeroing of
+>  		 * existing extents that contain data.
+>  		 */
+> -		if (!xfs_is_reflink_inode(ip) ||
+> +		if (!xfs_is_cow_inode(ip) ||
+>  		    ((flags & IOMAP_ZERO) && imap.br_state != XFS_EXT_NORM)) {
+>  			trace_xfs_iomap_found(ip, offset, count, XFS_DATA_FORK,
+>  					&imap);
+> @@ -619,7 +624,7 @@ xfs_file_iomap_begin_delay(
+>  		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+>  
+>  		/* Trim the mapping to the nearest shared extent boundary. */
+> -		error = xfs_reflink_trim_around_shared(ip, &imap, &shared);
+> +		error = xfs_inode_need_cow(ip, &imap, &shared);
+>  		if (error)
+>  			goto out_unlock;
+>  
+> @@ -648,15 +653,18 @@ xfs_file_iomap_begin_delay(
+>  		 */
+>  		count = min_t(loff_t, count, 1024 * PAGE_SIZE);
+>  		end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
+> +
+> +		if (xfs_is_always_cow_inode(ip))
+> +			whichfork = XFS_COW_FORK;
+>  	}
+>  
+>  	error = xfs_qm_dqattach_locked(ip, false);
+>  	if (error)
+>  		goto out_unlock;
+>  
+> -	if (eof && whichfork == XFS_DATA_FORK) {
+> -		prealloc_blocks = xfs_iomap_prealloc_size(ip, offset, count,
+> -				&icur);
+> +	if (eof) {
+> +		prealloc_blocks = xfs_iomap_prealloc_size(ip, whichfork, offset,
+> +				count, &icur);
+>  		if (prealloc_blocks) {
+>  			xfs_extlen_t	align;
+>  			xfs_off_t	end_offset;
+> @@ -987,7 +995,7 @@ xfs_ilock_for_iomap(
+>  	 * COW writes may allocate delalloc space or convert unwritten COW
+>  	 * extents, so we need to make sure to take the lock exclusively here.
+>  	 */
+> -	if (xfs_is_reflink_inode(ip) && is_write) {
+> +	if (xfs_is_cow_inode(ip) && is_write) {
+>  		/*
+>  		 * FIXME: It could still overwrite on unshared extents and not
+>  		 * need allocation.
+> @@ -1021,7 +1029,7 @@ xfs_ilock_for_iomap(
+>  	 * check, so if we got ILOCK_SHARED for a write and but we're now a
+>  	 * reflink inode we have to switch to ILOCK_EXCL and relock.
+>  	 */
+> -	if (mode == XFS_ILOCK_SHARED && is_write && xfs_is_reflink_inode(ip)) {
+> +	if (mode == XFS_ILOCK_SHARED && is_write && xfs_is_cow_inode(ip)) {
+>  		xfs_iunlock(ip, mode);
+>  		mode = XFS_ILOCK_EXCL;
+>  		goto relock;
+> @@ -1093,7 +1101,7 @@ xfs_file_iomap_begin(
+>  	 * Break shared extents if necessary. Checks for non-blocking IO have
+>  	 * been done up front, so we don't need to do them here.
+>  	 */
+> -	if (xfs_is_reflink_inode(ip)) {
+> +	if (xfs_is_cow_inode(ip)) {
+>  		struct xfs_bmbt_irec	orig = imap;
+>  
+>  		/* if zeroing doesn't need COW allocation, then we are done. */
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 0cf13cb1b2fe..1da46899c215 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -192,7 +192,7 @@ xfs_reflink_trim_around_shared(
+>  	int			error = 0;
+>  
+>  	/* Holes, unwritten, and delalloc extents cannot be shared */
+> -	if (!xfs_is_reflink_inode(ip) || !xfs_bmap_is_real_extent(irec)) {
+> +	if (!xfs_is_cow_inode(ip) || !xfs_bmap_is_real_extent(irec)) {
+>  		*shared = false;
+>  		return 0;
+>  	}
+> @@ -234,6 +234,23 @@ xfs_reflink_trim_around_shared(
+>  	}
+>  }
+>  
+> +bool
+> +xfs_inode_need_cow(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_bmbt_irec	*imap,
+> +	bool			*shared)
+> +{
+> +	/* We can't update any real extents in always COW mode. */
+> +	if (xfs_is_always_cow_inode(ip) &&
+> +	    !isnullstartblock(imap->br_startblock)) {
+> +		*shared = true;
+> +		return 0;
+> +	}
+> +
+> +	/* Trim the mapping to the nearest shared extent boundary. */
+> +	return xfs_reflink_trim_around_shared(ip, imap, shared);
+> +}
+> +
+>  static int
+>  xfs_reflink_convert_cow_locked(
+>  	struct xfs_inode	*ip,
+> @@ -321,7 +338,7 @@ xfs_find_trim_cow_extent(
+>  	if (got.br_startoff > offset_fsb) {
+>  		xfs_trim_extent(imap, imap->br_startoff,
+>  				got.br_startoff - imap->br_startoff);
+> -		return xfs_reflink_trim_around_shared(ip, imap, shared);
+> +		return xfs_inode_need_cow(ip, imap, shared);
+>  	}
+>  
+>  	*shared = true;
+> @@ -356,7 +373,10 @@ xfs_reflink_allocate_cow(
+>  	xfs_extlen_t		resblks = 0;
+>  
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> -	ASSERT(xfs_is_reflink_inode(ip));
+> +	if (!ip->i_cowfp) {
+> +		ASSERT(!xfs_is_reflink_inode(ip));
+> +		xfs_ifork_init_cow(ip);
+> +	}
+>  
+>  	error = xfs_find_trim_cow_extent(ip, imap, shared, &found);
+>  	if (error || !*shared)
+> @@ -537,7 +557,7 @@ xfs_reflink_cancel_cow_range(
+>  	int			error;
+>  
+>  	trace_xfs_reflink_cancel_cow_range(ip, offset, count);
+> -	ASSERT(xfs_is_reflink_inode(ip));
+> +	ASSERT(ip->i_cowfp);
+>  
+>  	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+>  	if (count == NULLFILEOFF)
+> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> index d76fc520cac8..f6505ae37626 100644
+> --- a/fs/xfs/xfs_reflink.h
+> +++ b/fs/xfs/xfs_reflink.h
+> @@ -6,11 +6,24 @@
+>  #ifndef __XFS_REFLINK_H
+>  #define __XFS_REFLINK_H 1
+>  
+> +static inline bool xfs_is_always_cow_inode(struct xfs_inode *ip)
+> +{
+> +	return xfs_globals.always_cow &&
+> +		xfs_sb_version_hasreflink(&ip->i_mount->m_sb);
+> +}
+> +
+> +static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
+> +{
+> +	return xfs_is_reflink_inode(ip) || xfs_is_always_cow_inode(ip);
+> +}
+> +
+>  extern int xfs_reflink_find_shared(struct xfs_mount *mp, struct xfs_trans *tp,
+>  		xfs_agnumber_t agno, xfs_agblock_t agbno, xfs_extlen_t aglen,
+>  		xfs_agblock_t *fbno, xfs_extlen_t *flen, bool find_maximal);
+>  extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+>  		struct xfs_bmbt_irec *irec, bool *shared);
+> +bool xfs_inode_need_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
+> +		bool *shared);
+>  
+>  extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
+>  		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode,
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index d3e6cd063688..f4d34749505e 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1728,11 +1728,16 @@ xfs_fs_fill_super(
+>  		}
+>  	}
+>  
+> -	if (xfs_sb_version_hasreflink(&mp->m_sb) && mp->m_sb.sb_rblocks) {
+> -		xfs_alert(mp,
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> +		if (mp->m_sb.sb_rblocks) {
+> +			xfs_alert(mp,
+>  	"reflink not compatible with realtime device!");
+> -		error = -EINVAL;
+> -		goto out_filestream_unmount;
+> +			error = -EINVAL;
+> +			goto out_filestream_unmount;
+> +		}
+> +
+> +		if (xfs_globals.always_cow)
+> +			xfs_info(mp, "using DEBUG-only always_cow mode.");
 
-generic/038 is a reliable reproducer of this problem - it has a 9 in
-10 failure rate on one of my test machines. Failure on other
-machines have been at random points in fstests runs but every run
-has ended up tripping this problem. Hence generic/038 was used to
-bisect the failure because it was the most reliable failure.
+How does xfs handle the situation where always_cow mode comes on after
+you've already opened a file and begun writing to it?  I assume we
+allocate a new cow fork for files that need it and all writes after the
+switch flips will be COW?
 
-It is too close to the 4.20 release (not to mention holidays) to
-try to diagnose, fix and test the underlying cause of the problem,
-so reverting the commit is the only option we have right now. The
-revert has been tested against a current tot 4.20-rc7+ kernel across
-multiple machines running sub-page block size XFs filesystems and
-none of the bad page state failures have been seen.
+--D
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/iomap.c | 7 -------
- 1 file changed, 7 deletions(-)
-
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 5bc172f3dfe8..d6bc98ae8d35 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -116,12 +116,6 @@ iomap_page_create(struct inode *inode, struct page *page)
- 	atomic_set(&iop->read_count, 0);
- 	atomic_set(&iop->write_count, 0);
- 	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
--
--	/*
--	 * migrate_page_move_mapping() assumes that pages with private data have
--	 * their count elevated by 1.
--	 */
--	get_page(page);
- 	set_page_private(page, (unsigned long)iop);
- 	SetPagePrivate(page);
- 	return iop;
-@@ -138,7 +132,6 @@ iomap_page_release(struct page *page)
- 	WARN_ON_ONCE(atomic_read(&iop->write_count));
- 	ClearPagePrivate(page);
- 	set_page_private(page, 0);
--	put_page(page);
- 	kfree(iop);
- }
- 
--- 
-2.19.1
+>  	}
+>  
+>  	if (xfs_sb_version_hasrmapbt(&mp->m_sb) && mp->m_sb.sb_rblocks) {
+> diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
+> index 168488130a19..ad7f9be13087 100644
+> --- a/fs/xfs/xfs_sysctl.h
+> +++ b/fs/xfs/xfs_sysctl.h
+> @@ -85,6 +85,7 @@ struct xfs_globals {
+>  	int	log_recovery_delay;	/* log recovery delay (secs) */
+>  	int	mount_delay;		/* mount setup delay (secs) */
+>  	bool	bug_on_assert;		/* BUG() the kernel on assert failure */
+> +	bool	always_cow;		/* use COW fork for all overwrites */
+>  };
+>  extern struct xfs_globals	xfs_globals;
+>  
+> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> index cd6a994a7250..cabda13f3c64 100644
+> --- a/fs/xfs/xfs_sysfs.c
+> +++ b/fs/xfs/xfs_sysfs.c
+> @@ -183,10 +183,34 @@ mount_delay_show(
+>  }
+>  XFS_SYSFS_ATTR_RW(mount_delay);
+>  
+> +static ssize_t
+> +always_cow_store(
+> +	struct kobject	*kobject,
+> +	const char	*buf,
+> +	size_t		count)
+> +{
+> +	ssize_t		ret;
+> +
+> +	ret = kstrtobool(buf, &xfs_globals.always_cow);
+> +	if (ret < 0)
+> +		return ret;
+> +	return count;
+> +}
+> +
+> +static ssize_t
+> +always_cow_show(
+> +	struct kobject	*kobject,
+> +	char		*buf)
+> +{
+> +	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.always_cow);
+> +}
+> +XFS_SYSFS_ATTR_RW(always_cow);
+> +
+>  static struct attribute *xfs_dbg_attrs[] = {
+>  	ATTR_LIST(bug_on_assert),
+>  	ATTR_LIST(log_recovery_delay),
+>  	ATTR_LIST(mount_delay),
+> +	ATTR_LIST(always_cow),
+>  	NULL,
+>  };
+>  
+> -- 
+> 2.19.1
+> 
