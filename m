@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:55448 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727544AbeLRUgO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 15:36:14 -0500
-Subject: [PATCH 4/5] xfs: look for stringified constants in ftrace formats
+Received: from userp2120.oracle.com ([156.151.31.85]:54772 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727290AbeLRUgV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 15:36:21 -0500
+Subject: [PATCH 5/5] xfs: filter out mount options that don't work on v4
+ filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 18 Dec 2018 12:36:09 -0800
-Message-ID: <154516536986.31115.738289589511424146.stgit@magnolia>
+Date: Tue, 18 Dec 2018 12:36:16 -0800
+Message-ID: <154516537610.31115.1785062537646476692.stgit@magnolia>
 In-Reply-To: <154516534392.31115.7010578395334646479.stgit@magnolia>
 References: <154516534392.31115.7010578395334646479.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,113 +21,54 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Look for uninterpretable stringified constants in the ftrace format
-description for xfs tracepoints.
+A few tests require v4 filesystems and enforce this by disabling crc's
+in the _scratch_mkfs call.  However, if the user specified MOUNT_OPTIONS
+that only work with v5 filesystems, these tests fail.  If we detect a
+test creating a v4 scratch filesystem, filter out incompatible mount
+options that don't work on v4, such as simultaneous group/project quota.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/735     |   73 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/735.out |    3 ++
- tests/xfs/group   |    1 +
- 3 files changed, 77 insertions(+)
- create mode 100755 tests/xfs/735
- create mode 100644 tests/xfs/735.out
+ common/xfs |   24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
 
-diff --git a/tests/xfs/735 b/tests/xfs/735
-new file mode 100755
-index 00000000..d5f4eba0
---- /dev/null
-+++ b/tests/xfs/735
-@@ -0,0 +1,73 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2018 Oracle, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 735
-+#
-+# Look for stringified constants in the __print_symbolic format strings,
-+# which suggest that we forgot to TRACE_DEFINE_ENUM somewhere, which causes
-+# incomplete ftrace reporting.
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
+diff --git a/common/xfs b/common/xfs
+index 80340b0d..484e6ab6 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -89,6 +89,7 @@ _scratch_mkfs_xfs()
+ 	_scratch_do_mkfs "$mkfs_cmd" "$mkfs_filter" $* 2>$tmp.mkfserr 1>$tmp.mkfsstd
+ 	mkfs_status=$?
+ 
++	grep -q crc=0 $tmp.mkfsstd && _force_xfsv4_mount_options
+ 
+ 	if [ $mkfs_status -eq 0 -a "$LARGE_SCRATCH_DEV" = yes ]; then
+ 		# manually parse the mkfs output to get the fs size in bytes
+@@ -779,3 +780,26 @@ _scratch_get_bmx_prefix() {
+ 	_scratch_xfs_db -c "inode ${ino}" -c 'p' >> $seqres.full
+ 	return 1
+ }
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
++#
++# Ensures that we don't pass any mount options incompatible with XFS v4
++#
++_force_xfsv4_mount_options()
 +{
-+	cd /
-+	rm -rf $tmp.*
++	local gquota=0
++	local pquota=0
++
++	# Can't have group and project quotas in XFS v4
++	echo "$MOUNT_OPTIONS" | egrep -q "(gquota|grpquota|grpjquota=|gqnoenforce)" && gquota=1
++	echo "$MOUNT_OPTIONS" | egrep -q "(\bpquota|prjquota|pqnoenforce)" && pquota=1
++
++	if [ $gquota -gt 0 ] && [ $pquota -gt 0 ]; then
++		export MOUNT_OPTIONS=$(echo $MOUNT_OPTIONS \
++			| sed   -e 's/gquota/QUOTA/g'      \
++				-e 's/grpquota/QUOTA/g'    \
++				-e 's/grpjquota=[^, ]/QUOTA/g' \
++				-e 's/gqnoenforce/QUOTA/g' \
++				-e "s/QUOTA/defaults/g")
++	fi
++	echo "MOUNT_OPTIONS = $MOUNT_OPTIONS" >>$seqres.full
 +}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+
-+cprog=$tmp.ftrace.c
-+oprog=$tmp.ftrace
-+sedprog=$tmp.ftrace.sed
-+
-+ftrace_dir=/sys/kernel/debug/tracing/events/xfs
-+
-+test -d $ftrace_dir || _notrun "ftrace not enabled"
-+
-+# The second argument to __print_symbolic is stringified in the tracepoint's
-+# fmt file, so we look for "{ NUM, STRING }" and try to separate each of them
-+# into single lines so that we can build a C structure.  This will (we hope)
-+# catch non-constant numbers that the compiler won't know about.
-+cat > $sedprog << ENDL
-+s/}, /},\n/g
-+s/}),/},\n/g
-+s/})/},\n/g
-+s/, {/\n{/g
-+ENDL
-+
-+cat > $cprog << ENDL
-+struct ftrace_chk {
-+	unsigned long long	num;
-+	char			*str;
-+} syms[] = {
-+ENDL
-+egrep '(__print_flags|__print_symbolic)' $ftrace_dir*/*/format | \
-+	sed -f $sedprog | grep '^{' | sort | uniq >> $cprog
-+cat >> $cprog << ENDL
-+};
-+
-+int main(int argc, char *argv[]) { return 0; }
-+ENDL
-+
-+cat $cprog >> $seqres.full
-+echo Compiler errors imply missing TRACE_DEFINE_ENUM.
-+cc -o $oprog $cprog
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/xfs/735.out b/tests/xfs/735.out
-new file mode 100644
-index 00000000..844cea1d
---- /dev/null
-+++ b/tests/xfs/735.out
-@@ -0,0 +1,3 @@
-+QA output created by 735
-+Compiler errors imply missing TRACE_DEFINE_ENUM.
-+Silence is golden
-diff --git a/tests/xfs/group b/tests/xfs/group
-index dfaae2bc..4a986af3 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -496,3 +496,4 @@
- 496 dangerous_fuzzers dangerous_scrub dangerous_repair
- 497 dangerous_fuzzers dangerous_scrub dangerous_online_repair
- 498 dangerous_fuzzers dangerous_norepair
-+735 auto quick
