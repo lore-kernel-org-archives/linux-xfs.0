@@ -1,49 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51728 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727892AbeLRSfZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 13:35:25 -0500
-Date: Tue, 18 Dec 2018 10:35:21 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/6] xfs: move XFS_INODE_FORMAT_STR mappings to libxfs
-Message-ID: <20181218183521.GC27208@magnolia>
-References: <154344773243.4341.5458822684407979916.stgit@magnolia>
- <154344775711.4341.699323732443443292.stgit@magnolia>
- <541758f7-3af9-1eb5-db21-a0c8de9a808f@sandeen.net>
+Received: from mail-lj1-f181.google.com ([209.85.208.181]:34741 "EHLO
+        mail-lj1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726276AbeLRCmB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Dec 2018 21:42:01 -0500
+Received: by mail-lj1-f181.google.com with SMTP id u89-v6so2151149lje.1
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Dec 2018 18:42:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <541758f7-3af9-1eb5-db21-a0c8de9a808f@sandeen.net>
+References: <CAJDdQW1bUSZ+3p-4XMbtzU0y5SifQnnwmStKGhb5dkozCaExoA@mail.gmail.com>
+ <20181217233343.GE10644@dastard>
+In-Reply-To: <20181217233343.GE10644@dastard>
+From: =?UTF-8?B?5byg5pys6b6Z?= <zbl.lkml@gmail.com>
+Date: Tue, 18 Dec 2018 10:41:48 +0800
+Message-ID: <CAJDdQW2U5hE2W245iodcOF408DV8W1D1-MSRtSMvY8=TT9rnCg@mail.gmail.com>
+Subject: Re: XFS: 3-way deadlock with xfs_dquot, xfs_buf and xfs_inode
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Tue, Dec 18, 2018 at 11:25:41AM -0600, Eric Sandeen wrote:
-> On 11/28/18 5:29 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Move XFS_INODE_FORMAT_STR to libxfs so that we don't forget to keep it
-> > updated, and add necessary TRACE_DEFINE_ENUM.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> ...
-> 
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index 3f57002ca660..94e289aca220 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -1901,11 +1901,11 @@ TRACE_EVENT(xfs_dir2_leafn_moveents,
-> >  	{ 0,	"target" }, \
-> >  	{ 1,	"temp" }
-> 
-> ^^^^ that context makes me wonder if we shouldn't move that #define
-> as well, and give 0 & 1 some meaningful macro names.  Patch 7/6? :)
+Dave Chinner <david@fromorbit.com> =E4=BA=8E2018=E5=B9=B412=E6=9C=8818=E6=
+=97=A5=E5=91=A8=E4=BA=8C =E4=B8=8A=E5=8D=887:33=E5=86=99=E9=81=93=EF=BC=9A
+>
+> On Sat, Dec 15, 2018 at 01:34:33PM +0800, =E5=BC=A0=E6=9C=AC=E9=BE=99 wro=
+te:
+> > Hi Developpers and XFS,
+> >
+> > There seems to be a deadlock involving 3 threads: 1) the fsync thread
+> > has acquired the project quota lock, and is trying to get the xfs_buf
+> > (it's a an agf); 2) the xfs_buf is attached to a transaction, and
+> > xfs_end_io is trying to get the xfs_inode ilock; 3) the write thread
+> > has acquired the xfs_inode ilock, and tries to get the xfs_dquot.
+> > Below are the traces.
+>
+> I don't see a deadlock here. What's holding the AGF lock and
+> preventing progress from being made?
+>
 
-Or just combine them into a single tracepoint that emits both inodes.
+Oh, I was thinking the AGF is attached to a transaction. So between
+xfs_trans_bjoin() and xfs_trans_commit(), a buf cannot be used by
+others right? Then it should be released by xfs_end_io() in
+xfs_trans_commit(), and the deadlock is like:
 
---D
+Thread          1                  2
+         3
+                   fsync()
+                   dqlock P
+                   agf lock
+                   <blocks>
+                                  xfs_end_io
+                                  (agf locked by transaction)
+                                  ilock A
+                                  <blocks>
+                                  unlock agf in trans commit
 
-> -Eric
+            write()
+
+            ilock A
+
+            dqlock P
+
+            <blocks>
+
+> i.e. we have:
+>
+> process         1               2               3
+>         fsync()
+>           ilock A
+>           dqlock P
+>             agf lock
+>             <blocks>
+>                                 xfs_end_io
+>                                   ilock A
+>                                   <blocks>
+>                                                 write()
+>                                                   ilock B
+>                                                   dqlock P
+>                                                   <blocks>
+>
+> So, basically, everyhting is waiting for the AGF lock, which
+> is held by something other than these three threads. When the AGF
+> lock is relesaed, the fsync() will make progress, then release
+> both dqlock P and ilock A and the other two threads will make
+> progress again.
+>
+
+Absolutely possible. fsync() indeed acquired ilock in
+xfs_iomap_write_allocate(). Yes the key is who holds AGF in this
+scenario.
+
+But in either guess it seems the AGF is being held by a transaction,
+blocked in xfs_end_io() by ilock.
+> > It's 3.10.0-514.16.1.el7.x86_64 kernel, met about 10-20 times a week
+> > on several hundred of servers.
+>
+> That's not a mainline kernel and so we can't really help diagnose
+> this much further. You should really report it to your distro
+> support channels so they can help you with further diagnosis and
+> fixes...
+
+Oh oh sure, thank you for pointing out. We don't have support channels
+since we use CentOS...
+
+I really appreciate your reply!
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
