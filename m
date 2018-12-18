@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54624 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727051AbeLRUgH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 15:36:07 -0500
-Subject: [PATCH 3/5] generic/050: fix ro blockdev mount of xfs with quota
+Received: from aserp2130.oracle.com ([141.146.126.79]:55448 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727544AbeLRUgO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 15:36:14 -0500
+Subject: [PATCH 4/5] xfs: look for stringified constants in ftrace formats
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 18 Dec 2018 12:36:03 -0800
-Message-ID: <154516536357.31115.14111308107665005322.stgit@magnolia>
+Date: Tue, 18 Dec 2018 12:36:09 -0800
+Message-ID: <154516536986.31115.738289589511424146.stgit@magnolia>
 In-Reply-To: <154516534392.31115.7010578395334646479.stgit@magnolia>
 References: <154516534392.31115.7010578395334646479.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,104 +20,113 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In XFS, mounting with quota always require a writable device.  If the
-block device is read only, the mount fails, which fails this test.
-Since this is expected, work around this by simulating the golden output
-when we expect a mount failure.
+Look for uninterpretable stringified constants in the ftrace format
+description for xfs tracepoints.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/generic/050 |   62 +++++++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 46 insertions(+), 16 deletions(-)
+ tests/xfs/735     |   73 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/735.out |    3 ++
+ tests/xfs/group   |    1 +
+ 3 files changed, 77 insertions(+)
+ create mode 100755 tests/xfs/735
+ create mode 100644 tests/xfs/735.out
 
 
-diff --git a/tests/generic/050 b/tests/generic/050
-index 90e924db..9a327165 100755
---- a/tests/generic/050
-+++ b/tests/generic/050
-@@ -36,6 +36,22 @@ _require_norecovery
- 
- _scratch_mkfs >/dev/null 2>&1
- 
-+filter_ro_mount() {
-+	local arg=""
+diff --git a/tests/xfs/735 b/tests/xfs/735
+new file mode 100755
+index 00000000..d5f4eba0
+--- /dev/null
++++ b/tests/xfs/735
+@@ -0,0 +1,73 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Oracle, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 735
++#
++# Look for stringified constants in the __print_symbolic format strings,
++# which suggest that we forgot to TRACE_DEFINE_ENUM somewhere, which causes
++# incomplete ftrace reporting.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
-+	if [ -n "$expect_mount_failure" ]; then
-+		arg="s|mount: $SCRATCH_MNT: permission denied|mount: device write-protected, mounting read-only|g"
-+	fi
-+	sed -e "$arg" | _filter_ro_mount
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
 +}
 +
-+# Mounting with quota on XFS requires a writable fs, which means
-+# we expect to fail the ro blockdev test with with EPERM.
-+expect_mount_failure=
-+if [ "$FSTYP" = "xfs" ] && echo "$MOUNT_OPTIONS" | grep -q quota ; then
-+	expect_mount_failure=1
-+fi
++# get standard environment, filters and checks
++. ./common/rc
 +
- #
- # Mark the device read-only
- #
-@@ -46,17 +62,25 @@ blockdev --setro $SCRATCH_DEV
- # Mount it, and make sure we can't write to it, and we can unmount it again
- #
- echo "mounting read-only block device:"
--_try_scratch_mount 2>&1 | _filter_ro_mount
--
--echo "touching file on read-only filesystem (should fail)"
--touch $SCRATCH_MNT/foo 2>&1 | _filter_scratch
--
--#
--# Apparently this used to be broken at some point:
--#	http://oss.sgi.com/bugzilla/show_bug.cgi?id=807
--#
--echo "unmounting read-only filesystem"
--_scratch_unmount 2>&1 | _filter_scratch
-+_try_scratch_mount 2>&1 | filter_ro_mount
-+if [ "${PIPESTATUS[0]}" -eq 0 ]; then
-+	echo "touching file on read-only filesystem (should fail)"
-+	touch $SCRATCH_MNT/foo 2>&1 | _filter_scratch
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
 +
-+	#
-+	# Apparently this used to be broken at some point:
-+	#	http://oss.sgi.com/bugzilla/show_bug.cgi?id=807
-+	#
-+	echo "unmounting read-only filesystem"
-+	_scratch_unmount 2>&1 | _filter_scratch
-+elif [ -n "${expect_mount_failure}" ]; then
-+	# Mount failed, so simulate EROFS instead of scribbling on root fs
-+	echo "touching file on read-only filesystem (should fail)"
-+	echo "touch: cannot touch 'SCRATCH_MNT/foo': Read-only file system"
-+	echo "unmounting read-only filesystem"
-+else
-+	echo "Mount failed, though it wasn't supposed to!"
-+fi
- 
- echo "setting device read-write"
- blockdev --setrw $SCRATCH_DEV
-@@ -88,14 +112,20 @@ _scratch_unmount 2>&1 | _filter_scratch | _filter_ending_dot
- 
- #
- # This is the way out if the underlying device really is read-only.
--# Doesn't mean it's a good idea in practive, more a last resort
-+# Doesn't mean it's a good idea in practice, more a last resort
- # data recovery hack.
- #
- echo "mounting filesystem with -o norecovery on a read-only device:"
--_try_scratch_mount -o norecovery 2>&1 | _filter_ro_mount
--
--echo "unmounting read-only filesystem"
--_scratch_unmount 2>&1 | _filter_scratch
-+_try_scratch_mount -o norecovery 2>&1 | filter_ro_mount
-+if [ "${PIPESTATUS[0]}" -eq 0 ]; then
-+	echo "unmounting read-only filesystem"
-+	_scratch_unmount 2>&1 | _filter_scratch
-+elif [ -n "${expect_mount_failure}" ]; then
-+	# Mount failed, simulate correct output
-+	echo "unmounting read-only filesystem"
-+else
-+	echo "Mount failed, though it wasn't supposed to!"
-+fi
- 
- echo "setting device read-write"
- blockdev --setrw $SCRATCH_DEV
++cprog=$tmp.ftrace.c
++oprog=$tmp.ftrace
++sedprog=$tmp.ftrace.sed
++
++ftrace_dir=/sys/kernel/debug/tracing/events/xfs
++
++test -d $ftrace_dir || _notrun "ftrace not enabled"
++
++# The second argument to __print_symbolic is stringified in the tracepoint's
++# fmt file, so we look for "{ NUM, STRING }" and try to separate each of them
++# into single lines so that we can build a C structure.  This will (we hope)
++# catch non-constant numbers that the compiler won't know about.
++cat > $sedprog << ENDL
++s/}, /},\n/g
++s/}),/},\n/g
++s/})/},\n/g
++s/, {/\n{/g
++ENDL
++
++cat > $cprog << ENDL
++struct ftrace_chk {
++	unsigned long long	num;
++	char			*str;
++} syms[] = {
++ENDL
++egrep '(__print_flags|__print_symbolic)' $ftrace_dir*/*/format | \
++	sed -f $sedprog | grep '^{' | sort | uniq >> $cprog
++cat >> $cprog << ENDL
++};
++
++int main(int argc, char *argv[]) { return 0; }
++ENDL
++
++cat $cprog >> $seqres.full
++echo Compiler errors imply missing TRACE_DEFINE_ENUM.
++cc -o $oprog $cprog
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/735.out b/tests/xfs/735.out
+new file mode 100644
+index 00000000..844cea1d
+--- /dev/null
++++ b/tests/xfs/735.out
+@@ -0,0 +1,3 @@
++QA output created by 735
++Compiler errors imply missing TRACE_DEFINE_ENUM.
++Silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index dfaae2bc..4a986af3 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -496,3 +496,4 @@
+ 496 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 497 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 498 dangerous_fuzzers dangerous_norepair
++735 auto quick
