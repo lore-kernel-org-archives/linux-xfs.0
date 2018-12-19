@@ -1,52 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:33914 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725267AbeLSWPp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Dec 2018 17:15:45 -0500
-Received: by mail-qk1-f195.google.com with SMTP id q8so10461145qke.1
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Dec 2018 14:15:45 -0800 (PST)
+Received: from verein.lst.de ([213.95.11.211]:48801 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727079AbeLSTch (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Dec 2018 14:32:37 -0500
+Date: Wed, 19 Dec 2018 20:32:36 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 04/11] xfs: rework the truncate race handling in the
+ writeback path
+Message-ID: <20181219193236.GC28624@lst.de>
+References: <20181203222503.30649-1-hch@lst.de> <20181203222503.30649-5-hch@lst.de> <20181218230345.GR27208@magnolia>
 MIME-Version: 1.0
-References: <CABWYdi1YZp+baxpON2R6mP09pjkUz5D-OE7Z2KmwVGycYTN-AA@mail.gmail.com>
- <20181129021800.GQ6311@dastard> <CABWYdi0Bd6sMAaTPkfHKupMGpw1QPSf_VohPF_Wg7Mm=W=j2bA@mail.gmail.com>
- <20181130021840.GV6311@dastard> <CABWYdi0nSJAV-RPdUSwGbRwqeoKo-83_X=ptuQwwH1CnPXCYmQ@mail.gmail.com>
- <20181130064908.GX6311@dastard> <20181130074547.GY6311@dastard>
-In-Reply-To: <20181130074547.GY6311@dastard>
-From: Ivan Babrou <ivan@cloudflare.com>
-Date: Wed, 19 Dec 2018 14:15:33 -0800
-Message-ID: <CABWYdi28ifToh-yWRAv4MSdJ9g6t-Rxyz2GAFXGFraCwf9BBDg@mail.gmail.com>
-Subject: Re: Non-blocking socket stuck for multiple seconds on xfs_reclaim_inodes_ag()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181218230345.GR27208@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, Shawn Bohrer <sbohrer@cloudflare.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-We're sticking with the following patch that allows runtime switching
-between XFS memory reclaim strategies:
+On Tue, Dec 18, 2018 at 03:03:45PM -0800, Darrick J. Wong wrote:
+> > +eof:
+> > +	/*
+> > +	 * If we raced with truncate there might be no data left at this offset.
+> > +	 * In that case we need to return a hole so that the writeback code
+> > +	 * skips writeback for the rest of the file.
+> > +	 */
+> > +	wpc->imap.br_startoff = offset_fsb;
+> > +	wpc->imap.br_blockcount = end_fsb - offset_fsb;
+> > +	wpc->imap.br_startblock = HOLESTARTBLOCK;
+> > +	wpc->imap.br_state = XFS_EXT_NORM;
+> > +	return 0;
+> 
+> This function has become rather spaghetti-like.  Any way we can clean
+> this up reasonably?
 
-* https://github.com/bobrik/linux/pull/2
+What is spaghetti about a small number of gotos that we jump to at
+the end of the function?  Compared to the previous mess we had this
+actually is a significant cleanup.
 
-There are some tests and graphs describing the issue and how it can be solved.
+> > -		nimaps = 0;
+> > -		while (nimaps == 0) {
+> 
+> This removal of the nimaps == 0 loop bothers me: why is doing so safe?
+> 
+> I see that we can return from xfs_bmapi_write with nimaps == 0 if
+> something is trying to punch or truncate the range that we're writing
+> back, but it also seems to me that bmapi_write can return zero mappings
+> because xfs_bmapi_allocate() didn't find any blocks.  I /think/ that's
+> impossible because we're converting delalloc reservations and so we
+> should never run out of space, right?
+> 
+> Anyway, when _write_allocate gets zero mappings, it'll return -EAGAIN to
+> xfs_map_blocks, which will retry once to cover the case of racing with
+> cow -> data fork remapping but otherwise it won't bother?  And that's
+> why it's fine that only to loop once?
+> 
+> Am I reasoning this correctly?
 
-Let me know if you think this can be incorporated upstream, I'm fine if not.
-
-On Thu, Nov 29, 2018 at 11:45 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Fri, Nov 30, 2018 at 05:49:08PM +1100, Dave Chinner wrote:
-> > Seriously: describe your workload in detail for me so I can write a
-> > reproducer for it. Without that I cannot help you any further and I
-> > am just wasting my time asking you to describe the workload over
-> > and over again.
->
-> FWIW, here's the discussion that about the FB issue. Go read it,
-> the first few emails are pretty much the same as this thread so far.
->
-> https://www.spinics.net/lists/linux-xfs/msg01541.html
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+Yes, exactly.  The only thing the loop did was to make sure we hit
+the truncate race handling code another time on a failure return
+from xfs_bmapi_write.
