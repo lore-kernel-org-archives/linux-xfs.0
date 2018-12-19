@@ -1,18 +1,18 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:48234 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727383AbeLSTaL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Dec 2018 14:30:11 -0500
-Subject: [PATCH 5/8] xfs_scrub: use data/rtdev parallelization estimates for
- the read-verify pool
+Received: from userp2120.oracle.com ([156.151.31.85]:41350 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727383AbeLST3l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Dec 2018 14:29:41 -0500
+Subject: [PATCH 1/8] xfs_scrub_all: walk the lsblk device/fs hierarchy
+ correctly
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 19 Dec 2018 11:30:05 -0800
-Message-ID: <154524780496.28646.2648041743792188824.stgit@magnolia>
+Date: Wed, 19 Dec 2018 11:29:30 -0800
+Message-ID: <154524777080.28646.13859873012142786308.stgit@magnolia>
 In-Reply-To: <154524776457.28646.3004453037075812416.stgit@magnolia>
 References: <154524776457.28646.3004453037075812416.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -21,59 +21,70 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Since we use the same read-verify pool object to dispatch file data read
-requests for both the data device and the realtime device, we should
-create enough IO threads to handle the estimated parallelization of both
-devices, not just the data device.
+Back when I was designing xfs_scrub_all, I naïvely assumed that the
+emitted output would always list physical storage before the virtual
+devices stacked atop it.  However, this is not actually true when one
+omits the "NAME" column, which is crucial to forcing the output (json or
+otherwise) to capture the block device hierarchy.  If the assumption is
+violated, the program crashes with a python exception.
+
+To fix this, force the hierarchal json output and restructure the
+discovery routines to walk the json object that we receive, from the top
+(physical devices) downwards to wherever there are live xfs filesystems.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/phase6.c |   20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+ scrub/xfs_scrub_all.in |   28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
 
 
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index ead48d77..cbda9b53 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -435,6 +435,22 @@ xfs_check_rmap(
- 	return true;
- }
+diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+index c4e9899d..5b76b49a 100644
+--- a/scrub/xfs_scrub_all.in
++++ b/scrub/xfs_scrub_all.in
+@@ -28,9 +28,21 @@ def DEVNULL():
  
-+/*
-+ * Estimate the amount of parallelization possible for scanning file data on
-+ * the data and realtime devices.
-+ */
-+static unsigned int
-+phase6_threads(
-+	struct scrub_ctx	*ctx)
-+{
-+	unsigned int		nr = disk_heads(ctx->datadev);
-+
-+	if (ctx->rtdev)
-+		nr += disk_heads(ctx->rtdev);
-+
-+	return nr > nproc ? nproc : nr;
-+}
-+
- /*
-  * Read verify all the file data blocks in a filesystem.  Since XFS doesn't
-  * do data checksums, we trust that the underlying storage will pass back
-@@ -469,7 +485,7 @@ xfs_scan_blocks(
- 	}
+ def find_mounts():
+ 	'''Map mountpoints to physical disks.'''
++	def find_xfs_mounts(bdev, fs, lastdisk):
++		'''Attach lastdisk to each fs found under bdev.'''
++		if bdev['fstype'] == 'xfs' and bdev['mountpoint'] is not None:
++			mnt = bdev['mountpoint']
++			if mnt in fs:
++				fs[mnt].add(lastdisk)
++			else:
++				fs[mnt] = set([lastdisk])
++		if 'children' not in bdev:
++			return
++		for child in bdev['children']:
++			find_xfs_mounts(child, fs, lastdisk)
  
- 	ve.readverify = read_verify_pool_init(ctx, ctx->geo.blocksize,
--			xfs_check_rmap_ioerr, disk_heads(ctx->datadev));
-+			xfs_check_rmap_ioerr, phase6_threads(ctx));
- 	if (!ve.readverify) {
- 		moveon = false;
- 		str_info(ctx, ctx->mntpoint,
-@@ -525,7 +541,7 @@ xfs_estimate_verify_work(
- 		return moveon;
+ 	fs = {}
+-	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
++	cmd=['lsblk', '-o', 'NAME,KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
+ 	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+ 	result.wait()
+ 	if result.returncode != 0:
+@@ -38,18 +50,12 @@ def find_mounts():
+ 	sarray = [x.decode(sys.stdout.encoding) for x in result.stdout.readlines()]
+ 	output = ' '.join(sarray)
+ 	bdevdata = json.loads(output)
++
+ 	# The lsblk output had better be in disks-then-partitions order
+ 	for bdev in bdevdata['blockdevices']:
+-		if bdev['type'] in ('disk', 'loop'):
+-			lastdisk = bdev['kname']
+-		if bdev['fstype'] == 'xfs':
+-			mnt = bdev['mountpoint']
+-			if mnt is None:
+-				continue
+-			if mnt in fs:
+-				fs[mnt].add(lastdisk)
+-			else:
+-				fs[mnt] = set([lastdisk])
++		lastdisk = bdev['kname']
++		find_xfs_mounts(bdev, fs, lastdisk)
++
+ 	return fs
  
- 	*items = ((d_blocks - d_bfree) + (r_blocks - r_bfree)) << ctx->blocklog;
--	*nr_threads = disk_heads(ctx->datadev);
-+	*nr_threads = phase6_threads(ctx);
- 	*rshift = 20;
- 	return moveon;
- }
+ def kill_systemd(unit, proc):
