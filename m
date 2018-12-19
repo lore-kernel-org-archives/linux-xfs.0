@@ -1,57 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43280 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728106AbeLTIUX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Dec 2018 03:20:23 -0500
-Date: Thu, 20 Dec 2018 09:20:21 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] quota: Lock s_umount in exclusive mode for
- Q_XQUOTA{ON,OFF} quotactls.
-Message-ID: <20181220082021.GA27845@quack2.suse.cz>
-References: <1ad62e88-7784-6de8-c03d-01295375e315@gmail.com>
- <20181214095613.GD8896@quack2.suse.cz>
+Received: from aserp2130.oracle.com ([141.146.126.79]:49658 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727079AbeLSTc5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Dec 2018 14:32:57 -0500
+Date: Wed, 19 Dec 2018 11:32:46 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 06/11] xfs: don't use delalloc extents for COW on files
+ with extsize hints
+Message-ID: <20181219193246.GY27208@magnolia>
+References: <20181203222503.30649-1-hch@lst.de>
+ <20181203222503.30649-7-hch@lst.de>
+ <20181218214425.GL27208@magnolia>
+ <20181219192924.GA28624@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181214095613.GD8896@quack2.suse.cz>
+In-Reply-To: <20181219192924.GA28624@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Javier Barrio <javier.barrio.mart@gmail.com>
-Cc: Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri 14-12-18 10:56:13, Jan Kara wrote:
-> On Thu 13-12-18 01:06:29, Javier Barrio wrote:
-> > Commit 1fa5efe3622db58cb8c7b9a50665e9eb9a6c7e97 (ext4: Use generic
-> > helpers for quotaon and quotaoff) made possible to call
-> > quotactl(Q_XQUOTAON/OFF) on ext4 filesystems with sysfile quota support.
-> > This leads to calling dquot_enable/disable without s_umount held in excl.
-> > mode, because quotactl_cmd_onoff checks only for Q_QUOTAON/OFF.
+On Wed, Dec 19, 2018 at 08:29:24PM +0100, Christoph Hellwig wrote:
+> On Tue, Dec 18, 2018 at 01:44:25PM -0800, Darrick J. Wong wrote:
+> > > +	uint			*lockmode,
+> > > +	unsigned		flags)
 > > 
-> > The following WARN_ON_ONCE triggers (in this case for dquot_enable, ext4,
-> > latest Linus' tree):
-> > 
-> > [  155.036847] WARNING: CPU: 0 PID: 2343 at fs/quota/dquot.c:2469 dquot_enable+0x34/0xb9
+> > I'm not thrilled with passing iomap flags into the reflink code here...
 > 
-> ...
-> 
-> > This patch locks the superblock ->s_umount sem. in exclusive mode for all Q_XQUOTAON/OFF
-> > quotactls too in addition to Q_QUOTAON/OFF.
-> 
-> Thanks for the patch! It looks good to me but let me run it past XFS
-> people. Looking at XFS code they definitely do not *need* s_umount in
-> exclusive mode for Q_XQUOTAON/OFF (they have their private mutex for
-> the exclusion). Shared mode they currently get is enough for them. But
-> exclusive mode is fine for them as well AFAICT and it would be easier if
-> all quota backends had the same locking rules wrt VFS locks. XFS guys, any
-> objections to switching Q_XQUOTAON/OFF handlers from having s_umount locked
-> for read to having it locked exclusive?
+> So what is the alternative?  A non-descriptive bool argument?
 
-Since there were no objections and the patch passed quota xfstests for XFS,
-I've added it to my tree and will push it to Linus in the coming merge
-window.
+More or less what I described below. :)
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> > ...because I feel that it's easy to miss the subtlety here that for
+> > buffered writes we don't care if the cow extent is unwritten or written,
+> > but for directio we very /much/ care that the cow extent is written,
+> > because we're writing to it immediately.  Can this grow a comment to
+> > reinforce why we skip the conversion?
+> 
+> Sure.
+> 
+> > Also, can we call this 'iomap_flags' to make it clearer which flags
+> > we're talking about?
+> 
+> Sure.
+
+Cool!
+
+--D
