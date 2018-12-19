@@ -1,131 +1,205 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:48874 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725294AbeLSIbH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Dec 2018 03:31:07 -0500
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id wBJ8SmXl088283
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Dec 2018 03:31:06 -0500
-Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2pffeufr38-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Dec 2018 03:31:06 -0500
-Received: from localhost
-        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 19 Dec 2018 08:31:04 -0000
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: Re: [PATCH 0/9] xfs-5.0: inode scrubber fixes
-Date: Wed, 19 Dec 2018 14:01:13 +0530
-In-Reply-To: <154344761877.3835.7785580513047409388.stgit@magnolia>
-References: <154344761877.3835.7785580513047409388.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:41018 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727991AbeLSQP6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Dec 2018 11:15:58 -0500
+Date: Thu, 20 Dec 2018 00:18:34 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to a9d25bde1e9b
+Message-ID: <20181219161834.GL30999@dhcp-12-149.nay.redhat.com>
+References: <20181218204731.GK27208@magnolia>
+ <20181219033431.GH30999@dhcp-12-149.nay.redhat.com>
+ <20181219045306.GX27208@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-Message-Id: <1644698.IS83YqTc9I@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181219045306.GX27208@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Thursday, November 29, 2018 4:56:58 AM IST Darrick J. Wong wrote:
-> Hi all,
+On Tue, Dec 18, 2018 at 08:53:06PM -0800, Darrick J. Wong wrote:
+> On Wed, Dec 19, 2018 at 11:34:31AM +0800, Zorro Lang wrote:
+> > On Tue, Dec 18, 2018 at 12:47:31PM -0800, Darrick J. Wong wrote:
+> > > Hi folks,
+> > > 
+> > > The for-next branch of the xfs-linux repository at:
+> > > 
+> > > 	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> > > 
+> > > has just been updated.
+> > > 
+> > > Patches often get missed, so please check if your outstanding patches
+> > > were in this update. If they have not been in this update, please
+> > > resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+> > > the next update.  I'm still testing Christoph's always_cow patches, so
+> > > they're not in this update.
+> > > 
+> > > The new head of the for-next branch is commit:
+> > > 
+> > > a9d25bde1e9b xfs: Fix x32 ioctls when cmd numbers differ from ia32.
+> > 
+> > Hi Darrick,
+> > 
+> > This update didn't trigger my test, due to my testing trigger base on new
+> > xfs-xxxx-fixes-N tag.
+> > Did you forget that, or you're planning to add a new tag after you merge
+> > Christoph's always_cow patches?
 > 
-> Here are fixes for some problems with the inode btree scrub code, namely
-> that the existing code does not handle the case where a single inode
-> cluster is mapped by multiple inobt records.
+> I was planning to add a tag with whatever (if anything) I push tomorrow.
+> That said, I also found that I had questions about the always_cow
+> patchset so you might as well start whatever testing you want to do
+> right now.
+
+Sure, thanks. I'm testing now. BTW, most of test jobs are still running, just
+one of them find a xfs corruption on s390x[1]. I'm trying to reproduce it
+again, due to it looks not easy to reproduce.
+
+If there's nothing come to your mind by reading these information, I'll keep
+tracking.
+
+Thanks,
+Zorro
+
+# mkfs.xfs -f /dev/loop0
+meta-data=/dev/loop0             isize=512    agcount=4, agsize=655360 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1
+data     =                       bsize=4096   blocks=2621440, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+# mount -t nfs -o hard,intr,vers=4.2 127.0.0.1:/mnt/scratch /mnt/client
+# mount -l
+/dev/loop0                          10G  2.0G  8.1G  20% /mnt/scratch
+127.0.0.1:/mnt/scratch              10G  2.0G  8.1G  20% /mnt/client
+# fsstress -d /mnt/client/testdir  -p 100 -n 1000 -v
+Then umount nfs and /dev/loop0
+# xfs_repair -n /dev/loop0
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+No modify flag set, skipping phase 5
+Phase 6 - check inode connectivity...
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify link counts...
+would have reset inode 8391532 nlinks from 3 to 5
+No modify flag set, skipping filesystem flush and exiting.
+
+
+
 > 
-> Patch 1 teaches the inode record block counting code to handle the case
-> where there's more than one inobt record per inode cluster.  We do this
-> by counting inodes and converting to blocks only at the end.
+> --D
 > 
-> Patch 2 corrects a condition where we needed to clamp the number of
-> inodes checked for a given inobt record to the inode chunk size.
-> 
-> Patches 3-4 move the inobt record alignment checks to a separate
-> function and enhance the function to check that when we have more than
-> one inobt record per cluster we actually check that *all* of the
-> necessary records are present and in the correct order.
-> 
-> Patches 5-7 reorganize the inobt free data checks to deal with the
-> "multiple inobt records per icluster" situation.  In restructuring the
-> code to do so, we also rename variables and functions to be less
-> confusing about what they're there for.  We also fix the 'is the inode
-> free?' check to calculate dinode buffer offsets correctly in the
-> "multiple inobt records per icluster" situation.
-> 
-> Patch 8 aborts the xattr scrub loop if there are pending fatal signals.
-> 
-> Patch 9 checks that for any directory or attr fork there are no extent
-> maps that stretch beyond what a xfs_dablk_t can map.
-> 
-> If you're going to start using this mess, you probably ought to just
-> pull from my git trees.  The kernel patches[1] should apply against
-> 4.20-rc4.
-> 
-> Comments and questions are, as always, welcome.
-
-Hi Darrick,
-
-I reviewed patches 1 through 7. The fixes look good.
-
-I am not well versed with the XFS code that deals with xattrs &
-directories. Hence I could not review patches 8 and 9.
-
-I did a simple scrub test on a 64k blocksized filesystem running a kernel
-having the following commit as the HEAD,
-
-commit 6c4e1579b332e52566c11416e0dd0fa91a3b8f70 (HEAD -> djwong-devel, djwong-xfs-linux/djwong-devel)
-Author: Darrick J. Wong <darrick.wong@oracle.com>
-Date:   Thu Oct 18 17:35:49 2018 -0700
-
-    xfs: repair quotas
-    
-    Fix anything that causes the quota verifiers to fail.
-    
-    Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-
-Xfsprogs had the following as the topmost commit,
-
-commit 633eec2a893c3be9796dad188144b00e084560ec (HEAD -> djwong-devel, djwong/djwong-devel)
-Author: Darrick J. Wong <darrick.wong@oracle.com>
-Date:   Tue Nov 13 17:38:31 2018 -0800
-
-    xfs: repair extended attributes
-    
-    If the extended attributes look bad, try to sift through the rubble to
-    find whatever keys/values we can, zap the attr tree, and re-add the
-    values.
-    
-    Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-
-The test filesystem had 2000 files with each being 64k in size.
-
-root@ubuntu:~# xfs_scrub -d -n -v /mnt/
-EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
-Phase 1: Find filesystem geometry.
-/mnt/: using 8 threads to scrub.
-Phase 2: Check internal metadata.
-Info: AG 1 superblock: Optimization is possible. (scrub.c line 269)
-Info: AG 3 superblock: Optimization is possible. (scrub.c line 269)
-Info: AG 2 superblock: Optimization is possible. (scrub.c line 269)
-Error: AG 0 free inode btree: Repairs are required. (scrub.c line 253)
-Phase 3: Scan all inodes.
-Phase 5: Check directory tree.
-Info: /mnt/: Filesystem has errors, skipping connectivity checks. (phase5.c line 295)
-Phase 7: Check summary counters.
-163.9MiB data used;  1.9K inodes used.
-152.7MiB data found; 1.9K inodes found.
-1.9K inodes counted; 1.9K inodes checked.
-/mnt/: errors found: 1
-/mnt/: Re-run xfs_scrub without -n.
-
-Looks like we have a bug when scrubbing the Free inode btree. I will work on
-figuring out the root cause and also plan to execute scrub tests shipped with
-xfstests.
-
--- 
-chandan
+> > Thanks,
+> > Zorro
+> > 
+> > > 
+> > > New Commits:
+> > > 
+> > > Colin Ian King (1):
+> > >       [8c4ce794ee7a] xfs: clean up indentation issues, remove an unwanted space
+> > > 
+> > > Darrick J. Wong (10):
+> > >       [d6f215f35963] xfs: split up the xfs_reflink_end_cow work into smaller transactions
+> > >       [bc9f2b7c8a73] xfs: idiotproof defer op type configuration
+> > >       [02b100fb83f9] xfs: streamline defer op type handling
+> > >       [66e3237e724c] xfs: const-ify xfs_owner_info arguments
+> > >       [7280fedaf3a0] xfs: remove xfs_rmap_ag_owner and friends
+> > >       [43004b2a8da2] xfs: add a block to inode count converter
+> > >       [83dcdb4469e7] xfs: precalculate inodes and blocks per inode cluster
+> > >       [c1b4a321ede0] xfs: precalculate cluster alignment in inodes and blocks
+> > >       [2c2d9d3a205a] xfs: count inode blocks correctly in inobt scrub
+> > >       [64bafd2f1e48] xfs: require both realtime inodes to mount
+> > > 
+> > > Dave Chinner (1):
+> > >       [43feeea88c9c] xfs: zero length symlinks are not valid
+> > > 
+> > > Nick Bowler (3):
+> > >       [c456d64449ef] xfs: Align compat attrlist_by_handle with native implementation.
+> > >       [7ca860e3c1a7] xfs: Fix bulkstat compat ioctls on x32 userspace.
+> > >       [a9d25bde1e9b] xfs: Fix x32 ioctls when cmd numbers differ from ia32.
+> > > 
+> > > Omar Sandoval (1):
+> > >       [355e3532132b] xfs: cache minimum realtime summary level
+> > > 
+> > > Pan Bian (1):
+> > >       [fe5ed6c22e94] xfs: libxfs: move xfs_perag_put late
+> > > 
+> > > 
+> > > Code Diffstat:
+> > > 
+> > >  fs/xfs/libxfs/xfs_ag.c             |   9 +-
+> > >  fs/xfs/libxfs/xfs_alloc.c          |  79 ++++++------
+> > >  fs/xfs/libxfs/xfs_alloc.h          |   4 +-
+> > >  fs/xfs/libxfs/xfs_bmap.c           |   6 +-
+> > >  fs/xfs/libxfs/xfs_bmap.h           |   4 +-
+> > >  fs/xfs/libxfs/xfs_defer.c          |  67 ++++++-----
+> > >  fs/xfs/libxfs/xfs_defer.h          |  37 +++---
+> > >  fs/xfs/libxfs/xfs_format.h         |   2 +
+> > >  fs/xfs/libxfs/xfs_ialloc.c         |  54 ++++-----
+> > >  fs/xfs/libxfs/xfs_ialloc_btree.c   |   7 +-
+> > >  fs/xfs/libxfs/xfs_refcount_btree.c |   6 +-
+> > >  fs/xfs/libxfs/xfs_rmap.c           | 240 +++++++++++++++++++++----------------
+> > >  fs/xfs/libxfs/xfs_rmap.h           |  54 ++++-----
+> > >  fs/xfs/libxfs/xfs_rtbitmap.c       |   6 +
+> > >  fs/xfs/libxfs/xfs_symlink_remote.c |  14 ++-
+> > >  fs/xfs/libxfs/xfs_types.c          |   9 +-
+> > >  fs/xfs/scrub/agheader.c            |  25 ++--
+> > >  fs/xfs/scrub/agheader_repair.c     |   5 +-
+> > >  fs/xfs/scrub/alloc.c               |   4 +-
+> > >  fs/xfs/scrub/btree.c               |  45 +++----
+> > >  fs/xfs/scrub/btree.h               |  22 ++--
+> > >  fs/xfs/scrub/common.c              |  14 +--
+> > >  fs/xfs/scrub/common.h              |   2 +-
+> > >  fs/xfs/scrub/ialloc.c              |  64 +++++-----
+> > >  fs/xfs/scrub/inode.c               |   4 +-
+> > >  fs/xfs/scrub/refcount.c            |  16 +--
+> > >  fs/xfs/scrub/repair.c              |  54 ++++-----
+> > >  fs/xfs/scrub/repair.h              |   7 +-
+> > >  fs/xfs/scrub/rmap.c                |  35 +++---
+> > >  fs/xfs/scrub/scrub.h               |   4 +-
+> > >  fs/xfs/xfs_extfree_item.c          |   5 +-
+> > >  fs/xfs/xfs_fsops.c                 |   2 +-
+> > >  fs/xfs/xfs_inode.c                 |  16 +--
+> > >  fs/xfs/xfs_ioctl32.c               |  58 +++++++--
+> > >  fs/xfs/xfs_itable.c                |  14 +--
+> > >  fs/xfs/xfs_log_recover.c           |   8 +-
+> > >  fs/xfs/xfs_mount.c                 |   4 +
+> > >  fs/xfs/xfs_mount.h                 |  11 ++
+> > >  fs/xfs/xfs_reflink.c               | 232 ++++++++++++++++++++---------------
+> > >  fs/xfs/xfs_rtalloc.c               |  29 +++--
+> > >  fs/xfs/xfs_super.c                 |  10 +-
+> > >  fs/xfs/xfs_symlink.c               |  33 ++---
+> > >  fs/xfs/xfs_trace.h                 |   6 +-
+> > >  fs/xfs/xfs_trans.h                 |   7 +-
+> > >  fs/xfs/xfs_trans_bmap.c            |  11 +-
+> > >  fs/xfs/xfs_trans_extfree.c         |  40 +++----
+> > >  fs/xfs/xfs_trans_refcount.c        |  11 +-
+> > >  fs/xfs/xfs_trans_rmap.c            |  11 +-
+> > >  48 files changed, 737 insertions(+), 670 deletions(-)
