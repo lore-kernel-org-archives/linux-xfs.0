@@ -1,53 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55620 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727821AbeLSUZ4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Dec 2018 15:25:56 -0500
-Date: Wed, 19 Dec 2018 14:25:50 -0600
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH 8/8] xfs_repair: fix uninitialized variable warnings
-Message-ID: <20181219202550.GB22276@redhat.com>
-References: <154524776457.28646.3004453037075812416.stgit@magnolia>
- <154524782350.28646.8296184601173040680.stgit@magnolia>
+Received: from mail-qk1-f195.google.com ([209.85.222.195]:33914 "EHLO
+        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725267AbeLSWPp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Dec 2018 17:15:45 -0500
+Received: by mail-qk1-f195.google.com with SMTP id q8so10461145qke.1
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Dec 2018 14:15:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154524782350.28646.8296184601173040680.stgit@magnolia>
+References: <CABWYdi1YZp+baxpON2R6mP09pjkUz5D-OE7Z2KmwVGycYTN-AA@mail.gmail.com>
+ <20181129021800.GQ6311@dastard> <CABWYdi0Bd6sMAaTPkfHKupMGpw1QPSf_VohPF_Wg7Mm=W=j2bA@mail.gmail.com>
+ <20181130021840.GV6311@dastard> <CABWYdi0nSJAV-RPdUSwGbRwqeoKo-83_X=ptuQwwH1CnPXCYmQ@mail.gmail.com>
+ <20181130064908.GX6311@dastard> <20181130074547.GY6311@dastard>
+In-Reply-To: <20181130074547.GY6311@dastard>
+From: Ivan Babrou <ivan@cloudflare.com>
+Date: Wed, 19 Dec 2018 14:15:33 -0800
+Message-ID: <CABWYdi28ifToh-yWRAv4MSdJ9g6t-Rxyz2GAFXGFraCwf9BBDg@mail.gmail.com>
+Subject: Re: Non-blocking socket stuck for multiple seconds on xfs_reclaim_inodes_ag()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Shawn Bohrer <sbohrer@cloudflare.com>
 
-On Wed, Dec 19, 2018 at 11:30:23AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Fix some uninitialized variable warnings because ASSERT disappears if
-> DEBUG is not defined.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+We're sticking with the following patch that allows runtime switching
+between XFS memory reclaim strategies:
 
-Looks fine.
-Reviewed-by <billodo@redhat.com>
+* https://github.com/bobrik/linux/pull/2
 
->  repair/dinode.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index f670bf87..c0a56daa 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -1176,8 +1176,8 @@ process_quota_inode(
->  	struct xfs_buf		*bp;
->  	xfs_filblks_t		dqchunklen;
->  	uint			dqperchunk;
-> -	int			quota_type;
-> -	char			*quota_string;
-> +	int			quota_type = 0;
-> +	char			*quota_string = NULL;
->  	xfs_dqid_t		dqid;
->  	xfs_fileoff_t		qbno;
->  	int			i;
-> 
+There are some tests and graphs describing the issue and how it can be solved.
+
+Let me know if you think this can be incorporated upstream, I'm fine if not.
+
+On Thu, Nov 29, 2018 at 11:45 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Fri, Nov 30, 2018 at 05:49:08PM +1100, Dave Chinner wrote:
+> > Seriously: describe your workload in detail for me so I can write a
+> > reproducer for it. Without that I cannot help you any further and I
+> > am just wasting my time asking you to describe the workload over
+> > and over again.
+>
+> FWIW, here's the discussion that about the FB issue. Go read it,
+> the first few emails are pretty much the same as this thread so far.
+>
+> https://www.spinics.net/lists/linux-xfs/msg01541.html
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
