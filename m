@@ -1,43 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:48831 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:57330 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728858AbeLSTjZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Dec 2018 14:39:25 -0500
-Date: Wed, 19 Dec 2018 20:39:23 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 09/11] xfs: report IOMAP_F_SHARED from
- xfs_file_iomap_begin_delay
-Message-ID: <20181219193923.GF28624@lst.de>
-References: <20181203222503.30649-1-hch@lst.de> <20181203222503.30649-10-hch@lst.de> <20181218233828.GU27208@magnolia>
+        id S1728688AbeLSUYw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Dec 2018 15:24:52 -0500
+Date: Wed, 19 Dec 2018 14:24:47 -0600
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH 6/8] xfs_repair: reinitialize the root directory nlink
+ correctly
+Message-ID: <20181219202447.GA22276@redhat.com>
+References: <154524776457.28646.3004453037075812416.stgit@magnolia>
+ <154524781113.28646.8112653175487549499.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181218233828.GU27208@magnolia>
+In-Reply-To: <154524781113.28646.8112653175487549499.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Tue, Dec 18, 2018 at 03:38:28PM -0800, Darrick J. Wong wrote:
-> > @@ -541,7 +541,7 @@ xfs_file_iomap_begin_delay(
-> >  	struct xfs_bmbt_irec	imap, cmap;
-> >  	struct xfs_iext_cursor	icur, ccur;
-> >  	xfs_fsblock_t		prealloc_blocks = 0;
-> > -	bool			eof = false, cow_eof = false, shared;
-> > +	bool			eof = false, cow_eof = false, shared = false;
-> >  	int			whichfork = XFS_DATA_FORK;
-> >  	int			error = 0;
-> >  
-> > @@ -709,13 +709,14 @@ xfs_file_iomap_begin_delay(
-> >  		if (imap.br_startoff > offset_fsb) {
-> >  			xfs_trim_extent(&cmap, offset_fsb,
-> >  					imap.br_startoff - offset_fsb);
-> > -			error = xfs_bmbt_to_iomap(ip, iomap, &cmap, false);
-> > +			error = xfs_bmbt_to_iomap(ip, iomap, &cmap, true);
+On Wed, Dec 19, 2018 at 11:30:11AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Does this belong in the previous patch?  (Maybe all of it?)
+> In mk_root_dir, we reinitialize the root directory inode with a link
+> count of 1.  This differs from mkfs parseproto, which initializes the
+> root to have a link count of 2.  The nlink discrepancy in repair is
+> caught and corrected during phase 7, but this is unnecessary since we
+> should set it properly in the first place.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Not really, as it is just a nice to have thing that is a change of
-behavior to what we did before.  So I'd rather have it in a single
-patch that documents what exactly we did here and why.
+Looks fine.
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+
+>  repair/phase6.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> 
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 9477bc25..8a50b350 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -891,7 +891,7 @@ mk_root_dir(xfs_mount_t *mp)
+>  	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+>  	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
+>  
+> -	set_nlink(VFS_I(ip), 1);	/* account for . */
+> +	set_nlink(VFS_I(ip), 2);	/* account for . and .. */
+>  
+>  	times = XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD;
+>  	if (ip->i_d.di_version == 3) {
+> 
