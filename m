@@ -1,54 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54502 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726599AbeKII5z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Nov 2018 03:57:55 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wA8NJIjP066178
-        for <linux-xfs@vger.kernel.org>; Thu, 8 Nov 2018 23:20:04 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2nh4ar47u5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Nov 2018 23:20:03 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id wA8NK2vI015126
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 8 Nov 2018 23:20:02 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wA8NK2sp013732
-        for <linux-xfs@vger.kernel.org>; Thu, 8 Nov 2018 23:20:02 GMT
-Subject: [PATCH 0/5] xfs-5.0: miscellaneous cleanups
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 08 Nov 2018 15:20:01 -0800
-Message-ID: <154171920164.30818.2178553842722589349.stgit@magnolia>
+Received: from mail-ed1-f44.google.com ([209.85.208.44]:41027 "EHLO
+        mail-ed1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728724AbeLSVaW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Dec 2018 16:30:22 -0500
+Received: by mail-ed1-f44.google.com with SMTP id g19so11603502edy.8
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Dec 2018 13:30:21 -0800 (PST)
+Received: from teal.hq.k1024.org (77-59-128-99.dclient.hispeed.ch. [77.59.128.99])
+        by smtp.gmail.com with ESMTPSA id w24-v6sm2955973eja.71.2018.12.19.13.30.19
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 19 Dec 2018 13:30:20 -0800 (PST)
+Date: Wed, 19 Dec 2018 22:30:19 +0100
+From: Iustin Pop <iustin@k1024.org>
+Subject: Re: reflink status?
+Message-ID: <20181219213019.GG14820@teal.hq.k1024.org>
+References: <20181218212207.GA27985@teal.hq.k1024.org>
+ <20181219053000.GA4205@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181219053000.GA4205@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Hi all,
+On 2018-12-19 16:30:00, Dave Chinner wrote:
+> On Tue, Dec 18, 2018 at 10:22:07PM +0100, Iustin Pop wrote:
+> > Apologies if this information is available somewhere, but a quick scan
+> > at the list archives failed to clarify things for me.
+> > 
+> > How production ready is the reflink/clone code?
+> 
+> The XFS code is pretty robust - I've been using it in anger for
+> filesystem image duplication on my test machines for well over a
+> year now, so it gets beaten on every day by my test machines...
 
-Here are some cleanups I made against the rmap code and the inode
-geometry code, which came up as part of review comments on the scrub
-inode fixes posted earlier.
+Got it, thanks.
 
-The first cleanup constifies the struct xfs_owner_inode pointers that
-get passed around to the rmap calls.  This enables the second cleanup,
-which is to create some global const XFS_RMAP_OINFO_* objects for static
-fs metadata.  This enables us to reduce stack usage here and there, and
-remove a surprising amount of oinfo setup clutter in the scrub code.
+> > I saw a patch series in
+> > October for 4.19rc-something with many fixes ("fixes for serious
+> > clone/dedupe problems"), so I guess pre-4.19 kernels are not quite
+> > recommended yet? Is 4.19 OK for it?
+> 
+> ... but the vfs interfaces were not so good. The original APIs were
+> overly complex and not very well defined or implemented, so there
+> were lots of little corner cases where things could go very wrong.
 
-The last three patches add some inode <-> block conversion macros and
-adds precomputed inode cluster size and alignment geometry information
-in struct xfs_mount instead of calculating it over and over.
+Interesting.
 
-These cleanups are being submitted ahead of v2 of the scrub inode fixes
-and the repair patches to be sent later.
+> IOWs, if you are doing basic stuff like cloning entire files (e.g.
+> cp --reflink=always) then they work just fine. However, if you have
+> custom apps that do partial file operations (i.e.  use the "range"
+> part of the API) and/or overwrite parts of existing files using
+> clones, then there's lots of corner cases where stuff can go wrong.
 
-Comments and questions are, as always, welcome.
+I see. Yes, this is my intended use case, so I'll hold off for now.
 
---D
+> best advice right now is to use the most recent kernel you can -
+> 4.19 has the worst problems already fixed - and upgrade to 4.20 when
+> it is released.....
+
+I was hoping 4.19 is "good to go", since it's an LTS version; I prefer
+to keep to LTS to reduce upgrade churn.
+
+But, it also means the next LTS will be even more stable in this regard,
+so all is good.
+
+Thanks for the fast reply!
+
+iustin
