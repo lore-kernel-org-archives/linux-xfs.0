@@ -1,91 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:47948 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:41646 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727344AbeLRXjY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 18:39:24 -0500
-Date: Tue, 18 Dec 2018 15:39:19 -0800
+        with ESMTP id S1727383AbeLSTaE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Dec 2018 14:30:04 -0500
+Subject: [PATCH 4/8] xfs_scrub: use datadev parallelization estimates for
+ thread count
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 07/11] xfs: also truncate holes covered by COW blocks
-Message-ID: <20181218233919.GV27208@magnolia>
-References: <20181203222503.30649-1-hch@lst.de>
- <20181203222503.30649-8-hch@lst.de>
+Date: Wed, 19 Dec 2018 11:29:58 -0800
+Message-ID: <154524779871.28646.8062050192682765855.stgit@magnolia>
+In-Reply-To: <154524776457.28646.3004453037075812416.stgit@magnolia>
+References: <154524776457.28646.3004453037075812416.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181203222503.30649-8-hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Dec 03, 2018 at 05:24:59PM -0500, Christoph Hellwig wrote:
-> This only matters if we want to write data through the COW fork that is
-> not actually an overwrite of existing data.  Reasons for that are
-> speculative COW fork allocations using the cowextsize, or a mode where
-> we always write through the COW fork.  Currently both can't actually
-> happen, but I plan to enable them.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+During phases 2-5, xfs_scrub should estimate the level of
+parallelization possible on the data device to determine the number of
+threads spawned to scrub filesystem metadata, not just blindly using the
+number of CPUs.  This avoids flooding non-rotational storage with random
+reads, which totally destroys performance and makes scrub runtimes
+higher.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/phase1.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-> ---
->  fs/xfs/xfs_aops.c | 31 ++++++++++++++++---------------
->  1 file changed, 16 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 124b8de37115..7d95a84064e7 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -403,28 +403,29 @@ xfs_map_blocks(
->  
->  	wpc->fork = XFS_DATA_FORK;
->  
-> +	/* landed in a hole or beyond EOF? */
->  	if (imap.br_startoff > offset_fsb) {
-> -		/* landed in a hole or beyond EOF */
->  		imap.br_blockcount = imap.br_startoff - offset_fsb;
->  		imap.br_startoff = offset_fsb;
->  		imap.br_startblock = HOLESTARTBLOCK;
->  		imap.br_state = XFS_EXT_NORM;
-> -	} else {
-> -		/*
-> -		 * Truncate to the next COW extent if there is one.  This is the
-> -		 * only opportunity to do this because we can skip COW fork
-> -		 * lookups for the subsequent blocks in the mapping; however,
-> -		 * the requirement to treat the COW range separately remains.
-> -		 */
-> -		if (cow_fsb != NULLFILEOFF &&
-> -		    cow_fsb < imap.br_startoff + imap.br_blockcount)
-> -			imap.br_blockcount = cow_fsb - imap.br_startoff;
-> -
-> -		/* got a delalloc extent? */
-> -		if (isnullstartblock(imap.br_startblock))
-> -			goto allocate_blocks;
->  	}
->  
-> +	/*
-> +	 * Truncate to the next COW extent if there is one.  This is the only
-> +	 * opportunity to do this because we can skip COW fork lookups for the
-> +	 * subsequent blocks in the mapping; however, the requirement to treat
-> +	 * the COW range separately remains.
-> +	 */
-> +	if (cow_fsb != NULLFILEOFF &&
-> +	    cow_fsb < imap.br_startoff + imap.br_blockcount)
-> +		imap.br_blockcount = cow_fsb - imap.br_startoff;
-> +
-> +	/* got a delalloc extent? */
-> +	if (imap.br_startblock != HOLESTARTBLOCK &&
-> +	    isnullstartblock(imap.br_startblock))
-> +		goto allocate_blocks;
-> +
->  	wpc->imap = imap;
->  	trace_xfs_map_blocks_found(ip, offset, count, wpc->fork, &imap);
->  	return 0;
-> -- 
-> 2.19.1
-> 
+
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index 2113014b..6b472147 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -109,13 +109,6 @@ _("Must be root to run scrub."));
+ 		return false;
+ 	}
+ 
+-	ctx->nr_io_threads = nproc;
+-	if (verbose) {
+-		fprintf(stdout, _("%s: using %d threads to scrub.\n"),
+-				ctx->mntpoint, scrub_nproc(ctx));
+-		fflush(stdout);
+-	}
+-
+ 	if (!platform_test_xfs_fd(ctx->mnt_fd)) {
+ 		str_info(ctx, ctx->mntpoint,
+ _("Does not appear to be an XFS filesystem!"));
+@@ -193,6 +186,13 @@ _("Unable to find realtime device path."));
+ 		return false;
+ 	}
+ 
++	ctx->nr_io_threads = disk_heads(ctx->datadev);
++	if (verbose) {
++		fprintf(stdout, _("%s: using %d threads to scrub.\n"),
++				ctx->mntpoint, scrub_nproc(ctx));
++		fflush(stdout);
++	}
++
+ 	if (ctx->fsinfo.fs_log) {
+ 		ctx->logdev = disk_open(ctx->fsinfo.fs_log);
+ 		if (error) {
