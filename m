@@ -1,18 +1,18 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41350 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:41752 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727383AbeLST3l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Dec 2018 14:29:41 -0500
-Subject: [PATCH 1/8] xfs_scrub_all: walk the lsblk device/fs hierarchy
+        with ESMTP id S1727383AbeLSTaP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Dec 2018 14:30:15 -0500
+Subject: [PATCH 6/8] xfs_repair: reinitialize the root directory nlink
  correctly
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 19 Dec 2018 11:29:30 -0800
-Message-ID: <154524777080.28646.13859873012142786308.stgit@magnolia>
+Date: Wed, 19 Dec 2018 11:30:11 -0800
+Message-ID: <154524781113.28646.8112653175487549499.stgit@magnolia>
 In-Reply-To: <154524776457.28646.3004453037075812416.stgit@magnolia>
 References: <154524776457.28646.3004453037075812416.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -21,70 +21,28 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Back when I was designing xfs_scrub_all, I naïvely assumed that the
-emitted output would always list physical storage before the virtual
-devices stacked atop it.  However, this is not actually true when one
-omits the "NAME" column, which is crucial to forcing the output (json or
-otherwise) to capture the block device hierarchy.  If the assumption is
-violated, the program crashes with a python exception.
-
-To fix this, force the hierarchal json output and restructure the
-discovery routines to walk the json object that we receive, from the top
-(physical devices) downwards to wherever there are live xfs filesystems.
+In mk_root_dir, we reinitialize the root directory inode with a link
+count of 1.  This differs from mkfs parseproto, which initializes the
+root to have a link count of 2.  The nlink discrepancy in repair is
+caught and corrected during phase 7, but this is unnecessary since we
+should set it properly in the first place.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/xfs_scrub_all.in |   28 +++++++++++++++++-----------
- 1 file changed, 17 insertions(+), 11 deletions(-)
+ repair/phase6.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index c4e9899d..5b76b49a 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -28,9 +28,21 @@ def DEVNULL():
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 9477bc25..8a50b350 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -891,7 +891,7 @@ mk_root_dir(xfs_mount_t *mp)
+ 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+ 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
  
- def find_mounts():
- 	'''Map mountpoints to physical disks.'''
-+	def find_xfs_mounts(bdev, fs, lastdisk):
-+		'''Attach lastdisk to each fs found under bdev.'''
-+		if bdev['fstype'] == 'xfs' and bdev['mountpoint'] is not None:
-+			mnt = bdev['mountpoint']
-+			if mnt in fs:
-+				fs[mnt].add(lastdisk)
-+			else:
-+				fs[mnt] = set([lastdisk])
-+		if 'children' not in bdev:
-+			return
-+		for child in bdev['children']:
-+			find_xfs_mounts(child, fs, lastdisk)
+-	set_nlink(VFS_I(ip), 1);	/* account for . */
++	set_nlink(VFS_I(ip), 2);	/* account for . and .. */
  
- 	fs = {}
--	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
-+	cmd=['lsblk', '-o', 'NAME,KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
- 	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
- 	result.wait()
- 	if result.returncode != 0:
-@@ -38,18 +50,12 @@ def find_mounts():
- 	sarray = [x.decode(sys.stdout.encoding) for x in result.stdout.readlines()]
- 	output = ' '.join(sarray)
- 	bdevdata = json.loads(output)
-+
- 	# The lsblk output had better be in disks-then-partitions order
- 	for bdev in bdevdata['blockdevices']:
--		if bdev['type'] in ('disk', 'loop'):
--			lastdisk = bdev['kname']
--		if bdev['fstype'] == 'xfs':
--			mnt = bdev['mountpoint']
--			if mnt is None:
--				continue
--			if mnt in fs:
--				fs[mnt].add(lastdisk)
--			else:
--				fs[mnt] = set([lastdisk])
-+		lastdisk = bdev['kname']
-+		find_xfs_mounts(bdev, fs, lastdisk)
-+
- 	return fs
- 
- def kill_systemd(unit, proc):
+ 	times = XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD;
+ 	if (ip->i_d.di_version == 3) {
