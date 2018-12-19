@@ -1,68 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41646 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727383AbeLSTaE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Dec 2018 14:30:04 -0500
-Subject: [PATCH 4/8] xfs_scrub: use datadev parallelization estimates for
- thread count
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 19 Dec 2018 11:29:58 -0800
-Message-ID: <154524779871.28646.8062050192682765855.stgit@magnolia>
-In-Reply-To: <154524776457.28646.3004453037075812416.stgit@magnolia>
-References: <154524776457.28646.3004453037075812416.stgit@magnolia>
+Received: from verein.lst.de ([213.95.11.211]:48793 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727079AbeLSTac (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Dec 2018 14:30:32 -0500
+Date: Wed, 19 Dec 2018 20:30:30 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 10/11] xfs: make COW fork unwritten extent conversions
+ more robust
+Message-ID: <20181219193030.GB28624@lst.de>
+References: <20181203222503.30649-1-hch@lst.de> <20181203222503.30649-11-hch@lst.de> <20181218222211.GP27208@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181218222211.GP27208@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+> >  	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
+> >  	xfs_filblks_t		count_fsb = end_fsb - offset_fsb;
+> > -	struct xfs_bmbt_irec	imap;
+> > -	int			nimaps = 1, error = 0;
+> > +	int			error;
+> >  
+> >  	ASSERT(count != 0);
+> >  
+> >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > -	error = xfs_bmapi_write(NULL, ip, offset_fsb, count_fsb,
+> > -			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT |
+> > -			XFS_BMAPI_CONVERT_ONLY, 0, &imap, &nimaps);
+> > +	error = xfs_reflink_convert_cow_locked(ip, offset_fsb, count_fsb);
+> 
+> At this point you might as well convert the one remaining caller of
+> xfs_reflink_convert_cow to take and drop the ILOCK around the
+> reflink_convert_cow call...
 
-During phases 2-5, xfs_scrub should estimate the level of
-parallelization possible on the data device to determine the number of
-threads spawned to scrub filesystem metadata, not just blindly using the
-number of CPUs.  This avoids flooding non-rotational storage with random
-reads, which totally destroys performance and makes scrub runtimes
-higher.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/phase1.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-
-diff --git a/scrub/phase1.c b/scrub/phase1.c
-index 2113014b..6b472147 100644
---- a/scrub/phase1.c
-+++ b/scrub/phase1.c
-@@ -109,13 +109,6 @@ _("Must be root to run scrub."));
- 		return false;
- 	}
- 
--	ctx->nr_io_threads = nproc;
--	if (verbose) {
--		fprintf(stdout, _("%s: using %d threads to scrub.\n"),
--				ctx->mntpoint, scrub_nproc(ctx));
--		fflush(stdout);
--	}
--
- 	if (!platform_test_xfs_fd(ctx->mnt_fd)) {
- 		str_info(ctx, ctx->mntpoint,
- _("Does not appear to be an XFS filesystem!"));
-@@ -193,6 +186,13 @@ _("Unable to find realtime device path."));
- 		return false;
- 	}
- 
-+	ctx->nr_io_threads = disk_heads(ctx->datadev);
-+	if (verbose) {
-+		fprintf(stdout, _("%s: using %d threads to scrub.\n"),
-+				ctx->mntpoint, scrub_nproc(ctx));
-+		fflush(stdout);
-+	}
-+
- 	if (ctx->fsinfo.fs_log) {
- 		ctx->logdev = disk_open(ctx->fsinfo.fs_log);
- 		if (error) {
+I looked at it - the ilock is not the issue, but moving the bytes
+to fsb conversion into the only caller makes it look worse than
+keeping a helper for that one helper.
