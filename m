@@ -1,100 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44104 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:53322 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727818AbeLSUa4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Dec 2018 15:30:56 -0500
-Date: Wed, 19 Dec 2018 14:30:48 -0600
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH 7/8] xfs_repair: bump the irec on-disk nlink when adding
- lost+found
-Message-ID: <20181219203048.GC22276@redhat.com>
-References: <154524776457.28646.3004453037075812416.stgit@magnolia>
- <154524781732.28646.10845701241680094884.stgit@magnolia>
+        id S2387479AbeLTRcf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Dec 2018 12:32:35 -0500
+Subject: Re: Same size drive has less usable space
+References: <20181220131305.2a84b717@lud1.home>
+ <6ab0a568-4732-905a-d45d-209f4bb0cfb0@sandeen.net>
+ <20181220145529.1292ec61@lud1.home>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <710b005e-0738-b793-3014-2234fcee84ad@sandeen.net>
+Date: Thu, 20 Dec 2018 11:32:33 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154524781732.28646.10845701241680094884.stgit@magnolia>
+In-Reply-To: <20181220145529.1292ec61@lud1.home>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Luciano ES <lucmove@gmail.com>, linux-xfs@vger.kernel.org
 
-On Wed, Dec 19, 2018 at 11:30:17AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 12/20/18 10:55 AM, Luciano ES wrote:
+> On Thu, 20 Dec 2018 10:10:42 -0600, Eric Sandeen wrote:
 > 
-> We increment the nlink of the root directory inode when creating a
-> "lost+found" directory during phase 6, but we don't update the irec copy
-> of the root dir nlink.  This normally gets papered over by phase 7, but
-> this can fail badly if:
+>> Well, you have larger inodes on xxbkp for starters.
 > 
-> 1) The root directory had an entry to a busted subdirectory, so
->    that root directory will have nlink == 3, but in the ino_tree,
->    counted_nlinks == 2 and disk_nlinks == 3.
+> I can't make smaller inodes on this disk.
 > 
-> 2) Phase 6 creates lost+found to root the files that were in the busted
->    directory, we'll set nlink = 4 and counted_nlinks = 3.  The correct
->    nlink is 3 ('.', '..', 'lost+found'), not 4.
-> 
-> 3) During phase 7, we see that counted_nlinks == disk_nlinks and so we
->    totally fail to correct the on-disk inode.
-> 
-> 4) A subsequent run of xfs_repair complains about the nlink being 4
->    instead of 3.
-> 
-> To fix this, we have to adjust the irec's disk_nlinks in step 2 so that
-> phase 7 seeds that counted_nlinks < disk_nlinks and resets nlink to
-> counted_nlinks.  This can be reproduced somewhat frequently by xfs/117.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> "specified blocksize 2048 is less than device physical sector size 4096
+> switching to logical sector size 512"
 
-Makes sense.
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+1) that's a warning not an error
+2) that's blocksize not inode size
 
->  repair/phase6.c |   14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
+but ok, I missed that you had 2k blocks on your backup disk.... I don't
+really know what you're trying to do here, TBH.
+
+> another attempt:
 > 
+> "specified blocksize 2048 is less than device physical sector size 4096
+> switching to logical sector size 512
+> Minimum inode size for CRCs is 512 bytes"
+
+So, I don't think you turned off crcs here.
+
+> So yes, it's the CRC feature.
+
+So turn it off.
+
 > 
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index 8a50b350..194cfdbf 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -1019,6 +1019,7 @@ mk_orphanage(xfs_mount_t *mp)
->  	 */
->  	set_inode_used(irec, ino_offset);
->  	add_inode_ref(irec, ino_offset);
-> +	add_inode_reached(irec, ino_offset);
->  
->  	/*
->  	 * now that we know the transaction will stay around,
-> @@ -1037,14 +1038,14 @@ mk_orphanage(xfs_mount_t *mp)
->  
->  	/*
->  	 * bump up the link count in the root directory to account
-> -	 * for .. in the new directory
-> +	 * for .. in the new directory, and update the irec copy of the
-> +	 * on-disk nlink so we don't fail the link count check later.
->  	 */
->  	inc_nlink(VFS_I(pip));
-> -	add_inode_ref(find_inode_rec(mp,
-> -				XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
-> -				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino)), 0);
-> -
-> -
-> +	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
-> +				  XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
-> +	add_inode_ref(irec, 0);
-> +	set_inode_disk_nlinks(irec, 0, get_inode_disk_nlinks(irec, 0) + 1);
->  
->  	libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
->  	libxfs_dir_init(tp, ip, pip);
-> @@ -1056,7 +1057,6 @@ mk_orphanage(xfs_mount_t *mp)
->  	}
->  	libxfs_irele(ip);
->  	libxfs_irele(pip);
-> -	add_inode_reached(irec,ino_offset);
->  
->  	return(ino);
->  }
+> On Thu, 20 Dec 2018 10:10:42 -0600, Eric Sandeen wrote:
 > 
+>> # mkfs.xfs -m crc=0,finobt=1 -i sparse=0 -n ftype=0
+> 
+> Your command line doesn't work. It says:
+> 
+> finobt not supported without CRC support
+
+yeah I fat-fingered that, make it finobt=0 of course.
+
+> I have confirmed that disabling CRC allows me to have smaller inodes, 
+> but I wish I could keep that feature. It sounds like something I want 
+> to have, to improve reliability.
+> 
+> Is there another way?
+
+You're over-constraining yourself here; crcs require larger inodes which
+requires more space, by definition.  Sorry, but you can't get something
+for nothing.
+
+If you are trying to consume identical space you're going to need to use
+an identical format.
+
+-Eric
