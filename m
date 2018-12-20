@@ -1,228 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:48828 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727079AbeLSTio (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Dec 2018 14:38:44 -0500
-Date: Wed, 19 Dec 2018 20:38:43 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 08/11] xfs: merge COW handling into
- xfs_file_iomap_begin_delay
-Message-ID: <20181219193843.GE28624@lst.de>
-References: <20181203222503.30649-1-hch@lst.de> <20181203222503.30649-9-hch@lst.de> <20181218233641.GT27208@magnolia>
+Received: from mail-qt1-f174.google.com ([209.85.160.174]:36417 "EHLO
+        mail-qt1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732431AbeLTQze (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Dec 2018 11:55:34 -0500
+Received: by mail-qt1-f174.google.com with SMTP id t13so2562353qtn.3
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Dec 2018 08:55:33 -0800 (PST)
+Received: from lud1.home ([189.115.213.104])
+        by smtp.gmail.com with ESMTPSA id c17sm5490738qtb.14.2018.12.20.08.55.30
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 20 Dec 2018 08:55:31 -0800 (PST)
+Date: Thu, 20 Dec 2018 14:55:29 -0200
+From: Luciano ES <lucmove@gmail.com>
+Subject: Re: Same size drive has less usable space
+Message-ID: <20181220145529.1292ec61@lud1.home>
+In-Reply-To: <6ab0a568-4732-905a-d45d-209f4bb0cfb0@sandeen.net>
+References: <20181220131305.2a84b717@lud1.home>
+        <6ab0a568-4732-905a-d45d-209f4bb0cfb0@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181218233641.GT27208@magnolia>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Dec 18, 2018 at 03:36:41PM -0800, Darrick J. Wong wrote:
-> On Mon, Dec 03, 2018 at 05:25:00PM -0500, Christoph Hellwig wrote:
-> > Besides simplifying the code a bit this allows to actually implement
-> > the behavior of using COW preallocation for non-COW data mentioned
-> > in the current comments.
-> > 
-> > Note that this breaks the current version of xfs/420, but that is
-> > because the test is broken.  A separate fix will be sent for it.
-> 
-> (Still waiting for this...)
+On Thu, 20 Dec 2018 10:10:42 -0600, Eric Sandeen wrote:
 
-It was sent quite a while ago, but I need to resend it..
+> Well, you have larger inodes on xxbkp for starters.
 
-> 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/xfs_iomap.c   | 132 ++++++++++++++++++++++++++++++-------------
-> >  fs/xfs/xfs_reflink.c |  67 ----------------------
-> >  fs/xfs/xfs_trace.h   |   1 -
-> >  3 files changed, 93 insertions(+), 107 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index d851abac16a9..d19f99e5476a 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -534,15 +534,16 @@ xfs_file_iomap_begin_delay(
-> >  {
-> >  	struct xfs_inode	*ip = XFS_I(inode);
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> > -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> >  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> >  	xfs_fileoff_t		maxbytes_fsb =
-> >  		XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
-> >  	xfs_fileoff_t		end_fsb;
-> > -	int			error = 0, eof = 0;
-> > -	struct xfs_bmbt_irec	got;
-> > -	struct xfs_iext_cursor	icur;
-> > +	struct xfs_bmbt_irec	imap, cmap;
-> > +	struct xfs_iext_cursor	icur, ccur;
-> >  	xfs_fsblock_t		prealloc_blocks = 0;
-> > +	bool			eof = false, cow_eof = false, shared;
-> > +	int			whichfork = XFS_DATA_FORK;
-> > +	int			error = 0;
-> >  
-> >  	ASSERT(!XFS_IS_REALTIME_INODE(ip));
-> >  	ASSERT(!xfs_get_extsz_hint(ip));
-> > @@ -560,7 +561,7 @@ xfs_file_iomap_begin_delay(
-> >  
-> >  	XFS_STATS_INC(mp, xs_blk_mapw);
-> >  
-> > -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> > +	if (!(ip->i_df.if_flags & XFS_IFEXTENTS)) {
-> >  		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> >  		if (error)
-> >  			goto out_unlock;
-> > @@ -568,51 +569,92 @@ xfs_file_iomap_begin_delay(
-> >  
-> >  	end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
-> >  
-> > -	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got);
-> > +	/*
-> > +	 * Search the data fork fork first to look up our source mapping.  We
-> > +	 * always need the data fork map, as we have to return it to the
-> > +	 * iomap code so that the higher level write code can read data in to
-> > +	 * perform read-modify-write cycles for unaligned writes.
-> > +	 */
-> > +	eof = !xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap);
-> >  	if (eof)
-> > -		got.br_startoff = end_fsb; /* fake hole until the end */
-> > +		imap.br_startoff = end_fsb; /* fake hole until the end */
-> >  
-> > -	if (got.br_startoff <= offset_fsb) {
-> > +	/* We never need to allocate blocks for zeroing a hole. */
-> > +	if ((flags & IOMAP_ZERO) && imap.br_startoff > offset_fsb) {
-> > +		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
-> > +		goto out_unlock;
-> > +	}
-> > +
-> > +	/*
-> > +	 * Search the COW fork extent list even if we did not find a data fork
-> > +	 * extent.  This serves two purposes: first this implements the
-> > +	 * speculative preallocation using cowextisze, so that we also unshare
-> 
-> "cowextsize"
-> 
-> > +	 * block adjacent to shared blocks instead of just the shared blocks
-> > +	 * themselves.  Second the lookup in the extent list is generally faster
-> > +	 * than going out to the shared extent tree.
-> > +	 */
-> > +	if (xfs_is_reflink_inode(ip)) {
-> > +		cow_eof = !xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb,
-> > +				&ccur, &cmap);
-> > +		if (!cow_eof && cmap.br_startoff <= offset_fsb) {
-> > +			trace_xfs_reflink_cow_found(ip, &cmap);
-> > +			whichfork = XFS_COW_FORK;
-> > +			goto done;
-> > +		}
-> > +	}
-> > +
-> > +	if (imap.br_startoff <= offset_fsb) {
-> >  		/*
-> >  		 * For reflink files we may need a delalloc reservation when
-> >  		 * overwriting shared extents.   This includes zeroing of
-> >  		 * existing extents that contain data.
-> >  		 */
-> > -		if (xfs_is_reflink_inode(ip) &&
-> > -		    ((flags & IOMAP_WRITE) ||
-> > -		     got.br_state != XFS_EXT_UNWRITTEN)) {
-> > -			xfs_trim_extent(&got, offset_fsb, end_fsb - offset_fsb);
-> > -			error = xfs_reflink_reserve_cow(ip, &got);
-> > -			if (error)
-> > -				goto out_unlock;
-> > +		if (!xfs_is_reflink_inode(ip) ||
-> > +		    ((flags & IOMAP_ZERO) && imap.br_state != XFS_EXT_NORM)) {
-> > +			trace_xfs_iomap_found(ip, offset, count, XFS_DATA_FORK,
-> > +					&imap);
-> > +			goto done;
-> >  		}
-> >  
-> > -		trace_xfs_iomap_found(ip, offset, count, XFS_DATA_FORK, &got);
-> > -		goto done;
-> > -	}
-> > +		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
-> >  
-> > -	if (flags & IOMAP_ZERO) {
-> > -		xfs_hole_to_iomap(ip, iomap, offset_fsb, got.br_startoff);
-> > -		goto out_unlock;
-> > +		/* Trim the mapping to the nearest shared extent boundary. */
-> > +		error = xfs_reflink_trim_around_shared(ip, &imap, &shared);
-> > +		if (error)
-> > +			goto out_unlock;
-> > +
-> > +		/* Not shared?  Just report the (potentially capped) extent. */
-> > +		if (!shared) {
-> > +			trace_xfs_iomap_found(ip, offset, count, XFS_DATA_FORK,
-> > +					&imap);
-> > +			goto done;
-> > +		}
-> > +
-> > +		/*
-> > +		 * Fork all the shared blocks from our write offset until the
-> > +		 * end of the extent.
-> > +		 */
-> > +		whichfork = XFS_COW_FORK;
-> > +		end_fsb = imap.br_startoff + imap.br_blockcount;
-> > +	} else {
-> > +		/*
-> > +		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
-> > +		 * pages to keep the chunks of work done where somewhat
-> > +		 * symmetric with the work writeback does.  This is a completely
-> > +		 * arbitrary number pulled out of thin air.
-> > +		 *
-> > +		 * Note that the values needs to be less than 32-bits wide until
-> > +		 * the lower level functions are updated.
-> > +		 */
-> > +		count = min_t(loff_t, count, 1024 * PAGE_SIZE);
-> > +		end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
-> >  	}
-> >  
-> >  	error = xfs_qm_dqattach_locked(ip, false);
-> >  	if (error)
-> >  		goto out_unlock;
-> >  
-> > -	/*
-> > -	 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES pages
-> > -	 * to keep the chunks of work done where somewhat symmetric with the
-> > -	 * work writeback does. This is a completely arbitrary number pulled
-> > -	 * out of thin air as a best guess for initial testing.
-> > -	 *
-> > -	 * Note that the values needs to be less than 32-bits wide until
-> > -	 * the lower level functions are updated.
-> > -	 */
-> > -	count = min_t(loff_t, count, 1024 * PAGE_SIZE);
-> > -	end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
-> > -
-> > -	if (eof) {
-> > +	if (eof && whichfork == XFS_DATA_FORK) {
-> >  		prealloc_blocks = xfs_iomap_prealloc_size(ip, offset, count,
-> >  				&icur);
-> >  		if (prealloc_blocks) {
-> > @@ -635,9 +677,11 @@ xfs_file_iomap_begin_delay(
-> >  	}
-> >  
-> >  retry:
-> > -	error = xfs_bmapi_reserve_delalloc(ip, XFS_DATA_FORK, offset_fsb,
-> > -			end_fsb - offset_fsb, prealloc_blocks, &got, &icur,
-> > -			eof);
-> > +	error = xfs_bmapi_reserve_delalloc(ip, whichfork, offset_fsb,
-> > +			end_fsb - offset_fsb, prealloc_blocks,
-> > +			whichfork == XFS_DATA_FORK ? &imap : &cmap,
-> > +			whichfork == XFS_DATA_FORK ? &icur : &ccur,
-> > +			whichfork == XFS_DATA_FORK ? eof : cow_eof);
-> >  	switch (error) {
-> >  	case 0:
-> >  		break;
-> > @@ -659,9 +703,19 @@ xfs_file_iomap_begin_delay(
-> >  	 * them out if the write happens to fail.
-> >  	 */
-> >  	iomap->flags |= IOMAP_F_NEW;
-> > -	trace_xfs_iomap_alloc(ip, offset, count, XFS_DATA_FORK, &got);
-> > +	trace_xfs_iomap_alloc(ip, offset, count, whichfork, &imap);
-> 
-> I'm confused by this, if whichfork == COW then won't ftrace report
-> results from the wrong fork?
+I can't make smaller inodes on this disk.
 
-The question is what the "right" fork to trace is as both matter here.
-At least we now clearly tell you which fork the trace belongs too.
+"specified blocksize 2048 is less than device physical sector size 4096
+switching to logical sector size 512"
+
+another attempt:
+
+"specified blocksize 2048 is less than device physical sector size 4096
+switching to logical sector size 512
+Minimum inode size for CRCs is 512 bytes"
+
+So yes, it's the CRC feature.
+
+
+On Thu, 20 Dec 2018 10:10:42 -0600, Eric Sandeen wrote:
+
+> # mkfs.xfs -m crc=0,finobt=1 -i sparse=0 -n ftype=0
+
+Your command line doesn't work. It says:
+
+finobt not supported without CRC support
+
+I have confirmed that disabling CRC allows me to have smaller inodes, 
+but I wish I could keep that feature. It sounds like something I want 
+to have, to improve reliability.
+
+Is there another way?
+
+
+On Thu, 20 Dec 2018 08:26:41 -0800, Darrick J. Wong wrote:
+
+> Why not xfs_copy?
+
+Good question. But then the copy would not have CRC enabled either 
+because the original doesn't. 
+
+Looks like I an going to have to commit to having CRC always on 
+from now on. And I am going to lose about 7GB of space for that.
+
+Is it worth it?
+
+
+-- 
+Luciano ES
+>>
