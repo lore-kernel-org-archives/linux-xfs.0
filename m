@@ -1,87 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39970 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729699AbeLNOKU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 Dec 2018 09:10:20 -0500
-Subject: Re: [PATCH 3/3] iomap: optimize iomap_is_partially_uptodate for full
- page range
-References: <1544739929-21651-1-git-send-email-sandeen@sandeen.net>
- <1544739929-21651-4-git-send-email-sandeen@sandeen.net>
- <20181214030528.GK6311@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <568c811c-bfd5-216e-30a0-c54ebc2989a0@sandeen.net>
-Date: Fri, 14 Dec 2018 08:10:19 -0600
+Received: from mail-qt1-f169.google.com ([209.85.160.169]:39818 "EHLO
+        mail-qt1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731280AbeLTSjs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Dec 2018 13:39:48 -0500
+Received: by mail-qt1-f169.google.com with SMTP id n21so2930327qtl.6
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Dec 2018 10:39:48 -0800 (PST)
+Received: from lud1.home ([189.115.213.104])
+        by smtp.gmail.com with ESMTPSA id 20sm5236020qtp.54.2018.12.20.10.39.45
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 20 Dec 2018 10:39:46 -0800 (PST)
+Date: Thu, 20 Dec 2018 16:39:43 -0200
+From: Luciano ES <lucmove@gmail.com>
+Subject: Re: Same size drive has less usable space
+Message-ID: <20181220163943.5d8c6c2c@lud1.home>
+In-Reply-To: <710b005e-0738-b793-3014-2234fcee84ad@sandeen.net>
+References: <20181220131305.2a84b717@lud1.home>
+        <6ab0a568-4732-905a-d45d-209f4bb0cfb0@sandeen.net>
+        <20181220145529.1292ec61@lud1.home>
+        <710b005e-0738-b793-3014-2234fcee84ad@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20181214030528.GK6311@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, hch@lst.de
+To: linux-xfs@vger.kernel.org
 
-On 12/13/18 9:05 PM, Dave Chinner wrote:
-> On Thu, Dec 13, 2018 at 04:25:29PM -0600, Eric Sandeen wrote:
->> From: Eric Sandeen <sandeen@redhat.com>
+On Thu, 20 Dec 2018 11:32:33 -0600, Eric Sandeen wrote:
+
+> but ok, I missed that you had 2k blocks on your backup disk.... I
+> don't really know what you're trying to do here, TBH.
+
+Smaller blocks waste less space. In ext3/4, I've always used 2k or 
+even 1k blocks. It does save space. Doesn't it in XFS too?
+
+-- 
+Luciano ES
 >>
->> We only call ->is_partially_uptodate to look for an uptodate range
->> within a not-uptodate page.
->>
->> If the range covers all blocks in the page, there is no point to checking
->> each block individually - if the whole range (i.e. the whole page) were
->> uptodate, the page would be uptodate as well.  Hence in this case, we
->> can return early and skip the loop.
->>
->> This is similar to what is done in block_is_partially_uptodate().
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
->> ---
->>  fs/iomap.c | 4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> diff --git a/fs/iomap.c b/fs/iomap.c
->> index ce837d9..7d7d985 100644
->> --- a/fs/iomap.c
->> +++ b/fs/iomap.c
->> @@ -515,6 +515,10 @@ struct iomap_readpage_ctx {
->>  	first = from >> inode->i_blkbits;
->>  	last = (from + len - 1) >> inode->i_blkbits;
->>  
->> +	/* If page wasn't uptodate and range covers all blocks: no partial */
->> +	if (first == 0 && last == (PAGE_SIZE - 1) >> inode->i_blkbits)
->> +		return 0;
->> +
-> 
-> Even if the range covers the entire page, we still have to check
-> that all the individual blocks in the page are up to date or not.
-> Hence I think this is wrong....
-
-Didn't PageUptodate(page) answer that question already in the caller?
-
-The caller does:
-
-                        if (PageUptodate(page))
-                                goto page_ok;
-...
-                        if (!mapping->a_ops->is_partially_uptodate(page,
-                                                        offset, iter->count))
-                                goto page_not_up_to_date_locked;
-
-
-So if it was found to be uptodate, we never called this op.  If we /were/
-called (page was not uptodate) that can only be because at least one block in
-the page is not uptodate.  So what's the need for checking them all again?
-
-(unless it's because we're now doing it under the page lock?)
-
-block_is_partially_uptodate does the same thing:
-
-        if (from < blocksize && to > PAGE_SIZE - blocksize)
-                return 0;
-
-Still, this also seems like maybe something the caller should do instead.
-
--Eric
