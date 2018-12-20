@@ -1,88 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58392 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726788AbeLRVpX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 16:45:23 -0500
-Date: Tue, 18 Dec 2018 13:45:13 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/11] xfs: remove xfs_trim_extent_eof
-Message-ID: <20181218214513.GM27208@magnolia>
-References: <20181203222503.30649-1-hch@lst.de>
- <20181203222503.30649-2-hch@lst.de>
+Received: from mail.kernel.org ([198.145.29.99]:35888 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725794AbeLTM23 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Dec 2018 07:28:29 -0500
+Date: Thu, 20 Dec 2018 13:28:25 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] iomap: Revert "fs/iomap.c: get/put the page in
+ iomap_page_create/release()"
+Message-ID: <20181220122825.GA17138@kroah.com>
+References: <20181220122324.17082-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181203222503.30649-2-hch@lst.de>
+In-Reply-To: <20181220122324.17082-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, pjaroszynski@nvidia.com, william.kucharski@oracle.com, stable@vger.kernel.org, hch@lst.de, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
-On Mon, Dec 03, 2018 at 05:24:53PM -0500, Christoph Hellwig wrote:
-> Opencoding this function in the only caller makes it blindly obvious
-> what is going on instead of having to look at two files for that.
+On Thu, Dec 20, 2018 at 11:23:24PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
+> This reverts commit 61c6de667263184125d5ca75e894fcad632b0dd3.
+> 
+> The reverted commit added page reference counting to iomap page
+> structures that are used to track block size < page size state. This
+> was supposed to align the code with page migration page accounting
+> assumptions, but what it has done instead is break XFS filesystems.
+> Every fstests run I've done on sub-page block size XFS filesystems
+> has since picking up this commit 2 days ago has failed with bad page
+> state errors such as:
+> 
+> # ./run_check.sh "-m rmapbt=1,reflink=1 -i sparse=1 -b size=1k" "generic/038"
+> ....
+> SECTION       -- xfs
+> FSTYP         -- xfs (debug)
+> PLATFORM      -- Linux/x86_64 test1 4.20.0-rc6-dgc+
+> MKFS_OPTIONS  -- -f -m rmapbt=1,reflink=1 -i sparse=1 -b size=1k /dev/sdc
+> MOUNT_OPTIONS -- /dev/sdc /mnt/scratch
+> 
+> generic/038 454s ...
+>  run fstests generic/038 at 2018-12-20 18:43:05
+>  XFS (sdc): Unmounting Filesystem
+>  XFS (sdc): Mounting V5 Filesystem
+>  XFS (sdc): Ending clean mount
+>  BUG: Bad page state in process kswapd0  pfn:3a7fa
+>  page:ffffea0000ccbeb0 count:0 mapcount:0 mapping:ffff88800d9b6360 index:0x1
+>  flags: 0xfffffc0000000()
+>  raw: 000fffffc0000000 dead000000000100 dead000000000200 ffff88800d9b6360
+>  raw: 0000000000000001 0000000000000000 00000000ffffffff
+>  page dumped because: non-NULL mapping
+>  CPU: 0 PID: 676 Comm: kswapd0 Not tainted 4.20.0-rc6-dgc+ #915
+>  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/2014
+>  Call Trace:
+>   dump_stack+0x67/0x90
+>   bad_page.cold.116+0x8a/0xbd
+>   free_pcppages_bulk+0x4bf/0x6a0
+>   free_unref_page_list+0x10f/0x1f0
+>   shrink_page_list+0x49d/0xf50
+>   shrink_inactive_list+0x19d/0x3b0
+>   shrink_node_memcg.constprop.77+0x398/0x690
+>   ? shrink_slab.constprop.81+0x278/0x3f0
+>   shrink_node+0x7a/0x2f0
+>   kswapd+0x34b/0x6d0
+>   ? node_reclaim+0x240/0x240
+>   kthread+0x11f/0x140
+>   ? __kthread_bind_mask+0x60/0x60
+>   ret_from_fork+0x24/0x30
+>  Disabling lock debugging due to kernel taint
+> ....
+> 
+> The failures are from anyway that frees pages and empties the
+> per-cpu page magazines, so it's not a predictable failure or an easy
+> to debug failure.
+> 
+> generic/038 is a reliable reproducer of this problem - it has a 9 in
+> 10 failure rate on one of my test machines. Failure on other
+> machines have been at random points in fstests runs but every run
+> has ended up tripping this problem. Hence generic/038 was used to
+> bisect the failure because it was the most reliable failure.
+> 
+> It is too close to the 4.20 release (not to mention holidays) to
+> try to diagnose, fix and test the underlying cause of the problem,
+> so reverting the commit is the only option we have right now. The
+> revert has been tested against a current tot 4.20-rc7+ kernel across
+> multiple machines running sub-page block size XFs filesystems and
+> none of the bad page state failures have been seen.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 11 -----------
->  fs/xfs/libxfs/xfs_bmap.h |  1 -
->  fs/xfs/xfs_aops.c        |  2 +-
->  3 files changed, 1 insertion(+), 13 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 19e921d1586f..f16d42abc500 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3685,17 +3685,6 @@ xfs_trim_extent(
->  	}
->  }
->  
-> -/* trim extent to within eof */
-> -void
-> -xfs_trim_extent_eof(
-> -	struct xfs_bmbt_irec	*irec,
-> -	struct xfs_inode	*ip)
-> -
-> -{
-> -	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
-> -					      i_size_read(VFS_I(ip))));
-> -}
-> -
->  /*
->   * Trim the returned map to the required bounds
->   */
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index 488dc8860fd7..f9a925caa70e 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -181,7 +181,6 @@ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
->  
->  void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
->  		xfs_filblks_t len);
-> -void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
->  int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
->  int	xfs_bmap_set_attrforkoff(struct xfs_inode *ip, int size, int *version);
->  void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 338b9d9984e0..d7275075878e 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -329,7 +329,7 @@ xfs_map_blocks(
->  	 * mechanism to protect us from arbitrary extent modifying contexts, not
->  	 * just eofblocks.
->  	 */
-> -	xfs_trim_extent_eof(&wpc->imap, ip);
-> +	xfs_trim_extent(&wpc->imap, 0, XFS_B_TO_FSB(mp, i_size_read(inode)));
->  
->  	/*
->  	 * COW fork blocks can overlap data fork blocks even if the blocks
-> -- 
-> 2.19.1
-> 
+>  fs/iomap.c | 7 -------
+>  1 file changed, 7 deletions(-)
+
+<formletter>
+
+This is not the correct way to submit patches for inclusion in the
+stable kernel tree.  Please read:
+    https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
+for how to do this properly.
+
+</formletter>
