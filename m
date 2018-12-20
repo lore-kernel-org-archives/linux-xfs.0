@@ -1,82 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56540 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726898AbeLRUjr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 15:39:47 -0500
-Subject: [PATCH 4/6] xfs: move XFS_INODE_FORMAT_STR mappings to libxfs
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 18 Dec 2018 12:39:41 -0800
-Message-ID: <154516558181.31776.11748064239827461401.stgit@magnolia>
-In-Reply-To: <154516555511.31776.9868161112615886200.stgit@magnolia>
-References: <154516555511.31776.9868161112615886200.stgit@magnolia>
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:37637 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727644AbeLTH1O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Dec 2018 02:27:14 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <20181220053622.GD27176@magnolia>
+In-Reply-To: <20181220053622.GD27176@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 20 Dec 2018 09:27:02 +0200
+Message-ID: <CAOQ4uxj3cnZJNqZRt-ijGZcq8rjcBfiF1UrctZK4-jCe=UnEEw@mail.gmail.com>
+Subject: Re: [RFC PATCH] iomap: take responsibility for the filesystem iomap code
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, sandeen@sandeen.net
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Dec 20, 2018 at 8:47 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> XFS is the primary user of the filesystem iomap code, so we (the XFS
+> community, specifically) will explicitly take responsibility for its
+> maintenance.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> Just floating this as a test balloon.  Would like at acks from at least
+> Dave and Christoph since they wrote most of the fs iomap code.
+> ---
+>  MAINTAINERS |   10 ++++++++++
+>  1 file changed, 10 insertions(+)
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 8119141a926f..a36a88a72423 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -16518,6 +16518,16 @@ L:     alsa-devel@alsa-project.org (moderated for non-subscribers)
+>  S:     Supported
+>  F:     sound/xen/*
+>
+> +IOMAP FILESYSTEM LIBRARY
 
-Move XFS_INODE_FORMAT_STR to libxfs so that we don't forget to keep it
-updated, and add necessary TRACE_DEFINE_ENUM.
+Sort alphabetically please.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
----
- fs/xfs/libxfs/xfs_format.h |   10 ++++++++++
- fs/xfs/xfs_trace.h         |   10 +++++-----
- 2 files changed, 15 insertions(+), 5 deletions(-)
-
-
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index b15412e4c535..9bb3c48843ec 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -916,6 +916,9 @@ static inline uint xfs_dinode_size(int version)
- 
- /*
-  * Values for di_format
-+ *
-+ * This enum is used in string mapping in xfs_trace.h; please keep the
-+ * TRACE_DEFINE_ENUMs for it up to date.
-  */
- typedef enum xfs_dinode_fmt {
- 	XFS_DINODE_FMT_DEV,		/* xfs_dev_t */
-@@ -925,6 +928,13 @@ typedef enum xfs_dinode_fmt {
- 	XFS_DINODE_FMT_UUID		/* added long ago, but never used */
- } xfs_dinode_fmt_t;
- 
-+#define XFS_INODE_FORMAT_STR \
-+	{ XFS_DINODE_FMT_DEV,		"dev" }, \
-+	{ XFS_DINODE_FMT_LOCAL,		"local" }, \
-+	{ XFS_DINODE_FMT_EXTENTS,	"extent" }, \
-+	{ XFS_DINODE_FMT_BTREE,		"btree" }, \
-+	{ XFS_DINODE_FMT_UUID,		"uuid" }
-+
- /*
-  * Inode minimum and maximum sizes.
-  */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 3f57002ca660..94e289aca220 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1901,11 +1901,11 @@ TRACE_EVENT(xfs_dir2_leafn_moveents,
- 	{ 0,	"target" }, \
- 	{ 1,	"temp" }
- 
--#define XFS_INODE_FORMAT_STR \
--	{ 0,	"invalid" }, \
--	{ 1,	"local" }, \
--	{ 2,	"extent" }, \
--	{ 3,	"btree" }
-+TRACE_DEFINE_ENUM(XFS_DINODE_FMT_DEV);
-+TRACE_DEFINE_ENUM(XFS_DINODE_FMT_LOCAL);
-+TRACE_DEFINE_ENUM(XFS_DINODE_FMT_EXTENTS);
-+TRACE_DEFINE_ENUM(XFS_DINODE_FMT_BTREE);
-+TRACE_DEFINE_ENUM(XFS_DINODE_FMT_UUID);
- 
- DECLARE_EVENT_CLASS(xfs_swap_extent_class,
- 	TP_PROTO(struct xfs_inode *ip, int which),
+Thanks,
+Amir.
