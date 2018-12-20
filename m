@@ -1,55 +1,22 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57330 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:54439 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728688AbeLSUYw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Dec 2018 15:24:52 -0500
-Date: Wed, 19 Dec 2018 14:24:47 -0600
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH 6/8] xfs_repair: reinitialize the root directory nlink
- correctly
-Message-ID: <20181219202447.GA22276@redhat.com>
-References: <154524776457.28646.3004453037075812416.stgit@magnolia>
- <154524781113.28646.8112653175487549499.stgit@magnolia>
+        id S2387679AbeLTRlb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Dec 2018 12:41:31 -0500
+Date: Thu, 20 Dec 2018 18:41:30 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] iomap: Revert "fs/iomap.c: get/put the page in
+ iomap_page_create/release()"
+Message-ID: <20181220174130.GA21065@lst.de>
+References: <20181220122324.17082-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <154524781113.28646.8112653175487549499.stgit@magnolia>
+In-Reply-To: <20181220122324.17082-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, pjaroszynski@nvidia.com, william.kucharski@oracle.com, stable@vger.kernel.org, hch@lst.de, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
-On Wed, Dec 19, 2018 at 11:30:11AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In mk_root_dir, we reinitialize the root directory inode with a link
-> count of 1.  This differs from mkfs parseproto, which initializes the
-> root to have a link count of 2.  The nlink discrepancy in repair is
-> caught and corrected during phase 7, but this is unnecessary since we
-> should set it properly in the first place.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-
-Looks fine.
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
-
->  repair/phase6.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> 
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index 9477bc25..8a50b350 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -891,7 +891,7 @@ mk_root_dir(xfs_mount_t *mp)
->  	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
->  	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
->  
-> -	set_nlink(VFS_I(ip), 1);	/* account for . */
-> +	set_nlink(VFS_I(ip), 2);	/* account for . and .. */
->  
->  	times = XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD;
->  	if (ip->i_d.di_version == 3) {
-> 
+Lets fix the problem instead.  I'll dig into it.
