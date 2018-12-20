@@ -1,400 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:32800 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726956AbeLRXDx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 18:03:53 -0500
-Date: Tue, 18 Dec 2018 15:03:45 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 04/11] xfs: rework the truncate race handling in the
- writeback path
-Message-ID: <20181218230345.GR27208@magnolia>
-References: <20181203222503.30649-1-hch@lst.de>
- <20181203222503.30649-5-hch@lst.de>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:38123 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729161AbeLTMX3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Dec 2018 07:23:29 -0500
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] iomap: Revert "fs/iomap.c: get/put the page in iomap_page_create/release()"
+Date: Thu, 20 Dec 2018 23:23:24 +1100
+Message-Id: <20181220122324.17082-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181203222503.30649-5-hch@lst.de>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, pjaroszynski@nvidia.com, william.kucharski@oracle.com, stable@vger.kernel.org, hch@lst.de, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
-On Mon, Dec 03, 2018 at 05:24:56PM -0500, Christoph Hellwig wrote:
-> We currently try to handle the races with truncate and COW to data fork
-> conversion rather ad-hoc in a few places in the writeback path:
-> 
->  - xfs_map_blocks contains an i_size check for the COW fork only, and
->    returns an imap containing a hole to make the writeback code skip
->    the rest of the page
->  - xfs_iomap_write_allocate does another i_size check under ilock, and
->    does an extent tree lookup to find the last extent to skip everthing
->    beyond that, returning -EAGAIN if either is invalid to make the
->    writeback code exit early
->  - xfs_bmapi_write can ignore holes for delalloc conversions, but only
->    does so if called for the COW fork
-> 
-> Replace this with a coherent scheme:
-> 
->  - check i_size first in xfs_map_blocks, and skip any processing if we
->    already are beyond i_size by presenting a hole until the end of the
->    file to the caller
->  - in xfs_iomap_write_allocate check i_size again, and return -EAGAIN
->    if we are beyond it now that we've taken ilock.
->  - Skip holes for all delalloc conversion in xfs_bmapi_write instead
->    of doing a separate lookup before calling it
->  - in xfs_map_blocks retry the case where xfs_iomap_write_allocate
->    could not perform a conversion one single time if we were on a COW
->    fork to handle the race where an extent moved from the COW to the
->    data fork, and else return a hole to skip writeback as we must
->    have races with writeback
-> 
-> Overall this greatly simplifies the code, makes it more robust and also
-> handles the COW to data fork race properly that we did not handle
-> previosuly.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c |  27 ++++-----
->  fs/xfs/xfs_aops.c        |  61 +++++++++++++-------
->  fs/xfs/xfs_iomap.c       | 121 ++++++++++++---------------------------
->  3 files changed, 87 insertions(+), 122 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index f16d42abc500..1992ed8a60b0 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4305,28 +4305,21 @@ xfs_bmapi_write(
->  		/* in hole or beyond EOF? */
->  		if (eof || bma.got.br_startoff > bno) {
->  			/*
-> -			 * CoW fork conversions should /never/ hit EOF or
-> -			 * holes.  There should always be something for us
-> -			 * to work on.
-> +			 * It is possible that the extents have changed since
-> +			 * we did the read call as we dropped the ilock for a
-> +			 * while.  We have to be careful about truncates or hole
-> +			 * punchs here - we are not allowed to allocate
-> +			 * non-delalloc blocks here.
-> +			 *
-> +			 * The only protection against truncation is the pages
-> +			 * for the range we are being asked to convert are
-> +			 * locked and hence a truncate will block on them
-> +			 * first.
->  			 */
->  			ASSERT(!((flags & XFS_BMAPI_CONVERT) &&
->  			         (flags & XFS_BMAPI_COWFORK)));
->  
->  			if (flags & XFS_BMAPI_DELALLOC) {
-> -				/*
-> -				 * For the COW fork we can reasonably get a
-> -				 * request for converting an extent that races
-> -				 * with other threads already having converted
-> -				 * part of it, as there converting COW to
-> -				 * regular blocks is not protected using the
-> -				 * IOLOCK.
-> -				 */
-> -				ASSERT(flags & XFS_BMAPI_COWFORK);
-> -				if (!(flags & XFS_BMAPI_COWFORK)) {
-> -					error = -EIO;
-> -					goto error0;
-> -				}
-> -
->  				if (eof || bno >= end)
->  					break;
->  			} else {
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 5b6fab283316..124b8de37115 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -300,6 +300,7 @@ xfs_map_blocks(
->  {
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	struct xfs_mount	*mp = ip->i_mount;
-> +	loff_t			isize = i_size_read(inode);
->  	ssize_t			count = i_blocksize(inode);
->  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
->  	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
-> @@ -308,6 +309,15 @@ xfs_map_blocks(
->  	struct xfs_iext_cursor	icur;
->  	bool			imap_valid;
->  	int			error = 0;
-> +	int			retries = 0;
-> +
-> +	/*
-> +	 * If the offset is beyong the inode size we know that we raced with
-> +	 * trunacte and are done now.  Note that we'll recheck this again
+From: Dave Chinner <dchinner@redhat.com>
 
-"truncate" ^^^^^^^^
+This reverts commit 61c6de667263184125d5ca75e894fcad632b0dd3.
 
-> +	 * under the ilock later before doing delalloc conversions.
-> +	 */
-> +	if (offset > isize)
-> +		goto eof;
->  
->  	/*
->  	 * We have to make sure the cached mapping is within EOF to protect
-> @@ -320,7 +330,7 @@ xfs_map_blocks(
->  	 * mechanism to protect us from arbitrary extent modifying contexts, not
->  	 * just eofblocks.
->  	 */
-> -	xfs_trim_extent(&wpc->imap, 0, XFS_B_TO_FSB(mp, i_size_read(inode)));
-> +	xfs_trim_extent(&wpc->imap, 0, XFS_B_TO_FSB(mp, isize));
->  
->  	/*
->  	 * COW fork blocks can overlap data fork blocks even if the blocks
-> @@ -354,6 +364,7 @@ xfs_map_blocks(
->  	 * into real extents.  If we return without a valid map, it means we
->  	 * landed in a hole and we skip the block.
->  	 */
-> +retry:
->  	xfs_ilock(ip, XFS_ILOCK_SHARED);
->  	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
->  	       (ip->i_df.if_flags & XFS_IFEXTENTS));
-> @@ -370,26 +381,6 @@ xfs_map_blocks(
->  		xfs_iunlock(ip, XFS_ILOCK_SHARED);
->  
->  		wpc->fork = XFS_COW_FORK;
-> -
-> -		/*
-> -		 * Truncate can race with writeback since writeback doesn't
-> -		 * take the iolock and truncate decreases the file size before
-> -		 * it starts truncating the pages between new_size and old_size.
-> -		 * Therefore, we can end up in the situation where writeback
-> -		 * gets a CoW fork mapping but the truncate makes the mapping
-> -		 * invalid and we end up in here trying to get a new mapping.
-> -		 * bail out here so that we simply never get a valid mapping
-> -		 * and so we drop the write altogether.  The page truncation
-> -		 * will kill the contents anyway.
-> -		 */
-> -		if (offset > i_size_read(inode)) {
-> -			wpc->imap.br_blockcount = end_fsb - offset_fsb;
-> -			wpc->imap.br_startoff = offset_fsb;
-> -			wpc->imap.br_startblock = HOLESTARTBLOCK;
-> -			wpc->imap.br_state = XFS_EXT_NORM;
-> -			return 0;
-> -		}
-> -
->  		goto allocate_blocks;
->  	}
->  
-> @@ -440,13 +431,39 @@ xfs_map_blocks(
->  allocate_blocks:
->  	error = xfs_iomap_write_allocate(ip, wpc->fork, offset, &imap,
->  			&wpc->cow_seq);
-> -	if (error)
-> +	if (error) {
-> +		if (error == -EAGAIN)
-> +			goto truncate_race;
->  		return error;
-> +	}
->  	ASSERT(wpc->fork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
->  	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
->  	wpc->imap = imap;
->  	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->fork, &imap);
->  	return 0;
-> +
-> +truncate_race:
-> +	/*
-> +	 * If we failed to find the extent in the COW fork we might have raced
-> +	 * with a COW to data fork conversion or truncate.  Restart the lookup
-> +	 * to catch the extent in the data fork for the former case, but prevent
-> +	 * additional retries to avoid looping forever for the latter case.
-> +	 */
-> +	if (wpc->fork == XFS_COW_FORK && !retries++) {
-> +		imap_valid = false;
-> +		goto retry;
-> +	}
-> +eof:
-> +	/*
-> +	 * If we raced with truncate there might be no data left at this offset.
-> +	 * In that case we need to return a hole so that the writeback code
-> +	 * skips writeback for the rest of the file.
-> +	 */
-> +	wpc->imap.br_startoff = offset_fsb;
-> +	wpc->imap.br_blockcount = end_fsb - offset_fsb;
-> +	wpc->imap.br_startblock = HOLESTARTBLOCK;
-> +	wpc->imap.br_state = XFS_EXT_NORM;
-> +	return 0;
+The reverted commit added page reference counting to iomap page
+structures that are used to track block size < page size state. This
+was supposed to align the code with page migration page accounting
+assumptions, but what it has done instead is break XFS filesystems.
+Every fstests run I've done on sub-page block size XFS filesystems
+has since picking up this commit 2 days ago has failed with bad page
+state errors such as:
 
-This function has become rather spaghetti-like.  Any way we can clean
-this up reasonably?
+# ./run_check.sh "-m rmapbt=1,reflink=1 -i sparse=1 -b size=1k" "generic/038"
+....
+SECTION       -- xfs
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 test1 4.20.0-rc6-dgc+
+MKFS_OPTIONS  -- -f -m rmapbt=1,reflink=1 -i sparse=1 -b size=1k /dev/sdc
+MOUNT_OPTIONS -- /dev/sdc /mnt/scratch
 
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 32a7c169e096..6acfed2ae858 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -685,14 +685,13 @@ xfs_iomap_write_allocate(
->  {
->  	xfs_mount_t	*mp = ip->i_mount;
->  	struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
-> -	xfs_fileoff_t	offset_fsb, last_block;
-> +	xfs_fileoff_t	offset_fsb;
->  	xfs_fileoff_t	end_fsb, map_start_fsb;
->  	xfs_filblks_t	count_fsb;
->  	xfs_trans_t	*tp;
->  	int		nimaps;
->  	int		error = 0;
->  	int		flags = XFS_BMAPI_DELALLOC;
-> -	int		nres;
->  
->  	if (whichfork == XFS_COW_FORK)
->  		flags |= XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC;
-> @@ -712,95 +711,51 @@ xfs_iomap_write_allocate(
->  
->  	while (count_fsb != 0) {
->  		/*
-> -		 * Set up a transaction with which to allocate the
-> -		 * backing store for the file.  Do allocations in a
-> -		 * loop until we get some space in the range we are
-> -		 * interested in.  The other space that might be allocated
-> -		 * is in the delayed allocation extent on which we sit
-> -		 * but before our buffer starts.
-> +		 * We have already reserved space for the extent and any
-> +		 * indirect blocks when creating the delalloc extent, there
-> +		 * is no need to reserve space in this transaction again.
->  		 */
-> -		nimaps = 0;
-> -		while (nimaps == 0) {
+generic/038 454s ...
+ run fstests generic/038 at 2018-12-20 18:43:05
+ XFS (sdc): Unmounting Filesystem
+ XFS (sdc): Mounting V5 Filesystem
+ XFS (sdc): Ending clean mount
+ BUG: Bad page state in process kswapd0  pfn:3a7fa
+ page:ffffea0000ccbeb0 count:0 mapcount:0 mapping:ffff88800d9b6360 index:0x1
+ flags: 0xfffffc0000000()
+ raw: 000fffffc0000000 dead000000000100 dead000000000200 ffff88800d9b6360
+ raw: 0000000000000001 0000000000000000 00000000ffffffff
+ page dumped because: non-NULL mapping
+ CPU: 0 PID: 676 Comm: kswapd0 Not tainted 4.20.0-rc6-dgc+ #915
+ Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/2014
+ Call Trace:
+  dump_stack+0x67/0x90
+  bad_page.cold.116+0x8a/0xbd
+  free_pcppages_bulk+0x4bf/0x6a0
+  free_unref_page_list+0x10f/0x1f0
+  shrink_page_list+0x49d/0xf50
+  shrink_inactive_list+0x19d/0x3b0
+  shrink_node_memcg.constprop.77+0x398/0x690
+  ? shrink_slab.constprop.81+0x278/0x3f0
+  shrink_node+0x7a/0x2f0
+  kswapd+0x34b/0x6d0
+  ? node_reclaim+0x240/0x240
+  kthread+0x11f/0x140
+  ? __kthread_bind_mask+0x60/0x60
+  ret_from_fork+0x24/0x30
+ Disabling lock debugging due to kernel taint
+....
 
-This removal of the nimaps == 0 loop bothers me: why is doing so safe?
+The failures are from anyway that frees pages and empties the
+per-cpu page magazines, so it's not a predictable failure or an easy
+to debug failure.
 
-I see that we can return from xfs_bmapi_write with nimaps == 0 if
-something is trying to punch or truncate the range that we're writing
-back, but it also seems to me that bmapi_write can return zero mappings
-because xfs_bmapi_allocate() didn't find any blocks.  I /think/ that's
-impossible because we're converting delalloc reservations and so we
-should never run out of space, right?
+generic/038 is a reliable reproducer of this problem - it has a 9 in
+10 failure rate on one of my test machines. Failure on other
+machines have been at random points in fstests runs but every run
+has ended up tripping this problem. Hence generic/038 was used to
+bisect the failure because it was the most reliable failure.
 
-Anyway, when _write_allocate gets zero mappings, it'll return -EAGAIN to
-xfs_map_blocks, which will retry once to cover the case of racing with
-cow -> data fork remapping but otherwise it won't bother?  And that's
-why it's fine that only to loop once?
+It is too close to the 4.20 release (not to mention holidays) to
+try to diagnose, fix and test the underlying cause of the problem,
+so reverting the commit is the only option we have right now. The
+revert has been tested against a current tot 4.20-rc7+ kernel across
+multiple machines running sub-page block size XFs filesystems and
+none of the bad page state failures have been seen.
 
-Am I reasoning this correctly?
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/iomap.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
---D
-
-> -			nres = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
-> -			/*
-> -			 * We have already reserved space for the extent and any
-> -			 * indirect blocks when creating the delalloc extent,
-> -			 * there is no need to reserve space in this transaction
-> -			 * again.
-> -			 */
-> -			error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0,
-> -					0, XFS_TRANS_RESERVE, &tp);
-> -			if (error)
-> -				return error;
-> +		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0,
-> +				0, XFS_TRANS_RESERVE, &tp);
-> +		if (error)
-> +			return error;
->  
-> -			xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -			xfs_trans_ijoin(tp, ip, 0);
-> +		xfs_ilock(ip, XFS_ILOCK_EXCL);
->  
-> -			/*
-> -			 * it is possible that the extents have changed since
-> -			 * we did the read call as we dropped the ilock for a
-> -			 * while. We have to be careful about truncates or hole
-> -			 * punchs here - we are not allowed to allocate
-> -			 * non-delalloc blocks here.
-> -			 *
-> -			 * The only protection against truncation is the pages
-> -			 * for the range we are being asked to convert are
-> -			 * locked and hence a truncate will block on them
-> -			 * first.
-> -			 *
-> -			 * As a result, if we go beyond the range we really
-> -			 * need and hit an delalloc extent boundary followed by
-> -			 * a hole while we have excess blocks in the map, we
-> -			 * will fill the hole incorrectly and overrun the
-> -			 * transaction reservation.
-> -			 *
-> -			 * Using a single map prevents this as we are forced to
-> -			 * check each map we look for overlap with the desired
-> -			 * range and abort as soon as we find it. Also, given
-> -			 * that we only return a single map, having one beyond
-> -			 * what we can return is probably a bit silly.
-> -			 *
-> -			 * We also need to check that we don't go beyond EOF;
-> -			 * this is a truncate optimisation as a truncate sets
-> -			 * the new file size before block on the pages we
-> -			 * currently have locked under writeback. Because they
-> -			 * are about to be tossed, we don't need to write them
-> -			 * back....
-> -			 */
-> -			nimaps = 1;
-> -			end_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
-> -			error = xfs_bmap_last_offset(ip, &last_block,
-> -							XFS_DATA_FORK);
-> -			if (error)
-> +		/*
-> +		 * We need to check that we don't go beyond EOF; this is a
-> +		 * truncate optimisation as a truncate sets the new file size
-> +		 * before block on the pages we currently have locked under
-> +		 * writeback.  Because they are about to be tossed, we don't
-> +		 * need to write them back....
-> +		 */
-> +		end_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
-> +		if (map_start_fsb + count_fsb > end_fsb) {
-> +			count_fsb = end_fsb - map_start_fsb;
-> +			if (count_fsb == 0) {
-> +				error = -EAGAIN;
->  				goto trans_cancel;
-> -
-> -			last_block = XFS_FILEOFF_MAX(last_block, end_fsb);
-> -			if ((map_start_fsb + count_fsb) > last_block) {
-> -				count_fsb = last_block - map_start_fsb;
-> -				if (count_fsb == 0) {
-> -					error = -EAGAIN;
-> -					goto trans_cancel;
-> -				}
->  			}
-> +		}
->  
-> -			/*
-> -			 * From this point onwards we overwrite the imap
-> -			 * pointer that the caller gave to us.
-> -			 */
-> -			error = xfs_bmapi_write(tp, ip, map_start_fsb,
-> -						count_fsb, flags, nres, imap,
-> -						&nimaps);
-> -			if (error)
-> -				goto trans_cancel;
-> +		nimaps = 1;
-> +		xfs_trans_ijoin(tp, ip, 0);
-> +		error = xfs_bmapi_write(tp, ip, map_start_fsb, count_fsb, flags,
-> +				XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK),
-> +				imap, &nimaps);
-> +		if (error)
-> +			goto trans_cancel;
->  
-> -			error = xfs_trans_commit(tp);
-> -			if (error)
-> -				goto error0;
-> +		error = xfs_trans_commit(tp);
-> +		if (error)
-> +			goto error0;
->  
-> -			if (whichfork == XFS_COW_FORK)
-> -				*cow_seq = READ_ONCE(ifp->if_seq);
-> -			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -		}
-> +		if (whichfork == XFS_COW_FORK)
-> +			*cow_seq = READ_ONCE(ifp->if_seq);
-> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +
-> +		if (nimaps == 0)
-> +			return -EAGAIN;
->  
->  		/*
->  		 * See if we were able to allocate an extent that
-> -- 
-> 2.19.1
-> 
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 5bc172f3dfe8..d6bc98ae8d35 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -116,12 +116,6 @@ iomap_page_create(struct inode *inode, struct page *page)
+ 	atomic_set(&iop->read_count, 0);
+ 	atomic_set(&iop->write_count, 0);
+ 	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
+-
+-	/*
+-	 * migrate_page_move_mapping() assumes that pages with private data have
+-	 * their count elevated by 1.
+-	 */
+-	get_page(page);
+ 	set_page_private(page, (unsigned long)iop);
+ 	SetPagePrivate(page);
+ 	return iop;
+@@ -138,7 +132,6 @@ iomap_page_release(struct page *page)
+ 	WARN_ON_ONCE(atomic_read(&iop->write_count));
+ 	ClearPagePrivate(page);
+ 	set_page_private(page, 0);
+-	put_page(page);
+ 	kfree(iop);
+ }
+ 
+-- 
+2.19.1
