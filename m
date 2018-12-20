@@ -1,69 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:47618 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727213AbeLRXij (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 18:38:39 -0500
-Date: Tue, 18 Dec 2018 15:38:28 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 09/11] xfs: report IOMAP_F_SHARED from
- xfs_file_iomap_begin_delay
-Message-ID: <20181218233828.GU27208@magnolia>
-References: <20181203222503.30649-1-hch@lst.de>
- <20181203222503.30649-10-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:47948 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731085AbeLTQKo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Dec 2018 11:10:44 -0500
+Subject: Re: Same size drive has less usable space
+References: <20181220131305.2a84b717@lud1.home>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6ab0a568-4732-905a-d45d-209f4bb0cfb0@sandeen.net>
+Date: Thu, 20 Dec 2018 10:10:42 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181203222503.30649-10-hch@lst.de>
+In-Reply-To: <20181220131305.2a84b717@lud1.home>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Luciano ES <lucmove@gmail.com>, linux-xfs@vger.kernel.org
 
-On Mon, Dec 03, 2018 at 05:25:01PM -0500, Christoph Hellwig wrote:
-> No user of it in the iomap code at the moment, but we should not
-> actively report wrong information if we can trivially get it right.
+On 12/20/18 9:13 AM, Luciano ES wrote:
+> I have a new drive for backups. 
+> I copied everything over and now I have this problem:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_iomap.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
+> Filesystem      Size  Used 	 Avail 	Use% 	Mounted on
+> /dev/sda1   	931G  914G   18G  	99% 	/xx
+> /dev/sdb1   	931G  920G   11G  	99% 	/xxbkp
 > 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index d19f99e5476a..bbc5d2e06b06 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -541,7 +541,7 @@ xfs_file_iomap_begin_delay(
->  	struct xfs_bmbt_irec	imap, cmap;
->  	struct xfs_iext_cursor	icur, ccur;
->  	xfs_fsblock_t		prealloc_blocks = 0;
-> -	bool			eof = false, cow_eof = false, shared;
-> +	bool			eof = false, cow_eof = false, shared = false;
->  	int			whichfork = XFS_DATA_FORK;
->  	int			error = 0;
->  
-> @@ -709,13 +709,14 @@ xfs_file_iomap_begin_delay(
->  		if (imap.br_startoff > offset_fsb) {
->  			xfs_trim_extent(&cmap, offset_fsb,
->  					imap.br_startoff - offset_fsb);
-> -			error = xfs_bmbt_to_iomap(ip, iomap, &cmap, false);
-> +			error = xfs_bmbt_to_iomap(ip, iomap, &cmap, true);
-
-Does this belong in the previous patch?  (Maybe all of it?)
-
---D
-
->  			goto out_unlock;
->  		}
->  		/* ensure we only report blocks we have a reservation for */
->  		xfs_trim_extent(&imap, cmap.br_startoff, cmap.br_blockcount);
-> +		shared = true;
->  	}
-> -	error = xfs_bmbt_to_iomap(ip, iomap, &imap, false);
-> +	error = xfs_bmbt_to_iomap(ip, iomap, &imap, shared);
->  out_unlock:
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return error;
-> -- 
-> 2.19.1
+> So 914GB from the old drive expand and become 920GB. The new drive 
+> is supposed to be the same size, but for some reason it can't 
+> really hold it all. I will be forced to waste precious gigabytes.
 > 
+> I tried to format the new one exactly like the old one, but 
+> it was not possible:
+> 
+> $ xfs_info /xx
+> meta-data=/dev/sda1     isize=256    agcount=8, agsize=30506944 blks
+>          =              sectsz=4096  attr=2, projid32bit=1
+>          =              crc=0        finobt=0 spinodes=0 rmapbt=0
+>          =              reflink=0
+> data     =              bsize=4096   blocks=244055552, imaxpct=25
+>          =              sunit=0      swidth=0 blks
+> naming   =version 2     bsize=4096   ascii-ci=0 ftype=0
+> log      =internal      bsize=4096   blocks=119167, version=2
+>          =              sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none          extsz=4096   blocks=0, rtextents=0
+> 
+> 
+> $ xfs_info /xxbkp
+> meta-data=/dev/sdb1     isize=512    agcount=8, agsize=61013888 blks
+>          =              sectsz=512   attr=2, projid32bit=1
+>          =              crc=1        finobt=1 spinodes=1 rmapbt=0
+>          =              reflink=0
+> data     =              bsize=2048   blocks=488111104, imaxpct=25
+>          =              sunit=0      swidth=0 blks
+> naming   =version 2     bsize=4096   ascii-ci=0 ftype=1
+> log      =internal      bsize=2048   blocks=238335, version=2
+>          =              sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none          extsz=4096   blocks=0, rtextents=0
+> 
+> 
+> I guess at least part of the problem is CRC enabled in the second 
+> one. So, is there anything I can do to make all the data fit in the 
+> new drive?
+
+Well, you have larger inodes on xxbkp for starters.  If you want,
+
+# mkfs.xfs -m crc=0,finobt=1 -i sparse=0 -n ftype=0
+
+should get you the same geometry.  This is all documented in the mfks.xfs
+manpage, btw.
+
+But beware that copying sparse files w/o maintaining sparseness (for example)
+will also consume more space.  If you want a nothing less than a bit-for-bit
+copy, use dd.  ;)
+
+-Eric
