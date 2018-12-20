@@ -1,209 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:59000 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726811AbeLRVqn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Dec 2018 16:46:43 -0500
-Date: Tue, 18 Dec 2018 13:46:37 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/11] xfs: make xfs_bmbt_to_iomap more useful
-Message-ID: <20181218214637.GO27208@magnolia>
-References: <20181203222503.30649-1-hch@lst.de>
- <20181203222503.30649-6-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181203222503.30649-6-hch@lst.de>
+Received: from mail-wr1-f44.google.com ([209.85.221.44]:39488 "EHLO
+        mail-wr1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731279AbeLTOTx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Dec 2018 09:19:53 -0500
+Received: by mail-wr1-f44.google.com with SMTP id t27so1944422wra.6
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Dec 2018 06:19:52 -0800 (PST)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 12.2 \(3445.102.3\))
+Subject: Re: XFS metadata corruption
+From: Predrag Mijatovic <predmijat@gmail.com>
+In-Reply-To: <9d535706-8b75-7eb7-bf6c-a7bace790ed1@sandeen.net>
+Date: Thu, 20 Dec 2018 15:19:49 +0100
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <BD7C2D2C-0B16-4BA1-8F81-39A4E5F7461E@gmail.com>
+References: <93641AD9-AD79-4400-8C7F-14C5D7746709@gmail.com>
+ <5fe33e22-e034-db8c-f62d-8124e731c5dd@sandeen.net>
+ <6E2E81FA-9677-4385-9ADF-46E06B6F5150@gmail.com>
+ <5804b809-4656-9471-9d06-64c5a58e99b0@sandeen.net>
+ <9CE4CDCD-DDCE-470D-9AE8-69D2E5C6E1FE@gmail.com>
+ <9d535706-8b75-7eb7-bf6c-a7bace790ed1@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Dec 03, 2018 at 05:24:57PM -0500, Christoph Hellwig wrote:
-> Move checking for invalid zero blocks and setting of various iomap flags
-> into this helper.  Also make it deal with "raw" delalloc extents to
-> avoid clutter in the callers.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Had to cancel it at 24G at size after I read that it can be 10% of =
+actual partition size :)
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  fs/xfs/xfs_iomap.c | 84 +++++++++++++++++++++-------------------------
->  fs/xfs/xfs_iomap.h |  4 +--
->  fs/xfs/xfs_pnfs.c  |  2 +-
->  3 files changed, 41 insertions(+), 49 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 6acfed2ae858..9f1fd224bb06 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -35,18 +35,40 @@
->  #define XFS_WRITEIO_ALIGN(mp,off)	(((off) >> mp->m_writeio_log) \
->  						<< mp->m_writeio_log)
->  
-> -void
-> +static int
-> +xfs_alert_fsblock_zero(
-> +	xfs_inode_t	*ip,
-> +	xfs_bmbt_irec_t	*imap)
-> +{
-> +	xfs_alert_tag(ip->i_mount, XFS_PTAG_FSBLOCK_ZERO,
-> +			"Access to block zero in inode %llu "
-> +			"start_block: %llx start_off: %llx "
-> +			"blkcnt: %llx extent-state: %x",
-> +		(unsigned long long)ip->i_ino,
-> +		(unsigned long long)imap->br_startblock,
-> +		(unsigned long long)imap->br_startoff,
-> +		(unsigned long long)imap->br_blockcount,
-> +		imap->br_state);
-> +	return -EFSCORRUPTED;
-> +}
-> +
-> +int
->  xfs_bmbt_to_iomap(
->  	struct xfs_inode	*ip,
->  	struct iomap		*iomap,
-> -	struct xfs_bmbt_irec	*imap)
-> +	struct xfs_bmbt_irec	*imap,
-> +	bool			shared)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  
-> +	if (unlikely(!imap->br_startblock && !XFS_IS_REALTIME_INODE(ip)))
-> +		return xfs_alert_fsblock_zero(ip, imap);
-> +
->  	if (imap->br_startblock == HOLESTARTBLOCK) {
->  		iomap->addr = IOMAP_NULL_ADDR;
->  		iomap->type = IOMAP_HOLE;
-> -	} else if (imap->br_startblock == DELAYSTARTBLOCK) {
-> +	} else if (imap->br_startblock == DELAYSTARTBLOCK ||
-> +		   isnullstartblock(imap->br_startblock)) {
->  		iomap->addr = IOMAP_NULL_ADDR;
->  		iomap->type = IOMAP_DELALLOC;
->  	} else {
-> @@ -60,6 +82,13 @@ xfs_bmbt_to_iomap(
->  	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
->  	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
->  	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
-> +
-> +	if (xfs_ipincount(ip) &&
-> +	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
-> +		iomap->flags |= IOMAP_F_DIRTY;
-> +	if (shared)
-> +		iomap->flags |= IOMAP_F_SHARED;
-> +	return 0;
->  }
->  
->  static void
-> @@ -138,23 +167,6 @@ xfs_iomap_eof_align_last_fsb(
->  	return 0;
->  }
->  
-> -STATIC int
-> -xfs_alert_fsblock_zero(
-> -	xfs_inode_t	*ip,
-> -	xfs_bmbt_irec_t	*imap)
-> -{
-> -	xfs_alert_tag(ip->i_mount, XFS_PTAG_FSBLOCK_ZERO,
-> -			"Access to block zero in inode %llu "
-> -			"start_block: %llx start_off: %llx "
-> -			"blkcnt: %llx extent-state: %x",
-> -		(unsigned long long)ip->i_ino,
-> -		(unsigned long long)imap->br_startblock,
-> -		(unsigned long long)imap->br_startoff,
-> -		(unsigned long long)imap->br_blockcount,
-> -		imap->br_state);
-> -	return -EFSCORRUPTED;
-> -}
-> -
->  int
->  xfs_iomap_write_direct(
->  	xfs_inode_t	*ip,
-> @@ -649,17 +661,7 @@ xfs_file_iomap_begin_delay(
->  	iomap->flags |= IOMAP_F_NEW;
->  	trace_xfs_iomap_alloc(ip, offset, count, XFS_DATA_FORK, &got);
->  done:
-> -	if (isnullstartblock(got.br_startblock))
-> -		got.br_startblock = DELAYSTARTBLOCK;
-> -
-> -	if (!got.br_startblock) {
-> -		error = xfs_alert_fsblock_zero(ip, &got);
-> -		if (error)
-> -			goto out_unlock;
-> -	}
-> -
-> -	xfs_bmbt_to_iomap(ip, iomap, &got);
-> -
-> +	error = xfs_bmbt_to_iomap(ip, iomap, &got, false);
->  out_unlock:
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return error;
-> @@ -1097,15 +1099,7 @@ xfs_file_iomap_begin(
->  	trace_xfs_iomap_alloc(ip, offset, length, XFS_DATA_FORK, &imap);
->  
->  out_finish:
-> -	if (xfs_ipincount(ip) && (ip->i_itemp->ili_fsync_fields
-> -				& ~XFS_ILOG_TIMESTAMP))
-> -		iomap->flags |= IOMAP_F_DIRTY;
-> -
-> -	xfs_bmbt_to_iomap(ip, iomap, &imap);
-> -
-> -	if (shared)
-> -		iomap->flags |= IOMAP_F_SHARED;
-> -	return 0;
-> +	return xfs_bmbt_to_iomap(ip, iomap, &imap, shared);
->  
->  out_found:
->  	ASSERT(nimaps);
-> @@ -1228,12 +1222,10 @@ xfs_xattr_iomap_begin(
->  out_unlock:
->  	xfs_iunlock(ip, lockmode);
->  
-> -	if (!error) {
-> -		ASSERT(nimaps);
-> -		xfs_bmbt_to_iomap(ip, iomap, &imap);
-> -	}
-> -
-> -	return error;
-> +	if (error)
-> +		return error;
-> +	ASSERT(nimaps);
-> +	return xfs_bmbt_to_iomap(ip, iomap, &imap, false);
->  }
->  
->  const struct iomap_ops xfs_xattr_iomap_ops = {
-> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-> index c6170548831b..ed27e41b687c 100644
-> --- a/fs/xfs/xfs_iomap.h
-> +++ b/fs/xfs/xfs_iomap.h
-> @@ -17,8 +17,8 @@ int xfs_iomap_write_allocate(struct xfs_inode *, int, xfs_off_t,
->  			struct xfs_bmbt_irec *, unsigned int *);
->  int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
->  
-> -void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
-> -		struct xfs_bmbt_irec *);
-> +int xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
-> +		struct xfs_bmbt_irec *, bool shared);
->  xfs_extlen_t xfs_eof_alignment(struct xfs_inode *ip, xfs_extlen_t extsize);
->  
->  static inline xfs_filblks_t
-> diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-> index f44c3599527d..bde2c9f56a46 100644
-> --- a/fs/xfs/xfs_pnfs.c
-> +++ b/fs/xfs/xfs_pnfs.c
-> @@ -185,7 +185,7 @@ xfs_fs_map_blocks(
->  	}
->  	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
->  
-> -	xfs_bmbt_to_iomap(ip, iomap, &imap);
-> +	error = xfs_bmbt_to_iomap(ip, iomap, &imap, false);
->  	*device_generation = mp->m_generation;
->  	return error;
->  out_unlock:
-> -- 
-> 2.19.1
-> 
+> On Dec 18, 2018, at 9:43 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>=20
+> On 12/18/18 2:42 PM, Predrag Mijatovic wrote:
+>> I realize it will be less than 12T (btw it=E2=80=99s almost full) but =
+it will still take a lot (more than few GBs), no?
+>=20
+> yes, possibly.  If it's unwieldy we can try to do some remote
+> debugging with xfs_db, but having a metadata image can be very helpful
+> at times.  No promises though.  ;)
+>=20
+> Thanks,
+> -Eric
+>=20
+>> Also, I read on RedHat website that it should be unmounted...
+>>=20
+>>> On Dec 18, 2018, at 9:32 PM, Eric Sandeen <sandeen@sandeen.net> =
+wrote:
+>>>=20
+>>>> On 12/18/18 2:26 PM, Predrag Mijatovic wrote:
+>>>> It=E2=80=99s a 12T partition so it will take a while (plus I =
+can=E2=80=99t start it before tomorrow morning)
+>>>=20
+>>> Just FYI, a metadump is metadata-only so the time and space it takes =
+will
+>>> be a) much less than a full 12T and b) proportional to the amount of
+>>> metadata you have in the filesystem.
+>>>=20
+>>> Note, the fs does need to be offline to get a metadump.
+>>>=20
+>>> Thanks,
+>>> -Eric
+>>>=20
+>>>=20
+>>=20
