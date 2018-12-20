@@ -1,33 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:54638 "EHLO
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:60068 "EHLO
         ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2387666AbeLTUxr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Dec 2018 15:53:47 -0500
-Date: Fri, 21 Dec 2018 07:53:42 +1100
+        by vger.kernel.org with ESMTP id S1729578AbeLTU5Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Dec 2018 15:57:24 -0500
+Date: Fri, 21 Dec 2018 07:57:21 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] iomap: Revert "fs/iomap.c: get/put the page in
  iomap_page_create/release()"
-Message-ID: <20181220205342.GC4205@dastard>
+Message-ID: <20181220205721.GD4205@dastard>
 References: <20181220122324.17082-1-david@fromorbit.com>
- <20181220174130.GA21065@lst.de>
+ <20181220122825.GA17138@kroah.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181220174130.GA21065@lst.de>
+In-Reply-To: <20181220122825.GA17138@kroah.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, pjaroszynski@nvidia.com, william.kucharski@oracle.com, stable@vger.kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, pjaroszynski@nvidia.com, william.kucharski@oracle.com, stable@vger.kernel.org, hch@lst.de, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
-On Thu, Dec 20, 2018 at 06:41:30PM +0100, Christoph Hellwig wrote:
-> Lets fix the problem instead.  I'll dig into it.
+On Thu, Dec 20, 2018 at 01:28:25PM +0100, Greg KH wrote:
+> On Thu, Dec 20, 2018 at 11:23:24PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > This reverts commit 61c6de667263184125d5ca75e894fcad632b0dd3.
 
-I'd say we still need to revert this for 4.20 which is due for
-release in a couple of days. Most of us are going to be on holidays
-and away from computers for the next week, so I don't think we
-have time to adequately review and test a new fix (which doesn't
-exist yet) before the release occurs.
+<snip>
+
+> <formletter>
+> 
+> This is not the correct way to submit patches for inclusion in the
+> stable kernel tree.  Please read:
+>     https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
+> for how to do this properly.
+> 
+> </formletter>
+
+This wasn't a stable kernel patch submission. This was to let the
+stable kernel maintainers know that a commit that was submitted for
+stable kernel inclusion (via a cc stable in the commit message) is
+buggy and should not be backported. i.e. if you've already queued/
+backported 61c6de6672 then you need to drop it from your trees.
 
 Cheers,
 
