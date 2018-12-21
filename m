@@ -1,62 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:64356 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389028AbeLUWFf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Dec 2018 17:05:35 -0500
-Date: Sat, 22 Dec 2018 09:05:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] iomap: take responsibility for the filesystem iomap
- code
-Message-ID: <20181221220532.GG4205@dastard>
-References: <20181220053622.GD27176@magnolia>
- <20181220190401.GD27208@magnolia>
+Received: from mail.kernel.org ([198.145.29.99]:50416 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730294AbeLUHkp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Dec 2018 02:40:45 -0500
+Date: Fri, 21 Dec 2018 08:40:42 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] iomap: Revert "fs/iomap.c: get/put the page in
+ iomap_page_create/release()"
+Message-ID: <20181221074042.GA8633@kroah.com>
+References: <20181220122324.17082-1-david@fromorbit.com>
+ <20181220122825.GA17138@kroah.com>
+ <20181220205721.GD4205@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181220190401.GD27208@magnolia>
+In-Reply-To: <20181220205721.GD4205@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, Amir Goldstein <amir73il@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, pjaroszynski@nvidia.com, william.kucharski@oracle.com, stable@vger.kernel.org, hch@lst.de, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
-On Thu, Dec 20, 2018 at 11:04:01AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Dec 21, 2018 at 07:57:21AM +1100, Dave Chinner wrote:
+> On Thu, Dec 20, 2018 at 01:28:25PM +0100, Greg KH wrote:
+> > On Thu, Dec 20, 2018 at 11:23:24PM +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > This reverts commit 61c6de667263184125d5ca75e894fcad632b0dd3.
 > 
-> XFS is the primary user of the filesystem iomap code, so we (the XFS
-> community, specifically) will explicitly take responsibility for its
-> maintenance.
+> <snip>
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: maintain alphabetization, add Christoph as a Real Person patch
-> mailing target.  Still looking for acks from Christoph & Dave...
-
-> ---
->  MAINTAINERS |   11 +++++++++++
->  1 file changed, 11 insertions(+)
+> > <formletter>
+> > 
+> > This is not the correct way to submit patches for inclusion in the
+> > stable kernel tree.  Please read:
+> >     https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
+> > for how to do this properly.
+> > 
+> > </formletter>
 > 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 3318f30903b2..a3ccbeebb377 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -7783,6 +7783,17 @@ L:	linux-serial@vger.kernel.org
->  S:	Maintained
->  F:	drivers/tty/serial/ioc3_serial.c
->  
-> +IOMAP FILESYSTEM LIBRARY
-> +M:	Christoph Hellwig <hch@infradead.org>
-> +M:	linux-xfs@vger.kernel.org
-> +M:	linux-fsdevel@vger.kernel.org
-> +L:	linux-xfs@vger.kernel.org
-> +L:	linux-fsdevel@vger.kernel.org
-> +T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-> +S:	Supported
-> +F:	fs/iomap.c
-> +F:	include/linux/iomap.h
+> This wasn't a stable kernel patch submission. This was to let the
+> stable kernel maintainers know that a commit that was submitted for
+> stable kernel inclusion (via a cc stable in the commit message) is
+> buggy and should not be backported. i.e. if you've already queued/
+> backported 61c6de6672 then you need to drop it from your trees.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+As the commit 61c6de667263 ("fs/iomap.c: get/put the page in
+iomap_page_create/release()") was tagged for a stable release (and is in
+4.19.11) it would be nice to also add the cc: stable in the revert.
+When you just blindly send it to the stable mailing list, we have no
+idea what to do with it, hence the automated form letter that was sent.
 
--- 
-Dave Chinner
-david@fromorbit.com
+Now that this is in Linus's tree, I'll dig out the revert and remember
+to queue it up for the next round of stable updates, thanks for letting
+us know.
+
+greg k-h
