@@ -1,61 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:59978 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726686AbfAACJT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:09:19 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x01299Hd170793
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:09:18 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2pp1jqx3sh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:09:18 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x0129INE003761
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:09:18 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x0129I8S019360
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:09:18 GMT
-Subject: [PATCH 7/8] xfs: abort xattr scrub if fatal signals are pending
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 31 Dec 2018 18:09:17 -0800
-Message-ID: <154630855701.14372.16042422623260751227.stgit@magnolia>
-In-Reply-To: <154630850739.14372.14000129432637481206.stgit@magnolia>
-References: <154630850739.14372.14000129432637481206.stgit@magnolia>
+Received: from verein.lst.de ([213.95.11.211]:57949 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731114AbeLUJjU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Dec 2018 04:39:20 -0500
+Date: Fri, 21 Dec 2018 10:39:19 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] iomap: Revert "fs/iomap.c: get/put the page in
+ iomap_page_create/release()"
+Message-ID: <20181221093919.GA2337@lst.de>
+References: <20181220122324.17082-1-david@fromorbit.com> <20181220174130.GA21065@lst.de> <20181220205342.GC4205@dastard> <CAHk-=wgdbrbV+jNUmhJ7KZsR77CY+pUF7EmtxP2mWKnE8ZyFSQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHk-=wgdbrbV+jNUmhJ7KZsR77CY+pUF7EmtxP2mWKnE8ZyFSQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: david@fromorbit.com, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, pjaroszynski@nvidia.com, william.kucharski@oracle.com, stable@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Dec 20, 2018 at 02:42:15PM -0800, Linus Torvalds wrote:
+> Yeah. I already applied the revert. If somebody finds a "duh" moment,
+> and an alternate fix gets posted and tested we can revert the revert
+> and fix it properly, but for 4.20 (and for xmas) I do think that just
+> going back to the previous state is otherwise the right choice.
 
-The extended attribute scrubber should abort the "read all attrs" loop
-if there's a fatal signal pending on the process.
+As far as I can tell the commit simply missed updating the recounts
+in the actual migrate callback for which it was added.  The fixed
+version looks something like this (still running xfstests):
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/attr.c |    5 +++++
- 1 file changed, 5 insertions(+)
-
-
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 81d5e90547a1..9960bc5b5d76 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -82,6 +82,11 @@ xchk_xattr_listent(
- 
- 	sx = container_of(context, struct xchk_xattr, context);
- 
-+	if (xchk_should_terminate(sx->sc, &error)) {
-+		context->seen_enough = 1;
-+		return;
-+	}
+diff --git a/fs/iomap.c b/fs/iomap.c
+index d6bc98ae8d35..20c9c1cadd4e 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -116,6 +116,12 @@ iomap_page_create(struct inode *inode, struct page *page)
+ 	atomic_set(&iop->read_count, 0);
+ 	atomic_set(&iop->write_count, 0);
+ 	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
 +
- 	if (flags & XFS_ATTR_INCOMPLETE) {
- 		/* Incomplete attr key, just mark the inode for preening. */
- 		xchk_ino_set_preen(sx->sc, context->dp->i_ino);
++	/*
++	 * migrate_page_move_mapping() assumes that pages with private data have
++	 * their count elevated by 1.
++	 */
++	get_page(page);
+ 	set_page_private(page, (unsigned long)iop);
+ 	SetPagePrivate(page);
+ 	return iop;
+@@ -132,6 +138,7 @@ iomap_page_release(struct page *page)
+ 	WARN_ON_ONCE(atomic_read(&iop->write_count));
+ 	ClearPagePrivate(page);
+ 	set_page_private(page, 0);
++	put_page(page);
+ 	kfree(iop);
+ }
+ 
+@@ -556,8 +563,10 @@ iomap_migrate_page(struct address_space *mapping, struct page *newpage,
+ 
+ 	if (page_has_private(page)) {
+ 		ClearPagePrivate(page);
++		get_page(newpage);
+ 		set_page_private(newpage, page_private(page));
+ 		set_page_private(page, 0);
++		put_page(page);
+ 		SetPagePrivate(newpage);
+ 	}
+ 
