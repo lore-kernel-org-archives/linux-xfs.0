@@ -1,70 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt1-f176.google.com ([209.85.160.176]:38403 "EHLO
-        mail-qt1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387803AbeLVAtz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Dec 2018 19:49:55 -0500
-Received: by mail-qt1-f176.google.com with SMTP id p17so7767824qtl.5
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Dec 2018 16:49:54 -0800 (PST)
-Received: from lud1.home ([189.115.213.104])
-        by smtp.gmail.com with ESMTPSA id n26sm5050371qkg.74.2018.12.21.16.49.52
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 21 Dec 2018 16:49:53 -0800 (PST)
-Date: Fri, 21 Dec 2018 22:49:50 -0200
-From: Luciano ES <lucmove@gmail.com>
-Subject: Re: Same size drive has less usable space
-Message-ID: <20181221224950.45950329@lud1.home>
-In-Reply-To: <20181221175737.1a6022b8@harpe.intellique.com>
-References: <20181220131305.2a84b717@lud1.home>
-        <20181221175737.1a6022b8@harpe.intellique.com>
+Received: from mail.kernel.org ([198.145.29.99]:43116 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731907AbeLVAFA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Dec 2018 19:05:00 -0500
+Date: Fri, 21 Dec 2018 19:04:58 -0500
+From: Sasha Levin <sashal@kernel.org>
+Subject: Re: [PATCH] iomap: Revert "fs/iomap.c: get/put the page in
+ iomap_page_create/release()"
+Message-ID: <20181222000458.GH86645@sasha-vm>
+References: <20181220122324.17082-1-david@fromorbit.com>
+ <20181220122825.GA17138@kroah.com>
+ <20181220205721.GD4205@dastard>
+ <20181221074042.GA8633@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20181221074042.GA8633@kroah.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, pjaroszynski@nvidia.com, william.kucharski@oracle.com, stable@vger.kernel.org, hch@lst.de, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
-On Fri, 21 Dec 2018 17:57:37 +0100, Emmanuel Florac wrote:
-
-> Le Thu, 20 Dec 2018 13:13:05 -0200
-> Luciano ES =C3=A9crivait:
->=20
-> > I guess at least part of the problem is CRC enabled in the second=20
-> > one. So, is there anything I can do to make all the data fit in the=20
-> > new drive? =20
->=20
-> Your new drive is using 4K blocks, while the old one uses 512b blocks.
-> That's why they can't match.
-**************************
-
-What 512b? There is no 512 in the old drive.
-
-$ xfs_info /xx
-meta-data=3D/dev/sda1     isize=3D256    agcount=3D8, agsize=3D30506944 blks
-         =3D              sectsz=3D4096  attr=3D2, projid32bit=3D1
-         =3D              crc=3D0        finobt=3D0 spinodes=3D0 rmapbt=3D0
-         =3D              reflink=3D0
-data     =3D              bsize=3D4096   blocks=3D244055552, imaxpct=3D25
-         =3D              sunit=3D0      swidth=3D0 blks
-naming   =3Dversion 2     bsize=3D4096   ascii-ci=3D0 ftype=3D0
-log      =3Dinternal      bsize=3D4096   blocks=3D119167, version=3D2
-         =3D              sectsz=3D4096  sunit=3D1 blks, lazy-count=3D1
-realtime =3Dnone          extsz=3D4096   blocks=3D0, rtextents=3D0
-
-
-$ xfs_info /xxbkp
-meta-data=3D/dev/sdb1     isize=3D512    agcount=3D8, agsize=3D61013888 blks
-         =3D              sectsz=3D512   attr=3D2, projid32bit=3D1
-         =3D              crc=3D1        finobt=3D1 spinodes=3D1 rmapbt=3D0
-         =3D              reflink=3D0
-data     =3D              bsize=3D2048   blocks=3D488111104, imaxpct=3D25
-         =3D              sunit=3D0      swidth=3D0 blks
-naming   =3Dversion 2     bsize=3D4096   ascii-ci=3D0 ftype=3D1
-log      =3Dinternal      bsize=3D2048   blocks=3D238335, version=3D2
-         =3D              sectsz=3D512   sunit=3D0 blks, lazy-count=3D1
-realtime =3Dnone          extsz=3D4096   blocks=3D0, rtextents=3D0
-
---=20
-Luciano ES
+On Fri, Dec 21, 2018 at 08:40:42AM +0100, Greg KH wrote:
+>On Fri, Dec 21, 2018 at 07:57:21AM +1100, Dave Chinner wrote:
+>> On Thu, Dec 20, 2018 at 01:28:25PM +0100, Greg KH wrote:
+>> > On Thu, Dec 20, 2018 at 11:23:24PM +1100, Dave Chinner wrote:
+>> > > From: Dave Chinner <dchinner@redhat.com>
+>> > >
+>> > > This reverts commit 61c6de667263184125d5ca75e894fcad632b0dd3.
 >>
+>> <snip>
+>>
+>> > <formletter>
+>> >
+>> > This is not the correct way to submit patches for inclusion in the
+>> > stable kernel tree.  Please read:
+>> >     https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
+>> > for how to do this properly.
+>> >
+>> > </formletter>
+>>
+>> This wasn't a stable kernel patch submission. This was to let the
+>> stable kernel maintainers know that a commit that was submitted for
+>> stable kernel inclusion (via a cc stable in the commit message) is
+>> buggy and should not be backported. i.e. if you've already queued/
+>> backported 61c6de6672 then you need to drop it from your trees.
+>
+>As the commit 61c6de667263 ("fs/iomap.c: get/put the page in
+>iomap_page_create/release()") was tagged for a stable release (and is in
+>4.19.11) it would be nice to also add the cc: stable in the revert.
+>When you just blindly send it to the stable mailing list, we have no
+>idea what to do with it, hence the automated form letter that was sent.
+>
+>Now that this is in Linus's tree, I'll dig out the revert and remember
+>to queue it up for the next round of stable updates, thanks for letting
+>us know.
+
+I've queued the revert for 4.19.
+
+--
+Thanks,
+Sasha
