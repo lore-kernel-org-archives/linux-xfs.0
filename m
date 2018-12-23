@@ -1,278 +1,271 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:58890 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729129AbfAAC0e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:26:34 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012NqAk173710
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:26:32 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2130.oracle.com with ESMTP id 2pnxedxayp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:26:32 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x012QVn6004231
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:26:31 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x012QVbU005743
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:26:31 GMT
-Subject: [PATCH 20/20] xfs: cross-reference the realtime rmapbt
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 31 Dec 2018 18:26:30 -0800
-Message-ID: <154630959024.8108.12561990911859728755.stgit@magnolia>
-In-Reply-To: <154630945466.8108.16578904812191021263.stgit@magnolia>
-References: <154630945466.8108.16578904812191021263.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:36102 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725829AbeLWORe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 23 Dec 2018 09:17:34 -0500
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH] xfstests: test swapext log replay
+Date: Sun, 23 Dec 2018 22:17:21 +0800
+Message-Id: <20181223141721.5318-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+If an inode had been in btree format and had a data fork owner change
+logged (XFS_ILOG_DOWNER), after changing the format to non-btree, will
+hit an ASSERT in xfs_recover_inode_owner_change() which enforces that
+if XFS_ILOG_[AD]OWNER is set.
 
-When we're scrubbing the realtime metadata, cross-reference
-the rtrmapt.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Zorro Lang <zlang@redhat.com>
 ---
- fs/xfs/scrub/bmap.c     |   16 ++++++++++++++++
- fs/xfs/scrub/common.c   |   22 ++++++++++++++++++++++
- fs/xfs/scrub/common.h   |    1 +
- fs/xfs/scrub/rmap.c     |   16 ++++++++--------
- fs/xfs/scrub/rtbitmap.c |   30 ++++++++++++++++++++++++++++++
- fs/xfs/scrub/scrub.h    |   12 ++++++------
- 6 files changed, 83 insertions(+), 14 deletions(-)
+
+This case is written for Eric's patchset:
+[PATCH 0/2] xfs: swapext replay fixes
+
+Thanks for the reproducer which is provided by Eric. I've tested on latest
+xfs-linux for-next branch with the 2 patches of Eric:
+# git log --oneline
+39a9114528e4 (HEAD -> for-next) xfs: clear XFS_ILOG_[AD]OWNER for non-btree formats
+46fe0206d242 xfs: handle bad flags in xfs_recover_inode_owner_change
+86d163dbfe2a (tag: xfs-4.21-merge-1, origin/xfs-4.21-merge, origin/for-next) xfs: stringify scrub types in ftrace output
+...
+...
+
+But I still can hit a fs corruption which can't be log replayed[1]. Only
+"xfs_repair -L" can help to fix that.
+
+Thanks,
+Zorro
+
+[1]
+# ./check xfs/999
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/x86_64 xxx-xxxx-xx 4.20.0-rc6+
+MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=0,finobt=1,crc=1 -i sparse=1 /dev/mapper/rhel_xxx-xxxx-xx-xfscratch
+MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/rhel_xxx-xxxx-xx-xfscratch /mnt/scratch
+
+xfs/999 82s ... [failed, exit status 1]- output mismatch (see /root/git/xfstests-zlang/results//xfs/999.out.bad)
+    --- tests/xfs/999.out       2018-12-23 08:27:02.524495164 -0500
+    +++ /root/git/xfstests-zlang/results//xfs/999.out.bad       2018-12-23 08:58:01.826244128 -0500
+    @@ -1,2 +1,4 @@
+     QA output created by 999
+    -Silence is golden
+    +mount: /mnt/scratch: mount(2) system call failed: Structure needs cleaning.
+    +cycle mount failed
+    +(see /root/git/xfstests-zlang/results//xfs/999.full for details)
+    ...
+    (Run 'diff -u /root/git/xfstests-zlang/tests/xfs/999.out /root/git/xfstests-zlang/results//xfs/999.out.bad'  to see the entire diff)
+Ran: xfs/999
+Failures: xfs/999
+Failed 1 of 1 tests
+
+# dmesg
+[ 1961.335700] run fstests xfs/999 at 2018-12-23 08:56:53
+[ 1962.270422] XFS (dm-5): Unmounting Filesystem
+[ 1964.097509] XFS (dm-5): Mounting V5 Filesystem
+[ 1964.217909] XFS (dm-5): Ending clean mount
+[ 2026.309500] XFS (dm-5): User initiated shutdown received. Shutting down filesystem
+[ 2026.343161] XFS (dm-5): Unmounting Filesystem
+[ 2026.420747] XFS (dm-5): Mounting V5 Filesystem
+[ 2028.557423] XFS (dm-5): Starting recovery (logdev: internal)
+[ 2029.162746] XFS (dm-5): Corruption warning: Metadata has LSN (-842150451:-842150451) ahead of current LSN (1:785). Please unmount and run xfs_repair (>= v4.3) to resolve.
+[ 2029.179889] XFS (dm-5): Metadata CRC error detected at xfs_bmbt_read_verify+0x1b/0x2d0 [xfs], xfs_bmbt block 0x5830 
+[ 2029.191678] XFS (dm-5): Unmount and run xfs_repair
+[ 2029.197051] XFS (dm-5): First 128 bytes of corrupted metadata buffer:
+[ 2029.204262] 00000000: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.213220] 00000010: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.222178] 00000020: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.231151] 00000030: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.240107] 00000040: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.249171] 00000050: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.258134] 00000060: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.267083] 00000070: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.282435] XFS (dm-5): Corruption warning: Metadata has LSN (-842150451:-842150451) ahead of current LSN (1:785). Please unmount and run xfs_repair (>= v4.3) to resolve.
+[ 2029.299516] XFS (dm-5): Metadata CRC error detected at xfs_bmbt_read_verify+0x1b/0x2d0 [xfs], xfs_bmbt block 0x5830 
+[ 2029.311295] XFS (dm-5): Unmount and run xfs_repair
+[ 2029.316666] XFS (dm-5): First 128 bytes of corrupted metadata buffer:
+[ 2029.323887] 00000000: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.332844] 00000010: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.341817] 00000020: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.350776] 00000030: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.359731] 00000040: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.368690] 00000050: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.377648] 00000060: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.386607] 00000070: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+[ 2029.395599] XFS (dm-5): metadata I/O error in "xfs_trans_read_buf_map" at daddr 0x5830 len 8 error 74
+[ 2029.499375] XFS (dm-5): log mount/recovery failed: error -117
+[ 2029.506425] XFS (dm-5): log mount failed
+[ 2029.552080] XFS (dm-2): Unmounting Filesystem
+
+# xfs_repair /dev/mapper/rhel_xxx-xxxx-xx-xfscratch
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+ERROR: The filesystem has valuable metadata changes in a log which needs to
+be replayed.  Mount the filesystem to replay the log, and unmount it before
+re-running xfs_repair.  If you are unable to mount the filesystem, then use
+the -L option to destroy the log and attempt a repair.
+Note that destroying the log may cause corruption -- please attempt a mount
+of the filesystem before doing this
+
+# mount /dev/mapper/rhel_xxx-xxxx-xx-xfscratch /mnt/scratch
+mount: /mnt/scratch: mount(2) system call failed: Structure needs cleaning.
+
+# xfs_repair -L /dev/mapper/rhel_xxx-xxxx-xx-xfscratch 
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+ALERT: The filesystem has valuable metadata changes in a log which is being
+destroyed because the -L option was used.
+        - scan filesystem freespace and inode maps...
+sb_ifree 61, counted 60
+sb_fdblocks 22271328, counted 22270327
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+Metadata CRC error detected at 0x449c9d, xfs_bmbt block 0x5830/0x1000
+btree block 0/2822 is suspect, error -74
+bad magic # 0xcdcdcdcd in inode 131 (data fork) bmbt block 2822
+bad data fork in inode 131
+cleared inode 131
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+entry "fragfile" in shortform directory 128 references free inode 131
+junking entry "fragfile" in directory inode 128
+        - agno = 1
+        - agno = 3
+        - agno = 2
+Phase 5 - rebuild AG headers and trees...
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify and correct link counts...
+Metadata corruption detected at 0x449b47, xfs_bmbt block 0x5830/0x1000
+libxfs_writebufr: write verifer failed on xfs_bmbt bno 0x5830/0x1000
+Maximum metadata LSN (1:237) is ahead of log (1:2).
+Format log to cycle 4.
+releasing dirty buffer (bulk) to free list!done
 
 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 799a8c9731af..840d0bb70d45 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -249,11 +249,27 @@ xchk_bmap_rt_extent_xref(
- 	struct xfs_btree_cur	*cur,
- 	struct xfs_bmbt_irec	*irec)
- {
-+	int				error;
+
+ tests/xfs/999     | 76 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/999.out |  2 ++
+ tests/xfs/group   |  1 +
+ 3 files changed, 79 insertions(+)
+ create mode 100755 tests/xfs/999
+ create mode 100644 tests/xfs/999.out
+
+diff --git a/tests/xfs/999 b/tests/xfs/999
+new file mode 100755
+index 00000000..cfe5c4d4
+--- /dev/null
++++ b/tests/xfs/999
+@@ -0,0 +1,76 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Red Hat Inc. All Rights Reserved.
++#
++# FS QA Test No. 999
++#
++# If an inode had been in btree format and had a data fork owner change
++# logged, after changing the format to non-btree, will hit an ASSERT or
++# fs corruption.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
- 	if (info->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		return;
- 
-+	xfs_ilock(info->sc->mp->m_rbmip, XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP);
-+	xfs_ilock(info->sc->mp->m_rrmapip, XFS_ILOCK_EXCL | XFS_ILOCK_RTSUM);
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+	error = xchk_rt_init(info->sc, &info->sc->sa);
-+	if (!xchk_fblock_process_error(info->sc, info->whichfork,
-+			irec->br_startoff, &error))
-+		goto out_unlock;
-+
- 	xchk_xref_is_used_rt_space(info->sc, irec->br_startblock,
- 			irec->br_blockcount);
-+	xchk_bmap_xref_rmap(info, irec, irec->br_startblock);
-+
-+	xchk_ag_free(info->sc, &info->sc->sa);
-+out_unlock:
-+	xfs_iunlock(info->sc->mp->m_rrmapip, XFS_ILOCK_EXCL);
-+	xfs_iunlock(info->sc->mp->m_rbmip, XFS_ILOCK_EXCL);
- }
- 
- /* Cross-reference a single datadev extent record. */
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index c5cbe245082c..3277c21bc914 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -32,6 +32,7 @@
- #include "xfs_trans_priv.h"
- #include "xfs_attr.h"
- #include "xfs_reflink.h"
-+#include "xfs_rtrmap_btree.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -574,6 +575,27 @@ xchk_perag_get(
- 		sa->pag = xfs_perag_get(mp, sa->agno);
- }
- 
-+/*
-+ * For scrubbing a realtime file, grab the rtrmapt.  We follow the same
-+ * resource release rules as xfs_scrub_ag_init.
-+ */
-+int
-+xchk_rt_init(
-+	struct xfs_scrub	*sc,
-+	struct xchk_ag			*sa)
++_cleanup()
 +{
-+	memset(sa, 0, sizeof(*sa));
-+	sa->agno = NULLAGNUMBER;
-+	if (xfs_sb_version_hasrmapbt(&sc->mp->m_sb)) {
-+		ASSERT(xfs_isilocked(sc->mp->m_rrmapip,
-+				XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
-+		sa->rmap_cur = xfs_rtrmapbt_init_cursor(sc->mp, sc->tp,
-+				sc->mp->m_rrmapip);
-+	}
-+
-+	return 0;
++	cd /
++	rm -f $tmp.*
 +}
 +
- /* Per-scrubber setup functions */
- 
- /*
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 9a62bdaa58f1..3d8a55b13dcc 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -113,6 +113,7 @@ xchk_setup_quota(struct xfs_scrub *sc, struct xfs_inode *ip)
- #endif
- int xchk_setup_fscounters(struct xfs_scrub *sc, struct xfs_inode *ip);
- 
-+int xchk_rt_init(struct xfs_scrub *sc, struct xchk_ag *sa);
- void xchk_ag_free(struct xfs_scrub *sc, struct xchk_ag *sa);
- int xchk_ag_init(struct xfs_scrub *sc, xfs_agnumber_t agno,
- 		struct xchk_ag *sa);
-diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
-index 753c8078ee80..4254a4ad78f3 100644
---- a/fs/xfs/scrub/rmap.c
-+++ b/fs/xfs/scrub/rmap.c
-@@ -186,8 +186,8 @@ xchk_rmapbt(
- static inline void
- xchk_xref_check_owner(
- 	struct xfs_scrub		*sc,
--	xfs_agblock_t			bno,
--	xfs_extlen_t			len,
-+	xfs_fsblock_t			bno,
-+	xfs_filblks_t			len,
- 	const struct xfs_owner_info	*oinfo,
- 	bool				should_have_rmap)
- {
-@@ -209,8 +209,8 @@ xchk_xref_check_owner(
- void
- xchk_xref_is_owned_by(
- 	struct xfs_scrub		*sc,
--	xfs_agblock_t			bno,
--	xfs_extlen_t			len,
-+	xfs_fsblock_t			bno,
-+	xfs_filblks_t			len,
- 	const struct xfs_owner_info	*oinfo)
- {
- 	xchk_xref_check_owner(sc, bno, len, oinfo, true);
-@@ -220,8 +220,8 @@ xchk_xref_is_owned_by(
- void
- xchk_xref_is_not_owned_by(
- 	struct xfs_scrub		*sc,
--	xfs_agblock_t			bno,
--	xfs_extlen_t			len,
-+	xfs_fsblock_t			bno,
-+	xfs_filblks_t			len,
- 	const struct xfs_owner_info	*oinfo)
- {
- 	xchk_xref_check_owner(sc, bno, len, oinfo, false);
-@@ -231,8 +231,8 @@ xchk_xref_is_not_owned_by(
- void
- xchk_xref_has_no_owner(
- 	struct xfs_scrub	*sc,
--	xfs_agblock_t		bno,
--	xfs_extlen_t		len)
-+	xfs_fsblock_t		bno,
-+	xfs_filblks_t		len)
- {
- 	bool			has_rmap;
- 	int			error;
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index 35c243a404e7..ebe4dad901ad 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -15,12 +15,16 @@
- #include "xfs_log_format.h"
- #include "xfs_trans.h"
- #include "xfs_sb.h"
-+#include "xfs_inode.h"
- #include "xfs_alloc.h"
- #include "xfs_rtalloc.h"
- #include "xfs_inode.h"
-+#include "xfs_rmap.h"
-+#include "xfs_rtrmap_btree.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-+#include "scrub/btree.h"
- #include "scrub/trace.h"
- 
- /* Set us up with the realtime metadata locked. */
-@@ -39,11 +43,31 @@ xchk_setup_rt(
- 	sc->ip = sc->mp->m_rbmip;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
- 
-+	if (xfs_sb_version_hasrmapbt(&sc->mp->m_sb)) {
-+		unsigned int	lockmode = XFS_ILOCK_EXCL;
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
 +
-+		xfs_ilock(sc->mp->m_rrmapip, lockmode);
-+		xfs_trans_ijoin(sc->tp, sc->mp->m_rrmapip, lockmode);
-+	}
++# remove previous $seqres.full before test
++rm -f $seqres.full
 +
- 	return 0;
- }
- 
- /* Realtime bitmap. */
- 
-+/* Cross-reference rtbitmap entries with other metadata. */
-+STATIC void
-+xchk_rtbitmap_xref(
-+	struct xfs_scrub	*sc,
-+	xfs_rtblock_t		startblock,
-+	xfs_rtblock_t		blockcount)
-+{
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
++# real QA test starts here
 +
-+	xchk_xref_has_no_owner(sc, startblock, blockcount);
-+}
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++_require_scratch
 +
- /* Scrub a free extent record from the realtime bitmap. */
- STATIC int
- xchk_rtbitmap_rec(
-@@ -62,6 +86,8 @@ xchk_rtbitmap_rec(
- 	    !xfs_verify_rtbno(sc->mp, startblock) ||
- 	    !xfs_verify_rtbno(sc->mp, startblock + blockcount - 1))
- 		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
++_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
++. $tmp.mkfs
 +
-+	xchk_rtbitmap_xref(sc, startblock, blockcount);
- 	return 0;
- }
- 
-@@ -77,6 +103,10 @@ xchk_rtbitmap(
- 	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
- 		return error;
- 
-+	error = xchk_rt_init(sc, &sc->sa);
-+	if (error)
-+		return error;
++_scratch_mount
++localfile=$SCRATCH_MNT/fragfile
 +
- 	error = xfs_rtalloc_query_all(sc->tp, xchk_rtbitmap_rec, sc);
- 	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
- 		goto out;
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 312f4a56e1b9..50ce5fbeb7ab 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -135,12 +135,12 @@ void xchk_xref_is_not_inode_chunk(struct xfs_scrub *sc, xfs_agblock_t agbno,
- 		xfs_extlen_t len);
- void xchk_xref_is_inode_chunk(struct xfs_scrub *sc, xfs_agblock_t agbno,
- 		xfs_extlen_t len);
--void xchk_xref_is_owned_by(struct xfs_scrub *sc, xfs_agblock_t agbno,
--		xfs_extlen_t len, const struct xfs_owner_info *oinfo);
--void xchk_xref_is_not_owned_by(struct xfs_scrub *sc, xfs_agblock_t agbno,
--		xfs_extlen_t len, const struct xfs_owner_info *oinfo);
--void xchk_xref_has_no_owner(struct xfs_scrub *sc, xfs_agblock_t agbno,
--		xfs_extlen_t len);
-+void xchk_xref_is_owned_by(struct xfs_scrub *sc, xfs_fsblock_t bno,
-+		xfs_filblks_t len, const struct xfs_owner_info *oinfo);
-+void xchk_xref_is_not_owned_by(struct xfs_scrub *sc, xfs_fsblock_t bno,
-+		xfs_filblks_t len, const struct xfs_owner_info *oinfo);
-+void xchk_xref_has_no_owner(struct xfs_scrub *sc, xfs_fsblock_t bno,
-+		xfs_filblks_t len);
- void xchk_xref_is_cow_staging(struct xfs_scrub *sc, xfs_agblock_t bno,
- 		xfs_extlen_t len);
- void xchk_xref_is_not_shared(struct xfs_scrub *sc, xfs_agblock_t bno,
++# Try to create a file with 1024 * (3 blocks + 1 hole):
++# +----------+--------+-------+----------+--------+
++# | 3 blocks | 1 hole |  ...  | 3 blocks | 1 hole |
++# +----------+--------+-------+----------+--------+
++#
++# The number of extents we can get maybe more or less than 1024, this method
++# just to get a btree inode format.
++filesize=$((dbsize * 1024 * 4))
++for i in `seq $filesize -$dbsize 0`; do
++	if [ $((i % (3 * dbsize))) -eq 0 ]; then
++		continue
++	fi
++	$XFS_IO_PROG -f -d -c "pwrite $i $dbsize" $localfile >> $seqres.full
++done
++
++# Make a data fork owner change log
++$XFS_FSR_PROG -v -d $localfile >> $seqres.full 2>&1
++
++# Truncate the file to 0, and change the inode format to extent, then shutdown
++# the fs to keep the XFS_ILOG_DOWNER flag
++$XFS_IO_PROG -t -x -c "pwrite 0 $dbsize" \
++	     -c "fsync" \
++	     -c "shutdown" $localfile >> $seqres.full
++
++# Cycle mount, to replay the log
++_scratch_cycle_mount
++
++echo "Silence is golden"
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+new file mode 100644
+index 00000000..3b276ca8
+--- /dev/null
++++ b/tests/xfs/999.out
+@@ -0,0 +1,2 @@
++QA output created by 999
++Silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index dfaae2bc..9171144e 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -496,3 +496,4 @@
+ 496 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 497 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 498 dangerous_fuzzers dangerous_norepair
++999 auto quick
+-- 
+2.17.2
