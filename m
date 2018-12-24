@@ -1,38 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41712 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731843AbeLTOe1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Dec 2018 09:34:27 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id DF9FD87C
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Dec 2018 08:34:07 -0600 (CST)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: RFC: deprecate mkfs.xfs protofile functionality
-Message-ID: <e3b338cb-33d0-04d0-c14c-7b06a7b924c9@sandeen.net>
-Date: Thu, 20 Dec 2018 08:34:25 -0600
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from walrus.jabberwocky.com ([173.9.29.57]:34769 "EHLO
+        mail.jabberwocky.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726361AbeLXBzq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Dec 2018 20:55:46 -0500
+Received: from grover.home.jabberwocky.com (grover.home.jabberwocky.com [172.24.84.28])
+        by mail.jabberwocky.com (Postfix) with ESMTPSA id B4CDE206F016
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Dec 2018 20:50:02 -0500 (EST)
+From: David Shaw <dshaw@jabberwocky.com>
+Content-Type: text/plain;
+        charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Mime-Version: 1.0 (Mac OS X Mail 12.2 \(3445.102.3\))
+Subject: Using su and sw when the underlying RAID changes
+Message-Id: <1CFB1ED6-B218-4E73-9A2F-0D2F62C9C2AB@jabberwocky.com>
+Date: Sun, 23 Dec 2018 20:50:02 -0500
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-I'd like to deprecate and eventually remove the protofile functionality
-in mkfs.xfs, because it's not well tested code which is really a special
-snowflake in the codebase that adds complexity.  And as far as I know,
-nobody uses it.
+Hello,
 
-If I'm wrong though, speak up now.  Is anybody using protofiles?
+I have a question around su and sw on a RAID.  Using some RAID systems, including mdadm under Linux, it's possible to reshape the array such that the su and sw settings used at mkfs time are no longer the correct ones.  For example, lets's say I make a 2 device RAID 0, run mkfs.xfs on it, and use it for a while.  That RAID is sw=2.  Then I need more space so I add another device, reshaping it to a 3 device RAID 0.  If I did a fresh mkfs.xfs on the (now) 3 device RAID 0 I would have sw=3, but given that I don't want to lose all the contents, the existing formatting is still sw=2.
 
-(If you don't know what a protofile is, then you're not using it.
-And let's not turn this into a "well I could think of a way to use it"
-discussion, because it's been there for a couple decades and if you're
-not using it /yet/ ... unless there really is some new usecase on the
-horizon which would clearly depend on it.)
+Are there any best practices (including, I suppose, "don't do that") for handling this sort of thing?  So far as I know there is no way to change su or sw for already allocated data structures.  I understand that the existing data will still be readable, albeit not optimally stored.  How bad is it to have incorrect su or sw?
 
-Thanks,
--Eric
+Thanks for any advice,
+
+David
