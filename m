@@ -1,61 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36888 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726134AbeL2FZk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Dec 2018 00:25:40 -0500
-Date: Fri, 28 Dec 2018 21:25:04 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 00/20] drop useless LIST_HEAD
-Message-ID: <20181229052504.GA16315@magnolia>
-References: <1545555435-24576-1-git-send-email-Julia.Lawall@lip6.fr>
- <CAKR_QVJefW1vxYb7-qiU8=0YdbFghYo15SK2eGjOC-dntRfyYA@mail.gmail.com>
- <alpine.DEB.2.21.1812232304130.2940@hadrien>
- <CAKR_QVLeZBL43W4x1mzcfcakSZyyh9L81vgUMxfnSccKawEfdg@mail.gmail.com>
- <20181227134055.GA2272@kadam>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:56410 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727078AbeLZRTO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Dec 2018 12:19:14 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id C0F772856A
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Dec 2018 17:19:13 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202077] New: xfs transaction overruns on 4.14.67
+Date: Wed, 26 Dec 2018 17:19:12 +0000
+Message-ID: <bug-202077-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181227134055.GA2272@kadam>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Tom Psyborg <pozega.tomislav@gmail.com>, Julia Lawall <julia.lawall@lip6.fr>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, kernel-janitors@vger.kernel.org, dmaengine@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Dan Williams <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, linux-rdma@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, Stefano Stabellini <sstabellini@kernel.org>, xen-devel@lists.xenproject.org, linux-wireless@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Dec 27, 2018 at 04:40:55PM +0300, Dan Carpenter wrote:
-> On Tue, Dec 25, 2018 at 11:12:20PM +0100, Tom Psyborg wrote:
-> > there was discussion about this just some days ago. CC 4-5 lists is
-> > more than enough
-> > 
-> 
-> I don't know who you were discussing this with...
-> 
-> You should CC the 0th patch to all the mailinglists.  That much is a
-> clear rule.
-> 
-> For the rest, Julia's position is the more conservative one.  I was in
-> a conversation in RL and they were like, "CC everyone for all the
-> patches".  It depends on the context, of course.  If the patches are
-> dependent on each other then you *have* to CC everyone for everything.
+https://bugzilla.kernel.org/show_bug.cgi?id=202077
 
-Agreed.  Ms. Lawall, sending "Cover letter + all relevant XFS patches"
-(as you did) was exactly the right thing for us xfs types. :)
+            Bug ID: 202077
+           Summary: xfs transaction overruns on 4.14.67
+           Product: File System
+           Version: 2.5
+    Kernel Version: 4.14.67
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: thomas.walker@twosigma.com
+        Regression: No
 
-For that matter, we prefer to receive through linux-xfs more patches
-than necessary (one can send the entire series if one is unsure) than to
-go wanting for more context.
+Created attachment 280149
+  --> https://bugzilla.kernel.org/attachment.cgi?id=280149&action=edit
+xfs transaction overrun #1
 
---D
+We've encountered two recent examples of xfs transaction overruns on production
+systems running 4.14.67 kernels.  Both systems in this case are running docker
+with dozens of overlay mounts, using this xfs fs as both upper and lower.  In
+both cases the filesystem was able to successfully recover when the filesystem
+was unmounted and remounted again.
 
-> If we really have other clear rules, then it should be encoded into
-> get_maintainer.pl so that it's automatic.
-> 
-> My other question is why do the linux-arm-kernel@lists.infradead.org
-> people feel like they need to be CC'd about every driver???  I always
-> remove them from the CC list unless it's an arch/arm issue.
-> 
-> regards,
-> dan carpenter
-> 
-> PS:  Please, no more top posting.
-> 
+It looks like there has been a good bit of work in 4.16+ addressing similar
+issues but none of it has made it back into the 4.14 LTS.  Any chance that any
+of the attached debug output points to anything specific that might be a
+candidate for backport?
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
