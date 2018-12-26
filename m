@@ -1,123 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:48208 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726686AbfAACJ0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:09:26 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0129Pfo165633
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:09:25 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2130.oracle.com with ESMTP id 2pnxedxafj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:09:25 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x0129O7V016928
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:09:24 GMT
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x0129Oml002909
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:09:24 GMT
-Subject: [PATCH 8/8] xfs: scrub should flag dir/attr offsets that aren't
- mappable with xfs_dablk_t
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 31 Dec 2018 18:09:23 -0800
-Message-ID: <154630856305.14372.3244113773553269634.stgit@magnolia>
-In-Reply-To: <154630850739.14372.14000129432637481206.stgit@magnolia>
-References: <154630850739.14372.14000129432637481206.stgit@magnolia>
+Received: from mail-it1-f174.google.com ([209.85.166.174]:52115 "EHLO
+        mail-it1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725913AbeLZDRC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Dec 2018 22:17:02 -0500
+Received: by mail-it1-f174.google.com with SMTP id w18so19673066ite.1
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Dec 2018 19:17:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <CABWYdi1YZp+baxpON2R6mP09pjkUz5D-OE7Z2KmwVGycYTN-AA@mail.gmail.com>
+ <20181129021800.GQ6311@dastard> <CABWYdi0Bd6sMAaTPkfHKupMGpw1QPSf_VohPF_Wg7Mm=W=j2bA@mail.gmail.com>
+ <20181130021840.GV6311@dastard> <CABWYdi0nSJAV-RPdUSwGbRwqeoKo-83_X=ptuQwwH1CnPXCYmQ@mail.gmail.com>
+ <20181130064908.GX6311@dastard> <20181130074547.GY6311@dastard>
+ <CABWYdi28ifToh-yWRAv4MSdJ9g6t-Rxyz2GAFXGFraCwf9BBDg@mail.gmail.com>
+ <CAJouXQn2mSyyacnf_CnrhX-JQ1x2QOUoB3=bzsSfbHFfAdRc9Q@mail.gmail.com> <20181225234732.GH4205@dastard>
+In-Reply-To: <20181225234732.GH4205@dastard>
+From: Kenton Varda <kenton@cloudflare.com>
+Date: Tue, 25 Dec 2018 19:16:25 -0800
+Message-ID: <CAJouXQndAaybOzbSLRq+Uw7a35YLkUnL5NmRC0qLbV+8QP+vaA@mail.gmail.com>
+Subject: Re: Non-blocking socket stuck for multiple seconds on xfs_reclaim_inodes_ag()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ivan Babrou <ivan@cloudflare.com>, linux-xfs@vger.kernel.org, Shawn Bohrer <sbohrer@cloudflare.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Dec 25, 2018 at 3:47 PM Dave Chinner <david@fromorbit.com> wrote:
+> But taking out your frustrations on the people who are trying to fix
+> the problems you are seeing isn't productive. We are only a small
+> team and we can't fix every problem that everyone reports
+> immediately. Some things take time to fix.
 
-Teach scrub to flag extent maps that exceed the range that can be mapped
-with a xfs_dablk_t.
+I agree. My hope is that explaining our use case helps you make XFS
+better, but you don't owe us anything. It's our problem to solve and
+any help you give us is a favor.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_types.c |   11 +++++++++++
- fs/xfs/libxfs/xfs_types.h |    1 +
- fs/xfs/scrub/bmap.c       |   27 +++++++++++++++++++++++++++
- 3 files changed, 39 insertions(+)
+> IOWs, there are relatively few applications that have such a
+> significant dependency on memory reclaim having extremely low
+> latency,
 
+Hmm, I'm confused by this. Isn't low-latency memory allocation is a
+common requirement for any kind of interactive workload? I don't see
+what's unique about our use case in this respect. Any desktop and most
+web servers I would think have similar requirements.
 
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index 3306fc42cfad..8e03e88a2f1a 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -204,3 +204,14 @@ xfs_verify_icount(
- 	xfs_icount_range(mp, &min, &max);
- 	return icount >= min && icount <= max;
- }
-+
-+/* Sanity-checking of dir/attr block offsets. */
-+bool
-+xfs_verify_dablk(
-+	struct xfs_mount	*mp,
-+	xfs_fileoff_t		dabno)
-+{
-+	xfs_dablk_t		max_dablk = -1U;
-+
-+	return dabno < max_dablk;
-+}
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index 8f02855a019a..704b4f308780 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -188,5 +188,6 @@ bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
- bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
-+bool xfs_verify_dablk(struct xfs_mount *mp, xfs_fileoff_t off);
- 
- #endif	/* __XFS_TYPES_H__ */
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index e1d11f3223e3..a703cd58a90e 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -281,6 +281,31 @@ xchk_bmap_extent_xref(
- 	xchk_ag_free(info->sc, &info->sc->sa);
- }
- 
-+/*
-+ * Directories and attr forks should never have blocks that can't be addressed
-+ * by a xfs_dablk_t.
-+ */
-+STATIC void
-+xchk_bmap_dirattr_extent(
-+	struct xfs_inode	*ip,
-+	struct xchk_bmap_info	*info,
-+	struct xfs_bmbt_irec	*irec)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fileoff_t		off;
-+
-+	if (!S_ISDIR(VFS_I(ip)->i_mode) && info->whichfork != XFS_ATTR_FORK)
-+		return;
-+
-+	if (!xfs_verify_dablk(mp, irec->br_startoff))
-+		xchk_fblock_set_corrupt(info->sc, info->whichfork,
-+				irec->br_startoff);
-+
-+	off = irec->br_startoff + irec->br_blockcount - 1;
-+	if (!xfs_verify_dablk(mp, off))
-+		xchk_fblock_set_corrupt(info->sc, info->whichfork, off);
-+}
-+
- /* Scrub a single extent record. */
- STATIC int
- xchk_bmap_extent(
-@@ -305,6 +330,8 @@ xchk_bmap_extent(
- 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
- 				irec->br_startoff);
- 
-+	xchk_bmap_dirattr_extent(ip, info, irec);
-+
- 	/* There should never be a "hole" extent in either extent list. */
- 	if (irec->br_startblock == HOLESTARTBLOCK)
- 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
+I'm sure there's something about our use case that's unusual, but it
+doesn't seem to me that requiring low-latency memory allocation is
+unique.
+
+Maybe the real thing that's odd about us is that we constantly create
+and delete files at a high rate, and that means we have an excessive
+number of dirty inodes to flush?
+
+> IOWs, we're trying to solve *all* the blocking problems that we know
+> that can occur in inode reclaim so that it all just works for
+> everyone without tweaks being necessary. Yes, this takes longer than
+> just addressing the specific symptom that is causing you problems,
+> but the reality is while fixing things properly takes time to get
+> right, everyone will benefit from it being fixed and not just one or
+> two very specific, latency sensitive workloads.
+
+Great, it's good to hear that this problem is expected to be fixed
+eventually. We can patch our way around it in the meantime.
+
+-Kenton
