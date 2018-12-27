@@ -1,56 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:44311
-        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727264AbeLWJeB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Dec 2018 04:34:01 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 09/20] xfs: xfs_fsops: drop useless LIST_HEAD
-Date: Sun, 23 Dec 2018 09:57:04 +0100
-Message-Id: <1545555435-24576-10-git-send-email-Julia.Lawall@lip6.fr>
-In-Reply-To: <1545555435-24576-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1545555435-24576-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from bombadil.infradead.org ([198.137.202.133]:34842 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728809AbeL0IHe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Dec 2018 03:07:34 -0500
+Date: Thu, 27 Dec 2018 00:07:29 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: add a check for xfs_trans_commit
+Message-ID: <20181227080728.GA12171@infradead.org>
+References: <20181226060516.75103-1-kjlu@umn.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181226060516.75103-1-kjlu@umn.edu>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: kernel-janitors@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kangjie Lu <kjlu@umn.edu>
+Cc: pakki001@umn.edu, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Drop LIST_HEAD where the variable it declares is never used.
+On Wed, Dec 26, 2018 at 12:05:16AM -0600, Kangjie Lu wrote:
+> xfs_trans_commit could fails. The checks issues an error message upon
+> its failure.
+> 
+> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
 
-Commit 0410c3bb2b88 ("xfs: factor ag btree root block
-initialisation") stopped using buffer_list and started using a
-buffer list in an aghdr_init_data structure, but the declaration
-of buffer_list was not removed.
-
-The semantic patch that fixes this problem is as follows:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-identifier x;
-@@
-- LIST_HEAD(x);
-  ... when != x
-// </smpl>
-
-Fixes: 0410c3bb2b88 ("xfs: factor ag btree root block initialisation")
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
-Successfully 0-day tested on 151 configurations.
-
- fs/xfs/xfs_fsops.c |    1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index ec2e63a7963b..f3ef70c542e1 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -40,7 +40,6 @@ xfs_growfs_data_private(
- 	xfs_rfsblock_t		new;
- 	xfs_agnumber_t		oagcount;
- 	xfs_trans_t		*tp;
--	LIST_HEAD		(buffer_list);
- 	struct aghdr_init_data	id = {};
- 
- 	nb = in->newblocks;
+Please take a close look at what could fail in xfs_trans_commit, and how
+those failures are logged inside the implementation.
