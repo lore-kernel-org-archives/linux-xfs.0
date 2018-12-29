@@ -1,61 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:43774 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726049AbeLXAhn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Dec 2018 19:37:43 -0500
-Date: Sun, 23 Dec 2018 16:37:11 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v3] iomap: take responsibility for the filesystem iomap code
-Message-ID: <20181224003711.GK27208@magnolia>
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:44509 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726709AbeL2Hti (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Dec 2018 02:49:38 -0500
+Date: Sat, 29 Dec 2018 15:49:30 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH] xfstests: test swapext log replay
+Message-ID: <20181229074930.GF21777@desktop>
+References: <20181223141721.5318-1-zlang@redhat.com>
+ <20181229052739.GD21777@desktop>
+ <20181229073829.GR30999@dhcp-12-149.nay.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181220053622.GD27176@magnolia>
+In-Reply-To: <20181229073829.GR30999@dhcp-12-149.nay.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Amir Goldstein <amir73il@gmail.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, Dec 29, 2018 at 03:38:29PM +0800, Zorro Lang wrote:
+> On Sat, Dec 29, 2018 at 01:27:39PM +0800, Eryu Guan wrote:
+> > On Sun, Dec 23, 2018 at 10:17:21PM +0800, Zorro Lang wrote:
+> > > If an inode had been in btree format and had a data fork owner change
+> > > logged (XFS_ILOG_DOWNER), after changing the format to non-btree, will
+> > > hit an ASSERT in xfs_recover_inode_owner_change() which enforces that
+> > > if XFS_ILOG_[AD]OWNER is set.
+> > > 
+> > > Signed-off-by: Zorro Lang <zlang@redhat.com>
 
-XFS is the primary user of the filesystem iomap code, so we (the XFS
-community, specifically) will explicitly take responsibility for its
-maintenance.
+[snip]
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Acked-by: Al Viro <viro@zeniv.linux.org.uk>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
-v3: I decided that perhaps I ought to be listed for iomap after all.
-Still looking for an ack from Christoph...
+> > > +999 auto quick
+> > 
+> > Added 'shutdown log' groups.
+> 
+> Thanks your revewing. But I still have some problems as I described at
+> beginning, so I hope we can merge this patch after we have an reply
+> about that.
 
-v2: maintain alphabetization, add Christoph as a Real Person patch
-mailing target.  Still looking for acks from Christoph & Dave...
----
- MAINTAINERS |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Ok, thanks for the heads-up!
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 3318f30903b2..d2c034aed4be 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7783,6 +7783,18 @@ L:	linux-serial@vger.kernel.org
- S:	Maintained
- F:	drivers/tty/serial/ioc3_serial.c
- 
-+IOMAP FILESYSTEM LIBRARY
-+M:	Christoph Hellwig <hch@infradead.org>
-+M:	Darrick J. Wong <darrick.wong@oracle.com>
-+M:	linux-xfs@vger.kernel.org
-+M:	linux-fsdevel@vger.kernel.org
-+L:	linux-xfs@vger.kernel.org
-+L:	linux-fsdevel@vger.kernel.org
-+T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-+S:	Supported
-+F:	fs/iomap.c
-+F:	include/linux/iomap.h
-+
- IOMMU DRIVERS
- M:	Joerg Roedel <joro@8bytes.org>
- L:	iommu@lists.linux-foundation.org
+Eryu
