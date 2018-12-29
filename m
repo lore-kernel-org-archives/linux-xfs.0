@@ -1,102 +1,293 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from relayout03-q02.e.movistar.es ([86.109.101.162]:40911 "EHLO
-        relayout03-q02.e.movistar.es" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728324AbeLTSrf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Dec 2018 13:47:35 -0500
-Received: from relayout03-redir.e.movistar.es (relayout03-redir.e.movistar.es [86.109.101.203])
-        by relayout03-out.e.movistar.es (Postfix) with ESMTP id 43LLNN537mzQkMw
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Dec 2018 19:47:32 +0100 (CET)
-Received: from Telcontar.valinor (105.red-79-146-214.dynamicip.rima-tde.net [79.146.214.105])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: robin.listas2@telefonica.net)
-        by relayout03.e.movistar.es (Postfix) with ESMTPSA id 43LLNM0hCTzMlZb
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Dec 2018 19:47:30 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-        by Telcontar.valinor (Postfix) with ESMTP id 9B3DD32060A
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Dec 2018 19:47:30 +0100 (CET)
-Received: from Telcontar.valinor ([127.0.0.1])
-        by localhost (telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-        with LMTP id aerBMctm0XYR for <linux-xfs@vger.kernel.org>;
-        Thu, 20 Dec 2018 19:47:30 +0100 (CET)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        by Telcontar.valinor (Postfix) with ESMTP id 7A92B320608
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Dec 2018 19:47:30 +0100 (CET)
-Subject: Re: Same size drive has less usable space
-References: <20181220131305.2a84b717@lud1.home>
- <6ab0a568-4732-905a-d45d-209f4bb0cfb0@sandeen.net>
- <20181220145529.1292ec61@lud1.home>
- <710b005e-0738-b793-3014-2234fcee84ad@sandeen.net>
- <20181220163943.5d8c6c2c@lud1.home>
-From: "Carlos E. R." <robin.listas@telefonica.net>
-Message-ID: <89b5b424-01a0-5369-963f-8adc044b5f2c@telefonica.net>
-Date: Thu, 20 Dec 2018 19:47:21 +0100
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:37232 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725923AbeL2F1s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Dec 2018 00:27:48 -0500
+Date: Sat, 29 Dec 2018 13:27:39 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH] xfstests: test swapext log replay
+Message-ID: <20181229052739.GD21777@desktop>
+References: <20181223141721.5318-1-zlang@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20181220163943.5d8c6c2c@lud1.home>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="2FcNxBx2BO3eb9srVozL4V8iuQdTd3ddk"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181223141721.5318-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---2FcNxBx2BO3eb9srVozL4V8iuQdTd3ddk
-Content-Type: multipart/mixed; boundary="y1vYluhJcTlkKcZPsMVInkdE5yEPrIpbh";
- protected-headers="v1"
-From: "Carlos E. R." <robin.listas@telefonica.net>
-To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
-Message-ID: <89b5b424-01a0-5369-963f-8adc044b5f2c@telefonica.net>
-Subject: Re: Same size drive has less usable space
-References: <20181220131305.2a84b717@lud1.home>
- <6ab0a568-4732-905a-d45d-209f4bb0cfb0@sandeen.net>
- <20181220145529.1292ec61@lud1.home>
- <710b005e-0738-b793-3014-2234fcee84ad@sandeen.net>
- <20181220163943.5d8c6c2c@lud1.home>
-In-Reply-To: <20181220163943.5d8c6c2c@lud1.home>
+On Sun, Dec 23, 2018 at 10:17:21PM +0800, Zorro Lang wrote:
+> If an inode had been in btree format and had a data fork owner change
+> logged (XFS_ILOG_DOWNER), after changing the format to non-btree, will
+> hit an ASSERT in xfs_recover_inode_owner_change() which enforces that
+> if XFS_ILOG_[AD]OWNER is set.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> This case is written for Eric's patchset:
+> [PATCH 0/2] xfs: swapext replay fixes
+> 
+> Thanks for the reproducer which is provided by Eric. I've tested on latest
+> xfs-linux for-next branch with the 2 patches of Eric:
+> # git log --oneline
+> 39a9114528e4 (HEAD -> for-next) xfs: clear XFS_ILOG_[AD]OWNER for non-btree formats
+> 46fe0206d242 xfs: handle bad flags in xfs_recover_inode_owner_change
+> 86d163dbfe2a (tag: xfs-4.21-merge-1, origin/xfs-4.21-merge, origin/for-next) xfs: stringify scrub types in ftrace output
+> ...
+> ...
+> 
+> But I still can hit a fs corruption which can't be log replayed[1]. Only
+> "xfs_repair -L" can help to fix that.
+> 
+> Thanks,
+> Zorro
+> 
+> [1]
+> # ./check xfs/999
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 xxx-xxxx-xx 4.20.0-rc6+
+> MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=0,finobt=1,crc=1 -i sparse=1 /dev/mapper/rhel_xxx-xxxx-xx-xfscratch
+> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/rhel_xxx-xxxx-xx-xfscratch /mnt/scratch
+> 
+> xfs/999 82s ... [failed, exit status 1]- output mismatch (see /root/git/xfstests-zlang/results//xfs/999.out.bad)
+>     --- tests/xfs/999.out       2018-12-23 08:27:02.524495164 -0500
+>     +++ /root/git/xfstests-zlang/results//xfs/999.out.bad       2018-12-23 08:58:01.826244128 -0500
+>     @@ -1,2 +1,4 @@
+>      QA output created by 999
+>     -Silence is golden
+>     +mount: /mnt/scratch: mount(2) system call failed: Structure needs cleaning.
+>     +cycle mount failed
+>     +(see /root/git/xfstests-zlang/results//xfs/999.full for details)
+>     ...
+>     (Run 'diff -u /root/git/xfstests-zlang/tests/xfs/999.out /root/git/xfstests-zlang/results//xfs/999.out.bad'  to see the entire diff)
+> Ran: xfs/999
+> Failures: xfs/999
+> Failed 1 of 1 tests
+> 
+> # dmesg
+> [ 1961.335700] run fstests xfs/999 at 2018-12-23 08:56:53
+> [ 1962.270422] XFS (dm-5): Unmounting Filesystem
+> [ 1964.097509] XFS (dm-5): Mounting V5 Filesystem
+> [ 1964.217909] XFS (dm-5): Ending clean mount
+> [ 2026.309500] XFS (dm-5): User initiated shutdown received. Shutting down filesystem
+> [ 2026.343161] XFS (dm-5): Unmounting Filesystem
+> [ 2026.420747] XFS (dm-5): Mounting V5 Filesystem
+> [ 2028.557423] XFS (dm-5): Starting recovery (logdev: internal)
+> [ 2029.162746] XFS (dm-5): Corruption warning: Metadata has LSN (-842150451:-842150451) ahead of current LSN (1:785). Please unmount and run xfs_repair (>= v4.3) to resolve.
+> [ 2029.179889] XFS (dm-5): Metadata CRC error detected at xfs_bmbt_read_verify+0x1b/0x2d0 [xfs], xfs_bmbt block 0x5830 
+> [ 2029.191678] XFS (dm-5): Unmount and run xfs_repair
+> [ 2029.197051] XFS (dm-5): First 128 bytes of corrupted metadata buffer:
+> [ 2029.204262] 00000000: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.213220] 00000010: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.222178] 00000020: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.231151] 00000030: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.240107] 00000040: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.249171] 00000050: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.258134] 00000060: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.267083] 00000070: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.282435] XFS (dm-5): Corruption warning: Metadata has LSN (-842150451:-842150451) ahead of current LSN (1:785). Please unmount and run xfs_repair (>= v4.3) to resolve.
+> [ 2029.299516] XFS (dm-5): Metadata CRC error detected at xfs_bmbt_read_verify+0x1b/0x2d0 [xfs], xfs_bmbt block 0x5830 
+> [ 2029.311295] XFS (dm-5): Unmount and run xfs_repair
+> [ 2029.316666] XFS (dm-5): First 128 bytes of corrupted metadata buffer:
+> [ 2029.323887] 00000000: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.332844] 00000010: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.341817] 00000020: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.350776] 00000030: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.359731] 00000040: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.368690] 00000050: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.377648] 00000060: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.386607] 00000070: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
+> [ 2029.395599] XFS (dm-5): metadata I/O error in "xfs_trans_read_buf_map" at daddr 0x5830 len 8 error 74
+> [ 2029.499375] XFS (dm-5): log mount/recovery failed: error -117
+> [ 2029.506425] XFS (dm-5): log mount failed
+> [ 2029.552080] XFS (dm-2): Unmounting Filesystem
+> 
+> # xfs_repair /dev/mapper/rhel_xxx-xxxx-xx-xfscratch
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+> ERROR: The filesystem has valuable metadata changes in a log which needs to
+> be replayed.  Mount the filesystem to replay the log, and unmount it before
+> re-running xfs_repair.  If you are unable to mount the filesystem, then use
+> the -L option to destroy the log and attempt a repair.
+> Note that destroying the log may cause corruption -- please attempt a mount
+> of the filesystem before doing this
+> 
+> # mount /dev/mapper/rhel_xxx-xxxx-xx-xfscratch /mnt/scratch
+> mount: /mnt/scratch: mount(2) system call failed: Structure needs cleaning.
+> 
+> # xfs_repair -L /dev/mapper/rhel_xxx-xxxx-xx-xfscratch 
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+> ALERT: The filesystem has valuable metadata changes in a log which is being
+> destroyed because the -L option was used.
+>         - scan filesystem freespace and inode maps...
+> sb_ifree 61, counted 60
+> sb_fdblocks 22271328, counted 22270327
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+> Metadata CRC error detected at 0x449c9d, xfs_bmbt block 0x5830/0x1000
+> btree block 0/2822 is suspect, error -74
+> bad magic # 0xcdcdcdcd in inode 131 (data fork) bmbt block 2822
+> bad data fork in inode 131
+> cleared inode 131
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+> entry "fragfile" in shortform directory 128 references free inode 131
+> junking entry "fragfile" in directory inode 128
+>         - agno = 1
+>         - agno = 3
+>         - agno = 2
+> Phase 5 - rebuild AG headers and trees...
+>         - reset superblock...
+> Phase 6 - check inode connectivity...
+>         - resetting contents of realtime bitmap and summary inodes
+>         - traversing filesystem ...
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> Phase 7 - verify and correct link counts...
+> Metadata corruption detected at 0x449b47, xfs_bmbt block 0x5830/0x1000
+> libxfs_writebufr: write verifer failed on xfs_bmbt bno 0x5830/0x1000
+> Maximum metadata LSN (1:237) is ahead of log (1:2).
+> Format log to cycle 4.
+> releasing dirty buffer (bulk) to free list!done
+> 
+> 
+> 
+>  tests/xfs/999     | 76 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/999.out |  2 ++
+>  tests/xfs/group   |  1 +
+>  3 files changed, 79 insertions(+)
+>  create mode 100755 tests/xfs/999
+>  create mode 100644 tests/xfs/999.out
+> 
+> diff --git a/tests/xfs/999 b/tests/xfs/999
+> new file mode 100755
+> index 00000000..cfe5c4d4
+> --- /dev/null
+> +++ b/tests/xfs/999
+> @@ -0,0 +1,76 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2018 Red Hat Inc. All Rights Reserved.
+> +#
+> +# FS QA Test No. 999
+> +#
+> +# If an inode had been in btree format and had a data fork owner change
+> +# logged, after changing the format to non-btree, will hit an ASSERT or
+> +# fs corruption.
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
 
---y1vYluhJcTlkKcZPsMVInkdE5yEPrIpbh
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: quoted-printable
+I changed it to "_supported_fs xfs"
 
-On 20/12/2018 19.39, Luciano ES wrote:
-> On Thu, 20 Dec 2018 11:32:33 -0600, Eric Sandeen wrote:
->=20
->> but ok, I missed that you had 2k blocks on your backup disk.... I
->> don't really know what you're trying to do here, TBH.
->=20
-> Smaller blocks waste less space. In ext3/4, I've always used 2k or=20
-> even 1k blocks. It does save space. Doesn't it in XFS too?
+> +_supported_os Linux
+> +_require_scratch
 
-Depends. Not always "smaller blocks waste less space". It depends on the
-mix of filesizes. If most files are big, then no.
+I also added
 
-Consider, for instance, that in a filesystem with a fixed number of
-inodes (like ext2/3/4), when using small blocks the structures that list
-the blocks are larger, simply because there are more blocks.
+_require_scratch_shutdown
+_require_command "$XFS_FSR_PROG" "xfs_fsr"
 
---=20
-Cheers / Saludos,
+> +
+> +_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
+> +. $tmp.mkfs
+> +
+> +_scratch_mount
+> +localfile=$SCRATCH_MNT/fragfile
+> +
+> +# Try to create a file with 1024 * (3 blocks + 1 hole):
+> +# +----------+--------+-------+----------+--------+
+> +# | 3 blocks | 1 hole |  ...  | 3 blocks | 1 hole |
+> +# +----------+--------+-------+----------+--------+
+> +#
+> +# The number of extents we can get maybe more or less than 1024, this method
+> +# just to get a btree inode format.
+> +filesize=$((dbsize * 1024 * 4))
+> +for i in `seq $filesize -$dbsize 0`; do
+> +	if [ $((i % (3 * dbsize))) -eq 0 ]; then
+> +		continue
+> +	fi
+> +	$XFS_IO_PROG -f -d -c "pwrite $i $dbsize" $localfile >> $seqres.full
+> +done
+> +
+> +# Make a data fork owner change log
+> +$XFS_FSR_PROG -v -d $localfile >> $seqres.full 2>&1
+> +
+> +# Truncate the file to 0, and change the inode format to extent, then shutdown
+> +# the fs to keep the XFS_ILOG_DOWNER flag
+> +$XFS_IO_PROG -t -x -c "pwrite 0 $dbsize" \
+> +	     -c "fsync" \
+> +	     -c "shutdown" $localfile >> $seqres.full
+> +
+> +# Cycle mount, to replay the log
+> +_scratch_cycle_mount
+> +
+> +echo "Silence is golden"
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+> new file mode 100644
+> index 00000000..3b276ca8
+> --- /dev/null
+> +++ b/tests/xfs/999.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 999
+> +Silence is golden
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index dfaae2bc..9171144e 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -496,3 +496,4 @@
+>  496 dangerous_fuzzers dangerous_scrub dangerous_repair
+>  497 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+>  498 dangerous_fuzzers dangerous_norepair
+> +999 auto quick
 
-		Carlos E. R.
-		(from 42.3 x86_64 "Malachite" at Telcontar)
+Added 'shutdown log' groups.
 
+Thanks,
+Eryu
 
---y1vYluhJcTlkKcZPsMVInkdE5yEPrIpbh--
-
---2FcNxBx2BO3eb9srVozL4V8iuQdTd3ddk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlwb48IACgkQtTMYHG2NR9VE9ACfftUvudHqRRUaFRVMZPhmw0cF
-3EsAn2cE/IyUopodwQ0Krnus7w4ir2Pt
-=ucvi
------END PGP SIGNATURE-----
-
---2FcNxBx2BO3eb9srVozL4V8iuQdTd3ddk--
+> -- 
+> 2.17.2
+> 
