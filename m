@@ -1,48 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:47460 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:42314 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726343AbeLXAmM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Dec 2018 19:42:12 -0500
-Date: Sun, 23 Dec 2018 16:42:04 -0800
+        with ESMTP id S1726903AbeLaTSx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 14:18:53 -0500
+Date: Mon, 31 Dec 2018 11:18:48 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [GIT PULL] iomap: updates for v4.21
-Message-ID: <20181224004204.GL27208@magnolia>
+Subject: [PATCH] xfs_db: fix finobt record decoding when sparse inodes enabled
+Message-ID: <20181231191848.GB20475@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-Hi Linus,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Here's a fix for a memory overflow bug in the iomap code for 4.21-rc1.
-It has undergone the usual testing regimen and merges cleanly with 4.20
-final.  Let me know if you encounter any problems with the merge.
+Use the sparse inobt record field decoder (inobt_spcrc_hfld) to decode
+finobt records when sparse inodes are enabled.  Otherwise, xfs_db
+prints out bogus things like:
 
---D
+recs[1] = [startino,freecount,free]
+1:[214720,16429,0xfffffffffff80000]
 
-The following changes since commit 7566ec393f4161572ba6f11ad5171fd5d59b0fbd:
+There can never be 16429 records in an inode btree record; instead it
+should print:
 
-  Linux 4.20-rc7 (2018-12-16 15:46:55 -0800)
+recs[1] = [startino,holemask,count,freecount,free]
+1:[214720,0,64,45,0xfffffffffff80000]
 
-are available in the Git repository at:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/type.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-4.21-merge-2
-
-for you to fetch changes up to 3cc31fa65d85610574c0f6a474e89f4c419923d5:
-
-  iomap: don't search past page end in iomap_is_partially_uptodate (2018-12-21 08:42:50 -0800)
-
-----------------------------------------------------------------
-Updates for 4.21:
-- Fix a memory overflow bug for blocksize < pagesize
-
-----------------------------------------------------------------
-Eric Sandeen (1):
-      iomap: don't search past page end in iomap_is_partially_uptodate
-
- fs/iomap.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+diff --git a/db/type.c b/db/type.c
+index d0234c57..f5f65042 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -151,7 +151,7 @@ static const typ_t	__typtab_spcrc[] = {
+ 	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
+ 		&xfs_symlink_buf_ops, XFS_SYMLINK_CRC_OFF },
+ 	{ TYP_TEXT, "text", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
+-	{ TYP_FINOBT, "finobt", handle_struct, inobt_crc_hfld,
++	{ TYP_FINOBT, "finobt", handle_struct, inobt_spcrc_hfld,
+ 		&xfs_inobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
+ 	{ TYP_NONE, NULL }
+ };
