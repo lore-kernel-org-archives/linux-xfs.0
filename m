@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:39532 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728193AbfAACXC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:23:02 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012EFNB173632
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:00 GMT
+Received: from userp2130.oracle.com ([156.151.31.86]:44928 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728193AbfAACXH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:23:07 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012DnDJ018621
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:06 GMT
 Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2120.oracle.com with ESMTP id 2pp1jqx45d-1
+        by userp2130.oracle.com with ESMTP id 2pp0btp7bb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:23:00 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012MxwN013443
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:23:06 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012N5uQ013678
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:22:59 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x012MxAj004382
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:22:59 GMT
-Subject: [PATCH 05/13] xfs: iget for metadata inodes
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:05 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x012N53P028919
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:05 GMT
+Subject: [PATCH 06/13] xfs: define the on-disk format for the metadir feature
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 31 Dec 2018 18:22:57 -0800
-Message-ID: <154630937786.21716.1154582079168264872.stgit@magnolia>
+Date: Mon, 31 Dec 2018 18:23:04 -0800
+Message-ID: <154630938409.21716.18345212801449500981.stgit@magnolia>
 In-Reply-To: <154630934595.21716.17416691804044507782.stgit@magnolia>
 References: <154630934595.21716.17416691804044507782.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,267 +34,103 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a xfs_iget_meta function for metadata inodes to ensure that we
-always check that the inobt thinks a metadata inode is in use.
+Define the on-disk layout and feature flags for the metadata inode
+directory feature.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_imeta.h |    5 +++++
- fs/xfs/xfs_icache.c       |   27 +++++++++++++++++++++++++++
- fs/xfs/xfs_inode.c        |    7 +++++++
- fs/xfs/xfs_qm.c           |   33 +++++++++++++++++----------------
- fs/xfs/xfs_qm_syscalls.c  |    4 +++-
- fs/xfs/xfs_rtalloc.c      |   15 +++++++++------
- 6 files changed, 68 insertions(+), 23 deletions(-)
+ fs/xfs/libxfs/xfs_format.h |   30 ++++++++++++++++++++++++++++--
+ fs/xfs/xfs_inode.h         |    5 +++++
+ 2 files changed, 33 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_imeta.h b/fs/xfs/libxfs/xfs_imeta.h
-index 7740e7bd03e5..5321dba38bbe 100644
---- a/fs/xfs/libxfs/xfs_imeta.h
-+++ b/fs/xfs/libxfs/xfs_imeta.h
-@@ -43,4 +43,9 @@ int xfs_imeta_mount(struct xfs_mount *mp);
- unsigned int xfs_imeta_create_space_res(struct xfs_mount *mp);
- unsigned int xfs_imeta_unlink_space_res(struct xfs_mount *mp);
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 3d9f5d8e4e25..c85a2f2e4c83 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -175,6 +175,14 @@ typedef struct xfs_sb {
+ 	xfs_lsn_t	sb_lsn;		/* last write sequence */
+ 	uuid_t		sb_meta_uuid;	/* metadata file system unique id */
  
-+/* Must be implemented by the libxfs client */
-+int xfs_imeta_iget(struct xfs_mount *mp, xfs_ino_t ino, unsigned char ftype,
-+		  struct xfs_inode **ipp);
-+void xfs_imeta_irele(struct xfs_inode *ip);
++	/*
++	 * Metadata Directory Inode.  On disk this lives in the sb_rbmino slot,
++	 * but we continue to use the in-core superblock to cache the classic
++	 * inodes (rt bitmap; rt summary; user, group, and project quotas) so
++	 * we cache the metadir inode value here too.
++	 */
++	xfs_ino_t	sb_metadirino;
 +
- #endif /* __XFS_IMETA_H__ */
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index f00c6f4bc515..7c459e37396d 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -22,6 +22,8 @@
- #include "xfs_dquot_item.h"
- #include "xfs_dquot.h"
- #include "xfs_reflink.h"
-+#include "xfs_da_format.h"
-+#include "xfs_dir2.h"
+ 	/* must be padded to 64 bit alignment */
+ } xfs_sb_t;
  
- #include <linux/kthread.h>
- #include <linux/freezer.h>
-@@ -910,6 +912,31 @@ xfs_icache_inode_is_allocated(
- 	return 0;
+@@ -193,7 +201,14 @@ typedef struct xfs_dsb {
+ 	uuid_t		sb_uuid;	/* user-visible file system unique id */
+ 	__be64		sb_logstart;	/* starting block of log if internal */
+ 	__be64		sb_rootino;	/* root inode number */
+-	__be64		sb_rbmino;	/* bitmap inode for realtime extents */
++	/*
++	 * bitmap inode for realtime extents.
++	 *
++	 * The metadata inode directory feature uses the sb_rbmino field to
++	 * point to the root of the metadata directory tree.  All other sb
++	 * inode pointers are cancelled.
++	 */
++	__be64		sb_rbmino;
+ 	__be64		sb_rsumino;	/* summary inode for rt bitmap */
+ 	__be32		sb_rextsize;	/* realtime extent size, blocks */
+ 	__be32		sb_agblocks;	/* size of an allocation group */
+@@ -465,6 +480,7 @@ xfs_sb_has_ro_compat_feature(
+ #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
+ #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
+ #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
++#define XFS_SB_FEAT_INCOMPAT_METADIR	(1 << 3)	/* metadata ino dir */
+ #define XFS_SB_FEAT_INCOMPAT_ALL \
+ 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
+ 		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
+@@ -546,6 +562,12 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+ 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
  }
  
-+/* Get a metadata inode.  The ftype must match exactly. */
-+int
-+xfs_imeta_iget(
-+	struct xfs_mount	*mp,
-+	xfs_ino_t		ino,
-+	unsigned char		ftype,
-+	struct xfs_inode	**ipp)
++static inline bool xfs_sb_version_hasmetadir(struct xfs_sb *sbp)
 +{
-+	struct xfs_inode	*ip;
-+	int			error;
-+
-+	error = xfs_iget(mp, NULL, ino, XFS_IGET_UNTRUSTED, 0, &ip);
-+	if (error)
-+		return error;
-+
-+	if (ftype == XFS_DIR3_FT_UNKNOWN ||
-+	    xfs_mode_to_ftype(VFS_I(ip)->i_mode) != ftype) {
-+		xfs_irele(ip);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	*ipp = ip;
-+	return 0;
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
++		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_METADIR);
 +}
 +
  /*
-  * The inode lookup is done in batches to keep the amount of lock traffic and
-  * radix tree lookups to a minimum. The batch size is a trade off between
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index f177e0ded21c..d2de7cd87b07 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2654,6 +2654,13 @@ xfs_irele(
- 	iput(VFS_I(ip));
+  * end of superblock version macros
+  */
+@@ -1055,12 +1077,16 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+ #define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
+ #define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
+ #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
++#define XFS_DIFLAG2_METADATA_BIT 3	/* filesystem metadata */
++
+ #define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
+ #define XFS_DIFLAG2_REFLINK     (1 << XFS_DIFLAG2_REFLINK_BIT)
+ #define XFS_DIFLAG2_COWEXTSIZE  (1 << XFS_DIFLAG2_COWEXTSIZE_BIT)
++#define XFS_DIFLAG2_METADATA	(1 << XFS_DIFLAG2_METADATA_BIT)
+ 
+ #define XFS_DIFLAG2_ANY \
+-	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE)
++	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE | \
++	 XFS_DIFLAG2_METADATA)
+ 
+ /*
+  * Inode number format:
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 211b7d85bf62..5f8375424f62 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -170,6 +170,11 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+ 	return ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
  }
  
-+void
-+xfs_imeta_irele(
-+	struct xfs_inode	*ip)
++static inline bool xfs_is_metadata_inode(struct xfs_inode *ip)
 +{
-+	xfs_irele(ip);
++	return ip->i_d.di_flags2 & XFS_DIFLAG2_METADATA;
 +}
 +
  /*
-  * Decide if this inode have post-EOF blocks.  The caller is responsible
-  * for knowing / caring about the PREALLOC/APPEND flags.
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 4b8a48fb5780..c6ab9fe531d5 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -27,6 +27,7 @@
- #include "xfs_icache.h"
- #include "xfs_cksum.h"
- #include "xfs_imeta.h"
-+#include "xfs_da_format.h"
- 
- /*
-  * The global quota manager. There is only one of these for the entire
-@@ -232,15 +233,15 @@ xfs_qm_unmount_quotas(
- 	 */
- 	if (mp->m_quotainfo) {
- 		if (mp->m_quotainfo->qi_uquotaip) {
--			xfs_irele(mp->m_quotainfo->qi_uquotaip);
-+			xfs_imeta_irele(mp->m_quotainfo->qi_uquotaip);
- 			mp->m_quotainfo->qi_uquotaip = NULL;
- 		}
- 		if (mp->m_quotainfo->qi_gquotaip) {
--			xfs_irele(mp->m_quotainfo->qi_gquotaip);
-+			xfs_imeta_irele(mp->m_quotainfo->qi_gquotaip);
- 			mp->m_quotainfo->qi_gquotaip = NULL;
- 		}
- 		if (mp->m_quotainfo->qi_pquotaip) {
--			xfs_irele(mp->m_quotainfo->qi_pquotaip);
-+			xfs_imeta_irele(mp->m_quotainfo->qi_pquotaip);
- 			mp->m_quotainfo->qi_pquotaip = NULL;
- 		}
- 	}
-@@ -798,7 +799,7 @@ xfs_qm_qino_switch(
- 	if (ino == NULLFSINO)
- 		return 0;
- 
--	error = xfs_iget(mp, NULL, ino, 0, 0, ip);
-+	error = xfs_imeta_iget(mp, ino, XFS_DIR3_FT_REG_FILE, ip);
- 	if (error)
- 		return error;
- 
-@@ -1570,24 +1571,24 @@ xfs_qm_init_quotainos(
- 		if (XFS_IS_UQUOTA_ON(mp) &&
- 		    mp->m_sb.sb_uquotino != NULLFSINO) {
- 			ASSERT(mp->m_sb.sb_uquotino > 0);
--			error = xfs_iget(mp, NULL, mp->m_sb.sb_uquotino,
--					     0, 0, &uip);
-+			error = xfs_imeta_iget(mp, mp->m_sb.sb_uquotino,
-+					XFS_DIR3_FT_REG_FILE, &uip);
- 			if (error)
- 				return error;
- 		}
- 		if (XFS_IS_GQUOTA_ON(mp) &&
- 		    mp->m_sb.sb_gquotino != NULLFSINO) {
- 			ASSERT(mp->m_sb.sb_gquotino > 0);
--			error = xfs_iget(mp, NULL, mp->m_sb.sb_gquotino,
--					     0, 0, &gip);
-+			error = xfs_imeta_iget(mp, mp->m_sb.sb_gquotino,
-+					XFS_DIR3_FT_REG_FILE, &gip);
- 			if (error)
- 				goto error_rele;
- 		}
- 		if (XFS_IS_PQUOTA_ON(mp) &&
- 		    mp->m_sb.sb_pquotino != NULLFSINO) {
- 			ASSERT(mp->m_sb.sb_pquotino > 0);
--			error = xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
--					     0, 0, &pip);
-+			error = xfs_imeta_iget(mp, mp->m_sb.sb_pquotino,
-+					XFS_DIR3_FT_REG_FILE, &pip);
- 			if (error)
- 				goto error_rele;
- 		}
-@@ -1632,11 +1633,11 @@ xfs_qm_init_quotainos(
- 
- error_rele:
- 	if (uip)
--		xfs_irele(uip);
-+		xfs_imeta_irele(uip);
- 	if (gip)
--		xfs_irele(gip);
-+		xfs_imeta_irele(gip);
- 	if (pip)
--		xfs_irele(pip);
-+		xfs_imeta_irele(pip);
- 	return error;
- }
- 
-@@ -1645,15 +1646,15 @@ xfs_qm_destroy_quotainos(
- 	xfs_quotainfo_t	*qi)
- {
- 	if (qi->qi_uquotaip) {
--		xfs_irele(qi->qi_uquotaip);
-+		xfs_imeta_irele(qi->qi_uquotaip);
- 		qi->qi_uquotaip = NULL; /* paranoia */
- 	}
- 	if (qi->qi_gquotaip) {
--		xfs_irele(qi->qi_gquotaip);
-+		xfs_imeta_irele(qi->qi_gquotaip);
- 		qi->qi_gquotaip = NULL;
- 	}
- 	if (qi->qi_pquotaip) {
--		xfs_irele(qi->qi_pquotaip);
-+		xfs_imeta_irele(qi->qi_pquotaip);
- 		qi->qi_pquotaip = NULL;
- 	}
- }
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index d96f146e3fe6..71c910ea9e6c 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -23,6 +23,8 @@
- #include "xfs_trace.h"
- #include "xfs_icache.h"
- #include "xfs_defer.h"
-+#include "xfs_imeta.h"
-+#include "xfs_da_format.h"
- 
- STATIC int	xfs_qm_log_quotaoff(xfs_mount_t *, xfs_qoff_logitem_t **, uint);
- STATIC int	xfs_qm_log_quotaoff_end(xfs_mount_t *, xfs_qoff_logitem_t *,
-@@ -225,7 +227,7 @@ xfs_qm_scall_trunc_qfile(
- 	if (ino == NULLFSINO)
- 		return 0;
- 
--	error = xfs_iget(mp, NULL, ino, 0, 0, &ip);
-+	error = xfs_imeta_iget(mp, ino, XFS_DIR3_FT_REG_FILE, &ip);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index afe4d29f7ab4..cedaf2f94362 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -24,7 +24,8 @@
- #include "xfs_buf.h"
- #include "xfs_icache.h"
- #include "xfs_rtalloc.h"
--
-+#include "xfs_da_format.h"
-+#include "xfs_imeta.h"
- 
- /*
-  * Read and return the summary information for a given extent size,
-@@ -1206,14 +1207,16 @@ xfs_rtmount_inodes(
- 	xfs_sb_t	*sbp;
- 
- 	sbp = &mp->m_sb;
--	error = xfs_iget(mp, NULL, sbp->sb_rbmino, 0, 0, &mp->m_rbmip);
-+	error = xfs_imeta_iget(mp, mp->m_sb.sb_rbmino, XFS_DIR3_FT_REG_FILE,
-+			&mp->m_rbmip);
- 	if (error)
- 		return error;
- 	ASSERT(mp->m_rbmip != NULL);
- 
--	error = xfs_iget(mp, NULL, sbp->sb_rsumino, 0, 0, &mp->m_rsumip);
-+	error = xfs_imeta_iget(mp, mp->m_sb.sb_rsumino, XFS_DIR3_FT_REG_FILE,
-+			&mp->m_rsumip);
- 	if (error) {
--		xfs_irele(mp->m_rbmip);
-+		xfs_imeta_irele(mp->m_rbmip);
- 		return error;
- 	}
- 	ASSERT(mp->m_rsumip != NULL);
-@@ -1234,9 +1237,9 @@ xfs_rtunmount_inodes(
- {
- 	kmem_free(mp->m_rsum_cache);
- 	if (mp->m_rbmip)
--		xfs_irele(mp->m_rbmip);
-+		xfs_imeta_irele(mp->m_rbmip);
- 	if (mp->m_rsumip)
--		xfs_irele(mp->m_rsumip);
-+		xfs_imeta_irele(mp->m_rsumip);
- }
- 
- /*
+  * Check if an inode has any data in the COW fork.  This might be often false
+  * even for inodes with the reflink flag when there is no pending COW operation.
