@@ -1,69 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from w1.tutanota.de ([81.3.6.162]:55110 "EHLO w1.tutanota.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725867AbeLYXJY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Dec 2018 18:09:24 -0500
-Received: from w2.tutanota.de (unknown [192.168.1.163])
-        by w1.tutanota.de (Postfix) with ESMTP id 3AB25FA0926
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Dec 2018 23:09:22 +0000 (UTC)
-Date: Wed, 26 Dec 2018 00:09:21 +0100 (CET)
-From: Jan <bug-reporter@tuta.io>
-Message-ID: <LUbcIN3--3-1@tuta.io>
-Subject: 'stripe width' inconsistency
+Received: from userp2120.oracle.com ([156.151.31.85]:59978 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726686AbfAACJT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:09:19 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x01299Hd170793
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:09:18 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2pp1jqx3sh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:09:18 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x0129INE003761
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:09:18 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x0129I8S019360
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:09:18 GMT
+Subject: [PATCH 7/8] xfs: abort xattr scrub if fatal signals are pending
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 31 Dec 2018 18:09:17 -0800
+Message-ID: <154630855701.14372.16042422623260751227.stgit@magnolia>
+In-Reply-To: <154630850739.14372.14000129432637481206.stgit@magnolia>
+References: <154630850739.14372.14000129432637481206.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linux Xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Hello!
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I hope I came to the right place here. If not, I'd appreciate a pointer to =
-a more appropriate one.
+The extended attribute scrubber should abort the "read all attrs" loop
+if there's a fatal signal pending on the process.
 
-Recently, I ran into problems mounting one of my XFS file systems. It's bee=
-n a while since I used that HDD but I'm almost certain there were no proble=
-ms. 'xfs_repair' complains about 'bad stripe width in superblock' but 'xfs_=
-db' has no problems parsing the filesystem. It reports (among other informa=
-tion)
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/attr.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-> unit =3D 8
-> width =3D 65535
-[...]
-> crc =3D 0xe9e260b (correct)
 
-and can also output directory/file information properly. The values for 'un=
-it' and 'width' do seem strange but are the defaults chosen by 'mkfs.xfs'. =
-I double checked that by running 'mkfs.xfs -Nf' on the device which yields
-
-> data=C2=A0=C2=A0=C2=A0=C2=A0 =3D=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 bsize=3D4096=C2=A0=C2=A0 blocks=3D976688597, imaxpct=3D5
->=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =3D=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 sunit=3D8=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 swidth=3D65535 blks
-
-In case this is relevant: The filesystem is created on top of a LUKS contai=
-ner on an external USB disk. 'blockdev --getss --getpbsz --getiomin --getio=
-opt /dev/mapper/XFS' reports
-
-> 4096
-> 4096
-> 32768
-> 268431360
-
-and 'fdisk -l /dev/sdb'
-
-> Device=C2=A0=C2=A0=C2=A0=C2=A0 Start=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-End=C2=A0=C2=A0 Sectors=C2=A0 Size Type
-> /dev/sdb1=C2=A0 65535 976754636 976689102=C2=A0 3,7T Linux filesystem
-
-I'm running a 64-bit Debian Testing, so my xfsprogs are version 4.15.1 and =
-the kernel is 4.18. If any further information is required/helpful,=C2=A0I'=
-ll gladly provide it. Is there any way to "repair" the XFS or at the very l=
-east (mount it to) copy its files?
-
-Regards, Jan
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 81d5e90547a1..9960bc5b5d76 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -82,6 +82,11 @@ xchk_xattr_listent(
+ 
+ 	sx = container_of(context, struct xchk_xattr, context);
+ 
++	if (xchk_should_terminate(sx->sc, &error)) {
++		context->seen_enough = 1;
++		return;
++	}
++
+ 	if (flags & XFS_ATTR_INCOMPLETE) {
+ 		/* Incomplete attr key, just mark the inode for preening. */
+ 		xchk_ino_set_preen(sx->sc, context->dp->i_ino);
