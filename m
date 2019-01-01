@@ -1,45 +1,415 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:44509 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726709AbeL2Hti (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Dec 2018 02:49:38 -0500
-Date: Sat, 29 Dec 2018 15:49:30 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH] xfstests: test swapext log replay
-Message-ID: <20181229074930.GF21777@desktop>
-References: <20181223141721.5318-1-zlang@redhat.com>
- <20181229052739.GD21777@desktop>
- <20181229073829.GR30999@dhcp-12-149.nay.redhat.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:48862 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726686AbfAACKP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:10:15 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0129lUw166022
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:10:14 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2130.oracle.com with ESMTP id 2pnxedxahv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:10:13 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x012ACQD005641
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:10:13 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x012ACpQ019982
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:10:12 GMT
+Subject: [PATCH 02/17] xfs: create a big array data structure
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 31 Dec 2018 18:10:11 -0800
+Message-ID: <154630861135.15625.9606107629550960801.stgit@magnolia>
+In-Reply-To: <154630859850.15625.17640302184521917854.stgit@magnolia>
+References: <154630859850.15625.17640302184521917854.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181229073829.GR30999@dhcp-12-149.nay.redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Sat, Dec 29, 2018 at 03:38:29PM +0800, Zorro Lang wrote:
-> On Sat, Dec 29, 2018 at 01:27:39PM +0800, Eryu Guan wrote:
-> > On Sun, Dec 23, 2018 at 10:17:21PM +0800, Zorro Lang wrote:
-> > > If an inode had been in btree format and had a data fork owner change
-> > > logged (XFS_ILOG_DOWNER), after changing the format to non-btree, will
-> > > hit an ASSERT in xfs_recover_inode_owner_change() which enforces that
-> > > if XFS_ILOG_[AD]OWNER is set.
-> > > 
-> > > Signed-off-by: Zorro Lang <zlang@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-[snip]
+Create a simple 'big array' data structure for storage of fixed-size
+metadata records that will be used to reconstruct a btree index.  For
+repair operations, the most important operations are append, iterate,
+and sort; while supported, get and put are not for frequent use.
 
-> > > +999 auto quick
-> > 
-> > Added 'shutdown log' groups.
-> 
-> Thanks your revewing. But I still have some problems as I described at
-> beginning, so I hope we can merge this patch after we have an reply
-> about that.
+For the initial implementation we will use linked-list containers,
+though a subsequent patch will restructure the backend to avoid using
+pinned kernel memory.
 
-Ok, thanks for the heads-up!
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/Makefile      |    1 
+ fs/xfs/scrub/array.c |  283 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/array.h |   53 +++++++++
+ 3 files changed, 337 insertions(+)
+ create mode 100644 fs/xfs/scrub/array.c
+ create mode 100644 fs/xfs/scrub/array.h
 
-Eryu
+
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 9c5542ef0495..bd781606719f 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -165,6 +165,7 @@ xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
+ ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
+ xfs-y				+= $(addprefix scrub/, \
+ 				   agheader_repair.o \
++				   array.o \
+ 				   bitmap.o \
+ 				   repair.o \
+ 				   )
+diff --git a/fs/xfs/scrub/array.c b/fs/xfs/scrub/array.c
+new file mode 100644
+index 000000000000..7871e8dcad5c
+--- /dev/null
++++ b/fs/xfs/scrub/array.c
+@@ -0,0 +1,283 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "scrub/array.h"
++
++/*
++ * XFS Fixed-Size Big Memory Array
++ * ===============================
++ * The big memory array uses a list to store large numbers of fixed-size
++ * records in memory.  Access to the array is performed via indexed get and put
++ * methods, and an append method is provided for convenience.  Array elements
++ * can be set to all zeroes, which means that the entry is NULL and will be
++ * skipped during iteration.
++ */
++
++struct xa_item {
++	struct list_head	list;
++	/* array item comes after here */
++};
++
++#define XA_ITEM_SIZE(sz)	(sizeof(struct xa_item) + (sz))
++
++/* Initialize a big memory array. */
++struct xfbma *
++xfbma_init(
++	size_t		obj_size)
++{
++	struct xfbma	*array;
++	int		error;
++
++	error = -ENOMEM;
++	array = kmem_alloc(sizeof(struct xfbma) + obj_size,
++			KM_NOFS | KM_MAYFAIL);
++	if (!array)
++		return ERR_PTR(error);
++
++	array->obj_size = obj_size;
++	array->nr = 0;
++	INIT_LIST_HEAD(&array->list);
++	memset(&array->cache, 0, sizeof(array->cache));
++
++	return array;
++}
++
++void
++xfbma_destroy(
++	struct xfbma	*array)
++{
++	struct xa_item	*item, *n;
++
++	list_for_each_entry_safe(item, n, &array->list, list) {
++		list_del(&item->list);
++		kmem_free(item);
++	}
++	kmem_free(array);
++}
++
++/* Find something in the cache. */
++static struct xa_item *
++xfbma_cache_lookup(
++	struct xfbma	*array,
++	uint64_t	nr)
++{
++	uint64_t	i;
++
++	for (i = 0; i < XMA_CACHE_SIZE; i++)
++		if (array->cache[i].nr == nr && array->cache[i].item)
++			return array->cache[i].item;
++	return NULL;
++}
++
++/* Invalidate the lookup cache. */
++static void
++xfbma_cache_invalidate(
++	struct xfbma	*array)
++{
++	memset(array->cache, 0, sizeof(array->cache));
++}
++
++/* Put something in the cache. */
++static void
++xfbma_cache_store(
++	struct xfbma	*array,
++	uint64_t	nr,
++	struct xa_item	*item)
++{
++	memmove(array->cache + 1, array->cache,
++			sizeof(struct xma_cache) * (XMA_CACHE_SIZE - 1));
++	array->cache[0].item = item;
++	array->cache[0].nr = nr;
++}
++
++/* Find a particular array item. */
++static struct xa_item *
++xfbma_lookup(
++	struct xfbma	*array,
++	uint64_t	nr)
++{
++	struct xa_item	*item;
++	uint64_t	i;
++
++	if (nr >= array->nr) {
++		ASSERT(0);
++		return NULL;
++	}
++
++	item = xfbma_cache_lookup(array, nr);
++	if (item)
++		return item;
++
++	i = 0;
++	list_for_each_entry(item, &array->list, list) {
++		if (i == nr) {
++			xfbma_cache_store(array, nr, item);
++			return item;
++		}
++		i++;
++	}
++	return NULL;
++}
++
++/* Get an element from the array. */
++int
++xfbma_get(
++	struct xfbma	*array,
++	uint64_t	nr,
++	void		*ptr)
++{
++	struct xa_item	*item;
++
++	item = xfbma_lookup(array, nr);
++	if (!item)
++		return -ENODATA;
++	memcpy(ptr, item + 1, array->obj_size);
++	return 0;
++}
++
++/* Put an element in the array. */
++int
++xfbma_set(
++	struct xfbma	*array,
++	uint64_t	nr,
++	void		*ptr)
++{
++	struct xa_item	*item;
++
++	item = xfbma_lookup(array, nr);
++	if (!item)
++		return -ENODATA;
++	memcpy(item + 1, ptr, array->obj_size);
++	return 0;
++}
++
++/* Is this array element NULL? */
++bool
++xfbma_is_null(
++	struct xfbma	*array,
++	void		*ptr)
++{
++	return !memchr_inv(ptr, 0, array->obj_size);
++}
++
++/* Put an element anywhere in the array that isn't NULL. */
++int
++xfbma_insert_anywhere(
++	struct xfbma	*array,
++	void		*ptr)
++{
++	struct xa_item	*item;
++
++	/* Find a null slot to put it in. */
++	list_for_each_entry(item, &array->list, list) {
++		if (!xfbma_is_null(array, item + 1))
++			continue;
++		memcpy(item + 1, ptr, array->obj_size);
++		return 0;
++	}
++
++	/* No null slots, just dump it on the end. */
++	return xfbma_append(array, ptr);
++}
++
++/* NULL an element in the array. */
++int
++xfbma_nullify(
++	struct xfbma	*array,
++	uint64_t	nr)
++{
++	struct xa_item	*item;
++
++	item = xfbma_lookup(array, nr);
++	if (!item)
++		return -ENODATA;
++	memset(item + 1, 0, array->obj_size);
++	return 0;
++}
++
++/* Append an element to the array. */
++int
++xfbma_append(
++	struct xfbma	*array,
++	void		*ptr)
++{
++	struct xa_item	*item;
++
++	item = kmem_alloc(XA_ITEM_SIZE(array->obj_size), KM_NOFS | KM_MAYFAIL);
++	if (!item)
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&item->list);
++	memcpy(item + 1, ptr, array->obj_size);
++	list_add_tail(&item->list, &array->list);
++	array->nr++;
++	return 0;
++}
++
++/*
++ * Iterate every element in this array, freeing each element as we go.
++ * Array elements will be shifted down.
++ */
++int
++xfbma_iter_del(
++	struct xfbma	*array,
++	xfbma_iter_fn	iter_fn,
++	void		*priv)
++{
++	struct xa_item	*item, *n;
++	int		error = 0;
++
++	list_for_each_entry_safe(item, n, &array->list, list) {
++		if (xfbma_is_null(array, item + 1))
++			goto next;
++		memcpy(array + 1, item + 1, array->obj_size);
++		error = iter_fn(array + 1, priv);
++		if (error)
++			break;
++next:
++		list_del(&item->list);
++		kmem_free(item);
++		array->nr--;
++	}
++
++	xfbma_cache_invalidate(array);
++	return error;
++}
++
++/* Return length of array. */
++uint64_t
++xfbma_length(
++	struct xfbma	*array)
++{
++	return array->nr;
++}
++
++static int
++xfbma_item_cmp(
++	void			*priv,
++	struct list_head	*a,
++	struct list_head	*b)
++{
++	int			(*cmp_fn)(void *a, void *b) = priv;
++	struct xa_item		*ai, *bi;
++
++	ai = container_of(a, struct xa_item, list);
++	bi = container_of(b, struct xa_item, list);
++
++	return cmp_fn(ai + 1, bi + 1);
++}
++
++/* Sort everything in this array. */
++int
++xfbma_sort(
++	struct xfbma	*array,
++	xfbma_cmp_fn	cmp_fn)
++{
++	list_sort(cmp_fn, &array->list, xfbma_item_cmp);
++	return 0;
++}
+diff --git a/fs/xfs/scrub/array.h b/fs/xfs/scrub/array.h
+new file mode 100644
+index 000000000000..a6a7b69dc138
+--- /dev/null
++++ b/fs/xfs/scrub/array.h
+@@ -0,0 +1,53 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ */
++#ifndef __XFS_SCRUB_ARRAY_H__
++#define __XFS_SCRUB_ARRAY_H__
++
++struct xma_item;
++
++struct xma_cache {
++	uint64_t	nr;
++	struct xa_item	*item;
++};
++
++#define XMA_CACHE_SIZE	(8)
++
++struct xfbma {
++	struct list_head	list;
++	size_t			obj_size;
++	uint64_t		nr;
++	struct xma_cache	cache[XMA_CACHE_SIZE];
++};
++
++struct xfbma *xfbma_init(size_t obj_size);
++void xfbma_destroy(struct xfbma *array);
++int xfbma_get(struct xfbma *array, uint64_t nr, void *ptr);
++int xfbma_set(struct xfbma *array, uint64_t nr, void *ptr);
++int xfbma_insert_anywhere(struct xfbma *array, void *ptr);
++bool xfbma_is_null(struct xfbma *array, void *ptr);
++int xfbma_nullify(struct xfbma *array, uint64_t nr);
++int xfbma_append(struct xfbma *array, void *ptr);
++uint64_t xfbma_length(struct xfbma *array);
++
++/*
++ * Iterator functions return zero for success, a negative error code to abort
++ * with an error, or XFBMA_ITERATE_ABORT to stop iterating.
++ */
++#define XFBMA_ITERATE_ABORT	(1)
++typedef int (*xfbma_iter_fn)(const void *item, void *priv);
++
++int xfbma_iter_del(struct xfbma *array, xfbma_iter_fn iter_fn, void *priv);
++
++typedef int (*xfbma_cmp_fn)(const void *a, const void *b);
++
++int xfbma_sort(struct xfbma *array, xfbma_cmp_fn cmp_fn);
++
++#define foreach_xfbma_item(array, i, rec) \
++	for ((i) = 0; (i) < xfbma_length(array); (i)++) \
++		if (xfbma_get((array), (i), &(rec)) == 0 && \
++		    !xfbma_is_null((array), &(rec)))
++
++#endif /* __XFS_SCRUB_ARRAY_H__ */
