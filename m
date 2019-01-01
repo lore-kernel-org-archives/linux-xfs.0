@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:39644 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728193AbfAACXN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:23:13 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012E408173564
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:12 GMT
+Received: from userp2130.oracle.com ([156.151.31.86]:45112 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728414AbfAACXX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:23:23 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012FYGM019623
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:23 GMT
 Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2pp1jqx45k-1
+        by userp2130.oracle.com with ESMTP id 2pp0btp7bm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:23:12 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012NBRJ030731
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:23:23 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012NHIO030892
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:11 GMT
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x012NBBZ027491
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:11 GMT
-Subject: [PATCH 07/13] xfs: load metadata inode directory at mount time
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:17 GMT
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x012NHSO004481
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:17 GMT
+Subject: [PATCH 08/13] xfs: convert metadata inode lookup keys to use paths
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 31 Dec 2018 18:23:10 -0800
-Message-ID: <154630939020.21716.3079946986143648994.stgit@magnolia>
+Date: Mon, 31 Dec 2018 18:23:16 -0800
+Message-ID: <154630939636.21716.9376021504995036779.stgit@magnolia>
 In-Reply-To: <154630934595.21716.17416691804044507782.stgit@magnolia>
 References: <154630934595.21716.17416691804044507782.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,149 +34,116 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Load the metadata directory inode into memory at mount time and release
-it at unmount time.  We also make sure that the obsolete inode pointers
-in the superblock are not logged or read from the superblock.
+Convert the magic metadata inode lookup keys to use actual strings
+for paths.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_sb.c    |   31 +++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_types.c |    2 +-
- fs/xfs/xfs_mount.c        |   20 ++++++++++++++++++--
- fs/xfs/xfs_mount.h        |    1 +
- 4 files changed, 51 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_imeta.c |   48 ++++++++++++++++++++++++---------------------
+ fs/xfs/libxfs/xfs_imeta.h |   17 ++++++++++++++--
+ 2 files changed, 41 insertions(+), 24 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 8ffb5c1b2843..86ba6a2cb3bb 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -524,6 +524,25 @@ __xfs_sb_from_disk(
- 	/* Convert on-disk flags to in-memory flags? */
- 	if (convert_xquota)
- 		xfs_sb_quota_from_disk(to);
-+
-+	if (xfs_sb_version_hasmetadir(to)) {
-+		/*
-+		 * Set metadirino here and null out the in-core fields for
-+		 * the other inodes because metadir initialization will load
-+		 * them later.
-+		 */
-+		to->sb_metadirino = be64_to_cpu(from->sb_rbmino);
-+		to->sb_rbmino = NULLFSINO;
-+		to->sb_rsumino = NULLFSINO;
-+
-+		/*
-+		 * We don't have to worry about quota inode conversion here
-+		 * because metadir requires a v5 filesystem.
-+		 */
-+		to->sb_uquotino = NULLFSINO;
-+		to->sb_gquotino = NULLFSINO;
-+		to->sb_pquotino = NULLFSINO;
-+	}
- }
+diff --git a/fs/xfs/libxfs/xfs_imeta.c b/fs/xfs/libxfs/xfs_imeta.c
+index 86b05992599a..3249f66d680f 100644
+--- a/fs/xfs/libxfs/xfs_imeta.c
++++ b/fs/xfs/libxfs/xfs_imeta.c
+@@ -47,26 +47,17 @@
+  */
  
- void
-@@ -665,6 +684,18 @@ xfs_sb_to_disk(
- 		if (xfs_sb_version_hasmetauuid(from))
- 			uuid_copy(&to->sb_meta_uuid, &from->sb_meta_uuid);
- 	}
+ /* Static metadata inode paths */
+-
+-const struct xfs_imeta_path XFS_IMETA_RTBITMAP = {
+-	.bogus = 0,
+-};
+-
+-const struct xfs_imeta_path XFS_IMETA_RTSUMMARY = {
+-	.bogus = 1,
+-};
+-
+-const struct xfs_imeta_path XFS_IMETA_USRQUOTA = {
+-	.bogus = 2,
+-};
+-
+-const struct xfs_imeta_path XFS_IMETA_GRPQUOTA = {
+-	.bogus = 3,
+-};
+-
+-const struct xfs_imeta_path XFS_IMETA_PRJQUOTA = {
+-	.bogus = 4,
+-};
++static const char *rtbitmap_path[]	= {"realtime", "0.bitmap"};
++static const char *rtsummary_path[]	= {"realtime", "0.summary"};
++static const char *usrquota_path[]	= {"quota", "user"};
++static const char *grpquota_path[]	= {"quota", "group"};
++static const char *prjquota_path[]	= {"quota", "project"};
 +
-+	if (xfs_sb_version_hasmetadir(from)) {
-+		/*
-+		 * Save metadirino here and null out the on-disk fields for
-+		 * the other inodes, at least until we reuse the fields.
-+		 */
-+		to->sb_rbmino = cpu_to_be64(from->sb_metadirino);
-+		to->sb_rsumino = cpu_to_be64(NULLFSINO);
-+		to->sb_uquotino = cpu_to_be64(NULLFSINO);
-+		to->sb_gquotino = cpu_to_be64(NULLFSINO);
-+		to->sb_pquotino = cpu_to_be64(NULLFSINO);
-+	}
- }
++XFS_IMETA_DEFINE_PATH(XFS_IMETA_RTBITMAP,	rtbitmap_path);
++XFS_IMETA_DEFINE_PATH(XFS_IMETA_RTSUMMARY,	rtsummary_path);
++XFS_IMETA_DEFINE_PATH(XFS_IMETA_USRQUOTA,	usrquota_path);
++XFS_IMETA_DEFINE_PATH(XFS_IMETA_GRPQUOTA,	grpquota_path);
++XFS_IMETA_DEFINE_PATH(XFS_IMETA_PRJQUOTA,	prjquota_path);
  
- /*
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index d05ccfabbc9c..089c5d865746 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -153,7 +153,7 @@ xfs_verify_dir_ino(
- 	struct xfs_mount	*mp,
- 	xfs_ino_t		ino)
+ /* Are these two paths equal? */
+ STATIC bool
+@@ -74,7 +65,20 @@ xfs_imeta_path_compare(
+ 	const struct xfs_imeta_path	*a,
+ 	const struct xfs_imeta_path	*b)
  {
--	if (xfs_internal_inum(mp, ino))
-+	if (!xfs_sb_version_hasmetadir(&mp->m_sb) && xfs_internal_inum(mp, ino))
- 		return false;
- 	return xfs_verify_ino(mp, ino);
+-	return a == b;
++	unsigned int			i;
++
++	if (a == b)
++		return true;
++
++	if (a->im_depth != b->im_depth)
++		return false;
++
++	for (i = 0; i < a->im_depth; i++)
++		if (a->im_path[i] != b->im_path[i] &&
++		    strcmp(a->im_path[i], b->im_path[i]))
++			return false;
++
++	return true;
  }
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index b895368c64fb..68b9ba7245e8 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -672,6 +672,16 @@ xfs_mountfs_imeta(
+ 
+ /* Is this path ok? */
+@@ -82,7 +86,7 @@ static inline bool
+ xfs_imeta_path_check(
+ 	const struct xfs_imeta_path	*path)
  {
- 	int			error;
+-	return true;
++	return path->im_depth <= XFS_IMETA_MAX_DEPTH;
+ }
  
-+	/* Load the metadata directory inode into memory. */
-+	if (xfs_sb_version_hasmetadir(&mp->m_sb)) {
-+		error = xfs_imeta_iget(mp, mp->m_sb.sb_metadirino,
-+				XFS_DIR3_FT_DIR, &mp->m_metadirip);
-+		if (error) {
-+			xfs_warn(mp, "Failed metadir ino init: %d", error);
-+			return error;
-+		}
-+	}
+ /* Functions for storing and retrieving superblock inode values. */
+diff --git a/fs/xfs/libxfs/xfs_imeta.h b/fs/xfs/libxfs/xfs_imeta.h
+index 5321dba38bbe..6caf5b16f8d7 100644
+--- a/fs/xfs/libxfs/xfs_imeta.h
++++ b/fs/xfs/libxfs/xfs_imeta.h
+@@ -6,10 +6,23 @@
+ #ifndef __XFS_IMETA_H__
+ #define __XFS_IMETA_H__
+ 
++/* How deep can we nest metadata dirs? */
++#define XFS_IMETA_MAX_DEPTH	64
 +
- 	error = xfs_imeta_mount(mp);
- 	if (error) {
- 		xfs_warn(mp, "Failed to load metadata inode info, error %d",
-@@ -921,7 +931,7 @@ xfs_mountfs(
- 
- 	error = xfs_mountfs_imeta(mp);
- 	if (error)
--		goto out_log_dealloc;
-+		goto out_free_metadir;
- 
- 	/*
- 	 * Get and sanity-check the root inode.
-@@ -933,7 +943,7 @@ xfs_mountfs(
- 		xfs_warn(mp,
- 			"Failed to read root inode 0x%llx, error %d",
- 			sbp->sb_rootino, -error);
--		goto out_log_dealloc;
-+		goto out_free_metadir;
- 	}
- 
- 	ASSERT(rip != NULL);
-@@ -1079,6 +1089,9 @@ xfs_mountfs(
- 	xfs_irele(rip);
- 	/* Clean out dquots that might be in memory after quotacheck. */
- 	xfs_qm_unmount(mp);
-+ out_free_metadir:
-+	if (mp->m_metadirip)
-+		xfs_imeta_irele(mp->m_metadirip);
- 	/*
- 	 * Cancel all delayed reclaim work and reclaim the inodes directly.
- 	 * We have to do this /after/ rtunmount and qm_unmount because those
-@@ -1143,6 +1156,9 @@ xfs_unmountfs(
- 	xfs_rtunmount_inodes(mp);
- 	xfs_irele(mp->m_rootip);
- 
-+	if (mp->m_metadirip)
-+		xfs_imeta_irele(mp->m_metadirip);
++/* Form an imeta path from a simple array of strings. */
++#define XFS_IMETA_DEFINE_PATH(name, path) \
++const struct xfs_imeta_path name = { \
++	.im_path = (path), \
++	.im_depth = ARRAY_SIZE(path), \
++}
 +
- 	/*
- 	 * We can potentially deadlock here if we have an inode cluster
- 	 * that has been freed has its buffer still pinned in memory because
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 34f2cf96ec27..2845a51f1a36 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -103,6 +103,7 @@ typedef struct xfs_mount {
- 	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
- 	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
- 	struct xfs_inode	*m_rootip;	/* pointer to root directory */
-+	struct xfs_inode	*m_metadirip;	/* metadata inode directory */
- 	struct xfs_quotainfo	*m_quotainfo;	/* disk quota information */
- 	xfs_buftarg_t		*m_ddev_targp;	/* saves taking the address */
- 	xfs_buftarg_t		*m_logdev_targp;/* ptr to log device */
+ /* Key for looking up metadata inodes. */
+ struct xfs_imeta_path {
+-	/* Temporary: integer to keep the static imeta definitions unique */
+-	int		bogus;
++	/* Array of string pointers. */
++	const char	**im_path;
++
++	/* Number of strings in path. */
++	unsigned int	im_depth;
+ };
+ 
+ /* Cleanup widget for metadata inode creation and deletion. */
