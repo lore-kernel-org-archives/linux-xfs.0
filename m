@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:53860 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728213AbfAACS2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:18:28 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012E5h8168497
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:18:26 GMT
+Received: from userp2120.oracle.com ([156.151.31.85]:36952 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728213AbfAACSj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:18:39 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012EK56173710
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:18:33 GMT
 Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2130.oracle.com with ESMTP id 2pnxedxarc-1
+        by userp2120.oracle.com with ESMTP id 2pp1jqx41r-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:18:25 +0000
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:18:33 +0000
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012IOeQ022904
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012IXmk023065
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:18:25 GMT
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x012IOlh006612
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:18:24 GMT
-Subject: [PATCH 1/4] xfs: introduce online scrub freeze
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:18:33 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x012IWrS006637
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:18:33 GMT
+Subject: [PATCH 2/4] xfs: repair the rmapbt
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 31 Dec 2018 18:18:23 -0800
-Message-ID: <154630910344.17342.15163257894247850713.stgit@magnolia>
+Date: Mon, 31 Dec 2018 18:18:29 -0800
+Message-ID: <154630910972.17342.14822754192448916248.stgit@magnolia>
 In-Reply-To: <154630909728.17342.14170394718206854566.stgit@magnolia>
 References: <154630909728.17342.14170394718206854566.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,327 +34,1272 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Introduce a new 'online scrub freeze' that we can use to lock out all
-filesystem modifications and background activity so that we can perform
-global scans in order to rebuild metadata.  This introduces a new IFLAG
-to the scrub ioctl to indicate that userspace is willing to allow a
-freeze.
+Rebuild the reverse mapping btree from all primary metadata.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h |    6 +++
- fs/xfs/scrub/common.c  |   89 +++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/scrub/common.h  |    2 +
- fs/xfs/scrub/scrub.c   |    8 ++++
- fs/xfs/scrub/scrub.h   |    6 +++
- fs/xfs/xfs_mount.h     |    6 +++
- fs/xfs/xfs_super.c     |   46 ++++++++++++++++++++++++-
- fs/xfs/xfs_trans.c     |    5 ++-
- 8 files changed, 164 insertions(+), 4 deletions(-)
+ fs/xfs/Makefile            |    1 
+ fs/xfs/scrub/bitmap.c      |   11 
+ fs/xfs/scrub/bitmap.h      |    2 
+ fs/xfs/scrub/repair.h      |   13 +
+ fs/xfs/scrub/rmap.c        |    6 
+ fs/xfs/scrub/rmap_repair.c | 1095 ++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/scrub.c       |    2 
+ 7 files changed, 1128 insertions(+), 2 deletions(-)
+ create mode 100644 fs/xfs/scrub/rmap_repair.c
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index f3aa59302fef..e93f9432d2a6 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -536,7 +536,11 @@ struct xfs_scrub_metadata {
-  */
- #define XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED (1 << 7)
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index f7c5f4d51e78..fc681adbf2ff 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -175,6 +175,7 @@ xfs-y				+= $(addprefix scrub/, \
+ 				   inode_repair.o \
+ 				   refcount_repair.o \
+ 				   repair.o \
++				   rmap_repair.o \
+ 				   symlink_repair.o \
+ 				   xfile.o \
+ 				   )
+diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
+index fdadc9e1dc49..2c0450c39fba 100644
+--- a/fs/xfs/scrub/bitmap.c
++++ b/fs/xfs/scrub/bitmap.c
+@@ -38,6 +38,7 @@ xfs_bitmap_set(
+ 	bmr->start = start;
+ 	bmr->len = len;
+ 	list_add_tail(&bmr->list, &bitmap->list);
++	bitmap->weight += len;
  
--#define XFS_SCRUB_FLAGS_IN	(XFS_SCRUB_IFLAG_REPAIR)
-+/* i: Allow scrub to freeze the filesystem to perform global scans. */
-+#define XFS_SCRUB_IFLAG_FREEZE_OK	(1 << 8)
-+
-+#define XFS_SCRUB_FLAGS_IN	(XFS_SCRUB_IFLAG_REPAIR | \
-+				 XFS_SCRUB_IFLAG_FREEZE_OK)
- #define XFS_SCRUB_FLAGS_OUT	(XFS_SCRUB_OFLAG_CORRUPT | \
- 				 XFS_SCRUB_OFLAG_PREEN | \
- 				 XFS_SCRUB_OFLAG_XFAIL | \
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 76629c874e07..979aa748be30 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -591,9 +591,13 @@ xchk_trans_alloc(
- 	struct xfs_scrub	*sc,
- 	uint			resblks)
+ 	return 0;
+ }
+@@ -62,6 +63,7 @@ xfs_bitmap_init(
+ 	struct xfs_bitmap	*bitmap)
  {
-+	uint			flags = 0;
-+
-+	if (sc->fs_frozen)
-+		flags |= XFS_TRANS_NO_WRITECOUNT;
- 	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
- 		return xfs_trans_alloc(sc->mp, &M_RES(sc->mp)->tr_itruncate,
--				resblks, 0, 0, &sc->tp);
-+				resblks, 0, flags, &sc->tp);
+ 	INIT_LIST_HEAD(&bitmap->list);
++	bitmap->weight = 0;
+ }
  
- 	return xfs_trans_alloc_empty(sc->mp, &sc->tp);
+ /* Compare two btree extents. */
+@@ -164,6 +166,7 @@ xfs_bitmap_disunion(
+ 			state |= LEFT_ALIGNED;
+ 		if (sub_start + sub_len == br->start + br->len)
+ 			state |= RIGHT_ALIGNED;
++		bitmap->weight -= sub_len;
+ 		switch (state) {
+ 		case LEFT_ALIGNED:
+ 			/* Coincides with only the left. */
+@@ -301,3 +304,11 @@ xfs_bitmap_set_btblocks(
+ {
+ 	return xfs_btree_visit_blocks(cur, xfs_bitmap_collect_btblock, bitmap);
  }
-@@ -892,3 +896,86 @@ xchk_ilock_inverted(
- 	}
- 	return -EDEADLOCK;
++
++/* Compute the weight of this bitmap. */
++uint64_t
++xfs_bitmap_hweight(
++	struct xfs_bitmap	*bitmap)
++{
++	return bitmap->weight;
++}
+diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
+index ae8ecbce6fa6..f75494b16cb7 100644
+--- a/fs/xfs/scrub/bitmap.h
++++ b/fs/xfs/scrub/bitmap.h
+@@ -14,6 +14,7 @@ struct xfs_bitmap_range {
+ 
+ struct xfs_bitmap {
+ 	struct list_head	list;
++	xfs_fsblock_t		weight;
+ };
+ 
+ void xfs_bitmap_init(struct xfs_bitmap *bitmap);
+@@ -32,5 +33,6 @@ int xfs_bitmap_set_btcur_path(struct xfs_bitmap *bitmap,
+ 		struct xfs_btree_cur *cur);
+ int xfs_bitmap_set_btblocks(struct xfs_bitmap *bitmap,
+ 		struct xfs_btree_cur *cur);
++uint64_t xfs_bitmap_hweight(struct xfs_bitmap *bitmap);
+ 
+ #endif	/* __XFS_SCRUB_BITMAP_H__ */
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index ba31c703cf19..aff23deda920 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -57,6 +57,7 @@ int xrep_ino_dqattach(struct xfs_scrub *sc);
+ int xrep_reset_perag_resv(struct xfs_scrub *sc);
+ int xrep_xattr_reset_btree(struct xfs_scrub *sc);
+ int xrep_metadata_inode_forks(struct xfs_scrub *sc);
++int xrep_rmapbt_setup(struct xfs_scrub *sc, struct xfs_inode *ip);
+ 
+ /* Metadata repairers */
+ 
+@@ -67,6 +68,7 @@ int xrep_agfl(struct xfs_scrub *sc);
+ int xrep_agi(struct xfs_scrub *sc);
+ int xrep_allocbt(struct xfs_scrub *sc);
+ int xrep_iallocbt(struct xfs_scrub *sc);
++int xrep_rmapbt(struct xfs_scrub *sc);
+ int xrep_refcountbt(struct xfs_scrub *sc);
+ int xrep_inode(struct xfs_scrub *sc);
+ int xrep_bmap_data(struct xfs_scrub *sc);
+@@ -107,6 +109,16 @@ xrep_reset_perag_resv(
+ 	return -EOPNOTSUPP;
  }
+ 
++/* rmap setup function for CONFIG_XFS_REPAIR=n */
++static inline int
++xrep_rmapbt_setup(
++	struct xfs_scrub	*sc,
++	struct xfs_inode		*ip)
++{
++	/* We don't support rmap repair, but we can still do a scan. */
++	return xchk_setup_ag_btree(sc, ip, false);
++}
++
+ #define xrep_probe			xrep_notsupported
+ #define xrep_superblock			xrep_notsupported
+ #define xrep_agf			xrep_notsupported
+@@ -114,6 +126,7 @@ xrep_reset_perag_resv(
+ #define xrep_agi			xrep_notsupported
+ #define xrep_allocbt			xrep_notsupported
+ #define xrep_iallocbt			xrep_notsupported
++#define xrep_rmapbt			xrep_notsupported
+ #define xrep_refcountbt			xrep_notsupported
+ #define xrep_inode			xrep_notsupported
+ #define xrep_bmap_data			xrep_notsupported
+diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
+index 92a140c5b55e..c7a2401ad36f 100644
+--- a/fs/xfs/scrub/rmap.c
++++ b/fs/xfs/scrub/rmap.c
+@@ -24,6 +24,7 @@
+ #include "scrub/common.h"
+ #include "scrub/btree.h"
+ #include "scrub/trace.h"
++#include "scrub/repair.h"
+ 
+ /*
+  * Set us up to scrub reverse mapping btrees.
+@@ -33,7 +34,10 @@ xchk_setup_ag_rmapbt(
+ 	struct xfs_scrub	*sc,
+ 	struct xfs_inode	*ip)
+ {
+-	return xchk_setup_ag_btree(sc, ip, false);
++	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
++		return xrep_rmapbt_setup(sc, ip);
++	else
++		return xchk_setup_ag_btree(sc, ip, false);
+ }
+ 
+ /* Reverse-mapping scrubber. */
+diff --git a/fs/xfs/scrub/rmap_repair.c b/fs/xfs/scrub/rmap_repair.c
+new file mode 100644
+index 000000000000..806e98a66278
+--- /dev/null
++++ b/fs/xfs/scrub/rmap_repair.c
+@@ -0,0 +1,1095 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_alloc.h"
++#include "xfs_alloc_btree.h"
++#include "xfs_ialloc.h"
++#include "xfs_ialloc_btree.h"
++#include "xfs_rmap.h"
++#include "xfs_rmap_btree.h"
++#include "xfs_inode.h"
++#include "xfs_icache.h"
++#include "xfs_bmap.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_refcount.h"
++#include "xfs_refcount_btree.h"
++#include "scrub/xfs_scrub.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/btree.h"
++#include "scrub/trace.h"
++#include "scrub/repair.h"
++#include "scrub/bitmap.h"
++#include "scrub/array.h"
 +
 +/*
-+ * Exclusive Filesystem Access During Scrub and Repair
-+ * ===================================================
++ * Reverse Mapping Btree Repair
++ * ============================
 + *
-+ * While most scrub activity can occur while the filesystem is live, there
-+ * are certain scenarios where we cannot tolerate concurrent metadata updates.
-+ * We therefore must freeze the filesystem against all other changes.
++ * This is the most involved of all the AG space btree rebuilds.  Everywhere
++ * else in XFS we lock inodes and then AG data structures, but generating the
++ * list of rmap records requires that we be able to scan both block mapping
++ * btrees of every inode in the filesystem to see if it owns any extents in
++ * this AG.  We can't tolerate any inode updates while we do this, so we
++ * freeze the filesystem to lock everyone else out, and grant ourselves
++ * special privileges to run transactions with regular background reclamation
++ * turned off.
 + *
-+ * The typical scenarios envisioned for scrub freezes are (a) to lock out all
-+ * other filesystem changes in order to check the global summary counters,
-+ * and anything else that requires unusual behavioral semantics.
++ * We also have to be very careful not to allow inode reclaim to start a
++ * transaction because all transactions (other than our own) will block.
 + *
-+ * The typical scenarios envisioned for repair freezes are (a) to avoid ABBA
-+ * deadlocks when need to take locks in an unusual order; or (b) to update
-+ * global filesystem state.  For example, reconstruction of a damaged reverse
-+ * mapping btree requires us to hold the AG header locks while scanning
-+ * inodes, which goes against the usual inode -> AG header locking order.
++ * So basically we scan all primary per-AG metadata and all block maps of all
++ * inodes to generate a huge list of reverse map records.  Next we look for
++ * gaps in the rmap records to calculate all the unclaimed free space (1).
++ * Next, we scan all other OWN_AG metadata (bnobt, cntbt, agfl) and subtract
++ * the space used by those btrees from (1), and also subtract the free space
++ * listed in the bnobt from (1).  What's left are the gaps in assigned space
++ * that the new rmapbt knows about but the existing bnobt doesn't; these are
++ * the blocks from the old rmapbt and they can be freed.
 + *
-+ * A note about inode reclaim: when we freeze the filesystem, users can't
-+ * modify things and periodic background reclaim of speculative preallocations
-+ * and copy-on-write staging extents is stopped.  However, the scrub/repair
-+ * thread must be careful about evicting an inode from memory -- if the
-+ * eviction would require a transaction, we must defer the iput until after
-+ * the scrub freeze.  The reasons for this are twofold: first, scrub/repair
-+ * already have a transaction and xfs can't nest transactions; and second, we
-+ * froze the fs to prevent modifications that we can't control directly.
-+ * This guarantee is made by freezing the inode inactivation worker while
-+ * frozen.
-+ *
-+ * Userspace is prevented from freezing or thawing the filesystem during a
-+ * repair freeze by the ->freeze_super and ->thaw_super superblock operations,
-+ * which block any changes to the freeze state while a repair freeze is
-+ * running through the use of the m_scrub_freeze mutex.  It only makes sense
-+ * to run one scrub/repair freeze at a time, so the mutex is fine.
-+ *
-+ * Scrub/repair freezes cannot be initiated during a regular freeze because
-+ * freeze_super does not allow nested freeze.  Repair activity that does not
-+ * require a repair freeze is also prevented from running during a regular
-+ * freeze because transaction allocation blocks on the regular freeze.  We
-+ * assume that the only other users of XFS_TRANS_NO_WRITECOUNT transactions
-+ * either aren't modifying space metadata in a way that would affect repair,
-+ * or that we can inhibit any of the ones that do.
-+ *
-+ * Note that thaw_super and freeze_super can call deactivate_locked_super
-+ * which can free the xfs_mount.  This can happen if someone freezes the block
-+ * device, unmounts the filesystem, and thaws the block device.  Therefore, we
-+ * must be careful about who gets to unlock the repair freeze mutex.  See the
-+ * comments in xfs_fs_put_super.
++ * We use the 'xrep_rmbt' prefix for all the rmap functions.
 + */
 +
-+/* Start a scrub/repair freeze. */
++/* Set us up to repair reverse mapping btrees. */
 +int
-+xfs_scrub_fs_freeze(
-+	struct xfs_scrub	*sc)
++xrep_rmapbt_setup(
++	struct xfs_scrub	*sc,
++	struct xfs_inode	*ip)
 +{
 +	int			error;
 +
-+	if (!(sc->sm->sm_flags & XFS_SCRUB_IFLAG_FREEZE_OK))
-+		return -EUSERS;
-+
-+	mutex_lock(&sc->mp->m_scrub_freeze);
-+	error = freeze_super(sc->mp->m_super);
-+	if (error) {
-+		mutex_unlock(&sc->mp->m_scrub_freeze);
++	/*
++	 * Freeze out anything that can lock an inode.  We reconstruct
++	 * the rmapbt by reading inode bmaps with the AGF held, which is
++	 * only safe w.r.t. ABBA deadlocks if we're the only ones locking
++	 * inodes.
++	 */
++	error = xfs_scrub_fs_freeze(sc);
++	if (error)
 +		return error;
++
++	/* Check the AG number and set up the scrub context. */
++	error = xchk_setup_fs(sc, ip);
++	if (error)
++		return error;
++
++	return xchk_ag_init(sc, sc->sm->sm_agno, &sc->sa);
++}
++
++/*
++ * Packed rmap record.  The ATTR/BMBT/UNWRITTEN flags are hidden in the upper
++ * bits of offset, just like the on-disk record.
++ */
++struct xrep_rmbt_extent {
++	xfs_agblock_t	startblock;
++	xfs_extlen_t	blockcount;
++	uint64_t	owner;
++	uint64_t	offset;
++} __attribute__((packed));
++
++/* Context for collecting rmaps */
++struct xrep_rmbt {
++	/* Bitmap of inobt blocks, for generating rmaps later. */
++	struct xfs_bitmap	inobt_blocks;
++
++	/* New rmap records generated from primary metadata. */
++	struct xfbma		*rmap_records;
++
++	struct xfs_scrub	*sc;
++
++	/*
++	 * rmap owner for whatever we're iterating to generate new rmap
++	 * records.
++	 */
++	uint64_t		owner;
++
++	/* New AGF btreeblks value, which won't include old rmapbt blocks. */
++	xfs_agblock_t		btblocks;
++
++	/* Number of new rmap records. */
++	uint64_t		nr_records;
++};
++
++/* Context for calculating old rmapbt blocks */
++struct xrep_rmbt_freesp {
++	/* Unclaimed (free) space, according to the new rmap. */
++	struct xfs_bitmap	rmap_freelist;
++
++	/* Free space accounted for by the free space btrees. */
++	struct xfs_bitmap	bno_freelist;
++
++	struct xfs_scrub	*sc;
++
++	/*
++	 * Next block we expect to find while scanning the new rmap for
++	 * claimed space.
++	 */
++	xfs_agblock_t		next_bno;
++};
++
++/* Initialize an rmap. */
++static inline int
++xrep_rmbt_new_rec(
++	struct xrep_rmbt	*rr,
++	xfs_agblock_t		startblock,
++	xfs_extlen_t		blockcount,
++	uint64_t		owner,
++	uint64_t		offset,
++	unsigned int		flags)
++{
++	struct xrep_rmbt_extent	rre = {
++		.startblock	= startblock,
++		.blockcount	= blockcount,
++		.owner		= owner,
++	};
++	struct xfs_rmap_irec	rmap = {
++		.rm_offset	= offset,
++		.rm_flags	= flags,
++	};
++	int			error = 0;
++
++	trace_xrep_rmap_extent_fn(rr->sc->mp, rr->sc->sa.agno, startblock,
++			blockcount, owner, offset, flags);
++
++	if (xchk_should_terminate(rr->sc, &error))
++		return error;
++
++	rre.offset = xfs_rmap_irec_offset_pack(&rmap);
++	return xfbma_append(rr->rmap_records, &rre);
++}
++
++/* Add an AGFL block to the rmap list. */
++STATIC int
++xrep_rmbt_walk_agfl(
++	struct xfs_mount	*mp,
++	xfs_agblock_t		bno,
++	void			*priv)
++{
++	struct xrep_rmbt	*rr = priv;
++
++	return xrep_rmbt_new_rec(rr, bno, 1, XFS_RMAP_OWN_AG, 0, 0);
++}
++
++/* Add a btree block to the rmap list. */
++STATIC int
++xrep_rmbt_visit_btblock(
++	struct xfs_btree_cur	*cur,
++	int			level,
++	void			*priv)
++{
++	struct xrep_rmbt	*rr = priv;
++	struct xfs_buf		*bp;
++	xfs_fsblock_t		fsb;
++
++	xfs_btree_get_block(cur, level, &bp);
++	if (!bp)
++		return 0;
++
++	rr->btblocks++;
++	fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
++	return xrep_rmbt_new_rec(rr, XFS_FSB_TO_AGBNO(cur->bc_mp, fsb), 1,
++			rr->owner, 0, 0);
++}
++
++/* Record inode btree rmaps. */
++STATIC int
++xrep_rmbt_walk_inobt(
++	struct xfs_btree_cur		*cur,
++	union xfs_btree_rec		*rec,
++	void				*priv)
++{
++	struct xfs_inobt_rec_incore	irec;
++	struct xrep_rmbt		*rr = priv;
++	struct xfs_mount		*mp = cur->bc_mp;
++	xfs_agino_t			agino;
++	xfs_agino_t			iperhole;
++	unsigned int			i;
++	int				error;
++
++	/* Record the inobt blocks. */
++	error = xfs_bitmap_set_btcur_path(&rr->inobt_blocks, cur);
++	if (error)
++		return error;
++
++	xfs_inobt_btrec_to_irec(mp, rec, &irec);
++
++	/* Record a non-sparse inode chunk. */
++	if (irec.ir_holemask == XFS_INOBT_HOLEMASK_FULL)
++		return xrep_rmbt_new_rec(rr,
++				XFS_AGINO_TO_AGBNO(mp, irec.ir_startino),
++				XFS_INODES_PER_CHUNK / mp->m_sb.sb_inopblock,
++				XFS_RMAP_OWN_INODES, 0, 0);
++
++	/* Iterate each chunk. */
++	iperhole = max_t(xfs_agino_t, mp->m_sb.sb_inopblock,
++			XFS_INODES_PER_HOLEMASK_BIT);
++	for (i = 0, agino = irec.ir_startino;
++	     i < XFS_INOBT_HOLEMASK_BITS;
++	     i += iperhole / XFS_INODES_PER_HOLEMASK_BIT, agino += iperhole) {
++		/* Skip holes. */
++		if (irec.ir_holemask & (1 << i))
++			continue;
++
++		/* Record the inode chunk otherwise. */
++		error = xrep_rmbt_new_rec(rr, XFS_AGINO_TO_AGBNO(mp, agino),
++				iperhole / mp->m_sb.sb_inopblock,
++				XFS_RMAP_OWN_INODES, 0, 0);
++		if (error)
++			return error;
 +	}
-+	sc->fs_frozen = true;
++
 +	return 0;
 +}
 +
-+/* Release a scrub/repair freeze. */
-+int
-+xfs_scrub_fs_thaw(
-+	struct xfs_scrub	*sc)
++/* Record a CoW staging extent. */
++STATIC int
++xrep_rmbt_walk_cowblocks(
++	struct xfs_btree_cur		*cur,
++	union xfs_btree_rec		*rec,
++	void				*priv)
 +{
-+	int			error;
++	struct xrep_rmbt		*rr = priv;
++	struct xfs_refcount_irec	refc;
 +
-+	sc->fs_frozen = false;
-+	error = thaw_super(sc->mp->m_super);
-+	mutex_unlock(&sc->mp->m_scrub_freeze);
++	xfs_refcount_btrec_to_irec(rec, &refc);
++	if (refc.rc_refcount != 1)
++		return -EFSCORRUPTED;
++
++	return xrep_rmbt_new_rec(rr, refc.rc_startblock - XFS_REFC_COW_START,
++			refc.rc_blockcount, XFS_RMAP_OWN_COW, 0, 0);
++}
++
++/* Add a bmbt block to the rmap list. */
++STATIC int
++xrep_rmbt_visit_bmbt(
++	struct xfs_btree_cur	*cur,
++	int			level,
++	void			*priv)
++{
++	struct xrep_rmbt	*rr = priv;
++	struct xfs_buf		*bp;
++	xfs_fsblock_t		fsb;
++	unsigned int		flags = XFS_RMAP_BMBT_BLOCK;
++
++	xfs_btree_get_block(cur, level, &bp);
++	if (!bp)
++		return 0;
++
++	fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
++	if (XFS_FSB_TO_AGNO(cur->bc_mp, fsb) != rr->sc->sa.agno)
++		return 0;
++
++	if (cur->bc_private.b.whichfork == XFS_ATTR_FORK)
++		flags |= XFS_RMAP_ATTR_FORK;
++	return xrep_rmbt_new_rec(rr, XFS_FSB_TO_AGBNO(cur->bc_mp, fsb), 1,
++			cur->bc_private.b.ip->i_ino, 0, flags);
++}
++
++/* Determine rmap flags from fork and bmbt state. */
++static inline unsigned int
++xrep_rmbt_bmap_flags(
++	int			whichfork,
++	xfs_exntst_t		state)
++{
++	return  (whichfork == XFS_ATTR_FORK ? XFS_RMAP_ATTR_FORK : 0) |
++		(state == XFS_EXT_UNWRITTEN ? XFS_RMAP_UNWRITTEN : 0);
++}
++
++/* Find all the extents from a given AG in an inode fork. */
++STATIC int
++xrep_rmbt_scan_ifork(
++	struct xrep_rmbt	*rr,
++	struct xfs_inode	*ip,
++	int			whichfork)
++{
++	struct xfs_bmbt_irec	rec;
++	struct xfs_iext_cursor	icur;
++	struct xfs_mount	*mp = rr->sc->mp;
++	struct xfs_btree_cur	*cur = NULL;
++	struct xfs_ifork	*ifp;
++	unsigned int		rflags;
++	int			fmt;
++	int			error = 0;
++
++	/* Do we even have data mapping extents? */
++	fmt = XFS_IFORK_FORMAT(ip, whichfork);
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	switch (fmt) {
++	case XFS_DINODE_FMT_BTREE:
++		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++			error = xfs_iread_extents(rr->sc->tp, ip, whichfork);
++			if (error)
++				return error;
++		}
++		break;
++	case XFS_DINODE_FMT_EXTENTS:
++		break;
++	default:
++		return 0;
++	}
++	if (!ifp)
++		return 0;
++
++	/* Find all the BMBT blocks in the AG. */
++	if (fmt == XFS_DINODE_FMT_BTREE) {
++		cur = xfs_bmbt_init_cursor(mp, rr->sc->tp, ip, whichfork);
++		error = xfs_btree_visit_blocks(cur, xrep_rmbt_visit_bmbt, rr);
++		if (error)
++			goto out;
++		xfs_btree_del_cursor(cur, error);
++		cur = NULL;
++	}
++
++	/* We're done if this is an rt inode's data fork. */
++	if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip))
++		return 0;
++
++	/* Find all the extents in the AG. */
++	for_each_xfs_iext(ifp, &icur, &rec) {
++		if (isnullstartblock(rec.br_startblock))
++			continue;
++		/* Stash non-hole extent. */
++		if (XFS_FSB_TO_AGNO(mp, rec.br_startblock) == rr->sc->sa.agno) {
++			rflags = xrep_rmbt_bmap_flags(whichfork, rec.br_state);
++			error = xrep_rmbt_new_rec(rr,
++					XFS_FSB_TO_AGBNO(mp, rec.br_startblock),
++					rec.br_blockcount, ip->i_ino,
++					rec.br_startoff, rflags);
++			if (error)
++				goto out;
++		}
++	}
++out:
++	if (cur)
++		xfs_btree_del_cursor(cur, error);
 +	return error;
 +}
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 8646ee27d667..b525f0be0924 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -137,6 +137,8 @@ static inline bool xchk_skip_xref(struct xfs_scrub_metadata *sm)
- 
- int xchk_metadata_inode_forks(struct xfs_scrub *sc);
- int xchk_ilock_inverted(struct xfs_inode *ip, uint lock_mode);
-+int xfs_scrub_fs_freeze(struct xfs_scrub *sc);
-+int xfs_scrub_fs_thaw(struct xfs_scrub *sc);
- 
- /* Do we need to invoke the repair tool? */
- static inline bool xfs_scrub_needs_repair(struct xfs_scrub_metadata *sm)
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index e08f588d518f..3b945f0ffbf6 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -170,6 +170,8 @@ xchk_teardown(
- 	struct xfs_inode	*ip_in,
- 	int			error)
- {
-+	int				err2;
 +
- 	xchk_ag_free(sc, &sc->sa);
- 	if (sc->tp) {
- 		if (error == 0 && (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
-@@ -186,6 +188,12 @@ xchk_teardown(
- 			xfs_irele(sc->ip);
- 		sc->ip = NULL;
- 	}
-+	if (sc->fs_frozen) {
-+		err2 = xfs_scrub_fs_thaw(sc);
-+		if (!error && err2)
-+			error = err2;
-+		sc->fs_frozen = false;
++/* Iterate all the inodes in an AG group. */
++STATIC int
++xrep_rmbt_scan_inobt(
++	struct xfs_btree_cur		*cur,
++	union xfs_btree_rec		*rec,
++	void				*priv)
++{
++	struct xfs_inobt_rec_incore	irec;
++	struct xrep_rmbt		*rr = priv;
++	struct xfs_mount		*mp = cur->bc_mp;
++	struct xfs_inode		*ip = NULL;
++	xfs_ino_t			ino;
++	xfs_agino_t			agino;
++	int				chunkidx;
++	int				lock_mode = 0;
++	int				error = 0;
++
++	xfs_inobt_btrec_to_irec(mp, rec, &irec);
++
++	for (chunkidx = 0, agino = irec.ir_startino;
++	     chunkidx < XFS_INODES_PER_CHUNK;
++	     chunkidx++, agino++) {
++		/* Skip if this inode is free */
++		if (XFS_INOBT_MASK(chunkidx) & irec.ir_free)
++			continue;
++		ino = XFS_AGINO_TO_INO(mp, cur->bc_private.a.agno, agino);
++
++		/*
++		 * Grab inode for scanning.  We cannot use DONTCACHE here
++		 * because we already have a transaction so the iput must not
++		 * trigger inode reclaim (which might allocate a transaction
++		 * to clean up posteof blocks).
++		 */
++		error = xfs_iget(mp, cur->bc_tp, ino, 0, 0, &ip);
++		if (error)
++			return error;
++
++		if ((ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
++		     !(ip->i_df.if_flags & XFS_IFEXTENTS)) ||
++		    (ip->i_d.di_aformat == XFS_DINODE_FMT_BTREE &&
++		     !(ip->i_afp->if_flags & XFS_IFEXTENTS)))
++			lock_mode = XFS_ILOCK_EXCL;
++		else
++			lock_mode = XFS_ILOCK_SHARED;
++		if (!xfs_ilock_nowait(ip, lock_mode)) {
++			ASSERT(0); /* XXX impossible? */
++			error = -EBUSY;
++			goto out_rele;
++		}
++
++		/* Check the data fork. */
++		error = xrep_rmbt_scan_ifork(rr, ip, XFS_DATA_FORK);
++		if (error)
++			goto out_unlock;
++
++		/* Check the attr fork. */
++		error = xrep_rmbt_scan_ifork(rr, ip, XFS_ATTR_FORK);
++		if (error)
++			goto out_unlock;
++
++		xfs_iunlock(ip, lock_mode);
++		xfs_irele(ip);
++		ip = NULL;
 +	}
- 	if (sc->has_quotaofflock)
- 		mutex_unlock(&sc->mp->m_quotainfo->qi_quotaofflock);
- 	if (sc->buf) {
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 780cc8e9ef6a..fff806456f1c 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -66,6 +66,12 @@ struct xfs_scrub {
- 	bool				has_quotaofflock;
- 	bool				reset_perag_resv;
- 
-+	/*
-+	 * Do we own the current scrub freeze?  It is critical that we
-+	 * release it before exiting to userspace!
-+	 */
-+	bool				fs_frozen;
 +
- 	/* State tracking for single-AG operations. */
- 	struct xchk_ag			sa;
- };
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 1096ea61a427..34f2cf96ec27 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -193,6 +193,12 @@ typedef struct xfs_mount {
- 	unsigned int		*m_errortag;
- 	struct xfs_kobj		m_errortag_kobj;
- #endif
-+	/*
-+	 * Only allow one thread to initiate a repair freeze at a time.  We
-+	 * also use this to block userspace from changing the freeze state
-+	 * while a repair freeze is in progress.
-+	 */
-+	struct mutex		m_scrub_freeze;
- } xfs_mount_t;
- 
- /*
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 1141413c53c0..41d30a5ead2f 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1520,13 +1520,41 @@ xfs_fs_unfreeze(
- /*
-  * Before we get to stage 1 of a freeze, force all the inactivation work so
-  * that there's less work to do if we crash during the freeze.
-+ *
-+ * Don't let userspace freeze while scrub has the filesystem frozen.  Note
-+ * that freeze_super can free the xfs_mount, so we must be careful to recheck
-+ * XFS_M before trying to access anything in the xfs_mount afterwards.
-  */
- STATIC int
- xfs_fs_freeze_super(
- 	struct super_block	*sb)
- {
++	return error;
++out_unlock:
++	xfs_iunlock(ip, lock_mode);
++out_rele:
++	xfs_irele(ip);
++	return error;
++}
++
++/* Find all the unclaimed space in the new rmap records. */
++STATIC int
++xrep_rmbt_record_rmap_freesp(
++	struct xfs_btree_cur	*cur,
++	struct xfs_rmap_irec	*rec,
++	void			*priv)
++{
++	struct xrep_rmbt_freesp	*rrf = priv;
++	xfs_fsblock_t		fsb;
 +	int			error;
 +
- 	xfs_inactive_force(XFS_M(sb));
--	return freeze_super(sb);
-+	mutex_lock(&XFS_M(sb)->m_scrub_freeze);
-+	error = freeze_super(sb);
-+	if (XFS_M(sb))
-+		mutex_unlock(&XFS_M(sb)->m_scrub_freeze);
++	/* Record the free space we find. */
++	if (rec->rm_startblock > rrf->next_bno) {
++		fsb = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
++				rrf->next_bno);
++		error = xfs_bitmap_set(&rrf->rmap_freelist, fsb,
++				rec->rm_startblock - rrf->next_bno);
++		if (error)
++			return error;
++	}
++	rrf->next_bno = max_t(xfs_agblock_t, rrf->next_bno,
++			rec->rm_startblock + rec->rm_blockcount);
++	return 0;
++}
++
++/* Find all the free space recorded in the AG. */
++STATIC int
++xrep_rmbt_record_bno_freesp(
++	struct xfs_btree_cur		*cur,
++	struct xfs_alloc_rec_incore	*rec,
++	void				*priv)
++{
++	struct xrep_rmbt_freesp		*rrf = priv;
++	xfs_fsblock_t			fsb;
++
++	/* Record the free space we find. */
++	fsb = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
++			rec->ar_startblock);
++	return xfs_bitmap_set(&rrf->bno_freelist, fsb, rec->ar_blockcount);
++}
++
++/* Compare two rmapbt extents. */
++static int
++xrep_rmbt_extent_cmp(
++	const void			*a,
++	const void			*b)
++{
++	const struct xrep_rmbt_extent	*ap = a;
++	const struct xrep_rmbt_extent	*bp = b;
++	struct xfs_rmap_irec		ar = {
++		.rm_startblock	= ap->startblock,
++		.rm_blockcount	= ap->blockcount,
++		.rm_owner	= ap->owner,
++	};
++	struct xfs_rmap_irec		br = {
++		.rm_startblock	= bp->startblock,
++		.rm_blockcount	= bp->blockcount,
++		.rm_owner	= bp->owner,
++	};
++	int				error;
++
++	error = xfs_rmap_irec_offset_unpack(ap->offset, &ar);
++	ASSERT(error == 0);
++	error = xfs_rmap_irec_offset_unpack(bp->offset, &br);
++	ASSERT(error == 0);
++
++	return xfs_rmap_compare(&ar, &br);
++}
++
++/* Generate rmaps for the AG headers (AGI/AGF/AGFL) */
++STATIC int
++xrep_rmbt_generate_agheader_rmaps(
++	struct xrep_rmbt	*rr)
++{
++	struct xfs_scrub	*sc = rr->sc;
++	int			error;
++
++	/* Create a record for the AG sb->agfl. */
++	error = xrep_rmbt_new_rec(rr, XFS_SB_BLOCK(sc->mp),
++			XFS_AGFL_BLOCK(sc->mp) - XFS_SB_BLOCK(sc->mp) + 1,
++			XFS_RMAP_OWN_FS, 0, 0);
++	if (error)
++		return error;
++
++	/* Generate rmaps for the blocks in the AGFL. */
++	return xfs_agfl_walk(sc->mp, XFS_BUF_TO_AGF(sc->sa.agf_bp),
++			sc->sa.agfl_bp, xrep_rmbt_walk_agfl, rr);
++}
++
++/* Generate rmaps for the log, if it's in this AG. */
++STATIC int
++xrep_rmbt_generate_log_rmaps(
++	struct xrep_rmbt	*rr)
++{
++	struct xfs_scrub	*sc = rr->sc;
++
++	if (sc->mp->m_sb.sb_logstart == 0 ||
++	    XFS_FSB_TO_AGNO(sc->mp, sc->mp->m_sb.sb_logstart) != sc->sa.agno)
++		return 0;
++
++	return xrep_rmbt_new_rec(rr,
++			XFS_FSB_TO_AGBNO(sc->mp, sc->mp->m_sb.sb_logstart),
++			sc->mp->m_sb.sb_logblocks, XFS_RMAP_OWN_LOG, 0, 0);
++}
++
++/* Collect rmaps for the blocks containing the free space btrees. */
++STATIC int
++xrep_rmbt_generate_freesp_rmaps(
++	struct xrep_rmbt	*rr,
++	xfs_agblock_t		*new_btreeblks)
++{
++	struct xfs_scrub	*sc = rr->sc;
++	struct xfs_btree_cur	*cur;
++	int			error;
++
++	rr->owner = XFS_RMAP_OWN_AG;
++	rr->btblocks = 0;
++
++	/* bnobt */
++	cur = xfs_allocbt_init_cursor(sc->mp, sc->tp, sc->sa.agf_bp,
++			sc->sa.agno, XFS_BTNUM_BNO);
++	error = xfs_btree_visit_blocks(cur, xrep_rmbt_visit_btblock, rr);
++	if (error)
++		goto err;
++	xfs_btree_del_cursor(cur, error);
++
++	/* cntbt */
++	cur = xfs_allocbt_init_cursor(sc->mp, sc->tp, sc->sa.agf_bp,
++			sc->sa.agno, XFS_BTNUM_CNT);
++	error = xfs_btree_visit_blocks(cur, xrep_rmbt_visit_btblock, rr);
++	if (error)
++		goto err;
++	xfs_btree_del_cursor(cur, error);
++
++	/* btreeblks doesn't include the bnobt/cntbt btree roots */
++	*new_btreeblks = rr->btblocks - 2;
++	return 0;
++err:
++	xfs_btree_del_cursor(cur, error);
++	return error;
++}
++
++/* Collect rmaps for the blocks containing inode btrees and the inode chunks. */
++STATIC int
++xrep_rmbt_generate_inobt_rmaps(
++	struct xrep_rmbt	*rr)
++{
++	struct xfs_scrub	*sc = rr->sc;
++	struct xfs_btree_cur	*cur;
++	struct xfs_bitmap_range	*br;
++	struct xfs_bitmap_range	*n;
++	int			error;
++
++	rr->owner = XFS_RMAP_OWN_INOBT;
++
++	/*
++	 * Iterate every record in the inobt so we can capture all the inode
++	 * chunks and the blocks in the inobt itself.
++	 */
++	cur = xfs_inobt_init_cursor(sc->mp, sc->tp, sc->sa.agi_bp,
++			sc->sa.agno, XFS_BTNUM_INO);
++	error = xfs_btree_query_all(cur, xrep_rmbt_walk_inobt, rr);
++	if (error)
++		goto err_cur;
++	xfs_btree_del_cursor(cur, error);
++
++	/*
++	 * Note that if there are zero records in the inobt then query_all does
++	 * nothing and we have to account the empty inobt root manually.
++	 */
++	if (xfs_bitmap_hweight(&rr->inobt_blocks) == 0) {
++		struct xfs_agi	*agi;
++		xfs_fsblock_t	agi_root;
++
++		agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
++		agi_root = XFS_AGB_TO_FSB(sc->mp, sc->sa.agno,
++				be32_to_cpu(agi->agi_root));
++		xfs_bitmap_set(&rr->inobt_blocks, agi_root, 1);
++	}
++
++	/* Add all the inobt blocks to the rmap list. */
++	for_each_xfs_bitmap_extent(br, n, &rr->inobt_blocks) {
++		error = xrep_rmbt_new_rec(rr,
++				XFS_FSB_TO_AGBNO(sc->mp, br->start), br->len,
++				XFS_RMAP_OWN_INOBT, 0, 0);
++		if (error)
++			goto err;
++	}
++
++	/* finobt */
++	if (!xfs_sb_version_hasfinobt(&sc->mp->m_sb))
++		return 0;
++
++	cur = xfs_inobt_init_cursor(sc->mp, sc->tp, sc->sa.agi_bp, sc->sa.agno,
++			XFS_BTNUM_FINO);
++	error = xfs_btree_visit_blocks(cur, xrep_rmbt_visit_btblock, rr);
++	if (error)
++		goto err_cur;
++	xfs_btree_del_cursor(cur, error);
++	return 0;
++err_cur:
++	xfs_btree_del_cursor(cur, error);
++err:
 +	return error;
 +}
 +
 +/*
-+ * Don't let userspace thaw while scrub has the filesystem frozen.  Note that
-+ * thaw_super can free the xfs_mount, so we must be careful to recheck XFS_M
-+ * before trying to access anything in the xfs_mount afterwards.
++ * Collect rmaps for the blocks containing the refcount btree, and all CoW
++ * staging extents.
 + */
 +STATIC int
-+xfs_fs_thaw_super(
-+	struct super_block	*sb)
++xrep_rmbt_generate_refcountbt_rmaps(
++	struct xrep_rmbt	*rr)
++{
++	union xfs_btree_irec	low;
++	union xfs_btree_irec	high;
++	struct xfs_scrub	*sc = rr->sc;
++	struct xfs_btree_cur	*cur;
++	int			error;
++
++	if (!xfs_sb_version_hasreflink(&sc->mp->m_sb))
++		return 0;
++
++	rr->owner = XFS_RMAP_OWN_REFC;
++
++	/* refcountbt */
++	cur = xfs_refcountbt_init_cursor(sc->mp, sc->tp, sc->sa.agf_bp,
++			sc->sa.agno);
++	error = xfs_btree_visit_blocks(cur, xrep_rmbt_visit_btblock, rr);
++	if (error)
++		goto err_cur;
++
++	/* Collect rmaps for CoW staging extents. */
++	memset(&low, 0, sizeof(low));
++	low.rc.rc_startblock = XFS_REFC_COW_START;
++	memset(&high, 0xFF, sizeof(high));
++	error = xfs_btree_query_range(cur, &low, &high,
++			xrep_rmbt_walk_cowblocks, rr);
++err_cur:
++	xfs_btree_del_cursor(cur, error);
++	return error;
++}
++
++/* Collect rmaps for all block mappings for every inode in this AG. */
++STATIC int
++xrep_rmbt_generate_aginode_rmaps(
++	struct xrep_rmbt	*rr,
++	xfs_agnumber_t		agno)
++{
++	struct xfs_scrub	*sc = rr->sc;
++	struct xfs_mount	*mp = sc->mp;
++	struct xfs_btree_cur	*cur;
++	struct xfs_buf		*agi_bp;
++	int			error;
++
++	error = xfs_ialloc_read_agi(mp, sc->tp, agno, &agi_bp);
++	if (error)
++		return error;
++	cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, agno, XFS_BTNUM_INO);
++	error = xfs_btree_query_all(cur, xrep_rmbt_scan_inobt, rr);
++	xfs_btree_del_cursor(cur, error);
++	xfs_trans_brelse(sc->tp, agi_bp);
++	return error;
++}
++
++/*
++ * Generate all the reverse-mappings for this AG, a list of the old rmapbt
++ * blocks, and the new btreeblks count.  Figure out if we have enough free
++ * space to reconstruct the inode btrees.  The caller must clean up the lists
++ * if anything goes wrong.
++ */
++STATIC int
++xrep_rmbt_find_rmaps(
++	struct xfs_scrub	*sc,
++	struct xfbma		*rmap_records,
++	xfs_agblock_t		*new_btreeblks)
++{
++	struct xrep_rmbt	rr;
++	xfs_agnumber_t		agno;
++	int			error;
++
++	rr.rmap_records = rmap_records;
++	rr.sc = sc;
++	rr.nr_records = 0;
++	xfs_bitmap_init(&rr.inobt_blocks);
++
++	/* Generate rmaps for AG space metadata */
++	error = xrep_rmbt_generate_agheader_rmaps(&rr);
++	if (error)
++		return error;
++	error = xrep_rmbt_generate_log_rmaps(&rr);
++	if (error)
++		return error;
++	error = xrep_rmbt_generate_freesp_rmaps(&rr, new_btreeblks);
++	if (error)
++		return error;
++	error = xrep_rmbt_generate_inobt_rmaps(&rr);
++	if (error)
++		return error;
++	error = xrep_rmbt_generate_refcountbt_rmaps(&rr);
++	if (error)
++		return error;
++
++	/* Iterate all AGs for inodes rmaps. */
++	for (agno = 0; agno < sc->mp->m_sb.sb_agcount; agno++) {
++		error = xrep_rmbt_generate_aginode_rmaps(&rr, agno);
++		if (error)
++			return error;
++	}
++
++	/* Do we actually have enough space to do this? */
++	if (!xrep_ag_has_space(sc->sa.pag,
++			xfs_rmapbt_calc_size(sc->mp, rr.nr_records),
++			XFS_AG_RESV_RMAPBT))
++		return -ENOSPC;
++
++	return 0;
++}
++
++/* Update the AGF counters. */
++STATIC int
++xrep_rmbt_reset_counters(
++	struct xfs_scrub	*sc,
++	xfs_agblock_t		new_btreeblks,
++	int			*log_flags)
++{
++	struct xfs_agf		*agf;
++	struct xfs_perag	*pag = sc->sa.pag;
++
++	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
++	ASSERT(pag->pagf_init);
++	pag->pagf_init = 0;
++	pag->pagf_btreeblks = new_btreeblks;
++	agf->agf_btreeblks = cpu_to_be32(new_btreeblks);
++	*log_flags |= XFS_AGF_BTREEBLKS;
++
++	return 0;
++}
++
++/* Initialize a new rmapbt root and implant it into the AGF. */
++STATIC int
++xrep_rmbt_reset_btree(
++	struct xfs_scrub	*sc,
++	int			*log_flags)
++{
++	struct xfs_buf		*bp;
++	struct xfs_agf		*agf;
++	struct xfs_perag	*pag = sc->sa.pag;
++	xfs_fsblock_t		btfsb;
++	int			error;
++
++	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
++
++	/* Initialize a new rmapbt root. */
++	error = xrep_alloc_ag_block(sc, &XFS_RMAP_OINFO_SKIP_UPDATE, &btfsb,
++			XFS_AG_RESV_RMAPBT);
++	if (error)
++		return error;
++
++	/* The root block is not a btreeblks block. */
++	be32_add_cpu(&agf->agf_btreeblks, -1);
++	pag->pagf_btreeblks--;
++	*log_flags |= XFS_AGF_BTREEBLKS;
++
++	error = xrep_init_btblock(sc, btfsb, &bp, XFS_BTNUM_RMAP,
++			&xfs_rmapbt_buf_ops);
++	if (error)
++		return error;
++
++	agf->agf_roots[XFS_BTNUM_RMAPi] =
++			cpu_to_be32(XFS_FSB_TO_AGBNO(sc->mp, btfsb));
++	agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
++	agf->agf_rmap_blocks = cpu_to_be32(1);
++	pag->pagf_levels[XFS_BTNUM_RMAPi] = 1;
++	*log_flags |= XFS_AGF_ROOTS | XFS_AGF_LEVELS | XFS_AGF_RMAP_BLOCKS;
++
++	return 0;
++}
++
++/*
++ * Make our new btree root permanent so that we can start refilling the rmap
++ * records.
++ */
++STATIC int
++xrep_rmbt_commit_new(
++	struct xfs_scrub	*sc,
++	int			log_flags)
 +{
 +	int			error;
 +
-+	mutex_lock(&XFS_M(sb)->m_scrub_freeze);
-+	error = thaw_super(sb);
-+	if (XFS_M(sb))
-+		mutex_unlock(&XFS_M(sb)->m_scrub_freeze);
-+	return error;
- }
- 
- STATIC int
-@@ -1687,6 +1715,7 @@ xfs_mount_alloc(
- 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
- 	spin_lock_init(&mp->m_perag_lock);
- 	mutex_init(&mp->m_growlock);
-+	mutex_init(&mp->m_scrub_freeze);
- 	atomic_set(&mp->m_active_trans, 0);
- 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
- 	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
-@@ -1873,6 +1902,7 @@ xfs_fs_fill_super(
-  out_free_fsname:
- 	sb->s_fs_info = NULL;
- 	xfs_free_fsname(mp);
-+	mutex_destroy(&mp->m_scrub_freeze);
- 	kfree(mp);
-  out:
- 	return error;
-@@ -1905,6 +1935,19 @@ xfs_fs_put_super(
- 
- 	sb->s_fs_info = NULL;
- 	xfs_free_fsname(mp);
++	xfs_alloc_log_agf(sc->tp, sc->sa.agf_bp, log_flags);
++	error = xrep_roll_ag_trans(sc);
++	if (error)
++		return error;
++	sc->sa.pag->pagf_init = 1;
++	sc->reset_perag_resv = true;
++	return 0;
++}
++
++/*
++ * Roll and fix the free list while reloading the rmapbt.  Do not shrink the
++ * freelist because the rmapbt is not fully set up yet.
++ */
++STATIC int
++xrep_rmbt_fix_freelist(
++	struct xfs_scrub	*sc)
++{
++	int			error;
++
++	error = xrep_roll_ag_trans(sc);
++	if (error)
++		return error;
++	return xrep_fix_freelist(sc, false);
++}
++
++struct xrep_add_rmap {
++	struct xfs_scrub	*sc;
++	struct xfs_btree_cur	*cur;
++	uint32_t		old_rmbt_size;
++};
++
++static inline unsigned int
++xrep_rmbt_size(
++	struct xfs_scrub	*sc)
++{
++	struct xfs_agf		*agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
++
++	return be32_to_cpu(agf->agf_rmap_blocks);
++}
++
++/* Add one rmap record. */
++STATIC int
++xrep_rmbt_insert_rec(
++	const void			*item,
++	void				*priv)
++{
++	const struct xrep_rmbt_extent	*rre = item;
++	struct xfs_rmap_irec		rmap = {
++		.rm_startblock		= rre->startblock,
++		.rm_blockcount		= rre->blockcount,
++		.rm_owner		= rre->owner,
++	};
++	struct xrep_add_rmap		*x = priv;
++	int				error;
++
++	error = xfs_rmap_irec_offset_unpack(rre->offset, &rmap);
++	if (error)
++		return error;
++
++	/* Add the rmap. */
++	error = xfs_rmap_map_raw(x->cur, &rmap);
++	if (error)
++		return error;
++
 +	/*
-+	 * fs freeze takes an active reference to the filesystem and fs thaw
-+	 * drops it.  If a filesystem on a frozen (dm) block device is
-+	 * unmounted before the block device is thawed, we can end up tearing
-+	 * down the super from within thaw_super when the device is thawed.
-+	 * xfs_fs_thaw_super grabbed the scrub repair mutex before calling
-+	 * thaw_super, so we must avoid freeing a locked mutex.  At this point
-+	 * we know we're the only user of the filesystem, so we can safely
-+	 * unlock the scrub/repair mutex if it's locked.
++	 * If the flcount changed because the rmap btree changed shape then we
++	 * need to fix the freelist to keep it full enough to handle a total
++	 * btree split.  We'll roll this transaction to get it out of the way
++	 * and then fix the freelist in a fresh transaction.
++	 *
++	 * However, two things we must be careful about: (1) fixing the
++	 * freelist changes the rmapbt so drop the rmapbt cursor and (2) we
++	 * can't let the freelist shrink.  The rmapbt isn't fully set up yet,
++	 * which means that the current AGFL blocks might not be reflected in
++	 * the rmapbt, which is a problem if we want to unmap blocks from the
++	 * AGFL.
 +	 */
-+	if (mutex_is_locked(&mp->m_scrub_freeze))
-+		mutex_unlock(&mp->m_scrub_freeze);
-+	mutex_destroy(&mp->m_scrub_freeze);
- 	kfree(mp);
- }
- 
-@@ -1952,6 +1995,7 @@ static const struct super_operations xfs_super_operations = {
- 	.nr_cached_objects	= xfs_fs_nr_cached_objects,
- 	.free_cached_objects	= xfs_fs_free_cached_objects,
- 	.freeze_super		= xfs_fs_freeze_super,
-+	.thaw_super		= xfs_fs_thaw_super,
- };
- 
- static struct file_system_type xfs_fs_type = {
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 0ff635fde5bc..0c1c9e987741 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -326,9 +326,12 @@ xfs_trans_alloc(
- 
- 	/*
- 	 * Zero-reservation ("empty") transactions can't modify anything, so
--	 * they're allowed to run while we're frozen.
-+	 * they're allowed to run while we're frozen.  Scrub is allowed to
-+	 * freeze the filesystem in order to obtain exclusive access to the
-+	 * filesystem.
- 	 */
- 	WARN_ON(resp->tr_logres > 0 &&
-+	        !mutex_is_locked(&mp->m_scrub_freeze) &&
- 		mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
- 	atomic_inc(&mp->m_active_trans);
- 
++	if (xrep_rmbt_size(x->sc) == x->old_rmbt_size)
++		return 0;
++
++	xfs_btree_del_cursor(x->cur, error);
++	x->cur = NULL;
++	error = xrep_rmbt_fix_freelist(x->sc);
++	if (error)
++		return error;
++	x->old_rmbt_size = xrep_rmbt_size(x->sc);
++	x->cur = xfs_rmapbt_init_cursor(x->sc->mp, x->sc->tp, x->sc->sa.agf_bp,
++			x->sc->sa.agno);
++	return 0;
++}
++
++/* Insert all the rmaps we collected. */
++STATIC int
++xrep_rmbt_rebuild_tree(
++	struct xfs_scrub	*sc,
++	struct xfbma		*rmap_records)
++{
++	struct xrep_add_rmap	x = {
++		.sc	= sc,
++	};
++	struct xfs_mount	*mp = sc->mp;
++	int			error;
++
++	/*
++	 * Sort the reverse mappings by startblock to avoid btree splits when
++	 * we rebuild the rmap btree.
++	 */
++	error = xfbma_sort(rmap_records, xrep_rmbt_extent_cmp);
++	if (error)
++		return error;
++
++	/* Put everything back in the rmapbt. */
++	x.cur = xfs_rmapbt_init_cursor(mp, sc->tp, sc->sa.agf_bp, sc->sa.agno);
++	x.old_rmbt_size = xrep_rmbt_size(sc);
++	error = xfbma_iter_del(rmap_records, xrep_rmbt_insert_rec, &x);
++	if (x.cur)
++		xfs_btree_del_cursor(x.cur, error);
++	if (error)
++		goto err;
++
++	/* Fix the freelist once more, if necessary. */
++	if (xrep_rmbt_size(sc) != x.old_rmbt_size) {
++		error = xrep_rmbt_fix_freelist(sc);
++		if (error)
++			goto err;
++	}
++	return 0;
++err:
++	return error;
++}
++
++/*
++ * Reap the old rmapbt blocks.  Now that the rmapbt is fully rebuilt, we make
++ * a list of gaps in the rmap records and a list of the extents mentioned in
++ * the bnobt.  Any block that's in the new rmapbt gap list but not mentioned
++ * in the bnobt is a block from the old rmapbt and can be removed.
++ */
++STATIC int
++xrep_rmbt_reap_old_blocks(
++	struct xfs_scrub	*sc)
++{
++	struct xrep_rmbt_freesp	rrf;
++	struct xfs_mount	*mp = sc->mp;
++	struct xfs_agf		*agf;
++	struct xfs_btree_cur	*cur;
++	xfs_fsblock_t		btfsb;
++	xfs_agblock_t		agend;
++	int			error;
++
++	xfs_bitmap_init(&rrf.rmap_freelist);
++	xfs_bitmap_init(&rrf.bno_freelist);
++	rrf.next_bno = 0;
++	rrf.sc = sc;
++
++	/* Compute free space from the new rmapbt. */
++	cur = xfs_rmapbt_init_cursor(mp, sc->tp, sc->sa.agf_bp, sc->sa.agno);
++	error = xfs_rmap_query_all(cur, xrep_rmbt_record_rmap_freesp,
++			&rrf);
++	if (error)
++		goto err_cur;
++	xfs_btree_del_cursor(cur, error);
++
++	/* Insert a record for space between the last rmap and EOAG. */
++	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
++	agend = be32_to_cpu(agf->agf_length);
++	if (rrf.next_bno < agend) {
++		btfsb = XFS_AGB_TO_FSB(mp, sc->sa.agno, rrf.next_bno);
++		error = xfs_bitmap_set(&rrf.rmap_freelist, btfsb,
++				agend - rrf.next_bno);
++		if (error)
++			goto err;
++	}
++
++	/* Compute free space from the existing bnobt. */
++	cur = xfs_allocbt_init_cursor(sc->mp, sc->tp, sc->sa.agf_bp,
++			sc->sa.agno, XFS_BTNUM_BNO);
++	error = xfs_alloc_query_all(cur, xrep_rmbt_record_bno_freesp, &rrf);
++	if (error)
++		goto err_lists;
++	xfs_btree_del_cursor(cur, error);
++
++	/*
++	 * Free the "free" blocks that the new rmapbt knows about but
++	 * the old bnobt doesn't.  These are the old rmapbt blocks.
++	 */
++	error = xfs_bitmap_disunion(&rrf.rmap_freelist, &rrf.bno_freelist);
++	xfs_bitmap_destroy(&rrf.bno_freelist);
++	if (error)
++		goto err;
++	error = xrep_invalidate_blocks(sc, &rrf.rmap_freelist);
++	if (error)
++		goto err;
++	return xrep_reap_extents(sc, &rrf.rmap_freelist,
++			&XFS_RMAP_OINFO_ANY_OWNER, XFS_AG_RESV_RMAPBT);
++err_lists:
++	xfs_bitmap_destroy(&rrf.bno_freelist);
++err_cur:
++	xfs_btree_del_cursor(cur, error);
++err:
++	return error;
++}
++
++/* Repair the rmap btree for some AG. */
++int
++xrep_rmapbt(
++	struct xfs_scrub	*sc)
++{
++	struct xfbma		*rmap_records;
++	xfs_extlen_t		new_btreeblks;
++	int			log_flags = 0;
++	int			error;
++
++	xchk_perag_get(sc->mp, &sc->sa);
++
++	/* Set up some storage */
++	rmap_records = xfbma_init(sizeof(struct xrep_rmbt_extent));
++	if (IS_ERR(rmap_records))
++		return PTR_ERR(rmap_records);
++
++	/* Collect rmaps for all AG headers. */
++	error = xrep_rmbt_find_rmaps(sc, rmap_records, &new_btreeblks);
++	if (error)
++		goto out;
++
++	/*
++	 * Blow out the old rmap btrees.  This is the point at which
++	 * we are no longer able to bail out gracefully.
++	 */
++	error = xrep_rmbt_reset_counters(sc, new_btreeblks, &log_flags);
++	if (error)
++		goto out;
++	error = xrep_rmbt_reset_btree(sc, &log_flags);
++	if (error)
++		goto out;
++	error = xrep_rmbt_commit_new(sc, log_flags);
++	if (error)
++		goto out;
++
++	/* Now rebuild the rmap information. */
++	error = xrep_rmbt_rebuild_tree(sc, rmap_records);
++	if (error)
++		goto out;
++
++	/* Find and destroy the blocks from the old rmapbt. */
++	error = xrep_rmbt_reap_old_blocks(sc);
++	if (error)
++		goto out;
++out:
++	xfbma_destroy(rmap_records);
++	return error;
++}
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 3b945f0ffbf6..59a234f71ff2 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -266,7 +266,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+ 		.setup	= xchk_setup_ag_rmapbt,
+ 		.scrub	= xchk_rmapbt,
+ 		.has	= xfs_sb_version_hasrmapbt,
+-		.repair	= xrep_notsupported,
++		.repair	= xrep_rmapbt,
+ 	},
+ 	[XFS_SCRUB_TYPE_REFCNTBT] = {	/* refcountbt */
+ 		.type	= ST_PERAG,
