@@ -1,399 +1,556 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49520 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726722AbeLaSvp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 13:51:45 -0500
-Date: Mon, 31 Dec 2018 10:51:37 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:38186 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728004AbfAACLB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:11:01 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0128nSK015766
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:10:58 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2pp0btp72h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:10:58 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012AvZo020390
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:10:57 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x012Av3E003670
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:10:57 GMT
+Subject: [PATCH 09/17] xfs: repair damaged symlinks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/9] xfs-5.0: inode scrubber fixes
-Message-ID: <20181231185137.GA21010@magnolia>
-References: <154344761877.3835.7785580513047409388.stgit@magnolia>
- <13458322.z1pYrAaifT@localhost.localdomain>
- <20181219203359.GC27176@magnolia>
- <4040942.PUtEGDS0su@localhost.localdomain>
+Date: Mon, 31 Dec 2018 18:10:55 -0800
+Message-ID: <154630865577.15625.1958908872575064471.stgit@magnolia>
+In-Reply-To: <154630859850.15625.17640302184521917854.stgit@magnolia>
+References: <154630859850.15625.17640302184521917854.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4040942.PUtEGDS0su@localhost.localdomain>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chandan Rajendra <chandan@linux.ibm.com>
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Dec 31, 2018 at 05:09:47PM +0530, Chandan Rajendra wrote:
-> On Thursday, December 20, 2018 2:03:59 AM IST Darrick J. Wong wrote:
-> > On Wed, Dec 19, 2018 at 06:45:26PM +0530, Chandan Rajendra wrote:
-> > > On Wednesday, December 19, 2018 2:01:13 PM IST Chandan Rajendra wrote:
-> > > > On Thursday, November 29, 2018 4:56:58 AM IST Darrick J. Wong wrote:
-> > > > > Hi all,
-> > > > > 
-> > > > > Here are fixes for some problems with the inode btree scrub code, namely
-> > > > > that the existing code does not handle the case where a single inode
-> > > > > cluster is mapped by multiple inobt records.
-> > > > > 
-> > > > > Patch 1 teaches the inode record block counting code to handle the case
-> > > > > where there's more than one inobt record per inode cluster.  We do this
-> > > > > by counting inodes and converting to blocks only at the end.
-> > > > > 
-> > > > > Patch 2 corrects a condition where we needed to clamp the number of
-> > > > > inodes checked for a given inobt record to the inode chunk size.
-> > > > > 
-> > > > > Patches 3-4 move the inobt record alignment checks to a separate
-> > > > > function and enhance the function to check that when we have more than
-> > > > > one inobt record per cluster we actually check that *all* of the
-> > > > > necessary records are present and in the correct order.
-> > > > > 
-> > > > > Patches 5-7 reorganize the inobt free data checks to deal with the
-> > > > > "multiple inobt records per icluster" situation.  In restructuring the
-> > > > > code to do so, we also rename variables and functions to be less
-> > > > > confusing about what they're there for.  We also fix the 'is the inode
-> > > > > free?' check to calculate dinode buffer offsets correctly in the
-> > > > > "multiple inobt records per icluster" situation.
-> > > > > 
-> > > > > Patch 8 aborts the xattr scrub loop if there are pending fatal signals.
-> > > > > 
-> > > > > Patch 9 checks that for any directory or attr fork there are no extent
-> > > > > maps that stretch beyond what a xfs_dablk_t can map.
-> > > > > 
-> > > > > If you're going to start using this mess, you probably ought to just
-> > > > > pull from my git trees.  The kernel patches[1] should apply against
-> > > > > 4.20-rc4.
-> > > > > 
-> > > > > Comments and questions are, as always, welcome.
-> > > > 
-> > > > Hi Darrick,
-> > > > 
-> > > > I reviewed patches 1 through 7. The fixes look good.
-> > > > 
-> > > > I am not well versed with the XFS code that deals with xattrs &
-> > > > directories. Hence I could not review patches 8 and 9.
-> > > > 
-> > > > I did a simple scrub test on a 64k blocksized filesystem running a kernel
-> > > > having the following commit as the HEAD,
-> > > > 
-> > > > commit 6c4e1579b332e52566c11416e0dd0fa91a3b8f70 (HEAD -> djwong-devel, djwong-xfs-linux/djwong-devel)
-> > > > Author: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > Date:   Thu Oct 18 17:35:49 2018 -0700
-> > > > 
-> > > >     xfs: repair quotas
-> > > >     
-> > > >     Fix anything that causes the quota verifiers to fail.
-> > > >     
-> > > >     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > 
-> > > > Xfsprogs had the following as the topmost commit,
-> > > > 
-> > > > commit 633eec2a893c3be9796dad188144b00e084560ec (HEAD -> djwong-devel, djwong/djwong-devel)
-> > > > Author: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > Date:   Tue Nov 13 17:38:31 2018 -0800
-> > > > 
-> > > >     xfs: repair extended attributes
-> > > >     
-> > > >     If the extended attributes look bad, try to sift through the rubble to
-> > > >     find whatever keys/values we can, zap the attr tree, and re-add the
-> > > >     values.
-> > > >     
-> > > >     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > 
-> > > > The test filesystem had 2000 files with each being 64k in size.
-> > > > 
-> > > > root@ubuntu:~# xfs_scrub -d -n -v /mnt/
-> > > > EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
-> > > > Phase 1: Find filesystem geometry.
-> > > > /mnt/: using 8 threads to scrub.
-> > > > Phase 2: Check internal metadata.
-> > > > Info: AG 1 superblock: Optimization is possible. (scrub.c line 269)
-> > > > Info: AG 3 superblock: Optimization is possible. (scrub.c line 269)
-> > > > Info: AG 2 superblock: Optimization is possible. (scrub.c line 269)
-> > > > Error: AG 0 free inode btree: Repairs are required. (scrub.c line 253)
-> > > > Phase 3: Scan all inodes.
-> > > > Phase 5: Check directory tree.
-> > > > Info: /mnt/: Filesystem has errors, skipping connectivity checks. (phase5.c line 295)
-> > > > Phase 7: Check summary counters.
-> > > > 163.9MiB data used;  1.9K inodes used.
-> > > > 152.7MiB data found; 1.9K inodes found.
-> > > > 1.9K inodes counted; 1.9K inodes checked.
-> > > > /mnt/: errors found: 1
-> > > > /mnt/: Re-run xfs_scrub without -n.
-> > > > 
-> > > > Looks like we have a bug when scrubbing the Free inode btree. I will work on
-> > > > figuring out the root cause and also plan to execute scrub tests shipped with
-> > > > xfstests.
-> > > > 
-> > > > 
-> > > 
-> > > We do have an unaligned finobt record,
-> > > 
-> > > xfs_scrub 27247 [004] 18014.774762: probe:xchk_iallocbt_rec_alignment: (c00000000075941c) ir_startino=176960 ig_cluster_align_inodes=128 imask_u32=127
-> > >         c00000000075941c xchk_iallocbt_rec_alignment+0x10c (/boot/vmlinux)
-> > >         c00000000075966c xchk_iallocbt_rec+0x14c (/boot/vmlinux)
-> > >                        0 [unknown] ([unknown])
-> > >         c000000000752968 xchk_btree+0x288 (/boot/vmlinux)
-> > >         c0000000007598c4 xchk_iallocbt+0x64 (/boot/vmlinux)
-> > >         c00000000075dc1c xfs_scrub_metadata+0x4ac (/boot/vmlinux)
-> > >         c0000000006e4b88 xfs_ioc_scrub_metadata+0x68 (/boot/vmlinux)
-> > >         c0000000006e7d5c xfs_file_ioctl+0xbbc (/boot/vmlinux)
-> > >         c000000000425e04 do_vfs_ioctl+0xd4 (/boot/vmlinux)
-> > >         c000000000426874 ksys_ioctl+0x64 (/boot/vmlinux)
-> > >         c000000000426928 __se_sys_ioctl+0x28 (/boot/vmlinux)
-> > >         c00000000000bae4 system_call+0x5c (/boot/vmlinux)
-> > >             7ffff77d7694 __GI___ioctl+0x114 (/lib/powerpc64le-linux-gnu/libc-2.27.so)
-> > >                10000e4e0 xfs_check_metadata+0x100 (/root/repos/xfsprogs-dev/scrub/xfs_scrub)
-> > >                10000e484 xfs_check_metadata+0xa4 (/root/repos/xfsprogs-dev/scrub/xfs_scrub)
-> > >                10000ec48 xfs_scrub_metadata+0xd8 (/root/repos/xfsprogs-dev/scrub/xfs_scrub)
-> > >                100008dac xfs_scan_ag_metadata+0x12c (/root/repos/xfsprogs-dev/scrub/xfs_scrub)
-> > >                1000198c8 workqueue_thread+0x108 (/root/repos/xfsprogs-dev/scrub/xfs_scrub)
-> > >             7ffff7f2885c start_thread+0x10c (/lib/powerpc64le-linux-gnu/libpthread-2.27.so)
-> > >             7ffff77e9028 __clone+0x98 (/lib/powerpc64le-linux-gnu/libc-2.27.so)
-> > > 
-> > > Maybe this is due to a bug in the finobt code. I will continue debugging and
-> > > report my findings.
-> > 
-> > Ok.  Feel free to send along a metadump if you have one.
-> > 
-> 
-> 
-> Indeed, XFS does not align finobt records according to inode cluster size.
-> 
-> More precisely, For big block filesystems, When freeing inodes (please refer
-> to xfs_difree_inobt()), XFS does not delete inobt records due to the following
-> code evaluating to false,
-> 
->         if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
->             rec.ir_free == XFS_INOBT_ALL_FREE &&
->             mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK) {
-> 
-> However there is no such conditional check when deleting finobt records.
-> Hence I wrote the following patch,
-> 
-> ---
->  fs/xfs/libxfs/xfs_ialloc.c | 85 +++++++++++++++++++++++++++-----------
->  fs/xfs/scrub/ialloc.c      |  2 +
->  2 files changed, 64 insertions(+), 23 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index f32be0c85f93..8d3edd758413 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -1399,14 +1399,19 @@ xfs_dialloc_ag_finobt_near(
->  	struct xfs_btree_cur		*lcur = *ocur;	/* left search cursor */
->  	struct xfs_btree_cur		*rcur;	/* right search cursor */
->  	struct xfs_inobt_rec_incore	rrec;
-> +	xfs_agino_t			agino;
->  	int				error;
->  	int				i, j;
->  
-> -	error = xfs_inobt_lookup(lcur, pagino, XFS_LOOKUP_LE, &i);
-> -	if (error)
-> -		return error;
-> +	agino = pagino;
-> +	while (1) {
-> +		error = xfs_inobt_lookup(lcur, agino, XFS_LOOKUP_LE, &i);
-> +		if (error)
-> +			return error;
-> +
-> +		if (i != 1)
-> +			break;
->  
-> -	if (i == 1) {
->  		error = xfs_inobt_get_rec(lcur, rec, &i);
->  		if (error)
->  			return error;
-> @@ -1417,23 +1422,39 @@ xfs_dialloc_ag_finobt_near(
->  		 * only tracks chunks with at least one free inode, so record
->  		 * existence is enough.
->  		 */
-> -		if (pagino >= rec->ir_startino &&
-> -		    pagino < (rec->ir_startino + XFS_INODES_PER_CHUNK))
-> -			return 0;
-> +		if (rec->ir_freecount) {
-> +			if (pagino >= rec->ir_startino &&
-> +				pagino < (rec->ir_startino + XFS_INODES_PER_CHUNK))
-> +				return 0;
-> +			else
-> +				break;
-> +		}
-> +
-> +		agino = rec->ir_startino - 1;
->  	}
->  
->  	error = xfs_btree_dup_cursor(lcur, &rcur);
->  	if (error)
->  		return error;
->  
-> -	error = xfs_inobt_lookup(rcur, pagino, XFS_LOOKUP_GE, &j);
-> -	if (error)
-> -		goto error_rcur;
-> -	if (j == 1) {
-> +	agino = pagino;
-> +	while (1) {
-> +		error = xfs_inobt_lookup(rcur, agino, XFS_LOOKUP_GE, &j);
-> +		if (error)
-> +			goto error_rcur;
-> +
-> +		if (j != 1)
-> +			break;
-> +
->  		error = xfs_inobt_get_rec(rcur, &rrec, &j);
->  		if (error)
->  			goto error_rcur;
->  		XFS_WANT_CORRUPTED_GOTO(lcur->bc_mp, j == 1, error_rcur);
-> +
-> +		if (rrec.ir_freecount)
-> +			break;
-> +
-> +		agino = rrec.ir_startino + XFS_INODES_PER_CHUNK;
->  	}
->  
->  	XFS_WANT_CORRUPTED_GOTO(lcur->bc_mp, i == 1 || j == 1, error_rcur);
-> @@ -1477,6 +1498,7 @@ xfs_dialloc_ag_finobt_newino(
->  	struct xfs_btree_cur		*cur,
->  	struct xfs_inobt_rec_incore	*rec)
->  {
-> +	xfs_agino_t agino;
->  	int error;
->  	int i;
->  
-> @@ -1490,22 +1512,32 @@ xfs_dialloc_ag_finobt_newino(
->  			if (error)
->  				return error;
->  			XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
-> -			return 0;
-> +
-> +			if (rec->ir_freecount)
-> +				return 0;
->  		}
->  	}
->  
->  	/*
->  	 * Find the first inode available in the AG.
->  	 */
-> -	error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &i);
-> -	if (error)
-> -		return error;
-> -	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
-> +	agino = 0;
-> +	while (1) {
-> +		error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_GE, &i);
-> +		if (error)
-> +			return error;
-> +		XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
->  
-> -	error = xfs_inobt_get_rec(cur, rec, &i);
-> -	if (error)
-> -		return error;
-> -	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
-> +		error = xfs_inobt_get_rec(cur, rec, &i);
-> +		if (error)
-> +			return error;
-> +		XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
-> +
-> +		if (rec->ir_freecount)
-> +			break;
-> +
-> +		agino += XFS_INODES_PER_CHUNK;
-> +	}
->  
->  	return 0;
->  }
-> @@ -1615,10 +1647,17 @@ xfs_dialloc_ag(
->  	 */
->  	rec.ir_free &= ~XFS_INOBT_MASK(offset);
->  	rec.ir_freecount--;
-> -	if (rec.ir_freecount)
-> +	if (rec.ir_freecount) {
->  		error = xfs_inobt_update(cur, &rec);
-> -	else
-> -		error = xfs_btree_delete(cur, &i);
-> +	} else {
-> +		if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
-> +			/* TODO: Add a condition to check hole mask */
-> +			mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK)
-> +			error = xfs_btree_delete(cur, &i);
-> +		else
-> +			error = xfs_inobt_update(cur, &rec);
-> +	}
-> +
->  	if (error)
->  		goto error_cur;
->  
-> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> index 9269f5158cdc..838161f25db4 100644
-> --- a/fs/xfs/scrub/ialloc.c
-> +++ b/fs/xfs/scrub/ialloc.c
-> @@ -79,9 +79,11 @@ xchk_iallocbt_chunk_xref_other(
->  	error = xfs_ialloc_has_inode_record(*pcur, agino, agino, &has_irec);
->  	if (!xchk_should_check_xref(sc, &error, pcur))
->  		return;
-> +#if 0
->  	if (((irec->ir_freecount > 0 && !has_irec) ||
->  	     (irec->ir_freecount == 0 && has_irec)))
->  		xchk_btree_xref_set_corrupt(sc, *pcur, 0);
-> +#endif
->  }
->  
->  /* Cross-reference with the other btrees. */
-> -- 
-> 
-> The "cross reference" check had to be disabled since the above patch now
-> causes finobt entries with freecount value set to be 0 in big block
-> filesystem instances.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I don't think this is a good idea, because this now breaks the notion
-that the free inode btree contains only records for where there actually
-/are/ free inodes.  AFAICT, the entire point of the finobt is to be a
-condensed version of the inobt that only points to the free inodes, to
-save time while creating files.  If we start writing ir_freecount == 0
-finobt records now, what will older kernels think of this?
+Repair inconsistent symbolic link data.
 
-Furthermore, for these 'big block' filesystems we've already been
-writing out individual finobt records that aren't aligned to anything
-more than the cluster size.  These filesystems are already out in the
-wild, so it is scrub that must adapt to this circumstance.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/Makefile               |    1 
+ fs/xfs/scrub/repair.h         |    2 
+ fs/xfs/scrub/scrub.c          |    2 
+ fs/xfs/scrub/symlink.c        |    5 +
+ fs/xfs/scrub/symlink_repair.c |  243 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_symlink.c          |  150 ++++++++++++++-----------
+ fs/xfs/xfs_symlink.h          |    3 +
+ 7 files changed, 338 insertions(+), 68 deletions(-)
+ create mode 100644 fs/xfs/scrub/symlink_repair.c
 
-I think it's better to change xchk_iallocbt_rec_alignment to have a
-different check at the top when we're checking finobt records:
 
-/*
- * finobt records have different positioning requirements than inobt
- * records: each finobt record must have a corresponding inobt record.
- * That is checked in the xref function, so for now we only catch the
- * obvious case where the record isn't even chunk-aligned.
- *
- * Note also that if a fs block contains more than a single chunk of
- * inodes, we will have finobt records only for those chunks containing
- * free inodes.
- */
-if (bs->cur->bc_btnum == XFS_BTNUM_FINO) {
-	imask = XFS_INODES_PER_CHUNK - 1;
-	if (irec->ir_startino & imask)
-		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-	return;
-}
-
-> The following trivial tests have been executed on a kernel compiled with the
-> above patch,
-> 
-> 1. For both 4k and 64k block sized filesystems,
->    1. Create 2000 files and execute xfs_scrub.
-> 2. Repeat step 1 with sparse inode feature disabled.
-> 3. Build linux kernel on the test filesystem.
-> 
-> I am planning to test it more thoroughly after I get review comments for the
-> code changes provided above.
-> 
-> I have attached xz compressed image of xfs_metadump output of the test
-> filesystem along with this mail.
-> 
-> PS: Apologies for the delayed response. It took me some time to understand the
-> relevant code and write the patch provided above.
-
-No worries, most of us have been on vacation for a week+ anyway.
-
---D
-
-> -- 
-> chandan
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index a3b637e57927..5691f73711b5 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -173,6 +173,7 @@ xfs-y				+= $(addprefix scrub/, \
+ 				   inode_repair.o \
+ 				   refcount_repair.o \
+ 				   repair.o \
++				   symlink_repair.o \
+ 				   )
+ endif
+ endif
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 1b3ec5692cb8..0056835b2e15 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -69,6 +69,7 @@ int xrep_refcountbt(struct xfs_scrub *sc);
+ int xrep_inode(struct xfs_scrub *sc);
+ int xrep_bmap_data(struct xfs_scrub *sc);
+ int xrep_bmap_attr(struct xfs_scrub *sc);
++int xrep_symlink(struct xfs_scrub *sc);
+ 
+ #else
+ 
+@@ -109,6 +110,7 @@ xrep_reset_perag_resv(
+ #define xrep_inode			xrep_notsupported
+ #define xrep_bmap_data			xrep_notsupported
+ #define xrep_bmap_attr			xrep_notsupported
++#define xrep_symlink			xrep_notsupported
+ 
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
+ 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 74946d09a864..39238e92219b 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -307,7 +307,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+ 		.type	= ST_INODE,
+ 		.setup	= xchk_setup_symlink,
+ 		.scrub	= xchk_symlink,
+-		.repair	= xrep_notsupported,
++		.repair	= xrep_symlink,
+ 	},
+ 	[XFS_SCRUB_TYPE_PARENT] = {	/* parent pointers */
+ 		.type	= ST_INODE,
+diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
+index f7ebaa946999..ee968c62d0f2 100644
+--- a/fs/xfs/scrub/symlink.c
++++ b/fs/xfs/scrub/symlink.c
+@@ -29,12 +29,15 @@ xchk_setup_symlink(
+ 	struct xfs_scrub	*sc,
+ 	struct xfs_inode	*ip)
+ {
++	uint			resblks;
++
+ 	/* Allocate the buffer without the inode lock held. */
+ 	sc->buf = kmem_zalloc_large(XFS_SYMLINK_MAXLEN + 1, KM_SLEEP);
+ 	if (!sc->buf)
+ 		return -ENOMEM;
+ 
+-	return xchk_setup_inode_contents(sc, ip, 0);
++	resblks = xfs_symlink_blocks(sc->mp, XFS_SYMLINK_MAXLEN);
++	return xchk_setup_inode_contents(sc, ip, resblks);
+ }
+ 
+ /* Symbolic links. */
+diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
+new file mode 100644
+index 000000000000..a81d17bd745c
+--- /dev/null
++++ b/fs/xfs/scrub/symlink_repair.c
+@@ -0,0 +1,243 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "xfs_inode_fork.h"
++#include "xfs_symlink.h"
++#include "xfs_bmap.h"
++#include "xfs_quota.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_trans_space.h"
++#include "scrub/xfs_scrub.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/trace.h"
++#include "scrub/repair.h"
++
++/*
++ * Symbolic Link Repair
++ * ====================
++ *
++ * There's not much we can do to repair symbolic links -- we truncate them to
++ * the first NULL byte and reinitialize the target.  Zero-length symlinks are
++ * turned into links to the current dir.
++ */
++
++/* Try to salvage the pathname from rmt blocks. */
++STATIC int
++xrep_symlink_salvage_remote(
++	struct xfs_scrub	*sc)
++{
++	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
++	struct xfs_inode	*ip = sc->ip;
++	struct xfs_buf		*bp;
++	char			*target_buf = sc->buf;
++	xfs_failaddr_t		fa;
++	xfs_filblks_t		fsblocks;
++	xfs_daddr_t		d;
++	loff_t			len;
++	loff_t			offset;
++	unsigned int		byte_cnt;
++	bool			magic_ok;
++	bool			hdr_ok;
++	int			n;
++	int			nmaps = XFS_SYMLINK_MAPS;
++	int			error;
++
++	/* We'll only read until the buffer is full. */
++	len = max_t(loff_t, ip->i_d.di_size, XFS_SYMLINK_MAXLEN);
++	fsblocks = xfs_symlink_blocks(sc->mp, len);
++	error = xfs_bmapi_read(ip, 0, fsblocks, mval, &nmaps, 0);
++	if (error)
++		return error;
++
++	offset = 0;
++	for (n = 0; n < nmaps; n++) {
++		struct xfs_dsymlink_hdr	*dsl;
++
++		d = XFS_FSB_TO_DADDR(sc->mp, mval[n].br_startblock);
++
++		/* Read the rmt block.  We'll run the verifiers manually. */
++		error = xfs_trans_read_buf(sc->mp, sc->tp, sc->mp->m_ddev_targp,
++				d, XFS_FSB_TO_BB(sc->mp, mval[n].br_blockcount),
++				0, &bp, NULL);
++		if (error)
++			return error;
++		bp->b_ops = &xfs_symlink_buf_ops;
++
++		/* How many bytes do we expect to get out of this buffer? */
++		byte_cnt = XFS_FSB_TO_B(sc->mp, mval[n].br_blockcount);
++		byte_cnt = XFS_SYMLINK_BUF_SPACE(sc->mp, byte_cnt);
++		byte_cnt = min_t(unsigned int, byte_cnt, len);
++
++		/*
++		 * See if the verifiers accept this block.  We're willing to
++		 * salvage if the if the offset/byte/ino are ok and either the
++		 * verifier passed or the magic is ok.  Anything else and we
++		 * stop dead in our tracks.
++		 */
++		fa = bp->b_ops->verify_struct(bp);
++		dsl = bp->b_addr;
++		magic_ok = dsl->sl_magic == cpu_to_be32(XFS_SYMLINK_MAGIC);
++		hdr_ok = xfs_symlink_hdr_ok(ip->i_ino, offset, byte_cnt, bp);
++		if (!hdr_ok || (fa != NULL && !magic_ok))
++			break;
++
++		memcpy(target_buf + offset, dsl + 1, byte_cnt);
++
++		len -= byte_cnt;
++		offset += byte_cnt;
++	}
++
++	/* Ensure we have a zero at the end, and /some/ contents. */
++	if (offset == 0)
++		sprintf(target_buf, ".");
++	else
++		target_buf[offset] = 0;
++	return 0;
++}
++
++/*
++ * Try to salvage an inline symlink's contents.  Empty symlinks become a link
++ * to the current directory.
++ */
++STATIC void
++xrep_symlink_salvage_inline(
++	struct xfs_scrub	*sc)
++{
++	struct xfs_inode	*ip = sc->ip;
++	struct xfs_ifork	*ifp;
++
++	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	if (ifp->if_u1.if_data)
++		strncpy(sc->buf, ifp->if_u1.if_data, XFS_IFORK_DSIZE(ip));
++	if (strlen(sc->buf) == 0)
++		sprintf(sc->buf, ".");
++}
++
++/* Reset an inline symlink to its fresh configuration. */
++STATIC void
++xrep_symlink_truncate_inline(
++	struct xfs_inode	*ip)
++{
++	xfs_idestroy_fork(ip, XFS_DATA_FORK);
++	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
++	ip->i_d.di_nextents = 0;
++	memset(&ip->i_df, 0, sizeof(struct xfs_ifork));
++	ip->i_df.if_flags |= XFS_IFEXTENTS;
++}
++
++/*
++ * Salvage an inline symlink's contents and reset data fork.
++ * Returns with the inode joined to the transaction.
++ */
++STATIC int
++xrep_symlink_inline(
++	struct xfs_scrub	*sc)
++{
++	/* Salvage whatever link target information we can find. */
++	xrep_symlink_salvage_inline(sc);
++
++	/* Truncate the symlink. */
++	xrep_symlink_truncate_inline(sc->ip);
++
++	xfs_trans_ijoin(sc->tp, sc->ip, 0);
++	return 0;
++}
++
++/*
++ * Salvage an inline symlink's contents and reset data fork.
++ * Returns with the inode joined to the transaction.
++ */
++STATIC int
++xrep_symlink_remote(
++	struct xfs_scrub	*sc)
++{
++	int			error;
++
++	/* Salvage whatever link target information we can find. */
++	error = xrep_symlink_salvage_remote(sc);
++	if (error)
++		return error;
++
++	/* Truncate the symlink. */
++	xfs_trans_ijoin(sc->tp, sc->ip, 0);
++	return xfs_itruncate_extents(&sc->tp, sc->ip, XFS_DATA_FORK, 0);
++}
++
++/*
++ * Reinitialize a link target.  Caller must ensure the inode is joined to
++ * the transaction.
++ */
++STATIC int
++xrep_symlink_reinitialize(
++	struct xfs_scrub	*sc)
++{
++	xfs_fsblock_t		fs_blocks;
++	unsigned int		target_len;
++	uint			resblks;
++	int			error;
++
++	/* How many blocks do we need? */
++	target_len = strlen(sc->buf);
++	ASSERT(target_len != 0);
++	if (target_len == 0 || target_len > XFS_SYMLINK_MAXLEN)
++		return -EFSCORRUPTED;
++
++	/* Set up to reinitialize the target. */
++	fs_blocks = xfs_symlink_blocks(sc->mp, target_len);
++	resblks = XFS_SYMLINK_SPACE_RES(sc->mp, target_len, fs_blocks);
++	error = xfs_trans_reserve_quota_nblks(sc->tp, sc->ip, resblks, 0,
++			XFS_QMOPT_RES_REGBLKS);
++
++	/* Try to write the new target back out. */
++	error = xfs_symlink_write_target(sc->tp, sc->ip, sc->buf, target_len,
++			fs_blocks, resblks);
++	if (error)
++		return error;
++
++	/* Finish up any block mapping activities. */
++	return xfs_defer_finish(&sc->tp);
++}
++
++/* Repair a symbolic link. */
++int
++xrep_symlink(
++	struct xfs_scrub	*sc)
++{
++	struct xfs_ifork	*ifp;
++	int			error;
++
++	error = xfs_qm_dqattach_locked(sc->ip, false);
++	if (error)
++		return error;
++
++	/* Salvage whatever we can of the target. */
++	*((char *)sc->buf) = 0;
++	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
++	if (ifp->if_flags & XFS_IFINLINE)
++		error = xrep_symlink_inline(sc);
++	else
++		error = xrep_symlink_remote(sc);
++	if (error)
++		return error;
++
++	/* Now reset the target. */
++	return xrep_symlink_reinitialize(sc);
++}
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index b2c1177c717f..8e554e8264b6 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -150,6 +150,86 @@ xfs_readlink(
+ 	return error;
+ }
+ 
++/* Write the symlink target into the inode. */
++int
++xfs_symlink_write_target(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	const char		*target_path,
++	int			pathlen,
++	xfs_fsblock_t		fs_blocks,
++	uint			resblks)
++{
++	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
++	struct xfs_mount	*mp = tp->t_mountp;
++	const char		*cur_chunk;
++	struct xfs_buf		*bp;
++	xfs_daddr_t		d;
++	int			byte_cnt;
++	int			nmaps;
++	int			offset;
++	int			n;
++	int			error;
++
++	/*
++	 * If the symlink will fit into the inode, write it inline.
++	 */
++	if (pathlen <= XFS_IFORK_DSIZE(ip)) {
++		xfs_init_local_fork(ip, XFS_DATA_FORK, target_path, pathlen);
++
++		ip->i_d.di_size = pathlen;
++		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
++		xfs_trans_log_inode(tp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
++
++		return 0;
++	}
++
++	/* Write target to remote blocks. */
++	nmaps = XFS_SYMLINK_MAPS;
++	error = xfs_bmapi_write(tp, ip, 0, fs_blocks, XFS_BMAPI_METADATA,
++			resblks, mval, &nmaps);
++	if (error)
++		return error;
++
++	if (resblks)
++		resblks -= fs_blocks;
++	ip->i_d.di_size = pathlen;
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++
++	cur_chunk = target_path;
++	offset = 0;
++	for (n = 0; n < nmaps; n++) {
++		char	*buf;
++
++		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
++		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
++		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
++				BTOBB(byte_cnt), 0);
++		if (!bp)
++			return -ENOMEM;
++		bp->b_ops = &xfs_symlink_buf_ops;
++
++		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
++		byte_cnt = min(byte_cnt, pathlen);
++
++		buf = bp->b_addr;
++		buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
++					   byte_cnt, bp);
++
++		memcpy(buf, cur_chunk, byte_cnt);
++
++		cur_chunk += byte_cnt;
++		pathlen -= byte_cnt;
++		offset += byte_cnt;
++
++		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SYMLINK_BUF);
++		xfs_trans_log_buf(tp, bp, 0, (buf + byte_cnt - 1) -
++						(char *)bp->b_addr);
++	}
++	ASSERT(pathlen == 0);
++	return 0;
++}
++
+ int
+ xfs_symlink(
+ 	struct xfs_inode	*dp,
+@@ -164,15 +244,7 @@ xfs_symlink(
+ 	int			error = 0;
+ 	int			pathlen;
+ 	bool                    unlock_dp_on_error = false;
+-	xfs_fileoff_t		first_fsb;
+ 	xfs_filblks_t		fs_blocks;
+-	int			nmaps;
+-	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
+-	xfs_daddr_t		d;
+-	const char		*cur_chunk;
+-	int			byte_cnt;
+-	int			n;
+-	xfs_buf_t		*bp;
+ 	prid_t			prid;
+ 	struct xfs_dquot	*udqp = NULL;
+ 	struct xfs_dquot	*gdqp = NULL;
+@@ -266,65 +338,11 @@ xfs_symlink(
+ 
+ 	if (resblks)
+ 		resblks -= XFS_IALLOC_SPACE_RES(mp);
+-	/*
+-	 * If the symlink will fit into the inode, write it inline.
+-	 */
+-	if (pathlen <= XFS_IFORK_DSIZE(ip)) {
+-		xfs_init_local_fork(ip, XFS_DATA_FORK, target_path, pathlen);
+-
+-		ip->i_d.di_size = pathlen;
+-		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
+-		xfs_trans_log_inode(tp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
+-	} else {
+-		int	offset;
+-
+-		first_fsb = 0;
+-		nmaps = XFS_SYMLINK_MAPS;
+-
+-		error = xfs_bmapi_write(tp, ip, first_fsb, fs_blocks,
+-				  XFS_BMAPI_METADATA, resblks, mval, &nmaps);
+-		if (error)
+-			goto out_trans_cancel;
+-
+-		if (resblks)
+-			resblks -= fs_blocks;
+-		ip->i_d.di_size = pathlen;
+-		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-
+-		cur_chunk = target_path;
+-		offset = 0;
+-		for (n = 0; n < nmaps; n++) {
+-			char	*buf;
+-
+-			d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
+-			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
+-			bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
+-					       BTOBB(byte_cnt), 0);
+-			if (!bp) {
+-				error = -ENOMEM;
+-				goto out_trans_cancel;
+-			}
+-			bp->b_ops = &xfs_symlink_buf_ops;
+-
+-			byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
+-			byte_cnt = min(byte_cnt, pathlen);
+-
+-			buf = bp->b_addr;
+-			buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
+-						   byte_cnt, bp);
+-
+-			memcpy(buf, cur_chunk, byte_cnt);
+ 
+-			cur_chunk += byte_cnt;
+-			pathlen -= byte_cnt;
+-			offset += byte_cnt;
+-
+-			xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SYMLINK_BUF);
+-			xfs_trans_log_buf(tp, bp, 0, (buf + byte_cnt - 1) -
+-							(char *)bp->b_addr);
+-		}
+-		ASSERT(pathlen == 0);
+-	}
++	error = xfs_symlink_write_target(tp, ip, target_path, pathlen,
++			fs_blocks, resblks);
++	if (error)
++		goto out_trans_cancel;
+ 
+ 	/*
+ 	 * Create the directory entry for the symlink.
+diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
+index 9743d8c9394b..d7252f9cab41 100644
+--- a/fs/xfs/xfs_symlink.h
++++ b/fs/xfs/xfs_symlink.h
+@@ -12,5 +12,8 @@ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+ int xfs_readlink_bmap_ilocked(struct xfs_inode *ip, char *link);
+ int xfs_readlink(struct xfs_inode *ip, char *link);
+ int xfs_inactive_symlink(struct xfs_inode *ip);
++int xfs_symlink_write_target(struct xfs_trans *tp, struct xfs_inode *ip,
++		const char *target_path, int pathlen, xfs_fsblock_t fs_blocks,
++		uint resblks);
+ 
+ #endif /* __XFS_SYMLINK_H */
