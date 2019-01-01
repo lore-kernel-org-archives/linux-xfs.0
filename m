@@ -1,27 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:55402 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728195AbfAACU7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:20:59 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012E4im168470
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:20:58 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2130.oracle.com with ESMTP id 2pnxedxatp-1
+Received: from userp2130.oracle.com ([156.151.31.86]:43820 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728195AbfAACVG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:21:06 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012EgKo019067
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:21:04 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2130.oracle.com with ESMTP id 2pp0btp7a9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:20:58 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012KvIi009787
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:21:04 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012L4Pf027422
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:20:57 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x012KvHV026502
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:20:57 GMT
-Subject: [PATCH 16/22] xfs: create libxfs helper to link an existing inode
- into a directory
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:21:04 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x012L3Rh027995
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:21:03 GMT
+Subject: [PATCH 17/22] xfs: hoist inode free function to libxfs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 31 Dec 2018 18:20:49 -0800
-Message-ID: <154630924968.18437.14431992739946835828.stgit@magnolia>
+Date: Mon, 31 Dec 2018 18:21:02 -0800
+Message-ID: <154630926266.18437.9885897962204223918.stgit@magnolia>
 In-Reply-To: <154630914104.18437.15354380637179830566.stgit@magnolia>
 References: <154630914104.18437.15354380637179830566.stgit@magnolia>
 MIME-Version: 1.0
@@ -35,115 +34,181 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a new libxfs function to link an existing inode into a directory.
-The upcoming metadata directory feature will need this to create a
-metadata directory tree.
+Create a libxfs helper function that marks an inode free on disk.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_dir2.c |   44 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_dir2.h |    3 +++
- fs/xfs/xfs_inode.c       |   24 +-----------------------
- 3 files changed, 48 insertions(+), 23 deletions(-)
+ fs/xfs/libxfs/xfs_inode_util.c |   63 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_inode_util.h |    4 +++
+ fs/xfs/xfs_inode.c             |   48 +-----------------------------
+ 3 files changed, 68 insertions(+), 47 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index aaac55668e9d..4cd2afa234ca 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -748,3 +748,47 @@ xfs_dir_create_new_child(
+diff --git a/fs/xfs/libxfs/xfs_inode_util.c b/fs/xfs/libxfs/xfs_inode_util.c
+index e7251f8fd96a..01a320747ddf 100644
+--- a/fs/xfs/libxfs/xfs_inode_util.c
++++ b/fs/xfs/libxfs/xfs_inode_util.c
+@@ -17,6 +17,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_error.h"
++#include "xfs_inode_item.h"
  
- 	return xfs_bumplink(tp, dp);
+ /*
+  * helper function to extract extent size hint from inode
+@@ -823,3 +824,65 @@ xfs_bumplink(
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	return 0;
  }
 +
 +/*
-+ * Given a directory @dp, an existing non-directory inode @ip, and a @name,
-+ * link @ip into @dp under the given @name.  Both inodes must have the ILOCK
-+ * held.
++ * Free any local-format buffers sitting around before we reset to
++ * extents format.
 + */
-+int
-+xfs_dir_link_existing_child(
-+	struct xfs_trans		*tp,
-+	uint				resblks,
-+	struct xfs_inode		*dp,
-+	struct xfs_name			*name,
-+	struct xfs_inode		*ip)
++static inline void
++xfs_ifree_local_data(
++	struct xfs_inode	*ip,
++	int			whichfork)
 +{
-+	int				error;
++	struct xfs_ifork	*ifp;
 +
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+	ASSERT(xfs_isilocked(dp, XFS_ILOCK_EXCL));
-+	ASSERT(!S_ISDIR(VFS_I(ip)->i_mode));
++	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL)
++		return;
 +
-+	if (!resblks) {
-+		error = xfs_dir_canenter(tp, dp, name);
-+		if (error)
-+			return error;
-+	}
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
++}
++
++/* Mark an inode free on disk. */
++int
++xfs_dir_ifree(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	struct xfs_icluster	*xic)
++{
++	int			error;
 +
 +	/*
-+	 * Handle initial link state of O_TMPFILE inode
++	 * Pull the on-disk inode from the AGI unlinked list.
 +	 */
-+	if (VFS_I(ip)->i_nlink == 0) {
-+		error = xfs_iunlink_remove(tp, ip);
-+		if (error)
-+			return error;
-+	}
-+
-+	error = xfs_dir_createname(tp, dp, name, ip->i_ino, resblks);
++	error = xfs_iunlink_remove(tp, ip);
 +	if (error)
 +		return error;
 +
-+	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
++	error = xfs_difree(tp, ip->i_ino, xic);
++	if (error)
++		return error;
 +
-+	return xfs_bumplink(tp, ip);
++	xfs_ifree_local_data(ip, XFS_DATA_FORK);
++	xfs_ifree_local_data(ip, XFS_ATTR_FORK);
++
++	VFS_I(ip)->i_mode = 0;		/* mark incore inode as free */
++	ip->i_d.di_flags = 0;
++	ip->i_d.di_flags2 = 0;
++	ip->i_d.di_dmevmask = 0;
++	ip->i_d.di_forkoff = 0;		/* mark the attr fork not in use */
++	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
++	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
++
++	/* Don't attempt to replay owner changes for a deleted inode */
++	ip->i_itemp->ili_fields &= ~(XFS_ILOG_AOWNER | XFS_ILOG_DOWNER);
++
++	/*
++	 * Bump the generation count so no one will be confused
++	 * by reincarnations of this inode.
++	 */
++	VFS_I(ip)->i_generation++;
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++
++	return 0;
 +}
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index 5219ca503012..7e713fcb4c40 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -330,5 +330,8 @@ void *xfs_dir3_data_endp(struct xfs_da_geometry *geo,
- int xfs_dir_create_new_child(struct xfs_trans *tp, uint resblks,
- 		struct xfs_inode *dp, struct xfs_name *name,
- 		struct xfs_inode *ip);
-+int xfs_dir_link_existing_child(struct xfs_trans *tp, uint resblks,
-+		struct xfs_inode *dp, struct xfs_name *name,
-+		struct xfs_inode *ip);
+diff --git a/fs/xfs/libxfs/xfs_inode_util.h b/fs/xfs/libxfs/xfs_inode_util.h
+index 7258e18aeed0..4918379b682e 100644
+--- a/fs/xfs/libxfs/xfs_inode_util.h
++++ b/fs/xfs/libxfs/xfs_inode_util.h
+@@ -6,6 +6,8 @@
+ #ifndef	__XFS_INODE_UTIL_H__
+ #define	__XFS_INODE_UTIL_H__
  
- #endif	/* __XFS_DIR2_H__ */
++struct xfs_icluster;
++
+ xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
+ xfs_extlen_t	xfs_get_cowextsz_hint(struct xfs_inode *ip);
+ 
+@@ -100,5 +102,7 @@ int xfs_iunlink(struct xfs_trans *tp, struct xfs_inode *ip);
+ int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_inode *ip);
+ int xfs_droplink(struct xfs_trans *tp, struct xfs_inode *ip);
+ int xfs_bumplink(struct xfs_trans *tp, struct xfs_inode *ip);
++int xfs_dir_ifree(struct xfs_trans *tp, struct xfs_inode *ip,
++		  struct xfs_icluster *xic);
+ 
+ #endif /* __XFS_INODE_UTIL_H__ */
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 1469f905be36..189f11bba539 100644
+index 189f11bba539..93a03cbbb9af 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -974,29 +974,7 @@ xfs_link(
- 		goto error_return;
- 	}
+@@ -1770,24 +1770,6 @@ xfs_ifree_cluster(
+ 	return 0;
+ }
  
--	if (!resblks) {
--		error = xfs_dir_canenter(tp, tdp, target_name);
--		if (error)
--			goto error_return;
--	}
+-/*
+- * Free any local-format buffers sitting around before we reset to
+- * extents format.
+- */
+-static inline void
+-xfs_ifree_local_data(
+-	struct xfs_inode	*ip,
+-	int			whichfork)
+-{
+-	struct xfs_ifork	*ifp;
+-
+-	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL)
+-		return;
+-
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
+-}
+-
+ /*
+  * This is called to return an inode to the inode free list.
+  * The inode should already be truncated to 0 length and have
+@@ -1813,38 +1795,10 @@ xfs_ifree(
+ 	ASSERT(ip->i_d.di_size == 0 || !S_ISREG(VFS_I(ip)->i_mode));
+ 	ASSERT(ip->i_d.di_nblocks == 0);
+ 
+-	/*
+-	 * Pull the on-disk inode from the AGI unlinked list.
+-	 */
+-	error = xfs_iunlink_remove(tp, ip);
+-	if (error)
+-		return error;
+-
+-	error = xfs_difree(tp, ip->i_ino, &xic);
++	error = xfs_dir_ifree(tp, ip, &xic);
+ 	if (error)
+ 		return error;
+ 
+-	xfs_ifree_local_data(ip, XFS_DATA_FORK);
+-	xfs_ifree_local_data(ip, XFS_ATTR_FORK);
+-
+-	VFS_I(ip)->i_mode = 0;		/* mark incore inode as free */
+-	ip->i_d.di_flags = 0;
+-	ip->i_d.di_flags2 = 0;
+-	ip->i_d.di_dmevmask = 0;
+-	ip->i_d.di_forkoff = 0;		/* mark the attr fork not in use */
+-	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+-	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
+-
+-	/* Don't attempt to replay owner changes for a deleted inode */
+-	ip->i_itemp->ili_fields &= ~(XFS_ILOG_AOWNER|XFS_ILOG_DOWNER);
 -
 -	/*
--	 * Handle initial link state of O_TMPFILE inode
+-	 * Bump the generation count so no one will be confused
+-	 * by reincarnations of this inode.
 -	 */
--	if (VFS_I(sip)->i_nlink == 0) {
--		error = xfs_iunlink_remove(tp, sip);
--		if (error)
--			goto error_return;
--	}
+-	VFS_I(ip)->i_generation++;
+-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 -
--	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
--				   resblks);
--	if (error)
--		goto error_return;
--	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
--
--	error = xfs_bumplink(tp, sip);
-+	error = xfs_dir_link_existing_child(tp, resblks, tdp, target_name, sip);
- 	if (error)
- 		goto error_return;
+ 	if (xic.deleted)
+ 		error = xfs_ifree_cluster(ip, tp, &xic);
  
