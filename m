@@ -1,55 +1,183 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:10679 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725440AbeLTVDN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Dec 2018 16:03:13 -0500
-Date: Fri, 21 Dec 2018 08:03:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 11/11] xfs: introduce an always_cow mode
-Message-ID: <20181220210309.GE4205@dastard>
-References: <20181203222503.30649-1-hch@lst.de>
- <20181203222503.30649-12-hch@lst.de>
- <20181218232437.GS27208@magnolia>
- <20181219224335.GB4205@dastard>
- <20181220070741.GA9803@lst.de>
+Received: from aserp2130.oracle.com ([141.146.126.79]:47912 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726686AbfAACI6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:08:58 -0500
+Subject: [PATCH 4/8] xfs: hoist inode cluster checks out of loop
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 31 Dec 2018 18:08:52 -0800
+Message-ID: <154630853205.14372.8548651680958822032.stgit@magnolia>
+In-Reply-To: <154630850739.14372.14000129432637481206.stgit@magnolia>
+References: <154630850739.14372.14000129432637481206.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181220070741.GA9803@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Thu, Dec 20, 2018 at 08:07:41AM +0100, Christoph Hellwig wrote:
-> On Thu, Dec 20, 2018 at 09:43:35AM +1100, Dave Chinner wrote:
-> > On Tue, Dec 18, 2018 at 03:24:37PM -0800, Darrick J. Wong wrote:
-> > > On Mon, Dec 03, 2018 at 05:25:03PM -0500, Christoph Hellwig wrote:
-> > > Granted, I'm still rather fuzzy on what exactly is supposed to happen
-> > > with preallocating fallocate when all writes require an allocation to
-> > > succeed? 
-> > 
-> > For always_cow mode, perhaps we could consider preallocating into
-> > the COW fork rather than the data fork? That way when we go to write
-> > the data, we've already got the space allocated regardless of
-> > whether it is over a hole or existing data?
-> 
-> For a speculative preallocation that is what we already do.  But for
-> persistent preallocation that doesn't help as the COW fork is not
-> persistent.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yes, I know it's not persistent, but do we care for always_cow mode?
-Preallocation to prevent enospc is done just before the data is
-written, and if we put it in the COW fork then it will mostly just
-work and behave as expected for preventing ENOSPC on subsequent
-writes. Preallocation to control data layout is largely irrelevant
-to always_cow mode, so it really makes no difference to us if the
-preallocation disappears when the inode is cycled out of cache....
+Hoist the inode cluster checks out of the inobt record check loop into
+a separate function in preparation for refactoring of that loop.  No
+functional changes here; that's in the next patch.
 
-Cheers,
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/scrub/ialloc.c |  119 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 65 insertions(+), 54 deletions(-)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 5e593e4292b2..9af01ea0258d 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -188,19 +188,19 @@ xchk_iallocbt_check_cluster_freemask(
+ 	return 0;
+ }
+ 
+-/* Make sure the free mask is consistent with what the inodes think. */
++/* Check an inode cluster. */
+ STATIC int
+-xchk_iallocbt_check_freemask(
++xchk_iallocbt_check_cluster(
+ 	struct xchk_btree		*bs,
+-	struct xfs_inobt_rec_incore	*irec)
++	struct xfs_inobt_rec_incore	*irec,
++	xfs_agino_t			agino)
+ {
+ 	struct xfs_imap			imap;
+ 	struct xfs_mount		*mp = bs->cur->bc_mp;
+ 	struct xfs_dinode		*dip;
+ 	struct xfs_buf			*bp;
+ 	xfs_ino_t			fsino;
+-	xfs_agino_t			nr_inodes;
+-	xfs_agino_t			agino;
++	unsigned int			nr_inodes;
+ 	xfs_agino_t			chunkino;
+ 	xfs_agino_t			clusterino;
+ 	xfs_agblock_t			agbno;
+@@ -212,60 +212,71 @@ xchk_iallocbt_check_freemask(
+ 	nr_inodes = min_t(unsigned int, XFS_INODES_PER_CHUNK,
+ 			mp->m_inodes_per_cluster);
+ 
+-	for (agino = irec->ir_startino;
+-	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
+-	     agino += mp->m_inodes_per_cluster) {
+-		fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
+-		chunkino = agino - irec->ir_startino;
+-		agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+-
+-		/* Compute the holemask mask for this cluster. */
+-		for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
+-		     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
+-			holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
+-					XFS_INODES_PER_HOLEMASK_BIT);
+-
+-		/* The whole cluster must be a hole or not a hole. */
+-		ir_holemask = (irec->ir_holemask & holemask);
+-		if (ir_holemask != holemask && ir_holemask != 0) {
+-			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+-			continue;
+-		}
++	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
++	chunkino = agino - irec->ir_startino;
++	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+ 
+-		/* If any part of this is a hole, skip it. */
+-		if (ir_holemask) {
+-			xchk_xref_is_not_owned_by(bs->sc, agbno,
+-					mp->m_blocks_per_cluster,
+-					&XFS_RMAP_OINFO_INODES);
+-			continue;
+-		}
++	/* Compute the holemask mask for this cluster. */
++	for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
++	     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
++		holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
++				XFS_INODES_PER_HOLEMASK_BIT);
+ 
+-		xchk_xref_is_owned_by(bs->sc, agbno, mp->m_blocks_per_cluster,
++	/* The whole cluster must be a hole or not a hole. */
++	ir_holemask = (irec->ir_holemask & holemask);
++	if (ir_holemask != holemask && ir_holemask != 0) {
++		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
++		return 0;
++	}
++
++	/* If any part of this is a hole, skip it. */
++	if (ir_holemask) {
++		xchk_xref_is_not_owned_by(bs->sc, agbno,
++				mp->m_blocks_per_cluster,
+ 				&XFS_RMAP_OINFO_INODES);
++		return 0;
++	}
+ 
+-		/* Grab the inode cluster buffer. */
+-		imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno,
+-				agbno);
+-		imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
+-		imap.im_boffset = 0;
+-
+-		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
+-				&dip, &bp, 0, 0);
+-		if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0,
+-				&error))
+-			continue;
+-
+-		/* Which inodes are free? */
+-		for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
+-			error = xchk_iallocbt_check_cluster_freemask(bs,
+-					fsino, chunkino, clusterino, irec, bp);
+-			if (error) {
+-				xfs_trans_brelse(bs->cur->bc_tp, bp);
+-				return error;
+-			}
+-		}
++	xchk_xref_is_owned_by(bs->sc, agbno, mp->m_blocks_per_cluster,
++			&XFS_RMAP_OINFO_INODES);
++
++	/* Grab the inode cluster buffer. */
++	imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno, agbno);
++	imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
++	imap.im_boffset = 0;
+ 
+-		xfs_trans_brelse(bs->cur->bc_tp, bp);
++	error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap, &dip, &bp, 0, 0);
++	if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0, &error))
++		return 0;
++
++	/* Which inodes are free? */
++	for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
++		error = xchk_iallocbt_check_cluster_freemask(bs, fsino,
++				chunkino, clusterino, irec, bp);
++		if (error)
++			break;
++	}
++
++	xfs_trans_brelse(bs->cur->bc_tp, bp);
++	return error;
++}
++
++/* Make sure the free mask is consistent with what the inodes think. */
++STATIC int
++xchk_iallocbt_check_freemask(
++	struct xchk_btree		*bs,
++	struct xfs_inobt_rec_incore	*irec)
++{
++	struct xfs_mount		*mp = bs->cur->bc_mp;
++	xfs_agino_t			agino;
++	int				error = 0;
++
++	for (agino = irec->ir_startino;
++	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
++	     agino += mp->m_blocks_per_cluster * mp->m_sb.sb_inopblock) {
++		error = xchk_iallocbt_check_cluster(bs, irec, agino);
++		if (error)
++			break;
+ 	}
+ 
+ 	return error;
