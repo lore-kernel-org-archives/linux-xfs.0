@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:53018 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728133AbfAACRA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:17:00 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012E2He168455
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:16:59 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2130.oracle.com with ESMTP id 2pnxedxaq9-1
+Received: from userp2120.oracle.com ([156.151.31.85]:36186 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728133AbfAACRG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:17:06 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012Dlg6173225
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:17:05 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2pp1jqx40t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:16:59 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012GwZF000935
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:17:05 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x012H4ie004315
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:16:58 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x012Gw1L000457
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:16:58 GMT
-Subject: [PATCH 01/12] xfs: free COW staging extents when freezing filesystem
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:17:04 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x012H4TM024362
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:17:04 GMT
+Subject: [PATCH 02/12] xfs: refactor the predicate part of xfs_free_eofblocks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 31 Dec 2018 18:16:57 -0800
-Message-ID: <154630901708.16693.4337908735292154622.stgit@magnolia>
+Date: Mon, 31 Dec 2018 18:17:03 -0800
+Message-ID: <154630902321.16693.17215403042253916619.stgit@magnolia>
 In-Reply-To: <154630901076.16693.13111277988041606505.stgit@magnolia>
 References: <154630901076.16693.13111277988041606505.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,85 +34,192 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When we're freezing the filesystem, free all the COW staging extents
-before we shut the log down so that we can minimize the amount of
-recovery work that will be necessary during the next mount.
+Refactor the part of _free_eofblocks that decides if it's really going
+to truncate post-EOF blocks into a separate helper function.  The
+upcoming deferred inode inactivation patch requires us to be able to
+decide this prior to actual inactivation.  No functionality changes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_icache.c |   17 ++++++++++++-----
- fs/xfs/xfs_super.c  |   18 ++++++++++++++++++
- 2 files changed, 30 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_bmap_util.c |  101 ++++++++++++++++++++----------------------------
+ fs/xfs/xfs_inode.c     |   32 +++++++++++++++
+ fs/xfs/xfs_inode.h     |    1 
+ 3 files changed, 75 insertions(+), 59 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 245483cc282b..36d986087abb 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1741,6 +1741,7 @@ xfs_inode_free_cowblocks(
- 	void			*args)
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 1ee8c5539fa4..aa7f7fe241ec 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -781,78 +781,61 @@ xfs_free_eofblocks(
+ 	struct xfs_inode	*ip)
  {
- 	struct xfs_eofblocks	*eofb = args;
-+	uint			lock_mode = 0;
- 	int			match;
- 	int			ret = 0;
- 
-@@ -1761,9 +1762,15 @@ xfs_inode_free_cowblocks(
- 			return 0;
- 	}
- 
--	/* Free the CoW blocks */
--	xfs_ilock(ip, XFS_IOLOCK_EXCL);
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-+	/*
-+	 * Free the CoW blocks.  We don't need to lock the inode if we're in
-+	 * the process of freezing the filesystem because we've already locked
-+	 * out writes and page faults.
-+	 */
-+	if (ip->i_mount->m_super->s_writers.frozen == SB_UNFROZEN)
-+		lock_mode = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
-+	if (lock_mode)
-+		xfs_ilock(ip, lock_mode);
+ 	struct xfs_trans	*tp;
+-	int			error;
+-	xfs_fileoff_t		end_fsb;
+-	xfs_fileoff_t		last_fsb;
+-	xfs_filblks_t		map_len;
+-	int			nimaps;
+-	struct xfs_bmbt_irec	imap;
+ 	struct xfs_mount	*mp = ip->i_mount;
++	int			error;
  
  	/*
- 	 * Check again, nobody else should be able to dirty blocks or change
-@@ -1772,8 +1779,8 @@ xfs_inode_free_cowblocks(
- 	if (xfs_prep_free_cowblocks(ip))
- 		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
- 
--	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
--	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+	if (lock_mode)
-+		xfs_iunlock(ip, lock_mode);
- 
- 	return ret;
- }
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 6903b36eac5d..bb4953cfd683 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1102,6 +1102,24 @@ xfs_fs_sync_fs(
- 	if (!wait)
+-	 * Figure out if there are any blocks beyond the end
+-	 * of the file.  If not, then there is nothing to do.
++	 * If there are blocks after the end of file, truncate the file to its
++	 * current size to free them up.
+ 	 */
+-	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
+-	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+-	if (last_fsb <= end_fsb)
++	if (!xfs_inode_has_posteof_blocks(ip))
  		return 0;
+-	map_len = last_fsb - end_fsb;
+-
+-	nimaps = 1;
+-	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	error = xfs_bmapi_read(ip, end_fsb, map_len, &imap, &nimaps, 0);
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
  
-+	/*
-+	 * If we're in the middle of freezing the filesystem, this is our last
-+	 * chance to run regular transactions.  Clear all the COW staging
-+	 * extents so that we can freeze the filesystem with as little recovery
-+	 * work to do at the next mount as possible.  It's safe to do this
-+	 * without locking inodes because the freezer code flushed all the
-+	 * dirty data from the page cache and locked out writes and page faults.
-+	 */
-+	if (sb->s_writers.frozen == SB_FREEZE_PAGEFAULT) {
-+		int		error;
-+
-+		error = xfs_icache_free_cowblocks(mp, NULL);
-+		if (error) {
-+			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+			return error;
-+		}
+ 	/*
+-	 * If there are blocks after the end of file, truncate the file to its
+-	 * current size to free them up.
++	 * Attach the dquots to the inode up front.
+ 	 */
+-	if (!error && (nimaps != 0) &&
+-	    (imap.br_startblock != HOLESTARTBLOCK ||
+-	     ip->i_delayed_blks)) {
+-		/*
+-		 * Attach the dquots to the inode up front.
+-		 */
+-		error = xfs_qm_dqattach(ip);
+-		if (error)
+-			return error;
++	error = xfs_qm_dqattach(ip);
++	if (error)
++		return error;
+ 
+-		/* wait on dio to ensure i_size has settled */
+-		inode_dio_wait(VFS_I(ip));
++	/* wait on dio to ensure i_size has settled */
++	inode_dio_wait(VFS_I(ip));
+ 
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0,
+-				&tp);
+-		if (error) {
+-			ASSERT(XFS_FORCED_SHUTDOWN(mp));
+-			return error;
+-		}
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
++	if (error) {
++		ASSERT(XFS_FORCED_SHUTDOWN(mp));
++		return error;
 +	}
+ 
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		xfs_trans_ijoin(tp, ip, 0);
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, 0);
+ 
+-		/*
+-		 * Do not update the on-disk file size.  If we update the
+-		 * on-disk file size and then the system crashes before the
+-		 * contents of the file are flushed to disk then the files
+-		 * may be full of holes (ie NULL files bug).
+-		 */
+-		error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
+-					XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
+-		if (error) {
+-			/*
+-			 * If we get an error at this point we simply don't
+-			 * bother truncating the file.
+-			 */
+-			xfs_trans_cancel(tp);
+-		} else {
+-			error = xfs_trans_commit(tp);
+-			if (!error)
+-				xfs_inode_clear_eofblocks_tag(ip);
+-		}
++	/*
++	 * Do not update the on-disk file size.  If we update the
++	 * on-disk file size and then the system crashes before the
++	 * contents of the file are flushed to disk then the files
++	 * may be full of holes (ie NULL files bug).
++	 */
++	error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
++				XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
++	if (error)
++		goto err_cancel;
+ 
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	}
++	error = xfs_trans_commit(tp);
++	if (error)
++		goto out_unlock;
 +
- 	xfs_log_force(mp, XFS_LOG_SYNC);
- 	if (laptop_mode) {
- 		/*
++	xfs_inode_clear_eofblocks_tag(ip);
++	goto out_unlock;
++
++err_cancel:
++	/*
++	 * If we get an error at this point we simply don't
++	 * bother truncating the file.
++	 */
++	xfs_trans_cancel(tp);
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index c8bf02be0003..662ee537ffb5 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3568,3 +3568,35 @@ xfs_irele(
+ 	trace_xfs_irele(ip, _RET_IP_);
+ 	iput(VFS_I(ip));
+ }
++
++/*
++ * Decide if this inode have post-EOF blocks.  The caller is responsible
++ * for knowing / caring about the PREALLOC/APPEND flags.
++ */
++bool
++xfs_inode_has_posteof_blocks(
++	struct xfs_inode	*ip)
++{
++	struct xfs_bmbt_irec	imap;
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_fileoff_t		end_fsb;
++	xfs_fileoff_t		last_fsb;
++	xfs_filblks_t		map_len;
++	int			nimaps;
++	int			error;
++
++	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
++	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
++	if (last_fsb <= end_fsb)
++		return false;
++	map_len = last_fsb - end_fsb;
++
++	nimaps = 1;
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++	error = xfs_bmapi_read(ip, end_fsb, map_len, &imap, &nimaps, 0);
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++
++	return !error && (nimaps != 0) &&
++	       (imap.br_startblock != HOLESTARTBLOCK ||
++	        ip->i_delayed_blks);
++}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index be2014520155..02a938661ba8 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -499,5 +499,6 @@ extern struct kmem_zone	*xfs_inode_zone;
+ #define XFS_DEFAULT_COWEXTSZ_HINT 32
+ 
+ bool xfs_inode_verify_forks(struct xfs_inode *ip);
++bool xfs_inode_has_posteof_blocks(struct xfs_inode *ip);
+ 
+ #endif	/* __XFS_INODE_H__ */
