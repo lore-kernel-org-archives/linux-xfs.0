@@ -1,27 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45306 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728414AbfAACXi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:23:38 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012Ehmu019070
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:37 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2pp0btp7bs-1
+Received: from aserp2130.oracle.com ([141.146.126.79]:56970 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728414AbfAACXp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:23:45 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012NihA173680
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:44 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2130.oracle.com with ESMTP id 2pnxedxave-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:23:36 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012NaBN031226
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:23:43 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012NghK014675
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:36 GMT
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x012NaQd027728
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:36 GMT
-Subject: [PATCH 11/13] xfs: ensure metadata directory paths exist before
- creating files
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:43 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x012Ngeh008895
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:23:42 GMT
+Subject: [PATCH 12/13] xfs: disable the agi rotor for metadata inodes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 31 Dec 2018 18:23:35 -0800
-Message-ID: <154630941488.21716.5321601013179303914.stgit@magnolia>
+Date: Mon, 31 Dec 2018 18:23:41 -0800
+Message-ID: <154630942114.21716.1893263236839727703.stgit@magnolia>
 In-Reply-To: <154630934595.21716.17416691804044507782.stgit@magnolia>
 References: <154630934595.21716.17416691804044507782.stgit@magnolia>
 MIME-Version: 1.0
@@ -35,179 +34,140 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Since xfs_imeta_create can create new metadata files arbitrarily deep in
-the metadata directory tree, we must supply a function that can ensure
-that all directories in a path exist, and call it before the quota
-functions create the quota inodes.
+Ideally, we'd put all the metadata inodes in one place if we could, so
+that the metadata all stay reasonably close together instead of
+spreading out over the disk.  Furthermore, if the log is internal we'd
+probably prefer to keep the metadata near the log.  Therefore, disable
+AGI rotoring for metadata inode allocations.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_imeta.h |    2 +
- fs/xfs/xfs_inode.c        |  102 +++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_qm.c           |   13 ++++++
- 3 files changed, 117 insertions(+)
+ fs/xfs/libxfs/xfs_ialloc.c     |   48 ++++++++++++++++++++++++++--------------
+ fs/xfs/libxfs/xfs_ialloc.h     |   10 ++++----
+ fs/xfs/libxfs/xfs_inode_util.c |    3 +--
+ 3 files changed, 37 insertions(+), 24 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_imeta.h b/fs/xfs/libxfs/xfs_imeta.h
-index ecd2db0a4c92..33024889fc71 100644
---- a/fs/xfs/libxfs/xfs_imeta.h
-+++ b/fs/xfs/libxfs/xfs_imeta.h
-@@ -62,5 +62,7 @@ unsigned int xfs_imeta_unlink_space_res(struct xfs_mount *mp);
- int xfs_imeta_iget(struct xfs_mount *mp, xfs_ino_t ino, unsigned char ftype,
- 		  struct xfs_inode **ipp);
- void xfs_imeta_irele(struct xfs_inode *ip);
-+int xfs_imeta_ensure_dirpath(struct xfs_mount *mp,
-+			     const struct xfs_imeta_path *path);
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index f32be0c85f93..9f926fbb37f8 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -937,20 +937,21 @@ xfs_ialloc_next_ag(
+  */
+ STATIC xfs_agnumber_t
+ xfs_ialloc_ag_select(
+-	xfs_trans_t	*tp,		/* transaction pointer */
+-	xfs_ino_t	parent,		/* parent directory inode number */
+-	umode_t		mode)		/* bits set to indicate file type */
++	struct xfs_trans	*tp,
++	struct xfs_inode	*pip,
++	umode_t			mode)
+ {
+-	xfs_agnumber_t	agcount;	/* number of ag's in the filesystem */
+-	xfs_agnumber_t	agno;		/* current ag number */
+-	int		flags;		/* alloc buffer locking flags */
+-	xfs_extlen_t	ineed;		/* blocks needed for inode allocation */
+-	xfs_extlen_t	longest = 0;	/* longest extent available */
+-	xfs_mount_t	*mp;		/* mount point structure */
+-	int		needspace;	/* file mode implies space allocated */
+-	xfs_perag_t	*pag;		/* per allocation group data */
+-	xfs_agnumber_t	pagno;		/* parent (starting) ag number */
+-	int		error;
++	struct xfs_mount	*mp;
++	struct xfs_perag	*pag;
++	xfs_ino_t		parent = pip ? pip->i_ino : 0;
++	xfs_agnumber_t		agcount;
++	xfs_agnumber_t		agno;
++	xfs_agnumber_t		pagno;
++	xfs_extlen_t		ineed;
++	xfs_extlen_t		longest = 0;	/* longest extent available */
++	int			needspace;	/* file mode implies space allocated */
++	int			flags;
++	int			error;
  
- #endif /* __XFS_IMETA_H__ */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 6a3a8137af4d..abd332a13d95 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -43,6 +43,7 @@
- #include "xfs_dir2_priv.h"
- #include "xfs_dquot_item.h"
- #include "xfs_dquot.h"
-+#include "xfs_imeta.h"
- 
- kmem_zone_t *xfs_inode_zone;
- 
-@@ -927,6 +928,107 @@ xfs_create_tmpfile(
- 	return error;
- }
- 
-+/* Create a metadata for the last component of the path. */
-+STATIC int
-+xfs_imeta_mkdir(
-+	struct xfs_mount		*mp,
-+	const struct xfs_imeta_path	*path)
-+{
-+	struct xfs_imeta_end		ic;
-+	struct xfs_inode		*ip = NULL;
-+	struct xfs_trans		*tp = NULL;
-+	struct xfs_dquot		*udqp = NULL;
-+	struct xfs_dquot		*gdqp = NULL;
-+	struct xfs_dquot		*pdqp = NULL;
-+	uint				resblks;
-+	int				error;
-+
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return -EIO;
-+
-+	/* Grab the dquots from the metadata directory root. */
-+	error = xfs_qm_vop_dqalloc(mp->m_metadirip, 0, 0, 0,
-+			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
-+			&udqp, &gdqp, &pdqp);
-+	if (error)
-+		return error;
-+
-+	/* Allocate a transaction to create the last directory. */
-+	resblks = xfs_imeta_create_space_res(mp);
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_imeta_create, resblks,
-+			0, 0, &tp);
-+	if (error)
-+		goto out_dqrele;
-+
-+	/* Reserve quota for the new directory. */
-+	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp, pdqp,
-+			resblks, 1, 0);
-+	if (error) {
-+		xfs_trans_cancel(tp);
-+		goto out_dqrele;
-+	}
-+
-+	/* Create the subdirectory. */
-+	error = xfs_imeta_create(&tp, path, S_IFDIR, &ip, &ic);
-+	if (error) {
-+		xfs_trans_cancel(tp);
-+		xfs_imeta_end_update(mp, &ic, error);
-+		goto out_irele;
-+	}
-+
-+	/*
-+	 * Attach the dquot(s) to the inodes and modify them incore.
-+	 * These ids of the inode couldn't have changed since the new
-+	 * inode has been locked ever since it was created.
-+	 */
-+	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp, pdqp);
-+
-+	error = xfs_trans_commit(tp);
-+	xfs_imeta_end_update(mp, &ic, error);
-+
-+out_irele:
-+	/* Have to finish setting up the inode to ensure it's deleted. */
-+	if (ip) {
-+		xfs_finish_inode_setup(ip);
-+		xfs_irele(ip);
-+	}
-+
-+out_dqrele:
-+	xfs_qm_dqrele(udqp);
-+	xfs_qm_dqrele(gdqp);
-+	xfs_qm_dqrele(pdqp);
-+	return error;
-+}
-+
-+/*
-+ * Make sure that every metadata directory path component exists and is a
-+ * directory.
-+ */
-+int
-+xfs_imeta_ensure_dirpath(
-+	struct xfs_mount		*mp,
-+	const struct xfs_imeta_path	*path)
-+{
-+	struct xfs_imeta_path temp_path = {
-+		.im_path		= path->im_path,
-+		.im_depth		= 1,
-+	};
-+	unsigned int			i;
-+	int				error = 0;
-+
-+	if (!xfs_sb_version_hasmetadir(&mp->m_sb))
-+		return 0;
-+
-+	for (i = 0; i < path->im_depth - 1; i++) {
-+		temp_path.im_depth = i + 1;
-+		error = xfs_imeta_mkdir(mp, &temp_path);
-+		if (error && error != -EEXIST)
-+			break;
-+	}
-+
-+	return error == -EEXIST ? 0 : error;
-+}
-+
+ 	/*
+ 	 * Files of these types need at least one block if length > 0
+@@ -959,9 +960,21 @@ xfs_ialloc_ag_select(
+ 	needspace = S_ISDIR(mode) || S_ISREG(mode) || S_ISLNK(mode);
+ 	mp = tp->t_mountp;
+ 	agcount = mp->m_maxagi;
+-	if (S_ISDIR(mode))
++	if (pip && xfs_is_metadata_inode(pip)) {
++		/*
++		 * Try to squash all the metadata inodes into the parent's
++		 * AG, or the one with the log if the log is internal, or
++		 * AG 0 if all else fails.
++		 */
++		if (xfs_verify_ino(mp, parent))
++			pagno = XFS_INO_TO_AGNO(mp, parent);
++		else if (mp->m_sb.sb_logstart != 0)
++			pagno = XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart);
++		else
++			pagno = 0;
++	} else if (S_ISDIR(mode)) {
+ 		pagno = xfs_ialloc_next_ag(mp);
+-	else {
++	} else {
+ 		pagno = XFS_INO_TO_AGNO(mp, parent);
+ 		if (pagno >= agcount)
+ 			pagno = 0;
+@@ -1693,13 +1706,14 @@ xfs_dialloc_ag(
  int
- xfs_link(
- 	xfs_inode_t		*tdp,
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index c6ab9fe531d5..00d39e98af3f 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -827,6 +827,7 @@ xfs_qm_qino_alloc(
- 	struct xfs_imeta_end		ic;
- 	struct xfs_trans		*tp;
- 	const struct xfs_imeta_path	*path = xfs_qflags_to_imeta(flags);
-+	uint				old_qflags;
- 	int				error;
- 	bool				need_alloc = true;
+ xfs_dialloc(
+ 	struct xfs_trans	*tp,
+-	xfs_ino_t		parent,
++	struct xfs_inode	*pip,
+ 	umode_t			mode,
+ 	struct xfs_buf		**IO_agbp,
+ 	xfs_ino_t		*inop)
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+ 	struct xfs_buf		*agbp;
++	xfs_ino_t		parent = pip ? pip->i_ino : 0;
+ 	xfs_agnumber_t		agno;
+ 	int			error;
+ 	int			ialloced;
+@@ -1723,7 +1737,7 @@ xfs_dialloc(
+ 	 * We do not have an agbp, so select an initial allocation
+ 	 * group for inode allocation.
+ 	 */
+-	start_agno = xfs_ialloc_ag_select(tp, parent, mode);
++	start_agno = xfs_ialloc_ag_select(tp, pip, mode);
+ 	if (start_agno == NULLAGNUMBER) {
+ 		*inop = NULLFSINO;
+ 		return 0;
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index b74fa2addd51..23a03168c240 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -66,11 +66,11 @@ xfs_make_iptr(struct xfs_mount *mp, struct xfs_buf *b, int o)
+  */
+ int					/* error */
+ xfs_dialloc(
+-	struct xfs_trans *tp,		/* transaction pointer */
+-	xfs_ino_t	parent,		/* parent inode (directory) */
+-	umode_t		mode,		/* mode bits for new inode */
+-	struct xfs_buf	**agbp,		/* buf for a.g. inode header */
+-	xfs_ino_t	*inop);		/* inode number allocated */
++	struct xfs_trans	*tp,	/* transaction pointer */
++	struct xfs_inode	*pip,	/* parent inode (directory) */
++	umode_t			mode,	/* mode bits for new inode */
++	struct xfs_buf		**agbp,	/* buf for a.g. inode header */
++	xfs_ino_t		*inop);	/* inode number allocated */
  
-@@ -835,6 +836,18 @@ xfs_qm_qino_alloc(
+ /*
+  * Free disk inode.  Carefully avoids touching the incore inode, all
+diff --git a/fs/xfs/libxfs/xfs_inode_util.c b/fs/xfs/libxfs/xfs_inode_util.c
+index 815efd73efa7..7d29b995f2dc 100644
+--- a/fs/xfs/libxfs/xfs_inode_util.c
++++ b/fs/xfs/libxfs/xfs_inode_util.c
+@@ -380,8 +380,7 @@ xfs_ialloc(
+ 	 * Call the space management code to pick
+ 	 * the on-disk inode to be allocated.
+ 	 */
+-	error = xfs_dialloc(tp, pip ? pip->i_ino : 0, args->mode,
+-			    ialloc_context, &ino);
++	error = xfs_dialloc(tp, pip, args->mode, ialloc_context, &ino);
  	if (error)
  		return error;
- 
-+	/*
-+	 * Ensure the quota directory exists, being careful to disable quotas
-+	 * while we do this.  We'll have to quotacheck anyway, so the loss
-+	 * of one inode shouldn't affect the quota count.
-+	 */
-+	old_qflags = mp->m_qflags & XFS_ALL_QUOTA_ACCT;
-+	mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
-+	error = xfs_imeta_ensure_dirpath(mp, xfs_qflags_to_imeta(flags));
-+	mp->m_qflags |= old_qflags;
-+	if (error)
-+		return error;
-+
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_imeta_create,
- 			xfs_imeta_create_space_res(mp), 0, 0, &tp);
- 	if (error)
+ 	if (*ialloc_context || ino == NULLFSINO) {
