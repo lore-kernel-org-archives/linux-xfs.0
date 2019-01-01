@@ -1,26 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43552 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:43698 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728234AbfAACUe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:20:34 -0500
+        with ESMTP id S1728195AbfAACUr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Dec 2018 21:20:47 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012Eu1i019131
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:20:30 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2pp0btp79v-1
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x012Dn7v018643
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:20:45 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2pp0btp7a1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:20:30 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x012KOXh026528
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Jan 2019 02:20:45 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x012KiK3009202
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:20:25 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x012KOxG027479
-        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:20:24 GMT
-Subject: [PATCH 13/22] xfs: hoist xfs_iunlink to libxfs
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:20:44 GMT
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x012Kisi026339
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Jan 2019 02:20:44 GMT
+Subject: [PATCH 15/22] xfs: create libxfs helper to link a new inode into a
+ directory
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 31 Dec 2018 18:20:23 -0800
-Message-ID: <154630922342.18437.8517945462006681478.stgit@magnolia>
+Date: Mon, 31 Dec 2018 18:20:35 -0800
+Message-ID: <154630923581.18437.16793782051661833470.stgit@magnolia>
 In-Reply-To: <154630914104.18437.15354380637179830566.stgit@magnolia>
 References: <154630914104.18437.15354380637179830566.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,593 +35,120 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move xfs_iunlink and xfs_iunlink_remove to libxfs.
+Create a new libxfs function to link a newly created inode into a
+directory.  The upcoming metadata directory feature will need this to
+create a metadata directory tree.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_inode_util.c |  267 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_inode_util.h |    3 
- fs/xfs/xfs_inode.c             |  268 ----------------------------------------
- 3 files changed, 270 insertions(+), 268 deletions(-)
+ fs/xfs/libxfs/xfs_dir2.c |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_dir2.h |    4 ++++
+ fs/xfs/xfs_inode.c       |   20 ++------------------
+ 3 files changed, 51 insertions(+), 18 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_inode_util.c b/fs/xfs/libxfs/xfs_inode_util.c
-index fa9baea5be6d..b67d72cb8e38 100644
---- a/fs/xfs/libxfs/xfs_inode_util.c
-+++ b/fs/xfs/libxfs/xfs_inode_util.c
-@@ -16,6 +16,7 @@
- #include "xfs_inode_util.h"
- #include "xfs_trans.h"
- #include "xfs_ialloc.h"
-+#include "xfs_error.h"
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 229152cd1a24..aaac55668e9d 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -22,6 +22,9 @@
+ #include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
++#include "xfs_shared.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_trans_space.h"
  
- /*
-  * helper function to extract extent size hint from inode
-@@ -519,3 +520,269 @@ xfs_dir_ialloc(
+ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
  
+@@ -703,3 +706,45 @@ xfs_dir2_shrink_inode(
+ 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
  	return 0;
  }
 +
 +/*
-+ * This is called when the inode's link count goes to 0 or we are creating a
-+ * tmpfile via O_TMPFILE. In the case of a tmpfile, @ignore_linkcount will be
-+ * set to true as the link count is dropped to zero by the VFS after we've
-+ * created the file successfully, so we have to add it to the unlinked list
-+ * while the link count is non-zero.
-+ *
-+ * We place the on-disk inode on a list in the AGI.  It will be pulled from this
-+ * list when the inode is freed.
++ * Given a directory @dp, a newly allocated inode @ip, and a @name, link @ip
++ * into @dp under the given @name.  If @ip is a directory, it will be
++ * initialized.  Both inodes must have the ILOCK held and the transaction must
++ * have sufficient blocks reserved.
 + */
 +int
-+xfs_iunlink(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip)
++xfs_dir_create_new_child(
++	struct xfs_trans		*tp,
++	uint				resblks,
++	struct xfs_inode		*dp,
++	struct xfs_name			*name,
++	struct xfs_inode		*ip)
 +{
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_agi		*agi;
-+	struct xfs_dinode	*dip;
-+	struct xfs_buf		*agibp;
-+	struct xfs_buf		*ibp;
-+	xfs_agino_t		agino;
-+	short			bucket_index;
-+	int			offset;
-+	int			error;
++	struct xfs_mount		*mp = tp->t_mountp;
++	int				error;
 +
-+	ASSERT(VFS_I(ip)->i_mode != 0);
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	ASSERT(xfs_isilocked(dp, XFS_ILOCK_EXCL));
++	ASSERT(resblks == 0 || resblks > XFS_IALLOC_SPACE_RES(mp));
 +
-+	/*
-+	 * Get the agi buffer first.  It ensures lock ordering
-+	 * on the list.
-+	 */
-+	error = xfs_read_agi(mp, tp, XFS_INO_TO_AGNO(mp, ip->i_ino), &agibp);
-+	if (error)
++	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
++				   resblks ?
++					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
++	if (error) {
++		ASSERT(error != -ENOSPC);
 +		return error;
-+	agi = XFS_BUF_TO_AGI(agibp);
-+
-+	/*
-+	 * Get the index into the agi hash table for the
-+	 * list this inode will go on.
-+	 */
-+	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
-+	ASSERT(agino != 0);
-+	bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
-+	ASSERT(agi->agi_unlinked[bucket_index]);
-+	ASSERT(be32_to_cpu(agi->agi_unlinked[bucket_index]) != agino);
-+
-+	if (agi->agi_unlinked[bucket_index] != cpu_to_be32(NULLAGINO)) {
-+		/*
-+		 * There is already another inode in the bucket we need
-+		 * to add ourselves to.  Add us at the front of the list.
-+		 * Here we put the head pointer into our next pointer,
-+		 * and then we fall through to point the head at us.
-+		 */
-+		error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &ibp,
-+				       0, 0);
-+		if (error)
-+			return error;
-+
-+		ASSERT(dip->di_next_unlinked == cpu_to_be32(NULLAGINO));
-+		dip->di_next_unlinked = agi->agi_unlinked[bucket_index];
-+		offset = ip->i_imap.im_boffset +
-+			offsetof(xfs_dinode_t, di_next_unlinked);
-+
-+		/* need to recalc the inode CRC if appropriate */
-+		xfs_dinode_calc_crc(mp, dip);
-+
-+		xfs_trans_inode_buf(tp, ibp);
-+		xfs_trans_log_buf(tp, ibp, offset,
-+				  (offset + sizeof(xfs_agino_t) - 1));
-+		xfs_inobp_check(mp, ibp);
 +	}
 +
-+	/*
-+	 * Point the bucket head pointer at the inode being inserted.
-+	 */
-+	ASSERT(agino != 0);
-+	agi->agi_unlinked[bucket_index] = cpu_to_be32(agino);
-+	offset = offsetof(xfs_agi_t, agi_unlinked) +
-+		(sizeof(xfs_agino_t) * bucket_index);
-+	xfs_trans_log_buf(tp, agibp, offset,
-+			  (offset + sizeof(xfs_agino_t) - 1));
-+	return 0;
-+}
++	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
 +
-+/*
-+ * Pull the on-disk inode from the AGI unlinked list.
-+ */
-+int
-+xfs_iunlink_remove(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_mount	*mp;
-+	struct xfs_agi		*agi;
-+	struct xfs_dinode	*dip;
-+	struct xfs_buf		*agibp;
-+	struct xfs_buf		*ibp;
-+	struct xfs_buf		*last_ibp;
-+	struct xfs_dinode	*last_dip = NULL;
-+	xfs_ino_t		next_ino;
-+	xfs_agnumber_t		agno;
-+	xfs_agino_t		agino;
-+	xfs_agino_t		next_agino;
-+	short			bucket_index;
-+	int			offset, last_offset = 0;
-+	int			error;
++	if (!S_ISDIR(VFS_I(ip)->i_mode))
++		return 0;
 +
-+	mp = tp->t_mountp;
-+	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
-+
-+	/*
-+	 * Get the agi buffer first.  It ensures lock ordering
-+	 * on the list.
-+	 */
-+	error = xfs_read_agi(mp, tp, agno, &agibp);
++	error = xfs_dir_init(tp, ip, dp);
 +	if (error)
 +		return error;
 +
-+	agi = XFS_BUF_TO_AGI(agibp);
-+
-+	/*
-+	 * Get the index into the agi hash table for the
-+	 * list this inode will go on.
-+	 */
-+	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
-+	if (!xfs_verify_agino(mp, agno, agino))
-+		return -EFSCORRUPTED;
-+	bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
-+	if (!xfs_verify_agino(mp, agno,
-+			be32_to_cpu(agi->agi_unlinked[bucket_index]))) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-+				agi, sizeof(*agi));
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (be32_to_cpu(agi->agi_unlinked[bucket_index]) == agino) {
-+		/*
-+		 * We're at the head of the list.  Get the inode's on-disk
-+		 * buffer to see if there is anyone after us on the list.
-+		 * Only modify our next pointer if it is not already NULLAGINO.
-+		 * This saves us the overhead of dealing with the buffer when
-+		 * there is no need to change it.
-+		 */
-+		error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &ibp,
-+				       0, 0);
-+		if (error) {
-+			xfs_warn(mp, "%s: xfs_imap_to_bp returned error %d.",
-+				__func__, error);
-+			return error;
-+		}
-+		next_agino = be32_to_cpu(dip->di_next_unlinked);
-+		ASSERT(next_agino != 0);
-+		if (next_agino != NULLAGINO) {
-+			dip->di_next_unlinked = cpu_to_be32(NULLAGINO);
-+			offset = ip->i_imap.im_boffset +
-+				offsetof(xfs_dinode_t, di_next_unlinked);
-+
-+			/* need to recalc the inode CRC if appropriate */
-+			xfs_dinode_calc_crc(mp, dip);
-+
-+			xfs_trans_inode_buf(tp, ibp);
-+			xfs_trans_log_buf(tp, ibp, offset,
-+					  (offset + sizeof(xfs_agino_t) - 1));
-+			xfs_inobp_check(mp, ibp);
-+		} else {
-+			xfs_trans_brelse(tp, ibp);
-+		}
-+		/*
-+		 * Point the bucket head pointer at the next inode.
-+		 */
-+		ASSERT(next_agino != 0);
-+		ASSERT(next_agino != agino);
-+		agi->agi_unlinked[bucket_index] = cpu_to_be32(next_agino);
-+		offset = offsetof(xfs_agi_t, agi_unlinked) +
-+			(sizeof(xfs_agino_t) * bucket_index);
-+		xfs_trans_log_buf(tp, agibp, offset,
-+				  (offset + sizeof(xfs_agino_t) - 1));
-+	} else {
-+		/*
-+		 * We need to search the list for the inode being freed.
-+		 */
-+		next_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
-+		last_ibp = NULL;
-+		while (next_agino != agino) {
-+			struct xfs_imap	imap;
-+
-+			if (last_ibp)
-+				xfs_trans_brelse(tp, last_ibp);
-+
-+			imap.im_blkno = 0;
-+			next_ino = XFS_AGINO_TO_INO(mp, agno, next_agino);
-+
-+			error = xfs_imap(mp, tp, next_ino, &imap, 0);
-+			if (error) {
-+				xfs_warn(mp,
-+	"%s: xfs_imap returned error %d.",
-+					 __func__, error);
-+				return error;
-+			}
-+
-+			error = xfs_imap_to_bp(mp, tp, &imap, &last_dip,
-+					       &last_ibp, 0, 0);
-+			if (error) {
-+				xfs_warn(mp,
-+	"%s: xfs_imap_to_bp returned error %d.",
-+					__func__, error);
-+				return error;
-+			}
-+
-+			last_offset = imap.im_boffset;
-+			next_agino = be32_to_cpu(last_dip->di_next_unlinked);
-+			if (!xfs_verify_agino(mp, agno, next_agino)) {
-+				XFS_CORRUPTION_ERROR(__func__,
-+						XFS_ERRLEVEL_LOW, mp,
-+						last_dip, sizeof(*last_dip));
-+				return -EFSCORRUPTED;
-+			}
-+		}
-+
-+		/*
-+		 * Now last_ibp points to the buffer previous to us on the
-+		 * unlinked list.  Pull us from the list.
-+		 */
-+		error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &ibp,
-+				       0, 0);
-+		if (error) {
-+			xfs_warn(mp, "%s: xfs_imap_to_bp(2) returned error %d.",
-+				__func__, error);
-+			return error;
-+		}
-+		next_agino = be32_to_cpu(dip->di_next_unlinked);
-+		ASSERT(next_agino != 0);
-+		ASSERT(next_agino != agino);
-+		if (next_agino != NULLAGINO) {
-+			dip->di_next_unlinked = cpu_to_be32(NULLAGINO);
-+			offset = ip->i_imap.im_boffset +
-+				offsetof(xfs_dinode_t, di_next_unlinked);
-+
-+			/* need to recalc the inode CRC if appropriate */
-+			xfs_dinode_calc_crc(mp, dip);
-+
-+			xfs_trans_inode_buf(tp, ibp);
-+			xfs_trans_log_buf(tp, ibp, offset,
-+					  (offset + sizeof(xfs_agino_t) - 1));
-+			xfs_inobp_check(mp, ibp);
-+		} else {
-+			xfs_trans_brelse(tp, ibp);
-+		}
-+		/*
-+		 * Point the previous inode on the list to the next inode.
-+		 */
-+		last_dip->di_next_unlinked = cpu_to_be32(next_agino);
-+		ASSERT(next_agino != 0);
-+		offset = last_offset + offsetof(xfs_dinode_t, di_next_unlinked);
-+
-+		/* need to recalc the inode CRC if appropriate */
-+		xfs_dinode_calc_crc(mp, last_dip);
-+
-+		xfs_trans_inode_buf(tp, last_ibp);
-+		xfs_trans_log_buf(tp, last_ibp, offset,
-+				  (offset + sizeof(xfs_agino_t) - 1));
-+		xfs_inobp_check(mp, last_ibp);
-+	}
-+	return 0;
++	return xfs_bumplink(tp, dp);
 +}
-diff --git a/fs/xfs/libxfs/xfs_inode_util.h b/fs/xfs/libxfs/xfs_inode_util.h
-index 5e2608f99fad..bb403d3386ad 100644
---- a/fs/xfs/libxfs/xfs_inode_util.h
-+++ b/fs/xfs/libxfs/xfs_inode_util.h
-@@ -96,4 +96,7 @@ extern const struct xfs_ialloc_ops xfs_default_ialloc_ops;
- int xfs_dir_ialloc(struct xfs_trans **tpp, const struct xfs_ialloc_args *args,
- 		   struct xfs_inode **ipp);
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index c3e3f6b813d8..5219ca503012 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -327,4 +327,8 @@ unsigned char xfs_dir3_get_dtype(struct xfs_mount *mp, uint8_t filetype);
+ void *xfs_dir3_data_endp(struct xfs_da_geometry *geo,
+ 		struct xfs_dir2_data_hdr *hdr);
  
-+int xfs_iunlink(struct xfs_trans *tp, struct xfs_inode *ip);
-+int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_inode *ip);
++int xfs_dir_create_new_child(struct xfs_trans *tp, uint resblks,
++		struct xfs_inode *dp, struct xfs_name *name,
++		struct xfs_inode *ip);
 +
- #endif /* __XFS_INODE_UTIL_H__ */
+ #endif	/* __XFS_DIR2_H__ */
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 167fe4ec48bd..30c2f1076db0 100644
+index 110ce01f183e..1469f905be36 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -47,8 +47,6 @@
- kmem_zone_t *xfs_inode_zone;
+@@ -778,25 +778,9 @@ xfs_create(
+ 	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+ 	unlock_dp_on_error = false;
  
- STATIC int xfs_iflush_int(struct xfs_inode *, struct xfs_buf *);
--STATIC int xfs_iunlink(struct xfs_trans *, struct xfs_inode *);
--STATIC int xfs_iunlink_remove(struct xfs_trans *, struct xfs_inode *);
- 
- /*
-  * These two are wrapper routines around the xfs_ilock() routine used to
-@@ -1653,272 +1651,6 @@ xfs_inactive(
- 	xfs_qm_dqdetach(ip);
- }
- 
--/*
-- * This is called when the inode's link count goes to 0 or we are creating a
-- * tmpfile via O_TMPFILE. In the case of a tmpfile, @ignore_linkcount will be
-- * set to true as the link count is dropped to zero by the VFS after we've
-- * created the file successfully, so we have to add it to the unlinked list
-- * while the link count is non-zero.
-- *
-- * We place the on-disk inode on a list in the AGI.  It will be pulled from this
-- * list when the inode is freed.
-- */
--STATIC int
--xfs_iunlink(
--	struct xfs_trans *tp,
--	struct xfs_inode *ip)
--{
--	xfs_mount_t	*mp = tp->t_mountp;
--	xfs_agi_t	*agi;
--	xfs_dinode_t	*dip;
--	xfs_buf_t	*agibp;
--	xfs_buf_t	*ibp;
--	xfs_agino_t	agino;
--	short		bucket_index;
--	int		offset;
--	int		error;
+-	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
+-				   resblks ?
+-					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
+-	if (error) {
+-		ASSERT(error != -ENOSPC);
++	error = xfs_dir_create_new_child(tp, resblks, dp, name, ip);
++	if (error)
+ 		goto out_trans_cancel;
+-	}
+-	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
 -
--	ASSERT(VFS_I(ip)->i_mode != 0);
--
--	/*
--	 * Get the agi buffer first.  It ensures lock ordering
--	 * on the list.
--	 */
--	error = xfs_read_agi(mp, tp, XFS_INO_TO_AGNO(mp, ip->i_ino), &agibp);
--	if (error)
--		return error;
--	agi = XFS_BUF_TO_AGI(agibp);
--
--	/*
--	 * Get the index into the agi hash table for the
--	 * list this inode will go on.
--	 */
--	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
--	ASSERT(agino != 0);
--	bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
--	ASSERT(agi->agi_unlinked[bucket_index]);
--	ASSERT(be32_to_cpu(agi->agi_unlinked[bucket_index]) != agino);
--
--	if (agi->agi_unlinked[bucket_index] != cpu_to_be32(NULLAGINO)) {
--		/*
--		 * There is already another inode in the bucket we need
--		 * to add ourselves to.  Add us at the front of the list.
--		 * Here we put the head pointer into our next pointer,
--		 * and then we fall through to point the head at us.
--		 */
--		error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &ibp,
--				       0, 0);
+-	if (is_dir) {
+-		error = xfs_dir_init(tp, ip, dp);
 -		if (error)
--			return error;
+-			goto out_trans_cancel;
 -
--		ASSERT(dip->di_next_unlinked == cpu_to_be32(NULLAGINO));
--		dip->di_next_unlinked = agi->agi_unlinked[bucket_index];
--		offset = ip->i_imap.im_boffset +
--			offsetof(xfs_dinode_t, di_next_unlinked);
--
--		/* need to recalc the inode CRC if appropriate */
--		xfs_dinode_calc_crc(mp, dip);
--
--		xfs_trans_inode_buf(tp, ibp);
--		xfs_trans_log_buf(tp, ibp, offset,
--				  (offset + sizeof(xfs_agino_t) - 1));
--		xfs_inobp_check(mp, ibp);
+-		error = xfs_bumplink(tp, dp);
+-		if (error)
+-			goto out_trans_cancel;
 -	}
--
--	/*
--	 * Point the bucket head pointer at the inode being inserted.
--	 */
--	ASSERT(agino != 0);
--	agi->agi_unlinked[bucket_index] = cpu_to_be32(agino);
--	offset = offsetof(xfs_agi_t, agi_unlinked) +
--		(sizeof(xfs_agino_t) * bucket_index);
--	xfs_trans_log_buf(tp, agibp, offset,
--			  (offset + sizeof(xfs_agino_t) - 1));
--	return 0;
--}
--
--/*
-- * Pull the on-disk inode from the AGI unlinked list.
-- */
--STATIC int
--xfs_iunlink_remove(
--	xfs_trans_t	*tp,
--	xfs_inode_t	*ip)
--{
--	xfs_ino_t	next_ino;
--	xfs_mount_t	*mp;
--	xfs_agi_t	*agi;
--	xfs_dinode_t	*dip;
--	xfs_buf_t	*agibp;
--	xfs_buf_t	*ibp;
--	xfs_agnumber_t	agno;
--	xfs_agino_t	agino;
--	xfs_agino_t	next_agino;
--	xfs_buf_t	*last_ibp;
--	xfs_dinode_t	*last_dip = NULL;
--	short		bucket_index;
--	int		offset, last_offset = 0;
--	int		error;
--
--	mp = tp->t_mountp;
--	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
--
--	/*
--	 * Get the agi buffer first.  It ensures lock ordering
--	 * on the list.
--	 */
--	error = xfs_read_agi(mp, tp, agno, &agibp);
--	if (error)
--		return error;
--
--	agi = XFS_BUF_TO_AGI(agibp);
--
--	/*
--	 * Get the index into the agi hash table for the
--	 * list this inode will go on.
--	 */
--	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
--	if (!xfs_verify_agino(mp, agno, agino))
--		return -EFSCORRUPTED;
--	bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
--	if (!xfs_verify_agino(mp, agno,
--			be32_to_cpu(agi->agi_unlinked[bucket_index]))) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--				agi, sizeof(*agi));
--		return -EFSCORRUPTED;
--	}
--
--	if (be32_to_cpu(agi->agi_unlinked[bucket_index]) == agino) {
--		/*
--		 * We're at the head of the list.  Get the inode's on-disk
--		 * buffer to see if there is anyone after us on the list.
--		 * Only modify our next pointer if it is not already NULLAGINO.
--		 * This saves us the overhead of dealing with the buffer when
--		 * there is no need to change it.
--		 */
--		error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &ibp,
--				       0, 0);
--		if (error) {
--			xfs_warn(mp, "%s: xfs_imap_to_bp returned error %d.",
--				__func__, error);
--			return error;
--		}
--		next_agino = be32_to_cpu(dip->di_next_unlinked);
--		ASSERT(next_agino != 0);
--		if (next_agino != NULLAGINO) {
--			dip->di_next_unlinked = cpu_to_be32(NULLAGINO);
--			offset = ip->i_imap.im_boffset +
--				offsetof(xfs_dinode_t, di_next_unlinked);
--
--			/* need to recalc the inode CRC if appropriate */
--			xfs_dinode_calc_crc(mp, dip);
--
--			xfs_trans_inode_buf(tp, ibp);
--			xfs_trans_log_buf(tp, ibp, offset,
--					  (offset + sizeof(xfs_agino_t) - 1));
--			xfs_inobp_check(mp, ibp);
--		} else {
--			xfs_trans_brelse(tp, ibp);
--		}
--		/*
--		 * Point the bucket head pointer at the next inode.
--		 */
--		ASSERT(next_agino != 0);
--		ASSERT(next_agino != agino);
--		agi->agi_unlinked[bucket_index] = cpu_to_be32(next_agino);
--		offset = offsetof(xfs_agi_t, agi_unlinked) +
--			(sizeof(xfs_agino_t) * bucket_index);
--		xfs_trans_log_buf(tp, agibp, offset,
--				  (offset + sizeof(xfs_agino_t) - 1));
--	} else {
--		/*
--		 * We need to search the list for the inode being freed.
--		 */
--		next_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
--		last_ibp = NULL;
--		while (next_agino != agino) {
--			struct xfs_imap	imap;
--
--			if (last_ibp)
--				xfs_trans_brelse(tp, last_ibp);
--
--			imap.im_blkno = 0;
--			next_ino = XFS_AGINO_TO_INO(mp, agno, next_agino);
--
--			error = xfs_imap(mp, tp, next_ino, &imap, 0);
--			if (error) {
--				xfs_warn(mp,
--	"%s: xfs_imap returned error %d.",
--					 __func__, error);
--				return error;
--			}
--
--			error = xfs_imap_to_bp(mp, tp, &imap, &last_dip,
--					       &last_ibp, 0, 0);
--			if (error) {
--				xfs_warn(mp,
--	"%s: xfs_imap_to_bp returned error %d.",
--					__func__, error);
--				return error;
--			}
--
--			last_offset = imap.im_boffset;
--			next_agino = be32_to_cpu(last_dip->di_next_unlinked);
--			if (!xfs_verify_agino(mp, agno, next_agino)) {
--				XFS_CORRUPTION_ERROR(__func__,
--						XFS_ERRLEVEL_LOW, mp,
--						last_dip, sizeof(*last_dip));
--				return -EFSCORRUPTED;
--			}
--		}
--
--		/*
--		 * Now last_ibp points to the buffer previous to us on the
--		 * unlinked list.  Pull us from the list.
--		 */
--		error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &ibp,
--				       0, 0);
--		if (error) {
--			xfs_warn(mp, "%s: xfs_imap_to_bp(2) returned error %d.",
--				__func__, error);
--			return error;
--		}
--		next_agino = be32_to_cpu(dip->di_next_unlinked);
--		ASSERT(next_agino != 0);
--		ASSERT(next_agino != agino);
--		if (next_agino != NULLAGINO) {
--			dip->di_next_unlinked = cpu_to_be32(NULLAGINO);
--			offset = ip->i_imap.im_boffset +
--				offsetof(xfs_dinode_t, di_next_unlinked);
--
--			/* need to recalc the inode CRC if appropriate */
--			xfs_dinode_calc_crc(mp, dip);
--
--			xfs_trans_inode_buf(tp, ibp);
--			xfs_trans_log_buf(tp, ibp, offset,
--					  (offset + sizeof(xfs_agino_t) - 1));
--			xfs_inobp_check(mp, ibp);
--		} else {
--			xfs_trans_brelse(tp, ibp);
--		}
--		/*
--		 * Point the previous inode on the list to the next inode.
--		 */
--		last_dip->di_next_unlinked = cpu_to_be32(next_agino);
--		ASSERT(next_agino != 0);
--		offset = last_offset + offsetof(xfs_dinode_t, di_next_unlinked);
--
--		/* need to recalc the inode CRC if appropriate */
--		xfs_dinode_calc_crc(mp, last_dip);
--
--		xfs_trans_inode_buf(tp, last_ibp);
--		xfs_trans_log_buf(tp, last_ibp, offset,
--				  (offset + sizeof(xfs_agino_t) - 1));
--		xfs_inobp_check(mp, last_ibp);
--	}
--	return 0;
--}
--
- /*
-  * A big issue when freeing the inode cluster is that we _cannot_ skip any
-  * inodes that are in memory - they all must be marked stale and attached to
+ 
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
