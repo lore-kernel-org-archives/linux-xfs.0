@@ -1,88 +1,235 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:55219 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725941AbfAAXsY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Jan 2019 18:48:24 -0500
-Date: Wed, 2 Jan 2019 10:48:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Non-blocking socket stuck for multiple seconds on
- xfs_reclaim_inodes_ag()
-Message-ID: <20190101234818.GJ4205@dastard>
-References: <20181129021800.GQ6311@dastard>
- <CABWYdi0Bd6sMAaTPkfHKupMGpw1QPSf_VohPF_Wg7Mm=W=j2bA@mail.gmail.com>
- <20181130021840.GV6311@dastard>
- <CABWYdi0nSJAV-RPdUSwGbRwqeoKo-83_X=ptuQwwH1CnPXCYmQ@mail.gmail.com>
- <20181130064908.GX6311@dastard>
- <20181130074547.GY6311@dastard>
- <CABWYdi28ifToh-yWRAv4MSdJ9g6t-Rxyz2GAFXGFraCwf9BBDg@mail.gmail.com>
- <CAJouXQn2mSyyacnf_CnrhX-JQ1x2QOUoB3=bzsSfbHFfAdRc9Q@mail.gmail.com>
- <20181225234732.GH4205@dastard>
- <CAJouXQndAaybOzbSLRq+Uw7a35YLkUnL5NmRC0qLbV+8QP+vaA@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:44638 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728283AbfABJvD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Jan 2019 04:51:03 -0500
+Subject: Re: [PATCH 07/12] xfs: refactor eofblocks inode match code
+References: <154630901076.16693.13111277988041606505.stgit@magnolia>
+ <154630905381.16693.3528654270887956753.stgit@magnolia>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <c645b822-405e-cc3a-15e1-62a099e300b2@suse.com>
+Date: Wed, 2 Jan 2019 11:50:58 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJouXQndAaybOzbSLRq+Uw7a35YLkUnL5NmRC0qLbV+8QP+vaA@mail.gmail.com>
+In-Reply-To: <154630905381.16693.3528654270887956753.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Kenton Varda <kenton@cloudflare.com>
-Cc: Ivan Babrou <ivan@cloudflare.com>, linux-xfs@vger.kernel.org, Shawn Bohrer <sbohrer@cloudflare.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Dec 25, 2018 at 07:16:25PM -0800, Kenton Varda wrote:
-> On Tue, Dec 25, 2018 at 3:47 PM Dave Chinner <david@fromorbit.com> wrote:
-> > But taking out your frustrations on the people who are trying to fix
-> > the problems you are seeing isn't productive. We are only a small
-> > team and we can't fix every problem that everyone reports
-> > immediately. Some things take time to fix.
+
+
+On 1.01.19 г. 4:17 ч., Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I agree. My hope is that explaining our use case helps you make XFS
-> better, but you don't owe us anything. It's our problem to solve and
-> any help you give us is a favor.
+> Refactor the code that determines if an inode matches an eofblocks
+> structure into a helper, since we already use it twice and we're about
+> to use it a third time.
 > 
-> > IOWs, there are relatively few applications that have such a
-> > significant dependency on memory reclaim having extremely low
-> > latency,
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_icache.c |  146 ++++++++++++++++++++++++++-------------------------
+>  1 file changed, 74 insertions(+), 72 deletions(-)
 > 
-> Hmm, I'm confused by this. Isn't low-latency memory allocation is a
-> common requirement for any kind of interactive workload?
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 7e031eb6f048..c1b457ba1b7b 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -27,6 +27,76 @@
+>  #include <linux/freezer.h>
+>  #include <linux/iversion.h>
+>  
+> +STATIC int
+> +xfs_inode_match_id(
 
-"interactive" tends to mean "human does not see noticable
-delays" which means acceptible latency for an operation is measured
-in hundreds of milliseconds, not microseconds.
+This is a predicate so make it bool
 
-And it's relatively rare for interactive users to have heavily
-overloaded IO subsystems such that a single IO takes more than a
-couple of hundred milliseconds, let alone have enough memory demand
-and concurrent memory reclaim IO that direct reclaim backs up for
-seconds on it.
+> +	struct xfs_inode	*ip,
+> +	struct xfs_eofblocks	*eofb)
+> +{
+> +	if ((eofb->eof_flags & XFS_EOF_FLAGS_UID) &&
+> +	    !uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
+> +		return 0;
+> +
+> +	if ((eofb->eof_flags & XFS_EOF_FLAGS_GID) &&
+> +	    !gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
+> +		return 0;
+> +
+> +	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+> +	    xfs_get_projid(ip) != eofb->eof_prid)
+> +		return 0;
+> +
+> +	return 1;
+> +}
+> +
+> +/*
+> + * A union-based inode filtering algorithm. Process the inode if any of the
+> + * criteria match. This is for global/internal scans only.
+> + */
+> +STATIC int
 
-> I don't see
-> what's unique about our use case in this respect. Any desktop and most
-> web servers I would think have similar requirements.
+ditto
 
-Interactive latency deficiencies are almost always caused by "need
-to get something off disk", not memory reclaim.  And even when it is
-caused by "memory reclaim needs to write something", that tends to
-mean the "get something from disk" latency is even higher and more
-noticable....
-
-> I'm sure there's something about our use case that's unusual, but it
-> doesn't seem to me that requiring low-latency memory allocation is
-> unique.
->
-> Maybe the real thing that's odd about us is that we constantly create
-> and delete files at a high rate, and that means we have an excessive
-> number of dirty inodes to flush?
-
-Most likely. It is unusual to combine a huge amount of clean page
-cache with an inode cache that has really only has dirty reclaimable
-inodes in it. It basically implies the common way inodes age out of
-the in-memory cache is by being unlinked, not by having their page
-cache fully reclaimed by memory pressure...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> +xfs_inode_match_id_union(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_eofblocks	*eofb)
+> +{
+> +	if ((eofb->eof_flags & XFS_EOF_FLAGS_UID) &&
+> +	    uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
+> +		return 1;
+> +
+> +	if ((eofb->eof_flags & XFS_EOF_FLAGS_GID) &&
+> +	    gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
+> +		return 1;
+> +
+> +	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+> +	    xfs_get_projid(ip) == eofb->eof_prid)
+> +		return 1;
+> +
+> +	return 0;
+> +}
+> +
+> +/* Does this inode match the given parameters? */
+> +STATIC bool
+> +xfs_inode_matches_eofb(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_eofblocks	*eofb)
+> +{
+> +	int			match;
+> +
+> +	if (!eofb)
+> +		return true;
+> +
+> +	if (eofb->eof_flags & XFS_EOF_FLAGS_UNION)
+> +		match = xfs_inode_match_id_union(ip, eofb);
+> +	else
+> +		match = xfs_inode_match_id(ip, eofb);
+> +	if (!match)
+> +		return false;
+> +
+> +	/* skip the inode if the file size is too small */
+> +	if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
+> +	    XFS_ISIZE(ip) < eofb->eof_min_file_size)
+> +		return false;
+> +
+> +	return true;
+> +}
+> +
+>  /*
+>   * Allocate and initialise an xfs_inode.
+>   */
+> @@ -1424,50 +1494,6 @@ xfs_reclaim_inodes_count(
+>  	return reclaimable;
+>  }
+>  
+> -STATIC int
+> -xfs_inode_match_id(
+> -	struct xfs_inode	*ip,
+> -	struct xfs_eofblocks	*eofb)
+> -{
+> -	if ((eofb->eof_flags & XFS_EOF_FLAGS_UID) &&
+> -	    !uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
+> -		return 0;
+> -
+> -	if ((eofb->eof_flags & XFS_EOF_FLAGS_GID) &&
+> -	    !gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
+> -		return 0;
+> -
+> -	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+> -	    xfs_get_projid(ip) != eofb->eof_prid)
+> -		return 0;
+> -
+> -	return 1;
+> -}
+> -
+> -/*
+> - * A union-based inode filtering algorithm. Process the inode if any of the
+> - * criteria match. This is for global/internal scans only.
+> - */
+> -STATIC int
+> -xfs_inode_match_id_union(
+> -	struct xfs_inode	*ip,
+> -	struct xfs_eofblocks	*eofb)
+> -{
+> -	if ((eofb->eof_flags & XFS_EOF_FLAGS_UID) &&
+> -	    uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
+> -		return 1;
+> -
+> -	if ((eofb->eof_flags & XFS_EOF_FLAGS_GID) &&
+> -	    gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
+> -		return 1;
+> -
+> -	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+> -	    xfs_get_projid(ip) == eofb->eof_prid)
+> -		return 1;
+> -
+> -	return 0;
+> -}
+> -
+>  STATIC int
+>  xfs_inode_free_eofblocks(
+>  	struct xfs_inode	*ip,
+> @@ -1476,7 +1502,6 @@ xfs_inode_free_eofblocks(
+>  {
+>  	int ret = 0;
+>  	struct xfs_eofblocks *eofb = args;
+> -	int match;
+>  
+>  	if (!xfs_can_free_eofblocks(ip, false)) {
+>  		/* inode could be preallocated or append-only */
+> @@ -1493,19 +1518,8 @@ xfs_inode_free_eofblocks(
+>  	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY))
+>  		return 0;
+>  
+> -	if (eofb) {
+> -		if (eofb->eof_flags & XFS_EOF_FLAGS_UNION)
+> -			match = xfs_inode_match_id_union(ip, eofb);
+> -		else
+> -			match = xfs_inode_match_id(ip, eofb);
+> -		if (!match)
+> -			return 0;
+> -
+> -		/* skip the inode if the file size is too small */
+> -		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
+> -		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
+> -			return 0;
+> -	}
+> +	if (!xfs_inode_matches_eofb(ip, eofb))
+> +		return 0;
+>  
+>  	/*
+>  	 * If the caller is waiting, return -EAGAIN to keep the background
+> @@ -1766,25 +1780,13 @@ xfs_inode_free_cowblocks(
+>  {
+>  	struct xfs_eofblocks	*eofb = args;
+>  	uint			lock_mode = 0;
+> -	int			match;
+>  	int			ret = 0;
+>  
+>  	if (!xfs_prep_free_cowblocks(ip))
+>  		return 0;
+>  
+> -	if (eofb) {
+> -		if (eofb->eof_flags & XFS_EOF_FLAGS_UNION)
+> -			match = xfs_inode_match_id_union(ip, eofb);
+> -		else
+> -			match = xfs_inode_match_id(ip, eofb);
+> -		if (!match)
+> -			return 0;
+> -
+> -		/* skip the inode if the file size is too small */
+> -		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
+> -		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
+> -			return 0;
+> -	}
+> +	if (!xfs_inode_matches_eofb(ip, eofb))
+> +		return 0;
+>  
+>  	/*
+>  	 * Free the CoW blocks.  We don't need to lock the inode if we're in
+> 
+> 
