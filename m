@@ -1,28 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.schafweide.org ([185.45.112.52]:44632 "EHLO
-        mail.schafweide.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729301AbfABLnm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Jan 2019 06:43:42 -0500
-Received: from [IPv6:2001:67c:18e8:2:b5f0:9c2d:9f23:fdb] (unknown [IPv6:2001:67c:18e8:2:b5f0:9c2d:9f23:fdb])
-        by mail.schafweide.org (Postfix) with ESMTPSA id E664F3217BF0
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Jan 2019 12:34:42 +0100 (CET)
-From: Bjoern Franke <bjo@nord-west.org>
-Subject: upgrade V4 to V5?
-Message-ID: <b97c91a2-fbd1-dbbc-e797-5f9cec7bc01f@nord-west.org>
-Date: Wed, 2 Jan 2019 12:34:42 +0100
+Received: from mondschein.lichtvoll.de ([194.150.191.11]:36739 "EHLO
+        mail.lichtvoll.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728934AbfABME6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Jan 2019 07:04:58 -0500
+From: Martin Steigerwald <martin@lichtvoll.de>
+Subject: Re: upgrade V4 to V5?
+Date: Wed, 02 Jan 2019 12:59:16 +0100
+Message-ID: <1666788.bB3E36fe8H@merkaba>
+In-Reply-To: <b97c91a2-fbd1-dbbc-e797-5f9cec7bc01f@nord-west.org>
+References: <b97c91a2-fbd1-dbbc-e797-5f9cec7bc01f@nord-west.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Bjoern Franke <bjo@nord-west.org>
+Cc: linux-xfs@vger.kernel.org
 
-Hi,
+Hi Björn.
 
-is is possible to upgrade a V4 XFS to V5 without reformatting, e.g. with
-xfs_db or xfs_admin?
+Bjoern Franke - 02.01.19, 12:34:
+> is is possible to upgrade a V4 XFS to V5 without reformatting, e.g.
+> with xfs_db or xfs_admin?
 
-Kind regards
-Bjoern
+As to my knowledge there is no in-place migration.
+
+A Happy New Year to you and everyone.
+
+Thanks,
+-- 
+Martin
