@@ -1,131 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:51902 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726328AbfADMwy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Jan 2019 07:52:54 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id AB531283C9
-        for <linux-xfs@vger.kernel.org>; Fri,  4 Jan 2019 12:52:52 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202053] [xfstests generic/464]: XFS corruption and Assertion
- failed: 0, file: fs/xfs/xfs_super.c, line: 985
-Date: Fri, 04 Jan 2019 12:52:51 +0000
-Message-ID: <bug-202053-201763-NmI066HwJr@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202053-201763@https.bugzilla.kernel.org/>
-References: <bug-202053-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:38528 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729448AbfABMje (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Jan 2019 07:39:34 -0500
+Received: by mail-wr1-f67.google.com with SMTP id v13so30340300wrw.5
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Jan 2019 04:39:33 -0800 (PST)
+Date: Wed, 2 Jan 2019 13:39:29 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 1/8] xfs: never try to scrub more than 64 inodes per
+ inobt record
+Message-ID: <20190102123929.n3errbeyyc2mctgu@hades.usersys.redhat.com>
+References: <154630850739.14372.14000129432637481206.stgit@magnolia>
+ <154630851366.14372.14057534574140159776.stgit@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <154630851366.14372.14057534574140159776.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202053
-
---- Comment #7 from bfoster@redhat.com ---
-On Fri, Jan 04, 2019 at 07:32:17AM -0500, Brian Foster wrote:
-> On Tue, Dec 25, 2018 at 06:10:59AM +0000, bugzilla-daemon@bugzilla.kernel.org
-> wrote:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=202053
-> > 
-> > --- Comment #5 from Zorro Lang (zlang@redhat.com) ---
-> > (In reply to Zorro Lang from comment #4)
-> > > I never hit this bug before, just a similar bug which has been fixed one
-> > > year ago, by:
-> > > commit 40214d128e07dd21bb07a8ed6a7fe2f911281ab2
-> > > Author: Brian Foster <bfoster@redhat.com>
-> > > Date:   Fri Oct 13 09:47:46 2017 -0700
-> > > 
-> > >     xfs: trim writepage mapping to within eof
-> > > 
-> > > So I doubt if this's a regression issue?
-> > 
-> > I just reproduced this issue on kernel 4.19, so it's not a regression from
-> > v4.19:
-> > 
-> > [ 1297.449750] XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) ||
-> > ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 954
-> > [ 1297.463147] WARNING: CPU: 20 PID: 26952 at fs/xfs/xfs_message.c:104
-> > assfail+0x54/0x57 [xfs]
-> > [ 1297.472473] Modules linked in: sunrpc intel_rapl sb_edac
-> > x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass
-> > crct10dif_pclmul crc32_pclmul ghash_clmulni_intel ipmi_ssif 
-> > intel_cstate intel_uncore iTCO_wdt iTCO_vendor_support ipmi_si sg
-> > intel_rapl_perf ipmi_devintf wmi ioatdma i2c_i801 pcspkr ipmi_msghandler
-> > lpc_ich xfs libcrc32c sd_mod mgag200 drm_kms_helper 
-> > syscopyarea sysfillrect sysimgblt igb fb_sys_fops ttm dca drm crc32c_intel
-> > megaraid_sas i2c_algo_bit cdc_ether usbnet mii dm_mirror dm_region_hash
-> dm_log
-> > dm_mod
-> > [ 1297.525374] CPU: 20 PID: 26952 Comm: umount Not tainted 4.19.0-mainline
-> #1
-> > 
+On Mon, Dec 31, 2018 at 06:08:33PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I can reproduce this problem and it appears to be somewhat related to
-> the commit referenced above, mainly because the placement of the imap
-> trim leaves a larger than necessary window to race with external changes
-> to the extent map.
+> Make sure we never check more than XFS_INODES_PER_CHUNK inodes for any
+> given inobt record since there can be more than one inobt record mapped
+> to an inode cluster.
 > 
-> For example, a trace dump shows the following sequence of events:
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/ialloc.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> - writepages is in progress on a particular file that has decently sized
->   post-eof speculative preallocation
-> - writepages gets to the point where it looks up or allocates a new imap
->   that includes the preallocation, the allocation/lookup result is
->   stored in wpc
-> - the file is closed by one process, killing off preallocation, then
->   immediately appended to by another, updating the file size by a few
->   bytes
-> - writepages comes back around to xfs_map_blocks() and trims imap to the
->   current size, but imap still includes one block of the original speculative
->   prealloc (that was truncated and recreated) because the size increased
->   between the time imap was stored and trimmed
 > 
-> The EOF trim approach is known to be a bandaid and potentially racy, but
-> ISTM that this problem can be trivially avoided by moving or adding
-> trims of wpc->imap immediately after a new one is cached. I don't
-> reproduce the problem so far with a couple such extra calls in place.
+> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> index 882dc56c5c21..fd431682db0b 100644
+> --- a/fs/xfs/scrub/ialloc.c
+> +++ b/fs/xfs/scrub/ialloc.c
+> @@ -203,7 +203,8 @@ xchk_iallocbt_check_freemask(
+>  	int				error = 0;
+>  
+>  	/* Make sure the freemask matches the inode records. */
+> -	nr_inodes = mp->m_inodes_per_cluster;
+> +	nr_inodes = min_t(unsigned int, XFS_INODES_PER_CHUNK,
+> +			mp->m_inodes_per_cluster);
+
+Pardon me if this doesn't make sense, but, this looks like a good time to catch
+a possible corruption?! If mp->m_inodes_per_cluster is > XFS_INODES_PER_CHUNK
+something is terribly wrong and we could report it here instead of max it out to
+XFS_INODES_PER_CHUNK, but I haven't studied the scrub code that deep yet to see
+if my suggestion makes sense or not :)
+
+
+>  
+>  	for (agino = irec->ir_startino;
+>  	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
 > 
-> Bigger picture, we need some kind of invalidation mechanism similar to
-> what we're already doing for dealing with the COW fork in this writeback
-> context. I'm not sure the broad semantics used by the COW fork sequence
-> counter mechanism is really suitable for the data fork because any
-> extent-related change in the fork would cause an invalidation, but I am
-> wondering if we could define some subset of less frequent operations for
-> the same mechanism to reliably invalidate (e.g., on eofblocks trims, for
-> starters).
-> 
-
-Zorro,
-
-Can you still reproduce with the following patch?
-
-Brian
-
---- 8< ---
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 338b9d9984e0..d9048bcea49c 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -449,6 +449,7 @@ xfs_map_blocks(
-        }
-
-        wpc->imap = imap;
-+       xfs_trim_extent_eof(&wpc->imap, ip);
-        trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
-        return 0;
- allocate_blocks:
-@@ -459,6 +460,7 @@ xfs_map_blocks(
-        ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
-               imap.br_startoff + imap.br_blockcount <= cow_fsb);
-        wpc->imap = imap;
-+       xfs_trim_extent_eof(&wpc->imap, ip);
-        trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
-        return 0;
- }
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Carlos
