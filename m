@@ -1,121 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44328 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728293AbfADSbO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 Jan 2019 13:31:14 -0500
-Date: Fri, 4 Jan 2019 13:31:12 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/8] xfs: check inobt record alignment on big block
- filesystems
-Message-ID: <20190104183111.GE16751@bfoster>
-References: <154630850739.14372.14000129432637481206.stgit@magnolia>
- <154630852589.14372.6446270754079238669.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:55934 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725879AbfABVZd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Jan 2019 16:25:33 -0500
+Date: Wed, 2 Jan 2019 13:25:31 -0800
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [BUG, TOT] xfs w/ dax failure in __follow_pte_pmd()
+Message-ID: <20190102212531.GK6310@bombadil.infradead.org>
+References: <20190102211332.GL4205@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <154630852589.14372.6446270754079238669.stgit@magnolia>
+In-Reply-To: <20190102211332.GL4205@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, Dan Williams <dan.j.williams@intel.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Jan Kara <jack@suse.cz>, akpm@linux-foundation.org
 
-On Mon, Dec 31, 2018 at 06:08:45PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jan 03, 2019 at 08:13:32AM +1100, Dave Chinner wrote:
+> Hi folks,
 > 
-> On a big block filesystem, there may be multiple inobt records covering
-> a single inode cluster.  These records obviously won't be aligned to
-> cluster alignment rules, and they must cover the entire cluster.  Teach
-> scrub to check for these things.
+> An overnight test run on a current TOT kernel failed generic/413
+> with the following dmesg output:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> ---
+> [ 9487.276402] RIP: 0010:__follow_pte_pmd+0x22d/0x340
+> [ 9487.305065] Call Trace:
+> [ 9487.307310]  dax_entry_mkclean+0xbb/0x1f0
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/scrub/ialloc.c |   41 +++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 41 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> index 5082331d6c03..5e593e4292b2 100644
-> --- a/fs/xfs/scrub/ialloc.c
-> +++ b/fs/xfs/scrub/ialloc.c
-> @@ -47,6 +47,12 @@ xchk_setup_ag_iallocbt(
->  struct xchk_iallocbt {
->  	/* Number of inodes we see while scanning inobt. */
->  	unsigned long long	inodes;
-> +
-> +	/* Expected next startino, for big block filesystems. */
-> +	xfs_agino_t		next_startino;
-> +
-> +	/* Expected end of the current inode cluster. */
-> +	xfs_agino_t		next_cluster_ino;
->  };
->  
->  /*
-> @@ -272,6 +278,7 @@ xchk_iallocbt_rec_alignment(
->  	struct xfs_inobt_rec_incore	*irec)
->  {
->  	struct xfs_mount		*mp = bs->sc->mp;
-> +	struct xchk_iallocbt		*iabt = bs->private;
->  
->  	/*
->  	 * finobt records have different positioning requirements than inobt
-> @@ -289,6 +296,27 @@ xchk_iallocbt_rec_alignment(
->  		return;
->  	}
->  
-> +	if (iabt->next_startino != NULLAGINO) {
-> +		/*
-> +		 * We're midway through a cluster of inodes that is mapped by
-> +		 * multiple inobt records.  Did we get the record for the next
-> +		 * irec in the sequence?
-> +		 */
-> +		if (irec->ir_startino != iabt->next_startino) {
-> +			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> +			return;
-> +		}
-> +
-> +		iabt->next_startino += XFS_INODES_PER_CHUNK;
-> +
-> +		/* Are we done with the cluster? */
-> +		if (iabt->next_startino >= iabt->next_cluster_ino) {
-> +			iabt->next_startino = NULLAGINO;
-> +			iabt->next_cluster_ino = NULLAGINO;
-> +		}
-> +		return;
-> +	}
-> +
->  	/* inobt records must be aligned to cluster and inoalignmnt size. */
->  	if (irec->ir_startino & (mp->m_cluster_align_inodes - 1)) {
->  		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> @@ -299,6 +327,17 @@ xchk_iallocbt_rec_alignment(
->  		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
->  		return;
->  	}
-> +
-> +	if (mp->m_inodes_per_cluster <= XFS_INODES_PER_CHUNK)
-> +		return;
-> +
-> +	/*
-> +	 * If this is the start of an inode cluster that can be mapped by
-> +	 * multiple inobt records, the next inobt record must follow exactly
-> +	 * after this one.
-> +	 */
-> +	iabt->next_startino = irec->ir_startino + XFS_INODES_PER_CHUNK;
-> +	iabt->next_cluster_ino = irec->ir_startino + mp->m_inodes_per_cluster;
->  }
->  
->  /* Scrub an inobt/finobt record. */
-> @@ -463,6 +502,8 @@ xchk_iallocbt(
->  	struct xfs_btree_cur	*cur;
->  	struct xchk_iallocbt	iabt = {
->  		.inodes		= 0,
-> +		.next_startino	= NULLAGINO,
-> +		.next_cluster_ino = NULLAGINO,
->  	};
->  	int			error;
->  
-> 
+We've only got one commit touching dax_entry_mkclean and it's Jerome's.
+Looking through ac46d4f3c43241ffa23d5bf36153a0830c0e02cc, I'd say
+it's missing a call to mmu_notifier_range_init().
