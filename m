@@ -1,68 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40214 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726094AbfADWVX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 Jan 2019 17:21:23 -0500
-Subject: Re: [PATCH] generic: test that xattrs can have slashes in their names
-References: <20190104212336.GC12689@magnolia>
- <c44b0678-a050-e887-aa6d-9dc29d6b45a8@sandeen.net>
- <20190104221246.GE21010@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <96fed5e3-784f-1969-09a0-52a040310fc6@sandeen.net>
-Date: Fri, 4 Jan 2019 16:21:22 -0600
+Received: from userp2130.oracle.com ([156.151.31.86]:50740 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732002AbfACRzO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 12:55:14 -0500
+Date: Thu, 3 Jan 2019 09:55:04 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/5] xfs_metadump: Zap multi fsb blocks
+Message-ID: <20190103175504.GD20475@magnolia>
+References: <20181105213145.7560-1-stefanrin@gmail.com>
+ <20181105213145.7560-3-stefanrin@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20190104221246.GE21010@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181105213145.7560-3-stefanrin@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eryu Guan <guaneryu@gmail.com>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 1/4/19 4:12 PM, Darrick J. Wong wrote:
-> On Fri, Jan 04, 2019 at 03:27:37PM -0600, Eric Sandeen wrote:
->> On 1/4/19 3:23 PM, Darrick J. Wong wrote:
->>> From: Darrick J. Wong <darrick.wong@oracle.com>
->>>
->>> Eric Sandeen recently found a bug in xfs_repair that flagged extended
->>> attribute names containing "/" as corrupt and purged them.  There's
->>> nothing in the IRIX or Linux manuals that say anything about slashes not
->>> being allowed (and Linux certainly allows this) so let's make sure this
->>> continues to work.
->>>
->>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->>> ---
->>>  tests/generic/708     |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
->>>  tests/generic/708.out |    6 ++++++
->>>  tests/generic/group   |    1 +
->>>  3 files changed, 55 insertions(+)
->>>  create mode 100755 tests/generic/708
->>>  create mode 100644 tests/generic/708.out
->>>
->>> diff --git a/tests/generic/708 b/tests/generic/708
->>> new file mode 100755
->>> index 00000000..ee63ba79
->>> --- /dev/null
->>> +++ b/tests/generic/708
->>> @@ -0,0 +1,48 @@
->>> +#! /bin/bash
->>> +# SPDX-License-Identifier: GPL-2.0+
->>> +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
->>> +#
->>> +# FS QA Test No. 708
->>> +#
->>> +# Check that xattrs can have slashes in their name.
->>
->> Perhaps a note about what failed before?  Because set/get/list has
->> always(tm) worked:
->>
->> # (xfs_repair previously flagged this as a corruption)
+On Mon, Nov 05, 2018 at 10:31:42PM +0100, Stefan Ring wrote:
+> Using basically the same code as in process_single_fsb_objects.
 > 
-> Ok.
+> Signed-off-by: Stefan Ring <stefanrin@gmail.com>
+> ---
+>  db/metadump.c | 19 ++++++++++++-------
+>  1 file changed, 12 insertions(+), 7 deletions(-)
+> 
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 97d2a490..be7cf360 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -1881,6 +1881,7 @@ process_multi_fsb_objects(
+>  	typnm_t		btype,
+>  	xfs_fileoff_t	last)
+>  {
+> +	char		*dp;
+>  	int		ret = 0;
+>  
+>  	switch (btype) {
+> @@ -1921,15 +1922,19 @@ process_multi_fsb_objects(
+>  
+>  			}
+>  
+> -			if ((!obfuscate && !zero_stale_data) ||
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Hmmm, if we're not obfuscating or zeroing data, can we still jump to
+write_buf()?
 
-(fine by me if that little change goes in on commit, not that important
-but adds some clarity about what got fixed IMHO)
+--D
+
+> -			     o >= mp->m_dir_geo->leafblk) {
+> -				ret = write_buf(iocur_top);
+> -				goto out_pop;
+> +			dp = iocur_top->data;
+> +			if (o >= mp->m_dir_geo->freeblk) {
+> +				/* TODO, zap any stale data */
+> +				goto write;
+> +			} else if (o >= mp->m_dir_geo->leafblk) {
+> +				process_dir_leaf_block(dp);
+> +			} else {
+> +				process_dir_data_block(dp, o,
+> +					 last == mp->m_dir_geo->fsbcount);
+>  			}
+>  
+> -			process_dir_data_block(iocur_top->data, o,
+> -					       last == mp->m_dir_geo->fsbcount);
+> -			iocur_top->need_crc = 1;
+> +			iocur_top->need_crc = obfuscate || zero_stale_data;
+> +write:
+>  			ret = write_buf(iocur_top);
+>  out_pop:
+>  			pop_cur();
+> -- 
+> 2.14.5
+> 
