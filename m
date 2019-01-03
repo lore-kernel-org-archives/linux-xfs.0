@@ -1,86 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:45424 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729043AbfAHUgp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 15:36:45 -0500
-Subject: [PATCH 5/5] xfs: check attribute name validity
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 08 Jan 2019 12:36:35 -0800
-Message-ID: <154697979588.2839.8961664194626235093.stgit@magnolia>
-In-Reply-To: <154697976479.2839.3584921201780682011.stgit@magnolia>
-References: <154697976479.2839.3584921201780682011.stgit@magnolia>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:53714 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725919AbfACXIG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 18:08:06 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id BDED02522B
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Jan 2019 23:08:05 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202127] cannot mount or create xfs on a  597T device
+Date: Thu, 03 Jan 2019 23:08:05 +0000
+Message-ID: <bug-202127-201763-4jkh4yc4fj@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202127-201763@https.bugzilla.kernel.org/>
+References: <bug-202127-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=202127
 
-Check extended attribute entry names for invalid characters.
+Chris Murphy (bugzilla@colorremedies.com) changed:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_attr.c |   17 +++++++++++++++++
- fs/xfs/libxfs/xfs_attr.h |    2 +-
- fs/xfs/scrub/attr.c      |    6 ++++++
- 3 files changed, 24 insertions(+), 1 deletion(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bugzilla@colorremedies.com
 
+--- Comment #6 from Chris Murphy (bugzilla@colorremedies.com) ---
+What do you get for 'MegaCli64 -AdpAllInfo -aAll' and parse for firmware
+revision? Current on the website is 24.22.0-0034 dated Oct 12 2018. Upgrading
+it carries some risk *shrug* there might be a changelog you can download (now
+at Broadcom) and see if there's anything related to this problem that's been
+fixed.
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 844ed87b1900..2dd9ee2a2e08 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -1336,3 +1336,20 @@ xfs_attr_node_get(xfs_da_args_t *args)
- 	xfs_da_state_free(state);
- 	return retval;
- }
-+
-+/* Returns true if the attribute entry name is valid. */
-+bool
-+xfs_attr_namecheck(
-+	const void	*name,
-+	size_t		length)
-+{
-+	/*
-+	 * MAXNAMELEN includes the trailing null, but (name/length) leave it
-+	 * out, so use >= for the length check.
-+	 */
-+	if (length >= MAXNAMELEN)
-+		return false;
-+
-+	/* There shouldn't be any nulls here */
-+	return !memchr(name, 0, length);
-+}
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index bdf52a333f3f..2297d8467666 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -145,6 +145,6 @@ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
- int xfs_attr_remove_args(struct xfs_da_args *args);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- 		  int flags, struct attrlist_cursor_kern *cursor);
--
-+bool xfs_attr_namecheck(const void *name, size_t length);
- 
- #endif	/* __XFS_ATTR_H__ */
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 9960bc5b5d76..dce74ec57038 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -93,6 +93,12 @@ xchk_xattr_listent(
- 		return;
- 	}
- 
-+	/* Does this name make sense? */
-+	if (!xfs_attr_namecheck(name, namelen)) {
-+		xchk_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK, args.blkno);
-+		return;
-+	}
-+
- 	args.flags = ATTR_KERNOTIME;
- 	if (flags & XFS_ATTR_ROOT)
- 		args.flags |= ATTR_ROOT;
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
