@@ -1,53 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45732 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726601AbfADSjM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 Jan 2019 13:39:12 -0500
-Date: Fri, 4 Jan 2019 13:39:09 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 7/8] xfs: abort xattr scrub if fatal signals are pending
-Message-ID: <20190104183909.GI16751@bfoster>
-References: <154630850739.14372.14000129432637481206.stgit@magnolia>
- <154630855701.14372.16042422623260751227.stgit@magnolia>
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:43463
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726830AbfACAD6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Jan 2019 19:03:58 -0500
+Date: Thu, 3 Jan 2019 11:03:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [BUG, TOT] xfs w/ dax failure in __follow_pte_pmd()
+Message-ID: <20190103000354.GM4205@dastard>
+References: <20190102211332.GL4205@dastard>
+ <20190102212531.GK6310@bombadil.infradead.org>
+ <20190102225005.GL6310@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <154630855701.14372.16042422623260751227.stgit@magnolia>
+In-Reply-To: <20190102225005.GL6310@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, Dan Williams <dan.j.williams@intel.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Jan Kara <jack@suse.cz>, akpm@linux-foundation.org
 
-On Mon, Dec 31, 2018 at 06:09:17PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jan 02, 2019 at 02:50:05PM -0800, Matthew Wilcox wrote:
+> On Wed, Jan 02, 2019 at 01:25:31PM -0800, Matthew Wilcox wrote:
+> > On Thu, Jan 03, 2019 at 08:13:32AM +1100, Dave Chinner wrote:
+> > > Hi folks,
+> > > 
+> > > An overnight test run on a current TOT kernel failed generic/413
+> > > with the following dmesg output:
+> > > 
+> > > [ 9487.276402] RIP: 0010:__follow_pte_pmd+0x22d/0x340
+> > > [ 9487.305065] Call Trace:
+> > > [ 9487.307310]  dax_entry_mkclean+0xbb/0x1f0
+> > 
+> > We've only got one commit touching dax_entry_mkclean and it's Jerome's.
+> > Looking through ac46d4f3c43241ffa23d5bf36153a0830c0e02cc, I'd say
+> > it's missing a call to mmu_notifier_range_init().
 > 
-> The extended attribute scrubber should abort the "read all attrs" loop
-> if there's a fatal signal pending on the process.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> Could I persuade you to give this a try?
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Yup, that fixes it.
 
->  fs/xfs/scrub/attr.c |    5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-> index 81d5e90547a1..9960bc5b5d76 100644
-> --- a/fs/xfs/scrub/attr.c
-> +++ b/fs/xfs/scrub/attr.c
-> @@ -82,6 +82,11 @@ xchk_xattr_listent(
->  
->  	sx = container_of(context, struct xchk_xattr, context);
->  
-> +	if (xchk_should_terminate(sx->sc, &error)) {
-> +		context->seen_enough = 1;
-> +		return;
-> +	}
-> +
->  	if (flags & XFS_ATTR_INCOMPLETE) {
->  		/* Incomplete attr key, just mark the inode for preening. */
->  		xchk_ino_set_preen(sx->sc, context->dp->i_ino);
-> 
+And looking at the code, the dax mmu notifier code clearly wasn't
+tested. i.e. dax_entry_mkclean() is the *only* code that exercises
+the conditional range parameter code paths inside
+__follow_pte_pmd().  This means it wasn't tested before it was
+proposed for inclusion and since inclusion no-one using -akpm,
+linux-next or the current mainline TOT has done any filesystem DAX
+testing until I tripped over it.
+
+IOws, this is the second "this was never tested before it was merged
+into mainline" XFS regression that I've found in the last 3 weeks.
+Both commits have been merged through the -akpm tree, and that
+implies we currently have no significant filesystem QA coverage on
+changes being merged through this route. This seems like an area
+that needs significant improvement to me....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
