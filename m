@@ -1,50 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47738 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726003AbfADBG4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 20:06:56 -0500
-Date: Thu, 3 Jan 2019 17:06:44 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [GIT PULL] xfs: more updates for v4.21
-Message-ID: <20190104010644.GC21010@magnolia>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:43386 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726127AbfACTyC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 14:54:02 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 46A4B26223
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Jan 2019 19:54:01 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202127] New: cannot mount or create xfs on a  597T device
+Date: Thu, 03 Jan 2019 19:54:01 +0000
+Message-ID: <bug-202127-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: linux-xfs@vger.kernel.org
 
-Hi Linus,
+https://bugzilla.kernel.org/show_bug.cgi?id=202127
 
-Here are a couple more small bug fixes for 4.21-rc1.  It has undergone
-the usual testing regimen and merges cleanly with 4.20 final.  Let me
-know if you encounter any problems with the merge.
+            Bug ID: 202127
+           Summary: cannot mount or create xfs on a  597T device
+           Product: File System
+           Version: 2.5
+    Kernel Version: 4.20.0-arch1-1-ARCH #1 SMP PREEMPT Mon Dec 24 03:00:40
+                    UTC 2018 x86_64 GNU/Linux
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: daimh@umich.edu
+        Regression: No
 
---D
+Created attachment 280259
+  --> https://bugzilla.kernel.org/attachment.cgi?id=280259&action=edit
+output of "mkfs -t xfs -f /dev/sda"
 
-The following changes since commit 65eed012d1f2d0f0bf0ffc036826d58147de77b8:
+mkfs.xfs version 4.19.0
 
-  xfs: reallocate realtime summary cache on growfs (2018-12-21 18:45:18 -0800)
+While mounting an XFS file system created under kernel 4.17.0, the error is
+# mount /dev/sda /treehouse/watsons_lab/s1/
+mount: /treehouse/watsons_lab/s1: mount(2) system call failed: Structure needs
+cleaning.
+#dmesg
+[  397.225921] XFS (sda): SB stripe unit sanity check failed
+[  397.226007] XFS (sda): Metadata corruption detected at
+xfs_sb_read_verify+0x106/0x180 [xfs], xfs_sb block 0xffffffffffffffff 
+[  397.226090] XFS (sda): Unmount and run xfs_repair
+[  397.226126] XFS (sda): First 128 bytes of corrupted metadata buffer:
+[  397.226173] 00000000: 58 46 53 42 00 00 10 00 00 00 00 22 c9 7a 00 00 
+XFSB.......".z..
+[  397.226228] 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+................
+[  397.226283] 00000020: c3 44 e5 14 dd 09 45 69 b0 7d 3f 9b 4b 0a fa d9 
+.D....Ei.}?.K...
+[  397.226337] 00000030: 00 00 00 11 60 00 00 08 00 00 00 00 00 00 08 00 
+....`...........
+[  397.226392] 00000040: 00 00 00 00 00 00 08 01 00 00 00 00 00 00 08 02 
+................
+[  397.226474] 00000050: 00 00 00 01 0f ff fe 00 00 00 02 2d 00 00 00 00 
+...........-....
+[  397.226530] 00000060: 00 07 f6 00 bd a5 10 00 02 00 00 08 00 00 00 00 
+................
+[  397.226585] 00000070: 00 00 00 00 00 00 00 00 0c 0c 09 03 1c 00 00 01 
+................
+[  397.226651] XFS (sda): SB validate failed with error -117.
 
-are available in the Git repository at:
+#mkfs -t xfs -f /dev/sda &> mkfs.log  #the log file is attached.
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.21-merge-3
-
-for you to fetch changes up to 90be9b86da9039fe6cf2880dc16fd0b0899603a5:
-
-  xfs: xfs_fsops: drop useless LIST_HEAD (2018-12-29 10:47:58 -0800)
-
-----------------------------------------------------------------
-Changes since last update:
-- Remove a couple of unnecessary local variables.
-
-----------------------------------------------------------------
-Julia Lawall (2):
-      xfs: xfs_buf: drop useless LIST_HEAD
-      xfs: xfs_fsops: drop useless LIST_HEAD
-
- fs/xfs/xfs_buf.c   | 1 -
- fs/xfs/xfs_fsops.c | 1 -
- 2 files changed, 2 deletions(-)
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
