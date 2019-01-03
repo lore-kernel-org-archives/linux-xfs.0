@@ -1,95 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32986 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54234 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727574AbfADMcT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 Jan 2019 07:32:19 -0500
-Date: Fri, 4 Jan 2019 07:32:17 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [Bug 202053] [xfstests generic/464]: XFS corruption and
- Assertion failed: 0, file: fs/xfs/xfs_super.c, line: 985
-Message-ID: <20190104123217.GA16751@bfoster>
-References: <bug-202053-201763@https.bugzilla.kernel.org/>
- <bug-202053-201763-R7nWMjQIjy@https.bugzilla.kernel.org/>
+        id S1726259AbfACPFZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Jan 2019 10:05:25 -0500
+Date: Thu, 3 Jan 2019 10:05:21 -0500
+From: Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [PATCH] Initialise mmu_notifier_range correctly
+Message-ID: <20190103150521.GF3395@redhat.com>
+References: <20190103002126.GM6310@bombadil.infradead.org>
+ <20190103143116.GB3395@redhat.com>
+ <20190103144313.GR6310@bombadil.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <bug-202053-201763-R7nWMjQIjy@https.bugzilla.kernel.org/>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190103144313.GR6310@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Jan Kara <jack@suse.cz>
 
-On Tue, Dec 25, 2018 at 06:10:59AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=202053
-> 
-> --- Comment #5 from Zorro Lang (zlang@redhat.com) ---
-> (In reply to Zorro Lang from comment #4)
-> > I never hit this bug before, just a similar bug which has been fixed one
-> > year ago, by:
-> > commit 40214d128e07dd21bb07a8ed6a7fe2f911281ab2
-> > Author: Brian Foster <bfoster@redhat.com>
-> > Date:   Fri Oct 13 09:47:46 2017 -0700
+On Thu, Jan 03, 2019 at 06:43:13AM -0800, Matthew Wilcox wrote:
+> On Thu, Jan 03, 2019 at 09:31:16AM -0500, Jerome Glisse wrote:
+> > On Wed, Jan 02, 2019 at 04:21:26PM -0800, Matthew Wilcox wrote:
+> > > 
+> > > One of the paths in follow_pte_pmd() initialised the mmu_notifier_range
+> > > incorrectly.
+> > > 
+> > > Signed-off-by: Matthew Wilcox <willy@infradead.org>
+> > > Fixes: ac46d4f3c432 ("mm/mmu_notifier: use structure for invalidate_range_start/end calls v2")
+> > > Tested-by: Dave Chinner <dchinner@redhat.com>
 > > 
-> >     xfs: trim writepage mapping to within eof
-> > 
-> > So I doubt if this's a regression issue?
+> > Actually now that i have read the code again this is not ok to
+> > do so. The caller of follow_pte_pmd() will call range_init and
+> > follow pmd will only update the range address. So existing code
+> > is ok.
 > 
-> I just reproduced this issue on kernel 4.19, so it's not a regression from
-> v4.19:
+> I think you need to re-read your own patch.
 > 
-> [ 1297.449750] XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) ||
-> ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 954
-> [ 1297.463147] WARNING: CPU: 20 PID: 26952 at fs/xfs/xfs_message.c:104
-> assfail+0x54/0x57 [xfs]
-> [ 1297.472473] Modules linked in: sunrpc intel_rapl sb_edac
-> x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass
-> crct10dif_pclmul crc32_pclmul ghash_clmulni_intel ipmi_ssif 
-> intel_cstate intel_uncore iTCO_wdt iTCO_vendor_support ipmi_si sg
-> intel_rapl_perf ipmi_devintf wmi ioatdma i2c_i801 pcspkr ipmi_msghandler
-> lpc_ich xfs libcrc32c sd_mod mgag200 drm_kms_helper 
-> syscopyarea sysfillrect sysimgblt igb fb_sys_fops ttm dca drm crc32c_intel
-> megaraid_sas i2c_algo_bit cdc_ether usbnet mii dm_mirror dm_region_hash dm_log
-> dm_mod
-> [ 1297.525374] CPU: 20 PID: 26952 Comm: umount Not tainted 4.19.0-mainline #1
+> `git show ac46d4f3c43241ffa23d5bf36153a0830c0e02cc`
 > 
+> @@ -4058,10 +4059,10 @@ static int __follow_pte_pmd(struct mm_struct *mm, unsigned long address,
+>                 if (!pmdpp)
+>                         goto out;
+>  
+> -               if (start && end) {
+> -                       *start = address & PMD_MASK;
+> -                       *end = *start + PMD_SIZE;
+> -                       mmu_notifier_invalidate_range_start(mm, *start, *end);
+> +               if (range) {
+> +                       mmu_notifier_range_init(range, mm, address & PMD_MASK,
+> +                                            (address & PMD_MASK) + PMD_SIZE);
+> +                       mmu_notifier_invalidate_range_start(range);
+> 
+> ... so it's fine to call range_init() *here*.
+> 
+> @@ -4069,17 +4070,17 @@ static int __follow_pte_pmd(struct mm_struct *mm, unsign
+> ed long address,
+> [...]
+>         if (pmd_none(*pmd) || unlikely(pmd_bad(*pmd)))
+>                 goto out;
+>  
+> -       if (start && end) {
+> -               *start = address & PAGE_MASK;
+> -               *end = *start + PAGE_SIZE;
+> -               mmu_notifier_invalidate_range_start(mm, *start, *end);
+> +       if (range) {
+> +               range->start = address & PAGE_MASK;
+> +               range->end = range->start + PAGE_SIZE;
+> +               mmu_notifier_invalidate_range_start(range);
+> 
+> ... but then *not* here later in the same function?  You're not making
+> any sense.
 
-I can reproduce this problem and it appears to be somewhat related to
-the commit referenced above, mainly because the placement of the imap
-trim leaves a larger than necessary window to race with external changes
-to the extent map.
+Ok i see that the patch that add the reason why mmu notifier is
+call have been drop. So yes using range_init in follow_pte_pmd
+is fine. With that other patch the reasons is set by the caller
+of follow_pte_pmd and using range_init would have overwritten
+it.
 
-For example, a trace dump shows the following sequence of events:
+So this patch is fine for current tree. Sorry i was thinking with
+the other patch included in mind.
 
-- writepages is in progress on a particular file that has decently sized
-  post-eof speculative preallocation
-- writepages gets to the point where it looks up or allocates a new imap
-  that includes the preallocation, the allocation/lookup result is
-  stored in wpc
-- the file is closed by one process, killing off preallocation, then
-  immediately appended to by another, updating the file size by a few
-  bytes
-- writepages comes back around to xfs_map_blocks() and trims imap to the
-  current size, but imap still includes one block of the original speculative
-  prealloc (that was truncated and recreated) because the size increased
-  between the time imap was stored and trimmed
-
-The EOF trim approach is known to be a bandaid and potentially racy, but
-ISTM that this problem can be trivially avoided by moving or adding
-trims of wpc->imap immediately after a new one is cached. I don't
-reproduce the problem so far with a couple such extra calls in place.
-
-Bigger picture, we need some kind of invalidation mechanism similar to
-what we're already doing for dealing with the COW fork in this writeback
-context. I'm not sure the broad semantics used by the COW fork sequence
-counter mechanism is really suitable for the data fork because any
-extent-related change in the fork would cause an invalidation, but I am
-wondering if we could define some subset of less frequent operations for
-the same mechanism to reliably invalidate (e.g., on eofblocks trims, for
-starters).
-
-Brian
-
-> -- 
-> You are receiving this mail because:
-> You are watching the assignee of the bug.
+Cheers,
+Jérôme
