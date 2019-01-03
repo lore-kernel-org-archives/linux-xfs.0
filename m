@@ -1,56 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:38961 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726529AbfACWvN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 17:51:13 -0500
-Date: Fri, 4 Jan 2019 09:51:08 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Bug 202127] cannot mount or create xfs on a  597T device
-Message-ID: <20190103225108.GP4205@dastard>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:54716 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725931AbfACXWT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 18:22:19 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 0B75425F3E
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Jan 2019 23:22:18 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202127] cannot mount or create xfs on a  597T device
+Date: Thu, 03 Jan 2019 23:22:17 +0000
+Message-ID: <bug-202127-201763-KTKmdFdh1n@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202127-201763@https.bugzilla.kernel.org/>
 References: <bug-202127-201763@https.bugzilla.kernel.org/>
- <bug-202127-201763-gkEuA391xL@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bug-202127-201763-gkEuA391xL@https.bugzilla.kernel.org/>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jan 03, 2019 at 10:18:56PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=202127
+
+--- Comment #11 from Dave Chinner (david@fromorbit.com) ---
+On Thu, Jan 03, 2019 at 10:58:41PM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=202127
 > 
-> --- Comment #3 from daimh@umich.edu ---
-> [root@watsons-s1 ~]# blockdev --getsz  --getsize64 --getss --getpbsz 
-> --getiomin   --getioopt /dev/sda
-> 1195272830976
-> 611979689459712
-> 512
-> 4096
-> 1048576
-> 262144
+> --- Comment #5 from daimh@umich.edu ---
+> /dev/sda is a hardware raid. lspci -vvv output is below. By the way, /dev/sda
+> has been working great with kernel 4.17.5-1-ARCH and mkfs.xfs version 4.17.0.
+> I
+> can create, mount and copy 200+ T data without any glitches. Further, If I
+> downgrade linux kernel and xfsprogs, /dev/sda can work.
 
-Ok, so iomin=1MB  and ioopt=256k. That's an invalid block device
-configuration. If this is coming from hardware RAID (e.g. via a scsi
-code page) then this is a firmware bug. If this is coming from a
-softare layer (e.g. lvm, md, etc) then it may be a bug in one of
-those layers.
+Sure, that's because newer kernels and tools are much more stringent
+about validity checking the on-disk information. And, in this case,
+newer tools have found a validity problem that the older tools and
+kernel didn't.
 
-IOWs, we need to know what your storage stack configuration is and
-what hardware underlies /dev/sda. Can you attach the storage stack
-and hardware information indicated in this link for us?
+You can use xfs_db to fix the broken alignment in the superblock,
+but I'd like to get to the bottom of where the problem is coming
+from first.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+> 02:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS-3 3316
+> [Intruder] (rev 01)
 
-Eric, we probably need to catch this in mkfs when validating blkid
-information - the superblock verifier is too late to be catching
-bad config info like this....
+Ok, so it's an lsi/broadcom 3316 hardware RAID controller. Which
+means this is most likely a firmware bug. Can you update the raid
+controller to the latest firmware and see if the block dvice still
+reports the same iomin/ioopt parameters?
+
+If so, you need to talk to your vendor about getting their hardware
+bug fixed and ensure their QA deficiencies are addressed, then use
+xfs_db to rewrite the stripe unit/stripe width to valid values so
+you can continue to use the filesystem on modern kernels.
 
 Cheers,
 
 Dave.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+You are receiving this mail because:
+You are watching the assignee of the bug.
