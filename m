@@ -1,110 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:38812 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726015AbfADVXo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Jan 2019 16:23:44 -0500
-Date: Fri, 4 Jan 2019 13:23:36 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] generic: test that xattrs can have slashes in their names
-Message-ID: <20190104212336.GC12689@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:51395 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730862AbfACObU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Jan 2019 09:31:20 -0500
+Date: Thu, 3 Jan 2019 09:31:16 -0500
+From: Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [PATCH] Initialise mmu_notifier_range correctly
+Message-ID: <20190103143116.GB3395@redhat.com>
+References: <20190103002126.GM6310@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190103002126.GM6310@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Jan Kara <jack@suse.cz>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jan 02, 2019 at 04:21:26PM -0800, Matthew Wilcox wrote:
+> 
+> One of the paths in follow_pte_pmd() initialised the mmu_notifier_range
+> incorrectly.
+> 
+> Signed-off-by: Matthew Wilcox <willy@infradead.org>
+> Fixes: ac46d4f3c432 ("mm/mmu_notifier: use structure for invalidate_range_start/end calls v2")
+> Tested-by: Dave Chinner <dchinner@redhat.com>
 
-Eric Sandeen recently found a bug in xfs_repair that flagged extended
-attribute names containing "/" as corrupt and purged them.  There's
-nothing in the IRIX or Linux manuals that say anything about slashes not
-being allowed (and Linux certainly allows this) so let's make sure this
-continues to work.
+Actually now that i have read the code again this is not ok to
+do so. The caller of follow_pte_pmd() will call range_init and
+follow pmd will only update the range address. So existing code
+is ok.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/generic/708     |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/708.out |    6 ++++++
- tests/generic/group   |    1 +
- 3 files changed, 55 insertions(+)
- create mode 100755 tests/generic/708
- create mode 100644 tests/generic/708.out
+I know this is kind of ugly but i do not see a way around that
+uglyness.
 
-diff --git a/tests/generic/708 b/tests/generic/708
-new file mode 100755
-index 00000000..ee63ba79
---- /dev/null
-+++ b/tests/generic/708
-@@ -0,0 +1,48 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0+
-+# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 708
-+#
-+# Check that xattrs can have slashes in their name.
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/attr
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_attrs
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs >> $seqres.full 2>&1
-+_scratch_mount
-+
-+echo "set attr"
-+file=$SCRATCH_MNT/moofile
-+touch $file
-+setfattr -n "user.boo/hoo" -v "woof" $file
-+
-+echo "check attr"
-+getfattr -d --absolute-names $file | _filter_scratch
-+
-+# success, all done(?)
-+status=0
-+exit
-diff --git a/tests/generic/708.out b/tests/generic/708.out
-new file mode 100644
-index 00000000..6978532e
---- /dev/null
-+++ b/tests/generic/708.out
-@@ -0,0 +1,6 @@
-+QA output created by 708
-+set attr
-+check attr
-+# file: SCRATCH_MNT/moofile
-+user.boo/hoo="woof"
-+
-diff --git a/tests/generic/group b/tests/generic/group
-index ea5aa7aa..f88125b4 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -525,3 +525,4 @@
- 520 auto quick log
- 521 soak long_rw
- 522 soak long_rw
-+708 auto quick attr
+> 
+> diff --git a/mm/memory.c b/mm/memory.c
+> index 2dd2f9ab57f4..21a650368be0 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+> @@ -4078,8 +4078,8 @@ static int __follow_pte_pmd(struct mm_struct *mm, unsigned long address,
+>  		goto out;
+>  
+>  	if (range) {
+> -		range->start = address & PAGE_MASK;
+> -		range->end = range->start + PAGE_SIZE;
+> +		mmu_notifier_range_init(range, mm, address & PAGE_MASK,
+> +				     (address & PAGE_MASK) + PAGE_SIZE);
+>  		mmu_notifier_invalidate_range_start(range);
+>  	}
+>  	ptep = pte_offset_map_lock(mm, pmd, address, ptlp);
