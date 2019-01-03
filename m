@@ -1,121 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49954 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726328AbfADMwt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 Jan 2019 07:52:49 -0500
-Date: Fri, 4 Jan 2019 07:52:46 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [Bug 202053] [xfstests generic/464]: XFS corruption and
- Assertion failed: 0, file: fs/xfs/xfs_super.c, line: 985
-Message-ID: <20190104125246.GB16751@bfoster>
-References: <bug-202053-201763@https.bugzilla.kernel.org/>
- <bug-202053-201763-R7nWMjQIjy@https.bugzilla.kernel.org/>
- <20190104123217.GA16751@bfoster>
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:37241 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726601AbfACTMB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 14:12:01 -0500
+Received: by mail-oi1-f195.google.com with SMTP id y23so28533020oia.4
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Jan 2019 11:12:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190104123217.GA16751@bfoster>
+References: <20190102211332.GL4205@dastard> <20190102212531.GK6310@bombadil.infradead.org>
+ <20190102225005.GL6310@bombadil.infradead.org> <20190103000354.GM4205@dastard>
+In-Reply-To: <20190103000354.GM4205@dastard>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 3 Jan 2019 11:11:49 -0800
+Message-ID: <CAPcyv4jTWyYLEn+NcmVObscB9hArdsfxNL0YSMrHi_QDCOEkfQ@mail.gmail.com>
+Subject: Re: [BUG, TOT] xfs w/ dax failure in __follow_pte_pmd()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Matthew Wilcox <willy@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>
 
-On Fri, Jan 04, 2019 at 07:32:17AM -0500, Brian Foster wrote:
-> On Tue, Dec 25, 2018 at 06:10:59AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=202053
-> > 
-> > --- Comment #5 from Zorro Lang (zlang@redhat.com) ---
-> > (In reply to Zorro Lang from comment #4)
-> > > I never hit this bug before, just a similar bug which has been fixed one
-> > > year ago, by:
-> > > commit 40214d128e07dd21bb07a8ed6a7fe2f911281ab2
-> > > Author: Brian Foster <bfoster@redhat.com>
-> > > Date:   Fri Oct 13 09:47:46 2017 -0700
-> > > 
-> > >     xfs: trim writepage mapping to within eof
-> > > 
-> > > So I doubt if this's a regression issue?
-> > 
-> > I just reproduced this issue on kernel 4.19, so it's not a regression from
-> > v4.19:
-> > 
-> > [ 1297.449750] XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) ||
-> > ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 954
-> > [ 1297.463147] WARNING: CPU: 20 PID: 26952 at fs/xfs/xfs_message.c:104
-> > assfail+0x54/0x57 [xfs]
-> > [ 1297.472473] Modules linked in: sunrpc intel_rapl sb_edac
-> > x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass
-> > crct10dif_pclmul crc32_pclmul ghash_clmulni_intel ipmi_ssif 
-> > intel_cstate intel_uncore iTCO_wdt iTCO_vendor_support ipmi_si sg
-> > intel_rapl_perf ipmi_devintf wmi ioatdma i2c_i801 pcspkr ipmi_msghandler
-> > lpc_ich xfs libcrc32c sd_mod mgag200 drm_kms_helper 
-> > syscopyarea sysfillrect sysimgblt igb fb_sys_fops ttm dca drm crc32c_intel
-> > megaraid_sas i2c_algo_bit cdc_ether usbnet mii dm_mirror dm_region_hash dm_log
-> > dm_mod
-> > [ 1297.525374] CPU: 20 PID: 26952 Comm: umount Not tainted 4.19.0-mainline #1
-> > 
-> 
-> I can reproduce this problem and it appears to be somewhat related to
-> the commit referenced above, mainly because the placement of the imap
-> trim leaves a larger than necessary window to race with external changes
-> to the extent map.
-> 
-> For example, a trace dump shows the following sequence of events:
-> 
-> - writepages is in progress on a particular file that has decently sized
->   post-eof speculative preallocation
-> - writepages gets to the point where it looks up or allocates a new imap
->   that includes the preallocation, the allocation/lookup result is
->   stored in wpc
-> - the file is closed by one process, killing off preallocation, then
->   immediately appended to by another, updating the file size by a few
->   bytes
-> - writepages comes back around to xfs_map_blocks() and trims imap to the
->   current size, but imap still includes one block of the original speculative
->   prealloc (that was truncated and recreated) because the size increased
->   between the time imap was stored and trimmed
-> 
-> The EOF trim approach is known to be a bandaid and potentially racy, but
-> ISTM that this problem can be trivially avoided by moving or adding
-> trims of wpc->imap immediately after a new one is cached. I don't
-> reproduce the problem so far with a couple such extra calls in place.
-> 
-> Bigger picture, we need some kind of invalidation mechanism similar to
-> what we're already doing for dealing with the COW fork in this writeback
-> context. I'm not sure the broad semantics used by the COW fork sequence
-> counter mechanism is really suitable for the data fork because any
-> extent-related change in the fork would cause an invalidation, but I am
-> wondering if we could define some subset of less frequent operations for
-> the same mechanism to reliably invalidate (e.g., on eofblocks trims, for
-> starters).
-> 
+On Wed, Jan 2, 2019 at 4:04 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Wed, Jan 02, 2019 at 02:50:05PM -0800, Matthew Wilcox wrote:
+> > On Wed, Jan 02, 2019 at 01:25:31PM -0800, Matthew Wilcox wrote:
+> > > On Thu, Jan 03, 2019 at 08:13:32AM +1100, Dave Chinner wrote:
+> > > > Hi folks,
+> > > >
+> > > > An overnight test run on a current TOT kernel failed generic/413
+> > > > with the following dmesg output:
+> > > >
+> > > > [ 9487.276402] RIP: 0010:__follow_pte_pmd+0x22d/0x340
+> > > > [ 9487.305065] Call Trace:
+> > > > [ 9487.307310]  dax_entry_mkclean+0xbb/0x1f0
+> > >
+> > > We've only got one commit touching dax_entry_mkclean and it's Jerome's.
+> > > Looking through ac46d4f3c43241ffa23d5bf36153a0830c0e02cc, I'd say
+> > > it's missing a call to mmu_notifier_range_init().
+> >
+> > Could I persuade you to give this a try?
+>
+> Yup, that fixes it.
+>
+> And looking at the code, the dax mmu notifier code clearly wasn't
+> tested. i.e. dax_entry_mkclean() is the *only* code that exercises
+> the conditional range parameter code paths inside
+> __follow_pte_pmd().  This means it wasn't tested before it was
+> proposed for inclusion and since inclusion no-one using -akpm,
+> linux-next or the current mainline TOT has done any filesystem DAX
+> testing until I tripped over it.
+>
+> IOws, this is the second "this was never tested before it was merged
+> into mainline" XFS regression that I've found in the last 3 weeks.
+> Both commits have been merged through the -akpm tree, and that
+> implies we currently have no significant filesystem QA coverage on
+> changes being merged through this route. This seems like an area
+> that needs significant improvement to me....
 
-Zorro,
+Yes, this is also part of a series I explicitly NAK'd [1] because
+there are no upstream users for it. I didn't bother to test it because
+I thought the NAK was sufficient.
 
-Can you still reproduce with the following patch?
+Andrew, any reason to not revert the set? They provide no upstream
+value and actively break DAX.
 
-Brian
-
---- 8< ---
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 338b9d9984e0..d9048bcea49c 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -449,6 +449,7 @@ xfs_map_blocks(
- 	}
- 
- 	wpc->imap = imap;
-+	xfs_trim_extent_eof(&wpc->imap, ip);
- 	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
- 	return 0;
- allocate_blocks:
-@@ -459,6 +460,7 @@ xfs_map_blocks(
- 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
- 	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
- 	wpc->imap = imap;
-+	xfs_trim_extent_eof(&wpc->imap, ip);
- 	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
- 	return 0;
- }
+[1]: https://www.spinics.net/lists/linux-fsdevel/msg137309.html
