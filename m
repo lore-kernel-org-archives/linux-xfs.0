@@ -1,69 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53852 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729142AbfACOjK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 09:39:10 -0500
-Date: Thu, 3 Jan 2019 06:39:08 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH] Initialise mmu_notifier_range correctly
-Message-ID: <20190103143908.GQ6310@bombadil.infradead.org>
-References: <20190103002126.GM6310@bombadil.infradead.org>
- <20190103015654.GB15619@redhat.com>
- <785af237-eb67-c304-595d-9080a2f48102@nvidia.com>
- <20190103041833.GN6310@bombadil.infradead.org>
- <20190103142959.GA3395@redhat.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:37062 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728779AbfACXcg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 18:32:36 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 4462526E3E
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Jan 2019 23:32:36 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202127] cannot mount or create xfs on a  597T device
+Date: Thu, 03 Jan 2019 23:32:36 +0000
+Message-ID: <bug-202127-201763-YsYMv3ugqW@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202127-201763@https.bugzilla.kernel.org/>
+References: <bug-202127-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190103142959.GA3395@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jerome Glisse <jglisse@redhat.com>
-Cc: John Hubbard <jhubbard@nvidia.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Jan Kara <jack@suse.cz>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jan 03, 2019 at 09:29:59AM -0500, Jerome Glisse wrote:
-> On Wed, Jan 02, 2019 at 08:18:33PM -0800, Matthew Wilcox wrote:
-> > On Wed, Jan 02, 2019 at 07:32:08PM -0800, John Hubbard wrote:
-> > > Having the range struct declared in separate places from the mmu_notifier_range_init()
-> > > calls is not great. But I'm not sure I see a way to make it significantly cleaner, given
-> > > that __follow_pte_pmd uses the range pointer as a way to decide to issue the mmn calls.
-> > 
-> > Yeah, I don't think there's anything we can do.  But I started reviewing
-> > the comments, and they don't make sense together:
-> > 
-> >                 /*
-> >                  * Note because we provide range to follow_pte_pmd it will
-> >                  * call mmu_notifier_invalidate_range_start() on our behalf
-> >                  * before taking any lock.
-> >                  */
-> >                 if (follow_pte_pmd(vma->vm_mm, address, &range,
-> >                                    &ptep, &pmdp, &ptl))
-> >                         continue;
-> > 
-> >                 /*
-> >                  * No need to call mmu_notifier_invalidate_range() as we are
-> >                  * downgrading page table protection not changing it to point
-> >                  * to a new page.
-> >                  *
-> >                  * See Documentation/vm/mmu_notifier.rst
-> >                  */
-> > 
-> > So if we don't call mmu_notifier_invalidate_range, why are we calling
-> > mmu_notifier_invalidate_range_start and mmu_notifier_invalidate_range_end?
-> > ie, why not this ...
-> 
-> Thus comments looks wrong to me ... we need to call
-> mmu_notifier_invalidate_range() those are use by
-> IOMMU. I might be to blame for those comments thought.
+https://bugzilla.kernel.org/show_bug.cgi?id=202127
 
-Yes, you're to blame for both of them.
+--- Comment #13 from Eric Sandeen (sandeen@sandeen.net) ---
+(In reply to daimh from comment #12)
 
-a4d1a88525138 (Jérôme Glisse     2017-08-31 17:17:26 -0400  791)                 * Note because we provide start/end to follow_pte_pmd it will
-a4d1a88525138 (Jérôme Glisse     2017-08-31 17:17:26 -0400  792)                 * call mmu_notifier_invalidate_range_start() on our behalf
-a4d1a88525138 (Jérôme Glisse     2017-08-31 17:17:26 -0400  793)                 * before taking any lock.
+> [root@watsons-s1 ~]# mkfs.xfs -V
+> mkfs.xfs version 4.17.0
+> [root@watsons-s1 ~]# mkfs -t xfs -f /dev/sda  
 
-0f10851ea475e (Jérôme Glisse     2017-11-15 17:34:07 -0800  794)                 * No need to call mmu_notifier_invalidate_range() as we are
-0f10851ea475e (Jérôme Glisse     2017-11-15 17:34:07 -0800  795)                 * downgrading page table protection not changing it to point
-0f10851ea475e (Jérôme Glisse     2017-11-15 17:34:07 -0800  796)                 * to a new page.
+Thanks.  That's what I suspected, i.e. older xfsprogs just didn't validate or
+notice this problem, but I was too lazy to check the history. ;) Thanks for the
+test and the info.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
