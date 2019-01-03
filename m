@@ -1,53 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44880 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726875AbfABWuG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Jan 2019 17:50:06 -0500
-Date: Wed, 2 Jan 2019 14:50:05 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [BUG, TOT] xfs w/ dax failure in __follow_pte_pmd()
-Message-ID: <20190102225005.GL6310@bombadil.infradead.org>
-References: <20190102211332.GL4205@dastard>
- <20190102212531.GK6310@bombadil.infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:40290 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727673AbfACO7z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Jan 2019 09:59:55 -0500
+Date: Thu, 3 Jan 2019 09:59:51 -0500
+From: Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [PATCH] Initialise mmu_notifier_range correctly
+Message-ID: <20190103145950.GE3395@redhat.com>
+References: <20190103002126.GM6310@bombadil.infradead.org>
+ <20190103015654.GB15619@redhat.com>
+ <785af237-eb67-c304-595d-9080a2f48102@nvidia.com>
+ <20190103041833.GN6310@bombadil.infradead.org>
+ <20190103142959.GA3395@redhat.com>
+ <20190103143908.GQ6310@bombadil.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20190102212531.GK6310@bombadil.infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190103143908.GQ6310@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, Dan Williams <dan.j.williams@intel.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Jan Kara <jack@suse.cz>, akpm@linux-foundation.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: John Hubbard <jhubbard@nvidia.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Jan Kara <jack@suse.cz>
 
-On Wed, Jan 02, 2019 at 01:25:31PM -0800, Matthew Wilcox wrote:
-> On Thu, Jan 03, 2019 at 08:13:32AM +1100, Dave Chinner wrote:
-> > Hi folks,
+On Thu, Jan 03, 2019 at 06:39:08AM -0800, Matthew Wilcox wrote:
+> On Thu, Jan 03, 2019 at 09:29:59AM -0500, Jerome Glisse wrote:
+> > On Wed, Jan 02, 2019 at 08:18:33PM -0800, Matthew Wilcox wrote:
+> > > On Wed, Jan 02, 2019 at 07:32:08PM -0800, John Hubbard wrote:
+> > > > Having the range struct declared in separate places from the mmu_notifier_range_init()
+> > > > calls is not great. But I'm not sure I see a way to make it significantly cleaner, given
+> > > > that __follow_pte_pmd uses the range pointer as a way to decide to issue the mmn calls.
+> > > 
+> > > Yeah, I don't think there's anything we can do.  But I started reviewing
+> > > the comments, and they don't make sense together:
+> > > 
+> > >                 /*
+> > >                  * Note because we provide range to follow_pte_pmd it will
+> > >                  * call mmu_notifier_invalidate_range_start() on our behalf
+> > >                  * before taking any lock.
+> > >                  */
+> > >                 if (follow_pte_pmd(vma->vm_mm, address, &range,
+> > >                                    &ptep, &pmdp, &ptl))
+> > >                         continue;
+> > > 
+> > >                 /*
+> > >                  * No need to call mmu_notifier_invalidate_range() as we are
+> > >                  * downgrading page table protection not changing it to point
+> > >                  * to a new page.
+> > >                  *
+> > >                  * See Documentation/vm/mmu_notifier.rst
+> > >                  */
+> > > 
+> > > So if we don't call mmu_notifier_invalidate_range, why are we calling
+> > > mmu_notifier_invalidate_range_start and mmu_notifier_invalidate_range_end?
+> > > ie, why not this ...
 > > 
-> > An overnight test run on a current TOT kernel failed generic/413
-> > with the following dmesg output:
-> > 
-> > [ 9487.276402] RIP: 0010:__follow_pte_pmd+0x22d/0x340
-> > [ 9487.305065] Call Trace:
-> > [ 9487.307310]  dax_entry_mkclean+0xbb/0x1f0
+> > Thus comments looks wrong to me ... we need to call
+> > mmu_notifier_invalidate_range() those are use by
+> > IOMMU. I might be to blame for those comments thought.
 > 
-> We've only got one commit touching dax_entry_mkclean and it's Jerome's.
-> Looking through ac46d4f3c43241ffa23d5bf36153a0830c0e02cc, I'd say
-> it's missing a call to mmu_notifier_range_init().
+> Yes, you're to blame for both of them.
+> 
+> a4d1a88525138 (Jérôme Glisse     2017-08-31 17:17:26 -0400  791)                 * Note because we provide start/end to follow_pte_pmd it will
+> a4d1a88525138 (Jérôme Glisse     2017-08-31 17:17:26 -0400  792)                 * call mmu_notifier_invalidate_range_start() on our behalf
+> a4d1a88525138 (Jérôme Glisse     2017-08-31 17:17:26 -0400  793)                 * before taking any lock.
+> 
+> 0f10851ea475e (Jérôme Glisse     2017-11-15 17:34:07 -0800  794)                 * No need to call mmu_notifier_invalidate_range() as we are
+> 0f10851ea475e (Jérôme Glisse     2017-11-15 17:34:07 -0800  795)                 * downgrading page table protection not changing it to point
+> 0f10851ea475e (Jérôme Glisse     2017-11-15 17:34:07 -0800  796)                 * to a new page.
+> 
 
-Could I persuade you to give this a try?
+I remember now we do not need to call invalidate range because
+invalidate_range_end() does call invalidate_range so it is fine.
+Comments should be better thought. So existing code is fine.
 
-diff --git a/mm/memory.c b/mm/memory.c
-index 2dd2f9ab57f4..21a650368be0 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -4078,8 +4078,8 @@ static int __follow_pte_pmd(struct mm_struct *mm, unsigned long address,
- 		goto out;
- 
- 	if (range) {
--		range->start = address & PAGE_MASK;
--		range->end = range->start + PAGE_SIZE;
-+		mmu_notifier_range_init(range, mm, address & PAGE_MASK,
-+				     (address & PAGE_MASK) + PAGE_SIZE);
- 		mmu_notifier_invalidate_range_start(range);
- 	}
- 	ptep = pte_offset_map_lock(mm, pmd, address, ptlp);
+Cheers,
+Jérôme
