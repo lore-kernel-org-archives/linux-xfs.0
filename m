@@ -1,82 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55920 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726749AbfADSi6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 Jan 2019 13:38:58 -0500
-Date: Fri, 4 Jan 2019 13:38:56 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/8] xfs: scrub big block inode btrees correctly
-Message-ID: <20190104183856.GH16751@bfoster>
-References: <154630850739.14372.14000129432637481206.stgit@magnolia>
- <154630855085.14372.11366121347834353110.stgit@magnolia>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:43550 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726100AbfACT4R (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 14:56:17 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 07273289EE
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Jan 2019 19:56:17 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202127] cannot mount or create xfs on a  597T device
+Date: Thu, 03 Jan 2019 19:56:17 +0000
+Message-ID: <bug-202127-201763-TJFoB6PLY3@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202127-201763@https.bugzilla.kernel.org/>
+References: <bug-202127-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154630855085.14372.11366121347834353110.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Dec 31, 2018 at 06:09:10PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Teach scrub how to handle the case that there are one or more inobt
-> records covering a given inode cluster.  This fixes the operation on big
-> block filesystems (e.g. 64k blocks, 512 byte inodes).
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/ialloc.c |    8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> index 2f6c2d7fa3fd..1be6a5ebd61e 100644
-> --- a/fs/xfs/scrub/ialloc.c
-> +++ b/fs/xfs/scrub/ialloc.c
-> @@ -162,6 +162,7 @@ xchk_iallocbt_check_cluster_ifree(
->  	xfs_ino_t			fsino;
->  	xfs_agino_t			agino;
->  	unsigned int			offset;
-> +	unsigned int			cluster_buf_base;
->  	bool				irec_free;
->  	bool				ino_inuse;
->  	bool				freemask_ok;
-> @@ -174,11 +175,14 @@ xchk_iallocbt_check_cluster_ifree(
->  	 * Given an inobt record, an offset of a cluster within the record,
->  	 * and an offset of an inode within a cluster, compute which fs inode
->  	 * we're talking about and the offset of the inode record within the
-> -	 * inode buffer.
-> +	 * inode buffer, being careful about inobt records that don't align
-> +	 * with the start of the inode buffer when block sizes are large.
->  	 */
->  	agino = irec->ir_startino + cluster_base + cluster_index;
->  	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
-> -	offset = cluster_index * mp->m_sb.sb_inodesize;
-> +	cluster_buf_base = XFS_INO_TO_OFFSET(mp, irec->ir_startino +
-> +					     cluster_base);
-> +	offset = (cluster_buf_base + cluster_index) * mp->m_sb.sb_inodesize;
+https://bugzilla.kernel.org/show_bug.cgi?id=202127
 
-So cluster_buf_base should always be 0 unless the record itself is not
-cluster aligned (i.e., the second record in a large FSB), right? If so,
-cluster_base should also be 0 in any case where cluster_buf_base != 0.
-I'm wondering if that can be made a little more explicit, or perhaps
-self-documented with an assert.
+--- Comment #1 from daimh@umich.edu ---
+[root@watsons-s1 ~]# grep sda /proc/partitions 
+   8        0 597636415488 sda
 
-Thinking more about it, it's kind of confusing to me either way because
-cluster_index isn't really a cluster index in this case, rather it's
-more of a record index because it doesn't account for the fact that the
-record is a subset of the cluster. Hmmm... could we simplify this by
-setting imap.im_boffset appropriately in the caller such that dip always
-points to either the first inode in the buffer or first inode in the
-record, then just pass in dip directly and let the caller increment it
-in the associated loop? Maybe that's something for another patch..
 
-Brian
+By the way, the xfs filesystem works without any issue under the environment
+below
+[root@watsons-s1 ~]# mkfs.xfs -V
+mkfs.xfs version 4.17.0
+[root@watsons-s1 ~]# uname -a
+Linux watsons-s1.mbni.org 4.17.5-1-ARCH #1 SMP PREEMPT Sun Jul 8 17:27:31 UTC
+2018 x86_64 GNU/Linux
 
->  	if (offset >= BBTOB(cluster_bp->b_length)) {
->  		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
->  		goto out;
-> 
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
