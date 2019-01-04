@@ -1,78 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63197 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726813AbfACTaO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Jan 2019 14:30:14 -0500
-Date: Thu, 3 Jan 2019 14:30:10 -0500
-From: Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [BUG, TOT] xfs w/ dax failure in __follow_pte_pmd()
-Message-ID: <20190103193009.GG3395@redhat.com>
-References: <20190102211332.GL4205@dastard>
- <20190102212531.GK6310@bombadil.infradead.org>
- <20190102225005.GL6310@bombadil.infradead.org>
- <20190103000354.GM4205@dastard>
- <CAPcyv4jTWyYLEn+NcmVObscB9hArdsfxNL0YSMrHi_QDCOEkfQ@mail.gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:47738 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726003AbfADBG4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 20:06:56 -0500
+Date: Thu, 3 Jan 2019 17:06:44 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [GIT PULL] xfs: more updates for v4.21
+Message-ID: <20190104010644.GC21010@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAPcyv4jTWyYLEn+NcmVObscB9hArdsfxNL0YSMrHi_QDCOEkfQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>
+To: torvalds@linux-foundation.org
+Cc: Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On Thu, Jan 03, 2019 at 11:11:49AM -0800, Dan Williams wrote:
-> On Wed, Jan 2, 2019 at 4:04 PM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > On Wed, Jan 02, 2019 at 02:50:05PM -0800, Matthew Wilcox wrote:
-> > > On Wed, Jan 02, 2019 at 01:25:31PM -0800, Matthew Wilcox wrote:
-> > > > On Thu, Jan 03, 2019 at 08:13:32AM +1100, Dave Chinner wrote:
-> > > > > Hi folks,
-> > > > >
-> > > > > An overnight test run on a current TOT kernel failed generic/413
-> > > > > with the following dmesg output:
-> > > > >
-> > > > > [ 9487.276402] RIP: 0010:__follow_pte_pmd+0x22d/0x340
-> > > > > [ 9487.305065] Call Trace:
-> > > > > [ 9487.307310]  dax_entry_mkclean+0xbb/0x1f0
-> > > >
-> > > > We've only got one commit touching dax_entry_mkclean and it's Jerome's.
-> > > > Looking through ac46d4f3c43241ffa23d5bf36153a0830c0e02cc, I'd say
-> > > > it's missing a call to mmu_notifier_range_init().
-> > >
-> > > Could I persuade you to give this a try?
-> >
-> > Yup, that fixes it.
-> >
-> > And looking at the code, the dax mmu notifier code clearly wasn't
-> > tested. i.e. dax_entry_mkclean() is the *only* code that exercises
-> > the conditional range parameter code paths inside
-> > __follow_pte_pmd().  This means it wasn't tested before it was
-> > proposed for inclusion and since inclusion no-one using -akpm,
-> > linux-next or the current mainline TOT has done any filesystem DAX
-> > testing until I tripped over it.
-> >
-> > IOws, this is the second "this was never tested before it was merged
-> > into mainline" XFS regression that I've found in the last 3 weeks.
-> > Both commits have been merged through the -akpm tree, and that
-> > implies we currently have no significant filesystem QA coverage on
-> > changes being merged through this route. This seems like an area
-> > that needs significant improvement to me....
-> 
-> Yes, this is also part of a series I explicitly NAK'd [1] because
-> there are no upstream users for it. I didn't bother to test it because
-> I thought the NAK was sufficient.
-> 
-> Andrew, any reason to not revert the set? They provide no upstream
-> value and actively break DAX.
-> 
-> [1]: https://www.spinics.net/lists/linux-fsdevel/msg137309.html
+Hi Linus,
 
-I tested it but with the patch that was not included and that
-extra patch did properly initialize the range struct. So the
-patchset had a broken step.
+Here are a couple more small bug fixes for 4.21-rc1.  It has undergone
+the usual testing regimen and merges cleanly with 4.20 final.  Let me
+know if you encounter any problems with the merge.
 
-Cheers,
-Jérôme
+--D
+
+The following changes since commit 65eed012d1f2d0f0bf0ffc036826d58147de77b8:
+
+  xfs: reallocate realtime summary cache on growfs (2018-12-21 18:45:18 -0800)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.21-merge-3
+
+for you to fetch changes up to 90be9b86da9039fe6cf2880dc16fd0b0899603a5:
+
+  xfs: xfs_fsops: drop useless LIST_HEAD (2018-12-29 10:47:58 -0800)
+
+----------------------------------------------------------------
+Changes since last update:
+- Remove a couple of unnecessary local variables.
+
+----------------------------------------------------------------
+Julia Lawall (2):
+      xfs: xfs_buf: drop useless LIST_HEAD
+      xfs: xfs_fsops: drop useless LIST_HEAD
+
+ fs/xfs/xfs_buf.c   | 1 -
+ fs/xfs/xfs_fsops.c | 1 -
+ 2 files changed, 2 deletions(-)
