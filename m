@@ -1,97 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45258 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:36682 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725976AbfAWTce (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Jan 2019 14:32:34 -0500
-Subject: Re: [PATCH] xfs_repair: initialize non-leaf finobt blocks with
- correct magic
-References: <20190123185929.46507-1-bfoster@redhat.com>
+        id S1726056AbfADV1j (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Jan 2019 16:27:39 -0500
+Subject: Re: [PATCH] generic: test that xattrs can have slashes in their names
+References: <20190104212336.GC12689@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7326ee5b-08eb-420a-e3fe-2182cff6371e@sandeen.net>
-Date: Wed, 23 Jan 2019 13:32:32 -0600
+Message-ID: <c44b0678-a050-e887-aa6d-9dc29d6b45a8@sandeen.net>
+Date: Fri, 4 Jan 2019 15:27:37 -0600
 MIME-Version: 1.0
-In-Reply-To: <20190123185929.46507-1-bfoster@redhat.com>
+In-Reply-To: <20190104212336.GC12689@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Cc: Lucas Stach <l.stach@pengutronix.de>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eryu Guan <guaneryu@gmail.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-On 1/23/19 12:59 PM, Brian Foster wrote:
-> The free inode btree construction code in xfs_repair has a bug where
-> any non-leaf nodes outside of the leftmost block at the associated
-> level in the tree are incorrectly initialized with the inobt magic
-> value. Update the prop_ino_cursor() path responsible for growing the
-> non-leaf portion of the inode btrees to use the btnum of the
-> specific tree being generated rather than the hardcoded inode btree
-> type.
+On 1/4/19 3:23 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reported-by: Lucas Stach <l.stach@pengutronix.de>
-> Root-caused-by: Lucas Stach <l.stach@pengutronix.de>
-
-Looks good to me,
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-Interesting how the other btrees (rmap, refcount) have their own
-prop_$FOO_cursor() functions, but prop_ino_cursor() shares code
-for the 2 trees.
-
+> Eric Sandeen recently found a bug in xfs_repair that flagged extended
+> attribute names containing "/" as corrupt and purged them.  There's
+> nothing in the IRIX or Linux manuals that say anything about slashes not
+> being allowed (and Linux certainly allows this) so let's make sure this
+> continues to work.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  repair/phase5.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
+>  tests/generic/708     |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/708.out |    6 ++++++
+>  tests/generic/group   |    1 +
+>  3 files changed, 55 insertions(+)
+>  create mode 100755 tests/generic/708
+>  create mode 100644 tests/generic/708.out
 > 
-> diff --git a/repair/phase5.c b/repair/phase5.c
-> index 85d1f4fb..05333f11 100644
-> --- a/repair/phase5.c
-> +++ b/repair/phase5.c
-> @@ -983,7 +983,7 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
->  
->  static void
->  prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
-> -	xfs_agino_t startino, int level)
-> +	xfs_btnum_t btnum, xfs_agino_t startino, int level)
->  {
->  	struct xfs_btree_block	*bt_hdr;
->  	xfs_inobt_key_t		*bt_key;
-> @@ -1005,7 +1005,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
->  		 * first path up the left side of the tree
->  		 * where the agbno's are already set up
->  		 */
-> -		prop_ino_cursor(mp, agno, btree_curs, startino, level);
-> +		prop_ino_cursor(mp, agno, btree_curs, btnum, startino, level);
->  	}
->  
->  	if (be16_to_cpu(bt_hdr->bb_numrecs) ==
-> @@ -1041,7 +1041,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
->  		lptr->buf_p->b_ops = &xfs_inobt_buf_ops;
->  		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
->  		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
-> -		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_INO,
-> +		libxfs_btree_init_block(mp, lptr->buf_p, btnum,
->  					level, 0, agno, 0);
->  
->  		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
-> @@ -1049,7 +1049,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
->  		/*
->  		 * propagate extent record for first extent in new block up
->  		 */
-> -		prop_ino_cursor(mp, agno, btree_curs, startino, level);
-> +		prop_ino_cursor(mp, agno, btree_curs, btnum, startino, level);
->  	}
->  	/*
->  	 * add inode info to current block
-> @@ -1201,7 +1201,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
->  			lptr->modulo--;
->  
->  		if (lptr->num_recs_pb > 0)
-> -			prop_ino_cursor(mp, agno, btree_curs,
-> +			prop_ino_cursor(mp, agno, btree_curs, btnum,
->  					ino_rec->ino_startnum, 0);
->  
->  		bt_rec = (xfs_inobt_rec_t *)
+> diff --git a/tests/generic/708 b/tests/generic/708
+> new file mode 100755
+> index 00000000..ee63ba79
+> --- /dev/null
+> +++ b/tests/generic/708
+> @@ -0,0 +1,48 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0+
+> +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 708
+> +#
+> +# Check that xattrs can have slashes in their name.
+
+Perhaps a note about what failed before?  Because set/get/list has
+always(tm) worked:
+
+# (xfs_repair previously flagged this as a corruption)
+
+Is it worth also validating that '/' in a dir entry /is/ still flagged?
+Or maybe that's a separate test.
+
+-Eric
+
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/attr
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch
+> +_require_attrs
+> +
+> +rm -f $seqres.full
+> +
+> +_scratch_mkfs >> $seqres.full 2>&1
+> +_scratch_mount
+> +
+> +echo "set attr"
+> +file=$SCRATCH_MNT/moofile
+> +touch $file
+> +setfattr -n "user.boo/hoo" -v "woof" $file
+> +
+> +echo "check attr"
+> +getfattr -d --absolute-names $file | _filter_scratch
+> +
+> +# success, all done(?)
+> +status=0
+> +exit
+> diff --git a/tests/generic/708.out b/tests/generic/708.out
+> new file mode 100644
+> index 00000000..6978532e
+> --- /dev/null
+> +++ b/tests/generic/708.out
+> @@ -0,0 +1,6 @@
+> +QA output created by 708
+> +set attr
+> +check attr
+> +# file: SCRATCH_MNT/moofile
+> +user.boo/hoo="woof"
+> +
+> diff --git a/tests/generic/group b/tests/generic/group
+> index ea5aa7aa..f88125b4 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -525,3 +525,4 @@
+>  520 auto quick log
+>  521 soak long_rw
+>  522 soak long_rw
+> +708 auto quick attr
 > 
