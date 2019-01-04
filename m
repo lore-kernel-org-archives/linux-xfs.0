@@ -1,59 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:54152 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726792AbfACXR1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 18:17:27 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 882AA251F9
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Jan 2019 23:17:26 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202127] cannot mount or create xfs on a  597T device
-Date: Thu, 03 Jan 2019 23:17:26 +0000
-Message-ID: <bug-202127-201763-nKEiV4L3g2@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202127-201763@https.bugzilla.kernel.org/>
-References: <bug-202127-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from mx1.redhat.com ([209.132.183.28]:49544 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726405AbfADSa6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Jan 2019 13:30:58 -0500
+Date: Fri, 4 Jan 2019 13:30:56 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/8] xfs: never try to scrub more than 64 inodes per
+ inobt record
+Message-ID: <20190104183055.GC16751@bfoster>
+References: <154630850739.14372.14000129432637481206.stgit@magnolia>
+ <154630851366.14372.14057534574140159776.stgit@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <154630851366.14372.14057534574140159776.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202127
+On Mon, Dec 31, 2018 at 06:08:33PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Make sure we never check more than XFS_INODES_PER_CHUNK inodes for any
+> given inobt record since there can be more than one inobt record mapped
+> to an inode cluster.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/ialloc.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> index 882dc56c5c21..fd431682db0b 100644
+> --- a/fs/xfs/scrub/ialloc.c
+> +++ b/fs/xfs/scrub/ialloc.c
+> @@ -203,7 +203,8 @@ xchk_iallocbt_check_freemask(
+>  	int				error = 0;
+>  
+>  	/* Make sure the freemask matches the inode records. */
+> -	nr_inodes = mp->m_inodes_per_cluster;
+> +	nr_inodes = min_t(unsigned int, XFS_INODES_PER_CHUNK,
+> +			mp->m_inodes_per_cluster);
+>  
 
---- Comment #9 from daimh@umich.edu ---
-[root@watsons-s1 ~]# /opt/MegaRAID/storcli/storcli /c0 show | head -n 30
-Generating detailed summary of the adapter, it may take a while to complete.
+I'm wondering why we wouldn't also use nr_inodes in the loop immediately
+below instead of ->m_inodes_per_cluster, but it looks like this all
+changes in the following patches.
 
-Controller = 0
-Status = Success
-Description = None
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Product Name = AVAGO MegaRAID SAS 9361-16i
-Serial Number = SK82367083
-SAS Address =  500062b201dbbcc0
-PCI Address = 00:02:00:00
-System Time = 01/03/2019 18:17:05
-Mfg. Date = 06/06/18
-Controller Time = 01/03/2019 23:17:05
-FW Package Build = 24.19.0-0047
-BIOS Version = 6.34.01.0_4.19.08.00_0x06160200
-FW Version = 4.720.00-8218
-Driver Name = megaraid_sas
-Driver Version = 07.706.03.00-rc1
-Current Personality = RAID-Mode
-Vendor Id = 0x1000
-Device Id = 0xCE
-SubVendor Id = 0x1000
-SubDevice Id = 0x9371
-Host Interface = PCI-E
-Device Interface = SAS-12G
-Bus Number = 2
-Device Number = 0
-Function Number = 0
-Drive Groups = 1
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+>  	for (agino = irec->ir_startino;
+>  	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
+> 
