@@ -1,33 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:55934 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725879AbfABVZd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Jan 2019 16:25:33 -0500
-Date: Wed, 2 Jan 2019 13:25:31 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [BUG, TOT] xfs w/ dax failure in __follow_pte_pmd()
-Message-ID: <20190102212531.GK6310@bombadil.infradead.org>
-References: <20190102211332.GL4205@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:52940 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728293AbfADSbY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Jan 2019 13:31:24 -0500
+Date: Fri, 4 Jan 2019 13:31:21 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/8] xfs: hoist inode cluster checks out of loop
+Message-ID: <20190104183121.GF16751@bfoster>
+References: <154630850739.14372.14000129432637481206.stgit@magnolia>
+ <154630853205.14372.8548651680958822032.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190102211332.GL4205@dastard>
+In-Reply-To: <154630853205.14372.8548651680958822032.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, Dan Williams <dan.j.williams@intel.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Jan Kara <jack@suse.cz>, akpm@linux-foundation.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Thu, Jan 03, 2019 at 08:13:32AM +1100, Dave Chinner wrote:
-> Hi folks,
+On Mon, Dec 31, 2018 at 06:08:52PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> An overnight test run on a current TOT kernel failed generic/413
-> with the following dmesg output:
+> Hoist the inode cluster checks out of the inobt record check loop into
+> a separate function in preparation for refactoring of that loop.  No
+> functional changes here; that's in the next patch.
 > 
-> [ 9487.276402] RIP: 0010:__follow_pte_pmd+0x22d/0x340
-> [ 9487.305065] Call Trace:
-> [ 9487.307310]  dax_entry_mkclean+0xbb/0x1f0
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/scrub/ialloc.c |  119 +++++++++++++++++++++++++++----------------------
+>  1 file changed, 65 insertions(+), 54 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> index 5e593e4292b2..9af01ea0258d 100644
+> --- a/fs/xfs/scrub/ialloc.c
+> +++ b/fs/xfs/scrub/ialloc.c
+...
+> +/* Make sure the free mask is consistent with what the inodes think. */
+> +STATIC int
+> +xchk_iallocbt_check_freemask(
+> +	struct xchk_btree		*bs,
+> +	struct xfs_inobt_rec_incore	*irec)
+> +{
+> +	struct xfs_mount		*mp = bs->cur->bc_mp;
+> +	xfs_agino_t			agino;
+> +	int				error = 0;
+> +
+> +	for (agino = irec->ir_startino;
+> +	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
+> +	     agino += mp->m_blocks_per_cluster * mp->m_sb.sb_inopblock) {
 
-We've only got one commit touching dax_entry_mkclean and it's Jerome's.
-Looking through ac46d4f3c43241ffa23d5bf36153a0830c0e02cc, I'd say
-it's missing a call to mmu_notifier_range_init().
+->m_inodes_per_cluster ?
+
+Otherwise looks fine:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +		error = xchk_iallocbt_check_cluster(bs, irec, agino);
+> +		if (error)
+> +			break;
+>  	}
+>  
+>  	return error;
+> 
