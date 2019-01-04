@@ -1,232 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49224 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:57532 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726105AbfADWDG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Jan 2019 17:03:06 -0500
-Date: Fri, 4 Jan 2019 14:02:58 -0800
+        with ESMTP id S1726094AbfADWM7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Jan 2019 17:12:59 -0500
+Date: Fri, 4 Jan 2019 14:12:46 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/8] xfs: clean up the inode cluster checking in the
- inobt scrub
-Message-ID: <20190104220258.GD12689@magnolia>
-References: <154630850739.14372.14000129432637481206.stgit@magnolia>
- <154630853834.14372.13119540305623771045.stgit@magnolia>
- <20190104183239.GG16751@bfoster>
+Subject: Re: [PATCH] generic: test that xattrs can have slashes in their names
+Message-ID: <20190104221246.GE21010@magnolia>
+References: <20190104212336.GC12689@magnolia>
+ <c44b0678-a050-e887-aa6d-9dc29d6b45a8@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190104183239.GG16751@bfoster>
+In-Reply-To: <c44b0678-a050-e887-aa6d-9dc29d6b45a8@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eryu Guan <guaneryu@gmail.com>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-On Fri, Jan 04, 2019 at 01:32:39PM -0500, Brian Foster wrote:
-> On Mon, Dec 31, 2018 at 06:08:58PM -0800, Darrick J. Wong wrote:
+On Fri, Jan 04, 2019 at 03:27:37PM -0600, Eric Sandeen wrote:
+> On 1/4/19 3:23 PM, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > The code to check inobt records against inode clusters is a mess of
-> > poorly named variables and unnecessary parameters.  Clean the
-> > unnecessary inode number parameters out of _check_cluster_freemask in
-> > favor of computing them inside the function instead of making the caller
-> > do it.  In xchk_iallocbt_check_cluster, rename the variables to make it
-> > more obvious just what chunk_ino and cluster_ino represent.
-> > 
-> > Add a tracepoint to make it easier to track each inode cluster as we
-> > scrub it.
+> > Eric Sandeen recently found a bug in xfs_repair that flagged extended
+> > attribute names containing "/" as corrupt and purged them.  There's
+> > nothing in the IRIX or Linux manuals that say anything about slashes not
+> > being allowed (and Linux certainly allows this) so let's make sure this
+> > continues to work.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  fs/xfs/scrub/ialloc.c |  162 ++++++++++++++++++++++++++++++++-----------------
-> >  fs/xfs/scrub/trace.h  |   45 ++++++++++++++
-> >  2 files changed, 151 insertions(+), 56 deletions(-)
+> >  tests/generic/708     |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/708.out |    6 ++++++
+> >  tests/generic/group   |    1 +
+> >  3 files changed, 55 insertions(+)
+> >  create mode 100755 tests/generic/708
+> >  create mode 100644 tests/generic/708.out
 > > 
-> > 
-> > diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> > index 9af01ea0258d..2f6c2d7fa3fd 100644
-> > --- a/fs/xfs/scrub/ialloc.c
-> > +++ b/fs/xfs/scrub/ialloc.c
-> > @@ -134,41 +134,70 @@ xchk_iallocbt_freecount(
-> >  	return hweight64(freemask);
-> >  }
-> >  
-> > -/* Check a particular inode with ir_free. */
-> > +/*
-> > + * Check that an inode's allocation status matches ir_free in the inobt
-> > + * record.  First we try querying the in-core inode state, and if the inode
-> > + * isn't loaded we examine the on-disk inode directly.
-> > + *
-> > + * Since there can be 1:M and M:1 mappings between inobt records and inode
-> > + * clusters, we pass in the inode location information as an inobt record;
-> > + * the index of an inode cluster within the inobt record (as well as the
-> > + * cluster buffer itself); and the index of the inode within the cluster.
-> > + *
-> > + * @irec is the inobt record.
-> > + * @cluster_base is the inode offset of the cluster within the @irec.
-> > + * @cluster_bp is the cluster buffer.
-> > + * @cluster_index is the inode offset within the inode cluster.
-> > + */
-> >  STATIC int
-> > -xchk_iallocbt_check_cluster_freemask(
-> > +xchk_iallocbt_check_cluster_ifree(
-> >  	struct xchk_btree		*bs,
-> > -	xfs_ino_t			fsino,
-> > -	xfs_agino_t			chunkino,
-> > -	xfs_agino_t			clusterino,
-> >  	struct xfs_inobt_rec_incore	*irec,
-> > -	struct xfs_buf			*bp)
-> > +	unsigned int			cluster_base,
-> > +	struct xfs_buf			*cluster_bp,
-> > +	unsigned int			cluster_index)
-> >  {
-> > -	struct xfs_dinode		*dip;
-> >  	struct xfs_mount		*mp = bs->cur->bc_mp;
-> > -	bool				inode_is_free = false;
-> > +	struct xfs_dinode		*dip;
-> > +	xfs_ino_t			fsino;
-> > +	xfs_agino_t			agino;
-> > +	unsigned int			offset;
-> > +	bool				irec_free;
-> > +	bool				ino_inuse;
-> >  	bool				freemask_ok;
-> > -	bool				inuse;
-> > -	int				error = 0;
-> > +	int				error;
-> >  
-> >  	if (xchk_should_terminate(bs->sc, &error))
-> >  		return error;
-> >  
-> > -	dip = xfs_buf_offset(bp, clusterino * mp->m_sb.sb_inodesize);
-> > +	/*
-> > +	 * Given an inobt record, an offset of a cluster within the record,
-> > +	 * and an offset of an inode within a cluster, compute which fs inode
-> > +	 * we're talking about and the offset of the inode record within the
+> > diff --git a/tests/generic/708 b/tests/generic/708
+> > new file mode 100755
+> > index 00000000..ee63ba79
+> > --- /dev/null
+> > +++ b/tests/generic/708
+> > @@ -0,0 +1,48 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0+
+> > +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 708
+> > +#
+> > +# Check that xattrs can have slashes in their name.
 > 
-> Do you mean "offset of the inode within the buffer?"
-
-Yep.
-
-> > +	 * inode buffer.
-> > +	 */
-> > +	agino = irec->ir_startino + cluster_base + cluster_index;
-> > +	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
-> > +	offset = cluster_index * mp->m_sb.sb_inodesize;
-> > +	if (offset >= BBTOB(cluster_bp->b_length)) {
-> > +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > +		goto out;
-> > +	}
-> ...
-> > @@ -241,40 +284,47 @@ xchk_iallocbt_check_cluster(
-> ...
-> >  STATIC int
-> > -xchk_iallocbt_check_freemask(
-> > +xchk_iallocbt_check_clusters(
-> >  	struct xchk_btree		*bs,
-> >  	struct xfs_inobt_rec_incore	*irec)
-> >  {
-> > -	struct xfs_mount		*mp = bs->cur->bc_mp;
-> > -	xfs_agino_t			agino;
-> > +	unsigned int			cluster_base;
-> >  	int				error = 0;
-> >  
-> > -	for (agino = irec->ir_startino;
-> > -	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
-> > -	     agino += mp->m_blocks_per_cluster * mp->m_sb.sb_inopblock) {
-> > -		error = xchk_iallocbt_check_cluster(bs, irec, agino);
-> > +	/*
-> > +	 * For the common case where this inobt record maps to multiple inode
-> > +	 * clusters this will call _check_cluster for each cluster.
-> > +	 *
-> > +	 * For the case that multiple inobt records map to a single cluster,
-> > +	 * this will call _check_cluster once.
-> > +	 */
-> > +	for (cluster_base = 0;
-> > +	     cluster_base < XFS_INODES_PER_CHUNK;
-> > +	     cluster_base += bs->sc->mp->m_inodes_per_cluster) {
+> Perhaps a note about what failed before?  Because set/get/list has
+> always(tm) worked:
 > 
-> I see this puts ->m_inodes_per_cluster back here, not sure why it
-> changed back and forth but Ok.
+> # (xfs_repair previously flagged this as a corruption)
 
-I'll fix it up before I commit them.  Evidently I forgot to change all
-the patches when I created inodes_per_cluster out of (blocks_per_cluster
-* inopblock).
+Ok.
 
-> > +		error = xchk_iallocbt_check_cluster(bs, irec, cluster_base);
-> >  		if (error)
-> >  			break;
-> >  	}
-> > @@ -431,7 +481,7 @@ xchk_iallocbt_rec(
-> >  		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> >  
-> >  check_freemask:
+> Is it worth also validating that '/' in a dir entry /is/ still flagged?
+> Or maybe that's a separate test.
+
+Separate test. The VFS won't let us create a directory entry with a
+slash in it, which means we have to scribble on the fs with xfs_db to
+set up the test.
+
+--D
+
+> -Eric
 > 
-> Perhaps we should rename the label as well?
-
-Yep.
-
-> Nits aside:
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> > -	error = xchk_iallocbt_check_freemask(bs, &irec);
-> > +	error = xchk_iallocbt_check_clusters(bs, &irec);
-> >  	if (error)
-> >  		goto out;
-> >  
-> > diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-> > index 8344b14031ef..3c83e8b3b39c 100644
-> > --- a/fs/xfs/scrub/trace.h
-> > +++ b/fs/xfs/scrub/trace.h
-> > @@ -545,6 +545,51 @@ TRACE_EVENT(xchk_xref_error,
-> >  		  __entry->ret_ip)
-> >  );
-> >  
-> > +TRACE_EVENT(xchk_iallocbt_check_cluster,
-> > +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-> > +		 xfs_agino_t startino, xfs_daddr_t map_daddr,
-> > +		 unsigned short map_len, unsigned int chunk_ino,
-> > +		 unsigned int nr_inodes, uint16_t cluster_mask,
-> > +		 uint16_t holemask, unsigned int cluster_ino),
-> > +	TP_ARGS(mp, agno, startino, map_daddr, map_len, chunk_ino, nr_inodes,
-> > +		cluster_mask, holemask, cluster_ino),
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t, dev)
-> > +		__field(xfs_agnumber_t, agno)
-> > +		__field(xfs_agino_t, startino)
-> > +		__field(xfs_daddr_t, map_daddr)
-> > +		__field(unsigned short, map_len)
-> > +		__field(unsigned int, chunk_ino)
-> > +		__field(unsigned int, nr_inodes)
-> > +		__field(unsigned int, cluster_ino)
-> > +		__field(uint16_t, cluster_mask)
-> > +		__field(uint16_t, holemask)
-> > +	),
-> > +	TP_fast_assign(
-> > +		__entry->dev = mp->m_super->s_dev;
-> > +		__entry->agno = agno;
-> > +		__entry->startino = startino;
-> > +		__entry->map_daddr = map_daddr;
-> > +		__entry->map_len = map_len;
-> > +		__entry->chunk_ino = chunk_ino;
-> > +		__entry->nr_inodes = nr_inodes;
-> > +		__entry->cluster_mask = cluster_mask;
-> > +		__entry->holemask = holemask;
-> > +		__entry->cluster_ino = cluster_ino;
-> > +	),
-> > +	TP_printk("dev %d:%d agno %d startino %u daddr 0x%llx len %d chunkino %u nr_inodes %u cluster_mask 0x%x holemask 0x%x cluster_ino %u",
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > +		  __entry->agno,
-> > +		  __entry->startino,
-> > +		  __entry->map_daddr,
-> > +		  __entry->map_len,
-> > +		  __entry->chunk_ino,
-> > +		  __entry->nr_inodes,
-> > +		  __entry->cluster_mask,
-> > +		  __entry->holemask,
-> > +		  __entry->cluster_ino)
-> > +)
+> > +#
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
 > > +
-> >  /* repair tracepoints */
-> >  #if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
-> >  
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/attr
+> > +. ./common/filter
+> > +
+> > +# real QA test starts here
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +_require_scratch
+> > +_require_attrs
+> > +
+> > +rm -f $seqres.full
+> > +
+> > +_scratch_mkfs >> $seqres.full 2>&1
+> > +_scratch_mount
+> > +
+> > +echo "set attr"
+> > +file=$SCRATCH_MNT/moofile
+> > +touch $file
+> > +setfattr -n "user.boo/hoo" -v "woof" $file
+> > +
+> > +echo "check attr"
+> > +getfattr -d --absolute-names $file | _filter_scratch
+> > +
+> > +# success, all done(?)
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/708.out b/tests/generic/708.out
+> > new file mode 100644
+> > index 00000000..6978532e
+> > --- /dev/null
+> > +++ b/tests/generic/708.out
+> > @@ -0,0 +1,6 @@
+> > +QA output created by 708
+> > +set attr
+> > +check attr
+> > +# file: SCRATCH_MNT/moofile
+> > +user.boo/hoo="woof"
+> > +
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index ea5aa7aa..f88125b4 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -525,3 +525,4 @@
+> >  520 auto quick log
+> >  521 soak long_rw
+> >  522 soak long_rw
+> > +708 auto quick attr
 > > 
