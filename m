@@ -1,57 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:44248 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728287AbfABKeN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Jan 2019 05:34:13 -0500
-Received: by mail-ed1-f68.google.com with SMTP id y56so25712032edd.11
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Jan 2019 02:34:12 -0800 (PST)
-Received: from amb.local ([194.99.105.107])
-        by smtp.gmail.com with ESMTPSA id v12-v6sm12167693ejk.58.2019.01.02.02.34.10
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 02 Jan 2019 02:34:10 -0800 (PST)
-From: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
-Subject: Re: Non-blocking socket stuck for multiple seconds on
- xfs_reclaim_inodes_ag()
-References: <CABWYdi1YZp+baxpON2R6mP09pjkUz5D-OE7Z2KmwVGycYTN-AA@mail.gmail.com>
- <20181129021800.GQ6311@dastard>
- <CABWYdi0Bd6sMAaTPkfHKupMGpw1QPSf_VohPF_Wg7Mm=W=j2bA@mail.gmail.com>
- <20181130021840.GV6311@dastard>
- <CABWYdi0nSJAV-RPdUSwGbRwqeoKo-83_X=ptuQwwH1CnPXCYmQ@mail.gmail.com>
- <20181130064908.GX6311@dastard> <20181130074547.GY6311@dastard>
- <CABWYdi28ifToh-yWRAv4MSdJ9g6t-Rxyz2GAFXGFraCwf9BBDg@mail.gmail.com>
-Message-ID: <2a57d498-bf0f-bf48-ff4f-89748660d28e@gmail.com>
-Date: Wed, 2 Jan 2019 11:34:09 +0100
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:51104 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726296AbfADMkb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Jan 2019 07:40:31 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 44516283C3
+        for <linux-xfs@vger.kernel.org>; Fri,  4 Jan 2019 12:40:30 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202053] [xfstests generic/464]: XFS corruption and Assertion
+ failed: 0, file: fs/xfs/xfs_super.c, line: 985
+Date: Fri, 04 Jan 2019 12:40:29 +0000
+Message-ID: <bug-202053-201763-1kGXvoSkAK@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202053-201763@https.bugzilla.kernel.org/>
+References: <bug-202053-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-In-Reply-To: <CABWYdi28ifToh-yWRAv4MSdJ9g6t-Rxyz2GAFXGFraCwf9BBDg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 19/12/2018 23:15, Ivan Babrou wrote:
-> We're sticking with the following patch that allows runtime switching
-> between XFS memory reclaim strategies:
+https://bugzilla.kernel.org/show_bug.cgi?id=202053
+
+--- Comment #6 from bfoster@redhat.com ---
+On Tue, Dec 25, 2018 at 06:10:59AM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=202053
 > 
-> * https://github.com/bobrik/linux/pull/2
+> --- Comment #5 from Zorro Lang (zlang@redhat.com) ---
+> (In reply to Zorro Lang from comment #4)
+> > I never hit this bug before, just a similar bug which has been fixed one
+> > year ago, by:
+> > commit 40214d128e07dd21bb07a8ed6a7fe2f911281ab2
+> > Author: Brian Foster <bfoster@redhat.com>
+> > Date:   Fri Oct 13 09:47:46 2017 -0700
+> > 
+> >     xfs: trim writepage mapping to within eof
+> > 
+> > So I doubt if this's a regression issue?
 > 
-> There are some tests and graphs describing the issue and how it can be solved.
+> I just reproduced this issue on kernel 4.19, so it's not a regression from
+> v4.19:
 > 
-> Let me know if you think this can be incorporated upstream, I'm fine if not.
+> [ 1297.449750] XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) ||
+> ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 954
+> [ 1297.463147] WARNING: CPU: 20 PID: 26952 at fs/xfs/xfs_message.c:104
+> assfail+0x54/0x57 [xfs]
+> [ 1297.472473] Modules linked in: sunrpc intel_rapl sb_edac
+> x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass
+> crct10dif_pclmul crc32_pclmul ghash_clmulni_intel ipmi_ssif 
+> intel_cstate intel_uncore iTCO_wdt iTCO_vendor_support ipmi_si sg
+> intel_rapl_perf ipmi_devintf wmi ioatdma i2c_i801 pcspkr ipmi_msghandler
+> lpc_ich xfs libcrc32c sd_mod mgag200 drm_kms_helper 
+> syscopyarea sysfillrect sysimgblt igb fb_sys_fops ttm dca drm crc32c_intel
+> megaraid_sas i2c_algo_bit cdc_ether usbnet mii dm_mirror dm_region_hash
+> dm_log
+> dm_mod
+> [ 1297.525374] CPU: 20 PID: 26952 Comm: umount Not tainted 4.19.0-mainline #1
+> 
 
-This hack and fs.xfs.memory_reclaim=0 solved my problem where backup
-server (doing rsnapshot, so tons of rsync+hardlinks+rm+cp of milions
-files) was barely usable. Things like ssh or other network services were
-stuck for 10-30 minutes doing reclaim.
+I can reproduce this problem and it appears to be somewhat related to
+the commit referenced above, mainly because the placement of the imap
+trim leaves a larger than necessary window to race with external changes
+to the extent map.
 
-Hack but for now server behaves much better than with vanilla kernel on
-this type of workload.
+For example, a trace dump shows the following sequence of events:
 
-Thanks,
+- writepages is in progress on a particular file that has decently sized
+  post-eof speculative preallocation
+- writepages gets to the point where it looks up or allocates a new imap
+  that includes the preallocation, the allocation/lookup result is
+  stored in wpc
+- the file is closed by one process, killing off preallocation, then
+  immediately appended to by another, updating the file size by a few
+  bytes
+- writepages comes back around to xfs_map_blocks() and trims imap to the
+  current size, but imap still includes one block of the original speculative
+  prealloc (that was truncated and recreated) because the size increased
+  between the time imap was stored and trimmed
 
-(resend)
+The EOF trim approach is known to be a bandaid and potentially racy, but
+ISTM that this problem can be trivially avoided by moving or adding
+trims of wpc->imap immediately after a new one is cached. I don't
+reproduce the problem so far with a couple such extra calls in place.
+
+Bigger picture, we need some kind of invalidation mechanism similar to
+what we're already doing for dealing with the COW fork in this writeback
+context. I'm not sure the broad semantics used by the COW fork sequence
+counter mechanism is really suitable for the data fork because any
+extent-related change in the fork would cause an invalidation, but I am
+wondering if we could define some subset of less frequent operations for
+the same mechanism to reliably invalidate (e.g., on eofblocks trims, for
+starters).
+
+Brian
+
+> -- 
+> You are receiving this mail because:
+> You are watching the assignee of the bug.
+
 -- 
-Arkadiusz Miśkiewicz, arekm / ( maven.pl | pld-linux.org )
+You are receiving this mail because:
+You are watching the assignee of the bug.
