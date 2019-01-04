@@ -1,79 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:54286 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727010AbfACTT2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 14:19:28 -0500
-Date: Thu, 3 Jan 2019 11:19:26 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [BUG, TOT] xfs w/ dax failure in __follow_pte_pmd()
-Message-Id: <20190103111926.c752fe5a273b7c31b9088f1b@linux-foundation.org>
-In-Reply-To: <CAPcyv4jTWyYLEn+NcmVObscB9hArdsfxNL0YSMrHi_QDCOEkfQ@mail.gmail.com>
-References: <20190102211332.GL4205@dastard>
-        <20190102212531.GK6310@bombadil.infradead.org>
-        <20190102225005.GL6310@bombadil.infradead.org>
-        <20190103000354.GM4205@dastard>
-        <CAPcyv4jTWyYLEn+NcmVObscB9hArdsfxNL0YSMrHi_QDCOEkfQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:55920 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726749AbfADSi6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Jan 2019 13:38:58 -0500
+Date: Fri, 4 Jan 2019 13:38:56 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 6/8] xfs: scrub big block inode btrees correctly
+Message-ID: <20190104183856.GH16751@bfoster>
+References: <154630850739.14372.14000129432637481206.stgit@magnolia>
+ <154630855085.14372.11366121347834353110.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <154630855085.14372.11366121347834353110.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>, Christian =?ISO-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Jan Kara <jack@suse.cz>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, 3 Jan 2019 11:11:49 -0800 Dan Williams <dan.j.williams@intel.com> wrote:
-
-> On Wed, Jan 2, 2019 at 4:04 PM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > On Wed, Jan 02, 2019 at 02:50:05PM -0800, Matthew Wilcox wrote:
-> > > On Wed, Jan 02, 2019 at 01:25:31PM -0800, Matthew Wilcox wrote:
-> > > > On Thu, Jan 03, 2019 at 08:13:32AM +1100, Dave Chinner wrote:
-> > > > > Hi folks,
-> > > > >
-> > > > > An overnight test run on a current TOT kernel failed generic/413
-> > > > > with the following dmesg output:
-> > > > >
-> > > > > [ 9487.276402] RIP: 0010:__follow_pte_pmd+0x22d/0x340
-> > > > > [ 9487.305065] Call Trace:
-> > > > > [ 9487.307310]  dax_entry_mkclean+0xbb/0x1f0
-> > > >
-> > > > We've only got one commit touching dax_entry_mkclean and it's Jerome's.
-> > > > Looking through ac46d4f3c43241ffa23d5bf36153a0830c0e02cc, I'd say
-> > > > it's missing a call to mmu_notifier_range_init().
-> > >
-> > > Could I persuade you to give this a try?
-> >
-> > Yup, that fixes it.
-> >
-> > And looking at the code, the dax mmu notifier code clearly wasn't
-> > tested. i.e. dax_entry_mkclean() is the *only* code that exercises
-> > the conditional range parameter code paths inside
-> > __follow_pte_pmd().  This means it wasn't tested before it was
-> > proposed for inclusion and since inclusion no-one using -akpm,
-> > linux-next or the current mainline TOT has done any filesystem DAX
-> > testing until I tripped over it.
-> >
-> > IOws, this is the second "this was never tested before it was merged
-> > into mainline" XFS regression that I've found in the last 3 weeks.
-> > Both commits have been merged through the -akpm tree, and that
-> > implies we currently have no significant filesystem QA coverage on
-> > changes being merged through this route. This seems like an area
-> > that needs significant improvement to me....
+On Mon, Dec 31, 2018 at 06:09:10PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Yes, this is also part of a series I explicitly NAK'd [1] because
-> there are no upstream users for it. I didn't bother to test it because
-> I thought the NAK was sufficient.
+> Teach scrub how to handle the case that there are one or more inobt
+> records covering a given inode cluster.  This fixes the operation on big
+> block filesystems (e.g. 64k blocks, 512 byte inodes).
 > 
-> Andrew, any reason to not revert the set? They provide no upstream
-> value and actively break DAX.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/ialloc.c |    8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
 > 
-> [1]: https://www.spinics.net/lists/linux-fsdevel/msg137309.html
+> 
+> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> index 2f6c2d7fa3fd..1be6a5ebd61e 100644
+> --- a/fs/xfs/scrub/ialloc.c
+> +++ b/fs/xfs/scrub/ialloc.c
+> @@ -162,6 +162,7 @@ xchk_iallocbt_check_cluster_ifree(
+>  	xfs_ino_t			fsino;
+>  	xfs_agino_t			agino;
+>  	unsigned int			offset;
+> +	unsigned int			cluster_buf_base;
+>  	bool				irec_free;
+>  	bool				ino_inuse;
+>  	bool				freemask_ok;
+> @@ -174,11 +175,14 @@ xchk_iallocbt_check_cluster_ifree(
+>  	 * Given an inobt record, an offset of a cluster within the record,
+>  	 * and an offset of an inode within a cluster, compute which fs inode
+>  	 * we're talking about and the offset of the inode record within the
+> -	 * inode buffer.
+> +	 * inode buffer, being careful about inobt records that don't align
+> +	 * with the start of the inode buffer when block sizes are large.
+>  	 */
+>  	agino = irec->ir_startino + cluster_base + cluster_index;
+>  	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
+> -	offset = cluster_index * mp->m_sb.sb_inodesize;
+> +	cluster_buf_base = XFS_INO_TO_OFFSET(mp, irec->ir_startino +
+> +					     cluster_base);
+> +	offset = (cluster_buf_base + cluster_index) * mp->m_sb.sb_inodesize;
 
-You objected to "mm/mmu_notifier: contextual information for event
-triggering invalidation" and, agreeing, I have held that back pending
-further examination.
+So cluster_buf_base should always be 0 unless the record itself is not
+cluster aligned (i.e., the second record in a large FSB), right? If so,
+cluster_base should also be 0 in any case where cluster_buf_base != 0.
+I'm wondering if that can be made a little more explicit, or perhaps
+self-documented with an assert.
 
-The culprit here appears to be ac46d4f3c ("mm/mmu_notifier: use
-structure for invalidate_range_start/end calls") which seems to have a
-bug, which appears to now have a fix?
+Thinking more about it, it's kind of confusing to me either way because
+cluster_index isn't really a cluster index in this case, rather it's
+more of a record index because it doesn't account for the fact that the
+record is a subset of the cluster. Hmmm... could we simplify this by
+setting imap.im_boffset appropriately in the caller such that dip always
+points to either the first inode in the buffer or first inode in the
+record, then just pass in dip directly and let the caller increment it
+in the associated loop? Maybe that's something for another patch..
+
+Brian
+
+>  	if (offset >= BBTOB(cluster_bp->b_length)) {
+>  		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+>  		goto out;
+> 
