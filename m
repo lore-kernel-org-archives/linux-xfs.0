@@ -1,128 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49886 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726009AbfADXJj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Jan 2019 18:09:39 -0500
-Date: Fri, 4 Jan 2019 15:09:33 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 8/8] xfs: scrub should flag dir/attr offsets that aren't
- mappable with xfs_dablk_t
-Message-ID: <20190104230933.GE12689@magnolia>
-References: <154630850739.14372.14000129432637481206.stgit@magnolia>
- <154630856305.14372.3244113773553269634.stgit@magnolia>
- <20190104183931.GJ16751@bfoster>
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:32937 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726094AbfADW1f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Jan 2019 17:27:35 -0500
+Received: by mail-lf1-f66.google.com with SMTP id i26so26462565lfc.0
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Jan 2019 14:27:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190104183931.GJ16751@bfoster>
+References: <20181105213145.7560-1-stefanrin@gmail.com> <20181105213145.7560-3-stefanrin@gmail.com>
+ <20190103175504.GD20475@magnolia>
+In-Reply-To: <20190103175504.GD20475@magnolia>
+From: Stefan Ring <stefanrin@gmail.com>
+Date: Fri, 4 Jan 2019 23:27:20 +0100
+Message-ID: <CAAxjCEytZ4U8K6CPJFBguTSocH_bmxxoEvZ-HkZuFc=QwrZbBQ@mail.gmail.com>
+Subject: Re: [PATCH 2/5] xfs_metadump: Zap multi fsb blocks
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jan 04, 2019 at 01:39:31PM -0500, Brian Foster wrote:
-> On Mon, Dec 31, 2018 at 06:09:23PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Teach scrub to flag extent maps that exceed the range that can be mapped
-> > with a xfs_dablk_t.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jan 3, 2019 at 6:55 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> On Mon, Nov 05, 2018 at 10:31:42PM +0100, Stefan Ring wrote:
+> > Using basically the same code as in process_single_fsb_objects.
+> >
+> > Signed-off-by: Stefan Ring <stefanrin@gmail.com>
 > > ---
-> >  fs/xfs/libxfs/xfs_types.c |   11 +++++++++++
-> >  fs/xfs/libxfs/xfs_types.h |    1 +
-> >  fs/xfs/scrub/bmap.c       |   27 +++++++++++++++++++++++++++
-> >  3 files changed, 39 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-> > index 3306fc42cfad..8e03e88a2f1a 100644
-> > --- a/fs/xfs/libxfs/xfs_types.c
-> > +++ b/fs/xfs/libxfs/xfs_types.c
-> > @@ -204,3 +204,14 @@ xfs_verify_icount(
-> >  	xfs_icount_range(mp, &min, &max);
-> >  	return icount >= min && icount <= max;
-> >  }
-> > +
-> > +/* Sanity-checking of dir/attr block offsets. */
-> > +bool
-> > +xfs_verify_dablk(
-> > +	struct xfs_mount	*mp,
-> > +	xfs_fileoff_t		dabno)
-> > +{
-> > +	xfs_dablk_t		max_dablk = -1U;
-> > +
-> > +	return dabno < max_dablk;
-> 
-> Should that be <= ?
+> >  db/metadump.c | 19 ++++++++++++-------
+> >  1 file changed, 12 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/db/metadump.c b/db/metadump.c
+> > index 97d2a490..be7cf360 100644
+> > --- a/db/metadump.c
+> > +++ b/db/metadump.c
+> > @@ -1921,15 +1922,19 @@ process_multi_fsb_objects(
+> >
+> >                       }
+> >
+> > -                     if ((!obfuscate && !zero_stale_data) ||
+>
+> Hmmm, if we're not obfuscating or zeroing data, can we still jump to
+> write_buf()?
+>
+> --D
 
-Yeah.  Thanks for catching that.
+The call to write_buf() is always necessary, as without this, nothing
+would end up in the metadump. But while trying to argue the soundness
+of this patch, I have found deficiencies ;). It will always call
+process_dir_data_block, even without any zeroing/obfuscation flags
+set. I must have considered this harmless, since it does not actually
+"do" anything, but I'm not so sure anymore because it may complain
+about data inconsistencies, and this might make an otherwise dumpable
+image non-dumpable. It is also, at least in theory, able to reset the
+need_crc back to zero, contrary to all the other usages of this flag
+in this file. I don't think this is an actual problem, as the flag
+only seems to be set when zeroing or obfuscating in the first place,
+but it might become one if circumstances far removed from this
+location change. It is just too much of a mental burden.
 
-/me notes that xfs_repair doesn't seem to check dablk offsets at all.
+I will redo this once again so that it will be more similar in
+structure to the code in process_single_fsb_objects _and_ the original
+code, I hope.
 
-Anyway, thanks for the review!  I'll resend the patches that need a v2
-early next week.
-
---D
-
-> Brian
-> 
-> > +}
-> > diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> > index 8f02855a019a..704b4f308780 100644
-> > --- a/fs/xfs/libxfs/xfs_types.h
-> > +++ b/fs/xfs/libxfs/xfs_types.h
-> > @@ -188,5 +188,6 @@ bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
-> >  bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
-> >  bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
-> >  bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
-> > +bool xfs_verify_dablk(struct xfs_mount *mp, xfs_fileoff_t off);
-> >  
-> >  #endif	/* __XFS_TYPES_H__ */
-> > diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-> > index e1d11f3223e3..a703cd58a90e 100644
-> > --- a/fs/xfs/scrub/bmap.c
-> > +++ b/fs/xfs/scrub/bmap.c
-> > @@ -281,6 +281,31 @@ xchk_bmap_extent_xref(
-> >  	xchk_ag_free(info->sc, &info->sc->sa);
-> >  }
-> >  
-> > +/*
-> > + * Directories and attr forks should never have blocks that can't be addressed
-> > + * by a xfs_dablk_t.
-> > + */
-> > +STATIC void
-> > +xchk_bmap_dirattr_extent(
-> > +	struct xfs_inode	*ip,
-> > +	struct xchk_bmap_info	*info,
-> > +	struct xfs_bmbt_irec	*irec)
-> > +{
-> > +	struct xfs_mount	*mp = ip->i_mount;
-> > +	xfs_fileoff_t		off;
-> > +
-> > +	if (!S_ISDIR(VFS_I(ip)->i_mode) && info->whichfork != XFS_ATTR_FORK)
-> > +		return;
-> > +
-> > +	if (!xfs_verify_dablk(mp, irec->br_startoff))
-> > +		xchk_fblock_set_corrupt(info->sc, info->whichfork,
-> > +				irec->br_startoff);
-> > +
-> > +	off = irec->br_startoff + irec->br_blockcount - 1;
-> > +	if (!xfs_verify_dablk(mp, off))
-> > +		xchk_fblock_set_corrupt(info->sc, info->whichfork, off);
-> > +}
-> > +
-> >  /* Scrub a single extent record. */
-> >  STATIC int
-> >  xchk_bmap_extent(
-> > @@ -305,6 +330,8 @@ xchk_bmap_extent(
-> >  		xchk_fblock_set_corrupt(info->sc, info->whichfork,
-> >  				irec->br_startoff);
-> >  
-> > +	xchk_bmap_dirattr_extent(ip, info, irec);
-> > +
-> >  	/* There should never be a "hole" extent in either extent list. */
-> >  	if (irec->br_startblock == HOLESTARTBLOCK)
-> >  		xchk_fblock_set_corrupt(info->sc, info->whichfork,
-> > 
+>
+> > -                          o >= mp->m_dir_geo->leafblk) {
+> > -                             ret = write_buf(iocur_top);
+> > -                             goto out_pop;
+> > +                     dp = iocur_top->data;
+> > +                     if (o >= mp->m_dir_geo->freeblk) {
+> > +                             /* TODO, zap any stale data */
+> > +                             goto write;
+> > +                     } else if (o >= mp->m_dir_geo->leafblk) {
+> > +                             process_dir_leaf_block(dp);
+> > +                     } else {
+> > +                             process_dir_data_block(dp, o,
+> > +                                      last == mp->m_dir_geo->fsbcount);
+> >                       }
+> >
+> > -                     process_dir_data_block(iocur_top->data, o,
+> > -                                            last == mp->m_dir_geo->fsbcount);
+> > -                     iocur_top->need_crc = 1;
+> > +                     iocur_top->need_crc = obfuscate || zero_stale_data;
+> > +write:
+> >                       ret = write_buf(iocur_top);
+> >  out_pop:
+> >                       pop_cur();
+> > --
+> > 2.14.5
+> >
