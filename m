@@ -1,188 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50442 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725846AbfAKXMQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Jan 2019 18:12:16 -0500
-Subject: [PATCH V2] xfs_repair: allow '/' in attribute names
-References: <1c673348-0244-89ff-5b3c-545ee3e458e4@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <95c0c4ef-2a5b-656d-243d-f7a1cea516f6@sandeen.net>
-Date: Fri, 11 Jan 2019 17:12:15 -0600
+Received: from userp2120.oracle.com ([156.151.31.85]:40646 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726009AbfADXO4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Jan 2019 18:14:56 -0500
+Date: Fri, 4 Jan 2019 15:14:48 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] generic: test that xattrs can have slashes in their names
+Message-ID: <20190104231448.GF12689@magnolia>
+References: <20190104212336.GC12689@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <1c673348-0244-89ff-5b3c-545ee3e458e4@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190104212336.GC12689@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-For some reason, since the earliest days of XFS, a '/' character
-in an extended attribute name has been treated as corruption by
-xfs_repair.  This despite nothing in other userspace tools or the
-kernel having this restriction.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-My best guess is that this was an unintentional leftover from
-common code between dirs & attrs in the "da" code, and there has
-never been a good reason for it.
+Eric Sandeen recently found a bug in xfs_repair that flagged extended
+attribute names containing "/" as corrupt and purged them.  There's
+nothing in the IRIX or Linux manuals that say anything about slashes not
+being allowed (and Linux certainly allows this) so let's make sure this
+continues to work.
 
-Since userspace and kernelspace allow such a name to be set,
-listed, and read, it seems wrong to flag it as corruption.
-So, make this test conditional on whether we're validating a name
-in a dir, as opposed to the name of an attr.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 ---
+ tests/generic/708     |   50 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/708.out |    6 ++++++
+ tests/generic/group   |    1 +
+ 3 files changed, 57 insertions(+)
+ create mode 100755 tests/generic/708
+ create mode 100644 tests/generic/708.out
 
-V2: refactor per dave's suggestion
-
-djwong has new helpers in libxfs for this now, I'll pick them up
-and switch to them in...
-
-... drumroll ...
-
-...xfsprogs-5.0
-
--Eric
-
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 1d04500..5ad81c0 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -122,6 +122,14 @@ set_da_freemap(xfs_mount_t *mp, da_freemap_t *map, int start, int stop)
-  * fork being emptied and put in shortform format.
-  */
- 
-+static int
-+attr_namecheck(
-+	uint8_t	*name,
-+	int	length)
+diff --git a/tests/generic/708 b/tests/generic/708
+new file mode 100755
+index 00000000..c32f966c
+--- /dev/null
++++ b/tests/generic/708
+@@ -0,0 +1,50 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0+
++# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 708
++#
++# Check that xattrs can have slashes in their name.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	return namecheck((char *)name, length, false);
++	cd /
++	rm -f $tmp.*
 +}
 +
- /*
-  * This routine just checks what security needs are for attribute values
-  * only called when root flag is set, otherwise these names could exist in
-@@ -292,11 +300,9 @@ process_shortform_attr(
- 			}
- 		}
- 
--		/* namecheck checks for / and null terminated for file names.
--		 * attributes names currently follow the same rules.
--		*/
--		if (namecheck((char *)&currententry->nameval[0],
--						currententry->namelen))  {
-+		/* namecheck checks for null chars in attr names. */
-+		if (attr_namecheck(currententry->nameval,
-+						currententry->namelen)) {
- 			do_warn(
- 	_("entry contains illegal character in shortform attribute name\n"));
- 			junkit = 1;
-@@ -458,7 +464,7 @@ process_leaf_attr_local(
- 	xfs_attr_leaf_name_local_t *local;
- 
- 	local = xfs_attr3_leaf_name_local(leaf, i);
--	if (local->namelen == 0 || namecheck((char *)&local->nameval[0],
-+	if (local->namelen == 0 || attr_namecheck(local->nameval,
- 							local->namelen)) {
- 		do_warn(
- 	_("attribute entry %d in attr block %u, inode %" PRIu64 " has bad name (namelen = %d)\n"),
-@@ -513,7 +519,7 @@ process_leaf_attr_remote(
- 
- 	remotep = xfs_attr3_leaf_name_remote(leaf, i);
- 
--	if (remotep->namelen == 0 || namecheck((char *)&remotep->name[0],
-+	if (remotep->namelen == 0 || attr_namecheck(remotep->name,
- 						remotep->namelen) ||
- 			be32_to_cpu(entry->hashval) !=
- 				libxfs_da_hashname((unsigned char *)&remotep->name[0],
-diff --git a/repair/da_util.c b/repair/da_util.c
-index 1450767..1f6568e 100644
---- a/repair/da_util.c
-+++ b/repair/da_util.c
-@@ -13,20 +13,25 @@
- #include "da_util.h"
- 
- /*
-- * takes a name and length (name need not be null-terminated)
-- * and returns 1 if the name contains a '/' or a \0, returns 0
-- * otherwise
-+ * takes a name and length (name need not be null-terminated) and whether
-+ * we are checking a dir (vs an attr), and returns 1 if the direntry contains
-+ * a '/', or anything contains a \0, returns 0 otherwise
-  */
- int
--namecheck(char *name, int length)
-+namecheck(
-+	char	*name,
-+	int	length,
-+	bool	isadir)
- {
--	char *c;
--	int i;
-+	char	*c;
-+	int	i;
- 
- 	ASSERT(length < MAXNAMELEN);
- 
- 	for (c = name, i = 0; i < length; i++, c++) {
--		if (*c == '/' || *c == '\0')
-+		if (isadir && *c == '/')
-+			return 0;
-+		if (*c == '\0')
- 			return 1;
- 	}
- 
-diff --git a/repair/da_util.h b/repair/da_util.h
-index d36dfd0..041dff7 100644
---- a/repair/da_util.h
-+++ b/repair/da_util.h
-@@ -27,7 +27,8 @@ typedef struct da_bt_cursor {
- int
- namecheck(
- 	char		*name,
--	int		length);
-+	int		length,
-+	bool		isadir);
- 
- struct xfs_buf *
- da_read_buf(
-diff --git a/repair/dir2.c b/repair/dir2.c
-index ba5763e..a6ab21b 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -44,6 +44,14 @@ _("malloc failed (%zu bytes) dir2_add_badlist:ino %" PRIu64 "\n"),
- 	l->ino = ino;
- }
- 
-+static int
-+dir_namecheck(
-+	uint8_t	*name,
-+	int	length)
-+{
-+	return namecheck((char *)name, length, true);
-+}
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/attr
++. ./common/filter
 +
- int
- dir2_is_badino(
- 	xfs_ino_t	ino)
-@@ -310,7 +318,7 @@ _("entry #%d %s in shortform dir %" PRIu64),
- 		 * the length value is stored in a byte
- 		 * so it can't be too big, it can only wrap
- 		 */
--		if (namecheck((char *)&sfep->name[0], namelen))  {
-+		if (dir_namecheck(sfep->name, namelen)) {
- 			/*
- 			 * junk entry
- 			 */
-@@ -781,7 +789,7 @@ _("\twould clear inode number in entry at offset %" PRIdPTR "...\n"),
- 		 * during phase 4.
- 		 */
- 		junkit = dep->name[0] == '/';
--		nm_illegal = namecheck((char *)dep->name, dep->namelen);
-+		nm_illegal = dir_namecheck(dep->name, dep->namelen);
- 		if (ino_discovery && nm_illegal) {
- 			do_warn(
- _("entry at block %u offset %" PRIdPTR " in directory inode %" PRIu64 " has illegal name \"%*.*s\": "),
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_require_attrs
++
++rm -f $seqres.full
++
++_scratch_mkfs >> $seqres.full 2>&1
++_scratch_mount
++
++echo "set attr"
++file=$SCRATCH_MNT/moofile
++touch $file
++setfattr -n "user.boo/hoo" -v "woof" $file
++
++echo "check attr"
++getfattr -d --absolute-names $file | _filter_scratch
++
++# Now we let the fsck tool check the filesystem, because xfs_repair had a
++# regression where it would flag and erase any xattr with a '/' in it.
++
++status=0
++exit
+diff --git a/tests/generic/708.out b/tests/generic/708.out
+new file mode 100644
+index 00000000..6978532e
+--- /dev/null
++++ b/tests/generic/708.out
+@@ -0,0 +1,6 @@
++QA output created by 708
++set attr
++check attr
++# file: SCRATCH_MNT/moofile
++user.boo/hoo="woof"
++
+diff --git a/tests/generic/group b/tests/generic/group
+index ea5aa7aa..f88125b4 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -525,3 +525,4 @@
+ 520 auto quick log
+ 521 soak long_rw
+ 522 soak long_rw
++708 auto quick attr
