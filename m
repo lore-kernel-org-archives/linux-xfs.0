@@ -1,38 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:39588 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729198AbfAHR77 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 12:59:59 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 588A228E52
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Jan 2019 17:59:58 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202127] cannot mount or create xfs on a  597T device
-Date: Tue, 08 Jan 2019 17:59:58 +0000
-Message-ID: <bug-202127-201763-pAGY0ncz3K@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202127-201763@https.bugzilla.kernel.org/>
-References: <bug-202127-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from sandeen.net ([63.231.237.45]:59678 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726286AbfAERuj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 5 Jan 2019 12:50:39 -0500
+Subject: Re: [PATCH] xfs_quota: fix false error reporting of project
+ inheritance flag is not set
+References: <20190105102556.GA4200@nevermore.lan>
+ <20190105174617.GH12689@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9dc5afc1-b898-6808-e649-753682d79227@sandeen.net>
+Date: Sat, 5 Jan 2019 11:50:37 -0600
 MIME-Version: 1.0
+In-Reply-To: <20190105174617.GH12689@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Achilles Gaikwad <agaikwad@redhat.com>
+Cc: linux-xfs@vger.kernel.org, sgardner@redhat.com, sandeen@redhat.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202127
 
---- Comment #21 from daimh@umich.edu ---
-still failed.
 
-# mkfs.xfs /dev/vg/lv  &> log
-# head log
-SB stripe unit sanity check failed
-Metadata corruption detected at 0x5571f8b8d4a7, xfs_sb block 0x0/0x1000
-libxfs_writebufr: write verifer failed on xfs_sb bno 0x0/0x1000
-cache_node_purge: refcount was 1, not zero (node=0x5571f9936160)
-SB stripe unit sanity check failed
+On 1/5/19 11:46 AM, Darrick J. Wong wrote:
+> On Sat, Jan 05, 2019 at 03:56:01PM +0530, Achilles Gaikwad wrote:
+>> xfs_quota project check results in "project inheritance flag is not set" error
+>> https://bugzilla.redhat.com/show_bug.cgi?id=1663502
+>>
+>> Reported-by: Steven Gardner <sgardner@redhat.com>
+>> Signed-off-by: Achilles Gaikwad <agaikwad@redhat.com>
+>> ---
+>>  quota/project.c | 4 +++-
+>>  1 file changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/quota/project.c b/quota/project.c
+>> index e4e7a012..8c9be08b 100644
+>> --- a/quota/project.c
+>> +++ b/quota/project.c
+>> @@ -99,6 +99,7 @@ check_project(
+>>  {
+>>  	struct fsxattr		fsx;
+>>  	int			fd;
+>> +	int			isdir;
+> 
+> Use bool for boolean values, or...
+> 
+>>  
+>>  	if (recurse_depth >= 0 && data->level > recurse_depth)
+>>  		return -1;
+>> @@ -126,7 +127,8 @@ check_project(
+>>  			printf(_("%s - project identifier is not set"
+>>  				 " (inode=%u, tree=%u)\n"),
+>>  				path, fsx.fsx_projid, (unsigned int)prid);
+>> -		if (!(fsx.fsx_xflags & FS_XFLAG_PROJINHERIT))
+>> +		isdir = S_ISDIR(stat->st_mode);
+>> +		if (!(fsx.fsx_xflags & FS_XFLAG_PROJINHERIT) && isdir)
+> 
+> ...move the S_ISDIR test directly into the if condition test?
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Yup, since isdir is only used once I thought the same thing, TBH.
+
+-Eric
+
+> 
+> Otherwise looks fine to me.
+> 
+> --D
+> 
+>>  			printf(_("%s - project inheritance flag is not set\n"),
+>>  				path);
+>>  	}
+>> -- 
+>> 2.20.1
+>>
+> 
