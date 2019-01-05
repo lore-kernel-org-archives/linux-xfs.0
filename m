@@ -1,32 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:43188 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726356AbfAEVbj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Jan 2019 16:31:39 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id D449028761
-        for <linux-xfs@vger.kernel.org>; Sat,  5 Jan 2019 21:31:37 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202053] [xfstests generic/464]: XFS corruption and Assertion
- failed: 0, file: fs/xfs/xfs_super.c, line: 985
-Date: Sat, 05 Jan 2019 21:31:36 +0000
-Message-ID: <bug-202053-201763-BIFT9LXc99@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202053-201763@https.bugzilla.kernel.org/>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:25252 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726356AbfAEVbf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Jan 2019 16:31:35 -0500
+Date: Sun, 6 Jan 2019 08:31:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Bug 202053] [xfstests generic/464]: XFS corruption and
+ Assertion failed: 0, file: fs/xfs/xfs_super.c, line: 985
+Message-ID: <20190105213120.GS4205@dastard>
 References: <bug-202053-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+ <bug-202053-201763-R7nWMjQIjy@https.bugzilla.kernel.org/>
+ <20190104123217.GA16751@bfoster>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190104123217.GA16751@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202053
-
---- Comment #8 from Dave Chinner (david@fromorbit.com) ---
 On Fri, Jan 04, 2019 at 07:32:17AM -0500, Brian Foster wrote:
-> On Tue, Dec 25, 2018 at 06:10:59AM +0000, bugzilla-daemon@bugzilla.kernel.org
-> wrote:
+> On Tue, Dec 25, 2018 at 06:10:59AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
 > - writepages is in progress on a particular file that has decently sized
 >   post-eof speculative preallocation
 > - writepages gets to the point where it looks up or allocates a new imap
@@ -68,7 +64,6 @@ cause the generation number for that inode fork to be bumped.
 Cheers,
 
 Dave.
-
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Dave Chinner
+david@fromorbit.com
