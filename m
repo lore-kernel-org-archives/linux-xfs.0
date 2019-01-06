@@ -1,48 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:57472 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726003AbfADBHB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Jan 2019 20:07:01 -0500
-Date: Thu, 3 Jan 2019 17:06:45 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [GIT PULL] iomap: more updates for v4.21
-Message-ID: <20190104010645.GA12689@magnolia>
+Received: from mail-yw1-f65.google.com ([209.85.161.65]:44400 "EHLO
+        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726079AbfAFK0u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Jan 2019 05:26:50 -0500
+Received: by mail-yw1-f65.google.com with SMTP id b63so14863772ywc.11
+        for <linux-xfs@vger.kernel.org>; Sun, 06 Jan 2019 02:26:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20190105102556.GA4200@nevermore.lan> <20190105174617.GH12689@magnolia>
+ <9dc5afc1-b898-6808-e649-753682d79227@sandeen.net>
+In-Reply-To: <9dc5afc1-b898-6808-e649-753682d79227@sandeen.net>
+From: Achilles Gaikwad <agaikwad@redhat.com>
+Date: Sun, 6 Jan 2019 15:56:38 +0530
+Message-ID: <CAK0MK2quww5BQcB5R5ATORDwmmKdzu5odC30Th6BxzXhECQASQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs_quota: fix false error reporting of project
+ inheritance flag is not set
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Steven Gardner <sgardner@redhat.com>, sandeen@sandeen.net
 
-Hi Linus,
+Thanks Darrick and Eric, I'll move the macro into the if condition and
+send a v2 for this.
 
-Christoph Hellwig and I have decided to take responsibility for the fs
-iomap code rather than let it languish further.  Let me know if you
-encounter any problems with the merge.
-
---D
-
-The following changes since commit 3cc31fa65d85610574c0f6a474e89f4c419923d5:
-
-  iomap: don't search past page end in iomap_is_partially_uptodate (2018-12-21 08:42:50 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-4.21-merge-3
-
-for you to fetch changes up to 31af12efd0a259de9b0d8ef626503911f13b584f:
-
-  iomap: take responsibility for the filesystem iomap code (2018-12-21 08:43:05 -0800)
-
-----------------------------------------------------------------
-Changes since last update:
-- Take responsibility for the iomap code.
-
-----------------------------------------------------------------
-Darrick J. Wong (1):
-      iomap: take responsibility for the filesystem iomap code
-
- MAINTAINERS | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Best,
+- Achilles
