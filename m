@@ -1,116 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:41370 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728644AbfAHUc7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 15:32:59 -0500
-Subject: [PATCH 3/7] xfs: check inobt record alignment on big block
- filesystems
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 08 Jan 2019 12:32:53 -0800
-Message-ID: <154697957389.2494.1841601336700769377.stgit@magnolia>
-In-Reply-To: <154697955494.2494.5221420762912855354.stgit@magnolia>
-References: <154697955494.2494.5221420762912855354.stgit@magnolia>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:36544 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726075AbfAFV5r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Jan 2019 16:57:47 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id B62DD288EC
+        for <linux-xfs@vger.kernel.org>; Sun,  6 Jan 2019 21:57:45 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202053] [xfstests generic/464]: XFS corruption and Assertion
+ failed: 0, file: fs/xfs/xfs_super.c, line: 985
+Date: Sun, 06 Jan 2019 21:57:44 +0000
+Message-ID: <bug-202053-201763-yV5z8hYSXw@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202053-201763@https.bugzilla.kernel.org/>
+References: <bug-202053-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=202053
 
-On a big block filesystem, there may be multiple inobt records covering
-a single inode cluster.  These records obviously won't be aligned to
-cluster alignment rules, and they must cover the entire cluster.  Teach
-scrub to check for these things.
+--- Comment #9 from Dave Chinner (david@fromorbit.com) ---
+On Sun, Jan 06, 2019 at 08:31:20AM +1100, Dave Chinner wrote:
+> On Fri, Jan 04, 2019 at 07:32:17AM -0500, Brian Foster wrote:
+> > On Tue, Dec 25, 2018 at 06:10:59AM +0000,
+> bugzilla-daemon@bugzilla.kernel.org wrote:
+> > - writepages is in progress on a particular file that has decently sized
+> >   post-eof speculative preallocation
+> > - writepages gets to the point where it looks up or allocates a new imap
+> >   that includes the preallocation, the allocation/lookup result is
+> >   stored in wpc
+> > - the file is closed by one process, killing off preallocation, then
+> >   immediately appended to by another, updating the file size by a few
+> >   bytes
+> > - writepages comes back around to xfs_map_blocks() and trims imap to the
+> >   current size, but imap still includes one block of the original
+> speculative
+> >   prealloc (that was truncated and recreated) because the size increased
+> >   between the time imap was stored and trimmed
+> 
+> I'm betting hole punch can cause similar problems with cached maps
+> in writepage. I wrote a patch yonks ago to put a generation number
+> in the extent fork and to store it in the cached map, and to
+> invalidate the cached map if they didn't match.
+> 
+> > The EOF trim approach is known to be a bandaid and potentially racy, but
+> > ISTM that this problem can be trivially avoided by moving or adding
+> > trims of wpc->imap immediately after a new one is cached. I don't
+> > reproduce the problem so far with a couple such extra calls in place.
+> > 
+> > Bigger picture, we need some kind of invalidation mechanism similar to
+> > what we're already doing for dealing with the COW fork in this writeback
+> > context. I'm not sure the broad semantics used by the COW fork sequence
+> > counter mechanism is really suitable for the data fork because any
+> > extent-related change in the fork would cause an invalidation, but I am
+> > wondering if we could define some subset of less frequent operations for
+> > the same mechanism to reliably invalidate (e.g., on eofblocks trims, for
+> > starters).
+> 
+> The patch I had is below - I haven't forward ported it or anything,
+> just pulled it from my archive to demonstrate what I think we
+> probably need to be doing here. If we want to limit when it causes
+> invalidations, then we need probably need to limit which operations
+> cause the generation number for that inode fork to be bumped.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/scrub/ialloc.c |   41 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
+Ugh. Didn't attach patch.
 
+-Dave.
 
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 1c6fef9b3799..b8bfa93fd1a4 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -47,6 +47,12 @@ xchk_setup_ag_iallocbt(
- struct xchk_iallocbt {
- 	/* Number of inodes we see while scanning inobt. */
- 	unsigned long long	inodes;
-+
-+	/* Expected next startino, for big block filesystems. */
-+	xfs_agino_t		next_startino;
-+
-+	/* Expected end of the current inode cluster. */
-+	xfs_agino_t		next_cluster_ino;
- };
- 
- /*
-@@ -277,6 +283,7 @@ xchk_iallocbt_rec_alignment(
- 	struct xfs_inobt_rec_incore	*irec)
- {
- 	struct xfs_mount		*mp = bs->sc->mp;
-+	struct xchk_iallocbt		*iabt = bs->private;
- 
- 	/*
- 	 * finobt records have different positioning requirements than inobt
-@@ -300,6 +307,27 @@ xchk_iallocbt_rec_alignment(
- 		return;
- 	}
- 
-+	if (iabt->next_startino != NULLAGINO) {
-+		/*
-+		 * We're midway through a cluster of inodes that is mapped by
-+		 * multiple inobt records.  Did we get the record for the next
-+		 * irec in the sequence?
-+		 */
-+		if (irec->ir_startino != iabt->next_startino) {
-+			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-+			return;
-+		}
-+
-+		iabt->next_startino += XFS_INODES_PER_CHUNK;
-+
-+		/* Are we done with the cluster? */
-+		if (iabt->next_startino >= iabt->next_cluster_ino) {
-+			iabt->next_startino = NULLAGINO;
-+			iabt->next_cluster_ino = NULLAGINO;
-+		}
-+		return;
-+	}
-+
- 	/* inobt records must be aligned to cluster and inoalignmnt size. */
- 	if (irec->ir_startino & (mp->m_cluster_align_inodes - 1)) {
- 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-@@ -310,6 +338,17 @@ xchk_iallocbt_rec_alignment(
- 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
- 		return;
- 	}
-+
-+	if (mp->m_inodes_per_cluster <= XFS_INODES_PER_CHUNK)
-+		return;
-+
-+	/*
-+	 * If this is the start of an inode cluster that can be mapped by
-+	 * multiple inobt records, the next inobt record must follow exactly
-+	 * after this one.
-+	 */
-+	iabt->next_startino = irec->ir_startino + XFS_INODES_PER_CHUNK;
-+	iabt->next_cluster_ino = irec->ir_startino + mp->m_inodes_per_cluster;
- }
- 
- /* Scrub an inobt/finobt record. */
-@@ -474,6 +513,8 @@ xchk_iallocbt(
- 	struct xfs_btree_cur	*cur;
- 	struct xchk_iallocbt	iabt = {
- 		.inodes		= 0,
-+		.next_startino	= NULLAGINO,
-+		.next_cluster_ino = NULLAGINO,
- 	};
- 	int			error;
- 
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
