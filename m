@@ -1,109 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:47724 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728313AbfAHUgV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 15:36:21 -0500
-Subject: [PATCH 2/5] xfs: scrub should flag dir/attr offsets that aren't
- mappable with xfs_dablk_t
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 08 Jan 2019 12:36:17 -0800
-Message-ID: <154697977734.2839.3057935106750236010.stgit@magnolia>
-In-Reply-To: <154697976479.2839.3584921201780682011.stgit@magnolia>
-References: <154697976479.2839.3584921201780682011.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:50946 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726521AbfAGSE1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 Jan 2019 13:04:27 -0500
+Subject: Re: [PATCH] xfs: correct statx's result_mask value
+References: <1546854790-5233-1-git-send-email-suyj.fnst@cn.fujitsu.com>
+ <20190107175229.GJ12689@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <2b27e2ec-368b-d24c-8443-e265f87e417c@sandeen.net>
+Date: Mon, 7 Jan 2019 12:04:24 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20190107175229.GJ12689@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
-
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Teach scrub to flag extent maps that exceed the range that can be mapped
-with a xfs_dablk_t.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_types.c |   11 +++++++++++
- fs/xfs/libxfs/xfs_types.h |    1 +
- fs/xfs/scrub/bmap.c       |   27 +++++++++++++++++++++++++++
- 3 files changed, 39 insertions(+)
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Su Yanjun <suyj.fnst@cn.fujitsu.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, suyanjun218@gmail.com
 
 
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index 3306fc42cfad..451608b5a37b 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -204,3 +204,14 @@ xfs_verify_icount(
- 	xfs_icount_range(mp, &min, &max);
- 	return icount >= min && icount <= max;
- }
-+
-+/* Sanity-checking of dir/attr block offsets. */
-+bool
-+xfs_verify_dablk(
-+	struct xfs_mount	*mp,
-+	xfs_fileoff_t		dabno)
-+{
-+	xfs_dablk_t		max_dablk = -1U;
-+
-+	return dabno <= max_dablk;
-+}
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index 8f02855a019a..704b4f308780 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -188,5 +188,6 @@ bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
- bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
-+bool xfs_verify_dablk(struct xfs_mount *mp, xfs_fileoff_t off);
- 
- #endif	/* __XFS_TYPES_H__ */
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index e1d11f3223e3..a703cd58a90e 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -281,6 +281,31 @@ xchk_bmap_extent_xref(
- 	xchk_ag_free(info->sc, &info->sc->sa);
- }
- 
-+/*
-+ * Directories and attr forks should never have blocks that can't be addressed
-+ * by a xfs_dablk_t.
-+ */
-+STATIC void
-+xchk_bmap_dirattr_extent(
-+	struct xfs_inode	*ip,
-+	struct xchk_bmap_info	*info,
-+	struct xfs_bmbt_irec	*irec)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fileoff_t		off;
-+
-+	if (!S_ISDIR(VFS_I(ip)->i_mode) && info->whichfork != XFS_ATTR_FORK)
-+		return;
-+
-+	if (!xfs_verify_dablk(mp, irec->br_startoff))
-+		xchk_fblock_set_corrupt(info->sc, info->whichfork,
-+				irec->br_startoff);
-+
-+	off = irec->br_startoff + irec->br_blockcount - 1;
-+	if (!xfs_verify_dablk(mp, off))
-+		xchk_fblock_set_corrupt(info->sc, info->whichfork, off);
-+}
-+
- /* Scrub a single extent record. */
- STATIC int
- xchk_bmap_extent(
-@@ -305,6 +330,8 @@ xchk_bmap_extent(
- 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
- 				irec->br_startoff);
- 
-+	xchk_bmap_dirattr_extent(ip, info, irec);
-+
- 	/* There should never be a "hole" extent in either extent list. */
- 	if (irec->br_startblock == HOLESTARTBLOCK)
- 		xchk_fblock_set_corrupt(info->sc, info->whichfork,
+
+On 1/7/19 11:52 AM, Darrick J. Wong wrote:
+> On Mon, Jan 07, 2019 at 04:53:10AM -0500, Su Yanjun wrote:
+>> For statx syscall, xfs return the wrong result_mask.
+>>
+>> Signed-off-by: Su Yanjun <suyj.fnst@cn.fujitsu.com>
+>> ---
+>>  fs/xfs/xfs_iops.c | 3 +++
+>>  1 file changed, 3 insertions(+)
+>>
+>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+>> index f48ffd7..3811457 100644
+>> --- a/fs/xfs/xfs_iops.c
+>> +++ b/fs/xfs/xfs_iops.c
+>> @@ -521,6 +521,9 @@ xfs_vn_getattr(
+>>  			stat->btime.tv_nsec = ip->i_d.di_crtime.t_nsec;
+>>  		}
+>>  	}
+>> +	
+>> +	/* Only return mask that we care */
+>> +	stat->result_mask &= request_mask;
+> 
+> Why not just:
+> 
+> 	stat->result_mask = STATX_BASIC_STATS;
+> 
+> at the top of the function?
+> 
+> I don't see the need to mask off result_mask at all, since we could some
+> day elect to return more than what's in request_mask...
+> 
+> ...waitaminute, are you seeing garbage in the result_mask that's
+> returned to userspace?  I also noticed the vfs stat functions declare
+> "struct kstat stat;" without explicitly zeroing the structure fields,
+> which means (I think) that we can leak stack information if the kernel
+> isn't built with the stackleak plugin?
+
+A clear problem statement and reproducer steps would be hugely useful
+here.
+
+-Eric
