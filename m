@@ -1,66 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36664 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726310AbfAERqZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Jan 2019 12:46:25 -0500
-Date: Sat, 5 Jan 2019 09:46:17 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_quota: fix false error reporting of project
- inheritance flag is not set
-Message-ID: <20190105174617.GH12689@magnolia>
-References: <20190105102556.GA4200@nevermore.lan>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:33096 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728987AbfAGOlL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jan 2019 09:41:11 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id A911D28A3F
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Jan 2019 14:41:10 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202053] [xfstests generic/464]: XFS corruption and Assertion
+ failed: 0, file: fs/xfs/xfs_super.c, line: 985
+Date: Mon, 07 Jan 2019 14:41:09 +0000
+Message-ID: <bug-202053-201763-fAUQg1mf3h@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202053-201763@https.bugzilla.kernel.org/>
+References: <bug-202053-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190105102556.GA4200@nevermore.lan>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Achilles Gaikwad <agaikwad@redhat.com>
-Cc: linux-xfs@vger.kernel.org, sgardner@redhat.com, sandeen@redhat.com
+To: linux-xfs@vger.kernel.org
 
-On Sat, Jan 05, 2019 at 03:56:01PM +0530, Achilles Gaikwad wrote:
-> xfs_quota project check results in "project inheritance flag is not set" error
-> https://bugzilla.redhat.com/show_bug.cgi?id=1663502
+https://bugzilla.kernel.org/show_bug.cgi?id=202053
+
+--- Comment #11 from bfoster@redhat.com ---
+On Sun, Jan 06, 2019 at 08:31:20AM +1100, Dave Chinner wrote:
+> On Fri, Jan 04, 2019 at 07:32:17AM -0500, Brian Foster wrote:
+> > On Tue, Dec 25, 2018 at 06:10:59AM +0000,
+> bugzilla-daemon@bugzilla.kernel.org wrote:
+> > - writepages is in progress on a particular file that has decently sized
+> >   post-eof speculative preallocation
+> > - writepages gets to the point where it looks up or allocates a new imap
+> >   that includes the preallocation, the allocation/lookup result is
+> >   stored in wpc
+> > - the file is closed by one process, killing off preallocation, then
+> >   immediately appended to by another, updating the file size by a few
+> >   bytes
+> > - writepages comes back around to xfs_map_blocks() and trims imap to the
+> >   current size, but imap still includes one block of the original
+> speculative
+> >   prealloc (that was truncated and recreated) because the size increased
+> >   between the time imap was stored and trimmed
 > 
-> Reported-by: Steven Gardner <sgardner@redhat.com>
-> Signed-off-by: Achilles Gaikwad <agaikwad@redhat.com>
-> ---
->  quota/project.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+> I'm betting hole punch can cause similar problems with cached maps
+> in writepage. I wrote a patch yonks ago to put a generation number
+> in the extent fork and to store it in the cached map, and to
+> invalidate the cached map if they didn't match.
 > 
-> diff --git a/quota/project.c b/quota/project.c
-> index e4e7a012..8c9be08b 100644
-> --- a/quota/project.c
-> +++ b/quota/project.c
-> @@ -99,6 +99,7 @@ check_project(
->  {
->  	struct fsxattr		fsx;
->  	int			fd;
-> +	int			isdir;
 
-Use bool for boolean values, or...
+Isn't hole punch already serialized with writeback? I thought the issue
+was that post-eof blocks are not fully covered by the existing
+serialization logic because there are no pages involved, but it's been a
+while since I've looked at it..
 
->  
->  	if (recurse_depth >= 0 && data->level > recurse_depth)
->  		return -1;
-> @@ -126,7 +127,8 @@ check_project(
->  			printf(_("%s - project identifier is not set"
->  				 " (inode=%u, tree=%u)\n"),
->  				path, fsx.fsx_projid, (unsigned int)prid);
-> -		if (!(fsx.fsx_xflags & FS_XFLAG_PROJINHERIT))
-> +		isdir = S_ISDIR(stat->st_mode);
-> +		if (!(fsx.fsx_xflags & FS_XFLAG_PROJINHERIT) && isdir)
+Brian
 
-...move the S_ISDIR test directly into the if condition test?
-
-Otherwise looks fine to me.
-
---D
-
->  			printf(_("%s - project inheritance flag is not set\n"),
->  				path);
->  	}
+> > The EOF trim approach is known to be a bandaid and potentially racy, but
+> > ISTM that this problem can be trivially avoided by moving or adding
+> > trims of wpc->imap immediately after a new one is cached. I don't
+> > reproduce the problem so far with a couple such extra calls in place.
+> > 
+> > Bigger picture, we need some kind of invalidation mechanism similar to
+> > what we're already doing for dealing with the COW fork in this writeback
+> > context. I'm not sure the broad semantics used by the COW fork sequence
+> > counter mechanism is really suitable for the data fork because any
+> > extent-related change in the fork would cause an invalidation, but I am
+> > wondering if we could define some subset of less frequent operations for
+> > the same mechanism to reliably invalidate (e.g., on eofblocks trims, for
+> > starters).
+> 
+> The patch I had is below - I haven't forward ported it or anything,
+> just pulled it from my archive to demonstrate what I think we
+> probably need to be doing here. If we want to limit when it causes
+> invalidations, then we need probably need to limit which operations
+> cause the generation number for that inode fork to be bumped.
+> 
+> Cheers,
+> 
+> Dave.
 > -- 
-> 2.20.1
-> 
+> Dave Chinner
+> david@fromorbit.com
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
