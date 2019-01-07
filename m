@@ -1,71 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35310 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726368AbfAaJKO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Jan 2019 04:10:14 -0500
-Date: Thu, 31 Jan 2019 10:10:11 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 1/2] Revert "mm: don't reclaim inodes with many attached
- pages"
-Message-ID: <20190131091011.GP18811@dhcp22.suse.cz>
-References: <20190130041707.27750-1-david@fromorbit.com>
- <20190130041707.27750-2-david@fromorbit.com>
- <25EAF93D-BC63-4409-AF21-F45B2DDF5D66@fb.com>
- <20190131013403.GI4205@dastard>
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:51030 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726404AbfAGJ7d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jan 2019 04:59:33 -0500
+Received: by mail-wm1-f65.google.com with SMTP id n190so292611wmd.0
+        for <linux-xfs@vger.kernel.org>; Mon, 07 Jan 2019 01:59:31 -0800 (PST)
+Date: Mon, 7 Jan 2019 10:59:27 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v2] generic: test that xattrs can have slashes in their
+ names
+Message-ID: <20190107095927.yprhqj7h474bj4we@hades.usersys.redhat.com>
+References: <20190104212336.GC12689@magnolia>
+ <20190104231448.GF12689@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190131013403.GI4205@dastard>
+In-Reply-To: <20190104231448.GF12689@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chris Mason <clm@fb.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Roman Gushchin <guro@fb.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "vdavydov.dev@gmail.com" <vdavydov.dev@gmail.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eryu Guan <guaneryu@gmail.com>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-On Thu 31-01-19 12:34:03, Dave Chinner wrote:
-> On Wed, Jan 30, 2019 at 12:21:07PM +0000, Chris Mason wrote:
-> > 
-> > 
-> > On 29 Jan 2019, at 23:17, Dave Chinner wrote:
-> > 
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > >
-> > > This reverts commit a76cf1a474d7dbcd9336b5f5afb0162baa142cf0.
-> > >
-> > > This change causes serious changes to page cache and inode cache
-> > > behaviour and balance, resulting in major performance regressions
-> > > when combining worklaods such as large file copies and kernel
-> > > compiles.
-> > >
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=202441
-> > 
-> > I'm a little confused by the latest comment in the bz:
-> > 
-> > https://bugzilla.kernel.org/show_bug.cgi?id=202441#c24
+On Fri, Jan 04, 2019 at 03:14:48PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Which says the first patch that changed the shrinker behaviour is
-> the underlying cause of the regression.
+> Eric Sandeen recently found a bug in xfs_repair that flagged extended
+> attribute names containing "/" as corrupt and purged them.  There's
+> nothing in the IRIX or Linux manuals that say anything about slashes not
+> being allowed (and Linux certainly allows this) so let's make sure this
+> continues to work.
 > 
-> > Are these reverts sufficient?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+>  tests/generic/708     |   50 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/708.out |    6 ++++++
+>  tests/generic/group   |    1 +
+>  3 files changed, 57 insertions(+)
+>  create mode 100755 tests/generic/708
+>  create mode 100644 tests/generic/708.out
 > 
-> I think so.
-> 
-> > Roman beat me to suggesting Rik's followup.  We hit a different problem 
-> > in prod with small slabs, and have a lot of instrumentation on Rik's 
-> > code helping.
-> 
-> I think that's just another nasty, expedient hack that doesn't solve
-> the underlying problem. Solving the underlying problem does not
-> require changing core reclaim algorithms and upsetting a page
-> reclaim/shrinker balance that has been stable and worked well for
-> just about everyone for years.
+> diff --git a/tests/generic/708 b/tests/generic/708
+> new file mode 100755
+> index 00000000..c32f966c
+> --- /dev/null
+> +++ b/tests/generic/708
+> @@ -0,0 +1,50 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0+
+> +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 708
+> +#
+> +# Check that xattrs can have slashes in their name.
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/attr
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch
+> +_require_attrs
+> +
+> +rm -f $seqres.full
+> +
+> +_scratch_mkfs >> $seqres.full 2>&1
+> +_scratch_mount
+> +
+> +echo "set attr"
+> +file=$SCRATCH_MNT/moofile
+> +touch $file
+> +setfattr -n "user.boo/hoo" -v "woof" $file
 
-I tend to agree with Dave here. Slab pressure balancing is quite subtle
-and easy to get wrong. If we want to plug the problem with offline
-memcgs then the fix should be targeted at that problem. So maybe we want
-to emulate high pressure on offline memcgs only. There might be other
-issues to resolve for small caches but let's start with something more
-targeted first please.
+[off-topic] I love your creativity for naming :D
+
+> +
+> +echo "check attr"
+> +getfattr -d --absolute-names $file | _filter_scratch
+> +
+> +# Now we let the fsck tool check the filesystem, because xfs_repair had a
+> +# regression where it would flag and erase any xattr with a '/' in it.
+> +
+
+I'd prefer this to be in the beginning of the test description instead of
+'hidden' in the middle of the code, so, it's easily accessible via 'grep'.
+
+But the test itself looks good, and I don't think this change is worth a V3, so
+if you want, you could move it to the test description before merging, or ignore
+my suggestion completely :P
+But anyway, you can add:
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+
+Cheers
+
 -- 
-Michal Hocko
-SUSE Labs
+Carlos
