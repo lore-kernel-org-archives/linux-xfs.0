@@ -1,71 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:40740 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726149AbfAAWaf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Jan 2019 17:30:35 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 795B028707
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Jan 2019 22:30:34 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202077] xfs transaction log reservation overruns on 4.14.67
-Date: Tue, 01 Jan 2019 22:30:34 +0000
-Message-ID: <bug-202077-201763-YRyzPgNLi5@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202077-201763@https.bugzilla.kernel.org/>
-References: <bug-202077-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from userp2130.oracle.com ([156.151.31.86]:44498 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726681AbfAGSCI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jan 2019 13:02:08 -0500
+Date: Mon, 7 Jan 2019 10:02:00 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: correct statx's result_mask value
+Message-ID: <20190107180200.GK12689@magnolia>
+References: <1546854790-5233-1-git-send-email-suyj.fnst@cn.fujitsu.com>
+ <20190107175229.GJ12689@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190107175229.GJ12689@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Su Yanjun <suyj.fnst@cn.fujitsu.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, suyanjun218@gmail.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202077
+On Mon, Jan 07, 2019 at 09:52:29AM -0800, Darrick J. Wong wrote:
+> On Mon, Jan 07, 2019 at 04:53:10AM -0500, Su Yanjun wrote:
+> > For statx syscall, xfs return the wrong result_mask.
+> > 
+> > Signed-off-by: Su Yanjun <suyj.fnst@cn.fujitsu.com>
+> > ---
+> >  fs/xfs/xfs_iops.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> > index f48ffd7..3811457 100644
+> > --- a/fs/xfs/xfs_iops.c
+> > +++ b/fs/xfs/xfs_iops.c
+> > @@ -521,6 +521,9 @@ xfs_vn_getattr(
+> >  			stat->btime.tv_nsec = ip->i_d.di_crtime.t_nsec;
+> >  		}
+> >  	}
+> > +	
+> > +	/* Only return mask that we care */
+> > +	stat->result_mask &= request_mask;
+> 
+> Why not just:
+> 
+> 	stat->result_mask = STATX_BASIC_STATS;
+> 
+> at the top of the function?
+> 
+> I don't see the need to mask off result_mask at all, since we could some
+> day elect to return more than what's in request_mask...
+> 
+> ...waitaminute, are you seeing garbage in the result_mask that's
+> returned to userspace?  I also noticed the vfs stat functions declare
+> "struct kstat stat;" without explicitly zeroing the structure fields,
+> which means (I think) that we can leak stack information if the kernel
+> isn't built with the stackleak plugin?
 
---- Comment #2 from Dave Chinner (david@fromorbit.com) ---
-On Wed, Dec 26, 2018 at 05:19:12PM +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> We've encountered two recent examples of xfs transaction overruns on
-> production
-> systems running 4.14.67 kernels.  Both systems in this case are running
-> docker
-> with dozens of overlay mounts, using this xfs fs as both upper and lower.  In
-> both cases the filesystem was able to successfully recover when the
-> filesystem
-> was unmounted and remounted again.
+Ignore the above; vfs_getattr_nosec actually does zero the kstat buffer
+before calling ->getattr.  We also set result_mask to STATX_BASIC_STATS.
 
-Inboth cases, it looks like there were two free space manipulations
-in a single transaction, likely first modifying the free list
-(pattern is EFD, XAGF, ABTB, ABTC, then AGFL) followed by freeing
-the actual extent (more ABTB, ABTC buffers).
+Now I'm really confused: why is this necessary at all?  What incorrect
+masks did you see, and under what circumstances?
 
-> It looks like there has been a good bit of work in 4.16+
+--D
 
-The first fixes went into 4.18 with the deferred AGFL free
-operations. Those were the commits associated with the patchset
-titled "[PATCH v2 0/6] xfs: defer agfl block frees".
-
-There were more fixes in 4.19 to always defer the AGFL free for all
-operations. This was a much larger and more significant change, and
-can be found from the series titled "[PATCH 00/24] xfs: broad
-enablement of deferred agfl frees".
-
-> addressing similar issues but none of it has made it back into the
-> 4.14 LTS.  Any chance that any of the attached debug output points
-> to anything specific that might be a candidate for backport?
-
-Backporting the first series might be sufficient to avoid your
-problem (both are from the inode inactivation path) but it is no
-guarantee. I also have no idea what dependencies that patchset has
-on the rest of the code (e.g. is there enough deferred op
-infrastructure in place in 4.14?), and seeing as it touches core
-allocation algorithms it would require a substantial amount of QA
-before release....
-
-Cheers,
-
-Dave.
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+> --D
+> 
+> >  
+> >  	if (ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE)
+> >  		stat->attributes |= STATX_ATTR_IMMUTABLE;
+> > -- 
+> > 2.7.4
+> > 
+> > 
+> > 
