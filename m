@@ -1,116 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31956 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49048 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727944AbfAGNp5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 Jan 2019 08:45:57 -0500
-Date: Mon, 7 Jan 2019 08:45:55 -0500
+        id S1728418AbfAGOlH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 Jan 2019 09:41:07 -0500
+Date: Mon, 7 Jan 2019 09:41:04 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/8] xfs: scrub big block inode btrees correctly
-Message-ID: <20190107134554.GB2853@bfoster>
-References: <154630850739.14372.14000129432637481206.stgit@magnolia>
- <154630855085.14372.11366121347834353110.stgit@magnolia>
- <20190104183856.GH16751@bfoster>
- <20190105002916.GG12689@magnolia>
+Subject: Re: [Bug 202053] [xfstests generic/464]: XFS corruption and
+ Assertion failed: 0, file: fs/xfs/xfs_super.c, line: 985
+Message-ID: <20190107144104.GA5506@bfoster>
+References: <bug-202053-201763@https.bugzilla.kernel.org/>
+ <bug-202053-201763-R7nWMjQIjy@https.bugzilla.kernel.org/>
+ <20190104123217.GA16751@bfoster>
+ <20190105213120.GS4205@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190105002916.GG12689@magnolia>
+In-Reply-To: <20190105213120.GS4205@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, Jan 04, 2019 at 04:29:16PM -0800, Darrick J. Wong wrote:
-> On Fri, Jan 04, 2019 at 01:38:56PM -0500, Brian Foster wrote:
-> > On Mon, Dec 31, 2018 at 06:09:10PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Teach scrub how to handle the case that there are one or more inobt
-> > > records covering a given inode cluster.  This fixes the operation on big
-> > > block filesystems (e.g. 64k blocks, 512 byte inodes).
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/scrub/ialloc.c |    8 ++++++--
-> > >  1 file changed, 6 insertions(+), 2 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> > > index 2f6c2d7fa3fd..1be6a5ebd61e 100644
-> > > --- a/fs/xfs/scrub/ialloc.c
-> > > +++ b/fs/xfs/scrub/ialloc.c
-> > > @@ -162,6 +162,7 @@ xchk_iallocbt_check_cluster_ifree(
-> > >  	xfs_ino_t			fsino;
-> > >  	xfs_agino_t			agino;
-> > >  	unsigned int			offset;
-> > > +	unsigned int			cluster_buf_base;
-> > >  	bool				irec_free;
-> > >  	bool				ino_inuse;
-> > >  	bool				freemask_ok;
-> > > @@ -174,11 +175,14 @@ xchk_iallocbt_check_cluster_ifree(
-> > >  	 * Given an inobt record, an offset of a cluster within the record,
-> > >  	 * and an offset of an inode within a cluster, compute which fs inode
-> > >  	 * we're talking about and the offset of the inode record within the
-> > > -	 * inode buffer.
-> > > +	 * inode buffer, being careful about inobt records that don't align
-> > > +	 * with the start of the inode buffer when block sizes are large.
-> > >  	 */
-> > >  	agino = irec->ir_startino + cluster_base + cluster_index;
-> > >  	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
-> > > -	offset = cluster_index * mp->m_sb.sb_inodesize;
-> > > +	cluster_buf_base = XFS_INO_TO_OFFSET(mp, irec->ir_startino +
-> > > +					     cluster_base);
-> > > +	offset = (cluster_buf_base + cluster_index) * mp->m_sb.sb_inodesize;
-> > 
-> > So cluster_buf_base should always be 0 unless the record itself is not
-> > cluster aligned (i.e., the second record in a large FSB), right?
+On Sun, Jan 06, 2019 at 08:31:20AM +1100, Dave Chinner wrote:
+> On Fri, Jan 04, 2019 at 07:32:17AM -0500, Brian Foster wrote:
+> > On Tue, Dec 25, 2018 at 06:10:59AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> > - writepages is in progress on a particular file that has decently sized
+> >   post-eof speculative preallocation
+> > - writepages gets to the point where it looks up or allocates a new imap
+> >   that includes the preallocation, the allocation/lookup result is
+> >   stored in wpc
+> > - the file is closed by one process, killing off preallocation, then
+> >   immediately appended to by another, updating the file size by a few
+> >   bytes
+> > - writepages comes back around to xfs_map_blocks() and trims imap to the
+> >   current size, but imap still includes one block of the original speculative
+> >   prealloc (that was truncated and recreated) because the size increased
+> >   between the time imap was stored and trimmed
 > 
-> Right.  For the (n > 0)th inobt record for a large FSB, ir_startino's
-> block offset will be less than inopblock, so cluster_buf_base will be
-> greater than zero.
-> 
-> > If so, cluster_base should also be 0 in any case where
-> > cluster_buf_base != 0.  I'm wondering if that can be made a little
-> > more explicit, or perhaps self-documented with an assert.
-> 
-> Right.  For the more typical case where there are multiple clusters for
-> each inobt record, ir_startino's block offset will always point to the
-> start of an inode cluster (and therefore cluster_buf_base will be zero)
-> but cluster_base will increment as we visit each cluster in the inobt.
-> 
-> I think this code can become:
-> 
-> 	cluster_buf_base = XFS_INO_TO_OFFSET(mp, irec->ir_startino);
-> 	ASSERT(cluster_buf_base == 0 || cluster_base == 0);
-> 	offset = (cluster_buf_base + cluster_index) << mp->m_sb.sb_inopblog;
-> 
-> But I'll go feed that to the test machines before I commit to that. :)
-> 
-> > Thinking more about it, it's kind of confusing to me either way because
-> > cluster_index isn't really a cluster index in this case, rather it's
-> > more of a record index because it doesn't account for the fact that the
-> > record is a subset of the cluster. Hmmm... could we simplify this by
-> > setting imap.im_boffset appropriately in the caller such that dip always
-> > points to either the first inode in the buffer or first inode in the
-> > record, then just pass in dip directly and let the caller increment it
-> > in the associated loop? Maybe that's something for another patch..
-> 
-> I think that would be possible...
+> I'm betting hole punch can cause similar problems with cached maps
+> in writepage. I wrote a patch yonks ago to put a generation number
+> in the extent fork and to store it in the cached map, and to
+> invalidate the cached map if they didn't match.
 > 
 
-If so, I think it's worthwhile because then you'd only need to pass the
-record, the inode index and the dip pointer to this function. AFAICT
-you'd just need to pull up the cluster_buf_base logic here (along with
-a useful comment) to the im_boffset assignment in the caller.
+Isn't hole punch already serialized with writeback? I thought the issue
+was that post-eof blocks are not fully covered by the existing
+serialization logic because there are no pages involved, but it's been a
+while since I've looked at it..
 
 Brian
 
-> --D
-> 
-> > Brian
+> > The EOF trim approach is known to be a bandaid and potentially racy, but
+> > ISTM that this problem can be trivially avoided by moving or adding
+> > trims of wpc->imap immediately after a new one is cached. I don't
+> > reproduce the problem so far with a couple such extra calls in place.
 > > 
-> > >  	if (offset >= BBTOB(cluster_bp->b_length)) {
-> > >  		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > >  		goto out;
-> > > 
+> > Bigger picture, we need some kind of invalidation mechanism similar to
+> > what we're already doing for dealing with the COW fork in this writeback
+> > context. I'm not sure the broad semantics used by the COW fork sequence
+> > counter mechanism is really suitable for the data fork because any
+> > extent-related change in the fork would cause an invalidation, but I am
+> > wondering if we could define some subset of less frequent operations for
+> > the same mechanism to reliably invalidate (e.g., on eofblocks trims, for
+> > starters).
+> 
+> The patch I had is below - I haven't forward ported it or anything,
+> just pulled it from my archive to demonstrate what I think we
+> probably need to be doing here. If we want to limit when it causes
+> invalidations, then we need probably need to limit which operations
+> cause the generation number for that inode fork to be bumped.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
