@@ -1,98 +1,240 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:23879 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727383AbfAHFqn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 00:46:43 -0500
-Date: Tue, 8 Jan 2019 16:46:39 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Bug 202053] [xfstests generic/464]: XFS corruption and
- Assertion failed: 0, file: fs/xfs/xfs_super.c, line: 985
-Message-ID: <20190108054639.GV4205@dastard>
-References: <bug-202053-201763@https.bugzilla.kernel.org/>
- <bug-202053-201763-R7nWMjQIjy@https.bugzilla.kernel.org/>
- <20190104123217.GA16751@bfoster>
- <20190105213120.GS4205@dastard>
- <20190107144104.GA5506@bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:39072 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728188AbfAHTA0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 8 Jan 2019 14:00:26 -0500
+Date: Tue, 8 Jan 2019 14:00:18 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/8] xfs: check the ir_startino alignment directly
+Message-ID: <20190108190017.GA8975@bfoster>
+References: <154630850739.14372.14000129432637481206.stgit@magnolia>
+ <154630851978.14372.12986942629611980027.stgit@magnolia>
+ <20190104183104.GD16751@bfoster>
+ <20190104205906.GB12689@magnolia>
+ <20190107134530.GA2853@bfoster>
+ <20190108014307.GN12689@magnolia>
+ <20190108124723.GA6330@bfoster>
+ <20190108182830.GR12689@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190107144104.GA5506@bfoster>
+In-Reply-To: <20190108182830.GR12689@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jan 07, 2019 at 09:41:04AM -0500, Brian Foster wrote:
-> On Sun, Jan 06, 2019 at 08:31:20AM +1100, Dave Chinner wrote:
-> > On Fri, Jan 04, 2019 at 07:32:17AM -0500, Brian Foster wrote:
-> > > On Tue, Dec 25, 2018 at 06:10:59AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> > > - writepages is in progress on a particular file that has decently sized
-> > >   post-eof speculative preallocation
-> > > - writepages gets to the point where it looks up or allocates a new imap
-> > >   that includes the preallocation, the allocation/lookup result is
-> > >   stored in wpc
-> > > - the file is closed by one process, killing off preallocation, then
-> > >   immediately appended to by another, updating the file size by a few
-> > >   bytes
-> > > - writepages comes back around to xfs_map_blocks() and trims imap to the
-> > >   current size, but imap still includes one block of the original speculative
-> > >   prealloc (that was truncated and recreated) because the size increased
-> > >   between the time imap was stored and trimmed
+On Tue, Jan 08, 2019 at 10:28:30AM -0800, Darrick J. Wong wrote:
+> On Tue, Jan 08, 2019 at 07:47:23AM -0500, Brian Foster wrote:
+> > On Mon, Jan 07, 2019 at 05:43:07PM -0800, Darrick J. Wong wrote:
+> > > On Mon, Jan 07, 2019 at 08:45:31AM -0500, Brian Foster wrote:
+> > > > On Fri, Jan 04, 2019 at 12:59:06PM -0800, Darrick J. Wong wrote:
+> > > > > On Fri, Jan 04, 2019 at 01:31:04PM -0500, Brian Foster wrote:
+> > > > > > On Mon, Dec 31, 2018 at 06:08:39PM -0800, Darrick J. Wong wrote:
+> > > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > > 
+> > > > > > > In xchk_iallocbt_rec, check the alignment of ir_startino by converting
+> > > > > > > the inode cluster block alignment into units of inodes instead of the
+> > > > > > > other way around (converting ir_startino to blocks).  This prevents us
+> > > > > > > from tripping over off-by-one errors in ir_startino which are obscured
+> > > > > > > by the inode -> block conversion.
+> > > > > > > 
+> > > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > > ---
+> > > > > > >  fs/xfs/scrub/ialloc.c |   45 +++++++++++++++++++++++++++++++++++++++------
+> > > > > > >  1 file changed, 39 insertions(+), 6 deletions(-)
+> > > > > > > 
+> > > > > > > 
+> > > > > > > diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> > > > > > > index fd431682db0b..5082331d6c03 100644
+> > > > > > > --- a/fs/xfs/scrub/ialloc.c
+> > > > > > > +++ b/fs/xfs/scrub/ialloc.c
+> > > > > > > @@ -265,6 +265,42 @@ xchk_iallocbt_check_freemask(
+> > > > > > >  	return error;
+> > > > > > >  }
+> > > > > > >  
+> > > > > > > +/* Make sure this inode btree record is aligned properly. */
+> > > > > > > +STATIC void
+> > > > > > > +xchk_iallocbt_rec_alignment(
+> > > > > > > +	struct xchk_btree		*bs,
+> > > > > > > +	struct xfs_inobt_rec_incore	*irec)
+> > > > > > > +{
+> > > > > > > +	struct xfs_mount		*mp = bs->sc->mp;
+> > > > > > > +
+> > > > > > > +	/*
+> > > > > > > +	 * finobt records have different positioning requirements than inobt
+> > > > > > > +	 * records: each finobt record must have a corresponding inobt record.
+> > > > > > > +	 * That is checked in the xref function, so for now we only catch the
+> > > > > > > +	 * obvious case where the record isn't even chunk-aligned.
+> > > > > > > +	 *
+> > > > > > > +	 * Note also that if a fs block contains more than a single chunk of
+> > > > > > > +	 * inodes, we will have finobt records only for those chunks containing
+> > > > > > > +	 * free inodes.
+> > > > > > > +	 */
+> > > > > > > +	if (bs->cur->bc_btnum == XFS_BTNUM_FINO) {
+> > > > > > > +		if (irec->ir_startino & (XFS_INODES_PER_CHUNK - 1))
+> > > > > > > +			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > > > > > +		return;
+> > > > > > > +	}
+> > > > > > 
+> > > > > > Is the above really a finobt only check? Couldn't we run this
+> > > > > > sanity check against all records and skip the following for finobt?
+> > > > > 
+> > > > > Uhoh, it occurs to me that in the 4kblock !spinodes case we can have
+> > > > > inobt records (and therefore finobt records) that are aligned to
+> > > > > m_cluster_align_inodes, and that value can be less than 64.  So I think
+> > > > > this has to be something along the lines of:
+> > > > > 
+> > > > 
+> > > > Er, yeah. IIRC spinodes required slightly larger inode chunk alignment
+> > > > than traditionally required in order to ensure we don't create
+> > > > conflicting/overlapping sparse records. A quick look at mkfs shows that
+> > > > the cluster size basically defines the sparse chunk size and the chunk
+> > > > alignment == chunk size.
+> > > 
+> > > <nod>
+> > > 
+> > > > > imask = min(XFS_INODES_PER_CHUNK, mp->m_cluster_align_inodes) - 1;
+> > > > > if (irec->ir_startino & imask)
+> > > > > 	/* set corrupt... */
+> > > > > 
+> > > > > Hmm, and testing seems to bear this out.  New patch forthcoming.
+> > > > > 
+> > > > 
+> > > > Ok, I take it the min() is required because m_cluster_align_inodes can
+> > > > be multiple records in the large FSB case. If so, I wonder if it would
+> > > > be more simple to use m_cluster_align,
+> > > 
+> > > I don't see how that would work -- m_cluster_align is in units of
+> > > blocks, not inodes.
+> > > 
 > > 
-> > I'm betting hole punch can cause similar problems with cached maps
-> > in writepage. I wrote a patch yonks ago to put a generation number
-> > in the extent fork and to store it in the cached map, and to
-> > invalidate the cached map if they didn't match.
+> > Convert the startino to the agbno and check that..? It's ultimately just
+> > a nit, but my comment is that:
 > > 
+> > 	... = min(XFS_INODES_PER_CHUNK, mp->m_cluster_align_inodes) - 1;
+> > 
+> > ... gives me a brief wtf because I'm not sure what chunk size has to do
+> > with record alignment. Then I stare at it, go look at how
+> > ->m_cluster_align and friends are calculated, read the comment below and
+> > work out that we're basically special casing conversion of the startino
+> > of a multi-record per large FSB to block granularity. Note that part of
+> > my temporary confusion here is probably just that I'm not used to seeing
+> > cluster alignment in inode units..
 > 
-> Isn't hole punch already serialized with writeback? I thought the issue
+> Aha... now I think I know the source of the confusion (see below):
+> 
+> > > > but otherwise a one-liner comment couldn't hurt.
+> > > 
+> > > At the moment the comment says:
+> > > 
+> > > 	/*
+> > > 	 * finobt records have different positioning requirements than inobt
+> > > 	 * records: each finobt record must have a corresponding inobt record.
+> > > 	 * That is checked in the xref function, so for now we only catch the
+> > > 	 * obvious case where the record isn't at all aligned properly.
+> > > 	 *
+> > > 	 * Note that if a fs block contains more than a single chunk of inodes,
+> > > 	 * we will have finobt records only for those chunks containing free
+> > > 	 * inodes, and therefore expect chunk alignment of finobt records.
+> > > 	 * Otherwise, we expect that the finobt record is aligned to the
+> > > 	 * cluster alignment as told by the superblock.
+> > > 	 */
+> > > 
+> > 
+> > As opposed to something like:
+> > 
+> > 	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
+> > 	if (agbno & (mp->m_cluster_align - 1))
+> > 		...
+> > 
+> > ... which IMO is self explanatory: make sure the start block of the
+> > inode chunk is properly aligned. Am I missing some reason why we can't
+> > do that?
+> 
+> AGINO_TO_AGBNO right-shifts the low bits off ir_startino before the mask
+> test, which means we won't catch corruptions such as (ir_startino == 97)
+> if we're only examining block numbers derived from inode numbers.
+> 
+> I'll add an additional comment to the alignment check function to
+> explain why we have to perform the alignment checks at inode
+> granularity, not block granularity.
+> 
 
-Yes, dirty pages over the range of the hole are flushed flushed
-before we punch the hole. And we do that after preventing new pages
-from being dirtied. But this doesn't prevent background writeback
-from running at the same time on regions of the file outside the
-range to be hole punched. It also does not prevent writeback from
-caching a map that covers the range that has a hole punched in the
-middle of it.
+Ok, I see. One other quick thought.. do we still lose that information
+if we just convert back and forth? I.e., convert agino to agbno/offset,
+check alignment etc., convert agbno/offset back to agino and make sure
+it matches the startino..?
 
-Say the file has one large allocated extent and all the pages are in
-cache and dirty (e.g. full file overwrite). Hole punch
-runs, locks out new writes and cleans the middle of the file. At the
-same time, background writeback starts at offset zero and
-caches the single extent that maps the entire file. Hole punch then locks the
-extent list, punches out the middle of the file and drops all it's
-locks. writeback is still writing pages at the start of the file,
-oblivious to the hole that has just been punched that made it's
-cached extent map stale.
+That aside, yeah.. a couple sentences that explain precisely what you
+did above clear this up quite a bit.
 
-App then dirties a new page over the hole, creating a delalloc
-extent.
+Brian
 
-If writeback hasn't yet reached the hole and skipped over it because
-there are no dirty pages in that range (say it
-blocked in the block device because of device congestion or
-throttling), it will see this newly dirtied page and check that it
-is within the range of the cached map. Which it is, because the
-cached map spans the entire file. So writeback will map it directly
-to a bio because it considers the cached map to be correct.
-
-However, the hole punch made the cached map stale, and the newly
-dirtied page needs to call xfs_iomap_write_allocate() to convert the
-delalloc extent. But because we had no way to detect that the cached
-map no longer reflected the inode's extent map, writeback will
-incorrectly map the newly dirtied data to a freed (and potentially
-reallocated) block on disk. i.e. it's a use after free situation.
-
-FWIW, the recent range_cyclic changes we made removed one of the
-vectors for this problem (skip over hole, go back to start, hit
-newly dirtied page and write with stale cached map), but the problem
-still exists if the cached extent is large enough and we block
-writeback lower in the IO stack....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --D
+> 
+> > Brian
+> > 
+> > > --D
+> > > 
+> > > > > > Otherwise seems fine:
+> > > > > > 
+> > > > > > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > > > > 
+> > > > > I've wondered in recent days if this is even necessary at all -- when
+> > > > > we're asked to check the inobt we check the ir_startino alignment of all
+> > > > > those records, so really the only thing we need is the existing check
+> > > > > that for each finobt record there's also an inobt record with the same
+> > > > > ir_startino.  OTOH I guess we shouldn't really assume that the calling
+> > > > > process already checked the inobt or that it didn't change between calls.
+> > > > > 
+> > > > 
+> > > > I guess it makes sense to verify the applicable records match, but in
+> > > > general I agree that "1. verify the inobt 2. verify the finobt is a
+> > > > subset of the inobt" is probably sufficient (and more elegant logic).
+> > > > 
+> > > > Brian
+> > > > 
+> > > > > --D
+> > > > > 
+> > > > > > > +
+> > > > > > > +	/* inobt records must be aligned to cluster and inoalignmnt size. */
+> > > > > > > +	if (irec->ir_startino & (mp->m_cluster_align_inodes - 1)) {
+> > > > > > > +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > > > > > +		return;
+> > > > > > > +	}
+> > > > > > > +
+> > > > > > > +	if (irec->ir_startino & (mp->m_inodes_per_cluster - 1)) {
+> > > > > > > +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > > > > > +		return;
+> > > > > > > +	}
+> > > > > > > +}
+> > > > > > > +
+> > > > > > >  /* Scrub an inobt/finobt record. */
+> > > > > > >  STATIC int
+> > > > > > >  xchk_iallocbt_rec(
+> > > > > > > @@ -277,7 +313,6 @@ xchk_iallocbt_rec(
+> > > > > > >  	uint64_t			holes;
+> > > > > > >  	xfs_agnumber_t			agno = bs->cur->bc_private.a.agno;
+> > > > > > >  	xfs_agino_t			agino;
+> > > > > > > -	xfs_agblock_t			agbno;
+> > > > > > >  	xfs_extlen_t			len;
+> > > > > > >  	int				holecount;
+> > > > > > >  	int				i;
+> > > > > > > @@ -304,11 +339,9 @@ xchk_iallocbt_rec(
+> > > > > > >  		goto out;
+> > > > > > >  	}
+> > > > > > >  
+> > > > > > > -	/* Make sure this record is aligned to cluster and inoalignmnt size. */
+> > > > > > > -	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
+> > > > > > > -	if ((agbno & (mp->m_cluster_align - 1)) ||
+> > > > > > > -	    (agbno & (mp->m_blocks_per_cluster - 1)))
+> > > > > > > -		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > > > > > +	xchk_iallocbt_rec_alignment(bs, &irec);
+> > > > > > > +	if (bs->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> > > > > > > +		goto out;
+> > > > > > >  
+> > > > > > >  	iabt->inodes += irec.ir_count;
+> > > > > > >  
+> > > > > > > 
