@@ -1,74 +1,227 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:32333 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727290AbfAHE6t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jan 2019 23:58:49 -0500
-From: "Su Yanjun <suyj.fnst@cn.fujitsu.com>" <suyj.fnst@cn.fujitsu.com>
-Subject: Re: [PATCH] xfs: correct statx's result_mask value
-References: <1546854790-5233-1-git-send-email-suyj.fnst@cn.fujitsu.com>
- <20190107175229.GJ12689@magnolia>
- <2b27e2ec-368b-d24c-8443-e265f87e417c@sandeen.net>
-Message-ID: <67e03af1-6e11-4236-76e6-6127b6cfb9b9@cn.fujitsu.com>
-Date: Tue, 8 Jan 2019 12:58:43 +0800
+Received: from userp2120.oracle.com ([156.151.31.85]:37526 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728752AbfAHS2g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 13:28:36 -0500
+Date: Tue, 8 Jan 2019 10:28:30 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/8] xfs: check the ir_startino alignment directly
+Message-ID: <20190108182830.GR12689@magnolia>
+References: <154630850739.14372.14000129432637481206.stgit@magnolia>
+ <154630851978.14372.12986942629611980027.stgit@magnolia>
+ <20190104183104.GD16751@bfoster>
+ <20190104205906.GB12689@magnolia>
+ <20190107134530.GA2853@bfoster>
+ <20190108014307.GN12689@magnolia>
+ <20190108124723.GA6330@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <2b27e2ec-368b-d24c-8443-e265f87e417c@sandeen.net>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190108124723.GA6330@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, suyanjun218@gmail.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
+On Tue, Jan 08, 2019 at 07:47:23AM -0500, Brian Foster wrote:
+> On Mon, Jan 07, 2019 at 05:43:07PM -0800, Darrick J. Wong wrote:
+> > On Mon, Jan 07, 2019 at 08:45:31AM -0500, Brian Foster wrote:
+> > > On Fri, Jan 04, 2019 at 12:59:06PM -0800, Darrick J. Wong wrote:
+> > > > On Fri, Jan 04, 2019 at 01:31:04PM -0500, Brian Foster wrote:
+> > > > > On Mon, Dec 31, 2018 at 06:08:39PM -0800, Darrick J. Wong wrote:
+> > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > 
+> > > > > > In xchk_iallocbt_rec, check the alignment of ir_startino by converting
+> > > > > > the inode cluster block alignment into units of inodes instead of the
+> > > > > > other way around (converting ir_startino to blocks).  This prevents us
+> > > > > > from tripping over off-by-one errors in ir_startino which are obscured
+> > > > > > by the inode -> block conversion.
+> > > > > > 
+> > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > ---
+> > > > > >  fs/xfs/scrub/ialloc.c |   45 +++++++++++++++++++++++++++++++++++++++------
+> > > > > >  1 file changed, 39 insertions(+), 6 deletions(-)
+> > > > > > 
+> > > > > > 
+> > > > > > diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> > > > > > index fd431682db0b..5082331d6c03 100644
+> > > > > > --- a/fs/xfs/scrub/ialloc.c
+> > > > > > +++ b/fs/xfs/scrub/ialloc.c
+> > > > > > @@ -265,6 +265,42 @@ xchk_iallocbt_check_freemask(
+> > > > > >  	return error;
+> > > > > >  }
+> > > > > >  
+> > > > > > +/* Make sure this inode btree record is aligned properly. */
+> > > > > > +STATIC void
+> > > > > > +xchk_iallocbt_rec_alignment(
+> > > > > > +	struct xchk_btree		*bs,
+> > > > > > +	struct xfs_inobt_rec_incore	*irec)
+> > > > > > +{
+> > > > > > +	struct xfs_mount		*mp = bs->sc->mp;
+> > > > > > +
+> > > > > > +	/*
+> > > > > > +	 * finobt records have different positioning requirements than inobt
+> > > > > > +	 * records: each finobt record must have a corresponding inobt record.
+> > > > > > +	 * That is checked in the xref function, so for now we only catch the
+> > > > > > +	 * obvious case where the record isn't even chunk-aligned.
+> > > > > > +	 *
+> > > > > > +	 * Note also that if a fs block contains more than a single chunk of
+> > > > > > +	 * inodes, we will have finobt records only for those chunks containing
+> > > > > > +	 * free inodes.
+> > > > > > +	 */
+> > > > > > +	if (bs->cur->bc_btnum == XFS_BTNUM_FINO) {
+> > > > > > +		if (irec->ir_startino & (XFS_INODES_PER_CHUNK - 1))
+> > > > > > +			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > > > > +		return;
+> > > > > > +	}
+> > > > > 
+> > > > > Is the above really a finobt only check? Couldn't we run this
+> > > > > sanity check against all records and skip the following for finobt?
+> > > > 
+> > > > Uhoh, it occurs to me that in the 4kblock !spinodes case we can have
+> > > > inobt records (and therefore finobt records) that are aligned to
+> > > > m_cluster_align_inodes, and that value can be less than 64.  So I think
+> > > > this has to be something along the lines of:
+> > > > 
+> > > 
+> > > Er, yeah. IIRC spinodes required slightly larger inode chunk alignment
+> > > than traditionally required in order to ensure we don't create
+> > > conflicting/overlapping sparse records. A quick look at mkfs shows that
+> > > the cluster size basically defines the sparse chunk size and the chunk
+> > > alignment == chunk size.
+> > 
+> > <nod>
+> > 
+> > > > imask = min(XFS_INODES_PER_CHUNK, mp->m_cluster_align_inodes) - 1;
+> > > > if (irec->ir_startino & imask)
+> > > > 	/* set corrupt... */
+> > > > 
+> > > > Hmm, and testing seems to bear this out.  New patch forthcoming.
+> > > > 
+> > > 
+> > > Ok, I take it the min() is required because m_cluster_align_inodes can
+> > > be multiple records in the large FSB case. If so, I wonder if it would
+> > > be more simple to use m_cluster_align,
+> > 
+> > I don't see how that would work -- m_cluster_align is in units of
+> > blocks, not inodes.
+> > 
+> 
+> Convert the startino to the agbno and check that..? It's ultimately just
+> a nit, but my comment is that:
+> 
+> 	... = min(XFS_INODES_PER_CHUNK, mp->m_cluster_align_inodes) - 1;
+> 
+> ... gives me a brief wtf because I'm not sure what chunk size has to do
+> with record alignment. Then I stare at it, go look at how
+> ->m_cluster_align and friends are calculated, read the comment below and
+> work out that we're basically special casing conversion of the startino
+> of a multi-record per large FSB to block granularity. Note that part of
+> my temporary confusion here is probably just that I'm not used to seeing
+> cluster alignment in inode units..
 
+Aha... now I think I know the source of the confusion (see below):
 
-On 1/8/2019 2:04 AM, Eric Sandeen wrote:
-> On 1/7/19 11:52 AM, Darrick J. Wong wrote:
->> On Mon, Jan 07, 2019 at 04:53:10AM -0500, Su Yanjun wrote:
->>> For statx syscall, xfs return the wrong result_mask.
->>>
->>> Signed-off-by: Su Yanjun<suyj.fnst@cn.fujitsu.com>
->>> ---
->>>   fs/xfs/xfs_iops.c | 3 +++
->>>   1 file changed, 3 insertions(+)
->>>
->>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->>> index f48ffd7..3811457 100644
->>> --- a/fs/xfs/xfs_iops.c
->>> +++ b/fs/xfs/xfs_iops.c
->>> @@ -521,6 +521,9 @@ xfs_vn_getattr(
->>>   			stat->btime.tv_nsec = ip->i_d.di_crtime.t_nsec;
->>>   		}
->>>   	}
->>> +	
->>> +	/* Only return mask that we care */
->>> +	stat->result_mask &= request_mask;
->> Why not just:
->>
->> 	stat->result_mask = STATX_BASIC_STATS;
->>
->> at the top of the function?
->>
->> I don't see the need to mask off result_mask at all, since we could some
->> day elect to return more than what's in request_mask...
-When we run xfstests with nfs, the generic/423 case runs failed. So i 
-review the nfs'
-nfs_getattr code it does validate the request_mask.
+> > > but otherwise a one-liner comment couldn't hurt.
+> > 
+> > At the moment the comment says:
+> > 
+> > 	/*
+> > 	 * finobt records have different positioning requirements than inobt
+> > 	 * records: each finobt record must have a corresponding inobt record.
+> > 	 * That is checked in the xref function, so for now we only catch the
+> > 	 * obvious case where the record isn't at all aligned properly.
+> > 	 *
+> > 	 * Note that if a fs block contains more than a single chunk of inodes,
+> > 	 * we will have finobt records only for those chunks containing free
+> > 	 * inodes, and therefore expect chunk alignment of finobt records.
+> > 	 * Otherwise, we expect that the finobt record is aligned to the
+> > 	 * cluster alignment as told by the superblock.
+> > 	 */
+> > 
+> 
+> As opposed to something like:
+> 
+> 	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
+> 	if (agbno & (mp->m_cluster_align - 1))
+> 		...
+> 
+> ... which IMO is self explanatory: make sure the start block of the
+> inode chunk is properly aligned. Am I missing some reason why we can't
+> do that?
 
-Then i review the xfs' getattr code, it has no such check. Whatever 
-request_mask
-  is set, the stat's result_mask always the 0x7ff.
+AGINO_TO_AGBNO right-shifts the low bits off ir_startino before the mask
+test, which means we won't catch corruptions such as (ir_startino == 97)
+if we're only examining block numbers derived from inode numbers.
 
-Maybe it has Unclear semantics about statx's result_mask.
->> ...waitaminute, are you seeing garbage in the result_mask that's
->> returned to userspace?  I also noticed the vfs stat functions declare
->> "struct kstat stat;" without explicitly zeroing the structure fields,
->> which means (I think) that we can leak stack information if the kernel
->> isn't built with the stackleak plugin?
-No such problem.
-> A clear problem statement and reproducer steps would be hugely useful
-> here.
->
-> -Eric
-Thanks,
-Su
+I'll add an additional comment to the alignment check function to
+explain why we have to perform the alignment checks at inode
+granularity, not block granularity.
+
+--D
+
+> Brian
+> 
+> > --D
+> > 
+> > > > > Otherwise seems fine:
+> > > > > 
+> > > > > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > > > 
+> > > > I've wondered in recent days if this is even necessary at all -- when
+> > > > we're asked to check the inobt we check the ir_startino alignment of all
+> > > > those records, so really the only thing we need is the existing check
+> > > > that for each finobt record there's also an inobt record with the same
+> > > > ir_startino.  OTOH I guess we shouldn't really assume that the calling
+> > > > process already checked the inobt or that it didn't change between calls.
+> > > > 
+> > > 
+> > > I guess it makes sense to verify the applicable records match, but in
+> > > general I agree that "1. verify the inobt 2. verify the finobt is a
+> > > subset of the inobt" is probably sufficient (and more elegant logic).
+> > > 
+> > > Brian
+> > > 
+> > > > --D
+> > > > 
+> > > > > > +
+> > > > > > +	/* inobt records must be aligned to cluster and inoalignmnt size. */
+> > > > > > +	if (irec->ir_startino & (mp->m_cluster_align_inodes - 1)) {
+> > > > > > +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > > > > +		return;
+> > > > > > +	}
+> > > > > > +
+> > > > > > +	if (irec->ir_startino & (mp->m_inodes_per_cluster - 1)) {
+> > > > > > +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > > > > +		return;
+> > > > > > +	}
+> > > > > > +}
+> > > > > > +
+> > > > > >  /* Scrub an inobt/finobt record. */
+> > > > > >  STATIC int
+> > > > > >  xchk_iallocbt_rec(
+> > > > > > @@ -277,7 +313,6 @@ xchk_iallocbt_rec(
+> > > > > >  	uint64_t			holes;
+> > > > > >  	xfs_agnumber_t			agno = bs->cur->bc_private.a.agno;
+> > > > > >  	xfs_agino_t			agino;
+> > > > > > -	xfs_agblock_t			agbno;
+> > > > > >  	xfs_extlen_t			len;
+> > > > > >  	int				holecount;
+> > > > > >  	int				i;
+> > > > > > @@ -304,11 +339,9 @@ xchk_iallocbt_rec(
+> > > > > >  		goto out;
+> > > > > >  	}
+> > > > > >  
+> > > > > > -	/* Make sure this record is aligned to cluster and inoalignmnt size. */
+> > > > > > -	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
+> > > > > > -	if ((agbno & (mp->m_cluster_align - 1)) ||
+> > > > > > -	    (agbno & (mp->m_blocks_per_cluster - 1)))
+> > > > > > -		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > > > > +	xchk_iallocbt_rec_alignment(bs, &irec);
+> > > > > > +	if (bs->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> > > > > > +		goto out;
+> > > > > >  
+> > > > > >  	iabt->inodes += irec.ir_count;
+> > > > > >  
+> > > > > > 
