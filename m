@@ -1,135 +1,184 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:57532 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:60026 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726094AbfADWM7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Jan 2019 17:12:59 -0500
-Date: Fri, 4 Jan 2019 14:12:46 -0800
+        with ESMTP id S1727028AbfAHBnM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jan 2019 20:43:12 -0500
+Date: Mon, 7 Jan 2019 17:43:07 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] generic: test that xattrs can have slashes in their names
-Message-ID: <20190104221246.GE21010@magnolia>
-References: <20190104212336.GC12689@magnolia>
- <c44b0678-a050-e887-aa6d-9dc29d6b45a8@sandeen.net>
+Subject: Re: [PATCH 2/8] xfs: check the ir_startino alignment directly
+Message-ID: <20190108014307.GN12689@magnolia>
+References: <154630850739.14372.14000129432637481206.stgit@magnolia>
+ <154630851978.14372.12986942629611980027.stgit@magnolia>
+ <20190104183104.GD16751@bfoster>
+ <20190104205906.GB12689@magnolia>
+ <20190107134530.GA2853@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c44b0678-a050-e887-aa6d-9dc29d6b45a8@sandeen.net>
+In-Reply-To: <20190107134530.GA2853@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eryu Guan <guaneryu@gmail.com>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jan 04, 2019 at 03:27:37PM -0600, Eric Sandeen wrote:
-> On 1/4/19 3:23 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jan 07, 2019 at 08:45:31AM -0500, Brian Foster wrote:
+> On Fri, Jan 04, 2019 at 12:59:06PM -0800, Darrick J. Wong wrote:
+> > On Fri, Jan 04, 2019 at 01:31:04PM -0500, Brian Foster wrote:
+> > > On Mon, Dec 31, 2018 at 06:08:39PM -0800, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > In xchk_iallocbt_rec, check the alignment of ir_startino by converting
+> > > > the inode cluster block alignment into units of inodes instead of the
+> > > > other way around (converting ir_startino to blocks).  This prevents us
+> > > > from tripping over off-by-one errors in ir_startino which are obscured
+> > > > by the inode -> block conversion.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > >  fs/xfs/scrub/ialloc.c |   45 +++++++++++++++++++++++++++++++++++++++------
+> > > >  1 file changed, 39 insertions(+), 6 deletions(-)
+> > > > 
+> > > > 
+> > > > diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> > > > index fd431682db0b..5082331d6c03 100644
+> > > > --- a/fs/xfs/scrub/ialloc.c
+> > > > +++ b/fs/xfs/scrub/ialloc.c
+> > > > @@ -265,6 +265,42 @@ xchk_iallocbt_check_freemask(
+> > > >  	return error;
+> > > >  }
+> > > >  
+> > > > +/* Make sure this inode btree record is aligned properly. */
+> > > > +STATIC void
+> > > > +xchk_iallocbt_rec_alignment(
+> > > > +	struct xchk_btree		*bs,
+> > > > +	struct xfs_inobt_rec_incore	*irec)
+> > > > +{
+> > > > +	struct xfs_mount		*mp = bs->sc->mp;
+> > > > +
+> > > > +	/*
+> > > > +	 * finobt records have different positioning requirements than inobt
+> > > > +	 * records: each finobt record must have a corresponding inobt record.
+> > > > +	 * That is checked in the xref function, so for now we only catch the
+> > > > +	 * obvious case where the record isn't even chunk-aligned.
+> > > > +	 *
+> > > > +	 * Note also that if a fs block contains more than a single chunk of
+> > > > +	 * inodes, we will have finobt records only for those chunks containing
+> > > > +	 * free inodes.
+> > > > +	 */
+> > > > +	if (bs->cur->bc_btnum == XFS_BTNUM_FINO) {
+> > > > +		if (irec->ir_startino & (XFS_INODES_PER_CHUNK - 1))
+> > > > +			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > > +		return;
+> > > > +	}
+> > > 
+> > > Is the above really a finobt only check? Couldn't we run this
+> > > sanity check against all records and skip the following for finobt?
 > > 
-> > Eric Sandeen recently found a bug in xfs_repair that flagged extended
-> > attribute names containing "/" as corrupt and purged them.  There's
-> > nothing in the IRIX or Linux manuals that say anything about slashes not
-> > being allowed (and Linux certainly allows this) so let's make sure this
-> > continues to work.
+> > Uhoh, it occurs to me that in the 4kblock !spinodes case we can have
+> > inobt records (and therefore finobt records) that are aligned to
+> > m_cluster_align_inodes, and that value can be less than 64.  So I think
+> > this has to be something along the lines of:
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  tests/generic/708     |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/708.out |    6 ++++++
-> >  tests/generic/group   |    1 +
-> >  3 files changed, 55 insertions(+)
-> >  create mode 100755 tests/generic/708
-> >  create mode 100644 tests/generic/708.out
-> > 
-> > diff --git a/tests/generic/708 b/tests/generic/708
-> > new file mode 100755
-> > index 00000000..ee63ba79
-> > --- /dev/null
-> > +++ b/tests/generic/708
-> > @@ -0,0 +1,48 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0+
-> > +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 708
-> > +#
-> > +# Check that xattrs can have slashes in their name.
 > 
-> Perhaps a note about what failed before?  Because set/get/list has
-> always(tm) worked:
+> Er, yeah. IIRC spinodes required slightly larger inode chunk alignment
+> than traditionally required in order to ensure we don't create
+> conflicting/overlapping sparse records. A quick look at mkfs shows that
+> the cluster size basically defines the sparse chunk size and the chunk
+> alignment == chunk size.
+
+<nod>
+
+> > imask = min(XFS_INODES_PER_CHUNK, mp->m_cluster_align_inodes) - 1;
+> > if (irec->ir_startino & imask)
+> > 	/* set corrupt... */
+> > 
+> > Hmm, and testing seems to bear this out.  New patch forthcoming.
+> > 
 > 
-> # (xfs_repair previously flagged this as a corruption)
+> Ok, I take it the min() is required because m_cluster_align_inodes can
+> be multiple records in the large FSB case. If so, I wonder if it would
+> be more simple to use m_cluster_align,
 
-Ok.
+I don't see how that would work -- m_cluster_align is in units of
+blocks, not inodes.
 
-> Is it worth also validating that '/' in a dir entry /is/ still flagged?
-> Or maybe that's a separate test.
+> but otherwise a one-liner comment couldn't hurt.
 
-Separate test. The VFS won't let us create a directory entry with a
-slash in it, which means we have to scribble on the fs with xfs_db to
-set up the test.
+At the moment the comment says:
+
+	/*
+	 * finobt records have different positioning requirements than inobt
+	 * records: each finobt record must have a corresponding inobt record.
+	 * That is checked in the xref function, so for now we only catch the
+	 * obvious case where the record isn't at all aligned properly.
+	 *
+	 * Note that if a fs block contains more than a single chunk of inodes,
+	 * we will have finobt records only for those chunks containing free
+	 * inodes, and therefore expect chunk alignment of finobt records.
+	 * Otherwise, we expect that the finobt record is aligned to the
+	 * cluster alignment as told by the superblock.
+	 */
 
 --D
 
-> -Eric
-> 
-> > +#
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/attr
-> > +. ./common/filter
-> > +
-> > +# real QA test starts here
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +_require_scratch
-> > +_require_attrs
-> > +
-> > +rm -f $seqres.full
-> > +
-> > +_scratch_mkfs >> $seqres.full 2>&1
-> > +_scratch_mount
-> > +
-> > +echo "set attr"
-> > +file=$SCRATCH_MNT/moofile
-> > +touch $file
-> > +setfattr -n "user.boo/hoo" -v "woof" $file
-> > +
-> > +echo "check attr"
-> > +getfattr -d --absolute-names $file | _filter_scratch
-> > +
-> > +# success, all done(?)
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/708.out b/tests/generic/708.out
-> > new file mode 100644
-> > index 00000000..6978532e
-> > --- /dev/null
-> > +++ b/tests/generic/708.out
-> > @@ -0,0 +1,6 @@
-> > +QA output created by 708
-> > +set attr
-> > +check attr
-> > +# file: SCRATCH_MNT/moofile
-> > +user.boo/hoo="woof"
-> > +
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index ea5aa7aa..f88125b4 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -525,3 +525,4 @@
-> >  520 auto quick log
-> >  521 soak long_rw
-> >  522 soak long_rw
-> > +708 auto quick attr
+> > > Otherwise seems fine:
+> > > 
+> > > Reviewed-by: Brian Foster <bfoster@redhat.com>
 > > 
+> > I've wondered in recent days if this is even necessary at all -- when
+> > we're asked to check the inobt we check the ir_startino alignment of all
+> > those records, so really the only thing we need is the existing check
+> > that for each finobt record there's also an inobt record with the same
+> > ir_startino.  OTOH I guess we shouldn't really assume that the calling
+> > process already checked the inobt or that it didn't change between calls.
+> > 
+> 
+> I guess it makes sense to verify the applicable records match, but in
+> general I agree that "1. verify the inobt 2. verify the finobt is a
+> subset of the inobt" is probably sufficient (and more elegant logic).
+> 
+> Brian
+> 
+> > --D
+> > 
+> > > > +
+> > > > +	/* inobt records must be aligned to cluster and inoalignmnt size. */
+> > > > +	if (irec->ir_startino & (mp->m_cluster_align_inodes - 1)) {
+> > > > +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > > +		return;
+> > > > +	}
+> > > > +
+> > > > +	if (irec->ir_startino & (mp->m_inodes_per_cluster - 1)) {
+> > > > +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > > +		return;
+> > > > +	}
+> > > > +}
+> > > > +
+> > > >  /* Scrub an inobt/finobt record. */
+> > > >  STATIC int
+> > > >  xchk_iallocbt_rec(
+> > > > @@ -277,7 +313,6 @@ xchk_iallocbt_rec(
+> > > >  	uint64_t			holes;
+> > > >  	xfs_agnumber_t			agno = bs->cur->bc_private.a.agno;
+> > > >  	xfs_agino_t			agino;
+> > > > -	xfs_agblock_t			agbno;
+> > > >  	xfs_extlen_t			len;
+> > > >  	int				holecount;
+> > > >  	int				i;
+> > > > @@ -304,11 +339,9 @@ xchk_iallocbt_rec(
+> > > >  		goto out;
+> > > >  	}
+> > > >  
+> > > > -	/* Make sure this record is aligned to cluster and inoalignmnt size. */
+> > > > -	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
+> > > > -	if ((agbno & (mp->m_cluster_align - 1)) ||
+> > > > -	    (agbno & (mp->m_blocks_per_cluster - 1)))
+> > > > -		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > > +	xchk_iallocbt_rec_alignment(bs, &irec);
+> > > > +	if (bs->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> > > > +		goto out;
+> > > >  
+> > > >  	iabt->inodes += irec.ir_count;
+> > > >  
+> > > > 
