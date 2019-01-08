@@ -1,79 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49048 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728418AbfAGOlH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 Jan 2019 09:41:07 -0500
-Date: Mon, 7 Jan 2019 09:41:04 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [Bug 202053] [xfstests generic/464]: XFS corruption and
- Assertion failed: 0, file: fs/xfs/xfs_super.c, line: 985
-Message-ID: <20190107144104.GA5506@bfoster>
-References: <bug-202053-201763@https.bugzilla.kernel.org/>
- <bug-202053-201763-R7nWMjQIjy@https.bugzilla.kernel.org/>
- <20190104123217.GA16751@bfoster>
- <20190105213120.GS4205@dastard>
+Received: from userp2130.oracle.com ([156.151.31.86]:44610 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729104AbfAHUgd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 15:36:33 -0500
+Subject: [PATCH 4/5] xfs: check directory name validity
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 08 Jan 2019 12:36:29 -0800
+Message-ID: <154697978966.2839.8800976099907580396.stgit@magnolia>
+In-Reply-To: <154697976479.2839.3584921201780682011.stgit@magnolia>
+References: <154697976479.2839.3584921201780682011.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190105213120.GS4205@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On Sun, Jan 06, 2019 at 08:31:20AM +1100, Dave Chinner wrote:
-> On Fri, Jan 04, 2019 at 07:32:17AM -0500, Brian Foster wrote:
-> > On Tue, Dec 25, 2018 at 06:10:59AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> > - writepages is in progress on a particular file that has decently sized
-> >   post-eof speculative preallocation
-> > - writepages gets to the point where it looks up or allocates a new imap
-> >   that includes the preallocation, the allocation/lookup result is
-> >   stored in wpc
-> > - the file is closed by one process, killing off preallocation, then
-> >   immediately appended to by another, updating the file size by a few
-> >   bytes
-> > - writepages comes back around to xfs_map_blocks() and trims imap to the
-> >   current size, but imap still includes one block of the original speculative
-> >   prealloc (that was truncated and recreated) because the size increased
-> >   between the time imap was stored and trimmed
-> 
-> I'm betting hole punch can cause similar problems with cached maps
-> in writepage. I wrote a patch yonks ago to put a generation number
-> in the extent fork and to store it in the cached map, and to
-> invalidate the cached map if they didn't match.
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Isn't hole punch already serialized with writeback? I thought the issue
-was that post-eof blocks are not fully covered by the existing
-serialization logic because there are no pages involved, but it's been a
-while since I've looked at it..
+Check directory entry names for invalid characters.
 
-Brian
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_dir2.c |   17 +++++++++++++++++
+ fs/xfs/libxfs/xfs_dir2.h |    1 +
+ fs/xfs/scrub/dir.c       |    6 ++++++
+ 3 files changed, 24 insertions(+)
 
-> > The EOF trim approach is known to be a bandaid and potentially racy, but
-> > ISTM that this problem can be trivially avoided by moving or adding
-> > trims of wpc->imap immediately after a new one is cached. I don't
-> > reproduce the problem so far with a couple such extra calls in place.
-> > 
-> > Bigger picture, we need some kind of invalidation mechanism similar to
-> > what we're already doing for dealing with the COW fork in this writeback
-> > context. I'm not sure the broad semantics used by the COW fork sequence
-> > counter mechanism is really suitable for the data fork because any
-> > extent-related change in the fork would cause an invalidation, but I am
-> > wondering if we could define some subset of less frequent operations for
-> > the same mechanism to reliably invalidate (e.g., on eofblocks trims, for
-> > starters).
-> 
-> The patch I had is below - I haven't forward ported it or anything,
-> just pulled it from my archive to demonstrate what I think we
-> probably need to be doing here. If we want to limit when it causes
-> invalidations, then we need probably need to limit which operations
-> cause the generation number for that inode fork to be bumped.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 229152cd1a24..156ce95c9c45 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -703,3 +703,20 @@ xfs_dir2_shrink_inode(
+ 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+ 	return 0;
+ }
++
++/* Returns true if the directory entry name is valid. */
++bool
++xfs_dir2_namecheck(
++	const void	*name,
++	size_t		length)
++{
++	/*
++	 * MAXNAMELEN includes the trailing null, but (name/length) leave it
++	 * out, so use >= for the length check.
++	 */
++	if (length >= MAXNAMELEN)
++		return false;
++
++	/* There shouldn't be any slashes or nulls here */
++	return !memchr(name, '/', length) && !memchr(name, 0, length);
++}
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index c3e3f6b813d8..f54244779492 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -326,5 +326,6 @@ xfs_dir2_leaf_tail_p(struct xfs_da_geometry *geo, struct xfs_dir2_leaf *lp)
+ unsigned char xfs_dir3_get_dtype(struct xfs_mount *mp, uint8_t filetype);
+ void *xfs_dir3_data_endp(struct xfs_da_geometry *geo,
+ 		struct xfs_dir2_data_hdr *hdr);
++bool xfs_dir2_namecheck(const void *name, size_t length);
+ 
+ #endif	/* __XFS_DIR2_H__ */
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index cd3e4d768a18..a38a22785a1a 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -129,6 +129,12 @@ xchk_dir_actor(
+ 		goto out;
+ 	}
+ 
++	/* Does this name make sense? */
++	if (!xfs_dir2_namecheck(name, namelen)) {
++		xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
++		goto out;
++	}
++
+ 	if (!strncmp(".", name, namelen)) {
+ 		/* If this is "." then check that the inum matches the dir. */
+ 		if (xfs_sb_version_hasftype(&mp->m_sb) && type != DT_DIR)
