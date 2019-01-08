@@ -1,76 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38182 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727401AbfAKMad (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Jan 2019 07:30:33 -0500
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 2642AA4287
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Jan 2019 12:30:33 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id CF36E5C8BC
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Jan 2019 12:30:32 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 0/4] xfs: properly invalidate cached writeback mapping
-Date: Fri, 11 Jan 2019 07:30:28 -0500
-Message-Id: <20190111123032.31538-1-bfoster@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:49784 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728723AbfAHUmN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 15:42:13 -0500
+Date: Tue, 8 Jan 2019 12:42:09 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 6/5] libxfs(progs): fix attr include mess
+Message-ID: <20190108204209.GT12689@magnolia>
+References: <154697976479.2839.3584921201780682011.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <154697976479.2839.3584921201780682011.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This series attempts to fix the stale writepage mapping problem in XFS.
-The problem is essentially that ->writepages() caches the current extent
-across multiple writepage instances and in certain circumstances the
-cached mapping can be made invalid by concurrent filesystem operations.
-For example, even with the current EOF trim band-aid for dealing with
-post-eof speculative preallocation, a truncate+append sequence that
-happens to race with background writeback can lead to a writepage to an
-incorrect location.
+Remove all the userspace xfs_attr shim cruft so that we have one
+definition of ATTR_* macros so that we can actually use xfs_attr.c
+routines and include xfs_attr.h without problems.
 
-Since we already have an xfs_ifork change/sequence number mechanism in
-place, we reuse that to invalidate cached writeback mappings any time
-the associated data fork has changed. Note that while certain workloads
-might lead to a high frequency of spurious invalidations (i.e.,
-with allocsize=4k mounts, files with a predetermined size such as vdisk
-images, etc.), I've not been able to reproduce any noticeable effects at
-a user level. See the patch 3 commit log description for further
-discussion.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ include/libxfs.h         |   10 +---------
+ libxfs/libxfs_api_defs.h |    5 +++++
+ libxfs/libxfs_priv.h     |    8 --------
+ libxfs/xfs_attr.c        |    1 +
+ libxfs/xfs_attr_leaf.c   |    1 +
+ 5 files changed, 8 insertions(+), 17 deletions(-)
 
-If we do run into use cases and workloads for which this is a problem, I
-think there are options to further restrict seqno changing events (or
-use multiple counters for subsets of change events) for less frequent
-invalidations. For example, a sequence count that only tracks block
-removals may still be sufficient to preserve coherency of cached
-writeback mappings. Since this is all handwavy and theoretical, I opted
-to keep the code simple and only deal with this should the need arise.
-
-Patch 1 is a stable fix for the initial EOF trim patch. Patches 2-4
-tweak the fork seqno mechanism to work for data forks, use it to
-invalidate the cached writeback map and remove the EOF trim mechanism.
-This has been tested via xfstests on multiple FSB sizes and fsx without
-any explosions.
-
-Thoughts, reviews, flames appreciated.
-
-Brian
-
-Brian Foster (4):
-  xfs: eof trim writeback mapping as soon as it is cached
-  xfs: update fork seq counter on data fork changes
-  xfs: validate writeback mapping using data fork seq counter
-  xfs: remove superfluous writeback mapping eof trimming
-
- fs/xfs/libxfs/xfs_bmap.c       | 11 -----------
- fs/xfs/libxfs/xfs_bmap.h       |  1 -
- fs/xfs/libxfs/xfs_iext_tree.c  | 13 ++++++-------
- fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
- fs/xfs/xfs_aops.c              | 21 ++++++---------------
- fs/xfs/xfs_iomap.c             |  4 ++--
- 6 files changed, 15 insertions(+), 37 deletions(-)
-
--- 
-2.17.2
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 2bdef706..32dbb1c6 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -214,14 +214,6 @@ libxfs_bmbt_disk_get_all(
+ int libxfs_rtfree_extent(struct xfs_trans *, xfs_rtblock_t, xfs_extlen_t);
+ bool libxfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
+ 
+-/* XXX: need parts of xfs_attr.h in userspace */
+-#define LIBXFS_ATTR_ROOT	0x0002	/* use attrs in root namespace */
+-#define LIBXFS_ATTR_SECURE	0x0008	/* use attrs in security namespace */
+-#define LIBXFS_ATTR_CREATE	0x0010	/* create, but fail if attr exists */
+-#define LIBXFS_ATTR_REPLACE	0x0020	/* set, but fail if attr not exists */
+-
+-int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+-int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+-		 unsigned char *value, int valuelen, int flags);
++#include "xfs_attr.h"
+ 
+ #endif	/* __LIBXFS_H__ */
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index e10d78cd..2d5ff88f 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -150,4 +150,9 @@
+ #define xfs_fs_geometry			libxfs_fs_geometry
+ #define xfs_init_local_fork		libxfs_init_local_fork
+ 
++#define LIBXFS_ATTR_ROOT		ATTR_ROOT
++#define LIBXFS_ATTR_SECURE		ATTR_SECURE
++#define LIBXFS_ATTR_CREATE		ATTR_CREATE
++#define LIBXFS_ATTR_REPLACE		ATTR_REPLACE
++
+ #endif /* __LIBXFS_API_DEFS_H__ */
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index b45d07eb..59cd3333 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -104,14 +104,6 @@ extern char    *progname;
+  */
+ #define PTR_FMT "%p"
+ 
+-/* XXX: need to push these out to make LIBXFS_ATTR defines */
+-#define ATTR_ROOT			0x0002
+-#define ATTR_SECURE			0x0008
+-#define ATTR_CREATE			0x0010
+-#define ATTR_REPLACE			0x0020
+-#define ATTR_KERNOTIME			0
+-#define ATTR_KERNOVAL			0
+-
+ #define XFS_IGET_CREATE			0x1
+ #define XFS_IGET_UNTRUSTED		0x2
+ 
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index b8838302..170e64cf 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -20,6 +20,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_bmap.h"
+ #include "xfs_bmap_btree.h"
++#include "xfs_attr.h"
+ #include "xfs_attr_leaf.h"
+ #include "xfs_attr_remote.h"
+ #include "xfs_trans_space.h"
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 5683d294..48f4b28d 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -21,6 +21,7 @@
+ #include "xfs_bmap.h"
+ #include "xfs_attr_sf.h"
+ #include "xfs_attr_remote.h"
++#include "xfs_attr.h"
+ #include "xfs_attr_leaf.h"
+ #include "xfs_trace.h"
+ #include "xfs_cksum.h"
