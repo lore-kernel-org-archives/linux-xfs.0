@@ -1,171 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54274 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728853AbfAKNb0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Jan 2019 08:31:26 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] tests/generic: test writepage cached mapping validity
-Date: Fri, 11 Jan 2019 08:31:24 -0500
-Message-Id: <20190111133124.31879-1-bfoster@redhat.com>
-In-Reply-To: <20190111123032.31538-1-bfoster@redhat.com>
-References: <20190111123032.31538-1-bfoster@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:47796 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729104AbfAHUg1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 15:36:27 -0500
+Subject: [PATCH 3/5] xfs: fix off-by-one error in rtbitmap cross-reference
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 08 Jan 2019 12:36:23 -0800
+Message-ID: <154697978351.2839.11888108672644284957.stgit@magnolia>
+In-Reply-To: <154697976479.2839.3584921201780682011.stgit@magnolia>
+References: <154697976479.2839.3584921201780682011.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-XFS has a bug where page writeback can end up sending data to the
-wrong location due to a stale, cached file mapping. Add a test to
-trigger this problem by racing background writeback with a
-truncate/rewrite of the final page of the file.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Fix an off-by-one error in the realtime bitmap "is used" cross-reference
+helper function.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ fs/xfs/scrub/rtbitmap.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hi all,
 
-This is a resend of an old post[1] that never quite made it upstream. It
-wasn't a big deal at the time because we didn't really have a proper fix
-for the problem. I'm resending now because there is a proposed fix[2].
-
-I've verified that this still reproduces the problem and no longer fails
-with the fix applied (in hundreds of iters). Note that reproduction may
-require many iterations. It took me anywhere from 5 to 30 or so on the
-box I tested, which I think is reasonable for the tradeoff of a fairly
-quick test. There was some discussion on the original post around making
-the test run longer for a more reliable reproducer, but I'm not sure how
-valuable that is given this is a targeted regression test. Thoughts
-appreciated.
-
-Brian
-
-[1] https://marc.info/?l=fstests&m=150902929900510&w=2
-[2] https://marc.info/?l=linux-xfs&m=154721212321112&w=2
-
- tests/generic/999     | 94 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/999.out |  2 +
- tests/generic/group   |  1 +
- 3 files changed, 97 insertions(+)
- create mode 100755 tests/generic/999
- create mode 100644 tests/generic/999.out
-
-diff --git a/tests/generic/999 b/tests/generic/999
-new file mode 100755
-index 00000000..9e56a1e0
---- /dev/null
-+++ b/tests/generic/999
-@@ -0,0 +1,94 @@
-+#! /bin/bash
-+# FS QA Test 999
-+#
-+# Test XFS page writeback code for races with the cached file mapping. XFS
-+# caches the file -> block mapping for a full extent once it is initially looked
-+# up. The cached mapping is used for all subsequent pages in the same writeback
-+# cycle that cover the associated extent. Under certain conditions, it is
-+# possible for concurrent operations on the file to invalidate the cached
-+# mapping without the knowledge of writeback. Writeback ends up sending I/O to a
-+# partly stale mapping and potentially leaving delalloc blocks in the current
-+# mapping unconverted.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_test_program "feature"
-+
-+_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-+_scratch_mount || _fail "mount failed"
-+
-+file=$SCRATCH_MNT/file
-+filesize=$((1024 * 1024 * 32))
-+pagesize=`src/feature -s`
-+truncsize=$((filesize - pagesize))
-+
-+for i in $(seq 0 15); do
-+	# Truncate the file and fsync to persist the final size on-disk. This is
-+	# required so the subsequent truncate will not wait on writeback.
-+	$XFS_IO_PROG -fc "truncate 0" $file
-+	$XFS_IO_PROG -c "truncate $filesize" -c fsync $file
-+
-+	# create a small enough delalloc extent to likely be contiguous
-+	$XFS_IO_PROG -c "pwrite 0 $filesize" $file >> $seqres.full 2>&1
-+
-+	# Start writeback and a racing truncate and rewrite of the final page.
-+	$XFS_IO_PROG -c "sync_range -w 0 0" $file &
-+	sync_pid=$!
-+	$XFS_IO_PROG -c "truncate $truncsize" \
-+		     -c "pwrite $truncsize $pagesize" $file >> $seqres.full 2>&1
-+
-+	# If the test fails, the most likely outcome is an sb_fdblocks mismatch
-+	# and/or an associated delalloc assert failure on inode reclaim. Cycle
-+	# the mount to trigger detection.
-+	wait $sync_pid
-+	_scratch_cycle_mount || _fail "mount failed"
-+done
-+
-+echo Silence is golden
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/999.out b/tests/generic/999.out
-new file mode 100644
-index 00000000..3b276ca8
---- /dev/null
-+++ b/tests/generic/999.out
-@@ -0,0 +1,2 @@
-+QA output created by 999
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index ea5aa7aa..ce165981 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -525,3 +525,4 @@
- 520 auto quick log
- 521 soak long_rw
- 522 soak long_rw
-+999 auto quick
--- 
-2.17.2
+diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+index 665d4bbb17cc..5402211f980b 100644
+--- a/fs/xfs/scrub/rtbitmap.c
++++ b/fs/xfs/scrub/rtbitmap.c
+@@ -143,7 +143,7 @@ xchk_xref_is_used_rt_space(
+ 	do_div(startext, sc->mp->m_sb.sb_rextsize);
+ 	if (do_div(endext, sc->mp->m_sb.sb_rextsize))
+ 		endext++;
+-	extcount = endext - startext;
++	extcount = endext - startext + 1;
+ 	xfs_ilock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
+ 	error = xfs_rtalloc_extent_is_free(sc->mp, sc->tp, startext, extcount,
+ 			&is_free);
