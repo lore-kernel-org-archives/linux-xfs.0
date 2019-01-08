@@ -1,75 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:44498 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726681AbfAGSCI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jan 2019 13:02:08 -0500
-Date: Mon, 7 Jan 2019 10:02:00 -0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:45424 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729043AbfAHUgp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 15:36:45 -0500
+Subject: [PATCH 5/5] xfs: check attribute name validity
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: correct statx's result_mask value
-Message-ID: <20190107180200.GK12689@magnolia>
-References: <1546854790-5233-1-git-send-email-suyj.fnst@cn.fujitsu.com>
- <20190107175229.GJ12689@magnolia>
+Date: Tue, 08 Jan 2019 12:36:35 -0800
+Message-ID: <154697979588.2839.8961664194626235093.stgit@magnolia>
+In-Reply-To: <154697976479.2839.3584921201780682011.stgit@magnolia>
+References: <154697976479.2839.3584921201780682011.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190107175229.GJ12689@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Su Yanjun <suyj.fnst@cn.fujitsu.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, suyanjun218@gmail.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On Mon, Jan 07, 2019 at 09:52:29AM -0800, Darrick J. Wong wrote:
-> On Mon, Jan 07, 2019 at 04:53:10AM -0500, Su Yanjun wrote:
-> > For statx syscall, xfs return the wrong result_mask.
-> > 
-> > Signed-off-by: Su Yanjun <suyj.fnst@cn.fujitsu.com>
-> > ---
-> >  fs/xfs/xfs_iops.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > index f48ffd7..3811457 100644
-> > --- a/fs/xfs/xfs_iops.c
-> > +++ b/fs/xfs/xfs_iops.c
-> > @@ -521,6 +521,9 @@ xfs_vn_getattr(
-> >  			stat->btime.tv_nsec = ip->i_d.di_crtime.t_nsec;
-> >  		}
-> >  	}
-> > +	
-> > +	/* Only return mask that we care */
-> > +	stat->result_mask &= request_mask;
-> 
-> Why not just:
-> 
-> 	stat->result_mask = STATX_BASIC_STATS;
-> 
-> at the top of the function?
-> 
-> I don't see the need to mask off result_mask at all, since we could some
-> day elect to return more than what's in request_mask...
-> 
-> ...waitaminute, are you seeing garbage in the result_mask that's
-> returned to userspace?  I also noticed the vfs stat functions declare
-> "struct kstat stat;" without explicitly zeroing the structure fields,
-> which means (I think) that we can leak stack information if the kernel
-> isn't built with the stackleak plugin?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ignore the above; vfs_getattr_nosec actually does zero the kstat buffer
-before calling ->getattr.  We also set result_mask to STATX_BASIC_STATS.
+Check extended attribute entry names for invalid characters.
 
-Now I'm really confused: why is this necessary at all?  What incorrect
-masks did you see, and under what circumstances?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr.c |   17 +++++++++++++++++
+ fs/xfs/libxfs/xfs_attr.h |    2 +-
+ fs/xfs/scrub/attr.c      |    6 ++++++
+ 3 files changed, 24 insertions(+), 1 deletion(-)
 
---D
 
-> --D
-> 
-> >  
-> >  	if (ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE)
-> >  		stat->attributes |= STATX_ATTR_IMMUTABLE;
-> > -- 
-> > 2.7.4
-> > 
-> > 
-> > 
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 844ed87b1900..2dd9ee2a2e08 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -1336,3 +1336,20 @@ xfs_attr_node_get(xfs_da_args_t *args)
+ 	xfs_da_state_free(state);
+ 	return retval;
+ }
++
++/* Returns true if the attribute entry name is valid. */
++bool
++xfs_attr_namecheck(
++	const void	*name,
++	size_t		length)
++{
++	/*
++	 * MAXNAMELEN includes the trailing null, but (name/length) leave it
++	 * out, so use >= for the length check.
++	 */
++	if (length >= MAXNAMELEN)
++		return false;
++
++	/* There shouldn't be any nulls here */
++	return !memchr(name, 0, length);
++}
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index bdf52a333f3f..2297d8467666 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -145,6 +145,6 @@ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+ int xfs_attr_remove_args(struct xfs_da_args *args);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		  int flags, struct attrlist_cursor_kern *cursor);
+-
++bool xfs_attr_namecheck(const void *name, size_t length);
+ 
+ #endif	/* __XFS_ATTR_H__ */
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 9960bc5b5d76..dce74ec57038 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -93,6 +93,12 @@ xchk_xattr_listent(
+ 		return;
+ 	}
+ 
++	/* Does this name make sense? */
++	if (!xfs_attr_namecheck(name, namelen)) {
++		xchk_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK, args.blkno);
++		return;
++	}
++
+ 	args.flags = ATTR_KERNOTIME;
+ 	if (flags & XFS_ATTR_ROOT)
+ 		args.flags |= ATTR_ROOT;
