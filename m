@@ -1,219 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:49115 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727848AbfAHHqu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 02:46:50 -0500
-Date: Tue, 8 Jan 2019 18:46:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Broken dio refcounting leads to livelock?
-Message-ID: <20190108074644.GX4205@dastard>
-References: <20190108002633.GL12689@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:42654 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728644AbfAHUd3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 15:33:29 -0500
+Subject: [PATCH 7/7] xfs: consolidate scrub dinode mapping code into a
+ single function
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 08 Jan 2019 12:33:18 -0800
+Message-ID: <154697959877.2494.10993090686249072444.stgit@magnolia>
+In-Reply-To: <154697955494.2494.5221420762912855354.stgit@magnolia>
+References: <154697955494.2494.5221420762912855354.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190108002633.GL12689@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-On Mon, Jan 07, 2019 at 04:26:33PM -0800, Darrick J. Wong wrote:
-> Hi Christoph,
-> 
-> I have a question about refcounting in struct iomap_dio:
-> 
-> As I mentioned late last year, I've been seeing a livelock since the
-> early 4.20-rcX era in iomap_dio_rw when running generic/323.  The
-> relevant part of the function starts around line 1910:
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looking at iomap_dio_bio_end_io(), it has completion code that runs
-only when dio->ref hits zero. i.e. it assumes that if it sees a zero
-refcount, it holds the last reference and can free dio. Otherwise it
-doesn't touch dio.
+Move all the confusing dinode mapping code that's split between
+xchk_iallocbt_check_cluster and xchk_iallocbt_check_cluster_ifree into
+the first function so that it's clearer how we find the dinode for a
+given inode.
 
-> 
-> 	blk_finish_plug(&plug);
-> 
-> 	if (ret < 0)
-> 		iomap_dio_set_error(dio, ret);
-> 
-> 	/*
-> 	 * If all the writes we issued were FUA, we don't need to flush the
-> 	 * cache on IO completion. Clear the sync flag for this case.
-> 	 */
-> 	if (dio->flags & IOMAP_DIO_WRITE_FUA)
-> 		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
-> 
-> 	if (!atomic_dec_and_test(&dio->ref)) {
-
-So we've dropped the IO submission reference to the dio here, which
-means the onl remaining references are the bio references. We run
-this code if there are remaining bio references, which given the
-above it means that dio can be freed at any time after this by IO
-completion. That means it's never safe to reference dio after this.
-
-Yup, that's a use after free.
-
-> 		int clang = 0;
-> 
-> 		if (!dio->wait_for_completion)
-> 			return -EIOCBQUEUED;
-
-Ok, dio->wait_for_completion is unchanging at this point, so it
-doesn't matter if we do this check before or after we drop the
-dio->ref. That simplifies things.
-
-> 
-> 		for (;;) {
-> 			set_current_state(TASK_UNINTERRUPTIBLE);
-> 			if (!READ_ONCE(dio->submit.waiter))
-> 				break;
-> 
-> 			if (!(iocb->ki_flags & IOCB_HIPRI) ||
-> 			    !dio->submit.last_queue ||
-> 			    !blk_poll(dio->submit.last_queue,
-> 					 dio->submit.cookie, true))
-> 				io_schedule(); <--------- here
-> 		}
-> 		__set_current_state(TASK_RUNNING);
-
-This is an IO wait, which means we do not want to free the dio
-structure until after we've been woken. And that also means we
-are going to be running iomap_dio_complete() below, so we /must/
-hold on to the dio reference here. Which means we need to change
-the iomap_dio_bio_end_io() code because it only triggers a wakeup
-if it's dropping the last dio->ref.
-
-OK, so something like the patch below?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-iomap: fix iomap dio reference counts
-
-From: Dave Chinner <dchinner@redhat.com>
-
-The iomap dio structure could be referenced after contexts had
-dropped their reference, resulting in use-after free conditions
-being created. Rework the reference counting to ensure that we never
-access the dio structure without having a valid reference count or
-having guaranteed that the context holds the last reference will
-free it.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap.c | 75 +++++++++++++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 55 insertions(+), 20 deletions(-)
+ fs/xfs/scrub/ialloc.c |   48 +++++++++++++++++++++++++++---------------------
+ 1 file changed, 27 insertions(+), 21 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index a3088fae567b..ee71e2ec93d4 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -1539,12 +1539,31 @@ static void iomap_dio_bio_end_io(struct bio *bio)
- 	if (bio->bi_status)
- 		iomap_dio_set_error(dio, blk_status_to_errno(bio->bi_status));
+
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 1929d79ea6b3..663cc8a98fc9 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -146,7 +146,7 @@ xchk_iallocbt_freecount(
+  *
+  * @irec is the inobt record.
+  * @cluster_base is the inode offset of the cluster within the @irec.
+- * @cluster_bp is the cluster buffer.
++ * @dip is the on-disk inode.
+  * @cluster_index is the inode offset within the inode cluster.
+  */
+ STATIC int
+@@ -154,15 +154,12 @@ xchk_iallocbt_check_cluster_ifree(
+ 	struct xchk_btree		*bs,
+ 	struct xfs_inobt_rec_incore	*irec,
+ 	unsigned int			cluster_base,
+-	struct xfs_buf			*cluster_bp,
++	struct xfs_dinode		*dip,
+ 	unsigned int			cluster_index)
+ {
+ 	struct xfs_mount		*mp = bs->cur->bc_mp;
+-	struct xfs_dinode		*dip;
+ 	xfs_ino_t			fsino;
+ 	xfs_agino_t			agino;
+-	unsigned int			offset;
+-	unsigned int			cluster_buf_base;
+ 	bool				irec_free;
+ 	bool				ino_inuse;
+ 	bool				freemask_ok;
+@@ -174,23 +171,10 @@ xchk_iallocbt_check_cluster_ifree(
+ 	/*
+ 	 * Given an inobt record, an offset of a cluster within the record, and
+ 	 * an offset of an inode within a cluster, compute which fs inode we're
+-	 * talking about and the offset of that inode within the buffer.
+-	 *
+-	 * Be careful about inobt records that don't align with the start of
+-	 * the inode buffer when block sizes are large enough to hold multiple
+-	 * inode chunks.  When this happens, cluster_base will be zero but
+-	 * ir_startino can be large enough to make cluster_buf_base nonzero.
++	 * talking about.
+ 	 */
+ 	agino = irec->ir_startino + cluster_base + cluster_index;
+ 	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
+-	cluster_buf_base = XFS_INO_TO_OFFSET(mp, irec->ir_startino);
+-	ASSERT(cluster_buf_base == 0 || cluster_base == 0);
+-	offset = (cluster_buf_base + cluster_index) * mp->m_sb.sb_inodesize;
+-	if (offset >= BBTOB(cluster_bp->b_length)) {
+-		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+-		goto out;
+-	}
+-	dip = xfs_buf_offset(cluster_bp, offset);
+ 	irec_free = (irec->ir_free & XFS_INOBT_MASK(cluster_base +
+ 						    cluster_index));
  
--	if (atomic_dec_and_test(&dio->ref)) {
--		if (dio->wait_for_completion) {
+@@ -262,10 +246,23 @@ xchk_iallocbt_check_cluster(
+ 		cluster_mask |= XFS_INOBT_MASK((cluster_base + cluster_index) /
+ 				XFS_INODES_PER_HOLEMASK_BIT);
+ 
 +	/*
-+	 * If we have a waiter, then this is a sync IO and the waiter will still
-+	 * hold a reference to the dio. If this is the last IO reference, we
-+	 * cannot reference the dio after we drop the reference as the waiter
-+	 * may be woken immediately and free the dio before we are don with it.
-+	 * Hence we check for two references, do the wakeup, then drop the final
-+	 * IO reference. The ordering of clearing the submit.waiter, waking the
-+	 * waiter and then dropping the reference matches the order of checks in
-+	 * the wait loop to avoid wakeup races.
++	 * Map the first inode of this cluster to a buffer and offset.
++	 * Be careful about inobt records that don't align with the start of
++	 * the inode buffer when block sizes are large enough to hold multiple
++	 * inode chunks.  When this happens, cluster_base will be zero but
++	 * ir_startino can be large enough to make im_boffset nonzero.
 +	 */
-+	if (dio->wait_for_completion) {
-+		if (atomic_read(&dio->ref) == 2) {
- 			struct task_struct *waiter = dio->submit.waiter;
- 			WRITE_ONCE(dio->submit.waiter, NULL);
- 			blk_wake_io_task(waiter);
--		} else if (dio->flags & IOMAP_DIO_WRITE) {
-+		}
-+		atomic_dec(&dio->ref);
-+	} else if (atomic_dec_and_test(&dio->ref)) {
-+		/*
-+		 * There is no waiter so we are finishing async IO. If the
-+		 * refcount drops to zero then we are responsible for running
-+		 * the appropriate IO completion to finish and free the dio
-+		 * context.
-+		 */
-+		if (dio->flags & IOMAP_DIO_WRITE) {
- 			struct inode *inode = file_inode(dio->iocb->ki_filp);
- 
- 			INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
-@@ -1553,6 +1572,7 @@ static void iomap_dio_bio_end_io(struct bio *bio)
- 			iomap_dio_complete_work(&dio->aio.work);
- 		}
- 	}
-+	/* not safe to use dio past this point */
- 
- 	if (should_dirty) {
- 		bio_check_pages_dirty(bio);
-@@ -1916,27 +1936,42 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	if (dio->flags & IOMAP_DIO_WRITE_FUA)
- 		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
- 
--	if (!atomic_dec_and_test(&dio->ref)) {
--		if (!dio->wait_for_completion)
--			return -EIOCBQUEUED;
-+	/*
-+	 * If this is async IO, and we drop the last reference here we need
-+	 * to complete the IO, otherwise we return EIOCBQUEUED. The order of
-+	 * checks is important here because we can be racing with Io completion
-+	 * to drop the last reference and free the dio, so we must check the dio
-+	 * state before we drop the reference to avoid use-after-free
-+	 * situations.
-+	 */
-+	if (!dio->wait_for_completion) {
-+		if (atomic_dec_and_test(&dio->ref))
-+			return iomap_dio_complete(dio);
-+		return -EIOCBQUEUED;
+ 	ir_holemask = (irec->ir_holemask & cluster_mask);
+ 	imap.im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
+ 	imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
+-	imap.im_boffset = 0;
++	imap.im_boffset = XFS_INO_TO_OFFSET(mp, irec->ir_startino);
++
++	if (imap.im_boffset != 0 && cluster_base != 0) {
++		ASSERT(imap.im_boffset == 0 || cluster_base == 0);
++		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
++		return 0;
 +	}
  
--		for (;;) {
--			set_current_state(TASK_UNINTERRUPTIBLE);
--			if (!READ_ONCE(dio->submit.waiter))
--				break;
-+	/*
-+	 * This is sync IO and we have to access the dio structure to determine
-+	 * if we need to wait and/or poll the block device for completion. hence
-+	 * we need to hold on to our reference until IO completion has dropped
-+	 * all the IO references and woken us before we drop our reference and
-+	 * complete the IO.
-+	 */
-+	while (atomic_read(&dio->ref) > 1) {
-+		set_current_state(TASK_UNINTERRUPTIBLE);
-+		if (!READ_ONCE(dio->submit.waiter))
+ 	trace_xchk_iallocbt_check_cluster(mp, agno, irec->ir_startino,
+ 			imap.im_blkno, imap.im_len, cluster_base, nr_inodes,
+@@ -298,10 +295,19 @@ xchk_iallocbt_check_cluster(
+ 
+ 	/* Check free status of each inode within this cluster. */
+ 	for (cluster_index = 0; cluster_index < nr_inodes; cluster_index++) {
++		struct xfs_dinode	*dip;
++
++		if (imap.im_boffset >= BBTOB(cluster_bp->b_length)) {
++			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
 +			break;
- 
--			if (!(iocb->ki_flags & IOCB_HIPRI) ||
--			    !dio->submit.last_queue ||
--			    !blk_poll(dio->submit.last_queue,
--					 dio->submit.cookie, true))
--				io_schedule();
--		}
--		__set_current_state(TASK_RUNNING);
-+		if (!(iocb->ki_flags & IOCB_HIPRI) ||
-+		    !dio->submit.last_queue ||
-+		    !blk_poll(dio->submit.last_queue,
-+				 dio->submit.cookie, true))
-+			io_schedule();
++		}
++
++		dip = xfs_buf_offset(cluster_bp, imap.im_boffset);
+ 		error = xchk_iallocbt_check_cluster_ifree(bs, irec,
+-				cluster_base, cluster_bp, cluster_index);
++				cluster_base, dip, cluster_index);
+ 		if (error)
+ 			break;
++		imap.im_boffset += mp->m_sb.sb_inodesize;
  	}
-+	__set_current_state(TASK_RUNNING);
-+	atomic_dec(&dio->ref);
  
--	ret = iomap_dio_complete(dio);
--
--	return ret;
-+	return iomap_dio_complete(dio);
- 
- out_free_dio:
- 	kfree(dio);
+ 	xfs_trans_brelse(bs->cur->bc_tp, cluster_bp);
