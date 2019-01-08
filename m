@@ -1,205 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59066 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33654 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725789AbfAKLDh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Jan 2019 06:03:37 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V13 07/19] block: use bio_for_each_bvec() to compute multi-page bvec count
-Date: Fri, 11 Jan 2019 19:01:15 +0800
-Message-Id: <20190111110127.21664-8-ming.lei@redhat.com>
-In-Reply-To: <20190111110127.21664-1-ming.lei@redhat.com>
-References: <20190111110127.21664-1-ming.lei@redhat.com>
+        id S1727662AbfAHOyw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 8 Jan 2019 09:54:52 -0500
+Date: Tue, 8 Jan 2019 09:54:49 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [Bug 202053] [xfstests generic/464]: XFS corruption and
+ Assertion failed: 0, file: fs/xfs/xfs_super.c, line: 985
+Message-ID: <20190108145449.GB6330@bfoster>
+References: <bug-202053-201763@https.bugzilla.kernel.org/>
+ <bug-202053-201763-R7nWMjQIjy@https.bugzilla.kernel.org/>
+ <20190104123217.GA16751@bfoster>
+ <20190105213120.GS4205@dastard>
+ <20190107144104.GA5506@bfoster>
+ <20190108054639.GV4205@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190108054639.GV4205@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-xfs@vger.kernel.org
 
-First it is more efficient to use bio_for_each_bvec() in both
-blk_bio_segment_split() and __blk_recalc_rq_segments() to compute how
-many multi-page bvecs there are in the bio.
+On Tue, Jan 08, 2019 at 04:46:39PM +1100, Dave Chinner wrote:
+> On Mon, Jan 07, 2019 at 09:41:04AM -0500, Brian Foster wrote:
+> > On Sun, Jan 06, 2019 at 08:31:20AM +1100, Dave Chinner wrote:
+> > > On Fri, Jan 04, 2019 at 07:32:17AM -0500, Brian Foster wrote:
+> > > > On Tue, Dec 25, 2018 at 06:10:59AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> > > > - writepages is in progress on a particular file that has decently sized
+> > > >   post-eof speculative preallocation
+> > > > - writepages gets to the point where it looks up or allocates a new imap
+> > > >   that includes the preallocation, the allocation/lookup result is
+> > > >   stored in wpc
+> > > > - the file is closed by one process, killing off preallocation, then
+> > > >   immediately appended to by another, updating the file size by a few
+> > > >   bytes
+> > > > - writepages comes back around to xfs_map_blocks() and trims imap to the
+> > > >   current size, but imap still includes one block of the original speculative
+> > > >   prealloc (that was truncated and recreated) because the size increased
+> > > >   between the time imap was stored and trimmed
+> > > 
+> > > I'm betting hole punch can cause similar problems with cached maps
+> > > in writepage. I wrote a patch yonks ago to put a generation number
+> > > in the extent fork and to store it in the cached map, and to
+> > > invalidate the cached map if they didn't match.
+> > > 
+> > 
+> > Isn't hole punch already serialized with writeback? I thought the issue
+> 
+> Yes, dirty pages over the range of the hole are flushed flushed
+> before we punch the hole. And we do that after preventing new pages
+> from being dirtied. But this doesn't prevent background writeback
+> from running at the same time on regions of the file outside the
+> range to be hole punched. It also does not prevent writeback from
+> caching a map that covers the range that has a hole punched in the
+> middle of it.
+> 
+> Say the file has one large allocated extent and all the pages are in
+> cache and dirty (e.g. full file overwrite). Hole punch
+> runs, locks out new writes and cleans the middle of the file. At the
+> same time, background writeback starts at offset zero and
+> caches the single extent that maps the entire file. Hole punch then locks the
+> extent list, punches out the middle of the file and drops all it's
+> locks. writeback is still writing pages at the start of the file,
+> oblivious to the hole that has just been punched that made it's
+> cached extent map stale.
+> 
+> App then dirties a new page over the hole, creating a delalloc
+> extent.
+> 
 
-Secondly once bio_for_each_bvec() is used, the bvec may need to be
-splitted because its length can be very longer than max segment size,
-so we have to split the big bvec into several segments.
+Ah right, thanks. I had just lost track of this. I was wondering why we
+didn't have a test for this problem and then I realized I wrote one[1]
+over a year ago and it just never landed. :P
 
-Thirdly when splitting multi-page bvec into segments, the max segment
-limit may be reached, so the bio split need to be considered under
-this situation too.
+The test uses truncate/pwrite rather than hole punch, but it triggers
+the same fundamental problem. It looks like it left off at trying to
+find a suitable set of parameters to (reasonably) reliably reproduce on
+various test setups without taking forever.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- block/blk-merge.c | 99 ++++++++++++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 79 insertions(+), 20 deletions(-)
+Anyways, I have a small series to include a stable fix and then replace
+the whole EOF trim band-aid with an invalidation fix based on
+Christoph's aforementioned fork seqno patch. It needs more massage and
+testing, but I'll revisit the fstest and include that as well.
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index f85d878f313d..abe1c89c1253 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -161,6 +161,69 @@ static inline unsigned get_max_io_size(struct request_queue *q,
- 	return sectors;
- }
- 
-+static unsigned get_max_segment_size(struct request_queue *q,
-+				     unsigned offset)
-+{
-+	unsigned long mask = queue_segment_boundary(q);
-+
-+	return min_t(unsigned long, mask - (mask & offset) + 1,
-+		     queue_max_segment_size(q));
-+}
-+
-+/*
-+ * Split the bvec @bv into segments, and update all kinds of
-+ * variables.
-+ */
-+static bool bvec_split_segs(struct request_queue *q, struct bio_vec *bv,
-+		unsigned *nsegs, unsigned *last_seg_size,
-+		unsigned *front_seg_size, unsigned *sectors)
-+{
-+	unsigned len = bv->bv_len;
-+	unsigned total_len = 0;
-+	unsigned new_nsegs = 0, seg_size = 0;
-+
-+	/*
-+	 * Multi-page bvec may be too big to hold in one segment, so the
-+	 * current bvec has to be splitted as multiple segments.
-+	 */
-+	while (len && new_nsegs + *nsegs < queue_max_segments(q)) {
-+		seg_size = get_max_segment_size(q, bv->bv_offset + total_len);
-+		seg_size = min(seg_size, len);
-+
-+		new_nsegs++;
-+		total_len += seg_size;
-+		len -= seg_size;
-+
-+		if ((bv->bv_offset + total_len) & queue_virt_boundary(q))
-+			break;
-+	}
-+
-+	if (!new_nsegs)
-+		return !!len;
-+
-+	/* update front segment size */
-+	if (!*nsegs) {
-+		unsigned first_seg_size;
-+
-+		if (new_nsegs == 1)
-+			first_seg_size = get_max_segment_size(q, bv->bv_offset);
-+		else
-+			first_seg_size = queue_max_segment_size(q);
-+
-+		if (*front_seg_size < first_seg_size)
-+			*front_seg_size = first_seg_size;
-+	}
-+
-+	/* update other varibles */
-+	*last_seg_size = seg_size;
-+	*nsegs += new_nsegs;
-+	if (sectors)
-+		*sectors += total_len >> 9;
-+
-+	/* split in the middle of the bvec if len != 0 */
-+	return !!len;
-+}
-+
- static struct bio *blk_bio_segment_split(struct request_queue *q,
- 					 struct bio *bio,
- 					 struct bio_set *bs,
-@@ -174,7 +237,7 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
- 	struct bio *new = NULL;
- 	const unsigned max_sectors = get_max_io_size(q, bio);
- 
--	bio_for_each_segment(bv, bio, iter) {
-+	bio_for_each_bvec(bv, bio, iter) {
- 		/*
- 		 * If the queue doesn't support SG gaps and adding this
- 		 * offset would create a gap, disallow it.
-@@ -189,8 +252,12 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
- 			 */
- 			if (nsegs < queue_max_segments(q) &&
- 			    sectors < max_sectors) {
--				nsegs++;
--				sectors = max_sectors;
-+				/* split in the middle of bvec */
-+				bv.bv_len = (max_sectors - sectors) << 9;
-+				bvec_split_segs(q, &bv, &nsegs,
-+						&seg_size,
-+						&front_seg_size,
-+						&sectors);
- 			}
- 			goto split;
- 		}
-@@ -212,14 +279,12 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
- 		if (nsegs == queue_max_segments(q))
- 			goto split;
- 
--		if (nsegs == 1 && seg_size > front_seg_size)
--			front_seg_size = seg_size;
--
--		nsegs++;
- 		bvprv = bv;
- 		bvprvp = &bvprv;
--		seg_size = bv.bv_len;
--		sectors += bv.bv_len >> 9;
-+
-+		if (bvec_split_segs(q, &bv, &nsegs, &seg_size,
-+				    &front_seg_size, &sectors))
-+			goto split;
- 
- 	}
- 
-@@ -233,8 +298,6 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
- 			bio = new;
- 	}
- 
--	if (nsegs == 1 && seg_size > front_seg_size)
--		front_seg_size = seg_size;
- 	bio->bi_seg_front_size = front_seg_size;
- 	if (seg_size > bio->bi_seg_back_size)
- 		bio->bi_seg_back_size = seg_size;
-@@ -297,6 +360,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
- 	struct bio_vec bv, bvprv = { NULL };
- 	int prev = 0;
- 	unsigned int seg_size, nr_phys_segs;
-+	unsigned front_seg_size = bio->bi_seg_front_size;
- 	struct bio *fbio, *bbio;
- 	struct bvec_iter iter;
- 
-@@ -316,7 +380,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
- 	seg_size = 0;
- 	nr_phys_segs = 0;
- 	for_each_bio(bio) {
--		bio_for_each_segment(bv, bio, iter) {
-+		bio_for_each_bvec(bv, bio, iter) {
- 			/*
- 			 * If SG merging is disabled, each bio vector is
- 			 * a segment
-@@ -336,20 +400,15 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
- 				continue;
- 			}
- new_segment:
--			if (nr_phys_segs == 1 && seg_size >
--			    fbio->bi_seg_front_size)
--				fbio->bi_seg_front_size = seg_size;
--
--			nr_phys_segs++;
- 			bvprv = bv;
- 			prev = 1;
--			seg_size = bv.bv_len;
-+			bvec_split_segs(q, &bv, &nr_phys_segs, &seg_size,
-+					&front_seg_size, NULL);
- 		}
- 		bbio = bio;
- 	}
- 
--	if (nr_phys_segs == 1 && seg_size > fbio->bi_seg_front_size)
--		fbio->bi_seg_front_size = seg_size;
-+	fbio->bi_seg_front_size = front_seg_size;
- 	if (seg_size > bbio->bi_seg_back_size)
- 		bbio->bi_seg_back_size = seg_size;
- 
--- 
-2.9.5
+Brian
+
+[1] https://marc.info/?l=fstests&m=150902929900510&w=2
+
+
+> If writeback hasn't yet reached the hole and skipped over it because
+> there are no dirty pages in that range (say it
+> blocked in the block device because of device congestion or
+> throttling), it will see this newly dirtied page and check that it
+> is within the range of the cached map. Which it is, because the
+> cached map spans the entire file. So writeback will map it directly
+> to a bio because it considers the cached map to be correct.
+> 
+> However, the hole punch made the cached map stale, and the newly
+> dirtied page needs to call xfs_iomap_write_allocate() to convert the
+> delalloc extent. But because we had no way to detect that the cached
+> map no longer reflected the inode's extent map, writeback will
+> incorrectly map the newly dirtied data to a freed (and potentially
+> reallocated) block on disk. i.e. it's a use after free situation.
+> 
+> FWIW, the recent range_cyclic changes we made removed one of the
+> vectors for this problem (skip over hole, go back to start, hit
+> newly dirtied page and write with stale cached map), but the problem
+> still exists if the cached extent is large enough and we block
+> writeback lower in the IO stack....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
