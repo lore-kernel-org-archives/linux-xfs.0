@@ -1,110 +1,172 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:40277 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726925AbfAGUOz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jan 2019 15:14:55 -0500
-Received: by mail-wm1-f65.google.com with SMTP id f188so2127570wmf.5
-        for <linux-xfs@vger.kernel.org>; Mon, 07 Jan 2019 12:14:54 -0800 (PST)
-Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
-        by smtp.gmail.com with ESMTPSA id j124sm3194818wmb.48.2019.01.07.12.14.52
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 07 Jan 2019 12:14:53 -0800 (PST)
-From: Stefan Ring <stefanrin@gmail.com>
-Subject: [PATCH 3/5] xfs_metadump: Zap freeindex blocks in directory inodes
-Date: Mon,  7 Jan 2019 21:13:53 +0100
-Message-Id: <20190107201355.18996-4-stefanrin@gmail.com>
-In-Reply-To: <20190107201355.18996-1-stefanrin@gmail.com>
-References: <20190107201355.18996-1-stefanrin@gmail.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:36236 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726689AbfAHBQV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jan 2019 20:16:21 -0500
+Date: Mon, 7 Jan 2019 17:16:05 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: Broken dio refcounting leads to livelock?
+Message-ID: <20190108011605.GM12689@magnolia>
+References: <20190108002633.GL12689@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190108002633.GL12689@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-Signed-off-by: Stefan Ring <stefanrin@gmail.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jan 07, 2019 at 04:26:33PM -0800, Darrick J. Wong wrote:
+> Hi Christoph,
+> 
+> I have a question about refcounting in struct iomap_dio:
+> 
+> As I mentioned late last year, I've been seeing a livelock since the
+> early 4.20-rcX era in iomap_dio_rw when running generic/323.  The
+> relevant part of the function starts around line 1910:
+> 
+> 	blk_finish_plug(&plug);
+> 
+> 	if (ret < 0)
+> 		iomap_dio_set_error(dio, ret);
+> 
+> 	/*
+> 	 * If all the writes we issued were FUA, we don't need to flush the
+> 	 * cache on IO completion. Clear the sync flag for this case.
+> 	 */
+> 	if (dio->flags & IOMAP_DIO_WRITE_FUA)
+> 		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
+> 
+> 	if (!atomic_dec_and_test(&dio->ref)) {
+> 		int clang = 0;
+> 
+> 		if (!dio->wait_for_completion)
+> 			return -EIOCBQUEUED;
+> 
+> 		for (;;) {
+> 			set_current_state(TASK_UNINTERRUPTIBLE);
+> 			if (!READ_ONCE(dio->submit.waiter))
+> 				break;
+> 
+> 			if (!(iocb->ki_flags & IOCB_HIPRI) ||
+> 			    !dio->submit.last_queue ||
+> 			    !blk_poll(dio->submit.last_queue,
+> 					 dio->submit.cookie, true))
+> 				io_schedule(); <--------- here
+> 		}
+> 		__set_current_state(TASK_RUNNING);
+> 	}
+> 
+> 	ret = iomap_dio_complete(dio);
+> 
+> I finally had time to look into this, and I noticed garbage values for
+> dio->submit.waiter in *dio right before we call io_schedule.  I suspect
+> this is a use-after-free, so I altered iomap_dio_complete to memset the
+> entire structure to 0x5C just prior to kfreeing the *dio, and sure
+> enough I saw 0x5C in all the dio fields right before the io_schedule
+> call.
+> 
+> Next I instrumented all the places where we access dio->ref to see
+> what's going on, and observed the following sequence:
+> 
+>  1. ref == 2 just before the blk_finish_plug call.
+>     dio->wait_for_completion == false.
+>  2. ref == 2 just before the "if (!atomic_dec_and_test(...))"
+>  3. ref == 1 just after the "if (!atomic_dec_and_test(...))"
+> 
+> Next we apparently end up in iomap_dio_bio_end_io:
+> 
+>  4. ref == 1 just before the "if (atomic_dec_and_test(...))"
+>  5. ref == 0 just after the "if (atomic_dec_and_test(...))"
+>  6. iomap_dio_bio_end_io calls iomap_dio_complete, frees the dio after
+>     poisoning it with 0x5C as described above.
+> 
+> Then we jump back to iomap_dio_rw, and:
+> 
+>  7. ref = 0x5c5c5c5c just before the "if (!(iocb->ki_flags & IOCB_HIPRI)...)"
+>     However, dio->wait_for_completion is 0x5c5c5c5c so we incorrectly
+>     call io_schedule and never wake up.
+> 
+> KASAN confirms this diagnosis.  I noticed that only ~100us elapse
+> between the unplug and the bio endio function being called; I've found
+> that I can reproduce this in a qemu vm with a virtio-scsi device backed
+> by a tmpfs file on the host.  My guess is that with slower scsi device
+> the dispatch would take long enough that iomap_dio_rw would have
+> returned -EIOCBQUEUED long before the bio end_io function gets called
+> and frees the dio?
+> 
+> Anyhow, I'm not sure how to fix this.  It's clear that iomap_dio_rw
+> can't drop its ref to the dio until it's done using the dio fields.
+> It's tempting to change the if (!atomic_dec_and_test()) to a if
+> (atomic_read() > 1) and only drop the ref just before returning
+> -EIOCBQUEUED or just before calling iomap_dio_complete... but that just
+> pushes the livelock to kill_ioctx.
+
+No it doesn't, silly me just had debugging crapola all over iomap.c.
+
+> Brain scrambled, kicking to the list to see if anyone has something
+> smarter to say. ;)
+
+I have a gross brainscrambled patch that makes the regression go away.
+No idea what other subtle breakage this might cause...
+
+--D
+
 ---
- db/metadump.c | 45 ++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 40 insertions(+), 5 deletions(-)
+ fs/iomap.c |   22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
 
-diff --git a/db/metadump.c b/db/metadump.c
-index 45705685..edc288ce 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1421,6 +1421,43 @@ process_sf_attr(
- 		memset(asfep, 0, XFS_DFORK_ASIZE(dip, mp) - ino_attr_size);
- }
+diff --git a/fs/iomap.c b/fs/iomap.c
+index a3088fae567b..cdea2a83ef78 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1535,16 +1535,18 @@ static void iomap_dio_bio_end_io(struct bio *bio)
+ {
+ 	struct iomap_dio *dio = bio->bi_private;
+ 	bool should_dirty = (dio->flags & IOMAP_DIO_DIRTY);
++	int dio_ref = atomic_dec_return(&dio->ref);
  
-+static void
-+process_dir_free_block(
-+	char				*block)
-+{
-+	struct xfs_dir2_free		*free;
-+	struct xfs_dir3_icfree_hdr	freehdr;
+ 	if (bio->bi_status)
+ 		iomap_dio_set_error(dio, blk_status_to_errno(bio->bi_status));
+ 
+-	if (atomic_dec_and_test(&dio->ref)) {
+-		if (dio->wait_for_completion) {
+-			struct task_struct *waiter = dio->submit.waiter;
+-			WRITE_ONCE(dio->submit.waiter, NULL);
+-			blk_wake_io_task(waiter);
+-		} else if (dio->flags & IOMAP_DIO_WRITE) {
++	if (dio_ref == 1 && dio->wait_for_completion) {
++		struct task_struct *waiter = dio->submit.waiter;
 +
-+	if (!zero_stale_data)
-+		return;
-+
-+	free = (struct xfs_dir2_free *)block;
-+	M_DIROPS(mp)->free_hdr_from_disk(&freehdr, free);
-+
-+	switch (freehdr.magic) {
-+	case XFS_DIR2_FREE_MAGIC:
-+	case XFS_DIR3_FREE_MAGIC: {
-+		__be16			*bests;
-+		char			*high;
-+		int			used;
-+
-+		/* Zero out space from end of bests[] to end of block */
-+		bests = M_DIROPS(mp)->free_bests_p(free);
-+		high = (char *)&bests[freehdr.nvalid];
-+		used = high - (char*)free;
-+		memset(high, 0, mp->m_dir_geo->blksize - used);
-+		iocur_top->need_crc = 1;
-+		break;
-+	}
-+	default:
-+		if (show_warnings)
-+			print_warning("invalid magic in dir inode %llu "
-+				      "free block",
-+				      (unsigned long long)cur_ino);
-+		break;
-+	}
-+}
-+
- static void
- process_dir_leaf_block(
- 	char				*block)
-@@ -1518,7 +1555,7 @@ process_dir_data_block(
- 		if (show_warnings)
- 			print_warning(
- 		"invalid magic in dir inode %llu block %ld",
--					(long long)cur_ino, (long)offset);
-+					(unsigned long long)cur_ino, (long)offset);
- 		return;
++		WRITE_ONCE(dio->submit.waiter, NULL);
++		blk_wake_io_task(waiter);
++	} else if (dio_ref == 0) {
++		if (dio->flags & IOMAP_DIO_WRITE) {
+ 			struct inode *inode = file_inode(dio->iocb->ki_filp);
+ 
+ 			INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
+@@ -1916,9 +1918,12 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	if (dio->flags & IOMAP_DIO_WRITE_FUA)
+ 		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
+ 
+-	if (!atomic_dec_and_test(&dio->ref)) {
+-		if (!dio->wait_for_completion)
++	if (atomic_read(&dio->ref) > 1) {
++		if (!dio->wait_for_completion) {
++			if (atomic_dec_and_test(&dio->ref))
++				return iomap_dio_complete(dio);
+ 			return -EIOCBQUEUED;
++		}
+ 
+ 		for (;;) {
+ 			set_current_state(TASK_UNINTERRUPTIBLE);
+@@ -1934,6 +1939,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		__set_current_state(TASK_RUNNING);
  	}
  
-@@ -1832,8 +1869,7 @@ process_single_fsb_objects(
- 		switch (btype) {
- 		case TYP_DIR2:
- 			if (o >= mp->m_dir_geo->freeblk) {
--				/* TODO, zap any stale data */
--				break;
-+				process_dir_free_block(dp);
- 			} else if (o >= mp->m_dir_geo->leafblk) {
- 				process_dir_leaf_block(dp);
- 			} else {
-@@ -1927,8 +1963,7 @@ process_multi_fsb_objects(
++	atomic_dec(&dio->ref);
+ 	ret = iomap_dio_complete(dio);
  
- 			dp = iocur_top->data;
- 			if (o >= mp->m_dir_geo->freeblk) {
--				/* TODO, zap any stale data */
--				goto write;
-+				process_dir_free_block(dp);
- 			} else if (o >= mp->m_dir_geo->leafblk) {
- 				process_dir_leaf_block(dp);
- 			} else {
--- 
-2.19.2
+ 	return ret;
