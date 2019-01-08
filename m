@@ -1,89 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59260 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:41370 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725838AbfAHFHs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 00:07:48 -0500
-Date: Mon, 7 Jan 2019 21:07:39 -0800
+        with ESMTP id S1728644AbfAHUc7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 15:32:59 -0500
+Subject: [PATCH 3/7] xfs: check inobt record alignment on big block
+ filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: correct statx's result_mask value
-Message-ID: <20190108050739.GQ12689@magnolia>
-References: <1546854790-5233-1-git-send-email-suyj.fnst@cn.fujitsu.com>
- <20190107175229.GJ12689@magnolia>
- <2b27e2ec-368b-d24c-8443-e265f87e417c@sandeen.net>
- <67e03af1-6e11-4236-76e6-6127b6cfb9b9@cn.fujitsu.com>
+Date: Tue, 08 Jan 2019 12:32:53 -0800
+Message-ID: <154697957389.2494.1841601336700769377.stgit@magnolia>
+In-Reply-To: <154697955494.2494.5221420762912855354.stgit@magnolia>
+References: <154697955494.2494.5221420762912855354.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <67e03af1-6e11-4236-76e6-6127b6cfb9b9@cn.fujitsu.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Su Yanjun <suyj.fnst@cn.fujitsu.com>" <suyj.fnst@cn.fujitsu.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, suyanjun218@gmail.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>
 
-On Tue, Jan 08, 2019 at 12:58:43PM +0800, Su Yanjun <suyj.fnst@cn.fujitsu.com> wrote:
-> 
-> 
-> On 1/8/2019 2:04 AM, Eric Sandeen wrote:
-> > On 1/7/19 11:52 AM, Darrick J. Wong wrote:
-> > > On Mon, Jan 07, 2019 at 04:53:10AM -0500, Su Yanjun wrote:
-> > > > For statx syscall, xfs return the wrong result_mask.
-> > > > 
-> > > > Signed-off-by: Su Yanjun<suyj.fnst@cn.fujitsu.com>
-> > > > ---
-> > > >   fs/xfs/xfs_iops.c | 3 +++
-> > > >   1 file changed, 3 insertions(+)
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > > > index f48ffd7..3811457 100644
-> > > > --- a/fs/xfs/xfs_iops.c
-> > > > +++ b/fs/xfs/xfs_iops.c
-> > > > @@ -521,6 +521,9 @@ xfs_vn_getattr(
-> > > >   			stat->btime.tv_nsec = ip->i_d.di_crtime.t_nsec;
-> > > >   		}
-> > > >   	}
-> > > > +	
-> > > > +	/* Only return mask that we care */
-> > > > +	stat->result_mask &= request_mask;
-> > > Why not just:
-> > > 
-> > > 	stat->result_mask = STATX_BASIC_STATS;
-> > > 
-> > > at the top of the function?
-> > > 
-> > > I don't see the need to mask off result_mask at all, since we could some
-> > > day elect to return more than what's in request_mask...
-> When we run xfstests with nfs, the generic/423 case runs failed. So i review
-> the nfs'
-> nfs_getattr code it does validate the request_mask.
-> 
-> Then i review the xfs' getattr code, it has no such check. Whatever
-> request_mask
->  is set, the stat's result_mask always the 0x7ff.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yes, statx can return more data than what userspace callers ask for:
+On a big block filesystem, there may be multiple inobt records covering
+a single inode cluster.  These records obviously won't be aligned to
+cluster alignment rules, and they must cover the entire cluster.  Teach
+scrub to check for these things.
 
-> Maybe it has Unclear semantics about statx's result_mask.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/scrub/ialloc.c |   41 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
 
-"A filesystem may also fill in fields that the caller didn't ask for if
-it has values for them available and the information is available at no
-extra cost.  If this happens, the  corresponding  bits will be set in
-stx_mask."
 
---D
-
-> > > ...waitaminute, are you seeing garbage in the result_mask that's
-> > > returned to userspace?  I also noticed the vfs stat functions declare
-> > > "struct kstat stat;" without explicitly zeroing the structure fields,
-> > > which means (I think) that we can leak stack information if the kernel
-> > > isn't built with the stackleak plugin?
-> No such problem.
-> > A clear problem statement and reproducer steps would be hugely useful
-> > here.
-> > 
-> > -Eric
-> Thanks,
-> Su
-> 
-> 
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 1c6fef9b3799..b8bfa93fd1a4 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -47,6 +47,12 @@ xchk_setup_ag_iallocbt(
+ struct xchk_iallocbt {
+ 	/* Number of inodes we see while scanning inobt. */
+ 	unsigned long long	inodes;
++
++	/* Expected next startino, for big block filesystems. */
++	xfs_agino_t		next_startino;
++
++	/* Expected end of the current inode cluster. */
++	xfs_agino_t		next_cluster_ino;
+ };
+ 
+ /*
+@@ -277,6 +283,7 @@ xchk_iallocbt_rec_alignment(
+ 	struct xfs_inobt_rec_incore	*irec)
+ {
+ 	struct xfs_mount		*mp = bs->sc->mp;
++	struct xchk_iallocbt		*iabt = bs->private;
+ 
+ 	/*
+ 	 * finobt records have different positioning requirements than inobt
+@@ -300,6 +307,27 @@ xchk_iallocbt_rec_alignment(
+ 		return;
+ 	}
+ 
++	if (iabt->next_startino != NULLAGINO) {
++		/*
++		 * We're midway through a cluster of inodes that is mapped by
++		 * multiple inobt records.  Did we get the record for the next
++		 * irec in the sequence?
++		 */
++		if (irec->ir_startino != iabt->next_startino) {
++			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
++			return;
++		}
++
++		iabt->next_startino += XFS_INODES_PER_CHUNK;
++
++		/* Are we done with the cluster? */
++		if (iabt->next_startino >= iabt->next_cluster_ino) {
++			iabt->next_startino = NULLAGINO;
++			iabt->next_cluster_ino = NULLAGINO;
++		}
++		return;
++	}
++
+ 	/* inobt records must be aligned to cluster and inoalignmnt size. */
+ 	if (irec->ir_startino & (mp->m_cluster_align_inodes - 1)) {
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+@@ -310,6 +338,17 @@ xchk_iallocbt_rec_alignment(
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+ 		return;
+ 	}
++
++	if (mp->m_inodes_per_cluster <= XFS_INODES_PER_CHUNK)
++		return;
++
++	/*
++	 * If this is the start of an inode cluster that can be mapped by
++	 * multiple inobt records, the next inobt record must follow exactly
++	 * after this one.
++	 */
++	iabt->next_startino = irec->ir_startino + XFS_INODES_PER_CHUNK;
++	iabt->next_cluster_ino = irec->ir_startino + mp->m_inodes_per_cluster;
+ }
+ 
+ /* Scrub an inobt/finobt record. */
+@@ -474,6 +513,8 @@ xchk_iallocbt(
+ 	struct xfs_btree_cur	*cur;
+ 	struct xchk_iallocbt	iabt = {
+ 		.inodes		= 0,
++		.next_startino	= NULLAGINO,
++		.next_cluster_ino = NULLAGINO,
+ 	};
+ 	int			error;
+ 
