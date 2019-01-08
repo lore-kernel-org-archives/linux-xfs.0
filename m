@@ -1,122 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59540 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726252AbfAERsF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 5 Jan 2019 12:48:05 -0500
-Subject: Re: [PATCH] xfs_quota: fix false error reporting of project
- inheritance flag is not set
-References: <20190105102556.GA4200@nevermore.lan>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9eb0d635-54a3-7796-e7bb-a0be7352210e@sandeen.net>
-Date: Sat, 5 Jan 2019 11:48:03 -0600
+Received: from userp2130.oracle.com ([156.151.31.86]:52948 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727028AbfAHCDg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jan 2019 21:03:36 -0500
+Date: Mon, 7 Jan 2019 18:03:26 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/8] xfs: scrub big block inode btrees correctly
+Message-ID: <20190108020326.GO12689@magnolia>
+References: <154630850739.14372.14000129432637481206.stgit@magnolia>
+ <154630855085.14372.11366121347834353110.stgit@magnolia>
+ <20190104183856.GH16751@bfoster>
+ <20190105002916.GG12689@magnolia>
+ <20190107134554.GB2853@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20190105102556.GA4200@nevermore.lan>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190107134554.GB2853@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Achilles Gaikwad <agaikwad@redhat.com>, linux-xfs@vger.kernel.org
-Cc: sgardner@redhat.com, sandeen@redhat.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 1/5/19 4:26 AM, Achilles Gaikwad wrote:
-> xfs_quota project check results in "project inheritance flag is not set" error
-
-Thanks for doing this.
-
-> https://bugzilla.redhat.com/show_bug.cgi?id=1663502
-
-As I mentioned in the bug, this started happening after:
-
-commit 9336e3a765b68d4a7fdd8256f393ebce95ecb0a7
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu Oct 2 09:18:40 2014 +1000
-
-    xfs: project id inheritance is a directory only flag
-    
-    xfs_set_diflags() allows it to be set on non-directory inodes, and
-    this flags errors in xfs_repair. Further, inode allocation allows
-    the same directory-only flag to be inherited to non-directories.
-    Make sure directory inode flags don't appear on other types of
-    inodes.
-    
-    This fixes several xfstests scratch fileystem corruption reports
-    (e.g. xfs/050) now that xfstests checks scratch filesystems after
-    test completion.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-
-which is present in v3.18 upstream.  i.e. we stopped setting the
-project inheritance flag on regular files in the kernel, but quotacheck
-still looks for it in userspace.
-
-It's good to write changelogs that will give full context to future readers,
-so something like this might be more useful:
-
-===
-
-After kernel commit:
-
-9336e3a7 "xfs: project id inheritance is a directory only flag"
-
-xfs stopped setting the project inheritance flag on regular files, but
-userspace quota code still checks for it and will now issue the error:
-
-"project inheritance flag is not set"
-
-for every regular file during quotacheck.  Fix this by only checking
-for the flag on directories.
-
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1663502
-Reported-by: Steven Gardner <sgardner@redhat.com>
-Signed-off-by: Achilles Gaikwad <agaikwad@redhat.com>
-
-===
-
-But the change itself is fine, so:
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-Also, this should really have an xfstest, because it's been broken
-for a long time, and only just now turned up...
-
-Thanks,
--Eric
-
+On Mon, Jan 07, 2019 at 08:45:55AM -0500, Brian Foster wrote:
+> On Fri, Jan 04, 2019 at 04:29:16PM -0800, Darrick J. Wong wrote:
+> > On Fri, Jan 04, 2019 at 01:38:56PM -0500, Brian Foster wrote:
+> > > On Mon, Dec 31, 2018 at 06:09:10PM -0800, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Teach scrub how to handle the case that there are one or more inobt
+> > > > records covering a given inode cluster.  This fixes the operation on big
+> > > > block filesystems (e.g. 64k blocks, 512 byte inodes).
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > >  fs/xfs/scrub/ialloc.c |    8 ++++++--
+> > > >  1 file changed, 6 insertions(+), 2 deletions(-)
+> > > > 
+> > > > 
+> > > > diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> > > > index 2f6c2d7fa3fd..1be6a5ebd61e 100644
+> > > > --- a/fs/xfs/scrub/ialloc.c
+> > > > +++ b/fs/xfs/scrub/ialloc.c
+> > > > @@ -162,6 +162,7 @@ xchk_iallocbt_check_cluster_ifree(
+> > > >  	xfs_ino_t			fsino;
+> > > >  	xfs_agino_t			agino;
+> > > >  	unsigned int			offset;
+> > > > +	unsigned int			cluster_buf_base;
+> > > >  	bool				irec_free;
+> > > >  	bool				ino_inuse;
+> > > >  	bool				freemask_ok;
+> > > > @@ -174,11 +175,14 @@ xchk_iallocbt_check_cluster_ifree(
+> > > >  	 * Given an inobt record, an offset of a cluster within the record,
+> > > >  	 * and an offset of an inode within a cluster, compute which fs inode
+> > > >  	 * we're talking about and the offset of the inode record within the
+> > > > -	 * inode buffer.
+> > > > +	 * inode buffer, being careful about inobt records that don't align
+> > > > +	 * with the start of the inode buffer when block sizes are large.
+> > > >  	 */
+> > > >  	agino = irec->ir_startino + cluster_base + cluster_index;
+> > > >  	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
+> > > > -	offset = cluster_index * mp->m_sb.sb_inodesize;
+> > > > +	cluster_buf_base = XFS_INO_TO_OFFSET(mp, irec->ir_startino +
+> > > > +					     cluster_base);
+> > > > +	offset = (cluster_buf_base + cluster_index) * mp->m_sb.sb_inodesize;
+> > > 
+> > > So cluster_buf_base should always be 0 unless the record itself is not
+> > > cluster aligned (i.e., the second record in a large FSB), right?
+> > 
+> > Right.  For the (n > 0)th inobt record for a large FSB, ir_startino's
+> > block offset will be less than inopblock, so cluster_buf_base will be
+> > greater than zero.
+> > 
+> > > If so, cluster_base should also be 0 in any case where
+> > > cluster_buf_base != 0.  I'm wondering if that can be made a little
+> > > more explicit, or perhaps self-documented with an assert.
+> > 
+> > Right.  For the more typical case where there are multiple clusters for
+> > each inobt record, ir_startino's block offset will always point to the
+> > start of an inode cluster (and therefore cluster_buf_base will be zero)
+> > but cluster_base will increment as we visit each cluster in the inobt.
+> > 
+> > I think this code can become:
+> > 
+> > 	cluster_buf_base = XFS_INO_TO_OFFSET(mp, irec->ir_startino);
+> > 	ASSERT(cluster_buf_base == 0 || cluster_base == 0);
+> > 	offset = (cluster_buf_base + cluster_index) << mp->m_sb.sb_inopblog;
+> > 
+> > But I'll go feed that to the test machines before I commit to that. :)
+> > 
+> > > Thinking more about it, it's kind of confusing to me either way because
+> > > cluster_index isn't really a cluster index in this case, rather it's
+> > > more of a record index because it doesn't account for the fact that the
+> > > record is a subset of the cluster. Hmmm... could we simplify this by
+> > > setting imap.im_boffset appropriately in the caller such that dip always
+> > > points to either the first inode in the buffer or first inode in the
+> > > record, then just pass in dip directly and let the caller increment it
+> > > in the associated loop? Maybe that's something for another patch..
+> > 
+> > I think that would be possible...
+> > 
 > 
-> Reported-by: Steven Gardner <sgardner@redhat.com>
-> Signed-off-by: Achilles Gaikwad <agaikwad@redhat.com>
-> ---
+> If so, I think it's worthwhile because then you'd only need to pass the
+> record, the inode index and the dip pointer to this function. AFAICT
+> you'd just need to pull up the cluster_buf_base logic here (along with
+> a useful comment) to the im_boffset assignment in the caller.
 
+<nod> It looks like it cleans things up quite a bit.
 
+--D
 
->  quota/project.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+> Brian
 > 
-> diff --git a/quota/project.c b/quota/project.c
-> index e4e7a012..8c9be08b 100644
-> --- a/quota/project.c
-> +++ b/quota/project.c
-> @@ -99,6 +99,7 @@ check_project(
->  {
->  	struct fsxattr		fsx;
->  	int			fd;
-> +	int			isdir;
->  
->  	if (recurse_depth >= 0 && data->level > recurse_depth)
->  		return -1;
-> @@ -126,7 +127,8 @@ check_project(
->  			printf(_("%s - project identifier is not set"
->  				 " (inode=%u, tree=%u)\n"),
->  				path, fsx.fsx_projid, (unsigned int)prid);
-> -		if (!(fsx.fsx_xflags & FS_XFLAG_PROJINHERIT))
-> +		isdir = S_ISDIR(stat->st_mode);
-> +		if (!(fsx.fsx_xflags & FS_XFLAG_PROJINHERIT) && isdir)
->  			printf(_("%s - project inheritance flag is not set\n"),
->  				path);
->  	}
-> 
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > >  	if (offset >= BBTOB(cluster_bp->b_length)) {
+> > > >  		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > > >  		goto out;
+> > > > 
