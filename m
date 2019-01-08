@@ -1,88 +1,184 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45086 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728522AbfAHOLs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Jan 2019 09:11:48 -0500
-Subject: Re: [PATCH] xfs: correct statx's result_mask value
-References: <1546854790-5233-1-git-send-email-suyj.fnst@cn.fujitsu.com>
- <20190107175229.GJ12689@magnolia>
- <2b27e2ec-368b-d24c-8443-e265f87e417c@sandeen.net>
- <67e03af1-6e11-4236-76e6-6127b6cfb9b9@cn.fujitsu.com>
- <20190108050739.GQ12689@magnolia>
- <5c103aa0-8711-ceb3-38f8-dffe983526ff@cn.fujitsu.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <3af22df1-dc37-5e51-36be-aad3fe8a8fbb@sandeen.net>
-Date: Tue, 8 Jan 2019 08:11:46 -0600
+Received: from aserp2130.oracle.com ([141.146.126.79]:42304 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728644AbfAHUdE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 15:33:04 -0500
+Subject: [PATCH 4/7] xfs: hoist inode cluster checks out of loop
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 08 Jan 2019 12:33:00 -0800
+Message-ID: <154697958005.2494.13065416070471145235.stgit@magnolia>
+In-Reply-To: <154697955494.2494.5221420762912855354.stgit@magnolia>
+References: <154697955494.2494.5221420762912855354.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <5c103aa0-8711-ceb3-38f8-dffe983526ff@cn.fujitsu.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Su Yanjun <suyj.fnst@cn.fujitsu.com>" <suyj.fnst@cn.fujitsu.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, suyanjun218@gmail.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>
+
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+Hoist the inode cluster checks out of the inobt record check loop into
+a separate function in preparation for refactoring of that loop.  No
+functional changes here; that's in the next patch.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/scrub/ialloc.c |  119 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 65 insertions(+), 54 deletions(-)
 
 
-
-On 1/7/19 11:15 PM, Su Yanjun <suyj.fnst@cn.fujitsu.com> wrote:
-> 
-> 
-> On 1/8/2019 1:07 PM, Darrick J. Wong wrote:
->> On Tue, Jan 08, 2019 at 12:58:43PM +0800, Su Yanjun <suyj.fnst@cn.fujitsu.com> wrote:
->>>
->>> On 1/8/2019 2:04 AM, Eric Sandeen wrote:
->>>> On 1/7/19 11:52 AM, Darrick J. Wong wrote:
->>>>> On Mon, Jan 07, 2019 at 04:53:10AM -0500, Su Yanjun wrote:
->>>>>> For statx syscall, xfs return the wrong result_mask.
->>>>>>
->>>>>> Signed-off-by: Su Yanjun<suyj.fnst@cn.fujitsu.com>
->>>>>> ---
->>>>>>    fs/xfs/xfs_iops.c | 3 +++
->>>>>>    1 file changed, 3 insertions(+)
->>>>>>
->>>>>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->>>>>> index f48ffd7..3811457 100644
->>>>>> --- a/fs/xfs/xfs_iops.c
->>>>>> +++ b/fs/xfs/xfs_iops.c
->>>>>> @@ -521,6 +521,9 @@ xfs_vn_getattr(
->>>>>>                stat->btime.tv_nsec = ip->i_d.di_crtime.t_nsec;
->>>>>>            }
->>>>>>        }
->>>>>> +   
->>>>>> +    /* Only return mask that we care */
->>>>>> +    stat->result_mask &= request_mask;
->>>>> Why not just:
->>>>>
->>>>>     stat->result_mask = STATX_BASIC_STATS;
->>>>>
->>>>> at the top of the function?
->>>>>
->>>>> I don't see the need to mask off result_mask at all, since we could some
->>>>> day elect to return more than what's in request_mask...
->>> When we run xfstests with nfs, the generic/423 case runs failed. So i review
->>> the nfs'
->>> nfs_getattr code it does validate the request_mask.
->>>
->>> Then i review the xfs' getattr code, it has no such check. Whatever
->>> request_mask
->>>   is set, the stat's result_mask always the 0x7ff.
->> Yes, statx can return more data than what userspace callers ask for:
->>
->>> Maybe it has Unclear semantics about statx's result_mask.
->> "A filesystem may also fill in fields that the caller didn't ask for if
->> it has values for them available and the information is available at no
->> extra cost.  If this happens, the  corresponding  bits will be set in
->> stx_mask."
->>
->> --D
-> 
-> I get it, then the testcase generic/423 may need update in xfstests.
-> Thanks for your reply.
-
-Can you please share the details of the failure you're seeing when you run
-it over nfs?
-
-Thanks,
--=Eric
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index b8bfa93fd1a4..0ce793d92995 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -188,19 +188,19 @@ xchk_iallocbt_check_cluster_freemask(
+ 	return 0;
+ }
+ 
+-/* Make sure the free mask is consistent with what the inodes think. */
++/* Check an inode cluster. */
+ STATIC int
+-xchk_iallocbt_check_freemask(
++xchk_iallocbt_check_cluster(
+ 	struct xchk_btree		*bs,
+-	struct xfs_inobt_rec_incore	*irec)
++	struct xfs_inobt_rec_incore	*irec,
++	xfs_agino_t			agino)
+ {
+ 	struct xfs_imap			imap;
+ 	struct xfs_mount		*mp = bs->cur->bc_mp;
+ 	struct xfs_dinode		*dip;
+ 	struct xfs_buf			*bp;
+ 	xfs_ino_t			fsino;
+-	xfs_agino_t			nr_inodes;
+-	xfs_agino_t			agino;
++	unsigned int			nr_inodes;
+ 	xfs_agino_t			chunkino;
+ 	xfs_agino_t			clusterino;
+ 	xfs_agblock_t			agbno;
+@@ -212,60 +212,71 @@ xchk_iallocbt_check_freemask(
+ 	nr_inodes = min_t(unsigned int, XFS_INODES_PER_CHUNK,
+ 			mp->m_inodes_per_cluster);
+ 
+-	for (agino = irec->ir_startino;
+-	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
+-	     agino += mp->m_inodes_per_cluster) {
+-		fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
+-		chunkino = agino - irec->ir_startino;
+-		agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+-
+-		/* Compute the holemask mask for this cluster. */
+-		for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
+-		     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
+-			holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
+-					XFS_INODES_PER_HOLEMASK_BIT);
+-
+-		/* The whole cluster must be a hole or not a hole. */
+-		ir_holemask = (irec->ir_holemask & holemask);
+-		if (ir_holemask != holemask && ir_holemask != 0) {
+-			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+-			continue;
+-		}
++	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
++	chunkino = agino - irec->ir_startino;
++	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
+ 
+-		/* If any part of this is a hole, skip it. */
+-		if (ir_holemask) {
+-			xchk_xref_is_not_owned_by(bs->sc, agbno,
+-					mp->m_blocks_per_cluster,
+-					&XFS_RMAP_OINFO_INODES);
+-			continue;
+-		}
++	/* Compute the holemask mask for this cluster. */
++	for (clusterino = 0, holemask = 0; clusterino < nr_inodes;
++	     clusterino += XFS_INODES_PER_HOLEMASK_BIT)
++		holemask |= XFS_INOBT_MASK((chunkino + clusterino) /
++				XFS_INODES_PER_HOLEMASK_BIT);
++
++	/* The whole cluster must be a hole or not a hole. */
++	ir_holemask = (irec->ir_holemask & holemask);
++	if (ir_holemask != holemask && ir_holemask != 0) {
++		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
++		return 0;
++	}
+ 
+-		xchk_xref_is_owned_by(bs->sc, agbno, mp->m_blocks_per_cluster,
++	/* If any part of this is a hole, skip it. */
++	if (ir_holemask) {
++		xchk_xref_is_not_owned_by(bs->sc, agbno,
++				mp->m_blocks_per_cluster,
+ 				&XFS_RMAP_OINFO_INODES);
++		return 0;
++	}
+ 
+-		/* Grab the inode cluster buffer. */
+-		imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno,
+-				agbno);
+-		imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
+-		imap.im_boffset = 0;
+-
+-		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
+-				&dip, &bp, 0, 0);
+-		if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0,
+-				&error))
+-			continue;
+-
+-		/* Which inodes are free? */
+-		for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
+-			error = xchk_iallocbt_check_cluster_freemask(bs,
+-					fsino, chunkino, clusterino, irec, bp);
+-			if (error) {
+-				xfs_trans_brelse(bs->cur->bc_tp, bp);
+-				return error;
+-			}
+-		}
++	xchk_xref_is_owned_by(bs->sc, agbno, mp->m_blocks_per_cluster,
++			&XFS_RMAP_OINFO_INODES);
++
++	/* Grab the inode cluster buffer. */
++	imap.im_blkno = XFS_AGB_TO_DADDR(mp, bs->cur->bc_private.a.agno, agbno);
++	imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
++	imap.im_boffset = 0;
+ 
+-		xfs_trans_brelse(bs->cur->bc_tp, bp);
++	error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap, &dip, &bp, 0, 0);
++	if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0, &error))
++		return 0;
++
++	/* Which inodes are free? */
++	for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
++		error = xchk_iallocbt_check_cluster_freemask(bs, fsino,
++				chunkino, clusterino, irec, bp);
++		if (error)
++			break;
++	}
++
++	xfs_trans_brelse(bs->cur->bc_tp, bp);
++	return error;
++}
++
++/* Make sure the free mask is consistent with what the inodes think. */
++STATIC int
++xchk_iallocbt_check_freemask(
++	struct xchk_btree		*bs,
++	struct xfs_inobt_rec_incore	*irec)
++{
++	struct xfs_mount		*mp = bs->cur->bc_mp;
++	xfs_agino_t			agino;
++	int				error = 0;
++
++	for (agino = irec->ir_startino;
++	     agino < irec->ir_startino + XFS_INODES_PER_CHUNK;
++	     agino += mp->m_inodes_per_cluster) {
++		error = xchk_iallocbt_check_cluster(bs, irec, agino);
++		if (error)
++			break;
+ 	}
+ 
+ 	return error;
