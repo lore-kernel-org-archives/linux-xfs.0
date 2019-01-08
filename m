@@ -1,18 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:33096 "EHLO
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:39588 "EHLO
         mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728987AbfAGOlL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jan 2019 09:41:11 -0500
+        by vger.kernel.org with ESMTP id S1729198AbfAHR77 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 12:59:59 -0500
 Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id A911D28A3F
-        for <linux-xfs@vger.kernel.org>; Mon,  7 Jan 2019 14:41:10 +0000 (UTC)
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 588A228E52
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Jan 2019 17:59:58 +0000 (UTC)
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202053] [xfstests generic/464]: XFS corruption and Assertion
- failed: 0, file: fs/xfs/xfs_super.c, line: 985
-Date: Mon, 07 Jan 2019 14:41:09 +0000
-Message-ID: <bug-202053-201763-fAUQg1mf3h@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202053-201763@https.bugzilla.kernel.org/>
-References: <bug-202053-201763@https.bugzilla.kernel.org/>
+Subject: [Bug 202127] cannot mount or create xfs on a  597T device
+Date: Tue, 08 Jan 2019 17:59:58 +0000
+Message-ID: <bug-202127-201763-pAGY0ncz3K@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202127-201763@https.bugzilla.kernel.org/>
+References: <bug-202127-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
@@ -21,66 +20,18 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202053
+https://bugzilla.kernel.org/show_bug.cgi?id=202127
 
---- Comment #11 from bfoster@redhat.com ---
-On Sun, Jan 06, 2019 at 08:31:20AM +1100, Dave Chinner wrote:
-> On Fri, Jan 04, 2019 at 07:32:17AM -0500, Brian Foster wrote:
-> > On Tue, Dec 25, 2018 at 06:10:59AM +0000,
-> bugzilla-daemon@bugzilla.kernel.org wrote:
-> > - writepages is in progress on a particular file that has decently sized
-> >   post-eof speculative preallocation
-> > - writepages gets to the point where it looks up or allocates a new imap
-> >   that includes the preallocation, the allocation/lookup result is
-> >   stored in wpc
-> > - the file is closed by one process, killing off preallocation, then
-> >   immediately appended to by another, updating the file size by a few
-> >   bytes
-> > - writepages comes back around to xfs_map_blocks() and trims imap to the
-> >   current size, but imap still includes one block of the original
-> speculative
-> >   prealloc (that was truncated and recreated) because the size increased
-> >   between the time imap was stored and trimmed
-> 
-> I'm betting hole punch can cause similar problems with cached maps
-> in writepage. I wrote a patch yonks ago to put a generation number
-> in the extent fork and to store it in the cached map, and to
-> invalidate the cached map if they didn't match.
-> 
+--- Comment #21 from daimh@umich.edu ---
+still failed.
 
-Isn't hole punch already serialized with writeback? I thought the issue
-was that post-eof blocks are not fully covered by the existing
-serialization logic because there are no pages involved, but it's been a
-while since I've looked at it..
-
-Brian
-
-> > The EOF trim approach is known to be a bandaid and potentially racy, but
-> > ISTM that this problem can be trivially avoided by moving or adding
-> > trims of wpc->imap immediately after a new one is cached. I don't
-> > reproduce the problem so far with a couple such extra calls in place.
-> > 
-> > Bigger picture, we need some kind of invalidation mechanism similar to
-> > what we're already doing for dealing with the COW fork in this writeback
-> > context. I'm not sure the broad semantics used by the COW fork sequence
-> > counter mechanism is really suitable for the data fork because any
-> > extent-related change in the fork would cause an invalidation, but I am
-> > wondering if we could define some subset of less frequent operations for
-> > the same mechanism to reliably invalidate (e.g., on eofblocks trims, for
-> > starters).
-> 
-> The patch I had is below - I haven't forward ported it or anything,
-> just pulled it from my archive to demonstrate what I think we
-> probably need to be doing here. If we want to limit when it causes
-> invalidations, then we need probably need to limit which operations
-> cause the generation number for that inode fork to be bumped.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+# mkfs.xfs /dev/vg/lv  &> log
+# head log
+SB stripe unit sanity check failed
+Metadata corruption detected at 0x5571f8b8d4a7, xfs_sb block 0x0/0x1000
+libxfs_writebufr: write verifer failed on xfs_sb bno 0x0/0x1000
+cache_node_purge: refcount was 1, not zero (node=0x5571f9936160)
+SB stripe unit sanity check failed
 
 -- 
 You are receiving this mail because:
