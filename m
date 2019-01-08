@@ -1,122 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52948 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727028AbfAHCDg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jan 2019 21:03:36 -0500
-Date: Mon, 7 Jan 2019 18:03:26 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/8] xfs: scrub big block inode btrees correctly
-Message-ID: <20190108020326.GO12689@magnolia>
-References: <154630850739.14372.14000129432637481206.stgit@magnolia>
- <154630855085.14372.11366121347834353110.stgit@magnolia>
- <20190104183856.GH16751@bfoster>
- <20190105002916.GG12689@magnolia>
- <20190107134554.GB2853@bfoster>
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:11274 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725838AbfAHFPZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 00:15:25 -0500
+Subject: Re: [PATCH] xfs: correct statx's result_mask value
+References: <1546854790-5233-1-git-send-email-suyj.fnst@cn.fujitsu.com>
+ <20190107175229.GJ12689@magnolia>
+ <2b27e2ec-368b-d24c-8443-e265f87e417c@sandeen.net>
+ <67e03af1-6e11-4236-76e6-6127b6cfb9b9@cn.fujitsu.com>
+ <20190108050739.GQ12689@magnolia>
+From: "Su Yanjun <suyj.fnst@cn.fujitsu.com>" <suyj.fnst@cn.fujitsu.com>
+Message-ID: <5c103aa0-8711-ceb3-38f8-dffe983526ff@cn.fujitsu.com>
+Date: Tue, 8 Jan 2019 13:15:11 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190107134554.GB2853@bfoster>
+In-Reply-To: <20190108050739.GQ12689@magnolia>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, suyanjun218@gmail.com
 
-On Mon, Jan 07, 2019 at 08:45:55AM -0500, Brian Foster wrote:
-> On Fri, Jan 04, 2019 at 04:29:16PM -0800, Darrick J. Wong wrote:
-> > On Fri, Jan 04, 2019 at 01:38:56PM -0500, Brian Foster wrote:
-> > > On Mon, Dec 31, 2018 at 06:09:10PM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Teach scrub how to handle the case that there are one or more inobt
-> > > > records covering a given inode cluster.  This fixes the operation on big
-> > > > block filesystems (e.g. 64k blocks, 512 byte inodes).
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  fs/xfs/scrub/ialloc.c |    8 ++++++--
-> > > >  1 file changed, 6 insertions(+), 2 deletions(-)
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> > > > index 2f6c2d7fa3fd..1be6a5ebd61e 100644
-> > > > --- a/fs/xfs/scrub/ialloc.c
-> > > > +++ b/fs/xfs/scrub/ialloc.c
-> > > > @@ -162,6 +162,7 @@ xchk_iallocbt_check_cluster_ifree(
-> > > >  	xfs_ino_t			fsino;
-> > > >  	xfs_agino_t			agino;
-> > > >  	unsigned int			offset;
-> > > > +	unsigned int			cluster_buf_base;
-> > > >  	bool				irec_free;
-> > > >  	bool				ino_inuse;
-> > > >  	bool				freemask_ok;
-> > > > @@ -174,11 +175,14 @@ xchk_iallocbt_check_cluster_ifree(
-> > > >  	 * Given an inobt record, an offset of a cluster within the record,
-> > > >  	 * and an offset of an inode within a cluster, compute which fs inode
-> > > >  	 * we're talking about and the offset of the inode record within the
-> > > > -	 * inode buffer.
-> > > > +	 * inode buffer, being careful about inobt records that don't align
-> > > > +	 * with the start of the inode buffer when block sizes are large.
-> > > >  	 */
-> > > >  	agino = irec->ir_startino + cluster_base + cluster_index;
-> > > >  	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
-> > > > -	offset = cluster_index * mp->m_sb.sb_inodesize;
-> > > > +	cluster_buf_base = XFS_INO_TO_OFFSET(mp, irec->ir_startino +
-> > > > +					     cluster_base);
-> > > > +	offset = (cluster_buf_base + cluster_index) * mp->m_sb.sb_inodesize;
-> > > 
-> > > So cluster_buf_base should always be 0 unless the record itself is not
-> > > cluster aligned (i.e., the second record in a large FSB), right?
-> > 
-> > Right.  For the (n > 0)th inobt record for a large FSB, ir_startino's
-> > block offset will be less than inopblock, so cluster_buf_base will be
-> > greater than zero.
-> > 
-> > > If so, cluster_base should also be 0 in any case where
-> > > cluster_buf_base != 0.  I'm wondering if that can be made a little
-> > > more explicit, or perhaps self-documented with an assert.
-> > 
-> > Right.  For the more typical case where there are multiple clusters for
-> > each inobt record, ir_startino's block offset will always point to the
-> > start of an inode cluster (and therefore cluster_buf_base will be zero)
-> > but cluster_base will increment as we visit each cluster in the inobt.
-> > 
-> > I think this code can become:
-> > 
-> > 	cluster_buf_base = XFS_INO_TO_OFFSET(mp, irec->ir_startino);
-> > 	ASSERT(cluster_buf_base == 0 || cluster_base == 0);
-> > 	offset = (cluster_buf_base + cluster_index) << mp->m_sb.sb_inopblog;
-> > 
-> > But I'll go feed that to the test machines before I commit to that. :)
-> > 
-> > > Thinking more about it, it's kind of confusing to me either way because
-> > > cluster_index isn't really a cluster index in this case, rather it's
-> > > more of a record index because it doesn't account for the fact that the
-> > > record is a subset of the cluster. Hmmm... could we simplify this by
-> > > setting imap.im_boffset appropriately in the caller such that dip always
-> > > points to either the first inode in the buffer or first inode in the
-> > > record, then just pass in dip directly and let the caller increment it
-> > > in the associated loop? Maybe that's something for another patch..
-> > 
-> > I think that would be possible...
-> > 
-> 
-> If so, I think it's worthwhile because then you'd only need to pass the
-> record, the inode index and the dip pointer to this function. AFAICT
-> you'd just need to pull up the cluster_buf_base logic here (along with
-> a useful comment) to the im_boffset assignment in the caller.
 
-<nod> It looks like it cleans things up quite a bit.
 
---D
+On 1/8/2019 1:07 PM, Darrick J. Wong wrote:
+> On Tue, Jan 08, 2019 at 12:58:43PM +0800, Su Yanjun <suyj.fnst@cn.fujitsu.com> wrote:
+>>
+>> On 1/8/2019 2:04 AM, Eric Sandeen wrote:
+>>> On 1/7/19 11:52 AM, Darrick J. Wong wrote:
+>>>> On Mon, Jan 07, 2019 at 04:53:10AM -0500, Su Yanjun wrote:
+>>>>> For statx syscall, xfs return the wrong result_mask.
+>>>>>
+>>>>> Signed-off-by: Su Yanjun<suyj.fnst@cn.fujitsu.com>
+>>>>> ---
+>>>>>    fs/xfs/xfs_iops.c | 3 +++
+>>>>>    1 file changed, 3 insertions(+)
+>>>>>
+>>>>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+>>>>> index f48ffd7..3811457 100644
+>>>>> --- a/fs/xfs/xfs_iops.c
+>>>>> +++ b/fs/xfs/xfs_iops.c
+>>>>> @@ -521,6 +521,9 @@ xfs_vn_getattr(
+>>>>>    			stat->btime.tv_nsec = ip->i_d.di_crtime.t_nsec;
+>>>>>    		}
+>>>>>    	}
+>>>>> +	
+>>>>> +	/* Only return mask that we care */
+>>>>> +	stat->result_mask &= request_mask;
+>>>> Why not just:
+>>>>
+>>>> 	stat->result_mask = STATX_BASIC_STATS;
+>>>>
+>>>> at the top of the function?
+>>>>
+>>>> I don't see the need to mask off result_mask at all, since we could some
+>>>> day elect to return more than what's in request_mask...
+>> When we run xfstests with nfs, the generic/423 case runs failed. So i review
+>> the nfs'
+>> nfs_getattr code it does validate the request_mask.
+>>
+>> Then i review the xfs' getattr code, it has no such check. Whatever
+>> request_mask
+>>   is set, the stat's result_mask always the 0x7ff.
+> Yes, statx can return more data than what userspace callers ask for:
+>
+>> Maybe it has Unclear semantics about statx's result_mask.
+> "A filesystem may also fill in fields that the caller didn't ask for if
+> it has values for them available and the information is available at no
+> extra cost.  If this happens, the  corresponding  bits will be set in
+> stx_mask."
+>
+> --D
 
-> Brian
-> 
-> > --D
-> > 
-> > > Brian
-> > > 
-> > > >  	if (offset >= BBTOB(cluster_bp->b_length)) {
-> > > >  		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > > >  		goto out;
-> > > > 
+I get it, then the testcase generic/423 may need update in xfstests.
+Thanks for your reply.
+
+>>>> ...waitaminute, are you seeing garbage in the result_mask that's
+>>>> returned to userspace?  I also noticed the vfs stat functions declare
+>>>> "struct kstat stat;" without explicitly zeroing the structure fields,
+>>>> which means (I think) that we can leak stack information if the kernel
+>>>> isn't built with the stackleak plugin?
+>> No such problem.
+>>> A clear problem statement and reproducer steps would be hugely useful
+>>> here.
+>>>
+>>> -Eric
+>> Thanks,
+>> Su
+>>
+>>
+>
