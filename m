@@ -1,47 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15115 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:30136 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732080AbfAIOuR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Jan 2019 09:50:17 -0500
+        id S1731733AbfAIOy2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Jan 2019 09:54:28 -0500
+Date: Wed, 9 Jan 2019 09:54:19 -0500 (EST)
 From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v3 5/5] xfs: disable map_sync for virtio pmem
-Date: Wed,  9 Jan 2019 20:17:36 +0530
-Message-Id: <20190109144736.17452-6-pagupta@redhat.com>
-In-Reply-To: <20190109144736.17452-1-pagupta@redhat.com>
-References: <20190109144736.17452-1-pagupta@redhat.com>
+Message-ID: <1413703615.61223613.1547045659656.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20190109144215.GI15397@quack2.suse.cz>
+References: <20190109135606.15401-1-pagupta@redhat.com> <20190109144215.GI15397@quack2.suse.cz>
+Subject: Re: [PATCH v3 4/5] ext4: disable map_sync for virtio pmem
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, qemu-devel@nongnu.org, linux-nvdimm@ml01.01.org, linux-fsdevel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-acpi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: jack@suse.cz, stefanha@redhat.com, dan.j.williams@intel.com, riel@surriel.com, nilal@redhat.com, kwolf@redhat.com, pbonzini@redhat.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, david@redhat.com, jmoyer@redhat.com, xiaoguangrong.eric@gmail.com, hch@infradead.org, mst@redhat.com, jasowang@redhat.com, lcapitulino@redhat.com, imammedo@redhat.com, eblake@redhat.com, willy@infradead.org, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, rjw@rjwysocki.net, pagupta@redhat.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, qemu-devel@nongnu.org, linux-nvdimm@ml01.01.org, linux-fsdevel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-acpi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, stefanha@redhat.com, dan j williams <dan.j.williams@intel.com>, riel@surriel.com, nilal@redhat.com, kwolf@redhat.com, pbonzini@redhat.com, zwisler@kernel.org, vishal l verma <vishal.l.verma@intel.com>, dave jiang <dave.jiang@intel.com>, david@redhat.com, jmoyer@redhat.com, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, hch@infradead.org, mst@redhat.com, jasowang@redhat.com, lcapitulino@redhat.com, imammedo@redhat.com, eblake@redhat.com, willy@infradead.org, tytso@mit.edu, adilger kernel <adilger.kernel@dilger.ca>, darrick wong <darrick.wong@oracle.com>, rjw@rjwysocki.net
 
-Virtio pmem provides asynchronous host page cache flush
-mechanism. we don't support 'MAP_SYNC' with virtio pmem 
-and xfs.
 
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
----
- fs/xfs/xfs_file.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+> 
+> On Wed 09-01-19 19:26:05, Pankaj Gupta wrote:
+> > Virtio pmem provides asynchronous host page cache flush
+> > mechanism. We don't support 'MAP_SYNC' with virtio pmem
+> > and ext4.
+> > 
+> > Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> ...
+> > @@ -371,6 +373,13 @@ static int ext4_file_mmap(struct file *file, struct
+> > vm_area_struct *vma)
+> >  	if (!IS_DAX(file_inode(file)) && (vma->vm_flags & VM_SYNC))
+> >  		return -EOPNOTSUPP;
+> >  
+> > +	/* We don't support synchronous mappings with guest direct access
+> > +	 * and virtio based host page cache flush mechanism.
+> > +	 */
+> > +	if (IS_DAX(file_inode(file)) && virtio_pmem_host_cache_enabled(dax_dev)
+> > +						&& (vma->vm_flags & VM_SYNC))
+> > +		return -EOPNOTSUPP;
+> > +
+> 
+> Shouldn't there rather be some generic way of doing this? Having
+> virtio_pmem_host_cache_enabled() check in filesystem code just looks like
+> filesystem sniffing into details is should not care about... Maybe just
+> naming this (or having a wrapper) dax_dev_map_sync_supported()?
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e474250..eae4aa4 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1190,6 +1190,14 @@ xfs_file_mmap(
- 	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
- 		return -EOPNOTSUPP;
- 
-+	/* We don't support synchronous mappings with guest direct access
-+	 * and virtio based host page cache mechanism.
-+	 */
-+	if (IS_DAX(file_inode(filp)) && virtio_pmem_host_cache_enabled(
-+		xfs_find_daxdev_for_inode(file_inode(filp))) &&
-+					(vma->vm_flags & VM_SYNC))
-+		return -EOPNOTSUPP;
-+
- 	file_accessed(filp);
- 	vma->vm_ops = &xfs_file_vm_ops;
- 	if (IS_DAX(file_inode(filp)))
--- 
-2.9.3
+Thanks for the feedback.
+
+Just wanted to avoid 'dax' in function name just to differentiate this with real dax.
+But yes can add a wrapper: dax_dev_map_sync_supported()
+
+Thanks,
+Pankaj
