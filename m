@@ -1,149 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56166 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42058 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727627AbfAINdg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Jan 2019 08:33:36 -0500
-Date: Wed, 9 Jan 2019 08:33:33 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 7/7] xfs: consolidate scrub dinode mapping code into a
- single function
-Message-ID: <20190109133333.GC13613@bfoster>
-References: <154697955494.2494.5221420762912855354.stgit@magnolia>
- <154697959877.2494.10993090686249072444.stgit@magnolia>
+        id S1730380AbfAINvC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Jan 2019 08:51:02 -0500
+From: Pankaj Gupta <pagupta@redhat.com>
+Subject: [PATCH v3 0/5] kvm "virtio pmem" device
+Date: Wed,  9 Jan 2019 19:20:19 +0530
+Message-Id: <20190109135024.14093-1-pagupta@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154697959877.2494.10993090686249072444.stgit@magnolia>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, qemu-devel@nongnu.org, linux-nvdimm@ml01.01.org, linux-fsdevel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-acpi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: jack@suse.cz, stefanha@redhat.com, dan.j.williams@intel.com, riel@surriel.com, nilal@redhat.com, kwolf@redhat.com, pbonzini@redhat.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, david@redhat.com, jmoyer@redhat.com, xiaoguangrong.eric@gmail.com, hch@infradead.org, mst@redhat.com, jasowang@redhat.com, lcapitulino@redhat.com, imammedo@redhat.com, eblake@redhat.com, willy@infradead.org, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, rjw@rjwysocki.net, pagupta@redhat.com
 
-On Tue, Jan 08, 2019 at 12:33:18PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Move all the confusing dinode mapping code that's split between
-> xchk_iallocbt_check_cluster and xchk_iallocbt_check_cluster_ifree into
-> the first function so that it's clearer how we find the dinode for a
-> given inode.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/ialloc.c |   48 +++++++++++++++++++++++++++---------------------
->  1 file changed, 27 insertions(+), 21 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> index 1929d79ea6b3..663cc8a98fc9 100644
-> --- a/fs/xfs/scrub/ialloc.c
-> +++ b/fs/xfs/scrub/ialloc.c
-> @@ -146,7 +146,7 @@ xchk_iallocbt_freecount(
->   *
->   * @irec is the inobt record.
->   * @cluster_base is the inode offset of the cluster within the @irec.
-> - * @cluster_bp is the cluster buffer.
-> + * @dip is the on-disk inode.
->   * @cluster_index is the inode offset within the inode cluster.
->   */
->  STATIC int
-> @@ -154,15 +154,12 @@ xchk_iallocbt_check_cluster_ifree(
->  	struct xchk_btree		*bs,
->  	struct xfs_inobt_rec_incore	*irec,
->  	unsigned int			cluster_base,
-> -	struct xfs_buf			*cluster_bp,
-> +	struct xfs_dinode		*dip,
->  	unsigned int			cluster_index)
->  {
+ This patch series has implementation for "virtio pmem". 
+ "virtio pmem" is fake persistent memory(nvdimm) in guest 
+ which allows to bypass the guest page cache. This also
+ implements a VIRTIO based asynchronous flush mechanism.  
+ 
+ Sharing guest kernel driver in this patchset with the 
+ changes suggested in v2. Tested with Qemu side device 
+ emulation for virtio-pmem [6]. 
+ 
+ Details of project idea for 'virtio pmem' flushing interface 
+ is shared [3] & [4].
 
-It doesn't seem like there's any need to pass both cluster_base and
-cluster_index here either just to calculate agino, which is all this
-function cares about. Can we calculate the index relative to startino in
-the caller and pass that so this function has no reason to care about
-inode clusters at all?
+ Implementation is divided into two parts:
+ New virtio pmem guest driver and qemu code changes for new 
+ virtio pmem paravirtualized device.
 
-With that cleaned up:
+1. Guest virtio-pmem kernel driver
+---------------------------------
+   - Reads persistent memory range from paravirt device and 
+     registers with 'nvdimm_bus'.  
+   - 'nvdimm/pmem' driver uses this information to allocate 
+     persistent memory region and setup filesystem operations 
+     to the allocated memory. 
+   - virtio pmem driver implements asynchronous flushing 
+     interface to flush from guest to host.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+2. Qemu virtio-pmem device
+---------------------------------
+   - Creates virtio pmem device and exposes a memory range to 
+     KVM guest. 
+   - At host side this is file backed memory which acts as 
+     persistent memory. 
+   - Qemu side flush uses aio thread pool API's and virtio 
+     for asynchronous guest multi request handling. 
 
->  	struct xfs_mount		*mp = bs->cur->bc_mp;
-> -	struct xfs_dinode		*dip;
->  	xfs_ino_t			fsino;
->  	xfs_agino_t			agino;
-> -	unsigned int			offset;
-> -	unsigned int			cluster_buf_base;
->  	bool				irec_free;
->  	bool				ino_inuse;
->  	bool				freemask_ok;
-> @@ -174,23 +171,10 @@ xchk_iallocbt_check_cluster_ifree(
->  	/*
->  	 * Given an inobt record, an offset of a cluster within the record, and
->  	 * an offset of an inode within a cluster, compute which fs inode we're
-> -	 * talking about and the offset of that inode within the buffer.
-> -	 *
-> -	 * Be careful about inobt records that don't align with the start of
-> -	 * the inode buffer when block sizes are large enough to hold multiple
-> -	 * inode chunks.  When this happens, cluster_base will be zero but
-> -	 * ir_startino can be large enough to make cluster_buf_base nonzero.
-> +	 * talking about.
->  	 */
->  	agino = irec->ir_startino + cluster_base + cluster_index;
->  	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
-> -	cluster_buf_base = XFS_INO_TO_OFFSET(mp, irec->ir_startino);
-> -	ASSERT(cluster_buf_base == 0 || cluster_base == 0);
-> -	offset = (cluster_buf_base + cluster_index) * mp->m_sb.sb_inodesize;
-> -	if (offset >= BBTOB(cluster_bp->b_length)) {
-> -		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> -		goto out;
-> -	}
-> -	dip = xfs_buf_offset(cluster_bp, offset);
->  	irec_free = (irec->ir_free & XFS_INOBT_MASK(cluster_base +
->  						    cluster_index));
->  
-> @@ -262,10 +246,23 @@ xchk_iallocbt_check_cluster(
->  		cluster_mask |= XFS_INOBT_MASK((cluster_base + cluster_index) /
->  				XFS_INODES_PER_HOLEMASK_BIT);
->  
-> +	/*
-> +	 * Map the first inode of this cluster to a buffer and offset.
-> +	 * Be careful about inobt records that don't align with the start of
-> +	 * the inode buffer when block sizes are large enough to hold multiple
-> +	 * inode chunks.  When this happens, cluster_base will be zero but
-> +	 * ir_startino can be large enough to make im_boffset nonzero.
-> +	 */
->  	ir_holemask = (irec->ir_holemask & cluster_mask);
->  	imap.im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
->  	imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
-> -	imap.im_boffset = 0;
-> +	imap.im_boffset = XFS_INO_TO_OFFSET(mp, irec->ir_startino);
-> +
-> +	if (imap.im_boffset != 0 && cluster_base != 0) {
-> +		ASSERT(imap.im_boffset == 0 || cluster_base == 0);
-> +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> +		return 0;
-> +	}
->  
->  	trace_xchk_iallocbt_check_cluster(mp, agno, irec->ir_startino,
->  			imap.im_blkno, imap.im_len, cluster_base, nr_inodes,
-> @@ -298,10 +295,19 @@ xchk_iallocbt_check_cluster(
->  
->  	/* Check free status of each inode within this cluster. */
->  	for (cluster_index = 0; cluster_index < nr_inodes; cluster_index++) {
-> +		struct xfs_dinode	*dip;
-> +
-> +		if (imap.im_boffset >= BBTOB(cluster_bp->b_length)) {
-> +			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> +			break;
-> +		}
-> +
-> +		dip = xfs_buf_offset(cluster_bp, imap.im_boffset);
->  		error = xchk_iallocbt_check_cluster_ifree(bs, irec,
-> -				cluster_base, cluster_bp, cluster_index);
-> +				cluster_base, dip, cluster_index);
->  		if (error)
->  			break;
-> +		imap.im_boffset += mp->m_sb.sb_inodesize;
->  	}
->  
->  	xfs_trans_brelse(bs->cur->bc_tp, cluster_bp);
-> 
+   David Hildenbrand CCed also posted a modified version[6] of 
+   qemu virtio-pmem code based on updated Qemu memory device API. 
+
+ Virtio-pmem errors handling:
+ ----------------------------------------
+  Checked behaviour of virtio-pmem for below types of errors
+  Need suggestions on expected behaviour for handling these errors?
+
+  - Hardware Errors: Uncorrectable recoverable Errors: 
+  a] virtio-pmem: 
+    - As per current logic if error page belongs to Qemu process, 
+      host MCE handler isolates(hwpoison) that page and send SIGBUS. 
+      Qemu SIGBUS handler injects exception to KVM guest. 
+    - KVM guest then isolates the page and send SIGBUS to guest 
+      userspace process which has mapped the page. 
+  
+  b] Existing implementation for ACPI pmem driver: 
+    - Handles such errors with MCE notifier and creates a list 
+      of bad blocks. Read/direct access DAX operation return EIO 
+      if accessed memory page fall in bad block list.
+    - It also starts backgound scrubbing.  
+    - Similar functionality can be reused in virtio-pmem with MCE 
+      notifier but without scrubbing(no ACPI/ARS)? Need inputs to 
+      confirm if this behaviour is ok or needs any change?
+
+Changes from PATCH v2: [1]
+- Disable MAP_SYNC for ext4 & XFS filesystems - [Dan] 
+- Use name 'virtio pmem' in place of 'fake dax' 
+
+Changes from PATCH v1: [2]
+- 0-day build test for build dependency on libnvdimm 
+
+ Changes suggested by - [Dan Williams]
+- Split the driver into two parts virtio & pmem  
+- Move queuing of async block request to block layer
+- Add "sync" parameter in nvdimm_flush function
+- Use indirect call for nvdimm_flush
+- Don’t move declarations to common global header e.g nd.h
+- nvdimm_flush() return 0 or -EIO if it fails
+- Teach nsio_rw_bytes() that the flush can fail
+- Rename nvdimm_flush() to generic_nvdimm_flush()
+- Use 'nd_region->provider_data' for long dereferencing
+- Remove virtio_pmem_freeze/restore functions
+- Remove BSD license text with SPDX license text
+
+- Add might_sleep() in virtio_pmem_flush - [Luiz]
+- Make spin_lock_irqsave() narrow
+
+Changes from RFC v3
+- Rebase to latest upstream - Luiz
+- Call ndregion->flush in place of nvdimm_flush- Luiz
+- kmalloc return check - Luiz
+- virtqueue full handling - Stefan
+- Don't map entire virtio_pmem_req to device - Stefan
+- request leak, correct sizeof req- Stefan
+- Move declaration to virtio_pmem.c
+
+Changes from RFC v2:
+- Add flush function in the nd_region in place of switching
+  on a flag - Dan & Stefan
+- Add flush completion function with proper locking and wait
+  for host side flush completion - Stefan & Dan
+- Keep userspace API in uapi header file - Stefan, MST
+- Use LE fields & New device id - MST
+- Indentation & spacing suggestions - MST & Eric
+- Remove extra header files & add licensing - Stefan
+
+Changes from RFC v1:
+- Reuse existing 'pmem' code for registering persistent 
+  memory and other operations instead of creating an entirely 
+  new block driver.
+- Use VIRTIO driver to register memory information with 
+  nvdimm_bus and create region_type accordingly. 
+- Call VIRTIO flush from existing pmem driver.
+
+Pankaj Gupta (5):
+   libnvdimm: nd_region flush callback support
+   virtio-pmem: Add virtio-pmem guest driver
+   libnvdimm: add nd_region buffered dax_dev flag
+   ext4: disable map_sync for virtio pmem
+   xfs: disable map_sync for virtio pmem
+
+[2] https://lkml.org/lkml/2018/8/31/407
+[3] https://www.spinics.net/lists/kvm/msg149761.html
+[4] https://www.spinics.net/lists/kvm/msg153095.html  
+[5] https://lkml.org/lkml/2018/8/31/413
+[6] https://marc.info/?l=qemu-devel&m=153555721901824&w=2
+
+ drivers/acpi/nfit/core.c         |    4 -
+ drivers/dax/super.c              |   17 +++++
+ drivers/nvdimm/claim.c           |    6 +
+ drivers/nvdimm/nd.h              |    1 
+ drivers/nvdimm/pmem.c            |   15 +++-
+ drivers/nvdimm/region_devs.c     |   45 +++++++++++++-
+ drivers/nvdimm/virtio_pmem.c     |   84 ++++++++++++++++++++++++++
+ drivers/virtio/Kconfig           |   10 +++
+ drivers/virtio/Makefile          |    1 
+ drivers/virtio/pmem.c            |  125 +++++++++++++++++++++++++++++++++++++++
+ fs/ext4/file.c                   |   11 +++
+ fs/xfs/xfs_file.c                |    8 ++
+ include/linux/dax.h              |    9 ++
+ include/linux/libnvdimm.h        |   11 +++
+ include/linux/virtio_pmem.h      |   60 ++++++++++++++++++
+ include/uapi/linux/virtio_ids.h  |    1 
+ include/uapi/linux/virtio_pmem.h |   10 +++
+ 17 files changed, 406 insertions(+), 12 deletions(-)
