@@ -1,142 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33028 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726072AbfAIQs4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Jan 2019 11:48:56 -0500
-Date: Wed, 9 Jan 2019 11:48:53 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/7] xfs: check the ir_startino alignment directly
-Message-ID: <20190109164853.GA14062@bfoster>
-References: <154697955494.2494.5221420762912855354.stgit@magnolia>
- <154697956749.2494.10156686086778734160.stgit@magnolia>
- <20190109133226.GA13613@bfoster>
- <20190109163744.GX12689@magnolia>
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:44531 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726641AbfAIRCT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Jan 2019 12:02:19 -0500
+Received: by mail-oi1-f195.google.com with SMTP id m6so6843634oig.11
+        for <linux-xfs@vger.kernel.org>; Wed, 09 Jan 2019 09:02:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190109163744.GX12689@magnolia>
+References: <20190109135024.14093-1-pagupta@redhat.com> <20190109135024.14093-4-pagupta@redhat.com>
+In-Reply-To: <20190109135024.14093-4-pagupta@redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 9 Jan 2019 09:02:07 -0800
+Message-ID: <CAPcyv4jsa709BVPAx_BT5eFrODf-PUPOZ4aguDsjZVawVXTVHQ@mail.gmail.com>
+Subject: Re: [PATCH v3 3/5] libnvdimm: add nd_region buffered dax_dev flag
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Pankaj Gupta <pagupta@redhat.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, KVM list <kvm@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-nvdimm <linux-nvdimm@ml01.01.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, virtualization@lists.linux-foundation.org, Linux ACPI <linux-acpi@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>, Stefan Hajnoczi <stefanha@redhat.com>, Rik van Riel <riel@surriel.com>, Nitesh Narayan Lal <nilal@redhat.com>, Kevin Wolf <kwolf@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, Ross Zwisler <zwisler@kernel.org>, Vishal L Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, David Hildenbrand <david@redhat.com>, jmoyer <jmoyer@redhat.com>, Xiao Guangrong <xiaoguangrong.eric@gmail.com>, Christoph Hellwig <hch@infradead.org>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, lcapitulino@redhat.com, Igor Mammedov <imammedo@redhat.com>, Eric Blake <eblake@redhat.com>, Matthew Wilcox <willy@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 
-On Wed, Jan 09, 2019 at 08:37:44AM -0800, Darrick J. Wong wrote:
-> On Wed, Jan 09, 2019 at 08:32:26AM -0500, Brian Foster wrote:
-> > On Tue, Jan 08, 2019 at 12:32:47PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > In xchk_iallocbt_rec, check the alignment of ir_startino by converting
-> > > the inode cluster block alignment into units of inodes instead of the
-> > > other way around (converting ir_startino to blocks).  This prevents us
-> > > from tripping over off-by-one errors in ir_startino which are obscured
-> > > by the inode -> block conversion.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/scrub/ialloc.c |   56 ++++++++++++++++++++++++++++++++++++++++++++-----
-> > >  1 file changed, 50 insertions(+), 6 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> > > index fd431682db0b..1c6fef9b3799 100644
-> > > --- a/fs/xfs/scrub/ialloc.c
-> > > +++ b/fs/xfs/scrub/ialloc.c
-> > > @@ -265,6 +265,53 @@ xchk_iallocbt_check_freemask(
-> > >  	return error;
-> > >  }
-> > >  
-> > > +/*
-> > > + * Make sure this inode btree record is aligned properly.  Because a fs block
-> > > + * contains multiple inodes, we check that the inobt record is aligned to the
-> > > + * correct inode, not just the correct block on disk.  This results in a finer
-> > > + * grained corruption check.
-> > > + */
-> > > +STATIC void
-> > > +xchk_iallocbt_rec_alignment(
-> > > +	struct xchk_btree		*bs,
-> > > +	struct xfs_inobt_rec_incore	*irec)
-> > > +{
-> > > +	struct xfs_mount		*mp = bs->sc->mp;
-> > > +
-> > > +	/*
-> > > +	 * finobt records have different positioning requirements than inobt
-> > > +	 * records: each finobt record must have a corresponding inobt record.
-> > > +	 * That is checked in the xref function, so for now we only catch the
-> > > +	 * obvious case where the record isn't at all aligned properly.
-> > > +	 *
-> > > +	 * Note that if a fs block contains more than a single chunk of inodes,
-> > > +	 * we will have finobt records only for those chunks containing free
-> > > +	 * inodes, and therefore expect chunk alignment of finobt records.
-> > > +	 * Otherwise, we expect that the finobt record is aligned to the
-> > > +	 * cluster alignment as told by the superblock.
-> > > +	 */
-> > > +	if (bs->cur->bc_btnum == XFS_BTNUM_FINO) {
-> > > +		unsigned int	imask;
-> > > +
-> > > +		imask = min_t(unsigned int, XFS_INODES_PER_CHUNK,
-> > > +				mp->m_cluster_align_inodes) - 1;
-> > > +		if (irec->ir_startino & imask)
-> > > +			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > > +		return;
-> > > +	}
-> > > +
-> > 
-> > Don't we also need this large FSB alignment fixup for inobt records, or
-> > am I still confused? :/ I.e., if ->m_cluster_align_inodes is 128 and
-> > irec is the second inobt record in a block..
-> 
-> The logic added in the next patch checks that either an inobt record is
-> aligned to m_cluster_align_inodes, or that the record covers inodes that
-> are immediately after the previous inobt record.  In theory that should
-> fix our handling of the large FSB case, though I've only tested it on
-> qemu arm boxen.
-> 
+On Wed, Jan 9, 2019 at 5:53 AM Pankaj Gupta <pagupta@redhat.com> wrote:
+>
+> This patch adds 'DAXDEV_BUFFERED' flag which is set
+> for virtio pmem corresponding nd_region. This later
+> is used to disable MAP_SYNC functionality for ext4
+> & xfs filesystem.
+>
+> Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> ---
+>  drivers/dax/super.c          | 17 +++++++++++++++++
+>  drivers/nvdimm/pmem.c        |  3 +++
+>  drivers/nvdimm/region_devs.c |  7 +++++++
+>  drivers/virtio/pmem.c        |  1 +
+>  include/linux/dax.h          |  9 +++++++++
+>  include/linux/libnvdimm.h    |  6 ++++++
+>  6 files changed, 43 insertions(+)
+>
+> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+> index 6e928f3..9128740 100644
+> --- a/drivers/dax/super.c
+> +++ b/drivers/dax/super.c
+> @@ -167,6 +167,8 @@ enum dax_device_flags {
+>         DAXDEV_ALIVE,
+>         /* gate whether dax_flush() calls the low level flush routine */
+>         DAXDEV_WRITE_CACHE,
+> +       /* flag to disable MAP_SYNC for virtio based host page cache flush */
+> +       DAXDEV_BUFFERED,
+>  };
+>
+>  /**
+> @@ -335,6 +337,21 @@ bool dax_write_cache_enabled(struct dax_device *dax_dev)
+>  }
+>  EXPORT_SYMBOL_GPL(dax_write_cache_enabled);
+>
+> +void virtio_pmem_host_cache(struct dax_device *dax_dev, bool wc)
+> +{
+> +       if (wc)
+> +               set_bit(DAXDEV_BUFFERED, &dax_dev->flags);
+> +       else
+> +               clear_bit(DAXDEV_BUFFERED, &dax_dev->flags);
+> +}
+> +EXPORT_SYMBOL_GPL(virtio_pmem_host_cache);
 
-Ah right, that comes later. Thanks...
+The "write_cache" property was structured this way because it can
+conceivably change at runtime. The MAP_SYNC capability should be
+static and never changed after init.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+> +bool virtio_pmem_host_cache_enabled(struct dax_device *dax_dev)
+> +{
+> +       return test_bit(DAXDEV_BUFFERED, &dax_dev->flags);
+> +}
+> +EXPORT_SYMBOL_GPL(virtio_pmem_host_cache_enabled);
 
-> --D
-> 
-> > Brian
-> > 
-> > > +	/* inobt records must be aligned to cluster and inoalignmnt size. */
-> > > +	if (irec->ir_startino & (mp->m_cluster_align_inodes - 1)) {
-> > > +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > > +		return;
-> > > +	}
-> > > +
-> > > +	if (irec->ir_startino & (mp->m_inodes_per_cluster - 1)) {
-> > > +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > > +		return;
-> > > +	}
-> > > +}
-> > > +
-> > >  /* Scrub an inobt/finobt record. */
-> > >  STATIC int
-> > >  xchk_iallocbt_rec(
-> > > @@ -277,7 +324,6 @@ xchk_iallocbt_rec(
-> > >  	uint64_t			holes;
-> > >  	xfs_agnumber_t			agno = bs->cur->bc_private.a.agno;
-> > >  	xfs_agino_t			agino;
-> > > -	xfs_agblock_t			agbno;
-> > >  	xfs_extlen_t			len;
-> > >  	int				holecount;
-> > >  	int				i;
-> > > @@ -304,11 +350,9 @@ xchk_iallocbt_rec(
-> > >  		goto out;
-> > >  	}
-> > >  
-> > > -	/* Make sure this record is aligned to cluster and inoalignmnt size. */
-> > > -	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
-> > > -	if ((agbno & (mp->m_cluster_align - 1)) ||
-> > > -	    (agbno & (mp->m_blocks_per_cluster - 1)))
-> > > -		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-> > > +	xchk_iallocbt_rec_alignment(bs, &irec);
-> > > +	if (bs->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> > > +		goto out;
-> > >  
-> > >  	iabt->inodes += irec.ir_count;
-> > >  
-> > > 
+Echoing Darrick and Jan this is should be a generic property of a
+dax_device and not specific to virtio. I don't like the "buffered"
+designation as that's not accurate. There may be hardware reasons why
+a dax_device is not synchronous, like a requirement to flush a
+write-pending queue or otherwise notify the device of new writes.
+
+I would just have a dax_synchronous() helper and a DAXDEV_SYNC flag. I
+would also modify alloc_dax() to take a flags argument so that the
+capability can be instantiated when the dax_device is allocated.
