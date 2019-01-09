@@ -1,73 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk1-f174.google.com ([209.85.222.174]:43981 "EHLO
-        mail-qk1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726217AbfALAau (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Jan 2019 19:30:50 -0500
-Message-ID: <1547253047.20294.182.camel@intricatesoftware.com>
-Subject: Re: Block device flush ordering
-From: Kurt Miller <kurt@intricatesoftware.com>
-Date: Fri, 11 Jan 2019 19:30:47 -0500
-In-Reply-To: <CAAxjCEymRj+FQ-Zw1OAKVoh5LE=dwvy6PRU_BwxCoFZ6r0usyw@mail.gmail.com>
-References: <1547130601.20294.152.camel@intricatesoftware.com>
-         <CAAxjCEymRj+FQ-Zw1OAKVoh5LE=dwvy6PRU_BwxCoFZ6r0usyw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: from userp2130.oracle.com ([156.151.31.86]:47650 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726482AbfAIQhv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Jan 2019 11:37:51 -0500
+Date: Wed, 9 Jan 2019 08:37:44 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/7] xfs: check the ir_startino alignment directly
+Message-ID: <20190109163744.GX12689@magnolia>
+References: <154697955494.2494.5221420762912855354.stgit@magnolia>
+ <154697956749.2494.10156686086778734160.stgit@magnolia>
+ <20190109133226.GA13613@bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190109133226.GA13613@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, 2019-01-11 at 10:24 +0100, Stefan Ring wrote:
-> On Thu, Jan 10, 2019 at 3:31 PM Kurt Miller <kurt@intricatesoftware.com> wrote:
+On Wed, Jan 09, 2019 at 08:32:26AM -0500, Brian Foster wrote:
+> On Tue, Jan 08, 2019 at 12:32:47PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > In xchk_iallocbt_rec, check the alignment of ir_startino by converting
+> > the inode cluster block alignment into units of inodes instead of the
+> > other way around (converting ir_startino to blocks).  This prevents us
+> > from tripping over off-by-one errors in ir_startino which are obscured
+> > by the inode -> block conversion.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/scrub/ialloc.c |   56 ++++++++++++++++++++++++++++++++++++++++++++-----
+> >  1 file changed, 50 insertions(+), 6 deletions(-)
 > > 
 > > 
-> > For a well behaved block device that has a writeback cache,
-> > what is the proper behavior of flush when there are more
-> > then one outstanding flush operations? Is it;
-> > 
-> > Flush all writes seen since the last flush.
-> > or
-> > Flush all writes received prior to the flush including
-> > those before any prior flush.
-> > 
-> > For example take the following order of requests presented
-> > to the block device:
-> > 
-> >         writes 1-5
-> >         flush 1
-> >         write 6
-> >         flush 2
-> > 
-> > Can flush 2 finish with success as soon as write 6 is flushed
-> > (which may be before flush 1 success)? Or must it wait for
-> > all prior write operations to flush (writes 1-6)?
-> > 
-> > This question has come up in our implementation of an NBD
-> > user-space block device and have not found a definitive answer
-> > on which behavior is correct for us to conform to. We want to
-> > ensure we behave as required for file-system commit write
-> > ordering.
-> As an interested outstanding observer who has had a bit of exposure to
-> memory models I would pose the question differently: Should flushes be
-> allowed to execute concurrently or should there be a total order? If a
-> total order is imposed, the premise of the question does not exist,
-> and otherwise I cannot see a single good reason to "wait for all prior
-> write operations to flush" because the second thread (the one
-> executing write 6 and flush 2) cannot even determine in a non-esoteric
-> way if another flush is ongoing or not.
+> > diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> > index fd431682db0b..1c6fef9b3799 100644
+> > --- a/fs/xfs/scrub/ialloc.c
+> > +++ b/fs/xfs/scrub/ialloc.c
+> > @@ -265,6 +265,53 @@ xchk_iallocbt_check_freemask(
+> >  	return error;
+> >  }
+> >  
+> > +/*
+> > + * Make sure this inode btree record is aligned properly.  Because a fs block
+> > + * contains multiple inodes, we check that the inobt record is aligned to the
+> > + * correct inode, not just the correct block on disk.  This results in a finer
+> > + * grained corruption check.
+> > + */
+> > +STATIC void
+> > +xchk_iallocbt_rec_alignment(
+> > +	struct xchk_btree		*bs,
+> > +	struct xfs_inobt_rec_incore	*irec)
+> > +{
+> > +	struct xfs_mount		*mp = bs->sc->mp;
+> > +
+> > +	/*
+> > +	 * finobt records have different positioning requirements than inobt
+> > +	 * records: each finobt record must have a corresponding inobt record.
+> > +	 * That is checked in the xref function, so for now we only catch the
+> > +	 * obvious case where the record isn't at all aligned properly.
+> > +	 *
+> > +	 * Note that if a fs block contains more than a single chunk of inodes,
+> > +	 * we will have finobt records only for those chunks containing free
+> > +	 * inodes, and therefore expect chunk alignment of finobt records.
+> > +	 * Otherwise, we expect that the finobt record is aligned to the
+> > +	 * cluster alignment as told by the superblock.
+> > +	 */
+> > +	if (bs->cur->bc_btnum == XFS_BTNUM_FINO) {
+> > +		unsigned int	imask;
+> > +
+> > +		imask = min_t(unsigned int, XFS_INODES_PER_CHUNK,
+> > +				mp->m_cluster_align_inodes) - 1;
+> > +		if (irec->ir_startino & imask)
+> > +			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > +		return;
+> > +	}
+> > +
+> 
+> Don't we also need this large FSB alignment fixup for inobt records, or
+> am I still confused? :/ I.e., if ->m_cluster_align_inodes is 128 and
+> irec is the second inobt record in a block..
 
-Hi Stefan,
+The logic added in the next patch checks that either an inobt record is
+aligned to m_cluster_align_inodes, or that the record covers inodes that
+are immediately after the previous inobt record.  In theory that should
+fix our handling of the large FSB case, though I've only tested it on
+qemu arm boxen.
 
-Thank you for your comments. Our nbd block device implementation is
-asynchronous in nature. We are able to conform to either behavior.
+--D
 
-I can confirm that the kernel does in fact send multiple concurrent
-REQ_OP_FLUSH requests to block devices. So I'm trying to determine what
-behavior is acceptable when this occurs. Should we impose total ordering
-of the flush operations or allow flush operations to complete out of
-order when they finish first?
-
-Best,
--Kurt
+> Brian
+> 
+> > +	/* inobt records must be aligned to cluster and inoalignmnt size. */
+> > +	if (irec->ir_startino & (mp->m_cluster_align_inodes - 1)) {
+> > +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > +		return;
+> > +	}
+> > +
+> > +	if (irec->ir_startino & (mp->m_inodes_per_cluster - 1)) {
+> > +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > +		return;
+> > +	}
+> > +}
+> > +
+> >  /* Scrub an inobt/finobt record. */
+> >  STATIC int
+> >  xchk_iallocbt_rec(
+> > @@ -277,7 +324,6 @@ xchk_iallocbt_rec(
+> >  	uint64_t			holes;
+> >  	xfs_agnumber_t			agno = bs->cur->bc_private.a.agno;
+> >  	xfs_agino_t			agino;
+> > -	xfs_agblock_t			agbno;
+> >  	xfs_extlen_t			len;
+> >  	int				holecount;
+> >  	int				i;
+> > @@ -304,11 +350,9 @@ xchk_iallocbt_rec(
+> >  		goto out;
+> >  	}
+> >  
+> > -	/* Make sure this record is aligned to cluster and inoalignmnt size. */
+> > -	agbno = XFS_AGINO_TO_AGBNO(mp, irec.ir_startino);
+> > -	if ((agbno & (mp->m_cluster_align - 1)) ||
+> > -	    (agbno & (mp->m_blocks_per_cluster - 1)))
+> > -		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+> > +	xchk_iallocbt_rec_alignment(bs, &irec);
+> > +	if (bs->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> > +		goto out;
+> >  
+> >  	iabt->inodes += irec.ir_count;
+> >  
+> > 
