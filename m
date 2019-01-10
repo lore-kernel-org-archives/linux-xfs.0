@@ -1,58 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58974 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728913AbfAHVaQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Jan 2019 16:30:16 -0500
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: Broken dio refcounting leads to livelock?
-References: <20190108002633.GL12689@magnolia> <20190108074644.GX4205@dastard>
-        <20190108200803.GS12689@magnolia>
-        <x49tvii7tvk.fsf@segfault.boston.devel.redhat.com>
-        <20190108210716.GV12689@magnolia>
-Date: Tue, 08 Jan 2019 16:30:14 -0500
-In-Reply-To: <20190108210716.GV12689@magnolia> (Darrick J. Wong's message of
-        "Tue, 8 Jan 2019 13:07:16 -0800")
-Message-ID: <x49ef9m7s7t.fsf@segfault.boston.devel.redhat.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:44890 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728300AbfAJXGf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Jan 2019 18:06:35 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id C27C929EFC
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Jan 2019 23:06:34 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 199915] NULL pointer dereference in xfs_bmap_extents_to_btree()
+ when mounting and operating a crafted image
+Date: Thu, 10 Jan 2019 23:06:34 +0000
+Message-ID: <bug-199915-201763-hd0BGaniey@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-199915-201763@https.bugzilla.kernel.org/>
+References: <bug-199915-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-"Darrick J. Wong" <darrick.wong@oracle.com> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=199915
 
-> On Tue, Jan 08, 2019 at 03:54:23PM -0500, Jeff Moyer wrote:
->> "Darrick J. Wong" <darrick.wong@oracle.com> writes:
->> 
->> > It looks like we're issuing two bios to satisfy a particular dio.
->> > However, the first bio completes before the submitter calls finish_plug??
->> >
->> > I guess this means that blk_start_plug no longer plugs up io requests,
->> > which means that the end_io function tries to wake up the submitter
->> > before it's even had a chance to issue the second bio.
->> 
->> blk_start_plug was always a hint.  If you exceed a certain number of
->> requests (BLK_MAX_REQUEST_COUNT, which is 16) or a certain size of
->> request (BLK_PLUG_FLUSH_SIZE, which is 128k), the block layer will flush
->> the plug list.
->> 
->> > This is surprising to me, because I was under the impression that
->> > blk_{start,finish}_plug held all the bios so there was no chance that
->> > any of them would issue (let alone call end_io) before finish_plug.
->> 
->> Definitely not the case.  The plug list is just a performance
->> optimization.
->
-> Ahh, fun!  I had not realized that it was merely a suggestion.
->
-> $ git grep blk_start_plug Documentation/
-> $ echo $?
-> 1
+--- Comment #4 from billodo@redhat.com ---
+Is this still an issue?
 
-Point taken.  ;-)  I'll write some kernel-doc text.  Hopefully
-documentation in the header file will be enough?
-
-Cheers,
-Jeff
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
