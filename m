@@ -1,63 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:41030 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727826AbfAITPa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Jan 2019 14:15:30 -0500
-Date: Wed, 9 Jan 2019 08:26:54 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 5/5] xfs: disable map_sync for virtio pmem
-Message-ID: <20190109162654.GW12689@magnolia>
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:54468 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726590AbfAJB0W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Jan 2019 20:26:22 -0500
+Date: Thu, 10 Jan 2019 12:26:17 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 0/5] kvm "virtio pmem" device
+Message-ID: <20190110012617.GA4205@dastard>
 References: <20190109144736.17452-1-pagupta@redhat.com>
- <20190109144736.17452-6-pagupta@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190109144736.17452-6-pagupta@redhat.com>
+In-Reply-To: <20190109144736.17452-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Pankaj Gupta <pagupta@redhat.com>
-Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, qemu-devel@nongnu.org, linux-nvdimm@ml01.01.org, linux-fsdevel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-acpi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, jack@suse.cz, stefanha@redhat.com, dan.j.williams@intel.com, riel@surriel.com, nilal@redhat.com, kwolf@redhat.com, pbonzini@redhat.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, david@redhat.com, jmoyer@redhat.com, xiaoguangrong.eric@gmail.com, hch@infradead.org, mst@redhat.com, jasowang@redhat.com, lcapitulino@redhat.com, imammedo@redhat.com, eblake@redhat.com, willy@infradead.org, tytso@mit.edu, adilger.kernel@dilger.ca, rjw@rjwysocki.net
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, qemu-devel@nongnu.org, linux-nvdimm@ml01.01.org, linux-fsdevel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-acpi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, jack@suse.cz, stefanha@redhat.com, dan.j.williams@intel.com, riel@surriel.com, nilal@redhat.com, kwolf@redhat.com, pbonzini@redhat.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, david@redhat.com, jmoyer@redhat.com, xiaoguangrong.eric@gmail.com, hch@infradead.org, mst@redhat.com, jasowang@redhat.com, lcapitulino@redhat.com, imammedo@redhat.com, eblake@redhat.com, willy@infradead.org, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, rjw@rjwysocki.net
 
-On Wed, Jan 09, 2019 at 08:17:36PM +0530, Pankaj Gupta wrote:
-> Virtio pmem provides asynchronous host page cache flush
-> mechanism. we don't support 'MAP_SYNC' with virtio pmem 
-> and xfs.
-> 
-> Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
-> ---
->  fs/xfs/xfs_file.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index e474250..eae4aa4 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1190,6 +1190,14 @@ xfs_file_mmap(
->  	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
->  		return -EOPNOTSUPP;
->  
-> +	/* We don't support synchronous mappings with guest direct access
-> +	 * and virtio based host page cache mechanism.
-> +	 */
-> +	if (IS_DAX(file_inode(filp)) && virtio_pmem_host_cache_enabled(
+On Wed, Jan 09, 2019 at 08:17:31PM +0530, Pankaj Gupta wrote:
+>  This patch series has implementation for "virtio pmem". 
+>  "virtio pmem" is fake persistent memory(nvdimm) in guest 
+>  which allows to bypass the guest page cache. This also
+>  implements a VIRTIO based asynchronous flush mechanism.  
 
-Echoing what Jan said, this ought to be some sort of generic function
-that tells us whether or not memory mapped from the dax device will
-always still be accessible even after a crash (i.e. supports MAP_SYNC).
+Hmmmm. Sharing the host page cache direct into the guest VM. Sounds
+like a good idea, but.....
 
-What if the underlying file on the host is itself on pmem and can be
-MAP_SYNC'd?  Shouldn't the guest be able to use MAP_SYNC as well?
+This means the guest VM can now run timing attacks to observe host
+side page cache residency, and depending on the implementation I'm
+guessing that the guest will be able to control host side page
+cache eviction, too (e.g. via discard or hole punch operations).
 
---D
+Which means this functionality looks to me like a new vector for
+information leakage into and out of the guest VM via guest
+controlled host page cache manipulation.
 
-> +		xfs_find_daxdev_for_inode(file_inode(filp))) &&
-> +					(vma->vm_flags & VM_SYNC))
-> +		return -EOPNOTSUPP;
-> +
->  	file_accessed(filp);
->  	vma->vm_ops = &xfs_file_vm_ops;
->  	if (IS_DAX(file_inode(filp)))
-> -- 
-> 2.9.3
-> 
+https://arxiv.org/pdf/1901.01161
+
+I might be wrong, but if I'm not we're going to have to be very
+careful about how guest VMs can access and manipulate host side
+resources like the page cache.....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
