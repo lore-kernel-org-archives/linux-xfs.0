@@ -1,138 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52316 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39598 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725267AbfAKLGD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Jan 2019 06:06:03 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V13 15/19] block: enable multipage bvecs
-Date: Fri, 11 Jan 2019 19:01:23 +0800
-Message-Id: <20190111110127.21664-16-ming.lei@redhat.com>
-In-Reply-To: <20190111110127.21664-1-ming.lei@redhat.com>
-References: <20190111110127.21664-1-ming.lei@redhat.com>
+        id S1729697AbfAKMaf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Jan 2019 07:30:35 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id DD38B30EF64
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Jan 2019 12:30:34 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 97F345C25A
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Jan 2019 12:30:34 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 4/4] xfs: remove superfluous writeback mapping eof trimming
+Date: Fri, 11 Jan 2019 07:30:32 -0500
+Message-Id: <20190111123032.31538-5-bfoster@redhat.com>
+In-Reply-To: <20190111123032.31538-1-bfoster@redhat.com>
+References: <20190111123032.31538-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-This patch pulls the trigger for multi-page bvecs.
+Now that the cached writeback mapping is explicitly invalidated on
+data fork changes, the EOF trimming band-aid is no longer necessary.
+Remove xfs_trim_extent_eof() as well since it has no other users.
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- block/bio.c         | 22 +++++++++++++++-------
- fs/iomap.c          |  4 ++--
- fs/xfs/xfs_aops.c   |  4 ++--
- include/linux/bio.h |  2 +-
- 4 files changed, 20 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 11 -----------
+ fs/xfs/libxfs/xfs_bmap.h |  1 -
+ fs/xfs/xfs_aops.c        | 15 ---------------
+ 3 files changed, 27 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 968b12fea564..83a2dfa417ca 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -753,6 +753,8 @@ EXPORT_SYMBOL(bio_add_pc_page);
-  * @page: page to add
-  * @len: length of the data to add
-  * @off: offset of the data in @page
-+ * @same_page: if %true only merge if the new data is in the same physical
-+ *		page as the last segment of the bio.
-  *
-  * Try to add the data at @page + @off to the last bvec of @bio.  This is a
-  * a useful optimisation for file systems with a block size smaller than the
-@@ -761,19 +763,25 @@ EXPORT_SYMBOL(bio_add_pc_page);
-  * Return %true on success or %false on failure.
-  */
- bool __bio_try_merge_page(struct bio *bio, struct page *page,
--		unsigned int len, unsigned int off)
-+		unsigned int len, unsigned int off, bool same_page)
- {
- 	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
- 		return false;
- 
- 	if (bio->bi_vcnt > 0) {
- 		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
-+		phys_addr_t vec_end_addr = page_to_phys(bv->bv_page) +
-+			bv->bv_offset + bv->bv_len - 1;
-+		phys_addr_t page_addr = page_to_phys(page);
- 
--		if (page == bv->bv_page && off == bv->bv_offset + bv->bv_len) {
--			bv->bv_len += len;
--			bio->bi_iter.bi_size += len;
--			return true;
--		}
-+		if (vec_end_addr + 1 != page_addr + off)
-+			return false;
-+		if (same_page && (vec_end_addr & PAGE_MASK) != page_addr)
-+			return false;
-+
-+		bv->bv_len += len;
-+		bio->bi_iter.bi_size += len;
-+		return true;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 332eefa2700b..4c73927819c2 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3685,17 +3685,6 @@ xfs_trim_extent(
  	}
- 	return false;
  }
-@@ -819,7 +827,7 @@ EXPORT_SYMBOL_GPL(__bio_add_page);
- int bio_add_page(struct bio *bio, struct page *page,
- 		 unsigned int len, unsigned int offset)
- {
--	if (!__bio_try_merge_page(bio, page, len, offset)) {
-+	if (!__bio_try_merge_page(bio, page, len, offset, false)) {
- 		if (bio_full(bio))
- 			return 0;
- 		__bio_add_page(bio, page, len, offset);
-diff --git a/fs/iomap.c b/fs/iomap.c
-index af736acd9006..0c350e658b7f 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -318,7 +318,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 	 */
- 	sector = iomap_sector(iomap, pos);
- 	if (ctx->bio && bio_end_sector(ctx->bio) == sector) {
--		if (__bio_try_merge_page(ctx->bio, page, plen, poff))
-+		if (__bio_try_merge_page(ctx->bio, page, plen, poff, true))
- 			goto done;
- 		is_contig = true;
- 	}
-@@ -349,7 +349,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		ctx->bio->bi_end_io = iomap_read_end_io;
- 	}
  
--	__bio_add_page(ctx->bio, page, plen, poff);
-+	bio_add_page(ctx->bio, page, plen, poff);
- done:
- 	/*
- 	 * Move the caller beyond our range so that it keeps making progress.
+-/* trim extent to within eof */
+-void
+-xfs_trim_extent_eof(
+-	struct xfs_bmbt_irec	*irec,
+-	struct xfs_inode	*ip)
+-
+-{
+-	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
+-					      i_size_read(VFS_I(ip))));
+-}
+-
+ /*
+  * Trim the returned map to the required bounds
+  */
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 09d3ea97cc15..b4ff710d7250 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -181,7 +181,6 @@ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
+ 
+ void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
+ 		xfs_filblks_t len);
+-void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
+ int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+ int	xfs_bmap_set_attrforkoff(struct xfs_inode *ip, int size, int *version);
+ void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 1f1829e506e8..b9fd44168f61 100644
+index 33a1be5df99f..8cc0c31d18b6 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -616,12 +616,12 @@ xfs_add_to_ioend(
- 				bdev, sector);
+@@ -319,19 +319,6 @@ xfs_map_blocks(
+ 	bool			imap_valid;
+ 	int			error = 0;
+ 
+-	/*
+-	 * We have to make sure the cached mapping is within EOF to protect
+-	 * against eofblocks trimming on file release leaving us with a stale
+-	 * mapping. Otherwise, a page for a subsequent file extending buffered
+-	 * write could get picked up by this writeback cycle and written to the
+-	 * wrong blocks.
+-	 *
+-	 * Note that what we really want here is a generic mapping invalidation
+-	 * mechanism to protect us from arbitrary extent modifying contexts, not
+-	 * just eofblocks.
+-	 */
+-	xfs_trim_extent_eof(&wpc->imap, ip);
+-
+ 	/*
+ 	 * COW fork blocks can overlap data fork blocks even if the blocks
+ 	 * aren't shared.  COW I/O always takes precedent, so we must always
+@@ -452,7 +439,6 @@ xfs_map_blocks(
  	}
  
--	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff)) {
-+	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff, true)) {
- 		if (iop)
- 			atomic_inc(&iop->write_count);
- 		if (bio_full(wpc->ioend->io_bio))
- 			xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
--		__bio_add_page(wpc->ioend->io_bio, page, len, poff);
-+		bio_add_page(wpc->ioend->io_bio, page, len, poff);
- 	}
- 
- 	wpc->ioend->io_size += len;
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index c5231e5c7e85..1ece9f30294b 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -441,7 +441,7 @@ extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
- extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
- 			   unsigned int, unsigned int);
- bool __bio_try_merge_page(struct bio *bio, struct page *page,
--		unsigned int len, unsigned int off);
-+		unsigned int len, unsigned int off, bool same_page);
- void __bio_add_page(struct bio *bio, struct page *page,
- 		unsigned int len, unsigned int off);
- int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter);
+ 	wpc->imap = imap;
+-	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ allocate_blocks:
+@@ -464,7 +450,6 @@ xfs_map_blocks(
+ 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+ 	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+ 	wpc->imap = imap;
+-	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ }
 -- 
-2.9.5
+2.17.2
