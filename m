@@ -1,47 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:40106 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726777AbfANUcL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Jan 2019 15:32:11 -0500
-Date: Mon, 14 Jan 2019 12:32:01 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 3/5] xfs: fix off-by-one error in rtbitmap cross-reference
-Message-ID: <20190114203201.GA12689@magnolia>
-References: <154697976479.2839.3584921201780682011.stgit@magnolia>
- <154697978351.2839.11888108672644284957.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154697978351.2839.11888108672644284957.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:59764 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725446AbfAKLEu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Jan 2019 06:04:50 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V13 12/19] block: loop: pass multi-page bvec to iov_iter
+Date: Fri, 11 Jan 2019 19:01:20 +0800
+Message-Id: <20190111110127.21664-13-ming.lei@redhat.com>
+In-Reply-To: <20190111110127.21664-1-ming.lei@redhat.com>
+References: <20190111110127.21664-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, sandeen@sandeen.net
-Cc: Brian Foster <bfoster@redhat.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+iov_iter is implemented on bvec itererator helpers, so it is safe to pass
+multi-page bvec to it, and this way is much more efficient than passing one
+page in each bvec.
 
-Fix an off-by-one error in the realtime bitmap "is used" cross-reference
-helper function if the realtime extent size is a single block.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- fs/xfs/scrub/rtbitmap.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/block/loop.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index 665d4bbb17cc..dbe115b075f7 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -141,9 +141,8 @@ xchk_xref_is_used_rt_space(
- 	startext = fsbno;
- 	endext = fsbno + len - 1;
- 	do_div(startext, sc->mp->m_sb.sb_rextsize);
--	if (do_div(endext, sc->mp->m_sb.sb_rextsize))
--		endext++;
--	extcount = endext - startext;
-+	do_div(endext, sc->mp->m_sb.sb_rextsize);
-+	extcount = endext - startext + 1;
- 	xfs_ilock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
- 	error = xfs_rtalloc_extent_is_free(sc->mp, sc->tp, startext, extcount,
- 			&is_free);
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index b8a0720d3653..28dd22c6f83f 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -511,21 +511,22 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		     loff_t pos, bool rw)
+ {
+ 	struct iov_iter iter;
++	struct req_iterator rq_iter;
+ 	struct bio_vec *bvec;
+ 	struct request *rq = blk_mq_rq_from_pdu(cmd);
+ 	struct bio *bio = rq->bio;
+ 	struct file *file = lo->lo_backing_file;
++	struct bio_vec tmp;
+ 	unsigned int offset;
+-	int segments = 0;
++	int nr_bvec = 0;
+ 	int ret;
+ 
++	rq_for_each_bvec(tmp, rq, rq_iter)
++		nr_bvec++;
++
+ 	if (rq->bio != rq->biotail) {
+-		struct req_iterator iter;
+-		struct bio_vec tmp;
+ 
+-		__rq_for_each_bio(bio, rq)
+-			segments += bio_segments(bio);
+-		bvec = kmalloc_array(segments, sizeof(struct bio_vec),
++		bvec = kmalloc_array(nr_bvec, sizeof(struct bio_vec),
+ 				     GFP_NOIO);
+ 		if (!bvec)
+ 			return -EIO;
+@@ -534,10 +535,10 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		/*
+ 		 * The bios of the request may be started from the middle of
+ 		 * the 'bvec' because of bio splitting, so we can't directly
+-		 * copy bio->bi_iov_vec to new bvec. The rq_for_each_segment
++		 * copy bio->bi_iov_vec to new bvec. The rq_for_each_bvec
+ 		 * API will take care of all details for us.
+ 		 */
+-		rq_for_each_segment(tmp, rq, iter) {
++		rq_for_each_bvec(tmp, rq, rq_iter) {
+ 			*bvec = tmp;
+ 			bvec++;
+ 		}
+@@ -551,11 +552,10 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		 */
+ 		offset = bio->bi_iter.bi_bvec_done;
+ 		bvec = __bvec_iter_bvec(bio->bi_io_vec, bio->bi_iter);
+-		segments = bio_segments(bio);
+ 	}
+ 	atomic_set(&cmd->ref, 2);
+ 
+-	iov_iter_bvec(&iter, rw, bvec, segments, blk_rq_bytes(rq));
++	iov_iter_bvec(&iter, rw, bvec, nr_bvec, blk_rq_bytes(rq));
+ 	iter.iov_offset = offset;
+ 
+ 	cmd->iocb.ki_pos = pos;
+-- 
+2.9.5
