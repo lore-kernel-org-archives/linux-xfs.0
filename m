@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59764 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58296 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725446AbfAKLEu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Jan 2019 06:04:50 -0500
+        id S1725267AbfAKLGG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Jan 2019 06:06:06 -0500
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V13 12/19] block: loop: pass multi-page bvec to iov_iter
-Date: Fri, 11 Jan 2019 19:01:20 +0800
-Message-Id: <20190111110127.21664-13-ming.lei@redhat.com>
+Subject: [PATCH V13 16/19] block: always define BIO_MAX_PAGES as 256
+Date: Fri, 11 Jan 2019 19:01:24 +0800
+Message-Id: <20190111110127.21664-17-ming.lei@redhat.com>
 In-Reply-To: <20190111110127.21664-1-ming.lei@redhat.com>
 References: <20190111110127.21664-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,75 +15,39 @@ List-Id: xfs
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-iov_iter is implemented on bvec itererator helpers, so it is safe to pass
-multi-page bvec to it, and this way is much more efficient than passing one
-page in each bvec.
+Now multi-page bvec can cover CONFIG_THP_SWAP, so we don't need to
+increase BIO_MAX_PAGES for it.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+CONFIG_THP_SWAP needs to split one THP into normal pages and adds
+them all to one bio. With multipage-bvec, it just takes one bvec to
+hold them all.
+
 Reviewed-by: Omar Sandoval <osandov@fb.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/block/loop.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ include/linux/bio.h | 8 --------
+ 1 file changed, 8 deletions(-)
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index b8a0720d3653..28dd22c6f83f 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -511,21 +511,22 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
- 		     loff_t pos, bool rw)
- {
- 	struct iov_iter iter;
-+	struct req_iterator rq_iter;
- 	struct bio_vec *bvec;
- 	struct request *rq = blk_mq_rq_from_pdu(cmd);
- 	struct bio *bio = rq->bio;
- 	struct file *file = lo->lo_backing_file;
-+	struct bio_vec tmp;
- 	unsigned int offset;
--	int segments = 0;
-+	int nr_bvec = 0;
- 	int ret;
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 1ece9f30294b..54ef81f11f83 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -34,15 +34,7 @@
+ #define BIO_BUG_ON
+ #endif
  
-+	rq_for_each_bvec(tmp, rq, rq_iter)
-+		nr_bvec++;
-+
- 	if (rq->bio != rq->biotail) {
--		struct req_iterator iter;
--		struct bio_vec tmp;
+-#ifdef CONFIG_THP_SWAP
+-#if HPAGE_PMD_NR > 256
+-#define BIO_MAX_PAGES		HPAGE_PMD_NR
+-#else
+ #define BIO_MAX_PAGES		256
+-#endif
+-#else
+-#define BIO_MAX_PAGES		256
+-#endif
  
--		__rq_for_each_bio(bio, rq)
--			segments += bio_segments(bio);
--		bvec = kmalloc_array(segments, sizeof(struct bio_vec),
-+		bvec = kmalloc_array(nr_bvec, sizeof(struct bio_vec),
- 				     GFP_NOIO);
- 		if (!bvec)
- 			return -EIO;
-@@ -534,10 +535,10 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
- 		/*
- 		 * The bios of the request may be started from the middle of
- 		 * the 'bvec' because of bio splitting, so we can't directly
--		 * copy bio->bi_iov_vec to new bvec. The rq_for_each_segment
-+		 * copy bio->bi_iov_vec to new bvec. The rq_for_each_bvec
- 		 * API will take care of all details for us.
- 		 */
--		rq_for_each_segment(tmp, rq, iter) {
-+		rq_for_each_bvec(tmp, rq, rq_iter) {
- 			*bvec = tmp;
- 			bvec++;
- 		}
-@@ -551,11 +552,10 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
- 		 */
- 		offset = bio->bi_iter.bi_bvec_done;
- 		bvec = __bvec_iter_bvec(bio->bi_io_vec, bio->bi_iter);
--		segments = bio_segments(bio);
- 	}
- 	atomic_set(&cmd->ref, 2);
- 
--	iov_iter_bvec(&iter, rw, bvec, segments, blk_rq_bytes(rq));
-+	iov_iter_bvec(&iter, rw, bvec, nr_bvec, blk_rq_bytes(rq));
- 	iter.iov_offset = offset;
- 
- 	cmd->iocb.ki_pos = pos;
+ #define bio_prio(bio)			(bio)->bi_ioprio
+ #define bio_set_prio(bio, prio)		((bio)->bi_ioprio = prio)
 -- 
 2.9.5
