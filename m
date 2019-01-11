@@ -1,50 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57110 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:47112 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731704AbfAIPA1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Jan 2019 10:00:27 -0500
-Subject: Re: [PATCH] xfsdump: don't fail installation if /sbin is symlink of
- /usr/sbin
-References: <20181101104732.19322-1-jtulak@redhat.com>
- <1a662234-f71a-7208-76f9-9f2f89aa8255@sandeen.net>
- <c9bea20c-058c-d715-8b2b-9ac55e77c131@sandeen.net>
- <CACj3i702aS2Dw_i_8PAGOD6=AFYCuuHqf3EkUop5nhmKoo317A@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <246936bb-cb92-b6c1-c766-a4547ad7f3f0@sandeen.net>
-Date: Wed, 9 Jan 2019 09:00:25 -0600
-MIME-Version: 1.0
-In-Reply-To: <CACj3i702aS2Dw_i_8PAGOD6=AFYCuuHqf3EkUop5nhmKoo317A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1727401AbfAKMad (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Jan 2019 07:30:33 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 1/4] xfs: eof trim writeback mapping as soon as it is cached
+Date: Fri, 11 Jan 2019 07:30:29 -0500
+Message-Id: <20190111123032.31538-2-bfoster@redhat.com>
+In-Reply-To: <20190111123032.31538-1-bfoster@redhat.com>
+References: <20190111123032.31538-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: stable@vger.kernel.org
 
+The cached writeback mapping is EOF trimmed to try and avoid races
+between post-eof block management and writeback that result in
+sending cached data to a stale location. The cached mapping is
+currently trimmed on the validation check, which leaves a race
+window between the time the mapping is cached and when it is trimmed
+against the current inode size.
 
+For example, if a new mapping is cached by delalloc conversion on a
+blocksize == page size fs, we could cycle various locks, perform
+memory allocations, etc.  in the writeback codepath before the
+associated mapping is eventually trimmed to i_size. This leaves
+enough time for a post-eof truncate and file append before the
+cached mapping is trimmed. The former event essentially invalidates
+a range of the cached mapping and the latter bumps the inode size
+such the trim on the next writepage event won't trim all of the
+invalid blocks. fstest generic/464 reproduces this scenario
+occasionally and causes a lost writeback and stale delalloc blocks
+warning on inode inactivation.
 
-On 1/9/19 7:53 AM, Jan Tulak wrote:
-> On Wed, Dec 5, 2018 at 5:56 AM Eric Sandeen <sandeen@sandeen.net> wrote:
->>
->> On 12/4/18 10:48 PM, Eric Sandeen wrote:
->>> On 11/1/18 5:47 AM, Jan Tulak wrote:
-> 
-> snip
-> 
->>>
->>> so, um, I guess this seems ok to handle the /sbin == /usr/sbin case.
->>>
->>> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
->>
->> Heh, ok, yes your fix is what I should have done 6 years ago :D
->>
->> Thanks,
->> -Eric
-> 
-> This is not merged yet. Maybe it just got off your list somehow? :-)
+To work around this problem, trim the cached writeback mapping as
+soon as it is cached in addition to on subsequent validation checks.
+This is a minor tweak to tighten the race window as much as possible
+until a proper invalidation mechanism is available.
 
-Yep, it fell through the cracks, thanks for the reminder.
+Fixes: 40214d128e07 ("xfs: trim writepage mapping to within eof")
+Cc: <stable@vger.kernel.org> # v4.14+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_aops.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
--Eric
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 338b9d9984e0..d9048bcea49c 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -449,6 +449,7 @@ xfs_map_blocks(
+ 	}
+ 
+ 	wpc->imap = imap;
++	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ allocate_blocks:
+@@ -459,6 +460,7 @@ xfs_map_blocks(
+ 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+ 	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+ 	wpc->imap = imap;
++	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ }
+-- 
+2.17.2
