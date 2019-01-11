@@ -1,67 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59064 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59380 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729905AbfAKLCK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Jan 2019 06:02:10 -0500
+        id S1725789AbfAKLC3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Jan 2019 06:02:29 -0500
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V13 01/19] btrfs: look at bi_size for repair decisions
-Date: Fri, 11 Jan 2019 19:01:09 +0800
-Message-Id: <20190111110127.21664-2-ming.lei@redhat.com>
+Subject: [PATCH V13 03/19] block: remove bvec_iter_rewind()
+Date: Fri, 11 Jan 2019 19:01:11 +0800
+Message-Id: <20190111110127.21664-4-ming.lei@redhat.com>
 In-Reply-To: <20190111110127.21664-1-ming.lei@redhat.com>
 References: <20190111110127.21664-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-From: Christoph Hellwig <hch@lst.de>
-
-bio_readpage_error currently uses bi_vcnt to decide if it is worth
-retrying an I/O.  But the vector count is mostly an implementation
-artifact - it really should figure out if there is more than a
-single sector worth retrying.  Use bi_size for that and shift by
-PAGE_SHIFT.  This really should be blocks/sectors, but given that
-btrfs doesn't support a sector size different from the PAGE_SIZE
-using the page size keeps the changes to a minimum.
+Commit 7759eb23fd980 ("block: remove bio_rewind_iter()") removes
+bio_rewind_iter(), then no one uses bvec_iter_rewind() any more,
+so remove it.
 
 Reviewed-by: Omar Sandoval <osandov@fb.com>
-Reviewed-by: David Sterba <dsterba@suse.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- fs/btrfs/extent_io.c | 2 +-
- include/linux/bio.h  | 6 ------
- 2 files changed, 1 insertion(+), 7 deletions(-)
+ include/linux/bvec.h | 24 ------------------------
+ 1 file changed, 24 deletions(-)
 
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index 52abe4082680..dc8ba3ee515d 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -2350,7 +2350,7 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
- 	int read_mode = 0;
- 	blk_status_t status;
- 	int ret;
--	unsigned failed_bio_pages = bio_pages_all(failed_bio);
-+	unsigned failed_bio_pages = failed_bio->bi_iter.bi_size >> PAGE_SHIFT;
- 
- 	BUG_ON(bio_op(failed_bio) == REQ_OP_WRITE);
- 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 7380b094dcca..72b4f7be2106 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -263,12 +263,6 @@ static inline void bio_get_last_bvec(struct bio *bio, struct bio_vec *bv)
- 		bv->bv_len = iter.bi_bvec_done;
+diff --git a/include/linux/bvec.h b/include/linux/bvec.h
+index 02c73c6aa805..ba0ae40e77c9 100644
+--- a/include/linux/bvec.h
++++ b/include/linux/bvec.h
+@@ -92,30 +92,6 @@ static inline bool bvec_iter_advance(const struct bio_vec *bv,
+ 	return true;
  }
  
--static inline unsigned bio_pages_all(struct bio *bio)
+-static inline bool bvec_iter_rewind(const struct bio_vec *bv,
+-				     struct bvec_iter *iter,
+-				     unsigned int bytes)
 -{
--	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
--	return bio->bi_vcnt;
+-	while (bytes) {
+-		unsigned len = min(bytes, iter->bi_bvec_done);
+-
+-		if (iter->bi_bvec_done == 0) {
+-			if (WARN_ONCE(iter->bi_idx == 0,
+-				      "Attempted to rewind iter beyond "
+-				      "bvec's boundaries\n")) {
+-				return false;
+-			}
+-			iter->bi_idx--;
+-			iter->bi_bvec_done = __bvec_iter_bvec(bv, *iter)->bv_len;
+-			continue;
+-		}
+-		bytes -= len;
+-		iter->bi_size += len;
+-		iter->bi_bvec_done -= len;
+-	}
+-	return true;
 -}
 -
- static inline struct bio_vec *bio_first_bvec_all(struct bio *bio)
- {
- 	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
+ #define for_each_bvec(bvl, bio_vec, iter, start)			\
+ 	for (iter = (start);						\
+ 	     (iter).bi_size &&						\
 -- 
 2.9.5
