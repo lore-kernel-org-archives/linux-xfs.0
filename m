@@ -1,50 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:54468 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726590AbfAJB0W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Jan 2019 20:26:22 -0500
-Date: Thu, 10 Jan 2019 12:26:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 0/5] kvm "virtio pmem" device
-Message-ID: <20190110012617.GA4205@dastard>
-References: <20190109144736.17452-1-pagupta@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190109144736.17452-1-pagupta@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:59470 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727401AbfAKMae (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Jan 2019 07:30:34 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 17BD15F758
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Jan 2019 12:30:34 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BFC905C25A
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Jan 2019 12:30:33 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 2/4] xfs: update fork seq counter on data fork changes
+Date: Fri, 11 Jan 2019 07:30:30 -0500
+Message-Id: <20190111123032.31538-3-bfoster@redhat.com>
+In-Reply-To: <20190111123032.31538-1-bfoster@redhat.com>
+References: <20190111123032.31538-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>
-Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, qemu-devel@nongnu.org, linux-nvdimm@ml01.01.org, linux-fsdevel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-acpi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, jack@suse.cz, stefanha@redhat.com, dan.j.williams@intel.com, riel@surriel.com, nilal@redhat.com, kwolf@redhat.com, pbonzini@redhat.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, david@redhat.com, jmoyer@redhat.com, xiaoguangrong.eric@gmail.com, hch@infradead.org, mst@redhat.com, jasowang@redhat.com, lcapitulino@redhat.com, imammedo@redhat.com, eblake@redhat.com, willy@infradead.org, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, rjw@rjwysocki.net
+To: linux-xfs@vger.kernel.org
 
-On Wed, Jan 09, 2019 at 08:17:31PM +0530, Pankaj Gupta wrote:
->  This patch series has implementation for "virtio pmem". 
->  "virtio pmem" is fake persistent memory(nvdimm) in guest 
->  which allows to bypass the guest page cache. This also
->  implements a VIRTIO based asynchronous flush mechanism.  
+The sequence counter in the xfs_ifork structure is only updated on
+COW forks. This is because the counter is currently only used to
+optimize out repetitive COW fork checks at writeback time.
 
-Hmmmm. Sharing the host page cache direct into the guest VM. Sounds
-like a good idea, but.....
+Tweak the extent code to update the seq counter regardless of the
+fork type in preparation for using this counter on data forks as
+well.
 
-This means the guest VM can now run timing attacks to observe host
-side page cache residency, and depending on the implementation I'm
-guessing that the guest will be able to control host side page
-cache eviction, too (e.g. via discard or hole punch operations).
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_iext_tree.c  | 13 ++++++-------
+ fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
+ 2 files changed, 7 insertions(+), 8 deletions(-)
 
-Which means this functionality looks to me like a new vector for
-information leakage into and out of the guest VM via guest
-controlled host page cache manipulation.
-
-https://arxiv.org/pdf/1901.01161
-
-I might be wrong, but if I'm not we're going to have to be very
-careful about how guest VMs can access and manipulate host side
-resources like the page cache.....
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+index 771dd072015d..bc690f2409fa 100644
+--- a/fs/xfs/libxfs/xfs_iext_tree.c
++++ b/fs/xfs/libxfs/xfs_iext_tree.c
+@@ -614,16 +614,15 @@ xfs_iext_realloc_root(
+ }
+ 
+ /*
+- * Increment the sequence counter if we are on a COW fork.  This allows
+- * the writeback code to skip looking for a COW extent if the COW fork
+- * hasn't changed.  We use WRITE_ONCE here to ensure the update to the
+- * sequence counter is seen before the modifications to the extent
+- * tree itself take effect.
++ * Increment the sequence counter on extent tree changes. If we are on a COW
++ * fork, this allows the writeback code to skip looking for a COW extent if the
++ * COW fork hasn't changed. We use WRITE_ONCE here to ensure the update to the
++ * sequence counter is seen before the modifications to the extent tree itself
++ * take effect.
+  */
+ static inline void xfs_iext_inc_seq(struct xfs_ifork *ifp, int state)
+ {
+-	if (state & BMAP_COWFORK)
+-		WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
++	WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
+ }
+ 
+ void
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 60361d2d74a1..00c62ce170d0 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -14,7 +14,7 @@ struct xfs_dinode;
+  */
+ struct xfs_ifork {
+ 	int			if_bytes;	/* bytes in if_u1 */
+-	unsigned int		if_seq;		/* cow fork mod counter */
++	unsigned int		if_seq;		/* fork mod counter */
+ 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
+ 	short			if_broot_bytes;	/* bytes allocated for root */
+ 	unsigned char		if_flags;	/* per-fork flags */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.17.2
