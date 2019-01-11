@@ -1,29 +1,205 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51796 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:59066 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726364AbfAEWcP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 5 Jan 2019 17:32:15 -0500
-Subject: Re: [GIT PULL] xfs: more updates for v4.21
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20190104010644.GC21010@magnolia>
-References: <20190104010644.GC21010@magnolia>
-Message-Id: <20190105221502.6651.3178.pr-tracker-bot@pdx-korg-gitolite-1.ci.codeaurora.org>
-Date: Sat, 05 Jan 2019 22:15:02 +0000
+        id S1725789AbfAKLDh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Jan 2019 06:03:37 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V13 07/19] block: use bio_for_each_bvec() to compute multi-page bvec count
+Date: Fri, 11 Jan 2019 19:01:15 +0800
+Message-Id: <20190111110127.21664-8-ming.lei@redhat.com>
+In-Reply-To: <20190111110127.21664-1-ming.lei@redhat.com>
+References: <20190111110127.21664-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: torvalds@linux-foundation.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-The pull request you sent on Thu, 3 Jan 2019 17:06:44 -0800:
+First it is more efficient to use bio_for_each_bvec() in both
+blk_bio_segment_split() and __blk_recalc_rq_segments() to compute how
+many multi-page bvecs there are in the bio.
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.21-merge-3
+Secondly once bio_for_each_bvec() is used, the bvec may need to be
+splitted because its length can be very longer than max segment size,
+so we have to split the big bvec into several segments.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/acda9efa8c62d4baa0395c83bda43f252137e302
+Thirdly when splitting multi-page bvec into segments, the max segment
+limit may be reached, so the bio split need to be considered under
+this situation too.
 
-Thank you!
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-merge.c | 99 ++++++++++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 79 insertions(+), 20 deletions(-)
 
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index f85d878f313d..abe1c89c1253 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -161,6 +161,69 @@ static inline unsigned get_max_io_size(struct request_queue *q,
+ 	return sectors;
+ }
+ 
++static unsigned get_max_segment_size(struct request_queue *q,
++				     unsigned offset)
++{
++	unsigned long mask = queue_segment_boundary(q);
++
++	return min_t(unsigned long, mask - (mask & offset) + 1,
++		     queue_max_segment_size(q));
++}
++
++/*
++ * Split the bvec @bv into segments, and update all kinds of
++ * variables.
++ */
++static bool bvec_split_segs(struct request_queue *q, struct bio_vec *bv,
++		unsigned *nsegs, unsigned *last_seg_size,
++		unsigned *front_seg_size, unsigned *sectors)
++{
++	unsigned len = bv->bv_len;
++	unsigned total_len = 0;
++	unsigned new_nsegs = 0, seg_size = 0;
++
++	/*
++	 * Multi-page bvec may be too big to hold in one segment, so the
++	 * current bvec has to be splitted as multiple segments.
++	 */
++	while (len && new_nsegs + *nsegs < queue_max_segments(q)) {
++		seg_size = get_max_segment_size(q, bv->bv_offset + total_len);
++		seg_size = min(seg_size, len);
++
++		new_nsegs++;
++		total_len += seg_size;
++		len -= seg_size;
++
++		if ((bv->bv_offset + total_len) & queue_virt_boundary(q))
++			break;
++	}
++
++	if (!new_nsegs)
++		return !!len;
++
++	/* update front segment size */
++	if (!*nsegs) {
++		unsigned first_seg_size;
++
++		if (new_nsegs == 1)
++			first_seg_size = get_max_segment_size(q, bv->bv_offset);
++		else
++			first_seg_size = queue_max_segment_size(q);
++
++		if (*front_seg_size < first_seg_size)
++			*front_seg_size = first_seg_size;
++	}
++
++	/* update other varibles */
++	*last_seg_size = seg_size;
++	*nsegs += new_nsegs;
++	if (sectors)
++		*sectors += total_len >> 9;
++
++	/* split in the middle of the bvec if len != 0 */
++	return !!len;
++}
++
+ static struct bio *blk_bio_segment_split(struct request_queue *q,
+ 					 struct bio *bio,
+ 					 struct bio_set *bs,
+@@ -174,7 +237,7 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+ 	struct bio *new = NULL;
+ 	const unsigned max_sectors = get_max_io_size(q, bio);
+ 
+-	bio_for_each_segment(bv, bio, iter) {
++	bio_for_each_bvec(bv, bio, iter) {
+ 		/*
+ 		 * If the queue doesn't support SG gaps and adding this
+ 		 * offset would create a gap, disallow it.
+@@ -189,8 +252,12 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+ 			 */
+ 			if (nsegs < queue_max_segments(q) &&
+ 			    sectors < max_sectors) {
+-				nsegs++;
+-				sectors = max_sectors;
++				/* split in the middle of bvec */
++				bv.bv_len = (max_sectors - sectors) << 9;
++				bvec_split_segs(q, &bv, &nsegs,
++						&seg_size,
++						&front_seg_size,
++						&sectors);
+ 			}
+ 			goto split;
+ 		}
+@@ -212,14 +279,12 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+ 		if (nsegs == queue_max_segments(q))
+ 			goto split;
+ 
+-		if (nsegs == 1 && seg_size > front_seg_size)
+-			front_seg_size = seg_size;
+-
+-		nsegs++;
+ 		bvprv = bv;
+ 		bvprvp = &bvprv;
+-		seg_size = bv.bv_len;
+-		sectors += bv.bv_len >> 9;
++
++		if (bvec_split_segs(q, &bv, &nsegs, &seg_size,
++				    &front_seg_size, &sectors))
++			goto split;
+ 
+ 	}
+ 
+@@ -233,8 +298,6 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
+ 			bio = new;
+ 	}
+ 
+-	if (nsegs == 1 && seg_size > front_seg_size)
+-		front_seg_size = seg_size;
+ 	bio->bi_seg_front_size = front_seg_size;
+ 	if (seg_size > bio->bi_seg_back_size)
+ 		bio->bi_seg_back_size = seg_size;
+@@ -297,6 +360,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+ 	struct bio_vec bv, bvprv = { NULL };
+ 	int prev = 0;
+ 	unsigned int seg_size, nr_phys_segs;
++	unsigned front_seg_size = bio->bi_seg_front_size;
+ 	struct bio *fbio, *bbio;
+ 	struct bvec_iter iter;
+ 
+@@ -316,7 +380,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+ 	seg_size = 0;
+ 	nr_phys_segs = 0;
+ 	for_each_bio(bio) {
+-		bio_for_each_segment(bv, bio, iter) {
++		bio_for_each_bvec(bv, bio, iter) {
+ 			/*
+ 			 * If SG merging is disabled, each bio vector is
+ 			 * a segment
+@@ -336,20 +400,15 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
+ 				continue;
+ 			}
+ new_segment:
+-			if (nr_phys_segs == 1 && seg_size >
+-			    fbio->bi_seg_front_size)
+-				fbio->bi_seg_front_size = seg_size;
+-
+-			nr_phys_segs++;
+ 			bvprv = bv;
+ 			prev = 1;
+-			seg_size = bv.bv_len;
++			bvec_split_segs(q, &bv, &nr_phys_segs, &seg_size,
++					&front_seg_size, NULL);
+ 		}
+ 		bbio = bio;
+ 	}
+ 
+-	if (nr_phys_segs == 1 && seg_size > fbio->bi_seg_front_size)
+-		fbio->bi_seg_front_size = seg_size;
++	fbio->bi_seg_front_size = front_seg_size;
+ 	if (seg_size > bbio->bi_seg_back_size)
+ 		bbio->bi_seg_back_size = seg_size;
+ 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+2.9.5
