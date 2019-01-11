@@ -1,70 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47112 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35786 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727401AbfAKMad (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Jan 2019 07:30:33 -0500
+        id S1730347AbfAKPKr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Jan 2019 10:10:47 -0500
+Date: Fri, 11 Jan 2019 10:10:44 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/4] xfs: eof trim writeback mapping as soon as it is cached
-Date: Fri, 11 Jan 2019 07:30:29 -0500
-Message-Id: <20190111123032.31538-2-bfoster@redhat.com>
-In-Reply-To: <20190111123032.31538-1-bfoster@redhat.com>
-References: <20190111123032.31538-1-bfoster@redhat.com>
+Subject: Re: [PATCH 2/5] xfs: scrub should flag dir/attr offsets that aren't
+ mappable with xfs_dablk_t
+Message-ID: <20190111151043.GA30640@bfoster>
+References: <154697976479.2839.3584921201780682011.stgit@magnolia>
+ <154697977734.2839.3057935106750236010.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <154697977734.2839.3057935106750236010.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: stable@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-The cached writeback mapping is EOF trimmed to try and avoid races
-between post-eof block management and writeback that result in
-sending cached data to a stale location. The cached mapping is
-currently trimmed on the validation check, which leaves a race
-window between the time the mapping is cached and when it is trimmed
-against the current inode size.
+On Tue, Jan 08, 2019 at 12:36:17PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Teach scrub to flag extent maps that exceed the range that can be mapped
+> with a xfs_dablk_t.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-For example, if a new mapping is cached by delalloc conversion on a
-blocksize == page size fs, we could cycle various locks, perform
-memory allocations, etc.  in the writeback codepath before the
-associated mapping is eventually trimmed to i_size. This leaves
-enough time for a post-eof truncate and file append before the
-cached mapping is trimmed. The former event essentially invalidates
-a range of the cached mapping and the latter bumps the inode size
-such the trim on the next writepage event won't trim all of the
-invalid blocks. fstest generic/464 reproduces this scenario
-occasionally and causes a lost writeback and stale delalloc blocks
-warning on inode inactivation.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-To work around this problem, trim the cached writeback mapping as
-soon as it is cached in addition to on subsequent validation checks.
-This is a minor tweak to tighten the race window as much as possible
-until a proper invalidation mechanism is available.
-
-Fixes: 40214d128e07 ("xfs: trim writepage mapping to within eof")
-Cc: <stable@vger.kernel.org> # v4.14+
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_aops.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 338b9d9984e0..d9048bcea49c 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -449,6 +449,7 @@ xfs_map_blocks(
- 	}
- 
- 	wpc->imap = imap;
-+	xfs_trim_extent_eof(&wpc->imap, ip);
- 	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
- 	return 0;
- allocate_blocks:
-@@ -459,6 +460,7 @@ xfs_map_blocks(
- 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
- 	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
- 	wpc->imap = imap;
-+	xfs_trim_extent_eof(&wpc->imap, ip);
- 	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
- 	return 0;
- }
--- 
-2.17.2
+>  fs/xfs/libxfs/xfs_types.c |   11 +++++++++++
+>  fs/xfs/libxfs/xfs_types.h |    1 +
+>  fs/xfs/scrub/bmap.c       |   27 +++++++++++++++++++++++++++
+>  3 files changed, 39 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+> index 3306fc42cfad..451608b5a37b 100644
+> --- a/fs/xfs/libxfs/xfs_types.c
+> +++ b/fs/xfs/libxfs/xfs_types.c
+> @@ -204,3 +204,14 @@ xfs_verify_icount(
+>  	xfs_icount_range(mp, &min, &max);
+>  	return icount >= min && icount <= max;
+>  }
+> +
+> +/* Sanity-checking of dir/attr block offsets. */
+> +bool
+> +xfs_verify_dablk(
+> +	struct xfs_mount	*mp,
+> +	xfs_fileoff_t		dabno)
+> +{
+> +	xfs_dablk_t		max_dablk = -1U;
+> +
+> +	return dabno <= max_dablk;
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+> index 8f02855a019a..704b4f308780 100644
+> --- a/fs/xfs/libxfs/xfs_types.h
+> +++ b/fs/xfs/libxfs/xfs_types.h
+> @@ -188,5 +188,6 @@ bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
+>  bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
+>  bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
+>  bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
+> +bool xfs_verify_dablk(struct xfs_mount *mp, xfs_fileoff_t off);
+>  
+>  #endif	/* __XFS_TYPES_H__ */
+> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> index e1d11f3223e3..a703cd58a90e 100644
+> --- a/fs/xfs/scrub/bmap.c
+> +++ b/fs/xfs/scrub/bmap.c
+> @@ -281,6 +281,31 @@ xchk_bmap_extent_xref(
+>  	xchk_ag_free(info->sc, &info->sc->sa);
+>  }
+>  
+> +/*
+> + * Directories and attr forks should never have blocks that can't be addressed
+> + * by a xfs_dablk_t.
+> + */
+> +STATIC void
+> +xchk_bmap_dirattr_extent(
+> +	struct xfs_inode	*ip,
+> +	struct xchk_bmap_info	*info,
+> +	struct xfs_bmbt_irec	*irec)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	xfs_fileoff_t		off;
+> +
+> +	if (!S_ISDIR(VFS_I(ip)->i_mode) && info->whichfork != XFS_ATTR_FORK)
+> +		return;
+> +
+> +	if (!xfs_verify_dablk(mp, irec->br_startoff))
+> +		xchk_fblock_set_corrupt(info->sc, info->whichfork,
+> +				irec->br_startoff);
+> +
+> +	off = irec->br_startoff + irec->br_blockcount - 1;
+> +	if (!xfs_verify_dablk(mp, off))
+> +		xchk_fblock_set_corrupt(info->sc, info->whichfork, off);
+> +}
+> +
+>  /* Scrub a single extent record. */
+>  STATIC int
+>  xchk_bmap_extent(
+> @@ -305,6 +330,8 @@ xchk_bmap_extent(
+>  		xchk_fblock_set_corrupt(info->sc, info->whichfork,
+>  				irec->br_startoff);
+>  
+> +	xchk_bmap_dirattr_extent(ip, info, irec);
+> +
+>  	/* There should never be a "hole" extent in either extent list. */
+>  	if (irec->br_startblock == HOLESTARTBLOCK)
+>  		xchk_fblock_set_corrupt(info->sc, info->whichfork,
+> 
