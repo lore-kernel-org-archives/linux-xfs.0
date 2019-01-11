@@ -1,135 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46818 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52206 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729349AbfAKQ2k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Jan 2019 11:28:40 -0500
-Date: Fri, 11 Jan 2019 11:28:38 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 01/12] xfs: free COW staging extents when freezing
- filesystem
-Message-ID: <20190111162837.GA33275@bfoster>
-References: <154630901076.16693.13111277988041606505.stgit@magnolia>
- <154630901708.16693.4337908735292154622.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154630901708.16693.4337908735292154622.stgit@magnolia>
+        id S1725789AbfAKLC0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Jan 2019 06:02:26 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V13 02/19] block: don't use bio->bi_vcnt to figure out segment number
+Date: Fri, 11 Jan 2019 19:01:10 +0800
+Message-Id: <20190111110127.21664-3-ming.lei@redhat.com>
+In-Reply-To: <20190111110127.21664-1-ming.lei@redhat.com>
+References: <20190111110127.21664-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-On Mon, Dec 31, 2018 at 06:16:57PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> When we're freezing the filesystem, free all the COW staging extents
-> before we shut the log down so that we can minimize the amount of
-> recovery work that will be necessary during the next mount.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_icache.c |   17 ++++++++++++-----
->  fs/xfs/xfs_super.c  |   18 ++++++++++++++++++
->  2 files changed, 30 insertions(+), 5 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 245483cc282b..36d986087abb 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1741,6 +1741,7 @@ xfs_inode_free_cowblocks(
->  	void			*args)
->  {
->  	struct xfs_eofblocks	*eofb = args;
-> +	uint			lock_mode = 0;
->  	int			match;
->  	int			ret = 0;
->  
-> @@ -1761,9 +1762,15 @@ xfs_inode_free_cowblocks(
->  			return 0;
->  	}
->  
-> -	/* Free the CoW blocks */
-> -	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-> -	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> +	/*
-> +	 * Free the CoW blocks.  We don't need to lock the inode if we're in
-> +	 * the process of freezing the filesystem because we've already locked
-> +	 * out writes and page faults.
-> +	 */
-> +	if (ip->i_mount->m_super->s_writers.frozen == SB_UNFROZEN)
-> +		lock_mode = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+It is wrong to use bio->bi_vcnt to figure out how many segments
+there are in the bio even though CLONED flag isn't set on this bio,
+because this bio may be splitted or advanced.
 
-Ok, but is there a problem with actually locking in this context? If so,
-I'd expect the comment to say something like: "Free the COW blocks.
-Don't lock the inode if we're in the process of freezing the filesystem
-because <some bad thing happens>. This is safe because we've already
-locked out writes and page faults."
+So always use bio_segments() in blk_recount_segments(), and it shouldn't
+cause any performance loss now because the physical segment number is figured
+out in blk_queue_split() and BIO_SEG_VALID is set meantime since
+bdced438acd83ad83a6c ("block: setup bi_phys_segments after splitting").
 
-> +	if (lock_mode)
-> +		xfs_ilock(ip, lock_mode);
->  
->  	/*
->  	 * Check again, nobody else should be able to dirty blocks or change
-> @@ -1772,8 +1779,8 @@ xfs_inode_free_cowblocks(
->  	if (xfs_prep_free_cowblocks(ip))
->  		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
->  
-> -	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-> -	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-> +	if (lock_mode)
-> +		xfs_iunlock(ip, lock_mode);
->  
->  	return ret;
->  }
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 6903b36eac5d..bb4953cfd683 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1102,6 +1102,24 @@ xfs_fs_sync_fs(
->  	if (!wait)
->  		return 0;
->  
-> +	/*
-> +	 * If we're in the middle of freezing the filesystem, this is our last
-> +	 * chance to run regular transactions.  Clear all the COW staging
-> +	 * extents so that we can freeze the filesystem with as little recovery
-> +	 * work to do at the next mount as possible.  It's safe to do this
-> +	 * without locking inodes because the freezer code flushed all the
-> +	 * dirty data from the page cache and locked out writes and page faults.
-> +	 */
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fixes: 76d8137a3113 ("blk-merge: recaculate segment if it isn't less than max segments")
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-merge.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-Well, we have XFS_TRANS_NO_WRITECOUNT. It seems we could use an eofb
-freeze flag or some such to notify the scan that we're in a special
-freeze context and in turn use that to tweak the locking (instead of the
-SB_FREEZE_* checks) and avoid blocking on transaction allocation. Would
-that allow us to run this in xfs_fs_freeze() context?
-
-I'm also a little curious about the high-level tradeoff we're making.
-This patch means that a freeze, and thus something like an LVM snapshot,
-would clear/reset all COW blocks in the fs, right? If so, ISTM that
-could be annoying if the user had a bunch of reflinked vdisk images or
-something on the fs.
-
-Is the tradeoff just that if the user freezes and then doesn't unfreeze
-before the next mount that log recovery will have to deal with COW
-blocks, or are there considerations for a typical freeze/unfreeze cycle
-as well? Is this more expensive at recovery time than at freeze time?
-
-Brian
-
-> +	if (sb->s_writers.frozen == SB_FREEZE_PAGEFAULT) {
-> +		int		error;
-> +
-> +		error = xfs_icache_free_cowblocks(mp, NULL);
-> +		if (error) {
-> +			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> +			return error;
-> +		}
-> +	}
-> +
->  	xfs_log_force(mp, XFS_LOG_SYNC);
->  	if (laptop_mode) {
->  		/*
-> 
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 71e9ac03f621..f85d878f313d 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -367,13 +367,7 @@ void blk_recalc_rq_segments(struct request *rq)
+ 
+ void blk_recount_segments(struct request_queue *q, struct bio *bio)
+ {
+-	unsigned short seg_cnt;
+-
+-	/* estimate segment number by bi_vcnt for non-cloned bio */
+-	if (bio_flagged(bio, BIO_CLONED))
+-		seg_cnt = bio_segments(bio);
+-	else
+-		seg_cnt = bio->bi_vcnt;
++	unsigned short seg_cnt = bio_segments(bio);
+ 
+ 	if (test_bit(QUEUE_FLAG_NO_SG_MERGE, &q->queue_flags) &&
+ 			(seg_cnt < queue_max_segments(q)))
+-- 
+2.9.5
