@@ -1,181 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60372 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54274 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731306AbfAKLGV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 Jan 2019 06:06:21 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V13 18/19] block: kill QUEUE_FLAG_NO_SG_MERGE
-Date: Fri, 11 Jan 2019 19:01:26 +0800
-Message-Id: <20190111110127.21664-19-ming.lei@redhat.com>
-In-Reply-To: <20190111110127.21664-1-ming.lei@redhat.com>
-References: <20190111110127.21664-1-ming.lei@redhat.com>
+        id S1728853AbfAKNb0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Jan 2019 08:31:26 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] tests/generic: test writepage cached mapping validity
+Date: Fri, 11 Jan 2019 08:31:24 -0500
+Message-Id: <20190111133124.31879-1-bfoster@redhat.com>
+In-Reply-To: <20190111123032.31538-1-bfoster@redhat.com>
+References: <20190111123032.31538-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-Since bdced438acd83ad83a6c ("block: setup bi_phys_segments after splitting"),
-physical segment number is mainly figured out in blk_queue_split() for
-fast path, and the flag of BIO_SEG_VALID is set there too.
+XFS has a bug where page writeback can end up sending data to the
+wrong location due to a stale, cached file mapping. Add a test to
+trigger this problem by racing background writeback with a
+truncate/rewrite of the final page of the file.
 
-Now only blk_recount_segments() and blk_recalc_rq_segments() use this
-flag.
-
-Basically blk_recount_segments() is bypassed in fast path given BIO_SEG_VALID
-is set in blk_queue_split().
-
-For another user of blk_recalc_rq_segments():
-
-- run in partial completion branch of blk_update_request, which is an unusual case
-
-- run in blk_cloned_rq_check_limits(), still not a big problem if the flag is killed
-since dm-rq is the only user.
-
-Multi-page bvec is enabled now, not doing S/G merging is rather pointless with the
-current setup of the I/O path, as it isn't going to save you a significant amount
-of cycles.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- block/blk-merge.c      | 31 ++++++-------------------------
- block/blk-mq-debugfs.c |  1 -
- block/blk-mq.c         |  3 ---
- drivers/md/dm-table.c  | 13 -------------
- include/linux/blkdev.h |  1 -
- 5 files changed, 6 insertions(+), 43 deletions(-)
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index bf736d2b3710..dc4877eaf9f9 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -354,8 +354,7 @@ void blk_queue_split(struct request_queue *q, struct bio **bio)
- EXPORT_SYMBOL(blk_queue_split);
- 
- static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
--					     struct bio *bio,
--					     bool no_sg_merge)
-+					     struct bio *bio)
- {
- 	struct bio_vec bv, bvprv = { NULL };
- 	int prev = 0;
-@@ -381,13 +380,6 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
- 	nr_phys_segs = 0;
- 	for_each_bio(bio) {
- 		bio_for_each_bvec(bv, bio, iter) {
--			/*
--			 * If SG merging is disabled, each bio vector is
--			 * a segment
--			 */
--			if (no_sg_merge)
--				goto new_segment;
--
- 			if (prev) {
- 				if (seg_size + bv.bv_len
- 				    > queue_max_segment_size(q))
-@@ -417,27 +409,16 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
- 
- void blk_recalc_rq_segments(struct request *rq)
- {
--	bool no_sg_merge = !!test_bit(QUEUE_FLAG_NO_SG_MERGE,
--			&rq->q->queue_flags);
--
--	rq->nr_phys_segments = __blk_recalc_rq_segments(rq->q, rq->bio,
--			no_sg_merge);
-+	rq->nr_phys_segments = __blk_recalc_rq_segments(rq->q, rq->bio);
- }
- 
- void blk_recount_segments(struct request_queue *q, struct bio *bio)
- {
--	unsigned short seg_cnt = bio_segments(bio);
--
--	if (test_bit(QUEUE_FLAG_NO_SG_MERGE, &q->queue_flags) &&
--			(seg_cnt < queue_max_segments(q)))
--		bio->bi_phys_segments = seg_cnt;
--	else {
--		struct bio *nxt = bio->bi_next;
-+	struct bio *nxt = bio->bi_next;
- 
--		bio->bi_next = NULL;
--		bio->bi_phys_segments = __blk_recalc_rq_segments(q, bio, false);
--		bio->bi_next = nxt;
--	}
-+	bio->bi_next = NULL;
-+	bio->bi_phys_segments = __blk_recalc_rq_segments(q, bio);
-+	bio->bi_next = nxt;
- 
- 	bio_set_flag(bio, BIO_SEG_VALID);
- }
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 90d68760af08..2f9a11ef5bad 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -128,7 +128,6 @@ static const char *const blk_queue_flag_name[] = {
- 	QUEUE_FLAG_NAME(SAME_FORCE),
- 	QUEUE_FLAG_NAME(DEAD),
- 	QUEUE_FLAG_NAME(INIT_DONE),
--	QUEUE_FLAG_NAME(NO_SG_MERGE),
- 	QUEUE_FLAG_NAME(POLL),
- 	QUEUE_FLAG_NAME(WC),
- 	QUEUE_FLAG_NAME(FUA),
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 3ba37b9e15e9..fa45817a7e62 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2829,9 +2829,6 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
- 	    set->map[HCTX_TYPE_POLL].nr_queues)
- 		blk_queue_flag_set(QUEUE_FLAG_POLL, q);
- 
--	if (!(set->flags & BLK_MQ_F_SG_MERGE))
--		blk_queue_flag_set(QUEUE_FLAG_NO_SG_MERGE, q);
--
- 	q->sg_reserved_size = INT_MAX;
- 
- 	INIT_DELAYED_WORK(&q->requeue_work, blk_mq_requeue_work);
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index 4b1be754cc41..ba9481f1bf3c 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -1698,14 +1698,6 @@ static int device_is_not_random(struct dm_target *ti, struct dm_dev *dev,
- 	return q && !blk_queue_add_random(q);
- }
- 
--static int queue_supports_sg_merge(struct dm_target *ti, struct dm_dev *dev,
--				   sector_t start, sector_t len, void *data)
--{
--	struct request_queue *q = bdev_get_queue(dev->bdev);
--
--	return q && !test_bit(QUEUE_FLAG_NO_SG_MERGE, &q->queue_flags);
--}
--
- static bool dm_table_all_devices_attribute(struct dm_table *t,
- 					   iterate_devices_callout_fn func)
- {
-@@ -1902,11 +1894,6 @@ void dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
- 	if (!dm_table_supports_write_zeroes(t))
- 		q->limits.max_write_zeroes_sectors = 0;
- 
--	if (dm_table_all_devices_attribute(t, queue_supports_sg_merge))
--		blk_queue_flag_clear(QUEUE_FLAG_NO_SG_MERGE, q);
--	else
--		blk_queue_flag_set(QUEUE_FLAG_NO_SG_MERGE, q);
--
- 	dm_table_verify_integrity(t);
- 
- 	/*
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 7f4ca073e2f3..61bb72f55fc3 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -588,7 +588,6 @@ struct request_queue {
- #define QUEUE_FLAG_SAME_FORCE  15	/* force complete on same CPU */
- #define QUEUE_FLAG_DEAD        16	/* queue tear-down finished */
- #define QUEUE_FLAG_INIT_DONE   17	/* queue is initialized */
--#define QUEUE_FLAG_NO_SG_MERGE 18	/* don't attempt to merge SG segments*/
- #define QUEUE_FLAG_POLL	       19	/* IO polling enabled if set */
- #define QUEUE_FLAG_WC	       20	/* Write back caching */
- #define QUEUE_FLAG_FUA	       21	/* device supports FUA writes */
+Hi all,
+
+This is a resend of an old post[1] that never quite made it upstream. It
+wasn't a big deal at the time because we didn't really have a proper fix
+for the problem. I'm resending now because there is a proposed fix[2].
+
+I've verified that this still reproduces the problem and no longer fails
+with the fix applied (in hundreds of iters). Note that reproduction may
+require many iterations. It took me anywhere from 5 to 30 or so on the
+box I tested, which I think is reasonable for the tradeoff of a fairly
+quick test. There was some discussion on the original post around making
+the test run longer for a more reliable reproducer, but I'm not sure how
+valuable that is given this is a targeted regression test. Thoughts
+appreciated.
+
+Brian
+
+[1] https://marc.info/?l=fstests&m=150902929900510&w=2
+[2] https://marc.info/?l=linux-xfs&m=154721212321112&w=2
+
+ tests/generic/999     | 94 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/999.out |  2 +
+ tests/generic/group   |  1 +
+ 3 files changed, 97 insertions(+)
+ create mode 100755 tests/generic/999
+ create mode 100644 tests/generic/999.out
+
+diff --git a/tests/generic/999 b/tests/generic/999
+new file mode 100755
+index 00000000..9e56a1e0
+--- /dev/null
++++ b/tests/generic/999
+@@ -0,0 +1,94 @@
++#! /bin/bash
++# FS QA Test 999
++#
++# Test XFS page writeback code for races with the cached file mapping. XFS
++# caches the file -> block mapping for a full extent once it is initially looked
++# up. The cached mapping is used for all subsequent pages in the same writeback
++# cycle that cover the associated extent. Under certain conditions, it is
++# possible for concurrent operations on the file to invalidate the cached
++# mapping without the knowledge of writeback. Writeback ends up sending I/O to a
++# partly stale mapping and potentially leaving delalloc blocks in the current
++# mapping unconverted.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_require_test_program "feature"
++
++_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
++_scratch_mount || _fail "mount failed"
++
++file=$SCRATCH_MNT/file
++filesize=$((1024 * 1024 * 32))
++pagesize=`src/feature -s`
++truncsize=$((filesize - pagesize))
++
++for i in $(seq 0 15); do
++	# Truncate the file and fsync to persist the final size on-disk. This is
++	# required so the subsequent truncate will not wait on writeback.
++	$XFS_IO_PROG -fc "truncate 0" $file
++	$XFS_IO_PROG -c "truncate $filesize" -c fsync $file
++
++	# create a small enough delalloc extent to likely be contiguous
++	$XFS_IO_PROG -c "pwrite 0 $filesize" $file >> $seqres.full 2>&1
++
++	# Start writeback and a racing truncate and rewrite of the final page.
++	$XFS_IO_PROG -c "sync_range -w 0 0" $file &
++	sync_pid=$!
++	$XFS_IO_PROG -c "truncate $truncsize" \
++		     -c "pwrite $truncsize $pagesize" $file >> $seqres.full 2>&1
++
++	# If the test fails, the most likely outcome is an sb_fdblocks mismatch
++	# and/or an associated delalloc assert failure on inode reclaim. Cycle
++	# the mount to trigger detection.
++	wait $sync_pid
++	_scratch_cycle_mount || _fail "mount failed"
++done
++
++echo Silence is golden
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/999.out b/tests/generic/999.out
+new file mode 100644
+index 00000000..3b276ca8
+--- /dev/null
++++ b/tests/generic/999.out
+@@ -0,0 +1,2 @@
++QA output created by 999
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index ea5aa7aa..ce165981 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -525,3 +525,4 @@
+ 520 auto quick log
+ 521 soak long_rw
+ 522 soak long_rw
++999 auto quick
 -- 
-2.9.5
+2.17.2
