@@ -1,89 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:38327 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726392AbfAGUOw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Jan 2019 15:14:52 -0500
-Received: by mail-wm1-f66.google.com with SMTP id m22so2151028wml.3
-        for <linux-xfs@vger.kernel.org>; Mon, 07 Jan 2019 12:14:51 -0800 (PST)
-Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
-        by smtp.gmail.com with ESMTPSA id j124sm3194818wmb.48.2019.01.07.12.14.49
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 07 Jan 2019 12:14:49 -0800 (PST)
-From: Stefan Ring <stefanrin@gmail.com>
-Subject: [PATCH 1/5] xfs_metadump: Extend data zapping to XFS_DIR{2,3}_LEAFN_MAGIC blocks
-Date: Mon,  7 Jan 2019 21:13:51 +0100
-Message-Id: <20190107201355.18996-2-stefanrin@gmail.com>
-In-Reply-To: <20190107201355.18996-1-stefanrin@gmail.com>
-References: <20190107201355.18996-1-stefanrin@gmail.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: from mx1.redhat.com ([209.132.183.28]:55732 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725446AbfAKLEF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Jan 2019 06:04:05 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V13 09/19] block: introduce bvec_last_segment()
+Date: Fri, 11 Jan 2019 19:01:17 +0800
+Message-Id: <20190111110127.21664-10-ming.lei@redhat.com>
+In-Reply-To: <20190111110127.21664-1-ming.lei@redhat.com>
+References: <20190111110127.21664-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-Signed-off-by: Stefan Ring <stefanrin@gmail.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+BTRFS and guard_bio_eod() need to get the last singlepage segment
+from one multipage bvec, so introduce this helper to make them happy.
+
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- db/metadump.c | 27 +++++++++++++++++++++++----
- 1 file changed, 23 insertions(+), 4 deletions(-)
+ include/linux/bvec.h | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-diff --git a/db/metadump.c b/db/metadump.c
-index cc2ae9af..97d2a490 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1426,7 +1426,7 @@ process_dir_leaf_block(
- 	char				*block)
- {
- 	struct xfs_dir2_leaf		*leaf;
--	struct xfs_dir3_icleaf_hdr 	leafhdr;
-+	struct xfs_dir3_icleaf_hdr	leafhdr;
- 
- 	if (!zero_stale_data)
- 		return;
-@@ -1435,20 +1435,39 @@ process_dir_leaf_block(
- 	leaf = (struct xfs_dir2_leaf *)block;
- 	M_DIROPS(mp)->leaf_hdr_from_disk(&leafhdr, leaf);
- 
--	/* Zero out space from end of ents[] to bests */
--	if (leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
--	    leafhdr.magic == XFS_DIR3_LEAF1_MAGIC) {
-+	switch (leafhdr.magic) {
-+	case XFS_DIR2_LEAF1_MAGIC:
-+	case XFS_DIR3_LEAF1_MAGIC: {
- 		struct xfs_dir2_leaf_tail	*ltp;
- 		__be16				*lbp;
- 		struct xfs_dir2_leaf_entry	*ents;
- 		char				*free; /* end of ents */
- 
-+		/* Zero out space from end of ents[] to bests */
- 		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
- 		free = (char *)&ents[leafhdr.count];
- 		ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, leaf);
- 		lbp = xfs_dir2_leaf_bests_p(ltp);
- 		memset(free, 0, (char *)lbp - free);
- 		iocur_top->need_crc = 1;
-+		break;
-+	}
-+	case XFS_DIR2_LEAFN_MAGIC:
-+	case XFS_DIR3_LEAFN_MAGIC: {
-+		struct xfs_dir2_leaf_entry	*ents;
-+		char				*free;
-+		int				used;
-+
-+		/* Zero out space from end of ents[] to end of block */
-+		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
-+		free = (char *)&ents[leafhdr.count];
-+		used = free - (char*)leaf;
-+		memset(free, 0, mp->m_dir_geo->blksize - used);
-+		iocur_top->need_crc = 1;
-+		break;
-+	}
-+	default:
-+		break;
- 	}
+diff --git a/include/linux/bvec.h b/include/linux/bvec.h
+index d441486db605..ca6e630f88ab 100644
+--- a/include/linux/bvec.h
++++ b/include/linux/bvec.h
+@@ -131,4 +131,26 @@ static inline bool bvec_iter_advance(const struct bio_vec *bv,
+ 	.bi_bvec_done	= 0,						\
  }
  
++/*
++ * Get the last single-page segment from the multi-page bvec and store it
++ * in @seg
++ */
++static inline void bvec_last_segment(const struct bio_vec *bvec,
++				     struct bio_vec *seg)
++{
++	unsigned total = bvec->bv_offset + bvec->bv_len;
++	unsigned last_page = (total - 1) / PAGE_SIZE;
++
++	seg->bv_page = nth_page(bvec->bv_page, last_page);
++
++	/* the whole segment is inside the last page */
++	if (bvec->bv_offset >= last_page * PAGE_SIZE) {
++		seg->bv_offset = bvec->bv_offset % PAGE_SIZE;
++		seg->bv_len = bvec->bv_len;
++	} else {
++		seg->bv_offset = 0;
++		seg->bv_len = total - last_page * PAGE_SIZE;
++	}
++}
++
+ #endif /* __LINUX_BVEC_ITER_H */
 -- 
-2.19.2
+2.9.5
