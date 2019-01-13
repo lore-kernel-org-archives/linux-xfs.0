@@ -1,63 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:45678 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725941AbfAAXwD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Jan 2019 18:52:03 -0500
-Date: Wed, 2 Jan 2019 10:52:00 +1100
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:61147 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725837AbfAMX3I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Jan 2019 18:29:08 -0500
+Date: Mon, 14 Jan 2019 10:29:02 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_db: fix finobt record decoding when sparse inodes
- enabled
-Message-ID: <20190101235200.GK4205@dastard>
-References: <20181231191848.GB20475@magnolia>
+Subject: Re: [PATCH v3 0/5] kvm "virtio pmem" device
+Message-ID: <20190113232902.GD4205@dastard>
+References: <20190109144736.17452-1-pagupta@redhat.com>
+ <20190110012617.GA4205@dastard>
+ <1326478078.61913951.1547192704870.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181231191848.GB20475@magnolia>
+In-Reply-To: <1326478078.61913951.1547192704870.JavaMail.zimbra@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: Pankaj Gupta <pagupta@redhat.com>
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, qemu-devel@nongnu.org, linux-nvdimm@ml01.01.org, linux-fsdevel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-acpi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, jack@suse.cz, stefanha@redhat.com, dan j williams <dan.j.williams@intel.com>, riel@surriel.com, nilal@redhat.com, kwolf@redhat.com, pbonzini@redhat.com, zwisler@kernel.org, vishal l verma <vishal.l.verma@intel.com>, dave jiang <dave.jiang@intel.com>, david@redhat.com, jmoyer@redhat.com, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, hch@infradead.org, mst@redhat.com, jasowang@redhat.com, lcapitulino@redhat.com, imammedo@redhat.com, eblake@redhat.com, willy@infradead.org, tytso@mit.edu, adilger kernel <adilger.kernel@dilger.ca>, darrick wong <darrick.wong@oracle.com>, rjw@rjwysocki.net
 
-On Mon, Dec 31, 2018 at 11:18:48AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jan 11, 2019 at 02:45:04AM -0500, Pankaj Gupta wrote:
 > 
-> Use the sparse inobt record field decoder (inobt_spcrc_hfld) to decode
-> finobt records when sparse inodes are enabled.  Otherwise, xfs_db
-> prints out bogus things like:
+> > 
+> > On Wed, Jan 09, 2019 at 08:17:31PM +0530, Pankaj Gupta wrote:
+> > >  This patch series has implementation for "virtio pmem".
+> > >  "virtio pmem" is fake persistent memory(nvdimm) in guest
+> > >  which allows to bypass the guest page cache. This also
+> > >  implements a VIRTIO based asynchronous flush mechanism.
+> > 
+> > Hmmmm. Sharing the host page cache direct into the guest VM. Sounds
+> > like a good idea, but.....
+> > 
+> > This means the guest VM can now run timing attacks to observe host
+> > side page cache residency, and depending on the implementation I'm
+> > guessing that the guest will be able to control host side page
+> > cache eviction, too (e.g. via discard or hole punch operations).
 > 
-> recs[1] = [startino,freecount,free]
-> 1:[214720,16429,0xfffffffffff80000]
-> 
-> There can never be 16429 records in an inode btree record; instead it
-> should print:
-> 
-> recs[1] = [startino,holemask,count,freecount,free]
-> 1:[214720,0,64,45,0xfffffffffff80000]
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  db/type.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/db/type.c b/db/type.c
-> index d0234c57..f5f65042 100644
-> --- a/db/type.c
-> +++ b/db/type.c
-> @@ -151,7 +151,7 @@ static const typ_t	__typtab_spcrc[] = {
->  	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
->  		&xfs_symlink_buf_ops, XFS_SYMLINK_CRC_OFF },
->  	{ TYP_TEXT, "text", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
-> -	{ TYP_FINOBT, "finobt", handle_struct, inobt_crc_hfld,
-> +	{ TYP_FINOBT, "finobt", handle_struct, inobt_spcrc_hfld,
->  		&xfs_inobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
->  	{ TYP_NONE, NULL }
->  };
+> Not sure how? this is similar to mmapping virtual memory by any userspace 
+> process. Any host userspace process can do such attack on host page cache
+> using mincore & mmap shared file. 
 
-Looks fine.
+Mincore is for monitoring, not cached eviction. And it's not
+required to observe cache residency, either. That's a wide open
+field containing an uncountable number of moles...
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> But i don't think guest can do this alone. For virtio-pmem usecase
+> guest won't be using page cache so timing attack from only guest
+> side is not possible unless host userspace can run checks on page
+> cache eviction state using mincore etc.  As rightly described by
+> Rik, guest will only access its own page cache pages and if guest
+> page cache is managed directly by host, this saves alot of effort
+> for guest in transferring guest state of page cache.  
 
+Until you have images (and hence host page cache) shared between
+multiple guests. People will want to do this, because it means they
+only need a single set of pages in host memory for executable
+binaries rather than a set of pages per guest. Then you have
+multiple guests being able to detect residency of the same set of
+pages. If the guests can then, in any way, control eviction of the
+pages from the host cache, then we have a guest-to-guest information
+leak channel.
+
+i.e. it's something we need to be aware of and really careful about
+enabling infrastructure that /will/ be abused if guests can find a
+way to influence the host side cache residency.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
