@@ -1,74 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:61147 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725837AbfAMX3I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Jan 2019 18:29:08 -0500
-Date: Mon, 14 Jan 2019 10:29:02 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 0/5] kvm "virtio pmem" device
-Message-ID: <20190113232902.GD4205@dastard>
-References: <20190109144736.17452-1-pagupta@redhat.com>
- <20190110012617.GA4205@dastard>
- <1326478078.61913951.1547192704870.JavaMail.zimbra@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:40106 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726777AbfANUcL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Jan 2019 15:32:11 -0500
+Date: Mon, 14 Jan 2019 12:32:01 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 3/5] xfs: fix off-by-one error in rtbitmap cross-reference
+Message-ID: <20190114203201.GA12689@magnolia>
+References: <154697976479.2839.3584921201780682011.stgit@magnolia>
+ <154697978351.2839.11888108672644284957.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1326478078.61913951.1547192704870.JavaMail.zimbra@redhat.com>
+In-Reply-To: <154697978351.2839.11888108672644284957.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>
-Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, qemu-devel@nongnu.org, linux-nvdimm@ml01.01.org, linux-fsdevel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-acpi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, jack@suse.cz, stefanha@redhat.com, dan j williams <dan.j.williams@intel.com>, riel@surriel.com, nilal@redhat.com, kwolf@redhat.com, pbonzini@redhat.com, zwisler@kernel.org, vishal l verma <vishal.l.verma@intel.com>, dave jiang <dave.jiang@intel.com>, david@redhat.com, jmoyer@redhat.com, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, hch@infradead.org, mst@redhat.com, jasowang@redhat.com, lcapitulino@redhat.com, imammedo@redhat.com, eblake@redhat.com, willy@infradead.org, tytso@mit.edu, adilger kernel <adilger.kernel@dilger.ca>, darrick wong <darrick.wong@oracle.com>, rjw@rjwysocki.net
+To: linux-xfs@vger.kernel.org, sandeen@sandeen.net
+Cc: Brian Foster <bfoster@redhat.com>
 
-On Fri, Jan 11, 2019 at 02:45:04AM -0500, Pankaj Gupta wrote:
-> 
-> > 
-> > On Wed, Jan 09, 2019 at 08:17:31PM +0530, Pankaj Gupta wrote:
-> > >  This patch series has implementation for "virtio pmem".
-> > >  "virtio pmem" is fake persistent memory(nvdimm) in guest
-> > >  which allows to bypass the guest page cache. This also
-> > >  implements a VIRTIO based asynchronous flush mechanism.
-> > 
-> > Hmmmm. Sharing the host page cache direct into the guest VM. Sounds
-> > like a good idea, but.....
-> > 
-> > This means the guest VM can now run timing attacks to observe host
-> > side page cache residency, and depending on the implementation I'm
-> > guessing that the guest will be able to control host side page
-> > cache eviction, too (e.g. via discard or hole punch operations).
-> 
-> Not sure how? this is similar to mmapping virtual memory by any userspace 
-> process. Any host userspace process can do such attack on host page cache
-> using mincore & mmap shared file. 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Mincore is for monitoring, not cached eviction. And it's not
-required to observe cache residency, either. That's a wide open
-field containing an uncountable number of moles...
+Fix an off-by-one error in the realtime bitmap "is used" cross-reference
+helper function if the realtime extent size is a single block.
 
-> But i don't think guest can do this alone. For virtio-pmem usecase
-> guest won't be using page cache so timing attack from only guest
-> side is not possible unless host userspace can run checks on page
-> cache eviction state using mincore etc.  As rightly described by
-> Rik, guest will only access its own page cache pages and if guest
-> page cache is managed directly by host, this saves alot of effort
-> for guest in transferring guest state of page cache.  
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/rtbitmap.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-Until you have images (and hence host page cache) shared between
-multiple guests. People will want to do this, because it means they
-only need a single set of pages in host memory for executable
-binaries rather than a set of pages per guest. Then you have
-multiple guests being able to detect residency of the same set of
-pages. If the guests can then, in any way, control eviction of the
-pages from the host cache, then we have a guest-to-guest information
-leak channel.
-
-i.e. it's something we need to be aware of and really careful about
-enabling infrastructure that /will/ be abused if guests can find a
-way to influence the host side cache residency.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+index 665d4bbb17cc..dbe115b075f7 100644
+--- a/fs/xfs/scrub/rtbitmap.c
++++ b/fs/xfs/scrub/rtbitmap.c
+@@ -141,9 +141,8 @@ xchk_xref_is_used_rt_space(
+ 	startext = fsbno;
+ 	endext = fsbno + len - 1;
+ 	do_div(startext, sc->mp->m_sb.sb_rextsize);
+-	if (do_div(endext, sc->mp->m_sb.sb_rextsize))
+-		endext++;
+-	extcount = endext - startext;
++	do_div(endext, sc->mp->m_sb.sb_rextsize);
++	extcount = endext - startext + 1;
+ 	xfs_ilock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
+ 	error = xfs_rtalloc_extent_is_free(sc->mp, sc->tp, startext, extcount,
+ 			&is_free);
