@@ -1,285 +1,208 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35664 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38796 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726595AbfANPe0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Jan 2019 10:34:26 -0500
-Date: Mon, 14 Jan 2019 10:34:23 -0500
+        id S1726595AbfANPeh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 14 Jan 2019 10:34:37 -0500
+Date: Mon, 14 Jan 2019 10:34:34 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/4] xfs: validate writeback mapping using data fork seq
- counter
-Message-ID: <20190114153422.GA3148@bfoster>
+Subject: Re: [PATCH] tests/generic: test writepage cached mapping validity
+Message-ID: <20190114153434.GB3148@bfoster>
 References: <20190111123032.31538-1-bfoster@redhat.com>
- <20190111123032.31538-4-bfoster@redhat.com>
- <20190113214905.GB4205@dastard>
+ <20190111133124.31879-1-bfoster@redhat.com>
+ <20190114093036.GH2713@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190113214905.GB4205@dastard>
+In-Reply-To: <20190114093036.GH2713@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Jan 14, 2019 at 08:49:05AM +1100, Dave Chinner wrote:
-> On Fri, Jan 11, 2019 at 07:30:31AM -0500, Brian Foster wrote:
-> > The writeback code caches the current extent mapping across multiple
-> > xfs_do_writepage() calls to avoid repeated lookups for sequential
-> > pages backed by the same extent. This is known to be slightly racy
-> > with extent fork changes in certain difficult to reproduce
-> > scenarios. The cached extent is trimmed to within EOF to help avoid
-> > the most common vector for this problem via speculative
-> > preallocation management, but this is a band-aid that does not
-> > address the fundamental problem.
-> > 
-> > Now that we have an xfs_ifork sequence counter mechanism used to
-> > facilitate COW writeback, we can use the same mechanism to validate
-> > consistency between the data fork and cached writeback mappings. On
-> > its face, this is somewhat of a big hammer approach because any
-> > change to the data fork invalidates any mapping currently cached by
-> > a writeback in progress regardless of whether the data fork change
-> > overlaps with the range under writeback. In practice, however, the
-> > impact of this approach is minimal in most cases.
-> > 
-> > First, data fork changes (delayed allocations) caused by sustained
-> > sequential buffered writes are amortized across speculative
-> > preallocations. This means that a cached mapping won't be
-> > invalidated by each buffered write of a common file copy workload,
-> > but rather only on less frequent allocation events. Second, the
-> > extent tree is always entirely in-core so an additional lookup of a
-> > usable extent mostly costs a shared ilock cycle and in-memory tree
-> > lookup. This means that a cached mapping reval is relatively cheap
-> > compared to the I/O itself. Third, spurious invalidations don't
-> > impact ioend construction. This means that even if the same extent
-> > is revalidated multiple times across multiple writepage instances,
-> > we still construct and submit the same size ioend (and bio) if the
-> > blocks are physically contiguous.
-> > 
-> > Update struct xfs_writepage_ctx with a new field to hold the
-> > sequence number of the data fork associated with the currently
-> > cached mapping. Check the wpc seqno against the data fork when the
-> > mapping is validated and reestablish the mapping whenever the fork
-> > has changed since the mapping was cached. This ensures that
-> > writeback always uses a valid extent mapping and thus prevents lost
-> > writebacks and stale delalloc block problems.
+On Mon, Jan 14, 2019 at 05:30:36PM +0800, Eryu Guan wrote:
+> On Fri, Jan 11, 2019 at 08:31:24AM -0500, Brian Foster wrote:
+> > XFS has a bug where page writeback can end up sending data to the
+> > wrong location due to a stale, cached file mapping. Add a test to
+> > trigger this problem by racing background writeback with a
+> > truncate/rewrite of the final page of the file.
 > > 
 > > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > > ---
-> >  fs/xfs/xfs_aops.c  | 8 ++++++--
-> >  fs/xfs/xfs_iomap.c | 4 ++--
-> >  2 files changed, 8 insertions(+), 4 deletions(-)
 > > 
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index d9048bcea49c..33a1be5df99f 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -29,6 +29,7 @@
-> >  struct xfs_writepage_ctx {
-> >  	struct xfs_bmbt_irec    imap;
-> >  	unsigned int		io_type;
-> > +	unsigned int		data_seq;
-> >  	unsigned int		cow_seq;
-> >  	struct xfs_ioend	*ioend;
-> >  };
-> > @@ -347,7 +348,8 @@ xfs_map_blocks(
-> >  	 * out that ensures that we always see the current value.
-> >  	 */
-> >  	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
-> > -		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
-> > +		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount &&
-> > +		     wpc->data_seq == READ_ONCE(ip->i_df.if_seq);
-> >  	if (imap_valid &&
-> >  	    (!xfs_inode_has_cow_data(ip) ||
-> >  	     wpc->io_type == XFS_IO_COW ||
+> > Hi all,
+> > 
+> > This is a resend of an old post[1] that never quite made it upstream. It
+> > wasn't a big deal at the time because we didn't really have a proper fix
+> > for the problem. I'm resending now because there is a proposed fix[2].
 > 
-> I suspect this next "if (imap_valid) ..." logic needs to be updated,
-> too. i.e. the next line is checking if the cow_seq has not changed.
+> Thanks for the resending!
+> 
+> > 
+> > I've verified that this still reproduces the problem and no longer fails
+> > with the fix applied (in hundreds of iters). Note that reproduction may
+> > require many iterations. It took me anywhere from 5 to 30 or so on the
+> > box I tested, which I think is reasonable for the tradeoff of a fairly
+> > quick test. There was some discussion on the original post around making
+> > the test run longer for a more reliable reproducer, but I'm not sure how
+> > valuable that is given this is a targeted regression test. Thoughts
+> > appreciated.
+> 
+> It took me around 5 iterations to hit the corruption, I think it's fine.
+> 
+> But a couple of things changed over the years :)
 > 
 
-I'm not quite sure what you're getting at here. By "next," do you mean
-the one you've quoted or the post-lock cycle check (a re-check at the
-latter point makes sense to me). Otherwise the imap check is
-intentionally distinct from the COW seq check because these control
-independent bits of subsequent logic (in certain cases).
-
-That said, now that I look at it again this logic is rather convoluted
-because imap_valid doesn't necessarily refer to the data fork (e.g., if
-->imap is a cow fork extent). So yeah, this all should probably be
-refactored...
-
-> i.e. I think wrapping this up in a helper (again!) might make more
-> sense:
-> 
-> static bool
-> xfs_imap_valid(
-> 	struct xfs_inode	*ip,
-> 	struct xfs_writepage_ctx *wpc,
-> 	xfs_fileoff_t		offset_fsb)
-> {
-> 	if (offset_fsb < wpc->imap.br_startoff)
-> 		return false;
-> 	if (offset_fsb >= wpc->imap.br_startoff + wpc->imap.br_blockcount)
-> 		return false;
-> 	if (wpc->data_seq != READ_ONCE(ip->i_df.if_seq)
-> 		return false;
-> 	if (!xfs_inode_has_cow_data(ip))
-> 		return true;
-> 	if (wpc->io_type != XFS_IO_COW)
-> 		return true;
-> 	if (wpc->cow_seq != READ_ONCE(ip->i_cowfp->if_seq)
-> 		return false;
-> 	return true;
-> }
-> 
-
-I think you mean 'if (io_type == XFS_IO_COW)'? Otherwise this seems
-reasonable, though I think the logic suffers a bit from the same problem
-as above. How about with the following tweaks (and comments to try and
-make this easier to follow)?
-
-static bool
-xfs_imap_valid()
-{
-	if (offset_fsb < wpc->imap.br_startoff)
-		return false;
-	if (offset_fsb >= wpc->imap.br_startoff + wpc->imap.br_blockcount)
-		return false;
-	/* a valid range is sufficient for COW mappings */
-	if (wpc->io_type == XFS_IO_COW)
-		return true;
-
-	/*
-	 * Not a COW mapping. Revalidate across changes in either the
-	 * data or COW fork ...
-	 */
-	if (wpc->data_seq != READ_ONCE(ip->i_df.if_seq)
-		return false;
-	if (xfs_inode_has_cow_data(ip) &&
-	    wpc->cow_seq != READ_ONCE(ip->i_cowfp->if_seq)
-		return false;
-
-	return true;
-}
-
-I think that technically we could skip the == XFS_IO_COW check and we'd
-just be more conservative by essentially applying the same fork change
-logic we are for the data fork, but that's not really the intent of this
-patch.
-
-> and then put the shutdown check before we check the map for validity
-> (i.e. don't continue to write to the cached map after a shutdown has
-> been triggered):
-> 
-
-Ack.
-
-> 	if (XFS_FORCED_SHUTDOWN(mp))
-> 		return -EIO;
-> 
-> 	if (xfs_imap_valid(ip, wpc, offset_fsb))
-> 		return 0;
-> 
-> 
-> > @@ -417,6 +419,7 @@ xfs_map_blocks(
-> >  	 */
-> >  	if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap))
-> >  		imap.br_startoff = end_fsb;	/* fake a hole past EOF */
-> > +	wpc->data_seq = READ_ONCE(ip->i_df.if_seq);
-> >  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> >  
-> >  	if (imap.br_startoff > offset_fsb) {
-> > @@ -454,7 +457,8 @@ xfs_map_blocks(
-> >  	return 0;
-> >  allocate_blocks:
-> >  	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap,
-> > -			&wpc->cow_seq);
-> > +			whichfork == XFS_COW_FORK ?
-> > +					 &wpc->cow_seq : &wpc->data_seq);
-> >  	if (error)
-> >  		return error;
-> >  	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index 27c93b5f029d..0401e33d4e8f 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -681,7 +681,7 @@ xfs_iomap_write_allocate(
-> >  	int		whichfork,
-> >  	xfs_off_t	offset,
-> >  	xfs_bmbt_irec_t *imap,
-> > -	unsigned int	*cow_seq)
-> > +	unsigned int	*seq)
-> >  {
-> >  	xfs_mount_t	*mp = ip->i_mount;
-> >  	struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
-> > @@ -798,7 +798,7 @@ xfs_iomap_write_allocate(
-> >  				goto error0;
-> >  
-> >  			if (whichfork == XFS_COW_FORK)
-> > -				*cow_seq = READ_ONCE(ifp->if_seq);
-> > +				*seq = READ_ONCE(ifp->if_seq);
-> >  			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> >  		}
-> 
-> One of the things that limits xfs_iomap_write_allocate() efficiency
-> is the mitigations for races against truncate. i.e. the huge comment that
-> starts:
-> 
-> 	       /*
-> 		* it is possible that the extents have changed since
-> 		* we did the read call as we dropped the ilock for a
-> 		* while. We have to be careful about truncates or hole
-> 		* punchs here - we are not allowed to allocate
-> 		* non-delalloc blocks here.
-> ....
-> 
-
-Hmm, Ok... so this fix goes a ways back to commit e4143a1cf5 ("[XFS] Fix
-transaction overrun during writeback."). It sounds like the issue was an
-instance of the "attempt to convert delalloc blocks ends up doing
-physical allocation" problem (which results in a transaction overrun).
-
-> Now that we can detect that the extents have changed in the data
-> fork, we can go back to allocating multiple extents per
-> xfs_bmapi_write() call by doing a sequence number check after we
-> lock the inode. If the sequence number does not match what was
-> passed in or returned from the previous loop, we return -EAGAIN.
-> 
-
-I'm not familiar with this particular instance of this problem (we've
-certainly had other instances of the same thing), but the surrounding
-context of this code has changed quite a bit. Most notably is
-XFS_BMAPI_DELALLOC, which was intended to mitigate this problem by
-disallowing real allocation in such calls.
-
-> Hmmm, looking at the existing -EAGAIN case, I suspect this isn't
-> handled correctly by xfs_map_blocks() anymore. i.e. it just returns
-> the error which can lead to discarding the page rather than checking
-> to see if the there was a valid map allocated. I think there's some
-> followup work here (another patch series). :/
-> 
-
-Ok. At the moment, that error looks like it should only happen if we're
-past EOF..? Either way, the XFS_BMAPI_DELALLOC thing still can result in
-an error so it probably makes sense to tie a seqno check to -EAGAIN and
-handle it properly in the caller.
-
-Hmm, given that we can really only handle one extent at a time up
-through the caller (as also noted in the big comment you quoted) and
-that this series introduces more aggressive revalidation as it is, I am
-wondering what real value there is in doing more delalloc conversions
-here than technically required. ISTM that removing some of this i_size
-checking code and doing the seqno based kickback may actually be
-cleaner. I'll need to have a closer look from an optimization
-perspective when the correctness issues are dealt with.
-
-I also could have sworn I removed that whichfork check from
-xfs_iomap_write_allocate(), but apparently not... ;P
+Indeed, these changes all sound good. I'll include them in v2, thanks!
 
 Brian
 
-> Cheers,
+> > 
+> > Brian
+> > 
+> > [1] https://marc.info/?l=fstests&m=150902929900510&w=2
+> > [2] https://marc.info/?l=linux-xfs&m=154721212321112&w=2
+> > 
+> >  tests/generic/999     | 94 +++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/999.out |  2 +
+> >  tests/generic/group   |  1 +
+> >  3 files changed, 97 insertions(+)
+> >  create mode 100755 tests/generic/999
+> >  create mode 100644 tests/generic/999.out
+> > 
+> > diff --git a/tests/generic/999 b/tests/generic/999
+> > new file mode 100755
+> > index 00000000..9e56a1e0
+> > --- /dev/null
+> > +++ b/tests/generic/999
+> > @@ -0,0 +1,94 @@
+> > +#! /bin/bash
+> > +# FS QA Test 999
+> > +#
+> > +# Test XFS page writeback code for races with the cached file mapping. XFS
+> > +# caches the file -> block mapping for a full extent once it is initially looked
+> > +# up. The cached mapping is used for all subsequent pages in the same writeback
+> > +# cycle that cover the associated extent. Under certain conditions, it is
+> > +# possible for concurrent operations on the file to invalidate the cached
+> > +# mapping without the knowledge of writeback. Writeback ends up sending I/O to a
+> > +# partly stale mapping and potentially leaving delalloc blocks in the current
+> > +# mapping unconverted.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2017 Red Hat, Inc.  All Rights Reserved.
+>                    ^^^^ 2019?
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#-----------------------------------------------------------------------
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> And please change this to SPDX-License-Identifier.
+> 
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +
+> > +# remove previous $seqres.full before test
+> > +rm -f $seqres.full
+> > +
+> > +# real QA test starts here
+> > +
+> > +# Modify as appropriate.
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +_require_scratch
+> > +_require_test_program "feature"
+> 
+> _require_xfs_io_command "sync_range"
+> 
+> > +
+> > +_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+> > +_scratch_mount || _fail "mount failed"
+> 
+> _scratch_mount will _fail the test on failure now :)
+> 
+> > +
+> > +file=$SCRATCH_MNT/file
+> > +filesize=$((1024 * 1024 * 32))
+> > +pagesize=`src/feature -s`
+> > +truncsize=$((filesize - pagesize))
+> > +
+> > +for i in $(seq 0 15); do
+> > +	# Truncate the file and fsync to persist the final size on-disk. This is
+> > +	# required so the subsequent truncate will not wait on writeback.
+> > +	$XFS_IO_PROG -fc "truncate 0" $file
+> > +	$XFS_IO_PROG -c "truncate $filesize" -c fsync $file
+> > +
+> > +	# create a small enough delalloc extent to likely be contiguous
+> > +	$XFS_IO_PROG -c "pwrite 0 $filesize" $file >> $seqres.full 2>&1
+> > +
+> > +	# Start writeback and a racing truncate and rewrite of the final page.
+> > +	$XFS_IO_PROG -c "sync_range -w 0 0" $file &
+> > +	sync_pid=$!
+> > +	$XFS_IO_PROG -c "truncate $truncsize" \
+> > +		     -c "pwrite $truncsize $pagesize" $file >> $seqres.full 2>&1
+> > +
+> > +	# If the test fails, the most likely outcome is an sb_fdblocks mismatch
+> > +	# and/or an associated delalloc assert failure on inode reclaim. Cycle
+> > +	# the mount to trigger detection.
+> > +	wait $sync_pid
+> > +	_scratch_cycle_mount || _fail "mount failed"
+> 
+> And _scratch_cycle_mount will exit the test on failure as well.
+> 
+> Thanks,
+> Eryu
+> 
+> > +done
+> > +
+> > +echo Silence is golden
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/999.out b/tests/generic/999.out
+> > new file mode 100644
+> > index 00000000..3b276ca8
+> > --- /dev/null
+> > +++ b/tests/generic/999.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 999
+> > +Silence is golden
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index ea5aa7aa..ce165981 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -525,3 +525,4 @@
+> >  520 auto quick log
+> >  521 soak long_rw
+> >  522 soak long_rw
+> > +999 auto quick
+> > -- 
+> > 2.17.2
+> > 
