@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46316 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37970 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726807AbfANR0F (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Jan 2019 12:26:05 -0500
+        id S1726673AbfANR0B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 14 Jan 2019 12:26:01 -0500
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 5BF6C1F58E
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Jan 2019 17:26:04 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id BD0E37CDE4
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Jan 2019 17:26:00 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 05/13] xfsdump: (5/13) (style) remove spaces from parentheses
-Date: Mon, 14 Jan 2019 18:25:20 +0100
-Message-Id: <20190114172528.65250-6-jtulak@redhat.com>
+Subject: [PATCH 03/13] xfsdump: (3/13) (style) remove spaces from parentheses
+Date: Mon, 14 Jan 2019 18:25:18 +0100
+Message-Id: <20190114172528.65250-4-jtulak@redhat.com>
 In-Reply-To: <20190114172528.65250-1-jtulak@redhat.com>
 References: <20190114172528.65250-1-jtulak@redhat.com>
 MIME-Version: 1.0
@@ -60,3503 +60,5835 @@ sed -i \
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- common/mlog.c     | 328 +++++++++++++++++++++++-----------------------
- common/mlog.h     |  58 ++++----
- common/openutil.c |  72 +++++-----
- common/openutil.h |  22 ++--
- common/path.c     | 190 +++++++++++++--------------
- common/path.h     |   8 +-
- common/qlock.c    | 116 ++++++++--------
- common/qlock.h    |  18 +--
- common/rec_hdr.h  |   4 +-
- common/ring.c     | 228 ++++++++++++++++----------------
- common/ring.h     |  20 +--
- common/stream.c   |  96 +++++++-------
- common/stream.h   |  26 ++--
- common/timeutil.c |   8 +-
- common/timeutil.h |   6 +-
- common/ts_mtio.h  |   2 +-
- common/types.h    |  58 ++++----
- common/util.c     | 260 ++++++++++++++++++------------------
- common/util.h     |  56 ++++----
- 19 files changed, 788 insertions(+), 788 deletions(-)
+ common/drive_scsitape.c | 2948 +++++++++++++++++++--------------------
+ 1 file changed, 1474 insertions(+), 1474 deletions(-)
 
-diff --git a/common/mlog.c b/common/mlog.c
-index 0924bf2..e3cf69d 100644
---- a/common/mlog.c
-+++ b/common/mlog.c
-@@ -42,7 +42,7 @@
- #include "drive.h"
+diff --git a/common/drive_scsitape.c b/common/drive_scsitape.c
+index c360f9c..5c9ee89 100644
+--- a/common/drive_scsitape.c
++++ b/common/drive_scsitape.c
+@@ -257,11 +257,11 @@ typedef struct drive_context drive_context_t;
+ /* macros for shortcut references to context. assumes a local variable named
+  * 'contextp'.
+  */
+-#define	tape_recsz	( contextp->dc_recsz )
+-#define	tape_blksz	( contextp->dc_blksz )
++#define	tape_recsz	(contextp->dc_recsz)
++#define	tape_blksz	(contextp->dc_blksz)
  
- extern char *progname;
+ /* macros to interpret tape status information returned by reference from
+- * mt_get_status( ).
++ * mt_get_status().
+  */
+ 	/* tape is positioned at end-of-tape   			*/
+ #define IS_EOT(mtstat)		GMT_EOT(mtstat)
+@@ -284,116 +284,116 @@ typedef long mtstat_t;
+ 
+ /* declarations of externally defined global variables ***********************/
+ 
 -extern void usage( void );
 +extern void usage(void);
- extern pthread_t parenttid;
- 
  #ifdef DUMP
-@@ -52,7 +52,7 @@ static FILE *mlog_fp = NULL; /* stderr */;
- static FILE *mlog_fp = NULL; /* stdout */;
- #endif /* RESTORE */
- 
--int mlog_level_ss[ MLOG_SS_CNT ];
-+int mlog_level_ss[MLOG_SS_CNT];
- 
- int mlog_showlevel = BOOL_FALSE;
- 
-@@ -60,11 +60,11 @@ int mlog_showss = BOOL_FALSE;
- 
- int mlog_timestamp = BOOL_FALSE;
- 
--static int mlog_sym_lookup( char * );
-+static int mlog_sym_lookup(char *);
- 
- static size_t mlog_streamcnt;
- 
--static char mlog_levelstr[ 3 ];
-+static char mlog_levelstr[3];
- 
- #define MLOG_SS_NAME_MAX	15
- #ifdef DUMP
-@@ -76,9 +76,9 @@ static char mlog_levelstr[ 3 ];
+ extern uint64_t hdr_mfilesz;
  #endif /* DUMP */
- #define N(a) (sizeof((a)) / sizeof((a)[0]))
  
--static char mlog_ssstr[ MLOG_SS_NAME_MAX + 2 ];
-+static char mlog_ssstr[MLOG_SS_NAME_MAX + 2];
+ /* remote tape protocol declarations (should be a system header file)
+  */
+-extern int rmtopen( char *, int, ... );
+-extern int rmtclose( int );
+-extern int rmtfstat( int, struct stat * );
+-extern int rmtioctl( int, int, ... );
+-extern int rmtread( int, void*, uint);
+-extern int rmtwrite( int, const void *, uint);
++extern int rmtopen(char *, int, ...);
++extern int rmtclose(int);
++extern int rmtfstat(int, struct stat *);
++extern int rmtioctl(int, int, ...);
++extern int rmtread(int, void*, uint);
++extern int rmtwrite(int, const void *, uint);
  
--static char mlog_tsstr[ 10 ];
-+static char mlog_tsstr[10];
  
- struct mlog_sym {
- 	char *sym;
-@@ -87,7 +87,7 @@ struct mlog_sym {
+ /* forward declarations of locally defined static functions ******************/
  
- typedef struct mlog_sym mlog_sym_t;
+ /* strategy functions
+  */
+-static int ds_match( int, char *[], drive_t * );
+-static int ds_instantiate( int, char *[], drive_t * );
++static int ds_match(int, char *[], drive_t *);
++static int ds_instantiate(int, char *[], drive_t *);
  
--char *mlog_ss_names[ MLOG_SS_CNT ] = {
-+char *mlog_ss_names[MLOG_SS_CNT] = {
- 	"general",	/* MLOG_SS_GEN */
- 	"proc",		/* MLOG_SS_PROC */
- 	"drive",	/* MLOG_SS_DRIVE */
-@@ -102,7 +102,7 @@ char *mlog_ss_names[ MLOG_SS_CNT ] = {
- 	"excluded_files" /* MLOG_SS_EXCLFILES */
- };
+ /* manager operations
+  */
+-static bool_t do_init( drive_t * );
+-static bool_t do_sync( drive_t * );
+-static int do_begin_read( drive_t * );
+-static char *do_read( drive_t *, size_t , size_t *, int * );
+-static void do_return_read_buf( drive_t *, char *, size_t );
+-static void do_get_mark( drive_t *, drive_mark_t * );
+-static int do_seek_mark( drive_t *, drive_mark_t * );
+-static int do_next_mark( drive_t * );
+-static void do_get_mark( drive_t *, drive_mark_t * );
+-static void do_end_read( drive_t * );
+-static int do_begin_write( drive_t * );
+-static void do_set_mark( drive_t *, drive_mcbfp_t, void *, drive_markrec_t * );
+-static char * do_get_write_buf( drive_t *, size_t , size_t * );
+-static int do_write( drive_t *, char *, size_t );
+-static size_t do_get_align_cnt( drive_t * );
+-static int do_end_write( drive_t *, off64_t * );
+-static int do_fsf( drive_t *, int , int *);
+-static int do_bsf( drive_t *, int , int *);
+-static int do_rewind( drive_t * );
+-static int do_erase( drive_t * );
+-static int do_eject_media( drive_t * );
+-static int do_get_device_class( drive_t * );
+-static void do_display_metrics( drive_t *drivep );
+-static void do_quit( drive_t * );
++static bool_t do_init(drive_t *);
++static bool_t do_sync(drive_t *);
++static int do_begin_read(drive_t *);
++static char *do_read(drive_t *, size_t , size_t *, int *);
++static void do_return_read_buf(drive_t *, char *, size_t);
++static void do_get_mark(drive_t *, drive_mark_t *);
++static int do_seek_mark(drive_t *, drive_mark_t *);
++static int do_next_mark(drive_t *);
++static void do_get_mark(drive_t *, drive_mark_t *);
++static void do_end_read(drive_t *);
++static int do_begin_write(drive_t *);
++static void do_set_mark(drive_t *, drive_mcbfp_t, void *, drive_markrec_t *);
++static char * do_get_write_buf(drive_t *, size_t , size_t *);
++static int do_write(drive_t *, char *, size_t);
++static size_t do_get_align_cnt(drive_t *);
++static int do_end_write(drive_t *, off64_t *);
++static int do_fsf(drive_t *, int , int *);
++static int do_bsf(drive_t *, int , int *);
++static int do_rewind(drive_t *);
++static int do_erase(drive_t *);
++static int do_eject_media(drive_t *);
++static int do_get_device_class(drive_t *);
++static void do_display_metrics(drive_t *drivep);
++static void do_quit(drive_t *);
  
--static mlog_sym_t mlog_sym[ ] = {
-+static mlog_sym_t mlog_sym[] = {
- 	{"0",		MLOG_SILENT},
- 	{"1",		MLOG_VERBOSE},
- 	{"2",		MLOG_TRACE},
-@@ -122,7 +122,7 @@ static rv_t mlog_main_exit_return = RV_NONE;
- static rv_t mlog_main_exit_hint = RV_NONE;
+ /* misc. local utility funcs
+  */
+-static int	mt_op(int , int , int );
+-static int mt_blkinfo(int , struct mtblkinfo * );
+-static bool_t mt_get_fileno( drive_t *, long *);
+-static bool_t mt_get_status( drive_t *, mtstat_t *);
+-static int determine_write_error( drive_t *, int, int );
+-static int read_label( drive_t *);
+-static bool_t tape_rec_checksum_check( drive_context_t *, char * );
+-static void set_recommended_sizes( drive_t * );
+-static void display_access_failed_message( drive_t *);
+-static void status_failed_message( drive_t *);
+-static bool_t get_tpcaps( drive_t * );
+-static bool_t set_fixed_blksz( drive_t *, size_t );
+-static int prepare_drive( drive_t *drivep );
+-static bool_t Open( drive_t *drivep );
+-static void Close( drive_t *drivep );
+-static int Read( drive_t *drivep,
++static int	mt_op(int , int , int);
++static int mt_blkinfo(int , struct mtblkinfo *);
++static bool_t mt_get_fileno(drive_t *, long *);
++static bool_t mt_get_status(drive_t *, mtstat_t *);
++static int determine_write_error(drive_t *, int, int);
++static int read_label(drive_t *);
++static bool_t tape_rec_checksum_check(drive_context_t *, char *);
++static void set_recommended_sizes(drive_t *);
++static void display_access_failed_message(drive_t *);
++static void status_failed_message(drive_t *);
++static bool_t get_tpcaps(drive_t *);
++static bool_t set_fixed_blksz(drive_t *, size_t);
++static int prepare_drive(drive_t *drivep);
++static bool_t Open(drive_t *drivep);
++static void Close(drive_t *drivep);
++static int Read(drive_t *drivep,
+ 		      char *bufp,
+ 		      size_t cnt,
+-		      int *errnop );
+-static int Write( drive_t *drivep,
++		      int *errnop);
++static int Write(drive_t *drivep,
+ 		       char *bufp,
+ 		       size_t cnt,
+-		       int *saved_errnop );
+-static int quick_backup( drive_t *drivep,
++		       int *saved_errnop);
++static int quick_backup(drive_t *drivep,
+ 			      drive_context_t *contextp,
+-			      ix_t skipcnt );
+-static int record_hdr_validate( drive_t *drivep,
++			      ix_t skipcnt);
++static int record_hdr_validate(drive_t *drivep,
+ 				     char *bufp,
+-				     bool_t chkoffpr );
+-static int ring_read( void *clientctxp, char *bufp );
+-static int ring_write( void *clientctxp, char *bufp );
+-static double percent64( off64_t num, off64_t denom );
+-static int getrec( drive_t *drivep );
+-static int write_record( drive_t *drivep, char *bufp, bool_t chksumpr,
+-                              bool_t xlatepr );
+-static ring_msg_t * Ring_get( ring_t *ringp );
+-static void Ring_reset(  ring_t *ringp, ring_msg_t *msgp );
+-static void Ring_put(  ring_t *ringp, ring_msg_t *msgp );
+-static int validate_media_file_hdr( drive_t *drivep );
+-static void calc_max_lost( drive_t *drivep );
+-static void display_ring_metrics( drive_t *drivep, int mlog_flags );
+-static mtstat_t rewind_and_verify( drive_t *drivep );
+-static mtstat_t erase_and_verify( drive_t *drivep );
+-static mtstat_t bsf_and_verify( drive_t *drivep );
+-static mtstat_t fsf_and_verify( drive_t *drivep );
+-static void calc_best_blk_and_rec_sz( drive_t *drivep );
+-static bool_t set_best_blk_and_rec_sz( drive_t *drivep );
+-static bool_t isefsdump( drive_t *drivep );
+-static int get_driver_character_major( const char * );
+-static void map_ts_status( struct mtget *, struct mtget_sgi );
++				     bool_t chkoffpr);
++static int ring_read(void *clientctxp, char *bufp);
++static int ring_write(void *clientctxp, char *bufp);
++static double percent64(off64_t num, off64_t denom);
++static int getrec(drive_t *drivep);
++static int write_record(drive_t *drivep, char *bufp, bool_t chksumpr,
++                              bool_t xlatepr);
++static ring_msg_t * Ring_get(ring_t *ringp);
++static void Ring_reset(ring_t *ringp, ring_msg_t *msgp);
++static void Ring_put(ring_t *ringp, ring_msg_t *msgp);
++static int validate_media_file_hdr(drive_t *drivep);
++static void calc_max_lost(drive_t *drivep);
++static void display_ring_metrics(drive_t *drivep, int mlog_flags);
++static mtstat_t rewind_and_verify(drive_t *drivep);
++static mtstat_t erase_and_verify(drive_t *drivep);
++static mtstat_t bsf_and_verify(drive_t *drivep);
++static mtstat_t fsf_and_verify(drive_t *drivep);
++static void calc_best_blk_and_rec_sz(drive_t *drivep);
++static bool_t set_best_blk_and_rec_sz(drive_t *drivep);
++static bool_t isefsdump(drive_t *drivep);
++static int get_driver_character_major(const char *);
++static void map_ts_status(struct mtget *, struct mtget_sgi);
  
- void
--mlog_init0( void )
-+mlog_init0(void)
+ /* RMT trace stubs
+  */
+ #ifdef RMTDBG
+-static int dbgrmtopen( char *, int );
+-static int dbgrmtclose( int );
+-static int dbgrmtioctl( int, int, void *);
+-static int dbgrmtread( int, void*, uint);
+-static int dbgrmtwrite( int, void *, uint);
++static int dbgrmtopen(char *, int);
++static int dbgrmtclose(int);
++static int dbgrmtioctl(int, int, void *);
++static int dbgrmtread(int, void*, uint);
++static int dbgrmtwrite(int, void *, uint);
+ #endif /* RMTDBG */
+ 
+ /* definition of locally defined global variables ****************************/
+@@ -462,11 +462,11 @@ is_scsi_driver(char *pathname)
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	if ( stat64( pathname, &statbuf ) == -1) {
++	if (stat64(pathname, &statbuf) == -1) {
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	if ( !S_ISCHR( statbuf.st_mode )) {
++	if (!S_ISCHR(statbuf.st_mode)) {
+ 		return BOOL_FALSE;
+ 	}
+ 
+@@ -510,7 +510,7 @@ is_scsi_driver(char *pathname)
+  */
+ /* ARGSUSED */
+ static int
+-ds_match( int argc, char *argv[], drive_t *drivep )
++ds_match(int argc, char *argv[], drive_t *drivep)
  {
- 	int i;
- 
-@@ -134,17 +134,17 @@ mlog_init0( void )
- #endif /* RESTORE */
- 
- 	/* initialize stream count. will be updated later by call to
--	 * mlog_tell_streamcnt( ), after drive layer has counted drives
-+	 * mlog_tell_streamcnt(), after drive layer has counted drives
+ 	struct mtget mt_stat;
+ 	int fd;
+@@ -518,21 +518,21 @@ ds_match( int argc, char *argv[], drive_t *drivep )
+ 	/* heuristics to determine if this is a drive.
  	 */
- 	mlog_streamcnt = 1;
  
--	for( i = 0 ; i < MLOG_SS_CNT ; i++ ) {
--		mlog_level_ss[ i ] = MLOG_VERBOSE;
-+	for(i = 0 ; i < MLOG_SS_CNT ; i++) {
-+		mlog_level_ss[i] = MLOG_VERBOSE;
+-	if ( ! strcmp( drivep->d_pathname, "stdio" )) {
++	if (! strcmp(drivep->d_pathname, "stdio")) {
+ 		return -10;
  	}
- }
  
- bool_t
--mlog_init1( int argc, char *argv[ ] )
-+mlog_init1(int argc, char *argv[])
+-	if ( strchr( drivep->d_pathname, ':')) {
++	if (strchr(drivep->d_pathname, ':')) {
+ 		errno = 0;
+-		fd = open( drivep->d_pathname, O_RDONLY );
+-		if ( fd < 0 ) {
++		fd = open(drivep->d_pathname, O_RDONLY);
++		if (fd < 0) {
+ 			return -10;
+ 		}
+-		if ( ioctl( fd, MTIOCGET, &mt_stat ) < 0 ) {
+-			close( fd );
++		if (ioctl(fd, MTIOCGET, &mt_stat) < 0) {
++			close(fd);
+ 			return -10;
+ 		}
+-		close( fd );
++		close(fd);
+ 		return 10;
+ 	} else {
+                 if (is_scsi_driver(drivep->d_pathname)) {
+@@ -548,18 +548,18 @@ ds_match( int argc, char *argv[], drive_t *drivep )
+  */
+ /*ARGSUSED*/
+ static bool_t
+-ds_instantiate( int argc, char *argv[], drive_t *drivep )
++ds_instantiate(int argc, char *argv[], drive_t *drivep)
  {
- 	char **suboptstrs;
- 	ix_t ssix;
-@@ -154,105 +154,105 @@ mlog_init1( int argc, char *argv[ ] )
+ 	drive_context_t *contextp;
+ 	int c;
  
- 	/* prepare an array of suboption token strings. this will be the
- 	 * concatenation of the subsystem names with the verbosity symbols.
--	 * this array of char pts must be null terminated for getsubopt( 3 ).
-+	 * this array of char pts must be null terminated for getsubopt(3).
+ 	/* opportunity for sanity checking
  	 */
--	vsymcnt = sizeof( mlog_sym ) / sizeof( mlog_sym[ 0 ] );
--	suboptstrs = ( char ** )calloc( MLOG_SS_CNT + vsymcnt + 1,
--					sizeof( char * ));
--	assert( suboptstrs );
--	for ( soix = 0 ; soix < MLOG_SS_CNT ; soix++ ) {
--		assert( strlen( mlog_ss_names[ soix ] ) <= MLOG_SS_NAME_MAX );
-+	vsymcnt = sizeof(mlog_sym) / sizeof(mlog_sym[0]);
-+	suboptstrs = (char **)calloc(MLOG_SS_CNT + vsymcnt + 1,
-+					sizeof(char *));
-+	assert(suboptstrs);
-+	for (soix = 0 ; soix < MLOG_SS_CNT ; soix++) {
-+		assert(strlen(mlog_ss_names[soix]) <= MLOG_SS_NAME_MAX);
- 			/* unrelated, but opportunity to chk */
--		suboptstrs[ soix ] = mlog_ss_names[ soix ];
-+		suboptstrs[soix] = mlog_ss_names[soix];
- 	}
--	for ( ; soix < MLOG_SS_CNT + vsymcnt ; soix++ ) {
--		suboptstrs[ soix ] = mlog_sym[ soix - MLOG_SS_CNT ].sym;
-+	for (; soix < MLOG_SS_CNT + vsymcnt ; soix++) {
-+		suboptstrs[soix] = mlog_sym[soix - MLOG_SS_CNT].sym;
- 	}
--	suboptstrs[ soix ] = 0;
-+	suboptstrs[soix] = 0;
+-	assert( sizeof( global_hdr_t ) <= STAPE_HDR_SZ );
+-	assert( sizeof( rec_hdr_t )
++	assert(sizeof(global_hdr_t) <= STAPE_HDR_SZ);
++	assert(sizeof(rec_hdr_t)
+ 		==
+-		sizeofmember( drive_hdr_t, dh_specific ));
+-	assert( ! ( STAPE_MAX_RECSZ % PGSZ ));
++		sizeofmember(drive_hdr_t, dh_specific));
++	assert(! (STAPE_MAX_RECSZ % PGSZ));
  
- 	/* set all of the subsystem log levels to -1, so we can see which
- 	 * subsystems where explicitly called out. those which weren't will
- 	 * be given the "general" level.
+ 	/* hook up the drive ops
  	 */
--	for ( ssix = 0 ; ssix < MLOG_SS_CNT ; ssix++ ) {
--		mlog_level_ss[ ssix ] = -1;
-+	for (ssix = 0 ; ssix < MLOG_SS_CNT ; ssix++) {
-+		mlog_level_ss[ssix] = -1;
- 	}
--	mlog_level_ss[ MLOG_SS_GEN ] = MLOG_VERBOSE;
-+	mlog_level_ss[MLOG_SS_GEN] = MLOG_VERBOSE;
+@@ -567,9 +567,9 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep )
  
- 	/* get command line options
+ 	/* allocate context for the drive manager
  	 */
+-	contextp = ( drive_context_t * )calloc( 1, sizeof( drive_context_t ));
+-	assert( contextp );
+-	memset( ( void * )contextp, 0, sizeof( *contextp ));
++	contextp = (drive_context_t *)calloc(1, sizeof(drive_context_t));
++	assert(contextp);
++	memset((void *)contextp, 0, sizeof(*contextp));
+ 
+ 	/* do not enable a separate I/O thread,
+ 	 * more testing to be done first...
+@@ -589,26 +589,26 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep )
+ #endif
  	optind = 1;
  	opterr = 0;
 -	while ( ( c = getopt( argc, argv, GETOPT_CMDSTRING )) != EOF ) {
-+	while ((c = getopt(argc, argv, GETOPT_CMDSTRING)) != EOF) {
- 		char *options;
- 
 -		switch ( c ) {
++	while ((c = getopt(argc, argv, GETOPT_CMDSTRING)) != EOF) {
 +		switch (c) {
- 		case GETOPT_VERBOSITY:
+ 		case GETOPT_RINGLEN:
 -			if ( ! optarg || optarg[ 0 ] == '-' ) {
--				fprintf( stderr,
+-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
 +			if (! optarg || optarg[0] == '-') {
-+				fprintf(stderr,
- 					 _("%s: -%c argument missing\n"),
- 					 progname,
--					 c );
--				usage( );
-+					 c);
-+				usage();
++				mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 				      _("-%c argument missing\n"),
+-				      c );
++				      c);
  				return BOOL_FALSE;
  			}
- 			options = optarg;
--			while ( *options ) {
-+			while (*options) {
- 				int suboptix;
- 				char *valstr;
- 
--				suboptix = getsubopt( &options,
-+				suboptix = getsubopt(&options,
- 						      (constpp)suboptstrs,
--						      &valstr );
--				if ( suboptix < 0 ) {
--					fprintf( stderr,
-+						      &valstr);
-+				if (suboptix < 0) {
-+					fprintf(stderr,
- 						 _("%s: -%c argument invalid\n"),
- 						 progname,
--						 c );
--					usage( );
-+						 c);
-+					usage();
- 					return BOOL_FALSE;
- 				}
--				assert( ( ix_t )suboptix
-+				assert((ix_t)suboptix
- 					<
--					MLOG_SS_CNT + vsymcnt );
--				if ( suboptix < MLOG_SS_CNT ) {
--					if ( ! valstr ) {
--						fprintf( stderr,
-+					MLOG_SS_CNT + vsymcnt);
-+				if (suboptix < MLOG_SS_CNT) {
-+					if (! valstr) {
-+						fprintf(stderr,
- 							 _("%s: -%c subsystem "
- 							 "subargument "
- 							 "%s requires a "
- 							 "verbosity value\n"),
- 							 progname,
- 							 c,
--						mlog_ss_names[ suboptix ] );
--						usage( );
-+						mlog_ss_names[suboptix]);
-+						usage();
- 						return BOOL_FALSE;
- 					}
--					ssix = ( ix_t )suboptix;
--					mlog_level_ss[ ssix ] =
--						    mlog_sym_lookup( valstr );
-+					ssix = (ix_t)suboptix;
-+					mlog_level_ss[ssix] =
-+						    mlog_sym_lookup(valstr);
- 				} else {
--					if ( valstr ) {
--						fprintf( stderr,
-+					if (valstr) {
-+						fprintf(stderr,
- 							 _("%s: -%c argument "
- 							 "does not require "
- 							 "a value\n"),
- 							 progname,
--							 c );
--						usage( );
-+							 c);
-+						usage();
- 						return BOOL_FALSE;
- 					}
- 					ssix = MLOG_SS_GEN;
--					mlog_level_ss[ ssix ] =
--				    mlog_sym_lookup( suboptstrs[ suboptix ] );
-+					mlog_level_ss[ssix] =
-+				    mlog_sym_lookup(suboptstrs[suboptix]);
- 				}
--				if ( mlog_level_ss[ ssix ] < 0 ) {
--					fprintf( stderr,
-+				if (mlog_level_ss[ssix] < 0) {
-+					fprintf(stderr,
- 						 _("%s: -%c argument "
- 						 "invalid\n"),
- 						 progname,
--						 c );
--					usage( );
-+						 c);
-+					usage();
- 					return BOOL_FALSE;
- 				}
+-			contextp->dc_ringlen = ( size_t )atoi( optarg );
+-			if ( contextp->dc_ringlen < RINGLEN_MIN
++			contextp->dc_ringlen = (size_t)atoi(optarg);
++			if (contextp->dc_ringlen < RINGLEN_MIN
+ 			     ||
+-			     contextp->dc_ringlen > RINGLEN_MAX ) {
+-				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
++			     contextp->dc_ringlen > RINGLEN_MAX) {
++				mlog(MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
+ 				      _("-%c argument must be "
+ 				      "between %u and %u: ignoring %u\n"),
+ 				      c,
+ 				      RINGLEN_MIN,
+ 				      RINGLEN_MAX,
+-				      contextp->dc_ringlen );
++				      contextp->dc_ringlen);
+ 				return BOOL_FALSE;
  			}
-@@ -269,25 +269,25 @@ mlog_init1( int argc, char *argv[ ] )
- 		}
- 	}
- 
--	free( ( void * )suboptstrs );
-+	free((void *)suboptstrs);
- 
- 	/* give subsystems not explicitly called out the "general" verbosity
+ 			break;
+@@ -625,33 +625,33 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep )
+ 			contextp->dc_isQICpr = BOOL_TRUE;
+ 			break;
+ 		case GETOPT_BLOCKSIZE:
+-			if ( ! optarg || optarg[ 0 ] == '-' ) {
+-			    mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++			if (! optarg || optarg[0] == '-') {
++			    mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 				    _("-%c argument missing\n"),
+-				    c );
++				    c);
+ 			    return -10;
+ 			}
+-			cmdlineblksize = ( uint32_t )atoi( optarg );
++			cmdlineblksize = (uint32_t)atoi(optarg);
+ 			break;
+ #ifdef DUMP
+ 		case GETOPT_OVERWRITE:
+ 			contextp->dc_overwritepr = BOOL_TRUE;
+ 			break;
+ 		case GETOPT_FILESZ:
+-			if ( ! optarg || optarg[ 0 ] == '-' ) {
+-				mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++			if (! optarg || optarg[0] == '-') {
++				mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 				      _("-%c argument missing\n"),
+-				      c );
++				      c);
+ 				return BOOL_FALSE;
+ 			}
+                         /* given in Mb */
+-			contextp->dc_filesz = (off64_t)atoi( optarg ) * 1024 * 1024;
++			contextp->dc_filesz = (off64_t)atoi(optarg) * 1024 * 1024;
+                         if (contextp->dc_filesz <= 0) {
+-				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
++				mlog(MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
+ 				      _("-%c argument must be a "
+ 				      "positive number (Mb): ignoring %u\n"),
+ 				      c,
+-				      contextp->dc_filesz );
++				      contextp->dc_filesz);
+ 				return BOOL_FALSE;
+                         }
+ 			break;
+@@ -675,37 +675,37 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep )
+ 	/* if threads not allowed, allocate a record buffer. otherwise
+ 	 * create a ring, from which buffers will be taken.
  	 */
--	for ( ssix = 0 ; ssix < MLOG_SS_CNT ; ssix++ ) {
--		if ( mlog_level_ss[ ssix ] < 0 ) {
--			assert( mlog_level_ss[ ssix ] == -1 );
--			assert( mlog_level_ss[ MLOG_SS_GEN ] >= 0 );
--			mlog_level_ss[ ssix ] = mlog_level_ss[ MLOG_SS_GEN ];
-+	for (ssix = 0 ; ssix < MLOG_SS_CNT ; ssix++) {
-+		if (mlog_level_ss[ssix] < 0) {
-+			assert(mlog_level_ss[ssix] == -1);
-+			assert(mlog_level_ss[MLOG_SS_GEN] >= 0);
-+			mlog_level_ss[ssix] = mlog_level_ss[MLOG_SS_GEN];
+-	if ( contextp->dc_singlethreadedpr ) {
+-		contextp->dc_bufp = ( char * )memalign( PGSZ, STAPE_MAX_RECSZ );
+-		assert( contextp->dc_bufp );
++	if (contextp->dc_singlethreadedpr) {
++		contextp->dc_bufp = (char *)memalign(PGSZ, STAPE_MAX_RECSZ);
++		assert(contextp->dc_bufp);
+ 	} else {
+ 		int rval;
+-		mlog( (MLOG_NITTY + 1) | MLOG_DRIVE,
++		mlog((MLOG_NITTY + 1) | MLOG_DRIVE,
+ 		      "ring op: create: ringlen == %u\n",
+-		      contextp->dc_ringlen );
+-		contextp->dc_ringp = ring_create( contextp->dc_ringlen,
++		      contextp->dc_ringlen);
++		contextp->dc_ringp = ring_create(contextp->dc_ringlen,
+ 						  STAPE_MAX_RECSZ,
+ 						  contextp->dc_ringpinnedpr,
+ 						  drivep->d_index,
+ 						  ring_read,
+ 						  ring_write,
+-						  ( void * )drivep,
+-						  &rval );
+-		if ( ! contextp->dc_ringp ) {
+-			if ( rval == ENOMEM ) {
+-				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
++						  (void *)drivep,
++						  &rval);
++		if (! contextp->dc_ringp) {
++			if (rval == ENOMEM) {
++				mlog(MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
+ 				      _("unable to allocate memory "
+-				      "for I/O buffer ring\n") );
+-			} else if ( rval == E2BIG ) {
+-				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
++				      "for I/O buffer ring\n"));
++			} else if (rval == E2BIG) {
++				mlog(MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
+ 				      _("not enough physical memory "
+-				      "to pin down I/O buffer ring\n") );
+-			} else if ( rval == EPERM ) {
+-				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
++				      "to pin down I/O buffer ring\n"));
++			} else if (rval == EPERM) {
++				mlog(MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE,
+ 				      _("not allowed "
+-				      "to pin down I/O buffer ring\n") );
++				      "to pin down I/O buffer ring\n"));
+ 			} else {
+-				assert( 0 );
++				assert(0);
+ 			}
+ 			return BOOL_FALSE;
  		}
- 	}
+@@ -713,7 +713,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep )
  
- 	/* prepare a string for optionally displaying the log level
+ 	/* scan drive device pathname to see if remote tape
  	 */
--	mlog_levelstr[ 0 ] = 0;
--	mlog_levelstr[ 1 ] = 0;
--	mlog_levelstr[ 2 ] = 0;
--	if ( mlog_showlevel ) {
--		mlog_levelstr[ 0 ] = ':';
-+	mlog_levelstr[0] = 0;
-+	mlog_levelstr[1] = 0;
-+	mlog_levelstr[2] = 0;
-+	if (mlog_showlevel) {
-+		mlog_levelstr[0] = ':';
- 	}
+-	if ( strchr( drivep->d_pathname, ':') ) {
++	if (strchr(drivep->d_pathname, ':')) {
+ 		contextp->dc_isrmtpr = BOOL_TRUE;
+ 	} else {
+ 		contextp->dc_isrmtpr = BOOL_FALSE;
+@@ -723,7 +723,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep )
+ 	 * mark them as unknown for now. however, if this is an RMT
+ 	 * access, we know immediately some capabilities are missing.
+ 	 */
+-	if ( contextp->dc_isrmtpr ) {
++	if (contextp->dc_isrmtpr) {
+ 		contextp->dc_cangetblkszpr = BOOL_FALSE;
+ 		contextp->dc_cansetblkszpr = BOOL_FALSE;
+ 		contextp->dc_isvarpr = BOOL_TRUE;
+@@ -781,15 +781,15 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep )
+  */
+ /* ARGSUSED */
+ static bool_t
+-do_init( drive_t *drivep )
++do_init(drive_t *drivep)
+ {
+ #ifdef DUMP
+ 	drive_hdr_t *dwhdrp = drivep->d_writehdrp;
+-	media_hdr_t *mwhdrp = ( media_hdr_t * )dwhdrp->dh_upper;
++	media_hdr_t *mwhdrp = (media_hdr_t *)dwhdrp->dh_upper;
+ #endif /* DUMP */
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: init\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: init\n");
  
  #ifdef DUMP
-@@ -296,7 +296,7 @@ mlog_init1( int argc, char *argv[ ] )
- 	 * mlog_fd set to stderr, see if we can switch
- 	 * to stdout.
- 	 */
--	if ( optind >= argc ||  strcmp( argv[ optind ], "-" )) {
-+	if (optind >= argc ||  strcmp(argv[optind ], "-")) {
- 		mlog_fp = stdout;
- 	}
- #endif /* DUMP */
-@@ -307,31 +307,31 @@ mlog_init1( int argc, char *argv[ ] )
- }
- 
- bool_t
--mlog_init2( void )
-+mlog_init2(void)
+ 	/* fill in media strategy id: artifact of first version of xfsdump
+@@ -806,10 +806,10 @@ do_init( drive_t *drivep )
+  */
+ /* ARGSUSED */
+ static bool_t
+-do_sync( drive_t *drivep )
++do_sync(drive_t *drivep)
  {
- 	/* allocate a qlock
- 	 */
--	mlog_qlockh = qlock_alloc( QLOCK_ORD_MLOG );
-+	mlog_qlockh = qlock_alloc(QLOCK_ORD_MLOG);
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: sync\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: sync\n");
  
  	return BOOL_TRUE;
  }
- 
- void
--mlog_tell_streamcnt( size_t streamcnt )
-+mlog_tell_streamcnt(size_t streamcnt)
- {
- 	mlog_streamcnt = streamcnt;
- }
- 
- void
--mlog_lock( void )
-+mlog_lock(void)
- {
--	qlock_lock( mlog_qlockh );
-+	qlock_lock(mlog_qlockh);
- }
- 
- void
--mlog_unlock( void )
-+mlog_unlock(void)
- {
--	qlock_unlock( mlog_qlockh );
-+	qlock_unlock(mlog_qlockh);
- }
- 
- /*
-@@ -341,122 +341,122 @@ mlog_unlock( void )
-  * too much output.
+@@ -824,32 +824,32 @@ do_sync( drive_t *drivep )
+  *
   */
- void
--mlog_override_level( int levelarg )
-+mlog_override_level(int levelarg)
- {
- 	int level;
- 	ix_t ss; /* SubSystem */
- 
- 	level = levelarg & MLOG_LEVELMASK;
--	ss = ( ix_t )( ( levelarg & MLOG_SS_MASK ) >> MLOG_SS_SHIFT );
-+	ss = (ix_t)((levelarg & MLOG_SS_MASK) >> MLOG_SS_SHIFT);
- 
- 	if (ss == MLOG_SS_GEN) { /* do level for all subsys */
--	    for (ss = 0 ; ss < MLOG_SS_CNT ; ss++ ) {
--		mlog_level_ss[ ss ] = level;
-+	    for (ss = 0 ; ss < MLOG_SS_CNT ; ss++) {
-+		mlog_level_ss[ss] = level;
- 	    }
- 	}
- 	else { /* do a particular subsys */
--	    mlog_level_ss[ ss ] = level;
-+	    mlog_level_ss[ss] = level;
- 	}
- }
- 
- void
--mlog( int levelarg, char *fmt, ... )
-+mlog(int levelarg, char *fmt, ...)
- {
- 	va_list args;
--	va_start( args, fmt );
--	mlog_va( levelarg, fmt, args );
--	va_end( args );
-+	va_start(args, fmt);
-+	mlog_va(levelarg, fmt, args);
-+	va_end(args);
- }
- 
- void
--mlog_va( int levelarg, char *fmt, va_list args )
-+mlog_va(int levelarg, char *fmt, va_list args)
- {
- 	int level;
- 	ix_t ss;
- 
- 	level = levelarg & MLOG_LEVELMASK;
--	ss = ( ix_t )( ( levelarg & MLOG_SS_MASK ) >> MLOG_SS_SHIFT );
-+	ss = (ix_t)((levelarg & MLOG_SS_MASK) >> MLOG_SS_SHIFT);
- 
--	assert( ss < MLOG_SS_CNT );
--	if ( level > mlog_level_ss[ ss ] ) {
-+	assert(ss < MLOG_SS_CNT);
-+	if (level > mlog_level_ss[ss]) {
- 		return;
- 	}
- 
--	if ( ! ( levelarg & MLOG_NOLOCK )) {
--		mlog_lock( );
-+	if (! (levelarg & MLOG_NOLOCK)) {
-+		mlog_lock();
- 	}
- 
--	if ( ! ( levelarg & MLOG_BARE )) {
-+	if (! (levelarg & MLOG_BARE)) {
- 		int streamix;
--		streamix = stream_getix( pthread_self( ) );
-+		streamix = stream_getix(pthread_self());
- 
--		if ( mlog_showss ) {
--			sprintf( mlog_ssstr, ":%s", mlog_ss_names[ ss ] );
-+		if (mlog_showss) {
-+			sprintf(mlog_ssstr, ":%s", mlog_ss_names[ ss]);
- 		} else {
--			mlog_ssstr[ 0 ] = 0;
-+			mlog_ssstr[0] = 0;
- 		}
- 
--		if ( mlog_timestamp ) {
--			time_t now = time( 0 );
--			struct tm *tmp = localtime( &now );
--			sprintf( mlog_tsstr,
-+		if (mlog_timestamp) {
-+			time_t now = time(0);
-+			struct tm *tmp = localtime(&now);
-+			sprintf(mlog_tsstr,
- 				 ":%02d.%02d.%02d",
- 				 tmp->tm_hour,
- 				 tmp->tm_min,
--				 tmp->tm_sec );
--			assert( strlen( mlog_tsstr ) < sizeof( mlog_tsstr ));
-+				 tmp->tm_sec);
-+			assert(strlen(mlog_tsstr) < sizeof(mlog_tsstr));
- 		} else {
--			mlog_tsstr[ 0 ] = 0;
-+			mlog_tsstr[0] = 0;
- 		}
- 
--		if ( mlog_showlevel ) {
--			mlog_levelstr[ 0 ] = ':';
--			if ( level > 9 ) {
--				mlog_levelstr[ 1 ] = '?';
-+		if (mlog_showlevel) {
-+			mlog_levelstr[0] = ':';
-+			if (level > 9) {
-+				mlog_levelstr[1] = '?';
- 			} else {
--				mlog_levelstr[ 1 ] = ( char )
--						     ( level
-+				mlog_levelstr[1] = (char)
-+						     (level
- 						       +
--						       ( int )'0' );
-+						       (int)'0');
- 			}
- 		} else {
--			mlog_levelstr[ 0 ] = 0;
-+			mlog_levelstr[0] = 0;
- 		}
--		if ( streamix != -1 && mlog_streamcnt > 1 ) {
--			fprintf( mlog_fp,
-+		if (streamix != -1 && mlog_streamcnt > 1) {
-+			fprintf(mlog_fp,
- 				 _("%s%s%s%s: drive %d: "),
- 				 progname,
- 				 mlog_tsstr,
- 				 mlog_ssstr,
- 				 mlog_levelstr,
--				 streamix );
-+				 streamix);
- 		} else {
--			fprintf( mlog_fp,
-+			fprintf(mlog_fp,
- 				 "%s%s%s%s: ",
- 				 progname,
- 				 mlog_tsstr,
- 				 mlog_ssstr,
--				 mlog_levelstr );
-+				 mlog_levelstr);
- 		}
--		if ( levelarg & MLOG_NOTE ) {
--			fprintf( mlog_fp,
--				 "NOTE: " );
-+		if (levelarg & MLOG_NOTE) {
-+			fprintf(mlog_fp,
-+				 "NOTE: ");
- 		}
--		if ( levelarg & MLOG_WARNING ) {
--			fprintf( mlog_fp,
--				 "WARNING: " );
-+		if (levelarg & MLOG_WARNING) {
-+			fprintf(mlog_fp,
-+				 "WARNING: ");
- 		}
--		if ( levelarg & MLOG_ERROR ) {
--			fprintf( mlog_fp,
--				 "ERROR: " );
-+		if (levelarg & MLOG_ERROR) {
-+			fprintf(mlog_fp,
-+				 "ERROR: ");
- 		}
- 	}
- 
--	vfprintf( mlog_fp, fmt, args );
--	fflush( mlog_fp );
-+	vfprintf(mlog_fp, fmt, args);
-+	fflush(mlog_fp);
- 
--	if ( ! ( levelarg & MLOG_NOLOCK )) {
--		mlog_unlock( );
-+	if (! (levelarg & MLOG_NOLOCK)) {
-+		mlog_unlock();
- 	}
- }
- 
-@@ -569,7 +569,7 @@ rv_getdesc(rv_t rv)
-  */
- 
- int
--_mlog_exit( const char *file, int line, int exit_code, rv_t rv )
-+_mlog_exit(const char *file, int line, int exit_code, rv_t rv)
- {
- 	pthread_t tid;
- 	const struct rv_map *rvp;
-@@ -578,7 +578,7 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
- 	rvp = rv_getdesc(rv);
- 
- 
--	mlog( MLOG_DEBUG | MLOG_NOLOCK,
-+	mlog(MLOG_DEBUG | MLOG_NOLOCK,
- 	      "%s: %d: mlog_exit called: "
- 	      "exit_code: %s return: %s (%s)\n",
- 	      file, line,
-@@ -586,7 +586,7 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
- 	      rvp->rv_string, rvp->rv_desc);
- 
- 	if (rv < 0 || rv >= _RV_NUM) {
--		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK,
-+		mlog(MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK,
- 		      "mlog_exit(): bad return code");
- 		return exit_code;
- 	}
-@@ -598,7 +598,7 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
- 	 * most accurate information about the termination condition.
- 	 */
- 
--	if ( pthread_equal( tid, parenttid ) ) {
-+	if (pthread_equal(tid, parenttid)) {
- 		if (mlog_main_exit_code == -1) {
- 			mlog_main_exit_code = exit_code;
- 			mlog_main_exit_return = rv;
-@@ -631,7 +631,7 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
- }
- 
- void
--_mlog_exit_hint( const char *file, int line, rv_t rv )
-+_mlog_exit_hint(const char *file, int line, rv_t rv)
- {
- 	pthread_t tid;
- 	const struct rv_map *rvp;
-@@ -639,14 +639,14 @@ _mlog_exit_hint( const char *file, int line, rv_t rv )
- 	tid = pthread_self();
- 	rvp = rv_getdesc(rv);
- 
--	mlog( MLOG_DEBUG | MLOG_NOLOCK,
-+	mlog(MLOG_DEBUG | MLOG_NOLOCK,
- 	      "%s: %d: mlog_exit_hint called: "
- 	      "hint: %s (%s)\n",
- 	      file, line,
- 	      rvp->rv_string, rvp->rv_desc);
- 
- 	if (rv < 0 || rv >= _RV_NUM) {
--		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK,
-+		mlog(MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK,
- 		      "mlog_exit_hint(): bad return code");
- 		return;
- 	}
-@@ -658,22 +658,22 @@ _mlog_exit_hint( const char *file, int line, rv_t rv )
- 	 * information about the termination condition.
- 	 */
- 
--	if ( pthread_equal( tid, parenttid ) )
-+	if (pthread_equal(tid, parenttid))
- 		mlog_main_exit_hint = rv;
- 	else
--		stream_set_hint( tid, rv );
-+		stream_set_hint(tid, rv);
- 
- }
- 
- rv_t
--mlog_get_hint( void )
-+mlog_get_hint(void)
- {
- 	stream_state_t states[] = { S_RUNNING };
- 	/* REFERENCED */
- 	bool_t ok;
- 	rv_t hint;
- 
--	if ( pthread_equal( pthread_self(), parenttid ) )
-+	if (pthread_equal(pthread_self(), parenttid))
- 		return mlog_main_exit_hint;
- 
- 	ok = stream_get_exit_status(pthread_self(), states, N(states),
-@@ -720,7 +720,7 @@ mlog_exit_flush(void)
- 	if (ntids > 0) {
- 
- 		/* print the state of all the streams */
--		fprintf(mlog_fp, _("%s: %s Summary:\n"), progname, PROGSTR_CAPS );
-+		fprintf(mlog_fp, _("%s: %s Summary:\n"), progname, PROGSTR_CAPS);
- 
- 		for (i = 0; i < ntids; i++) {
- 			stream_state_t state;
-@@ -785,15 +785,15 @@ mlog_exit_flush(void)
- }
- 
  static int
--mlog_sym_lookup( char *sym )
-+mlog_sym_lookup(char *sym)
+-do_begin_read( drive_t *drivep )
++do_begin_read(drive_t *drivep)
  {
- 	mlog_sym_t *p = mlog_sym;
- 	mlog_sym_t *ep = mlog_sym
- 			 +
--			 sizeof( mlog_sym ) / sizeof( mlog_sym[ 0 ] );
-+			 sizeof(mlog_sym) / sizeof(mlog_sym[0]);
+         drive_context_t *contextp;
+         int rval;
  
--	for ( ; p < ep ; p++ ) {
--		if ( ! strcmp( sym, p->sym )) {
-+	for (; p < ep ; p++) {
-+		if (! strcmp(sym, p->sym)) {
- 			return p->level;
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: begin read\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: begin read\n");
+ 
+ 	/* get drive context
+ 	 */
+-        contextp = ( drive_context_t * )drivep->d_contextp;
++        contextp = (drive_context_t *)drivep->d_contextp;
+ 
+ 	/* verify protocol being followed
+ 	 */
+-	assert( drivep->d_capabilities & DRIVE_CAP_READ );
+-	assert( contextp->dc_mode == OM_NONE );
+-	assert( ! contextp->dc_recp );
++	assert(drivep->d_capabilities & DRIVE_CAP_READ);
++	assert(contextp->dc_mode == OM_NONE);
++	assert(! contextp->dc_recp);
+ 
+ 	/* get a record buffer to use during initialization.
+ 	 */
+-	if ( contextp->dc_singlethreadedpr ) {
++	if (contextp->dc_singlethreadedpr) {
+ 		contextp->dc_recp = contextp->dc_bufp;
+ 	} else {
+-		assert( contextp->dc_ringp );
+-		contextp->dc_msgp = Ring_get( contextp->dc_ringp );
+-		assert( contextp->dc_msgp->rm_stat == RING_STAT_INIT );
++		assert(contextp->dc_ringp);
++		contextp->dc_msgp = Ring_get(contextp->dc_ringp);
++		assert(contextp->dc_msgp->rm_stat == RING_STAT_INIT);
+ 		contextp->dc_recp = contextp->dc_msgp->rm_bufp;
+ 	}
+ 
+@@ -858,38 +858,38 @@ do_begin_read( drive_t *drivep )
+ 	 * size previously determined.
+ 	 */
+ 	contextp->dc_iocnt = 0;
+-	if ( contextp->dc_fd < 0 ) {
+-		assert( contextp->dc_fd == -1 );
+-		rval = prepare_drive( drivep );
+-		if ( rval ) {
+-			if ( ! contextp->dc_singlethreadedpr ) {
+-			    Ring_reset( contextp->dc_ringp, contextp->dc_msgp );
++	if (contextp->dc_fd < 0) {
++		assert(contextp->dc_fd == -1);
++		rval = prepare_drive(drivep);
++		if (rval) {
++			if (! contextp->dc_singlethreadedpr) {
++			    Ring_reset(contextp->dc_ringp, contextp->dc_msgp);
+ 			}
+ 			contextp->dc_msgp = 0;
+ 			contextp->dc_recp = 0;
+ 			return rval;
+ 		}
+ 	} else {
+-		rval = read_label( drivep );
+-		if ( rval ) {
+-			if ( ! contextp->dc_singlethreadedpr ) {
+-			    Ring_reset( contextp->dc_ringp, contextp->dc_msgp );
++		rval = read_label(drivep);
++		if (rval) {
++			if (! contextp->dc_singlethreadedpr) {
++			    Ring_reset(contextp->dc_ringp, contextp->dc_msgp);
+ 			}
+ 			contextp->dc_msgp = 0;
+ 			contextp->dc_recp = 0;
+ 			return rval;
  		}
  	}
-@@ -802,7 +802,7 @@ mlog_sym_lookup( char *sym )
- }
+-	assert( contextp->dc_iocnt == 1 );
++	assert(contextp->dc_iocnt == 1);
+ 					/* set by prepare_drive or read_label */
  
- void
--fold_init( fold_t fold, char *infostr, char c )
-+fold_init(fold_t fold, char *infostr, char c)
- {
- 	size_t infolen;
- 	size_t dashlen;
-@@ -812,36 +812,36 @@ fold_init( fold_t fold, char *infostr, char c )
- 	char *endp;
- 	ix_t cnt;
- 
--	assert( sizeof( fold_t ) == FOLD_LEN + 1 );
-+	assert(sizeof(fold_t) == FOLD_LEN + 1);
- 
--	infolen = strlen( infostr );
--	if ( infolen > FOLD_LEN - 4 ) {
-+	infolen = strlen(infostr);
-+	if (infolen > FOLD_LEN - 4) {
- 		infolen = FOLD_LEN - 4;
+ 	/* all is well. adjust context. don't kick off read-aheads just yet;
+ 	 * the client may not want this media file.
+ 	 */
+-	if ( ! contextp->dc_singlethreadedpr ) {
++	if (! contextp->dc_singlethreadedpr) {
+ 		contextp->dc_msgp->rm_op = RING_OP_NOP;
+ 		contextp->dc_msgp->rm_user = 0; /* do diff. use in do_seek */
+-		Ring_put( contextp->dc_ringp, contextp->dc_msgp );
++		Ring_put(contextp->dc_ringp, contextp->dc_msgp);
+ 		contextp->dc_msgp = 0;
  	}
- 	dashlen = FOLD_LEN - infolen - 3;
- 	predashlen = dashlen / 2;
- 	postdashlen = dashlen - predashlen;
- 
--	p = &fold[ 0 ];
--	endp = &fold[ sizeof( fold_t ) - 1 ];
-+	p = &fold[0];
-+	endp = &fold[sizeof(fold_t) - 1];
- 
--	assert( p < endp );
-+	assert(p < endp);
- 	*p++ = ' ';
--	for ( cnt = 0 ; cnt < predashlen && p < endp ; cnt++, p++ ) {
-+	for (cnt = 0 ; cnt < predashlen && p < endp ; cnt++, p++) {
- 		*p = c;
- 	}
--	assert( p < endp );
-+	assert(p < endp);
- 	*p++ = ' ';
--	assert( p < endp );
--	assert( p + infolen < endp );
--	strcpy( p, infostr );
-+	assert(p < endp);
-+	assert(p + infolen < endp);
-+	strcpy(p, infostr);
- 	p += infolen;
--	assert( p < endp );
-+	assert(p < endp);
- 	*p++ = ' ';
--	assert( p < endp );
--	for ( cnt = 0 ; cnt < postdashlen && p < endp ; cnt++, p++ ) {
-+	assert(p < endp);
-+	for (cnt = 0 ; cnt < postdashlen && p < endp ; cnt++, p++) {
- 		*p = c;
- 	}
--	assert( p <= endp );
-+	assert(p <= endp);
- 	*p = 0;
- }
-diff --git a/common/mlog.h b/common/mlog.h
-index 628dd28..f007761 100644
---- a/common/mlog.h
-+++ b/common/mlog.h
-@@ -60,27 +60,27 @@
- #define MLOG_SS_CNT	7		/* NOTE! bump this when adding ss */
- 
- #define MLOG_SS_SHIFT	8
--#define MLOG_SS_MASK	( 0xff << MLOG_SS_SHIFT )
-+#define MLOG_SS_MASK	(0xff << MLOG_SS_SHIFT)
- 
--/* subsystem flags - NOTE! only one may be specified! use in mlog( first arg )
-+/* subsystem flags - NOTE! only one may be specified! use in mlog(first arg)
+ 	contextp->dc_recp = 0;
+@@ -920,31 +920,31 @@ do_begin_read( drive_t *drivep )
+  *
   */
--#define MLOG_ALL	( MLOG_SS_GEN << MLOG_SS_SHIFT )
--#define MLOG_PROC	( MLOG_SS_PROC << MLOG_SS_SHIFT )
--#define MLOG_DRIVE	( MLOG_SS_DRIVE << MLOG_SS_SHIFT )
--#define MLOG_MEDIA	( MLOG_SS_MEDIA << MLOG_SS_SHIFT )
--#define MLOG_INV	( MLOG_SS_INV << MLOG_SS_SHIFT )
-+#define MLOG_ALL	(MLOG_SS_GEN << MLOG_SS_SHIFT)
-+#define MLOG_PROC	(MLOG_SS_PROC << MLOG_SS_SHIFT)
-+#define MLOG_DRIVE	(MLOG_SS_DRIVE << MLOG_SS_SHIFT)
-+#define MLOG_MEDIA	(MLOG_SS_MEDIA << MLOG_SS_SHIFT)
-+#define MLOG_INV	(MLOG_SS_INV << MLOG_SS_SHIFT)
- #ifdef DUMP
--#define MLOG_INOMAP	( MLOG_SS_INOMAP << MLOG_SS_SHIFT )
-+#define MLOG_INOMAP	(MLOG_SS_INOMAP << MLOG_SS_SHIFT)
- #endif /* DUMP */
- #ifdef RESTORE
--#define MLOG_TREE	( MLOG_SS_TREE << MLOG_SS_SHIFT )
-+#define MLOG_TREE	(MLOG_SS_TREE << MLOG_SS_SHIFT)
- #endif /* RESTORE */
--#define MLOG_EXCLFILES	( MLOG_SS_EXCLFILES << MLOG_SS_SHIFT )
-+#define MLOG_EXCLFILES	(MLOG_SS_EXCLFILES << MLOG_SS_SHIFT)
- 
- /* mlog_level - set during initialization, exported to facilitate
-  * message logging decisions. one per subsystem (see above)
-  */
--extern int mlog_level_ss[ MLOG_SS_CNT ];
-+extern int mlog_level_ss[MLOG_SS_CNT];
- 
- /* made external so main.c sigint dialog can change
-  */
-@@ -90,43 +90,43 @@ extern int mlog_timestamp;
- 
- /* mlog_ss_name - so main.c sigint dialog can allow changes
-  */
--extern char *mlog_ss_names[ MLOG_SS_CNT ];
-+extern char *mlog_ss_names[MLOG_SS_CNT];
- 
- /* initializes the mlog abstraction. split into two phases to
-  * unravel some initialization sequencing problems.
-  */
--extern void mlog_init0( void );
--extern bool_t mlog_init1( int argc, char *argv[ ] );
--extern bool_t mlog_init2( void );
-+extern void mlog_init0(void);
-+extern bool_t mlog_init1(int argc, char *argv[]);
-+extern bool_t mlog_init2(void);
- 
- /* post-initialization, to tell mlog how many streams
-  */
--extern void mlog_tell_streamcnt( size_t streamcnt );
-+extern void mlog_tell_streamcnt(size_t streamcnt);
- 
- /* override the -v option
-  */
--void mlog_override_level( int levelarg );
-+void mlog_override_level(int levelarg);
- 
- /* vprintf-based message format
-  */
--extern void mlog( int level, char *fmt, ... );
--extern void mlog_va( int levelarg, char *fmt, va_list args );
--#define mlog_exit( e, r ) _mlog_exit( __FILE__, __LINE__, (e), (r) )
--extern int  _mlog_exit( const char *file, int line, int exit_code, rv_t return_code );
--#define mlog_exit_hint( r ) _mlog_exit_hint( __FILE__, __LINE__, (r) )
--extern void _mlog_exit_hint( const char *file, int line, rv_t rv );
--extern rv_t mlog_get_hint( void );
--extern void mlog_exit_flush( void );
-+extern void mlog(int level, char *fmt, ...);
-+extern void mlog_va(int levelarg, char *fmt, va_list args);
-+#define mlog_exit(e, r) _mlog_exit(__FILE__, __LINE__, (e), (r))
-+extern int  _mlog_exit(const char *file, int line, int exit_code, rv_t return_code);
-+#define mlog_exit_hint(r) _mlog_exit_hint(__FILE__, __LINE__, (r))
-+extern void _mlog_exit_hint(const char *file, int line, rv_t rv);
-+extern rv_t mlog_get_hint(void);
-+extern void mlog_exit_flush(void);
- 
- /* the following calls are exported ONLY to dlog.c!
-  */
--extern void mlog_lock( void );
--extern void mlog_unlock( void );
-+extern void mlog_lock(void);
-+extern void mlog_unlock(void);
- 
- /* fold_t - a character string made to look like a "fold here"
-  */
- #define FOLD_LEN	79
--typedef char fold_t[ FOLD_LEN + 1 ];
--extern void fold_init( fold_t fold, char *infostr, char c );
-+typedef char fold_t[FOLD_LEN + 1];
-+extern void fold_init(fold_t fold, char *infostr, char c);
- 
- #endif /* MLOG_H */
-diff --git a/common/openutil.c b/common/openutil.c
-index fcb52fc..6b7b1b6 100644
---- a/common/openutil.c
-+++ b/common/openutil.c
-@@ -32,15 +32,15 @@
- #include "mlog.h"
- 
- char *
--open_pathalloc( char *dirname, char *basename, pid_t pid )
-+open_pathalloc(char *dirname, char *basename, pid_t pid)
+ static char *
+-do_read( drive_t *drivep,
++do_read(drive_t *drivep,
+ 	 size_t wantedcnt,
+ 	 size_t *actualcntp,
+-	 int *rvalp )
++	 int *rvalp)
  {
- 	size_t dirlen;
- 	size_t pidlen;
- 	size_t namelen;
- 	char *namebuf;
- 
--	if ( strcmp( dirname, "/" )) {
--		dirlen = strlen( dirname );
-+	if (strcmp(dirname, "/")) {
-+		dirlen = strlen(dirname);
- 	} else {
- 		dirlen = 0;
- 		dirname = "";
-@@ -54,111 +54,111 @@ open_pathalloc( char *dirname, char *basename, pid_t pid )
- 	 * And if it ever became 64 bits,
- 	 * 64 bits => trunc(log10(2^64))+1 = 20
-          */
--  	if ( pid ) {
-+  	if (pid) {
- 		pidlen = 1 + 20;
-   	} else {
-   		pidlen = 0;
-   	}
--	namelen = dirlen + 1 + strlen( basename ) + pidlen + 1;
--	namebuf = ( char * )calloc( 1, namelen );
--  	assert( namebuf );
-+	namelen = dirlen + 1 + strlen(basename) + pidlen + 1;
-+	namebuf = (char *)calloc(1, namelen);
-+  	assert(namebuf);
- 
--  	if ( pid ) {
--		( void )snprintf( namebuf, namelen, "%s/%s.%d", dirname, basename, pid );
-+  	if (pid) {
-+		(void )snprintf(namebuf, namelen, "%s/%s.%d", dirname, basename, pid);
-   	} else {
--		( void )snprintf( namebuf, namelen, "%s/%s", dirname, basename );
-+		(void )snprintf(namebuf, namelen, "%s/%s", dirname, basename);
-   	}
- 
-   	return namebuf;
- }
- 
- int
--open_trwp( char *pathname )
-+open_trwp(char *pathname)
- {
- 	int fd;
- 
--	fd = open( pathname, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR );
--	if ( fd < 0 ) {
--		mlog( MLOG_NORMAL,
-+	fd = open(pathname, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
-+	if (fd < 0) {
-+		mlog(MLOG_NORMAL,
- 		      _("could not create %s: %s\n"),
- 		      pathname,
--		      strerror( errno ));
-+		      strerror(errno));
- 	}
- 
- 	return fd;
- }
- 
- int
--open_erwp( char *pathname )
-+open_erwp(char *pathname)
- {
- 	int fd;
- 
--	fd = open( pathname, O_EXCL | O_CREAT | O_RDWR, S_IRUSR | S_IWUSR );
--	if ( fd < 0 ) {
--		mlog( MLOG_NORMAL,
-+	fd = open(pathname, O_EXCL | O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-+	if (fd < 0) {
-+		mlog(MLOG_NORMAL,
- 		      _("could not create %s: %s\n"),
- 		      pathname,
--		      strerror( errno ));
-+		      strerror(errno));
- 	}
- 
- 	return fd;
- }
- 
- int
--open_rwp( char *pathname )
-+open_rwp(char *pathname)
- {
- 	int fd;
- 
--	fd = open( pathname, O_RDWR );
-+	fd = open(pathname, O_RDWR);
- 
- 	return fd;
- }
- 
- int
--mkdir_tp( char *pathname )
-+mkdir_tp(char *pathname)
- {
+ 	drive_context_t *contextp;
+ 	size_t availcnt;
+ 	size_t actualcnt;
  	int rval;
  
--	rval = mkdir( pathname, S_IRWXU );
-+	rval = mkdir(pathname, S_IRWXU);
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "drive op: read: wanted %u (0x%x)\n",
+ 	      wantedcnt,
+-	      wantedcnt );
++	      wantedcnt);
+ 
+ 	/* get context ptrs
+ 	 */
+-	contextp = ( drive_context_t * )drivep->d_contextp;
++	contextp = (drive_context_t *)drivep->d_contextp;
+ 
+ 	/* assert protocol being followed
+ 	 */
+-	assert( contextp->dc_mode == OM_READ );
+-	assert( ! contextp->dc_errorpr );
+-	assert( ! contextp->dc_ownedp );
+-	assert( wantedcnt > 0 );
++	assert(contextp->dc_mode == OM_READ);
++	assert(! contextp->dc_errorpr);
++	assert(! contextp->dc_ownedp);
++	assert(wantedcnt > 0);
+ 
+ 	/* clear the return status field
+ 	 */
+@@ -952,30 +952,30 @@ do_read( drive_t *drivep,
+ 
+ 	/* read a new record if necessary
+ 	 */
+-	rval = getrec( drivep );
+-	if ( rval ) {
+-		mlog( MLOG_NITTY | MLOG_DRIVE,
++	rval = getrec(drivep);
++	if (rval) {
++		mlog(MLOG_NITTY | MLOG_DRIVE,
+ 		      "drive op read returning error rval=%d\n",
+-		      rval );
++		      rval);
+ 		*rvalp = rval;
+ 		return 0;
+ 	}
+ 
+ 	/* figure how much data is available, and how much should be supplied
+ 	 */
+-	availcnt = ( size_t )( contextp->dc_dataendp - contextp->dc_nextp );
+-	actualcnt = min( wantedcnt, availcnt );
++	availcnt = (size_t)(contextp->dc_dataendp - contextp->dc_nextp);
++	actualcnt = min(wantedcnt, availcnt);
+ 
+ 	/* adjust the context
+ 	 */
+ 	contextp->dc_ownedp = contextp->dc_nextp;
+ 	contextp->dc_nextp += actualcnt;
+-	assert( contextp->dc_nextp <= contextp->dc_dataendp );
++	assert(contextp->dc_nextp <= contextp->dc_dataendp);
+ 
+-	mlog( MLOG_NITTY | MLOG_DRIVE,
++	mlog(MLOG_NITTY | MLOG_DRIVE,
+ 	      "drive op read actual == %d (0x%x)\n",
+ 	      actualcnt,
+-	      actualcnt );
++	      actualcnt);
+ 
+ 	*actualcntp = actualcnt;
+ 	return contextp->dc_ownedp;
+@@ -990,29 +990,29 @@ do_read( drive_t *drivep,
+  */
+ /* ARGSUSED */
+ static void
+-do_return_read_buf( drive_t *drivep, char *bufp, size_t retcnt )
++do_return_read_buf(drive_t *drivep, char *bufp, size_t retcnt)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	/* REFERENCED */
+ 	size_t ownedcnt;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "drive op: return read buf: sz %d (0x%x)\n",
+ 	      retcnt,
+-	      retcnt );
++	      retcnt);
+ 
+ 	/* assert protocol being followed
+ 	 */
+-	assert( contextp->dc_mode == OM_READ );
+-	assert( ! contextp->dc_errorpr );
+-	assert( contextp->dc_ownedp );
+-	assert( bufp == contextp->dc_ownedp );
++	assert(contextp->dc_mode == OM_READ);
++	assert(! contextp->dc_errorpr);
++	assert(contextp->dc_ownedp);
++	assert(bufp == contextp->dc_ownedp);
+ 
+ 	/* calculate how much the caller owns
+ 	 */
+-	assert( contextp->dc_nextp >= contextp->dc_ownedp );
+-	ownedcnt = ( size_t )( contextp->dc_nextp - contextp->dc_ownedp );
+-	assert( ownedcnt == retcnt );
++	assert(contextp->dc_nextp >= contextp->dc_ownedp);
++	ownedcnt = (size_t)(contextp->dc_nextp - contextp->dc_ownedp);
++	assert(ownedcnt == retcnt);
+ 
+ 	/* take possession of buffer portion
+ 	 */
+@@ -1021,11 +1021,11 @@ do_return_read_buf( drive_t *drivep, char *bufp, size_t retcnt )
+ 	/* if caller is done with this record, take the buffer back
+ 	 * and (if ring in use) give buffer to ring for read-ahead.
+ 	 */
+-	if ( contextp->dc_nextp >= contextp->dc_dataendp ) {
+-		assert( contextp->dc_nextp == contextp->dc_dataendp );
+-		if ( ! contextp->dc_singlethreadedpr ) {
++	if (contextp->dc_nextp >= contextp->dc_dataendp) {
++		assert(contextp->dc_nextp == contextp->dc_dataendp);
++		if (! contextp->dc_singlethreadedpr) {
+ 			contextp->dc_msgp->rm_op = RING_OP_READ;
+-			Ring_put( contextp->dc_ringp, contextp->dc_msgp );
++			Ring_put(contextp->dc_ringp, contextp->dc_msgp);
+ 			contextp->dc_msgp = 0;
+ 		}
+ 		contextp->dc_recp = 0;
+@@ -1043,29 +1043,29 @@ do_return_read_buf( drive_t *drivep, char *bufp, size_t retcnt )
+  *	void
+  */
+ static void
+-do_get_mark( drive_t *drivep, drive_mark_t *markp )
++do_get_mark(drive_t *drivep, drive_mark_t *markp)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	off64_t offset;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: get mark\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: get mark\n");
+ 
+ 	/* assert protocol being followed
+ 	 */
+-	assert( contextp->dc_mode == OM_READ );
+-	assert( ! contextp->dc_errorpr );
+-	assert( ! contextp->dc_ownedp );
++	assert(contextp->dc_mode == OM_READ);
++	assert(! contextp->dc_errorpr);
++	assert(! contextp->dc_ownedp);
+ 
+ 	/* the mark is simply the offset into the media file of the
+ 	 * next byte to be read.
+ 	 */
+-	offset = contextp->dc_reccnt * ( off64_t )tape_recsz;
+-	if ( contextp->dc_recp ) {
+-		offset += ( off64_t )( contextp->dc_nextp - contextp->dc_recp );
++	offset = contextp->dc_reccnt * (off64_t)tape_recsz;
++	if (contextp->dc_recp) {
++		offset += (off64_t)(contextp->dc_nextp - contextp->dc_recp);
+ 	}
+ 
+-	*markp = ( drive_mark_t )offset;
++	*markp = (drive_mark_t)offset;
+ 
+ 	return;
+ }
+@@ -1082,7 +1082,7 @@ typedef enum { SEEKMODE_BUF, SEEKMODE_RAW } seekmode_t;
+  *
+  */
+ static int
+-do_seek_mark( drive_t *drivep, drive_mark_t *markp )
++do_seek_mark(drive_t *drivep, drive_mark_t *markp)
+ {
+ 	drive_context_t	*contextp;
+ 	off64_t wantedoffset;
+@@ -1094,55 +1094,55 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
+ 
+ 	/* assert protocol being followed
+ 	 */
+-	assert( contextp->dc_mode == OM_READ );
+-	assert( ! contextp->dc_errorpr );
+-	assert( ! contextp->dc_ownedp );
++	assert(contextp->dc_mode == OM_READ);
++	assert(! contextp->dc_errorpr);
++	assert(! contextp->dc_ownedp);
+ 
+ 
+ 	/* the desired mark is passed by reference, and is really just an
+ 	 * offset into the raw (incl rec hdrs) read stream
+ 	 */
+-	wantedoffset = *( off64_t * )markp;
++	wantedoffset = *(off64_t *)markp;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "drive op: seek mark: %lld (0x%llx)\n",
+ 	      wantedoffset,
+-	      wantedoffset );
++	      wantedoffset);
+ 
+ 	/* determine the current offset. assert that the wanted offset is
+ 	 * not less than the current offset.
+ 	 */
+-	currentoffset = contextp->dc_reccnt * ( off64_t )tape_recsz;
+-	if ( contextp->dc_recp ) {
++	currentoffset = contextp->dc_reccnt * (off64_t)tape_recsz;
++	if (contextp->dc_recp) {
+ 		uint32_t recoff;
+ #ifdef DEBUG
+-		rec_hdr_t *rechdrp = ( rec_hdr_t * )contextp->dc_recp;
++		rec_hdr_t *rechdrp = (rec_hdr_t *)contextp->dc_recp;
+ #endif
+ 
+-		assert( contextp->dc_nextp >= contextp->dc_recp );
+-		recoff = ( uint32_t )( contextp->dc_nextp
++		assert(contextp->dc_nextp >= contextp->dc_recp);
++		recoff = (uint32_t)(contextp->dc_nextp
+ 					-
+-					contextp->dc_recp );
+-		assert( recoff <= tape_recsz );
+-		assert( rechdrp->rec_used <= tape_recsz );
+-		assert( recoff >= STAPE_HDR_SZ );
+-		assert( rechdrp->rec_used >= STAPE_HDR_SZ );
+-		assert( recoff <= rechdrp->rec_used );
+-		currentoffset += ( off64_t )recoff;
++					contextp->dc_recp);
++		assert(recoff <= tape_recsz);
++		assert(rechdrp->rec_used <= tape_recsz);
++		assert(recoff >= STAPE_HDR_SZ);
++		assert(rechdrp->rec_used >= STAPE_HDR_SZ);
++		assert(recoff <= rechdrp->rec_used);
++		currentoffset += (off64_t)recoff;
+ 	}
+-	assert( wantedoffset >= currentoffset );
++	assert(wantedoffset >= currentoffset);
+ 
+ 	/* if we are currently holding a record and the desired offset
+ 	 * is not within the current record, eat the current record.
+ 	 */
+-	if ( contextp->dc_recp ) {
++	if (contextp->dc_recp) {
+ 		off64_t nextrecoffset;
+-		rec_hdr_t *rechdrp = ( rec_hdr_t * )contextp->dc_recp;
++		rec_hdr_t *rechdrp = (rec_hdr_t *)contextp->dc_recp;
+ 
+-		nextrecoffset = contextp->dc_reccnt  * ( off64_t )tape_recsz
++		nextrecoffset = contextp->dc_reccnt  * (off64_t)tape_recsz
+ 				+
+-				( off64_t )rechdrp->rec_used;
+-		if ( wantedoffset >= nextrecoffset ) {
++				(off64_t)rechdrp->rec_used;
++		if (wantedoffset >= nextrecoffset) {
+ 			uint32_t recoff;
+ 			size_t wantedcnt;
+ 			char *dummybufp;
+@@ -1152,39 +1152,39 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
+ 			/* if this is the last record, the wanted offset
+ 			 * must be just after it.
+ 			 */
+-			if ( rechdrp->rec_used < tape_recsz ) {
+-				assert( wantedoffset == nextrecoffset );
++			if (rechdrp->rec_used < tape_recsz) {
++				assert(wantedoffset == nextrecoffset);
+ 			}
+ 
+ 			/* figure how much to ask for
+ 			 */
+-			assert( contextp->dc_nextp >= contextp->dc_recp );
+-			recoff = ( uint32_t )( contextp->dc_nextp
++			assert(contextp->dc_nextp >= contextp->dc_recp);
++			recoff = (uint32_t)(contextp->dc_nextp
+ 						-
+-						contextp->dc_recp );
+-			wantedcnt = ( size_t )( rechdrp->rec_used
++						contextp->dc_recp);
++			wantedcnt = (size_t)(rechdrp->rec_used
+ 						-
+-						recoff );
++						recoff);
+ 
+ 			/* eat that much tape
+ 			 */
+ 			rval = 0;
+-			dummybufp = do_read( drivep,
++			dummybufp = do_read(drivep,
+ 					     wantedcnt,
+ 					     &actualcnt,
+-					     &rval );
+-			if ( rval ) {
++					     &rval);
++			if (rval) {
+ 				return rval;
+ 			}
+-			assert( actualcnt == wantedcnt );
+-			do_return_read_buf( drivep, dummybufp, actualcnt );
+-			currentoffset += ( off64_t )actualcnt;
+-			assert( currentoffset == nextrecoffset );
+-			assert( wantedoffset >= currentoffset );
+-			assert( ! contextp->dc_recp );
+-			assert( currentoffset
++			assert(actualcnt == wantedcnt);
++			do_return_read_buf(drivep, dummybufp, actualcnt);
++			currentoffset += (off64_t)actualcnt;
++			assert(currentoffset == nextrecoffset);
++			assert(wantedoffset >= currentoffset);
++			assert(! contextp->dc_recp);
++			assert(currentoffset
+ 				==
+-				contextp->dc_reccnt * ( off64_t )tape_recsz );
++				contextp->dc_reccnt * (off64_t)tape_recsz);
+ 		}
+ 	}
+ 
+@@ -1195,208 +1195,208 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
+ 	 * made it there, suspend read-ahead, eat those readahead records,
+ 	 * FSR the remaining, and resume readahead.
+ 	 */
+-	if ( contextp->dc_canfsrpr
++	if (contextp->dc_canfsrpr
+ 	     &&
+-	     wantedoffset - currentoffset >= ( off64_t )tape_recsz ) {
++	     wantedoffset - currentoffset >= (off64_t)tape_recsz) {
+ 		off64_t wantedreccnt;
+ 		seekmode_t seekmode;
+ 
+-		assert( ! contextp->dc_recp );
+-		wantedreccnt = wantedoffset / ( off64_t )tape_recsz;
+-		if ( contextp->dc_singlethreadedpr ) {
++		assert(! contextp->dc_recp);
++		wantedreccnt = wantedoffset / (off64_t)tape_recsz;
++		if (contextp->dc_singlethreadedpr) {
+ 			seekmode = SEEKMODE_RAW;
+ 		} else {
+ 			seekmode = SEEKMODE_BUF;
+ 		}
+-		assert( wantedreccnt != 0 ); /* so NOP below can be
++		assert(wantedreccnt != 0); /* so NOP below can be
+ 					      * distinguished from use
+ 					      * in do_begin_read
+ 					      */
+-		while ( contextp->dc_reccnt < wantedreccnt ) {
++		while (contextp->dc_reccnt < wantedreccnt) {
+ 			off64_t recskipcnt64;
+ 			off64_t recskipcnt64remaining;
+ 
+-			if ( seekmode == SEEKMODE_BUF ) {
++			if (seekmode == SEEKMODE_BUF) {
+ 				ring_stat_t rs;
+-				assert( ! contextp->dc_msgp );
++				assert(! contextp->dc_msgp);
+ 				contextp->dc_msgp =
+-						Ring_get( contextp->dc_ringp );
++						Ring_get(contextp->dc_ringp);
+ 				rs = contextp->dc_msgp->rm_stat;
+-				if ( rs == RING_STAT_ERROR ) {
++				if (rs == RING_STAT_ERROR) {
+ 					contextp->dc_errorpr = BOOL_TRUE;
+ 					return contextp->dc_msgp->rm_rval;
+ 				}
+-				if ( rs != RING_STAT_OK
++				if (rs != RING_STAT_OK
+ 				     &&
+ 				     rs != RING_STAT_INIT
+ 				     &&
+-				     rs != RING_STAT_NOPACK ) {
+-					assert( 0 );
++				     rs != RING_STAT_NOPACK) {
++					assert(0);
+ 					contextp->dc_errorpr = BOOL_TRUE;
+ 					return DRIVE_ERROR_CORE;
+ 				}
+-				if ( rs == RING_STAT_OK ) {
++				if (rs == RING_STAT_OK) {
+ 					contextp->dc_reccnt++;
+ 				}
+-				if ( rs == RING_STAT_NOPACK
++				if (rs == RING_STAT_NOPACK
+ 				     &&
+ 				     contextp->dc_msgp->rm_user
+ 				     ==
+-				     wantedreccnt ) {
++				     wantedreccnt) {
+ 					seekmode = SEEKMODE_RAW;
+ 				}
+ 				contextp->dc_msgp->rm_op = RING_OP_NOP;
+ 				contextp->dc_msgp->rm_user = wantedreccnt;
+-				Ring_put( contextp->dc_ringp,
+-					  contextp->dc_msgp );
++				Ring_put(contextp->dc_ringp,
++					  contextp->dc_msgp);
+ 				contextp->dc_msgp = 0;
+ 				continue;
+ 			}
+ 
+-			assert( contextp->dc_reccnt == contextp->dc_iocnt );
+-			assert( wantedreccnt > contextp->dc_reccnt );
++			assert(contextp->dc_reccnt == contextp->dc_iocnt);
++			assert(wantedreccnt > contextp->dc_reccnt);
+ 			recskipcnt64 = wantedreccnt - contextp->dc_reccnt;
+ 			recskipcnt64remaining = recskipcnt64;
+-			while ( recskipcnt64remaining ) {
++			while (recskipcnt64remaining) {
+ 				int recskipcnt;
+ 				int saved_errno;
+ 				int rval;
+ 
+-				assert( recskipcnt64remaining > 0 );
+-				if ( recskipcnt64remaining > INTGENMAX ) {
++				assert(recskipcnt64remaining > 0);
++				if (recskipcnt64remaining > INTGENMAX) {
+ 					recskipcnt = INTGENMAX;
+ 				} else {
+-					recskipcnt = ( int )
++					recskipcnt = (int)
+ 						     recskipcnt64remaining;
+ 				}
+-				assert( recskipcnt > 0 );
+-				rval = mt_op( contextp->dc_fd,
++				assert(recskipcnt > 0);
++				rval = mt_op(contextp->dc_fd,
+ 					      MTFSR,
+-					      recskipcnt );
++					      recskipcnt);
+ 				saved_errno = errno;
+-				if ( rval ) {
+-					mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++				if (rval) {
++					mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 					      _("could not forward space %d "
+ 					      "tape blocks: "
+ 					      "rval == %d, errno == %d (%s)\n"),
+ 					      rval,
+ 					      saved_errno,
+-					      strerror( saved_errno ));
++					      strerror(saved_errno));
+ 					return DRIVE_ERROR_MEDIA;
+ 				}
+-				recskipcnt64remaining -= ( off64_t )recskipcnt;
++				recskipcnt64remaining -= (off64_t)recskipcnt;
+ 			}
+ 			contextp->dc_reccnt += recskipcnt64;
+ 			contextp->dc_iocnt += recskipcnt64;
+ 			currentoffset = contextp->dc_reccnt
+ 					*
+-					( off64_t )tape_recsz;
+-			assert( wantedoffset >= currentoffset );
+-			assert( wantedoffset - currentoffset
++					(off64_t)tape_recsz;
++			assert(wantedoffset >= currentoffset);
++			assert(wantedoffset - currentoffset
+ 				<
+-				( off64_t )tape_recsz );
++				(off64_t)tape_recsz);
+ 		}
+ 	}
+ 
+ 	/* remove excess records by eating them. won't be any if
+ 	 * FSR supported
+ 	 */
+-	while ( wantedoffset - currentoffset >= ( off64_t )tape_recsz ) {
++	while (wantedoffset - currentoffset >= (off64_t)tape_recsz) {
+ 		size_t wantedcnt;
+ 		char *dummybufp;
+ 		size_t actualcnt;
+ 		int rval;
+ 
+-		assert( ! contextp->dc_recp );
++		assert(! contextp->dc_recp);
+ 
+ 		/* figure how much to ask for. to eat an entire record,
+ 		 * ask for a record sans the header. do_read will eat
+ 		 * the header, we eat the rest.
+ 		 */
+-		wantedcnt = ( size_t )( tape_recsz - STAPE_HDR_SZ );
++		wantedcnt = (size_t)(tape_recsz - STAPE_HDR_SZ);
+ 
+ 		/* eat that much tape
+ 		 */
+ 		rval = 0;
+-		dummybufp = do_read( drivep, wantedcnt, &actualcnt, &rval );
+-		if ( rval ) {
++		dummybufp = do_read(drivep, wantedcnt, &actualcnt, &rval);
++		if (rval) {
+ 			return rval;
+ 		}
+-		assert( actualcnt == wantedcnt );
+-		do_return_read_buf( drivep, dummybufp, actualcnt );
+-		assert( ! contextp->dc_recp );
+-		currentoffset += ( off64_t )tape_recsz;
+-		assert( currentoffset
++		assert(actualcnt == wantedcnt);
++		do_return_read_buf(drivep, dummybufp, actualcnt);
++		assert(! contextp->dc_recp);
++		currentoffset += (off64_t)tape_recsz;
++		assert(currentoffset
+ 			==
+-			contextp->dc_reccnt * ( off64_t )tape_recsz );
++			contextp->dc_reccnt * (off64_t)tape_recsz);
+ 	}
+ 
+ 	/* eat that portion of the next record leading up to the
+ 	 * desired offset.
+ 	 */
+-	if ( wantedoffset != currentoffset ) {
++	if (wantedoffset != currentoffset) {
+ 		size_t wantedcnt;
+ 		char *dummybufp;
+ 		size_t actualcnt;
+ 
+-		assert( wantedoffset > currentoffset );
+-		assert( wantedoffset - currentoffset < ( off64_t )tape_recsz );
+-		wantedcnt = ( size_t )( wantedoffset - currentoffset );
+-		if ( contextp->dc_recp ) {
++		assert(wantedoffset > currentoffset);
++		assert(wantedoffset - currentoffset < (off64_t)tape_recsz);
++		wantedcnt = (size_t)(wantedoffset - currentoffset);
++		if (contextp->dc_recp) {
+ 			uint32_t recoff;
+ #ifdef DEBUG
+-			rec_hdr_t *rechdrp = ( rec_hdr_t * )contextp->dc_recp;
++			rec_hdr_t *rechdrp = (rec_hdr_t *)contextp->dc_recp;
+ #endif
+-			recoff = ( uint32_t )( contextp->dc_nextp
++			recoff = (uint32_t)(contextp->dc_nextp
+ 						-
+-						contextp->dc_recp );
+-			assert( recoff <= tape_recsz );
+-			assert( rechdrp->rec_used <= tape_recsz );
+-			assert( recoff >= STAPE_HDR_SZ );
+-			assert( rechdrp->rec_used >= STAPE_HDR_SZ );
+-			assert( recoff <= rechdrp->rec_used );
+-			assert( recoff + wantedcnt <= rechdrp->rec_used );
++						contextp->dc_recp);
++			assert(recoff <= tape_recsz);
++			assert(rechdrp->rec_used <= tape_recsz);
++			assert(recoff >= STAPE_HDR_SZ);
++			assert(rechdrp->rec_used >= STAPE_HDR_SZ);
++			assert(recoff <= rechdrp->rec_used);
++			assert(recoff + wantedcnt <= rechdrp->rec_used);
+ 		} else {
+-			assert( wantedcnt >= STAPE_HDR_SZ );
++			assert(wantedcnt >= STAPE_HDR_SZ);
+ 			wantedcnt -= STAPE_HDR_SZ;
+ 		}
+ 
+ 		/* eat that much tape
+ 		 */
+-		if ( wantedcnt > 0 ) {
++		if (wantedcnt > 0) {
+ 		    int rval;
+ 		    rval = 0;
+-		    dummybufp = do_read( drivep, wantedcnt, &actualcnt, &rval );
+-		    if ( rval ) {
++		    dummybufp = do_read(drivep, wantedcnt, &actualcnt, &rval);
++		    if (rval) {
+ 			    return rval;
+ 		    }
+-		    assert( actualcnt == wantedcnt );
+-		    do_return_read_buf( drivep, dummybufp, actualcnt );
++		    assert(actualcnt == wantedcnt);
++		    do_return_read_buf(drivep, dummybufp, actualcnt);
+ 		}
+ 	}
+ 
+ 	/* as a sanity check, refigure the current offset and make sure
+ 	 * it is equal to the wanted offset
+ 	 */
+-	currentoffset = contextp->dc_reccnt * ( off64_t )tape_recsz;
+-	if ( contextp->dc_recp ) {
++	currentoffset = contextp->dc_reccnt * (off64_t)tape_recsz;
++	if (contextp->dc_recp) {
+ 		uint32_t recoff;
+ #ifdef DEBUG
+-		rec_hdr_t *rechdrp = ( rec_hdr_t * )contextp->dc_recp;
++		rec_hdr_t *rechdrp = (rec_hdr_t *)contextp->dc_recp;
+ #endif
+ 
+-		assert( contextp->dc_nextp >= contextp->dc_recp );
+-		recoff = ( uint32_t )( contextp->dc_nextp
++		assert(contextp->dc_nextp >= contextp->dc_recp);
++		recoff = (uint32_t)(contextp->dc_nextp
+ 					-
+-					contextp->dc_recp );
+-		assert( recoff <= tape_recsz );
+-		assert( rechdrp->rec_used <= tape_recsz );
+-		assert( recoff >= STAPE_HDR_SZ );
+-		assert( rechdrp->rec_used >= STAPE_HDR_SZ );
+-		assert( recoff <= rechdrp->rec_used );
+-		currentoffset += ( off64_t )recoff;
++					contextp->dc_recp);
++		assert(recoff <= tape_recsz);
++		assert(rechdrp->rec_used <= tape_recsz);
++		assert(recoff >= STAPE_HDR_SZ);
++		assert(rechdrp->rec_used >= STAPE_HDR_SZ);
++		assert(recoff <= rechdrp->rec_used);
++		currentoffset += (off64_t)recoff;
+ 	}
+-	assert( wantedoffset == currentoffset );
++	assert(wantedoffset == currentoffset);
+ 
+ 	return 0;
+ }
+@@ -1412,7 +1412,7 @@ do_seek_mark( drive_t *drivep, drive_mark_t *markp )
+  *	DRIVE_ERROR_* on failure
+  */
+ static int
+-do_next_mark( drive_t *drivep )
++do_next_mark(drive_t *drivep)
+ {
+ 	drive_context_t	*contextp = (drive_context_t *)drivep->d_contextp;
+ 	rec_hdr_t *rechdrp;
+@@ -1429,69 +1429,69 @@ do_next_mark( drive_t *drivep )
+ 
+ 	/* assert protocol being followed.
+ 	 */
+-	assert( contextp->dc_mode == OM_READ );
+-	assert( ! contextp->dc_errorpr );
+-	assert( ! contextp->dc_ownedp );
++	assert(contextp->dc_mode == OM_READ);
++	assert(! contextp->dc_errorpr);
++	assert(! contextp->dc_ownedp);
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: next mark\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: next mark\n");
+ 
+ 	trycnt = 0;
+ 
+-	if ( contextp->dc_errorpr ) {
++	if (contextp->dc_errorpr) {
+ 		goto resetring;
+ 	} else {
+ 		goto noerrorsearch;
+ 	}
+ 
+ noerrorsearch:
+-	for ( ; ; ) {
+-		rval = getrec( drivep );
+-		if ( rval == DRIVE_ERROR_CORRUPTION ) {
++	for (; ;) {
++		rval = getrec(drivep);
++		if (rval == DRIVE_ERROR_CORRUPTION) {
+ 			goto resetring;
+-		} else if ( rval ) {
++		} else if (rval) {
+ 			return rval;
+ 		}
+-		rechdrp = ( rec_hdr_t * )contextp->dc_recp;
++		rechdrp = (rec_hdr_t *)contextp->dc_recp;
+ 
+-		assert( rechdrp->first_mark_offset != 0 );
+-		if ( rechdrp->first_mark_offset > 0 ) {
++		assert(rechdrp->first_mark_offset != 0);
++		if (rechdrp->first_mark_offset > 0) {
+ 			 off64_t markoff = rechdrp->first_mark_offset
+ 					   -
+ 					   rechdrp->file_offset;
+-			 off64_t curoff = ( off64_t )( contextp->dc_nextp
++			 off64_t curoff = (off64_t)(contextp->dc_nextp
+ 						       -
+-						       contextp->dc_recp );
+-			 assert( markoff > 0 );
+-			 assert( curoff > 0 );
+-			 if ( markoff >= curoff ) {
++						       contextp->dc_recp);
++			 assert(markoff > 0);
++			 assert(curoff > 0);
++			 if (markoff >= curoff) {
+ 				break;
+ 			}
+ 		}
+ 
+-		if ( ! contextp->dc_singlethreadedpr ) {
+-			Ring_put( contextp->dc_ringp,
+-				  contextp->dc_msgp );
++		if (! contextp->dc_singlethreadedpr) {
++			Ring_put(contextp->dc_ringp,
++				  contextp->dc_msgp);
+ 			contextp->dc_msgp = 0;
+ 		}
+ 		contextp->dc_recp = 0;
+ 		contextp->dc_reccnt++;
+ 	}
+ 
+-	assert( rechdrp->first_mark_offset - rechdrp->file_offset
++	assert(rechdrp->first_mark_offset - rechdrp->file_offset
+ 		<=
+-		( off64_t )tape_recsz );
++		(off64_t)tape_recsz);
+ 	contextp->dc_nextp = contextp->dc_recp
+ 			     +
+-			     ( size_t )( rechdrp->first_mark_offset
++			     (size_t)(rechdrp->first_mark_offset
+ 					 -
+-					 rechdrp->file_offset );
+-	assert( contextp->dc_nextp <= contextp->dc_dataendp );
+-	assert( contextp->dc_nextp >= contextp->dc_recp + STAPE_HDR_SZ );
+-	if ( contextp->dc_nextp == contextp->dc_dataendp ) {
+-		if ( ! contextp->dc_singlethreadedpr ) {
+-			Ring_put( contextp->dc_ringp,
+-				  contextp->dc_msgp );
++					 rechdrp->file_offset);
++	assert(contextp->dc_nextp <= contextp->dc_dataendp);
++	assert(contextp->dc_nextp >= contextp->dc_recp + STAPE_HDR_SZ);
++	if (contextp->dc_nextp == contextp->dc_dataendp) {
++		if (! contextp->dc_singlethreadedpr) {
++			Ring_put(contextp->dc_ringp,
++				  contextp->dc_msgp);
+ 			contextp->dc_msgp = 0;
+ 		}
+ 		contextp->dc_recp = 0;
+@@ -1501,152 +1501,152 @@ noerrorsearch:
+ 	return 0;
+ 
+ resetring:
+-	if ( ! contextp->dc_singlethreadedpr ) {
+-		Ring_reset( contextp->dc_ringp, contextp->dc_msgp );
++	if (! contextp->dc_singlethreadedpr) {
++		Ring_reset(contextp->dc_ringp, contextp->dc_msgp);
+ 		contextp->dc_msgp = 0;
+ 	}
+ 	contextp->dc_recp = 0;
+ 
+ 	/* get a record buffer and cast a record header pointer
+ 	 */
+-	if ( contextp->dc_singlethreadedpr ) {
++	if (contextp->dc_singlethreadedpr) {
+ 		contextp->dc_recp = contextp->dc_bufp;
+ 	} else {
+-		contextp->dc_msgp = Ring_get( contextp->dc_ringp );
+-		assert( contextp->dc_msgp->rm_stat == RING_STAT_INIT );
++		contextp->dc_msgp = Ring_get(contextp->dc_ringp);
++		assert(contextp->dc_msgp->rm_stat == RING_STAT_INIT);
+ 		contextp->dc_recp = contextp->dc_msgp->rm_bufp;
+ 	}
+-	rechdrp = ( rec_hdr_t * )contextp->dc_recp;
++	rechdrp = (rec_hdr_t *)contextp->dc_recp;
+ 	goto readrecord;
+ 
+ readrecord:
+ 	trycnt++;
+-	if ( trycnt > maxtrycnt ) {
+-		mlog( MLOG_NORMAL | MLOG_DRIVE,
+-		      _("unable to locate next mark in media file\n") );
++	if (trycnt > maxtrycnt) {
++		mlog(MLOG_NORMAL | MLOG_DRIVE,
++		      _("unable to locate next mark in media file\n"));
+ 		return DRIVE_ERROR_MEDIA;
+ 	}
+ 
+-	nread = Read( drivep, contextp->dc_recp, tape_recsz, &saved_errno );
++	nread = Read(drivep, contextp->dc_recp, tape_recsz, &saved_errno);
+ 	goto validateread;
+ 
+ validateread:
+-	if ( nread == ( int )tape_recsz ) {
++	if (nread == (int)tape_recsz) {
+ 		goto validatehdr;
+ 	}
+-	ok = mt_get_status( drivep, &mtstat );
+-	if ( ! ok ) {
+-		status_failed_message( drivep );
++	ok = mt_get_status(drivep, &mtstat);
++	if (! ok) {
++		status_failed_message(drivep);
+ 		return DRIVE_ERROR_DEVICE;
+ 	}
+ 
+-	if ( IS_FMK( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
+-		      "encountered EOF attempting to read record\n" );
++	if (IS_FMK(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
++		      "encountered EOF attempting to read record\n");
+ 		return DRIVE_ERROR_EOF;
+ 	}
+ 
+-	if ( IS_EOD( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
+-		      "encountered EOD attempting to read record\n" );
++	if (IS_EOD(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
++		      "encountered EOD attempting to read record\n");
+ 		return DRIVE_ERROR_EOD;
+ 	}
+ 
+-	if ( IS_EOT( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
+-		      "encountered EOM attempting to read record\n" );
++	if (IS_EOT(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
++		      "encountered EOM attempting to read record\n");
+ 		return DRIVE_ERROR_EOM;
+ 	}
+ 
+-	if ( IS_EW( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
+-		      "encountered EW attempting to read record\n" );
++	if (IS_EW(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
++		      "encountered EW attempting to read record\n");
+ 		return DRIVE_ERROR_EOM;
+ 	}
+ 
+-	if ( nread >= 0 ) {
+-		assert( ( size_t )nread <= tape_recsz );
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (nread >= 0) {
++		assert((size_t)nread <= tape_recsz);
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 		      "short read (nread == %d, record size == %d)\n",
+ 		      nread,
+-		      tape_recsz );
++		      tape_recsz);
+ 		goto getbeyonderror;
+ 	}
+ 
+ 	/* some other error
+ 	 */
+-	mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
++	mlog(MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
+ 	      "unexpected error attempting to read record: "
+ 	      "read returns %d, errno %d (%s)\n"),
+ 	      nread,
+ 	      errno,
+-	      strerror( errno ));
++	      strerror(errno));
+ 
+ 	goto getbeyonderror;
+ 
+ validatehdr:
+-	rval = record_hdr_validate( drivep, contextp->dc_recp, BOOL_FALSE );
++	rval = record_hdr_validate(drivep, contextp->dc_recp, BOOL_FALSE);
+ 
+-	if ( rval
++	if (rval
+ 	     &&
+-	     ( contextp->dc_isQICpr == BOOL_TRUE
++	     (contextp->dc_isQICpr == BOOL_TRUE
+ 	       ||
+-	       contextp->dc_isQICpr == BOOL_UNKNOWN )) {
++	       contextp->dc_isQICpr == BOOL_UNKNOWN)) {
+ 		goto huntQIC;
+ 	}
+ 
+-	if ( rval ) {
++	if (rval) {
+ 		goto readrecord;
+ 	}
+ 
+-	contextp->dc_reccnt = rechdrp->file_offset / ( off64_t )tape_recsz;
++	contextp->dc_reccnt = rechdrp->file_offset / (off64_t)tape_recsz;
+ 	contextp->dc_iocnt = contextp->dc_reccnt + 1;
+-	if ( rechdrp->first_mark_offset < 0 ) {
+-		mlog( MLOG_NORMAL | MLOG_DRIVE,
++	if (rechdrp->first_mark_offset < 0) {
++		mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 		      _("valid record %lld but no mark\n"),
+-		      contextp->dc_iocnt - 1 );
++		      contextp->dc_iocnt - 1);
+ 		goto readrecord;
+ 	}
+ 
+-	assert( ! ( rechdrp->file_offset % ( off64_t )tape_recsz ));
++	assert(! (rechdrp->file_offset % (off64_t)tape_recsz));
+ 	markoff = rechdrp->first_mark_offset - rechdrp->file_offset;
+-	assert( markoff >= ( off64_t )STAPE_HDR_SZ );
+-	assert( markoff < ( off64_t )tape_recsz );
+-	assert( rechdrp->rec_used > STAPE_HDR_SZ );
+-	assert( rechdrp->rec_used < tape_recsz );
++	assert(markoff >= (off64_t)STAPE_HDR_SZ);
++	assert(markoff < (off64_t)tape_recsz);
++	assert(rechdrp->rec_used > STAPE_HDR_SZ);
++	assert(rechdrp->rec_used < tape_recsz);
+ 
+ 	goto alliswell;
+ 
+ alliswell:
+-	contextp->dc_nextp = contextp->dc_recp + ( size_t )markoff;
+-	assert( ! ( rechdrp->file_offset % ( off64_t )tape_recsz ));
+-	contextp->dc_reccnt = rechdrp->file_offset / ( off64_t )tape_recsz;
++	contextp->dc_nextp = contextp->dc_recp + (size_t)markoff;
++	assert(! (rechdrp->file_offset % (off64_t)tape_recsz));
++	contextp->dc_reccnt = rechdrp->file_offset / (off64_t)tape_recsz;
+ 	contextp->dc_iocnt = contextp->dc_reccnt + 1;
+ 	contextp->dc_recendp = contextp->dc_recp + tape_recsz;
+ 	contextp->dc_dataendp = contextp->dc_recp + rechdrp->rec_used;
+-	assert( contextp->dc_dataendp <= contextp->dc_recendp );
+-	assert( contextp->dc_nextp < contextp->dc_dataendp );
++	assert(contextp->dc_dataendp <= contextp->dc_recendp);
++	assert(contextp->dc_nextp < contextp->dc_dataendp);
+ 	contextp->dc_errorpr = BOOL_FALSE;
+ 
+-	mlog( MLOG_NORMAL | MLOG_DRIVE,
++	mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 	      _("resynchronized at record %lld offset %u\n"),
+ 	      contextp->dc_iocnt - 1,
+ 	      contextp->dc_nextp
+ 	      -
+-	      contextp->dc_recp );
++	      contextp->dc_recp);
+ 	return 0;
+ 
+ getbeyonderror:
+-	rval = mt_op( contextp->dc_fd, MTFSR, 1 );
++	rval = mt_op(contextp->dc_fd, MTFSR, 1);
+ 	saved_errno = errno;
+ 
+-	if ( rval ) {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++	if (rval) {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 		      _("could not forward space one tape block beyond "
+ 		      "read error: rval == %d, errno == %d (%s)\n"),
+ 		      rval,
+ 		      saved_errno,
+-		      strerror( saved_errno ));
++		      strerror(saved_errno));
+ 		return DRIVE_ERROR_MEDIA;
+ 	}
+ 
+@@ -1658,12 +1658,12 @@ huntQIC:
+ 	 * the following blocks to the head of the record buffer, and try
+ 	 * to read the remaining blocks in the record.
+ 	 */
+-	for ( p = contextp->dc_recp + QIC_BLKSZ
++	for (p = contextp->dc_recp + QIC_BLKSZ
+ 	      ;
+ 	      p < contextp->dc_recendp
+ 	      ;
+-	      p += QIC_BLKSZ ) {
+-		if ( *( uint64_t * )p == STAPE_MAGIC ) {
++	      p += QIC_BLKSZ) {
++		if (*(uint64_t *)p == STAPE_MAGIC) {
+ 			goto adjustQIC;
+ 		}
+ 	}
+@@ -1671,14 +1671,14 @@ huntQIC:
+ 	goto readrecord;
+ 
+ adjustQIC:
+-	tailsz = ( size_t )( contextp->dc_recendp - p );
+-	memcpy( ( void * )contextp->dc_recp,
+-		( void * )p,
+-		tailsz );
+-	nread = Read( drivep,
++	tailsz = (size_t)(contextp->dc_recendp - p);
++	memcpy((void *)contextp->dc_recp,
++		(void *)p,
++		tailsz);
++	nread = Read(drivep,
+ 		      contextp->dc_recp + tailsz,
+ 		      tape_recsz - tailsz,
+-		      &saved_errno );
++		      &saved_errno);
+ 
+ 	goto validateread;
+ }
+@@ -1691,20 +1691,20 @@ adjustQIC:
+  *	void
+  */
+ static void
+-do_end_read( drive_t *drivep )
++do_end_read(drive_t *drivep)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: end read\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: end read\n");
+ 
+ 	/* assert protocol being followed
+ 	 */
+-	assert( contextp->dc_mode == OM_READ );
+-	assert( ! contextp->dc_ownedp );
++	assert(contextp->dc_mode == OM_READ);
++	assert(! contextp->dc_ownedp);
+ 
+-	if ( ! contextp->dc_singlethreadedpr ) {
+-		Ring_reset( contextp->dc_ringp, contextp->dc_msgp );
++	if (! contextp->dc_singlethreadedpr) {
++		Ring_reset(contextp->dc_ringp, contextp->dc_msgp);
+ 		contextp->dc_msgp = 0;
+ 	}
+ 
+@@ -1720,7 +1720,7 @@ do_end_read( drive_t *drivep )
+  * 	DRIVE_ERROR_... on failure
+  */
+ static int
+-do_begin_write( drive_t *drivep )
++do_begin_write(drive_t *drivep)
+ {
+ 	drive_context_t		*contextp;
+ 	drive_hdr_t		*dwhdrp;
+@@ -1742,38 +1742,38 @@ do_begin_write( drive_t *drivep )
+ 
+ 	/* get drive context
+ 	 */
+-        contextp = ( drive_context_t * )drivep->d_contextp;
++        contextp = (drive_context_t *)drivep->d_contextp;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: begin write\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: begin write\n");
+ 
+ 	/* verify protocol being followed
+ 	 */
+-	assert( contextp->dc_mode == OM_NONE );
+-	assert( ! drivep->d_markrecheadp );
+-	assert( ! contextp->dc_recp );
++	assert(contextp->dc_mode == OM_NONE);
++	assert(! drivep->d_markrecheadp);
++	assert(! contextp->dc_recp);
+ 
+ 	/* get pointers into global write header
+ 	 */
+ 	gwhdrp = drivep->d_gwritehdrp;
+ 	dwhdrp = drivep->d_writehdrp;
+-	tpwhdrp = ( rec_hdr_t * )dwhdrp->dh_specific;
++	tpwhdrp = (rec_hdr_t *)dwhdrp->dh_specific;
+ 
+ 	/* must already be open. The only way to open is to do a begin_read.
+ 	 * so all interaction with scsi tape requires reading first.
+ 	 */
+-	assert( contextp->dc_fd != -1 );
++	assert(contextp->dc_fd != -1);
+ 
+ 	/* get tape device status. verify tape is positioned
+  	 */
+-	if ( ! mt_get_status( drivep, &mtstat )) {
+-		status_failed_message( drivep );
++	if (! mt_get_status(drivep, &mtstat)) {
++		status_failed_message(drivep);
+         	return DRIVE_ERROR_DEVICE;
+ 	}
+-	if ( IS_EOT( mtstat )) {
++	if (IS_EOT(mtstat)) {
+ 		return DRIVE_ERROR_EOM;
+ 	}
+-	if ( IS_EW( mtstat ) && !(IS_BOT(mtstat)) ) {
++	if (IS_EW(mtstat) && !(IS_BOT(mtstat))) {
+ 		return DRIVE_ERROR_EOM;
+ 	}
+ 
+@@ -1781,8 +1781,8 @@ do_begin_write( drive_t *drivep )
+ 	 */
+ 	tpwhdrp->magic = STAPE_MAGIC;
+ 	tpwhdrp->version = STAPE_VERSION;
+-	tpwhdrp->blksize = ( int32_t )tape_blksz;
+-	tpwhdrp->recsize = ( int32_t )tape_recsz;
++	tpwhdrp->blksize = (int32_t)tape_blksz;
++	tpwhdrp->recsize = (int32_t)tape_recsz;
+ 	tpwhdrp->rec_used = 0;
+ 	tpwhdrp->file_offset = 0;
+ 	tpwhdrp->first_mark_offset= 0;
+@@ -1791,15 +1791,15 @@ do_begin_write( drive_t *drivep )
+ 	/* get a record buffer. will be used for the media file header,
+ 	 * and is needed to "prime the pump" for first call to do_write.
+ 	 */
+-	assert( ! contextp->dc_recp );
+-	if ( contextp->dc_singlethreadedpr ) {
+-		assert( contextp->dc_bufp );
++	assert(! contextp->dc_recp);
++	if (contextp->dc_singlethreadedpr) {
++		assert(contextp->dc_bufp);
+ 		contextp->dc_recp = contextp->dc_bufp;
+ 	} else {
+-		assert( contextp->dc_ringp );
+-		assert( ! contextp->dc_msgp );
+-		contextp->dc_msgp = Ring_get( contextp->dc_ringp );
+-		assert( contextp->dc_msgp->rm_stat == RING_STAT_INIT );
++		assert(contextp->dc_ringp);
++		assert(! contextp->dc_msgp);
++		contextp->dc_msgp = Ring_get(contextp->dc_ringp);
++		assert(contextp->dc_msgp->rm_stat == RING_STAT_INIT);
+ 		contextp->dc_recp = contextp->dc_msgp->rm_bufp;
+ 	}
+ 
+@@ -1807,7 +1807,7 @@ do_begin_write( drive_t *drivep )
+ 	 * being produced!
+ 	 */
+ 	contextp->dc_iocnt = 0;
+-	memset( ( void * )contextp->dc_recp, 0, tape_recsz );
++	memset((void *)contextp->dc_recp, 0, tape_recsz);
+ 
+ 	tmpgh  = (global_hdr_t *)contextp->dc_recp;
+ 	tmpdh  = (drive_hdr_t *)tmpgh->gh_upper;
+@@ -1829,12 +1829,12 @@ do_begin_write( drive_t *drivep )
+ 
+ 	/* checksum the global header
+ 	 */
+-	global_hdr_checksum_set( tmpgh );
++	global_hdr_checksum_set(tmpgh);
+ 
+-	rval = write_record( drivep, contextp->dc_recp, BOOL_TRUE, BOOL_FALSE );
+-	if ( rval ) {
+-		if ( ! contextp->dc_singlethreadedpr ) {
+-			Ring_reset( contextp->dc_ringp, contextp->dc_msgp );
++	rval = write_record(drivep, contextp->dc_recp, BOOL_TRUE, BOOL_FALSE);
++	if (rval) {
++		if (! contextp->dc_singlethreadedpr) {
++			Ring_reset(contextp->dc_ringp, contextp->dc_msgp);
+ 			contextp->dc_msgp = 0;
+ 		}
+ 		contextp->dc_recp = 0;
+@@ -1844,7 +1844,7 @@ do_begin_write( drive_t *drivep )
+ 	/* prepare the drive context. must have a record buffer ready to
+ 	 * go, header initialized.
+ 	 */
+-	assert( ! contextp->dc_ownedp );
++	assert(! contextp->dc_ownedp);
+ 	contextp->dc_reccnt = 1; /* count the header record */
+ 	contextp->dc_recendp = contextp->dc_recp + tape_recsz;
+ 	contextp->dc_nextp = contextp->dc_recp + STAPE_HDR_SZ;
+@@ -1854,12 +1854,12 @@ do_begin_write( drive_t *drivep )
+ 	rechdrp = (rec_hdr_t*)contextp->dc_recp;
+ 	rechdrp->magic = STAPE_MAGIC;
+ 	rechdrp->version = STAPE_VERSION;
+-	rechdrp->file_offset = contextp->dc_reccnt * ( off64_t )tape_recsz;
+-	rechdrp->blksize = ( int32_t )tape_blksz;
+-	rechdrp->recsize = ( int32_t )tape_recsz;
++	rechdrp->file_offset = contextp->dc_reccnt * (off64_t)tape_recsz;
++	rechdrp->blksize = (int32_t)tape_blksz;
++	rechdrp->recsize = (int32_t)tape_recsz;
+ 	rechdrp->capability = drivep->d_capabilities;
+ 	rechdrp->first_mark_offset = -1LL;
+-	uuid_copy( rechdrp->dump_uuid, gwhdrp->gh_dumpid );
++	uuid_copy(rechdrp->dump_uuid, gwhdrp->gh_dumpid);
+ 
+ 	/* set mode now so operators will work
+ 	 */
+@@ -1874,10 +1874,10 @@ do_begin_write( drive_t *drivep )
+  * in record.
+  */
+ static void
+-do_set_mark( drive_t *drivep,
++do_set_mark(drive_t *drivep,
+ 	     drive_mcbfp_t cbfuncp,
+ 	     void *cbcontextp,
+-	     drive_markrec_t *markrecp )
++	     drive_markrec_t *markrecp)
+ {
+ 	drive_context_t *contextp;
+ 	off64_t nextoff;
+@@ -1885,34 +1885,34 @@ do_set_mark( drive_t *drivep,
+ 
+ 	/* get drive context
+ 	 */
+-        contextp = ( drive_context_t * )drivep->d_contextp;
++        contextp = (drive_context_t *)drivep->d_contextp;
+ 
+ 	/* verify protocol being followed
+ 	 */
+-	assert( contextp->dc_mode == OM_WRITE );
+-	assert( ! contextp->dc_errorpr );
+-	assert( ! contextp->dc_ownedp );
+-	assert( contextp->dc_recp );
+-	assert( contextp->dc_nextp );
++	assert(contextp->dc_mode == OM_WRITE);
++	assert(! contextp->dc_errorpr);
++	assert(! contextp->dc_ownedp);
++	assert(contextp->dc_recp);
++	assert(contextp->dc_nextp);
+ 
+ 	/* calculate and fill in the mark record offset
+ 	 */
+-	assert( contextp->dc_recp );
+-	nextoff = contextp->dc_reccnt * ( off64_t )tape_recsz
++	assert(contextp->dc_recp);
++	nextoff = contextp->dc_reccnt * (off64_t)tape_recsz
+ 		  +
+-		  ( off64_t )( contextp->dc_nextp - contextp->dc_recp );
+-	markrecp->dm_log = ( drive_mark_t )nextoff;
++		  (off64_t)(contextp->dc_nextp - contextp->dc_recp);
++	markrecp->dm_log = (drive_mark_t)nextoff;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "drive op: set mark: %lld (0x%llx)\n",
+ 	      nextoff,
+-	      nextoff );
++	      nextoff);
+ 
+ 	/* note the location of the first mark in this tape record.
+ 	 */
+-	rechdrp = ( rec_hdr_t * )contextp->dc_recp;
+-	if ( rechdrp->first_mark_offset == -1LL ) {
+-		assert( nextoff != -1LL );
++	rechdrp = (rec_hdr_t *)contextp->dc_recp;
++	if (rechdrp->first_mark_offset == -1LL) {
++		assert(nextoff != -1LL);
+ 		rechdrp->first_mark_offset = nextoff;
+ 	}
+ 
+@@ -1921,11 +1921,11 @@ do_set_mark( drive_t *drivep,
+ 	markrecp->dm_cbfuncp = cbfuncp;
+ 	markrecp->dm_cbcontextp = cbcontextp;
+ 	markrecp->dm_nextp = 0;
+-	if ( drivep->d_markrecheadp == 0 ) {
++	if (drivep->d_markrecheadp == 0) {
+ 		drivep->d_markrecheadp = markrecp;
+ 		drivep->d_markrectailp = markrecp;
+ 	} else {
+-		assert( drivep->d_markrectailp );
++		assert(drivep->d_markrectailp);
+ 		drivep->d_markrectailp->dm_nextp = markrecp;
+ 		drivep->d_markrectailp = markrecp;
+ 	}
+@@ -1940,7 +1940,7 @@ do_set_mark( drive_t *drivep,
+  *	"actual_bufszp" points to the size of the buffer
+  */
+ static char *
+-do_get_write_buf( drive_t *drivep, size_t wantedcnt, size_t *actualcntp )
++do_get_write_buf(drive_t *drivep, size_t wantedcnt, size_t *actualcntp)
+ {
+ 	drive_context_t *contextp;
+ 	size_t remainingcnt;
+@@ -1948,32 +1948,32 @@ do_get_write_buf( drive_t *drivep, size_t wantedcnt, size_t *actualcntp )
+ 
+ 	/* get drive context
+ 	 */
+-        contextp = ( drive_context_t * )drivep->d_contextp;
++        contextp = (drive_context_t *)drivep->d_contextp;
+ 
+ 	/* verify protocol being followed
+ 	 */
+-	assert( contextp->dc_mode == OM_WRITE );
+-	assert( ! contextp->dc_errorpr );
+-	assert( ! contextp->dc_ownedp );
+-	assert( contextp->dc_recp );
+-	assert( contextp->dc_nextp );
+-	assert( contextp->dc_nextp < contextp->dc_recendp );
++	assert(contextp->dc_mode == OM_WRITE);
++	assert(! contextp->dc_errorpr);
++	assert(! contextp->dc_ownedp);
++	assert(contextp->dc_recp);
++	assert(contextp->dc_nextp);
++	assert(contextp->dc_nextp < contextp->dc_recendp);
+ 
+ 	/* figure how much is available; supply the min of what is
+ 	 * available and what is wanted.
+ 	 */
+-	remainingcnt = ( size_t )( contextp->dc_recendp - contextp->dc_nextp );
+-	actualcnt = min( remainingcnt, wantedcnt );
++	remainingcnt = (size_t)(contextp->dc_recendp - contextp->dc_nextp);
++	actualcnt = min(remainingcnt, wantedcnt);
+ 	*actualcntp = actualcnt;
+ 	contextp->dc_ownedp = contextp->dc_nextp;
+ 	contextp->dc_nextp += actualcnt;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "drive op: get write buf: wanted %u (0x%x) actual %u (0x%x)\n",
+ 	      wantedcnt,
+ 	      wantedcnt,
+ 	      actualcnt,
+-	      actualcnt );
++	      actualcnt);
+ 
+ 	return contextp->dc_ownedp;
+ }
+@@ -1991,7 +1991,7 @@ do_get_write_buf( drive_t *drivep, size_t wantedcnt, size_t *actualcntp )
+  */
+ /* ARGSUSED */
+ static int
+-do_write( drive_t *drivep, char *bufp, size_t retcnt )
++do_write(drive_t *drivep, char *bufp, size_t retcnt)
+ {
+ 	drive_context_t *contextp;
+ 	rec_hdr_t *rechdrp;
+@@ -2002,33 +2002,33 @@ do_write( drive_t *drivep, char *bufp, size_t retcnt )
+ 
+ 	/* get drive context and pointer to global write hdr
+ 	 */
+-        contextp = ( drive_context_t * )drivep->d_contextp;
++        contextp = (drive_context_t *)drivep->d_contextp;
+ 	gwhdrp = drivep->d_gwritehdrp;
+ 
+ 	/* calculate how many bytes we believe caller is holding
+ 	 */
+-	heldcnt = ( size_t )( contextp->dc_nextp - contextp->dc_ownedp );
++	heldcnt = (size_t)(contextp->dc_nextp - contextp->dc_ownedp);
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "drive op: write: retcnt %u (0x%x) heldcnt %u (0x%x)\n",
+ 	      retcnt,
+ 	      retcnt,
+ 	      heldcnt,
+-	      heldcnt );
++	      heldcnt);
+ 
+ 	/* verify protocol being followed
+ 	 */
+-	assert( contextp->dc_mode == OM_WRITE );
+-	assert( ! contextp->dc_errorpr );
+-	assert( contextp->dc_ownedp );
+-	assert( contextp->dc_recp );
+-	assert( contextp->dc_nextp );
+-	assert( contextp->dc_nextp <= contextp->dc_recendp );
++	assert(contextp->dc_mode == OM_WRITE);
++	assert(! contextp->dc_errorpr);
++	assert(contextp->dc_ownedp);
++	assert(contextp->dc_recp);
++	assert(contextp->dc_nextp);
++	assert(contextp->dc_nextp <= contextp->dc_recendp);
+ 
+ 	/* verify the caller is returning exactly what is held
+ 	 */
+-	assert( bufp == contextp->dc_ownedp );
+-	assert( retcnt == heldcnt );
++	assert(bufp == contextp->dc_ownedp);
++	assert(retcnt == heldcnt);
+ 
+ 	/* take it back
+ 	 */
+@@ -2037,30 +2037,30 @@ do_write( drive_t *drivep, char *bufp, size_t retcnt )
+ 	/* if some portion of the record buffer has not yet been
+ 	 * held by the client, just return.
+ 	 */
+-	if ( contextp->dc_nextp < contextp->dc_recendp ) {
++	if (contextp->dc_nextp < contextp->dc_recendp) {
+ 		return 0;
+ 	}
+ 
+ 	/* record in record header that entire record is used
+ 	 */
+-	rechdrp = ( rec_hdr_t * )contextp->dc_recp;
++	rechdrp = (rec_hdr_t *)contextp->dc_recp;
+ 	rechdrp->rec_used = tape_recsz;
+ 
+ 	/* write out the record buffer and get a new one.
+ 	 */
+-	if ( contextp->dc_singlethreadedpr ) {
+-		rval = write_record( drivep, contextp->dc_recp, BOOL_TRUE, BOOL_TRUE );
++	if (contextp->dc_singlethreadedpr) {
++		rval = write_record(drivep, contextp->dc_recp, BOOL_TRUE, BOOL_TRUE);
+ 		last_rec_wrtn_wo_err = contextp->dc_reccnt; /* conv cnt to ix */
+ 	} else {
+ 		contextp->dc_msgp->rm_op = RING_OP_WRITE;
+ 		contextp->dc_msgp->rm_user = contextp->dc_reccnt;
+-		Ring_put( contextp->dc_ringp,
+-			  contextp->dc_msgp );
++		Ring_put(contextp->dc_ringp,
++			  contextp->dc_msgp);
+ 		contextp->dc_msgp = 0;
+-		contextp->dc_msgp = Ring_get( contextp->dc_ringp );
++		contextp->dc_msgp = Ring_get(contextp->dc_ringp);
+ 		contextp->dc_recp = contextp->dc_msgp->rm_bufp;
+ 		last_rec_wrtn_wo_err = contextp->dc_msgp->rm_user;
+-		switch( contextp->dc_msgp->rm_stat ) {
++		switch(contextp->dc_msgp->rm_stat) {
+ 		case RING_STAT_OK:
+ 		case RING_STAT_INIT:
+ 			rval = 0;
+@@ -2069,7 +2069,7 @@ do_write( drive_t *drivep, char *bufp, size_t retcnt )
+ 			rval = contextp->dc_msgp->rm_rval;
+ 			break;
+ 		default:
+-			assert( 0 );
++			assert(0);
+ 			return DRIVE_ERROR_CORE;
+ 		}
+ 	}
+@@ -2077,7 +2077,7 @@ do_write( drive_t *drivep, char *bufp, size_t retcnt )
+ 	/* check for errors. if none, commit all marks before a safety margin
+ 	 * before the no error offset.
+ 	 */
+-	if ( rval ) {
++	if (rval) {
+ 		contextp->dc_errorpr = BOOL_TRUE;
+ 	} else {
+ 		off64_t recs_wrtn_wo_err;
+@@ -2085,8 +2085,8 @@ do_write( drive_t *drivep, char *bufp, size_t retcnt )
+ 		off64_t bytes_committed;
+ 		recs_wrtn_wo_err = last_rec_wrtn_wo_err + 1;
+ 		recs_committed = recs_wrtn_wo_err - contextp->dc_lostrecmax;
+-		bytes_committed = recs_committed * ( off64_t )tape_recsz;
+-		drive_mark_commit( drivep, bytes_committed );
++		bytes_committed = recs_committed * (off64_t)tape_recsz;
++		drive_mark_commit(drivep, bytes_committed);
+ 	}
+ 
+ 	/* adjust context
+@@ -2099,15 +2099,15 @@ do_write( drive_t *drivep, char *bufp, size_t retcnt )
+ 
+ 	/* intialize header in new record
+ 	 */
+-	rechdrp = ( rec_hdr_t * )contextp->dc_recp;
++	rechdrp = (rec_hdr_t *)contextp->dc_recp;
+ 	rechdrp->magic = STAPE_MAGIC;
+ 	rechdrp->version = STAPE_VERSION;
+-	rechdrp->file_offset = contextp->dc_reccnt * ( off64_t )tape_recsz;
+-	rechdrp->blksize = ( int32_t )tape_blksz;
+-	rechdrp->recsize = ( int32_t )tape_recsz;
++	rechdrp->file_offset = contextp->dc_reccnt * (off64_t)tape_recsz;
++	rechdrp->blksize = (int32_t)tape_blksz;
++	rechdrp->recsize = (int32_t)tape_recsz;
+ 	rechdrp->capability = drivep->d_capabilities;
+ 	rechdrp->first_mark_offset = -1LL;
+-	uuid_copy( rechdrp->dump_uuid, gwhdrp->gh_dumpid );
++	uuid_copy(rechdrp->dump_uuid, gwhdrp->gh_dumpid);
+ 
+ 	return rval;
+ }
+@@ -2120,40 +2120,40 @@ do_write( drive_t *drivep, char *bufp, size_t retcnt )
+  *	the number of bytes to next alignment
+  */
+ static size_t
+-do_get_align_cnt( drive_t * drivep )
++do_get_align_cnt(drive_t * drivep)
+ {
+ 	char *next_alignment_point;
+ 	intptr_t next_alignment_off;
+ 	drive_context_t *contextp;
+ 
+-	contextp = ( drive_context_t * )drivep->d_contextp;
++	contextp = (drive_context_t *)drivep->d_contextp;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: get align cnt\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: get align cnt\n");
+ 
+ 	/* verify protocol being followed
+ 	 */
+-	assert( contextp->dc_mode == OM_WRITE );
+-	assert( ! contextp->dc_errorpr );
+-	assert( ! contextp->dc_ownedp );
+-	assert( contextp->dc_recp );
+-	assert( contextp->dc_nextp );
+-	assert( contextp->dc_nextp < contextp->dc_recendp );
++	assert(contextp->dc_mode == OM_WRITE);
++	assert(! contextp->dc_errorpr);
++	assert(! contextp->dc_ownedp);
++	assert(contextp->dc_recp);
++	assert(contextp->dc_nextp);
++	assert(contextp->dc_nextp < contextp->dc_recendp);
+ 
+ 	/* calculate the next alignment point at or beyond the current nextp.
+ 	 * the following algorithm works because all buffers are page-aligned
+ 	 * and a multiple of PGSZ.
+ 	 */
+-	next_alignment_off = ( intptr_t )contextp->dc_nextp;
++	next_alignment_off = (intptr_t)contextp->dc_nextp;
+ 	next_alignment_off +=  PGMASK;
+ 	next_alignment_off &= ~PGMASK;
+-	next_alignment_point = ( char * )next_alignment_off;
+-	assert( next_alignment_point <= contextp->dc_recendp );
++	next_alignment_point = (char *)next_alignment_off;
++	assert(next_alignment_point <= contextp->dc_recendp);
+ 
+ 	/* return the number of bytes to the next alignment offset
+ 	 */
+-	assert( next_alignment_point >= contextp->dc_nextp );
+-	return ( size_t )( next_alignment_point - contextp->dc_nextp );
++	assert(next_alignment_point >= contextp->dc_nextp);
++	return (size_t)(next_alignment_point - contextp->dc_nextp);
+ }
+ 
+ /* do_end_write - pad and write pending record if any client data in it.
+@@ -2164,9 +2164,9 @@ do_get_align_cnt( drive_t * drivep )
+  *	DRIVE_ERROR_* on failure
+  */
+ static int
+-do_end_write( drive_t *drivep, off64_t *ncommittedp )
++do_end_write(drive_t *drivep, off64_t *ncommittedp)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	off64_t first_rec_w_err; /* zero-based index */
+ 	off64_t recs_wtn_wo_err;
+ 	off64_t recs_guaranteed;
+@@ -2174,17 +2174,17 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
+ 
+ 	int rval;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: end write\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: end write\n");
+ 
+ 	/* verify protocol being followed
+ 	 */
+-	assert( contextp->dc_mode == OM_WRITE );
+-	assert( ! contextp->dc_ownedp );
+-	assert( contextp->dc_recp );
+-	assert( contextp->dc_nextp );
+-	assert( contextp->dc_nextp >= contextp->dc_recp + STAPE_HDR_SZ );
+-	assert( contextp->dc_nextp < contextp->dc_recendp );
++	assert(contextp->dc_mode == OM_WRITE);
++	assert(! contextp->dc_ownedp);
++	assert(contextp->dc_recp);
++	assert(contextp->dc_nextp);
++	assert(contextp->dc_nextp >= contextp->dc_recp + STAPE_HDR_SZ);
++	assert(contextp->dc_nextp < contextp->dc_recendp);
+ 
+ 	/* pre-initialize return of count of bytes committed to media
+ 	 */
+@@ -2194,46 +2194,46 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
+ 	 * to do anymore writes, just cleanup and return 0. don't need to
+ 	 * do commits, already done when error occured.
+ 	 */
+-	if ( contextp->dc_errorpr ) {
+-		if ( ! contextp->dc_singlethreadedpr ) {
+-			Ring_reset( contextp->dc_ringp, contextp->dc_msgp );
++	if (contextp->dc_errorpr) {
++		if (! contextp->dc_singlethreadedpr) {
++			Ring_reset(contextp->dc_ringp, contextp->dc_msgp);
+ 			contextp->dc_msgp = 0;
+ 		}
+ 		contextp->dc_mode = OM_NONE;
+-		drive_mark_discard( drivep );
+-		*ncommittedp = ( contextp->dc_iocnt - contextp->dc_lostrecmax )
++		drive_mark_discard(drivep);
++		*ncommittedp = (contextp->dc_iocnt - contextp->dc_lostrecmax)
+ 			       *
+-			       ( off64_t )tape_recsz;
++			       (off64_t)tape_recsz;
+ 		contextp->dc_recp = 0;
+ 		return 0;
+ 	}
+ 
+ 	/* if any user data in current record buffer, send it out.
+ 	 */
+-	if ( contextp->dc_nextp > contextp->dc_recp + STAPE_HDR_SZ ) {
++	if (contextp->dc_nextp > contextp->dc_recp + STAPE_HDR_SZ) {
+ 		rec_hdr_t *rechdrp;
+ 		size_t bufusedcnt;
+ 
+-		rechdrp = ( rec_hdr_t * )contextp->dc_recp;
+-		bufusedcnt = ( size_t )( contextp->dc_nextp
++		rechdrp = (rec_hdr_t *)contextp->dc_recp;
++		bufusedcnt = (size_t)(contextp->dc_nextp
+ 					 -
+-					 contextp->dc_recp );
++					 contextp->dc_recp);
+ 		rechdrp->rec_used = bufusedcnt;
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
+-		      "writing padded last record\n" );
+-		if ( contextp->dc_singlethreadedpr ) {
+-			rval = write_record( drivep,
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
++		      "writing padded last record\n");
++		if (contextp->dc_singlethreadedpr) {
++			rval = write_record(drivep,
+ 					     contextp->dc_recp,
+-					     BOOL_TRUE, BOOL_TRUE );
++					     BOOL_TRUE, BOOL_TRUE);
+ 		} else {
+-			assert( contextp->dc_msgp );
++			assert(contextp->dc_msgp);
+ 			contextp->dc_msgp->rm_op = RING_OP_WRITE;
+ 			contextp->dc_msgp->rm_user = contextp->dc_reccnt;
+-			Ring_put( contextp->dc_ringp,
+-				  contextp->dc_msgp );
++			Ring_put(contextp->dc_ringp,
++				  contextp->dc_msgp);
+ 			contextp->dc_msgp = 0;
+-			contextp->dc_msgp = Ring_get( contextp->dc_ringp );
+-			switch( contextp->dc_msgp->rm_stat ) {
++			contextp->dc_msgp = Ring_get(contextp->dc_ringp);
++			switch(contextp->dc_msgp->rm_stat) {
+ 			case RING_STAT_OK:
+ 			case RING_STAT_INIT:
+ 				rval = 0;
+@@ -2242,7 +2242,7 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
+ 				rval = contextp->dc_msgp->rm_rval;
+ 				break;
+ 			default:
+-				assert( 0 );
++				assert(0);
+ 				contextp->dc_recp = 0;
+ 				return DRIVE_ERROR_CORE;
+ 			}
+@@ -2259,7 +2259,7 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
+ 	 * media, and that will be used to select which marks
+ 	 * to commit and which to discard.
+ 	 */
+-	if ( rval ) {
++	if (rval) {
+ 		first_rec_w_err = contextp->dc_iocnt;
+ 			/* because dc_iocnt bumped by write_record
+ 			 * only if no error
+@@ -2267,28 +2267,28 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
+ 	} else {
+ 		first_rec_w_err = -1L;
+ 	}
+-	if ( ! contextp->dc_singlethreadedpr ) {
+-		while ( ! rval ) {
+-			assert( contextp->dc_msgp );
++	if (! contextp->dc_singlethreadedpr) {
++		while (! rval) {
++			assert(contextp->dc_msgp);
+ 			contextp->dc_msgp->rm_op = RING_OP_TRACE;
+-			Ring_put( contextp->dc_ringp,
+-				  contextp->dc_msgp );
++			Ring_put(contextp->dc_ringp,
++				  contextp->dc_msgp);
+ 			contextp->dc_msgp = 0;
+-			contextp->dc_msgp = Ring_get( contextp->dc_ringp );
+-			if ( contextp->dc_msgp->rm_op == RING_OP_TRACE ) {
++			contextp->dc_msgp = Ring_get(contextp->dc_ringp);
++			if (contextp->dc_msgp->rm_op == RING_OP_TRACE) {
+ 				break;
+ 			}
+-			switch( contextp->dc_msgp->rm_stat ) {
++			switch(contextp->dc_msgp->rm_stat) {
+ 			case RING_STAT_OK:
+ 			case RING_STAT_INIT:
+-				assert( rval == 0 );
++				assert(rval == 0);
+ 				break;
+ 			case RING_STAT_ERROR:
+ 				rval = contextp->dc_msgp->rm_rval;
+ 				first_rec_w_err = contextp->dc_msgp->rm_user;
+ 				break;
+ 			default:
+-				assert( 0 );
++				assert(0);
+ 				contextp->dc_recp = 0;
+ 				return DRIVE_ERROR_CORE;
+ 			}
+@@ -2297,8 +2297,8 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
+ 
+ 	/* the ring is now flushed. reset
+ 	 */
+-	if ( ! contextp->dc_singlethreadedpr ) {
+-		Ring_reset( contextp->dc_ringp, contextp->dc_msgp );
++	if (! contextp->dc_singlethreadedpr) {
++		Ring_reset(contextp->dc_ringp, contextp->dc_msgp);
+ 		contextp->dc_msgp = 0;
+ 	}
+ 	contextp->dc_recp = 0;
+@@ -2307,30 +2307,30 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
+ 	 * side-effect of flushing the driver/drive of pending writes,
+ 	 * exposing any write errors.
+ 	 */
+-	if ( ! rval ) {
++	if (! rval) {
+ 		int weofrval;
+ 		mtstat_t mtstat;
+ 		bool_t ok;
+ 
+-		weofrval = mt_op( contextp->dc_fd, MTWEOF, 1 );
+-		if ( ! weofrval ) {
+-			ok = mt_get_status( drivep, &mtstat );
+-			if ( ! ok ) {
+-				status_failed_message( drivep );
++		weofrval = mt_op(contextp->dc_fd, MTWEOF, 1);
++		if (! weofrval) {
++			ok = mt_get_status(drivep, &mtstat);
++			if (! ok) {
++				status_failed_message(drivep);
+ 				mtstat = 0;
+ 				rval = DRIVE_ERROR_DEVICE;
+ 			}
+ 		} else {
+ 			mtstat = 0;
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "MTWEOF returned %d: errno == %d (%s)\n",
+ 			      weofrval,
+ 			      errno,
+-			      strerror( errno ));
++			      strerror(errno));
+ 		}
+-		if ( weofrval || IS_EW( mtstat ) || IS_EOT( mtstat )) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
+-			     "hit EOM trying to write file mark\n" );
++		if (weofrval || IS_EW(mtstat) || IS_EOT(mtstat)) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
++			     "hit EOM trying to write file mark\n");
+ 			rval = DRIVE_ERROR_EOM;
+ 		}
+ 	}
+@@ -2349,18 +2349,18 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
+ 	 * and return rval. return by reference the number of bytes committed
+ 	 * to tape.
+ 	 */
+-	if ( rval ) {
+-		assert( first_rec_w_err >= 0 );
++	if (rval) {
++		assert(first_rec_w_err >= 0);
+ 		recs_wtn_wo_err = first_rec_w_err;
+ 		recs_guaranteed = recs_wtn_wo_err - contextp->dc_lostrecmax;
+ 	} else {
+-		assert( first_rec_w_err == -1 );
++		assert(first_rec_w_err == -1);
+ 		recs_wtn_wo_err = contextp->dc_iocnt;
+ 		recs_guaranteed = recs_wtn_wo_err;
+ 	}
+-	bytes_committed = recs_guaranteed * ( off64_t )tape_recsz;
+-	drive_mark_commit( drivep, bytes_committed );
+-	drive_mark_discard( drivep );
++	bytes_committed = recs_guaranteed * (off64_t)tape_recsz;
++	drive_mark_commit(drivep, bytes_committed);
++	drive_mark_discard(drivep);
+ 	contextp->dc_mode = OM_NONE;
+ 	*ncommittedp = bytes_committed;
+ 	return rval;
+@@ -2374,7 +2374,7 @@ do_end_write( drive_t *drivep, off64_t *ncommittedp )
+  *	*statp set to zero or DRIVE_ERROR_...
+  */
+ static int
+-do_fsf( drive_t *drivep, int count, int *statp )
++do_fsf(drive_t *drivep, int count, int *statp)
+ {
+ 	int 		i, done, op_failed, opcount;
+ 	mtstat_t mtstat;
+@@ -2382,42 +2382,42 @@ do_fsf( drive_t *drivep, int count, int *statp )
+ 
+ 	/* get drive context
+ 	 */
+-        contextp = ( drive_context_t * )drivep->d_contextp;
++        contextp = (drive_context_t *)drivep->d_contextp;
+ 
+ 	/* verify protocol being followed
+ 	 */
+-	assert( contextp->dc_mode == OM_NONE );
++	assert(contextp->dc_mode == OM_NONE);
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "drive op: fsf: count %d\n",
+-	      count );
++	      count);
+ 
+-	assert( count );
+-	assert( contextp->dc_mode == OM_NONE );
++	assert(count);
++	assert(contextp->dc_mode == OM_NONE);
+ 
+ 	/* get tape status
+   	 */
+-	if ( ! mt_get_status( drivep, &mtstat) ) {
+-		status_failed_message( drivep );
++	if (! mt_get_status(drivep, &mtstat)) {
++		status_failed_message(drivep);
+ 		*statp = DRIVE_ERROR_DEVICE;
+ 		return 0;
+ 	}
+ 
+-	for ( i = 0 ; i < count; i++ ) {
++	for (i = 0 ; i < count; i++) {
+ 		done = 0;
+ 		opcount = 2;
+ 
+ 		/* the tape may encounter errors will trying to
+ 		 * reach the next file.
+ 		 */
+-		while ( !done ) {
++		while (!done) {
+ 			/* check for end-of-data and end-of-tape conditions
+ 			 */
+-			if ( IS_EOT( mtstat ) ) {
++			if (IS_EOT(mtstat)) {
+ 				*statp = DRIVE_ERROR_EOM;
+ 				return i;
+ 
+-			} else if ( IS_EOD( mtstat ) ) {
++			} else if (IS_EOD(mtstat)) {
+ 				*statp = DRIVE_ERROR_EOD;
+ 				return i;
+ 			}
+@@ -2426,17 +2426,17 @@ do_fsf( drive_t *drivep, int count, int *statp )
+ 			 * NOTE:
+ 			 * 	ignore return code
+ 			 */
+-			mlog( MLOG_VERBOSE | MLOG_DRIVE,
+-			      _("advancing tape to next media file\n") );
++			mlog(MLOG_VERBOSE | MLOG_DRIVE,
++			      _("advancing tape to next media file\n"));
+ 
+ 			op_failed = 0;
+-			assert( contextp->dc_fd >= 0 );
+-			if ( mt_op( contextp->dc_fd, MTFSF, 1 ) ) {
++			assert(contextp->dc_fd >= 0);
++			if (mt_op(contextp->dc_fd, MTFSF, 1)) {
+ 				op_failed = 1;
+ 			}
+ 
+-			if ( ! mt_get_status( drivep, &mtstat) ) {
+-				status_failed_message( drivep );
++			if (! mt_get_status(drivep, &mtstat)) {
++				status_failed_message(drivep);
+ 				*statp = DRIVE_ERROR_DEVICE;
+ 				return i;
+ 			}
+@@ -2444,7 +2444,7 @@ do_fsf( drive_t *drivep, int count, int *statp )
+ 			/* Check for a file mark to
+ 			 * determine if the fsf command worked.
+ 			 */
+-			if ( (!op_failed) && (IS_FMK(mtstat)) ) {
++			if ((!op_failed) && (IS_FMK(mtstat))) {
+ 				done = 1;
+ 			}
+ 
+@@ -2452,9 +2452,9 @@ do_fsf( drive_t *drivep, int count, int *statp )
+ 			 * times, and a file mark has not been reached,
+ 			 * return an error.
+ 			 */
+-			if ( --opcount < 0 ) {
+-				mlog( MLOG_VERBOSE | MLOG_DRIVE,
+-					_("FSF tape command failed\n") );
++			if (--opcount < 0) {
++				mlog(MLOG_VERBOSE | MLOG_DRIVE,
++					_("FSF tape command failed\n"));
+ 
+ 				*statp = DRIVE_ERROR_DEVICE;
+ 				return i;
+@@ -2474,19 +2474,19 @@ do_fsf( drive_t *drivep, int count, int *statp )
+  *	*statp set to zero or DRIVE_ERROR_...
+  */
+ static int
+-do_bsf( drive_t *drivep, int count, int *statp )
++do_bsf(drive_t *drivep, int count, int *statp)
+ {
+ #ifdef DEBUG
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ #endif
+ 	int skipped;
+ 	mtstat_t mtstat;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "drive op: bsf: count %d\n",
+-	      count );
++	      count);
+ 
+-	assert( contextp->dc_mode == OM_NONE );
++	assert(contextp->dc_mode == OM_NONE);
+ 
+ 	*statp = 0;
+ 
+@@ -2497,29 +2497,29 @@ do_bsf( drive_t *drivep, int count, int *statp )
+ 
+ 	/* get tape status
+ 	 */
+-	if ( ! mt_get_status( drivep, &mtstat )) {
+-		status_failed_message( drivep );
++	if (! mt_get_status(drivep, &mtstat)) {
++		status_failed_message(drivep);
+ 		*statp = DRIVE_ERROR_DEVICE;
+ 		return 0;
+ 	}
+ 
+ 	/* check for beginning-of-tape condition. close/reopen hack here
+ 	 */
+-	if ( IS_BOT( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
+-		      "reopening drive while at BOT\n" );
+-		Close( drivep );
+-		if ( ! Open( drivep )) {
+-			display_access_failed_message( drivep );
++	if (IS_BOT(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
++		      "reopening drive while at BOT\n");
++		Close(drivep);
++		if (! Open(drivep)) {
++			display_access_failed_message(drivep);
+ 			*statp = DRIVE_ERROR_DEVICE;
+ 			return 0;
+ 		}
+-		if ( ! mt_get_status( drivep, &mtstat )) {
+-			status_failed_message( drivep );
++		if (! mt_get_status(drivep, &mtstat)) {
++			status_failed_message(drivep);
+ 			*statp = DRIVE_ERROR_DEVICE;
+ 			return 0;
+ 		}
+-		assert( IS_BOT(mtstat ));
++		assert(IS_BOT(mtstat));
+ 
+ 
+ 		*statp = DRIVE_ERROR_BOM;
+@@ -2529,18 +2529,18 @@ do_bsf( drive_t *drivep, int count, int *statp )
+ 	/* check if already at (and to right of) file mark and
+ 	 * count is zero.
+ 	 */
+-	if ( IS_FMK( mtstat ) && count == 0 ) {
++	if (IS_FMK(mtstat) && count == 0) {
+ 		return 0;
+ 	}
+ 
+ 	/* back space - places us to left of previous file mark
+ 	 */
+-	assert( drivep->d_capabilities & DRIVE_CAP_BSF );
+-	mtstat = bsf_and_verify( drivep );
++	assert(drivep->d_capabilities & DRIVE_CAP_BSF);
++	mtstat = bsf_and_verify(drivep);
+ 
+ 	/* check again for beginning-of-tape condition
+ 	 */
+-	if ( IS_BOT( mtstat )) {
++	if (IS_BOT(mtstat)) {
+ 		*statp = DRIVE_ERROR_BOM;
+ 		return 0;
+ 	}
+@@ -2550,8 +2550,8 @@ do_bsf( drive_t *drivep, int count, int *statp )
+ 	 * TS devices !!!  LINUX ST tape driver only reports
+ 	 * GMT_EOF to the right of the filemark !!
+ 	 */
+-	if ( TS_ISDRIVER ) {
+-		if ( ! IS_FMK( mtstat )) {
++	if (TS_ISDRIVER) {
++		if (! IS_FMK(mtstat)) {
+ 			*statp = DRIVE_ERROR_DEVICE;
+ 			return 0;
+ 		}
+@@ -2559,18 +2559,18 @@ do_bsf( drive_t *drivep, int count, int *statp )
+ 
+ 	/* now loop, skipping media files
+ 	 */
+-	for ( skipped = 0 ; skipped < count ; skipped++ ) {
++	for (skipped = 0 ; skipped < count ; skipped++) {
+ 
+ 		/* move to the left of the next file mark on the left.
+ 		 * check for BOT.
+ 		 */
+-		mtstat = bsf_and_verify( drivep );
+-		if ( IS_BOT( mtstat )) {
++		mtstat = bsf_and_verify(drivep);
++		if (IS_BOT(mtstat)) {
+ 			*statp = DRIVE_ERROR_BOM;
+ 			return skipped + 1;
+ 		}
+-		if ( TS_ISDRIVER ) {
+-			if ( ! IS_FMK( mtstat )) {
++		if (TS_ISDRIVER) {
++			if (! IS_FMK(mtstat)) {
+ 				*statp = DRIVE_ERROR_DEVICE;
+ 				return 0;
+ 			}
+@@ -2579,11 +2579,11 @@ do_bsf( drive_t *drivep, int count, int *statp )
+ 
+ 	/* finally, move to the right side of the file mark
+ 	 */
+-	mtstat = fsf_and_verify( drivep );
+-	if( IS_EOT( mtstat )) {
++	mtstat = fsf_and_verify(drivep);
++	if(IS_EOT(mtstat)) {
+ 		*statp = DRIVE_ERROR_EOM;
+ 	}
+-	if ( ! IS_FMK( mtstat )) {
++	if (! IS_FMK(mtstat)) {
+ 		*statp = DRIVE_ERROR_DEVICE;
+ 	}
+ 
+@@ -2600,23 +2600,23 @@ do_bsf( drive_t *drivep, int count, int *statp )
+  *	DRIVE_ERROR_* on failure
+  */
+ static int
+-do_rewind( drive_t *drivep )
++do_rewind(drive_t *drivep)
+ {
+ #ifdef DEBUG
+ 	drive_context_t	*contextp = (drive_context_t *)drivep->d_contextp;
+ #endif
+ 	mtstat_t mtstat;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: rewind\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: rewind\n");
+ 
+-	assert( contextp->dc_mode == OM_NONE );
+-	assert( contextp->dc_fd >= 0 );
++	assert(contextp->dc_mode == OM_NONE);
++	assert(contextp->dc_fd >= 0);
+ 
+ 	/* use validating tape rewind util func
+ 	 */
+-	mtstat = rewind_and_verify( drivep );
+-	if ( ! IS_BOT( mtstat )) {
++	mtstat = rewind_and_verify(drivep);
++	if (! IS_BOT(mtstat)) {
+ 		return DRIVE_ERROR_DEVICE;
+ 	} else {
+ 		return 0;
+@@ -2631,40 +2631,40 @@ do_rewind( drive_t *drivep )
+  *	DRIVE_ERROR_* on failure
+  */
+ static int
+-do_erase( drive_t *drivep )
++do_erase(drive_t *drivep)
+ {
+ #ifdef DEBUG
+ 	drive_context_t	*contextp = (drive_context_t *)drivep->d_contextp;
+ #endif
+ 	mtstat_t mtstat;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: erase\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: erase\n");
+ 
+-	assert( contextp->dc_mode == OM_NONE );
+-	assert( contextp->dc_fd >= 0 );
++	assert(contextp->dc_mode == OM_NONE);
++	assert(contextp->dc_fd >= 0);
+ 
+ 	/* use validating tape rewind util func
+ 	 */
+-	mtstat = rewind_and_verify( drivep );
+-	if ( ! IS_BOT( mtstat )) {
++	mtstat = rewind_and_verify(drivep);
++	if (! IS_BOT(mtstat)) {
+ 		return DRIVE_ERROR_DEVICE;
+ 	}
+ 
+ 	/* use validating tape erase util func
+ 	 */
+-	( void )erase_and_verify( drivep );
++	(void)erase_and_verify(drivep);
+ 
+ 	/* rewind again
+ 	 */
+-	mtstat = rewind_and_verify( drivep );
+-	if ( ! IS_BOT( mtstat )) {
++	mtstat = rewind_and_verify(drivep);
++	if (! IS_BOT(mtstat)) {
+ 		return DRIVE_ERROR_DEVICE;
+ 	}
+ 
+ 	/* close the drive so we start from scratch
+ 	 */
+-	Close( drivep );
++	Close(drivep);
+ 	return 0;
+ }
+ 
+@@ -2676,27 +2676,27 @@ do_erase( drive_t *drivep )
+  *	DRIVE_ERROR_DEVICE on failure
+  */
+ static int
+-do_eject_media( drive_t *drivep )
++do_eject_media(drive_t *drivep)
+ {
+ 	drive_context_t	*contextp = (drive_context_t *)drivep->d_contextp;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: eject media\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: eject media\n");
+ 
+ 	/* drive must be open
+ 	 */
+-	assert( contextp->dc_fd >= 0 );
+-	assert( contextp->dc_mode == OM_NONE );
++	assert(contextp->dc_fd >= 0);
++	assert(contextp->dc_mode == OM_NONE);
+ 
+ 	/* issue tape unload
+ 	 */
+-	if ( contextp->dc_unloadokpr ) {
+-		( void )mt_op( contextp->dc_fd, MTUNLOAD, 0 );
++	if (contextp->dc_unloadokpr) {
++		(void)mt_op(contextp->dc_fd, MTUNLOAD, 0);
+ 	}
+ 
+ 	/* close the device driver
+ 	 */
+-	Close( drivep );
++	Close(drivep);
+ 
+ 	return 0;
+ }
+@@ -2709,10 +2709,10 @@ do_eject_media( drive_t *drivep )
+  */
+ /* ARGSUSED */
+ static int
+-do_get_device_class( drive_t *drivep)
++do_get_device_class(drive_t *drivep)
+ {
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: get device class\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: get device class\n");
+ 
+ 	return DEVICE_TAPE_REMOVABLE;
+ }
+@@ -2720,69 +2720,69 @@ do_get_device_class( drive_t *drivep)
+ /* do_display_metrics - print ring stats if using I/O ring
+  */
+ static void
+-do_display_metrics( drive_t *drivep )
++do_display_metrics(drive_t *drivep)
+ {
+ 	drive_context_t	*contextp = (drive_context_t *)drivep->d_contextp;
+ 	ring_t *ringp = contextp->dc_ringp;
+ 
+-	if ( ringp ) {
+-		if ( drivecnt > 1 ) {
+-			mlog( MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_DRIVE,
++	if (ringp) {
++		if (drivecnt > 1) {
++			mlog(MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK | MLOG_DRIVE,
+ 			      _("drive %u "),
+-			      drivep->d_index );
++			      drivep->d_index);
+ 		}
+-		display_ring_metrics( drivep,
+-				      MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK );
++		display_ring_metrics(drivep,
++				      MLOG_NORMAL | MLOG_BARE | MLOG_NOLOCK);
+ 	}
+ }
+ 
+ /* do_quit
+  */
+ static void
+-do_quit( drive_t *drivep )
++do_quit(drive_t *drivep)
+ {
+ 	drive_context_t	*contextp = (drive_context_t *)drivep->d_contextp;
+ 	ring_t *ringp = contextp->dc_ringp;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op: quit\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op: quit\n");
+ 
+ 	/* print the ring metrics and kill the ring
+ 	 */
+-	if ( ringp ) {
+-		display_ring_metrics( drivep, MLOG_VERBOSE );
++	if (ringp) {
++		display_ring_metrics(drivep, MLOG_VERBOSE);
+ 
+ 		/* tell slave to die
+ 		 */
+-		mlog( (MLOG_NITTY + 1) | MLOG_DRIVE,
+-		      "ring op: destroy\n" );
+-		ring_destroy( ringp );
++		mlog((MLOG_NITTY + 1) | MLOG_DRIVE,
++		      "ring op: destroy\n");
++		ring_destroy(ringp);
+ 	}
+ 
+-	if ( ! contextp->dc_isvarpr
++	if (! contextp->dc_isvarpr
+ 	     &&
+ 	     ! contextp->dc_isQICpr
+ 	     &&
+ 	     contextp->dc_cansetblkszpr
+ 	     &&
+-	     ( contextp->dc_origcurblksz != 0 ) ) {
+-		( void )set_fixed_blksz( drivep, contextp->dc_origcurblksz );
++	     (contextp->dc_origcurblksz != 0)) {
++		(void)set_fixed_blksz(drivep, contextp->dc_origcurblksz);
+ 	}
+ 
+ 	/* issue tape unload
+ 	 */
+-	if ( contextp->dc_unloadokpr ) {
+-		( void )mt_op( contextp->dc_fd, MTUNLOAD, 0 );
++	if (contextp->dc_unloadokpr) {
++		(void)mt_op(contextp->dc_fd, MTUNLOAD, 0);
+ 	}
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "drive op quit complete\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "drive op quit complete\n");
+ }
+ 
+ static double
+-percent64( off64_t num, off64_t denom )
++percent64(off64_t num, off64_t denom)
+ {
+-	return ( double )( num * 100 ) / ( double )denom;
++	return (double)(num * 100) / (double)denom;
+ }
+ 
+ 
+@@ -2831,7 +2831,7 @@ percent64( off64_t num, off64_t denom )
+ 
+ 
+ static int
+-read_label( drive_t *drivep )
++read_label(drive_t *drivep)
+ {
+ 	drive_context_t *contextp;
+ 	int nread;
+@@ -2843,46 +2843,46 @@ read_label( drive_t *drivep )
+ 
+ 	/* initialize context ptr
+ 	 */
+-	contextp = ( drive_context_t * )drivep->d_contextp;
++	contextp = (drive_context_t *)drivep->d_contextp;
+ 
+ 	/* if not at BOT or a file mark, advance to right of next file mark
+ 	 */
+-	ok = mt_get_status( drivep, &mtstat );
+-	if ( ! ok ) {
+-		status_failed_message( drivep );
++	ok = mt_get_status(drivep, &mtstat);
++	if (! ok) {
++		status_failed_message(drivep);
+ 		return DRIVE_ERROR_DEVICE;
+ 	}
+-	if ( ! IS_BOT( mtstat ) && ! IS_FMK( mtstat )) {
+-		mtstat = fsf_and_verify( drivep );
++	if (! IS_BOT(mtstat) && ! IS_FMK(mtstat)) {
++		mtstat = fsf_and_verify(drivep);
+ 	}
+ 
+ 	/* if we hit EOM or early warning, just return
+ 	 */
+-	if ( IS_EOT( mtstat ) || IS_EW( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
+-		      "begin read hit EOM/EW\n" );
++	if (IS_EOT(mtstat) || IS_EW(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
++		      "begin read hit EOM/EW\n");
+ 		return DRIVE_ERROR_EOM;
+ 	}
+ 
+ 	/* if we hit EOD, a file mark is missing
+ 	 */
+-	if ( IS_EOD( mtstat )) {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+-		      _("file mark missing from tape (hit EOD)\n") );
++	if (IS_EOD(mtstat)) {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++		      _("file mark missing from tape (hit EOD)\n"));
+ #ifdef DUMP
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+-		      _("writing file mark at EOD\n") );
+-		rval = mt_op( contextp->dc_fd, MTWEOF, 1 );
+-		if ( rval ) {
+-			mlog( MLOG_NORMAL | MLOG_WARNING,
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++		      _("writing file mark at EOD\n"));
++		rval = mt_op(contextp->dc_fd, MTWEOF, 1);
++		if (rval) {
++			mlog(MLOG_NORMAL | MLOG_WARNING,
+ 			      _("unable to write file mark at eod: %s (%d)\n"),
+-			      strerror( errno ),
+-			      errno );
++			      strerror(errno),
++			      errno);
+ 			return DRIVE_ERROR_MEDIA;
+ 		}
+-		ok = mt_get_status( drivep, &mtstat );
+-		if ( ! ok ) {
+-			status_failed_message( drivep );
++		ok = mt_get_status(drivep, &mtstat);
++		if (! ok) {
++			status_failed_message(drivep);
+ 			return DRIVE_ERROR_DEVICE;
+ 		}
+ #endif /* DUMP */
+@@ -2890,9 +2890,9 @@ read_label( drive_t *drivep )
+ 
+ 	/* verify we are either at BOT or a file mark
+ 	 */
+-	if ( ! IS_BOT( mtstat ) && ! IS_FMK( mtstat )) {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+-		      _("file mark missing from tape\n") );
++	if (! IS_BOT(mtstat) && ! IS_FMK(mtstat)) {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++		      _("file mark missing from tape\n"));
+ #ifdef DUMP
+ 		return DRIVE_ERROR_MEDIA;
+ #endif
+@@ -2901,7 +2901,7 @@ read_label( drive_t *drivep )
+ 	/* remember if we were at BOT, so we know how to reposition if EOD
+ 	 * encountered
+ 	 */
+-	if ( IS_BOT( mtstat )) {
++	if (IS_BOT(mtstat)) {
+ 		wasatbotpr = BOOL_TRUE;
+ 	} else {
+ 		wasatbotpr = BOOL_FALSE;
+@@ -2909,18 +2909,18 @@ read_label( drive_t *drivep )
+ 
+ 	/* read the first record of the media file directly
+ 	 */
+-	nread = Read( drivep,
++	nread = Read(drivep,
+ 		      contextp->dc_recp,
+ 		      tape_recsz,
+-		      &saved_errno );
++		      &saved_errno);
+ 
+ 	/* if a read error, get status
+ 	 */
+-	if ( nread != ( int )tape_recsz ) {
+-		assert( nread < ( int )tape_recsz );
+-		ok = mt_get_status( drivep, &mtstat );
+-		if ( ! ok ) {
+-			status_failed_message( drivep );
++	if (nread != (int)tape_recsz) {
++		assert(nread < (int)tape_recsz);
++		ok = mt_get_status(drivep, &mtstat);
++		if (! ok) {
++			status_failed_message(drivep);
+ 			return DRIVE_ERROR_DEVICE;
+ 		}
+ 	} else {
+@@ -2929,29 +2929,29 @@ read_label( drive_t *drivep )
+ 
+ 	/* check for an unexpected errno
+ 	 */
+-	if ( nread < 0 && saved_errno != ENOSPC ) {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++	if (nread < 0 && saved_errno != ENOSPC) {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 		      _("could not read from drive: %s (%d)\n"),
+-		      strerror( errno ),
+-		      errno );
++		      strerror(errno),
++		      errno);
+ 		return DRIVE_ERROR_DEVICE;
+ 	}
+ 
+ 	/* check for a blank tape. NOTE: shouldn't get here!
+ 	 */
+-	if ( nread == 0 && wasatbotpr ) {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++	if (nread == 0 && wasatbotpr) {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 		      _("unexpectedly encountered EOD at BOT: "
+-		      "assuming corrupted media\n") );
+-		( void )rewind_and_verify( drivep );
++		      "assuming corrupted media\n"));
++		(void)rewind_and_verify(drivep);
+ 		return DRIVE_ERROR_MEDIA;
+ 	}
+ 
+ 	/* if we hit end of tape or early warning, indicate EOM
+ 	 */
+-	if ( IS_EOT( mtstat ) || IS_EW( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
+-		      "hit EOM\n" );
++	if (IS_EOT(mtstat) || IS_EW(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
++		      "hit EOM\n");
+ 		return DRIVE_ERROR_EOM;
+ 	}
+ 
+@@ -2959,29 +2959,29 @@ read_label( drive_t *drivep )
+ #ifdef DUMP
+ 	/* if we hit EOD, re-position in anticipation of appending.
+ 	 */
+-	if ( IS_EOD( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
+-		      "hit EOD: repositioning for append\n" );
+-		if ( drivep->d_capabilities & DRIVE_CAP_BSF ) {
+-			( void )bsf_and_verify( drivep );
++	if (IS_EOD(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
++		      "hit EOD: repositioning for append\n");
++		if (drivep->d_capabilities & DRIVE_CAP_BSF) {
++			(void)bsf_and_verify(drivep);
+ 		}
+-		( void )fsf_and_verify( drivep );
++		(void)fsf_and_verify(drivep);
+ 		return DRIVE_ERROR_EOD;
+ 	}
+ #endif /* DUMP */
+ #ifdef RESTORE
+ 
+         /* Linux case */
+-	if ( IS_EOD( mtstat ) && IS_FMK( mtstat ) ) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
+-		      "hit EOM\n" );
++	if (IS_EOD(mtstat) && IS_FMK(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
++		      "hit EOM\n");
+ 		return DRIVE_ERROR_EOM;
+ 	}
+ 
+ 
+-	if ( IS_EOD( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
+-		      "hit EOD\n" );
++	if (IS_EOD(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
++		      "hit EOD\n");
+ 		return DRIVE_ERROR_EOD;
+ 	}
+ #endif /* RESTORE */
+@@ -2989,11 +2989,11 @@ read_label( drive_t *drivep )
+ 	/* if we hit a file mark, this is very bad.
+ 	 * indicates the media has been corrupted
+ 	 */
+-	if ( IS_FMK( mtstat )) {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++	if (IS_FMK(mtstat)) {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 		      _("unexpectedly encountered a file mark: "
+-		      "assuming corrupted media\n") );
+-		( void )rewind_and_verify( drivep );
++		      "assuming corrupted media\n"));
++		(void)rewind_and_verify(drivep);
+ 		return DRIVE_ERROR_MEDIA;
+ 	}
+ 
+@@ -3001,13 +3001,13 @@ read_label( drive_t *drivep )
+ 	 */
+ 	contextp->dc_iocnt = 1;
+ 
+-	rval = validate_media_file_hdr( drivep );
++	rval = validate_media_file_hdr(drivep);
  
  	return rval;
  }
  
- int
--open_trwdb( char *dirname, char *basename, pid_t pid )
-+open_trwdb(char *dirname, char *basename, pid_t pid)
- {
- 	char *pathname;
- 	int fd;
- 
--	pathname = open_pathalloc( dirname, basename, pid );
--	fd = open_trwp( pathname );
--	free( ( void * )pathname );
-+	pathname = open_pathalloc(dirname, basename, pid);
-+	fd = open_trwp(pathname);
-+	free((void *)pathname);
- 
- 	return fd;
- }
- 
- int
--open_erwdb( char *dirname, char *basename, pid_t pid )
-+open_erwdb(char *dirname, char *basename, pid_t pid)
- {
- 	char *pathname;
- 	int fd;
- 
--	pathname = open_pathalloc( dirname, basename, pid );
--	fd = open_erwp( pathname );
--	free( ( void * )pathname );
-+	pathname = open_pathalloc(dirname, basename, pid);
-+	fd = open_erwp(pathname);
-+	free((void *)pathname);
- 
- 	return fd;
- }
- 
- int
--open_rwdb( char *dirname, char *basename, pid_t pid )
-+open_rwdb(char *dirname, char *basename, pid_t pid)
- {
- 	char *pathname;
- 	int fd;
- 
--	pathname = open_pathalloc( dirname, basename, pid );
--	fd = open_rwp( pathname );
--	free( ( void * )pathname );
-+	pathname = open_pathalloc(dirname, basename, pid);
-+	fd = open_rwp(pathname);
-+	free((void *)pathname);
- 
- 	return fd;
- }
-diff --git a/common/openutil.h b/common/openutil.h
-index 587462c..0e418d4 100644
---- a/common/openutil.h
-+++ b/common/openutil.h
-@@ -28,35 +28,35 @@
-  * representation of the pid will be appended to the pathname, beginning
-  * with a '.'.
-  */
--extern char *open_pathalloc( char *dirname, char *basename, pid_t pid );
-+extern char *open_pathalloc(char *dirname, char *basename, pid_t pid);
- 
- /* create the specified file, creating or truncating as necessary,
-  * with read and write permissions, given a directory and base.
-- * return the file descriptor, or -1 with errno set. uses mlog( MLOG_NORMAL...
-+ * return the file descriptor, or -1 with errno set. uses mlog(MLOG_NORMAL...
-  * if the creation fails.
-  */
--extern int open_trwdb( char *dirname, char *basename, pid_t pid );
--extern int open_trwp( char *pathname );
-+extern int open_trwdb(char *dirname, char *basename, pid_t pid);
-+extern int open_trwp(char *pathname);
- 
- 
- /* open the specified file, with read and write permissions, given a
-  * directory and base.* return the file descriptor, or -1 with errno set.
-- * uses mlog( MLOG_NORMAL... if the open fails.
-+ * uses mlog(MLOG_NORMAL... if the open fails.
-  */
--extern int open_rwdb( char *dirname, char *basename, pid_t pid );
--extern int open_rwp( char *pathname );
-+extern int open_rwdb(char *dirname, char *basename, pid_t pid);
-+extern int open_rwp(char *pathname);
- 
- 
- /* create and open the specified file, failing if already exists
-  */
--extern int open_erwp( char *pathname );
--extern int open_erwdb( char *dirname, char *basename, pid_t pid );
-+extern int open_erwp(char *pathname);
-+extern int open_erwdb(char *dirname, char *basename, pid_t pid);
- 
- 
- /* create the specified directory, guaranteed to be initially empty. returns
-- * 0 on success, -1 if trouble. uses mlog( MLOG_NORMAL... if the creation fails.
-+ * 0 on success, -1 if trouble. uses mlog(MLOG_NORMAL... if the creation fails.
-  */
--extern int mkdir_tp( char *pathname );
-+extern int mkdir_tp(char *pathname);
- 
- 
- #endif /* UTIL_H */
-diff --git a/common/path.c b/common/path.c
-index b234de1..fb1fcf0 100644
---- a/common/path.c
-+++ b/common/path.c
-@@ -33,143 +33,143 @@ struct pem {
- 
- typedef struct pem pem_t;
- 
--static pem_t * pem_alloc( char *path );
--static void pem_free( pem_t *pemp );
--static char * pem_next( pem_t *pemp );
-+static pem_t * pem_alloc(char *path);
-+static void pem_free(pem_t *pemp);
-+static char * pem_next(pem_t *pemp);
- 
- #define PAMAX	1024
- 
- struct pa {
--	char *pa_array[ PAMAX ];
-+	char *pa_array[PAMAX];
- 	int pa_cnt;
- };
- 
- typedef struct pa pa_t;
- 
--static pa_t * pa_alloc( void );
--static void pa_free( pa_t *pap );
--static void pa_append( pa_t *pap, char *pep );
--static int pa_peel( pa_t *pap );
--static char * pa_gen( pa_t *pap );
-+static pa_t * pa_alloc(void);
-+static void pa_free(pa_t *pap);
-+static void pa_append(pa_t *pap, char *pep);
-+static int pa_peel(pa_t *pap);
-+static char * pa_gen(pa_t *pap);
- 
- char *
--path_diff( char *path, char *base )
-+path_diff(char *path, char *base)
- {
- 	char *diff;
- 
--	assert( *base == '/' );
--	assert( *path == '/' );
-+	assert(*base == '/');
-+	assert(*path == '/');
- 
--	if ( ! path_beginswith( path, base )) {
-+	if (! path_beginswith(path, base)) {
- 		return 0;
- 	}
- 
--	for ( ; *base && *path == *base ; path++, base++ )
-+	for (; *base && *path == *base ; path++, base++)
- 		;
- 
--	if ( *path == 0 ) {
-+	if (*path == 0) {
- 		return 0;
- 	}
- 
--	if ( *path == '/' ) {
-+	if (*path == '/') {
- 		path++;
- 	}
- 
--	diff = ( char * )calloc( 1, strlen( path ) + 1 );
--	assert( diff );
--	strcpy( diff, path );
-+	diff = (char *)calloc(1, strlen(path) + 1);
-+	assert(diff);
-+	strcpy(diff, path);
- 
- 	return diff;
- }
- 
- int
--path_beginswith( char *path, char *base )
-+path_beginswith(char *path, char *base)
- {
--	if ( ! base ) {
-+	if (! base) {
- 		return 0;
- 	}
--	return ! strncmp( base, path, strlen( base ));
-+	return ! strncmp(base, path, strlen(base));
- }
- 
- char *
--path_reltoabs( char *dir, char *basedir )
-+path_reltoabs(char *dir, char *basedir)
- {
- 	char *absdir;
- 
- 	/* check if the path starts with a / or
--	 * is a remote path (i.e. contains  machine:/path/name ).
-+	 * is a remote path (i.e. contains  machine:/path/name).
- 	 */
--	if ( ( *dir != '/' ) && ( strchr(dir, ':') == 0 ) ) {
-+	if ((*dir != '/') && (strchr(dir, ':') == 0)) {
- 		char *absdir;
--		absdir = ( char * )malloc( strlen( basedir )
-+		absdir = (char *)malloc(strlen(basedir)
- 					   +
- 					   1
- 					   +
--					   strlen( dir )
-+					   strlen(dir)
- 					   +
--					   1 );
--		assert( absdir );
-+					   1);
-+		assert(absdir);
- 
--		( void )sprintf( absdir, "%s/%s", basedir, dir );
-+		(void )sprintf(absdir, "%s/%s", basedir, dir);
- 
- 		dir = absdir;
- 	}
- 
--	if ( strchr(dir, ':') == 0 ) {
--		absdir = path_normalize( dir );
-+	if (strchr(dir, ':') == 0) {
-+		absdir = path_normalize(dir);
- 	} else {
--		absdir = ( char * )malloc( strlen( dir )  + 1);
--		( void )sprintf( absdir, "%s", dir);
-+		absdir = (char *)malloc(strlen(dir)  + 1);
-+		(void )sprintf(absdir, "%s", dir);
- 	}
- 
- 	return absdir;
- }
- 
- char *
--path_normalize( char *path )
-+path_normalize(char *path)
- {
--	pem_t *pemp = pem_alloc( path );
--	pa_t *pap = pa_alloc( );
-+	pem_t *pemp = pem_alloc(path);
-+	pa_t *pap = pa_alloc();
- 	char *pep;
- 	char *npath;
- 
--	assert( path[ 0 ] == '/' );
-+	assert(path[0] == '/');
- 
--	while ( ( pep = pem_next( pemp )) != 0 ) {
--		if ( ! strcmp( pep, "" )) {
--			free( ( void * )pep );
-+	while ((pep = pem_next(pemp)) != 0) {
-+		if (! strcmp(pep, "")) {
-+			free((void *)pep);
- 			continue;
- 		}
--		if ( ! strcmp( pep, "." )) {
--			free( ( void * )pep );
-+		if (! strcmp(pep, ".")) {
-+			free((void *)pep);
- 			continue;
- 		}
--		if ( ! strcmp( pep, ".." )) {
-+		if (! strcmp(pep, "..")) {
- 			int ok;
--			free( ( void * )pep );
--			ok = pa_peel( pap );
--			if ( ! ok ) {
--				pa_free( pap );
--				pem_free( pemp );
-+			free((void *)pep);
-+			ok = pa_peel(pap);
-+			if (! ok) {
-+				pa_free(pap);
-+				pem_free(pemp);
- 				return 0;
- 			}
- 			continue;
- 		}
--		pa_append( pap, pep );
-+		pa_append(pap, pep);
- 	}
- 
--	npath = pa_gen( pap );
--	pa_free( pap );
--	pem_free( pemp );
-+	npath = pa_gen(pap);
-+	pa_free(pap);
-+	pem_free(pemp);
- 
- 	return npath;
- }
- 
- static pem_t *
--pem_alloc( char *path )
-+pem_alloc(char *path)
- {
--	pem_t *pemp = ( pem_t * )calloc( 1, sizeof( pem_t ));
--	assert( pemp );
-+	pem_t *pemp = (pem_t *)calloc(1, sizeof(pem_t));
-+	assert(pemp);
- 	pemp->pem_head = path;
- 	pemp->pem_next = pemp->pem_head;
- 
-@@ -177,13 +177,13 @@ pem_alloc( char *path )
- }
- 
- static void
--pem_free( pem_t *pemp )
-+pem_free(pem_t *pemp)
- {
--	free( ( void * )pemp );
-+	free((void *)pemp);
- }
- 
- static char *
--pem_next( pem_t *pemp )
-+pem_next(pem_t *pemp)
- {
- 	char *nextnext;
- 	size_t len;
-@@ -191,37 +191,37 @@ pem_next( pem_t *pemp )
- 
- 	/* no more left
- 	 */
--	if ( *pemp->pem_next == 0 ) {
-+	if (*pemp->pem_next == 0) {
- 		return 0;
- 	}
- 
- 	/* find the following slash
- 	 */
--	nextnext = strchr( pemp->pem_next + 1, '/' );
-+	nextnext = strchr(pemp->pem_next + 1, '/');
- 
- 	/* if end of string encountered, place next next at end of string
- 	 */
--	if ( ! nextnext ) {
--		for ( nextnext = pemp->pem_next ; *nextnext ; nextnext++ )
-+	if (! nextnext) {
-+		for (nextnext = pemp->pem_next ; *nextnext ; nextnext++)
- 			;
- 	}
- 
- 	/* determine the length of the path element, sans the leading slash
- 	 */
--	len = ( size_t )( nextnext - pemp->pem_next - 1 );
-+	len = (size_t)(nextnext - pemp->pem_next - 1);
- 
- 	/* allocate buffer to hold the path element, incl null termination
- 	 */
--	p = ( char * )malloc( len + 1 );
--	assert( p );
-+	p = (char *)malloc(len + 1);
-+	assert(p);
- 
- 	/* copy the path element into the buffer
- 	 */
--	strncpy( p, pemp->pem_next + 1, len );
-+	strncpy(p, pemp->pem_next + 1, len);
- 
- 	/* null-terminate
- 	 */
--	p[ len ] = 0;
-+	p[len] = 0;
- 
- 	/* update next
- 	 */
-@@ -233,54 +233,54 @@ pem_next( pem_t *pemp )
- }
- 
- static pa_t *
--pa_alloc( void )
-+pa_alloc(void)
- {
--	pa_t *pap = ( pa_t * )calloc( 1, sizeof( pa_t ));
--	assert( pap );
-+	pa_t *pap = (pa_t *)calloc(1, sizeof(pa_t));
-+	assert(pap);
- 
- 	return pap;
- }
- 
- static void
--pa_free( pa_t *pap )
-+pa_free(pa_t *pap)
- {
- 	int i;
- 
--	for ( i = 0 ; i < pap->pa_cnt ; i++ ) {
--		free( ( void * )pap->pa_array[ i ] );
-+	for (i = 0 ; i < pap->pa_cnt ; i++) {
-+		free((void *)pap->pa_array[i]);
- 	}
- 
--	free( ( void * )pap );
-+	free((void *)pap);
- }
- 
- static void
--pa_append( pa_t *pap, char *pep )
-+pa_append(pa_t *pap, char *pep)
- {
--	assert( pap->pa_cnt < PAMAX );
-+	assert(pap->pa_cnt < PAMAX);
- 
--	pap->pa_array[ pap->pa_cnt ] = pep;
-+	pap->pa_array[pap->pa_cnt] = pep;
- 
- 	pap->pa_cnt++;
- }
- 
  static int
--pa_peel( pa_t *pap )
-+pa_peel(pa_t *pap)
+-validate_media_file_hdr( drive_t *drivep )
++validate_media_file_hdr(drive_t *drivep)
  {
--	if ( pap->pa_cnt <= 0 ) {
--		assert( pap->pa_cnt == 0 );
-+	if (pap->pa_cnt <= 0) {
-+		assert(pap->pa_cnt == 0);
- 		return 0;
+ 	global_hdr_t		*grhdrp = drivep->d_greadhdrp;
+ 	drive_hdr_t		*drhdrp = drivep->d_readhdrp;
+@@ -3024,10 +3024,10 @@ validate_media_file_hdr( drive_t *drivep )
+ 	content_hdr_t		*tmpch = (content_hdr_t *)tmpmh->mh_upper;
+ 	content_inode_hdr_t	*tmpcih = (content_inode_hdr_t *)tmpch->ch_specific;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "validating media file header\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "validating media file header\n");
+ 
+-	memcpy( tmpbuf, contextp->dc_recp, GLOBAL_HDR_SZ );
++	memcpy(tmpbuf, contextp->dc_recp, GLOBAL_HDR_SZ);
+ 
+ 	mlog(MLOG_NITTY, "validate_media_file_hdr\n"
+ 	     "\tgh_magic %.100s\n"
+@@ -3047,14 +3047,14 @@ validate_media_file_hdr( drive_t *drivep )
+ 
+ 	/* check the checksum
+ 	 */
+-	if ( ! global_hdr_checksum_check( tmpgh )) {
+-	        mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (! global_hdr_checksum_check(tmpgh)) {
++	        mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	              "bad media file header checksum\n");
+ 	        return DRIVE_ERROR_CORRUPTION;
  	}
  
- 	pap->pa_cnt--;
--	assert( pap->pa_array[ pap->pa_cnt ] );
--	free( ( void * )pap->pa_array[ pap->pa_cnt ] );
--	pap->pa_array[ pap->pa_cnt ] = 0;
-+	assert(pap->pa_array[pap->pa_cnt]);
-+	free((void *)pap->pa_array[pap->pa_cnt]);
-+	pap->pa_array[pap->pa_cnt] = 0;
+-	if ( ! tape_rec_checksum_check( contextp, contextp->dc_recp )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (! tape_rec_checksum_check(contextp, contextp->dc_recp)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 		      "tape record checksum error\n");
+ 		return DRIVE_ERROR_CORRUPTION;
  
- 	return 1;
- }
+@@ -3067,54 +3067,54 @@ validate_media_file_hdr( drive_t *drivep )
+ 	xlate_content_inode_hdr(tmpcih, cih, 1);
+ 	xlate_rec_hdr(tmprh, tprhdrp, 1);
  
- static char *
--pa_gen( pa_t *pap )
-+pa_gen(pa_t *pap)
- {
- 	size_t sz;
- 	int i;
-@@ -288,23 +288,23 @@ pa_gen( pa_t *pap )
- 	char *p;
+-	memcpy( contextp->dc_recp, grhdrp, GLOBAL_HDR_SZ );
++	memcpy(contextp->dc_recp, grhdrp, GLOBAL_HDR_SZ);
  
- 	sz = 0;
--	for ( i = 0 ; i < pap->pa_cnt ; i++ ) {
--		sz += strlen( pap->pa_array[ i ] ) + 1;
-+	for (i = 0 ; i < pap->pa_cnt ; i++) {
-+		sz += strlen(pap->pa_array[i]) + 1;
- 	}
--	if ( i == 0 )
-+	if (i == 0)
- 		sz++;
- 	sz++;
- 
--	retp = ( char * )malloc( sz );
-+	retp = (char *)malloc(sz);
- 
--	if (  pap->pa_cnt <= 0 ) {
--		assert(  pap->pa_cnt == 0 );
--		sprintf( retp, "/" );
-+	if (pap->pa_cnt <= 0) {
-+		assert(pap->pa_cnt == 0);
-+		sprintf(retp, "/");
- 	} else {
- 		p = retp;
--		for ( i = 0 ; i < pap->pa_cnt ; i++ ) {
--			sprintf( p, "/%s", pap->pa_array[ i ] );
--			p += strlen( p );
-+		for (i = 0 ; i < pap->pa_cnt ; i++) {
-+			sprintf(p, "/%s", pap->pa_array[ i]);
-+			p += strlen(p);
- 		}
+ 	/* check the magic number
+ 	 */
+-	if ( strncmp( grhdrp->gh_magic, GLOBAL_HDR_MAGIC,GLOBAL_HDR_MAGIC_SZ)) {
+-	        mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (strncmp(grhdrp->gh_magic, GLOBAL_HDR_MAGIC,GLOBAL_HDR_MAGIC_SZ)) {
++	        mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	              "missing magic number in tape label\n");
+ 	        return DRIVE_ERROR_FORMAT;
  	}
  
-diff --git a/common/path.h b/common/path.h
-index 9092233..f05f5c7 100644
---- a/common/path.h
-+++ b/common/path.h
-@@ -20,9 +20,9 @@
- 
- /* various pathname helpers
-  */
--extern char * path_reltoabs( char *dir, char *basedir );
--extern char *path_normalize( char *path );
--extern char * path_diff( char *path, char *base );
--extern int path_beginswith( char *path, char *base );
-+extern char * path_reltoabs(char *dir, char *basedir);
-+extern char *path_normalize(char *path);
-+extern char * path_diff(char *path, char *base);
-+extern int path_beginswith(char *path, char *base);
- 
- #endif /* PATH_H */
-diff --git a/common/qlock.c b/common/qlock.c
-index 1db461d..ae36817 100644
---- a/common/qlock.c
-+++ b/common/qlock.c
-@@ -43,7 +43,7 @@ typedef size_t ordmap_t;
- 	 * been allocated.
+ 	/* check the version
  	 */
- 
--#define ORDMAX					( 8 * sizeof( ordmap_t ))
-+#define ORDMAX					(8 * sizeof(ordmap_t))
- 	/* ordinals must fit into a wordsize bitmap
- 	 */
- 
-@@ -55,53 +55,53 @@ static __thread ordmap_t thread_ordmap;
- 	/* holds the ordmap for each thread
- 	 */
- 
--#define QLOCK_ORDMAP_SET( ordmap, ord )	( ordmap |= 1U << ord )
-+#define QLOCK_ORDMAP_SET(ordmap, ord)	(ordmap |= 1U << ord)
- 	/* sets the ordinal bit in an ordmap
- 	 */
- 
--#define QLOCK_ORDMAP_CLR( ordmap, ord )	( ordmap &= ~( 1U << ord ))
-+#define QLOCK_ORDMAP_CLR(ordmap, ord)	(ordmap &= ~(1U << ord))
- 	/* clears the ordinal bit in an ordmap
- 	 */
- 
--#define QLOCK_ORDMAP_GET( ordmap, ord )	( ordmap & ( 1U << ord ))
-+#define QLOCK_ORDMAP_GET(ordmap, ord)	(ordmap & (1U << ord))
- 	/* checks if ordinal set in ordmap
- 	 */
- 
--#define QLOCK_ORDMAP_CHK( ordmap, ord )	( ordmap & (( 1U << ord ) - 1U ))
-+#define QLOCK_ORDMAP_CHK(ordmap, ord)	(ordmap & ((1U << ord) - 1U))
- 	/* checks if any bits less than ord are set in the ordmap
- 	 */
- 
- 
- qlockh_t
--qlock_alloc( ix_t ord )
-+qlock_alloc(ix_t ord)
- {
- 	qlock_t *qlockp;
- 
- 	/* verify the ordinal is not already taken, and mark as taken
- 	 */
--	assert( ! QLOCK_ORDMAP_GET( qlock_ordalloced, ord ));
--	QLOCK_ORDMAP_SET( qlock_ordalloced, ord );
-+	assert(! QLOCK_ORDMAP_GET(qlock_ordalloced, ord));
-+	QLOCK_ORDMAP_SET(qlock_ordalloced, ord);
- 
- 	/* allocate lock memory
- 	 */
--	qlockp = ( qlock_t * )calloc( 1, sizeof( qlock_t ));
--	assert( qlockp );
-+	qlockp = (qlock_t *)calloc(1, sizeof(qlock_t));
-+	assert(qlockp);
- 
- 	/* initialize the mutex
- 	 */
--	pthread_mutex_init( &qlockp->ql_mutex, NULL );
-+	pthread_mutex_init(&qlockp->ql_mutex, NULL);
- 
- 	/* assign the ordinal position
- 	 */
- 	qlockp->ql_ord = ord;
- 
--	return ( qlockh_t )qlockp;
-+	return (qlockh_t)qlockp;
- }
- 
- void
--qlock_lock( qlockh_t qlockh )
-+qlock_lock(qlockh_t qlockh)
- {
--	qlock_t *qlockp = ( qlock_t * )qlockh;
-+	qlock_t *qlockp = (qlock_t *)qlockh;
- 	pthread_t tid;
- 	/* REFERENCED */
- 	int rval;
-@@ -112,138 +112,138 @@ qlock_lock( qlockh_t qlockh )
- 
- 	/* assert that this lock not already held by this thread
- 	 */
--	if ( QLOCK_ORDMAP_GET( thread_ordmap, qlockp->ql_ord )) {
--		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_NOLOCK,
-+	if (QLOCK_ORDMAP_GET(thread_ordmap, qlockp->ql_ord)) {
-+		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_NOLOCK,
- 		      _("lock already held: tid %lu ord %d map %x\n"),
- 		      tid,
- 		      qlockp->ql_ord,
--		      thread_ordmap );
-+		      thread_ordmap);
- 	}
--	assert( ! QLOCK_ORDMAP_GET( thread_ordmap, qlockp->ql_ord ));
-+	assert(! QLOCK_ORDMAP_GET(thread_ordmap, qlockp->ql_ord));
- 
- 	/* assert that no locks with a lesser ordinal are held by this thread
- 	 */
--	if ( QLOCK_ORDMAP_CHK( thread_ordmap, qlockp->ql_ord )) {
--		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_NOLOCK,
-+	if (QLOCK_ORDMAP_CHK(thread_ordmap, qlockp->ql_ord)) {
-+		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_NOLOCK,
- 		      _("lock ordinal violation: tid %lu ord %d map %x\n"),
- 		      tid,
- 		      qlockp->ql_ord,
--		      thread_ordmap );
-+		      thread_ordmap);
- 	}
--	assert( ! QLOCK_ORDMAP_CHK( thread_ordmap, qlockp->ql_ord ));
-+	assert(! QLOCK_ORDMAP_CHK(thread_ordmap, qlockp->ql_ord));
- 
- 	/* acquire the lock
- 	 */
--	rval = pthread_mutex_lock( &qlockp->ql_mutex );
--	assert( !rval );
-+	rval = pthread_mutex_lock(&qlockp->ql_mutex);
-+	assert(!rval);
- 
- 	/* add ordinal to this threads ordmap
- 	 */
--	QLOCK_ORDMAP_SET( thread_ordmap, qlockp->ql_ord );
-+	QLOCK_ORDMAP_SET(thread_ordmap, qlockp->ql_ord);
- }
- 
- void
--qlock_unlock( qlockh_t qlockh )
-+qlock_unlock(qlockh_t qlockh)
- {
--	qlock_t *qlockp = ( qlock_t * )qlockh;
-+	qlock_t *qlockp = (qlock_t *)qlockh;
- 	/* REFERENCED */
- 	int rval;
- 
- 	/* verify lock is held by this thread
- 	 */
--	assert( QLOCK_ORDMAP_GET( thread_ordmap, qlockp->ql_ord ));
-+	assert(QLOCK_ORDMAP_GET(thread_ordmap, qlockp->ql_ord));
- 
- 	/* clear lock's ord from thread's ord map
- 	 */
--	QLOCK_ORDMAP_CLR( thread_ordmap, qlockp->ql_ord );
-+	QLOCK_ORDMAP_CLR(thread_ordmap, qlockp->ql_ord);
- 
- 	/* release the lock
- 	 */
--	rval = pthread_mutex_unlock( &qlockp->ql_mutex );
--	assert( ! rval );
-+	rval = pthread_mutex_unlock(&qlockp->ql_mutex);
-+	assert(! rval);
- }
- 
- qsemh_t
--qsem_alloc( ix_t cnt )
-+qsem_alloc(ix_t cnt)
- {
- 	sem_t *semp;
- 	int rval;
- 
- 	/* allocate a semaphore
- 	 */
--	semp = ( sem_t * )calloc( 1, sizeof( sem_t ));
--	assert( semp );
-+	semp = (sem_t *)calloc(1, sizeof(sem_t));
-+	assert(semp);
- 
- 	/* initialize the semaphore
- 	 */
--	rval = sem_init( semp, 0, cnt );
--	assert( !rval );
-+	rval = sem_init(semp, 0, cnt);
-+	assert(!rval);
- 
--	return ( qsemh_t )semp;
-+	return (qsemh_t)semp;
- }
- 
- void
--qsem_free( qsemh_t qsemh )
-+qsem_free(qsemh_t qsemh)
- {
--	sem_t *semp = ( sem_t * )qsemh;
-+	sem_t *semp = (sem_t *)qsemh;
- 	int rval;
- 
- 	/* destroy the mutex and condition
- 	 */
--	rval = sem_destroy( semp );
--	assert( !rval );
-+	rval = sem_destroy(semp);
-+	assert(!rval);
- 
- 	/* free the semaphore
- 	 */
--	free( semp );
-+	free(semp);
- }
- 
- void
--qsemP( qsemh_t qsemh )
-+qsemP(qsemh_t qsemh)
- {
--	sem_t *semp = ( sem_t * )qsemh;
-+	sem_t *semp = (sem_t *)qsemh;
- 	int rval;
- 
- 	/* "P" the semaphore
- 	 */
--	rval = sem_wait( semp );
--	assert( !rval );
-+	rval = sem_wait(semp);
-+	assert(!rval);
- }
- 
- void
--qsemV( qsemh_t qsemh )
-+qsemV(qsemh_t qsemh)
- {
--	sem_t *semp = ( sem_t * )qsemh;
-+	sem_t *semp = (sem_t *)qsemh;
- 	int rval;
- 
- 	/* "V" the semaphore
- 	 */
--	rval = sem_post( semp );
--	assert( !rval );
-+	rval = sem_post(semp);
-+	assert(!rval);
- }
- 
- bool_t
--qsemPwouldblock( qsemh_t qsemh )
-+qsemPwouldblock(qsemh_t qsemh)
- {
--	sem_t *semp = ( sem_t * )qsemh;
-+	sem_t *semp = (sem_t *)qsemh;
- 	int count;
- 	int rval;
- 
--	rval = sem_getvalue( semp, &count );
--	assert( !rval );
-+	rval = sem_getvalue(semp, &count);
-+	assert(!rval);
- 
- 	return count <= 0 ? BOOL_TRUE : BOOL_FALSE;
- }
- 
- size_t
--qsemPavail( qsemh_t qsemh )
-+qsemPavail(qsemh_t qsemh)
- {
--	sem_t *semp = ( sem_t * )qsemh;
-+	sem_t *semp = (sem_t *)qsemh;
- 	int count;
- 	int rval;
- 
--	rval = sem_getvalue( semp, &count );
--	assert( !rval );
-+	rval = sem_getvalue(semp, &count);
-+	assert(!rval);
- 
- 	return count < 0 ? 0 : count;
- }
-diff --git a/common/qlock.h b/common/qlock.h
-index 6c2dd18..52a8467 100644
---- a/common/qlock.h
-+++ b/common/qlock.h
-@@ -48,14 +48,14 @@ typedef void *qlockh_t;
- 	/* opaque handle
- 	 */
- 
--extern qlockh_t qlock_alloc( ix_t ord );
-+extern qlockh_t qlock_alloc(ix_t ord);
- 	/* allocates a qlock with the specified ordinal. returns
- 	 * NULL if lock can't be allocated.
- 	 */
--extern void qlock_lock( qlockh_t qlockh );
-+extern void qlock_lock(qlockh_t qlockh);
- 	/* acquires the specified lock.
- 	 */
--extern void qlock_unlock( qlockh_t qlockh );
-+extern void qlock_unlock(qlockh_t qlockh);
- 	/* releases the specified lock.
- 	 */
- 
-@@ -64,23 +64,23 @@ typedef void *qsemh_t;
- 	/* opaque handle
- 	 */
- 
--extern qsemh_t qsem_alloc( size_t cnt );
-+extern qsemh_t qsem_alloc(size_t cnt);
- 	/* allocates a counting semaphore initialized to the specified
- 	 * count. returns a qsem handle
- 	 */
--extern void qsem_free( qsemh_t qsemh );
-+extern void qsem_free(qsemh_t qsemh);
- 	/* frees the counting semaphore
- 	 */
--extern void qsemP( qsemh_t qsemh );
-+extern void qsemP(qsemh_t qsemh);
- 	/* "P" (decrement) op
- 	 */
--extern void qsemV( qsemh_t qsemh );
-+extern void qsemV(qsemh_t qsemh);
- 	/* "V" (increment) op
- 	 */
--extern bool_t qsemPwouldblock( qsemh_t qsemh );
-+extern bool_t qsemPwouldblock(qsemh_t qsemh);
- 	/* returns true if a qsemP op would block
- 	 */
--extern size_t qsemPavail( qsemh_t qsemh );
-+extern size_t qsemPavail(qsemh_t qsemh);
- 	/* number of resources available
- 	 */
- 
-diff --git a/common/rec_hdr.h b/common/rec_hdr.h
-index 1ab783c..a33c54e 100644
---- a/common/rec_hdr.h
-+++ b/common/rec_hdr.h
-@@ -51,7 +51,7 @@ struct rec_hdr {
- 	int32_t capability;			/*   4  18 */
- 		/* tape drive capabilities (from drive.h)
- 		 */
--	char pad1[ 8 ];				/*   8  20 */
-+	char pad1[8];				/*   8  20 */
- 		/* padding
- 		 */
- 	off64_t file_offset;			/*   8  28 */
-@@ -73,7 +73,7 @@ struct rec_hdr {
- 
- 	uuid_t dump_uuid;			/*  10  4c */
- 
--	char pad2[ 0x1b4 ];			/* 1b4 200 */
-+	char pad2[0x1b4];			/* 1b4 200 */
- };		/* pad to sizeof drive_hdr_t dh_specific */
- 
- typedef struct rec_hdr rec_hdr_t;
-diff --git a/common/ring.c b/common/ring.c
-index 70c0f45..d1fbcb7 100644
---- a/common/ring.c
-+++ b/common/ring.c
-@@ -33,17 +33,17 @@
- #include "cldmgr.h"
- #include "ring.h"
- 
--static int ring_slave_entry( void *ringctxp );
-+static int ring_slave_entry(void *ringctxp);
- 
- ring_t *
--ring_create( size_t ringlen,
-+ring_create(size_t ringlen,
- 	     size_t bufsz,
- 	     bool_t pinpr,
- 	     ix_t drive_index,
--	     int ( *readfunc )( void *clientctxp, char *bufp ),
--	     int ( *writefunc )( void *clientctxp, char *bufp ),
-+	     int (*readfunc)(void *clientctxp, char *bufp),
-+	     int (*writefunc)(void *clientctxp, char *bufp),
- 	     void *clientctxp,
--	     int *rvalp )
-+	     int *rvalp)
- {
- 	bool_t ok;
- 	ring_t *ringp;
-@@ -55,8 +55,8 @@ ring_create( size_t ringlen,
- 
- 	/* allocate a ring descriptor
- 	 */
--	ringp = ( ring_t * )calloc( 1, sizeof( ring_t ));
--	assert( ringp );
-+	ringp = (ring_t *)calloc(1, sizeof(ring_t));
-+	assert(ringp);
- 	ringp->r_len = ringlen;
- 	ringp->r_clientctxp = clientctxp;
- 	ringp->r_readfunc = readfunc;
-@@ -65,8 +65,8 @@ ring_create( size_t ringlen,
- 	/* allocate counting semaphores for the ready and active queues,
- 	 * and initialize the queue input and output indices.
- 	 */
--	ringp->r_ready_qsemh = qsem_alloc( ringlen );
--	ringp->r_active_qsemh = qsem_alloc( 0 );
-+	ringp->r_ready_qsemh = qsem_alloc(ringlen);
-+	ringp->r_active_qsemh = qsem_alloc(0);
- 	ringp->r_ready_in_ix = 0;
- 	ringp->r_ready_out_ix = 0;
- 	ringp->r_active_in_ix = 0;
-@@ -85,87 +85,87 @@ ring_create( size_t ringlen,
- 
- 	/* allocate the ring messages
- 	 */
--	ringp->r_msgp = ( ring_msg_t * )calloc( ringlen, sizeof( ring_msg_t ));
--	assert( ringp->r_msgp );
-+	ringp->r_msgp = (ring_msg_t *)calloc(ringlen, sizeof(ring_msg_t));
-+	assert(ringp->r_msgp);
- 
- 	/* allocate the buffers and initialize the messages
- 	 */
--	for ( mix = 0 ; mix < ringlen ; mix++ ) {
--		ring_msg_t *msgp = &ringp->r_msgp[ mix ];
-+	for (mix = 0 ; mix < ringlen ; mix++) {
-+		ring_msg_t *msgp = &ringp->r_msgp[mix];
- 		msgp->rm_mix = mix;
- 		msgp->rm_op = RING_OP_NONE;
- 		msgp->rm_stat = RING_STAT_INIT;
- 		msgp->rm_user = 0;
- 		msgp->rm_loc = RING_LOC_READY;
- 
--		msgp->rm_bufp = ( char * )memalign( PGSZ, bufsz );
--		if ( ! msgp->rm_bufp ) {
-+		msgp->rm_bufp = (char *)memalign(PGSZ, bufsz);
-+		if (! msgp->rm_bufp) {
- 			*rvalp = ENOMEM;
- 			return 0;
- 		}
--		if ( pinpr ) {
-+		if (pinpr) {
- 			int rval;
--			rval = mlock( ( void * )msgp->rm_bufp, bufsz );
--			if ( rval ) {
--				if ( errno == ENOMEM ) {
-+			rval = mlock((void *)msgp->rm_bufp, bufsz);
-+			if (rval) {
-+				if (errno == ENOMEM) {
- 					*rvalp = E2BIG;
- 					return 0;
- 				}
--				if ( errno == EPERM ) {
-+				if (errno == EPERM) {
- 					*rvalp = EPERM;
- 					return 0;
- 				}
--				assert( 0 );
-+				assert(0);
- 			}
- 		}
+-	if ( global_version_check( grhdrp->gh_version ) != BOOL_TRUE ) {
+-	        mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (global_version_check(grhdrp->gh_version) != BOOL_TRUE) {
++	        mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	              "invalid version number (%d) in tape label\n",
+-		      grhdrp->gh_version );
++		      grhdrp->gh_version);
+ 	        return DRIVE_ERROR_VERSION;
  	}
  
- 	/* kick off the slave thread
+ 	/* check the strategy id
  	 */
--	ok = cldmgr_create( ring_slave_entry,
-+	ok = cldmgr_create(ring_slave_entry,
- 			    drive_index,
- 			    _("slave"),
--			    ringp );
--	assert( ok );
-+			    ringp);
-+	assert(ok);
- 
- 	return ringp;
- }
- 
- ring_msg_t *
--ring_get( ring_t *ringp )
-+ring_get(ring_t *ringp)
- {
- 	ring_msg_t *msgp;
- 
- 	/* assert client currently holds no messages
- 	 */
--	assert( ringp->r_client_cnt == 0 );
-+	assert(ringp->r_client_cnt == 0);
- 
- 	/* bump client message count and note if client needs to block
- 	 */
- 	ringp->r_client_msgcnt++;
--	if ( qsemPwouldblock( ringp->r_ready_qsemh )) {
-+	if (qsemPwouldblock(ringp->r_ready_qsemh)) {
- 		ringp->r_client_blkcnt++;
+-	if ( drhdrp->dh_strategyid != drivep->d_strategyp->ds_id ) {
+-	        mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (drhdrp->dh_strategyid != drivep->d_strategyp->ds_id) {
++	        mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	               "unrecognized drive strategy ID (%d)\n",
+-	               drivep->d_readhdrp->dh_strategyid );
++	               drivep->d_readhdrp->dh_strategyid);
+ 	        return DRIVE_ERROR_FORMAT;
  	}
  
- 	/* block until msg available on ready queue ("P")
+ 	/* check the record magic number
  	 */
--	qsemP( ringp->r_ready_qsemh );
-+	qsemP(ringp->r_ready_qsemh);
- 
- 	/* get a pointer to the next msg on the queue
- 	 */
--	msgp = &ringp->r_msgp[ ringp->r_ready_out_ix ];
-+	msgp = &ringp->r_msgp[ringp->r_ready_out_ix];
- 
- 	/* assert the message is where it belongs
- 	 */
--	assert( msgp->rm_loc == RING_LOC_READY );
-+	assert(msgp->rm_loc == RING_LOC_READY);
- 
- 	/* verify the message index has not become corrupted
- 	 */
--	assert( msgp->rm_mix == ringp->r_ready_out_ix );
-+	assert(msgp->rm_mix == ringp->r_ready_out_ix);
- 
- 	/* bump the output index
- 	 */
--	ringp->r_ready_out_ix = ( ringp->r_ready_out_ix + 1 )
-+	ringp->r_ready_out_ix = (ringp->r_ready_out_ix + 1)
- 				%
- 				ringp->r_len;
- 
-@@ -183,19 +183,19 @@ ring_get( ring_t *ringp )
- }
- 
- void
--ring_put( ring_t *ringp, ring_msg_t *msgp )
-+ring_put(ring_t *ringp, ring_msg_t *msgp)
- {
- 	/* assert the client holds exactly one message
- 	 */
--	assert( ringp->r_client_cnt == 1 );
-+	assert(ringp->r_client_cnt == 1);
- 
- 	/* assert the client is returning the right message
- 	 */
--	assert( msgp->rm_mix == ringp->r_active_in_ix );
-+	assert(msgp->rm_mix == ringp->r_active_in_ix);
- 
- 	/* assert the message is where it belongs
- 	 */
--	assert( msgp->rm_loc == RING_LOC_CLIENT );
-+	assert(msgp->rm_loc == RING_LOC_CLIENT);
- 
- 	/* decrement the count of messages held by the client
- 	 */
-@@ -207,150 +207,150 @@ ring_put( ring_t *ringp, ring_msg_t *msgp )
- 
- 	/* bump the active queue input ix
- 	 */
--	ringp->r_active_in_ix = ( ringp->r_active_in_ix + 1 )
-+	ringp->r_active_in_ix = (ringp->r_active_in_ix + 1)
- 				%
- 				ringp->r_len;
- 
- 	/* bump the semaphore for the active queue ("V")
- 	 */
--	qsemV( ringp->r_active_qsemh );
-+	qsemV(ringp->r_active_qsemh);
- }
- 
- void
--ring_reset( ring_t *ringp, ring_msg_t *msgp )
-+ring_reset(ring_t *ringp, ring_msg_t *msgp)
- {
- 	size_t mix;
- 
- 	/* if the client is not holding a message, get the next message
- 	 */
--	if ( ringp->r_client_cnt == 0 ) {
--		assert( ! msgp );
--		msgp = ring_get( ringp );
--		assert( msgp );
--		assert( ringp->r_client_cnt == 1 );
-+	if (ringp->r_client_cnt == 0) {
-+		assert(! msgp);
-+		msgp = ring_get(ringp);
-+		assert(msgp);
-+		assert(ringp->r_client_cnt == 1);
- 	} else {
--		assert( msgp );
--		assert( ringp->r_client_cnt == 1 );
-+		assert(msgp);
-+		assert(ringp->r_client_cnt == 1);
+-	if ( tprhdrp->magic != STAPE_MAGIC ) {
+-	        mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (tprhdrp->magic != STAPE_MAGIC) {
++	        mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	              "invalid record magic number in tape label\n");
+ 	        return DRIVE_ERROR_FORMAT;
  	}
  
- 	/* tell the slave to abort
+ 	/* check the record version number
  	 */
- 	msgp->rm_op = RING_OP_RESET;
--	ring_put( ringp, msgp );
-+	ring_put(ringp, msgp);
- 
- 	/* wait for the reset to be acknowledged
- 	 */
--	assert( ringp->r_client_cnt == 0 );
-+	assert(ringp->r_client_cnt == 0);
- 	do {
- 		/* pull a message from the ready queue
- 		 */
--		qsemP( ringp->r_ready_qsemh );
--		msgp = &ringp->r_msgp[ ringp->r_ready_out_ix ];
--		assert( msgp->rm_loc == RING_LOC_READY );
--		ringp->r_ready_out_ix = ( ringp->r_ready_out_ix + 1 )
-+		qsemP(ringp->r_ready_qsemh);
-+		msgp = &ringp->r_msgp[ringp->r_ready_out_ix];
-+		assert(msgp->rm_loc == RING_LOC_READY);
-+		ringp->r_ready_out_ix = (ringp->r_ready_out_ix + 1)
- 					%
- 					ringp->r_len;
- 		ringp->r_client_cnt++;
--	} while ( msgp->rm_stat != RING_STAT_RESETACK );
--	assert( ringp->r_client_cnt == ringp->r_len );
-+	} while (msgp->rm_stat != RING_STAT_RESETACK);
-+	assert(ringp->r_client_cnt == ringp->r_len);
- 
- 	/* re-initialize the ring
- 	 */
--	assert( qsemPavail( ringp->r_ready_qsemh ) == 0 );
--	assert( qsemPavail( ringp->r_active_qsemh ) == 0 );
-+	assert(qsemPavail(ringp->r_ready_qsemh) == 0);
-+	assert(qsemPavail(ringp->r_active_qsemh) == 0);
- 	ringp->r_ready_in_ix = 0;
- 	ringp->r_ready_out_ix = 0;
- 	ringp->r_active_in_ix = 0;
- 	ringp->r_active_out_ix = 0;
- 	ringp->r_client_cnt = 0;
- 	ringp->r_slave_cnt = 0;
--	for ( mix = 0 ; mix < ringp->r_len ; mix++ ) {
--		ring_msg_t *msgp = &ringp->r_msgp[ mix ];
-+	for (mix = 0 ; mix < ringp->r_len ; mix++) {
-+		ring_msg_t *msgp = &ringp->r_msgp[mix];
- 		msgp->rm_mix = mix;
- 		msgp->rm_op = RING_OP_NONE;
- 		msgp->rm_stat = RING_STAT_INIT;
- 		msgp->rm_user = 0;
- 		msgp->rm_loc = RING_LOC_READY;
--		qsemV( ringp->r_ready_qsemh );
-+		qsemV(ringp->r_ready_qsemh);
- 	}
--	assert( qsemPavail( ringp->r_ready_qsemh ) == ringp->r_len );
--	assert( qsemPavail( ringp->r_active_qsemh ) == 0 );
-+	assert(qsemPavail(ringp->r_ready_qsemh) == ringp->r_len);
-+	assert(qsemPavail(ringp->r_active_qsemh) == 0);
- }
- 
- void
--ring_destroy( ring_t *ringp )
-+ring_destroy(ring_t *ringp)
- {
- 	ring_msg_t *msgp;
- 
- 	/* the client must not be holding a message
- 	 */
--	assert( ringp->r_client_cnt == 0 );
-+	assert(ringp->r_client_cnt == 0);
- 
- 	/* get a message
- 	 */
--	msgp = ring_get( ringp );
-+	msgp = ring_get(ringp);
- 
- 	/* tell the slave to exit
- 	 */
- 	msgp->rm_op = RING_OP_DIE;
--	ring_put( ringp, msgp );
-+	ring_put(ringp, msgp);
- 
- 	/* wait for the die to be acknowledged
- 	 */
- 	do {
- 		/* pull a message from the ready queue
- 		 */
--		qsemP( ringp->r_ready_qsemh );
--		msgp = &ringp->r_msgp[ ringp->r_ready_out_ix ];
--		assert( msgp->rm_loc == RING_LOC_READY );
--		ringp->r_ready_out_ix = ( ringp->r_ready_out_ix + 1 )
-+		qsemP(ringp->r_ready_qsemh);
-+		msgp = &ringp->r_msgp[ringp->r_ready_out_ix];
-+		assert(msgp->rm_loc == RING_LOC_READY);
-+		ringp->r_ready_out_ix = (ringp->r_ready_out_ix + 1)
- 					%
- 					ringp->r_len;
--	} while ( msgp->rm_stat != RING_STAT_DIEACK );
-+	} while (msgp->rm_stat != RING_STAT_DIEACK);
- 
- 	/* the slave is dead.
- 	 */
--	qsem_free( ringp->r_ready_qsemh );
--	qsem_free( ringp->r_active_qsemh );
--	free( ( void * )ringp );
-+	qsem_free(ringp->r_ready_qsemh);
-+	qsem_free(ringp->r_active_qsemh);
-+	free((void *)ringp);
- }
- 
- 
- static ring_msg_t *
--ring_slave_get( ring_t *ringp )
-+ring_slave_get(ring_t *ringp)
- {
- 	ring_msg_t *msgp;
- 
- 	/* assert slave currently holds no messages
- 	 */
--	assert( ringp->r_slave_cnt == 0 );
-+	assert(ringp->r_slave_cnt == 0);
- 
- 	/* bump slave message count and note if slave needs to block
- 	 */
- 	ringp->r_slave_msgcnt++;
--	if ( qsemPwouldblock( ringp->r_active_qsemh )) {
-+	if (qsemPwouldblock(ringp->r_active_qsemh)) {
- 		ringp->r_slave_blkcnt++;
+-	if ( tprhdrp->version != STAPE_VERSION ) {
+-	        mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (tprhdrp->version != STAPE_VERSION) {
++	        mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	              "invalid record version number in tape label\n");
+ 	        return DRIVE_ERROR_VERSION;
  	}
  
- 	/* block until msg available on active queue ("P")
- 	 */
--	qsemP( ringp->r_active_qsemh );
-+	qsemP(ringp->r_active_qsemh);
- 
- 	/* get a pointer to the next msg on the queue
- 	 */
--	msgp = &ringp->r_msgp[ ringp->r_active_out_ix ];
-+	msgp = &ringp->r_msgp[ringp->r_active_out_ix];
- 
- 	/* assert the message is where it belongs
- 	 */
--	assert( msgp->rm_loc == RING_LOC_ACTIVE );
-+	assert(msgp->rm_loc == RING_LOC_ACTIVE);
- 
- 	/* verify the message index has not become corrupted
- 	 */
--	assert( msgp->rm_mix == ringp->r_active_out_ix );
-+	assert(msgp->rm_mix == ringp->r_active_out_ix);
- 
- 	/* bump the output index
- 	 */
--	ringp->r_active_out_ix = ( ringp->r_active_out_ix + 1 )
-+	ringp->r_active_out_ix = (ringp->r_active_out_ix + 1)
- 				 %
- 				 ringp->r_len;
- 
-@@ -368,19 +368,19 @@ ring_slave_get( ring_t *ringp )
- }
- 
- static void
--ring_slave_put( ring_t *ringp, ring_msg_t *msgp )
-+ring_slave_put(ring_t *ringp, ring_msg_t *msgp)
- {
- 	/* assert the slave holds exactly one message
- 	 */
--	assert( ringp->r_slave_cnt == 1 );
-+	assert(ringp->r_slave_cnt == 1);
- 
- 	/* assert the slave is returning the right message
- 	 */
--	assert( msgp->rm_mix == ringp->r_ready_in_ix );
-+	assert(msgp->rm_mix == ringp->r_ready_in_ix);
- 
- 	/* assert the message is where it belongs
- 	 */
--	assert( msgp->rm_loc == RING_LOC_SLAVE );
-+	assert(msgp->rm_loc == RING_LOC_SLAVE);
- 
- 	/* decrement the count of messages held by the slave
- 	 */
-@@ -392,56 +392,56 @@ ring_slave_put( ring_t *ringp, ring_msg_t *msgp )
- 
- 	/* bump the ready queue input ix
- 	 */
--	ringp->r_ready_in_ix = ( ringp->r_ready_in_ix + 1 )
-+	ringp->r_ready_in_ix = (ringp->r_ready_in_ix + 1)
- 			       %
- 			       ringp->r_len;
- 
- 	/* bump the semaphore for the ready queue ("V")
- 	 */
--	qsemV( ringp->r_ready_qsemh );
-+	qsemV(ringp->r_ready_qsemh);
- }
- 
- static int
--ring_slave_entry( void *ringctxp )
-+ring_slave_entry(void *ringctxp)
- {
- 	sigset_t blocked_set;
--	ring_t *ringp = ( ring_t * )ringctxp;
-+	ring_t *ringp = (ring_t *)ringctxp;
- 	enum { LOOPMODE_NORMAL, LOOPMODE_IGNORE, LOOPMODE_DIE } loopmode;
- 
- 	/* block signals, let the main thread handle them
- 	 */
--	sigemptyset( &blocked_set );
--	sigaddset( &blocked_set, SIGINT );
--	sigaddset( &blocked_set, SIGHUP );
--	sigaddset( &blocked_set, SIGTERM );
--	sigaddset( &blocked_set, SIGQUIT );
--	sigaddset( &blocked_set, SIGALRM );
--	pthread_sigmask( SIG_SETMASK, &blocked_set, NULL );
-+	sigemptyset(&blocked_set);
-+	sigaddset(&blocked_set, SIGINT);
-+	sigaddset(&blocked_set, SIGHUP);
-+	sigaddset(&blocked_set, SIGTERM);
-+	sigaddset(&blocked_set, SIGQUIT);
-+	sigaddset(&blocked_set, SIGALRM);
-+	pthread_sigmask(SIG_SETMASK, &blocked_set, NULL);
- 
- 	/* loop reading and precessing messages until told to die
- 	 */
--	for ( loopmode = LOOPMODE_NORMAL ; loopmode != LOOPMODE_DIE ; ) {
-+	for (loopmode = LOOPMODE_NORMAL ; loopmode != LOOPMODE_DIE ;) {
- 		ring_msg_t *msgp;
- 		int rval;
- 
--		msgp = ring_slave_get( ringp );
-+		msgp = ring_slave_get(ringp);
- 		msgp->rm_rval = 0;
- 
--		switch( msgp->rm_op ) {
-+		switch(msgp->rm_op) {
- 		case RING_OP_READ:
--			if ( loopmode == LOOPMODE_IGNORE ) {
-+			if (loopmode == LOOPMODE_IGNORE) {
- 				msgp->rm_stat = RING_STAT_IGNORE;
- 				break;
- 			}
--			if ( ! ringp->r_first_io_time ) {
--				ringp->r_first_io_time = time( 0 );
--				assert( ringp->r_first_io_time );
-+			if (! ringp->r_first_io_time) {
-+				ringp->r_first_io_time = time(0);
-+				assert(ringp->r_first_io_time);
- 			}
--			rval = ( ringp->r_readfunc )( ringp->r_clientctxp,
--						      msgp->rm_bufp );
-+			rval = (ringp->r_readfunc)(ringp->r_clientctxp,
-+						      msgp->rm_bufp);
- 			msgp->rm_rval = rval;
- 			ringp->r_all_io_cnt++;
--			if ( msgp->rm_rval == 0 ) {
-+			if (msgp->rm_rval == 0) {
- 				msgp->rm_stat = RING_STAT_OK;
- 			} else {
- 				msgp->rm_stat = RING_STAT_ERROR;
-@@ -449,19 +449,19 @@ ring_slave_entry( void *ringctxp )
- 			}
- 			break;
- 		case RING_OP_WRITE:
--			if ( loopmode == LOOPMODE_IGNORE ) {
-+			if (loopmode == LOOPMODE_IGNORE) {
- 				msgp->rm_stat = RING_STAT_IGNORE;
- 				break;
- 			}
--			if ( ! ringp->r_first_io_time ) {
--				ringp->r_first_io_time = time( 0 );
--				assert( ringp->r_first_io_time );
-+			if (! ringp->r_first_io_time) {
-+				ringp->r_first_io_time = time(0);
-+				assert(ringp->r_first_io_time);
- 			}
--			rval = ( ringp->r_writefunc )( ringp->r_clientctxp,
--						       msgp->rm_bufp );
-+			rval = (ringp->r_writefunc)(ringp->r_clientctxp,
-+						       msgp->rm_bufp);
- 			msgp->rm_rval = rval;
- 			ringp->r_all_io_cnt++;
--			if ( msgp->rm_rval == 0 ) {
-+			if (msgp->rm_rval == 0) {
- 				msgp->rm_stat = RING_STAT_OK;
- 			} else {
- 				msgp->rm_stat = RING_STAT_ERROR;
-@@ -486,7 +486,7 @@ ring_slave_entry( void *ringctxp )
- 			msgp->rm_stat = RING_STAT_IGNORE;
- 			break;
- 		}
--		ring_slave_put( ringp, msgp );
-+		ring_slave_put(ringp, msgp);
- 	}
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "media file header valid: "
+ 	      "media file ix %d\n",
+-	      mrhdrp->mh_mediafileix );
++	      mrhdrp->mh_mediafileix);
  
  	return 0;
-diff --git a/common/ring.h b/common/ring.h
-index 6126b77..be4ae69 100644
---- a/common/ring.h
-+++ b/common/ring.h
-@@ -144,8 +144,8 @@ struct ring {
- 	qsemh_t r_active_qsemh;
- 	size_t r_client_cnt;
- 	size_t r_slave_cnt;
--	int ( *r_readfunc )( void *contextp, char *bufp );
--	int ( *r_writefunc )( void *contextp, char *bufp );
-+	int (*r_readfunc)(void *contextp, char *bufp);
-+	int (*r_writefunc)(void *contextp, char *bufp);
- 	void *r_clientctxp;
- };
- 
-@@ -164,34 +164,34 @@ typedef struct ring ring_t;
-  * E2BIG - insufficient physical memory available for pinning;
-  * EPERM - exceeds allowed amount of pinned down memory.
-  */
--extern ring_t *ring_create( size_t ringlen,
-+extern ring_t *ring_create(size_t ringlen,
- 			    size_t bufsz,
- 			    bool_t pinpr,
- 			    ix_t drive_index,
--			    int ( * readfunc )( void *clientctxp, char *bufp ),
--			    int ( * writefunc )( void *clientctxp, char *bufp ),
-+			    int (* readfunc)(void *clientctxp, char *bufp),
-+			    int (* writefunc)(void *clientctxp, char *bufp),
- 			    void *clientctxp,
--			    int *rvalp );
-+			    int *rvalp);
- 
- 
- /* ring_get - get a message off the ready queue
-  */
--extern ring_msg_t *ring_get( ring_t *ringp );
-+extern ring_msg_t *ring_get(ring_t *ringp);
- 
- 
- /* ring_put - put a message on the active queue
-  */
--extern void ring_put( ring_t *ringp, ring_msg_t *msgp );
-+extern void ring_put(ring_t *ringp, ring_msg_t *msgp);
- 
- 
- /* ring_reset - re-initialize the ring, after the current I/O completes.
-  * msgp must be NULL if the client is not currently holding a ring message.
-  * otherwise it must point to that message.
-  */
--extern void ring_reset( ring_t *ringp, ring_msg_t *msgp );
-+extern void ring_reset(ring_t *ringp, ring_msg_t *msgp);
- 
- /* ring_destroy - de-allocates ring
-  */
--extern void ring_destroy( ring_t *ringp );
-+extern void ring_destroy(ring_t *ringp);
- 
- #endif /* RING_H */
-diff --git a/common/stream.c b/common/stream.c
-index eadaaea..64a112a 100644
---- a/common/stream.c
-+++ b/common/stream.c
-@@ -40,13 +40,13 @@ struct spm {
- };
- 
- typedef struct spm spm_t;
--static spm_t spm[ STREAM_SIMMAX * 3 ];
-+static spm_t spm[STREAM_SIMMAX * 3];
- static bool_t initialized = BOOL_FALSE;
- 
- void
--stream_init( void )
-+stream_init(void)
- {
--	( void )memset( ( void * )spm, 0, sizeof( spm ));
-+	(void)memset((void *)spm, 0, sizeof(spm));
- 	initialized = BOOL_TRUE;
  }
- 
-@@ -61,24 +61,24 @@ stream_init( void )
+@@ -3132,59 +3132,59 @@ validate_media_file_hdr( drive_t *drivep )
+  *	FALSE on failure
   */
- 
- void
--stream_register( pthread_t tid, int streamix )
-+stream_register(pthread_t tid, int streamix)
+ static bool_t
+-set_fixed_blksz( drive_t *drivep, size_t blksz )
++set_fixed_blksz(drive_t *drivep, size_t blksz)
  {
- 	spm_t *p = spm;
- 	spm_t *ep = spm + N(spm);
+-	drive_context_t	*contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t	*contextp = (drive_context_t *)drivep->d_contextp;
+ 	ix_t try;
  
--	assert( streamix < STREAM_SIMMAX );
-+	assert(streamix < STREAM_SIMMAX);
+ 	/* sanity checks
+ 	 */
+-	assert( blksz );
+-	assert( contextp->dc_isvarpr == BOOL_FALSE );
+-	assert( contextp->dc_cansetblkszpr );
+-	assert( contextp->dc_fd >= 0 );
++	assert(blksz);
++	assert(contextp->dc_isvarpr == BOOL_FALSE);
++	assert(contextp->dc_cansetblkszpr);
++	assert(contextp->dc_fd >= 0);
  
- 	lock();
--	for ( ; p < ep ; p++ ) {
--		if ( p->s_state == S_FREE ) {
-+	for (; p < ep ; p++) {
-+		if (p->s_state == S_FREE) {
- 			p->s_state = S_RUNNING;
- 			break;
+ 	/* give it two tries: first without rewinding, second with rewinding
+ 	 */
+-	for ( try = 1 ; try <= 2 ; try++ ) {
++	for (try = 1 ; try <= 2 ; try++) {
+ 		struct mtblkinfo mtinfo;
+ 
+ 		/* set the tape block size. requires re-open
+ 	 	 */
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 		      "setting fixed block size to %d\n",
+-		      blksz );
++		      blksz);
+ 
+ 		/* close and re-open
+ 		 */
+-		Close( drivep );
+-		if ( ! Open( drivep )) {
+-			display_access_failed_message( drivep );
++		Close(drivep);
++		if (! Open(drivep)) {
++			display_access_failed_message(drivep);
+ 			return BOOL_FALSE;
  		}
- 	}
- 	unlock();
--	assert( p < ep );
-+	assert(p < ep);
  
--	if ( p >= ep ) return;
-+	if (p >= ep) return;
- 
- 	p->s_tid = tid;
- 	p->s_ix = streamix;
-@@ -89,40 +89,40 @@ stream_register( pthread_t tid, int streamix )
- 
- /* NOTE: lock() must be held when calling stream_dead() */
- void
--stream_dead( pthread_t tid )
-+stream_dead(pthread_t tid)
- {
- 	spm_t *p = spm;
- 	spm_t *ep = spm + N(spm);
- 
--	for ( ; p < ep ; p++ )
--		if ( pthread_equal( p->s_tid, tid ) ) {
-+	for (; p < ep ; p++)
-+		if (pthread_equal(p->s_tid, tid)) {
- 			p->s_state = S_ZOMBIE;
- 			break;
+                 /* issue call to set block size
+                  */
+-                if ( mt_op( contextp->dc_fd,
++                if (mt_op(contextp->dc_fd,
+                             MTSETBLK,
+-                            ( int )blksz ) ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++                            (int)blksz)) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "MTSETBLK %u failed: %s (%d)\n",
+ 			      blksz,
+-			      strerror( errno ),
++			      strerror(errno),
+ 			      errno);
  		}
--	assert( p < ep );
-+	assert(p < ep);
- }
  
- void
--stream_free( pthread_t tid )
-+stream_free(pthread_t tid)
- {
- 	spm_t *p = spm;
- 	spm_t *ep = spm + N(spm);
- 
- 	lock();
--	for ( ; p < ep ; p++ ) {
--		if ( pthread_equal( p->s_tid, tid ) ) {
--			(void) memset( (void *) p, 0, sizeof(spm_t) );
-+	for (; p < ep ; p++) {
-+		if (pthread_equal(p->s_tid, tid)) {
-+			(void) memset((void *) p, 0, sizeof(spm_t));
- 			p->s_state = S_FREE;
- 			break;
- 		}
- 	}
- 	unlock();
--	assert( p < ep );
-+	assert(p < ep);
- }
- 
- int
--stream_find_all( stream_state_t states[], int nstates,
--		 pthread_t tids[], int ntids )
-+stream_find_all(stream_state_t states[], int nstates,
-+		 pthread_t tids[], int ntids)
- {
- 	int i, count = 0;
- 	spm_t *p = spm;
-@@ -134,7 +134,7 @@ stream_find_all( stream_state_t states[], int nstates,
- 
- 	/* lock - make sure we get a consistent snapshot of the stream status */
- 	lock();
--	for ( ; p < ep && count < ntids; p++ )
-+	for (; p < ep && count < ntids; p++)
- 		for (i = 0; i < nstates; i++)
- 			if (p->s_state == states[i]) {
- 				tids[count++] = p->s_tid;
-@@ -145,7 +145,7 @@ stream_find_all( stream_state_t states[], int nstates,
- }
- 
- static spm_t *
--stream_find( pthread_t tid, stream_state_t s[], int nstates )
-+stream_find(pthread_t tid, stream_state_t s[], int nstates)
- {
- 	int i;
- 	spm_t *p = spm;
-@@ -154,8 +154,8 @@ stream_find( pthread_t tid, stream_state_t s[], int nstates )
- 	assert(nstates > 0);
- 
- 	/* note we don't lock the stream array in this function */
--	for ( ; p < ep ; p++ )
--		if ( pthread_equal( p->s_tid, tid ) ) {
-+	for (; p < ep ; p++)
-+		if (pthread_equal(p->s_tid, tid)) {
- 			/* check state */
- 			for (i = 0; i < nstates; i++)
- 				if (p->s_state == s[i])
-@@ -165,13 +165,13 @@ stream_find( pthread_t tid, stream_state_t s[], int nstates )
- #ifdef STREAM_DEBUG
- 	{
- 		static const char *state_strings[] = { "S_FREE", "S_RUNNING", "S_ZOMBIE" };
--		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
-+		mlog(MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
- 		      "stream_find(): no stream with tid: %lu and state%s:",
--		      tid, nstates == 1 ? "" : "s" );
-+		      tid, nstates == 1 ? "" : "s");
- 		for (i = 0; i < nstates; i++)
--			mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
-+			mlog(MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE,
- 			      " %s", state_strings[s[i]]);
--		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE, "\n");
-+		mlog(MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK | MLOG_BARE, "\n");
- 	}
- #endif /* STREAM_DEBUG */
- 
-@@ -185,12 +185,12 @@ stream_find( pthread_t tid, stream_state_t s[], int nstates )
-  */
- 
- int
--stream_getix( pthread_t tid )
-+stream_getix(pthread_t tid)
- {
- 	stream_state_t states[] = { S_RUNNING };
- 	spm_t *p;
- 	int ix;
--	p = stream_find( tid, states, N(states) );
-+	p = stream_find(tid, states, N(states));
- 	ix = p ? p->s_ix : -1;
- 	return ix;
- }
-@@ -208,8 +208,8 @@ stream_getix( pthread_t tid )
- 	spm_t *p;							\
- 	pthread_t mytid = pthread_self();				\
- 									\
--	if ( !pthread_equal(mytid, (tid))) {				\
--		mlog( MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK,		\
-+	if (!pthread_equal(mytid, (tid))) {				\
-+		mlog(MLOG_DEBUG | MLOG_ERROR | MLOG_NOLOCK,		\
- 		      "stream_set_" #field_name "(): "			\
- 		      "foreign stream (tid %lu) "			\
- 		      "not permitted to update this stream (tid %lu)\n",\
-@@ -218,28 +218,28 @@ stream_getix( pthread_t tid )
- 	}								\
- 									\
- 	lock();								\
--	p = stream_find( (tid), states, N(states) );			\
-+	p = stream_find((tid), states, N(states));			\
- 	if (p) p->s_exit_ ## field_name = (value);			\
- 	unlock();
- 
--void stream_set_code( pthread_t tid, int exit_code )
-+void stream_set_code(pthread_t tid, int exit_code)
- {
--	stream_set( code, tid, exit_code );
-+	stream_set(code, tid, exit_code);
- }
- 
--void stream_set_return( pthread_t tid, rv_t rv )
-+void stream_set_return(pthread_t tid, rv_t rv)
- {
--	stream_set( return, tid, rv );
-+	stream_set(return, tid, rv);
- }
- 
--void stream_set_hint( pthread_t tid, rv_t rv )
-+void stream_set_hint(pthread_t tid, rv_t rv)
- {
--	stream_set( hint, tid, rv );
-+	stream_set(hint, tid, rv);
- }
- 
- 
- bool_t
--stream_get_exit_status( pthread_t tid,
-+stream_get_exit_status(pthread_t tid,
- 			stream_state_t states[],
- 			int nstates,
- 			stream_state_t *state,
-@@ -252,7 +252,7 @@ stream_get_exit_status( pthread_t tid,
- 	spm_t *p;
- 
- 	lock();
--	p = stream_find( tid, states, nstates );
-+	p = stream_find(tid, states, nstates);
- 	if (! p) goto unlock;
- 
- 	if (state) *state = p->s_state;
-@@ -268,7 +268,7 @@ stream_get_exit_status( pthread_t tid,
- }
- 
- size_t
--stream_cnt( void )
-+stream_cnt(void)
- {
- 	spm_t *p = spm;
- 	spm_t *ep = spm + N(spm);
-@@ -276,19 +276,19 @@ stream_cnt( void )
- 	size_t ixcnt;
- 	size_t bitix;
- 
--	assert( sizeof( ixmap ) * NBBY >= STREAM_SIMMAX );
-+	assert(sizeof(ixmap) * NBBY >= STREAM_SIMMAX);
- 
- 	lock();
--	for ( ; p < ep ; p++ ) {
--		if ( p->s_state == S_RUNNING ) {
--			ixmap |= ( size_t )1 << p->s_ix;
-+	for (; p < ep ; p++) {
-+		if (p->s_state == S_RUNNING) {
-+			ixmap |= (size_t)1 << p->s_ix;
- 		}
- 	}
- 	unlock();
- 
- 	ixcnt = 0;
--	for ( bitix = 0 ; bitix < STREAM_SIMMAX ; bitix++ ) {
--		if ( ixmap & ( ( size_t )1 << bitix )) {
-+	for (bitix = 0 ; bitix < STREAM_SIMMAX ; bitix++) {
-+		if (ixmap & ((size_t)1 << bitix)) {
- 			ixcnt++;
- 		}
- 	}
-diff --git a/common/stream.h b/common/stream.h
-index a83a5a5..b3417fa 100644
---- a/common/stream.h
-+++ b/common/stream.h
-@@ -41,21 +41,21 @@
- 
- typedef enum { S_FREE, S_RUNNING, S_ZOMBIE } stream_state_t;
- 
--extern void stream_init( void );
--extern void stream_register( pthread_t tid, int streamix );
-+extern void stream_init(void);
-+extern void stream_register(pthread_t tid, int streamix);
- /* NOTE: lock() must be held when calling stream_dead */
--extern void stream_dead( pthread_t tid );
--extern void stream_free( pthread_t tid );
--extern int stream_find_all( stream_state_t states[],
-+extern void stream_dead(pthread_t tid);
-+extern void stream_free(pthread_t tid);
-+extern int stream_find_all(stream_state_t states[],
- 			    int nstates,
- 			    pthread_t tids[],
--			    int ntids );
--extern int stream_getix( pthread_t tid );
--extern void stream_set_code( pthread_t tid, int code );
--extern void stream_set_return( pthread_t tid, rv_t rv );
--extern void stream_set_hint( pthread_t tid, rv_t rv );
--extern bool_t stream_exists( pthread_t tid );
--extern bool_t stream_get_exit_status( pthread_t tid,
-+			    int ntids);
-+extern int stream_getix(pthread_t tid);
-+extern void stream_set_code(pthread_t tid, int code);
-+extern void stream_set_return(pthread_t tid, rv_t rv);
-+extern void stream_set_hint(pthread_t tid, rv_t rv);
-+extern bool_t stream_exists(pthread_t tid);
-+extern bool_t stream_get_exit_status(pthread_t tid,
- 				      stream_state_t states[],
- 				      int nstates,
- 				      stream_state_t *state,
-@@ -63,7 +63,7 @@ extern bool_t stream_get_exit_status( pthread_t tid,
- 				      int *exit_code,
- 				      rv_t *exit_return,
- 				      rv_t *exit_hint);
--extern size_t stream_cnt( void );
-+extern size_t stream_cnt(void);
- 
- 
- #endif /* STREAM_H */
-diff --git a/common/timeutil.c b/common/timeutil.c
-index 0e52968..a25b0c4 100644
---- a/common/timeutil.c
-+++ b/common/timeutil.c
-@@ -38,12 +38,12 @@ ctime32_r(const time32_t *timep, char *buf)
- }
- 
- char *
--ctimennl( const time32_t *clockp )
-+ctimennl(const time32_t *clockp)
- {
--	char *p = ctime32( clockp );
-+	char *p = ctime32(clockp);
- 
--	if ( p && strlen( p ) > 0 ) {
--		p[ strlen( p ) - 1 ] = 0;
-+	if (p && strlen(p) > 0) {
-+		p[strlen(p) - 1] = 0;
- 	}
- 
- 	return p;
-diff --git a/common/timeutil.h b/common/timeutil.h
-index b200855..5b9567d 100644
---- a/common/timeutil.h
-+++ b/common/timeutil.h
-@@ -24,14 +24,14 @@
- 
- /* ctime32 - takes a time32_t instead of a time_t
-  */
--extern char *ctime32( const time32_t *timep );
-+extern char *ctime32(const time32_t *timep);
- 
- /* ctime32_r - takes a time32_t instead of a time_t
-  */
--extern char *ctime32_r( const time32_t *timep, char *buf );
-+extern char *ctime32_r(const time32_t *timep, char *buf);
- 
- /* ctimennl - ctime(3C) with newline removed
-  */
--extern char *ctimennl( const time32_t *clockp );
-+extern char *ctimennl(const time32_t *clockp);
- 
- #endif /* TIMEUTIL_H */
-diff --git a/common/ts_mtio.h b/common/ts_mtio.h
-index 92fd889..9e4ae4c 100644
---- a/common/ts_mtio.h
-+++ b/common/ts_mtio.h
-@@ -42,7 +42,7 @@ typedef unsigned int    minor_t;
-  * #define MTSEEK	22	 Seek to the given block number.  Not all
-  *				 drives support this option.  For drives
-  *				 that support audio, the block number
-- *				 actually becomes the program number ( 0
-+ *				 actually becomes the program number (0
-  *				 meaning leadin area, 0xfffffffe meaning
-  *				 leadout, and other values (currently 1-
-  *				 799 decimal) the program #).  For seeking
-diff --git a/common/types.h b/common/types.h
-index b619667..080cc1a 100644
---- a/common/types.h
-+++ b/common/types.h
-@@ -43,8 +43,8 @@
-  * for now we will
-  */
- #define PGSZLOG2	12
--#define PGSZ		( 1 << PGSZLOG2 )
--#define PGMASK		( PGSZ - 1 )
-+#define PGSZ		(1 << PGSZLOG2)
-+#define PGMASK		(PGSZ - 1)
- 
- /* integers
-  */
-@@ -68,37 +68,37 @@ typedef uint64_t xfs_ino_t;
- #define NBBY		8
- #endif
- 
--#define	MKMAX( t, s )	( ( t )						\
--			  ( ( ( 1ull					\
-+#define	MKMAX(t, s)	((t)						\
-+			  (((1ull					\
- 			        <<					\
--			        ( ( unsigned long long )sizeof( t )	\
-+			        ((unsigned long long)sizeof(t)	\
- 				  *					\
--				  ( unsigned long long )NBBY		\
-+				  (unsigned long long)NBBY		\
- 			          -					\
--			          ( s + 1ull )))			\
-+			          (s + 1ull)))			\
- 			      -						\
--			      1ull )					\
-+			      1ull)					\
- 			    *						\
- 			    2ull					\
- 			    +						\
--			    1ull ))
--#define MKSMAX( t )	MKMAX( t, 1ull )
--#define MKUMAX( t )	MKMAX( t, 0ull )
--#define INT32MAX	MKSMAX( int32_t )
--#define UINT32MAX	MKUMAX( uint32_t )
--#define SIZE32MAX	MKUMAX( size32_t )
--#define INT64MAX	MKSMAX( int64_t )
--#define UINT64MAX	MKUMAX( uint64_t )
--#define SIZE64MAX	MKUMAX( size64_t )
--#define INO64MAX	MKUMAX( xfs_ino_t )
--#define OFF64MAX	MKSMAX( off64_t )
--#define INTGENMAX	MKSMAX( int )
--#define UINTGENMAX	MKUMAX( uint )
--#define OFFMAX		MKSMAX( off_t )
--#define SIZEMAX		MKUMAX( size_t )
--#define IXMAX		MKUMAX( size_t )
--#define INOMAX		MKUMAX( ino_t )
--#define TIMEMAX		MKSMAX( time32_t )
-+			    1ull))
-+#define MKSMAX(t)	MKMAX(t, 1ull)
-+#define MKUMAX(t)	MKMAX(t, 0ull)
-+#define INT32MAX	MKSMAX(int32_t)
-+#define UINT32MAX	MKUMAX(uint32_t)
-+#define SIZE32MAX	MKUMAX(size32_t)
-+#define INT64MAX	MKSMAX(int64_t)
-+#define UINT64MAX	MKUMAX(uint64_t)
-+#define SIZE64MAX	MKUMAX(size64_t)
-+#define INO64MAX	MKUMAX(xfs_ino_t)
-+#define OFF64MAX	MKSMAX(off64_t)
-+#define INTGENMAX	MKSMAX(int)
-+#define UINTGENMAX	MKUMAX(uint)
-+#define OFFMAX		MKSMAX(off_t)
-+#define SIZEMAX		MKUMAX(size_t)
-+#define IXMAX		MKUMAX(size_t)
-+#define INOMAX		MKUMAX(ino_t)
-+#define TIMEMAX		MKSMAX(time32_t)
- #define INT16MAX	0x7fff
- #define UINT16MAX	0xffff
- 
-@@ -107,8 +107,8 @@ typedef uint64_t xfs_ino_t;
- typedef int bool_t;
- #define BOOL_TRUE	1
- #define BOOL_FALSE	0
--#define BOOL_UNKNOWN	( -1 )
--#define BOOL_ERROR	( -2 )
-+#define BOOL_UNKNOWN	(-1)
-+#define BOOL_ERROR	(-2)
- 
- /* useful return code scheme
-  * NOTE: that there are macros and error messages in common/types.h that should
-@@ -122,7 +122,7 @@ typedef enum { RV_OK,		/* mission accomplished */
- 	       RV_EOM,		/* hit end of media object */
- 	       RV_ERROR,	/* operator error or resource exhaustion */
- 	       RV_DONE,		/* return early because someone else did work */
--	       RV_INTR,		/* cldmgr_stop_requested( ) */
-+	       RV_INTR,		/* cldmgr_stop_requested() */
- 	       RV_CORRUPT,	/* stopped because corrupt data encountered */
- 	       RV_QUIT,		/* stop using resource */
- 	       RV_DRIVE,	/* drive quit working */
-diff --git a/common/util.c b/common/util.c
-index 70b17eb..081a40f 100644
---- a/common/util.c
-+++ b/common/util.c
-@@ -38,31 +38,31 @@
- extern size_t pgsz;
- 
- int
--write_buf( char *bufp,
-+write_buf(char *bufp,
- 	   size_t bufsz,
- 	   void *contextp,
- 	   gwbfp_t get_write_buf_funcp,
--	   wfp_t write_funcp )
-+	   wfp_t write_funcp)
- {
- 	char *mbufp;	/* buffer obtained from manager */
- 	size_t mbufsz;/* size of buffer obtained from manager */
- 
--	while ( bufsz ) {
-+	while (bufsz) {
- 		int rval;
- 
--		assert( bufsz > 0 );
--		mbufp = ( *get_write_buf_funcp )( contextp, bufsz, &mbufsz );
--		assert( mbufsz <= bufsz );
--		if ( bufp ) {
--			(void)memcpy( ( void * )mbufp, ( void * )bufp, mbufsz );
-+		assert(bufsz > 0);
-+		mbufp = (*get_write_buf_funcp)(contextp, bufsz, &mbufsz);
-+		assert(mbufsz <= bufsz);
-+		if (bufp) {
-+			(void)memcpy((void *)mbufp, (void *)bufp, mbufsz);
+ 		/* see if we were successful (can't look if RMT, so assume
+ 		 * it worked)
+ 		 */
+-		if ( ! contextp->dc_isrmtpr ) {
++		if (! contextp->dc_isrmtpr) {
+                         bool_t ok;
+-                        ok = mt_blkinfo( contextp->dc_fd, &mtinfo );
+-                        if ( ! ok ) {
++                        ok = mt_blkinfo(contextp->dc_fd, &mtinfo);
++                        if (! ok) {
+                                 return BOOL_FALSE;
+                         }
+-                        if ( mtinfo.curblksz == blksz ) {
++                        if (mtinfo.curblksz == blksz) {
+                                 return BOOL_TRUE;
+                         }
  		} else {
--			(void)memset( ( void * )mbufp, 0, mbufsz );
-+			(void)memset((void *)mbufp, 0, mbufsz);
+@@ -3193,12 +3193,12 @@ set_fixed_blksz( drive_t *drivep, size_t blksz )
+ 
+ 		/* so rewind and try again
+ 		 */
+-		( void )rewind_and_verify( drivep );
++		(void)rewind_and_verify(drivep);
+ 	}
+ 
+-	mlog( MLOG_NORMAL | MLOG_DRIVE,
++	mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 	      _("unable to set block size to %d\n"),
+-	      blksz );
++	      blksz);
+ 
+ 	return BOOL_FALSE;
+ }
+@@ -3213,13 +3213,13 @@ set_fixed_blksz( drive_t *drivep, size_t blksz )
+  *	FALSE on error
+  */
+ static bool_t
+-get_tpcaps( drive_t *drivep )
++get_tpcaps(drive_t *drivep)
+ {
+-	drive_context_t	*contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t	*contextp = (drive_context_t *)drivep->d_contextp;
+ 
+-	assert( contextp->dc_fd >= 0 );
++	assert(contextp->dc_fd >= 0);
+ 
+-	if ( contextp->dc_isrmtpr ) {
++	if (contextp->dc_isrmtpr) {
+ 		/* can't ask about blksz, can't set blksz, can't ask about
+ 		 * drive types/caps. assume a drive which can overwrite.
+ 		 * assume NOT QIC, since fixed blksz devices not supported
+@@ -3236,8 +3236,8 @@ get_tpcaps( drive_t *drivep )
+ 		 */
+ 		struct mtblkinfo mtinfo;
+ 		bool_t ok;
+-		ok = mt_blkinfo( contextp->dc_fd, &mtinfo );
+-		if ( ! ok ) {
++		ok = mt_blkinfo(contextp->dc_fd, &mtinfo);
++		if (! ok) {
+ 			return BOOL_FALSE;
  		}
--		rval = ( * write_funcp )( contextp, mbufp, mbufsz );
+ 
+@@ -3254,20 +3254,20 @@ get_tpcaps( drive_t *drivep )
+ 			contextp->dc_cangetblkszpr = BOOL_TRUE;
+ 			contextp->dc_cansetblkszpr = BOOL_TRUE;
+ 			contextp->dc_maxblksz = mtinfo.maxblksz;
+-			if ( contextp->dc_origcurblksz == 0 )
++			if (contextp->dc_origcurblksz == 0)
+ 				contextp->dc_origcurblksz = mtinfo.curblksz;
+ 			drivep->d_capabilities |= DRIVE_CAP_OVERWRITE;
+ 			drivep->d_capabilities |= DRIVE_CAP_BSF;
+ #ifdef HIDDEN
+ Need to find equivalent in Linux.
+-			if ( mtcapablity & MTCAN_SEEK ) {
++			if (mtcapablity & MTCAN_SEEK) {
+ 				contextp->dc_canfsrpr = BOOL_TRUE;
+ 			}
+ #endif
+ 		}
+ 	}
+ 
+-	set_recommended_sizes( drivep );
++	set_recommended_sizes(drivep);
+ 
+ 	return BOOL_TRUE;
+ }
+@@ -3280,32 +3280,32 @@ Need to find equivalent in Linux.
+  *	void
+  */
+ static void
+-set_recommended_sizes( drive_t *drivep )
++set_recommended_sizes(drive_t *drivep)
+ {
+-	drive_context_t	*contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t	*contextp = (drive_context_t *)drivep->d_contextp;
+ 	off64_t	fsize = drive_strategy_scsitape.ds_recmfilesz;
+ 	off64_t	marksep = drive_strategy_scsitape.ds_recmarksep;
+ 
+ 	if (contextp->dc_filesz > 0) {
+ 		fsize = contextp->dc_filesz;
+ #ifdef DUMP
+-		if ( hdr_mfilesz > fsize ) {
+-			mlog( MLOG_WARNING, _(
++		if (hdr_mfilesz > fsize) {
++			mlog(MLOG_WARNING, _(
+ 			      "recommended media file size of %llu Mb less than"
+ 			      " estimated file header size %llu Mb for %s\n"),
+-			      fsize / ( 1024 * 1024 ),
+-			      hdr_mfilesz / ( 1024 * 1024 ),
+-			      drivep->d_pathname );
++			      fsize / (1024 * 1024),
++			      hdr_mfilesz / (1024 * 1024),
++			      drivep->d_pathname);
+ 		}
+ #endif /* DUMP */
+         }
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "recommended tape media file size set to 0x%llx bytes\n",
+-	      fsize );
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	      fsize);
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "recommended tape media mark separation set to 0x%llx bytes\n",
+-	      marksep );
++	      marksep);
+ 
+ 	drivep->d_recmfilesz = fsize;
+ 	drivep->d_recmarksep = marksep;
+@@ -3326,36 +3326,36 @@ set_recommended_sizes( drive_t *drivep )
+  *	FALSE on failure
+  */
+ static bool_t
+-mt_blkinfo( int fd, struct mtblkinfo *minfo )
++mt_blkinfo(int fd, struct mtblkinfo *minfo)
+ {
+ 	struct mtget 	mt_stat;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "tape op: get block size info\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "tape op: get block size info\n");
+ 
+ 	if (TS_ISDRIVER) { /* Use TS ioctl MTIOCGETBLKINFO so we don't
+ 			    * have to hard code the max block size  */
+ 		struct mtblkinfo ts_blkinfo;
+-		if ( ioctl(fd, MTIOCGETBLKINFO, &ts_blkinfo) < 0 ) {
++		if (ioctl(fd, MTIOCGETBLKINFO, &ts_blkinfo) < 0) {
+ 			/* failure
+ 			 */
+ 			mlog(MLOG_DEBUG,
+ 				"tape command MTIOCGETBLKINFO failed : %d (%s)\n",
+ 				errno,
+-				strerror( errno ));
++				strerror(errno));
+ 			return BOOL_FALSE;
+ 		}
+ 		minfo->curblksz = ts_blkinfo.curblksz;
+ 		minfo->maxblksz = ts_blkinfo.maxblksz;
+ 	}
+ 	else {
+-		if ( ioctl(fd, MTIOCGET, &mt_stat) < 0 ) {
++		if (ioctl(fd, MTIOCGET, &mt_stat) < 0) {
+ 			/* failure
+ 			 */
+ 			mlog(MLOG_DEBUG,
+ 				"tape command MTIOCGET failed : %d (%s)\n",
+ 	 			errno,
+- 	 			strerror( errno ));
++ 	 			strerror(errno));
+ 			return BOOL_FALSE;
+ 		}
+ 		minfo->curblksz = (mt_stat.mt_dsreg >> MT_ST_BLKSIZE_SHIFT) &
+@@ -3363,7 +3363,7 @@ mt_blkinfo( int fd, struct mtblkinfo *minfo )
+ 		minfo->maxblksz = STAPE_MAX_LINUX_RECSZ;
+ 	}
+ 
+-	mlog( MLOG_NITTY | MLOG_DRIVE,
++	mlog(MLOG_NITTY | MLOG_DRIVE,
+ 	      "max=%u cur=%u\n",
+ 	      minfo->maxblksz,
+ 	      minfo->curblksz);
+@@ -3381,18 +3381,18 @@ mt_blkinfo( int fd, struct mtblkinfo *minfo )
+  *	-1 on failure
+  */
+ static int
+-mt_op(int fd, int sub_op, int param )
++mt_op(int fd, int sub_op, int param)
+ {
+ 	struct mtop 	mop;
+ 	char *printstr;
+ 	int rval;
+ 
+-	mop.mt_op   	= (short )sub_op;
++	mop.mt_op   	= (short)sub_op;
+ 	mop.mt_count	= param;
+ 
+-	assert( fd >= 0 );
++	assert(fd >= 0);
+ 
+-	switch ( sub_op ) {
++	switch (sub_op) {
+ 	case MTSEEK:
+ 		printstr = "seek";
+ 		break;
+@@ -3427,22 +3427,22 @@ mt_op(int fd, int sub_op, int param )
+ 		printstr = "???";
+ 		break;
+ 	}
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "tape op: %s %d\n",
+ 	      printstr,
+-	      param );
++	      param);
+ 
+-	rval = ioctl( fd, MTIOCTOP, &mop );
+-	if ( rval < 0 ) {
++	rval = ioctl(fd, MTIOCTOP, &mop);
++	if (rval < 0) {
+ 		/* failure
+ 	 	 */
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 		      "tape op %s %d returns %d: errno == %d (%s)\n",
+ 		      printstr,
+ 		      param,
+ 		      rval,
+ 		      errno,
+-		      strerror( errno ));
++		      strerror(errno));
+ 		return -1;
+ 	}
+ 
+@@ -3452,25 +3452,25 @@ mt_op(int fd, int sub_op, int param )
+ }
+ 
+ static bool_t
+-mt_get_fileno( drive_t *drivep, long *fileno)
++mt_get_fileno(drive_t *drivep, long *fileno)
+ {
+ 	struct mtget 	mt_stat;
+ 	drive_context_t *contextp;
+ 
+-	contextp = ( drive_context_t * )drivep->d_contextp;
++	contextp = (drive_context_t *)drivep->d_contextp;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "tape op: get fileno\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "tape op: get fileno\n");
+ 
+-	assert( contextp->dc_fd >= 0 );
++	assert(contextp->dc_fd >= 0);
+ 
+-	if ( ioctl(contextp->dc_fd, MTIOCGET, &mt_stat) < 0 ) {
++	if (ioctl(contextp->dc_fd, MTIOCGET, &mt_stat) < 0) {
+ 		/* failure
+ 		 */
+ 		mlog(MLOG_DEBUG,
+ 			"tape command MTIOCGET failed : %d (%s)\n",
+ 	 		errno,
+- 	 		strerror( errno ));
++ 	 		strerror(errno));
+ 		return BOOL_FALSE;
+ 	}
+ 	*fileno = mt_stat.mt_fileno;
+@@ -3485,17 +3485,17 @@ mt_get_fileno( drive_t *drivep, long *fileno)
+  *	FALSE if not
+  */
+ static bool_t
+-mt_get_status( drive_t *drivep, long *status)
++mt_get_status(drive_t *drivep, long *status)
+ {
+ 	struct mtget 	mt_stat;
+ 	drive_context_t *contextp;
+ 
+-	contextp = ( drive_context_t * )drivep->d_contextp;
++	contextp = (drive_context_t *)drivep->d_contextp;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "tape op: get status\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "tape op: get status\n");
+ 
+-	assert( contextp->dc_fd >= 0 );
++	assert(contextp->dc_fd >= 0);
+ 
+ 	if (TS_ISDRIVER) {
+ 		/*
+@@ -3505,24 +3505,24 @@ mt_get_status( drive_t *drivep, long *status)
+ 		 * See comments in map_ts_status() for more detail.
+ 		 */
+ 		struct mtget_sgi mt_stat_sgi;
+-                if ( ioctl(contextp->dc_fd, MTIOCGET_SGI, &mt_stat_sgi) < 0 ) {
++                if (ioctl(contextp->dc_fd, MTIOCGET_SGI, &mt_stat_sgi) < 0) {
+                         /* failure
+                          */
+                         mlog(MLOG_DEBUG,
+                                 "tape command MTIOCGET_SGI failed : %d (%s)\n",
+                                 errno,
+-                                strerror( errno ));
++                                strerror(errno));
+                         return BOOL_FALSE;
+                 }
+-		map_ts_status( &mt_stat, mt_stat_sgi );
++		map_ts_status(&mt_stat, mt_stat_sgi);
+ 	} else {
+-		if ( ioctl(contextp->dc_fd, MTIOCGET, &mt_stat) < 0 ) {
++		if (ioctl(contextp->dc_fd, MTIOCGET, &mt_stat) < 0) {
+ 			/* failure
+ 			 */
+ 			mlog(MLOG_DEBUG,
+ 				"tape command MTIOCGET failed : %d (%s)\n",
+ 	 			errno,
+- 	 			strerror( errno ));
++ 	 			strerror(errno));
+ 			return BOOL_FALSE;
+ 		}
+ 	}
+@@ -3532,7 +3532,7 @@ mt_get_status( drive_t *drivep, long *status)
+ 	*status = mt_stat.mt_gstat;
+ 
+ 	/* print out symbolic form of tape status */
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 		"tape status = %s%s%s%s%s%s%s\n",
+ 		IS_BOT(*status)?   "bot ":"",
+ 		IS_FMK(*status)?   "fmk ":"",
+@@ -3553,28 +3553,28 @@ mt_get_status( drive_t *drivep, long *status)
+  *	DRIVE_ERROR_*
+  */
+ static int
+-determine_write_error( drive_t *drivep, int nwritten, int saved_errno )
++determine_write_error(drive_t *drivep, int nwritten, int saved_errno)
+ {
+ 	mtstat_t	mtstat;
+ 	int 	ret;
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 
+ 	/* get tape device status
+ 	 */
+-	if ( ! mt_get_status( drivep, &mtstat) ) {
+-		status_failed_message( drivep );
++	if (! mt_get_status(drivep, &mtstat)) {
++		status_failed_message(drivep);
+ 		ret = DRIVE_ERROR_DEVICE;
+-	} else if ( IS_WPROT(mtstat) && (saved_errno == EROFS)) {
++	} else if (IS_WPROT(mtstat) && (saved_errno == EROFS)) {
+ 
+ 		mlog(MLOG_NORMAL,
+ 		     _("tape is write protected\n"));
+ 
+ 		ret = DRIVE_ERROR_DEVICE;
+-	} else if ( (!IS_BOT(mtstat)) &&
+-		    (IS_EOT( mtstat ) || IS_EW( mtstat) ||
++	} else if ((!IS_BOT(mtstat)) &&
++		    (IS_EOT(mtstat) || IS_EW(mtstat) ||
+ 		    (saved_errno == ENOSPC))) {
+  		ret = DRIVE_ERROR_EOM;
+-	} else if (saved_errno == EIO ) {
++	} else if (saved_errno == EIO) {
+ 
+ 		mlog(MLOG_NORMAL,
+ 		     _("tape media error on write operation\n"));
+@@ -3583,65 +3583,65 @@ determine_write_error( drive_t *drivep, int nwritten, int saved_errno )
+ 		     _("no more data can be written to this tape\n"));
+ 
+ 		ret = DRIVE_ERROR_EOM;
+-	} else if ( (saved_errno == 0) &&
++	} else if ((saved_errno == 0) &&
+ 		    (nwritten > 0)     &&
+-		    contextp->dc_isQICpr ) {
++		    contextp->dc_isQICpr) {
+ 		/* short write on one of this devices indicates
+ 		 * early warning for end-of-media.
+ 		 */
+  		ret = DRIVE_ERROR_EOM;
+ 	} else {
+ 		ret = DRIVE_ERROR_CORE;
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			"tape unknown error on write operation: "
+ 			"0x%x, %d, %d\n",
+ 			mtstat, nwritten, saved_errno);
+ 	}
+ 
+-	mlog( MLOG_NITTY | MLOG_DRIVE,
++	mlog(MLOG_NITTY | MLOG_DRIVE,
+ 		"tape write operation status 0x%x, nwritten %d, errno %d\n",
+ 		mtstat,
+ 		nwritten,
+ 		saved_errno);
+ 
+-	return ( ret );
++	return (ret);
+ 
+ }
+ 
+ static void
+-tape_rec_checksum_set( drive_context_t *contextp, char *bufp )
++tape_rec_checksum_set(drive_context_t *contextp, char *bufp)
+ {
+-	rec_hdr_t *rechdrp = ( rec_hdr_t * )bufp;
+-	uint32_t *beginp = ( uint32_t * )bufp;
+-	uint32_t *endp = ( uint32_t * )( bufp + tape_recsz );
++	rec_hdr_t *rechdrp = (rec_hdr_t *)bufp;
++	uint32_t *beginp = (uint32_t *)bufp;
++	uint32_t *endp = (uint32_t *)(bufp + tape_recsz);
+ 	uint32_t *p;
+ 	uint32_t accum;
+ 
+-	if ( ! contextp->dc_recchksumpr ) {
++	if (! contextp->dc_recchksumpr) {
+ 		return;
+ 	}
+ 
+ 	INT_SET(rechdrp->ischecksum, ARCH_CONVERT, 1);
+ 	rechdrp->checksum = 0;
+ 	accum = 0;
+-	for ( p = beginp ; p < endp ; p++ ) {
++	for (p = beginp ; p < endp ; p++) {
+ 	        accum += INT_GET(*p, ARCH_CONVERT);
+ 	}
+-	INT_SET(rechdrp->checksum, ARCH_CONVERT, ( int32_t )( ~accum + 1 ));
++	INT_SET(rechdrp->checksum, ARCH_CONVERT, (int32_t)(~accum + 1));
+ }
+ 
+ static bool_t
+-tape_rec_checksum_check( drive_context_t *contextp, char *bufp )
++tape_rec_checksum_check(drive_context_t *contextp, char *bufp)
+ {
+-	rec_hdr_t *rechdrp = ( rec_hdr_t * )bufp;
+-	uint32_t *beginp = ( uint32_t * )bufp;
+-	uint32_t *endp = ( uint32_t * )( bufp + tape_recsz );
++	rec_hdr_t *rechdrp = (rec_hdr_t *)bufp;
++	uint32_t *beginp = (uint32_t *)bufp;
++	uint32_t *endp = (uint32_t *)(bufp + tape_recsz);
+ 	uint32_t *p;
+ 	uint32_t accum;
+ 
+-	if ( contextp->dc_recchksumpr && INT_GET(rechdrp->ischecksum, ARCH_CONVERT)) {
++	if (contextp->dc_recchksumpr && INT_GET(rechdrp->ischecksum, ARCH_CONVERT)) {
+ 		accum = 0;
+-		for ( p = beginp ; p < endp ; p++ ) {
++		for (p = beginp ; p < endp ; p++) {
+ 	       		accum += INT_GET(*p, ARCH_CONVERT);
+ 		}
+ 		return accum == 0 ? BOOL_TRUE : BOOL_FALSE;
+@@ -3654,75 +3654,75 @@ tape_rec_checksum_check( drive_context_t *contextp, char *bufp )
+  */
+ #ifdef RMTDBG
+ static int
+-dbgrmtopen( char *path, int flags )
++dbgrmtopen(char *path, int flags)
+ {
+ 	int rval;
+-	rval = rmtopen( path, flags );
+-	mlog( MLOG_NORMAL | MLOG_DRIVE,
++	rval = rmtopen(path, flags);
++	mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 	      _("RMTOPEN( %s, %d ) returns %d: errno=%d (%s)\n"),
+ 	      path,
+ 	      flags,
+ 	      rval,
+ 	      errno,
+-	      strerror( errno ));
++	      strerror(errno));
+ 	return rval;
+ }
+ static int
+-dbgrmtclose( int fd )
++dbgrmtclose(int fd)
+ {
+ 	int rval;
+-	rval = rmtclose( fd );
+-	mlog( MLOG_NORMAL | MLOG_DRIVE,
++	rval = rmtclose(fd);
++	mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 	      _("RMTCLOSE( %d ) returns %d: errno=%d (%s)\n"),
+ 	      fd,
+ 	      rval,
+ 	      errno,
+-	      strerror( errno ));
++	      strerror(errno));
+ 	return rval;
+ }
+ static int
+-dbgrmtioctl( int fd, int op, void *arg )
++dbgrmtioctl(int fd, int op, void *arg)
+ {
+ 	int rval;
+-	rval = rmtioctl( fd, op, arg );
+-	mlog( MLOG_NORMAL | MLOG_DRIVE,
++	rval = rmtioctl(fd, op, arg);
++	mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 	      _("RMTIOCTL( %d, %d, 0x%x ) returns %d: errno=%d (%s)\n"),
+ 	      fd,
+ 	      op,
+ 	      arg,
+ 	      rval,
+ 	      errno,
+-	      strerror( errno ));
++	      strerror(errno));
+ 	return rval;
+ }
+ static int
+-dbgrmtread( int fd, void *p, uint sz )
++dbgrmtread(int fd, void *p, uint sz)
+ {
+ 	int rval;
+-	rval = rmtread( fd, p, sz );
+-	mlog( MLOG_NORMAL | MLOG_DRIVE,
++	rval = rmtread(fd, p, sz);
++	mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 	      _("RMTREAD( %d, 0x%x, %u ) returns %d: errno=%d (%s)\n"),
+ 	      fd,
+ 	      p,
+ 	      sz,
+ 	      rval,
+ 	      errno,
+-	      strerror( errno ));
++	      strerror(errno));
+ 	return rval;
+ }
+ static int
+-dbgrmtwrite( int fd, void *p, uint sz )
++dbgrmtwrite(int fd, void *p, uint sz)
+ {
+ 	int rval;
+-	rval = rmtwrite( fd, p, sz );
+-	mlog( MLOG_NORMAL | MLOG_DRIVE,
++	rval = rmtwrite(fd, p, sz);
++	mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 	      _("RMTWRITE( %d, 0x%x, %u ) returns %d: errno=%d (%s)\n"),
+ 	      fd,
+ 	      p,
+ 	      sz,
+ 	      rval,
+ 	      errno,
+-	      strerror( errno ));
++	      strerror(errno));
+ 	return rval;
+ }
+ #endif /* RMTDBG */
+@@ -3734,27 +3734,27 @@ dbgrmtwrite( int fd, void *p, uint sz )
+  *	void
+  */
+ static void
+-display_access_failed_message( drive_t *drivep )
++display_access_failed_message(drive_t *drivep)
+ {
+ 	drive_context_t		*contextp;
+ 
+ 	/* get pointer to drive context
+ 	 */
+-	contextp = ( drive_context_t * )drivep->d_contextp;
++	contextp = (drive_context_t *)drivep->d_contextp;
+ 
+-	if ( contextp->dc_isrmtpr ) {
+-		mlog( MLOG_NORMAL | MLOG_DRIVE,
++	if (contextp->dc_isrmtpr) {
++		mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 			_("attempt to access/open remote "
+ 			"tape drive %s failed: %d (%s)\n"),
+ 			drivep->d_pathname,
+ 			errno,
+-			strerror( errno ));
++			strerror(errno));
+ 	} else {
+-		mlog( MLOG_NORMAL | MLOG_DRIVE,
++		mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 			_("attempt to access/open device %s failed: %d (%s)\n"),
+ 			drivep->d_pathname,
+ 			errno,
+-			strerror( errno ));
++			strerror(errno));
+ 	}
+ 	return;
+ }
+@@ -3766,43 +3766,43 @@ display_access_failed_message( drive_t *drivep )
+  *	one
+  */
+ static void
+-status_failed_message( drive_t *drivep )
++status_failed_message(drive_t *drivep)
+ {
+ 	drive_context_t		*contextp;
+ 
+ 	/* get pointer to drive context
+ 	 */
+-	contextp = ( drive_context_t * )drivep->d_contextp;
++	contextp = (drive_context_t *)drivep->d_contextp;
+ 
+ 	/* the get status call could have failed due to the
+ 	 * tape device being closed by a CTLR-\ from the operator.
+ 	 */
+-	if ( contextp->dc_fd != -1 ) {
+-		if ( contextp->dc_isrmtpr ) {
+-		 	mlog( MLOG_NORMAL | MLOG_DRIVE,
++	if (contextp->dc_fd != -1) {
++		if (contextp->dc_isrmtpr) {
++		 	mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 	 			_("attempt to get status of remote "
+ 	 			"tape drive %s failed: %d (%s)\n"),
+ 				drivep->d_pathname,
+ 				errno,
+-				strerror( errno ));
++				strerror(errno));
+ 		} else {
+-			mlog( MLOG_NORMAL | MLOG_DRIVE,
++			mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 				_("attempt to get status of "
+ 				"tape drive %s failed: %d (%s)\n"),
+ 				drivep->d_pathname,
+ 				errno,
+-				strerror( errno ));
++				strerror(errno));
+ 		}
+ 	}
+ 	return;
+ }
+ 
+ static bool_t
+-is_variable( drive_t *drivep, bool_t *varblk )
++is_variable(drive_t *drivep, bool_t *varblk)
+ {
+ 	drive_context_t *contextp;
+ 
+-	contextp = ( drive_context_t * )drivep->d_contextp;
++	contextp = (drive_context_t *)drivep->d_contextp;
+ 
+ 	if (TS_ISDRIVER) {
+ 		char value[MT_ATTR_MAX_VALLEN+1];
+@@ -3826,7 +3826,7 @@ is_variable( drive_t *drivep, bool_t *varblk )
+ 		struct mtblkinfo minfo;
+ 
+ 		ok = mt_blkinfo(contextp->dc_fd, &minfo);
+-		if (!ok )
++		if (!ok)
+ 			return BOOL_FALSE; /* failure */
+ 
+ 		/* for Linux scsi driver the blksize == 0 if variable */
+@@ -3846,7 +3846,7 @@ is_variable( drive_t *drivep, bool_t *varblk )
+  * xfsdumps on media.
+  */
+ static int
+-prepare_drive( drive_t *drivep )
++prepare_drive(drive_t *drivep)
+ {
+ 	drive_context_t	*contextp;
+ 	mtstat_t mtstat;
+@@ -3859,44 +3859,44 @@ prepare_drive( drive_t *drivep )
+ 
+ 	/* get pointer to drive context
+ 	 */
+-	contextp = ( drive_context_t * )drivep->d_contextp;
++	contextp = (drive_context_t *)drivep->d_contextp;
+ 
+ retry:
+-	if ( cldmgr_stop_requested( )) {
++	if (cldmgr_stop_requested()) {
+ 		return DRIVE_ERROR_STOP;
+ 	}
+ 
+ 	/* shouldn't be here if drive is open
+ 	 */
+-	assert( contextp->dc_fd == -1 );
++	assert(contextp->dc_fd == -1);
+ 
+-	mlog( MLOG_VERBOSE | MLOG_DRIVE,
+-	      _("preparing drive\n") );
++	mlog(MLOG_VERBOSE | MLOG_DRIVE,
++	      _("preparing drive\n"));
+ 
+ 
+ 	/* determine if tape is present or write protected. try several times.
+ 	 * if not present or write-protected during dump, return.
+ 	 */
+ 	maxtries = 15;
+-	for ( try = 1 ; ; sleep( 10 ), try++ ) {
+-		if ( cldmgr_stop_requested( )) {
++	for (try = 1 ; ; sleep(10), try++) {
++		if (cldmgr_stop_requested()) {
+ 			return DRIVE_ERROR_STOP;
+ 		}
+ 
+ 		/* open the drive
+ 	 	 */
+-		ok = Open( drivep );
+-		if ( ! ok ) {
+-			if ( errno != EBUSY ) {
+-				display_access_failed_message( drivep );
++		ok = Open(drivep);
++		if (! ok) {
++			if (errno != EBUSY) {
++				display_access_failed_message(drivep);
+ 				return DRIVE_ERROR_DEVICE;
+ 			} else {
+-				mlog( MLOG_DEBUG | MLOG_DRIVE,
+-				      "open drive returns EBUSY\n" );
+-				if ( try >= maxtries ) {
+-					mlog( MLOG_TRACE | MLOG_DRIVE,
++				mlog(MLOG_DEBUG | MLOG_DRIVE,
++				      "open drive returns EBUSY\n");
++				if (try >= maxtries) {
++					mlog(MLOG_TRACE | MLOG_DRIVE,
+ 					      "giving up waiting for drive "
+-					      "to indicate online\n" );
++					      "to indicate online\n");
+ 					return DRIVE_ERROR_MEDIA;
+ 				}
+ 				continue;
+@@ -3906,9 +3906,9 @@ retry:
+ 		/* read device status (uses an ioctl)
+ 		 */
+ 		mtstat = 0;
+-		ok = mt_get_status( drivep, &mtstat );
+-		if ( ! ok ) {
+-			status_failed_message( drivep );
++		ok = mt_get_status(drivep, &mtstat);
++		if (! ok) {
++			status_failed_message(drivep);
+ 			return DRIVE_ERROR_DEVICE;
+ 		}
+ 
+@@ -3916,18 +3916,18 @@ retry:
+ 		 * also check if write-protected (DUMP only), and give up
+ 		 * after a few tries.
+ 		 */
+-		if ( IS_ONL( mtstat )) {
++		if (IS_ONL(mtstat)) {
+ #ifdef DUMP
+-			if ( IS_WPROT( mtstat )) {
++			if (IS_WPROT(mtstat)) {
+ 				mlog(MLOG_NORMAL,
+-				     _("tape is write protected\n") );
++				     _("tape is write protected\n"));
+ 				return DRIVE_ERROR_MEDIA;
+ 			}
+ #endif /* DUMP */
+ 			/* populate a struct stat. NOTE: this may do a temporary open/close
+ 			 * NOTE: may do this only on local drives: rmt does not support!
+ 			 */
+-			if ( contextp->dc_isrmtpr ) {
++			if (contextp->dc_isrmtpr) {
+ 				contextp->dc_isvarpr = BOOL_FALSE;
+ 			} else {
+ 				/* check for special device dev_t for fixed or variable type
+@@ -3939,66 +3939,66 @@ retry:
+ 
+ 				if (varblk) {
+ 					contextp->dc_isvarpr = BOOL_TRUE;
+-					mlog( MLOG_TRACE | MLOG_DRIVE,
++					mlog(MLOG_TRACE | MLOG_DRIVE,
+ 					      "variable block size "
+ 					      "tape drive at %s\n",
+-					      drivep->d_pathname );
++					      drivep->d_pathname);
+ 				} else {
+ 					contextp->dc_isvarpr = BOOL_FALSE;
+-					mlog( MLOG_TRACE | MLOG_DRIVE,
++					mlog(MLOG_TRACE | MLOG_DRIVE,
+ 					      "fixed block size tape "
+ 					      "drive at %s\n",
+-					      drivep->d_pathname );
++					      drivep->d_pathname);
+ 				}
+ 			}
+ 
+ 			break;
+-		} else if ( try >= maxtries ) {
+-			mlog( MLOG_VERBOSE | MLOG_DRIVE,
++		} else if (try >= maxtries) {
++			mlog(MLOG_VERBOSE | MLOG_DRIVE,
+ 			      _("giving up waiting for drive "
+-			      "to indicate online\n") );
++			      "to indicate online\n"));
+ 			return DRIVE_ERROR_MEDIA;
+ 		}
+ 
+ 		/* drive is not ready. sleep for a while and try again
+ 		 */
+-		mlog( MLOG_VERBOSE | MLOG_DRIVE,
++		mlog(MLOG_VERBOSE | MLOG_DRIVE,
+ 		      _("tape drive %s is not ready (0x%x): "
+ 		      "retrying ...\n"),
+ 		      drivep->d_pathname,
+-		      mtstat );
++		      mtstat);
+ 
+-		Close( drivep );
++		Close(drivep);
+ 	}
+-	assert( IS_ONL( mtstat ));
++	assert(IS_ONL(mtstat));
+ 
+ 	/* determine tape capabilities. this will set the drivep->d_capabilities
+ 	 * and contextp->dc_{...}blksz and dc_isQICpr, as well as recommended
+ 	 * mark separation and media file size.
+ 	 */
+-	ok = get_tpcaps( drivep );
+-	if ( ! ok ) {
++	ok = get_tpcaps(drivep);
++	if (! ok) {
+ 		return DRIVE_ERROR_DEVICE;
+ 	}
+ 
+ 	/* disallow access of QIC via variable
+ 	 */
+-	if ( contextp->dc_isvarpr && contextp->dc_isQICpr ) {
+-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
++	if (contextp->dc_isvarpr && contextp->dc_isQICpr) {
++		mlog(MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
+ 		      "use of QIC drives via variable blocksize device nodes "
+-		      "is not supported\n") );
++		      "is not supported\n"));
+ 		return DRIVE_ERROR_INVAL;
+ 	}
+ 
+ 	/* if the overwrite option was specified , set the best blocksize
+ 	 * we can and return.
+ 	 */
+-	if ( contextp->dc_overwritepr ) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (contextp->dc_overwritepr) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			"Overwrite option specified. "
+-			"Trying best blocksize\n" );
+-		ok = set_best_blk_and_rec_sz( drivep );
+-		if ( ! ok ) {
++			"Trying best blocksize\n");
++		ok = set_best_blk_and_rec_sz(drivep);
++		if (! ok) {
+ 			return DRIVE_ERROR_DEVICE;
+ 		}
+ 		return DRIVE_ERROR_OVERWRITE;
+@@ -4017,16 +4017,16 @@ retry:
+ 	 * we will use tape motion. back up two file marks, because
+ 	 * typically we will be positioned after last file mark at EOD.
+ 	 */
+-	if ( ! IS_BOT( mtstat ) && IS_FMK( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (! IS_BOT(mtstat) && IS_FMK(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 		      "tape positioned at file mark, "
+ 		      "but do not know if before or after: "
+-		      "forcing tape motion to disambiguate\n" );
++		      "forcing tape motion to disambiguate\n");
+ #ifdef RESTORE
+-		( void )fsf_and_verify( drivep );
++		(void)fsf_and_verify(drivep);
+ #endif /* RESTORE */
+-		rval = quick_backup( drivep, contextp, 0 );
 -		if ( rval ) {
-+		rval = (* write_funcp)(contextp, mbufp, mbufsz);
++		rval = quick_backup(drivep, contextp, 0);
 +		if (rval) {
  			return rval;
  		}
--		if ( bufp ) {
-+		if (bufp) {
- 			bufp += mbufsz;
+ 	}
+@@ -4051,39 +4051,39 @@ retry:
+  	 */
+ 	maxtries = 5;
+ 	changedblkszpr = BOOL_FALSE;
+-	for ( try = 1 ; ; try++ ) {
++	for (try = 1 ; ; try++) {
+ 		bool_t wasatbotpr;
+ 		int nread;
+ 		int saved_errno;
+ 
+-		if ( cldmgr_stop_requested( )) {
++		if (cldmgr_stop_requested()) {
+ 			return DRIVE_ERROR_STOP;
  		}
- 		bufsz -= mbufsz;
-@@ -72,12 +72,12 @@ write_buf( char *bufp,
+ 
+ 		/* bail out if we've tried too many times
+ 		 */
+-		if ( try > maxtries ) {
+-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE, _(
++		if (try > maxtries) {
++			mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE, _(
+ 			      "giving up attempt to determining "
+-			      "tape record size\n") );
++			      "tape record size\n"));
+ 			return DRIVE_ERROR_MEDIA;
+ 		}
+ 
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 		      "determining tape record size: trying %d (0x%x) bytes\n",
+ 		      tape_recsz,
+-		      tape_recsz );
++		      tape_recsz);
+ 
+ 		/* if a fixed device, but not QIC, and possible to set the block
+ 		 * size, do so.
+ 		 */
+-		if ( ! contextp->dc_isvarpr
++		if (! contextp->dc_isvarpr
+ 		     &&
+ 		     ! contextp->dc_isQICpr
+ 		     &&
+-		     contextp->dc_cansetblkszpr ) {
+-			ok = set_fixed_blksz( drivep, tape_blksz );
+-			if ( ! ok ) {
++		     contextp->dc_cansetblkszpr) {
++			ok = set_fixed_blksz(drivep, tape_blksz);
++			if (! ok) {
+ 				return DRIVE_ERROR_DEVICE;
+ 			}
+ 		}
+@@ -4091,9 +4091,9 @@ retry:
+ 		/* refresh the tape status
+ 		 */
+ 		mtstat = 0;
+-		ok = mt_get_status( drivep, &mtstat );
+-		if ( ! ok ) {
+-			status_failed_message( drivep );
++		ok = mt_get_status(drivep, &mtstat);
++		if (! ok) {
++			status_failed_message(drivep);
+ 			return DRIVE_ERROR_DEVICE;
+ 		}
+ 
+@@ -4103,102 +4103,102 @@ retry:
+ 		 * so we must either bsf or rewind to eliminate the uncertainty.
+ 		 * if BSF is not supported, must rewind.
+ 		 */
+-		if ( ! IS_BOT( mtstat ) && ! IS_FMK( mtstat )) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		if (! IS_BOT(mtstat) && ! IS_FMK(mtstat)) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "tape position unknown: searching backward "
+-			      "for file mark or BOT\n" );
+-			rval = quick_backup( drivep, contextp, 0 );
+-			if ( rval ) {
++			      "for file mark or BOT\n");
++			rval = quick_backup(drivep, contextp, 0);
++			if (rval) {
+ 				return rval;
+ 			}
+ 			mtstat = 0;
+-			ok = mt_get_status( drivep, &mtstat );
+-			if ( ! ok ) {
+-				status_failed_message( drivep );
++			ok = mt_get_status(drivep, &mtstat);
++			if (! ok) {
++				status_failed_message(drivep);
+ 				return DRIVE_ERROR_DEVICE;
+ 			}
+ 		}
+ 
+ 		/* if we can't position the tape, call it a media error
+ 		 */
+-		if ( ! IS_BOT( mtstat ) && ! IS_FMK( mtstat )) {
+-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+-			      _("unable to backspace/rewind media\n") );
++		if (! IS_BOT(mtstat) && ! IS_FMK(mtstat)) {
++			mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++			      _("unable to backspace/rewind media\n"));
+ 			return DRIVE_ERROR_MEDIA;
+ 		}
+-		if ( IS_BOT( mtstat )) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		if (IS_BOT(mtstat)) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "tape positioned at BOT: "
+-			      "doing redundant rewind\n" );
+-			mtstat = rewind_and_verify( drivep );
+-			if ( ! IS_BOT( mtstat )) {
++			      "doing redundant rewind\n");
++			mtstat = rewind_and_verify(drivep);
++			if (! IS_BOT(mtstat)) {
+ 				return DRIVE_ERROR_DEVICE;
+ 			}
+ 		}
+-		if ( IS_FMK( mtstat )) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
+-			      "tape positioned at file mark\n" );
++		if (IS_FMK(mtstat)) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
++			      "tape positioned at file mark\n");
+ 		}
+ 
+ 		/* determine if we are at BOT. remember, so if read fails
+ 		 * we can make a better decision on what to do next.
+ 		 */
+-		if ( IS_BOT( mtstat )) {
++		if (IS_BOT(mtstat)) {
+ 			wasatbotpr = BOOL_TRUE;
+-		} else if ( IS_FMK( mtstat )) {
++		} else if (IS_FMK(mtstat)) {
+ 			wasatbotpr = BOOL_FALSE;
+ 		} else {
+-			mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+-			      _("unable to backspace/rewind media\n") );
++			mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++			      _("unable to backspace/rewind media\n"));
+ 			return DRIVE_ERROR_MEDIA;
+ 		}
+ 
+ 		/* read a record. use the first ring buffer
+ 		 */
+ 		saved_errno = 0;
+-		nread = Read( drivep,
++		nread = Read(drivep,
+ 			      contextp->dc_recp,
+ 			      tape_recsz,
+-			      &saved_errno );
+-		assert( saved_errno == 0 || nread < 0 );
++			      &saved_errno);
++		assert(saved_errno == 0 || nread < 0);
+ 
+ 		/* RMT can require a retry
+ 		 */
+-		if ( saved_errno == EAGAIN ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
+-			      "read returned EAGAIN: retrying\n" );
++		if (saved_errno == EAGAIN) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
++			      "read returned EAGAIN: retrying\n");
+ 			continue;
+ 		}
+ 
+ 		/* block size is bigger than buffer; should never happen
+ 		 */
+-		if ( saved_errno == EINVAL ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		if (saved_errno == EINVAL) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "read returned EINVAL: "
+-			      "trying new record size\n" );
++			      "trying new record size\n");
+ 			goto largersize;
+ 		}
+ 
+ 		/* block size is bigger than buffer; should never happen
+ 		 */
+-		if ( saved_errno == ENOMEM ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		if (saved_errno == ENOMEM) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "read returned ENOMEM: "
+-			      "trying new record size\n" );
++			      "trying new record size\n");
+ 			goto largersize;
+ 		}
+ 
+ 		/* tried to read past EOD and was at BOT
+ 		 */
+-		if ( saved_errno == ENOSPC
++		if (saved_errno == ENOSPC
+ 		     &&
+-		     wasatbotpr ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     wasatbotpr) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "errno ENOSPC while at BOT "
+-			      "indicates blank tape: returning\n" );
+-			( void )rewind_and_verify( drivep );
+-			ok = set_best_blk_and_rec_sz( drivep );
+-			if ( ! ok ) {
++			      "indicates blank tape: returning\n");
++			(void)rewind_and_verify(drivep);
++			ok = set_best_blk_and_rec_sz(drivep);
++			if (! ok) {
+ 				return DRIVE_ERROR_DEVICE;
+ 			}
+ 			return DRIVE_ERROR_BLANK;
+@@ -4208,15 +4208,15 @@ retry:
+ 		 * On Linux, using the scsi tape driver this
+ 		 * seems to happen with an erased/blank tape
+ 		 */
+-		if ( saved_errno == EIO
++		if (saved_errno == EIO
+ 		     &&
+-		     wasatbotpr ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     wasatbotpr) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "errno EIO while at BOT "
+-			      "indicates blank tape: returning\n" );
+-			( void )rewind_and_verify( drivep );
+-			ok = set_best_blk_and_rec_sz( drivep );
+-			if ( ! ok ) {
++			      "indicates blank tape: returning\n");
++			(void)rewind_and_verify(drivep);
++			ok = set_best_blk_and_rec_sz(drivep);
++			if (! ok) {
+ 				return DRIVE_ERROR_DEVICE;
+ 			}
+ 			return DRIVE_ERROR_BLANK;
+@@ -4224,14 +4224,14 @@ retry:
+ 
+ 		/* tried to read past EOD and NOT at BOT
+ 		 */
+-		if ( saved_errno == ENOSPC
++		if (saved_errno == ENOSPC
+ 		     &&
+-		     ! wasatbotpr ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     ! wasatbotpr) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "errno ENOSPC while not at BOT "
+-			      "indicates EOD: retrying\n" );
+-			rval = quick_backup( drivep, contextp, 1 );
+-			if ( rval ) {
++			      "indicates EOD: retrying\n");
++			rval = quick_backup(drivep, contextp, 1);
++			if (rval) {
+ 				return rval;
+ 			}
+ 			continue;
+@@ -4239,17 +4239,17 @@ retry:
+ 
+ 		/* I/O error
+ 		 */
+-		if ( saved_errno == EIO ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		if (saved_errno == EIO) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "read returned EIO: will reopen, rewind, "
+-			      "and try again\n" );
+-			Close( drivep );
+-			ok = Open( drivep );
+-			if ( ! ok ) {
+-				display_access_failed_message( drivep );
++			      "and try again\n");
++			Close(drivep);
++			ok = Open(drivep);
++			if (! ok) {
++				display_access_failed_message(drivep);
+ 				return DRIVE_ERROR_DEVICE;
+ 			}
+-			( void )rewind_and_verify( drivep );
++			(void)rewind_and_verify(drivep);
+ 			continue;
+ 		}
+ 
+@@ -4257,197 +4257,197 @@ retry:
+ 		 * done below.
+ 		 */
+ 		mtstat = 0;
+-		ok = mt_get_status( drivep, &mtstat );
+-		if ( ! ok ) {
+-			status_failed_message( drivep );
++		ok = mt_get_status(drivep, &mtstat);
++		if (! ok) {
++			status_failed_message(drivep);
+ 			return DRIVE_ERROR_DEVICE;
+ 		}
+ 
+-		if ( nread == 0
++		if (nread == 0
+ 		     &&
+ 		     ! contextp->dc_isvarpr
+ 		     &&
+-		     IS_EOD( mtstat )
++		     IS_EOD(mtstat)
+ 		     &&
+-		     wasatbotpr ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     wasatbotpr) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			  "nread == 0 and EOD while at BOT on "
+ 			  "fixed blocksize drive "
+-			  "indicates blank tape: returning\n" );
+-			( void )rewind_and_verify( drivep );
+-			ok = set_best_blk_and_rec_sz( drivep );
+-			if ( ! ok ) {
++			  "indicates blank tape: returning\n");
++			(void)rewind_and_verify(drivep);
++			ok = set_best_blk_and_rec_sz(drivep);
++			if (! ok) {
+ 				return DRIVE_ERROR_DEVICE;
+ 			}
+ 			return DRIVE_ERROR_BLANK;
+ 		}
+ 
+-		if ( nread == 0
++		if (nread == 0
+ 		     &&
+ 		     ! contextp->dc_isvarpr
+ 		     &&
+-		     IS_EOD( mtstat )
++		     IS_EOD(mtstat)
+ 		     &&
+-		     ! wasatbotpr ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     ! wasatbotpr) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			  "nread == 0 and EOD while not at BOT on "
+ 			  "fixed blocksize drive "
+-			  "indicates EOD: backing up and retrying\n" );
+-			rval = quick_backup( drivep, contextp, 1 );
+-			if ( rval ) {
++			  "indicates EOD: backing up and retrying\n");
++			rval = quick_backup(drivep, contextp, 1);
++			if (rval) {
+ 				return rval;
+ 			}
+ 			continue;
+ 		}
+ 
+-		if ( nread == 0
++		if (nread == 0
+ 		     &&
+ 		     ! contextp->dc_isvarpr
+ 		     &&
+-		     IS_EOT( mtstat )
++		     IS_EOT(mtstat)
+ 		     &&
+-		     ! wasatbotpr ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     ! wasatbotpr) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			  "nread == 0 and EOT while not at BOT on "
+ 			  "fixed blocksize drive "
+-			  "indicates EOD: backing up and retrying\n" );
+-			rval = quick_backup( drivep, contextp, 1 );
+-			if ( rval ) {
++			  "indicates EOD: backing up and retrying\n");
++			rval = quick_backup(drivep, contextp, 1);
++			if (rval) {
+ 				return rval;
+ 			}
+ 			continue;
+ 		}
+ 
+-		if ( nread == 0
++		if (nread == 0
+ 		     &&
+ 		     ! contextp->dc_isvarpr
+ 		     &&
+-		     ! IS_EOD( mtstat )
++		     ! IS_EOD(mtstat)
+ 		     &&
+-		     ! IS_FMK( mtstat )
++		     ! IS_FMK(mtstat)
+ 		     &&
+-		     ! IS_EOT( mtstat )) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     ! IS_EOT(mtstat)) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			  "nread == 0 and not EOD, not EOT, "
+ 			  "and not at a file mark on fixed blocksize drive "
+-			  "indicates wrong blocksize\n" );
++			  "indicates wrong blocksize\n");
+ 			goto newsize;
+ 		}
+ 
+-		if ( nread == 0
++		if (nread == 0
+ 		     &&
+ 		     contextp->dc_isvarpr
+ 		     &&
+-		     IS_EOD( mtstat )
++		     IS_EOD(mtstat)
+ 		     &&
+-		     wasatbotpr ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     wasatbotpr) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "nread == 0 and EOD indication at BOT "
+ 			      "on variable tape "
+-			      "indicates blank tape: returning\n" );
+-			( void )rewind_and_verify( drivep );
+-			ok = set_best_blk_and_rec_sz( drivep );
+-			if ( ! ok ) {
++			      "indicates blank tape: returning\n");
++			(void)rewind_and_verify(drivep);
++			ok = set_best_blk_and_rec_sz(drivep);
++			if (! ok) {
+ 				return DRIVE_ERROR_DEVICE;
+ 			}
+ 			return DRIVE_ERROR_BLANK;
+ 		}
+ 
+-		if ( nread == 0
++		if (nread == 0
+ 		     &&
+ 		     contextp->dc_isvarpr
+ 		     &&
+-		     IS_EOD( mtstat )
++		     IS_EOD(mtstat)
+ 		     &&
+-		     ! wasatbotpr ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     ! wasatbotpr) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			  "nread == 0 and EOD while not at BOT on "
+ 			  "variable blocksize drive "
+-			  "indicates EOD: backing up and retrying\n" );
+-			rval = quick_backup( drivep, contextp, 1 );
+-			if ( rval ) {
++			  "indicates EOD: backing up and retrying\n");
++			rval = quick_backup(drivep, contextp, 1);
++			if (rval) {
+ 				return rval;
+ 			}
+ 			continue;
+ 		}
+ 
+-		if ( nread == 0
++		if (nread == 0
+ 		     &&
+ 		     contextp->dc_isvarpr
+ 		     &&
+-		     IS_EOT( mtstat )
++		     IS_EOT(mtstat)
+ 		     &&
+-		     ! wasatbotpr ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     ! wasatbotpr) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			  "nread == 0 and EOT while not at BOT on "
+ 			  "variable blocksize drive "
+-			  "indicates EOT: backing up and retrying\n" );
+-			rval = quick_backup( drivep, contextp, 1 );
+-			if ( rval ) {
++			  "indicates EOT: backing up and retrying\n");
++			rval = quick_backup(drivep, contextp, 1);
++			if (rval) {
+ 				return rval;
+ 			}
+ 			continue;
+ 		}
+ 
+-		if ( nread == 0
++		if (nread == 0
+ 		     &&
+ 		     contextp->dc_isvarpr
+ 		     &&
+-		     IS_FMK( mtstat )
++		     IS_FMK(mtstat)
+ 		     &&
+-		     wasatbotpr ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     wasatbotpr) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "nread == 0 at BOT and at a file mark "
+ 			      "on variable blocksize drive "
+-			      "indicates foreign tape: returning\n" );
+-			( void )rewind_and_verify( drivep );
+-			ok = set_best_blk_and_rec_sz( drivep );
+-			if ( ! ok ) {
++			      "indicates foreign tape: returning\n");
++			(void)rewind_and_verify(drivep);
++			ok = set_best_blk_and_rec_sz(drivep);
++			if (! ok) {
+ 				return DRIVE_ERROR_DEVICE;
+ 			}
+ 			return DRIVE_ERROR_FOREIGN;
+ 		}
+ 
+-		if ( nread > 0
++		if (nread > 0
+ 		     &&
+ 		     contextp->dc_isvarpr
+ 		     &&
+-		     ! IS_EOD( mtstat )
++		     ! IS_EOD(mtstat)
+ 		     &&
+-		     ! IS_FMK( mtstat )
++		     ! IS_FMK(mtstat)
+ 		     &&
+-		     ! IS_EOT( mtstat )) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     ! IS_EOT(mtstat)) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			  "nread > 0 and not EOD, not EOT, "
+ 			  "and not at a file mark on variable blocksize drive "
+-			  "indicates correct blocksize found\n" );
++			  "indicates correct blocksize found\n");
+ 			goto checkhdr;
+ 		}
+ 
+-		if ( nread < ( int )tape_recsz
++		if (nread < (int)tape_recsz
+ 		     &&
+-		     ! contextp->dc_isvarpr ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     ! contextp->dc_isvarpr) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			  "nread less than selected record size on "
+ 			  "fixed blocksize drive "
+-			  "indicates wrong blocksize\n" );
++			  "indicates wrong blocksize\n");
+ 			goto newsize;
+ 		}
+ 
+-		if ( nread == ( int )tape_recsz
++		if (nread == (int)tape_recsz
+ 		     &&
+-		     ! contextp->dc_isvarpr ) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++		     ! contextp->dc_isvarpr) {
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			  "nread == selected blocksize "
+ 			  "on fixed blocksize drive "
+-			  "indicates correct blocksize found\n" );
++			  "indicates correct blocksize found\n");
+ 			goto checkhdr;
+ 		}
+ 
+ 		/* if we fell through the seive, code is wrong.
+ 		 * display useful info and abort
+ 		 */
+-		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
++		mlog(MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
+ 		      "unexpected tape error: "
+ 		      "errno %d "
+ 		      "nread %d "
+@@ -4468,21 +4468,21 @@ retry:
+ 		      tape_recsz,
+ 		      !! contextp->dc_isvarpr,
+ 		      wasatbotpr,
+-		      IS_EOD( mtstat ) > 0,
+-		      IS_FMK( mtstat ) > 0,
+-		      IS_EOT( mtstat ) > 0,
+-		      IS_ONL( mtstat ) > 0,
+-		      IS_WPROT( mtstat ) > 0,
+-		      IS_EW( mtstat ) > 0,
+-		      0 );
++		      IS_EOD(mtstat) > 0,
++		      IS_FMK(mtstat) > 0,
++		      IS_EOT(mtstat) > 0,
++		      IS_ONL(mtstat) > 0,
++		      IS_WPROT(mtstat) > 0,
++		      IS_EW(mtstat) > 0,
++		      0);
+ 
+ 		/* Common Linux Problem */
+ 		if (errno == EOVERFLOW) {
+-		    mlog( MLOG_NORMAL | MLOG_NOTE | MLOG_DRIVE,
++		    mlog(MLOG_NORMAL | MLOG_NOTE | MLOG_DRIVE,
+ 			_("likely problem is that the block size, %d, "
+ 			"is too large for Linux\n"),
+ 			tape_blksz);
+-		    mlog( MLOG_NORMAL | MLOG_NOTE | MLOG_DRIVE,
++		    mlog(MLOG_NORMAL | MLOG_NOTE | MLOG_DRIVE,
+ 			_("either try using a smaller block size with "
+ 			"the -b option, or increase max_sg_segs for "
+ 			"the scsi tape driver\n"));
+@@ -4493,44 +4493,44 @@ retry:
+ 
+ 
+ checkhdr:
+-		rval = validate_media_file_hdr( drivep );
+-		if ( rval ) {
+-			if ( rval == DRIVE_ERROR_VERSION ) {
++		rval = validate_media_file_hdr(drivep);
++		if (rval) {
++			if (rval == DRIVE_ERROR_VERSION) {
+ 				global_hdr_t *grhdrp = drivep->d_greadhdrp;
+-				mlog( MLOG_NORMAL | MLOG_DRIVE,
++				mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 				      _("media file header version (%d) "
+ 				      "invalid: advancing\n"),
+-				      grhdrp->gh_version );
++				      grhdrp->gh_version);
+ 				continue;
+-			} else if ( wasatbotpr ) {
+-				if ( isefsdump( drivep )) {
+-					mlog( MLOG_NORMAL
++			} else if (wasatbotpr) {
++				if (isefsdump(drivep)) {
++					mlog(MLOG_NORMAL
+ 					      |
+ 					      MLOG_WARNING
+ 					      |
+ 					      MLOG_DRIVE,
+ 					      _("may be an EFS dump at BOT\n"));
+ 				} else {
+-					mlog( MLOG_NORMAL | MLOG_DRIVE,
++					mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 					      _("bad media file header at BOT "
+ 					      "indicates foreign or "
+ 					      "corrupted tape\n"));
+ 				}
+-				( void )rewind_and_verify( drivep );
+-				ok = set_best_blk_and_rec_sz( drivep );
+-				if ( ! ok ) {
++				(void)rewind_and_verify(drivep);
++				ok = set_best_blk_and_rec_sz(drivep);
++				if (! ok) {
+ 					return DRIVE_ERROR_DEVICE;
+ 				}
+ 				return DRIVE_ERROR_FOREIGN;
+ 			} else {
+ 				/* back up and try again.
+ 				 */
+-				mlog( MLOG_DEBUG | MLOG_DRIVE,
++				mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 				      "media file header invalid: "
+ 				      "backing up "
+-				      "to try a previous media file\n" );
+-				rval = quick_backup( drivep, contextp, 1 );
+-				if ( rval ) {
++				      "to try a previous media file\n");
++				rval = quick_backup(drivep, contextp, 1);
++				if (rval) {
+ 					return rval;
+ 				}
+ 				continue;
+@@ -4539,10 +4539,10 @@ checkhdr:
+ 			drive_hdr_t *drhdrp;
+ 			rec_hdr_t *tprhdrp;
+ 			drhdrp = drivep->d_readhdrp;
+-			tprhdrp = ( rec_hdr_t * )drhdrp->dh_specific;
+-			assert( tprhdrp->recsize >= 0 );
+-			tape_recsz = ( size_t )tprhdrp->recsize;
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++			tprhdrp = (rec_hdr_t *)drhdrp->dh_specific;
++			assert(tprhdrp->recsize >= 0);
++			tape_recsz = (size_t)tprhdrp->recsize;
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "tape record size set to header's "
+ 			      "record size = %d\n", tape_recsz);
+ 			break;
+@@ -4552,37 +4552,37 @@ newsize:
+ 		/* we end up here if we want to try a new record size.
+ 		 * only do this once.
+ 		 */
+-		if ( changedblkszpr ) {
+-			mlog( MLOG_NORMAL | MLOG_DRIVE,
++		if (changedblkszpr) {
++			mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 			      _("cannot determine tape block size "
+-			      "after two tries\n") );
+-			if ( ! wasatbotpr ) {
+-				mlog( MLOG_NORMAL | MLOG_DRIVE,
+-				      _("will rewind and try again\n") );
+-				( void )rewind_and_verify( drivep );
+-				Close( drivep );
++			      "after two tries\n"));
++			if (! wasatbotpr) {
++				mlog(MLOG_NORMAL | MLOG_DRIVE,
++				      _("will rewind and try again\n"));
++				(void)rewind_and_verify(drivep);
++				Close(drivep);
+ 				goto retry;
+ 			} else {
+-				mlog( MLOG_NORMAL | MLOG_DRIVE,
++				mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 				      _("assuming media is corrupt "
+-				      "or contains non-xfsdump data\n") );
+-				( void )rewind_and_verify( drivep );
+-				ok = set_best_blk_and_rec_sz( drivep );
+-				if ( ! ok ) {
++				      "or contains non-xfsdump data\n"));
++				(void)rewind_and_verify(drivep);
++				ok = set_best_blk_and_rec_sz(drivep);
++				if (! ok) {
+ 					return DRIVE_ERROR_DEVICE;
+ 				}
+ 				return DRIVE_ERROR_FOREIGN;
+ 			}
+ 		}
+-		if ( tape_recsz > STAPE_MIN_MAX_BLKSZ ) {
++		if (tape_recsz > STAPE_MIN_MAX_BLKSZ) {
+ 			tape_recsz = STAPE_MIN_MAX_BLKSZ;
+-			if ( ! contextp->dc_isQICpr ) {
++			if (! contextp->dc_isQICpr) {
+ 				tape_blksz = tape_recsz;;
+ 			}
+ 			changedblkszpr = BOOL_TRUE;
+ 		} else {
+-			mlog( MLOG_NORMAL | MLOG_DRIVE,
+-			      _("cannot determine tape block size\n") );
++			mlog(MLOG_NORMAL | MLOG_DRIVE,
++			      _("cannot determine tape block size\n"));
+ 			return DRIVE_ERROR_MEDIA;
+ 		}
+ 		continue;
+@@ -4591,23 +4591,23 @@ largersize:
+ 		/* we end up here if we want to try a new larger record size
+ 		 * because the last one was not big enough for the tape block
+ 		 */
+-		if ( changedblkszpr ) {
+-			mlog( MLOG_NORMAL | MLOG_DRIVE,
++		if (changedblkszpr) {
++			mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 			      _("cannot determine tape block size "
+-			      "after two tries\n") );
+-			if ( ! wasatbotpr ) {
+-				mlog( MLOG_NORMAL | MLOG_DRIVE,
+-				      _("will rewind and try again\n") );
+-				( void )rewind_and_verify( drivep );
+-				Close( drivep );
++			      "after two tries\n"));
++			if (! wasatbotpr) {
++				mlog(MLOG_NORMAL | MLOG_DRIVE,
++				      _("will rewind and try again\n"));
++				(void)rewind_and_verify(drivep);
++				Close(drivep);
+ 				goto retry;
+ 			} else {
+-				mlog( MLOG_NORMAL | MLOG_DRIVE,
++				mlog(MLOG_NORMAL | MLOG_DRIVE,
+ 				      _("assuming media is corrupt "
+-				      "or contains non-xfsdump data\n") );
+-				( void )rewind_and_verify( drivep );
+-				ok = set_best_blk_and_rec_sz( drivep );
+-				if ( ! ok ) {
++				      "or contains non-xfsdump data\n"));
++				(void)rewind_and_verify(drivep);
++				ok = set_best_blk_and_rec_sz(drivep);
++				if (! ok) {
+ 					return DRIVE_ERROR_DEVICE;
+ 				}
+ 				return DRIVE_ERROR_FOREIGN;
+@@ -4615,29 +4615,29 @@ largersize:
+ 		}
+                 /* Make it as large as we can go
+                  */
+-		if ( tape_recsz != STAPE_MAX_RECSZ ) {
++		if (tape_recsz != STAPE_MAX_RECSZ) {
+ 			tape_recsz = STAPE_MAX_RECSZ;
+-			if ( ! contextp->dc_isQICpr ) {
++			if (! contextp->dc_isQICpr) {
+ 				tape_blksz = tape_recsz;;
+ 			}
+ 			changedblkszpr = BOOL_TRUE;
+ 		} else {
+-			mlog( MLOG_NORMAL | MLOG_DRIVE,
+-			      _("cannot determine tape block size\n") );
++			mlog(MLOG_NORMAL | MLOG_DRIVE,
++			      _("cannot determine tape block size\n"));
+ 			return DRIVE_ERROR_MEDIA;
+ 		}
+ 		continue;
+ 
+ 	} /* loop reading 1st record 'til get correct blksz */
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "read first record of first media file encountered on media: "
+ 	      "recsz == %u\n",
+-	      tape_recsz );
++	      tape_recsz);
+ 
+ 	/* calculate maximum bytes lost without error at end of tape
+ 	 */
+-	calc_max_lost( drivep );
++	calc_max_lost(drivep);
+ 
+ 	contextp->dc_iocnt = 1;
+ 	return 0;
+@@ -4646,9 +4646,9 @@ largersize:
+ /* if BOOL_FALSE returned, errno is valid
+  */
+ static bool_t
+-Open( drive_t *drivep )
++Open(drive_t *drivep)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	int oflags;
+ 
+ #ifdef DUMP
+@@ -4658,15 +4658,15 @@ Open( drive_t *drivep )
+ 	oflags = O_RDONLY;
+ #endif /* RESTORE */
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "tape op: opening drive\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "tape op: opening drive\n");
+ 
+-	assert( contextp->dc_fd == -1 );
++	assert(contextp->dc_fd == -1);
+ 
+ 	errno = 0;
+-	contextp->dc_fd = open( drivep->d_pathname, oflags );
++	contextp->dc_fd = open(drivep->d_pathname, oflags);
+ 
+-	if ( contextp->dc_fd <= 0 ) {
++	if (contextp->dc_fd <= 0) {
+ 		return BOOL_FALSE;
+ 	}
+ 
+@@ -4675,87 +4675,87 @@ Open( drive_t *drivep )
  }
  
- int
--read_buf( char *bufp,
-+read_buf(char *bufp,
- 	  size_t bufsz,
- 	  void *contextp,
- 	  rfp_t read_funcp,
- 	  rrbfp_t return_read_buf_funcp,
--	  int *statp )
-+	  int *statp)
+ static void
+-Close( drive_t *drivep )
++Close(drive_t *drivep)
  {
- 	char *mbufp;		/* manager's buffer pointer */
- 	size_t mbufsz;	/* size of manager's buffer */
-@@ -85,37 +85,37 @@ read_buf( char *bufp,
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
  
- 	nread = 0;
- 	*statp = 0;
--	while ( bufsz ) {
--		mbufp = ( * read_funcp )( contextp, bufsz, &mbufsz, statp );
--		if ( *statp ) {
-+	while (bufsz) {
-+		mbufp = (* read_funcp)(contextp, bufsz, &mbufsz, statp);
-+		if (*statp) {
- 			break;
- 		}
--		assert( mbufsz <= bufsz );
--		if ( bufp ) {
--			( void )memcpy( (void *)bufp, (void *)mbufp, mbufsz );
-+		assert(mbufsz <= bufsz);
-+		if (bufp) {
-+			(void)memcpy((void *)bufp, (void *)mbufp, mbufsz);
- 			bufp += mbufsz;
- 		}
- 		bufsz -= mbufsz;
--		nread += ( int )mbufsz;
--		( * return_read_buf_funcp )( contextp, mbufp, mbufsz );
-+		nread += (int)mbufsz;
-+		(* return_read_buf_funcp)(contextp, mbufp, mbufsz);
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
+-	      "tape op: closing drive\n" );
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
++	      "tape op: closing drive\n");
+ 
+-	assert( contextp->dc_fd >= 0 );
++	assert(contextp->dc_fd >= 0);
+ 
+-	( void )close( contextp->dc_fd );
++	(void)close(contextp->dc_fd);
+ 
+ 	contextp->dc_fd = -1;
+ }
+ 
+ static int
+-Read( drive_t *drivep, char *bufp, size_t cnt, int *errnop )
++Read(drive_t *drivep, char *bufp, size_t cnt, int *errnop)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	int nread;
+ 
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "tape op: reading %u bytes\n",
+-	      cnt );
++	      cnt);
+ 
+-	assert( contextp->dc_fd >= 0 );
+-	assert( bufp );
++	assert(contextp->dc_fd >= 0);
++	assert(bufp);
+ 	*errnop = 0;
+ 	errno = 0;
+-	nread = read( contextp->dc_fd, ( void * )bufp, cnt );
+-	if ( nread < 0 ) {
++	nread = read(contextp->dc_fd, (void *)bufp, cnt);
++	if (nread < 0) {
+ 		*errnop = errno;
+-		mlog( MLOG_NITTY | MLOG_DRIVE,
++		mlog(MLOG_NITTY | MLOG_DRIVE,
+ 		      "tape op read of %u bytes failed: errno == %d (%s)\n",
+ 		      cnt,
+ 		      errno,
+-		      strerror( errno ));
+-	} else if ( nread != ( int )cnt ) {
+-		mlog( MLOG_NITTY | MLOG_DRIVE,
++		      strerror(errno));
++	} else if (nread != (int)cnt) {
++		mlog(MLOG_NITTY | MLOG_DRIVE,
+ 		      "tape op read of %u bytes short: nread == %d\n",
+ 		      cnt,
+-		      nread );
++		      nread);
+ 	} else {
+-		mlog( MLOG_NITTY | MLOG_DRIVE,
++		mlog(MLOG_NITTY | MLOG_DRIVE,
+ 		      "tape op read of %u bytes successful\n",
+-		      cnt );
++		      cnt);
  	}
  
  	return nread;
  }
  
- char
--*strncpyterm( char *s1, char *s2, size_t n )
-+*strncpyterm(char *s1, char *s2, size_t n)
+ static int
+-Write( drive_t *drivep, char *bufp, size_t cnt, int *errnop )
++Write(drive_t *drivep, char *bufp, size_t cnt, int *errnop)
  {
- 	char *rval;
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	int nwritten;
  
--	if ( n < 1 ) return 0;
--	rval = strncpy( s1, s2, n );
--	s1[ n - 1 ] = 0;
-+	if (n < 1) return 0;
-+	rval = strncpy(s1, s2, n);
-+	s1[n - 1] = 0;
+-	mlog( MLOG_DEBUG | MLOG_DRIVE,
++	mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 	      "tape op: writing %u bytes\n",
+-	      cnt );
++	      cnt);
+ 
+-	assert( contextp->dc_fd >= 0 );
+-	assert( bufp );
++	assert(contextp->dc_fd >= 0);
++	assert(bufp);
+ 	*errnop = 0;
+ 	errno = 0;
+-	nwritten = write( contextp->dc_fd, ( void * )bufp, cnt );
+-	if ( nwritten < 0 ) {
++	nwritten = write(contextp->dc_fd, (void *)bufp, cnt);
++	if (nwritten < 0) {
+ 		*errnop = errno;
+-		mlog( MLOG_NITTY | MLOG_DRIVE,
++		mlog(MLOG_NITTY | MLOG_DRIVE,
+ 		      "tape op write of %u bytes failed: errno == %d (%s)\n",
+ 		      cnt,
+ 		      errno,
+-		      strerror( errno ));
+-	} else if ( nwritten != ( int )cnt ) {
+-		mlog( MLOG_NITTY | MLOG_DRIVE,
++		      strerror(errno));
++	} else if (nwritten != (int)cnt) {
++		mlog(MLOG_NITTY | MLOG_DRIVE,
+ 		      "tape op write of %u bytes short: nwritten == %d\n",
+ 		      cnt,
+-		      nwritten );
++		      nwritten);
+ 	} else {
+-		mlog( MLOG_NITTY | MLOG_DRIVE,
++		mlog(MLOG_NITTY | MLOG_DRIVE,
+ 		      "tape op write of %u bytes successful\n",
+-		      cnt );
++		      cnt);
+ 	}
+ 
+ 	return nwritten;
+@@ -4767,27 +4767,27 @@ Write( drive_t *drivep, char *bufp, size_t cnt, int *errnop )
+  */
+ /* ARGSUSED */
+ static int
+-quick_backup( drive_t *drivep, drive_context_t *contextp, ix_t skipcnt )
++quick_backup(drive_t *drivep, drive_context_t *contextp, ix_t skipcnt)
+ {
+-	if ( drivep->d_capabilities & DRIVE_CAP_BSF ) {
++	if (drivep->d_capabilities & DRIVE_CAP_BSF) {
+ 		do {
+ 			mtstat_t mtstat;
+-			mtstat = bsf_and_verify( drivep );
+-			if ( IS_BOT( mtstat )) {
++			mtstat = bsf_and_verify(drivep);
++			if (IS_BOT(mtstat)) {
+ 				return 0;
+ 			}
+-			if ( TS_ISDRIVER ) {
+-				if ( ! IS_FMK( mtstat )) {
+-					mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++			if (TS_ISDRIVER) {
++				if (! IS_FMK(mtstat)) {
++					mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 					      _("unable to backspace tape: "
+-					      "assuming media error\n") );
++					      "assuming media error\n"));
+ 					return DRIVE_ERROR_MEDIA;
+ 				}
+ 			}
+-		} while ( skipcnt-- );
+-		( void )fsf_and_verify( drivep );
++		} while (skipcnt--);
++		(void)fsf_and_verify(drivep);
+ 	} else {
+-		( void )rewind_and_verify( drivep );
++		(void)rewind_and_verify(drivep);
+ 	}
+ 
+ 	return 0;
+@@ -4797,82 +4797,82 @@ quick_backup( drive_t *drivep, drive_context_t *contextp, ix_t skipcnt )
+  * indication.
+  */
+ static int
+-record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
++record_hdr_validate(drive_t *drivep, char *bufp, bool_t chkoffpr)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	global_hdr_t *grhdrp = drivep->d_greadhdrp;
+ 	rec_hdr_t rechdr;
+ 	rec_hdr_t *rechdrp = &rechdr;
+-	rec_hdr_t *tmprh = ( rec_hdr_t * )bufp;
++	rec_hdr_t *tmprh = (rec_hdr_t *)bufp;
+ 
+-	if ( ! tape_rec_checksum_check( contextp, bufp )) {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++	if (! tape_rec_checksum_check(contextp, bufp)) {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 		      _("record %lld corrupt: bad record checksum\n"),
+-		      contextp->dc_iocnt - 1 );
++		      contextp->dc_iocnt - 1);
+ 		return DRIVE_ERROR_CORRUPTION;
+ 
+ 	}
+ 
+ 	xlate_rec_hdr(tmprh, rechdrp, 1);
+ 
+-	if ( rechdrp->magic != STAPE_MAGIC )  {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++	if (rechdrp->magic != STAPE_MAGIC)  {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 		      _("record %lld corrupt: bad magic number\n"),
+-		      contextp->dc_iocnt - 1 );
++		      contextp->dc_iocnt - 1);
+ 		return DRIVE_ERROR_CORRUPTION;
+ 	}
+ 
+-	if ( uuid_is_null( rechdrp->dump_uuid )) {
++	if (uuid_is_null(rechdrp->dump_uuid)) {
+ 
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 		      _("record %lld corrupt: null dump id\n"),
+-		      contextp->dc_iocnt - 1 );
++		      contextp->dc_iocnt - 1);
+ 		return DRIVE_ERROR_CORRUPTION;
+ 	}
+ 
+-	if ( uuid_compare( grhdrp->gh_dumpid,
+-			   rechdrp->dump_uuid ) != 0) {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++	if (uuid_compare(grhdrp->gh_dumpid,
++			   rechdrp->dump_uuid) != 0) {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 		      _("record %lld corrupt: dump id mismatch\n"),
+-		      contextp->dc_iocnt - 1 );
++		      contextp->dc_iocnt - 1);
+ 		return DRIVE_ERROR_CORRUPTION;
+ 	}
+ 
+-	if ( ( size_t )rechdrp->recsize != tape_recsz ) {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE, _(
++	if ((size_t)rechdrp->recsize != tape_recsz) {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE, _(
+ 		      "record %lld corrupt: incorrect record size in header\n"),
+-		      contextp->dc_iocnt - 1 );
++		      contextp->dc_iocnt - 1);
+ 		return DRIVE_ERROR_CORRUPTION;
+ 	}
+ 
+-	if ( rechdrp->file_offset % ( off64_t )tape_recsz ) {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++	if (rechdrp->file_offset % (off64_t)tape_recsz) {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 		      _("record %lld corrupt: record offset in header "
+ 		      "not a multiple of record size\n"),
+-		      contextp->dc_iocnt - 1 );
++		      contextp->dc_iocnt - 1);
+ 		return DRIVE_ERROR_CORRUPTION;
+ 	}
+ 
+-	if ( chkoffpr
++	if (chkoffpr
+ 	     &&
+ 	     rechdrp->file_offset
+ 	     !=
+-	     ( contextp->dc_iocnt - 1 ) * ( off64_t )tape_recsz ) {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++	     (contextp->dc_iocnt - 1) * (off64_t)tape_recsz) {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 		      _("record %lld corrupt: "
+ 		      "incorrect record offset in header (0x%llx)\n"),
+ 		      contextp->dc_iocnt - 1,
+-		      rechdrp->file_offset );
++		      rechdrp->file_offset);
+ 		return DRIVE_ERROR_CORRUPTION;
+ 	}
+ 
+-	if ( rechdrp->rec_used > tape_recsz
++	if (rechdrp->rec_used > tape_recsz
+ 	     ||
+-	     rechdrp->rec_used < STAPE_HDR_SZ ) {
+-		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
++	     rechdrp->rec_used < STAPE_HDR_SZ) {
++		mlog(MLOG_NORMAL | MLOG_WARNING | MLOG_DRIVE,
+ 		      _("record %lld corrupt: "
+ 		      "incorrect record padding offset in header\n"),
+-		      contextp->dc_iocnt - 1 );
++		      contextp->dc_iocnt - 1);
+ 		return DRIVE_ERROR_CORRUPTION;
+ 	}
+ 
+@@ -4885,116 +4885,116 @@ record_hdr_validate( drive_t *drivep, char *bufp, bool_t chkoffpr )
+  * return 0 on success.
+  */
+ static int
+-read_record(  drive_t *drivep, char *bufp )
++read_record(drive_t *drivep, char *bufp)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	int nread;
+ 	int saved_errno;
+ 	mtstat_t mtstat;
+ 	int rval;
+ 	bool_t ok;
+ 
+-	nread = Read( drivep, bufp, tape_recsz, &saved_errno );
+-	if ( nread == ( int )tape_recsz ) {
++	nread = Read(drivep, bufp, tape_recsz, &saved_errno);
++	if (nread == (int)tape_recsz) {
+ 		contextp->dc_iocnt++;
+-		rval = record_hdr_validate( drivep, bufp, BOOL_TRUE );
++		rval = record_hdr_validate(drivep, bufp, BOOL_TRUE);
+ 		return rval;
+ 	}
+ 
+ 	/* get drive status
+ 	 */
+-	ok = mt_get_status( drivep, &mtstat );
+-	if ( ! ok ) {
+-		status_failed_message( drivep );
++	ok = mt_get_status(drivep, &mtstat);
++	if (! ok) {
++		status_failed_message(drivep);
+ 		return DRIVE_ERROR_DEVICE;
+ 	}
+ 
+ 	/* encountered a file mark
+ 	 */
+-	if ( IS_FMK( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (IS_FMK(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 		      "encountered EOF attempting to read record %lld\n",
+-		      contextp->dc_iocnt );
++		      contextp->dc_iocnt);
+ 		return DRIVE_ERROR_EOF;
+ 	}
+ 
+ 	/* encountered a end of recorded data
+ 	 */
+-	if ( IS_EOD( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (IS_EOD(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 		      "encountered EOD attempting to read record %lld\n",
+-		      contextp->dc_iocnt );
++		      contextp->dc_iocnt);
+ 		return DRIVE_ERROR_EOD;
+ 	}
+ 
+ 	/* encountered a end of media
+ 	 */
+-	if ( IS_EOT( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (IS_EOT(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 		      "encountered EOM attempting to read record %lld\n",
+-		      contextp->dc_iocnt );
++		      contextp->dc_iocnt);
+ 		return DRIVE_ERROR_EOM;
+ 	}
+ 
+ 	/* encountered a end of media (early warning indicated)
+ 	 */
+-	if ( IS_EW( mtstat )) {
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (IS_EW(mtstat)) {
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 		      "encountered EW attempting to read record %lld\n",
+-		      contextp->dc_iocnt );
++		      contextp->dc_iocnt);
+ 		return DRIVE_ERROR_EOM;
+ 	}
+ 
+ 	/* short read
+ 	 */
+-	if ( nread >= 0 ) {
+-		assert( nread <= ( int )tape_recsz );
+-		mlog( MLOG_DEBUG | MLOG_DRIVE,
++	if (nread >= 0) {
++		assert(nread <= (int)tape_recsz);
++		mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 		      "short read record %lld (nread == %d)\n",
+ 		      contextp->dc_iocnt,
+-		      nread );
++		      nread);
+ 		return DRIVE_ERROR_CORRUPTION;
+ 	}
+ 
+ 	/* some other error
+ 	 */
+-	mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
++	mlog(MLOG_NORMAL | MLOG_ERROR | MLOG_DRIVE, _(
+ 	      "unexpected error attempting to read record %lld: "
+ 	      "read returns %d, errno %d (%s)\n"),
+ 	      contextp->dc_iocnt,
+ 	      nread,
+ 	      errno,
+-	      strerror( errno ));
++	      strerror(errno));
+ 	return DRIVE_ERROR_CORRUPTION;
+ }
+ 
+ static int
+-ring_read( void *clientctxp, char *bufp )
++ring_read(void *clientctxp, char *bufp)
+ {
+-	return read_record( ( drive_t * )clientctxp, bufp );
++	return read_record((drive_t *)clientctxp, bufp);
+ }
+ 
+ /* gets another record IF dc_recp is NULL
+  */
+ static int
+-getrec( drive_t *drivep )
++getrec(drive_t *drivep)
+ {
+ 	drive_context_t *contextp;
+-	contextp = ( drive_context_t * )drivep->d_contextp;
++	contextp = (drive_context_t *)drivep->d_contextp;
+ 
+-	while ( ! contextp->dc_recp ) {
++	while (! contextp->dc_recp) {
+ 		rec_hdr_t *rechdrp;
+-		if ( contextp->dc_singlethreadedpr ) {
++		if (contextp->dc_singlethreadedpr) {
+ 			int rval;
+ 			contextp->dc_recp = contextp->dc_bufp;
+-			rval = read_record( drivep, contextp->dc_recp );
+-			if ( rval ) {
++			rval = read_record(drivep, contextp->dc_recp);
++			if (rval) {
+ 				contextp->dc_errorpr = BOOL_TRUE;
+ 				return rval;
+ 			}
+ 		} else {
+-			contextp->dc_msgp = Ring_get( contextp->dc_ringp );
+-			switch( contextp->dc_msgp->rm_stat ) {
++			contextp->dc_msgp = Ring_get(contextp->dc_ringp);
++			switch(contextp->dc_msgp->rm_stat) {
+ 			case RING_STAT_OK:
+ 				contextp->dc_recp = contextp->dc_msgp->rm_bufp;
+ 				break;
+@@ -5002,20 +5002,20 @@ getrec( drive_t *drivep )
+ 			case RING_STAT_NOPACK:
+ 			case RING_STAT_IGNORE:
+ 				contextp->dc_msgp->rm_op = RING_OP_READ;
+-				Ring_put( contextp->dc_ringp,
+-					  contextp->dc_msgp );
++				Ring_put(contextp->dc_ringp,
++					  contextp->dc_msgp);
+ 				contextp->dc_msgp = 0;
+ 				continue;
+ 			case RING_STAT_ERROR:
+ 				contextp->dc_errorpr = BOOL_TRUE;
+ 				return contextp->dc_msgp->rm_rval;
+ 			default:
+-				assert( 0 );
++				assert(0);
+ 				contextp->dc_errorpr = BOOL_TRUE;
+ 				return DRIVE_ERROR_CORE;
+ 			}
+ 		}
+-		rechdrp = ( rec_hdr_t * )contextp->dc_recp;
++		rechdrp = (rec_hdr_t *)contextp->dc_recp;
+ 		contextp->dc_recendp = contextp->dc_recp + tape_recsz;
+ 		contextp->dc_dataendp = contextp->dc_recp
+ 				        +
+@@ -5023,7 +5023,7 @@ getrec( drive_t *drivep )
+ 		contextp->dc_nextp = contextp->dc_recp
+ 				     +
+ 				     STAPE_HDR_SZ;
+-		assert( contextp->dc_nextp <= contextp->dc_dataendp );
++		assert(contextp->dc_nextp <= contextp->dc_dataendp);
+ 	}
+ 
+ 	return 0;
+@@ -5034,73 +5034,73 @@ getrec( drive_t *drivep )
+  */
+ /*ARGSUSED*/
+ static int
+-write_record(  drive_t *drivep, char *bufp, bool_t chksumpr, bool_t xlatepr )
++write_record(drive_t *drivep, char *bufp, bool_t chksumpr, bool_t xlatepr)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	int nwritten;
+ 	int saved_errno;
+ 	int rval;
+ 
+-        if ( xlatepr ) {
++        if (xlatepr) {
+ 		rec_hdr_t rechdr;
+-		memcpy( &rechdr, bufp, sizeof(rechdr) );
+-		xlate_rec_hdr( &rechdr, ( rec_hdr_t * )bufp, 1 );
++		memcpy(&rechdr, bufp, sizeof(rechdr));
++		xlate_rec_hdr(&rechdr, (rec_hdr_t *)bufp, 1);
+ 	}
+ 
+-	if ( chksumpr ) {
+-		tape_rec_checksum_set( contextp, bufp );
++	if (chksumpr) {
++		tape_rec_checksum_set(contextp, bufp);
+ 	}
+ 
+-	nwritten = Write( drivep, bufp, tape_recsz, &saved_errno );
++	nwritten = Write(drivep, bufp, tape_recsz, &saved_errno);
+ 
+-	if ( nwritten == ( int )tape_recsz ) {
++	if (nwritten == (int)tape_recsz) {
+ 		contextp->dc_iocnt++;
+ 		return 0;
+ 	}
+ 
+-	rval = determine_write_error( drivep, nwritten, saved_errno );
+-	assert( rval );
++	rval = determine_write_error(drivep, nwritten, saved_errno);
++	assert(rval);
+ 
  	return rval;
  }
  
- int
--bigstat_iter( jdm_fshandle_t *fshandlep,
-+bigstat_iter(jdm_fshandle_t *fshandlep,
- 	      int fsfd,
- 	      int selector,
- 	      xfs_ino_t start_ino,
-@@ -124,9 +124,9 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
- 	      bstat_seekfp_t seekfp,
- 	      void * seek_arg1,
- 	      int *statp,
--	      bool_t ( pfp )( int ),
-+	      bool_t (pfp)(int),
- 	      xfs_bstat_t *buf,
--	      size_t buflenin )
-+	      size_t buflenin)
+ static int
+-ring_write( void *clientctxp, char *bufp )
++ring_write(void *clientctxp, char *bufp)
  {
- 	__s32 buflenout;
- 	xfs_ino_t lastino;
-@@ -141,20 +141,20 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
- 	/* NOT COOL: open will affect root dir's access time
- 	 */
- 
--	mlog( MLOG_NITTY,
-+	mlog(MLOG_NITTY,
- 	      "bulkstat iteration initiated: start_ino == %llu\n",
--	      start_ino );
-+	      start_ino);
- 
- 	/* quirk of the interface: I want to play in terms of the
- 	 * ino to begin with, and ino 0 is not used. so, ...
- 	 */
--	if ( start_ino > 0 ) {
-+	if (start_ino > 0) {
- 		lastino = start_ino - 1;
- 	} else {
- 		lastino = 0;
- 	}
--	mlog( MLOG_NITTY + 1,
--	      "calling bulkstat\n" );
-+	mlog(MLOG_NITTY + 1,
-+	      "calling bulkstat\n");
- 
- 	bulkstatcnt = 0;
- 	bulkreq.lastip = (__u64 *)&lastino;
-@@ -165,101 +165,101 @@ bigstat_iter( jdm_fshandle_t *fshandlep,
- 		xfs_bstat_t *p;
- 		xfs_bstat_t *endp;
- 
--		if ( buflenout == 0 ) {
--			mlog( MLOG_NITTY + 1,
-+		if (buflenout == 0) {
-+			mlog(MLOG_NITTY + 1,
- 			      "bulkstat returns buflen %d\n",
--			      buflenout );
-+			      buflenout);
- 			return 0;
- 		}
--		mlog( MLOG_NITTY + 1,
-+		mlog(MLOG_NITTY + 1,
- 		      "bulkstat returns buflen %d ino %llu\n",
- 		      buflenout,
--		      buf->bs_ino );
--		for ( p = buf, endp = buf + buflenout ; p < endp ; p++ ) {
-+		      buf->bs_ino);
-+		for (p = buf, endp = buf + buflenout ; p < endp ; p++) {
- 			int rval;
- 
--			if ( p->bs_ino == 0 )
-+			if (p->bs_ino == 0)
- 				continue;
- 
--			if ( !p->bs_nlink || !p->bs_mode ) {
-+			if (!p->bs_nlink || !p->bs_mode) {
- 				/* inode being modified, get synced data */
--				mlog( MLOG_NITTY + 1,
-+				mlog(MLOG_NITTY + 1,
- 				      "ino %llu needed second bulkstat\n",
--				      p->bs_ino );
-+				      p->bs_ino);
- 
--				if( bigstat_one( fsfd, p->bs_ino, p ) < 0 ) {
--				    mlog( MLOG_WARNING,
-+				if(bigstat_one(fsfd, p->bs_ino, p) < 0) {
-+				    mlog(MLOG_WARNING,
- 					  _("failed to get bulkstat information for inode %llu\n"),
--					  p->bs_ino );
-+					  p->bs_ino);
- 				    continue;
- 				}
--				if ( !p->bs_nlink || !p->bs_mode || !p->bs_ino ) {
--					mlog( MLOG_TRACE,
-+				if (!p->bs_nlink || !p->bs_mode || !p->bs_ino) {
-+					mlog(MLOG_TRACE,
- 					      _("failed to get valid bulkstat information for inode %llu\n"),
--					      p->bs_ino );
-+					      p->bs_ino);
- 					continue;
- 				}
- 			}
- 
--			if ( ( p->bs_mode & S_IFMT ) == S_IFDIR ) {
--				if ( ! ( selector & BIGSTAT_ITER_DIR )){
-+			if ((p->bs_mode & S_IFMT) == S_IFDIR) {
-+				if (! (selector & BIGSTAT_ITER_DIR)){
- 					continue;
- 				}
- 			} else {
--				if ( ! ( selector & BIGSTAT_ITER_NONDIR )){
-+				if (! (selector & BIGSTAT_ITER_NONDIR)){
- 					continue;
- 				}
- 			}
--			rval = ( * fp )( cb_arg1, fshandlep, fsfd, p );
--			if ( rval ) {
-+			rval = (* fp)(cb_arg1, fshandlep, fsfd, p);
-+			if (rval) {
- 				*statp = rval;
- 				return 0;
- 			}
--			if ( pfp ) ( pfp )( PREEMPT_PROGRESSONLY );
-+			if (pfp) (pfp)(PREEMPT_PROGRESSONLY);
- 		}
- 
--		if ( pfp && (++bulkstatcnt % 10) == 0 &&
--		     ( pfp )( PREEMPT_FULL )) {
-+		if (pfp && (++bulkstatcnt % 10) == 0 &&
-+		     (pfp)(PREEMPT_FULL)) {
- 			return EINTR;
- 		}
- 
- 		if (seekfp) {
- 			lastino = seekfp(seek_arg1, lastino);
- 			if (lastino == INO64MAX) {
--				mlog( MLOG_DEBUG,
-+				mlog(MLOG_DEBUG,
- 				      "bulkstat seeked to EOS\n");
- 				return 0;
- 			}
- 
--			mlog( MLOG_DEBUG,
-+			mlog(MLOG_DEBUG,
- 			      "bulkstat seeked to %llu\n", lastino);
- 
- 			lastino = (lastino > 0) ? lastino - 1 : 0;
- 		}
- 
--		mlog( MLOG_NITTY + 1,
--		      "calling bulkstat\n" );
-+		mlog(MLOG_NITTY + 1,
-+		      "calling bulkstat\n");
- 	}
- 
- 	saved_errno = errno;
- 
--	mlog( MLOG_NORMAL,
-+	mlog(MLOG_NORMAL,
- 	      _("syssgi( SGI_FS_BULKSTAT ) on fsroot failed: %s\n"),
--	      strerror( saved_errno ));
-+	      strerror(saved_errno));
- 
- 	return saved_errno;
+-	return write_record( ( drive_t * )clientctxp, bufp, BOOL_TRUE, BOOL_TRUE );
++	return write_record((drive_t *)clientctxp, bufp, BOOL_TRUE, BOOL_TRUE);
  }
  
- /* ARGSUSED */
- int
--bigstat_one( int fsfd,
-+bigstat_one(int fsfd,
- 	     xfs_ino_t ino,
--	     xfs_bstat_t *statp )
-+	     xfs_bstat_t *statp)
+ static ring_msg_t *
+-Ring_get( ring_t *ringp )
++Ring_get(ring_t *ringp)
  {
-         xfs_fsop_bulkreq_t bulkreq;
- 	int count = 0;
+ 	ring_msg_t *msgp;
  
--	assert( ino > 0 );
-+	assert(ino > 0);
-         bulkreq.lastip = (__u64 *)&ino;
-         bulkreq.icount = 1;
-         bulkreq.ubuffer = statp;
-@@ -271,12 +271,12 @@ bigstat_one( int fsfd,
-  */
- #define INOGRPLEN	256
- int
--inogrp_iter( int fsfd,
--	     int ( * fp )( void *arg1,
-+inogrp_iter(int fsfd,
-+	     int (* fp)(void *arg1,
- 				int fsfd,
--				xfs_inogrp_t *inogrp ),
-+				xfs_inogrp_t *inogrp),
- 	     void * arg1,
--	     int *statp )
-+	     int *statp)
- {
- 	xfs_ino_t lastino;
- 	int inogrpcnt;
-@@ -304,15 +304,15 @@ inogrp_iter( int fsfd,
- 	while (!ioctl(fsfd, XFS_IOC_FSINUMBERS, &bulkreq)) {
- 		xfs_inogrp_t *p, *endp;
+-	mlog( (MLOG_NITTY + 1) | MLOG_DRIVE,
+-	      "ring op: get\n" );
++	mlog((MLOG_NITTY + 1) | MLOG_DRIVE,
++	      "ring op: get\n");
  
--		if ( inogrpcnt == 0 ) {
-+		if (inogrpcnt == 0) {
- 			free(igrp);
- 			return 0;
- 		}
--		for ( p = igrp, endp = igrp + inogrpcnt ; p < endp ; p++ ) {
-+		for (p = igrp, endp = igrp + inogrpcnt ; p < endp ; p++) {
- 			int rval;
- 
--			rval = ( * fp )( arg1, fsfd, p );
--			if ( rval ) {
-+			rval = (* fp)(arg1, fsfd, p);
-+			if (rval) {
- 				*statp = rval;
- 				free(igrp);
- 				return 0;
-@@ -337,18 +337,18 @@ inogrp_iter( int fsfd,
-  * caller may supply a dirent buffer. if not, will malloc one
-  */
- int
--diriter( jdm_fshandle_t *fshandlep,
-+diriter(jdm_fshandle_t *fshandlep,
- 	 int fsfd,
- 	 xfs_bstat_t *statp,
--	 int ( *cbfp )( void *arg1,
-+	 int (*cbfp)(void *arg1,
- 			     jdm_fshandle_t *fshandlep,
- 			     int fsfd,
- 			     xfs_bstat_t *statp,
--			     char *namep ),
-+			     char *namep),
- 	 void *arg1,
- 	 int *cbrvalp,
- 	 char *usrgdp,
--	 size_t usrgdsz )
-+	 size_t usrgdsz)
- {
- 	size_t gdsz;
- 	struct dirent *gdp;
-@@ -357,105 +357,105 @@ diriter( jdm_fshandle_t *fshandlep,
- 	int scrval;
- 	int cbrval;
- 
--	if ( usrgdp ) {
--		assert( usrgdsz >= sizeof( struct dirent ) );
-+	if (usrgdp) {
-+		assert(usrgdsz >= sizeof(struct dirent));
- 		gdsz = usrgdsz;
--		gdp = ( struct dirent * )usrgdp;
-+		gdp = (struct dirent *)usrgdp;
- 	} else {
- 		gdsz = pgsz;
--		gdp = ( struct dirent * )malloc( gdsz );
--		assert( gdp );
-+		gdp = (struct dirent *)malloc(gdsz);
-+		assert(gdp);
- 	}
- 
- 	/* open the directory
- 	 */
--	fd = jdm_open( fshandlep, statp, O_RDONLY );
--	if ( fd < 0 ) {
--		mlog( MLOG_NORMAL,
-+	fd = jdm_open(fshandlep, statp, O_RDONLY);
-+	if (fd < 0) {
-+		mlog(MLOG_NORMAL,
- 		      _("WARNING: unable to open directory ino %llu: %s\n"),
- 		      statp->bs_ino,
--		      strerror( errno ));
-+		      strerror(errno));
- 		*cbrvalp = 0;
--		if ( ! usrgdp ) {
--			free( ( void * )gdp );
-+		if (! usrgdp) {
-+			free((void *)gdp);
- 		}
- 		return -1;
- 	}
--	assert( ( statp->bs_mode & S_IFMT ) == S_IFDIR );
-+	assert((statp->bs_mode & S_IFMT) == S_IFDIR);
- 
- 	/* lots of buffering done here, to achieve OS-independence.
- 	 * if proves to be to much overhead, can streamline.
- 	 */
- 	scrval = 0;
- 	cbrval = 0;
--	for ( gdcnt = 1 ; ; gdcnt++ ) {
-+	for (gdcnt = 1 ; ; gdcnt++) {
- 		struct dirent *p;
- 		int nread;
- 		register size_t reclen;
- 
--		assert( scrval == 0 );
--		assert( cbrval == 0 );
-+		assert(scrval == 0);
-+		assert(cbrval == 0);
- 
--		nread = getdents_wrap( fd, (char *)gdp, gdsz );
-+		nread = getdents_wrap(fd, (char *)gdp, gdsz);
- 
- 		/* negative count indicates something very bad happened;
- 		 * try to gracefully end this dir.
- 		 */
--		if ( nread < 0 ) {
--			mlog( MLOG_NORMAL,
-+		if (nread < 0) {
-+			mlog(MLOG_NORMAL,
- 			      _("WARNING: unable to read dirents (%d) for "
- 			      "directory ino %llu: %s\n"),
- 			      gdcnt,
- 			      statp->bs_ino,
--			      strerror( errno ));
-+			      strerror(errno));
- 			nread = 0; /* pretend we are done */
- 		}
- 
- 		/* no more directory entries: break;
- 		 */
--		if ( nread == 0 ) {
-+		if (nread == 0) {
- 			break;
- 		}
- 
- 		/* translate and invoke cb each entry: skip "." and "..".
- 		 */
--		for ( p = gdp,
--		      reclen = ( size_t )p->d_reclen
-+		for (p = gdp,
-+		      reclen = (size_t)p->d_reclen
- 		      ;
- 		      nread > 0
- 		      ;
--		      nread -= ( int )reclen,
--		      assert( nread >= 0 ),
--		      p = ( struct dirent * )( ( char * )p + reclen ),
--		      reclen = ( size_t )p->d_reclen ) {
-+		      nread -= (int)reclen,
-+		      assert(nread >= 0),
-+		      p = (struct dirent *)((char *)p + reclen),
-+		      reclen = (size_t)p->d_reclen) {
- 			xfs_bstat_t statbuf;
--			assert( scrval == 0 );
--			assert( cbrval == 0 );
-+			assert(scrval == 0);
-+			assert(cbrval == 0);
- 
- 			/* skip "." and ".."
- 			 */
--			if ( *( p->d_name + 0 ) == '.'
-+			if (*(p->d_name + 0) == '.'
- 			     &&
--			     ( *( p->d_name + 1 ) == 0
-+			     (*(p->d_name + 1) == 0
- 			       ||
--			       ( *( p->d_name + 1 ) == '.'
-+			       (*(p->d_name + 1) == '.'
- 				 &&
--				 *( p->d_name + 2 ) == 0 ))) {
-+				 *(p->d_name + 2) == 0))) {
- 				continue;
- 			}
- 
- 			/* use bigstat
- 			 */
--			scrval = bigstat_one( fsfd,
-+			scrval = bigstat_one(fsfd,
- 					      p->d_ino,
--					      &statbuf );
--			if ( scrval ) {
--				mlog( MLOG_NORMAL,
-+					      &statbuf);
-+			if (scrval) {
-+				mlog(MLOG_NORMAL,
- 				      _("WARNING: could not stat "
- 				      "dirent %s ino %llu: %s\n"),
- 				      p->d_name,
--				      ( xfs_ino_t )p->d_ino,
--				      strerror( errno ));
-+				      (xfs_ino_t)p->d_ino,
-+				      strerror(errno));
- 				scrval = 0;
- 				continue;
- 			}
-@@ -464,45 +464,45 @@ diriter( jdm_fshandle_t *fshandlep,
- 			 * occupied more than 32 bits, warn and skip.
- 			 */
- #ifndef __USE_LARGEFILE64
--			if ( statbuf.bs_ino > ( xfs_ino_t )INOMAX ) {
--				mlog( MLOG_NORMAL,
-+			if (statbuf.bs_ino > (xfs_ino_t)INOMAX) {
-+				mlog(MLOG_NORMAL,
- 				      _("WARNING: unable to process dirent %s: "
- 				      "ino %llu too large\n"),
- 				      p->d_name,
--				      ( xfs_ino_t )p->d_ino );
-+				      (xfs_ino_t)p->d_ino);
- 				continue;
- 			}
- #endif
- 
- 			/* invoke the callback
- 			 */
--			cbrval = ( * cbfp )( arg1,
-+			cbrval = (* cbfp)(arg1,
- 					     fshandlep,
- 					     fsfd,
- 					     &statbuf,
--					     p->d_name );
-+					     p->d_name);
- 
- 			/* abort the iteration if the callback returns non-zero
- 			 */
--			if ( cbrval ) {
-+			if (cbrval) {
- 				break;
- 			}
- 		}
- 
--		if ( scrval || cbrval ) {
-+		if (scrval || cbrval) {
- 			break;
- 		}
- 	}
- 
--	( void )close( fd );
--	if ( ! usrgdp ) {
--		free( ( void * )gdp );
-+	(void)close(fd);
-+	if (! usrgdp) {
-+		free((void *)gdp);
- 	}
- 
--	if ( scrval ) {
-+	if (scrval) {
- 		*cbrvalp = 0;
- 		return -1;
--	} else if ( cbrval ) {
-+	} else if (cbrval) {
- 		*cbrvalp = cbrval;
- 		return 1;
- 	} else {
-@@ -512,7 +512,7 @@ diriter( jdm_fshandle_t *fshandlep,
+-	msgp = ring_get( ringp );
++	msgp = ring_get(ringp);
+ 	return msgp;
  }
  
- int
--cvtnum( int blocksize, char *s )
-+cvtnum(int blocksize, char *s)
+ static void
+-Ring_put(  ring_t *ringp, ring_msg_t *msgp )
++Ring_put(ring_t *ringp, ring_msg_t *msgp)
  {
- 	int i;
- 	char *sp;
-diff --git a/common/util.h b/common/util.h
-index 07fdd36..ab43739 100644
---- a/common/util.h
-+++ b/common/util.h
-@@ -32,14 +32,14 @@
-  *
-  * if bufp is null, writes bufsz zeros.
+-	mlog( (MLOG_NITTY + 1) | MLOG_DRIVE,
++	mlog((MLOG_NITTY + 1) | MLOG_DRIVE,
+ 	      "ring op: put %d\n",
+-	      msgp->rm_op );
++	      msgp->rm_op);
+ 
+-	ring_put( ringp, msgp );
++	ring_put(ringp, msgp);
+ }
+ 
+ static void
+-Ring_reset(  ring_t *ringp, ring_msg_t *msgp )
++Ring_reset(ring_t *ringp, ring_msg_t *msgp)
+ {
+-	mlog( (MLOG_NITTY + 1) | MLOG_DRIVE,
+-	      "ring op: reset\n" );
++	mlog((MLOG_NITTY + 1) | MLOG_DRIVE,
++	      "ring op: reset\n");
+ 
+-	assert( ringp );
++	assert(ringp);
+ 
+-	ring_reset( ringp, msgp );
++	ring_reset(ringp, msgp);
+ }
+ 
+ /* a simple heuristic to calculate the maximum uncertainty
+@@ -5108,11 +5108,11 @@ Ring_reset(  ring_t *ringp, ring_msg_t *msgp )
+  * end of media.
   */
--typedef char * ( * gwbfp_t )( void *contextp, size_t wantedsz, size_t *szp);
--typedef int ( * wfp_t )( void *contextp, char *bufp, size_t bufsz );
-+typedef char * (* gwbfp_t)(void *contextp, size_t wantedsz, size_t *szp);
-+typedef int (* wfp_t)(void *contextp, char *bufp, size_t bufsz);
+ static void
+-calc_max_lost( drive_t *drivep )
++calc_max_lost(drive_t *drivep)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
  
--extern int write_buf( char *bufp,
-+extern int write_buf(char *bufp,
- 			   size_t bufsz,
- 			   void *contextp,
- 			   gwbfp_t get_write_buf_funcp,
--			   wfp_t write_funcp );
-+			   wfp_t write_funcp);
+-	if ( contextp->dc_isQICpr ) {
++	if (contextp->dc_isQICpr) {
+ 		contextp->dc_lostrecmax = 1;
+ 	} else {
+ 		contextp->dc_lostrecmax = 2;
+@@ -5121,33 +5121,33 @@ calc_max_lost( drive_t *drivep )
+ }
  
+ static void
+-display_ring_metrics( drive_t *drivep, int mlog_flags )
++display_ring_metrics(drive_t *drivep, int mlog_flags)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	ring_t *ringp = contextp->dc_ringp;
+-	char bufszbuf[ 16 ];
++	char bufszbuf[16];
+ 	char *bufszsfxp;
  
- /* read_buf - converts the normal manager read method into something simpler
-@@ -56,21 +56,21 @@ extern int write_buf( char *bufp,
-  * status of the first failure of the read funcp. if no read failures occur,
-  * *statp will be zero.
+-	if ( tape_recsz == STAPE_MIN_MAX_BLKSZ ) {
+-		assert( ! ( STAPE_MIN_MAX_BLKSZ % 0x400 ));
+-		sprintf( bufszbuf, "%u", STAPE_MIN_MAX_BLKSZ / 0x400 );
+-		assert( strlen( bufszbuf ) < sizeof( bufszbuf ));
++	if (tape_recsz == STAPE_MIN_MAX_BLKSZ) {
++		assert(! (STAPE_MIN_MAX_BLKSZ % 0x400));
++		sprintf(bufszbuf, "%u", STAPE_MIN_MAX_BLKSZ / 0x400);
++		assert(strlen(bufszbuf) < sizeof(bufszbuf));
+ 		bufszsfxp = "KB";
+-	} else if ( tape_recsz == STAPE_MAX_RECSZ ) {
+-		assert( ! ( STAPE_MAX_RECSZ % 0x100000 ));
+-		sprintf( bufszbuf, "%u", STAPE_MAX_RECSZ / 0x100000 );
+-		assert( strlen( bufszbuf ) < sizeof( bufszbuf ));
++	} else if (tape_recsz == STAPE_MAX_RECSZ) {
++		assert(! (STAPE_MAX_RECSZ % 0x100000));
++		sprintf(bufszbuf, "%u", STAPE_MAX_RECSZ / 0x100000);
++		assert(strlen(bufszbuf) < sizeof(bufszbuf));
+ 		bufszsfxp = "MB";
+-	} else if ( tape_recsz == STAPE_MAX_LINUX_RECSZ ) {
+-		assert( ! ( STAPE_MAX_LINUX_RECSZ % 0x100000 ));
+-		sprintf( bufszbuf, "%u", STAPE_MAX_LINUX_RECSZ / 0x100000 );
+-		assert( strlen( bufszbuf ) < sizeof( bufszbuf ));
++	} else if (tape_recsz == STAPE_MAX_LINUX_RECSZ) {
++		assert(! (STAPE_MAX_LINUX_RECSZ % 0x100000));
++		sprintf(bufszbuf, "%u", STAPE_MAX_LINUX_RECSZ / 0x100000);
++		assert(strlen(bufszbuf) < sizeof(bufszbuf));
+ 		bufszsfxp = "MB";
+ 	} else {
+ 		bufszsfxp = "";
+ 	}
+ 
+-	mlog( mlog_flags, _(
++	mlog(mlog_flags, _(
+ 	      "I/O metrics: "
+ 	      "%u by %s%s %sring; "
+ 	      "%lld/%lld (%.0lf%%) records streamed; "
+@@ -5158,100 +5158,100 @@ display_ring_metrics( drive_t *drivep, int mlog_flags )
+ 	      contextp->dc_ringpinnedpr ? _("pinned ") : "",
+ 	      ringp->r_slave_msgcnt - ringp->r_slave_blkcnt,
+ 	      ringp->r_slave_msgcnt,
+-	      percent64( ringp->r_slave_msgcnt - ringp->r_slave_blkcnt,
+-			 ringp->r_slave_msgcnt ),
+-	      ( double )( ringp->r_all_io_cnt )
++	      percent64(ringp->r_slave_msgcnt - ringp->r_slave_blkcnt,
++			 ringp->r_slave_msgcnt),
++	      (double)(ringp->r_all_io_cnt)
+ 	      *
+-	      ( double )tape_recsz
++	      (double)tape_recsz
+ 	      /
+-	      ( double )( time( 0 ) - ringp->r_first_io_time ));
++	      (double)(time(0) - ringp->r_first_io_time));
+ }
+ 
+ static mtstat_t
+-rewind_and_verify( drive_t *drivep )
++rewind_and_verify(drive_t *drivep)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	ix_t try;
+ 	int rval;
+ 
+-	rval = mt_op( contextp->dc_fd, MTREW, 0 );
+-	for ( try = 1 ; ; try++ ) {
++	rval = mt_op(contextp->dc_fd, MTREW, 0);
++	for (try = 1 ; ; try++) {
+ 		mtstat_t mtstat;
+ 		bool_t ok;
+ 
+-		if ( rval ) {
+-			sleep( 1 );
+-			rval = mt_op( contextp->dc_fd, MTREW, 0 );
++		if (rval) {
++			sleep(1);
++			rval = mt_op(contextp->dc_fd, MTREW, 0);
+ 		}
+-		ok = mt_get_status( drivep, &mtstat );
+-		if ( ! ok ) {
++		ok = mt_get_status(drivep, &mtstat);
++		if (! ok) {
+ 			mtstat = 0;
+-			status_failed_message( drivep );
+-			if ( try > 1 ) {
++			status_failed_message(drivep);
++			if (try > 1) {
+ 				return 0;
+ 			}
+ 		}
+-		if ( IS_BOT( mtstat )) {
++		if (IS_BOT(mtstat)) {
+ 			return mtstat;
+ 		}
+-		if ( try >= MTOP_TRIES_MAX ) {
++		if (try >= MTOP_TRIES_MAX) {
+ 			return mtstat;
+ 		}
+-		if ( rval ) {
++		if (rval) {
+ 			return mtstat;
+ 		}
+-		sleep( 1 );
++		sleep(1);
+ 	}
+ 	/* NOTREACHED */
+ }
+ 
+ static mtstat_t
+-erase_and_verify( drive_t *drivep )
++erase_and_verify(drive_t *drivep)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	mtstat_t mtstat;
+ 	bool_t ok;
+ 
+-	( void )mt_op( contextp->dc_fd, MTERASE, 0 );
+-	ok = mt_get_status( drivep, &mtstat );
+-	if ( ! ok ) {
++	(void)mt_op(contextp->dc_fd, MTERASE, 0);
++	ok = mt_get_status(drivep, &mtstat);
++	if (! ok) {
+ 		mtstat = 0;
+-		status_failed_message( drivep );
++		status_failed_message(drivep);
+ 	}
+ 	return mtstat;
+ }
+ 
+ static mtstat_t
+-bsf_and_verify( drive_t *drivep )
++bsf_and_verify(drive_t *drivep)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	ix_t try;
+ 	bool_t ok;
+ 
+ 	/* Can't do with LINUX ST driver, as GMT_EOF never set for left of fmk */
+-	if ( TS_ISDRIVER ) {
+-		( void )mt_op( contextp->dc_fd, MTBSF, 1 );
+-		for ( try = 1 ; ; try++ ) {
++	if (TS_ISDRIVER) {
++		(void)mt_op(contextp->dc_fd, MTBSF, 1);
++		for (try = 1 ; ; try++) {
+ 			mtstat_t mtstat;
+ 
+-			ok = mt_get_status( drivep, &mtstat );
+-			if ( ! ok ) {
++			ok = mt_get_status(drivep, &mtstat);
++			if (! ok) {
+ 				mtstat = 0;
+-				status_failed_message( drivep );
+-				if ( try > 1 ) {
++				status_failed_message(drivep);
++				if (try > 1) {
+ 					return 0;
+ 				}
+ 			}
+-			if ( IS_FMK( mtstat )) {
++			if (IS_FMK(mtstat)) {
+ 				return mtstat;
+ 			}
+-			if ( IS_BOT( mtstat )) {
++			if (IS_BOT(mtstat)) {
+ 				return mtstat;
+ 			}
+-			if ( try >= MTOP_TRIES_MAX ) {
++			if (try >= MTOP_TRIES_MAX) {
+ 				return mtstat;
+ 			}
+-			sleep( 1 );
++			sleep(1);
+ 		}
+ 	} else {
+ 		long fileno;
+@@ -5264,29 +5264,29 @@ bsf_and_verify( drive_t *drivep )
+ 		 * Do a rewind instead because the status won't be
+ 		 * set correctly otherwise. [TS:Oct/2000]
+ 		 */
+-		ok = mt_get_fileno( drivep, &fileno );
+-		if ( ! ok ) {
+-			status_failed_message( drivep );
++		ok = mt_get_fileno(drivep, &fileno);
++		if (! ok) {
++			status_failed_message(drivep);
+ 			return 0;
+ 		}
+ 		if (fileno == 0) {
+-			mlog( MLOG_DEBUG | MLOG_DRIVE,
++			mlog(MLOG_DEBUG | MLOG_DRIVE,
+ 			      "In first file, do a rewind to achieve bsf\n");
+-			return rewind_and_verify( drivep );
++			return rewind_and_verify(drivep);
+ 		}
+ 
+-		( void )mt_op( contextp->dc_fd, MTBSF, 1 );
++		(void)mt_op(contextp->dc_fd, MTBSF, 1);
+ 
+ 		try = 1;
+-status:		ok = mt_get_status( drivep, &mtstat );
+-		if ( ! ok ) {
++status:		ok = mt_get_status(drivep, &mtstat);
++		if (! ok) {
+ 			mtstat = 0;
+-			status_failed_message( drivep );
+-			if ( try > 1 ) {
++			status_failed_message(drivep);
++			if (try > 1) {
+ 				return 0;
+ 			}
+ 			try++;
+-			sleep( 1 );
++			sleep(1);
+ 			goto status;
+ 		}
+ 		return mtstat;
+@@ -5295,56 +5295,56 @@ status:		ok = mt_get_status( drivep, &mtstat );
+ }
+ 
+ static mtstat_t
+-fsf_and_verify( drive_t *drivep )
++fsf_and_verify(drive_t *drivep)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 	ix_t try;
+ 
+-	( void )mt_op( contextp->dc_fd, MTFSF, 1 );
+-	for ( try = 1 ; ; try++ ) {
++	(void)mt_op(contextp->dc_fd, MTFSF, 1);
++	for (try = 1 ; ; try++) {
+ 		mtstat_t mtstat;
+ 		bool_t ok;
+ 
+-		ok = mt_get_status( drivep, &mtstat );
+-		if ( ! ok ) {
++		ok = mt_get_status(drivep, &mtstat);
++		if (! ok) {
+ 			mtstat = 0;
+-			status_failed_message( drivep );
+-			if ( try > 1 ) {
++			status_failed_message(drivep);
++			if (try > 1) {
+ 				return 0;
+ 			}
+ 		}
+-		if ( IS_FMK( mtstat )) {
++		if (IS_FMK(mtstat)) {
+ 			return mtstat;
+ 		}
+-		if ( IS_EOD( mtstat )) {
++		if (IS_EOD(mtstat)) {
+ 			return mtstat;
+ 		}
+-		if ( IS_EOT( mtstat )) {
++		if (IS_EOT(mtstat)) {
+ 			return mtstat;
+ 		}
+-		if ( try >= MTOP_TRIES_MAX ) {
++		if (try >= MTOP_TRIES_MAX) {
+ 			return mtstat;
+ 		}
+-		sleep( 1 );
++		sleep(1);
+ 	}
+ 	/* NOTREACHED */
+ }
+ 
+ static void
+-calc_best_blk_and_rec_sz( drive_t *drivep )
++calc_best_blk_and_rec_sz(drive_t *drivep)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 
+-	if ( ! contextp->dc_isrmtpr ) {
+-		if ( cmdlineblksize > 0 ) {
++	if (! contextp->dc_isrmtpr) {
++		if (cmdlineblksize > 0) {
+ 		    tape_blksz = cmdlineblksize;
+                 } else {
+ 		    tape_blksz = contextp->dc_maxblksz;
+                 }
+-		if ( tape_blksz > STAPE_MAX_RECSZ ) {
++		if (tape_blksz > STAPE_MAX_RECSZ) {
+ 			tape_blksz = STAPE_MAX_RECSZ;
+ 		}
+-		if ( contextp->dc_isQICpr ) {
++		if (contextp->dc_isQICpr) {
+ 			tape_recsz = STAPE_MAX_RECSZ;
+ 		} else {
+ 			tape_recsz = tape_blksz;
+@@ -5355,20 +5355,20 @@ calc_best_blk_and_rec_sz( drive_t *drivep )
+ }
+ 
+ static bool_t
+-set_best_blk_and_rec_sz( drive_t *drivep )
++set_best_blk_and_rec_sz(drive_t *drivep)
+ {
+-	drive_context_t *contextp = ( drive_context_t * )drivep->d_contextp;
++	drive_context_t *contextp = (drive_context_t *)drivep->d_contextp;
+ 
+         calc_best_blk_and_rec_sz(drivep);
+ 
+-	if ( ! contextp->dc_isvarpr
++	if (! contextp->dc_isvarpr
+ 	     &&
+ 	     ! contextp->dc_isQICpr
+ 	     &&
+-	     contextp->dc_cansetblkszpr ) {
++	     contextp->dc_cansetblkszpr) {
+ 		bool_t ok;
+-		ok = set_fixed_blksz( drivep, tape_blksz );
+-		if ( ! ok ) {
++		ok = set_fixed_blksz(drivep, tape_blksz);
++		if (! ok) {
+ 			return BOOL_FALSE;
+ 		}
+ 	}
+@@ -5377,13 +5377,13 @@ set_best_blk_and_rec_sz( drive_t *drivep )
+ }
+ 
+ static bool_t
+-isefsdump( drive_t *drivep )
++isefsdump(drive_t *drivep)
+ {
+-	int32_t *efshdrp = ( int32_t * )drivep->d_greadhdrp;
+-	int32_t efsmagic = efshdrp[ 6 ];
+-	if ( efsmagic == 60011
++	int32_t *efshdrp = (int32_t *)drivep->d_greadhdrp;
++	int32_t efsmagic = efshdrp[6];
++	if (efsmagic == 60011
+ 	     ||
+-	     efsmagic == 60012 ) {
++	     efsmagic == 60012) {
+ 		return BOOL_TRUE;
+ 	} else {
+ 		return BOOL_FALSE;
+@@ -5397,7 +5397,7 @@ isefsdump( drive_t *drivep )
+  * the get_driver_block_major() routine in the libdisk library.)
   */
--typedef char * ( *rfp_t )( void *contextp, size_t wantedsz, size_t *szp, int *statp );
--typedef void ( * rrbfp_t )( void *contextp, char *bufp, size_t bufsz );
-+typedef char * (*rfp_t)(void *contextp, size_t wantedsz, size_t *szp, int *statp);
-+typedef void (* rrbfp_t)(void *contextp, char *bufp, size_t bufsz);
+ static int
+-get_driver_character_major( const char *driver )
++get_driver_character_major(const char *driver)
+ {
+ 	FILE	*f;
+ 	char	buf[64], puf[64];
+@@ -5420,7 +5420,7 @@ found:
+ }
  
--extern int read_buf( char *bufp,
-+extern int read_buf(char *bufp,
- 			  size_t bufsz,
- 			  void *contextp,
- 			  rfp_t read_funcp,
- 			  rrbfp_t return_read_buf_funcp,
--			  int *statp );
-+			  int *statp);
- 
- 
- 
- /* strncpyterm - like strncpy, but guarantees the destination is null-terminated
-  */
--extern char *strncpyterm( char *s1, char *s2, size_t n );
-+extern char *strncpyterm(char *s1, char *s2, size_t n);
- 
- /* bigstat - efficient file status gatherer. presents an iterative
-  * callback interface, invoking the caller's callback for each in-use
-@@ -80,19 +80,19 @@ extern char *strncpyterm( char *s1, char *s2, size_t n );
-  * stat is set to zero. return value set to errno if the system call fails,
-  * or EINTR if optional pre-emption func returns TRUE.
-  */
--#define BIGSTAT_ITER_DIR	( 1 << 0 )
--#define BIGSTAT_ITER_NONDIR	( 1 << 1 )
--#define BIGSTAT_ITER_ALL	( ~0 )
-+#define BIGSTAT_ITER_DIR	(1 << 0)
-+#define BIGSTAT_ITER_NONDIR	(1 << 1)
-+#define BIGSTAT_ITER_ALL	(~0)
- 
- typedef int (*bstat_cbfp_t)(void *arg1,
- 				 jdm_fshandle_t *fshandlep,
- 				 int fsfd,
--				 xfs_bstat_t *statp );
-+				 xfs_bstat_t *statp);
- 
- typedef xfs_ino_t (*bstat_seekfp_t)(void *arg1,
- 				    xfs_ino_t lastino);
- 
--extern int bigstat_iter( jdm_fshandle_t *fshandlep,
-+extern int bigstat_iter(jdm_fshandle_t *fshandlep,
- 			      int fsfd,
- 			      int selector,
- 			      xfs_ino_t start_ino,
-@@ -101,20 +101,20 @@ extern int bigstat_iter( jdm_fshandle_t *fshandlep,
- 			      bstat_seekfp_t seekfp,
- 			      void * seek_arg1,
- 			      int *statp,
--			      bool_t ( pfp )( int ), /* preemption chk func */
-+			      bool_t (pfp)(int), /* preemption chk func */
- 			      xfs_bstat_t *buf,
--			      size_t buflen );
-+			      size_t buflen);
- 
--extern int bigstat_one( int fsfd,
-+extern int bigstat_one(int fsfd,
- 			     xfs_ino_t ino,
--			     xfs_bstat_t *statp );
-+			     xfs_bstat_t *statp);
- 
--extern int inogrp_iter( int fsfd,
--			     int ( * fp )( void *arg1,
-+extern int inogrp_iter(int fsfd,
-+			     int (* fp)(void *arg1,
- 				     		int fsfd,
--						xfs_inogrp_t *inogrp ),
-+						xfs_inogrp_t *inogrp),
- 			     void * arg1,
--			     int *statp );
-+			     int *statp);
- 
- /* calls the callback for every entry in the directory specified
-  * by the stat buffer. supplies the callback with a file system
-@@ -122,31 +122,31 @@ extern int inogrp_iter( int fsfd,
-  *
-  * NOTE: does NOT invoke callback for "." or ".."!
-  *
-- * caller may supply getdents buffer. size must be >= sizeof( dirent_t )
-+ * caller may supply getdents buffer. size must be >= sizeof(dirent_t)
-  * + MAXPATHLEN. if not supplied (usrgdp NULL), one will be malloc()ed.
-  *
-  * if the callback returns non-zero, returns 1 with cbrval set to the
-  * callback's return value. if syscall fails, returns -1 with errno set.
-  * otherwise returns 0.
-  */
--extern int diriter( jdm_fshandle_t *fshandlep,
-+extern int diriter(jdm_fshandle_t *fshandlep,
- 			 int fsfd,
- 			 xfs_bstat_t *statp,
--			 int ( *cbfp )( void *arg1,
-+			 int (*cbfp)(void *arg1,
- 					     jdm_fshandle_t *fshandlep,
- 					     int fsfd,
- 					     xfs_bstat_t *statp,
--					     char *namep ),
-+					     char *namep),
- 			 void *arg1,
- 			 int *cbrvalp,
- 			 char *usrgdp,
--			 size_t usrgdsz );
-+			 size_t usrgdsz);
- 
- 
- 
- /* macro to copy uuid structures
-  */
--#define COPY_LABEL( lab1, lab2) ( bcopy( lab1, lab2, GLOBAL_HDR_STRING_SZ) )
-+#define COPY_LABEL(lab1, lab2) (bcopy(lab1, lab2, GLOBAL_HDR_STRING_SZ))
- 
- /*
-  * Align pointer up to alignment
+ static void
+-map_ts_status( struct mtget *mtstat, struct mtget_sgi mtstat_sgi)
++map_ts_status(struct mtget *mtstat, struct mtget_sgi mtstat_sgi)
+ {
+ 	/*
+ 	 * This routine has been added as a workaround for a TS/APD
 -- 
 2.19.1
