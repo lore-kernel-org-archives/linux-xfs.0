@@ -1,81 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:42896 "EHLO
-        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726060AbfAaPt0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 10:49:26 -0500
-From: Chris Mason <clm@fb.com>
-Subject: Re: [PATCH 1/2] Revert "mm: don't reclaim inodes with many attached
- pages"
-Date: Thu, 31 Jan 2019 15:48:11 +0000
-Message-ID: <E8895615-9DDA-4FC5-A3AB-1BE593138A89@fb.com>
-References: <20190130041707.27750-1-david@fromorbit.com>
- <20190130041707.27750-2-david@fromorbit.com>
- <25EAF93D-BC63-4409-AF21-F45B2DDF5D66@fb.com> <20190131013403.GI4205@dastard>
-In-Reply-To: <20190131013403.GI4205@dastard>
-Content-Language: en-US
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:44910 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730179AbfAOUma (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 15:42:30 -0500
+Date: Wed, 16 Jan 2019 07:42:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 0/5] kvm "virtio pmem" device
+Message-ID: <20190115204222.GK4205@dastard>
+References: <20190109144736.17452-1-pagupta@redhat.com>
+ <1326478078.61913951.1547192704870.JavaMail.zimbra@redhat.com>
+ <20190113232902.GD4205@dastard>
+ <20190113233820.GX6310@bombadil.infradead.org>
+ <942065073.64011540.1547450140670.JavaMail.zimbra@redhat.com>
+ <20190114212501.GG4205@dastard>
+ <CAPcyv4jtPcLV-s0sKNHwwk0ug7GLBV6699dpm1h3r2xSo879dg@mail.gmail.com>
+ <20190114222132.GH4205@dastard>
+ <1684638419.64320214.1547530506805.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1684638419.64320214.1547530506805.JavaMail.zimbra@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Roman Gushchin <guro@fb.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "mhocko@kernel.org" <mhocko@kernel.org>, "vdavydov.dev@gmail.com" <vdavydov.dev@gmail.com>
+To: Pankaj Gupta <pagupta@redhat.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, KVM list <kvm@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-nvdimm <linux-nvdimm@ml01.01.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, virtualization@lists.linux-foundation.org, Linux ACPI <linux-acpi@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>, Stefan Hajnoczi <stefanha@redhat.com>, Rik van Riel <riel@surriel.com>, Nitesh Narayan Lal <nilal@redhat.com>, Kevin Wolf <kwolf@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, Ross Zwisler <zwisler@kernel.org>, vishal l verma <vishal.l.verma@intel.com>, dave jiang <dave.jiang@intel.com>, David Hildenbrand <david@redhat.com>, jmoyer <jmoyer@redhat.com>, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, Christoph Hellwig <hch@infradead.org>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, lcapitulino@redhat.com, Igor Mammedov <imammedo@redhat.com>, Eric Blake <eblake@redhat.com>, Theodore Ts'o <tytso@mit.edu>, adilger kernel <adilger.kernel@dilger.ca>, darrick wong <darrick.wong@oracle.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 
-On 30 Jan 2019, at 20:34, Dave Chinner wrote:
+On Tue, Jan 15, 2019 at 12:35:06AM -0500, Pankaj Gupta wrote:
+> 
+> > > > On Mon, Jan 14, 2019 at 02:15:40AM -0500, Pankaj Gupta wrote:
+> > > > >
+> > > > > > > Until you have images (and hence host page cache) shared between
+> > > > > > > multiple guests. People will want to do this, because it means they
+> > > > > > > only need a single set of pages in host memory for executable
+> > > > > > > binaries rather than a set of pages per guest. Then you have
+> > > > > > > multiple guests being able to detect residency of the same set of
+> > > > > > > pages. If the guests can then, in any way, control eviction of the
+> > > > > > > pages from the host cache, then we have a guest-to-guest
+> > > > > > > information
+> > > > > > > leak channel.
+> > > > > >
+> > > > > > I don't think we should ever be considering something that would
+> > > > > > allow a
+> > > > > > guest to evict page's from the host's pagecache [1].  The guest
+> > > > > > should
+> > > > > > be able to kick its own references to the host's pagecache out of its
+> > > > > > own pagecache, but not be able to influence whether the host or
+> > > > > > another
+> > > > > > guest has a read-only mapping cached.
+> > > > > >
+> > > > > > [1] Unless the guest is allowed to modify the host's file; obviously
+> > > > > > truncation, holepunching, etc are going to evict pages from the
+> > > > > > host's
+> > > > > > page cache.
+> > > > >
+> > > > > This is so correct. Guest does not not evict host page cache pages
+> > > > > directly.
+> > > >
+> > > > They don't right now.
+> > > >
+> > > > But someone is going to end up asking for discard to work so that
+> > > > the guest can free unused space in the underlying spares image (i.e.
+> > > > make use of fstrim or mount -o discard) because they have workloads
+> > > > that have bursts of space usage and they need to trim the image
+> > > > files afterwards to keep their overall space usage under control.
+> > > >
+> > > > And then....
+> > > 
+> > > ...we reject / push back on that patch citing the above concern.
+> > 
+> > So at what point do we draw the line?
+> > 
+> > We're allowing writable DAX mappings, but as I've pointed out that
+> > means we are going to be allowing  a potential information leak via
+> > files with shared extents to be directly mapped and written to.
+> > 
+> > But we won't allow useful admin operations that allow better
+> > management of host side storage space similar to how normal image
+> > files are used by guests because it's an information leak vector?
+> 
+> First of all Thank you for all the useful discussions. 
+> I am summarizing here:
+> 
+> - We have to live with the limitation to not support fstrim and 
+>   mount -o discard options with virtio-pmem as they will evict 
+>   host page cache pages. We cannot allow this for virtio-pmem
+>   for security reasons. These filesystem commands will just zero out 
+>   unused pages currently.
 
-> On Wed, Jan 30, 2019 at 12:21:07PM +0000, Chris Mason wrote:
->>
->>
->> On 29 Jan 2019, at 23:17, Dave Chinner wrote:
->>
->>> From: Dave Chinner <dchinner@redhat.com>
->>>
->>> This reverts commit a76cf1a474d7dbcd9336b5f5afb0162baa142cf0.
->>>
->>> This change causes serious changes to page cache and inode cache
->>> behaviour and balance, resulting in major performance regressions
->>> when combining worklaods such as large file copies and kernel
->>> compiles.
->>>
->>> https://bugzilla.kernel.org/show_bug.cgi?id=3D202441
->>
->> I'm a little confused by the latest comment in the bz:
->>
->> https://bugzilla.kernel.org/show_bug.cgi?id=3D202441#c24
->
-> Which says the first patch that changed the shrinker behaviour is
-> the underlying cause of the regression.
->
->> Are these reverts sufficient?
->
-> I think so.
+Not sure I follow you here - what pages are going to be zeroed and
+when will they be zeroed? If discard is not allowed, filesystems
+just don't issue such commands and the underlying device will never
+seen them.
 
-Based on the latest comment:
+> - If alot of space is unused and not freed guest can request host 
+>   Administrator for truncating the host backing image. 
 
-"If I had been less strict in my testing I probably would have=20
-discovered that the problem was present earlier than 4.19.3. Mr Gushins=20
-commit made it more visible.
-I'm going back to work after two days off, so I might not be able to=20
-respond inside your working hours, but I'll keep checking in on this as=20
-I get a chance."
+You can't use truncate to free space in a disk image file. The only
+way to do it safely in a generic, filesystem agnositic way is to
+mount the disk image (e.g. on loopback) and run fstrim on it. The
+loopback device will punches holes in the file where all the free
+space is reported by the filesystem via discard requests.
 
-I don't think the reverts are sufficient.
+Which is kinda my point - this could only be done if the guest is
+shut down, which makes it very difficult for admins to manage. 
 
->
->> Roman beat me to suggesting Rik's followup.  We hit a different=20
->> problem
->> in prod with small slabs, and have a lot of instrumentation on Rik's
->> code helping.
->
-> I think that's just another nasty, expedient hack that doesn't solve
-> the underlying problem. Solving the underlying problem does not
-> require changing core reclaim algorithms and upsetting a page
-> reclaim/shrinker balance that has been stable and worked well for
-> just about everyone for years.
->
+>   We are also planning to support qcow2 sparse image format at 
+>   host side with virtio-pmem.
 
-Things are definitely breaking down in non-specialized workloads, and=20
-have been for a long time.
+So you're going to be remapping a huge number of disjoint regions
+into a linear pmem mapping? ISTR discussions about similar things
+for virtio+fuse+dax that came up against "large numbers of mapped
+regions don't scale" and so it wasn't a practical solution compared
+to a just using raw sparse files....
 
--chris
+> - There is no existing solution for Qemu persistent memory 
+>   emulation with write support currently. This solution provides 
+>   us the paravartualized way of emulating persistent memory.
+
+Sure, but the question is why do you need to create an emulation
+that doesn't actually perform like pmem? The whole point of pmem is
+performance, and emulating pmem by mmap() of a file on spinning
+disks is going to be horrible for performance. Even on SSDs it's
+going to be orders of magnitudes slower than real pmem.
+
+So exactly what problem are you trying to solve with this driver?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
