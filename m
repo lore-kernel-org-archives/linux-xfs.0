@@ -1,84 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt1-f179.google.com ([209.85.160.179]:45614 "EHLO
-        mail-qt1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727883AbfAOOfo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 09:35:44 -0500
-Message-ID: <1547562941.20294.196.camel@intricatesoftware.com>
-Subject: Re: Block device flush ordering
-From: Kurt Miller <kurt@intricatesoftware.com>
-Date: Tue, 15 Jan 2019 09:35:41 -0500
-In-Reply-To: <20190114164549.GA26523@infradead.org>
-References: <1547130601.20294.152.camel@intricatesoftware.com>
-         <20190113224244.GC4205@dastard> <20190114164549.GA26523@infradead.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:39491 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732372AbfAOUXj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 15:23:39 -0500
+Date: Wed, 16 Jan 2019 07:23:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: don't crash when read verifier reports errors with
+ null b_ops
+Message-ID: <20190115202336.GI4205@dastard>
+References: <20190115170820.GB12689@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190115170820.GB12689@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-block@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, 2019-01-14 at 08:45 -0800, Christoph Hellwig wrote:
-> On Mon, Jan 14, 2019 at 09:42:44AM +1100, Dave Chinner wrote:
-> > 
-> > On Thu, Jan 10, 2019 at 09:30:01AM -0500, Kurt Miller wrote:
-> > > 
-> > > For a well behaved block device that has a writeback cache,
-> > > what is the proper behavior of flush when there are more
-> > > then one outstanding flush operations? Is it;
-> > > 
-> > > Flush all writes seen since the last flush.
-> > > or
-> > > Flush all writes received prior to the flush including
-> > > those before any prior flush.
-> The requirement is that all write operations that have been completed
-> before the flush was seen are on stable storage.  How that is
-> implemented in detail is up to the device.  The typical implementation
-> is simply to writeback the whole cache everytime a flush operation
-> is received.
+On Tue, Jan 15, 2019 at 09:08:20AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> > 
-> > > 
-> > > 
-> > > For example take the following order of requests presented
-> > > to the block device:
-> > > 
-> > > 	writes 1-5
-> > > 	flush 1
-> > > 	write 6
-> > > 	flush 2
-> > > 
-> > > Can flush 2 finish with success as soon as write 6 is flushed
-> > > (which may be before flush 1 success)? Or must it wait for
-> > > all prior write operations to flush (writes 1-6)?
-> No.  For all the usual protocols as well as the linux kernel semantics
-> there is no overall command ordering, especially as there is no way
-> to even enforce that in a multi-queue environment.
+> In xrep_findroot_block, we work out the btree type and correctness of a
+> given block by calling different btree verifiers on root block
+> candidates.  However, we leave the NULL b_ops while ->verify_read
+> validates the block, which means that if the verifier calls
+> xfs_buf_verifier_error it'll crash on the null b_ops.  Fix it to avoid
+> this crash.
 > 
-> > 
-> > 
-> >  * C1. At any given time, only one flush shall be in progress.  This makes
-> >  *     double buffering sufficient.
-> Very specific implementation detail inside the request layer.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> FWIW I also thought about stuffing in a fake b_ops while xrep_findroot
+> is calling a candidate read verifier, but thought that might just
+> confuse things more?
+> ---
+>  fs/xfs/xfs_error.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> > 
-> > Then flush 1 does not guarantee any of the writes are on stable
-> > storage. They *may* be on stable storage if the timing is right, but
-> > it is not guaranteed by the OS code. Likewise, flush 2 only
-> > guarantees writes 1, 3 and 5 are on stable storage becase they are
-> > the only writes that have been signalled as complete when flush 2
-> > was submitted.
-> Exactly.
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index 9866f542e77b..2a02be280769 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -359,7 +359,7 @@ xfs_buf_verifier_error(
+>  
+>  	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx %s",
+>  		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
+> -		  fa, bp->b_ops->name, bp->b_bn, name);
+> +		  fa, bp->b_ops ? bp->b_ops->name : "unknown", bp->b_bn, name);
 
-Thank you both for the detailed answers. They have been very helpful.
-Also after spending an afternoon reading kernel code (xlog_sync though
-blk_flush_complete_seq) I understand it better. The multiple concurrent
-flush requests comment I made in another reply was a logging issue in
-our nbd implementation where we were logging completions after replying
-to the kernel. As a result our log messages were out of order and
-misleading. With that corrected in our code we see only one flush at a
-time.
+Looks fine, but can you add a comment to xfs_buf_verifier_error()
+that says that some callers might be running the verifiers
+themselves rather than through the b_ops structure and so it may be
+null...
 
-Best,
--Kurt
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
