@@ -1,145 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35466 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727369AbfAOOJr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 Jan 2019 09:09:47 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] tests/generic: test writepage cached mapping validity
-Date: Tue, 15 Jan 2019 09:09:45 -0500
-Message-Id: <20190115140945.25293-1-bfoster@redhat.com>
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:44293 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728971AbfAOP4C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 10:56:02 -0500
+Received: by mail-pl1-f196.google.com with SMTP id e11so1467009plt.11
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Jan 2019 07:56:02 -0800 (PST)
+Date: Tue, 15 Jan 2019 07:55:57 -0800
+From: Luis Chamberlain <mcgrof@kernel.org>
+Subject: Re: [RFC PATCH xfstests] xfs: add tests to validate ioctl structure
+ layout.
+Message-ID: <20190115155557.GA4482@garbanzo.do-not-panic.com>
+References: <CADyTPEzrtDwSE9F1Ef+0xJDn4Fh15gDZOwz5J-ySorgM2WTjiw@mail.gmail.com>
+ <20181214034053.23795-1-nbowler@draconx.ca>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181214034053.23795-1-nbowler@draconx.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Nick Bowler <nbowler@draconx.ca>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-XFS has a bug where page writeback can end up sending data to the
-wrong location due to a stale, cached file mapping. Add a test to
-trigger this problem by racing background writeback with a
-truncate/rewrite of the final page of the file.
+On Thu, Dec 13, 2018 at 10:40:53PM -0500, Nick Bowler wrote:
+> Introduce two new test cases.  The first one greps xfs_fs.h to find
+> any structure types possibly relevant to ioctls, then compares the
+> structure layouts between 64-bit and 32-bit objects.  The goal is to
+> ensure that any _new_ structure has the same characteristics on 32-bit
+> versus 64-bit mode, ensuring a sane compat handler.  This requires a
+> toolchain that can build both 64-bit and 32-bit objects, and hopefully
+> works on non-x86 platforms with compat woes.
+> 
+> The whitelist was constructed by manually inspecting the current
+> compat ioctl implementation.  The test validates that everything
+> in the whitelist actually got found by the grepping as a sort of
+> self-sanity check, but if older versions lacked some of these
+> types then this might need tweaking a bit.
+> 
+> The second test validates that a well-known set of structures on x32
+> crrectly match the ia32 or amd64 layouts as expected.  This requires
+> a toolchain that can build for all three ABIs.
+> 
+> The idea is that new additions to the header where the structures
+> differ in 32 and 64-bit x86 will be caught by the first test case
+> and that will be sufficient to detect potential x32 problems too.
+> 
+> Signed-off-by: Nick Bowler <nbowler@draconx.ca>
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+I believe this effort was dropped. Respin?
 
-Note again that this test is expected to occasionally fail on upstream
-XFS. The fix is undergoing development and review.
-
-Brian
-
-v2:
-- Fix up copyright header.
-- Fix up _require statements and _scratch_mount* error checks.
-v1: https://marc.info/?l=fstests&m=154721349921715&w=2
-
- tests/generic/999     | 80 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/999.out |  2 ++
- tests/generic/group   |  1 +
- 3 files changed, 83 insertions(+)
- create mode 100755 tests/generic/999
- create mode 100644 tests/generic/999.out
-
-diff --git a/tests/generic/999 b/tests/generic/999
-new file mode 100755
-index 00000000..0546125e
---- /dev/null
-+++ b/tests/generic/999
-@@ -0,0 +1,80 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2017-2019 Red Hat, Inc.  All Rights Reserved.
-+#
-+# FS QA Test 999
-+#
-+# Test XFS page writeback code for races with the cached file mapping. XFS
-+# caches the file -> block mapping for a full extent once it is initially looked
-+# up. The cached mapping is used for all subsequent pages in the same writeback
-+# cycle that cover the associated extent. Under certain conditions, it is
-+# possible for concurrent operations on the file to invalidate the cached
-+# mapping without the knowledge of writeback. Writeback ends up sending I/O to a
-+# partly stale mapping and potentially leaving delalloc blocks in the current
-+# mapping unconverted.
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_test_program "feature"
-+_require_xfs_io_command "sync_range"
-+
-+_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-+_scratch_mount
-+
-+file=$SCRATCH_MNT/file
-+filesize=$((1024 * 1024 * 32))
-+pagesize=`src/feature -s`
-+truncsize=$((filesize - pagesize))
-+
-+for i in $(seq 0 15); do
-+	# Truncate the file and fsync to persist the final size on-disk. This is
-+	# required so the subsequent truncate will not wait on writeback.
-+	$XFS_IO_PROG -fc "truncate 0" $file
-+	$XFS_IO_PROG -c "truncate $filesize" -c fsync $file
-+
-+	# create a small enough delalloc extent to likely be contiguous
-+	$XFS_IO_PROG -c "pwrite 0 $filesize" $file >> $seqres.full 2>&1
-+
-+	# Start writeback and a racing truncate and rewrite of the final page.
-+	$XFS_IO_PROG -c "sync_range -w 0 0" $file &
-+	sync_pid=$!
-+	$XFS_IO_PROG -c "truncate $truncsize" \
-+		     -c "pwrite $truncsize $pagesize" $file >> $seqres.full 2>&1
-+
-+	# If the test fails, the most likely outcome is an sb_fdblocks mismatch
-+	# and/or an associated delalloc assert failure on inode reclaim. Cycle
-+	# the mount to trigger detection.
-+	wait $sync_pid
-+	_scratch_cycle_mount
-+done
-+
-+echo Silence is golden
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/999.out b/tests/generic/999.out
-new file mode 100644
-index 00000000..3b276ca8
---- /dev/null
-+++ b/tests/generic/999.out
-@@ -0,0 +1,2 @@
-+QA output created by 999
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index ea5aa7aa..ce165981 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -525,3 +525,4 @@
- 520 auto quick log
- 521 soak long_rw
- 522 soak long_rw
-+999 auto quick
--- 
-2.17.2
+  Luis
