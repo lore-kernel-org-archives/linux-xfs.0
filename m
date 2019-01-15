@@ -1,52 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:44293 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728971AbfAOP4C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 10:56:02 -0500
-Received: by mail-pl1-f196.google.com with SMTP id e11so1467009plt.11
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Jan 2019 07:56:02 -0800 (PST)
-Date: Tue, 15 Jan 2019 07:55:57 -0800
-From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: Re: [RFC PATCH xfstests] xfs: add tests to validate ioctl structure
- layout.
-Message-ID: <20190115155557.GA4482@garbanzo.do-not-panic.com>
-References: <CADyTPEzrtDwSE9F1Ef+0xJDn4Fh15gDZOwz5J-ySorgM2WTjiw@mail.gmail.com>
- <20181214034053.23795-1-nbowler@draconx.ca>
+Received: from aserp2130.oracle.com ([141.146.126.79]:46056 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728566AbfAORIw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 12:08:52 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0FH4QTe004309
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Jan 2019 17:08:51 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2130.oracle.com with ESMTP id 2pybjnn530-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Jan 2019 17:08:51 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x0FH8otX025587
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Jan 2019 17:08:50 GMT
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x0FH8obL016855
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Jan 2019 17:08:50 GMT
+Date: Tue, 15 Jan 2019 09:08:49 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: use generic fillattr to reduce redundant code
+Message-ID: <20190115170849.GC12689@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181214034053.23795-1-nbowler@draconx.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nick Bowler <nbowler@draconx.ca>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Dec 13, 2018 at 10:40:53PM -0500, Nick Bowler wrote:
-> Introduce two new test cases.  The first one greps xfs_fs.h to find
-> any structure types possibly relevant to ioctls, then compares the
-> structure layouts between 64-bit and 32-bit objects.  The goal is to
-> ensure that any _new_ structure has the same characteristics on 32-bit
-> versus 64-bit mode, ensuring a sane compat handler.  This requires a
-> toolchain that can build both 64-bit and 32-bit objects, and hopefully
-> works on non-x86 platforms with compat woes.
-> 
-> The whitelist was constructed by manually inspecting the current
-> compat ioctl implementation.  The test validates that everything
-> in the whitelist actually got found by the grepping as a sort of
-> self-sanity check, but if older versions lacked some of these
-> types then this might need tweaking a bit.
-> 
-> The second test validates that a well-known set of structures on x32
-> crrectly match the ia32 or amd64 layouts as expected.  This requires
-> a toolchain that can build for all three ABIs.
-> 
-> The idea is that new additions to the header where the structures
-> differ in 32 and 64-bit x86 will be caught by the first test case
-> and that will be sufficient to detect potential x32 problems too.
-> 
-> Signed-off-by: Nick Bowler <nbowler@draconx.ca>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I believe this effort was dropped. Respin?
+Refactor xfs_vn_getattr to use generic_fillattr to fill out parts of the
+kstat structure instead of open-coding the same pieces.  This eliminates
+redundant code and fixes a bug where we fail to set the AUTOMOUNT
+attribute.  Obviously, we retain all the xfs-specific parts.
 
-  Luis
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_iops.c |   10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
+
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index f48ffd7a8d3e..169bd7824479 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -501,16 +501,9 @@ xfs_vn_getattr(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
++	generic_fillattr(inode, stat);
+ 	stat->size = XFS_ISIZE(ip);
+-	stat->dev = inode->i_sb->s_dev;
+-	stat->mode = inode->i_mode;
+-	stat->nlink = inode->i_nlink;
+-	stat->uid = inode->i_uid;
+-	stat->gid = inode->i_gid;
+ 	stat->ino = ip->i_ino;
+-	stat->atime = inode->i_atime;
+-	stat->mtime = inode->i_mtime;
+-	stat->ctime = inode->i_ctime;
+ 	stat->blocks =
+ 		XFS_FSB_TO_BB(mp, ip->i_d.di_nblocks + ip->i_delayed_blks);
+ 
+@@ -533,7 +526,6 @@ xfs_vn_getattr(
+ 	case S_IFBLK:
+ 	case S_IFCHR:
+ 		stat->blksize = BLKDEV_IOSIZE;
+-		stat->rdev = inode->i_rdev;
+ 		break;
+ 	default:
+ 		if (XFS_IS_REALTIME_INODE(ip)) {
