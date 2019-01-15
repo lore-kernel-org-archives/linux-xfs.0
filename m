@@ -1,73 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:46056 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728566AbfAORIw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 12:08:52 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0FH4QTe004309
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Jan 2019 17:08:51 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2130.oracle.com with ESMTP id 2pybjnn530-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Jan 2019 17:08:51 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x0FH8otX025587
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Jan 2019 17:08:50 GMT
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x0FH8obL016855
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Jan 2019 17:08:50 GMT
-Date: Tue, 15 Jan 2019 09:08:49 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:48940 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731673AbfAOTc3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 14:32:29 -0500
+Date: Tue, 15 Jan 2019 11:32:22 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: use generic fillattr to reduce redundant code
-Message-ID: <20190115170849.GC12689@magnolia>
+Subject: Re: [PATCH v2 3/5] xfs: fix off-by-one error in rtbitmap
+ cross-reference
+Message-ID: <20190115193222.GD12689@magnolia>
+References: <154697976479.2839.3584921201780682011.stgit@magnolia>
+ <154697978351.2839.11888108672644284957.stgit@magnolia>
+ <20190114203201.GA12689@magnolia>
+ <20190115104954.GA23423@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190115104954.GA23423@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 15, 2019 at 05:49:54AM -0500, Brian Foster wrote:
+> On Mon, Jan 14, 2019 at 12:32:01PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Fix an off-by-one error in the realtime bitmap "is used" cross-reference
+> > helper function if the realtime extent size is a single block.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Refactor xfs_vn_getattr to use generic_fillattr to fill out parts of the
-kstat structure instead of open-coding the same pieces.  This eliminates
-redundant code and fixes a bug where we fail to set the AUTOMOUNT
-attribute.  Obviously, we retain all the xfs-specific parts.
+Thanks for reviewing this series!
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_iops.c |   10 +---------
- 1 file changed, 1 insertion(+), 9 deletions(-)
+--D
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index f48ffd7a8d3e..169bd7824479 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -501,16 +501,9 @@ xfs_vn_getattr(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
-+	generic_fillattr(inode, stat);
- 	stat->size = XFS_ISIZE(ip);
--	stat->dev = inode->i_sb->s_dev;
--	stat->mode = inode->i_mode;
--	stat->nlink = inode->i_nlink;
--	stat->uid = inode->i_uid;
--	stat->gid = inode->i_gid;
- 	stat->ino = ip->i_ino;
--	stat->atime = inode->i_atime;
--	stat->mtime = inode->i_mtime;
--	stat->ctime = inode->i_ctime;
- 	stat->blocks =
- 		XFS_FSB_TO_BB(mp, ip->i_d.di_nblocks + ip->i_delayed_blks);
- 
-@@ -533,7 +526,6 @@ xfs_vn_getattr(
- 	case S_IFBLK:
- 	case S_IFCHR:
- 		stat->blksize = BLKDEV_IOSIZE;
--		stat->rdev = inode->i_rdev;
- 		break;
- 	default:
- 		if (XFS_IS_REALTIME_INODE(ip)) {
+> >  fs/xfs/scrub/rtbitmap.c |    5 ++---
+> >  1 file changed, 2 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+> > index 665d4bbb17cc..dbe115b075f7 100644
+> > --- a/fs/xfs/scrub/rtbitmap.c
+> > +++ b/fs/xfs/scrub/rtbitmap.c
+> > @@ -141,9 +141,8 @@ xchk_xref_is_used_rt_space(
+> >  	startext = fsbno;
+> >  	endext = fsbno + len - 1;
+> >  	do_div(startext, sc->mp->m_sb.sb_rextsize);
+> > -	if (do_div(endext, sc->mp->m_sb.sb_rextsize))
+> > -		endext++;
+> > -	extcount = endext - startext;
+> > +	do_div(endext, sc->mp->m_sb.sb_rextsize);
+> > +	extcount = endext - startext + 1;
+> >  	xfs_ilock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
+> >  	error = xfs_rtalloc_extent_is_free(sc->mp, sc->tp, startext, extcount,
+> >  			&is_free);
