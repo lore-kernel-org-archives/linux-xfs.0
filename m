@@ -1,44 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:55174 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725893AbfARFEO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Jan 2019 00:04:14 -0500
-Date: Fri, 18 Jan 2019 16:04:10 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:30743 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728858AbfAOXSy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 18:18:54 -0500
+Date: Wed, 16 Jan 2019 10:18:51 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: don't crash when read verifier reports errors
- with null b_ops
-Message-ID: <20190118050410.GH6173@dastard>
-References: <20190115170820.GB12689@magnolia>
- <20190115224256.GF12689@magnolia>
+Subject: Re: BUG: iomap_dio_rw() accesses freed memory
+Message-ID: <20190115231851.GN4205@dastard>
+References: <2762504.H5M01fycxG@localhost.localdomain>
+ <20190110142552.GA9661@lst.de>
+ <1829543.H1xe2kokQy@localhost.localdomain>
+ <20190110170935.GY12689@magnolia>
+ <20190115182745.GA12295@lst.de>
+ <20190115205141.GL4205@dastard>
+ <20190115210903.GA15737@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190115224256.GF12689@magnolia>
+In-Reply-To: <20190115210903.GA15737@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Chandan Rajendra <chandan@linux.ibm.com>, linux-xfs@vger.kernel.org
 
-On Tue, Jan 15, 2019 at 02:42:56PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 15, 2019 at 10:09:03PM +0100, Christoph Hellwig wrote:
+> On Wed, Jan 16, 2019 at 07:51:41AM +1100, Dave Chinner wrote:
+> > Atomic operations don't imply a memory barrier for dependent data,
+> > right?
 > 
-> In xrep_findroot_block, we work out the btree type and correctness of a
-> given block by calling different btree verifiers on root block
-> candidates.  However, we leave the NULL b_ops while ->verify_read
-> validates the block, which means that if the verifier calls
-> xfs_buf_verifier_error it'll crash on the null b_ops.  Fix it to avoid
-> this crash.
+> Documentation/atomic_t.txt says:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: leave a comment about what we're doing above the function
-> ---
+> -------------------------- snip --------------------------
+> The rule of thumb:
+> 
+>  - non-RMW operations are unordered;
+> 
+>  - RMW operations that have no return value are unordered;
+> 
+>  - RMW operations that have a return value are fully ordered;
+> 
+> [...]
+> 
+> Fully ordered primitives are ordered against everything prior and everything
+> subsequent. Therefore a fully ordered primitive is like having an smp_mb()
+> before and an smp_mb() after the primitive.
 
-Looks good now.
+I guess I haven't looked at the documentation for a while. Or the
+implementation for that matter.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+/me goes off and looks.
 
+Oh, they are now implemented with built in, explicit
+smp_mb__before_atomic() and smp_mb__after_atomic() barriers. Ok,
+so the necessary barriers are there, my brain was telling me they
+still needed to be added manually and needed updating.....
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
