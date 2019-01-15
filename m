@@ -1,33 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50632 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732985AbfAOVNW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 16:13:22 -0500
-Date: Tue, 15 Jan 2019 13:13:06 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: use generic fillattr to reduce redundant code
-Message-ID: <20190115211306.GA12570@infradead.org>
-References: <20190115170849.GC12689@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:59530 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729846AbfAOWnA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 17:43:00 -0500
+Date: Tue, 15 Jan 2019 14:42:56 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] xfs: don't crash when read verifier reports errors with
+ null b_ops
+Message-ID: <20190115224256.GF12689@magnolia>
+References: <20190115170820.GB12689@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190115170849.GC12689@magnolia>
+In-Reply-To: <20190115170820.GB12689@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>
 
-On Tue, Jan 15, 2019 at 09:08:49AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Refactor xfs_vn_getattr to use generic_fillattr to fill out parts of the
-> kstat structure instead of open-coding the same pieces.  This eliminates
-> redundant code and fixes a bug where we fail to set the AUTOMOUNT
-> attribute.  Obviously, we retain all the xfs-specific parts.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I find the idea of writing the same values twice for something like
-stat that is pretty performane critical rather odd.
+In xrep_findroot_block, we work out the btree type and correctness of a
+given block by calling different btree verifiers on root block
+candidates.  However, we leave the NULL b_ops while ->verify_read
+validates the block, which means that if the verifier calls
+xfs_buf_verifier_error it'll crash on the null b_ops.  Fix it to avoid
+this crash.
 
-I'd much rather just fix the XFS version up to set the automount
-attribute, and clear STATX_ATIME for noatime inodes.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: leave a comment about what we're doing above the function
+---
+ fs/xfs/xfs_error.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 9866f542e77b..6e80e438b27a 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -340,6 +340,9 @@ xfs_corruption_error(
+ /*
+  * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
+  * values, and omit the stack trace unless the error level is tuned high.
++ *
++ * NOTE: Some callers might be calling the verifiers directly (rather than
++ * through the b_ops structure) so bp->b_ops may be NULL.
+  */
+ void
+ xfs_buf_verifier_error(
+@@ -359,7 +362,7 @@ xfs_buf_verifier_error(
+ 
+ 	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx %s",
+ 		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
+-		  fa, bp->b_ops->name, bp->b_bn, name);
++		  fa, bp->b_ops ? bp->b_ops->name : "unknown", bp->b_bn, name);
+ 
+ 	xfs_alert(mp, "Unmount and run xfs_repair");
+ 
