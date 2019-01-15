@@ -1,47 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:55551 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730505AbfAOVJF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 Jan 2019 16:09:05 -0500
-Date: Tue, 15 Jan 2019 22:09:03 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: BUG: iomap_dio_rw() accesses freed memory
-Message-ID: <20190115210903.GA15737@lst.de>
-References: <2762504.H5M01fycxG@localhost.localdomain> <20190110142552.GA9661@lst.de> <1829543.H1xe2kokQy@localhost.localdomain> <20190110170935.GY12689@magnolia> <20190115182745.GA12295@lst.de> <20190115205141.GL4205@dastard>
+Received: from bombadil.infradead.org ([198.137.202.133]:50632 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732985AbfAOVNW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 16:13:22 -0500
+Date: Tue, 15 Jan 2019 13:13:06 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: use generic fillattr to reduce redundant code
+Message-ID: <20190115211306.GA12570@infradead.org>
+References: <20190115170849.GC12689@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190115205141.GL4205@dastard>
+In-Reply-To: <20190115170849.GC12689@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Chandan Rajendra <chandan@linux.ibm.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jan 16, 2019 at 07:51:41AM +1100, Dave Chinner wrote:
-> Atomic operations don't imply a memory barrier for dependent data,
-> right?
+On Tue, Jan 15, 2019 at 09:08:49AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Refactor xfs_vn_getattr to use generic_fillattr to fill out parts of the
+> kstat structure instead of open-coding the same pieces.  This eliminates
+> redundant code and fixes a bug where we fail to set the AUTOMOUNT
+> attribute.  Obviously, we retain all the xfs-specific parts.
 
-Documentation/atomic_t.txt says:
+I find the idea of writing the same values twice for something like
+stat that is pretty performane critical rather odd.
 
--------------------------- snip --------------------------
-The rule of thumb:
-
- - non-RMW operations are unordered;
-
- - RMW operations that have no return value are unordered;
-
- - RMW operations that have a return value are fully ordered;
-
-[...]
-
-Fully ordered primitives are ordered against everything prior and everything
-subsequent. Therefore a fully ordered primitive is like having an smp_mb()
-before and an smp_mb() after the primitive.
-
-
--------------------------- snip --------------------------
-
-I think atomic_dec_and_test clearly falls into the third category,
-and I can't see how much of the kernel could work if that wasn't the
-case.
+I'd much rather just fix the XFS version up to set the automount
+attribute, and clear STATX_ATIME for noatime inodes.
