@@ -1,177 +1,138 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:60973 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727546AbfAQWFP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jan 2019 17:05:15 -0500
-Date: Fri, 18 Jan 2019 09:05:12 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS filesystem hang
-Message-ID: <20190117220512.GE6173@dastard>
-References: <645a3d40-47a5-0f7a-7565-821bbce103f2@profihost.ag>
- <20190117123427.GA37591@bfoster>
- <8cf51b2c-6e9b-317a-16fc-9e47f916198e@profihost.ag>
+Received: from mx1.redhat.com ([209.132.183.28]:45264 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725929AbfAOFfL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 Jan 2019 00:35:11 -0500
+Date: Tue, 15 Jan 2019 00:35:06 -0500 (EST)
+From: Pankaj Gupta <pagupta@redhat.com>
+Message-ID: <1684638419.64320214.1547530506805.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20190114222132.GH4205@dastard>
+References: <20190109144736.17452-1-pagupta@redhat.com> <1326478078.61913951.1547192704870.JavaMail.zimbra@redhat.com> <20190113232902.GD4205@dastard> <20190113233820.GX6310@bombadil.infradead.org> <942065073.64011540.1547450140670.JavaMail.zimbra@redhat.com> <20190114212501.GG4205@dastard> <CAPcyv4jtPcLV-s0sKNHwwk0ug7GLBV6699dpm1h3r2xSo879dg@mail.gmail.com> <20190114222132.GH4205@dastard>
+Subject: Re: [PATCH v3 0/5] kvm "virtio pmem" device
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8cf51b2c-6e9b-317a-16fc-9e47f916198e@profihost.ag>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Daniel Aberger - Profihost AG <d.aberger@profihost.ag>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, s.priebe@profihost.ag, n.fahldieck@profihost.ag
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, KVM list <kvm@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-nvdimm <linux-nvdimm@ml01.01.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, virtualization@lists.linux-foundation.org, Linux ACPI <linux-acpi@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>, Stefan Hajnoczi <stefanha@redhat.com>, Rik van Riel <riel@surriel.com>, Nitesh Narayan Lal <nilal@redhat.com>, Kevin Wolf <kwolf@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, Ross Zwisler <zwisler@kernel.org>, vishal l verma <vishal.l.verma@intel.com>, dave jiang <dave.jiang@intel.com>, David Hildenbrand <david@redhat.com>, jmoyer <jmoyer@redhat.com>, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, Christoph Hellwig <hch@infradead.org>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, lcapitulino@redhat.com, Igor Mammedov <imammedo@redhat.com>, Eric Blake <eblake@redhat.com>, Theodore Ts'o <tytso@mit.edu>, adilger kernel <adilger.kernel@dilger.ca>, darrick wong <darrick.wong@oracle.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 
-On Thu, Jan 17, 2019 at 02:50:23PM +0100, Daniel Aberger - Profihost AG wrote:
-> Am 17.01.19 um 13:34 schrieb Brian Foster:
-> > On Thu, Jan 17, 2019 at 12:14:11PM +0100, Daniel Aberger - Profihost AG wrote:
-> >> Hi,
-> >>
-> >> one of our servers crashed / hung several times in the past days with
-> >> similar errors regarding XFS. Unfortunately we are unable to interprete
-> >> the call trace of dmesg to pinpoint the exact problem and I hope you
-> >> could help me to do so.
-> >>
-> >> We already ran xfs_repair to ensure that there are no filesystem errors.
-> >>
-> >> Here is an example dmesg output of recent crash of the mentioned server:
-> >>
-> >> 2019-01-12 06:06:35     INFO: task mysqld:1171 blocked for more than 120
-> >> seconds.
+
+> > > On Mon, Jan 14, 2019 at 02:15:40AM -0500, Pankaj Gupta wrote:
+> > > >
+> > > > > > Until you have images (and hence host page cache) shared between
+> > > > > > multiple guests. People will want to do this, because it means they
+> > > > > > only need a single set of pages in host memory for executable
+> > > > > > binaries rather than a set of pages per guest. Then you have
+> > > > > > multiple guests being able to detect residency of the same set of
+> > > > > > pages. If the guests can then, in any way, control eviction of the
+> > > > > > pages from the host cache, then we have a guest-to-guest
+> > > > > > information
+> > > > > > leak channel.
+> > > > >
+> > > > > I don't think we should ever be considering something that would
+> > > > > allow a
+> > > > > guest to evict page's from the host's pagecache [1].  The guest
+> > > > > should
+> > > > > be able to kick its own references to the host's pagecache out of its
+> > > > > own pagecache, but not be able to influence whether the host or
+> > > > > another
+> > > > > guest has a read-only mapping cached.
+> > > > >
+> > > > > [1] Unless the guest is allowed to modify the host's file; obviously
+> > > > > truncation, holepunching, etc are going to evict pages from the
+> > > > > host's
+> > > > > page cache.
+> > > >
+> > > > This is so correct. Guest does not not evict host page cache pages
+> > > > directly.
+> > >
+> > > They don't right now.
+> > >
+> > > But someone is going to end up asking for discard to work so that
+> > > the guest can free unused space in the underlying spares image (i.e.
+> > > make use of fstrim or mount -o discard) because they have workloads
+> > > that have bursts of space usage and they need to trim the image
+> > > files afterwards to keep their overall space usage under control.
+> > >
+> > > And then....
 > > 
-> > This is not a crash but rather an indication from the kernel that this
-> > task has been sitting here for at least a couple minutes. This doesn't
-> > tell us whether the task will eventually recover or remain blocked
-> > indefinitely.
+> > ...we reject / push back on that patch citing the above concern.
+> 
+> So at what point do we draw the line?
+> 
+> We're allowing writable DAX mappings, but as I've pointed out that
+> means we are going to be allowing  a potential information leak via
+> files with shared extents to be directly mapped and written to.
+> 
+> But we won't allow useful admin operations that allow better
+> management of host side storage space similar to how normal image
+> files are used by guests because it's an information leak vector?
+
+First of all Thank you for all the useful discussions. 
+I am summarizing here:
+
+- We have to live with the limitation to not support fstrim and 
+  mount -o discard options with virtio-pmem as they will evict 
+  host page cache pages. We cannot allow this for virtio-pmem
+  for security reasons. These filesystem commands will just zero out 
+  unused pages currently.
+
+- If alot of space is unused and not freed guest can request host 
+  Administrator for truncating the host backing image. 
+  We are also planning to support qcow2 sparse image format at 
+  host side with virtio-pmem.
+
+- There is no existing solution for Qemu persistent memory 
+  emulation with write support currently. This solution provides 
+  us the paravartualized way of emulating persistent memory. It 
+  does not emulate of ACPI structures instead it just uses VIRTIO 
+  for communication between guest & host. It is fast because of its
+  asynchronous nature and it works well. This makes use of at guest 
+  side libnvdimm API's 
+  
+- If disk size freeing problem with guest files trim truncate is 
+  very important for users, they can still use real hardware which 
+  will provide them both (advance disk features & page cache by pass).
+
+Considering all the above reasons I think this feature is useful
+from virtualization point of view. As Dave rightly said we should
+be careful and I think now we are careful with the security implications
+of this device. 
+
+Thanks again for all the inputs.
+
+Best regards,
+Pankaj  
+
+
+> 
+> That's splitting some really fine hairs there...
+> 
+> > > > In case of virtio-pmem & DAX, guest clears guest page cache exceptional
+> > > > entries.
+> > > > Its solely decision of host to take action on the host page cache
+> > > > pages.
+> > > >
+> > > > In case of virtio-pmem, guest does not modify host file directly i.e
+> > > > don't
+> > > > perform hole punch & truncation operation directly on host file.
+> > >
+> > > ... this will no longer be true, and the nuclear landmine in this
+> > > driver interface will have been armed....
 > > 
+> > I agree with the need to be careful when / if explicit cache control
+> > is added, but that's not the case today.
 > 
-> Yes, you're right. Well I was referring to it as a crash since the
-> system does not respond to any inputs anymore and we have to perform a
-> REISUB to reboot it.
+> "if"?
 > 
-> >> 2019-01-12 06:06:35     Tainted: G 4.12.0+139-ph #1
-> >> 2019-01-12 06:06:35     "echo 0 >
-> >> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> >> 2019-01-12 06:06:35     mysqld D 0 1171 1 0x00080000
-> >> 2019-01-12 06:06:35     Call Trace:
-> >> 2019-01-12 06:06:35     ? __schedule+0x3bc/0x820
-> >> 2019-01-12 06:06:35     ? strlcpy+0x31/0x40
-> >> 2019-01-12 06:06:35     ?
-> >> kernfs_path_from_node_locked+0x238/0x320schedule+0x32/0x80xlog_grant_head_wait+0xca/0x200xlog_grant_head_check+0x86/0xe0xfs_log_reserve+0xc7/0x1c0xfs_trans_reserve+0x169/0x1c0xfs_trans_alloc+0xb9/0x130xfs_vn_update_time+0x4e/0x130file_update_time+0xa7/0x100xfs_file_aio_write_checks+0x178/0x1a0
-> >> 2019-01-12 06:06:35     ?
-> > 
-> > I'm not sure how reliable the stack is, but fwiw it looks like this is
-> > an aio that is waiting on transaction reservation to update a file time.
-> > Transaction reservation is a normal blocking path because log space is a
-> > finite resource. We certainly don't expect to block here for minutes,
-> > but the fact that we don't know anything about your filesystem geometry,
-> > mount options, underlying storage, workload, etc. will make it difficult
-> > for anybody to surmise what the problem could be.
-> > 
-> > Please see the following url for what information to include when
-> > reporting a problem:
-> > 
-> > http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-> > 
-> > I'd also suggest to include broader dmesg output and/or xfs_repair
-> > output if there are multiple error reports that aren't exactly the same.
-> > 
+> I expect it to be "when", not if. Expect the worst, plan for it now.
 > 
-> I'm sorry, I missed this page on my search for an FAQ somehow.
+> Cheers,
 > 
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 > 
-> * Kernel Version: Linux 4.12.0+139-ph #1 SMP Tue Jan 1 21:46:16 UTC 2019
-> x86_64 GNU/Linux
-
-Is that an unmodified distro kernel or one you've patched and built
-yourself?
-
-> * xfsprogs version: 4.9.0
-> 
-> * Single CPU, Xeon E5-1650 v3, 6 cores, 12 threads
-> 
-> * /proc/meminfo, /proc/mounts, /proc/partitions and xfs_info can be
-> found here: https://pastebin.com/cZiTrUDL
-
-Just  notes as I browse it.
-- lots of free memory.
-- xfs-info: 1.3TB, 32 ags, ~700MB log w/sunit =64fsbs
-  sunit=64 fsbs, swidth=192fsbs (RAID?)
-- mount options: noatime, sunit=512,sunit=1536, usrquota
-- /dev/sda3 mounted on /
-- /dev/sda3 also mounted on /home/tmp (bind mount of something?)
-
-> * full dmesg output of problem mentioned in the first mail:
-> https://pastebin.com/pLaz18L1
-
-No smoking gun.
-
-> * a couple of more dmesg outputs from the same system with similar
-> behaviour:
->  * https://pastebin.com/hWDbwcCr
->  * https://pastebin.com/HAqs4yQc
-
-Ok, so mysqld seems to be the problem child here.
-
-> * Raid Controller: Adaptec ASR8805
->  * Logical Device 0 is a RAID6 with 5 SSDs (Samsung MZ7KM480), /dev/sda
-
-Ok, so RAID6 on a RADI controller with 1GB cache and a small random
-write workload?
-
->  * Logical Device 1 is a single backup HDD (Seagate ST2000NX0253) for
-> internal backups, /dev/sdb
-> 
-> * Output of xfs_repair: https://pastebin.com/JzVMqrLh
-
-Nothing wrong at all. So this looks like it's either a log space
-accounting leak (i.e. XFS bug) or something else....
-
-> The problem seems to happen randomly. There does not have to be high
-> load on our storage devices. This makes it pretty hard to find an exact
-> cause.
-
-... which makes me suspect "something else".
-
-I note that nothing is stalled on reads from the device - it's all
-stalled on journal space (i.e. write operations). I've seen similar
-things before where the RAID controller is configured as a writeback
-cache and the workload just keeps dumping lots of small random writes
-into the RAID cache until it fills. Databases do lots of small
-writes.
-
-This looks like the device is lightly loaded because writing into
-the cache is really fast. Right up until it fills and then has to
-dump hundreds of thousands of small writes to disk, which on RAID 6
-each require read-modify-raid-recalc-write cycles to run. This is
-really slow, and why RAID6 is generally a poor choice for database
-workloads.
-
-i.e. when the RAID cache fills, new writes stalls waiting for a RAID
-cache flush - they run at slower than disk speed because they have
-to first wait for the RAID controller to comple.
-
-It is is only noticed when the filesystem journal stalls
-because it's run out of space and is trying to dump a large amount
-of small metadata writes to the device to free up journal space. The
-journal space won't be freed up until the metadata that pins the
-tail of the log has been successfully written. When there's
-thousands of metadata IOs needed (a 700MB log can hold several
-hundred thousand dirty metadata objects in memory!) to move th elog
-forward, and the RAID cache is full, it will take a /long time/ and
-the filesystem will be stalled until that completes.
-
-I've seen spinning disk RAID setups like this stall for hours while
-large RAID caches flush. SSDs should be a lot faster, but we're
-still potentially talking about having to do millions of IOs and the
-RAID controller will be CPU bound on parity recalculatoins.  So this
-/may/ just be a result of the storage configuration and have nothing
-to do with XFS at all.
-
-Which leads me to ask: what is your RAID cache setup - write-thru,
-write-back, etc?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
