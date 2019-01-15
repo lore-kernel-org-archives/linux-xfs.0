@@ -1,60 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59530 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729846AbfAOWnA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 17:43:00 -0500
-Date: Tue, 15 Jan 2019 14:42:56 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] xfs: don't crash when read verifier reports errors with
- null b_ops
-Message-ID: <20190115224256.GF12689@magnolia>
-References: <20190115170820.GB12689@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:61942 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2387748AbfAOXHs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Jan 2019 18:07:48 -0500
+Date: Wed, 16 Jan 2019 10:07:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] iomap: get/put the page in iomap_page_create/release()
+Message-ID: <20190115230744.GM4205@dastard>
+References: <20190115211028.15742-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190115170820.GB12689@magnolia>
+In-Reply-To: <20190115211028.15742-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, Piotr Jaroszynski <pjaroszynski@nvidia.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 15, 2019 at 10:10:28PM +0100, Christoph Hellwig wrote:
+> migrate_page_move_mapping() expects pages with private data set to have
+> a page_count elevated by 1.  This is what used to happen for xfs through
+> the buffer_heads code before the switch to iomap in commit 82cb14175e7d
+> ("xfs: add support for sub-pagesize writeback without buffer_heads").
+> Not having the count elevated causes move_pages() to fail on memory
+> mapped files coming from xfs.
+> 
+> Make iomap compatible with the migrate_page_move_mapping() assumption by
+> elevating the page count as part of iomap_page_create() and lowering it
+> in iomap_page_release().
+> 
+> It causes the move_pages() syscall to misbehave on memory mapped files
+> from xfs.  It does not not move any pages, which I suppose is "just" a
+> perf issue, but it also ends up returning a positive number which is out
+> of spec for the syscall.  Talking to Michal Hocko, it sounds like
+> returning positive numbers might be a necessary update to move_pages()
+> anyway though.
+> 
+> Based on an earlier patch and changelog from Piotr Jaroszynski, except
+> that this version actually puts/gets the page aswell when migrating
+> pages using a copy, and thus actually survives xfstests.
+> 
+> Fixes: 82cb14175e7d ("xfs: add support for sub-pagesize writeback without buffer_heads")
+> Cc: Piotr Jaroszynski <pjaroszynski@nvidia.com>
 
-In xrep_findroot_block, we work out the btree type and correctness of a
-given block by calling different btree verifiers on root block
-candidates.  However, we leave the NULL b_ops while ->verify_read
-validates the block, which means that if the verifier calls
-xfs_buf_verifier_error it'll crash on the null b_ops.  Fix it to avoid
-this crash.
+Missing a SOB.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: leave a comment about what we're doing above the function
----
- fs/xfs/xfs_error.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+But apart from that, I've been running an identical patch in my test
+tree, so:
 
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 9866f542e77b..6e80e438b27a 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -340,6 +340,9 @@ xfs_corruption_error(
- /*
-  * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
-  * values, and omit the stack trace unless the error level is tuned high.
-+ *
-+ * NOTE: Some callers might be calling the verifiers directly (rather than
-+ * through the b_ops structure) so bp->b_ops may be NULL.
-  */
- void
- xfs_buf_verifier_error(
-@@ -359,7 +362,7 @@ xfs_buf_verifier_error(
- 
- 	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx %s",
- 		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
--		  fa, bp->b_ops->name, bp->b_bn, name);
-+		  fa, bp->b_ops ? bp->b_ops->name : "unknown", bp->b_bn, name);
- 
- 	xfs_alert(mp, "Unmount and run xfs_repair");
- 
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
