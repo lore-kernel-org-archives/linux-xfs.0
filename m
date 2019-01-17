@@ -1,181 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59786 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729870AbfAUIWW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Jan 2019 03:22:22 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V14 17/18] block: kill QUEUE_FLAG_NO_SG_MERGE
-Date: Mon, 21 Jan 2019 16:18:04 +0800
-Message-Id: <20190121081805.32727-18-ming.lei@redhat.com>
-In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
-References: <20190121081805.32727-1-ming.lei@redhat.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:31417 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727018AbfAQWVW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jan 2019 17:21:22 -0500
+Date: Fri, 18 Jan 2019 09:21:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 12/12] xfs: wait for deferred inactivation when
+ destroying unlinked inodes
+Message-ID: <20190117222117.GF6173@dastard>
+References: <154630901076.16693.13111277988041606505.stgit@magnolia>
+ <154630908468.16693.4548983851684057794.stgit@magnolia>
+ <20190103124644.GN4205@dastard>
+ <20190117184158.GE4424@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190117184158.GE4424@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Since bdced438acd83ad83a6c ("block: setup bi_phys_segments after splitting"),
-physical segment number is mainly figured out in blk_queue_split() for
-fast path, and the flag of BIO_SEG_VALID is set there too.
+On Thu, Jan 17, 2019 at 10:41:58AM -0800, Darrick J. Wong wrote:
+> On Thu, Jan 03, 2019 at 11:46:44PM +1100, Dave Chinner wrote:
+> > On Mon, Dec 31, 2018 at 06:18:04PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Now that we've constructed a mechanism to batch background inode
+> > > inactivation work, we actually want in some cases to throttle the amount
+> > > of backlog work that the frontend can generate.  We do this by making
+> > > destroy_inode wait for inactivation when we're deleting things, assuming
+> > > that deleted inodes are dropped and destroyed in process context and not
+> > > from fs reclaim.
+> > 
+> > This would kills performance of highly concurrent unlink
+> > workloads.
+> > 
+> > That said, the current unlink code needs severe throttling because
+> > the unlinked inode list management does not scale at all well - get
+> > more than a a couple of hundred inodes into the AGI unlinked lists,
+> > and xfs_iunlink_remove burns huge amounts of CPU.
+> > 
+> > So if it isn't throttled, it'll be just as slow, but burn huge
+> > amounts amounts of extra CPU walking the unlinked lists.....
+> 
+> ...so I've refactored the iunlink code to record "who points to this
+> inode?" references, which speeds up iunlink_remove substantially.  I'll
+> put that series out for review after letting it run on some real
+> workloads.
+> 
+> I've also dropped this patch from the series entirely, just to see what
+> happens.  The tradeoff here is that allocations see increased latency
+> upon hitting ENOSPC because we now force inactivation to see if we can
+> clean things out, but OTOH if we never hit ENOSPC then the rest of the
+> fs runs considerably faster.
 
-Now only blk_recount_segments() and blk_recalc_rq_segments() use this
-flag.
+I think that's a valid trade-off - we make it in several other
+places, so we expect things to slow down near/at ENOSPC.
 
-Basically blk_recount_segments() is bypassed in fast path given BIO_SEG_VALID
-is set in blk_queue_split().
+> > > +/*
+> > > + * Decide if this inode is a candidate for unlinked inactivation throttling.
+> > > + * We have to decide this prior to setting the NEED_INACTIVE iflag because
+> > > + * once we flag the inode for inactivation we can't access it any more.
+> > > + */
+> > > +enum xfs_iwait
+> > > +xfs_iwait_check(
+> > > +	struct xfs_inode	*ip)
+> > > +{
+> > > +	struct xfs_mount	*mp = ip->i_mount;
+> > > +	unsigned long long	x;
+> > > +	unsigned long long	y;
+> > > +	bool			rt = XFS_IS_REALTIME_INODE(ip);
+> > > +
+> > > +	/*
+> > > +	 * Don't wait unless we're doing a deletion inactivation.  We assume
+> > > +	 * that unlinked inodes that lose all their refcount are dropped,
+> > > +	 * evicted, and destroyed immediately in the context of the unlink()ing
+> > > +	 * process.
+> > > +	 */
+> > 
+> > I think this is wrong - we want to push unlinked inode processing
+> > into the background so we don't have to wait on it, not force
+> > inactivation of unlinked inodes to wait for other inodes to be
+> > inactivated.
+> 
+> The original idea behind most of this was that we'd try to slow down a
+> rm -rf so that the fs doesn't find itself facing a gigantic flood of
+> inactivation work, particularly if there were a lot of extents to free
+> or a lot of inodes to free.  Under this scheme we don't ever wait for
+> inactivation if we're just closing a linked file, but we could do so for
+> deletions.
+> 
+> However, it is difficult to quantify what "gigantic" means here.  The
+> situation I was trying to avoid is where the system gets bogged down
+> with background processing work for a long time after the userspace
+> process terminates, but perhaps it's better not to bother. :)
 
-For another user of blk_recalc_rq_segments():
+Multi-processor systems are ubiquitous now. If we can move things to
+the background and burn otherwise idle CPU to do the work so that
+users/apps don't have to wait on it, then I think that's fine. IMO,
+the more work we can push into async background processing the
+better we can optimise it (e.g. start batching or using bulk
+operations rather than one-at-a-time).
 
-- run in partial completion branch of blk_update_request, which is an unusual case
+Cheers,
 
-- run in blk_cloned_rq_check_limits(), still not a big problem if the flag is killed
-since dm-rq is the only user.
-
-Multi-page bvec is enabled now, not doing S/G merging is rather pointless with the
-current setup of the I/O path, as it isn't going to save you a significant amount
-of cycles.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- block/blk-merge.c      | 31 ++++++-------------------------
- block/blk-mq-debugfs.c |  1 -
- block/blk-mq.c         |  3 ---
- drivers/md/dm-table.c  | 13 -------------
- include/linux/blkdev.h |  1 -
- 5 files changed, 6 insertions(+), 43 deletions(-)
-
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 8a498f29636f..b990853f6de7 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -358,8 +358,7 @@ void blk_queue_split(struct request_queue *q, struct bio **bio)
- EXPORT_SYMBOL(blk_queue_split);
- 
- static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
--					     struct bio *bio,
--					     bool no_sg_merge)
-+					     struct bio *bio)
- {
- 	struct bio_vec bv, bvprv = { NULL };
- 	int prev = 0;
-@@ -385,13 +384,6 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
- 	nr_phys_segs = 0;
- 	for_each_bio(bio) {
- 		bio_for_each_mp_bvec(bv, bio, iter) {
--			/*
--			 * If SG merging is disabled, each bio vector is
--			 * a segment
--			 */
--			if (no_sg_merge)
--				goto new_segment;
--
- 			if (prev) {
- 				if (seg_size + bv.bv_len
- 				    > queue_max_segment_size(q))
-@@ -421,27 +413,16 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
- 
- void blk_recalc_rq_segments(struct request *rq)
- {
--	bool no_sg_merge = !!test_bit(QUEUE_FLAG_NO_SG_MERGE,
--			&rq->q->queue_flags);
--
--	rq->nr_phys_segments = __blk_recalc_rq_segments(rq->q, rq->bio,
--			no_sg_merge);
-+	rq->nr_phys_segments = __blk_recalc_rq_segments(rq->q, rq->bio);
- }
- 
- void blk_recount_segments(struct request_queue *q, struct bio *bio)
- {
--	unsigned short seg_cnt = bio_segments(bio);
--
--	if (test_bit(QUEUE_FLAG_NO_SG_MERGE, &q->queue_flags) &&
--			(seg_cnt < queue_max_segments(q)))
--		bio->bi_phys_segments = seg_cnt;
--	else {
--		struct bio *nxt = bio->bi_next;
-+	struct bio *nxt = bio->bi_next;
- 
--		bio->bi_next = NULL;
--		bio->bi_phys_segments = __blk_recalc_rq_segments(q, bio, false);
--		bio->bi_next = nxt;
--	}
-+	bio->bi_next = NULL;
-+	bio->bi_phys_segments = __blk_recalc_rq_segments(q, bio);
-+	bio->bi_next = nxt;
- 
- 	bio_set_flag(bio, BIO_SEG_VALID);
- }
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 90d68760af08..2f9a11ef5bad 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -128,7 +128,6 @@ static const char *const blk_queue_flag_name[] = {
- 	QUEUE_FLAG_NAME(SAME_FORCE),
- 	QUEUE_FLAG_NAME(DEAD),
- 	QUEUE_FLAG_NAME(INIT_DONE),
--	QUEUE_FLAG_NAME(NO_SG_MERGE),
- 	QUEUE_FLAG_NAME(POLL),
- 	QUEUE_FLAG_NAME(WC),
- 	QUEUE_FLAG_NAME(FUA),
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 3ba37b9e15e9..fa45817a7e62 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2829,9 +2829,6 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
- 	    set->map[HCTX_TYPE_POLL].nr_queues)
- 		blk_queue_flag_set(QUEUE_FLAG_POLL, q);
- 
--	if (!(set->flags & BLK_MQ_F_SG_MERGE))
--		blk_queue_flag_set(QUEUE_FLAG_NO_SG_MERGE, q);
--
- 	q->sg_reserved_size = INT_MAX;
- 
- 	INIT_DELAYED_WORK(&q->requeue_work, blk_mq_requeue_work);
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index 4b1be754cc41..ba9481f1bf3c 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -1698,14 +1698,6 @@ static int device_is_not_random(struct dm_target *ti, struct dm_dev *dev,
- 	return q && !blk_queue_add_random(q);
- }
- 
--static int queue_supports_sg_merge(struct dm_target *ti, struct dm_dev *dev,
--				   sector_t start, sector_t len, void *data)
--{
--	struct request_queue *q = bdev_get_queue(dev->bdev);
--
--	return q && !test_bit(QUEUE_FLAG_NO_SG_MERGE, &q->queue_flags);
--}
--
- static bool dm_table_all_devices_attribute(struct dm_table *t,
- 					   iterate_devices_callout_fn func)
- {
-@@ -1902,11 +1894,6 @@ void dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
- 	if (!dm_table_supports_write_zeroes(t))
- 		q->limits.max_write_zeroes_sectors = 0;
- 
--	if (dm_table_all_devices_attribute(t, queue_supports_sg_merge))
--		blk_queue_flag_clear(QUEUE_FLAG_NO_SG_MERGE, q);
--	else
--		blk_queue_flag_set(QUEUE_FLAG_NO_SG_MERGE, q);
--
- 	dm_table_verify_integrity(t);
- 
- 	/*
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 6ebae3ee8f44..2d4cdc1a7bac 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -588,7 +588,6 @@ struct request_queue {
- #define QUEUE_FLAG_SAME_FORCE  15	/* force complete on same CPU */
- #define QUEUE_FLAG_DEAD        16	/* queue tear-down finished */
- #define QUEUE_FLAG_INIT_DONE   17	/* queue is initialized */
--#define QUEUE_FLAG_NO_SG_MERGE 18	/* don't attempt to merge SG segments*/
- #define QUEUE_FLAG_POLL	       19	/* IO polling enabled if set */
- #define QUEUE_FLAG_WC	       20	/* Write back caching */
- #define QUEUE_FLAG_FUA	       21	/* device supports FUA writes */
+Dave.
 -- 
-2.9.5
+Dave Chinner
+david@fromorbit.com
