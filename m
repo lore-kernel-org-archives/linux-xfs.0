@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:41570 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726981AbfAQXCu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jan 2019 18:02:50 -0500
-Date: Thu, 17 Jan 2019 15:02:40 -0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:56948 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726008AbfAQX2V (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jan 2019 18:28:21 -0500
+Date: Thu, 17 Jan 2019 15:28:08 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [PATCH 06/22] xfs: refactor kernel-specific parts of xfs_ialloc
-Message-ID: <20190117230240.GI4424@magnolia>
+Message-ID: <20190117232808.GJ4424@magnolia>
 References: <154630914104.18437.15354380637179830566.stgit@magnolia>
  <154630917828.18437.11659667761358440410.stgit@magnolia>
- <20190117222614.GG6173@dastard>
+ <20190117142221.GD16270@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190117222614.GG6173@dastard>
+In-Reply-To: <20190117142221.GD16270@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jan 18, 2019 at 09:26:14AM +1100, Dave Chinner wrote:
+On Thu, Jan 17, 2019 at 06:22:21AM -0800, Christoph Hellwig wrote:
 > On Mon, Dec 31, 2018 at 06:19:38PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
@@ -51,49 +51,25 @@ On Fri, Jan 18, 2019 at 09:26:14AM +1100, Dave Chinner wrote:
 > > +{
 > > +	return xfs_iget(mp, tp, ino, XFS_IGET_CREATE, XFS_ILOCK_EXCL, ipp);
 > > +}
-> > +
-> > +/* Propagate platform-specific inode properties into the new child. */
-> > +static void
-> > +xfs_ialloc_platform_init(
-> > +	struct xfs_trans		*tp,
-> > +	const struct xfs_ialloc_args	*args,
-> > +	struct xfs_inode		*ip)
-> > +{
-> > +	struct timespec64		tv;
-> > +
-> > +	tv = current_time(VFS_I(ip));
-> > +	VFS_I(ip)->i_mtime = tv;
-> > +	VFS_I(ip)->i_atime = tv;
-> > +	VFS_I(ip)->i_ctime = tv;
 > 
-> Doesn't set ip->i_d.di_crtime, so ....
-> 
-> > @@ -755,10 +781,11 @@ xfs_ialloc(
-> >  		inode_set_iversion(inode, 1);
-> >  		ip->i_d.di_flags2 = 0;
-> >  		ip->i_d.di_cowextsize = 0;
-> > -		ip->i_d.di_crtime.t_sec = (int32_t)tv.tv_sec;
-> > -		ip->i_d.di_crtime.t_nsec = (int32_t)tv.tv_nsec;
-> > +		ip->i_d.di_crtime.t_sec = 0;
-> > +		ip->i_d.di_crtime.t_nsec = 0;
-> >  	}
-> >  
+> This is just too ugly and pointless.  Can you explain (or even better
+> show code) why we really need this for xfsprogs?
+
+To avoid having a useless lock_flags argument to xfs_iget in userspace?
+It wasn't so long ago that Eric removed it, but I don't mind adding it
+back to avoid this kind of ugliness.
+
 > > +	xfs_ialloc_platform_init(tp, args, ip);
 > 
-> This breaks create time functionality.
+> And that platform naming also is rather horrible.
 
-Yikes!
+Hm.  Looking at it now, both platform_init() functions basically just
+set ctime/mtime/atime/crtime, which means that I really just need to add
+a XFS_ICHGTIME_CREATE flag to xfs_trans_ichgtime and replace all the
+platform_init stuff with that.
 
-> Don't we have a statx() test in fstests that checks that the
-> create time of inodes is set correctly?
-
-Clearly not... <frown>
+The mkfs protofile platform_init also has some code to set other
+attributes from a struct fsxattr, but I think I can just set them once
+the inode allocation function returns to the protofile code.
 
 --D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
