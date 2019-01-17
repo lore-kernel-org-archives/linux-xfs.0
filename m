@@ -1,31 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:54138 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:36454 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725878AbfAQO0g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jan 2019 09:26:36 -0500
-Date: Thu, 17 Jan 2019 06:26:36 -0800
+        with ESMTP id S1727010AbfAQOld (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jan 2019 09:41:33 -0500
+Date: Thu, 17 Jan 2019 06:41:32 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 00/13] xfs: metadata inode directories
-Message-ID: <20190117142636.GH16270@infradead.org>
-References: <154630934595.21716.17416691804044507782.stgit@magnolia>
+Subject: Re: [PATCH 2/4] xfs: update fork seq counter on data fork changes
+Message-ID: <20190117144132.GA21906@infradead.org>
+References: <20190111123032.31538-1-bfoster@redhat.com>
+ <20190111123032.31538-3-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <154630934595.21716.17416691804044507782.stgit@magnolia>
+In-Reply-To: <20190111123032.31538-3-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Dec 31, 2018 at 06:22:26PM -0800, Darrick J. Wong wrote:
-> Hi all,
+On Fri, Jan 11, 2019 at 07:30:30AM -0500, Brian Foster wrote:
+> The sequence counter in the xfs_ifork structure is only updated on
+> COW forks. This is because the counter is currently only used to
+> optimize out repetitive COW fork checks at writeback time.
 > 
-> This series delivers a new feature -- metadata inode directories.  This
-> is a separate directory tree (rooted in the superblock) that contains
-> only inodes that contain filesystem metadata.  Different metadata
-> objects can be looked up with regular paths.
+> Tweak the extent code to update the seq counter regardless of the
+> fork type in preparation for using this counter on data forks as
+> well.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-If we use path names we should just use regular VFS path lookup for
-them.  But why do we even need names?  Can't we just work based on
-inode numbers?
+Looks fine,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
