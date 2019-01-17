@@ -1,52 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55026 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726559AbfANRqS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Jan 2019 12:46:18 -0500
-Subject: Re: [PATCH 2/5] xfs_metadump: Zap multi fsb blocks
-References: <20190107201355.18996-1-stefanrin@gmail.com>
- <20190107201355.18996-3-stefanrin@gmail.com>
- <2b4718eb-bf55-600e-2a42-1b3128bf21bf@sandeen.net>
- <CAAxjCEz5puFW3a7D7exu9wQT5_uHAzt7Tcu2yVuG9PpOEKqbfQ@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ebcb60db-0f42-f19e-e3e8-e1b3f839d0a0@sandeen.net>
-Date: Mon, 14 Jan 2019 11:46:16 -0600
+Received: from bombadil.infradead.org ([198.137.202.133]:52508 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726062AbfAQOWV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jan 2019 09:22:21 -0500
+Date: Thu, 17 Jan 2019 06:22:21 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 06/22] xfs: refactor kernel-specific parts of xfs_ialloc
+Message-ID: <20190117142221.GD16270@infradead.org>
+References: <154630914104.18437.15354380637179830566.stgit@magnolia>
+ <154630917828.18437.11659667761358440410.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <CAAxjCEz5puFW3a7D7exu9wQT5_uHAzt7Tcu2yVuG9PpOEKqbfQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <154630917828.18437.11659667761358440410.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-
-
-On 1/14/19 11:42 AM, Stefan Ring wrote:
-> On Fri, Jan 11, 2019 at 6:31 PM Eric Sandeen <sandeen@sandeen.net> wrote:
->>
->> On 1/7/19 2:13 PM, Stefan Ring wrote:
->>> Using basically the same code as in process_single_fsb_objects.
->>>
->>> Signed-off-by: Stefan Ring <stefanrin@gmail.com>
->>
->> thanks, the change here to goto write: looks good to me.
->>
->> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+On Mon, Dec 31, 2018 at 06:19:38PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Thanks, this makes my series fully reviewed. Is there anything left
-> for me to do now? FWIW, I added the Reviewed-by tag and pushed it to
-> <https://github.com/Ringdingcoder/xfsprogs-dev/commits/metadump-fully-reviewed>.
+> Move the kernel-specific parts of xfs_ialloc into a separate function in
+> preparation for hoisting xfs_ialloc to libxfs.
 > 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_inode.c |   45 ++++++++++++++++++++++++++++++++++++---------
+>  1 file changed, 36 insertions(+), 9 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 403eb8fa2f1f..b635d43caeed 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -621,6 +621,32 @@ xfs_lookup(
+>  	return error;
+>  }
+>  
+> +/* Return an exclusive ILOCK'd in-core inode. */
+> +static int
+> +xfs_ialloc_iget(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans	*tp,
+> +	xfs_ino_t		ino,
+> +	struct xfs_inode	**ipp)
+> +{
+> +	return xfs_iget(mp, tp, ino, XFS_IGET_CREATE, XFS_ILOCK_EXCL, ipp);
+> +}
 
-I don't think so.  Pretty sure the failures I ran into with my extended
-xfstests harness are actually pre-existing, and Carlos is looking at the
-root cause.  I'll give it another once-over but I hope/plan to include this
-in xfsprogs-4.20 now.
+This is just too ugly and pointless.  Can you explain (or even better
+show code) why we really need this for xfsprogs?
 
-Apologies for the long wait, I can't tell you how much I appreciate
-your effort on this.  Thank you!
+> +	xfs_ialloc_platform_init(tp, args, ip);
 
--Eric
+And that platform naming also is rather horrible.
