@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59908 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59254 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
         id S1726993AbfAQTUG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 17 Jan 2019 14:20:06 -0500
 Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4A7F680F9B
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Jan 2019 19:20:06 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id E4FAB2914F
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Jan 2019 19:20:05 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id ECE17600C7
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 86018600C6
         for <linux-xfs@vger.kernel.org>; Thu, 17 Jan 2019 19:20:05 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 2/5] xfs: update fork seq counter on data fork changes
-Date: Thu, 17 Jan 2019 14:20:01 -0500
-Message-Id: <20190117192004.49346-3-bfoster@redhat.com>
+Subject: [PATCH v2 1/5] xfs: eof trim writeback mapping as soon as it is cached
+Date: Thu, 17 Jan 2019 14:20:00 -0500
+Message-Id: <20190117192004.49346-2-bfoster@redhat.com>
 In-Reply-To: <20190117192004.49346-1-bfoster@redhat.com>
 References: <20190117192004.49346-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,60 +22,56 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-The sequence counter in the xfs_ifork structure is only updated on
-COW forks. This is because the counter is currently only used to
-optimize out repetitive COW fork checks at writeback time.
+The cached writeback mapping is EOF trimmed to try and avoid races
+between post-eof block management and writeback that result in
+sending cached data to a stale location. The cached mapping is
+currently trimmed on the validation check, which leaves a race
+window between the time the mapping is cached and when it is trimmed
+against the current inode size.
 
-Tweak the extent code to update the seq counter regardless of the
-fork type in preparation for using this counter on data forks as
-well.
+For example, if a new mapping is cached by delalloc conversion on a
+blocksize == page size fs, we could cycle various locks, perform
+memory allocations, etc.  in the writeback codepath before the
+associated mapping is eventually trimmed to i_size. This leaves
+enough time for a post-eof truncate and file append before the
+cached mapping is trimmed. The former event essentially invalidates
+a range of the cached mapping and the latter bumps the inode size
+such the trim on the next writepage event won't trim all of the
+invalid blocks. fstest generic/464 reproduces this scenario
+occasionally and causes a lost writeback and stale delalloc blocks
+warning on inode inactivation.
 
+To work around this problem, trim the cached writeback mapping as
+soon as it is cached in addition to on subsequent validation checks.
+This is a minor tweak to tighten the race window as much as possible
+until a proper invalidation mechanism is available.
+
+Fixes: 40214d128e07 ("xfs: trim writepage mapping to within eof")
+Cc: <stable@vger.kernel.org> # v4.14+
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_iext_tree.c  | 13 ++++++-------
- fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
- 2 files changed, 7 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_aops.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
-index 771dd072015d..bc690f2409fa 100644
---- a/fs/xfs/libxfs/xfs_iext_tree.c
-+++ b/fs/xfs/libxfs/xfs_iext_tree.c
-@@ -614,16 +614,15 @@ xfs_iext_realloc_root(
- }
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 338b9d9984e0..d9048bcea49c 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -449,6 +449,7 @@ xfs_map_blocks(
+ 	}
  
- /*
-- * Increment the sequence counter if we are on a COW fork.  This allows
-- * the writeback code to skip looking for a COW extent if the COW fork
-- * hasn't changed.  We use WRITE_ONCE here to ensure the update to the
-- * sequence counter is seen before the modifications to the extent
-- * tree itself take effect.
-+ * Increment the sequence counter on extent tree changes. If we are on a COW
-+ * fork, this allows the writeback code to skip looking for a COW extent if the
-+ * COW fork hasn't changed. We use WRITE_ONCE here to ensure the update to the
-+ * sequence counter is seen before the modifications to the extent tree itself
-+ * take effect.
-  */
- static inline void xfs_iext_inc_seq(struct xfs_ifork *ifp, int state)
- {
--	if (state & BMAP_COWFORK)
--		WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
-+	WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
+ 	wpc->imap = imap;
++	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ allocate_blocks:
+@@ -459,6 +460,7 @@ xfs_map_blocks(
+ 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+ 	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+ 	wpc->imap = imap;
++	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
  }
- 
- void
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 60361d2d74a1..00c62ce170d0 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -14,7 +14,7 @@ struct xfs_dinode;
-  */
- struct xfs_ifork {
- 	int			if_bytes;	/* bytes in if_u1 */
--	unsigned int		if_seq;		/* cow fork mod counter */
-+	unsigned int		if_seq;		/* fork mod counter */
- 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
- 	short			if_broot_bytes;	/* bytes allocated for root */
- 	unsigned char		if_flags;	/* per-fork flags */
 -- 
 2.17.2
