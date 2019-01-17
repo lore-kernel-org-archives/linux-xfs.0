@@ -1,82 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53164 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726854AbfAQQg6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jan 2019 11:36:58 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/11] xfs: also truncate holes covered by COW blocks
-Date: Thu, 17 Jan 2019 17:36:32 +0100
-Message-Id: <20190117163636.23171-8-hch@lst.de>
-In-Reply-To: <20190117163636.23171-1-hch@lst.de>
-References: <20190117163636.23171-1-hch@lst.de>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: from mx1.redhat.com ([209.132.183.28]:61241 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727363AbfAQTUH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Jan 2019 14:20:07 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1F8ADC0740E7
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Jan 2019 19:20:07 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C9F7B600C6
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Jan 2019 19:20:06 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 4/5] xfs: remove superfluous writeback mapping eof trimming
+Date: Thu, 17 Jan 2019 14:20:03 -0500
+Message-Id: <20190117192004.49346-5-bfoster@redhat.com>
+In-Reply-To: <20190117192004.49346-1-bfoster@redhat.com>
+References: <20190117192004.49346-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>
 
-This only matters if we want to write data through the COW fork that is
-not actually an overwrite of existing data.  Reasons for that are
-speculative COW fork allocations using the cowextsize, or a mode where
-we always write through the COW fork.  Currently both can't actually
-happen, but I plan to enable them.
+Now that the cached writeback mapping is explicitly invalidated on
+data fork changes, the EOF trimming band-aid is no longer necessary.
+Remove xfs_trim_extent_eof() as well since it has no other users.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_aops.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 11 -----------
+ fs/xfs/libxfs/xfs_bmap.h |  1 -
+ fs/xfs/xfs_aops.c        | 15 ---------------
+ 3 files changed, 27 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 332eefa2700b..4c73927819c2 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3685,17 +3685,6 @@ xfs_trim_extent(
+ 	}
+ }
+ 
+-/* trim extent to within eof */
+-void
+-xfs_trim_extent_eof(
+-	struct xfs_bmbt_irec	*irec,
+-	struct xfs_inode	*ip)
+-
+-{
+-	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
+-					      i_size_read(VFS_I(ip))));
+-}
+-
+ /*
+  * Trim the returned map to the required bounds
+  */
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 09d3ea97cc15..b4ff710d7250 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -181,7 +181,6 @@ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
+ 
+ void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
+ 		xfs_filblks_t len);
+-void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
+ int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+ int	xfs_bmap_set_attrforkoff(struct xfs_inode *ip, int size, int *version);
+ void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index ef05164651dc..64dd16712dc3 100644
+index 649e4ad76add..09d8f7690e9e 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -403,28 +403,29 @@ xfs_map_blocks(
+@@ -357,19 +357,6 @@ xfs_map_blocks(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
  
- 	wpc->fork = XFS_DATA_FORK;
- 
-+	/* landed in a hole or beyond EOF? */
- 	if (imap.br_startoff > offset_fsb) {
--		/* landed in a hole or beyond EOF */
- 		imap.br_blockcount = imap.br_startoff - offset_fsb;
- 		imap.br_startoff = offset_fsb;
- 		imap.br_startblock = HOLESTARTBLOCK;
- 		imap.br_state = XFS_EXT_NORM;
--	} else {
--		/*
--		 * Truncate to the next COW extent if there is one.  This is the
--		 * only opportunity to do this because we can skip COW fork
--		 * lookups for the subsequent blocks in the mapping; however,
--		 * the requirement to treat the COW range separately remains.
--		 */
--		if (cow_fsb != NULLFILEOFF &&
--		    cow_fsb < imap.br_startoff + imap.br_blockcount)
--			imap.br_blockcount = cow_fsb - imap.br_startoff;
+-	/*
+-	 * We have to make sure the cached mapping is within EOF to protect
+-	 * against eofblocks trimming on file release leaving us with a stale
+-	 * mapping. Otherwise, a page for a subsequent file extending buffered
+-	 * write could get picked up by this writeback cycle and written to the
+-	 * wrong blocks.
+-	 *
+-	 * Note that what we really want here is a generic mapping invalidation
+-	 * mechanism to protect us from arbitrary extent modifying contexts, not
+-	 * just eofblocks.
+-	 */
+-	xfs_trim_extent_eof(&wpc->imap, ip);
 -
--		/* got a delalloc extent? */
--		if (isnullstartblock(imap.br_startblock))
--			goto allocate_blocks;
+ 	/*
+ 	 * COW fork blocks can overlap data fork blocks even if the blocks
+ 	 * aren't shared.  COW I/O always takes precedent, so we must always
+@@ -482,7 +469,6 @@ xfs_map_blocks(
  	}
  
-+	/*
-+	 * Truncate to the next COW extent if there is one.  This is the only
-+	 * opportunity to do this because we can skip COW fork lookups for the
-+	 * subsequent blocks in the mapping; however, the requirement to treat
-+	 * the COW range separately remains.
-+	 */
-+	if (cow_fsb != NULLFILEOFF &&
-+	    cow_fsb < imap.br_startoff + imap.br_blockcount)
-+		imap.br_blockcount = cow_fsb - imap.br_startoff;
-+
-+	/* got a delalloc extent? */
-+	if (imap.br_startblock != HOLESTARTBLOCK &&
-+	    isnullstartblock(imap.br_startblock))
-+		goto allocate_blocks;
-+
  	wpc->imap = imap;
- 	trace_xfs_map_blocks_found(ip, offset, count, wpc->fork, &imap);
+-	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
  	return 0;
+ allocate_blocks:
+@@ -494,7 +480,6 @@ xfs_map_blocks(
+ 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+ 	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+ 	wpc->imap = imap;
+-	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ }
 -- 
-2.20.1
+2.17.2
