@@ -1,67 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56086 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59908 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727695AbfAUISe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Jan 2019 03:18:34 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V14 01/18] btrfs: look at bi_size for repair decisions
-Date: Mon, 21 Jan 2019 16:17:48 +0800
-Message-Id: <20190121081805.32727-2-ming.lei@redhat.com>
-In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
-References: <20190121081805.32727-1-ming.lei@redhat.com>
+        id S1726993AbfAQTUG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Jan 2019 14:20:06 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4A7F680F9B
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Jan 2019 19:20:06 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id ECE17600C7
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Jan 2019 19:20:05 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 2/5] xfs: update fork seq counter on data fork changes
+Date: Thu, 17 Jan 2019 14:20:01 -0500
+Message-Id: <20190117192004.49346-3-bfoster@redhat.com>
+In-Reply-To: <20190117192004.49346-1-bfoster@redhat.com>
+References: <20190117192004.49346-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: linux-xfs@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+The sequence counter in the xfs_ifork structure is only updated on
+COW forks. This is because the counter is currently only used to
+optimize out repetitive COW fork checks at writeback time.
 
-bio_readpage_error currently uses bi_vcnt to decide if it is worth
-retrying an I/O.  But the vector count is mostly an implementation
-artifact - it really should figure out if there is more than a
-single sector worth retrying.  Use bi_size for that and shift by
-PAGE_SHIFT.  This really should be blocks/sectors, but given that
-btrfs doesn't support a sector size different from the PAGE_SIZE
-using the page size keeps the changes to a minimum.
+Tweak the extent code to update the seq counter regardless of the
+fork type in preparation for using this counter on data forks as
+well.
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Reviewed-by: David Sterba <dsterba@suse.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/btrfs/extent_io.c | 2 +-
- include/linux/bio.h  | 6 ------
- 2 files changed, 1 insertion(+), 7 deletions(-)
+ fs/xfs/libxfs/xfs_iext_tree.c  | 13 ++++++-------
+ fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
+ 2 files changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index 52abe4082680..dc8ba3ee515d 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -2350,7 +2350,7 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
- 	int read_mode = 0;
- 	blk_status_t status;
- 	int ret;
--	unsigned failed_bio_pages = bio_pages_all(failed_bio);
-+	unsigned failed_bio_pages = failed_bio->bi_iter.bi_size >> PAGE_SHIFT;
- 
- 	BUG_ON(bio_op(failed_bio) == REQ_OP_WRITE);
- 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 7380b094dcca..72b4f7be2106 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -263,12 +263,6 @@ static inline void bio_get_last_bvec(struct bio *bio, struct bio_vec *bv)
- 		bv->bv_len = iter.bi_bvec_done;
+diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+index 771dd072015d..bc690f2409fa 100644
+--- a/fs/xfs/libxfs/xfs_iext_tree.c
++++ b/fs/xfs/libxfs/xfs_iext_tree.c
+@@ -614,16 +614,15 @@ xfs_iext_realloc_root(
  }
  
--static inline unsigned bio_pages_all(struct bio *bio)
--{
--	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
--	return bio->bi_vcnt;
--}
--
- static inline struct bio_vec *bio_first_bvec_all(struct bio *bio)
+ /*
+- * Increment the sequence counter if we are on a COW fork.  This allows
+- * the writeback code to skip looking for a COW extent if the COW fork
+- * hasn't changed.  We use WRITE_ONCE here to ensure the update to the
+- * sequence counter is seen before the modifications to the extent
+- * tree itself take effect.
++ * Increment the sequence counter on extent tree changes. If we are on a COW
++ * fork, this allows the writeback code to skip looking for a COW extent if the
++ * COW fork hasn't changed. We use WRITE_ONCE here to ensure the update to the
++ * sequence counter is seen before the modifications to the extent tree itself
++ * take effect.
+  */
+ static inline void xfs_iext_inc_seq(struct xfs_ifork *ifp, int state)
  {
- 	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
+-	if (state & BMAP_COWFORK)
+-		WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
++	WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
+ }
+ 
+ void
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 60361d2d74a1..00c62ce170d0 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -14,7 +14,7 @@ struct xfs_dinode;
+  */
+ struct xfs_ifork {
+ 	int			if_bytes;	/* bytes in if_u1 */
+-	unsigned int		if_seq;		/* cow fork mod counter */
++	unsigned int		if_seq;		/* fork mod counter */
+ 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
+ 	short			if_broot_bytes;	/* bytes allocated for root */
+ 	unsigned char		if_flags;	/* per-fork flags */
 -- 
-2.9.5
+2.17.2
