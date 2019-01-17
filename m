@@ -1,108 +1,241 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60352 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726119AbfAQRxg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Jan 2019 12:53:36 -0500
-Date: Thu, 17 Jan 2019 12:53:33 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/4] xfs: validate writeback mapping using data fork seq
- counter
-Message-ID: <20190117175333.GE37591@bfoster>
-References: <20190111123032.31538-1-bfoster@redhat.com>
- <20190111123032.31538-4-bfoster@redhat.com>
- <20190113214905.GB4205@dastard>
- <20190114153422.GA3148@bfoster>
- <20190117144728.GA28225@infradead.org>
- <20190117163516.GD37591@bfoster>
- <20190117164148.GA15959@infradead.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:42574 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726883AbfAQSFV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Jan 2019 13:05:21 -0500
+Date: Thu, 17 Jan 2019 10:05:15 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 07/12] xfs: refactor eofblocks inode match code
+Message-ID: <20190117180515.GD4424@magnolia>
+References: <154630901076.16693.13111277988041606505.stgit@magnolia>
+ <154630905381.16693.3528654270887956753.stgit@magnolia>
+ <c645b822-405e-cc3a-15e1-62a099e300b2@suse.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20190117164148.GA15959@infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <c645b822-405e-cc3a-15e1-62a099e300b2@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 17, 2019 at 08:41:48AM -0800, Christoph Hellwig wrote:
-> On Thu, Jan 17, 2019 at 11:35:17AM -0500, Brian Foster wrote:
-> > Hmm, it would be nice if these fixes were separate from the whole
-> > always_cow thing. Some initial thoughts on a quick look through the
-> > first few patches on the v3 post:
+On Wed, Jan 02, 2019 at 11:50:58AM +0200, Nikolay Borisov wrote:
 > 
-> We can always skip the last patch.  It just helps to really nicely
-> show a lot of the problems that are otherwise hard to reproduce, but
-> already exist.
 > 
-> FYI, I just resent it like a minute before reading your mail.
-> 
-> > 1. It's probably best to drop your xfs_trim_extent_eof() changes as I
-> > have a stable patch to add a couple more calls and then I subsequently
-> > remove the whole thing going forward. Refactoring it is just churn at
-> > this point.
-> 
-> Sure.
-> 
-> > 2. The whole explicit race with truncate detection looks rather involved
-> > to me at first glance. I'm trying to avoid relying on i_size at all for
-> > this because it doesn't seem like a reliable approach. E.g., Dave
-> > described a hole punch vector for the same fundamental problem this
-> > series is trying to address:
+> On 1.01.19 г. 4:17 ч., Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> >   https://marc.info/?l=linux-xfs&m=154692641021480&w=2
+> > Refactor the code that determines if an inode matches an eofblocks
+> > structure into a helper, since we already use it twice and we're about
+> > to use it a third time.
 > > 
-> > I don't think looking at i_size really helps us with that, but I could
-> > be missing other changes in the cow series.
-> 
-> The i_size detection isn't new in this series, just slightly moved
-> around.  And it really is just intended as an optimization to not
-> even bother if we are beyond i_size.
-> 
-
-Ok, then I probably need to take a closer look. The purpose of these
-patches are to remove it and replace it with something that
-fundamentally addresses the underlying problem (i.e., the fork change
-detection).
-
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_icache.c |  146 ++++++++++++++++++++++++++-------------------------
+> >  1 file changed, 74 insertions(+), 72 deletions(-)
 > > 
-> > In general I'm looking at putting something like this in
-> > xfs_iomap_write_allocate() once the data fork sequence number tracking
-> > is enabled:
 > > 
-> >                         /*
-> >                          * Now that we have ILOCK we must account for the fact
-> >                          * that the fork (and thus our mapping) could have
-> >                          * changed while the inode was unlocked. If the fork
-> >                          * has changed, trim the caller's mapping to the
-> >                          * current extent in the fork.
+> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > index 7e031eb6f048..c1b457ba1b7b 100644
+> > --- a/fs/xfs/xfs_icache.c
+> > +++ b/fs/xfs/xfs_icache.c
+> > @@ -27,6 +27,76 @@
+> >  #include <linux/freezer.h>
+> >  #include <linux/iversion.h>
+> >  
+> > +STATIC int
+> > +xfs_inode_match_id(
 > 
-> We don't even look at the callers mapping except for the range to
-> cover.  And that is how e.g. direct I/O also works and a good thing
-> as far as I can tell.  To make use of the previous mapping we'd have
-> to rewrite xfs_bmapi_write.
+> This is a predicate so make it bool
 > 
+> > +	struct xfs_inode	*ip,
+> > +	struct xfs_eofblocks	*eofb)
+> > +{
+> > +	if ((eofb->eof_flags & XFS_EOF_FLAGS_UID) &&
+> > +	    !uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
+> > +		return 0;
+> > +
+> > +	if ((eofb->eof_flags & XFS_EOF_FLAGS_GID) &&
+> > +	    !gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
+> > +		return 0;
+> > +
+> > +	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+> > +	    xfs_get_projid(ip) != eofb->eof_prid)
+> > +		return 0;
+> > +
+> > +	return 1;
+> > +}
+> > +
+> > +/*
+> > + * A union-based inode filtering algorithm. Process the inode if any of the
+> > + * criteria match. This is for global/internal scans only.
+> > + */
+> > +STATIC int
+> 
+> ditto
 
-Yes, that's really just semantics. The purpose of the lookup in this
-context is to trim down the range to map. We can only guarantee the
-range specified by the current page once we cycle ilock, so we have to
-consider that any part of the range external to that has become invalid.
-This change to xfs_iomap_write_allocate() doesn't introduce any new way
-of using the caller's imap that isn't already done by the existing code.
-We just access the inode fork to validate the range rather than the
-inode size because the caller already gives us information to confirm
-whether the range has been invalidated (the *seq param) whereas the
-i_size could have been truncated down and up since the last time we
-checked it.
+The originals returned int, but sure, I'll convert them to bool.
 
-> If we want to be able to reuse existing mapings I think the sequences
-> are helping us a bit, but a lot more work is needed, and it should
-> be done in a generic way and not just in this path.
+--D
 
-I'm assuming that a correct solution will lend itself to cleaning up
-much of this code to do things like reduce the need for validations,
-provide commonality with other paths, clean up layering, etc., but I'm
-not worrying about that until we're confident that this is a correct and
-viable approach.
-
-Brian
+> > +xfs_inode_match_id_union(
+> > +	struct xfs_inode	*ip,
+> > +	struct xfs_eofblocks	*eofb)
+> > +{
+> > +	if ((eofb->eof_flags & XFS_EOF_FLAGS_UID) &&
+> > +	    uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
+> > +		return 1;
+> > +
+> > +	if ((eofb->eof_flags & XFS_EOF_FLAGS_GID) &&
+> > +	    gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
+> > +		return 1;
+> > +
+> > +	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+> > +	    xfs_get_projid(ip) == eofb->eof_prid)
+> > +		return 1;
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +/* Does this inode match the given parameters? */
+> > +STATIC bool
+> > +xfs_inode_matches_eofb(
+> > +	struct xfs_inode	*ip,
+> > +	struct xfs_eofblocks	*eofb)
+> > +{
+> > +	int			match;
+> > +
+> > +	if (!eofb)
+> > +		return true;
+> > +
+> > +	if (eofb->eof_flags & XFS_EOF_FLAGS_UNION)
+> > +		match = xfs_inode_match_id_union(ip, eofb);
+> > +	else
+> > +		match = xfs_inode_match_id(ip, eofb);
+> > +	if (!match)
+> > +		return false;
+> > +
+> > +	/* skip the inode if the file size is too small */
+> > +	if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
+> > +	    XFS_ISIZE(ip) < eofb->eof_min_file_size)
+> > +		return false;
+> > +
+> > +	return true;
+> > +}
+> > +
+> >  /*
+> >   * Allocate and initialise an xfs_inode.
+> >   */
+> > @@ -1424,50 +1494,6 @@ xfs_reclaim_inodes_count(
+> >  	return reclaimable;
+> >  }
+> >  
+> > -STATIC int
+> > -xfs_inode_match_id(
+> > -	struct xfs_inode	*ip,
+> > -	struct xfs_eofblocks	*eofb)
+> > -{
+> > -	if ((eofb->eof_flags & XFS_EOF_FLAGS_UID) &&
+> > -	    !uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
+> > -		return 0;
+> > -
+> > -	if ((eofb->eof_flags & XFS_EOF_FLAGS_GID) &&
+> > -	    !gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
+> > -		return 0;
+> > -
+> > -	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+> > -	    xfs_get_projid(ip) != eofb->eof_prid)
+> > -		return 0;
+> > -
+> > -	return 1;
+> > -}
+> > -
+> > -/*
+> > - * A union-based inode filtering algorithm. Process the inode if any of the
+> > - * criteria match. This is for global/internal scans only.
+> > - */
+> > -STATIC int
+> > -xfs_inode_match_id_union(
+> > -	struct xfs_inode	*ip,
+> > -	struct xfs_eofblocks	*eofb)
+> > -{
+> > -	if ((eofb->eof_flags & XFS_EOF_FLAGS_UID) &&
+> > -	    uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
+> > -		return 1;
+> > -
+> > -	if ((eofb->eof_flags & XFS_EOF_FLAGS_GID) &&
+> > -	    gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
+> > -		return 1;
+> > -
+> > -	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+> > -	    xfs_get_projid(ip) == eofb->eof_prid)
+> > -		return 1;
+> > -
+> > -	return 0;
+> > -}
+> > -
+> >  STATIC int
+> >  xfs_inode_free_eofblocks(
+> >  	struct xfs_inode	*ip,
+> > @@ -1476,7 +1502,6 @@ xfs_inode_free_eofblocks(
+> >  {
+> >  	int ret = 0;
+> >  	struct xfs_eofblocks *eofb = args;
+> > -	int match;
+> >  
+> >  	if (!xfs_can_free_eofblocks(ip, false)) {
+> >  		/* inode could be preallocated or append-only */
+> > @@ -1493,19 +1518,8 @@ xfs_inode_free_eofblocks(
+> >  	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY))
+> >  		return 0;
+> >  
+> > -	if (eofb) {
+> > -		if (eofb->eof_flags & XFS_EOF_FLAGS_UNION)
+> > -			match = xfs_inode_match_id_union(ip, eofb);
+> > -		else
+> > -			match = xfs_inode_match_id(ip, eofb);
+> > -		if (!match)
+> > -			return 0;
+> > -
+> > -		/* skip the inode if the file size is too small */
+> > -		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
+> > -		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
+> > -			return 0;
+> > -	}
+> > +	if (!xfs_inode_matches_eofb(ip, eofb))
+> > +		return 0;
+> >  
+> >  	/*
+> >  	 * If the caller is waiting, return -EAGAIN to keep the background
+> > @@ -1766,25 +1780,13 @@ xfs_inode_free_cowblocks(
+> >  {
+> >  	struct xfs_eofblocks	*eofb = args;
+> >  	uint			lock_mode = 0;
+> > -	int			match;
+> >  	int			ret = 0;
+> >  
+> >  	if (!xfs_prep_free_cowblocks(ip))
+> >  		return 0;
+> >  
+> > -	if (eofb) {
+> > -		if (eofb->eof_flags & XFS_EOF_FLAGS_UNION)
+> > -			match = xfs_inode_match_id_union(ip, eofb);
+> > -		else
+> > -			match = xfs_inode_match_id(ip, eofb);
+> > -		if (!match)
+> > -			return 0;
+> > -
+> > -		/* skip the inode if the file size is too small */
+> > -		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
+> > -		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
+> > -			return 0;
+> > -	}
+> > +	if (!xfs_inode_matches_eofb(ip, eofb))
+> > +		return 0;
+> >  
+> >  	/*
+> >  	 * Free the CoW blocks.  We don't need to lock the inode if we're in
+> > 
+> > 
