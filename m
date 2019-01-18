@@ -1,55 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44980 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728673AbfAUISy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Jan 2019 03:18:54 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V14 02/18] block: don't use bio->bi_vcnt to figure out segment number
-Date: Mon, 21 Jan 2019 16:17:49 +0800
-Message-Id: <20190121081805.32727-3-ming.lei@redhat.com>
-In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
-References: <20190121081805.32727-1-ming.lei@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:40090 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727177AbfARLuf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Jan 2019 06:50:35 -0500
+Date: Fri, 18 Jan 2019 03:50:34 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 3/5] xfs: validate writeback mapping using data fork
+ seq counter
+Message-ID: <20190118115034.GB7807@infradead.org>
+References: <20190117192004.49346-1-bfoster@redhat.com>
+ <20190117192004.49346-4-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190117192004.49346-4-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-It is wrong to use bio->bi_vcnt to figure out how many segments
-there are in the bio even though CLONED flag isn't set on this bio,
-because this bio may be splitted or advanced.
+On Thu, Jan 17, 2019 at 02:20:02PM -0500, Brian Foster wrote:
+> The writeback code caches the current extent mapping across multiple
+> xfs_do_writepage() calls to avoid repeated lookups for sequential
+> pages backed by the same extent. This is known to be slightly racy
+> with extent fork changes in certain difficult to reproduce
+> scenarios. The cached extent is trimmed to within EOF to help avoid
+> the most common vector for this problem via speculative
+> preallocation management, but this is a band-aid that does not
+> address the fundamental problem.
+> 
+> Now that we have an xfs_ifork sequence counter mechanism used to
+> facilitate COW writeback, we can use the same mechanism to validate
+> consistency between the data fork and cached writeback mappings. On
+> its face, this is somewhat of a big hammer approach because any
+> change to the data fork invalidates any mapping currently cached by
+> a writeback in progress regardless of whether the data fork change
+> overlaps with the range under writeback. In practice, however, the
+> impact of this approach is minimal in most cases.
+> 
+> First, data fork changes (delayed allocations) caused by sustained
+> sequential buffered writes are amortized across speculative
+> preallocations. This means that a cached mapping won't be
+> invalidated by each buffered write of a common file copy workload,
+> but rather only on less frequent allocation events. Second, the
+> extent tree is always entirely in-core so an additional lookup of a
+> usable extent mostly costs a shared ilock cycle and in-memory tree
+> lookup. This means that a cached mapping reval is relatively cheap
+> compared to the I/O itself. Third, spurious invalidations don't
+> impact ioend construction. This means that even if the same extent
+> is revalidated multiple times across multiple writepage instances,
+> we still construct and submit the same size ioend (and bio) if the
+> blocks are physically contiguous.
+> 
+> Update struct xfs_writepage_ctx with a new field to hold the
+> sequence number of the data fork associated with the currently
+> cached mapping. Check the wpc seqno against the data fork when the
+> mapping is validated and reestablish the mapping whenever the fork
+> has changed since the mapping was cached. This ensures that
+> writeback always uses a valid extent mapping and thus prevents lost
+> writebacks and stale delalloc block problems.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_aops.c  | 60 ++++++++++++++++++++++++++++++++++++----------
+>  fs/xfs/xfs_iomap.c |  5 ++--
+>  2 files changed, 49 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index d9048bcea49c..649e4ad76add 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -29,6 +29,7 @@
+>  struct xfs_writepage_ctx {
+>  	struct xfs_bmbt_irec    imap;
+>  	unsigned int		io_type;
+> +	unsigned int		data_seq;
+>  	unsigned int		cow_seq;
+>  	struct xfs_ioend	*ioend;
+>  };
+> @@ -301,6 +302,42 @@ xfs_end_bio(
+>  		xfs_destroy_ioend(ioend, blk_status_to_errno(bio->bi_status));
+>  }
+>  
+> +/*
+> + * Fast revalidation of the cached writeback mapping. Return true if the current
+> + * mapping is valid, false otherwise.
+> + */
+> +static bool
+> +xfs_imap_valid(
+> +	struct xfs_writepage_ctx	*wpc,
+> +	struct xfs_inode		*ip,
+> +	xfs_fileoff_t			offset_fsb)
+> +{
+> +	/*
+> +	 * If this is a COW mapping, it is sufficient to check that the mapping
+> +	 * covers the offset. Be careful to check this first because the caller
+> +	 * can revalidate a COW mapping without updating the data seqno.
+> +	 */
+> +	if (offset_fsb < wpc->imap.br_startoff ||
+> +	    offset_fsb >= wpc->imap.br_startoff + wpc->imap.br_blockcount)
+> +		return false;
+> +	if (wpc->io_type == XFS_IO_COW)
+> +		return true;
 
-So always use bio_segments() in blk_recount_segments(), and it shouldn't
-cause any performance loss now because the physical segment number is figured
-out in blk_queue_split() and BIO_SEG_VALID is set meantime since
-bdced438acd83ad83a6c ("block: setup bi_phys_segments after splitting").
+Maybe the comment should move below the first range check? 
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
+Otherwise looks good:
+
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Fixes: 76d8137a3113 ("blk-merge: recaculate segment if it isn't less than max segments")
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- block/blk-merge.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
-
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 71e9ac03f621..f85d878f313d 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -367,13 +367,7 @@ void blk_recalc_rq_segments(struct request *rq)
- 
- void blk_recount_segments(struct request_queue *q, struct bio *bio)
- {
--	unsigned short seg_cnt;
--
--	/* estimate segment number by bi_vcnt for non-cloned bio */
--	if (bio_flagged(bio, BIO_CLONED))
--		seg_cnt = bio_segments(bio);
--	else
--		seg_cnt = bio->bi_vcnt;
-+	unsigned short seg_cnt = bio_segments(bio);
- 
- 	if (test_bit(QUEUE_FLAG_NO_SG_MERGE, &q->queue_flags) &&
- 			(seg_cnt < queue_max_segments(q)))
--- 
-2.9.5
