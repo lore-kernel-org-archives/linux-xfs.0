@@ -1,69 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57138 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728067AbfAUITz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Jan 2019 03:19:55 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V14 05/18] block: introduce bio_for_each_mp_bvec() and rq_for_each_mp_bvec()
-Date: Mon, 21 Jan 2019 16:17:52 +0800
-Message-Id: <20190121081805.32727-6-ming.lei@redhat.com>
-In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
-References: <20190121081805.32727-1-ming.lei@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:37170 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727346AbfARQbd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Jan 2019 11:31:33 -0500
+Date: Fri, 18 Jan 2019 08:31:32 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 5/5] xfs: revalidate imap properly before writeback
+ delalloc conversion
+Message-ID: <20190118163132.GA6318@infradead.org>
+References: <20190117192004.49346-1-bfoster@redhat.com>
+ <20190117192004.49346-6-bfoster@redhat.com>
+ <20190118115937.GD7807@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190118115937.GD7807@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-bio_for_each_mp_bvec() is used for iterating over multi-page bvec for bio
-split & merge code.
+On Fri, Jan 18, 2019 at 03:59:37AM -0800, Christoph Hellwig wrote:
+> xfs_bmapi_write will always do a xfs_iext_lookup_extent for the
+> passed in blocks anyway.  So this trimming logic should move into
+> xfs_bmapi_write to ensure it does the right thing, instead of papering
+> over the logic in xfs_bmapi_write in the caller with another lookup.
+> 
+> I think the improved XFS_BMAPI_DELALLOC handling in this patch:
+> 
+>    http://git.infradead.org/users/hch/xfs.git/commitdiff/553fed9ce7695df081779c6a9a205af4142b2a06
+> 
+> is the right answer, as writeback really should only ever convert
+> existing delalloc extents, and I'd much rather rely on that rather than
+> piling hacks of hacks to feed the right range into a function that must
+> do a lookup in the extent tree anyway.
 
-rq_for_each_mp_bvec() can be used for drivers which may handle the
-multi-page bvec directly, so far loop is one perfect use case.
+FYI, here is a tree that rebases my patches on top of your (minus this
+one) and also drops the internal i_size checks, although it still keeps
+the initial one for the truncate fast path.  Testing is still ongoing,
+and for the writeback issue you probably only need the first three
+of my patches:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- include/linux/bio.h    | 10 ++++++++++
- include/linux/blkdev.h |  4 ++++
- 2 files changed, 14 insertions(+)
-
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 72b4f7be2106..730288145568 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -156,6 +156,16 @@ static inline void bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
- #define bio_for_each_segment(bvl, bio, iter)				\
- 	__bio_for_each_segment(bvl, bio, iter, (bio)->bi_iter)
- 
-+#define __bio_for_each_mp_bvec(bvl, bio, iter, start)		\
-+	for (iter = (start);						\
-+	     (iter).bi_size &&						\
-+		((bvl = mp_bvec_iter_bvec((bio)->bi_io_vec, (iter))), 1); \
-+	     bio_advance_iter((bio), &(iter), (bvl).bv_len))
-+
-+/* iterate over multi-page bvec */
-+#define bio_for_each_mp_bvec(bvl, bio, iter)			\
-+	__bio_for_each_mp_bvec(bvl, bio, iter, (bio)->bi_iter)
-+
- #define bio_iter_last(bvec, iter) ((iter).bi_size == (bvec).bv_len)
- 
- static inline unsigned bio_segments(struct bio *bio)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 338604dff7d0..6ebae3ee8f44 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -797,6 +797,10 @@ struct req_iterator {
- 	__rq_for_each_bio(_iter.bio, _rq)			\
- 		bio_for_each_segment(bvl, _iter.bio, _iter.iter)
- 
-+#define rq_for_each_mp_bvec(bvl, _rq, _iter)			\
-+	__rq_for_each_bio(_iter.bio, _rq)			\
-+		bio_for_each_mp_bvec(bvl, _iter.bio, _iter.iter)
-+
- #define rq_iter_last(bvec, _iter)				\
- 		(_iter.bio->bi_next == NULL &&			\
- 		 bio_iter_last(bvec, _iter.iter))
--- 
-2.9.5
+	http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-mapping-validation
