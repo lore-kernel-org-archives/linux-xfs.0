@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49184 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726442AbfARGMZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Jan 2019 01:12:25 -0500
-Subject: Re: [PATCH v2 3/5] xfs: validate writeback mapping using data fork
- seq counter
+Received: from aserp2130.oracle.com ([141.146.126.79]:33290 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726962AbfARGtJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Jan 2019 01:49:09 -0500
+Subject: Re: [PATCH v2 4/5] xfs: remove superfluous writeback mapping eof
+ trimming
 References: <20190117192004.49346-1-bfoster@redhat.com>
- <20190117192004.49346-4-bfoster@redhat.com>
+ <20190117192004.49346-5-bfoster@redhat.com>
 From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <d761eaea-4114-95f3-e21a-5ff74e8cfdae@oracle.com>
-Date: Thu, 17 Jan 2019 23:12:19 -0700
+Message-ID: <6798de3d-def7-c75d-a61a-23dc04f874b1@oracle.com>
+Date: Thu, 17 Jan 2019 23:48:58 -0700
 MIME-Version: 1.0
-In-Reply-To: <20190117192004.49346-4-bfoster@redhat.com>
+In-Reply-To: <20190117192004.49346-5-bfoster@redhat.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -21,197 +21,96 @@ List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
 
+
 On 1/17/19 12:20 PM, Brian Foster wrote:
-> The writeback code caches the current extent mapping across multiple
-> xfs_do_writepage() calls to avoid repeated lookups for sequential
-> pages backed by the same extent. This is known to be slightly racy
-> with extent fork changes in certain difficult to reproduce
-> scenarios. The cached extent is trimmed to within EOF to help avoid
-> the most common vector for this problem via speculative
-> preallocation management, but this is a band-aid that does not
-> address the fundamental problem.
-> 
-> Now that we have an xfs_ifork sequence counter mechanism used to
-> facilitate COW writeback, we can use the same mechanism to validate
-> consistency between the data fork and cached writeback mappings. On
-> its face, this is somewhat of a big hammer approach because any
-> change to the data fork invalidates any mapping currently cached by
-> a writeback in progress regardless of whether the data fork change
-> overlaps with the range under writeback. In practice, however, the
-> impact of this approach is minimal in most cases.
-> 
-> First, data fork changes (delayed allocations) caused by sustained
-> sequential buffered writes are amortized across speculative
-> preallocations. This means that a cached mapping won't be
-> invalidated by each buffered write of a common file copy workload,
-> but rather only on less frequent allocation events. Second, the
-> extent tree is always entirely in-core so an additional lookup of a
-> usable extent mostly costs a shared ilock cycle and in-memory tree
-> lookup. This means that a cached mapping reval is relatively cheap
-> compared to the I/O itself. Third, spurious invalidations don't
-> impact ioend construction. This means that even if the same extent
-> is revalidated multiple times across multiple writepage instances,
-> we still construct and submit the same size ioend (and bio) if the
-> blocks are physically contiguous.
-> 
-> Update struct xfs_writepage_ctx with a new field to hold the
-> sequence number of the data fork associated with the currently
-> cached mapping. Check the wpc seqno against the data fork when the
-> mapping is validated and reestablish the mapping whenever the fork
-> has changed since the mapping was cached. This ensures that
-> writeback always uses a valid extent mapping and thus prevents lost
-> writebacks and stale delalloc block problems.
+> Now that the cached writeback mapping is explicitly invalidated on
+> data fork changes, the EOF trimming band-aid is no longer necessary.
+> Remove xfs_trim_extent_eof() as well since it has no other users.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->   fs/xfs/xfs_aops.c  | 60 ++++++++++++++++++++++++++++++++++++----------
->   fs/xfs/xfs_iomap.c |  5 ++--
->   2 files changed, 49 insertions(+), 16 deletions(-)
+>   fs/xfs/libxfs/xfs_bmap.c | 11 -----------
+>   fs/xfs/libxfs/xfs_bmap.h |  1 -
+>   fs/xfs/xfs_aops.c        | 15 ---------------
+>   3 files changed, 27 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index d9048bcea49c..649e4ad76add 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -29,6 +29,7 @@
->   struct xfs_writepage_ctx {
->   	struct xfs_bmbt_irec    imap;
->   	unsigned int		io_type;
-> +	unsigned int		data_seq;
->   	unsigned int		cow_seq;
->   	struct xfs_ioend	*ioend;
->   };
-> @@ -301,6 +302,42 @@ xfs_end_bio(
->   		xfs_destroy_ioend(ioend, blk_status_to_errno(bio->bi_status));
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 332eefa2700b..4c73927819c2 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3685,17 +3685,6 @@ xfs_trim_extent(
+>   	}
 >   }
 >   
-> +/*
-> + * Fast revalidation of the cached writeback mapping. Return true if the current
-> + * mapping is valid, false otherwise.
-> + */
-> +static bool
-> +xfs_imap_valid(
-> +	struct xfs_writepage_ctx	*wpc,
-> +	struct xfs_inode		*ip,
-> +	xfs_fileoff_t			offset_fsb)
-> +{
-> +	/*
-> +	 * If this is a COW mapping, it is sufficient to check that the mapping
-> +	 * covers the offset. Be careful to check this first because the caller
-> +	 * can revalidate a COW mapping without updating the data seqno.
-> +	 */
-> +	if (offset_fsb < wpc->imap.br_startoff ||
-> +	    offset_fsb >= wpc->imap.br_startoff + wpc->imap.br_blockcount)
-> +		return false;
-> +	if (wpc->io_type == XFS_IO_COW)
-> +		return true;
-> +
-> +	/*
-> +	 * This is not a COW mapping. Check the sequence number of the data fork
-> +	 * because concurrent changes could have invalidated the extent. Check
-> +	 * the COW fork because concurrent changes since the last time we
-> +	 * checked (and found nothing at this offset) could have added
-> +	 * overlapping blocks.
-> +	 */
-> +	if (wpc->data_seq != READ_ONCE(ip->i_df.if_seq))
-> +		return false;
-> +	if (xfs_inode_has_cow_data(ip) &&
-> +	    wpc->cow_seq != READ_ONCE(ip->i_cowfp->if_seq))
-> +		return false;
-> +	return true;
-> +}
-> +
->   STATIC int
->   xfs_map_blocks(
->   	struct xfs_writepage_ctx *wpc,
-> @@ -315,9 +352,11 @@ xfs_map_blocks(
->   	struct xfs_bmbt_irec	imap;
->   	int			whichfork = XFS_DATA_FORK;
->   	struct xfs_iext_cursor	icur;
-> -	bool			imap_valid;
->   	int			error = 0;
+> -/* trim extent to within eof */
+> -void
+> -xfs_trim_extent_eof(
+> -	struct xfs_bmbt_irec	*irec,
+> -	struct xfs_inode	*ip)
+> -
+> -{
+> -	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
+> -					      i_size_read(VFS_I(ip))));
+> -}
+> -
+>   /*
+>    * Trim the returned map to the required bounds
+>    */
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 09d3ea97cc15..b4ff710d7250 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -181,7 +181,6 @@ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
 >   
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		return -EIO;
-> +
->   	/*
->   	 * We have to make sure the cached mapping is within EOF to protect
->   	 * against eofblocks trimming on file release leaving us with a stale
-> @@ -346,17 +385,9 @@ xfs_map_blocks(
->   	 * against concurrent updates and provides a memory barrier on the way
->   	 * out that ensures that we always see the current value.
->   	 */
-> -	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
-> -		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
-> -	if (imap_valid &&
-> -	    (!xfs_inode_has_cow_data(ip) ||
-> -	     wpc->io_type == XFS_IO_COW ||
-> -	     wpc->cow_seq == READ_ONCE(ip->i_cowfp->if_seq)))
-> +	if (xfs_imap_valid(wpc, ip, offset_fsb))
->   		return 0;
+>   void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
+>   		xfs_filblks_t len);
+> -void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
+>   int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+>   int	xfs_bmap_set_attrforkoff(struct xfs_inode *ip, int size, int *version);
+>   void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 649e4ad76add..09d8f7690e9e 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -357,19 +357,6 @@ xfs_map_blocks(
+>   	if (XFS_FORCED_SHUTDOWN(mp))
+>   		return -EIO;
 >   
-> -	if (XFS_FORCED_SHUTDOWN(mp))
-> -		return -EIO;
+> -	/*
+> -	 * We have to make sure the cached mapping is within EOF to protect
+> -	 * against eofblocks trimming on file release leaving us with a stale
+> -	 * mapping. Otherwise, a page for a subsequent file extending buffered
+> -	 * write could get picked up by this writeback cycle and written to the
+> -	 * wrong blocks.
+> -	 *
+> -	 * Note that what we really want here is a generic mapping invalidation
+> -	 * mechanism to protect us from arbitrary extent modifying contexts, not
+> -	 * just eofblocks.
+> -	 */
+> -	xfs_trim_extent_eof(&wpc->imap, ip);
 > -
 >   	/*
->   	 * If we don't have a valid map, now it's time to get a new one for this
->   	 * offset.  This will convert delayed allocations (including COW ones)
-> @@ -403,9 +434,10 @@ xfs_map_blocks(
+>   	 * COW fork blocks can overlap data fork blocks even if the blocks
+>   	 * aren't shared.  COW I/O always takes precedent, so we must always
+> @@ -482,7 +469,6 @@ xfs_map_blocks(
 >   	}
 >   
->   	/*
-> -	 * Map valid and no COW extent in the way?  We're done.
-> +	 * No COW extent overlap. Revalidate now that we may have updated
-> +	 * ->cow_seq. If the data mapping is still valid, we're done.
->   	 */
-> -	if (imap_valid) {
-> +	if (xfs_imap_valid(wpc, ip, offset_fsb)) {
->   		xfs_iunlock(ip, XFS_ILOCK_SHARED);
->   		return 0;
->   	}
-> @@ -417,6 +449,7 @@ xfs_map_blocks(
->   	 */
->   	if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap))
->   		imap.br_startoff = end_fsb;	/* fake a hole past EOF */
-> +	wpc->data_seq = READ_ONCE(ip->i_df.if_seq);
->   	xfs_iunlock(ip, XFS_ILOCK_SHARED);
->   
->   	if (imap.br_startoff > offset_fsb) {
-> @@ -454,7 +487,8 @@ xfs_map_blocks(
+>   	wpc->imap = imap;
+> -	xfs_trim_extent_eof(&wpc->imap, ip);
+>   	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
 >   	return 0;
 >   allocate_blocks:
->   	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap,
-> -			&wpc->cow_seq);
-> +			whichfork == XFS_COW_FORK ?
-> +					 &wpc->cow_seq : &wpc->data_seq);
->   	if (error)
->   		return error;
+> @@ -494,7 +480,6 @@ xfs_map_blocks(
 >   	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 27c93b5f029d..ab69caa685b4 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -681,7 +681,7 @@ xfs_iomap_write_allocate(
->   	int		whichfork,
->   	xfs_off_t	offset,
->   	xfs_bmbt_irec_t *imap,
-> -	unsigned int	*cow_seq)
-> +	unsigned int	*seq)
->   {
->   	xfs_mount_t	*mp = ip->i_mount;
->   	struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
-> @@ -797,8 +797,7 @@ xfs_iomap_write_allocate(
->   			if (error)
->   				goto error0;
->   
-> -			if (whichfork == XFS_COW_FORK)
-> -				*cow_seq = READ_ONCE(ifp->if_seq);
-> +			*seq = READ_ONCE(ifp->if_seq);
->   			xfs_iunlock(ip, XFS_ILOCK_EXCL);
->   		}
->   
+>   	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+>   	wpc->imap = imap;
+> -	xfs_trim_extent_eof(&wpc->imap, ip);
+>   	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+>   	return 0;
+>   }
 > 
 
-Looks good, I think the new version is a lot cleaner with the helper 
-routine.  Thx!
+I'll skip this one, it sounds from the last review we decided not to 
+keep it.  Thanks though!
 
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Allison
