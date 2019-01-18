@@ -1,111 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61241 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43974 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727363AbfAQTUH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Jan 2019 14:20:07 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        id S1725982AbfARLKm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 18 Jan 2019 06:10:42 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1F8ADC0740E7
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Jan 2019 19:20:07 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C9F7B600C6
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Jan 2019 19:20:06 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 4/5] xfs: remove superfluous writeback mapping eof trimming
-Date: Thu, 17 Jan 2019 14:20:03 -0500
-Message-Id: <20190117192004.49346-5-bfoster@redhat.com>
-In-Reply-To: <20190117192004.49346-1-bfoster@redhat.com>
-References: <20190117192004.49346-1-bfoster@redhat.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id 3CD03C056796
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Jan 2019 11:10:42 +0000 (UTC)
+From: Marco Benatto <mbenatto@redhat.com>
+Subject: [PATCH] xfs: Introduce XFS_PTAG_VERIFIER_ERROR panic mask
+Date: Fri, 18 Jan 2019 06:10:37 -0500
+Message-Id: <1547809837-8147-1-git-send-email-mbenatto@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, mbenatto@redhat.com
+Cc: sandeen@redhat.com
 
-Now that the cached writeback mapping is explicitly invalidated on
-data fork changes, the EOF trimming band-aid is no longer necessary.
-Remove xfs_trim_extent_eof() as well since it has no other users.
+Currently we have a few PTAGs in place allowing us
+to transform a filesystem error in a BUG() call. However
+we still none of them could perform such task during
+XFS buffer verifier error, this patche introduces the
+XFS_PTAG_VERIFIER_ERROR with value 0x00000100. When
+fs.xfs.panic_mask sysctl knob is set to XFS_PTAG_VERIFIER_ERROR
+XFS will convert any error detected by buffer verifiers into a
+kernel panic.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Marco Benatto <mbenatto@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 11 -----------
- fs/xfs/libxfs/xfs_bmap.h |  1 -
- fs/xfs/xfs_aops.c        | 15 ---------------
- 3 files changed, 27 deletions(-)
+ Documentation/filesystems/xfs.txt | 3 ++-
+ fs/xfs/xfs_error.c                | 2 +-
+ fs/xfs/xfs_error.h                | 1 +
+ fs/xfs/xfs_globals.c              | 2 +-
+ 4 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 332eefa2700b..4c73927819c2 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3685,17 +3685,6 @@ xfs_trim_extent(
- 	}
- }
+diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+index 9ccfd1b..a5cbb5e 100644
+--- a/Documentation/filesystems/xfs.txt
++++ b/Documentation/filesystems/xfs.txt
+@@ -272,7 +272,7 @@ The following sysctls are available for the XFS filesystem:
+ 		XFS_ERRLEVEL_LOW:       1
+ 		XFS_ERRLEVEL_HIGH:      5
  
--/* trim extent to within eof */
--void
--xfs_trim_extent_eof(
--	struct xfs_bmbt_irec	*irec,
--	struct xfs_inode	*ip)
--
--{
--	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
--					      i_size_read(VFS_I(ip))));
--}
--
- /*
-  * Trim the returned map to the required bounds
-  */
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 09d3ea97cc15..b4ff710d7250 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -181,7 +181,6 @@ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
+-  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 255)
++  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 256)
+ 	Causes certain error conditions to call BUG(). Value is a bitmask;
+ 	OR together the tags which represent errors which should cause panics:
  
- void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
- 		xfs_filblks_t len);
--void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
- int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
- int	xfs_bmap_set_attrforkoff(struct xfs_inode *ip, int size, int *version);
- void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 649e4ad76add..09d8f7690e9e 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -357,19 +357,6 @@ xfs_map_blocks(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
+@@ -285,6 +285,7 @@ The following sysctls are available for the XFS filesystem:
+ 		XFS_PTAG_SHUTDOWN_IOERROR       0x00000020
+ 		XFS_PTAG_SHUTDOWN_LOGERROR      0x00000040
+ 		XFS_PTAG_FSBLOCK_ZERO           0x00000080
++		XFS_PTAG_VERIFIER_ERROR         0x00000100
  
--	/*
--	 * We have to make sure the cached mapping is within EOF to protect
--	 * against eofblocks trimming on file release leaving us with a stale
--	 * mapping. Otherwise, a page for a subsequent file extending buffered
--	 * write could get picked up by this writeback cycle and written to the
--	 * wrong blocks.
--	 *
--	 * Note that what we really want here is a generic mapping invalidation
--	 * mechanism to protect us from arbitrary extent modifying contexts, not
--	 * just eofblocks.
--	 */
--	xfs_trim_extent_eof(&wpc->imap, ip);
--
- 	/*
- 	 * COW fork blocks can overlap data fork blocks even if the blocks
- 	 * aren't shared.  COW I/O always takes precedent, so we must always
-@@ -482,7 +469,6 @@ xfs_map_blocks(
- 	}
+ 	This option is intended for debugging only.
  
- 	wpc->imap = imap;
--	xfs_trim_extent_eof(&wpc->imap, ip);
- 	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
- 	return 0;
- allocate_blocks:
-@@ -494,7 +480,6 @@ xfs_map_blocks(
- 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
- 	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
- 	wpc->imap = imap;
--	xfs_trim_extent_eof(&wpc->imap, ip);
- 	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
- 	return 0;
- }
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 9866f54..e2ef710 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -357,7 +357,7 @@ struct xfs_errortag_attr {
+ 	fa = failaddr ? failaddr : __return_address;
+ 	__xfs_buf_ioerror(bp, error, fa);
+ 
+-	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx %s",
++	xfs_alert_tag(mp, XFS_PTAG_VERIFIER_ERROR, "Metadata %s detected at %pS, %s block 0x%llx %s",
+ 		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
+ 		  fa, bp->b_ops->name, bp->b_bn, name);
+ 
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 246d3e9..602aa7d 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -98,5 +98,6 @@ extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
+ #define		XFS_PTAG_SHUTDOWN_IOERROR	0x00000020
+ #define		XFS_PTAG_SHUTDOWN_LOGERROR	0x00000040
+ #define		XFS_PTAG_FSBLOCK_ZERO		0x00000080
++#define		XFS_PTAG_VERIFIER_ERROR		0x00000100
+ 
+ #endif	/* __XFS_ERROR_H__ */
+diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+index 5169e84..d0d3773 100644
+--- a/fs/xfs/xfs_globals.c
++++ b/fs/xfs/xfs_globals.c
+@@ -16,7 +16,7 @@
+ 			  /*	MIN		DFLT		MAX	*/
+ 	.sgid_inherit	= {	0,		0,		1	},
+ 	.symlink_mode	= {	0,		0,		1	},
+-	.panic_mask	= {	0,		0,		255	},
++	.panic_mask	= {	0,		0,		256	},
+ 	.error_level	= {	0,		3,		11	},
+ 	.syncd_timer	= {	1*100,		30*100,		7200*100},
+ 	.stats_clear	= {	0,		0,		1	},
 -- 
-2.17.2
+1.8.3.1
