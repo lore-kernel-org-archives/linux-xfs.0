@@ -1,122 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22912 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35028 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728232AbfAUITe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Jan 2019 03:19:34 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V14 04/18] block: introduce multi-page bvec helpers
-Date: Mon, 21 Jan 2019 16:17:51 +0800
-Message-Id: <20190121081805.32727-5-ming.lei@redhat.com>
-In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
-References: <20190121081805.32727-1-ming.lei@redhat.com>
+        id S1728750AbfARSjS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 18 Jan 2019 13:39:18 -0500
+Date: Fri, 18 Jan 2019 13:39:15 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 5/5] xfs: revalidate imap properly before writeback
+ delalloc conversion
+Message-ID: <20190118183915.GB53532@bfoster>
+References: <20190117192004.49346-1-bfoster@redhat.com>
+ <20190117192004.49346-6-bfoster@redhat.com>
+ <20190118115937.GD7807@infradead.org>
+ <20190118163132.GA6318@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190118163132.GA6318@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-This patch introduces helpers of 'mp_bvec_iter_*' for multi-page bvec
-support.
+On Fri, Jan 18, 2019 at 08:31:32AM -0800, Christoph Hellwig wrote:
+> On Fri, Jan 18, 2019 at 03:59:37AM -0800, Christoph Hellwig wrote:
+> > xfs_bmapi_write will always do a xfs_iext_lookup_extent for the
+> > passed in blocks anyway.  So this trimming logic should move into
+> > xfs_bmapi_write to ensure it does the right thing, instead of papering
+> > over the logic in xfs_bmapi_write in the caller with another lookup.
+> > 
+> > I think the improved XFS_BMAPI_DELALLOC handling in this patch:
+> > 
+> >    http://git.infradead.org/users/hch/xfs.git/commitdiff/553fed9ce7695df081779c6a9a205af4142b2a06
+> > 
+> > is the right answer, as writeback really should only ever convert
+> > existing delalloc extents, and I'd much rather rely on that rather than
+> > piling hacks of hacks to feed the right range into a function that must
+> > do a lookup in the extent tree anyway.
+> 
+> FYI, here is a tree that rebases my patches on top of your (minus this
+> one) and also drops the internal i_size checks, although it still keeps
+> the initial one for the truncate fast path.  Testing is still ongoing,
+> and for the writeback issue you probably only need the first three
+> of my patches:
+> 
+> 	http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-mapping-validation
 
-The introduced helpers treate one bvec as real multi-page segment,
-which may include more than one pages.
+This doesn't really seem all that different to me. Rather than firm up
+the range in the caller, we turn XFS_BMAPI_DELALLOC into something that
+seemingly behaves a bit more like CONVERT_ONLY.
 
-The existed helpers of bvec_iter_* are interfaces for supporting current
-bvec iterator which is thought as single-page by drivers, fs, dm and
-etc. These introduced helpers will build single-page bvec in flight, so
-this way won't break current bio/bvec users, which needn't any change.
+A few notes/thoughts:
 
-Follows some multi-page bvec background:
+1. What's the purpose of the nimaps == 0 check in
+xfs_iomap_write_allocate()? If we got to this point with the page lock
+held, shouldn't we always expect to find something backing the current
+page?
 
-- bvecs stored in bio->bi_io_vec is always multi-page style
+2. If so, then it also seems that the whole "eof:" thing in
+xfs_map_blocks() should never happen for data forks. If that's the case,
+the use of the eof label there seems gratuitous.
 
-- bvec(struct bio_vec) represents one physically contiguous I/O
-  buffer, now the buffer may include more than one page after
-  multi-page bvec is supported, and all these pages represented
-  by one bvec is physically contiguous. Before multi-page bvec
-  support, at most one page is included in one bvec, we call it
-  single-page bvec.
+3. If the starting bno param to xfs_bmapi_write() lands in a hole (due
+to racing with a hole punch for example) and it finds some subsequent
+delalloc extent to convert in the requested range, the arithmetic in
+xfs_bmapi_trim_map() actually fabricates physical blocks for the hole
+portion of the range relative to the startblock of the converted
+delalloc extent. I don't think that causes a problem with the writeback
+code because the fabricated blocks are before the page offset, but those
+semantics are insane. I think you need to do something like fix up
+xfs_bmapi_write() to return the actual converted mapping and make sure
+xfs_iomap_write_allocate() handles that it might start beyond
+map_start_fsb.
 
-- .bv_page of the bvec points to the 1st page in the multi-page bvec
-
-- .bv_offset of the bvec is the offset of the buffer in the bvec
-
-The effect on the current drivers/filesystem/dm/bcache/...:
-
-- almost everyone supposes that one bvec only includes one single
-  page, so we keep the sp interface not changed, for example,
-  bio_for_each_segment() still returns single-page bvec
-
-- bio_for_each_segment_all() will return single-page bvec too
-
-- during iterating, iterator variable(struct bvec_iter) is always
-  updated in multi-page bvec style, and bvec_iter_advance() is kept
-  not changed
-
-- returned(copied) single-page bvec is built in flight by bvec
-  helpers from the stored multi-page bvec
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- include/linux/bvec.h | 30 +++++++++++++++++++++++++++---
- 1 file changed, 27 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-index ba0ae40e77c9..0ae729b1c9fe 100644
---- a/include/linux/bvec.h
-+++ b/include/linux/bvec.h
-@@ -23,6 +23,7 @@
- #include <linux/kernel.h>
- #include <linux/bug.h>
- #include <linux/errno.h>
-+#include <linux/mm.h>
- 
- /*
-  * was unsigned short, but we might as well be ready for > 64kB I/O pages
-@@ -50,16 +51,39 @@ struct bvec_iter {
-  */
- #define __bvec_iter_bvec(bvec, iter)	(&(bvec)[(iter).bi_idx])
- 
--#define bvec_iter_page(bvec, iter)				\
-+/* multi-page (mp_bvec) helpers */
-+#define mp_bvec_iter_page(bvec, iter)				\
- 	(__bvec_iter_bvec((bvec), (iter))->bv_page)
- 
--#define bvec_iter_len(bvec, iter)				\
-+#define mp_bvec_iter_len(bvec, iter)				\
- 	min((iter).bi_size,					\
- 	    __bvec_iter_bvec((bvec), (iter))->bv_len - (iter).bi_bvec_done)
- 
--#define bvec_iter_offset(bvec, iter)				\
-+#define mp_bvec_iter_offset(bvec, iter)				\
- 	(__bvec_iter_bvec((bvec), (iter))->bv_offset + (iter).bi_bvec_done)
- 
-+#define mp_bvec_iter_page_idx(bvec, iter)			\
-+	(mp_bvec_iter_offset((bvec), (iter)) / PAGE_SIZE)
-+
-+#define mp_bvec_iter_bvec(bvec, iter)				\
-+((struct bio_vec) {						\
-+	.bv_page	= mp_bvec_iter_page((bvec), (iter)),	\
-+	.bv_len		= mp_bvec_iter_len((bvec), (iter)),	\
-+	.bv_offset	= mp_bvec_iter_offset((bvec), (iter)),	\
-+})
-+
-+/* For building single-page bvec in flight */
-+ #define bvec_iter_offset(bvec, iter)				\
-+	(mp_bvec_iter_offset((bvec), (iter)) % PAGE_SIZE)
-+
-+#define bvec_iter_len(bvec, iter)				\
-+	min_t(unsigned, mp_bvec_iter_len((bvec), (iter)),		\
-+	      PAGE_SIZE - bvec_iter_offset((bvec), (iter)))
-+
-+#define bvec_iter_page(bvec, iter)				\
-+	nth_page(mp_bvec_iter_page((bvec), (iter)),		\
-+		 mp_bvec_iter_page_idx((bvec), (iter)))
-+
- #define bvec_iter_bvec(bvec, iter)				\
- ((struct bio_vec) {						\
- 	.bv_page	= bvec_iter_page((bvec), (iter)),	\
--- 
-2.9.5
+Brian
