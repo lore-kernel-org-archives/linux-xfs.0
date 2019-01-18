@@ -1,65 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49144 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55542 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728607AbfAUITO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Jan 2019 03:19:14 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V14 03/18] block: remove bvec_iter_rewind()
-Date: Mon, 21 Jan 2019 16:17:50 +0800
-Message-Id: <20190121081805.32727-4-ming.lei@redhat.com>
-In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
-References: <20190121081805.32727-1-ming.lei@redhat.com>
+        id S1726722AbfARLZI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 18 Jan 2019 06:25:08 -0500
+Date: Fri, 18 Jan 2019 06:25:05 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 4/5] xfs: remove superfluous writeback mapping eof
+ trimming
+Message-ID: <20190118112505.GA52214@bfoster>
+References: <20190117192004.49346-1-bfoster@redhat.com>
+ <20190117192004.49346-5-bfoster@redhat.com>
+ <6798de3d-def7-c75d-a61a-23dc04f874b1@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6798de3d-def7-c75d-a61a-23dc04f874b1@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Commit 7759eb23fd980 ("block: remove bio_rewind_iter()") removes
-bio_rewind_iter(), then no one uses bvec_iter_rewind() any more,
-so remove it.
+On Thu, Jan 17, 2019 at 11:48:58PM -0700, Allison Henderson wrote:
+> 
+> 
+> On 1/17/19 12:20 PM, Brian Foster wrote:
+> > Now that the cached writeback mapping is explicitly invalidated on
+> > data fork changes, the EOF trimming band-aid is no longer necessary.
+> > Remove xfs_trim_extent_eof() as well since it has no other users.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >   fs/xfs/libxfs/xfs_bmap.c | 11 -----------
+> >   fs/xfs/libxfs/xfs_bmap.h |  1 -
+> >   fs/xfs/xfs_aops.c        | 15 ---------------
+> >   3 files changed, 27 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 332eefa2700b..4c73927819c2 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -3685,17 +3685,6 @@ xfs_trim_extent(
+> >   	}
+> >   }
+> > -/* trim extent to within eof */
+> > -void
+> > -xfs_trim_extent_eof(
+> > -	struct xfs_bmbt_irec	*irec,
+> > -	struct xfs_inode	*ip)
+> > -
+> > -{
+> > -	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
+> > -					      i_size_read(VFS_I(ip))));
+> > -}
+> > -
+> >   /*
+> >    * Trim the returned map to the required bounds
+> >    */
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> > index 09d3ea97cc15..b4ff710d7250 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.h
+> > +++ b/fs/xfs/libxfs/xfs_bmap.h
+> > @@ -181,7 +181,6 @@ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
+> >   void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
+> >   		xfs_filblks_t len);
+> > -void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
+> >   int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+> >   int	xfs_bmap_set_attrforkoff(struct xfs_inode *ip, int size, int *version);
+> >   void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index 649e4ad76add..09d8f7690e9e 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -357,19 +357,6 @@ xfs_map_blocks(
+> >   	if (XFS_FORCED_SHUTDOWN(mp))
+> >   		return -EIO;
+> > -	/*
+> > -	 * We have to make sure the cached mapping is within EOF to protect
+> > -	 * against eofblocks trimming on file release leaving us with a stale
+> > -	 * mapping. Otherwise, a page for a subsequent file extending buffered
+> > -	 * write could get picked up by this writeback cycle and written to the
+> > -	 * wrong blocks.
+> > -	 *
+> > -	 * Note that what we really want here is a generic mapping invalidation
+> > -	 * mechanism to protect us from arbitrary extent modifying contexts, not
+> > -	 * just eofblocks.
+> > -	 */
+> > -	xfs_trim_extent_eof(&wpc->imap, ip);
+> > -
+> >   	/*
+> >   	 * COW fork blocks can overlap data fork blocks even if the blocks
+> >   	 * aren't shared.  COW I/O always takes precedent, so we must always
+> > @@ -482,7 +469,6 @@ xfs_map_blocks(
+> >   	}
+> >   	wpc->imap = imap;
+> > -	xfs_trim_extent_eof(&wpc->imap, ip);
+> >   	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
+> >   	return 0;
+> >   allocate_blocks:
+> > @@ -494,7 +480,6 @@ xfs_map_blocks(
+> >   	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+> >   	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+> >   	wpc->imap = imap;
+> > -	xfs_trim_extent_eof(&wpc->imap, ip);
+> >   	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+> >   	return 0;
+> >   }
+> > 
+> 
+> I'll skip this one, it sounds from the last review we decided not to keep
+> it.  Thanks though!
+> 
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- include/linux/bvec.h | 24 ------------------------
- 1 file changed, 24 deletions(-)
+This one is actually still intended to be part of the series. The
+previous patch to revalidate on fork sequence number changes eliminates
+the need for the racy EOF trimming solution. The first patch in the
+series was just intended to be a stable workaround for older kernels
+that might have the patch where xfs_trim_extent_eof() was first added.
 
-diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-index 02c73c6aa805..ba0ae40e77c9 100644
---- a/include/linux/bvec.h
-+++ b/include/linux/bvec.h
-@@ -92,30 +92,6 @@ static inline bool bvec_iter_advance(const struct bio_vec *bv,
- 	return true;
- }
- 
--static inline bool bvec_iter_rewind(const struct bio_vec *bv,
--				     struct bvec_iter *iter,
--				     unsigned int bytes)
--{
--	while (bytes) {
--		unsigned len = min(bytes, iter->bi_bvec_done);
--
--		if (iter->bi_bvec_done == 0) {
--			if (WARN_ONCE(iter->bi_idx == 0,
--				      "Attempted to rewind iter beyond "
--				      "bvec's boundaries\n")) {
--				return false;
--			}
--			iter->bi_idx--;
--			iter->bi_bvec_done = __bvec_iter_bvec(bv, *iter)->bv_len;
--			continue;
--		}
--		bytes -= len;
--		iter->bi_size += len;
--		iter->bi_bvec_done -= len;
--	}
--	return true;
--}
--
- #define for_each_bvec(bvl, bio_vec, iter, start)			\
- 	for (iter = (start);						\
- 	     (iter).bi_size &&						\
--- 
-2.9.5
+Thanks for the reviews..
+
+Brian
+
+> Allison
