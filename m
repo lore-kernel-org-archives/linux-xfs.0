@@ -1,45 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:37170 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727346AbfARQbd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Jan 2019 11:31:33 -0500
-Date: Fri, 18 Jan 2019 08:31:32 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 5/5] xfs: revalidate imap properly before writeback
- delalloc conversion
-Message-ID: <20190118163132.GA6318@infradead.org>
-References: <20190117192004.49346-1-bfoster@redhat.com>
- <20190117192004.49346-6-bfoster@redhat.com>
- <20190118115937.GD7807@infradead.org>
+Received: from verein.lst.de ([213.95.11.211]:48441 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726512AbfASJpf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 19 Jan 2019 04:45:35 -0500
+Date: Sat, 19 Jan 2019 10:45:33 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] iomap: get/put the page in iomap_page_create/release()
+Message-ID: <20190119094533.GA21729@lst.de>
+References: <20190115211028.15742-1-hch@lst.de> <20190115230744.GM4205@dastard> <20190117075145.GA29509@lst.de> <5777f872-49a9-2717-a0c1-664908aeb8e1@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190118115937.GD7807@infradead.org>
+In-Reply-To: <5777f872-49a9-2717-a0c1-664908aeb8e1@nvidia.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Piotr Jaroszynski <pjaroszynski@nvidia.com>
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Fri, Jan 18, 2019 at 03:59:37AM -0800, Christoph Hellwig wrote:
-> xfs_bmapi_write will always do a xfs_iext_lookup_extent for the
-> passed in blocks anyway.  So this trimming logic should move into
-> xfs_bmapi_write to ensure it does the right thing, instead of papering
-> over the logic in xfs_bmapi_write in the caller with another lookup.
+On Thu, Jan 17, 2019 at 09:32:32AM -0800, Piotr Jaroszynski wrote:
+> On 1/16/19 11:51 PM, Christoph Hellwig wrote:
+> > On Wed, Jan 16, 2019 at 10:07:45AM +1100, Dave Chinner wrote:
+> >> Missing a SOB.
+> >>
+> >> But apart from that, I've been running an identical patch in my test
+> >> tree, so:
+> > 
+> > Piotr: do you still want to claim authorship for this fixed up patch,
+> > in which case I'll need your sob.  Otherwise I can submit it under my
+> > name.
 > 
-> I think the improved XFS_BMAPI_DELALLOC handling in this patch:
-> 
->    http://git.infradead.org/users/hch/xfs.git/commitdiff/553fed9ce7695df081779c6a9a205af4142b2a06
-> 
-> is the right answer, as writeback really should only ever convert
-> existing delalloc extents, and I'd much rather rely on that rather than
-> piling hacks of hacks to feed the right range into a function that must
-> do a lookup in the extent tree anyway.
+> Sorry for the delay and thank you for handling the revert while I was
+> out on paternity leave. I'm fine with whatever is easiest for you,
+> and thanks for fixing up the patch!
 
-FYI, here is a tree that rebases my patches on top of your (minus this
-one) and also drops the internal i_size checks, although it still keeps
-the initial one for the truncate fast path.  Testing is still ongoing,
-and for the writeback issue you probably only need the first three
-of my patches:
-
-	http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-mapping-validation
+In that case I'll happily keep you as the author.  Can you re-cofirm
+your signoff for this modified variant so we pick it up?
