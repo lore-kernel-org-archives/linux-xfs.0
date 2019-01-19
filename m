@@ -1,49 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50976 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728490AbfAUIVX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Jan 2019 03:21:23 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V14 12/18] bcache: avoid to use bio_for_each_segment_all() in bch_bio_alloc_pages()
-Date: Mon, 21 Jan 2019 16:17:59 +0800
-Message-Id: <20190121081805.32727-13-ming.lei@redhat.com>
-In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
-References: <20190121081805.32727-1-ming.lei@redhat.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:37746 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729056AbfASWUn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Jan 2019 17:20:43 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 373CF2B4A6
+        for <linux-xfs@vger.kernel.org>; Sat, 19 Jan 2019 22:20:42 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202349] Extreme desktop freezes during sustained write
+ operations with XFS
+Date: Sat, 19 Jan 2019 22:20:41 +0000
+Message-ID: <bug-202349-201763-JBg7A7fi9H@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202349-201763@https.bugzilla.kernel.org/>
+References: <bug-202349-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-bch_bio_alloc_pages() is always called on one new bio, so it is safe
-to access the bvec table directly. Given it is the only kind of this
-case, open code the bvec table access since bio_for_each_segment_all()
-will be changed to support for iterating over multipage bvec.
+https://bugzilla.kernel.org/show_bug.cgi?id=202349
 
-Acked-by: Coly Li <colyli@suse.de>
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/md/bcache/util.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Arkadiusz Miskiewicz (arekm@maven.pl) changed:
 
-diff --git a/drivers/md/bcache/util.c b/drivers/md/bcache/util.c
-index 20eddeac1531..62fb917f7a4f 100644
---- a/drivers/md/bcache/util.c
-+++ b/drivers/md/bcache/util.c
-@@ -270,7 +270,11 @@ int bch_bio_alloc_pages(struct bio *bio, gfp_t gfp_mask)
- 	int i;
- 	struct bio_vec *bv;
- 
--	bio_for_each_segment_all(bv, bio, i) {
-+	/*
-+	 * This is called on freshly new bio, so it is safe to access the
-+	 * bvec table directly.
-+	 */
-+	for (i = 0, bv = bio->bi_io_vec; i < bio->bi_vcnt; bv++, i++) {
- 		bv->bv_page = alloc_page(gfp_mask);
- 		if (!bv->bv_page) {
- 			while (--bv >= bio->bi_io_vec)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |arekm@maven.pl
+
+--- Comment #2 from Arkadiusz Miskiewicz (arekm@maven.pl) ---
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+
 -- 
-2.9.5
+You are receiving this mail because:
+You are watching the assignee of the bug.
