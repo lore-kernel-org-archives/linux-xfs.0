@@ -1,50 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:19385 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728770AbfASTBH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Jan 2019 14:01:07 -0500
-Subject: Re: [PATCH] iomap: get/put the page in iomap_page_create/release()
-References: <20190115211028.15742-1-hch@lst.de>
- <20190115230744.GM4205@dastard> <20190117075145.GA29509@lst.de>
- <5777f872-49a9-2717-a0c1-664908aeb8e1@nvidia.com>
- <20190119094533.GA21729@lst.de>
-From: Piotr Jaroszynski <pjaroszynski@nvidia.com>
-Message-ID: <ef7e3ffd-2665-5924-79a8-18a31f02e264@nvidia.com>
-Date: Sat, 19 Jan 2019 11:01:05 -0800
+Received: from mx1.redhat.com ([209.132.183.28]:56698 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730536AbfATMpF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 20 Jan 2019 07:45:05 -0500
+Date: Sun, 20 Jan 2019 07:45:02 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 5/5] xfs: revalidate imap properly before writeback
+ delalloc conversion
+Message-ID: <20190120124502.GA65044@bfoster>
+References: <20190117192004.49346-1-bfoster@redhat.com>
+ <20190117192004.49346-6-bfoster@redhat.com>
+ <20190118115937.GD7807@infradead.org>
+ <20190118163132.GA6318@infradead.org>
+ <20190118183915.GB53532@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20190119094533.GA21729@lst.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190118183915.GB53532@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-On 1/19/19 1:45 AM, Christoph Hellwig wrote:
-> On Thu, Jan 17, 2019 at 09:32:32AM -0800, Piotr Jaroszynski wrote:
->> On 1/16/19 11:51 PM, Christoph Hellwig wrote:
->>> On Wed, Jan 16, 2019 at 10:07:45AM +1100, Dave Chinner wrote:
->>>> Missing a SOB.
->>>>
->>>> But apart from that, I've been running an identical patch in my test
->>>> tree, so:
->>>
->>> Piotr: do you still want to claim authorship for this fixed up patch,
->>> in which case I'll need your sob.  Otherwise I can submit it under my
->>> name.
->>
->> Sorry for the delay and thank you for handling the revert while I was
->> out on paternity leave. I'm fine with whatever is easiest for you,
->> and thanks for fixing up the patch!
+On Fri, Jan 18, 2019 at 01:39:15PM -0500, Brian Foster wrote:
+> On Fri, Jan 18, 2019 at 08:31:32AM -0800, Christoph Hellwig wrote:
+> > On Fri, Jan 18, 2019 at 03:59:37AM -0800, Christoph Hellwig wrote:
+> > > xfs_bmapi_write will always do a xfs_iext_lookup_extent for the
+> > > passed in blocks anyway.  So this trimming logic should move into
+> > > xfs_bmapi_write to ensure it does the right thing, instead of papering
+> > > over the logic in xfs_bmapi_write in the caller with another lookup.
+> > > 
+> > > I think the improved XFS_BMAPI_DELALLOC handling in this patch:
+> > > 
+> > >    http://git.infradead.org/users/hch/xfs.git/commitdiff/553fed9ce7695df081779c6a9a205af4142b2a06
+> > > 
+> > > is the right answer, as writeback really should only ever convert
+> > > existing delalloc extents, and I'd much rather rely on that rather than
+> > > piling hacks of hacks to feed the right range into a function that must
+> > > do a lookup in the extent tree anyway.
+> > 
+> > FYI, here is a tree that rebases my patches on top of your (minus this
+> > one) and also drops the internal i_size checks, although it still keeps
+> > the initial one for the truncate fast path.  Testing is still ongoing,
+> > and for the writeback issue you probably only need the first three
+> > of my patches:
+> > 
+> > 	http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-mapping-validation
 > 
-> In that case I'll happily keep you as the author.  Can you re-cofirm
-> your signoff for this modified variant so we pick it up?
+> This doesn't really seem all that different to me. Rather than firm up
+> the range in the caller, we turn XFS_BMAPI_DELALLOC into something that
+> seemingly behaves a bit more like CONVERT_ONLY.
+> 
+> A few notes/thoughts:
+> 
+> 1. What's the purpose of the nimaps == 0 check in
+> xfs_iomap_write_allocate()? If we got to this point with the page lock
+> held, shouldn't we always expect to find something backing the current
+> page?
+> 
+> 2. If so, then it also seems that the whole "eof:" thing in
+> xfs_map_blocks() should never happen for data forks. If that's the case,
+> the use of the eof label there seems gratuitous.
+> 
+> 3. If the starting bno param to xfs_bmapi_write() lands in a hole (due
+> to racing with a hole punch for example) and it finds some subsequent
+> delalloc extent to convert in the requested range, the arithmetic in
+> xfs_bmapi_trim_map() actually fabricates physical blocks for the hole
+> portion of the range relative to the startblock of the converted
+> delalloc extent. I don't think that causes a problem with the writeback
+> code because the fabricated blocks are before the page offset, but those
+> semantics are insane. I think you need to do something like fix up
+> xfs_bmapi_write() to return the actual converted mapping and make sure
+> xfs_iomap_write_allocate() handles that it might start beyond
+> map_start_fsb.
 > 
 
-Sure:
-Signed-off-by: Piotr Jaroszynski <pjaroszynski@nvidia.com>
+A couple more thoughts now that I've had more time to think about this:
 
-Thanks,
-Piotr
+4. Kind of a nit, but the comment update in xfs_bmapi_write() that
+describes the ilock and associated race window and whatnot should really
+be split between there and xfs_iomap_write_allocate(). The former should
+just explain what exactly XFS_BMAPI_DELALLOC does (i.e., skip holes,
+real extents, over a range..). The latter should explain how
+the use of XFS_BMAPI_DELALLOC helps us deal with the race window in the
+writeback code.
+
+5. A more serious point.. with this approach, what prevents writeback
+from thrashing with buffered writes in the event of the hole punch race
+scenario I mentioned previously? One of the things I explicitly wanted
+to avoid in this patch is the potential to bounce back and forth between
+writes and writeback over extent updates. There is the performance
+aspect of that, which is what I was initially concerned about, but your
+patch introduces a functional aspect of that we need to consider as
+well.
+
+For (the extreme/worst case) example, suppose again we're at writeback
+in the middle of a fairly large delalloc extent. Somehow or another we
+race and lose a good portion at the start of the currently cached extent
+and then see a buffered write at the start offset of the (now invalid)
+cached extent. The now invalid range is passed to xfs_bmapi_write(),
+which finds and allocates that first block in the range, commits the
+transaction and cycles the ilock. If we now contend with another
+buffered write at the next offset in the original extent range,
+writeback finds and allocates at that offset next and the cycle repeats
+until we finally allocate an extent that backs our current page.
+
+Unless I'm missing something here, there's not only opportunity to spend
+an awkward amount of time processing unrelated delalloc extents for a
+single page, there's potential to allocate bits of what should be a
+large contiguous delalloc extent a block at a time, which can defeat the
+purpose of delayed allocation (assuming the block allocator doesn't save
+our ass).
+
+Hmm, I'm not totally sure what the right answer to that is. On one hand,
+I think the approach of using XFS_BMAPI_DELALLOC is fairly elegant. On
+the other, I don't think a solution open to this behavior is robust
+enough.
+
+One option that comes to mind is to perhaps split off XFS_BMAPI_DELALLOC
+from xfs_bmapi_write() into a new xfs_bmapi_delalloc() function that
+facilitates new semantics (I'm not terribly comfortable with overloading
+the semantics of xfs_bmapi_write()). Instead of passing a range to
+xfs_bmapi_delalloc(), just pass the offset we care about and expect that
+this function will attempt to allocate the entire extent currently
+backing offset. (Alternatively, we could perhaps pass a range by value
+and allow xfs_bmapi_delalloc() to update the range in the event of
+delalloc discontiguity.) Either way, the extent returned may not cover
+the offset (due to fragmentation, as today) and thus the caller needs to
+iterate until that happens. The larger point is that we'd lookup the
+current extent _at offset_ on each iteration and thus shouldn't ever
+contend with new delalloc reservations. Thoughts?
+
+Brian
+
+> Brian
