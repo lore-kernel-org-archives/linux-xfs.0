@@ -1,30 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ed1-f43.google.com ([209.85.208.43]:41929 "EHLO
-        mail-ed1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729262AbfARTsA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Jan 2019 14:48:00 -0500
-Received: by mail-ed1-f43.google.com with SMTP id a20so12049046edc.8
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Jan 2019 11:47:59 -0800 (PST)
-Subject: Re: 4.19.13: general protection fault: RIP:
- 0010:xfs_fs_destroy_inode+0x41/0x1c0 [xfs]
-References: <3aff45c7-5d6a-adbc-d409-cec0bb9726cb@gmail.com>
-From: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
-Message-ID: <71307167-06d4-9b90-094b-8917b928852c@gmail.com>
-Date: Fri, 18 Jan 2019 20:47:55 +0100
-MIME-Version: 1.0
-In-Reply-To: <3aff45c7-5d6a-adbc-d409-cec0bb9726cb@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mx1.redhat.com ([209.132.183.28]:50976 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728490AbfAUIVX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Jan 2019 03:21:23 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V14 12/18] bcache: avoid to use bio_for_each_segment_all() in bch_bio_alloc_pages()
+Date: Mon, 21 Jan 2019 16:17:59 +0800
+Message-Id: <20190121081805.32727-13-ming.lei@redhat.com>
+In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
+References: <20190121081805.32727-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Sami Farin <hvtaifwkbgefbaei@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
+bch_bio_alloc_pages() is always called on one new bio, so it is safe
+to access the bvec table directly. Given it is the only kind of this
+case, open code the bvec table access since bio_for_each_segment_all()
+will be changed to support for iterating over multipage bvec.
 
-Typo in subject. Mine happens on 4.19.13 (as you can see in pasted log).
+Acked-by: Coly Li <colyli@suse.de>
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/md/bcache/util.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-
+diff --git a/drivers/md/bcache/util.c b/drivers/md/bcache/util.c
+index 20eddeac1531..62fb917f7a4f 100644
+--- a/drivers/md/bcache/util.c
++++ b/drivers/md/bcache/util.c
+@@ -270,7 +270,11 @@ int bch_bio_alloc_pages(struct bio *bio, gfp_t gfp_mask)
+ 	int i;
+ 	struct bio_vec *bv;
+ 
+-	bio_for_each_segment_all(bv, bio, i) {
++	/*
++	 * This is called on freshly new bio, so it is safe to access the
++	 * bvec table directly.
++	 */
++	for (i = 0, bv = bio->bi_io_vec; i < bio->bi_vcnt; bv++, i++) {
+ 		bv->bv_page = alloc_page(gfp_mask);
+ 		if (!bv->bv_page) {
+ 			while (--bv >= bio->bi_io_vec)
 -- 
-Arkadiusz Miśkiewicz, arekm / ( maven.pl | pld-linux.org )
+2.9.5
