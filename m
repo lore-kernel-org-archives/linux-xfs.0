@@ -1,97 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:46454 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727422AbfAUVSu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Jan 2019 16:18:50 -0500
-Date: Tue, 22 Jan 2019 08:18:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Regular FS shutdown while rsync is running
-Message-ID: <20190121211846.GB4205@dastard>
-References: <1543238989.2507.33.camel@pengutronix.de>
- <20181126153249.GC14585@bfoster>
- <1548067317.2465.7.camel@pengutronix.de>
+Received: from bombadil.infradead.org ([198.137.202.133]:58488 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729678AbfAUPRG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Jan 2019 10:17:06 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] iomap: get/put the page in iomap_page_create/release()
+Date: Mon, 21 Jan 2019 16:17:02 +0100
+Message-Id: <20190121151702.28863-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <1548067317.2465.7.camel@pengutronix.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, Piotr Jaroszynski <pjaroszynski@nvidia.com>
 
-On Mon, Jan 21, 2019 at 11:41:57AM +0100, Lucas Stach wrote:
-> > Can you provide xfs_info for the fs and details of your storage, CPU and
-> > RAM configuration?
-> 
-> root@XXX:~# xfs_info /srv/
-> meta-data=/dev/mapper/XXX-backup isize=512    agcount=33, agsize=183123968 blks
->          =                       sectsz=4096  attr=2, projid32bit=1
->          =                       crc=1        finobt=1 spinodes=0 rmapbt=0
->          =                       reflink=0
-> data     =                       bsize=4096   blocks=5860389888, imaxpct=15
->          =                       sunit=16     swidth=48 blks
-> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> log      =internal               bsize=4096   blocks=521728, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
+From: Piotr Jaroszynski <pjaroszynski@nvidia.com>
 
-Just recreated a similar fs here to do some math with xfs_db...
+migrate_page_move_mapping() expects pages with private data set to have
+a page_count elevated by 1.  This is what used to happen for xfs through
+the buffer_heads code before the switch to iomap in commit 82cb14175e7d
+("xfs: add support for sub-pagesize writeback without buffer_heads").
+Not having the count elevated causes move_pages() to fail on memory
+mapped files coming from xfs.
 
-> bad magic # 0x49414233 in inobt block 5/7831662
+Make iomap compatible with the migrate_page_move_mapping() assumption by
+elevating the page count as part of iomap_page_create() and lowering it
+in iomap_page_release().
 
-So repair tripped over this bad block at AG 5, agbno 7831662.
-Let's check that against the info in the block that the kernel
-reported as corrupt:
+It causes the move_pages() syscall to misbehave on memory mapped files
+from xfs.  It does not not move any pages, which I suppose is "just" a
+perf issue, but it also ends up returning a positive number which is out
+of spec for the syscall.  Talking to Michal Hocko, it sounds like
+returning positive numbers might be a necessary update to move_pages()
+anyway though.
 
-> With that applied we were able to collect the following dump:
-> 
-> [215922.475666] 00000000d471c70c: 49 41 42 33 00 01 01 0c 00 07 58 ab ff ff ff ff  IAB3......X.....
-> [215922.475954] 000000001be9cc59: 00 00 00 01 b5 db 40 b8 00 00 00 00 00 00 00 00  ......@.........
-                                    ^^^^^^^^^^^^^^^^^^^^^^^
-				    daddr of the block that was read.
+Fixes: 82cb14175e7d ("xfs: add support for sub-pagesize writeback without buffer_heads")
+Signed-off-by: Piotr Jaroszynski <pjaroszynski@nvidia.com>
+[hch: actually get/put the page iomap_migrate_page() to make it work
+      properly]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-xfs_db> convert daddr 0x1b5db40b8 agno
-0x5 (5)
-xfs_db> convert daddr 0x1b5db40b8 agbno
-0x282817 (2631703)
-xfs_db> 
-
-That doesn't match the agbno that xfs repair reported.
-
-xfs_db> convert agno 5 agbno 7831662 daddr
-0x1b8560370 (7387612016)
-xfs_db> convert daddr 0x1b8560370 agbno
-0x77806e (7831662)
-xfs_db> 
-
-The agbno isn't even close to being correct. We may have a
-misdirected write here. So, we really need to start to walk the tree
-structure to determine if this really is in the correct place.  So
-what we really need is to look at is the left sibling block of the
-bad block (agbno 0x758ab) and determine what agbno it points to
-(i.e. if it points to the agbno that repair told us about or the
-agbno the kernel thinks it has read).
-
-i.e. run these commands and paste the output:
-
-xfs_db> convert agno 5 agbno 0x758ab fsb
-0x500758ab (1342658731)
-xfs_db> fsb 0x500758ab
-xfs_db> type data
-xfs_db> p
-[hexdump output we need]
-xfs_db> type finobt
-xfs_db> p
-[same info but decoded as finobt structure]
-xfs_db> type inobt
-xfs_db> p
-[same info but decoded as inobt structure]
-
-Cheers,
-
-Dave.
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 987fefc054b4..47362397cb82 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -116,6 +116,12 @@ iomap_page_create(struct inode *inode, struct page *page)
+ 	atomic_set(&iop->read_count, 0);
+ 	atomic_set(&iop->write_count, 0);
+ 	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
++
++	/*
++	 * migrate_page_move_mapping() assumes that pages with private data have
++	 * their count elevated by 1.
++	 */
++	get_page(page);
+ 	set_page_private(page, (unsigned long)iop);
+ 	SetPagePrivate(page);
+ 	return iop;
+@@ -132,6 +138,7 @@ iomap_page_release(struct page *page)
+ 	WARN_ON_ONCE(atomic_read(&iop->write_count));
+ 	ClearPagePrivate(page);
+ 	set_page_private(page, 0);
++	put_page(page);
+ 	kfree(iop);
+ }
+ 
+@@ -569,8 +576,10 @@ iomap_migrate_page(struct address_space *mapping, struct page *newpage,
+ 
+ 	if (page_has_private(page)) {
+ 		ClearPagePrivate(page);
++		get_page(newpage);
+ 		set_page_private(newpage, page_private(page));
+ 		set_page_private(page, 0);
++		put_page(page);
+ 		SetPagePrivate(newpage);
+ 	}
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.20.1
