@@ -1,79 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f44.google.com ([209.85.128.44]:36433 "EHLO
-        mail-wm1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725986AbfAXIdU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Jan 2019 03:33:20 -0500
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH 1/2] common/dump: do not override test cleanup trap
-Date: Thu, 24 Jan 2019 10:33:09 +0200
-Message-Id: <20190124083310.25928-1-amir73il@gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:49910 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728950AbfAUPvL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Jan 2019 10:51:11 -0500
+Date: Mon, 21 Jan 2019 07:51:10 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 5/5] xfs: revalidate imap properly before writeback
+ delalloc conversion
+Message-ID: <20190121155110.GB31678@infradead.org>
+References: <20190117192004.49346-1-bfoster@redhat.com>
+ <20190117192004.49346-6-bfoster@redhat.com>
+ <20190118115937.GD7807@infradead.org>
+ <20190118163132.GA6318@infradead.org>
+ <20190118183915.GB53532@bfoster>
+ <20190120124502.GA65044@bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190120124502.GA65044@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-Currently this doesn't matter for the two dump tests xfs/022 and xfs/068
-because they do not have a _cleanup() routine and the override dump
-_cleanup() routine does the generic cleanup as well.
+On Sun, Jan 20, 2019 at 07:45:02AM -0500, Brian Foster wrote:
+> 4. Kind of a nit, but the comment update in xfs_bmapi_write() that
+> describes the ilock and associated race window and whatnot should really
+> be split between there and xfs_iomap_write_allocate(). The former should
+> just explain what exactly XFS_BMAPI_DELALLOC does (i.e., skip holes,
+> real extents, over a range..). The latter should explain how
+> the use of XFS_BMAPI_DELALLOC helps us deal with the race window in the
+> writeback code.
 
-Instead, call the _dump_cleanup explicitly from the trap in those tests.
+Ok.
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- common/dump   | 5 +----
- tests/xfs/022 | 2 +-
- tests/xfs/068 | 2 +-
- 3 files changed, 3 insertions(+), 6 deletions(-)
+> One option that comes to mind is to perhaps split off XFS_BMAPI_DELALLOC
+> from xfs_bmapi_write() into a new xfs_bmapi_delalloc() function that
+> facilitates new semantics (I'm not terribly comfortable with overloading
+> the semantics of xfs_bmapi_write()). Instead of passing a range to
+> xfs_bmapi_delalloc(), just pass the offset we care about and expect that
+> this function will attempt to allocate the entire extent currently
+> backing offset. (Alternatively, we could perhaps pass a range by value
+> and allow xfs_bmapi_delalloc() to update the range in the event of
+> delalloc discontiguity.) Either way, the extent returned may not cover
+> the offset (due to fragmentation, as today) and thus the caller needs to
+> iterate until that happens. The larger point is that we'd lookup the
+> current extent _at offset_ on each iteration and thus shouldn't ever
+> contend with new delalloc reservations. Thoughts?
 
-diff --git a/common/dump b/common/dump
-index 4d1a1607..47d14601 100644
---- a/common/dump
-+++ b/common/dump
-@@ -45,9 +45,6 @@ session_label="stress_$seq"
- nobody=4 # define this uid/gid as a number
- do_quota_check=true # do quota check if quotas enabled
- 
--# install our cleaner
--trap "_cleanup; exit \$status" 0 1 2 3 15
--
- # start inventory from a known base - move it aside for test
- for dir in /var/xfsdump/inventory /var/lib/xfsdump/inventory; do
-     if [ -d $dir ]; then
-@@ -227,7 +224,7 @@ _wipe_fs()
- # Cleanup created dirs and files
- # Called by trap
- #
--_cleanup()
-+_dump_cleanup()
- {
-     # Some tests include this before checking _supported_fs xfs
-     # and the sleeps & checks here get annoying
-diff --git a/tests/xfs/022 b/tests/xfs/022
-index e1162798..f091b7c5 100755
---- a/tests/xfs/022
-+++ b/tests/xfs/022
-@@ -17,7 +17,7 @@ echo "QA output created by $seq"
- here=`pwd`
- tmp=/tmp/$$
- status=0	# success is the default!
--trap "rm -rf $tmp.*; exit \$status" 0 1 2 3 15
-+trap "_dump_cleanup; exit \$status" 0 1 2 3 15
- 
- . ./common/rc
- . ./common/dump
-diff --git a/tests/xfs/068 b/tests/xfs/068
-index c755bc3e..95a8cd12 100755
---- a/tests/xfs/068
-+++ b/tests/xfs/068
-@@ -18,7 +18,7 @@ echo "QA output created by $seq"
- here=`pwd`
- tmp=/tmp/$$
- status=0	# success is the default!
--trap "rm -rf $tmp.*; exit \$status" 0 1 2 3 15
-+trap "_dump_cleanup; exit \$status" 0 1 2 3 15
- 
- . ./common/rc
- . ./common/dump
--- 
-2.17.1
+I considered splitting it off and even had an early prototype.  I
+got something wrong and it didn't work, and it created a little too
+much duplication for my taste so I gave up on it for now.  But
+fundamentally having the delalloc conversion separate from
+xfs_bmapi_write is the right thing.  I'll just have to find some
+time for it or pass this work off to you..
