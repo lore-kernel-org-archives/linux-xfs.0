@@ -1,215 +1,165 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13584 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44112 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726101AbfAWSld (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Jan 2019 13:41:33 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 0DAD315F5E
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Jan 2019 18:41:33 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B6A99103BAB6
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Jan 2019 18:41:32 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 3/6] xfs: validate writeback mapping using data fork seq counter
-Date: Wed, 23 Jan 2019 13:41:28 -0500
-Message-Id: <20190123184131.46188-4-bfoster@redhat.com>
-In-Reply-To: <20190123184131.46188-1-bfoster@redhat.com>
-References: <20190123184131.46188-1-bfoster@redhat.com>
+        id S1728855AbfAUIWY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Jan 2019 03:22:24 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V14 18/18] block: kill BLK_MQ_F_SG_MERGE
+Date: Mon, 21 Jan 2019 16:18:05 +0800
+Message-Id: <20190121081805.32727-19-ming.lei@redhat.com>
+In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
+References: <20190121081805.32727-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-The writeback code caches the current extent mapping across multiple
-xfs_do_writepage() calls to avoid repeated lookups for sequential
-pages backed by the same extent. This is known to be slightly racy
-with extent fork changes in certain difficult to reproduce
-scenarios. The cached extent is trimmed to within EOF to help avoid
-the most common vector for this problem via speculative
-preallocation management, but this is a band-aid that does not
-address the fundamental problem.
+QUEUE_FLAG_NO_SG_MERGE has been killed, so kill BLK_MQ_F_SG_MERGE too.
 
-Now that we have an xfs_ifork sequence counter mechanism used to
-facilitate COW writeback, we can use the same mechanism to validate
-consistency between the data fork and cached writeback mappings. On
-its face, this is somewhat of a big hammer approach because any
-change to the data fork invalidates any mapping currently cached by
-a writeback in progress regardless of whether the data fork change
-overlaps with the range under writeback. In practice, however, the
-impact of this approach is minimal in most cases.
-
-First, data fork changes (delayed allocations) caused by sustained
-sequential buffered writes are amortized across speculative
-preallocations. This means that a cached mapping won't be
-invalidated by each buffered write of a common file copy workload,
-but rather only on less frequent allocation events. Second, the
-extent tree is always entirely in-core so an additional lookup of a
-usable extent mostly costs a shared ilock cycle and in-memory tree
-lookup. This means that a cached mapping reval is relatively cheap
-compared to the I/O itself. Third, spurious invalidations don't
-impact ioend construction. This means that even if the same extent
-is revalidated multiple times across multiple writepage instances,
-we still construct and submit the same size ioend (and bio) if the
-blocks are physically contiguous.
-
-Update struct xfs_writepage_ctx with a new field to hold the
-sequence number of the data fork associated with the currently
-cached mapping. Check the wpc seqno against the data fork when the
-mapping is validated and reestablish the mapping whenever the fork
-has changed since the mapping was cached. This ensures that
-writeback always uses a valid extent mapping and thus prevents lost
-writebacks and stale delalloc block problems.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- fs/xfs/xfs_aops.c  | 60 ++++++++++++++++++++++++++++++++++++----------
- fs/xfs/xfs_iomap.c |  5 ++--
- 2 files changed, 49 insertions(+), 16 deletions(-)
+ block/blk-mq-debugfs.c       | 1 -
+ drivers/block/loop.c         | 2 +-
+ drivers/block/nbd.c          | 2 +-
+ drivers/block/rbd.c          | 2 +-
+ drivers/block/skd_main.c     | 1 -
+ drivers/block/xen-blkfront.c | 2 +-
+ drivers/md/dm-rq.c           | 2 +-
+ drivers/mmc/core/queue.c     | 3 +--
+ drivers/scsi/scsi_lib.c      | 2 +-
+ include/linux/blk-mq.h       | 1 -
+ 10 files changed, 7 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index d9048bcea49c..5b0256a8a420 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -29,6 +29,7 @@
- struct xfs_writepage_ctx {
- 	struct xfs_bmbt_irec    imap;
- 	unsigned int		io_type;
-+	unsigned int		data_seq;
- 	unsigned int		cow_seq;
- 	struct xfs_ioend	*ioend;
+diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+index 2f9a11ef5bad..2ba0aa05ce13 100644
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -250,7 +250,6 @@ static const char *const alloc_policy_name[] = {
+ static const char *const hctx_flag_name[] = {
+ 	HCTX_FLAG_NAME(SHOULD_MERGE),
+ 	HCTX_FLAG_NAME(TAG_SHARED),
+-	HCTX_FLAG_NAME(SG_MERGE),
+ 	HCTX_FLAG_NAME(BLOCKING),
+ 	HCTX_FLAG_NAME(NO_SCHED),
  };
-@@ -301,6 +302,42 @@ xfs_end_bio(
- 		xfs_destroy_ioend(ioend, blk_status_to_errno(bio->bi_status));
- }
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index 168a151aba49..714924cfb050 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -1937,7 +1937,7 @@ static int loop_add(struct loop_device **l, int i)
+ 	lo->tag_set.queue_depth = 128;
+ 	lo->tag_set.numa_node = NUMA_NO_NODE;
+ 	lo->tag_set.cmd_size = sizeof(struct loop_cmd);
+-	lo->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
++	lo->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
+ 	lo->tag_set.driver_data = lo;
  
-+/*
-+ * Fast revalidation of the cached writeback mapping. Return true if the current
-+ * mapping is valid, false otherwise.
-+ */
-+static bool
-+xfs_imap_valid(
-+	struct xfs_writepage_ctx	*wpc,
-+	struct xfs_inode		*ip,
-+	xfs_fileoff_t			offset_fsb)
-+{
-+	if (offset_fsb < wpc->imap.br_startoff ||
-+	    offset_fsb >= wpc->imap.br_startoff + wpc->imap.br_blockcount)
-+		return false;
-+	/*
-+	 * If this is a COW mapping, it is sufficient to check that the mapping
-+	 * covers the offset. Be careful to check this first because the caller
-+	 * can revalidate a COW mapping without updating the data seqno.
-+	 */
-+	if (wpc->io_type == XFS_IO_COW)
-+		return true;
-+
-+	/*
-+	 * This is not a COW mapping. Check the sequence number of the data fork
-+	 * because concurrent changes could have invalidated the extent. Check
-+	 * the COW fork because concurrent changes since the last time we
-+	 * checked (and found nothing at this offset) could have added
-+	 * overlapping blocks.
-+	 */
-+	if (wpc->data_seq != READ_ONCE(ip->i_df.if_seq))
-+		return false;
-+	if (xfs_inode_has_cow_data(ip) &&
-+	    wpc->cow_seq != READ_ONCE(ip->i_cowfp->if_seq))
-+		return false;
-+	return true;
-+}
-+
- STATIC int
- xfs_map_blocks(
- 	struct xfs_writepage_ctx *wpc,
-@@ -315,9 +352,11 @@ xfs_map_blocks(
- 	struct xfs_bmbt_irec	imap;
- 	int			whichfork = XFS_DATA_FORK;
- 	struct xfs_iext_cursor	icur;
--	bool			imap_valid;
- 	int			error = 0;
+ 	err = blk_mq_alloc_tag_set(&lo->tag_set);
+diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
+index 08696f5f00bb..999c94de78e5 100644
+--- a/drivers/block/nbd.c
++++ b/drivers/block/nbd.c
+@@ -1570,7 +1570,7 @@ static int nbd_dev_add(int index)
+ 	nbd->tag_set.numa_node = NUMA_NO_NODE;
+ 	nbd->tag_set.cmd_size = sizeof(struct nbd_cmd);
+ 	nbd->tag_set.flags = BLK_MQ_F_SHOULD_MERGE |
+-		BLK_MQ_F_SG_MERGE | BLK_MQ_F_BLOCKING;
++		BLK_MQ_F_BLOCKING;
+ 	nbd->tag_set.driver_data = nbd;
  
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return -EIO;
-+
- 	/*
- 	 * We have to make sure the cached mapping is within EOF to protect
- 	 * against eofblocks trimming on file release leaving us with a stale
-@@ -346,17 +385,9 @@ xfs_map_blocks(
- 	 * against concurrent updates and provides a memory barrier on the way
- 	 * out that ensures that we always see the current value.
- 	 */
--	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
--		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
--	if (imap_valid &&
--	    (!xfs_inode_has_cow_data(ip) ||
--	     wpc->io_type == XFS_IO_COW ||
--	     wpc->cow_seq == READ_ONCE(ip->i_cowfp->if_seq)))
-+	if (xfs_imap_valid(wpc, ip, offset_fsb))
- 		return 0;
+ 	err = blk_mq_alloc_tag_set(&nbd->tag_set);
+diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
+index 1e92b61d0bd5..abe9e1c89227 100644
+--- a/drivers/block/rbd.c
++++ b/drivers/block/rbd.c
+@@ -3988,7 +3988,7 @@ static int rbd_init_disk(struct rbd_device *rbd_dev)
+ 	rbd_dev->tag_set.ops = &rbd_mq_ops;
+ 	rbd_dev->tag_set.queue_depth = rbd_dev->opts->queue_depth;
+ 	rbd_dev->tag_set.numa_node = NUMA_NO_NODE;
+-	rbd_dev->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
++	rbd_dev->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
+ 	rbd_dev->tag_set.nr_hw_queues = 1;
+ 	rbd_dev->tag_set.cmd_size = sizeof(struct work_struct);
  
--	if (XFS_FORCED_SHUTDOWN(mp))
--		return -EIO;
--
- 	/*
- 	 * If we don't have a valid map, now it's time to get a new one for this
- 	 * offset.  This will convert delayed allocations (including COW ones)
-@@ -403,9 +434,10 @@ xfs_map_blocks(
- 	}
+diff --git a/drivers/block/skd_main.c b/drivers/block/skd_main.c
+index ab893a7571a2..7d3ad6c22ee5 100644
+--- a/drivers/block/skd_main.c
++++ b/drivers/block/skd_main.c
+@@ -2843,7 +2843,6 @@ static int skd_cons_disk(struct skd_device *skdev)
+ 		skdev->sgs_per_request * sizeof(struct scatterlist);
+ 	skdev->tag_set.numa_node = NUMA_NO_NODE;
+ 	skdev->tag_set.flags = BLK_MQ_F_SHOULD_MERGE |
+-		BLK_MQ_F_SG_MERGE |
+ 		BLK_ALLOC_POLICY_TO_MQ_FLAG(BLK_TAG_ALLOC_FIFO);
+ 	skdev->tag_set.driver_data = skdev;
+ 	rc = blk_mq_alloc_tag_set(&skdev->tag_set);
+diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
+index 0ed4b200fa58..d43a5677ccbc 100644
+--- a/drivers/block/xen-blkfront.c
++++ b/drivers/block/xen-blkfront.c
+@@ -977,7 +977,7 @@ static int xlvbd_init_blk_queue(struct gendisk *gd, u16 sector_size,
+ 	} else
+ 		info->tag_set.queue_depth = BLK_RING_SIZE(info);
+ 	info->tag_set.numa_node = NUMA_NO_NODE;
+-	info->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
++	info->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
+ 	info->tag_set.cmd_size = sizeof(struct blkif_req);
+ 	info->tag_set.driver_data = info;
  
- 	/*
--	 * Map valid and no COW extent in the way?  We're done.
-+	 * No COW extent overlap. Revalidate now that we may have updated
-+	 * ->cow_seq. If the data mapping is still valid, we're done.
- 	 */
--	if (imap_valid) {
-+	if (xfs_imap_valid(wpc, ip, offset_fsb)) {
- 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 		return 0;
- 	}
-@@ -417,6 +449,7 @@ xfs_map_blocks(
- 	 */
- 	if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap))
- 		imap.br_startoff = end_fsb;	/* fake a hole past EOF */
-+	wpc->data_seq = READ_ONCE(ip->i_df.if_seq);
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+index 4eb5f8c56535..b2f8eb2365ee 100644
+--- a/drivers/md/dm-rq.c
++++ b/drivers/md/dm-rq.c
+@@ -527,7 +527,7 @@ int dm_mq_init_request_queue(struct mapped_device *md, struct dm_table *t)
+ 	md->tag_set->ops = &dm_mq_ops;
+ 	md->tag_set->queue_depth = dm_get_blk_mq_queue_depth();
+ 	md->tag_set->numa_node = md->numa_node_id;
+-	md->tag_set->flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
++	md->tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
+ 	md->tag_set->nr_hw_queues = dm_get_blk_mq_nr_hw_queues();
+ 	md->tag_set->driver_data = md;
  
- 	if (imap.br_startoff > offset_fsb) {
-@@ -454,7 +487,8 @@ xfs_map_blocks(
- 	return 0;
- allocate_blocks:
- 	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap,
--			&wpc->cow_seq);
-+			whichfork == XFS_COW_FORK ?
-+					 &wpc->cow_seq : &wpc->data_seq);
- 	if (error)
- 		return error;
- 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 27c93b5f029d..ab69caa685b4 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -681,7 +681,7 @@ xfs_iomap_write_allocate(
- 	int		whichfork,
- 	xfs_off_t	offset,
- 	xfs_bmbt_irec_t *imap,
--	unsigned int	*cow_seq)
-+	unsigned int	*seq)
- {
- 	xfs_mount_t	*mp = ip->i_mount;
- 	struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
-@@ -797,8 +797,7 @@ xfs_iomap_write_allocate(
- 			if (error)
- 				goto error0;
- 
--			if (whichfork == XFS_COW_FORK)
--				*cow_seq = READ_ONCE(ifp->if_seq);
-+			*seq = READ_ONCE(ifp->if_seq);
- 			xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		}
- 
+diff --git a/drivers/mmc/core/queue.c b/drivers/mmc/core/queue.c
+index 35cc138b096d..cc19e71c71d4 100644
+--- a/drivers/mmc/core/queue.c
++++ b/drivers/mmc/core/queue.c
+@@ -410,8 +410,7 @@ int mmc_init_queue(struct mmc_queue *mq, struct mmc_card *card)
+ 	else
+ 		mq->tag_set.queue_depth = MMC_QUEUE_DEPTH;
+ 	mq->tag_set.numa_node = NUMA_NO_NODE;
+-	mq->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE |
+-			    BLK_MQ_F_BLOCKING;
++	mq->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_BLOCKING;
+ 	mq->tag_set.nr_hw_queues = 1;
+ 	mq->tag_set.cmd_size = sizeof(struct mmc_queue_req);
+ 	mq->tag_set.driver_data = mq;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b13cc9288ba0..afad57071cb6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1899,7 +1899,7 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+ 	shost->tag_set.queue_depth = shost->can_queue;
+ 	shost->tag_set.cmd_size = cmd_size;
+ 	shost->tag_set.numa_node = NUMA_NO_NODE;
+-	shost->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
++	shost->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
+ 	shost->tag_set.flags |=
+ 		BLK_ALLOC_POLICY_TO_MQ_FLAG(shost->hostt->tag_alloc_policy);
+ 	shost->tag_set.driver_data = shost;
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 0e030f5f76b6..b0c814bcc7e3 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -218,7 +218,6 @@ struct blk_mq_ops {
+ enum {
+ 	BLK_MQ_F_SHOULD_MERGE	= 1 << 0,
+ 	BLK_MQ_F_TAG_SHARED	= 1 << 1,
+-	BLK_MQ_F_SG_MERGE	= 1 << 2,
+ 	BLK_MQ_F_BLOCKING	= 1 << 5,
+ 	BLK_MQ_F_NO_SCHED	= 1 << 6,
+ 	BLK_MQ_F_ALLOC_POLICY_START_BIT = 8,
 -- 
-2.17.2
+2.9.5
