@@ -1,137 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56698 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:32832 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730536AbfATMpF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 20 Jan 2019 07:45:05 -0500
-Date: Sun, 20 Jan 2019 07:45:02 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 5/5] xfs: revalidate imap properly before writeback
- delalloc conversion
-Message-ID: <20190120124502.GA65044@bfoster>
-References: <20190117192004.49346-1-bfoster@redhat.com>
- <20190117192004.49346-6-bfoster@redhat.com>
- <20190118115937.GD7807@infradead.org>
- <20190118163132.GA6318@infradead.org>
- <20190118183915.GB53532@bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190118183915.GB53532@bfoster>
+        id S1727993AbfAUIUc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Jan 2019 03:20:32 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V14 07/18] block: use bio_for_each_mp_bvec() to map sg
+Date: Mon, 21 Jan 2019 16:17:54 +0800
+Message-Id: <20190121081805.32727-8-ming.lei@redhat.com>
+In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
+References: <20190121081805.32727-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-On Fri, Jan 18, 2019 at 01:39:15PM -0500, Brian Foster wrote:
-> On Fri, Jan 18, 2019 at 08:31:32AM -0800, Christoph Hellwig wrote:
-> > On Fri, Jan 18, 2019 at 03:59:37AM -0800, Christoph Hellwig wrote:
-> > > xfs_bmapi_write will always do a xfs_iext_lookup_extent for the
-> > > passed in blocks anyway.  So this trimming logic should move into
-> > > xfs_bmapi_write to ensure it does the right thing, instead of papering
-> > > over the logic in xfs_bmapi_write in the caller with another lookup.
-> > > 
-> > > I think the improved XFS_BMAPI_DELALLOC handling in this patch:
-> > > 
-> > >    http://git.infradead.org/users/hch/xfs.git/commitdiff/553fed9ce7695df081779c6a9a205af4142b2a06
-> > > 
-> > > is the right answer, as writeback really should only ever convert
-> > > existing delalloc extents, and I'd much rather rely on that rather than
-> > > piling hacks of hacks to feed the right range into a function that must
-> > > do a lookup in the extent tree anyway.
-> > 
-> > FYI, here is a tree that rebases my patches on top of your (minus this
-> > one) and also drops the internal i_size checks, although it still keeps
-> > the initial one for the truncate fast path.  Testing is still ongoing,
-> > and for the writeback issue you probably only need the first three
-> > of my patches:
-> > 
-> > 	http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-mapping-validation
-> 
-> This doesn't really seem all that different to me. Rather than firm up
-> the range in the caller, we turn XFS_BMAPI_DELALLOC into something that
-> seemingly behaves a bit more like CONVERT_ONLY.
-> 
-> A few notes/thoughts:
-> 
-> 1. What's the purpose of the nimaps == 0 check in
-> xfs_iomap_write_allocate()? If we got to this point with the page lock
-> held, shouldn't we always expect to find something backing the current
-> page?
-> 
-> 2. If so, then it also seems that the whole "eof:" thing in
-> xfs_map_blocks() should never happen for data forks. If that's the case,
-> the use of the eof label there seems gratuitous.
-> 
-> 3. If the starting bno param to xfs_bmapi_write() lands in a hole (due
-> to racing with a hole punch for example) and it finds some subsequent
-> delalloc extent to convert in the requested range, the arithmetic in
-> xfs_bmapi_trim_map() actually fabricates physical blocks for the hole
-> portion of the range relative to the startblock of the converted
-> delalloc extent. I don't think that causes a problem with the writeback
-> code because the fabricated blocks are before the page offset, but those
-> semantics are insane. I think you need to do something like fix up
-> xfs_bmapi_write() to return the actual converted mapping and make sure
-> xfs_iomap_write_allocate() handles that it might start beyond
-> map_start_fsb.
-> 
+It is more efficient to use bio_for_each_mp_bvec() to map sg, meantime
+we have to consider splitting multipage bvec as done in blk_bio_segment_split().
 
-A couple more thoughts now that I've had more time to think about this:
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-merge.c | 70 +++++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 50 insertions(+), 20 deletions(-)
 
-4. Kind of a nit, but the comment update in xfs_bmapi_write() that
-describes the ilock and associated race window and whatnot should really
-be split between there and xfs_iomap_write_allocate(). The former should
-just explain what exactly XFS_BMAPI_DELALLOC does (i.e., skip holes,
-real extents, over a range..). The latter should explain how
-the use of XFS_BMAPI_DELALLOC helps us deal with the race window in the
-writeback code.
-
-5. A more serious point.. with this approach, what prevents writeback
-from thrashing with buffered writes in the event of the hole punch race
-scenario I mentioned previously? One of the things I explicitly wanted
-to avoid in this patch is the potential to bounce back and forth between
-writes and writeback over extent updates. There is the performance
-aspect of that, which is what I was initially concerned about, but your
-patch introduces a functional aspect of that we need to consider as
-well.
-
-For (the extreme/worst case) example, suppose again we're at writeback
-in the middle of a fairly large delalloc extent. Somehow or another we
-race and lose a good portion at the start of the currently cached extent
-and then see a buffered write at the start offset of the (now invalid)
-cached extent. The now invalid range is passed to xfs_bmapi_write(),
-which finds and allocates that first block in the range, commits the
-transaction and cycles the ilock. If we now contend with another
-buffered write at the next offset in the original extent range,
-writeback finds and allocates at that offset next and the cycle repeats
-until we finally allocate an extent that backs our current page.
-
-Unless I'm missing something here, there's not only opportunity to spend
-an awkward amount of time processing unrelated delalloc extents for a
-single page, there's potential to allocate bits of what should be a
-large contiguous delalloc extent a block at a time, which can defeat the
-purpose of delayed allocation (assuming the block allocator doesn't save
-our ass).
-
-Hmm, I'm not totally sure what the right answer to that is. On one hand,
-I think the approach of using XFS_BMAPI_DELALLOC is fairly elegant. On
-the other, I don't think a solution open to this behavior is robust
-enough.
-
-One option that comes to mind is to perhaps split off XFS_BMAPI_DELALLOC
-from xfs_bmapi_write() into a new xfs_bmapi_delalloc() function that
-facilitates new semantics (I'm not terribly comfortable with overloading
-the semantics of xfs_bmapi_write()). Instead of passing a range to
-xfs_bmapi_delalloc(), just pass the offset we care about and expect that
-this function will attempt to allocate the entire extent currently
-backing offset. (Alternatively, we could perhaps pass a range by value
-and allow xfs_bmapi_delalloc() to update the range in the event of
-delalloc discontiguity.) Either way, the extent returned may not cover
-the offset (due to fragmentation, as today) and thus the caller needs to
-iterate until that happens. The larger point is that we'd lookup the
-current extent _at offset_ on each iteration and thus shouldn't ever
-contend with new delalloc reservations. Thoughts?
-
-Brian
-
-> Brian
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 2dfc30d8bc77..8a498f29636f 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -464,6 +464,54 @@ static int blk_phys_contig_segment(struct request_queue *q, struct bio *bio,
+ 	return biovec_phys_mergeable(q, &end_bv, &nxt_bv);
+ }
+ 
++static struct scatterlist *blk_next_sg(struct scatterlist **sg,
++		struct scatterlist *sglist)
++{
++	if (!*sg)
++		return sglist;
++
++	/*
++	 * If the driver previously mapped a shorter list, we could see a
++	 * termination bit prematurely unless it fully inits the sg table
++	 * on each mapping. We KNOW that there must be more entries here
++	 * or the driver would be buggy, so force clear the termination bit
++	 * to avoid doing a full sg_init_table() in drivers for each command.
++	 */
++	sg_unmark_end(*sg);
++	return sg_next(*sg);
++}
++
++static unsigned blk_bvec_map_sg(struct request_queue *q,
++		struct bio_vec *bvec, struct scatterlist *sglist,
++		struct scatterlist **sg)
++{
++	unsigned nbytes = bvec->bv_len;
++	unsigned nsegs = 0, total = 0, offset = 0;
++
++	while (nbytes > 0) {
++		unsigned seg_size;
++		struct page *pg;
++		unsigned idx;
++
++		*sg = blk_next_sg(sg, sglist);
++
++		seg_size = get_max_segment_size(q, bvec->bv_offset + total);
++		seg_size = min(nbytes, seg_size);
++
++		offset = (total + bvec->bv_offset) % PAGE_SIZE;
++		idx = (total + bvec->bv_offset) / PAGE_SIZE;
++		pg = nth_page(bvec->bv_page, idx);
++
++		sg_set_page(*sg, pg, seg_size, offset);
++
++		total += seg_size;
++		nbytes -= seg_size;
++		nsegs++;
++	}
++
++	return nsegs;
++}
++
+ static inline void
+ __blk_segment_map_sg(struct request_queue *q, struct bio_vec *bvec,
+ 		     struct scatterlist *sglist, struct bio_vec *bvprv,
+@@ -481,25 +529,7 @@ __blk_segment_map_sg(struct request_queue *q, struct bio_vec *bvec,
+ 		(*sg)->length += nbytes;
+ 	} else {
+ new_segment:
+-		if (!*sg)
+-			*sg = sglist;
+-		else {
+-			/*
+-			 * If the driver previously mapped a shorter
+-			 * list, we could see a termination bit
+-			 * prematurely unless it fully inits the sg
+-			 * table on each mapping. We KNOW that there
+-			 * must be more entries here or the driver
+-			 * would be buggy, so force clear the
+-			 * termination bit to avoid doing a full
+-			 * sg_init_table() in drivers for each command.
+-			 */
+-			sg_unmark_end(*sg);
+-			*sg = sg_next(*sg);
+-		}
+-
+-		sg_set_page(*sg, bvec->bv_page, nbytes, bvec->bv_offset);
+-		(*nsegs)++;
++		(*nsegs) += blk_bvec_map_sg(q, bvec, sglist, sg);
+ 	}
+ 	*bvprv = *bvec;
+ }
+@@ -521,7 +551,7 @@ static int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
+ 	int nsegs = 0;
+ 
+ 	for_each_bio(bio)
+-		bio_for_each_segment(bvec, bio, iter)
++		bio_for_each_mp_bvec(bvec, bio, iter)
+ 			__blk_segment_map_sg(q, &bvec, sglist, &bvprv, sg,
+ 					     &nsegs);
+ 
+-- 
+2.9.5
