@@ -1,82 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46164 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34654 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726101AbfAWSlc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Jan 2019 13:41:32 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 98F7215F5E
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Jan 2019 18:41:32 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 516F71001F3D
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Jan 2019 18:41:32 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 2/6] xfs: update fork seq counter on data fork changes
-Date: Wed, 23 Jan 2019 13:41:27 -0500
-Message-Id: <20190123184131.46188-3-bfoster@redhat.com>
-In-Reply-To: <20190123184131.46188-1-bfoster@redhat.com>
-References: <20190123184131.46188-1-bfoster@redhat.com>
+        id S1728855AbfAUIWS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Jan 2019 03:22:18 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V14 16/18] block: document usage of bio iterator helpers
+Date: Mon, 21 Jan 2019 16:18:03 +0800
+Message-Id: <20190121081805.32727-17-ming.lei@redhat.com>
+In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
+References: <20190121081805.32727-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-The sequence counter in the xfs_ifork structure is only updated on
-COW forks. This is because the counter is currently only used to
-optimize out repetitive COW fork checks at writeback time.
+Now multi-page bvec is supported, some helpers may return page by
+page, meantime some may return segment by segment, this patch
+documents the usage.
 
-Tweak the extent code to update the seq counter regardless of the
-fork type in preparation for using this counter on data forks as
-well.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- fs/xfs/libxfs/xfs_iext_tree.c  | 13 ++++++-------
- fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
- 2 files changed, 7 insertions(+), 8 deletions(-)
+ Documentation/block/biovecs.txt | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
-index 771dd072015d..bc690f2409fa 100644
---- a/fs/xfs/libxfs/xfs_iext_tree.c
-+++ b/fs/xfs/libxfs/xfs_iext_tree.c
-@@ -614,16 +614,15 @@ xfs_iext_realloc_root(
- }
- 
- /*
-- * Increment the sequence counter if we are on a COW fork.  This allows
-- * the writeback code to skip looking for a COW extent if the COW fork
-- * hasn't changed.  We use WRITE_ONCE here to ensure the update to the
-- * sequence counter is seen before the modifications to the extent
-- * tree itself take effect.
-+ * Increment the sequence counter on extent tree changes. If we are on a COW
-+ * fork, this allows the writeback code to skip looking for a COW extent if the
-+ * COW fork hasn't changed. We use WRITE_ONCE here to ensure the update to the
-+ * sequence counter is seen before the modifications to the extent tree itself
-+ * take effect.
-  */
- static inline void xfs_iext_inc_seq(struct xfs_ifork *ifp, int state)
- {
--	if (state & BMAP_COWFORK)
--		WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
-+	WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
- }
- 
- void
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 60361d2d74a1..00c62ce170d0 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -14,7 +14,7 @@ struct xfs_dinode;
-  */
- struct xfs_ifork {
- 	int			if_bytes;	/* bytes in if_u1 */
--	unsigned int		if_seq;		/* cow fork mod counter */
-+	unsigned int		if_seq;		/* fork mod counter */
- 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
- 	short			if_broot_bytes;	/* bytes allocated for root */
- 	unsigned char		if_flags;	/* per-fork flags */
+diff --git a/Documentation/block/biovecs.txt b/Documentation/block/biovecs.txt
+index 25689584e6e0..4a466bcb9611 100644
+--- a/Documentation/block/biovecs.txt
++++ b/Documentation/block/biovecs.txt
+@@ -117,3 +117,28 @@ Other implications:
+    size limitations and the limitations of the underlying devices. Thus
+    there's no need to define ->merge_bvec_fn() callbacks for individual block
+    drivers.
++
++Usage of helpers:
++=================
++
++* The following helpers whose names have the suffix of "_all" can only be used
++on non-BIO_CLONED bio. They are usually used by filesystem code. Drivers
++shouldn't use them because the bio may have been split before it reached the
++driver.
++
++	bio_for_each_segment_all()
++	bio_first_bvec_all()
++	bio_first_page_all()
++	bio_last_bvec_all()
++
++* The following helpers iterate over single-page segment. The passed 'struct
++bio_vec' will contain a single-page IO vector during the iteration
++
++	bio_for_each_segment()
++	bio_for_each_segment_all()
++
++* The following helpers iterate over multi-page bvec. The passed 'struct
++bio_vec' will contain a multi-page IO vector during the iteration
++
++	bio_for_each_mp_bvec()
++	rq_for_each_mp_bvec()
 -- 
-2.17.2
+2.9.5
