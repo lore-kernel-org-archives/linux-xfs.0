@@ -1,106 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:16035 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730114AbfASATv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Jan 2019 19:19:51 -0500
-Date: Sat, 19 Jan 2019 11:19:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS filesystem hang
-Message-ID: <20190119001946.GI6173@dastard>
-References: <645a3d40-47a5-0f7a-7565-821bbce103f2@profihost.ag>
- <20190117123427.GA37591@bfoster>
- <8cf51b2c-6e9b-317a-16fc-9e47f916198e@profihost.ag>
- <20190117220512.GE6173@dastard>
- <030b0a00-0c0f-4ab3-373d-f9734e60472f@profihost.ag>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <030b0a00-0c0f-4ab3-373d-f9734e60472f@profihost.ag>
+Received: from mx1.redhat.com ([209.132.183.28]:57138 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728067AbfAUITz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Jan 2019 03:19:55 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V14 05/18] block: introduce bio_for_each_mp_bvec() and rq_for_each_mp_bvec()
+Date: Mon, 21 Jan 2019 16:17:52 +0800
+Message-Id: <20190121081805.32727-6-ming.lei@redhat.com>
+In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
+References: <20190121081805.32727-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Daniel Aberger - Profihost AG <d.aberger@profihost.ag>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, s.priebe@profihost.ag, n.fahldieck@profihost.ag
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-On Fri, Jan 18, 2019 at 03:48:46PM +0100, Daniel Aberger - Profihost AG wrote:
-> Am 17.01.19 um 23:05 schrieb Dave Chinner:
-> > On Thu, Jan 17, 2019 at 02:50:23PM +0100, Daniel Aberger - Profihost AG wrote:
-> >> * Kernel Version: Linux 4.12.0+139-ph #1 SMP Tue Jan 1 21:46:16 UTC 2019
-> >> x86_64 GNU/Linux
-> > 
-> > Is that an unmodified distro kernel or one you've patched and built
-> > yourself?
-> 
-> Unmodified regarding XFS and any subsystems related to XFS, as I was
-> being told.
+bio_for_each_mp_bvec() is used for iterating over multi-page bvec for bio
+split & merge code.
 
-That doesn't answer my question - has the kernel been patched (and
-what with) or is it a completely unmodified upstream kernel?
+rq_for_each_mp_bvec() can be used for drivers which may handle the
+multi-page bvec directly, so far loop is one perfect use case.
 
-> >> * /proc/meminfo, /proc/mounts, /proc/partitions and xfs_info can be
-> >> found here: https://pastebin.com/cZiTrUDL
-> > 
-> > Just  notes as I browse it.
-> > - lots of free memory.
-> > - xfs-info: 1.3TB, 32 ags, ~700MB log w/sunit =64fsbs
-> >   sunit=64 fsbs, swidth=192fsbs (RAID?)
-> > - mount options: noatime, sunit=512,sunit=1536, usrquota
-> > - /dev/sda3 mounted on /
-> > - /dev/sda3 also mounted on /home/tmp (bind mount of something?)
-> > 
-> >> * full dmesg output of problem mentioned in the first mail:
-> >> https://pastebin.com/pLaz18L1
-> > 
-> > No smoking gun.
-> > 
-> >> * a couple of more dmesg outputs from the same system with similar
-> >> behaviour:
-> >>  * https://pastebin.com/hWDbwcCr
-> >>  * https://pastebin.com/HAqs4yQc
-> > 
-> > Ok, so mysqld seems to be the problem child here.
-> > 
-> 
-> Our MySQL workload on this server is very small except for this time of
-> the day because our local backup to /backup happens during this time.
-> The highest IO happens during the night when our local backup is being
-> written. The timestamps of these two outputs suggest that the "mysql
-> dump" phase might just have been started. Unfortunately we only keep the
-> log of the last job, so I can't confirm that.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Omar Sandoval <osandov@fb.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ include/linux/bio.h    | 10 ++++++++++
+ include/linux/blkdev.h |  4 ++++
+ 2 files changed, 14 insertions(+)
 
-Ok, so you've just started loading up the btrfs volume that is also
-attached to the same raid controller, which does have raid caches
-enabled....
-
-I wonder if that has anything to do with it?
-
-Best would be to capture iostat output for both luns (as per the
-FAQ) when the problem workload starts.
-
-> > Which leads me to ask: what is your RAID cache setup - write-thru,
-> > write-back, etc?
-> > 
-> 
-> Our RAID6 cache configuration:
-> 
->    Read-cache setting                       : Disabled
->    Read-cache status                        : Off
->    Write-cache setting                      : Disabled
->    Write-cache status                       : Off
-
-Ok, so read caching is turned off, which means it likely won't even
-be caching stripes between modifications. May not be very efficient,
-but hard to say if it's the problem or not.
-
-> Full Configuration: https://pastebin.com/PdGatDY4
-
-Yeah, caching is enabled on the backup btrfs lun, so there may be
-interaction issues. Is the backup device idle (or stalling) at the
-same time that the XFS messages are being issued?
-
-CHeers,
-
-Dave.
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 72b4f7be2106..730288145568 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -156,6 +156,16 @@ static inline void bio_advance_iter(struct bio *bio, struct bvec_iter *iter,
+ #define bio_for_each_segment(bvl, bio, iter)				\
+ 	__bio_for_each_segment(bvl, bio, iter, (bio)->bi_iter)
+ 
++#define __bio_for_each_mp_bvec(bvl, bio, iter, start)		\
++	for (iter = (start);						\
++	     (iter).bi_size &&						\
++		((bvl = mp_bvec_iter_bvec((bio)->bi_io_vec, (iter))), 1); \
++	     bio_advance_iter((bio), &(iter), (bvl).bv_len))
++
++/* iterate over multi-page bvec */
++#define bio_for_each_mp_bvec(bvl, bio, iter)			\
++	__bio_for_each_mp_bvec(bvl, bio, iter, (bio)->bi_iter)
++
+ #define bio_iter_last(bvec, iter) ((iter).bi_size == (bvec).bv_len)
+ 
+ static inline unsigned bio_segments(struct bio *bio)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 338604dff7d0..6ebae3ee8f44 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -797,6 +797,10 @@ struct req_iterator {
+ 	__rq_for_each_bio(_iter.bio, _rq)			\
+ 		bio_for_each_segment(bvl, _iter.bio, _iter.iter)
+ 
++#define rq_for_each_mp_bvec(bvl, _rq, _iter)			\
++	__rq_for_each_bio(_iter.bio, _rq)			\
++		bio_for_each_mp_bvec(bvl, _iter.bio, _iter.iter)
++
+ #define rq_iter_last(bvec, _iter)				\
+ 		(_iter.bio->bi_next == NULL &&			\
+ 		 bio_iter_last(bvec, _iter.iter))
 -- 
-Dave Chinner
-david@fromorbit.com
+2.9.5
