@@ -1,113 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from 1.mo301.mail-out.ovh.net ([137.74.110.64]:54843 "EHLO
-        1.mo301.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726105AbfAXNHk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Jan 2019 08:07:40 -0500
-From: Julien Lutran <julien.lutran@corp.ovh.com>
-Subject: Re: Unable to fix metadata corruption with xfs_repair
-Date: Thu, 24 Jan 2019 13:07:36 +0000
-Message-ID: <D4E40E64-5AD6-4657-9989-50201111541D@corp.ovh.com>
-References: <68A7E1A3-8AE1-4CD5-86E2-ABDD5F64D2CB@corp.ovh.com>
- <ac8c49d2-7c51-5f4c-d891-b06fe86c87dc@sandeen.net>
-In-Reply-To: <ac8c49d2-7c51-5f4c-d891-b06fe86c87dc@sandeen.net>
-Content-Language: en-US
-Content-Type: multipart/signed;
-        boundary="Apple-Mail=_71C5AFFE-A763-45DC-85BB-D8322D5EB877";
-        protocol="application/pgp-signature"; micalg=pgp-sha512
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:63725 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726225AbfAVVw5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Jan 2019 16:52:57 -0500
+Date: Wed, 23 Jan 2019 08:52:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Bug 202127] cannot mount or create xfs on a  597T device
+Message-ID: <20190122215254.GM6173@dastard>
+References: <bug-202127-201763@https.bugzilla.kernel.org/>
+ <bug-202127-201763-jc6cMFk2so@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bug-202127-201763-jc6cMFk2so@https.bugzilla.kernel.org/>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
---Apple-Mail=_71C5AFFE-A763-45DC-85BB-D8322D5EB877
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=utf-8
+On Tue, Jan 22, 2019 at 12:49:31PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=202127
+> 
+> --- Comment #22 from daimh@umich.edu ---
+> An update is that Broadcom engineer cannot reproduce the issue with Arch Linux
+> kernel 4.20.3-arch1-1-ARCH and mkfs.xfs version 4.19.0. The difference is his
+> raid-60 is 7T and 2T, while mine is 556T. 
 
-Here=E2=80=99s the xfs_metadump (1.35 GB) : =
-https://dl.plik.ovh/file/kyXGCIy5luJe7ZKi/ZvUMwvCqUVPiQ2Oe/sdb.metadump.xz=
+IOWs, they didn't actually test your configuration, and so they
+didn't see the problem you are seeing. Which implies they've got a
+problem in their firmware where something overflows at a larger size
+than 7TB.  If that were my raid card, I'd be tearing strips off the
+support engineer's manager by now...
 
+Cheers,
 
-
-Julien
-
-> On 21 Jan 2019, at 17:42, Eric Sandeen <sandeen@sandeen.net> wrote:
->=20
->=20
->=20
-> On 1/21/19 9:36 AM, Julien Lutran wrote:
->> Hello,
->>=20
->> I=E2=80=99m experiencing an issue with metadata corruption while =
-trying to fix several corrupted xfs filesystems.
->> Here=E2=80=99s an excerpt of the kernel messages when the disk is =
-mounted :
->>=20
->> [=E2=80=A6]
->> Jan 21 15:44:16 rescue kernel: XFS (sdb): Metadata corruption =
-detected at xfs_inode_buf_verify+0x6d/0xf0, xfs_inode block 0x300160
->> Jan 21 15:44:16 rescue kernel: XFS (sdb): Unmount and run xfs_repair
->> Jan 21 15:44:16 rescue kernel: XFS (sdb): First 64 bytes of corrupted =
-metadata buffer:
->> Jan 21 15:44:16 rescue kernel: XFS (sdb): metadata I/O error: block =
-0x300160 ("xfs_trans_read_buf_map") error 117 numblks 16
->> Jan 21 15:44:16 rescue kernel: XFS (sdb): xfs_imap_to_bp: =
-xfs_trans_read_buf() returned error -117.
->>=20
->> I tried to run a xfs_repair (see attached log) but it ends up the =
-same way : metadata error on block 0x300160
->> Is there a way to fix this corruption ?
->>=20
->> Linux kernel version is 4.14.17 but I encountered the exact same =
-issue in several other hosts running an older kernel.
->> Xfsprogs version is 4.19.0
->>=20
->>=20
->> Best regards,
->> Julien Lutran
->=20
-> Hi Julien -
->=20
-> Your log file says:
->=20
-> "Start xfs_repair with cmdline: xfs_repair -L -m 8047 /dev/sdb"
->=20
-> 1) Why did you use -L, would the log not replay?
-> 2) Why use -m?  Does that affect the outcome at all?
-> 3) You could give the for-next branch in git a try, just in case, but =
-otherwise
-> 4) Please provide a compressed xfs_metadump for me to look at, off =
-list, and
->   I'll see what I can find.
->=20
-> Thanks,
-> -Eric
-
-
---Apple-Mail=_71C5AFFE-A763-45DC-85BB-D8322D5EB877
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - https://gpgtools.org
-
-iQIzBAEBCgAdFiEEHWtkGxqIdLStc9rVXqwUC54mmJYFAlxJuJYACgkQXqwUC54m
-mJa8FQ//bQQS5nwdMMglRkjY9rIUX+9FPu4s0OoAVTf6hfSIFJLsiJrQZwV3Swfd
-/pQfTOFO5E5+QSTQeXqEozeZAzv3PJy9OIN1Vgkl1yyFw0b+sakWPebd8on731t7
-C9K19brwXy2sNN/7qjAAz+dInX14qW1EWI6D5c/aywxVaFuND3qXGhZVgLR8F7v8
-syjvz3vA9+HDDj+4QPhcxVDfG4c+vyrTs4Z8fFB1s4HSuHp5qvDddvbOeh8iAsr0
-eeYCvkejk50/KaotKMZ07vEaPpEn5BOJW/vS4+0qz8zjUcOedMrr1xFib5sl5+bW
-umaofE2EjplReGx4FLitjS3zWgIlC8RHeNyN5DrJZp7hl5BhwmJYKm2Gzr8hr4w4
-ztg0eY4bB7Su9+nNLbJ3zCJ4tj3pzB5ZJOwtI+fRAs22qqsKDkSmlrWt8mHLN8XW
-mRaYR0mJILJjbjRaISopXRHBI6e2qiEFzZI4pEdhHJL0NzQpPYp1YkFAYkoOQJKC
-hQJQfz37bE9bqrsvyIXgctRiAa3EwEE3nOdykiMR3Hj/9BjI3GgCkG+KjdhijLw0
-V3Htw0ufnOnaGaLJE6vaxAgrHs5ZO0OFiRAazVWiqozZ0N/+tYTY/7j3BUWvQRVe
-VRYgmPAJLWHg4fq+EvduwmGeJjDxdzvJdABXLA1Oi+OZOCrAxtc=
-=jW7k
------END PGP SIGNATURE-----
-
---Apple-Mail=_71C5AFFE-A763-45DC-85BB-D8322D5EB877--
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
