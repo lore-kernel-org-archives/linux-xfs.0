@@ -1,49 +1,215 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:37652 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726002AbfAWSON (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Jan 2019 13:14:13 -0500
-Date: Wed, 23 Jan 2019 10:14:12 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 5/5] xfs: revalidate imap properly before writeback
- delalloc conversion
-Message-ID: <20190123181412.GA23710@infradead.org>
-References: <20190117192004.49346-1-bfoster@redhat.com>
- <20190117192004.49346-6-bfoster@redhat.com>
- <20190118115937.GD7807@infradead.org>
- <20190118163132.GA6318@infradead.org>
- <20190118183915.GB53532@bfoster>
- <20190121154833.GA31678@infradead.org>
- <20190121174256.GB14281@bfoster>
- <20190122171445.GA6717@infradead.org>
- <20190122181327.GA23651@bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190122181327.GA23651@bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:13584 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726101AbfAWSld (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 Jan 2019 13:41:33 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0DAD315F5E
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Jan 2019 18:41:33 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B6A99103BAB6
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Jan 2019 18:41:32 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3 3/6] xfs: validate writeback mapping using data fork seq counter
+Date: Wed, 23 Jan 2019 13:41:28 -0500
+Message-Id: <20190123184131.46188-4-bfoster@redhat.com>
+In-Reply-To: <20190123184131.46188-1-bfoster@redhat.com>
+References: <20190123184131.46188-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Jan 22, 2019 at 01:13:28PM -0500, Brian Foster wrote:
-> > So, the nimaps == 0 case hits even for the data fork when running
-> > xfs/442 on a 1k block size file system.  That test has generally been
-> > a fun source of bugs in the always_cow series.
-> 
-> Hmm, Ok.. any idea how/why that is? I'm curious if this is an artifact
-> of this code being racy (i.e., nimaps == 0 occurs somehow on a range
-> external to the page) or there is some legitimate means to lose a
-> delalloc block under the locked page. If the latter, we should at least
-> document it in the code..
+The writeback code caches the current extent mapping across multiple
+xfs_do_writepage() calls to avoid repeated lookups for sequential
+pages backed by the same extent. This is known to be slightly racy
+with extent fork changes in certain difficult to reproduce
+scenarios. The cached extent is trimmed to within EOF to help avoid
+the most common vector for this problem via speculative
+preallocation management, but this is a band-aid that does not
+address the fundamental problem.
 
-I haven't managed to pinpint it mostly because xfs_bmapi_write is
-such an unreadable mess.  Based on that I decided to implement the idea
-of a separate xfs_bmapi_delalloc_convert helper again, mostly to try
-to understand what actuall is going on.  This seems to work pretty
-reasonable after initial testing, except that it seems to unhide an
-issue in xfs/109 which doesn't look directly related.  The current
-status is here:
+Now that we have an xfs_ifork sequence counter mechanism used to
+facilitate COW writeback, we can use the same mechanism to validate
+consistency between the data fork and cached writeback mappings. On
+its face, this is somewhat of a big hammer approach because any
+change to the data fork invalidates any mapping currently cached by
+a writeback in progress regardless of whether the data fork change
+overlaps with the range under writeback. In practice, however, the
+impact of this approach is minimal in most cases.
 
-http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-mapping-validation.2
+First, data fork changes (delayed allocations) caused by sustained
+sequential buffered writes are amortized across speculative
+preallocations. This means that a cached mapping won't be
+invalidated by each buffered write of a common file copy workload,
+but rather only on less frequent allocation events. Second, the
+extent tree is always entirely in-core so an additional lookup of a
+usable extent mostly costs a shared ilock cycle and in-memory tree
+lookup. This means that a cached mapping reval is relatively cheap
+compared to the I/O itself. Third, spurious invalidations don't
+impact ioend construction. This means that even if the same extent
+is revalidated multiple times across multiple writepage instances,
+we still construct and submit the same size ioend (and bio) if the
+blocks are physically contiguous.
+
+Update struct xfs_writepage_ctx with a new field to hold the
+sequence number of the data fork associated with the currently
+cached mapping. Check the wpc seqno against the data fork when the
+mapping is validated and reestablish the mapping whenever the fork
+has changed since the mapping was cached. This ensures that
+writeback always uses a valid extent mapping and thus prevents lost
+writebacks and stale delalloc block problems.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c  | 60 ++++++++++++++++++++++++++++++++++++----------
+ fs/xfs/xfs_iomap.c |  5 ++--
+ 2 files changed, 49 insertions(+), 16 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index d9048bcea49c..5b0256a8a420 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -29,6 +29,7 @@
+ struct xfs_writepage_ctx {
+ 	struct xfs_bmbt_irec    imap;
+ 	unsigned int		io_type;
++	unsigned int		data_seq;
+ 	unsigned int		cow_seq;
+ 	struct xfs_ioend	*ioend;
+ };
+@@ -301,6 +302,42 @@ xfs_end_bio(
+ 		xfs_destroy_ioend(ioend, blk_status_to_errno(bio->bi_status));
+ }
+ 
++/*
++ * Fast revalidation of the cached writeback mapping. Return true if the current
++ * mapping is valid, false otherwise.
++ */
++static bool
++xfs_imap_valid(
++	struct xfs_writepage_ctx	*wpc,
++	struct xfs_inode		*ip,
++	xfs_fileoff_t			offset_fsb)
++{
++	if (offset_fsb < wpc->imap.br_startoff ||
++	    offset_fsb >= wpc->imap.br_startoff + wpc->imap.br_blockcount)
++		return false;
++	/*
++	 * If this is a COW mapping, it is sufficient to check that the mapping
++	 * covers the offset. Be careful to check this first because the caller
++	 * can revalidate a COW mapping without updating the data seqno.
++	 */
++	if (wpc->io_type == XFS_IO_COW)
++		return true;
++
++	/*
++	 * This is not a COW mapping. Check the sequence number of the data fork
++	 * because concurrent changes could have invalidated the extent. Check
++	 * the COW fork because concurrent changes since the last time we
++	 * checked (and found nothing at this offset) could have added
++	 * overlapping blocks.
++	 */
++	if (wpc->data_seq != READ_ONCE(ip->i_df.if_seq))
++		return false;
++	if (xfs_inode_has_cow_data(ip) &&
++	    wpc->cow_seq != READ_ONCE(ip->i_cowfp->if_seq))
++		return false;
++	return true;
++}
++
+ STATIC int
+ xfs_map_blocks(
+ 	struct xfs_writepage_ctx *wpc,
+@@ -315,9 +352,11 @@ xfs_map_blocks(
+ 	struct xfs_bmbt_irec	imap;
+ 	int			whichfork = XFS_DATA_FORK;
+ 	struct xfs_iext_cursor	icur;
+-	bool			imap_valid;
+ 	int			error = 0;
+ 
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return -EIO;
++
+ 	/*
+ 	 * We have to make sure the cached mapping is within EOF to protect
+ 	 * against eofblocks trimming on file release leaving us with a stale
+@@ -346,17 +385,9 @@ xfs_map_blocks(
+ 	 * against concurrent updates and provides a memory barrier on the way
+ 	 * out that ensures that we always see the current value.
+ 	 */
+-	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
+-		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
+-	if (imap_valid &&
+-	    (!xfs_inode_has_cow_data(ip) ||
+-	     wpc->io_type == XFS_IO_COW ||
+-	     wpc->cow_seq == READ_ONCE(ip->i_cowfp->if_seq)))
++	if (xfs_imap_valid(wpc, ip, offset_fsb))
+ 		return 0;
+ 
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return -EIO;
+-
+ 	/*
+ 	 * If we don't have a valid map, now it's time to get a new one for this
+ 	 * offset.  This will convert delayed allocations (including COW ones)
+@@ -403,9 +434,10 @@ xfs_map_blocks(
+ 	}
+ 
+ 	/*
+-	 * Map valid and no COW extent in the way?  We're done.
++	 * No COW extent overlap. Revalidate now that we may have updated
++	 * ->cow_seq. If the data mapping is still valid, we're done.
+ 	 */
+-	if (imap_valid) {
++	if (xfs_imap_valid(wpc, ip, offset_fsb)) {
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 		return 0;
+ 	}
+@@ -417,6 +449,7 @@ xfs_map_blocks(
+ 	 */
+ 	if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap))
+ 		imap.br_startoff = end_fsb;	/* fake a hole past EOF */
++	wpc->data_seq = READ_ONCE(ip->i_df.if_seq);
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 
+ 	if (imap.br_startoff > offset_fsb) {
+@@ -454,7 +487,8 @@ xfs_map_blocks(
+ 	return 0;
+ allocate_blocks:
+ 	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap,
+-			&wpc->cow_seq);
++			whichfork == XFS_COW_FORK ?
++					 &wpc->cow_seq : &wpc->data_seq);
+ 	if (error)
+ 		return error;
+ 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 27c93b5f029d..ab69caa685b4 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -681,7 +681,7 @@ xfs_iomap_write_allocate(
+ 	int		whichfork,
+ 	xfs_off_t	offset,
+ 	xfs_bmbt_irec_t *imap,
+-	unsigned int	*cow_seq)
++	unsigned int	*seq)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
+@@ -797,8 +797,7 @@ xfs_iomap_write_allocate(
+ 			if (error)
+ 				goto error0;
+ 
+-			if (whichfork == XFS_COW_FORK)
+-				*cow_seq = READ_ONCE(ifp->if_seq);
++			*seq = READ_ONCE(ifp->if_seq);
+ 			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		}
+ 
+-- 
+2.17.2
