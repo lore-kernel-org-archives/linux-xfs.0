@@ -1,63 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34654 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728855AbfAUIWS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Jan 2019 03:22:18 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V14 16/18] block: document usage of bio iterator helpers
-Date: Mon, 21 Jan 2019 16:18:03 +0800
-Message-Id: <20190121081805.32727-17-ming.lei@redhat.com>
-In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
-References: <20190121081805.32727-1-ming.lei@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:37652 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726002AbfAWSON (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Jan 2019 13:14:13 -0500
+Date: Wed, 23 Jan 2019 10:14:12 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 5/5] xfs: revalidate imap properly before writeback
+ delalloc conversion
+Message-ID: <20190123181412.GA23710@infradead.org>
+References: <20190117192004.49346-1-bfoster@redhat.com>
+ <20190117192004.49346-6-bfoster@redhat.com>
+ <20190118115937.GD7807@infradead.org>
+ <20190118163132.GA6318@infradead.org>
+ <20190118183915.GB53532@bfoster>
+ <20190121154833.GA31678@infradead.org>
+ <20190121174256.GB14281@bfoster>
+ <20190122171445.GA6717@infradead.org>
+ <20190122181327.GA23651@bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190122181327.GA23651@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-Now multi-page bvec is supported, some helpers may return page by
-page, meantime some may return segment by segment, this patch
-documents the usage.
+On Tue, Jan 22, 2019 at 01:13:28PM -0500, Brian Foster wrote:
+> > So, the nimaps == 0 case hits even for the data fork when running
+> > xfs/442 on a 1k block size file system.  That test has generally been
+> > a fun source of bugs in the always_cow series.
+> 
+> Hmm, Ok.. any idea how/why that is? I'm curious if this is an artifact
+> of this code being racy (i.e., nimaps == 0 occurs somehow on a range
+> external to the page) or there is some legitimate means to lose a
+> delalloc block under the locked page. If the latter, we should at least
+> document it in the code..
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- Documentation/block/biovecs.txt | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+I haven't managed to pinpint it mostly because xfs_bmapi_write is
+such an unreadable mess.  Based on that I decided to implement the idea
+of a separate xfs_bmapi_delalloc_convert helper again, mostly to try
+to understand what actuall is going on.  This seems to work pretty
+reasonable after initial testing, except that it seems to unhide an
+issue in xfs/109 which doesn't look directly related.  The current
+status is here:
 
-diff --git a/Documentation/block/biovecs.txt b/Documentation/block/biovecs.txt
-index 25689584e6e0..4a466bcb9611 100644
---- a/Documentation/block/biovecs.txt
-+++ b/Documentation/block/biovecs.txt
-@@ -117,3 +117,28 @@ Other implications:
-    size limitations and the limitations of the underlying devices. Thus
-    there's no need to define ->merge_bvec_fn() callbacks for individual block
-    drivers.
-+
-+Usage of helpers:
-+=================
-+
-+* The following helpers whose names have the suffix of "_all" can only be used
-+on non-BIO_CLONED bio. They are usually used by filesystem code. Drivers
-+shouldn't use them because the bio may have been split before it reached the
-+driver.
-+
-+	bio_for_each_segment_all()
-+	bio_first_bvec_all()
-+	bio_first_page_all()
-+	bio_last_bvec_all()
-+
-+* The following helpers iterate over single-page segment. The passed 'struct
-+bio_vec' will contain a single-page IO vector during the iteration
-+
-+	bio_for_each_segment()
-+	bio_for_each_segment_all()
-+
-+* The following helpers iterate over multi-page bvec. The passed 'struct
-+bio_vec' will contain a multi-page IO vector during the iteration
-+
-+	bio_for_each_mp_bvec()
-+	rq_for_each_mp_bvec()
--- 
-2.9.5
+http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-mapping-validation.2
