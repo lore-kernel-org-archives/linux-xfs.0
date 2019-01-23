@@ -1,27 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:56871 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:51738 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729541AbfAUIWu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Jan 2019 03:22:50 -0500
-Date: Mon, 21 Jan 2019 09:22:46 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V14 00/18] block: support multi-page bvec
-Message-ID: <20190121082246.GA18305@lst.de>
-References: <20190121081805.32727-1-ming.lei@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
+        id S1726274AbfAWSld (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 Jan 2019 13:41:33 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 73294806A8
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Jan 2019 18:41:33 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 29A94100191D
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Jan 2019 18:41:33 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3 4/6] xfs: remove superfluous writeback mapping eof trimming
+Date: Wed, 23 Jan 2019 13:41:29 -0500
+Message-Id: <20190123184131.46188-5-bfoster@redhat.com>
+In-Reply-To: <20190123184131.46188-1-bfoster@redhat.com>
+References: <20190123184131.46188-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: linux-xfs@vger.kernel.org
 
-On Mon, Jan 21, 2019 at 04:17:47PM +0800, Ming Lei wrote:
-> V14:
-> 	- drop patch(patch 4 in V13) for renaming bvec helpers, as suggested by Jens
-> 	- use mp_bvec_* as multi-page bvec helper name
+Now that the cached writeback mapping is explicitly invalidated on
+data fork changes, the EOF trimming band-aid is no longer necessary.
+Remove xfs_trim_extent_eof() as well since it has no other users.
 
-WTF?  Where is this coming from?  mp is just a nightmare of a name,
-and I also didn't see any comments like that.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 11 -----------
+ fs/xfs/libxfs/xfs_bmap.h |  1 -
+ fs/xfs/xfs_aops.c        | 15 ---------------
+ 3 files changed, 27 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 332eefa2700b..4c73927819c2 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3685,17 +3685,6 @@ xfs_trim_extent(
+ 	}
+ }
+ 
+-/* trim extent to within eof */
+-void
+-xfs_trim_extent_eof(
+-	struct xfs_bmbt_irec	*irec,
+-	struct xfs_inode	*ip)
+-
+-{
+-	xfs_trim_extent(irec, 0, XFS_B_TO_FSB(ip->i_mount,
+-					      i_size_read(VFS_I(ip))));
+-}
+-
+ /*
+  * Trim the returned map to the required bounds
+  */
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 09d3ea97cc15..b4ff710d7250 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -181,7 +181,6 @@ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
+ 
+ void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
+ 		xfs_filblks_t len);
+-void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
+ int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+ int	xfs_bmap_set_attrforkoff(struct xfs_inode *ip, int size, int *version);
+ void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 5b0256a8a420..515532f45beb 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -357,19 +357,6 @@ xfs_map_blocks(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	/*
+-	 * We have to make sure the cached mapping is within EOF to protect
+-	 * against eofblocks trimming on file release leaving us with a stale
+-	 * mapping. Otherwise, a page for a subsequent file extending buffered
+-	 * write could get picked up by this writeback cycle and written to the
+-	 * wrong blocks.
+-	 *
+-	 * Note that what we really want here is a generic mapping invalidation
+-	 * mechanism to protect us from arbitrary extent modifying contexts, not
+-	 * just eofblocks.
+-	 */
+-	xfs_trim_extent_eof(&wpc->imap, ip);
+-
+ 	/*
+ 	 * COW fork blocks can overlap data fork blocks even if the blocks
+ 	 * aren't shared.  COW I/O always takes precedent, so we must always
+@@ -482,7 +469,6 @@ xfs_map_blocks(
+ 	}
+ 
+ 	wpc->imap = imap;
+-	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ allocate_blocks:
+@@ -494,7 +480,6 @@ xfs_map_blocks(
+ 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+ 	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+ 	wpc->imap = imap;
+-	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ }
+-- 
+2.17.2
