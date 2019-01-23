@@ -1,177 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56412 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726673AbfANRZz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Jan 2019 12:25:55 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 7582181DF3
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Jan 2019 17:25:55 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 00/13] xfsdump: (style) remove spaces from parentheses
-Date: Mon, 14 Jan 2019 18:25:15 +0100
-Message-Id: <20190114172528.65250-1-jtulak@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:43397 "EHLO
+        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726317AbfAWLOT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Jan 2019 06:14:19 -0500
+Message-ID: <1548242057.28802.1.camel@pengutronix.de>
+Subject: Re: Regular FS shutdown while rsync is running
+From: Lucas Stach <l.stach@pengutronix.de>
+Date: Wed, 23 Jan 2019 12:14:17 +0100
+In-Reply-To: <20190122130254.GA22901@bfoster>
+References: <1543238989.2507.33.camel@pengutronix.de>
+         <20181126153249.GC14585@bfoster> <1548067317.2465.7.camel@pengutronix.de>
+         <20190121130121.GA4537@bfoster> <1548087824.2465.9.camel@pengutronix.de>
+         <20190121181151.GD14281@bfoster> <1548153593.2465.18.camel@pengutronix.de>
+         <20190122130254.GA22901@bfoster>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi guys
+Am Dienstag, den 22.01.2019, 08:02 -0500 schrieb Brian Foster:
+> On Tue, Jan 22, 2019 at 11:39:53AM +0100, Lucas Stach wrote:
+> > Hi Brian,
+> > 
+> > Am Montag, den 21.01.2019, 13:11 -0500 schrieb Brian Foster:
+> > [...]
+> > > > So for the moment, here's the output of the above sequence.
+> > > > 
+> > > > xfs_db> convert agno 5 agbno 7831662 fsb
+> > > > 0x5077806e (1350008942)
+> > > > xfs_db> fsb 0x5077806e
+> > > > xfs_db> type finobt
+> > > > xfs_db> print
+> > > > magic = 0x49414233
+> > > > level = 1
+> > > > numrecs = 335
+> > > > leftsib = 7810856
+> > > > rightsib = null
+> > > > bno = 7387612016
+> > > > lsn = 0x6671003d9700
+> > > > uuid = 026711cc-25c7-44b9-89aa-0aac496edfec
+> > > > owner = 5
+> > > > crc = 0xe12b19b2 (correct)
+> > > 
+> > > As expected, we have the inobt magic. Interesting that this is a fairly
+> > > full intermediate (level > 0) node. There is no right sibling, which
+> > > means we're at the far right end of the tree. I wouldn't mind poking
+> > > around a bit more at the tree, but that might be easier with access to
+> > > the metadump. I also think that xfs_repair would have complained were
+> > > something more significant wrong with the tree.
+> > > 
+> > > Hmm, I wonder if the (lightly tested) diff below would help us catch
+> > > anything. It basically just splits up the currently combined inobt and
+> > > finobt I/O verifiers to expect the appropriate magic number (rather than
+> > > accepting either magic for both trees). Could you give that a try?
+> > > Unless we're doing something like using the wrong type of cursor for a
+> > > particular tree, I'd think this would catch wherever we happen to put a
+> > > bad magic on disk. Note that this assumes the underlying filesystem has
+> > > been repaired so as to try and detect the next time an on-disk
+> > > corruption is introduced.
+> > > 
+> > > You'll also need to turn up the XFS error level to make sure this prints
+> > > out a stack trace if/when a verifier failure triggers:
+> > > 
+> > > echo 5 > /proc/sys/fs/xfs/error_level
+> > > 
+> > > I guess we also shouldn't rule out hardware issues or whatnot. I did
+> > > notice you have a strange kernel version: 4.19.4-holodeck10. Is that a
+> > > distro kernel? Has it been modified from upstream in any way? If so, I'd
+> > > strongly suggest to try and confirm whether this is reproducible with an
+> > > upstream kernel.
+> > 
+> > With the finobt verifier changes applied we are unable to mount the FS,
+> > even after running xfs_repair.
+> > 
+> > xfs_repair had found "bad magic # 0x49414233 in inobt block 5/2631703",
+> > which would be daddr 0x1b5db40b8 according to xfs_db. The mount trips
+> > over a buffer at a different daddr though:
+> > 
+> 
+> So the mount failed, you ran repair and discovered the bad magic..? That
+> suggests there was still an issue with the fs on-disk. Could you run
+> 'xfs_repair -n' after the actual xfs_repair to confirm the fs is free of
+> errors before it is mounted? Note that xfs_repair unconditionally
+> regenerates certain metadata structures (like the finobt) from scratch
+> so there is always the possibility that xfs_repair itself is introducing
+> some problem in the fs.
 
-Another change to make xfsdump more eyes-friendly. I hope you prefer
-this slower, once-in-a-time approach more. :-)
+The sequence was:
+1. Trying to mount with the debug kernel, which didn't work due to the
+finobt verifier rejecting a bad btree node.
+2. Full run of mutating xfs_repair (which did find a finobt node with
+bad magic)
+3. Try to mount again, still fails due to finobt verifier rejecting a
+bad btree node, but at a different daddr than what was flagged by
+xfs_repair.
+4. xfs_repair -n finds a bad magic finobt node at the same position as
+the mount splat.
 
-First, why this patchset has the weird numbering: it should be just one
-patch, but because the mailing list throws away emails that are bigger
-than some 250 kB or so, I had to split it to multiple emails that all
-are 'small' enough to pass.
+This leads me to wonder if xfs_repair was the poison rather than the
+cure in this case. After digging into the xfs_repair code I found the
+following, which looks suspicious, but I don't know enough about XFS
+internals to tell if this can actually happen:
 
-And as they all share the same name, it would be difficult to know which
-patch you are looking at once you apply them, so I added the numbers
-directly into the title. When merging, they can be squashed (and
-individual messages discarded, they are all the same).
+build_ino_tree(), which is shared between XFS_BTNUM_INO and
+XFS_BTNUM_FINO btree rebuilds contains the following in one of the
+loops:
 
-All the patches do the same thing, transforming "( x, y )" to "(x, y)"
-(and dtto for []). Most of patches contain multiple files and
-directories, except 6, 7 and 10, 11. In these two pairs, I had to split
-a single file (dump/content.c and restore/content.c) into two patches as
-they would be still too big otherwise.
+if (lptr->num_recs_pb > 0)
+		prop_ino_cursor(mp, agno, btree_curs,
+				ino_rec->ino_startnum, 0);
 
-Some information that should help you with the review:
-- I managed to tune the script to avoid all pittfals I could find, so
-  the changes are reproducible.
-- No strings should be changed.
-- No real changes in gcc output: I made a diff of 'make' output before and
-  after and the only differences are the removed spaces where gcc already
-  complained.
-- A sight decrease of long lines (>79 chars), from 217 to 206.
-- Comparing objdumps won't work, a single space can change it. :-(
+prop_ino_cursor() calls libxfs_btree_init_block() with the btnum
+parameter being a fixed XFS_BTNUM_INO.
 
-I don't think that it made any line particularly more difficult to read
-(or at least I didn't notice any).
+So if it's possible to get into this code path while rebuilding the
+finobt, xfs_repair will generate a otherwise valid btree node with the
+wrong magic, which matches what we see.
 
+Sadly we have no more debug information available about the state of
+the FS on the first crash, which lead us to run xfs_repair in the first
+place.
 
-
-Jan Tulak (13):
-  xfsdump: (1/13) (style) remove spaces from parentheses
-  xfsdump: (2/13) (style) remove spaces from parentheses
-  xfsdump: (3/13) (style) remove spaces from parentheses
-  xfsdump: (4/13) (style) remove spaces from parentheses
-  xfsdump: (5/13) (style) remove spaces from parentheses
-  xfsdump: (6/13) (style) remove spaces from parentheses
-  xfsdump: (7/13) (style) remove spaces from parentheses
-  xfsdump: (8/13) (style) remove spaces from parentheses
-  xfsdump: (9/13) (style) remove spaces from parentheses
-  xfsdump: (10/13) (style) remove spaces from parentheses
-  xfsdump: (11/13) (style) remove spaces from parentheses
-  xfsdump: (12/13) (style) remove spaces from parentheses
-  xfsdump: (13/13) (style) remove spaces from parentheses
-
- common/arch_xlate.c     |    8 +-
- common/cldmgr.c         |  134 +-
- common/cldmgr.h         |   16 +-
- common/cleanup.c        |   66 +-
- common/cleanup.h        |   16 +-
- common/content.h        |   42 +-
- common/content_common.c |   94 +-
- common/content_common.h |    2 +-
- common/content_inode.h  |   88 +-
- common/dlog.c           |  284 +-
- common/dlog.h           |   32 +-
- common/drive.c          |  170 +-
- common/drive.h          |  126 +-
- common/drive_minrmt.c   | 2128 +++++++--------
- common/drive_scsitape.c | 2948 ++++++++++-----------
- common/drive_simple.c   |  732 +++---
- common/exit.h           |    4 +-
- common/fs.c             |  188 +-
- common/fs.h             |   12 +-
- common/global.c         |  206 +-
- common/global.h         |   28 +-
- common/hsmapi.c         |   22 +-
- common/inventory.c      |  302 +--
- common/inventory.h      |   36 +-
- common/lock.c           |   14 +-
- common/lock.h           |    6 +-
- common/main.c           | 1578 ++++++------
- common/media.c          |  126 +-
- common/media.h          |   20 +-
- common/media_rmvtape.h  |    6 +-
- common/mlog.c           |  328 +--
- common/mlog.h           |   58 +-
- common/openutil.c       |   72 +-
- common/openutil.h       |   22 +-
- common/path.c           |  190 +-
- common/path.h           |    8 +-
- common/qlock.c          |  116 +-
- common/qlock.h          |   18 +-
- common/rec_hdr.h        |    4 +-
- common/ring.c           |  228 +-
- common/ring.h           |   20 +-
- common/stream.c         |   96 +-
- common/stream.h         |   26 +-
- common/timeutil.c       |    8 +-
- common/timeutil.h       |    6 +-
- common/ts_mtio.h        |    2 +-
- common/types.h          |   58 +-
- common/util.c           |  260 +-
- common/util.h           |   56 +-
- dump/content.c          | 3644 +++++++++++++-------------
- dump/getopt.h           |    2 +-
- dump/inomap.c           |  768 +++---
- dump/inomap.h           |   32 +-
- dump/var.c              |   96 +-
- dump/var.h              |    4 +-
- include/swab.h          |   24 +-
- include/swap.h          |   10 +-
- inventory/getopt.h      |    2 +-
- inventory/inv_api.c     |  414 +--
- inventory/inv_core.c    |  106 +-
- inventory/inv_files.c   |   10 +-
- inventory/inv_fstab.c   |  152 +-
- inventory/inv_idx.c     |  274 +-
- inventory/inv_mgr.c     |  332 +--
- inventory/inv_oref.c    |   46 +-
- inventory/inv_oref.h    |    2 +-
- inventory/inv_priv.h    |  244 +-
- inventory/inv_stobj.c   |  746 +++---
- inventory/inventory.h   |   28 +-
- inventory/testmain.c    |  236 +-
- invutil/cmenu.h         |   24 +-
- invutil/fstab.c         |   12 +-
- invutil/invidx.c        |   76 +-
- invutil/invutil.c       |  246 +-
- invutil/invutil.h       |    6 +-
- invutil/stobj.c         |   32 +-
- librmt/rmtcommand.c     |    2 +-
- librmt/rmtfstat.c       |    6 +-
- librmt/rmtioctl.c       |   18 +-
- librmt/rmtopen.c        |    4 +-
- librmt/rmtstatus.c      |    8 +-
- librmt/rmtwrite.c       |    2 +-
- restore/bag.c           |   70 +-
- restore/bag.h           |   20 +-
- restore/content.c       | 5414 +++++++++++++++++++--------------------
- restore/dirattr.c       |  682 ++---
- restore/dirattr.h       |   46 +-
- restore/getopt.h        |    2 +-
- restore/inomap.c        |  288 +--
- restore/inomap.h        |   34 +-
- restore/mmap.c          |    2 +-
- restore/namreg.c        |  234 +-
- restore/namreg.h        |   12 +-
- restore/node.c          |  328 +--
- restore/node.h          |   12 +-
- restore/tree.c          | 2874 ++++++++++-----------
- restore/tree.h          |   48 +-
- restore/win.c           |  138 +-
- restore/win.h           |   12 +-
- 99 files changed, 14417 insertions(+), 14417 deletions(-)
-
--- 
-2.19.1
+Regards,
+Lucas
