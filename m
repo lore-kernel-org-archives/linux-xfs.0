@@ -1,42 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:36464 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726872AbfAUJnZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Jan 2019 04:43:25 -0500
-Subject: Re: [PATCH V14 00/18] block: support multi-page bvec
-References: <20190121081805.32727-1-ming.lei@redhat.com>
-From: Sagi Grimberg <sagi@grimberg.me>
-Message-ID: <61dfaa1e-e7bf-75f1-410b-ed32f97d0782@grimberg.me>
-Date: Mon, 21 Jan 2019 01:43:21 -0800
-MIME-Version: 1.0
-In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:59476 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726101AbfAWSlc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 Jan 2019 13:41:32 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 373CC4025D
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Jan 2019 18:41:32 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E0B9F1001944
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Jan 2019 18:41:31 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3 1/6] xfs: eof trim writeback mapping as soon as it is cached
+Date: Wed, 23 Jan 2019 13:41:26 -0500
+Message-Id: <20190123184131.46188-2-bfoster@redhat.com>
+In-Reply-To: <20190123184131.46188-1-bfoster@redhat.com>
+References: <20190123184131.46188-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: linux-xfs@vger.kernel.org
 
+The cached writeback mapping is EOF trimmed to try and avoid races
+between post-eof block management and writeback that result in
+sending cached data to a stale location. The cached mapping is
+currently trimmed on the validation check, which leaves a race
+window between the time the mapping is cached and when it is trimmed
+against the current inode size.
 
-> V14:
-> 	- drop patch(patch 4 in V13) for renaming bvec helpers, as suggested by Jens
-> 	- use mp_bvec_* as multi-page bvec helper name
-> 	- fix one build issue, which is caused by missing one converion of
-> 	bio_for_each_segment_all in fs/gfs2
-> 	- fix one 32bit ARCH specific issue caused by segment boundary mask
-> 	overflow
+For example, if a new mapping is cached by delalloc conversion on a
+blocksize == page size fs, we could cycle various locks, perform
+memory allocations, etc.  in the writeback codepath before the
+associated mapping is eventually trimmed to i_size. This leaves
+enough time for a post-eof truncate and file append before the
+cached mapping is trimmed. The former event essentially invalidates
+a range of the cached mapping and the latter bumps the inode size
+such the trim on the next writepage event won't trim all of the
+invalid blocks. fstest generic/464 reproduces this scenario
+occasionally and causes a lost writeback and stale delalloc blocks
+warning on inode inactivation.
 
-Hey Ming,
+To work around this problem, trim the cached writeback mapping as
+soon as it is cached in addition to on subsequent validation checks.
+This is a minor tweak to tighten the race window as much as possible
+until a proper invalidation mechanism is available.
 
-So is nvme-tcp also affected here? The only point where I see nvme-tcp
-can be affected is when initializing a bvec iter using bio_segments() as
-everywhere else we use iters which should transparently work..
+Fixes: 40214d128e07 ("xfs: trim writepage mapping to within eof")
+Cc: <stable@vger.kernel.org> # v4.14+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-I see that loop was converted, does it mean that nvme-tcp needs to
-call something like?
---
-	bio_for_each_mp_bvec(bv, bio, iter)
-		nr_bvecs++;
---
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 338b9d9984e0..d9048bcea49c 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -449,6 +449,7 @@ xfs_map_blocks(
+ 	}
+ 
+ 	wpc->imap = imap;
++	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ allocate_blocks:
+@@ -459,6 +460,7 @@ xfs_map_blocks(
+ 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+ 	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+ 	wpc->imap = imap;
++	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ }
+-- 
+2.17.2
