@@ -1,61 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:37558 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727326AbfA2VoM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 16:44:12 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id A4C332CA88
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 21:44:11 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
- since 4.19.0  on sata hdd:s
-Date: Tue, 29 Jan 2019 21:44:10 +0000
-Message-ID: <bug-202441-201763-ntwCpAyNPT@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
-References: <bug-202441-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from sandeen.net ([63.231.237.45]:45258 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725976AbfAWTce (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 Jan 2019 14:32:34 -0500
+Subject: Re: [PATCH] xfs_repair: initialize non-leaf finobt blocks with
+ correct magic
+References: <20190123185929.46507-1-bfoster@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <7326ee5b-08eb-420a-e3fe-2182cff6371e@sandeen.net>
+Date: Wed, 23 Jan 2019 13:32:32 -0600
 MIME-Version: 1.0
+In-Reply-To: <20190123185929.46507-1-bfoster@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Cc: Lucas Stach <l.stach@pengutronix.de>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202441
-
---- Comment #15 from Dave Chinner (david@fromorbit.com) ---
-On Tue, Jan 29, 2019 at 09:19:52PM +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=202441
+On 1/23/19 12:59 PM, Brian Foster wrote:
+> The free inode btree construction code in xfs_repair has a bug where
+> any non-leaf nodes outside of the leftmost block at the associated
+> level in the tree are incorrectly initialized with the inobt magic
+> value. Update the prop_ino_cursor() path responsible for growing the
+> non-leaf portion of the inode btrees to use the btnum of the
+> specific tree being generated rather than the hardcoded inode btree
+> type.
 > 
-> --- Comment #13 from Roger (rogan6710@gmail.com) ---
-> Considering that rc8 which I believe was released as 4.19.0 did not show any
-> problems on my 24G machine I must have managed to get a false positive on
-> 4.19.0. The machine I tested that on has less ram (8G) but I don't know if
-> that
-> matters.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reported-by: Lucas Stach <l.stach@pengutronix.de>
+> Root-caused-by: Lucas Stach <l.stach@pengutronix.de>
+
+Looks good to me,
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+Interesting how the other btrees (rmap, refcount) have their own
+prop_$FOO_cursor() functions, but prop_ino_cursor() shares code
+for the 2 trees.
+
+> ---
+>  repair/phase5.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
 > 
-> Anyhow, after a filthy amount of copying and compiling I can say that
-> something probably went wrong between 4.19.2, which is ok, and 4.19.3
-> which is not, at least on this 9590. 
-
-Thank you!
-
-We crossed streams - I was writing the email suggesting this when,
-in fact, your were way ahead of me.
-
-> I downloaded, compiled, and tested all rc versions, 4.19.{2,3,5,9} and
-> verified
-> that 4.19.{3,5,9,18} all have the problems described above on the 9590.
-> All tests were done in console (nomodeset) directly after boot.
-
-Ok, I'll have a look at the 4.19.2 -> 4.19.3 history now and see
-what pops out.
-
-Cheers,
-
-Dave.
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+> diff --git a/repair/phase5.c b/repair/phase5.c
+> index 85d1f4fb..05333f11 100644
+> --- a/repair/phase5.c
+> +++ b/repair/phase5.c
+> @@ -983,7 +983,7 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+>  
+>  static void
+>  prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+> -	xfs_agino_t startino, int level)
+> +	xfs_btnum_t btnum, xfs_agino_t startino, int level)
+>  {
+>  	struct xfs_btree_block	*bt_hdr;
+>  	xfs_inobt_key_t		*bt_key;
+> @@ -1005,7 +1005,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+>  		 * first path up the left side of the tree
+>  		 * where the agbno's are already set up
+>  		 */
+> -		prop_ino_cursor(mp, agno, btree_curs, startino, level);
+> +		prop_ino_cursor(mp, agno, btree_curs, btnum, startino, level);
+>  	}
+>  
+>  	if (be16_to_cpu(bt_hdr->bb_numrecs) ==
+> @@ -1041,7 +1041,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+>  		lptr->buf_p->b_ops = &xfs_inobt_buf_ops;
+>  		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+>  		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+> -		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_INO,
+> +		libxfs_btree_init_block(mp, lptr->buf_p, btnum,
+>  					level, 0, agno, 0);
+>  
+>  		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
+> @@ -1049,7 +1049,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+>  		/*
+>  		 * propagate extent record for first extent in new block up
+>  		 */
+> -		prop_ino_cursor(mp, agno, btree_curs, startino, level);
+> +		prop_ino_cursor(mp, agno, btree_curs, btnum, startino, level);
+>  	}
+>  	/*
+>  	 * add inode info to current block
+> @@ -1201,7 +1201,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  			lptr->modulo--;
+>  
+>  		if (lptr->num_recs_pb > 0)
+> -			prop_ino_cursor(mp, agno, btree_curs,
+> +			prop_ino_cursor(mp, agno, btree_curs, btnum,
+>  					ino_rec->ino_startnum, 0);
+>  
+>  		bt_rec = (xfs_inobt_rec_t *)
+> 
