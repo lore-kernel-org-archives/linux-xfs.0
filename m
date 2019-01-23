@@ -1,53 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59146 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46164 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728855AbfAUIWF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Jan 2019 03:22:05 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V14 15/18] block: always define BIO_MAX_PAGES as 256
-Date: Mon, 21 Jan 2019 16:18:02 +0800
-Message-Id: <20190121081805.32727-16-ming.lei@redhat.com>
-In-Reply-To: <20190121081805.32727-1-ming.lei@redhat.com>
-References: <20190121081805.32727-1-ming.lei@redhat.com>
+        id S1726101AbfAWSlc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 Jan 2019 13:41:32 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 98F7215F5E
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Jan 2019 18:41:32 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 516F71001F3D
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Jan 2019 18:41:32 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3 2/6] xfs: update fork seq counter on data fork changes
+Date: Wed, 23 Jan 2019 13:41:27 -0500
+Message-Id: <20190123184131.46188-3-bfoster@redhat.com>
+In-Reply-To: <20190123184131.46188-1-bfoster@redhat.com>
+References: <20190123184131.46188-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-Now multi-page bvec can cover CONFIG_THP_SWAP, so we don't need to
-increase BIO_MAX_PAGES for it.
+The sequence counter in the xfs_ifork structure is only updated on
+COW forks. This is because the counter is currently only used to
+optimize out repetitive COW fork checks at writeback time.
 
-CONFIG_THP_SWAP needs to split one THP into normal pages and adds
-them all to one bio. With multipage-bvec, it just takes one bvec to
-hold them all.
+Tweak the extent code to update the seq counter regardless of the
+fork type in preparation for using this counter on data forks as
+well.
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- include/linux/bio.h | 8 --------
- 1 file changed, 8 deletions(-)
+ fs/xfs/libxfs/xfs_iext_tree.c  | 13 ++++++-------
+ fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
+ 2 files changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index af288f6e8ab0..1d279a6ae737 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -34,15 +34,7 @@
- #define BIO_BUG_ON
- #endif
+diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+index 771dd072015d..bc690f2409fa 100644
+--- a/fs/xfs/libxfs/xfs_iext_tree.c
++++ b/fs/xfs/libxfs/xfs_iext_tree.c
+@@ -614,16 +614,15 @@ xfs_iext_realloc_root(
+ }
  
--#ifdef CONFIG_THP_SWAP
--#if HPAGE_PMD_NR > 256
--#define BIO_MAX_PAGES		HPAGE_PMD_NR
--#else
- #define BIO_MAX_PAGES		256
--#endif
--#else
--#define BIO_MAX_PAGES		256
--#endif
+ /*
+- * Increment the sequence counter if we are on a COW fork.  This allows
+- * the writeback code to skip looking for a COW extent if the COW fork
+- * hasn't changed.  We use WRITE_ONCE here to ensure the update to the
+- * sequence counter is seen before the modifications to the extent
+- * tree itself take effect.
++ * Increment the sequence counter on extent tree changes. If we are on a COW
++ * fork, this allows the writeback code to skip looking for a COW extent if the
++ * COW fork hasn't changed. We use WRITE_ONCE here to ensure the update to the
++ * sequence counter is seen before the modifications to the extent tree itself
++ * take effect.
+  */
+ static inline void xfs_iext_inc_seq(struct xfs_ifork *ifp, int state)
+ {
+-	if (state & BMAP_COWFORK)
+-		WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
++	WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
+ }
  
- #define bio_prio(bio)			(bio)->bi_ioprio
- #define bio_set_prio(bio, prio)		((bio)->bi_ioprio = prio)
+ void
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 60361d2d74a1..00c62ce170d0 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -14,7 +14,7 @@ struct xfs_dinode;
+  */
+ struct xfs_ifork {
+ 	int			if_bytes;	/* bytes in if_u1 */
+-	unsigned int		if_seq;		/* cow fork mod counter */
++	unsigned int		if_seq;		/* fork mod counter */
+ 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
+ 	short			if_broot_bytes;	/* bytes allocated for root */
+ 	unsigned char		if_flags;	/* per-fork flags */
 -- 
-2.9.5
+2.17.2
