@@ -1,57 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49910 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728950AbfAUPvL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Jan 2019 10:51:11 -0500
-Date: Mon, 21 Jan 2019 07:51:10 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 5/5] xfs: revalidate imap properly before writeback
- delalloc conversion
-Message-ID: <20190121155110.GB31678@infradead.org>
-References: <20190117192004.49346-1-bfoster@redhat.com>
- <20190117192004.49346-6-bfoster@redhat.com>
- <20190118115937.GD7807@infradead.org>
- <20190118163132.GA6318@infradead.org>
- <20190118183915.GB53532@bfoster>
- <20190120124502.GA65044@bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190120124502.GA65044@bfoster>
+Received: from mail-wr1-f54.google.com ([209.85.221.54]:35728 "EHLO
+        mail-wr1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726347AbfAXIdV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Jan 2019 03:33:21 -0500
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH 2/2] xfs/068: Add fsstress generated file count to golden output
+Date: Thu, 24 Jan 2019 10:33:10 +0200
+Message-Id: <20190124083310.25928-2-amir73il@gmail.com>
+In-Reply-To: <20190124083310.25928-1-amir73il@gmail.com>
+References: <20190124083310.25928-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Sun, Jan 20, 2019 at 07:45:02AM -0500, Brian Foster wrote:
-> 4. Kind of a nit, but the comment update in xfs_bmapi_write() that
-> describes the ilock and associated race window and whatnot should really
-> be split between there and xfs_iomap_write_allocate(). The former should
-> just explain what exactly XFS_BMAPI_DELALLOC does (i.e., skip holes,
-> real extents, over a range..). The latter should explain how
-> the use of XFS_BMAPI_DELALLOC helps us deal with the race window in the
-> writeback code.
+This test has the number of files/dirs created by fsstress hardcoded
+in golden output.
 
-Ok.
+When fsstress is added new ops, the number of files/dirs created with
+the same random seed changes and this regularly breaks this test.
 
-> One option that comes to mind is to perhaps split off XFS_BMAPI_DELALLOC
-> from xfs_bmapi_write() into a new xfs_bmapi_delalloc() function that
-> facilitates new semantics (I'm not terribly comfortable with overloading
-> the semantics of xfs_bmapi_write()). Instead of passing a range to
-> xfs_bmapi_delalloc(), just pass the offset we care about and expect that
-> this function will attempt to allocate the entire extent currently
-> backing offset. (Alternatively, we could perhaps pass a range by value
-> and allow xfs_bmapi_delalloc() to update the range in the event of
-> delalloc discontiguity.) Either way, the extent returned may not cover
-> the offset (due to fragmentation, as today) and thus the caller needs to
-> iterate until that happens. The larger point is that we'd lookup the
-> current extent _at offset_ on each iteration and thus shouldn't ever
-> contend with new delalloc reservations. Thoughts?
+So when new fsstress ops are added they should be either added to the
+dump test blacklist or golden output of this test needs to be ammended
+to reflect the change.
 
-I considered splitting it off and even had an early prototype.  I
-got something wrong and it didn't work, and it created a little too
-much duplication for my taste so I gave up on it for now.  But
-fundamentally having the delalloc conversion separate from
-xfs_bmapi_write is the right thing.  I'll just have to find some
-time for it or pass this work off to you..
+Since the golden output includes only the file count after dump/restore,
+add also the file count before dump/restore so developers are less
+likely to forget to check the validity of golden output before commiting
+the change.
+
+For some reason the file count reported by xfsrestore has one directory
+more than the file count reported by 'find'. I did not investigate why
+that is, but did verify that this was the same with the original test
+fsstress ops (i.e. without the added ops
+insert/mread/mwrite/aread/awrite/readv/writev).
+
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ common/dump       | 7 +++++++
+ tests/xfs/068     | 1 +
+ tests/xfs/068.out | 1 +
+ 3 files changed, 9 insertions(+)
+
+diff --git a/common/dump b/common/dump
+index 47d14601..23f42216 100644
+--- a/common/dump
++++ b/common/dump
+@@ -1515,6 +1515,13 @@ _check_quota_file()
+    _check_quota 'xfsdump_quotas' 'xfsdump_quotas_group' 'xfsdump_quotas_proj'
+ }
+ 
++_count_dumpdir_files()
++{
++	local ndirs=$(find $dump_dir -type d | wc -l)
++	local nents=$(find $dump_dir | wc -l)
++
++	echo "Created $ndirs directories and $nents entries"
++}
+ 
+ # make sure this script returns success
+ /bin/true
+diff --git a/tests/xfs/068 b/tests/xfs/068
+index 95a8cd12..ffc293bd 100755
+--- a/tests/xfs/068
++++ b/tests/xfs/068
+@@ -28,6 +28,7 @@ _supported_fs xfs
+ _supported_os Linux
+ 
+ _create_dumpdir_stress_num 4096
++_count_dumpdir_files
+ _do_dump_restore
+ 
+ # success, all done
+diff --git a/tests/xfs/068.out b/tests/xfs/068.out
+index fa3a5523..61cbbfa4 100644
+--- a/tests/xfs/068.out
++++ b/tests/xfs/068.out
+@@ -4,6 +4,7 @@ Creating directory system to dump using fsstress.
+ -----------------------------------------------
+ fsstress : -f link=10 -f creat=10 -f mkdir=10 -f truncate=5 -f symlink=10
+ -----------------------------------------------
++Created 382 directories and 1334 entries
+ xfsdump|xfsrestore ...
+ xfsdump  -s DUMP_SUBDIR - SCRATCH_MNT | xfsrestore  - RESTORE_DIR
+ xfsrestore: using file dump (drive_simple) strategy
+-- 
+2.17.1
