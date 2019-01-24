@@ -1,46 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38004 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42030 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726919AbfA2Sdx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 Jan 2019 13:33:53 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 29F36369BC
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 18:33:53 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id CDA8D5D717
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 18:33:52 +0000 (UTC)
+        id S1728279AbfAXOBY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Jan 2019 09:01:24 -0500
+Date: Thu, 24 Jan 2019 09:01:21 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 5/5] xfs: fix typo in xfs_inode_buf_ra_ops verifier name
-Date: Tue, 29 Jan 2019 13:33:50 -0500
-Message-Id: <20190129183350.27302-6-bfoster@redhat.com>
-In-Reply-To: <20190129183350.27302-1-bfoster@redhat.com>
-References: <20190129183350.27302-1-bfoster@redhat.com>
+Subject: Re: [PATCH v3 6/6] xfs: use the latest extent at writeback delalloc
+ conversion time
+Message-ID: <20190124140121.GB2855@bfoster>
+References: <20190123184131.46188-1-bfoster@redhat.com>
+ <20190123184131.46188-7-bfoster@redhat.com>
+ <20190124085230.GB24774@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190124085230.GB24774@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-Fix a typo in the struct xfs_inode_buf_ra_ops verifier name.
+On Thu, Jan 24, 2019 at 12:52:30AM -0800, Christoph Hellwig wrote:
+> And this I really don't like.  I much prefer the full version
+> I've done here, which has evolved a bit from the work I've been
+> posting to the list for months now:
+> 
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_inode_buf.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patch is just an incremental step in that direction to fix the
+underlying problem. The functionality with regard to imap race
+mitigation in the delalloc conversion path is essentially equivalent.
+The difference is you've cleaned up the API further by lifting the
+lookup into the caller and implementing a more proper conversion
+implemention.
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 09d9c8cfa4a0..fd2df5747a3a 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -152,7 +152,7 @@ const struct xfs_buf_ops xfs_inode_buf_ops = {
- };
- 
- const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
--	.name = "xxfs_inode_ra",
-+	.name = "xfs_inode_ra",
- 	.verify_read = xfs_inode_buf_readahead_verify,
- 	.verify_write = xfs_inode_buf_write_verify,
- };
--- 
-2.17.2
+> http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-mapping-validation.2
+> 
+> Which also fixes up some layering issues we have in that code path.
+
+Ok... I've not reviewed the details but as noted above, the approach to
+dealing with imap validity looks sane to me. Essentially all I'm asking
+for here is isolated patches for fixes vs. refactoring vs. whatever
+other cleanups/changes were related to the always cow stuff and offering
+this (or the v2 patch) as an already tested way to do that.
+
+If you'd rather just put this all in your series, then please split this
+all up into a patch per logical change (i.e., separate patches to
+move/rename functions first, introduce the new bmapi delalloc conversion
+helper, modify writeback to use said helper, the layering fixups you're
+referring to, etc.). At a glance, the commit above looks like it could
+easily be split into at least 3 or 4 patches.
+
+Brian
