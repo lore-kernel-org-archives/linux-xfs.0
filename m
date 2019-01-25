@@ -1,18 +1,18 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:38378 "EHLO
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:43562 "EHLO
         mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727342AbfA2VxT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 16:53:19 -0500
+        by vger.kernel.org with ESMTP id S1726878AbfAYJzd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Jan 2019 04:55:33 -0500
 Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id E610C2DBD2
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 21:53:17 +0000 (UTC)
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id E85DB2E85D
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Jan 2019 09:55:32 +0000 (UTC)
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
- since 4.19.0  on sata hdd:s
-Date: Tue, 29 Jan 2019 21:53:16 +0000
-Message-ID: <bug-202441-201763-UUDONeIBmx@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
-References: <bug-202441-201763@https.bugzilla.kernel.org/>
+Subject: [Bug 202349] Extreme desktop freezes during sustained write
+ operations with XFS
+Date: Fri, 25 Jan 2019 09:55:30 +0000
+Message-ID: <bug-202349-201763-w4cTyERu7i@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202349-201763@https.bugzilla.kernel.org/>
+References: <bug-202349-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
@@ -21,124 +21,33 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202441
+https://bugzilla.kernel.org/show_bug.cgi?id=202349
 
---- Comment #16 from Dave Chinner (david@fromorbit.com) ---
-On Tue, Jan 29, 2019 at 09:41:21PM +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=202441
-> --- Comment #14 from Dave Chinner (david@fromorbit.com) ---
-> > --- Comment #12 from Roger (rogan6710@gmail.com) ---
-> > Beginnig from rc5, might have been earlier also, cache get's released,
-> > sometimes almost all of it, and begins to fill up slowly again,
-> 
-> Which I'd consider bad behaviour - trashing the entire working set
-> because memory pressure is occurring is pathological behaviour.
-> 
-> Can you confirm which -rcX that behaviour starts in? e.g. between
-> -rc4 and -rc5 there is this commit:
-> 
-> 172b06c32b94 mm: slowly shrink slabs with a relatively small number of
-> objects
-> 
-> Which does change the way that the inode caches are reclaimed by
-> forcably triggering reclaim for caches that would have previously
-> been ignored. That's one of the "red flag" commits I noticed when
-> first looking at the history between 4.18 and 4.19....
+Lucas Stach (dev@lynxeye.de) changed:
 
-And now, added in 4.19.3:
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |dev@lynxeye.de
 
- $ gl -n 1 5ebac3b957a9 -p
-commit 5ebac3b957a91c921d2f1a7953caafca18aa6260
-Author: Roman Gushchin <guro@fb.com>
-Date:   Fri Nov 16 15:08:18 2018 -0800
+--- Comment #8 from Lucas Stach (dev@lynxeye.de) ---
+So with my GPU developer hat on: What is it that the GPU driver devs should do
+to avoid this?
+GPU tasks aren't per-se realtime or interactive (think GPU compute tasks with
+big working sets, that can take hours or even days to complete). So from the
+driver perspective we _want_ FS reclaim to happen instead of failing a task,
+but in general for the interactive workload we would rather trash the working
+set a bit (by purging clean caches) instead of doing a high latency writeback
+of dirty caches.
 
-    mm: don't reclaim inodes with many attached pages
+Also to put the obvious question up again: Why doesn't the reporter see any of
+those catastrophic latency events with ext4? It it just that XFS can queue up
+way more IO and thus direct reclaim getting stuck behind the already scheduled
+IO for a way longer time?
 
-    commit a76cf1a474d7dbcd9336b5f5afb0162baa142cf0 upstream.
-
-    Spock reported that commit 172b06c32b94 ("mm: slowly shrink slabs with a
-    relatively small number of objects") leads to a regression on his setup:
-    periodically the majority of the pagecache is evicted without an obvious
-    reason, while before the change the amount of free memory was balancing
-    around the watermark.
-
-    The reason behind is that the mentioned above change created some
-    minimal background pressure on the inode cache.  The problem is that if
-    an inode is considered to be reclaimed, all belonging pagecache page are
-    stripped, no matter how many of them are there.  So, if a huge
-    multi-gigabyte file is cached in the memory, and the goal is to reclaim
-    only few slab objects (unused inodes), we still can eventually evict all
-    gigabytes of the pagecache at once.
-
-    The workload described by Spock has few large non-mapped files in the
-    pagecache, so it's especially noticeable.
-
-    To solve the problem let's postpone the reclaim of inodes, which have
-    more than 1 attached page.  Let's wait until the pagecache pages will be
-    evicted naturally by scanning the corresponding LRU lists, and only then
-    reclaim the inode structure.
-
-    Link: http://lkml.kernel.org/r/20181023164302.20436-1-guro@fb.com
-    Signed-off-by: Roman Gushchin <guro@fb.com>
-    Reported-by: Spock <dairinin@gmail.com>
-    Tested-by: Spock <dairinin@gmail.com>
-    Reviewed-by: Andrew Morton <akpm@linux-foundation.org>
-    Cc: Michal Hocko <mhocko@kernel.org>
-    Cc: Rik van Riel <riel@surriel.com>
-    Cc: Randy Dunlap <rdunlap@infradead.org>
-    Cc: <stable@vger.kernel.org>    [4.19.x]
-    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-    Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
-SO, basically, I was right - the slab shrinking change in 4.18-rc5
-caused the page cache to saw tooth like you reported, and there is a
-"fix" for it in 4.19.3.
-
-What does that "fix" do? It stops inode reclaim from inodes with
-cached pages attached.
-
-diff --git a/fs/inode.c b/fs/inode.c
-index 42f6d25f32a5..65ae154df760 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -730,8 +730,11 @@ static enum lru_status inode_lru_isolate(struct list_head
-*item,
-                return LRU_REMOVED;
-        }
-
--       /* recently referenced inodes get one more pass */
--       if (inode->i_state & I_REFERENCED) {
-+       /*
-+        * Recently referenced inodes and inodes with many attached pages
-+        * get one more pass.
-+        */
-+       if (inode->i_state & I_REFERENCED || inode->i_data.nrpages > 1) {
-                inode->i_state &= ~I_REFERENCED;
-                spin_unlock(&inode->i_lock);
-                return LRU_ROTATE;
-
-Basically, what happened before this patch was that when an inode
-was aged out of the cache due to the shrinker cycling over it, it's
-page cache was reclaimed and then the inode reclaimed.
-
-Now, the inode does not get reclaimed and the page cache is not
-reclaimed. When you have lots of large files in your workload, that
-means the inode cache turning over can no longer reclaim those
-inodes, and so the inode can only be reclaimed after memory reclaim
-has reclaimed the entire page cache for an inode.
-
-That's a /massive/ change in behaviour, and it means that clean
-inodes with cached pages attached can no longer be reclaimed by the
-inode cache shrinker. Which will drive the inode cache shrinker into
-trying to reclaim dirty inodes.....
-
-Can you revert the above patch and see if the problem goes away?
-
-Cheers,
-
-Dave.
+If I understand the problem right, the basic issue is that we still don't have
+have IO less dirty throttling in Linux, so we make the interactive GPU process
+pay part of the bill of the background process dirtying lots of pages, instead
+of throttling this one earlier.
 
 -- 
 You are receiving this mail because:
