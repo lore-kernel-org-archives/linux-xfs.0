@@ -1,126 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:55012 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:37724 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726562AbfA0Rtz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Jan 2019 12:49:55 -0500
-Date: Sun, 27 Jan 2019 09:49:49 -0800
+        with ESMTP id S1726562AbfA0SAv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Jan 2019 13:00:51 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0RHw3Ul104750
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Jan 2019 18:00:50 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2q8g6qu2p4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Jan 2019 18:00:50 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x0RI0nLH008278
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Jan 2019 18:00:49 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x0RI0n9W014981
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Jan 2019 18:00:49 GMT
+Date: Sun, 27 Jan 2019 10:00:50 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH RFC] xfs: support magic value in xfs_buf_ops
-Message-ID: <20190127174949.GD4368@magnolia>
-References: <20190124155440.46469-1-bfoster@redhat.com>
- <20190124190846.GC4368@magnolia>
- <20190124221917.GN4205@dastard>
- <20190125144324.GA58775@bfoster>
+Subject: [PATCH] xfs: set buffer ops when repair probes for btree type
+Message-ID: <20190127180050.GE4368@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190125144324.GA58775@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Jan 25, 2019 at 09:43:25AM -0500, Brian Foster wrote:
-> On Fri, Jan 25, 2019 at 09:19:17AM +1100, Dave Chinner wrote:
-> > On Thu, Jan 24, 2019 at 11:08:46AM -0800, Darrick J. Wong wrote:
-> > > On Thu, Jan 24, 2019 at 10:54:40AM -0500, Brian Foster wrote:
-> > > > Add a field to specify the v4 and v5 magic values in xfs_buf_ops.
-> > > > This allows otherwise identical verifiers to distinguish between
-> > > > and verify different magic values (inobt vs. finobt buffers). This
-> > > > also facilitates verification of the appropriate magic value based
-> > > > on superblock version.
-> > > > 
-> > > > The magic field is optional and is free to be used as appropriate
-> > > > for each particular verifier.
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > ---
-> > > > 
-> > > > Hi all,
-> > > > 
-> > > > What do folks think of something like this as a lightweight (and
-> > > > untested) means to do proper [f]inobt magic verification? For reference,
-> > > > the initial version of this put together to help root cause a user
-> > > > report is here[1]. I was hoping to do the same thing with less code
-> > > > duplication. A couple things that come to mind:
-> > > > 
-> > > > 1. I know scrub has at least one place where we invoke the verifier with
-> > > > ->b_ops == NULL, which will cause this to explode. Could we fix that up
-> > > > to assign and reset ->b_ops to accommodate something like this, or is
-> > > > that problematic?
-> > > 
-> > > IIRC one of the scrub findroot reviewers didn't like the idea of scrub
-> > > setting b_ops until it was absolutely sure it wanted to.  I think it's
-> > > actually ok to patch it in temporarily while running the read verifier
-> > > since we have the buffer locked and patch it out afterwards.
-> > 
-> > How does this interact with xfs_buf_ensure_ops()?
-> > 
-> > [ side note: the comments about this function are poor - I have no
-> > idea what problem it is avoiding from reading the code. Yes, I know
-> > it protects against transactions with buffers and no ops, but the
-> > comments don't tell me *how or when that occurs* so I do not know
-> > where to go looking for potential issues here. ]
-> > 
-> 
-> I think the when and how behind this logic is the scrub case (i.e.,
-> xrep_findroot_block()) called out above: we read the buffer with a NULL
-> b_ops param because we don't know which buf_ops actually applies. If a
-> ->b_ops is not ultimately attached, the buf sits around in cache without
-> ->b_ops and is never verified (even if read with a non-NULL b_ops) until
-> it cycles out of cache. So without this logic, the aforementioned case
-> would have to drop the buffer from the cache if it was ultimately read
-> with a NULL b_ops.
-> 
-> With regard to verifiers depending on ->b_ops != NULL, I don't think
-> this would change anything at this level. The higher level scrub code
-> would just be required to assign ->b_ops in order to run a verifier and
-> thus would have to make sure to reset ->b_ops in the event of a failure.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok, easy enough.  I'll also try to fix Dave's complaints about
-insufficient commenting for xfs_buf_ensure_ops.
+In xrep_findroot_block, we work out the btree type and correctness of a
+given block by calling different btree verifiers on root block
+candidates.  However, we leave the NULL b_ops while ->verify_read
+validates the block, which means that if the verifier calls
+xfs_buf_verifier_error it'll crash on the null b_ops.  Fix it to set
+b_ops before calling the verifier and unsetting it if the verifier
+fails.
 
---D
+Furthermore, improve the documentation around xfs_buf_ensure_ops, which
+is the function that is responsible for cleaning up the b_ops state of
+buffers that go through xrep_findroot_block but don't match anything.
 
-> > > > 2. We have some other verifiers around that actually use the buffer
-> > > > magic to set a more specific verifier. See xfs_da3_node_read_verify()
-> > > > for an example. I'm not sure this is all that useful for such higher
-> > > > level verifiers, but I think we'd at least be able to use it for the
-> > > > underlying verifiers. That might provide some extra sb version vs. magic
-> > > > sanity checking for places that might not already look at the sb version
-> > > > (otherwise it's just refactoring).
-> > > > 
-> > > > Thoughts or other ideas before I try to apply this more broadly? Thanks.
-> > > 
-> > > Hmm... not sure if I like the idea that you have to find the b_ops
-> > > declaration to figure out which magic number the verifier function is
-> > > checking, but I don't really have a cogent objection.
-> > 
-> > Yeah, I don't really like it either (especially the added CPU
-> > overhead that we avoided by doing compile time byte swapping),
-> > but I'm struggling to come up with a better option.
-> > 
-> 
-> I suppose we could store the on-disk magics in the xfs_buf_ops
-> structures (it works on x86_64 at least, I'd have to verify other
-> arches), but that is pretty ugly. Given all of the other conversions and
-> checks, I'm not sure it's worth it.
-> 
-> Hmm, I suppose we could also define a separate set of on-disk magic
-> directives:
-> 
-> #define XFS_FIBT_CRC_MAGIC_DISK        cpu_to_be32(XFS_FIBT_CRC_MAGIC)
-> 
-> ... and start using those in various places to avoid the ugliness. I
-> think that's a separate change though (and again, it's not immediately
-> clear to me the benefit justifies the additional code).
-> 
-> Brian
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/repair.c |   11 ++++++++---
+ fs/xfs/xfs_buf.c      |   16 ++++++++++++++++
+ 2 files changed, 24 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 1c8eecfe52b8..6acf1bfa0bfe 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -768,18 +768,23 @@ xrep_findroot_block(
+ 		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
+ 				&mp->m_sb.sb_meta_uuid))
+ 			goto out;
++		/*
++		 * Read verifiers can reference b_ops, so we set the pointer
++		 * here.  If the verifier fails we'll reset the buffer state
++		 * to what it was before we touched the buffer.
++		 */
++		bp->b_ops = fab->buf_ops;
+ 		fab->buf_ops->verify_read(bp);
+ 		if (bp->b_error) {
++			bp->b_ops = NULL;
+ 			bp->b_error = 0;
+ 			goto out;
+ 		}
+ 
+ 		/*
+ 		 * Some read verifiers will (re)set b_ops, so we must be
+-		 * careful not to blow away any such assignment.
++		 * careful not to change b_ops after running the verifier.
+ 		 */
+-		if (!bp->b_ops)
+-			bp->b_ops = fab->buf_ops;
+ 	}
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index eedc5e0156ff..3316e444b973 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -776,10 +776,26 @@ _xfs_buf_read(
+ }
+ 
+ /*
++ * Set buffer ops on an unchecked buffer and validate it, if possible.
++ *
+  * If the caller passed in an ops structure and the buffer doesn't have ops
+  * assigned, set the ops and use them to verify the contents.  If the contents
+  * cannot be verified, we'll clear XBF_DONE.  We assume the buffer has no
+  * recorded errors and is already in XBF_DONE state.
++ *
++ * Under normal operations, every in-core buffer must have buffer ops assigned
++ * to them when the buffer is read in from disk so that we can validate the
++ * metadata.
++ *
++ * However, there are two scenarios where one can encounter in-core buffers
++ * that don't have buffer ops.  The first is during log recovery of buffers on
++ * a V4 filesystem, though these buffers are purged at the end of recovery.
++ *
++ * The other is online repair, which tries to match arbitrary metadata blocks
++ * with btree types in order to find the root.  If online repair doesn't match
++ * the buffer with /any/ btree type, the buffer remains in memory in DONE state
++ * with no ops, and a subsequent read_buf call from elsewhere will not set the
++ * ops.  This function helps us fix this situation.
+  */
+ int
+ xfs_buf_ensure_ops(
