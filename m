@@ -1,104 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:37086 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726280AbfA0HvJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Jan 2019 02:51:09 -0500
+Received: from mail-yb1-f196.google.com ([209.85.219.196]:42528 "EHLO
+        mail-yb1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726280AbfA0IAk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Jan 2019 03:00:40 -0500
+MIME-Version: 1.0
+References: <20190124083310.25928-1-amir73il@gmail.com> <20190124083310.25928-2-amir73il@gmail.com>
+ <20190127050217.GL2713@desktop>
+In-Reply-To: <20190127050217.GL2713@desktop>
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v2 2/2] xfs/068: Verify actual file count instead of reported file count
-Date: Sun, 27 Jan 2019 09:50:57 +0200
-Message-Id: <20190127075057.25254-2-amir73il@gmail.com>
-In-Reply-To: <20190127075057.25254-1-amir73il@gmail.com>
-References: <20190127075057.25254-1-amir73il@gmail.com>
+Date: Sun, 27 Jan 2019 10:00:28 +0200
+Message-ID: <CAOQ4uxiup2OxAnHrLRTzNQgoDCXDv26xhz3+Pev4TMVDJ8Vy9g@mail.gmail.com>
+Subject: Re: [PATCH 2/2] xfs/068: Add fsstress generated file count to golden output
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eryu Guan <guaneryu@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-This test has the number of files/dirs created by xfsrestore hardcoded
-in golden output.
+On Sun, Jan 27, 2019 at 7:02 AM Eryu Guan <guaneryu@gmail.com> wrote:
+>
+> [I'm sorry that I've been absent from the discussion entirely.. I was
+> busy with other tasks recently.]
+>
+> On Thu, Jan 24, 2019 at 10:33:10AM +0200, Amir Goldstein wrote:
+> > This test has the number of files/dirs created by fsstress hardcoded
+> > in golden output.
+>
+> This leads me to wonder if we could remove the hardcoded dir/entries
+> number from the golden output and verify the counts on the fly? i.e. we
+> count the dir/entries numbers that fsstress created and compare them
+> with the numbers xfsrestore reports. So we don't have to worry about new
+> ops in fsstress and xfs configurations.
+>
 
-When fsstress is added new ops, the number of files/dirs created with
-the same random seed changes and this regularly breaks this test,
-so when new fsstress ops are added they should be either added to the
-dump test blacklist or golden output of this test needs to be ammended
-to reflect the change.
+posted v2 with a slightly different approach:
+count the dir/entries numbers that fsstress created and compare them
+with the *actual* numbers xfsrestore created instead of the numbers that
+xfsrestore reports.
 
-The golden output includes only the file count reported by xfsrestore
-and test does not even verify that this is the correct file count.
-Instead, leave the golden output nuetral and explicitly verify that
-file count before and after the test are the same.
+Sure, this removes test coverage for the accuracy of the report, but
+that was really never the intention of the test and the report is really
+wrong! (off by one dir from actual restored).
 
-With this change, the test becomes agnostic to fsstress ops and we
-could also stop blacklisting clone/dedup/copy ops if we want.
+If someone really cares about validating the accuracy of xfsrestore report
+in that test, that by all means, let someone read into xfsrestore and figure
+out what the one directory stands for and either fix xfsrestore or work that
+quirk into the test. As can be inferred, that someone is not going to be me.
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- common/dump       |  7 +++++++
- tests/xfs/068     | 14 +++++++++++++-
- tests/xfs/068.out |  2 +-
- 3 files changed, 21 insertions(+), 2 deletions(-)
-
-diff --git a/common/dump b/common/dump
-index 89fa0391..f112fc37 100644
---- a/common/dump
-+++ b/common/dump
-@@ -1514,6 +1514,13 @@ _check_quota_file()
-    _check_quota 'xfsdump_quotas' 'xfsdump_quotas_group' 'xfsdump_quotas_proj'
- }
- 
-+_count_dumpdir_files()
-+{
-+	local ndirs=$(find $dump_dir -type d | wc -l)
-+	local nents=$(find $dump_dir | wc -l)
-+
-+	echo "$ndirs directories and $nents entries"
-+}
- 
- # make sure this script returns success
- /bin/true
-diff --git a/tests/xfs/068 b/tests/xfs/068
-index 7f5900fc..264a9e96 100755
---- a/tests/xfs/068
-+++ b/tests/xfs/068
-@@ -30,12 +30,24 @@ _cleanup()
- . ./common/rc
- . ./common/dump
- 
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
- # real QA test starts here
- _supported_fs xfs
- _supported_os Linux
- 
- _create_dumpdir_stress_num 4096
--_do_dump_restore
-+
-+echo -n "Before: " >> $seqres.full
-+_count_dumpdir_files | tee $tmp.before >> $seqres.full
-+
-+# filter out the file count, it changes as fsstress adds new operations
-+_do_dump_restore | sed -e "/entries processed$/s/[0-9][0-9]*/NUM/g"
-+
-+echo -n "After: " >> $seqres.full
-+_count_dumpdir_files | tee $tmp.after >> $seqres.full
-+diff -u $tmp.before $tmp.after
- 
- # success, all done
- exit
-diff --git a/tests/xfs/068.out b/tests/xfs/068.out
-index fa3a5523..2b276b77 100644
---- a/tests/xfs/068.out
-+++ b/tests/xfs/068.out
-@@ -22,7 +22,7 @@ xfsrestore: session id: ID
- xfsrestore: media ID: ID
- xfsrestore: searching media for directory dump
- xfsrestore: reading directories
--xfsrestore: 383 directories and 1335 entries processed
-+xfsrestore: NUM directories and NUM entries processed
- xfsrestore: directory post-processing
- xfsrestore: restoring non-directory files
- xfsrestore: restore complete: SECS seconds elapsed
--- 
-2.17.1
+Thanks,
+Amir.
