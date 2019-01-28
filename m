@@ -1,100 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:48338 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726713AbfA2A3h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Jan 2019 19:29:37 -0500
-Date: Tue, 29 Jan 2019 11:29:34 +1100
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:8774 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728448AbfA1V0r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Jan 2019 16:26:47 -0500
+Date: Tue, 29 Jan 2019 08:26:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Bug 202441] Possibly vfs cache related replicable xfs
- regression since 4.19.0  on sata hdd:s
-Message-ID: <20190129002934.GW4205@dastard>
-References: <bug-202441-201763@https.bugzilla.kernel.org/>
- <bug-202441-201763-InGMajsRVS@https.bugzilla.kernel.org/>
+Subject: Re: [LSF/MM TOPIC] Lazy file reflink
+Message-ID: <20190128212642.GQ4205@dastard>
+References: <CAOQ4uxgqm-m1Zj073o_vSnwkTbGObJiQ-CdWV2ESd_P-29=jZw@mail.gmail.com>
+ <20190128125044.GC27972@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bug-202441-201763-InGMajsRVS@https.bugzilla.kernel.org/>
+In-Reply-To: <20190128125044.GC27972@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Amir Goldstein <amir73il@gmail.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
 
-On Mon, Jan 28, 2019 at 11:26:32PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=202441
+On Mon, Jan 28, 2019 at 01:50:44PM +0100, Jan Kara wrote:
+> Hi,
 > 
-> --- Comment #2 from Roger (rogan6710@gmail.com) ---
+> On Fri 25-01-19 16:27:52, Amir Goldstein wrote:
+> > I would like to discuss the concept of lazy file reflink.
+> > The use case is backup of a very large read-mostly file.
+> > Backup application would like to read consistent content from the
+> > file, "atomic read" sort of speak.
+> > 
+> > With filesystem that supports reflink, that can be done by:
+> > - Create O_TMPFILE
+> > - Reflink origin to temp file
+> > - Backup from temp file
+> >
+> > However, since the origin file is very likely not to be modified,
+> > the reflink step, that may incur lots of metadata updates, is a waste.
+> > Instead, if filesystem could be notified that atomic content was
+> > requested (O_ATOMIC|O_RDONLY or O_CLONE|O_RDONLY),
+> > filesystem could defer reflink to an O_TMPFILE until origin file is
+> > open for write or actually modified.
+
+That makes me want to run screaming for the hills.
+
+> > What I just described above is actually already implemented with
+> > Overlayfs snapshots [1], but for many applications overlayfs snapshots
+> > it is not a practical solution.
+> > 
+> > I have based my assumption that reflink of a large file may incur
+> > lots of metadata updates on my limited knowledge of xfs reflink
+> > implementation, but perhaps it is not the case for other filesystems?
+
+Comparitively speaking: compared to copying a large file, reflink is
+cheap on any filesystem that implements it. Sure, reflinking on XFS
+is CPU limited, IIRC, to ~10-20,000 extents per second per reflink
+op per AG, but it's still faster than copying 10-20,000 extents
+per second per copy op on all but the very fastest, unloaded nvme
+SSDs...
+
+> > (btrfs?) and perhaps the current metadata overhead on reflink of a large
+> > file is an implementation detail that could be optimized in the future?
+> > 
+> > The point of the matter is that there is no API to make an explicit
+> > request for a "volatile reflink" that does not need to survive power
+> > failure and that limits the ability of filesytems to optimize this case.
 > 
-> Hello Dave !
-> Thanks for the really fast reply :)
-> Here is most of the (rather lengthy) system information:
-> 
-> Single "eight" core processor:
-> 
-> rogan@trooper:~$ uname -a
-> Linux trooper.morgoth.org 4.19.18 #2 SMP Sat Jan 26 13:43:16 CST 2019 x86_64
-> AMD FX(tm)-9590 Eight-Core Processor AuthenticAMD GNU/Linux
-> 
-> root@trooper:~# xfs_repair -V
-> xfs_repair version 4.19.0
-> 
-> root@trooper:~# cat /proc/meminfo 
-> MemTotal:       24645396 kB
-> MemFree:          358452 kB
-> MemAvailable:   22044292 kB
-> Buffers:            3152 kB
-> Cached:         22005216 kB
-> SwapCached:            0 kB
-> Active:          1713092 kB
-> Inactive:       21824100 kB
-> Active(anon):    1157816 kB
-> Inactive(anon):   555736 kB
-> Active(file):     555276 kB
-> Inactive(file): 21268364 kB
-....
-> Slab:             565012 kB
-> SReclaimable:     502684 kB
+> Well, to me this seems like a relatively rare usecase (and performance
+> gain) for the complexity. Also the speed of reflink is fs dependent - e.g.
+> for btrfs it is rather cheap AFAIK.
 
-Ok, so memory is completely used by the page cache, and there is
-some inode/dentry cache overhead in the slab caches.
+I suspect for "very large read-mostly file" it's still an expensive
+operation on btrfs.
 
-Nothing unusual in the rest of the output , either.
+Really, though, for this use case it's make more sense to have "per
+file freeze" semantics. i.e. if you want a consistent backup image
+on snapshot capable storage, the process is usually "freeze
+filesystem, snapshot fs, unfreeze fs, do backup from snapshot,
+remove snapshot". We can already transparently block incoming
+writes/modifications on files via the freeze mechanism, so why not
+just extend that to per-file granularity so writes to the "very
+large read-mostly file" block while it's being backed up....
 
->  xfs_info /dev/sdc1
-> xfs_info: /dev/sdc1 contains a mounted filesystem
-> 
-> fatal error -- couldn't initialize XFS library
-> 
-> hmm ?
-
-$ man xfs_info
-...
-	xfs_info [ -t mtab ] mount-point
-...
-	[...] The mount-point argument is the pathname of the
-	directory where the filesystem is mounted. [...]
-
-$ sudo mount /dev/vdc /mnt/scratch
-$ sudo xfs_info /dev/vdc
-xfs_info: /dev/vdc contains a mounted filesystem
-
-fatal error -- couldn't initialize XFS library
-$ sudo xfs_info /mnt/scratch
-meta-data=/dev/vdc               isize=512    agcount=500, agsize=268435455 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=0
-         =                       reflink=0
-data     =                       bsize=4096   blocks=134217727500, imaxpct=1
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=521728, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-$
-
-> I'll do a quick run and give you some dmesg
-
-OK, that'll be interesting :)
+Indeed, this would probably only require a simple extension to
+FIFREEZE/FITHAW - the parameter is currently ignored, but as defined
+by XFS it was a "freeze level". Set this to 0xffffffff and then it
+freezes just the fd passed in, not the whole filesystem.
+Alternatively, FI_FREEZE_FILE/FI_THAW_FILE is simple to define...
 
 Cheers,
 
