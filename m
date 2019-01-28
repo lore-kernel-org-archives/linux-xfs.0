@@ -1,112 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:38378 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726859AbfA1VGn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Jan 2019 16:06:43 -0500
-Date: Tue, 29 Jan 2019 08:06:40 +1100
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:6263 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726766AbfA1WAK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Jan 2019 17:00:10 -0500
+Date: Tue, 29 Jan 2019 09:00:07 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC] xfs: support magic value in xfs_buf_ops
-Message-ID: <20190128210640.GP4205@dastard>
-References: <20190124155440.46469-1-bfoster@redhat.com>
- <20190124190846.GC4368@magnolia>
- <20190124221917.GN4205@dastard>
- <20190125144324.GA58775@bfoster>
+Subject: Re: [Bug 202441] New: Possibly vfs cache related replicable xfs
+ regression since 4.19.0  on sata hdd:s
+Message-ID: <20190128220006.GS4205@dastard>
+References: <bug-202441-201763@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190125144324.GA58775@bfoster>
+In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jan 25, 2019 at 09:43:25AM -0500, Brian Foster wrote:
-> On Fri, Jan 25, 2019 at 09:19:17AM +1100, Dave Chinner wrote:
-> > On Thu, Jan 24, 2019 at 11:08:46AM -0800, Darrick J. Wong wrote:
-> > > On Thu, Jan 24, 2019 at 10:54:40AM -0500, Brian Foster wrote:
-> > > > Add a field to specify the v4 and v5 magic values in xfs_buf_ops.
-> > > > This allows otherwise identical verifiers to distinguish between
-> > > > and verify different magic values (inobt vs. finobt buffers). This
-> > > > also facilitates verification of the appropriate magic value based
-> > > > on superblock version.
-> > > > 
-> > > > The magic field is optional and is free to be used as appropriate
-> > > > for each particular verifier.
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > ---
-> > > > 
-> > > > Hi all,
-> > > > 
-> > > > What do folks think of something like this as a lightweight (and
-> > > > untested) means to do proper [f]inobt magic verification? For reference,
-> > > > the initial version of this put together to help root cause a user
-> > > > report is here[1]. I was hoping to do the same thing with less code
-> > > > duplication. A couple things that come to mind:
-> > > > 
-> > > > 1. I know scrub has at least one place where we invoke the verifier with
-> > > > ->b_ops == NULL, which will cause this to explode. Could we fix that up
-> > > > to assign and reset ->b_ops to accommodate something like this, or is
-> > > > that problematic?
-> > > 
-> > > IIRC one of the scrub findroot reviewers didn't like the idea of scrub
-> > > setting b_ops until it was absolutely sure it wanted to.  I think it's
-> > > actually ok to patch it in temporarily while running the read verifier
-> > > since we have the buffer locked and patch it out afterwards.
-> > 
-> > How does this interact with xfs_buf_ensure_ops()?
-> > 
-> > [ side note: the comments about this function are poor - I have no
-> > idea what problem it is avoiding from reading the code. Yes, I know
-> > it protects against transactions with buffers and no ops, but the
-> > comments don't tell me *how or when that occurs* so I do not know
-> > where to go looking for potential issues here. ]
-> > 
+Hi roger,
+
+On Mon, Jan 28, 2019 at 08:41:36PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=202441
+
+[...]
+
+> I have a file system related problem where a compile job on a sata hdd almost
+> stops and ui becomes unresponsive when copying large files at the same time,
+> regardless of to what disk or from where they are copied.
+
+Thanks for the detailed bug report! I'll need some more information
+about your system and storage to understand (and hopefully
+reproduce) the symptoms you are seeing. Can you provide the
+information listed here, please?
+
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+
+> All testing has been done on "bare metal" without even md, lvm or similar.
+> I have done a lot of testing of many different kernel versions on two different
+> systems (Slackware 14.2 and "current") and I feel confident that this is a
+> kernel regression.
 > 
-> I think the when and how behind this logic is the scrub case (i.e.,
-> xrep_findroot_block()) called out above: we read the buffer with a NULL
-> b_ops param because we don't know which buf_ops actually applies. If a
-> ->b_ops is not ultimately attached, the buf sits around in cache without
-> ->b_ops and is never verified (even if read with a non-NULL b_ops) until
-> it cycles out of cache.
-
-IOWs, it is marked XBF_DONE, which prevents it from being verified
-on future reads accesses even if a buf_ops is provided.
-
-So, really, it is just very badly named - it's named for it's
-implementation, not for the purpose it serves. i.e. it should be
-named something like xfs_buf_reverify(bp, ops)?  Or even:
-
-	if (xfs_buf_need_verify(bp, ops))
-		xfs_buf_reverify(bp, ops);
-
-> > > Hmm... not sure if I like the idea that you have to find the b_ops
-> > > declaration to figure out which magic number the verifier function is
-> > > checking, but I don't really have a cogent objection.
-> > 
-> > Yeah, I don't really like it either (especially the added CPU
-> > overhead that we avoided by doing compile time byte swapping),
-> > but I'm struggling to come up with a better option.
+> The problem is _very_ pronounced when using xfs and it is only present from
+> kernel version 4.19.0 and all following versions NOT before (I have not tested
+> any 4.19 rc versions). I have tested many of them including the latest 4.19.18
+> and 5.0-rc3 with varying configurations and some very limited testing on
+> 4.20.4.
 > 
-> I suppose we could store the on-disk magics in the xfs_buf_ops
-> structures (it works on x86_64 at least, I'd have to verify other
-> arches), but that is pretty ugly. Given all of the other conversions and
-> checks, I'm not sure it's worth it.
-> 
-> Hmm, I suppose we could also define a separate set of on-disk magic
-> directives:
-> 
-> #define XFS_FIBT_CRC_MAGIC_DISK        cpu_to_be32(XFS_FIBT_CRC_MAGIC)
-> 
-> ... and start using those in various places to avoid the ugliness. I
-> think that's a separate change though (and again, it's not immediately
-> clear to me the benefit justifies the additional code).
+> It affects jfs, ext2, ext3, ext4 also but to a much lesser extent.
+> btrfs and reiserfs does not seem to be affected at all, at least not on the
+> 4.19 series.
 
-I'd prefer we don't have to duplicate every magic number in XFS -
-that feels like going backwards to the bad old days of crufty irix
-code that we have cleaned up over the years.... Just use
-cpu_to_be32(XFS_FIBT_CRC_MAGIC) where necessary.
+Ok, that's interesting, because it's the second report of similar
+problems on 4.19:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=202349
+
+I've not been able to reproduce the problems as documented in that
+bug because all my test systems are headless, but in trying to
+reproduce it I have seen some concerning behaviour that leads to
+massive slowdowns that I don't ever recall seeing before. I'm hoping
+that your problem is what I've seen, and not something different.
+
+> After adding another 16GB ram on one of my testing machines I noticed that it
+> took much more time before the compile job slowed down and ui became
+> unresponsive, so I suspected some cache related issue.
+> I made a few test runs and while watching "top" I observed that as soon as
+> buff/cache passed ~ 23G (total 24G) while copying, the compile job slowed down
+> to almost a halt, while the copying also slowed down significantly.
+> 
+> After echo 0 >/proc/sys/vm/vfs_cache_pressure the compilation runs without
+> slowdown all the way through, while copying retains its steady +100MB/sec.
+> This "solution" is tested on 4.19.17-18 with "generic" Slackware config
+> and 5.0-rc3 both on xfs.
+
+Ok, so you turn off inode reclaim, and so page cache pressure
+doesn't cause inodes to be reclaimed anymore. That's something I've
+tested, and while it does alleviate the symptoms it eventually ends
+up OOM killing the test machines dead because the inode cache takes
+all of memory and can't be reclaimed. This is a documented side
+effect of this modification - Documentation/sysctl/vm.txt:
+
+	[....] When vfs_cache_pressure=0, the kernel will never
+	reclaim dentries and inodes due to memory pressure and this
+	can easily lead to out-of-memory conditions. [....]
+
+> Here's how I hit this issue every time on a pre-zen AMD:
+> 
+> 1. A decent amount of data to copy, probably at least 5-10 times as much as ram
+> and reasonably fast media (~100Mb/sec) to copy from and to (Gbit nfs mount,
+> usb3 drive, regular hard drive...).
+
+Ok, so you add a large amount of page cache pressure, some dirty
+inodes.
+
+> 2. A dedicated xfs formatted regular rotating hard drive for the compile job (I
+> suppose any io-latency sensitive parallellizable job will do), This problem is
+> probably present for ssd's as well, but because they are so fast, cache becomes
+> less of an issue and you will maybe not notice much, at least I don't.
+
+Ok, so now you add memory pressure (gcc) along with temporary and
+dirty XFS inodes. Is the system swapping?
+
+Can you get me the dmesg output of several samples (maybe 10?) of
+"echo w > /sysrq/trigger" a few seconds apart when the compile job
+is running?
+
+> Under these circumstances a defconfig kernel compile (ver 4.19.17) takes about
+> 3min 35s on 4.18.20 (xfs) and sometimes more than an hour using any version
+> after it. On Slackware "current" I use gcc 8.2.0 multilib, on 14.2 regular gcc
+> 5.5.0 which seemed to produce slightly better results.
+
+I note that in 4.19 there was a significant rework of the mm/ code
+that drives the shrinkers that do inode cache reclaim. I suspect
+we are seeing the fallout of these changes - are you able to confirm
+that the change occurred between 4.18 and 4.19-rc1 and perhaps run a
+bisect on the mm/ directory over that window?
+
+Thanks again for the detailed bug report!
 
 Cheers,
 
