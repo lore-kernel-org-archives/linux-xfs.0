@@ -1,81 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47610 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725846AbfA2Nrx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 Jan 2019 08:47:53 -0500
-Date: Tue, 29 Jan 2019 08:47:51 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: end sync buffer I/O properly on shutdown error
-Message-ID: <20190129134750.GB24998@bfoster>
-References: <20190128145548.20726-1-bfoster@redhat.com>
- <20190128213041.GR4205@dastard>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:54062 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726314AbfA2RzC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 12:55:02 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id C57412D568
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 17:55:01 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
+ since 4.19.0  on sata hdd:s
+Date: Tue, 29 Jan 2019 17:55:00 +0000
+Message-ID: <bug-202441-201763-Av2K1cZ8fw@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
+References: <bug-202441-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190128213041.GR4205@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 08:30:41AM +1100, Dave Chinner wrote:
-> On Mon, Jan 28, 2019 at 09:55:48AM -0500, Brian Foster wrote:
-> > As of commit e339dd8d8b ("xfs: use sync buffer I/O for sync delwri
-> > queue submission"), the delwri submission code uses sync buffer I/O
-> > for sync delwri I/O. Instead of waiting on async I/O to unlock the
-> > buffer, it uses the underlying sync I/O completion mechanism.
-> > 
-> > If delwri buffer submission fails due to a shutdown scenario, an
-> > error is set on the buffer and buffer completion never occurs. This
-> > can cause xfs_buf_delwri_submit() to deadlock waiting on a
-> > completion event.
-> > 
-> > We could check the error state before waiting on such buffers, but
-> > that doesn't serialize against the case of an error set via a racing
-> > I/O completion. Instead, invoke I/O completion in the shutdown case
-> > regardless of buffer I/O type.
-> 
-> How did you find this? i.e. what are the symptoms of the bug? I'm
-> guessing that it's a shutdown/unmount hang from the above, but I'm
-> really not sure.
-> 
+https://bugzilla.kernel.org/show_bug.cgi?id=202441
 
-A shutdown during log recovery via generic/034 reproduced the deadlock
-described in the commit log. The shutdown itself was caused by developer
-error (missing an xfs_buf_ops assignment when working on the magic
-stuff), so I'm not aware of a current upstream reproducer (that wouldn't
-be related to some already corrupted fs).
+--- Comment #12 from Roger (rogan6710@gmail.com) ---
+Now I have tested all rc versions as well. None of them have the problem.
+I'm watching "top" as the compile executes and seeing a _large_ difference
+in how the problem free kernel versions handles buff/cache versus the others.
 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_buf.c | 3 +--
-> >  1 file changed, 1 insertion(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index eedc5e0156ff..1f9857e3630a 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -1536,8 +1536,7 @@ __xfs_buf_submit(
-> >  		xfs_buf_ioerror(bp, -EIO);
-> >  		bp->b_flags &= ~XBF_DONE;
-> >  		xfs_buf_stale(bp);
-> > -		if (bp->b_flags & XBF_ASYNC)
-> > -			xfs_buf_ioend(bp);
-> > +		xfs_buf_ioend(bp);
-> >  		return -EIO;
-> >  	}
-> 
-> That said, it definitely looks like it fixes a bug. Will test.
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
+Beginnig from rc5, might have been earlier also, cache get's released,
+sometimes almost all of it, and begins to fill up slowly again, while for
+instance on 4.19.18 it get's almost completely filled (23.5 of 24 G) and is not
+released unless the copying is manually halted.
 
-Thanks.
-
-Brian
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
