@@ -1,128 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:6263 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726766AbfA1WAK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Jan 2019 17:00:10 -0500
-Date: Tue, 29 Jan 2019 09:00:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Bug 202441] New: Possibly vfs cache related replicable xfs
- regression since 4.19.0  on sata hdd:s
-Message-ID: <20190128220006.GS4205@dastard>
-References: <bug-202441-201763@https.bugzilla.kernel.org/>
+Received: from sandeen.net ([63.231.237.45]:44096 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728559AbfA2RFe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 Jan 2019 12:05:34 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 6017CB7C
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 11:04:20 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 193bc42
+Message-ID: <d5164ad2-1aed-0875-5032-64cea5be9afc@sandeen.net>
+Date: Tue, 29 Jan 2019 11:05:32 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="fA0sMke80S42M60YvJRegUyAgLf62BjeX"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi roger,
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--fA0sMke80S42M60YvJRegUyAgLf62BjeX
+Content-Type: multipart/mixed; boundary="QGOG54dU6xYi0faxmQF7wodzBfuhSEChR";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <d5164ad2-1aed-0875-5032-64cea5be9afc@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 193bc42
 
-On Mon, Jan 28, 2019 at 08:41:36PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=202441
+--QGOG54dU6xYi0faxmQF7wodzBfuhSEChR
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-[...]
+Hi folks,
 
-> I have a file system related problem where a compile job on a sata hdd almost
-> stops and ui becomes unresponsive when copying large files at the same time,
-> regardless of to what disk or from where they are copied.
+The xfsprogs repository at:
 
-Thanks for the detailed bug report! I'll need some more information
-about your system and storage to understand (and hopefully
-reproduce) the symptoms you are seeing. Can you provide the
-information listed here, please?
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+has just been updated.
 
-> All testing has been done on "bare metal" without even md, lvm or similar.
-> I have done a lot of testing of many different kernel versions on two different
-> systems (Slackware 14.2 and "current") and I feel confident that this is a
-> kernel regression.
-> 
-> The problem is _very_ pronounced when using xfs and it is only present from
-> kernel version 4.19.0 and all following versions NOT before (I have not tested
-> any 4.19 rc versions). I have tested many of them including the latest 4.19.18
-> and 5.0-rc3 with varying configurations and some very limited testing on
-> 4.20.4.
-> 
-> It affects jfs, ext2, ext3, ext4 also but to a much lesser extent.
-> btrfs and reiserfs does not seem to be affected at all, at least not on the
-> 4.19 series.
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
 
-Ok, that's interesting, because it's the second report of similar
-problems on 4.19:
+This is close to what xfsprogs-4.20 will (finally) be.  I'll review
+Carlos' metadump patch for possible inclusion, and if anyone has other
+outstanding patches that are better for 4.20 than 5.0, please let me know=
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202349
+either via a re-submit, or just point me at the patch subjects.
 
-I've not been able to reproduce the problems as documented in that
-bug because all my test systems are headless, but in trying to
-reproduce it I have seen some concerning behaviour that leads to
-massive slowdowns that I don't ever recall seeing before. I'm hoping
-that your problem is what I've seen, and not something different.
+Thanks,
+-Eric
 
-> After adding another 16GB ram on one of my testing machines I noticed that it
-> took much more time before the compile job slowed down and ui became
-> unresponsive, so I suspected some cache related issue.
-> I made a few test runs and while watching "top" I observed that as soon as
-> buff/cache passed ~ 23G (total 24G) while copying, the compile job slowed down
-> to almost a halt, while the copying also slowed down significantly.
-> 
-> After echo 0 >/proc/sys/vm/vfs_cache_pressure the compilation runs without
-> slowdown all the way through, while copying retains its steady +100MB/sec.
-> This "solution" is tested on 4.19.17-18 with "generic" Slackware config
-> and 5.0-rc3 both on xfs.
+The new head of the for-next branch is commit:
 
-Ok, so you turn off inode reclaim, and so page cache pressure
-doesn't cause inodes to be reclaimed anymore. That's something I've
-tested, and while it does alleviate the symptoms it eventually ends
-up OOM killing the test machines dead because the inode cache takes
-all of memory and can't be reclaimed. This is a documented side
-effect of this modification - Documentation/sysctl/vm.txt:
+193bc42 xfsprogs: Remove barrier/nobarrier mount options from xfs.5
 
-	[....] When vfs_cache_pressure=0, the kernel will never
-	reclaim dentries and inodes due to memory pressure and this
-	can easily lead to out-of-memory conditions. [....]
+New Commits:
 
-> Here's how I hit this issue every time on a pre-zen AMD:
-> 
-> 1. A decent amount of data to copy, probably at least 5-10 times as much as ram
-> and reasonably fast media (~100Mb/sec) to copy from and to (Gbit nfs mount,
-> usb3 drive, regular hard drive...).
+Achilles Gaikwad (1):
+      [b136f48] xfs_quota: fix false error reporting of project inheritan=
+ce flag is not set
 
-Ok, so you add a large amount of page cache pressure, some dirty
-inodes.
+Brian Foster (1):
+      [051dae5] xfs_repair: initialize non-leaf finobt blocks with correc=
+t magic
 
-> 2. A dedicated xfs formatted regular rotating hard drive for the compile job (I
-> suppose any io-latency sensitive parallellizable job will do), This problem is
-> probably present for ssd's as well, but because they are so fast, cache becomes
-> less of an issue and you will maybe not notice much, at least I don't.
+Darrick J. Wong (2):
+      [0ba6dae] xfs_repair: fix off by one error when rebuilding high key=
+s
+      [38c599e] xfs_db: fix finobt record decoding when sparse inodes ena=
+bled
 
-Ok, so now you add memory pressure (gcc) along with temporary and
-dirty XFS inodes. Is the system swapping?
+Eric Sandeen (4):
+      [45571fd] xfs_repair: allow '/' in attribute names
+      [17728a4] xfsprogs: remove generated scrub files under clean target=
 
-Can you get me the dmesg output of several samples (maybe 10?) of
-"echo w > /sysrq/trigger" a few seconds apart when the compile job
-is running?
+      [e3f66d1] xfs_db: add -d to short help for write command
+      [193bc42] xfsprogs: Remove barrier/nobarrier mount options from xfs=
+=2E5
 
-> Under these circumstances a defconfig kernel compile (ver 4.19.17) takes about
-> 3min 35s on 4.18.20 (xfs) and sometimes more than an hour using any version
-> after it. On Slackware "current" I use gcc 8.2.0 multilib, on 14.2 regular gcc
-> 5.5.0 which seemed to produce slightly better results.
+Stefan Ring (5):
+      [11f3d9f] xfs_metadump: Extend data zapping to XFS_DIR{2,3}_LEAFN_M=
+AGIC blocks
+      [b04e7e9] xfs_metadump: Zap multi fsb blocks
+      [c3387ef] xfs_metadump: Zap freeindex blocks in directory inodes
+      [07b75e3] xfs_metadump: Zap unused space in inode btrees
+      [b32d0eb] xfs_metadump: Zap dev inodes
 
-I note that in 4.19 there was a significant rework of the mm/ code
-that drives the shrinkers that do inode cache reclaim. I suspect
-we are seeing the fallout of these changes - are you able to confirm
-that the change occurred between 4.18 and 4.19-rc1 and perhaps run a
-bisect on the mm/ directory over that window?
 
-Thanks again for the detailed bug report!
+Code Diffstat:
 
-Cheers,
+ db/metadump.c        | 132 +++++++++++++++++++++++++++++++++++++++++++++=
+------
+ db/type.c            |   2 +-
+ db/write.c           |   2 +-
+ man/man5/xfs.5       |  30 ++++++------
+ man/man8/xfs_db.8    |   2 +-
+ quota/project.c      |   2 +-
+ repair/attr_repair.c |  20 +++++---
+ repair/da_util.c     |  20 +++++---
+ repair/da_util.h     |   3 +-
+ repair/dir2.c        |  12 ++++-
+ repair/phase5.c      |  12 ++---
+ scrub/Makefile       |   2 +
+ 12 files changed, 183 insertions(+), 56 deletions(-)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+--QGOG54dU6xYi0faxmQF7wodzBfuhSEChR--
+
+--fA0sMke80S42M60YvJRegUyAgLf62BjeX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlxQh90ACgkQIK4WkuE9
+3uAbjBAAjHSxkqUX88fOfDzaQuOht3NrnuOC6tNseXbotaGAGemudAAfLCanEdIF
+nqjGdw/FBC6wpr6YkGeFy5iY5BQKcX7Mft9CaHWmBA6jZ7UfSMRcVll7dgbv6edm
+IE5pG5PTuHX3Qf+ie+WTTDGhaFbNjLhOWtvHKtKyZrldxW27abjrOkgmkkpNJAGL
+gjn5ewzcDyZefHplnNesP1sXNk+TvyThXpeMEjNOlm5zDkqxgJpXfJHirvsDAtwS
+MN8y1hN1jzyLy1UToQddqaurpVfq+WPyKYsPHEQI1A8GxVGQt/k18IavN8nEKlR3
+mfT5vD96v2nNWwcWokbHC6NBohOd9uPF013o+vPtif0ravjH01zbOVLkUngbo3/i
+sShLfNAr5tnXBR3963HjFp4GfYr7utYwS84G+ISfuxnegUCFjgjLdu1VHfa6GBCA
+LoroAXtC51cOzQ2Tz2jKJMgvZB9TVnsgbzJCjVNtarHsjCJ0x7FixCzYKGuWwmSF
+Ei7FbGP+qzO6xBqd0ZKZNziFpEMpHcD+ZC7mbPKszsS2hrWPPbB9iBveQHsH5kpV
+78wC5rdfvOQ+kvM0gKENIkt5sVSUXEQSbXnJ2LiMlp+XY91awyn9bIUpI9ISh4hW
+BX5Xn0PZyG/1M7ADuA0WTIJNuXiF0kRUfYgUU+7Dkkcv+xsyWLU=
+=CgQ9
+-----END PGP SIGNATURE-----
+
+--fA0sMke80S42M60YvJRegUyAgLf62BjeX--
