@@ -1,69 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:53200 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389024AbfA1QXc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Jan 2019 11:23:32 -0500
-Date: Mon, 28 Jan 2019 08:22:33 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] iomap: fix a use after free in iomap_dio_rw
-Message-ID: <20190128162233.GF4368@magnolia>
-References: <20190117075707.8640-1-hch@lst.de>
- <20190117212658.GD6173@dastard>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:37558 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727326AbfA2VoM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 16:44:12 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id A4C332CA88
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 21:44:11 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
+ since 4.19.0  on sata hdd:s
+Date: Tue, 29 Jan 2019 21:44:10 +0000
+Message-ID: <bug-202441-201763-ntwCpAyNPT@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
+References: <bug-202441-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190117212658.GD6173@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Chandan Rajendra <chandan@linux.ibm.com>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jan 18, 2019 at 08:26:58AM +1100, Dave Chinner wrote:
-> On Thu, Jan 17, 2019 at 08:57:07AM +0100, Christoph Hellwig wrote:
-> > Introduce a local wait_for_completion variable to avoid an access to the
-> > potentially freed dio struture after dropping the last reference count.
-> > 
-> > Also use the chance to document the completion behavior to make the
-> > refcounting clear to the reader of the code.
-> > 
-> > Fixes: ff6a9292e6 ("iomap: implement direct I/O")
-> > Reported-by: Chandan Rajendra <chandan@linux.ibm.com>
-> > Reported-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > Tested-by: Chandan Rajendra <chandan@linux.ibm.com>
-> > Tested-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/iomap.c | 28 +++++++++++++++++++++-------
-> >  1 file changed, 21 insertions(+), 7 deletions(-)
+https://bugzilla.kernel.org/show_bug.cgi?id=202441
+
+--- Comment #15 from Dave Chinner (david@fromorbit.com) ---
+On Tue, Jan 29, 2019 at 09:19:52PM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=202441
 > 
-> Looks good, minor comment cleanup needed, though. maybe Darrick can
-> do it on commit?
+> --- Comment #13 from Roger (rogan6710@gmail.com) ---
+> Considering that rc8 which I believe was released as 4.19.0 did not show any
+> problems on my 24G machine I must have managed to get a false positive on
+> 4.19.0. The machine I tested that on has less ram (8G) but I don't know if
+> that
+> matters.
 > 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> > @@ -1925,8 +1925,24 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> >  	if (dio->flags & IOMAP_DIO_WRITE_FUA)
-> >  		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
-> >  
-> > +	/*
-> > +	 * We are about to drop our additional submission reference, which
-> > +	 * might be the last reference to the dio.  There are three three
-> > +	 * different ways we can progress here:
-> > +	 *
-> > +	 *  (a) If this is the last reference we will always complete and free
-> > +	 *	the dio ourselves. right here.
-> 
-> s/ right here.//
+> Anyhow, after a filthy amount of copying and compiling I can say that
+> something probably went wrong between 4.19.2, which is ok, and 4.19.3
+> which is not, at least on this 9590. 
 
-Fixed.
+Thank you!
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+We crossed streams - I was writing the email suggesting this when,
+in fact, your were way ahead of me.
 
---D
+> I downloaded, compiled, and tested all rc versions, 4.19.{2,3,5,9} and
+> verified
+> that 4.19.{3,5,9,18} all have the problems described above on the 9590.
+> All tests were done in console (nomodeset) directly after boot.
 
+Ok, I'll have a look at the 4.19.2 -> 4.19.3 history now and see
+what pops out.
 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Cheers,
+
+Dave.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
