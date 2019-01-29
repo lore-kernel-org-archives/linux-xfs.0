@@ -1,243 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:29485 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727488AbfA2VRB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 16:17:01 -0500
-Date: Wed, 30 Jan 2019 08:16:55 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC v2 2/3] xfs: distinguish between inobt and finobt
- magic values
-Message-ID: <20190129211655.GY4205@dastard>
-References: <20190128152034.21080-1-bfoster@redhat.com>
- <20190128152034.21080-3-bfoster@redhat.com>
- <20190128225426.GU4205@dastard>
- <20190129140136.GC24998@bfoster>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:33932 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727909AbfA2JJN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 04:09:13 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 461042B093
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 09:09:12 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
+ since 4.19.0  on sata hdd:s
+Date: Tue, 29 Jan 2019 09:09:11 +0000
+Message-ID: <bug-202441-201763-U8xfDVFdKi@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
+References: <bug-202441-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190129140136.GC24998@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 09:01:36AM -0500, Brian Foster wrote:
-> On Tue, Jan 29, 2019 at 09:54:26AM +1100, Dave Chinner wrote:
-> > On Mon, Jan 28, 2019 at 10:20:33AM -0500, Brian Foster wrote:
-> > > The inode btree verifier code is shared between the inode btree and
-> > > free inode btree because the underlying metadata formats are
-> > > essentially equivalent. A side effect of this is that the verifier
-> > > cannot determine whether a particular btree block should have an
-> > > inobt or finobt magic value.
-> > > 
-> > > This logic allows an unfortunate xfs_repair bug to escape detection
-> > > where certain level > 0 nodes of the finobt are stamped with inobt
-> > > magic by xfs_repair finobt reconstruction. This is fortunately not a
-> > > severe problem since the inode btree magic values do not contribute
-> > > to any changes in kernel behavior, but we do need a means to detect
-> > > and prevent this problem in the future.
-> > > 
-> > > Add a field to xfs_buf_ops to store the v4 and v5 superblock magic
-> > > values expected by a particular verifier. Add a helper to check an
-> > > on-disk magic value against the value expected by the verifier. Call
-> > > the helper from the shared [f]inobt verifier code for magic value
-> > > verification. This ensures that the inode btree blocks each have the
-> > > appropriate magic value based on specific tree type and superblock
-> > > version.
-> > 
-> > I still really don't like this code :(
-> > 
-> 
-> Enough to explain why, perhaps?
+https://bugzilla.kernel.org/show_bug.cgi?id=202441
 
-I did in the past thread - it adds runtime overhead in performance
-critical paths, and it requires verfiers to have a dependecy on
-bp->b_ops being set.
+--- Comment #8 from Roger (rogan6710@gmail.com) ---
+Created attachment 280837
+  --> https://bugzilla.kernel.org/attachment.cgi?id=280837&action=edit
+meminfo and xfs_info 4.19.0-rc1
 
-> > > @@ -387,4 +388,22 @@ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
-> > >  
-> > >  int xfs_buf_ensure_ops(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
-> > >  
-> > > +/*
-> > > + * Verify an on-disk magic value against the magic value specified in the
-> > > + * verifier structure.
-> > > + */
-> > > +static inline bool
-> > > +xfs_buf_ops_verify_magic(
-> > > +	struct xfs_buf		*bp,
-> > > +	__be32			dmagic,
-> > > +	bool			crc)
-> > > +{
-> > > +	if (unlikely(WARN_ON(!bp->b_ops || !bp->b_ops->magic[crc])))
-> > > +		return false;
-> > > +	return dmagic == cpu_to_be32(bp->b_ops->magic[crc]);
-> > > +}
-> > > +#define xfs_verify_magic(bp, dmagic)		\
-> > > +	xfs_buf_ops_verify_magic(bp, dmagic,	\
-> > > +			xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb))
-> > 
-> > That, IMO, is even worse....
-> > 
-> 
-> Worse than what and why?
-
-Worse that the last patch, because it now adds a needless macro that
-only serves to obfuscate the code. This:
-
-static inline bool
-xfs_verify_magic(
-	struct xfs_mount	*mp,
-	__be32			dmagic,
-	int			idx)
-{
-	__be32			magic;
-
-	if (xfs_sb_version_hascrc(&mp->m_sb))
-		magic = xfs_v5_disk_magic[idx];
-	magic = xfs_v4_disk_magic[idx];
-
-	return dmagic == magic;
-}
-
-is much cleaner and easier to understand....
-
-> Note that I've removed the endian conversion from here. Otherwise, this
-> is basically just a wrapper to factor out the sb version lookup and
-> provide some common error checking.
-> 
-> > Ok, here's a different option. Store all the magic numbers in a pair
-> > of tables - one for v4, one for v5. They can be static const and
-> > in on-disk format.
-> > 
-> > Then use some simple 1-line wrappers for the verifier definitions to
-> > specify the table index for the magic numbers. e.g:
-> > 
-> > __be32 xfs_disk_magic(mp, idx)
-> > {
-> > 	if (xfs_sb_version_hascrc(&mp->m_sb))
-> > 		return xfs_v5_disk_magic[idx];
-> > 	return xfs_v4_disk_magic[idx];
-> > }
-> > 
-> 
-> Seems reasonable enough... but where/how is the index encoded?
-
-I was thinking in fs/xfs/libxfs/xfs_types.[ch], via an index similar
-to xfs_btnum_t indexes (could even use it to begin with).
-
-static const xfs_v5_disk_magic[] = {
-	cpu_to_be32(XFS_ABTB_CRC_MAGIC),
-	cpu_to_be32(XFS_ABTC_CRC_MAGIC),
-	cpu_to_be32(XFS_ITB_CRC_MAGIC),
-	cpu_to_be32(XFS_FITB_CRC_MAGIC),
-	.....
-}
-
-You could do the same thing to the verfier op definition to
-remove the need on-the-fly endian conversion just for the magic
-number checks, which gets rid of that concern.
-
-> > And this can be extended to all the verifiers - it handles crc and
-> > non CRC variants transparently, and can be used for the cnt/bno free
-> > space btrees, too.
-> > 
-> > Yes, it's a bit more boiler plate code, but IMO it is easier to
-> > follow and understand than encoding multiple magic numbers into the
-> > verifier and adding a dependency on the buffer having an ops
-> > structure attached to be able to check the magic number...
-> 
-> This code duplication is what I was hoping to avoid. We already have
-> similar proliferation of boilerplate code in some of the verifiers that
-> handle multiple object types. See the appended hunk related to the dir
-> leaf verifier code, for example.
-
-Personally I prefer code duplication first, then factor later once
-the code settles down. In hindsight, we've probably factored the
-verifiers too much too soon...
-
-> I agree that the magic value itself is a bit obfuscated with this
-> change, but that's still the case with a lookup table.
-
-The difference with the lookup table is that you know what the magic
-number is supposed to be by looking at the code that calls it...
-
-> Another angle to this is that we don't necessarily have to use the
-> xfs_buf_ops->magic field for every verifier. I could just add it to the
-> finobt case, perhaps the directory case below, and leave the rest alone
-> until we come up with something more agreeable. Then it basically just
-> supports a couple corner cases and is easy enough to remove down the
-> road.
-
-I'd like all the verifiers to use the same mechanism so we maintain
-consistency between them.
-
-> --- 8< ---
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> index 1728a3e6f5cf..f602307d2fa0 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> @@ -142,41 +142,32 @@ xfs_dir3_leaf_check_int(
->   */
->  static xfs_failaddr_t
->  xfs_dir3_leaf_verify(
-> -	struct xfs_buf		*bp,
-> -	uint16_t		magic)
-> +	struct xfs_buf		*bp)
->  {
->  	struct xfs_mount	*mp = bp->b_target->bt_mount;
->  	struct xfs_dir2_leaf	*leaf = bp->b_addr;
->  
-> -	ASSERT(magic == XFS_DIR2_LEAF1_MAGIC || magic == XFS_DIR2_LEAFN_MAGIC);
-> +	if (!xfs_verify_magic(bp, be16_to_cpu(leaf->hdr.info.magic)))
-> +		return __this_address;
->  
->  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
->  		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
-> -		uint16_t		magic3;
->  
-> -		magic3 = (magic == XFS_DIR2_LEAF1_MAGIC) ? XFS_DIR3_LEAF1_MAGIC
-> -							 : XFS_DIR3_LEAFN_MAGIC;
-> -
-> -		if (leaf3->info.hdr.magic != cpu_to_be16(magic3))
-> -			return __this_address;
-> +		ASSERT(leaf3->info.hdr.magic == leaf->hdr.info.magic);
->  		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
->  			return __this_address;
->  		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
->  			return __this_address;
->  		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
->  			return __this_address;
-> -	} else {
-> -		if (leaf->hdr.info.magic != cpu_to_be16(magic))
-> -			return __this_address;
->  	}
->  
->  	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
->  }
-
-.....
-
-Ok, that removes a lot more existing code than I ever thought it
-would. If you clean up the macro mess and use encoded magic numbers
-in the ops structure, then consider my objections removed. :)
-
-(And that then leads to factoring of xfs_dablk_info_verify() as dir
-leaf, danode and attribute leaf blocks all use the same struct
-xfs_da3_blkinfo header, and now the magic number is abstracted they
-can use the same code....)
-
-Brian, to help prevent stupid people like me wasting your time in
-future, can you post the entire patch set you have so we can see the
-same picture you have for the overall change, even if there's only a
-small chunk you are proposing for merge? That way we'll be able to
-judge the change on the merits of the entire work, rather than just
-the small chunk that was posted? 
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+You are receiving this mail because:
+You are watching the assignee of the bug.
