@@ -1,189 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33044 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726919AbfA2Sdw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 Jan 2019 13:33:52 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4A760804F4
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 18:33:52 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 003B95D717
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 18:33:51 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 3/5] xfs: use verifier magic field in dir2 leaf verifiers
-Date: Tue, 29 Jan 2019 13:33:48 -0500
-Message-Id: <20190129183350.27302-4-bfoster@redhat.com>
-In-Reply-To: <20190129183350.27302-1-bfoster@redhat.com>
-References: <20190129183350.27302-1-bfoster@redhat.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:38378 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727342AbfA2VxT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 16:53:19 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id E610C2DBD2
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 21:53:17 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
+ since 4.19.0  on sata hdd:s
+Date: Tue, 29 Jan 2019 21:53:16 +0000
+Message-ID: <bug-202441-201763-UUDONeIBmx@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
+References: <bug-202441-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-The dir2 leaf verifiers share the same underlying structure
-verification code, but implement six accessor functions to multiplex
-the code across the two verifiers. Further, the magic value isn't
-sufficiently abstracted such that the common helper has to manually
-fix up the magic from the caller on v5 filesystems.
+https://bugzilla.kernel.org/show_bug.cgi?id=202441
 
-Use the magic field in the verifier structure to eliminate the
-duplicate code and clean this all up. No functional change.
+--- Comment #16 from Dave Chinner (david@fromorbit.com) ---
+On Tue, Jan 29, 2019 at 09:41:21PM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=202441
+> --- Comment #14 from Dave Chinner (david@fromorbit.com) ---
+> > --- Comment #12 from Roger (rogan6710@gmail.com) ---
+> > Beginnig from rc5, might have been earlier also, cache get's released,
+> > sometimes almost all of it, and begins to fill up slowly again,
+> 
+> Which I'd consider bad behaviour - trashing the entire working set
+> because memory pressure is occurring is pathological behaviour.
+> 
+> Can you confirm which -rcX that behaviour starts in? e.g. between
+> -rc4 and -rc5 there is this commit:
+> 
+> 172b06c32b94 mm: slowly shrink slabs with a relatively small number of
+> objects
+> 
+> Which does change the way that the inode caches are reclaimed by
+> forcably triggering reclaim for caches that would have previously
+> been ignored. That's one of the "red flag" commits I noticed when
+> first looking at the history between 4.18 and 4.19....
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_dir2_leaf.c | 86 ++++++++---------------------------
- 1 file changed, 18 insertions(+), 68 deletions(-)
+And now, added in 4.19.3:
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index 1728a3e6f5cf..f602307d2fa0 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -142,41 +142,32 @@ xfs_dir3_leaf_check_int(
-  */
- static xfs_failaddr_t
- xfs_dir3_leaf_verify(
--	struct xfs_buf		*bp,
--	uint16_t		magic)
-+	struct xfs_buf		*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 	struct xfs_dir2_leaf	*leaf = bp->b_addr;
- 
--	ASSERT(magic == XFS_DIR2_LEAF1_MAGIC || magic == XFS_DIR2_LEAFN_MAGIC);
-+	if (!xfs_verify_magic(bp, be16_to_cpu(leaf->hdr.info.magic)))
-+		return __this_address;
- 
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
--		uint16_t		magic3;
- 
--		magic3 = (magic == XFS_DIR2_LEAF1_MAGIC) ? XFS_DIR3_LEAF1_MAGIC
--							 : XFS_DIR3_LEAFN_MAGIC;
--
--		if (leaf3->info.hdr.magic != cpu_to_be16(magic3))
--			return __this_address;
-+		ASSERT(leaf3->info.hdr.magic == leaf->hdr.info.magic);
- 		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
- 			return __this_address;
- 		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
- 			return __this_address;
- 		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
- 			return __this_address;
--	} else {
--		if (leaf->hdr.info.magic != cpu_to_be16(magic))
--			return __this_address;
- 	}
- 
- 	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
- }
- 
- static void
--__read_verify(
--	struct xfs_buf  *bp,
--	uint16_t	magic)
-+xfs_dir3_leaf_read_verify(
-+	struct xfs_buf  *bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 	xfs_failaddr_t		fa;
-@@ -185,23 +176,22 @@ __read_verify(
- 	     !xfs_buf_verify_cksum(bp, XFS_DIR3_LEAF_CRC_OFF))
- 		xfs_verifier_error(bp, -EFSBADCRC, __this_address);
- 	else {
--		fa = xfs_dir3_leaf_verify(bp, magic);
-+		fa = xfs_dir3_leaf_verify(bp);
- 		if (fa)
- 			xfs_verifier_error(bp, -EFSCORRUPTED, fa);
- 	}
- }
- 
- static void
--__write_verify(
--	struct xfs_buf  *bp,
--	uint16_t	magic)
-+xfs_dir3_leaf_write_verify(
-+	struct xfs_buf  *bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	struct xfs_dir3_leaf_hdr *hdr3 = bp->b_addr;
- 	xfs_failaddr_t		fa;
- 
--	fa = xfs_dir3_leaf_verify(bp, magic);
-+	fa = xfs_dir3_leaf_verify(bp);
- 	if (fa) {
- 		xfs_verifier_error(bp, -EFSCORRUPTED, fa);
- 		return;
-@@ -216,60 +206,20 @@ __write_verify(
- 	xfs_buf_update_cksum(bp, XFS_DIR3_LEAF_CRC_OFF);
- }
- 
--static xfs_failaddr_t
--xfs_dir3_leaf1_verify(
--	struct xfs_buf	*bp)
--{
--	return xfs_dir3_leaf_verify(bp, XFS_DIR2_LEAF1_MAGIC);
--}
--
--static void
--xfs_dir3_leaf1_read_verify(
--	struct xfs_buf	*bp)
--{
--	__read_verify(bp, XFS_DIR2_LEAF1_MAGIC);
--}
--
--static void
--xfs_dir3_leaf1_write_verify(
--	struct xfs_buf	*bp)
--{
--	__write_verify(bp, XFS_DIR2_LEAF1_MAGIC);
--}
--
--static xfs_failaddr_t
--xfs_dir3_leafn_verify(
--	struct xfs_buf	*bp)
--{
--	return xfs_dir3_leaf_verify(bp, XFS_DIR2_LEAFN_MAGIC);
--}
--
--static void
--xfs_dir3_leafn_read_verify(
--	struct xfs_buf	*bp)
--{
--	__read_verify(bp, XFS_DIR2_LEAFN_MAGIC);
--}
--
--static void
--xfs_dir3_leafn_write_verify(
--	struct xfs_buf	*bp)
--{
--	__write_verify(bp, XFS_DIR2_LEAFN_MAGIC);
--}
--
- const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
- 	.name = "xfs_dir3_leaf1",
--	.verify_read = xfs_dir3_leaf1_read_verify,
--	.verify_write = xfs_dir3_leaf1_write_verify,
--	.verify_struct = xfs_dir3_leaf1_verify,
-+	.magic = { XFS_DIR2_LEAF1_MAGIC, XFS_DIR3_LEAF1_MAGIC },
-+	.verify_read = xfs_dir3_leaf_read_verify,
-+	.verify_write = xfs_dir3_leaf_write_verify,
-+	.verify_struct = xfs_dir3_leaf_verify,
- };
- 
- const struct xfs_buf_ops xfs_dir3_leafn_buf_ops = {
- 	.name = "xfs_dir3_leafn",
--	.verify_read = xfs_dir3_leafn_read_verify,
--	.verify_write = xfs_dir3_leafn_write_verify,
--	.verify_struct = xfs_dir3_leafn_verify,
-+	.magic = { XFS_DIR2_LEAFN_MAGIC, XFS_DIR3_LEAFN_MAGIC },
-+	.verify_read = xfs_dir3_leaf_read_verify,
-+	.verify_write = xfs_dir3_leaf_write_verify,
-+	.verify_struct = xfs_dir3_leaf_verify,
- };
- 
- int
+ $ gl -n 1 5ebac3b957a9 -p
+commit 5ebac3b957a91c921d2f1a7953caafca18aa6260
+Author: Roman Gushchin <guro@fb.com>
+Date:   Fri Nov 16 15:08:18 2018 -0800
+
+    mm: don't reclaim inodes with many attached pages
+
+    commit a76cf1a474d7dbcd9336b5f5afb0162baa142cf0 upstream.
+
+    Spock reported that commit 172b06c32b94 ("mm: slowly shrink slabs with a
+    relatively small number of objects") leads to a regression on his setup:
+    periodically the majority of the pagecache is evicted without an obvious
+    reason, while before the change the amount of free memory was balancing
+    around the watermark.
+
+    The reason behind is that the mentioned above change created some
+    minimal background pressure on the inode cache.  The problem is that if
+    an inode is considered to be reclaimed, all belonging pagecache page are
+    stripped, no matter how many of them are there.  So, if a huge
+    multi-gigabyte file is cached in the memory, and the goal is to reclaim
+    only few slab objects (unused inodes), we still can eventually evict all
+    gigabytes of the pagecache at once.
+
+    The workload described by Spock has few large non-mapped files in the
+    pagecache, so it's especially noticeable.
+
+    To solve the problem let's postpone the reclaim of inodes, which have
+    more than 1 attached page.  Let's wait until the pagecache pages will be
+    evicted naturally by scanning the corresponding LRU lists, and only then
+    reclaim the inode structure.
+
+    Link: http://lkml.kernel.org/r/20181023164302.20436-1-guro@fb.com
+    Signed-off-by: Roman Gushchin <guro@fb.com>
+    Reported-by: Spock <dairinin@gmail.com>
+    Tested-by: Spock <dairinin@gmail.com>
+    Reviewed-by: Andrew Morton <akpm@linux-foundation.org>
+    Cc: Michal Hocko <mhocko@kernel.org>
+    Cc: Rik van Riel <riel@surriel.com>
+    Cc: Randy Dunlap <rdunlap@infradead.org>
+    Cc: <stable@vger.kernel.org>    [4.19.x]
+    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+    Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+SO, basically, I was right - the slab shrinking change in 4.18-rc5
+caused the page cache to saw tooth like you reported, and there is a
+"fix" for it in 4.19.3.
+
+What does that "fix" do? It stops inode reclaim from inodes with
+cached pages attached.
+
+diff --git a/fs/inode.c b/fs/inode.c
+index 42f6d25f32a5..65ae154df760 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -730,8 +730,11 @@ static enum lru_status inode_lru_isolate(struct list_head
+*item,
+                return LRU_REMOVED;
+        }
+
+-       /* recently referenced inodes get one more pass */
+-       if (inode->i_state & I_REFERENCED) {
++       /*
++        * Recently referenced inodes and inodes with many attached pages
++        * get one more pass.
++        */
++       if (inode->i_state & I_REFERENCED || inode->i_data.nrpages > 1) {
+                inode->i_state &= ~I_REFERENCED;
+                spin_unlock(&inode->i_lock);
+                return LRU_ROTATE;
+
+Basically, what happened before this patch was that when an inode
+was aged out of the cache due to the shrinker cycling over it, it's
+page cache was reclaimed and then the inode reclaimed.
+
+Now, the inode does not get reclaimed and the page cache is not
+reclaimed. When you have lots of large files in your workload, that
+means the inode cache turning over can no longer reclaim those
+inodes, and so the inode can only be reclaimed after memory reclaim
+has reclaimed the entire page cache for an inode.
+
+That's a /massive/ change in behaviour, and it means that clean
+inodes with cached pages attached can no longer be reclaimed by the
+inode cache shrinker. Which will drive the inode cache shrinker into
+trying to reclaim dirty inodes.....
+
+Can you revert the above patch and see if the problem goes away?
+
+Cheers,
+
+Dave.
+
 -- 
-2.17.2
+You are receiving this mail because:
+You are watching the assignee of the bug.
