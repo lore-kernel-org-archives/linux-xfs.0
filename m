@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:54062 "EHLO
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:58288 "EHLO
         mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726314AbfA2RzC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 12:55:02 -0500
+        by vger.kernel.org with ESMTP id S1727342AbfA2WXF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 17:23:05 -0500
 Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id C57412D568
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 17:55:01 +0000 (UTC)
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 759432DCD1
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 22:23:04 +0000 (UTC)
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
  since 4.19.0  on sata hdd:s
-Date: Tue, 29 Jan 2019 17:55:00 +0000
-Message-ID: <bug-202441-201763-Av2K1cZ8fw@https.bugzilla.kernel.org/>
+Date: Tue, 29 Jan 2019 22:23:03 +0000
+Message-ID: <bug-202441-201763-aVz3hg3j3U@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
 References: <bug-202441-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -23,15 +23,10 @@ To: linux-xfs@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=202441
 
---- Comment #12 from Roger (rogan6710@gmail.com) ---
-Now I have tested all rc versions as well. None of them have the problem.
-I'm watching "top" as the compile executes and seeing a _large_ difference
-in how the problem free kernel versions handles buff/cache versus the others.
-
-Beginnig from rc5, might have been earlier also, cache get's released,
-sometimes almost all of it, and begins to fill up slowly again, while for
-instance on 4.19.18 it get's almost completely filled (23.5 of 24 G) and is not
-released unless the copying is manually halted.
+--- Comment #19 from Dave Chinner (david@fromorbit.com) ---
+Created attachment 280859
+  --> https://bugzilla.kernel.org/attachment.cgi?id=280859&action=edit
+revert patch
 
 -- 
 You are receiving this mail because:
