@@ -1,120 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:46778 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725846AbfA2QRh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 11:17:37 -0500
-Subject: [PATCH 4/4] generic: check for reasonable inode creation time
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 29 Jan 2019 08:17:31 -0800
-Message-ID: <154877865178.9277.5385935769005684086.stgit@magnolia>
-In-Reply-To: <154877863279.9277.4463697450629081138.stgit@magnolia>
-References: <154877863279.9277.4463697450629081138.stgit@magnolia>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:50214 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727488AbfA2VTz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 16:19:55 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 726D72D2EA
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 21:19:54 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
+ since 4.19.0  on sata hdd:s
+Date: Tue, 29 Jan 2019 21:19:52 +0000
+Message-ID: <bug-202441-201763-GRtP2T87ne@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
+References: <bug-202441-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=202441
 
-If statx returns inode creation time (aka btime), check it to make sure
-that the filesystem is setting a creation time that's reasonably close
-to when it creates a file.
+--- Comment #13 from Roger (rogan6710@gmail.com) ---
+Considering that rc8 which I believe was released as 4.19.0 did not show any
+problems on my 24G machine I must have managed to get a false positive on
+4.19.0. The machine I tested that on has less ram (8G) but I don't know if that
+matters.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/generic/709     |   61 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/709.out |    2 ++
- tests/generic/group   |    1 +
- 3 files changed, 64 insertions(+)
- create mode 100755 tests/generic/709
- create mode 100644 tests/generic/709.out
+Anyhow, after a filthy amount of copying and compiling I can say that
+something probably went wrong between 4.19.2, which is ok, and 4.19.3
+which is not, at least on this 9590. 
 
+I downloaded, compiled, and tested all rc versions, 4.19.{2,3,5,9} and verified
+that 4.19.{3,5,9,18} all have the problems described above on the 9590.
+All tests were done in console (nomodeset) directly after boot.
 
-diff --git a/tests/generic/709 b/tests/generic/709
-new file mode 100755
-index 00000000..724a16a8
---- /dev/null
-+++ b/tests/generic/709
-@@ -0,0 +1,61 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0+
-+# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 709
-+#
-+# Check that statx btime (aka creation time) is plausibly close to when
-+# we created a file.  A bug caught during code review of xfs patches revealed
-+# that there weren't any sanity checks of the btime values.
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+testfile=$TEST_DIR/$seq.txt
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.* $testfile
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/attr
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_xfs_io_command "statx" "-r"
-+
-+rm -f $seqres.full
-+rm -f $testfile
-+
-+# Create a file and the time we created it
-+now=$(date +%s)
-+touch $testfile
-+
-+# Does statx return results with the BTIME flag set in the result mask?
-+STATX_BTIME=0x800
-+$XFS_IO_PROG -c "statx -F -r -m $STATX_BTIME" $testfile > $tmp.statx
-+cat $tmp.statx >> $seqres.full
-+
-+result_mask=$(grep 'stat.mask =' $tmp.statx | cut -d ' ' -f 3)
-+test -n "$result_mask" || _notrun "did not see stat.mask in output"
-+
-+test "$(( result_mask & STATX_BTIME ))" -ne 0 || \
-+	_notrun "statx did not return btime"
-+
-+# Make sure the reported btime is within 5 seconds of the time we recorded
-+# just prior to creating the file.
-+btime=$(grep 'stat.btime.tv_sec =' $tmp.statx | cut -d ' ' -f 3)
-+test -n "$btime" || echo "error: did not see btime in output??"
-+
-+_within_tolerance "btime" "$btime" "$now" 0 5 -v
-+
-+status=0
-+exit
-diff --git a/tests/generic/709.out b/tests/generic/709.out
-new file mode 100644
-index 00000000..d8495ace
---- /dev/null
-+++ b/tests/generic/709.out
-@@ -0,0 +1,2 @@
-+QA output created by 709
-+btime is in range
-diff --git a/tests/generic/group b/tests/generic/group
-index 6f5f28d8..9ce608c0 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -527,3 +527,4 @@
- 522 soak long_rw
- 523 auto quick attr
- 524 auto quick
-+709 auto quick
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
