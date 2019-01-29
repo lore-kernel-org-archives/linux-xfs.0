@@ -1,85 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:29587 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725913AbfAXWTU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Jan 2019 17:19:20 -0500
-Date: Fri, 25 Jan 2019 09:19:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC] xfs: support magic value in xfs_buf_ops
-Message-ID: <20190124221917.GN4205@dastard>
-References: <20190124155440.46469-1-bfoster@redhat.com>
- <20190124190846.GC4368@magnolia>
+Received: from ozlabs.org ([203.11.71.1]:41971 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727332AbfA2U4x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 Jan 2019 15:56:53 -0500
+Date: Wed, 30 Jan 2019 07:56:47 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: linux-next: Fixes tag needs some work in the xfs tree
+Message-ID: <20190130075647.53e86078@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190124190846.GC4368@magnolia>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/RicaNw4dIu0b2+hrLAjDX7W"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc: Linux Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-On Thu, Jan 24, 2019 at 11:08:46AM -0800, Darrick J. Wong wrote:
-> On Thu, Jan 24, 2019 at 10:54:40AM -0500, Brian Foster wrote:
-> > Add a field to specify the v4 and v5 magic values in xfs_buf_ops.
-> > This allows otherwise identical verifiers to distinguish between
-> > and verify different magic values (inobt vs. finobt buffers). This
-> > also facilitates verification of the appropriate magic value based
-> > on superblock version.
-> > 
-> > The magic field is optional and is free to be used as appropriate
-> > for each particular verifier.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > Hi all,
-> > 
-> > What do folks think of something like this as a lightweight (and
-> > untested) means to do proper [f]inobt magic verification? For reference,
-> > the initial version of this put together to help root cause a user
-> > report is here[1]. I was hoping to do the same thing with less code
-> > duplication. A couple things that come to mind:
-> > 
-> > 1. I know scrub has at least one place where we invoke the verifier with
-> > ->b_ops == NULL, which will cause this to explode. Could we fix that up
-> > to assign and reset ->b_ops to accommodate something like this, or is
-> > that problematic?
-> 
-> IIRC one of the scrub findroot reviewers didn't like the idea of scrub
-> setting b_ops until it was absolutely sure it wanted to.  I think it's
-> actually ok to patch it in temporarily while running the read verifier
-> since we have the buffer locked and patch it out afterwards.
+--Sig_/RicaNw4dIu0b2+hrLAjDX7W
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-How does this interact with xfs_buf_ensure_ops()?
+Hi all,
 
-[ side note: the comments about this function are poor - I have no
-idea what problem it is avoiding from reading the code. Yes, I know
-it protects against transactions with buffers and no ops, but the
-comments don't tell me *how or when that occurs* so I do not know
-where to go looking for potential issues here. ]
+In commit
 
-> > 2. We have some other verifiers around that actually use the buffer
-> > magic to set a more specific verifier. See xfs_da3_node_read_verify()
-> > for an example. I'm not sure this is all that useful for such higher
-> > level verifiers, but I think we'd at least be able to use it for the
-> > underlying verifiers. That might provide some extra sb version vs. magic
-> > sanity checking for places that might not already look at the sb version
-> > (otherwise it's just refactoring).
-> > 
-> > Thoughts or other ideas before I try to apply this more broadly? Thanks.
-> 
-> Hmm... not sure if I like the idea that you have to find the b_ops
-> declaration to figure out which magic number the verifier function is
-> checking, but I don't really have a cogent objection.
+  4ea899ead278 ("iomap: fix a use after free in iomap_dio_rw")
 
-Yeah, I don't really like it either (especially the added CPU
-overhead that we avoided by doing compile time byte swapping),
-but I'm struggling to come up with a better option.
+Fixes tag
 
+  Fixes: ff6a9292e6 ("iomap: implement direct I/O")
+
+has these problem(s):
+
+  - SHA1 should be at least 12 digits long
+
+--=20
 Cheers,
+Stephen Rothwell
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Sig_/RicaNw4dIu0b2+hrLAjDX7W
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlxQvg8ACgkQAVBC80lX
+0GzruQgAjaZIiKEwYGbf7nYMnVQlLn58+AOaEIMAZQsHJPcrzx30mfHWnYI4UbDk
+Ay4n4hTFXNBVptN80fqrD5W1gQs6vSFZwq1wIpvf12+TfI7Uz9nSxh3CDCAQ3wmQ
+VG9AaYk4YEgThkkyAX5hwEPQFumvfvgFcqf5sFcwiNg++QN7DvN6mosg1nnPFQWO
+uhoLj0M8iJLQYPDb2wFWgqorhVm73cpnMgAVlVzPc3ilh5o0N+O0sutEiGIvi0/1
+r5alsoQy0MC0KdtXrv+1oCfFXc03EkLNLUnLq742M3FH23peuZPXKX7Pm1wYEdEz
+DD2YxPAOgQuF7aD8ezi9Wnwu0L74tg==
+=McsE
+-----END PGP SIGNATURE-----
+
+--Sig_/RicaNw4dIu0b2+hrLAjDX7W--
