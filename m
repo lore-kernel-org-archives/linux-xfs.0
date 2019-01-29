@@ -1,170 +1,335 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46630 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49826 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726105AbfAXNbX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Jan 2019 08:31:23 -0500
-Date: Thu, 24 Jan 2019 08:31:20 -0500
+        id S1727989AbfA2OBj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 Jan 2019 09:01:39 -0500
+Date: Tue, 29 Jan 2019 09:01:36 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Regular FS shutdown while rsync is running
-Message-ID: <20190124133120.GA2855@bfoster>
-References: <1548067317.2465.7.camel@pengutronix.de>
- <20190121130121.GA4537@bfoster>
- <1548087824.2465.9.camel@pengutronix.de>
- <20190121181151.GD14281@bfoster>
- <1548153593.2465.18.camel@pengutronix.de>
- <20190122130254.GA22901@bfoster>
- <1548242057.28802.1.camel@pengutronix.de>
- <20190123121153.GA27284@bfoster>
- <20190123130306.GB27284@bfoster>
- <20190123204528.GL4205@dastard>
+Subject: Re: [PATCH RFC v2 2/3] xfs: distinguish between inobt and finobt
+ magic values
+Message-ID: <20190129140136.GC24998@bfoster>
+References: <20190128152034.21080-1-bfoster@redhat.com>
+ <20190128152034.21080-3-bfoster@redhat.com>
+ <20190128225426.GU4205@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190123204528.GL4205@dastard>
+In-Reply-To: <20190128225426.GU4205@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>, linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 24, 2019 at 07:45:28AM +1100, Dave Chinner wrote:
-> On Wed, Jan 23, 2019 at 08:03:07AM -0500, Brian Foster wrote:
-> > On Wed, Jan 23, 2019 at 07:11:53AM -0500, Brian Foster wrote:
-> > > On Wed, Jan 23, 2019 at 12:14:17PM +0100, Lucas Stach wrote:
-> > > > build_ino_tree(), which is shared between XFS_BTNUM_INO and
-> > > > XFS_BTNUM_FINO btree rebuilds contains the following in one of the
-> > > > loops:
-> > > > 
-> > > > if (lptr->num_recs_pb > 0)
-> > > > 		prop_ino_cursor(mp, agno, btree_curs,
-> > > > 				ino_rec->ino_startnum, 0);
-> > > > 
-> > > > prop_ino_cursor() calls libxfs_btree_init_block() with the btnum
-> > > > parameter being a fixed XFS_BTNUM_INO.
-> 
-> Nice find, Lucas!
-> 
-> > > It's been a while since I've looked at the guts of this code but that
-> > > definitely does not look right. build_ino_tree() is where we abstract
-> > > construction of the different tree types. Nice catch!
-> > > 
-> > > If this is the problem, I'll have to take a closer look to figure out
-> > > why this problem isn't more prevalent..
-> > > 
+On Tue, Jan 29, 2019 at 09:54:26AM +1100, Dave Chinner wrote:
+> On Mon, Jan 28, 2019 at 10:20:33AM -0500, Brian Foster wrote:
+> > The inode btree verifier code is shared between the inode btree and
+> > free inode btree because the underlying metadata formats are
+> > essentially equivalent. A side effect of this is that the verifier
+> > cannot determine whether a particular btree block should have an
+> > inobt or finobt magic value.
 > > 
-> > Hmm... so it looks like this is the code responsible for _growing_ the
-> > interior nodes of the tree (i.e., level > 0). If I'm following the code
-> > correctly, the high level algorithm is to first set up a block for each
-> > level of the tree. This occurs early in build_ino_tree() and uses the
-> > correct btnum. We then start populating the leaf nodes with the finobt
-> > records that have previously been built up in-core. For each leaf block,
-> > we populate the higher level block with the key based on the first
-> > record in the leaf then fill in the remaining records in the leaf. This
-> > repeats until the block at the next level up is full, at which point we
-> > grab a new level > 0 block and initialize it with the inobt magic.
+> > This logic allows an unfortunate xfs_repair bug to escape detection
+> > where certain level > 0 nodes of the finobt are stamped with inobt
+> > magic by xfs_repair finobt reconstruction. This is fortunately not a
+> > severe problem since the inode btree magic values do not contribute
+> > to any changes in kernel behavior, but we do need a means to detect
+> > and prevent this problem in the future.
 > > 
-> > I haven't confirmed, but I think this basically means that we'd
-> > initialize every intermediate block after the left-most block at each
-> > level in the tree with the inobt magic. I think Dave already recognized
-> > in the other subthread that you have a 2 block level 1 tree. I suspect
-> > the only reasons we haven't run into this until now are that the finobt
-> > is intended to remain fairly small by only tracking free inode records
-> > and thus prioritizing allocation from those records (removing them from
-> > the tree) and this is limited to users who repair a filesystem in such a
-> > state.
-> > 
-> > I'm guessing you have a large enough set of inodes and a sustained
-> > enough deletion pattern in your workload that you eventually free enough
-> > inodes across a large enough set of records to populate a multi-block
-> > level 1 tree. Then as soon as you try to allocate from that side of the
-> > tree the finer grained checks in __xfs_btree_check_[l|s]block() discover
-> > the wrong magic and generate the error.
+> > Add a field to xfs_buf_ops to store the v4 and v5 superblock magic
+> > values expected by a particular verifier. Add a helper to check an
+> > on-disk magic value against the value expected by the verifier. Call
+> > the helper from the shared [f]inobt verifier code for magic value
+> > verification. This ensures that the inode btree blocks each have the
+> > appropriate magic value based on specific tree type and superblock
+> > version.
 > 
-> Yeah, this is the "lots of sparse free inodes" sort of filesystem
-> that finobt is intended to really help with. :/
-> 
-> > The positive here is that this isn't really a coherency problem with the
-> > filesystem. The finobt itself is coherent, consistent with the inobt and
-> > the magic value doesn't really dictate how the trees are used/updated at
-> > runtime. This means that the only real corruption should be the magic
-> > value.
-> 
-> *nod*
-> 
-> Which means it should be fixable by a bit of xfs_db magic to find
-> and rewrite the magic numbers without needing a full repair to run.
-> 
-> > I am wondering whether this warrants a special case in the magic
-> > checking to convert the runtime internal error into more of a warning to
-> > unmount and run xfs_repair (similar to how we detected the agfl size
-> > mismatch problem). Dave, any thoughts on that?
-> 
-> I don't think it has the scope and breadth of the AGFL issue - there
-> isn't an actual fatal corruption on disk that will lead to loss or
-> corruption of user data.  It's just the wrong magic number being
-> placed in the btree block.
+> I still really don't like this code :(
 > 
 
-Right, it's not a corruption that's going to have compound effects and
-lead to broader inconsistencies and whatnot. We made a decision to nuke
-the agfl at runtime to preserve behavior and allow the fs to continue
-running (in spite of less severe corruption actually introduced by the
-agfl reset).
+Enough to explain why, perhaps?
 
-This problem is still a fatal runtime error in some cases (and probably
-all cases once we fix up the verifiers), however, and that's the
-behavior I'm wondering whether we should mitigate because otherwise the
-fs is fully capable of continuing to run (and the state may ultimately
-clear itself).
-
-> IMO, after fixing the repair bug, we should:
+> > @@ -387,4 +388,22 @@ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
+> >  
+> >  int xfs_buf_ensure_ops(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
+> >  
+> > +/*
+> > + * Verify an on-disk magic value against the magic value specified in the
+> > + * verifier structure.
+> > + */
+> > +static inline bool
+> > +xfs_buf_ops_verify_magic(
+> > +	struct xfs_buf		*bp,
+> > +	__be32			dmagic,
+> > +	bool			crc)
+> > +{
+> > +	if (unlikely(WARN_ON(!bp->b_ops || !bp->b_ops->magic[crc])))
+> > +		return false;
+> > +	return dmagic == cpu_to_be32(bp->b_ops->magic[crc]);
+> > +}
+> > +#define xfs_verify_magic(bp, dmagic)		\
+> > +	xfs_buf_ops_verify_magic(bp, dmagic,	\
+> > +			xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb))
 > 
-> 	a) make the inobt/finobt block verifier more robust to make
-> 	sure we have the correct magic number for the btree type. In
-> 	hindsight, if we did that in the first place then the
-> 	repair bug would have not escaped into the wild.
-> 
-
-Agreed. I had already sent Lucas a patch along this lines that pretty
-much implicated xfs_repair as the cause by virtue of the mount time
-finobt scan. I'll post that to the list separately.
-
-> 	b) write a xfs_db finobt traversal command that rewrites the
-> 	magic numbers of all the blocks in the tree. Probably with
-> 	an xfs_admin wrapper to make it nice for users who need to
-> 	run it.
+> That, IMO, is even worse....
 > 
 
-Hmm, I can't really think of any time I'd suggest a user run something
-that swizzles on-disk data like this without running xfs_repair before
-and after. I certainly wouldn't ever do otherwise myself. Of course such
-a script means those xfs_repair runs could be non-destructive, but I'm
-not sure that's much of an advantage.
+Worse than what and why?
 
-Hmm, I was thinking a more targeted script to fix a single block based
-on daddr might be reasonable, but I'm not sure I'd even trust that.
+Note that I've removed the endian conversion from here. Otherwise, this
+is basically just a wrapper to factor out the sb version lookup and
+provide some common error checking.
 
-> 	c) audit all the other verifiers to determine whether the
-> 	combined magic number checks can/should be split so in
-> 	future we detect this class of bug during development and
-> 	testing.
+> Ok, here's a different option. Store all the magic numbers in a pair
+> of tables - one for v4, one for v5. They can be static const and
+> in on-disk format.
+> 
+> Then use some simple 1-line wrappers for the verifier definitions to
+> specify the table index for the magic numbers. e.g:
+> 
+> __be32 xfs_disk_magic(mp, idx)
+> {
+> 	if (xfs_sb_version_hascrc(&mp->m_sb))
+> 		return xfs_v5_disk_magic[idx];
+> 	return xfs_v4_disk_magic[idx];
+> }
 > 
 
-Agree. TBH, I think the failure in this case was not thorough enough
-testing of the xfs_repair changes moreso than the kernel checks not
-being granular enough. Otherwise an immediate follow up xfs_repair -n
-run (which I tend to do) would have caught this much quicker than split
-checks in the kernel verifiers. That said, the split checks definitely
-facilitate analysis of this kind of error report and are worth
-considering for that alone.
+Seems reasonable enough... but where/how is the index encoded?
+
+> [.....]
+> 
+> __xfs_inobt_read_verify(bp, magic_idx)
+> {
+> 	magic = xfs_disk_magic(mp, magic_idx);
+> 	.....
+> }
+> 
+> __xfs_inobt_write_verify(bp, magic_idx)
+> {
+> 	magic = xfs_disk_magic(mp, magic_idx);
+> 	.....
+> }
+> 
+> __xfs_inobt_struct_verify(bp, magic_idx)
+> {
+> 	magic = xfs_disk_magic(mp, magic_idx);
+> 	.....
+> }
+> 
+> [ or drive the magic number resolution further inwards to where it
+> is actually needed. ]
+> 
+> xfs_inobt_read_verify(bp)
+> {
+> 	return __xfs_inobt_read_verify(bp, INOBT);
+> }
+> 
+> xfs_inobt_write_verify(bp)
+> {
+> 	return __xfs_inobt_write_verify(bp, INOBT);
+> }
+> 
+> xfs_inobt_struct_verify(bp)
+> {
+> 	return __xfs_inobt_struct_verify(bp, INOBT);
+> }
+> 
+> xfs_finobt_read_verify(bp)
+> {
+> 	return __xfs_inobt_read_verify(bp, FINOBT);
+> }
+> 
+> xfs_finobt_write_verify(bp)
+> {
+> 	return __xfs_inobt_write_verify(bp, FINOBT);
+> }
+> 
+> xfs_finobt_struct_verify(bp)
+> {
+> 	return __xfs_inobt_struct_verify(bp, FINOBT);
+> }
+> 
+> And this can be extended to all the verifiers - it handles crc and
+> non CRC variants transparently, and can be used for the cnt/bno free
+> space btrees, too.
+> 
+> Yes, it's a bit more boiler plate code, but IMO it is easier to
+> follow and understand than encoding multiple magic numbers into the
+> verifier and adding a dependency on the buffer having an ops
+> structure attached to be able to check the magic number...
+> 
+
+This code duplication is what I was hoping to avoid. We already have
+similar proliferation of boilerplate code in some of the verifiers that
+handle multiple object types. See the appended hunk related to the dir
+leaf verifier code, for example.
+
+I agree that the magic value itself is a bit obfuscated with this
+change, but that's still the case with a lookup table. I disagree that
+an indirected magic value is more difficult to read than nearly a screen
+full of similarly named verifier functions. The magic value is a simple
+data value, the code above makes it unnecessarily more confusing (at a
+glance) to grok which verifiers run which checks. That's just my
+experience from folding the code below, fwiw.
+
+Another angle to this is that we don't necessarily have to use the
+xfs_buf_ops->magic field for every verifier. I could just add it to the
+finobt case, perhaps the directory case below, and leave the rest alone
+until we come up with something more agreeable. Then it basically just
+supports a couple corner cases and is easy enough to remove down the
+road.
 
 Brian
 
-> Cheers,
-> 
-> Dave.
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+--- 8< ---
+
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 1728a3e6f5cf..f602307d2fa0 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -142,41 +142,32 @@ xfs_dir3_leaf_check_int(
+  */
+ static xfs_failaddr_t
+ xfs_dir3_leaf_verify(
+-	struct xfs_buf		*bp,
+-	uint16_t		magic)
++	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_dir2_leaf	*leaf = bp->b_addr;
+ 
+-	ASSERT(magic == XFS_DIR2_LEAF1_MAGIC || magic == XFS_DIR2_LEAFN_MAGIC);
++	if (!xfs_verify_magic(bp, be16_to_cpu(leaf->hdr.info.magic)))
++		return __this_address;
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
+-		uint16_t		magic3;
+ 
+-		magic3 = (magic == XFS_DIR2_LEAF1_MAGIC) ? XFS_DIR3_LEAF1_MAGIC
+-							 : XFS_DIR3_LEAFN_MAGIC;
+-
+-		if (leaf3->info.hdr.magic != cpu_to_be16(magic3))
+-			return __this_address;
++		ASSERT(leaf3->info.hdr.magic == leaf->hdr.info.magic);
+ 		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
+ 			return __this_address;
+ 		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
+ 			return __this_address;
+ 		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
+ 			return __this_address;
+-	} else {
+-		if (leaf->hdr.info.magic != cpu_to_be16(magic))
+-			return __this_address;
+ 	}
+ 
+ 	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
+ }
+ 
+ static void
+-__read_verify(
+-	struct xfs_buf  *bp,
+-	uint16_t	magic)
++xfs_dir3_leaf_read_verify(
++	struct xfs_buf  *bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	xfs_failaddr_t		fa;
+@@ -185,23 +176,22 @@ __read_verify(
+ 	     !xfs_buf_verify_cksum(bp, XFS_DIR3_LEAF_CRC_OFF))
+ 		xfs_verifier_error(bp, -EFSBADCRC, __this_address);
+ 	else {
+-		fa = xfs_dir3_leaf_verify(bp, magic);
++		fa = xfs_dir3_leaf_verify(bp);
+ 		if (fa)
+ 			xfs_verifier_error(bp, -EFSCORRUPTED, fa);
+ 	}
+ }
+ 
+ static void
+-__write_verify(
+-	struct xfs_buf  *bp,
+-	uint16_t	magic)
++xfs_dir3_leaf_write_verify(
++	struct xfs_buf  *bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
+ 	struct xfs_dir3_leaf_hdr *hdr3 = bp->b_addr;
+ 	xfs_failaddr_t		fa;
+ 
+-	fa = xfs_dir3_leaf_verify(bp, magic);
++	fa = xfs_dir3_leaf_verify(bp);
+ 	if (fa) {
+ 		xfs_verifier_error(bp, -EFSCORRUPTED, fa);
+ 		return;
+@@ -216,60 +206,20 @@ __write_verify(
+ 	xfs_buf_update_cksum(bp, XFS_DIR3_LEAF_CRC_OFF);
+ }
+ 
+-static xfs_failaddr_t
+-xfs_dir3_leaf1_verify(
+-	struct xfs_buf	*bp)
+-{
+-	return xfs_dir3_leaf_verify(bp, XFS_DIR2_LEAF1_MAGIC);
+-}
+-
+-static void
+-xfs_dir3_leaf1_read_verify(
+-	struct xfs_buf	*bp)
+-{
+-	__read_verify(bp, XFS_DIR2_LEAF1_MAGIC);
+-}
+-
+-static void
+-xfs_dir3_leaf1_write_verify(
+-	struct xfs_buf	*bp)
+-{
+-	__write_verify(bp, XFS_DIR2_LEAF1_MAGIC);
+-}
+-
+-static xfs_failaddr_t
+-xfs_dir3_leafn_verify(
+-	struct xfs_buf	*bp)
+-{
+-	return xfs_dir3_leaf_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+-}
+-
+-static void
+-xfs_dir3_leafn_read_verify(
+-	struct xfs_buf	*bp)
+-{
+-	__read_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+-}
+-
+-static void
+-xfs_dir3_leafn_write_verify(
+-	struct xfs_buf	*bp)
+-{
+-	__write_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+-}
+-
+ const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
+ 	.name = "xfs_dir3_leaf1",
+-	.verify_read = xfs_dir3_leaf1_read_verify,
+-	.verify_write = xfs_dir3_leaf1_write_verify,
+-	.verify_struct = xfs_dir3_leaf1_verify,
++	.magic = { XFS_DIR2_LEAF1_MAGIC, XFS_DIR3_LEAF1_MAGIC },
++	.verify_read = xfs_dir3_leaf_read_verify,
++	.verify_write = xfs_dir3_leaf_write_verify,
++	.verify_struct = xfs_dir3_leaf_verify,
+ };
+ 
+ const struct xfs_buf_ops xfs_dir3_leafn_buf_ops = {
+ 	.name = "xfs_dir3_leafn",
+-	.verify_read = xfs_dir3_leafn_read_verify,
+-	.verify_write = xfs_dir3_leafn_write_verify,
+-	.verify_struct = xfs_dir3_leafn_verify,
++	.magic = { XFS_DIR2_LEAFN_MAGIC, XFS_DIR3_LEAFN_MAGIC },
++	.verify_read = xfs_dir3_leaf_read_verify,
++	.verify_write = xfs_dir3_leaf_write_verify,
++	.verify_struct = xfs_dir3_leaf_verify,
+ };
+ 
+ int
