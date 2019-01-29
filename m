@@ -1,126 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43620 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727032AbfA2QRa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 11:17:30 -0500
-Subject: [PATCH 3/4] common: fix kmemleak to work with sections
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 29 Jan 2019 08:17:25 -0800
-Message-ID: <154877864538.9277.6249607598508212314.stgit@magnolia>
-In-Reply-To: <154877863279.9277.4463697450629081138.stgit@magnolia>
-References: <154877863279.9277.4463697450629081138.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:45968 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726919AbfA2Sdv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 Jan 2019 13:33:51 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0869A89AE0
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 18:33:51 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B3B665D717
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 18:33:50 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 0/5] xfs: fix [f]inobt magic value verification
+Date: Tue, 29 Jan 2019 13:33:45 -0500
+Message-Id: <20190129183350.27302-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-Refactor the kmemleak code to work correctly with sections.  This
-requires changing the report location to use RESULT_DIR instead of
-RESULT_BASE, and clarifying which functions get used when.
+Here's a first non-rfc version of the finobt magic fixup. There is still
+a bit of trepidation over this approach based on the rfcv2 feedback, but
+I've not seen a good enough (IMO) alternative that justifies reworking
+what I've tested so far. I'm posting this v1 with the caveat that only
+the first two patches are required to implement the desired per-inobt
+magic value verification logic.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- check     |    4 ++--
- common/rc |   32 ++++++++++++++++++++++----------
- 2 files changed, 24 insertions(+), 12 deletions(-)
+Patches 3-4 include optional conversions of other verifiers and patch 5
+is just a typo fixup (which could be folded into any other otherwise
+acceptable patch). I separated out patch 3 as an independent patch
+because I thought there was more value in the code cleanup (eliminating
+~50 lines of cruft) than for the remaining verifiers. I skipped a few
+others where the lower level verification seemed a bit more logically
+removed from the buffer verifier itself (i.e., dquot, inode).
 
+Note again that this depends on Darrick's scrub ->b_ops fixup [1].
 
-diff --git a/check b/check
-index c0eee0aa..b9eb86cb 100755
---- a/check
-+++ b/check
-@@ -509,7 +509,7 @@ _expunge_test()
- 	return 0
- }
- 
--_init_kmemleak
-+_detect_kmemleak
- _prepare_test_list
- 
- if $OPTIONS_HAVE_SECTIONS; then
-@@ -793,8 +793,8 @@ for section in $HOST_OPTIONS_SECTIONS; do
- 			# and log messages that shouldn't be there.
- 			_check_filesystems
- 			_check_dmesg || err=true
--			_check_kmemleak || err=true
- 		fi
-+		_check_kmemleak || err=true
- 
- 		# test ends after all checks are done.
- 		$timestamp && _timestamp
-diff --git a/common/rc b/common/rc
-index 19e947df..75771f31 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3514,7 +3514,7 @@ _check_dmesg()
- # capture the kmemleak report
- _capture_kmemleak()
- {
--	local kern_knob="${DEBUGFS_MNT}/kmemleak"
-+	local kern_knob="$DEBUGFS_MNT/kmemleak"
- 	local leak_file="$1"
- 
- 	# Tell the kernel to scan for memory leaks.  Apparently the write
-@@ -3535,17 +3535,20 @@ ENDL
- 	echo "clear" > "$kern_knob"
- }
- 
--# set up kmemleak
--_init_kmemleak()
-+# Figure out if the running kernel supports kmemleak; if it does, clear out
-+# anything that leaked before we even started testing.  The leak checker only
-+# needs to be primed like this once per ./check invocation.
-+_detect_kmemleak()
- {
--	local kern_knob="${DEBUGFS_MNT}/kmemleak"
-+	local kern_knob="$DEBUGFS_MNT/kmemleak"
-+	KMEMLEAK_CHECK_FILE="/tmp/check_kmemleak"
- 
- 	# Since kernel v4.19-rc3, the kmemleak knob exists even if kmemleak is
- 	# disabled, but returns EBUSY on write. So instead of relying on
- 	# existance of writable knob file, we use a test file to indicate that
- 	# _check_kmemleak() is enabled only if we actually managed to write to
- 	# the knob file.
--	rm -f ${RESULT_BASE}/check_kmemleak
-+	rm -f "$KMEMLEAK_CHECK_FILE"
- 
- 	if [ ! -w "$kern_knob" ]; then
- 		return 0
-@@ -3555,17 +3558,26 @@ _init_kmemleak()
- 	# then dump all the leaks recorded so far.
- 	if echo "scan=off" > "$kern_knob" 2>/dev/null; then
- 		_capture_kmemleak /dev/null
--		touch ${RESULT_BASE}/check_kmemleak
-+		touch "$KMEMLEAK_CHECK_FILE"
- 	fi
- }
- 
--# check kmemleak log
-+# Kick the kmemleak checker to scan for leaks.  Background leak scan mode is
-+# not enabled, so we must call the kernel to ask for a scan and deal with the
-+# results appropriately.  This we do after every test completes, whether or not
-+# it was successful.
- _check_kmemleak()
- {
--	local kern_knob="${DEBUGFS_MNT}/kmemleak"
--	local leak_file="${seqres}.kmemleak"
-+	local kern_knob="$DEBUGFS_MNT/kmemleak"
-+	local leak_file="$seqres.kmemleak"
- 
--	if [ ! -f ${RESULT_BASE}/check_kmemleak ]; then
-+	if [ ! -f "$KMEMLEAK_CHECK_FILE" ]; then
-+		return 0
-+	fi
-+
-+	# Not enabled, so discard any report of leaks found.
-+	if [ "$USE_KMEMLEAK" != "yes" ]; then
-+		_capture_kmemleak /dev/null
- 		return 0
- 	fi
- 
+Brian
+
+[1] https://marc.info/?l=linux-xfs&m=154861208322420&w=2
+
+v1:
+- Remove endian conversion from helper.
+- Drop finobt bad magic mitigation patch.
+- Additional verifier magic fixups.
+- Add verifier name typo fixup.
+rfcv2: https://marc.info/?l=linux-xfs&m=154868884311668&w=2
+- Split off finobt verifier into separate patch, assign it
+  appropriately.
+- Created helpers for xfs_buf_ops magic value verification.
+- Added error mitigation patch for problematic finobt blocks.
+rfcv1: https://marc.info/?l=linux-xfs&m=154834528212262&w=2
+
+Brian Foster (5):
+  xfs: create a separate finobt verifier
+  xfs: distinguish between inobt and finobt magic values
+  xfs: use verifier magic field in dir2 leaf verifiers
+  xfs: miscellaneous verifier magic value fixups
+  xfs: fix typo in xfs_inode_buf_ra_ops verifier name
+
+ fs/xfs/libxfs/xfs_ag.c             |  2 +-
+ fs/xfs/libxfs/xfs_alloc.c          | 12 +++--
+ fs/xfs/libxfs/xfs_attr_leaf.c      | 10 ++--
+ fs/xfs/libxfs/xfs_attr_remote.c    |  8 +--
+ fs/xfs/libxfs/xfs_bmap_btree.c     | 12 ++---
+ fs/xfs/libxfs/xfs_da_btree.c       | 10 ++--
+ fs/xfs/libxfs/xfs_dir2_block.c     |  9 ++--
+ fs/xfs/libxfs/xfs_dir2_data.c      |  9 ++--
+ fs/xfs/libxfs/xfs_dir2_leaf.c      | 86 +++++++-----------------------
+ fs/xfs/libxfs/xfs_dir2_node.c      | 10 ++--
+ fs/xfs/libxfs/xfs_ialloc.c         |  3 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c   | 24 +++++----
+ fs/xfs/libxfs/xfs_inode_buf.c      |  2 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c |  3 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c     |  3 +-
+ fs/xfs/libxfs/xfs_sb.c             |  4 +-
+ fs/xfs/libxfs/xfs_shared.h         |  1 +
+ fs/xfs/libxfs/xfs_symlink_remote.c |  3 +-
+ fs/xfs/scrub/agheader_repair.c     |  2 +-
+ fs/xfs/xfs_buf.h                   | 20 +++++++
+ fs/xfs/xfs_log_recover.c           |  6 ++-
+ 21 files changed, 110 insertions(+), 129 deletions(-)
+
+-- 
+2.17.2
