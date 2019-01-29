@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:53132 "EHLO
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:44642 "EHLO
         mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729546AbfA2WTY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 17:19:24 -0500
+        by vger.kernel.org with ESMTP id S1726713AbfA2A3k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Jan 2019 19:29:40 -0500
 Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 627FC2D3B8
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 22:19:23 +0000 (UTC)
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 537C72B4DC
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 00:29:39 +0000 (UTC)
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
  since 4.19.0  on sata hdd:s
-Date: Tue, 29 Jan 2019 22:19:22 +0000
-Message-ID: <bug-202441-201763-fT1IgXJDCq@https.bugzilla.kernel.org/>
+Date: Tue, 29 Jan 2019 00:29:38 +0000
+Message-ID: <bug-202441-201763-xDT6Dzv60A@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
 References: <bug-202441-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -23,41 +23,88 @@ To: linux-xfs@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=202441
 
-Dave Chinner (david@fromorbit.com) changed:
+--- Comment #3 from Dave Chinner (david@fromorbit.com) ---
+On Mon, Jan 28, 2019 at 11:26:32PM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=202441
+> 
+> --- Comment #2 from Roger (rogan6710@gmail.com) ---
+> 
+> Hello Dave !
+> Thanks for the really fast reply :)
+> Here is most of the (rather lengthy) system information:
+> 
+> Single "eight" core processor:
+> 
+> rogan@trooper:~$ uname -a
+> Linux trooper.morgoth.org 4.19.18 #2 SMP Sat Jan 26 13:43:16 CST 2019 x86_64
+> AMD FX(tm)-9590 Eight-Core Processor AuthenticAMD GNU/Linux
+> 
+> root@trooper:~# xfs_repair -V
+> xfs_repair version 4.19.0
+> 
+> root@trooper:~# cat /proc/meminfo 
+> MemTotal:       24645396 kB
+> MemFree:          358452 kB
+> MemAvailable:   22044292 kB
+> Buffers:            3152 kB
+> Cached:         22005216 kB
+> SwapCached:            0 kB
+> Active:          1713092 kB
+> Inactive:       21824100 kB
+> Active(anon):    1157816 kB
+> Inactive(anon):   555736 kB
+> Active(file):     555276 kB
+> Inactive(file): 21268364 kB
+....
+> Slab:             565012 kB
+> SReclaimable:     502684 kB
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |david@fromorbit.com
+Ok, so memory is completely used by the page cache, and there is
+some inode/dentry cache overhead in the slab caches.
 
---- Comment #18 from Dave Chinner (david@fromorbit.com) ---
-(In reply to Roger from comment #17)
-> I suspected that commit as well...
-> I would love to try that revert. I have never done one so I'm not sure how
-> to go about it. I'll have to read up a little.
-> Do I revert in 4.19.3 or the latest ?
+Nothing unusual in the rest of the output , either.
 
-Reverting in 4.19.3 and testing that would be ideal, though it would 
-probably revert just fine in the lastest tree. If yuive been         
-building from a git tree, then:                                      
+>  xfs_info /dev/sdc1
+> xfs_info: /dev/sdc1 contains a mounted filesystem
+> 
+> fatal error -- couldn't initialize XFS library
+> 
+> hmm ?
 
-$ git revert 5ebac3b957a9                                            
+$ man xfs_info
+...
+        xfs_info [ -t mtab ] mount-point
+...
+        [...] The mount-point argument is the pathname of the
+        directory where the filesystem is mounted. [...]
 
-and rebuild is all you need to do (assuming it cleanly reverts).                
+$ sudo mount /dev/vdc /mnt/scratch
+$ sudo xfs_info /dev/vdc
+xfs_info: /dev/vdc contains a mounted filesystem
 
-If you've been building from a downloaded tarball, then you'll need to apply
-the revert yourself. I'll attach a revert patch, which you can apply via:
+fatal error -- couldn't initialize XFS library
+$ sudo xfs_info /mnt/scratch
+meta-data=/dev/vdc               isize=512    agcount=500, agsize=268435455
+blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=0
+data     =                       bsize=4096   blocks=134217727500, imaxpct=1
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=521728, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+$
 
-$ patch -p1 < revert.patch
+> I'll do a quick run and give you some dmesg
 
-and rebuild the kernel (assuming it applies cleanly - use --dry-run to test).
+OK, that'll be interesting :)
 
-Or you can just manually change the code in an editor to set the code back to
-the original. i.e:
+Cheers,
 
-        /* recently referenced inodes get one more pass */
-        if (inode->i_state & I_REFERENCED) {
-
--Dave.
+Dave.
 
 -- 
 You are receiving this mail because:
