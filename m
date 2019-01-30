@@ -1,147 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57378 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725730AbfAaS2b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Jan 2019 13:28:31 -0500
-Date: Thu, 31 Jan 2019 13:28:29 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 06/11] xfs: factor out two helpers from xfs_bmapi_write
-Message-ID: <20190131182828.GH36239@bfoster>
-References: <20190131075524.4769-1-hch@lst.de>
- <20190131075524.4769-7-hch@lst.de>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:55758 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726462AbfA3R60 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jan 2019 12:58:26 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 590B62FCC0
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Jan 2019 17:58:25 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202349] Extreme desktop freezes during sustained write
+ operations with XFS
+Date: Wed, 30 Jan 2019 17:58:23 +0000
+Message-ID: <bug-202349-201763-1G0jYV87bS@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202349-201763@https.bugzilla.kernel.org/>
+References: <bug-202349-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190131075524.4769-7-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jan 31, 2019 at 08:55:19AM +0100, Christoph Hellwig wrote:
-> We want to be able to reuse them for the upcoming dedidcated delalloc
-> convert routine.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+https://bugzilla.kernel.org/show_bug.cgi?id=202349
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+--- Comment #11 from nfxjfg@googlemail.com ---
+I also have to note that I found it impossible to reproduce the issue using the
+test script on some other hard disks. It must depend a lot on the work load and
+the speed/size of the disk, or other unknown circumstances. This also means
+that my comment about ext4 might be misleading, although I definitely confirmed
+that my problem went away when I reformatted yet another disk from xfs to ext4.
 
->  fs/xfs/libxfs/xfs_bmap.c | 78 ++++++++++++++++++++++------------------
->  1 file changed, 44 insertions(+), 34 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index a0443158a40e..d75f45d9b7d1 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4194,6 +4194,44 @@ xfs_bmapi_convert_unwritten(
->  	return 0;
->  }
->  
-> +static inline xfs_extlen_t
-> +xfs_bmapi_minleft(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*ip,
-> +	int			fork)
-> +{
-> +	if (tp && tp->t_firstblock != NULLFSBLOCK)
-> +		return 0;
-> +	if (XFS_IFORK_FORMAT(ip, fork) != XFS_DINODE_FMT_BTREE)
-> +		return 1;
-> +	return be16_to_cpu(XFS_IFORK_PTR(ip, fork)->if_broot->bb_level) + 1;
-> +}
-> +
-> +/*
-> + * Log whatever the flags say, even if error.  Otherwise we might miss detecting
-> + * a case where the data is changed, there's an error, and it's not logged so we
-> + * don't shutdown when we should.  Don't bother logging extents/btree changes if
-> + * we converted to the other format.
-> + */
-> +static void
-> +xfs_bmapi_finish(
-> +	struct xfs_bmalloca	*bma,
-> +	int			whichfork,
-> +	int			error)
-> +{
-> +	if ((bma->logflags & xfs_ilog_fext(whichfork)) &&
-> +	    XFS_IFORK_FORMAT(bma->ip, whichfork) != XFS_DINODE_FMT_EXTENTS)
-> +		bma->logflags &= ~xfs_ilog_fext(whichfork);
-> +	else if ((bma->logflags & xfs_ilog_fbroot(whichfork)) &&
-> +		 XFS_IFORK_FORMAT(bma->ip, whichfork) != XFS_DINODE_FMT_BTREE)
-> +		bma->logflags &= ~xfs_ilog_fbroot(whichfork);
-> +
-> +	if (bma->logflags)
-> +		xfs_trans_log_inode(bma->tp, bma->ip, bma->logflags);
-> +	if (bma->cur)
-> +		xfs_btree_del_cursor(bma->cur, error);
-> +}
-> +
->  /*
->   * Map file blocks to filesystem blocks, and allocate blocks or convert the
->   * extent state if necessary.  Details behaviour is controlled by the flags
-> @@ -4273,15 +4311,6 @@ xfs_bmapi_write(
->  
->  	XFS_STATS_INC(mp, xs_blk_mapw);
->  
-> -	if (!tp || tp->t_firstblock == NULLFSBLOCK) {
-> -		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
-> -			bma.minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
-> -		else
-> -			bma.minleft = 1;
-> -	} else {
-> -		bma.minleft = 0;
-> -	}
-> -
->  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
->  		error = xfs_iread_extents(tp, ip, whichfork);
->  		if (error)
-> @@ -4296,6 +4325,7 @@ xfs_bmapi_write(
->  	bma.ip = ip;
->  	bma.total = total;
->  	bma.datatype = 0;
-> +	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
->  
->  	/*
->  	 * The delalloc flag means the caller wants to allocate the entire
-> @@ -4434,32 +4464,12 @@ xfs_bmapi_write(
->  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE ||
->  	       XFS_IFORK_NEXTENTS(ip, whichfork) >
->  		XFS_IFORK_MAXEXT(ip, whichfork));
-> -	error = 0;
-> +	xfs_bmapi_finish(&bma, whichfork, 0);
-> +	xfs_bmap_validate_ret(orig_bno, orig_len, orig_flags, orig_mval,
-> +		orig_nmap, *nmap);
-> +	return 0;
->  error0:
-> -	/*
-> -	 * Log everything.  Do this after conversion, there's no point in
-> -	 * logging the extent records if we've converted to btree format.
-> -	 */
-> -	if ((bma.logflags & xfs_ilog_fext(whichfork)) &&
-> -	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS)
-> -		bma.logflags &= ~xfs_ilog_fext(whichfork);
-> -	else if ((bma.logflags & xfs_ilog_fbroot(whichfork)) &&
-> -		 XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)
-> -		bma.logflags &= ~xfs_ilog_fbroot(whichfork);
-> -	/*
-> -	 * Log whatever the flags say, even if error.  Otherwise we might miss
-> -	 * detecting a case where the data is changed, there's an error,
-> -	 * and it's not logged so we don't shutdown when we should.
-> -	 */
-> -	if (bma.logflags)
-> -		xfs_trans_log_inode(tp, ip, bma.logflags);
-> -
-> -	if (bma.cur) {
-> -		xfs_btree_del_cursor(bma.cur, error);
-> -	}
-> -	if (!error)
-> -		xfs_bmap_validate_ret(orig_bno, orig_len, orig_flags, orig_mval,
-> -			orig_nmap, *nmap);
-> +	xfs_bmapi_finish(&bma, whichfork, error);
->  	return error;
->  }
->  
-> -- 
-> 2.20.1
-> 
+Dave Chinner: would a 4.18.20 kernel also do? (I still have that on my disk.)
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
