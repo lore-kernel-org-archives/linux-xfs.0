@@ -1,66 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:44497 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726193AbfAaBeH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jan 2019 20:34:07 -0500
-Date: Thu, 31 Jan 2019 12:34:03 +1100
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:46667 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727527AbfA3ERS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 23:17:18 -0500
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] Revert "mm: don't reclaim inodes with many attached
- pages"
-Message-ID: <20190131013403.GI4205@dastard>
+Subject: [PATCH 2/2] Revert "mm: slowly shrink slabs with a relatively small number of objects"
+Date: Wed, 30 Jan 2019 15:17:07 +1100
+Message-Id: <20190130041707.27750-3-david@fromorbit.com>
+In-Reply-To: <20190130041707.27750-1-david@fromorbit.com>
 References: <20190130041707.27750-1-david@fromorbit.com>
- <20190130041707.27750-2-david@fromorbit.com>
- <25EAF93D-BC63-4409-AF21-F45B2DDF5D66@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <25EAF93D-BC63-4409-AF21-F45B2DDF5D66@fb.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Mason <clm@fb.com>
-Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Roman Gushchin <guro@fb.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "mhocko@kernel.org" <mhocko@kernel.org>, "vdavydov.dev@gmail.com" <vdavydov.dev@gmail.com>
+To: linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: guro@fb.com, akpm@linux-foundation.org, mhocko@kernel.org, vdavydov.dev@gmail.com
 
-On Wed, Jan 30, 2019 at 12:21:07PM +0000, Chris Mason wrote:
-> 
-> 
-> On 29 Jan 2019, at 23:17, Dave Chinner wrote:
-> 
-> > From: Dave Chinner <dchinner@redhat.com>
-> >
-> > This reverts commit a76cf1a474d7dbcd9336b5f5afb0162baa142cf0.
-> >
-> > This change causes serious changes to page cache and inode cache
-> > behaviour and balance, resulting in major performance regressions
-> > when combining worklaods such as large file copies and kernel
-> > compiles.
-> >
-> > https://bugzilla.kernel.org/show_bug.cgi?id=202441
-> 
-> I'm a little confused by the latest comment in the bz:
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=202441#c24
+From: Dave Chinner <dchinner@redhat.com>
 
-Which says the first patch that changed the shrinker behaviour is
-the underlying cause of the regression.
+This reverts commit 172b06c32b949759fe6313abec514bc4f15014f4.
 
-> Are these reverts sufficient?
+This change changes the agressiveness of shrinker reclaim, causing
+small cache and low priority reclaim to greatly increase
+scanning pressure on small caches. As a result, light memory
+pressure has a disproportionate affect on small caches, and causes
+large caches to be reclaimed much faster than previously.
 
-I think so.
+As a result, it greatly perturbs the delicate balance of the VFS
+caches (dentry/inode vs file page cache) such that the inode/dentry
+caches are reclaimed much, much faster than the page cache and this
+drives us into several other caching imbalance related problems.
 
-> Roman beat me to suggesting Rik's followup.  We hit a different problem 
-> in prod with small slabs, and have a lot of instrumentation on Rik's 
-> code helping.
+As such, this is a bad change and needs to be reverted.
 
-I think that's just another nasty, expedient hack that doesn't solve
-the underlying problem. Solving the underlying problem does not
-require changing core reclaim algorithms and upsetting a page
-reclaim/shrinker balance that has been stable and worked well for
-just about everyone for years.
+[ Needs some massaging to retain the later seekless shrinker
+modifications. ]
 
-Cheers,
+cc: <stable@vger.kernel.org>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ mm/vmscan.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-Dave.
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index a714c4f800e9..e979705bbf32 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -491,16 +491,6 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+ 		delta = freeable / 2;
+ 	}
+ 
+-	/*
+-	 * Make sure we apply some minimal pressure on default priority
+-	 * even on small cgroups. Stale objects are not only consuming memory
+-	 * by themselves, but can also hold a reference to a dying cgroup,
+-	 * preventing it from being reclaimed. A dying cgroup with all
+-	 * corresponding structures like per-cpu stats and kmem caches
+-	 * can be really big, so it may lead to a significant waste of memory.
+-	 */
+-	delta = max_t(unsigned long long, delta, min(freeable, batch_size));
+-
+ 	total_scan += delta;
+ 	if (total_scan < 0) {
+ 		pr_err("shrink_slab: %pF negative objects to delete nr=%ld\n",
 -- 
-Dave Chinner
-david@fromorbit.com
+2.20.1
