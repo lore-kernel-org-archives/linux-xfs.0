@@ -1,64 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49882 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726957AbfAaSKQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Jan 2019 13:10:16 -0500
-Date: Thu, 31 Jan 2019 13:10:13 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 03/11] xfs: remove the s_maxbytes checks in xfs_map_blocks
-Message-ID: <20190131181013.GE36239@bfoster>
-References: <20190131075524.4769-1-hch@lst.de>
- <20190131075524.4769-4-hch@lst.de>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:35286 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726548AbfA3KuN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jan 2019 05:50:13 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 4D3132E762
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Jan 2019 10:50:13 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
+ since 4.19.0  on sata hdd:s
+Date: Wed, 30 Jan 2019 10:50:12 +0000
+Message-ID: <bug-202441-201763-yQ5YCatYVh@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
+References: <bug-202441-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190131075524.4769-4-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jan 31, 2019 at 08:55:16AM +0100, Christoph Hellwig wrote:
-> We already ensure all data fits into s_maxbytes in the write / fault
-> path.  The only reason we have them here is that they were copy and
-> pasted from xfs_bmapi_read when we stopped using that function.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+https://bugzilla.kernel.org/show_bug.cgi?id=202441
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+--- Comment #24 from Roger (rogan6710@gmail.com) ---
+A few moments ago, a piece of the puzzle fell into place.
 
->  fs/xfs/xfs_aops.c | 8 ++------
->  1 file changed, 2 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index a3fa60d1d2df..8bfb62d8776f 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -338,7 +338,8 @@ xfs_map_blocks(
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	struct xfs_mount	*mp = ip->i_mount;
->  	ssize_t			count = i_blocksize(inode);
-> -	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset), end_fsb;
-> +	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
->  	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
->  	struct xfs_bmbt_irec	imap;
->  	struct xfs_iext_cursor	icur;
-> @@ -374,11 +375,6 @@ xfs_map_blocks(
->  	xfs_ilock(ip, XFS_ILOCK_SHARED);
->  	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
->  	       (ip->i_df.if_flags & XFS_IFEXTENTS));
-> -	ASSERT(offset <= mp->m_super->s_maxbytes);
-> -
-> -	if (offset > mp->m_super->s_maxbytes - count)
-> -		count = mp->m_super->s_maxbytes - offset;
-> -	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
->  
->  	/*
->  	 * Check if this is offset is covered by a COW extents, and if yes use
-> -- 
-> 2.20.1
-> 
+The problem persists. All this revert did, was to make the issue granularity
+dependent from what I gather. While redoing the test with all those source
+trees I used to compile the kernels, the same exact problem came back.
+
+The earlier tests were done using mostly multi GB files.
+
+After some more testing I found out that rc4 is completely problem free in this
+regard, but rc5 is definately not, so the real culprit was probably introduced
+in rc5. 
+
+After applying our inode.c revert on 4.19.18, it shows the same behaviour as
+rc5. I can test on intermediate versions as well if necessary, as I still have
+them all compiled and ready.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
