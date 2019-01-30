@@ -1,236 +1,928 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:42371 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727017AbfAaWTL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 17:19:11 -0500
-Date: Fri, 1 Feb 2019 09:19:04 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] Revert "mm: don't reclaim inodes with many attached
- pages"
-Message-ID: <20190131221904.GL4205@dastard>
-References: <20190130041707.27750-1-david@fromorbit.com>
- <20190130041707.27750-2-david@fromorbit.com>
- <25EAF93D-BC63-4409-AF21-F45B2DDF5D66@fb.com>
- <20190131013403.GI4205@dastard>
- <20190131091011.GP18811@dhcp22.suse.cz>
- <20190131185704.GA8755@castle.DHCP.thefacebook.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:51360 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726341AbfA3Rue (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jan 2019 12:50:34 -0500
+Subject: [PATCH 1/2] libfrog: hoist bitmap out of scrub
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 30 Jan 2019 09:50:24 -0800
+Message-ID: <154887062444.5611.12746798208748899665.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190131185704.GA8755@castle.DHCP.thefacebook.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Roman Gushchin <guro@fb.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Chris Mason <clm@fb.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "vdavydov.dev@gmail.com" <vdavydov.dev@gmail.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 31, 2019 at 06:57:10PM +0000, Roman Gushchin wrote:
-> On Thu, Jan 31, 2019 at 10:10:11AM +0100, Michal Hocko wrote:
-> > On Thu 31-01-19 12:34:03, Dave Chinner wrote:
-> > > On Wed, Jan 30, 2019 at 12:21:07PM +0000, Chris Mason wrote:
-> > > > 
-> > > > 
-> > > > On 29 Jan 2019, at 23:17, Dave Chinner wrote:
-> > > > 
-> > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > >
-> > > > > This reverts commit a76cf1a474d7dbcd9336b5f5afb0162baa142cf0.
-> > > > >
-> > > > > This change causes serious changes to page cache and inode cache
-> > > > > behaviour and balance, resulting in major performance regressions
-> > > > > when combining worklaods such as large file copies and kernel
-> > > > > compiles.
-> > > > >
-> > > > > https://bugzilla.kernel.org/show_bug.cgi?id=202441
-> > > > 
-> > > > I'm a little confused by the latest comment in the bz:
-> > > > 
-> > > > https://bugzilla.kernel.org/show_bug.cgi?id=202441#c24
-> > > 
-> > > Which says the first patch that changed the shrinker behaviour is
-> > > the underlying cause of the regression.
-> > > 
-> > > > Are these reverts sufficient?
-> > > 
-> > > I think so.
-> > > 
-> > > > Roman beat me to suggesting Rik's followup.  We hit a different problem 
-> > > > in prod with small slabs, and have a lot of instrumentation on Rik's 
-> > > > code helping.
-> > > 
-> > > I think that's just another nasty, expedient hack that doesn't solve
-> > > the underlying problem. Solving the underlying problem does not
-> > > require changing core reclaim algorithms and upsetting a page
-> > > reclaim/shrinker balance that has been stable and worked well for
-> > > just about everyone for years.
-> > 
-> > I tend to agree with Dave here. Slab pressure balancing is quite subtle
-> > and easy to get wrong. If we want to plug the problem with offline
-> > memcgs then the fix should be targeted at that problem. So maybe we want
-> > to emulate high pressure on offline memcgs only. There might be other
-> > issues to resolve for small caches but let's start with something more
-> > targeted first please.
-> 
-> First, the path proposed by Dave is not regression-safe too. A slab object
-> can be used by other cgroups as well, so creating an artificial pressure on
-> the dying cgroup might perfectly affect the rest of the system.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Isolating regressions to the memcg dying path is far better than the
-current changes you've made, which have already been *proven* to
-affect the rest of the system.
+Move the bitmap code to libfrog so that we can use bitmaps in
+xfs_repair.
 
-> We do reparent
-> slab lists on offlining, so there is even no easy way to iterate over them.
-> Also, creating an artifical pressure will create unnecessary CPU load.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ include/bitmap.h |   24 +++
+ libfrog/Makefile |    1 
+ libfrog/bitmap.c |  393 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/Makefile   |    2 
+ scrub/bitmap.c   |  393 ------------------------------------------------------
+ scrub/bitmap.h   |   24 ---
+ 6 files changed, 418 insertions(+), 419 deletions(-)
+ create mode 100644 include/bitmap.h
+ create mode 100644 libfrog/bitmap.c
+ delete mode 100644 scrub/bitmap.c
+ delete mode 100644 scrub/bitmap.h
 
-Yes, so do your changes - they increase small slab scanning by 100x
-which means reclaim CPU has most definitely increased.
 
-However, the memcg reaper *doesn't need to be perfect* to solve the
-"takes too long to clean up dying memcgs". Even if it leaves shared
-objects behind (which we want to do!), it still trims those memcgs
-down to /just the shared objects still in use/.  And given that
-objects shared by memcgs are in the minority (according to past
-discussions about the difficulies of accounting them correctly) I
-think this is just fine.
-
-Besides, those reamining shared objects are the ones we want to
-naturally age out under memory pressure, but otherwise the memcgs
-will have been shaken clean of all other objects accounted to them.
-i.e. the "dying memcg" memory footprint goes down massively and the
-"long term buildup" of dying memcgs basically goes away.
-
-> So I'd really prefer to make the "natural" memory pressure to be applied
-> in a way, that doesn't leave any stalled objects behind.
-
-Except that "natural" memory pressure isn't enough to do this, so
-you've artificially inflated that "natural" pressure and screwed up
-the reclaim for everyone else.
-
-> Second, the code around slab pressure is not "worked well for years": as I can
-> see the latest major change was made about a year ago by Josef Bacik
-> (9092c71bb724 "mm: use sc->priority for slab shrink targets").
-
-Strawman. False equivalence.
-
-The commit you mention was effectively a minor tweak - instead of
-using the ratio of pages scanned to pages reclaimed to define the
-amount of slab work, (a second order measure of reclaim urgency), it
-was changed to use the primary reclaim urgency directive that the
-page scanning uses - the reclaim priority.
-
-This *isn't a major change* in algorithm - it conveys essentially
-exactly the same information, and does not change the overall page
-cache vs shrinker reclaim balance. It just behaves more correctly in
-corner cases where there is very little page cache/lots of slab and
-vice versa.  It barely even changed the amount or balance of
-reclaim being done under normal circumstances.
-
-> The existing balance, even if it works perfectly for some cases, isn't something
-> set in stone. We're really under-scanning small cgroups, and I strongly believe
-> that what Rik is proposing is a right thing to do.
-
-You keep saying "small cgroups". That is incorrect.
-
-The shrinker knows nothing about the size of the cache. All it knows
-is how many /freeable objects/ are in the cache. A large cache can
-have zero freeable objects, and to the shrinker look just like a
-small cache with just a few freeable objects. You're trying to
-derive cache characterisations from accounting data that carries no
-such information.
-
-IOWs, adding yet another broken, racy, unpredictable "deferred scan
-count" to triggers when there is few freeable objects in the cache
-is not an improvement. The code is completely buggy, because
-shrinkers can run in parallel and so shrinker->small_scan can be
-modified by multiple shrinker instances running at the same time.
-That's the problem the shrinker->nr_deferred[] array and the atomic
-exchanges solve (which has other problems we really need to fix
-before we even start thinking about changing shrinker balances at
-all).
-
-> If we don't scan objects
-> in small cgroups unless we have really strong memory pressure, we're basically
-> wasting memory.
-
-Maybe for memcgs, but that's exactly the oppose of what we want to
-do for global caches (e.g. filesystem metadata caches). We need to
-make sure that a single, heavily pressured cache doesn't evict small
-caches that lower pressure but are equally important for
-performance.
-
-e.g. I've noticed recently a significant increase in RMW cycles in
-XFS inode cache writeback during various benchmarks. It hasn't
-affected performance because the machine has IO and CPU to burn, but
-on slower machines and storage, it will have a major impact.
-
-The reason these RMW cycles occur is that the dirty inode in memory
-needs to be flushed to the backing buffer before it can be written.
-That backing buffer is in a metadata slab cache controlled by a
-shrinker (not the superblock shrinker which reclaims inodes).  It's
-*much smaller* than the inode cache, but it also needs to be turned
-over much more slowly than the inode cache. If it gets turned over
-too quickly because of inode cache pressure, then flushing dirty
-inodes (in the superblock inode cache shrinker!) needs to read the
-backing buffer back in to memory before it can write the inode and
-reclaim it.
-
-And when you change the shrinker infrastructure to reclaim small
-caches more aggressively? It changes the balance of cache reclaim
-within the filesystem, and so opens up these "should have been in
-the cache but wasn't" performance problems. Where are all the
-problems that users have reported? In the superblock shrinker,
-reclaiming XFS inodes, waiting on IO to be done on really slow Io
-subsystems. Basically, we're stuck because the shrinker changes have
-screwed up the intra-cache reclaim balance.
-
-IOWs, there's complex dependencies between shrinkers and memory
-reclaim, and changing the balance of large vs small caches can have
-very adverse affects when memory pressure occurs. For XFS,
-increasing small cache pressure vs large cache pressure has the
-effect of *increasing the memory demand* of inode reclaim because
-writeback has to allocate buffers, and that's one of the reasons
-it's the canary for naive memory reclaim algorithm changes.
-
-Just because something "works for your memcg heavy workload" doesn't
-mean it works for everyone, or is even a desirable algorithmic
-change.
-
-> And it really makes no sense to reclaim inodes with tons of attached pagecache
-> as easy as "empty" inodes.
-
-You didn't even know this happened until recently. Have you looked
-up it's history?  e.g. from the initial git commit in 2.6.12, almost
-15 years ago now, there's this comment on prune_icache():
-
- * Any inodes which are pinned purely because of attached pagecache have their
- * pagecache removed.  We expect the final iput() on that inode to add it to
- * the front of the inode_unused list.  So look for it there and if the
- * inode is still freeable, proceed.  The right inode is found 99.9% of the
- * time in testing on a 4-way.
-
-Indeed, did you know this inode cache based page reclaim is what
-PGINODESTEAL and KSWAPD_INODESTEAL /proc/vmstat record for us? e.g.
-looking at my workstation:
-
-$ grep inodesteal /proc/vmstat
-pginodesteal 14617964
-kswapd_inodesteal 6674859
-$
-
-Page cache reclaim from clean, unreferenced, aged-out inodes
-actually happens an awful lot in real life.
-
-> So, assuming all this, can we, please, first check if Rik's patch is addressing
-> the regression?
-
-Nope, it's broken and buggy, and reintroduces problems with racing
-deferred counts that were fixed years ago when I originally
-wrote the numa aware shrinker infrastructure.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/include/bitmap.h b/include/bitmap.h
+new file mode 100644
+index 00000000..e29a4335
+--- /dev/null
++++ b/include/bitmap.h
+@@ -0,0 +1,24 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ */
++#ifndef LIBFROG_BITMAP_H_
++#define LIBFROG_BITMAP_H_
++
++struct bitmap {
++	pthread_mutex_t		bt_lock;
++	struct avl64tree_desc	*bt_tree;
++};
++
++bool bitmap_init(struct bitmap **bmap);
++void bitmap_free(struct bitmap **bmap);
++bool bitmap_set(struct bitmap *bmap, uint64_t start, uint64_t length);
++bool bitmap_iterate(struct bitmap *bmap,
++		bool (*fn)(uint64_t, uint64_t, void *), void *arg);
++bool bitmap_test(struct bitmap *bmap, uint64_t start,
++		uint64_t len);
++bool bitmap_empty(struct bitmap *bmap);
++void bitmap_dump(struct bitmap *bmap);
++
++#endif /* LIBFROG_BITMAP_H_ */
+diff --git a/libfrog/Makefile b/libfrog/Makefile
+index dbff9596..f5a0539b 100644
+--- a/libfrog/Makefile
++++ b/libfrog/Makefile
+@@ -12,6 +12,7 @@ LT_AGE = 0
+ 
+ CFILES = \
+ avl64.c \
++bitmap.c \
+ convert.c \
+ crc32.c \
+ fsgeom.c \
+diff --git a/libfrog/bitmap.c b/libfrog/bitmap.c
+new file mode 100644
+index 00000000..aecdba0d
+--- /dev/null
++++ b/libfrog/bitmap.c
+@@ -0,0 +1,393 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ */
++#include "xfs.h"
++#include <stdint.h>
++#include <stdlib.h>
++#include <assert.h>
++#include <pthread.h>
++#include "platform_defs.h"
++#include "avl64.h"
++#include "list.h"
++#include "bitmap.h"
++
++/*
++ * Space Efficient Bitmap
++ *
++ * Implements a space-efficient bitmap.  We use an AVL tree to manage
++ * extent records that tell us which ranges are set; the bitmap key is
++ * an arbitrary uint64_t.  The usual bitmap operations (set, clear,
++ * test, test and set) are supported, plus we can iterate set ranges.
++ */
++
++#define avl_for_each_range_safe(pos, n, l, first, last) \
++	for (pos = (first), n = pos->avl_nextino, l = (last)->avl_nextino; pos != (l); \
++			pos = n, n = pos ? pos->avl_nextino : NULL)
++
++#define avl_for_each_safe(tree, pos, n) \
++	for (pos = (tree)->avl_firstino, n = pos ? pos->avl_nextino : NULL; \
++			pos != NULL; \
++			pos = n, n = pos ? pos->avl_nextino : NULL)
++
++#define avl_for_each(tree, pos) \
++	for (pos = (tree)->avl_firstino; pos != NULL; pos = pos->avl_nextino)
++
++struct bitmap_node {
++	struct avl64node	btn_node;
++	uint64_t		btn_start;
++	uint64_t		btn_length;
++};
++
++static uint64_t
++extent_start(
++	struct avl64node	*node)
++{
++	struct bitmap_node	*btn;
++
++	btn = container_of(node, struct bitmap_node, btn_node);
++	return btn->btn_start;
++}
++
++static uint64_t
++extent_end(
++	struct avl64node	*node)
++{
++	struct bitmap_node	*btn;
++
++	btn = container_of(node, struct bitmap_node, btn_node);
++	return btn->btn_start + btn->btn_length;
++}
++
++static struct avl64ops bitmap_ops = {
++	extent_start,
++	extent_end,
++};
++
++/* Initialize a bitmap. */
++bool
++bitmap_init(
++	struct bitmap		**bmapp)
++{
++	struct bitmap		*bmap;
++
++	bmap = calloc(1, sizeof(struct bitmap));
++	if (!bmap)
++		return false;
++	bmap->bt_tree = malloc(sizeof(struct avl64tree_desc));
++	if (!bmap->bt_tree) {
++		free(bmap);
++		return false;
++	}
++
++	pthread_mutex_init(&bmap->bt_lock, NULL);
++	avl64_init_tree(bmap->bt_tree, &bitmap_ops);
++	*bmapp = bmap;
++
++	return true;
++}
++
++/* Free a bitmap. */
++void
++bitmap_free(
++	struct bitmap		**bmapp)
++{
++	struct bitmap		*bmap;
++	struct avl64node	*node;
++	struct avl64node	*n;
++	struct bitmap_node	*ext;
++
++	bmap = *bmapp;
++	avl_for_each_safe(bmap->bt_tree, node, n) {
++		ext = container_of(node, struct bitmap_node, btn_node);
++		free(ext);
++	}
++	free(bmap->bt_tree);
++	*bmapp = NULL;
++}
++
++/* Create a new bitmap extent node. */
++static struct bitmap_node *
++bitmap_node_init(
++	uint64_t		start,
++	uint64_t		len)
++{
++	struct bitmap_node	*ext;
++
++	ext = malloc(sizeof(struct bitmap_node));
++	if (!ext)
++		return NULL;
++
++	ext->btn_node.avl_nextino = NULL;
++	ext->btn_start = start;
++	ext->btn_length = len;
++
++	return ext;
++}
++
++/* Set a region of bits (locked). */
++static bool
++__bitmap_set(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		length)
++{
++	struct avl64node	*firstn;
++	struct avl64node	*lastn;
++	struct avl64node	*pos;
++	struct avl64node	*n;
++	struct avl64node	*l;
++	struct bitmap_node	*ext;
++	uint64_t		new_start;
++	uint64_t		new_length;
++	struct avl64node	*node;
++	bool			res = true;
++
++	/* Find any existing nodes adjacent or within that range. */
++	avl64_findranges(bmap->bt_tree, start - 1, start + length + 1,
++			&firstn, &lastn);
++
++	/* Nothing, just insert a new extent. */
++	if (firstn == NULL && lastn == NULL) {
++		ext = bitmap_node_init(start, length);
++		if (!ext)
++			return false;
++
++		node = avl64_insert(bmap->bt_tree, &ext->btn_node);
++		if (node == NULL) {
++			free(ext);
++			errno = EEXIST;
++			return false;
++		}
++
++		return true;
++	}
++
++	assert(firstn != NULL && lastn != NULL);
++	new_start = start;
++	new_length = length;
++
++	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
++		ext = container_of(pos, struct bitmap_node, btn_node);
++
++		/* Bail if the new extent is contained within an old one. */
++		if (ext->btn_start <= start &&
++		    ext->btn_start + ext->btn_length >= start + length)
++			return res;
++
++		/* Check for overlapping and adjacent extents. */
++		if (ext->btn_start + ext->btn_length >= start ||
++		    ext->btn_start <= start + length) {
++			if (ext->btn_start < start) {
++				new_start = ext->btn_start;
++				new_length += ext->btn_length;
++			}
++
++			if (ext->btn_start + ext->btn_length >
++			    new_start + new_length)
++				new_length = ext->btn_start + ext->btn_length -
++						new_start;
++
++			avl64_delete(bmap->bt_tree, pos);
++			free(ext);
++		}
++	}
++
++	ext = bitmap_node_init(new_start, new_length);
++	if (!ext)
++		return false;
++
++	node = avl64_insert(bmap->bt_tree, &ext->btn_node);
++	if (node == NULL) {
++		free(ext);
++		errno = EEXIST;
++		return false;
++	}
++
++	return res;
++}
++
++/* Set a region of bits. */
++bool
++bitmap_set(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		length)
++{
++	bool			res;
++
++	pthread_mutex_lock(&bmap->bt_lock);
++	res = __bitmap_set(bmap, start, length);
++	pthread_mutex_unlock(&bmap->bt_lock);
++
++	return res;
++}
++
++#if 0	/* Unused, provided for completeness. */
++/* Clear a region of bits. */
++bool
++bitmap_clear(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		len)
++{
++	struct avl64node	*firstn;
++	struct avl64node	*lastn;
++	struct avl64node	*pos;
++	struct avl64node	*n;
++	struct avl64node	*l;
++	struct bitmap_node	*ext;
++	uint64_t		new_start;
++	uint64_t		new_length;
++	struct avl64node	*node;
++	int			stat;
++
++	pthread_mutex_lock(&bmap->bt_lock);
++	/* Find any existing nodes over that range. */
++	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
++
++	/* Nothing, we're done. */
++	if (firstn == NULL && lastn == NULL) {
++		pthread_mutex_unlock(&bmap->bt_lock);
++		return true;
++	}
++
++	assert(firstn != NULL && lastn != NULL);
++
++	/* Delete or truncate everything in sight. */
++	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
++		ext = container_of(pos, struct bitmap_node, btn_node);
++
++		stat = 0;
++		if (ext->btn_start < start)
++			stat |= 1;
++		if (ext->btn_start + ext->btn_length > start + len)
++			stat |= 2;
++		switch (stat) {
++		case 0:
++			/* Extent totally within range; delete. */
++			avl64_delete(bmap->bt_tree, pos);
++			free(ext);
++			break;
++		case 1:
++			/* Extent is left-adjacent; truncate. */
++			ext->btn_length = start - ext->btn_start;
++			break;
++		case 2:
++			/* Extent is right-adjacent; move it. */
++			ext->btn_length = ext->btn_start + ext->btn_length -
++					(start + len);
++			ext->btn_start = start + len;
++			break;
++		case 3:
++			/* Extent overlaps both ends. */
++			ext->btn_length = start - ext->btn_start;
++			new_start = start + len;
++			new_length = ext->btn_start + ext->btn_length -
++					new_start;
++
++			ext = bitmap_node_init(new_start, new_length);
++			if (!ext)
++				return false;
++
++			node = avl64_insert(bmap->bt_tree, &ext->btn_node);
++			if (node == NULL) {
++				errno = EEXIST;
++				return false;
++			}
++			break;
++		}
++	}
++
++	pthread_mutex_unlock(&bmap->bt_lock);
++	return true;
++}
++#endif
++
++#ifdef DEBUG
++/* Iterate the set regions of this bitmap. */
++bool
++bitmap_iterate(
++	struct bitmap		*bmap,
++	bool			(*fn)(uint64_t, uint64_t, void *),
++	void			*arg)
++{
++	struct avl64node	*node;
++	struct bitmap_node	*ext;
++	bool			moveon = true;
++
++	pthread_mutex_lock(&bmap->bt_lock);
++	avl_for_each(bmap->bt_tree, node) {
++		ext = container_of(node, struct bitmap_node, btn_node);
++		moveon = fn(ext->btn_start, ext->btn_length, arg);
++		if (!moveon)
++			break;
++	}
++	pthread_mutex_unlock(&bmap->bt_lock);
++
++	return moveon;
++}
++#endif
++
++/* Do any bitmap extents overlap the given one?  (locked) */
++static bool
++__bitmap_test(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		len)
++{
++	struct avl64node	*firstn;
++	struct avl64node	*lastn;
++
++	/* Find any existing nodes over that range. */
++	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
++
++	return firstn != NULL && lastn != NULL;
++}
++
++/* Is any part of this range set? */
++bool
++bitmap_test(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		len)
++{
++	bool			res;
++
++	pthread_mutex_lock(&bmap->bt_lock);
++	res = __bitmap_test(bmap, start, len);
++	pthread_mutex_unlock(&bmap->bt_lock);
++
++	return res;
++}
++
++/* Are none of the bits set? */
++bool
++bitmap_empty(
++	struct bitmap		*bmap)
++{
++	return bmap->bt_tree->avl_firstino == NULL;
++}
++
++#ifdef DEBUG
++static bool
++bitmap_dump_fn(
++	uint64_t		startblock,
++	uint64_t		blockcount,
++	void			*arg)
++{
++	printf("%"PRIu64":%"PRIu64"\n", startblock, blockcount);
++	return true;
++}
++
++/* Dump bitmap. */
++void
++bitmap_dump(
++	struct bitmap		*bmap)
++{
++	printf("BITMAP DUMP %p\n", bmap);
++	bitmap_iterate(bmap, bitmap_dump_fn, NULL);
++	printf("BITMAP DUMP DONE\n");
++}
++#endif
+diff --git a/scrub/Makefile b/scrub/Makefile
+index c6473c12..9c56d550 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -31,7 +31,6 @@ endif
+ endif	# scrub_prereqs
+ 
+ HFILES = \
+-bitmap.h \
+ common.h \
+ counter.h \
+ disk.h \
+@@ -48,7 +47,6 @@ vfs.h \
+ xfs_scrub.h
+ 
+ CFILES = \
+-bitmap.c \
+ common.c \
+ counter.c \
+ disk.c \
+diff --git a/scrub/bitmap.c b/scrub/bitmap.c
+deleted file mode 100644
+index aecdba0d..00000000
+--- a/scrub/bitmap.c
++++ /dev/null
+@@ -1,393 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0+
+-/*
+- * Copyright (C) 2018 Oracle.  All Rights Reserved.
+- * Author: Darrick J. Wong <darrick.wong@oracle.com>
+- */
+-#include "xfs.h"
+-#include <stdint.h>
+-#include <stdlib.h>
+-#include <assert.h>
+-#include <pthread.h>
+-#include "platform_defs.h"
+-#include "avl64.h"
+-#include "list.h"
+-#include "bitmap.h"
+-
+-/*
+- * Space Efficient Bitmap
+- *
+- * Implements a space-efficient bitmap.  We use an AVL tree to manage
+- * extent records that tell us which ranges are set; the bitmap key is
+- * an arbitrary uint64_t.  The usual bitmap operations (set, clear,
+- * test, test and set) are supported, plus we can iterate set ranges.
+- */
+-
+-#define avl_for_each_range_safe(pos, n, l, first, last) \
+-	for (pos = (first), n = pos->avl_nextino, l = (last)->avl_nextino; pos != (l); \
+-			pos = n, n = pos ? pos->avl_nextino : NULL)
+-
+-#define avl_for_each_safe(tree, pos, n) \
+-	for (pos = (tree)->avl_firstino, n = pos ? pos->avl_nextino : NULL; \
+-			pos != NULL; \
+-			pos = n, n = pos ? pos->avl_nextino : NULL)
+-
+-#define avl_for_each(tree, pos) \
+-	for (pos = (tree)->avl_firstino; pos != NULL; pos = pos->avl_nextino)
+-
+-struct bitmap_node {
+-	struct avl64node	btn_node;
+-	uint64_t		btn_start;
+-	uint64_t		btn_length;
+-};
+-
+-static uint64_t
+-extent_start(
+-	struct avl64node	*node)
+-{
+-	struct bitmap_node	*btn;
+-
+-	btn = container_of(node, struct bitmap_node, btn_node);
+-	return btn->btn_start;
+-}
+-
+-static uint64_t
+-extent_end(
+-	struct avl64node	*node)
+-{
+-	struct bitmap_node	*btn;
+-
+-	btn = container_of(node, struct bitmap_node, btn_node);
+-	return btn->btn_start + btn->btn_length;
+-}
+-
+-static struct avl64ops bitmap_ops = {
+-	extent_start,
+-	extent_end,
+-};
+-
+-/* Initialize a bitmap. */
+-bool
+-bitmap_init(
+-	struct bitmap		**bmapp)
+-{
+-	struct bitmap		*bmap;
+-
+-	bmap = calloc(1, sizeof(struct bitmap));
+-	if (!bmap)
+-		return false;
+-	bmap->bt_tree = malloc(sizeof(struct avl64tree_desc));
+-	if (!bmap->bt_tree) {
+-		free(bmap);
+-		return false;
+-	}
+-
+-	pthread_mutex_init(&bmap->bt_lock, NULL);
+-	avl64_init_tree(bmap->bt_tree, &bitmap_ops);
+-	*bmapp = bmap;
+-
+-	return true;
+-}
+-
+-/* Free a bitmap. */
+-void
+-bitmap_free(
+-	struct bitmap		**bmapp)
+-{
+-	struct bitmap		*bmap;
+-	struct avl64node	*node;
+-	struct avl64node	*n;
+-	struct bitmap_node	*ext;
+-
+-	bmap = *bmapp;
+-	avl_for_each_safe(bmap->bt_tree, node, n) {
+-		ext = container_of(node, struct bitmap_node, btn_node);
+-		free(ext);
+-	}
+-	free(bmap->bt_tree);
+-	*bmapp = NULL;
+-}
+-
+-/* Create a new bitmap extent node. */
+-static struct bitmap_node *
+-bitmap_node_init(
+-	uint64_t		start,
+-	uint64_t		len)
+-{
+-	struct bitmap_node	*ext;
+-
+-	ext = malloc(sizeof(struct bitmap_node));
+-	if (!ext)
+-		return NULL;
+-
+-	ext->btn_node.avl_nextino = NULL;
+-	ext->btn_start = start;
+-	ext->btn_length = len;
+-
+-	return ext;
+-}
+-
+-/* Set a region of bits (locked). */
+-static bool
+-__bitmap_set(
+-	struct bitmap		*bmap,
+-	uint64_t		start,
+-	uint64_t		length)
+-{
+-	struct avl64node	*firstn;
+-	struct avl64node	*lastn;
+-	struct avl64node	*pos;
+-	struct avl64node	*n;
+-	struct avl64node	*l;
+-	struct bitmap_node	*ext;
+-	uint64_t		new_start;
+-	uint64_t		new_length;
+-	struct avl64node	*node;
+-	bool			res = true;
+-
+-	/* Find any existing nodes adjacent or within that range. */
+-	avl64_findranges(bmap->bt_tree, start - 1, start + length + 1,
+-			&firstn, &lastn);
+-
+-	/* Nothing, just insert a new extent. */
+-	if (firstn == NULL && lastn == NULL) {
+-		ext = bitmap_node_init(start, length);
+-		if (!ext)
+-			return false;
+-
+-		node = avl64_insert(bmap->bt_tree, &ext->btn_node);
+-		if (node == NULL) {
+-			free(ext);
+-			errno = EEXIST;
+-			return false;
+-		}
+-
+-		return true;
+-	}
+-
+-	assert(firstn != NULL && lastn != NULL);
+-	new_start = start;
+-	new_length = length;
+-
+-	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
+-		ext = container_of(pos, struct bitmap_node, btn_node);
+-
+-		/* Bail if the new extent is contained within an old one. */
+-		if (ext->btn_start <= start &&
+-		    ext->btn_start + ext->btn_length >= start + length)
+-			return res;
+-
+-		/* Check for overlapping and adjacent extents. */
+-		if (ext->btn_start + ext->btn_length >= start ||
+-		    ext->btn_start <= start + length) {
+-			if (ext->btn_start < start) {
+-				new_start = ext->btn_start;
+-				new_length += ext->btn_length;
+-			}
+-
+-			if (ext->btn_start + ext->btn_length >
+-			    new_start + new_length)
+-				new_length = ext->btn_start + ext->btn_length -
+-						new_start;
+-
+-			avl64_delete(bmap->bt_tree, pos);
+-			free(ext);
+-		}
+-	}
+-
+-	ext = bitmap_node_init(new_start, new_length);
+-	if (!ext)
+-		return false;
+-
+-	node = avl64_insert(bmap->bt_tree, &ext->btn_node);
+-	if (node == NULL) {
+-		free(ext);
+-		errno = EEXIST;
+-		return false;
+-	}
+-
+-	return res;
+-}
+-
+-/* Set a region of bits. */
+-bool
+-bitmap_set(
+-	struct bitmap		*bmap,
+-	uint64_t		start,
+-	uint64_t		length)
+-{
+-	bool			res;
+-
+-	pthread_mutex_lock(&bmap->bt_lock);
+-	res = __bitmap_set(bmap, start, length);
+-	pthread_mutex_unlock(&bmap->bt_lock);
+-
+-	return res;
+-}
+-
+-#if 0	/* Unused, provided for completeness. */
+-/* Clear a region of bits. */
+-bool
+-bitmap_clear(
+-	struct bitmap		*bmap,
+-	uint64_t		start,
+-	uint64_t		len)
+-{
+-	struct avl64node	*firstn;
+-	struct avl64node	*lastn;
+-	struct avl64node	*pos;
+-	struct avl64node	*n;
+-	struct avl64node	*l;
+-	struct bitmap_node	*ext;
+-	uint64_t		new_start;
+-	uint64_t		new_length;
+-	struct avl64node	*node;
+-	int			stat;
+-
+-	pthread_mutex_lock(&bmap->bt_lock);
+-	/* Find any existing nodes over that range. */
+-	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
+-
+-	/* Nothing, we're done. */
+-	if (firstn == NULL && lastn == NULL) {
+-		pthread_mutex_unlock(&bmap->bt_lock);
+-		return true;
+-	}
+-
+-	assert(firstn != NULL && lastn != NULL);
+-
+-	/* Delete or truncate everything in sight. */
+-	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
+-		ext = container_of(pos, struct bitmap_node, btn_node);
+-
+-		stat = 0;
+-		if (ext->btn_start < start)
+-			stat |= 1;
+-		if (ext->btn_start + ext->btn_length > start + len)
+-			stat |= 2;
+-		switch (stat) {
+-		case 0:
+-			/* Extent totally within range; delete. */
+-			avl64_delete(bmap->bt_tree, pos);
+-			free(ext);
+-			break;
+-		case 1:
+-			/* Extent is left-adjacent; truncate. */
+-			ext->btn_length = start - ext->btn_start;
+-			break;
+-		case 2:
+-			/* Extent is right-adjacent; move it. */
+-			ext->btn_length = ext->btn_start + ext->btn_length -
+-					(start + len);
+-			ext->btn_start = start + len;
+-			break;
+-		case 3:
+-			/* Extent overlaps both ends. */
+-			ext->btn_length = start - ext->btn_start;
+-			new_start = start + len;
+-			new_length = ext->btn_start + ext->btn_length -
+-					new_start;
+-
+-			ext = bitmap_node_init(new_start, new_length);
+-			if (!ext)
+-				return false;
+-
+-			node = avl64_insert(bmap->bt_tree, &ext->btn_node);
+-			if (node == NULL) {
+-				errno = EEXIST;
+-				return false;
+-			}
+-			break;
+-		}
+-	}
+-
+-	pthread_mutex_unlock(&bmap->bt_lock);
+-	return true;
+-}
+-#endif
+-
+-#ifdef DEBUG
+-/* Iterate the set regions of this bitmap. */
+-bool
+-bitmap_iterate(
+-	struct bitmap		*bmap,
+-	bool			(*fn)(uint64_t, uint64_t, void *),
+-	void			*arg)
+-{
+-	struct avl64node	*node;
+-	struct bitmap_node	*ext;
+-	bool			moveon = true;
+-
+-	pthread_mutex_lock(&bmap->bt_lock);
+-	avl_for_each(bmap->bt_tree, node) {
+-		ext = container_of(node, struct bitmap_node, btn_node);
+-		moveon = fn(ext->btn_start, ext->btn_length, arg);
+-		if (!moveon)
+-			break;
+-	}
+-	pthread_mutex_unlock(&bmap->bt_lock);
+-
+-	return moveon;
+-}
+-#endif
+-
+-/* Do any bitmap extents overlap the given one?  (locked) */
+-static bool
+-__bitmap_test(
+-	struct bitmap		*bmap,
+-	uint64_t		start,
+-	uint64_t		len)
+-{
+-	struct avl64node	*firstn;
+-	struct avl64node	*lastn;
+-
+-	/* Find any existing nodes over that range. */
+-	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
+-
+-	return firstn != NULL && lastn != NULL;
+-}
+-
+-/* Is any part of this range set? */
+-bool
+-bitmap_test(
+-	struct bitmap		*bmap,
+-	uint64_t		start,
+-	uint64_t		len)
+-{
+-	bool			res;
+-
+-	pthread_mutex_lock(&bmap->bt_lock);
+-	res = __bitmap_test(bmap, start, len);
+-	pthread_mutex_unlock(&bmap->bt_lock);
+-
+-	return res;
+-}
+-
+-/* Are none of the bits set? */
+-bool
+-bitmap_empty(
+-	struct bitmap		*bmap)
+-{
+-	return bmap->bt_tree->avl_firstino == NULL;
+-}
+-
+-#ifdef DEBUG
+-static bool
+-bitmap_dump_fn(
+-	uint64_t		startblock,
+-	uint64_t		blockcount,
+-	void			*arg)
+-{
+-	printf("%"PRIu64":%"PRIu64"\n", startblock, blockcount);
+-	return true;
+-}
+-
+-/* Dump bitmap. */
+-void
+-bitmap_dump(
+-	struct bitmap		*bmap)
+-{
+-	printf("BITMAP DUMP %p\n", bmap);
+-	bitmap_iterate(bmap, bitmap_dump_fn, NULL);
+-	printf("BITMAP DUMP DONE\n");
+-}
+-#endif
+diff --git a/scrub/bitmap.h b/scrub/bitmap.h
+deleted file mode 100644
+index e9746a12..00000000
+--- a/scrub/bitmap.h
++++ /dev/null
+@@ -1,24 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0+
+-/*
+- * Copyright (C) 2018 Oracle.  All Rights Reserved.
+- * Author: Darrick J. Wong <darrick.wong@oracle.com>
+- */
+-#ifndef XFS_SCRUB_BITMAP_H_
+-#define XFS_SCRUB_BITMAP_H_
+-
+-struct bitmap {
+-	pthread_mutex_t		bt_lock;
+-	struct avl64tree_desc	*bt_tree;
+-};
+-
+-bool bitmap_init(struct bitmap **bmap);
+-void bitmap_free(struct bitmap **bmap);
+-bool bitmap_set(struct bitmap *bmap, uint64_t start, uint64_t length);
+-bool bitmap_iterate(struct bitmap *bmap,
+-		bool (*fn)(uint64_t, uint64_t, void *), void *arg);
+-bool bitmap_test(struct bitmap *bmap, uint64_t start,
+-		uint64_t len);
+-bool bitmap_empty(struct bitmap *bmap);
+-void bitmap_dump(struct bitmap *bmap);
+-
+-#endif /* XFS_SCRUB_BITMAP_H_ */
