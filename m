@@ -1,36 +1,199 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:60330 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726857AbfA3MAS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jan 2019 07:00:18 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 7327F2E3D7
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Jan 2019 12:00:17 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
- since 4.19.0  on sata hdd:s
-Date: Wed, 30 Jan 2019 12:00:15 +0000
-Message-ID: <bug-202441-201763-P5sGUg9qRk@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
-References: <bug-202441-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from mx1.redhat.com ([209.132.183.28]:55240 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725768AbfA3MPi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Jan 2019 07:15:38 -0500
+Date: Wed, 30 Jan 2019 07:15:35 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH RFC v2 2/3] xfs: distinguish between inobt and finobt
+ magic values
+Message-ID: <20190130121535.GA30304@bfoster>
+References: <20190128152034.21080-1-bfoster@redhat.com>
+ <20190128152034.21080-3-bfoster@redhat.com>
+ <20190128225426.GU4205@dastard>
+ <20190129140136.GC24998@bfoster>
+ <20190129211655.GY4205@dastard>
+ <20190130010552.GA28304@bfoster>
+ <20190130021529.GH4205@dastard>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190130021529.GH4205@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202441
+On Wed, Jan 30, 2019 at 01:15:29PM +1100, Dave Chinner wrote:
+> On Tue, Jan 29, 2019 at 08:05:53PM -0500, Brian Foster wrote:
+> > On Wed, Jan 30, 2019 at 08:16:55AM +1100, Dave Chinner wrote:
+> > > On Tue, Jan 29, 2019 at 09:01:36AM -0500, Brian Foster wrote:
+> > > > On Tue, Jan 29, 2019 at 09:54:26AM +1100, Dave Chinner wrote:
+> > > > I agree that the magic value itself is a bit obfuscated with this
+> > > > change, but that's still the case with a lookup table.
+> > > 
+> > > The difference with the lookup table is that you know what the magic
+> > > number is supposed to be by looking at the code that calls it...
+> > > 
+> > 
+> > Indeed. What I didn't realize until later today is that some verifiers
+> > (xfs_sb_buf_ops, xfs_attr3_leaf_buf_ops, xfs_da3_node_buf_ops) check
+> > already converted in-core structures and thus actually verify against
+> > cpu endian magic values. This means said verifiers would require further
+> > tweaks to either check the underlying buffer, another conversion back to
+> > disk endian, or we'd otherwise need four of these arrays. :/
+> 
+> That was purely convenience, because we had to convert to the incore
+> header to check a bunch of other stuff, so the magic number got
+> converted for free.
+> 
 
---- Comment #25 from Roger (rogan6710@gmail.com) ---
-If I had been less strict in my testing I probably would have discovered that
-the problem was present earlier than 4.19.3. Mr Gushins commit made it more
-visible.
+I think that applies to the first two cases noted above. The
+xfs_da3_node_verify() case is a bit more involved conceptually because
+we call out to another indirect function to do the conversion. I think
+we can ultimately use hdr for the magic check just the same as the
+others because either way the block is headed by an xfs_da_blkinfo, it
+just takes some thought to grok from the verifier context (and thus adds
+minor maintenance burden if this code changes again down the road). I'll
+try to add a comment there..
 
-I'm going back to work after two days off, so I might not be able to respond
-inside your working hours, but I'll keep checking in on this as I get a chance.
+> I'd prefer if we are going to use a generic method of checking magic
+> numbers that it does it in on-disk format so that we don't need to
+> convert just for the magic number check.
+> 
+> > > I'd like all the verifiers to use the same mechanism so we maintain
+> > > consistency between them.
+> > > 
+> > 
+> > I'd like that too, but I think we need to make some kind of tradeoff or
+> > compromise to fix this problem given the current, rather ad-hoc nature
+> > of the verifier code. Some check in-core structs, some don't and may or
+> > may not use the compile time conversion optimization.
+> 
+> Ypup, so lets get them all on to checking the on-disk magic number
+> before conversion.
+> 
+> > > > --- 8< ---
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> > > > index 1728a3e6f5cf..f602307d2fa0 100644
+> > > > --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> > > > +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> > > > @@ -142,41 +142,32 @@ xfs_dir3_leaf_check_int(
+> > > >   */
+> > > >  static xfs_failaddr_t
+> > > >  xfs_dir3_leaf_verify(
+> > > > -	struct xfs_buf		*bp,
+> > > > -	uint16_t		magic)
+> > > > +	struct xfs_buf		*bp)
+> > > >  {
+> > > >  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> > > >  	struct xfs_dir2_leaf	*leaf = bp->b_addr;
+> > > >  
+> > > > -	ASSERT(magic == XFS_DIR2_LEAF1_MAGIC || magic == XFS_DIR2_LEAFN_MAGIC);
+> > > > +	if (!xfs_verify_magic(bp, be16_to_cpu(leaf->hdr.info.magic)))
+> > > > +		return __this_address;
+> > > >  
+> > > >  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> > > >  		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
+> > > > -		uint16_t		magic3;
+> > > >  
+> > > > -		magic3 = (magic == XFS_DIR2_LEAF1_MAGIC) ? XFS_DIR3_LEAF1_MAGIC
+> > > > -							 : XFS_DIR3_LEAFN_MAGIC;
+> > > > -
+> > > > -		if (leaf3->info.hdr.magic != cpu_to_be16(magic3))
+> > > > -			return __this_address;
+> > > > +		ASSERT(leaf3->info.hdr.magic == leaf->hdr.info.magic);
+> > > >  		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
+> > > >  			return __this_address;
+> > > >  		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
+> > > >  			return __this_address;
+> > > >  		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
+> > > >  			return __this_address;
+> > > > -	} else {
+> > > > -		if (leaf->hdr.info.magic != cpu_to_be16(magic))
+> > > > -			return __this_address;
+> > > >  	}
+> > > >  
+> > > >  	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
+> > > >  }
+> > > 
+> > > .....
+> > > 
+> > > Ok, that removes a lot more existing code than I ever thought it
+> > > would. If you clean up the macro mess and use encoded magic numbers
+> > > in the ops structure, then consider my objections removed. :)
+> > > 
+> > 
+> > I'll kill off the macro..
+> > 
+> > By encoded, I assume you mean on-disk order(?).
+> 
+> Yup.
+> 
+> > > (And that then leads to factoring of xfs_dablk_info_verify() as dir
+> > > leaf, danode and attribute leaf blocks all use the same struct
+> > > xfs_da3_blkinfo header, and now the magic number is abstracted they
+> > > can use the same code....)
+> > > 
+> > 
+> > Not sure I follow..?
+> 
+> They all do the same thing. Taking your converted code:
+> 
+> 	if (!xfs_verify_magic(bp, be16_to_cpu(leaf->hdr.info.magic)))
+> 		return __this_address;
+> 
+> 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> 		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
+> 
+> 		ASSERT(leaf3->info.hdr.magic == leaf->hdr.info.magic);
+> 		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
+> 			return __this_address;
+> 		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
+> 			return __this_address;
+> 		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
+> 			return __this_address;
+> 	}
+> 
+> The only thing they need is mp, &leaf->hdr, and bp. They don't
+> actually need to know that its a dir2/dir3 leaf block now the magic
+> number is encoded in bp->b_ops.
+> 
+> i.e. that boiler plate can be factored out of multiple verifiers...
+> 
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Ok, I thought you meant that there were other, existing functions being
+shared rather than referring to a subset of the (modified) verifier
+code. I'll take a closer look at this after the other fixups.
+
+> > > Brian, to help prevent stupid people like me wasting your time in
+> > > future, can you post the entire patch set you have so we can see the
+> > > same picture you have for the overall change, even if there's only a
+> > > small chunk you are proposing for merge? That way we'll be able to
+> > > judge the change on the merits of the entire work, rather than just
+> > > the small chunk that was posted? 
+> > > 
+> > 
+> > That was the entire patchset at the time. ;) I intentionally made the
+> > isolated finobt change and posted that to try and get big picture
+> > feedback before making mechanical changes to the rest of the verifiers.
+> > I probably had most of the rest done shortly after posting the rfcv2,
+> > but it wasn't tested until today (re: the v1 post) so I just included
+> > the above snippet to demonstrate the cleanup.
+> 
+> OK, so somewhat crossed wires while changes were still being made.
+> Such is life...
+> 
+
+*nod*
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
