@@ -1,82 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:64394 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725915AbfAaUnG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 15:43:06 -0500
-Date: Fri, 1 Feb 2019 07:43:01 +1100
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:46667 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730045AbfA3ERU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 23:17:20 -0500
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH] ext4: add link file support for {GET,SET}XATTR ioctl
-Message-ID: <20190131204301.GK4205@dastard>
-References: <1548899232-30311-1-git-send-email-wshilong1991@gmail.com>
- <20190131034106.GJ4205@dastard>
- <20190131174059.GA10211@magnolia>
+Subject: [PATCH 1/2] Revert "mm: don't reclaim inodes with many attached pages"
+Date: Wed, 30 Jan 2019 15:17:06 +1100
+Message-Id: <20190130041707.27750-2-david@fromorbit.com>
+In-Reply-To: <20190130041707.27750-1-david@fromorbit.com>
+References: <20190130041707.27750-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190131174059.GA10211@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Wang Shilong <wangshilong1991@gmail.com>, linux-ext4@vger.kernel.org, linux-fs@vger.kernel.org, linux-xfs@vger.kernel.org, Wang Shilong <wshilong@ddn.com>, Andreas Dilger <adilger@dilger.ca>, Li Xi <lixi@ddn.com>
+To: linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: guro@fb.com, akpm@linux-foundation.org, mhocko@kernel.org, vdavydov.dev@gmail.com
 
-On Thu, Jan 31, 2019 at 09:40:59AM -0800, Darrick J. Wong wrote:
-> On Thu, Jan 31, 2019 at 02:41:06PM +1100, Dave Chinner wrote:
-> > On Thu, Jan 31, 2019 at 10:47:12AM +0900, Wang Shilong wrote:
-> > > From: Wang Shilong <wshilong@ddn.com>
-> > > 
-> > > Currently there is no way to change project ID of
-> > > symlink file itself, this is important to implement
-> > > Directory quota for an existed directory.
-> > 
-> > This seems like something open(O_PATH|O_NOFOLLOW) should allow.
-> > from open(2):
-> 
-> ...but I thought O_PATH|O_NOFOLLOW file descriptions didn't allow ioctl
-> calls?
+From: Dave Chinner <dchinner@redhat.com>
 
-It doesn't, and that is the problem here.
+This reverts commit a76cf1a474d7dbcd9336b5f5afb0162baa142cf0.
 
-> > 	If pathname is a symbolic link and the O_NOFOLLOW flag is
-> > 	also specified, then the call returns a file  descriptor
-> > 	referring  to  the symbolic  link.  This  file  descriptor
-> > 	can  be used as the dirfd argument in calls to fchownat(2),
-> > 	fstatat(2), linkat(2), and read¿ linkat(2) with an empty
-> > 	pathname to have the calls operate on the symbolic link.
-> > 
-> > Changing the project id is the equivalent of fchownat().....
-> 
-> /me & others wonder (on the ext4 call) if maybe we should promote
-> project id to a vfs level concept? 
+This change causes serious changes to page cache and inode cache
+behaviour and balance, resulting in major performance regressions
+when combining worklaods such as large file copies and kernel
+compiles.
 
-It already is - see include/linux/kprojid.h.
+https://bugzilla.kernel.org/show_bug.cgi?id=202441
 
-That was done for user namespaces, despite my objections that
-project IDs aren't something that user namespaces should swizzle
-because they are filesystem controlled IDs and the init namespace
-needs to use them to control container directory space usage,
-therefore they are not available for use in user namespaces
-contexts.....
+This change is a hack to work around the problems introduced by
+changing how agressive shrinkers are on small caches in commit
+172b06c32b94 ("mm: slowly shrink slabs with a relatively small
+number of objects"). It creates more problems than it solves, wasn't
+adequately reviewed or tested, so it needs to be reverted.
 
-> i.e. store project id in struct
-> inode instead of the fs-specific inode structures.  Then we can use the
-> existing setattr infrastructure to persist those changes.
+cc: <stable@vger.kernel.org>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/inode.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-Makes no difference to me where they are stored - settattr has to
-call into the filesystem anyway to change them (transactions!) so it
-doesn't need to be in the struct inode, just in the struct iattr
-that is passed to the filesystems.
-
-> As for fchownat, how about a new flag that means "use the value in the
-> gid field to set the project id"?
-
-Kinda what I was thinking, so we don't need a whole new syscall.
-Just limit that flag usage to the init namespace and we're all good.
-
-Cheers,
-
-Dave.
+diff --git a/fs/inode.c b/fs/inode.c
+index 0cd47fe0dbe5..73432e64f874 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -730,11 +730,8 @@ static enum lru_status inode_lru_isolate(struct list_head *item,
+ 		return LRU_REMOVED;
+ 	}
+ 
+-	/*
+-	 * Recently referenced inodes and inodes with many attached pages
+-	 * get one more pass.
+-	 */
+-	if (inode->i_state & I_REFERENCED || inode->i_data.nrpages > 1) {
++	/* recently referenced inodes get one more pass */
++	if (inode->i_state & I_REFERENCED) {
+ 		inode->i_state &= ~I_REFERENCED;
+ 		spin_unlock(&inode->i_lock);
+ 		return LRU_ROTATE;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.20.1
