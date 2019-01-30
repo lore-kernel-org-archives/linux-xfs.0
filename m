@@ -1,101 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58345 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726135AbfAaSLL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Jan 2019 13:11:11 -0500
-Date: Thu, 31 Jan 2019 13:11:09 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 04/11] xfs: don't try to map blocks beyond i_size in
- writeback
-Message-ID: <20190131181108.GF36239@bfoster>
-References: <20190131075524.4769-1-hch@lst.de>
- <20190131075524.4769-5-hch@lst.de>
+Received: from mail-yw1-f44.google.com ([209.85.161.44]:39965 "EHLO
+        mail-yw1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726548AbfA3Nav (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jan 2019 08:30:51 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190131075524.4769-5-hch@lst.de>
+References: <CAOQ4uxgqm-m1Zj073o_vSnwkTbGObJiQ-CdWV2ESd_P-29=jZw@mail.gmail.com>
+ <20190128125044.GC27972@quack2.suse.cz> <20190128212642.GQ4205@dastard>
+ <CAOQ4uxgUDoSc_nVrLM1An_tH_0NMVonA8npJLBbi0ibD+mwnMw@mail.gmail.com>
+ <20190129001826.GV4205@dastard> <CAOQ4uxiNe8i6YZ3dQvsW_fDNoPj5HPyY5ve93wXChmqAC10B4w@mail.gmail.com>
+ <20190129230129.GD4205@dastard>
+In-Reply-To: <20190129230129.GD4205@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 30 Jan 2019 15:30:39 +0200
+Message-ID: <CAOQ4uxifnvHnM-i7LnHx6a9s9msx_=X_RweRxXu9US0_NEK2Hw@mail.gmail.com>
+Subject: Re: [LSF/MM TOPIC] Lazy file reflink
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
 
-On Thu, Jan 31, 2019 at 08:55:17AM +0100, Christoph Hellwig wrote:
-> We already shortcut xfs_map_blocks for COW mappings, but there is just
-> as little reason to start writeback beyond i_size in the data fork.
-> 
-> Note that this has to be just an optimization as hole punches can unmaps
-> block just like truncate, and we need to handle that case further down
-> in the low-level code.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_aops.c | 34 ++++++++++++++--------------------
->  1 file changed, 14 insertions(+), 20 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 8bfb62d8776f..9c2a1947d5dd 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -348,6 +348,20 @@ xfs_map_blocks(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
->  
-> +	/*
-> +	 * If the offset is beyond the inode size, we know that we raced with
-> +	 * truncate.  No point in doing calling any lower level code, just
-> +	 * return a hole so that the writeback code skips writeback for the
-> +	 * rest of the file.
-> +	 */
-> +	if (offset > i_size_read(inode)) {
-> +		wpc->imap.br_startoff = offset_fsb;
-> +		wpc->imap.br_blockcount = end_fsb - offset_fsb;
-> +		wpc->imap.br_startblock = HOLESTARTBLOCK;
-> +		wpc->imap.br_state = XFS_EXT_NORM;
-> +		return 0;
-> +	}
-> +
+On Wed, Jan 30, 2019 at 1:01 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Tue, Jan 29, 2019 at 09:18:57AM +0200, Amir Goldstein wrote:
+> > > > I think it's a good idea to add file freeze semantics to the toolbox
+> > > > of useful things that could be accomplished with reflink.
+> > >
+> > > reflink is already atomic w.r.t. other writes - in what way does a
+> > > "file freeze" have any impact on a reflink operation? that is, apart
+> > > from preventing it from being done, because reflink can modify the
+> > > source inode on XFS, too....
+> > >
+> >
+> > - create O_TMPFILE
+> > - freeze source file
+> > - read and calculate hash from source file
+> > - likely unfreeze and skip reflink+backup
+>
+> IF you can read the file to determine if you need to back up the
+> file while it's frozen, then why do you need to reflink it
+> before you read the file to back it up? It's the /exact same
+> read operation/ on the file.
+>
+> I'm not sure what the hell you actually want now, because you've
+> contradicting yourself again by saying you want read the entire file
+> while it's frozen and blocking writes, after you just said that's
+> not acceptible and why reflink is required....
+>
 
-The code looks fine, but I don't see any more value in this code than
-the similar code down in xfs_iomap_write_allocate(). The comment implies
-this skips writeback for the rest of the file, but AFACT the higher
-level page->index code in xfs_do_writepage() already does that. All
-these checks do is skip the remaining blocks in the current page. When
-you consider that we're most likely sending an I/O in the latter case
-either way, I'm curious why we'd bother to keep this around at all.
+Mmm. I've tried to stick to a simplified description and picked one specific
+use case of large file that was not a good example.
+A colleague has corrected me that we are more concerned over the cost of
+reflinking many millions of files just to find out that they were not change
+and even just to back them up.
+Ended up being confusing. If I contradicted myself is because my description
+was often missing "sometimes".
 
-Brian
+Let's start over:
+For small files, that can fit in application buffers, freeze is probably enough.
+For very large files, your assertion that reflink is cheap compared to reading
+the file is correct, so there is probably no justification for lazy reflink.
 
->  	/*
->  	 * COW fork blocks can overlap data fork blocks even if the blocks
->  	 * aren't shared.  COW I/O always takes precedent, so we must always
-> @@ -388,26 +402,6 @@ xfs_map_blocks(
->  		xfs_iunlock(ip, XFS_ILOCK_SHARED);
->  
->  		wpc->fork = XFS_COW_FORK;
-> -
-> -		/*
-> -		 * Truncate can race with writeback since writeback doesn't
-> -		 * take the iolock and truncate decreases the file size before
-> -		 * it starts truncating the pages between new_size and old_size.
-> -		 * Therefore, we can end up in the situation where writeback
-> -		 * gets a CoW fork mapping but the truncate makes the mapping
-> -		 * invalid and we end up in here trying to get a new mapping.
-> -		 * bail out here so that we simply never get a valid mapping
-> -		 * and so we drop the write altogether.  The page truncation
-> -		 * will kill the contents anyway.
-> -		 */
-> -		if (offset > i_size_read(inode)) {
-> -			wpc->imap.br_blockcount = end_fsb - offset_fsb;
-> -			wpc->imap.br_startoff = offset_fsb;
-> -			wpc->imap.br_startblock = HOLESTARTBLOCK;
-> -			wpc->imap.br_state = XFS_EXT_NORM;
-> -			return 0;
-> -		}
-> -
->  		goto allocate_blocks;
->  	}
->  
-> -- 
-> 2.20.1
-> 
+In the middle, there are files that we can analyse fast enough to determine
+which parts of the file have been modified and send the modified parts.
+Send can happen quite later.
+If we analysed the frozen file, we wouldn't want the file to change
+before sending
+out the modified parts, hence we would want a reflink that is consistent with
+the file that we analysed.
+
+For that case, I think we need freeze+reflink, where reflink is done under
+write protection. If I am wrong from show me how.
+
+> > Bottom line: I completely agree with you that "file freeze" is sufficient
+> > for the case I presented, as long as reflink is allowed while file is frozen.
+> > IOW, break the existing compound API freeze+reflink+unfreeze to
+> > individual operations to give more control over to user.
+>
+> I don't think that's a good idea. If we allow "metadata" to be
+> unfrozen, but only freeze data, does that mean we allow modifying
+> owner, perms, attributes, etc, but then don't allow truncate. What
+> about preallocation over holes? That doesn't change data, and it's
+> only a metadata modification. What about background dedupe? That
+> sort of thing is a can of worms that I don't want to go anywhere
+> near. Either the file is frozen (i.e. effectively immutable but
+> blocks modifications rather than EPERMs) or it's a normal, writeable
+> file - madness lies within any other boundary...
+>
+
+OK. the data/metadata dichotomy may be wrong to use here,
+because it is not well defined.
+We all know that truncate and fallocate need to be serialized with
+data modifications and filesystems already do that, so however you
+call it, we all know what data changes means.
+I agree that data sometimes requires consistency with metadata.
+
+Fact is that the backup application is interested in the file content
+and metadata, but NOT the file disk layout.
+
+generic_remap_file_range_prep() does not require that source
+file is not immutable. Does XFS? I don't know if "immutable"
+has ever been defined w.r.t file layout on disk. has it?
+I recon btrfs re-balancing would not stop at migrating "immutable"
+file blocks would it?
+
+Still madness? or sparks of sanity?
+
+Thanks,
+Amir.
