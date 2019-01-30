@@ -1,46 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:51809 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725535AbfAaDlK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jan 2019 22:41:10 -0500
-Date: Thu, 31 Jan 2019 14:41:06 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH] ext4: add link file support for {GET,SET}XATTR ioctl
-Message-ID: <20190131034106.GJ4205@dastard>
-References: <1548899232-30311-1-git-send-email-wshilong1991@gmail.com>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:37580 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725768AbfA3MV0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jan 2019 07:21:26 -0500
+From: Chris Mason <clm@fb.com>
+Subject: Re: [PATCH 1/2] Revert "mm: don't reclaim inodes with many attached
+ pages"
+Date: Wed, 30 Jan 2019 12:21:07 +0000
+Message-ID: <25EAF93D-BC63-4409-AF21-F45B2DDF5D66@fb.com>
+References: <20190130041707.27750-1-david@fromorbit.com>
+ <20190130041707.27750-2-david@fromorbit.com>
+In-Reply-To: <20190130041707.27750-2-david@fromorbit.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1548899232-30311-1-git-send-email-wshilong1991@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Wang Shilong <wangshilong1991@gmail.com>
-Cc: linux-ext4@vger.kernel.org, linux-fs@vger.kernel.org, linux-xfs@vger.kernel.org, Wang Shilong <wshilong@ddn.com>, Andreas Dilger <adilger@dilger.ca>, Li Xi <lixi@ddn.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Roman Gushchin <guro@fb.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "mhocko@kernel.org" <mhocko@kernel.org>, "vdavydov.dev@gmail.com" <vdavydov.dev@gmail.com>
 
-On Thu, Jan 31, 2019 at 10:47:12AM +0900, Wang Shilong wrote:
-> From: Wang Shilong <wshilong@ddn.com>
-> 
-> Currently there is no way to change project ID of
-> symlink file itself, this is important to implement
-> Directory quota for an existed directory.
 
-This seems like something open(O_PATH|O_NOFOLLOW) should allow.
-from open(2):
 
-	If pathname is a symbolic link and the O_NOFOLLOW flag is
-	also specified, then the call returns a file  descriptor
-	referring  to  the symbolic  link.  This  file  descriptor
-	can  be used as the dirfd argument in calls to fchownat(2),
-	fstatat(2), linkat(2), and read¿ linkat(2) with an empty
-	pathname to have the calls operate on the symbolic link.
+On 29 Jan 2019, at 23:17, Dave Chinner wrote:
 
-Changing the project id is the equivalent of fchownat().....
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> This reverts commit a76cf1a474d7dbcd9336b5f5afb0162baa142cf0.
+>
+> This change causes serious changes to page cache and inode cache
+> behaviour and balance, resulting in major performance regressions
+> when combining worklaods such as large file copies and kernel
+> compiles.
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D202441
 
-Cheers,
+I'm a little confused by the latest comment in the bz:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+https://bugzilla.kernel.org/show_bug.cgi?id=3D202441#c24
+
+Are these reverts sufficient?
+
+Roman beat me to suggesting Rik's followup.  We hit a different problem=20
+in prod with small slabs, and have a lot of instrumentation on Rik's=20
+code helping.
+
+-chris
