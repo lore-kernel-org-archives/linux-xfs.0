@@ -1,111 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f44.google.com ([209.85.161.44]:39965 "EHLO
-        mail-yw1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726548AbfA3Nav (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jan 2019 08:30:51 -0500
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:47696 "EHLO
+        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728423AbfAaS5U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 13:57:20 -0500
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH 1/2] Revert "mm: don't reclaim inodes with many attached
+ pages"
+Date: Thu, 31 Jan 2019 18:57:10 +0000
+Message-ID: <20190131185704.GA8755@castle.DHCP.thefacebook.com>
+References: <20190130041707.27750-1-david@fromorbit.com>
+ <20190130041707.27750-2-david@fromorbit.com>
+ <25EAF93D-BC63-4409-AF21-F45B2DDF5D66@fb.com> <20190131013403.GI4205@dastard>
+ <20190131091011.GP18811@dhcp22.suse.cz>
+In-Reply-To: <20190131091011.GP18811@dhcp22.suse.cz>
+Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <E840709697C48B40B7F55D8803373219@namprd15.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <CAOQ4uxgqm-m1Zj073o_vSnwkTbGObJiQ-CdWV2ESd_P-29=jZw@mail.gmail.com>
- <20190128125044.GC27972@quack2.suse.cz> <20190128212642.GQ4205@dastard>
- <CAOQ4uxgUDoSc_nVrLM1An_tH_0NMVonA8npJLBbi0ibD+mwnMw@mail.gmail.com>
- <20190129001826.GV4205@dastard> <CAOQ4uxiNe8i6YZ3dQvsW_fDNoPj5HPyY5ve93wXChmqAC10B4w@mail.gmail.com>
- <20190129230129.GD4205@dastard>
-In-Reply-To: <20190129230129.GD4205@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 30 Jan 2019 15:30:39 +0200
-Message-ID: <CAOQ4uxifnvHnM-i7LnHx6a9s9msx_=X_RweRxXu9US0_NEK2Hw@mail.gmail.com>
-Subject: Re: [LSF/MM TOPIC] Lazy file reflink
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, Chris Mason <clm@fb.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "vdavydov.dev@gmail.com" <vdavydov.dev@gmail.com>
 
-On Wed, Jan 30, 2019 at 1:01 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Tue, Jan 29, 2019 at 09:18:57AM +0200, Amir Goldstein wrote:
-> > > > I think it's a good idea to add file freeze semantics to the toolbox
-> > > > of useful things that could be accomplished with reflink.
-> > >
-> > > reflink is already atomic w.r.t. other writes - in what way does a
-> > > "file freeze" have any impact on a reflink operation? that is, apart
-> > > from preventing it from being done, because reflink can modify the
-> > > source inode on XFS, too....
-> > >
-> >
-> > - create O_TMPFILE
-> > - freeze source file
-> > - read and calculate hash from source file
-> > - likely unfreeze and skip reflink+backup
->
-> IF you can read the file to determine if you need to back up the
-> file while it's frozen, then why do you need to reflink it
-> before you read the file to back it up? It's the /exact same
-> read operation/ on the file.
->
-> I'm not sure what the hell you actually want now, because you've
-> contradicting yourself again by saying you want read the entire file
-> while it's frozen and blocking writes, after you just said that's
-> not acceptible and why reflink is required....
->
+On Thu, Jan 31, 2019 at 10:10:11AM +0100, Michal Hocko wrote:
+> On Thu 31-01-19 12:34:03, Dave Chinner wrote:
+> > On Wed, Jan 30, 2019 at 12:21:07PM +0000, Chris Mason wrote:
+> > >=20
+> > >=20
+> > > On 29 Jan 2019, at 23:17, Dave Chinner wrote:
+> > >=20
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > >
+> > > > This reverts commit a76cf1a474d7dbcd9336b5f5afb0162baa142cf0.
+> > > >
+> > > > This change causes serious changes to page cache and inode cache
+> > > > behaviour and balance, resulting in major performance regressions
+> > > > when combining worklaods such as large file copies and kernel
+> > > > compiles.
+> > > >
+> > > > https://bugzilla.kernel.org/show_bug.cgi?id=3D202441
+> > >=20
+> > > I'm a little confused by the latest comment in the bz:
+> > >=20
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=3D202441#c24
+> >=20
+> > Which says the first patch that changed the shrinker behaviour is
+> > the underlying cause of the regression.
+> >=20
+> > > Are these reverts sufficient?
+> >=20
+> > I think so.
+> >=20
+> > > Roman beat me to suggesting Rik's followup.  We hit a different probl=
+em=20
+> > > in prod with small slabs, and have a lot of instrumentation on Rik's=
+=20
+> > > code helping.
+> >=20
+> > I think that's just another nasty, expedient hack that doesn't solve
+> > the underlying problem. Solving the underlying problem does not
+> > require changing core reclaim algorithms and upsetting a page
+> > reclaim/shrinker balance that has been stable and worked well for
+> > just about everyone for years.
+>=20
+> I tend to agree with Dave here. Slab pressure balancing is quite subtle
+> and easy to get wrong. If we want to plug the problem with offline
+> memcgs then the fix should be targeted at that problem. So maybe we want
+> to emulate high pressure on offline memcgs only. There might be other
+> issues to resolve for small caches but let's start with something more
+> targeted first please.
 
-Mmm. I've tried to stick to a simplified description and picked one specific
-use case of large file that was not a good example.
-A colleague has corrected me that we are more concerned over the cost of
-reflinking many millions of files just to find out that they were not change
-and even just to back them up.
-Ended up being confusing. If I contradicted myself is because my description
-was often missing "sometimes".
+First, the path proposed by Dave is not regression-safe too. A slab object
+can be used by other cgroups as well, so creating an artificial pressure on
+the dying cgroup might perfectly affect the rest of the system. We do repar=
+ent
+slab lists on offlining, so there is even no easy way to iterate over them.
+Also, creating an artifical pressure will create unnecessary CPU load.
 
-Let's start over:
-For small files, that can fit in application buffers, freeze is probably enough.
-For very large files, your assertion that reflink is cheap compared to reading
-the file is correct, so there is probably no justification for lazy reflink.
+So I'd really prefer to make the "natural" memory pressure to be applied
+in a way, that doesn't leave any stalled objects behind.
 
-In the middle, there are files that we can analyse fast enough to determine
-which parts of the file have been modified and send the modified parts.
-Send can happen quite later.
-If we analysed the frozen file, we wouldn't want the file to change
-before sending
-out the modified parts, hence we would want a reflink that is consistent with
-the file that we analysed.
+Second, the code around slab pressure is not "worked well for years": as I =
+can
+see the latest major change was made about a year ago by Josef Bacik
+(9092c71bb724 "mm: use sc->priority for slab shrink targets").
 
-For that case, I think we need freeze+reflink, where reflink is done under
-write protection. If I am wrong from show me how.
+The existing balance, even if it works perfectly for some cases, isn't some=
+thing
+set in stone. We're really under-scanning small cgroups, and I strongly bel=
+ieve
+that what Rik is proposing is a right thing to do. If we don't scan objects
+in small cgroups unless we have really strong memory pressure, we're basica=
+lly
+wasting memory.
 
-> > Bottom line: I completely agree with you that "file freeze" is sufficient
-> > for the case I presented, as long as reflink is allowed while file is frozen.
-> > IOW, break the existing compound API freeze+reflink+unfreeze to
-> > individual operations to give more control over to user.
->
-> I don't think that's a good idea. If we allow "metadata" to be
-> unfrozen, but only freeze data, does that mean we allow modifying
-> owner, perms, attributes, etc, but then don't allow truncate. What
-> about preallocation over holes? That doesn't change data, and it's
-> only a metadata modification. What about background dedupe? That
-> sort of thing is a can of worms that I don't want to go anywhere
-> near. Either the file is frozen (i.e. effectively immutable but
-> blocks modifications rather than EPERMs) or it's a normal, writeable
-> file - madness lies within any other boundary...
->
+And it really makes no sense to reclaim inodes with tons of attached pageca=
+che
+as easy as "empty" inodes. At the end, all we need is to free some memory, =
+and
+treating a sub-page object equal to many thousands page object is just stra=
+nge.
+If it's simple "wrong" and I do miss something, please, explain. Maybe we n=
+eed
+something more complicated than in my patch, but saying that existing code =
+is
+just perfect and can't be touched at all makes no sense to me.
 
-OK. the data/metadata dichotomy may be wrong to use here,
-because it is not well defined.
-We all know that truncate and fallocate need to be serialized with
-data modifications and filesystems already do that, so however you
-call it, we all know what data changes means.
-I agree that data sometimes requires consistency with metadata.
+So, assuming all this, can we, please, first check if Rik's patch is addres=
+sing
+the regression?
 
-Fact is that the backup application is interested in the file content
-and metadata, but NOT the file disk layout.
-
-generic_remap_file_range_prep() does not require that source
-file is not immutable. Does XFS? I don't know if "immutable"
-has ever been defined w.r.t file layout on disk. has it?
-I recon btrfs re-balancing would not stop at migrating "immutable"
-file blocks would it?
-
-Still madness? or sparks of sanity?
-
-Thanks,
-Amir.
+Thanks!
