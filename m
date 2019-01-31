@@ -1,63 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:44888 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728644AbfAHUdW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Jan 2019 15:33:22 -0500
-Subject: [PATCH 6/7] xfs: scrub big block inode btrees correctly
+Received: from aserp2130.oracle.com ([141.146.126.79]:53702 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725867AbfAaG2w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 01:28:52 -0500
+Date: Wed, 30 Jan 2019 22:28:45 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 08 Jan 2019 12:33:12 -0800
-Message-ID: <154697959265.2494.12997637561160260241.stgit@magnolia>
-In-Reply-To: <154697955494.2494.5221420762912855354.stgit@magnolia>
-References: <154697955494.2494.5221420762912855354.stgit@magnolia>
+Subject: Re: [ANNOUNCE] xfsprogs for-next updated to 193bc42
+Message-ID: <20190131062845.GA5761@magnolia>
+References: <d5164ad2-1aed-0875-5032-64cea5be9afc@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d5164ad2-1aed-0875-5032-64cea5be9afc@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 29, 2019 at 11:05:32AM -0600, Eric Sandeen wrote:
+> Hi folks,
+> 
+> The xfsprogs repository at:
+> 
+> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> 
+> has just been updated.
+> 
+> Patches often get missed, so please check if your outstanding
+> patches were in this update. If they have not been in this update,
+> please resubmit them to linux-xfs@vger.kernel.org so they can be
+> picked up in the next update.
+> 
+> This is close to what xfsprogs-4.20 will (finally) be.  I'll review
+> Carlos' metadump patch for possible inclusion, and if anyone has other
+> outstanding patches that are better for 4.20 than 5.0, please let me know
+> either via a re-submit, or just point me at the patch subjects.
 
-Teach scrub how to handle the case that there are one or more inobt
-records covering a given inode cluster.  This fixes the operation on big
-block filesystems (e.g. 64k blocks, 512 byte inodes).
+urk.....
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/ialloc.c |   10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
++ * Returns 1 if the name contains a NUL or if a directory entry contains a '/'.
++ * Returns 0 if the name checks out.
+  */
+ int
+-namecheck(char *name, int length)
++namecheck(
++	char	*name,
++	int	length,
++	bool	isadir)
+ {
+-	char *c;
+-	int i;
++	char	*c;
++	int	i;
+ 
+ 	ASSERT(length < MAXNAMELEN);
+ 
+ 	for (c = name, i = 0; i < length; i++, c++) {
+-		if (*c == '/' || *c == '\0')
++		if (isadir && *c == '/')
++			return 0;
+
+I think that's supposed to be 'return 1', given the comment?
+
+--D
 
 
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 708f6607db71..1929d79ea6b3 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -162,6 +162,7 @@ xchk_iallocbt_check_cluster_ifree(
- 	xfs_ino_t			fsino;
- 	xfs_agino_t			agino;
- 	unsigned int			offset;
-+	unsigned int			cluster_buf_base;
- 	bool				irec_free;
- 	bool				ino_inuse;
- 	bool				freemask_ok;
-@@ -174,10 +175,17 @@ xchk_iallocbt_check_cluster_ifree(
- 	 * Given an inobt record, an offset of a cluster within the record, and
- 	 * an offset of an inode within a cluster, compute which fs inode we're
- 	 * talking about and the offset of that inode within the buffer.
-+	 *
-+	 * Be careful about inobt records that don't align with the start of
-+	 * the inode buffer when block sizes are large enough to hold multiple
-+	 * inode chunks.  When this happens, cluster_base will be zero but
-+	 * ir_startino can be large enough to make cluster_buf_base nonzero.
- 	 */
- 	agino = irec->ir_startino + cluster_base + cluster_index;
- 	fsino = XFS_AGINO_TO_INO(mp, bs->cur->bc_private.a.agno, agino);
--	offset = cluster_index * mp->m_sb.sb_inodesize;
-+	cluster_buf_base = XFS_INO_TO_OFFSET(mp, irec->ir_startino);
-+	ASSERT(cluster_buf_base == 0 || cluster_base == 0);
-+	offset = (cluster_buf_base + cluster_index) * mp->m_sb.sb_inodesize;
- 	if (offset >= BBTOB(cluster_bp->b_length)) {
- 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
- 		goto out;
+> Thanks,
+> -Eric
+> 
+> The new head of the for-next branch is commit:
+> 
+> 193bc42 xfsprogs: Remove barrier/nobarrier mount options from xfs.5
+> 
+> New Commits:
+> 
+> Achilles Gaikwad (1):
+>       [b136f48] xfs_quota: fix false error reporting of project inheritance flag is not set
+> 
+> Brian Foster (1):
+>       [051dae5] xfs_repair: initialize non-leaf finobt blocks with correct magic
+> 
+> Darrick J. Wong (2):
+>       [0ba6dae] xfs_repair: fix off by one error when rebuilding high keys
+>       [38c599e] xfs_db: fix finobt record decoding when sparse inodes enabled
+> 
+> Eric Sandeen (4):
+>       [45571fd] xfs_repair: allow '/' in attribute names
+>       [17728a4] xfsprogs: remove generated scrub files under clean target
+>       [e3f66d1] xfs_db: add -d to short help for write command
+>       [193bc42] xfsprogs: Remove barrier/nobarrier mount options from xfs.5
+> 
+> Stefan Ring (5):
+>       [11f3d9f] xfs_metadump: Extend data zapping to XFS_DIR{2,3}_LEAFN_MAGIC blocks
+>       [b04e7e9] xfs_metadump: Zap multi fsb blocks
+>       [c3387ef] xfs_metadump: Zap freeindex blocks in directory inodes
+>       [07b75e3] xfs_metadump: Zap unused space in inode btrees
+>       [b32d0eb] xfs_metadump: Zap dev inodes
+> 
+> 
+> Code Diffstat:
+> 
+>  db/metadump.c        | 132 +++++++++++++++++++++++++++++++++++++++++++++------
+>  db/type.c            |   2 +-
+>  db/write.c           |   2 +-
+>  man/man5/xfs.5       |  30 ++++++------
+>  man/man8/xfs_db.8    |   2 +-
+>  quota/project.c      |   2 +-
+>  repair/attr_repair.c |  20 +++++---
+>  repair/da_util.c     |  20 +++++---
+>  repair/da_util.h     |   3 +-
+>  repair/dir2.c        |  12 ++++-
+>  repair/phase5.c      |  12 ++---
+>  scrub/Makefile       |   2 +
+>  12 files changed, 183 insertions(+), 56 deletions(-)
+> 
