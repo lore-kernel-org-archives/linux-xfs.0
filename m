@@ -1,193 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36184 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725849AbfAaRv0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 12:51:26 -0500
-Date: Thu, 31 Jan 2019 09:51:13 -0800
+Received: from userp2120.oracle.com ([156.151.31.85]:44300 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726622AbfAaXSA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 18:18:00 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0VNEIfF047228
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:17:58 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2q8g6rkj93-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:17:58 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x0VNHwDi018023
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:17:58 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x0VNHvM4003873
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:17:57 GMT
+Subject: [PATCH 1/8] xfs: clean up iunlink functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 7/7] xfs: factor xfs_da3_blkinfo verification into
- common helper
-Message-ID: <20190131175113.GB5761@magnolia>
-References: <20190131154608.36837-1-bfoster@redhat.com>
- <20190131154608.36837-8-bfoster@redhat.com>
+Date: Thu, 31 Jan 2019 15:17:56 -0800
+Message-ID: <154897667679.26065.17995098675615600714.stgit@magnolia>
+In-Reply-To: <154897667054.26065.13164381203002725289.stgit@magnolia>
+References: <154897667054.26065.13164381203002725289.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190131154608.36837-8-bfoster@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 31, 2019 at 10:46:08AM -0500, Brian Foster wrote:
-> With the verifier magic value helper in place, we've left a bit more
-> duplicate code across the verifiers that involve struct
-> xfs_da3_blkinfo. This includes the da node, xattr leaf and dir leaf
-> verifiers, all of which perform similar checks for v4 and v5
-> filesystems.
-> 
-> Create a common helper to verify an xfs_da3_blkinfo structure,
-> taking care to only access v5 fields where appropriate, and refactor
-> the aforementioned verifiers to use the helper. No functional
-> changes.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c | 17 +++----------
->  fs/xfs/libxfs/xfs_da_btree.c  | 46 +++++++++++++++++++++++++----------
->  fs/xfs/libxfs/xfs_da_format.h |  2 ++
->  fs/xfs/libxfs/xfs_dir2_leaf.c | 18 +++-----------
->  4 files changed, 43 insertions(+), 40 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index dde3a550d7ce..0c92987f57fc 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -245,23 +245,14 @@ xfs_attr3_leaf_verify(
->  	struct xfs_attr_leaf_entry	*entries;
->  	uint32_t			end;	/* must be 32bit - see below */
->  	int				i;
-> +	xfs_failaddr_t			fa;
->  
->  	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
->  
-> -	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
-> -		return __this_address;
-> -
-> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> -		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
-> +	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
-> +	if (fa)
-> +		return fa;
->  
-> -		ASSERT(leaf->hdr.info.magic == hdr3->info.hdr.magic);
-> -		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
-> -			return __this_address;
-> -		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
-> -			return __this_address;
-> -		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
-> -			return __this_address;
-> -	}
->  	/*
->  	 * In recovery there is a transient state where count == 0 is valid
->  	 * because we may have transitioned an empty shortform attr to a leaf
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index 6b8ca390eecc..622f88a1b1aa 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -116,6 +116,35 @@ xfs_da_state_free(xfs_da_state_t *state)
->  	kmem_zone_free(xfs_da_state_zone, state);
->  }
->  
-> +/*
-> + * Verify an xfs_da3_blkinfo structure. Note that the da3 fields are only
-> + * accessible on v5 filesystems. This header format is common across da node,
-> + * attr leaf and dir leaf blocks.
-> + */
-> +xfs_failaddr_t
-> +xfs_da3_blkinfo_verify(
-> +	struct xfs_buf		*bp,
-> +	struct xfs_da3_blkinfo	*hdr3)
-> +{
-> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-> +	struct xfs_da_blkinfo	*hdr = &hdr3->hdr;
-> +
-> +	if (!xfs_verify_magic(bp, hdr->magic))
-> +		return __this_address;
-> +
-> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> +		ASSERT(hdr3->hdr.magic == hdr->magic);
-> +		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_meta_uuid))
-> +			return __this_address;
-> +		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
-> +			return __this_address;
-> +		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->lsn)))
-> +			return __this_address;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static xfs_failaddr_t
->  xfs_da3_node_verify(
->  	struct xfs_buf		*bp)
-> @@ -124,25 +153,16 @@ xfs_da3_node_verify(
->  	struct xfs_da_intnode	*hdr = bp->b_addr;
->  	struct xfs_da3_icnode_hdr ichdr;
->  	const struct xfs_dir_ops *ops;
-> +	xfs_failaddr_t		fa;
->  
->  	ops = xfs_dir_get_ops(mp, NULL);
->  
->  	ops->node_hdr_from_disk(&ichdr, hdr);
->  
-> -	if (!xfs_verify_magic(bp, hdr->hdr.info.magic))
-> -		return __this_address;
-> +	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
-> +	if (fa)
-> +		return fa;
->  
-> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> -		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
-> -
-> -		ASSERT(hdr3->info.hdr.magic == hdr->hdr.info.magic);
-> -		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
-> -			return __this_address;
-> -		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
-> -			return __this_address;
-> -		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
-> -			return __this_address;
-> -	}
->  	if (ichdr.level == 0)
->  		return __this_address;
->  	if (ichdr.level > XFS_DA_NODE_MAXDEPTH)
-> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-> index 5d5bf3bffc78..bf0c53bd2e60 100644
-> --- a/fs/xfs/libxfs/xfs_da_format.h
-> +++ b/fs/xfs/libxfs/xfs_da_format.h
-> @@ -869,4 +869,6 @@ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
->  	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
->  }
->  
-> +xfs_failaddr_t xfs_da3_blkinfo_verify(struct xfs_buf *, struct xfs_da3_blkinfo*);
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Specify parameter names in the declaration, please.
+Fix some indentation issues with the iunlink functions and reorganize
+the tops of the functions to be identical.  No functional changes.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_inode.c |   77 +++++++++++++++++++++++++++-------------------------
+ 1 file changed, 40 insertions(+), 37 deletions(-)
 
-> +
->  #endif /* __XFS_DA_FORMAT_H__ */
-> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> index a99ae2cd292e..094028b7b162 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> @@ -146,21 +146,11 @@ xfs_dir3_leaf_verify(
->  {
->  	struct xfs_mount	*mp = bp->b_target->bt_mount;
->  	struct xfs_dir2_leaf	*leaf = bp->b_addr;
-> +	xfs_failaddr_t		fa;
->  
-> -	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
-> -		return __this_address;
-> -
-> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> -		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
-> -
-> -		ASSERT(leaf3->info.hdr.magic == leaf->hdr.info.magic);
-> -		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
-> -			return __this_address;
-> -		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
-> -			return __this_address;
-> -		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
-> -			return __this_address;
-> -	}
-> +	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
-> +	if (fa)
-> +		return fa;
->  
->  	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
->  }
-> -- 
-> 2.17.2
-> 
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index c8bf02be0003..d18354517320 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1892,26 +1892,32 @@ xfs_inactive(
+  */
+ STATIC int
+ xfs_iunlink(
+-	struct xfs_trans *tp,
+-	struct xfs_inode *ip)
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip)
+ {
+-	xfs_mount_t	*mp = tp->t_mountp;
+-	xfs_agi_t	*agi;
+-	xfs_dinode_t	*dip;
+-	xfs_buf_t	*agibp;
+-	xfs_buf_t	*ibp;
+-	xfs_agino_t	agino;
+-	short		bucket_index;
+-	int		offset;
+-	int		error;
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_agi		*agi;
++	struct xfs_dinode	*dip;
++	struct xfs_buf		*agibp;
++	struct xfs_buf		*ibp;
++	xfs_agnumber_t		agno;
++	xfs_agino_t		agino;
++	short			bucket_index;
++	int			offset;
++	int			error;
+ 
+ 	ASSERT(VFS_I(ip)->i_mode != 0);
++	ASSERT(xfs_verify_ino(mp, ip->i_ino));
++
++	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
++	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
++	bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
+ 
+ 	/*
+ 	 * Get the agi buffer first.  It ensures lock ordering
+ 	 * on the list.
+ 	 */
+-	error = xfs_read_agi(mp, tp, XFS_INO_TO_AGNO(mp, ip->i_ino), &agibp);
++	error = xfs_read_agi(mp, tp, agno, &agibp);
+ 	if (error)
+ 		return error;
+ 	agi = XFS_BUF_TO_AGI(agibp);
+@@ -1920,9 +1926,6 @@ xfs_iunlink(
+ 	 * Get the index into the agi hash table for the
+ 	 * list this inode will go on.
+ 	 */
+-	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+-	ASSERT(agino != 0);
+-	bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
+ 	ASSERT(agi->agi_unlinked[bucket_index]);
+ 	ASSERT(be32_to_cpu(agi->agi_unlinked[bucket_index]) != agino);
+ 
+@@ -1969,26 +1972,31 @@ xfs_iunlink(
+  */
+ STATIC int
+ xfs_iunlink_remove(
+-	xfs_trans_t	*tp,
+-	xfs_inode_t	*ip)
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip)
+ {
+-	xfs_ino_t	next_ino;
+-	xfs_mount_t	*mp;
+-	xfs_agi_t	*agi;
+-	xfs_dinode_t	*dip;
+-	xfs_buf_t	*agibp;
+-	xfs_buf_t	*ibp;
+-	xfs_agnumber_t	agno;
+-	xfs_agino_t	agino;
+-	xfs_agino_t	next_agino;
+-	xfs_buf_t	*last_ibp;
+-	xfs_dinode_t	*last_dip = NULL;
+-	short		bucket_index;
+-	int		offset, last_offset = 0;
+-	int		error;
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_agi		*agi;
++	struct xfs_dinode	*dip;
++	struct xfs_buf		*agibp;
++	struct xfs_buf		*ibp;
++	struct xfs_buf		*last_ibp;
++	struct xfs_dinode	*last_dip = NULL;
++	xfs_ino_t		next_ino;
++	xfs_agnumber_t		agno;
++	xfs_agino_t		agino;
++	xfs_agino_t		next_agino;
++	short			bucket_index;
++	int			offset;
++	int			last_offset = 0;
++	int			error;
++
++	if (!xfs_verify_ino(mp, ip->i_ino))
++		return -EFSCORRUPTED;
+ 
+-	mp = tp->t_mountp;
+ 	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
++	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
++	bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
+ 
+ 	/*
+ 	 * Get the agi buffer first.  It ensures lock ordering
+@@ -1997,17 +2005,12 @@ xfs_iunlink_remove(
+ 	error = xfs_read_agi(mp, tp, agno, &agibp);
+ 	if (error)
+ 		return error;
+-
+ 	agi = XFS_BUF_TO_AGI(agibp);
+ 
+ 	/*
+ 	 * Get the index into the agi hash table for the
+ 	 * list this inode will go on.
+ 	 */
+-	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+-	if (!xfs_verify_agino(mp, agno, agino))
+-		return -EFSCORRUPTED;
+-	bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
+ 	if (!xfs_verify_agino(mp, agno,
+ 			be32_to_cpu(agi->agi_unlinked[bucket_index]))) {
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
