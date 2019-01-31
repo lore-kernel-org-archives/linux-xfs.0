@@ -1,163 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:45946 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725796AbfAaO4T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 09:56:19 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id A61F3312D5
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 14:56:18 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202349] Extreme desktop freezes during sustained write
- operations with XFS
-Date: Thu, 31 Jan 2019 14:56:16 +0000
-Message-ID: <bug-202349-201763-n6IPRYZHBi@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202349-201763@https.bugzilla.kernel.org/>
-References: <bug-202349-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:49800 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731284AbfAaPqN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Jan 2019 10:46:13 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 75F3B81DE1
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:12 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1E62060152
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:12 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 7/7] xfs: factor xfs_da3_blkinfo verification into common helper
+Date: Thu, 31 Jan 2019 10:46:08 -0500
+Message-Id: <20190131154608.36837-8-bfoster@redhat.com>
+In-Reply-To: <20190131154608.36837-1-bfoster@redhat.com>
+References: <20190131154608.36837-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202349
+With the verifier magic value helper in place, we've left a bit more
+duplicate code across the verifiers that involve struct
+xfs_da3_blkinfo. This includes the da node, xattr leaf and dir leaf
+verifiers, all of which perform similar checks for v4 and v5
+filesystems.
 
---- Comment #12 from nfxjfg@googlemail.com ---
-So I tried on the following kernel versions: 4.19.19 4.19.16 4.19.0 4.18.20
-4.16.14
-It happened on all of them.
+Create a common helper to verify an xfs_da3_blkinfo structure,
+taking care to only access v5 fields where appropriate, and refactor
+the aforementioned verifiers to use the helper. No functional
+changes.
 
-Reproduction is a bit spotty. The script I first posted doesn't work reliably
-anymore. I guess it depends on the kind and amount of memory pressure.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_attr_leaf.c | 17 +++----------
+ fs/xfs/libxfs/xfs_da_btree.c  | 46 +++++++++++++++++++++++++----------
+ fs/xfs/libxfs/xfs_da_format.h |  2 ++
+ fs/xfs/libxfs/xfs_dir2_leaf.c | 18 +++-----------
+ 4 files changed, 43 insertions(+), 40 deletions(-)
 
-Despite hard reproduction, it's not an obscure issue. I've also hit it when
-compiling the kernel on a XFS filesystem on a hard disk.
-
-My reproduction steps are now as following (and yes they're absurd):
-
-- run memtester 12G (make sure "free memory" as shown in top goes to very low
-while running the test)
-- start video playback (I used mpv with some random 720p video)
-- run test.sh (maybe until 100k files)
-- run sync
-- run rm -rf /mnt/tmp1/tests/
-- switch to another virtual desktop with lots of firefox windows (yeah...), and
-switch back
-- video playback gets noticeably interrupted for a moment
-
-This happened even on 4.16.14.
-
-dmesg except when I "caught" it again on 4.19.19 (there's nothing new I guess):
-
-[  250.656494] sysrq: SysRq : Show Blocked State
-[  250.656505]   task                        PC stack   pid father
-[  250.656581] kswapd0         D    0    91      2 0x80000000
-[  250.656585] Call Trace:
-[  250.656600]  ? __schedule+0x23d/0x830
-[  250.656604]  schedule+0x28/0x80
-[  250.656608]  schedule_timeout+0x23e/0x360
-[  250.656612]  wait_for_completion+0xeb/0x150
-[  250.656617]  ? wake_up_q+0x70/0x70
-[  250.656623]  ? __xfs_buf_submit+0x112/0x230
-[  250.656625]  ? xfs_bwrite+0x25/0x60
-[  250.656628]  xfs_buf_iowait+0x22/0xc0
-[  250.656631]  __xfs_buf_submit+0x112/0x230
-[  250.656633]  xfs_bwrite+0x25/0x60
-[  250.656637]  xfs_reclaim_inode+0x2e5/0x310
-[  250.656640]  xfs_reclaim_inodes_ag+0x19e/0x2d0
-[  250.656645]  xfs_reclaim_inodes_nr+0x31/0x40
-[  250.656650]  super_cache_scan+0x14c/0x1a0
-[  250.656656]  do_shrink_slab+0x129/0x270
-[  250.656660]  shrink_slab+0x201/0x280
-[  250.656663]  shrink_node+0xd6/0x420
-[  250.656666]  kswapd+0x3d3/0x6c0
-[  250.656670]  ? mem_cgroup_shrink_node+0x140/0x140
-[  250.656674]  kthread+0x110/0x130
-[  250.656677]  ? kthread_create_worker_on_cpu+0x40/0x40
-[  250.656680]  ret_from_fork+0x24/0x30
-[  250.656785] Xorg            D    0   850    836 0x00400004
-[  250.656789] Call Trace:
-[  250.656792]  ? __schedule+0x23d/0x830
-[  250.656795]  schedule+0x28/0x80
-[  250.656798]  schedule_preempt_disabled+0xa/0x10
-[  250.656801]  __mutex_lock.isra.5+0x28b/0x460
-[  250.656806]  ? xfs_perag_get_tag+0x2d/0xc0
-[  250.656808]  xfs_reclaim_inodes_ag+0x286/0x2d0
-[  250.656811]  ? isolate_lru_pages.isra.55+0x34f/0x400
-[  250.656817]  ? list_lru_add+0xb2/0x190
-[  250.656819]  ? list_lru_isolate_move+0x40/0x60
-[  250.656824]  ? iput+0x1f0/0x1f0
-[  250.656827]  xfs_reclaim_inodes_nr+0x31/0x40
-[  250.656829]  super_cache_scan+0x14c/0x1a0
-[  250.656832]  do_shrink_slab+0x129/0x270
-[  250.656836]  shrink_slab+0x144/0x280
-[  250.656838]  shrink_node+0xd6/0x420
-[  250.656841]  do_try_to_free_pages+0xb6/0x350
-[  250.656844]  try_to_free_pages+0xce/0x180
-[  250.656856]  __alloc_pages_slowpath+0x347/0xc70
-[  250.656863]  __alloc_pages_nodemask+0x25c/0x280
-[  250.656875]  ttm_pool_populate+0x25e/0x480 [ttm]
-[  250.656880]  ? kmalloc_large_node+0x37/0x60
-[  250.656883]  ? __kmalloc_node+0x204/0x2a0
-[  250.656891]  ttm_populate_and_map_pages+0x24/0x250 [ttm]
-[  250.656899]  ttm_tt_populate.part.9+0x1b/0x60 [ttm]
-[  250.656907]  ttm_tt_bind+0x42/0x60 [ttm]
-[  250.656915]  ttm_bo_handle_move_mem+0x258/0x4e0 [ttm]
-[  250.656995]  ? amdgpu_bo_subtract_pin_size+0x50/0x50 [amdgpu]
-[  250.657003]  ttm_bo_validate+0xe7/0x110 [ttm]
-[  250.657079]  ? amdgpu_bo_subtract_pin_size+0x50/0x50 [amdgpu]
-[  250.657105]  ? drm_vma_offset_add+0x46/0x50 [drm]
-[  250.657113]  ttm_bo_init_reserved+0x342/0x380 [ttm]
-[  250.657189]  amdgpu_bo_do_create+0x19c/0x400 [amdgpu]
-[  250.657266]  ? amdgpu_bo_subtract_pin_size+0x50/0x50 [amdgpu]
-[  250.657269]  ? try_to_wake_up+0x44/0x450
-[  250.657343]  amdgpu_bo_create+0x30/0x200 [amdgpu]
-[  250.657349]  ? cpumask_next_wrap+0x2c/0x70
-[  250.657352]  ? sched_clock_cpu+0xc/0xb0
-[  250.657355]  ? select_idle_sibling+0x293/0x3a0
-[  250.657431]  amdgpu_gem_object_create+0x8b/0x110 [amdgpu]
-[  250.657509]  amdgpu_gem_create_ioctl+0x1d0/0x290 [amdgpu]
-[  250.657516]  ? tracing_record_taskinfo_skip+0x40/0x50
-[  250.657518]  ? tracing_record_taskinfo+0xe/0xa0
-[  250.657594]  ? amdgpu_gem_object_close+0x1c0/0x1c0 [amdgpu]
-[  250.657614]  drm_ioctl_kernel+0x7f/0xd0 [drm]
-[  250.657619]  ? sock_sendmsg+0x30/0x40
-[  250.657639]  drm_ioctl+0x1e4/0x380 [drm]
-[  250.657715]  ? amdgpu_gem_object_close+0x1c0/0x1c0 [amdgpu]
-[  250.657720]  ? do_futex+0x2a1/0xa30
-[  250.657802]  amdgpu_drm_ioctl+0x49/0x80 [amdgpu]
-[  250.657828]  do_vfs_ioctl+0x8d/0x5d0
-[  250.657832]  ? __x64_sys_futex+0x133/0x15b
-[  250.657835]  ksys_ioctl+0x60/0x90
-[  250.657838]  __x64_sys_ioctl+0x16/0x20
-[  250.657842]  do_syscall_64+0x4a/0xd0
-[  250.657845]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-[  250.657849] RIP: 0033:0x7f12b52dc747
-[  250.657855] Code: Bad RIP value.
-[  250.657856] RSP: 002b:00007ffceccab168 EFLAGS: 00003246 ORIG_RAX:
-0000000000000010
-[  250.657860] RAX: ffffffffffffffda RBX: 00007ffceccab250 RCX:
-00007f12b52dc747
-[  250.657861] RDX: 00007ffceccab1c0 RSI: 00000000c0206440 RDI:
-000000000000000e
-[  250.657863] RBP: 00007ffceccab1c0 R08: 0000559b8f644890 R09:
-00007f12b53a7cb0
-[  250.657864] R10: 0000559b8e72a010 R11: 0000000000003246 R12:
-00000000c0206440
-[  250.657865] R13: 000000000000000e R14: 0000559b8e7bf500 R15:
-0000559b8f644890
-
-
-Also I noticed some more bad behavior. When I copied hundreds of gigabytes from
-a SSD block device to a XFS file system on a HDD, I got _severe_ problems with
-tasks hanging. They got stuck in something like io_scheduler (I don't think I
-have the log anymore; could probably reproduce if needed). This was also a
-"desktop randomly freezes on heavy background I/O". Although the freezes were
-worse (waiting for up to a minute for small I/O to finish!), it's overall not
-as bad as the one this bug is about, because most hangs seemed to be about
-accesses to the same filesystem.
-
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index dde3a550d7ce..0c92987f57fc 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -245,23 +245,14 @@ xfs_attr3_leaf_verify(
+ 	struct xfs_attr_leaf_entry	*entries;
+ 	uint32_t			end;	/* must be 32bit - see below */
+ 	int				i;
++	xfs_failaddr_t			fa;
+ 
+ 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
+ 
+-	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
+-		return __this_address;
+-
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+-		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
++	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
++	if (fa)
++		return fa;
+ 
+-		ASSERT(leaf->hdr.info.magic == hdr3->info.hdr.magic);
+-		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
+-			return __this_address;
+-		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
+-			return __this_address;
+-		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
+-			return __this_address;
+-	}
+ 	/*
+ 	 * In recovery there is a transient state where count == 0 is valid
+ 	 * because we may have transitioned an empty shortform attr to a leaf
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 6b8ca390eecc..622f88a1b1aa 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -116,6 +116,35 @@ xfs_da_state_free(xfs_da_state_t *state)
+ 	kmem_zone_free(xfs_da_state_zone, state);
+ }
+ 
++/*
++ * Verify an xfs_da3_blkinfo structure. Note that the da3 fields are only
++ * accessible on v5 filesystems. This header format is common across da node,
++ * attr leaf and dir leaf blocks.
++ */
++xfs_failaddr_t
++xfs_da3_blkinfo_verify(
++	struct xfs_buf		*bp,
++	struct xfs_da3_blkinfo	*hdr3)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_da_blkinfo	*hdr = &hdr3->hdr;
++
++	if (!xfs_verify_magic(bp, hdr->magic))
++		return __this_address;
++
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		ASSERT(hdr3->hdr.magic == hdr->magic);
++		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_meta_uuid))
++			return __this_address;
++		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
++			return __this_address;
++		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->lsn)))
++			return __this_address;
++	}
++
++	return 0;
++}
++
+ static xfs_failaddr_t
+ xfs_da3_node_verify(
+ 	struct xfs_buf		*bp)
+@@ -124,25 +153,16 @@ xfs_da3_node_verify(
+ 	struct xfs_da_intnode	*hdr = bp->b_addr;
+ 	struct xfs_da3_icnode_hdr ichdr;
+ 	const struct xfs_dir_ops *ops;
++	xfs_failaddr_t		fa;
+ 
+ 	ops = xfs_dir_get_ops(mp, NULL);
+ 
+ 	ops->node_hdr_from_disk(&ichdr, hdr);
+ 
+-	if (!xfs_verify_magic(bp, hdr->hdr.info.magic))
+-		return __this_address;
++	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
++	if (fa)
++		return fa;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+-		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
+-
+-		ASSERT(hdr3->info.hdr.magic == hdr->hdr.info.magic);
+-		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
+-			return __this_address;
+-		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
+-			return __this_address;
+-		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
+-			return __this_address;
+-	}
+ 	if (ichdr.level == 0)
+ 		return __this_address;
+ 	if (ichdr.level > XFS_DA_NODE_MAXDEPTH)
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index 5d5bf3bffc78..bf0c53bd2e60 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -869,4 +869,6 @@ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
+ 	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
+ }
+ 
++xfs_failaddr_t xfs_da3_blkinfo_verify(struct xfs_buf *, struct xfs_da3_blkinfo*);
++
+ #endif /* __XFS_DA_FORMAT_H__ */
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index a99ae2cd292e..094028b7b162 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -146,21 +146,11 @@ xfs_dir3_leaf_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_dir2_leaf	*leaf = bp->b_addr;
++	xfs_failaddr_t		fa;
+ 
+-	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
+-		return __this_address;
+-
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+-		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
+-
+-		ASSERT(leaf3->info.hdr.magic == leaf->hdr.info.magic);
+-		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
+-			return __this_address;
+-		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
+-			return __this_address;
+-		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
+-			return __this_address;
+-	}
++	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
++	if (fa)
++		return fa;
+ 
+ 	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
+ }
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.17.2
