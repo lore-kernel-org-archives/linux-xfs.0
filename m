@@ -1,81 +1,108 @@
 Return-Path: linux-xfs-owner@vger.kernel.org
-Received: from mail.kernel.org ([198.145.29.99]:43310 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:43338 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727048AbfAaSJd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1726164AbfAaSJd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 31 Jan 2019 13:09:33 -0500
 From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 05/10] xfs: fix shared extent data corruption due to missing cow reservation
-Date: Thu, 31 Jan 2019 10:09:14 -0800
-Message-Id: <20190131180919.2500-6-mcgrof@kernel.org>
+Subject: [PATCH 04/10] xfs: fix overflow in xfs_attr3_leaf_verify
+Date: Thu, 31 Jan 2019 10:09:13 -0800
+Message-Id: <20190131180919.2500-5-mcgrof@kernel.org>
 In-Reply-To: <20190131180919.2500-1-mcgrof@kernel.org>
 References: <20190131180919.2500-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 To: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com
-Cc: amir73il@gmail.com, hch@infradead.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Luis Chamberlain <mcgrof@kernel.org>
+Cc: amir73il@gmail.com, hch@infradead.org, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Luis Chamberlain <mcgrof@kernel.org>
 
-From: Brian Foster <bfoster@redhat.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Page writeback indirectly handles shared extents via the existence
-of overlapping COW fork blocks. If COW fork blocks exist, writeback
-always performs the associated copy-on-write regardless if the
-underlying blocks are actually shared. If the blocks are shared,
-then overlapping COW fork blocks must always exist.
+generic/070 on 64k block size filesystems is failing with a verifier
+corruption on writeback or an attribute leaf block:
 
-fstests shared/010 reproduces a case where a buffered write occurs
-over a shared block without performing the requisite COW fork
-reservation.  This ultimately causes writeback to the shared extent
-and data corruption that is detected across md5 checks of the
-filesystem across a mount cycle.
+[   94.973083] XFS (pmem0): Metadata corruption detected at xfs_attr3_leaf_verify+0x246/0x260, xfs_attr3_leaf block 0x811480
+[   94.975623] XFS (pmem0): Unmount and run xfs_repair
+[   94.976720] XFS (pmem0): First 128 bytes of corrupted metadata buffer:
+[   94.978270] 000000004b2e7b45: 00 00 00 00 00 00 00 00 3b ee 00 00 00 00 00 00  ........;.......
+[   94.980268] 000000006b1db90b: 00 00 00 00 00 81 14 80 00 00 00 00 00 00 00 00  ................
+[   94.982251] 00000000433f2407: 22 7b 5c 82 2d 5c 47 4c bb 31 1c 37 fa a9 ce d6  "{\.-\GL.1.7....
+[   94.984157] 0000000010dc7dfb: 00 00 00 00 00 81 04 8a 00 0a 18 e8 dd 94 01 00  ................
+[   94.986215] 00000000d5a19229: 00 a0 dc f4 fe 98 01 68 f0 d8 07 e0 00 00 00 00  .......h........
+[   94.988171] 00000000521df36c: 0c 2d 32 e2 fe 20 01 00 0c 2d 58 65 fe 0c 01 00  .-2.. ...-Xe....
+[   94.990162] 000000008477ae06: 0c 2d 5b 66 fe 8c 01 00 0c 2d 71 35 fe 7c 01 00  .-[f.....-q5.|..
+[   94.992139] 00000000a4a6bca6: 0c 2d 72 37 fc d4 01 00 0c 2d d8 b8 f0 90 01 00  .-r7.....-......
+[   94.994789] XFS (pmem0): xfs_do_force_shutdown(0x8) called from line 1453 of file fs/xfs/xfs_buf.c. Return address = ffffffff815365f3
 
-The problem occurs when a buffered write lands over a shared extent
-that crosses an extent size hint boundary and that also happens to
-have a partial COW reservation that doesn't cover the start and end
-blocks of the data fork extent.
+This is failing this check:
 
-For example, a buffered write occurs across the file offset (in FSB
-units) range of [29, 57]. A shared extent exists at blocks [29, 35]
-and COW reservation already exists at blocks [32, 34]. After
-accommodating a COW extent size hint of 32 blocks and the existing
-reservation at offset 32, xfs_reflink_reserve_cow() allocates 32
-blocks of reservation at offset 0 and returns with COW reservation
-across the range of [0, 34]. The associated data fork extent is
-still [29, 35], however, which isn't fully covered by the COW
-reservation.
+                end = ichdr.freemap[i].base + ichdr.freemap[i].size;
+                if (end < ichdr.freemap[i].base)
+>>>>>                   return __this_address;
+                if (end > mp->m_attr_geo->blksize)
+                        return __this_address;
 
-This leads to a buffered write at file offset 35 over a shared
-extent without associated COW reservation. Writeback eventually
-kicks in, performs an overwrite of the underlying shared block and
-causes the associated data corruption.
+And from the buffer output above, the freemap array is:
 
-Update xfs_reflink_reserve_cow() to accommodate the fact that a
-delalloc allocation request may not fully cover the extent in the
-data fork. Trim the data fork extent appropriately, just as is done
-for shared extent boundaries and/or existing COW reservations that
-happen to overlap the start of the data fork extent. This prevents
-shared/010 failures due to data corruption on reflink enabled
-filesystems.
+	freemap[0].base = 0x00a0
+	freemap[0].size = 0xdcf4	end = 0xdd94
+	freemap[1].base = 0xfe98
+	freemap[1].size = 0x0168	end = 0x10000
+	freemap[2].base = 0xf0d8
+	freemap[2].size = 0x07e0	end = 0xf8b8
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+These all look valid - the block size is 0x10000 and so from the
+last check in the above verifier fragment we know that the end
+of freemap[1] is valid. The problem is that end is declared as:
+
+	uint16_t	end;
+
+And (uint16_t)0x10000 = 0. So we have a verifier bug here, not a
+corruption. Fix the verifier to use uint32_t types for the check and
+hence avoid the overflow.
+
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=201577
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- fs/xfs/xfs_reflink.c | 1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/libxfs/xfs_attr_leaf.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 42ea7bab9144..7088f44c0c59 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -302,6 +302,7 @@ xfs_reflink_reserve_cow(
- 	if (error)
- 		return error;
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 6fc5425b1474..2652d00842d6 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -243,7 +243,7 @@ xfs_attr3_leaf_verify(
+ 	struct xfs_mount		*mp = bp->b_target->bt_mount;
+ 	struct xfs_attr_leafblock	*leaf = bp->b_addr;
+ 	struct xfs_attr_leaf_entry	*entries;
+-	uint16_t			end;
++	uint32_t			end;	/* must be 32bit - see below */
+ 	int				i;
  
-+	xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
- 	trace_xfs_reflink_cow_alloc(ip, &got);
- 	return 0;
- }
+ 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
+@@ -293,6 +293,11 @@ xfs_attr3_leaf_verify(
+ 	/*
+ 	 * Quickly check the freemap information.  Attribute data has to be
+ 	 * aligned to 4-byte boundaries, and likewise for the free space.
++	 *
++	 * Note that for 64k block size filesystems, the freemap entries cannot
++	 * overflow as they are only be16 fields. However, when checking end
++	 * pointer of the freemap, we have to be careful to detect overflows and
++	 * so use uint32_t for those checks.
+ 	 */
+ 	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
+ 		if (ichdr.freemap[i].base > mp->m_attr_geo->blksize)
+@@ -303,7 +308,9 @@ xfs_attr3_leaf_verify(
+ 			return __this_address;
+ 		if (ichdr.freemap[i].size & 0x3)
+ 			return __this_address;
+-		end = ichdr.freemap[i].base + ichdr.freemap[i].size;
++
++		/* be care of 16 bit overflows here */
++		end = (uint32_t)ichdr.freemap[i].base + ichdr.freemap[i].size;
+ 		if (end < ichdr.freemap[i].base)
+ 			return __this_address;
+ 		if (end > mp->m_attr_geo->blksize)
 -- 
 2.18.0
