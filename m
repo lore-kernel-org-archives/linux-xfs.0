@@ -1,188 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49800 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:32914 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731284AbfAaPqN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Jan 2019 10:46:13 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 75F3B81DE1
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:12 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1E62060152
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:12 +0000 (UTC)
+        id S1726880AbfAaT2n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Jan 2019 14:28:43 -0500
+Date: Thu, 31 Jan 2019 14:28:39 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 7/7] xfs: factor xfs_da3_blkinfo verification into common helper
-Date: Thu, 31 Jan 2019 10:46:08 -0500
-Message-Id: <20190131154608.36837-8-bfoster@redhat.com>
-In-Reply-To: <20190131154608.36837-1-bfoster@redhat.com>
-References: <20190131154608.36837-1-bfoster@redhat.com>
+Subject: Re: [PATCH 07/11] xfs: split XFS_BMAPI_DELALLOC handling from
+ xfs_bmapi_write
+Message-ID: <20190131192839.GI36239@bfoster>
+References: <20190131075524.4769-1-hch@lst.de>
+ <20190131075524.4769-8-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190131075524.4769-8-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-With the verifier magic value helper in place, we've left a bit more
-duplicate code across the verifiers that involve struct
-xfs_da3_blkinfo. This includes the da node, xattr leaf and dir leaf
-verifiers, all of which perform similar checks for v4 and v5
-filesystems.
+On Thu, Jan 31, 2019 at 08:55:20AM +0100, Christoph Hellwig wrote:
+> Delalloc conversion has traditionally been part of our function to
+> allocate blocks on disk (first xfs_bmapi, then xfs_bmapi_write), but
+> delalloc conversion is a little special as we really do not want
+> to allocate blocks over holes, for which we don't have reservations.
+> 
+> Split the delalloc conversions into a separate helper to keep the
+> code simple and structured.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 104 +++++++++++++++++++++------------------
+>  fs/xfs/libxfs/xfs_bmap.h |   4 --
+>  2 files changed, 57 insertions(+), 51 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index d75f45d9b7d1..818cd018d510 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+...
+> @@ -4487,21 +4452,66 @@ xfs_bmapi_convert_delalloc(
+>  	xfs_fileoff_t		offset_fsb,
+>  	struct xfs_bmbt_irec	*imap)
+>  {
+> -	int			flags = XFS_BMAPI_DELALLOC, nimaps = 1, error;
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> +	struct xfs_bmalloca	bma = { NULL };
+> +	int			error;
+>  
+...
+> +
+> +	bma.tp = tp;
+> +	bma.ip = ip;
+> +	bma.wasdel = true;
+> +	bma.offset = bma.got.br_startoff;
+> +	bma.length = bma.got.br_blockcount;
 
-Create a common helper to verify an xfs_da3_blkinfo structure,
-taking care to only access v5 fields where appropriate, and refactor
-the aforementioned verifiers to use the helper. No functional
-changes.
+Do we need a MAXEXTLEN cap here? Otherwise the rest looks sane to me.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_attr_leaf.c | 17 +++----------
- fs/xfs/libxfs/xfs_da_btree.c  | 46 +++++++++++++++++++++++++----------
- fs/xfs/libxfs/xfs_da_format.h |  2 ++
- fs/xfs/libxfs/xfs_dir2_leaf.c | 18 +++-----------
- 4 files changed, 43 insertions(+), 40 deletions(-)
+Brian
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index dde3a550d7ce..0c92987f57fc 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -245,23 +245,14 @@ xfs_attr3_leaf_verify(
- 	struct xfs_attr_leaf_entry	*entries;
- 	uint32_t			end;	/* must be 32bit - see below */
- 	int				i;
-+	xfs_failaddr_t			fa;
- 
- 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
- 
--	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
--		return __this_address;
--
--	if (xfs_sb_version_hascrc(&mp->m_sb)) {
--		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
-+	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
-+	if (fa)
-+		return fa;
- 
--		ASSERT(leaf->hdr.info.magic == hdr3->info.hdr.magic);
--		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
--			return __this_address;
--		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
--			return __this_address;
--		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
--			return __this_address;
--	}
- 	/*
- 	 * In recovery there is a transient state where count == 0 is valid
- 	 * because we may have transitioned an empty shortform attr to a leaf
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 6b8ca390eecc..622f88a1b1aa 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -116,6 +116,35 @@ xfs_da_state_free(xfs_da_state_t *state)
- 	kmem_zone_free(xfs_da_state_zone, state);
- }
- 
-+/*
-+ * Verify an xfs_da3_blkinfo structure. Note that the da3 fields are only
-+ * accessible on v5 filesystems. This header format is common across da node,
-+ * attr leaf and dir leaf blocks.
-+ */
-+xfs_failaddr_t
-+xfs_da3_blkinfo_verify(
-+	struct xfs_buf		*bp,
-+	struct xfs_da3_blkinfo	*hdr3)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_da_blkinfo	*hdr = &hdr3->hdr;
-+
-+	if (!xfs_verify_magic(bp, hdr->magic))
-+		return __this_address;
-+
-+	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+		ASSERT(hdr3->hdr.magic == hdr->magic);
-+		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_meta_uuid))
-+			return __this_address;
-+		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
-+			return __this_address;
-+		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->lsn)))
-+			return __this_address;
-+	}
-+
-+	return 0;
-+}
-+
- static xfs_failaddr_t
- xfs_da3_node_verify(
- 	struct xfs_buf		*bp)
-@@ -124,25 +153,16 @@ xfs_da3_node_verify(
- 	struct xfs_da_intnode	*hdr = bp->b_addr;
- 	struct xfs_da3_icnode_hdr ichdr;
- 	const struct xfs_dir_ops *ops;
-+	xfs_failaddr_t		fa;
- 
- 	ops = xfs_dir_get_ops(mp, NULL);
- 
- 	ops->node_hdr_from_disk(&ichdr, hdr);
- 
--	if (!xfs_verify_magic(bp, hdr->hdr.info.magic))
--		return __this_address;
-+	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
-+	if (fa)
-+		return fa;
- 
--	if (xfs_sb_version_hascrc(&mp->m_sb)) {
--		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
--
--		ASSERT(hdr3->info.hdr.magic == hdr->hdr.info.magic);
--		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
--			return __this_address;
--		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
--			return __this_address;
--		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
--			return __this_address;
--	}
- 	if (ichdr.level == 0)
- 		return __this_address;
- 	if (ichdr.level > XFS_DA_NODE_MAXDEPTH)
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 5d5bf3bffc78..bf0c53bd2e60 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -869,4 +869,6 @@ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
- 	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
- }
- 
-+xfs_failaddr_t xfs_da3_blkinfo_verify(struct xfs_buf *, struct xfs_da3_blkinfo*);
-+
- #endif /* __XFS_DA_FORMAT_H__ */
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index a99ae2cd292e..094028b7b162 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -146,21 +146,11 @@ xfs_dir3_leaf_verify(
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 	struct xfs_dir2_leaf	*leaf = bp->b_addr;
-+	xfs_failaddr_t		fa;
- 
--	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
--		return __this_address;
--
--	if (xfs_sb_version_hascrc(&mp->m_sb)) {
--		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
--
--		ASSERT(leaf3->info.hdr.magic == leaf->hdr.info.magic);
--		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
--			return __this_address;
--		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
--			return __this_address;
--		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
--			return __this_address;
--	}
-+	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
-+	if (fa)
-+		return fa;
- 
- 	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
- }
--- 
-2.17.2
+> +	bma.total = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
+> +	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
+> +	if (whichfork == XFS_COW_FORK)
+> +		bma.flags = XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC;
+> +
+> +	if (!xfs_iext_peek_prev_extent(ifp, &bma.icur, &bma.prev))
+> +		bma.prev.br_startoff = NULLFILEOFF;
+> +
+> +	error = xfs_bmapi_allocate(&bma);
+> +	if (error)
+> +		goto out_finish;
+> +	if (WARN_ON_ONCE(bma.blkno == NULLFSBLOCK)) {
+> +		error = -ENOSPC;
+> +		goto out_finish;
+> +	}
+> +
+> +	ASSERT(!isnullstartblock(bma.got.br_startblock));
+> +	ASSERT(bma.got.br_startblock || XFS_IS_REALTIME_INODE(ip));
+> +	*imap = bma.got;
+> +
+> +	if (whichfork == XFS_COW_FORK) {
+> +		error = xfs_refcount_alloc_cow_extent(tp, bma.blkno,
+> +				bma.length);
+> +		if (error)
+> +			goto out_finish;
+> +	}
+> +
+> +	error = xfs_bmap_btree_to_extents(tp, ip, bma.cur, &bma.logflags,
+> +			whichfork);
+> +out_finish:
+> +	xfs_bmapi_finish(&bma, whichfork, error);
+>  	return error;
+>  }
+>  
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index c385987251cd..5bdfa8001f07 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -95,9 +95,6 @@ struct xfs_extent_free_item
+>  /* Map something in the CoW fork. */
+>  #define XFS_BMAPI_COWFORK	0x200
+>  
+> -/* Only convert delalloc space, don't allocate entirely new extents */
+> -#define XFS_BMAPI_DELALLOC	0x400
+> -
+>  /* Only convert unwritten extents, don't allocate new blocks */
+>  #define XFS_BMAPI_CONVERT_ONLY	0x800
+>  
+> @@ -117,7 +114,6 @@ struct xfs_extent_free_item
+>  	{ XFS_BMAPI_ZERO,	"ZERO" }, \
+>  	{ XFS_BMAPI_REMAP,	"REMAP" }, \
+>  	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
+> -	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }, \
+>  	{ XFS_BMAPI_CONVERT_ONLY, "CONVERT_ONLY" }, \
+>  	{ XFS_BMAPI_NODISCARD,	"NODISCARD" }, \
+>  	{ XFS_BMAPI_NORMAP,	"NORMAP" }
+> -- 
+> 2.20.1
+> 
