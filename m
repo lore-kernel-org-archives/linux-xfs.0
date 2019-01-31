@@ -1,100 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44261 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36168 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731284AbfAaPqJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Jan 2019 10:46:09 -0500
+        id S1733301AbfAaPqK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Jan 2019 10:46:10 -0500
 Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 7525DC002964
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:09 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4A356C079C2B
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:10 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 251D2600C2
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0281B60152
         for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:09 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 0/7] xfs: fix [f]inobt magic value verification
-Date: Thu, 31 Jan 2019 10:46:01 -0500
-Message-Id: <20190131154608.36837-1-bfoster@redhat.com>
+Subject: [PATCH v2 2/7] xfs: always check magic values in on-disk byte order
+Date: Thu, 31 Jan 2019 10:46:03 -0500
+Message-Id: <20190131154608.36837-3-bfoster@redhat.com>
+In-Reply-To: <20190131154608.36837-1-bfoster@redhat.com>
+References: <20190131154608.36837-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Hi all,
+Most verifiers that check on-disk magic values convert the CPU
+endian magic value constant to disk endian to facilitate compile
+time optimization of the byte swap and reduce the need for runtime
+byte swaps in buffer verifiers. Several buffer verifiers do not
+follow this pattern. Update those verifiers for consistency.
 
-Here's v2 of the verifier magic value cleanup. This is generally the
-same idea as the previous version. The primary difference is that v2
-first converts verifiers that use cpu order magic comparisons to use
-on-disk (big endian) order and then stores/compares the verifier magic
-values in on-disk order. The purpose of this change is to reduce the
-number of byte swaps required at runtime for verifier magic value
-checks. Further changes include some cleanups, additional refactoring
-and the inclusion of Darrick's scrub ->b_ops fix with some modifications
-from the original version.
+Also fix up a random typo in the inode readahead verifier name.
 
-This survives fstests on v4 and v5 filesystems on both little and big
-endian systems without regressions. Thoughts, reviews, flames
-appreciated.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c     | 2 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c | 4 ++--
+ fs/xfs/libxfs/xfs_da_btree.c  | 4 ++--
+ fs/xfs/libxfs/xfs_inode_buf.c | 2 +-
+ fs/xfs/libxfs/xfs_sb.c        | 3 ++-
+ 5 files changed, 8 insertions(+), 7 deletions(-)
 
-Brian
-
-v2:
-- Include djwong's ->b_ops patch w/ modifications.
-- Added patch to fix up existing cpu endian magic checks, fold in typo
-  fix.
-- Replace static inline magic verifier helper with out of line variant,
-  kill macro.
-- Store on-disk byte order magics in ->b_ops.
-- Added patch to refactor common xfs_da3_blkinfo checks.
-v1: https://marc.info/?l=linux-xfs&m=154878684317178&w=2
-- Remove endian conversion from helper.
-- Drop finobt bad magic mitigation patch.
-- Additional verifier magic fixups.
-- Add verifier name typo fixup.
-rfcv2: https://marc.info/?l=linux-xfs&m=154868884311668&w=2
-- Split off finobt verifier into separate patch, assign it
-  appropriately.
-- Created helpers for xfs_buf_ops magic value verification.
-- Added error mitigation patch for problematic finobt blocks.
-rfcv1: https://marc.info/?l=linux-xfs&m=154834528212262&w=2
-
-Brian Foster (6):
-  xfs: always check magic values in on-disk byte order
-  xfs: create a separate finobt verifier
-  xfs: distinguish between inobt and finobt magic values
-  xfs: use verifier magic field in dir2 leaf verifiers
-  xfs: miscellaneous verifier magic value fixups
-  xfs: factor xfs_da3_blkinfo verification into common helper
-
-Darrick J. Wong (1):
-  xfs: set buffer ops when repair probes for btree type
-
- fs/xfs/libxfs/xfs_ag.c             |   2 +-
- fs/xfs/libxfs/xfs_alloc.c          |  12 ++--
- fs/xfs/libxfs/xfs_attr_leaf.c      |  21 ++----
- fs/xfs/libxfs/xfs_attr_remote.c    |   8 ++-
- fs/xfs/libxfs/xfs_bmap_btree.c     |  13 ++--
- fs/xfs/libxfs/xfs_da_btree.c       |  50 ++++++++++-----
- fs/xfs/libxfs/xfs_da_format.h      |   2 +
- fs/xfs/libxfs/xfs_dir2_block.c     |  10 +--
- fs/xfs/libxfs/xfs_dir2_data.c      |  12 ++--
- fs/xfs/libxfs/xfs_dir2_leaf.c      | 100 ++++++-----------------------
- fs/xfs/libxfs/xfs_dir2_node.c      |  11 ++--
- fs/xfs/libxfs/xfs_ialloc.c         |   3 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c   |  25 +++++---
- fs/xfs/libxfs/xfs_inode_buf.c      |   2 +-
- fs/xfs/libxfs/xfs_refcount_btree.c |   3 +-
- fs/xfs/libxfs/xfs_rmap_btree.c     |   3 +-
- fs/xfs/libxfs/xfs_sb.c             |   5 +-
- fs/xfs/libxfs/xfs_shared.h         |   1 +
- fs/xfs/libxfs/xfs_symlink_remote.c |   3 +-
- fs/xfs/scrub/agheader_repair.c     |   2 +-
- fs/xfs/scrub/repair.c              |  11 +++-
- fs/xfs/xfs_buf.c                   |  41 ++++++++++--
- fs/xfs/xfs_buf.h                   |   4 +-
- fs/xfs/xfs_log_recover.c           |   6 +-
- fs/xfs/xfs_trans_buf.c             |   2 +-
- 25 files changed, 183 insertions(+), 169 deletions(-)
-
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index b715668886a4..48aab07e7138 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -570,7 +570,7 @@ xfs_agfl_verify(
+ 
+ 	if (!uuid_equal(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid))
+ 		return __this_address;
+-	if (be32_to_cpu(agfl->agfl_magicnum) != XFS_AGFL_MAGIC)
++	if (agfl->agfl_magicnum != cpu_to_be32(XFS_AGFL_MAGIC))
+ 		return __this_address;
+ 	/*
+ 	 * during growfs operations, the perag is not fully initialised,
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 2652d00842d6..e60eba7f129c 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -251,7 +251,7 @@ xfs_attr3_leaf_verify(
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
+ 
+-		if (ichdr.magic != XFS_ATTR3_LEAF_MAGIC)
++		if (hdr3->info.hdr.magic != cpu_to_be16(XFS_ATTR3_LEAF_MAGIC))
+ 			return __this_address;
+ 
+ 		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
+@@ -261,7 +261,7 @@ xfs_attr3_leaf_verify(
+ 		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
+ 			return __this_address;
+ 	} else {
+-		if (ichdr.magic != XFS_ATTR_LEAF_MAGIC)
++		if (leaf->hdr.info.magic != cpu_to_be16(XFS_ATTR_LEAF_MAGIC))
+ 			return __this_address;
+ 	}
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 376bee94b5dd..355322688c9f 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -132,7 +132,7 @@ xfs_da3_node_verify(
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
+ 
+-		if (ichdr.magic != XFS_DA3_NODE_MAGIC)
++		if (hdr3->info.hdr.magic != cpu_to_be16(XFS_DA3_NODE_MAGIC))
+ 			return __this_address;
+ 
+ 		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
+@@ -142,7 +142,7 @@ xfs_da3_node_verify(
+ 		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
+ 			return __this_address;
+ 	} else {
+-		if (ichdr.magic != XFS_DA_NODE_MAGIC)
++		if (hdr->hdr.info.magic != cpu_to_be16(XFS_DA_NODE_MAGIC))
+ 			return __this_address;
+ 	}
+ 	if (ichdr.level == 0)
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 09d9c8cfa4a0..fd2df5747a3a 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -152,7 +152,7 @@ const struct xfs_buf_ops xfs_inode_buf_ops = {
+ };
+ 
+ const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
+-	.name = "xxfs_inode_ra",
++	.name = "xfs_inode_ra",
+ 	.verify_read = xfs_inode_buf_readahead_verify,
+ 	.verify_write = xfs_inode_buf_write_verify,
+ };
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index b5a82acd7dfe..a2f52a958091 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -225,10 +225,11 @@ xfs_validate_sb_common(
+ 	struct xfs_buf		*bp,
+ 	struct xfs_sb		*sbp)
+ {
++	struct xfs_dsb		*dsb = XFS_BUF_TO_SBP(bp);
+ 	uint32_t		agcount = 0;
+ 	uint32_t		rem;
+ 
+-	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
++	if (dsb->sb_magicnum != cpu_to_be32(XFS_SB_MAGIC)) {
+ 		xfs_warn(mp, "bad magic number");
+ 		return -EWRONGFS;
+ 	}
 -- 
 2.17.2
