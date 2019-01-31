@@ -1,38 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:12640 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726846AbfA2X2f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 18:28:35 -0500
-Date: Wed, 30 Jan 2019 10:28:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Bug 202441] Possibly vfs cache related replicable xfs
- regression since 4.19.0  on sata hdd:s
-Message-ID: <20190129232832.GE4205@dastard>
-References: <bug-202441-201763@https.bugzilla.kernel.org/>
- <bug-202441-201763-x9fpm8eS4W@https.bugzilla.kernel.org/>
+Received: from mx1.redhat.com ([209.132.183.28]:47060 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726957AbfAaSKB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Jan 2019 13:10:01 -0500
+Date: Thu, 31 Jan 2019 13:09:58 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 01/11] FOLD: improve xfs_bmapi_delalloc
+Message-ID: <20190131180957.GC36239@bfoster>
+References: <20190131075524.4769-1-hch@lst.de>
+ <20190131075524.4769-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bug-202441-201763-x9fpm8eS4W@https.bugzilla.kernel.org/>
+In-Reply-To: <20190131075524.4769-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: bugzilla-daemon@bugzilla.kernel.org
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 11:03:21PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=202441
+On Thu, Jan 31, 2019 at 08:55:14AM +0100, Christoph Hellwig wrote:
+> Give it a more descriptive name, and remove a couple of parameters that
+> are better derived internally instead of burdening it on the caller.
 > 
-> --- Comment #21 from Roger (rogan6710@gmail.com) ---
-> Worked very well :) (compile took 3min 31s) 
-> I saw the same behaviour as I first noticed on rc5, sawtoothing buff/cache.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 24 ++++++++++++++++--------
+>  fs/xfs/libxfs/xfs_bmap.h |  5 +++--
+>  fs/xfs/xfs_iomap.c       | 14 ++------------
+>  3 files changed, 21 insertions(+), 22 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 3229a82de1fb..65940b79019a 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4477,21 +4477,29 @@ xfs_bmapi_write(
+>   * is not available.
+>   */
+>  int
+> -xfs_bmapi_delalloc(
+> +xfs_bmapi_convert_delalloc(
+>  	struct xfs_trans	*tp,
+>  	struct xfs_inode	*ip,
+> -	xfs_fileoff_t		bno,
+> -	int			flags,
+> -	xfs_extlen_t		total,
+> -	struct xfs_bmbt_irec	*imap,
+> -	int			*nimaps)
+> +	int			whichfork,
+> +	xfs_fileoff_t		offset_fsb,
+> +	struct xfs_bmbt_irec	*imap)
+>  {
+> +	int			flags = XFS_BMAPI_DELALLOC, nimaps = 1, error;
+> +
 
-Ok, thanks for confirming. I doubt there's going to be a fast fix
-for this, though, but we'll see how it goes.
+I'd rather see these on separate lines.
 
-Cheers,
+> +	if (whichfork == XFS_COW_FORK)
+> +		flags |= XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC;
+> +
+>  	/*
+> -	 * The reval flag means to allocate the entire extent; pass a dummy
+> +	 * The DELALLOC flag always allocates the entire extent; pass a dummy
+>  	 * length of 1.
+>  	 */
+>  	flags |= XFS_BMAPI_DELALLOC;
+> -	return xfs_bmapi_write(tp, ip, bno, 1, flags, total, imap, nimaps);
+> +	error = xfs_bmapi_write(tp, ip, offset_fsb, 1, flags,
+> +			XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK),
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Shouldn't this be whichfork?
+
+Brian
+
+> +			imap, &nimaps);
+> +	if (!error && !nimaps)
+> +		error = -EFSCORRUPTED;
+> +	return error;
+>  }
+>  
+>  int
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 4e8bd2837cb0..c385987251cd 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -227,8 +227,9 @@ int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
+>  		xfs_fileoff_t off, xfs_filblks_t len, xfs_filblks_t prealloc,
+>  		struct xfs_bmbt_irec *got, struct xfs_iext_cursor *cur,
+>  		int eof);
+> -int	xfs_bmapi_delalloc(struct xfs_trans *, struct xfs_inode *,
+> -		xfs_fileoff_t, int, xfs_extlen_t, struct xfs_bmbt_irec *, int *);
+> +int	xfs_bmapi_convert_delalloc(struct xfs_trans *tp, struct xfs_inode *ip,
+> +		int whichfork, xfs_fileoff_t offset_fsb,
+> +		struct xfs_bmbt_irec *imap);
+>  
+>  static inline void
+>  xfs_bmap_add_free(
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 066c2120f0ba..9849c3a5a435 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -689,14 +689,7 @@ xfs_iomap_write_allocate(
+>  	xfs_fileoff_t		map_start_fsb;
+>  	xfs_extlen_t		map_count_fsb;
+>  	struct xfs_trans	*tp;
+> -	int			nimaps;
+>  	int			error = 0;
+> -	int			flags = XFS_BMAPI_DELALLOC;
+> -	int			nres;
+> -
+> -	if (whichfork == XFS_COW_FORK)
+> -		flags |= XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC;
+> -	nres = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
+>  
+>  	/*
+>  	 * Make sure that the dquots are there.
+> @@ -744,11 +737,8 @@ xfs_iomap_write_allocate(
+>  		 * caller. We'll trim it down to the caller's most recently
+>  		 * validated range before we return.
+>  		 */
+> -		nimaps = 1;
+> -		error = xfs_bmapi_delalloc(tp, ip, offset_fsb, flags, nres,
+> -					   imap, &nimaps);
+> -		if (nimaps == 0)
+> -			error = -EFSCORRUPTED;
+> +		error = xfs_bmapi_convert_delalloc(tp, ip, whichfork,
+> +				offset_fsb, imap);
+>  		if (error)
+>  			goto trans_cancel;
+>  
+> -- 
+> 2.20.1
+> 
