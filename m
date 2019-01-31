@@ -1,29 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:56105 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726543AbfAaHks (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Jan 2019 02:40:48 -0500
-Date: Thu, 31 Jan 2019 08:40:47 +0100
+Received: from bombadil.infradead.org ([198.137.202.133]:56596 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725829AbfAaHz1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 02:55:27 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: move noatime and automount flags setting into common code
-Message-ID: <20190131074047.GA26171@lst.de>
-References: <20190121152326.9954-1-hch@lst.de>
+Subject: make delalloc conversion more robust and clear
+Date: Thu, 31 Jan 2019 08:55:13 +0100
+Message-Id: <20190131075524.4769-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190121152326.9954-1-hch@lst.de>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: David Howells <dhowells@redhat.com>, Mike Marshall <hubcap@omnibond.com>, Martin Brandenburg <martin@omnibond.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, devel@lists.orangefs.org
+To: linux-xfs@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>
 
-On Mon, Jan 21, 2019 at 04:23:24PM +0100, Christoph Hellwig wrote:
-> Hi Al,
-> 
-> can you take a look at this series that fixes incorrect attributes
-> reported for filesystems like XFS that don't use generic_filattr?
+Hi all,
 
-Al,
+I've rebased the series to rewrite the delalloc handling to handle the
+race where another thread moves extents from the COW to the data fork
+on top of the ' xfs: properly invalidate cached writeback mapping'
+series from Brian.
 
-can you pick this up?
+The first patch is a FOLD for that series as those changes should go
+into the original patches.
+
+To make reviewing easier I also have a git tree available here:
+
+    git://git.infradead.org/users/hch/xfs.git xfs-mapping-validation.3
+
+Gitweb:
+
+    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-mapping-validation.3
