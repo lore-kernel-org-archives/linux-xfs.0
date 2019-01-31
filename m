@@ -1,129 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51666 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:36176 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727202AbfAaNvx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Jan 2019 08:51:53 -0500
-Subject: Re: [ANNOUNCE] xfsprogs for-next updated to 193bc42
-References: <d5164ad2-1aed-0875-5032-64cea5be9afc@sandeen.net>
- <20190131062845.GA5761@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <4e2e62cf-7a53-c11d-bfdb-86be6cb95992@sandeen.net>
-Date: Thu, 31 Jan 2019 07:51:51 -0600
-MIME-Version: 1.0
-In-Reply-To: <20190131062845.GA5761@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1733301AbfAaPqM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Jan 2019 10:46:12 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 249B8C07754E
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:11 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id CEEA4600C2
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:10 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 4/7] xfs: distinguish between inobt and finobt magic values
+Date: Thu, 31 Jan 2019 10:46:05 -0500
+Message-Id: <20190131154608.36837-5-bfoster@redhat.com>
+In-Reply-To: <20190131154608.36837-1-bfoster@redhat.com>
+References: <20190131154608.36837-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
+The inode btree verifier code is shared between the inode btree and
+free inode btree because the underlying metadata formats are
+essentially equivalent. A side effect of this is that the verifier
+cannot determine whether a particular btree block should have an
+inobt or finobt magic value.
 
+This logic allows an unfortunate xfs_repair bug to escape detection
+where certain level > 0 nodes of the finobt are stamped with inobt
+magic by xfs_repair finobt reconstruction. This is fortunately not a
+severe problem since the inode btree magic values do not contribute
+to any changes in kernel behavior, but we do need a means to detect
+and prevent this problem in the future.
 
-On 1/31/19 12:28 AM, Darrick J. Wong wrote:
-> On Tue, Jan 29, 2019 at 11:05:32AM -0600, Eric Sandeen wrote:
->> Hi folks,
->>
->> The xfsprogs repository at:
->>
->> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
->>
->> has just been updated.
->>
->> Patches often get missed, so please check if your outstanding
->> patches were in this update. If they have not been in this update,
->> please resubmit them to linux-xfs@vger.kernel.org so they can be
->> picked up in the next update.
->>
->> This is close to what xfsprogs-4.20 will (finally) be.  I'll review
->> Carlos' metadump patch for possible inclusion, and if anyone has other
->> outstanding patches that are better for 4.20 than 5.0, please let me know
->> either via a re-submit, or just point me at the patch subjects.
-> 
-> urk.....
+Add a field to xfs_buf_ops to store the v4 and v5 superblock magic
+values expected by a particular verifier. Add a helper to check an
+on-disk magic value against the value expected by the verifier. Call
+the helper from the shared [f]inobt verifier code for magic value
+verification. This ensures that the inode btree blocks each have the
+appropriate magic value based on specific tree type and superblock
+version.
 
-sigh ....
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_ialloc_btree.c | 16 +++++++---------
+ fs/xfs/xfs_buf.c                 | 19 +++++++++++++++++++
+ fs/xfs/xfs_buf.h                 |  2 ++
+ 3 files changed, 28 insertions(+), 9 deletions(-)
 
-I'll send a patch to fix it.
-
-> + * Returns 1 if the name contains a NUL or if a directory entry contains a '/'.
-> + * Returns 0 if the name checks out.
->   */
->  int
-> -namecheck(char *name, int length)
-> +namecheck(
-> +	char	*name,
-> +	int	length,
-> +	bool	isadir)
->  {
-> -	char *c;
-> -	int i;
-> +	char	*c;
-> +	int	i;
->  
->  	ASSERT(length < MAXNAMELEN);
->  
->  	for (c = name, i = 0; i < length; i++, c++) {
-> -		if (*c == '/' || *c == '\0')
-> +		if (isadir && *c == '/')
-> +			return 0;
-> 
-> I think that's supposed to be 'return 1', given the comment?
-> 
-> --D
-> 
-> 
->> Thanks,
->> -Eric
->>
->> The new head of the for-next branch is commit:
->>
->> 193bc42 xfsprogs: Remove barrier/nobarrier mount options from xfs.5
->>
->> New Commits:
->>
->> Achilles Gaikwad (1):
->>       [b136f48] xfs_quota: fix false error reporting of project inheritance flag is not set
->>
->> Brian Foster (1):
->>       [051dae5] xfs_repair: initialize non-leaf finobt blocks with correct magic
->>
->> Darrick J. Wong (2):
->>       [0ba6dae] xfs_repair: fix off by one error when rebuilding high keys
->>       [38c599e] xfs_db: fix finobt record decoding when sparse inodes enabled
->>
->> Eric Sandeen (4):
->>       [45571fd] xfs_repair: allow '/' in attribute names
->>       [17728a4] xfsprogs: remove generated scrub files under clean target
->>       [e3f66d1] xfs_db: add -d to short help for write command
->>       [193bc42] xfsprogs: Remove barrier/nobarrier mount options from xfs.5
->>
->> Stefan Ring (5):
->>       [11f3d9f] xfs_metadump: Extend data zapping to XFS_DIR{2,3}_LEAFN_MAGIC blocks
->>       [b04e7e9] xfs_metadump: Zap multi fsb blocks
->>       [c3387ef] xfs_metadump: Zap freeindex blocks in directory inodes
->>       [07b75e3] xfs_metadump: Zap unused space in inode btrees
->>       [b32d0eb] xfs_metadump: Zap dev inodes
->>
->>
->> Code Diffstat:
->>
->>  db/metadump.c        | 132 +++++++++++++++++++++++++++++++++++++++++++++------
->>  db/type.c            |   2 +-
->>  db/write.c           |   2 +-
->>  man/man5/xfs.5       |  30 ++++++------
->>  man/man8/xfs_db.8    |   2 +-
->>  quota/project.c      |   2 +-
->>  repair/attr_repair.c |  20 +++++---
->>  repair/da_util.c     |  20 +++++---
->>  repair/da_util.h     |   3 +-
->>  repair/dir2.c        |  12 ++++-
->>  repair/phase5.c      |  12 ++---
->>  scrub/Makefile       |   2 +
->>  12 files changed, 183 insertions(+), 56 deletions(-)
->>
-> 
-> 
-> 
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 798269eb4767..c2df1f89eec8 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -260,6 +260,9 @@ xfs_inobt_verify(
+ 	xfs_failaddr_t		fa;
+ 	unsigned int		level;
+ 
++	if (!xfs_verify_magic(bp, block->bb_magic))
++		return __this_address;
++
+ 	/*
+ 	 * During growfs operations, we can't verify the exact owner as the
+ 	 * perag is not fully initialised and hence not attached to the buffer.
+@@ -270,18 +273,10 @@ xfs_inobt_verify(
+ 	 * but beware of the landmine (i.e. need to check pag->pagi_init) if we
+ 	 * ever do.
+ 	 */
+-	switch (block->bb_magic) {
+-	case cpu_to_be32(XFS_IBT_CRC_MAGIC):
+-	case cpu_to_be32(XFS_FIBT_CRC_MAGIC):
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		fa = xfs_btree_sblock_v5hdr_verify(bp);
+ 		if (fa)
+ 			return fa;
+-		/* fall through */
+-	case cpu_to_be32(XFS_IBT_MAGIC):
+-	case cpu_to_be32(XFS_FIBT_MAGIC):
+-		break;
+-	default:
+-		return __this_address;
+ 	}
+ 
+ 	/* level verification */
+@@ -328,6 +323,7 @@ xfs_inobt_write_verify(
+ 
+ const struct xfs_buf_ops xfs_inobt_buf_ops = {
+ 	.name = "xfs_inobt",
++	.magic = { cpu_to_be32(XFS_IBT_MAGIC), cpu_to_be32(XFS_IBT_CRC_MAGIC) },
+ 	.verify_read = xfs_inobt_read_verify,
+ 	.verify_write = xfs_inobt_write_verify,
+ 	.verify_struct = xfs_inobt_verify,
+@@ -335,6 +331,8 @@ const struct xfs_buf_ops xfs_inobt_buf_ops = {
+ 
+ const struct xfs_buf_ops xfs_finobt_buf_ops = {
+ 	.name = "xfs_finobt",
++	.magic = { cpu_to_be32(XFS_FIBT_MAGIC),
++		   cpu_to_be32(XFS_FIBT_CRC_MAGIC) },
+ 	.verify_read = xfs_inobt_read_verify,
+ 	.verify_write = xfs_inobt_write_verify,
+ 	.verify_struct = xfs_inobt_verify,
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 222b5260ed35..0481c19fe5ae 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -2204,3 +2204,22 @@ void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
+ 
+ 	atomic_set(&bp->b_lru_ref, lru_ref);
+ }
++
++/*
++ * Verify an on-disk magic value against the magic value specified in the
++ * verifier structure. The verifier magic is in disk byte order so the caller is
++ * expected to pass the value directly from disk.
++ */
++bool
++xfs_verify_magic(
++	struct xfs_buf		*bp,
++	uint32_t		dmagic)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	int			idx;
++
++	idx = xfs_sb_version_hascrc(&mp->m_sb);
++	if (unlikely(WARN_ON(!bp->b_ops || !bp->b_ops->magic[idx])))
++		return false;
++	return dmagic == bp->b_ops->magic[idx];
++}
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 1c436a85b71d..8d8fbcf54dda 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -125,6 +125,7 @@ struct xfs_buf_map {
+ 
+ struct xfs_buf_ops {
+ 	char *name;
++	uint32_t magic[2];		/* v4 and v5 on disk magic values */
+ 	void (*verify_read)(struct xfs_buf *);
+ 	void (*verify_write)(struct xfs_buf *);
+ 	xfs_failaddr_t (*verify_struct)(struct xfs_buf *bp);
+@@ -386,5 +387,6 @@ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
+ #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
+ 
+ int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
++bool xfs_verify_magic(struct xfs_buf *, uint32_t);
+ 
+ #endif	/* __XFS_BUF_H__ */
+-- 
+2.17.2
