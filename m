@@ -1,79 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f68.google.com ([209.85.167.68]:39999 "EHLO
-        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727161AbfAaUCs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 15:02:48 -0500
-Received: by mail-lf1-f68.google.com with SMTP id v5so3295886lfe.7
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 12:02:47 -0800 (PST)
-MIME-Version: 1.0
-References: <CAOQ4uxgqm-m1Zj073o_vSnwkTbGObJiQ-CdWV2ESd_P-29=jZw@mail.gmail.com>
-In-Reply-To: <CAOQ4uxgqm-m1Zj073o_vSnwkTbGObJiQ-CdWV2ESd_P-29=jZw@mail.gmail.com>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Thu, 31 Jan 2019 13:02:34 -0700
-Message-ID: <CAJCQCtRGrt-K7WUe76D1g_HhU8NCi7ZuGExstVOQujtRS2Rf_w@mail.gmail.com>
-Subject: Re: [LSF/MM TOPIC] Lazy file reflink
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:49756 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731284AbfAaPqK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Jan 2019 10:46:10 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id EBD6081DEB
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:09 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8B04A600C2
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:09 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 1/7] xfs: set buffer ops when repair probes for btree type
+Date: Thu, 31 Jan 2019 10:46:02 -0500
+Message-Id: <20190131154608.36837-2-bfoster@redhat.com>
+In-Reply-To: <20190131154608.36837-1-bfoster@redhat.com>
+References: <20190131154608.36837-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jan 25, 2019 at 7:28 AM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> Hi,
->
-> I would like to discuss the concept of lazy file reflink.
-> The use case is backup of a very large read-mostly file.
-> Backup application would like to read consistent content from the
-> file, "atomic read" sort of speak.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-If it's even a few thousand such files let alone millions, whether XFS
-or Btrfs,  you're talking about a lot of metadata writes (hence I
-sorta understand the request for lazy+volatile reflink). But this
-quickly is a metric f ton of data, it's in effect a duplicate of each
-file's metadata which includes a list of its extents. So in simple
-cases it can be unwritten, but not in every case can you be sure the
-operation fits in memory.
+In xrep_findroot_block, we work out the btree type and correctness of a
+given block by calling different btree verifiers on root block
+candidates.  However, we leave the NULL b_ops while ->verify_read
+validates the block, which means that if the verifier calls
+xfs_buf_verifier_error it'll crash on the null b_ops.  Fix it to set
+b_ops before calling the verifier and unsetting it if the verifier
+fails.
 
-example from my sysroot:
-36.87GiB data extents
-1.12GiB filesystem metadata
+Furthermore, improve the documentation around xfs_buf_ensure_ops, which
+is the function that is responsible for cleaning up the b_ops state of
+buffers that go through xrep_findroot_block but don't match anything.
 
-If I reflink copy that whole file system, it translates into 1.12GiB
-metadata read and then 1.12GiB written. If it's a Btrfs snapshot of
-the containing subvolumes, it's maybe 128KiB written per snapshot. The
-reflink copy is only cheap compared to full data copy. It's not that
-cheap compared to snapshots. It sounds to me like a lazy reflink copy
-is no longer lazy if it has to write out to disk because it can't all
-fit in memory, or ends up evicting something in memory that otherwise
-slows things down.
+[bfoster: Renamed xfs_buf_ensure_ops() and modified comment.]
 
-A Btrfs snapshot is cheaper than an LVM thinp snapshot which comes
-with a need to then mount that snapshot's filesystem in order to do
-the backup. But if the file system is big enough that there are long
-mount times, chances are you're talking about a lot of data to backup
-also, which means a alot of metadata to read and then write out unless
-you're lucky enough to have gobs of RAM.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/scrub/repair.c  | 11 ++++++++---
+ fs/xfs/xfs_buf.c       | 22 ++++++++++++++++------
+ fs/xfs/xfs_buf.h       |  2 +-
+ fs/xfs/xfs_trans_buf.c |  2 +-
+ 4 files changed, 26 insertions(+), 11 deletions(-)
 
-So *shrug* I'm not seeing a consistent optimization with lazy reflink.
-It'll be faster if we're not talking about a lot of data in the first
-place.
-
-> I have based my assumption that reflink of a large file may incur
-> lots of metadata updates on my limited knowledge of xfs reflink
-> implementation, but perhaps it is not the case for other filesystems?
-> (btrfs?) and perhaps the current metadata overhead on reflink of a large
-> file is an implementation detail that could be optimized in the future?
-
-The optimum use case is maybe a few hundred big files. Tens of
-thousands to millions - I think you start creating a lot of
-competition for memory, and the ensuing consequences. Something has to
-be evicted. Either the lazy reflink is a lower priority and it
-functionally becomes a partial or full reflink by writing out to block
-devices; or it's a higher priority and kicks something else out. No
-free lunch.
-
-
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 1c8eecfe52b8..6acf1bfa0bfe 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -768,18 +768,23 @@ xrep_findroot_block(
+ 		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
+ 				&mp->m_sb.sb_meta_uuid))
+ 			goto out;
++		/*
++		 * Read verifiers can reference b_ops, so we set the pointer
++		 * here.  If the verifier fails we'll reset the buffer state
++		 * to what it was before we touched the buffer.
++		 */
++		bp->b_ops = fab->buf_ops;
+ 		fab->buf_ops->verify_read(bp);
+ 		if (bp->b_error) {
++			bp->b_ops = NULL;
+ 			bp->b_error = 0;
+ 			goto out;
+ 		}
+ 
+ 		/*
+ 		 * Some read verifiers will (re)set b_ops, so we must be
+-		 * careful not to blow away any such assignment.
++		 * careful not to change b_ops after running the verifier.
+ 		 */
+-		if (!bp->b_ops)
+-			bp->b_ops = fab->buf_ops;
+ 	}
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index eedc5e0156ff..222b5260ed35 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -776,13 +776,23 @@ _xfs_buf_read(
+ }
+ 
+ /*
+- * If the caller passed in an ops structure and the buffer doesn't have ops
+- * assigned, set the ops and use them to verify the contents.  If the contents
+- * cannot be verified, we'll clear XBF_DONE.  We assume the buffer has no
+- * recorded errors and is already in XBF_DONE state.
++ * Reverify a buffer found in cache without an attached ->b_ops.
++ *
++ * If the caller passed an ops structure and the buffer doesn't have ops
++ * assigned, set the ops and use it to verify the contents. If verification
++ * fails, clear XBF_DONE. We assume the buffer has no recorded errors and is
++ * already in XBF_DONE state on entry.
++ *
++ * Under normal operations, every in-core buffer is verified on read I/O
++ * completion. There are two scenarios that can lead to in-core buffers without
++ * an assigned ->b_ops. The first is during log recovery of buffers on a V4
++ * filesystem, though these buffers are purged at the end of recovery. The
++ * other is online repair, which intentionally reads with a NULL buffer ops to
++ * run several verifiers across an in-core buffer in order to establish buffer
++ * type.
+  */
+ int
+-xfs_buf_ensure_ops(
++xfs_buf_reverify(
+ 	struct xfs_buf		*bp,
+ 	const struct xfs_buf_ops *ops)
+ {
+@@ -824,7 +834,7 @@ xfs_buf_read_map(
+ 		return bp;
+ 	}
+ 
+-	xfs_buf_ensure_ops(bp, ops);
++	xfs_buf_reverify(bp, ops);
+ 
+ 	if (flags & XBF_ASYNC) {
+ 		/*
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index b9f5511ea998..1c436a85b71d 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -385,6 +385,6 @@ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
+ #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
+ #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
+ 
+-int xfs_buf_ensure_ops(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
++int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
+ 
+ #endif	/* __XFS_BUF_H__ */
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 629f1479c9d2..7d65ebf1e847 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -277,7 +277,7 @@ xfs_trans_read_buf_map(
+ 		 * release this buffer when it kills the tranaction.
+ 		 */
+ 		ASSERT(bp->b_ops != NULL);
+-		error = xfs_buf_ensure_ops(bp, ops);
++		error = xfs_buf_reverify(bp, ops);
+ 		if (error) {
+ 			xfs_buf_ioerror_alert(bp, __func__);
+ 
 -- 
-Chris Murphy
+2.17.2
