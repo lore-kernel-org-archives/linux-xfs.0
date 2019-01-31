@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:56650 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:56660 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726462AbfAaHzm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 02:55:42 -0500
+        with ESMTP id S1726462AbfAaHzp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 02:55:45 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/11] xfs: simplify the xfs_bmap_btree_to_extents calling conventions
-Date: Thu, 31 Jan 2019 08:55:18 +0100
-Message-Id: <20190131075524.4769-6-hch@lst.de>
+Subject: [PATCH 06/11] xfs: factor out two helpers from xfs_bmapi_write
+Date: Thu, 31 Jan 2019 08:55:19 +0100
+Message-Id: <20190131075524.4769-7-hch@lst.de>
 In-Reply-To: <20190131075524.4769-1-hch@lst.de>
 References: <20190131075524.4769-1-hch@lst.de>
 MIME-Version: 1.0
@@ -17,157 +17,124 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Brian Foster <bfoster@redhat.com>
 
-Move boilerplate code from the callers into xfs_bmap_btree_to_extents:
-
- - exit early without failure if we don't need to convert to the
-   extent format
- - assert that we have a btree cursor
- - don't reinitialize the passed in logflags argument
+We want to be able to reuse them for the upcoming dedidcated delalloc
+convert routine.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 78 ++++++++++++++--------------------------
- 1 file changed, 26 insertions(+), 52 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 78 ++++++++++++++++++++++------------------
+ 1 file changed, 44 insertions(+), 34 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 65940b79019a..a0443158a40e 100644
+index a0443158a40e..d75f45d9b7d1 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -577,42 +577,44 @@ __xfs_bmap_add_free(
-  */
- 
- /*
-- * Transform a btree format file with only one leaf node, where the
-- * extents list will fit in the inode, into an extents format file.
-- * Since the file extents are already in-core, all we have to do is
-- * give up the space for the btree root and pitch the leaf block.
-+ * Convert the inode format to extent format if it currently is in btree format,
-+ * but the extent list is small enough that it fits into the extent format.
-+ 8
-+ * Since the extents are already in-core, all we have to do is give up the space
-+ * for the btree root and pitch the leaf block.
-  */
- STATIC int				/* error */
- xfs_bmap_btree_to_extents(
--	xfs_trans_t		*tp,	/* transaction pointer */
--	xfs_inode_t		*ip,	/* incore inode pointer */
--	xfs_btree_cur_t		*cur,	/* btree cursor */
-+	struct xfs_trans	*tp,	/* transaction pointer */
-+	struct xfs_inode	*ip,	/* incore inode pointer */
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
- 	int			*logflagsp, /* inode logging flags */
- 	int			whichfork)  /* data or attr fork */
- {
--	/* REFERENCED */
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_btree_block	*rblock = ifp->if_broot;
- 	struct xfs_btree_block	*cblock;/* child btree block */
- 	xfs_fsblock_t		cbno;	/* child block number */
- 	xfs_buf_t		*cbp;	/* child block's buffer */
- 	int			error;	/* error return value */
--	struct xfs_ifork	*ifp;	/* inode fork data */
--	xfs_mount_t		*mp;	/* mount point structure */
- 	__be64			*pp;	/* ptr to block address */
--	struct xfs_btree_block	*rblock;/* root btree block */
- 	struct xfs_owner_info	oinfo;
- 
--	mp = ip->i_mount;
--	ifp = XFS_IFORK_PTR(ip, whichfork);
-+	/* check if we actually need the extent format first: */
-+	if (!xfs_bmap_wants_extents(ip, whichfork))
-+		return 0;
-+
-+	ASSERT(cur);
- 	ASSERT(whichfork != XFS_COW_FORK);
- 	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE);
--	rblock = ifp->if_broot;
- 	ASSERT(be16_to_cpu(rblock->bb_level) == 1);
- 	ASSERT(be16_to_cpu(rblock->bb_numrecs) == 1);
- 	ASSERT(xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0) == 1);
-+
- 	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, rblock, 1, ifp->if_broot_bytes);
- 	cbno = be64_to_cpu(*pp);
--	*logflagsp = 0;
- #ifdef DEBUG
- 	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp,
- 			xfs_btree_check_lptr(cur, cbno, 1));
-@@ -635,7 +637,7 @@ xfs_bmap_btree_to_extents(
- 	ASSERT(ifp->if_broot == NULL);
- 	ASSERT((ifp->if_flags & XFS_IFBROOT) == 0);
- 	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
--	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
-+	*logflagsp |= XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
+@@ -4194,6 +4194,44 @@ xfs_bmapi_convert_unwritten(
  	return 0;
  }
  
-@@ -4424,19 +4426,10 @@ xfs_bmapi_write(
- 	}
- 	*nmap = n;
++static inline xfs_extlen_t
++xfs_bmapi_minleft(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	int			fork)
++{
++	if (tp && tp->t_firstblock != NULLFSBLOCK)
++		return 0;
++	if (XFS_IFORK_FORMAT(ip, fork) != XFS_DINODE_FMT_BTREE)
++		return 1;
++	return be16_to_cpu(XFS_IFORK_PTR(ip, fork)->if_broot->bb_level) + 1;
++}
++
++/*
++ * Log whatever the flags say, even if error.  Otherwise we might miss detecting
++ * a case where the data is changed, there's an error, and it's not logged so we
++ * don't shutdown when we should.  Don't bother logging extents/btree changes if
++ * we converted to the other format.
++ */
++static void
++xfs_bmapi_finish(
++	struct xfs_bmalloca	*bma,
++	int			whichfork,
++	int			error)
++{
++	if ((bma->logflags & xfs_ilog_fext(whichfork)) &&
++	    XFS_IFORK_FORMAT(bma->ip, whichfork) != XFS_DINODE_FMT_EXTENTS)
++		bma->logflags &= ~xfs_ilog_fext(whichfork);
++	else if ((bma->logflags & xfs_ilog_fbroot(whichfork)) &&
++		 XFS_IFORK_FORMAT(bma->ip, whichfork) != XFS_DINODE_FMT_BTREE)
++		bma->logflags &= ~xfs_ilog_fbroot(whichfork);
++
++	if (bma->logflags)
++		xfs_trans_log_inode(bma->tp, bma->ip, bma->logflags);
++	if (bma->cur)
++		xfs_btree_del_cursor(bma->cur, error);
++}
++
+ /*
+  * Map file blocks to filesystem blocks, and allocate blocks or convert the
+  * extent state if necessary.  Details behaviour is controlled by the flags
+@@ -4273,15 +4311,6 @@ xfs_bmapi_write(
  
--	/*
--	 * Transform from btree to extents, give it cur.
--	 */
--	if (xfs_bmap_wants_extents(ip, whichfork)) {
--		int		tmp_logflags = 0;
--
--		ASSERT(bma.cur);
--		error = xfs_bmap_btree_to_extents(tp, ip, bma.cur,
--			&tmp_logflags, whichfork);
--		bma.logflags |= tmp_logflags;
--		if (error)
--			goto error0;
+ 	XFS_STATS_INC(mp, xs_blk_mapw);
+ 
+-	if (!tp || tp->t_firstblock == NULLFSBLOCK) {
+-		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
+-			bma.minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
+-		else
+-			bma.minleft = 1;
+-	} else {
+-		bma.minleft = 0;
 -	}
-+	error = xfs_bmap_btree_to_extents(tp, ip, bma.cur, &bma.logflags,
-+			whichfork);
-+	if (error)
-+		goto error0;
+-
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+ 		error = xfs_iread_extents(tp, ip, whichfork);
+ 		if (error)
+@@ -4296,6 +4325,7 @@ xfs_bmapi_write(
+ 	bma.ip = ip;
+ 	bma.total = total;
+ 	bma.datatype = 0;
++	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
  
+ 	/*
+ 	 * The delalloc flag means the caller wants to allocate the entire
+@@ -4434,32 +4464,12 @@ xfs_bmapi_write(
  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE ||
  	       XFS_IFORK_NEXTENTS(ip, whichfork) >
-@@ -4572,13 +4565,7 @@ xfs_bmapi_remap(
- 	if (error)
- 		goto error0;
- 
--	if (xfs_bmap_wants_extents(ip, whichfork)) {
--		int		tmp_logflags = 0;
--
--		error = xfs_bmap_btree_to_extents(tp, ip, cur,
--			&tmp_logflags, whichfork);
--		logflags |= tmp_logflags;
--	}
-+	error = xfs_bmap_btree_to_extents(tp, ip, cur, &logflags, whichfork);
- 
- error0:
- 	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS)
-@@ -5442,24 +5429,11 @@ __xfs_bunmapi(
- 		error = xfs_bmap_extents_to_btree(tp, ip, &cur, 0,
- 				&tmp_logflags, whichfork);
- 		logflags |= tmp_logflags;
--		if (error)
--			goto error0;
--	}
--	/*
--	 * transform from btree to extents, give it cur
--	 */
--	else if (xfs_bmap_wants_extents(ip, whichfork)) {
--		ASSERT(cur != NULL);
--		error = xfs_bmap_btree_to_extents(tp, ip, cur, &tmp_logflags,
-+	} else {
-+		error = xfs_bmap_btree_to_extents(tp, ip, cur, &logflags,
- 			whichfork);
--		logflags |= tmp_logflags;
--		if (error)
--			goto error0;
- 	}
--	/*
--	 * transform from extents to local?
--	 */
+ 		XFS_IFORK_MAXEXT(ip, whichfork));
 -	error = 0;
-+
++	xfs_bmapi_finish(&bma, whichfork, 0);
++	xfs_bmap_validate_ret(orig_bno, orig_len, orig_flags, orig_mval,
++		orig_nmap, *nmap);
++	return 0;
  error0:
- 	/*
- 	 * Log everything.  Do this after conversion, there's no point in
+-	/*
+-	 * Log everything.  Do this after conversion, there's no point in
+-	 * logging the extent records if we've converted to btree format.
+-	 */
+-	if ((bma.logflags & xfs_ilog_fext(whichfork)) &&
+-	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS)
+-		bma.logflags &= ~xfs_ilog_fext(whichfork);
+-	else if ((bma.logflags & xfs_ilog_fbroot(whichfork)) &&
+-		 XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)
+-		bma.logflags &= ~xfs_ilog_fbroot(whichfork);
+-	/*
+-	 * Log whatever the flags say, even if error.  Otherwise we might miss
+-	 * detecting a case where the data is changed, there's an error,
+-	 * and it's not logged so we don't shutdown when we should.
+-	 */
+-	if (bma.logflags)
+-		xfs_trans_log_inode(tp, ip, bma.logflags);
+-
+-	if (bma.cur) {
+-		xfs_btree_del_cursor(bma.cur, error);
+-	}
+-	if (!error)
+-		xfs_bmap_validate_ret(orig_bno, orig_len, orig_flags, orig_mval,
+-			orig_nmap, *nmap);
++	xfs_bmapi_finish(&bma, whichfork, error);
+ 	return error;
+ }
+ 
 -- 
 2.20.1
