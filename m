@@ -1,126 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51166 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53028 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731284AbfAaPqL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Jan 2019 10:46:11 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B5EE8637E2
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:10 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 69F4C600C2
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:10 +0000 (UTC)
+        id S1727928AbfAaSEB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Jan 2019 13:04:01 -0500
+Date: Thu, 31 Jan 2019 13:03:59 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 3/7] xfs: create a separate finobt verifier
-Date: Thu, 31 Jan 2019 10:46:04 -0500
-Message-Id: <20190131154608.36837-4-bfoster@redhat.com>
-In-Reply-To: <20190131154608.36837-1-bfoster@redhat.com>
+Subject: Re: [PATCH v2 0/7] xfs: fix [f]inobt magic value verification
+Message-ID: <20190131180358.GA36239@bfoster>
 References: <20190131154608.36837-1-bfoster@redhat.com>
+ <20190131175404.GC5761@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190131175404.GC5761@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-The inobt verifier is reused for the inobt and finobt, which
-prevents the ability to distinguish between magic values on a
-per-tree basis. Create a separate finobt structure in preparation
-for changes to enforce the appropriate magic value for the
-associated tree. This patch has no functional change.
+On Thu, Jan 31, 2019 at 09:54:04AM -0800, Darrick J. Wong wrote:
+> On Thu, Jan 31, 2019 at 10:46:01AM -0500, Brian Foster wrote:
+> > Hi all,
+> > 
+> > Here's v2 of the verifier magic value cleanup. This is generally the
+> > same idea as the previous version. The primary difference is that v2
+> > first converts verifiers that use cpu order magic comparisons to use
+> > on-disk (big endian) order and then stores/compares the verifier magic
+> > values in on-disk order. The purpose of this change is to reduce the
+> > number of byte swaps required at runtime for verifier magic value
+> > checks. Further changes include some cleanups, additional refactoring
+> > and the inclusion of Darrick's scrub ->b_ops fix with some modifications
+> > from the original version.
+> > 
+> > This survives fstests on v4 and v5 filesystems on both little and big
+> > endian systems without regressions. Thoughts, reviews, flames
+> > appreciated.
+> 
+> One thing I was expecting to see but didn't -- are you going to convert
+> the bnobt/cntbt verifiers so that we have tree-specific magic number
+> checking?
+> 
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_ag.c           | 2 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c | 9 ++++++++-
- fs/xfs/libxfs/xfs_shared.h       | 1 +
- fs/xfs/scrub/agheader_repair.c   | 2 +-
- fs/xfs/xfs_log_recover.c         | 6 ++++--
- 5 files changed, 15 insertions(+), 5 deletions(-)
+I originally skipped over that one because the hardcoded checks looked
+convoluted. Looking again, we probably should include it simply because
+it's a similar shared verifier case as for the inobt vs. finobt. We
+might still have to keep around a couple hardcoded magic checks for the
+pagf_levels thing, but I'll look into it and tack on a new patch for
+xfs_allocbt_buf_ops.
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index 999ad8d00d43..bde67ef3ff43 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -361,7 +361,7 @@ xfs_ag_init_headers(
- 	{ /* FINO root block */
- 		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp)),
- 		.numblks = BTOBB(mp->m_sb.sb_blocksize),
--		.ops = &xfs_inobt_buf_ops,
-+		.ops = &xfs_finobt_buf_ops,
- 		.work = &xfs_btroot_init,
- 		.type = XFS_BTNUM_FINO,
- 		.need_init =  xfs_sb_version_hasfinobt(&mp->m_sb)
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 9b25e7a0df47..798269eb4767 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -333,6 +333,13 @@ const struct xfs_buf_ops xfs_inobt_buf_ops = {
- 	.verify_struct = xfs_inobt_verify,
- };
- 
-+const struct xfs_buf_ops xfs_finobt_buf_ops = {
-+	.name = "xfs_finobt",
-+	.verify_read = xfs_inobt_read_verify,
-+	.verify_write = xfs_inobt_write_verify,
-+	.verify_struct = xfs_inobt_verify,
-+};
-+
- STATIC int
- xfs_inobt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -389,7 +396,7 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
- 	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
- 	.init_ptr_from_cur	= xfs_finobt_init_ptr_from_cur,
- 	.key_diff		= xfs_inobt_key_diff,
--	.buf_ops		= &xfs_inobt_buf_ops,
-+	.buf_ops		= &xfs_finobt_buf_ops,
- 	.diff_two_keys		= xfs_inobt_diff_two_keys,
- 	.keys_inorder		= xfs_inobt_keys_inorder,
- 	.recs_inorder		= xfs_inobt_recs_inorder,
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index 1c5debe748f0..9855f4d2f98f 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -36,6 +36,7 @@ extern const struct xfs_buf_ops xfs_dquot_buf_ops;
- extern const struct xfs_buf_ops xfs_symlink_buf_ops;
- extern const struct xfs_buf_ops xfs_agi_buf_ops;
- extern const struct xfs_buf_ops xfs_inobt_buf_ops;
-+extern const struct xfs_buf_ops xfs_finobt_buf_ops;
- extern const struct xfs_buf_ops xfs_inode_buf_ops;
- extern const struct xfs_buf_ops xfs_inode_buf_ra_ops;
- extern const struct xfs_buf_ops xfs_dquot_buf_ops;
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 03d1e15cceba..673be3cf7b8d 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -879,7 +879,7 @@ xrep_agi(
- 		},
- 		[XREP_AGI_FINOBT] = {
- 			.rmap_owner = XFS_RMAP_OWN_INOBT,
--			.buf_ops = &xfs_inobt_buf_ops,
-+			.buf_ops = &xfs_finobt_buf_ops,
- 			.magic = XFS_FIBT_CRC_MAGIC,
- 		},
- 		[XREP_AGI_END] = {
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 9fe88d125f0a..228c754bb137 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2445,11 +2445,13 @@ xlog_recover_validate_buf_type(
- 			bp->b_ops = &xfs_allocbt_buf_ops;
- 			break;
- 		case XFS_IBT_CRC_MAGIC:
--		case XFS_FIBT_CRC_MAGIC:
- 		case XFS_IBT_MAGIC:
--		case XFS_FIBT_MAGIC:
- 			bp->b_ops = &xfs_inobt_buf_ops;
- 			break;
-+		case XFS_FIBT_CRC_MAGIC:
-+		case XFS_FIBT_MAGIC:
-+			bp->b_ops = &xfs_finobt_buf_ops;
-+			break;
- 		case XFS_BMAP_CRC_MAGIC:
- 		case XFS_BMAP_MAGIC:
- 			bp->b_ops = &xfs_bmbt_buf_ops;
--- 
-2.17.2
+Brian
+
+> --D
+> 
+> > Brian
+> > 
+> > v2:
+> > - Include djwong's ->b_ops patch w/ modifications.
+> > - Added patch to fix up existing cpu endian magic checks, fold in typo
+> >   fix.
+> > - Replace static inline magic verifier helper with out of line variant,
+> >   kill macro.
+> > - Store on-disk byte order magics in ->b_ops.
+> > - Added patch to refactor common xfs_da3_blkinfo checks.
+> > v1: https://marc.info/?l=linux-xfs&m=154878684317178&w=2
+> > - Remove endian conversion from helper.
+> > - Drop finobt bad magic mitigation patch.
+> > - Additional verifier magic fixups.
+> > - Add verifier name typo fixup.
+> > rfcv2: https://marc.info/?l=linux-xfs&m=154868884311668&w=2
+> > - Split off finobt verifier into separate patch, assign it
+> >   appropriately.
+> > - Created helpers for xfs_buf_ops magic value verification.
+> > - Added error mitigation patch for problematic finobt blocks.
+> > rfcv1: https://marc.info/?l=linux-xfs&m=154834528212262&w=2
+> > 
+> > Brian Foster (6):
+> >   xfs: always check magic values in on-disk byte order
+> >   xfs: create a separate finobt verifier
+> >   xfs: distinguish between inobt and finobt magic values
+> >   xfs: use verifier magic field in dir2 leaf verifiers
+> >   xfs: miscellaneous verifier magic value fixups
+> >   xfs: factor xfs_da3_blkinfo verification into common helper
+> > 
+> > Darrick J. Wong (1):
+> >   xfs: set buffer ops when repair probes for btree type
+> > 
+> >  fs/xfs/libxfs/xfs_ag.c             |   2 +-
+> >  fs/xfs/libxfs/xfs_alloc.c          |  12 ++--
+> >  fs/xfs/libxfs/xfs_attr_leaf.c      |  21 ++----
+> >  fs/xfs/libxfs/xfs_attr_remote.c    |   8 ++-
+> >  fs/xfs/libxfs/xfs_bmap_btree.c     |  13 ++--
+> >  fs/xfs/libxfs/xfs_da_btree.c       |  50 ++++++++++-----
+> >  fs/xfs/libxfs/xfs_da_format.h      |   2 +
+> >  fs/xfs/libxfs/xfs_dir2_block.c     |  10 +--
+> >  fs/xfs/libxfs/xfs_dir2_data.c      |  12 ++--
+> >  fs/xfs/libxfs/xfs_dir2_leaf.c      | 100 ++++++-----------------------
+> >  fs/xfs/libxfs/xfs_dir2_node.c      |  11 ++--
+> >  fs/xfs/libxfs/xfs_ialloc.c         |   3 +-
+> >  fs/xfs/libxfs/xfs_ialloc_btree.c   |  25 +++++---
+> >  fs/xfs/libxfs/xfs_inode_buf.c      |   2 +-
+> >  fs/xfs/libxfs/xfs_refcount_btree.c |   3 +-
+> >  fs/xfs/libxfs/xfs_rmap_btree.c     |   3 +-
+> >  fs/xfs/libxfs/xfs_sb.c             |   5 +-
+> >  fs/xfs/libxfs/xfs_shared.h         |   1 +
+> >  fs/xfs/libxfs/xfs_symlink_remote.c |   3 +-
+> >  fs/xfs/scrub/agheader_repair.c     |   2 +-
+> >  fs/xfs/scrub/repair.c              |  11 +++-
+> >  fs/xfs/xfs_buf.c                   |  41 ++++++++++--
+> >  fs/xfs/xfs_buf.h                   |   4 +-
+> >  fs/xfs/xfs_log_recover.c           |   6 +-
+> >  fs/xfs/xfs_trans_buf.c             |   2 +-
+> >  25 files changed, 183 insertions(+), 169 deletions(-)
+> > 
+> > -- 
+> > 2.17.2
+> > 
