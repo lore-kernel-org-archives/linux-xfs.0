@@ -1,57 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:56630 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725829AbfAaHzg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 02:55:36 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/11] xfs: remove the s_maxbytes checks in xfs_map_blocks
-Date: Thu, 31 Jan 2019 08:55:16 +0100
-Message-Id: <20190131075524.4769-4-hch@lst.de>
-In-Reply-To: <20190131075524.4769-1-hch@lst.de>
-References: <20190131075524.4769-1-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:39952 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726622AbfAaXRx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 18:17:53 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0VNDx15084170
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:17:52 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2q8eyuumrv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:17:52 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x0VNHpNH017768
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:17:51 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x0VNHpUY003768
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:17:51 GMT
+Subject: [PATCH 0/8] xfs: incore unlinked list
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 31 Jan 2019 15:17:50 -0800
+Message-ID: <154897667054.26065.13164381203002725289.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-We already ensure all data fits into s_maxbytes in the write / fault
-path.  The only reason we have them here is that they were copy and
-pasted from xfs_bmapi_read when we stopped using that function.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_aops.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+This new patch series refactors the existing code that handles metadata
+updates to the unlinked list when adding or removing inodes from that
+list.  It then adds an in-core hashtable to record which inode's
+next_unlinked field points to a given inode.  This enables us to remove
+any inode from the on-disk unlinked structure without having to actually
+walk the entire unlinked list, which reduces overhead substantially.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index a3fa60d1d2df..8bfb62d8776f 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -338,7 +338,8 @@ xfs_map_blocks(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	ssize_t			count = i_blocksize(inode);
--	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset), end_fsb;
-+	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
- 	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
- 	struct xfs_bmbt_irec	imap;
- 	struct xfs_iext_cursor	icur;
-@@ -374,11 +375,6 @@ xfs_map_blocks(
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
- 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
--	ASSERT(offset <= mp->m_super->s_maxbytes);
--
--	if (offset > mp->m_super->s_maxbytes - count)
--		count = mp->m_super->s_maxbytes - offset;
--	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
- 
- 	/*
- 	 * Check if this is offset is covered by a COW extents, and if yes use
--- 
-2.20.1
+If you're going to start using this mess, you probably ought to just
+pull from my git trees: kernel[1], xfsprogs[2], and xfstests[3].
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=incore-unlinked-list
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git
