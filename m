@@ -1,155 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51712 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726341AbfA3Run (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Jan 2019 12:50:43 -0500
-Subject: [PATCH 2/2] xfs_repair: correctly account for free space btree
- shrinks when fixing freelist
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 30 Jan 2019 09:50:30 -0800
-Message-ID: <154887063081.5611.2097236157481583596.stgit@magnolia>
-In-Reply-To: <154887062444.5611.12746798208748899665.stgit@magnolia>
-References: <154887062444.5611.12746798208748899665.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:57378 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725730AbfAaS2b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Jan 2019 13:28:31 -0500
+Date: Thu, 31 Jan 2019 13:28:29 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 06/11] xfs: factor out two helpers from xfs_bmapi_write
+Message-ID: <20190131182828.GH36239@bfoster>
+References: <20190131075524.4769-1-hch@lst.de>
+ <20190131075524.4769-7-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190131075524.4769-7-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jan 31, 2019 at 08:55:19AM +0100, Christoph Hellwig wrote:
+> We want to be able to reuse them for the upcoming dedidcated delalloc
+> convert routine.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-When we fix the freelist at the end of build_agf_agfl in phase 5 of
-repair, we need to create incore rmap records for the blocks that get
-added to the AGFL.  We can't let the regular freelist fixing code use
-the regular on-disk rmapbt update code because the rmapbt isn't fully
-set up yet.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Unfortunately, the original code fails to account for the fact that the
-free space btrees can shrink when we allocate blocks to fix the
-freelist; those blocks are also put on the freelist, but there are
-already incore rmaps for all the free space btree blocks.  We must not
-create (redundant) incore rmaps for those blocks.  If we do, repair
-fails with a complaint that rebuilding the rmapbt failed during phase 5.
-xfs/137 on a 1k block size occasionally triggers this bug.
-
-To fix the problem, construct a bitmap of all OWN_AG blocks that we know
-about before traversing the AGFL, and only create new incore rmaps for
-those AGFL blocks that are not already tracked in the bitmap.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- repair/rmap.c |   54 ++++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 44 insertions(+), 10 deletions(-)
-
-
-diff --git a/repair/rmap.c b/repair/rmap.c
-index c5a86646..3bb05065 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -12,6 +12,7 @@
- #include "dinode.h"
- #include "slab.h"
- #include "rmap.h"
-+#include "bitmap.h"
- 
- #undef RMAP_DEBUG
- 
-@@ -450,6 +451,8 @@ rmap_store_ag_btree_rec(
- 	struct xfs_buf		*agflbp = NULL;
- 	struct xfs_trans	*tp;
- 	__be32			*agfl_bno, *b;
-+	struct xfs_ag_rmap	*ag_rmap = &ag_rmaps[agno];
-+	struct bitmap		*own_ag_bitmap = NULL;
- 	int			error = 0;
- 	struct xfs_owner_info	oinfo;
- 
-@@ -457,9 +460,8 @@ rmap_store_ag_btree_rec(
- 		return 0;
- 
- 	/* Release the ar_rmaps; they were put into the rmapbt during p5. */
--	free_slab(&ag_rmaps[agno].ar_rmaps);
--	error = init_slab(&ag_rmaps[agno].ar_rmaps,
--				  sizeof(struct xfs_rmap_irec));
-+	free_slab(&ag_rmap->ar_rmaps);
-+	error = init_slab(&ag_rmap->ar_rmaps, sizeof(struct xfs_rmap_irec));
- 	if (error)
- 		goto err;
- 
-@@ -479,19 +481,50 @@ rmap_store_ag_btree_rec(
- 	 * rmap, we only need to add rmap records for AGFL blocks past
- 	 * that point in the AGFL because those blocks are a result of a
- 	 * no-rmap no-shrink freelist fixup that we did earlier.
-+	 *
-+	 * However, some blocks end up on the AGFL because the free space
-+	 * btrees shed blocks as a result of allocating space to fix the
-+	 * freelist.  We already created in-core rmap records for the free
-+	 * space btree blocks, so we must be careful not to create those
-+	 * records again.  Create a bitmap of already-recorded OWN_AG rmaps.
- 	 */
-+	error = init_slab_cursor(ag_rmap->ar_raw_rmaps, rmap_compare, &rm_cur);
-+	if (error)
-+		goto err;
-+	if (!bitmap_init(&own_ag_bitmap)) {
-+		error = -ENOMEM;
-+		goto err;
-+	}
-+	while ((rm_rec = pop_slab_cursor(rm_cur)) != NULL) {
-+		if (rm_rec->rm_owner != XFS_RMAP_OWN_AG)
-+			continue;
-+		if (!bitmap_set(own_ag_bitmap, rm_rec->rm_startblock,
-+					rm_rec->rm_blockcount)) {
-+			error = EFSCORRUPTED;
-+			goto err;
-+		}
-+	}
-+	free_slab_cursor(&rm_cur);
-+
-+	/* Create rmaps for any AGFL blocks that aren't already rmapped. */
- 	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
--	b = agfl_bno + ag_rmaps[agno].ar_flcount;
-+	b = agfl_bno + ag_rmap->ar_flcount;
- 	while (*b != cpu_to_be32(NULLAGBLOCK) &&
- 	       b - agfl_bno < libxfs_agfl_size(mp)) {
--		error = rmap_add_ag_rec(mp, agno, be32_to_cpu(*b), 1,
--				XFS_RMAP_OWN_AG);
--		if (error)
--			goto err;
-+		xfs_agblock_t	agbno;
-+
-+		agbno = be32_to_cpu(*b);
-+		if (!bitmap_test(own_ag_bitmap, agbno, 1)) {
-+			error = rmap_add_ag_rec(mp, agno, agbno, 1,
-+					XFS_RMAP_OWN_AG);
-+			if (error)
-+				goto err;
-+		}
- 		b++;
- 	}
- 	libxfs_putbuf(agflbp);
- 	agflbp = NULL;
-+	bitmap_free(&own_ag_bitmap);
- 
- 	/* Merge all the raw rmaps into the main list */
- 	error = rmap_fold_raw_recs(mp, agno);
-@@ -499,8 +532,7 @@ rmap_store_ag_btree_rec(
- 		goto err;
- 
- 	/* Create cursors to refcount structures */
--	error = init_slab_cursor(ag_rmaps[agno].ar_rmaps, rmap_compare,
--			&rm_cur);
-+	error = init_slab_cursor(ag_rmap->ar_rmaps, rmap_compare, &rm_cur);
- 	if (error)
- 		goto err;
- 
-@@ -541,6 +573,8 @@ rmap_store_ag_btree_rec(
- err:
- 	if (agflbp)
- 		libxfs_putbuf(agflbp);
-+	if (own_ag_bitmap)
-+		bitmap_free(&own_ag_bitmap);
- 	return error;
- }
- 
+>  fs/xfs/libxfs/xfs_bmap.c | 78 ++++++++++++++++++++++------------------
+>  1 file changed, 44 insertions(+), 34 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index a0443158a40e..d75f45d9b7d1 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4194,6 +4194,44 @@ xfs_bmapi_convert_unwritten(
+>  	return 0;
+>  }
+>  
+> +static inline xfs_extlen_t
+> +xfs_bmapi_minleft(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	int			fork)
+> +{
+> +	if (tp && tp->t_firstblock != NULLFSBLOCK)
+> +		return 0;
+> +	if (XFS_IFORK_FORMAT(ip, fork) != XFS_DINODE_FMT_BTREE)
+> +		return 1;
+> +	return be16_to_cpu(XFS_IFORK_PTR(ip, fork)->if_broot->bb_level) + 1;
+> +}
+> +
+> +/*
+> + * Log whatever the flags say, even if error.  Otherwise we might miss detecting
+> + * a case where the data is changed, there's an error, and it's not logged so we
+> + * don't shutdown when we should.  Don't bother logging extents/btree changes if
+> + * we converted to the other format.
+> + */
+> +static void
+> +xfs_bmapi_finish(
+> +	struct xfs_bmalloca	*bma,
+> +	int			whichfork,
+> +	int			error)
+> +{
+> +	if ((bma->logflags & xfs_ilog_fext(whichfork)) &&
+> +	    XFS_IFORK_FORMAT(bma->ip, whichfork) != XFS_DINODE_FMT_EXTENTS)
+> +		bma->logflags &= ~xfs_ilog_fext(whichfork);
+> +	else if ((bma->logflags & xfs_ilog_fbroot(whichfork)) &&
+> +		 XFS_IFORK_FORMAT(bma->ip, whichfork) != XFS_DINODE_FMT_BTREE)
+> +		bma->logflags &= ~xfs_ilog_fbroot(whichfork);
+> +
+> +	if (bma->logflags)
+> +		xfs_trans_log_inode(bma->tp, bma->ip, bma->logflags);
+> +	if (bma->cur)
+> +		xfs_btree_del_cursor(bma->cur, error);
+> +}
+> +
+>  /*
+>   * Map file blocks to filesystem blocks, and allocate blocks or convert the
+>   * extent state if necessary.  Details behaviour is controlled by the flags
+> @@ -4273,15 +4311,6 @@ xfs_bmapi_write(
+>  
+>  	XFS_STATS_INC(mp, xs_blk_mapw);
+>  
+> -	if (!tp || tp->t_firstblock == NULLFSBLOCK) {
+> -		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
+> -			bma.minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
+> -		else
+> -			bma.minleft = 1;
+> -	} else {
+> -		bma.minleft = 0;
+> -	}
+> -
+>  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+>  		error = xfs_iread_extents(tp, ip, whichfork);
+>  		if (error)
+> @@ -4296,6 +4325,7 @@ xfs_bmapi_write(
+>  	bma.ip = ip;
+>  	bma.total = total;
+>  	bma.datatype = 0;
+> +	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
+>  
+>  	/*
+>  	 * The delalloc flag means the caller wants to allocate the entire
+> @@ -4434,32 +4464,12 @@ xfs_bmapi_write(
+>  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE ||
+>  	       XFS_IFORK_NEXTENTS(ip, whichfork) >
+>  		XFS_IFORK_MAXEXT(ip, whichfork));
+> -	error = 0;
+> +	xfs_bmapi_finish(&bma, whichfork, 0);
+> +	xfs_bmap_validate_ret(orig_bno, orig_len, orig_flags, orig_mval,
+> +		orig_nmap, *nmap);
+> +	return 0;
+>  error0:
+> -	/*
+> -	 * Log everything.  Do this after conversion, there's no point in
+> -	 * logging the extent records if we've converted to btree format.
+> -	 */
+> -	if ((bma.logflags & xfs_ilog_fext(whichfork)) &&
+> -	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS)
+> -		bma.logflags &= ~xfs_ilog_fext(whichfork);
+> -	else if ((bma.logflags & xfs_ilog_fbroot(whichfork)) &&
+> -		 XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)
+> -		bma.logflags &= ~xfs_ilog_fbroot(whichfork);
+> -	/*
+> -	 * Log whatever the flags say, even if error.  Otherwise we might miss
+> -	 * detecting a case where the data is changed, there's an error,
+> -	 * and it's not logged so we don't shutdown when we should.
+> -	 */
+> -	if (bma.logflags)
+> -		xfs_trans_log_inode(tp, ip, bma.logflags);
+> -
+> -	if (bma.cur) {
+> -		xfs_btree_del_cursor(bma.cur, error);
+> -	}
+> -	if (!error)
+> -		xfs_bmap_validate_ret(orig_bno, orig_len, orig_flags, orig_mval,
+> -			orig_nmap, *nmap);
+> +	xfs_bmapi_finish(&bma, whichfork, error);
+>  	return error;
+>  }
+>  
+> -- 
+> 2.20.1
+> 
