@@ -1,149 +1,193 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49756 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731284AbfAaPqK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Jan 2019 10:46:10 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id EBD6081DEB
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:09 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8B04A600C2
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 15:46:09 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 1/7] xfs: set buffer ops when repair probes for btree type
-Date: Thu, 31 Jan 2019 10:46:02 -0500
-Message-Id: <20190131154608.36837-2-bfoster@redhat.com>
-In-Reply-To: <20190131154608.36837-1-bfoster@redhat.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:36184 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725849AbfAaRv0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 12:51:26 -0500
+Date: Thu, 31 Jan 2019 09:51:13 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 7/7] xfs: factor xfs_da3_blkinfo verification into
+ common helper
+Message-ID: <20190131175113.GB5761@magnolia>
 References: <20190131154608.36837-1-bfoster@redhat.com>
+ <20190131154608.36837-8-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190131154608.36837-8-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+On Thu, Jan 31, 2019 at 10:46:08AM -0500, Brian Foster wrote:
+> With the verifier magic value helper in place, we've left a bit more
+> duplicate code across the verifiers that involve struct
+> xfs_da3_blkinfo. This includes the da node, xattr leaf and dir leaf
+> verifiers, all of which perform similar checks for v4 and v5
+> filesystems.
+> 
+> Create a common helper to verify an xfs_da3_blkinfo structure,
+> taking care to only access v5 fields where appropriate, and refactor
+> the aforementioned verifiers to use the helper. No functional
+> changes.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 17 +++----------
+>  fs/xfs/libxfs/xfs_da_btree.c  | 46 +++++++++++++++++++++++++----------
+>  fs/xfs/libxfs/xfs_da_format.h |  2 ++
+>  fs/xfs/libxfs/xfs_dir2_leaf.c | 18 +++-----------
+>  4 files changed, 43 insertions(+), 40 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index dde3a550d7ce..0c92987f57fc 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -245,23 +245,14 @@ xfs_attr3_leaf_verify(
+>  	struct xfs_attr_leaf_entry	*entries;
+>  	uint32_t			end;	/* must be 32bit - see below */
+>  	int				i;
+> +	xfs_failaddr_t			fa;
+>  
+>  	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
+>  
+> -	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
+> -		return __this_address;
+> -
+> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
+> +	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
+> +	if (fa)
+> +		return fa;
+>  
+> -		ASSERT(leaf->hdr.info.magic == hdr3->info.hdr.magic);
+> -		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
+> -			return __this_address;
+> -		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
+> -			return __this_address;
+> -		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
+> -			return __this_address;
+> -	}
+>  	/*
+>  	 * In recovery there is a transient state where count == 0 is valid
+>  	 * because we may have transitioned an empty shortform attr to a leaf
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index 6b8ca390eecc..622f88a1b1aa 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -116,6 +116,35 @@ xfs_da_state_free(xfs_da_state_t *state)
+>  	kmem_zone_free(xfs_da_state_zone, state);
+>  }
+>  
+> +/*
+> + * Verify an xfs_da3_blkinfo structure. Note that the da3 fields are only
+> + * accessible on v5 filesystems. This header format is common across da node,
+> + * attr leaf and dir leaf blocks.
+> + */
+> +xfs_failaddr_t
+> +xfs_da3_blkinfo_verify(
+> +	struct xfs_buf		*bp,
+> +	struct xfs_da3_blkinfo	*hdr3)
+> +{
+> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> +	struct xfs_da_blkinfo	*hdr = &hdr3->hdr;
+> +
+> +	if (!xfs_verify_magic(bp, hdr->magic))
+> +		return __this_address;
+> +
+> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		ASSERT(hdr3->hdr.magic == hdr->magic);
+> +		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_meta_uuid))
+> +			return __this_address;
+> +		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
+> +			return __this_address;
+> +		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->lsn)))
+> +			return __this_address;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static xfs_failaddr_t
+>  xfs_da3_node_verify(
+>  	struct xfs_buf		*bp)
+> @@ -124,25 +153,16 @@ xfs_da3_node_verify(
+>  	struct xfs_da_intnode	*hdr = bp->b_addr;
+>  	struct xfs_da3_icnode_hdr ichdr;
+>  	const struct xfs_dir_ops *ops;
+> +	xfs_failaddr_t		fa;
+>  
+>  	ops = xfs_dir_get_ops(mp, NULL);
+>  
+>  	ops->node_hdr_from_disk(&ichdr, hdr);
+>  
+> -	if (!xfs_verify_magic(bp, hdr->hdr.info.magic))
+> -		return __this_address;
+> +	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
+> +	if (fa)
+> +		return fa;
+>  
+> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
+> -
+> -		ASSERT(hdr3->info.hdr.magic == hdr->hdr.info.magic);
+> -		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
+> -			return __this_address;
+> -		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
+> -			return __this_address;
+> -		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
+> -			return __this_address;
+> -	}
+>  	if (ichdr.level == 0)
+>  		return __this_address;
+>  	if (ichdr.level > XFS_DA_NODE_MAXDEPTH)
+> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+> index 5d5bf3bffc78..bf0c53bd2e60 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.h
+> +++ b/fs/xfs/libxfs/xfs_da_format.h
+> @@ -869,4 +869,6 @@ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
+>  	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
+>  }
+>  
+> +xfs_failaddr_t xfs_da3_blkinfo_verify(struct xfs_buf *, struct xfs_da3_blkinfo*);
 
-In xrep_findroot_block, we work out the btree type and correctness of a
-given block by calling different btree verifiers on root block
-candidates.  However, we leave the NULL b_ops while ->verify_read
-validates the block, which means that if the verifier calls
-xfs_buf_verifier_error it'll crash on the null b_ops.  Fix it to set
-b_ops before calling the verifier and unsetting it if the verifier
-fails.
+Specify parameter names in the declaration, please.
 
-Furthermore, improve the documentation around xfs_buf_ensure_ops, which
-is the function that is responsible for cleaning up the b_ops state of
-buffers that go through xrep_findroot_block but don't match anything.
+--D
 
-[bfoster: Renamed xfs_buf_ensure_ops() and modified comment.]
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/scrub/repair.c  | 11 ++++++++---
- fs/xfs/xfs_buf.c       | 22 ++++++++++++++++------
- fs/xfs/xfs_buf.h       |  2 +-
- fs/xfs/xfs_trans_buf.c |  2 +-
- 4 files changed, 26 insertions(+), 11 deletions(-)
-
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 1c8eecfe52b8..6acf1bfa0bfe 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -768,18 +768,23 @@ xrep_findroot_block(
- 		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
- 				&mp->m_sb.sb_meta_uuid))
- 			goto out;
-+		/*
-+		 * Read verifiers can reference b_ops, so we set the pointer
-+		 * here.  If the verifier fails we'll reset the buffer state
-+		 * to what it was before we touched the buffer.
-+		 */
-+		bp->b_ops = fab->buf_ops;
- 		fab->buf_ops->verify_read(bp);
- 		if (bp->b_error) {
-+			bp->b_ops = NULL;
- 			bp->b_error = 0;
- 			goto out;
- 		}
- 
- 		/*
- 		 * Some read verifiers will (re)set b_ops, so we must be
--		 * careful not to blow away any such assignment.
-+		 * careful not to change b_ops after running the verifier.
- 		 */
--		if (!bp->b_ops)
--			bp->b_ops = fab->buf_ops;
- 	}
- 
- 	/*
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index eedc5e0156ff..222b5260ed35 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -776,13 +776,23 @@ _xfs_buf_read(
- }
- 
- /*
-- * If the caller passed in an ops structure and the buffer doesn't have ops
-- * assigned, set the ops and use them to verify the contents.  If the contents
-- * cannot be verified, we'll clear XBF_DONE.  We assume the buffer has no
-- * recorded errors and is already in XBF_DONE state.
-+ * Reverify a buffer found in cache without an attached ->b_ops.
-+ *
-+ * If the caller passed an ops structure and the buffer doesn't have ops
-+ * assigned, set the ops and use it to verify the contents. If verification
-+ * fails, clear XBF_DONE. We assume the buffer has no recorded errors and is
-+ * already in XBF_DONE state on entry.
-+ *
-+ * Under normal operations, every in-core buffer is verified on read I/O
-+ * completion. There are two scenarios that can lead to in-core buffers without
-+ * an assigned ->b_ops. The first is during log recovery of buffers on a V4
-+ * filesystem, though these buffers are purged at the end of recovery. The
-+ * other is online repair, which intentionally reads with a NULL buffer ops to
-+ * run several verifiers across an in-core buffer in order to establish buffer
-+ * type.
-  */
- int
--xfs_buf_ensure_ops(
-+xfs_buf_reverify(
- 	struct xfs_buf		*bp,
- 	const struct xfs_buf_ops *ops)
- {
-@@ -824,7 +834,7 @@ xfs_buf_read_map(
- 		return bp;
- 	}
- 
--	xfs_buf_ensure_ops(bp, ops);
-+	xfs_buf_reverify(bp, ops);
- 
- 	if (flags & XBF_ASYNC) {
- 		/*
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index b9f5511ea998..1c436a85b71d 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -385,6 +385,6 @@ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
- #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
- #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
- 
--int xfs_buf_ensure_ops(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
-+int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
- 
- #endif	/* __XFS_BUF_H__ */
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 629f1479c9d2..7d65ebf1e847 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -277,7 +277,7 @@ xfs_trans_read_buf_map(
- 		 * release this buffer when it kills the tranaction.
- 		 */
- 		ASSERT(bp->b_ops != NULL);
--		error = xfs_buf_ensure_ops(bp, ops);
-+		error = xfs_buf_reverify(bp, ops);
- 		if (error) {
- 			xfs_buf_ioerror_alert(bp, __func__);
- 
--- 
-2.17.2
+> +
+>  #endif /* __XFS_DA_FORMAT_H__ */
+> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> index a99ae2cd292e..094028b7b162 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> @@ -146,21 +146,11 @@ xfs_dir3_leaf_verify(
+>  {
+>  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  	struct xfs_dir2_leaf	*leaf = bp->b_addr;
+> +	xfs_failaddr_t		fa;
+>  
+> -	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
+> -		return __this_address;
+> -
+> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
+> -
+> -		ASSERT(leaf3->info.hdr.magic == leaf->hdr.info.magic);
+> -		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
+> -			return __this_address;
+> -		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
+> -			return __this_address;
+> -		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
+> -			return __this_address;
+> -	}
+> +	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
+> +	if (fa)
+> +		return fa;
+>  
+>  	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
+>  }
+> -- 
+> 2.17.2
+> 
