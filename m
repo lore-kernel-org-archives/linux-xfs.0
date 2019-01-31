@@ -1,32 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:39096 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728224AbfA2XDW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Jan 2019 18:03:22 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 2E70E2D522
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Jan 2019 23:03:22 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
- since 4.19.0  on sata hdd:s
-Date: Tue, 29 Jan 2019 23:03:21 +0000
-Message-ID: <bug-202441-201763-x9fpm8eS4W@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
-References: <bug-202441-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from mx1.redhat.com ([209.132.183.28]:55184 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727714AbfAaUU7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Jan 2019 15:20:59 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2E4D7DC91F
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 20:20:59 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id EA9FA608E5
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 20:20:58 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_repair: fix incorrect return value in namecheck()
+Message-ID: <f17672e5-63eb-0f74-afdf-55ff006ee28d@redhat.com>
+Date: Thu, 31 Jan 2019 14:20:58 -0600
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202441
+Obviously a directory entry with a '/' in the name should return
+1, i.e. failure.  This was just a dumb thinko.
 
---- Comment #21 from Roger (rogan6710@gmail.com) ---
-Worked very well :) (compile took 3min 31s) 
-I saw the same behaviour as I first noticed on rc5, sawtoothing buff/cache.
+Fixes: 45571fd5885d ("xfs_repair: allow '/' in attribute names")
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Reported-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/repair/da_util.c b/repair/da_util.c
+index c5e690c..4a258e5 100644
+--- a/repair/da_util.c
++++ b/repair/da_util.c
+@@ -31,7 +31,7 @@ namecheck(
+ 
+ 	for (c = name, i = 0; i < length; i++, c++) {
+ 		if (isadir && *c == '/')
+-			return 0;
++			return 1;
+ 		if (*c == '\0')
+ 			return 1;
+ 	}
