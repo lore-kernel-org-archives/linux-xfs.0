@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:44416 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726622AbfAaXSG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 18:18:06 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0VNEaJM047797
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:18:05 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2q8g6rkj9g-1
+Received: from userp2130.oracle.com ([156.151.31.86]:40396 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726622AbfAaXSN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 18:18:13 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0VNDx18084170
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:18:12 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2q8eyuumt3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:18:04 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x0VNI4Zi029122
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:18:11 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x0VNIAkQ026605
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:18:04 GMT
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x0VNI3VL029336
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:18:04 GMT
-Subject: [PATCH 2/8] xfs: track unlinked inode counts in per-ag data
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:18:10 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x0VNIArN031278
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 23:18:10 GMT
+Subject: [PATCH 3/8] xfs: refactor AGI unlinked bucket updates
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 31 Jan 2019 15:18:03 -0800
-Message-ID: <154897668290.26065.2216454639188570690.stgit@magnolia>
+Date: Thu, 31 Jan 2019 15:18:09 -0800
+Message-ID: <154897668914.26065.4021602625860113731.stgit@magnolia>
 In-Reply-To: <154897667054.26065.13164381203002725289.stgit@magnolia>
 References: <154897667054.26065.13164381203002725289.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,235 +34,144 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Track the number of unlinked inodes in each AG so that we can use these
-decisions to throttle inactivations when the unlinked list gets long.
+Split the AGI unlinked bucket updates into a separate function.  No
+functional changes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_inode.c       |   40 +++++++++++++++++++++++++++++-----------
- fs/xfs/xfs_log_recover.c |    8 ++++++++
- fs/xfs/xfs_mount.c       |    5 +++++
- fs/xfs/xfs_mount.h       |    4 ++++
- 4 files changed, 46 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_inode.c |   69 ++++++++++++++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_trace.h |   26 ++++++++++++++++++++
+ 2 files changed, 76 insertions(+), 19 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d18354517320..98355f5f9253 100644
+index 98355f5f9253..3c33136b21ef 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1900,6 +1900,7 @@ xfs_iunlink(
- 	struct xfs_dinode	*dip;
- 	struct xfs_buf		*agibp;
- 	struct xfs_buf		*ibp;
-+	struct xfs_perag	*pag;
- 	xfs_agnumber_t		agno;
- 	xfs_agino_t		agino;
- 	short			bucket_index;
-@@ -1912,6 +1913,8 @@ xfs_iunlink(
- 	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
- 	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
- 	bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
-+	pag = xfs_perag_get(mp, agno);
-+	mutex_lock(&pag->pagi_unlinked_lock);
- 
- 	/*
- 	 * Get the agi buffer first.  It ensures lock ordering
-@@ -1919,7 +1922,7 @@ xfs_iunlink(
- 	 */
- 	error = xfs_read_agi(mp, tp, agno, &agibp);
- 	if (error)
--		return error;
-+		goto out_unlock;
- 	agi = XFS_BUF_TO_AGI(agibp);
- 
- 	/*
-@@ -1939,7 +1942,7 @@ xfs_iunlink(
- 		error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &ibp,
- 				       0, 0);
- 		if (error)
--			return error;
-+			goto out_unlock;
- 
- 		ASSERT(dip->di_next_unlinked == cpu_to_be32(NULLAGINO));
- 		dip->di_next_unlinked = agi->agi_unlinked[bucket_index];
-@@ -1964,7 +1967,12 @@ xfs_iunlink(
- 		(sizeof(xfs_agino_t) * bucket_index);
- 	xfs_trans_log_buf(tp, agibp, offset,
- 			  (offset + sizeof(xfs_agino_t) - 1));
--	return 0;
-+	pag->pagi_unlinked_count++;
-+
-+out_unlock:
-+	mutex_unlock(&pag->pagi_unlinked_lock);
-+	xfs_perag_put(pag);
-+	return error;
+@@ -1880,6 +1880,46 @@ xfs_inactive(
+ 	xfs_qm_dqdetach(ip);
  }
  
++/*
++ * Point the AGI unlinked bucket at an inode and log the results.  The caller
++ * is responsible for validating the old value.
++ */
++STATIC int
++xfs_iunlink_update_bucket(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*agibp,
++	unsigned int		bucket_index,
++	xfs_agino_t		new_agino)
++{
++	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agibp);
++	xfs_agino_t		old_value;
++	int			offset;
++
++	ASSERT(new_agino == NULLAGINO ||
++	       xfs_verify_agino(tp->t_mountp, be32_to_cpu(agi->agi_seqno),
++				new_agino));
++
++	old_value = be32_to_cpu(agi->agi_unlinked[bucket_index]);
++	trace_xfs_iunlink_update_bucket(tp->t_mountp,
++			be32_to_cpu(agi->agi_seqno), bucket_index, old_value,
++			new_agino);
++
++	/*
++	 * We should never find the head of the list already set to the value
++	 * passed in because either we're adding or removing ourselves from the
++	 * head of the list.
++	 */
++	if (old_value == new_agino)
++		return -EFSCORRUPTED;
++
++	agi->agi_unlinked[bucket_index] = cpu_to_be32(new_agino);
++	offset = offsetof(struct xfs_agi, agi_unlinked) +
++			(sizeof(xfs_agino_t) * bucket_index);
++	xfs_trans_log_buf(tp, agibp, offset,
++			(offset + sizeof(xfs_agino_t) - 1));
++	return 0;
++}
++
  /*
-@@ -1982,6 +1990,7 @@ xfs_iunlink_remove(
- 	struct xfs_buf		*ibp;
- 	struct xfs_buf		*last_ibp;
- 	struct xfs_dinode	*last_dip = NULL;
-+	struct xfs_perag	*pag;
- 	xfs_ino_t		next_ino;
- 	xfs_agnumber_t		agno;
- 	xfs_agino_t		agino;
-@@ -1997,6 +2006,8 @@ xfs_iunlink_remove(
- 	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
- 	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
- 	bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
-+	pag = xfs_perag_get(mp, agno);
-+	mutex_lock(&pag->pagi_unlinked_lock);
+  * This is called when the inode's link count goes to 0 or we are creating a
+  * tmpfile via O_TMPFILE. In the case of a tmpfile, @ignore_linkcount will be
+@@ -1958,15 +1998,10 @@ xfs_iunlink(
+ 		xfs_inobp_check(mp, ibp);
+ 	}
  
- 	/*
- 	 * Get the agi buffer first.  It ensures lock ordering
-@@ -2004,7 +2015,7 @@ xfs_iunlink_remove(
- 	 */
- 	error = xfs_read_agi(mp, tp, agno, &agibp);
- 	if (error)
--		return error;
+-	/*
+-	 * Point the bucket head pointer at the inode being inserted.
+-	 */
+-	ASSERT(agino != 0);
+-	agi->agi_unlinked[bucket_index] = cpu_to_be32(agino);
+-	offset = offsetof(xfs_agi_t, agi_unlinked) +
+-		(sizeof(xfs_agino_t) * bucket_index);
+-	xfs_trans_log_buf(tp, agibp, offset,
+-			  (offset + sizeof(xfs_agino_t) - 1));
++	/* Point the head of the list to point to this inode. */
++	error = xfs_iunlink_update_bucket(tp, agibp, bucket_index, agino);
++	if (error)
 +		goto out_unlock;
- 	agi = XFS_BUF_TO_AGI(agibp);
+ 	pag->pagi_unlinked_count++;
  
- 	/*
-@@ -2015,7 +2026,8 @@ xfs_iunlink_remove(
- 			be32_to_cpu(agi->agi_unlinked[bucket_index]))) {
- 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
- 				agi, sizeof(*agi));
--		return -EFSCORRUPTED;
-+		error = -EFSCORRUPTED;
-+		goto out_unlock;
- 	}
- 
- 	if (be32_to_cpu(agi->agi_unlinked[bucket_index]) == agino) {
-@@ -2031,7 +2043,7 @@ xfs_iunlink_remove(
- 		if (error) {
- 			xfs_warn(mp, "%s: xfs_imap_to_bp returned error %d.",
- 				__func__, error);
--			return error;
+ out_unlock:
+@@ -2062,16 +2097,12 @@ xfs_iunlink_remove(
+ 		} else {
+ 			xfs_trans_brelse(tp, ibp);
+ 		}
+-		/*
+-		 * Point the bucket head pointer at the next inode.
+-		 */
+-		ASSERT(next_agino != 0);
+-		ASSERT(next_agino != agino);
+-		agi->agi_unlinked[bucket_index] = cpu_to_be32(next_agino);
+-		offset = offsetof(xfs_agi_t, agi_unlinked) +
+-			(sizeof(xfs_agino_t) * bucket_index);
+-		xfs_trans_log_buf(tp, agibp, offset,
+-				  (offset + sizeof(xfs_agino_t) - 1));
++
++		/* Point the head of the list to the next unlinked inode. */
++		error = xfs_iunlink_update_bucket(tp, agibp, bucket_index,
++				next_agino);
++		if (error)
 +			goto out_unlock;
- 		}
- 		next_agino = be32_to_cpu(dip->di_next_unlinked);
- 		ASSERT(next_agino != 0);
-@@ -2080,7 +2092,7 @@ xfs_iunlink_remove(
- 				xfs_warn(mp,
- 	"%s: xfs_imap returned error %d.",
- 					 __func__, error);
--				return error;
-+				goto out_unlock;
- 			}
+ 	} else {
+ 		/*
+ 		 * We need to search the list for the inode being freed.
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 6fcc893dfc91..c10478e7e49a 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3371,6 +3371,32 @@ DEFINE_TRANS_EVENT(xfs_trans_roll);
+ DEFINE_TRANS_EVENT(xfs_trans_add_item);
+ DEFINE_TRANS_EVENT(xfs_trans_free_items);
  
- 			error = xfs_imap_to_bp(mp, tp, &imap, &last_dip,
-@@ -2089,7 +2101,7 @@ xfs_iunlink_remove(
- 				xfs_warn(mp,
- 	"%s: xfs_imap_to_bp returned error %d.",
- 					__func__, error);
--				return error;
-+				goto out_unlock;
- 			}
- 
- 			last_offset = imap.im_boffset;
-@@ -2098,7 +2110,8 @@ xfs_iunlink_remove(
- 				XFS_CORRUPTION_ERROR(__func__,
- 						XFS_ERRLEVEL_LOW, mp,
- 						last_dip, sizeof(*last_dip));
--				return -EFSCORRUPTED;
-+				error = -EFSCORRUPTED;
-+				goto out_unlock;
- 			}
- 		}
- 
-@@ -2111,7 +2124,7 @@ xfs_iunlink_remove(
- 		if (error) {
- 			xfs_warn(mp, "%s: xfs_imap_to_bp(2) returned error %d.",
- 				__func__, error);
--			return error;
-+			goto out_unlock;
- 		}
- 		next_agino = be32_to_cpu(dip->di_next_unlinked);
- 		ASSERT(next_agino != 0);
-@@ -2146,7 +2159,12 @@ xfs_iunlink_remove(
- 				  (offset + sizeof(xfs_agino_t) - 1));
- 		xfs_inobp_check(mp, last_ibp);
- 	}
--	return 0;
-+	pag->pagi_unlinked_count--;
++TRACE_EVENT(xfs_iunlink_update_bucket,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, unsigned int bucket,
++		 xfs_agino_t old_ptr, xfs_agino_t new_ptr),
++	TP_ARGS(mp, agno, bucket, old_ptr, new_ptr),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(unsigned int, bucket)
++		__field(xfs_agino_t, old_ptr)
++		__field(xfs_agino_t, new_ptr)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->bucket = bucket;
++		__entry->old_ptr = old_ptr;
++		__entry->new_ptr = new_ptr;
++	),
++	TP_printk("dev %d:%d agno %u bucket %u old 0x%x new 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->bucket,
++		  __entry->old_ptr,
++		  __entry->new_ptr)
++);
 +
-+out_unlock:
-+	mutex_unlock(&pag->pagi_unlinked_lock);
-+	xfs_perag_put(pag);
-+	return error;
- }
+ #endif /* _TRACE_XFS_H */
  
- /*
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index ff9a27834c50..c920b8aeba01 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -5054,6 +5054,7 @@ xlog_recover_process_one_iunlink(
- 	struct xfs_buf			*ibp;
- 	struct xfs_dinode		*dip;
- 	struct xfs_inode		*ip;
-+	struct xfs_perag		*pag;
- 	xfs_ino_t			ino;
- 	int				error;
- 
-@@ -5077,6 +5078,13 @@ xlog_recover_process_one_iunlink(
- 	agino = be32_to_cpu(dip->di_next_unlinked);
- 	xfs_buf_relse(ibp);
- 
-+	/* Make sure the in-core data knows about this unlinked inode. */
-+	pag = xfs_perag_get(mp, agno);
-+	mutex_lock(&pag->pagi_unlinked_lock);
-+	pag->pagi_unlinked_count++;
-+	mutex_unlock(&pag->pagi_unlinked_lock);
-+	xfs_perag_put(pag);
-+
- 	/*
- 	 * Prevent any DMAPI event from being sent when the reference on
- 	 * the inode is dropped.
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 10be706ec72e..6bfc985669e0 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -149,6 +149,9 @@ xfs_free_perag(
- 		spin_unlock(&mp->m_perag_lock);
- 		ASSERT(pag);
- 		ASSERT(atomic_read(&pag->pag_ref) == 0);
-+		ASSERT(pag->pagi_unlinked_count == 0 ||
-+		       XFS_FORCED_SHUTDOWN(mp));
-+		mutex_destroy(&pag->pagi_unlinked_lock);
- 		xfs_buf_hash_destroy(pag);
- 		mutex_destroy(&pag->pag_ici_reclaim_lock);
- 		call_rcu(&pag->rcu_head, __xfs_free_perag);
-@@ -227,6 +230,7 @@ xfs_initialize_perag(
- 		/* first new pag is fully initialized */
- 		if (first_initialised == NULLAGNUMBER)
- 			first_initialised = index;
-+		mutex_init(&pag->pagi_unlinked_lock);
- 	}
- 
- 	index = xfs_set_inode_alloc(mp, agcount);
-@@ -249,6 +253,7 @@ xfs_initialize_perag(
- 		if (!pag)
- 			break;
- 		xfs_buf_hash_destroy(pag);
-+		mutex_destroy(&pag->pagi_unlinked_lock);
- 		mutex_destroy(&pag->pag_ici_reclaim_lock);
- 		kmem_free(pag);
- 	}
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index e344b1dfde63..0fcc6b6a4f67 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -388,6 +388,10 @@ typedef struct xfs_perag {
- 
- 	/* reference count */
- 	uint8_t			pagf_refcount_level;
-+
-+	/* unlinked inodes */
-+	struct mutex		pagi_unlinked_lock;
-+	uint32_t		pagi_unlinked_count;
- } xfs_perag_t;
- 
- static inline struct xfs_ag_resv *
+ #undef TRACE_INCLUDE_PATH
