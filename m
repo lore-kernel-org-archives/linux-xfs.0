@@ -1,106 +1,204 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:58848 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725787AbfAaRyZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 12:54:25 -0500
-Date: Thu, 31 Jan 2019 09:54:04 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 0/7] xfs: fix [f]inobt magic value verification
-Message-ID: <20190131175404.GC5761@magnolia>
-References: <20190131154608.36837-1-bfoster@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:48676 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725849AbfAaT24 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Jan 2019 14:28:56 -0500
+Date: Thu, 31 Jan 2019 14:28:53 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 08/11] xfs: move transaction handling to
+ xfs_bmapi_convert_delalloc
+Message-ID: <20190131192853.GJ36239@bfoster>
+References: <20190131075524.4769-1-hch@lst.de>
+ <20190131075524.4769-9-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190131154608.36837-1-bfoster@redhat.com>
+In-Reply-To: <20190131075524.4769-9-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 31, 2019 at 10:46:01AM -0500, Brian Foster wrote:
-> Hi all,
+On Thu, Jan 31, 2019 at 08:55:21AM +0100, Christoph Hellwig wrote:
+> No need to deal with the transaction and the inode locking in the
+> caller.  Also move to automatic unlocking on transaction commit or
+> cancel to simplify the code a little more.
 > 
-> Here's v2 of the verifier magic value cleanup. This is generally the
-> same idea as the previous version. The primary difference is that v2
-> first converts verifiers that use cpu order magic comparisons to use
-> on-disk (big endian) order and then stores/compares the verifier magic
-> values in on-disk order. The purpose of this change is to reduce the
-> number of byte swaps required at runtime for verifier magic value
-> checks. Further changes include some cleanups, additional refactoring
-> and the inclusion of Darrick's scrub ->b_ops fix with some modifications
-> from the original version.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 33 +++++++++++++++++++++++++++++----
+>  fs/xfs/libxfs/xfs_bmap.h |  6 +++---
+>  fs/xfs/xfs_iomap.c       | 32 ++++----------------------------
+>  3 files changed, 36 insertions(+), 35 deletions(-)
 > 
-> This survives fstests on v4 and v5 filesystems on both little and big
-> endian systems without regressions. Thoughts, reviews, flames
-> appreciated.
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 818cd018d510..408a6da14849 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4446,16 +4446,32 @@ xfs_bmapi_write(
+>   */
+>  int
+>  xfs_bmapi_convert_delalloc(
+> -	struct xfs_trans	*tp,
+>  	struct xfs_inode	*ip,
+>  	int			whichfork,
+>  	xfs_fileoff_t		offset_fsb,
+> -	struct xfs_bmbt_irec	*imap)
+> +	struct xfs_bmbt_irec	*imap,
+> +	unsigned int		*seq)
+>  {
+>  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> +	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_bmalloca	bma = { NULL };
+> +	struct xfs_trans	*tp;
+>  	int			error;
+>  
+> +	/*
+> +	 * Space for the extent and indirect blocks was reserved when the
+> +	 * delalloc extent was created so there's no need to do so here.
+> +	 */
+> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0,
+> +				XFS_TRANS_RESERVE, &tp);
+> +	if (error)
+> +		return error;
+> +
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> +
+> +	*seq = READ_ONCE(ifp->if_seq);
+> +
 
-One thing I was expecting to see but didn't -- are you going to convert
-the bnobt/cntbt verifiers so that we have tree-specific magic number
-checking?
+seq is going to change once we do the allocation. I think you want to
+move this further down to where we set imap, otherwise looks good.
 
---D
+Brian
 
-> Brian
-> 
-> v2:
-> - Include djwong's ->b_ops patch w/ modifications.
-> - Added patch to fix up existing cpu endian magic checks, fold in typo
->   fix.
-> - Replace static inline magic verifier helper with out of line variant,
->   kill macro.
-> - Store on-disk byte order magics in ->b_ops.
-> - Added patch to refactor common xfs_da3_blkinfo checks.
-> v1: https://marc.info/?l=linux-xfs&m=154878684317178&w=2
-> - Remove endian conversion from helper.
-> - Drop finobt bad magic mitigation patch.
-> - Additional verifier magic fixups.
-> - Add verifier name typo fixup.
-> rfcv2: https://marc.info/?l=linux-xfs&m=154868884311668&w=2
-> - Split off finobt verifier into separate patch, assign it
->   appropriately.
-> - Created helpers for xfs_buf_ops magic value verification.
-> - Added error mitigation patch for problematic finobt blocks.
-> rfcv1: https://marc.info/?l=linux-xfs&m=154834528212262&w=2
-> 
-> Brian Foster (6):
->   xfs: always check magic values in on-disk byte order
->   xfs: create a separate finobt verifier
->   xfs: distinguish between inobt and finobt magic values
->   xfs: use verifier magic field in dir2 leaf verifiers
->   xfs: miscellaneous verifier magic value fixups
->   xfs: factor xfs_da3_blkinfo verification into common helper
-> 
-> Darrick J. Wong (1):
->   xfs: set buffer ops when repair probes for btree type
-> 
->  fs/xfs/libxfs/xfs_ag.c             |   2 +-
->  fs/xfs/libxfs/xfs_alloc.c          |  12 ++--
->  fs/xfs/libxfs/xfs_attr_leaf.c      |  21 ++----
->  fs/xfs/libxfs/xfs_attr_remote.c    |   8 ++-
->  fs/xfs/libxfs/xfs_bmap_btree.c     |  13 ++--
->  fs/xfs/libxfs/xfs_da_btree.c       |  50 ++++++++++-----
->  fs/xfs/libxfs/xfs_da_format.h      |   2 +
->  fs/xfs/libxfs/xfs_dir2_block.c     |  10 +--
->  fs/xfs/libxfs/xfs_dir2_data.c      |  12 ++--
->  fs/xfs/libxfs/xfs_dir2_leaf.c      | 100 ++++++-----------------------
->  fs/xfs/libxfs/xfs_dir2_node.c      |  11 ++--
->  fs/xfs/libxfs/xfs_ialloc.c         |   3 +-
->  fs/xfs/libxfs/xfs_ialloc_btree.c   |  25 +++++---
->  fs/xfs/libxfs/xfs_inode_buf.c      |   2 +-
->  fs/xfs/libxfs/xfs_refcount_btree.c |   3 +-
->  fs/xfs/libxfs/xfs_rmap_btree.c     |   3 +-
->  fs/xfs/libxfs/xfs_sb.c             |   5 +-
->  fs/xfs/libxfs/xfs_shared.h         |   1 +
->  fs/xfs/libxfs/xfs_symlink_remote.c |   3 +-
->  fs/xfs/scrub/agheader_repair.c     |   2 +-
->  fs/xfs/scrub/repair.c              |  11 +++-
->  fs/xfs/xfs_buf.c                   |  41 ++++++++++--
->  fs/xfs/xfs_buf.h                   |   4 +-
->  fs/xfs/xfs_log_recover.c           |   6 +-
->  fs/xfs/xfs_trans_buf.c             |   2 +-
->  25 files changed, 183 insertions(+), 169 deletions(-)
-> 
+>  	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &bma.icur, &bma.got) ||
+>  	    bma.got.br_startoff > offset_fsb) {
+>  		/*
+> @@ -4464,7 +4480,8 @@ xfs_bmapi_convert_delalloc(
+>  		 * might have moved the extent to the data fork in the meantime.
+>  		 */
+>  		WARN_ON_ONCE(whichfork != XFS_COW_FORK);
+> -		return -EAGAIN;
+> +		error = -EAGAIN;
+> +		goto out_trans_cancel;
+>  	}
+>  
+>  	/*
+> @@ -4473,7 +4490,7 @@ xfs_bmapi_convert_delalloc(
+>  	 */
+>  	if (!isnullstartblock(bma.got.br_startblock)) {
+>  		*imap = bma.got;
+> -		return 0;
+> +		goto out_trans_cancel;
+>  	}
+>  
+>  	bma.tp = tp;
+> @@ -4510,8 +4527,16 @@ xfs_bmapi_convert_delalloc(
+>  
+>  	error = xfs_bmap_btree_to_extents(tp, ip, bma.cur, &bma.logflags,
+>  			whichfork);
+> +	if (error)
+> +		goto out_finish;
+> +
+> +	xfs_bmapi_finish(&bma, whichfork, 0);
+> +	return xfs_trans_commit(tp);
+> +
+>  out_finish:
+>  	xfs_bmapi_finish(&bma, whichfork, error);
+> +out_trans_cancel:
+> +	xfs_trans_cancel(tp);
+>  	return error;
+>  }
+>  
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 5bdfa8001f07..78b190b6e908 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -223,9 +223,9 @@ int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
+>  		xfs_fileoff_t off, xfs_filblks_t len, xfs_filblks_t prealloc,
+>  		struct xfs_bmbt_irec *got, struct xfs_iext_cursor *cur,
+>  		int eof);
+> -int	xfs_bmapi_convert_delalloc(struct xfs_trans *tp, struct xfs_inode *ip,
+> -		int whichfork, xfs_fileoff_t offset_fsb,
+> -		struct xfs_bmbt_irec *imap);
+> +int	xfs_bmapi_convert_delalloc(struct xfs_inode *ip, int whichfork,
+> +		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap,
+> +		unsigned int *seq);
+>  
+>  static inline void
+>  xfs_bmap_add_free(
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index b7c1b279057b..39be741cac5a 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -684,11 +684,9 @@ xfs_iomap_write_allocate(
+>  	unsigned int		*seq)
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+> -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	xfs_fileoff_t		offset_fsb;
+>  	xfs_fileoff_t		map_start_fsb;
+>  	xfs_extlen_t		map_count_fsb;
+> -	struct xfs_trans	*tp;
+>  	int			error = 0;
+>  
+>  	/*
+> @@ -716,17 +714,8 @@ xfs_iomap_write_allocate(
+>  		/*
+>  		 * Allocate in a loop because it may take several attempts to
+>  		 * allocate real blocks for a contiguous delalloc extent if free
+> -		 * space is sufficiently fragmented. Note that space for the
+> -		 * extent and indirect blocks was reserved when the delalloc
+> -		 * extent was created so there's no need to do so here.
+> +		 * space is sufficiently fragmented.
+>  		 */
+> -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0,
+> -					XFS_TRANS_RESERVE, &tp);
+> -		if (error)
+> -			return error;
+> -
+> -		xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -		xfs_trans_ijoin(tp, ip, 0);
+>  
+>  		/*
+>  		 * ilock was dropped since imap was populated which means it
+> @@ -737,17 +726,10 @@ xfs_iomap_write_allocate(
+>  		 * caller. We'll trim it down to the caller's most recently
+>  		 * validated range before we return.
+>  		 */
+> -		error = xfs_bmapi_convert_delalloc(tp, ip, whichfork,
+> -				offset_fsb, imap);
+> -		if (error)
+> -			goto trans_cancel;
+> -
+> -		error = xfs_trans_commit(tp);
+> +		error = xfs_bmapi_convert_delalloc(ip, whichfork, offset_fsb,
+> +				imap, seq);
+>  		if (error)
+> -			goto error0;
+> -
+> -		*seq = READ_ONCE(ifp->if_seq);
+> -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +			return error;
+>  
+>  		/*
+>  		 * See if we were able to allocate an extent that covers at
+> @@ -766,12 +748,6 @@ xfs_iomap_write_allocate(
+>  			return 0;
+>  		}
+>  	}
+> -
+> -trans_cancel:
+> -	xfs_trans_cancel(tp);
+> -error0:
+> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -	return error;
+>  }
+>  
+>  int
 > -- 
-> 2.17.2
+> 2.20.1
 > 
