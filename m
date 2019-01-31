@@ -1,118 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53028 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727928AbfAaSEB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Jan 2019 13:04:01 -0500
-Date: Thu, 31 Jan 2019 13:03:59 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 0/7] xfs: fix [f]inobt magic value verification
-Message-ID: <20190131180358.GA36239@bfoster>
-References: <20190131154608.36837-1-bfoster@redhat.com>
- <20190131175404.GC5761@magnolia>
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:41913 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726426AbfAaS0O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Jan 2019 13:26:14 -0500
+Received: by mail-pg1-f195.google.com with SMTP id m1so1697651pgq.8
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Jan 2019 10:26:13 -0800 (PST)
+Date: Thu, 31 Jan 2019 10:26:09 -0800
+From: Luis Chamberlain <mcgrof@kernel.org>
+Subject: Re: [PATCH 01/10] xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
+Message-ID: <20190131182609.GN11489@garbanzo.do-not-panic.com>
+References: <20190131180919.2500-1-mcgrof@kernel.org>
+ <20190131180919.2500-2-mcgrof@kernel.org>
+ <20190131181903.GB4989@kroah.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190131175404.GC5761@magnolia>
+In-Reply-To: <20190131181903.GB4989@kroah.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-xfs@vger.kernel.org, Alexander.Levin@microsoft.com, amir73il@gmail.com, hch@infradead.org, Carlos Maiolino <cmaiolino@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-On Thu, Jan 31, 2019 at 09:54:04AM -0800, Darrick J. Wong wrote:
-> On Thu, Jan 31, 2019 at 10:46:01AM -0500, Brian Foster wrote:
-> > Hi all,
+On Thu, Jan 31, 2019 at 07:19:03PM +0100, Greg KH wrote:
+> On Thu, Jan 31, 2019 at 10:09:10AM -0800, Luis Chamberlain wrote:
+> > From: Carlos Maiolino <cmaiolino@redhat.com>
 > > 
-> > Here's v2 of the verifier magic value cleanup. This is generally the
-> > same idea as the previous version. The primary difference is that v2
-> > first converts verifiers that use cpu order magic comparisons to use
-> > on-disk (big endian) order and then stores/compares the verifier magic
-> > values in on-disk order. The purpose of this change is to reduce the
-> > number of byte swaps required at runtime for verifier magic value
-> > checks. Further changes include some cleanups, additional refactoring
-> > and the inclusion of Darrick's scrub ->b_ops fix with some modifications
-> > from the original version.
+> > The addition of FIBT, RMAP and REFCOUNT changed the offsets into
+> > __xfssats structure.
 > > 
-> > This survives fstests on v4 and v5 filesystems on both little and big
-> > endian systems without regressions. Thoughts, reviews, flames
-> > appreciated.
+> > This caused xqmstat_proc_show() to display garbage data via
+> > /proc/fs/xfs/xqmstat, once it relies on the offsets marked via macros.
+> > 
+> > Fix it.
+> > 
+> > Fixes: 00f4e4f9 xfs: add rmap btree stats infrastructure
+> > Fixes: aafc3c24 xfs: support the XFS_BTNUM_FINOBT free inode btree type
+> > Fixes: 46eeb521 xfs: introduce refcount btree definitions
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> > Signed-off-by: Dave Chinner <david@fromorbit.com>
+> > Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> > ---
+> >  fs/xfs/xfs_stats.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> One thing I was expecting to see but didn't -- are you going to convert
-> the bnobt/cntbt verifiers so that we have tree-specific magic number
-> checking?
+> You do not list what the upstream git commit ids are on any of these
+> patches :(
 > 
+> That's a requirement, sorry, can you respin these and add that to the
+> first line of the commit, as is normally done in the stable patches?
 
-I originally skipped over that one because the hardcoded checks looked
-convoluted. Looking again, we probably should include it simply because
-it's a similar shared verifier case as for the inobt vs. finobt. We
-might still have to keep around a couple hardcoded magic checks for the
-pagf_levels thing, but I'll look into it and tack on a new patch for
-xfs_allocbt_buf_ops.
+Sure thing, sorry forgot about that. Will wait for review on the set
+first, and if there are no complaints will send a v2 as required.
 
-Brian
-
-> --D
-> 
-> > Brian
-> > 
-> > v2:
-> > - Include djwong's ->b_ops patch w/ modifications.
-> > - Added patch to fix up existing cpu endian magic checks, fold in typo
-> >   fix.
-> > - Replace static inline magic verifier helper with out of line variant,
-> >   kill macro.
-> > - Store on-disk byte order magics in ->b_ops.
-> > - Added patch to refactor common xfs_da3_blkinfo checks.
-> > v1: https://marc.info/?l=linux-xfs&m=154878684317178&w=2
-> > - Remove endian conversion from helper.
-> > - Drop finobt bad magic mitigation patch.
-> > - Additional verifier magic fixups.
-> > - Add verifier name typo fixup.
-> > rfcv2: https://marc.info/?l=linux-xfs&m=154868884311668&w=2
-> > - Split off finobt verifier into separate patch, assign it
-> >   appropriately.
-> > - Created helpers for xfs_buf_ops magic value verification.
-> > - Added error mitigation patch for problematic finobt blocks.
-> > rfcv1: https://marc.info/?l=linux-xfs&m=154834528212262&w=2
-> > 
-> > Brian Foster (6):
-> >   xfs: always check magic values in on-disk byte order
-> >   xfs: create a separate finobt verifier
-> >   xfs: distinguish between inobt and finobt magic values
-> >   xfs: use verifier magic field in dir2 leaf verifiers
-> >   xfs: miscellaneous verifier magic value fixups
-> >   xfs: factor xfs_da3_blkinfo verification into common helper
-> > 
-> > Darrick J. Wong (1):
-> >   xfs: set buffer ops when repair probes for btree type
-> > 
-> >  fs/xfs/libxfs/xfs_ag.c             |   2 +-
-> >  fs/xfs/libxfs/xfs_alloc.c          |  12 ++--
-> >  fs/xfs/libxfs/xfs_attr_leaf.c      |  21 ++----
-> >  fs/xfs/libxfs/xfs_attr_remote.c    |   8 ++-
-> >  fs/xfs/libxfs/xfs_bmap_btree.c     |  13 ++--
-> >  fs/xfs/libxfs/xfs_da_btree.c       |  50 ++++++++++-----
-> >  fs/xfs/libxfs/xfs_da_format.h      |   2 +
-> >  fs/xfs/libxfs/xfs_dir2_block.c     |  10 +--
-> >  fs/xfs/libxfs/xfs_dir2_data.c      |  12 ++--
-> >  fs/xfs/libxfs/xfs_dir2_leaf.c      | 100 ++++++-----------------------
-> >  fs/xfs/libxfs/xfs_dir2_node.c      |  11 ++--
-> >  fs/xfs/libxfs/xfs_ialloc.c         |   3 +-
-> >  fs/xfs/libxfs/xfs_ialloc_btree.c   |  25 +++++---
-> >  fs/xfs/libxfs/xfs_inode_buf.c      |   2 +-
-> >  fs/xfs/libxfs/xfs_refcount_btree.c |   3 +-
-> >  fs/xfs/libxfs/xfs_rmap_btree.c     |   3 +-
-> >  fs/xfs/libxfs/xfs_sb.c             |   5 +-
-> >  fs/xfs/libxfs/xfs_shared.h         |   1 +
-> >  fs/xfs/libxfs/xfs_symlink_remote.c |   3 +-
-> >  fs/xfs/scrub/agheader_repair.c     |   2 +-
-> >  fs/xfs/scrub/repair.c              |  11 +++-
-> >  fs/xfs/xfs_buf.c                   |  41 ++++++++++--
-> >  fs/xfs/xfs_buf.h                   |   4 +-
-> >  fs/xfs/xfs_log_recover.c           |   6 +-
-> >  fs/xfs/xfs_trans_buf.c             |   2 +-
-> >  25 files changed, 183 insertions(+), 169 deletions(-)
-> > 
-> > -- 
-> > 2.17.2
-> > 
+  Luis
