@@ -1,35 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:35610 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726172AbfBAQIm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Feb 2019 11:08:42 -0500
-Date: Fri, 1 Feb 2019 17:08:40 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 01/11] FOLD: improve xfs_bmapi_delalloc
-Message-ID: <20190201160840.GB6532@lst.de>
-References: <20190131075524.4769-1-hch@lst.de> <20190131075524.4769-2-hch@lst.de> <20190131180957.GC36239@bfoster> <20190201072322.GA14711@lst.de> <20190201072820.GA14783@lst.de> <20190201124655.GB40798@bfoster>
+Received: from aserp2130.oracle.com ([141.146.126.79]:37774 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726721AbfBAQ4e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Feb 2019 11:56:34 -0500
+Date: Fri, 1 Feb 2019 08:56:16 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [GIT PULL] iomap: more fixes for v5.0
+Message-ID: <20190201165616.GG5761@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190201124655.GB40798@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
 
-On Fri, Feb 01, 2019 at 07:46:56AM -0500, Brian Foster wrote:
-> Ok, I see. Hmm.. I'm wondering how accurate the ->total value is in the
-> delalloc conversion path. IIUC, the purpose is to try and select an AG
-> with enough blocks for the allocation along with the indirect blocks to
-> insert into the bmbt. Both of those have been reserved at delalloc res
-> time, hence not needed in the tx. The AG selection code uses the max of
-> total and the allocation request size, which means that for most
-> conversions (> maxlevels) total is a no-op. Shouldn't total reflect the
-> full size of the allocation (alloc size + maxlevels) regardless of
-> whether the blocks were already "globally reserved?" Note that this is
-> existing code and probably not something I would change in this series..
+Hi Linus,
 
-I think the total value in this path is completely bogus.  A while
-ago I had a series trying to sort out some of these reservation
-issues, but it will take a fair amount of work to get back to that.
+Here are a couple of iomap fixes to eliminate some memory corruption
+and hang problems that were reported.
+
+--D
+
+The following changes since commit 1c7fc5cbc33980acd13d668f1c8f0313d6ae9fd8:
+
+  Linux 5.0-rc2 (2019-01-14 10:41:12 +1200)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.0-fixes-1
+
+for you to fetch changes up to 4ea899ead2786a30aaa8181fefa81a3df4ad28f6:
+
+  iomap: fix a use after free in iomap_dio_rw (2019-01-27 08:47:42 -0800)
+
+----------------------------------------------------------------
+Changes since last update:
+- fix page migration when using iomap for pagecache management
+- fix a use-after-free bug in the directio code
+
+----------------------------------------------------------------
+Christoph Hellwig (1):
+      iomap: fix a use after free in iomap_dio_rw
+
+Piotr Jaroszynski (1):
+      iomap: get/put the page in iomap_page_create/release()
+
+ fs/iomap.c | 37 ++++++++++++++++++++++++++++++-------
+ 1 file changed, 30 insertions(+), 7 deletions(-)
