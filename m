@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46982 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46990 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726972AbfBAOc5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Feb 2019 09:32:57 -0500
+        id S1726972AbfBAOc6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Feb 2019 09:32:58 -0500
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B425D5D61C
-        for <linux-xfs@vger.kernel.org>; Fri,  1 Feb 2019 14:32:57 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 360A558E29
+        for <linux-xfs@vger.kernel.org>; Fri,  1 Feb 2019 14:32:58 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6C0965D9D1
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D1FE85D962
         for <linux-xfs@vger.kernel.org>; Fri,  1 Feb 2019 14:32:57 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 2/6] xfs: update fork seq counter on data fork changes
-Date: Fri,  1 Feb 2019 09:32:52 -0500
-Message-Id: <20190201143256.43232-3-bfoster@redhat.com>
+Subject: [PATCH v4 3/6] xfs: validate writeback mapping using data fork seq counter
+Date: Fri,  1 Feb 2019 09:32:53 -0500
+Message-Id: <20190201143256.43232-4-bfoster@redhat.com>
 In-Reply-To: <20190201143256.43232-1-bfoster@redhat.com>
 References: <20190201143256.43232-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,61 +22,194 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-The sequence counter in the xfs_ifork structure is only updated on
-COW forks. This is because the counter is currently only used to
-optimize out repetitive COW fork checks at writeback time.
+The writeback code caches the current extent mapping across multiple
+xfs_do_writepage() calls to avoid repeated lookups for sequential
+pages backed by the same extent. This is known to be slightly racy
+with extent fork changes in certain difficult to reproduce
+scenarios. The cached extent is trimmed to within EOF to help avoid
+the most common vector for this problem via speculative
+preallocation management, but this is a band-aid that does not
+address the fundamental problem.
 
-Tweak the extent code to update the seq counter regardless of the
-fork type in preparation for using this counter on data forks as
-well.
+Now that we have an xfs_ifork sequence counter mechanism used to
+facilitate COW writeback, we can use the same mechanism to validate
+consistency between the data fork and cached writeback mappings. On
+its face, this is somewhat of a big hammer approach because any
+change to the data fork invalidates any mapping currently cached by
+a writeback in progress regardless of whether the data fork change
+overlaps with the range under writeback. In practice, however, the
+impact of this approach is minimal in most cases.
+
+First, data fork changes (delayed allocations) caused by sustained
+sequential buffered writes are amortized across speculative
+preallocations. This means that a cached mapping won't be
+invalidated by each buffered write of a common file copy workload,
+but rather only on less frequent allocation events. Second, the
+extent tree is always entirely in-core so an additional lookup of a
+usable extent mostly costs a shared ilock cycle and in-memory tree
+lookup. This means that a cached mapping reval is relatively cheap
+compared to the I/O itself. Third, spurious invalidations don't
+impact ioend construction. This means that even if the same extent
+is revalidated multiple times across multiple writepage instances,
+we still construct and submit the same size ioend (and bio) if the
+blocks are physically contiguous.
+
+Update struct xfs_writepage_ctx with a new field to hold the
+sequence number of the data fork associated with the currently
+cached mapping. Check the wpc seqno against the data fork when the
+mapping is validated and reestablish the mapping whenever the fork
+has changed since the mapping was cached. This ensures that
+writeback always uses a valid extent mapping and thus prevents lost
+writebacks and stale delalloc block problems.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_iext_tree.c  | 13 ++++++-------
- fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
- 2 files changed, 7 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_aops.c  | 60 ++++++++++++++++++++++++++++++++++++----------
+ fs/xfs/xfs_iomap.c |  5 ++--
+ 2 files changed, 49 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
-index 771dd072015d..bc690f2409fa 100644
---- a/fs/xfs/libxfs/xfs_iext_tree.c
-+++ b/fs/xfs/libxfs/xfs_iext_tree.c
-@@ -614,16 +614,15 @@ xfs_iext_realloc_root(
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index d9048bcea49c..5b0256a8a420 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -29,6 +29,7 @@
+ struct xfs_writepage_ctx {
+ 	struct xfs_bmbt_irec    imap;
+ 	unsigned int		io_type;
++	unsigned int		data_seq;
+ 	unsigned int		cow_seq;
+ 	struct xfs_ioend	*ioend;
+ };
+@@ -301,6 +302,42 @@ xfs_end_bio(
+ 		xfs_destroy_ioend(ioend, blk_status_to_errno(bio->bi_status));
  }
  
- /*
-- * Increment the sequence counter if we are on a COW fork.  This allows
-- * the writeback code to skip looking for a COW extent if the COW fork
-- * hasn't changed.  We use WRITE_ONCE here to ensure the update to the
-- * sequence counter is seen before the modifications to the extent
-- * tree itself take effect.
-+ * Increment the sequence counter on extent tree changes. If we are on a COW
-+ * fork, this allows the writeback code to skip looking for a COW extent if the
-+ * COW fork hasn't changed. We use WRITE_ONCE here to ensure the update to the
-+ * sequence counter is seen before the modifications to the extent tree itself
-+ * take effect.
-  */
- static inline void xfs_iext_inc_seq(struct xfs_ifork *ifp, int state)
++/*
++ * Fast revalidation of the cached writeback mapping. Return true if the current
++ * mapping is valid, false otherwise.
++ */
++static bool
++xfs_imap_valid(
++	struct xfs_writepage_ctx	*wpc,
++	struct xfs_inode		*ip,
++	xfs_fileoff_t			offset_fsb)
++{
++	if (offset_fsb < wpc->imap.br_startoff ||
++	    offset_fsb >= wpc->imap.br_startoff + wpc->imap.br_blockcount)
++		return false;
++	/*
++	 * If this is a COW mapping, it is sufficient to check that the mapping
++	 * covers the offset. Be careful to check this first because the caller
++	 * can revalidate a COW mapping without updating the data seqno.
++	 */
++	if (wpc->io_type == XFS_IO_COW)
++		return true;
++
++	/*
++	 * This is not a COW mapping. Check the sequence number of the data fork
++	 * because concurrent changes could have invalidated the extent. Check
++	 * the COW fork because concurrent changes since the last time we
++	 * checked (and found nothing at this offset) could have added
++	 * overlapping blocks.
++	 */
++	if (wpc->data_seq != READ_ONCE(ip->i_df.if_seq))
++		return false;
++	if (xfs_inode_has_cow_data(ip) &&
++	    wpc->cow_seq != READ_ONCE(ip->i_cowfp->if_seq))
++		return false;
++	return true;
++}
++
+ STATIC int
+ xfs_map_blocks(
+ 	struct xfs_writepage_ctx *wpc,
+@@ -315,9 +352,11 @@ xfs_map_blocks(
+ 	struct xfs_bmbt_irec	imap;
+ 	int			whichfork = XFS_DATA_FORK;
+ 	struct xfs_iext_cursor	icur;
+-	bool			imap_valid;
+ 	int			error = 0;
+ 
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return -EIO;
++
+ 	/*
+ 	 * We have to make sure the cached mapping is within EOF to protect
+ 	 * against eofblocks trimming on file release leaving us with a stale
+@@ -346,17 +385,9 @@ xfs_map_blocks(
+ 	 * against concurrent updates and provides a memory barrier on the way
+ 	 * out that ensures that we always see the current value.
+ 	 */
+-	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
+-		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
+-	if (imap_valid &&
+-	    (!xfs_inode_has_cow_data(ip) ||
+-	     wpc->io_type == XFS_IO_COW ||
+-	     wpc->cow_seq == READ_ONCE(ip->i_cowfp->if_seq)))
++	if (xfs_imap_valid(wpc, ip, offset_fsb))
+ 		return 0;
+ 
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return -EIO;
+-
+ 	/*
+ 	 * If we don't have a valid map, now it's time to get a new one for this
+ 	 * offset.  This will convert delayed allocations (including COW ones)
+@@ -403,9 +434,10 @@ xfs_map_blocks(
+ 	}
+ 
+ 	/*
+-	 * Map valid and no COW extent in the way?  We're done.
++	 * No COW extent overlap. Revalidate now that we may have updated
++	 * ->cow_seq. If the data mapping is still valid, we're done.
+ 	 */
+-	if (imap_valid) {
++	if (xfs_imap_valid(wpc, ip, offset_fsb)) {
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 		return 0;
+ 	}
+@@ -417,6 +449,7 @@ xfs_map_blocks(
+ 	 */
+ 	if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap))
+ 		imap.br_startoff = end_fsb;	/* fake a hole past EOF */
++	wpc->data_seq = READ_ONCE(ip->i_df.if_seq);
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 
+ 	if (imap.br_startoff > offset_fsb) {
+@@ -454,7 +487,8 @@ xfs_map_blocks(
+ 	return 0;
+ allocate_blocks:
+ 	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap,
+-			&wpc->cow_seq);
++			whichfork == XFS_COW_FORK ?
++					 &wpc->cow_seq : &wpc->data_seq);
+ 	if (error)
+ 		return error;
+ 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 27c93b5f029d..ab69caa685b4 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -681,7 +681,7 @@ xfs_iomap_write_allocate(
+ 	int		whichfork,
+ 	xfs_off_t	offset,
+ 	xfs_bmbt_irec_t *imap,
+-	unsigned int	*cow_seq)
++	unsigned int	*seq)
  {
--	if (state & BMAP_COWFORK)
--		WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
-+	WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
- }
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
+@@ -797,8 +797,7 @@ xfs_iomap_write_allocate(
+ 			if (error)
+ 				goto error0;
  
- void
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 60361d2d74a1..00c62ce170d0 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -14,7 +14,7 @@ struct xfs_dinode;
-  */
- struct xfs_ifork {
- 	int			if_bytes;	/* bytes in if_u1 */
--	unsigned int		if_seq;		/* cow fork mod counter */
-+	unsigned int		if_seq;		/* fork mod counter */
- 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
- 	short			if_broot_bytes;	/* bytes allocated for root */
- 	unsigned char		if_flags;	/* per-fork flags */
+-			if (whichfork == XFS_COW_FORK)
+-				*cow_seq = READ_ONCE(ifp->if_seq);
++			*seq = READ_ONCE(ifp->if_seq);
+ 			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		}
+ 
 -- 
 2.17.2
