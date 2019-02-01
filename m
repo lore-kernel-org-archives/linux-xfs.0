@@ -1,97 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:39460 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:39602 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725786AbfBAIBh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Feb 2019 03:01:37 -0500
-Date: Fri, 1 Feb 2019 00:01:36 -0800
+        with ESMTP id S1725786AbfBAIDo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Feb 2019 03:03:44 -0500
+Date: Fri, 1 Feb 2019 00:03:43 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/8] xfs: clean up iunlink functions
-Message-ID: <20190201080136.GC22295@infradead.org>
+Subject: Re: [PATCH 8/8] xfs: cache unlinked pointers in an rhashtable
+Message-ID: <20190201080343.GD22295@infradead.org>
 References: <154897667054.26065.13164381203002725289.stgit@magnolia>
- <154897667679.26065.17995098675615600714.stgit@magnolia>
+ <154897672012.26065.1375987197453969157.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <154897667679.26065.17995098675615600714.stgit@magnolia>
+In-Reply-To: <154897672012.26065.1375987197453969157.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 31, 2019 at 03:17:56PM -0800, Darrick J. Wong wrote:
+On Thu, Jan 31, 2019 at 03:18:40PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Fix some indentation issues with the iunlink functions and reorganize
-> the tops of the functions to be identical.  No functional changes.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_inode.c |   77 +++++++++++++++++++++++++++-------------------------
->  1 file changed, 40 insertions(+), 37 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index c8bf02be0003..d18354517320 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1892,26 +1892,32 @@ xfs_inactive(
->   */
->  STATIC int
->  xfs_iunlink(
-> -	struct xfs_trans *tp,
-> -	struct xfs_inode *ip)
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*ip)
->  {
-> -	xfs_mount_t	*mp = tp->t_mountp;
-> -	xfs_agi_t	*agi;
-> -	xfs_dinode_t	*dip;
-> -	xfs_buf_t	*agibp;
-> -	xfs_buf_t	*ibp;
-> -	xfs_agino_t	agino;
-> -	short		bucket_index;
-> -	int		offset;
-> -	int		error;
-> +	struct xfs_mount	*mp = tp->t_mountp;
-> +	struct xfs_agi		*agi;
-> +	struct xfs_dinode	*dip;
-> +	struct xfs_buf		*agibp;
-> +	struct xfs_buf		*ibp;
-> +	xfs_agnumber_t		agno;
-> +	xfs_agino_t		agino;
-> +	short			bucket_index;
-> +	int			offset;
-> +	int			error;
->  
->  	ASSERT(VFS_I(ip)->i_mode != 0);
-> +	ASSERT(xfs_verify_ino(mp, ip->i_ino));
+> Use a rhashtable to cache the unlinked list incore.  This should speed
+> up unlinked processing considerably when there are a lot of inodes on
+> the unlinked list because iunlink_remove no longer has to traverse an
+> entire bucket list to find which inode points to the one being removed.
 
-This verify_ino calls seems odd given that we pass in an initialized
-inode struct..
-
-> +
-> +	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
-> +	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
-
-And then we could move these initializations up int othe lines with
-the variable declarations.
-
-> +	bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
->  
->  	/*
->  	 * Get the agi buffer first.  It ensures lock ordering
->  	 * on the list.
->  	 */
-
-If you are touching this anyway, the whole comment could be changed
-into a single line..
-
-> +	if (!xfs_verify_ino(mp, ip->i_ino))
-> +		return -EFSCORRUPTED;
->  
-> -	mp = tp->t_mountp;
->  	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
-> +	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
-
-Same here.
+This sounds pretty reasonable and a real review will follow.  But can
+you quantify the considerably speedups for real life workloads?
