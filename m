@@ -1,55 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57980 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725837AbfBAMq7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Feb 2019 07:46:59 -0500
-Date: Fri, 1 Feb 2019 07:46:56 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 01/11] FOLD: improve xfs_bmapi_delalloc
-Message-ID: <20190201124655.GB40798@bfoster>
-References: <20190131075524.4769-1-hch@lst.de>
- <20190131075524.4769-2-hch@lst.de>
- <20190131180957.GC36239@bfoster>
- <20190201072322.GA14711@lst.de>
- <20190201072820.GA14783@lst.de>
+Received: from mail-yb1-f170.google.com ([209.85.219.170]:34531 "EHLO
+        mail-yb1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726760AbfBANtz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Feb 2019 08:49:55 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190201072820.GA14783@lst.de>
+References: <CAOQ4uxgqm-m1Zj073o_vSnwkTbGObJiQ-CdWV2ESd_P-29=jZw@mail.gmail.com>
+ <20190128125044.GC27972@quack2.suse.cz> <20190128212642.GQ4205@dastard> <20190131211351.GB26359@bombadil.infradead.org>
+In-Reply-To: <20190131211351.GB26359@bombadil.infradead.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 1 Feb 2019 15:49:42 +0200
+Message-ID: <CAOQ4uxhf+mscvqt9VkpRDpwNJ6-gr_uQm2EMrGFGBDBZkkDbOg@mail.gmail.com>
+Subject: Re: [LSF/MM TOPIC] Lazy file reflink
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
 
-On Fri, Feb 01, 2019 at 08:28:20AM +0100, Christoph Hellwig wrote:
-> On Fri, Feb 01, 2019 at 08:23:22AM +0100, Christoph Hellwig wrote:
-> > > >  	flags |= XFS_BMAPI_DELALLOC;
-> > > > -	return xfs_bmapi_write(tp, ip, bno, 1, flags, total, imap, nimaps);
-> > > > +	error = xfs_bmapi_write(tp, ip, offset_fsb, 1, flags,
-> > > > +			XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK),
-> > > 
-> > > Shouldn't this be whichfork?
-> > 
-> > Yeah.
-> 
-> Actually - XFS_EXTENTADD_SPACE_RES expands to XFS_BM_MAXLEVELS, which
-> indexes into m_bm_maxlevels, which only contains two members, one for
-> the data and one for the attr fork.  So this should stay a hardcoded
-> XFS_DATA_FORK.
+On Thu, Jan 31, 2019 at 11:13 PM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> On Tue, Jan 29, 2019 at 08:26:43AM +1100, Dave Chinner wrote:
+> > Really, though, for this use case it's make more sense to have "per
+> > file freeze" semantics. i.e. if you want a consistent backup image
+> > on snapshot capable storage, the process is usually "freeze
+> > filesystem, snapshot fs, unfreeze fs, do backup from snapshot,
+> > remove snapshot". We can already transparently block incoming
+> > writes/modifications on files via the freeze mechanism, so why not
+> > just extend that to per-file granularity so writes to the "very
+> > large read-mostly file" block while it's being backed up....
+> >
+> > Indeed, this would probably only require a simple extension to
+> > FIFREEZE/FITHAW - the parameter is currently ignored, but as defined
+> > by XFS it was a "freeze level". Set this to 0xffffffff and then it
+> > freezes just the fd passed in, not the whole filesystem.
+> > Alternatively, FI_FREEZE_FILE/FI_THAW_FILE is simple to define...
+>
+> This sounds like you want a lease (aka oplock), which we already have
+> implemented.
 
-Ok, I see. Hmm.. I'm wondering how accurate the ->total value is in the
-delalloc conversion path. IIUC, the purpose is to try and select an AG
-with enough blocks for the allocation along with the indirect blocks to
-insert into the bmbt. Both of those have been reserved at delalloc res
-time, hence not needed in the tx. The AG selection code uses the max of
-total and the allocation request size, which means that for most
-conversions (> maxlevels) total is a no-op. Shouldn't total reflect the
-full size of the allocation (alloc size + maxlevels) regardless of
-whether the blocks were already "globally reserved?" Note that this is
-existing code and probably not something I would change in this series..
+Yes, its possibly true.
+I think that it could make sense to skip the reflink optimization for files that
+are open for write in our workloads. I'll need to check with my peers.
 
-That aside, I'll repost my series with this folded in and the other bits
-dropped..
-
-Brian
+Thanks,
+Amir.
