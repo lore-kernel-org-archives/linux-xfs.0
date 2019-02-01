@@ -1,80 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:47009 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726190AbfBAXjJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Feb 2019 18:39:09 -0500
-Date: Sat, 2 Feb 2019 10:39:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] Revert "mm: don't reclaim inodes with many attached
- pages"
-Message-ID: <20190201233905.GW6173@dastard>
-References: <20190130041707.27750-1-david@fromorbit.com>
- <20190130041707.27750-2-david@fromorbit.com>
- <25EAF93D-BC63-4409-AF21-F45B2DDF5D66@fb.com>
- <20190131013403.GI4205@dastard>
- <E8895615-9DDA-4FC5-A3AB-1BE593138A89@fb.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:54160 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726582AbfBASm4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Feb 2019 13:42:56 -0500
+Date: Fri, 1 Feb 2019 10:42:46 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] xfs_repair: correctly account for free space btree
+ shrinks when fixing freelist
+Message-ID: <20190201184246.GI5761@magnolia>
+References: <154887062444.5611.12746798208748899665.stgit@magnolia>
+ <154887063081.5611.2097236157481583596.stgit@magnolia>
+ <01d11bd4-3e99-e267-5e76-7c3fc7162558@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <E8895615-9DDA-4FC5-A3AB-1BE593138A89@fb.com>
+In-Reply-To: <01d11bd4-3e99-e267-5e76-7c3fc7162558@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Mason <clm@fb.com>
-Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Roman Gushchin <guro@fb.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "mhocko@kernel.org" <mhocko@kernel.org>, "vdavydov.dev@gmail.com" <vdavydov.dev@gmail.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Thu, Jan 31, 2019 at 03:48:11PM +0000, Chris Mason wrote:
-> On 30 Jan 2019, at 20:34, Dave Chinner wrote:
+On Fri, Feb 01, 2019 at 12:39:16PM -0600, Eric Sandeen wrote:
+> On 1/30/19 11:50 AM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > When we fix the freelist at the end of build_agf_agfl in phase 5 of
+> > repair, we need to create incore rmap records for the blocks that get
+> > added to the AGFL.  We can't let the regular freelist fixing code use
+> > the regular on-disk rmapbt update code because the rmapbt isn't fully
+> > set up yet.
+> > 
+> > Unfortunately, the original code fails to account for the fact that the
+> > free space btrees can shrink when we allocate blocks to fix the
+> > freelist; those blocks are also put on the freelist, but there are
+> > already incore rmaps for all the free space btree blocks.  We must not
+> > create (redundant) incore rmaps for those blocks.  If we do, repair
+> > fails with a complaint that rebuilding the rmapbt failed during phase 5.
+> > xfs/137 on a 1k block size occasionally triggers this bug.
+> > 
+> > To fix the problem, construct a bitmap of all OWN_AG blocks that we know
+> > about before traversing the AGFL, and only create new incore rmaps for
+> > those AGFL blocks that are not already tracked in the bitmap.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  repair/rmap.c |   54 ++++++++++++++++++++++++++++++++++++++++++++----------
+> >  1 file changed, 44 insertions(+), 10 deletions(-)
+> > 
+> > 
+> > diff --git a/repair/rmap.c b/repair/rmap.c
+> > index c5a86646..3bb05065 100644
+> > --- a/repair/rmap.c
+> > +++ b/repair/rmap.c
+> > @@ -12,6 +12,7 @@
+> >  #include "dinode.h"
+> >  #include "slab.h"
+> >  #include "rmap.h"
+> > +#include "bitmap.h"
+> >  
+> >  #undef RMAP_DEBUG
+> >  
+> > @@ -450,6 +451,8 @@ rmap_store_ag_btree_rec(
+> >  	struct xfs_buf		*agflbp = NULL;
+> >  	struct xfs_trans	*tp;
+> >  	__be32			*agfl_bno, *b;
+> > +	struct xfs_ag_rmap	*ag_rmap = &ag_rmaps[agno];
+> > +	struct bitmap		*own_ag_bitmap = NULL;
+> >  	int			error = 0;
+> >  	struct xfs_owner_info	oinfo;
+> >  
+> > @@ -457,9 +460,8 @@ rmap_store_ag_btree_rec(
+> >  		return 0;
+> >  
+> >  	/* Release the ar_rmaps; they were put into the rmapbt during p5. */
+> > -	free_slab(&ag_rmaps[agno].ar_rmaps);
+> > -	error = init_slab(&ag_rmaps[agno].ar_rmaps,
+> > -				  sizeof(struct xfs_rmap_irec));
+> > +	free_slab(&ag_rmap->ar_rmaps);
+> > +	error = init_slab(&ag_rmap->ar_rmaps, sizeof(struct xfs_rmap_irec));
+> >  	if (error)
+> >  		goto err;
+> >  
+> > @@ -479,19 +481,50 @@ rmap_store_ag_btree_rec(
+> >  	 * rmap, we only need to add rmap records for AGFL blocks past
+> >  	 * that point in the AGFL because those blocks are a result of a
+> >  	 * no-rmap no-shrink freelist fixup that we did earlier.
+> > +	 *
+> > +	 * However, some blocks end up on the AGFL because the free space
+> > +	 * btrees shed blocks as a result of allocating space to fix the
+> > +	 * freelist.  We already created in-core rmap records for the free
+> > +	 * space btree blocks, so we must be careful not to create those
+> > +	 * records again.  Create a bitmap of already-recorded OWN_AG rmaps.
+> >  	 */
+> > +	error = init_slab_cursor(ag_rmap->ar_raw_rmaps, rmap_compare, &rm_cur);
+> > +	if (error)
+> > +		goto err;
+> > +	if (!bitmap_init(&own_ag_bitmap)) {
+> > +		error = -ENOMEM;
+> > +		goto err;
 > 
-> > On Wed, Jan 30, 2019 at 12:21:07PM +0000, Chris Mason wrote:
-> >>
-> >>
-> >> On 29 Jan 2019, at 23:17, Dave Chinner wrote:
-> >>
-> >>> From: Dave Chinner <dchinner@redhat.com>
-> >>>
-> >>> This reverts commit a76cf1a474d7dbcd9336b5f5afb0162baa142cf0.
-> >>>
-> >>> This change causes serious changes to page cache and inode cache
-> >>> behaviour and balance, resulting in major performance regressions
-> >>> when combining worklaods such as large file copies and kernel
-> >>> compiles.
-> >>>
-> >>> https://bugzilla.kernel.org/show_bug.cgi?id=202441
-> >>
-> >> I'm a little confused by the latest comment in the bz:
-> >>
-> >> https://bugzilla.kernel.org/show_bug.cgi?id=202441#c24
-> >
-> > Which says the first patch that changed the shrinker behaviour is
-> > the underlying cause of the regression.
-> >
-> >> Are these reverts sufficient?
-> >
-> > I think so.
+> I think that this ^^
 > 
-> Based on the latest comment:
+> > +	}
+> > +	while ((rm_rec = pop_slab_cursor(rm_cur)) != NULL) {
+> > +		if (rm_rec->rm_owner != XFS_RMAP_OWN_AG)
+> > +			continue;
+> > +		if (!bitmap_set(own_ag_bitmap, rm_rec->rm_startblock,
+> > +					rm_rec->rm_blockcount)) {
+> > +			error = EFSCORRUPTED;
+> > +			goto err;
 > 
-> "If I had been less strict in my testing I probably would have 
-> discovered that the problem was present earlier than 4.19.3. Mr Gushins 
-> commit made it more visible.
-> I'm going back to work after two days off, so I might not be able to 
-> respond inside your working hours, but I'll keep checking in on this as 
-> I get a chance."
-> 
-> I don't think the reverts are sufficient.
+> and this need to free up rm_cur to be tidy, right?
 
-Roger has tested the two reverts more heavily against 5.0.0-rc3.
-Without the reverts, the machine locks up hard. With the two reverts
-applied, it runs along smoothly under extremely heavy load.
+Yep, they do need to be 'goto err_slab', thanks for catching that.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202441#c26
+--D
 
-So, yes, these changes need to be reverted.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> -Eric
