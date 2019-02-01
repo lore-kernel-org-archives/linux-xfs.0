@@ -1,158 +1,177 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61852 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46202 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729563AbfBDOwf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Feb 2019 09:52:35 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B0E6DA85F
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Feb 2019 14:52:34 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 602BC1001F45
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Feb 2019 14:52:34 +0000 (UTC)
+        id S1727450AbfBATAq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Feb 2019 14:00:46 -0500
+Date: Fri, 1 Feb 2019 14:00:43 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 5/9] xfs: split up allocation btree verifier
-Date: Mon,  4 Feb 2019 09:52:27 -0500
-Message-Id: <20190204145231.47034-6-bfoster@redhat.com>
-In-Reply-To: <20190204145231.47034-1-bfoster@redhat.com>
-References: <20190204145231.47034-1-bfoster@redhat.com>
+Subject: Re: [PATCH 3/8] xfs: refactor AGI unlinked bucket updates
+Message-ID: <20190201190042.GB31203@bfoster>
+References: <154897667054.26065.13164381203002725289.stgit@magnolia>
+ <154897668914.26065.4021602625860113731.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <154897668914.26065.4021602625860113731.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Similar to the inode btree verifier, the same allocation btree
-verifier structure is shared between the by-bno (bnobt) and by-size
-(cntbt) btrees. This prevents the ability to distinguish magic
-values between them. Separate the verifier into two, one for each
-tree, and assign them appropriately. No functional changes.
+On Thu, Jan 31, 2019 at 03:18:09PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Split the AGI unlinked bucket updates into a separate function.  No
+> functional changes.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_inode.c |   69 ++++++++++++++++++++++++++++++++++++++--------------
+>  fs/xfs/xfs_trace.h |   26 ++++++++++++++++++++
+>  2 files changed, 76 insertions(+), 19 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 98355f5f9253..3c33136b21ef 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1880,6 +1880,46 @@ xfs_inactive(
+>  	xfs_qm_dqdetach(ip);
+>  }
+>  
+> +/*
+> + * Point the AGI unlinked bucket at an inode and log the results.  The caller
+> + * is responsible for validating the old value.
+> + */
+> +STATIC int
+> +xfs_iunlink_update_bucket(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*agibp,
+> +	unsigned int		bucket_index,
+> +	xfs_agino_t		new_agino)
+> +{
+> +	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agibp);
+> +	xfs_agino_t		old_value;
+> +	int			offset;
+> +
+> +	ASSERT(new_agino == NULLAGINO ||
+> +	       xfs_verify_agino(tp->t_mountp, be32_to_cpu(agi->agi_seqno),
+> +				new_agino));
+> +
+> +	old_value = be32_to_cpu(agi->agi_unlinked[bucket_index]);
+> +	trace_xfs_iunlink_update_bucket(tp->t_mountp,
+> +			be32_to_cpu(agi->agi_seqno), bucket_index, old_value,
+> +			new_agino);
+> +
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_ag.c          |  4 ++--
- fs/xfs/libxfs/xfs_alloc_btree.c | 14 ++++++++++----
- fs/xfs/libxfs/xfs_shared.h      |  3 ++-
- fs/xfs/scrub/agheader_repair.c  |  4 ++--
- fs/xfs/xfs_log_recover.c        |  6 ++++--
- 5 files changed, 20 insertions(+), 11 deletions(-)
+Might as well pass agno as a param, particularly since the callers
+already have it.
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index bde67ef3ff43..1ef8acf35e7d 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -339,14 +339,14 @@ xfs_ag_init_headers(
- 	{ /* BNO root block */
- 		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp)),
- 		.numblks = BTOBB(mp->m_sb.sb_blocksize),
--		.ops = &xfs_allocbt_buf_ops,
-+		.ops = &xfs_bnobt_buf_ops,
- 		.work = &xfs_bnoroot_init,
- 		.need_init = true
- 	},
- 	{ /* CNT root block */
- 		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp)),
- 		.numblks = BTOBB(mp->m_sb.sb_blocksize),
--		.ops = &xfs_allocbt_buf_ops,
-+		.ops = &xfs_cntbt_buf_ops,
- 		.work = &xfs_cntroot_init,
- 		.need_init = true
- 	},
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 4e59cc8a2802..480d0f52da64 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -377,13 +377,19 @@ xfs_allocbt_write_verify(
- 
- }
- 
--const struct xfs_buf_ops xfs_allocbt_buf_ops = {
--	.name = "xfs_allocbt",
-+const struct xfs_buf_ops xfs_bnobt_buf_ops = {
-+	.name = "xfs_bnobt",
- 	.verify_read = xfs_allocbt_read_verify,
- 	.verify_write = xfs_allocbt_write_verify,
- 	.verify_struct = xfs_allocbt_verify,
- };
- 
-+const struct xfs_buf_ops xfs_cntbt_buf_ops = {
-+	.name = "xfs_cntbt",
-+	.verify_read = xfs_allocbt_read_verify,
-+	.verify_write = xfs_allocbt_write_verify,
-+	.verify_struct = xfs_allocbt_verify,
-+};
- 
- STATIC int
- xfs_bnobt_keys_inorder(
-@@ -448,7 +454,7 @@ static const struct xfs_btree_ops xfs_bnobt_ops = {
- 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
- 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
- 	.key_diff		= xfs_bnobt_key_diff,
--	.buf_ops		= &xfs_allocbt_buf_ops,
-+	.buf_ops		= &xfs_bnobt_buf_ops,
- 	.diff_two_keys		= xfs_bnobt_diff_two_keys,
- 	.keys_inorder		= xfs_bnobt_keys_inorder,
- 	.recs_inorder		= xfs_bnobt_recs_inorder,
-@@ -470,7 +476,7 @@ static const struct xfs_btree_ops xfs_cntbt_ops = {
- 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
- 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
- 	.key_diff		= xfs_cntbt_key_diff,
--	.buf_ops		= &xfs_allocbt_buf_ops,
-+	.buf_ops		= &xfs_cntbt_buf_ops,
- 	.diff_two_keys		= xfs_cntbt_diff_two_keys,
- 	.keys_inorder		= xfs_cntbt_keys_inorder,
- 	.recs_inorder		= xfs_cntbt_recs_inorder,
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index 9855f4d2f98f..4e909791aeac 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -25,7 +25,8 @@ extern const struct xfs_buf_ops xfs_agf_buf_ops;
- extern const struct xfs_buf_ops xfs_agi_buf_ops;
- extern const struct xfs_buf_ops xfs_agf_buf_ops;
- extern const struct xfs_buf_ops xfs_agfl_buf_ops;
--extern const struct xfs_buf_ops xfs_allocbt_buf_ops;
-+extern const struct xfs_buf_ops xfs_bnobt_buf_ops;
-+extern const struct xfs_buf_ops xfs_cntbt_buf_ops;
- extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
- extern const struct xfs_buf_ops xfs_refcountbt_buf_ops;
- extern const struct xfs_buf_ops xfs_attr3_leaf_buf_ops;
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 673be3cf7b8d..2799d1531639 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -341,12 +341,12 @@ xrep_agf(
- 	struct xrep_find_ag_btree	fab[XREP_AGF_MAX] = {
- 		[XREP_AGF_BNOBT] = {
- 			.rmap_owner = XFS_RMAP_OWN_AG,
--			.buf_ops = &xfs_allocbt_buf_ops,
-+			.buf_ops = &xfs_bnobt_buf_ops,
- 			.magic = XFS_ABTB_CRC_MAGIC,
- 		},
- 		[XREP_AGF_CNTBT] = {
- 			.rmap_owner = XFS_RMAP_OWN_AG,
--			.buf_ops = &xfs_allocbt_buf_ops,
-+			.buf_ops = &xfs_cntbt_buf_ops,
- 			.magic = XFS_ABTC_CRC_MAGIC,
- 		},
- 		[XREP_AGF_RMAPBT] = {
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 228c754bb137..5ad42d598333 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2439,10 +2439,12 @@ xlog_recover_validate_buf_type(
- 	case XFS_BLFT_BTREE_BUF:
- 		switch (magic32) {
- 		case XFS_ABTB_CRC_MAGIC:
--		case XFS_ABTC_CRC_MAGIC:
- 		case XFS_ABTB_MAGIC:
-+			bp->b_ops = &xfs_bnobt_buf_ops;
-+			break;
-+		case XFS_ABTC_CRC_MAGIC:
- 		case XFS_ABTC_MAGIC:
--			bp->b_ops = &xfs_allocbt_buf_ops;
-+			bp->b_ops = &xfs_cntbt_buf_ops;
- 			break;
- 		case XFS_IBT_CRC_MAGIC:
- 		case XFS_IBT_MAGIC:
--- 
-2.17.2
+> +	/*
+> +	 * We should never find the head of the list already set to the value
+> +	 * passed in because either we're adding or removing ourselves from the
+> +	 * head of the list.
+> +	 */
+> +	if (old_value == new_agino)
+> +		return -EFSCORRUPTED;
+> +
+
+This seems a little weird in the NULLAGINO case. That probably should
+still never happen, but doesn't seem indicative of corruption on its
+own. *shrug* not a big deal.
+
+Brian
+
+> +	agi->agi_unlinked[bucket_index] = cpu_to_be32(new_agino);
+> +	offset = offsetof(struct xfs_agi, agi_unlinked) +
+> +			(sizeof(xfs_agino_t) * bucket_index);
+> +	xfs_trans_log_buf(tp, agibp, offset,
+> +			(offset + sizeof(xfs_agino_t) - 1));
+> +	return 0;
+> +}
+> +
+>  /*
+>   * This is called when the inode's link count goes to 0 or we are creating a
+>   * tmpfile via O_TMPFILE. In the case of a tmpfile, @ignore_linkcount will be
+> @@ -1958,15 +1998,10 @@ xfs_iunlink(
+>  		xfs_inobp_check(mp, ibp);
+>  	}
+>  
+> -	/*
+> -	 * Point the bucket head pointer at the inode being inserted.
+> -	 */
+> -	ASSERT(agino != 0);
+> -	agi->agi_unlinked[bucket_index] = cpu_to_be32(agino);
+> -	offset = offsetof(xfs_agi_t, agi_unlinked) +
+> -		(sizeof(xfs_agino_t) * bucket_index);
+> -	xfs_trans_log_buf(tp, agibp, offset,
+> -			  (offset + sizeof(xfs_agino_t) - 1));
+> +	/* Point the head of the list to point to this inode. */
+> +	error = xfs_iunlink_update_bucket(tp, agibp, bucket_index, agino);
+> +	if (error)
+> +		goto out_unlock;
+>  	pag->pagi_unlinked_count++;
+>  
+>  out_unlock:
+> @@ -2062,16 +2097,12 @@ xfs_iunlink_remove(
+>  		} else {
+>  			xfs_trans_brelse(tp, ibp);
+>  		}
+> -		/*
+> -		 * Point the bucket head pointer at the next inode.
+> -		 */
+> -		ASSERT(next_agino != 0);
+> -		ASSERT(next_agino != agino);
+> -		agi->agi_unlinked[bucket_index] = cpu_to_be32(next_agino);
+> -		offset = offsetof(xfs_agi_t, agi_unlinked) +
+> -			(sizeof(xfs_agino_t) * bucket_index);
+> -		xfs_trans_log_buf(tp, agibp, offset,
+> -				  (offset + sizeof(xfs_agino_t) - 1));
+> +
+> +		/* Point the head of the list to the next unlinked inode. */
+> +		error = xfs_iunlink_update_bucket(tp, agibp, bucket_index,
+> +				next_agino);
+> +		if (error)
+> +			goto out_unlock;
+>  	} else {
+>  		/*
+>  		 * We need to search the list for the inode being freed.
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 6fcc893dfc91..c10478e7e49a 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3371,6 +3371,32 @@ DEFINE_TRANS_EVENT(xfs_trans_roll);
+>  DEFINE_TRANS_EVENT(xfs_trans_add_item);
+>  DEFINE_TRANS_EVENT(xfs_trans_free_items);
+>  
+> +TRACE_EVENT(xfs_iunlink_update_bucket,
+> +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, unsigned int bucket,
+> +		 xfs_agino_t old_ptr, xfs_agino_t new_ptr),
+> +	TP_ARGS(mp, agno, bucket, old_ptr, new_ptr),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(xfs_agnumber_t, agno)
+> +		__field(unsigned int, bucket)
+> +		__field(xfs_agino_t, old_ptr)
+> +		__field(xfs_agino_t, new_ptr)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = mp->m_super->s_dev;
+> +		__entry->agno = agno;
+> +		__entry->bucket = bucket;
+> +		__entry->old_ptr = old_ptr;
+> +		__entry->new_ptr = new_ptr;
+> +	),
+> +	TP_printk("dev %d:%d agno %u bucket %u old 0x%x new 0x%x",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->agno,
+> +		  __entry->bucket,
+> +		  __entry->old_ptr,
+> +		  __entry->new_ptr)
+> +);
+> +
+>  #endif /* _TRACE_XFS_H */
+>  
+>  #undef TRACE_INCLUDE_PATH
+> 
