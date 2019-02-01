@@ -1,51 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:37774 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726721AbfBAQ4e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Feb 2019 11:56:34 -0500
-Date: Fri, 1 Feb 2019 08:56:16 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:49576 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726582AbfBARkl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Feb 2019 12:40:41 -0500
+Date: Fri, 1 Feb 2019 09:40:26 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [GIT PULL] iomap: more fixes for v5.0
-Message-ID: <20190201165616.GG5761@magnolia>
+Subject: Re: [PATCH v3 1/6] xfs: eof trim writeback mapping as soon as it is
+ cached
+Message-ID: <20190201174026.GH5761@magnolia>
+References: <20190123184131.46188-1-bfoster@redhat.com>
+ <20190123184131.46188-2-bfoster@redhat.com>
+ <20190201075829.GB22295@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190201075829.GB22295@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-Hi Linus,
+On Thu, Jan 31, 2019 at 11:58:29PM -0800, Christoph Hellwig wrote:
+> Darrick,
+> 
+> can we get this queue up for 5.0?
 
-Here are a couple of iomap fixes to eliminate some memory corruption
-and hang problems that were reported.
+Ok, I'll give it a test run.
 
 --D
 
-The following changes since commit 1c7fc5cbc33980acd13d668f1c8f0313d6ae9fd8:
-
-  Linux 5.0-rc2 (2019-01-14 10:41:12 +1200)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.0-fixes-1
-
-for you to fetch changes up to 4ea899ead2786a30aaa8181fefa81a3df4ad28f6:
-
-  iomap: fix a use after free in iomap_dio_rw (2019-01-27 08:47:42 -0800)
-
-----------------------------------------------------------------
-Changes since last update:
-- fix page migration when using iomap for pagecache management
-- fix a use-after-free bug in the directio code
-
-----------------------------------------------------------------
-Christoph Hellwig (1):
-      iomap: fix a use after free in iomap_dio_rw
-
-Piotr Jaroszynski (1):
-      iomap: get/put the page in iomap_page_create/release()
-
- fs/iomap.c | 37 ++++++++++++++++++++++++++++++-------
- 1 file changed, 30 insertions(+), 7 deletions(-)
+> On Wed, Jan 23, 2019 at 01:41:26PM -0500, Brian Foster wrote:
+> > The cached writeback mapping is EOF trimmed to try and avoid races
+> > between post-eof block management and writeback that result in
+> > sending cached data to a stale location. The cached mapping is
+> > currently trimmed on the validation check, which leaves a race
+> > window between the time the mapping is cached and when it is trimmed
+> > against the current inode size.
+> > 
+> > For example, if a new mapping is cached by delalloc conversion on a
+> > blocksize == page size fs, we could cycle various locks, perform
+> > memory allocations, etc.  in the writeback codepath before the
+> > associated mapping is eventually trimmed to i_size. This leaves
+> > enough time for a post-eof truncate and file append before the
+> > cached mapping is trimmed. The former event essentially invalidates
+> > a range of the cached mapping and the latter bumps the inode size
+> > such the trim on the next writepage event won't trim all of the
+> > invalid blocks. fstest generic/464 reproduces this scenario
+> > occasionally and causes a lost writeback and stale delalloc blocks
+> > warning on inode inactivation.
+> > 
+> > To work around this problem, trim the cached writeback mapping as
+> > soon as it is cached in addition to on subsequent validation checks.
+> > This is a minor tweak to tighten the race window as much as possible
+> > until a proper invalidation mechanism is available.
+> > 
+> > Fixes: 40214d128e07 ("xfs: trim writepage mapping to within eof")
+> > Cc: <stable@vger.kernel.org> # v4.14+
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_aops.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index 338b9d9984e0..d9048bcea49c 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -449,6 +449,7 @@ xfs_map_blocks(
+> >  	}
+> >  
+> >  	wpc->imap = imap;
+> > +	xfs_trim_extent_eof(&wpc->imap, ip);
+> >  	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
+> >  	return 0;
+> >  allocate_blocks:
+> > @@ -459,6 +460,7 @@ xfs_map_blocks(
+> >  	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+> >  	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+> >  	wpc->imap = imap;
+> > +	xfs_trim_extent_eof(&wpc->imap, ip);
+> >  	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+> >  	return 0;
+> >  }
+> > -- 
+> > 2.17.2
+> > 
+> ---end quoted text---
