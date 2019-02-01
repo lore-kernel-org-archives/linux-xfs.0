@@ -1,238 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34586 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727419AbfBDNSs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Feb 2019 08:18:48 -0500
-Date: Mon, 4 Feb 2019 08:18:45 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/8] xfs: hoist unlinked list search and mapping to a
- separate function
-Message-ID: <20190204131845.GA45457@bfoster>
-References: <154897667054.26065.13164381203002725289.stgit@magnolia>
- <154897670777.26065.9017810401812180528.stgit@magnolia>
- <20190201190137.GE31203@bfoster>
- <20190202204600.GU5761@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:57226 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726017AbfBASrk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Feb 2019 13:47:40 -0500
+Date: Fri, 1 Feb 2019 10:47:27 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 2/2] xfs_repair: correctly account for free space btree
+ shrinks when fixing freelist
+Message-ID: <20190201184727.GJ5761@magnolia>
+References: <154887062444.5611.12746798208748899665.stgit@magnolia>
+ <154887063081.5611.2097236157481583596.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190202204600.GU5761@magnolia>
+In-Reply-To: <154887063081.5611.2097236157481583596.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On Sat, Feb 02, 2019 at 12:46:00PM -0800, Darrick J. Wong wrote:
-> On Fri, Feb 01, 2019 at 02:01:38PM -0500, Brian Foster wrote:
-> > On Thu, Jan 31, 2019 at 03:18:27PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > There's a loop that searches an unlinked bucket list to find the inode
-> > > that points to a given inode.  Hoist this into a separate function;
-> > > later we'll use our iunlink backref cache to bypass the slow list
-> > > operation.  No functional changes.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/xfs_inode.c |  136 ++++++++++++++++++++++++++++++++++++++--------------
-> > >  1 file changed, 99 insertions(+), 37 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index ea38b66fbc59..d5b3f8fdac7e 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -2084,6 +2084,100 @@ xfs_iunlink(
-> > >  	return error;
-> > >  }
-> > >  
-> > > +/* Return the imap, dinode pointer, and buffer for an inode. */
-> > > +STATIC int
-> > > +xfs_iunlink_map_ino(
-> > > +	struct xfs_trans	*tp,
-> > > +	xfs_ino_t		next_ino,
-> > 
-> > Might be good to clean up some of these variable names as this code gets
-> > factored out. E.g., "next_ino" doesn't mean much more than "ino" in the
-> > context of this helper.
-> 
-> Ok.
-> 
-> > > +	struct xfs_imap		*imap,
-> > > +	struct xfs_dinode	**dipp,
-> > > +	struct xfs_buf		**bpp)
-> > > +{
-> > > +	struct xfs_mount	*mp = tp->t_mountp;
-> > > +	int			error;
-> > > +
-> > > +	imap->im_blkno = 0;
-> > > +	error = xfs_imap(mp, tp, next_ino, imap, 0);
-> > > +	if (error) {
-> > > +		xfs_warn(mp, "%s: xfs_imap returned error %d.",
-> > > +				__func__, error);
-> > > +		return error;
-> > > +	}
-> > > +
-> > > +	error = xfs_imap_to_bp(mp, tp, imap, dipp, bpp, 0, 0);
-> > > +	if (error) {
-> > > +		xfs_warn(mp, "%s: xfs_imap_to_bp returned error %d.",
-> > > +				__func__, error);
-> > > +		return error;
-> > > +	}
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-> > > +/*
-> > > + * Walk the unlinked chain from @head_agino until we find the inode that
-> > > + * points to @target_ino.  Return the inode number, map, dinode pointer,
-> > > + * and inode cluster buffer of that inode as @ino, @imap, @dipp, and @bpp.
-> > > + *
-> > > + * Do not call this function if @target_agino is the head of the list.
-> > > + */
-> > > +STATIC int
-> > > +xfs_iunlink_map_prev(
-> > > +	struct xfs_trans	*tp,
-> > > +	struct xfs_perag	*pag,
-> > > +	xfs_agino_t		head_agino,
-> > > +	xfs_agino_t		target_agino,
-> > > +	xfs_ino_t		*ino,
-> > > +	struct xfs_imap		*imap,
-> > > +	struct xfs_dinode	**dipp,
-> > > +	struct xfs_buf		**bpp)
-> > > +{
-> > 
-> > It would also be nice to have some oneline comments next to the params
-> > of some of these functions.
-> 
-> In addition to the description given above the function?
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I missed the header comment.. perhaps just a one liner that indicates
-ino and everything after are output params would be helpful here. BTW,
-s/@target_ino/@target_agino/ in the header comment?
+When we fix the freelist at the end of build_agf_agfl in phase 5 of
+repair, we need to create incore rmap records for the blocks that get
+added to the AGFL.  We can't let the regular freelist fixing code use
+the regular on-disk rmapbt update code because the rmapbt isn't fully
+set up yet.
 
-Brian
+Unfortunately, the original code fails to account for the fact that the
+free space btrees can shrink when we allocate blocks to fix the
+freelist; those blocks are also put on the freelist, but there are
+already incore rmaps for all the free space btree blocks.  We must not
+create (redundant) incore rmaps for those blocks.  If we do, repair
+fails with a complaint that rebuilding the rmapbt failed during phase 5.
+xfs/137 on a 1k block size occasionally triggers this bug.
 
-> > > +	struct xfs_imap		last_imap;
-> > > +	struct xfs_mount	*mp = tp->t_mountp;
-> > > +	struct xfs_buf		*last_ibp = NULL;
-> > > +	struct xfs_dinode	*last_dip;
-> > > +	xfs_ino_t		next_ino = NULLFSINO;
-> > > +	xfs_agino_t		next_agino;
-> > > +	int			error;
-> > > +
-> > > +	ASSERT(head_agino != target_agino);
-> > > +
-> > > +	next_agino = head_agino;
-> > > +	while (next_agino != target_agino) {
-> > > +		xfs_agino_t	unlinked_agino;
-> > > +
-> > > +		if (last_ibp)
-> > > +			xfs_trans_brelse(tp, last_ibp);
-> > > +
-> > > +		next_ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, next_agino);
-> > > +		error = xfs_iunlink_map_ino(tp, next_ino, &last_imap,
-> > > +				&last_dip, &last_ibp);
-> > > +		if (error)
-> > > +			return error;
-> > > +
-> > > +		unlinked_agino = be32_to_cpu(last_dip->di_next_unlinked);
-> > > +		if (!xfs_verify_agino(mp, pag->pag_agno, next_agino) ||
-> > 
-> > Should the next_agino above be unlinked_agino? Also is the == check
-> > below a loop check (comment pls)?
-> 
-> Yes, fixed.
-> 
-> /*
->  * Make sure this pointer is valid and isn't an obvious
->  * infinite loop.
->  */
-> 
-> 
-> > > +		    next_agino == unlinked_agino) {
-> > > +			XFS_CORRUPTION_ERROR(__func__,
-> > > +					XFS_ERRLEVEL_LOW, mp,
-> > > +					last_dip, sizeof(*last_dip));
-> > > +			error = -EFSCORRUPTED;
-> > > +			return error;
-> > > +		}
-> > > +		next_agino = unlinked_agino;
-> > > +	}
-> > > +
-> > > +	/* Should never happen, but don't return garbage. */
-> > > +	if (next_ino == NULLFSINO)
-> > > +		return -EFSCORRUPTED;
-> > > +
-> > > +	*ino = next_ino;
-> > > +	memcpy(imap, &last_imap, sizeof(last_imap));
-> > > +	*dipp = last_dip;
-> > > +	*bpp = last_ibp;
-> > > +	return 0;
-> > > +}
-> > > +
-> > >  /*
-> > >   * Pull the on-disk inode from the AGI unlinked list.
-> > >   */
-> > > @@ -2153,43 +2247,11 @@ xfs_iunlink_remove(
-> > >  	} else {
-> > >  		struct xfs_imap	imap;
-> > >  
-> > > -		/*
-> > > -		 * We need to search the list for the inode being freed.
-> > > -		 */
-> > > -		last_ibp = NULL;
-> > > -		while (next_agino != agino) {
-> > > -			if (last_ibp)
-> > > -				xfs_trans_brelse(tp, last_ibp);
-> > > -
-> > > -			imap.im_blkno = 0;
-> > > -			next_ino = XFS_AGINO_TO_INO(mp, agno, next_agino);
-> > > -
-> > > -			error = xfs_imap(mp, tp, next_ino, &imap, 0);
-> > > -			if (error) {
-> > > -				xfs_warn(mp,
-> > > -	"%s: xfs_imap returned error %d.",
-> > > -					 __func__, error);
-> > > -				goto out_unlock;
-> > > -			}
-> > > -
-> > > -			error = xfs_imap_to_bp(mp, tp, &imap, &last_dip,
-> > > -					       &last_ibp, 0, 0);
-> > > -			if (error) {
-> > > -				xfs_warn(mp,
-> > > -	"%s: xfs_imap_to_bp returned error %d.",
-> > > -					__func__, error);
-> > > -				goto out_unlock;
-> > > -			}
-> > > -
-> > > -			next_agino = be32_to_cpu(last_dip->di_next_unlinked);
-> > > -			if (!xfs_verify_agino(mp, agno, next_agino)) {
-> > > -				XFS_CORRUPTION_ERROR(__func__,
-> > > -						XFS_ERRLEVEL_LOW, mp,
-> > > -						last_dip, sizeof(*last_dip));
-> > > -				error = -EFSCORRUPTED;
-> > > -				goto out_unlock;
-> > > -			}
-> > > -		}
-> > > +		/* We need to search the list for the inode being freed. */
-> > > +		error = xfs_iunlink_map_prev(tp, pag, next_agino, agino,
-> > > +				&next_ino, &imap, &last_dip, &last_ibp);
-> > 
-> > Another variable nit... next_ino is kind of confusing here, particularly
-> > where we still use next_agino as well. The former is actually the "prev"
-> > ino output, right?
-> 
-> Yep, will fix.
-> 
-> --D
-> 
-> > Brian
-> > 
-> > > +		if (error)
-> > > +			goto out_unlock;
-> > >  
-> > >  		/*
-> > >  		 * Now last_ibp points to the buffer previous to us on the
-> > > 
+To fix the problem, construct a bitmap of all OWN_AG blocks that we know
+about before traversing the AGFL, and only create new incore rmaps for
+those AGFL blocks that are not already tracked in the bitmap.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: fix error jumps
+---
+ repair/rmap.c |   54 ++++++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 44 insertions(+), 10 deletions(-)
+
+diff --git a/repair/rmap.c b/repair/rmap.c
+index c5a86646..b48701df 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -12,6 +12,7 @@
+ #include "dinode.h"
+ #include "slab.h"
+ #include "rmap.h"
++#include "bitmap.h"
+ 
+ #undef RMAP_DEBUG
+ 
+@@ -450,6 +451,8 @@ rmap_store_ag_btree_rec(
+ 	struct xfs_buf		*agflbp = NULL;
+ 	struct xfs_trans	*tp;
+ 	__be32			*agfl_bno, *b;
++	struct xfs_ag_rmap	*ag_rmap = &ag_rmaps[agno];
++	struct bitmap		*own_ag_bitmap = NULL;
+ 	int			error = 0;
+ 	struct xfs_owner_info	oinfo;
+ 
+@@ -457,9 +460,8 @@ rmap_store_ag_btree_rec(
+ 		return 0;
+ 
+ 	/* Release the ar_rmaps; they were put into the rmapbt during p5. */
+-	free_slab(&ag_rmaps[agno].ar_rmaps);
+-	error = init_slab(&ag_rmaps[agno].ar_rmaps,
+-				  sizeof(struct xfs_rmap_irec));
++	free_slab(&ag_rmap->ar_rmaps);
++	error = init_slab(&ag_rmap->ar_rmaps, sizeof(struct xfs_rmap_irec));
+ 	if (error)
+ 		goto err;
+ 
+@@ -479,19 +481,50 @@ rmap_store_ag_btree_rec(
+ 	 * rmap, we only need to add rmap records for AGFL blocks past
+ 	 * that point in the AGFL because those blocks are a result of a
+ 	 * no-rmap no-shrink freelist fixup that we did earlier.
++	 *
++	 * However, some blocks end up on the AGFL because the free space
++	 * btrees shed blocks as a result of allocating space to fix the
++	 * freelist.  We already created in-core rmap records for the free
++	 * space btree blocks, so we must be careful not to create those
++	 * records again.  Create a bitmap of already-recorded OWN_AG rmaps.
+ 	 */
++	error = init_slab_cursor(ag_rmap->ar_raw_rmaps, rmap_compare, &rm_cur);
++	if (error)
++		goto err;
++	if (!bitmap_init(&own_ag_bitmap)) {
++		error = -ENOMEM;
++		goto err_slab;
++	}
++	while ((rm_rec = pop_slab_cursor(rm_cur)) != NULL) {
++		if (rm_rec->rm_owner != XFS_RMAP_OWN_AG)
++			continue;
++		if (!bitmap_set(own_ag_bitmap, rm_rec->rm_startblock,
++					rm_rec->rm_blockcount)) {
++			error = EFSCORRUPTED;
++			goto err_slab;
++		}
++	}
++	free_slab_cursor(&rm_cur);
++
++	/* Create rmaps for any AGFL blocks that aren't already rmapped. */
+ 	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+-	b = agfl_bno + ag_rmaps[agno].ar_flcount;
++	b = agfl_bno + ag_rmap->ar_flcount;
+ 	while (*b != cpu_to_be32(NULLAGBLOCK) &&
+ 	       b - agfl_bno < libxfs_agfl_size(mp)) {
+-		error = rmap_add_ag_rec(mp, agno, be32_to_cpu(*b), 1,
+-				XFS_RMAP_OWN_AG);
+-		if (error)
+-			goto err;
++		xfs_agblock_t	agbno;
++
++		agbno = be32_to_cpu(*b);
++		if (!bitmap_test(own_ag_bitmap, agbno, 1)) {
++			error = rmap_add_ag_rec(mp, agno, agbno, 1,
++					XFS_RMAP_OWN_AG);
++			if (error)
++				goto err;
++		}
+ 		b++;
+ 	}
+ 	libxfs_putbuf(agflbp);
+ 	agflbp = NULL;
++	bitmap_free(&own_ag_bitmap);
+ 
+ 	/* Merge all the raw rmaps into the main list */
+ 	error = rmap_fold_raw_recs(mp, agno);
+@@ -499,8 +532,7 @@ rmap_store_ag_btree_rec(
+ 		goto err;
+ 
+ 	/* Create cursors to refcount structures */
+-	error = init_slab_cursor(ag_rmaps[agno].ar_rmaps, rmap_compare,
+-			&rm_cur);
++	error = init_slab_cursor(ag_rmap->ar_rmaps, rmap_compare, &rm_cur);
+ 	if (error)
+ 		goto err;
+ 
+@@ -541,6 +573,8 @@ rmap_store_ag_btree_rec(
+ err:
+ 	if (agflbp)
+ 		libxfs_putbuf(agflbp);
++	if (own_ag_bitmap)
++		bitmap_free(&own_ag_bitmap);
+ 	return error;
+ }
+ 
