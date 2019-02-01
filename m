@@ -1,84 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:37244 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:39460 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726239AbfBAH6b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Feb 2019 02:58:31 -0500
-Date: Thu, 31 Jan 2019 23:58:29 -0800
+        with ESMTP id S1725786AbfBAIBh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Feb 2019 03:01:37 -0500
+Date: Fri, 1 Feb 2019 00:01:36 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 1/6] xfs: eof trim writeback mapping as soon as it is
- cached
-Message-ID: <20190201075829.GB22295@infradead.org>
-References: <20190123184131.46188-1-bfoster@redhat.com>
- <20190123184131.46188-2-bfoster@redhat.com>
+Subject: Re: [PATCH 1/8] xfs: clean up iunlink functions
+Message-ID: <20190201080136.GC22295@infradead.org>
+References: <154897667054.26065.13164381203002725289.stgit@magnolia>
+ <154897667679.26065.17995098675615600714.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190123184131.46188-2-bfoster@redhat.com>
+In-Reply-To: <154897667679.26065.17995098675615600714.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-Darrick,
-
-can we get this queue up for 5.0?
-
-On Wed, Jan 23, 2019 at 01:41:26PM -0500, Brian Foster wrote:
-> The cached writeback mapping is EOF trimmed to try and avoid races
-> between post-eof block management and writeback that result in
-> sending cached data to a stale location. The cached mapping is
-> currently trimmed on the validation check, which leaves a race
-> window between the time the mapping is cached and when it is trimmed
-> against the current inode size.
+On Thu, Jan 31, 2019 at 03:17:56PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> For example, if a new mapping is cached by delalloc conversion on a
-> blocksize == page size fs, we could cycle various locks, perform
-> memory allocations, etc.  in the writeback codepath before the
-> associated mapping is eventually trimmed to i_size. This leaves
-> enough time for a post-eof truncate and file append before the
-> cached mapping is trimmed. The former event essentially invalidates
-> a range of the cached mapping and the latter bumps the inode size
-> such the trim on the next writepage event won't trim all of the
-> invalid blocks. fstest generic/464 reproduces this scenario
-> occasionally and causes a lost writeback and stale delalloc blocks
-> warning on inode inactivation.
+> Fix some indentation issues with the iunlink functions and reorganize
+> the tops of the functions to be identical.  No functional changes.
 > 
-> To work around this problem, trim the cached writeback mapping as
-> soon as it is cached in addition to on subsequent validation checks.
-> This is a minor tweak to tighten the race window as much as possible
-> until a proper invalidation mechanism is available.
-> 
-> Fixes: 40214d128e07 ("xfs: trim writepage mapping to within eof")
-> Cc: <stable@vger.kernel.org> # v4.14+
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_aops.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  fs/xfs/xfs_inode.c |   77 +++++++++++++++++++++++++++-------------------------
+>  1 file changed, 40 insertions(+), 37 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 338b9d9984e0..d9048bcea49c 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -449,6 +449,7 @@ xfs_map_blocks(
->  	}
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index c8bf02be0003..d18354517320 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1892,26 +1892,32 @@ xfs_inactive(
+>   */
+>  STATIC int
+>  xfs_iunlink(
+> -	struct xfs_trans *tp,
+> -	struct xfs_inode *ip)
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip)
+>  {
+> -	xfs_mount_t	*mp = tp->t_mountp;
+> -	xfs_agi_t	*agi;
+> -	xfs_dinode_t	*dip;
+> -	xfs_buf_t	*agibp;
+> -	xfs_buf_t	*ibp;
+> -	xfs_agino_t	agino;
+> -	short		bucket_index;
+> -	int		offset;
+> -	int		error;
+> +	struct xfs_mount	*mp = tp->t_mountp;
+> +	struct xfs_agi		*agi;
+> +	struct xfs_dinode	*dip;
+> +	struct xfs_buf		*agibp;
+> +	struct xfs_buf		*ibp;
+> +	xfs_agnumber_t		agno;
+> +	xfs_agino_t		agino;
+> +	short			bucket_index;
+> +	int			offset;
+> +	int			error;
 >  
->  	wpc->imap = imap;
-> +	xfs_trim_extent_eof(&wpc->imap, ip);
->  	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
->  	return 0;
->  allocate_blocks:
-> @@ -459,6 +460,7 @@ xfs_map_blocks(
->  	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
->  	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
->  	wpc->imap = imap;
-> +	xfs_trim_extent_eof(&wpc->imap, ip);
->  	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
->  	return 0;
->  }
-> -- 
-> 2.17.2
-> 
----end quoted text---
+>  	ASSERT(VFS_I(ip)->i_mode != 0);
+> +	ASSERT(xfs_verify_ino(mp, ip->i_ino));
+
+This verify_ino calls seems odd given that we pass in an initialized
+inode struct..
+
+> +
+> +	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+> +	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+
+And then we could move these initializations up int othe lines with
+the variable declarations.
+
+> +	bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
+>  
+>  	/*
+>  	 * Get the agi buffer first.  It ensures lock ordering
+>  	 * on the list.
+>  	 */
+
+If you are touching this anyway, the whole comment could be changed
+into a single line..
+
+> +	if (!xfs_verify_ino(mp, ip->i_ino))
+> +		return -EFSCORRUPTED;
+>  
+> -	mp = tp->t_mountp;
+>  	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+> +	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+
+Same here.
