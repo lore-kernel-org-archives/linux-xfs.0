@@ -1,65 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51858 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46976 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726172AbfBAOc5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1726972AbfBAOc5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Fri, 1 Feb 2019 09:32:57 -0500
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id DF8D9C0528B9
-        for <linux-xfs@vger.kernel.org>; Fri,  1 Feb 2019 14:32:56 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4E7805D61C
+        for <linux-xfs@vger.kernel.org>; Fri,  1 Feb 2019 14:32:57 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 92B235D9D1
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 077995D982
         for <linux-xfs@vger.kernel.org>; Fri,  1 Feb 2019 14:32:56 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 0/6] xfs: properly invalidate cached writeback mapping
-Date: Fri,  1 Feb 2019 09:32:50 -0500
-Message-Id: <20190201143256.43232-1-bfoster@redhat.com>
+Subject: [PATCH v4 1/6] xfs: eof trim writeback mapping as soon as it is cached
+Date: Fri,  1 Feb 2019 09:32:51 -0500
+Message-Id: <20190201143256.43232-2-bfoster@redhat.com>
+In-Reply-To: <20190201143256.43232-1-bfoster@redhat.com>
+References: <20190201143256.43232-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Hi all,
+The cached writeback mapping is EOF trimmed to try and avoid races
+between post-eof block management and writeback that result in
+sending cached data to a stale location. The cached mapping is
+currently trimmed on the validation check, which leaves a race
+window between the time the mapping is cached and when it is trimmed
+against the current inode size.
 
-This is a minor update of this series to fold in some changes from
-Christoph's follow on series to rework the delalloc conversion code. The
-changes apply to patches 5 and 6 and rename/rework the delalloc helper.
-The subsequent series will fill in a real implementation for the wrapper
-and further clean up the writeback code.
+For example, if a new mapping is cached by delalloc conversion on a
+blocksize == page size fs, we could cycle various locks, perform
+memory allocations, etc.  in the writeback codepath before the
+associated mapping is eventually trimmed to i_size. This leaves
+enough time for a post-eof truncate and file append before the
+cached mapping is trimmed. The former event essentially invalidates
+a range of the cached mapping and the latter bumps the inode size
+such the trim on the next writepage event won't trim all of the
+invalid blocks. fstest generic/464 reproduces this scenario
+occasionally and causes a lost writeback and stale delalloc blocks
+warning on inode inactivation.
 
-Brian
+To work around this problem, trim the cached writeback mapping as
+soon as it is cached in addition to on subsequent validation checks.
+This is a minor tweak to tighten the race window as much as possible
+until a proper invalidation mechanism is available.
 
-v4:
-- Fold in Christoph's interface changes from the delalloc conversion
-  rework series (patches 5-6).
-v3: https://marc.info/?l=linux-xfs&m=154826889919747&w=2
-- Move comment in xfs_imap_valid().
-- Replace lookup+trim in xfs_iomap_write_allocate() with
-  xfs_bmapi_delalloc() wrapper mechanism.
-v2: https://marc.info/?l=linux-xfs&m=154775280823464&w=2
-- Refactor validation logic into xfs_imap_valid() helper.
-- Revalidate seqno after the lock cycle in xfs_map_blocks().
-- Update *seq in xfs_iomap_write_allocate() regardless of fork type.
-- Add patch 5 for seqno revalidation on xfs_iomap_write_allocate() lock
-  cycles.
-v1: https://marc.info/?l=linux-xfs&m=154721212321112&w=2
+Fixes: 40214d128e07 ("xfs: trim writepage mapping to within eof")
+Cc: <stable@vger.kernel.org> # v4.14+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Brian Foster (6):
-  xfs: eof trim writeback mapping as soon as it is cached
-  xfs: update fork seq counter on data fork changes
-  xfs: validate writeback mapping using data fork seq counter
-  xfs: remove superfluous writeback mapping eof trimming
-  xfs: create delalloc bmapi wrapper for full extent allocation
-  xfs: use the latest extent at writeback delalloc conversion time
-
- fs/xfs/libxfs/xfs_bmap.c       |  68 ++++++++++---
- fs/xfs/libxfs/xfs_bmap.h       |   3 +-
- fs/xfs/libxfs/xfs_iext_tree.c  |  13 ++-
- fs/xfs/libxfs/xfs_inode_fork.h |   2 +-
- fs/xfs/xfs_aops.c              |  71 +++++++++-----
- fs/xfs/xfs_iomap.c             | 171 +++++++++++----------------------
- 6 files changed, 165 insertions(+), 163 deletions(-)
-
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 338b9d9984e0..d9048bcea49c 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -449,6 +449,7 @@ xfs_map_blocks(
+ 	}
+ 
+ 	wpc->imap = imap;
++	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ allocate_blocks:
+@@ -459,6 +460,7 @@ xfs_map_blocks(
+ 	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+ 	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+ 	wpc->imap = imap;
++	xfs_trim_extent_eof(&wpc->imap, ip);
+ 	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ }
 -- 
 2.17.2
