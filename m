@@ -1,34 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:60602 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:34554 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728267AbfBBQHR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Feb 2019 11:07:17 -0500
-Date: Sat, 2 Feb 2019 08:07:15 -0800
+        with ESMTP id S1727843AbfBBQJN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Feb 2019 11:09:13 -0500
+Date: Sat, 2 Feb 2019 08:09:12 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 8/8] xfs: cache unlinked pointers in an rhashtable
-Message-ID: <20190202160714.GA12145@infradead.org>
-References: <154897667054.26065.13164381203002725289.stgit@magnolia>
- <154897672012.26065.1375987197453969157.stgit@magnolia>
- <20190201080343.GD22295@infradead.org>
- <20190201235900.GX6173@dastard>
- <20190202043159.GN5761@magnolia>
+Subject: Re: [PATCH v4 6/6] xfs: use the latest extent at writeback delalloc
+ conversion time
+Message-ID: <20190202160912.GB12373@infradead.org>
+References: <20190201143256.43232-1-bfoster@redhat.com>
+ <20190201143256.43232-7-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190202043159.GN5761@magnolia>
+In-Reply-To: <20190201143256.43232-7-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Feb 01, 2019 at 08:31:59PM -0800, Darrick J. Wong wrote:
+> [hch: Call updated delalloc conversion helper.]
 > 
-> I wrote a silly program to open as many O_TMPFILE files as it can and
-> then close them all.  I wrapped that in a script to crank up ulimit -n
-> to fs.file_max (which on this VM was about 194000 files) and came up
-> with this on a 5.0-rc4 kernel with deferred inactivation and iunlink
-> backref caching:
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Ah, cool.  Maybe throw a one-line summary of the results into the commit
-log for the next version.
+Looks good:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+And no need to mention the minor calling convention change from me
+here, or to pick up the signoff for that.
