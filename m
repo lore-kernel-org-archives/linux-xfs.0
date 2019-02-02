@@ -1,48 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:46976 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726116AbfBAWAB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Feb 2019 17:00:01 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 8B28632F5A
-        for <linux-xfs@vger.kernel.org>; Fri,  1 Feb 2019 22:00:00 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
- since 4.19.0  on sata hdd:s
-Date: Fri, 01 Feb 2019 21:59:59 +0000
-Message-ID: <bug-202441-201763-QN7VyTFJrO@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
-References: <bug-202441-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from bombadil.infradead.org ([198.137.202.133]:37394 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726082AbfBBQvK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Feb 2019 11:51:10 -0500
+Date: Sat, 2 Feb 2019 08:51:10 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 6/8] xfs: hoist unlinked list search and mapping to a
+ separate function
+Message-ID: <20190202165109.GA18160@infradead.org>
+References: <154897667054.26065.13164381203002725289.stgit@magnolia>
+ <154897670777.26065.9017810401812180528.stgit@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <154897670777.26065.9017810401812180528.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202441
+> +/* Return the imap, dinode pointer, and buffer for an inode. */
+> +STATIC int
+> +xfs_iunlink_map_ino(
+> +	struct xfs_trans	*tp,
+> +	xfs_ino_t		next_ino,
+> +	struct xfs_imap		*imap,
+> +	struct xfs_dinode	**dipp,
+> +	struct xfs_buf		**bpp)
+> +{
+> +	struct xfs_mount	*mp = tp->t_mountp;
+> +	int			error;
+> +
+> +	imap->im_blkno = 0;
+> +	error = xfs_imap(mp, tp, next_ino, imap, 0);
 
---- Comment #26 from Roger (rogan6710@gmail.com) ---
-I have tried both your suggested reverts on a customized non-modular server
-oriented 5.0.0-rc3, and subjected the poor machine to a brutal test: 8
-"simultaneous" defonfig compiles, a sort of load balancing test I do to
-evaluate io and cpu, on a xfs formatted hdd, while copying GB sized files to a
-btrfs formatted hdd ditto and my, by now, significant collection of kernel
-source trees to yet another ext4 formatted hdd. All this while watching a (very
-boring) youtube HD video and writing this. All working perfectly with a very
-responsive ui, while buff/cache is kept at 20-23 Gb, and almost no cpu idle.
+Looking at the next patch it actually would be nicer if we'd pass
+agno/agino instead of the inode number to this function,
+as currently both callers need to duplicate the caculation of the
+ino.
 
-I have also done the earlier tests with very good results :)
-5.5.0-rc3 locked up completely, and I had do do a "Norwegian reboot", when I
-tried loading it like that, earlier, without the reverts.
-
->From my point of view, they entirely solve this particular problem.
-I'll continue testing the reverts on other versions as well.
-
-All kernel compile processes finished with a delta t < 5o seconds, good :)
-(now try that on jfs ;))
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+In fact the first thing xfs_imap does is to split the ino into agno
+and agino again, so maybe we should throw in a prep patch to change
+the xfs_imap calling convention as well.
