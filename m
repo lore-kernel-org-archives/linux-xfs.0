@@ -1,44 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:58570 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726534AbfBESRs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Feb 2019 13:17:48 -0500
-Date: Tue, 5 Feb 2019 10:17:33 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/10] xfs: cache unlinked pointers in an rhashtable
-Message-ID: <20190205181733.GK7991@magnolia>
-References: <154930313674.31814.17994684613232167921.stgit@magnolia>
- <154930320519.31814.7868551876308474527.stgit@magnolia>
- <20190205142458.GD51421@bfoster>
- <20190205175309.GJ7991@magnolia>
- <20190205175702.GA5951@infradead.org>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:45334 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725891AbfBCIMP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Feb 2019 03:12:15 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 3C9632C834
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Feb 2019 08:12:14 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 202441] Possibly vfs cache related replicable xfs regression
+ since 4.19.0  on sata hdd:s
+Date: Sun, 03 Feb 2019 08:12:13 +0000
+Message-ID: <bug-202441-201763-E9wjyFGYlx@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202441-201763@https.bugzilla.kernel.org/>
+References: <bug-202441-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190205175702.GA5951@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Feb 05, 2019 at 09:57:02AM -0800, Christoph Hellwig wrote:
-> On Tue, Feb 05, 2019 at 09:53:09AM -0800, Darrick J. Wong wrote:
-> > Good point, we could be much more resilient to backref cache failures
-> > since we do have the option of doing it the slow way.
-> 
-> I don't think there is any failure that can happen during normal
-> operation as long as we use KM_SLEEP..
+https://bugzilla.kernel.org/show_bug.cgi?id=202441
 
-I dug even deeper into the rhashtable code it looks like it can fail a
-GFP_ATOMIC allocation for new buckets, which will bubble ENOMEM up to
-the caller, so Brian's right that we have to handle various errors, and
-should do so in a manner that doesn't kill the filesystem.
+--- Comment #27 from Roger (rogan6710@gmail.com) ---
+I've done testing on distribution standard 4.19.19 "generic" kernel with the
+reverts applied, all seems ok again :)
 
-Seeing as it's a backref cache and not critical to correct operation, I
-think I can change add_backref to ignore errors other than EEXIST
-(because having duplicate entries is a sign that we've screwed something
-up).  change_backref can absorb all the error codes, though it'll have
-to handle the case that lookup_fast returns ENOENT.
-
---D
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
