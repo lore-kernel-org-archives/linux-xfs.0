@@ -1,68 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:35937 "EHLO
-        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729486AbfBDVUq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Feb 2019 16:20:46 -0500
-Received: by mail-ed1-f65.google.com with SMTP id d12so169836edy.3
-        for <linux-xfs@vger.kernel.org>; Mon, 04 Feb 2019 13:20:45 -0800 (PST)
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: [PATCH] xfs: allow disabling xfs tracepoints via Kconfig
-Date: Mon,  4 Feb 2019 22:20:35 +0100
-Message-Id: <20190204212035.9919-1-linux@rasmusvillemoes.dk>
+Received: from sandeen.net ([63.231.237.45]:38300 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728037AbfBDSMX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Feb 2019 13:12:23 -0500
+Subject: Re: [PATCH 2/8] xfs_scrub_all.timer: activate after most of the
+ system is up
+References: <154524776457.28646.3004453037075812416.stgit@magnolia>
+ <154524777696.28646.14668160393059175404.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9de27cb4-7027-023f-58d5-eca8456627ba@sandeen.net>
+Date: Mon, 4 Feb 2019 12:12:21 -0600
 MIME-Version: 1.0
+In-Reply-To: <154524777696.28646.14668160393059175404.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
-Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-linux/tracepoints.h allows individual subsystems to disable their
-tracepoints. Add such a knob for xfs. Disabling XFS_TRACEPOINTS
-reduces the resident size of xfs.ko by about a third, or ~350 KiB.
+On 12/19/18 1:29 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> We really don't want the xfs_scrub_all timer triggering while the system
+> is booting up because not all the mounts will have finished, networking
+> might not be up for reporting, and slowing down bootup annoys people.
+> Therefore, delay the xfs_scrub_all service's activation until after the
+> system has started all the big pieces it's going to start.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  scrub/xfs_scrub_all.service.in |    1 +
+>  1 file changed, 1 insertion(+)
 
-$ size /tmp/xfs/{a,b}/xfs.ko
-   text    data     bss     dec     hex filename
- 671726    4129     632  676487   a5287 /tmp/xfs/a/xfs.ko
- 893192  166737     632 1060561  102ed1 /tmp/xfs/b/xfs.ko
+<lays hands on systemd-fu, attempts to sense aura of goodness>
 
-Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
----
- fs/xfs/Kconfig     | 9 +++++++++
- fs/xfs/xfs_trace.h | 4 ++++
- 2 files changed, 13 insertions(+)
+<has no real basis for judgement but feels that waiting for more $STUFF can't hurt>
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index 457ac9f97377..d099e6d9f6c5 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -141,3 +141,12 @@ config XFS_ASSERT_FATAL
- 	  result in warnings.
- 
- 	  This behavior can be modified at runtime via sysfs.
-+
-+config XFS_TRACEPOINTS
-+	bool "XFS tracepoints"
-+	default y
-+	depends on XFS_FS && TRACEPOINTS
-+	help
-+	  Say Y here to build XFS with tracepoints.
-+
-+	  You can say N here to reduce the size of the kernel image.
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 6fcc893dfc91..5fb3d5c0483e 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -6,6 +6,10 @@
- #undef TRACE_SYSTEM
- #define TRACE_SYSTEM xfs
- 
-+#ifndef CONFIG_XFS_TRACEPOINTS
-+#define NOTRACE
-+#endif
-+
- #if !defined(_TRACE_XFS_H) || defined(TRACE_HEADER_MULTI_READ)
- #define _TRACE_XFS_H
- 
--- 
-2.20.1
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> 
+> diff --git a/scrub/xfs_scrub_all.service.in b/scrub/xfs_scrub_all.service.in
+> index 66f82fc7..b1b80da4 100644
+> --- a/scrub/xfs_scrub_all.service.in
+> +++ b/scrub/xfs_scrub_all.service.in
+> @@ -2,6 +2,7 @@
+>  Description=Online XFS Metadata Check for All Filesystems
+>  ConditionACPower=true
+>  Documentation=man:xfs_scrub_all(8)
+> +After=paths.target multi-user.target network.target network-online.target systemd-networkd.service NetworkManager.service connman.service
+>  
+>  [Service]
+>  Type=oneshot
+> 
