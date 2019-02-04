@@ -1,154 +1,158 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:45911 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727264AbfBCJK5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Feb 2019 04:10:57 -0500
-Date: Sun, 3 Feb 2019 17:10:49 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 3/4] common: fix kmemleak to work with sections
-Message-ID: <20190203091049.GN2713@desktop>
-References: <154877863279.9277.4463697450629081138.stgit@magnolia>
- <154877864538.9277.6249607598508212314.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154877864538.9277.6249607598508212314.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:61852 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729563AbfBDOwf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Feb 2019 09:52:35 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B0E6DA85F
+        for <linux-xfs@vger.kernel.org>; Mon,  4 Feb 2019 14:52:34 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 602BC1001F45
+        for <linux-xfs@vger.kernel.org>; Mon,  4 Feb 2019 14:52:34 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3 5/9] xfs: split up allocation btree verifier
+Date: Mon,  4 Feb 2019 09:52:27 -0500
+Message-Id: <20190204145231.47034-6-bfoster@redhat.com>
+In-Reply-To: <20190204145231.47034-1-bfoster@redhat.com>
+References: <20190204145231.47034-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 08:17:25AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Refactor the kmemleak code to work correctly with sections.  This
+Similar to the inode btree verifier, the same allocation btree
+verifier structure is shared between the by-bno (bnobt) and by-size
+(cntbt) btrees. This prevents the ability to distinguish magic
+values between them. Separate the verifier into two, one for each
+tree, and assign them appropriately. No functional changes.
 
-Thanks for the fix!
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_ag.c          |  4 ++--
+ fs/xfs/libxfs/xfs_alloc_btree.c | 14 ++++++++++----
+ fs/xfs/libxfs/xfs_shared.h      |  3 ++-
+ fs/xfs/scrub/agheader_repair.c  |  4 ++--
+ fs/xfs/xfs_log_recover.c        |  6 ++++--
+ 5 files changed, 20 insertions(+), 11 deletions(-)
 
-> requires changing the report location to use RESULT_DIR instead of
-> RESULT_BASE, and clarifying which functions get used when.
-
-But I didn't see any RESULT_DIR related changes in this patch.
-
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  check     |    4 ++--
->  common/rc |   32 ++++++++++++++++++++++----------
->  2 files changed, 24 insertions(+), 12 deletions(-)
-> 
-> 
-> diff --git a/check b/check
-> index c0eee0aa..b9eb86cb 100755
-> --- a/check
-> +++ b/check
-> @@ -509,7 +509,7 @@ _expunge_test()
->  	return 0
->  }
->  
-> -_init_kmemleak
-> +_detect_kmemleak
->  _prepare_test_list
->  
->  if $OPTIONS_HAVE_SECTIONS; then
-> @@ -793,8 +793,8 @@ for section in $HOST_OPTIONS_SECTIONS; do
->  			# and log messages that shouldn't be there.
->  			_check_filesystems
->  			_check_dmesg || err=true
-> -			_check_kmemleak || err=true
->  		fi
-> +		_check_kmemleak || err=true
-
-So we check for kmemleak after each test even when the test already
-failed, better to have some comments here to explain why this is
-necessary.
-
->  
->  		# test ends after all checks are done.
->  		$timestamp && _timestamp
-> diff --git a/common/rc b/common/rc
-> index 19e947df..75771f31 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -3514,7 +3514,7 @@ _check_dmesg()
->  # capture the kmemleak report
->  _capture_kmemleak()
->  {
-> -	local kern_knob="${DEBUGFS_MNT}/kmemleak"
-> +	local kern_knob="$DEBUGFS_MNT/kmemleak"
-
-Just wondering why the "{}" are removed in this patch?
-
->  	local leak_file="$1"
->  
->  	# Tell the kernel to scan for memory leaks.  Apparently the write
-> @@ -3535,17 +3535,20 @@ ENDL
->  	echo "clear" > "$kern_knob"
->  }
->  
-> -# set up kmemleak
-> -_init_kmemleak()
-> +# Figure out if the running kernel supports kmemleak; if it does, clear out
-> +# anything that leaked before we even started testing.  The leak checker only
-> +# needs to be primed like this once per ./check invocation.
-> +_detect_kmemleak()
->  {
-> -	local kern_knob="${DEBUGFS_MNT}/kmemleak"
-> +	local kern_knob="$DEBUGFS_MNT/kmemleak"
-> +	KMEMLEAK_CHECK_FILE="/tmp/check_kmemleak"
-
-So we're checking the "/tmp/check_kmemleak" file instead of
-${RESULT_BASE}/check_kmemleak now, but from the commit log it seems that
-it should be ${RESULT_DIR}/check_kmemleak?
-
->  
->  	# Since kernel v4.19-rc3, the kmemleak knob exists even if kmemleak is
->  	# disabled, but returns EBUSY on write. So instead of relying on
->  	# existance of writable knob file, we use a test file to indicate that
->  	# _check_kmemleak() is enabled only if we actually managed to write to
->  	# the knob file.
-> -	rm -f ${RESULT_BASE}/check_kmemleak
-> +	rm -f "$KMEMLEAK_CHECK_FILE"
->  
->  	if [ ! -w "$kern_knob" ]; then
->  		return 0
-> @@ -3555,17 +3558,26 @@ _init_kmemleak()
->  	# then dump all the leaks recorded so far.
->  	if echo "scan=off" > "$kern_knob" 2>/dev/null; then
->  		_capture_kmemleak /dev/null
-> -		touch ${RESULT_BASE}/check_kmemleak
-> +		touch "$KMEMLEAK_CHECK_FILE"
->  	fi
->  }
->  
-> -# check kmemleak log
-> +# Kick the kmemleak checker to scan for leaks.  Background leak scan mode is
-> +# not enabled, so we must call the kernel to ask for a scan and deal with the
-> +# results appropriately.  This we do after every test completes, whether or not
-> +# it was successful.
->  _check_kmemleak()
->  {
-> -	local kern_knob="${DEBUGFS_MNT}/kmemleak"
-> -	local leak_file="${seqres}.kmemleak"
-> +	local kern_knob="$DEBUGFS_MNT/kmemleak"
-> +	local leak_file="$seqres.kmemleak"
->  
-> -	if [ ! -f ${RESULT_BASE}/check_kmemleak ]; then
-> +	if [ ! -f "$KMEMLEAK_CHECK_FILE" ]; then
-> +		return 0
-> +	fi
-> +
-> +	# Not enabled, so discard any report of leaks found.
-> +	if [ "$USE_KMEMLEAK" != "yes" ]; then
-> +		_capture_kmemleak /dev/null
-
-New knob requires new documentation in README :)
-
-Thanks,
-Eryu
-
->  		return 0
->  	fi
->  
-> 
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index bde67ef3ff43..1ef8acf35e7d 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -339,14 +339,14 @@ xfs_ag_init_headers(
+ 	{ /* BNO root block */
+ 		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp)),
+ 		.numblks = BTOBB(mp->m_sb.sb_blocksize),
+-		.ops = &xfs_allocbt_buf_ops,
++		.ops = &xfs_bnobt_buf_ops,
+ 		.work = &xfs_bnoroot_init,
+ 		.need_init = true
+ 	},
+ 	{ /* CNT root block */
+ 		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp)),
+ 		.numblks = BTOBB(mp->m_sb.sb_blocksize),
+-		.ops = &xfs_allocbt_buf_ops,
++		.ops = &xfs_cntbt_buf_ops,
+ 		.work = &xfs_cntroot_init,
+ 		.need_init = true
+ 	},
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 4e59cc8a2802..480d0f52da64 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -377,13 +377,19 @@ xfs_allocbt_write_verify(
+ 
+ }
+ 
+-const struct xfs_buf_ops xfs_allocbt_buf_ops = {
+-	.name = "xfs_allocbt",
++const struct xfs_buf_ops xfs_bnobt_buf_ops = {
++	.name = "xfs_bnobt",
+ 	.verify_read = xfs_allocbt_read_verify,
+ 	.verify_write = xfs_allocbt_write_verify,
+ 	.verify_struct = xfs_allocbt_verify,
+ };
+ 
++const struct xfs_buf_ops xfs_cntbt_buf_ops = {
++	.name = "xfs_cntbt",
++	.verify_read = xfs_allocbt_read_verify,
++	.verify_write = xfs_allocbt_write_verify,
++	.verify_struct = xfs_allocbt_verify,
++};
+ 
+ STATIC int
+ xfs_bnobt_keys_inorder(
+@@ -448,7 +454,7 @@ static const struct xfs_btree_ops xfs_bnobt_ops = {
+ 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
+ 	.key_diff		= xfs_bnobt_key_diff,
+-	.buf_ops		= &xfs_allocbt_buf_ops,
++	.buf_ops		= &xfs_bnobt_buf_ops,
+ 	.diff_two_keys		= xfs_bnobt_diff_two_keys,
+ 	.keys_inorder		= xfs_bnobt_keys_inorder,
+ 	.recs_inorder		= xfs_bnobt_recs_inorder,
+@@ -470,7 +476,7 @@ static const struct xfs_btree_ops xfs_cntbt_ops = {
+ 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
+ 	.key_diff		= xfs_cntbt_key_diff,
+-	.buf_ops		= &xfs_allocbt_buf_ops,
++	.buf_ops		= &xfs_cntbt_buf_ops,
+ 	.diff_two_keys		= xfs_cntbt_diff_two_keys,
+ 	.keys_inorder		= xfs_cntbt_keys_inorder,
+ 	.recs_inorder		= xfs_cntbt_recs_inorder,
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index 9855f4d2f98f..4e909791aeac 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -25,7 +25,8 @@ extern const struct xfs_buf_ops xfs_agf_buf_ops;
+ extern const struct xfs_buf_ops xfs_agi_buf_ops;
+ extern const struct xfs_buf_ops xfs_agf_buf_ops;
+ extern const struct xfs_buf_ops xfs_agfl_buf_ops;
+-extern const struct xfs_buf_ops xfs_allocbt_buf_ops;
++extern const struct xfs_buf_ops xfs_bnobt_buf_ops;
++extern const struct xfs_buf_ops xfs_cntbt_buf_ops;
+ extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
+ extern const struct xfs_buf_ops xfs_refcountbt_buf_ops;
+ extern const struct xfs_buf_ops xfs_attr3_leaf_buf_ops;
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index 673be3cf7b8d..2799d1531639 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -341,12 +341,12 @@ xrep_agf(
+ 	struct xrep_find_ag_btree	fab[XREP_AGF_MAX] = {
+ 		[XREP_AGF_BNOBT] = {
+ 			.rmap_owner = XFS_RMAP_OWN_AG,
+-			.buf_ops = &xfs_allocbt_buf_ops,
++			.buf_ops = &xfs_bnobt_buf_ops,
+ 			.magic = XFS_ABTB_CRC_MAGIC,
+ 		},
+ 		[XREP_AGF_CNTBT] = {
+ 			.rmap_owner = XFS_RMAP_OWN_AG,
+-			.buf_ops = &xfs_allocbt_buf_ops,
++			.buf_ops = &xfs_cntbt_buf_ops,
+ 			.magic = XFS_ABTC_CRC_MAGIC,
+ 		},
+ 		[XREP_AGF_RMAPBT] = {
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 228c754bb137..5ad42d598333 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2439,10 +2439,12 @@ xlog_recover_validate_buf_type(
+ 	case XFS_BLFT_BTREE_BUF:
+ 		switch (magic32) {
+ 		case XFS_ABTB_CRC_MAGIC:
+-		case XFS_ABTC_CRC_MAGIC:
+ 		case XFS_ABTB_MAGIC:
++			bp->b_ops = &xfs_bnobt_buf_ops;
++			break;
++		case XFS_ABTC_CRC_MAGIC:
+ 		case XFS_ABTC_MAGIC:
+-			bp->b_ops = &xfs_allocbt_buf_ops;
++			bp->b_ops = &xfs_cntbt_buf_ops;
+ 			break;
+ 		case XFS_IBT_CRC_MAGIC:
+ 		case XFS_IBT_MAGIC:
+-- 
+2.17.2
