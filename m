@@ -1,50 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49964 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727265AbfBLCRw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Feb 2019 21:17:52 -0500
-Subject: [PATCH 1/2] inject: skip tests when knob dir exists but knob doesn't
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 11 Feb 2019 18:17:48 -0800
-Message-ID: <154993786856.2062.15965021741779968907.stgit@magnolia>
-In-Reply-To: <154993786231.2062.8490515215533507881.stgit@magnolia>
-References: <154993786231.2062.8490515215533507881.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:46510 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726614AbfBDW44 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Feb 2019 17:56:56 -0500
+Date: Mon, 4 Feb 2019 17:56:22 -0500
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: security implications of caching with virtio pmem (was Re: [PATCH v3
+ 0/5] kvm "virtio pmem" device)
+Message-ID: <20190204170515-mutt-send-email-mst@kernel.org>
+References: <20190109144736.17452-1-pagupta@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190109144736.17452-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-If the XFS error injection knob directory exists but the knob itself
-doesn't, then we know that this kernel doesn't support the knob and
-can skip the test.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/inject |    7 +++++++
- 1 file changed, 7 insertions(+)
+To: Pankaj Gupta <pagupta@redhat.com>
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, qemu-devel@nongnu.org, linux-nvdimm@ml01.01.org, linux-fsdevel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-acpi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, jack@suse.cz, stefanha@redhat.com, dan.j.williams@intel.com, riel@surriel.com, nilal@redhat.com, kwolf@redhat.com, pbonzini@redhat.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, david@redhat.com, jmoyer@redhat.com, xiaoguangrong.eric@gmail.com, hch@infradead.org, jasowang@redhat.com, lcapitulino@redhat.com, imammedo@redhat.com, eblake@redhat.com, willy@infradead.org, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, rjw@rjwysocki.net, Andrea Arcangeli <aarcange@redhat.com>
 
 
-diff --git a/common/inject b/common/inject
-index 903fb379..984ec209 100644
---- a/common/inject
-+++ b/common/inject
-@@ -62,6 +62,13 @@ _require_xfs_io_error_injection()
- 	knob="$(_find_xfs_mountdev_errortag_knob "${TEST_DEV}" "${type}")"
- 	test -w "${knob}" && return
- 
-+	# If the directory containing the sysfs error injection knob exists
-+	# but the knob itself isn't usable, this kernel doesn't know about
-+	# the knob.  Skip the test.
-+	if [ -d "$(dirname "${knob}")" ]; then
-+		_notrun "XFS error injection $type unknown on this kernel."
-+	fi
-+
- 	# NOTE: We can't actually test error injection here because xfs
- 	# hasn't always range checked the argument to xfs_errortag_add.
- 	# We also don't want to trip an error before we're ready to deal
+On Wed, Jan 09, 2019 at 08:17:31PM +0530, Pankaj Gupta wrote:
+>  This patch series has implementation for "virtio pmem". 
+>  "virtio pmem" is fake persistent memory(nvdimm) in guest 
+>  which allows to bypass the guest page cache. This also
+>  implements a VIRTIO based asynchronous flush mechanism.  
+
+
+At Pankaj's request I looked at information leak implications of virtio
+pmem in light of the recent page cache side channels paper
+(https://arxiv.org/pdf/1901.01161.pdf) - to see what
+kind of side channels it might create if any.  TLDR - I think that
+depending on the host side implementation there could be some, but this
+might be addressable by better documentation in both code and spec.
+The fake dax approach backing the guest memory by a host page cache
+does seem to have potential issues.
+
+For clarity: we are talking about leaking information either to a VM, or
+within a VM (I did not look into leaks to hypervisor in configurations
+such as SEV) through host page cache.
+
+Leaks into a VM: It seems clear that while pmem allows memory accesses
+versus read/write with e.g. a block device, from host page cache point
+of view this doesn't matter much: reads populate cache in the same way
+as memory faults.  Thus ignoring presence of information leaks (which is
+an interesting question e.g. in light of recent discard support) pmem
+doesn't seem to be any better or worse for leaking information into a
+VM.
+
+Leaks within VM: Right now pmem seems to bypass the guest page cache
+completely.  Whether pmem memory is then resident in a page cache would
+be up to the device/host. Assuming that it is, the "Preventing
+Efficient Eviction while Increasing the System Performance"
+countermeasure for the page cache side channel attack would appear to
+become ineffective with pmem. What is suggested is a per-process
+management of the page cache, and host does not have visibility of
+processes within a VM. Another possible countermeasure - not discussed
+in the paper - could be modify the applications to lock the security
+relevant pages in memory.  Again this becomes impractical with pmem as
+host does not have visibility into that. However note that as long
+as the only countermeasure linux uses is "Privileged Access"
+(i.e. blocking mincore) nothing can be done as guest page cache
+remains as vulnerable as host page cache.
+
+
+Countermeasures: which host-side countermeasures can be designed would
+depend on which countermeasures are used guest-side - we would need to
+make sure they are not broken by pmem.  For "Preventing Efficient
+Eviction while Increasing the System Performance" modifying the host
+implementation to ensure that pmem device bypasses the host page cache
+would seem to address the security problem.Similarly, ensuring that a
+real memory device (e.g. DAX, RAM such as hugetlbfs, pmem for nested
+virt) is used for pmem would make the memory locking countermeasure
+work.  Whether with such limitations the device is still useful
+performance wise is an open question.  These questions probably should
+be addressed in the documentation, spec and possible qemu code.
+
+
+
+Severity of the security implications: some people argue that the
+security implications of the page cache leaks are minor.  I do not have
+an opinion on this: the severity would seem to depend on the specific
+configuration.
+
+
+Other security implications: recent discussion seems to suggest there
+are other concerns around e.g. resource management and thus DOS
+potential. If that's so, it's a matter for a separate discussion
+as I didn't look into that in depth.
+
+Some or all of the above might be based on a misunderstanding of the
+current pmem code, the whitepaper and linux page cache in general.
+If so I apologise, do not hesitate to call out any mistakes.
+
+Thanks!
+
+-- 
+MST
