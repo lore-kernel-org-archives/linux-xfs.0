@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37998 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:37916 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725980AbfBDQyh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1729545AbfBDQyh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Mon, 4 Feb 2019 11:54:37 -0500
 From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH v2 06/10] xfs: fix transient reference count error in xfs_buf_resubmit_failed_buffers
-Date: Mon,  4 Feb 2019 08:54:23 -0800
-Message-Id: <20190204165427.23607-7-mcgrof@kernel.org>
+Subject: [PATCH v2 07/10] xfs: delalloc -> unwritten COW fork allocation can go wrong
+Date: Mon,  4 Feb 2019 08:54:24 -0800
+Message-Id: <20190204165427.23607-8-mcgrof@kernel.org>
 In-Reply-To: <20190204165427.23607-1-mcgrof@kernel.org>
 References: <20190204165427.23607-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,84 +17,101 @@ Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, Dave Chinner 
 
 From: Dave Chinner <dchinner@redhat.com>
 
-commit d43aaf1685aa471f0593685c9f54d53e3af3cf3f upstream.
+commit 9230a0b65b47fe6856c4468ec0175c4987e5bede upstream.
 
-When retrying a failed inode or dquot buffer,
-xfs_buf_resubmit_failed_buffers() clears all the failed flags from
-the inde/dquot log items. In doing so, it also drops all the
-reference counts on the buffer that the failed log items hold. This
-means it can drop all the active references on the buffer and hence
-free the buffer before it queues it for write again.
+Long saga. There have been days spent following this through dead end
+after dead end in multi-GB event traces. This morning, after writing
+a trace-cmd wrapper that enabled me to be more selective about XFS
+trace points, I discovered that I could get just enough essential
+tracepoints enabled that there was a 50:50 chance the fsx config
+would fail at ~115k ops. If it didn't fail at op 115547, I stopped
+fsx at op 115548 anyway.
 
-Putting the buffer on the delwri queue takes a reference to the
-buffer (so that it hangs around until it has been written and
-completed), but this goes bang if the buffer has already been freed.
+That gave me two traces - one where the problem manifested, and one
+where it didn't. After refining the traces to have the necessary
+information, I found that in the failing case there was a real
+extent in the COW fork compared to an unwritten extent in the
+working case.
 
-Hence we need to add the buffer to the delwri queue before we remove
-the failed flags from the log items attached to the buffer to ensure
-it always remains referenced during the resubmit process.
+Walking back through the two traces to the point where the CWO fork
+extents actually diverged, I found that the bad case had an extra
+unwritten extent in it. This is likely because the bug it led me to
+had triggered multiple times in those 115k ops, leaving stray
+COW extents around. What I saw was a COW delalloc conversion to an
+unwritten extent (as they should always be through
+xfs_iomap_write_allocate()) resulted in a /written extent/:
 
-Reported-by: Josef Bacik <josef@toxicpanda.com>
+xfs_writepage:        dev 259:0 ino 0x83 pgoff 0x17000 size 0x79a00 offset 0 length 0
+xfs_iext_remove:      dev 259:0 ino 0x83 state RC|LF|RF|COW cur 0xffff888247b899c0/2 offset 32 block 152 count 20 flag 1 caller xfs_bmap_add_extent_delay_real
+xfs_bmap_pre_update:  dev 259:0 ino 0x83 state RC|LF|RF|COW cur 0xffff888247b899c0/1 offset 1 block 4503599627239429 count 31 flag 0 caller xfs_bmap_add_extent_delay_real
+xfs_bmap_post_update: dev 259:0 ino 0x83 state RC|LF|RF|COW cur 0xffff888247b899c0/1 offset 1 block 121 count 51 flag 0 caller xfs_bmap_add_ex
+
+Basically, Cow fork before:
+
+	0 1            32          52
+	+H+DDDDDDDDDDDD+UUUUUUUUUUU+
+	   PREV		RIGHT
+
+COW delalloc conversion allocates:
+
+	  1	       32
+	  +uuuuuuuuuuuu+
+	  NEW
+
+And the result according to the xfs_bmap_post_update trace was:
+
+	0 1            32          52
+	+H+wwwwwwwwwwwwwwwwwwwwwwww+
+	   PREV
+
+Which is clearly wrong - it should be a merged unwritten extent,
+not an unwritten extent.
+
+That lead me to look at the LEFT_FILLING|RIGHT_FILLING|RIGHT_CONTIG
+case in xfs_bmap_add_extent_delay_real(), and sure enough, there's
+the bug.
+
+It takes the old delalloc extent (PREV) and adds the length of the
+RIGHT extent to it, takes the start block from NEW, removes the
+RIGHT extent and then updates PREV with the new extent.
+
+What it fails to do is update PREV.br_state. For delalloc, this is
+always XFS_EXT_NORM, while in this case we are converting the
+delayed allocation to unwritten, so it needs to be updated to
+XFS_EXT_UNWRITTEN. This LF|RF|RC case does not do this, and so
+the resultant extent is always written.
+
+And that's the bug I've been chasing for a week - a bmap btree bug,
+not a reflink/dedupe/copy_file_range bug, but a BMBT bug introduced
+with the recent in core extent tree scalability enhancements.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- fs/xfs/xfs_buf_item.c | 28 +++++++++++++++++++++-------
- 1 file changed, 21 insertions(+), 7 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 12d8455bfbb2..010db5f8fb00 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1233,9 +1233,23 @@ xfs_buf_iodone(
- }
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index a47670332326..3a496ffe6551 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1683,10 +1683,13 @@ xfs_bmap_add_extent_delay_real(
+ 	case BMAP_LEFT_FILLING | BMAP_RIGHT_FILLING | BMAP_RIGHT_CONTIG:
+ 		/*
+ 		 * Filling in all of a previously delayed allocation extent.
+-		 * The right neighbor is contiguous, the left is not.
++		 * The right neighbor is contiguous, the left is not. Take care
++		 * with delay -> unwritten extent allocation here because the
++		 * delalloc record we are overwriting is always written.
+ 		 */
+ 		PREV.br_startblock = new->br_startblock;
+ 		PREV.br_blockcount += RIGHT.br_blockcount;
++		PREV.br_state = new->br_state;
  
- /*
-- * Requeue a failed buffer for writeback
-+ * Requeue a failed buffer for writeback.
-  *
-- * Return true if the buffer has been re-queued properly, false otherwise
-+ * We clear the log item failed state here as well, but we have to be careful
-+ * about reference counts because the only active reference counts on the buffer
-+ * may be the failed log items. Hence if we clear the log item failed state
-+ * before queuing the buffer for IO we can release all active references to
-+ * the buffer and free it, leading to use after free problems in
-+ * xfs_buf_delwri_queue. It makes no difference to the buffer or log items which
-+ * order we process them in - the buffer is locked, and we own the buffer list
-+ * so nothing on them is going to change while we are performing this action.
-+ *
-+ * Hence we can safely queue the buffer for IO before we clear the failed log
-+ * item state, therefore  always having an active reference to the buffer and
-+ * avoiding the transient zero-reference state that leads to use-after-free.
-+ *
-+ * Return true if the buffer was added to the buffer list, false if it was
-+ * already on the buffer list.
-  */
- bool
- xfs_buf_resubmit_failed_buffers(
-@@ -1243,16 +1257,16 @@ xfs_buf_resubmit_failed_buffers(
- 	struct list_head	*buffer_list)
- {
- 	struct xfs_log_item	*lip;
-+	bool			ret;
-+
-+	ret = xfs_buf_delwri_queue(bp, buffer_list);
- 
- 	/*
--	 * Clear XFS_LI_FAILED flag from all items before resubmit
--	 *
--	 * XFS_LI_FAILED set/clear is protected by ail_lock, caller  this
-+	 * XFS_LI_FAILED set/clear is protected by ail_lock, caller of this
- 	 * function already have it acquired
- 	 */
- 	list_for_each_entry(lip, &bp->b_li_list, li_bio_list)
- 		xfs_clear_li_failed(lip);
- 
--	/* Add this buffer back to the delayed write list */
--	return xfs_buf_delwri_queue(bp, buffer_list);
-+	return ret;
- }
+ 		xfs_iext_next(ifp, &bma->icur);
+ 		xfs_iext_remove(bma->ip, &bma->icur, state);
 -- 
 2.18.0
