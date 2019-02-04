@@ -1,107 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60566 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:38074 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727450AbfBATAz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Feb 2019 14:00:55 -0500
-Date: Fri, 1 Feb 2019 14:00:52 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/8] xfs: strengthen AGI unlinked inode bucket pointer
- checks
-Message-ID: <20190201190052.GC31203@bfoster>
-References: <154897667054.26065.13164381203002725289.stgit@magnolia>
- <154897669539.26065.18123748779523685840.stgit@magnolia>
+        id S1727917AbfBDSIu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Feb 2019 13:08:50 -0500
+Subject: Re: [PATCH 1/8] xfs_scrub_all: walk the lsblk device/fs hierarchy
+ correctly
+References: <154524776457.28646.3004453037075812416.stgit@magnolia>
+ <154524777080.28646.13859873012142786308.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d4cd6eba-2767-9fea-ea98-2416fe5c2ba4@sandeen.net>
+Date: Mon, 4 Feb 2019 12:08:49 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154897669539.26065.18123748779523685840.stgit@magnolia>
+In-Reply-To: <154524777080.28646.13859873012142786308.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 31, 2019 at 03:18:15PM -0800, Darrick J. Wong wrote:
+On 12/19/18 1:29 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Strengthen our checking of the AGI unlinked pointers when we start to
-> use them for updating the metadata.
+> Back when I was designing xfs_scrub_all, I naïvely assumed that the
+> emitted output would always list physical storage before the virtual
+> devices stacked atop it.  However, this is not actually true when one
+> omits the "NAME" column, which is crucial to forcing the output (json or
+> otherwise) to capture the block device hierarchy.  If the assumption is
+> violated, the program crashes with a python exception.
+
+Is this a quirk or a documented feature of lsblk?
+ 
+> To fix this, force the hierarchal json output and restructure the
+> discovery routines to walk the json object that we receive, from the top
+> (physical devices) downwards to wherever there are live xfs filesystems.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_inode.c |   28 +++++++++++++++++-----------
+>  scrub/xfs_scrub_all.in |   28 +++++++++++++++++-----------
 >  1 file changed, 17 insertions(+), 11 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 3c33136b21ef..4ddda3f3255f 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1942,6 +1942,7 @@ xfs_iunlink(
->  	struct xfs_buf		*ibp;
->  	struct xfs_perag	*pag;
->  	xfs_agnumber_t		agno;
-> +	xfs_agino_t		next_agino;
->  	xfs_agino_t		agino;
->  	short			bucket_index;
->  	int			offset;
-> @@ -1966,13 +1967,19 @@ xfs_iunlink(
->  	agi = XFS_BUF_TO_AGI(agibp);
+> diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+> index c4e9899d..5b76b49a 100644
+> --- a/scrub/xfs_scrub_all.in
+> +++ b/scrub/xfs_scrub_all.in
+> @@ -28,9 +28,21 @@ def DEVNULL():
 >  
->  	/*
-> -	 * Get the index into the agi hash table for the
-> -	 * list this inode will go on.
-> +	 * Get the index into the agi hash table for the list this inode will
-> +	 * go on.  Make sure the pointer isn't garbage and that this inode
-> +	 * isn't already on the list.
->  	 */
-> -	ASSERT(agi->agi_unlinked[bucket_index]);
-> -	ASSERT(be32_to_cpu(agi->agi_unlinked[bucket_index]) != agino);
-> +	next_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
-> +	if (next_agino == agino ||
-> +	    (next_agino != NULLAGINO &&
-> +	     !xfs_verify_agino(mp, agno, next_agino))) {
-> +		error = -EFSCORRUPTED;
-> +		goto out_unlock;
-> +	}
+>  def find_mounts():
+>  	'''Map mountpoints to physical disks.'''
+> +	def find_xfs_mounts(bdev, fs, lastdisk):
+> +		'''Attach lastdisk to each fs found under bdev.'''
+> +		if bdev['fstype'] == 'xfs' and bdev['mountpoint'] is not None:
+> +			mnt = bdev['mountpoint']
+> +			if mnt in fs:
+> +				fs[mnt].add(lastdisk)
+> +			else:
+> +				fs[mnt] = set([lastdisk])
+> +		if 'children' not in bdev:
+> +			return
+> +		for child in bdev['children']:
+> +			find_xfs_mounts(child, fs, lastdisk)
 >  
-> -	if (agi->agi_unlinked[bucket_index] != cpu_to_be32(NULLAGINO)) {
-> +	if (next_agino != NULLAGINO) {
->  		/*
->  		 * There is already another inode in the bucket we need
->  		 * to add ourselves to.  Add us at the front of the list.
-> @@ -2054,18 +2061,18 @@ xfs_iunlink_remove(
->  	agi = XFS_BUF_TO_AGI(agibp);
+>  	fs = {}
+> -	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
+> +	cmd=['lsblk', '-o', 'NAME,KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
+
+sorry for the ridonculously late review, and although '-J" isn't added
+new in this patch, FYI at least RHEL7 does not allow it:
+
+# lsblk -o KNAME -J
+lsblk: invalid option -- 'J'
+
+... thoughts?  Probably should be handled gracefully at least?
+
+-Eric
+
+>  	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+>  	result.wait()
+>  	if result.returncode != 0:
+> @@ -38,18 +50,12 @@ def find_mounts():
+>  	sarray = [x.decode(sys.stdout.encoding) for x in result.stdout.readlines()]
+>  	output = ' '.join(sarray)
+>  	bdevdata = json.loads(output)
+> +
+>  	# The lsblk output had better be in disks-then-partitions order
+>  	for bdev in bdevdata['blockdevices']:
+> -		if bdev['type'] in ('disk', 'loop'):
+> -			lastdisk = bdev['kname']
+> -		if bdev['fstype'] == 'xfs':
+> -			mnt = bdev['mountpoint']
+> -			if mnt is None:
+> -				continue
+> -			if mnt in fs:
+> -				fs[mnt].add(lastdisk)
+> -			else:
+> -				fs[mnt] = set([lastdisk])
+> +		lastdisk = bdev['kname']
+> +		find_xfs_mounts(bdev, fs, lastdisk)
+> +
+>  	return fs
 >  
->  	/*
-> -	 * Get the index into the agi hash table for the
-> -	 * list this inode will go on.
-> +	 * Get the index into the agi hash table for the list this inode will
-> +	 * go on.  Make sure the head pointer isn't garbage.
->  	 */
-> -	if (!xfs_verify_agino(mp, agno,
-> -			be32_to_cpu(agi->agi_unlinked[bucket_index]))) {
-> +	next_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
-> +	if (!xfs_verify_agino(mp, agno, next_agino)) {
->  		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
->  				agi, sizeof(*agi));
->  		error = -EFSCORRUPTED;
->  		goto out_unlock;
->  	}
->  
-> -	if (be32_to_cpu(agi->agi_unlinked[bucket_index]) == agino) {
-> +	if (next_agino == agino) {
->  		/*
->  		 * We're at the head of the list.  Get the inode's on-disk
->  		 * buffer to see if there is anyone after us on the list.
-> @@ -2107,7 +2114,6 @@ xfs_iunlink_remove(
->  		/*
->  		 * We need to search the list for the inode being freed.
->  		 */
-> -		next_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
->  		last_ibp = NULL;
->  		while (next_agino != agino) {
->  			struct xfs_imap	imap;
+>  def kill_systemd(unit, proc):
 > 
