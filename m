@@ -1,166 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53682 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727966AbfBDTZL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Feb 2019 14:25:11 -0500
-Date: Mon, 4 Feb 2019 14:25:09 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 04/10] xfs: refactor AGI unlinked bucket updates
-Message-ID: <20190204192508.GD47560@bfoster>
+Received: from bombadil.infradead.org ([198.137.202.133]:37434 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727057AbfBDUxM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Feb 2019 15:53:12 -0500
+Date: Mon, 4 Feb 2019 12:53:10 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 02/10] xfs: track unlinked inode counts in per-ag data
+Message-ID: <20190204205310.GB30334@infradead.org>
 References: <154930313674.31814.17994684613232167921.stgit@magnolia>
- <154930316722.31814.1440085628512350921.stgit@magnolia>
+ <154930315478.31814.9792968910867944759.stgit@magnolia>
+ <20190204192451.GB47560@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <154930316722.31814.1440085628512350921.stgit@magnolia>
+In-Reply-To: <20190204192451.GB47560@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Mon, Feb 04, 2019 at 09:59:27AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Split the AGI unlinked bucket updates into a separate function.  No
-> functional changes.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+On Mon, Feb 04, 2019 at 02:24:51PM -0500, Brian Foster wrote:
+> I'm a little confused where we're at with this one given the discussion
+> on the previous version. We've dropped the locking, but left the
+> tracking in place. Are we just relying on holding the agi in the
+> iunlink/iunlink_remove cases? If so, that seems reasonable to me but the
+> commit log should probably have a sentence or two on the serialization
+> rules. The commit log could also use an update to describe how this
+> value is actually used in this patch (as an unmount time check) as
+> opposed to some apparent throttling functionality that isn't a part of
+> this series.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_inode.c |   66 +++++++++++++++++++++++++++++++++++++---------------
->  fs/xfs/xfs_trace.h |   26 ++++++++++++++++++++
->  2 files changed, 73 insertions(+), 19 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 435901c7c674..8c4a1d198de8 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1880,6 +1880,43 @@ xfs_inactive(
->  	xfs_qm_dqdetach(ip);
->  }
->  
-> +/*
-> + * Point the AGI unlinked bucket at an inode and log the results.  The caller
-> + * is responsible for validating the old value.
-> + */
-> +STATIC int
-> +xfs_iunlink_update_bucket(
-> +	struct xfs_trans	*tp,
-> +	xfs_agnumber_t		agno,
-> +	struct xfs_buf		*agibp,
-> +	unsigned int		bucket_index,
-> +	xfs_agino_t		new_agino)
-> +{
-> +	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agibp);
-> +	xfs_agino_t		old_value;
-> +	int			offset;
-> +
-> +	ASSERT(xfs_verify_agino_or_null(tp->t_mountp, agno, new_agino));
-> +
-> +	old_value = be32_to_cpu(agi->agi_unlinked[bucket_index]);
-> +	trace_xfs_iunlink_update_bucket(tp->t_mountp, agno, bucket_index,
-> +			old_value, new_agino);
-> +
-> +	/*
-> +	 * We should never find the head of the list already set to the value
-> +	 * passed in because either we're adding or removing ourselves from the
-> +	 * head of the list.
-> +	 */
-> +	if (old_value == new_agino)
-> +		return -EFSCORRUPTED;
-> +
-> +	agi->agi_unlinked[bucket_index] = cpu_to_be32(new_agino);
-> +	offset = offsetof(struct xfs_agi, agi_unlinked) +
-> +			(sizeof(xfs_agino_t) * bucket_index);
-> +	xfs_trans_log_buf(tp, agibp, offset, offset + sizeof(xfs_agino_t) - 1);
-> +	return 0;
-> +}
-> +
->  /*
->   * This is called when the inode's link count goes to 0 or we are creating a
->   * tmpfile via O_TMPFILE. In the case of a tmpfile, @ignore_linkcount will be
-> @@ -1949,15 +1986,10 @@ xfs_iunlink(
->  		xfs_inobp_check(mp, ibp);
->  	}
->  
-> -	/*
-> -	 * Point the bucket head pointer at the inode being inserted.
-> -	 */
-> -	ASSERT(agino != 0);
-> -	agi->agi_unlinked[bucket_index] = cpu_to_be32(agino);
-> -	offset = offsetof(xfs_agi_t, agi_unlinked) +
-> -		(sizeof(xfs_agino_t) * bucket_index);
-> -	xfs_trans_log_buf(tp, agibp, offset,
-> -			  (offset + sizeof(xfs_agino_t) - 1));
-> +	/* Point the head of the list to point to this inode. */
-> +	error = xfs_iunlink_update_bucket(tp, agno, agibp, bucket_index, agino);
-> +	if (error)
-> +		goto out;
->  	pag->pagi_unlinked_count++;
->  out:
->  	xfs_perag_put(pag);
-> @@ -2041,16 +2073,12 @@ xfs_iunlink_remove(
->  		} else {
->  			xfs_trans_brelse(tp, ibp);
->  		}
-> -		/*
-> -		 * Point the bucket head pointer at the next inode.
-> -		 */
-> -		ASSERT(next_agino != 0);
-> -		ASSERT(next_agino != agino);
-> -		agi->agi_unlinked[bucket_index] = cpu_to_be32(next_agino);
-> -		offset = offsetof(xfs_agi_t, agi_unlinked) +
-> -			(sizeof(xfs_agino_t) * bucket_index);
-> -		xfs_trans_log_buf(tp, agibp, offset,
-> -				  (offset + sizeof(xfs_agino_t) - 1));
-> +
-> +		/* Point the head of the list to the next unlinked inode. */
-> +		error = xfs_iunlink_update_bucket(tp, agno, agibp, bucket_index,
-> +				next_agino);
-> +		if (error)
-> +			goto out;
->  	} else {
->  		/*
->  		 * We need to search the list for the inode being freed.
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 6fcc893dfc91..c10478e7e49a 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3371,6 +3371,32 @@ DEFINE_TRANS_EVENT(xfs_trans_roll);
->  DEFINE_TRANS_EVENT(xfs_trans_add_item);
->  DEFINE_TRANS_EVENT(xfs_trans_free_items);
->  
-> +TRACE_EVENT(xfs_iunlink_update_bucket,
-> +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, unsigned int bucket,
-> +		 xfs_agino_t old_ptr, xfs_agino_t new_ptr),
-> +	TP_ARGS(mp, agno, bucket, old_ptr, new_ptr),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(xfs_agnumber_t, agno)
-> +		__field(unsigned int, bucket)
-> +		__field(xfs_agino_t, old_ptr)
-> +		__field(xfs_agino_t, new_ptr)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = mp->m_super->s_dev;
-> +		__entry->agno = agno;
-> +		__entry->bucket = bucket;
-> +		__entry->old_ptr = old_ptr;
-> +		__entry->new_ptr = new_ptr;
-> +	),
-> +	TP_printk("dev %d:%d agno %u bucket %u old 0x%x new 0x%x",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> +		  __entry->agno,
-> +		  __entry->bucket,
-> +		  __entry->old_ptr,
-> +		  __entry->new_ptr)
-> +);
-> +
->  #endif /* _TRACE_XFS_H */
->  
->  #undef TRACE_INCLUDE_PATH
-> 
+I thought we Darrick was going to drop this tracking from the series,
+as it isn't very useful (at least yet), but maybe I misunderstood the
+previous thread.
