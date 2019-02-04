@@ -1,229 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42488 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726609AbfBBUqJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Feb 2019 15:46:09 -0500
-Date: Sat, 2 Feb 2019 12:46:00 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/8] xfs: hoist unlinked list search and mapping to a
- separate function
-Message-ID: <20190202204600.GU5761@magnolia>
-References: <154897667054.26065.13164381203002725289.stgit@magnolia>
- <154897670777.26065.9017810401812180528.stgit@magnolia>
- <20190201190137.GE31203@bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190201190137.GE31203@bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:41950 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728788AbfBDOwd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Feb 2019 09:52:33 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0C20E80F6D
+        for <linux-xfs@vger.kernel.org>; Mon,  4 Feb 2019 14:52:33 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id ACB23100191D
+        for <linux-xfs@vger.kernel.org>; Mon,  4 Feb 2019 14:52:32 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3 1/9] xfs: set buffer ops when repair probes for btree type
+Date: Mon,  4 Feb 2019 09:52:23 -0500
+Message-Id: <20190204145231.47034-2-bfoster@redhat.com>
+In-Reply-To: <20190204145231.47034-1-bfoster@redhat.com>
+References: <20190204145231.47034-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Feb 01, 2019 at 02:01:38PM -0500, Brian Foster wrote:
-> On Thu, Jan 31, 2019 at 03:18:27PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > There's a loop that searches an unlinked bucket list to find the inode
-> > that points to a given inode.  Hoist this into a separate function;
-> > later we'll use our iunlink backref cache to bypass the slow list
-> > operation.  No functional changes.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_inode.c |  136 ++++++++++++++++++++++++++++++++++++++--------------
-> >  1 file changed, 99 insertions(+), 37 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index ea38b66fbc59..d5b3f8fdac7e 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -2084,6 +2084,100 @@ xfs_iunlink(
-> >  	return error;
-> >  }
-> >  
-> > +/* Return the imap, dinode pointer, and buffer for an inode. */
-> > +STATIC int
-> > +xfs_iunlink_map_ino(
-> > +	struct xfs_trans	*tp,
-> > +	xfs_ino_t		next_ino,
-> 
-> Might be good to clean up some of these variable names as this code gets
-> factored out. E.g., "next_ino" doesn't mean much more than "ino" in the
-> context of this helper.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-Ok.
+In xrep_findroot_block, we work out the btree type and correctness of a
+given block by calling different btree verifiers on root block
+candidates.  However, we leave the NULL b_ops while ->verify_read
+validates the block, which means that if the verifier calls
+xfs_buf_verifier_error it'll crash on the null b_ops.  Fix it to set
+b_ops before calling the verifier and unsetting it if the verifier
+fails.
 
-> > +	struct xfs_imap		*imap,
-> > +	struct xfs_dinode	**dipp,
-> > +	struct xfs_buf		**bpp)
-> > +{
-> > +	struct xfs_mount	*mp = tp->t_mountp;
-> > +	int			error;
-> > +
-> > +	imap->im_blkno = 0;
-> > +	error = xfs_imap(mp, tp, next_ino, imap, 0);
-> > +	if (error) {
-> > +		xfs_warn(mp, "%s: xfs_imap returned error %d.",
-> > +				__func__, error);
-> > +		return error;
-> > +	}
-> > +
-> > +	error = xfs_imap_to_bp(mp, tp, imap, dipp, bpp, 0, 0);
-> > +	if (error) {
-> > +		xfs_warn(mp, "%s: xfs_imap_to_bp returned error %d.",
-> > +				__func__, error);
-> > +		return error;
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +/*
-> > + * Walk the unlinked chain from @head_agino until we find the inode that
-> > + * points to @target_ino.  Return the inode number, map, dinode pointer,
-> > + * and inode cluster buffer of that inode as @ino, @imap, @dipp, and @bpp.
-> > + *
-> > + * Do not call this function if @target_agino is the head of the list.
-> > + */
-> > +STATIC int
-> > +xfs_iunlink_map_prev(
-> > +	struct xfs_trans	*tp,
-> > +	struct xfs_perag	*pag,
-> > +	xfs_agino_t		head_agino,
-> > +	xfs_agino_t		target_agino,
-> > +	xfs_ino_t		*ino,
-> > +	struct xfs_imap		*imap,
-> > +	struct xfs_dinode	**dipp,
-> > +	struct xfs_buf		**bpp)
-> > +{
-> 
-> It would also be nice to have some oneline comments next to the params
-> of some of these functions.
+Furthermore, improve the documentation around xfs_buf_ensure_ops, which
+is the function that is responsible for cleaning up the b_ops state of
+buffers that go through xrep_findroot_block but don't match anything.
 
-In addition to the description given above the function?
+[bfoster: Renamed xfs_buf_ensure_ops() and modified comment.]
 
-> > +	struct xfs_imap		last_imap;
-> > +	struct xfs_mount	*mp = tp->t_mountp;
-> > +	struct xfs_buf		*last_ibp = NULL;
-> > +	struct xfs_dinode	*last_dip;
-> > +	xfs_ino_t		next_ino = NULLFSINO;
-> > +	xfs_agino_t		next_agino;
-> > +	int			error;
-> > +
-> > +	ASSERT(head_agino != target_agino);
-> > +
-> > +	next_agino = head_agino;
-> > +	while (next_agino != target_agino) {
-> > +		xfs_agino_t	unlinked_agino;
-> > +
-> > +		if (last_ibp)
-> > +			xfs_trans_brelse(tp, last_ibp);
-> > +
-> > +		next_ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, next_agino);
-> > +		error = xfs_iunlink_map_ino(tp, next_ino, &last_imap,
-> > +				&last_dip, &last_ibp);
-> > +		if (error)
-> > +			return error;
-> > +
-> > +		unlinked_agino = be32_to_cpu(last_dip->di_next_unlinked);
-> > +		if (!xfs_verify_agino(mp, pag->pag_agno, next_agino) ||
-> 
-> Should the next_agino above be unlinked_agino? Also is the == check
-> below a loop check (comment pls)?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/scrub/repair.c  | 11 ++++++++---
+ fs/xfs/xfs_buf.c       | 22 ++++++++++++++++------
+ fs/xfs/xfs_buf.h       |  2 +-
+ fs/xfs/xfs_trans_buf.c |  2 +-
+ 4 files changed, 26 insertions(+), 11 deletions(-)
 
-Yes, fixed.
-
-/*
- * Make sure this pointer is valid and isn't an obvious
- * infinite loop.
- */
-
-
-> > +		    next_agino == unlinked_agino) {
-> > +			XFS_CORRUPTION_ERROR(__func__,
-> > +					XFS_ERRLEVEL_LOW, mp,
-> > +					last_dip, sizeof(*last_dip));
-> > +			error = -EFSCORRUPTED;
-> > +			return error;
-> > +		}
-> > +		next_agino = unlinked_agino;
-> > +	}
-> > +
-> > +	/* Should never happen, but don't return garbage. */
-> > +	if (next_ino == NULLFSINO)
-> > +		return -EFSCORRUPTED;
-> > +
-> > +	*ino = next_ino;
-> > +	memcpy(imap, &last_imap, sizeof(last_imap));
-> > +	*dipp = last_dip;
-> > +	*bpp = last_ibp;
-> > +	return 0;
-> > +}
-> > +
-> >  /*
-> >   * Pull the on-disk inode from the AGI unlinked list.
-> >   */
-> > @@ -2153,43 +2247,11 @@ xfs_iunlink_remove(
-> >  	} else {
-> >  		struct xfs_imap	imap;
-> >  
-> > -		/*
-> > -		 * We need to search the list for the inode being freed.
-> > -		 */
-> > -		last_ibp = NULL;
-> > -		while (next_agino != agino) {
-> > -			if (last_ibp)
-> > -				xfs_trans_brelse(tp, last_ibp);
-> > -
-> > -			imap.im_blkno = 0;
-> > -			next_ino = XFS_AGINO_TO_INO(mp, agno, next_agino);
-> > -
-> > -			error = xfs_imap(mp, tp, next_ino, &imap, 0);
-> > -			if (error) {
-> > -				xfs_warn(mp,
-> > -	"%s: xfs_imap returned error %d.",
-> > -					 __func__, error);
-> > -				goto out_unlock;
-> > -			}
-> > -
-> > -			error = xfs_imap_to_bp(mp, tp, &imap, &last_dip,
-> > -					       &last_ibp, 0, 0);
-> > -			if (error) {
-> > -				xfs_warn(mp,
-> > -	"%s: xfs_imap_to_bp returned error %d.",
-> > -					__func__, error);
-> > -				goto out_unlock;
-> > -			}
-> > -
-> > -			next_agino = be32_to_cpu(last_dip->di_next_unlinked);
-> > -			if (!xfs_verify_agino(mp, agno, next_agino)) {
-> > -				XFS_CORRUPTION_ERROR(__func__,
-> > -						XFS_ERRLEVEL_LOW, mp,
-> > -						last_dip, sizeof(*last_dip));
-> > -				error = -EFSCORRUPTED;
-> > -				goto out_unlock;
-> > -			}
-> > -		}
-> > +		/* We need to search the list for the inode being freed. */
-> > +		error = xfs_iunlink_map_prev(tp, pag, next_agino, agino,
-> > +				&next_ino, &imap, &last_dip, &last_ibp);
-> 
-> Another variable nit... next_ino is kind of confusing here, particularly
-> where we still use next_agino as well. The former is actually the "prev"
-> ino output, right?
-
-Yep, will fix.
-
---D
-
-> Brian
-> 
-> > +		if (error)
-> > +			goto out_unlock;
-> >  
-> >  		/*
-> >  		 * Now last_ibp points to the buffer previous to us on the
-> > 
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 1c8eecfe52b8..6acf1bfa0bfe 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -768,18 +768,23 @@ xrep_findroot_block(
+ 		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
+ 				&mp->m_sb.sb_meta_uuid))
+ 			goto out;
++		/*
++		 * Read verifiers can reference b_ops, so we set the pointer
++		 * here.  If the verifier fails we'll reset the buffer state
++		 * to what it was before we touched the buffer.
++		 */
++		bp->b_ops = fab->buf_ops;
+ 		fab->buf_ops->verify_read(bp);
+ 		if (bp->b_error) {
++			bp->b_ops = NULL;
+ 			bp->b_error = 0;
+ 			goto out;
+ 		}
+ 
+ 		/*
+ 		 * Some read verifiers will (re)set b_ops, so we must be
+-		 * careful not to blow away any such assignment.
++		 * careful not to change b_ops after running the verifier.
+ 		 */
+-		if (!bp->b_ops)
+-			bp->b_ops = fab->buf_ops;
+ 	}
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index eedc5e0156ff..222b5260ed35 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -776,13 +776,23 @@ _xfs_buf_read(
+ }
+ 
+ /*
+- * If the caller passed in an ops structure and the buffer doesn't have ops
+- * assigned, set the ops and use them to verify the contents.  If the contents
+- * cannot be verified, we'll clear XBF_DONE.  We assume the buffer has no
+- * recorded errors and is already in XBF_DONE state.
++ * Reverify a buffer found in cache without an attached ->b_ops.
++ *
++ * If the caller passed an ops structure and the buffer doesn't have ops
++ * assigned, set the ops and use it to verify the contents. If verification
++ * fails, clear XBF_DONE. We assume the buffer has no recorded errors and is
++ * already in XBF_DONE state on entry.
++ *
++ * Under normal operations, every in-core buffer is verified on read I/O
++ * completion. There are two scenarios that can lead to in-core buffers without
++ * an assigned ->b_ops. The first is during log recovery of buffers on a V4
++ * filesystem, though these buffers are purged at the end of recovery. The
++ * other is online repair, which intentionally reads with a NULL buffer ops to
++ * run several verifiers across an in-core buffer in order to establish buffer
++ * type.
+  */
+ int
+-xfs_buf_ensure_ops(
++xfs_buf_reverify(
+ 	struct xfs_buf		*bp,
+ 	const struct xfs_buf_ops *ops)
+ {
+@@ -824,7 +834,7 @@ xfs_buf_read_map(
+ 		return bp;
+ 	}
+ 
+-	xfs_buf_ensure_ops(bp, ops);
++	xfs_buf_reverify(bp, ops);
+ 
+ 	if (flags & XBF_ASYNC) {
+ 		/*
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index b9f5511ea998..1c436a85b71d 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -385,6 +385,6 @@ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
+ #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
+ #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
+ 
+-int xfs_buf_ensure_ops(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
++int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
+ 
+ #endif	/* __XFS_BUF_H__ */
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 629f1479c9d2..7d65ebf1e847 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -277,7 +277,7 @@ xfs_trans_read_buf_map(
+ 		 * release this buffer when it kills the tranaction.
+ 		 */
+ 		ASSERT(bp->b_ops != NULL);
+-		error = xfs_buf_ensure_ops(bp, ops);
++		error = xfs_buf_reverify(bp, ops);
+ 		if (error) {
+ 			xfs_buf_ioerror_alert(bp, __func__);
+ 
+-- 
+2.17.2
