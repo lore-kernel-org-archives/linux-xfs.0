@@ -1,87 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36842 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726051AbfBDVhn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Feb 2019 16:37:43 -0500
-Date: Mon, 4 Feb 2019 13:37:38 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:49151 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726086AbfBDXPB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Feb 2019 18:15:01 -0500
+Date: Tue, 5 Feb 2019 10:13:46 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs: allow disabling xfs tracepoints via Kconfig
-Message-ID: <20190204213738.GB7991@magnolia>
+Message-ID: <20190204231346.GC14116@dastard>
 References: <20190204212035.9919-1-linux@rasmusvillemoes.dk>
+ <20190204215332.GB14116@dastard>
+ <4d66f2c2-bf5c-be47-9ef1-e581c5901823@rasmusvillemoes.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190204212035.9919-1-linux@rasmusvillemoes.dk>
+In-Reply-To: <4d66f2c2-bf5c-be47-9ef1-e581c5901823@rasmusvillemoes.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Feb 04, 2019 at 10:20:35PM +0100, Rasmus Villemoes wrote:
-> linux/tracepoints.h allows individual subsystems to disable their
-> tracepoints. Add such a knob for xfs. Disabling XFS_TRACEPOINTS
-> reduces the resident size of xfs.ko by about a third, or ~350 KiB.
-
-LOL. :)
-
-> $ size /tmp/xfs/{a,b}/xfs.ko
->    text    data     bss     dec     hex filename
->  671726    4129     632  676487   a5287 /tmp/xfs/a/xfs.ko
->  893192  166737     632 1060561  102ed1 /tmp/xfs/b/xfs.ko
+On Mon, Feb 04, 2019 at 11:12:57PM +0100, Rasmus Villemoes wrote:
+> On 04/02/2019 22.53, Dave Chinner wrote:
+> > On Mon, Feb 04, 2019 at 10:20:35PM +0100, Rasmus Villemoes wrote:
+> >> linux/tracepoints.h allows individual subsystems to disable their
+> >> tracepoints. Add such a knob for xfs. Disabling XFS_TRACEPOINTS
+> >> reduces the resident size of xfs.ko by about a third, or ~350 KiB.
+> > 
+> > Ok, now we can't debug typical problems on live production systems
+> > if tracepoints are turned off on the user/distro kernels.  So under
+> > what circumstances would we ever want to turn off tracepoints on
+> > XFS?
 > 
-> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-> ---
->  fs/xfs/Kconfig     | 9 +++++++++
->  fs/xfs/xfs_trace.h | 4 ++++
+> I don't expect any mainstream distros to turn it off. But for embedded
+> systems that use a hand-tuned .config, being able to shave off 100s of K
+> of the kernel image is quite valuable.
 
-I think a similar thing ought to apply to fs/xfs/scrub/trace.h, right?
+However, small embedded systems don't use XFS because of it's size,
+dependence on 64 bit capability (ie. 64BIT || LBDAF), its CPU and
+memory overhead in comparison to other filesystems, etc. 
 
-More general questions:
+Increasing kconfig options increases the test matrix (even just the
+"does this changeset compile" matrix) so these things don't come for
+free.  XFS is firmly focussed on the other end of the scale (big,
+lots, fast), so I'm not sure that increasing the kconfig combination
+matrix to cater for really low end embedded systems is really that
+worthwhile.
 
-(a) Do we want to be doing this on a per-subsystem basis?
+> Tracing _is_ useful,
+> also/especially when doing embedded development, which is why "just turn
+> off CONFIG_TRACING" isn't really an option.
 
-(b) Since xfs_scrub is a separate trace domain, do we want a separate
-Kconfig item for toggling scrub trace, or is one big one enough?
+Do you have a specific need for this, or is it just "I noticed this,
+here's a patch"? If you need it and will use it, great, let's add
+it. But config options that don't ever get used tend to rot....
 
-(I can't think of why I'd want one on and the other off.)
+Cheers,
 
---D
-
->  2 files changed, 13 insertions(+)
-> 
-> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> index 457ac9f97377..d099e6d9f6c5 100644
-> --- a/fs/xfs/Kconfig
-> +++ b/fs/xfs/Kconfig
-> @@ -141,3 +141,12 @@ config XFS_ASSERT_FATAL
->  	  result in warnings.
->  
->  	  This behavior can be modified at runtime via sysfs.
-> +
-> +config XFS_TRACEPOINTS
-> +	bool "XFS tracepoints"
-> +	default y
-> +	depends on XFS_FS && TRACEPOINTS
-> +	help
-> +	  Say Y here to build XFS with tracepoints.
-> +
-> +	  You can say N here to reduce the size of the kernel image.
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 6fcc893dfc91..5fb3d5c0483e 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -6,6 +6,10 @@
->  #undef TRACE_SYSTEM
->  #define TRACE_SYSTEM xfs
->  
-> +#ifndef CONFIG_XFS_TRACEPOINTS
-> +#define NOTRACE
-> +#endif
-> +
->  #if !defined(_TRACE_XFS_H) || defined(TRACE_HEADER_MULTI_READ)
->  #define _TRACE_XFS_H
->  
-> -- 
-> 2.20.1
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
