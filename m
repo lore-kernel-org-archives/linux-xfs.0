@@ -1,121 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38874 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:39342 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726585AbfBDSU7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Feb 2019 13:20:59 -0500
-Subject: Re: [PATCH 3/8] xfs_scrub: rename the global nr_threads
+        id S1726585AbfBDS1T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Feb 2019 13:27:19 -0500
+Subject: Re: [PATCH 1/8] xfs_scrub_all: walk the lsblk device/fs hierarchy
+ correctly
 References: <154524776457.28646.3004453037075812416.stgit@magnolia>
- <154524778320.28646.6335728310849649280.stgit@magnolia>
+ <154524777080.28646.13859873012142786308.stgit@magnolia>
+ <d4cd6eba-2767-9fea-ea98-2416fe5c2ba4@sandeen.net>
+ <20190204181649.GX5761@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d323ec9b-d2ef-49ef-dd71-5b9084d42a05@sandeen.net>
-Date: Mon, 4 Feb 2019 12:20:58 -0600
+Message-ID: <edca5db4-2e33-0fcc-0779-1c863543b5a5@sandeen.net>
+Date: Mon, 4 Feb 2019 12:27:18 -0600
 MIME-Version: 1.0
-In-Reply-To: <154524778320.28646.6335728310849649280.stgit@magnolia>
+In-Reply-To: <20190204181649.GX5761@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On 12/19/18 1:29 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+
+
+On 2/4/19 12:16 PM, Darrick J. Wong wrote:
+> On Mon, Feb 04, 2019 at 12:08:49PM -0600, Eric Sandeen wrote:
+>> On 12/19/18 1:29 PM, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>
+>>> Back when I was designing xfs_scrub_all, I naïvely assumed that the
+>>> emitted output would always list physical storage before the virtual
+>>> devices stacked atop it.  However, this is not actually true when one
+>>> omits the "NAME" column, which is crucial to forcing the output (json or
+>>> otherwise) to capture the block device hierarchy.  If the assumption is
+>>> violated, the program crashes with a python exception.
+>>
+>> Is this a quirk or a documented feature of lsblk?
 > 
-> Various functions have nr_threads local variables that shadow the global
-> one.  Since the global one forces the number of threads we use, change
-> its name to remove this ambiguity and reflect what it really does.
+> Not a documented feature, but seems to be a fairly common behavioral
+> quirk?
+
+bleah.  Sounds fragile.  :(
+
+Let me check with kzak on this.  If your patch improves it for now, super,
+but I don't want to leave a little time bomb here.
+
+>>> -	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
+>>> +	cmd=['lsblk', '-o', 'NAME,KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
+>>
+>> sorry for the ridonculously late review, and although '-J" isn't added
+>> new in this patch, FYI at least RHEL7 does not allow it:
+>>
+>> # lsblk -o KNAME -J
+>> lsblk: invalid option -- 'J'
+>>
+>> ... thoughts?  Probably should be handled gracefully at least?
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  scrub/common.c    |    4 ++--
->  scrub/disk.c      |    4 ++--
->  scrub/xfs_scrub.c |    6 +++---
->  scrub/xfs_scrub.h |    2 +-
->  4 files changed, 8 insertions(+), 8 deletions(-)
-
-
-Weird, for some reason I thought I addressed this when I did the "make check"
-sparse stuff.  Apparently not.
-
-Yeah, the new name is a bit more self-documenting too I suppose.
-
-Reviwed-by: Eric Sandeen <sandeen@redhat.com>
-
+> lsblk returns 1 for unrecognized arguments, so xfs_scrub_all will bail
+> if lsblk barfs.  Not sure if we want to divert lsblk's stderr to
+> /dev/null or just let it spray out sloppily like we do now?
 > 
-> diff --git a/scrub/common.c b/scrub/common.c
-> index 78afc4bf..c877c7c8 100644
-> --- a/scrub/common.c
-> +++ b/scrub/common.c
-> @@ -231,8 +231,8 @@ unsigned int
->  scrub_nproc(
->  	struct scrub_ctx	*ctx)
->  {
-> -	if (nr_threads)
-> -		return nr_threads;
-> +	if (force_nr_threads)
-> +		return force_nr_threads;
->  	return ctx->nr_io_threads;
->  }
->  
-> diff --git a/scrub/disk.c b/scrub/disk.c
-> index 7daa508e..dd109533 100644
-> --- a/scrub/disk.c
-> +++ b/scrub/disk.c
-> @@ -75,8 +75,8 @@ unsigned int
->  disk_heads(
->  	struct disk		*disk)
->  {
-> -	if (nr_threads)
-> -		return nr_threads;
-> +	if (force_nr_threads)
-> +		return force_nr_threads;
->  	return __disk_heads(disk);
->  }
->  
-> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-> index b8138000..71fc274f 100644
-> --- a/scrub/xfs_scrub.c
-> +++ b/scrub/xfs_scrub.c
-> @@ -133,7 +133,7 @@ unsigned int			bg_mode;
->  int				nproc;
->  
->  /* Number of threads we're allowed to use. */
-> -unsigned int			nr_threads;
-> +unsigned int			force_nr_threads;
->  
->  /* Verbosity; higher values print more information. */
->  bool				verbose;
-> @@ -589,7 +589,7 @@ main(
->  			}
->  			break;
->  		case 'b':
-> -			nr_threads = 1;
-> +			force_nr_threads = 1;
->  			bg_mode++;
->  			break;
->  		case 'C':
-> @@ -659,7 +659,7 @@ main(
->  			perror("nr_threads");
->  			usage();
->  		}
-> -		nr_threads = x;
-> +		force_nr_threads = x;
->  	}
->  
->  	if (optind != argc - 1)
-> diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-> index a961d8fd..a459e4b5 100644
-> --- a/scrub/xfs_scrub.h
-> +++ b/scrub/xfs_scrub.h
-> @@ -10,7 +10,7 @@ extern char *progname;
->  
->  #define _PATH_PROC_MOUNTS	"/proc/mounts"
->  
-> -extern unsigned int		nr_threads;
-> +extern unsigned int		force_nr_threads;
->  extern unsigned int		bg_mode;
->  extern unsigned int		debug;
->  extern int			nproc;
+> (Practically speaking I suspect that distros will pick up the util-linux
+> release that has json support before they pick up XFS kernel scrub...
+> but I should at least make sure that's really true.)
+
+Yeah I'd expect that as well, just wondered how much of a landmine it
+might be, I guess.
+
+-Eric
+
+> --D
+> 
+>> -Eric
+>>
+>>>  	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+>>>  	result.wait()
+>>>  	if result.returncode != 0:
+>>> @@ -38,18 +50,12 @@ def find_mounts():
+>>>  	sarray = [x.decode(sys.stdout.encoding) for x in result.stdout.readlines()]
+>>>  	output = ' '.join(sarray)
+>>>  	bdevdata = json.loads(output)
+>>> +
+>>>  	# The lsblk output had better be in disks-then-partitions order
+>>>  	for bdev in bdevdata['blockdevices']:
+>>> -		if bdev['type'] in ('disk', 'loop'):
+>>> -			lastdisk = bdev['kname']
+>>> -		if bdev['fstype'] == 'xfs':
+>>> -			mnt = bdev['mountpoint']
+>>> -			if mnt is None:
+>>> -				continue
+>>> -			if mnt in fs:
+>>> -				fs[mnt].add(lastdisk)
+>>> -			else:
+>>> -				fs[mnt] = set([lastdisk])
+>>> +		lastdisk = bdev['kname']
+>>> +		find_xfs_mounts(bdev, fs, lastdisk)
+>>> +
+>>>  	return fs
+>>>  
+>>>  def kill_systemd(unit, proc):
+>>>
 > 
