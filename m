@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38300 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:39678 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728037AbfBDSMX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Feb 2019 13:12:23 -0500
-Subject: Re: [PATCH 2/8] xfs_scrub_all.timer: activate after most of the
- system is up
+        id S1727946AbfBDScA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Feb 2019 13:32:00 -0500
+Subject: Re: [PATCH 4/8] xfs_scrub: use datadev parallelization estimates for
+ thread count
 References: <154524776457.28646.3004453037075812416.stgit@magnolia>
- <154524777696.28646.14668160393059175404.stgit@magnolia>
+ <154524779871.28646.8062050192682765855.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9de27cb4-7027-023f-58d5-eca8456627ba@sandeen.net>
-Date: Mon, 4 Feb 2019 12:12:21 -0600
+Message-ID: <be364989-b8de-b027-8561-48f7bc53a7fa@sandeen.net>
+Date: Mon, 4 Feb 2019 12:31:59 -0600
 MIME-Version: 1.0
-In-Reply-To: <154524777696.28646.14668160393059175404.stgit@magnolia>
+In-Reply-To: <154524779871.28646.8062050192682765855.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -24,34 +24,57 @@ Cc: linux-xfs@vger.kernel.org
 On 12/19/18 1:29 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> We really don't want the xfs_scrub_all timer triggering while the system
-> is booting up because not all the mounts will have finished, networking
-> might not be up for reporting, and slowing down bootup annoys people.
-> Therefore, delay the xfs_scrub_all service's activation until after the
-> system has started all the big pieces it's going to start.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  scrub/xfs_scrub_all.service.in |    1 +
->  1 file changed, 1 insertion(+)
+> During phases 2-5, xfs_scrub should estimate the level of
+> parallelization possible on the data device to determine the number of
+> threads spawned to scrub filesystem metadata, not just blindly using the
+> number of CPUs.  This avoids flooding non-rotational storage with random
+> reads, which totally destroys performance and makes scrub runtimes
+> higher.
 
-<lays hands on systemd-fu, attempts to sense aura of goodness>
+typo in the changelog?  __disk_heads() /does/ throw all cpus at nonrotational,
+should the above presumably say "rotational storage?"
 
-<has no real basis for judgement but feels that waiting for more $STUFF can't hurt>
+Otherwise,
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > 
-> diff --git a/scrub/xfs_scrub_all.service.in b/scrub/xfs_scrub_all.service.in
-> index 66f82fc7..b1b80da4 100644
-> --- a/scrub/xfs_scrub_all.service.in
-> +++ b/scrub/xfs_scrub_all.service.in
-> @@ -2,6 +2,7 @@
->  Description=Online XFS Metadata Check for All Filesystems
->  ConditionACPower=true
->  Documentation=man:xfs_scrub_all(8)
-> +After=paths.target multi-user.target network.target network-online.target systemd-networkd.service NetworkManager.service connman.service
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  scrub/phase1.c |   14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
+> 
+> 
+> diff --git a/scrub/phase1.c b/scrub/phase1.c
+> index 2113014b..6b472147 100644
+> --- a/scrub/phase1.c
+> +++ b/scrub/phase1.c
+> @@ -109,13 +109,6 @@ _("Must be root to run scrub."));
+>  		return false;
+>  	}
 >  
->  [Service]
->  Type=oneshot
+> -	ctx->nr_io_threads = nproc;
+> -	if (verbose) {
+> -		fprintf(stdout, _("%s: using %d threads to scrub.\n"),
+> -				ctx->mntpoint, scrub_nproc(ctx));
+> -		fflush(stdout);
+> -	}
+> -
+>  	if (!platform_test_xfs_fd(ctx->mnt_fd)) {
+>  		str_info(ctx, ctx->mntpoint,
+>  _("Does not appear to be an XFS filesystem!"));
+> @@ -193,6 +186,13 @@ _("Unable to find realtime device path."));
+>  		return false;
+>  	}
+>  
+> +	ctx->nr_io_threads = disk_heads(ctx->datadev);
+> +	if (verbose) {
+> +		fprintf(stdout, _("%s: using %d threads to scrub.\n"),
+> +				ctx->mntpoint, scrub_nproc(ctx));
+> +		fflush(stdout);
+> +	}
+> +
+>  	if (ctx->fsinfo.fs_log) {
+>  		ctx->logdev = disk_open(ctx->fsinfo.fs_log);
+>  		if (error) {
 > 
