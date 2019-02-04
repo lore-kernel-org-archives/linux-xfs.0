@@ -1,98 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:52266 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727917AbfBDSjD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Feb 2019 13:39:03 -0500
-Date: Mon, 4 Feb 2019 10:38:55 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/8] xfs_scrub: use data/rtdev parallelization estimates
- for the read-verify pool
-Message-ID: <20190204183855.GA7991@magnolia>
+Received: from sandeen.net ([63.231.237.45]:42878 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726585AbfBDTTY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Feb 2019 14:19:24 -0500
+Subject: Re: [PATCH 6/8] xfs_repair: reinitialize the root directory nlink
+ correctly
 References: <154524776457.28646.3004453037075812416.stgit@magnolia>
- <154524780496.28646.2648041743792188824.stgit@magnolia>
- <9a284f93-3a17-a2e4-f347-562d23a52388@sandeen.net>
+ <154524781113.28646.8112653175487549499.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <de29a582-be99-bddd-0b7c-c31360da043f@sandeen.net>
+Date: Mon, 4 Feb 2019 13:19:22 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9a284f93-3a17-a2e4-f347-562d23a52388@sandeen.net>
+In-Reply-To: <154524781113.28646.8112653175487549499.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Feb 04, 2019 at 12:35:00PM -0600, Eric Sandeen wrote:
-> On 12/19/18 1:30 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Since we use the same read-verify pool object to dispatch file data read
-> > requests for both the data device and the realtime device, we should
-> > create enough IO threads to handle the estimated parallelization of both
-> > devices, not just the data device.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On 12/19/18 1:30 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> So if rtdev is on SSD and datadev is on a rotational device, won't we
-> possibly still Launch All Threads at the rotational device for this
-> case, and won't that still hurt?  I'm not sure it works to lump these
-> together, does it?  (I also don't know if it can be done another way...)
+> In mk_root_dir, we reinitialize the root directory inode with a link
+> count of 1.  This differs from mkfs parseproto, which initializes the
+> root to have a link count of 2.  The nlink discrepancy in repair is
+> caught and corrected during phase 7, but this is unnecessary since we
+> should set it properly in the first place.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hmm.  I think we /could/ have separate readverify pools for data and rt
-devices.  Let me look into that...
+I have this nagging feeling that played whackamole with root dir counts
+but can't find any real evidence of that now.  Seems ok.
 
---D
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-> -Eric
+> ---
+>  repair/phase6.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > 
-> > ---
-> >  scrub/phase6.c |   20 ++++++++++++++++++--
-> >  1 file changed, 18 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/scrub/phase6.c b/scrub/phase6.c
-> > index ead48d77..cbda9b53 100644
-> > --- a/scrub/phase6.c
-> > +++ b/scrub/phase6.c
-> > @@ -435,6 +435,22 @@ xfs_check_rmap(
-> >  	return true;
-> >  }
-> >  
-> > +/*
-> > + * Estimate the amount of parallelization possible for scanning file data on
-> > + * the data and realtime devices.
-> > + */
-> > +static unsigned int
-> > +phase6_threads(
-> > +	struct scrub_ctx	*ctx)
-> > +{
-> > +	unsigned int		nr = disk_heads(ctx->datadev);
-> > +
-> > +	if (ctx->rtdev)
-> > +		nr += disk_heads(ctx->rtdev);
-> > +
-> > +	return nr > nproc ? nproc : nr;
-> > +}
-> > +
-> >  /*
-> >   * Read verify all the file data blocks in a filesystem.  Since XFS doesn't
-> >   * do data checksums, we trust that the underlying storage will pass back
-> > @@ -469,7 +485,7 @@ xfs_scan_blocks(
-> >  	}
-> >  
-> >  	ve.readverify = read_verify_pool_init(ctx, ctx->geo.blocksize,
-> > -			xfs_check_rmap_ioerr, disk_heads(ctx->datadev));
-> > +			xfs_check_rmap_ioerr, phase6_threads(ctx));
-> >  	if (!ve.readverify) {
-> >  		moveon = false;
-> >  		str_info(ctx, ctx->mntpoint,
-> > @@ -525,7 +541,7 @@ xfs_estimate_verify_work(
-> >  		return moveon;
-> >  
-> >  	*items = ((d_blocks - d_bfree) + (r_blocks - r_bfree)) << ctx->blocklog;
-> > -	*nr_threads = disk_heads(ctx->datadev);
-> > +	*nr_threads = phase6_threads(ctx);
-> >  	*rshift = 20;
-> >  	return moveon;
-> >  }
-> > 
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 9477bc25..8a50b350 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -891,7 +891,7 @@ mk_root_dir(xfs_mount_t *mp)
+>  	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+>  	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
+>  
+> -	set_nlink(VFS_I(ip), 1);	/* account for . */
+> +	set_nlink(VFS_I(ip), 2);	/* account for . and .. */
+>  
+>  	times = XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD;
+>  	if (ip->i_d.di_version == 3) {
+> 
