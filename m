@@ -1,100 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f68.google.com ([209.85.161.68]:47086 "EHLO
-        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726956AbfBEGo5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Feb 2019 01:44:57 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:60414 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727691AbfBDSQ6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Feb 2019 13:16:58 -0500
+Date: Mon, 4 Feb 2019 10:16:49 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/8] xfs_scrub_all: walk the lsblk device/fs hierarchy
+ correctly
+Message-ID: <20190204181649.GX5761@magnolia>
+References: <154524776457.28646.3004453037075812416.stgit@magnolia>
+ <154524777080.28646.13859873012142786308.stgit@magnolia>
+ <d4cd6eba-2767-9fea-ea98-2416fe5c2ba4@sandeen.net>
 MIME-Version: 1.0
-References: <20190204165427.23607-1-mcgrof@kernel.org>
-In-Reply-To: <20190204165427.23607-1-mcgrof@kernel.org>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 5 Feb 2019 08:44:45 +0200
-Message-ID: <CAOQ4uxiMdaeKvGAmnswWZAbJQZTRsFfQKGthkxnCyfOPC+xosQ@mail.gmail.com>
-Subject: Re: [PATCH v2 00/10] xfs: stable fixes for v4.19.y
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <d4cd6eba-2767-9fea-ea98-2416fe5c2ba4@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>, Sasha Levin <Alexander.Levin@microsoft.com>, stable <stable@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, Carlos Maiolino <cmaiolino@redhat.com>, Eric Sandeen <sandeen@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Mon, Feb 4, 2019 at 6:54 PM Luis Chamberlain <mcgrof@kernel.org> wrote:
->
-> Kernel stable team,
->
-> here is a v2 respin of my XFS stable patches for v4.19.y. The only
-> change in this series is adding the upstream commit to the commit log,
-> and I've now also Cc'd stable@vger.kernel.org as well. No other issues
-> were spotted or raised with this series.
->
-> Reviews, questions, or rants are greatly appreciated.
+On Mon, Feb 04, 2019 at 12:08:49PM -0600, Eric Sandeen wrote:
+> On 12/19/18 1:29 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Back when I was designing xfs_scrub_all, I naïvely assumed that the
+> > emitted output would always list physical storage before the virtual
+> > devices stacked atop it.  However, this is not actually true when one
+> > omits the "NAME" column, which is crucial to forcing the output (json or
+> > otherwise) to capture the block device hierarchy.  If the assumption is
+> > violated, the program crashes with a python exception.
+> 
+> Is this a quirk or a documented feature of lsblk?
 
-Luis,
+Not a documented feature, but seems to be a fairly common behavioral
+quirk?
 
-Thanks a lot for doing this work.
+> > To fix this, force the hierarchal json output and restructure the
+> > discovery routines to walk the json object that we receive, from the top
+> > (physical devices) downwards to wherever there are live xfs filesystems.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  scrub/xfs_scrub_all.in |   28 +++++++++++++++++-----------
+> >  1 file changed, 17 insertions(+), 11 deletions(-)
+> > 
+> > 
+> > diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+> > index c4e9899d..5b76b49a 100644
+> > --- a/scrub/xfs_scrub_all.in
+> > +++ b/scrub/xfs_scrub_all.in
+> > @@ -28,9 +28,21 @@ def DEVNULL():
+> >  
+> >  def find_mounts():
+> >  	'''Map mountpoints to physical disks.'''
+> > +	def find_xfs_mounts(bdev, fs, lastdisk):
+> > +		'''Attach lastdisk to each fs found under bdev.'''
+> > +		if bdev['fstype'] == 'xfs' and bdev['mountpoint'] is not None:
+> > +			mnt = bdev['mountpoint']
+> > +			if mnt in fs:
+> > +				fs[mnt].add(lastdisk)
+> > +			else:
+> > +				fs[mnt] = set([lastdisk])
+> > +		if 'children' not in bdev:
+> > +			return
+> > +		for child in bdev['children']:
+> > +			find_xfs_mounts(child, fs, lastdisk)
+> >  
+> >  	fs = {}
+> > -	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
+> > +	cmd=['lsblk', '-o', 'NAME,KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
+> 
+> sorry for the ridonculously late review, and although '-J" isn't added
+> new in this patch, FYI at least RHEL7 does not allow it:
+> 
+> # lsblk -o KNAME -J
+> lsblk: invalid option -- 'J'
+> 
+> ... thoughts?  Probably should be handled gracefully at least?
 
-For the sake of people not following "oscheck", could you please
-write a list of configurations you tested with xfstests. auto group?
-Any expunged tests we should know about?
+lsblk returns 1 for unrecognized arguments, so xfs_scrub_all will bail
+if lsblk barfs.  Not sure if we want to divert lsblk's stderr to
+/dev/null or just let it spray out sloppily like we do now?
 
-I went over the candidate patches and to me, they all look like stable
-worthy patches and I have not identified any dependencies.
+(Practically speaking I suspect that distros will pick up the util-linux
+release that has json support before they pick up XFS kernel scrub...
+but I should at least make sure that's really true.)
 
-Original authors and reviewers are in the best position to  verify
-those assessments, so please guys, if each one of you acks his
-own patch, that shouldn't take a lot of anyone's time.
+--D
 
-Specifically, repeating Luis's request from v1 cover letter -
-There are two patches by Dave ([6,7/10]) that are originally from
-a 7 patch series of assorted fixes:
-https://patchwork.kernel.org/cover/10689445/
-
-Please confirm that those two patches do stand on their own.
-
-Thanks,
-Amir.
-
-
->
->   Luis
->
-> Brian Foster (1):
->   xfs: fix shared extent data corruption due to missing cow reservation
->
-> Carlos Maiolino (1):
->   xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
->
-> Christoph Hellwig (1):
->   xfs: cancel COW blocks before swapext
->
-> Christophe JAILLET (1):
->   xfs: Fix error code in 'xfs_ioc_getbmap()'
->
-> Darrick J. Wong (1):
->   xfs: fix PAGE_MASK usage in xfs_free_file_space
->
-> Dave Chinner (3):
->   xfs: fix overflow in xfs_attr3_leaf_verify
->   xfs: fix transient reference count error in
->     xfs_buf_resubmit_failed_buffers
->   xfs: delalloc -> unwritten COW fork allocation can go wrong
->
-> Eric Sandeen (1):
->   xfs: fix inverted return from xfs_btree_sblock_verify_crc
->
-> Ye Yin (1):
->   fs/xfs: fix f_ffree value for statfs when project quota is set
->
->  fs/xfs/libxfs/xfs_attr_leaf.c | 11 +++++++++--
->  fs/xfs/libxfs/xfs_bmap.c      |  5 ++++-
->  fs/xfs/libxfs/xfs_btree.c     |  2 +-
->  fs/xfs/xfs_bmap_util.c        | 10 ++++++++--
->  fs/xfs/xfs_buf_item.c         | 28 +++++++++++++++++++++-------
->  fs/xfs/xfs_ioctl.c            |  2 +-
->  fs/xfs/xfs_qm_bhv.c           |  2 +-
->  fs/xfs/xfs_reflink.c          |  1 +
->  fs/xfs/xfs_stats.c            |  2 +-
->  9 files changed, 47 insertions(+), 16 deletions(-)
->
-> --
-> 2.18.0
->
+> -Eric
+> 
+> >  	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+> >  	result.wait()
+> >  	if result.returncode != 0:
+> > @@ -38,18 +50,12 @@ def find_mounts():
+> >  	sarray = [x.decode(sys.stdout.encoding) for x in result.stdout.readlines()]
+> >  	output = ' '.join(sarray)
+> >  	bdevdata = json.loads(output)
+> > +
+> >  	# The lsblk output had better be in disks-then-partitions order
+> >  	for bdev in bdevdata['blockdevices']:
+> > -		if bdev['type'] in ('disk', 'loop'):
+> > -			lastdisk = bdev['kname']
+> > -		if bdev['fstype'] == 'xfs':
+> > -			mnt = bdev['mountpoint']
+> > -			if mnt is None:
+> > -				continue
+> > -			if mnt in fs:
+> > -				fs[mnt].add(lastdisk)
+> > -			else:
+> > -				fs[mnt] = set([lastdisk])
+> > +		lastdisk = bdev['kname']
+> > +		find_xfs_mounts(bdev, fs, lastdisk)
+> > +
+> >  	return fs
+> >  
+> >  def kill_systemd(unit, proc):
+> > 
