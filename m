@@ -1,52 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37896 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729810AbfBDQyi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Feb 2019 11:54:38 -0500
-From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH v2 10/10] xfs: fix inverted return from xfs_btree_sblock_verify_crc
-Date: Mon,  4 Feb 2019 08:54:27 -0800
-Message-Id: <20190204165427.23607-11-mcgrof@kernel.org>
-In-Reply-To: <20190204165427.23607-1-mcgrof@kernel.org>
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:47086 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726956AbfBEGo5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Feb 2019 01:44:57 -0500
+MIME-Version: 1.0
 References: <20190204165427.23607-1-mcgrof@kernel.org>
+In-Reply-To: <20190204165427.23607-1-mcgrof@kernel.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 5 Feb 2019 08:44:45 +0200
+Message-ID: <CAOQ4uxiMdaeKvGAmnswWZAbJQZTRsFfQKGthkxnCyfOPC+xosQ@mail.gmail.com>
+Subject: Re: [PATCH v2 00/10] xfs: stable fixes for v4.19.y
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com
-Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, Eric Sandeen <sandeen@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Luis Chamberlain <mcgrof@kernel.org>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>, Sasha Levin <Alexander.Levin@microsoft.com>, stable <stable@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, Carlos Maiolino <cmaiolino@redhat.com>, Eric Sandeen <sandeen@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
 
-From: Eric Sandeen <sandeen@redhat.com>
+On Mon, Feb 4, 2019 at 6:54 PM Luis Chamberlain <mcgrof@kernel.org> wrote:
+>
+> Kernel stable team,
+>
+> here is a v2 respin of my XFS stable patches for v4.19.y. The only
+> change in this series is adding the upstream commit to the commit log,
+> and I've now also Cc'd stable@vger.kernel.org as well. No other issues
+> were spotted or raised with this series.
+>
+> Reviews, questions, or rants are greatly appreciated.
 
-commit 7d048df4e9b05ba89b74d062df59498aa81f3785 upstream.
+Luis,
 
-xfs_btree_sblock_verify_crc is a bool so should not be returning
-a failaddr_t; worse, if xfs_log_check_lsn fails it returns
-__this_address which looks like a boolean true (i.e. success)
-to the caller.
+Thanks a lot for doing this work.
 
-(interestingly xfs_btree_lblock_verify_crc doesn't have the issue)
+For the sake of people not following "oscheck", could you please
+write a list of configurations you tested with xfstests. auto group?
+Any expunged tests we should know about?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
- fs/xfs/libxfs/xfs_btree.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I went over the candidate patches and to me, they all look like stable
+worthy patches and I have not identified any dependencies.
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 34c6d7bd4d18..bbdae2b4559f 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -330,7 +330,7 @@ xfs_btree_sblock_verify_crc(
- 
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		if (!xfs_log_check_lsn(mp, be64_to_cpu(block->bb_u.s.bb_lsn)))
--			return __this_address;
-+			return false;
- 		return xfs_buf_verify_cksum(bp, XFS_BTREE_SBLOCK_CRC_OFF);
- 	}
- 
--- 
-2.18.0
+Original authors and reviewers are in the best position to  verify
+those assessments, so please guys, if each one of you acks his
+own patch, that shouldn't take a lot of anyone's time.
+
+Specifically, repeating Luis's request from v1 cover letter -
+There are two patches by Dave ([6,7/10]) that are originally from
+a 7 patch series of assorted fixes:
+https://patchwork.kernel.org/cover/10689445/
+
+Please confirm that those two patches do stand on their own.
+
+Thanks,
+Amir.
+
+
+>
+>   Luis
+>
+> Brian Foster (1):
+>   xfs: fix shared extent data corruption due to missing cow reservation
+>
+> Carlos Maiolino (1):
+>   xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
+>
+> Christoph Hellwig (1):
+>   xfs: cancel COW blocks before swapext
+>
+> Christophe JAILLET (1):
+>   xfs: Fix error code in 'xfs_ioc_getbmap()'
+>
+> Darrick J. Wong (1):
+>   xfs: fix PAGE_MASK usage in xfs_free_file_space
+>
+> Dave Chinner (3):
+>   xfs: fix overflow in xfs_attr3_leaf_verify
+>   xfs: fix transient reference count error in
+>     xfs_buf_resubmit_failed_buffers
+>   xfs: delalloc -> unwritten COW fork allocation can go wrong
+>
+> Eric Sandeen (1):
+>   xfs: fix inverted return from xfs_btree_sblock_verify_crc
+>
+> Ye Yin (1):
+>   fs/xfs: fix f_ffree value for statfs when project quota is set
+>
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 11 +++++++++--
+>  fs/xfs/libxfs/xfs_bmap.c      |  5 ++++-
+>  fs/xfs/libxfs/xfs_btree.c     |  2 +-
+>  fs/xfs/xfs_bmap_util.c        | 10 ++++++++--
+>  fs/xfs/xfs_buf_item.c         | 28 +++++++++++++++++++++-------
+>  fs/xfs/xfs_ioctl.c            |  2 +-
+>  fs/xfs/xfs_qm_bhv.c           |  2 +-
+>  fs/xfs/xfs_reflink.c          |  1 +
+>  fs/xfs/xfs_stats.c            |  2 +-
+>  9 files changed, 47 insertions(+), 16 deletions(-)
+>
+> --
+> 2.18.0
+>
