@@ -1,108 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37560 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726098AbfBEOX5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Feb 2019 09:23:57 -0500
-Date: Tue, 5 Feb 2019 09:23:55 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/10] xfs: refactor inode update in iunlink_remove
-Message-ID: <20190205142354.GB51421@bfoster>
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:53020 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726114AbfBEU7U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Feb 2019 15:59:20 -0500
+Date: Wed, 6 Feb 2019 07:59:15 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 10/10] xfs: cache unlinked pointers in an rhashtable
+Message-ID: <20190205205915.GD14116@dastard>
 References: <154930313674.31814.17994684613232167921.stgit@magnolia>
- <154930319253.31814.2352584428677696706.stgit@magnolia>
+ <154930320519.31814.7868551876308474527.stgit@magnolia>
+ <20190205142458.GD51421@bfoster>
+ <20190205175309.GJ7991@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <154930319253.31814.2352584428677696706.stgit@magnolia>
+In-Reply-To: <20190205175309.GJ7991@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Mon, Feb 04, 2019 at 09:59:52AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Feb 05, 2019 at 09:53:09AM -0800, Darrick J. Wong wrote:
+> On Tue, Feb 05, 2019 at 09:24:59AM -0500, Brian Foster wrote:
+> > On Mon, Feb 04, 2019 at 10:00:05AM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Use a rhashtable to cache the unlinked list incore.  This should speed
+> > > up unlinked processing considerably when there are a lot of inodes on
+> > > the unlinked list because iunlink_remove no longer has to traverse an
+> > > entire bucket list to find which inode points to the one being removed.
+> > > 
+> > > The incore list structure records "X.next_unlinked = Y" relations, with
+> > > the rhashtable using Y to index the records.  This makes finding the
+> > > inode X that points to a inode Y very quick.  If our cache fails to find
+> > > anything we can always fall back on the old method.
+> > > 
+> > > FWIW this drastically reduces the amount of time it takes to remove
+> > > inodes from the unlinked list.  I wrote a program to open a lot of
+> > > O_TMPFILE files and then close them in the same order, which takes
+> > > a very long time if we have to traverse the unlinked lists.  With the
+> > > ptach, I see:
+> > > 
+> > ...
+> > > ---
+> > >  fs/xfs/xfs_inode.c       |  207 ++++++++++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/xfs_inode.h       |    9 ++
+> > >  fs/xfs/xfs_log_recover.c |   12 ++-
+> > >  fs/xfs/xfs_mount.c       |    5 +
+> > >  fs/xfs/xfs_mount.h       |    1 
+> > >  5 files changed, 233 insertions(+), 1 deletion(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > index b9696d762c8f..baee8c894447 100644
+> > > --- a/fs/xfs/xfs_inode.c
+> > > +++ b/fs/xfs/xfs_inode.c
+> > > @@ -1880,6 +1880,167 @@ xfs_inactive(
+> > >  	xfs_qm_dqdetach(ip);
+> > >  }
+> > >  
+> > ...
+> > > +
+> > > +static const struct rhashtable_params xfs_iunlink_hash_params = {
+> > > +	.min_size		= XFS_AGI_UNLINKED_BUCKETS,
+> > > +	.nelem_hint		= 512,
+> > 
+> > Any reasoning behind the 512 value? It seems rather large to me, at
+> > least until we get more into deferred inactivation and whatnot. It looks
+> > like the rhashtable code will round this up to 1024 as well, FWIW.
+> > 
+> > I'm also wondering whether a kmem_zone might be worthwhile for
+> > xfs_iunlink structures, but that's probably also more for when we expect
+> > to drive deeper unlinked lists.
 > 
-> In xfs_iunlink_remove we have two identical calls to
-> xfs_iunlink_update_inode, so move it out of the if statement to simplify
-> the code some more.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> I picked an arbitrary value of 64 buckets * 8 items per list.  I /do/
+> have plans to test various values to see if there's a particular sweet
+> spot, though I guess this could be much lower on the assumption that
+> we don't expect /that/ many unlinked inodes(?)
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Seems pretty large, given we use this for the per-ag buffer cache
+rhashtable:
 
->  fs/xfs/xfs_inode.c |   34 +++++++++++++---------------------
->  1 file changed, 13 insertions(+), 21 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 8af5f4e989ac..fac9562ecd39 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2183,6 +2183,7 @@ xfs_iunlink_remove(
->  	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
->  	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
->  	xfs_agino_t		next_agino;
-> +	xfs_agino_t		head_agino;
->  	short			bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
->  	int			error;
->  
-> @@ -2198,24 +2199,24 @@ xfs_iunlink_remove(
->  	 * Get the index into the agi hash table for the list this inode will
->  	 * go on.  Make sure the head pointer isn't garbage.
->  	 */
-> -	next_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
-> -	if (!xfs_verify_agino(mp, agno, next_agino)) {
-> +	head_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
-> +	if (!xfs_verify_agino(mp, agno, head_agino)) {
->  		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
->  				agi, sizeof(*agi));
->  		error = -EFSCORRUPTED;
->  		goto out;
->  	}
->  
-> -	if (next_agino == agino) {
-> -		/*
-> -		 * We're at the head of the list.  Get the inode's on-disk
-> -		 * buffer to see if there is anyone after us on the list.
-> -		 */
-> -		error = xfs_iunlink_update_inode(tp, ip, agno, NULLAGINO,
-> -				&next_agino);
-> -		if (error)
-> -			goto out;
-> +	/*
-> +	 * Set our inode's next_unlinked pointer to NULL and then return
-> +	 * the old pointer value so that we can update whatever was previous
-> +	 * to us in the list to point to whatever was next in the list.
-> +	 */
-> +	error = xfs_iunlink_update_inode(tp, ip, agno, NULLAGINO, &next_agino);
-> +	if (error)
-> +		goto out;
->  
-> +	if (head_agino == agino) {
->  		/* Point the head of the list to the next unlinked inode. */
->  		error = xfs_iunlink_update_bucket(tp, agno, agibp, bucket_index,
->  				next_agino);
-> @@ -2225,20 +2226,11 @@ xfs_iunlink_remove(
->  		struct xfs_imap	imap;
->  
->  		/* We need to search the list for the inode being freed. */
-> -		error = xfs_iunlink_map_prev(tp, pag, next_agino, agino,
-> +		error = xfs_iunlink_map_prev(tp, pag, head_agino, agino,
->  				&prev_ino, &imap, &last_dip, &last_ibp);
->  		if (error)
->  			goto out;
->  
-> -		/*
-> -		 * Now last_ibp points to the buffer previous to us on the
-> -		 * unlinked list.  Pull us from the list.
-> -		 */
-> -		error = xfs_iunlink_update_inode(tp, ip, agno, NULLAGINO,
-> -				&next_agino);
-> -		if (error)
-> -			goto out;
-> -
->  		/* Point the previous inode on the list to the next inode. */
->  		xfs_iunlink_update_dinode(tp, agno, last_ibp, last_dip, &imap,
->  				prev_ino, next_agino);
-> 
+     .min_size               = 32,   /* empty AGs have minimal footprint */
+     .nelem_hint             = 16,
+
+And nobody notices problems when they grow and shrink and they run
+from empty to hundreds of thousands of entries and back again in
+very short preiods of time. Hence I'd suggest that we make it as
+small as possible to begin with and then only change things if there
+are performance problems triggered by growing and shrinking....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
