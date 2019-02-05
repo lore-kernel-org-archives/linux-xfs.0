@@ -1,122 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:60414 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727691AbfBDSQ6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Feb 2019 13:16:58 -0500
-Date: Mon, 4 Feb 2019 10:16:49 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/8] xfs_scrub_all: walk the lsblk device/fs hierarchy
- correctly
-Message-ID: <20190204181649.GX5761@magnolia>
-References: <154524776457.28646.3004453037075812416.stgit@magnolia>
- <154524777080.28646.13859873012142786308.stgit@magnolia>
- <d4cd6eba-2767-9fea-ea98-2416fe5c2ba4@sandeen.net>
+Received: from bombadil.infradead.org ([198.137.202.133]:53214 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726416AbfBEGzU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Feb 2019 01:55:20 -0500
+Date: Mon, 4 Feb 2019 22:55:18 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 02/10] xfs: track unlinked inode counts in per-ag data
+Message-ID: <20190205065518.GA1868@infradead.org>
+References: <154930313674.31814.17994684613232167921.stgit@magnolia>
+ <154930315478.31814.9792968910867944759.stgit@magnolia>
+ <20190204192451.GB47560@bfoster>
+ <20190204205310.GB30334@infradead.org>
+ <20190205002638.GE7991@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <d4cd6eba-2767-9fea-ea98-2416fe5c2ba4@sandeen.net>
+In-Reply-To: <20190205002638.GE7991@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Mon, Feb 04, 2019 at 12:08:49PM -0600, Eric Sandeen wrote:
-> On 12/19/18 1:29 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Back when I was designing xfs_scrub_all, I naïvely assumed that the
-> > emitted output would always list physical storage before the virtual
-> > devices stacked atop it.  However, this is not actually true when one
-> > omits the "NAME" column, which is crucial to forcing the output (json or
-> > otherwise) to capture the block device hierarchy.  If the assumption is
-> > violated, the program crashes with a python exception.
-> 
-> Is this a quirk or a documented feature of lsblk?
+On Mon, Feb 04, 2019 at 04:26:38PM -0800, Darrick J. Wong wrote:
+> I decided to leave the unlinked counter so that we could have a
+> debugging check.  I will make it more explicit that anyone accessing the
+> counter needs to hold the AGI buffer lock or otherwise assured that
+> there aren't any other threads.
 
-Not a documented feature, but seems to be a fairly common behavioral
-quirk?
-
-> > To fix this, force the hierarchal json output and restructure the
-> > discovery routines to walk the json object that we receive, from the top
-> > (physical devices) downwards to wherever there are live xfs filesystems.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  scrub/xfs_scrub_all.in |   28 +++++++++++++++++-----------
-> >  1 file changed, 17 insertions(+), 11 deletions(-)
-> > 
-> > 
-> > diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-> > index c4e9899d..5b76b49a 100644
-> > --- a/scrub/xfs_scrub_all.in
-> > +++ b/scrub/xfs_scrub_all.in
-> > @@ -28,9 +28,21 @@ def DEVNULL():
-> >  
-> >  def find_mounts():
-> >  	'''Map mountpoints to physical disks.'''
-> > +	def find_xfs_mounts(bdev, fs, lastdisk):
-> > +		'''Attach lastdisk to each fs found under bdev.'''
-> > +		if bdev['fstype'] == 'xfs' and bdev['mountpoint'] is not None:
-> > +			mnt = bdev['mountpoint']
-> > +			if mnt in fs:
-> > +				fs[mnt].add(lastdisk)
-> > +			else:
-> > +				fs[mnt] = set([lastdisk])
-> > +		if 'children' not in bdev:
-> > +			return
-> > +		for child in bdev['children']:
-> > +			find_xfs_mounts(child, fs, lastdisk)
-> >  
-> >  	fs = {}
-> > -	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
-> > +	cmd=['lsblk', '-o', 'NAME,KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
-> 
-> sorry for the ridonculously late review, and although '-J" isn't added
-> new in this patch, FYI at least RHEL7 does not allow it:
-> 
-> # lsblk -o KNAME -J
-> lsblk: invalid option -- 'J'
-> 
-> ... thoughts?  Probably should be handled gracefully at least?
-
-lsblk returns 1 for unrecognized arguments, so xfs_scrub_all will bail
-if lsblk barfs.  Not sure if we want to divert lsblk's stderr to
-/dev/null or just let it spray out sloppily like we do now?
-
-(Practically speaking I suspect that distros will pick up the util-linux
-release that has json support before they pick up XFS kernel scrub...
-but I should at least make sure that's really true.)
-
---D
-
-> -Eric
-> 
-> >  	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-> >  	result.wait()
-> >  	if result.returncode != 0:
-> > @@ -38,18 +50,12 @@ def find_mounts():
-> >  	sarray = [x.decode(sys.stdout.encoding) for x in result.stdout.readlines()]
-> >  	output = ' '.join(sarray)
-> >  	bdevdata = json.loads(output)
-> > +
-> >  	# The lsblk output had better be in disks-then-partitions order
-> >  	for bdev in bdevdata['blockdevices']:
-> > -		if bdev['type'] in ('disk', 'loop'):
-> > -			lastdisk = bdev['kname']
-> > -		if bdev['fstype'] == 'xfs':
-> > -			mnt = bdev['mountpoint']
-> > -			if mnt is None:
-> > -				continue
-> > -			if mnt in fs:
-> > -				fs[mnt].add(lastdisk)
-> > -			else:
-> > -				fs[mnt] = set([lastdisk])
-> > +		lastdisk = bdev['kname']
-> > +		find_xfs_mounts(bdev, fs, lastdisk)
-> > +
-> >  	return fs
-> >  
-> >  def kill_systemd(unit, proc):
-> > 
+Don'we already have a debug check by the fact that the rhashtable
+destroy function throws an assert if it finds anything?
