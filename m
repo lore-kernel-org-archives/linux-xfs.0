@@ -1,66 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37868 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725980AbfBDQye (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Feb 2019 11:54:34 -0500
-From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH v2 00/10] xfs: stable fixes for v4.19.y
-Date: Mon,  4 Feb 2019 08:54:17 -0800
-Message-Id: <20190204165427.23607-1-mcgrof@kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:52200 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725917AbfBECXW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Feb 2019 21:23:22 -0500
+Date: Mon, 4 Feb 2019 18:23:15 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/8] xfs_scrub: use data/rtdev parallelization estimates
+ for the read-verify pool
+Message-ID: <20190205022315.GH7991@magnolia>
+References: <154524776457.28646.3004453037075812416.stgit@magnolia>
+ <154524780496.28646.2648041743792188824.stgit@magnolia>
+ <9a284f93-3a17-a2e4-f347-562d23a52388@sandeen.net>
+ <20190204183855.GA7991@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190204183855.GA7991@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com
-Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, Luis Chamberlain <mcgrof@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-Kernel stable team,
+On Mon, Feb 04, 2019 at 10:38:55AM -0800, Darrick J. Wong wrote:
+> On Mon, Feb 04, 2019 at 12:35:00PM -0600, Eric Sandeen wrote:
+> > On 12/19/18 1:30 PM, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Since we use the same read-verify pool object to dispatch file data read
+> > > requests for both the data device and the realtime device, we should
+> > > create enough IO threads to handle the estimated parallelization of both
+> > > devices, not just the data device.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > So if rtdev is on SSD and datadev is on a rotational device, won't we
+> > possibly still Launch All Threads at the rotational device for this
+> > case, and won't that still hurt?  I'm not sure it works to lump these
+> > together, does it?  (I also don't know if it can be done another way...)
+> 
+> Hmm.  I think we /could/ have separate readverify pools for data and rt
+> devices.  Let me look into that...
 
-here is a v2 respin of my XFS stable patches for v4.19.y. The only
-change in this series is adding the upstream commit to the commit log,
-and I've now also Cc'd stable@vger.kernel.org as well. No other issues
-were spotted or raised with this series.
+...yes, the readverify pool code needs some refactoring and thinko
+removal; however, that cleanup should wait for xfsprogs 5.0.
 
-Reviews, questions, or rants are greatly appreciated.
+--D
 
-  Luis
-
-Brian Foster (1):
-  xfs: fix shared extent data corruption due to missing cow reservation
-
-Carlos Maiolino (1):
-  xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
-
-Christoph Hellwig (1):
-  xfs: cancel COW blocks before swapext
-
-Christophe JAILLET (1):
-  xfs: Fix error code in 'xfs_ioc_getbmap()'
-
-Darrick J. Wong (1):
-  xfs: fix PAGE_MASK usage in xfs_free_file_space
-
-Dave Chinner (3):
-  xfs: fix overflow in xfs_attr3_leaf_verify
-  xfs: fix transient reference count error in
-    xfs_buf_resubmit_failed_buffers
-  xfs: delalloc -> unwritten COW fork allocation can go wrong
-
-Eric Sandeen (1):
-  xfs: fix inverted return from xfs_btree_sblock_verify_crc
-
-Ye Yin (1):
-  fs/xfs: fix f_ffree value for statfs when project quota is set
-
- fs/xfs/libxfs/xfs_attr_leaf.c | 11 +++++++++--
- fs/xfs/libxfs/xfs_bmap.c      |  5 ++++-
- fs/xfs/libxfs/xfs_btree.c     |  2 +-
- fs/xfs/xfs_bmap_util.c        | 10 ++++++++--
- fs/xfs/xfs_buf_item.c         | 28 +++++++++++++++++++++-------
- fs/xfs/xfs_ioctl.c            |  2 +-
- fs/xfs/xfs_qm_bhv.c           |  2 +-
- fs/xfs/xfs_reflink.c          |  1 +
- fs/xfs/xfs_stats.c            |  2 +-
- 9 files changed, 47 insertions(+), 16 deletions(-)
-
--- 
-2.18.0
+> --D
+> 
+> > -Eric
+> > 
+> > 
+> > > ---
+> > >  scrub/phase6.c |   20 ++++++++++++++++++--
+> > >  1 file changed, 18 insertions(+), 2 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/scrub/phase6.c b/scrub/phase6.c
+> > > index ead48d77..cbda9b53 100644
+> > > --- a/scrub/phase6.c
+> > > +++ b/scrub/phase6.c
+> > > @@ -435,6 +435,22 @@ xfs_check_rmap(
+> > >  	return true;
+> > >  }
+> > >  
+> > > +/*
+> > > + * Estimate the amount of parallelization possible for scanning file data on
+> > > + * the data and realtime devices.
+> > > + */
+> > > +static unsigned int
+> > > +phase6_threads(
+> > > +	struct scrub_ctx	*ctx)
+> > > +{
+> > > +	unsigned int		nr = disk_heads(ctx->datadev);
+> > > +
+> > > +	if (ctx->rtdev)
+> > > +		nr += disk_heads(ctx->rtdev);
+> > > +
+> > > +	return nr > nproc ? nproc : nr;
+> > > +}
+> > > +
+> > >  /*
+> > >   * Read verify all the file data blocks in a filesystem.  Since XFS doesn't
+> > >   * do data checksums, we trust that the underlying storage will pass back
+> > > @@ -469,7 +485,7 @@ xfs_scan_blocks(
+> > >  	}
+> > >  
+> > >  	ve.readverify = read_verify_pool_init(ctx, ctx->geo.blocksize,
+> > > -			xfs_check_rmap_ioerr, disk_heads(ctx->datadev));
+> > > +			xfs_check_rmap_ioerr, phase6_threads(ctx));
+> > >  	if (!ve.readverify) {
+> > >  		moveon = false;
+> > >  		str_info(ctx, ctx->mntpoint,
+> > > @@ -525,7 +541,7 @@ xfs_estimate_verify_work(
+> > >  		return moveon;
+> > >  
+> > >  	*items = ((d_blocks - d_bfree) + (r_blocks - r_bfree)) << ctx->blocklog;
+> > > -	*nr_threads = disk_heads(ctx->datadev);
+> > > +	*nr_threads = phase6_threads(ctx);
+> > >  	*rshift = 20;
+> > >  	return moveon;
+> > >  }
+> > > 
