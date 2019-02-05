@@ -1,105 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:52200 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725917AbfBECXW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Feb 2019 21:23:22 -0500
-Date: Mon, 4 Feb 2019 18:23:15 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/8] xfs_scrub: use data/rtdev parallelization estimates
- for the read-verify pool
-Message-ID: <20190205022315.GH7991@magnolia>
-References: <154524776457.28646.3004453037075812416.stgit@magnolia>
- <154524780496.28646.2648041743792188824.stgit@magnolia>
- <9a284f93-3a17-a2e4-f347-562d23a52388@sandeen.net>
- <20190204183855.GA7991@magnolia>
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:33328 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726696AbfBEKAX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Feb 2019 05:00:23 -0500
+Received: by mail-lj1-f195.google.com with SMTP id v1-v6so2379406ljd.0
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Feb 2019 02:00:22 -0800 (PST)
+Subject: Re: [PATCH] xfs: allow disabling xfs tracepoints via Kconfig
+References: <20190204212035.9919-1-linux@rasmusvillemoes.dk>
+ <20190204215332.GB14116@dastard>
+ <4d66f2c2-bf5c-be47-9ef1-e581c5901823@rasmusvillemoes.dk>
+ <20190204231346.GC14116@dastard>
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Message-ID: <8d36092f-adea-a025-380f-a97de6bc93e0@rasmusvillemoes.dk>
+Date: Tue, 5 Feb 2019 11:00:20 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190204183855.GA7991@magnolia>
+In-Reply-To: <20190204231346.GC14116@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Feb 04, 2019 at 10:38:55AM -0800, Darrick J. Wong wrote:
-> On Mon, Feb 04, 2019 at 12:35:00PM -0600, Eric Sandeen wrote:
-> > On 12/19/18 1:30 PM, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Since we use the same read-verify pool object to dispatch file data read
-> > > requests for both the data device and the realtime device, we should
-> > > create enough IO threads to handle the estimated parallelization of both
-> > > devices, not just the data device.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > So if rtdev is on SSD and datadev is on a rotational device, won't we
-> > possibly still Launch All Threads at the rotational device for this
-> > case, and won't that still hurt?  I'm not sure it works to lump these
-> > together, does it?  (I also don't know if it can be done another way...)
+On 05/02/2019 00.13, Dave Chinner wrote:
+> On Mon, Feb 04, 2019 at 11:12:57PM +0100, Rasmus Villemoes wrote:
+>> On 04/02/2019 22.53, Dave Chinner wrote:
+>>> On Mon, Feb 04, 2019 at 10:20:35PM +0100, Rasmus Villemoes wrote:
+>>>> linux/tracepoints.h allows individual subsystems to disable their
+>>>> tracepoints. Add such a knob for xfs. Disabling XFS_TRACEPOINTS
+>>>> reduces the resident size of xfs.ko by about a third, or ~350 KiB.
 > 
-> Hmm.  I think we /could/ have separate readverify pools for data and rt
-> devices.  Let me look into that...
+> Do you have a specific need for this, or is it just "I noticed this,
+> here's a patch"? 
 
-...yes, the readverify pool code needs some refactoring and thinko
-removal; however, that cleanup should wait for xfsprogs 5.0.
+A little of both, actually. I noticed it, did the patch for the kernel I
+use on my laptop, and thought others might find it useful. But no, I
+don't currently deal with any customer boards where it'd be relevant.
 
---D
+> If you need it and will use it, great, let's add
+> it. But config options that don't ever get used tend to rot....
 
-> --D
-> 
-> > -Eric
-> > 
-> > 
-> > > ---
-> > >  scrub/phase6.c |   20 ++++++++++++++++++--
-> > >  1 file changed, 18 insertions(+), 2 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/scrub/phase6.c b/scrub/phase6.c
-> > > index ead48d77..cbda9b53 100644
-> > > --- a/scrub/phase6.c
-> > > +++ b/scrub/phase6.c
-> > > @@ -435,6 +435,22 @@ xfs_check_rmap(
-> > >  	return true;
-> > >  }
-> > >  
-> > > +/*
-> > > + * Estimate the amount of parallelization possible for scanning file data on
-> > > + * the data and realtime devices.
-> > > + */
-> > > +static unsigned int
-> > > +phase6_threads(
-> > > +	struct scrub_ctx	*ctx)
-> > > +{
-> > > +	unsigned int		nr = disk_heads(ctx->datadev);
-> > > +
-> > > +	if (ctx->rtdev)
-> > > +		nr += disk_heads(ctx->rtdev);
-> > > +
-> > > +	return nr > nproc ? nproc : nr;
-> > > +}
-> > > +
-> > >  /*
-> > >   * Read verify all the file data blocks in a filesystem.  Since XFS doesn't
-> > >   * do data checksums, we trust that the underlying storage will pass back
-> > > @@ -469,7 +485,7 @@ xfs_scan_blocks(
-> > >  	}
-> > >  
-> > >  	ve.readverify = read_verify_pool_init(ctx, ctx->geo.blocksize,
-> > > -			xfs_check_rmap_ioerr, disk_heads(ctx->datadev));
-> > > +			xfs_check_rmap_ioerr, phase6_threads(ctx));
-> > >  	if (!ve.readverify) {
-> > >  		moveon = false;
-> > >  		str_info(ctx, ctx->mntpoint,
-> > > @@ -525,7 +541,7 @@ xfs_estimate_verify_work(
-> > >  		return moveon;
-> > >  
-> > >  	*items = ((d_blocks - d_bfree) + (r_blocks - r_bfree)) << ctx->blocklog;
-> > > -	*nr_threads = disk_heads(ctx->datadev);
-> > > +	*nr_threads = phase6_threads(ctx);
-> > >  	*rshift = 20;
-> > >  	return moveon;
-> > >  }
-> > > 
+Fair enough, I'll just keep it privately and resend if I encounter a use
+case in the wild.
+
+Rasmus
