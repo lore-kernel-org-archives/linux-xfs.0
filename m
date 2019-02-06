@@ -1,114 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49200 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726780AbfBGISe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Feb 2019 03:18:34 -0500
-Subject: Re: bcache on XFS: metadata I/O (dirent I/O?) not getting cached at
- all?
-References: <87h8dgefee.fsf@esperi.org.uk> <20190206234328.GH14116@dastard>
- <20190207002425.GX24140@tuebingen.mpg.de> <20190207022657.GI14116@dastard>
- <438851ef-ef77-b5f2-d46d-05762b6330b2@suse.de>
- <20190207031008.GJ14116@dastard>
-From: Coly Li <colyli@suse.de>
-Message-ID: <db79b5a2-e50b-880e-8ee1-da482a02088e@suse.de>
-Date: Thu, 7 Feb 2019 16:18:25 +0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:57536 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726270AbfBFSXm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 13:23:42 -0500
+Date: Wed, 6 Feb 2019 10:23:31 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 0/9] xfs: fix [f]inobt magic value verification
+Message-ID: <20190206182331.GW7991@magnolia>
+References: <20190204145231.47034-1-bfoster@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20190207031008.GJ14116@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190204145231.47034-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Andre Noll <maan@tuebingen.mpg.de>, Nix <nix@esperi.org.uk>, linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 2019/2/7 11:10 上午, Dave Chinner wrote:
-> On Thu, Feb 07, 2019 at 10:38:58AM +0800, Coly Li wrote:
->> On 2019/2/7 10:26 上午, Dave Chinner wrote:
->>> On Thu, Feb 07, 2019 at 01:24:25AM +0100, Andre Noll wrote:
->>>> On Thu, Feb 07, 10:43, Dave Chinner wrote
->>>>> File data readahead: REQ_RAHEAD
->>>>> Metadata readahead: REQ_META | REQ_RAHEAD
->>>>>
->>>>> drivers/md/bcache/request.c::check_should_bypass():
->>>>>
->>>>>         /*
->>>>>          * Flag for bypass if the IO is for read-ahead or background,
->>>>>          * unless the read-ahead request is for metadata (eg, for gfs2).
->>>>>          */
->>>>>         if (bio->bi_opf & (REQ_RAHEAD|REQ_BACKGROUND) &&
->>>>>             !(bio->bi_opf & REQ_PRIO))
->>>>>                 goto skip;
->>>>>
->>>>> bcache needs fixing - it thinks REQ_PRIO means metadata IO. That's
->>>>> wrong - REQ_META means it's metadata IO, and so this is a bcache
->>>>> bug.
->>>>
->>>> Do you think 752f66a75abad is bad (ha!) and should be reverted?
->>>
->>> Yes, that change is just broken. From include/linux/blk_types.h:
->>>
->>> 	__REQ_META,             /* metadata io request */
->>> 	__REQ_PRIO,             /* boost priority in cfq */
->>>
->>>
->>
->> Hi Dave,
->>
->>> i.e. REQ_META means that it is a metadata request, REQ_PRIO means it
->>> is a "high priority" request. Two completely different things, often
->>> combined, but not interchangeable.
->>
->> I found in file system metadata IO, most of time REQ_META and REQ_PRIO
->> are tagged together for bio, but XFS seems not use REQ_PRIO.
+On Mon, Feb 04, 2019 at 09:52:22AM -0500, Brian Foster wrote:
+> Hi all,
 > 
-> Yes, that's correct, because we don't specifically prioritise
-> metadata IO over data IO.
+> Here's v3 of the verifier magic value fixup series. This version adds a
+> couple more patches to separate and convert the allocation btree buffer
+> verifier to the new magic value verification scheme. The allocbt is
+> similar to the inobt verifier in that it currently uses the same
+> verifier code for multiple magic values. This change allows the verifier
+> to ensure that bnobt/cntbt blocks have the appropriate magic value for
+> v4 and v5 filesytems. The only other change from v2 is a fixup to
+> include parameter names in function declarations.
 > 
->> Is there any basic principle for when should these tags to be used or
->> not ?
-> 
-> Yes.
-> 
->> e.g. If REQ_META is enough for meta data I/O, why REQ_PRIO is used
->> too.
-> 
-> REQ_META is used for metadata. REQ_PRIO is used to communicate to
-> the lower layers that the submitter considers this IO to be more
-> important that non REQ_PRIO IO and so dispatch should be expedited.
-> 
-> IOWs, if the filesystem considers metadata IO to be more important
-> that user data IO, then it will use REQ_PRIO | REQ_META rather than
-> just REQ_META.
-> 
-> Historically speaking, REQ_PRIO was a hack for CFQ to get it to
-> dispatch journal IO from a different thread without waiting for a
-> time slice to expire. In the XFs world, we just said "don't use CFQ,
-> it's fundametnally broken for highly concurrent applications" and
-> didn't bother trying to hack around the limitations of CFQ.
-> 
-> These days REQ_PRIO is only used by the block layer writeback
-> throttle, but unlike bcache it considers both REQ_META and REQ_PRIO
-> to mean the same thing.
-> 
-> REQ_META, OTOH, is used by BFQ and blk-cgroup to detect metadata
-> IO and don't look at REQ_PRIO at all. So, really, REQ_META is for
-> metadata, not REQ_PRIO. REQ_PRIO looks like it should just go away.
-> 
->> And if REQ_PRIO is necessary, why it is not used in fs/xfs/ code ?
-> 
-> It's not necessary, it's just an /optimisation/ that some
-> filesystems make and some IO schedulers used to pay attention to. It
-> looks completely redundant now.
+> Thoughts, reviews, flames appreciated.
 
-Hi Dave,
+I noticed that inode and quota buf_ops still don't have magic numbers in
+them.  I think it's fairly trivial to add them to the buffer ops
+definitions, though actually using them looks a little tricky for
+dquots.  I'll send along a couple of patches to add that and clean up
+some of the repair code magic handling.
 
-Thanks for your detailed explanation. This is great hint from view of
-file system developer :-)
+--D
 
-I just compose a fix, hope it makes better.
-
--- 
-
-Coly Li
+> Brian
+> 
+> v3:
+> - Fix function declarations to include parameter names.
+> - Convert allocbt buffer verifier.
+> v2: https://marc.info/?l=linux-xfs&m=154894958207167&w=2
+> - Include djwong's ->b_ops patch w/ modifications.
+> - Added patch to fix up existing cpu endian magic checks, fold in typo
+>   fix.
+> - Replace static inline magic verifier helper with out of line variant,
+>   kill macro.
+> - Store on-disk byte order magics in ->b_ops.
+> - Added patch to refactor common xfs_da3_blkinfo checks.
+> v1: https://marc.info/?l=linux-xfs&m=154878684317178&w=2
+> - Remove endian conversion from helper.
+> - Drop finobt bad magic mitigation patch.
+> - Additional verifier magic fixups.
+> - Add verifier name typo fixup.
+> rfcv2: https://marc.info/?l=linux-xfs&m=154868884311668&w=2
+> - Split off finobt verifier into separate patch, assign it
+>   appropriately.
+> - Created helpers for xfs_buf_ops magic value verification.
+> - Added error mitigation patch for problematic finobt blocks.
+> rfcv1: https://marc.info/?l=linux-xfs&m=154834528212262&w=2
+> 
+> Brian Foster (8):
+>   xfs: always check magic values in on-disk byte order
+>   xfs: create a separate finobt verifier
+>   xfs: distinguish between inobt and finobt magic values
+>   xfs: split up allocation btree verifier
+>   xfs: distinguish between bnobt and cntbt magic values
+>   xfs: use verifier magic field in dir2 leaf verifiers
+>   xfs: miscellaneous verifier magic value fixups
+>   xfs: factor xfs_da3_blkinfo verification into common helper
+> 
+> Darrick J. Wong (1):
+>   xfs: set buffer ops when repair probes for btree type
+> 
+>  fs/xfs/libxfs/xfs_ag.c             |   6 +-
+>  fs/xfs/libxfs/xfs_alloc.c          |  12 ++--
+>  fs/xfs/libxfs/xfs_alloc_btree.c    |  74 ++++++++++-----------
+>  fs/xfs/libxfs/xfs_attr_leaf.c      |  21 ++----
+>  fs/xfs/libxfs/xfs_attr_remote.c    |   8 ++-
+>  fs/xfs/libxfs/xfs_bmap_btree.c     |  13 ++--
+>  fs/xfs/libxfs/xfs_da_btree.c       |  50 ++++++++++-----
+>  fs/xfs/libxfs/xfs_da_format.h      |   3 +
+>  fs/xfs/libxfs/xfs_dir2_block.c     |  10 +--
+>  fs/xfs/libxfs/xfs_dir2_data.c      |  12 ++--
+>  fs/xfs/libxfs/xfs_dir2_leaf.c      | 100 ++++++-----------------------
+>  fs/xfs/libxfs/xfs_dir2_node.c      |  11 ++--
+>  fs/xfs/libxfs/xfs_ialloc.c         |   3 +-
+>  fs/xfs/libxfs/xfs_ialloc_btree.c   |  25 +++++---
+>  fs/xfs/libxfs/xfs_inode_buf.c      |   2 +-
+>  fs/xfs/libxfs/xfs_refcount_btree.c |   3 +-
+>  fs/xfs/libxfs/xfs_rmap_btree.c     |   3 +-
+>  fs/xfs/libxfs/xfs_sb.c             |   5 +-
+>  fs/xfs/libxfs/xfs_shared.h         |   4 +-
+>  fs/xfs/libxfs/xfs_symlink_remote.c |   3 +-
+>  fs/xfs/scrub/agheader_repair.c     |   6 +-
+>  fs/xfs/scrub/repair.c              |  11 +++-
+>  fs/xfs/xfs_buf.c                   |  41 ++++++++++--
+>  fs/xfs/xfs_buf.h                   |   4 +-
+>  fs/xfs/xfs_log_recover.c           |  12 ++--
+>  fs/xfs/xfs_trans_buf.c             |   2 +-
+>  26 files changed, 229 insertions(+), 215 deletions(-)
+> 
+> -- 
+> 2.17.2
+> 
