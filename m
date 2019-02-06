@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51232 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:51404 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726732AbfBFQy7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 11:54:59 -0500
-Subject: [PATCH 2/9] xfs: add xfs_verify_agino_or_null helper
+        with ESMTP id S1726732AbfBFQzG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 11:55:06 -0500
+Subject: [PATCH 3/9] xfs: refactor AGI unlinked bucket updates
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 06 Feb 2019 08:54:50 -0800
-Message-ID: <154947209051.22369.14535026008966648730.stgit@magnolia>
+Date: Wed, 06 Feb 2019 08:54:56 -0800
+Message-ID: <154947209694.22369.11138202297700094711.stgit@magnolia>
 In-Reply-To: <154947207759.22369.11575570374120223292.stgit@magnolia>
 References: <154947207759.22369.11575570374120223292.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,95 +20,142 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Christoph Hell
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a new helper to check that a per-AG inode pointer is either null or
-points somewhere valid within that AG.
+Split the AGI unlinked bucket updates into a separate function.  No
+functional changes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c |    3 +--
- fs/xfs/libxfs/xfs_types.c     |   13 +++++++++++++
- fs/xfs/libxfs/xfs_types.h     |    2 ++
- fs/xfs/scrub/agheader.c       |    8 +++-----
- 4 files changed, 19 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_inode.c |   65 ++++++++++++++++++++++++++++++++++++----------------
+ fs/xfs/xfs_trace.h |   26 +++++++++++++++++++++
+ 2 files changed, 71 insertions(+), 20 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 09d9c8cfa4a0..82c4374acb4c 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -99,8 +99,7 @@ xfs_inode_buf_verify(
- 		unlinked_ino = be32_to_cpu(dip->di_next_unlinked);
- 		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
- 			xfs_dinode_good_version(mp, dip->di_version) &&
--			(unlinked_ino == NULLAGINO ||
--			 xfs_verify_agino(mp, agno, unlinked_ino));
-+			xfs_verify_agino_or_null(mp, agno, unlinked_ino);
- 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
- 						XFS_ERRTAG_ITOBP_INOTOBP))) {
- 			if (readahead) {
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index 451608b5a37b..de310712dd6d 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -115,6 +115,19 @@ xfs_verify_agino(
- 	return agino >= first && agino <= last;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 8a39d80f4863..f1de80e8b9a6 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1906,6 +1906,43 @@ xfs_inactive(
+ 	xfs_qm_dqdetach(ip);
  }
  
 +/*
-+ * Verify that an AG inode number pointer neither points outside the AG
-+ * nor points at static metadata, or is NULLAGINO.
++ * Point the AGI unlinked bucket at an inode and log the results.  The caller
++ * is responsible for validating the old value.
 + */
-+bool
-+xfs_verify_agino_or_null(
-+	struct xfs_mount	*mp,
++STATIC int
++xfs_iunlink_update_bucket(
++	struct xfs_trans	*tp,
 +	xfs_agnumber_t		agno,
-+	xfs_agino_t		agino)
++	struct xfs_buf		*agibp,
++	unsigned int		bucket_index,
++	xfs_agino_t		new_agino)
 +{
-+	return agino == NULLAGINO || xfs_verify_agino(mp, agno, agino);
++	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agibp);
++	xfs_agino_t		old_value;
++	int			offset;
++
++	ASSERT(xfs_verify_agino_or_null(tp->t_mountp, agno, new_agino));
++
++	old_value = be32_to_cpu(agi->agi_unlinked[bucket_index]);
++	trace_xfs_iunlink_update_bucket(tp->t_mountp, agno, bucket_index,
++			old_value, new_agino);
++
++	/*
++	 * We should never find the head of the list already set to the value
++	 * passed in because either we're adding or removing ourselves from the
++	 * head of the list.
++	 */
++	if (old_value == new_agino)
++		return -EFSCORRUPTED;
++
++	agi->agi_unlinked[bucket_index] = cpu_to_be32(new_agino);
++	offset = offsetof(struct xfs_agi, agi_unlinked) +
++			(sizeof(xfs_agino_t) * bucket_index);
++	xfs_trans_log_buf(tp, agibp, offset, offset + sizeof(xfs_agino_t) - 1);
++	return 0;
 +}
 +
  /*
-  * Verify that an FS inode number pointer neither points outside the
-  * filesystem nor points at static AG metadata.
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index 704b4f308780..c5a25403b4db 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -183,6 +183,8 @@ void xfs_agino_range(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		xfs_agino_t *first, xfs_agino_t *last);
- bool xfs_verify_agino(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		xfs_agino_t agino);
-+bool xfs_verify_agino_or_null(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		xfs_agino_t agino);
- bool xfs_verify_ino(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 90955ab1e895..9d4e8293d37e 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -864,19 +864,17 @@ xchk_agi(
- 
- 	/* Check inode pointers */
- 	agino = be32_to_cpu(agi->agi_newino);
--	if (agino != NULLAGINO && !xfs_verify_agino(mp, agno, agino))
-+	if (!xfs_verify_agino_or_null(mp, agno, agino))
- 		xchk_block_set_corrupt(sc, sc->sa.agi_bp);
- 
- 	agino = be32_to_cpu(agi->agi_dirino);
--	if (agino != NULLAGINO && !xfs_verify_agino(mp, agno, agino))
-+	if (!xfs_verify_agino_or_null(mp, agno, agino))
- 		xchk_block_set_corrupt(sc, sc->sa.agi_bp);
- 
- 	/* Check unlinked inode buckets */
- 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
- 		agino = be32_to_cpu(agi->agi_unlinked[i]);
--		if (agino == NULLAGINO)
--			continue;
--		if (!xfs_verify_agino(mp, agno, agino))
-+		if (!xfs_verify_agino_or_null(mp, agno, agino))
- 			xchk_block_set_corrupt(sc, sc->sa.agi_bp);
+  * This is called when the inode's link count goes to 0 or we are creating a
+  * tmpfile via O_TMPFILE. In the case of a tmpfile, @ignore_linkcount will be
+@@ -1973,16 +2010,8 @@ xfs_iunlink(
+ 		xfs_inobp_check(mp, ibp);
  	}
  
+-	/*
+-	 * Point the bucket head pointer at the inode being inserted.
+-	 */
+-	ASSERT(agino != 0);
+-	agi->agi_unlinked[bucket_index] = cpu_to_be32(agino);
+-	offset = offsetof(xfs_agi_t, agi_unlinked) +
+-		(sizeof(xfs_agino_t) * bucket_index);
+-	xfs_trans_log_buf(tp, agibp, offset,
+-			  (offset + sizeof(xfs_agino_t) - 1));
+-	return 0;
++	/* Point the head of the list to point to this inode. */
++	return xfs_iunlink_update_bucket(tp, agno, agibp, bucket_index, agino);
+ }
+ 
+ /*
+@@ -2058,16 +2087,12 @@ xfs_iunlink_remove(
+ 		} else {
+ 			xfs_trans_brelse(tp, ibp);
+ 		}
+-		/*
+-		 * Point the bucket head pointer at the next inode.
+-		 */
+-		ASSERT(next_agino != 0);
+-		ASSERT(next_agino != agino);
+-		agi->agi_unlinked[bucket_index] = cpu_to_be32(next_agino);
+-		offset = offsetof(xfs_agi_t, agi_unlinked) +
+-			(sizeof(xfs_agino_t) * bucket_index);
+-		xfs_trans_log_buf(tp, agibp, offset,
+-				  (offset + sizeof(xfs_agino_t) - 1));
++
++		/* Point the head of the list to the next unlinked inode. */
++		error = xfs_iunlink_update_bucket(tp, agno, agibp, bucket_index,
++				next_agino);
++		if (error)
++			return error;
+ 	} else {
+ 		/*
+ 		 * We need to search the list for the inode being freed.
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 6fcc893dfc91..c10478e7e49a 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3371,6 +3371,32 @@ DEFINE_TRANS_EVENT(xfs_trans_roll);
+ DEFINE_TRANS_EVENT(xfs_trans_add_item);
+ DEFINE_TRANS_EVENT(xfs_trans_free_items);
+ 
++TRACE_EVENT(xfs_iunlink_update_bucket,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, unsigned int bucket,
++		 xfs_agino_t old_ptr, xfs_agino_t new_ptr),
++	TP_ARGS(mp, agno, bucket, old_ptr, new_ptr),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(unsigned int, bucket)
++		__field(xfs_agino_t, old_ptr)
++		__field(xfs_agino_t, new_ptr)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->bucket = bucket;
++		__entry->old_ptr = old_ptr;
++		__entry->new_ptr = new_ptr;
++	),
++	TP_printk("dev %d:%d agno %u bucket %u old 0x%x new 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->bucket,
++		  __entry->old_ptr,
++		  __entry->new_ptr)
++);
++
+ #endif /* _TRACE_XFS_H */
+ 
+ #undef TRACE_INCLUDE_PATH
