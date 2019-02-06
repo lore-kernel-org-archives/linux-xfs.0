@@ -1,65 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx.gwdg.de ([134.76.10.20]:45863 "EHLO mx.gwdg.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726186AbfBGJ2Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Feb 2019 04:28:24 -0500
-Date: Thu, 7 Feb 2019 10:28:19 +0100
-From: Andre Noll <maan@tuebingen.mpg.de>
-Subject: Re: bcache on XFS: metadata I/O (dirent I/O?) not getting cached at
- all?
-Message-ID: <20190207092819.GY24140@tuebingen.mpg.de>
-References: <87h8dgefee.fsf@esperi.org.uk>
- <20190206234328.GH14116@dastard>
- <20190207002425.GX24140@tuebingen.mpg.de>
- <b982a23b-7225-d20a-2802-60bce314ccc2@suse.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:38934 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725784AbfBFSZS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 13:25:18 -0500
+Date: Wed, 6 Feb 2019 10:25:12 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 10/10] xfs: cache unlinked pointers in an rhashtable
+Message-ID: <20190206182512.GX7991@magnolia>
+References: <154930313674.31814.17994684613232167921.stgit@magnolia>
+ <154930320519.31814.7868551876308474527.stgit@magnolia>
+ <20190205142458.GD51421@bfoster>
+ <20190205175309.GJ7991@magnolia>
+ <20190205205915.GD14116@dastard>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="gBii9oQw/U9UOygZ"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b982a23b-7225-d20a-2802-60bce314ccc2@suse.de>
+In-Reply-To: <20190205205915.GD14116@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Coly Li <colyli@suse.de>
-Cc: Dave Chinner <david@fromorbit.com>, Nix <nix@esperi.org.uk>, linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
+On Wed, Feb 06, 2019 at 07:59:15AM +1100, Dave Chinner wrote:
+> On Tue, Feb 05, 2019 at 09:53:09AM -0800, Darrick J. Wong wrote:
+> > On Tue, Feb 05, 2019 at 09:24:59AM -0500, Brian Foster wrote:
+> > > On Mon, Feb 04, 2019 at 10:00:05AM -0800, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Use a rhashtable to cache the unlinked list incore.  This should speed
+> > > > up unlinked processing considerably when there are a lot of inodes on
+> > > > the unlinked list because iunlink_remove no longer has to traverse an
+> > > > entire bucket list to find which inode points to the one being removed.
+> > > > 
+> > > > The incore list structure records "X.next_unlinked = Y" relations, with
+> > > > the rhashtable using Y to index the records.  This makes finding the
+> > > > inode X that points to a inode Y very quick.  If our cache fails to find
+> > > > anything we can always fall back on the old method.
+> > > > 
+> > > > FWIW this drastically reduces the amount of time it takes to remove
+> > > > inodes from the unlinked list.  I wrote a program to open a lot of
+> > > > O_TMPFILE files and then close them in the same order, which takes
+> > > > a very long time if we have to traverse the unlinked lists.  With the
+> > > > ptach, I see:
+> > > > 
+> > > ...
+> > > > ---
+> > > >  fs/xfs/xfs_inode.c       |  207 ++++++++++++++++++++++++++++++++++++++++++++++
+> > > >  fs/xfs/xfs_inode.h       |    9 ++
+> > > >  fs/xfs/xfs_log_recover.c |   12 ++-
+> > > >  fs/xfs/xfs_mount.c       |    5 +
+> > > >  fs/xfs/xfs_mount.h       |    1 
+> > > >  5 files changed, 233 insertions(+), 1 deletion(-)
+> > > > 
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > > index b9696d762c8f..baee8c894447 100644
+> > > > --- a/fs/xfs/xfs_inode.c
+> > > > +++ b/fs/xfs/xfs_inode.c
+> > > > @@ -1880,6 +1880,167 @@ xfs_inactive(
+> > > >  	xfs_qm_dqdetach(ip);
+> > > >  }
+> > > >  
+> > > ...
+> > > > +
+> > > > +static const struct rhashtable_params xfs_iunlink_hash_params = {
+> > > > +	.min_size		= XFS_AGI_UNLINKED_BUCKETS,
+> > > > +	.nelem_hint		= 512,
+> > > 
+> > > Any reasoning behind the 512 value? It seems rather large to me, at
+> > > least until we get more into deferred inactivation and whatnot. It looks
+> > > like the rhashtable code will round this up to 1024 as well, FWIW.
+> > > 
+> > > I'm also wondering whether a kmem_zone might be worthwhile for
+> > > xfs_iunlink structures, but that's probably also more for when we expect
+> > > to drive deeper unlinked lists.
+> > 
+> > I picked an arbitrary value of 64 buckets * 8 items per list.  I /do/
+> > have plans to test various values to see if there's a particular sweet
+> > spot, though I guess this could be much lower on the assumption that
+> > we don't expect /that/ many unlinked inodes(?)
+> 
+> Seems pretty large, given we use this for the per-ag buffer cache
+> rhashtable:
+> 
+>      .min_size               = 32,   /* empty AGs have minimal footprint */
+>      .nelem_hint             = 16,
+> 
+> And nobody notices problems when they grow and shrink and they run
+> from empty to hundreds of thousands of entries and back again in
+> very short preiods of time. Hence I'd suggest that we make it as
+> small as possible to begin with and then only change things if there
+> are performance problems triggered by growing and shrinking....
 
---gBii9oQw/U9UOygZ
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yeah, I'll change the patch to remove the nelem_hint, which will get us
+a hashtable of size >= 64.
 
-On Thu, Feb 07, 10:27, Coly Li wrote
+(Ok, I already sent the patches, I just forgot to reply to this.)
 
-> If different file system handles metadata flags in unified ways, it is
-> OK to me to change the code to: !(bio->bi_opf & (REQ_META |REQ_PRIO)).
+--D
 
-Yes, that's the smallest fix that should also go into 4.19-stable.
-
-In the long run, we should try to get rid of the 45 instances of
-REQ_PRIO. Most users specify REQ_META | REQ_PRIO anyway, which leaves
-only a few other instances to look at.
-
-I think the one in submit_bh_wbc() of fs/buffer.c can just be removed
-while block/cfq-iosched.c does not use REQ_META at all, so the simple
-s/REQ_PRIO/REQ_META should be OK. drivers/staging/erofs/data.c is
-also easy to fix.
-
-Best
-Andre
---=20
-Max Planck Institute for Developmental Biology
-Max-Planck-Ring 5, 72076 T=C3=BCbingen, Germany. Phone: (+49) 7071 601 829
-http://people.tuebingen.mpg.de/maan/
-
---gBii9oQw/U9UOygZ
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iF0EABECAB0WIQSHtF/cbZGyylvqq1Ra2jVAMQCTDwUCXFv6MAAKCRBa2jVAMQCT
-D5coAKCcC0GuP2KTQi/SwEAsWqfUJw6gigCfX4CU1iFd0TsxJMy93V2ZSUUPpLg=
-=ML1i
------END PGP SIGNATURE-----
-
---gBii9oQw/U9UOygZ--
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
