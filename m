@@ -1,151 +1,196 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48930 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726780AbfBGIQ4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Feb 2019 03:16:56 -0500
-Subject: Re: bcache on XFS: metadata I/O (dirent I/O?) not getting cached at
- all?
-References: <87h8dgefee.fsf@esperi.org.uk>
-From: Coly Li <colyli@suse.de>
-Message-ID: <64f32487-5b8f-f6c2-37a9-84bb0717a9e1@suse.de>
-Date: Thu, 7 Feb 2019 16:16:48 +0800
+Received: from userp2120.oracle.com ([156.151.31.85]:55894 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726270AbfBFSQO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 13:16:14 -0500
+Date: Wed, 6 Feb 2019 10:16:08 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 9/9] xfs: factor xfs_da3_blkinfo verification into
+ common helper
+Message-ID: <20190206181608.GV7991@magnolia>
+References: <20190204145231.47034-1-bfoster@redhat.com>
+ <20190204145231.47034-10-bfoster@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <87h8dgefee.fsf@esperi.org.uk>
-Content-Type: multipart/mixed;
- boundary="------------0BFDCE4D32CD1F8FB50BD466"
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190204145231.47034-10-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nix <nix@esperi.org.uk>
-Cc: linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Andre Noll <maan@tuebingen.mpg.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------0BFDCE4D32CD1F8FB50BD466
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+On Mon, Feb 04, 2019 at 09:52:31AM -0500, Brian Foster wrote:
+> With the verifier magic value helper in place, we've left a bit more
+> duplicate code across the verifiers that involve struct
+> xfs_da3_blkinfo. This includes the da node, xattr leaf and dir leaf
+> verifiers, all of which perform similar checks for v4 and v5
+> filesystems.
+> 
+> Create a common helper to verify an xfs_da3_blkinfo structure,
+> taking care to only access v5 fields where appropriate, and refactor
+> the aforementioned verifiers to use the helper. No functional
+> changes.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-On 2019/2/7 6:11 上午, Nix wrote:
-> So I just upgraded to 4.20 and revived my long-turned-off bcache now
-> that the metadata corruption leading to mount failure on dirty close may
-> have been identified (applying Tang Junhui's patch to do so)... and I
-> spotted something a bit disturbing. It appears that XFS directory and
-> metadata I/O is going more or less entirely uncached.
-> 
-> Here's some bcache stats before and after a git status of a *huge*
-> uncached tree (Chromium) on my no-writeback readaround cache. It takes
-> many minutes and pounds the disk with massively seeky metadata I/O in
-> the process:
-> 
-> Before:
-> 
-> stats_total/bypassed: 48.3G
-> stats_total/cache_bypass_hits: 7942
-> stats_total/cache_bypass_misses: 861045
-> stats_total/cache_hit_ratio: 3
-> stats_total/cache_hits: 16286
-> stats_total/cache_miss_collisions: 25
-> stats_total/cache_misses: 411575
-> stats_total/cache_readaheads: 0
-> 
-> After:
-> stats_total/bypassed: 49.3G
-> stats_total/cache_bypass_hits: 7942
-> stats_total/cache_bypass_misses: 1154887
-> stats_total/cache_hit_ratio: 3
-> stats_total/cache_hits: 16291
-> stats_total/cache_miss_collisions: 25
-> stats_total/cache_misses: 411625
-> stats_total/cache_readaheads: 0
-> 
-> Huge increase in bypassed reads, essentially no new cached reads. This
-> is... basically the optimum case for bcache, and it's not caching it!
-> 
-> From my reading of xfs_dir2_leaf_readbuf(), it looks like essentially
-> all directory reads in XFS appear to bcache as a single non-readahead
-> followed by a pile of readahead I/O: bcache bypasses readahead bios, so
-> all directory reads (or perhaps all directory reads larger than a single
-> block) are going to be bypassed out of hand.
-> 
-> This seems... suboptimal, but so does filling up the cache with
-> read-ahead blocks (particularly for non-metadata) that are never used.
-> Anyone got any ideas, 'cos I'm currently at a loss: XFS doesn't appear
-> to let us distinguish between "read-ahead just in case but almost
-> certain to be accessed" (like directory blocks) and "read ahead on the
-> offchance because someone did a single-block file read and what the hell
-> let's suck in a bunch more".
-> 
-> As it is, this seems to render bcache more or less useless with XFS,
-> since bcache's primary raison d'etre is precisely to cache seeky stuff
-> like metadata. :(
-> 
-Hi Nix,
+Seems ok modulo the questions I had about the ASSERT,
 
-Could you please to try whether the attached patch makes things better ?
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Thanks in advance for your help.
+--D
 
--- 
-
-Coly Li
-
---------------0BFDCE4D32CD1F8FB50BD466
-Content-Type: text/plain; charset=UTF-8; x-mac-type="0"; x-mac-creator="0";
- name="0001-bcache-use-REQ_META-REQ_PRIO-to-indicate-bio-for-met.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename*0="0001-bcache-use-REQ_META-REQ_PRIO-to-indicate-bio-for-met.pa";
- filename*1="tch"
-
-RnJvbSA3YzI3ZTI2MDE3ZjYyOTdhNmJjNmE4MDc1NzMyZjY5ZDNlZGNjNTJlIE1vbiBTZXAg
-MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBDb2x5IExpIDxjb2x5bGlAc3VzZS5kZT4KRGF0ZTog
-VGh1LCA3IEZlYiAyMDE5IDE1OjU0OjI0ICswODAwClN1YmplY3Q6IFtQQVRDSF0gYmNhY2hl
-OiB1c2UgKFJFUV9NRVRBfFJFUV9QUklPKSB0byBpbmRpY2F0ZSBiaW8gZm9yIG1ldGFkYXRh
-CgpJbiAnY29tbWl0IDc1MmY2NmE3NWFiYSAoImJjYWNoZTogdXNlIFJFUV9QUklPIHRvIGlu
-ZGljYXRlIGJpbyBmb3IKbWV0YWRhdGEiKScgUkVRX01FVEEgaXMgcmVwbGFjZWQgYnkgUkVR
-X1BSSU8gdG8gaW5kaWNhdGUgbWV0YWRhdGEgYmlvLgpUaGlzIGFzc3VtcHRpb24gaXMgbm90
-IGFsd2F5cyBjb3JyZWN0LCBlLmcuIFhGUyB1c2VzIFJFUV9NRVRBIHRvIG1hcmsKbWV0YWRh
-dGEgYmlvIG90aGVyIHRoYW4gUkVRX1BSSU8uIFRoaXMgaXMgd2h5IE5peCByZXBvcnRzIGEg
-cmVncmVzc2lvbgp0aGF0IGJjYWNoZSBkb2VzIG5vdCBjYWNoZSBtZXRhZGF0YSBmb3IgWEZT
-IGFmdGVyIHRoZSBhYm92ZSBjb21taXQuCgpUaGFua3MgdG8gRGF2ZSBDaGlubmVyLCBoZSBl
-eHBsYWlucyB0aGUgZGlmZmVyZW5jZSBiZXR3ZWVuIFJFUV9NRVRBIGFuZApSRVFfUFJJTyBm
-cm9tIHZpZXcgb2YgZmlsZSBzeXN0ZW0gZGV2ZWxvcGVyLiBIZXJlIEkgcXVvdGUgcGFydCBv
-ZiBoaXMKZXhwbGFuYXRpb24gZnJvbSBtYWlsaW5nIGxpc3QsCiAgIFJFUV9NRVRBIGlzIHVz
-ZWQgZm9yIG1ldGFkYXRhLiBSRVFfUFJJTyBpcyB1c2VkIHRvIGNvbW11bmljYXRlIHRvCiAg
-IHRoZSBsb3dlciBsYXllcnMgdGhhdCB0aGUgc3VibWl0dGVyIGNvbnNpZGVycyB0aGlzIElP
-IHRvIGJlIG1vcmUKICAgaW1wb3J0YW50IHRoYXQgbm9uIFJFUV9QUklPIElPIGFuZCBzbyBk
-aXNwYXRjaCBzaG91bGQgYmUgZXhwZWRpdGVkLgoKICAgSU9XcywgaWYgdGhlIGZpbGVzeXN0
-ZW0gY29uc2lkZXJzIG1ldGFkYXRhIElPIHRvIGJlIG1vcmUgaW1wb3J0YW50CiAgIHRoYXQg
-dXNlciBkYXRhIElPLCB0aGVuIGl0IHdpbGwgdXNlIFJFUV9QUklPIHwgUkVRX01FVEEgcmF0
-aGVyIHRoYW4KICAganVzdCBSRVFfTUVUQS4KClRoZW4gaXQgc2VlbXMgYmlvcyB3aXRoIFJF
-UV9NRVRBIG9yIFJFUV9QUklPIHNob3VsZCBib3RoIGJlIGNhY2hlZCBmb3IKcGVyZm9ybWFu
-Y2Ugb3B0aW1hdGlvbiwgYmVjYXVzZSB0aGV5IGFyZSBhbGwgcHJvYmFibHkgbG93IEkvTyBs
-YXRlbmN5CmRlbWFuZCBieSB1cHBlciBsYXllciAoZS5nLiBmaWxlIHN5c3RlbSkuCgpTbyBp
-biB0aGlzIHBhdGNoLCB3aGVuIHdlIHdhbnQgdG8gY2hlY2sgd2hldGhlciBhIGJpbyBpcyBt
-ZXRhZGF0YQpyZWxhdGVkLCBSRVFfTUVUQSBhbmQgUkVRX1BSSU8gYXJlIGJvdGggY2hlY2tl
-ZC4gVGhlbiBib3RoIG1ldGFkYXRhIGFuZApoaWdoIHByaW9yaXR5IEkvTyByZXF1ZXN0cyB3
-aWxsIGJlIGhhbmRsZWQgcHJvcGVybHkuCgpSZXBvcnRlZC1ieTogTml4IDxuaXhAZXNwZXJp
-Lm9yZy51az4KU2lnbmVkLW9mZi1ieTogQ29seSBMaSA8Y29seWxpQHN1c2UuZGU+CkNjOiBE
-YXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+CkNjOiBBbmRyZSBOb2xsIDxtYWFu
-QHR1ZWJpbmdlbi5tcGcuZGU+CkNjOiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4K
-LS0tCiBkcml2ZXJzL21kL2JjYWNoZS9yZXF1ZXN0LmMgfCA0ICsrLS0KIDEgZmlsZSBjaGFu
-Z2VkLCAyIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9tZC9iY2FjaGUvcmVxdWVzdC5jIGIvZHJpdmVycy9tZC9iY2FjaGUvcmVxdWVzdC5j
-CmluZGV4IDNiZjM1OTE0YmI1Ny4uNjJiZGE5MGEzOGRjIDEwMDY0NAotLS0gYS9kcml2ZXJz
-L21kL2JjYWNoZS9yZXF1ZXN0LmMKKysrIGIvZHJpdmVycy9tZC9iY2FjaGUvcmVxdWVzdC5j
-CkBAIC0zOTUsNyArMzk1LDcgQEAgc3RhdGljIGJvb2wgY2hlY2tfc2hvdWxkX2J5cGFzcyhz
-dHJ1Y3QgY2FjaGVkX2RldiAqZGMsIHN0cnVjdCBiaW8gKmJpbykKIAkgKiB1bmxlc3MgdGhl
-IHJlYWQtYWhlYWQgcmVxdWVzdCBpcyBmb3IgbWV0YWRhdGEgKGVnLCBmb3IgZ2ZzMiBvciB4
-ZnMpLgogCSAqLwogCWlmIChiaW8tPmJpX29wZiAmIChSRVFfUkFIRUFEfFJFUV9CQUNLR1JP
-VU5EKSAmJgotCSAgICAhKGJpby0+Ymlfb3BmICYgUkVRX1BSSU8pKQorCSAgICAhKGJpby0+
-Ymlfb3BmICYgKFJFUV9NRVRBfFJFUV9QUklPKSkpCiAJCWdvdG8gc2tpcDsKIAogCWlmIChi
-aW8tPmJpX2l0ZXIuYmlfc2VjdG9yICYgKGMtPnNiLmJsb2NrX3NpemUgLSAxKSB8fApAQCAt
-ODc3LDcgKzg3Nyw3IEBAIHN0YXRpYyBpbnQgY2FjaGVkX2Rldl9jYWNoZV9taXNzKHN0cnVj
-dCBidHJlZSAqYiwgc3RydWN0IHNlYXJjaCAqcywKIAl9CiAKIAlpZiAoIShiaW8tPmJpX29w
-ZiAmIFJFUV9SQUhFQUQpICYmCi0JICAgICEoYmlvLT5iaV9vcGYgJiBSRVFfUFJJTykgJiYK
-KwkgICAgIShiaW8tPmJpX29wZiAmIChSRVFfTUVUQXxSRVFfUFJJTykpICYmCiAJICAgIHMt
-PmlvcC5jLT5nY19zdGF0cy5pbl91c2UgPCBDVVRPRkZfQ0FDSEVfUkVBREEpCiAJCXJlYWRh
-ID0gbWluX3Qoc2VjdG9yX3QsIGRjLT5yZWFkYWhlYWQgPj4gOSwKIAkJCSAgICAgIGdldF9j
-YXBhY2l0eShiaW8tPmJpX2Rpc2spIC0gYmlvX2VuZF9zZWN0b3IoYmlvKSk7Ci0tIAoyLjE2
-LjQKCg==
---------------0BFDCE4D32CD1F8FB50BD466--
+> ---
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 17 +++----------
+>  fs/xfs/libxfs/xfs_da_btree.c  | 46 +++++++++++++++++++++++++----------
+>  fs/xfs/libxfs/xfs_da_format.h |  3 +++
+>  fs/xfs/libxfs/xfs_dir2_leaf.c | 18 +++-----------
+>  4 files changed, 44 insertions(+), 40 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index dde3a550d7ce..0c92987f57fc 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -245,23 +245,14 @@ xfs_attr3_leaf_verify(
+>  	struct xfs_attr_leaf_entry	*entries;
+>  	uint32_t			end;	/* must be 32bit - see below */
+>  	int				i;
+> +	xfs_failaddr_t			fa;
+>  
+>  	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
+>  
+> -	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
+> -		return __this_address;
+> -
+> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
+> +	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
+> +	if (fa)
+> +		return fa;
+>  
+> -		ASSERT(leaf->hdr.info.magic == hdr3->info.hdr.magic);
+> -		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
+> -			return __this_address;
+> -		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
+> -			return __this_address;
+> -		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
+> -			return __this_address;
+> -	}
+>  	/*
+>  	 * In recovery there is a transient state where count == 0 is valid
+>  	 * because we may have transitioned an empty shortform attr to a leaf
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index 6b8ca390eecc..622f88a1b1aa 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -116,6 +116,35 @@ xfs_da_state_free(xfs_da_state_t *state)
+>  	kmem_zone_free(xfs_da_state_zone, state);
+>  }
+>  
+> +/*
+> + * Verify an xfs_da3_blkinfo structure. Note that the da3 fields are only
+> + * accessible on v5 filesystems. This header format is common across da node,
+> + * attr leaf and dir leaf blocks.
+> + */
+> +xfs_failaddr_t
+> +xfs_da3_blkinfo_verify(
+> +	struct xfs_buf		*bp,
+> +	struct xfs_da3_blkinfo	*hdr3)
+> +{
+> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> +	struct xfs_da_blkinfo	*hdr = &hdr3->hdr;
+> +
+> +	if (!xfs_verify_magic(bp, hdr->magic))
+> +		return __this_address;
+> +
+> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		ASSERT(hdr3->hdr.magic == hdr->magic);
+> +		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_meta_uuid))
+> +			return __this_address;
+> +		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
+> +			return __this_address;
+> +		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->lsn)))
+> +			return __this_address;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static xfs_failaddr_t
+>  xfs_da3_node_verify(
+>  	struct xfs_buf		*bp)
+> @@ -124,25 +153,16 @@ xfs_da3_node_verify(
+>  	struct xfs_da_intnode	*hdr = bp->b_addr;
+>  	struct xfs_da3_icnode_hdr ichdr;
+>  	const struct xfs_dir_ops *ops;
+> +	xfs_failaddr_t		fa;
+>  
+>  	ops = xfs_dir_get_ops(mp, NULL);
+>  
+>  	ops->node_hdr_from_disk(&ichdr, hdr);
+>  
+> -	if (!xfs_verify_magic(bp, hdr->hdr.info.magic))
+> -		return __this_address;
+> +	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
+> +	if (fa)
+> +		return fa;
+>  
+> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
+> -
+> -		ASSERT(hdr3->info.hdr.magic == hdr->hdr.info.magic);
+> -		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
+> -			return __this_address;
+> -		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
+> -			return __this_address;
+> -		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
+> -			return __this_address;
+> -	}
+>  	if (ichdr.level == 0)
+>  		return __this_address;
+>  	if (ichdr.level > XFS_DA_NODE_MAXDEPTH)
+> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+> index 5d5bf3bffc78..ae654e06b2fb 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.h
+> +++ b/fs/xfs/libxfs/xfs_da_format.h
+> @@ -869,4 +869,7 @@ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
+>  	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
+>  }
+>  
+> +xfs_failaddr_t xfs_da3_blkinfo_verify(struct xfs_buf *bp,
+> +				      struct xfs_da3_blkinfo *hdr3);
+> +
+>  #endif /* __XFS_DA_FORMAT_H__ */
+> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> index a99ae2cd292e..094028b7b162 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> @@ -146,21 +146,11 @@ xfs_dir3_leaf_verify(
+>  {
+>  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+>  	struct xfs_dir2_leaf	*leaf = bp->b_addr;
+> +	xfs_failaddr_t		fa;
+>  
+> -	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
+> -		return __this_address;
+> -
+> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
+> -
+> -		ASSERT(leaf3->info.hdr.magic == leaf->hdr.info.magic);
+> -		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
+> -			return __this_address;
+> -		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
+> -			return __this_address;
+> -		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
+> -			return __this_address;
+> -	}
+> +	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
+> +	if (fa)
+> +		return fa;
+>  
+>  	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
+>  }
+> -- 
+> 2.17.2
+> 
