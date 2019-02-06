@@ -1,127 +1,287 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:41856 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726319AbfBGSzQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 13:55:16 -0500
-Date: Thu, 7 Feb 2019 10:55:03 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 0.5/8] xfs: clarify documentation for the function to
- reverify buffers
-Message-ID: <20190207185503.GF7991@magnolia>
-References: <20190207184105.17064-1-bfoster@redhat.com>
- <20190207184105.17064-2-bfoster@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53162 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726579AbfBFTSj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Feb 2019 14:18:39 -0500
+Date: Wed, 6 Feb 2019 14:18:36 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v3 7/9] xfs: use verifier magic field in dir2 leaf
+ verifiers
+Message-ID: <20190206191836.GE55658@bfoster>
+References: <20190204145231.47034-1-bfoster@redhat.com>
+ <20190204145231.47034-8-bfoster@redhat.com>
+ <20190206174526.GO7991@magnolia>
+ <20190206184122.GC55658@bfoster>
+ <20190206190343.GY7991@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20190207184105.17064-2-bfoster@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190206190343.GY7991@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-Errrr.... here's the patch to clean up the ensure_ops documentation and
-rename the function:
+On Wed, Feb 06, 2019 at 11:03:43AM -0800, Darrick J. Wong wrote:
+> On Wed, Feb 06, 2019 at 01:41:22PM -0500, Brian Foster wrote:
+> > On Wed, Feb 06, 2019 at 09:45:26AM -0800, Darrick J. Wong wrote:
+> > > On Mon, Feb 04, 2019 at 09:52:29AM -0500, Brian Foster wrote:
+> > > > The dir2 leaf verifiers share the same underlying structure
+> > > > verification code, but implement six accessor functions to multiplex
+> > > > the code across the two verifiers. Further, the magic value isn't
+> > > > sufficiently abstracted such that the common helper has to manually
+> > > > fix up the magic from the caller on v5 filesystems.
+> > > > 
+> > > > Use the magic field in the verifier structure to eliminate the
+> > > > duplicate code and clean this all up. No functional change.
+> > > > 
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_dir2_leaf.c | 88 ++++++++---------------------------
+> > > >  1 file changed, 20 insertions(+), 68 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> > > > index 1728a3e6f5cf..a99ae2cd292e 100644
+> > > > --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> > > > +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> > > > @@ -142,41 +142,32 @@ xfs_dir3_leaf_check_int(
+> > > >   */
+> > > >  static xfs_failaddr_t
+> > > >  xfs_dir3_leaf_verify(
+> > > > -	struct xfs_buf		*bp,
+> > > > -	uint16_t		magic)
+> > > > +	struct xfs_buf		*bp)
+> > > >  {
+> > > >  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> > > >  	struct xfs_dir2_leaf	*leaf = bp->b_addr;
+> > > >  
+> > > > -	ASSERT(magic == XFS_DIR2_LEAF1_MAGIC || magic == XFS_DIR2_LEAFN_MAGIC);
+> > > > +	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
+> > > > +		return __this_address;
+> > > >  
+> > > >  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> > > >  		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
+> > > > -		uint16_t		magic3;
+> > > >  
+> > > > -		magic3 = (magic == XFS_DIR2_LEAF1_MAGIC) ? XFS_DIR3_LEAF1_MAGIC
+> > > > -							 : XFS_DIR3_LEAFN_MAGIC;
+> > > > -
+> > > > -		if (leaf3->info.hdr.magic != cpu_to_be16(magic3))
+> > > > -			return __this_address;
+> > > > +		ASSERT(leaf3->info.hdr.magic == leaf->hdr.info.magic);
+> > > 
+> > > leaf2 and leaf3 directory block headers are supposed to have the magic
+> > > at the same offset in the buffer, right?  When would this assert fail?
+> > > 
+> > 
+> > Hopefully never.. ;P I added the assert as a mechanical defense measure
+> > simply because these are technically different structures and this
+> > refactoring dictates that we access the magic value through one of the
+> > two rather than both independently. I just wanted to make sure that this
+> > dependency was encoded somewhere because it's not obvious in the code.
+> 
+> <nod>
+> 
+> > > Could we replace this with a BUILD_BUG_ON check of the leaf2/leaf3 magic
+> > > number buffer offset in xfs_ondisk.h?
+> > > 
+> > 
+> > BUILD_BUG_ON() probably makes more sense for this than an assert in
+> > principle. Is there a clean enough way to encode the offset checks
+> > through multiple structures though? We could do something with NULL
+> > pointers:
+> > 
+> > 	BUILD_BUG_ON(&((struct xfs_da3_blkinfo *)NULL)->hdr.magic !=
+> > 		     &((struct xfs_da_blkinfo *)NULL)->magic);
+> > 
+> > ... to check the offsets, but that's ugly. I'm not sure manually adding
+> > up the offsetof() results is any better. That said, after this code is
+> > refactored by the last patch this particular instance could probably be
+> > reduced to a simple:
+> > 
+> > 	BUILD_BUG_ON(offsetof(struct xfs_da3_blkinfo, hdr) != 0);
+> > 
+> > ... in xfs_da3_blkinfo_verify(). So perhaps the right approach is just
+> > to add a separate BUILD_BUG_ON() for each such layer in the
+> > encapsulating structures. I'll take a closer look at that and see how
+> > far I get.
+> 
+> <nod> afaict offsetof can look through substructures, since it all just
+> turns into a bunch of pointer arithmetic goop.
+> 
+> > Also, any particular reason to put it in xfs_ondisk.h vs. where the
+> > asserts currently are?
+> 
+> Hmm... we established xfs_ondisk.h to contain all the offset and
+> structure size checks so that they'd all be in one place instead of
+> scattered around in the verifiers and whatnot.  The macro soup emits
+> prettier diagnostic data in case someone on an unfamiliar arch hits a
+> build error and reports it.  So if we add this to xfs_ondisk.h:
+> 
+> XFS_CHECK_OFFSET(struct xfs_dir3_leaf_hdr, info.hdr.magic, 8);
+> XFS_CHECK_OFFSET(struct xfs_dir2_leaf_hdr, info.magic, 8);
+> 
+> Then the compiler will emit:
+> 
+> include/linux/compiler.h:344:38: error: call to
+> ‘__compiletime_assert_58’ declared with attribute error: XFS:
+> offsetof(struct xfs_dir3_leaf_hdr, info.hdr.magic) is wrong, expected 8
+> 
+> I guess the strongest argument I have for xfs_ondisk.h is because
+> "that's where all the other offset and size build checks go".
+> 
 
---D
+Ok. Maybe it's just simplest to hardcode the relevant offsets like this.
+A comment that explains that the verifier magic checks are the primary
+motivation for the magic-specific offset checks mostly addresses my
+concern over context. I'll give that a shot.
 
-From: Brian Foster <bfoster@redhat.com>
+> > To me this is more context for the verifier code
+> > than some broader requirement (since we're explicitly checking the magic
+> > field), but maybe there are broader header alignment/offset expectations
+> > elsewhere too.
+> 
+> Heh, I think this is a hair-splitting thing: are we checking that the
+> offsets are the same (which indeed is a relational thing that ought to
+> be in the verifier), or checking that ttwo offsets equal some value,
+> where the value just happens to be the same number?
+> 
 
-Improve the documentation around xfs_buf_ensure_ops, which is the
-function that is responsible for cleaning up the b_ops state of buffers
-that go through xrep_findroot_block but don't match anything.  Rename
-the function to xfs_buf_reverify.
+The intent was really to check the offsets. The implementation did that
+indirectly/hackily via the value comparison.
 
-[darrick: this started off as bfoster mods of a previous patch of mine,
-but the renaming parts are now a separate patch.]
+Brian
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf.c       |   35 +++++++++++++++--------------------
- fs/xfs/xfs_buf.h       |    2 +-
- fs/xfs/xfs_trans_buf.c |    2 +-
- 3 files changed, 17 insertions(+), 22 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 4f5f2ff3f70f..d29246ac3721 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -776,29 +776,24 @@ _xfs_buf_read(
- }
- 
- /*
-- * Set buffer ops on an unchecked buffer and validate it, if possible.
-+ * Reverify a buffer found in cache without an attached ->b_ops.
-  *
-- * If the caller passed in an ops structure and the buffer doesn't have ops
-- * assigned, set the ops and use them to verify the contents.  If the contents
-- * cannot be verified, we'll clear XBF_DONE.  We assume the buffer has no
-- * recorded errors and is already in XBF_DONE state.
-+ * If the caller passed an ops structure and the buffer doesn't have ops
-+ * assigned, set the ops and use it to verify the contents. If verification
-+ * fails, clear XBF_DONE. We assume the buffer has no recorded errors and is
-+ * already in XBF_DONE state on entry.
-  *
-- * Under normal operations, every in-core buffer must have buffer ops assigned
-- * to them when the buffer is read in from disk so that we can validate the
-- * metadata.
-- *
-- * However, there are two scenarios where one can encounter in-core buffers
-- * that don't have buffer ops.  The first is during log recovery of buffers on
-- * a V4 filesystem, though these buffers are purged at the end of recovery.
-- *
-- * The other is online repair, which tries to match arbitrary metadata blocks
-- * with btree types in order to find the root.  If online repair doesn't match
-- * the buffer with /any/ btree type, the buffer remains in memory in DONE state
-- * with no ops, and a subsequent read_buf call from elsewhere will not set the
-- * ops.  This function helps us fix this situation.
-+ * Under normal operations, every in-core buffer is verified on read I/O
-+ * completion. There are two scenarios that can lead to in-core buffers without
-+ * an assigned ->b_ops. The first is during log recovery of buffers on a V4
-+ * filesystem, though these buffers are purged at the end of recovery. The
-+ * other is online repair, which intentionally reads with a NULL buffer ops to
-+ * run several verifiers across an in-core buffer in order to establish buffer
-+ * type.  If repair can't establish that, the buffer will be left in memory
-+ * with NULL buffer ops.
-  */
- int
--xfs_buf_ensure_ops(
-+xfs_buf_reverify(
- 	struct xfs_buf		*bp,
- 	const struct xfs_buf_ops *ops)
- {
-@@ -840,7 +835,7 @@ xfs_buf_read_map(
- 		return bp;
- 	}
- 
--	xfs_buf_ensure_ops(bp, ops);
-+	xfs_buf_reverify(bp, ops);
- 
- 	if (flags & XBF_ASYNC) {
- 		/*
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index b9f5511ea998..1c436a85b71d 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -385,6 +385,6 @@ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
- #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
- #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
- 
--int xfs_buf_ensure_ops(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
-+int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
- 
- #endif	/* __XFS_BUF_H__ */
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 629f1479c9d2..7d65ebf1e847 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -277,7 +277,7 @@ xfs_trans_read_buf_map(
- 		 * release this buffer when it kills the tranaction.
- 		 */
- 		ASSERT(bp->b_ops != NULL);
--		error = xfs_buf_ensure_ops(bp, ops);
-+		error = xfs_buf_reverify(bp, ops);
- 		if (error) {
- 			xfs_buf_ioerror_alert(bp, __func__);
- 
+> --D
+> 
+> > Brian
+> > 
+> > > --D
+> > > 
+> > > >  		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
+> > > >  			return __this_address;
+> > > >  		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
+> > > >  			return __this_address;
+> > > >  		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
+> > > >  			return __this_address;
+> > > > -	} else {
+> > > > -		if (leaf->hdr.info.magic != cpu_to_be16(magic))
+> > > > -			return __this_address;
+> > > >  	}
+> > > >  
+> > > >  	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
+> > > >  }
+> > > >  
+> > > >  static void
+> > > > -__read_verify(
+> > > > -	struct xfs_buf  *bp,
+> > > > -	uint16_t	magic)
+> > > > +xfs_dir3_leaf_read_verify(
+> > > > +	struct xfs_buf  *bp)
+> > > >  {
+> > > >  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> > > >  	xfs_failaddr_t		fa;
+> > > > @@ -185,23 +176,22 @@ __read_verify(
+> > > >  	     !xfs_buf_verify_cksum(bp, XFS_DIR3_LEAF_CRC_OFF))
+> > > >  		xfs_verifier_error(bp, -EFSBADCRC, __this_address);
+> > > >  	else {
+> > > > -		fa = xfs_dir3_leaf_verify(bp, magic);
+> > > > +		fa = xfs_dir3_leaf_verify(bp);
+> > > >  		if (fa)
+> > > >  			xfs_verifier_error(bp, -EFSCORRUPTED, fa);
+> > > >  	}
+> > > >  }
+> > > >  
+> > > >  static void
+> > > > -__write_verify(
+> > > > -	struct xfs_buf  *bp,
+> > > > -	uint16_t	magic)
+> > > > +xfs_dir3_leaf_write_verify(
+> > > > +	struct xfs_buf  *bp)
+> > > >  {
+> > > >  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> > > >  	struct xfs_buf_log_item	*bip = bp->b_log_item;
+> > > >  	struct xfs_dir3_leaf_hdr *hdr3 = bp->b_addr;
+> > > >  	xfs_failaddr_t		fa;
+> > > >  
+> > > > -	fa = xfs_dir3_leaf_verify(bp, magic);
+> > > > +	fa = xfs_dir3_leaf_verify(bp);
+> > > >  	if (fa) {
+> > > >  		xfs_verifier_error(bp, -EFSCORRUPTED, fa);
+> > > >  		return;
+> > > > @@ -216,60 +206,22 @@ __write_verify(
+> > > >  	xfs_buf_update_cksum(bp, XFS_DIR3_LEAF_CRC_OFF);
+> > > >  }
+> > > >  
+> > > > -static xfs_failaddr_t
+> > > > -xfs_dir3_leaf1_verify(
+> > > > -	struct xfs_buf	*bp)
+> > > > -{
+> > > > -	return xfs_dir3_leaf_verify(bp, XFS_DIR2_LEAF1_MAGIC);
+> > > > -}
+> > > > -
+> > > > -static void
+> > > > -xfs_dir3_leaf1_read_verify(
+> > > > -	struct xfs_buf	*bp)
+> > > > -{
+> > > > -	__read_verify(bp, XFS_DIR2_LEAF1_MAGIC);
+> > > > -}
+> > > > -
+> > > > -static void
+> > > > -xfs_dir3_leaf1_write_verify(
+> > > > -	struct xfs_buf	*bp)
+> > > > -{
+> > > > -	__write_verify(bp, XFS_DIR2_LEAF1_MAGIC);
+> > > > -}
+> > > > -
+> > > > -static xfs_failaddr_t
+> > > > -xfs_dir3_leafn_verify(
+> > > > -	struct xfs_buf	*bp)
+> > > > -{
+> > > > -	return xfs_dir3_leaf_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+> > > > -}
+> > > > -
+> > > > -static void
+> > > > -xfs_dir3_leafn_read_verify(
+> > > > -	struct xfs_buf	*bp)
+> > > > -{
+> > > > -	__read_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+> > > > -}
+> > > > -
+> > > > -static void
+> > > > -xfs_dir3_leafn_write_verify(
+> > > > -	struct xfs_buf	*bp)
+> > > > -{
+> > > > -	__write_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+> > > > -}
+> > > > -
+> > > >  const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
+> > > >  	.name = "xfs_dir3_leaf1",
+> > > > -	.verify_read = xfs_dir3_leaf1_read_verify,
+> > > > -	.verify_write = xfs_dir3_leaf1_write_verify,
+> > > > -	.verify_struct = xfs_dir3_leaf1_verify,
+> > > > +	.magic = { cpu_to_be16(XFS_DIR2_LEAF1_MAGIC),
+> > > > +		   cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) },
+> > > > +	.verify_read = xfs_dir3_leaf_read_verify,
+> > > > +	.verify_write = xfs_dir3_leaf_write_verify,
+> > > > +	.verify_struct = xfs_dir3_leaf_verify,
+> > > >  };
+> > > >  
+> > > >  const struct xfs_buf_ops xfs_dir3_leafn_buf_ops = {
+> > > >  	.name = "xfs_dir3_leafn",
+> > > > -	.verify_read = xfs_dir3_leafn_read_verify,
+> > > > -	.verify_write = xfs_dir3_leafn_write_verify,
+> > > > -	.verify_struct = xfs_dir3_leafn_verify,
+> > > > +	.magic = { cpu_to_be16(XFS_DIR2_LEAFN_MAGIC),
+> > > > +		   cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) },
+> > > > +	.verify_read = xfs_dir3_leaf_read_verify,
+> > > > +	.verify_write = xfs_dir3_leaf_write_verify,
+> > > > +	.verify_struct = xfs_dir3_leaf_verify,
+> > > >  };
+> > > >  
+> > > >  int
+> > > > -- 
+> > > > 2.17.2
+> > > > 
