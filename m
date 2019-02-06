@@ -1,141 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:40032 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2438164AbfBNKBM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 05:01:12 -0500
-Received: by mail-pf1-f193.google.com with SMTP id h1so2847510pfo.7
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 02:01:12 -0800 (PST)
-From: Omar Sandoval <osandov@osandov.com>
-Subject: [PATCH] xfs_io: add AT_UTIME_BTIME support
-Date: Thu, 14 Feb 2019 02:00:16 -0800
-Message-Id: <347edcff487b59d56844f51eb74a42220fac64c9.1550138137.git.osandov@fb.com>
-In-Reply-To: <cover.1550136164.git.osandov@fb.com>
-References: <cover.1550136164.git.osandov@fb.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:50866 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726732AbfBFQyl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 11:54:41 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x16Gs7TK146866
+        for <linux-xfs@vger.kernel.org>; Wed, 6 Feb 2019 16:54:40 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2qd9arj71u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 06 Feb 2019 16:54:40 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x16GsdPd001106
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 6 Feb 2019 16:54:39 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x16GsdNd030093
+        for <linux-xfs@vger.kernel.org>; Wed, 6 Feb 2019 16:54:39 GMT
+Subject: [PATCH v3 0/9] xfs: incore unlinked list
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 06 Feb 2019 08:54:37 -0800
+Message-ID: <154947207759.22369.11575570374120223292.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
-Cc: kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Omar Sandoval <osandov@fb.com>
+Hi all,
 
-In order to test updating btime, make the utimes command optionally take
-the btime timestamp.
+This new patch series refactors the existing code that handles metadata
+updates to the unlinked list when adding or removing inodes from that
+list.  It then adds an in-core hashtable to record which inode's
+next_unlinked field points to a given inode.  This enables us to remove
+any inode from the on-disk unlinked structure without having to actually
+walk the entire unlinked list, which reduces overhead substantially.
 
-Signed-off-by: Omar Sandoval <osandov@fb.com>
----
- io/utimes.c       | 41 +++++++++++++++++++++++++++++++----------
- man/man8/xfs_io.8 |  5 +++--
- 2 files changed, 34 insertions(+), 12 deletions(-)
+Since v2 this series has been reworked so that the iunlink code is more
+robust in the face of backref cache failures (since we can always fall
+back to the old bucket walking code), removal of the unlinked inode
+counts, standardization of the helper function parameter types, and
+fixing other review comments.
 
-diff --git a/io/utimes.c b/io/utimes.c
-index 40117472..72ce68f3 100644
---- a/io/utimes.c
-+++ b/io/utimes.c
-@@ -4,11 +4,18 @@
-  * All Rights Reserved.
-  */
- 
-+#include <fcntl.h>
-+#include <sys/syscall.h>
-+
- #include "command.h"
- #include "input.h"
- #include "init.h"
- #include "io.h"
- 
-+#ifndef AT_UTIME_BTIME
-+#define AT_UTIME_BTIME 0x8000
-+#endif
-+
- static cmdinfo_t utimes_cmd;
- 
- static void
-@@ -16,9 +23,10 @@ utimes_help(void)
- {
- 	printf(_(
- "\n"
--" Update file atime and mtime of the current file with nansecond precision.\n"
-+" Update file atime, mtime, and optionally btime of the current file with\n"
-+" nansecond precision.\n"
- "\n"
--" Usage: utimes atime_sec atime_nsec mtime_sec mtime_nsec.\n"
-+" Usage: utimes atime_sec atime_nsec mtime_sec mtime_nsec [btime_sec btime_nsec]\n"
- " *_sec: Seconds elapsed since 1970-01-01 00:00:00 UTC.\n"
- " *_nsec: Nanoseconds since the corresponding *_sec.\n"
- "\n"));
-@@ -29,9 +37,13 @@ utimes_f(
- 	int		argc,
- 	char		**argv)
- {
--	struct timespec t[2];
-+	struct timespec t[3];
-+	int flags = 0;
- 	int result;
- 
-+	if (argc == 6)
-+		return command_usage(&utimes_cmd);
-+
- 	/* Get the timestamps */
- 	result = timespec_from_string(argv[1], argv[2], &t[0]);
- 	if (result) {
-@@ -43,13 +55,22 @@ utimes_f(
- 		fprintf(stderr, "Bad value for mtime\n");
- 		return 0;
- 	}
--
--	/* Call futimens to update time. */
--	if (futimens(file->fd, t)) {
--		perror("futimens");
--		return 0;
-+	if (argc == 7) {
-+		result = timespec_from_string(argv[5], argv[6], &t[2]);
-+		if (result) {
-+			fprintf(stderr, "Bad value for btime\n");
-+			return 0;
-+		}
-+		flags |= AT_UTIME_BTIME;
- 	}
- 
-+	/*
-+	 * Use syscall() because the glibc wrapper for utimensat() disallows a
-+	 * NULL pathname.
-+	 */
-+	if (syscall(SYS_utimensat, file->fd, NULL, t, flags))
-+		perror("utimensat");
-+
- 	return 0;
- }
- 
-@@ -59,9 +80,9 @@ utimes_init(void)
- 	utimes_cmd.name = "utimes";
- 	utimes_cmd.cfunc = utimes_f;
- 	utimes_cmd.argmin = 4;
--	utimes_cmd.argmax = 4;
-+	utimes_cmd.argmax = 6;
- 	utimes_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
--	utimes_cmd.args = _("atime_sec atime_nsec mtime_sec mtime_nsec");
-+	utimes_cmd.args = _("atime_sec atime_nsec mtime_sec mtime_nsec [btime_sec btime_nsec]");
- 	utimes_cmd.oneline = _("Update file times of the current file");
- 	utimes_cmd.help = utimes_help;
- 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index fbf50df5..dbf8098b 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -827,8 +827,9 @@ verbose output will be printed.
- .RE
- .PD
- .TP
--.BI utimes " atime_sec atime_nsec mtime_sec mtime_nsec"
--The utimes command changes the atime and mtime of the current file.
-+.BI utimes " atime_sec atime_nsec mtime_sec mtime_nsec [btime_sec btime_nsec]"
-+The utimes command changes the atime, mtime, and optionally btime of the
-+current file.
- sec uses UNIX timestamp notation and is the seconds elapsed since
- 1970-01-01 00:00:00 UTC.
- nsec is the nanoseconds since the sec. This value needs to be in
--- 
-2.20.1
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=incore-unlinked-list
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=incore-unlinked-list
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=incore-unlinked-list
