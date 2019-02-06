@@ -1,47 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38822 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726196AbfBFEGA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Feb 2019 23:06:00 -0500
-Date: Tue, 5 Feb 2019 23:05:59 -0500
-From: Sasha Levin <sashal@kernel.org>
-Subject: Re: [PATCH v2 00/10] xfs: stable fixes for v4.19.y
-Message-ID: <20190206040559.GA4119@sasha-vm>
-References: <20190204165427.23607-1-mcgrof@kernel.org>
- <20190205220655.GF14116@dastard>
+Received: from aserp2130.oracle.com ([141.146.126.79]:33604 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726270AbfBFQLE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 11:11:04 -0500
+Date: Wed, 6 Feb 2019 08:10:52 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix use after free in buf log item unlock assert
+Message-ID: <20190206161052.GM7991@magnolia>
+References: <20190206160107.63672-1-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190205220655.GF14116@dastard>
+In-Reply-To: <20190206160107.63672-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Luis Chamberlain <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com, stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Feb 06, 2019 at 09:06:55AM +1100, Dave Chinner wrote:
->On Mon, Feb 04, 2019 at 08:54:17AM -0800, Luis Chamberlain wrote:
->> Kernel stable team,
->>
->> here is a v2 respin of my XFS stable patches for v4.19.y. The only
->> change in this series is adding the upstream commit to the commit log,
->> and I've now also Cc'd stable@vger.kernel.org as well. No other issues
->> were spotted or raised with this series.
->>
->> Reviews, questions, or rants are greatly appreciated.
->
->Test results?
->
->The set of changes look fine themselves, but as always, the proof is
->in the testing...
+On Wed, Feb 06, 2019 at 11:01:07AM -0500, Brian Foster wrote:
+> The xfs_buf_log_item ->iop_unlock() callback asserts that the buffer
+> is unlocked when either non-stale or aborted. This assert occurs
+> after the bli refcount has been dropped and the log item potentially
+> freed. The aborted check is thus a potential use after free. This
+> problem has been reproduced with KASAN enabled via generic/475.
+> 
+> Fix up xfs_buf_item_unlock() to query aborted state before the bli
+> reference is dropped to prevent a potential use after free.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Luis noted on v1 that it passes through his oscheck test suite, and I
-noted that I haven't seen any regression with the xfstests scripts I
-have.
+Seems reasonable,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-What sort of data are you looking for beyond "we didn't see a
-regression"?
+--D
 
---
-Thanks,
-Sasha
+> ---
+>  fs/xfs/xfs_buf_item.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 010db5f8fb00..65b32acfa0f6 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -605,6 +605,8 @@ xfs_buf_item_unlock(
+>  #if defined(DEBUG) || defined(XFS_WARN)
+>  	bool			ordered = bip->bli_flags & XFS_BLI_ORDERED;
+>  	bool			dirty = bip->bli_flags & XFS_BLI_DIRTY;
+> +	bool			aborted = test_bit(XFS_LI_ABORTED,
+> +						   &lip->li_flags);
+>  #endif
+>  
+>  	trace_xfs_buf_item_unlock(bip);
+> @@ -633,7 +635,7 @@ xfs_buf_item_unlock(
+>  	released = xfs_buf_item_put(bip);
+>  	if (hold || (stale && !released))
+>  		return;
+> -	ASSERT(!stale || test_bit(XFS_LI_ABORTED, &lip->li_flags));
+> +	ASSERT(!stale || aborted);
+>  	xfs_buf_relse(bp);
+>  }
+>  
+> -- 
+> 2.17.2
+> 
