@@ -1,111 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:57536 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726270AbfBFSXm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 13:23:42 -0500
-Date: Wed, 6 Feb 2019 10:23:31 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 0/9] xfs: fix [f]inobt magic value verification
-Message-ID: <20190206182331.GW7991@magnolia>
-References: <20190204145231.47034-1-bfoster@redhat.com>
+Received: from mx.gwdg.de ([134.76.10.20]:45863 "EHLO mx.gwdg.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726186AbfBGJ2Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Feb 2019 04:28:24 -0500
+Date: Thu, 7 Feb 2019 10:28:19 +0100
+From: Andre Noll <maan@tuebingen.mpg.de>
+Subject: Re: bcache on XFS: metadata I/O (dirent I/O?) not getting cached at
+ all?
+Message-ID: <20190207092819.GY24140@tuebingen.mpg.de>
+References: <87h8dgefee.fsf@esperi.org.uk>
+ <20190206234328.GH14116@dastard>
+ <20190207002425.GX24140@tuebingen.mpg.de>
+ <b982a23b-7225-d20a-2802-60bce314ccc2@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="gBii9oQw/U9UOygZ"
 Content-Disposition: inline
-In-Reply-To: <20190204145231.47034-1-bfoster@redhat.com>
+In-Reply-To: <b982a23b-7225-d20a-2802-60bce314ccc2@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Coly Li <colyli@suse.de>
+Cc: Dave Chinner <david@fromorbit.com>, Nix <nix@esperi.org.uk>, linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk
 
-On Mon, Feb 04, 2019 at 09:52:22AM -0500, Brian Foster wrote:
-> Hi all,
-> 
-> Here's v3 of the verifier magic value fixup series. This version adds a
-> couple more patches to separate and convert the allocation btree buffer
-> verifier to the new magic value verification scheme. The allocbt is
-> similar to the inobt verifier in that it currently uses the same
-> verifier code for multiple magic values. This change allows the verifier
-> to ensure that bnobt/cntbt blocks have the appropriate magic value for
-> v4 and v5 filesytems. The only other change from v2 is a fixup to
-> include parameter names in function declarations.
-> 
-> Thoughts, reviews, flames appreciated.
 
-I noticed that inode and quota buf_ops still don't have magic numbers in
-them.  I think it's fairly trivial to add them to the buffer ops
-definitions, though actually using them looks a little tricky for
-dquots.  I'll send along a couple of patches to add that and clean up
-some of the repair code magic handling.
+--gBii9oQw/U9UOygZ
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
---D
+On Thu, Feb 07, 10:27, Coly Li wrote
 
-> Brian
-> 
-> v3:
-> - Fix function declarations to include parameter names.
-> - Convert allocbt buffer verifier.
-> v2: https://marc.info/?l=linux-xfs&m=154894958207167&w=2
-> - Include djwong's ->b_ops patch w/ modifications.
-> - Added patch to fix up existing cpu endian magic checks, fold in typo
->   fix.
-> - Replace static inline magic verifier helper with out of line variant,
->   kill macro.
-> - Store on-disk byte order magics in ->b_ops.
-> - Added patch to refactor common xfs_da3_blkinfo checks.
-> v1: https://marc.info/?l=linux-xfs&m=154878684317178&w=2
-> - Remove endian conversion from helper.
-> - Drop finobt bad magic mitigation patch.
-> - Additional verifier magic fixups.
-> - Add verifier name typo fixup.
-> rfcv2: https://marc.info/?l=linux-xfs&m=154868884311668&w=2
-> - Split off finobt verifier into separate patch, assign it
->   appropriately.
-> - Created helpers for xfs_buf_ops magic value verification.
-> - Added error mitigation patch for problematic finobt blocks.
-> rfcv1: https://marc.info/?l=linux-xfs&m=154834528212262&w=2
-> 
-> Brian Foster (8):
->   xfs: always check magic values in on-disk byte order
->   xfs: create a separate finobt verifier
->   xfs: distinguish between inobt and finobt magic values
->   xfs: split up allocation btree verifier
->   xfs: distinguish between bnobt and cntbt magic values
->   xfs: use verifier magic field in dir2 leaf verifiers
->   xfs: miscellaneous verifier magic value fixups
->   xfs: factor xfs_da3_blkinfo verification into common helper
-> 
-> Darrick J. Wong (1):
->   xfs: set buffer ops when repair probes for btree type
-> 
->  fs/xfs/libxfs/xfs_ag.c             |   6 +-
->  fs/xfs/libxfs/xfs_alloc.c          |  12 ++--
->  fs/xfs/libxfs/xfs_alloc_btree.c    |  74 ++++++++++-----------
->  fs/xfs/libxfs/xfs_attr_leaf.c      |  21 ++----
->  fs/xfs/libxfs/xfs_attr_remote.c    |   8 ++-
->  fs/xfs/libxfs/xfs_bmap_btree.c     |  13 ++--
->  fs/xfs/libxfs/xfs_da_btree.c       |  50 ++++++++++-----
->  fs/xfs/libxfs/xfs_da_format.h      |   3 +
->  fs/xfs/libxfs/xfs_dir2_block.c     |  10 +--
->  fs/xfs/libxfs/xfs_dir2_data.c      |  12 ++--
->  fs/xfs/libxfs/xfs_dir2_leaf.c      | 100 ++++++-----------------------
->  fs/xfs/libxfs/xfs_dir2_node.c      |  11 ++--
->  fs/xfs/libxfs/xfs_ialloc.c         |   3 +-
->  fs/xfs/libxfs/xfs_ialloc_btree.c   |  25 +++++---
->  fs/xfs/libxfs/xfs_inode_buf.c      |   2 +-
->  fs/xfs/libxfs/xfs_refcount_btree.c |   3 +-
->  fs/xfs/libxfs/xfs_rmap_btree.c     |   3 +-
->  fs/xfs/libxfs/xfs_sb.c             |   5 +-
->  fs/xfs/libxfs/xfs_shared.h         |   4 +-
->  fs/xfs/libxfs/xfs_symlink_remote.c |   3 +-
->  fs/xfs/scrub/agheader_repair.c     |   6 +-
->  fs/xfs/scrub/repair.c              |  11 +++-
->  fs/xfs/xfs_buf.c                   |  41 ++++++++++--
->  fs/xfs/xfs_buf.h                   |   4 +-
->  fs/xfs/xfs_log_recover.c           |  12 ++--
->  fs/xfs/xfs_trans_buf.c             |   2 +-
->  26 files changed, 229 insertions(+), 215 deletions(-)
-> 
-> -- 
-> 2.17.2
-> 
+> If different file system handles metadata flags in unified ways, it is
+> OK to me to change the code to: !(bio->bi_opf & (REQ_META |REQ_PRIO)).
+
+Yes, that's the smallest fix that should also go into 4.19-stable.
+
+In the long run, we should try to get rid of the 45 instances of
+REQ_PRIO. Most users specify REQ_META | REQ_PRIO anyway, which leaves
+only a few other instances to look at.
+
+I think the one in submit_bh_wbc() of fs/buffer.c can just be removed
+while block/cfq-iosched.c does not use REQ_META at all, so the simple
+s/REQ_PRIO/REQ_META should be OK. drivers/staging/erofs/data.c is
+also easy to fix.
+
+Best
+Andre
+--=20
+Max Planck Institute for Developmental Biology
+Max-Planck-Ring 5, 72076 T=C3=BCbingen, Germany. Phone: (+49) 7071 601 829
+http://people.tuebingen.mpg.de/maan/
+
+--gBii9oQw/U9UOygZ
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQSHtF/cbZGyylvqq1Ra2jVAMQCTDwUCXFv6MAAKCRBa2jVAMQCT
+D5coAKCcC0GuP2KTQi/SwEAsWqfUJw6gigCfX4CU1iFd0TsxJMy93V2ZSUUPpLg=
+=ML1i
+-----END PGP SIGNATURE-----
+
+--gBii9oQw/U9UOygZ--
