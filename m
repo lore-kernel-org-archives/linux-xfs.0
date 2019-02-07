@@ -1,69 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from icebox.esperi.org.uk ([81.187.191.129]:36954 "EHLO
-        mail.esperi.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725959AbfBFX0i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 18:26:38 -0500
-From: Nix <nix@esperi.org.uk>
-Subject: bcache on XFS: metadata I/O (dirent I/O?) not getting cached at all?
-Date: Wed, 06 Feb 2019 22:11:21 +0000
-Message-ID: <87h8dgefee.fsf@esperi.org.uk>
+Received: from mx.gwdg.de ([134.76.10.20]:54269 "EHLO mx.gwdg.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726186AbfBGJll (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Feb 2019 04:41:41 -0500
+Date: Thu, 7 Feb 2019 10:41:38 +0100
+From: Andre Noll <maan@tuebingen.mpg.de>
+Subject: Re: bcache on XFS: metadata I/O (dirent I/O?) not getting cached at
+ all?
+Message-ID: <20190207094138.GZ24140@tuebingen.mpg.de>
+References: <87h8dgefee.fsf@esperi.org.uk>
+ <64f32487-5b8f-f6c2-37a9-84bb0717a9e1@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="F+wU6CH2q8RBGewX"
+Content-Disposition: inline
+In-Reply-To: <64f32487-5b8f-f6c2-37a9-84bb0717a9e1@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Coly Li <colyli@suse.de>
+Cc: Nix <nix@esperi.org.uk>, linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Dave Chinner <david@fromorbit.com>
 
-So I just upgraded to 4.20 and revived my long-turned-off bcache now
-that the metadata corruption leading to mount failure on dirty close may
-have been identified (applying Tang Junhui's patch to do so)... and I
-spotted something a bit disturbing. It appears that XFS directory and
-metadata I/O is going more or less entirely uncached.
 
-Here's some bcache stats before and after a git status of a *huge*
-uncached tree (Chromium) on my no-writeback readaround cache. It takes
-many minutes and pounds the disk with massively seeky metadata I/O in
-the process:
+--F+wU6CH2q8RBGewX
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Before:
+On Thu, Feb 07, 16:16, Coly Li wrote
+> From: Coly Li <colyli@suse.de>
+> Date: Thu, 7 Feb 2019 15:54:24 +0800
+> Subject: [PATCH] bcache: use (REQ_META|REQ_PRIO) to indicate bio for meta=
+data
+>=20
+> In 'commit 752f66a75aba ("bcache: use REQ_PRIO to indicate bio for
+> metadata")' REQ_META is replaced by REQ_PRIO to indicate metadata bio.
+> This assumption is not always correct, e.g. XFS uses REQ_META to mark
+> metadata bio other than REQ_PRIO. This is why Nix reports a regression
+> that bcache does not cache metadata for XFS after the above commit.
 
-stats_total/bypassed: 48.3G
-stats_total/cache_bypass_hits: 7942
-stats_total/cache_bypass_misses: 861045
-stats_total/cache_hit_ratio: 3
-stats_total/cache_hits: 16286
-stats_total/cache_miss_collisions: 25
-stats_total/cache_misses: 411575
-stats_total/cache_readaheads: 0
+maybe s/reports a regression/noticed
 
-After:
-stats_total/bypassed: 49.3G
-stats_total/cache_bypass_hits: 7942
-stats_total/cache_bypass_misses: 1154887
-stats_total/cache_hit_ratio: 3
-stats_total/cache_hits: 16291
-stats_total/cache_miss_collisions: 25
-stats_total/cache_misses: 411625
-stats_total/cache_readaheads: 0
+> Thanks to Dave Chinner, he explains the difference between REQ_META and
+> REQ_PRIO from view of file system developer. Here I quote part of his
+> explanation from mailing list,
+>    REQ_META is used for metadata. REQ_PRIO is used to communicate to
+>    the lower layers that the submitter considers this IO to be more
+>    important that non REQ_PRIO IO and so dispatch should be expedited.
+>=20
+>    IOWs, if the filesystem considers metadata IO to be more important
+>    that user data IO, then it will use REQ_PRIO | REQ_META rather than
+>    just REQ_META.
+>=20
+> Then it seems bios with REQ_META or REQ_PRIO should both be cached for
+> performance optimation, because they are all probably low I/O latency
+> demand by upper layer (e.g. file system).
+>=20
+> So in this patch, when we want to check whether a bio is metadata
+> related, REQ_META and REQ_PRIO are both checked. Then both metadata and
+> high priority I/O requests will be handled properly.
 
-Huge increase in bypassed reads, essentially no new cached reads. This
-is... basically the optimum case for bcache, and it's not caching it!
+s/check whether a bio is metadata related/decide whether to bypass the cache
 
->From my reading of xfs_dir2_leaf_readbuf(), it looks like essentially
-all directory reads in XFS appear to bcache as a single non-readahead
-followed by a pile of readahead I/O: bcache bypasses readahead bios, so
-all directory reads (or perhaps all directory reads larger than a single
-block) are going to be bypassed out of hand.
+Apart from these two nitpicks, feel free to add my Reviewed-by.
 
-This seems... suboptimal, but so does filling up the cache with
-read-ahead blocks (particularly for non-metadata) that are never used.
-Anyone got any ideas, 'cos I'm currently at a loss: XFS doesn't appear
-to let us distinguish between "read-ahead just in case but almost
-certain to be accessed" (like directory blocks) and "read ahead on the
-offchance because someone did a single-block file read and what the hell
-let's suck in a bunch more".
+Thanks
+Andre
+--=20
+Max Planck Institute for Developmental Biology
+Max-Planck-Ring 5, 72076 T=C3=BCbingen, Germany. Phone: (+49) 7071 601 829
+http://people.tuebingen.mpg.de/maan/
 
-As it is, this seems to render bcache more or less useless with XFS,
-since bcache's primary raison d'etre is precisely to cache seeky stuff
-like metadata. :(
+--F+wU6CH2q8RBGewX
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQSHtF/cbZGyylvqq1Ra2jVAMQCTDwUCXFv9TwAKCRBa2jVAMQCT
+D6iBAJ9Q49MNCE/vqkNWDbBeCJmj75/yuwCcCNgZSsoX/Q77BlBlvG43/qiOADE=
+=/dXc
+-----END PGP SIGNATURE-----
+
+--F+wU6CH2q8RBGewX--
