@@ -1,136 +1,208 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:40262 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:33206 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727218AbfBFRId (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 12:08:33 -0500
-Date: Wed, 6 Feb 2019 09:08:26 -0800
+        with ESMTP id S1725910AbfBGFVT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 00:21:19 -0500
+Date: Wed, 6 Feb 2019 21:21:14 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 2/9] xfs: always check magic values in on-disk byte
- order
-Message-ID: <20190206170826.GN7991@magnolia>
-References: <20190204145231.47034-1-bfoster@redhat.com>
- <20190204145231.47034-3-bfoster@redhat.com>
+Subject: Re: [RFC PATCH 0/3]: Extreme fragmentation ahoy!
+Message-ID: <20190207052114.GA7991@magnolia>
+References: <20190207050813.24271-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190204145231.47034-3-bfoster@redhat.com>
+In-Reply-To: <20190207050813.24271-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Feb 04, 2019 at 09:52:24AM -0500, Brian Foster wrote:
-> Most verifiers that check on-disk magic values convert the CPU
-> endian magic value constant to disk endian to facilitate compile
-> time optimization of the byte swap and reduce the need for runtime
-> byte swaps in buffer verifiers. Several buffer verifiers do not
-> follow this pattern. Update those verifiers for consistency.
+On Thu, Feb 07, 2019 at 04:08:10PM +1100, Dave Chinner wrote:
+> Hi folks,
 > 
-> Also fix up a random typo in the inode readahead verifier name.
+> I've just finished analysing an IO trace from a application
+> generating an extreme filesystem fragmentation problem that started
+> with extent size hints and ended with spurious ENOSPC reports due to
+> massively fragmented files and free space. While the ENOSPC issue
+> looks to have previously been solved, I still wanted to understand
+> how the application had so comprehensively defeated extent size
+> hints as a method of avoiding file fragmentation.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> The key behaviour that I discovered was that specific "append write
+> only" files that had extent size hints to prevent fragmentation
+> weren't actually write only.  The application didn't do a lot of
+> writes to the file, but it kept the file open and appended to the
+> file (from the traces I have) in chunks of between ~3000 bytes and
+> ~160000 bytes. This didn't explain the problem. I did notice that
+> the files were opened O_SYNC, however.
+> 
+> I then found was another process that, once every second, opened the
+> log file O_RDONLY, read 28 bytes from offset zero, then closed the
+> file. Every second. IOWs, between every appending write that would
+> allocate an extent size hint worth of space beyond EOF and then
+> write a small chunk of it, there were numerous open/read/close
+> cycles being done on the same file.
+> 
+> And what do we do on close()? We call xfs_release() and that can
+> truncate away blocks beyond EOF. For some reason the close wasn't
+> triggering the IDIRTY_RELEASE heuristic that preventd close from
+> removing EOF blocks prematurely. Then I realised that O_SYNC writes
+> don't leave delayed allocation blocks behind - they are always
+> converted in the context of the write. That's why it wasn't
+> triggering, and that meant that the open/read/close cycle was
+> removing the extent size hint allocation beyond EOF prematurely.
+> beyond EOF prematurely.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+<urk>
+
+> Then it occurred to me that extent size hints don't use delalloc
+> either, so they behave the same was as O_SYNC writes in this
+> situation.
+> 
+> Oh, and we remove EOF blocks on O_RDONLY file close, too. i.e. we
+> modify the file without having write permissions.
+
+Yikes!
+
+> I suspect there's more cases like this when combined with repeated
+> open/<do_something>/close operations on a file that is being
+> written, but the patches address just these ones I just talked
+> about. The test script to reproduce them is below. Fragmentation
+> reduction results are in the commit descriptions. It's running
+> through fstests for a couple of hours now, no issues have been
+> noticed yet.
+> 
+> FWIW, I suspect we need to have a good hard think about whether we
+> should be trimming EOF blocks on close by default, or whether we
+> should only be doing it in very limited situations....
+> 
+> Comments, thoughts, flames welcome.
+> 
+> -Dave.
+> 
+> 
+> #!/bin/bash
+> #
+> # Test 1
+
+Can you please turn these into fstests to cause the maintainer maximal
+immediate pain^W^W^Wmake everyone pay attention^W^W^W^Westablish a basis
+for regression testing and finding whatever other problems we can find
+from digging deeper? :)
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_alloc.c     | 2 +-
->  fs/xfs/libxfs/xfs_attr_leaf.c | 4 ++--
->  fs/xfs/libxfs/xfs_da_btree.c  | 4 ++--
->  fs/xfs/libxfs/xfs_inode_buf.c | 2 +-
->  fs/xfs/libxfs/xfs_sb.c        | 3 ++-
->  5 files changed, 8 insertions(+), 7 deletions(-)
+> #
+> # Write multiple files in parallel using synchronous buffered writes. Aim is to
+> # interleave allocations to fragment the files. Synchronous writes defeat the
+> # open/write/close heuristics in xfs_release() that prevent EOF block removal,
+> # so this should fragment badly.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index b715668886a4..48aab07e7138 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -570,7 +570,7 @@ xfs_agfl_verify(
->  
->  	if (!uuid_equal(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid))
->  		return __this_address;
-> -	if (be32_to_cpu(agfl->agfl_magicnum) != XFS_AGFL_MAGIC)
-> +	if (agfl->agfl_magicnum != cpu_to_be32(XFS_AGFL_MAGIC))
->  		return __this_address;
->  	/*
->  	 * during growfs operations, the perag is not fully initialised,
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 2652d00842d6..e60eba7f129c 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -251,7 +251,7 @@ xfs_attr3_leaf_verify(
->  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
->  		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
->  
-> -		if (ichdr.magic != XFS_ATTR3_LEAF_MAGIC)
-> +		if (hdr3->info.hdr.magic != cpu_to_be16(XFS_ATTR3_LEAF_MAGIC))
->  			return __this_address;
->  
->  		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
-> @@ -261,7 +261,7 @@ xfs_attr3_leaf_verify(
->  		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
->  			return __this_address;
->  	} else {
-> -		if (ichdr.magic != XFS_ATTR_LEAF_MAGIC)
-> +		if (leaf->hdr.info.magic != cpu_to_be16(XFS_ATTR_LEAF_MAGIC))
->  			return __this_address;
->  	}
->  	/*
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index 376bee94b5dd..355322688c9f 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -132,7 +132,7 @@ xfs_da3_node_verify(
->  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
->  		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
->  
-> -		if (ichdr.magic != XFS_DA3_NODE_MAGIC)
-> +		if (hdr3->info.hdr.magic != cpu_to_be16(XFS_DA3_NODE_MAGIC))
->  			return __this_address;
->  
->  		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
-> @@ -142,7 +142,7 @@ xfs_da3_node_verify(
->  		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
->  			return __this_address;
->  	} else {
-> -		if (ichdr.magic != XFS_DA_NODE_MAGIC)
-> +		if (hdr->hdr.info.magic != cpu_to_be16(XFS_DA_NODE_MAGIC))
->  			return __this_address;
->  	}
->  	if (ichdr.level == 0)
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 09d9c8cfa4a0..fd2df5747a3a 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -152,7 +152,7 @@ const struct xfs_buf_ops xfs_inode_buf_ops = {
->  };
->  
->  const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
-> -	.name = "xxfs_inode_ra",
-> +	.name = "xfs_inode_ra",
->  	.verify_read = xfs_inode_buf_readahead_verify,
->  	.verify_write = xfs_inode_buf_write_verify,
->  };
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index b5a82acd7dfe..a2f52a958091 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -225,10 +225,11 @@ xfs_validate_sb_common(
->  	struct xfs_buf		*bp,
->  	struct xfs_sb		*sbp)
->  {
-> +	struct xfs_dsb		*dsb = XFS_BUF_TO_SBP(bp);
->  	uint32_t		agcount = 0;
->  	uint32_t		rem;
->  
-> -	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
-> +	if (dsb->sb_magicnum != cpu_to_be32(XFS_SB_MAGIC)) {
->  		xfs_warn(mp, "bad magic number");
->  		return -EWRONGFS;
->  	}
-> -- 
-> 2.17.2
+> workdir=/mnt/scratch
+> nfiles=8
+> wsize=4096
+> wcnt=1000
+> 
+> echo
+> echo "Test 1: sync write fragmentation counts"
+> echo
+> write_sync_file()
+> {
+> 	idx=$1
+> 
+> 	for ((cnt=0; cnt<$wcnt; cnt++)); do
+> 		xfs_io -f -s -c "pwrite $((cnt * wsize)) $wsize" $workdir/file.$idx
+> 	done
+> }
+> 
+> rm -f $workdir/file*
+> for ((n=0; n<$nfiles; n++)); do
+> 	write_sync_file $n > /dev/null 2>&1 &
+> done
+> wait
+> 
+> sync
+> 
+> for ((n=0; n<$nfiles; n++)); do
+> 	echo -n "$workdir/file.$n: "
+> 	xfs_bmap -vp $workdir/file.$n | wc -l
+> done;
+> 
+> 
+> # Test 2
+> #
+> # Same as test 1, but instead of sync writes, use extent size hints to defeat
+> # the open/write/close heuristic
+> 
+> extent_size=16m
+> 
+> echo
+> echo "Test 2: Extent size hint fragmentation counts"
+> echo
+> 
+> write_extsz_file()
+> {
+> 	idx=$1
+> 
+> 	xfs_io -f -c "extsize $extent_size" $workdir/file.$idx
+> 	for ((cnt=0; cnt<$wcnt; cnt++)); do
+> 		xfs_io -f -c "pwrite $((cnt * wsize)) $wsize" $workdir/file.$idx
+> 	done
+> }
+> 
+> rm -f $workdir/file*
+> for ((n=0; n<$nfiles; n++)); do
+> 	write_extsz_file $n > /dev/null 2>&1 &
+> done
+> wait
+> 
+> sync
+> 
+> for ((n=0; n<$nfiles; n++)); do
+> 	echo -n "$workdir/file.$n: "
+> 	xfs_bmap -vp $workdir/file.$n | wc -l
+> done;
+> 
+> 
+> 
+> # Test 3
+> #
+> # Same as test 2, but instead of extent size hints, use open/read/close loops
+> # on the files to remove EOF blocks.
+> 
+> echo
+> echo "Test 3: Open/read/close loop fragmentation counts"
+> echo
+> 
+> write_file()
+> {
+> 	idx=$1
+> 
+> 	xfs_io -f -s -c "pwrite -b 64k 0 50m" $workdir/file.$idx
+> }
+> 
+> read_file()
+> {
+> 	idx=$1
+> 
+> 	for ((cnt=0; cnt<$wcnt; cnt++)); do
+> 		xfs_io -f -r -c "pread 0 28" $workdir/file.$idx
+> 	done
+> }
+> 
+> rm -f $workdir/file*
+> for ((n=0; n<$((nfiles * 4)); n++)); do
+> 	write_file $n > /dev/null 2>&1 &
+> 	read_file $n > /dev/null 2>&1 &
+> done
+> wait
+> 
+> sync
+> 
+> for ((n=0; n<$nfiles; n++)); do
+> 	echo -n "$workdir/file.$n: "
+> 	xfs_bmap -vp $workdir/file.$n | wc -l
+> done;
+> 
 > 
