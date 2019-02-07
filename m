@@ -1,145 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cloud1-vm154.de-nserver.de ([178.250.10.56]:38965 "EHLO
-        cloud1-vm154.de-nserver.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726127AbfBJS6K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Feb 2019 13:58:10 -0500
-Subject: Re: XFS filesystem hang
-References: <645a3d40-47a5-0f7a-7565-821bbce103f2@profihost.ag>
- <20190117123427.GA37591@bfoster>
- <8cf51b2c-6e9b-317a-16fc-9e47f916198e@profihost.ag>
- <20190117220512.GE6173@dastard>
- <030b0a00-0c0f-4ab3-373d-f9734e60472f@profihost.ag>
- <20190119001946.GI6173@dastard>
- <45ec229d-3554-e273-3704-daee5e1bfe54@profihost.ag>
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Message-ID: <dd73d3db-32e4-e357-a5db-0e1b41c8b4a0@profihost.ag>
-Date: Sun, 10 Feb 2019 19:52:42 +0100
+Received: from mx0b-002e3701.pphosted.com ([148.163.143.35]:49780 "EHLO
+        mx0b-002e3701.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726793AbfBHEKP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 23:10:15 -0500
+From: "Kani, Toshi" <toshi.kani@hpe.com>
+Subject: Re: [LSF/MM TOPIC] The end of the DAX experiment
+Date: Thu, 7 Feb 2019 21:51:54 +0000
+Message-ID: <d7790ae27161db2fcf0b10a7d5d67de833f2d3fe.camel@hpe.com>
+References: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
+In-Reply-To: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <8985FFB9EA129A48918CC8ABDA67F384@NAMPRD84.PROD.OUTLOOK.COM>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-In-Reply-To: <45ec229d-3554-e273-3704-daee5e1bfe54@profihost.ag>
-Content-Type: text/plain; charset=utf-8
-Content-Language: de-DE
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: d.aberger@profihost.ag, Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, n.fahldieck@profihost.ag
+To: "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
 
-Dear dave,
-
-we're still seeing the issue below. I verified that we see this also on:
-1.) systems without any raid or controller (pure qemu/kvm with ceph rbd
-backend)
-
-2.) systems where no btrs is running nor any backup jobs
-
-To me this looks like a xfs lockup. I found the same trace here:
-"https://access.redhat.com/solutions/2964341"
-
-but do not have any access to this subscriber content.
-
-Greets,
-Stefan
-
-Am 21.01.19 um 15:59 schrieb Daniel Aberger - Profihost AG:
-> Am 19.01.19 um 01:19 schrieb Dave Chinner:
->> On Fri, Jan 18, 2019 at 03:48:46PM +0100, Daniel Aberger - Profihost AG wrote:
->>> Am 17.01.19 um 23:05 schrieb Dave Chinner:
->>>> On Thu, Jan 17, 2019 at 02:50:23PM +0100, Daniel Aberger - Profihost AG wrote:
->>>>> * Kernel Version: Linux 4.12.0+139-ph #1 SMP Tue Jan 1 21:46:16 UTC 2019
->>>>> x86_64 GNU/Linux
->>>>
->>>> Is that an unmodified distro kernel or one you've patched and built
->>>> yourself?
->>>
->>> Unmodified regarding XFS and any subsystems related to XFS, as I was
->>> being told.
->>
->> That doesn't answer my question - has the kernel been patched (and
->> what with) or is it a completely unmodified upstream kernel?
->>
-> 
-> The kernel we were running was OpenSUSE SLE15 based on commit
-> 6c5c7489089608d89b7ce310bca44812e2b0a4a5.
-> 
-> https://github.com/openSUSE/kernel
-> 
-> 
->>>>> * /proc/meminfo, /proc/mounts, /proc/partitions and xfs_info can be
->>>>> found here: https://pastebin.com/cZiTrUDL
->>>>
->>>> Just  notes as I browse it.
->>>> - lots of free memory.
->>>> - xfs-info: 1.3TB, 32 ags, ~700MB log w/sunit =64fsbs
->>>>   sunit=64 fsbs, swidth=192fsbs (RAID?)
->>>> - mount options: noatime, sunit=512,sunit=1536, usrquota
->>>> - /dev/sda3 mounted on /
->>>> - /dev/sda3 also mounted on /home/tmp (bind mount of something?)
->>>>
->>>>> * full dmesg output of problem mentioned in the first mail:
->>>>> https://pastebin.com/pLaz18L1
->>>>
->>>> No smoking gun.
->>>>
->>>>> * a couple of more dmesg outputs from the same system with similar
->>>>> behaviour:
->>>>>  * https://pastebin.com/hWDbwcCr
->>>>>  * https://pastebin.com/HAqs4yQc
->>>>
->>>> Ok, so mysqld seems to be the problem child here.
->>>>
->>>
->>> Our MySQL workload on this server is very small except for this time of
->>> the day because our local backup to /backup happens during this time.
->>> The highest IO happens during the night when our local backup is being
->>> written. The timestamps of these two outputs suggest that the "mysql
->>> dump" phase might just have been started. Unfortunately we only keep the
->>> log of the last job, so I can't confirm that.
->>
->> Ok, so you've just started loading up the btrfs volume that is also
->> attached to the same raid controller, which does have raid caches
->> enabled....
->>
->> I wonder if that has anything to do with it?
->>
-> 
-> Do you suggest to change any caching options?
-> 
->> Best would be to capture iostat output for both luns (as per the
->> FAQ) when the problem workload starts.
->>
-> 
-> What I can give you so far is two I/O activity screenshots of Grafana of
-> two of the dmesg outputs above.
-> 
-> https://imgur.com/a/3lL776U
-> 
-> 
->>>> Which leads me to ask: what is your RAID cache setup - write-thru,
->>>> write-back, etc?
->>>>
->>>
->>> Our RAID6 cache configuration:
->>>
->>>    Read-cache setting                       : Disabled
->>>    Read-cache status                        : Off
->>>    Write-cache setting                      : Disabled
->>>    Write-cache status                       : Off
->>
->> Ok, so read caching is turned off, which means it likely won't even
->> be caching stripes between modifications. May not be very efficient,
->> but hard to say if it's the problem or not.
->>
->>> Full Configuration: https://pastebin.com/PdGatDY4
->>
->> Yeah, caching is enabled on the backup btrfs lun, so there may be
->> interaction issues. Is the backup device idle (or stalling) at the
->> same time that the XFS messages are being issued?
-> 
-> In 2 out of 3 cases it happened while the backup job was running, which
-> starts at 0:10 am and finishes roughly between 2:30 and 3:30 am on this
-> particular machine. So it wasn't idle.
-> 
-> The MySQL dumping phase takes about 20 to 25 minutes and happens at the
-> end of the backup job.
-> 
+T24gV2VkLCAyMDE5LTAyLTA2IGF0IDEzOjEyIC0wODAwLCBEYW4gV2lsbGlhbXMgd3JvdGU6DQo+
+IEJlZm9yZSBwZW9wbGUgZ2V0IHRvbyBleGNpdGVkIHRoaXMgaXNuJ3QgYSBwcm9wb3NhbCB0byBr
+aWxsIERBWC4gVGhlDQo+IHRvcGljIHByb3Bvc2FsIGlzIGEgZGlzY3Vzc2lvbiB0byByZXNvbHZl
+IGxpbmdlcmluZyBvcGVuIHF1ZXN0aW9ucw0KPiB0aGF0IGN1cnJlbnRseSBtb3RpdmF0ZSBleHQ0
+IGFuZCB4ZnMgdG8gc2NyZWFtICJFWFBFUklNRU5UQUwiIHdoZW4gdGhlDQo+IGN1cnJlbnQgREFY
+IGZhY2lsaXRpZXMgYXJlIGVuYWJsZWQuIFRoZSBhcmUgMiBwcmltYXJ5IGNvbmNlcm5zIHRvDQo+
+IHJlc29sdmUuIEVudW1lcmF0ZSB0aGUgcmVtYWluaW5nIGZlYXR1cmVzL2ZpeGVzLCBhbmQgaWRl
+bnRpZnkgYSBwYXRoDQo+IHRvIGltcGxlbWVudCBpdCBhbGwgd2l0aG91dCByZWdyZXNzaW5nIGFu
+eSBleGlzdGluZyBhcHBsaWNhdGlvbiB1c2UNCj4gY2FzZXMuDQo+IA0KPiBBbiBlbnVtZXJhdGlv
+biBvZiByZW1haW5pbmcgcHJvamVjdHMgZm9sbG93cywgcGxlYXNlIGV4cGFuZCB0aGlzIGxpc3QN
+Cj4gaWYgSSBtaXNzZWQgc29tZXRoaW5nOg0KPiANCj4gKiAiREFYIiBoYXMgbm8gc3BlY2lmaWMg
+bWVhbmluZyBieSBpdHNlbGYsIHVzZXJzIGhhdmUgMiB1c2UgY2FzZXMgZm9yDQo+ICJEQVgiIGNh
+cGFiaWxpdGllczogdXNlcnNwYWNlIGNhY2hlIG1hbmFnZW1lbnQgdmlhIE1BUF9TWU5DLCBhbmQg
+cGFnZQ0KPiBjYWNoZSBhdm9pZGFuY2Ugd2hlcmUgdGhlIGxhdHRlciBhc3BlY3Qgb2YgREFYIGhh
+cyBubyBjdXJyZW50IGFwaSB0bw0KPiBkaXNjb3ZlciAvIHVzZSBpdC4gVGhlIHByb2plY3QgaXMg
+dG8gc3VwcGxlbWVudCBNQVBfU1lOQyB3aXRoIGENCj4gTUFQX0RJUkVDVCBmYWNpbGl0eSBhbmQg
+TUFEVl9TWU5DIC8gTUFEVl9ESVJFQ1QgdG8gaW5kaWNhdGUgdGhlIHNhbWUNCj4gZHluYW1pY2Fs
+bHkgdmlhIG1hZHZpc2UuIFNpbWlsYXIgdG8gT19ESVJFQ1QsIE1BUF9ESVJFQ1Qgd291bGQgYmUg
+YW4NCj4gYXBwbGljYXRpb24gaGludCB0byBhdm9pZCAvIG1pbmltaWl6ZSBwYWdlIGNhY2hlIHVz
+YWdlLCBidXQgbm8gc3RyaWN0DQo+IGd1YXJhbnRlZSBsaWtlIHdoYXQgTUFQX1NZTkMgcHJvdmlk
+ZXMuDQoNCkFncmVlZCB0aGF0IGJhc2ljIGRheCBwcm9ncmFtbWluZyBtb2RlbCBuZWVkcyB0byBi
+ZSBzZXR0bGVkLg0KDQo+ICogUmVzb2x2ZSBhbGwgImlmIChkYXgpIGdvdG8gZmFpbDsiIHBhdHRl
+cm5zIGluIHRoZSBrZXJuZWwuIE91dHNpZGUgb2YNCj4gbG9uZ3Rlcm0tR1VQIChhIHRvcGljIGlu
+IGl0cyBvd24gcmlnaHQpIHRoZSBwcm9qZWN0cyBoZXJlIGFyZQ0KPiBYRlMtcmVmbGluayBhbmQg
+WEZTLXJlYWx0aW1lLWRldmljZSBzdXBwb3J0LiBEQVgrcmVmbGluayBlZmZlY3RpdmVseQ0KPiBy
+ZXF1aXJlcyBhIGdpdmVuIHBoeXNpY2FsIHBhZ2UgdG8gYmUgbWFwcGVkIGludG8gdHdvIGRpZmZl
+cmVudCBpbm9kZXMNCj4gYXQgZGlmZmVyZW50IChwYWdlLT5pbmRleCkgb2Zmc2V0cy4gVGhlIGNo
+YWxsZW5nZSBpcyB0byBzdXBwb3J0DQo+IERBWC1yZWZsaW5rIHdpdGhvdXQgdmlvbGF0aW5nIGFu
+eSBleGlzdGluZyBhcHBsaWNhdGlvbiB2aXNpYmxlDQo+IHNlbWFudGljcywgdGhlIG9wZXJhdGlu
+ZyBhc3N1bXB0aW9uIC8gc3RyYXdtYW4gdG8gZGViYXRlIGlzIHRoYXQNCj4gZXhwZXJpbWVudGFs
+IHN0YXR1cyBpcyBub3QgYmxhbmtldCBwZXJtaXNzaW9uIHRvIGdvIGNoYW5nZSBleGlzdGluZw0K
+PiBzZW1hbnRpY3MgaW4gYmFja3dhcmRzIGluY29tcGF0aWJsZSB3YXlzLg0KDQpJIGRvIG5vdCB0
+aGluayAiaWYgKGRheCkgZ290byBmYWlsOyIgaXMgYWN0dWFsbHkgYmFkLiAgSXQgaGVscHMgdXNl
+cnMgdG8NCmltbWVkaWF0ZWx5IHJlYWxpemUgdGhhdCBkYXggbWF5IG5vdCBiZSBlbmFibGVkIGFu
+ZCB0aGV5IGhhdmUgYSBzZXR1cA0KaXNzdWUuICBJIGFsc28gdGhpbmsgdGhhdCBGUy1zcGVjaWZp
+YyBlbmhhbmNlbWVudHMgbGlrZSBEQVgtcmVmbGluaz0xDQpzdXBwb3J0IHNob3VsZCBiZSBtYW5h
+Z2VkIHNlcGFyYXRlbHkgYW5kIHNob3VsZCBiZSBwb3NzaWJsZSBhZnRlcg0KRVhQRVJJTUVOVEFM
+IGlzIHJlbW92ZWQgZnJvbSAnbW91bnQgLW8gZGF4Jy4gIFRoYXQgaXMsIHJlbW92aW5nDQpFWFBF
+UklNRU5UQUwgZm9yIERBWC1yZWZsaW5rPTAgc2hvdWxkIG5vdCByZXF1aXJlIHN1cHBvcnQgb2Yg
+REFYLQ0KcmVmbGluaz0xLg0KDQpJJ3ZlIGFsc28gaGFkIG11bHRpcGxlIHVzZXJzIGNvbXBsYWlu
+ZWQgYWJvdXQgJ21vdW50IC1vIGRheCcgc3VjY2VlZGVkDQpieSBmYWxsaW5nIGJhY2sgdG8gbm9u
+LWRheCBkZXNwaXRlIG9mIHRoZWlyIGludGVudC4gIFN1Y2ggdXNlcnMgd2FzdGVkDQptYW55IGhv
+dXJzIHdpdGhvdXQga25vd2luZyB0aGVpciBzZXR1cCBlcnJvciAvIGN1cnJlbnQgcmVzdHJpY3Rp
+b25zLiANClRoZSBuZXh0IHRoaW5rIHRoZXkgYWx3YXlzIGFzayBpcyBob3cgdG8gY2hlY2sgaWYg
+ZGF4IGlzIGVuYWJsZWQgaW4gc3VjaA0KY2FzZSwgYW5kIHRoZXkgYXJlIG5vdCBoYXBweSBhYm91
+dCBsaW1pdGVkIGludGVyZmFjZXMgKGV4LiBsb29rIGZvcg0KbW91bnQgZW50cnkgaW4gL3Byb2Mv
+bW91bnRzKSwgZWl0aGVyLg0KDQo+ICogRGVwcmVjYXRlLCBidXQgbm90IHJlbW92ZSwgdGhlIERB
+WCBtb3VudCBvcHRpb24uIFRvbyBtYW55IGZsb3dzDQo+IGRlcGVuZCBvbiB0aGUgb3B0aW9uIHNv
+IGl0IHdpbGwgbmV2ZXIgZ28gYXdheSwgYnV0IHRoZSBmYWNpbGl0eSBpcyB0b28NCj4gY29hcnNl
+LiBQcm92aWRlIGFuIG9wdGlvbiB0byBlbmFibGUgTUFQX1NZTkMgYW5kDQo+IG1vcmUtbGlrZWx5
+LXRvLWRvLXNvbWV0aGluZy11c2VmdWwtTUFQX0RJUkVDVCBvbiBhIHBlci1kaXJlY3RvcnkNCj4g
+YmFzaXMuIFRoZSBjdXJyZW50IHByb3Bvc2FsIGlzIHRvIGFsbG93IHRoaXMgcHJvcGVydHkgdG8g
+b25seSBiZQ0KPiB0b2dnbGVkIHdoaWxlIHRoZSBkaXJlY3RvcnkgaXMgZW1wdHkgdG8gYXZvaWQg
+dGhlIGNvbXBsaWNhdGlvbnMgb2YNCj4gcmFjaW5nIHBhZ2UgaW52YWxpZGF0aW9uIHdpdGggbmV3
+IERBWCBtYXBwaW5ncy4NCg0KU2FtZSBhcyBhYm92ZS4gIFN1Y2ggZW5oYW5jZW1lbnQgc2hvdWxk
+IGJlIHBvc3NpYmxlIGFmdGVyIEVYUEVSSU1FTlRBTA0KaXMgcmVtb3ZlZCBmcm9tICdtb3VudCAt
+byBkYXgnLiAgSU9XLCBhIHNlcGFyYXRlIEVYUEVSSU1FTlRBTCBtZXNzYWdlDQpjYW4gYmUgc2hv
+d24gd2hlbiB1c2VyIHJlcXVlc3RzIHBlci1kaXJlY3RvcnkgZGF4Lg0KDQpUaGFua3MsDQotVG9z
+aGkNCg==
