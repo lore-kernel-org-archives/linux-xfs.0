@@ -1,110 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:26986 "EHLO
-        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726610AbfBGDKO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 22:10:14 -0500
-Date: Thu, 7 Feb 2019 14:10:08 +1100
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:11812 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726136AbfBGFIh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 00:08:37 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1grbv6-0003pJ-Pc
+        for linux-xfs@vger.kernel.org; Thu, 07 Feb 2019 16:08:16 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.92-RC5)
+        (envelope-from <david@fromorbit.com>)
+        id 1grbv6-0006KT-Nk
+        for linux-xfs@vger.kernel.org; Thu, 07 Feb 2019 16:08:16 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: bcache on XFS: metadata I/O (dirent I/O?) not getting cached at
- all?
-Message-ID: <20190207031008.GJ14116@dastard>
-References: <87h8dgefee.fsf@esperi.org.uk>
- <20190206234328.GH14116@dastard>
- <20190207002425.GX24140@tuebingen.mpg.de>
- <20190207022657.GI14116@dastard>
- <438851ef-ef77-b5f2-d46d-05762b6330b2@suse.de>
+Subject: [PATCH 1/3] xfs: Don't free EOF blocks on sync write close
+Date: Thu,  7 Feb 2019 16:08:11 +1100
+Message-Id: <20190207050813.24271-2-david@fromorbit.com>
+In-Reply-To: <20190207050813.24271-1-david@fromorbit.com>
+References: <20190207050813.24271-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <438851ef-ef77-b5f2-d46d-05762b6330b2@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Coly Li <colyli@suse.de>
-Cc: Andre Noll <maan@tuebingen.mpg.de>, Nix <nix@esperi.org.uk>, linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk
+To: linux-xfs@vger.kernel.org
 
-On Thu, Feb 07, 2019 at 10:38:58AM +0800, Coly Li wrote:
-> On 2019/2/7 10:26 上午, Dave Chinner wrote:
-> > On Thu, Feb 07, 2019 at 01:24:25AM +0100, Andre Noll wrote:
-> >> On Thu, Feb 07, 10:43, Dave Chinner wrote
-> >>> File data readahead: REQ_RAHEAD
-> >>> Metadata readahead: REQ_META | REQ_RAHEAD
-> >>>
-> >>> drivers/md/bcache/request.c::check_should_bypass():
-> >>>
-> >>>         /*
-> >>>          * Flag for bypass if the IO is for read-ahead or background,
-> >>>          * unless the read-ahead request is for metadata (eg, for gfs2).
-> >>>          */
-> >>>         if (bio->bi_opf & (REQ_RAHEAD|REQ_BACKGROUND) &&
-> >>>             !(bio->bi_opf & REQ_PRIO))
-> >>>                 goto skip;
-> >>>
-> >>> bcache needs fixing - it thinks REQ_PRIO means metadata IO. That's
-> >>> wrong - REQ_META means it's metadata IO, and so this is a bcache
-> >>> bug.
-> >>
-> >> Do you think 752f66a75abad is bad (ha!) and should be reverted?
-> > 
-> > Yes, that change is just broken. From include/linux/blk_types.h:
-> > 
-> > 	__REQ_META,             /* metadata io request */
-> > 	__REQ_PRIO,             /* boost priority in cfq */
-> > 
-> > 
-> 
-> Hi Dave,
-> 
-> > i.e. REQ_META means that it is a metadata request, REQ_PRIO means it
-> > is a "high priority" request. Two completely different things, often
-> > combined, but not interchangeable.
-> 
-> I found in file system metadata IO, most of time REQ_META and REQ_PRIO
-> are tagged together for bio, but XFS seems not use REQ_PRIO.
+From: Dave Chinner <dchinner@redhat.com>
 
-Yes, that's correct, because we don't specifically prioritise
-metadata IO over data IO.
+When we have a workload that does open/sync write/close in parallel
+with other allocation, the file becomes rapidly fragmented. This is
+due to close() calling xfs_release() and removing the speculative
+preallocation beyond EOF.
 
-> Is there any basic principle for when should these tags to be used or
-> not ?
+The existing open/write/close hueristic in xfs_release() does not
+catch this as sync writes do not leave delayed allocation blocks
+allocated on the inode for later writeback that can be detected in
+xfs_release() and hence XFS_IDIRTY_RELEASE never gets set.
 
-Yes.
+In xfs_file_release(), we can tell whether the release context was a
+synchronous write context, and so we need to communicate this to
+xfs_release() so it can do the right thing here and skip EOF
+block truncation. This defers the EOF block cleanup for synchronous
+write contexts to the background EOF block cleaner which will clean
+up within a few minutes.
 
-> e.g. If REQ_META is enough for meta data I/O, why REQ_PRIO is used
-> too.
+Before:
 
-REQ_META is used for metadata. REQ_PRIO is used to communicate to
-the lower layers that the submitter considers this IO to be more
-important that non REQ_PRIO IO and so dispatch should be expedited.
+Test 1: sync write fragmentation counts
 
-IOWs, if the filesystem considers metadata IO to be more important
-that user data IO, then it will use REQ_PRIO | REQ_META rather than
-just REQ_META.
+/mnt/scratch/file.0: 919
+/mnt/scratch/file.1: 916
+/mnt/scratch/file.2: 919
+/mnt/scratch/file.3: 920
+/mnt/scratch/file.4: 920
+/mnt/scratch/file.5: 921
+/mnt/scratch/file.6: 916
+/mnt/scratch/file.7: 918
 
-Historically speaking, REQ_PRIO was a hack for CFQ to get it to
-dispatch journal IO from a different thread without waiting for a
-time slice to expire. In the XFs world, we just said "don't use CFQ,
-it's fundametnally broken for highly concurrent applications" and
-didn't bother trying to hack around the limitations of CFQ.
+After:
 
-These days REQ_PRIO is only used by the block layer writeback
-throttle, but unlike bcache it considers both REQ_META and REQ_PRIO
-to mean the same thing.
+Test 1: sync write fragmentation counts
 
-REQ_META, OTOH, is used by BFQ and blk-cgroup to detect metadata
-IO and don't look at REQ_PRIO at all. So, really, REQ_META is for
-metadata, not REQ_PRIO. REQ_PRIO looks like it should just go away.
+/mnt/scratch/file.0: 24
+/mnt/scratch/file.1: 24
+/mnt/scratch/file.2: 11
+/mnt/scratch/file.3: 24
+/mnt/scratch/file.4: 3
+/mnt/scratch/file.5: 24
+/mnt/scratch/file.6: 24
+/mnt/scratch/file.7: 23
 
-> And if REQ_PRIO is necessary, why it is not used in fs/xfs/ code ?
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_file.c  | 15 +++++++++++++--
+ fs/xfs/xfs_inode.c |  9 +++++----
+ fs/xfs/xfs_inode.h |  2 +-
+ 3 files changed, 19 insertions(+), 7 deletions(-)
 
-It's not necessary, it's just an /optimisation/ that some
-filesystems make and some IO schedulers used to pay attention to. It
-looks completely redundant now.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index e47425071e65..02f76b8e6c03 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1019,12 +1019,23 @@ xfs_dir_open(
+ 	return error;
+ }
+ 
++/*
++ * When we release the file, we don't want it to trim EOF blocks for synchronous
++ * write contexts as this leads to severe fragmentation when applications do
++ * repeated open/appending sync write/close to a file amongst other file IO.
++ */
+ STATIC int
+ xfs_file_release(
+ 	struct inode	*inode,
+-	struct file	*filp)
++	struct file	*file)
+ {
+-	return xfs_release(XFS_I(inode));
++	bool		free_eof_blocks = true;
++
++	if ((file->f_mode & FMODE_WRITE) &&
++	    (file->f_flags & O_DSYNC))
++		free_eof_blocks = false;
++
++	return xfs_release(XFS_I(inode), free_eof_blocks);
+ }
+ 
+ STATIC int
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index ae667ba74a1c..a74dc240697f 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1603,10 +1603,11 @@ xfs_itruncate_extents_flags(
+ 
+ int
+ xfs_release(
+-	xfs_inode_t	*ip)
++	struct xfs_inode	*ip,
++	bool			can_free_eofblocks)
+ {
+-	xfs_mount_t	*mp = ip->i_mount;
+-	int		error;
++	struct xfs_mount	*mp = ip->i_mount;
++	int			error;
+ 
+ 	if (!S_ISREG(VFS_I(ip)->i_mode) || (VFS_I(ip)->i_mode == 0))
+ 		return 0;
+@@ -1642,7 +1643,7 @@ xfs_release(
+ 	if (VFS_I(ip)->i_nlink == 0)
+ 		return 0;
+ 
+-	if (xfs_can_free_eofblocks(ip, false)) {
++	if (can_free_eofblocks && xfs_can_free_eofblocks(ip, false)) {
+ 
+ 		/*
+ 		 * Check if the inode is being opened, written and closed
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index be2014520155..7e59b0e086d7 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -397,7 +397,7 @@ enum layout_break_reason {
+ 	(((pip)->i_mount->m_flags & XFS_MOUNT_GRPID) || \
+ 	 (VFS_I(pip)->i_mode & S_ISGID))
+ 
+-int		xfs_release(struct xfs_inode *ip);
++int		xfs_release(struct xfs_inode *ip, bool can_free_eofblocks);
+ void		xfs_inactive(struct xfs_inode *ip);
+ int		xfs_lookup(struct xfs_inode *dp, struct xfs_name *name,
+ 			   struct xfs_inode **ipp, struct xfs_name *ci_name);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.20.1
