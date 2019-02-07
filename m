@@ -1,147 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34718 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40610 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725928AbfBFSkU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Feb 2019 13:40:20 -0500
-Date: Wed, 6 Feb 2019 13:40:17 -0500
+        id S1726401AbfBGSlH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Feb 2019 13:41:07 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 913E3C05D40D
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Feb 2019 18:41:06 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 2CDC667621
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Feb 2019 18:41:06 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3 1/9] xfs: set buffer ops when repair probes for btree
- type
-Message-ID: <20190206184017.GB55658@bfoster>
-References: <20190204145231.47034-1-bfoster@redhat.com>
- <20190204145231.47034-2-bfoster@redhat.com>
- <20190206180835.GQ7991@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190206180835.GQ7991@magnolia>
+Subject: [PATCH v4 0/8] xfs: fix [f]inobt magic value verification
+Date: Thu,  7 Feb 2019 13:40:57 -0500
+Message-Id: <20190207184105.17064-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Feb 06, 2019 at 10:08:35AM -0800, Darrick J. Wong wrote:
-> On Mon, Feb 04, 2019 at 09:52:23AM -0500, Brian Foster wrote:
-> > From: "Darrick J. Wong" <darrick.wong@oracle.com>
-> > 
-> > In xrep_findroot_block, we work out the btree type and correctness of a
-> > given block by calling different btree verifiers on root block
-> > candidates.  However, we leave the NULL b_ops while ->verify_read
-> > validates the block, which means that if the verifier calls
-> > xfs_buf_verifier_error it'll crash on the null b_ops.  Fix it to set
-> > b_ops before calling the verifier and unsetting it if the verifier
-> > fails.
-> > 
-> > Furthermore, improve the documentation around xfs_buf_ensure_ops, which
-> > is the function that is responsible for cleaning up the b_ops state of
-> > buffers that go through xrep_findroot_block but don't match anything.
-> > 
-> > [bfoster: Renamed xfs_buf_ensure_ops() and modified comment.]
-> 
-> Heh, I already queued up the original patch for 5.0 so that we don't
-> oops the kernel. :/
-> 
+Hi all,
 
-Yeah, I noticed.. not really a big deal.
-
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/scrub/repair.c  | 11 ++++++++---
-> >  fs/xfs/xfs_buf.c       | 22 ++++++++++++++++------
-> >  fs/xfs/xfs_buf.h       |  2 +-
-> >  fs/xfs/xfs_trans_buf.c |  2 +-
-> >  4 files changed, 26 insertions(+), 11 deletions(-)
-> > 
-...
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index eedc5e0156ff..222b5260ed35 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -776,13 +776,23 @@ _xfs_buf_read(
-> >  }
-> >  
-> >  /*
-> > - * If the caller passed in an ops structure and the buffer doesn't have ops
-> > - * assigned, set the ops and use them to verify the contents.  If the contents
-> > - * cannot be verified, we'll clear XBF_DONE.  We assume the buffer has no
-> > - * recorded errors and is already in XBF_DONE state.
-> > + * Reverify a buffer found in cache without an attached ->b_ops.
-> > + *
-> > + * If the caller passed an ops structure and the buffer doesn't have ops
-> > + * assigned, set the ops and use it to verify the contents. If verification
-> > + * fails, clear XBF_DONE. We assume the buffer has no recorded errors and is
-> > + * already in XBF_DONE state on entry.
-> > + *
-> > + * Under normal operations, every in-core buffer is verified on read I/O
-> > + * completion. There are two scenarios that can lead to in-core buffers without
-> > + * an assigned ->b_ops. The first is during log recovery of buffers on a V4
-> > + * filesystem, though these buffers are purged at the end of recovery. The
-> > + * other is online repair, which intentionally reads with a NULL buffer ops to
-> > + * run several verifiers across an in-core buffer in order to establish buffer
-> > + * type.
-> 
-> I would like to add a sentence here explicitly saying that if repair
-> can't establish the buffer type from the verifiers then the buffer is
-> left in memory with null b_ops.
-> 
-
-Ok.
-
-> >   */
-> >  int
-> > -xfs_buf_ensure_ops(
-> > +xfs_buf_reverify(
-> 
-> I like the name and the comment better than my original version, so I'll
-> rework this patch as a separate "rename and unfrobulate documentation"
-> thing and send it out.
-> 
-
-Sounds good to me. Thanks.
+This is v4 of the buffer verifier magic value rework. The only changes
+in this version are that patch 1 of v3 has been dropped as it is already
+merged and that the magic value asserts that were added to several of
+the refactored verifiers are replaced with compile-time magic value
+offset checks starting from the top-level structures used in the
+associated verifiers.
 
 Brian
 
-> --D
-> 
-> >  	struct xfs_buf		*bp,
-> >  	const struct xfs_buf_ops *ops)
-> >  {
-> > @@ -824,7 +834,7 @@ xfs_buf_read_map(
-> >  		return bp;
-> >  	}
-> >  
-> > -	xfs_buf_ensure_ops(bp, ops);
-> > +	xfs_buf_reverify(bp, ops);
-> >  
-> >  	if (flags & XBF_ASYNC) {
-> >  		/*
-> > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> > index b9f5511ea998..1c436a85b71d 100644
-> > --- a/fs/xfs/xfs_buf.h
-> > +++ b/fs/xfs/xfs_buf.h
-> > @@ -385,6 +385,6 @@ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
-> >  #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
-> >  #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
-> >  
-> > -int xfs_buf_ensure_ops(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
-> > +int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
-> >  
-> >  #endif	/* __XFS_BUF_H__ */
-> > diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-> > index 629f1479c9d2..7d65ebf1e847 100644
-> > --- a/fs/xfs/xfs_trans_buf.c
-> > +++ b/fs/xfs/xfs_trans_buf.c
-> > @@ -277,7 +277,7 @@ xfs_trans_read_buf_map(
-> >  		 * release this buffer when it kills the tranaction.
-> >  		 */
-> >  		ASSERT(bp->b_ops != NULL);
-> > -		error = xfs_buf_ensure_ops(bp, ops);
-> > +		error = xfs_buf_reverify(bp, ops);
-> >  		if (error) {
-> >  			xfs_buf_ioerror_alert(bp, __func__);
-> >  
-> > -- 
-> > 2.17.2
-> > 
+v4:
+- Dropped set buf ops patch (already merged).
+- Replace magic value asserts with build-time magic offset checks.
+v3: https://marc.info/?l=linux-xfs&m=154929197225225&w=2
+- Fix function declarations to include parameter names.
+- Convert allocbt buffer verifier.
+v2: https://marc.info/?l=linux-xfs&m=154894958207167&w=2
+- Include djwong's ->b_ops patch w/ modifications.
+- Added patch to fix up existing cpu endian magic checks, fold in typo
+  fix.
+- Replace static inline magic verifier helper with out of line variant,
+  kill macro.
+- Store on-disk byte order magics in ->b_ops.
+- Added patch to refactor common xfs_da3_blkinfo checks.
+v1: https://marc.info/?l=linux-xfs&m=154878684317178&w=2
+- Remove endian conversion from helper.
+- Drop finobt bad magic mitigation patch.
+- Additional verifier magic fixups.
+- Add verifier name typo fixup.
+rfcv2: https://marc.info/?l=linux-xfs&m=154868884311668&w=2
+- Split off finobt verifier into separate patch, assign it
+  appropriately.
+- Created helpers for xfs_buf_ops magic value verification.
+- Added error mitigation patch for problematic finobt blocks.
+rfcv1: https://marc.info/?l=linux-xfs&m=154834528212262&w=2
+
+Brian Foster (8):
+  xfs: always check magic values in on-disk byte order
+  xfs: create a separate finobt verifier
+  xfs: distinguish between inobt and finobt magic values
+  xfs: split up allocation btree verifier
+  xfs: distinguish between bnobt and cntbt magic values
+  xfs: use verifier magic field in dir2 leaf verifiers
+  xfs: miscellaneous verifier magic value fixups
+  xfs: factor xfs_da3_blkinfo verification into common helper
+
+ fs/xfs/libxfs/xfs_ag.c             |   6 +-
+ fs/xfs/libxfs/xfs_alloc.c          |  12 ++--
+ fs/xfs/libxfs/xfs_alloc_btree.c    |  74 ++++++++++-----------
+ fs/xfs/libxfs/xfs_attr_leaf.c      |  21 ++----
+ fs/xfs/libxfs/xfs_attr_remote.c    |   8 ++-
+ fs/xfs/libxfs/xfs_bmap_btree.c     |  13 ++--
+ fs/xfs/libxfs/xfs_da_btree.c       |  49 +++++++++-----
+ fs/xfs/libxfs/xfs_da_format.h      |   3 +
+ fs/xfs/libxfs/xfs_dir2_block.c     |  10 +--
+ fs/xfs/libxfs/xfs_dir2_data.c      |  12 ++--
+ fs/xfs/libxfs/xfs_dir2_leaf.c      | 100 ++++++-----------------------
+ fs/xfs/libxfs/xfs_dir2_node.c      |  10 +--
+ fs/xfs/libxfs/xfs_ialloc.c         |   3 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |  25 +++++---
+ fs/xfs/libxfs/xfs_inode_buf.c      |   2 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c |   3 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c     |   3 +-
+ fs/xfs/libxfs/xfs_sb.c             |   5 +-
+ fs/xfs/libxfs/xfs_shared.h         |   4 +-
+ fs/xfs/libxfs/xfs_symlink_remote.c |   3 +-
+ fs/xfs/scrub/agheader_repair.c     |   6 +-
+ fs/xfs/xfs_buf.c                   |  19 ++++++
+ fs/xfs/xfs_buf.h                   |   2 +
+ fs/xfs/xfs_log_recover.c           |  12 ++--
+ fs/xfs/xfs_ondisk.h                |  17 +++++
+ 25 files changed, 218 insertions(+), 204 deletions(-)
+
+-- 
+2.17.2
