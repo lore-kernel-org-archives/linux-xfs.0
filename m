@@ -1,196 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:55894 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726270AbfBFSQO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 13:16:14 -0500
-Date: Wed, 6 Feb 2019 10:16:08 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 9/9] xfs: factor xfs_da3_blkinfo verification into
- common helper
-Message-ID: <20190206181608.GV7991@magnolia>
-References: <20190204145231.47034-1-bfoster@redhat.com>
- <20190204145231.47034-10-bfoster@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:49200 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726780AbfBGISe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Feb 2019 03:18:34 -0500
+Subject: Re: bcache on XFS: metadata I/O (dirent I/O?) not getting cached at
+ all?
+References: <87h8dgefee.fsf@esperi.org.uk> <20190206234328.GH14116@dastard>
+ <20190207002425.GX24140@tuebingen.mpg.de> <20190207022657.GI14116@dastard>
+ <438851ef-ef77-b5f2-d46d-05762b6330b2@suse.de>
+ <20190207031008.GJ14116@dastard>
+From: Coly Li <colyli@suse.de>
+Message-ID: <db79b5a2-e50b-880e-8ee1-da482a02088e@suse.de>
+Date: Thu, 7 Feb 2019 16:18:25 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190204145231.47034-10-bfoster@redhat.com>
+In-Reply-To: <20190207031008.GJ14116@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Andre Noll <maan@tuebingen.mpg.de>, Nix <nix@esperi.org.uk>, linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, axboe@kernel.dk
 
-On Mon, Feb 04, 2019 at 09:52:31AM -0500, Brian Foster wrote:
-> With the verifier magic value helper in place, we've left a bit more
-> duplicate code across the verifiers that involve struct
-> xfs_da3_blkinfo. This includes the da node, xattr leaf and dir leaf
-> verifiers, all of which perform similar checks for v4 and v5
-> filesystems.
+On 2019/2/7 11:10 上午, Dave Chinner wrote:
+> On Thu, Feb 07, 2019 at 10:38:58AM +0800, Coly Li wrote:
+>> On 2019/2/7 10:26 上午, Dave Chinner wrote:
+>>> On Thu, Feb 07, 2019 at 01:24:25AM +0100, Andre Noll wrote:
+>>>> On Thu, Feb 07, 10:43, Dave Chinner wrote
+>>>>> File data readahead: REQ_RAHEAD
+>>>>> Metadata readahead: REQ_META | REQ_RAHEAD
+>>>>>
+>>>>> drivers/md/bcache/request.c::check_should_bypass():
+>>>>>
+>>>>>         /*
+>>>>>          * Flag for bypass if the IO is for read-ahead or background,
+>>>>>          * unless the read-ahead request is for metadata (eg, for gfs2).
+>>>>>          */
+>>>>>         if (bio->bi_opf & (REQ_RAHEAD|REQ_BACKGROUND) &&
+>>>>>             !(bio->bi_opf & REQ_PRIO))
+>>>>>                 goto skip;
+>>>>>
+>>>>> bcache needs fixing - it thinks REQ_PRIO means metadata IO. That's
+>>>>> wrong - REQ_META means it's metadata IO, and so this is a bcache
+>>>>> bug.
+>>>>
+>>>> Do you think 752f66a75abad is bad (ha!) and should be reverted?
+>>>
+>>> Yes, that change is just broken. From include/linux/blk_types.h:
+>>>
+>>> 	__REQ_META,             /* metadata io request */
+>>> 	__REQ_PRIO,             /* boost priority in cfq */
+>>>
+>>>
+>>
+>> Hi Dave,
+>>
+>>> i.e. REQ_META means that it is a metadata request, REQ_PRIO means it
+>>> is a "high priority" request. Two completely different things, often
+>>> combined, but not interchangeable.
+>>
+>> I found in file system metadata IO, most of time REQ_META and REQ_PRIO
+>> are tagged together for bio, but XFS seems not use REQ_PRIO.
 > 
-> Create a common helper to verify an xfs_da3_blkinfo structure,
-> taking care to only access v5 fields where appropriate, and refactor
-> the aforementioned verifiers to use the helper. No functional
-> changes.
+> Yes, that's correct, because we don't specifically prioritise
+> metadata IO over data IO.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-
-Seems ok modulo the questions I had about the ASSERT,
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c | 17 +++----------
->  fs/xfs/libxfs/xfs_da_btree.c  | 46 +++++++++++++++++++++++++----------
->  fs/xfs/libxfs/xfs_da_format.h |  3 +++
->  fs/xfs/libxfs/xfs_dir2_leaf.c | 18 +++-----------
->  4 files changed, 44 insertions(+), 40 deletions(-)
+>> Is there any basic principle for when should these tags to be used or
+>> not ?
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index dde3a550d7ce..0c92987f57fc 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -245,23 +245,14 @@ xfs_attr3_leaf_verify(
->  	struct xfs_attr_leaf_entry	*entries;
->  	uint32_t			end;	/* must be 32bit - see below */
->  	int				i;
-> +	xfs_failaddr_t			fa;
->  
->  	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
->  
-> -	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
-> -		return __this_address;
-> -
-> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> -		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
-> +	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
-> +	if (fa)
-> +		return fa;
->  
-> -		ASSERT(leaf->hdr.info.magic == hdr3->info.hdr.magic);
-> -		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
-> -			return __this_address;
-> -		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
-> -			return __this_address;
-> -		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
-> -			return __this_address;
-> -	}
->  	/*
->  	 * In recovery there is a transient state where count == 0 is valid
->  	 * because we may have transitioned an empty shortform attr to a leaf
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index 6b8ca390eecc..622f88a1b1aa 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -116,6 +116,35 @@ xfs_da_state_free(xfs_da_state_t *state)
->  	kmem_zone_free(xfs_da_state_zone, state);
->  }
->  
-> +/*
-> + * Verify an xfs_da3_blkinfo structure. Note that the da3 fields are only
-> + * accessible on v5 filesystems. This header format is common across da node,
-> + * attr leaf and dir leaf blocks.
-> + */
-> +xfs_failaddr_t
-> +xfs_da3_blkinfo_verify(
-> +	struct xfs_buf		*bp,
-> +	struct xfs_da3_blkinfo	*hdr3)
-> +{
-> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-> +	struct xfs_da_blkinfo	*hdr = &hdr3->hdr;
-> +
-> +	if (!xfs_verify_magic(bp, hdr->magic))
-> +		return __this_address;
-> +
-> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> +		ASSERT(hdr3->hdr.magic == hdr->magic);
-> +		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_meta_uuid))
-> +			return __this_address;
-> +		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
-> +			return __this_address;
-> +		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->lsn)))
-> +			return __this_address;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static xfs_failaddr_t
->  xfs_da3_node_verify(
->  	struct xfs_buf		*bp)
-> @@ -124,25 +153,16 @@ xfs_da3_node_verify(
->  	struct xfs_da_intnode	*hdr = bp->b_addr;
->  	struct xfs_da3_icnode_hdr ichdr;
->  	const struct xfs_dir_ops *ops;
-> +	xfs_failaddr_t		fa;
->  
->  	ops = xfs_dir_get_ops(mp, NULL);
->  
->  	ops->node_hdr_from_disk(&ichdr, hdr);
->  
-> -	if (!xfs_verify_magic(bp, hdr->hdr.info.magic))
-> -		return __this_address;
-> +	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
-> +	if (fa)
-> +		return fa;
->  
-> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> -		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
-> -
-> -		ASSERT(hdr3->info.hdr.magic == hdr->hdr.info.magic);
-> -		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
-> -			return __this_address;
-> -		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
-> -			return __this_address;
-> -		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
-> -			return __this_address;
-> -	}
->  	if (ichdr.level == 0)
->  		return __this_address;
->  	if (ichdr.level > XFS_DA_NODE_MAXDEPTH)
-> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-> index 5d5bf3bffc78..ae654e06b2fb 100644
-> --- a/fs/xfs/libxfs/xfs_da_format.h
-> +++ b/fs/xfs/libxfs/xfs_da_format.h
-> @@ -869,4 +869,7 @@ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
->  	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
->  }
->  
-> +xfs_failaddr_t xfs_da3_blkinfo_verify(struct xfs_buf *bp,
-> +				      struct xfs_da3_blkinfo *hdr3);
-> +
->  #endif /* __XFS_DA_FORMAT_H__ */
-> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> index a99ae2cd292e..094028b7b162 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> @@ -146,21 +146,11 @@ xfs_dir3_leaf_verify(
->  {
->  	struct xfs_mount	*mp = bp->b_target->bt_mount;
->  	struct xfs_dir2_leaf	*leaf = bp->b_addr;
-> +	xfs_failaddr_t		fa;
->  
-> -	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
-> -		return __this_address;
-> -
-> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> -		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
-> -
-> -		ASSERT(leaf3->info.hdr.magic == leaf->hdr.info.magic);
-> -		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
-> -			return __this_address;
-> -		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
-> -			return __this_address;
-> -		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
-> -			return __this_address;
-> -	}
-> +	fa = xfs_da3_blkinfo_verify(bp, bp->b_addr);
-> +	if (fa)
-> +		return fa;
->  
->  	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
->  }
-> -- 
-> 2.17.2
+> Yes.
 > 
+>> e.g. If REQ_META is enough for meta data I/O, why REQ_PRIO is used
+>> too.
+> 
+> REQ_META is used for metadata. REQ_PRIO is used to communicate to
+> the lower layers that the submitter considers this IO to be more
+> important that non REQ_PRIO IO and so dispatch should be expedited.
+> 
+> IOWs, if the filesystem considers metadata IO to be more important
+> that user data IO, then it will use REQ_PRIO | REQ_META rather than
+> just REQ_META.
+> 
+> Historically speaking, REQ_PRIO was a hack for CFQ to get it to
+> dispatch journal IO from a different thread without waiting for a
+> time slice to expire. In the XFs world, we just said "don't use CFQ,
+> it's fundametnally broken for highly concurrent applications" and
+> didn't bother trying to hack around the limitations of CFQ.
+> 
+> These days REQ_PRIO is only used by the block layer writeback
+> throttle, but unlike bcache it considers both REQ_META and REQ_PRIO
+> to mean the same thing.
+> 
+> REQ_META, OTOH, is used by BFQ and blk-cgroup to detect metadata
+> IO and don't look at REQ_PRIO at all. So, really, REQ_META is for
+> metadata, not REQ_PRIO. REQ_PRIO looks like it should just go away.
+> 
+>> And if REQ_PRIO is necessary, why it is not used in fs/xfs/ code ?
+> 
+> It's not necessary, it's just an /optimisation/ that some
+> filesystems make and some IO schedulers used to pay attention to. It
+> looks completely redundant now.
+
+Hi Dave,
+
+Thanks for your detailed explanation. This is great hint from view of
+file system developer :-)
+
+I just compose a fix, hope it makes better.
+
+-- 
+
+Coly Li
