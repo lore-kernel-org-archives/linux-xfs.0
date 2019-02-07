@@ -1,152 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:11812 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726136AbfBGFIh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 00:08:37 -0500
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1grbv6-0003pJ-Pc
-        for linux-xfs@vger.kernel.org; Thu, 07 Feb 2019 16:08:16 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.92-RC5)
-        (envelope-from <david@fromorbit.com>)
-        id 1grbv6-0006KT-Nk
-        for linux-xfs@vger.kernel.org; Thu, 07 Feb 2019 16:08:16 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:47767 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726128AbfBGFjp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 00:39:45 -0500
+Date: Thu, 7 Feb 2019 16:39:41 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/3] xfs: Don't free EOF blocks on sync write close
-Date: Thu,  7 Feb 2019 16:08:11 +1100
-Message-Id: <20190207050813.24271-2-david@fromorbit.com>
-In-Reply-To: <20190207050813.24271-1-david@fromorbit.com>
+Subject: Re: [RFC PATCH 0/3]: Extreme fragmentation ahoy!
+Message-ID: <20190207053941.GL14116@dastard>
 References: <20190207050813.24271-1-david@fromorbit.com>
+ <20190207052114.GA7991@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190207052114.GA7991@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Feb 06, 2019 at 09:21:14PM -0800, Darrick J. Wong wrote:
+> On Thu, Feb 07, 2019 at 04:08:10PM +1100, Dave Chinner wrote:
+> > Hi folks,
+> > 
+> > I've just finished analysing an IO trace from a application
+> > generating an extreme filesystem fragmentation problem that started
+> > with extent size hints and ended with spurious ENOSPC reports due to
+> > massively fragmented files and free space. While the ENOSPC issue
+> > looks to have previously been solved, I still wanted to understand
+> > how the application had so comprehensively defeated extent size
+> > hints as a method of avoiding file fragmentation.
+> > 
+> > The key behaviour that I discovered was that specific "append write
+> > only" files that had extent size hints to prevent fragmentation
+> > weren't actually write only.  The application didn't do a lot of
+> > writes to the file, but it kept the file open and appended to the
+> > file (from the traces I have) in chunks of between ~3000 bytes and
+> > ~160000 bytes. This didn't explain the problem. I did notice that
+> > the files were opened O_SYNC, however.
+> > 
+> > I then found was another process that, once every second, opened the
+> > log file O_RDONLY, read 28 bytes from offset zero, then closed the
+> > file. Every second. IOWs, between every appending write that would
+> > allocate an extent size hint worth of space beyond EOF and then
+> > write a small chunk of it, there were numerous open/read/close
+> > cycles being done on the same file.
+> > 
+> > And what do we do on close()? We call xfs_release() and that can
+> > truncate away blocks beyond EOF. For some reason the close wasn't
+> > triggering the IDIRTY_RELEASE heuristic that preventd close from
+> > removing EOF blocks prematurely. Then I realised that O_SYNC writes
+> > don't leave delayed allocation blocks behind - they are always
+> > converted in the context of the write. That's why it wasn't
+> > triggering, and that meant that the open/read/close cycle was
+> > removing the extent size hint allocation beyond EOF prematurely.
+> > beyond EOF prematurely.
+> 
+> <urk>
+> 
+> > Then it occurred to me that extent size hints don't use delalloc
+> > either, so they behave the same was as O_SYNC writes in this
+> > situation.
+> > 
+> > Oh, and we remove EOF blocks on O_RDONLY file close, too. i.e. we
+> > modify the file without having write permissions.
+> 
+> Yikes!
+> 
+> > I suspect there's more cases like this when combined with repeated
+> > open/<do_something>/close operations on a file that is being
+> > written, but the patches address just these ones I just talked
+> > about. The test script to reproduce them is below. Fragmentation
+> > reduction results are in the commit descriptions. It's running
+> > through fstests for a couple of hours now, no issues have been
+> > noticed yet.
+> > 
+> > FWIW, I suspect we need to have a good hard think about whether we
+> > should be trimming EOF blocks on close by default, or whether we
+> > should only be doing it in very limited situations....
+> > 
+> > Comments, thoughts, flames welcome.
+> > 
+> > -Dave.
+> > 
+> > 
+> > #!/bin/bash
+> > #
+> > # Test 1
+> 
+> Can you please turn these into fstests to cause the maintainer maximal
+> immediate pain^W^W^Wmake everyone pay attention^W^W^W^Westablish a basis
+> for regression testing and finding whatever other problems we can find
+> from digging deeper? :)
 
-When we have a workload that does open/sync write/close in parallel
-with other allocation, the file becomes rapidly fragmented. This is
-due to close() calling xfs_release() and removing the speculative
-preallocation beyond EOF.
+I will, but not today - I only understood the cause well enough to
+write a prototype reproducer about 4 hours ago. The rest of the time
+since then has been fixing the issues and running smoke tests. My
+brain is about fried now....
 
-The existing open/write/close hueristic in xfs_release() does not
-catch this as sync writes do not leave delayed allocation blocks
-allocated on the inode for later writeback that can be detected in
-xfs_release() and hence XFS_IDIRTY_RELEASE never gets set.
+FWIW, I think the scope of the problem is quite widespread -
+anything that does open/something/close repeatedly on a file that is
+being written to with O_DSYNC or O_DIRECT appending writes will kill
+the post-eof extent size hint allocated space. That's why I suspect
+we need to think about not trimming by default and trying to
+enumerating only the cases that need to trim eof blocks.
 
-In xfs_file_release(), we can tell whether the release context was a
-synchronous write context, and so we need to communicate this to
-xfs_release() so it can do the right thing here and skip EOF
-block truncation. This defers the EOF block cleanup for synchronous
-write contexts to the background EOF block cleaner which will clean
-up within a few minutes.
+e.g. I closed the O_RDONLY case, but O_RDWR/read/close in a loop
+will still trigger removal of post EOF extent size hint
+preallocation and hence severe fragmentation.
 
-Before:
+Cheers,
 
-Test 1: sync write fragmentation counts
-
-/mnt/scratch/file.0: 919
-/mnt/scratch/file.1: 916
-/mnt/scratch/file.2: 919
-/mnt/scratch/file.3: 920
-/mnt/scratch/file.4: 920
-/mnt/scratch/file.5: 921
-/mnt/scratch/file.6: 916
-/mnt/scratch/file.7: 918
-
-After:
-
-Test 1: sync write fragmentation counts
-
-/mnt/scratch/file.0: 24
-/mnt/scratch/file.1: 24
-/mnt/scratch/file.2: 11
-/mnt/scratch/file.3: 24
-/mnt/scratch/file.4: 3
-/mnt/scratch/file.5: 24
-/mnt/scratch/file.6: 24
-/mnt/scratch/file.7: 23
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_file.c  | 15 +++++++++++++--
- fs/xfs/xfs_inode.c |  9 +++++----
- fs/xfs/xfs_inode.h |  2 +-
- 3 files changed, 19 insertions(+), 7 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e47425071e65..02f76b8e6c03 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1019,12 +1019,23 @@ xfs_dir_open(
- 	return error;
- }
- 
-+/*
-+ * When we release the file, we don't want it to trim EOF blocks for synchronous
-+ * write contexts as this leads to severe fragmentation when applications do
-+ * repeated open/appending sync write/close to a file amongst other file IO.
-+ */
- STATIC int
- xfs_file_release(
- 	struct inode	*inode,
--	struct file	*filp)
-+	struct file	*file)
- {
--	return xfs_release(XFS_I(inode));
-+	bool		free_eof_blocks = true;
-+
-+	if ((file->f_mode & FMODE_WRITE) &&
-+	    (file->f_flags & O_DSYNC))
-+		free_eof_blocks = false;
-+
-+	return xfs_release(XFS_I(inode), free_eof_blocks);
- }
- 
- STATIC int
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index ae667ba74a1c..a74dc240697f 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1603,10 +1603,11 @@ xfs_itruncate_extents_flags(
- 
- int
- xfs_release(
--	xfs_inode_t	*ip)
-+	struct xfs_inode	*ip,
-+	bool			can_free_eofblocks)
- {
--	xfs_mount_t	*mp = ip->i_mount;
--	int		error;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	int			error;
- 
- 	if (!S_ISREG(VFS_I(ip)->i_mode) || (VFS_I(ip)->i_mode == 0))
- 		return 0;
-@@ -1642,7 +1643,7 @@ xfs_release(
- 	if (VFS_I(ip)->i_nlink == 0)
- 		return 0;
- 
--	if (xfs_can_free_eofblocks(ip, false)) {
-+	if (can_free_eofblocks && xfs_can_free_eofblocks(ip, false)) {
- 
- 		/*
- 		 * Check if the inode is being opened, written and closed
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index be2014520155..7e59b0e086d7 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -397,7 +397,7 @@ enum layout_break_reason {
- 	(((pip)->i_mount->m_flags & XFS_MOUNT_GRPID) || \
- 	 (VFS_I(pip)->i_mode & S_ISGID))
- 
--int		xfs_release(struct xfs_inode *ip);
-+int		xfs_release(struct xfs_inode *ip, bool can_free_eofblocks);
- void		xfs_inactive(struct xfs_inode *ip);
- int		xfs_lookup(struct xfs_inode *dp, struct xfs_name *name,
- 			   struct xfs_inode **ipp, struct xfs_name *ci_name);
+Dave.
 -- 
-2.20.1
+Dave Chinner
+david@fromorbit.com
