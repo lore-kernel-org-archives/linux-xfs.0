@@ -1,133 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44112 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726037AbfBGPwp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Feb 2019 10:52:45 -0500
-Date: Thu, 7 Feb 2019 10:52:43 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH 0/3]: Extreme fragmentation ahoy!
-Message-ID: <20190207155242.GE2880@bfoster>
-References: <20190207050813.24271-1-david@fromorbit.com>
- <20190207052114.GA7991@magnolia>
- <20190207053941.GL14116@dastard>
+Received: from mx2.suse.de ([195.135.220.15]:43900 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726186AbfBGKXx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Feb 2019 05:23:53 -0500
+Subject: Re: bcache on XFS: metadata I/O (dirent I/O?) not getting cached at
+ all?
+References: <87h8dgefee.fsf@esperi.org.uk>
+ <64f32487-5b8f-f6c2-37a9-84bb0717a9e1@suse.de>
+ <20190207094138.GZ24140@tuebingen.mpg.de>
+From: Coly Li <colyli@suse.de>
+Message-ID: <41fef785-1e38-87ea-115a-4cdb7e86ed18@suse.de>
+Date: Thu, 7 Feb 2019 18:23:44 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190207053941.GL14116@dastard>
+In-Reply-To: <20190207094138.GZ24140@tuebingen.mpg.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Andre Noll <maan@tuebingen.mpg.de>
+Cc: Nix <nix@esperi.org.uk>, linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Dave Chinner <david@fromorbit.com>
 
-On Thu, Feb 07, 2019 at 04:39:41PM +1100, Dave Chinner wrote:
-> On Wed, Feb 06, 2019 at 09:21:14PM -0800, Darrick J. Wong wrote:
-> > On Thu, Feb 07, 2019 at 04:08:10PM +1100, Dave Chinner wrote:
-> > > Hi folks,
-> > > 
-> > > I've just finished analysing an IO trace from a application
-> > > generating an extreme filesystem fragmentation problem that started
-> > > with extent size hints and ended with spurious ENOSPC reports due to
-> > > massively fragmented files and free space. While the ENOSPC issue
-> > > looks to have previously been solved, I still wanted to understand
-> > > how the application had so comprehensively defeated extent size
-> > > hints as a method of avoiding file fragmentation.
-> > > 
-> > > The key behaviour that I discovered was that specific "append write
-> > > only" files that had extent size hints to prevent fragmentation
-> > > weren't actually write only.  The application didn't do a lot of
-> > > writes to the file, but it kept the file open and appended to the
-> > > file (from the traces I have) in chunks of between ~3000 bytes and
-> > > ~160000 bytes. This didn't explain the problem. I did notice that
-> > > the files were opened O_SYNC, however.
-> > > 
-> > > I then found was another process that, once every second, opened the
-> > > log file O_RDONLY, read 28 bytes from offset zero, then closed the
-> > > file. Every second. IOWs, between every appending write that would
-> > > allocate an extent size hint worth of space beyond EOF and then
-> > > write a small chunk of it, there were numerous open/read/close
-> > > cycles being done on the same file.
-> > > 
-> > > And what do we do on close()? We call xfs_release() and that can
-> > > truncate away blocks beyond EOF. For some reason the close wasn't
-> > > triggering the IDIRTY_RELEASE heuristic that preventd close from
-> > > removing EOF blocks prematurely. Then I realised that O_SYNC writes
-> > > don't leave delayed allocation blocks behind - they are always
-> > > converted in the context of the write. That's why it wasn't
-> > > triggering, and that meant that the open/read/close cycle was
-> > > removing the extent size hint allocation beyond EOF prematurely.
-> > > beyond EOF prematurely.
-> > 
-> > <urk>
-> > 
-> > > Then it occurred to me that extent size hints don't use delalloc
-> > > either, so they behave the same was as O_SYNC writes in this
-> > > situation.
-> > > 
-> > > Oh, and we remove EOF blocks on O_RDONLY file close, too. i.e. we
-> > > modify the file without having write permissions.
-> > 
-> > Yikes!
-> > 
-> > > I suspect there's more cases like this when combined with repeated
-> > > open/<do_something>/close operations on a file that is being
-> > > written, but the patches address just these ones I just talked
-> > > about. The test script to reproduce them is below. Fragmentation
-> > > reduction results are in the commit descriptions. It's running
-> > > through fstests for a couple of hours now, no issues have been
-> > > noticed yet.
-> > > 
-> > > FWIW, I suspect we need to have a good hard think about whether we
-> > > should be trimming EOF blocks on close by default, or whether we
-> > > should only be doing it in very limited situations....
-> > > 
-> > > Comments, thoughts, flames welcome.
-> > > 
-> > > -Dave.
-> > > 
-> > > 
-> > > #!/bin/bash
-> > > #
-> > > # Test 1
-> > 
-> > Can you please turn these into fstests to cause the maintainer maximal
-> > immediate pain^W^W^Wmake everyone pay attention^W^W^W^Westablish a basis
-> > for regression testing and finding whatever other problems we can find
-> > from digging deeper? :)
-> 
-> I will, but not today - I only understood the cause well enough to
-> write a prototype reproducer about 4 hours ago. The rest of the time
-> since then has been fixing the issues and running smoke tests. My
-> brain is about fried now....
-> 
-> FWIW, I think the scope of the problem is quite widespread -
-> anything that does open/something/close repeatedly on a file that is
-> being written to with O_DSYNC or O_DIRECT appending writes will kill
-> the post-eof extent size hint allocated space. That's why I suspect
-> we need to think about not trimming by default and trying to
-> enumerating only the cases that need to trim eof blocks.
-> 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
 
-To further this point.. I think the eofblocks scanning stuff came long
-after the speculative preallocation code and associated release time
-post-eof truncate. I think the background scanning was initially an
-enhancement to deal with things like the dirty release optimization
-leaving these blocks around longer and being able to free up this
-accumulated space when we're at -ENOSPC conditions. Now that we have the
-scanning mechanism in place (and a 5 minute default background scan,
-which really isn't all that long), it might be reasonable to just drop
-the release time truncate completely and only trim post-eof blocks via
-the bg scan or reclaim paths.
-
-Brian
-
-> e.g. I closed the O_RDONLY case, but O_RDWR/read/close in a loop
-> will still trigger removal of post EOF extent size hint
-> preallocation and hence severe fragmentation.
+On 2019/2/7 5:41 下午, Andre Noll wrote:
+> On Thu, Feb 07, 16:16, Coly Li wrote
+>> From: Coly Li <colyli@suse.de> Date: Thu, 7 Feb 2019 15:54:24
+>> +0800 Subject: [PATCH] bcache: use (REQ_META|REQ_PRIO) to
+>> indicate bio for metadata
+>> 
+>> In 'commit 752f66a75aba ("bcache: use REQ_PRIO to indicate bio
+>> for metadata")' REQ_META is replaced by REQ_PRIO to indicate
+>> metadata bio. This assumption is not always correct, e.g. XFS
+>> uses REQ_META to mark metadata bio other than REQ_PRIO. This is
+>> why Nix reports a regression that bcache does not cache metadata
+>> for XFS after the above commit.
 > 
-> Cheers,
+> maybe s/reports a regression/noticed
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+>> Thanks to Dave Chinner, he explains the difference between
+>> REQ_META and REQ_PRIO from view of file system developer. Here I
+>> quote part of his explanation from mailing list, REQ_META is used
+>> for metadata. REQ_PRIO is used to communicate to the lower layers
+>> that the submitter considers this IO to be more important that
+>> non REQ_PRIO IO and so dispatch should be expedited.
+>> 
+>> IOWs, if the filesystem considers metadata IO to be more
+>> important that user data IO, then it will use REQ_PRIO | REQ_META
+>> rather than just REQ_META.
+>> 
+>> Then it seems bios with REQ_META or REQ_PRIO should both be
+>> cached for performance optimation, because they are all probably
+>> low I/O latency demand by upper layer (e.g. file system).
+>> 
+>> So in this patch, when we want to check whether a bio is
+>> metadata related, REQ_META and REQ_PRIO are both checked. Then
+>> both metadata and high priority I/O requests will be handled
+>> properly.
+> 
+> s/check whether a bio is metadata related/decide whether to bypass
+> the cache
+> 
+> Apart from these two nitpicks, feel free to add my Reviewed-by.
+
+Hi Andre,
+
+Thanks for your review :-)
+
+- -- 
+
+Coly Li
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEE6j5FL/T5SGCN6PrQxzkHk2t9+PwFAlxcBy0ACgkQxzkHk2t9
++PxmeRAAnIh3KzGx13lmpj/0sDlellc02eawvooSDE8zTNsqo/UzqAB1lzUvtJx1
+SQXYepoM4hPjrGzDKBe+oaMWuzG6WO08kI0dMT1Q1cfKX2eucExa8G9oRHQqxxBq
+wRChl4HKScqvyCy0XTQYet8QJwFAeBAdBzM2L0VOuulsRjLKBSfpcH+jr9fdNt/S
+wWGv9KVlJDq3BZrRA0TA1ovDl4wohyvtXM4OL27ahUMlmj4cI0XlaoketaAVM8QS
+z7uK+9sRdemW3cvfkl76wfIkiSN43Pk6RZcKRAHzlSgwF1L3xY7ZPxhFz187bFzI
+ANpTLVXiv1JNx+jnceV4O7UVZyj06hQhh1VFLedqpAVvzgYNp8RRSaiWucNH7m5d
+6qzw5+ob5jMEI2vdXooYC8hVwNaXa+3XfVU5QLlKVG9Al1kZxgkE3e8s28pjj3Df
+WJXaqkOCnal12FZ9Hz+Ev/Jp/1wmN3TagPJyeVlc/0vQTIXfBFuSssL+n/1RrKjd
+wTc2WuWBf2x7BLnuCX6z4fDvPLuW8LOJCrCYsqr4z5s7YI6mb0B4qDSqli8dN2TB
+vxnY1K1WQW/9BhE/QQpXHKBD2nRbPYcaAZEhk3UvIdV2dvafdQpcD4FgrEXGKXV8
+MmkaeTcQ4NcSNvGWgG9vaiY0acE8YGtqNsBDAtjOglJrP/tJjJA=
+=kG5J
+-----END PGP SIGNATURE-----
