@@ -1,106 +1,200 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44956 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46562 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726401AbfBGTmn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Feb 2019 14:42:43 -0500
-Date: Thu, 7 Feb 2019 14:42:41 -0500
+        id S1726512AbfBGUKD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Feb 2019 15:10:03 -0500
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 85A895856F
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Feb 2019 20:10:02 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 39AD217A67
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Feb 2019 20:10:02 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v4 7/8] xfs: miscellaneous verifier magic value fixups
-Message-ID: <20190207194240.GC61958@bfoster>
-References: <20190207184105.17064-1-bfoster@redhat.com>
- <20190207184105.17064-8-bfoster@redhat.com>
- <20190207191313.GK7991@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190207191313.GK7991@magnolia>
+Subject: [PATCH v4.1] xfs: use verifier magic field in dir2 leaf verifiers
+Date: Thu,  7 Feb 2019 15:10:01 -0500
+Message-Id: <20190207201001.18597-1-bfoster@redhat.com>
+In-Reply-To: <20190207184105.17064-7-bfoster@redhat.com>
+References: <20190207184105.17064-7-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Feb 07, 2019 at 11:13:13AM -0800, Darrick J. Wong wrote:
-> On Thu, Feb 07, 2019 at 01:41:04PM -0500, Brian Foster wrote:
-> > Most buffer verifiers have hardcoded magic value checks
-> > conditionalized on the version of the filesystem. The magic value
-> > field of the verifier structure facilitates abstraction of some of
-> > this code. Populate the ->magic field of various verifiers to take
-> > advantage of this abstraction. No functional changes.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_alloc.c          | 12 ++++++++----
-> >  fs/xfs/libxfs/xfs_attr_leaf.c      | 11 +++++------
-> >  fs/xfs/libxfs/xfs_attr_remote.c    |  8 +++++---
-> >  fs/xfs/libxfs/xfs_bmap_btree.c     | 13 ++++++-------
-> >  fs/xfs/libxfs/xfs_da_btree.c       | 11 +++++------
-> >  fs/xfs/libxfs/xfs_dir2_block.c     | 10 +++++-----
-> >  fs/xfs/libxfs/xfs_dir2_data.c      | 12 +++++++-----
-> >  fs/xfs/libxfs/xfs_dir2_node.c      | 10 +++++-----
-> >  fs/xfs/libxfs/xfs_ialloc.c         |  3 ++-
-> >  fs/xfs/libxfs/xfs_refcount_btree.c |  3 ++-
-> >  fs/xfs/libxfs/xfs_rmap_btree.c     |  3 ++-
-> >  fs/xfs/libxfs/xfs_sb.c             |  4 +++-
-> >  fs/xfs/libxfs/xfs_symlink_remote.c |  3 ++-
-> >  fs/xfs/xfs_ondisk.h                |  6 ++++++
-> >  14 files changed, 63 insertions(+), 46 deletions(-)
-> > 
-...
-> > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> > index 0209f3e91254..881af4f7ed89 100644
-> > --- a/fs/xfs/xfs_ondisk.h
-> > +++ b/fs/xfs/xfs_ondisk.h
-> > @@ -136,6 +136,12 @@ xfs_check_ondisk_structs(void)
-> >  	 */
-> >  	XFS_CHECK_OFFSET(struct xfs_dir2_leaf, hdr.info.magic,		8);
-> >  	XFS_CHECK_OFFSET(struct xfs_dir3_leaf_hdr, info.hdr.magic,	8);
-> > +	XFS_CHECK_OFFSET(struct xfs_attr_leafblock, hdr.info.magic,	8);
-> 
-> > +	XFS_CHECK_OFFSET(struct xfs_da3_node_hdr, info.hdr.magic,	8);
-> > +	XFS_CHECK_OFFSET(struct xfs_da_intnode, hdr.info.magic,		8);
-> 
-> Should there be a check for struct xfs_da3_intnode too?
-> 
+The dir2 leaf verifiers share the same underlying structure
+verification code, but implement six accessor functions to multiplex
+the code across the two verifiers. Further, the magic value isn't
+sufficiently abstracted such that the common helper has to manually
+fix up the magic from the caller on v5 filesystems.
 
-I think this is the same deal as the previous patch. The verifier uses
-xfs_da_intnode (where I suppose it could use either).
+Use the magic field in the verifier structure to eliminate the
+duplicate code and clean this all up. No functional change.
 
-> > +	XFS_CHECK_OFFSET(struct xfs_da3_node_hdr, info.hdr.magic,	8);
-> 
-> Is one of these supposed to be struct xfs_da_node_hdr?
-> 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-Is that used in one of the verifiers (as opposed to xfs_da_intnode I
-suspect)? I replaced 3 asserts in this patch and replaced each with the
-magic value as accessed via the associated verifier on v4 and v5.
-
-> Granted these all end up comparing the same thing, so maybe it's
-> overkill to check da_node_hdr/da_intnode and da3_node_hdr/da3_intnode?
-> 
-
-The intent is just to cover the fact that the verifiers expect these
-magic values to reside at the same offset, not so much that they're at
-some particular offset. That's the reason for the comment above.
-
-Perhaps it's better just to remove all of this entirely since this is
-1.) not going to change without breaking v4/v5 fs' 2.) still technically
-doesn't encode the requirement of the verifier and 3.) is kind of
-getting beyond the scope of this series. Some of these verifiers used
-the magic value itself to distinguish between v4 and v5 already, after
-all. The original asserts were really just added as a quick mechanism to
-make sure nothing obvious was broken by the changes that collapsed a few
-of the verifiers with separate but similar magic checks.
+This v4.1 update drops the compile-time magic value offset checks.
+Rather than attempt to retrofit the original asserts into the
+xfs_ondisk.h infrastructure, it's probably more appropriate to add some
+checks that ensure the v4 headers land at the expected offset of the v5
+extended variants (where appropriate). This is outside the scope of this
+series.
 
 Brian
 
-> --D
-> 
-> > +	XFS_CHECK_OFFSET(struct xfs_dir2_free_hdr, magic,		0);
-> > +	XFS_CHECK_OFFSET(struct xfs_dir3_blk_hdr, magic,		0);
-> >  }
-> >  
-> >  #endif /* __XFS_ONDISK_H */
-> > -- 
-> > 2.17.2
-> > 
+ fs/xfs/libxfs/xfs_dir2_leaf.c | 87 ++++++++---------------------------
+ 1 file changed, 19 insertions(+), 68 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 1728a3e6f5cf..dee0fd333d9d 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -142,41 +142,31 @@ xfs_dir3_leaf_check_int(
+  */
+ static xfs_failaddr_t
+ xfs_dir3_leaf_verify(
+-	struct xfs_buf		*bp,
+-	uint16_t		magic)
++	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_dir2_leaf	*leaf = bp->b_addr;
+ 
+-	ASSERT(magic == XFS_DIR2_LEAF1_MAGIC || magic == XFS_DIR2_LEAFN_MAGIC);
++	if (!xfs_verify_magic(bp, leaf->hdr.info.magic))
++		return __this_address;
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
+-		uint16_t		magic3;
+ 
+-		magic3 = (magic == XFS_DIR2_LEAF1_MAGIC) ? XFS_DIR3_LEAF1_MAGIC
+-							 : XFS_DIR3_LEAFN_MAGIC;
+-
+-		if (leaf3->info.hdr.magic != cpu_to_be16(magic3))
+-			return __this_address;
+ 		if (!uuid_equal(&leaf3->info.uuid, &mp->m_sb.sb_meta_uuid))
+ 			return __this_address;
+ 		if (be64_to_cpu(leaf3->info.blkno) != bp->b_bn)
+ 			return __this_address;
+ 		if (!xfs_log_check_lsn(mp, be64_to_cpu(leaf3->info.lsn)))
+ 			return __this_address;
+-	} else {
+-		if (leaf->hdr.info.magic != cpu_to_be16(magic))
+-			return __this_address;
+ 	}
+ 
+ 	return xfs_dir3_leaf_check_int(mp, NULL, NULL, leaf);
+ }
+ 
+ static void
+-__read_verify(
+-	struct xfs_buf  *bp,
+-	uint16_t	magic)
++xfs_dir3_leaf_read_verify(
++	struct xfs_buf  *bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	xfs_failaddr_t		fa;
+@@ -185,23 +175,22 @@ __read_verify(
+ 	     !xfs_buf_verify_cksum(bp, XFS_DIR3_LEAF_CRC_OFF))
+ 		xfs_verifier_error(bp, -EFSBADCRC, __this_address);
+ 	else {
+-		fa = xfs_dir3_leaf_verify(bp, magic);
++		fa = xfs_dir3_leaf_verify(bp);
+ 		if (fa)
+ 			xfs_verifier_error(bp, -EFSCORRUPTED, fa);
+ 	}
+ }
+ 
+ static void
+-__write_verify(
+-	struct xfs_buf  *bp,
+-	uint16_t	magic)
++xfs_dir3_leaf_write_verify(
++	struct xfs_buf  *bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
+ 	struct xfs_dir3_leaf_hdr *hdr3 = bp->b_addr;
+ 	xfs_failaddr_t		fa;
+ 
+-	fa = xfs_dir3_leaf_verify(bp, magic);
++	fa = xfs_dir3_leaf_verify(bp);
+ 	if (fa) {
+ 		xfs_verifier_error(bp, -EFSCORRUPTED, fa);
+ 		return;
+@@ -216,60 +205,22 @@ __write_verify(
+ 	xfs_buf_update_cksum(bp, XFS_DIR3_LEAF_CRC_OFF);
+ }
+ 
+-static xfs_failaddr_t
+-xfs_dir3_leaf1_verify(
+-	struct xfs_buf	*bp)
+-{
+-	return xfs_dir3_leaf_verify(bp, XFS_DIR2_LEAF1_MAGIC);
+-}
+-
+-static void
+-xfs_dir3_leaf1_read_verify(
+-	struct xfs_buf	*bp)
+-{
+-	__read_verify(bp, XFS_DIR2_LEAF1_MAGIC);
+-}
+-
+-static void
+-xfs_dir3_leaf1_write_verify(
+-	struct xfs_buf	*bp)
+-{
+-	__write_verify(bp, XFS_DIR2_LEAF1_MAGIC);
+-}
+-
+-static xfs_failaddr_t
+-xfs_dir3_leafn_verify(
+-	struct xfs_buf	*bp)
+-{
+-	return xfs_dir3_leaf_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+-}
+-
+-static void
+-xfs_dir3_leafn_read_verify(
+-	struct xfs_buf	*bp)
+-{
+-	__read_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+-}
+-
+-static void
+-xfs_dir3_leafn_write_verify(
+-	struct xfs_buf	*bp)
+-{
+-	__write_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+-}
+-
+ const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
+ 	.name = "xfs_dir3_leaf1",
+-	.verify_read = xfs_dir3_leaf1_read_verify,
+-	.verify_write = xfs_dir3_leaf1_write_verify,
+-	.verify_struct = xfs_dir3_leaf1_verify,
++	.magic = { cpu_to_be16(XFS_DIR2_LEAF1_MAGIC),
++		   cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) },
++	.verify_read = xfs_dir3_leaf_read_verify,
++	.verify_write = xfs_dir3_leaf_write_verify,
++	.verify_struct = xfs_dir3_leaf_verify,
+ };
+ 
+ const struct xfs_buf_ops xfs_dir3_leafn_buf_ops = {
+ 	.name = "xfs_dir3_leafn",
+-	.verify_read = xfs_dir3_leafn_read_verify,
+-	.verify_write = xfs_dir3_leafn_write_verify,
+-	.verify_struct = xfs_dir3_leafn_verify,
++	.magic = { cpu_to_be16(XFS_DIR2_LEAFN_MAGIC),
++		   cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) },
++	.verify_read = xfs_dir3_leaf_read_verify,
++	.verify_write = xfs_dir3_leaf_write_verify,
++	.verify_struct = xfs_dir3_leaf_verify,
+ };
+ 
+ int
+-- 
+2.17.2
