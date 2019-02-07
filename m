@@ -1,102 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:55104 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725910AbfBGFIg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 00:08:36 -0500
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1grbv6-0003pK-Q6
-        for linux-xfs@vger.kernel.org; Thu, 07 Feb 2019 16:08:16 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.92-RC5)
-        (envelope-from <david@fromorbit.com>)
-        id 1grbv6-0006KW-Oq
-        for linux-xfs@vger.kernel.org; Thu, 07 Feb 2019 16:08:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] xfs: Don't free EOF blocks on close when extent size hints are set
-Date: Thu,  7 Feb 2019 16:08:12 +1100
-Message-Id: <20190207050813.24271-3-david@fromorbit.com>
-In-Reply-To: <20190207050813.24271-1-david@fromorbit.com>
-References: <20190207050813.24271-1-david@fromorbit.com>
+Received: from mail-wm1-f51.google.com ([209.85.128.51]:52952 "EHLO
+        mail-wm1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726186AbfBGKvL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 05:51:11 -0500
+Received: by mail-wm1-f51.google.com with SMTP id m1so5589814wml.2
+        for <linux-xfs@vger.kernel.org>; Thu, 07 Feb 2019 02:51:09 -0800 (PST)
+Subject: Re: ENSOPC on a 10% used disk
+References: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
+ <20190205214847.GE14116@dastard>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <5a9691ef-bd4a-f9d4-9fc4-1171645daca0@scylladb.com>
+Date: Thu, 7 Feb 2019 12:51:06 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190205214847.GE14116@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-When we have a workload that does open/write/close on files with
-extent size hints set in parallel with other allocation, the file
-becomes rapidly fragmented. This is due to close() calling
-xfs_release() and removing the preallocated extent beyond EOF.  This
-occurs for both buffered and direct writes that append to files with
-extent size hints.
 
-The existing open/write/close hueristic in xfs_release() does not
-catch this as writes to files using extent size hints do not use
-delayed allocation and hence do not leave delayed allocation blocks
-allocated on the inode that can be detected in xfs_release(). Hence
-XFS_IDIRTY_RELEASE never gets set.
+On 05/02/2019 23.48, Dave Chinner wrote:
+> Hi Avi,
+>
+> On Wed, Oct 17, 2018 at 10:52:48AM +0300, Avi Kivity wrote:
+>> I have a user running a 1.7TB filesystem with ~10% usage (as shown
+>> by df), getting sporadic ENOSPC errors. The disk is mounted with
+>> inode64 and has a relatively small number of large files. The disk
+>> is a single-member RAID0 array, with 1MB chunk size. There are 32
+>> AGs. Running Linux 4.9.17.
+>>
+>>
+>> The write load consists of AIO/DIO writes, followed by unlinks of
+>> these files. The writes are non-size-changing (we truncate ahead)
+>> and we use XFS_IOC_FSSETXATTR/XFS_FLAG_EXTSIZE with a hint size of
+>> 32MB. The errors happen on commit logs, which have a target size of
+>> 32MB (but may exceed it a little).
+>>
+>>
+>> The errors are sporadic and after restarting the workload they go
+>> away for a few hours to a few days, but then return. During one of
+>> the crashes I used xfs_db to look at fragmentation and saw that most
+>> AGs had free extents of size categories up to 128-255, but a few had
+>> more. I tried xfs_fsr but it did not help.
+>>
+>>
+>> Is this a known issue? Would upgrading the kernel help?
+> Long time, I know, but Brian has just made me aware of this commit
+> from early 2018 that went into 4.16 that might be relevant and so I
+> thought it best to close the loop:
+>
+> commit 6d8a45ce29c7d67cc4fc3016dc2a07660c62482a
+> Author: Darrick J. Wong <darrick.wong@oracle.com>
+> Date:   Fri Jan 19 17:47:36 2018 -0800
+>
+>      xfs: don't screw up direct writes when freesp is fragmented
+>      
+>      xfs_bmap_btalloc is given a range of file offset blocks that must be
+>      allocated to some data/attr/cow fork.  If the fork has an extent size
+>      hint associated with it, the request will be enlarged on both ends to
+>      try to satisfy the alignment hint.  If free space is fragmentated,
+>      sometimes we can allocate some blocks but not enough to fulfill any of
+>      the requested range.  Since bmapi_allocate always trims the new extent
+>      mapping to match the originally requested range, this results in
+>      bmapi_write returning zero and no mapping.
+>      
+>      The consequences of this vary -- buffered writes will simply re-call
+>      bmapi_write until it can satisfy at least one block from the original
+>      request.  Direct IO overwrites notice nmaps == 0 and return -ENOSPC
+>      through the dio mechanism out to userspace with the weird result that
+>      writes fail even when we have enough space because the ENOSPC return
+>      overrides any partial write status.  For direct CoW writes the situation
+>      was disastrous because nobody notices us returning an invalid zero-length
+>      wrong-offset mapping to iomap and the write goes off into space.
+>      
+>      Therefore, if free space is so fragmented that we managed to allocate
+>      some space but not enough to map into even a single block of the
+>      original allocation request range, we should break the alignment hint in
+>      order to guarantee at least some forward progress for the direct write.
+>      If we return a short allocation to iomap_apply it'll call back about the
+>      remaining blocks.
+>      
+>      Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>      Reviewed-by: Christoph Hellwig <hch@lst.de>
+>
+> The spurious ENOSPC symptoms seem to match what you are seeing here
+> on your customer's 4.9 kernel, so it may be that this is the fix for
+> the ENOSPC problem that was reported. If this comes up again, then
+> perhaps it would be worth either upgrading the kernel to 4.16+ or
+> backporting this commit to see if it fixes the problem.
 
-In xfs_file_release(), we can tell whether the inode has extent size
-hints set and skip EOF block truncation. We add this check to
-xfs_can_free_eofblocks() so that we treat the post-EOF preallocated
-extent like intentional preallocation and so are persistent unless
-directly removed by userspace.
 
-Before:
-
-Test 2: Extent size hint fragmentation counts
-
-/mnt/scratch/file.0: 1002
-/mnt/scratch/file.1: 1002
-/mnt/scratch/file.2: 1002
-/mnt/scratch/file.3: 1002
-/mnt/scratch/file.4: 1002
-/mnt/scratch/file.5: 1002
-/mnt/scratch/file.6: 1002
-/mnt/scratch/file.7: 1002
-
-After:
-
-Test 2: Extent size hint fragmentation counts
-
-/mnt/scratch/file.0: 4
-/mnt/scratch/file.1: 4
-/mnt/scratch/file.2: 4
-/mnt/scratch/file.3: 4
-/mnt/scratch/file.4: 4
-/mnt/scratch/file.5: 4
-/mnt/scratch/file.6: 4
-/mnt/scratch/file.7: 4
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_bmap_util.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 1ee8c5539fa4..98e5e305b789 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -761,12 +761,15 @@ xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
- 		return false;
- 
- 	/*
--	 * Do not free real preallocated or append-only files unless the file
--	 * has delalloc blocks and we are forced to remove them.
-+	 * Do not free extent size hints, real preallocated or append-only files
-+	 * unless the file has delalloc blocks and we are forced to remove
-+	 * them.
- 	 */
--	if (ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
-+	if (xfs_get_extsz_hint(ip) ||
-+	    (ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))) {
- 		if (!force || ip->i_delayed_blks == 0)
- 			return false;
-+	}
- 
- 	return true;
- }
--- 
-2.20.1
+Thanks for remembering. Indeed it looks like a good match for the 
+problem. We did not see the problem again (it took quite a combination 
+of screwups to achieve), but I'll remember this in case that we do.
