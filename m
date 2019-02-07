@@ -1,100 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:38516 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725988AbfBJLOf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Feb 2019 06:14:35 -0500
-Date: Sun, 10 Feb 2019 19:14:28 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH] xfs/420: only check the extent layout after syncing
-Message-ID: <20190210111428.GV2713@desktop>
-References: <20190204153026.1673-1-hch@lst.de>
+Received: from icebox.esperi.org.uk ([81.187.191.129]:42044 "EHLO
+        mail.esperi.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727467AbfBGUvi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 15:51:38 -0500
+From: Nix <nix@esperi.org.uk>
+Subject: Re: bcache on XFS: metadata I/O (dirent I/O?) not getting cached at all?
+References: <87h8dgefee.fsf@esperi.org.uk>
+        <64f32487-5b8f-f6c2-37a9-84bb0717a9e1@suse.de>
+Date: Thu, 07 Feb 2019 20:51:26 +0000
+In-Reply-To: <64f32487-5b8f-f6c2-37a9-84bb0717a9e1@suse.de> (Coly Li's message
+        of "Thu, 7 Feb 2019 16:16:48 +0800")
+Message-ID: <87k1ib8gq9.fsf@esperi.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190204153026.1673-1-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Coly Li <colyli@suse.de>
+Cc: linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Andre Noll <maan@tuebingen.mpg.de>
 
-On Mon, Feb 04, 2019 at 04:30:26PM +0100, Christoph Hellwig wrote:
-> This tests validates the correct extent layout for some hairy reflink
-> related issues.  But until we called sync or fsync we have no gurantee
-> of any data fork layout, as only writeback moves the extents from the
-> COW for to the data fork.
-> 
-> The comparism pass before the sync might see an "error" if we use COW
-> fork speculative preallocations for non-overwrites, which is useful to
-> reduce fragmentation.
-> 
-> Just remove the pass of comparisms before the sync, as the one after
-> the sync will catch all persistent issues.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 7 Feb 2019, Coly Li uttered the following:
+> On 2019/2/7 6:11 上午, Nix wrote:
+>> As it is, this seems to render bcache more or less useless with XFS,
+>> since bcache's primary raison d'etre is precisely to cache seeky stuff
+>> like metadata. :(
+>
+> Hi Nix,
+>
+> Could you please to try whether the attached patch makes things better ?
 
-I think this is fine. But I'd like the test author to take a look too.
+Looks good! Before huge tree cp -al:
 
-/me looks at Darrick :)
+loom:~# bcache-stats 
+stats_total/bypassed: 1.0G
+stats_total/cache_bypass_hits: 16
+stats_total/cache_bypass_misses: 26436
+stats_total/cache_hit_ratio: 46
+stats_total/cache_hits: 24349
+stats_total/cache_miss_collisions: 8
+stats_total/cache_misses: 27898
+stats_total/cache_readaheads: 0
 
-Thanks,
-Eryu
+After:
 
-> ---
->  tests/xfs/420     | 14 --------------
->  tests/xfs/420.out | 14 --------------
->  2 files changed, 28 deletions(-)
-> 
-> diff --git a/tests/xfs/420 b/tests/xfs/420
-> index a083a12b..0d611fd6 100755
-> --- a/tests/xfs/420
-> +++ b/tests/xfs/420
-> @@ -93,20 +93,6 @@ $XFS_IO_PROG -c "pwrite -S 0x63 $((blksz * 3)) $blksz" $testdir/file2 >> $seqres
->  $XFS_IO_PROG -c "pwrite -S 0x63 0 $blksz" $testdir/file3 >> $seqres.full
->  $XFS_IO_PROG -c "pwrite -S 0x63 $((blksz * 3)) $blksz" $testdir/file3 >> $seqres.full
->  
-> -$XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file1 >> $seqres.full 2>&1
-> -$XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file2 >> $seqres.full 2>&1
-> -$XFS_IO_PROG -c "bmap -ev" -c "bmap -cv" $testdir/file3 >> $seqres.full 2>&1
-> -
-> -echo "Seek holes and data in file1"
-> -$XFS_IO_PROG -c "seek -a -r 0" $testdir/file1
-> -echo "Seek holes and data in file2"
-> -$XFS_IO_PROG -c "seek -a -r 0" $testdir/file2
-> -
-> -echo "Compare files"
-> -md5sum $testdir/file1 | _filter_scratch
-> -md5sum $testdir/file2 | _filter_scratch
-> -md5sum $testdir/file3 | _filter_scratch
-> -
->  echo "sync filesystem" | tee -a $seqres.full
->  sync
->  
-> diff --git a/tests/xfs/420.out b/tests/xfs/420.out
-> index d1b5483a..39360741 100644
-> --- a/tests/xfs/420.out
-> +++ b/tests/xfs/420.out
-> @@ -6,20 +6,6 @@ c2803804acc9936eef8aab42c119bfac  SCRATCH_MNT/test-420/file1
->  c2803804acc9936eef8aab42c119bfac  SCRATCH_MNT/test-420/file2
->  c2803804acc9936eef8aab42c119bfac  SCRATCH_MNT/test-420/file3
->  CoW the shared part then write into the empty part
-> -Seek holes and data in file1
-> -Whence	Result
-> -DATA	0
-> -HOLE	131072
-> -Seek holes and data in file2
-> -Whence	Result
-> -DATA	0
-> -HOLE	131072
-> -DATA	196608
-> -HOLE	262144
-> -Compare files
-> -c2803804acc9936eef8aab42c119bfac  SCRATCH_MNT/test-420/file1
-> -017c08a9320aad844ce86aa9631afb98  SCRATCH_MNT/test-420/file2
-> -017c08a9320aad844ce86aa9631afb98  SCRATCH_MNT/test-420/file3
->  sync filesystem
->  Seek holes and data in file1
->  Whence	Result
-> -- 
-> 2.20.1
-> 
+stats_total/bypassed: 1.1G
+stats_total/cache_bypass_hits: 16
+stats_total/cache_bypass_misses: 27176
+stats_total/cache_hit_ratio: 43
+stats_total/cache_hits: 24443
+stats_total/cache_miss_collisions: 9
+stats_total/cache_misses: 32152           <----
+stats_total/cache_readaheads: 0
+
+So loads of new misses. (A bunch of bypassed misses too. Not sure where
+those came from, maybe some larger sequential reads somewhere, but a lot
+is getting cached now, and every bit of metadata that gets cached means
+things get a bit faster.)
+
+
+btw I have ported ewheeler's ioprio-based cache hinting patch to 4.20;
+I/O below the ioprio threshold bypasses everything, even metadata and
+REQ_PRIO stuff. It was trivial, but I was able to spot and fix a tiny
+bypass accounting bug in the patch in the process): see
+http://www.esperi.org.uk/~nix/bundles/bcache-ioprio.bundle. (I figured
+you didn't want almost exactly the same patch series as before posted to
+the list, but I can do that if you prefer.)
+
+
+Put this all together and it seems to work very well: my test massive
+compile triggered 500MiB of metadata writes at the start and then the
+actual compile (being entirely sequential reads) hardly wrote anything
+out and was almost entirely bypassed: meanwhile a huge git push I ran at
+idle priority didn't pollute the cache at all. Excellent!
+
+(I'm also keeping write volumes down by storing transient things like
+objdirs that just sit in the page cache and then get deleted on a
+separate non-bcached, non-journalled ext4 fs at the start of the the
+spinning rust disk, with subdirs of this fs bind-mounted into various
+places as needed. I should make the scripts that do that public because
+they seem likely to be useful to bcache users...)
+
+
+Semi-unrelated side note: after my most recent reboot, which involved a
+bcache journal replay even though my shutdown was clean, the stats_total
+reset; the cache device's bcache/written and
+bcache/set/cache_available_percent also flipped to 0 and 100%,. I
+suspect this is merely a stats bug of some sort, because the boot was
+notably faster than before and cache_hits was about 6000 by the time it
+was done. bcache/priority_stats *does* say that the cache is "only" 98%
+unused, like it did before. Maybe cache_available_percent doesn't mean
+what I thought it did.
+
+-- 
+NULL && (void)
