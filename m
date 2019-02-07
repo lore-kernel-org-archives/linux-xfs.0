@@ -1,554 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52044 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726767AbfBFQzk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Feb 2019 11:55:40 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x16GsCrH146921
-        for <linux-xfs@vger.kernel.org>; Wed, 6 Feb 2019 16:55:38 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2qd9arj784-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 06 Feb 2019 16:55:38 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x16GtcQD028340
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 6 Feb 2019 16:55:38 GMT
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x16Gtbrj030621
-        for <linux-xfs@vger.kernel.org>; Wed, 6 Feb 2019 16:55:37 GMT
-Subject: [PATCH 9/9] xfs: cache unlinked pointers in an rhashtable
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 06 Feb 2019 08:55:36 -0800
-Message-ID: <154947213625.22369.7330296004413590907.stgit@magnolia>
-In-Reply-To: <154947207759.22369.11575570374120223292.stgit@magnolia>
-References: <154947207759.22369.11575570374120223292.stgit@magnolia>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:55104 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725910AbfBGFIe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 00:08:34 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1grbv6-0003pN-R4
+        for linux-xfs@vger.kernel.org; Thu, 07 Feb 2019 16:08:16 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.92-RC5)
+        (envelope-from <david@fromorbit.com>)
+        id 1grbv6-0006KZ-Pw
+        for linux-xfs@vger.kernel.org; Thu, 07 Feb 2019 16:08:16 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 3/3] xfs: Don't free EOF blocks on sync write close
+Date: Thu,  7 Feb 2019 16:08:13 +1100
+Message-Id: <20190207050813.24271-4-david@fromorbit.com>
+In-Reply-To: <20190207050813.24271-1-david@fromorbit.com>
+References: <20190207050813.24271-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Use a rhashtable to cache the unlinked list incore.  This should speed
-up unlinked processing considerably when there are a lot of inodes on
-the unlinked list because iunlink_remove no longer has to traverse an
-entire bucket list to find which inode points to the one being removed.
+When we have a workload that does open/read/close in parallel with
+other synchronous buffered writes to long term open files, the file
+becomes rapidly fragmented. This is due to close() after read
+calling xfs_release() and removing the speculative preallocation
+beyond EOF.
 
-The incore list structure records "X.next_unlinked = Y" relations, with
-the rhashtable using Y to index the records.  This makes finding the
-inode X that points to a inode Y very quick.  If our cache fails to find
-anything we can always fall back on the old method.
+The existing open/write/close hueristic in xfs_release() does not
+catch this as sync writes do not leave delayed allocation blocks
+allocated on the inode for later writeback that can be detected in
+xfs_release() and hence XFS_IDIRTY_RELEASE never gets set.
 
-FWIW this drastically reduces the amount of time it takes to remove
-inodes from the unlinked list.  I wrote a program to open a lot of
-O_TMPFILE files and then close them in the same order, which takes
-a very long time if we have to traverse the unlinked lists.  With the
-ptach, I see:
+Further, the close context here is for a file opened O_RDONLY, and
+so /modifying/ the file metadata on close doesn't pass muster.
+Fortunately, we can tell in xfs_file_release() whether the release
+context was a read-only context, and so we need to communicate this
+to xfs_release() so it can do the right thing here and skip EOF
+block truncation, hence ensuring that only contexts with write
+permissions will remove post-EOF blocks from the file.
 
-+ /d/t/tmpfile/tmpfile
-Opened 193531 files in 6.33s.
-Closed 193531 files in 5.86s
+Before:
 
-real    0m12.192s
-user    0m0.064s
-sys     0m11.619s
-+ cd /
-+ umount /mnt
+Test 3: Open/read/close loop fragmentation counts
 
-real    0m0.050s
-user    0m0.004s
-sys     0m0.030s
+/mnt/scratch/file.0: 150
+/mnt/scratch/file.1: 342
+/mnt/scratch/file.2: 113
+/mnt/scratch/file.3: 165
+/mnt/scratch/file.4: 86
+/mnt/scratch/file.5: 363
+/mnt/scratch/file.6: 129
+/mnt/scratch/file.7: 233
 
-And without the patch:
+After:
 
-+ /d/t/tmpfile/tmpfile
-Opened 193588 files in 6.35s.
-Closed 193588 files in 751.61s
+Test 3: Open/read/close loop fragmentation counts
 
-real    12m38.853s
-user    0m0.084s
-sys     12m34.470s
-+ cd /
-+ umount /mnt
+/mnt/scratch/file.0: 12
+/mnt/scratch/file.1: 12
+/mnt/scratch/file.2: 12
+/mnt/scratch/file.3: 12
+/mnt/scratch/file.4: 12
+/mnt/scratch/file.5: 12
+/mnt/scratch/file.6: 12
+/mnt/scratch/file.7: 12
 
-real    0m0.086s
-user    0m0.000s
-sys     0m0.060s
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_errortag.h |    4 -
- fs/xfs/xfs_error.c           |    3 
- fs/xfs/xfs_inode.c           |  269 +++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_inode.h           |    3 
- fs/xfs/xfs_mount.c           |    5 +
- fs/xfs/xfs_mount.h           |    7 +
- fs/xfs/xfs_trace.h           |    1 
- 7 files changed, 285 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_file.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index 66077a105cbb..79e6c4fb1d8a 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -54,7 +54,8 @@
- #define XFS_ERRTAG_BUF_LRU_REF				31
- #define XFS_ERRTAG_FORCE_SCRUB_REPAIR			32
- #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
--#define XFS_ERRTAG_MAX					34
-+#define XFS_ERRTAG_IUNLINK_FALLBACK			34
-+#define XFS_ERRTAG_MAX					35
- 
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -93,5 +94,6 @@
- #define XFS_RANDOM_BUF_LRU_REF				2
- #define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
- #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
-+#define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
- 
- #endif /* __XFS_ERRORTAG_H_ */
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 9866f542e77b..cc77c11bd0d4 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -51,6 +51,7 @@ static unsigned int xfs_errortag_random_default[] = {
- 	XFS_RANDOM_BUF_LRU_REF,
- 	XFS_RANDOM_FORCE_SCRUB_REPAIR,
- 	XFS_RANDOM_FORCE_SUMMARY_RECALC,
-+	XFS_RANDOM_IUNLINK_FALLBACK,
- };
- 
- struct xfs_errortag_attr {
-@@ -159,6 +160,7 @@ XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
- XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
- XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
- XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
-+XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
- 
- static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(noerror),
-@@ -195,6 +197,7 @@ static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
- 	XFS_ERRORTAG_ATTR_LIST(force_repair),
- 	XFS_ERRORTAG_ATTR_LIST(bad_summary),
-+	XFS_ERRORTAG_ATTR_LIST(iunlink_fallback),
- 	NULL,
- };
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 53a9c8c26d18..fdfcb3a9bac7 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1906,6 +1906,194 @@ xfs_inactive(
- 	xfs_qm_dqdetach(ip);
- }
- 
-+/*
-+ * In-Core Unlinked List Lookups
-+ * =============================
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 02f76b8e6c03..e2d8a0b7f891 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1023,6 +1023,10 @@ xfs_dir_open(
+  * When we release the file, we don't want it to trim EOF blocks for synchronous
+  * write contexts as this leads to severe fragmentation when applications do
+  * repeated open/appending sync write/close to a file amongst other file IO.
 + *
-+ * Every inode is supposed to be reachable from some other piece of metadata
-+ * with the exception of the root directory.  Inodes with a connection to a
-+ * file descriptor but not linked from anywhere in the on-disk directory tree
-+ * are collectively known as unlinked inodes, though the filesystem itself
-+ * maintains links to these inodes so that on-disk metadata are consistent.
-+ *
-+ * XFS implements a per-AG on-disk hash table of unlinked inodes.  The AGI
-+ * header contains a number of buckets that point to an inode, and each inode
-+ * record has a pointer to the next inode in the hash chain.  This
-+ * singly-linked list causes scaling problems in the iunlink remove function
-+ * because we must walk that list to find the inode that points to the inode
-+ * being removed from the unlinked hash bucket list.
-+ *
-+ * What if we modelled the unlinked list as a collection of records capturing
-+ * "X.next_unlinked = Y" relations?  If we indexed those records on Y, we'd
-+ * have a fast way to look up unlinked list predecessors, which avoids the
-+ * slow list walk.  That's exactly what we do here (in-core) with a per-AG
-+ * rhashtable.
-+ *
-+ * Because this is a backref cache, we ignore operational failures since the
-+ * iunlink code can fall back to the slow bucket walk.  The only errors that
-+ * should bubble out are for obviously incorrect situations.
-+ *
-+ * All users of the backref cache MUST hold the AGI buffer lock to serialize
-+ * access or have otherwise provided for concurrency control.
-+ */
-+
-+/* Capture a "X.next_unlinked = Y" relationship. */
-+struct xfs_iunlink {
-+	struct rhash_head	iu_rhash_head;
-+	xfs_agino_t		iu_agino;		/* X */
-+	xfs_agino_t		iu_next_unlinked;	/* Y */
-+};
-+
-+/* Unlinked list predecessor lookup hashtable construction */
-+static int
-+xfs_iunlink_obj_cmpfn(
-+	struct rhashtable_compare_arg	*arg,
-+	const void			*obj)
-+{
-+	const xfs_agino_t		*key = arg->key;
-+	const struct xfs_iunlink	*iu = obj;
-+
-+	if (iu->iu_next_unlinked != *key)
-+		return 1;
-+	return 0;
-+}
-+
-+static const struct rhashtable_params xfs_iunlink_hash_params = {
-+	.min_size		= XFS_AGI_UNLINKED_BUCKETS,
-+	.key_len		= sizeof(xfs_agino_t),
-+	.key_offset		= offsetof(struct xfs_iunlink,
-+					   iu_next_unlinked),
-+	.head_offset		= offsetof(struct xfs_iunlink, iu_rhash_head),
-+	.automatic_shrinking	= true,
-+	.obj_cmpfn		= xfs_iunlink_obj_cmpfn,
-+};
-+
-+/*
-+ * Return X, where X.next_unlinked == @agino.  Returns NULLAGINO if no such
-+ * relation is found.
-+ */
-+xfs_agino_t
-+xfs_iunlink_lookup_backref(
-+	struct xfs_perag	*pag,
-+	xfs_agino_t		agino)
-+{
-+	struct xfs_iunlink	*iu;
-+
-+	iu = rhashtable_lookup_fast(&pag->pagi_unlinked_hash, &agino,
-+			xfs_iunlink_hash_params);
-+	return iu ? iu->iu_agino : NULLAGINO;
-+}
-+
-+/*
-+ * Remember that @prev_agino.next_unlinked = @this_agino.  Fail loudly if there
-+ * already was an entry, but absorb any other runtime errors.
-+ */
-+int
-+xfs_iunlink_add_backref(
-+	struct xfs_perag	*pag,
-+	xfs_agino_t		prev_agino,
-+	xfs_agino_t		this_agino)
-+{
-+	struct xfs_iunlink	*iu;
-+	int			error;
-+
-+	if (XFS_TEST_ERROR(false, pag->pag_mount, XFS_ERRTAG_IUNLINK_FALLBACK))
-+		return 0;
-+
-+	iu = kmem_zalloc(sizeof(*iu), KM_SLEEP | KM_NOFS);
-+	iu->iu_agino = prev_agino;
-+	iu->iu_next_unlinked = this_agino;
-+
-+	error = rhashtable_insert_fast(&pag->pagi_unlinked_hash,
-+			&iu->iu_rhash_head, xfs_iunlink_hash_params);
-+	if (error == 0 || error == -EEXIST)
-+		return error;
-+	return 0;
-+}
-+
-+/*
-+ * Replace X.next_unlinked = @agino with X.next_unlinked = @next_unlinked.
-+ * If @next_unlinked is NULLAGINO, we drop the backref and exit.  If there
-+ * wasn't any such entry then we don't bother.
-+ */
-+int
-+xfs_iunlink_change_backref(
-+	struct xfs_perag	*pag,
-+	xfs_agino_t		agino,
-+	xfs_agino_t		next_unlinked)
-+{
-+	struct xfs_iunlink	*iu;
-+	int			error;
-+
-+	/* Look up the old entry; if there wasn't one then exit. */
-+	iu = rhashtable_lookup_fast(&pag->pagi_unlinked_hash, &agino,
-+			xfs_iunlink_hash_params);
-+	if (!iu)
-+		return 0;
-+
-+	/*
-+	 * Remove the entry.  This shouldn't ever return an error, but if we
-+	 * couldn't remove the old entry we don't want to add it again to the
-+	 * hash table, and if the entry disappeared on us then someone's
-+	 * violated the locking rules and we need to fail loudly.
-+	 */
-+	error = rhashtable_remove_fast(&pag->pagi_unlinked_hash,
-+			&iu->iu_rhash_head, xfs_iunlink_hash_params);
-+	if (error)
-+		return error;
-+
-+	/* If there is no new next entry just free our item and return. */
-+	if (next_unlinked == NULLAGINO) {
-+		kmem_free(iu);
-+		return 0;
-+	}
-+
-+	/*
-+	 * Update the hash table to the new entry, ignoring operational
-+	 * errors.
-+	 */
-+	iu->iu_next_unlinked = next_unlinked;
-+	error = rhashtable_insert_fast(&pag->pagi_unlinked_hash,
-+			&iu->iu_rhash_head, xfs_iunlink_hash_params);
-+	if (error == 0 || error == -EEXIST)
-+		return error;
-+	return 0;
-+}
-+
-+/* Set up the in-core predecessor structures. */
-+int
-+xfs_iunlink_init(
-+	struct xfs_perag	*pag)
-+{
-+	return rhashtable_init(&pag->pagi_unlinked_hash,
-+			&xfs_iunlink_hash_params);
-+}
-+
-+/* Free the in-core predecessor structures. */
-+static void
-+xfs_iunlink_free_item(
-+	void			*ptr,
-+	void			*arg)
-+{
-+	struct xfs_iunlink	*iu = ptr;
-+	bool			*freed_anything = arg;
-+
-+	*freed_anything = true;
-+	kmem_free(iu);
-+}
-+
-+void
-+xfs_iunlink_destroy(
-+	struct xfs_perag	*pag)
-+{
-+	bool			freed_anything = false;
-+
-+	rhashtable_free_and_destroy(&pag->pagi_unlinked_hash,
-+			xfs_iunlink_free_item, &freed_anything);
-+
-+	ASSERT(freed_anything == false || XFS_FORCED_SHUTDOWN(pag->pag_mount));
-+}
-+
- /*
-  * Point the AGI unlinked bucket at an inode and log the results.  The caller
-  * is responsible for validating the old value.
-@@ -2066,7 +2254,8 @@ xfs_iunlink(
- 		return -EFSCORRUPTED;
- 
- 	if (next_agino != NULLAGINO) {
--		xfs_agino_t	old_agino;
-+		struct xfs_perag	*pag;
-+		xfs_agino_t		old_agino;
- 
- 		/*
- 		 * There is already another inode in the bucket, so point this
-@@ -2077,6 +2266,16 @@ xfs_iunlink(
- 		if (error)
- 			return error;
- 		ASSERT(old_agino == NULLAGINO);
-+
-+		/*
-+		 * agino has been unlinked, add a backref from the next inode
-+		 * back to agino.
-+		 */
-+		pag = xfs_perag_get(mp, agno);
-+		error = xfs_iunlink_add_backref(pag, agino, next_agino);
-+		xfs_perag_put(pag);
-+		if (error)
-+			return error;
- 	}
- 
- 	/* Point the head of the list to point to this inode. */
-@@ -2133,7 +2332,8 @@ xfs_iunlink_map_prev(
- 	xfs_agino_t		*agino,
- 	struct xfs_imap		*imap,
- 	struct xfs_dinode	**dipp,
--	struct xfs_buf		**bpp)
-+	struct xfs_buf		**bpp,
-+	struct xfs_perag	*pag)
++ * We also don't want to trim the EOF blocks if it is a read only context. This
++ * prevents open/read/close workloads from removing EOF blocks that other
++ * writers are depending on to prevent fragmentation.
+  */
+ STATIC int
+ xfs_file_release(
+@@ -1031,8 +1035,9 @@ xfs_file_release(
  {
- 	struct xfs_mount	*mp = tp->t_mountp;
- 	xfs_agino_t		next_agino;
-@@ -2141,6 +2341,27 @@ xfs_iunlink_map_prev(
+ 	bool		free_eof_blocks = true;
  
- 	ASSERT(head_agino != target_agino);
+-	if ((file->f_mode & FMODE_WRITE) &&
+-	    (file->f_flags & O_DSYNC))
++	if ((file->f_mode & FMODE_WRITE|FMODE_READ) == FMODE_READ)
++		free_eof_blocks = false;
++	else if ((file->f_mode & FMODE_WRITE) && (file->f_flags & O_DSYNC))
+ 		free_eof_blocks = false;
  
-+	/* See if our backref cache can find it faster. */
-+	*agino = xfs_iunlink_lookup_backref(pag, target_agino);
-+	if (*agino != NULLAGINO) {
-+		error = xfs_iunlink_map_ino(tp, agno, *agino, imap, dipp, bpp);
-+		if (error)
-+			return error;
-+
-+		if (be32_to_cpu((*dipp)->di_next_unlinked) == target_agino)
-+			return 0;
-+
-+		/*
-+		 * If we get here the cache contents were corrupt, so drop the
-+		 * buffer and fall back to walking the bucket list.
-+		 */
-+		xfs_trans_brelse(tp, *bpp);
-+		*bpp = NULL;
-+	}
-+
-+	trace_xfs_iunlink_map_prev_fallback(mp, agno);
-+
-+	/* Otherwise, walk the entire bucket until we find it. */
- 	next_agino = head_agino;
- 	while (next_agino != target_agino) {
- 		xfs_agino_t	unlinked_agino;
-@@ -2186,6 +2407,7 @@ xfs_iunlink_remove(
- 	struct xfs_buf		*agibp;
- 	struct xfs_buf		*last_ibp = NULL;
- 	struct xfs_dinode	*last_dip = NULL;
-+	struct xfs_perag	*pag = NULL;
- 	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
- 	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
- 	xfs_agino_t		next_agino;
-@@ -2221,27 +2443,62 @@ xfs_iunlink_remove(
- 	if (error)
- 		return error;
- 
-+	/*
-+	 * If there was a backref pointing from the next inode back to this
-+	 * one, remove it because we've removed this inode from the list.
-+	 *
-+	 * Later, if this inode was in the middle of the list we'll update
-+	 * this inode's backref to point from the next inode.
-+	 */
-+	if (next_agino != NULLAGINO) {
-+		pag = xfs_perag_get(mp, agno);
-+		error = xfs_iunlink_change_backref(pag, next_agino,
-+				NULLAGINO);
-+		if (error)
-+			goto out;
-+	}
-+
- 	if (head_agino == agino) {
- 		/* Point the head of the list to the next unlinked inode. */
- 		error = xfs_iunlink_update_bucket(tp, agno, agibp, bucket_index,
- 				next_agino);
- 		if (error)
--			return error;
-+			goto out;
- 	} else {
- 		struct xfs_imap	imap;
- 		xfs_agino_t	prev_agino;
- 
-+		if (!pag)
-+			pag = xfs_perag_get(mp, agno);
-+
- 		/* We need to search the list for the inode being freed. */
- 		error = xfs_iunlink_map_prev(tp, agno, head_agino, agino,
--				&prev_agino, &imap, &last_dip, &last_ibp);
-+				&prev_agino, &imap, &last_dip, &last_ibp,
-+				pag);
- 		if (error)
--			return error;
-+			goto out;
- 
- 		/* Point the previous inode on the list to the next inode. */
- 		xfs_iunlink_update_dinode(tp, agno, prev_agino, last_ibp,
- 				last_dip, &imap, next_agino);
-+
-+		/*
-+		 * Now we deal with the backref for this inode.  If this inode
-+		 * pointed at a real inode, change the backref that pointed to
-+		 * us to point to our old next.  If this inode was the end of
-+		 * the list, delete the backref that pointed to us.  Note that
-+		 * change_backref takes care of deleting the backref if
-+		 * next_agino is NULLAGINO.
-+		 */
-+		error = xfs_iunlink_change_backref(pag, agino, next_agino);
-+		if (error)
-+			goto out;
- 	}
--	return 0;
-+
-+out:
-+	if (pag)
-+		xfs_perag_put(pag);
-+	return error;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index be2014520155..e62074a5257c 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -500,4 +500,7 @@ extern struct kmem_zone	*xfs_inode_zone;
- 
- bool xfs_inode_verify_forks(struct xfs_inode *ip);
- 
-+int xfs_iunlink_init(struct xfs_perag *pag);
-+void xfs_iunlink_destroy(struct xfs_perag *pag);
-+
- #endif	/* __XFS_INODE_H__ */
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index b4d8c318be3c..fd63b0b1307c 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -149,6 +149,7 @@ xfs_free_perag(
- 		spin_unlock(&mp->m_perag_lock);
- 		ASSERT(pag);
- 		ASSERT(atomic_read(&pag->pag_ref) == 0);
-+		xfs_iunlink_destroy(pag);
- 		xfs_buf_hash_destroy(pag);
- 		mutex_destroy(&pag->pag_ici_reclaim_lock);
- 		call_rcu(&pag->rcu_head, __xfs_free_perag);
-@@ -227,6 +228,9 @@ xfs_initialize_perag(
- 		/* first new pag is fully initialized */
- 		if (first_initialised == NULLAGNUMBER)
- 			first_initialised = index;
-+		error = xfs_iunlink_init(pag);
-+		if (error)
-+			goto out_hash_destroy;
- 	}
- 
- 	index = xfs_set_inode_alloc(mp, agcount);
-@@ -249,6 +253,7 @@ xfs_initialize_perag(
- 		if (!pag)
- 			break;
- 		xfs_buf_hash_destroy(pag);
-+		xfs_iunlink_destroy(pag);
- 		mutex_destroy(&pag->pag_ici_reclaim_lock);
- 		kmem_free(pag);
- 	}
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 7daafe064af8..a33f45077867 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -396,6 +396,13 @@ typedef struct xfs_perag {
- 
- 	/* reference count */
- 	uint8_t			pagf_refcount_level;
-+
-+	/*
-+	 * Unlinked inode information.  This incore information reflects
-+	 * data stored in the AGI, so callers must hold the AGI buffer lock
-+	 * or have some other means to control concurrency.
-+	 */
-+	struct rhashtable	pagi_unlinked_hash;
- } xfs_perag_t;
- 
- static inline struct xfs_ag_resv *
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index a6e384a642b1..c83ce022a355 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3447,6 +3447,7 @@ DEFINE_EVENT(xfs_ag_inode_class, name, \
- 	TP_ARGS(ip))
- DEFINE_AGINODE_EVENT(xfs_iunlink);
- DEFINE_AGINODE_EVENT(xfs_iunlink_remove);
-+DEFINE_AG_EVENT(xfs_iunlink_map_prev_fallback);
- 
- #endif /* _TRACE_XFS_H */
- 
+ 	return xfs_release(XFS_I(inode), free_eof_blocks);
+-- 
+2.20.1
