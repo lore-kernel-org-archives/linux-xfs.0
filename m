@@ -1,140 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58396 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726750AbfBFSBp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Feb 2019 13:01:45 -0500
-Date: Wed, 6 Feb 2019 13:01:36 -0500
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: security implications of caching with virtio pmem (was Re:
- [PATCH v3 0/5] kvm "virtio pmem" device)
-Message-ID: <20190206125535-mutt-send-email-mst@kernel.org>
-References: <20190109144736.17452-1-pagupta@redhat.com>
- <20190204170515-mutt-send-email-mst@kernel.org>
- <5b8a06a7-be44-698f-f319-6b2cbcf1eb8a@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:57878 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726319AbfBGQTk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 11:19:40 -0500
+Date: Thu, 7 Feb 2019 08:19:33 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/9] xfs: refactor unlinked list search and mapping to a
+ separate function
+Message-ID: <20190207161933.GB7991@magnolia>
+References: <154947207759.22369.11575570374120223292.stgit@magnolia>
+ <154947211711.22369.10227484386880189461.stgit@magnolia>
+ <20190207142815.GA2880@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5b8a06a7-be44-698f-f319-6b2cbcf1eb8a@redhat.com>
+In-Reply-To: <20190207142815.GA2880@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Hildenbrand <david@redhat.com>
-Cc: Pankaj Gupta <pagupta@redhat.com>, jack@suse.cz, kvm@vger.kernel.org, linux-nvdimm@ml01.01.org, qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org, adilger.kernel@dilger.ca, zwisler@kernel.org, eblake@redhat.com, Andrea Arcangeli <aarcange@redhat.com>, dave.jiang@intel.com, darrick.wong@oracle.com, vishal.l.verma@intel.com, willy@infradead.org, hch@infradead.org, linux-acpi@vger.kernel.org, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, imammedo@redhat.com, dan.j.williams@intel.com, lcapitulino@redhat.com, linux-ext4@vger.kernel.org, tytso@mit.edu, xiaoguangrong.eric@gmail.com, rjw@rjwysocki.net, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, pbonzini@redhat.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Feb 06, 2019 at 03:00:26PM +0100, David Hildenbrand wrote:
-> On 04.02.19 23:56, Michael S. Tsirkin wrote:
+On Thu, Feb 07, 2019 at 09:28:15AM -0500, Brian Foster wrote:
+> On Wed, Feb 06, 2019 at 08:55:17AM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > On Wed, Jan 09, 2019 at 08:17:31PM +0530, Pankaj Gupta wrote:
-> >>  This patch series has implementation for "virtio pmem". 
-> >>  "virtio pmem" is fake persistent memory(nvdimm) in guest 
-> >>  which allows to bypass the guest page cache. This also
-> >>  implements a VIRTIO based asynchronous flush mechanism.  
+> > There's a loop that searches an unlinked bucket list to find the inode
+> > that points to a given inode.  Hoist this into a separate function;
+> > later we'll use our iunlink backref cache to bypass the slow list
+> > operation.  No functional changes.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_inode.c |  135 +++++++++++++++++++++++++++++++++++++---------------
+> >  1 file changed, 96 insertions(+), 39 deletions(-)
 > > 
 > > 
-> > At Pankaj's request I looked at information leak implications of virtio
-> > pmem in light of the recent page cache side channels paper
-> > (https://arxiv.org/pdf/1901.01161.pdf) - to see what
-> > kind of side channels it might create if any.  TLDR - I think that
-> > depending on the host side implementation there could be some, but this
-> > might be addressable by better documentation in both code and spec.
-> > The fake dax approach backing the guest memory by a host page cache
-> > does seem to have potential issues.
-> > 
-> > For clarity: we are talking about leaking information either to a VM, or
-> > within a VM (I did not look into leaks to hypervisor in configurations
-> > such as SEV) through host page cache.
-> > 
-> > Leaks into a VM: It seems clear that while pmem allows memory accesses
-> > versus read/write with e.g. a block device, from host page cache point
-> > of view this doesn't matter much: reads populate cache in the same way
-> > as memory faults.  Thus ignoring presence of information leaks (which is
-> > an interesting question e.g. in light of recent discard support) pmem
-> > doesn't seem to be any better or worse for leaking information into a
-> > VM.
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index eb51fa33f91a..161d8da459aa 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -2082,6 +2082,96 @@ xfs_iunlink(
+> >  	return xfs_iunlink_update_bucket(tp, agno, agibp, bucket_index, agino);
+> >  }
+> >  
+> ...
+> > +STATIC int
+> > +xfs_iunlink_map_prev(
+> > +	struct xfs_trans	*tp,
+> > +	xfs_agnumber_t		agno,
+> > +	xfs_agino_t		head_agino,
+> > +	xfs_agino_t		target_agino,
+> > +	xfs_agino_t		*agino,
+> > +	struct xfs_imap		*imap,
+> > +	struct xfs_dinode	**dipp,
+> > +	struct xfs_buf		**bpp)
+> > +{
+> > +	struct xfs_mount	*mp = tp->t_mountp;
+> > +	xfs_agino_t		next_agino;
+> > +	int			error;
+> > +
+> > +	ASSERT(head_agino != target_agino);
+> > +
+> > +	next_agino = head_agino;
+> > +	while (next_agino != target_agino) {
+> > +		xfs_agino_t	unlinked_agino;
+> > +
+> > +		if (*bpp)
+> > +			xfs_trans_brelse(tp, *bpp);
 > 
-> +1, just a different way to access that cache.
-> 
-> Conceptually a virtio-pmem devices is from the guest view a "device with
-> a managed buffer". Some accesses might be faster than others. There are
-> no guarantees on how fast a certain access is. And yes, actions on other
-> guests can result in accesses being slower but not faster.
-> 
-> Also other storage devices have caches like that (well, the caches size
-> depends on the device) - thinking especially about storage systems -
-> which would in my opinion, also allow similar leaks. How are such
-> security concerns handled there? Are they different (besides eventually
-> access speed)?
-> 
-> > 
-> > Leaks within VM: Right now pmem seems to bypass the guest page cache
-> > completely.  Whether pmem memory is then resident in a page cache would
-> > be up to the device/host. Assuming that it is, the "Preventing
-> > Efficient Eviction while Increasing the System Performance"
-> > countermeasure for the page cache side channel attack would appear to
-> > become ineffective with pmem. What is suggested is a per-process
-> > management of the page cache, and host does not have visibility of
-> > processes within a VM. Another possible countermeasure - not discussed
-> > in the paper - could be modify the applications to lock the security
-> > relevant pages in memory.  Again this becomes impractical with pmem as
-> > host does not have visibility into that. However note that as long
-> > as the only countermeasure linux uses is "Privileged Access"
-> > (i.e. blocking mincore) nothing can be done as guest page cache
-> > remains as vulnerable as host page cache.
-> 
-> This sounds very use-case specific. If I run a VM only with a very
-> specific workload (say, a container running one application), I usually
-> don't care about leaks within the VM. At least not leaks between
-> applications ;)
-> 
-> In contrast, to running different applications (e.g. containers from
-> different customers) on one system, I really care about leaks within a VM.
+> Just because we have this check here, it might be appropriate to set
+> *bpp to NULL at the start of this function. Otherwise looks fine:
 
-Clearly, not everyone cares about closing off information leaks.
+It's set to NULL in the caller but I can move it to the top of
+_map_prev to make the connection easier to find.
 
-> > 
-> > 
-> > Countermeasures: which host-side countermeasures can be designed would
-> > depend on which countermeasures are used guest-side - we would need to
-> > make sure they are not broken by pmem.  For "Preventing Efficient
-> > Eviction while Increasing the System Performance" modifying the host
-> > implementation to ensure that pmem device bypasses the host page cache
-> > would seem to address the security problem.Similarly, ensuring that a
-> > real memory device (e.g. DAX, RAM such as hugetlbfs, pmem for nested
-> > virt) is used for pmem would make the memory locking countermeasure
-> > work.  Whether with such limitations the device is still useful
-> > performance wise is an open question.  These questions probably should
-> > be addressed in the documentation, spec and possible qemu code.
-> > 
-> I also want to note that using a disk/file as memory backend with
-> NVDIMMs in QEMU essentially results in the exact same questions we have
-> with virtio-pmem.
-> 
-> E.g. kata-containers use nvdimms for the rootfile system (read-only) as
-> far as I am aware.
-> 
-> Conceptually, a virtio-pmem device is just an emulated nvdimm device
-> with a flush interface. And the nice thing is, that it is designed to
-> also work on architectures that don't speak "nvdimm".
-> 
-> > 
-> > Severity of the security implications: some people argue that the
-> > security implications of the page cache leaks are minor.  I do not have
-> > an opinion on this: the severity would seem to depend on the specific
-> > configuration.
-> 
-> I guess configuration and use case.
+--D
 
-Good point.
-
-> Nice summary, thanks for looking into this Michael!
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 > 
-> 
-> -- 
-> 
-> Thanks,
-> 
-> David / dhildenb
-> _______________________________________________
-> Virtualization mailing list
-> Virtualization@lists.linux-foundation.org
-> https://lists.linuxfoundation.org/mailman/listinfo/virtualization
+> > +
+> > +		*agino = next_agino;
+> > +		error = xfs_iunlink_map_ino(tp, agno, next_agino, imap, dipp,
+> > +				bpp);
+> > +		if (error)
+> > +			return error;
+> > +
+> > +		unlinked_agino = be32_to_cpu((*dipp)->di_next_unlinked);
+> > +		/*
+> > +		 * Make sure this pointer is valid and isn't an obvious
+> > +		 * infinite loop.
+> > +		 */
+> > +		if (!xfs_verify_agino(mp, agno, unlinked_agino) ||
+> > +		    next_agino == unlinked_agino) {
+> > +			XFS_CORRUPTION_ERROR(__func__,
+> > +					XFS_ERRLEVEL_LOW, mp,
+> > +					*dipp, sizeof(**dipp));
+> > +			error = -EFSCORRUPTED;
+> > +			return error;
+> > +		}
+> > +		next_agino = unlinked_agino;
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> >  /*
+> >   * Pull the on-disk inode from the AGI unlinked list.
+> >   */
+> > @@ -2093,9 +2183,8 @@ xfs_iunlink_remove(
+> >  	struct xfs_mount	*mp = tp->t_mountp;
+> >  	struct xfs_agi		*agi;
+> >  	struct xfs_buf		*agibp;
+> > -	struct xfs_buf		*last_ibp;
+> > +	struct xfs_buf		*last_ibp = NULL;
+> >  	struct xfs_dinode	*last_dip = NULL;
+> > -	xfs_ino_t		next_ino;
+> >  	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+> >  	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+> >  	xfs_agino_t		next_agino;
+> > @@ -2138,43 +2227,11 @@ xfs_iunlink_remove(
+> >  		struct xfs_imap	imap;
+> >  		xfs_agino_t	prev_agino;
+> >  
+> > -		/*
+> > -		 * We need to search the list for the inode being freed.
+> > -		 */
+> > -		last_ibp = NULL;
+> > -		while (next_agino != agino) {
+> > -			if (last_ibp)
+> > -				xfs_trans_brelse(tp, last_ibp);
+> > -
+> > -			imap.im_blkno = 0;
+> > -			next_ino = XFS_AGINO_TO_INO(mp, agno, next_agino);
+> > -
+> > -			error = xfs_imap(mp, tp, next_ino, &imap, 0);
+> > -			if (error) {
+> > -				xfs_warn(mp,
+> > -	"%s: xfs_imap returned error %d.",
+> > -					 __func__, error);
+> > -				return error;
+> > -			}
+> > -
+> > -			error = xfs_imap_to_bp(mp, tp, &imap, &last_dip,
+> > -					       &last_ibp, 0, 0);
+> > -			if (error) {
+> > -				xfs_warn(mp,
+> > -	"%s: xfs_imap_to_bp returned error %d.",
+> > -					__func__, error);
+> > -				return error;
+> > -			}
+> > -
+> > -			prev_agino = next_agino;
+> > -			next_agino = be32_to_cpu(last_dip->di_next_unlinked);
+> > -			if (!xfs_verify_agino(mp, agno, next_agino)) {
+> > -				XFS_CORRUPTION_ERROR(__func__,
+> > -						XFS_ERRLEVEL_LOW, mp,
+> > -						last_dip, sizeof(*last_dip));
+> > -				return -EFSCORRUPTED;
+> > -			}
+> > -		}
+> > +		/* We need to search the list for the inode being freed. */
+> > +		error = xfs_iunlink_map_prev(tp, agno, next_agino, agino,
+> > +				&prev_agino, &imap, &last_dip, &last_ibp);
+> > +		if (error)
+> > +			return error;
+> >  
+> >  		/*
+> >  		 * Now last_ibp points to the buffer previous to us on the
+> > 
