@@ -1,84 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:35858 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727106AbfBKMzA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Feb 2019 07:55:00 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/10] xfs: retry COW fork delalloc conversion when no extent was found
-Date: Mon, 11 Feb 2019 13:54:27 +0100
-Message-Id: <20190211125427.16577-11-hch@lst.de>
-In-Reply-To: <20190211125427.16577-1-hch@lst.de>
-References: <20190211125427.16577-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:46078 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727039AbfBHV0G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Feb 2019 16:26:06 -0500
+Received: from Liberator-6.local (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 7BFB978AB
+        for <linux-xfs@vger.kernel.org>; Fri,  8 Feb 2019 15:24:39 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs-4.20.0-rc1 released
+Message-ID: <01ba1b68-65bb-4bae-eb4f-3bdd9b08ba5f@sandeen.net>
+Date: Fri, 8 Feb 2019 15:26:04 -0600
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="fl2x7IdI73oFTRSP4etceHYTJDT1nF0oK"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-While we can only truncate a block under the page lock for the current
-page, there is no high-level synchronization for moving extents from the
-COW to the data fork.  Because of that there is a chance that a
-delalloc conversion for the COW fork might not find any extents to
-convert.  In that case we should retry the whole block lookup and now
-find the blocks in the data fork.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--fl2x7IdI73oFTRSP4etceHYTJDT1nF0oK
+Content-Type: multipart/mixed; boundary="L9sL31bLbHeQK57yC1G631HXlWFtZRWXo";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <01ba1b68-65bb-4bae-eb4f-3bdd9b08ba5f@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs-4.20.0-rc1 released
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+--L9sL31bLbHeQK57yC1G631HXlWFtZRWXo
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 6a8937a833ad..e1723ac6c533 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -338,7 +338,8 @@ xfs_imap_valid(
-  * consistency with what the caller expects.
-  *
-  * The current page is held locked so nothing could have removed the block
-- * backing offset_fsb.
-+ * backing offset_fsb, although it could have moved from the COW to the data
-+ * fork by another thread.
-  */
- static int
- xfs_convert_blocks(
-@@ -381,6 +382,7 @@ xfs_map_blocks(
- 	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
- 	struct xfs_bmbt_irec	imap;
- 	struct xfs_iext_cursor	icur;
-+	int			retries = 0;
- 	int			error = 0;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -410,6 +412,7 @@ xfs_map_blocks(
- 	 * into real extents.  If we return without a valid map, it means we
- 	 * landed in a hole and we skip the block.
- 	 */
-+retry:
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
- 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
-@@ -477,8 +480,19 @@ xfs_map_blocks(
- 	return 0;
- allocate_blocks:
- 	error = xfs_convert_blocks(wpc, ip, offset_fsb, &imap);
--	if (error)
-+	if (error) {
-+		/*
-+		 * If we failed to find the extent in the COW fork we might have
-+		 * raced with a COW to data fork conversion or truncate.
-+		 * Restart the lookup to catch the extent in the data fork for
-+		 * the former case, but prevent additional retries to avoid
-+		 * looping forever for the latter case.
-+		 */
-+		if (error == -EAGAIN && wpc->fork == XFS_COW_FORK && !retries++)
-+			goto retry;
-+		ASSERT(error != -EAGAIN);
- 		return error;
-+	}
- 	ASSERT(wpc->imap.br_startoff <= offset_fsb);
- 	ASSERT(wpc->imap.br_startoff + wpc->imap.br_blockcount >= offset_fsb);
- 	ASSERT(wpc->fork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
--- 
-2.20.1
+Hi folks,
+
+The xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+I've pushed out a 4.20.0-rc1 release.  I know there are worthy
+patches still waiting, but as close as we are to 5.0, I don't
+want to keep dragging this out.  Sorry.  No real need to resubmit
+unless you want to, I think I still have tabs on those fixes.
+
+Summarized changelog for this release:
+
+xfsprogs-4.20.0-rc1 (08 Feb 2018)
+        - mkfs.xfs: null-terminate symlinks created via protofile (Eric S=
+andeen)
+        - xfs_repair: allow '/' in attribute names (Eric Sandeen)
+        - xfs_repair: skip block reservation when fixing freelist (Darric=
+k Wong)
+        - xfs_repair: rebuild dir when nonroot blocks corrupt (Darrick Wo=
+ng)
+        - xfs_repair: int nonleaf finobt blocks with proper magic (Brian =
+Foster)
+        - xfs_repair: fix off by one error rebuilding high keys (Darrick =
+Wong)
+        - xfs_io: allow open file permissions to be changed (Dave Chinner=
+)
+        - xfs_io: open pipes in non-blocking mode (Dave Chinner)
+        - xfs_metadump: multiple stale data zeroing fixes (Stefan Ring)
+        - xfs_quota: allow reg files w/o prjinherit flag (Achilles Gaikwa=
+d)
+        - xfs_db: properly decode finobt record w/ sparse inodes (Darrick=
+ Wong)
+        - xfs_db: fix frag command to work w/ sparse inodes (Eric Sandeen=
+)
+        - xfs_scrub: move all executables to /usr/sbin (Darrick Wong)
+        - xfs_scrub: handle totally empty inode chunks (Darrick Wong)
+        - xfs.5 manpage: Remove barrier related options (Eric Sandeen)
+        - xfs_io.8 manpage: rearrange command listings by section (Darric=
+k Wong)
+        - Remove generated scrub files under make clean (Eric Sandeen)
+        - Skip scrub manpage install if not configured (Eric Sandeen)
+        - Merge libxfs from kernel 4.20
+
+I'll give this a couple days for anyone who wants to test it, and then pu=
+sh
+out 4.20 proper as long as no issues are found.
+
+Thanks!
+-Eric
+
+
+The new head of the master branch is commit:
+
+d586cf7 xfsprogs: Release v4.20.0-rc1
+
+New Commits:
+
+Eric Sandeen (1):
+      [d586cf7] xfsprogs: Release v4.20.0-rc1
+
+
+Code Diffstat:
+
+ VERSION          |  4 ++--
+ configure.ac     |  2 +-
+ debian/changelog |  6 ++++++
+ doc/CHANGES      | 22 +++++++++++++++++++++-
+ 4 files changed, 30 insertions(+), 4 deletions(-)
+
+
+--L9sL31bLbHeQK57yC1G631HXlWFtZRWXo--
+
+--fl2x7IdI73oFTRSP4etceHYTJDT1nF0oK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlxd8+0ACgkQIK4WkuE9
+3uCaGBAAlspckaoxLaQbY7nUxl2oNxuoKUiqJ2wnq6YI968lQKfhcjZfiP4Yy4Wc
+ywNahptcjqye5NclRimyELyatbDTeOdCeU4Yuo9ACfHTkCc6lENsANeWidprr2xM
+JH5ep8E+7vLScV9O7WcUBIcgqkPWR6edrRydEuJouJHA8ktneFDuF05Db/CZ1Jgy
+a0iZ0TSASGbkIe2ld8mJvXJ15D8TMKxh/3omd3U1OXTZ0OUIbj0ChQIUqL5dW7vS
+INRKgX74cm9fb/K17zNJi1GuEl+UfQtYqr2xGe2/Bhyb7nxYDhRj6Ub6wL6JbnUu
+XcNbx+QeF6mM01yiBxUjFTcplhqW3+uxDFXQDzZb+RepWWTLk0xxFehnEutfkst8
+qNXdm3vzAstheXHf73q3xpfUvqk1O/6SLFwWdjulUadrNb+IC6xCxFyS54KAyK0G
+hWzSJ3r5EPBOi5Kg5gkKiGltV1xikbx4f2bJ6rwiQJevWMrQeDII0ZxodoHLmLnL
+a+yo9Ej6FJSp6EDobD+aUR2ArNVHLj/NBJkoIsG24+Ya5SXF2x5Ff0ge1CajzIkl
+SndQv5Eac47G7KXyXWJuylQT15gbiD3P2NeYRYEEYZXIQhetj+rVbTwtkH34K9e1
+C/p1FYBc/z+6NZG8EJ3aaJ2fCzxrB++I/lqJLVCNWUSoR917sk0=
+=xUaT
+-----END PGP SIGNATURE-----
+
+--fl2x7IdI73oFTRSP4etceHYTJDT1nF0oK--
