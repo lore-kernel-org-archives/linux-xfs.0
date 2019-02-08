@@ -1,131 +1,197 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33430 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:51992 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726454AbfBGSlH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Feb 2019 13:41:07 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id DABB289ACB
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Feb 2019 18:41:06 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9262917C2B
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Feb 2019 18:41:06 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 1/8] xfs: always check magic values in on-disk byte order
-Date: Thu,  7 Feb 2019 13:40:58 -0500
-Message-Id: <20190207184105.17064-2-bfoster@redhat.com>
-In-Reply-To: <20190207184105.17064-1-bfoster@redhat.com>
-References: <20190207184105.17064-1-bfoster@redhat.com>
+        id S1725977AbfBHGG0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Feb 2019 01:06:26 -0500
+Date: Fri, 8 Feb 2019 01:06:20 -0500
+From: Sasha Levin <sashal@kernel.org>
+Subject: Re: [PATCH v2 00/10] xfs: stable fixes for v4.19.y
+Message-ID: <20190208060620.GA31898@sasha-vm>
+References: <20190204165427.23607-1-mcgrof@kernel.org>
+ <20190205220655.GF14116@dastard>
+ <20190206040559.GA4119@sasha-vm>
+ <20190206215454.GG14116@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20190206215454.GG14116@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Luis Chamberlain <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com, stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org
 
-Most verifiers that check on-disk magic values convert the CPU
-endian magic value constant to disk endian to facilitate compile
-time optimization of the byte swap and reduce the need for runtime
-byte swaps in buffer verifiers. Several buffer verifiers do not
-follow this pattern. Update those verifiers for consistency.
+On Thu, Feb 07, 2019 at 08:54:54AM +1100, Dave Chinner wrote:
+>On Tue, Feb 05, 2019 at 11:05:59PM -0500, Sasha Levin wrote:
+>> On Wed, Feb 06, 2019 at 09:06:55AM +1100, Dave Chinner wrote:
+>> >On Mon, Feb 04, 2019 at 08:54:17AM -0800, Luis Chamberlain wrote:
+>> >>Kernel stable team,
+>> >>
+>> >>here is a v2 respin of my XFS stable patches for v4.19.y. The only
+>> >>change in this series is adding the upstream commit to the commit log,
+>> >>and I've now also Cc'd stable@vger.kernel.org as well. No other issues
+>> >>were spotted or raised with this series.
+>> >>
+>> >>Reviews, questions, or rants are greatly appreciated.
+>> >
+>> >Test results?
+>> >
+>> >The set of changes look fine themselves, but as always, the proof is
+>> >in the testing...
+>>
+>> Luis noted on v1 that it passes through his oscheck test suite, and I
+>> noted that I haven't seen any regression with the xfstests scripts I
+>> have.
+>>
+>> What sort of data are you looking for beyond "we didn't see a
+>> regression"?
+>
+>Nothing special, just a summary of what was tested so we have some
+>visibility of whether the testing covered the proposed changes
+>sufficiently.  i.e. something like:
+>
+>	Patchset was run through ltp and the fstests "auto" group
+>	with the following configs:
+>
+>	- mkfs/mount defaults
+>	- -m reflink=1,rmapbt=1
+>	- -b size=1k
+>	- -m crc=0
+>	....
+>
+>	No new regressions were reported.
+>
+>
+>Really, all I'm looking for is a bit more context for the review
+>process - nobody remembers what configs other people test. However,
+>it's important in reviewing a backport to know whether a backport to
+>a fix, say, a bug in the rmap code actually got exercised by the
+>tests on an rmap enabled filesystem...
 
-Also fix up a random typo in the inode readahead verifier name.
+Sure! Below are the various configs this was run against. There were
+multiple runs over 48+ hours and no regressions from a 4.14.17 baseline
+were observed.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_alloc.c     | 2 +-
- fs/xfs/libxfs/xfs_attr_leaf.c | 4 ++--
- fs/xfs/libxfs/xfs_da_btree.c  | 4 ++--
- fs/xfs/libxfs/xfs_inode_buf.c | 2 +-
- fs/xfs/libxfs/xfs_sb.c        | 3 ++-
- 5 files changed, 8 insertions(+), 7 deletions(-)
+[default]
+TEST_DEV=/dev/nvme0n1p1
+TEST_DIR=/media/test
+SCRATCH_DEV_POOL="/dev/nvme0n1p2"
+SCRATCH_MNT=/media/scratch
+RESULT_BASE=$PWD/results/$HOST/$(uname -r)
+MKFS_OPTIONS='-f -m crc=1,reflink=0,rmapbt=0, -i sparse=0'
+USE_EXTERNAL=no
+LOGWRITES_DEV=/dev/nve0n1p3
+FSTYP=xfs
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index b715668886a4..48aab07e7138 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -570,7 +570,7 @@ xfs_agfl_verify(
- 
- 	if (!uuid_equal(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid))
- 		return __this_address;
--	if (be32_to_cpu(agfl->agfl_magicnum) != XFS_AGFL_MAGIC)
-+	if (agfl->agfl_magicnum != cpu_to_be32(XFS_AGFL_MAGIC))
- 		return __this_address;
- 	/*
- 	 * during growfs operations, the perag is not fully initialised,
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 2652d00842d6..e60eba7f129c 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -251,7 +251,7 @@ xfs_attr3_leaf_verify(
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
- 
--		if (ichdr.magic != XFS_ATTR3_LEAF_MAGIC)
-+		if (hdr3->info.hdr.magic != cpu_to_be16(XFS_ATTR3_LEAF_MAGIC))
- 			return __this_address;
- 
- 		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
-@@ -261,7 +261,7 @@ xfs_attr3_leaf_verify(
- 		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
- 			return __this_address;
- 	} else {
--		if (ichdr.magic != XFS_ATTR_LEAF_MAGIC)
-+		if (leaf->hdr.info.magic != cpu_to_be16(XFS_ATTR_LEAF_MAGIC))
- 			return __this_address;
- 	}
- 	/*
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 376bee94b5dd..355322688c9f 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -132,7 +132,7 @@ xfs_da3_node_verify(
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
- 
--		if (ichdr.magic != XFS_DA3_NODE_MAGIC)
-+		if (hdr3->info.hdr.magic != cpu_to_be16(XFS_DA3_NODE_MAGIC))
- 			return __this_address;
- 
- 		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_meta_uuid))
-@@ -142,7 +142,7 @@ xfs_da3_node_verify(
- 		if (!xfs_log_check_lsn(mp, be64_to_cpu(hdr3->info.lsn)))
- 			return __this_address;
- 	} else {
--		if (ichdr.magic != XFS_DA_NODE_MAGIC)
-+		if (hdr->hdr.info.magic != cpu_to_be16(XFS_DA_NODE_MAGIC))
- 			return __this_address;
- 	}
- 	if (ichdr.level == 0)
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 09d9c8cfa4a0..fd2df5747a3a 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -152,7 +152,7 @@ const struct xfs_buf_ops xfs_inode_buf_ops = {
- };
- 
- const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
--	.name = "xxfs_inode_ra",
-+	.name = "xfs_inode_ra",
- 	.verify_read = xfs_inode_buf_readahead_verify,
- 	.verify_write = xfs_inode_buf_write_verify,
- };
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index b5a82acd7dfe..a2f52a958091 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -225,10 +225,11 @@ xfs_validate_sb_common(
- 	struct xfs_buf		*bp,
- 	struct xfs_sb		*sbp)
- {
-+	struct xfs_dsb		*dsb = XFS_BUF_TO_SBP(bp);
- 	uint32_t		agcount = 0;
- 	uint32_t		rem;
- 
--	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
-+	if (dsb->sb_magicnum != cpu_to_be32(XFS_SB_MAGIC)) {
- 		xfs_warn(mp, "bad magic number");
- 		return -EWRONGFS;
- 	}
--- 
-2.17.2
+
+[default]
+TEST_DEV=/dev/nvme0n1p1
+TEST_DIR=/media/test
+SCRATCH_DEV_POOL="/dev/nvme0n1p2"
+SCRATCH_MNT=/media/scratch
+RESULT_BASE=$PWD/results/$HOST/$(uname -r)
+MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1,'
+USE_EXTERNAL=no
+LOGWRITES_DEV=/dev/nvme0n1p3
+FSTYP=xfs
+
+
+[default]
+TEST_DEV=/dev/nvme0n1p1
+TEST_DIR=/media/test
+SCRATCH_DEV_POOL="/dev/nvme0n1p2"
+SCRATCH_MNT=/media/scratch
+RESULT_BASE=$PWD/results/$HOST/$(uname -r)
+MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1, -b size=1024,'
+USE_EXTERNAL=no
+LOGWRITES_DEV=/dev/nvme0n1p3
+FSTYP=xfs
+
+
+[default]
+TEST_DEV=/dev/nvme0n1p1
+TEST_DIR=/media/test
+SCRATCH_DEV_POOL="/dev/nvme0n1p2"
+SCRATCH_MNT=/media/scratch
+RESULT_BASE=$PWD/results/$HOST/$(uname -r)
+MKFS_OPTIONS='-f -m crc=0,reflink=0,rmapbt=0, -i sparse=0,'
+USE_EXTERNAL=no
+LOGWRITES_DEV=/dev/nvme0n1p3
+FSTYP=xfs
+
+
+[default]
+TEST_DEV=/dev/nvme0n1p1
+TEST_DIR=/media/test
+SCRATCH_DEV_POOL="/dev/nvme0n1p2"
+SCRATCH_MNT=/media/scratch
+RESULT_BASE=$PWD/results/$HOST/$(uname -r)
+MKFS_OPTIONS='-f -m crc=0,reflink=0,rmapbt=0, -i sparse=0, -b size=512,'
+USE_EXTERNAL=no
+LOGWRITES_DEV=/dev/nvme0n1p3
+FSTYP=xfs
+
+
+[default_pmem]
+TEST_DEV=/dev/pmem0
+TEST_DIR=/media/test
+SCRATCH_DEV_POOL="/dev/pmem1"
+SCRATCH_MNT=/media/scratch
+RESULT_BASE=$PWD/results/$HOST/$(uname -r)-pmem
+MKFS_OPTIONS='-f -m crc=1,reflink=0,rmapbt=0, -i sparse=0'
+USE_EXTERNAL=no
+LOGWRITES_DEV=/dev/pmem2
+FSTYP=xfs
+
+
+[default_pmem]
+TEST_DEV=/dev/pmem0
+TEST_DIR=/media/test
+SCRATCH_DEV_POOL="/dev/pmem1"
+SCRATCH_MNT=/media/scratch
+RESULT_BASE=$PWD/results/$HOST/$(uname -r)-pmem
+MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1,'
+USE_EXTERNAL=no
+LOGWRITES_DEV=/dev/pmem2
+FSTYP=xfs
+
+
+[default_pmem]
+TEST_DEV=/dev/pmem0
+TEST_DIR=/media/test
+SCRATCH_DEV_POOL="/dev/pmem1"
+SCRATCH_MNT=/media/scratch
+RESULT_BASE=$PWD/results/$HOST/$(uname -r)-pmem
+MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1, -b size=1024,'
+USE_EXTERNAL=no
+LOGWRITES_DEV=/dev/pmem2
+FSTYP=xfs
+
+
+[default_pmem]
+TEST_DEV=/dev/pmem0
+TEST_DIR=/media/test
+SCRATCH_DEV_POOL="/dev/pmem1"
+SCRATCH_MNT=/media/scratch
+RESULT_BASE=$PWD/results/$HOST/$(uname -r)-pmem
+MKFS_OPTIONS='-f -m crc=0,reflink=0,rmapbt=0, -i sparse=0,'
+USE_EXTERNAL=no
+LOGWRITES_DEV=/dev/pmem2
+FSTYP=xfs
+
+
+[default_pmem]
+TEST_DEV=/dev/pmem0
+TEST_DIR=/media/test
+SCRATCH_DEV_POOL="/dev/pmem1"
+SCRATCH_MNT=/media/scratch
+RESULT_BASE=$PWD/results/$HOST/$(uname -r)-pmem
+MKFS_OPTIONS='-f -m crc=0,reflink=0,rmapbt=0, -i sparse=0, -b size=512,'
+USE_EXTERNAL=no
+LOGWRITES_DEV=/dev/pmem2
+FSTYP=xfs
+
+
+--
+Thanks,
+Sasha
