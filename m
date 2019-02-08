@@ -1,52 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk1-f178.google.com ([209.85.222.178]:34746 "EHLO
-        mail-qk1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726522AbfBHQ5p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 11:57:45 -0500
-Received: by mail-qk1-f178.google.com with SMTP id a15so2522212qkc.1
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Feb 2019 08:57:44 -0800 (PST)
-From: "Ricardo J. Barberis" <ricardo.barberis@gmail.com>
-Subject: Re: Metadata CRC error detected at xfs_dquot_buf_read_verify
-Date: Fri, 8 Feb 2019 13:57:39 -0300
-References: <201902071309.38999.ricardo.barberis@gmail.com> <201902081249.24904.ricardo.barberis@gmail.com> <20190208162617.GM7991@magnolia>
-In-Reply-To: <20190208162617.GM7991@magnolia>
+Received: from mail-it1-f194.google.com ([209.85.166.194]:34550 "EHLO
+        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727139AbfBHRFW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 12:05:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-Message-Id: <201902081357.39265.ricardo.barberis@gmail.com>
+From: Kyungtae Kim <kt0755@gmail.com>
+Date: Fri, 8 Feb 2019 12:05:09 -0500
+Message-ID: <CAEAjamtgtkkBbwOEjSG+m9Oe0Jb2JDpZoAiYXg4Js4hEMB9pBw@mail.gmail.com>
+Subject: UBSAN: Undefined behaviour in fs/xfs/xfs_ioctl.c
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, Linux-XFS list <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: Byoungyoung Lee <lifeasageek@gmail.com>, DaeRyong Jeong <threeearcat@gmail.com>, syzkaller <syzkaller@googlegroups.com>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-El Viernes 08/02/2019 a las 13:26, Darrick J. Wong escribi=C3=B3:
-> On Fri, Feb 08, 2019 at 12:49:24PM -0300, Ricardo J. Barberis wrote:
-> > El Viernes 08/02/2019 a las 10:17, Brian Foster escribi=C3=B3:
-> > > On Thu, Feb 07, 2019 at 01:09:38PM -0300, Ricardo J. Barberis wrote:
-[ ... ]
-> > > Does xfs_repair find and fix anything? Please show the associated rep=
-air
-> > > output.
-> >=20
-> > Unfotunately I didn't save xfs_repair output, but I don't believe it fi=
-xed
-> > anything other than the log that first time.
->=20
-> Eric Sandeen amended xfs_repair in xfsprogs 4.17 to detect and zap
-> corrupt quota blocks.  I don't know what version of xfsprogs centos 7.6
-> ships with, but you might try running something newer?
->=20
-> (Run it with -n first to make sure repair identifies the corrupt dquot
-> blocks, as is customary...)
-=20
-I can try to compile 4.17 (CentOS 7.6 has 4.5.0) and see if it helps
+I'm reporting a bug in linux-4.19.19: "UBSAN: Undefined behaviour in
+fs/xfs/xfs_ioctl.c"
 
-Thank you,
-=2D-=20
-Ricardo J. Barberis
-Usuario Linux N=C2=BA 250625: http://counter.li.org/
-Usuario LFS N=C2=BA 5121: http://www.linuxfromscratch.org/
-Senior SysAdmin / IT Architect - www.DonWeb.com
+kernel config: https://kt0755.github.io/etc/config_4.19.19
+repro: https://kt0755.github.io/etc/repro.8d35e.c (xfs is mounted on
+/mnt/xfs/)
+
+Integer overflow arose in xfs_ioc_space() when bf->l_start + bf->l_len
+(at line 676) is larger than the boundary of its storage (i.e., long long int).
+A sanity check right before it would help.
+
+=========================================
+UBSAN: Undefined behaviour in fs/xfs/xfs_ioctl.c:676:18
+signed integer overflow:
+2378465760851919362 + 8382694012240466910 cannot be represented in
+type 'long long int'
+CPU: 0 PID: 8220 Comm: syz-executor2 Not tainted 4.19.19 #1
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+Call Trace:
+ __dump_stack lib/dump_stack.c:77 [inline]
+ dump_stack+0xd2/0x148 lib/dump_stack.c:113
+ ubsan_epilogue+0x12/0x94 lib/ubsan.c:159
+ handle_overflow+0x1cf/0x21a lib/ubsan.c:190
+ __ubsan_handle_add_overflow+0x2a/0x31 lib/ubsan.c:198
+ xfs_ioc_space+0xb97/0xc70 fs/xfs/xfs_ioctl.c:676
+ xfs_file_ioctl+0x101e/0x1690 fs/xfs/xfs_ioctl.c:1926
+ vfs_ioctl fs/ioctl.c:46 [inline]
+ do_vfs_ioctl+0x1aa/0x1160 fs/ioctl.c:690
+ ksys_ioctl+0x9e/0xb0 fs/ioctl.c:705
+ __do_sys_ioctl fs/ioctl.c:712 [inline]
+ __se_sys_ioctl fs/ioctl.c:710 [inline]
+ __x64_sys_ioctl+0x7e/0xc0 fs/ioctl.c:710
+ do_syscall_64+0xc4/0x510 arch/x86/entry/common.c:290
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x4497b9
+Code: e8 8c 9f 02 00 48 83 c4 18 c3 0f 1f 80 00 00 00 00 48 89 f8 48
+89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d
+01 f0 ff ff 0f 83 9b 6b fc ff c3 66 2e 0f 1f 84 00 00 00 00
+RSP: 002b:00007f7df3931c68 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007f7df39326cc RCX: 00000000004497b9
+RDX: 0000000020000000 RSI: 0000020040305829 RDI: 0000000000000013
+RBP: 000000000071bea0 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 00000000ffffffff
+R13: 0000000000005f70 R14: 00000000006ef010 R15: 00007f7df3932700
+=========================================
+
+Thanks,
+Kyungtae
