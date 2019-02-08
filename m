@@ -1,84 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:51314 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726031AbfBZCfj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Feb 2019 21:35:39 -0500
-Subject: [PATCH 1/2] misc: don't oom the box opening tmpfiles
+Received: from userp2130.oracle.com ([156.151.31.86]:37342 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727115AbfBHQ37 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 11:29:59 -0500
+Date: Fri, 8 Feb 2019 08:29:51 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 25 Feb 2019 18:35:29 -0800
-Message-ID: <155114852926.9683.4048206997940455508.stgit@magnolia>
+Subject: Re: [RFC PATCH 0/3]: Extreme fragmentation ahoy!
+Message-ID: <20190208162951.GN7991@magnolia>
+References: <20190207050813.24271-1-david@fromorbit.com>
+ <20190207052114.GA7991@magnolia>
+ <20190207053941.GL14116@dastard>
+ <20190207155242.GE2880@bfoster>
+ <20190208024730.GM14116@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190208024730.GM14116@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Feb 08, 2019 at 01:47:30PM +1100, Dave Chinner wrote:
+> On Thu, Feb 07, 2019 at 10:52:43AM -0500, Brian Foster wrote:
+> > On Thu, Feb 07, 2019 at 04:39:41PM +1100, Dave Chinner wrote:
+> > > On Wed, Feb 06, 2019 at 09:21:14PM -0800, Darrick J. Wong wrote:
+> > > > On Thu, Feb 07, 2019 at 04:08:10PM +1100, Dave Chinner wrote:
+> > > > > Hi folks,
+> > > > > 
+> > > > > I've just finished analysing an IO trace from a application
+> > > > > generating an extreme filesystem fragmentation problem that started
+> > > > > with extent size hints and ended with spurious ENOSPC reports due to
+> > > > > massively fragmented files and free space. While the ENOSPC issue
+> > > > > looks to have previously been solved, I still wanted to understand
+> > > > > how the application had so comprehensively defeated extent size
+> > > > > hints as a method of avoiding file fragmentation.
+> ....
+> > > FWIW, I think the scope of the problem is quite widespread -
+> > > anything that does open/something/close repeatedly on a file that is
+> > > being written to with O_DSYNC or O_DIRECT appending writes will kill
+> > > the post-eof extent size hint allocated space. That's why I suspect
+> > > we need to think about not trimming by default and trying to
+> > > enumerating only the cases that need to trim eof blocks.
+> > > 
+> > 
+> > To further this point.. I think the eofblocks scanning stuff came long
+> > after the speculative preallocation code and associated release time
+> > post-eof truncate.
+> 
+> Yes, I cribed a bit of the history of the xfs_release() behaviour
+> on #xfs yesterday afternoon:
+> 
+>  <djwong>	dchinner: feel free to ignore this until tomorrow if you want, but /me wonders why we'd want to free the eofblocks at close time at all, instead of waiting for inactivation/enospc/background reaper to do it?
+>  <dchinner>	historic. People doing operations then complaining du didn't match ls
+>  <dchinner>	stuff like that
+>  <dchinner>	There used to be a open file cache in XFS - we'd know exactly when the last reference went away and trim it then
+>  <dchinner>	but that went away when NFS and the dcache got smarter about file handle conversion
+>  <dchinner>	(i.e. that's how we used to make nfs not suck)
+>  <dchinner>	that's when we started doing work in ->release
+>  <dchinner>	it was close enough to "last close" for most workloads it made no difference.
+>  <dchinner>	Except for concurrent NFS writes into the same directory
+>  <dchinner>	and now there's another pathological application that triggers problems
+>  <dchinner>	The NFS exception was prior to having thebackground reaper
+>  <dchinner>	as these things goes the background reaper is relatively recent functionality
+>  <dchinner>	so perhaps we should just leave it to "inode cache expiry or background reaping" and not do it on close at al
+> 
+> > I think the background scanning was initially an
+> > enhancement to deal with things like the dirty release optimization
+> > leaving these blocks around longer and being able to free up this
+> > accumulated space when we're at -ENOSPC conditions.
+> 
+> Yes, amongst other things like slow writes keeping the file open
+> forever.....
+> 
+> > Now that we have the
+> > scanning mechanism in place (and a 5 minute default background scan,
+> > which really isn't all that long), it might be reasonable to just drop
+> > the release time truncate completely and only trim post-eof blocks via
+> > the bg scan or reclaim paths.
+> 
+> Yeah, that's kinda the question I'm asking here. What's the likely
+> impact of not trimming EOF blocks at least on close apart from
+> people complaining about df/ls not matching du?
+> 
+> I don't really care about that anymore because, well, reflink/dedupe
+> completely break any remaining assumption that du reported space
+> consumption is related to the file size (if sparse files wasn't
+> enough of a hint arlready)....
 
-For the t_open_tmpfiles tests, limit ourselves to half of file-max so
-that we don't OOM the test machine.
+Not to mention the deferred inactivation series tracks "space we could
+free if we did a bunch of inactivation work" so that we can lie to
+statfs and pretend we already did the work.  It wouldn't be hard to
+include speculative posteof blocks in that too.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/generic/530 |    2 +-
- tests/generic/531 |    2 +-
- tests/xfs/501     |    2 +-
- tests/xfs/502     |    2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+--D
 
-
-diff --git a/tests/generic/530 b/tests/generic/530
-index a2968d25..2bc4a992 100755
---- a/tests/generic/530
-+++ b/tests/generic/530
-@@ -42,7 +42,7 @@ _scratch_mount
- # Set ULIMIT_NOFILE to min(file-max, 50000 files per LOAD_FACTOR)
- # so that this test doesn't take forever or OOM the box
- max_files=$((50000 * LOAD_FACTOR))
--max_allowable_files=$(( $(cat /proc/sys/fs/file-max) ))
-+max_allowable_files=$(( $(cat /proc/sys/fs/file-max) / 2 ))
- test $max_allowable_files -gt 0 && test $max_files -gt $max_allowable_files && \
- 	max_files=$max_allowable_files
- ulimit -n $max_files
-diff --git a/tests/generic/531 b/tests/generic/531
-index f3eb5cde..5d60e4b6 100755
---- a/tests/generic/531
-+++ b/tests/generic/531
-@@ -44,7 +44,7 @@ nr_cpus=$(( $(getconf _NPROCESSORS_ONLN) * 2 ))
- # Set ULIMIT_NOFILE to min(file-max, 50000 files per LOAD_FACTOR)
- # so that this test doesn't take forever or OOM the box
- max_files=$((50000 * LOAD_FACTOR))
--max_allowable_files=$(( $(cat /proc/sys/fs/file-max) ))
-+max_allowable_files=$(( $(cat /proc/sys/fs/file-max) / 2 ))
- test $max_allowable_files -gt 0 && test $max_files -gt $max_allowable_files && \
- 	max_files=$max_allowable_files
- ulimit -n $max_files
-diff --git a/tests/xfs/501 b/tests/xfs/501
-index 51cdb020..d689145f 100755
---- a/tests/xfs/501
-+++ b/tests/xfs/501
-@@ -47,7 +47,7 @@ _scratch_mount
- # Set ULIMIT_NOFILE to min(file-max, 30000 files per LOAD_FACTOR)
- # so that this test doesn't take forever or OOM the box
- max_files=$((30000 * LOAD_FACTOR))
--max_allowable_files=$(( $(cat /proc/sys/fs/file-max) ))
-+max_allowable_files=$(( $(cat /proc/sys/fs/file-max) / 2 ))
- test $max_allowable_files -gt 0 && test $max_files -gt $max_allowable_files && \
- 	max_files=$max_allowable_files
- ulimit -n $max_files
-diff --git a/tests/xfs/502 b/tests/xfs/502
-index bfb063f4..5ad10316 100755
---- a/tests/xfs/502
-+++ b/tests/xfs/502
-@@ -46,7 +46,7 @@ nr_cpus=$(( $(getconf _NPROCESSORS_ONLN) * 2 ))
- # Set ULIMIT_NOFILE to min(file-max, 30000 files per cpu per LOAD_FACTOR)
- # so that this test doesn't take forever or OOM the box
- max_files=$((30000 * LOAD_FACTOR))
--max_allowable_files=$(( $(cat /proc/sys/fs/file-max) ))
-+max_allowable_files=$(( $(cat /proc/sys/fs/file-max) / 2 ))
- test $max_allowable_files -gt 0 && test $max_files -gt $max_allowable_files && \
- 	max_files=$max_allowable_files
- ulimit -n $max_files
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
