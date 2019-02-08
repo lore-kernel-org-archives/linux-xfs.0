@@ -1,102 +1,369 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41716 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728174AbfBHPYo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Feb 2019 10:24:44 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8E14A88E61
-        for <linux-xfs@vger.kernel.org>; Fri,  8 Feb 2019 15:24:43 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 467E962662
-        for <linux-xfs@vger.kernel.org>; Fri,  8 Feb 2019 15:24:43 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: compile time offset checks for common v4/v5 metadata
-Date: Fri,  8 Feb 2019 10:24:42 -0500
-Message-Id: <20190208152442.22862-1-bfoster@redhat.com>
+Received: from mail-qt1-f176.google.com ([209.85.160.176]:41780 "EHLO
+        mail-qt1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726869AbfBHPtb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 10:49:31 -0500
+Received: by mail-qt1-f176.google.com with SMTP id b15so4359501qto.8
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Feb 2019 07:49:29 -0800 (PST)
+From: "Ricardo J. Barberis" <ricardo.barberis@gmail.com>
+Subject: Re: Metadata CRC error detected at xfs_dquot_buf_read_verify
+Date: Fri, 8 Feb 2019 12:49:24 -0300
+References: <201902071309.38999.ricardo.barberis@gmail.com> <20190208131756.GD21317@bfoster>
+In-Reply-To: <20190208131756.GD21317@bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+Message-Id: <201902081249.24904.ricardo.barberis@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Linux-XFS list <linux-xfs@vger.kernel.org>
 
-The v5 superblock format added various metadata fields (such as crc,
-metadata lsn, owner uuid, etc.) to v4 metadata headers or created
-new v5 headers for blocks where no such headers existed on v4. Where
-v4 headers did exist, the v5 structures are careful to place v4
-metadata at the original location. For example, the magic value is
-expected to be at the same location in certain blocks to facilitate
-version detection.
+El Viernes 08/02/2019 a las 10:17, Brian Foster escribi=C3=B3:
+> On Thu, Feb 07, 2019 at 01:09:38PM -0300, Ricardo J. Barberis wrote:
+> > Hello list!
+> >=20
+> > I'm having a metadata corruption on an XFS filesystem, I googled the er=
+ror but
+> > didn't find anything about it.
+> >=20
+> > Background:
+> >=20
+> > One CentOS 7.6 box with 2 SSD disks and 3 SATA disks.
+> > Those disks are synchorized via DRBD with 5 identical disks on another
+> > identical box (for HA).
+> > The SSDs form an LVM group with one VG and one LV.
+> > This LV is then formatted with XFS and mounted with quotas enabled.
+> > The SATA disks form another LVM group with one VG and one LV, also form=
+atted
+> > with XFS and mounted quotas enabled.
+> >=20
+> > Each pair of servers has keepalived to make sure only one of them puts =
+the
+> > DRBD resources as primary and can mount the LVs.
+> >=20
+> > Relevant extract from lsblk:
+> > sdb              8:16   0 931,5G  0 disk
+> > =E2=94=94=E2=94=80sdb1           8:17   0 931,5G  0 part
+> >   =E2=94=94=E2=94=80drbd2      147:2    0 931,5G  0 disk
+> >     =E2=94=94=E2=94=80VG2-home 253:4    0   1,8T  0 lvm  /home
+> > sdc              8:32   0 894,3G  0 disk
+> > =E2=94=94=E2=94=80sdc1           8:33   0 894,3G  0 part
+> >   =E2=94=94=E2=94=80drbd3      147:3    0 894,2G  0 disk
+> >     =E2=94=94=E2=94=80VG2-home 253:4    0   1,8T  0 lvm  /home
+> > sdd              8:48   0 931,5G  0 disk
+> > =E2=94=94=E2=94=80sdd1           8:49   0 931,5G  0 part
+> >   =E2=94=94=E2=94=80drbd4      147:4    0 931,5G  0 disk
+> >     =E2=94=94=E2=94=80VG3-mail 253:0    0   2,7T  0 lvm
+> >       =E2=94=94=E2=94=80mail   253:5    0   2,7T  0 dm   /Mails
+> > sde              8:64   0 931,5G  0 disk
+> > =E2=94=94=E2=94=80sde1           8:65   0 931,5G  0 part
+> >   =E2=94=94=E2=94=80drbd5      147:5    0 931,5G  0 disk
+> >     =E2=94=94=E2=94=80VG3-mail 253:0    0   2,7T  0 lvm
+> >       =E2=94=94=E2=94=80mail   253:5    0   2,7T  0 dm   /Mails
+> > sdf              8:80   0 931,5G  0 disk
+> > =E2=94=94=E2=94=80sdf1           8:81   0 931,5G  0 part
+> >   =E2=94=94=E2=94=80drbd6      147:6    0 931,5G  0 disk
+> >     =E2=94=94=E2=94=80VG3-mail 253:0    0   2,7T  0 lvm
+> >       =E2=94=94=E2=94=80mail   253:5    0   2,7T  0 dm   /Mails
+> >=20
+> >=20
+> > We have several pairs of servers with this same configuration, but on t=
+his
+> > particular pair of boxes we're getting metadata corruption only on the =
+SSD LV
+> > and quotas don't get accounted for, dmesg shows these errors on the pri=
+mary box:
+> >=20
+>=20
+> I assume there are different workloads between the two volumes as well,
+> based on the naming above at least, and that dm-4 is the VG2-home volume
+> above..?
 
-While failure of this invariant is likely to cause severe and
-obvious problems at runtime, we can detect this condition at compile
-time via the more recently added on-disk format check
-infrastructure. Since there is no runtime cost, add some offset
-checks that start with v5 structure definitions, traverse down to
-the first bit of common metadata with v4 and ensure that common
-metadata is at the expected offset. Note that we don't care about
-blocks which had no v4 header because there is no common metadata in
-those cases. No functional changes.
+Yes, that's correct.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+> Either way, can you provide the xfs_info for the associated filesystem?
 
-Hi all,
+Sure thing:
 
-This patch is inspired from debug checks that were initially in the
-verifier magic fixup series. I originally had some assert checks to make
-sure magic values were in the same location across v4 and v5 structures.
-Darrick suggested that these were perhaps better suited as build time
-offset checks. My subsequent attempt to convert the magic offset checks
-resulted in somewhat confusing and convoluted build time checks.
+[root@c142a ~] # xfs_info /home
+meta-data=3D/dev/mapper/VG2-home   isize=3D512    agcount=3D32, agsize=3D14=
+651136 blks
+         =3D                       sectsz=3D4096  attr=3D2, projid32bit=3D1
+         =3D                       crc=3D1        finobt=3D0 spinodes=3D0
+data     =3D                       bsize=3D4096   blocks=3D468830208, imaxp=
+ct=3D5
+         =3D                       sunit=3D256    swidth=3D512 blks
+naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0 ftype=3D1
+log      =3Dinternal               bsize=3D4096   blocks=3D228921, version=
+=3D2
+         =3D                       sectsz=3D4096  sunit=3D1 blks, lazy-coun=
+t=3D1
+realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
 
-As a result, I opted to remove this stuff from the verifier series to be
-replaced with an independent patch that attempts to verify v5 structures
-place v4 metadata at the expected location in general. This is not a
-known problem or anything, just something that's easy to check for with
-the on-disk format infrastructure already in place and helps validate
-common code.
+[root@c142a ~] # xfs_info /Mails
+meta-data=3D/dev/mapper/mail       isize=3D512    agcount=3D32, agsize=3D22=
+892288 blks
+         =3D                       sectsz=3D4096  attr=3D2, projid32bit=3D1
+         =3D                       crc=3D1        finobt=3D0 spinodes=3D0
+data     =3D                       bsize=3D4096   blocks=3D732546048, imaxp=
+ct=3D5
+         =3D                       sunit=3D256    swidth=3D768 blks
+naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0 ftype=3D1
+log      =3Dinternal               bsize=3D4096   blocks=3D357688, version=
+=3D2
+         =3D                       sectsz=3D4096  sunit=3D1 blks, lazy-coun=
+t=3D1
+realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
 
-I think this covers all structures handled by the verifier series at
-least (some are "internal" in that they are between the top-level v5
-structs and v4 structs), but I could have missed some. Thoughts?
+=20
+> > [root@c142a ~] # dmesg -T | grep XFS
+> > [mi=C3=A9 feb  6 18:43:03 2019] SGI XFS with ACLs, security attributes,=
+ no debug enabled
+> > [mi=C3=A9 feb  6 18:43:03 2019] XFS (dm-4): Mounting V5 Filesystem
+> > [mi=C3=A9 feb  6 18:43:03 2019] XFS (dm-4): Starting recovery (logdev: =
+internal)
+>=20
+> What happened to require log recovery in the first place?
 
-Brian
+At that time c142b was acting as primary and crashed, so c142a took over.
 
- fs/xfs/xfs_ondisk.h | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+We were having some issues with these two servers, power loss in a couple of
+cases, and c142b crashed a few times also, we had to change power supplies =
+and
+RAM.
 
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index d3e04d20d8d4..c8ba98fae30a 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -125,6 +125,27 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format,	56);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
-+
-+	/*
-+	 * The v5 superblock format extended several v4 header structures with
-+	 * additional data. While new fields are only accessible on v5
-+	 * superblocks, it's important that the v5 structures place original v4
-+	 * fields/headers in the correct location on-disk. For example, we must
-+	 * be able to find magic values at the same location in certain blocks
-+	 * regardless of superblock version.
-+	 *
-+	 * The following checks ensure that various v5 data structures place the
-+	 * subset of v4 metadata associated with the same type of block at the
-+	 * start of the on-disk block. If there is no data structure definition
-+	 * for certain types of v4 blocks, traverse down to the first field of
-+	 * common metadata (e.g., magic value) and make sure it is at offset
-+	 * zero.
-+	 */
-+	XFS_CHECK_OFFSET(struct xfs_dir3_leaf, hdr.info.hdr,	0);
-+	XFS_CHECK_OFFSET(struct xfs_da3_intnode, hdr.info.hdr,	0);
-+	XFS_CHECK_OFFSET(struct xfs_dir3_data_hdr, hdr.magic,	0);
-+	XFS_CHECK_OFFSET(struct xfs_dir3_free, hdr.hdr.magic,	0);
-+	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
- }
- 
- #endif /* __XFS_ONDISK_H */
--- 
-2.17.2
+> > [mi=C3=A9 feb  6 18:43:04 2019] XFS (dm-4): Metadata CRC error detected=
+ at xfs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [mi=C3=A9 feb  6 18:43:04 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [mi=C3=A9 feb  6 18:43:04 2019] XFS (dm-4): First 64 bytes of corrupted=
+ metadata buffer:
+> > [mi=C3=A9 feb  6 18:43:04 2019] XFS (dm-4): metadata I/O error: block 0=
+x4170 ("xfs_trans_read_buf_map") error 74 numblks 8
+> > [mi=C3=A9 feb  6 18:43:04 2019] XFS (dm-4): log mount/recovery failed: =
+error -117
+> > [mi=C3=A9 feb  6 18:43:04 2019] XFS (dm-4): log mount failed
+>=20
+> So log recovery and the mount failed. Is this where you ran
+> xfs_repair?
+
+Yes, I was informed that c142b crashed and c142a didn't mount /home, xfs_re=
+pair
+complained about the log and had to use -L to "fix" it :(
+
+> > [mi=C3=A9 feb  6 18:48:52 2019] XFS (dm-5): Mounting V5 Filesystem
+> > [mi=C3=A9 feb  6 18:48:52 2019] XFS (dm-5): Ending clean mount
+> > [mi=C3=A9 feb  6 18:48:59 2019] XFS (dm-5): Unmounting Filesystem
+> > [mi=C3=A9 feb  6 18:57:25 2019] XFS (dm-4): Mounting V5 Filesystem
+> > [mi=C3=A9 feb  6 18:57:25 2019] XFS (dm-4): Ending clean mount
+> > [mi=C3=A9 feb  6 18:57:25 2019] XFS (dm-4): Quotacheck needed: Please w=
+ait.
+>=20
+> Then the mount succeeds (repair presumably zapped the log), a quotacheck
+> was required and before that even completes we run into the same issue.
+
+Yes, it mounted fine but doing a "xfs_quota -x -c 'report /home -b'" trigge=
+red the
+error again.
+
+> > [mi=C3=A9 feb  6 18:57:26 2019] XFS (dm-4): Metadata CRC error detected=
+ at xfs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [mi=C3=A9 feb  6 18:57:26 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [mi=C3=A9 feb  6 18:57:26 2019] XFS (dm-4): First 64 bytes of corrupted=
+ metadata buffer:
+> > [mi=C3=A9 feb  6 18:57:26 2019] XFS (dm-4): Metadata CRC error detected=
+ at xfs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [mi=C3=A9 feb  6 18:57:26 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [mi=C3=A9 feb  6 18:57:26 2019] XFS (dm-4): First 64 bytes of corrupted=
+ metadata buffer:
+> > [mi=C3=A9 feb  6 18:57:26 2019] XFS (dm-4): metadata I/O error: block 0=
+x4170 ("xfs_trans_read_buf_map") error 74 numblks 8
+> > [mi=C3=A9 feb  6 18:57:52 2019] XFS (dm-4): Quotacheck: Done.
+> > [mi=C3=A9 feb  6 18:58:13 2019] XFS (dm-4): Unmounting Filesystem
+> > [mi=C3=A9 feb  6 18:58:15 2019] XFS (dm-4): Mounting V5 Filesystem
+> > [mi=C3=A9 feb  6 18:58:15 2019] XFS (dm-4): Ending clean mount
+> > [mi=C3=A9 feb  6 18:58:27 2019] XFS (dm-4): Unmounting Filesystem
+> > [mi=C3=A9 feb  6 19:01:12 2019] XFS (dm-5): Mounting V5 Filesystem
+> > [mi=C3=A9 feb  6 19:01:12 2019] XFS (dm-5): Ending clean mount
+> > [mi=C3=A9 feb  6 19:01:12 2019] XFS (dm-4): Mounting V5 Filesystem
+> > [mi=C3=A9 feb  6 19:01:12 2019] XFS (dm-4): Ending clean mount
+> > [mi=C3=A9 feb  6 19:03:08 2019] XFS (dm-4): Metadata CRC error detected=
+ at xfs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [mi=C3=A9 feb  6 19:03:08 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [mi=C3=A9 feb  6 19:03:08 2019] XFS (dm-4): First 64 bytes of corrupted=
+ metadata buffer:
+> > [mi=C3=A9 feb  6 19:03:08 2019] XFS (dm-4): metadata I/O error: block 0=
+x4170 ("xfs_trans_read_buf_map") error 74 numblks 8
+> > [mi=C3=A9 feb  6 19:03:08 2019] XFS (dm-4): Metadata CRC error detected=
+ at xfs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [mi=C3=A9 feb  6 19:03:08 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [mi=C3=A9 feb  6 19:03:08 2019] XFS (dm-4): First 64 bytes of corrupted=
+ metadata buffer:
+> > [mi=C3=A9 feb  6 19:03:08 2019] XFS (dm-4): metadata I/O error: block 0=
+x4170 ("xfs_trans_read_buf_map") error 74 numblks 8
+> >=20
+> >=20
+> > We tried xfs_repair but it doesn't seem to fix it.
+> >=20
+>=20
+> Does xfs_repair find and fix anything? Please show the associated repair
+> output.
+
+Unfotunately I didn't save xfs_repair output, but I don't believe it fixed
+anything other than the log that first time.
+
+> > We then promoted the secondary and tried xfs_repair there, fearing some=
+ memory
+> > issues on the primary, but the result is the same:
+> >=20
+>=20
+> I'm not terribly familiar with drbd. I assume this means the primary was
+> offlined and the secondary onlined. IOW, these two filesystems are not
+> ever simultaneously active, correct?
+
+That's correct (drbd has an option to disable that behaviour if you want to=
+ use it
+with a clustered filesystem but it's off by default and we never use it).
+
+> Brian
+
+
+I see that below I pasted an older dmesg log I had, sorry for that.
+
+> > [root@c142b ~] # dmesg -T | grep XFS
+> > [jue ene 31 19:14:12 2019] SGI XFS with ACLs, security attributes, no d=
+ebug enabled
+> > [jue ene 31 19:14:12 2019] XFS (dm-4): Mounting V5 Filesystem
+> > [jue ene 31 19:14:12 2019] XFS (dm-4): Ending clean mount
+> > [jue ene 31 19:22:20 2019] XFS (dm-4): Unmounting Filesystem
+> > [jue ene 31 19:23:24 2019] XFS (dm-5): Mounting V5 Filesystem
+> > [jue ene 31 19:23:24 2019] XFS (dm-5): Ending clean mount
+> > [jue ene 31 19:23:24 2019] XFS (dm-4): Mounting V5 Filesystem
+> > [jue ene 31 19:23:24 2019] XFS (dm-4): Ending clean mount
+> > [jue ene 31 19:25:21 2019] XFS (dm-4): Unmounting Filesystem
+> > [jue ene 31 19:26:14 2019] XFS (dm-4): Mounting V5 Filesystem
+> > [jue ene 31 19:26:14 2019] XFS (dm-4): Ending clean mount
+> > [jue ene 31 19:26:14 2019] XFS (dm-4): Quotacheck needed: Please wait.
+> > [jue ene 31 19:26:14 2019] XFS (dm-4): Metadata CRC error detected at x=
+fs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [jue ene 31 19:26:14 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [jue ene 31 19:26:14 2019] XFS (dm-4): First 64 bytes of corrupted meta=
+data buffer:
+> > [jue ene 31 19:26:14 2019] XFS (dm-4): Metadata CRC error detected at x=
+fs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [jue ene 31 19:26:14 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [jue ene 31 19:26:14 2019] XFS (dm-4): First 64 bytes of corrupted meta=
+data buffer:
+> > [jue ene 31 19:26:14 2019] XFS (dm-4): metadata I/O error: block 0x4170=
+ ("xfs_trans_read_buf_map") error 74 numblks 8
+> > [jue ene 31 19:26:40 2019] XFS (dm-4): Quotacheck: Done.
+> > [jue ene 31 19:34:31 2019] XFS (dm-5): Unmounting Filesystem
+> > [jue ene 31 19:35:13 2019] XFS (dm-4): Unmounting Filesystem
+> > [jue ene 31 19:46:33 2019] XFS (dm-5): Mounting V5 Filesystem
+> > [jue ene 31 19:46:34 2019] XFS (dm-5): Ending clean mount
+> > [jue ene 31 19:46:34 2019] XFS (dm-4): Mounting V5 Filesystem
+> > [jue ene 31 19:46:34 2019] XFS (dm-4): Ending clean mount
+> > [jue ene 31 19:47:18 2019] XFS (dm-4): Unmounting Filesystem
+> > [jue ene 31 19:47:21 2019] XFS (dm-4): Mounting V5 Filesystem
+> > [jue ene 31 19:47:21 2019] XFS (dm-4): Ending clean mount
+> > [jue ene 31 19:47:29 2019] XFS (dm-4): Unmounting Filesystem
+> > [jue ene 31 19:50:28 2019] XFS (dm-4): Mounting V5 Filesystem
+> > [jue ene 31 19:50:28 2019] XFS (dm-4): Ending clean mount
+> > [jue ene 31 19:50:28 2019] XFS (dm-4): Quotacheck needed: Please wait.
+> > [jue ene 31 19:50:28 2019] XFS (dm-4): Metadata CRC error detected at x=
+fs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [jue ene 31 19:50:28 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [jue ene 31 19:50:28 2019] XFS (dm-4): First 64 bytes of corrupted meta=
+data buffer:
+> > [jue ene 31 19:50:28 2019] XFS (dm-4): Metadata CRC error detected at x=
+fs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [jue ene 31 19:50:28 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [jue ene 31 19:50:28 2019] XFS (dm-4): First 64 bytes of corrupted meta=
+data buffer:
+> > [jue ene 31 19:50:28 2019] XFS (dm-4): metadata I/O error: block 0x4170=
+ ("xfs_trans_read_buf_map") error 74 numblks 8
+> > [jue ene 31 19:50:54 2019] XFS (dm-4): Quotacheck: Done.
+> >=20
+> >=20
+> > This is a more complete extract of dmesg, where I noticed some context =
+lines
+> > that might be useful:
+> >=20
+> > [Thu Feb  7 12:06:45 2019] XFS (dm-4): Metadata CRC error detected at x=
+fs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [Thu Feb  7 12:06:45 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [Thu Feb  7 12:06:45 2019] XFS (dm-4): First 64 bytes of corrupted meta=
+data buffer:
+> > [Thu Feb  7 12:06:45 2019] ffffa0002708a000: 44 51 01 01 00 00 d7 82 00=
+ 00 00 00 00 00 00 00  DQ..............
+> > [Thu Feb  7 12:06:45 2019] ffffa0002708a010: 00 00 00 00 00 00 00 00 00=
+ 00 00 00 00 00 00 00  ................
+> > [Thu Feb  7 12:06:45 2019] ffffa0002708a020: 00 00 00 00 00 00 00 00 00=
+ 00 00 00 00 00 00 00  ................
+> > [Thu Feb  7 12:06:45 2019] ffffa0002708a030: 00 00 00 00 00 00 00 00 00=
+ 00 00 00 00 00 00 00  ................
+> > [Thu Feb  7 12:06:45 2019] XFS (dm-4): metadata I/O error: block 0x4170=
+ ("xfs_trans_read_buf_map") error 74 numblks 8
+> > [Thu Feb  7 12:06:45 2019] XFS (dm-4): Metadata CRC error detected at x=
+fs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [Thu Feb  7 12:06:45 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [Thu Feb  7 12:06:45 2019] XFS (dm-4): First 64 bytes of corrupted meta=
+data buffer:
+> > [Thu Feb  7 12:06:45 2019] ffffa003bdb3b000: 44 51 01 01 00 00 d7 82 00=
+ 00 00 00 00 00 00 00  DQ..............
+> > [Thu Feb  7 12:06:45 2019] ffffa003bdb3b010: 00 00 00 00 00 00 00 00 00=
+ 00 00 00 00 00 00 00  ................
+> > [Thu Feb  7 12:06:45 2019] ffffa003bdb3b020: 00 00 00 00 00 00 00 00 00=
+ 00 00 00 00 00 00 00  ................
+> > [Thu Feb  7 12:06:45 2019] ffffa003bdb3b030: 00 00 00 00 00 00 00 00 00=
+ 00 00 00 00 00 00 00  ................
+> > [Thu Feb  7 12:06:45 2019] XFS (dm-4): metadata I/O error: block 0x4170=
+ ("xfs_trans_read_buf_map") error 74 numblks 8
+> > [Thu Feb  7 13:03:43 2019] XFS (dm-4): Metadata CRC error detected at x=
+fs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [Thu Feb  7 13:03:43 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [Thu Feb  7 13:03:43 2019] XFS (dm-4): First 64 bytes of corrupted meta=
+data buffer:
+> > [Thu Feb  7 13:03:43 2019] ffffa001427e8000: 44 51 01 01 00 00 d7 82 00=
+ 00 00 00 00 00 00 00  DQ..............
+> > [Thu Feb  7 13:03:43 2019] ffffa001427e8010: 00 00 00 00 00 00 00 00 00=
+ 00 00 00 00 00 00 00  ................
+> > [Thu Feb  7 13:03:43 2019] ffffa001427e8020: 00 00 00 00 00 00 00 00 00=
+ 00 00 00 00 00 00 00  ................
+> > [Thu Feb  7 13:03:43 2019] ffffa001427e8030: 00 00 00 00 00 00 00 00 00=
+ 00 00 00 00 00 00 00  ................
+> > [Thu Feb  7 13:03:43 2019] XFS (dm-4): metadata I/O error: block 0x4170=
+ ("xfs_trans_read_buf_map") error 74 numblks 8
+> > [Thu Feb  7 13:03:43 2019] XFS (dm-4): Metadata CRC error detected at x=
+fs_dquot_buf_read_verify+0x4f/0x90 [xfs], xfs_dquot block 0x4170
+> > [Thu Feb  7 13:03:43 2019] XFS (dm-4): Unmount and run xfs_repair
+> > [Thu Feb  7 13:03:43 2019] XFS (dm-4): First 64 bytes of corrupted meta=
+data buffer:
+> > [Thu Feb  7 13:03:43 2019] ffffa004a3ef1000: 44 51 01 01 00 00 d7 82 00=
+ 00 00 00 00 00 00 00  DQ..............
+> > [Thu Feb  7 13:03:43 2019] ffffa004a3ef1010: 00 00 00 00 00 00 00 00 00=
+ 00 00 00 00 00 00 00  ................
+> > [Thu Feb  7 13:03:43 2019] ffffa004a3ef1020: 00 00 00 00 00 00 00 00 00=
+ 00 00 00 00 00 00 00  ................
+> > [Thu Feb  7 13:03:43 2019] ffffa004a3ef1030: 00 00 00 00 00 00 00 00 00=
+ 00 00 00 00 00 00 00  ................
+> > [Thu Feb  7 13:03:43 2019] XFS (dm-4): metadata I/O error: block 0x4170=
+ ("xfs_trans_read_buf_map") error 74 numblks 8
+> >=20
+> >=20
+> > Is there anything else I can try?
+> > Any more info needed?
+> > Should I open a bug report instead?
+> >=20
+> > I can compile a newr version of xfsprogs but I don't know if it'll help.
+> >=20
+> >=20
+> > Thanks,
+=2D-=20
+Ricardo J. Barberis
+Usuario Linux N=C2=BA 250625: http://counter.li.org/
+Usuario LFS N=C2=BA 5121: http://www.linuxfromscratch.org/
+Senior SysAdmin / IT Architect - www.DonWeb.com
