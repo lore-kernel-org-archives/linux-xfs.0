@@ -1,296 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56348 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41716 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727377AbfBHNAL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Feb 2019 08:00:11 -0500
-Date: Fri, 8 Feb 2019 08:00:08 -0500
+        id S1728174AbfBHPYo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Feb 2019 10:24:44 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8E14A88E61
+        for <linux-xfs@vger.kernel.org>; Fri,  8 Feb 2019 15:24:43 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 467E962662
+        for <linux-xfs@vger.kernel.org>; Fri,  8 Feb 2019 15:24:43 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: is it safe to xfs_repair this volume? do i have a different
- first step?
-Message-ID: <20190208130007.GC21317@bfoster>
-References: <20190207132534.GA2185@justpickone.org>
- <20190207145247.GC2880@bfoster>
- <20190208022513.GB2185@justpickone.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190208022513.GB2185@justpickone.org>
+Subject: [PATCH] xfs: compile time offset checks for common v4/v5 metadata
+Date: Fri,  8 Feb 2019 10:24:42 -0500
+Message-Id: <20190208152442.22862-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David T-G <davidtg@justpickone.org>
-Cc: Linux-XFS list <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Feb 07, 2019 at 09:25:13PM -0500, David T-G wrote:
-> Brian, et al --
-> 
-> ...and then Brian Foster said...
-> % 
-> % On Thu, Feb 07, 2019 at 08:25:34AM -0500, David T-G wrote:
-> % > 
-> % > I have a four-disk RAID5 volume with an ~11T filesystem that suddenly
-> % > won't mount 
-> ...
-> % > when poking, I at first thought that this was a RAID issue, but all of
-> % > the md reports look good and apparently the GPT table issue is common, so
-> % > I'll leave all of that out unless someone asks for it.
-> % 
-> % I'd be curious if the MD metadata format contends with GPT metadata. Is
-> % the above something you've ever tried before running into this problem
-> % and thus can confirm whether it preexisted the mount problem or not?
-> 
-> There's a lot I don't know, so it's quite possible that it doesn't line
-> up.  Here's what mdadm tells me:
-> 
->   diskfarm:root:6:~> mdadm --detail /dev/md0
->   /dev/md0:
->           Version : 1.2
->     Creation Time : Mon Feb  6 00:56:35 2017
->        Raid Level : raid5
->        Array Size : 11720265216 (11177.32 GiB 12001.55 GB)
->     Used Dev Size : 3906755072 (3725.77 GiB 4000.52 GB)
->      Raid Devices : 4
->     Total Devices : 4
->       Persistence : Superblock is persistent
-> 
->       Update Time : Fri Jan 25 03:32:18 2019
->             State : clean
->    Active Devices : 4
->   Working Devices : 4
->    Failed Devices : 0
->     Spare Devices : 0
-> 
->            Layout : left-symmetric
->        Chunk Size : 512K
-> 
->              Name : diskfarm:0  (local to host diskfarm)
->              UUID : ca7008ef:90693dae:6c231ad7:08b3f92d
->            Events : 48211
-> 
->       Number   Major   Minor   RaidDevice State
->          0       8       17        0      active sync   /dev/sdb1
->          1       8       65        1      active sync   /dev/sde1
->          3       8       81        2      active sync   /dev/sdf1
->          4       8        1        3      active sync   /dev/sda1
->   diskfarm:root:6:~>
->   diskfarm:root:6:~> for D in a1 b1 e1 f1 ; do mdadm --examine /dev/sd$D | egrep "$D|Role|State|Checksum|Events" ; done
->   /dev/sda1:
->             State : clean
->       Device UUID : f05a143b:50c9b024:36714b9a:44b6a159
->          Checksum : 4561f58b - correct
->            Events : 48211
->      Device Role : Active device 3
->      Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
->   /dev/sdb1:
->             State : clean
->          Checksum : 4654df78 - correct
->            Events : 48211
->      Device Role : Active device 0
->      Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
->   /dev/sde1:
->             State : clean
->          Checksum : c4ec7cb6 - correct
->            Events : 48211
->      Device Role : Active device 1
->      Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
->   /dev/sdf1:
->             State : clean
->          Checksum : 349cf800 - correct
->            Events : 48211
->      Device Role : Active device 2
->      Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-> 
-> Does that set off any alarms for you?
->
+The v5 superblock format added various metadata fields (such as crc,
+metadata lsn, owner uuid, etc.) to v4 metadata headers or created
+new v5 headers for blocks where no such headers existed on v4. Where
+v4 headers did exist, the v5 structures are careful to place v4
+metadata at the original location. For example, the magic value is
+expected to be at the same location in certain blocks to facilitate
+version detection.
 
-It looks normal to me, but I'm not an MD person. I also don't think an
-MD format / GPT format conflict is something that mdadm will show. It
-not appear until/unless you change the geometry on one side or the
-other. Again, I'd strongly suggest to validate your configuration with
-linux-raid before making any such changes.
- 
-> 
-> % 
-> % If not, I'd suggest some more investigation into this before you make
-> % any future partition or raid changes to this storage. I thought there
-> % were different MD formats to accommodate precisely this sort of
-> % incompatibility, but I don't know for sure. linux-raid is probably more
-> % of a help here.
-> 
-> Thanks :-)  I have no plans to partition, but I will eventually want to
-> grow it, so I'll definitely have to check on that.
-> 
-> 
-> % 
-> % > dmesg reports some XFS problems
-> % > 
-> % >   diskfarm:root:5:~> dmesg | egrep 'md[:/0]'
-> ...
-> % >   [  202.230961] XFS (md0p1): Mounting V4 Filesystem
-> % >   [  203.182567] XFS (md0p1): Torn write (CRC failure) detected at log block 0x3397e8. Truncating head block from 0x3399e8.
-> % >   [  203.367581] XFS (md0p1): failed to locate log tail
-> % >   [  203.367587] XFS (md0p1): log mount/recovery failed: error -74
-> % >   [  203.367712] XFS (md0p1): log mount failed
-> ...
-> % 
-> % Hmm. So part of the on-disk log is invalid. We attempt to deal with this
-> ...
-> % I'd guess that the torn write is due to interleaving log writes across
-> % raid devices or something, but we can't really tell from just this.
-> 
-> The filesystem *shouldn't* see that there are distinct devices under
-> there, since that's handled by the md driver, but there's STILL a lot
-> that I don't know :-)
-> 
+While failure of this invariant is likely to cause severe and
+obvious problems at runtime, we can detect this condition at compile
+time via the more recently added on-disk format check
+infrastructure. Since there is no runtime cost, add some offset
+checks that start with v5 structure definitions, traverse down to
+the first bit of common metadata with v4 and ensure that common
+metadata is at the expected offset. Note that we don't care about
+blocks which had no v4 header because there is no common metadata in
+those cases. No functional changes.
 
-It doesn't see multiple devices, but a contiguous range of filesystem
-blocks (such as the fs log) that happen to map to multiple physical
-devices by underlying storage layer.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-> 
-> % 
-> % >   diskfarm:root:4:~> xfs_repair -n /dev/disk/by-label/4Traid5md 2>&1 | egrep -v 'agno = '
-> ...
-> % >           - scan filesystem freespace and inode maps...
-> % >   sb_fdblocks 471930978, counted 471939170
-> % 
-> % The above said, the corruption here looks extremely minor. You basically
-> ...
-> % scans and not much else going on.
-> 
-> That sounds hopeful! :-)
-> 
-> 
-> % 
-> % >           - 09:18:47: scanning filesystem freespace - 48 of 48 allocation groups done
-> ...
-> % >   Phase 7 - verify link counts...
-> % >           - 09:34:02: verify and correct link counts - 48 of 48 allocation groups done
-> % >   No modify flag set, skipping filesystem flush and exiting.
-> % > 
-> % > is the trimmed output that can fit on one screen.  Since I don't have a
-> ...
-> % 
-> % What do you mean by trimmed output? Was there more output from
-> % xfs_repair that is not shown here?
-> 
-> Yes.  Note the
-> 
->   | egrep -v 'agno = '
-> 
-> on the command line above.  The full output
-> 
->   diskfarm:root:4:~> xfs_repair -n /dev/disk/by-label/4Traid5md >/tmp/xfs_repair.out 2>&1
->   diskfarm:root:4:~> wc -l /tmp/xfs_repair.out
->   124 /tmp/xfs_repair.out
-> 
-> was quite long.  Shall I attach that file or post a link?
-> 
+Hi all,
 
-Please post the full repair output.
+This patch is inspired from debug checks that were initially in the
+verifier magic fixup series. I originally had some assert checks to make
+sure magic values were in the same location across v4 and v5 structures.
+Darrick suggested that these were perhaps better suited as build time
+offset checks. My subsequent attempt to convert the magic offset checks
+resulted in somewhat confusing and convoluted build time checks.
 
-> 
-> % 
-> % In general, if you're concerned about what xfs_repair might do to a
-> % particular filesystem you can always do a normal xfs_repair run against
-> % a metadump of the filesystem before the original copy. Collect a
-> % metadump of the fs:
-> % 
-> % xfs_metadump -go <dev> <outputmdimg>
-> 
-> Hey, cool!  I like that :-)  It generated a sizeable output file
-> 
->   diskfarm:root:8:~> xfs_metadump /dev/disk/by-label/4Traid5md /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out >/mnt/750Graid5md/tmp/4Traid5md.xfs_d.out.stdout-stderr 2>&1
->   diskfarm:root:8:~> ls -goh /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out
->   -rw-r--r-- 1 3.5G Feb  7 17:57 /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out
->   diskfarm:root:8:~> wc -l /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out.stdout-stderr
->   239 /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out.stdout-stderr
-> 
-> as well as quite a few errors.  Here
-> 
->   diskfarm:root:8:~> head /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out.stdout-stderr
->   xfs_metadump: error - read only 0 of 4096 bytes
->   xfs_metadump: error - read only 0 of 4096 bytes
->   xfs_metadump: cannot init perag data (5). Continuing anyway.
->   xfs_metadump: error - read only 0 of 4096 bytes
->   xfs_metadump: cannot read dir2 block 39/132863 (2617378559)
->   xfs_metadump: error - read only 0 of 4096 bytes
->   xfs_metadump: cannot read dir2 block 41/11461784 (2762925208)
->   xfs_metadump: error - read only 0 of 4096 bytes
->   xfs_metadump: cannot read dir2 block 41/4237562 (2755700986)
->   xfs_metadump: error - read only 0 of 4096 bytes
-> 
->   diskfarm:root:8:~> tail /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out.stdout-stderr
->   xfs_metadump: error - read only 0 of 4096 bytes
->   xfs_metadump: cannot read superblock for ag 47
->   xfs_metadump: error - read only 0 of 4096 bytes
->   xfs_metadump: cannot read agf block for ag 47
->   xfs_metadump: error - read only 0 of 4096 bytes
->   xfs_metadump: cannot read agi block for ag 47
->   xfs_metadump: error - read only 0 of 4096 bytes
->   xfs_metadump: cannot read agfl block for ag 47
->   xfs_metadump: Filesystem log is dirty; image will contain unobfuscated metadata in log.
->   cache_purge: shake on cache 0x4ee1c0 left 117 nodes!?
-> 
-> is a glance at the contents.  Should I post/paste the full copy?
-> 
+As a result, I opted to remove this stuff from the verifier series to be
+replaced with an independent patch that attempts to verify v5 structures
+place v4 metadata at the expected location in general. This is not a
+known problem or anything, just something that's easy to check for with
+the on-disk format infrastructure already in place and helps validate
+common code.
 
-It couldn't hurt. Perhaps this suggests there are other issues beyond
-what was shown in the original repair output.
-
-> 
-> % 
-> % Note that the metadump collects everything except file data so it will
-> % require a decent amount of space depending on how much metadata
-> % populates your fs vs. data.
-> % 
-> % Then restore the metadump to a sparse file (on some other
-> % filesystem/storage):
-> % 
-> % xfs_mdrestore -g <mdfile> <sparsefiletarget>
-> 
-> I tried this 
-> 
->   diskfarm:root:11:~> dd if=/dev/zero bs=1 count=0 seek=4G of=/mnt/750Graid5md/tmp/4Traid5md.xfs_d.iso
->   0+0 records in
->   0+0 records out
->   0 bytes copied, 6.7252e-05 s, 0.0 kB/s
->   diskfarm:root:11:~> ls -goh /mnt/750Graid5md/tmp/4Traid5md.xfs_d.iso
->   -rw-r--r-- 1 4.0G Feb  7 21:15 /mnt/750Graid5md/tmp/4Traid5md.xfs_d.iso
->   diskfarm:root:11:~> xfs_mdrestore /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out /mnt/750Graid5md/tmp/4Traid5md.xfs_d.iso
->   xfs_mdrestore: cannot set filesystem image size: File too large
-> 
-> and got an error :-(  Should a 4G file be large enough for a 3.5G
-> metadata dump?
-> 
-
-The output file size is too large and not supported by the underlying
-filesystem.  Note that the output file size will match the size of the
-original fs despite the fact that the image may only consume 3.5G worth
-of space. What is the underlying fs? You might need to find somewhere
-where you can restore this file on another XFS fs.
+I think this covers all structures handled by the verifier series at
+least (some are "internal" in that they are between the top-level v5
+structs and v4 structs), but I could have missed some. Thoughts?
 
 Brian
 
-> 
-> % 
-> % Then you can mount/xfs_repair the restored sparse image, see what
-> % xfs_repair does, mount the before/after img, etc. Note again that file
-> % data is absent from the restored metadata image so don't expect to be
-> % able to look at file content in the metadump image.
-> 
-> Right.  That sounds like a great middle step, though.  Thanks!
-> 
-> 
-> % 
-> % Brian
-> 
-> 
-> HAND
-> 
-> :-D
-> -- 
-> David T-G
-> See http://justpickone.org/davidtg/email/
-> See http://justpickone.org/davidtg/tofu.txt
-> 
+ fs/xfs/xfs_ondisk.h | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+index d3e04d20d8d4..c8ba98fae30a 100644
+--- a/fs/xfs/xfs_ondisk.h
++++ b/fs/xfs/xfs_ondisk.h
+@@ -125,6 +125,27 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format,	56);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
++
++	/*
++	 * The v5 superblock format extended several v4 header structures with
++	 * additional data. While new fields are only accessible on v5
++	 * superblocks, it's important that the v5 structures place original v4
++	 * fields/headers in the correct location on-disk. For example, we must
++	 * be able to find magic values at the same location in certain blocks
++	 * regardless of superblock version.
++	 *
++	 * The following checks ensure that various v5 data structures place the
++	 * subset of v4 metadata associated with the same type of block at the
++	 * start of the on-disk block. If there is no data structure definition
++	 * for certain types of v4 blocks, traverse down to the first field of
++	 * common metadata (e.g., magic value) and make sure it is at offset
++	 * zero.
++	 */
++	XFS_CHECK_OFFSET(struct xfs_dir3_leaf, hdr.info.hdr,	0);
++	XFS_CHECK_OFFSET(struct xfs_da3_intnode, hdr.info.hdr,	0);
++	XFS_CHECK_OFFSET(struct xfs_dir3_data_hdr, hdr.magic,	0);
++	XFS_CHECK_OFFSET(struct xfs_dir3_free, hdr.hdr.magic,	0);
++	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
+ }
+ 
+ #endif /* __XFS_ONDISK_H */
+-- 
+2.17.2
