@@ -1,71 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:36522 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726004AbfBHIAS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 03:00:18 -0500
-Date: Fri, 8 Feb 2019 00:00:16 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 9/9] xfs: cache unlinked pointers in an rhashtable
-Message-ID: <20190208080016.GB5523@infradead.org>
-References: <154947207759.22369.11575570374120223292.stgit@magnolia>
- <154947213625.22369.7330296004413590907.stgit@magnolia>
- <20190207143114.GB2880@bfoster>
+Received: from mx2.suse.de ([195.135.220.15]:39254 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726115AbfBHJCs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Feb 2019 04:02:48 -0500
+Date: Fri, 8 Feb 2019 10:02:45 +0100
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [LSF/MM TOPIC] The end of the DAX experiment
+Message-ID: <20190208090245.GA8038@linux-x5ow.site>
+References: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
+ <d7790ae27161db2fcf0b10a7d5d67de833f2d3fe.camel@hpe.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20190207143114.GB2880@bfoster>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <d7790ae27161db2fcf0b10a7d5d67de833f2d3fe.camel@hpe.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: "Kani, Toshi" <toshi.kani@hpe.com>
+Cc: "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
 
-> > +	if (XFS_TEST_ERROR(false, pag->pag_mount, XFS_ERRTAG_IUNLINK_FALLBACK))
-> > +		return 0;
-> > +
-> > +	iu = kmem_zalloc(sizeof(*iu), KM_SLEEP | KM_NOFS);
-> > +	iu->iu_agino = prev_agino;
-> > +	iu->iu_next_unlinked = this_agino;
-> > +
-> > +	error = rhashtable_insert_fast(&pag->pagi_unlinked_hash,
-> > +			&iu->iu_rhash_head, xfs_iunlink_hash_params);
-> > +	if (error == 0 || error == -EEXIST)
-> > +		return error;
-> > +	return 0;
-> 
-> The return val looks funny at a glance: return -EEXIST or otherwise
-> return 0 for success and all other errors (also the error == 0 looks
-> superfluous). I see the comment above describes what this does, but it
-> doesn't explain why. I'd move the comment to above the if check and
-> explain why it's there (i.e., "Absorb all runtime errors besides -EEXIST
-> because fallback blah blah. We care about -EEXIST because ...").
-> 
-> Also I assume we need to free the iu object on insert failure,
-> regardless of whether we ultimately return the error.
+On 07/02/2019 22:51, Kani, Toshi wrote:
+> I've also had multiple users complained about 'mount -o dax' succeeded
+> by falling back to non-dax despite of their intent.  Such users wasted
+> many hours without knowing their setup error / current restrictions.
+> The next think they always ask is how to check if dax is enabled in such
+> case, and they are not happy about limited interfaces (ex. look for
+> mount entry in /proc/mounts), either.
 
-But is this really the right thing to do?  Everything but ENOMEM
-would be a bug in the rhashtable implementation, or the XFS use,
-wouldn't it?
+Exactly, there's a need for admins and user-space applications to check if they
+can use DAX or not. See also [1] for reference.
 
-So why not drop the return value entirely and do a:
+> Same as above.  Such enhancement should be possible after EXPERIMENTAL
+> is removed from 'mount -o dax'.  IOW, a separate EXPERIMENTAL message
+> can be shown when user requests per-directory dax.
 
-	error = rhashtable_insert_fast(&pag->pagi_unlinked_hash,
-			&iu->iu_rhash_head, xfs_iunlink_hash_params);
-	ASSERT(error == 0 || error == -ENOMEM);
+Just as a data point here, in our Kernels we've removed the EXPERIMENTAL
+warning for DAX on XFS (but not EXT4) and we are supporting it for some limited
+use-cases.
 
-> > +	error = rhashtable_remove_fast(&pag->pagi_unlinked_hash,
-> > +			&iu->iu_rhash_head, xfs_iunlink_hash_params);
-> > +	if (error)
-> > +		return error;
-> 
-> What's interesting about remove failure is that if we otherwise found an
-> iu for this inode, removing the inode from the unlinked list leaves a
-> stale/incorrect iu around in the in-core table. So it's one thing for
-> the in-core table to be a valid subset of the on-disk structures, but
-> another thing entirely to have incoherence between the two. It might be
-> worth pointing out that it's critical to return an error here so we
-> don't actually remove the inode (whereas the re-add below is less
-> strict).
+[1] https://lore.kernel.org/linux-fsdevel/20181002100531.GC4135@quack2.suse.cz/
 
-Again, remove failure here sounds like a programming bug - so ASSERT
-and or forced shutdown here.
+Byte,
+        Johannes
+-- 
+Johannes Thumshirn                            SUSE Labs Filesystems
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
