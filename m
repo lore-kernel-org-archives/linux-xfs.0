@@ -1,65 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f194.google.com ([209.85.166.194]:34550 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727139AbfBHRFW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 12:05:22 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:41434 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726915AbfBHRGc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 12:06:32 -0500
+Date: Fri, 8 Feb 2019 09:06:26 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: compile time offset checks for common v4/v5 metadata
+Message-ID: <20190208170626.GP7991@magnolia>
+References: <20190208152442.22862-1-bfoster@redhat.com>
 MIME-Version: 1.0
-From: Kyungtae Kim <kt0755@gmail.com>
-Date: Fri, 8 Feb 2019 12:05:09 -0500
-Message-ID: <CAEAjamtgtkkBbwOEjSG+m9Oe0Jb2JDpZoAiYXg4Js4hEMB9pBw@mail.gmail.com>
-Subject: UBSAN: Undefined behaviour in fs/xfs/xfs_ioctl.c
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190208152442.22862-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: Byoungyoung Lee <lifeasageek@gmail.com>, DaeRyong Jeong <threeearcat@gmail.com>, syzkaller <syzkaller@googlegroups.com>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-I'm reporting a bug in linux-4.19.19: "UBSAN: Undefined behaviour in
-fs/xfs/xfs_ioctl.c"
+On Fri, Feb 08, 2019 at 10:24:42AM -0500, Brian Foster wrote:
+> The v5 superblock format added various metadata fields (such as crc,
+> metadata lsn, owner uuid, etc.) to v4 metadata headers or created
+> new v5 headers for blocks where no such headers existed on v4. Where
+> v4 headers did exist, the v5 structures are careful to place v4
+> metadata at the original location. For example, the magic value is
+> expected to be at the same location in certain blocks to facilitate
+> version detection.
+> 
+> While failure of this invariant is likely to cause severe and
+> obvious problems at runtime, we can detect this condition at compile
+> time via the more recently added on-disk format check
+> infrastructure. Since there is no runtime cost, add some offset
+> checks that start with v5 structure definitions, traverse down to
+> the first bit of common metadata with v4 and ensure that common
+> metadata is at the expected offset. Note that we don't care about
+> blocks which had no v4 header because there is no common metadata in
+> those cases. No functional changes.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> Hi all,
+> 
+> This patch is inspired from debug checks that were initially in the
+> verifier magic fixup series. I originally had some assert checks to make
+> sure magic values were in the same location across v4 and v5 structures.
+> Darrick suggested that these were perhaps better suited as build time
+> offset checks. My subsequent attempt to convert the magic offset checks
+> resulted in somewhat confusing and convoluted build time checks.
+> 
+> As a result, I opted to remove this stuff from the verifier series to be
+> replaced with an independent patch that attempts to verify v5 structures
+> place v4 metadata at the expected location in general. This is not a
+> known problem or anything, just something that's easy to check for with
+> the on-disk format infrastructure already in place and helps validate
+> common code.
+> 
+> I think this covers all structures handled by the verifier series at
+> least (some are "internal" in that they are between the top-level v5
+> structs and v4 structs), but I could have missed some. Thoughts?
 
-kernel config: https://kt0755.github.io/etc/config_4.19.19
-repro: https://kt0755.github.io/etc/repro.8d35e.c (xfs is mounted on
-/mnt/xfs/)
+Looks ok to me,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Integer overflow arose in xfs_ioc_space() when bf->l_start + bf->l_len
-(at line 676) is larger than the boundary of its storage (i.e., long long int).
-A sanity check right before it would help.
+(In my fantasyland we would have comprehensive build-time checks for
+every field offset of every on-disk structure, but that's a totally
+separate patchset.)
 
-=========================================
-UBSAN: Undefined behaviour in fs/xfs/xfs_ioctl.c:676:18
-signed integer overflow:
-2378465760851919362 + 8382694012240466910 cannot be represented in
-type 'long long int'
-CPU: 0 PID: 8220 Comm: syz-executor2 Not tainted 4.19.19 #1
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0xd2/0x148 lib/dump_stack.c:113
- ubsan_epilogue+0x12/0x94 lib/ubsan.c:159
- handle_overflow+0x1cf/0x21a lib/ubsan.c:190
- __ubsan_handle_add_overflow+0x2a/0x31 lib/ubsan.c:198
- xfs_ioc_space+0xb97/0xc70 fs/xfs/xfs_ioctl.c:676
- xfs_file_ioctl+0x101e/0x1690 fs/xfs/xfs_ioctl.c:1926
- vfs_ioctl fs/ioctl.c:46 [inline]
- do_vfs_ioctl+0x1aa/0x1160 fs/ioctl.c:690
- ksys_ioctl+0x9e/0xb0 fs/ioctl.c:705
- __do_sys_ioctl fs/ioctl.c:712 [inline]
- __se_sys_ioctl fs/ioctl.c:710 [inline]
- __x64_sys_ioctl+0x7e/0xc0 fs/ioctl.c:710
- do_syscall_64+0xc4/0x510 arch/x86/entry/common.c:290
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
-RIP: 0033:0x4497b9
-Code: e8 8c 9f 02 00 48 83 c4 18 c3 0f 1f 80 00 00 00 00 48 89 f8 48
-89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d
-01 f0 ff ff 0f 83 9b 6b fc ff c3 66 2e 0f 1f 84 00 00 00 00
-RSP: 002b:00007f7df3931c68 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 00007f7df39326cc RCX: 00000000004497b9
-RDX: 0000000020000000 RSI: 0000020040305829 RDI: 0000000000000013
-RBP: 000000000071bea0 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 00000000ffffffff
-R13: 0000000000005f70 R14: 00000000006ef010 R15: 00007f7df3932700
-=========================================
+--D
 
-Thanks,
-Kyungtae
+> 
+> Brian
+> 
+>  fs/xfs/xfs_ondisk.h | 21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> index d3e04d20d8d4..c8ba98fae30a 100644
+> --- a/fs/xfs/xfs_ondisk.h
+> +++ b/fs/xfs/xfs_ondisk.h
+> @@ -125,6 +125,27 @@ xfs_check_ondisk_structs(void)
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format,	56);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
+> +
+> +	/*
+> +	 * The v5 superblock format extended several v4 header structures with
+> +	 * additional data. While new fields are only accessible on v5
+> +	 * superblocks, it's important that the v5 structures place original v4
+> +	 * fields/headers in the correct location on-disk. For example, we must
+> +	 * be able to find magic values at the same location in certain blocks
+> +	 * regardless of superblock version.
+> +	 *
+> +	 * The following checks ensure that various v5 data structures place the
+> +	 * subset of v4 metadata associated with the same type of block at the
+> +	 * start of the on-disk block. If there is no data structure definition
+> +	 * for certain types of v4 blocks, traverse down to the first field of
+> +	 * common metadata (e.g., magic value) and make sure it is at offset
+> +	 * zero.
+> +	 */
+> +	XFS_CHECK_OFFSET(struct xfs_dir3_leaf, hdr.info.hdr,	0);
+> +	XFS_CHECK_OFFSET(struct xfs_da3_intnode, hdr.info.hdr,	0);
+> +	XFS_CHECK_OFFSET(struct xfs_dir3_data_hdr, hdr.magic,	0);
+> +	XFS_CHECK_OFFSET(struct xfs_dir3_free, hdr.hdr.magic,	0);
+> +	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
+>  }
+>  
+>  #endif /* __XFS_ONDISK_H */
+> -- 
+> 2.17.2
+> 
