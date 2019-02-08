@@ -1,78 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:36247 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726244AbfBHVvD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 16:51:03 -0500
-Date: Fri, 8 Feb 2019 13:50:57 -0800
-From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: Re: [PATCH v2 00/10] xfs: stable fixes for v4.19.y
-Message-ID: <20190208215057.GL11489@garbanzo.do-not-panic.com>
-References: <20190204165427.23607-1-mcgrof@kernel.org>
- <20190205220655.GF14116@dastard>
- <20190208194829.GJ11489@garbanzo.do-not-panic.com>
- <20190208213201.GP14116@dastard>
+Received: from mail-qt1-f180.google.com ([209.85.160.180]:42968 "EHLO
+        mail-qt1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726788AbfBHWTd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 17:19:33 -0500
+Received: by mail-qt1-f180.google.com with SMTP id b8so5756012qtr.9
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Feb 2019 14:19:32 -0800 (PST)
+From: "Ricardo J. Barberis" <ricardo.barberis@gmail.com>
+Subject: Re: Metadata CRC error detected at xfs_dquot_buf_read_verify
+Date: Fri, 8 Feb 2019 19:19:24 -0300
+References: <201902071309.38999.ricardo.barberis@gmail.com> <20190208162617.GM7991@magnolia> <201902081357.39265.ricardo.barberis@gmail.com>
+In-Reply-To: <201902081357.39265.ricardo.barberis@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
-In-Reply-To: <20190208213201.GP14116@dastard>
+Message-Id: <201902081919.24466.ricardo.barberis@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com, stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, Linux-XFS list <linux-xfs@vger.kernel.org>
 
-On Sat, Feb 09, 2019 at 08:32:01AM +1100, Dave Chinner wrote:
-> On Fri, Feb 08, 2019 at 11:48:29AM -0800, Luis Chamberlain wrote:
-> > On Wed, Feb 06, 2019 at 09:06:55AM +1100, Dave Chinner wrote:
-> > > On Mon, Feb 04, 2019 at 08:54:17AM -0800, Luis Chamberlain wrote:
-> > > > Kernel stable team,
-> > > > 
-> > > > here is a v2 respin of my XFS stable patches for v4.19.y. The only
-> > > > change in this series is adding the upstream commit to the commit log,
-> > > > and I've now also Cc'd stable@vger.kernel.org as well. No other issues
-> > > > were spotted or raised with this series.
-> > > > 
-> > > > Reviews, questions, or rants are greatly appreciated.
-> > > 
-> > > Test results?
-> > > 
-> > > The set of changes look fine themselves, but as always, the proof is
-> > > in the testing...
-> > 
-> > I've first established a baseline for v4.19.18 with fstests using
-> > a series of different sections to test against. I annotated the
-> > failures on an expunge list and then use that expunge list to confirm
-> > no regressions -- no failures if we skip the failures already known for
-> > v4.19.18.
-> > 
-> > Each different configuration I test against I use a section for. I only
-> > test x86_64 for now but am starting to create a baseline for ppc64le.
-> > 
-> > The sections I use:
-> > 
-> >   * xfs
-> >   * xfs_nocrc
-> >   * xfs_nocrc_512
-> >   * xfs_reflink
-> >   * xfs_reflink_1024
-> >   * xfs_logdev
-> >   * xfs_realtimedev
-> 
-> Yup, that seems to cover most common things :)
+El Viernes 08/02/2019 a las 13:57, Ricardo J. Barberis escribi=C3=B3:
+> El Viernes 08/02/2019 a las 13:26, Darrick J. Wong escribi=C3=B3:
+> > On Fri, Feb 08, 2019 at 12:49:24PM -0300, Ricardo J. Barberis wrote:
+> > > El Viernes 08/02/2019 a las 10:17, Brian Foster escribi=C3=B3:
+> > > > On Thu, Feb 07, 2019 at 01:09:38PM -0300, Ricardo J. Barberis wrote:
+> [ ... ]
+> > > > Does xfs_repair find and fix anything? Please show the associated r=
+epair
+> > > > output.
+> > >=20
+> > > Unfotunately I didn't save xfs_repair output, but I don't believe it =
+fixed
+> > > anything other than the log that first time.
+> >=20
+> > Eric Sandeen amended xfs_repair in xfsprogs 4.17 to detect and zap
+> > corrupt quota blocks.  I don't know what version of xfsprogs centos 7.6
+> > ships with, but you might try running something newer?
+> >=20
+> > (Run it with -n first to make sure repair identifies the corrupt dquot
+> > blocks, as is customary...)
+> =20
+> I can try to compile 4.17 (CentOS 7.6 has 4.5.0) and see if it helps
 
-To be clear in the future I hope to also have a baseline for:
+Indeed, 4.19 found the corruption:
 
-  * xfs_bigblock
+Metadata corruption detected at 0x460184, xfs_dquot block 0x4170/0x1000
+User quota: bad UUID for id 55197. Would correct.
 
-But that is *currently* [0] only possible on the following architectures
-with the respective kernel config:
+And fixed it when ran without '-n':
 
-aarch64:
-CONFIG_ARM64_64K_PAGES=y
+Metadata corruption detected at 0x460184, xfs_dquot block 0x4170/0x1000
+User quota: bad UUID for id 55197. Corrected.
 
-ppc64le:
-CONFIG_PPC_64K_PAGES=y
 
-[0] Someone is working on 64k pages on x86 I think?
+After that, I mounted it and ran "xfs_quota -x -c 'report /home -b'" withou=
+t issues.
 
-  Luis
+Thanks!
+=2D-=20
+Ricardo J. Barberis
+Usuario Linux N=C2=BA 250625: http://counter.li.org/
+Usuario LFS N=C2=BA 5121: http://www.linuxfromscratch.org/
+Senior SysAdmin / IT Architect - www.DonWeb.com
