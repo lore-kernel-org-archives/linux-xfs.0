@@ -1,112 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41434 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726915AbfBHRGc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 12:06:32 -0500
-Date: Fri, 8 Feb 2019 09:06:26 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: compile time offset checks for common v4/v5 metadata
-Message-ID: <20190208170626.GP7991@magnolia>
-References: <20190208152442.22862-1-bfoster@redhat.com>
+Received: from mail-lj1-f176.google.com ([209.85.208.176]:41132 "EHLO
+        mail-lj1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726747AbfBHSkf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 13:40:35 -0500
+Received: by mail-lj1-f176.google.com with SMTP id f21-v6so2403955ljj.8
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Feb 2019 10:40:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190208152442.22862-1-bfoster@redhat.com>
+References: <20190207132534.GA2185@justpickone.org>
+In-Reply-To: <20190207132534.GA2185@justpickone.org>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Fri, 8 Feb 2019 11:40:20 -0700
+Message-ID: <CAJCQCtSxC55X2R--THjrBK=1U4hg1FhB0AQULT3FciAeT8Pp3w@mail.gmail.com>
+Subject: Re: is it safe to xfs_repair this volume? do i have a different first step?
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: David T-G <davidtg@justpickone.org>
+Cc: Linux-XFS list <linux-xfs@vger.kernel.org>
 
-On Fri, Feb 08, 2019 at 10:24:42AM -0500, Brian Foster wrote:
-> The v5 superblock format added various metadata fields (such as crc,
-> metadata lsn, owner uuid, etc.) to v4 metadata headers or created
-> new v5 headers for blocks where no such headers existed on v4. Where
-> v4 headers did exist, the v5 structures are careful to place v4
-> metadata at the original location. For example, the magic value is
-> expected to be at the same location in certain blocks to facilitate
-> version detection.
-> 
-> While failure of this invariant is likely to cause severe and
-> obvious problems at runtime, we can detect this condition at compile
-> time via the more recently added on-disk format check
-> infrastructure. Since there is no runtime cost, add some offset
-> checks that start with v5 structure definitions, traverse down to
-> the first bit of common metadata with v4 and ensure that common
-> metadata is at the expected offset. Note that we don't care about
-> blocks which had no v4 header because there is no common metadata in
-> those cases. No functional changes.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> Hi all,
-> 
-> This patch is inspired from debug checks that were initially in the
-> verifier magic fixup series. I originally had some assert checks to make
-> sure magic values were in the same location across v4 and v5 structures.
-> Darrick suggested that these were perhaps better suited as build time
-> offset checks. My subsequent attempt to convert the magic offset checks
-> resulted in somewhat confusing and convoluted build time checks.
-> 
-> As a result, I opted to remove this stuff from the verifier series to be
-> replaced with an independent patch that attempts to verify v5 structures
-> place v4 metadata at the expected location in general. This is not a
-> known problem or anything, just something that's easy to check for with
-> the on-disk format infrastructure already in place and helps validate
-> common code.
-> 
-> I think this covers all structures handled by the verifier series at
-> least (some are "internal" in that they are between the top-level v5
-> structs and v4 structs), but I could have missed some. Thoughts?
+On Thu, Feb 7, 2019 at 6:30 AM David T-G <davidtg@justpickone.org> wrote:
+>
+>   diskfarm:root:4:~> parted /dev/md0 print
+>   Error: end of file while reading /dev/md0
+>   Retry/Ignore/Cancel? ignore
+>   Error: The backup GPT table is corrupt, but the primary appears OK, so that will be used.
+[snip]
+> when poking, I at first thought that this was a RAID issue, but all of
+> the md reports look good and apparently the GPT table issue is common, so
+> I'll leave all of that out unless someone asks for it.
 
-Looks ok to me,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+A corrupt backup GPT is a huge redflag that there's user confusion,
+that has then led to the storage stack itself becoming confused.
 
-(In my fantasyland we would have comprehensive build-time checks for
-every field offset of every on-disk structure, but that's a totally
-separate patchset.)
+Since GPT partitioning an array, in particular with just one
+partition, seems unnecessarily complicated and thus pointless; I'm
+suspicious that /dev/md0 is not in fact partitioned - that GPT very
+well may belong to the first member device of the array. Not the
+array. And the reason the backup is "corrupt" is because parted+fdisk
+looking at the end of /dev/md0 rather than the end of the device this
+GPT actually belongs to.
 
---D
+So I suspect GPT and XFS have stepped on each other possibly more than
+once each which is why both have corruption; and the mdadm metadata
+doesn't. Or even possible that one or more signatures in this storage
+stack are stale, not having previously been properly wiped, and now
+are haunting this storage stack.
 
-> 
-> Brian
-> 
->  fs/xfs/xfs_ondisk.h | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> index d3e04d20d8d4..c8ba98fae30a 100644
-> --- a/fs/xfs/xfs_ondisk.h
-> +++ b/fs/xfs/xfs_ondisk.h
-> @@ -125,6 +125,27 @@ xfs_check_ondisk_structs(void)
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format,	56);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
->  	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
-> +
-> +	/*
-> +	 * The v5 superblock format extended several v4 header structures with
-> +	 * additional data. While new fields are only accessible on v5
-> +	 * superblocks, it's important that the v5 structures place original v4
-> +	 * fields/headers in the correct location on-disk. For example, we must
-> +	 * be able to find magic values at the same location in certain blocks
-> +	 * regardless of superblock version.
-> +	 *
-> +	 * The following checks ensure that various v5 data structures place the
-> +	 * subset of v4 metadata associated with the same type of block at the
-> +	 * start of the on-disk block. If there is no data structure definition
-> +	 * for certain types of v4 blocks, traverse down to the first field of
-> +	 * common metadata (e.g., magic value) and make sure it is at offset
-> +	 * zero.
-> +	 */
-> +	XFS_CHECK_OFFSET(struct xfs_dir3_leaf, hdr.info.hdr,	0);
-> +	XFS_CHECK_OFFSET(struct xfs_da3_intnode, hdr.info.hdr,	0);
-> +	XFS_CHECK_OFFSET(struct xfs_dir3_data_hdr, hdr.magic,	0);
-> +	XFS_CHECK_OFFSET(struct xfs_dir3_free, hdr.hdr.magic,	0);
-> +	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
->  }
->  
->  #endif /* __XFS_ONDISK_H */
-> -- 
-> 2.17.2
-> 
+I wouldn't make any writes until you've double checked what the layout
+is supposed to be. First check if the individual member drives are GPT
+partitioned, and whether their primary and backups are valid (not
+corrupt); if there's corruption don't fix it yet. Right now you just
+need to focus on what all of the on disk metadata says is true, and
+then you'll be able to discover what metadata is wrong and
+contributing to all this confusion.
+
+
+-- 
+Chris Murphy
