@@ -1,94 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55338 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35602 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726565AbfBHMG1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Feb 2019 07:06:27 -0500
-Date: Fri, 8 Feb 2019 07:06:24 -0500
+        id S1726522AbfBHMef (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Feb 2019 07:34:35 -0500
+Date: Fri, 8 Feb 2019 07:34:33 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 9/9] xfs: cache unlinked pointers in an rhashtable
-Message-ID: <20190208120623.GA21317@bfoster>
-References: <154947207759.22369.11575570374120223292.stgit@magnolia>
- <154947213625.22369.7330296004413590907.stgit@magnolia>
- <20190207143114.GB2880@bfoster>
- <20190208080016.GB5523@infradead.org>
+Subject: Re: [RFC PATCH 0/3]: Extreme fragmentation ahoy!
+Message-ID: <20190208123432.GB21317@bfoster>
+References: <20190207050813.24271-1-david@fromorbit.com>
+ <20190207052114.GA7991@magnolia>
+ <20190207053941.GL14116@dastard>
+ <20190207155242.GE2880@bfoster>
+ <20190208024730.GM14116@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190208080016.GB5523@infradead.org>
+In-Reply-To: <20190208024730.GM14116@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Fri, Feb 08, 2019 at 12:00:16AM -0800, Christoph Hellwig wrote:
-> > > +	if (XFS_TEST_ERROR(false, pag->pag_mount, XFS_ERRTAG_IUNLINK_FALLBACK))
-> > > +		return 0;
-> > > +
-> > > +	iu = kmem_zalloc(sizeof(*iu), KM_SLEEP | KM_NOFS);
-> > > +	iu->iu_agino = prev_agino;
-> > > +	iu->iu_next_unlinked = this_agino;
-> > > +
-> > > +	error = rhashtable_insert_fast(&pag->pagi_unlinked_hash,
-> > > +			&iu->iu_rhash_head, xfs_iunlink_hash_params);
-> > > +	if (error == 0 || error == -EEXIST)
-> > > +		return error;
-> > > +	return 0;
+On Fri, Feb 08, 2019 at 01:47:30PM +1100, Dave Chinner wrote:
+> On Thu, Feb 07, 2019 at 10:52:43AM -0500, Brian Foster wrote:
+> > On Thu, Feb 07, 2019 at 04:39:41PM +1100, Dave Chinner wrote:
+> > > On Wed, Feb 06, 2019 at 09:21:14PM -0800, Darrick J. Wong wrote:
+> > > > On Thu, Feb 07, 2019 at 04:08:10PM +1100, Dave Chinner wrote:
+> > > > > Hi folks,
+> > > > > 
+> > > > > I've just finished analysing an IO trace from a application
+> > > > > generating an extreme filesystem fragmentation problem that started
+> > > > > with extent size hints and ended with spurious ENOSPC reports due to
+> > > > > massively fragmented files and free space. While the ENOSPC issue
+> > > > > looks to have previously been solved, I still wanted to understand
+> > > > > how the application had so comprehensively defeated extent size
+> > > > > hints as a method of avoiding file fragmentation.
+> ....
+> > > FWIW, I think the scope of the problem is quite widespread -
+> > > anything that does open/something/close repeatedly on a file that is
+> > > being written to with O_DSYNC or O_DIRECT appending writes will kill
+> > > the post-eof extent size hint allocated space. That's why I suspect
+> > > we need to think about not trimming by default and trying to
+> > > enumerating only the cases that need to trim eof blocks.
+> > > 
 > > 
-> > The return val looks funny at a glance: return -EEXIST or otherwise
-> > return 0 for success and all other errors (also the error == 0 looks
-> > superfluous). I see the comment above describes what this does, but it
-> > doesn't explain why. I'd move the comment to above the if check and
-> > explain why it's there (i.e., "Absorb all runtime errors besides -EEXIST
-> > because fallback blah blah. We care about -EEXIST because ...").
-> > 
-> > Also I assume we need to free the iu object on insert failure,
-> > regardless of whether we ultimately return the error.
+> > To further this point.. I think the eofblocks scanning stuff came long
+> > after the speculative preallocation code and associated release time
+> > post-eof truncate.
 > 
-> But is this really the right thing to do?  Everything but ENOMEM
-> would be a bug in the rhashtable implementation, or the XFS use,
-> wouldn't it?
+> Yes, I cribed a bit of the history of the xfs_release() behaviour
+> on #xfs yesterday afternoon:
 > 
-
-I think anything beyond -ENOMEM would imply a bug somewhere, yes.
-
-> So why not drop the return value entirely and do a:
-> 
-> 	error = rhashtable_insert_fast(&pag->pagi_unlinked_hash,
-> 			&iu->iu_rhash_head, xfs_iunlink_hash_params);
-> 	ASSERT(error == 0 || error == -ENOMEM);
+>  <djwong>	dchinner: feel free to ignore this until tomorrow if you want, but /me wonders why we'd want to free the eofblocks at close time at all, instead of waiting for inactivation/enospc/background reaper to do it?
+>  <dchinner>	historic. People doing operations then complaining du didn't match ls
+>  <dchinner>	stuff like that
+>  <dchinner>	There used to be a open file cache in XFS - we'd know exactly when the last reference went away and trim it then
+>  <dchinner>	but that went away when NFS and the dcache got smarter about file handle conversion
+>  <dchinner>	(i.e. that's how we used to make nfs not suck)
+>  <dchinner>	that's when we started doing work in ->release
+>  <dchinner>	it was close enough to "last close" for most workloads it made no difference.
+>  <dchinner>	Except for concurrent NFS writes into the same directory
+>  <dchinner>	and now there's another pathological application that triggers problems
+>  <dchinner>	The NFS exception was prior to having thebackground reaper
+>  <dchinner>	as these things goes the background reaper is relatively recent functionality
+>  <dchinner>	so perhaps we should just leave it to "inode cache expiry or background reaping" and not do it on close at al
 > 
 
-It's not clear to me whether you're suggesting we return 0, error or
-nothing at all here. The assert otherwise seems fine to me as I don't
-think we'd ever expect anything outside of success or -ENOMEM.
+Thanks.
 
-That said, I don't see any reason to ever leak an iu if we know it
-didn't make it into the table. I could probably go either way on whether
-we wanted to allow the filesystem to continue or not on unexpected
-insert errors. The original comment was just that we probably shouldn't
-explode on "expected" errors like -ENOSPC.
-
-> > > +	error = rhashtable_remove_fast(&pag->pagi_unlinked_hash,
-> > > +			&iu->iu_rhash_head, xfs_iunlink_hash_params);
-> > > +	if (error)
-> > > +		return error;
-> > 
-> > What's interesting about remove failure is that if we otherwise found an
-> > iu for this inode, removing the inode from the unlinked list leaves a
-> > stale/incorrect iu around in the in-core table. So it's one thing for
-> > the in-core table to be a valid subset of the on-disk structures, but
-> > another thing entirely to have incoherence between the two. It might be
-> > worth pointing out that it's critical to return an error here so we
-> > don't actually remove the inode (whereas the re-add below is less
-> > strict).
+> > I think the background scanning was initially an
+> > enhancement to deal with things like the dirty release optimization
+> > leaving these blocks around longer and being able to free up this
+> > accumulated space when we're at -ENOSPC conditions.
 > 
-> Again, remove failure here sounds like a programming bug - so ASSERT
-> and or forced shutdown here.
+> Yes, amongst other things like slow writes keeping the file open
+> forever.....
+> 
+> > Now that we have the
+> > scanning mechanism in place (and a 5 minute default background scan,
+> > which really isn't all that long), it might be reasonable to just drop
+> > the release time truncate completely and only trim post-eof blocks via
+> > the bg scan or reclaim paths.
+> 
+> Yeah, that's kinda the question I'm asking here. What's the likely
+> impact of not trimming EOF blocks at least on close apart from
+> people complaining about df/ls not matching du?
+> 
 
-Remove failure already unconditionally returns the error (which in the
-inactive path translates to a shutdown). My feedback above was just a
-suggestion to explain why in a comment because the error handling is
-intentionally different between table insert/remove/lookup.
+Ok. ISTM it's just a continuation of the same "might confuse some users"
+scenario that pops up occasionally. It also seems that kind of thing has
+died down as either most people don't really know or care about the
+transient state or are just more familiar with it at this point. IME,
+complex applications that depend on block ownership stats (userspace
+filesystems for example) already have to account for speculative
+preallocation with XFS, so tweaking the semantics of the optimization
+shouldn't really have much of an impact that I can tell so long as the
+broader/long-term behavior doesn't change[1].
+
+I suppose there are all kinds of other applications that are technically
+affected by dropping the release time trim (simple file copies, archive
+extraction, etc.), but it's not clear to me that matters so long as we
+have effective bg and -ENOSPC scans. The only thing I can think of so
+far is whether we should consider changes to the bg scan heuristics to
+accommodate scenarios currently covered by the release time trim. For
+example, the release time scan doesn't consider whether the file is
+dirty or not while the bg scan always skips "active" files.
 
 Brian
+
+[1] Which isn't the case for a change to not bg trim files with extent
+size hints.
+
+> I don't really care about that anymore because, well, reflink/dedupe
+> completely break any remaining assumption that du reported space
+> consumption is related to the file size (if sparse files wasn't
+> enough of a hint arlready)....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
