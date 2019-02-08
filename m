@@ -1,99 +1,264 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f51.google.com ([209.85.128.51]:52952 "EHLO
-        mail-wm1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726186AbfBGKvL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 05:51:11 -0500
-Received: by mail-wm1-f51.google.com with SMTP id m1so5589814wml.2
-        for <linux-xfs@vger.kernel.org>; Thu, 07 Feb 2019 02:51:09 -0800 (PST)
-Subject: Re: ENSOPC on a 10% used disk
-References: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
- <20190205214847.GE14116@dastard>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <5a9691ef-bd4a-f9d4-9fc4-1171645daca0@scylladb.com>
-Date: Thu, 7 Feb 2019 12:51:06 +0200
+Received: from mout.perfora.net ([74.208.4.194]:55127 "EHLO mout.perfora.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726801AbfBHCZU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Feb 2019 21:25:20 -0500
+Date: Thu, 7 Feb 2019 21:25:13 -0500
+From: David T-G <davidtg@justpickone.org>
+Subject: Re: is it safe to xfs_repair this volume? do i have a different
+ first step?
+Message-ID: <20190208022513.GB2185@justpickone.org>
+References: <20190207132534.GA2185@justpickone.org>
+ <20190207145247.GC2880@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20190205214847.GE14116@dastard>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190207145247.GC2880@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Linux-XFS list <linux-xfs@vger.kernel.org>
+
+Brian, et al --
+
+...and then Brian Foster said...
+% 
+% On Thu, Feb 07, 2019 at 08:25:34AM -0500, David T-G wrote:
+% > 
+% > I have a four-disk RAID5 volume with an ~11T filesystem that suddenly
+% > won't mount 
+...
+% > when poking, I at first thought that this was a RAID issue, but all of
+% > the md reports look good and apparently the GPT table issue is common, so
+% > I'll leave all of that out unless someone asks for it.
+% 
+% I'd be curious if the MD metadata format contends with GPT metadata. Is
+% the above something you've ever tried before running into this problem
+% and thus can confirm whether it preexisted the mount problem or not?
+
+There's a lot I don't know, so it's quite possible that it doesn't line
+up.  Here's what mdadm tells me:
+
+  diskfarm:root:6:~> mdadm --detail /dev/md0
+  /dev/md0:
+          Version : 1.2
+    Creation Time : Mon Feb  6 00:56:35 2017
+       Raid Level : raid5
+       Array Size : 11720265216 (11177.32 GiB 12001.55 GB)
+    Used Dev Size : 3906755072 (3725.77 GiB 4000.52 GB)
+     Raid Devices : 4
+    Total Devices : 4
+      Persistence : Superblock is persistent
+
+      Update Time : Fri Jan 25 03:32:18 2019
+            State : clean
+   Active Devices : 4
+  Working Devices : 4
+   Failed Devices : 0
+    Spare Devices : 0
+
+           Layout : left-symmetric
+       Chunk Size : 512K
+
+             Name : diskfarm:0  (local to host diskfarm)
+             UUID : ca7008ef:90693dae:6c231ad7:08b3f92d
+           Events : 48211
+
+      Number   Major   Minor   RaidDevice State
+         0       8       17        0      active sync   /dev/sdb1
+         1       8       65        1      active sync   /dev/sde1
+         3       8       81        2      active sync   /dev/sdf1
+         4       8        1        3      active sync   /dev/sda1
+  diskfarm:root:6:~>
+  diskfarm:root:6:~> for D in a1 b1 e1 f1 ; do mdadm --examine /dev/sd$D | egrep "$D|Role|State|Checksum|Events" ; done
+  /dev/sda1:
+            State : clean
+      Device UUID : f05a143b:50c9b024:36714b9a:44b6a159
+         Checksum : 4561f58b - correct
+           Events : 48211
+     Device Role : Active device 3
+     Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+  /dev/sdb1:
+            State : clean
+         Checksum : 4654df78 - correct
+           Events : 48211
+     Device Role : Active device 0
+     Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+  /dev/sde1:
+            State : clean
+         Checksum : c4ec7cb6 - correct
+           Events : 48211
+     Device Role : Active device 1
+     Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+  /dev/sdf1:
+            State : clean
+         Checksum : 349cf800 - correct
+           Events : 48211
+     Device Role : Active device 2
+     Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+Does that set off any alarms for you?
 
 
-On 05/02/2019 23.48, Dave Chinner wrote:
-> Hi Avi,
->
-> On Wed, Oct 17, 2018 at 10:52:48AM +0300, Avi Kivity wrote:
->> I have a user running a 1.7TB filesystem with ~10% usage (as shown
->> by df), getting sporadic ENOSPC errors. The disk is mounted with
->> inode64 and has a relatively small number of large files. The disk
->> is a single-member RAID0 array, with 1MB chunk size. There are 32
->> AGs. Running Linux 4.9.17.
->>
->>
->> The write load consists of AIO/DIO writes, followed by unlinks of
->> these files. The writes are non-size-changing (we truncate ahead)
->> and we use XFS_IOC_FSSETXATTR/XFS_FLAG_EXTSIZE with a hint size of
->> 32MB. The errors happen on commit logs, which have a target size of
->> 32MB (but may exceed it a little).
->>
->>
->> The errors are sporadic and after restarting the workload they go
->> away for a few hours to a few days, but then return. During one of
->> the crashes I used xfs_db to look at fragmentation and saw that most
->> AGs had free extents of size categories up to 128-255, but a few had
->> more. I tried xfs_fsr but it did not help.
->>
->>
->> Is this a known issue? Would upgrading the kernel help?
-> Long time, I know, but Brian has just made me aware of this commit
-> from early 2018 that went into 4.16 that might be relevant and so I
-> thought it best to close the loop:
->
-> commit 6d8a45ce29c7d67cc4fc3016dc2a07660c62482a
-> Author: Darrick J. Wong <darrick.wong@oracle.com>
-> Date:   Fri Jan 19 17:47:36 2018 -0800
->
->      xfs: don't screw up direct writes when freesp is fragmented
->      
->      xfs_bmap_btalloc is given a range of file offset blocks that must be
->      allocated to some data/attr/cow fork.  If the fork has an extent size
->      hint associated with it, the request will be enlarged on both ends to
->      try to satisfy the alignment hint.  If free space is fragmentated,
->      sometimes we can allocate some blocks but not enough to fulfill any of
->      the requested range.  Since bmapi_allocate always trims the new extent
->      mapping to match the originally requested range, this results in
->      bmapi_write returning zero and no mapping.
->      
->      The consequences of this vary -- buffered writes will simply re-call
->      bmapi_write until it can satisfy at least one block from the original
->      request.  Direct IO overwrites notice nmaps == 0 and return -ENOSPC
->      through the dio mechanism out to userspace with the weird result that
->      writes fail even when we have enough space because the ENOSPC return
->      overrides any partial write status.  For direct CoW writes the situation
->      was disastrous because nobody notices us returning an invalid zero-length
->      wrong-offset mapping to iomap and the write goes off into space.
->      
->      Therefore, if free space is so fragmented that we managed to allocate
->      some space but not enough to map into even a single block of the
->      original allocation request range, we should break the alignment hint in
->      order to guarantee at least some forward progress for the direct write.
->      If we return a short allocation to iomap_apply it'll call back about the
->      remaining blocks.
->      
->      Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->      Reviewed-by: Christoph Hellwig <hch@lst.de>
->
-> The spurious ENOSPC symptoms seem to match what you are seeing here
-> on your customer's 4.9 kernel, so it may be that this is the fix for
-> the ENOSPC problem that was reported. If this comes up again, then
-> perhaps it would be worth either upgrading the kernel to 4.16+ or
-> backporting this commit to see if it fixes the problem.
+% 
+% If not, I'd suggest some more investigation into this before you make
+% any future partition or raid changes to this storage. I thought there
+% were different MD formats to accommodate precisely this sort of
+% incompatibility, but I don't know for sure. linux-raid is probably more
+% of a help here.
+
+Thanks :-)  I have no plans to partition, but I will eventually want to
+grow it, so I'll definitely have to check on that.
 
 
-Thanks for remembering. Indeed it looks like a good match for the 
-problem. We did not see the problem again (it took quite a combination 
-of screwups to achieve), but I'll remember this in case that we do.
+% 
+% > dmesg reports some XFS problems
+% > 
+% >   diskfarm:root:5:~> dmesg | egrep 'md[:/0]'
+...
+% >   [  202.230961] XFS (md0p1): Mounting V4 Filesystem
+% >   [  203.182567] XFS (md0p1): Torn write (CRC failure) detected at log block 0x3397e8. Truncating head block from 0x3399e8.
+% >   [  203.367581] XFS (md0p1): failed to locate log tail
+% >   [  203.367587] XFS (md0p1): log mount/recovery failed: error -74
+% >   [  203.367712] XFS (md0p1): log mount failed
+...
+% 
+% Hmm. So part of the on-disk log is invalid. We attempt to deal with this
+...
+% I'd guess that the torn write is due to interleaving log writes across
+% raid devices or something, but we can't really tell from just this.
+
+The filesystem *shouldn't* see that there are distinct devices under
+there, since that's handled by the md driver, but there's STILL a lot
+that I don't know :-)
+
+
+% 
+% >   diskfarm:root:4:~> xfs_repair -n /dev/disk/by-label/4Traid5md 2>&1 | egrep -v 'agno = '
+...
+% >           - scan filesystem freespace and inode maps...
+% >   sb_fdblocks 471930978, counted 471939170
+% 
+% The above said, the corruption here looks extremely minor. You basically
+...
+% scans and not much else going on.
+
+That sounds hopeful! :-)
+
+
+% 
+% >           - 09:18:47: scanning filesystem freespace - 48 of 48 allocation groups done
+...
+% >   Phase 7 - verify link counts...
+% >           - 09:34:02: verify and correct link counts - 48 of 48 allocation groups done
+% >   No modify flag set, skipping filesystem flush and exiting.
+% > 
+% > is the trimmed output that can fit on one screen.  Since I don't have a
+...
+% 
+% What do you mean by trimmed output? Was there more output from
+% xfs_repair that is not shown here?
+
+Yes.  Note the
+
+  | egrep -v 'agno = '
+
+on the command line above.  The full output
+
+  diskfarm:root:4:~> xfs_repair -n /dev/disk/by-label/4Traid5md >/tmp/xfs_repair.out 2>&1
+  diskfarm:root:4:~> wc -l /tmp/xfs_repair.out
+  124 /tmp/xfs_repair.out
+
+was quite long.  Shall I attach that file or post a link?
+
+
+% 
+% In general, if you're concerned about what xfs_repair might do to a
+% particular filesystem you can always do a normal xfs_repair run against
+% a metadump of the filesystem before the original copy. Collect a
+% metadump of the fs:
+% 
+% xfs_metadump -go <dev> <outputmdimg>
+
+Hey, cool!  I like that :-)  It generated a sizeable output file
+
+  diskfarm:root:8:~> xfs_metadump /dev/disk/by-label/4Traid5md /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out >/mnt/750Graid5md/tmp/4Traid5md.xfs_d.out.stdout-stderr 2>&1
+  diskfarm:root:8:~> ls -goh /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out
+  -rw-r--r-- 1 3.5G Feb  7 17:57 /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out
+  diskfarm:root:8:~> wc -l /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out.stdout-stderr
+  239 /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out.stdout-stderr
+
+as well as quite a few errors.  Here
+
+  diskfarm:root:8:~> head /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out.stdout-stderr
+  xfs_metadump: error - read only 0 of 4096 bytes
+  xfs_metadump: error - read only 0 of 4096 bytes
+  xfs_metadump: cannot init perag data (5). Continuing anyway.
+  xfs_metadump: error - read only 0 of 4096 bytes
+  xfs_metadump: cannot read dir2 block 39/132863 (2617378559)
+  xfs_metadump: error - read only 0 of 4096 bytes
+  xfs_metadump: cannot read dir2 block 41/11461784 (2762925208)
+  xfs_metadump: error - read only 0 of 4096 bytes
+  xfs_metadump: cannot read dir2 block 41/4237562 (2755700986)
+  xfs_metadump: error - read only 0 of 4096 bytes
+
+  diskfarm:root:8:~> tail /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out.stdout-stderr
+  xfs_metadump: error - read only 0 of 4096 bytes
+  xfs_metadump: cannot read superblock for ag 47
+  xfs_metadump: error - read only 0 of 4096 bytes
+  xfs_metadump: cannot read agf block for ag 47
+  xfs_metadump: error - read only 0 of 4096 bytes
+  xfs_metadump: cannot read agi block for ag 47
+  xfs_metadump: error - read only 0 of 4096 bytes
+  xfs_metadump: cannot read agfl block for ag 47
+  xfs_metadump: Filesystem log is dirty; image will contain unobfuscated metadata in log.
+  cache_purge: shake on cache 0x4ee1c0 left 117 nodes!?
+
+is a glance at the contents.  Should I post/paste the full copy?
+
+
+% 
+% Note that the metadump collects everything except file data so it will
+% require a decent amount of space depending on how much metadata
+% populates your fs vs. data.
+% 
+% Then restore the metadump to a sparse file (on some other
+% filesystem/storage):
+% 
+% xfs_mdrestore -g <mdfile> <sparsefiletarget>
+
+I tried this 
+
+  diskfarm:root:11:~> dd if=/dev/zero bs=1 count=0 seek=4G of=/mnt/750Graid5md/tmp/4Traid5md.xfs_d.iso
+  0+0 records in
+  0+0 records out
+  0 bytes copied, 6.7252e-05 s, 0.0 kB/s
+  diskfarm:root:11:~> ls -goh /mnt/750Graid5md/tmp/4Traid5md.xfs_d.iso
+  -rw-r--r-- 1 4.0G Feb  7 21:15 /mnt/750Graid5md/tmp/4Traid5md.xfs_d.iso
+  diskfarm:root:11:~> xfs_mdrestore /mnt/750Graid5md/tmp/4Traid5md.xfs_d.out /mnt/750Graid5md/tmp/4Traid5md.xfs_d.iso
+  xfs_mdrestore: cannot set filesystem image size: File too large
+
+and got an error :-(  Should a 4G file be large enough for a 3.5G
+metadata dump?
+
+
+% 
+% Then you can mount/xfs_repair the restored sparse image, see what
+% xfs_repair does, mount the before/after img, etc. Note again that file
+% data is absent from the restored metadata image so don't expect to be
+% able to look at file content in the metadump image.
+
+Right.  That sounds like a great middle step, though.  Thanks!
+
+
+% 
+% Brian
+
+
+HAND
+
+:-D
+-- 
+David T-G
+See http://justpickone.org/davidtg/email/
+See http://justpickone.org/davidtg/tofu.txt
