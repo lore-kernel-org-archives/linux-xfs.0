@@ -1,88 +1,175 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:37890 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726211AbfBHWtr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 17:49:47 -0500
-Date: Fri, 8 Feb 2019 14:49:44 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/2] Revert
- "mm: don't reclaim inodes with many attached pages"
-Message-Id: <20190208144944.082a771e84f02a77bad3e292@linux-foundation.org>
-In-Reply-To: <20190208125049.GA11587@quack2.suse.cz>
-References: <20190130041707.27750-1-david@fromorbit.com>
-        <20190130041707.27750-2-david@fromorbit.com>
-        <25EAF93D-BC63-4409-AF21-F45B2DDF5D66@fb.com>
-        <20190131013403.GI4205@dastard>
-        <20190131091011.GP18811@dhcp22.suse.cz>
-        <20190131185704.GA8755@castle.DHCP.thefacebook.com>
-        <20190131221904.GL4205@dastard>
-        <20190207102750.GA4570@quack2.suse.cz>
-        <20190207213727.a791db810341cec2c013ba93@linux-foundation.org>
-        <20190208095507.GB6353@quack2.suse.cz>
-        <20190208125049.GA11587@quack2.suse.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Received: from mail.kernel.org ([198.145.29.99]:33552 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726978AbfBIV4a (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 9 Feb 2019 16:56:30 -0500
+Date: Sat, 9 Feb 2019 16:56:27 -0500
+From: Sasha Levin <sashal@kernel.org>
+Subject: Re: [PATCH v2 00/10] xfs: stable fixes for v4.19.y
+Message-ID: <20190209215627.GB69686@sasha-vm>
+References: <20190204165427.23607-1-mcgrof@kernel.org>
+ <20190205220655.GF14116@dastard>
+ <20190206040559.GA4119@sasha-vm>
+ <20190206215454.GG14116@dastard>
+ <20190208060620.GA31898@sasha-vm>
+ <20190208221726.GM11489@garbanzo.do-not-panic.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20190208221726.GM11489@garbanzo.do-not-panic.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Dave Chinner <david@fromorbit.com>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Chris Mason <clm@fb.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "vdavydov.dev@gmail.com" <vdavydov.dev@gmail.com>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com, stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org
 
-On Fri, 8 Feb 2019 13:50:49 +0100 Jan Kara <jack@suse.cz> wrote:
+On Fri, Feb 08, 2019 at 02:17:26PM -0800, Luis Chamberlain wrote:
+>On Fri, Feb 08, 2019 at 01:06:20AM -0500, Sasha Levin wrote:
+>> Sure! Below are the various configs this was run against. There were
+>> multiple runs over 48+ hours and no regressions from a 4.14.17 baseline
+>> were observed.
+>
+>In an effort to consolidate our sections:
+>
+>> [default]
+>> TEST_DEV=/dev/nvme0n1p1
+>> TEST_DIR=/media/test
+>> SCRATCH_DEV_POOL="/dev/nvme0n1p2"
+>> SCRATCH_MNT=/media/scratch
+>> RESULT_BASE=$PWD/results/$HOST/$(uname -r)
+>> MKFS_OPTIONS='-f -m crc=1,reflink=0,rmapbt=0, -i sparse=0'
+>
+>This matches my "xfs" section.
+>
+>> USE_EXTERNAL=no
+>> LOGWRITES_DEV=/dev/nve0n1p3
+>> FSTYP=xfs
+>>
+>>
+>> [default]
+>> TEST_DEV=/dev/nvme0n1p1
+>> TEST_DIR=/media/test
+>> SCRATCH_DEV_POOL="/dev/nvme0n1p2"
+>> SCRATCH_MNT=/media/scratch
+>> RESULT_BASE=$PWD/results/$HOST/$(uname -r)
+>> MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1,'
+>
+>This matches my "xfs_reflink"
+>
+>> USE_EXTERNAL=no
+>> LOGWRITES_DEV=/dev/nvme0n1p3
+>> FSTYP=xfs
+>>
+>>
+>> [default]
+>> TEST_DEV=/dev/nvme0n1p1
+>> TEST_DIR=/media/test
+>> SCRATCH_DEV_POOL="/dev/nvme0n1p2"
+>> SCRATCH_MNT=/media/scratch
+>> RESULT_BASE=$PWD/results/$HOST/$(uname -r)
+>> MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1, -b size=1024,'
+>
+>This matches my "xfs_reflink_1024" section.
+>
+>> USE_EXTERNAL=no
+>> LOGWRITES_DEV=/dev/nvme0n1p3
+>> FSTYP=xfs
+>>
+>>
+>> [default]
+>> TEST_DEV=/dev/nvme0n1p1
+>> TEST_DIR=/media/test
+>> SCRATCH_DEV_POOL="/dev/nvme0n1p2"
+>> SCRATCH_MNT=/media/scratch
+>> RESULT_BASE=$PWD/results/$HOST/$(uname -r)
+>> MKFS_OPTIONS='-f -m crc=0,reflink=0,rmapbt=0, -i sparse=0,'
+>
+>This matches my "xfs_nocrc" section.
+>
+>> USE_EXTERNAL=no
+>> LOGWRITES_DEV=/dev/nvme0n1p3
+>> FSTYP=xfs
+>>
+>>
+>> [default]
+>> TEST_DEV=/dev/nvme0n1p1
+>> TEST_DIR=/media/test
+>> SCRATCH_DEV_POOL="/dev/nvme0n1p2"
+>> SCRATCH_MNT=/media/scratch
+>> RESULT_BASE=$PWD/results/$HOST/$(uname -r)
+>> MKFS_OPTIONS='-f -m crc=0,reflink=0,rmapbt=0, -i sparse=0, -b size=512,'
+>
+>This matches my "xfs_nocrc_512" section.
+>
+>> USE_EXTERNAL=no
+>> LOGWRITES_DEV=/dev/nvme0n1p3
+>> FSTYP=xfs
+>>
+>>
+>> [default_pmem]
+>> TEST_DEV=/dev/pmem0
+>
+>I'll have to add this to my framework. Have you found pmem
+>issues not present on other sections?
 
-> > > Has anyone done significant testing with Rik's maybe-fix?
-> > 
-> > I will give it a spin with bonnie++ today. We'll see what comes out.
-> 
-> OK, I did a bonnie++ run with Rik's patch (on top of 4.20 to rule out other
-> differences). This machine does not show so big differences in bonnie++
-> numbers but the difference is still clearly visible. The results are
-> (averages of 5 runs):
-> 
-> 		 Revert			Base			Rik
-> SeqCreate del    78.04 (   0.00%)	98.18 ( -25.81%)	90.90 ( -16.48%)
-> RandCreate del   87.68 (   0.00%)	95.01 (  -8.36%)	87.66 (   0.03%)
-> 
-> 'Revert' is 4.20 with "mm: don't reclaim inodes with many attached pages"
-> and "mm: slowly shrink slabs with a relatively small number of objects"
-> reverted. 'Base' is the kernel without any reverts. 'Rik' is a 4.20 with
-> Rik's patch applied.
-> 
-> The numbers are time to do a batch of deletes so lower is better. You can see
-> that the patch did help somewhat but it was not enough to close the gap
-> when files are deleted in 'readdir' order.
+Originally I've added this because the xfs folks suggested that pmem vs
+block exercises very different code paths and we should be testing both
+of them.
 
-OK, thanks.
+Looking at the baseline I have, it seems that there are differences
+between the failing tests. For example, with "MKFS_OPTIONS='-f -m
+crc=1,reflink=0,rmapbt=0, -i sparse=0'", generic/524 seems to fail on
+pmem but not on block.
 
-I guess we need a rethink on Roman's fixes.   I'll queued the reverts.
+>> TEST_DIR=/media/test
+>> SCRATCH_DEV_POOL="/dev/pmem1"
+>> SCRATCH_MNT=/media/scratch
+>> RESULT_BASE=$PWD/results/$HOST/$(uname -r)-pmem
+>> MKFS_OPTIONS='-f -m crc=1,reflink=0,rmapbt=0, -i sparse=0'
+>
+>OK so you just repeat the above options vervbatim but for pmem.
+>Correct?
 
+Right.
 
-BTW, one thing I don't think has been discussed (or noticed) is the
-effect of "mm: don't reclaim inodes with many attached pages" on 32-bit
-highmem machines.  Look why someone added that code in the first place:
+>Any reason you don't name the sections with more finer granularity?
+>It would help me in ensuring when we revise both of tests we can more
+>easily ensure we're talking about apples, pears, or bananas.
 
-: commit f9a316fa9099053a299851762aedbf12881cff42
-: Author: Andrew Morton <akpm@digeo.com>
-: Date:   Thu Oct 31 04:09:37 2002 -0800
-: 
-:     [PATCH] strip pagecache from to-be-reaped inodes
-:     
-:     With large highmem machines and many small cached files it is possible
-:     to encounter ZONE_NORMAL allocation failures.  This can be demonstrated
-:     with a large number of one-byte files on a 7G machine.
-:     
-:     All lowmem is filled with icache and all those inodes have a small
-:     amount of highmem pagecache which makes them unfreeable.
-:     
-:     The patch strips the pagecache from inodes as they come off the tail of
-:     the inode_unused list.
-:     
-:     I play tricks in there peeking at the head of the inode_unused list to
-:     pick up the inode again after running iput().  The alternatives seemed
-:     to involve more widespread changes.
-:     
-:     Or running invalidate_inode_pages() under inode_lock which would be a
-:     bad thing from a scheduling latency and lock contention point of view.
+Nope, I'll happily rename them if there are "official" names for it :)
 
-I guess I shold have added a comment.  Doh.
+>FWIW, I run two different bare metal hosts now, and each has a VM guest
+>per section above. One host I use for tracking stable, the other host for
+>my changes. This ensures I don't mess things up easier and I can re-test
+>any time fast.
+>
+>I dedicate a VM guest to test *one* section. I do this with oscheck
+>easily:
+>
+>./oscheck.sh --test-section xfs_nocrc | tee log-xfs-4.19.18+
+>
+>For instance will just test xfs_nocrc section. On average each section
+>takes about 1 hour to run.
+
+We have a similar setup then. I just spawn the VM on azure for each
+section and run them all in parallel that way.
+
+I thought oscheck runs everything on a single VM, is it a built in
+mechanism to spawn a VM for each config? If so, I can add some code in
+to support azure and we can use the same codebase.
+
+>I could run the tests on raw nvme and do away with the guests, but
+>that loses some of my ability to debug on crashes easily and out to
+>baremetal.. but curious, how long do your tests takes? How about per
+>section? Say just the default "xfs" section?
+
+I think that the longest config takes about 5 hours, otherwise
+everything tends to take about 2 hours.
+
+I basically run these on "repeat" until I issue a stop order, so in a
+timespan of 48 hours some configs run ~20 times and some only ~10.
+
+>IIRC you also had your system on hyperV :) so maybe you can still debug
+>easily on crashes.
+>
+>  Luis
