@@ -1,67 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt1-f180.google.com ([209.85.160.180]:42968 "EHLO
-        mail-qt1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726788AbfBHWTd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 17:19:33 -0500
-Received: by mail-qt1-f180.google.com with SMTP id b8so5756012qtr.9
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Feb 2019 14:19:32 -0800 (PST)
-From: "Ricardo J. Barberis" <ricardo.barberis@gmail.com>
-Subject: Re: Metadata CRC error detected at xfs_dquot_buf_read_verify
-Date: Fri, 8 Feb 2019 19:19:24 -0300
-References: <201902071309.38999.ricardo.barberis@gmail.com> <20190208162617.GM7991@magnolia> <201902081357.39265.ricardo.barberis@gmail.com>
-In-Reply-To: <201902081357.39265.ricardo.barberis@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:36770 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726940AbfBJAG7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 9 Feb 2019 19:06:59 -0500
+Date: Sat, 9 Feb 2019 19:06:57 -0500
+From: Sasha Levin <sashal@kernel.org>
+Subject: Re: [PATCH v2 00/10] xfs: stable fixes for v4.19.y
+Message-ID: <20190210000657.GC69686@sasha-vm>
+References: <20190204165427.23607-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-Message-Id: <201902081919.24466.ricardo.barberis@gmail.com>
+In-Reply-To: <20190204165427.23607-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, Linux-XFS list <linux-xfs@vger.kernel.org>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com, stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org
 
-El Viernes 08/02/2019 a las 13:57, Ricardo J. Barberis escribi=C3=B3:
-> El Viernes 08/02/2019 a las 13:26, Darrick J. Wong escribi=C3=B3:
-> > On Fri, Feb 08, 2019 at 12:49:24PM -0300, Ricardo J. Barberis wrote:
-> > > El Viernes 08/02/2019 a las 10:17, Brian Foster escribi=C3=B3:
-> > > > On Thu, Feb 07, 2019 at 01:09:38PM -0300, Ricardo J. Barberis wrote:
-> [ ... ]
-> > > > Does xfs_repair find and fix anything? Please show the associated r=
-epair
-> > > > output.
-> > >=20
-> > > Unfotunately I didn't save xfs_repair output, but I don't believe it =
-fixed
-> > > anything other than the log that first time.
-> >=20
-> > Eric Sandeen amended xfs_repair in xfsprogs 4.17 to detect and zap
-> > corrupt quota blocks.  I don't know what version of xfsprogs centos 7.6
-> > ships with, but you might try running something newer?
-> >=20
-> > (Run it with -n first to make sure repair identifies the corrupt dquot
-> > blocks, as is customary...)
-> =20
-> I can try to compile 4.17 (CentOS 7.6 has 4.5.0) and see if it helps
+On Mon, Feb 04, 2019 at 08:54:17AM -0800, Luis Chamberlain wrote:
+>Kernel stable team,
+>
+>here is a v2 respin of my XFS stable patches for v4.19.y. The only
+>change in this series is adding the upstream commit to the commit log,
+>and I've now also Cc'd stable@vger.kernel.org as well. No other issues
+>were spotted or raised with this series.
+>
+>Reviews, questions, or rants are greatly appreciated.
+>
+>  Luis
+>
+>Brian Foster (1):
+>  xfs: fix shared extent data corruption due to missing cow reservation
+>
+>Carlos Maiolino (1):
+>  xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
+>
+>Christoph Hellwig (1):
+>  xfs: cancel COW blocks before swapext
+>
+>Christophe JAILLET (1):
+>  xfs: Fix error code in 'xfs_ioc_getbmap()'
+>
+>Darrick J. Wong (1):
+>  xfs: fix PAGE_MASK usage in xfs_free_file_space
+>
+>Dave Chinner (3):
+>  xfs: fix overflow in xfs_attr3_leaf_verify
+>  xfs: fix transient reference count error in
+>    xfs_buf_resubmit_failed_buffers
+>  xfs: delalloc -> unwritten COW fork allocation can go wrong
+>
+>Eric Sandeen (1):
+>  xfs: fix inverted return from xfs_btree_sblock_verify_crc
+>
+>Ye Yin (1):
+>  fs/xfs: fix f_ffree value for statfs when project quota is set
+>
+> fs/xfs/libxfs/xfs_attr_leaf.c | 11 +++++++++--
+> fs/xfs/libxfs/xfs_bmap.c      |  5 ++++-
+> fs/xfs/libxfs/xfs_btree.c     |  2 +-
+> fs/xfs/xfs_bmap_util.c        | 10 ++++++++--
+> fs/xfs/xfs_buf_item.c         | 28 +++++++++++++++++++++-------
+> fs/xfs/xfs_ioctl.c            |  2 +-
+> fs/xfs/xfs_qm_bhv.c           |  2 +-
+> fs/xfs/xfs_reflink.c          |  1 +
+> fs/xfs/xfs_stats.c            |  2 +-
+> 9 files changed, 47 insertions(+), 16 deletions(-)
 
-Indeed, 4.19 found the corruption:
+Queued for 4.19, thank you.
 
-Metadata corruption detected at 0x460184, xfs_dquot block 0x4170/0x1000
-User quota: bad UUID for id 55197. Would correct.
-
-And fixed it when ran without '-n':
-
-Metadata corruption detected at 0x460184, xfs_dquot block 0x4170/0x1000
-User quota: bad UUID for id 55197. Corrected.
-
-
-After that, I mounted it and ran "xfs_quota -x -c 'report /home -b'" withou=
-t issues.
-
-Thanks!
-=2D-=20
-Ricardo J. Barberis
-Usuario Linux N=C2=BA 250625: http://counter.li.org/
-Usuario LFS N=C2=BA 5121: http://www.linuxfromscratch.org/
-Senior SysAdmin / IT Architect - www.DonWeb.com
+--
+Thanks,
+Sasha
