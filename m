@@ -1,199 +1,205 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54400 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57070 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731645AbfBKPVU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Feb 2019 10:21:20 -0500
-Date: Mon, 11 Feb 2019 10:21:17 -0500
+        id S2390136AbfBKPWs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Feb 2019 10:22:48 -0500
+Date: Mon, 11 Feb 2019 10:22:45 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 05/10] xfs: split XFS_BMAPI_DELALLOC handling from
- xfs_bmapi_write
-Message-ID: <20190211152116.GD2804@bfoster>
+Subject: Re: [PATCH 08/10] xfs: move xfs_iomap_write_allocate to xfs_aops.c
+Message-ID: <20190211152244.GG2804@bfoster>
 References: <20190211125427.16577-1-hch@lst.de>
- <20190211125427.16577-6-hch@lst.de>
+ <20190211125427.16577-9-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190211125427.16577-6-hch@lst.de>
+In-Reply-To: <20190211125427.16577-9-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Feb 11, 2019 at 01:54:22PM +0100, Christoph Hellwig wrote:
-> Delalloc conversion has traditionally been part of our function to
-> allocate blocks on disk (first xfs_bmapi, then xfs_bmapi_write), but
-> delalloc conversion is a little special as we really do not want
-> to allocate blocks over holes, for which we don't have reservations.
+On Mon, Feb 11, 2019 at 01:54:25PM +0100, Christoph Hellwig wrote:
+> This function is a small wrapper only used by the writeback code, so
+> move it together with the writeback code and simplify it down to the
+> glorified do { } while loop that is now is.
 > 
-> Split the delalloc conversions into a separate helper to keep the
-> code simple and structured.
+> A few bits intentionally got lost here: no need to call xfs_qm_dqattach
+> because quotas are always attached when we create the delalloc
+> reservation, and no need for the imap->br_startblock == 0 check given
+> that xfs_bmapi_convert_delalloc already has a WARN_ON_ONCE for exactly
+> that condition.
 > 
+
+It's an assert in xfs_bmapi_convert_delalloc() FWIW. That also doesn't
+account for the fact that this changes an explicit error into a debug
+mode notification. I'm not familiar with the history of this check and
+the whole xfs_alert_fsblock_zero() thing, but AFAICT it's the only thing
+that prevents an in-core record corruption from constructing a
+superblock overwrite in this path.
+
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_bmap.c | 104 +++++++++++++++++++++------------------
->  fs/xfs/libxfs/xfs_bmap.h |   4 --
->  2 files changed, 56 insertions(+), 52 deletions(-)
+>  fs/xfs/xfs_aops.c  | 47 ++++++++++++++++++++++++---
+>  fs/xfs/xfs_iomap.c | 81 ----------------------------------------------
+>  fs/xfs/xfs_iomap.h |  2 --
+>  3 files changed, 42 insertions(+), 88 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index a9c9bd39d822..be2cb5800e02 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4327,22 +4327,6 @@ xfs_bmapi_write(
->  	bma.datatype = 0;
->  	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 8bfb62d8776f..403df647c0e4 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -329,6 +329,44 @@ xfs_imap_valid(
+>  	return true;
+>  }
 >  
-> -	/*
-> -	 * The delalloc flag means the caller wants to allocate the entire
-> -	 * delalloc extent backing bno where bno may not necessarily match the
-> -	 * startoff. Now that we've looked up the extent, reset the range to
-> -	 * map based on the extent in the file. If we're in a hole, this may be
-> -	 * an error so don't adjust anything.
-> -	 */
-> -	if ((flags & XFS_BMAPI_DELALLOC) &&
-> -	    !eof && bno >= bma.got.br_startoff) {
-> -		bno = bma.got.br_startoff;
-> -		len = bma.got.br_blockcount;
-> -#ifdef DEBUG
-> -		orig_bno = bno;
-> -		orig_len = len;
-> -#endif
-> -	}
->  	n = 0;
->  	end = bno + len;
->  	obno = bno;
-> @@ -4359,26 +4343,7 @@ xfs_bmapi_write(
->  			ASSERT(!((flags & XFS_BMAPI_CONVERT) &&
->  			         (flags & XFS_BMAPI_COWFORK)));
->  
-> -			if (flags & XFS_BMAPI_DELALLOC) {
-> -				/*
-> -				 * For the COW fork we can reasonably get a
-> -				 * request for converting an extent that races
-> -				 * with other threads already having converted
-> -				 * part of it, as there converting COW to
-> -				 * regular blocks is not protected using the
-> -				 * IOLOCK.
-> -				 */
-> -				ASSERT(flags & XFS_BMAPI_COWFORK);
-> -				if (!(flags & XFS_BMAPI_COWFORK)) {
-> -					error = -EIO;
-> -					goto error0;
-> -				}
-> -
-> -				if (eof || bno >= end)
-> -					break;
-> -			} else {
-> -				need_alloc = true;
-> -			}
-> +			need_alloc = true;
->  		} else if (isnullstartblock(bma.got.br_startblock)) {
->  			wasdelay = true;
->  		}
-> @@ -4487,23 +4452,66 @@ xfs_bmapi_convert_delalloc(
->  	int			whichfork,
->  	struct xfs_bmbt_irec	*imap)
->  {
-> -	int			flags = XFS_BMAPI_DELALLOC;
-> -	int			nimaps = 1;
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-> +	struct xfs_bmalloca	bma = { NULL };
->  	int			error;
-> -	int			total = XFS_EXTENTADD_SPACE_RES(ip->i_mount,
-> -								XFS_DATA_FORK);
->  
-> -	if (whichfork == XFS_COW_FORK)
-> -		flags |= XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC;
-> +	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &bma.icur, &bma.got) ||
-> +	    bma.got.br_startoff > offset_fsb) {
-> +		/*
-> +		 * No extent found in the range we are trying to convert.  This
-> +		 * should only happen for the COW fork, where another thread
-> +		 * might have moved the extent to the data fork in the meantime.
-> +		 */
-> +		WARN_ON_ONCE(whichfork != XFS_COW_FORK);
-> +		return -EAGAIN;
-> +	}
->  
->  	/*
-> -	 * The delalloc flag means to allocate the entire extent; pass a dummy
-> -	 * length of 1.
-> +	 * If we find a real extent here we raced with another thread converting
-> +	 * the extent.  Just return the real extent at this offset.
->  	 */
-> -	error = xfs_bmapi_write(tp, ip, offset_fsb, 1, flags, total, imap,
-> -				&nimaps);
-> -	if (!error && !nimaps)
-> -		error = -EFSCORRUPTED;
-> +	if (!isnullstartblock(bma.got.br_startblock)) {
-> +		*imap = bma.got;
-> +		return 0;
-> +	}
-> +
-> +	bma.tp = tp;
-> +	bma.ip = ip;
-> +	bma.wasdel = true;
-> +	bma.offset = bma.got.br_startoff;
-> +	bma.length = max_t(xfs_filblks_t, bma.got.br_blockcount, MAXEXTLEN);
-> +	bma.total = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
-> +	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
-> +	if (whichfork == XFS_COW_FORK)
-> +		bma.flags = XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC;
-> +
-> +	if (!xfs_iext_peek_prev_extent(ifp, &bma.icur, &bma.prev))
-> +		bma.prev.br_startoff = NULLFILEOFF;
-> +
-> +	error = xfs_bmapi_allocate(&bma);
-> +	if (error)
-> +		goto out_finish;
-> +	if (WARN_ON_ONCE(bma.blkno == NULLFSBLOCK)) {
-> +		error = -ENOSPC;
-> +		goto out_finish;
-> +	}
-> +
-> +	ASSERT(!isnullstartblock(bma.got.br_startblock));
-> +	ASSERT(bma.got.br_startblock || XFS_IS_REALTIME_INODE(ip));
-> +	*imap = bma.got;
-> +
-> +	if (whichfork == XFS_COW_FORK) {
-> +		error = xfs_refcount_alloc_cow_extent(tp, bma.blkno,
-> +				bma.length);
-> +		if (error)
-> +			goto out_finish;
-> +	}
-> +
-> +	error = xfs_bmap_btree_to_extents(tp, ip, bma.cur, &bma.logflags,
-> +			whichfork);
-> +out_finish:
-> +	xfs_bmapi_finish(&bma, whichfork, error);
+> +/*
+> + * Pass in a dellalloc extent and convert it to real extents, return the real
+> + * extent that maps offset_fsb in wpc->imap.
+> + *
+> + * Given that ilock was dropped since got was populated it might no longer be
+> + * valid, and we only use it to trim the return extent to this range to maintain
+> + * consistency with what the caller expects.
+> + *
+
+Can we please fix this comment to explain what "what the caller expects"
+means? This could be as simple as appending "(i.e., the caller has
+already trimmed against overlapping COW fork blocks)" to the last
+sentence above.
+
+> + * The current page is held locked so nothing could have removed the block
+> + * backing offset_fsb.
+> + */
+...
+> @@ -458,14 +496,13 @@ xfs_map_blocks(
+>  	trace_xfs_map_blocks_found(ip, offset, count, wpc->fork, &imap);
+>  	return 0;
+>  allocate_blocks:
+> -	error = xfs_iomap_write_allocate(ip, wpc->fork, offset, &imap,
+> -			wpc->fork == XFS_COW_FORK ?
+> -					 &wpc->cow_seq : &wpc->data_seq);
+> +	error = xfs_convert_blocks(wpc, ip, offset_fsb, &imap);
+>  	if (error)
+>  		return error;
+> +	ASSERT(wpc->imap.br_startoff <= offset_fsb);
+> +	ASSERT(wpc->imap.br_startoff + wpc->imap.br_blockcount >= offset_fsb);
+
+Looks like this one should be >.
+
+Brian
+
+>  	ASSERT(wpc->fork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+> -	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+> -	wpc->imap = imap;
+> +	       wpc->imap.br_startoff + wpc->imap.br_blockcount <= cow_fsb);
+>  	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->fork, &imap);
+>  	return 0;
+>  }
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 15da53b5fb53..361dfe7af783 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -665,87 +665,6 @@ xfs_file_iomap_begin_delay(
 >  	return error;
 >  }
 >  
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index 4dc7d1a02b35..b5eca7a26949 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -95,9 +95,6 @@ struct xfs_extent_free_item
->  /* Map something in the CoW fork. */
->  #define XFS_BMAPI_COWFORK	0x200
->  
-> -/* Only convert delalloc space, don't allocate entirely new extents */
-> -#define XFS_BMAPI_DELALLOC	0x400
+> -/*
+> - * Pass in a delayed allocate extent, convert it to real extents;
+> - * return to the caller the extent we create which maps on top of
+> - * the originating callers request.
+> - *
+> - * Called without a lock on the inode.
+> - *
+> - * We no longer bother to look at the incoming map - all we have to
+> - * guarantee is that whatever we allocate fills the required range.
+> - */
+> -int
+> -xfs_iomap_write_allocate(
+> -	struct xfs_inode	*ip,
+> -	int			whichfork,
+> -	xfs_off_t		offset,
+> -	struct xfs_bmbt_irec	*imap,
+> -	unsigned int		*seq)
+> -{
+> -	struct xfs_mount	*mp = ip->i_mount;
+> -	xfs_fileoff_t		offset_fsb;
+> -	xfs_fileoff_t		map_start_fsb;
+> -	xfs_extlen_t		map_count_fsb;
+> -	int			error = 0;
 > -
->  /* Only convert unwritten extents, don't allocate new blocks */
->  #define XFS_BMAPI_CONVERT_ONLY	0x800
+> -	/*
+> -	 * Make sure that the dquots are there.
+> -	 */
+> -	error = xfs_qm_dqattach(ip);
+> -	if (error)
+> -		return error;
+> -
+> -	/*
+> -	 * Store the file range the caller is interested in because it encodes
+> -	 * state such as potential overlap with COW fork blocks. We must trim
+> -	 * the allocated extent down to this range to maintain consistency with
+> -	 * what the caller expects. Revalidation of the range itself is the
+> -	 * responsibility of the caller.
+> -	 */
+> -	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> -	map_start_fsb = imap->br_startoff;
+> -	map_count_fsb = imap->br_blockcount;
+> -
+> -	while (true) {
+> -		/*
+> -		 * Allocate in a loop because it may take several attempts to
+> -		 * allocate real blocks for a contiguous delalloc extent if free
+> -		 * space is sufficiently fragmented.
+> -		 */
+> -
+> -		/*
+> -		 * ilock was dropped since imap was populated which means it
+> -		 * might no longer be valid. The current page is held locked so
+> -		 * nothing could have removed the block backing offset_fsb.
+> -		 * Attempt to allocate whatever delalloc extent currently backs
+> -		 * offset_fsb and put the result in the imap pointer from the
+> -		 * caller. We'll trim it down to the caller's most recently
+> -		 * validated range before we return.
+> -		 */
+> -		error = xfs_bmapi_convert_delalloc(ip, whichfork, offset_fsb,
+> -				imap, seq);
+> -		if (error)
+> -			return error;
+> -
+> -		/*
+> -		 * See if we were able to allocate an extent that covers at
+> -		 * least part of the callers request.
+> -		 */
+> -		if (!(imap->br_startblock || XFS_IS_REALTIME_INODE(ip)))
+> -			return xfs_alert_fsblock_zero(ip, imap);
+> -
+> -		if ((offset_fsb >= imap->br_startoff) &&
+> -		    (offset_fsb < (imap->br_startoff +
+> -				   imap->br_blockcount))) {
+> -			xfs_trim_extent(imap, map_start_fsb, map_count_fsb);
+> -			ASSERT(offset_fsb >= imap->br_startoff &&
+> -			       offset_fsb < imap->br_startoff + imap->br_blockcount);
+> -			return 0;
+> -		}
+> -	}
+> -}
+> -
+>  int
+>  xfs_iomap_write_unwritten(
+>  	xfs_inode_t	*ip,
+> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+> index c6170548831b..6b16243db0b7 100644
+> --- a/fs/xfs/xfs_iomap.h
+> +++ b/fs/xfs/xfs_iomap.h
+> @@ -13,8 +13,6 @@ struct xfs_bmbt_irec;
 >  
-> @@ -117,7 +114,6 @@ struct xfs_extent_free_item
->  	{ XFS_BMAPI_ZERO,	"ZERO" }, \
->  	{ XFS_BMAPI_REMAP,	"REMAP" }, \
->  	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
-> -	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }, \
->  	{ XFS_BMAPI_CONVERT_ONLY, "CONVERT_ONLY" }, \
->  	{ XFS_BMAPI_NODISCARD,	"NODISCARD" }, \
->  	{ XFS_BMAPI_NORMAP,	"NORMAP" }
+>  int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
+>  			struct xfs_bmbt_irec *, int);
+> -int xfs_iomap_write_allocate(struct xfs_inode *, int, xfs_off_t,
+> -			struct xfs_bmbt_irec *, unsigned int *);
+>  int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
+>  
+>  void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
 > -- 
 > 2.20.1
 > 
