@@ -1,88 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56748 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:47928 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726880AbfBIRxq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 9 Feb 2019 12:53:46 -0500
-Date: Sat, 9 Feb 2019 12:53:44 -0500
-From: Sasha Levin <sashal@kernel.org>
-Subject: Re: [PATCH v2 00/10] xfs: stable fixes for v4.19.y
-Message-ID: <20190209175344.GA69686@sasha-vm>
-References: <20190204165427.23607-1-mcgrof@kernel.org>
- <20190205220655.GF14116@dastard>
- <20190206040559.GA4119@sasha-vm>
- <20190206215454.GG14116@dastard>
- <20190208060620.GA31898@sasha-vm>
- <20190208212921.GO14116@dastard>
+        id S1726847AbfBKXHQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Feb 2019 18:07:16 -0500
+Date: Mon, 11 Feb 2019 18:07:02 -0500
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [Qemu-devel] security implications of caching with virtio pmem
+ (was Re: [PATCH v3 0/5] kvm "virtio pmem" device)
+Message-ID: <20190211180449-mutt-send-email-mst@kernel.org>
+References: <20190109144736.17452-1-pagupta@redhat.com>
+ <20190204170515-mutt-send-email-mst@kernel.org>
+ <888328358.132676.1549870186945.JavaMail.zimbra@redhat.com>
+ <20190211222907.GR14116@dastard>
+ <b2be7796-9dee-b9fd-87e5-1ae570aa7db6@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190208212921.GO14116@dastard>
+In-Reply-To: <b2be7796-9dee-b9fd-87e5-1ae570aa7db6@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Luis Chamberlain <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com, stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org
+To: David Hildenbrand <david@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, Pankaj Gupta <pagupta@redhat.com>, dchinner@redhat.com, jack@suse.cz, kvm@vger.kernel.org, linux-nvdimm@ml01.01.org, jasowang@redhat.com, qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org, adilger kernel <adilger.kernel@dilger.ca>, zwisler@kernel.org, Andrea Arcangeli <aarcange@redhat.com>, dave jiang <dave.jiang@intel.com>, darrick wong <darrick.wong@oracle.com>, vishal l verma <vishal.l.verma@intel.com>, willy@infradead.org, hch@infradead.org, linux-acpi@vger.kernel.org, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, imammedo@redhat.com, dan j williams <dan.j.williams@intel.com>, lcapitulino@redhat.com, kwolf@redhat.com, linux-ext4@vger.kernel.org, tytso@mit.edu, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, rjw@rjwysocki.net, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, pbonzini@redhat.com
 
-On Sat, Feb 09, 2019 at 08:29:21AM +1100, Dave Chinner wrote:
->On Fri, Feb 08, 2019 at 01:06:20AM -0500, Sasha Levin wrote:
->> On Thu, Feb 07, 2019 at 08:54:54AM +1100, Dave Chinner wrote:
->> >On Tue, Feb 05, 2019 at 11:05:59PM -0500, Sasha Levin wrote:
->> >>On Wed, Feb 06, 2019 at 09:06:55AM +1100, Dave Chinner wrote:
->> >>>On Mon, Feb 04, 2019 at 08:54:17AM -0800, Luis Chamberlain wrote:
->> >>>>Kernel stable team,
->> >>>>
->> >>>>here is a v2 respin of my XFS stable patches for v4.19.y. The only
->> >>>>change in this series is adding the upstream commit to the commit log,
->> >>>>and I've now also Cc'd stable@vger.kernel.org as well. No other issues
->> >>>>were spotted or raised with this series.
->> >>>>
->> >>>>Reviews, questions, or rants are greatly appreciated.
->> >>>
->> >>>Test results?
->> >>>
->> >>>The set of changes look fine themselves, but as always, the proof is
->> >>>in the testing...
->> >>
->> >>Luis noted on v1 that it passes through his oscheck test suite, and I
->> >>noted that I haven't seen any regression with the xfstests scripts I
->> >>have.
->> >>
->> >>What sort of data are you looking for beyond "we didn't see a
->> >>regression"?
->> >
->> >Nothing special, just a summary of what was tested so we have some
->> >visibility of whether the testing covered the proposed changes
->> >sufficiently.  i.e. something like:
->> >
->> >	Patchset was run through ltp and the fstests "auto" group
->> >	with the following configs:
->> >
->> >	- mkfs/mount defaults
->> >	- -m reflink=1,rmapbt=1
->> >	- -b size=1k
->> >	- -m crc=0
->> >	....
->> >
->> >	No new regressions were reported.
->> >
->> >
->> >Really, all I'm looking for is a bit more context for the review
->> >process - nobody remembers what configs other people test. However,
->> >it's important in reviewing a backport to know whether a backport to
->> >a fix, say, a bug in the rmap code actually got exercised by the
->> >tests on an rmap enabled filesystem...
->>
->> Sure! Below are the various configs this was run against. There were
->> multiple runs over 48+ hours and no regressions from a 4.14.17 baseline
->> were observed.
->
->Thanks, Sasha. As an ongoing thing, I reckon a "grep _OPTIONS
-><config_files>" (catches both mkfs and mount options) would be
->sufficient as a summary of what was tested in the series
->decription...
+On Mon, Feb 11, 2019 at 11:58:15PM +0100, David Hildenbrand wrote:
+> On 11.02.19 23:29, Dave Chinner wrote:
+> > On Mon, Feb 11, 2019 at 02:29:46AM -0500, Pankaj Gupta wrote:
+> >> Hello Dave,
+> >> Are we okay with this?
+> > 
+> > Sure.
+> > 
+> > I'm not sure I agree with all the analysis presented, but, well, I
+> > haven't looked any deeper because I'm tired of being shouted at and
+> > being called argumentative for daring to ask hard questions about
+> > this topic....
+> 
+> I think if you have concerns, they should definitely be discussed.
+> Making people frustrated that review code is not what we want. Not at all.
+> 
+> I suggest that Pankaj properly documents what we found out so far about
+> security concerns and properly describes intended use cases and answers
+> other questions you had in the cover letter / documentation of the
+> follow up series.
+> 
+> Thanks Dave!
 
-Will do.
+Right. Also, there's an open question that you posed:
+	Also other storage devices have caches like that (well, the caches size
+	depends on the device) - thinking especially about storage systems -
+	which would in my opinion, also allow similar leaks. How are such
+	security concerns handled there? Are they different (besides eventually
+	access speed)?
+and that needs some looking into, and reporting on.
 
---
-Thanks,
-Sasha
+
+> > 
+> > Cheers,
+> > 
+> > Dave.
+> > 
+> 
+> 
+> -- 
+> 
+> Thanks,
+> 
+> David / dhildenb
