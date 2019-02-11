@@ -1,69 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38170 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38374 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387846AbfBKPWz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Feb 2019 10:22:55 -0500
-Date: Mon, 11 Feb 2019 10:22:53 -0500
+        id S1728464AbfBKPXD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Feb 2019 10:23:03 -0500
+Date: Mon, 11 Feb 2019 10:23:00 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 09/10] xfs: remove the truncate short cut in
- xfs_map_blocks
-Message-ID: <20190211152252.GH2804@bfoster>
+Subject: Re: [PATCH 10/10] xfs: retry COW fork delalloc conversion when no
+ extent was found
+Message-ID: <20190211152300.GI2804@bfoster>
 References: <20190211125427.16577-1-hch@lst.de>
- <20190211125427.16577-10-hch@lst.de>
+ <20190211125427.16577-11-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190211125427.16577-10-hch@lst.de>
+In-Reply-To: <20190211125427.16577-11-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Feb 11, 2019 at 01:54:26PM +0100, Christoph Hellwig wrote:
-> Now that we properly handle the race with truncate in the delalloc
-> allocator there is no need to short cut this exceptional case earlier
-> on.
+On Mon, Feb 11, 2019 at 01:54:27PM +0100, Christoph Hellwig wrote:
+> While we can only truncate a block under the page lock for the current
+> page, there is no high-level synchronization for moving extents from the
+> COW to the data fork.  Because of that there is a chance that a
+> delalloc conversion for the COW fork might not find any extents to
+> convert.  In that case we should retry the whole block lookup and now
+> find the blocks in the data fork.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
 
+Can't say I fully understand the race that motivates this, but the code
+seems fine:
+
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_aops.c | 20 --------------------
->  1 file changed, 20 deletions(-)
+>  fs/xfs/xfs_aops.c | 18 ++++++++++++++++--
+>  1 file changed, 16 insertions(+), 2 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 403df647c0e4..6a8937a833ad 100644
+> index 6a8937a833ad..e1723ac6c533 100644
 > --- a/fs/xfs/xfs_aops.c
 > +++ b/fs/xfs/xfs_aops.c
-> @@ -426,26 +426,6 @@ xfs_map_blocks(
->  		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> @@ -338,7 +338,8 @@ xfs_imap_valid(
+>   * consistency with what the caller expects.
+>   *
+>   * The current page is held locked so nothing could have removed the block
+> - * backing offset_fsb.
+> + * backing offset_fsb, although it could have moved from the COW to the data
+> + * fork by another thread.
+>   */
+>  static int
+>  xfs_convert_blocks(
+> @@ -381,6 +382,7 @@ xfs_map_blocks(
+>  	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
+>  	struct xfs_bmbt_irec	imap;
+>  	struct xfs_iext_cursor	icur;
+> +	int			retries = 0;
+>  	int			error = 0;
 >  
->  		wpc->fork = XFS_COW_FORK;
-> -
-> -		/*
-> -		 * Truncate can race with writeback since writeback doesn't
-> -		 * take the iolock and truncate decreases the file size before
-> -		 * it starts truncating the pages between new_size and old_size.
-> -		 * Therefore, we can end up in the situation where writeback
-> -		 * gets a CoW fork mapping but the truncate makes the mapping
-> -		 * invalid and we end up in here trying to get a new mapping.
-> -		 * bail out here so that we simply never get a valid mapping
-> -		 * and so we drop the write altogether.  The page truncation
-> -		 * will kill the contents anyway.
-> -		 */
-> -		if (offset > i_size_read(inode)) {
-> -			wpc->imap.br_blockcount = end_fsb - offset_fsb;
-> -			wpc->imap.br_startoff = offset_fsb;
-> -			wpc->imap.br_startblock = HOLESTARTBLOCK;
-> -			wpc->imap.br_state = XFS_EXT_NORM;
-> -			return 0;
-> -		}
-> -
->  		goto allocate_blocks;
->  	}
->  
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+> @@ -410,6 +412,7 @@ xfs_map_blocks(
+>  	 * into real extents.  If we return without a valid map, it means we
+>  	 * landed in a hole and we skip the block.
+>  	 */
+> +retry:
+>  	xfs_ilock(ip, XFS_ILOCK_SHARED);
+>  	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+>  	       (ip->i_df.if_flags & XFS_IFEXTENTS));
+> @@ -477,8 +480,19 @@ xfs_map_blocks(
+>  	return 0;
+>  allocate_blocks:
+>  	error = xfs_convert_blocks(wpc, ip, offset_fsb, &imap);
+> -	if (error)
+> +	if (error) {
+> +		/*
+> +		 * If we failed to find the extent in the COW fork we might have
+> +		 * raced with a COW to data fork conversion or truncate.
+> +		 * Restart the lookup to catch the extent in the data fork for
+> +		 * the former case, but prevent additional retries to avoid
+> +		 * looping forever for the latter case.
+> +		 */
+> +		if (error == -EAGAIN && wpc->fork == XFS_COW_FORK && !retries++)
+> +			goto retry;
+> +		ASSERT(error != -EAGAIN);
+>  		return error;
+> +	}
+>  	ASSERT(wpc->imap.br_startoff <= offset_fsb);
+>  	ASSERT(wpc->imap.br_startoff + wpc->imap.br_blockcount >= offset_fsb);
+>  	ASSERT(wpc->fork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
 > -- 
 > 2.20.1
 > 
