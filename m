@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:35606 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:35822 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727106AbfBKMyv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Feb 2019 07:54:51 -0500
+        with ESMTP id S1727106AbfBKMy5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Feb 2019 07:54:57 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/10] xfs: move stat accounting to xfs_bmapi_convert_delalloc
-Date: Mon, 11 Feb 2019 13:54:24 +0100
-Message-Id: <20190211125427.16577-8-hch@lst.de>
+Subject: [PATCH 09/10] xfs: remove the truncate short cut in xfs_map_blocks
+Date: Mon, 11 Feb 2019 13:54:26 +0100
+Message-Id: <20190211125427.16577-10-hch@lst.de>
 In-Reply-To: <20190211125427.16577-1-hch@lst.de>
 References: <20190211125427.16577-1-hch@lst.de>
 MIME-Version: 1.0
@@ -17,51 +17,45 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Brian Foster <bfoster@redhat.com>
 
-This way we can actually count how many bytes got converted and how many
-calls we need, unlike in the caller which doesn't have the detailed
-view.
+Now that we properly handle the race with truncate in the delalloc
+allocator there is no need to short cut this exceptional case earlier
+on.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 3 +++
- fs/xfs/xfs_iomap.c       | 4 ----
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_aops.c | 20 --------------------
+ 1 file changed, 20 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index d9d66e1856d7..dc3f0608377d 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4513,6 +4513,9 @@ xfs_bmapi_convert_delalloc(
- 		goto out_finish;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 403df647c0e4..6a8937a833ad 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -426,26 +426,6 @@ xfs_map_blocks(
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 
+ 		wpc->fork = XFS_COW_FORK;
+-
+-		/*
+-		 * Truncate can race with writeback since writeback doesn't
+-		 * take the iolock and truncate decreases the file size before
+-		 * it starts truncating the pages between new_size and old_size.
+-		 * Therefore, we can end up in the situation where writeback
+-		 * gets a CoW fork mapping but the truncate makes the mapping
+-		 * invalid and we end up in here trying to get a new mapping.
+-		 * bail out here so that we simply never get a valid mapping
+-		 * and so we drop the write altogether.  The page truncation
+-		 * will kill the contents anyway.
+-		 */
+-		if (offset > i_size_read(inode)) {
+-			wpc->imap.br_blockcount = end_fsb - offset_fsb;
+-			wpc->imap.br_startoff = offset_fsb;
+-			wpc->imap.br_startblock = HOLESTARTBLOCK;
+-			wpc->imap.br_state = XFS_EXT_NORM;
+-			return 0;
+-		}
+-
+ 		goto allocate_blocks;
  	}
  
-+	XFS_STATS_ADD(mp, xs_xstrat_bytes, XFS_FSB_TO_B(mp, bma.length));
-+	XFS_STATS_INC(mp, xs_xstrat_quick);
-+
- 	ASSERT(!isnullstartblock(bma.got.br_startblock));
- 	ASSERT(bma.got.br_startblock || XFS_IS_REALTIME_INODE(ip));
- 	*imap = bma.got;
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 39be741cac5a..15da53b5fb53 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -707,9 +707,6 @@ xfs_iomap_write_allocate(
- 	map_start_fsb = imap->br_startoff;
- 	map_count_fsb = imap->br_blockcount;
- 
--	XFS_STATS_ADD(mp, xs_xstrat_bytes,
--		      XFS_FSB_TO_B(mp, imap->br_blockcount));
--
- 	while (true) {
- 		/*
- 		 * Allocate in a loop because it may take several attempts to
-@@ -741,7 +738,6 @@ xfs_iomap_write_allocate(
- 		if ((offset_fsb >= imap->br_startoff) &&
- 		    (offset_fsb < (imap->br_startoff +
- 				   imap->br_blockcount))) {
--			XFS_STATS_INC(mp, xs_xstrat_quick);
- 			xfs_trim_extent(imap, map_start_fsb, map_count_fsb);
- 			ASSERT(offset_fsb >= imap->br_startoff &&
- 			       offset_fsb < imap->br_startoff + imap->br_blockcount);
 -- 
 2.20.1
