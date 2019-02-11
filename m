@@ -1,69 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47928 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37974 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726847AbfBKXHQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Feb 2019 18:07:16 -0500
-Date: Mon, 11 Feb 2019 18:07:02 -0500
-From: "Michael S. Tsirkin" <mst@redhat.com>
+        id S1725931AbfBKH3v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Feb 2019 02:29:51 -0500
+Date: Mon, 11 Feb 2019 02:29:46 -0500 (EST)
+From: Pankaj Gupta <pagupta@redhat.com>
+Message-ID: <888328358.132676.1549870186945.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20190204170515-mutt-send-email-mst@kernel.org>
+References: <20190109144736.17452-1-pagupta@redhat.com> <20190204170515-mutt-send-email-mst@kernel.org>
 Subject: Re: [Qemu-devel] security implications of caching with virtio pmem
  (was Re: [PATCH v3 0/5] kvm "virtio pmem" device)
-Message-ID: <20190211180449-mutt-send-email-mst@kernel.org>
-References: <20190109144736.17452-1-pagupta@redhat.com>
- <20190204170515-mutt-send-email-mst@kernel.org>
- <888328358.132676.1549870186945.JavaMail.zimbra@redhat.com>
- <20190211222907.GR14116@dastard>
- <b2be7796-9dee-b9fd-87e5-1ae570aa7db6@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b2be7796-9dee-b9fd-87e5-1ae570aa7db6@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Hildenbrand <david@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, Pankaj Gupta <pagupta@redhat.com>, dchinner@redhat.com, jack@suse.cz, kvm@vger.kernel.org, linux-nvdimm@ml01.01.org, jasowang@redhat.com, qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org, adilger kernel <adilger.kernel@dilger.ca>, zwisler@kernel.org, Andrea Arcangeli <aarcange@redhat.com>, dave jiang <dave.jiang@intel.com>, darrick wong <darrick.wong@oracle.com>, vishal l verma <vishal.l.verma@intel.com>, willy@infradead.org, hch@infradead.org, linux-acpi@vger.kernel.org, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, imammedo@redhat.com, dan j williams <dan.j.williams@intel.com>, lcapitulino@redhat.com, kwolf@redhat.com, linux-ext4@vger.kernel.org, tytso@mit.edu, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, rjw@rjwysocki.net, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, pbonzini@redhat.com
-
-On Mon, Feb 11, 2019 at 11:58:15PM +0100, David Hildenbrand wrote:
-> On 11.02.19 23:29, Dave Chinner wrote:
-> > On Mon, Feb 11, 2019 at 02:29:46AM -0500, Pankaj Gupta wrote:
-> >> Hello Dave,
-> >> Are we okay with this?
-> > 
-> > Sure.
-> > 
-> > I'm not sure I agree with all the analysis presented, but, well, I
-> > haven't looked any deeper because I'm tired of being shouted at and
-> > being called argumentative for daring to ask hard questions about
-> > this topic....
-> 
-> I think if you have concerns, they should definitely be discussed.
-> Making people frustrated that review code is not what we want. Not at all.
-> 
-> I suggest that Pankaj properly documents what we found out so far about
-> security concerns and properly describes intended use cases and answers
-> other questions you had in the cover letter / documentation of the
-> follow up series.
-> 
-> Thanks Dave!
-
-Right. Also, there's an open question that you posed:
-	Also other storage devices have caches like that (well, the caches size
-	depends on the device) - thinking especially about storage systems -
-	which would in my opinion, also allow similar leaks. How are such
-	security concerns handled there? Are they different (besides eventually
-	access speed)?
-and that needs some looking into, and reporting on.
+To: "Michael S. Tsirkin" <mst@redhat.com>, dchinner@redhat.com
+Cc: jack@suse.cz, kvm@vger.kernel.org, david@redhat.com, linux-nvdimm@ml01.01.org, jasowang@redhat.com, qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org, adilger kernel <adilger.kernel@dilger.ca>, zwisler@kernel.org, Andrea Arcangeli <aarcange@redhat.com>, dave jiang <dave.jiang@intel.com>, darrick wong <darrick.wong@oracle.com>, vishal l verma <vishal.l.verma@intel.com>, willy@infradead.org, hch@infradead.org, linux-acpi@vger.kernel.org, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, imammedo@redhat.com, dan j williams <dan.j.williams@intel.com>, lcapitulino@redhat.com, kwolf@redhat.com, linux-ext4@vger.kernel.org, tytso@mit.edu, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, rjw@rjwysocki.net, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, pbonzini@redhat.com
 
 
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> > 
+Hi Michael, 
+
+Thanks for looking into this and summarizing in detail. 
+
+> >  This patch series has implementation for "virtio pmem".
+> >  "virtio pmem" is fake persistent memory(nvdimm) in guest
+> >  which allows to bypass the guest page cache. This also
+> >  implements a VIRTIO based asynchronous flush mechanism.
 > 
 > 
-> -- 
+> At Pankaj's request I looked at information leak implications of virtio
+> pmem in light of the recent page cache side channels paper
+> (https://arxiv.org/pdf/1901.01161.pdf) - to see what
+> kind of side channels it might create if any.  TLDR - I think that
+> depending on the host side implementation there could be some, but this
+> might be addressable by better documentation in both code and spec.
+> The fake dax approach backing the guest memory by a host page cache
+> does seem to have potential issues.
 > 
-> Thanks,
+> For clarity: we are talking about leaking information either to a VM, or
+> within a VM (I did not look into leaks to hypervisor in configurations
+> such as SEV) through host page cache.
 > 
-> David / dhildenb
+> Leaks into a VM: It seems clear that while pmem allows memory accesses
+> versus read/write with e.g. a block device, from host page cache point
+> of view this doesn't matter much: reads populate cache in the same way
+> as memory faults.  Thus ignoring presence of information leaks (which is
+> an interesting question e.g. in light of recent discard support) pmem
+> doesn't seem to be any better or worse for leaking information into a
+> VM.
+> 
+> Leaks within VM: Right now pmem seems to bypass the guest page cache
+> completely.  Whether pmem memory is then resident in a page cache would
+> be up to the device/host. Assuming that it is, the "Preventing
+> Efficient Eviction while Increasing the System Performance"
+> countermeasure for the page cache side channel attack would appear to
+> become ineffective with pmem. What is suggested is a per-process
+> management of the page cache, and host does not have visibility of
+> processes within a VM. Another possible countermeasure - not discussed
+> in the paper - could be modify the applications to lock the security
+> relevant pages in memory.  Again this becomes impractical with pmem as
+> host does not have visibility into that. However note that as long
+> as the only countermeasure linux uses is "Privileged Access"
+> (i.e. blocking mincore) nothing can be done as guest page cache
+> remains as vulnerable as host page cache.
+> 
+> 
+> Countermeasures: which host-side countermeasures can be designed would
+> depend on which countermeasures are used guest-side - we would need to
+> make sure they are not broken by pmem.  For "Preventing Efficient
+> Eviction while Increasing the System Performance" modifying the host
+> implementation to ensure that pmem device bypasses the host page cache
+> would seem to address the security problem.Similarly, ensuring that a
+> real memory device (e.g. DAX, RAM such as hugetlbfs, pmem for nested
+> virt) is used for pmem would make the memory locking countermeasure
+> work.  Whether with such limitations the device is still useful
+> performance wise is an open question.  These questions probably should
+> be addressed in the documentation, spec and possible qemu code.
+> 
+> 
+> 
+> Severity of the security implications: some people argue that the
+> security implications of the page cache leaks are minor.  I do not have
+> an opinion on this: the severity would seem to depend on the specific
+> configuration.
+> 
+> 
+> Other security implications: recent discussion seems to suggest there
+> are other concerns around e.g. resource management and thus DOS
+> potential. If that's so, it's a matter for a separate discussion
+> as I didn't look into that in depth.
+> 
+> Some or all of the above might be based on a misunderstanding of the
+> current pmem code, the whitepaper and linux page cache in general.
+> If so I apologise, do not hesitate to call out any mistakes.
+
+I agree similar to any guest VM(without virtio-pmem) or any host 
+userspace process, virtio-pmem may also have some security implications.
+We need to document these in virtio-pmem host device specification
+and in qemu code. This is to make sure while creating virtio-pmem
+device, we are aware of these implications and create/use 
+host side device backing file accordingly as per the use-case
+described by David here [1].
+
+I will document these in next version of my patch series.
+
+Hello Dave,
+Are we okay with this?
+
+Thank you everyone for the discussion.
+
+[1] https://marc.info/?l=linux-kernel&m=154946989419403&w=2
+
+Best regards,
+Pankaj    
