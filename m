@@ -1,52 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39254 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726115AbfBHJCs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 Feb 2019 04:02:48 -0500
-Date: Fri, 8 Feb 2019 10:02:45 +0100
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [LSF/MM TOPIC] The end of the DAX experiment
-Message-ID: <20190208090245.GA8038@linux-x5ow.site>
-References: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
- <d7790ae27161db2fcf0b10a7d5d67de833f2d3fe.camel@hpe.com>
+Received: from mail-lj1-f177.google.com ([209.85.208.177]:43641 "EHLO
+        mail-lj1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727141AbfBKVxb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Feb 2019 16:53:31 -0500
+Received: by mail-lj1-f177.google.com with SMTP id o1-v6so368319ljc.10
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Feb 2019 13:53:30 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <d7790ae27161db2fcf0b10a7d5d67de833f2d3fe.camel@hpe.com>
+References: <20190211172359.71aff9d6@harpe.intellique.com> <20190211174053.7eec6a59@harpe.intellique.com>
+In-Reply-To: <20190211174053.7eec6a59@harpe.intellique.com>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Mon, 11 Feb 2019 14:53:16 -0700
+Message-ID: <CAJCQCtQtzsTRq_mP3kGLNsAOH7huATUtJaOYA7ujKdLqn8AnsA@mail.gmail.com>
+Subject: Re: RAID hiccup, LVM information wiped, XFS FS gone, how to proceed?
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Kani, Toshi" <toshi.kani@hpe.com>
-Cc: "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Linux-XFS list <linux-xfs@vger.kernel.org>
 
-On 07/02/2019 22:51, Kani, Toshi wrote:
-> I've also had multiple users complained about 'mount -o dax' succeeded
-> by falling back to non-dax despite of their intent.  Such users wasted
-> many hours without knowing their setup error / current restrictions.
-> The next think they always ask is how to check if dax is enabled in such
-> case, and they are not happy about limited interfaces (ex. look for
-> mount entry in /proc/mounts), either.
+On Mon, Feb 11, 2019 at 9:42 AM Emmanuel Florac <eflorac@intellique.com> wr=
+ote:
+>
+> Le Mon, 11 Feb 2019 17:23:59 +0100
+> Emmanuel Florac <eflorac@intellique.com> =C3=A9crivait:
+>
+> > (I know, I could simply restore the vgcfgbackup if it existed...
+> > please let's suppose this command doesn't exist).
+> >
+>
+> Hum, actually I have a backup of the vg configuration but... it looks
+> like actually 7 or 8 kB were erased  from the disk. So  no dice, I must
+> recreate the PV first but wouldn't it wipe everything?
 
-Exactly, there's a need for admins and user-space applications to check if they
-can use DAX or not. See also [1] for reference.
+You're right to be concerned. First you need to make sure the raid is
+assembled correctly, and functioning correctly. Is there a battery
+backed cache? There should be raid logs that can be extract to show at
+least what the hardware raid thinks happened; and if it did a cache
+flush upon power being restored, the log should indicate that as well.
+If it's possible the cache was full and the contents lost, that's also
+useful information.
 
-> Same as above.  Such enhancement should be possible after EXPERIMENTAL
-> is removed from 'mount -o dax'.  IOW, a separate EXPERIMENTAL message
-> can be shown when user requests per-directory dax.
+Anyway, get the raid sorted out first. Only then can you move on to
+LVM checking and recovery options, from the LVM list:
 
-Just as a data point here, in our Kernels we've removed the EXPERIMENTAL
-warning for DAX on XFS (but not EXT4) and we are supporting it for some limited
-use-cases.
+linux-lvm@redhat.com
 
-[1] https://lore.kernel.org/linux-fsdevel/20181002100531.GC4135@quack2.suse.cz/
+And only once LVM is healthy and working correctly can you move on to
+XFS checks and if advised, repair. Just be really deliberate, don't go
+stomping around with repairs and writes to disk that aren't
+deliberate, or you risk user induced data loss. Basically, I advise
+doing only checks and posting the results, and only doing repairs
+recommended on the applicable list by developers or expert users.
 
-Byte,
-        Johannes
--- 
-Johannes Thumshirn                            SUSE Labs Filesystems
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+All the lists will want information not provided in your first post, exampl=
+e:
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_=
+reporting_a_problem.3F
+
+
+
+
+--
+Chris Murphy
