@@ -1,60 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f176.google.com ([209.85.208.176]:41132 "EHLO
-        mail-lj1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726747AbfBHSkf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 13:40:35 -0500
-Received: by mail-lj1-f176.google.com with SMTP id f21-v6so2403955ljj.8
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Feb 2019 10:40:34 -0800 (PST)
+Received: from mail1.g1.pair.com ([66.39.3.162]:34691 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727620AbfBKQZM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Feb 2019 11:25:12 -0500
+Received: from mail1.g1.pair.com (localhost [127.0.0.1])
+        by mail1.g1.pair.com (Postfix) with ESMTP id 46B485476C4
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Feb 2019 11:25:11 -0500 (EST)
+Received: from harpe.intellique.com (labo.djinux.com [82.225.196.72])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail1.g1.pair.com (Postfix) with ESMTPSA id E267760B0C3
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Feb 2019 11:25:10 -0500 (EST)
+Date: Mon, 11 Feb 2019 17:23:59 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: RAID hiccup, LVM information wiped, XFS FS gone, how to proceed?
+Message-ID: <20190211172359.71aff9d6@harpe.intellique.com>
 MIME-Version: 1.0
-References: <20190207132534.GA2185@justpickone.org>
-In-Reply-To: <20190207132534.GA2185@justpickone.org>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Fri, 8 Feb 2019 11:40:20 -0700
-Message-ID: <CAJCQCtSxC55X2R--THjrBK=1U4hg1FhB0AQULT3FciAeT8Pp3w@mail.gmail.com>
-Subject: Re: is it safe to xfs_repair this volume? do i have a different first step?
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/HqlO8AI6QMX=wjTnbhd_ZeZ"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David T-G <davidtg@justpickone.org>
-Cc: Linux-XFS list <linux-xfs@vger.kernel.org>
+To: Linux-XFS list <linux-xfs@vger.kernel.org>
 
-On Thu, Feb 7, 2019 at 6:30 AM David T-G <davidtg@justpickone.org> wrote:
->
->   diskfarm:root:4:~> parted /dev/md0 print
->   Error: end of file while reading /dev/md0
->   Retry/Ignore/Cancel? ignore
->   Error: The backup GPT table is corrupt, but the primary appears OK, so that will be used.
-[snip]
-> when poking, I at first thought that this was a RAID issue, but all of
-> the md reports look good and apparently the GPT table issue is common, so
-> I'll leave all of that out unless someone asks for it.
-
-A corrupt backup GPT is a huge redflag that there's user confusion,
-that has then led to the storage stack itself becoming confused.
-
-Since GPT partitioning an array, in particular with just one
-partition, seems unnecessarily complicated and thus pointless; I'm
-suspicious that /dev/md0 is not in fact partitioned - that GPT very
-well may belong to the first member device of the array. Not the
-array. And the reason the backup is "corrupt" is because parted+fdisk
-looking at the end of /dev/md0 rather than the end of the device this
-GPT actually belongs to.
-
-So I suspect GPT and XFS have stepped on each other possibly more than
-once each which is why both have corruption; and the mdadm metadata
-doesn't. Or even possible that one or more signatures in this storage
-stack are stale, not having previously been properly wiped, and now
-are haunting this storage stack.
-
-I wouldn't make any writes until you've double checked what the layout
-is supposed to be. First check if the individual member drives are GPT
-partitioned, and whether their primary and backups are valid (not
-corrupt); if there's corruption don't fix it yet. Right now you just
-need to focus on what all of the on disk metadata says is true, and
-then you'll be able to discover what metadata is wrong and
-contributing to all this confusion.
+--Sig_/HqlO8AI6QMX=wjTnbhd_ZeZ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
 
--- 
-Chris Murphy
+Hi everyone,
+
+I have a lost filesystem at hand: the RAID controller had a hiccup (or
+someone tripped on the cord, or did some other mistake, I have no way
+to know because the system is in some other country anyway).
+
+The configuration was quite simple: RAID array -> pv -> vg -> lv -> XFS.
+
+I've hexedit'ed the /dev/sdb and it looks like the first few kB have
+been wiped out: no LVM signature, no VG UUID... However after the first
+few blocks, it looks very similar to another disk>vg>lv configuration
+which I hexedit side by side (there are series of 00 with regularly
+placed "FIB" values interspersed with other values, then after a while
+what is obviously file content) so my guess is that the data is probably
+still there (better be, there are 80 TB missing).
+
+xfs_repair can't seem to be able to do anything on the raw disk, alas.
+Any ideas? I don't even know why I can't seem to find the XFSB
+signature on disk: when hexediting (for instance) /dev/vg0/somelv, I
+see it starting with XFSB; but editing /dev/sdc (which is hosting the
+above mentioned lv), it's not there.
+
+(I know, I could simply restore the vgcfgbackup if it existed...
+please let's suppose this command doesn't exist).
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/HqlO8AI6QMX=wjTnbhd_ZeZ
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+
+iEYEARECAAYFAlxhoZ8ACgkQX3jQXNUicVYPLACfYCzIlGOF33E0gvyzOkMNSY/m
+4MEAn2HYTVWO1aNpQpWcOhrlMFEt2gpz
+=Pgm8
+-----END PGP SIGNATURE-----
+
+--Sig_/HqlO8AI6QMX=wjTnbhd_ZeZ--
