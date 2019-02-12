@@ -1,65 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40180 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:37369 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2406868AbfBNUeP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Feb 2019 15:34:15 -0500
-Date: Thu, 14 Feb 2019 15:34:12 -0500
-From: Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] The end of the DAX experiment
-Message-ID: <20190214203411.GC3420@redhat.com>
-References: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
- <20190214134622.GG4525@dhcp22.suse.cz>
- <CAPcyv4gxFKBQ9eVdn+pNEzBXRfw6Qwfmu21H2i5uj-PyFmRAGQ@mail.gmail.com>
- <20190214191013.GA3420@redhat.com>
- <CAPcyv4jLTdJyTOy715qvBL_j_deiLoBmu_thkUnFKZKMvZL6hA@mail.gmail.com>
- <20190214200840.GB12668@bombadil.infradead.org>
- <CAPcyv4hsDqvrV5yiDq8oWPuWb3WpuCEk_HB4qBxfiDpUwo75QQ@mail.gmail.com>
+        id S1728353AbfBLTAZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Feb 2019 14:00:25 -0500
+Date: Tue, 12 Feb 2019 20:00:22 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] xfs/420: only check the extent layout after syncing
+Message-ID: <20190212190022.GA28460@lst.de>
+References: <20190204153026.1673-1-hch@lst.de> <20190211235144.GA6477@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAPcyv4hsDqvrV5yiDq8oWPuWb3WpuCEk_HB4qBxfiDpUwo75QQ@mail.gmail.com>
+In-Reply-To: <20190211235144.GA6477@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Matthew Wilcox <willy@infradead.org>, Michal Hocko <mhocko@kernel.org>, lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, Feb 14, 2019 at 12:20:11PM -0800, Dan Williams wrote:
-> On Thu, Feb 14, 2019 at 12:09 PM Matthew Wilcox <willy@infradead.org> wrote:
-> >
-> > On Thu, Feb 14, 2019 at 11:31:24AM -0800, Dan Williams wrote:
-> > > On Thu, Feb 14, 2019 at 11:10 AM Jerome Glisse <jglisse@redhat.com> wrote:
-> > > > I am just again working on my struct page mapping patchset as well as
-> > > > the generic page write protection that sits on top. I hope to be able
-> > > > to post the v2 in couple weeks. You can always look at my posting last
-> > > > year to see more details.
-> > >
-> > > Yes, I have that in mind as one of the contenders. However, it's not
-> > > clear to me that its a suitable fit for filesystem-reflink. Others
-> > > have floated the 'page proxy' idea, so it would be good to discuss the
-> > > merits of the general approaches.
-> >
-> > ... and my preferred option of putting pfn entries in the page cache.
+On Mon, Feb 11, 2019 at 03:51:44PM -0800, Darrick J. Wong wrote:
+> > The comparism pass before the sync might see an "error" if we use COW
+> > fork speculative preallocations for non-overwrites, which is useful to
+> > reduce fragmentation.
 > 
-> Another option to include the discussion.
+> What error do you see?
+
+-- /root/xfstests/tests/xfs/420.out	2019-02-12 15:41:12.202606228 +0000
++++ /root/xfstests/results//xfs/420.out.bad	2019-02-12 18:58:06.158426573
++0000
+@@ -14,8 +14,6 @@
+ Whence	Result
+ DATA	0
+ HOLE	131072
+-DATA	196608
+-HOLE	262144
+ Compare files
+ c2803804acc9936eef8aab42c119bfac  SCRATCH_MNT/test-420/file1
+ 017c08a9320aad844ce86aa9631afb98  SCRATCH_MNT/test-420/file2
+
+
+> > -echo "Seek holes and data in file1"
+> > -$XFS_IO_PROG -c "seek -a -r 0" $testdir/file1
+> > -echo "Seek holes and data in file2"
+> > -$XFS_IO_PROG -c "seek -a -r 0" $testdir/file2
 > 
-> > Or is that what you meant by "page proxy"?
+> This removed code tests that the earlier write of 64k of data into file2
+> between 192k and 256k can be found by SEEK_DATA before file2 gets
+> sync'd to disk.
+
+Well, and it might not be able to be found if it is in the COW fork..
+
+> And this removed code checks that the page cache contents remain stable
+> and correct even for a write that goes through the COW mechanism.
 > 
-> Page proxy would be an object that a filesystem could allocate to
-> point back to a single physical 'struct page *'. The proxy would
-> contain an override for page->index.
+> I don't see why it's advantageous to remove this part of the test?
 
-Note that generic page write protection has such object, kind of like
-stable_node in KSM. You overwritte page->mapping to point to this
-generic struct which has a pointer to set of callback so that whatever
-is protecting the page can offer API to break protection (break sharing
-here).
-
-So instead of having struct proxy_page -> struct page you would have the
-reverse: struct page -> struct proxy and so you do not have to change
-much in all the file system beside removing the reliance on page->mapping
-which is what most of my patches are about.
-
-Cheers,
-Jérôme
+Last time I send a patch to just add a sync and got the recommendation
+to just remove the double tests before and after the sync..
