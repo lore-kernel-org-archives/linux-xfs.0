@@ -1,95 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38374 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728464AbfBKPXD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Feb 2019 10:23:03 -0500
-Date: Mon, 11 Feb 2019 10:23:00 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 10/10] xfs: retry COW fork delalloc conversion when no
- extent was found
-Message-ID: <20190211152300.GI2804@bfoster>
-References: <20190211125427.16577-1-hch@lst.de>
- <20190211125427.16577-11-hch@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:49852 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727265AbfBLCRo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Feb 2019 21:17:44 -0500
+Subject: [PATCH 3/3] generic: check for reasonable inode creation time
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 11 Feb 2019 18:17:39 -0800
+Message-ID: <154993785921.1948.13721935036926653125.stgit@magnolia>
+In-Reply-To: <154993784038.1948.7502664832930298472.stgit@magnolia>
+References: <154993784038.1948.7502664832930298472.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190211125427.16577-11-hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Feb 11, 2019 at 01:54:27PM +0100, Christoph Hellwig wrote:
-> While we can only truncate a block under the page lock for the current
-> page, there is no high-level synchronization for moving extents from the
-> COW to the data fork.  Because of that there is a chance that a
-> delalloc conversion for the COW fork might not find any extents to
-> convert.  In that case we should retry the whole block lookup and now
-> find the blocks in the data fork.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Can't say I fully understand the race that motivates this, but the code
-seems fine:
+If statx returns inode creation time (aka btime), check it to make sure
+that the filesystem is setting a creation time that's reasonably close
+to when it creates a file.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/generic/709     |   53 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/709.out |    2 ++
+ tests/generic/group   |    1 +
+ 3 files changed, 56 insertions(+)
+ create mode 100755 tests/generic/709
+ create mode 100644 tests/generic/709.out
 
->  fs/xfs/xfs_aops.c | 18 ++++++++++++++++--
->  1 file changed, 16 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 6a8937a833ad..e1723ac6c533 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -338,7 +338,8 @@ xfs_imap_valid(
->   * consistency with what the caller expects.
->   *
->   * The current page is held locked so nothing could have removed the block
-> - * backing offset_fsb.
-> + * backing offset_fsb, although it could have moved from the COW to the data
-> + * fork by another thread.
->   */
->  static int
->  xfs_convert_blocks(
-> @@ -381,6 +382,7 @@ xfs_map_blocks(
->  	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
->  	struct xfs_bmbt_irec	imap;
->  	struct xfs_iext_cursor	icur;
-> +	int			retries = 0;
->  	int			error = 0;
->  
->  	if (XFS_FORCED_SHUTDOWN(mp))
-> @@ -410,6 +412,7 @@ xfs_map_blocks(
->  	 * into real extents.  If we return without a valid map, it means we
->  	 * landed in a hole and we skip the block.
->  	 */
-> +retry:
->  	xfs_ilock(ip, XFS_ILOCK_SHARED);
->  	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
->  	       (ip->i_df.if_flags & XFS_IFEXTENTS));
-> @@ -477,8 +480,19 @@ xfs_map_blocks(
->  	return 0;
->  allocate_blocks:
->  	error = xfs_convert_blocks(wpc, ip, offset_fsb, &imap);
-> -	if (error)
-> +	if (error) {
-> +		/*
-> +		 * If we failed to find the extent in the COW fork we might have
-> +		 * raced with a COW to data fork conversion or truncate.
-> +		 * Restart the lookup to catch the extent in the data fork for
-> +		 * the former case, but prevent additional retries to avoid
-> +		 * looping forever for the latter case.
-> +		 */
-> +		if (error == -EAGAIN && wpc->fork == XFS_COW_FORK && !retries++)
-> +			goto retry;
-> +		ASSERT(error != -EAGAIN);
->  		return error;
-> +	}
->  	ASSERT(wpc->imap.br_startoff <= offset_fsb);
->  	ASSERT(wpc->imap.br_startoff + wpc->imap.br_blockcount >= offset_fsb);
->  	ASSERT(wpc->fork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
-> -- 
-> 2.20.1
-> 
+
+diff --git a/tests/generic/709 b/tests/generic/709
+new file mode 100755
+index 00000000..ebec10de
+--- /dev/null
++++ b/tests/generic/709
+@@ -0,0 +1,53 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0+
++# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 709
++#
++# Check that statx btime (aka creation time) is plausibly close to when
++# we created a file.  A bug caught during code review of xfs patches revealed
++# that there weren't any sanity checks of the btime values.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++tmp=/tmp/$$
++status=1	# failure is the default!
++testfile=$TEST_DIR/$seq.txt
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.* $testfile
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/attr
++. ./common/filter
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_test
++_require_xfs_io_command "statx" "-r"
++_require_btime
++
++rm -f $seqres.full
++rm -f $testfile
++
++# Create a file and the time we created it
++now=$(date +%s)
++touch $testfile
++
++# Make sure the reported btime is within 5 seconds of the time we recorded
++# just prior to creating the file.
++btime=$(date +%s -d "$($XFS_IO_PROG -c "statx -v -m $STATX_BTIME" $testfile | \
++	grep 'stat.btime =' | cut -d '=' -f 2)")
++test -n "$btime" || echo "error: did not see btime in output??"
++
++_within_tolerance "btime" "$btime" "$now" 0 5 -v
++
++status=0
++exit
+diff --git a/tests/generic/709.out b/tests/generic/709.out
+new file mode 100644
+index 00000000..d8495ace
+--- /dev/null
++++ b/tests/generic/709.out
+@@ -0,0 +1,2 @@
++QA output created by 709
++btime is in range
+diff --git a/tests/generic/group b/tests/generic/group
+index cfd003d3..f56eb475 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -528,3 +528,4 @@
+ 523 auto quick attr
+ 524 auto quick
+ 525 auto quick rw
++709 auto quick
