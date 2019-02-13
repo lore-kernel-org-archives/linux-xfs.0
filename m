@@ -1,102 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56276 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727039AbfBLXqF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Feb 2019 18:46:05 -0500
-Subject: Re: [PATCH] Fix error message when xfs handle library not found
-References: <20190212181840.7093-1-fdmanana@kernel.org>
- <93a04478-db84-95f2-9957-5588dc0a54ed@sandeen.net>
- <20190212211526.GK20493@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <748b6652-8234-cfff-4cd7-0d18556c5350@sandeen.net>
-Date: Tue, 12 Feb 2019 17:46:03 -0600
+Received: from aserp2130.oracle.com ([141.146.126.79]:52356 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726530AbfBMEdr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Feb 2019 23:33:47 -0500
+Date: Tue, 12 Feb 2019 20:33:41 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] generic: check the behavior of programs opening a
+ lot of O_TMPFILE files
+Message-ID: <20190213043341.GA32253@magnolia>
+References: <154993786231.2062.8490515215533507881.stgit@magnolia>
+ <154993787478.2062.17047634303195751186.stgit@magnolia>
+ <CAOQ4uxjz=Wp1wg2vmvmTe8g69qzN2FF_+nJ=FJZkTsNPMPLCvA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20190212211526.GK20493@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxjz=Wp1wg2vmvmTe8g69qzN2FF_+nJ=FJZkTsNPMPLCvA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: fdmanana@kernel.org, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Eryu Guan <guaneryu@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-On 2/12/19 3:15 PM, Dave Chinner wrote:
-> [cc linux-xfs@vger.kernel.org]
+On Tue, Feb 12, 2019 at 04:42:21AM +0200, Amir Goldstein wrote:
+> On Tue, Feb 12, 2019 at 4:18 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> > Create a test (+ helper program) that opens as many unlinked files as it
+> > possibly can on the scratch filesystem, then closes all the files at
+> > once to stress-test unlinked file cleanup.  Add an xfs-specific test to
+> > make sure that the fallback code doesn't bitrot.
+> >
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  src/Makefile          |    2 -
+> >  src/tmpfile.c         |  127 +++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/710     |   65 +++++++++++++++++++++++++
+> >  tests/generic/710.out |    2 +
+> >  tests/generic/711     |   73 ++++++++++++++++++++++++++++
+> >  tests/generic/711.out |    2 +
+> >  tests/generic/group   |    2 +
+> >  tests/xfs/736         |   71 +++++++++++++++++++++++++++
+> >  tests/xfs/736.out     |    2 +
+> >  tests/xfs/737         |   79 ++++++++++++++++++++++++++++++
+> >  tests/xfs/737.out     |    2 +
+> >  tests/xfs/group       |    2 +
+> >  12 files changed, 428 insertions(+), 1 deletion(-)
+> >  create mode 100644 src/tmpfile.c
+> >  create mode 100755 tests/generic/710
+> >  create mode 100644 tests/generic/710.out
+> >  create mode 100755 tests/generic/711
+> >  create mode 100644 tests/generic/711.out
+> >  create mode 100755 tests/xfs/736
+> >  create mode 100644 tests/xfs/736.out
+> >  create mode 100755 tests/xfs/737
+> >  create mode 100644 tests/xfs/737.out
+> >
+> >
+> > diff --git a/src/Makefile b/src/Makefile
+> > index 41826585..5fce881d 100644
+> > --- a/src/Makefile
+> > +++ b/src/Makefile
+> > @@ -27,7 +27,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+> >         renameat2 t_getcwd e4compact test-nextquota punch-alternating \
+> >         attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
+> >         dio-invalidate-cache stat_test t_encrypted_d_revalidate \
+> > -       attr_replace_test swapon mkswap
+> > +       attr_replace_test swapon mkswap tmpfile
+> >
+> >  SUBDIRS = log-writes perf
+> >
+> > diff --git a/src/tmpfile.c b/src/tmpfile.c
 > 
-> On Tue, Feb 12, 2019 at 12:59:02PM -0600, Eric Sandeen wrote:
->> On 2/12/19 12:18 PM, fdmanana@kernel.org wrote:
->>> From: Filipe Manana <fdmanana@suse.com>
->>>
->>> The error message mentions a "make install-lib" target from xfsprogs,
->>> however that target does not exists in xfsprogs, what exists is a
->>> target named "install-dev". So fix that and replace "install-lib" with
->>> "install-dev".
->>>
->>> Signed-off-by: Filipe Manana <fdmanana@suse.com>
->>> ---
->>>  m4/package_xfslibs.m4 | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/m4/package_xfslibs.m4 b/m4/package_xfslibs.m4
->>> index 9be56e11..ad019518 100644
->>> --- a/m4/package_xfslibs.m4
->>> +++ b/m4/package_xfslibs.m4
->>> @@ -83,7 +83,7 @@ AC_DEFUN([AC_PACKAGE_NEED_ATTRLIST_LIBHANDLE],
->>>          echo
->>>          echo 'FATAL ERROR: could not find a current XFS handle library.'
->>>          echo 'Install or upgrade the XFS library package.'
->>
->> To fix things up a bit more, I'd probably not refer to the "XFS library package"
->> because I'm not sure that exists anywhere either, does it?
->>
->> In fedora/rhel land, it's in xfsprogs & xfsprogs-devel for development.
->>
->> Not sure about suse or debian or ...?
+> Let's go crazy and call it t_open_tmpfiles ?
+> Missing .gitignore patch.
+
+Will fix.
+
+> ...
+> > +/* Put an opened file on the unlinked list and leak the fd. */
+> > +void leak_tmpfile(void)
+> > +{
+> > +       int fd = -1;
+> > +       int ret;
+> > +
+> > +       /* Try to create an O_TMPFILE and leak the fd. */
+> > +#ifdef O_TMPFILE
+> > +       fd = open(".", O_TMPFILE | O_RDWR, 0644);
 > 
-> Debian:
-> 
-> $ apt-file search libhandle
-> ....
-> xfslibs-dev: /lib/libhandle.a
-> xfslibs-dev: /lib/libhandle.so
-> xfslibs-dev: /usr/lib/libhandle.a
-> xfslibs-dev: /usr/lib/libhandle.la
-> xfsprogs: /lib/libhandle.so.1
-> xfsprogs: /lib/libhandle.so.1.0.3
-> $
-> 
-> So the libhandle library DSO is shipped in xfsprogs. The /static/
-> library is shipped in xfslibs-dev.
-> 
-> So what is fstests requiring here - the DSO or the static library?
-> If it's the static library, then why does it need that and why can't
-> it use the DSO shipped as part of the main xfsprogs package?
+> Pass in path as argv[1], so you won't need to cd $SCRATCH_MNT
+> all the time. Or does it have a purpose?
 
-I don't think it's looking for libhandle.a, I certainly
-don't have that available on my test systems...
+Nope, just sillyness on my part.  Thanks for the suggestion.
 
->> Not a huge deal but if nobody ships xfsprogs-libs (or similar) then maybe best
->> to fix that line as well.
->>
->>> -        echo 'Alternatively, run "make install-lib" from the xfsprogs source.'
->>> +        echo 'Alternatively, run "make install-dev" from the xfsprogs source.'
->>
->> and yeah, this part makes sense.
-> 
-> Only if it requires the static libhandle.a library.
+--D
 
-Oh, ok.  And it doesn't.
-
-so, it should be:
-
-        echo 'FATAL ERROR: could not find a current XFS handle library.'
-        echo 'Install or upgrade the xfsprogs package.'
-        echo 'Alternatively, run "make install" from the xfsprogs source.'
-
-?
-
-(if I have headers from xfsprogs-devel, but no xfsprogs installed, I hit the
-above error first on the missing libhandle)
-
--Eric
+> Thanks,
+> Amir.
