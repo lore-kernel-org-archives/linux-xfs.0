@@ -1,153 +1,271 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:34038 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388727AbfBMUvD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Feb 2019 15:51:03 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x1DKcrrG133643
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Feb 2019 20:51:01 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2qhrekmcse-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Feb 2019 20:51:01 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x1DKp1uF002979
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Feb 2019 20:51:01 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x1DKp0MV009616
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Feb 2019 20:51:00 GMT
-Subject: [PATCH 3/3] xfs: reserve blocks for ifree transaction during log
- recovery
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 13 Feb 2019 12:50:59 -0800
-Message-ID: <155009105963.32028.10768016263671369410.stgit@magnolia>
-In-Reply-To: <155009104740.32028.193157199378698979.stgit@magnolia>
-References: <155009104740.32028.193157199378698979.stgit@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:14746 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2389384AbfBMW1c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Feb 2019 17:27:32 -0500
+Date: Thu, 14 Feb 2019 09:27:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 0/3]: Extreme fragmentation ahoy!
+Message-ID: <20190213222726.GT14116@dastard>
+References: <20190207050813.24271-1-david@fromorbit.com>
+ <20190207052114.GA7991@magnolia>
+ <20190207053941.GL14116@dastard>
+ <20190207155242.GE2880@bfoster>
+ <20190208024730.GM14116@dastard>
+ <20190208123432.GB21317@bfoster>
+ <20190212011333.GB23989@magnolia>
+ <20190212114630.GA35242@bfoster>
+ <20190212202150.GS14116@dastard>
+ <20190213135021.GB42812@bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190213135021.GB42812@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Feb 13, 2019 at 08:50:22AM -0500, Brian Foster wrote:
+> On Wed, Feb 13, 2019 at 07:21:51AM +1100, Dave Chinner wrote:
+> > On Tue, Feb 12, 2019 at 06:46:31AM -0500, Brian Foster wrote:
+> > > On Mon, Feb 11, 2019 at 05:13:33PM -0800, Darrick J. Wong wrote:
+> > > > On Fri, Feb 08, 2019 at 07:34:33AM -0500, Brian Foster wrote:
+> > > For example, extent size hints just happen to skip delayed allocation.
+> > > I don't recall the exact history, but I don't think this was always the
+> > > case for extsz hints.
+> > 
+> > It wasn't, but extent size hints + delalloc never played nicely and
+> > could corrupt or expose stale data and caused all sorts of problems
+> > at ENOSPC because delalloc reservations are unaware of alignment
+> > requirements for extent size hints. Hence to make extent size hints
+> > work for buffered writes, I simply made them work the same way as
+> > direct writes (i.e. immediate allocation w/ unwritten extents).
+> > 
+> > > So would the close time eofb trim be as
+> > > problematic as for extsz hint files if the behavior of the latter
+> > > changed back to using delayed allocation?
+> > 
+> > Yes, but if it's a write-once file that doesn't matter. If it's
+> > write-many, then we'd retain the post-eof blocks...
+> > 
+> > > I think a patch for that was
+> > > proposed fairly recently, but it depended on delalloc -> unwritten
+> > > functionality which still had unresolved issues (IIRC).
+> > 
+> > *nod*
+> > 
+> > > From another angle, would a system that held files open for a
+> > > significant amount of time relative to a one-time write such that close
+> > > consistently occurred after writeback (and thus delalloc conversion) be
+> > > susceptible to the same level of free space fragmentation as shown
+> > > above?
+> > 
+> > If the file is held open for writing for a long time, we have to
+> > assume that they are going to write again (and again) so we should
+> > leave the EOF blocks there. If they are writing slower than the eofb
+> > gc, then there's nothing more we can really do in that case...
+> > 
+> 
+> I'm not necessarily sure that this condition is always a matter of
+> writing too slow. It very well may be true, but I'm curious if there are
+> parallel copy scenarios (perhaps under particular cpu/RAM configs)
+> where we could end up doing a large number of one time file writes and
+> not doing the release time trim until an underlying extent (with
+> post-eof blocks) has been converted in more cases than not.
 
-Log recovery frees all the inodes stored in the unlinked list, which can
-cause expansion of the free inode btree.  The ifree code skips block
-reservations if it thinks there's a per-AG space reservation, but we
-don't set up the reservation until after log recovery, which means that
-a finobt expansion blows up in xfs_trans_mod_sb when we exceed the
-transaction's block reservation.
+I'm not sure I follow what sort of workload and situation you are
+describing here. Are you talking about the effect of an EOFB gc pass
+during ongoing writes?
 
-To fix this, we set the "no finobt reservation" flag to true when we
-create the xfs_mount and only set it to false if we confirm that every
-AG had enough free space to put aside for the finobt.
+> Perhaps this is more of a question of writeback behavior than anything
+> in XFS, but if that can occur with files on the smaller side it's a
+> clear path to free space fragmentation. I think it's at least worth
+> considering whether we can improve things, but of course this requires
+> significantly more thought and analysis to determine whether that's an
+> actual problem and if the cure is worse than the disease. :P
+> 
+> > > (I'm not sure if/why anybody would actually do that.. userspace
+> > > fs with an fd cache perhaps? It's somewhat besides the point,
+> > > anyways...)).
+> > 
+> > *nod*
+> > 
+> > > More testing and thought is probably required. I _was_ wondering if we
+> > > should consider something like always waiting as long as possible to
+> > > eofb trim already converted post-eof blocks, but I'm not totally
+> > > convinced that actually has value. For files that are not going to see
+> > > any further appends, we may have already lost since the real post-eof
+> > > blocks will end up truncated just the same whether it happens sooner or
+> > > not until inode reclaim.
+> > 
+> > If the writes are far enough apart, then we lose any IO optimisation
+> > advantage of retaining post-eof blocks (induces seeks because
+> > location of new writes is fixed ahead of time). Then it just becomes
+> > a fragmentation avoidance If the writes are slow enough,
+> > fragmentation really doesn't matter a whole lot - it's when writes
+> > are frequent and we trash the post-eof blocks quickly that it
+> > matters.
+> > 
+> 
+> It sounds like what you're saying is that it doesn't really matter
+> either way at this point. There's no perf advantage to keeping the eof
+> blocks in this scenario, but there's also no real harm in deferring the
+> eofb trim of physical post-eof blocks because any future free space
+> fragmentation damage has already been done (assuming no more writes come
+> in).
 
-While we're at it we change the flag name to be clearer about what it
-actually does.
+Essentially, yes.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_ag_resv.c      |    2 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c |    4 ++--
- fs/xfs/xfs_fsops.c               |    1 +
- fs/xfs/xfs_inode.c               |    2 +-
- fs/xfs/xfs_mount.h               |    2 +-
- fs/xfs/xfs_super.c               |    7 +++++++
- 6 files changed, 13 insertions(+), 5 deletions(-)
+> The thought above was tip-toeing around the idea of (in addition to the
+> one-time trim heuristic you mentioned above) never doing a release time
+> trim of non-delalloc post-eof blocks.
 
+Except we want to trim blocks in the in the cases where it's a write
+once file that has been fsync()d or written by O_DIRECT w/ really
+large extent size hints....
 
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index e701ebc36c06..e2ba2a3b63b2 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -281,7 +281,7 @@ xfs_ag_resv_init(
- 			 */
- 			ask = used = 0;
- 
--			mp->m_inotbt_nores = true;
-+			mp->m_finobt_nores = true;
- 
- 			error = xfs_refcountbt_calc_reserves(mp, tp, agno, &ask,
- 					&used);
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index c2df1f89eec8..1080381ff243 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -124,7 +124,7 @@ xfs_finobt_alloc_block(
- 	union xfs_btree_ptr	*new,
- 	int			*stat)
- {
--	if (cur->bc_mp->m_inotbt_nores)
-+	if (cur->bc_mp->m_finobt_nores)
- 		return xfs_inobt_alloc_block(cur, start, new, stat);
- 	return __xfs_inobt_alloc_block(cur, start, new, stat,
- 			XFS_AG_RESV_METADATA);
-@@ -154,7 +154,7 @@ xfs_finobt_free_block(
- 	struct xfs_btree_cur	*cur,
- 	struct xfs_buf		*bp)
- {
--	if (cur->bc_mp->m_inotbt_nores)
-+	if (cur->bc_mp->m_finobt_nores)
- 		return xfs_inobt_free_block(cur, bp);
- 	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_METADATA);
- }
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index f3ef70c542e1..584648582ba7 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -533,6 +533,7 @@ xfs_fs_reserve_ag_blocks(
- 	int			error = 0;
- 	int			err2;
- 
-+	mp->m_finobt_nores = false;
- 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
- 		pag = xfs_perag_get(mp, agno);
- 		err2 = xfs_ag_resv_init(pag, NULL);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 9d683b455e01..f643a9295179 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1754,7 +1754,7 @@ xfs_inactive_ifree(
- 	 * now remains allocated and sits on the unlinked list until the fs is
- 	 * repaired.
- 	 */
--	if (unlikely(mp->m_inotbt_nores)) {
-+	if (unlikely(mp->m_finobt_nores)) {
- 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ifree,
- 				XFS_IFREE_SPACE_RES(mp), 0, XFS_TRANS_RESERVE,
- 				&tp);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index a33f45077867..864ecf27aa75 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -138,7 +138,7 @@ typedef struct xfs_mount {
- 	struct mutex		m_growlock;	/* growfs mutex */
- 	int			m_fixedfsid[2];	/* unchanged for life of FS */
- 	uint64_t		m_flags;	/* global mount flags */
--	bool			m_inotbt_nores; /* no per-AG finobt resv. */
-+	bool			m_finobt_nores; /* no per-AG finobt resv. */
- 	int			m_ialloc_inos;	/* inodes in inode allocation */
- 	int			m_ialloc_blks;	/* blocks in inode allocation */
- 	int			m_ialloc_min_blks;/* min blocks in sparse inode
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index c9097cb0b955..08033ac040d6 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1594,6 +1594,13 @@ xfs_mount_alloc(
- 	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
- 	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
- 	mp->m_kobj.kobject.kset = xfs_kset;
-+	/*
-+	 * We don't create the finobt per-ag space reservation until after log
-+	 * recovery, so we must set this to true so that an ifree transaction
-+	 * started during log recovery will not depend on space reservations
-+	 * for finobt expansion.
-+	 */
-+	mp->m_finobt_nores = true;
- 	return mp;
- }
- 
+It seems to me that once we start making exceptions to the general
+rule, we end up in a world of corner cases and, most likely,
+unreliable heuristics.
+
+> > IOWs, speculative prealloc beyond EOF is not just about preventing
+> > fragmentation - it also helps minimise the per-write CPU overhead of
+> > delalloc space accounting. (i.e. allows faster write rates into
+> > cache). IOWs, for anything more than a really small files, we want
+> > to be doing speculative delalloc on the first time the file is
+> > written to.
+> > 
+> 
+> Ok, this paper refers to CPU overhead as it contributes to lack of
+> scalability.
+
+Well, that was the experiments that were being performed. I'm using
+it as an example of how per-write overhead is actually important to
+throughput. Ignore the "global lock caused overall throughput
+issues" because we don't have that problem any more, and instead
+look at it as a demonstration of "anything that slows down a write()
+reduces per-thread throughput".
+
+> It certainly makes sense that a delayed allocation buffered
+> write does more work than a non-alloc write, but this document isn't
+> necessarily claiming that as evidence of measurably faster or slower
+> single threaded buffered writes. Rather, that overhead becomes
+> measurable with enough parallel buffered writes contending on a global
+> allocation critical section (section 5.1 "Spinlocks in Hot Paths").
+
+It's just an example of how increasing per-write overhead impacts
+performance. The same can be said for all the memory reclaim
+mods - they also reduced per-write overhead because memory
+allocation for the page cache was much, much faster and required
+much less CPU, so each write spent less time allocating pages to
+cache the data to be written. hence, faster writes....
+
+> Subsequently, section 6.1.2 addresses that particular issue via the
+> introduction of per-cpu accounting. It looks like there is further
+> discussion around the general link between efficiency and performance,
+> which makes sense, but I don't think that draws a definite conclusion
+> that speculative preallocation needs to be introduced immediately on
+> sequential buffered writes.
+
+Sure, because the post-EOF preallocation that was already happening
+wasn't the problem, and we couldn't easily address the per-page
+block mapping overhead with generic code changes that would be
+useful in any circumstance (Linux community at the time was hostile
+towards bringing anything useful to XFS into the core kernel code).
+
+And this was only a small machine (24 CPUs) so we had to address the
+locking problem because increasing speculative prealloc wouldn't
+help solve the global lock contention problems on the 2048p machines
+that SGI was shipping at the time....
+
+> What I think it suggests is that we need to
+> consider the potential scalability impact of any prospective change in
+> speculative preallocation behavior (along with the other tradeoffs
+> associated with preallocation) because less aggressive preallocation
+> means more buffered write overhead.
+
+It's not a scalability problem now because of the fixes made back
+then - it's now just a per-write thread latency and throughput
+issue.
+
+What is not obvious from the paper is that I designed the XFS
+benchmarks so that it wrote each file into a separate directories to
+place them into different AGs so that they didn't fragment due to
+interleaving writes. i.e. so we could directly control the number of
+sequential write streams going to the disks.
+
+We had to do that to minimise the seek overhead of the disks so
+they'd run at full bandwidth rather than being seek bound - we had
+to keep the 256 disks at >97% bandwidth utilisation to get to
+10GB/S, so even one extra seek per disk per second and we wouldn't
+get there.
+
+IOWs, we'd carefully taken anything to do with fragmentation out of
+the picture entirely, both for direct and buffered writes. We were
+just focussed on write efficiency and maximising total throughput
+and that largely made post-EOF preallocation irrelevant to us.
+
+> BTW for historical context.. was speculative preallocation a thing when
+> this paper was written?
+
+Yes. specualtive prealloc goes way back into the 90s from Irix.  It
+was first made configurable in XFS via the biosize mount option
+added with v3 superblocks in 1997, but the initial linux port only
+allowed up to 64k.
+
+In 2005, the linux mount option allowed biosize to be extended to
+1GB, which made sense because >4GB allocation groups (mkfs enabled
+them late 2003) were now starting to be widely used and so users
+were reporting new large AG fragmentation issues that had never been
+seen before. i.e.  it was now practical to have contiguous multi-GB
+extents in files and the delalloc code was struggling to create
+them, so having EOF-prealloc be able to make use of that capability
+was needed....
+
+And then auto-tuning made sense because more and more people were
+having to use the mount option in more general workloads to avoid
+fragmentation.
+
+And even since then it's abeen able tweaking the algorithms to stop
+userspace from defeating it and re-introducing fragmentation
+vectors...
+
+> The doc suggests per-page block allocation needs
+> to be reduced on XFS,
+
+Yup. It still stands - that was the specific design premise that
+lead to the iomap infrastructure we now have. i.e. do block mapping
+once per write() call, not once per page per write call. early
+prototypes got us a 10-20% increase in single threaded bufered write
+throughput on slow CPUs, and with the current code some high
+throughput buffered write cases either went up by 30-40% or CPU
+usage went down by that amount.
+
+> but also indicates that XFS had minimal
+> fragmentation compared to other fs'. AFAICT, section 5.2 attributes XFS
+> fragmentation avoidance to delayed allocation (not necessarily
+> preallocation).
+
+Right, because none of the other filesystems had delayed allocation
+and they were interleaving concurent allocations at write() time.
+i.e. they serialised write() for long periods of time while they did
+global fs allocation, whilst XFS had a low overhead delalloc path
+with a tiny critical global section. i.e. delalloc allowed us to
+defer allocation to writeback where it isn't so throughput critical
+and better allocation decisions can be made.
+
+IOWs, delalloc was the primary difference in both the fragmentation
+and scalability differences reported in the paper. That XFS did
+small amounts of in-memory-only prealloc beyond EOF during delalloc
+was irrelevant - it's just part of the delalloc mechanism in this
+context....
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
