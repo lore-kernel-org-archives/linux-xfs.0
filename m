@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:53044 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729649AbfBMJx2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Feb 2019 04:53:28 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:58376 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387608AbfBMJxj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Feb 2019 04:53:39 -0500
 From: Bob Liu <bob.liu@oracle.com>
-Subject: [RFC PATCH v2 1/9] block: add nr_mirrors to request_queue
-Date: Wed, 13 Feb 2019 17:50:36 +0800
-Message-Id: <20190213095044.29628-2-bob.liu@oracle.com>
+Subject: [RFC PATCH v2 4/9] md:raid1: rd_hint support and consider stacked layer case
+Date: Wed, 13 Feb 2019 17:50:39 +0800
+Message-Id: <20190213095044.29628-5-bob.liu@oracle.com>
 In-Reply-To: <20190213095044.29628-1-bob.liu@oracle.com>
 References: <20190213095044.29628-1-bob.liu@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,117 +15,256 @@ List-Id: xfs
 To: linux-block@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, allison.henderson@oracle.com, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca, Bob Liu <bob.liu@oracle.com>
 
-When fs data/metadata checksum mismatch, lower block devices may have other
-correct copies. e.g if we did raid1 for protecting fs metadata.
-Then fs could try other copies of metadata instead of panic, but fs need be
-awared how many mirrors the block devices have.
+rd_hint is a bit map for stacked md layer supporting.
+When submit bio to a lower md layer, the bio->bi_rd_hint should be split
+according mirror number of each device of lower layer.
+And merge bio->bi_rd_hint in the end path vise versa.
 
-This patch add @nr_mirrors to struct request_queue which is similar as
-blk_queue_nonrot(), filesystem can grab device request queue and check the
-number of mirrors of this block device.
+For a two layer stacked md case like:
+                           /dev/md0
+             /                |                        \
+      /dev/md1-a             /dev/md1-b                /dev/md1-c
+   /        \           /       |        \           /      |      \
+/dev/sda /dev/sdb  /dev/sdc /dev/sdd  /dev/sde  /dev/sdf /dev/sdg /dev/sdh
 
-@nr_mirrors is 1 by default which means only one copy, drivers e.g raid1 are
-responsible for setting the right value. The maximum value is
-BITS_PER_LONG which is 32 or 64. That should be big enough else retry lantency
-may be too high.
 
-Also added helper functions for get/set the number of mirrors for a specific
-device request queue.
+- 1) First the top layer sumbit bio with bi_rd_hint = [00 000 000],
+then the value of bi_rd_hint changed as below when bio goes to lower layer.
+                         [00 000 000]
+             /                |                       \
+         [00]               [000]                    [000]
+   /        \           /       |        \           /      |      \
+[0]         [0]        [0]     [0]       [0]       [0]     [0]     [0]
 
-Todo:
-* Export nr_mirrors through /sysfs.
+
+- 2) i/o may goes to  /dev/sda at first:
+[1]         [0]        [0]     [0]      [0]       [0]     [0]     [0]
+  \         /           \       |        /          \      |      /
+         [10]                [000]                    [000]
+             \                |                       /
+                         [10 000 000]
+The top layer will get bio->bi_rd_hint = [10 000 000]
+
+
+- 3) Fs check the data is corrupt, resumbit bio with bi_rd_hint = [10 000 000]
+                         [10 000 000]
+             /                |                       \
+         [10]               [000]                    [000]
+   /        \           /       |        \           /      |      \
+[1]         [0]        [0]     [0]       [0]       [0]     [0]     [0]
+
+
+- 4) i/o can go to any dev except /dev/sda(already tried), assum goes to /dev/sdg
+this time.
+[1]         [0]        [0]     [0]      [0]       [0]     [1]     [0]
+  \         /           \       |        /          \      |      /
+         [10]                [000]                    [010]
+             \                |                       /
+                         [10 000 010]
+The top layer will get bio->bi_rd_hint = [10 000 010], which means we already
+tried /dev/sda and /dev/sdg.
+
+
+- 5) If the data is corrupt again, resumbit bio with
+bi_rd_hint = [10 000 010].
+
+Loop until all mirrors are tried..
 
 Signed-off-by: Bob Liu <bob.liu@oracle.com>
 ---
- block/blk-core.c       |  3 +++
- block/blk-settings.c   | 24 ++++++++++++++++++++++++
- include/linux/blkdev.h |  3 +++
- include/linux/types.h  |  3 +++
- 4 files changed, 33 insertions(+)
+ drivers/md/raid1.c | 117 ++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 116 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 6b78ec56a4f2..b838c6dc5357 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -537,6 +537,9 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
- 	if (blkcg_init_queue(q))
- 		goto fail_ref;
- 
-+	/* Set queue default mirrors to 1 explicitly. */
-+	blk_queue_set_mirrors(q, 1);
-+
- 	return q;
- 
- fail_ref:
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 3e7038e475ee..38e4d7e675e6 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -844,6 +844,30 @@ void blk_queue_write_cache(struct request_queue *q, bool wc, bool fua)
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 0de28714e9b5..75fde3a3fd3d 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -325,6 +325,41 @@ static int find_bio_disk(struct r1bio *r1_bio, struct bio *bio)
+ 	return mirror;
  }
- EXPORT_SYMBOL_GPL(blk_queue_write_cache);
  
-+/*
-+ * Get the number of read redundant mirrors.
-+ */
-+unsigned short blk_queue_get_mirrors(struct request_queue *q)
++/* merge children's rd hint to master bio */
++static void raid1_merge_rd_hint(struct bio *bio)
 +{
-+	return q->nr_mirrors;
-+}
-+EXPORT_SYMBOL(blk_queue_get_mirrors);
++	struct r1bio *r1_bio = bio->bi_private;
++	struct r1conf *conf = r1_bio->mddev->private;
++	struct md_rdev *tmp_rdev = NULL;
++	int i = conf->raid_disks - 1;
++	int cnt = 0;
++	int read_disk = r1_bio->read_disk;
++	DECLARE_BITMAP(tmp_bitmap, BLKDEV_MAX_MIRRORS);
 +
-+/*
-+ * Set the number of read redundant mirrors.
-+ */
-+bool blk_queue_set_mirrors(struct request_queue *q, unsigned short mirrors)
-+{
-+	if(q->nr_mirrors >= BLKDEV_MAX_MIRRORS) {
-+		printk("blk_queue_set_mirrors: %d exceed max mirrors(%d)\n",
-+				mirrors, BLKDEV_MAX_MIRRORS);
-+		return false;
++	if (!r1_bio->master_bio)
++		return;
++
++	/* ignore replace case now */
++	if (read_disk > conf->raid_disks - 1)
++		read_disk = r1_bio->read_disk - conf->raid_disks;
++
++	for (; i >= 0; i--) {
++		tmp_rdev = conf->mirrors[i].rdev;
++		if (i == read_disk)
++			break;
++		cnt += blk_queue_get_mirrors(bdev_get_queue(tmp_rdev->bdev));
 +	}
-+	q->nr_mirrors = mirrors;
-+	return true;
++
++	/* init map properly from most lower layer */
++	if (blk_queue_get_mirrors(bdev_get_queue(tmp_rdev->bdev)) == 1)
++		bitmap_set(bio->bi_rd_hint, 0, 1);
++
++	bitmap_shift_left(tmp_bitmap, bio->bi_rd_hint, cnt, BLKDEV_MAX_MIRRORS);
++	bitmap_or(r1_bio->master_bio->bi_rd_hint,
++		  r1_bio->master_bio->bi_rd_hint, tmp_bitmap,
++		  BLKDEV_MAX_MIRRORS);
 +}
-+EXPORT_SYMBOL(blk_queue_set_mirrors);
 +
- static int __init blk_settings_init(void)
+ static void raid1_end_read_request(struct bio *bio)
  {
- 	blk_max_low_pfn = max_low_pfn - 1;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 338604dff7d0..0191dc4d3f2d 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -570,6 +570,7 @@ struct request_queue {
+ 	int uptodate = !bio->bi_status;
+@@ -332,6 +367,7 @@ static void raid1_end_read_request(struct bio *bio)
+ 	struct r1conf *conf = r1_bio->mddev->private;
+ 	struct md_rdev *rdev = conf->mirrors[r1_bio->read_disk].rdev;
  
- #define BLK_MAX_WRITE_HINTS	5
- 	u64			write_hints[BLK_MAX_WRITE_HINTS];
-+	unsigned long		nr_mirrors; /* Default value is 1 */
- };
++	raid1_merge_rd_hint(bio);
+ 	/*
+ 	 * this branch is our 'one mirror IO has finished' event handler:
+ 	 */
+@@ -539,6 +575,37 @@ static sector_t align_to_barrier_unit_end(sector_t start_sector,
+ 	return len;
+ }
  
- #define QUEUE_FLAG_STOPPED	1	/* queue is stopped */
-@@ -1071,6 +1072,8 @@ extern void blk_queue_update_dma_alignment(struct request_queue *, int);
- extern void blk_queue_rq_timeout(struct request_queue *, unsigned int);
- extern void blk_queue_flush_queueable(struct request_queue *q, bool queueable);
- extern void blk_queue_write_cache(struct request_queue *q, bool enabled, bool fua);
-+extern unsigned short blk_queue_get_mirrors(struct request_queue *q);
-+extern bool blk_queue_set_mirrors(struct request_queue *q, unsigned short mirrors);
- 
- /*
-  * Number of physical segments as sent to the device.
-diff --git a/include/linux/types.h b/include/linux/types.h
-index c2615d6a019e..a29135772f3a 100644
---- a/include/linux/types.h
-+++ b/include/linux/types.h
-@@ -7,6 +7,9 @@
- 
- #ifndef __ASSEMBLY__
- 
-+/* max mirrors of blkdev */
-+#define BLKDEV_MAX_MIRRORS BITS_PER_LONG
++static long choose_disk_from_rd_hint(struct r1conf *conf, struct r1bio *r1_bio)
++{
++	struct md_rdev *tmp_rdev;
++	unsigned long bit, cnt;
++	struct bio *bio = r1_bio->master_bio;
++	int mirror = conf->raid_disks - 1;
 +
- #define DECLARE_BITMAP(name,bits) \
- 	unsigned long name[BITS_TO_LONGS(bits)]
++	cnt = blk_queue_get_mirrors(r1_bio->mddev->queue);
++	/* Find a never-readed device */
++	bit = bitmap_find_next_zero_area(bio->bi_rd_hint, cnt, 0, 1, 0);
++	if (bit >= cnt)
++		/* Already tried all mirrors */
++		return -1;
++
++	/* Decide this device belongs to which mirror for stacked-layer raid
++	 * devices. */
++	cnt = 0;
++	for ( ; mirror >= 0; mirror--) {
++		tmp_rdev = conf->mirrors[mirror].rdev;
++		cnt += blk_queue_get_mirrors(bdev_get_queue(tmp_rdev->bdev));
++		/* bit start from 0, while mirrors start from 1. So should compare
++		 * with (bit + 1) */
++		if (cnt >= (bit + 1)) {
++			return mirror;
++		}
++	}
++
++	/* Should not arrive here. */
++	return -1;
++}
++
+ /*
+  * This routine returns the disk from which the requested read should
+  * be done. There is a per-array 'next expected sequential IO' sector
+@@ -566,6 +633,7 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 	struct md_rdev *rdev;
+ 	int choose_first;
+ 	int choose_next_idle;
++	int max_disks;
  
+ 	rcu_read_lock();
+ 	/*
+@@ -593,7 +661,18 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
+ 	else
+ 		choose_first = 0;
+ 
+-	for (disk = 0 ; disk < conf->raid_disks * 2 ; disk++) {
++	if (!bitmap_empty(r1_bio->master_bio->bi_rd_hint, BLKDEV_MAX_MIRRORS)) {
++		disk  = choose_disk_from_rd_hint(conf, r1_bio);
++		if (disk < 0)
++			return -1;
++
++		/* Use the specific disk */
++		max_disks = disk + 1;
++	} else {
++		disk = 0;
++		max_disks = conf->raid_disks * 2;
++	}
++	for (; disk < max_disks; disk++) {
+ 		sector_t dist;
+ 		sector_t first_bad;
+ 		int bad_sectors;
+@@ -1186,6 +1265,34 @@ alloc_r1bio(struct mddev *mddev, struct bio *bio)
+ 	return r1_bio;
+ }
+ 
++static void raid1_split_rd_hint(struct bio *bio)
++{
++	struct r1bio *r1_bio = bio->bi_private;
++	struct r1conf *conf = r1_bio->mddev->private;
++	unsigned int cnt = 0;
++	DECLARE_BITMAP(tmp_bitmap, BLKDEV_MAX_MIRRORS);
++
++	int i = conf->raid_disks - 1;
++	struct md_rdev *tmp_rdev = NULL;
++
++	for (; i >= 0; i--) {
++		tmp_rdev = conf->mirrors[i].rdev;
++		if (i == r1_bio->read_disk)
++			break;
++		cnt += blk_queue_get_mirrors(bdev_get_queue(tmp_rdev->bdev));
++	}
++
++	bitmap_zero(tmp_bitmap, BLKDEV_MAX_MIRRORS);
++	bitmap_shift_right(bio->bi_rd_hint, r1_bio->master_bio->bi_rd_hint, cnt,
++			BLKDEV_MAX_MIRRORS);
++
++	cnt = blk_queue_get_mirrors(bdev_get_queue(tmp_rdev->bdev));
++	bitmap_set(tmp_bitmap, 0, cnt);
++
++	bitmap_and(bio->bi_rd_hint, bio->bi_rd_hint, tmp_bitmap,
++			BLKDEV_MAX_MIRRORS);
++}
++
+ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 			       int max_read_sectors, struct r1bio *r1_bio)
+ {
+@@ -1199,6 +1306,7 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 	int rdisk;
+ 	bool print_msg = !!r1_bio;
+ 	char b[BDEVNAME_SIZE];
++	bool auto_select_mirror;
+ 
+ 	/*
+ 	 * If r1_bio is set, we are blocking the raid1d thread
+@@ -1230,6 +1338,8 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 	else
+ 		init_r1bio(r1_bio, mddev, bio);
+ 	r1_bio->sectors = max_read_sectors;
++	auto_select_mirror = bitmap_empty(r1_bio->master_bio->bi_rd_hint, BLKDEV_MAX_MIRRORS);
++
+ 
+ 	/*
+ 	 * make_request() can abort the operation when read-ahead is being
+@@ -1238,6 +1348,9 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 	rdisk = read_balance(conf, r1_bio, &max_sectors);
+ 
+ 	if (rdisk < 0) {
++		if (auto_select_mirror)
++			bitmap_set(r1_bio->master_bio->bi_rd_hint, 0, BLKDEV_MAX_MIRRORS);
++
+ 		/* couldn't find anywhere to read from */
+ 		if (print_msg) {
+ 			pr_crit_ratelimited("md/raid1:%s: %s: unrecoverable I/O read error for block %llu\n",
+@@ -1292,6 +1405,8 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 	    test_bit(R1BIO_FailFast, &r1_bio->state))
+ 	        read_bio->bi_opf |= MD_FAILFAST;
+ 	read_bio->bi_private = r1_bio;
++	/* rd_hint of read_bio is a subset of master_bio. */
++	raid1_split_rd_hint(read_bio);
+ 
+ 	if (mddev->gendisk)
+ 	        trace_block_bio_remap(read_bio->bi_disk->queue, read_bio,
 -- 
 2.17.1
