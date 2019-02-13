@@ -1,27 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:52864 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388727AbfBMUu5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Feb 2019 15:50:57 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x1DKcte7140284
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Feb 2019 20:50:56 GMT
+Received: from userp2130.oracle.com ([156.151.31.86]:34038 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388727AbfBMUvD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Feb 2019 15:51:03 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x1DKcrrG133643
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Feb 2019 20:51:01 GMT
 Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2130.oracle.com with ESMTP id 2qhre5mbvg-1
+        by userp2130.oracle.com with ESMTP id 2qhrekmcse-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Feb 2019 20:50:55 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x1DKosIE002590
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Feb 2019 20:51:01 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x1DKp1uF002979
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Feb 2019 20:50:55 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x1DKosPf026542
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Feb 2019 20:50:54 GMT
-Subject: [PATCH 2/3] xfs: don't ever put nlink > 0 inodes on the unlinked
- list
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Feb 2019 20:51:01 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x1DKp0MV009616
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Feb 2019 20:51:00 GMT
+Subject: [PATCH 3/3] xfs: reserve blocks for ifree transaction during log
+ recovery
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 13 Feb 2019 12:50:53 -0800
-Message-ID: <155009105350.32028.13101526675073908023.stgit@magnolia>
+Date: Wed, 13 Feb 2019 12:50:59 -0800
+Message-ID: <155009105963.32028.10768016263671369410.stgit@magnolia>
 In-Reply-To: <155009104740.32028.193157199378698979.stgit@magnolia>
 References: <155009104740.32028.193157199378698979.stgit@magnolia>
 MIME-Version: 1.0
@@ -35,101 +35,119 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When XFS creates an O_TMPFILE file, the inode is created with nlink = 1,
-put on the unlinked list, and then the VFS sets nlink = 0 in d_tmpfile.
-If we crash before anything logs the inode (it's dirty incore but the
-vfs doesn't tell us it's dirty so we never log that change), the iunlink
-processing part of recovery will then explode with a pile of:
+Log recovery frees all the inodes stored in the unlinked list, which can
+cause expansion of the free inode btree.  The ifree code skips block
+reservations if it thinks there's a per-AG space reservation, but we
+don't set up the reservation until after log recovery, which means that
+a finobt expansion blows up in xfs_trans_mod_sb when we exceed the
+transaction's block reservation.
 
-XFS: Assertion failed: VFS_I(ip)->i_nlink == 0, file:
-fs/xfs/xfs_log_recover.c, line: 5072
+To fix this, we set the "no finobt reservation" flag to true when we
+create the xfs_mount and only set it to false if we confirm that every
+AG had enough free space to put aside for the finobt.
 
-Worse yet, since nlink is nonzero, the inodes also don't get cleaned up
-and they just leak until the next xfs_repair run.
-
-Therefore, change xfs_iunlink to require that inodes being put on the
-unlinked list have nlink == 0, change the tmpfile callers to instantiate
-nodes that way, and set the nlink to 1 just prior to calling d_tmpfile.
-Fix the comment for xfs_iunlink while we're at it.
+While we're at it we change the flag name to be clearer about what it
+actually does.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_inode.c |   16 ++++++----------
- fs/xfs/xfs_iops.c  |   13 +++++++++++--
- 2 files changed, 17 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_ag_resv.c      |    2 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    4 ++--
+ fs/xfs/xfs_fsops.c               |    1 +
+ fs/xfs/xfs_inode.c               |    2 +-
+ fs/xfs/xfs_mount.h               |    2 +-
+ fs/xfs/xfs_super.c               |    7 +++++++
+ 6 files changed, 13 insertions(+), 5 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index e701ebc36c06..e2ba2a3b63b2 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -281,7 +281,7 @@ xfs_ag_resv_init(
+ 			 */
+ 			ask = used = 0;
+ 
+-			mp->m_inotbt_nores = true;
++			mp->m_finobt_nores = true;
+ 
+ 			error = xfs_refcountbt_calc_reserves(mp, tp, agno, &ask,
+ 					&used);
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index c2df1f89eec8..1080381ff243 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -124,7 +124,7 @@ xfs_finobt_alloc_block(
+ 	union xfs_btree_ptr	*new,
+ 	int			*stat)
+ {
+-	if (cur->bc_mp->m_inotbt_nores)
++	if (cur->bc_mp->m_finobt_nores)
+ 		return xfs_inobt_alloc_block(cur, start, new, stat);
+ 	return __xfs_inobt_alloc_block(cur, start, new, stat,
+ 			XFS_AG_RESV_METADATA);
+@@ -154,7 +154,7 @@ xfs_finobt_free_block(
+ 	struct xfs_btree_cur	*cur,
+ 	struct xfs_buf		*bp)
+ {
+-	if (cur->bc_mp->m_inotbt_nores)
++	if (cur->bc_mp->m_finobt_nores)
+ 		return xfs_inobt_free_block(cur, bp);
+ 	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_METADATA);
+ }
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index f3ef70c542e1..584648582ba7 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -533,6 +533,7 @@ xfs_fs_reserve_ag_blocks(
+ 	int			error = 0;
+ 	int			err2;
+ 
++	mp->m_finobt_nores = false;
+ 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+ 		pag = xfs_perag_get(mp, agno);
+ 		err2 = xfs_ag_resv_init(pag, NULL);
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 9aaa3143a277..9d683b455e01 100644
+index 9d683b455e01..f643a9295179 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1332,7 +1332,7 @@ xfs_create_tmpfile(
- 	if (error)
- 		goto out_trans_cancel;
- 
--	error = xfs_dir_ialloc(&tp, dp, mode, 1, 0, prid, &ip);
-+	error = xfs_dir_ialloc(&tp, dp, mode, 0, 0, prid, &ip);
- 	if (error)
- 		goto out_trans_cancel;
- 
-@@ -2231,11 +2231,8 @@ xfs_iunlink_update_inode(
+@@ -1754,7 +1754,7 @@ xfs_inactive_ifree(
+ 	 * now remains allocated and sits on the unlinked list until the fs is
+ 	 * repaired.
+ 	 */
+-	if (unlikely(mp->m_inotbt_nores)) {
++	if (unlikely(mp->m_finobt_nores)) {
+ 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ifree,
+ 				XFS_IFREE_SPACE_RES(mp), 0, XFS_TRANS_RESERVE,
+ 				&tp);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index a33f45077867..864ecf27aa75 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -138,7 +138,7 @@ typedef struct xfs_mount {
+ 	struct mutex		m_growlock;	/* growfs mutex */
+ 	int			m_fixedfsid[2];	/* unchanged for life of FS */
+ 	uint64_t		m_flags;	/* global mount flags */
+-	bool			m_inotbt_nores; /* no per-AG finobt resv. */
++	bool			m_finobt_nores; /* no per-AG finobt resv. */
+ 	int			m_ialloc_inos;	/* inodes in inode allocation */
+ 	int			m_ialloc_blks;	/* blocks in inode allocation */
+ 	int			m_ialloc_min_blks;/* min blocks in sparse inode
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index c9097cb0b955..08033ac040d6 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1594,6 +1594,13 @@ xfs_mount_alloc(
+ 	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
+ 	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
+ 	mp->m_kobj.kobject.kset = xfs_kset;
++	/*
++	 * We don't create the finobt per-ag space reservation until after log
++	 * recovery, so we must set this to true so that an ifree transaction
++	 * started during log recovery will not depend on space reservations
++	 * for finobt expansion.
++	 */
++	mp->m_finobt_nores = true;
+ 	return mp;
  }
  
- /*
-- * This is called when the inode's link count goes to 0 or we are creating a
-- * tmpfile via O_TMPFILE. In the case of a tmpfile, @ignore_linkcount will be
-- * set to true as the link count is dropped to zero by the VFS after we've
-- * created the file successfully, so we have to add it to the unlinked list
-- * while the link count is non-zero.
-+ * This is called when the inode's link count has gone to 0 or we are creating
-+ * a tmpfile via O_TMPFILE.  The inode @ip must have nlink == 0.
-  *
-  * We place the on-disk inode on a list in the AGI.  It will be pulled from this
-  * list when the inode is freed.
-@@ -2254,6 +2251,7 @@ xfs_iunlink(
- 	short			bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
- 	int			error;
- 
-+	ASSERT(VFS_I(ip)->i_nlink == 0);
- 	ASSERT(VFS_I(ip)->i_mode != 0);
- 	trace_xfs_iunlink(ip);
- 
-@@ -3184,11 +3182,9 @@ xfs_rename_alloc_whiteout(
- 
- 	/*
- 	 * Prepare the tmpfile inode as if it were created through the VFS.
--	 * Otherwise, the link increment paths will complain about nlink 0->1.
--	 * Drop the link count as done by d_tmpfile(), complete the inode setup
--	 * and flag it as linkable.
-+	 * Complete the inode setup and flag it as linkable.  nlink is already
-+	 * zero, so we can skip the drop_nlink.
- 	 */
--	drop_nlink(VFS_I(tmpfile));
- 	xfs_setup_iops(tmpfile);
- 	xfs_finish_inode_setup(tmpfile);
- 	VFS_I(tmpfile)->i_state |= I_LINKABLE;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index f48ffd7a8d3e..1efef69a7f1c 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -191,9 +191,18 @@ xfs_generic_create(
- 
- 	xfs_setup_iops(ip);
- 
--	if (tmpfile)
-+	if (tmpfile) {
-+		/*
-+		 * The VFS requires that any inode fed to d_tmpfile must have
-+		 * nlink == 1 so that it can decrement the nlink in d_tmpfile.
-+		 * However, we created the temp file with nlink == 0 because
-+		 * we're not allowed to put an inode with nlink > 0 on the
-+		 * unlinked list.  Therefore we have to set nlink to 1 so that
-+		 * d_tmpfile can immediately set it back to zero.
-+		 */
-+		set_nlink(inode, 1);
- 		d_tmpfile(dentry, inode);
--	else
-+	} else
- 		d_instantiate(dentry, inode);
- 
- 	xfs_finish_inode_setup(ip);
