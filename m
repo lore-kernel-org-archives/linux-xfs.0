@@ -1,145 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36346 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727631AbfBLCRg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Feb 2019 21:17:36 -0500
-Subject: [PATCH 1/3] common: fix kmemleak to work with sections
+Received: from userp2120.oracle.com ([156.151.31.85]:55626 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726129AbfBNTFH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 14:05:07 -0500
+Subject: [PATCH 1/2] xfs: rename m_inotbt_nores to m_finobt_nores
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 11 Feb 2019 18:17:26 -0800
-Message-ID: <154993784666.1948.2898373791588046149.stgit@magnolia>
-In-Reply-To: <154993784038.1948.7502664832930298472.stgit@magnolia>
-References: <154993784038.1948.7502664832930298472.stgit@magnolia>
+Date: Thu, 14 Feb 2019 11:04:53 -0800
+Message-ID: <155017109378.6016.17031057745821704893.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor the kmemleak code to work correctly with sections.  This
-requires changing the location of the "is kmemleak enabled?" flag to use
-/tmp instead of RESULT_BASE, scanning for leaks after every test, and
-clarifying which functions get used when.
+Rename this flag variable to imply more strongly that it's related to
+the free inode btree (finobt) operation.  No functional changes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- README    |    2 ++
- check     |    7 +++++--
- common/rc |   32 ++++++++++++++++++++++----------
- 3 files changed, 29 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_ag_resv.c      |    2 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    4 ++--
+ fs/xfs/xfs_inode.c               |    2 +-
+ fs/xfs/xfs_mount.h               |    2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
 
-diff --git a/README b/README
-index 73f057f3..6e9aa34d 100644
---- a/README
-+++ b/README
-@@ -99,6 +99,8 @@ Preparing system for tests:
-                that relevant results are compared.  For example 'spinningrust'
-                for configurations that use spinning disks and 'nvme' for tests
-                using nvme drives.
-+             - set USE_KMEMLEAK=yes to scan for memory leaks in the kernel
-+               after every test, if the kernel supports kmemleak.
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index e701ebc36c06..e2ba2a3b63b2 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -281,7 +281,7 @@ xfs_ag_resv_init(
+ 			 */
+ 			ask = used = 0;
  
-         - or add a case to the switch in common/config assigning
-           these variables based on the hostname of your test
-diff --git a/check b/check
-index 77a06b00..20e95302 100755
---- a/check
-+++ b/check
-@@ -496,7 +496,7 @@ _expunge_test()
- 	return 0
- }
+-			mp->m_inotbt_nores = true;
++			mp->m_finobt_nores = true;
  
--_init_kmemleak
-+_detect_kmemleak
- _prepare_test_list
- 
- if $OPTIONS_HAVE_SECTIONS; then
-@@ -771,9 +771,12 @@ for section in $HOST_OPTIONS_SECTIONS; do
- 			# and log messages that shouldn't be there.
- 			_check_filesystems
- 			_check_dmesg || err=true
--			_check_kmemleak || err=true
- 		fi
- 
-+		# Scan for memory leaks after every test so that associating
-+		# a leak to a particular test will be as accurate as possible.
-+		_check_kmemleak || err=true
-+
- 		# test ends after all checks are done.
- 		$timestamp && _timestamp
- 		stop=`_wallclock`
-diff --git a/common/rc b/common/rc
-index b8ed1776..ab468adf 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3500,7 +3500,7 @@ _check_dmesg()
- # capture the kmemleak report
- _capture_kmemleak()
+ 			error = xfs_refcountbt_calc_reserves(mp, tp, agno, &ask,
+ 					&used);
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index c2df1f89eec8..1080381ff243 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -124,7 +124,7 @@ xfs_finobt_alloc_block(
+ 	union xfs_btree_ptr	*new,
+ 	int			*stat)
  {
--	local kern_knob="${DEBUGFS_MNT}/kmemleak"
-+	local kern_knob="$DEBUGFS_MNT/kmemleak"
- 	local leak_file="$1"
- 
- 	# Tell the kernel to scan for memory leaks.  Apparently the write
-@@ -3521,17 +3521,20 @@ ENDL
- 	echo "clear" > "$kern_knob"
- }
- 
--# set up kmemleak
--_init_kmemleak()
-+# Figure out if the running kernel supports kmemleak; if it does, clear out
-+# anything that leaked before we even started testing.  The leak checker only
-+# needs to be primed like this once per ./check invocation.
-+_detect_kmemleak()
+-	if (cur->bc_mp->m_inotbt_nores)
++	if (cur->bc_mp->m_finobt_nores)
+ 		return xfs_inobt_alloc_block(cur, start, new, stat);
+ 	return __xfs_inobt_alloc_block(cur, start, new, stat,
+ 			XFS_AG_RESV_METADATA);
+@@ -154,7 +154,7 @@ xfs_finobt_free_block(
+ 	struct xfs_btree_cur	*cur,
+ 	struct xfs_buf		*bp)
  {
--	local kern_knob="${DEBUGFS_MNT}/kmemleak"
-+	local kern_knob="$DEBUGFS_MNT/kmemleak"
-+	KMEMLEAK_CHECK_FILE="/tmp/check_kmemleak"
- 
- 	# Since kernel v4.19-rc3, the kmemleak knob exists even if kmemleak is
- 	# disabled, but returns EBUSY on write. So instead of relying on
- 	# existance of writable knob file, we use a test file to indicate that
- 	# _check_kmemleak() is enabled only if we actually managed to write to
- 	# the knob file.
--	rm -f ${RESULT_BASE}/check_kmemleak
-+	rm -f "$KMEMLEAK_CHECK_FILE"
- 
- 	if [ ! -w "$kern_knob" ]; then
- 		return 0
-@@ -3541,17 +3544,26 @@ _init_kmemleak()
- 	# then dump all the leaks recorded so far.
- 	if echo "scan=off" > "$kern_knob" 2>/dev/null; then
- 		_capture_kmemleak /dev/null
--		touch ${RESULT_BASE}/check_kmemleak
-+		touch "$KMEMLEAK_CHECK_FILE"
- 	fi
+-	if (cur->bc_mp->m_inotbt_nores)
++	if (cur->bc_mp->m_finobt_nores)
+ 		return xfs_inobt_free_block(cur, bp);
+ 	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_METADATA);
  }
- 
--# check kmemleak log
-+# Kick the kmemleak checker to scan for leaks.  Background leak scan mode is
-+# not enabled, so we must call the kernel to ask for a scan and deal with the
-+# results appropriately.  This we do after every test completes, whether or not
-+# it was successful.
- _check_kmemleak()
- {
--	local kern_knob="${DEBUGFS_MNT}/kmemleak"
--	local leak_file="${seqres}.kmemleak"
-+	local kern_knob="$DEBUGFS_MNT/kmemleak"
-+	local leak_file="$seqres.kmemleak"
- 
--	if [ ! -f ${RESULT_BASE}/check_kmemleak ]; then
-+	if [ ! -f "$KMEMLEAK_CHECK_FILE" ]; then
-+		return 0
-+	fi
-+
-+	# Not enabled, so discard any report of leaks found.
-+	if [ "$USE_KMEMLEAK" != "yes" ]; then
-+		_capture_kmemleak /dev/null
- 		return 0
- 	fi
- 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 9aaa3143a277..d1411c168700 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1754,7 +1754,7 @@ xfs_inactive_ifree(
+ 	 * now remains allocated and sits on the unlinked list until the fs is
+ 	 * repaired.
+ 	 */
+-	if (unlikely(mp->m_inotbt_nores)) {
++	if (unlikely(mp->m_finobt_nores)) {
+ 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ifree,
+ 				XFS_IFREE_SPACE_RES(mp), 0, XFS_TRANS_RESERVE,
+ 				&tp);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index a33f45077867..864ecf27aa75 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -138,7 +138,7 @@ typedef struct xfs_mount {
+ 	struct mutex		m_growlock;	/* growfs mutex */
+ 	int			m_fixedfsid[2];	/* unchanged for life of FS */
+ 	uint64_t		m_flags;	/* global mount flags */
+-	bool			m_inotbt_nores; /* no per-AG finobt resv. */
++	bool			m_finobt_nores; /* no per-AG finobt resv. */
+ 	int			m_ialloc_inos;	/* inodes in inode allocation */
+ 	int			m_ialloc_blks;	/* blocks in inode allocation */
+ 	int			m_ialloc_min_blks;/* min blocks in sparse inode
