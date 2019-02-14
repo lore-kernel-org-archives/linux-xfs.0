@@ -1,147 +1,202 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:39624 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725892AbfBVQru (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Feb 2019 11:47:50 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x1MGidm6155034
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:49 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2qp9xugavw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:49 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x1MGlm1v011184
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:48 GMT
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x1MGllO5025240
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:47 GMT
-Subject: [PATCH 4/4] xfs_restore: support fallocate when reserving space for
- a file
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 22 Feb 2019 08:47:44 -0800
-Message-ID: <155085406431.5141.9035398131483539445.stgit@magnolia>
-In-Reply-To: <155085403848.5141.1866278990901950186.stgit@magnolia>
-References: <155085403848.5141.1866278990901950186.stgit@magnolia>
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:41679 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2437904AbfBNKBC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 05:01:02 -0500
+Received: by mail-pg1-f195.google.com with SMTP id m1so2804328pgq.8
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 02:01:01 -0800 (PST)
+From: Omar Sandoval <osandov@osandov.com>
+Subject: [RFC PATCH 2/6] fs: add AT_UTIME_BTIME for utimensat()
+Date: Thu, 14 Feb 2019 02:00:09 -0800
+Message-Id: <383aea1b93edf69d4f96a898ef4878881867d33e.1550136164.git.osandov@fb.com>
+In-Reply-To: <cover.1550136164.git.osandov@fb.com>
+References: <cover.1550136164.git.osandov@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+Cc: kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Omar Sandoval <osandov@fb.com>
 
-Update the file creation helper to try fallocate when restoring a
-filesystem before it tries RESVSP.
+Now that we have a btime iattr, use it to allow updating btime from
+utimensat(). We do so by adding a new AT_UTIME_BTIME flag. Iff this flag
+is given, the btime is set to times[2] (unless times is NULL, in which
+case the current time is used).
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Omar Sandoval <osandov@fb.com>
 ---
- configure.ac          |    2 ++
- include/builddefs.in  |    1 +
- m4/Makefile           |    1 +
- m4/package_libcdev.m4 |   15 +++++++++++++++
- restore/Makefile      |    4 ++++
- restore/dirattr.c     |   11 +++++++++++
- 6 files changed, 34 insertions(+)
- create mode 100644 m4/package_libcdev.m4
+ fs/utimes.c                | 86 +++++++++++++++++++++++---------------
+ include/uapi/linux/fcntl.h |  2 +
+ 2 files changed, 55 insertions(+), 33 deletions(-)
 
-
-diff --git a/configure.ac b/configure.ac
-index a77054c..73dedd7 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -84,6 +84,8 @@ AC_PACKAGE_NEED_ATTRIBUTES_H
- AC_PACKAGE_NEED_ATTRIBUTES_MACROS
- AC_PACKAGE_NEED_ATTRGET_LIBATTR
+diff --git a/fs/utimes.c b/fs/utimes.c
+index bdcf2daf39c1..cb9fe77e5f91 100644
+--- a/fs/utimes.c
++++ b/fs/utimes.c
+@@ -16,7 +16,20 @@ static bool nsec_valid(long nsec)
+ 	return nsec >= 0 && nsec <= 999999999;
+ }
  
-+AC_HAVE_FALLOCATE
+-static int utimes_common(const struct path *path, struct timespec64 *times)
++static void init_time_attr(struct iattr *newattrs, struct timespec64 *time_attr,
++			   struct timespec64 time, unsigned int attr,
++			   unsigned int attr_set)
++{
++	if (time.tv_nsec == UTIME_OMIT) {
++		newattrs->ia_valid &= ~attr;
++	} else {
++		*time_attr = time;
++		newattrs->ia_valid |= attr_set;
++	}
++}
 +
- AC_MANUAL_FORMAT
++static int utimes_common(const struct path *path, struct timespec64 *times,
++			 bool btime)
+ {
+ 	int error;
+ 	struct iattr newattrs;
+@@ -28,25 +41,21 @@ static int utimes_common(const struct path *path, struct timespec64 *times)
+ 		goto out;
  
- AC_CONFIG_FILES([include/builddefs])
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 269c928..1c7e12f 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -69,6 +69,7 @@ ENABLE_SHARED	= @enable_shared@
- ENABLE_GETTEXT	= @enable_gettext@
+ 	if (times && times[0].tv_nsec == UTIME_NOW &&
+-		     times[1].tv_nsec == UTIME_NOW)
++	    times[1].tv_nsec == UTIME_NOW &&
++	    (!btime || times[2].tv_nsec == UTIME_NOW))
+ 		times = NULL;
  
- HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
-+HAVE_FALLOCATE = @have_fallocate@
+ 	newattrs.ia_valid = ATTR_CTIME | ATTR_MTIME | ATTR_ATIME;
++	if (btime)
++		newattrs.ia_valid |= ATTR_BTIME;
+ 	if (times) {
+-		if (times[0].tv_nsec == UTIME_OMIT)
+-			newattrs.ia_valid &= ~ATTR_ATIME;
+-		else if (times[0].tv_nsec != UTIME_NOW) {
+-			newattrs.ia_atime.tv_sec = times[0].tv_sec;
+-			newattrs.ia_atime.tv_nsec = times[0].tv_nsec;
+-			newattrs.ia_valid |= ATTR_ATIME_SET;
+-		}
+-
+-		if (times[1].tv_nsec == UTIME_OMIT)
+-			newattrs.ia_valid &= ~ATTR_MTIME;
+-		else if (times[1].tv_nsec != UTIME_NOW) {
+-			newattrs.ia_mtime.tv_sec = times[1].tv_sec;
+-			newattrs.ia_mtime.tv_nsec = times[1].tv_nsec;
+-			newattrs.ia_valid |= ATTR_MTIME_SET;
++		init_time_attr(&newattrs, &newattrs.ia_atime, times[0],
++			       ATTR_ATIME, ATTR_ATIME_SET);
++		init_time_attr(&newattrs, &newattrs.ia_mtime, times[1],
++			       ATTR_MTIME, ATTR_MTIME_SET);
++		if (btime) {
++			init_time_attr(&newattrs, &newattrs.ia_btime, times[2],
++				       ATTR_BTIME, ATTR_BTIME_SET);
+ 		}
+ 		/*
+ 		 * Tell setattr_prepare(), that this is an explicit time
+@@ -90,14 +99,16 @@ static int utimes_common(const struct path *path, struct timespec64 *times)
+ long do_utimes(int dfd, const char __user *filename, struct timespec64 *times,
+ 	       int flags)
+ {
++	bool btime = flags & AT_UTIME_BTIME;
+ 	int error = -EINVAL;
  
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall 
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/m4/Makefile b/m4/Makefile
-index 9a35056..ae452f7 100644
---- a/m4/Makefile
-+++ b/m4/Makefile
-@@ -16,6 +16,7 @@ LSRCFILES = \
- 	manual_format.m4 \
- 	package_attrdev.m4 \
- 	package_globals.m4 \
-+	package_libcdev.m4 \
- 	package_ncurses.m4 \
- 	package_pthread.m4 \
- 	package_utilies.m4 \
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-new file mode 100644
-index 0000000..050f82c
---- /dev/null
-+++ b/m4/package_libcdev.m4
-@@ -0,0 +1,15 @@
-+#
-+# Check if we have a fallocate libc call (Linux)
-+#
-+AC_DEFUN([AC_HAVE_FALLOCATE],
-+  [ AC_MSG_CHECKING([for fallocate])
-+    AC_TRY_LINK([
-+#include <fcntl.h>
-+#include <linux/falloc.h>
-+    ], [
-+         fallocate(0, 0, 0, 0);
-+    ], have_fallocate=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_fallocate)
-+  ])
-diff --git a/restore/Makefile b/restore/Makefile
-index 20c870a..ac3f8c8 100644
---- a/restore/Makefile
-+++ b/restore/Makefile
-@@ -102,6 +102,10 @@ LTDEPENDENCIES = $(LIBRMT)
+ 	if (times && (!nsec_valid(times[0].tv_nsec) ||
+-		      !nsec_valid(times[1].tv_nsec))) {
++		      !nsec_valid(times[1].tv_nsec) ||
++		      (btime && !nsec_valid(times[2].tv_nsec)))) {
+ 		goto out;
+ 	}
  
- LCFLAGS = -DRESTORE
+-	if (flags & ~AT_SYMLINK_NOFOLLOW)
++	if (flags & ~(AT_SYMLINK_NOFOLLOW | AT_UTIME_BTIME))
+ 		goto out;
  
-+ifeq ($(HAVE_FALLOCATE),yes)
-+LCFLAGS += -DHAVE_FALLOCATE
-+endif
+ 	if (filename == NULL && dfd != AT_FDCWD) {
+@@ -111,7 +122,7 @@ long do_utimes(int dfd, const char __user *filename, struct timespec64 *times,
+ 		if (!f.file)
+ 			goto out;
+ 
+-		error = utimes_common(&f.file->f_path, times);
++		error = utimes_common(&f.file->f_path, times, btime);
+ 		fdput(f);
+ 	} else {
+ 		struct path path;
+@@ -124,7 +135,7 @@ long do_utimes(int dfd, const char __user *filename, struct timespec64 *times,
+ 		if (error)
+ 			goto out;
+ 
+-		error = utimes_common(&path, times);
++		error = utimes_common(&path, times, btime);
+ 		path_put(&path);
+ 		if (retry_estale(error, lookup_flags)) {
+ 			lookup_flags |= LOOKUP_REVAL;
+@@ -139,16 +150,20 @@ long do_utimes(int dfd, const char __user *filename, struct timespec64 *times,
+ SYSCALL_DEFINE4(utimensat, int, dfd, const char __user *, filename,
+ 		struct __kernel_timespec __user *, utimes, int, flags)
+ {
+-	struct timespec64 tstimes[2];
++	struct timespec64 tstimes[3];
+ 
+ 	if (utimes) {
+-		if ((get_timespec64(&tstimes[0], &utimes[0]) ||
+-			get_timespec64(&tstimes[1], &utimes[1])))
+-			return -EFAULT;
+-
++		int i, n = (flags & AT_UTIME_BTIME) ? 3 : 2;
++		bool all_omit = true;
 +
- default: depend $(LTCOMMAND)
++		for (i = 0; i < n; i++) {
++			if (get_timespec64(&tstimes[i], &utimes[i]))
++				return -EFAULT;
++			if (tstimes[i].tv_nsec != UTIME_OMIT)
++				all_omit = false;
++		}
+ 		/* Nothing to do, we must not even check the path.  */
+-		if (tstimes[0].tv_nsec == UTIME_OMIT &&
+-		    tstimes[1].tv_nsec == UTIME_OMIT)
++		if (all_omit)
+ 			return 0;
+ 	}
  
- include $(BUILDRULES)
-diff --git a/restore/dirattr.c b/restore/dirattr.c
-index 3fa8fb6..82eb1de 100644
---- a/restore/dirattr.c
-+++ b/restore/dirattr.c
-@@ -75,6 +75,17 @@ create_filled_file(
- 	if (fd < 0)
- 		return fd;
+@@ -242,14 +257,19 @@ COMPAT_SYSCALL_DEFINE2(utime, const char __user *, filename,
  
-+#ifdef HAVE_FALLOCATE
-+	ret = fallocate(fd, 0, 0, size);
-+	if (ret && (errno != EOPNOTSUPP && errno != ENOTTY))
-+		mlog(MLOG_VERBOSE | MLOG_NOTE,
-+_("attempt to reserve %lld bytes for %s using %s failed: %s (%d)\n"),
-+				size, pathname, "fallocate",
-+				strerror(errno), errno);
-+	if (ret == 0)
-+		goto done;
-+#endif
+ COMPAT_SYSCALL_DEFINE4(utimensat, unsigned int, dfd, const char __user *, filename, struct old_timespec32 __user *, t, int, flags)
+ {
+-	struct timespec64 tv[2];
++	struct timespec64 tv[3];
+ 
+ 	if  (t) {
+-		if (get_old_timespec32(&tv[0], &t[0]) ||
+-		    get_old_timespec32(&tv[1], &t[1]))
+-			return -EFAULT;
+-
+-		if (tv[0].tv_nsec == UTIME_OMIT && tv[1].tv_nsec == UTIME_OMIT)
++		int i, n = (flags & AT_UTIME_BTIME) ? 3 : 2;
++		bool all_omit = true;
 +
- 	ret = ioctl(fd, XFS_IOC_RESVSP64, &fl);
- 	if (ret && (errno != EOPNOTSUPP && errno != ENOTTY))
- 		mlog(MLOG_VERBOSE | MLOG_NOTE,
++		for (i = 0; i < n; i++) {
++			if (get_old_timespec32(&tv[i], &t[i]))
++				return -EFAULT;
++			if (tv[i].tv_nsec != UTIME_OMIT)
++				all_omit = false;
++		}
++		if (all_omit)
+ 			return 0;
+ 	}
+ 	return do_utimes(dfd, filename, t ? tv : NULL, flags);
+diff --git a/include/uapi/linux/fcntl.h b/include/uapi/linux/fcntl.h
+index 6448cdd9a350..fc5b02439697 100644
+--- a/include/uapi/linux/fcntl.h
++++ b/include/uapi/linux/fcntl.h
+@@ -90,5 +90,7 @@
+ #define AT_STATX_FORCE_SYNC	0x2000	/* - Force the attributes to be sync'd with the server */
+ #define AT_STATX_DONT_SYNC	0x4000	/* - Don't sync attributes with the server */
+ 
++#define AT_UTIME_BTIME		0x8000	/* Also update file creation time */
++
+ 
+ #endif /* _UAPI_LINUX_FCNTL_H */
+-- 
+2.20.1
