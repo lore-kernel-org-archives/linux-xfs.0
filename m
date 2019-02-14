@@ -1,46 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38756 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726144AbfBNP5k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 10:57:40 -0500
-Date: Thu, 14 Feb 2019 07:57:34 -0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:43008 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730784AbfBNP7m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 10:59:42 -0500
+Date: Thu, 14 Feb 2019 07:58:49 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: small fixes and optimizations for delalloc and reflink
-Message-ID: <20190214155734.GG32253@magnolia>
-References: <20190211125427.16577-1-hch@lst.de>
- <20190212000337.GA23989@magnolia>
- <20190213180253.GA19484@lst.de>
- <20190214081120.GA11119@lst.de>
+Subject: Re: [PATCH 3/3] xfs: reserve blocks for ifree transaction during log
+ recovery
+Message-ID: <20190214155849.GH32253@magnolia>
+References: <155009104740.32028.193157199378698979.stgit@magnolia>
+ <155009105963.32028.10768016263671369410.stgit@magnolia>
+ <20190214081700.GC5961@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190214081120.GA11119@lst.de>
+In-Reply-To: <20190214081700.GC5961@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Feb 14, 2019 at 09:11:20AM +0100, Christoph Hellwig wrote:
-> On Wed, Feb 13, 2019 at 07:02:53PM +0100, Christoph Hellwig wrote:
-> > On Mon, Feb 11, 2019 at 04:03:37PM -0800, Darrick J. Wong wrote:
-> > > I pulled this series in and saw a bunch of new regressions in
-> > > generic/127 generic/269 generic/476 generic/521 generic/522 xfs/442 with
-> > > quota, rmap, and reflink enabled.  The regressions were all the
-> > > XFS_WANT_CORRUPTED_GOTO near the top of xfs_rmap_unmap_shared.
+On Thu, Feb 14, 2019 at 12:17:00AM -0800, Christoph Hellwig wrote:
+> On Wed, Feb 13, 2019 at 12:50:59PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Quick status update:  I managed to reproduce this ones on xfs/442 only
-> > yesterday.  But as soon as I started bisecting it it disappeared again..
+> > Log recovery frees all the inodes stored in the unlinked list, which can
+> > cause expansion of the free inode btree.  The ifree code skips block
+> > reservations if it thinks there's a per-AG space reservation, but we
+> > don't set up the reservation until after log recovery, which means that
+> > a finobt expansion blows up in xfs_trans_mod_sb when we exceed the
+> > transaction's block reservation.
+> > 
+> > To fix this, we set the "no finobt reservation" flag to true when we
+> > create the xfs_mount and only set it to false if we confirm that every
+> > AG had enough free space to put aside for the finobt.
+> > 
+> > While we're at it we change the flag name to be clearer about what it
+> > actually does.
 > 
-> And another full overnight run couldn't report this even once.
+> Looks good:
 > 
-> How reproducible is the issue for you?   Are you sure it never happens
-> with the baseline, given that this series really doesn't touch anything
-> interacting with the rmap?
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> But throwing in the field rename makes the patch way bigger and
+> not as obvious to understand.  Any reason it can't be split into
+> a separate patch?
 
-Nearly every time, so I'll go digging and report back what I find.
-
-(It's odd, because I didn't see anything obvious in the patches that
-would cause this...)
+Ok, I'll separate the two.
 
 --D
