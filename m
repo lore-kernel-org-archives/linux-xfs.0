@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:37008 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2438142AbfBNKBG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 05:01:06 -0500
-Received: by mail-pg1-f196.google.com with SMTP id q206so2819609pgq.4
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 02:01:06 -0800 (PST)
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:44760 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2438156AbfBNKBK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 05:01:10 -0500
+Received: by mail-pg1-f195.google.com with SMTP id y1so2799509pgk.11
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 02:01:09 -0800 (PST)
 From: Omar Sandoval <osandov@osandov.com>
-Subject: [RFC PATCH 5/6] f2fs: add support for setting btime
-Date: Thu, 14 Feb 2019 02:00:12 -0800
-Message-Id: <a1e3edfb36b1cc732aa1f6159343ce2562d118d3.1550136164.git.osandov@fb.com>
+Subject: [PATCH] generic: add a test for AT_UTIME_BTIME
+Date: Thu, 14 Feb 2019 02:00:14 -0800
+Message-Id: <c0d9cb0b181db011a3068fb96bb85e732f508b73.1550138186.git.osandov@fb.com>
 In-Reply-To: <cover.1550136164.git.osandov@fb.com>
 References: <cover.1550136164.git.osandov@fb.com>
 MIME-Version: 1.0
@@ -21,78 +21,142 @@ Cc: kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, 
 
 From: Omar Sandoval <osandov@fb.com>
 
-The f2fs inode format includes btime (under the name crtime) if the
-feature was enabled at mkfs time.
+Test that on filesystems supporting btime, the timestamp is updated as
+expected.
 
 Signed-off-by: Omar Sandoval <osandov@fb.com>
 ---
- fs/f2fs/file.c  | 19 +++++++++++++++----
- fs/f2fs/super.c |  2 +-
- 2 files changed, 16 insertions(+), 5 deletions(-)
+ common/rc             | 14 ++++++++++
+ tests/generic/526     | 64 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/526.out | 14 ++++++++++
+ tests/generic/group   |  1 +
+ 4 files changed, 93 insertions(+)
+ create mode 100755 tests/generic/526
+ create mode 100644 tests/generic/526.out
 
-diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-index bba56b39dcc5..6064d3e42987 100644
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@ -690,17 +690,23 @@ int f2fs_truncate(struct inode *inode)
- 	return 0;
+diff --git a/common/rc b/common/rc
+index b8ed1776..d2f43a21 100644
+--- a/common/rc
++++ b/common/rc
+@@ -3843,6 +3843,20 @@ _require_btime()
+ 	rm -f $TEST_DIR/test_creation_time
  }
  
-+static bool f2fs_inode_has_crtime(struct inode *inode)
++_require_utime_btime()
 +{
-+	struct f2fs_inode *ri;
-+
-+	return (f2fs_has_extra_attr(inode) &&
-+		f2fs_sb_has_inode_crtime(F2FS_I_SB(inode)) &&
-+		F2FS_FITS_IN_INODE(ri, F2FS_I(inode)->i_extra_isize, i_crtime));
++	_require_btime
++	_require_xfs_io_command utimes
++	testio=`$XFS_IO_PROG -f -c "utimes 0 0 0 0 0 0" "$TEST_DIR/$$.xfs_io" 2>&1`
++	echo $testio | grep -q "expected 4 arguments" && \
++		_notrun "xfs_io utimes btime support is missing"
++	echo $testio | grep -q "Operation not supported" && \
++		_notrun "updating inode creation time not supported by this filesystem"
++	echo $testio | grep -q "Invalid" && \
++		_notrun "updating inode creation time not supported by this kernel"
++	rm -f $testfile > /dev/null 2>&1
 +}
 +
- int f2fs_getattr(const struct path *path, struct kstat *stat,
- 		 u32 request_mask, unsigned int query_flags)
+ _require_scratch_btime()
  {
- 	struct inode *inode = d_inode(path->dentry);
- 	struct f2fs_inode_info *fi = F2FS_I(inode);
--	struct f2fs_inode *ri;
- 	unsigned int flags;
- 
--	if (f2fs_has_extra_attr(inode) &&
--			f2fs_sb_has_inode_crtime(F2FS_I_SB(inode)) &&
--			F2FS_FITS_IN_INODE(ri, fi->i_extra_isize, i_crtime)) {
-+	if (f2fs_inode_has_crtime(inode)) {
- 		stat->result_mask |= STATX_BTIME;
- 		stat->btime.tv_sec = fi->i_crtime.tv_sec;
- 		stat->btime.tv_nsec = fi->i_crtime.tv_nsec;
-@@ -770,6 +776,9 @@ int f2fs_setattr(struct dentry *dentry, struct iattr *attr)
- 	int err;
- 	bool size_changed = false;
- 
-+	if ((attr->ia_valid & ATTR_BTIME) && !f2fs_inode_has_crtime(inode))
-+		return -EOPNOTSUPP;
+ 	_require_scratch
+diff --git a/tests/generic/526 b/tests/generic/526
+new file mode 100755
+index 00000000..c2e47a27
+--- /dev/null
++++ b/tests/generic/526
+@@ -0,0 +1,64 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2019 Omar Sandoval.  All Rights Reserved.
++#
++# FS QA Test 526
++#
++# Test basic AT_UTIME_BTIME functionality.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
- 	if (unlikely(f2fs_cp_error(F2FS_I_SB(inode))))
- 		return -EIO;
- 
-@@ -848,6 +857,8 @@ int f2fs_setattr(struct dentry *dentry, struct iattr *attr)
- 	}
- 
- 	__setattr_copy(inode, attr);
-+	if (attr->ia_valid & ATTR_BTIME)
-+		F2FS_I(inode)->i_crtime = attr->ia_btime;
- 
- 	if (attr->ia_valid & ATTR_MODE) {
- 		err = posix_acl_chmod(inode, f2fs_get_inode_mode(inode));
-diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
-index c46a1d4318d4..e32070c8cb27 100644
---- a/fs/f2fs/super.c
-+++ b/fs/f2fs/super.c
-@@ -3485,7 +3485,7 @@ static struct file_system_type f2fs_fs_type = {
- 	.name		= "f2fs",
- 	.mount		= f2fs_mount,
- 	.kill_sb	= kill_f2fs_super,
--	.fs_flags	= FS_REQUIRES_DEV,
-+	.fs_flags	= FS_REQUIRES_DEV | FS_HAS_BTIME,
- };
- MODULE_ALIAS_FS("f2fs");
- 
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	rm -f "$TEST_DIR/$$"
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++_supported_fs generic
++_supported_os Linux
++_require_test
++_require_utime_btime
++
++SEC=683153828
++UTIME_NOW=$(((1 << 30) - 1))
++UTIME_OMIT=$(((1 << 30) - 2))
++
++touch "$TEST_DIR/$$"
++
++echo "Set btime"
++$XFS_IO_PROG -c "utimes 0 $UTIME_OMIT 0 $UTIME_OMIT $SEC 0" "$TEST_DIR/$$"
++$XFS_IO_PROG -c 'statx -r' "$TEST_DIR/$$" | grep btime
++
++echo "Set atime and mtime"
++$XFS_IO_PROG -c "utimes 0 $UTIME_NOW 0 $UTIME_NOW" "$TEST_DIR/$$"
++$XFS_IO_PROG -c 'statx -r' "$TEST_DIR/$$" | grep btime
++
++echo "Omit btime"
++$XFS_IO_PROG -c "utimes 0 $UTIME_NOW 0 $UTIME_NOW 0 $UTIME_OMIT" "$TEST_DIR/$$"
++$XFS_IO_PROG -c 'statx -r' "$TEST_DIR/$$" | grep btime
++
++echo "Cycle mount"
++_test_cycle_mount
++$XFS_IO_PROG -c 'statx -r' "$TEST_DIR/$$" | grep btime
++
++echo "Set btime to now"
++$XFS_IO_PROG -c "utimes 0 $UTIME_OMIT 0 $UTIME_OMIT 0 $UTIME_NOW" "$TEST_DIR/$$"
++# The timestamp changed, so this shouldn't output anything.
++$XFS_IO_PROG -c 'statx -r' "$TEST_DIR/$$" | grep -w "$SEC"
++
++status=0
++exit
+diff --git a/tests/generic/526.out b/tests/generic/526.out
+new file mode 100644
+index 00000000..f9ec18e9
+--- /dev/null
++++ b/tests/generic/526.out
+@@ -0,0 +1,14 @@
++QA output created by 526
++Set btime
++stat.btime.tv_sec = 683153828
++stat.btime.tv_nsec = 0
++Set atime and mtime
++stat.btime.tv_sec = 683153828
++stat.btime.tv_nsec = 0
++Omit btime
++stat.btime.tv_sec = 683153828
++stat.btime.tv_nsec = 0
++Cycle mount
++stat.btime.tv_sec = 683153828
++stat.btime.tv_nsec = 0
++Set btime to now
+diff --git a/tests/generic/group b/tests/generic/group
+index cfd003d3..2e0203fc 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -528,3 +528,4 @@
+ 523 auto quick attr
+ 524 auto quick
+ 525 auto quick rw
++526 auto quick
 -- 
 2.20.1
