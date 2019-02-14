@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:36915 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2438161AbfBNKBL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 05:01:11 -0500
-Received: by mail-pl1-f193.google.com with SMTP id b5so2911156plr.4
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 02:01:10 -0800 (PST)
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:37616 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2393498AbfBNKBA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 05:01:00 -0500
+Received: by mail-pf1-f194.google.com with SMTP id s22so2855312pfh.4
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 02:01:00 -0800 (PST)
 From: Omar Sandoval <osandov@osandov.com>
-Subject: [PATCH] utimensat2: document AT_UTIME_BTIME
-Date: Thu, 14 Feb 2019 02:00:15 -0800
-Message-Id: <4717a88b238f1f03272598295942ebe8f24c2939.1550138203.git.osandov@fb.com>
+Subject: [RFC PATCH 1/6] fs: add btime to struct iattr
+Date: Thu, 14 Feb 2019 02:00:08 -0800
+Message-Id: <338b960e32ae2bebcf45c738af42a979af112e12.1550136164.git.osandov@fb.com>
 In-Reply-To: <cover.1550136164.git.osandov@fb.com>
 References: <cover.1550136164.git.osandov@fb.com>
 MIME-Version: 1.0
@@ -21,73 +21,68 @@ Cc: kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, 
 
 From: Omar Sandoval <osandov@fb.com>
 
+Add btime as an attribute that can be updated through notify_change() if
+the filesystem supports it, which is indicated by FS_HAS_BTIME in
+file_system_type->fs_flags.
+
 Signed-off-by: Omar Sandoval <osandov@fb.com>
 ---
- man2/utimensat.2 | 38 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 37 insertions(+), 1 deletion(-)
+ fs/attr.c          | 6 ++++++
+ include/linux/fs.h | 4 ++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/man2/utimensat.2 b/man2/utimensat.2
-index d61b43e96..3b7c62181 100644
---- a/man2/utimensat.2
-+++ b/man2/utimensat.2
-@@ -211,7 +211,7 @@ is ignored.
- .PP
- The
- .I flags
--field is a bit mask that may be 0, or include the following constant,
-+field is a bit mask that may be 0, or include the following constants,
- defined in
- .IR <fcntl.h> :
- .TP
-@@ -220,6 +220,36 @@ If
- .I pathname
- specifies a symbolic link, then update the timestamps of the link,
- rather than the file to which it refers.
-+.TP
-+.B AT_UTIME_BTIME
-+Also update the file's "creation time" (\fIbtime\fP). If
-+.I times
-+is not NULL, then its length must be at least 3, and
-+.IR times [2]
-+specifies the new creation time. The
-+.I tv_nsec
-+field may be
-+.BR UTIME_NOW
-+or
-+.BR UTIME_OMIT ;
-+this has the same meaning as for the first two timestamps.
-+If
-+.I times
-+is NULL, then the creation time is set to the current time.
-+.IP
-+Not all filesystems store the file creation time; if a filesystem does not, an
-+error is returned. At least the following filesystems store the creation time:
-+.RS
-+.IP * 3
-+Btrfs
-+.IP *
-+ext4, if the filesystem was created with an inode size of at least 256
-+.IP *
-+F2FS, if the filesystem was created with the inode_crtime feature
-+.IP *
-+XFS, if the filesystem was created with the v5 format (i.e., with CRCs enabled)
-+.HP
-+Support for this flag was added in Linux 5.2.
- .SH RETURN VALUE
- On success,
- .BR utimensat ()
-@@ -359,6 +389,12 @@ or, one of the prefix components of
- .I pathname
- is not a directory.
- .TP
-+.B EOPNOTSUPP
-+.I flags
-+contains
-+.BR AT_UTIME_BTIME
-+but the filesystem does not store the file creation time.
-+.TP
- .B EPERM
- The caller attempted to change one or both timestamps to a value
- other than the current time,
+diff --git a/fs/attr.c b/fs/attr.c
+index d22e8187477f..4831ef479951 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -233,6 +233,10 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
+ 
+ 	WARN_ON_ONCE(!inode_is_locked(inode));
+ 
++	if ((ia_valid & ATTR_BTIME) &&
++	    !(inode->i_sb->s_type->fs_flags & FS_HAS_BTIME))
++		return -EOPNOTSUPP;
++
+ 	if (ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) {
+ 		if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+ 			return -EPERM;
+@@ -267,6 +271,8 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
+ 		attr->ia_atime = now;
+ 	if (!(ia_valid & ATTR_MTIME_SET))
+ 		attr->ia_mtime = now;
++	if (!(ia_valid & ATTR_BTIME_SET))
++		attr->ia_btime = now;
+ 	if (ia_valid & ATTR_KILL_PRIV) {
+ 		error = security_inode_need_killpriv(dentry);
+ 		if (error < 0)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 29d8e2cfed0e..d66040f7740b 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -191,6 +191,8 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
+ #define ATTR_OPEN	(1 << 15) /* Truncating from open(O_TRUNC) */
+ #define ATTR_TIMES_SET	(1 << 16)
+ #define ATTR_TOUCH	(1 << 17)
++#define ATTR_BTIME	(1 << 18)
++#define ATTR_BTIME_SET	(1 << 19)
+ 
+ /*
+  * Whiteout is represented by a char device.  The following constants define the
+@@ -217,6 +219,7 @@ struct iattr {
+ 	struct timespec64 ia_atime;
+ 	struct timespec64 ia_mtime;
+ 	struct timespec64 ia_ctime;
++	struct timespec64 ia_btime;
+ 
+ 	/*
+ 	 * Not an attribute, but an auxiliary info for filesystems wanting to
+@@ -2172,6 +2175,7 @@ struct file_system_type {
+ #define FS_BINARY_MOUNTDATA	2
+ #define FS_HAS_SUBTYPE		4
+ #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
++#define FS_HAS_BTIME		16	/* Supports getting/setting btime. */
+ #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
+ 	struct dentry *(*mount) (struct file_system_type *, int,
+ 		       const char *, void *);
 -- 
 2.20.1
