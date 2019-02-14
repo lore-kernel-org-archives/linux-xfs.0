@@ -1,104 +1,141 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37342 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727115AbfBHQ37 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Feb 2019 11:29:59 -0500
-Date: Fri, 8 Feb 2019 08:29:51 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH 0/3]: Extreme fragmentation ahoy!
-Message-ID: <20190208162951.GN7991@magnolia>
-References: <20190207050813.24271-1-david@fromorbit.com>
- <20190207052114.GA7991@magnolia>
- <20190207053941.GL14116@dastard>
- <20190207155242.GE2880@bfoster>
- <20190208024730.GM14116@dastard>
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:40032 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2438164AbfBNKBM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 05:01:12 -0500
+Received: by mail-pf1-f193.google.com with SMTP id h1so2847510pfo.7
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 02:01:12 -0800 (PST)
+From: Omar Sandoval <osandov@osandov.com>
+Subject: [PATCH] xfs_io: add AT_UTIME_BTIME support
+Date: Thu, 14 Feb 2019 02:00:16 -0800
+Message-Id: <347edcff487b59d56844f51eb74a42220fac64c9.1550138137.git.osandov@fb.com>
+In-Reply-To: <cover.1550136164.git.osandov@fb.com>
+References: <cover.1550136164.git.osandov@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190208024730.GM14116@dastard>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+Cc: kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
 
-On Fri, Feb 08, 2019 at 01:47:30PM +1100, Dave Chinner wrote:
-> On Thu, Feb 07, 2019 at 10:52:43AM -0500, Brian Foster wrote:
-> > On Thu, Feb 07, 2019 at 04:39:41PM +1100, Dave Chinner wrote:
-> > > On Wed, Feb 06, 2019 at 09:21:14PM -0800, Darrick J. Wong wrote:
-> > > > On Thu, Feb 07, 2019 at 04:08:10PM +1100, Dave Chinner wrote:
-> > > > > Hi folks,
-> > > > > 
-> > > > > I've just finished analysing an IO trace from a application
-> > > > > generating an extreme filesystem fragmentation problem that started
-> > > > > with extent size hints and ended with spurious ENOSPC reports due to
-> > > > > massively fragmented files and free space. While the ENOSPC issue
-> > > > > looks to have previously been solved, I still wanted to understand
-> > > > > how the application had so comprehensively defeated extent size
-> > > > > hints as a method of avoiding file fragmentation.
-> ....
-> > > FWIW, I think the scope of the problem is quite widespread -
-> > > anything that does open/something/close repeatedly on a file that is
-> > > being written to with O_DSYNC or O_DIRECT appending writes will kill
-> > > the post-eof extent size hint allocated space. That's why I suspect
-> > > we need to think about not trimming by default and trying to
-> > > enumerating only the cases that need to trim eof blocks.
-> > > 
-> > 
-> > To further this point.. I think the eofblocks scanning stuff came long
-> > after the speculative preallocation code and associated release time
-> > post-eof truncate.
-> 
-> Yes, I cribed a bit of the history of the xfs_release() behaviour
-> on #xfs yesterday afternoon:
-> 
->  <djwong>	dchinner: feel free to ignore this until tomorrow if you want, but /me wonders why we'd want to free the eofblocks at close time at all, instead of waiting for inactivation/enospc/background reaper to do it?
->  <dchinner>	historic. People doing operations then complaining du didn't match ls
->  <dchinner>	stuff like that
->  <dchinner>	There used to be a open file cache in XFS - we'd know exactly when the last reference went away and trim it then
->  <dchinner>	but that went away when NFS and the dcache got smarter about file handle conversion
->  <dchinner>	(i.e. that's how we used to make nfs not suck)
->  <dchinner>	that's when we started doing work in ->release
->  <dchinner>	it was close enough to "last close" for most workloads it made no difference.
->  <dchinner>	Except for concurrent NFS writes into the same directory
->  <dchinner>	and now there's another pathological application that triggers problems
->  <dchinner>	The NFS exception was prior to having thebackground reaper
->  <dchinner>	as these things goes the background reaper is relatively recent functionality
->  <dchinner>	so perhaps we should just leave it to "inode cache expiry or background reaping" and not do it on close at al
-> 
-> > I think the background scanning was initially an
-> > enhancement to deal with things like the dirty release optimization
-> > leaving these blocks around longer and being able to free up this
-> > accumulated space when we're at -ENOSPC conditions.
-> 
-> Yes, amongst other things like slow writes keeping the file open
-> forever.....
-> 
-> > Now that we have the
-> > scanning mechanism in place (and a 5 minute default background scan,
-> > which really isn't all that long), it might be reasonable to just drop
-> > the release time truncate completely and only trim post-eof blocks via
-> > the bg scan or reclaim paths.
-> 
-> Yeah, that's kinda the question I'm asking here. What's the likely
-> impact of not trimming EOF blocks at least on close apart from
-> people complaining about df/ls not matching du?
-> 
-> I don't really care about that anymore because, well, reflink/dedupe
-> completely break any remaining assumption that du reported space
-> consumption is related to the file size (if sparse files wasn't
-> enough of a hint arlready)....
+From: Omar Sandoval <osandov@fb.com>
 
-Not to mention the deferred inactivation series tracks "space we could
-free if we did a bunch of inactivation work" so that we can lie to
-statfs and pretend we already did the work.  It wouldn't be hard to
-include speculative posteof blocks in that too.
+In order to test updating btime, make the utimes command optionally take
+the btime timestamp.
 
---D
+Signed-off-by: Omar Sandoval <osandov@fb.com>
+---
+ io/utimes.c       | 41 +++++++++++++++++++++++++++++++----------
+ man/man8/xfs_io.8 |  5 +++--
+ 2 files changed, 34 insertions(+), 12 deletions(-)
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/io/utimes.c b/io/utimes.c
+index 40117472..72ce68f3 100644
+--- a/io/utimes.c
++++ b/io/utimes.c
+@@ -4,11 +4,18 @@
+  * All Rights Reserved.
+  */
+ 
++#include <fcntl.h>
++#include <sys/syscall.h>
++
+ #include "command.h"
+ #include "input.h"
+ #include "init.h"
+ #include "io.h"
+ 
++#ifndef AT_UTIME_BTIME
++#define AT_UTIME_BTIME 0x8000
++#endif
++
+ static cmdinfo_t utimes_cmd;
+ 
+ static void
+@@ -16,9 +23,10 @@ utimes_help(void)
+ {
+ 	printf(_(
+ "\n"
+-" Update file atime and mtime of the current file with nansecond precision.\n"
++" Update file atime, mtime, and optionally btime of the current file with\n"
++" nansecond precision.\n"
+ "\n"
+-" Usage: utimes atime_sec atime_nsec mtime_sec mtime_nsec.\n"
++" Usage: utimes atime_sec atime_nsec mtime_sec mtime_nsec [btime_sec btime_nsec]\n"
+ " *_sec: Seconds elapsed since 1970-01-01 00:00:00 UTC.\n"
+ " *_nsec: Nanoseconds since the corresponding *_sec.\n"
+ "\n"));
+@@ -29,9 +37,13 @@ utimes_f(
+ 	int		argc,
+ 	char		**argv)
+ {
+-	struct timespec t[2];
++	struct timespec t[3];
++	int flags = 0;
+ 	int result;
+ 
++	if (argc == 6)
++		return command_usage(&utimes_cmd);
++
+ 	/* Get the timestamps */
+ 	result = timespec_from_string(argv[1], argv[2], &t[0]);
+ 	if (result) {
+@@ -43,13 +55,22 @@ utimes_f(
+ 		fprintf(stderr, "Bad value for mtime\n");
+ 		return 0;
+ 	}
+-
+-	/* Call futimens to update time. */
+-	if (futimens(file->fd, t)) {
+-		perror("futimens");
+-		return 0;
++	if (argc == 7) {
++		result = timespec_from_string(argv[5], argv[6], &t[2]);
++		if (result) {
++			fprintf(stderr, "Bad value for btime\n");
++			return 0;
++		}
++		flags |= AT_UTIME_BTIME;
+ 	}
+ 
++	/*
++	 * Use syscall() because the glibc wrapper for utimensat() disallows a
++	 * NULL pathname.
++	 */
++	if (syscall(SYS_utimensat, file->fd, NULL, t, flags))
++		perror("utimensat");
++
+ 	return 0;
+ }
+ 
+@@ -59,9 +80,9 @@ utimes_init(void)
+ 	utimes_cmd.name = "utimes";
+ 	utimes_cmd.cfunc = utimes_f;
+ 	utimes_cmd.argmin = 4;
+-	utimes_cmd.argmax = 4;
++	utimes_cmd.argmax = 6;
+ 	utimes_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	utimes_cmd.args = _("atime_sec atime_nsec mtime_sec mtime_nsec");
++	utimes_cmd.args = _("atime_sec atime_nsec mtime_sec mtime_nsec [btime_sec btime_nsec]");
+ 	utimes_cmd.oneline = _("Update file times of the current file");
+ 	utimes_cmd.help = utimes_help;
+ 
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index fbf50df5..dbf8098b 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -827,8 +827,9 @@ verbose output will be printed.
+ .RE
+ .PD
+ .TP
+-.BI utimes " atime_sec atime_nsec mtime_sec mtime_nsec"
+-The utimes command changes the atime and mtime of the current file.
++.BI utimes " atime_sec atime_nsec mtime_sec mtime_nsec [btime_sec btime_nsec]"
++The utimes command changes the atime, mtime, and optionally btime of the
++current file.
+ sec uses UNIX timestamp notation and is the seconds elapsed since
+ 1970-01-01 00:00:00 UTC.
+ nsec is the nanoseconds since the sec. This value needs to be in
+-- 
+2.20.1
