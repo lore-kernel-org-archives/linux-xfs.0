@@ -1,52 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:43008 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730784AbfBNP7m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 10:59:42 -0500
-Date: Thu, 14 Feb 2019 07:58:49 -0800
+Received: from userp2120.oracle.com ([156.151.31.85]:46008 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387585AbfBNQDv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 11:03:51 -0500
+Date: Thu, 14 Feb 2019 08:03:40 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/3] xfs: reserve blocks for ifree transaction during log
- recovery
-Message-ID: <20190214155849.GH32253@magnolia>
+Subject: Re: [PATCH 2/3] xfs: don't ever put nlink > 0 inodes on the unlinked
+ list
+Message-ID: <20190214160340.GI32253@magnolia>
 References: <155009104740.32028.193157199378698979.stgit@magnolia>
- <155009105963.32028.10768016263671369410.stgit@magnolia>
- <20190214081700.GC5961@infradead.org>
+ <155009105350.32028.13101526675073908023.stgit@magnolia>
+ <20190214081556.GB5961@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190214081700.GC5961@infradead.org>
+In-Reply-To: <20190214081556.GB5961@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Feb 14, 2019 at 12:17:00AM -0800, Christoph Hellwig wrote:
-> On Wed, Feb 13, 2019 at 12:50:59PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Log recovery frees all the inodes stored in the unlinked list, which can
-> > cause expansion of the free inode btree.  The ifree code skips block
-> > reservations if it thinks there's a per-AG space reservation, but we
-> > don't set up the reservation until after log recovery, which means that
-> > a finobt expansion blows up in xfs_trans_mod_sb when we exceed the
-> > transaction's block reservation.
-> > 
-> > To fix this, we set the "no finobt reservation" flag to true when we
-> > create the xfs_mount and only set it to false if we confirm that every
-> > AG had enough free space to put aside for the finobt.
-> > 
-> > While we're at it we change the flag name to be clearer about what it
-> > actually does.
+On Thu, Feb 14, 2019 at 12:15:56AM -0800, Christoph Hellwig wrote:
+> On Wed, Feb 13, 2019 at 12:50:53PM -0800, Darrick J. Wong wrote:
+> > +	if (tmpfile) {
+> > +		/*
+> > +		 * The VFS requires that any inode fed to d_tmpfile must have
+> > +		 * nlink == 1 so that it can decrement the nlink in d_tmpfile.
+> > +		 * However, we created the temp file with nlink == 0 because
+> > +		 * we're not allowed to put an inode with nlink > 0 on the
+> > +		 * unlinked list.  Therefore we have to set nlink to 1 so that
+> > +		 * d_tmpfile can immediately set it back to zero.
+> > +		 */
+> > +		set_nlink(inode, 1);
+> >  		d_tmpfile(dentry, inode);
+> > +	} else
 > 
-> Looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> But throwing in the field rename makes the patch way bigger and
-> not as obvious to understand.  Any reason it can't be split into
-> a separate patch?
+> At least btrtfs has to work around these d_tmpfile assumptions as well.
+> Instead of piling hacks over hacks I'd rather move the call to
+> inode_dec_link_count from d_tmpfile, which should lead to a saner
+> interface.
 
-Ok, I'll separate the two.
+I'm working on a bigger change to fix the d_tmpfile behavior, but that's
+a complex multi-fs change that may or may not make it for 5.1. :(
+
+In the meantime this prevents leaking inodes during unlink recovery by
+ensuring that we never put linked inodes on the unlink list so I would
+still like to get this one reviewed. :)
 
 --D
