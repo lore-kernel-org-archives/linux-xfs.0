@@ -1,16 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:37616 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2393498AbfBNKBA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 05:01:00 -0500
-Received: by mail-pf1-f194.google.com with SMTP id s22so2855312pfh.4
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 02:01:00 -0800 (PST)
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:39088 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2393093AbfBNKA7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 05:00:59 -0500
+Received: by mail-pl1-f193.google.com with SMTP id 101so2900728pld.6
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 02:00:59 -0800 (PST)
 From: Omar Sandoval <osandov@osandov.com>
-Subject: [RFC PATCH 1/6] fs: add btime to struct iattr
-Date: Thu, 14 Feb 2019 02:00:08 -0800
-Message-Id: <338b960e32ae2bebcf45c738af42a979af112e12.1550136164.git.osandov@fb.com>
-In-Reply-To: <cover.1550136164.git.osandov@fb.com>
-References: <cover.1550136164.git.osandov@fb.com>
+Subject: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
+Date: Thu, 14 Feb 2019 02:00:07 -0800
+Message-Id: <cover.1550136164.git.osandov@fb.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -21,68 +19,53 @@ Cc: kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, 
 
 From: Omar Sandoval <osandov@fb.com>
 
-Add btime as an attribute that can be updated through notify_change() if
-the filesystem supports it, which is indicated by FS_HAS_BTIME in
-file_system_type->fs_flags.
+Hi,
 
-Signed-off-by: Omar Sandoval <osandov@fb.com>
----
- fs/attr.c          | 6 ++++++
- include/linux/fs.h | 4 ++++
- 2 files changed, 10 insertions(+)
+Since statx was added in 4.11, userspace has had an interface for
+reading btime (file creation time), but no way to set it. This RFC patch
+series adds support for changing btime with utimensat(). Patch 1 adds
+the VFS infrastructure, patch 2 adds the support to utimensat() with a
+new flag, and the rest of the patches add filesystem support; I excluded
+CIFS for now because I don't have a CIFS setup to test it on.
 
-diff --git a/fs/attr.c b/fs/attr.c
-index d22e8187477f..4831ef479951 100644
---- a/fs/attr.c
-+++ b/fs/attr.c
-@@ -233,6 +233,10 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
- 
- 	WARN_ON_ONCE(!inode_is_locked(inode));
- 
-+	if ((ia_valid & ATTR_BTIME) &&
-+	    !(inode->i_sb->s_type->fs_flags & FS_HAS_BTIME))
-+		return -EOPNOTSUPP;
-+
- 	if (ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) {
- 		if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
- 			return -EPERM;
-@@ -267,6 +271,8 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
- 		attr->ia_atime = now;
- 	if (!(ia_valid & ATTR_MTIME_SET))
- 		attr->ia_mtime = now;
-+	if (!(ia_valid & ATTR_BTIME_SET))
-+		attr->ia_btime = now;
- 	if (ia_valid & ATTR_KILL_PRIV) {
- 		error = security_inode_need_killpriv(dentry);
- 		if (error < 0)
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 29d8e2cfed0e..d66040f7740b 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -191,6 +191,8 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
- #define ATTR_OPEN	(1 << 15) /* Truncating from open(O_TRUNC) */
- #define ATTR_TIMES_SET	(1 << 16)
- #define ATTR_TOUCH	(1 << 17)
-+#define ATTR_BTIME	(1 << 18)
-+#define ATTR_BTIME_SET	(1 << 19)
- 
- /*
-  * Whiteout is represented by a char device.  The following constants define the
-@@ -217,6 +219,7 @@ struct iattr {
- 	struct timespec64 ia_atime;
- 	struct timespec64 ia_mtime;
- 	struct timespec64 ia_ctime;
-+	struct timespec64 ia_btime;
- 
- 	/*
- 	 * Not an attribute, but an auxiliary info for filesystems wanting to
-@@ -2172,6 +2175,7 @@ struct file_system_type {
- #define FS_BINARY_MOUNTDATA	2
- #define FS_HAS_SUBTYPE		4
- #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
-+#define FS_HAS_BTIME		16	/* Supports getting/setting btime. */
- #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
- 	struct dentry *(*mount) (struct file_system_type *, int,
- 		       const char *, void *);
+Updating btime is useful for at least a couple of use cases:
+
+- Backup/restore programs (my motivation for this feature is btrfs send)
+- File servers which interoperate with operating systems that allow
+  updating file creation time, including Mac OS [1] and Windows [2]
+
+I've also included a man page patch, xfs_io support, and an xfstest.
+
+Thoughts on the implementation or the interface?
+
+Thanks!
+
+1: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/setattrlist.2.html
+2: https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-setfiletime
+
+Omar Sandoval (6):
+  fs: add btime to struct iattr
+  fs: add AT_UTIME_BTIME for utimensat()
+  Btrfs: add support for setting btime
+  ext4: add support for setting btime
+  f2fs: add support for setting btime
+  xfs: add support for setting btime
+
+ fs/attr.c                      |  6 +++
+ fs/btrfs/inode.c               |  2 +
+ fs/btrfs/super.c               |  4 +-
+ fs/ext4/inode.c                | 15 +++++-
+ fs/ext4/super.c                |  2 +-
+ fs/f2fs/file.c                 | 19 ++++++--
+ fs/f2fs/super.c                |  2 +-
+ fs/utimes.c                    | 86 +++++++++++++++++++++-------------
+ fs/xfs/libxfs/xfs_format.h     |  2 +-
+ fs/xfs/libxfs/xfs_log_format.h |  2 +-
+ fs/xfs/xfs_iops.c              | 11 ++++-
+ fs/xfs/xfs_super.c             |  2 +-
+ include/linux/fs.h             |  4 ++
+ include/uapi/linux/fcntl.h     |  2 +
+ 14 files changed, 111 insertions(+), 48 deletions(-)
+
 -- 
 2.20.1
