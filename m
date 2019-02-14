@@ -1,72 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:55804 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726129AbfBNTFQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 14:05:16 -0500
-Subject: [PATCH 2/2] xfs: reserve blocks for ifree transaction during log
- recovery
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Feb 2019 11:05:04 -0800
-Message-ID: <155017110489.6016.15023654256490874855.stgit@magnolia>
-In-Reply-To: <155017109378.6016.17031057745821704893.stgit@magnolia>
-References: <155017109378.6016.17031057745821704893.stgit@magnolia>
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:33487 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390551AbfBNUUX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 15:20:23 -0500
+Received: by mail-ot1-f68.google.com with SMTP id i20so12824786otl.0
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 12:20:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
+ <20190214134622.GG4525@dhcp22.suse.cz> <CAPcyv4gxFKBQ9eVdn+pNEzBXRfw6Qwfmu21H2i5uj-PyFmRAGQ@mail.gmail.com>
+ <20190214191013.GA3420@redhat.com> <CAPcyv4jLTdJyTOy715qvBL_j_deiLoBmu_thkUnFKZKMvZL6hA@mail.gmail.com>
+ <20190214200840.GB12668@bombadil.infradead.org>
+In-Reply-To: <20190214200840.GB12668@bombadil.infradead.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 14 Feb 2019 12:20:11 -0800
+Message-ID: <CAPcyv4hsDqvrV5yiDq8oWPuWb3WpuCEk_HB4qBxfiDpUwo75QQ@mail.gmail.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] The end of the DAX experiment
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Jerome Glisse <jglisse@redhat.com>, Michal Hocko <mhocko@kernel.org>, lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Feb 14, 2019 at 12:09 PM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> On Thu, Feb 14, 2019 at 11:31:24AM -0800, Dan Williams wrote:
+> > On Thu, Feb 14, 2019 at 11:10 AM Jerome Glisse <jglisse@redhat.com> wrote:
+> > > I am just again working on my struct page mapping patchset as well as
+> > > the generic page write protection that sits on top. I hope to be able
+> > > to post the v2 in couple weeks. You can always look at my posting last
+> > > year to see more details.
+> >
+> > Yes, I have that in mind as one of the contenders. However, it's not
+> > clear to me that its a suitable fit for filesystem-reflink. Others
+> > have floated the 'page proxy' idea, so it would be good to discuss the
+> > merits of the general approaches.
+>
+> ... and my preferred option of putting pfn entries in the page cache.
 
-Log recovery frees all the inodes stored in the unlinked list, which can
-cause expansion of the free inode btree.  The ifree code skips block
-reservations if it thinks there's a per-AG space reservation, but we
-don't set up the reservation until after log recovery, which means that
-a finobt expansion blows up in xfs_trans_mod_sb when we exceed the
-transaction's block reservation.
+Another option to include the discussion.
 
-To fix this, we set the "no finobt reservation" flag to true when we
-create the xfs_mount and only set it to false if we confirm that every
-AG had enough free space to put aside for the finobt.
+> Or is that what you meant by "page proxy"?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_fsops.c |    1 +
- fs/xfs/xfs_super.c |    7 +++++++
- 2 files changed, 8 insertions(+)
-
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index f3ef70c542e1..584648582ba7 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -533,6 +533,7 @@ xfs_fs_reserve_ag_blocks(
- 	int			error = 0;
- 	int			err2;
- 
-+	mp->m_finobt_nores = false;
- 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
- 		pag = xfs_perag_get(mp, agno);
- 		err2 = xfs_ag_resv_init(pag, NULL);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index c9097cb0b955..08033ac040d6 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1594,6 +1594,13 @@ xfs_mount_alloc(
- 	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
- 	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
- 	mp->m_kobj.kobject.kset = xfs_kset;
-+	/*
-+	 * We don't create the finobt per-ag space reservation until after log
-+	 * recovery, so we must set this to true so that an ifree transaction
-+	 * started during log recovery will not depend on space reservations
-+	 * for finobt expansion.
-+	 */
-+	mp->m_finobt_nores = true;
- 	return mp;
- }
- 
+Page proxy would be an object that a filesystem could allocate to
+point back to a single physical 'struct page *'. The proxy would
+contain an override for page->index.
