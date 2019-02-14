@@ -1,50 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36516 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727265AbfBLCRq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Feb 2019 21:17:46 -0500
-Subject: [PATCH 0/2] fstests: incore unlinked list
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 11 Feb 2019 18:17:42 -0800
-Message-ID: <154993786231.2062.8490515215533507881.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:52954 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391810AbfBNUIn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 15:08:43 -0500
+Date: Thu, 14 Feb 2019 12:08:40 -0800
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] The end of the DAX experiment
+Message-ID: <20190214200840.GB12668@bombadil.infradead.org>
+References: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
+ <20190214134622.GG4525@dhcp22.suse.cz>
+ <CAPcyv4gxFKBQ9eVdn+pNEzBXRfw6Qwfmu21H2i5uj-PyFmRAGQ@mail.gmail.com>
+ <20190214191013.GA3420@redhat.com>
+ <CAPcyv4jLTdJyTOy715qvBL_j_deiLoBmu_thkUnFKZKMvZL6hA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4jLTdJyTOy715qvBL_j_deiLoBmu_thkUnFKZKMvZL6hA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jerome Glisse <jglisse@redhat.com>, Michal Hocko <mhocko@kernel.org>, lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>
 
-Hi all,
+On Thu, Feb 14, 2019 at 11:31:24AM -0800, Dan Williams wrote:
+> On Thu, Feb 14, 2019 at 11:10 AM Jerome Glisse <jglisse@redhat.com> wrote:
+> > I am just again working on my struct page mapping patchset as well as
+> > the generic page write protection that sits on top. I hope to be able
+> > to post the v2 in couple weeks. You can always look at my posting last
+> > year to see more details.
+> 
+> Yes, I have that in mind as one of the contenders. However, it's not
+> clear to me that its a suitable fit for filesystem-reflink. Others
+> have floated the 'page proxy' idea, so it would be good to discuss the
+> merits of the general approaches.
 
-This series adds regression tests for the new XFS incore unlinked backref
-cache feature.
-
-The first patch teaches the XFS debug knob code to _notrun a test if the
-kernel supports debug knob discovery (via sysfs) but doesn't advertise
-the particular knob.
-
-The second patch adds four new regression tests.  The two generic/ tests
-exercise the creation and removal of O_TMPFILE files (or files which
-have been created, opened, unlinked, and then closed), which ensures
-that the filesystem can demonstrate that behavior without problems.  The
-two xfs/ tests examine the same behavior, but they deliberately skip the
-backref cache lookups to ensure that the old code still works.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=incore-unlinked-list
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=incore-unlinked-list
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=incore-unlinked-list
+... and my preferred option of putting pfn entries in the page cache.
+Or is that what you meant by "page proxy"?
