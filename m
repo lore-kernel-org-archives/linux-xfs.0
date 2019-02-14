@@ -1,14 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:39088 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2393093AbfBNKA7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 05:00:59 -0500
-Received: by mail-pl1-f193.google.com with SMTP id 101so2900728pld.6
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 02:00:59 -0800 (PST)
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:42868 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2438143AbfBNKBI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 05:01:08 -0500
+Received: by mail-pf1-f194.google.com with SMTP id n74so2842585pfi.9
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 02:01:07 -0800 (PST)
 From: Omar Sandoval <osandov@osandov.com>
-Subject: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
-Date: Thu, 14 Feb 2019 02:00:07 -0800
-Message-Id: <cover.1550136164.git.osandov@fb.com>
+Subject: [RFC PATCH 6/6] xfs: add support for setting btime
+Date: Thu, 14 Feb 2019 02:00:13 -0800
+Message-Id: <853e0dbdcd881e7dae13ada9dbb5924f6f5c4d9c.1550136164.git.osandov@fb.com>
+In-Reply-To: <cover.1550136164.git.osandov@fb.com>
+References: <cover.1550136164.git.osandov@fb.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -19,53 +21,92 @@ Cc: kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, 
 
 From: Omar Sandoval <osandov@fb.com>
 
-Hi,
+The XFS inode format includes btime (under the name crtime) in inode
+version 3. Also update the comments in libxfs to reflect that di_crtime
+can now change.
 
-Since statx was added in 4.11, userspace has had an interface for
-reading btime (file creation time), but no way to set it. This RFC patch
-series adds support for changing btime with utimensat(). Patch 1 adds
-the VFS infrastructure, patch 2 adds the support to utimensat() with a
-new flag, and the rest of the patches add filesystem support; I excluded
-CIFS for now because I don't have a CIFS setup to test it on.
-
-Updating btime is useful for at least a couple of use cases:
-
-- Backup/restore programs (my motivation for this feature is btrfs send)
-- File servers which interoperate with operating systems that allow
-  updating file creation time, including Mac OS [1] and Windows [2]
-
-I've also included a man page patch, xfs_io support, and an xfstest.
-
-Thoughts on the implementation or the interface?
-
-Thanks!
-
-1: https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/setattrlist.2.html
-2: https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-setfiletime
-
-Omar Sandoval (6):
-  fs: add btime to struct iattr
-  fs: add AT_UTIME_BTIME for utimensat()
-  Btrfs: add support for setting btime
-  ext4: add support for setting btime
-  f2fs: add support for setting btime
-  xfs: add support for setting btime
-
- fs/attr.c                      |  6 +++
- fs/btrfs/inode.c               |  2 +
- fs/btrfs/super.c               |  4 +-
- fs/ext4/inode.c                | 15 +++++-
- fs/ext4/super.c                |  2 +-
- fs/f2fs/file.c                 | 19 ++++++--
- fs/f2fs/super.c                |  2 +-
- fs/utimes.c                    | 86 +++++++++++++++++++++-------------
+Signed-off-by: Omar Sandoval <osandov@fb.com>
+---
  fs/xfs/libxfs/xfs_format.h     |  2 +-
  fs/xfs/libxfs/xfs_log_format.h |  2 +-
- fs/xfs/xfs_iops.c              | 11 ++++-
+ fs/xfs/xfs_iops.c              | 11 +++++++++--
  fs/xfs/xfs_super.c             |  2 +-
- include/linux/fs.h             |  4 ++
- include/uapi/linux/fcntl.h     |  2 +
- 14 files changed, 111 insertions(+), 48 deletions(-)
+ 4 files changed, 12 insertions(+), 5 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 9bb3c48843ec..ff6cb860ae77 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -884,9 +884,9 @@ typedef struct xfs_dinode {
+ 	__be64		di_flags2;	/* more random flags */
+ 	__be32		di_cowextsize;	/* basic cow extent size for file */
+ 	__u8		di_pad2[12];	/* more padding for future expansion */
++	xfs_timestamp_t	di_crtime;	/* time created */
+ 
+ 	/* fields only written to during inode creation */
+-	xfs_timestamp_t	di_crtime;	/* time created */
+ 	__be64		di_ino;		/* inode number */
+ 	uuid_t		di_uuid;	/* UUID of the filesystem */
+ 
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index e5f97c69b320..5cb35b3db870 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -415,9 +415,9 @@ struct xfs_log_dinode {
+ 	uint64_t	di_flags2;	/* more random flags */
+ 	uint32_t	di_cowextsize;	/* basic cow extent size for file */
+ 	uint8_t		di_pad2[12];	/* more padding for future expansion */
++	xfs_ictimestamp_t di_crtime;	/* time created */
+ 
+ 	/* fields only written to during inode creation */
+-	xfs_ictimestamp_t di_crtime;	/* time created */
+ 	xfs_ino_t	di_ino;		/* inode number */
+ 	uuid_t		di_uuid;	/* UUID of the filesystem */
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index f48ffd7a8d3e..20570f61ffeb 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -582,6 +582,10 @@ xfs_setattr_time(
+ 		inode->i_ctime = iattr->ia_ctime;
+ 	if (iattr->ia_valid & ATTR_MTIME)
+ 		inode->i_mtime = iattr->ia_mtime;
++	if (iattr->ia_valid & ATTR_BTIME) {
++		ip->i_d.di_crtime.t_sec = iattr->ia_btime.tv_sec;
++		ip->i_d.di_crtime.t_nsec = iattr->ia_btime.tv_nsec;
++	}
+ }
+ 
+ static int
+@@ -1025,11 +1029,14 @@ xfs_vn_setattr(
+ 	struct dentry		*dentry,
+ 	struct iattr		*iattr)
+ {
++	struct inode		*inode = d_inode(dentry);
++	struct xfs_inode	*ip = XFS_I(inode);
+ 	int			error;
+ 
++	if ((iattr->ia_valid & ATTR_BTIME) && ip->i_d.di_version != 3)
++		return -EOPNOTSUPP;
++
+ 	if (iattr->ia_valid & ATTR_SIZE) {
+-		struct inode		*inode = d_inode(dentry);
+-		struct xfs_inode	*ip = XFS_I(inode);
+ 		uint			iolock;
+ 
+ 		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index c9097cb0b955..54df86bc634b 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1860,7 +1860,7 @@ static struct file_system_type xfs_fs_type = {
+ 	.name			= "xfs",
+ 	.mount			= xfs_fs_mount,
+ 	.kill_sb		= kill_block_super,
+-	.fs_flags		= FS_REQUIRES_DEV,
++	.fs_flags		= FS_REQUIRES_DEV | FS_HAS_BTIME,
+ };
+ MODULE_ALIAS_FS("xfs");
+ 
 -- 
 2.20.1
