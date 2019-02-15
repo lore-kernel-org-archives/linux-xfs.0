@@ -1,188 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48360 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726146AbfBOQmG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Feb 2019 11:42:06 -0500
-Date: Fri, 15 Feb 2019 08:41:52 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 03/10] xfs: simplify the xfs_bmap_btree_to_extents
- calling conventions
-Message-ID: <20190215164152.GM32253@magnolia>
-References: <20190215144725.8894-1-hch@lst.de>
- <20190215144725.8894-4-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190215144725.8894-4-hch@lst.de>
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:45438 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728814AbfBOROT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Feb 2019 12:14:19 -0500
+Message-ID: <1550250855.31902.102.camel@acm.org>
+Subject: Re: [dm-devel] [PATCH V15 00/18] block: support multi-page bvec
+From: Bart Van Assche <bvanassche@acm.org>
+Date: Fri, 15 Feb 2019 09:14:15 -0800
+In-Reply-To: <c52b6a8b-d1d4-67ff-f81c-371d09cc6d5b@kernel.dk>
+References: <20190215111324.30129-1-ming.lei@redhat.com>
+         <c52b6a8b-d1d4-67ff-f81c-371d09cc6d5b@kernel.dk>
+Content-Type: text/plain; charset="UTF-7"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, linux-mm@kvack.org, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Darrick J . Wong" <darrick.wong@oracle.com>, Omar Sandoval <osandov@fb.com>, cluster-devel@redhat.com, linux-ext4@vger.kernel.org, Kent Overstreet <kent.overstreet@gmail.com>, Boaz Harrosh <ooo@electrozaur.com>, Gao Xiang <gaoxiang25@huawei.com>, Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, linux-bcache@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Dave Chinner <dchinner@redhat.com>, David Sterba <dsterba@suse.com>, linux-block@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Fri, Feb 15, 2019 at 03:47:18PM +0100, Christoph Hellwig wrote:
-> Move boilerplate code from the callers into xfs_bmap_btree_to_extents:
-> 
->  - exit early without failure if we don't need to convert to the
->    extent format
->  - assert that we have a btree cursor
->  - don't reinitialize the passed in logflags argument
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 78 ++++++++++++++--------------------------
->  1 file changed, 26 insertions(+), 52 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index f4a65330a2a9..7fa454f71f46 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -577,42 +577,44 @@ __xfs_bmap_add_free(
->   */
->  
->  /*
-> - * Transform a btree format file with only one leaf node, where the
-> - * extents list will fit in the inode, into an extents format file.
-> - * Since the file extents are already in-core, all we have to do is
-> - * give up the space for the btree root and pitch the leaf block.
-> + * Convert the inode format to extent format if it currently is in btree format,
-> + * but the extent list is small enough that it fits into the extent format.
-> + 8
+On Fri, 2019-02-15 at 08:49 -0700, Jens Axboe wrote:
++AD4 On 2/15/19 4:13 AM, Ming Lei wrote:
++AD4 +AD4 This patchset brings multi-page bvec into block layer:
++AD4 
++AD4 Applied, thanks Ming. Let's hope it sticks+ACE
 
-"*", not "8"; I'll fix that on import if I pull this series.
+Hi Jens and Ming,
 
-Otherwise looks ok to me,
+Test nvmeof-mp/002 fails with Jens' for-next branch from this morning.
+I have not yet tried to figure out which patch introduced the failure.
+Anyway, this is what I see in the kernel log for test nvmeof-mp/002:
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
++AFs  475.611363+AF0 BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
++AFs  475.621188+AF0 +ACM-PF error: +AFs-normal kernel read fault+AF0
++AFs  475.623148+AF0 PGD 0 P4D 0  
++AFs  475.624737+AF0 Oops: 0000 +AFsAIw-1+AF0 PREEMPT SMP KASAN
++AFs  475.626628+AF0 CPU: 1 PID: 277 Comm: kworker/1:1H Tainted: G    B             5.0.0-rc6-dbg+- +ACM-1
++AFs  475.630232+AF0 Hardware name: QEMU Standard PC (i440FX +- PIIX, 1996), BIOS 1.10.2-1 04/01/2014
++AFs  475.633855+AF0 Workqueue: kblockd blk+AF8-mq+AF8-requeue+AF8-work
++AFs  475.635777+AF0 RIP: 0010:+AF8AXw-blk+AF8-recalc+AF8-rq+AF8-segments+-0xbe/0x590
++AFs  475.670948+AF0 Call Trace:
++AFs  475.693515+AF0  blk+AF8-recalc+AF8-rq+AF8-segments+-0x2f/0x50
++AFs  475.695081+AF0  blk+AF8-insert+AF8-cloned+AF8-request+-0xbb/0x1c0
++AFs  475.701142+AF0  dm+AF8-mq+AF8-queue+AF8-rq+-0x3d1/0x770
++AFs  475.707225+AF0  blk+AF8-mq+AF8-dispatch+AF8-rq+AF8-list+-0x5fc/0xb10
++AFs  475.717137+AF0  blk+AF8-mq+AF8-sched+AF8-dispatch+AF8-requests+-0x256/0x300
++AFs  475.721767+AF0  +AF8AXw-blk+AF8-mq+AF8-run+AF8-hw+AF8-queue+-0xd6/0x180
++AFs  475.725920+AF0  +AF8AXw-blk+AF8-mq+AF8-delay+AF8-run+AF8-hw+AF8-queue+-0x25c/0x290
++AFs  475.727480+AF0  blk+AF8-mq+AF8-run+AF8-hw+AF8-queue+-0x119/0x1b0
++AFs  475.732019+AF0  blk+AF8-mq+AF8-run+AF8-hw+AF8-queues+-0x7b/0xa0
++AFs  475.733468+AF0  blk+AF8-mq+AF8-requeue+AF8-work+-0x2cb/0x300
++AFs  475.736473+AF0  process+AF8-one+AF8-work+-0x4f1/0xa40
++AFs  475.739424+AF0  worker+AF8-thread+-0x67/0x5b0
++AFs  475.741751+AF0  kthread+-0x1cf/0x1f0
++AFs  475.746034+AF0  ret+AF8-from+AF8-fork+-0x24/0x30
 
---D
+(gdb) list +ACo(+AF8AXw-blk+AF8-recalc+AF8-rq+AF8-segments+-0xbe)
+0xffffffff816a152e is in +AF8AXw-blk+AF8-recalc+AF8-rq+AF8-segments (block/blk-merge.c:366).
+361                                                  struct bio +ACo-bio)
+362     +AHs
+363             struct bio+AF8-vec bv, bvprv +AD0 +AHs NULL +AH0AOw
+364             int prev +AD0 0+ADs
+365             unsigned int seg+AF8-size, nr+AF8-phys+AF8-segs+ADs
+366             unsigned front+AF8-seg+AF8-size +AD0 bio-+AD4-bi+AF8-seg+AF8-front+AF8-size+ADs
+367             struct bio +ACo-fbio, +ACo-bbio+ADs
+368             struct bvec+AF8-iter iter+ADs
+369
+370             if (+ACE-bio)
 
-> + * Since the extents are already in-core, all we have to do is give up the space
-> + * for the btree root and pitch the leaf block.
->   */
->  STATIC int				/* error */
->  xfs_bmap_btree_to_extents(
-> -	xfs_trans_t		*tp,	/* transaction pointer */
-> -	xfs_inode_t		*ip,	/* incore inode pointer */
-> -	xfs_btree_cur_t		*cur,	/* btree cursor */
-> +	struct xfs_trans	*tp,	/* transaction pointer */
-> +	struct xfs_inode	*ip,	/* incore inode pointer */
-> +	struct xfs_btree_cur	*cur,	/* btree cursor */
->  	int			*logflagsp, /* inode logging flags */
->  	int			whichfork)  /* data or attr fork */
->  {
-> -	/* REFERENCED */
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_btree_block	*rblock = ifp->if_broot;
->  	struct xfs_btree_block	*cblock;/* child btree block */
->  	xfs_fsblock_t		cbno;	/* child block number */
->  	xfs_buf_t		*cbp;	/* child block's buffer */
->  	int			error;	/* error return value */
-> -	struct xfs_ifork	*ifp;	/* inode fork data */
-> -	xfs_mount_t		*mp;	/* mount point structure */
->  	__be64			*pp;	/* ptr to block address */
-> -	struct xfs_btree_block	*rblock;/* root btree block */
->  	struct xfs_owner_info	oinfo;
->  
-> -	mp = ip->i_mount;
-> -	ifp = XFS_IFORK_PTR(ip, whichfork);
-> +	/* check if we actually need the extent format first: */
-> +	if (!xfs_bmap_wants_extents(ip, whichfork))
-> +		return 0;
-> +
-> +	ASSERT(cur);
->  	ASSERT(whichfork != XFS_COW_FORK);
->  	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
->  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE);
-> -	rblock = ifp->if_broot;
->  	ASSERT(be16_to_cpu(rblock->bb_level) == 1);
->  	ASSERT(be16_to_cpu(rblock->bb_numrecs) == 1);
->  	ASSERT(xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0) == 1);
-> +
->  	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, rblock, 1, ifp->if_broot_bytes);
->  	cbno = be64_to_cpu(*pp);
-> -	*logflagsp = 0;
->  #ifdef DEBUG
->  	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp,
->  			xfs_btree_check_lptr(cur, cbno, 1));
-> @@ -635,7 +637,7 @@ xfs_bmap_btree_to_extents(
->  	ASSERT(ifp->if_broot == NULL);
->  	ASSERT((ifp->if_flags & XFS_IFBROOT) == 0);
->  	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
-> -	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
-> +	*logflagsp |= XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
->  	return 0;
->  }
->  
-> @@ -4424,19 +4426,10 @@ xfs_bmapi_write(
->  	}
->  	*nmap = n;
->  
-> -	/*
-> -	 * Transform from btree to extents, give it cur.
-> -	 */
-> -	if (xfs_bmap_wants_extents(ip, whichfork)) {
-> -		int		tmp_logflags = 0;
-> -
-> -		ASSERT(bma.cur);
-> -		error = xfs_bmap_btree_to_extents(tp, ip, bma.cur,
-> -			&tmp_logflags, whichfork);
-> -		bma.logflags |= tmp_logflags;
-> -		if (error)
-> -			goto error0;
-> -	}
-> +	error = xfs_bmap_btree_to_extents(tp, ip, bma.cur, &bma.logflags,
-> +			whichfork);
-> +	if (error)
-> +		goto error0;
->  
->  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE ||
->  	       XFS_IFORK_NEXTENTS(ip, whichfork) >
-> @@ -4574,13 +4567,7 @@ xfs_bmapi_remap(
->  	if (error)
->  		goto error0;
->  
-> -	if (xfs_bmap_wants_extents(ip, whichfork)) {
-> -		int		tmp_logflags = 0;
-> -
-> -		error = xfs_bmap_btree_to_extents(tp, ip, cur,
-> -			&tmp_logflags, whichfork);
-> -		logflags |= tmp_logflags;
-> -	}
-> +	error = xfs_bmap_btree_to_extents(tp, ip, cur, &logflags, whichfork);
->  
->  error0:
->  	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS)
-> @@ -5444,24 +5431,11 @@ __xfs_bunmapi(
->  		error = xfs_bmap_extents_to_btree(tp, ip, &cur, 0,
->  				&tmp_logflags, whichfork);
->  		logflags |= tmp_logflags;
-> -		if (error)
-> -			goto error0;
-> -	}
-> -	/*
-> -	 * transform from btree to extents, give it cur
-> -	 */
-> -	else if (xfs_bmap_wants_extents(ip, whichfork)) {
-> -		ASSERT(cur != NULL);
-> -		error = xfs_bmap_btree_to_extents(tp, ip, cur, &tmp_logflags,
-> +	} else {
-> +		error = xfs_bmap_btree_to_extents(tp, ip, cur, &logflags,
->  			whichfork);
-> -		logflags |= tmp_logflags;
-> -		if (error)
-> -			goto error0;
->  	}
-> -	/*
-> -	 * transform from extents to local?
-> -	 */
-> -	error = 0;
-> +
->  error0:
->  	/*
->  	 * Log everything.  Do this after conversion, there's no point in
-> -- 
-> 2.20.1
-> 
+Bart.
