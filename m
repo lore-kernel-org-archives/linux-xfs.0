@@ -1,329 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:47282 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729915AbfBOHXl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Feb 2019 02:23:41 -0500
-Date: Fri, 15 Feb 2019 18:23:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 0/3]: Extreme fragmentation ahoy!
-Message-ID: <20190215072332.GZ14116@dastard>
-References: <20190208024730.GM14116@dastard>
- <20190208123432.GB21317@bfoster>
- <20190212011333.GB23989@magnolia>
- <20190212114630.GA35242@bfoster>
- <20190212202150.GS14116@dastard>
- <20190213135021.GB42812@bfoster>
- <20190213222726.GT14116@dastard>
- <20190214130014.GA47851@bfoster>
- <20190214215124.GU14116@dastard>
- <20190215023520.GA50265@bfoster>
+Received: from mail-yb1-f195.google.com ([209.85.219.195]:35623 "EHLO
+        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732205AbfBOIEY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Feb 2019 03:04:24 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190215023520.GA50265@bfoster>
+References: <20190214234908.GA6474@magnolia>
+In-Reply-To: <20190214234908.GA6474@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 15 Feb 2019 10:04:12 +0200
+Message-ID: <CAOQ4uxho2AK7g-uhHykGaG6n+aqad-SaCTC6Z_EaA4Jn07tDSg@mail.gmail.com>
+Subject: Re: [PATCH] vfs: don't decrement i_nlink in d_tmpfile
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, dsterba@suse.com, Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, Theodore Tso <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, yuchao0@huawei.com, Hugh Dickins <hughd@google.com>, Christoph Hellwig <hch@infradead.org>, Richard Weinberger <richard@nod.at>, Artem Bityutskiy <dedekind1@gmail.com>, Adrian Hunter <adrian.hunter@intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, linux-mtd@lists.infradead.org, Linux MM <linux-mm@kvack.org>
 
-On Thu, Feb 14, 2019 at 09:35:21PM -0500, Brian Foster wrote:
-> On Fri, Feb 15, 2019 at 08:51:24AM +1100, Dave Chinner wrote:
-> > On Thu, Feb 14, 2019 at 08:00:14AM -0500, Brian Foster wrote:
-> > > On Thu, Feb 14, 2019 at 09:27:26AM +1100, Dave Chinner wrote:
-> > > > On Wed, Feb 13, 2019 at 08:50:22AM -0500, Brian Foster wrote:
-> > > > > On Wed, Feb 13, 2019 at 07:21:51AM +1100, Dave Chinner wrote:
-> > > > > > On Tue, Feb 12, 2019 at 06:46:31AM -0500, Brian Foster wrote:
-> > > > > > > On Mon, Feb 11, 2019 at 05:13:33PM -0800, Darrick J. Wong wrote:
-> > > > > > > > On Fri, Feb 08, 2019 at 07:34:33AM -0500, Brian Foster wrote:
-> > > > > > > For example, extent size hints just happen to skip delayed allocation.
-> > > > > > > I don't recall the exact history, but I don't think this was always the
-> > > > > > > case for extsz hints.
-> > > > > > 
-> > > > > > It wasn't, but extent size hints + delalloc never played nicely and
-> > > > > > could corrupt or expose stale data and caused all sorts of problems
-> > > > > > at ENOSPC because delalloc reservations are unaware of alignment
-> > > > > > requirements for extent size hints. Hence to make extent size hints
-> > > > > > work for buffered writes, I simply made them work the same way as
-> > > > > > direct writes (i.e. immediate allocation w/ unwritten extents).
-> > > > > > 
-> > > > > > > So would the close time eofb trim be as
-> > > > > > > problematic as for extsz hint files if the behavior of the latter
-> > > > > > > changed back to using delayed allocation?
-> > > > > > 
-> > > > > > Yes, but if it's a write-once file that doesn't matter. If it's
-> > > > > > write-many, then we'd retain the post-eof blocks...
-> > > > > > 
-> > > > > > > I think a patch for that was
-> > > > > > > proposed fairly recently, but it depended on delalloc -> unwritten
-> > > > > > > functionality which still had unresolved issues (IIRC).
-> > > > > > 
-> > > > > > *nod*
-> > > > > > 
-> > > > > > > From another angle, would a system that held files open for a
-> > > > > > > significant amount of time relative to a one-time write such that close
-> > > > > > > consistently occurred after writeback (and thus delalloc conversion) be
-> > > > > > > susceptible to the same level of free space fragmentation as shown
-> > > > > > > above?
-> > > > > > 
-> > > > > > If the file is held open for writing for a long time, we have to
-> > > > > > assume that they are going to write again (and again) so we should
-> > > > > > leave the EOF blocks there. If they are writing slower than the eofb
-> > > > > > gc, then there's nothing more we can really do in that case...
-> > > > > > 
-> > > > > 
-> > > > > I'm not necessarily sure that this condition is always a matter of
-> > > > > writing too slow. It very well may be true, but I'm curious if there are
-> > > > > parallel copy scenarios (perhaps under particular cpu/RAM configs)
-> > > > > where we could end up doing a large number of one time file writes and
-> > > > > not doing the release time trim until an underlying extent (with
-> > > > > post-eof blocks) has been converted in more cases than not.
-> > > > 
-> > > > I'm not sure I follow what sort of workload and situation you are
-> > > > describing here. Are you talking about the effect of an EOFB gc pass
-> > > > during ongoing writes?
-> > > > 
-> > > 
-> > > I'm not sure if it's an actual reproducible situation.. I'm just
-> > > wondering out loud if there are normal workloads that might still defeat
-> > > a one-time trim at release time. For example, copy enough files in
-> > > parallel such that writeback touches most of them before the copies
-> > > complete and we end up trimming physical blocks rather than delalloc
-> > > blocks.
-> > > 
-> > > This is not so much of a problem if those files are large, I think,
-> > > because then the preallocs and the resulting trimmed free space is on
-> > > the larger side as well. If we're copying a bunch of little files with
-> > > small preallocs, however, then we put ourselves in the pathological
-> > > situation shown in Darrick's test.
-> > > 
-> > > I was originally thinking about whether this could happen or not on a
-> > > highly parallel small file copy workload, but having thought about it a
-> > > bit more I think there is a more simple example. What about an untar
-> > > like workload that creates small files and calls fsync() before each fd
-> > > is released?
-> > 
-> > Which is the same as an O_SYNC write if it's the same fd, which
-> > means we'll trim allocated blocks on close. i.e. it's no different
-> > to the current behaviour.  If such files are written in parallel then,
-> > again, it is no different to the existing behaviour. i.e. it
-> > largely depends on the timing of allocation in writeback and EOF
-> > block clearing in close(). If close happens before the next
-> > allocation in that AG, then they'll pack because there's no EOF
-> > blocks that push out the new allocation.  If it's the other way
-> > around, we get some level of freespace fragmentation.
-> > 
-> 
-> I know it's the same as the current behavior. ;P I think we're talking
-> past eachother on this.
+On Fri, Feb 15, 2019 at 4:23 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> d_tmpfile was introduced to instantiate an inode in the dentry cache as
+> a temporary file.  This helper decrements the inode's nlink count and
+> dirties the inode, presumably so that filesystems could call new_inode
+> to create a new inode with nlink == 1 and then call d_tmpfile which will
+> decrement nlink.
+>
+> However, this doesn't play well with XFS, which needs to allocate,
+> initialize, and insert a tempfile inode on its unlinked list in a single
+> transaction.  In order to maintain referential integrity of the XFS
+> metadata, we cannot have an inode on the unlinked list with nlink >= 1.
+>
+> XFS and btrfs hack around d_tmpfile's behavior by creating the inode
+> with nlink == 0 and then incrementing it just prior to calling
+> d_tmpfile, anticipating that it will be reset to 0.
+>
+> Everywhere else outside of d_tmpfile, it appears that nlink updates and
+> persistence is the responsibility of individual filesystems.  Therefore,
+> move the nlink decrement out of d_tmpfile into the callers, and require
+> that callers only pass in inodes with nlink already set to 0.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/btrfs/inode.c  |    8 --------
+>  fs/dcache.c       |    8 ++++++--
+>  fs/ext2/namei.c   |    2 +-
+>  fs/ext4/namei.c   |    1 +
+>  fs/f2fs/namei.c   |    1 +
+>  fs/minix/namei.c  |    2 +-
+>  fs/ubifs/dir.c    |    1 +
+>  fs/udf/namei.c    |    2 +-
+>  fs/xfs/xfs_iops.c |   13 ++-----------
+>  mm/shmem.c        |    1 +
+>  10 files changed, 15 insertions(+), 24 deletions(-)
+>
+> diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+> index 5c349667c761..bd189fc50f83 100644
+> --- a/fs/btrfs/inode.c
+> +++ b/fs/btrfs/inode.c
+> @@ -10382,14 +10382,6 @@ static int btrfs_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
+>         if (ret)
+>                 goto out;
+>
+> -       /*
+> -        * We set number of links to 0 in btrfs_new_inode(), and here we set
+> -        * it to 1 because d_tmpfile() will issue a warning if the count is 0,
+> -        * through:
+> -        *
+> -        *    d_tmpfile() -> inode_dec_link_count() -> drop_nlink()
+> -        */
+> -       set_nlink(inode, 1);
+>         d_tmpfile(dentry, inode);
+>         unlock_new_inode(inode);
+>         mark_inode_dirty(inode);
+> diff --git a/fs/dcache.c b/fs/dcache.c
+> index aac41adf4743..5fb4ecce2589 100644
+> --- a/fs/dcache.c
+> +++ b/fs/dcache.c
+> @@ -3042,12 +3042,16 @@ void d_genocide(struct dentry *parent)
+>
+>  EXPORT_SYMBOL(d_genocide);
+>
+> +/*
+> + * Instantiate an inode in the dentry cache as a temporary file.  Callers must
+> + * ensure that @inode has a zero link count.
+> + */
+>  void d_tmpfile(struct dentry *dentry, struct inode *inode)
+>  {
+> -       inode_dec_link_count(inode);
+>         BUG_ON(dentry->d_name.name != dentry->d_iname ||
+>                 !hlist_unhashed(&dentry->d_u.d_alias) ||
+> -               !d_unlinked(dentry));
+> +               !d_unlinked(dentry) ||
+> +               inode->i_nlink != 0);
 
-Probably :P
+You've just promoted i_nlink filesystem accounting error (which
+are not that rare) from WARN_ON() to BUG_ON(), not to mention
+Linus' objection to any use of BUG_ON() at all.
 
-> What I'm saying is that the downside to the
-> current behavior is that a simple copy file -> fsync -> copy next file
-> workload fragments free space.
+!hlist_unhashed is anyway checked again in d_instantiate().
+!d_unlinked is not a reason to break the machine.
+The name check is really not a reason to break the machine.
+Can probably make tmp name code conditional to WARN_ON().
 
-Yes. But it's also one of the cases that "always release on first
-close" fixes.
-
-> Darrick demonstrated this better in his random size test with the
-> release time trim removed, but a simple loop to write one thousand 100k
-> files (xfs_io -fc "pwrite 0 100k" -c fsync ...) demonstrates similar
-> behavior:
-> 
-> # xfs_db -c "freesp -s" /dev/fedora_rhs-srv-19/tmp
->    from      to extents  blocks    pct
->       1       1      18      18   0.00
->      16      31       1      25   0.00
->      32      63       1      58   0.00
->  131072  262143     924 242197739  24.97
->  262144  524287       1  365696   0.04
-> 134217728 242588672       3 727292183  74.99
-
-That should not be leaving freespace fragments behind - it should be
-trimming the EOF blocks on close after fsync() and the next
-allocation should pack tightly.
-
-/me goes off to trace it because it's not doing what he knows it
-should be doing.
-
-Ngggh. Busy extent handling.
-
-Basically, the extent we trimmed is busy because it is a user data
-extent that has been freed and not yet committed (even though it was
-not used), so it gets trimmed out of the free space range that is
-allocated.
-
-IOWs, how we handle busy extents results in this behaviour, not the
-speculative prealloc which has already been removed and returned to
-the free space pool....
-
-> vs. the same test without the fsync:
-> 
-> # xfs_db -c "freesp -s" /dev/fedora_rhs-srv-19/tmp 
->    from      to extents  blocks    pct
->       1       1      16      16   0.00
->      16      31       1      20   0.00
-> 4194304 8388607       2 16752060   1.73
-> 134217728 242588672       4 953103627  98.27
-> 
-> Clearly there is an advantage to trimming before delalloc conversion.
-
-The advantage is in avoiding busy extents by trimming before
-physical allocation occurs. I think we need to fix the busy extent
-handling here, not the speculative prealloc...
-
-> Random thought: perhaps a one time trim at writeback (where writeback
-> would convert delaloc across eof) _or_ release time, whichever happens
-> first on an inode with preallocation, might help mitigate this problem.
-
-Not sure how you'd do that reliably - there's no serialisation with
-incoming writes, and no context as to what is changing EOF. Hence I
-don't know how we'd decide that trimming was required or not...
-
-> > I'm not looking for perfect here, just "better with no obvious
-> > regressions". We can't predict every situation, so if it deals with
-> > all the problems we've had reported and a few similar cases we don't
-> > curently handle as well, then we should run with that and not really
-> > worry about the cases that it (or the existing code) does not
-> > solve until we have evidence that those workloads exist and are
-> > causing real world problems. It's a difficult enough issue to reason
-> > about without making it more complex by playing "what about" games..
-> > 
-> 
-> That's fair, but we have had users run into this situation. The whole
-> sparse inodes thing is partially a workaround for side effects of this
-> problem (free space fragmentation being so bad we can't allocate
-> inodes). Granted, some of those users may have also been able to avoid
-> that problem with better fs usage/configuration.
-
-I think systems that required sparse inodes is orthogonal - those
-issues could be caused just with well packed small files and large
-inodes, and had nothing in common with the workload we've recently
-seen. Indeed, in the cases other than the specific small file
-workload gluster used to fragment free space to prevent inode
-allocation, we never got to the bottom of what caused the free space
-fragmentation. All we could do is make the fs more tolerant of
-freespace fragmentation.
-
-This time, we have direct evidence of what caused freespace
-fragmentation on this specific system. It was caused by the app
-doing something bizarre and we can extrapolate several similar
-behaviours from that workload.
-
-But beyond that, we're well into "whatabout" and "whatif" territory.
-
-> > > We still would trim it. The one time write case is essentially
-> > > unaffected because the only advantage of that hueristic is to trim eof
-> > > blocks before they are converted. If the eof blocks are real, the
-> > > release time heuristic has already failed (i.e., it hasn't provided any
-> > > benefit that background trim doesn't already provide).
-> > 
-> > No, all it means is that the blocks were allocated before the fd was
-> > closed, not that the release time heuristic failed. The release time
-> > heuristic is deciding what to do /after/ the writes have been
-> > completed, whatever the post-eof situation is. It /can't fail/ if it
-> > hasn't been triggered before physical allocation has been done, it
-> > can only decide what to do about those extents once it is called...
-> > 
-> 
-> Confused. By "failed," I mean we physically allocated blocks that were
-> never intended to be used.
-
-How can we know that are never intended to be used at writeback
-time?
-
-> This is basically referring to the negative
-> effect of delalloc conversion -> eof trim behavior on once written files
-> demonstrated above. If this negative effect didn't exist, we wouldn't
-> need the release time trim at all and could just rely on background
-> trim.
-
-We also cannot predict what the application intends. Hence we have
-heuristics that trigger once the application signals that it is
-"done with this file". i.e. it has closed the fd.
-
-> > > I eventually realized that this
-> > > had other effects (i.e., one copy doing size updates vs. the other not
-> > > doing so) and just compared a fixed, full size (1G) preallocation with a
-> > > fixed 4k preallocation to reproduce the boost provided by the former.
-> > 
-> > That only matters for *writeback overhead*, not ingest efficiency.
-> > Indeed, using a preallocated extent:
-> > 
-> 
-> Not sure how we got into physical preallocation here. Assume any
-> reference to "preallocation" in this thread by me refers to post-eof
-> speculative preallocation. The above preallocation tweaks were
-> controlled in my tests via the allocsize mount option, not physical
-> block preallocation.
-
-I'm just using it to demonstrate the difference is in continually
-extending the delalloc extent in memory. I could have just done an
-overwrite - it's the same thing.
-
-> > > FWIW, much of this
-> > > discussion also makes me wonder how appropriate the current size limit
-> > > (64k) on preallocation is for today's filesystems and systems (e.g. RAM
-> > > availability), as opposed to something larger (on the order of hundreds
-> > > of MBs for example, perhaps 256-512MB).
-> > 
-> > RAM size is irrelevant. What matters is file size and the impact
-> > of allocation patterns on writeback IO patterns. i.e. the size limit
-> > is about optimising writeback, not preventing fragmentation or
-> > making more efficient use of memory, etc.
-> 
-> I'm just suggesting that the more RAM that is available, the more we're
-> able to write into cache before writeback starts and thus the larger
-> physical extents we're able to allocate independent of speculative
-> preallocation (perf issues notwithstanding).
-
-ISTR I looked at that years ago and couldn't get it to work
-reliably. It works well for initial ingest, but once the writes go
-on for long enough dirty throttling starts chopping ingest up in
-smaller and smaller chunks as it rotors writeback bandwidth around
-all the processes dirtying the page cache. This chunking happens
-regardless of the size of the file being written. And so the more
-processes that are dirtying the page cache, the smaller the file
-fragments get because each file gets a smaller amount of the overall
-writeback bandwidth each time it writeback occurs. i.e.
-fragmentation increases as memory pressure, load and concurrency
-increases, which are exactly the conditions we want to be avoiding
-fragmentation as much as possible...
-
-The only way I found to prevent this in fair and predictable
-manner is the auto-grow algorithm we have now.  There's very few
-real world corner cases where it break down, so we do not need
-fundamental changes here. We've found one corner case where it is
-defeated, so let's address that corner case with the minimal change
-that is necessary but otherwise leave the underlying algorithm
-alone so we can observe the loner term effects of the tweak we
-need to make....
-
-> > i.e. when we have lots of small files, we want writeback to pack
-> > them so we get multiple-file sequentialisation of the write stream -
-> > this makes things like untarring a kernel tarball (which is a large
-> > number of small files) a sequential write workload rather than a
-> > seek-per-individual-file-write workload. That make a massive
-> > difference to performance on spinning disks, and that's what the 64k
-> > threshold (and post-EOF block removal on close for larger files)
-> > tries to preserve.
-> 
-> Sure, but what's the downside to increasing that threshold to even
-> something on the order of MBs? Wouldn't that at least help us leave
-> larger free extents around in those workloads/patterns that do fragment
-> free space?
-
-Because even for files in th the "few MB" size, worst case
-fragmentation is thousands of extents and IO performance that
-absolutely sucks. Especially on RAID5/6 devices. We have to ensure
-file fragmentation at it's worst does not affect filesystem
-throughput and that means in the general case less than ~1MB sized
-extents is just not acceptible even for smallish files....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Amir.
