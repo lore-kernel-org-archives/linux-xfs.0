@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53328 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49442 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727852AbfBOLOk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Feb 2019 06:14:40 -0500
+        id S2390773AbfBOLOw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Feb 2019 06:14:52 -0500
 From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V15 03/18] block: remove bvec_iter_rewind()
-Date: Fri, 15 Feb 2019 19:13:09 +0800
-Message-Id: <20190215111324.30129-4-ming.lei@redhat.com>
+Subject: [PATCH V15 04/18] block: introduce multi-page bvec helpers
+Date: Fri, 15 Feb 2019 19:13:10 +0800
+Message-Id: <20190215111324.30129-5-ming.lei@redhat.com>
 In-Reply-To: <20190215111324.30129-1-ming.lei@redhat.com>
 References: <20190215111324.30129-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,51 +15,108 @@ List-Id: xfs
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
 
-Commit 7759eb23fd980 ("block: remove bio_rewind_iter()") removes
-bio_rewind_iter(), then no one uses bvec_iter_rewind() any more,
-so remove it.
+This patch introduces helpers of 'mp_bvec_iter_*' for multi-page bvec
+support.
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
+The introduced helpers treate one bvec as real multi-page segment,
+which may include more than one pages.
+
+The existed helpers of bvec_iter_* are interfaces for supporting current
+bvec iterator which is thought as single-page by drivers, fs, dm and
+etc. These introduced helpers will build single-page bvec in flight, so
+this way won't break current bio/bvec users, which needn't any change.
+
+Follows some multi-page bvec background:
+
+- bvecs stored in bio->bi_io_vec is always multi-page style
+
+- bvec(struct bio_vec) represents one physically contiguous I/O
+  buffer, now the buffer may include more than one page after
+  multi-page bvec is supported, and all these pages represented
+  by one bvec is physically contiguous. Before multi-page bvec
+  support, at most one page is included in one bvec, we call it
+  single-page bvec.
+
+- .bv_page of the bvec points to the 1st page in the multi-page bvec
+
+- .bv_offset of the bvec is the offset of the buffer in the bvec
+
+The effect on the current drivers/filesystem/dm/bcache/...:
+
+- almost everyone supposes that one bvec only includes one single
+  page, so we keep the sp interface not changed, for example,
+  bio_for_each_segment() still returns single-page bvec
+
+- bio_for_each_segment_all() will return single-page bvec too
+
+- during iterating, iterator variable(struct bvec_iter) is always
+  updated in multi-page bvec style, and bvec_iter_advance() is kept
+  not changed
+
+- returned(copied) single-page bvec is built in flight by bvec
+  helpers from the stored multi-page bvec
+
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Omar Sandoval <osandov@fb.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- include/linux/bvec.h | 24 ------------------------
- 1 file changed, 24 deletions(-)
+ include/linux/bvec.h | 30 +++++++++++++++++++++++++++---
+ 1 file changed, 27 insertions(+), 3 deletions(-)
 
 diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-index 02c73c6aa805..ba0ae40e77c9 100644
+index ba0ae40e77c9..0ae729b1c9fe 100644
 --- a/include/linux/bvec.h
 +++ b/include/linux/bvec.h
-@@ -92,30 +92,6 @@ static inline bool bvec_iter_advance(const struct bio_vec *bv,
- 	return true;
- }
+@@ -23,6 +23,7 @@
+ #include <linux/kernel.h>
+ #include <linux/bug.h>
+ #include <linux/errno.h>
++#include <linux/mm.h>
  
--static inline bool bvec_iter_rewind(const struct bio_vec *bv,
--				     struct bvec_iter *iter,
--				     unsigned int bytes)
--{
--	while (bytes) {
--		unsigned len = min(bytes, iter->bi_bvec_done);
--
--		if (iter->bi_bvec_done == 0) {
--			if (WARN_ONCE(iter->bi_idx == 0,
--				      "Attempted to rewind iter beyond "
--				      "bvec's boundaries\n")) {
--				return false;
--			}
--			iter->bi_idx--;
--			iter->bi_bvec_done = __bvec_iter_bvec(bv, *iter)->bv_len;
--			continue;
--		}
--		bytes -= len;
--		iter->bi_size += len;
--		iter->bi_bvec_done -= len;
--	}
--	return true;
--}
--
- #define for_each_bvec(bvl, bio_vec, iter, start)			\
- 	for (iter = (start);						\
- 	     (iter).bi_size &&						\
+ /*
+  * was unsigned short, but we might as well be ready for > 64kB I/O pages
+@@ -50,16 +51,39 @@ struct bvec_iter {
+  */
+ #define __bvec_iter_bvec(bvec, iter)	(&(bvec)[(iter).bi_idx])
+ 
+-#define bvec_iter_page(bvec, iter)				\
++/* multi-page (mp_bvec) helpers */
++#define mp_bvec_iter_page(bvec, iter)				\
+ 	(__bvec_iter_bvec((bvec), (iter))->bv_page)
+ 
+-#define bvec_iter_len(bvec, iter)				\
++#define mp_bvec_iter_len(bvec, iter)				\
+ 	min((iter).bi_size,					\
+ 	    __bvec_iter_bvec((bvec), (iter))->bv_len - (iter).bi_bvec_done)
+ 
+-#define bvec_iter_offset(bvec, iter)				\
++#define mp_bvec_iter_offset(bvec, iter)				\
+ 	(__bvec_iter_bvec((bvec), (iter))->bv_offset + (iter).bi_bvec_done)
+ 
++#define mp_bvec_iter_page_idx(bvec, iter)			\
++	(mp_bvec_iter_offset((bvec), (iter)) / PAGE_SIZE)
++
++#define mp_bvec_iter_bvec(bvec, iter)				\
++((struct bio_vec) {						\
++	.bv_page	= mp_bvec_iter_page((bvec), (iter)),	\
++	.bv_len		= mp_bvec_iter_len((bvec), (iter)),	\
++	.bv_offset	= mp_bvec_iter_offset((bvec), (iter)),	\
++})
++
++/* For building single-page bvec in flight */
++ #define bvec_iter_offset(bvec, iter)				\
++	(mp_bvec_iter_offset((bvec), (iter)) % PAGE_SIZE)
++
++#define bvec_iter_len(bvec, iter)				\
++	min_t(unsigned, mp_bvec_iter_len((bvec), (iter)),		\
++	      PAGE_SIZE - bvec_iter_offset((bvec), (iter)))
++
++#define bvec_iter_page(bvec, iter)				\
++	nth_page(mp_bvec_iter_page((bvec), (iter)),		\
++		 mp_bvec_iter_page_idx((bvec), (iter)))
++
+ #define bvec_iter_bvec(bvec, iter)				\
+ ((struct bio_vec) {						\
+ 	.bv_page	= bvec_iter_page((bvec), (iter)),	\
 -- 
 2.9.5
