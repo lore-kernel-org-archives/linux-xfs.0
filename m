@@ -1,100 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk1-f193.google.com ([209.85.222.193]:33373 "EHLO
-        mail-qk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726012AbfBQU3T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Feb 2019 15:29:19 -0500
-Subject: Re: [LSF/MM TOPIC] The end of the DAX experiment
-References: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
-From: Ric Wheeler <ricwheeler@gmail.com>
-Message-ID: <3eb67ffa-76c9-aa66-d162-d4e209330f48@gmail.com>
-Date: Sun, 17 Feb 2019 15:29:14 -0500
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:6225 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725924AbfBOARC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 19:17:02 -0500
+Date: Fri, 15 Feb 2019 11:16:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
+Message-ID: <20190215001657.GY14116@dastard>
+References: <cover.1550136164.git.osandov@fb.com>
+ <20190214220626.GV14116@dastard>
+ <20190214231429.GE9819@vader>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190214231429.GE9819@vader>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>, lsf-pc@lists.linux-foundation.org
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Omar Sandoval <osandov@osandov.com>
+Cc: linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
 
-On 2/6/19 4:12 PM, Dan Williams wrote:
-> Before people get too excited this isn't a proposal to kill DAX. The
-> topic proposal is a discussion to resolve lingering open questions
-> that currently motivate ext4 and xfs to scream "EXPERIMENTAL" when the
-> current DAX facilities are enabled. The are 2 primary concerns to
-> resolve. Enumerate the remaining features/fixes, and identify a path
-> to implement it all without regressing any existing application use
-> cases.
->
-> An enumeration of remaining projects follows, please expand this list
-> if I missed something:
->
-> * "DAX" has no specific meaning by itself, users have 2 use cases for
-> "DAX" capabilities: userspace cache management via MAP_SYNC, and page
-> cache avoidance where the latter aspect of DAX has no current api to
-> discover / use it. The project is to supplement MAP_SYNC with a
-> MAP_DIRECT facility and MADV_SYNC / MADV_DIRECT to indicate the same
-> dynamically via madvise. Similar to O_DIRECT, MAP_DIRECT would be an
-> application hint to avoid / minimiize page cache usage, but no strict
-> guarantee like what MAP_SYNC provides.
+On Thu, Feb 14, 2019 at 03:14:29PM -0800, Omar Sandoval wrote:
+> On Fri, Feb 15, 2019 at 09:06:26AM +1100, Dave Chinner wrote:
+> > On Thu, Feb 14, 2019 at 02:00:07AM -0800, Omar Sandoval wrote:
+> > > From: Omar Sandoval <osandov@fb.com>
+> > > 
+> > > Hi,
+> > > 
+> > > Since statx was added in 4.11, userspace has had an interface for
+> > > reading btime (file creation time), but no way to set it. This RFC patch
+> > > series adds support for changing btime with utimensat(). Patch 1 adds
+> > > the VFS infrastructure, patch 2 adds the support to utimensat() with a
+> > > new flag, and the rest of the patches add filesystem support; I excluded
+> > > CIFS for now because I don't have a CIFS setup to test it on.
+> > > 
+> > > Updating btime is useful for at least a couple of use cases:
+> > > 
+> > > - Backup/restore programs (my motivation for this feature is btrfs send)
+> > > - File servers which interoperate with operating systems that allow
+> > >   updating file creation time, including Mac OS [1] and Windows [2]
+> > 
+> > So you're adding an interface that allows users to change the create
+> > time of files without needing any privileges?
+> 
+> I think it'd be reasonable to make this a privileged operation. I didn't
+> for this initial submission for a couple of reasons:
+> 
+> 1. The precedent on Mac OS and Windows is that this isn't a privileged
+>    operation.
 
+Don't really care about them. Interop file servers that support these
+operations on other OSs will need to be storing this info in xattrs
+because they have to work on filesystems that don't support btime.
 
-Sounds like a great topic to me. Having just gone through a new round of USENIX 
-paper reviews, it is interesting to see how many academic systems are being 
-pitched in this space (and most of them don't mention the kernel based xfs/ext4 
-with dax).
+> 2. I knew there would be different opinions on this either way I went.
 
-Regards,
+Yup.
 
-Ric
+> > Inode create time is forensic metadata in XFS  - information we use
+> > for sequence of event and inode lifetime analysis during examination
+> > of broken filesystem images and systems that have been broken into.
+> > Just because it's exposed to userspace via statx(), it doesn't mean
+> > that it is information that users should be allowed to change. i.e.
+> > allowing users to be able to change the create time on files makes
+> > it completely useless for the purpose it was added to XFS for...
+> > 
+> > And allowing root to change the create time doesn't really help,
+> > because once you've broken into a system, this makes it really easy
+> > to cover tracks
+> 
+> If the threat model is that the attacker has root, then they can
+> overwrite the timestamp on disk anyways, no?
 
+Modifying the block devicee under an active filesystem is fraught
+with danger, and there's no guarantee it will work if the metadata
+being modified is still active in memory. Corrupting the filesystem
+is a sure way to get noticed....
 
->
-> * Resolve all "if (dax) goto fail;" patterns in the kernel. Outside of
-> longterm-GUP (a topic in its own right) the projects here are
-> XFS-reflink and XFS-realtime-device support. DAX+reflink effectively
-> requires a given physical page to be mapped into two different inodes
-> at different (page->index) offsets. The challenge is to support
-> DAX-reflink without violating any existing application visible
-> semantics, the operating assumption / strawman to debate is that
-> experimental status is not blanket permission to go change existing
-> semantics in backwards incompatible ways.
->
-> * Deprecate, but not remove, the DAX mount option. Too many flows
-> depend on the option so it will never go away, but the facility is too
-> coarse. Provide an option to enable MAP_SYNC and
-> more-likely-to-do-something-useful-MAP_DIRECT on a per-directory
-> basis. The current proposal is to allow this property to only be
-> toggled while the directory is empty to avoid the complications of
-> racing page invalidation with new DAX mappings.
->
->
-> Secondary projects, i.e. important but I would submit are not in the
-> critical path to removing the "experimental" designation:
-> * Filesystem-integrated badblock management. Hook up the media error
-> notifications from libnvdimm to the filesystem to allow for operations
-> like "list files with media errors" and "enumerate bad file offsets on
-> a granulatiy smaller than a page". Another consideration along these
-> lines is to integrate machine-check-handling and dynamic error
-> notification into a filesystem interface. I've heard complaints that
-> the sigaction() based mechanism to receive BUS_MCEERR_* information,
-> while sufficient for the "System RAM" use case, is not precise enough
-> for the "Persistent Memory / DAX" use case where errors are repairable
-> and sub-page error information is useful.
->
-> * Userfaultfd for file-backed mappings and DAX
->
->
-> Ideally all the usual DAX, persistent memory, and GUP suspects could
-> be in the room to discuss this:
-> * Jan Kara
-> * Dave Chinner
-> * Christoph Hellwig
-> * Jeff Moyer
-> * Johannes Thumshirn
-> * Matthew Wilcox
-> * John Hubbard
-> * Jérôme Glisse
-> * MM folks for the reflink vs 'struct page' vs Xarray considerations
+> > (e.g. we can't find files that were created and
+> > unlinked during the break in window anymore) and lay false
+> > trails....
+> 
+> Fair point, although there's still ctime during the break-in window,
+
+Unless you're smart enough to know how to trigger S_NOCMTIME or
+FMODE_NOCMTIME....
+
+> which I assume you'd be looking for anyways since files modified during
+> the break-in window are also of interest.
+
+... and then that also can't be guaranteed. :/
+
+> I see a few options, none of which are particularly nice:
+> 
+> 1. Filesystems like XFS could choose not to support setting btime even
+>    if they support reading it.
+> 2. XFS could add a second, writeable btime which is used for
+>    statx/utimes when available (it would fit in di_pad2...).
+> 3. We could add a btime_writable sysctl/mount option/mkfs option.
+
+4. create time remains a read-only field, and btrfs grows its own
+special interface to twiddle it in btrfs-recv if it really is
+necessary.
+
+I'm still not convinced that even backup/restore should be doing this,
+because there's so much other metadata that is unique even on
+restored files that it doesn't really make any sense to me to lie
+about it being created in the past....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
