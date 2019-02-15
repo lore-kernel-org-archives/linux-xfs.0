@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:34944 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:34968 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726219AbfBOOr3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Feb 2019 09:47:29 -0500
+        with ESMTP id S1727493AbfBOOrg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Feb 2019 09:47:36 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/10] xfs: remove the io_type field from the writeback context and ioend
-Date: Fri, 15 Feb 2019 15:47:16 +0100
-Message-Id: <20190215144725.8894-2-hch@lst.de>
+Subject: [PATCH 04/10] xfs: factor out two helpers from xfs_bmapi_write
+Date: Fri, 15 Feb 2019 15:47:19 +0100
+Message-Id: <20190215144725.8894-5-hch@lst.de>
 In-Reply-To: <20190215144725.8894-1-hch@lst.de>
 References: <20190215144725.8894-1-hch@lst.de>
 MIME-Version: 1.0
@@ -15,447 +15,127 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>
 
-The io_type field contains what is basically a summary of information
-from the inode fork and the imap.  But we can just as easily use that
-information directly, simplifying a few bits here and there and
-improving the trace points.
+We want to be able to reuse them for the upcoming dedidcated delalloc
+convert routine.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c    | 93 ++++++++++++++++++++------------------------
- fs/xfs/xfs_aops.h    | 24 +-----------
- fs/xfs/xfs_iomap.c   |  8 ++--
- fs/xfs/xfs_reflink.c |  2 +-
- fs/xfs/xfs_trace.h   | 34 +++++++---------
- 5 files changed, 63 insertions(+), 98 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 78 ++++++++++++++++++++++------------------
+ 1 file changed, 44 insertions(+), 34 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 515532f45beb..a3fa60d1d2df 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -28,7 +28,7 @@
-  */
- struct xfs_writepage_ctx {
- 	struct xfs_bmbt_irec    imap;
--	unsigned int		io_type;
-+	int			fork;
- 	unsigned int		data_seq;
- 	unsigned int		cow_seq;
- 	struct xfs_ioend	*ioend;
-@@ -256,30 +256,20 @@ xfs_end_io(
- 	 */
- 	error = blk_status_to_errno(ioend->io_bio->bi_status);
- 	if (unlikely(error)) {
--		switch (ioend->io_type) {
--		case XFS_IO_COW:
-+		if (ioend->io_fork == XFS_COW_FORK)
- 			xfs_reflink_cancel_cow_range(ip, offset, size, true);
--			break;
--		}
--
- 		goto done;
- 	}
- 
- 	/*
--	 * Success:  commit the COW or unwritten blocks if needed.
-+	 * Success: commit the COW or unwritten blocks if needed.
- 	 */
--	switch (ioend->io_type) {
--	case XFS_IO_COW:
-+	if (ioend->io_fork == XFS_COW_FORK)
- 		error = xfs_reflink_end_cow(ip, offset, size);
--		break;
--	case XFS_IO_UNWRITTEN:
--		/* writeback should never update isize */
-+	else if (ioend->io_state == XFS_EXT_UNWRITTEN)
- 		error = xfs_iomap_write_unwritten(ip, offset, size, false);
--		break;
--	default:
-+	else
- 		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
--		break;
--	}
- 
- done:
- 	if (ioend->io_append_trans)
-@@ -294,7 +284,8 @@ xfs_end_bio(
- 	struct xfs_ioend	*ioend = bio->bi_private;
- 	struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
- 
--	if (ioend->io_type == XFS_IO_UNWRITTEN || ioend->io_type == XFS_IO_COW)
-+	if (ioend->io_fork == XFS_COW_FORK ||
-+	    ioend->io_state == XFS_EXT_UNWRITTEN)
- 		queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
- 	else if (ioend->io_append_trans)
- 		queue_work(mp->m_data_workqueue, &ioend->io_work);
-@@ -320,7 +311,7 @@ xfs_imap_valid(
- 	 * covers the offset. Be careful to check this first because the caller
- 	 * can revalidate a COW mapping without updating the data seqno.
- 	 */
--	if (wpc->io_type == XFS_IO_COW)
-+	if (wpc->fork == XFS_COW_FORK)
- 		return true;
- 
- 	/*
-@@ -350,7 +341,6 @@ xfs_map_blocks(
- 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset), end_fsb;
- 	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
- 	struct xfs_bmbt_irec	imap;
--	int			whichfork = XFS_DATA_FORK;
- 	struct xfs_iext_cursor	icur;
- 	int			error = 0;
- 
-@@ -400,6 +390,9 @@ xfs_map_blocks(
- 	if (cow_fsb != NULLFILEOFF && cow_fsb <= offset_fsb) {
- 		wpc->cow_seq = READ_ONCE(ip->i_cowfp->if_seq);
- 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+
-+		wpc->fork = XFS_COW_FORK;
-+
- 		/*
- 		 * Truncate can race with writeback since writeback doesn't
- 		 * take the iolock and truncate decreases the file size before
-@@ -412,11 +405,13 @@ xfs_map_blocks(
- 		 * will kill the contents anyway.
- 		 */
- 		if (offset > i_size_read(inode)) {
--			wpc->io_type = XFS_IO_HOLE;
-+			wpc->imap.br_blockcount = end_fsb - offset_fsb;
-+			wpc->imap.br_startoff = offset_fsb;
-+			wpc->imap.br_startblock = HOLESTARTBLOCK;
-+			wpc->imap.br_state = XFS_EXT_NORM;
- 			return 0;
- 		}
--		whichfork = XFS_COW_FORK;
--		wpc->io_type = XFS_IO_COW;
-+
- 		goto allocate_blocks;
- 	}
- 
-@@ -439,12 +434,14 @@ xfs_map_blocks(
- 	wpc->data_seq = READ_ONCE(ip->i_df.if_seq);
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 
-+	wpc->fork = XFS_DATA_FORK;
-+
- 	if (imap.br_startoff > offset_fsb) {
- 		/* landed in a hole or beyond EOF */
- 		imap.br_blockcount = imap.br_startoff - offset_fsb;
- 		imap.br_startoff = offset_fsb;
- 		imap.br_startblock = HOLESTARTBLOCK;
--		wpc->io_type = XFS_IO_HOLE;
-+		imap.br_state = XFS_EXT_NORM;
- 	} else {
- 		/*
- 		 * Truncate to the next COW extent if there is one.  This is the
-@@ -456,31 +453,24 @@ xfs_map_blocks(
- 		    cow_fsb < imap.br_startoff + imap.br_blockcount)
- 			imap.br_blockcount = cow_fsb - imap.br_startoff;
- 
--		if (isnullstartblock(imap.br_startblock)) {
--			/* got a delalloc extent */
--			wpc->io_type = XFS_IO_DELALLOC;
-+		/* got a delalloc extent? */
-+		if (isnullstartblock(imap.br_startblock))
- 			goto allocate_blocks;
--		}
--
--		if (imap.br_state == XFS_EXT_UNWRITTEN)
--			wpc->io_type = XFS_IO_UNWRITTEN;
--		else
--			wpc->io_type = XFS_IO_OVERWRITE;
- 	}
- 
- 	wpc->imap = imap;
--	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
-+	trace_xfs_map_blocks_found(ip, offset, count, wpc->fork, &imap);
- 	return 0;
- allocate_blocks:
--	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap,
--			whichfork == XFS_COW_FORK ?
-+	error = xfs_iomap_write_allocate(ip, wpc->fork, offset, &imap,
-+			wpc->fork == XFS_COW_FORK ?
- 					 &wpc->cow_seq : &wpc->data_seq);
- 	if (error)
- 		return error;
--	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
-+	ASSERT(wpc->fork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
- 	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
- 	wpc->imap = imap;
--	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
-+	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->fork, &imap);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 7fa454f71f46..a9c9bd39d822 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4194,6 +4194,44 @@ xfs_bmapi_convert_unwritten(
  	return 0;
  }
  
-@@ -505,7 +495,7 @@ xfs_submit_ioend(
- 	int			status)
- {
- 	/* Convert CoW extents to regular */
--	if (!status && ioend->io_type == XFS_IO_COW) {
-+	if (!status && ioend->io_fork == XFS_COW_FORK) {
- 		/*
- 		 * Yuk. This can do memory allocation, but is not a
- 		 * transactional operation so everything is done in GFP_KERNEL
-@@ -523,7 +513,8 @@ xfs_submit_ioend(
- 
- 	/* Reserve log space if we might write beyond the on-disk inode size. */
- 	if (!status &&
--	    ioend->io_type != XFS_IO_UNWRITTEN &&
-+	    (ioend->io_fork == XFS_COW_FORK ||
-+	     ioend->io_state != XFS_EXT_UNWRITTEN) &&
- 	    xfs_ioend_is_append(ioend) &&
- 	    !ioend->io_append_trans)
- 		status = xfs_setfilesize_trans_alloc(ioend);
-@@ -552,7 +543,8 @@ xfs_submit_ioend(
- static struct xfs_ioend *
- xfs_alloc_ioend(
- 	struct inode		*inode,
--	unsigned int		type,
-+	int			fork,
-+	xfs_exntst_t		state,
- 	xfs_off_t		offset,
- 	struct block_device	*bdev,
- 	sector_t		sector)
-@@ -566,7 +558,8 @@ xfs_alloc_ioend(
- 
- 	ioend = container_of(bio, struct xfs_ioend, io_inline_bio);
- 	INIT_LIST_HEAD(&ioend->io_list);
--	ioend->io_type = type;
-+	ioend->io_fork = fork;
-+	ioend->io_state = state;
- 	ioend->io_inode = inode;
- 	ioend->io_size = 0;
- 	ioend->io_offset = offset;
-@@ -627,13 +620,15 @@ xfs_add_to_ioend(
- 	sector = xfs_fsb_to_db(ip, wpc->imap.br_startblock) +
- 		((offset - XFS_FSB_TO_B(mp, wpc->imap.br_startoff)) >> 9);
- 
--	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
-+	if (!wpc->ioend ||
-+	    wpc->fork != wpc->ioend->io_fork ||
-+	    wpc->imap.br_state != wpc->ioend->io_state ||
- 	    sector != bio_end_sector(wpc->ioend->io_bio) ||
- 	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
- 		if (wpc->ioend)
- 			list_add(&wpc->ioend->io_list, iolist);
--		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset,
--				bdev, sector);
-+		wpc->ioend = xfs_alloc_ioend(inode, wpc->fork,
-+				wpc->imap.br_state, offset, bdev, sector);
- 	}
- 
- 	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff)) {
-@@ -742,7 +737,7 @@ xfs_writepage_map(
- 		error = xfs_map_blocks(wpc, inode, file_offset);
- 		if (error)
- 			break;
--		if (wpc->io_type == XFS_IO_HOLE)
-+		if (wpc->imap.br_startblock == HOLESTARTBLOCK)
- 			continue;
- 		xfs_add_to_ioend(inode, file_offset, page, iop, wpc, wbc,
- 				 &submit_list);
-@@ -937,9 +932,7 @@ xfs_vm_writepage(
- 	struct page		*page,
- 	struct writeback_control *wbc)
- {
--	struct xfs_writepage_ctx wpc = {
--		.io_type = XFS_IO_HOLE,
--	};
-+	struct xfs_writepage_ctx wpc = { };
- 	int			ret;
- 
- 	ret = xfs_do_writepage(page, wbc, &wpc);
-@@ -953,9 +946,7 @@ xfs_vm_writepages(
- 	struct address_space	*mapping,
- 	struct writeback_control *wbc)
- {
--	struct xfs_writepage_ctx wpc = {
--		.io_type = XFS_IO_HOLE,
--	};
-+	struct xfs_writepage_ctx wpc = { };
- 	int			ret;
- 
- 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index e5c23948a8ab..6c2615b83c5d 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -8,33 +8,13 @@
- 
- extern struct bio_set xfs_ioend_bioset;
- 
--/*
-- * Types of I/O for bmap clustering and I/O completion tracking.
-- *
-- * This enum is used in string mapping in xfs_trace.h; please keep the
-- * TRACE_DEFINE_ENUMs for it up to date.
-- */
--enum {
--	XFS_IO_HOLE,		/* covers region without any block allocation */
--	XFS_IO_DELALLOC,	/* covers delalloc region */
--	XFS_IO_UNWRITTEN,	/* covers allocated but uninitialized data */
--	XFS_IO_OVERWRITE,	/* covers already allocated extent */
--	XFS_IO_COW,		/* covers copy-on-write extent */
--};
--
--#define XFS_IO_TYPES \
--	{ XFS_IO_HOLE,			"hole" },	\
--	{ XFS_IO_DELALLOC,		"delalloc" },	\
--	{ XFS_IO_UNWRITTEN,		"unwritten" },	\
--	{ XFS_IO_OVERWRITE,		"overwrite" },	\
--	{ XFS_IO_COW,			"CoW" }
--
++static inline xfs_extlen_t
++xfs_bmapi_minleft(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	int			fork)
++{
++	if (tp && tp->t_firstblock != NULLFSBLOCK)
++		return 0;
++	if (XFS_IFORK_FORMAT(ip, fork) != XFS_DINODE_FMT_BTREE)
++		return 1;
++	return be16_to_cpu(XFS_IFORK_PTR(ip, fork)->if_broot->bb_level) + 1;
++}
++
++/*
++ * Log whatever the flags say, even if error.  Otherwise we might miss detecting
++ * a case where the data is changed, there's an error, and it's not logged so we
++ * don't shutdown when we should.  Don't bother logging extents/btree changes if
++ * we converted to the other format.
++ */
++static void
++xfs_bmapi_finish(
++	struct xfs_bmalloca	*bma,
++	int			whichfork,
++	int			error)
++{
++	if ((bma->logflags & xfs_ilog_fext(whichfork)) &&
++	    XFS_IFORK_FORMAT(bma->ip, whichfork) != XFS_DINODE_FMT_EXTENTS)
++		bma->logflags &= ~xfs_ilog_fext(whichfork);
++	else if ((bma->logflags & xfs_ilog_fbroot(whichfork)) &&
++		 XFS_IFORK_FORMAT(bma->ip, whichfork) != XFS_DINODE_FMT_BTREE)
++		bma->logflags &= ~xfs_ilog_fbroot(whichfork);
++
++	if (bma->logflags)
++		xfs_trans_log_inode(bma->tp, bma->ip, bma->logflags);
++	if (bma->cur)
++		xfs_btree_del_cursor(bma->cur, error);
++}
++
  /*
-  * Structure for buffered I/O completions.
-  */
- struct xfs_ioend {
- 	struct list_head	io_list;	/* next ioend in chain */
--	unsigned int		io_type;	/* delalloc / unwritten */
-+	int			io_fork;	/* inode fork written back */
-+	xfs_exntst_t		io_state;	/* extent state */
- 	struct inode		*io_inode;	/* file being written to */
- 	size_t			io_size;	/* size of the extent */
- 	xfs_off_t		io_offset;	/* offset in the file */
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 6af1d3ec0a9c..fd3aacd4bf02 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -575,7 +575,7 @@ xfs_file_iomap_begin_delay(
- 				goto out_unlock;
- 		}
+  * Map file blocks to filesystem blocks, and allocate blocks or convert the
+  * extent state if necessary.  Details behaviour is controlled by the flags
+@@ -4273,15 +4311,6 @@ xfs_bmapi_write(
  
--		trace_xfs_iomap_found(ip, offset, count, 0, &got);
-+		trace_xfs_iomap_found(ip, offset, count, XFS_DATA_FORK, &got);
- 		goto done;
- 	}
+ 	XFS_STATS_INC(mp, xs_blk_mapw);
  
-@@ -647,7 +647,7 @@ xfs_file_iomap_begin_delay(
- 	 * them out if the write happens to fail.
- 	 */
- 	iomap->flags |= IOMAP_F_NEW;
--	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
-+	trace_xfs_iomap_alloc(ip, offset, count, XFS_DATA_FORK, &got);
- done:
- 	if (isnullstartblock(got.br_startblock))
- 		got.br_startblock = DELAYSTARTBLOCK;
-@@ -1082,7 +1082,7 @@ xfs_file_iomap_begin(
- 		return error;
- 
- 	iomap->flags |= IOMAP_F_NEW;
--	trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
-+	trace_xfs_iomap_alloc(ip, offset, length, XFS_DATA_FORK, &imap);
- 
- out_finish:
- 	if (xfs_ipincount(ip) && (ip->i_itemp->ili_fsync_fields
-@@ -1098,7 +1098,7 @@ xfs_file_iomap_begin(
- out_found:
- 	ASSERT(nimaps);
- 	xfs_iunlock(ip, lockmode);
--	trace_xfs_iomap_found(ip, offset, length, 0, &imap);
-+	trace_xfs_iomap_found(ip, offset, length, XFS_DATA_FORK, &imap);
- 	goto out_finish;
- 
- out_unlock:
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index c5b4fa004ca4..2babc2cbe103 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1192,7 +1192,7 @@ xfs_reflink_remap_blocks(
- 			break;
- 		ASSERT(nimaps == 1);
- 
--		trace_xfs_reflink_remap_imap(src, srcoff, len, XFS_IO_OVERWRITE,
-+		trace_xfs_reflink_remap_imap(src, srcoff, len, XFS_DATA_FORK,
- 				&imap);
- 
- 		/* Translate imap into the destination file. */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index c83ce022a355..f1e18ae8a209 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1218,23 +1218,17 @@ DEFINE_EVENT(xfs_readpage_class, name,	\
- DEFINE_READPAGE_EVENT(xfs_vm_readpage);
- DEFINE_READPAGE_EVENT(xfs_vm_readpages);
- 
--TRACE_DEFINE_ENUM(XFS_IO_HOLE);
--TRACE_DEFINE_ENUM(XFS_IO_DELALLOC);
--TRACE_DEFINE_ENUM(XFS_IO_UNWRITTEN);
--TRACE_DEFINE_ENUM(XFS_IO_OVERWRITE);
--TRACE_DEFINE_ENUM(XFS_IO_COW);
+-	if (!tp || tp->t_firstblock == NULLFSBLOCK) {
+-		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
+-			bma.minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
+-		else
+-			bma.minleft = 1;
+-	} else {
+-		bma.minleft = 0;
+-	}
 -
- DECLARE_EVENT_CLASS(xfs_imap_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
--		 int type, struct xfs_bmbt_irec *irec),
--	TP_ARGS(ip, offset, count, type, irec),
-+		 int whichfork, struct xfs_bmbt_irec *irec),
-+	TP_ARGS(ip, offset, count, whichfork, irec),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_ino_t, ino)
- 		__field(loff_t, size)
- 		__field(loff_t, offset)
- 		__field(size_t, count)
--		__field(int, type)
-+		__field(int, whichfork)
- 		__field(xfs_fileoff_t, startoff)
- 		__field(xfs_fsblock_t, startblock)
- 		__field(xfs_filblks_t, blockcount)
-@@ -1245,33 +1239,33 @@ DECLARE_EVENT_CLASS(xfs_imap_class,
- 		__entry->size = ip->i_d.di_size;
- 		__entry->offset = offset;
- 		__entry->count = count;
--		__entry->type = type;
-+		__entry->whichfork = whichfork;
- 		__entry->startoff = irec ? irec->br_startoff : 0;
- 		__entry->startblock = irec ? irec->br_startblock : 0;
- 		__entry->blockcount = irec ? irec->br_blockcount : 0;
- 	),
- 	TP_printk("dev %d:%d ino 0x%llx size 0x%llx offset 0x%llx count %zd "
--		  "type %s startoff 0x%llx startblock %lld blockcount 0x%llx",
-+		  "fork %s startoff 0x%llx startblock %lld blockcount 0x%llx",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
- 		  __entry->size,
- 		  __entry->offset,
- 		  __entry->count,
--		  __print_symbolic(__entry->type, XFS_IO_TYPES),
-+		  __entry->whichfork == XFS_COW_FORK ? "cow" : "data",
- 		  __entry->startoff,
- 		  (int64_t)__entry->startblock,
- 		  __entry->blockcount)
- )
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+ 		error = xfs_iread_extents(tp, ip, whichfork);
+ 		if (error)
+@@ -4296,6 +4325,7 @@ xfs_bmapi_write(
+ 	bma.ip = ip;
+ 	bma.total = total;
+ 	bma.datatype = 0;
++	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
  
--#define DEFINE_IOMAP_EVENT(name)	\
-+#define DEFINE_IMAP_EVENT(name)	\
- DEFINE_EVENT(xfs_imap_class, name,	\
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,	\
--		 int type, struct xfs_bmbt_irec *irec),		\
--	TP_ARGS(ip, offset, count, type, irec))
--DEFINE_IOMAP_EVENT(xfs_map_blocks_found);
--DEFINE_IOMAP_EVENT(xfs_map_blocks_alloc);
--DEFINE_IOMAP_EVENT(xfs_iomap_alloc);
--DEFINE_IOMAP_EVENT(xfs_iomap_found);
-+		 int whichfork, struct xfs_bmbt_irec *irec),		\
-+	TP_ARGS(ip, offset, count, whichfork, irec))
-+DEFINE_IMAP_EVENT(xfs_map_blocks_found);
-+DEFINE_IMAP_EVENT(xfs_map_blocks_alloc);
-+DEFINE_IMAP_EVENT(xfs_iomap_alloc);
-+DEFINE_IMAP_EVENT(xfs_iomap_found);
+ 	/*
+ 	 * The delalloc flag means the caller wants to allocate the entire
+@@ -4434,32 +4464,12 @@ xfs_bmapi_write(
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE ||
+ 	       XFS_IFORK_NEXTENTS(ip, whichfork) >
+ 		XFS_IFORK_MAXEXT(ip, whichfork));
+-	error = 0;
++	xfs_bmapi_finish(&bma, whichfork, 0);
++	xfs_bmap_validate_ret(orig_bno, orig_len, orig_flags, orig_mval,
++		orig_nmap, *nmap);
++	return 0;
+ error0:
+-	/*
+-	 * Log everything.  Do this after conversion, there's no point in
+-	 * logging the extent records if we've converted to btree format.
+-	 */
+-	if ((bma.logflags & xfs_ilog_fext(whichfork)) &&
+-	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS)
+-		bma.logflags &= ~xfs_ilog_fext(whichfork);
+-	else if ((bma.logflags & xfs_ilog_fbroot(whichfork)) &&
+-		 XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)
+-		bma.logflags &= ~xfs_ilog_fbroot(whichfork);
+-	/*
+-	 * Log whatever the flags say, even if error.  Otherwise we might miss
+-	 * detecting a case where the data is changed, there's an error,
+-	 * and it's not logged so we don't shutdown when we should.
+-	 */
+-	if (bma.logflags)
+-		xfs_trans_log_inode(tp, ip, bma.logflags);
+-
+-	if (bma.cur) {
+-		xfs_btree_del_cursor(bma.cur, error);
+-	}
+-	if (!error)
+-		xfs_bmap_validate_ret(orig_bno, orig_len, orig_flags, orig_mval,
+-			orig_nmap, *nmap);
++	xfs_bmapi_finish(&bma, whichfork, error);
+ 	return error;
+ }
  
- DECLARE_EVENT_CLASS(xfs_simple_io_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count),
-@@ -3078,7 +3072,7 @@ DEFINE_EVENT(xfs_inode_irec_class, name, \
- DEFINE_INODE_EVENT(xfs_reflink_set_inode_flag);
- DEFINE_INODE_EVENT(xfs_reflink_unset_inode_flag);
- DEFINE_ITRUNC_EVENT(xfs_reflink_update_inode_size);
--DEFINE_IOMAP_EVENT(xfs_reflink_remap_imap);
-+DEFINE_IMAP_EVENT(xfs_reflink_remap_imap);
- TRACE_EVENT(xfs_reflink_remap_blocks_loop,
- 	TP_PROTO(struct xfs_inode *src, xfs_fileoff_t soffset,
- 		 xfs_filblks_t len, struct xfs_inode *dest,
 -- 
 2.20.1
