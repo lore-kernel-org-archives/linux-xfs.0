@@ -1,88 +1,24 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:35034 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726302AbfBOOrv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Feb 2019 09:47:51 -0500
+Received: from verein.lst.de ([213.95.11.211]:58390 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726139AbfBOOva (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Feb 2019 09:51:30 -0500
+Date: Fri, 15 Feb 2019 15:51:26 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/10] xfs: retry COW fork delalloc conversion when no
-Date: Fri, 15 Feb 2019 15:47:25 +0100
-Message-Id: <20190215144725.8894-11-hch@lst.de>
-In-Reply-To: <20190215144725.8894-1-hch@lst.de>
-References: <20190215144725.8894-1-hch@lst.de>
+Subject: Re: [PATCH V15 00/18] block: support multi-page bvec
+Message-ID: <20190215145126.GA16717@lst.de>
+References: <20190215111324.30129-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190215111324.30129-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
 
-While we can only truncate a block under the page lock for the current
-page, there is no high-level synchronization for moving extents from the
-COW to the data fork.  This means that for example we can have another
-thread doing a direct I/O completion that moves extents from the COW to
-the data fork race with writeback.  While this race is very hard to hit
-the always_cow seems to reproduce it reasonably well, and it also exists
-without that.  Because of that there is a chance that a delalloc
-conversion for the COW fork might not find any extents to convert.  In
-that case we should retry the whole block lookup and now find the blocks
-in the data fork.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index a6abb7125203..2ed8733eca49 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -334,7 +334,8 @@ xfs_imap_valid(
-  * extent that maps offset_fsb in wpc->imap.
-  *
-  * The current page is held locked so nothing could have removed the block
-- * backing offset_fsb.
-+ * backing offset_fsb, although it could have moved from the COW to the data
-+ * fork by another thread.
-  */
- static int
- xfs_convert_blocks(
-@@ -375,6 +376,7 @@ xfs_map_blocks(
- 	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
- 	struct xfs_bmbt_irec	imap;
- 	struct xfs_iext_cursor	icur;
-+	int			retries = 0;
- 	int			error = 0;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -404,6 +406,7 @@ xfs_map_blocks(
- 	 * into real extents.  If we return without a valid map, it means we
- 	 * landed in a hole and we skip the block.
- 	 */
-+retry:
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
- 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
-@@ -471,8 +474,19 @@ xfs_map_blocks(
- 	return 0;
- allocate_blocks:
- 	error = xfs_convert_blocks(wpc, ip, offset_fsb);
--	if (error)
-+	if (error) {
-+		/*
-+		 * If we failed to find the extent in the COW fork we might have
-+		 * raced with a COW to data fork conversion or truncate.
-+		 * Restart the lookup to catch the extent in the data fork for
-+		 * the former case, but prevent additional retries to avoid
-+		 * looping forever for the latter case.
-+		 */
-+		if (error == -EAGAIN && wpc->fork == XFS_COW_FORK && !retries++)
-+			goto retry;
-+		ASSERT(error != -EAGAIN);
- 		return error;
-+	}
- 
- 	/*
- 	 * Due to merging the return real extent might be larger than the
--- 
-2.20.1
+I still don't understand why mp_bvec_last_segment isn't simply
+called bvec_last_segment as there is no conflict.  But I don't
+want to hold this series up on that as there only are two users
+left and we can always just fix it up later.
