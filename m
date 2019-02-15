@@ -1,117 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f194.google.com ([209.85.166.194]:35168 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732116AbfBOPtf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Feb 2019 10:49:35 -0500
-Received: by mail-it1-f194.google.com with SMTP id v72so24430768itc.0
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Feb 2019 07:49:35 -0800 (PST)
-Subject: Re: [PATCH V15 00/18] block: support multi-page bvec
-References: <20190215111324.30129-1-ming.lei@redhat.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <c52b6a8b-d1d4-67ff-f81c-371d09cc6d5b@kernel.dk>
-Date: Fri, 15 Feb 2019 08:49:31 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:52550 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726597AbfBOP5A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Feb 2019 10:57:00 -0500
+Date: Fri, 15 Feb 2019 07:56:04 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] vfs: don't decrement i_nlink in d_tmpfile
+Message-ID: <20190215155604.GL32253@magnolia>
+References: <20190214234908.GA6474@magnolia>
+ <CAOQ4uxho2AK7g-uhHykGaG6n+aqad-SaCTC6Z_EaA4Jn07tDSg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20190215111324.30129-1-ming.lei@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxho2AK7g-uhHykGaG6n+aqad-SaCTC6Z_EaA4Jn07tDSg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>, dsterba@suse.com, Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, Theodore Tso <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, yuchao0@huawei.com, Hugh Dickins <hughd@google.com>, Christoph Hellwig <hch@infradead.org>, Richard Weinberger <richard@nod.at>, Artem Bityutskiy <dedekind1@gmail.com>, Adrian Hunter <adrian.hunter@intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, linux-mtd@lists.infradead.org, Linux MM <linux-mm@kvack.org>
 
-On 2/15/19 4:13 AM, Ming Lei wrote:
-> Hi,
+On Fri, Feb 15, 2019 at 10:04:12AM +0200, Amir Goldstein wrote:
+> On Fri, Feb 15, 2019 at 4:23 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> > d_tmpfile was introduced to instantiate an inode in the dentry cache as
+> > a temporary file.  This helper decrements the inode's nlink count and
+> > dirties the inode, presumably so that filesystems could call new_inode
+> > to create a new inode with nlink == 1 and then call d_tmpfile which will
+> > decrement nlink.
+> >
+> > However, this doesn't play well with XFS, which needs to allocate,
+> > initialize, and insert a tempfile inode on its unlinked list in a single
+> > transaction.  In order to maintain referential integrity of the XFS
+> > metadata, we cannot have an inode on the unlinked list with nlink >= 1.
+> >
+> > XFS and btrfs hack around d_tmpfile's behavior by creating the inode
+> > with nlink == 0 and then incrementing it just prior to calling
+> > d_tmpfile, anticipating that it will be reset to 0.
+> >
+> > Everywhere else outside of d_tmpfile, it appears that nlink updates and
+> > persistence is the responsibility of individual filesystems.  Therefore,
+> > move the nlink decrement out of d_tmpfile into the callers, and require
+> > that callers only pass in inodes with nlink already set to 0.
+> >
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/btrfs/inode.c  |    8 --------
+> >  fs/dcache.c       |    8 ++++++--
+> >  fs/ext2/namei.c   |    2 +-
+> >  fs/ext4/namei.c   |    1 +
+> >  fs/f2fs/namei.c   |    1 +
+> >  fs/minix/namei.c  |    2 +-
+> >  fs/ubifs/dir.c    |    1 +
+> >  fs/udf/namei.c    |    2 +-
+> >  fs/xfs/xfs_iops.c |   13 ++-----------
+> >  mm/shmem.c        |    1 +
+> >  10 files changed, 15 insertions(+), 24 deletions(-)
+> >
+> > diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+> > index 5c349667c761..bd189fc50f83 100644
+> > --- a/fs/btrfs/inode.c
+> > +++ b/fs/btrfs/inode.c
+> > @@ -10382,14 +10382,6 @@ static int btrfs_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
+> >         if (ret)
+> >                 goto out;
+> >
+> > -       /*
+> > -        * We set number of links to 0 in btrfs_new_inode(), and here we set
+> > -        * it to 1 because d_tmpfile() will issue a warning if the count is 0,
+> > -        * through:
+> > -        *
+> > -        *    d_tmpfile() -> inode_dec_link_count() -> drop_nlink()
+> > -        */
+> > -       set_nlink(inode, 1);
+> >         d_tmpfile(dentry, inode);
+> >         unlock_new_inode(inode);
+> >         mark_inode_dirty(inode);
+> > diff --git a/fs/dcache.c b/fs/dcache.c
+> > index aac41adf4743..5fb4ecce2589 100644
+> > --- a/fs/dcache.c
+> > +++ b/fs/dcache.c
+> > @@ -3042,12 +3042,16 @@ void d_genocide(struct dentry *parent)
+> >
+> >  EXPORT_SYMBOL(d_genocide);
+> >
+> > +/*
+> > + * Instantiate an inode in the dentry cache as a temporary file.  Callers must
+> > + * ensure that @inode has a zero link count.
+> > + */
+> >  void d_tmpfile(struct dentry *dentry, struct inode *inode)
+> >  {
+> > -       inode_dec_link_count(inode);
+> >         BUG_ON(dentry->d_name.name != dentry->d_iname ||
+> >                 !hlist_unhashed(&dentry->d_u.d_alias) ||
+> > -               !d_unlinked(dentry));
+> > +               !d_unlinked(dentry) ||
+> > +               inode->i_nlink != 0);
 > 
-> This patchset brings multi-page bvec into block layer:
+> You've just promoted i_nlink filesystem accounting error (which
+> are not that rare) from WARN_ON() to BUG_ON(), not to mention
+> Linus' objection to any use of BUG_ON() at all.
 > 
-> 1) what is multi-page bvec?
-> 
-> Multipage bvecs means that one 'struct bio_bvec' can hold multiple pages
-> which are physically contiguous instead of one single page used in linux
-> kernel for long time.
-> 
-> 2) why is multi-page bvec introduced?
-> 
-> Kent proposed the idea[1] first. 
-> 
-> As system's RAM becomes much bigger than before, and huge page, transparent
-> huge page and memory compaction are widely used, it is a bit easy now
-> to see physically contiguous pages from fs in I/O. On the other hand, from
-> block layer's view, it isn't necessary to store intermediate pages into bvec,
-> and it is enough to just store the physicallly contiguous 'segment' in each
-> io vector.
-> 
-> Also huge pages are being brought to filesystem and swap [2][6], we can
-> do IO on a hugepage each time[3], which requires that one bio can transfer
-> at least one huge page one time. Turns out it isn't flexiable to change
-> BIO_MAX_PAGES simply[3][5]. Multipage bvec can fit in this case very well.
-> As we saw, if CONFIG_THP_SWAP is enabled, BIO_MAX_PAGES can be configured
-> as much bigger, such as 512, which requires at least two 4K pages for holding
-> the bvec table.
-> 
-> With multi-page bvec:
-> 
-> - Inside block layer, both bio splitting and sg map can become more
-> efficient than before by just traversing the physically contiguous
-> 'segment' instead of each page.
-> 
-> - segment handling in block layer can be improved much in future since it
-> should be quite easy to convert multipage bvec into segment easily. For
-> example, we might just store segment in each bvec directly in future.
-> 
-> - bio size can be increased and it should improve some high-bandwidth IO
-> case in theory[4].
-> 
-> - there is opportunity in future to improve memory footprint of bvecs. 
-> 
-> 3) how is multi-page bvec implemented in this patchset?
-> 
-> Patch 1 ~ 3 parpares for supporting multi-page bvec. 
-> 
-> Patches 4 ~ 14 implement multipage bvec in block layer:
-> 
-> 	- put all tricks into bvec/bio/rq iterators, and as far as
-> 	drivers and fs use these standard iterators, they are happy
-> 	with multipage bvec
-> 
-> 	- introduce bio_for_each_bvec() to iterate over multipage bvec for splitting
-> 	bio and mapping sg
-> 
-> 	- keep current bio_for_each_segment*() to itereate over singlepage bvec and
-> 	make sure current users won't be broken; especailly, convert to this
-> 	new helper prototype in single patch 21 given it is bascially a mechanism
-> 	conversion
-> 
-> 	- deal with iomap & xfs's sub-pagesize io vec in patch 13
-> 
-> 	- enalbe multipage bvec in patch 14 
-> 
-> Patch 15 redefines BIO_MAX_PAGES as 256.
-> 
-> Patch 16 documents usages of bio iterator helpers.
-> 
-> Patch 17~18 kills NO_SG_MERGE.
-> 
-> These patches can be found in the following git tree:
-> 
-> 	git:  https://github.com/ming1/linux.git  v5.0-blk_mp_bvec_v14
-                                                                   ^^^
+> !hlist_unhashed is anyway checked again in d_instantiate().
+> !d_unlinked is not a reason to break the machine.
+> The name check is really not a reason to break the machine.
+> Can probably make tmp name code conditional to WARN_ON().
 
-v15?
+Fair enough, I'll remove the redundant checks and downgrade that to a
+WARN_ON, if nobody else objects....
 
-> Lots of test(blktest, xfstests, ltp io, ...) have been run with this patchset,
-> and not see regression.
-> 
-> Thanks Christoph for reviewing the early version and providing very good
-> suggestions, such as: introduce bio_init_with_vec_table(), remove another
-> unnecessary helpers for cleanup and so on.
-> 
-> Thanks Chritoph and Omar for reviewing V10/V11/V12, and provides lots of
-> helpful comments.
+--D
 
-Applied, thanks Ming. Let's hope it sticks!
-
--- 
-Jens Axboe
+> Thanks,
+> Amir.
