@@ -1,70 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:28706 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727266AbfBRCWs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Feb 2019 21:22:48 -0500
-Date: Mon, 18 Feb 2019 13:22:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [LSF/MM TOPIC] More async operations for file systems - async
- discard?
-Message-ID: <20190218022243.GC14116@dastard>
-References: <92ab41f7-35bc-0f56-056f-ed88526b8ea4@gmail.com>
- <20190217210948.GB14116@dastard>
- <46540876-c222-0889-ddce-44815dcaad04@gmail.com>
+Received: from mail-eopbgr30072.outbound.protection.outlook.com ([40.107.3.72]:17254
+        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726443AbfBOB5p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Feb 2019 20:57:45 -0500
+From: Hans van Kranenburg <Hans.van.Kranenburg@mendix.com>
+Subject: Re: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
+Date: Fri, 15 Feb 2019 01:57:39 +0000
+Message-ID: <1190dcc0-7054-72b4-2a88-33d0b97e332c@mendix.com>
+References: <cover.1550136164.git.osandov@fb.com>
+In-Reply-To: <cover.1550136164.git.osandov@fb.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <4FEA03B290DAE14C969E15CD47BE9B4F@eurprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <46540876-c222-0889-ddce-44815dcaad04@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-block@vger.kernel.org
+To: Omar Sandoval <osandov@osandov.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>
+Cc: "kernel-team@fb.com" <kernel-team@fb.com>, "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Sun, Feb 17, 2019 at 06:42:59PM -0500, Ric Wheeler wrote:
-> On 2/17/19 4:09 PM, Dave Chinner wrote:
-> >On Sun, Feb 17, 2019 at 03:36:10PM -0500, Ric Wheeler wrote:
-> >>One proposal for btrfs was that we should look at getting discard
-> >>out of the synchronous path in order to minimize the slowdown
-> >>associated with enabling discard at mount time. Seems like an
-> >>obvious win for "hint" like operations like discard.
-> >We already have support for that. blkdev_issue_discard() is
-> >synchornous, yes, but __blkdev_issue_discard() will only build the
-> >discard bio chain - it is up to the caller to submit and wait for it.
-> >
-> >Some callers (XFS, dm-thinp, nvmet, etc) use a bio completion to
-> >handle the discard IO completion, hence allowing async dispatch and
-> >processing of the discard chain without blocking the caller. Others
-> >(like ext4) simply call submit_bio_wait() to do wait synchronously
-> >on completion of the discard bio chain.
-> >
-> >>I do wonder where we stand now with the cost of the various discard
-> >>commands - how painful is it for modern SSD's?
-> >AIUI, it still depends on the SSD implementation, unfortunately.
-> 
-> I think the variability makes life really miserable for layers above it.
-
-Yup, that it does.
-
-> Might be worth constructing some tooling that we can use to validate
-> or shame vendors over
-
-That doesn't seem to work.
-
-> - testing things like a full device discard,
-> discard of fs block size and big chunks, discard against already
-> discarded, etc.
-
-We did that many years ago because discard on SSDs sucked:
-
-https://people.redhat.com/lczerner/discard/test_discard.html
-https://sourceforge.net/projects/test-discard/files/
-
-And, really, that didn't changed a thing - discard still sucks...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+SGksDQoNCk9uIDIvMTQvMTkgMTE6MDAgQU0sIE9tYXIgU2FuZG92YWwgd3JvdGU6DQo+IEZyb206
+IE9tYXIgU2FuZG92YWwgPG9zYW5kb3ZAZmIuY29tPg0KPiANCj4gU2luY2Ugc3RhdHggd2FzIGFk
+ZGVkIGluIDQuMTEsIHVzZXJzcGFjZSBoYXMgaGFkIGFuIGludGVyZmFjZSBmb3INCj4gcmVhZGlu
+ZyBidGltZSAoZmlsZSBjcmVhdGlvbiB0aW1lKSwgYnV0IG5vIHdheSB0byBzZXQgaXQuIFRoaXMg
+UkZDIHBhdGNoDQo+IHNlcmllcyBhZGRzIHN1cHBvcnQgZm9yIGNoYW5naW5nIGJ0aW1lIHdpdGgg
+dXRpbWVuc2F0KCkuIFBhdGNoIDEgYWRkcw0KPiB0aGUgVkZTIGluZnJhc3RydWN0dXJlLCBwYXRj
+aCAyIGFkZHMgdGhlIHN1cHBvcnQgdG8gdXRpbWVuc2F0KCkgd2l0aCBhDQo+IG5ldyBmbGFnLCBh
+bmQgdGhlIHJlc3Qgb2YgdGhlIHBhdGNoZXMgYWRkIGZpbGVzeXN0ZW0gc3VwcG9ydDsgSSBleGNs
+dWRlZA0KPiBDSUZTIGZvciBub3cgYmVjYXVzZSBJIGRvbid0IGhhdmUgYSBDSUZTIHNldHVwIHRv
+IHRlc3QgaXQgb24uDQo+IA0KPiBVcGRhdGluZyBidGltZSBpcyB1c2VmdWwgZm9yIGF0IGxlYXN0
+IGEgY291cGxlIG9mIHVzZSBjYXNlczoNCj4gDQo+IC0gQmFja3VwL3Jlc3RvcmUgcHJvZ3JhbXMg
+KG15IG1vdGl2YXRpb24gZm9yIHRoaXMgZmVhdHVyZSBpcyBidHJmcyBzZW5kKQ0KDQpDYW4geW91
+IGdpdmUgYW4gZXhhbXBsZSBvZiBzdWNoIHVzZWZ1bG5lc3M/IFdoYXQncyB0aGUgdGhpbmcgeW91
+IHJ1bg0KaW50byB0aGF0IHlvdSBjYW4ndCBkbyB3aXRob3V0IGhhdmluZyB0aGlzPw0KDQpZb3Ug
+Z3V5cyBhcmUgaGF2aW5nIGEgdGVjaG5pY2FsIGRpc2N1c3Npb24gYWJvdXQgJ2ltcGxlbWVudGF0
+aW9uIG9yIHRoZQ0KaW50ZXJmYWNlJyBpbiB0aGlzIHRocmVhZCwgd2hpbGUgSSdtIHdvbmRlcmlu
+ZyB3aGF0IEknbSBtaXNzaW5nIGFzIGJ0cmZzDQpzZW5kL3JlY2VpdmUgdXNlciBieSBub3QgaGF2
+aW5nIHRoaXMuIEkgbmV2ZXIgbmVlZGVkIGl0IGluIG15IHVzZSBjYXNlcy4NCg0KVGhlcmUncyB0
+d28gbGV2ZWxzIG9mIHVzZSBjYXNlIGhpZGRlbiBpbiB0aGUgYWJvdmUgbGluZS4gU28sIEkgZG9u
+J3QNCm1lYW4gd2h5IGJ0cmZzIHNlbmQvcmVjZWl2ZSBpcyB1c2VmdWwgKGl0IGlzLCBmb3IgcXVp
+Y2sgZWZmaWNpZW50DQpyZXBsaWNhdGlvbiBvZiBjaGFuZ2VzKSBidXQsIHdoYXQncyBhbiBpbXBv
+cnRhbnQgdXNlY2FzZSBmb3IgYnRpbWUgb24NCnRvcCBvZiB0aGF0Pw0KDQo+IC0gRmlsZSBzZXJ2
+ZXJzIHdoaWNoIGludGVyb3BlcmF0ZSB3aXRoIG9wZXJhdGluZyBzeXN0ZW1zIHRoYXQgYWxsb3cN
+Cj4gICB1cGRhdGluZyBmaWxlIGNyZWF0aW9uIHRpbWUsIGluY2x1ZGluZyBNYWMgT1MgWzFdIGFu
+ZCBXaW5kb3dzIFsyXQ0KPiANCj4gSSd2ZSBhbHNvIGluY2x1ZGVkIGEgbWFuIHBhZ2UgcGF0Y2gs
+IHhmc19pbyBzdXBwb3J0LCBhbmQgYW4geGZzdGVzdC4NCj4gDQo+IFRob3VnaHRzIG9uIHRoZSBp
+bXBsZW1lbnRhdGlvbiBvciB0aGUgaW50ZXJmYWNlPw0KPiANCj4gVGhhbmtzIQ0KPiANCj4gMTog
+aHR0cHM6Ly9kZXZlbG9wZXIuYXBwbGUuY29tL2xpYnJhcnkvYXJjaGl2ZS9kb2N1bWVudGF0aW9u
+L1N5c3RlbS9Db25jZXB0dWFsL01hblBhZ2VzX2lQaG9uZU9TL21hbjIvc2V0YXR0cmxpc3QuMi5o
+dG1sDQo+IDI6IGh0dHBzOi8vZG9jcy5taWNyb3NvZnQuY29tL2VuLXVzL3dpbmRvd3MvZGVza3Rv
+cC9hcGkvZmlsZWFwaS9uZi1maWxlYXBpLXNldGZpbGV0aW1lDQo+IA0KPiBPbWFyIFNhbmRvdmFs
+ICg2KToNCj4gICBmczogYWRkIGJ0aW1lIHRvIHN0cnVjdCBpYXR0cg0KPiAgIGZzOiBhZGQgQVRf
+VVRJTUVfQlRJTUUgZm9yIHV0aW1lbnNhdCgpDQo+ICAgQnRyZnM6IGFkZCBzdXBwb3J0IGZvciBz
+ZXR0aW5nIGJ0aW1lDQo+ICAgZXh0NDogYWRkIHN1cHBvcnQgZm9yIHNldHRpbmcgYnRpbWUNCj4g
+ICBmMmZzOiBhZGQgc3VwcG9ydCBmb3Igc2V0dGluZyBidGltZQ0KPiAgIHhmczogYWRkIHN1cHBv
+cnQgZm9yIHNldHRpbmcgYnRpbWUNCj4gDQo+ICBmcy9hdHRyLmMgICAgICAgICAgICAgICAgICAg
+ICAgfCAgNiArKysNCj4gIGZzL2J0cmZzL2lub2RlLmMgICAgICAgICAgICAgICB8ICAyICsNCj4g
+IGZzL2J0cmZzL3N1cGVyLmMgICAgICAgICAgICAgICB8ICA0ICstDQo+ICBmcy9leHQ0L2lub2Rl
+LmMgICAgICAgICAgICAgICAgfCAxNSArKysrKy0NCj4gIGZzL2V4dDQvc3VwZXIuYyAgICAgICAg
+ICAgICAgICB8ICAyICstDQo+ICBmcy9mMmZzL2ZpbGUuYyAgICAgICAgICAgICAgICAgfCAxOSAr
+KysrKystLQ0KPiAgZnMvZjJmcy9zdXBlci5jICAgICAgICAgICAgICAgIHwgIDIgKy0NCj4gIGZz
+L3V0aW1lcy5jICAgICAgICAgICAgICAgICAgICB8IDg2ICsrKysrKysrKysrKysrKysrKysrKy0t
+LS0tLS0tLS0tLS0NCj4gIGZzL3hmcy9saWJ4ZnMveGZzX2Zvcm1hdC5oICAgICB8ICAyICstDQo+
+ICBmcy94ZnMvbGlieGZzL3hmc19sb2dfZm9ybWF0LmggfCAgMiArLQ0KPiAgZnMveGZzL3hmc19p
+b3BzLmMgICAgICAgICAgICAgIHwgMTEgKysrKy0NCj4gIGZzL3hmcy94ZnNfc3VwZXIuYyAgICAg
+ICAgICAgICB8ICAyICstDQo+ICBpbmNsdWRlL2xpbnV4L2ZzLmggICAgICAgICAgICAgfCAgNCAr
+Kw0KPiAgaW5jbHVkZS91YXBpL2xpbnV4L2ZjbnRsLmggICAgIHwgIDIgKw0KPiAgMTQgZmlsZXMg
+Y2hhbmdlZCwgMTExIGluc2VydGlvbnMoKyksIDQ4IGRlbGV0aW9ucygtKQ0KPiANCg0KDQotLSAN
+CkhhbnMgdmFuIEtyYW5lbmJ1cmcNCg==
