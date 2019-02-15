@@ -1,82 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f193.google.com ([209.85.166.193]:40800 "EHLO
-        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730283AbfBOR7v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Feb 2019 12:59:51 -0500
-Received: by mail-it1-f193.google.com with SMTP id i2so25367250ite.5
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Feb 2019 09:59:50 -0800 (PST)
-Subject: Re: [dm-devel] [PATCH V15 00/18] block: support multi-page bvec
-References: <20190215111324.30129-1-ming.lei@redhat.com>
- <c52b6a8b-d1d4-67ff-f81c-371d09cc6d5b@kernel.dk>
- <1550250855.31902.102.camel@acm.org>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <18c711a9-ca13-885d-43cd-4d48e683a6a2@kernel.dk>
-Date: Fri, 15 Feb 2019 10:59:47 -0700
-MIME-Version: 1.0
-In-Reply-To: <1550250855.31902.102.camel@acm.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-eopbgr00045.outbound.protection.outlook.com ([40.107.0.45]:64320
+        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2388405AbfBOSZZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Feb 2019 13:25:25 -0500
+From: Hans van Kranenburg <Hans.van.Kranenburg@mendix.com>
+Subject: Re: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
+Date: Fri, 15 Feb 2019 18:25:18 +0000
+Message-ID: <d0f971c8-5b86-0f4f-7009-fdb199b7e820@mendix.com>
+References: <cover.1550136164.git.osandov@fb.com>
+ <1190dcc0-7054-72b4-2a88-33d0b97e332c@mendix.com>
+ <20190215053950.GF9819@vader>
+In-Reply-To: <20190215053950.GF9819@vader>
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <FAC717E3C0B1D14DA7B8988A46B27A8D@eurprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@redhat.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-mm@kvack.org, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Darrick J . Wong" <darrick.wong@oracle.com>, Omar Sandoval <osandov@fb.com>, cluster-devel@redhat.com, linux-ext4@vger.kernel.org, Kent Overstreet <kent.overstreet@gmail.com>, Boaz Harrosh <ooo@electrozaur.com>, Gao Xiang <gaoxiang25@huawei.com>, Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, linux-bcache@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Dave Chinner <dchinner@redhat.com>, David Sterba <dsterba@suse.com>, linux-block@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Omar Sandoval <osandov@osandov.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, "kernel-team@fb.com" <kernel-team@fb.com>, "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On 2/15/19 10:14 AM, Bart Van Assche wrote:
-> On Fri, 2019-02-15 at 08:49 -0700, Jens Axboe wrote:
->> On 2/15/19 4:13 AM, Ming Lei wrote:
->>> This patchset brings multi-page bvec into block layer:
->>
->> Applied, thanks Ming. Let's hope it sticks!
-> 
-> Hi Jens and Ming,
-> 
-> Test nvmeof-mp/002 fails with Jens' for-next branch from this morning.
-> I have not yet tried to figure out which patch introduced the failure.
-> Anyway, this is what I see in the kernel log for test nvmeof-mp/002:
-> 
-> [  475.611363] BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
-> [  475.621188] #PF error: [normal kernel read fault]
-> [  475.623148] PGD 0 P4D 0  
-> [  475.624737] Oops: 0000 [#1] PREEMPT SMP KASAN
-> [  475.626628] CPU: 1 PID: 277 Comm: kworker/1:1H Tainted: G    B             5.0.0-rc6-dbg+ #1
-> [  475.630232] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
-> [  475.633855] Workqueue: kblockd blk_mq_requeue_work
-> [  475.635777] RIP: 0010:__blk_recalc_rq_segments+0xbe/0x590
-> [  475.670948] Call Trace:
-> [  475.693515]  blk_recalc_rq_segments+0x2f/0x50
-> [  475.695081]  blk_insert_cloned_request+0xbb/0x1c0
-> [  475.701142]  dm_mq_queue_rq+0x3d1/0x770
-> [  475.707225]  blk_mq_dispatch_rq_list+0x5fc/0xb10
-> [  475.717137]  blk_mq_sched_dispatch_requests+0x256/0x300
-> [  475.721767]  __blk_mq_run_hw_queue+0xd6/0x180
-> [  475.725920]  __blk_mq_delay_run_hw_queue+0x25c/0x290
-> [  475.727480]  blk_mq_run_hw_queue+0x119/0x1b0
-> [  475.732019]  blk_mq_run_hw_queues+0x7b/0xa0
-> [  475.733468]  blk_mq_requeue_work+0x2cb/0x300
-> [  475.736473]  process_one_work+0x4f1/0xa40
-> [  475.739424]  worker_thread+0x67/0x5b0
-> [  475.741751]  kthread+0x1cf/0x1f0
-> [  475.746034]  ret_from_fork+0x24/0x30
-> 
-> (gdb) list *(__blk_recalc_rq_segments+0xbe)
-> 0xffffffff816a152e is in __blk_recalc_rq_segments (block/blk-merge.c:366).
-> 361                                                  struct bio *bio)
-> 362     {
-> 363             struct bio_vec bv, bvprv = { NULL };
-> 364             int prev = 0;
-> 365             unsigned int seg_size, nr_phys_segs;
-> 366             unsigned front_seg_size = bio->bi_seg_front_size;
-> 367             struct bio *fbio, *bbio;
-> 368             struct bvec_iter iter;
-> 369
-> 370             if (!bio)
-
-Just ran a few tests, and it also seems to cause about a 5% regression
-in per-core IOPS throughput. Prior to this work, I could get 1620K 4k
-rand read IOPS out of core, now I'm at ~1535K. The cycler stealer seems
-to be blk_queue_split() and blk_rq_map_sg().
-
--- 
-Jens Axboe
+T24gMi8xNS8xOSA2OjM5IEFNLCBPbWFyIFNhbmRvdmFsIHdyb3RlOg0KPiBPbiBGcmksIEZlYiAx
+NSwgMjAxOSBhdCAwMTo1NzozOUFNICswMDAwLCBIYW5zIHZhbiBLcmFuZW5idXJnIHdyb3RlOg0K
+Pj4gSGksDQo+Pg0KPj4gT24gMi8xNC8xOSAxMTowMCBBTSwgT21hciBTYW5kb3ZhbCB3cm90ZToN
+Cj4+PiBGcm9tOiBPbWFyIFNhbmRvdmFsIDxvc2FuZG92QGZiLmNvbT4NCj4+Pg0KPj4+IFNpbmNl
+IHN0YXR4IHdhcyBhZGRlZCBpbiA0LjExLCB1c2Vyc3BhY2UgaGFzIGhhZCBhbiBpbnRlcmZhY2Ug
+Zm9yDQo+Pj4gcmVhZGluZyBidGltZSAoZmlsZSBjcmVhdGlvbiB0aW1lKSwgYnV0IG5vIHdheSB0
+byBzZXQgaXQuIFRoaXMgUkZDIHBhdGNoDQo+Pj4gc2VyaWVzIGFkZHMgc3VwcG9ydCBmb3IgY2hh
+bmdpbmcgYnRpbWUgd2l0aCB1dGltZW5zYXQoKS4gUGF0Y2ggMSBhZGRzDQo+Pj4gdGhlIFZGUyBp
+bmZyYXN0cnVjdHVyZSwgcGF0Y2ggMiBhZGRzIHRoZSBzdXBwb3J0IHRvIHV0aW1lbnNhdCgpIHdp
+dGggYQ0KPj4+IG5ldyBmbGFnLCBhbmQgdGhlIHJlc3Qgb2YgdGhlIHBhdGNoZXMgYWRkIGZpbGVz
+eXN0ZW0gc3VwcG9ydDsgSSBleGNsdWRlZA0KPj4+IENJRlMgZm9yIG5vdyBiZWNhdXNlIEkgZG9u
+J3QgaGF2ZSBhIENJRlMgc2V0dXAgdG8gdGVzdCBpdCBvbi4NCj4+Pg0KPj4+IFVwZGF0aW5nIGJ0
+aW1lIGlzIHVzZWZ1bCBmb3IgYXQgbGVhc3QgYSBjb3VwbGUgb2YgdXNlIGNhc2VzOg0KPj4+DQo+
+Pj4gLSBCYWNrdXAvcmVzdG9yZSBwcm9ncmFtcyAobXkgbW90aXZhdGlvbiBmb3IgdGhpcyBmZWF0
+dXJlIGlzIGJ0cmZzIHNlbmQpDQo+Pg0KPj4gQ2FuIHlvdSBnaXZlIGFuIGV4YW1wbGUgb2Ygc3Vj
+aCB1c2VmdWxuZXNzPyBXaGF0J3MgdGhlIHRoaW5nIHlvdSBydW4NCj4+IGludG8gdGhhdCB5b3Ug
+Y2FuJ3QgZG8gd2l0aG91dCBoYXZpbmcgdGhpcz8NCj4gDQo+IFRoYXQgYm9pbHMgZG93biB0byB3
+aGF0J3MgdXNlZnVsIGFib3V0IGhhdmluZyB0aGUgZmlsZSBjcmVhdGlvbiB0aW1lLA0KPiBhbmQg
+aXQncyByZWFsbHkganVzdCBhbm90aGVyIHRpZGJpdCBvZiBpbmZvcm1hdGlvbiB3aGljaCB5b3Ug
+bWF5IG9yIG1heQ0KPiBub3QgY2FyZSBhYm91dC4gTWF5YmUgeW91IGhhdmUgYSBkb2N1bWVudCB0
+aGF0IHlvdSd2ZSBiZWVuIGVkaXRpbmcgZm9yDQo+IGF3aGlsZSwgYW5kIHlvdSB3YW50IHRvIGtu
+b3cgd2hlbiB5b3Ugc3RhcnRlZCB3b3JraW5nIG9uIGl0LiBPciwgeW91DQo+IHdhbnQgdG8ga25v
+dyB3aGVuIGEgdXNlciBjcmVhdGVkIHNvbWUgZGlyZWN0b3J5IHRoYXQgdGhleSBrZWVwIGFkZGlu
+Zw0KPiBmaWxlcyB0by4NCj4gDQo+IElmIHRoZSBmaWxlIGNyZWF0aW9uIHRpbWUgaXMgdXNlZnVs
+IHRvIHlvdSwgdGhlbiB5b3UgbGlrZWx5IHdhbnQgaXQNCj4gcHJlc2VydmVkIGlmIHlvdSBoYXZl
+IHRvIHJlc3RvcmUgZnJvbSBiYWNrdXBzLiBJZiBJIGhhZCB0byByZXN0b3JlIGZyb20NCj4gYmFj
+a3VwcyB5ZXN0ZXJkYXkgYW5kIEknbSB0cnlpbmcgdG8gZmlndXJlIG91dCB3aGVuIEkgc3RhcnRl
+ZCB0aGF0DQo+IGRvY3VtZW50LCBJIGRvbid0IGNhcmUgdGhhdCBJIHJlc3RvcmVkIHRoYXQgZmls
+ZSB5ZXN0ZXJkYXksIEkgd2FudCB0aGUNCj4gcmVhbCBjcmVhdGlvbiBkYXRlLg0KPiANCj4gSWYg
+eW91J3ZlIG5ldmVyIHdvbmRlcmVkIHdoZW4gYSBmaWxlIHdhcyBjcmVhdGVkLCB0aGVuIEknbSBz
+dXJlIHlvdQ0KPiB3b24ndCBjYXJlIHdoZXRoZXIgYnRyZnMgc2VuZC9yZWNlaXZlIHByZXNlcnZl
+cyBpdCA6KQ0KDQpUaGFua3MgZm9yIHRoZSBlbGFib3JhdGUgYW5zd2VyLiBJIHdhcyBqdXN0IGN1
+cmlvdXMgaWYgdGhpcyB3YXMgdG8gbWFrZQ0Kc2VuZCAibW9yZSBmZWF0dXJlIGNvbXBsZXRlIiBv
+ciBpZiB0aGVyZSB3YXMgc29tZXRoaW5nIGVsc2Ugc3BlY2lhbCB0bw0KaXQsIGFuZCBpdCBzZWVt
+cyB0byBiZSB0aGUgZmlyc3Qgb25lLiA7XQ0KDQpBbmQgZm9yIG15c2VsZiwgSSBtb3N0bHkgdHJl
+YXQgYnRyZnMgc2VuZC9yZWNlaXZlIGxpa2UgYSBpbXByb3ZlZA0KcmVwbGFjZW1lbnQgZm9yIHJz
+eW5jIGFuZCB1c3VhbGx5IGRvbid0IGNhcmUgdGhhdCBtdWNoIGFib3V0IGJ0aW1lICBpbmRlZWQu
+DQoNClRoYW5rcywNCi0tIA0KSGFucyB2YW4gS3JhbmVuYnVyZw0K
