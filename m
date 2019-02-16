@@ -1,199 +1,313 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59054 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726156AbfBPMFb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 Feb 2019 07:05:31 -0500
-Date: Sat, 16 Feb 2019 07:05:28 -0500
-From: Brian Foster <bfoster@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:54500 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729933AbfBPTyN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Feb 2019 14:54:13 -0500
+Date: Sat, 16 Feb 2019 11:54:01 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [linux-next:master 7512/8919]
  fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse: warning: incorrect type in
  argument 2 (different base types)
-Message-ID: <20190216120528.GA55854@bfoster>
+Message-ID: <20190216195401.GY32253@magnolia>
 References: <201902160410.WC4AmuSu%fengguang.wu@intel.com>
  <20190215225524.GE6503@magnolia>
+ <20190216120528.GA55854@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190215225524.GE6503@magnolia>
+In-Reply-To: <20190216120528.GA55854@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Feb 15, 2019 at 02:55:24PM -0800, Darrick J. Wong wrote:
-> [rip all the cc off]
-> 
-
-cc linux-xfs
-
-> On Sat, Feb 16, 2019 at 04:02:13AM +0800, kbuild test robot wrote:
-> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-> > head:   7a92eb7cc1dc4c63e3a2fa9ab8e3c1049f199249
-> > commit: b8f89801664f8413a88cf2c7539d1aeae07dd3c5 [7512/8919] xfs: distinguish between bnobt and cntbt magic values
-> > reproduce:
-> >         # apt-get install sparse
-> >         git checkout b8f89801664f8413a88cf2c7539d1aeae07dd3c5
-> >         make ARCH=x86_64 allmodconfig
-> >         make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
+On Sat, Feb 16, 2019 at 07:05:28AM -0500, Brian Foster wrote:
+> On Fri, Feb 15, 2019 at 02:55:24PM -0800, Darrick J. Wong wrote:
+> > [rip all the cc off]
 > > 
-> > All warnings (new ones prefixed by >>):
-> > 
-> > >> fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse: warning: incorrect type in argument 2 (different base types)
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse:    expected unsigned int [usertype] dmagic
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse:    got restricted __be32 [usertype] bb_magic
 > 
-> Hmmmm, I suspected this was going to happen, though when I built with
-> those parameters the endian checking didn't trigger so I decided not to
-> press any further.  Oh well...
+> cc linux-xfs
 > 
-
-Argh. Sorry, I wasn't aware this would result in noise.
-
-> Can we get a fix going for this ASAP, please?
+> > On Sat, Feb 16, 2019 at 04:02:13AM +0800, kbuild test robot wrote:
+> > > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+> > > head:   7a92eb7cc1dc4c63e3a2fa9ab8e3c1049f199249
+> > > commit: b8f89801664f8413a88cf2c7539d1aeae07dd3c5 [7512/8919] xfs: distinguish between bnobt and cntbt magic values
+> > > reproduce:
+> > >         # apt-get install sparse
+> > >         git checkout b8f89801664f8413a88cf2c7539d1aeae07dd3c5
+> > >         make ARCH=x86_64 allmodconfig
+> > >         make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
+> > > 
+> > > All warnings (new ones prefixed by >>):
+> > > 
+> > > >> fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse: warning: incorrect type in argument 2 (different base types)
+> > >    fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse:    expected unsigned int [usertype] dmagic
+> > >    fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse:    got restricted __be32 [usertype] bb_magic
+> > 
+> > Hmmmm, I suspected this was going to happen, though when I built with
+> > those parameters the endian checking didn't trigger so I decided not to
+> > press any further.  Oh well...
+> > 
 > 
+> Argh. Sorry, I wasn't aware this would result in noise.
 
-FYI it probably won't be Monday until I can spin a proper patch. In the
-meantime, what's the preferred solution?
+Heh.  It turned out that I forgot that my computer was configured to use
+smatch instead of sparse, and only sparse does the endian checking.
+(Gee, I thought smatch was supposed to be a superset of sparse!)
 
-I thought we might be able to address the callers fairly cleanly by
-creating a couple xfs_verify_magic[16|32]() wrappers and cast to the
-underlying format, but then sparse just generates warnings for the
-casts. So AFAICT, the options are to create separate wrappers and
-xfs_buf_ops fields (magic16/magic32) for each magic type and use them
-appropriately in each verifier or go back to how this patch was written
-originally and use the in-core values.
+So with the addition of /even more/ wrapper scripts I can now run
+/both/.
 
-The former seems silly to me. My preference is the latter. Thoughts or
-other ideas? Is there some other way to safely cast a "restricted" type?
-
-Brian
-
-> --D
+> > Can we get a fix going for this ASAP, please?
+> > 
 > 
-> > >> fs/xfs/libxfs/xfs_alloc_btree.c:321:36: sparse: warning: restricted __be32 degrades to integer
-> > >> fs/xfs/libxfs/xfs_alloc_btree.c:368:20: sparse: warning: incorrect type in initializer (different base types)
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:368:20: sparse:    expected unsigned int
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:368:20: sparse:    got restricted __be32 [usertype]
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:369:20: sparse: warning: incorrect type in initializer (different base types)
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:369:20: sparse:    expected unsigned int
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:369:20: sparse:    got restricted __be32 [usertype]
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:377:20: sparse: warning: incorrect type in initializer (different base types)
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:377:20: sparse:    expected unsigned int
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:377:20: sparse:    got restricted __be32 [usertype]
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:378:20: sparse: warning: incorrect type in initializer (different base types)
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:378:20: sparse:    expected unsigned int
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:378:20: sparse:    got restricted __be32 [usertype]
-> > 
-> > sparse warnings: (new ones prefixed by >>)
-> > 
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse: warning: incorrect type in argument 2 (different base types)
-> > >> fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse:    expected unsigned int [usertype] dmagic
-> > >> fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse:    got restricted __be32 [usertype] bb_magic
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:321:36: sparse: warning: restricted __be32 degrades to integer
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:368:20: sparse: warning: incorrect type in initializer (different base types)
-> > >> fs/xfs/libxfs/xfs_alloc_btree.c:368:20: sparse:    expected unsigned int
-> > >> fs/xfs/libxfs/xfs_alloc_btree.c:368:20: sparse:    got restricted __be32 [usertype]
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:369:20: sparse: warning: incorrect type in initializer (different base types)
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:369:20: sparse:    expected unsigned int
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:369:20: sparse:    got restricted __be32 [usertype]
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:377:20: sparse: warning: incorrect type in initializer (different base types)
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:377:20: sparse:    expected unsigned int
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:377:20: sparse:    got restricted __be32 [usertype]
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:378:20: sparse: warning: incorrect type in initializer (different base types)
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:378:20: sparse:    expected unsigned int
-> >    fs/xfs/libxfs/xfs_alloc_btree.c:378:20: sparse:    got restricted __be32 [usertype]
-> > 
-> > vim +302 fs/xfs/libxfs/xfs_alloc_btree.c
-> > 
-> >    290	
-> >    291	static xfs_failaddr_t
-> >    292	xfs_allocbt_verify(
-> >    293		struct xfs_buf		*bp)
-> >    294	{
-> >    295		struct xfs_mount	*mp = bp->b_target->bt_mount;
-> >    296		struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-> >    297		struct xfs_perag	*pag = bp->b_pag;
-> >    298		xfs_failaddr_t		fa;
-> >    299		unsigned int		level;
-> >    300		xfs_btnum_t		btnum = XFS_BTNUM_BNOi;
-> >    301	
-> >  > 302		if (!xfs_verify_magic(bp, block->bb_magic))
-> >    303			return __this_address;
-> >    304	
-> >    305		if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> >    306			fa = xfs_btree_sblock_v5hdr_verify(bp);
-> >    307			if (fa)
-> >    308				return fa;
-> >    309		}
-> >    310	
-> >    311		/*
-> >    312		 * The perag may not be attached during grow operations or fully
-> >    313		 * initialized from the AGF during log recovery. Therefore we can only
-> >    314		 * check against maximum tree depth from those contexts.
-> >    315		 *
-> >    316		 * Otherwise check against the per-tree limit. Peek at one of the
-> >    317		 * verifier magic values to determine the type of tree we're verifying
-> >    318		 * against.
-> >    319		 */
-> >    320		level = be16_to_cpu(block->bb_level);
-> >  > 321		if (bp->b_ops->magic[0] == cpu_to_be32(XFS_ABTC_MAGIC))
-> >    322			btnum = XFS_BTNUM_CNTi;
-> >    323		if (pag && pag->pagf_init) {
-> >    324			if (level >= pag->pagf_levels[btnum])
-> >    325				return __this_address;
-> >    326		} else if (level >= mp->m_ag_maxlevels)
-> >    327			return __this_address;
-> >    328	
-> >    329		return xfs_btree_sblock_verify(bp, mp->m_alloc_mxr[level != 0]);
-> >    330	}
-> >    331	
-> >    332	static void
-> >    333	xfs_allocbt_read_verify(
-> >    334		struct xfs_buf	*bp)
-> >    335	{
-> >    336		xfs_failaddr_t	fa;
-> >    337	
-> >    338		if (!xfs_btree_sblock_verify_crc(bp))
-> >    339			xfs_verifier_error(bp, -EFSBADCRC, __this_address);
-> >    340		else {
-> >    341			fa = xfs_allocbt_verify(bp);
-> >    342			if (fa)
-> >    343				xfs_verifier_error(bp, -EFSCORRUPTED, fa);
-> >    344		}
-> >    345	
-> >    346		if (bp->b_error)
-> >    347			trace_xfs_btree_corrupt(bp, _RET_IP_);
-> >    348	}
-> >    349	
-> >    350	static void
-> >    351	xfs_allocbt_write_verify(
-> >    352		struct xfs_buf	*bp)
-> >    353	{
-> >    354		xfs_failaddr_t	fa;
-> >    355	
-> >    356		fa = xfs_allocbt_verify(bp);
-> >    357		if (fa) {
-> >    358			trace_xfs_btree_corrupt(bp, _RET_IP_);
-> >    359			xfs_verifier_error(bp, -EFSCORRUPTED, fa);
-> >    360			return;
-> >    361		}
-> >    362		xfs_btree_sblock_calc_crc(bp);
-> >    363	
-> >    364	}
-> >    365	
-> >    366	const struct xfs_buf_ops xfs_bnobt_buf_ops = {
-> >    367		.name = "xfs_bnobt",
-> >  > 368		.magic = { cpu_to_be32(XFS_ABTB_MAGIC),
-> >    369			   cpu_to_be32(XFS_ABTB_CRC_MAGIC) },
-> >    370		.verify_read = xfs_allocbt_read_verify,
-> >    371		.verify_write = xfs_allocbt_write_verify,
-> >    372		.verify_struct = xfs_allocbt_verify,
-> >    373	};
-> >    374	
-> > 
-> > ---
-> > 0-DAY kernel test infrastructure                Open Source Technology Center
-> > https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> FYI it probably won't be Monday until I can spin a proper patch. In the
+> meantime, what's the preferred solution?
 > 
-> 
+> I thought we might be able to address the callers fairly cleanly by
+> creating a couple xfs_verify_magic[16|32]() wrappers and cast to the
+> underlying format, but then sparse just generates warnings for the
+> casts. So AFAICT, the options are to create separate wrappers and
+> xfs_buf_ops fields (magic16/magic32) for each magic type and use them
+> appropriately in each verifier or go back to how this patch was written
+> originally and use the in-core values.
+
+Hmm.  It would be sort of ugly to have to re-add the endian conversions
+back into the verifier code now; I think I lean towards having a magic16
+array and a xfs_verify_magic16.
+
+(Though I cheat and use anonymous unions :P)
+
+> The former seems silly to me. My preference is the latter. Thoughts or
+> other ideas? Is there some other way to safely cast a "restricted" type?
+
+None that I know of, sparse complains about any cast between restricted
+types.  I shut up sparse with the following mostly untested patch:
+
+--D
+
+xfs: fix xfs_buf magic number endian checks
+
+Create a separate magic16 check function so that we don't run afoul of
+static checkers.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr_leaf.c |    4 ++--
+ fs/xfs/libxfs/xfs_da_btree.c  |    8 ++++----
+ fs/xfs/libxfs/xfs_dir2_leaf.c |    8 ++++----
+ fs/xfs/libxfs/xfs_dquot_buf.c |    8 ++++----
+ fs/xfs/libxfs/xfs_inode_buf.c |   10 +++++-----
+ fs/xfs/xfs_buf.c              |   20 +++++++++++++++++++-
+ fs/xfs/xfs_buf.h              |    8 ++++++--
+ fs/xfs/xfs_log_recover.c      |    2 +-
+ 8 files changed, 45 insertions(+), 23 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 0c92987f57fc..1f6e3965ff74 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -358,8 +358,8 @@ xfs_attr3_leaf_read_verify(
+ 
+ const struct xfs_buf_ops xfs_attr3_leaf_buf_ops = {
+ 	.name = "xfs_attr3_leaf",
+-	.magic = { cpu_to_be16(XFS_ATTR_LEAF_MAGIC),
+-		   cpu_to_be16(XFS_ATTR3_LEAF_MAGIC) },
++	.magic16 = { cpu_to_be16(XFS_ATTR_LEAF_MAGIC),
++		     cpu_to_be16(XFS_ATTR3_LEAF_MAGIC) },
+ 	.verify_read = xfs_attr3_leaf_read_verify,
+ 	.verify_write = xfs_attr3_leaf_write_verify,
+ 	.verify_struct = xfs_attr3_leaf_verify,
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index eb2cee428f26..e2737e2ac2ae 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -129,7 +129,7 @@ xfs_da3_blkinfo_verify(
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_da_blkinfo	*hdr = &hdr3->hdr;
+ 
+-	if (!xfs_verify_magic(bp, hdr->magic))
++	if (!xfs_verify_magic16(bp, hdr->magic))
+ 		return __this_address;
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+@@ -141,7 +141,7 @@ xfs_da3_blkinfo_verify(
+ 			return __this_address;
+ 	}
+ 
+-	return 0;
++	return NULL;
+ }
+ 
+ static xfs_failaddr_t
+@@ -274,8 +274,8 @@ xfs_da3_node_verify_struct(
+ 
+ const struct xfs_buf_ops xfs_da3_node_buf_ops = {
+ 	.name = "xfs_da3_node",
+-	.magic = { cpu_to_be16(XFS_DA_NODE_MAGIC),
+-		   cpu_to_be16(XFS_DA3_NODE_MAGIC) },
++	.magic16 = { cpu_to_be16(XFS_DA_NODE_MAGIC),
++		     cpu_to_be16(XFS_DA3_NODE_MAGIC) },
+ 	.verify_read = xfs_da3_node_read_verify,
+ 	.verify_write = xfs_da3_node_write_verify,
+ 	.verify_struct = xfs_da3_node_verify_struct,
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 094028b7b162..9a3767818c50 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -198,8 +198,8 @@ xfs_dir3_leaf_write_verify(
+ 
+ const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
+ 	.name = "xfs_dir3_leaf1",
+-	.magic = { cpu_to_be16(XFS_DIR2_LEAF1_MAGIC),
+-		   cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) },
++	.magic16 = { cpu_to_be16(XFS_DIR2_LEAF1_MAGIC),
++		     cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) },
+ 	.verify_read = xfs_dir3_leaf_read_verify,
+ 	.verify_write = xfs_dir3_leaf_write_verify,
+ 	.verify_struct = xfs_dir3_leaf_verify,
+@@ -207,8 +207,8 @@ const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
+ 
+ const struct xfs_buf_ops xfs_dir3_leafn_buf_ops = {
+ 	.name = "xfs_dir3_leafn",
+-	.magic = { cpu_to_be16(XFS_DIR2_LEAFN_MAGIC),
+-		   cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) },
++	.magic16 = { cpu_to_be16(XFS_DIR2_LEAFN_MAGIC),
++		     cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) },
+ 	.verify_read = xfs_dir3_leaf_read_verify,
+ 	.verify_write = xfs_dir3_leaf_write_verify,
+ 	.verify_struct = xfs_dir3_leaf_verify,
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index b956638a3532..fb5bd9a804f6 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -277,8 +277,8 @@ xfs_dquot_buf_write_verify(
+ 
+ const struct xfs_buf_ops xfs_dquot_buf_ops = {
+ 	.name = "xfs_dquot",
+-	.magic = { cpu_to_be16(XFS_DQUOT_MAGIC),
+-		   cpu_to_be16(XFS_DQUOT_MAGIC) },
++	.magic16 = { cpu_to_be16(XFS_DQUOT_MAGIC),
++		     cpu_to_be16(XFS_DQUOT_MAGIC) },
+ 	.verify_read = xfs_dquot_buf_read_verify,
+ 	.verify_write = xfs_dquot_buf_write_verify,
+ 	.verify_struct = xfs_dquot_buf_verify_struct,
+@@ -286,8 +286,8 @@ const struct xfs_buf_ops xfs_dquot_buf_ops = {
+ 
+ const struct xfs_buf_ops xfs_dquot_buf_ra_ops = {
+ 	.name = "xfs_dquot_ra",
+-	.magic = { cpu_to_be16(XFS_DQUOT_MAGIC),
+-		   cpu_to_be16(XFS_DQUOT_MAGIC) },
++	.magic16 = { cpu_to_be16(XFS_DQUOT_MAGIC),
++		     cpu_to_be16(XFS_DQUOT_MAGIC) },
+ 	.verify_read = xfs_dquot_buf_readahead_verify,
+ 	.verify_write = xfs_dquot_buf_write_verify,
+ };
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index f92f14e93ad3..e021d5133ccb 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -97,7 +97,7 @@ xfs_inode_buf_verify(
+ 
+ 		dip = xfs_buf_offset(bp, (i << mp->m_sb.sb_inodelog));
+ 		unlinked_ino = be32_to_cpu(dip->di_next_unlinked);
+-		di_ok = xfs_verify_magic(bp, dip->di_magic) &&
++		di_ok = xfs_verify_magic16(bp, dip->di_magic) &&
+ 			xfs_dinode_good_version(mp, dip->di_version) &&
+ 			xfs_verify_agino_or_null(mp, agno, unlinked_ino);
+ 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+@@ -146,16 +146,16 @@ xfs_inode_buf_write_verify(
+ 
+ const struct xfs_buf_ops xfs_inode_buf_ops = {
+ 	.name = "xfs_inode",
+-	.magic = { cpu_to_be16(XFS_DINODE_MAGIC),
+-		   cpu_to_be16(XFS_DINODE_MAGIC) },
++	.magic16 = { cpu_to_be16(XFS_DINODE_MAGIC),
++		     cpu_to_be16(XFS_DINODE_MAGIC) },
+ 	.verify_read = xfs_inode_buf_read_verify,
+ 	.verify_write = xfs_inode_buf_write_verify,
+ };
+ 
+ const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
+ 	.name = "xfs_inode_ra",
+-	.magic = { cpu_to_be16(XFS_DINODE_MAGIC),
+-		   cpu_to_be16(XFS_DINODE_MAGIC) },
++	.magic16 = { cpu_to_be16(XFS_DINODE_MAGIC),
++		     cpu_to_be16(XFS_DINODE_MAGIC) },
+ 	.verify_read = xfs_inode_buf_readahead_verify,
+ 	.verify_write = xfs_inode_buf_write_verify,
+ };
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 52a382b8cbce..548344e25128 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -2213,7 +2213,7 @@ void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
+ bool
+ xfs_verify_magic(
+ 	struct xfs_buf		*bp,
+-	uint32_t		dmagic)
++	__be32			dmagic)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	int			idx;
+@@ -2223,3 +2223,21 @@ xfs_verify_magic(
+ 		return false;
+ 	return dmagic == bp->b_ops->magic[idx];
+ }
++/*
++ * Verify an on-disk magic value against the magic value specified in the
++ * verifier structure. The verifier magic is in disk byte order so the caller is
++ * expected to pass the value directly from disk.
++ */
++bool
++xfs_verify_magic16(
++	struct xfs_buf		*bp,
++	__be16			dmagic)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	int			idx;
++
++	idx = xfs_sb_version_hascrc(&mp->m_sb);
++	if (unlikely(WARN_ON(!bp->b_ops || !bp->b_ops->magic16[idx])))
++		return false;
++	return dmagic == bp->b_ops->magic16[idx];
++}
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 44f9423a1861..d0b96e071cec 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -125,7 +125,10 @@ struct xfs_buf_map {
+ 
+ struct xfs_buf_ops {
+ 	char *name;
+-	uint32_t magic[2];		/* v4 and v5 on disk magic values */
++	union {
++		__be32 magic[2];	/* v4 and v5 on disk magic values */
++		__be16 magic16[2];	/* v4 and v5 on disk magic values */
++	};
+ 	void (*verify_read)(struct xfs_buf *);
+ 	void (*verify_write)(struct xfs_buf *);
+ 	xfs_failaddr_t (*verify_struct)(struct xfs_buf *bp);
+@@ -387,6 +390,7 @@ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
+ #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
+ 
+ int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
+-bool xfs_verify_magic(struct xfs_buf *bp, uint32_t dmagic);
++bool xfs_verify_magic(struct xfs_buf *bp, __be32 dmagic);
++bool xfs_verify_magic16(struct xfs_buf *bp, __be16 dmagic);
+ 
+ #endif	/* __XFS_BUF_H__ */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index f5948d16015b..3371d1ff27c4 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3049,7 +3049,7 @@ xlog_recover_inode_pass2(
+ 	 * Make sure the place we're flushing out to really looks
+ 	 * like an inode!
+ 	 */
+-	if (unlikely(!xfs_verify_magic(bp, dip->di_magic))) {
++	if (unlikely(!xfs_verify_magic16(bp, dip->di_magic))) {
+ 		xfs_alert(mp,
+ 	"%s: Bad inode magic number, dip = "PTR_FMT", dino bp = "PTR_FMT", ino = %Ld",
+ 			__func__, dip, bp, in_f->ilf_ino);
