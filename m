@@ -1,104 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:43820 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726124AbfBQWHV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Feb 2019 17:07:21 -0500
-Date: Mon, 18 Feb 2019 09:07:16 +1100
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:43799 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725794AbfBPFhQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Feb 2019 00:37:16 -0500
+Date: Sat, 16 Feb 2019 16:37:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: test mkfs extent size hint validation
-Message-ID: <20190217220716.GA9805@dastard>
-References: <20190216003923.GV32253@magnolia>
- <20190216004119.GW32253@magnolia>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] The end of the DAX experiment
+Message-ID: <20190216053711.GA14116@dastard>
+References: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
+ <20190214134622.GG4525@dhcp22.suse.cz>
+ <CAPcyv4gxFKBQ9eVdn+pNEzBXRfw6Qwfmu21H2i5uj-PyFmRAGQ@mail.gmail.com>
+ <20190214191013.GA3420@redhat.com>
+ <CAPcyv4jLTdJyTOy715qvBL_j_deiLoBmu_thkUnFKZKMvZL6hA@mail.gmail.com>
+ <20190214200840.GB12668@bombadil.infradead.org>
+ <CAPcyv4hsDqvrV5yiDq8oWPuWb3WpuCEk_HB4qBxfiDpUwo75QQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190216004119.GW32253@magnolia>
+In-Reply-To: <CAPcyv4hsDqvrV5yiDq8oWPuWb3WpuCEk_HB4qBxfiDpUwo75QQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Eryu Guan <guaneryu@gmail.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Matthew Wilcox <willy@infradead.org>, Jerome Glisse <jglisse@redhat.com>, Michal Hocko <mhocko@kernel.org>, lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>
 
-On Fri, Feb 15, 2019 at 04:41:19PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Feb 14, 2019 at 12:20:11PM -0800, Dan Williams wrote:
+> On Thu, Feb 14, 2019 at 12:09 PM Matthew Wilcox <willy@infradead.org> wrote:
+> >
+> > On Thu, Feb 14, 2019 at 11:31:24AM -0800, Dan Williams wrote:
+> > > On Thu, Feb 14, 2019 at 11:10 AM Jerome Glisse <jglisse@redhat.com> wrote:
+> > > > I am just again working on my struct page mapping patchset as well as
+> > > > the generic page write protection that sits on top. I hope to be able
+> > > > to post the v2 in couple weeks. You can always look at my posting last
+> > > > year to see more details.
+> > >
+> > > Yes, I have that in mind as one of the contenders. However, it's not
+> > > clear to me that its a suitable fit for filesystem-reflink. Others
+> > > have floated the 'page proxy' idea, so it would be good to discuss the
+> > > merits of the general approaches.
+> >
+> > ... and my preferred option of putting pfn entries in the page cache.
 > 
-> Make sure mkfs won't format filesystems that fail extent size hint
-> validation.
+> Another option to include the discussion.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/xfs/738     |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/738.out |    2 ++
->  tests/xfs/group   |    1 +
->  3 files changed, 51 insertions(+)
->  create mode 100755 tests/xfs/738
->  create mode 100644 tests/xfs/738.out
+> > Or is that what you meant by "page proxy"?
 > 
-> diff --git a/tests/xfs/738 b/tests/xfs/738
-> new file mode 100755
-> index 00000000..ee0ffaae
-> --- /dev/null
-> +++ b/tests/xfs/738
-> @@ -0,0 +1,48 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0+
-> +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 738
-> +#
-> +# Make sure we can't format a filesystem with insane extent hints.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +testfile=$TEST_DIR/$seq.txt
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch_nocheck
-> +
-> +rm -f $seqres.full
-> +
-> +# Try regular extent size hint
-> +echo extszinherit >> $seqres.full
-> +_scratch_mkfs -d extszinherit=8388608 >> $seqres.full 2>&1
-> +test $? -eq 1 || echo "should have failed extszinherit"
+> Page proxy would be an object that a filesystem could allocate to
+> point back to a single physical 'struct page *'. The proxy would
+> contain an override for page->index.
 
-That won't fail on 64k block size filesystems....
+Needs to override page->mapping, potentially the page flags, what
+happens when someone takes a gup reference to the proxy structure,
+etc?
 
-> +# Try cow extent size hint if supported
-> +$MKFS_XFS_PROG -N -f $SCRATCH_DEV > $tmp.mkfs
-> +if grep -q 'reflink=' $tmp.mkfs ; then
-
-That's testing mkfs for reflink support, yes? i.e.
-
-_scratch_mkfs_xfs_supported -m crc=1,reflink=1 
-
-[ need to explicitly say -m crc=1 here, because MKFS_OPTIONS might
-have -m crc=0, right? ]
-
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -515,6 +515,7 @@
->  731 dangerous_scrub dangerous_online_repair
->  736 auto quick unlink
->  737 auto quick unlink
-> +738 auto quick
-
-prealloc, too. And maybe mkfs?
+Besides, didn't we discuss all this last year? how about we start
+with a summary of all the options considered last year, the pros and
+cons, etc, and then go from there? Regurgitating everything we've
+already talked about last year doesn't seem particularly useful to
+me...
 
 Cheers,
 
