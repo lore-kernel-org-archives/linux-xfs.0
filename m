@@ -1,277 +1,199 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:45364 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726156AbfBPMFi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Feb 2019 07:05:38 -0500
-Date: Sat, 16 Feb 2019 20:05:30 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 4/3] generic: posix acl extended attribute memory
- corruption test
-Message-ID: <20190216120530.GZ2713@desktop>
-References: <154993784038.1948.7502664832930298472.stgit@magnolia>
- <20190213204814.GB6477@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:59054 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726156AbfBPMFb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 16 Feb 2019 07:05:31 -0500
+Date: Sat, 16 Feb 2019 07:05:28 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [linux-next:master 7512/8919]
+ fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse: warning: incorrect type in
+ argument 2 (different base types)
+Message-ID: <20190216120528.GA55854@bfoster>
+References: <201902160410.WC4AmuSu%fengguang.wu@intel.com>
+ <20190215225524.GE6503@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190213204814.GB6477@magnolia>
+In-Reply-To: <20190215225524.GE6503@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Feb 13, 2019 at 12:48:14PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Feb 15, 2019 at 02:55:24PM -0800, Darrick J. Wong wrote:
+> [rip all the cc off]
 > 
-> XFS had a use-after-free bug when xfs_xattr_put_listent runs out of
-> listxattr buffer space while trying to store the name
-> "system.posix_acl_access" and then corrupts memory by not checking the
-> seen_enough state and then trying to shove "trusted.SGI_ACL_FILE" into
-> the buffer as well.
+
+cc linux-xfs
+
+> On Sat, Feb 16, 2019 at 04:02:13AM +0800, kbuild test robot wrote:
+> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+> > head:   7a92eb7cc1dc4c63e3a2fa9ab8e3c1049f199249
+> > commit: b8f89801664f8413a88cf2c7539d1aeae07dd3c5 [7512/8919] xfs: distinguish between bnobt and cntbt magic values
+> > reproduce:
+> >         # apt-get install sparse
+> >         git checkout b8f89801664f8413a88cf2c7539d1aeae07dd3c5
+> >         make ARCH=x86_64 allmodconfig
+> >         make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
+> > 
+> > All warnings (new ones prefixed by >>):
+> > 
+> > >> fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse: warning: incorrect type in argument 2 (different base types)
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse:    expected unsigned int [usertype] dmagic
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse:    got restricted __be32 [usertype] bb_magic
 > 
-> In order to tickle the bug in a user visible way we must have already
-> put a name in the buffer, so we take advantage of the fact that
-> "security.evm" sorts before "system.posix_acl_access" to make sure this
-> happens.
+> Hmmmm, I suspected this was going to happen, though when I built with
+> those parameters the endian checking didn't trigger so I decided not to
+> press any further.  Oh well...
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  .gitignore              |    1 
->  src/Makefile            |    2 -
->  src/t_attr_corruption.c |  122 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/712       |   41 ++++++++++++++++
->  tests/generic/712.out   |    2 +
->  tests/generic/group     |    1 
->  6 files changed, 168 insertions(+), 1 deletion(-)
->  create mode 100644 src/t_attr_corruption.c
->  create mode 100755 tests/generic/712
->  create mode 100644 tests/generic/712.out
+
+Argh. Sorry, I wasn't aware this would result in noise.
+
+> Can we get a fix going for this ASAP, please?
 > 
-> diff --git a/.gitignore b/.gitignore
-> index ea1aac8a..0933dc7d 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -114,6 +114,7 @@
->  /src/stat_test
->  /src/swapon
->  /src/t_access_root
-> +/src/t_attr_corruption
->  /src/t_dir_offset
->  /src/t_dir_offset2
->  /src/t_dir_type
-> diff --git a/src/Makefile b/src/Makefile
-> index 41826585..ae09eb0a 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -27,7 +27,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	renameat2 t_getcwd e4compact test-nextquota punch-alternating \
->  	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
->  	dio-invalidate-cache stat_test t_encrypted_d_revalidate \
-> -	attr_replace_test swapon mkswap
-> +	attr_replace_test swapon mkswap t_attr_corruption
->  
->  SUBDIRS = log-writes perf
->  
-> diff --git a/src/t_attr_corruption.c b/src/t_attr_corruption.c
-> new file mode 100644
-> index 00000000..1fa5e41f
-> --- /dev/null
-> +++ b/src/t_attr_corruption.c
-> @@ -0,0 +1,122 @@
-> +// SPDX-License-Identifier: GPL-2.0+
-> +/*
-> + * Copyright (C) 2019 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + *
-> + * Test program to tickle a use-after-free bug in xfs.
-> + *
-> + * XFS had a use-after-free bug when xfs_xattr_put_listent runs out of
-> + * listxattr buffer space while trying to store the name
-> + * "system.posix_acl_access" and then corrupts memory by not checking the
-> + * seen_enough state and then trying to shove "trusted.SGI_ACL_FILE" into the
-> + * buffer as well.
-> + *
-> + * In order to tickle the bug in a user visible way we must have already put a
-> + * name in the buffer, so we take advantage of the fact that "security.evm"
-> + * sorts before "system.posix_acl_access" to make sure this happens.
-> + *
-> + * If we trigger the bug, the program will print the garbled string
-> + * "rusted.SGI_ACL_FILE".  If the bug is fixed, the flistxattr call returns
-> + * ERANGE.
-> + */
-> +#include <sys/types.h>
-> +#include <sys/stat.h>
-> +#include <fcntl.h>
-> +#include <stdlib.h>
-> +#include <stdio.h>
-> +#include <string.h>
-> +#include <stdint.h>
-> +#include <unistd.h>
-> +#include <attr/xattr.h>
-> +
-> +void die(const char *msg)
-> +{
-> +	perror(msg);
-> +	exit(1);
-> +}
-> +
-> +struct entry {
-> +	uint16_t	a;
-> +	uint16_t	b;
-> +	uint32_t	c;
-> +};
-> +
-> +struct myacl {
-> +	uint32_t	d;
-> +	struct entry	e[4];
-> +};
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	struct myacl acl = {
-> +		.d = 2,
-> +		.e = {
-> +			{1, 0, 0},
-> +			{4, 0, 0},
-> +			{0x10, 0, 0},
-> +			{0x20, 0, 0},
-> +		},
-> +	};
-> +	char buf[64];
-> +	ssize_t sz;
-> +	int fd;
-> +	int ret;
-> +
-> +	if (argc > 1) {
-> +		ret = chdir(argv[1]);
-> +		if (ret)
-> +			die(argv[1]);
-> +	}
-> +
-> +	fd = creat("file0", 0644);
-> +	if (fd < 0)
-> +		die("create");
-> +
-> +	ret = fsetxattr(fd, "system.posix_acl_access", &acl, sizeof(acl), 0);
-> +	if (ret)
-> +		die("set posix acl");
-> +
-> +	ret = fsetxattr(fd, "security.evm", buf, 1, 1);
-> +	if (ret)
-> +		die("set evm");
-> +
-> +	sz = flistxattr(fd, buf, 30);
-> +	if (sz < 0)
-> +		die("list attr");
-> +
-> +	printf("%s\n", buf);
-> +
-> +	return 0;
-> +
-> +#if 0
-> +	/* original syzkaller reproducer */
-> +
-> +	syscall(__NR_mmap, 0x20000000, 0x1000000, 3, 0x32, -1, 0);
-> +
-> +	memcpy((void*)0x20000180, "./file0", 8);
-> +	syscall(__NR_creat, 0x20000180, 0);
-> +	memcpy((void*)0x20000000, "./file0", 8);
-> +	memcpy((void*)0x20000040, "system.posix_acl_access", 24);
-> +	*(uint32_t*)0x20000680 = 2;
-> +	*(uint16_t*)0x20000684 = 1;
-> +	*(uint16_t*)0x20000686 = 0;
-> +	*(uint32_t*)0x20000688 = 0;
-> +	*(uint16_t*)0x2000068c = 4;
-> +	*(uint16_t*)0x2000068e = 0;
-> +	*(uint32_t*)0x20000690 = 0;
-> +	*(uint16_t*)0x20000694 = 0x10;
-> +	*(uint16_t*)0x20000696 = 0;
-> +	*(uint32_t*)0x20000698 = 0;
-> +	*(uint16_t*)0x2000069c = 0x20;
-> +	*(uint16_t*)0x2000069e = 0;
-> +	*(uint32_t*)0x200006a0 = 0;
-> +	syscall(__NR_setxattr, 0x20000000, 0x20000040, 0x20000680, 0x24, 0);
-> +	memcpy((void*)0x20000080, "./file0", 8);
-> +	memcpy((void*)0x200000c0, "security.evm", 13);
-> +	memcpy((void*)0x20000100, "\x03\x00\x00\x00\x57", 5);
-> +	syscall(__NR_lsetxattr, 0x20000080, 0x200000c0, 0x20000100, 1, 1);
-> +	memcpy((void*)0x20000300, "./file0", 8);
-> +	syscall(__NR_listxattr, 0x20000300, 0x200002c0, 0x1e);
-> +	return 0;
-> +#endif
-> +}
-> diff --git a/tests/generic/712 b/tests/generic/712
-> new file mode 100755
-> index 00000000..6348a797
-> --- /dev/null
-> +++ b/tests/generic/712
-> @@ -0,0 +1,41 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0+
-> +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 712
-> +#
-> +# Regression test for a bug where XFS corrupts memory if the listxattr buffer
-> +# is a particularly well crafted size on a filesystem that supports posix acls.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +testfile=$TEST_DIR/$seq.txt
 
-I removed this definition, which is not used in the test.
+FYI it probably won't be Monday until I can spin a proper patch. In the
+meantime, what's the preferred solution?
 
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/attr
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_acls
-> +_require_scratch
+I thought we might be able to address the callers fairly cleanly by
+creating a couple xfs_verify_magic[16|32]() wrappers and cast to the
+underlying format, but then sparse just generates warnings for the
+casts. So AFAICT, the options are to create separate wrappers and
+xfs_buf_ops fields (magic16/magic32) for each magic type and use them
+appropriately in each verifier or go back to how this patch was written
+originally and use the in-core values.
 
-I also added
+The former seems silly to me. My preference is the latter. Thoughts or
+other ideas? Is there some other way to safely cast a "restricted" type?
 
-_require_test_program "t_attr_corruption"
+Brian
 
-Thanks,
-Eryu
-
-> +
-> +rm -f $seqres.full
-> +_scratch_mkfs >> $seqres.full 2>&1
-> +_scratch_mount
-> +
-> +src/t_attr_corruption $SCRATCH_MNT
-> +
-> +status=0
-> +exit
-> diff --git a/tests/generic/712.out b/tests/generic/712.out
-> new file mode 100644
-> index 00000000..a2ba09f3
-> --- /dev/null
-> +++ b/tests/generic/712.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 712
-> +list attr: Numerical result out of range
-> diff --git a/tests/generic/group b/tests/generic/group
-> index f56eb475..b3086154 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -529,3 +529,4 @@
->  524 auto quick
->  525 auto quick rw
->  709 auto quick
-> +712 auto quick attr
+> --D
+> 
+> > >> fs/xfs/libxfs/xfs_alloc_btree.c:321:36: sparse: warning: restricted __be32 degrades to integer
+> > >> fs/xfs/libxfs/xfs_alloc_btree.c:368:20: sparse: warning: incorrect type in initializer (different base types)
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:368:20: sparse:    expected unsigned int
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:368:20: sparse:    got restricted __be32 [usertype]
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:369:20: sparse: warning: incorrect type in initializer (different base types)
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:369:20: sparse:    expected unsigned int
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:369:20: sparse:    got restricted __be32 [usertype]
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:377:20: sparse: warning: incorrect type in initializer (different base types)
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:377:20: sparse:    expected unsigned int
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:377:20: sparse:    got restricted __be32 [usertype]
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:378:20: sparse: warning: incorrect type in initializer (different base types)
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:378:20: sparse:    expected unsigned int
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:378:20: sparse:    got restricted __be32 [usertype]
+> > 
+> > sparse warnings: (new ones prefixed by >>)
+> > 
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse: warning: incorrect type in argument 2 (different base types)
+> > >> fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse:    expected unsigned int [usertype] dmagic
+> > >> fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse:    got restricted __be32 [usertype] bb_magic
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:321:36: sparse: warning: restricted __be32 degrades to integer
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:368:20: sparse: warning: incorrect type in initializer (different base types)
+> > >> fs/xfs/libxfs/xfs_alloc_btree.c:368:20: sparse:    expected unsigned int
+> > >> fs/xfs/libxfs/xfs_alloc_btree.c:368:20: sparse:    got restricted __be32 [usertype]
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:369:20: sparse: warning: incorrect type in initializer (different base types)
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:369:20: sparse:    expected unsigned int
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:369:20: sparse:    got restricted __be32 [usertype]
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:377:20: sparse: warning: incorrect type in initializer (different base types)
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:377:20: sparse:    expected unsigned int
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:377:20: sparse:    got restricted __be32 [usertype]
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:378:20: sparse: warning: incorrect type in initializer (different base types)
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:378:20: sparse:    expected unsigned int
+> >    fs/xfs/libxfs/xfs_alloc_btree.c:378:20: sparse:    got restricted __be32 [usertype]
+> > 
+> > vim +302 fs/xfs/libxfs/xfs_alloc_btree.c
+> > 
+> >    290	
+> >    291	static xfs_failaddr_t
+> >    292	xfs_allocbt_verify(
+> >    293		struct xfs_buf		*bp)
+> >    294	{
+> >    295		struct xfs_mount	*mp = bp->b_target->bt_mount;
+> >    296		struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
+> >    297		struct xfs_perag	*pag = bp->b_pag;
+> >    298		xfs_failaddr_t		fa;
+> >    299		unsigned int		level;
+> >    300		xfs_btnum_t		btnum = XFS_BTNUM_BNOi;
+> >    301	
+> >  > 302		if (!xfs_verify_magic(bp, block->bb_magic))
+> >    303			return __this_address;
+> >    304	
+> >    305		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> >    306			fa = xfs_btree_sblock_v5hdr_verify(bp);
+> >    307			if (fa)
+> >    308				return fa;
+> >    309		}
+> >    310	
+> >    311		/*
+> >    312		 * The perag may not be attached during grow operations or fully
+> >    313		 * initialized from the AGF during log recovery. Therefore we can only
+> >    314		 * check against maximum tree depth from those contexts.
+> >    315		 *
+> >    316		 * Otherwise check against the per-tree limit. Peek at one of the
+> >    317		 * verifier magic values to determine the type of tree we're verifying
+> >    318		 * against.
+> >    319		 */
+> >    320		level = be16_to_cpu(block->bb_level);
+> >  > 321		if (bp->b_ops->magic[0] == cpu_to_be32(XFS_ABTC_MAGIC))
+> >    322			btnum = XFS_BTNUM_CNTi;
+> >    323		if (pag && pag->pagf_init) {
+> >    324			if (level >= pag->pagf_levels[btnum])
+> >    325				return __this_address;
+> >    326		} else if (level >= mp->m_ag_maxlevels)
+> >    327			return __this_address;
+> >    328	
+> >    329		return xfs_btree_sblock_verify(bp, mp->m_alloc_mxr[level != 0]);
+> >    330	}
+> >    331	
+> >    332	static void
+> >    333	xfs_allocbt_read_verify(
+> >    334		struct xfs_buf	*bp)
+> >    335	{
+> >    336		xfs_failaddr_t	fa;
+> >    337	
+> >    338		if (!xfs_btree_sblock_verify_crc(bp))
+> >    339			xfs_verifier_error(bp, -EFSBADCRC, __this_address);
+> >    340		else {
+> >    341			fa = xfs_allocbt_verify(bp);
+> >    342			if (fa)
+> >    343				xfs_verifier_error(bp, -EFSCORRUPTED, fa);
+> >    344		}
+> >    345	
+> >    346		if (bp->b_error)
+> >    347			trace_xfs_btree_corrupt(bp, _RET_IP_);
+> >    348	}
+> >    349	
+> >    350	static void
+> >    351	xfs_allocbt_write_verify(
+> >    352		struct xfs_buf	*bp)
+> >    353	{
+> >    354		xfs_failaddr_t	fa;
+> >    355	
+> >    356		fa = xfs_allocbt_verify(bp);
+> >    357		if (fa) {
+> >    358			trace_xfs_btree_corrupt(bp, _RET_IP_);
+> >    359			xfs_verifier_error(bp, -EFSCORRUPTED, fa);
+> >    360			return;
+> >    361		}
+> >    362		xfs_btree_sblock_calc_crc(bp);
+> >    363	
+> >    364	}
+> >    365	
+> >    366	const struct xfs_buf_ops xfs_bnobt_buf_ops = {
+> >    367		.name = "xfs_bnobt",
+> >  > 368		.magic = { cpu_to_be32(XFS_ABTB_MAGIC),
+> >    369			   cpu_to_be32(XFS_ABTB_CRC_MAGIC) },
+> >    370		.verify_read = xfs_allocbt_read_verify,
+> >    371		.verify_write = xfs_allocbt_write_verify,
+> >    372		.verify_struct = xfs_allocbt_verify,
+> >    373	};
+> >    374	
+> > 
+> > ---
+> > 0-DAY kernel test infrastructure                Open Source Technology Center
+> > https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> 
+> 
