@@ -1,110 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48120 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726145AbfBPAj3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Feb 2019 19:39:29 -0500
-Date: Fri, 15 Feb 2019 16:39:23 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:34510 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726145AbfBPAl0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Feb 2019 19:41:26 -0500
+Date: Fri, 15 Feb 2019 16:41:19 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] mkfs: validate extent size hint parameters
-Message-ID: <20190216003923.GV32253@magnolia>
+Subject: [PATCH] xfs: test mkfs extent size hint validation
+Message-ID: <20190216004119.GW32253@magnolia>
+References: <20190216003923.GV32253@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190216003923.GV32253@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Eryu Guan <guaneryu@gmail.com>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Validate extent and cow extent size hints that are passed to mkfs so
-that we avoid formatting a filesystem that will never mount.
+Make sure mkfs won't format filesystems that fail extent size hint
+validation.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- mkfs/xfs_mkfs.c |   64 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 64 insertions(+)
+ tests/xfs/738     |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/738.out |    2 ++
+ tests/xfs/group   |    1 +
+ 3 files changed, 51 insertions(+)
+ create mode 100755 tests/xfs/738
+ create mode 100644 tests/xfs/738.out
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 46fd7c25..28d91253 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2222,6 +2222,66 @@ validate_rtextsize(
- 	ASSERT(cfg->rtextblocks);
- }
- 
-+/* Validate the incoming extsize hint as if we were a file. */
-+static void
-+validate_extsize_hint(
-+	struct xfs_mount	*mp,
-+	struct cli_params	*cli)
+diff --git a/tests/xfs/738 b/tests/xfs/738
+new file mode 100755
+index 00000000..ee0ffaae
+--- /dev/null
++++ b/tests/xfs/738
+@@ -0,0 +1,48 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0+
++# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 738
++#
++# Make sure we can't format a filesystem with insane extent hints.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++tmp=/tmp/$$
++status=1	# failure is the default!
++testfile=$TEST_DIR/$seq.txt
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	xfs_failaddr_t		fa;
-+	bool			rt;
-+	uint16_t		flags = 0;
-+
-+	rt = (cli->fsx.fsx_xflags & XFS_DIFLAG_RTINHERIT);
-+
-+	if (cli->fsx.fsx_xflags & XFS_DIFLAG_EXTSZINHERIT)
-+		flags |= XFS_DIFLAG_EXTSIZE;
-+
-+	fa = libxfs_inode_validate_extsize(mp, cli->fsx.fsx_extsize, S_IFREG,
-+			flags);
-+	if (rt && fa == NULL)
-+		fa = libxfs_inode_validate_extsize(mp, cli->fsx.fsx_extsize,
-+				S_IFREG, flags | XFS_DIFLAG_REALTIME);
-+	if (fa == NULL)
-+		return;
-+
-+	if (rt && mp->m_sb.sb_rextsize > 1)
-+		fprintf(stderr,
-+	_("illegal extent size hint %lld, must be less than %u and a multiple of %u.\n"),
-+				(long long)cli->fsx.fsx_extsize,
-+				min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2),
-+				mp->m_sb.sb_rextsize);
-+	else
-+		fprintf(stderr,
-+	_("illegal extent size hint %lld, must be less than %u.\n"),
-+				(long long)cli->fsx.fsx_extsize,
-+				min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2));
-+	usage();
++	cd /
++	rm -f $tmp.*
 +}
 +
-+/* Validate the incoming CoW extsize hint as if we were a file. */
-+static void
-+validate_cowextsize_hint(
-+	struct xfs_mount	*mp,
-+	struct cli_params	*cli)
-+{
-+	xfs_failaddr_t		fa;
-+	uint64_t		flags2 = 0;
++# get standard environment, filters and checks
++. ./common/rc
 +
-+	if (cli->fsx.fsx_xflags & FS_XFLAG_COWEXTSIZE)
-+		flags2 |= XFS_DIFLAG2_COWEXTSIZE;
-+	fa = libxfs_inode_validate_cowextsize(mp, cli->fsx.fsx_cowextsize,
-+			S_IFREG, 0, flags2);
-+	if (fa == NULL)
-+		return;
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++_require_scratch_nocheck
 +
-+	fprintf(stderr,
-+_("illegal CoW extent size hint %lld, must be less than %u.\n"),
-+			(long long)cli->fsx.fsx_cowextsize,
-+			min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2));
-+	usage();
-+}
++rm -f $seqres.full
 +
- /*
-  * Validate the configured stripe geometry, or is none is specified, pull
-  * the configuration from the underlying device.
-@@ -3982,6 +4042,10 @@ main(
- 
- 	finish_superblock_setup(&cfg, mp, sbp);
- 
-+	/* Validate the extent size hints now that @mp is fully set up. */
-+	validate_extsize_hint(mp, &cli);
-+	validate_cowextsize_hint(mp, &cli);
++# Try regular extent size hint
++echo extszinherit >> $seqres.full
++_scratch_mkfs -d extszinherit=8388608 >> $seqres.full 2>&1
++test $? -eq 1 || echo "should have failed extszinherit"
 +
- 	/* Print the intended geometry of the fs. */
- 	if (!quiet || dry_run) {
- 		struct xfs_fsop_geom	geo;
++# Try cow extent size hint if supported
++$MKFS_XFS_PROG -N -f $SCRATCH_DEV > $tmp.mkfs
++if grep -q 'reflink=' $tmp.mkfs ; then
++	echo cowextsize >> $seqres.full
++	_scratch_mkfs -m reflink=1 -d cowextsize=8388608 >> $seqres.full 2>&1
++	test $? -eq 1 || echo "should have failed cowextsize"
++fi
++
++echo silence is golden
++status=0
++exit
+diff --git a/tests/xfs/738.out b/tests/xfs/738.out
+new file mode 100644
+index 00000000..703fe23b
+--- /dev/null
++++ b/tests/xfs/738.out
+@@ -0,0 +1,2 @@
++QA output created by 738
++silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 677396fb..b2fea9ef 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -515,6 +515,7 @@
+ 731 dangerous_scrub dangerous_online_repair
+ 736 auto quick unlink
+ 737 auto quick unlink
++738 auto quick
+ 1500 auto prealloc rw
+ 1501 auto prealloc rw
+ 1502 auto prealloc rw
