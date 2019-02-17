@@ -1,281 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:42082 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726084AbfBPRY4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Feb 2019 12:24:56 -0500
-Date: Sat, 16 Feb 2019 09:24:47 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/3] generic: posix acl extended attribute memory
- corruption test
-Message-ID: <20190216172447.GX32253@magnolia>
-References: <154993784038.1948.7502664832930298472.stgit@magnolia>
- <20190213204814.GB6477@magnolia>
- <20190216120530.GZ2713@desktop>
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:34450 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725810AbfBQQfc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Feb 2019 11:35:32 -0500
+Subject: Re: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
+References: <cover.1550136164.git.osandov@fb.com>
+ <20190214220626.GV14116@dastard>
+From: Boaz Harrosh <openosd@gmail.com>
+Message-ID: <6a9dc05a-0445-d0ab-0140-1de4fee7ba9b@gmail.com>
+Date: Sun, 17 Feb 2019 18:35:25 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190216120530.GZ2713@desktop>
+In-Reply-To: <20190214220626.GV14116@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, Omar Sandoval <osandov@osandov.com>
+Cc: linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
 
-On Sat, Feb 16, 2019 at 08:05:30PM +0800, Eryu Guan wrote:
-> On Wed, Feb 13, 2019 at 12:48:14PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > XFS had a use-after-free bug when xfs_xattr_put_listent runs out of
-> > listxattr buffer space while trying to store the name
-> > "system.posix_acl_access" and then corrupts memory by not checking the
-> > seen_enough state and then trying to shove "trusted.SGI_ACL_FILE" into
-> > the buffer as well.
-> > 
-> > In order to tickle the bug in a user visible way we must have already
-> > put a name in the buffer, so we take advantage of the fact that
-> > "security.evm" sorts before "system.posix_acl_access" to make sure this
-> > happens.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  .gitignore              |    1 
-> >  src/Makefile            |    2 -
-> >  src/t_attr_corruption.c |  122 +++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/712       |   41 ++++++++++++++++
-> >  tests/generic/712.out   |    2 +
-> >  tests/generic/group     |    1 
-> >  6 files changed, 168 insertions(+), 1 deletion(-)
-> >  create mode 100644 src/t_attr_corruption.c
-> >  create mode 100755 tests/generic/712
-> >  create mode 100644 tests/generic/712.out
-> > 
-> > diff --git a/.gitignore b/.gitignore
-> > index ea1aac8a..0933dc7d 100644
-> > --- a/.gitignore
-> > +++ b/.gitignore
-> > @@ -114,6 +114,7 @@
-> >  /src/stat_test
-> >  /src/swapon
-> >  /src/t_access_root
-> > +/src/t_attr_corruption
-> >  /src/t_dir_offset
-> >  /src/t_dir_offset2
-> >  /src/t_dir_type
-> > diff --git a/src/Makefile b/src/Makefile
-> > index 41826585..ae09eb0a 100644
-> > --- a/src/Makefile
-> > +++ b/src/Makefile
-> > @@ -27,7 +27,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
-> >  	renameat2 t_getcwd e4compact test-nextquota punch-alternating \
-> >  	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
-> >  	dio-invalidate-cache stat_test t_encrypted_d_revalidate \
-> > -	attr_replace_test swapon mkswap
-> > +	attr_replace_test swapon mkswap t_attr_corruption
-> >  
-> >  SUBDIRS = log-writes perf
-> >  
-> > diff --git a/src/t_attr_corruption.c b/src/t_attr_corruption.c
-> > new file mode 100644
-> > index 00000000..1fa5e41f
-> > --- /dev/null
-> > +++ b/src/t_attr_corruption.c
-> > @@ -0,0 +1,122 @@
-> > +// SPDX-License-Identifier: GPL-2.0+
-> > +/*
-> > + * Copyright (C) 2019 Oracle.  All Rights Reserved.
-> > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> > + *
-> > + * Test program to tickle a use-after-free bug in xfs.
-> > + *
-> > + * XFS had a use-after-free bug when xfs_xattr_put_listent runs out of
-> > + * listxattr buffer space while trying to store the name
-> > + * "system.posix_acl_access" and then corrupts memory by not checking the
-> > + * seen_enough state and then trying to shove "trusted.SGI_ACL_FILE" into the
-> > + * buffer as well.
-> > + *
-> > + * In order to tickle the bug in a user visible way we must have already put a
-> > + * name in the buffer, so we take advantage of the fact that "security.evm"
-> > + * sorts before "system.posix_acl_access" to make sure this happens.
-> > + *
-> > + * If we trigger the bug, the program will print the garbled string
-> > + * "rusted.SGI_ACL_FILE".  If the bug is fixed, the flistxattr call returns
-> > + * ERANGE.
-> > + */
-> > +#include <sys/types.h>
-> > +#include <sys/stat.h>
-> > +#include <fcntl.h>
-> > +#include <stdlib.h>
-> > +#include <stdio.h>
-> > +#include <string.h>
-> > +#include <stdint.h>
-> > +#include <unistd.h>
-> > +#include <attr/xattr.h>
-> > +
-> > +void die(const char *msg)
-> > +{
-> > +	perror(msg);
-> > +	exit(1);
-> > +}
-> > +
-> > +struct entry {
-> > +	uint16_t	a;
-> > +	uint16_t	b;
-> > +	uint32_t	c;
-> > +};
-> > +
-> > +struct myacl {
-> > +	uint32_t	d;
-> > +	struct entry	e[4];
-> > +};
-> > +
-> > +int main(int argc, char *argv[])
-> > +{
-> > +	struct myacl acl = {
-> > +		.d = 2,
-> > +		.e = {
-> > +			{1, 0, 0},
-> > +			{4, 0, 0},
-> > +			{0x10, 0, 0},
-> > +			{0x20, 0, 0},
-> > +		},
-> > +	};
-> > +	char buf[64];
-> > +	ssize_t sz;
-> > +	int fd;
-> > +	int ret;
-> > +
-> > +	if (argc > 1) {
-> > +		ret = chdir(argv[1]);
-> > +		if (ret)
-> > +			die(argv[1]);
-> > +	}
-> > +
-> > +	fd = creat("file0", 0644);
-> > +	if (fd < 0)
-> > +		die("create");
-> > +
-> > +	ret = fsetxattr(fd, "system.posix_acl_access", &acl, sizeof(acl), 0);
-> > +	if (ret)
-> > +		die("set posix acl");
-> > +
-> > +	ret = fsetxattr(fd, "security.evm", buf, 1, 1);
-> > +	if (ret)
-> > +		die("set evm");
-> > +
-> > +	sz = flistxattr(fd, buf, 30);
-> > +	if (sz < 0)
-> > +		die("list attr");
-> > +
-> > +	printf("%s\n", buf);
-> > +
-> > +	return 0;
-> > +
-> > +#if 0
-> > +	/* original syzkaller reproducer */
-> > +
-> > +	syscall(__NR_mmap, 0x20000000, 0x1000000, 3, 0x32, -1, 0);
-> > +
-> > +	memcpy((void*)0x20000180, "./file0", 8);
-> > +	syscall(__NR_creat, 0x20000180, 0);
-> > +	memcpy((void*)0x20000000, "./file0", 8);
-> > +	memcpy((void*)0x20000040, "system.posix_acl_access", 24);
-> > +	*(uint32_t*)0x20000680 = 2;
-> > +	*(uint16_t*)0x20000684 = 1;
-> > +	*(uint16_t*)0x20000686 = 0;
-> > +	*(uint32_t*)0x20000688 = 0;
-> > +	*(uint16_t*)0x2000068c = 4;
-> > +	*(uint16_t*)0x2000068e = 0;
-> > +	*(uint32_t*)0x20000690 = 0;
-> > +	*(uint16_t*)0x20000694 = 0x10;
-> > +	*(uint16_t*)0x20000696 = 0;
-> > +	*(uint32_t*)0x20000698 = 0;
-> > +	*(uint16_t*)0x2000069c = 0x20;
-> > +	*(uint16_t*)0x2000069e = 0;
-> > +	*(uint32_t*)0x200006a0 = 0;
-> > +	syscall(__NR_setxattr, 0x20000000, 0x20000040, 0x20000680, 0x24, 0);
-> > +	memcpy((void*)0x20000080, "./file0", 8);
-> > +	memcpy((void*)0x200000c0, "security.evm", 13);
-> > +	memcpy((void*)0x20000100, "\x03\x00\x00\x00\x57", 5);
-> > +	syscall(__NR_lsetxattr, 0x20000080, 0x200000c0, 0x20000100, 1, 1);
-> > +	memcpy((void*)0x20000300, "./file0", 8);
-> > +	syscall(__NR_listxattr, 0x20000300, 0x200002c0, 0x1e);
-> > +	return 0;
-> > +#endif
-> > +}
-> > diff --git a/tests/generic/712 b/tests/generic/712
-> > new file mode 100755
-> > index 00000000..6348a797
-> > --- /dev/null
-> > +++ b/tests/generic/712
-> > @@ -0,0 +1,41 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0+
-> > +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 712
-> > +#
-> > +# Regression test for a bug where XFS corrupts memory if the listxattr buffer
-> > +# is a particularly well crafted size on a filesystem that supports posix acls.
-> > +#
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +testfile=$TEST_DIR/$seq.txt
+On 15/02/19 00:06, Dave Chinner wrote:
+> On Thu, Feb 14, 2019 at 02:00:07AM -0800, Omar Sandoval wrote:
+>> From: Omar Sandoval <osandov@fb.com>
+>>
+>> Hi,
+>>
+>> Since statx was added in 4.11, userspace has had an interface for
+>> reading btime (file creation time), but no way to set it. This RFC patch
+>> series adds support for changing btime with utimensat(). Patch 1 adds
+>> the VFS infrastructure, patch 2 adds the support to utimensat() with a
+>> new flag, and the rest of the patches add filesystem support; I excluded
+>> CIFS for now because I don't have a CIFS setup to test it on.
+>>
+>> Updating btime is useful for at least a couple of use cases:
+>>
+[1]
+>> - Backup/restore programs (my motivation for this feature is btrfs send)
+>> - File servers which interoperate with operating systems that allow
+>>   updating file creation time, including Mac OS [1] and Windows [2]
 > 
-> I removed this definition, which is not used in the test.
+> So you're adding an interface that allows users to change the create
+> time of files without needing any privileges?
 > 
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/attr
-> > +
-> > +# real QA test starts here
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +_require_acls
-> > +_require_scratch
+[2]
+> Inode create time is forensic metadata in XFS  - information we use
+> for sequence of event and inode lifetime analysis during examination
+> of broken filesystem images and systems that have been broken into.
+> Just because it's exposed to userspace via statx(), it doesn't mean
+> that it is information that users should be allowed to change. i.e.
+> allowing users to be able to change the create time on files makes
+> it completely useless for the purpose it was added to XFS for...
 > 
-> I also added
-> 
-> _require_test_program "t_attr_corruption"
+<snap>
 
-Sounds good, thank you!
+I think the difference in opinion here is that there are two totally
+different BTIme out in the world. For two somewhat opposite motivations
+and it seems they both try to be crammed into the same on disk space.
 
-> Thanks,
-> Eryu
-> 
-> > +
-> > +rm -f $seqres.full
-> > +_scratch_mkfs >> $seqres.full 2>&1
-> > +_scratch_mount
-> > +
-> > +src/t_attr_corruption $SCRATCH_MNT
-> > +
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/712.out b/tests/generic/712.out
-> > new file mode 100644
-> > index 00000000..a2ba09f3
-> > --- /dev/null
-> > +++ b/tests/generic/712.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 712
-> > +list attr: Numerical result out of range
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index f56eb475..b3086154 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -529,3 +529,4 @@
-> >  524 auto quick
-> >  525 auto quick rw
-> >  709 auto quick
-> > +712 auto quick attr
+One - Author creation time
+  This is a Windows originated creature and later MAC (and all vendors who
+  make a living by serving cifs (hint see my email address))
+
+  This is a tag carried globally on the globe denoting the time of the
+  original creator of the file. copy, download, backup-restore and so
+  on preserve it from the very first original creation.
+  This creature is a user oriented information. That needs to be carefully
+  orchestrated by all parties
+
+Two - Local creation time
+  This is an immutable local FS information that helps in debugging and
+  FS-checking / recovery of data. It is an information that kind of denotes
+  the order of creation of files on a local FS.
+
+So it looks like both sides are correct trying to preserve their own guy?
+
+XFS invented [2] I'd let it be. If you need [1] on XFS better push for
+a well defined standardized xattr and be in peace.
+
+BTRFS should decide which one of [2] or [1] it has space for in the inode
+and commit to it. Documenting well what it is.
+
+That said putting my Netapp hat. I would love to see an easy API
+for Author-creation-time BTime type of value. That is accessed
+uniformly by user-mode and/or Network file servers (NFS/CIFS).
+And would love to see a generic implementation of that interface
+that puts it into a standardized xattr if the FS in question does
+not have a native support for it [1].
+
+So I love these patches. And would want to see this through. But
+let us understand each other?
+
+Thanks
+Boaz
