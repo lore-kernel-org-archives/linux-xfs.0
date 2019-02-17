@@ -1,85 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33308 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726788AbfBQNOD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 17 Feb 2019 08:14:03 -0500
-Date: Sun, 17 Feb 2019 21:13:33 +0800
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [dm-devel] [PATCH V15 00/18] block: support multi-page bvec
-Message-ID: <20190217131332.GC7296@ming.t460p>
-References: <20190215111324.30129-1-ming.lei@redhat.com>
- <c52b6a8b-d1d4-67ff-f81c-371d09cc6d5b@kernel.dk>
- <1550250855.31902.102.camel@acm.org>
- <18c711a9-ca13-885d-43cd-4d48e683a6a2@kernel.dk>
+Received: from mail-qk1-f193.google.com ([209.85.222.193]:33373 "EHLO
+        mail-qk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726012AbfBQU3T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Feb 2019 15:29:19 -0500
+Subject: Re: [LSF/MM TOPIC] The end of the DAX experiment
+References: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
+From: Ric Wheeler <ricwheeler@gmail.com>
+Message-ID: <3eb67ffa-76c9-aa66-d162-d4e209330f48@gmail.com>
+Date: Sun, 17 Feb 2019 15:29:14 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <18c711a9-ca13-885d-43cd-4d48e683a6a2@kernel.dk>
+In-Reply-To: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Bart Van Assche <bvanassche@acm.org>, Mike Snitzer <snitzer@redhat.com>, linux-mm@kvack.org, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Darrick J . Wong" <darrick.wong@oracle.com>, Omar Sandoval <osandov@fb.com>, cluster-devel@redhat.com, linux-ext4@vger.kernel.org, Kent Overstreet <kent.overstreet@gmail.com>, Boaz Harrosh <ooo@electrozaur.com>, Gao Xiang <gaoxiang25@huawei.com>, Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, linux-bcache@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Dave Chinner <dchinner@redhat.com>, David Sterba <dsterba@suse.com>, linux-block@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, lsf-pc@lists.linux-foundation.org
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Fri, Feb 15, 2019 at 10:59:47AM -0700, Jens Axboe wrote:
-> On 2/15/19 10:14 AM, Bart Van Assche wrote:
-> > On Fri, 2019-02-15 at 08:49 -0700, Jens Axboe wrote:
-> >> On 2/15/19 4:13 AM, Ming Lei wrote:
-> >>> This patchset brings multi-page bvec into block layer:
-> >>
-> >> Applied, thanks Ming. Let's hope it sticks!
-> > 
-> > Hi Jens and Ming,
-> > 
-> > Test nvmeof-mp/002 fails with Jens' for-next branch from this morning.
-> > I have not yet tried to figure out which patch introduced the failure.
-> > Anyway, this is what I see in the kernel log for test nvmeof-mp/002:
-> > 
-> > [  475.611363] BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
-> > [  475.621188] #PF error: [normal kernel read fault]
-> > [  475.623148] PGD 0 P4D 0  
-> > [  475.624737] Oops: 0000 [#1] PREEMPT SMP KASAN
-> > [  475.626628] CPU: 1 PID: 277 Comm: kworker/1:1H Tainted: G    B             5.0.0-rc6-dbg+ #1
-> > [  475.630232] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
-> > [  475.633855] Workqueue: kblockd blk_mq_requeue_work
-> > [  475.635777] RIP: 0010:__blk_recalc_rq_segments+0xbe/0x590
-> > [  475.670948] Call Trace:
-> > [  475.693515]  blk_recalc_rq_segments+0x2f/0x50
-> > [  475.695081]  blk_insert_cloned_request+0xbb/0x1c0
-> > [  475.701142]  dm_mq_queue_rq+0x3d1/0x770
-> > [  475.707225]  blk_mq_dispatch_rq_list+0x5fc/0xb10
-> > [  475.717137]  blk_mq_sched_dispatch_requests+0x256/0x300
-> > [  475.721767]  __blk_mq_run_hw_queue+0xd6/0x180
-> > [  475.725920]  __blk_mq_delay_run_hw_queue+0x25c/0x290
-> > [  475.727480]  blk_mq_run_hw_queue+0x119/0x1b0
-> > [  475.732019]  blk_mq_run_hw_queues+0x7b/0xa0
-> > [  475.733468]  blk_mq_requeue_work+0x2cb/0x300
-> > [  475.736473]  process_one_work+0x4f1/0xa40
-> > [  475.739424]  worker_thread+0x67/0x5b0
-> > [  475.741751]  kthread+0x1cf/0x1f0
-> > [  475.746034]  ret_from_fork+0x24/0x30
-> > 
-> > (gdb) list *(__blk_recalc_rq_segments+0xbe)
-> > 0xffffffff816a152e is in __blk_recalc_rq_segments (block/blk-merge.c:366).
-> > 361                                                  struct bio *bio)
-> > 362     {
-> > 363             struct bio_vec bv, bvprv = { NULL };
-> > 364             int prev = 0;
-> > 365             unsigned int seg_size, nr_phys_segs;
-> > 366             unsigned front_seg_size = bio->bi_seg_front_size;
-> > 367             struct bio *fbio, *bbio;
-> > 368             struct bvec_iter iter;
-> > 369
-> > 370             if (!bio)
-> 
-> Just ran a few tests, and it also seems to cause about a 5% regression
-> in per-core IOPS throughput. Prior to this work, I could get 1620K 4k
-> rand read IOPS out of core, now I'm at ~1535K. The cycler stealer seems
-> to be blk_queue_split() and blk_rq_map_sg().
+On 2/6/19 4:12 PM, Dan Williams wrote:
+> Before people get too excited this isn't a proposal to kill DAX. The
+> topic proposal is a discussion to resolve lingering open questions
+> that currently motivate ext4 and xfs to scream "EXPERIMENTAL" when the
+> current DAX facilities are enabled. The are 2 primary concerns to
+> resolve. Enumerate the remaining features/fixes, and identify a path
+> to implement it all without regressing any existing application use
+> cases.
+>
+> An enumeration of remaining projects follows, please expand this list
+> if I missed something:
+>
+> * "DAX" has no specific meaning by itself, users have 2 use cases for
+> "DAX" capabilities: userspace cache management via MAP_SYNC, and page
+> cache avoidance where the latter aspect of DAX has no current api to
+> discover / use it. The project is to supplement MAP_SYNC with a
+> MAP_DIRECT facility and MADV_SYNC / MADV_DIRECT to indicate the same
+> dynamically via madvise. Similar to O_DIRECT, MAP_DIRECT would be an
+> application hint to avoid / minimiize page cache usage, but no strict
+> guarantee like what MAP_SYNC provides.
 
-Could you share us your test setting?
 
-I will run null_blk first and see if it can be reproduced.
+Sounds like a great topic to me. Having just gone through a new round of USENIX 
+paper reviews, it is interesting to see how many academic systems are being 
+pitched in this space (and most of them don't mention the kernel based xfs/ext4 
+with dax).
 
-Thanks,
-Ming
+Regards,
+
+Ric
+
+
+>
+> * Resolve all "if (dax) goto fail;" patterns in the kernel. Outside of
+> longterm-GUP (a topic in its own right) the projects here are
+> XFS-reflink and XFS-realtime-device support. DAX+reflink effectively
+> requires a given physical page to be mapped into two different inodes
+> at different (page->index) offsets. The challenge is to support
+> DAX-reflink without violating any existing application visible
+> semantics, the operating assumption / strawman to debate is that
+> experimental status is not blanket permission to go change existing
+> semantics in backwards incompatible ways.
+>
+> * Deprecate, but not remove, the DAX mount option. Too many flows
+> depend on the option so it will never go away, but the facility is too
+> coarse. Provide an option to enable MAP_SYNC and
+> more-likely-to-do-something-useful-MAP_DIRECT on a per-directory
+> basis. The current proposal is to allow this property to only be
+> toggled while the directory is empty to avoid the complications of
+> racing page invalidation with new DAX mappings.
+>
+>
+> Secondary projects, i.e. important but I would submit are not in the
+> critical path to removing the "experimental" designation:
+> * Filesystem-integrated badblock management. Hook up the media error
+> notifications from libnvdimm to the filesystem to allow for operations
+> like "list files with media errors" and "enumerate bad file offsets on
+> a granulatiy smaller than a page". Another consideration along these
+> lines is to integrate machine-check-handling and dynamic error
+> notification into a filesystem interface. I've heard complaints that
+> the sigaction() based mechanism to receive BUS_MCEERR_* information,
+> while sufficient for the "System RAM" use case, is not precise enough
+> for the "Persistent Memory / DAX" use case where errors are repairable
+> and sub-page error information is useful.
+>
+> * Userfaultfd for file-backed mappings and DAX
+>
+>
+> Ideally all the usual DAX, persistent memory, and GUP suspects could
+> be in the room to discuss this:
+> * Jan Kara
+> * Dave Chinner
+> * Christoph Hellwig
+> * Jeff Moyer
+> * Johannes Thumshirn
+> * Matthew Wilcox
+> * John Hubbard
+> * Jérôme Glisse
+> * MM folks for the reflink vs 'struct page' vs Xarray considerations
