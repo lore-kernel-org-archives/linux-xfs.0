@@ -1,78 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60114 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:33308 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726201AbfBQUkY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 17 Feb 2019 15:40:24 -0500
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 280E2218D3
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Feb 2019 20:40:23 +0000 (UTC)
-Received: by mail-wr1-f50.google.com with SMTP id w2so1469935wrt.11
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Feb 2019 12:40:23 -0800 (PST)
+        id S1726788AbfBQNOD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 17 Feb 2019 08:14:03 -0500
+Date: Sun, 17 Feb 2019 21:13:33 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [dm-devel] [PATCH V15 00/18] block: support multi-page bvec
+Message-ID: <20190217131332.GC7296@ming.t460p>
+References: <20190215111324.30129-1-ming.lei@redhat.com>
+ <c52b6a8b-d1d4-67ff-f81c-371d09cc6d5b@kernel.dk>
+ <1550250855.31902.102.camel@acm.org>
+ <18c711a9-ca13-885d-43cd-4d48e683a6a2@kernel.dk>
 MIME-Version: 1.0
-References: <cover.1550136164.git.osandov@fb.com> <20190214220626.GV14116@dastard>
- <6a9dc05a-0445-d0ab-0140-1de4fee7ba9b@gmail.com> <20190217175450.psaesabv3vlzvjv4@angband.pl>
-In-Reply-To: <20190217175450.psaesabv3vlzvjv4@angband.pl>
-From: Andy Lutomirski <luto@kernel.org>
-Date: Sun, 17 Feb 2019 12:40:09 -0800
-Message-ID: <CALCETrWsCUTSbvwemKHB=8=pO4fwK2qD0boFEd4puBDkpb3F9g@mail.gmail.com>
-Subject: Re: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <18c711a9-ca13-885d-43cd-4d48e683a6a2@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Adam Borowski <kilobyte@angband.pl>
-Cc: Boaz Harrosh <openosd@gmail.com>, Dave Chinner <david@fromorbit.com>, Omar Sandoval <osandov@osandov.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, kernel-team <kernel-team@fb.com>, Linux API <linux-api@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Bart Van Assche <bvanassche@acm.org>, Mike Snitzer <snitzer@redhat.com>, linux-mm@kvack.org, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Darrick J . Wong" <darrick.wong@oracle.com>, Omar Sandoval <osandov@fb.com>, cluster-devel@redhat.com, linux-ext4@vger.kernel.org, Kent Overstreet <kent.overstreet@gmail.com>, Boaz Harrosh <ooo@electrozaur.com>, Gao Xiang <gaoxiang25@huawei.com>, Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, linux-bcache@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Dave Chinner <dchinner@redhat.com>, David Sterba <dsterba@suse.com>, linux-block@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Sun, Feb 17, 2019 at 9:55 AM Adam Borowski <kilobyte@angband.pl> wrote:
->
-> On Sun, Feb 17, 2019 at 06:35:25PM +0200, Boaz Harrosh wrote:
-> > On 15/02/19 00:06, Dave Chinner wrote:
-> > > So you're adding an interface that allows users to change the create
-> > > time of files without needing any privileges?
->
-> > > Inode create time is forensic metadata in XFS  - information we use
-> > > for sequence of event and inode lifetime analysis during examination
-> > > of broken filesystem images and systems that have been broken into.
->
-> > I think the difference in opinion here is that there are two totally
-> > different BTIme out in the world. For two somewhat opposite motivations
-> > and it seems they both try to be crammed into the same on disk space.
-> >
-> > One - Author creation time
-> > Two - Local creation time
->
-> > So it looks like both sides are correct trying to preserve their own guy?
->
-> I'd say that [2] is too easily gameable to be worth the effort.  You can
-> just change it on the disk.  That right now it'd take some skill to find the
-> right place to edit doesn't matter -- a tool to update the btime against
-> your wishes would need to be written just once.  Unlike btrfs, XFS doesn't
-> even have a chain of checksums all the way to the root.
->
-> On the other hand, [1] has a lot of uses.  It can also be preserved in
-> backups and version control (svnt and git-restore-mtime could be easily
-> extended).
->
-> I'd thus go with [2] -- any uses for [1] are better delegated to filesystem
-> specific tools.
->
+On Fri, Feb 15, 2019 at 10:59:47AM -0700, Jens Axboe wrote:
+> On 2/15/19 10:14 AM, Bart Van Assche wrote:
+> > On Fri, 2019-02-15 at 08:49 -0700, Jens Axboe wrote:
+> >> On 2/15/19 4:13 AM, Ming Lei wrote:
+> >>> This patchset brings multi-page bvec into block layer:
+> >>
+> >> Applied, thanks Ming. Let's hope it sticks!
+> > 
+> > Hi Jens and Ming,
+> > 
+> > Test nvmeof-mp/002 fails with Jens' for-next branch from this morning.
+> > I have not yet tried to figure out which patch introduced the failure.
+> > Anyway, this is what I see in the kernel log for test nvmeof-mp/002:
+> > 
+> > [  475.611363] BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+> > [  475.621188] #PF error: [normal kernel read fault]
+> > [  475.623148] PGD 0 P4D 0  
+> > [  475.624737] Oops: 0000 [#1] PREEMPT SMP KASAN
+> > [  475.626628] CPU: 1 PID: 277 Comm: kworker/1:1H Tainted: G    B             5.0.0-rc6-dbg+ #1
+> > [  475.630232] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
+> > [  475.633855] Workqueue: kblockd blk_mq_requeue_work
+> > [  475.635777] RIP: 0010:__blk_recalc_rq_segments+0xbe/0x590
+> > [  475.670948] Call Trace:
+> > [  475.693515]  blk_recalc_rq_segments+0x2f/0x50
+> > [  475.695081]  blk_insert_cloned_request+0xbb/0x1c0
+> > [  475.701142]  dm_mq_queue_rq+0x3d1/0x770
+> > [  475.707225]  blk_mq_dispatch_rq_list+0x5fc/0xb10
+> > [  475.717137]  blk_mq_sched_dispatch_requests+0x256/0x300
+> > [  475.721767]  __blk_mq_run_hw_queue+0xd6/0x180
+> > [  475.725920]  __blk_mq_delay_run_hw_queue+0x25c/0x290
+> > [  475.727480]  blk_mq_run_hw_queue+0x119/0x1b0
+> > [  475.732019]  blk_mq_run_hw_queues+0x7b/0xa0
+> > [  475.733468]  blk_mq_requeue_work+0x2cb/0x300
+> > [  475.736473]  process_one_work+0x4f1/0xa40
+> > [  475.739424]  worker_thread+0x67/0x5b0
+> > [  475.741751]  kthread+0x1cf/0x1f0
+> > [  475.746034]  ret_from_fork+0x24/0x30
+> > 
+> > (gdb) list *(__blk_recalc_rq_segments+0xbe)
+> > 0xffffffff816a152e is in __blk_recalc_rq_segments (block/blk-merge.c:366).
+> > 361                                                  struct bio *bio)
+> > 362     {
+> > 363             struct bio_vec bv, bvprv = { NULL };
+> > 364             int prev = 0;
+> > 365             unsigned int seg_size, nr_phys_segs;
+> > 366             unsigned front_seg_size = bio->bi_seg_front_size;
+> > 367             struct bio *fbio, *bbio;
+> > 368             struct bvec_iter iter;
+> > 369
+> > 370             if (!bio)
+> 
+> Just ran a few tests, and it also seems to cause about a 5% regression
+> in per-core IOPS throughput. Prior to this work, I could get 1620K 4k
+> rand read IOPS out of core, now I'm at ~1535K. The cycler stealer seems
+> to be blk_queue_split() and blk_rq_map_sg().
 
-I started out in the Windows world, and I found it quite handy to
-right-click a file and see when it was created.  When I started using
-Linux, I saw things like this:
+Could you share us your test setting?
 
-Access: 2019-02-16 22:19:32.024284060 -0800
-Modify: 2016-02-02 19:26:47.901766778 -0800
-Change: 2016-02-02 19:26:47.907766649 -0800
+I will run null_blk first and see if it can be reproduced.
 
-and my mind boggled a bit.  Modify makes sense.  Change?  What's that?
- Why do I care?
-
-Adding "birth" makes sense, and I think that filesystem-agnostic
-backup tools *should* be able to write it.
-
-So I'm highly in favor of this patch.  If XFS wants to disallow
-writing the birth time, fine, but I think that behavior should be
-overridable.
+Thanks,
+Ming
