@@ -1,44 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:55819 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388736AbfBOG4i (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Feb 2019 01:56:38 -0500
-Date: Fri, 15 Feb 2019 07:56:36 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 08/10] xfs: move xfs_iomap_write_allocate to xfs_aops.c
-Message-ID: <20190215065636.GA20146@lst.de>
-References: <20190211125427.16577-1-hch@lst.de> <20190211125427.16577-9-hch@lst.de> <20190211152244.GG2804@bfoster>
+Received: from mail-qk1-f176.google.com ([209.85.222.176]:44993 "EHLO
+        mail-qk1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725916AbfBQUgO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Feb 2019 15:36:14 -0500
+From: Ric Wheeler <ricwheeler@gmail.com>
+Subject: [LSF/MM TOPIC] More async operations for file systems - async
+ discard?
+Message-ID: <92ab41f7-35bc-0f56-056f-ed88526b8ea4@gmail.com>
+Date: Sun, 17 Feb 2019 15:36:10 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190211152244.GG2804@bfoster>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-block@vger.kernel.org
 
-On Mon, Feb 11, 2019 at 10:22:45AM -0500, Brian Foster wrote:
-> It's an assert in xfs_bmapi_convert_delalloc() FWIW. That also doesn't
-> account for the fact that this changes an explicit error into a debug
-> mode notification. I'm not familiar with the history of this check and
-> the whole xfs_alert_fsblock_zero() thing, but AFAICT it's the only thing
-> that prevents an in-core record corruption from constructing a
-> superblock overwrite in this path.
+One proposal for btrfs was that we should look at getting discard out of the 
+synchronous path in order to minimize the slowdown associated with enabling 
+discard at mount time. Seems like an obvious win for "hint" like operations like 
+discard.
 
-Ok, I'll change the earlier patch to return an error.
+I do wonder where we stand now with the cost of the various discard commands - 
+how painful is it for modern SSD's? Do we have a good sense of how discard 
+performance scales as the request size increases? Do most devices "no op" a 
+discard operation when issued against an already discarded region?
 
-> Can we please fix this comment to explain what "what the caller expects"
-> means? This could be as simple as appending "(i.e., the caller has
-> already trimmed against overlapping COW fork blocks)" to the last
-> sentence above.
+Would this be an interesting topic to discuss in a shared block/file system session?
 
-Actually, I think the better idea is to just do the explicit trim
-to cow_fsb in the caller, as that is a lot more obvious.
+Regards,
 
-> > +	ASSERT(wpc->imap.br_startoff <= offset_fsb);
-> > +	ASSERT(wpc->imap.br_startoff + wpc->imap.br_blockcount >= offset_fsb);
-> 
-> Looks like this one should be >.
-
-Indeed.
+Ric
