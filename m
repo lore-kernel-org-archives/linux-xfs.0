@@ -1,63 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52032 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729086AbfBOLRt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Feb 2019 06:17:49 -0500
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V15 16/18] block: document usage of bio iterator helpers
-Date: Fri, 15 Feb 2019 19:13:22 +0800
-Message-Id: <20190215111324.30129-17-ming.lei@redhat.com>
-In-Reply-To: <20190215111324.30129-1-ming.lei@redhat.com>
-References: <20190215111324.30129-1-ming.lei@redhat.com>
+Received: from tartarus.angband.pl ([54.37.238.230]:43838 "EHLO
+        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725811AbfBQRzL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Feb 2019 12:55:11 -0500
+Date: Sun, 17 Feb 2019 18:54:50 +0100
+From: Adam Borowski <kilobyte@angband.pl>
+Subject: Re: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
+Message-ID: <20190217175450.psaesabv3vlzvjv4@angband.pl>
+References: <cover.1550136164.git.osandov@fb.com>
+ <20190214220626.GV14116@dastard>
+ <6a9dc05a-0445-d0ab-0140-1de4fee7ba9b@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <6a9dc05a-0445-d0ab-0140-1de4fee7ba9b@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ming Lei <ming.lei@redhat.com>
+To: Boaz Harrosh <openosd@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, Omar Sandoval <osandov@osandov.com>, linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
 
-Now multi-page bvec is supported, some helpers may return page by
-page, meantime some may return segment by segment, this patch
-documents the usage.
+On Sun, Feb 17, 2019 at 06:35:25PM +0200, Boaz Harrosh wrote:
+> On 15/02/19 00:06, Dave Chinner wrote:
+> > So you're adding an interface that allows users to change the create
+> > time of files without needing any privileges?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Omar Sandoval <osandov@fb.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- Documentation/block/biovecs.txt | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+> > Inode create time is forensic metadata in XFS  - information we use
+> > for sequence of event and inode lifetime analysis during examination
+> > of broken filesystem images and systems that have been broken into.
 
-diff --git a/Documentation/block/biovecs.txt b/Documentation/block/biovecs.txt
-index 25689584e6e0..ce6eccaf5df7 100644
---- a/Documentation/block/biovecs.txt
-+++ b/Documentation/block/biovecs.txt
-@@ -117,3 +117,28 @@ Other implications:
-    size limitations and the limitations of the underlying devices. Thus
-    there's no need to define ->merge_bvec_fn() callbacks for individual block
-    drivers.
-+
-+Usage of helpers:
-+=================
-+
-+* The following helpers whose names have the suffix of "_all" can only be used
-+on non-BIO_CLONED bio. They are usually used by filesystem code. Drivers
-+shouldn't use them because the bio may have been split before it reached the
-+driver.
-+
-+	bio_for_each_segment_all()
-+	bio_first_bvec_all()
-+	bio_first_page_all()
-+	bio_last_bvec_all()
-+
-+* The following helpers iterate over single-page segment. The passed 'struct
-+bio_vec' will contain a single-page IO vector during the iteration
-+
-+	bio_for_each_segment()
-+	bio_for_each_segment_all()
-+
-+* The following helpers iterate over multi-page bvec. The passed 'struct
-+bio_vec' will contain a multi-page IO vector during the iteration
-+
-+	bio_for_each_bvec()
-+	rq_for_each_bvec()
+> I think the difference in opinion here is that there are two totally
+> different BTIme out in the world. For two somewhat opposite motivations
+> and it seems they both try to be crammed into the same on disk space.
+> 
+> One - Author creation time
+> Two - Local creation time
+
+> So it looks like both sides are correct trying to preserve their own guy?
+
+I'd say that [2] is too easily gameable to be worth the effort.  You can
+just change it on the disk.  That right now it'd take some skill to find the
+right place to edit doesn't matter -- a tool to update the btime against
+your wishes would need to be written just once.  Unlike btrfs, XFS doesn't
+even have a chain of checksums all the way to the root.
+
+On the other hand, [1] has a lot of uses.  It can also be preserved in
+backups and version control (svnt and git-restore-mtime could be easily
+extended).
+
+I'd thus go with [2] -- any uses for [1] are better delegated to filesystem
+specific tools.
+
+
+Meow!
 -- 
-2.9.5
+⢀⣴⠾⠻⢶⣦⠀
+⣾⠁⢠⠒⠀⣿⡁
+⢿⡄⠘⠷⠚⠋⠀ Have you accepted Khorne as your lord and saviour?
+⠈⠳⣄⠀⠀⠀⠀
