@@ -1,328 +1,161 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59688 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:14470 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732115AbfBRN5R (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Feb 2019 08:57:17 -0500
-Date: Mon, 18 Feb 2019 08:57:14 -0500
+        id S1732851AbfBROeG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Feb 2019 09:34:06 -0500
+Date: Mon, 18 Feb 2019 09:34:04 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [linux-next:master 7512/8919]
- fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse: warning: incorrect type in
- argument 2 (different base types)
-Message-ID: <20190218135714.GA24807@bfoster>
-References: <201902160410.WC4AmuSu%fengguang.wu@intel.com>
- <20190215225524.GE6503@magnolia>
- <20190216120528.GA55854@bfoster>
- <20190216195401.GY32253@magnolia>
+Subject: Re: Corruption of in-memory data detected. Shutting down filesystem
+Message-ID: <20190218143403.GB33924@bfoster>
+References: <b4141aed-70f1-83de-92e3-b8c9494900c7@molgen.mpg.de>
+ <20190218142203.p53qvipc4yul6mv6@hades.usersys.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20190216195401.GY32253@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190218142203.p53qvipc4yul6mv6@hades.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Paul Menzel <pmenzel@molgen.mpg.de>, linux-xfs@vger.kernel.org
 
-On Sat, Feb 16, 2019 at 11:54:01AM -0800, Darrick J. Wong wrote:
-> On Sat, Feb 16, 2019 at 07:05:28AM -0500, Brian Foster wrote:
-> > On Fri, Feb 15, 2019 at 02:55:24PM -0800, Darrick J. Wong wrote:
-> > > [rip all the cc off]
-> > > 
+On Mon, Feb 18, 2019 at 03:22:03PM +0100, Carlos Maiolino wrote:
+> Hi.
+> 
+> > Dear XFS folks,
 > > 
-> > cc linux-xfs
 > > 
-> > > On Sat, Feb 16, 2019 at 04:02:13AM +0800, kbuild test robot wrote:
-> > > > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-> > > > head:   7a92eb7cc1dc4c63e3a2fa9ab8e3c1049f199249
-> > > > commit: b8f89801664f8413a88cf2c7539d1aeae07dd3c5 [7512/8919] xfs: distinguish between bnobt and cntbt magic values
-> > > > reproduce:
-> > > >         # apt-get install sparse
-> > > >         git checkout b8f89801664f8413a88cf2c7539d1aeae07dd3c5
-> > > >         make ARCH=x86_64 allmodconfig
-> > > >         make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
-> > > > 
-> > > > All warnings (new ones prefixed by >>):
-> > > > 
-> > > > >> fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse: warning: incorrect type in argument 2 (different base types)
-> > > >    fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse:    expected unsigned int [usertype] dmagic
-> > > >    fs/xfs/libxfs/xfs_alloc_btree.c:302:40: sparse:    got restricted __be32 [usertype] bb_magic
-> > > 
-> > > Hmmmm, I suspected this was going to happen, though when I built with
-> > > those parameters the endian checking didn't trigger so I decided not to
-> > > press any further.  Oh well...
-> > > 
+> 
+> > [   25.506600] XFS (sdd): Mounting V5 Filesystem
+> > [   25.629621] XFS (sdd): Starting recovery (logdev: internal)
+> > [   25.685100] NFSD: starting 90-second grace period (net f0000098)
+> > [   26.433828] XFS (sdd): xfs_do_force_shutdown(0x8) called from line 368 of file fs/xfs/xfs_trans.c.  Return address = 00000000cfa623e1
+> > [   26.433834] XFS (sdd): Corruption of in-memory data detected.  Shutting down filesystem
+> > [   26.433835] XFS (sdd): Please umount the filesystem and rectify the problem(s)
+> > [   26.433857] XFS (sdd): xfs_imap_to_bp: xfs_trans_read_buf() returned error -5.
 > > 
-> > Argh. Sorry, I wasn't aware this would result in noise.
+> Ok, filesystem shut itself down likely because blocks allocated in the
+> transaction exceeded the reservation.
 > 
-> Heh.  It turned out that I forgot that my computer was configured to use
-> smatch instead of sparse, and only sparse does the endian checking.
-> (Gee, I thought smatch was supposed to be a superset of sparse!)
+> Could you please post the whole dmesg?
 > 
-> So with the addition of /even more/ wrapper scripts I can now run
-> /both/.
+> > We mounted it with an overlay files,
 > 
-> > > Can we get a fix going for this ASAP, please?
-> > > 
+> I'm not sure what you meant here, could you please specify what you meant by
+> 'overlay files'? Are you using this XFS filesystem as an upper/lower FS for
+> overlayfs?
+> 
+> > and the xfs_repair shows the
+> > summary below.
 > > 
-> > FYI it probably won't be Monday until I can spin a proper patch. In the
-> > meantime, what's the preferred solution?
+> > ```
+> > # xfs_repair -vv /dev/mapper/sddovl
+> >         - block cache size set to 4201400 entries
+> > Phase 2 - using internal log
+> >         - zero log...
+> > zero_log: head block 3930112 tail block 3929088
+> > ERROR: The filesystem has valuable metadata changes in a log which needs to
+> > be replayed.  Mount the filesystem to replay the log, and unmount it before
+> > re-running xfs_repair.  If you are unable to mount the filesystem, then use
+> > the -L option to destroy the log and attempt a repair.
+> > Note that destroying the log may cause corruption -- please attempt a mount
+> 
+> Have you tried to mount/umount the filesystem before zeroing the log? This is
+> supposed to be used as a last resort. Zero out the logs I mean.
+> 
 > > 
-> > I thought we might be able to address the callers fairly cleanly by
-> > creating a couple xfs_verify_magic[16|32]() wrappers and cast to the
-> > underlying format, but then sparse just generates warnings for the
-> > casts. So AFAICT, the options are to create separate wrappers and
-> > xfs_buf_ops fields (magic16/magic32) for each magic type and use them
-> > appropriately in each verifier or go back to how this patch was written
-> > originally and use the in-core values.
+> > The directory `lost+found` contains almost five million files
+> > 
+> >     # find lost+found | wc
+> >     4859687 4859687 110985720
 > 
-> Hmm.  It would be sort of ugly to have to re-add the endian conversions
-> back into the verifier code now; I think I lean towards having a magic16
-> array and a xfs_verify_magic16.
+> We don't have neither the whole xfs_repair output nor more information about the
+> filesystem itself, but looks like you had huge directory(ies) update in your log
+> which were not replayed, and all orphan inodes ended up in the lost+found =/
+> 
+> > 
+> > We saved the output of `xfs_repair`, but it’s over 500 MB in size, so we
+> > cannot attach it.
+> > 
+> > `sudo xfs_metadump -go /dev/sdd sdd-metadump.dump` takes over 15 minutes
+> > and the dump files is 8.8 GB in size.
+> 
+> At this point, xfs_metadump won't help much once you already repaired the
+> filesystem.
+> Although, why are you getting a metadump from /dev/sdd, when the fs you tried to
+> repair is a device-mapper device? Are you facing this issue in more than one
+> filesystem?
+> 
+> > 
+> > It’d be great, if you could give hints on debugging this issue further,
+> > and comment, if you think it is possible to recover the files, that means,
+> > to fix the log, so that it can be cleanly applied.
+> 
+> Unfortunately, you already got rid of the log, so, you can't recover it anymore,
+> but all the recovered files will be in lost+found, with their inode numbers as
+> file name.
+> 
+> 
+> Ok, so below is the dmesg, thanks for having attached it.
+> 
+> One thing is there are 2 devices failing. sdd and dm-0. So my question again, is
+> this the same filesystem or are they 2 separated filesystems showing exactly the
+> same issue? The filesystem has found corrupted inodes in the AG's unlinked
+> bucket, but this shouldn't affect log recovery.
+> 
+> If they are two separated devices, did you xfs_repair'ed both of them? After you
+> repaired the filesystem(s), do you still see the memory corruption issue?
+> 
+> At this point, there is not much we can do regarding the filesystem metadata,
+> once you already forced a xfs_repair zeroing the logs.
+> 
+> So, could you please tell the current state of the filesystem (or filesystems if
+> there is more than one)? Are you still seeing the same memory corruption error
+> even after xfs_repair it?
 > 
 
-Ok.
+FWIW, if you do still have an original copy of the fs, we could see
+about whether bypassing the shutdown allows us to trade log recovery
+failure for a space accounting error. This would still require a
+subsequent repair, but that may be less invasive than zapping the log
+and dealing with the aftermath of that.
 
-> (Though I cheat and use anonymous unions :P)
-> 
+Brian
 
-I think that helps a bit.
-
-> > The former seems silly to me. My preference is the latter. Thoughts or
-> > other ideas? Is there some other way to safely cast a "restricted" type?
+> And for completeness, please provide us as much information as possible from
+> this(these) filesystem(s):
 > 
-> None that I know of, sparse complains about any cast between restricted
-> types.  I shut up sparse with the following mostly untested patch:
+> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 > 
-> --D
+> Cheers.
 > 
-> xfs: fix xfs_buf magic number endian checks
+> > [ 1380.869451] XFS (sdd): Mounting V5 Filesystem
+> > [ 1380.912559] XFS (sdd): Starting recovery (logdev: internal)
+> > [ 1381.030780] XFS (sdd): xfs_do_force_shutdown(0x8) called from line 368 of file fs/xfs/xfs_trans.c.  Return address = 00000000cfa623e1
+> > [ 1381.030785] XFS (sdd): Corruption of in-memory data detected.  Shutting down filesystem
+> > [ 1381.030786] XFS (sdd): Please umount the filesystem and rectify the problem(s)
+> > [ 1381.031086] XFS (sdd): xlog_recover_clear_agi_bucket: failed to clear agi 0. Continuing.
+> > [ 1381.031088] XFS (sdd): xfs_imap_to_bp: xfs_trans_read_buf() returned error -5.
+> > [ 1381.031090] XFS (sdd): xlog_recover_clear_agi_bucket: failed to clear agi 0. Continuing.
+> > [ 1381.031093] XFS (sdd): xfs_imap_to_bp: xfs_trans_read_buf() returned error -5.
+> > [ 1381.031095] XFS (sdd): xlog_recover_clear_agi_bucket: failed to clear agi 0. Continuing.
+> <...>
+> > [ 1381.031113] XFS (sdd): Ending recovery (logdev: internal)
+> > [ 1381.031490] XFS (sdd): Error -5 reserving per-AG metadata reserve pool.
+> > [ 1381.031492] XFS (sdd): xfs_do_force_shutdown(0x8) called from line 548 of file fs/xfs/xfs_fsops.c.  Return address = 00000000217dbba5
 > 
-> Create a separate magic16 check function so that we don't run afoul of
-> static checkers.
+> > [ 2795.123228] XFS (dm-0): Ending recovery (logdev: internal)
+> > [ 2795.231020] XFS (dm-0): Error -5 reserving per-AG metadata reserve pool.
+> > [ 2795.231023] XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 548 of file fs/xfs/xfs_fsops.c.  Return address = 00000000217dbba5
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-
-I was originally thinking of splitting out everyting into magic32/16,
-but this shows that there aren't too many 16 instances. This looks good
-and quiets everything for me as well:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_attr_leaf.c |    4 ++--
->  fs/xfs/libxfs/xfs_da_btree.c  |    8 ++++----
->  fs/xfs/libxfs/xfs_dir2_leaf.c |    8 ++++----
->  fs/xfs/libxfs/xfs_dquot_buf.c |    8 ++++----
->  fs/xfs/libxfs/xfs_inode_buf.c |   10 +++++-----
->  fs/xfs/xfs_buf.c              |   20 +++++++++++++++++++-
->  fs/xfs/xfs_buf.h              |    8 ++++++--
->  fs/xfs/xfs_log_recover.c      |    2 +-
->  8 files changed, 45 insertions(+), 23 deletions(-)
+> > [10944.023429] XFS (dm-0): Mounting V5 Filesystem
+> > [10944.035260] XFS (dm-0): Ending clean mount
+> > [11664.862376] XFS (dm-0): Unmounting Filesystem
+> > [11689.260213] XFS (dm-0): Mounting V5 Filesystem
+> > [11689.338187] XFS (dm-0): Ending clean mount
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 0c92987f57fc..1f6e3965ff74 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -358,8 +358,8 @@ xfs_attr3_leaf_read_verify(
->  
->  const struct xfs_buf_ops xfs_attr3_leaf_buf_ops = {
->  	.name = "xfs_attr3_leaf",
-> -	.magic = { cpu_to_be16(XFS_ATTR_LEAF_MAGIC),
-> -		   cpu_to_be16(XFS_ATTR3_LEAF_MAGIC) },
-> +	.magic16 = { cpu_to_be16(XFS_ATTR_LEAF_MAGIC),
-> +		     cpu_to_be16(XFS_ATTR3_LEAF_MAGIC) },
->  	.verify_read = xfs_attr3_leaf_read_verify,
->  	.verify_write = xfs_attr3_leaf_write_verify,
->  	.verify_struct = xfs_attr3_leaf_verify,
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index eb2cee428f26..e2737e2ac2ae 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -129,7 +129,7 @@ xfs_da3_blkinfo_verify(
->  	struct xfs_mount	*mp = bp->b_target->bt_mount;
->  	struct xfs_da_blkinfo	*hdr = &hdr3->hdr;
->  
-> -	if (!xfs_verify_magic(bp, hdr->magic))
-> +	if (!xfs_verify_magic16(bp, hdr->magic))
->  		return __this_address;
->  
->  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> @@ -141,7 +141,7 @@ xfs_da3_blkinfo_verify(
->  			return __this_address;
->  	}
->  
-> -	return 0;
-> +	return NULL;
->  }
->  
->  static xfs_failaddr_t
-> @@ -274,8 +274,8 @@ xfs_da3_node_verify_struct(
->  
->  const struct xfs_buf_ops xfs_da3_node_buf_ops = {
->  	.name = "xfs_da3_node",
-> -	.magic = { cpu_to_be16(XFS_DA_NODE_MAGIC),
-> -		   cpu_to_be16(XFS_DA3_NODE_MAGIC) },
-> +	.magic16 = { cpu_to_be16(XFS_DA_NODE_MAGIC),
-> +		     cpu_to_be16(XFS_DA3_NODE_MAGIC) },
->  	.verify_read = xfs_da3_node_read_verify,
->  	.verify_write = xfs_da3_node_write_verify,
->  	.verify_struct = xfs_da3_node_verify_struct,
-> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> index 094028b7b162..9a3767818c50 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> @@ -198,8 +198,8 @@ xfs_dir3_leaf_write_verify(
->  
->  const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
->  	.name = "xfs_dir3_leaf1",
-> -	.magic = { cpu_to_be16(XFS_DIR2_LEAF1_MAGIC),
-> -		   cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) },
-> +	.magic16 = { cpu_to_be16(XFS_DIR2_LEAF1_MAGIC),
-> +		     cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) },
->  	.verify_read = xfs_dir3_leaf_read_verify,
->  	.verify_write = xfs_dir3_leaf_write_verify,
->  	.verify_struct = xfs_dir3_leaf_verify,
-> @@ -207,8 +207,8 @@ const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
->  
->  const struct xfs_buf_ops xfs_dir3_leafn_buf_ops = {
->  	.name = "xfs_dir3_leafn",
-> -	.magic = { cpu_to_be16(XFS_DIR2_LEAFN_MAGIC),
-> -		   cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) },
-> +	.magic16 = { cpu_to_be16(XFS_DIR2_LEAFN_MAGIC),
-> +		     cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) },
->  	.verify_read = xfs_dir3_leaf_read_verify,
->  	.verify_write = xfs_dir3_leaf_write_verify,
->  	.verify_struct = xfs_dir3_leaf_verify,
-> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-> index b956638a3532..fb5bd9a804f6 100644
-> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
-> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-> @@ -277,8 +277,8 @@ xfs_dquot_buf_write_verify(
->  
->  const struct xfs_buf_ops xfs_dquot_buf_ops = {
->  	.name = "xfs_dquot",
-> -	.magic = { cpu_to_be16(XFS_DQUOT_MAGIC),
-> -		   cpu_to_be16(XFS_DQUOT_MAGIC) },
-> +	.magic16 = { cpu_to_be16(XFS_DQUOT_MAGIC),
-> +		     cpu_to_be16(XFS_DQUOT_MAGIC) },
->  	.verify_read = xfs_dquot_buf_read_verify,
->  	.verify_write = xfs_dquot_buf_write_verify,
->  	.verify_struct = xfs_dquot_buf_verify_struct,
-> @@ -286,8 +286,8 @@ const struct xfs_buf_ops xfs_dquot_buf_ops = {
->  
->  const struct xfs_buf_ops xfs_dquot_buf_ra_ops = {
->  	.name = "xfs_dquot_ra",
-> -	.magic = { cpu_to_be16(XFS_DQUOT_MAGIC),
-> -		   cpu_to_be16(XFS_DQUOT_MAGIC) },
-> +	.magic16 = { cpu_to_be16(XFS_DQUOT_MAGIC),
-> +		     cpu_to_be16(XFS_DQUOT_MAGIC) },
->  	.verify_read = xfs_dquot_buf_readahead_verify,
->  	.verify_write = xfs_dquot_buf_write_verify,
->  };
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index f92f14e93ad3..e021d5133ccb 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -97,7 +97,7 @@ xfs_inode_buf_verify(
->  
->  		dip = xfs_buf_offset(bp, (i << mp->m_sb.sb_inodelog));
->  		unlinked_ino = be32_to_cpu(dip->di_next_unlinked);
-> -		di_ok = xfs_verify_magic(bp, dip->di_magic) &&
-> +		di_ok = xfs_verify_magic16(bp, dip->di_magic) &&
->  			xfs_dinode_good_version(mp, dip->di_version) &&
->  			xfs_verify_agino_or_null(mp, agno, unlinked_ino);
->  		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
-> @@ -146,16 +146,16 @@ xfs_inode_buf_write_verify(
->  
->  const struct xfs_buf_ops xfs_inode_buf_ops = {
->  	.name = "xfs_inode",
-> -	.magic = { cpu_to_be16(XFS_DINODE_MAGIC),
-> -		   cpu_to_be16(XFS_DINODE_MAGIC) },
-> +	.magic16 = { cpu_to_be16(XFS_DINODE_MAGIC),
-> +		     cpu_to_be16(XFS_DINODE_MAGIC) },
->  	.verify_read = xfs_inode_buf_read_verify,
->  	.verify_write = xfs_inode_buf_write_verify,
->  };
->  
->  const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
->  	.name = "xfs_inode_ra",
-> -	.magic = { cpu_to_be16(XFS_DINODE_MAGIC),
-> -		   cpu_to_be16(XFS_DINODE_MAGIC) },
-> +	.magic16 = { cpu_to_be16(XFS_DINODE_MAGIC),
-> +		     cpu_to_be16(XFS_DINODE_MAGIC) },
->  	.verify_read = xfs_inode_buf_readahead_verify,
->  	.verify_write = xfs_inode_buf_write_verify,
->  };
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 52a382b8cbce..548344e25128 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -2213,7 +2213,7 @@ void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
->  bool
->  xfs_verify_magic(
->  	struct xfs_buf		*bp,
-> -	uint32_t		dmagic)
-> +	__be32			dmagic)
->  {
->  	struct xfs_mount	*mp = bp->b_target->bt_mount;
->  	int			idx;
-> @@ -2223,3 +2223,21 @@ xfs_verify_magic(
->  		return false;
->  	return dmagic == bp->b_ops->magic[idx];
->  }
-> +/*
-> + * Verify an on-disk magic value against the magic value specified in the
-> + * verifier structure. The verifier magic is in disk byte order so the caller is
-> + * expected to pass the value directly from disk.
-> + */
-> +bool
-> +xfs_verify_magic16(
-> +	struct xfs_buf		*bp,
-> +	__be16			dmagic)
-> +{
-> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-> +	int			idx;
-> +
-> +	idx = xfs_sb_version_hascrc(&mp->m_sb);
-> +	if (unlikely(WARN_ON(!bp->b_ops || !bp->b_ops->magic16[idx])))
-> +		return false;
-> +	return dmagic == bp->b_ops->magic16[idx];
-> +}
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 44f9423a1861..d0b96e071cec 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -125,7 +125,10 @@ struct xfs_buf_map {
->  
->  struct xfs_buf_ops {
->  	char *name;
-> -	uint32_t magic[2];		/* v4 and v5 on disk magic values */
-> +	union {
-> +		__be32 magic[2];	/* v4 and v5 on disk magic values */
-> +		__be16 magic16[2];	/* v4 and v5 on disk magic values */
-> +	};
->  	void (*verify_read)(struct xfs_buf *);
->  	void (*verify_write)(struct xfs_buf *);
->  	xfs_failaddr_t (*verify_struct)(struct xfs_buf *bp);
-> @@ -387,6 +390,7 @@ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
->  #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
->  
->  int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
-> -bool xfs_verify_magic(struct xfs_buf *bp, uint32_t dmagic);
-> +bool xfs_verify_magic(struct xfs_buf *bp, __be32 dmagic);
-> +bool xfs_verify_magic16(struct xfs_buf *bp, __be16 dmagic);
->  
->  #endif	/* __XFS_BUF_H__ */
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index f5948d16015b..3371d1ff27c4 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3049,7 +3049,7 @@ xlog_recover_inode_pass2(
->  	 * Make sure the place we're flushing out to really looks
->  	 * like an inode!
->  	 */
-> -	if (unlikely(!xfs_verify_magic(bp, dip->di_magic))) {
-> +	if (unlikely(!xfs_verify_magic16(bp, dip->di_magic))) {
->  		xfs_alert(mp,
->  	"%s: Bad inode magic number, dip = "PTR_FMT", dino bp = "PTR_FMT", ino = %Ld",
->  			__func__, dip, bp, in_f->ilf_ino);
+> 
+> 
+> 
+> -- 
+> Carlos
