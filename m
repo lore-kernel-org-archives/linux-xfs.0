@@ -1,232 +1,235 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59348 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56250 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730659AbfBRQOf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Feb 2019 11:14:35 -0500
-Date: Mon, 18 Feb 2019 11:14:32 -0500
+        id S1730659AbfBRQRt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Feb 2019 11:17:49 -0500
+Date: Mon, 18 Feb 2019 11:17:46 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: inode not recycled after delete file
-Message-ID: <20190218161432.GD33924@bfoster>
-References: <CABAwU-adU9ChA7XbT5_LVGvyK_5tUmq-t3eOmbPRAGCFD3Md0g@mail.gmail.com>
- <20190218143122.GA33924@bfoster>
- <CABAwU-Z7dSNqfpH2wxF63C=UeBWoH8Au+P+Z8j1VERg1t_aZ5w@mail.gmail.com>
- <CABAwU-Z6sZzvzbtycZfWiembpAeaPBQT9xuQ9scqb0zh104KMw@mail.gmail.com>
+Subject: Re: Corruption of in-memory data detected. Shutting down filesystem
+Message-ID: <20190218161746.GE33924@bfoster>
+References: <b4141aed-70f1-83de-92e3-b8c9494900c7@molgen.mpg.de>
+ <20190218142203.p53qvipc4yul6mv6@hades.usersys.redhat.com>
+ <20190218143403.GB33924@bfoster>
+ <0d3627ab-34e6-a800-c562-c25c578e3c6a@molgen.mpg.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CABAwU-Z6sZzvzbtycZfWiembpAeaPBQT9xuQ9scqb0zh104KMw@mail.gmail.com>
+In-Reply-To: <0d3627ab-34e6-a800-c562-c25c578e3c6a@molgen.mpg.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: huang jun <hjwsm1989@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Paul Menzel <pmenzel@molgen.mpg.de>
+Cc: linux-xfs@vger.kernel.org, it+linux-xfs@molgen.mpg.de
 
-On Mon, Feb 18, 2019 at 11:43:25PM +0800, huang jun wrote:
-> The traceback paste below, and google show some bug reports,
-> but i don't know whether this bug resolved or not on my linux/xfs version.
+On Mon, Feb 18, 2019 at 04:08:00PM +0100, Paul Menzel wrote:
+> Dear Brian, dear Carlos,
+> 
+> 
+> Thank you very much for your replies.
+> 
+> 
+> On 02/18/19 15:34, Brian Foster wrote:
+> > On Mon, Feb 18, 2019 at 03:22:03PM +0100, Carlos Maiolino wrote:
+> 
+> >>> [   25.506600] XFS (sdd): Mounting V5 Filesystem
+> >>> [   25.629621] XFS (sdd): Starting recovery (logdev: internal)
+> >>> [   25.685100] NFSD: starting 90-second grace period (net f0000098)
+> >>> [   26.433828] XFS (sdd): xfs_do_force_shutdown(0x8) called from line 368 of file fs/xfs/xfs_trans.c.  Return address = 00000000cfa623e1
+> >>> [   26.433834] XFS (sdd): Corruption of in-memory data detected.  Shutting down filesystem
+> >>> [   26.433835] XFS (sdd): Please umount the filesystem and rectify the problem(s)
+> >>> [   26.433857] XFS (sdd): xfs_imap_to_bp: xfs_trans_read_buf() returned error -5.
+> >>>
+> >> Ok, filesystem shut itself down likely because blocks allocated in the
+> >> transaction exceeded the reservation.
+> 
+> >>> We mounted it with an overlay files,
+> >>
+> >> I'm not sure what you meant here, could you please specify what you meant by
+> >> 'overlay files'? Are you using this XFS filesystem as an upper/lower FS for
+> >> overlayfs?
+> 
+> To not touch the original data on `/dev/sdd` after the error we created on overlay
+> FS to test xfs_repair, and analyze the effect.
+> 
+> ```
+> # more /scratch/local3/mkoverlay.sh 
+> dev=/dev/sdd
+> ovl=/scratch/local3/X4042-overlay.file
+> newdevname=sddovl
+> size=$(blockdev --getsz "$dev")
+> 
+> loop=$(losetup -f --show -- "$ovl")
+> printf '%s\n' "0 $size snapshot $dev $loop P 8" 
+> printf '%s\n' "0 $size snapshot $dev $loop P 8" | dmsetup create "$newdevname"
+> # lsblk
+> NAME     MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+> loop0      7:0    0    10G  0 loop 
+> loop1      7:1    0    10G  0 loop 
+> └─sddovl 252:0    0    51T  0 dm   
+> sda        8:0    0 931.5G  0 disk 
+> ├─sda1     8:1    0   256G  0 part /
+> └─sda2     8:2    0 675.5G  0 part /amd/tinytina/0
+> sdb        8:16   0 931.5G  0 disk /amd/tinytina/1
+> sdc        8:32   0  27.3T  0 disk /amd/tinytina/2
+> sdd        8:48   0    51T  0 disk 
+> └─sddovl 252:0    0    51T  0 dm   
+> sde        8:64   0    51T  0 disk /amd/tinytina/X/X4075
+> sdf        8:80   0    51T  0 disk /amd/tinytina/X/X4076
+> ```
+> 
+> >>> and the xfs_repair shows the summary below.
+> >>>
+> >>> ```
+> >>> # xfs_repair -vv /dev/mapper/sddovl
+> >>>         - block cache size set to 4201400 entries
+> >>> Phase 2 - using internal log
+> >>>         - zero log...
+> >>> zero_log: head block 3930112 tail block 3929088
+> >>> ERROR: The filesystem has valuable metadata changes in a log which needs to
+> >>> be replayed.  Mount the filesystem to replay the log, and unmount it before
+> >>> re-running xfs_repair.  If you are unable to mount the filesystem, then use
+> >>> the -L option to destroy the log and attempt a repair.
+> >>> Note that destroying the log may cause corruption -- please attempt a mount
+> >>
+> >> Have you tried to mount/umount the filesystem before zeroing the log? This is
+> >> supposed to be used as a last resort. Zero out the logs I mean.
+> 
+> Yes, we tried that, and were told to run `xfs_repair`.
+> 
+> >>> The directory `lost+found` contains almost five million files
+> >>>
+> >>>     # find lost+found | wc
+> >>>     4859687 4859687 110985720
+> >>
+> >> We don't have neither the whole xfs_repair output nor more information about the
+> >> filesystem itself, but looks like you had huge directory(ies) update in your log
+> >> which were not replayed, and all orphan inodes ended up in the lost+found =/
+> 
+> I’ll see if I can share the 500 MB xfs_repair output.
+> 
+> ```
+> $ lsblk /dev/sdd
+> NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+> sdd    8:48   0  51T  0 disk
+> $ sudo xfs_info /dev/sdd
+> Password (for pmenzel) : 
+> meta-data=/dev/sdd               isize=512    agcount=51, agsize=268435392 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=0, rmapbt=0
+>          =                       reflink=0
+> data     =                       bsize=4096   blocks=13671838208, imaxpct=1
+>          =                       sunit=64     swidth=896 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=521728, version=2
+>          =                       sectsz=512   sunit=64 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> ```
+> 
+> >>> We saved the output of `xfs_repair`, but it’s over 500 MB in size, so we
+> >>> cannot attach it.
+> >>>
+> >>> `sudo xfs_metadump -go /dev/sdd sdd-metadump.dump` takes over 15 minutes
+> >>> and the dump files is 8.8 GB in size.
+> >>
+> >> At this point, xfs_metadump won't help much once you already repaired the
+> >> filesystem.
+> 
+> As written, we only run the repair on the overlay.
+> 
+> >> Although, why are you getting a metadump from /dev/sdd, when the fs you tried to
+> >> repair is a device-mapper device? Are you facing this issue in more than one
+> >> filesystem?
+> 
+> As written above, it was to not touch `/dev/sdd`. So the meta data dump should be
+> useable.
+> 
+> >>> It’d be great, if you could give hints on debugging this issue further,
+> >>> and comment, if you think it is possible to recover the files, that means,
+> >>> to fix the log, so that it can be cleanly applied.
+> >>
+> >> Unfortunately, you already got rid of the log, so, you can't recover it anymore,
+> >> but all the recovered files will be in lost+found, with their inode numbers as
+> >> file name.
+> >>
+> >> Ok, so below is the dmesg, thanks for having attached it.
+> >>
+> >> One thing is there are 2 devices failing. sdd and dm-0. So my question again, is
+> >> this the same filesystem or are they 2 separated filesystems showing exactly the
+> >> same issue? The filesystem has found corrupted inodes in the AG's unlinked
+> >> bucket, but this shouldn't affect log recovery.
+> >>
+> >> If they are two separated devices, did you xfs_repair'ed both of them? After you
+> >> repaired the filesystem(s), do you still see the memory corruption issue?
+> 
+> No, we do not see the corruption issue anymore, and mounting works as expected.
+> 
+> >> At this point, there is not much we can do regarding the filesystem metadata,
+> >> once you already forced a xfs_repair zeroing the logs.
+> >>
+> >> So, could you please tell the current state of the filesystem (or filesystems if
+> >> there is more than one)? Are you still seeing the same memory corruption error
+> >> even after xfs_repair it?
+> 
+> The user wants to continue using the device, and does not need the recovered files,
+> so we had to go ahead, and repair `/dev/sde` now too. We are only interested in
+> having this bug fixed in XFS, and not about data recovery.
+> 
 
-Ok, well you probably want to start with resolving this because clearly
-something is wrong and who knows what other side effects this problem
-might have.
-
-> [ 1266.662594] BUG: Dentry ffff8803ae02c600{i=68,n=333} still in use
-> (1) [unmount of xfs sdc2]
-> [ 1266.662705] ------------[ cut here ]------------
-> [ 1266.662741] kernel BUG at fs/dcache.c:891!
-> [ 1266.662774] invalid opcode: 0000 [#1] SMP
-> [ 1266.662810] Modules linked in: tcp_diag inet_diag rbd(OE)
-> tcm_qla2xxx_mod(OE) qla2xxx(OE) scsi_transport_fc scsi_tgt btree(OE)
-> tcm_loop_mod(OE) target_core_user_mod(OE) iscsi_target_mod(OE)
-> target_core_mod(OE) uio iptable_filter xt_conntrack nf_nat bridge stp
-> llc nf_conntrack_netlink nfnetlink nf_conntrack autoipv6(OE) dm_mirror
-> dm_region_hash dm_log dm_mod skx_edac edac_core coretemp intel_rapl
-> iosf_mbi kvm_intel kvm irqbypass crc32_pclmul ghash_clmulni_intel
-> aesni_intel lrw gf128mul glue_helper ablk_helper cryptd ses enclosure
-> iTCO_wdt iTCO_vendor_support sg ipmi_ssif pcspkr ipmi_si ipmi_devintf
-> ipmi_msghandler mei_me nfit i2c_i801 wmi mei libnvdimm shpchp lpc_ich
-> acpi_power_meter sunrpc ip_tables xfs libcrc32c sd_mod crc_t10dif
-> crct10dif_generic ast drm_kms_helper syscopyarea sysfillrect sysimgblt
-> [ 1266.663497]  fb_sys_fops crct10dif_pclmul ttm crct10dif_common
-> crc32c_intel i40e drm igb mpt3sas ahci libahci libata dca ptp
-> i2c_algo_bit raid_class pps_core scsi_transport_sas i2c_core
-> [ 1266.663656] CPU: 31 PID: 13258 Comm: umount Tainted: G           OE
->  ------------   3.10.0-693.el7.x86_64 #1
-
-This looks like a VFS issue and a (oldish) distro kernel. If this is
-RHEL/CentOS, you could try updating to the latest z-stream of the
-particular kernel revision you're on (i.e., 3.10.0-693.xxx.el7) to see
-whether it's already fixed in your release. If not, you may need to file
-a bug with your distro provider.
+Well, if the metadump is still available and is based on the original
+(broken) fs then it may be able to reproduce the original problem. How
+large is it compressed? Would you be able to upload it somewhere?
 
 Brian
 
-> [ 1266.663725] Hardware name: XSKY XSKY XSCALER 3000/RS33M2C9S, BIOS
-> 1.00.39 08/25/2018
-> [ 1266.663780] task: ffff880fa9b95ee0 ti: ffff880e41bd0000 task.ti:
-> ffff880e41bd0000
-> [ 1266.663833] RIP: 0010:[<ffffffff81218c8c>]  [<ffffffff81218c8c>]
-> shrink_dcache_for_umount_subtree+0x1ac/0x1c0
-> [ 1266.663915] RSP: 0018:ffff880e41bd3e10  EFLAGS: 00010246
-> [ 1266.663954] RAX: 000000000000004f RBX: ffff8803ae02c600 RCX: 0000000000000000
-> [ 1266.664004] RDX: 0000000000000000 RSI: ffff8810391cf8b8 RDI: ffff8810391cf8b8
-> [ 1266.664055] RBP: ffff880e41bd3e28 R08: 0000000000000000 R09: ffff88102f52c500
-> [ 1266.664106] R10: 0000000000000985 R11: 0000000000000001 R12: 0000000000000083
-> [ 1266.664156] R13: ffffffffc049f000 R14: ffffffff81e8af50 R15: ffff880fa9b966b0
-> [ 1266.664208] FS:  00007f17baca0880(0000) GS:ffff8810391c0000(0000)
-> knlGS:0000000000000000
-> [ 1266.664265] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 1266.664307] CR2: 00007f17ba85b074 CR3: 00000006faaec000 CR4: 00000000003407e0
-> [ 1266.664358] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> [ 1266.664409] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> [ 1266.664458] Stack:
-> [ 1266.664475]  ffff88101fabc320 ffff88101fabc000 0000000000000083
-> ffff880e41bd3e40
-> [ 1266.664538]  ffffffff8121aaff ffff88101fabc000 ffff880e41bd3e68
-> ffffffff812036c1
-> [ 1266.664600]  ffff881032f40340 0000000000000083 ffff880fa9b95ee0
-> ffff880e41bd3e88
-> [ 1266.664662] Call Trace:
-> [ 1266.664691]  [<ffffffff8121aaff>] shrink_dcache_for_umount+0x2f/0x60
-> [ 1266.664740]  [<ffffffff812036c1>] generic_shutdown_super+0x21/0x100
-> [ 1266.664788]  [<ffffffff81203b57>] kill_block_super+0x27/0x70
-> [ 1266.664836]  [<ffffffff81203e99>] deactivate_locked_super+0x49/0x60
-> [ 1266.664883]  [<ffffffff81204606>] deactivate_super+0x46/0x60
-> [ 1266.664928]  [<ffffffff812216af>] cleanup_mnt+0x3f/0x80
-> [ 1266.664969]  [<ffffffff81221742>] __cleanup_mnt+0x12/0x20
-> [ 1266.665013]  [<ffffffff810ad265>] task_work_run+0xc5/0xf0
-> [ 1266.665056]  [<ffffffff8102ab62>] do_notify_resume+0x92/0xb0
-> [ 1266.665102]  [<ffffffff816b527d>] int_signal+0x12/0x17
-> [ 1266.665140] Code: 00 00 48 8b 40 28 4c 8b 08 48 8b 43 30 48 85 c0
-> 74 1b 48 8b 50 40 48 89 34 24 48 c7 c7 b8 3e 91 81 48 89 de 31 c0 e8
-> ed 50 48 00 <0f> 0b 31 d2 eb e5 0f 0b 66 90 66 2e 0f 1f 84 00 00 00 00
-> 00 0f
-> [ 1266.667389] RIP  [<ffffffff81218c8c>]
-> shrink_dcache_for_umount_subtree+0x1ac/0x1c0
-> [ 1266.669435]  RSP <ffff880e41bd3e10>
+> > FWIW, if you do still have an original copy of the fs, we could see
+> > about whether bypassing the shutdown allows us to trade log recovery
+> > failure for a space accounting error. This would still require a
+> > subsequent repair, but that may be less invasive than zapping the log
+> > and dealing with the aftermath of that.
+> 
+> Unfortunately, it’s 50 TB, so we do not have a copy anymore.
+> 
+> >> And for completeness, please provide us as much information as possible from
+> >> this(these) filesystem(s):
+> >>
+> >> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+> 
+>     /dev/sdd /amd/tinytina/X/X4074 xfs rw,relatime,attr2,inode64,logbsize=256k,sunit=512,swidth=7168,noquota 0 0
+> 
+> >>> [ 1380.869451] XFS (sdd): Mounting V5 Filesystem
+> >>> [ 1380.912559] XFS (sdd): Starting recovery (logdev: internal)
+> >>> [ 1381.030780] XFS (sdd): xfs_do_force_shutdown(0x8) called from line 368 of file fs/xfs/xfs_trans.c.  Return address = 00000000cfa623e1
+> >>> [ 1381.030785] XFS (sdd): Corruption of in-memory data detected.  Shutting down filesystem
+> >>> [ 1381.030786] XFS (sdd): Please umount the filesystem and rectify the problem(s)
+> >>> [ 1381.031086] XFS (sdd): xlog_recover_clear_agi_bucket: failed to clear agi 0. Continuing.
+> >>> [ 1381.031088] XFS (sdd): xfs_imap_to_bp: xfs_trans_read_buf() returned error -5.
+> >>> [ 1381.031090] XFS (sdd): xlog_recover_clear_agi_bucket: failed to clear agi 0. Continuing.
+> >>> [ 1381.031093] XFS (sdd): xfs_imap_to_bp: xfs_trans_read_buf() returned error -5.
+> >>> [ 1381.031095] XFS (sdd): xlog_recover_clear_agi_bucket: failed to clear agi 0. Continuing.
+> >> <...>
+> >>> [ 1381.031113] XFS (sdd): Ending recovery (logdev: internal)
+> >>> [ 1381.031490] XFS (sdd): Error -5 reserving per-AG metadata reserve pool.
+> >>> [ 1381.031492] XFS (sdd): xfs_do_force_shutdown(0x8) called from line 548 of file fs/xfs/xfs_fsops.c.  Return address = 00000000217dbba5
+> >>
+> >>> [ 2795.123228] XFS (dm-0): Ending recovery (logdev: internal)
+> >>> [ 2795.231020] XFS (dm-0): Error -5 reserving per-AG metadata reserve pool.
+> >>> [ 2795.231023] XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 548 of file fs/xfs/xfs_fsops.c.  Return address = 00000000217dbba5
+> >>
+> >>> [10944.023429] XFS (dm-0): Mounting V5 Filesystem
+> >>> [10944.035260] XFS (dm-0): Ending clean mount
+> >>> [11664.862376] XFS (dm-0): Unmounting Filesystem
+> >>> [11689.260213] XFS (dm-0): Mounting V5 Filesystem
+> >>> [11689.338187] XFS (dm-0): Ending clean mount
+> 
+> As written, data recovery is not needed anymore, but, if it’d help the driver,
+> we could share the logs we have (after making sure it’s obfuscated).
+> 
+> Please tell us, if you are interested, and what dumps, xfs_repair output and
+> so on would be needed.
 > 
 > 
-> huang jun <hjwsm1989@gmail.com> 于2019年2月18日周一 下午11:13写道：
-> >
-> > Thank you for reply, i notice the warning message as you mentioned,
-> > and found that:
-> >
-> > [root@xefs-51 ~]# abrt-cli list --since 1550483811
-> > id 95c775cc6f18c083fb771a27accbb9a7a03e8515
-> > reason:         BUG: Dentry ffff8803ae02c600{i=68,n=333} still in use
-> > (1) [unmount of xfs sdc2]
-> > time:           2019年02月18日 星期一 18时19分51秒
-> > uid:            0 (root)
-> > count:          1
-> > Directory:      /var/spool/abrt/vmcore-127.0.0.1-2019-02-18-18:15:31
-> > 已报告：    无法报告
-> >
-> > id 224daa72a910003dceebe315d59cb9c4a2a6504e
-> > reason:         BUG: Dentry ffff880e3f7d8540{i=6e,n=110} still in use
-> > (1) [unmount of xfs sdc2]
-> > time:           2019年02月18日 星期一 18时19分24秒
-> > uid:            0 (root)
-> > count:          1
-> > Directory:      /var/spool/abrt/vmcore-127.0.0.1-2019-02-18-17:41:56
-> > 已报告：    无法报告
-> >
-> > 已禁用自动报告功能。请考虑启用该功能，方法是
-> > 作为有 root 特权的用户使用命令 'abrt-auto-reporting enabled'
-> >
-> > i will check this now.
-> >
-> > >
-> > > On Mon, Feb 18, 2019 at 07:18:20PM +0800, huang jun wrote:
-> > > > Hello
-> > > > Recently we have a problem on xfs.
-> > > >
-> > > > The environment is:
-> > > > CentOS Linux release 7.4.1708 (Core)
-> > > > Linux xefs-51 3.10.0-693.el7.x86_64 #1 SMP Tue Aug 22 21:09:27 UTC
-> > > > 2017 x86_64 x86_64 x86_64 GNU/Linux
-> > > >
-> > > > [root@xefs-51 ~]# modinfo xfs
-> > > > filename:       /lib/modules/3.10.0-693.el7.x86_64/kernel/fs/xfs/xfs.ko.xz
-> > > > license:        GPL
-> > > > description:    SGI XFS with ACLs, security attributes, no debug enabled
-> > > > author:         Silicon Graphics, Inc.
-> > > > alias:          fs-xfs
-> > > > rhelversion:    7.4
-> > > > srcversion:     6CAAE7A01207B73522C8412
-> > > > depends:        libcrc32c
-> > > > intree:         Y
-> > > > vermagic:       3.10.0-693.el7.x86_64 SMP mod_unload modversions
-> > > > signer:         CentOS Linux kernel signing key
-> > > > sig_key:        DA:18:7D:CA:7D:BE:53:AB:05:BD:13:BD:0C:4E:21:F4:22:B6:A4:9C
-> > > > sig_hashalgo:   sha256
-> > > >
-> > > > We mount /dev/sdc2 on /mnt after machine boot
-> > > > [root@xefs-51 ~]# df -iT /mnt/
-> > > > 文件系统       类型     Inode 已用(I)   可用(I) 已用(I)% 挂载点
-> > > > /dev/sdc2      xfs  107374144       6 107374138       1% /mnt
-> > > > [root@xefs-51 ~]# ls /mnt
-> > > > jjj  kkk  xfs.strace
-> > > >
-> > > > And we add files to /mnt at first,
-> > > > [root@xefs-51 ~]# cp /mnt/jjj /mnt/123
-> > > > [root@xefs-51 ~]# df -iT /mnt
-> > > > 文件系统       类型     Inode 已用(I)   可用(I) 已用(I)% 挂载点
-> > > > /dev/sdc2      xfs  107374144       7 107374137       1% /mnt
-> > > > [root@xefs-51 ~]# cp /mnt/jjj /mnt/111
-> > > > [root@xefs-51 ~]# df -iT /mnt
-> > > > 文件系统       类型     Inode 已用(I)   可用(I) 已用(I)% 挂载点
-> > > > /dev/sdc2      xfs  107374144       8 107374136       1% /mnt
-> > > > [root@xefs-51 ~]# cp /mnt/jjj /mnt/222
-> > > > [root@xefs-51 ~]# df -iT /mnt
-> > > > 文件系统       类型     Inode 已用(I)   可用(I) 已用(I)% 挂载点
-> > > > /dev/sdc2      xfs  107374144       9 107374135       1% /mnt
-> > > > [root@xefs-51 ~]# cp /mnt/jjj /mnt/333
-> > > > [root@xefs-51 ~]# df -iT /mnt
-> > > > 文件系统       类型     Inode 已用(I)   可用(I) 已用(I)% 挂载点
-> > > > /dev/sdc2      xfs  107374144      10 107374134       1% /mnt
-> > > >
-> > > > and then remove some, but the inodes used in 'df -iT /mnt' not changed
-> > > > [root@xefs-51 ~]# rm -f /mnt/jjj
-> > > > [root@xefs-51 ~]# df -iT /mnt
-> > > > 文件系统       类型     Inode 用(I)   可用(I) 已用(I)% 挂载点
-> > > > /dev/sdc2      xfs  107374144      10 107374134       1% /mnt
-> > > > [root@xefs-51 ~]# rm -f /mnt/kkk
-> > > > [root@xefs-51 ~]# df -iT /mnt
-> > > > 文件系统       类型     Inode 已用(I)   可用(I) 已用(I)% 挂载点
-> > > > /dev/sdc2      xfs  107374144      10 107374134       1% /mnt
-> > > >
-> > > > and if we umount /mnt at this time, the machine will reboot,
-> > > > and no related log in /var/log/messages after boot and the inodes used
-> > > > become normal.
-> > >
-> > > You have a filesystem that causes the machine to reboot when it is
-> > > unmounted? If so, you need to identify why that happens first and
-> > > foremost. I'd start by checking the filesystem for issues with
-> > > 'xfs_repair -n' after a mount cycle (to perform log recovery). After
-> > > that, perhaps check dmesg after each operation above before the unmount
-> > > to rule out any preceding errors/shutdowns putting the system in an
-> > > unexpected state. As for the unmount itself, I suppose you'll have to
-> > > find a way to get a console that shows alert output or whatnot when the
-> > > unmount occurs.
-> > >
-> > > Brian
-> > >
-> > > > As googled a lot, we tried some ways:
-> > > > 1) lsof /mnt: shows nobody use this mount point.
-> > > > 2) lsof |grep deleted: shows empty
-> > > > What should i do to find the problem out?
-> > > >
-> > > > --
-> > > > Thank you!
-> >
-> >
-> >
-> > --
-> > Thank you!
-> > HuangJun
+> Kind regards,
 > 
+> Paul
 > 
-> 
-> -- 
-> Thank you!
-> HuangJun
