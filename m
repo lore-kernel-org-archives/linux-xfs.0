@@ -1,35 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk1-f176.google.com ([209.85.222.176]:44993 "EHLO
-        mail-qk1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725916AbfBQUgO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Feb 2019 15:36:14 -0500
-From: Ric Wheeler <ricwheeler@gmail.com>
-Subject: [LSF/MM TOPIC] More async operations for file systems - async
- discard?
-Message-ID: <92ab41f7-35bc-0f56-056f-ed88526b8ea4@gmail.com>
-Date: Sun, 17 Feb 2019 15:36:10 -0500
+Received: from mail-qt1-f179.google.com ([209.85.160.179]:32768 "EHLO
+        mail-qt1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727004AbfBRKLf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Feb 2019 05:11:35 -0500
+Received: by mail-qt1-f179.google.com with SMTP id z39so18589537qtz.0
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Feb 2019 02:11:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+From: huang jun <hjwsm1989@gmail.com>
+Date: Mon, 18 Feb 2019 18:11:22 +0800
+Message-ID: <CABAwU-a4rTZf9MKweT-h81qxOu8wQag5ht40AmCmt1sMi1yjtQ@mail.gmail.com>
+Subject: inode not recycled after delete file
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: lsf-pc@lists.linux-foundation.org
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-block@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-One proposal for btrfs was that we should look at getting discard out of the 
-synchronous path in order to minimize the slowdown associated with enabling 
-discard at mount time. Seems like an obvious win for "hint" like operations like 
-discard.
+Hello
+Recently we have a problem on xfs.
 
-I do wonder where we stand now with the cost of the various discard commands - 
-how painful is it for modern SSD's? Do we have a good sense of how discard 
-performance scales as the request size increases? Do most devices "no op" a 
-discard operation when issued against an already discarded region?
+The environment is:
+CentOS Linux release 7.4.1708 (Core)
+Linux xefs-51 3.10.0-693.el7.x86_64 #1 SMP Tue Aug 22 21:09:27 UTC
+2017 x86_64 x86_64 x86_64 GNU/Linux
 
-Would this be an interesting topic to discuss in a shared block/file system session?
+[root@xefs-51 ~]# modinfo xfs
+filename:       /lib/modules/3.10.0-693.el7.x86_64/kernel/fs/xfs/xfs.ko.xz
+license:        GPL
+description:    SGI XFS with ACLs, security attributes, no debug enabled
+author:         Silicon Graphics, Inc.
+alias:          fs-xfs
+rhelversion:    7.4
+srcversion:     6CAAE7A01207B73522C8412
+depends:        libcrc32c
+intree:         Y
+vermagic:       3.10.0-693.el7.x86_64 SMP mod_unload modversions
+signer:         CentOS Linux kernel signing key
+sig_key:        DA:18:7D:CA:7D:BE:53:AB:05:BD:13:BD:0C:4E:21:F4:22:B6:A4:9C
+sig_hashalgo:   sha256
 
-Regards,
+We mount /dev/sdc2 on /mnt after machine boot
+[root@xefs-51 ~]# df -iT /mnt/
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
+=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
+=E8=BD=BD=E7=82=B9
+/dev/sdc2      xfs  107374144       6 107374138       1% /mnt
+[root@xefs-51 ~]# ls /mnt
+jjj  kkk  xfs.strace
 
-Ric
+And we add files to /mnt at first,
+[root@xefs-51 ~]# cp /mnt/jjj /mnt/123
+[root@xefs-51 ~]# df -iT /mnt
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
+=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
+=E8=BD=BD=E7=82=B9
+/dev/sdc2      xfs  107374144       7 107374137       1% /mnt
+[root@xefs-51 ~]# cp /mnt/jjj /mnt/111
+[root@xefs-51 ~]# df -iT /mnt
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
+=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
+=E8=BD=BD=E7=82=B9
+/dev/sdc2      xfs  107374144       8 107374136       1% /mnt
+[root@xefs-51 ~]# cp /mnt/jjj /mnt/222
+[root@xefs-51 ~]# df -iT /mnt
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
+=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
+=E8=BD=BD=E7=82=B9
+/dev/sdc2      xfs  107374144       9 107374135       1% /mnt
+[root@xefs-51 ~]# cp /mnt/jjj /mnt/333
+[root@xefs-51 ~]# df -iT /mnt
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
+=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
+=E8=BD=BD=E7=82=B9
+/dev/sdc2      xfs  107374144      10 107374134       1% /mnt
+
+and then remove some, but the inodes used in 'df -iT /mnt' not changed
+[root@xefs-51 ~]# rm -f /mnt/jjj
+[root@xefs-51 ~]# df -iT /mnt
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E7=
+=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=E8=BD=BD=
+=E7=82=B9
+/dev/sdc2      xfs  107374144      10 107374134       1% /mnt
+[root@xefs-51 ~]# rm -f /mnt/kkk
+[root@xefs-51 ~]# df -iT /mnt
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
+=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
+=E8=BD=BD=E7=82=B9
+/dev/sdc2      xfs  107374144      10 107374134       1% /mnt
+
+and if we umount /mnt at this time, the machine will reboot,
+and no related log in /var/log/messages after boot and the inodes used
+become normal.
+As googled a lot, we tried some ways:
+1) lsof /mnt: shows nobody use this mount point.
+2) lsof |grep deleted: shows empty
+What should i do to find the problem out?
+
+--
+Thank you!
