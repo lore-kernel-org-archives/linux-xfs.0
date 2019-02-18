@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44434 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:44656 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727423AbfBRJSl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Feb 2019 04:18:41 -0500
+        with ESMTP id S1727423AbfBRJSm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Feb 2019 04:18:42 -0500
 Received: from [88.128.83.71] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gvf4R-0002g7-He
-        for linux-xfs@vger.kernel.org; Mon, 18 Feb 2019 09:18:39 +0000
+        id 1gvf4U-0002jj-19
+        for linux-xfs@vger.kernel.org; Mon, 18 Feb 2019 09:18:42 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/8] xfs: fix SEEK_DATA for speculative COW fork preallocation
-Date: Mon, 18 Feb 2019 10:18:21 +0100
-Message-Id: <20190218091827.12619-3-hch@lst.de>
+Subject: [PATCH 3/8] xfs: don't use delalloc extents for COW on files with extsize hints
+Date: Mon, 18 Feb 2019 10:18:22 +0100
+Message-Id: <20190218091827.12619-4-hch@lst.de>
 In-Reply-To: <20190218091827.12619-1-hch@lst.de>
 References: <20190218091827.12619-1-hch@lst.de>
 MIME-Version: 1.0
@@ -20,155 +20,103 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-We speculatively allocate extents in the COW fork to reduce
-fragmentation.  But when we write data into such COW fork blocks that
-do now shadow an allocation in the data fork SEEK_DATA will not
-correctly report it, as it only looks at the data fork extents.
-The only reason why that hasn't been an issue so far is because
-we even use these speculative COW fork preallocations over holes in
-the data fork at all for buffered writes, and blocks in the COW
-fork that are written by direct writes are moved into the data
-fork immediately at I/O completion time.
-
-Add a new set of iomap_ops for SEEK_HOLE/SEEK_DATA which looks into
-both the COW and data fork, and reports all COW extents as unwritten
-to the iomap layer.  While this isn't strictly true for COW fork
-extents that were already converted to real extents, the practical
-semantics that you can't read data from them until they are moved
-into the data fork are very similar, and this will force the iomap
-layer into probing the extents for actually present data.
+While using delalloc for extsize hints is generally a good idea, the
+current code that does so only for COW doesn't help us much and creates
+a lot of special cases.  Switch it to use real allocations like we
+do for direct I/O.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_file.c  |  4 +--
- fs/xfs/xfs_iomap.c | 85 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_iomap.h |  1 +
- 3 files changed, 88 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_iomap.c   | 28 +++++++++++++++++-----------
+ fs/xfs/xfs_reflink.c | 10 +++++++++-
+ fs/xfs/xfs_reflink.h |  3 ++-
+ 3 files changed, 28 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e47425071e65..1d07dcfbbff3 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1068,10 +1068,10 @@ xfs_file_llseek(
- 	default:
- 		return generic_file_llseek(file, offset, whence);
- 	case SEEK_HOLE:
--		offset = iomap_seek_hole(inode, offset, &xfs_iomap_ops);
-+		offset = iomap_seek_hole(inode, offset, &xfs_seek_iomap_ops);
- 		break;
- 	case SEEK_DATA:
--		offset = iomap_seek_data(inode, offset, &xfs_iomap_ops);
-+		offset = iomap_seek_data(inode, offset, &xfs_seek_iomap_ops);
- 		break;
- 	}
- 
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 284c5e68f695..a7599b084571 100644
+index a7599b084571..19a3331b4a56 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -1068,6 +1068,91 @@ const struct iomap_ops xfs_iomap_ops = {
- 	.iomap_end		= xfs_file_iomap_end,
- };
+@@ -918,22 +918,28 @@ xfs_file_iomap_begin(
+ 	 * been done up front, so we don't need to do them here.
+ 	 */
+ 	if (xfs_is_reflink_inode(ip)) {
++		struct xfs_bmbt_irec	orig = imap;
++
+ 		/* if zeroing doesn't need COW allocation, then we are done. */
+ 		if ((flags & IOMAP_ZERO) &&
+ 		    !needs_cow_for_zeroing(&imap, nimaps))
+ 			goto out_found;
  
-+static int
-+xfs_seek_iomap_begin(
-+	struct inode		*inode,
-+	loff_t			offset,
-+	loff_t			length,
-+	unsigned		flags,
-+	struct iomap		*iomap)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + length);
-+	xfs_fileoff_t		cow_fsb = NULLFILEOFF, data_fsb = NULLFILEOFF;
-+	struct xfs_iext_cursor	icur;
-+	struct xfs_bmbt_irec	imap, cmap;
-+	int			error = 0;
-+	unsigned		lockmode;
-+
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return -EIO;
-+
-+	lockmode = xfs_ilock_data_map_shared(ip);
-+	if (!(ip->i_df.if_flags & XFS_IFEXTENTS)) {
-+		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+-		if (flags & IOMAP_DIRECT) {
+-			/* may drop and re-acquire the ilock */
+-			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
+-					&lockmode);
+-			if (error)
+-				goto out_unlock;
+-		} else {
+-			error = xfs_reflink_reserve_cow(ip, &imap);
+-			if (error)
+-				goto out_unlock;
+-		}
++		error = xfs_reflink_allocate_cow(ip, &imap, &shared, &lockmode,
++						 flags);
 +		if (error)
 +			goto out_unlock;
-+	}
 +
-+	if (xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap)) {
 +		/*
-+		 * If we found a data extent we are done.
++		 * For buffered writes we need to report the address of the
++		 * previous block (if there was any) so that the higher level
++		 * write code can perform read-modify-write operations.  For
++		 * direct I/O code, which must be block aligned we need to
++		 * report the newly allocated address.
 +		 */
-+		if (imap.br_startoff <= offset_fsb)
-+			goto done;
-+		data_fsb = imap.br_startoff;
-+	} else {
-+		/*
-+		 * Fake a hole until the end of the file.
-+		 */
-+		data_fsb = min(XFS_B_TO_FSB(mp, offset + length),
-+			       XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes));
-+	}
-+
-+	/*
-+	 * If a COW fork extent covers the hole, report it - capped to the next
-+	 * data fork extent:
-+	 */
-+	if (xfs_inode_has_cow_data(ip) &&
-+	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap))
-+		cow_fsb = cmap.br_startoff;
-+	if (cow_fsb != NULLFILEOFF && cow_fsb <= offset_fsb) {
-+		if (data_fsb < cow_fsb + cmap.br_blockcount)
-+			end_fsb = min(end_fsb, data_fsb);
-+		xfs_trim_extent(&cmap, offset_fsb, end_fsb);
-+		error = xfs_bmbt_to_iomap(ip, iomap, &cmap, true);
-+		/*
-+		 * Force page cache probing to avoid reporting COW extents as
-+		 * data even if they haven't been written to:
-+		 */
-+		iomap->type = IOMAP_UNWRITTEN;
-+		goto out_unlock;
-+	}
-+
-+	/*
-+	 * Else report a hole, capped to the next found data or COW extent.
-+	 */
-+	if (cow_fsb != NULLFILEOFF && cow_fsb < data_fsb)
-+		imap.br_blockcount = cow_fsb - offset_fsb;
-+	else
-+		imap.br_blockcount = data_fsb - offset_fsb;
-+	imap.br_startoff = offset_fsb;
-+	imap.br_startblock = HOLESTARTBLOCK;
-+	imap.br_state = XFS_EXT_NORM;
-+done:
-+	xfs_trim_extent(&imap, offset_fsb, end_fsb);
-+	error = xfs_bmbt_to_iomap(ip, iomap, &imap, false);
-+out_unlock:
-+	xfs_iunlock(ip, lockmode);
-+	return error;
-+}
-+
-+const struct iomap_ops xfs_seek_iomap_ops = {
-+	.iomap_begin		= xfs_seek_iomap_begin,
-+};
-+
- static int
- xfs_xattr_iomap_begin(
- 	struct inode		*inode,
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index 37b584c3069b..5c2f6aa6d78f 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -40,6 +40,7 @@ xfs_aligned_fsb_count(
- }
++		if (!(flags & IOMAP_DIRECT) &&
++		    orig.br_startblock != HOLESTARTBLOCK)
++			imap = orig;
  
- extern const struct iomap_ops xfs_iomap_ops;
-+extern const struct iomap_ops xfs_seek_iomap_ops;
- extern const struct iomap_ops xfs_xattr_iomap_ops;
+ 		end_fsb = imap.br_startoff + imap.br_blockcount;
+ 		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 2babc2cbe103..8a5353daf9ab 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -397,7 +397,8 @@ xfs_reflink_allocate_cow(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_bmbt_irec	*imap,
+ 	bool			*shared,
+-	uint			*lockmode)
++	uint			*lockmode,
++	unsigned		iomap_flags)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+@@ -471,6 +472,13 @@ xfs_reflink_allocate_cow(
+ 	if (nimaps == 0)
+ 		return -ENOSPC;
+ convert:
++	/*
++	 * COW fork extents are supposed to remain unwritten until we're ready
++	 * to initiate a disk write.  For direct I/O we are going to write the
++	 * data and need the conversion, but for buffered writes we're done.
++	 */
++	if (!(iomap_flags & IOMAP_DIRECT))
++		return 0;
+ 	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
  
- #endif /* __XFS_IOMAP_H__*/
+ out_unreserve:
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 6d73daef1f13..70d68a1a9b49 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -15,7 +15,8 @@ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+ extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
+ 		struct xfs_bmbt_irec *imap);
+ extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
+-		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
++		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode,
++		unsigned iomap_flags);
+ extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t count);
+ 
 -- 
 2.20.1
