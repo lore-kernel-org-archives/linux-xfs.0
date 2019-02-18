@@ -1,61 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:31538 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388020AbfBNWGm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 17:06:42 -0500
-Date: Fri, 15 Feb 2019 09:06:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
-Message-ID: <20190214220626.GV14116@dastard>
-References: <cover.1550136164.git.osandov@fb.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:43876 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727423AbfBRJSf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Feb 2019 04:18:35 -0500
+Received: from [88.128.83.71] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1gvf4N-0002cy-3M
+        for linux-xfs@vger.kernel.org; Mon, 18 Feb 2019 09:18:35 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: COW improvements and always_cow support V5
+Date: Mon, 18 Feb 2019 10:18:19 +0100
+Message-Id: <20190218091827.12619-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1550136164.git.osandov@fb.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Omar Sandoval <osandov@osandov.com>
-Cc: linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Feb 14, 2019 at 02:00:07AM -0800, Omar Sandoval wrote:
-> From: Omar Sandoval <osandov@fb.com>
-> 
-> Hi,
-> 
-> Since statx was added in 4.11, userspace has had an interface for
-> reading btime (file creation time), but no way to set it. This RFC patch
-> series adds support for changing btime with utimensat(). Patch 1 adds
-> the VFS infrastructure, patch 2 adds the support to utimensat() with a
-> new flag, and the rest of the patches add filesystem support; I excluded
-> CIFS for now because I don't have a CIFS setup to test it on.
-> 
-> Updating btime is useful for at least a couple of use cases:
-> 
-> - Backup/restore programs (my motivation for this feature is btrfs send)
-> - File servers which interoperate with operating systems that allow
->   updating file creation time, including Mac OS [1] and Windows [2]
+Hi all,
 
-So you're adding an interface that allows users to change the create
-time of files without needing any privileges?
+this series adds the always_cow mode support after fixing various
+little bugs and issues in the COW support.
+write support a little bit first.
 
-Inode create time is forensic metadata in XFS  - information we use
-for sequence of event and inode lifetime analysis during examination
-of broken filesystem images and systems that have been broken into.
-Just because it's exposed to userspace via statx(), it doesn't mean
-that it is information that users should be allowed to change. i.e.
-allowing users to be able to change the create time on files makes
-it completely useless for the purpose it was added to XFS for...
 
-And allowing root to change the create time doesn't really help,
-because once you've broken into a system, this makes it really easy
-to cover tracks (e.g. we can't find files that were created and
-unlinked during the break in window anymore) and lay false
-trails....
+    git://git.infradead.org/users/hch/xfs.git always_cow.7
 
-Cheers,
+Gitweb:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/always_cow.7
+
+
+Changes since v4:
+ - rebased on to of the mapping validation fixes from Brian and me
+ - fix SEEK_DATA / SEEK_HOLE vs COW fork preallocations
+ - sample the always_cow value in a per-mount variable
+ - disable all preallocation, including in zero range and unshare
+
+Changes since v3:
+ - spelling fixes
+ - improve argument naming and add a comment in xfs_reflink_allocate_cow
+ - trace the COW imap if allocating COW blocks
+ - collect a few reviewed-by tags from Darrick
+
+Changes since v2:
+ - add a patch to remove xfs_trim_extent_eof
+ - add a patch to remove the separate io_type and rely on existing state
+   in the writeback path
+ - rework the truncate race handling in the writeback path a little more
+
+Changes since v1:
+ - make delalloc and unwritten extent conversions simpler and more robust
+ - add a few additional cleanups
+ - support all fallocate modes but actual preallocation
+ - rebase on top of a fix from Brian (which is included as first patch
+   to make the patch set more usable)
