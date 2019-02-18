@@ -1,161 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14470 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51730 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732851AbfBROeG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Feb 2019 09:34:06 -0500
-Date: Mon, 18 Feb 2019 09:34:04 -0500
+        id S1733147AbfBROb0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Feb 2019 09:31:26 -0500
+Date: Mon, 18 Feb 2019 09:31:23 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Corruption of in-memory data detected. Shutting down filesystem
-Message-ID: <20190218143403.GB33924@bfoster>
-References: <b4141aed-70f1-83de-92e3-b8c9494900c7@molgen.mpg.de>
- <20190218142203.p53qvipc4yul6mv6@hades.usersys.redhat.com>
+Subject: Re: inode not recycled after delete file
+Message-ID: <20190218143122.GA33924@bfoster>
+References: <CABAwU-adU9ChA7XbT5_LVGvyK_5tUmq-t3eOmbPRAGCFD3Md0g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190218142203.p53qvipc4yul6mv6@hades.usersys.redhat.com>
+In-Reply-To: <CABAwU-adU9ChA7XbT5_LVGvyK_5tUmq-t3eOmbPRAGCFD3Md0g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Paul Menzel <pmenzel@molgen.mpg.de>, linux-xfs@vger.kernel.org
+To: huang jun <hjwsm1989@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Feb 18, 2019 at 03:22:03PM +0100, Carlos Maiolino wrote:
-> Hi.
+On Mon, Feb 18, 2019 at 07:18:20PM +0800, huang jun wrote:
+> Hello
+> Recently we have a problem on xfs.
 > 
-> > Dear XFS folks,
-> > 
-> > 
+> The environment is:
+> CentOS Linux release 7.4.1708 (Core)
+> Linux xefs-51 3.10.0-693.el7.x86_64 #1 SMP Tue Aug 22 21:09:27 UTC
+> 2017 x86_64 x86_64 x86_64 GNU/Linux
 > 
-> > [   25.506600] XFS (sdd): Mounting V5 Filesystem
-> > [   25.629621] XFS (sdd): Starting recovery (logdev: internal)
-> > [   25.685100] NFSD: starting 90-second grace period (net f0000098)
-> > [   26.433828] XFS (sdd): xfs_do_force_shutdown(0x8) called from line 368 of file fs/xfs/xfs_trans.c.  Return address = 00000000cfa623e1
-> > [   26.433834] XFS (sdd): Corruption of in-memory data detected.  Shutting down filesystem
-> > [   26.433835] XFS (sdd): Please umount the filesystem and rectify the problem(s)
-> > [   26.433857] XFS (sdd): xfs_imap_to_bp: xfs_trans_read_buf() returned error -5.
-> > 
-> Ok, filesystem shut itself down likely because blocks allocated in the
-> transaction exceeded the reservation.
+> [root@xefs-51 ~]# modinfo xfs
+> filename:       /lib/modules/3.10.0-693.el7.x86_64/kernel/fs/xfs/xfs.ko.xz
+> license:        GPL
+> description:    SGI XFS with ACLs, security attributes, no debug enabled
+> author:         Silicon Graphics, Inc.
+> alias:          fs-xfs
+> rhelversion:    7.4
+> srcversion:     6CAAE7A01207B73522C8412
+> depends:        libcrc32c
+> intree:         Y
+> vermagic:       3.10.0-693.el7.x86_64 SMP mod_unload modversions
+> signer:         CentOS Linux kernel signing key
+> sig_key:        DA:18:7D:CA:7D:BE:53:AB:05:BD:13:BD:0C:4E:21:F4:22:B6:A4:9C
+> sig_hashalgo:   sha256
 > 
-> Could you please post the whole dmesg?
+> We mount /dev/sdc2 on /mnt after machine boot
+> [root@xefs-51 ~]# df -iT /mnt/
+> 文件系统       类型     Inode 已用(I)   可用(I) 已用(I)% 挂载点
+> /dev/sdc2      xfs  107374144       6 107374138       1% /mnt
+> [root@xefs-51 ~]# ls /mnt
+> jjj  kkk  xfs.strace
 > 
-> > We mounted it with an overlay files,
+> And we add files to /mnt at first,
+> [root@xefs-51 ~]# cp /mnt/jjj /mnt/123
+> [root@xefs-51 ~]# df -iT /mnt
+> 文件系统       类型     Inode 已用(I)   可用(I) 已用(I)% 挂载点
+> /dev/sdc2      xfs  107374144       7 107374137       1% /mnt
+> [root@xefs-51 ~]# cp /mnt/jjj /mnt/111
+> [root@xefs-51 ~]# df -iT /mnt
+> 文件系统       类型     Inode 已用(I)   可用(I) 已用(I)% 挂载点
+> /dev/sdc2      xfs  107374144       8 107374136       1% /mnt
+> [root@xefs-51 ~]# cp /mnt/jjj /mnt/222
+> [root@xefs-51 ~]# df -iT /mnt
+> 文件系统       类型     Inode 已用(I)   可用(I) 已用(I)% 挂载点
+> /dev/sdc2      xfs  107374144       9 107374135       1% /mnt
+> [root@xefs-51 ~]# cp /mnt/jjj /mnt/333
+> [root@xefs-51 ~]# df -iT /mnt
+> 文件系统       类型     Inode 已用(I)   可用(I) 已用(I)% 挂载点
+> /dev/sdc2      xfs  107374144      10 107374134       1% /mnt
 > 
-> I'm not sure what you meant here, could you please specify what you meant by
-> 'overlay files'? Are you using this XFS filesystem as an upper/lower FS for
-> overlayfs?
+> and then remove some, but the inodes used in 'df -iT /mnt' not changed
+> [root@xefs-51 ~]# rm -f /mnt/jjj
+> [root@xefs-51 ~]# df -iT /mnt
+> 文件系统       类型     Inode 用(I)   可用(I) 已用(I)% 挂载点
+> /dev/sdc2      xfs  107374144      10 107374134       1% /mnt
+> [root@xefs-51 ~]# rm -f /mnt/kkk
+> [root@xefs-51 ~]# df -iT /mnt
+> 文件系统       类型     Inode 已用(I)   可用(I) 已用(I)% 挂载点
+> /dev/sdc2      xfs  107374144      10 107374134       1% /mnt
 > 
-> > and the xfs_repair shows the
-> > summary below.
-> > 
-> > ```
-> > # xfs_repair -vv /dev/mapper/sddovl
-> >         - block cache size set to 4201400 entries
-> > Phase 2 - using internal log
-> >         - zero log...
-> > zero_log: head block 3930112 tail block 3929088
-> > ERROR: The filesystem has valuable metadata changes in a log which needs to
-> > be replayed.  Mount the filesystem to replay the log, and unmount it before
-> > re-running xfs_repair.  If you are unable to mount the filesystem, then use
-> > the -L option to destroy the log and attempt a repair.
-> > Note that destroying the log may cause corruption -- please attempt a mount
-> 
-> Have you tried to mount/umount the filesystem before zeroing the log? This is
-> supposed to be used as a last resort. Zero out the logs I mean.
-> 
-> > 
-> > The directory `lost+found` contains almost five million files
-> > 
-> >     # find lost+found | wc
-> >     4859687 4859687 110985720
-> 
-> We don't have neither the whole xfs_repair output nor more information about the
-> filesystem itself, but looks like you had huge directory(ies) update in your log
-> which were not replayed, and all orphan inodes ended up in the lost+found =/
-> 
-> > 
-> > We saved the output of `xfs_repair`, but it’s over 500 MB in size, so we
-> > cannot attach it.
-> > 
-> > `sudo xfs_metadump -go /dev/sdd sdd-metadump.dump` takes over 15 minutes
-> > and the dump files is 8.8 GB in size.
-> 
-> At this point, xfs_metadump won't help much once you already repaired the
-> filesystem.
-> Although, why are you getting a metadump from /dev/sdd, when the fs you tried to
-> repair is a device-mapper device? Are you facing this issue in more than one
-> filesystem?
-> 
-> > 
-> > It’d be great, if you could give hints on debugging this issue further,
-> > and comment, if you think it is possible to recover the files, that means,
-> > to fix the log, so that it can be cleanly applied.
-> 
-> Unfortunately, you already got rid of the log, so, you can't recover it anymore,
-> but all the recovered files will be in lost+found, with their inode numbers as
-> file name.
-> 
-> 
-> Ok, so below is the dmesg, thanks for having attached it.
-> 
-> One thing is there are 2 devices failing. sdd and dm-0. So my question again, is
-> this the same filesystem or are they 2 separated filesystems showing exactly the
-> same issue? The filesystem has found corrupted inodes in the AG's unlinked
-> bucket, but this shouldn't affect log recovery.
-> 
-> If they are two separated devices, did you xfs_repair'ed both of them? After you
-> repaired the filesystem(s), do you still see the memory corruption issue?
-> 
-> At this point, there is not much we can do regarding the filesystem metadata,
-> once you already forced a xfs_repair zeroing the logs.
-> 
-> So, could you please tell the current state of the filesystem (or filesystems if
-> there is more than one)? Are you still seeing the same memory corruption error
-> even after xfs_repair it?
-> 
+> and if we umount /mnt at this time, the machine will reboot,
+> and no related log in /var/log/messages after boot and the inodes used
+> become normal.
 
-FWIW, if you do still have an original copy of the fs, we could see
-about whether bypassing the shutdown allows us to trade log recovery
-failure for a space accounting error. This would still require a
-subsequent repair, but that may be less invasive than zapping the log
-and dealing with the aftermath of that.
+You have a filesystem that causes the machine to reboot when it is
+unmounted? If so, you need to identify why that happens first and
+foremost. I'd start by checking the filesystem for issues with
+'xfs_repair -n' after a mount cycle (to perform log recovery). After
+that, perhaps check dmesg after each operation above before the unmount
+to rule out any preceding errors/shutdowns putting the system in an
+unexpected state. As for the unmount itself, I suppose you'll have to
+find a way to get a console that shows alert output or whatnot when the
+unmount occurs.
 
 Brian
 
-> And for completeness, please provide us as much information as possible from
-> this(these) filesystem(s):
+> As googled a lot, we tried some ways:
+> 1) lsof /mnt: shows nobody use this mount point.
+> 2) lsof |grep deleted: shows empty
+> What should i do to find the problem out?
 > 
-> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-> 
-> Cheers.
-> 
-> > [ 1380.869451] XFS (sdd): Mounting V5 Filesystem
-> > [ 1380.912559] XFS (sdd): Starting recovery (logdev: internal)
-> > [ 1381.030780] XFS (sdd): xfs_do_force_shutdown(0x8) called from line 368 of file fs/xfs/xfs_trans.c.  Return address = 00000000cfa623e1
-> > [ 1381.030785] XFS (sdd): Corruption of in-memory data detected.  Shutting down filesystem
-> > [ 1381.030786] XFS (sdd): Please umount the filesystem and rectify the problem(s)
-> > [ 1381.031086] XFS (sdd): xlog_recover_clear_agi_bucket: failed to clear agi 0. Continuing.
-> > [ 1381.031088] XFS (sdd): xfs_imap_to_bp: xfs_trans_read_buf() returned error -5.
-> > [ 1381.031090] XFS (sdd): xlog_recover_clear_agi_bucket: failed to clear agi 0. Continuing.
-> > [ 1381.031093] XFS (sdd): xfs_imap_to_bp: xfs_trans_read_buf() returned error -5.
-> > [ 1381.031095] XFS (sdd): xlog_recover_clear_agi_bucket: failed to clear agi 0. Continuing.
-> <...>
-> > [ 1381.031113] XFS (sdd): Ending recovery (logdev: internal)
-> > [ 1381.031490] XFS (sdd): Error -5 reserving per-AG metadata reserve pool.
-> > [ 1381.031492] XFS (sdd): xfs_do_force_shutdown(0x8) called from line 548 of file fs/xfs/xfs_fsops.c.  Return address = 00000000217dbba5
-> 
-> > [ 2795.123228] XFS (dm-0): Ending recovery (logdev: internal)
-> > [ 2795.231020] XFS (dm-0): Error -5 reserving per-AG metadata reserve pool.
-> > [ 2795.231023] XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 548 of file fs/xfs/xfs_fsops.c.  Return address = 00000000217dbba5
-> 
-> > [10944.023429] XFS (dm-0): Mounting V5 Filesystem
-> > [10944.035260] XFS (dm-0): Ending clean mount
-> > [11664.862376] XFS (dm-0): Unmounting Filesystem
-> > [11689.260213] XFS (dm-0): Mounting V5 Filesystem
-> > [11689.338187] XFS (dm-0): Ending clean mount
-> 
-> 
-> 
-> 
-> -- 
-> Carlos
+> --
+> Thank you!
