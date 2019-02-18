@@ -1,100 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:55772 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727864AbfB1X3K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Feb 2019 18:29:10 -0500
-Date: Thu, 28 Feb 2019 15:29:01 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: sporadic shared/298 failures?
-Message-ID: <20190228232901.GC6471@magnolia>
+Received: from mail-qt1-f193.google.com ([209.85.160.193]:36867 "EHLO
+        mail-qt1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729048AbfBRWax (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Feb 2019 17:30:53 -0500
+Subject: Re: [LSF/MM TOPIC] More async operations for file systems - async
+ discard?
+References: <92ab41f7-35bc-0f56-056f-ed88526b8ea4@gmail.com>
+ <20190217210948.GB14116@dastard>
+ <46540876-c222-0889-ddce-44815dcaad04@gmail.com>
+ <20190218022243.GC14116@dastard>
+From: Ric Wheeler <ricwheeler@gmail.com>
+Message-ID: <86f2588d-8567-3905-40aa-c422393daaf1@gmail.com>
+Date: Mon, 18 Feb 2019 17:30:49 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20190218022243.GC14116@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Whitney <enwlinux@gmail.com>
-Cc: linux-ext4@vger.kernel.org, tytso@mit.edu, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-block@vger.kernel.org
 
-Hi Eric,
+On 2/17/19 9:22 PM, Dave Chinner wrote:
+> On Sun, Feb 17, 2019 at 06:42:59PM -0500, Ric Wheeler wrote:
+>> On 2/17/19 4:09 PM, Dave Chinner wrote:
+>>> On Sun, Feb 17, 2019 at 03:36:10PM -0500, Ric Wheeler wrote:
+>>>> One proposal for btrfs was that we should look at getting discard
+>>>> out of the synchronous path in order to minimize the slowdown
+>>>> associated with enabling discard at mount time. Seems like an
+>>>> obvious win for "hint" like operations like discard.
+>>> We already have support for that. blkdev_issue_discard() is
+>>> synchornous, yes, but __blkdev_issue_discard() will only build the
+>>> discard bio chain - it is up to the caller to submit and wait for it.
+>>>
+>>> Some callers (XFS, dm-thinp, nvmet, etc) use a bio completion to
+>>> handle the discard IO completion, hence allowing async dispatch and
+>>> processing of the discard chain without blocking the caller. Others
+>>> (like ext4) simply call submit_bio_wait() to do wait synchronously
+>>> on completion of the discard bio chain.
+>>>
+>>>> I do wonder where we stand now with the cost of the various discard
+>>>> commands - how painful is it for modern SSD's?
+>>> AIUI, it still depends on the SSD implementation, unfortunately.
+>> I think the variability makes life really miserable for layers above it.
+> Yup, that it does.
+>
+>> Might be worth constructing some tooling that we can use to validate
+>> or shame vendors over
+> That doesn't seem to work.
+>
+>> - testing things like a full device discard,
+>> discard of fs block size and big chunks, discard against already
+>> discarded, etc.
+> We did that many years ago because discard on SSDs sucked:
+>
+> https://people.redhat.com/lczerner/discard/test_discard.html
+> https://sourceforge.net/projects/test-discard/files/
+>
+> And, really, that didn't changed a thing - discard still sucks...
+>
+> Cheers,
+>
+> Dave.
 
-On this morning's ext4 concall you mentioned that you saw sporadic
-failures in shared/298, and I mentioned that I'd seen similar symptoms
-on xfs.  I had a look at 298 and discovered that it probes the file
-image for holes while the filesystem is loop-mounted!  Yikes!  I don't
-remember the exact circumstances of your testing (I think you said it
-was related to bigalloc?) but this reproduces on XFS with blocksize = 1k
-every time.
+Totally forgot about that work - maybe it is time to try again and poke some 
+vendors.
 
-Does the following patch fix your sporadic failures?
-
-(This isn't the last word on this test -- both ext4 and XFS now /do/
-support live queries of the freep space map, so we're probably going
-to want a similar test that doesn't clunkily unmount the fs so much.)
-
-I'll send this patch out with proper subject line and whatnot next week
-after I give it more thorough testing on xfs.
-
---D
-
-This test does some weird things with live filesystems -- it seems to be
-validating the behavior of fstrim by comparing the filesystem's free
-space map to holes in the file image that backs the filesystem.
-However, this doesn't account for the fact that some filesystems
-maintain in-core preallocations and/or can perturb the free space data
-during unmount.  This causes sporadic test failures when the two become
-out of sync.
-
-Therefore, make sure we unmount the filesystem before we start running
-tools against the filesystem image file to eliminate the possibility of
-changes to the free space map.  This was found by running shared/298 on
-xfs with a 1k block size.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/shared/298 |   18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
-
-diff --git a/tests/shared/298 b/tests/shared/298
-index aafdc25f..5d6c6ccf 100755
---- a/tests/shared/298
-+++ b/tests/shared/298
-@@ -46,13 +46,21 @@ _cleanup()
- 
- get_holes()
- {
-+	# It's not a good idea to be running tools against the image file
-+	# backing a live filesystem because the filesystem could be maintaining
-+	# in-core state that will perturb the free space map on umount.  Stick
-+	# to established convention which requires the filesystem to be
-+	# unmounted while we probe the underlying file.
-+	$UMOUNT_PROG $loop_mnt
- 	$XFS_IO_PROG -F -c fiemap $1 | grep hole | $SED_PROG 's/.*\[\(.*\)\.\.\(.*\)\].*/\1 \2/'
-+	_mount $loop_dev $loop_mnt
- }
- 
- get_free_sectors()
- {
- 	case $FSTYP in
- 	ext4)
-+	$UMOUNT_PROG $loop_mnt
- 	$DUMPE2FS_PROG $img_file  2>&1 | grep " Free blocks" | cut -d ":" -f2- | \
- 		tr ',' '\n' | $SED_PROG 's/^ //' | \
- 		$AWK_PROG -v spb=$sectors_per_block 'BEGIN{FS="-"};
-@@ -195,6 +203,16 @@ while read line; do
- 		END { if(found) exit 0; else exit 1}' $merged_sectors
- 	then
- 		echo "Sectors $from-$to are not marked as free!"
-+
-+		# Dump the state to make it easier to debug this...
-+		echo free_sectors >> $seqres.full
-+		sort -g < $free_sectors >> $seqres.full
-+		echo fiemap_ref >> $seqres.full
-+		sort -g < $fiemap_ref >> $seqres.full
-+		echo merged_sectors >> $seqres.full
-+		sort -g < $merged_sectors >> $seqres.full
-+		echo fiemap_after >> $seqres.full
-+		sort -g < $fiemap_after >> $seqres.full
- 		exit
- 	fi
- done < $fiemap_after
+Ric
