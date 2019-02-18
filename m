@@ -1,208 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:36118 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726178AbfBNXuG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 18:50:06 -0500
-Date: Thu, 14 Feb 2019 15:49:08 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] vfs: don't decrement i_nlink in d_tmpfile
-Message-ID: <20190214234908.GA6474@magnolia>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:28706 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727266AbfBRCWs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Feb 2019 21:22:48 -0500
+Date: Mon, 18 Feb 2019 13:22:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [LSF/MM TOPIC] More async operations for file systems - async
+ discard?
+Message-ID: <20190218022243.GC14116@dastard>
+References: <92ab41f7-35bc-0f56-056f-ed88526b8ea4@gmail.com>
+ <20190217210948.GB14116@dastard>
+ <46540876-c222-0889-ddce-44815dcaad04@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <46540876-c222-0889-ddce-44815dcaad04@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: clm@fb.com, josef@toxicpanda.com, dsterba@suse.com, viro@zeniv.linux.org.uk, jack@suse.com, tytso@mit.edu, adilger.kernel@dilger.ca, jaegeuk@kernel.org, yuchao0@huawei.com, hughd@google.com, darrick.wong@oracle.com, hch@infradead.org
-Cc: richard@nod.at, dedekind1@gmail.com, adrian.hunter@intel.com, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-mtd@lists.infradead.org, linux-mm@kvack.org
+To: Ric Wheeler <ricwheeler@gmail.com>
+Cc: lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-block@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sun, Feb 17, 2019 at 06:42:59PM -0500, Ric Wheeler wrote:
+> On 2/17/19 4:09 PM, Dave Chinner wrote:
+> >On Sun, Feb 17, 2019 at 03:36:10PM -0500, Ric Wheeler wrote:
+> >>One proposal for btrfs was that we should look at getting discard
+> >>out of the synchronous path in order to minimize the slowdown
+> >>associated with enabling discard at mount time. Seems like an
+> >>obvious win for "hint" like operations like discard.
+> >We already have support for that. blkdev_issue_discard() is
+> >synchornous, yes, but __blkdev_issue_discard() will only build the
+> >discard bio chain - it is up to the caller to submit and wait for it.
+> >
+> >Some callers (XFS, dm-thinp, nvmet, etc) use a bio completion to
+> >handle the discard IO completion, hence allowing async dispatch and
+> >processing of the discard chain without blocking the caller. Others
+> >(like ext4) simply call submit_bio_wait() to do wait synchronously
+> >on completion of the discard bio chain.
+> >
+> >>I do wonder where we stand now with the cost of the various discard
+> >>commands - how painful is it for modern SSD's?
+> >AIUI, it still depends on the SSD implementation, unfortunately.
+> 
+> I think the variability makes life really miserable for layers above it.
 
-d_tmpfile was introduced to instantiate an inode in the dentry cache as
-a temporary file.  This helper decrements the inode's nlink count and
-dirties the inode, presumably so that filesystems could call new_inode
-to create a new inode with nlink == 1 and then call d_tmpfile which will
-decrement nlink.
+Yup, that it does.
 
-However, this doesn't play well with XFS, which needs to allocate,
-initialize, and insert a tempfile inode on its unlinked list in a single
-transaction.  In order to maintain referential integrity of the XFS
-metadata, we cannot have an inode on the unlinked list with nlink >= 1.
+> Might be worth constructing some tooling that we can use to validate
+> or shame vendors over
 
-XFS and btrfs hack around d_tmpfile's behavior by creating the inode
-with nlink == 0 and then incrementing it just prior to calling
-d_tmpfile, anticipating that it will be reset to 0.
+That doesn't seem to work.
 
-Everywhere else outside of d_tmpfile, it appears that nlink updates and
-persistence is the responsibility of individual filesystems.  Therefore,
-move the nlink decrement out of d_tmpfile into the callers, and require
-that callers only pass in inodes with nlink already set to 0.
+> - testing things like a full device discard,
+> discard of fs block size and big chunks, discard against already
+> discarded, etc.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/btrfs/inode.c  |    8 --------
- fs/dcache.c       |    8 ++++++--
- fs/ext2/namei.c   |    2 +-
- fs/ext4/namei.c   |    1 +
- fs/f2fs/namei.c   |    1 +
- fs/minix/namei.c  |    2 +-
- fs/ubifs/dir.c    |    1 +
- fs/udf/namei.c    |    2 +-
- fs/xfs/xfs_iops.c |   13 ++-----------
- mm/shmem.c        |    1 +
- 10 files changed, 15 insertions(+), 24 deletions(-)
+We did that many years ago because discard on SSDs sucked:
 
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 5c349667c761..bd189fc50f83 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -10382,14 +10382,6 @@ static int btrfs_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
- 	if (ret)
- 		goto out;
- 
--	/*
--	 * We set number of links to 0 in btrfs_new_inode(), and here we set
--	 * it to 1 because d_tmpfile() will issue a warning if the count is 0,
--	 * through:
--	 *
--	 *    d_tmpfile() -> inode_dec_link_count() -> drop_nlink()
--	 */
--	set_nlink(inode, 1);
- 	d_tmpfile(dentry, inode);
- 	unlock_new_inode(inode);
- 	mark_inode_dirty(inode);
-diff --git a/fs/dcache.c b/fs/dcache.c
-index aac41adf4743..5fb4ecce2589 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -3042,12 +3042,16 @@ void d_genocide(struct dentry *parent)
- 
- EXPORT_SYMBOL(d_genocide);
- 
-+/*
-+ * Instantiate an inode in the dentry cache as a temporary file.  Callers must
-+ * ensure that @inode has a zero link count.
-+ */
- void d_tmpfile(struct dentry *dentry, struct inode *inode)
- {
--	inode_dec_link_count(inode);
- 	BUG_ON(dentry->d_name.name != dentry->d_iname ||
- 		!hlist_unhashed(&dentry->d_u.d_alias) ||
--		!d_unlinked(dentry));
-+		!d_unlinked(dentry) ||
-+		inode->i_nlink != 0);
- 	spin_lock(&dentry->d_parent->d_lock);
- 	spin_lock_nested(&dentry->d_lock, DENTRY_D_LOCK_NESTED);
- 	dentry->d_name.len = sprintf(dentry->d_iname, "#%llu",
-diff --git a/fs/ext2/namei.c b/fs/ext2/namei.c
-index 0c26dcc5d850..8542e9ce9677 100644
---- a/fs/ext2/namei.c
-+++ b/fs/ext2/namei.c
-@@ -117,7 +117,7 @@ static int ext2_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
- 		return PTR_ERR(inode);
- 
- 	ext2_set_file_ops(inode);
--	mark_inode_dirty(inode);
-+	inode_dec_link_count(inode);
- 	d_tmpfile(dentry, inode);
- 	unlock_new_inode(inode);
- 	return 0;
-diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
-index 2b928eb07fa2..7502432f9816 100644
---- a/fs/ext4/namei.c
-+++ b/fs/ext4/namei.c
-@@ -2517,6 +2517,7 @@ static int ext4_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
- 		inode->i_op = &ext4_file_inode_operations;
- 		inode->i_fop = &ext4_file_operations;
- 		ext4_set_aops(inode);
-+		inode_dec_link_count(inode);
- 		d_tmpfile(dentry, inode);
- 		err = ext4_orphan_add(handle, inode);
- 		if (err)
-diff --git a/fs/f2fs/namei.c b/fs/f2fs/namei.c
-index 62d9829f3a6a..31a556af5f3a 100644
---- a/fs/f2fs/namei.c
-+++ b/fs/f2fs/namei.c
-@@ -780,6 +780,7 @@ static int __f2fs_tmpfile(struct inode *dir, struct dentry *dentry,
- 		f2fs_i_links_write(inode, false);
- 		*whiteout = inode;
- 	} else {
-+		inode_dec_link_count(inode);
- 		d_tmpfile(dentry, inode);
- 	}
- 	/* link_count was changed by d_tmpfile as well. */
-diff --git a/fs/minix/namei.c b/fs/minix/namei.c
-index 1a6084d2b02e..3249f86c476a 100644
---- a/fs/minix/namei.c
-+++ b/fs/minix/namei.c
-@@ -57,7 +57,7 @@ static int minix_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
- 	struct inode *inode = minix_new_inode(dir, mode, &error);
- 	if (inode) {
- 		minix_set_inode(inode, 0);
--		mark_inode_dirty(inode);
-+		inode_dec_link_count(inode);
- 		d_tmpfile(dentry, inode);
- 	}
- 	return error;
-diff --git a/fs/ubifs/dir.c b/fs/ubifs/dir.c
-index 5767b373a8ff..7187e4fd7561 100644
---- a/fs/ubifs/dir.c
-+++ b/fs/ubifs/dir.c
-@@ -419,6 +419,7 @@ static int do_tmpfile(struct inode *dir, struct dentry *dentry,
- 		drop_nlink(inode);
- 		*whiteout = inode;
- 	} else {
-+		inode_dec_link_count(inode);
- 		d_tmpfile(dentry, inode);
- 	}
- 	ubifs_assert(c, ui->dirty);
-diff --git a/fs/udf/namei.c b/fs/udf/namei.c
-index 58cc2414992b..38bd021f9673 100644
---- a/fs/udf/namei.c
-+++ b/fs/udf/namei.c
-@@ -652,7 +652,7 @@ static int udf_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
- 		inode->i_data.a_ops = &udf_aops;
- 	inode->i_op = &udf_file_inode_operations;
- 	inode->i_fop = &udf_file_operations;
--	mark_inode_dirty(inode);
-+	inode_dec_link_count(inode);
- 	d_tmpfile(dentry, inode);
- 	unlock_new_inode(inode);
- 	return 0;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 1efef69a7f1c..f48ffd7a8d3e 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -191,18 +191,9 @@ xfs_generic_create(
- 
- 	xfs_setup_iops(ip);
- 
--	if (tmpfile) {
--		/*
--		 * The VFS requires that any inode fed to d_tmpfile must have
--		 * nlink == 1 so that it can decrement the nlink in d_tmpfile.
--		 * However, we created the temp file with nlink == 0 because
--		 * we're not allowed to put an inode with nlink > 0 on the
--		 * unlinked list.  Therefore we have to set nlink to 1 so that
--		 * d_tmpfile can immediately set it back to zero.
--		 */
--		set_nlink(inode, 1);
-+	if (tmpfile)
- 		d_tmpfile(dentry, inode);
--	} else
-+	else
- 		d_instantiate(dentry, inode);
- 
- 	xfs_finish_inode_setup(ip);
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 6ece1e2fe76e..4a7810093561 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -2818,6 +2818,7 @@ shmem_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
- 		error = simple_acl_create(dir, inode);
- 		if (error)
- 			goto out_iput;
-+		inode_dec_link_count(inode);
- 		d_tmpfile(dentry, inode);
- 	}
- 	return error;
+https://people.redhat.com/lczerner/discard/test_discard.html
+https://sourceforge.net/projects/test-discard/files/
+
+And, really, that didn't changed a thing - discard still sucks...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
