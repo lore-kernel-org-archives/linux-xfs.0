@@ -1,94 +1,225 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:34450 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725810AbfBQQfc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Feb 2019 11:35:32 -0500
-Subject: Re: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
-References: <cover.1550136164.git.osandov@fb.com>
- <20190214220626.GV14116@dastard>
-From: Boaz Harrosh <openosd@gmail.com>
-Message-ID: <6a9dc05a-0445-d0ab-0140-1de4fee7ba9b@gmail.com>
-Date: Sun, 17 Feb 2019 18:35:25 +0200
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:23080 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727266AbfBRC0Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Feb 2019 21:26:25 -0500
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1gvYdP-0002p9-Fk
+        for linux-xfs@vger.kernel.org; Mon, 18 Feb 2019 13:26:19 +1100
+Date: Mon, 18 Feb 2019 13:26:19 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 4/3] xfs: EOF blocks are not busy extents
+Message-ID: <20190218022619.GD14116@dastard>
+References: <20190207050813.24271-1-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <20190214220626.GV14116@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190207050813.24271-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Omar Sandoval <osandov@osandov.com>
-Cc: linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 15/02/19 00:06, Dave Chinner wrote:
-> On Thu, Feb 14, 2019 at 02:00:07AM -0800, Omar Sandoval wrote:
->> From: Omar Sandoval <osandov@fb.com>
->>
->> Hi,
->>
->> Since statx was added in 4.11, userspace has had an interface for
->> reading btime (file creation time), but no way to set it. This RFC patch
->> series adds support for changing btime with utimensat(). Patch 1 adds
->> the VFS infrastructure, patch 2 adds the support to utimensat() with a
->> new flag, and the rest of the patches add filesystem support; I excluded
->> CIFS for now because I don't have a CIFS setup to test it on.
->>
->> Updating btime is useful for at least a couple of use cases:
->>
-[1]
->> - Backup/restore programs (my motivation for this feature is btrfs send)
->> - File servers which interoperate with operating systems that allow
->>   updating file creation time, including Mac OS [1] and Windows [2]
-> 
-> So you're adding an interface that allows users to change the create
-> time of files without needing any privileges?
-> 
-[2]
-> Inode create time is forensic metadata in XFS  - information we use
-> for sequence of event and inode lifetime analysis during examination
-> of broken filesystem images and systems that have been broken into.
-> Just because it's exposed to userspace via statx(), it doesn't mean
-> that it is information that users should be allowed to change. i.e.
-> allowing users to be able to change the create time on files makes
-> it completely useless for the purpose it was added to XFS for...
-> 
-<snap>
+From: Dave Chinner <dchinner@redhat.com>
 
-I think the difference in opinion here is that there are two totally
-different BTIme out in the world. For two somewhat opposite motivations
-and it seems they both try to be crammed into the same on disk space.
+Userdata extents are considered as "busy extents" when they are
+freed to ensure that they ar enot reallocated and written to before
+the transaction that frees the user data extent has been committed
+to disk.
 
-One - Author creation time
-  This is a Windows originated creature and later MAC (and all vendors who
-  make a living by serving cifs (hint see my email address))
+However, in the case of post EOF blocks, these block have
+never been exposed to user applications and so don't contain valid
+data. Hence they don't need to be considered "busy" when they've
+been freed because there is no data in them that can be destroyed
+if they are reallocated and have data written to them before the
+free transaction is committed.
 
-  This is a tag carried globally on the globe denoting the time of the
-  original creator of the file. copy, download, backup-restore and so
-  on preserve it from the very first original creation.
-  This creature is a user oriented information. That needs to be carefully
-  orchestrated by all parties
+We already have XFS_BMAPI_NODISCARD to extent freeing that the data
+extent has never been used so it doesn't need discards issued on it.
+This new functionality is just an extension of that concept - the
+extent is actually unused, so doesn't even need to be marked busy.
 
-Two - Local creation time
-  This is an immutable local FS information that helps in debugging and
-  FS-checking / recovery of data. It is an information that kind of denotes
-  the order of creation of files on a local FS.
+Hence fix this by adding XFS_BMAPI_UNUSED and update the EOF block
+data extent truncate with XFS_BMAPI_UNUSED and propagate that all
+the way through the various structures an use it to avoid inserting
+the extent into the busy list.
 
-So it looks like both sides are correct trying to preserve their own guy?
+[ Note: this seems like a bit of a hack, but I just don't see the
+point of inserting it into the busy list, then adding a new busy
+list unused flag, then allowing every allocation type to use it in
+the _trim code, then have every caller have to call _reuse to remove
+the range from the busy tree. It just seems like complexity that
+doesn't need to exist because anyone can reallocate an
+unused extent for immediate use. ]
 
-XFS invented [2] I'd let it be. If you need [1] on XFS better push for
-a well defined standardized xattr and be in peace.
+This avoids the problem of free space fragmentation when multiple
+files are written sequentially  via synchronous writes or post-write
+fsync calls before the next file is written. This results in the
+post-eof blocks being marked busy and can't be immediately
+reallocated resulting in the files packing poorly and unnecessarily
+leaving free space between them.
 
-BTRFS should decide which one of [2] or [1] it has space for in the inode
-and commit to it. Documenting well what it is.
+Freespace fragmentation from sequential multi-file synchronous write
+workload:
 
-That said putting my Netapp hat. I would love to see an easy API
-for Author-creation-time BTime type of value. That is accessed
-uniformly by user-mode and/or Network file servers (NFS/CIFS).
-And would love to see a generic implementation of that interface
-that puts it into a standardized xattr if the FS in question does
-not have a native support for it [1].
+Before:
+  from      to extents  blocks    pct
+      1       1       7       7   0.00
+      2       3      34      80   0.00
+      4       7      65     345   0.01
+      8      15     208    2417   0.05
+     16      31     147    2982   0.06
+     32      63       1      49   0.00
+1048576 1310720       4 5185064  99.89
 
-So I love these patches. And would want to see this through. But
-let us understand each other?
+After:
+   from      to extents  blocks    pct
+      1       1       3       3   0.00
+      2       3       1       3   0.00
+1048576 1310720       4 5190871 100.00
 
-Thanks
-Boaz
+Much better.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c  | 7 +++----
+ fs/xfs/libxfs/xfs_bmap.c   | 6 +++---
+ fs/xfs/libxfs/xfs_bmap.h   | 8 ++++++--
+ fs/xfs/xfs_bmap_util.c     | 2 +-
+ fs/xfs/xfs_trans_extfree.c | 6 +++---
+ 5 files changed, 16 insertions(+), 13 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 659bb9133955..729136ef0ed1 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -3014,7 +3014,7 @@ __xfs_free_extent(
+ 	xfs_extlen_t			len,
+ 	const struct xfs_owner_info	*oinfo,
+ 	enum xfs_ag_resv_type		type,
+-	bool				skip_discard)
++	bool				unused)
+ {
+ 	struct xfs_mount		*mp = tp->t_mountp;
+ 	struct xfs_buf			*agbp;
+@@ -3045,9 +3045,8 @@ __xfs_free_extent(
+ 	if (error)
+ 		goto err;
+ 
+-	if (skip_discard)
+-		busy_flags |= XFS_EXTENT_BUSY_SKIP_DISCARD;
+-	xfs_extent_busy_insert(tp, agno, agbno, len, busy_flags);
++	if (!unused)
++		xfs_extent_busy_insert(tp, agno, agbno, len, busy_flags);
+ 	return 0;
+ 
+ err:
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 332eefa2700b..ba0fd80eede4 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -537,7 +537,7 @@ __xfs_bmap_add_free(
+ 	xfs_fsblock_t			bno,
+ 	xfs_filblks_t			len,
+ 	const struct xfs_owner_info	*oinfo,
+-	bool				skip_discard)
++	bool				unused)
+ {
+ 	struct xfs_extent_free_item	*new;		/* new element */
+ #ifdef DEBUG
+@@ -565,7 +565,7 @@ __xfs_bmap_add_free(
+ 		new->xefi_oinfo = *oinfo;
+ 	else
+ 		new->xefi_oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
+-	new->xefi_skip_discard = skip_discard;
++	new->xefi_unused = unused;
+ 	trace_xfs_bmap_free_defer(tp->t_mountp,
+ 			XFS_FSB_TO_AGNO(tp->t_mountp, bno), 0,
+ 			XFS_FSB_TO_AGBNO(tp->t_mountp, bno), len);
+@@ -5069,7 +5069,7 @@ xfs_bmap_del_extent_real(
+ 		} else {
+ 			__xfs_bmap_add_free(tp, del->br_startblock,
+ 					del->br_blockcount, NULL,
+-					(bflags & XFS_BMAPI_NODISCARD) ||
++					(bflags & XFS_BMAPI_UNUSED) ||
+ 					del->br_state == XFS_EXT_UNWRITTEN);
+ 		}
+ 	}
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 09d3ea97cc15..33fb95f84ea0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -54,7 +54,7 @@ struct xfs_extent_free_item
+ 	xfs_extlen_t		xefi_blockcount;/* number of blocks in extent */
+ 	struct list_head	xefi_list;
+ 	struct xfs_owner_info	xefi_oinfo;	/* extent owner */
+-	bool			xefi_skip_discard;
++	bool			xefi_unused;
+ };
+ 
+ #define	XFS_BMAP_MAX_NMAP	4
+@@ -107,6 +107,9 @@ struct xfs_extent_free_item
+ /* Do not update the rmap btree.  Used for reconstructing bmbt from rmapbt. */
+ #define XFS_BMAPI_NORMAP	0x2000
+ 
++/* Unused freed data extent, no need to mark busy */
++#define XFS_BMAPI_UNUSED	0x4000
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -120,7 +123,8 @@ struct xfs_extent_free_item
+ 	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }, \
+ 	{ XFS_BMAPI_CONVERT_ONLY, "CONVERT_ONLY" }, \
+ 	{ XFS_BMAPI_NODISCARD,	"NODISCARD" }, \
+-	{ XFS_BMAPI_NORMAP,	"NORMAP" }
++	{ XFS_BMAPI_NORMAP,	"NORMAP" }, \
++	{ XFS_BMAPI_UNUSED,	"UNUSED" }
+ 
+ 
+ static inline int xfs_bmapi_aflag(int w)
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index af2e30d33794..f5a8a4385512 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -841,7 +841,7 @@ xfs_free_eofblocks(
+ 		 * may be full of holes (ie NULL files bug).
+ 		 */
+ 		error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
+-					XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
++					XFS_ISIZE(ip), XFS_BMAPI_UNUSED);
+ 		if (error) {
+ 			/*
+ 			 * If we get an error at this point we simply don't
+diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
+index 0710434eb240..d06fb2cd6ffb 100644
+--- a/fs/xfs/xfs_trans_extfree.c
++++ b/fs/xfs/xfs_trans_extfree.c
+@@ -58,7 +58,7 @@ xfs_trans_free_extent(
+ 	xfs_fsblock_t			start_block,
+ 	xfs_extlen_t			ext_len,
+ 	const struct xfs_owner_info	*oinfo,
+-	bool				skip_discard)
++	bool				unused)
+ {
+ 	struct xfs_mount		*mp = tp->t_mountp;
+ 	struct xfs_extent		*extp;
+@@ -71,7 +71,7 @@ xfs_trans_free_extent(
+ 	trace_xfs_bmap_free_deferred(tp->t_mountp, agno, 0, agbno, ext_len);
+ 
+ 	error = __xfs_free_extent(tp, start_block, ext_len,
+-				  oinfo, XFS_AG_RESV_NONE, skip_discard);
++				  oinfo, XFS_AG_RESV_NONE, unused);
+ 	/*
+ 	 * Mark the transaction dirty, even on error. This ensures the
+ 	 * transaction is aborted, which:
+@@ -184,7 +184,7 @@ xfs_extent_free_finish_item(
+ 	error = xfs_trans_free_extent(tp, done_item,
+ 			free->xefi_startblock,
+ 			free->xefi_blockcount,
+-			&free->xefi_oinfo, free->xefi_skip_discard);
++			&free->xefi_oinfo, free->xefi_unused);
+ 	kmem_free(free);
+ 	return error;
+ }
