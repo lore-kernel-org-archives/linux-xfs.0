@@ -1,68 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:39712 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725989AbfBTRQ2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Feb 2019 12:16:28 -0500
-Date: Wed, 20 Feb 2019 09:16:15 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] xfs_io: actually check copy file range helper return
- values
-Message-ID: <20190220171615.GM32253@magnolia>
-References: <c4b7eff6-8395-3d01-eaaf-736e32e6e1dc@redhat.com>
- <b48c8b5d-9ed3-c4b6-c7fc-2c13df211dd3@redhat.com>
+Received: from mail-qt1-f180.google.com ([209.85.160.180]:41129 "EHLO
+        mail-qt1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727058AbfBRLSd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Feb 2019 06:18:33 -0500
+Received: by mail-qt1-f180.google.com with SMTP id v10so18703968qtp.8
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Feb 2019 03:18:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b48c8b5d-9ed3-c4b6-c7fc-2c13df211dd3@redhat.com>
+From: huang jun <hjwsm1989@gmail.com>
+Date: Mon, 18 Feb 2019 19:18:20 +0800
+Message-ID: <CABAwU-adU9ChA7XbT5_LVGvyK_5tUmq-t3eOmbPRAGCFD3Md0g@mail.gmail.com>
+Subject: inode not recycled after delete file
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, schumaker.anna@gmail.com
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hello
+Recently we have a problem on xfs.
 
-We need to check the return value of copy_src_filesize and
-copy_dst_truncate because either could return -1 due to fstat/ftruncate
-failure.
+The environment is:
+CentOS Linux release 7.4.1708 (Core)
+Linux xefs-51 3.10.0-693.el7.x86_64 #1 SMP Tue Aug 22 21:09:27 UTC
+2017 x86_64 x86_64 x86_64 GNU/Linux
 
-Fixes: 628e112afdd98c5 ("xfs_io: implement 'copy_range' command")
-Cc: schumaker.anna@gmail.com
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: fix return values and overflow problems
----
- io/copy_file_range.c |   17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+[root@xefs-51 ~]# modinfo xfs
+filename:       /lib/modules/3.10.0-693.el7.x86_64/kernel/fs/xfs/xfs.ko.xz
+license:        GPL
+description:    SGI XFS with ACLs, security attributes, no debug enabled
+author:         Silicon Graphics, Inc.
+alias:          fs-xfs
+rhelversion:    7.4
+srcversion:     6CAAE7A01207B73522C8412
+depends:        libcrc32c
+intree:         Y
+vermagic:       3.10.0-693.el7.x86_64 SMP mod_unload modversions
+signer:         CentOS Linux kernel signing key
+sig_key:        DA:18:7D:CA:7D:BE:53:AB:05:BD:13:BD:0C:4E:21:F4:22:B6:A4:9C
+sig_hashalgo:   sha256
 
-diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-index 4e2969c9..d069e5bb 100644
---- a/io/copy_file_range.c
-+++ b/io/copy_file_range.c
-@@ -120,11 +120,24 @@ copy_range_f(int argc, char **argv)
- 		return 0;
- 
- 	if (src == 0 && dst == 0 && len == 0) {
--		len = copy_src_filesize(fd);
--		copy_dst_truncate();
-+		off64_t	sz;
-+
-+		sz = copy_src_filesize(fd);
-+		if (sz < 0 || (unsigned long long)sz > SIZE_MAX) {
-+			ret = 1;
-+			goto out;
-+		}
-+		len = sz;
-+
-+		ret = copy_dst_truncate();
-+		if (ret < 0) {
-+			ret = 1;
-+			goto out;
-+		}
- 	}
- 
- 	ret = copy_file_range_cmd(fd, &src, &dst, len);
-+out:
- 	close(fd);
- 	return ret;
- }
+We mount /dev/sdc2 on /mnt after machine boot
+[root@xefs-51 ~]# df -iT /mnt/
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
+=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
+=E8=BD=BD=E7=82=B9
+/dev/sdc2      xfs  107374144       6 107374138       1% /mnt
+[root@xefs-51 ~]# ls /mnt
+jjj  kkk  xfs.strace
+
+And we add files to /mnt at first,
+[root@xefs-51 ~]# cp /mnt/jjj /mnt/123
+[root@xefs-51 ~]# df -iT /mnt
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
+=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
+=E8=BD=BD=E7=82=B9
+/dev/sdc2      xfs  107374144       7 107374137       1% /mnt
+[root@xefs-51 ~]# cp /mnt/jjj /mnt/111
+[root@xefs-51 ~]# df -iT /mnt
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
+=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
+=E8=BD=BD=E7=82=B9
+/dev/sdc2      xfs  107374144       8 107374136       1% /mnt
+[root@xefs-51 ~]# cp /mnt/jjj /mnt/222
+[root@xefs-51 ~]# df -iT /mnt
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
+=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
+=E8=BD=BD=E7=82=B9
+/dev/sdc2      xfs  107374144       9 107374135       1% /mnt
+[root@xefs-51 ~]# cp /mnt/jjj /mnt/333
+[root@xefs-51 ~]# df -iT /mnt
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
+=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
+=E8=BD=BD=E7=82=B9
+/dev/sdc2      xfs  107374144      10 107374134       1% /mnt
+
+and then remove some, but the inodes used in 'df -iT /mnt' not changed
+[root@xefs-51 ~]# rm -f /mnt/jjj
+[root@xefs-51 ~]# df -iT /mnt
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E7=
+=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=E8=BD=BD=
+=E7=82=B9
+/dev/sdc2      xfs  107374144      10 107374134       1% /mnt
+[root@xefs-51 ~]# rm -f /mnt/kkk
+[root@xefs-51 ~]# df -iT /mnt
+=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
+=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
+=E8=BD=BD=E7=82=B9
+/dev/sdc2      xfs  107374144      10 107374134       1% /mnt
+
+and if we umount /mnt at this time, the machine will reboot,
+and no related log in /var/log/messages after boot and the inodes used
+become normal.
+As googled a lot, we tried some ways:
+1) lsof /mnt: shows nobody use this mount point.
+2) lsof |grep deleted: shows empty
+What should i do to find the problem out?
+
+--
+Thank you!
