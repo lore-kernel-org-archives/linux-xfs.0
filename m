@@ -1,139 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:44591 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725825AbfBTHrm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Feb 2019 02:47:42 -0500
-Received: by mail-pg1-f193.google.com with SMTP id y1so11437813pgk.11
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Feb 2019 23:47:41 -0800 (PST)
-From: Andreas Dilger <adilger@dilger.ca>
-Message-Id: <8778DF81-C710-473B-9817-574DE9D7DE9B@dilger.ca>
-Content-Type: multipart/signed;
- boundary="Apple-Mail=_10F92983-9723-4CD5-9FC3-52159FA26C5F";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
-Date: Tue, 19 Feb 2019 23:47:57 -0800
-In-Reply-To: <6a9dc05a-0445-d0ab-0140-1de4fee7ba9b@gmail.com>
-References: <cover.1550136164.git.osandov@fb.com>
- <20190214220626.GV14116@dastard>
- <6a9dc05a-0445-d0ab-0140-1de4fee7ba9b@gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:43896 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725681AbfBSFNJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Feb 2019 00:13:09 -0500
+Date: Mon, 18 Feb 2019 21:13:03 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/8] xfs: fix SEEK_DATA for speculative COW fork
+ preallocation
+Message-ID: <20190219051303.GC32253@magnolia>
+References: <20190218091827.12619-1-hch@lst.de>
+ <20190218091827.12619-3-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190218091827.12619-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Boaz Harrosh <openosd@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Omar Sandoval <osandov@osandov.com>, linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
+On Mon, Feb 18, 2019 at 10:18:21AM +0100, Christoph Hellwig wrote:
+> We speculatively allocate extents in the COW fork to reduce
+> fragmentation.  But when we write data into such COW fork blocks that
+> do now shadow an allocation in the data fork SEEK_DATA will not
+> correctly report it, as it only looks at the data fork extents.
+> The only reason why that hasn't been an issue so far is because
+> we even use these speculative COW fork preallocations over holes in
+> the data fork at all for buffered writes, and blocks in the COW
+> fork that are written by direct writes are moved into the data
+> fork immediately at I/O completion time.
+> 
+> Add a new set of iomap_ops for SEEK_HOLE/SEEK_DATA which looks into
+> both the COW and data fork, and reports all COW extents as unwritten
+> to the iomap layer.  While this isn't strictly true for COW fork
+> extents that were already converted to real extents, the practical
+> semantics that you can't read data from them until they are moved
+> into the data fork are very similar, and this will force the iomap
+> layer into probing the extents for actually present data.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_file.c  |  4 +--
+>  fs/xfs/xfs_iomap.c | 85 ++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_iomap.h |  1 +
+>  3 files changed, 88 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index e47425071e65..1d07dcfbbff3 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1068,10 +1068,10 @@ xfs_file_llseek(
+>  	default:
+>  		return generic_file_llseek(file, offset, whence);
+>  	case SEEK_HOLE:
+> -		offset = iomap_seek_hole(inode, offset, &xfs_iomap_ops);
+> +		offset = iomap_seek_hole(inode, offset, &xfs_seek_iomap_ops);
+>  		break;
+>  	case SEEK_DATA:
+> -		offset = iomap_seek_data(inode, offset, &xfs_iomap_ops);
+> +		offset = iomap_seek_data(inode, offset, &xfs_seek_iomap_ops);
+>  		break;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 284c5e68f695..a7599b084571 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -1068,6 +1068,91 @@ const struct iomap_ops xfs_iomap_ops = {
+>  	.iomap_end		= xfs_file_iomap_end,
+>  };
+>  
+> +static int
+> +xfs_seek_iomap_begin(
+> +	struct inode		*inode,
+> +	loff_t			offset,
+> +	loff_t			length,
+> +	unsigned		flags,
+> +	struct iomap		*iomap)
+> +{
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> +	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + length);
+> +	xfs_fileoff_t		cow_fsb = NULLFILEOFF, data_fsb = NULLFILEOFF;
+> +	struct xfs_iext_cursor	icur;
+> +	struct xfs_bmbt_irec	imap, cmap;
+> +	int			error = 0;
+> +	unsigned		lockmode;
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return -EIO;
+> +
+> +	lockmode = xfs_ilock_data_map_shared(ip);
+> +	if (!(ip->i_df.if_flags & XFS_IFEXTENTS)) {
+> +		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+> +		if (error)
+> +			goto out_unlock;
+> +	}
+> +
+> +	if (xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap)) {
+> +		/*
+> +		 * If we found a data extent we are done.
+> +		 */
+> +		if (imap.br_startoff <= offset_fsb)
+> +			goto done;
+> +		data_fsb = imap.br_startoff;
+> +	} else {
+> +		/*
+> +		 * Fake a hole until the end of the file.
+> +		 */
+> +		data_fsb = min(XFS_B_TO_FSB(mp, offset + length),
+> +			       XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes));
+> +	}
+> +
+> +	/*
+> +	 * If a COW fork extent covers the hole, report it - capped to the next
+> +	 * data fork extent:
+> +	 */
+> +	if (xfs_inode_has_cow_data(ip) &&
+> +	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap))
+> +		cow_fsb = cmap.br_startoff;
+> +	if (cow_fsb != NULLFILEOFF && cow_fsb <= offset_fsb) {
+> +		if (data_fsb < cow_fsb + cmap.br_blockcount)
+> +			end_fsb = min(end_fsb, data_fsb);
+> +		xfs_trim_extent(&cmap, offset_fsb, end_fsb);
+> +		error = xfs_bmbt_to_iomap(ip, iomap, &cmap, true);
+> +		/*
+> +		 * Force page cache probing to avoid reporting COW extents as
+> +		 * data even if they haven't been written to:
 
---Apple-Mail=_10F92983-9723-4CD5-9FC3-52159FA26C5F
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+This comment is a little awkward, I'll change it to:
 
-On Feb 17, 2019, at 8:35 AM, Boaz Harrosh <openosd@gmail.com> wrote:
->=20
-> On 15/02/19 00:06, Dave Chinner wrote:
->> On Thu, Feb 14, 2019 at 02:00:07AM -0800, Omar Sandoval wrote:
->>> From: Omar Sandoval <osandov@fb.com>
->>>=20
->>> Hi,
->>>=20
->>> Since statx was added in 4.11, userspace has had an interface for
->>> reading btime (file creation time), but no way to set it. This RFC =
-patch
->>> series adds support for changing btime with utimensat(). Patch 1 =
-adds
->>> the VFS infrastructure, patch 2 adds the support to utimensat() with =
-a
->>> new flag, and the rest of the patches add filesystem support; I =
-excluded
->>> CIFS for now because I don't have a CIFS setup to test it on.
->>>=20
->>> Updating btime is useful for at least a couple of use cases:
->>>=20
-> [1]
->>> - Backup/restore programs (my motivation for this feature is btrfs =
-send)
->>> - File servers which interoperate with operating systems that allow
->>>  updating file creation time, including Mac OS [1] and Windows [2]
->>=20
->> So you're adding an interface that allows users to change the create
->> time of files without needing any privileges?
->>=20
-> [2]
->> Inode create time is forensic metadata in XFS  - information we use
->> for sequence of event and inode lifetime analysis during examination
->> of broken filesystem images and systems that have been broken into.
->> Just because it's exposed to userspace via statx(), it doesn't mean
->> that it is information that users should be allowed to change. i.e.
->> allowing users to be able to change the create time on files makes
->> it completely useless for the purpose it was added to XFS for...
->>=20
-> <snap>
->=20
-> I think the difference in opinion here is that there are two totally
-> different BTIme out in the world. For two somewhat opposite =
-motivations
-> and it seems they both try to be crammed into the same on disk space.
->=20
-> One - Author creation time
->  This is a Windows originated creature and later MAC (and all vendors =
-who
->  make a living by serving cifs (hint see my email address))
->=20
->  This is a tag carried globally on the globe denoting the time of the
->  original creator of the file. copy, download, backup-restore and so
->  on preserve it from the very first original creation.
->  This creature is a user oriented information. That needs to be =
-carefully
->  orchestrated by all parties.
+/*
+ * This is a COW extent, so we must probe the page cache because there
+ * could be dirty page cache being backed by this extent.
+ */
 
-One of the issues with user-supplied "creation time" is that it is =
-vague.
-If Vim (or many other programs) is writing out an existing file, it
-will actually create a new file and rename it over the old file, so even
-though the newly-written file is "created" at write time, the content is
-older.  Unless the creation time is actually stored internal to the file
-itself, rather than as filesystem metadata, it is unlikely to be kept
-across filesystems, between systems, etc.
+Otherwise looks fine to me,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Conversely, there is already such metadata in existing file formats, =
-e.g.
-.jpg (Exif.Image.DateTime), .png (tEXt Creation Time), .docx (Date =
-Completed),
-etc. that sticks with the file regardless of the underlying storage =
-medium.
+--D
 
-Cheers, Andreas
-
-
-
-
-
-
---Apple-Mail=_10F92983-9723-4CD5-9FC3-52159FA26C5F
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAlxtBi0ACgkQcqXauRfM
-H+CEjxAAhbR5dOgpALSr9iorpUu/bTTAIVrYRKPTa05jj9GfzyUyV7lb1dkXbOc9
-8tpQ9+Ib2P/Xe1kDMXO76mmJbEGuzmegxOhLChr4LfweVTGxSjn4ak3MKQhNTaO5
-AyRLMu1alKmkm7DLODd7DV6PidGo2YPVf4bUkyJX03AaaIbfZBVs98i7HdY5e15Z
-4NxUkoyKCyo6G3ac+wTe+IT52ZPnrCXysbhTksGEs+7jLOuIXuOC+x4sMA/T20iZ
-MChP/g1r54yYAqSqC5+uSU/e1t/AkGAkt9alueGuA+h4UmR/mRpmxuBgvi41sV1+
-FT+CdpTiZoTkBOxbgYqYDM+26MOLgZ+lQI5q1+gV/f+4iiB4Lf7ohZ5MhXDzMZ3G
-6NfHDgxlknWklcoQ0iaHBLgFzkXK8VLCoU36HqKjKYlfAr5N3rZsRw9sDTInyhFp
-eGep9enMgdatdStIurbwoLzJXcwox9cRtD4T0Dow20Pkjm3nUp3JOGIadUYbvtJI
-vIwRfHyarTXkrZaRWA3yhaC+5mK2+cXrqGwoeGTFxeQuIoKEjxz7HInRZYmjoGpZ
-KVtl9KSwzV/8x23o46A8/pXxlBzN4NJcjT18I52cbBjprNF5CxhfbbaVJ5omaeOs
-EmC+xbyZbB3Izf1VjsqnwUj2SPcZyTpILgvI5BPKe2O8vA2Q5Hc=
-=P9aX
------END PGP SIGNATURE-----
-
---Apple-Mail=_10F92983-9723-4CD5-9FC3-52159FA26C5F--
+> +		 */
+> +		iomap->type = IOMAP_UNWRITTEN;
+> +		goto out_unlock;
+> +	}
+> +
+> +	/*
+> +	 * Else report a hole, capped to the next found data or COW extent.
+> +	 */
+> +	if (cow_fsb != NULLFILEOFF && cow_fsb < data_fsb)
+> +		imap.br_blockcount = cow_fsb - offset_fsb;
+> +	else
+> +		imap.br_blockcount = data_fsb - offset_fsb;
+> +	imap.br_startoff = offset_fsb;
+> +	imap.br_startblock = HOLESTARTBLOCK;
+> +	imap.br_state = XFS_EXT_NORM;
+> +done:
+> +	xfs_trim_extent(&imap, offset_fsb, end_fsb);
+> +	error = xfs_bmbt_to_iomap(ip, iomap, &imap, false);
+> +out_unlock:
+> +	xfs_iunlock(ip, lockmode);
+> +	return error;
+> +}
+> +
+> +const struct iomap_ops xfs_seek_iomap_ops = {
+> +	.iomap_begin		= xfs_seek_iomap_begin,
+> +};
+> +
+>  static int
+>  xfs_xattr_iomap_begin(
+>  	struct inode		*inode,
+> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+> index 37b584c3069b..5c2f6aa6d78f 100644
+> --- a/fs/xfs/xfs_iomap.h
+> +++ b/fs/xfs/xfs_iomap.h
+> @@ -40,6 +40,7 @@ xfs_aligned_fsb_count(
+>  }
+>  
+>  extern const struct iomap_ops xfs_iomap_ops;
+> +extern const struct iomap_ops xfs_seek_iomap_ops;
+>  extern const struct iomap_ops xfs_xattr_iomap_ops;
+>  
+>  #endif /* __XFS_IOMAP_H__*/
+> -- 
+> 2.20.1
+> 
