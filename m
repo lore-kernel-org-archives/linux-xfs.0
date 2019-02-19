@@ -1,67 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:43799 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725794AbfBPFhQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 Feb 2019 00:37:16 -0500
-Date: Sat, 16 Feb 2019 16:37:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] The end of the DAX experiment
-Message-ID: <20190216053711.GA14116@dastard>
-References: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
- <20190214134622.GG4525@dhcp22.suse.cz>
- <CAPcyv4gxFKBQ9eVdn+pNEzBXRfw6Qwfmu21H2i5uj-PyFmRAGQ@mail.gmail.com>
- <20190214191013.GA3420@redhat.com>
- <CAPcyv4jLTdJyTOy715qvBL_j_deiLoBmu_thkUnFKZKMvZL6hA@mail.gmail.com>
- <20190214200840.GB12668@bombadil.infradead.org>
- <CAPcyv4hsDqvrV5yiDq8oWPuWb3WpuCEk_HB4qBxfiDpUwo75QQ@mail.gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:36322 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725497AbfBSEEv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Feb 2019 23:04:51 -0500
+Date: Mon, 18 Feb 2019 20:04:47 -0800
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
+Message-ID: <20190219040447.GX12668@bombadil.infradead.org>
+References: <cover.1550136164.git.osandov@fb.com>
+ <20190214220626.GV14116@dastard>
+ <6a9dc05a-0445-d0ab-0140-1de4fee7ba9b@gmail.com>
+ <20190217175450.psaesabv3vlzvjv4@angband.pl>
+ <CALCETrWsCUTSbvwemKHB=8=pO4fwK2qD0boFEd4puBDkpb3F9g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4hsDqvrV5yiDq8oWPuWb3WpuCEk_HB4qBxfiDpUwo75QQ@mail.gmail.com>
+In-Reply-To: <CALCETrWsCUTSbvwemKHB=8=pO4fwK2qD0boFEd4puBDkpb3F9g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Matthew Wilcox <willy@infradead.org>, Jerome Glisse <jglisse@redhat.com>, Michal Hocko <mhocko@kernel.org>, lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>
+To: Andy Lutomirski <luto@kernel.org>
+Cc: Adam Borowski <kilobyte@angband.pl>, Boaz Harrosh <openosd@gmail.com>, Dave Chinner <david@fromorbit.com>, Omar Sandoval <osandov@osandov.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, kernel-team <kernel-team@fb.com>, Linux API <linux-api@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
 
-On Thu, Feb 14, 2019 at 12:20:11PM -0800, Dan Williams wrote:
-> On Thu, Feb 14, 2019 at 12:09 PM Matthew Wilcox <willy@infradead.org> wrote:
-> >
-> > On Thu, Feb 14, 2019 at 11:31:24AM -0800, Dan Williams wrote:
-> > > On Thu, Feb 14, 2019 at 11:10 AM Jerome Glisse <jglisse@redhat.com> wrote:
-> > > > I am just again working on my struct page mapping patchset as well as
-> > > > the generic page write protection that sits on top. I hope to be able
-> > > > to post the v2 in couple weeks. You can always look at my posting last
-> > > > year to see more details.
-> > >
-> > > Yes, I have that in mind as one of the contenders. However, it's not
-> > > clear to me that its a suitable fit for filesystem-reflink. Others
-> > > have floated the 'page proxy' idea, so it would be good to discuss the
-> > > merits of the general approaches.
-> >
-> > ... and my preferred option of putting pfn entries in the page cache.
-> 
-> Another option to include the discussion.
-> 
-> > Or is that what you meant by "page proxy"?
-> 
-> Page proxy would be an object that a filesystem could allocate to
-> point back to a single physical 'struct page *'. The proxy would
-> contain an override for page->index.
+On Sun, Feb 17, 2019 at 12:40:09PM -0800, Andy Lutomirski wrote:
+> So I'm highly in favor of this patch.  If XFS wants to disallow
+> writing the birth time, fine, but I think that behavior should be
+> overridable.
 
-Needs to override page->mapping, potentially the page flags, what
-happens when someone takes a gup reference to the proxy structure,
-etc?
-
-Besides, didn't we discuss all this last year? how about we start
-with a summary of all the options considered last year, the pros and
-cons, etc, and then go from there? Regurgitating everything we've
-already talked about last year doesn't seem particularly useful to
-me...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Please, no.  We need to have consistent behaviour between at least
+Linux local filesystems.  Not "Chris thinks this is a good idea,
+while Dave and Ted think its a bad idea, so btrfs supports it and
+XFS and ext4 disallow it".
