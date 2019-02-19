@@ -1,70 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:52044 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725730AbfBSFUw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Feb 2019 00:20:52 -0500
-Date: Mon, 18 Feb 2019 21:20:47 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/8] xfs: report IOMAP_F_SHARED from
- xfs_file_iomap_begin_delay
-Message-ID: <20190219052047.GF32253@magnolia>
-References: <20190218091827.12619-1-hch@lst.de>
- <20190218091827.12619-8-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:31259 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727091AbfBSXMe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Feb 2019 18:12:34 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C04A5811C0
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Feb 2019 23:12:34 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 92D331001E82
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Feb 2019 23:12:34 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 0/3] xfsprogs: minor 4.20 fixups
+Message-ID: <c4b7eff6-8395-3d01-eaaf-736e32e6e1dc@redhat.com>
+Date: Tue, 19 Feb 2019 17:12:33 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190218091827.12619-8-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Feb 18, 2019 at 10:18:26AM +0100, Christoph Hellwig wrote:
-> No user of it in the iomap code at the moment, but we should not
-> actively report wrong information if we can trivially get it right.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  fs/xfs/xfs_iomap.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index c9fd1e4a1f99..7b71dcc97ef0 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -541,7 +541,7 @@ xfs_file_iomap_begin_delay(
->  	struct xfs_bmbt_irec	imap, cmap;
->  	struct xfs_iext_cursor	icur, ccur;
->  	xfs_fsblock_t		prealloc_blocks = 0;
-> -	bool			eof = false, cow_eof = false, shared;
-> +	bool			eof = false, cow_eof = false, shared = false;
->  	int			whichfork = XFS_DATA_FORK;
->  	int			error = 0;
->  
-> @@ -710,13 +710,14 @@ xfs_file_iomap_begin_delay(
->  		if (imap.br_startoff > offset_fsb) {
->  			xfs_trim_extent(&cmap, offset_fsb,
->  					imap.br_startoff - offset_fsb);
-> -			error = xfs_bmbt_to_iomap(ip, iomap, &cmap, false);
-> +			error = xfs_bmbt_to_iomap(ip, iomap, &cmap, true);
->  			goto out_unlock;
->  		}
->  		/* ensure we only report blocks we have a reservation for */
->  		xfs_trim_extent(&imap, cmap.br_startoff, cmap.br_blockcount);
-> +		shared = true;
->  	}
-> -	error = xfs_bmbt_to_iomap(ip, iomap, &imap, false);
-> +	error = xfs_bmbt_to_iomap(ip, iomap, &imap, shared);
->  out_unlock:
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return error;
-> -- 
-> 2.20.1
-> 
+Address a few nitpicks picked up by code scanners, 2 of which
+are "new" in 4.20.
