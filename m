@@ -1,57 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:56602 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725730AbfBSF3K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Feb 2019 00:29:10 -0500
-Date: Mon, 18 Feb 2019 21:29:05 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs/500: fix review comments
-Message-ID: <20190219052905.GH6477@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:45839 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726405AbfBSXXk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Feb 2019 18:23:40 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id E24FF81DF9
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Feb 2019 23:23:39 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id B5F59600C0
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Feb 2019 23:23:39 +0000 (UTC)
+Subject: [PATCH 2/3] xfs_io: fix TOCTOU in openfile()
+References: <c4b7eff6-8395-3d01-eaaf-736e32e6e1dc@redhat.com>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <acf1deea-a637-571b-e501-c7cbcde95c38@redhat.com>
+Date: Tue, 19 Feb 2019 17:23:38 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <c4b7eff6-8395-3d01-eaaf-736e32e6e1dc@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+openfile() stats a path to determine whether it is a pipe, and then
+opens it with flags based on the type it saw during the stat.  It's
+possible that the file at that path changes in between, and Coverity
+points this out.
 
-Fix some problems detecting reflink support in the test.
+Instead, always open O_NONBLOCK, stat the fd we got, and turn the
+flag back off via fcntl() if it's not a pipe.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Addresses-Coverity-ID: 1442788 ("Time of check time of use")
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- tests/xfs/500   |    5 ++---
- tests/xfs/group |    2 +-
- 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/tests/xfs/500 b/tests/xfs/500
-index 7a965c69..370c78ec 100755
---- a/tests/xfs/500
-+++ b/tests/xfs/500
-@@ -36,10 +36,9 @@ _scratch_mkfs -d extszinherit=8388608 >> $seqres.full 2>&1
- test $? -eq 1 || echo "should have failed extszinherit"
+diff --git a/io/open.c b/io/open.c
+index f5fbd2c..856018b 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -62,6 +62,12 @@ openfile(
+ 	int		oflags;
  
- # Try cow extent size hint if supported
--$MKFS_XFS_PROG -N -f $SCRATCH_DEV > $tmp.mkfs
--if grep -q 'reflink=' $tmp.mkfs ; then
-+if _scratch_mkfs_xfs_supported -m crc=1,reflink=1 >> $seqres.full 2>&1; then
- 	echo cowextsize >> $seqres.full
--	_scratch_mkfs -m reflink=1 -d cowextsize=8388608 >> $seqres.full 2>&1
-+	_scratch_mkfs -m reflink=1,crc=1 -d cowextsize=8388608 >> $seqres.full 2>&1
- 	test $? -eq 1 || echo "should have failed cowextsize"
- fi
+ 	oflags = flags & IO_READONLY ? O_RDONLY : O_RDWR;
++	/*
++	 * In case we've been passed a pipe to open, don't block waiting for a
++	 * reader or writer to appear. We want to either succeed or error out
++	 * immediately.  We'll clear O_NONBLOCK if it's not a pipe.
++	 */
++	oflags |= O_NONBLOCK;
+ 	if (flags & IO_APPEND)
+ 		oflags |= O_APPEND;
+ 	if (flags & IO_CREAT)
+@@ -81,18 +87,6 @@ openfile(
+ 	if (flags & IO_NOFOLLOW)
+ 		oflags |= O_NOFOLLOW;
  
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 76b8a413..0047fb5c 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -497,6 +497,6 @@
- 497 dangerous_fuzzers dangerous_scrub dangerous_online_repair
- 498 dangerous_fuzzers dangerous_norepair
- 499 auto quick
--500 auto quick mkfs
-+500 auto quick mkfs prealloc mkfs
- 501 auto quick unlink
- 502 auto quick unlink
+-	/*
+-	 * if we've been passed a pipe to open, don't block waiting for a
+-	 * reader or writer to appear. We want to either succeed or error out
+-	 * immediately.
+-	 */
+-	if (stat(path, &st) < 0 && errno != ENOENT) {
+-		perror("stat");
+-		return -1;
+-	}
+-	if (S_ISFIFO(st.st_mode))
+-		oflags |= O_NONBLOCK;
+-
+ 	fd = open(path, oflags, mode);
+ 	if (fd < 0) {
+ 		if (errno == EISDIR &&
+@@ -112,6 +106,22 @@ openfile(
+ 		}
+ 	}
+ 
++	if (fstat(fd, &st) < 0) {
++		perror("stat");
++		close(fd);
++		return -1;
++	}
++
++	/* We only want to keep nonblocking behavior for pipes */
++	if (!S_ISFIFO(st.st_mode)) {
++		oflags &= ~O_NONBLOCK;
++		if (fcntl(fd, F_SETFL, oflags) < 0) {
++			perror("fcntl");
++			close(fd);
++			return -1;
++		}
++	}
++
+ 	if (!geom || !platform_test_xfs_fd(fd))
+ 		return fd;
+ 
