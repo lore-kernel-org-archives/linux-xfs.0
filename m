@@ -1,111 +1,461 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:44395 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726246AbfBUKI0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Feb 2019 05:08:26 -0500
-Subject: Re: [PATCH V15 14/18] block: enable multipage bvecs
-From: Marek Szyprowski <m.szyprowski@samsung.com>
-Message-ID: <ba39138d-d65b-335d-d709-b95dbde1fd5c@samsung.com>
-Date: Thu, 21 Feb 2019 11:08:19 +0100
+Received: from userp2120.oracle.com ([156.151.31.85]:56036 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725730AbfBSFZz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Feb 2019 00:25:55 -0500
+Date: Mon, 18 Feb 2019 21:25:45 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 8/8] xfs: introduce an always_cow mode
+Message-ID: <20190219052545.GG32253@magnolia>
+References: <20190218091827.12619-1-hch@lst.de>
+ <20190218091827.12619-9-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20190221095733.GA12448@ming.t460p>
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-References: <20190215111324.30129-1-ming.lei@redhat.com>
-        <20190215111324.30129-15-ming.lei@redhat.com>
-        <CGME20190221084301eucas1p11e8841a62b4b1da3cccca661b6f4c29d@eucas1p1.samsung.com>
-        <6c9ae4de-c56f-a2b3-2542-da7d8b95601d@samsung.com>
-        <20190221095733.GA12448@ming.t460p>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190218091827.12619-9-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ulf Hansson <ulf.hansson@linaro.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, 'Linux Samsung SOC' <linux-samsung-soc@vger.kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, Adrian Hunter <adrian.hunter@intel.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-Hi Ming,
+On Mon, Feb 18, 2019 at 10:18:27AM +0100, Christoph Hellwig wrote:
+> Add a mode where XFS never overwrites existing blocks in place.  This
+> is to aid debugging our COW code, and also put infatructure in place
+> for things like possible future support for zoned block devices, which
+> can't support overwrites.
+> 
+> This mode is enabled globally by doing a:
+> 
+>     echo 1 > /sys/fs/xfs/debug/always_cow
+> 
+> Note that the parameter is global to allow running all tests in xfstests
+> easily in this mode, which would not easily be possible with a per-fs
+> sysfs file.
+> 
+> In always_cow mode persistent preallocations are disabled, and fallocate
+> will fail when called with a 0 mode (with our without
+> FALLOC_FL_KEEP_SIZE), and not create unwritten extent for zeroed space
+> when called with FALLOC_FL_ZERO_RANGE or FALLOC_FL_UNSHARE_RANGE.
+> 
+> There are a few interesting xfstests failures when run in always_cow
+> mode:
+> 
+>  - generic/392 fails because the bytes used in the file used to test
+>    hole punch recovery are less after the log replay.  This is
+>    because the blocks written and then punched out are only freed
+>    with a delay due to the logging mechanism.
+>  - xfs/170 will fail as the already fragile file streams mechanism
+>    doesn't seem to interact well with the COW allocator
+>  - xfs/180 xfs/182 xfs/192 xfs/198 xfs/204 and xfs/208 will claim
+>    the file system is badly fragmented, but there is not much we
+>    can do to avoid that when always writing out of place
+>  - xfs/205 fails because overwriting a file in always_cow mode
+>    will require new space allocation and the assumption in the
+>    test thus don't work anymore.
+>  - xfs/326 fails to modify the file at all in always_cow mode after
+>    injecting the refcount error, leading to an unexpected md5sum
+>    after the remount, but that again is expected
 
-On 2019-02-21 10:57, Ming Lei wrote:
-> On Thu, Feb 21, 2019 at 09:42:59AM +0100, Marek Szyprowski wrote:
->> On 2019-02-15 12:13, Ming Lei wrote:
->>> This patch pulls the trigger for multi-page bvecs.
->>>
->>> Reviewed-by: Omar Sandoval <osandov@fb.com>
->>> Signed-off-by: Ming Lei <ming.lei@redhat.com>
->> Since Linux next-20190218 I've observed problems with block layer on one
->> of my test devices (Odroid U3 with EXT4 rootfs on SD card). Bisecting
->> this issue led me to this change. This is also the first linux-next
->> release with this change merged. The issue is fully reproducible and can
->> be observed in the following kernel log:
->>
->> sdhci: Secure Digital Host Controller Interface driver
->> sdhci: Copyright(c) Pierre Ossman
->> s3c-sdhci 12530000.sdhci: clock source 2: mmc_busclk.2 (100000000 Hz)
->> s3c-sdhci 12530000.sdhci: Got CD GPIO
->> mmc0: SDHCI controller on samsung-hsmmc [12530000.sdhci] using ADMA
->> mmc0: new high speed SDHC card at address aaaa
->> mmcblk0: mmc0:aaaa SL16G 14.8 GiB
->>
->> ...
->>
->> EXT4-fs (mmcblk0p2): INFO: recovery required on readonly filesystem
->> EXT4-fs (mmcblk0p2): write access will be enabled during recovery
->> EXT4-fs (mmcblk0p2): recovery complete
->> EXT4-fs (mmcblk0p2): mounted filesystem with ordered data mode. Opts: (null)
->> VFS: Mounted root (ext4 filesystem) readonly on device 179:2.
->> devtmpfs: mounted
->> Freeing unused kernel memory: 1024K
->> hub 1-3:1.0: USB hub found
->> Run /sbin/init as init process
->> hub 1-3:1.0: 3 ports detected
->> *** stack smashing detected ***: <unknown> terminated
->> Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000004
->> CPU: 1 PID: 1 Comm: init Not tainted 5.0.0-rc6-next-20190218 #1546
->> Hardware name: SAMSUNG EXYNOS (Flattened Device Tree)
->> [<c01118d0>] (unwind_backtrace) from [<c010d794>] (show_stack+0x10/0x14)
->> [<c010d794>] (show_stack) from [<c09ff8a4>] (dump_stack+0x90/0xc8)
->> [<c09ff8a4>] (dump_stack) from [<c0125944>] (panic+0xfc/0x304)
->> [<c0125944>] (panic) from [<c012bc98>] (do_exit+0xabc/0xc6c)
->> [<c012bc98>] (do_exit) from [<c012c100>] (do_group_exit+0x3c/0xbc)
->> [<c012c100>] (do_group_exit) from [<c0138908>] (get_signal+0x130/0xbf4)
->> [<c0138908>] (get_signal) from [<c010c7a0>] (do_work_pending+0x130/0x618)
->> [<c010c7a0>] (do_work_pending) from [<c0101034>]
->> (slow_work_pending+0xc/0x20)
->> Exception stack(0xe88c3fb0 to 0xe88c3ff8)
->> 3fa0:                                     00000000 bea7787c 00000005
->> b6e8d0b8
->> 3fc0: bea77a18 b6f92010 b6e8d0b8 00000001 b6e8d0c8 00000001 b6e8c000
->> bea77b60
->> 3fe0: 00000020 bea77998 ffffffff b6d52368 60000050 ffffffff
->> CPU3: stopping
->>
->> I would like to help debugging and fixing this issue, but I don't really
->> have idea where to start. Here are some more detailed information about
->> my test system:
->>
->> 1. Board: ARM 32bit Samsung Exynos4412-based Odroid U3 (device tree
->> source: arch/arm/boot/dts/exynos4412-odroidu3.dts)
->>
->> 2. Block device: MMC/SDHCI/SDHCI-S3C with SD card
->> (drivers/mmc/host/sdhci-s3c.c driver, sdhci_2 device node in the device
->> tree)
->>
->> 3. Rootfs: Ext4
->>
->> 4. Kernel config: arch/arm/configs/exynos_defconfig
->>
->> I can gather more logs if needed, just let me which kernel option to
->> enable. Reverting this commit on top of next-20190218 as well as current
->> linux-next (tested with next-20190221) fixes this issue and makes the
->> system bootable again.
-> Could you test the patch in following link and see if it can make a difference?
->
-> https://marc.info/?l=linux-aio&m=155070355614541&w=2
+Yeah, I saw failures in a bunch of tests when running always_cow against
+a 4k blocksize rmap/reflink filesystem:
 
-I've tested that patch, but it doesn't make any difference on the test
-system. In the log I see no warning added by it.
+generic/476 xfs/066 xfs/1501 xfs/064 xfs/296 xfs/205 xfs/056 xfs/198
+generic/392 xfs/170 xfs/450 xfs/060 xfs/068 xfs/192 generic/475 xfs/283
 
-Best regards
--- 
-Marek Szyprowski, PhD
-Samsung R&D Institute Poland
+Will have a look at those tomorrow...
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_aops.c      |  2 +-
+>  fs/xfs/xfs_bmap_util.c |  9 +++------
+>  fs/xfs/xfs_file.c      | 27 ++++++++++++++++++++-------
+>  fs/xfs/xfs_iomap.c     | 28 ++++++++++++++++++----------
+>  fs/xfs/xfs_mount.h     |  1 +
+>  fs/xfs/xfs_reflink.c   | 28 ++++++++++++++++++++++++----
+>  fs/xfs/xfs_reflink.h   | 13 +++++++++++++
+>  fs/xfs/xfs_super.c     | 15 +++++++++++----
+>  fs/xfs/xfs_sysctl.h    |  1 +
+>  fs/xfs/xfs_sysfs.c     | 24 ++++++++++++++++++++++++
+>  10 files changed, 116 insertions(+), 32 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 983d11c27d32..7b8bb6bde981 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1023,7 +1023,7 @@ xfs_vm_bmap(
+>  	 * Since we don't pass back blockdev info, we can't return bmap
+>  	 * information for rt files either.
+>  	 */
+> -	if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
+> +	if (xfs_is_cow_inode(ip) || XFS_IS_REALTIME_INODE(ip))
+>  		return 0;
+>  	return iomap_bmap(mapping, block, &xfs_iomap_ops);
+>  }
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 1ee8c5539fa4..2db43ff4f8b5 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1162,16 +1162,13 @@ xfs_zero_file_space(
+>  	 * by virtue of the hole punch.
+>  	 */
+>  	error = xfs_free_file_space(ip, offset, len);
+> -	if (error)
+> -		goto out;
+> +	if (error || xfs_is_always_cow_inode(ip))
+> +		return error;
+>  
+> -	error = xfs_alloc_file_space(ip, round_down(offset, blksize),
+> +	return xfs_alloc_file_space(ip, round_down(offset, blksize),
+>  				     round_up(offset + len, blksize) -
+>  				     round_down(offset, blksize),
+>  				     XFS_BMAPI_PREALLOC);
+> -out:
+> -	return error;
+> -
+>  }
+>  
+>  static int
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 1d07dcfbbff3..770cc2edf777 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -507,7 +507,7 @@ xfs_file_dio_aio_write(
+>  		 * We can't properly handle unaligned direct I/O to reflink
+>  		 * files yet, as we can't unshare a partial block.
+>  		 */
+> -		if (xfs_is_reflink_inode(ip)) {
+> +		if (xfs_is_cow_inode(ip)) {
+>  			trace_xfs_reflink_bounce_dio_write(ip, iocb->ki_pos, count);
+>  			return -EREMCHG;
+>  		}
+> @@ -872,14 +872,27 @@ xfs_file_fallocate(
+>  				goto out_unlock;
+>  		}
+>  
+> -		if (mode & FALLOC_FL_ZERO_RANGE)
+> +		if (mode & FALLOC_FL_ZERO_RANGE) {
+>  			error = xfs_zero_file_space(ip, offset, len);
+> -		else {
+> -			if (mode & FALLOC_FL_UNSHARE_RANGE) {
+> -				error = xfs_reflink_unshare(ip, offset, len);
+> -				if (error)
+> -					goto out_unlock;
+> +		} else if (mode & FALLOC_FL_UNSHARE_RANGE) {
+> +			error = xfs_reflink_unshare(ip, offset, len);
+> +			if (error)
+> +				goto out_unlock;
+> +
+> +			if (!xfs_is_always_cow_inode(ip)) {
+> +				error = xfs_alloc_file_space(ip, offset, len,
+> +						XFS_BMAPI_PREALLOC);
+>  			}
+> +		} else {
+> +			/*
+> +			 * If always_cow mode we can't use preallocations and
+> +			 * thus should not create them.
+> +			 */
+> +			if (xfs_is_always_cow_inode(ip)) {
+> +				error = -EOPNOTSUPP;
+> +				goto out_unlock;
+> +			}
+> +
+>  			error = xfs_alloc_file_space(ip, offset, len,
+>  						     XFS_BMAPI_PREALLOC);
+>  		}
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 7b71dcc97ef0..72533e9dddc6 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -395,12 +395,13 @@ xfs_quota_calc_throttle(
+>  STATIC xfs_fsblock_t
+>  xfs_iomap_prealloc_size(
+>  	struct xfs_inode	*ip,
+> +	int			whichfork,
+>  	loff_t			offset,
+>  	loff_t			count,
+>  	struct xfs_iext_cursor	*icur)
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+> -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+>  	struct xfs_bmbt_irec	prev;
+>  	int			shift = 0;
+> @@ -593,7 +594,11 @@ xfs_file_iomap_begin_delay(
+>  	 * themselves.  Second the lookup in the extent list is generally faster
+>  	 * than going out to the shared extent tree.
+>  	 */
+> -	if (xfs_is_reflink_inode(ip)) {
+> +	if (xfs_is_cow_inode(ip)) {
+> +		if (!ip->i_cowfp) {
+> +			ASSERT(!xfs_is_reflink_inode(ip));
+> +			xfs_ifork_init_cow(ip);
+> +		}
+>  		cow_eof = !xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb,
+>  				&ccur, &cmap);
+>  		if (!cow_eof && cmap.br_startoff <= offset_fsb) {
+> @@ -609,7 +614,7 @@ xfs_file_iomap_begin_delay(
+>  		 * overwriting shared extents.   This includes zeroing of
+>  		 * existing extents that contain data.
+>  		 */
+> -		if (!xfs_is_reflink_inode(ip) ||
+> +		if (!xfs_is_cow_inode(ip) ||
+>  		    ((flags & IOMAP_ZERO) && imap.br_state != XFS_EXT_NORM)) {
+>  			trace_xfs_iomap_found(ip, offset, count, XFS_DATA_FORK,
+>  					&imap);
+> @@ -619,7 +624,7 @@ xfs_file_iomap_begin_delay(
+>  		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+>  
+>  		/* Trim the mapping to the nearest shared extent boundary. */
+> -		error = xfs_reflink_trim_around_shared(ip, &imap, &shared);
+> +		error = xfs_inode_need_cow(ip, &imap, &shared);
+>  		if (error)
+>  			goto out_unlock;
+>  
+> @@ -648,15 +653,18 @@ xfs_file_iomap_begin_delay(
+>  		 */
+>  		count = min_t(loff_t, count, 1024 * PAGE_SIZE);
+>  		end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
+> +
+> +		if (xfs_is_always_cow_inode(ip))
+> +			whichfork = XFS_COW_FORK;
+>  	}
+>  
+>  	error = xfs_qm_dqattach_locked(ip, false);
+>  	if (error)
+>  		goto out_unlock;
+>  
+> -	if (eof && whichfork == XFS_DATA_FORK) {
+> -		prealloc_blocks = xfs_iomap_prealloc_size(ip, offset, count,
+> -				&icur);
+> +	if (eof) {
+> +		prealloc_blocks = xfs_iomap_prealloc_size(ip, whichfork, offset,
+> +				count, &icur);
+>  		if (prealloc_blocks) {
+>  			xfs_extlen_t	align;
+>  			xfs_off_t	end_offset;
+> @@ -867,7 +875,7 @@ xfs_ilock_for_iomap(
+>  	 * COW writes may allocate delalloc space or convert unwritten COW
+>  	 * extents, so we need to make sure to take the lock exclusively here.
+>  	 */
+> -	if (xfs_is_reflink_inode(ip) && is_write) {
+> +	if (xfs_is_cow_inode(ip) && is_write) {
+>  		/*
+>  		 * FIXME: It could still overwrite on unshared extents and not
+>  		 * need allocation.
+> @@ -901,7 +909,7 @@ xfs_ilock_for_iomap(
+>  	 * check, so if we got ILOCK_SHARED for a write and but we're now a
+>  	 * reflink inode we have to switch to ILOCK_EXCL and relock.
+>  	 */
+> -	if (mode == XFS_ILOCK_SHARED && is_write && xfs_is_reflink_inode(ip)) {
+> +	if (mode == XFS_ILOCK_SHARED && is_write && xfs_is_cow_inode(ip)) {
+>  		xfs_iunlock(ip, mode);
+>  		mode = XFS_ILOCK_EXCL;
+>  		goto relock;
+> @@ -973,7 +981,7 @@ xfs_file_iomap_begin(
+>  	 * Break shared extents if necessary. Checks for non-blocking IO have
+>  	 * been done up front, so we don't need to do them here.
+>  	 */
+> -	if (xfs_is_reflink_inode(ip)) {
+> +	if (xfs_is_cow_inode(ip)) {
+>  		struct xfs_bmbt_irec	orig = imap;
+>  
+>  		/* if zeroing doesn't need COW allocation, then we are done. */
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index a33f45077867..fa8b37d61838 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -194,6 +194,7 @@ typedef struct xfs_mount {
+>  	 */
+>  	uint32_t		m_generation;
+>  
+> +	bool			m_always_cow;
+>  	bool			m_fail_unmount;
+>  #ifdef DEBUG
+>  	/*
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index f84b37fa4f17..e2d9179bd50d 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -192,7 +192,7 @@ xfs_reflink_trim_around_shared(
+>  	int			error = 0;
+>  
+>  	/* Holes, unwritten, and delalloc extents cannot be shared */
+> -	if (!xfs_is_reflink_inode(ip) || !xfs_bmap_is_real_extent(irec)) {
+> +	if (!xfs_is_cow_inode(ip) || !xfs_bmap_is_real_extent(irec)) {
+>  		*shared = false;
+>  		return 0;
+>  	}
+> @@ -234,6 +234,23 @@ xfs_reflink_trim_around_shared(
+>  	}
+>  }
+>  
+> +bool
+> +xfs_inode_need_cow(
+
+xfs_inode_trim_to_cow() ?
+
+Otherwise generally looks ok to me, but it's late so I'll send this now
+and get back to review in the morning.
+
+--D
+
+> +	struct xfs_inode	*ip,
+> +	struct xfs_bmbt_irec	*imap,
+> +	bool			*shared)
+> +{
+> +	/* We can't update any real extents in always COW mode. */
+> +	if (xfs_is_always_cow_inode(ip) &&
+> +	    !isnullstartblock(imap->br_startblock)) {
+> +		*shared = true;
+> +		return 0;
+> +	}
+> +
+> +	/* Trim the mapping to the nearest shared extent boundary. */
+> +	return xfs_reflink_trim_around_shared(ip, imap, shared);
+> +}
+> +
+>  static int
+>  xfs_reflink_convert_cow_locked(
+>  	struct xfs_inode	*ip,
+> @@ -321,7 +338,7 @@ xfs_find_trim_cow_extent(
+>  	if (got.br_startoff > offset_fsb) {
+>  		xfs_trim_extent(imap, imap->br_startoff,
+>  				got.br_startoff - imap->br_startoff);
+> -		return xfs_reflink_trim_around_shared(ip, imap, shared);
+> +		return xfs_inode_need_cow(ip, imap, shared);
+>  	}
+>  
+>  	*shared = true;
+> @@ -356,7 +373,10 @@ xfs_reflink_allocate_cow(
+>  	xfs_extlen_t		resblks = 0;
+>  
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> -	ASSERT(xfs_is_reflink_inode(ip));
+> +	if (!ip->i_cowfp) {
+> +		ASSERT(!xfs_is_reflink_inode(ip));
+> +		xfs_ifork_init_cow(ip);
+> +	}
+>  
+>  	error = xfs_find_trim_cow_extent(ip, imap, shared, &found);
+>  	if (error || !*shared)
+> @@ -542,7 +562,7 @@ xfs_reflink_cancel_cow_range(
+>  	int			error;
+>  
+>  	trace_xfs_reflink_cancel_cow_range(ip, offset, count);
+> -	ASSERT(xfs_is_reflink_inode(ip));
+> +	ASSERT(ip->i_cowfp);
+>  
+>  	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+>  	if (count == NULLFILEOFF)
+> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> index 4a9e3cd4768a..2a3052fbe23e 100644
+> --- a/fs/xfs/xfs_reflink.h
+> +++ b/fs/xfs/xfs_reflink.h
+> @@ -6,11 +6,24 @@
+>  #ifndef __XFS_REFLINK_H
+>  #define __XFS_REFLINK_H 1
+>  
+> +static inline bool xfs_is_always_cow_inode(struct xfs_inode *ip)
+> +{
+> +	return ip->i_mount->m_always_cow &&
+> +		xfs_sb_version_hasreflink(&ip->i_mount->m_sb);
+> +}
+> +
+> +static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
+> +{
+> +	return xfs_is_reflink_inode(ip) || xfs_is_always_cow_inode(ip);
+> +}
+> +
+>  extern int xfs_reflink_find_shared(struct xfs_mount *mp, struct xfs_trans *tp,
+>  		xfs_agnumber_t agno, xfs_agblock_t agbno, xfs_extlen_t aglen,
+>  		xfs_agblock_t *fbno, xfs_extlen_t *flen, bool find_maximal);
+>  extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+>  		struct xfs_bmbt_irec *irec, bool *shared);
+> +bool xfs_inode_need_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
+> +		bool *shared);
+>  
+>  extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
+>  		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode,
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index c9097cb0b955..6be183a391b6 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1729,11 +1729,18 @@ xfs_fs_fill_super(
+>  		}
+>  	}
+>  
+> -	if (xfs_sb_version_hasreflink(&mp->m_sb) && mp->m_sb.sb_rblocks) {
+> -		xfs_alert(mp,
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> +		if (mp->m_sb.sb_rblocks) {
+> +			xfs_alert(mp,
+>  	"reflink not compatible with realtime device!");
+> -		error = -EINVAL;
+> -		goto out_filestream_unmount;
+> +			error = -EINVAL;
+> +			goto out_filestream_unmount;
+> +		}
+> +
+> +		if (xfs_globals.always_cow) {
+> +			xfs_info(mp, "using DEBUG-only always_cow mode.");
+> +			mp->m_always_cow = true;
+> +		}
+>  	}
+>  
+>  	if (xfs_sb_version_hasrmapbt(&mp->m_sb) && mp->m_sb.sb_rblocks) {
+> diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
+> index 168488130a19..ad7f9be13087 100644
+> --- a/fs/xfs/xfs_sysctl.h
+> +++ b/fs/xfs/xfs_sysctl.h
+> @@ -85,6 +85,7 @@ struct xfs_globals {
+>  	int	log_recovery_delay;	/* log recovery delay (secs) */
+>  	int	mount_delay;		/* mount setup delay (secs) */
+>  	bool	bug_on_assert;		/* BUG() the kernel on assert failure */
+> +	bool	always_cow;		/* use COW fork for all overwrites */
+>  };
+>  extern struct xfs_globals	xfs_globals;
+>  
+> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> index cd6a994a7250..cabda13f3c64 100644
+> --- a/fs/xfs/xfs_sysfs.c
+> +++ b/fs/xfs/xfs_sysfs.c
+> @@ -183,10 +183,34 @@ mount_delay_show(
+>  }
+>  XFS_SYSFS_ATTR_RW(mount_delay);
+>  
+> +static ssize_t
+> +always_cow_store(
+> +	struct kobject	*kobject,
+> +	const char	*buf,
+> +	size_t		count)
+> +{
+> +	ssize_t		ret;
+> +
+> +	ret = kstrtobool(buf, &xfs_globals.always_cow);
+> +	if (ret < 0)
+> +		return ret;
+> +	return count;
+> +}
+> +
+> +static ssize_t
+> +always_cow_show(
+> +	struct kobject	*kobject,
+> +	char		*buf)
+> +{
+> +	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.always_cow);
+> +}
+> +XFS_SYSFS_ATTR_RW(always_cow);
+> +
+>  static struct attribute *xfs_dbg_attrs[] = {
+>  	ATTR_LIST(bug_on_assert),
+>  	ATTR_LIST(log_recovery_delay),
+>  	ATTR_LIST(mount_delay),
+> +	ATTR_LIST(always_cow),
+>  	NULL,
+>  };
+>  
+> -- 
+> 2.20.1
+> 
