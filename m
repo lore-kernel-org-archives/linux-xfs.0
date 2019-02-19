@@ -1,71 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt1-f193.google.com ([209.85.160.193]:36867 "EHLO
-        mail-qt1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729048AbfBRWax (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Feb 2019 17:30:53 -0500
-Subject: Re: [LSF/MM TOPIC] More async operations for file systems - async
- discard?
-References: <92ab41f7-35bc-0f56-056f-ed88526b8ea4@gmail.com>
- <20190217210948.GB14116@dastard>
- <46540876-c222-0889-ddce-44815dcaad04@gmail.com>
- <20190218022243.GC14116@dastard>
-From: Ric Wheeler <ricwheeler@gmail.com>
-Message-ID: <86f2588d-8567-3905-40aa-c422393daaf1@gmail.com>
-Date: Mon, 18 Feb 2019 17:30:49 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:39010 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726175AbfBSB1D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Feb 2019 20:27:03 -0500
+Subject: Re: [RFC PATCH v2 0/9] Block/XFS: Support alternative mirror device
+ retry
+References: <20190213095044.29628-1-bob.liu@oracle.com>
+ <c2b6ec5c-ad8a-6f69-c8b9-8e264cc6aa0d@oracle.com>
+From: "jianchao.wang" <jianchao.w.wang@oracle.com>
+Message-ID: <5053beac-658e-d6a7-bcf8-050e0590f18d@oracle.com>
+Date: Tue, 19 Feb 2019 09:29:16 +0800
 MIME-Version: 1.0
-In-Reply-To: <20190218022243.GC14116@dastard>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <c2b6ec5c-ad8a-6f69-c8b9-8e264cc6aa0d@oracle.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-block@vger.kernel.org
+To: Bob Liu <bob.liu@oracle.com>, linux-block@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, allison.henderson@oracle.com, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca
 
-On 2/17/19 9:22 PM, Dave Chinner wrote:
-> On Sun, Feb 17, 2019 at 06:42:59PM -0500, Ric Wheeler wrote:
->> On 2/17/19 4:09 PM, Dave Chinner wrote:
->>> On Sun, Feb 17, 2019 at 03:36:10PM -0500, Ric Wheeler wrote:
->>>> One proposal for btrfs was that we should look at getting discard
->>>> out of the synchronous path in order to minimize the slowdown
->>>> associated with enabling discard at mount time. Seems like an
->>>> obvious win for "hint" like operations like discard.
->>> We already have support for that. blkdev_issue_discard() is
->>> synchornous, yes, but __blkdev_issue_discard() will only build the
->>> discard bio chain - it is up to the caller to submit and wait for it.
->>>
->>> Some callers (XFS, dm-thinp, nvmet, etc) use a bio completion to
->>> handle the discard IO completion, hence allowing async dispatch and
->>> processing of the discard chain without blocking the caller. Others
->>> (like ext4) simply call submit_bio_wait() to do wait synchronously
->>> on completion of the discard bio chain.
->>>
->>>> I do wonder where we stand now with the cost of the various discard
->>>> commands - how painful is it for modern SSD's?
->>> AIUI, it still depends on the SSD implementation, unfortunately.
->> I think the variability makes life really miserable for layers above it.
-> Yup, that it does.
->
->> Might be worth constructing some tooling that we can use to validate
->> or shame vendors over
-> That doesn't seem to work.
->
->> - testing things like a full device discard,
->> discard of fs block size and big chunks, discard against already
->> discarded, etc.
-> We did that many years ago because discard on SSDs sucked:
->
-> https://people.redhat.com/lczerner/discard/test_discard.html
-> https://sourceforge.net/projects/test-discard/files/
->
-> And, really, that didn't changed a thing - discard still sucks...
->
-> Cheers,
->
-> Dave.
 
-Totally forgot about that work - maybe it is time to try again and poke some 
-vendors.
 
-Ric
+On 2/18/19 4:08 PM, jianchao.wang wrote:
+> Hi Bob
+> 
+> On 2/13/19 5:50 PM, Bob Liu wrote:
+>> Motivation:
+>> When fs data/metadata checksum mismatch, lower block devices may have other
+>> correct copies. e.g. If XFS successfully reads a metadata buffer off a raid1 but
+>> decides that the metadata is garbage, today it will shut down the entire
+>> filesystem without trying any of the other mirrors.  This is a severe
+>> loss of service, and we propose these patches to have XFS try harder to
+>> avoid failure.
+>>
+>> This patch prototype this mirror retry idea by:
+>> * Adding @nr_mirrors to struct request_queue which is similar as
+>>   blk_queue_nonrot(), filesystem can grab device request queue and check max
+>>   mirrors this block device has.
+>>   Helper functions were also added to get/set the nr_mirrors.
+>>
+>> * Introducing bi_rd_hint just like bi_write_hint, but bi_rd_hint is a long bitmap
+>> in order to support stacked layer case.
+> 
+> Why does we need a bitmap to know which underlying device has been tried ?
+> For example, the following scenario,
+> 
+>                     md8
+>                    / | \
+>                sda sdb sdc
+> 
+> If the the raid read the data from sda and fs check and find the data is corrupted.
+> Then we may just need to let raid1 know that the data is from sda. Then based on this
+> hint, raid1 could handle it with handle_read_error to try other replica and fix the
+> error.
+
+This doesn't work.
+The md raid1 can only see IO success or failure, so fix_read_error won't fix this.
+Sorry for the noise.
+
+Thanks
+Jianchao
+
+> 
+> If this is feasible, we just need to modify the bio as following and needn't add any
+> bytes in it.
+> 
+> struct bio {
+>     ...
+>     union {
+>         unsigned short bi_write_hint;
+>         unsigned short bi_read_hint;
+>     }
+>     ...
+> }
+> 
+> Thanks
+> Jianchao
+>>
+>> * Modify md/raid1 to support this retry feature.
+>>
+>> * Adapter xfs to use this feature.
+>>   If the read verify fails, we loop over the available mirrors and retry the read.
+>>
+>> * Rewrite retried read
+>>   When the read verification fails, but the retry succeedes
+>>   write the buffer back to correct the bad mirror
+>>
+>> * Add tracepoints and logging to alternate device retry.
+>>   This patch adds new log entries and trace points to the alternate device retry
+>>   error path.
+>>
+>> Changes v2:
+>> - No more reuse bi_write_hint
+>> - Stacked layer support(see patch 4/9)
+>> - Other feedback fix
+>>
+>> Allison Henderson (5):
+>>   Add b_alt_retry to xfs_buf
+>>   xfs: Add b_rd_hint to xfs_buf
+>>   xfs: Add device retry
+>>   xfs: Rewrite retried read
+>>   xfs: Add tracepoints and logging to alternate device retry
+>>
+>> Bob Liu (4):
+>>   block: add nr_mirrors to request_queue
+>>   block: add rd_hint to bio and request
+>>   md:raid1: set mirrors correctly
+>>   md:raid1: rd_hint support and consider stacked layer case
+>>
+>>  Documentation/block/biodoc.txt |   3 +
+>>  block/bio.c                    |   1 +
+>>  block/blk-core.c               |   4 ++
+>>  block/blk-merge.c              |   6 ++
+>>  block/blk-settings.c           |  24 +++++++
+>>  block/bounce.c                 |   1 +
+>>  drivers/md/raid1.c             | 123 ++++++++++++++++++++++++++++++++-
+>>  fs/xfs/xfs_buf.c               |  58 +++++++++++++++-
+>>  fs/xfs/xfs_buf.h               |  14 ++++
+>>  fs/xfs/xfs_trace.h             |   6 +-
+>>  include/linux/blk_types.h      |   1 +
+>>  include/linux/blkdev.h         |   4 ++
+>>  include/linux/types.h          |   3 +
+>>  13 files changed, 244 insertions(+), 4 deletions(-)
+>>
+> 
