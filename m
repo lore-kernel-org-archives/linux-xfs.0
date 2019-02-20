@@ -1,72 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:33657 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729110AbfBTChO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Feb 2019 21:37:14 -0500
-Subject: Re: [dm-devel] [PATCH V15 00/18] block: support multi-page bvec
-References: <20190215111324.30129-1-ming.lei@redhat.com>
- <c52b6a8b-d1d4-67ff-f81c-371d09cc6d5b@kernel.dk>
- <1550250855.31902.102.camel@acm.org> <20190217131128.GB7296@ming.t460p>
- <1550593699.31902.115.camel@acm.org> <20190220011719.GA13035@ming.t460p>
-From: Bart Van Assche <bvanassche@acm.org>
-Message-ID: <8253d52d-a77a-b008-1fbd-f2f0a794a022@acm.org>
-Date: Tue, 19 Feb 2019 18:37:09 -0800
+Received: from verein.lst.de ([213.95.11.211]:58709 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726116AbfBTPIT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Feb 2019 10:08:19 -0500
+Date: Wed, 20 Feb 2019 16:08:18 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 8/8] xfs: introduce an always_cow mode
+Message-ID: <20190220150818.GA27934@lst.de>
+References: <20190218091827.12619-1-hch@lst.de> <20190218091827.12619-9-hch@lst.de> <20190219183114.GK32253@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20190220011719.GA13035@ming.t460p>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190219183114.GK32253@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@redhat.com>, linux-mm@kvack.org, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Darrick J . Wong" <darrick.wong@oracle.com>, Omar Sandoval <osandov@fb.com>, cluster-devel@redhat.com, linux-ext4@vger.kernel.org, Kent Overstreet <kent.overstreet@gmail.com>, Boaz Harrosh <ooo@electrozaur.com>, Gao Xiang <gaoxiang25@huawei.com>, Coly Li <colyli@suse.de>, linux-raid@vger.kernel.org, Bob Peterson <rpeterso@redhat.com>, linux-bcache@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Dave Chinner <dchinner@redhat.com>, David Sterba <dsterba@suse.com>, linux-block@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On 2/19/19 5:17 PM, Ming Lei wrote:
-> On Tue, Feb 19, 2019 at 08:28:19AM -0800, Bart Van Assche wrote:
->> With this patch applied test nvmeof-mp/002 fails as follows:
->>
->> [  694.700400] kernel BUG at lib/sg_pool.c:103!
->> [  694.705932] invalid opcode: 0000 [#1] PREEMPT SMP KASAN
->> [  694.708297] CPU: 2 PID: 349 Comm: kworker/2:1H Tainted: G    B             5.0.0-rc6-dbg+ #2
->> [  694.711730] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
->> [  694.715113] Workqueue: kblockd blk_mq_run_work_fn
->> [  694.716894] RIP: 0010:sg_alloc_table_chained+0xe5/0xf0
->> [  694.758222] Call Trace:
->> [  694.759645]  nvme_rdma_queue_rq+0x2aa/0xcc0 [nvme_rdma]
->> [  694.764915]  blk_mq_try_issue_directly+0x2a5/0x4b0
->> [  694.771779]  blk_insert_cloned_request+0x11e/0x1c0
->> [  694.778417]  dm_mq_queue_rq+0x3d1/0x770
->> [  694.793400]  blk_mq_dispatch_rq_list+0x5fc/0xb10
->> [  694.798386]  blk_mq_sched_dispatch_requests+0x2f7/0x300
->> [  694.803180]  __blk_mq_run_hw_queue+0xd6/0x180
->> [  694.808933]  blk_mq_run_work_fn+0x27/0x30
->> [  694.810315]  process_one_work+0x4f1/0xa40
->> [  694.813178]  worker_thread+0x67/0x5b0
->> [  694.814487]  kthread+0x1cf/0x1f0
->> [  694.819134]  ret_from_fork+0x24/0x30
->>
->> The code in sg_pool.c that triggers the BUG() statement is as follows:
->>
->> int sg_alloc_table_chained(struct sg_table *table, int nents,
->> 		struct scatterlist *first_chunk)
->> {
->> 	int ret;
->>
->> 	BUG_ON(!nents);
->> [ ... ]
->>
->> Bart.
+On Tue, Feb 19, 2019 at 10:31:14AM -0800, Darrick J. Wong wrote:
+> >  - xfs/326 fails to modify the file at all in always_cow mode after
+> >    injecting the refcount error, leading to an unexpected md5sum
+> >    after the remount, but that again is expected
 > 
-> I can reproduce this issue("kernel BUG at lib/sg_pool.c:103") without mp-bvec patches,
-> so looks it isn't the fault of this patchset.
+> I'm assuming the purpose of the debug knob is so that we can get all the
+> fstests regressions fixed before enabling always cow modes for users...
 
-Thanks Ming for your feedback.
+Theoriginal  purpose is to allow exercising the always COW functionality,
+so that  it can be tested without SMR support or atomic write which are
+still in flux.
 
-Jens, I don't see that issue with kernel v5.0-rc6. Does that mean that 
-the sg_pool BUG() is a regression in your for-next branch that predates 
-Ming's multi-page bvec patch series?
+While developing it I also noticed that it also helps to uncover general
+COW functionality bugs, so it also is a pretty good debug aid for that.
 
-Thanks,
+> > +		} else {
+> > +			/*
+> > +			 * If always_cow mode we can't use preallocations and
+> > +			 * thus should not create them.
+> > +			 */
+> > +			if (xfs_is_always_cow_inode(ip)) {
+> > +				error = -EOPNOTSUPP;
+> > +				goto out_unlock;
+> > +			}
+> > +
+> 
+> Ok, so the basic premise here is that we never call xfs_alloc_file_space
+> for alwayscow inodes.  As I pointed out in my reply that focused on
+> fstests errors, xfs_file_fallocate is not the only caller of
+> xfs_alloc_file_space, so I think xfs_ioc_space and friends are going to
+> need a similar treatment.
 
-Bart.
+As mentioned the XFS_IOC_RESVSP / XFS_IOC_RESVSP64 cases in
+xfs_ioc_space are dead code.  the allocspc/freespc ones aren't, and
+while those aren't super useful on always_cow inodes they do work
+just fine.
+
+> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > index 7b71dcc97ef0..72533e9dddc6 100644
+> > --- a/fs/xfs/xfs_iomap.c
+> > +++ b/fs/xfs/xfs_iomap.c
+> > @@ -395,12 +395,13 @@ xfs_quota_calc_throttle(
+> >  STATIC xfs_fsblock_t
+> >  xfs_iomap_prealloc_size(
+> >  	struct xfs_inode	*ip,
+> > +	int			whichfork,
+> >  	loff_t			offset,
+> >  	loff_t			count,
+> >  	struct xfs_iext_cursor	*icur)
+> >  {
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> > -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> > +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> 
+> Hmm, so are we able to do preallocations in the cow fork now?
+> 
+> I think that's a separate change from adding the alwayscow knob.
+
+I can split a prep patch out, but by always writing through the COW fork
+in always_cow mode we also want the speculative EOF preallocations there.
+Without always_cow we don't COW at EOF per defintion so it is rather
+pointless.
+
+> > +static inline bool xfs_is_always_cow_inode(struct xfs_inode *ip)
+> > +{
+> > +	return ip->i_mount->m_always_cow &&
+> > +		xfs_sb_version_hasreflink(&ip->i_mount->m_sb);
+> 
+> Assuming the next step is to rewrite this function to autodetect a
+> device that cannot easily handle rewrites (aka SMR)...
+
+For SMR we'll have a per-sb flag, for atomic writes a per-inode one.
+But right now I intended these to exist in addition, not instead of the
+debug know.
+
+> > --- a/fs/xfs/xfs_sysctl.h
+> > +++ b/fs/xfs/xfs_sysctl.h
+> > @@ -85,6 +85,7 @@ struct xfs_globals {
+> >  	int	log_recovery_delay;	/* log recovery delay (secs) */
+> >  	int	mount_delay;		/* mount setup delay (secs) */
+> >  	bool	bug_on_assert;		/* BUG() the kernel on assert failure */
+> > +	bool	always_cow;		/* use COW fork for all overwrites */
+> 
+> ...I'm also wondering if it makes sense to separate the creation of the
+> sysctl knob into a separate patch so that we can cleanly revert just
+> this part whenever we land a more permanent interface for enabling
+> alwayscow paths?
+
+I could split it - but my intention was to keep the debug know around
+in the long term, as it is really helpful for exercising the COW code.
