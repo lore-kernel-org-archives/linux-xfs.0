@@ -1,60 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53756 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727062AbfBFQBI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Feb 2019 11:01:08 -0500
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 3EA663D09
-        for <linux-xfs@vger.kernel.org>; Wed,  6 Feb 2019 16:01:08 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id CFFEC6CF56
-        for <linux-xfs@vger.kernel.org>; Wed,  6 Feb 2019 16:01:07 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: fix use after free in buf log item unlock assert
-Date: Wed,  6 Feb 2019 11:01:07 -0500
-Message-Id: <20190206160107.63672-1-bfoster@redhat.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:50162 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725796AbfBTR0T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Feb 2019 12:26:19 -0500
+Date: Wed, 20 Feb 2019 09:26:14 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/3] libhandle: zero terminate fspath string
+Message-ID: <20190220172614.GO32253@magnolia>
+References: <c4b7eff6-8395-3d01-eaaf-736e32e6e1dc@redhat.com>
+ <bce2b57b-50c8-0b56-b42d-9ff357c26eb6@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bce2b57b-50c8-0b56-b42d-9ff357c26eb6@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-The xfs_buf_log_item ->iop_unlock() callback asserts that the buffer
-is unlocked when either non-stale or aborted. This assert occurs
-after the bli refcount has been dropped and the log item potentially
-freed. The aborted check is thus a potential use after free. This
-problem has been reproduced with KASAN enabled via generic/475.
+On Tue, Feb 19, 2019 at 05:33:46PM -0600, Eric Sandeen wrote:
+> I had a heck of a time chasing through whether we were null terminated
+> by now or not, so just be safe and do it explicitly.
+> 
+> Addresses-Coverity-ID: 1297520 ("Buffer not null terminated")
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Fix up xfs_buf_item_unlock() to query aborted state before the bli
-reference is dropped to prevent a potential use after free.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf_item.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+--D
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 010db5f8fb00..65b32acfa0f6 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -605,6 +605,8 @@ xfs_buf_item_unlock(
- #if defined(DEBUG) || defined(XFS_WARN)
- 	bool			ordered = bip->bli_flags & XFS_BLI_ORDERED;
- 	bool			dirty = bip->bli_flags & XFS_BLI_DIRTY;
-+	bool			aborted = test_bit(XFS_LI_ABORTED,
-+						   &lip->li_flags);
- #endif
- 
- 	trace_xfs_buf_item_unlock(bip);
-@@ -633,7 +635,7 @@ xfs_buf_item_unlock(
- 	released = xfs_buf_item_put(bip);
- 	if (hold || (stale && !released))
- 		return;
--	ASSERT(!stale || test_bit(XFS_LI_ABORTED, &lip->li_flags));
-+	ASSERT(!stale || aborted);
- 	xfs_buf_relse(bp);
- }
- 
--- 
-2.17.2
+> ---
+> 
+> diff --git a/libhandle/handle.c b/libhandle/handle.c
+> index eb099f4..d3927a3 100644
+> --- a/libhandle/handle.c
+> +++ b/libhandle/handle.c
+> @@ -108,6 +108,7 @@ path_to_fshandle(
+>  
+>  		fdhp->fsfd = fd;
+>  		strncpy(fdhp->fspath, fspath, sizeof(fdhp->fspath));
+> +		fdhp->fspath[sizeof(fdhp->fspath) - 1] = '\0';
+>  		memcpy(fdhp->fsh, *fshanp, FSIDSIZE);
+>  
+>  		fdhp->fnxt = fdhash_head;
+> 
