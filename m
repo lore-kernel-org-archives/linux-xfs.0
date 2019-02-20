@@ -1,108 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:55104 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725910AbfBGFIe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Feb 2019 00:08:34 -0500
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1grbv6-0003pN-R4
-        for linux-xfs@vger.kernel.org; Thu, 07 Feb 2019 16:08:16 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.92-RC5)
-        (envelope-from <david@fromorbit.com>)
-        id 1grbv6-0006KZ-Pw
-        for linux-xfs@vger.kernel.org; Thu, 07 Feb 2019 16:08:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] xfs: Don't free EOF blocks on sync write close
-Date: Thu,  7 Feb 2019 16:08:13 +1100
-Message-Id: <20190207050813.24271-4-david@fromorbit.com>
-In-Reply-To: <20190207050813.24271-1-david@fromorbit.com>
-References: <20190207050813.24271-1-david@fromorbit.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:46906 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725801AbfBTRYO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Feb 2019 12:24:14 -0500
+Date: Wed, 20 Feb 2019 09:23:59 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/3] xfs_io: fix TOCTOU in openfile()
+Message-ID: <20190220172359.GN32253@magnolia>
+References: <c4b7eff6-8395-3d01-eaaf-736e32e6e1dc@redhat.com>
+ <acf1deea-a637-571b-e501-c7cbcde95c38@redhat.com>
+ <20190220015034.GI14116@dastard>
+ <6af42461-f96e-9902-1edb-a71f023843a7@sandeen.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6af42461-f96e-9902-1edb-a71f023843a7@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Feb 19, 2019 at 10:41:57PM -0600, Eric Sandeen wrote:
+> 
+> 
+> On 2/19/19 7:50 PM, Dave Chinner wrote:
+> > On Tue, Feb 19, 2019 at 05:23:38PM -0600, Eric Sandeen wrote:
+> >> openfile() stats a path to determine whether it is a pipe, and then
+> >> opens it with flags based on the type it saw during the stat.  It's
+> >> possible that the file at that path changes in between, and Coverity
+> >> points this out.
+> >>
+> >> Instead, always open O_NONBLOCK, stat the fd we got, and turn the
+> >> flag back off via fcntl() if it's not a pipe.
+> >>
+> >> Addresses-Coverity-ID: 1442788 ("Time of check time of use")
+> > 
+> > For O_NONBLOCK I think there is zero harm in the code as it stands,
+> > but I don't really care about it tht much.
+> > 
+> > I do wonder what happens if need to conditionally use O_NONBLOCK on
+> > open(), though....
+> > 
+> >> @@ -112,6 +106,22 @@ openfile(
+> >>  		}
+> >>  	}
+> >>  
+> >> +	if (fstat(fd, &st) < 0) {
+> >> +		perror("stat");
+> >> +		close(fd);
+> >> +		return -1;
+> >> +	}
+> >> +
+> >> +	/* We only want to keep nonblocking behavior for pipes */
+> >> +	if (!S_ISFIFO(st.st_mode)) {
+> >> +		oflags &= ~O_NONBLOCK;
+> >> +		if (fcntl(fd, F_SETFL, oflags) < 0) {
+> > 
+> > Don't you need to do oflags = fcntl(fd, F_GETFL, NULL) first?
+> 
+> maybe? We just opened it with oflags, but *shrug* I guess it doesn't
+> hurt?
 
-When we have a workload that does open/read/close in parallel with
-other synchronous buffered writes to long term open files, the file
-becomes rapidly fragmented. This is due to close() after read
-calling xfs_release() and removing the speculative preallocation
-beyond EOF.
+The kernel can set O_ flags on the file (e.g. O_LARGEFILE) for you,
+which means that if you try to F_SETFL with the original oflags, the
+kernel will think you're trying to clear those flags and misunderstand.
 
-The existing open/write/close hueristic in xfs_release() does not
-catch this as sync writes do not leave delayed allocation blocks
-allocated on the inode for later writeback that can be detected in
-xfs_release() and hence XFS_IDIRTY_RELEASE never gets set.
+--D
 
-Further, the close context here is for a file opened O_RDONLY, and
-so /modifying/ the file metadata on close doesn't pass muster.
-Fortunately, we can tell in xfs_file_release() whether the release
-context was a read-only context, and so we need to communicate this
-to xfs_release() so it can do the right thing here and skip EOF
-block truncation, hence ensuring that only contexts with write
-permissions will remove post-EOF blocks from the file.
-
-Before:
-
-Test 3: Open/read/close loop fragmentation counts
-
-/mnt/scratch/file.0: 150
-/mnt/scratch/file.1: 342
-/mnt/scratch/file.2: 113
-/mnt/scratch/file.3: 165
-/mnt/scratch/file.4: 86
-/mnt/scratch/file.5: 363
-/mnt/scratch/file.6: 129
-/mnt/scratch/file.7: 233
-
-After:
-
-Test 3: Open/read/close loop fragmentation counts
-
-/mnt/scratch/file.0: 12
-/mnt/scratch/file.1: 12
-/mnt/scratch/file.2: 12
-/mnt/scratch/file.3: 12
-/mnt/scratch/file.4: 12
-/mnt/scratch/file.5: 12
-/mnt/scratch/file.6: 12
-/mnt/scratch/file.7: 12
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_file.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 02f76b8e6c03..e2d8a0b7f891 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1023,6 +1023,10 @@ xfs_dir_open(
-  * When we release the file, we don't want it to trim EOF blocks for synchronous
-  * write contexts as this leads to severe fragmentation when applications do
-  * repeated open/appending sync write/close to a file amongst other file IO.
-+ *
-+ * We also don't want to trim the EOF blocks if it is a read only context. This
-+ * prevents open/read/close workloads from removing EOF blocks that other
-+ * writers are depending on to prevent fragmentation.
-  */
- STATIC int
- xfs_file_release(
-@@ -1031,8 +1035,9 @@ xfs_file_release(
- {
- 	bool		free_eof_blocks = true;
- 
--	if ((file->f_mode & FMODE_WRITE) &&
--	    (file->f_flags & O_DSYNC))
-+	if ((file->f_mode & FMODE_WRITE|FMODE_READ) == FMODE_READ)
-+		free_eof_blocks = false;
-+	else if ((file->f_mode & FMODE_WRITE) && (file->f_flags & O_DSYNC))
- 		free_eof_blocks = false;
- 
- 	return xfs_release(XFS_I(inode), free_eof_blocks);
--- 
-2.20.1
+> > 
+> >> +			perror("fcntl");
+> >> +			close(fd);
+> >> +			return -1;
+> >> +		}
+> > 
+> > can you add a "goto out_close;" error jump to this function now that
+> > this is the fourth and fifth places that have this same close/return
+> > on error...
+> 
+> yeah, good point.
+> 
+> > CHeers,
+> > 
+> > Dave.
+> > 
