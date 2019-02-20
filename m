@@ -1,115 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55818 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725881AbfBRIGs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Feb 2019 03:06:48 -0500
-Subject: Re: [RFC PATCH v2 0/9] Block/XFS: Support alternative mirror device
- retry
-References: <20190213095044.29628-1-bob.liu@oracle.com>
-From: "jianchao.wang" <jianchao.w.wang@oracle.com>
-Message-ID: <c2b6ec5c-ad8a-6f69-c8b9-8e264cc6aa0d@oracle.com>
-Date: Mon, 18 Feb 2019 16:08:51 +0800
+Received: from mail02.iobjects.de ([188.40.134.68]:55362 "EHLO
+        mail02.iobjects.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726030AbfBTOQK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Feb 2019 09:16:10 -0500
+Date: Wed, 20 Feb 2019 15:09:32 +0100 (CET)
+From: =?ISO-8859-15?Q?Holger_Hoffst=E4tte?=
+        <holger@applied-asynchrony.com>
+Subject: Re: [PATCH 4/3] generic: posix acl extended attribute memory corruption
+ test
+In-Reply-To: <20190220132952.GW9874@twin.jikos.cz>
+Message-ID: <alpine.LNX.2.21.9999.1902201501470.8769@tux.applied-asynchrony.com>
+References: <154993784038.1948.7502664832930298472.stgit@magnolia> <20190213204814.GB6477@magnolia> <20190220132952.GW9874@twin.jikos.cz>
 MIME-Version: 1.0
-In-Reply-To: <20190213095044.29628-1-bob.liu@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bob Liu <bob.liu@oracle.com>, linux-block@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, allison.henderson@oracle.com, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca
+To: David Sterba <dsterba@suse.cz>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Hi Bob
 
-On 2/13/19 5:50 PM, Bob Liu wrote:
-> Motivation:
-> When fs data/metadata checksum mismatch, lower block devices may have other
-> correct copies. e.g. If XFS successfully reads a metadata buffer off a raid1 but
-> decides that the metadata is garbage, today it will shut down the entire
-> filesystem without trying any of the other mirrors.  This is a severe
-> loss of service, and we propose these patches to have XFS try harder to
-> avoid failure.
-> 
-> This patch prototype this mirror retry idea by:
-> * Adding @nr_mirrors to struct request_queue which is similar as
->   blk_queue_nonrot(), filesystem can grab device request queue and check max
->   mirrors this block device has.
->   Helper functions were also added to get/set the nr_mirrors.
-> 
-> * Introducing bi_rd_hint just like bi_write_hint, but bi_rd_hint is a long bitmap
-> in order to support stacked layer case.
+On Wed, 20 Feb 2019, David Sterba wrote:
 
-Why does we need a bitmap to know which underlying device has been tried ?
-For example, the following scenario,
+> On Wed, Feb 13, 2019 at 12:48:14PM -0800, Darrick J. Wong wrote:
+>> +#include <attr/xattr.h>
+>
+> This does not compile on some systems, sys/xattr.h works (it's provided
+> by glibc) and is also used by other fstests' sources. I'm not sure where
+> does attr/xattr.h come from, my devel package for libattr provides only
+> attr/libattr.h.
 
-                    md8
-                   / | \
-               sda sdb sdc
+This was removed from attr back in 2015 [1] but apparently caused
+many aplications to no longer compile, so some packagers added 
+attr/xattr.h back, completing the cycle of confusion.
+I just randomly remembered because Gentoo fell into the same sinkhole
+and is still climbing out [2].
 
-If the the raid read the data from sda and fs check and find the data is corrupted.
-Then we may just need to let raid1 know that the data is from sda. Then based on this
-hint, raid1 could handle it with handle_read_error to try other replica and fix the
-error.
+AFAIK sys/xattr.h is the preferred thing now unless you are building on 
+an ancient distro.
 
-If this is feasible, we just need to modify the bio as following and needn't add any
-bytes in it.
+cheers
+Holger
 
-struct bio {
-    ...
-    union {
-        unsigned short bi_write_hint;
-        unsigned short bi_read_hint;
-    }
-    ...
-}
-
-Thanks
-Jianchao
-> 
-> * Modify md/raid1 to support this retry feature.
-> 
-> * Adapter xfs to use this feature.
->   If the read verify fails, we loop over the available mirrors and retry the read.
-> 
-> * Rewrite retried read
->   When the read verification fails, but the retry succeedes
->   write the buffer back to correct the bad mirror
-> 
-> * Add tracepoints and logging to alternate device retry.
->   This patch adds new log entries and trace points to the alternate device retry
->   error path.
-> 
-> Changes v2:
-> - No more reuse bi_write_hint
-> - Stacked layer support(see patch 4/9)
-> - Other feedback fix
-> 
-> Allison Henderson (5):
->   Add b_alt_retry to xfs_buf
->   xfs: Add b_rd_hint to xfs_buf
->   xfs: Add device retry
->   xfs: Rewrite retried read
->   xfs: Add tracepoints and logging to alternate device retry
-> 
-> Bob Liu (4):
->   block: add nr_mirrors to request_queue
->   block: add rd_hint to bio and request
->   md:raid1: set mirrors correctly
->   md:raid1: rd_hint support and consider stacked layer case
-> 
->  Documentation/block/biodoc.txt |   3 +
->  block/bio.c                    |   1 +
->  block/blk-core.c               |   4 ++
->  block/blk-merge.c              |   6 ++
->  block/blk-settings.c           |  24 +++++++
->  block/bounce.c                 |   1 +
->  drivers/md/raid1.c             | 123 ++++++++++++++++++++++++++++++++-
->  fs/xfs/xfs_buf.c               |  58 +++++++++++++++-
->  fs/xfs/xfs_buf.h               |  14 ++++
->  fs/xfs/xfs_trace.h             |   6 +-
->  include/linux/blk_types.h      |   1 +
->  include/linux/blkdev.h         |   4 ++
->  include/linux/types.h          |   3 +
->  13 files changed, 244 insertions(+), 4 deletions(-)
-> 
+[1] http://git.savannah.nongnu.org/cgit/attr.git/commit/?id=7921157890d07858d092f4003ca4c6bae9fd2c38
+[2] https://bugs.gentoo.org/648864
