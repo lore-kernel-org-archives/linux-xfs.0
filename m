@@ -1,58 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:43790 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726390AbfBUPyi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Feb 2019 10:54:38 -0500
-Date: Thu, 21 Feb 2019 07:54:31 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH][xfs-next] xfs: fix uninitialized error variable
-Message-ID: <20190221155431.GQ32253@magnolia>
-References: <20190221112224.3748-1-colin.king@canonical.com>
+Received: from sandeen.net ([63.231.237.45]:58022 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725989AbfBTUZZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Feb 2019 15:25:25 -0500
+Subject: Re: [PATCH 2/3] xfs_io: fix TOCTOU in openfile()
+References: <c4b7eff6-8395-3d01-eaaf-736e32e6e1dc@redhat.com>
+ <acf1deea-a637-571b-e501-c7cbcde95c38@redhat.com>
+ <20190220015034.GI14116@dastard>
+ <6af42461-f96e-9902-1edb-a71f023843a7@sandeen.net>
+ <20190220172359.GN32253@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1c3da823-4b0f-6ba4-53ee-eb073f3657cb@sandeen.net>
+Date: Wed, 20 Feb 2019 14:25:24 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190221112224.3748-1-colin.king@canonical.com>
+In-Reply-To: <20190220172359.GN32253@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Colin King <colin.king@canonical.com>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Feb 21, 2019 at 11:22:24AM +0000, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> A previous commit removed the initialization of variable 'error' to zero,
-> and can cause a bogus error return.  This occurs when error contains a
-> non-zero garbage value and the call to xchk_should_terminate detects a
-> pending fatal signal and checks for a zero error before setting it
-> to -EAGAIN. Fix the issue by initializing error to zero.
-> 
-> Fixes: b9454fe056bd ("xfs: clean up the inode cluster checking in the inobt scrub")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Thank you for the cleanup!
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+On 2/20/19 11:23 AM, Darrick J. Wong wrote:
+>>> Don't you need to do oflags = fcntl(fd, F_GETFL, NULL) first?
+>> maybe? We just opened it with oflags, but *shrug* I guess it doesn't
+>> hurt?
+> The kernel can set O_ flags on the file (e.g. O_LARGEFILE) for you,
+> which means that if you try to F_SETFL with the original oflags, the
+> kernel will think you're trying to clear those flags and misunderstand.
 
---D
+Ok, thanks.
 
-> ---
->  fs/xfs/scrub/ialloc.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> index 2c9dad2b61b1..700114f79a7d 100644
-> --- a/fs/xfs/scrub/ialloc.c
-> +++ b/fs/xfs/scrub/ialloc.c
-> @@ -161,7 +161,7 @@ xchk_iallocbt_check_cluster_ifree(
->  	bool				irec_free;
->  	bool				ino_inuse;
->  	bool				freemask_ok;
-> -	int				error;
-> +	int				error = 0;
->  
->  	if (xchk_should_terminate(bs->sc, &error))
->  		return error;
-> -- 
-> 2.20.1
-> 
+-Eric
