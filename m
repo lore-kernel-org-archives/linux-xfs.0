@@ -1,101 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt1-f174.google.com ([209.85.160.174]:42125 "EHLO
-        mail-qt1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726324AbfBRKX7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Feb 2019 05:23:59 -0500
-Received: by mail-qt1-f174.google.com with SMTP id b8so18520030qtr.9
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Feb 2019 02:23:58 -0800 (PST)
+Received: from sandeen.net ([63.231.237.45]:33838 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726952AbfBTEl7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Feb 2019 23:41:59 -0500
+Subject: Re: [PATCH 2/3] xfs_io: fix TOCTOU in openfile()
+References: <c4b7eff6-8395-3d01-eaaf-736e32e6e1dc@redhat.com>
+ <acf1deea-a637-571b-e501-c7cbcde95c38@redhat.com>
+ <20190220015034.GI14116@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6af42461-f96e-9902-1edb-a71f023843a7@sandeen.net>
+Date: Tue, 19 Feb 2019 22:41:57 -0600
 MIME-Version: 1.0
-From: huang jun <hjwsm1989@gmail.com>
-Date: Mon, 18 Feb 2019 18:23:46 +0800
-Message-ID: <CABAwU-YKT8QDqW7e3C-XARBveDn2OxM0KifqJE+qeaWdtHAgow@mail.gmail.com>
-Subject: inode not recycled after delete file
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20190220015034.GI14116@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Hello
-Recently we have a problem on xfs.
 
-The environment is:
-CentOS Linux release 7.4.1708 (Core)
-Linux xefs-51 3.10.0-693.el7.x86_64 #1 SMP Tue Aug 22 21:09:27 UTC
-2017 x86_64 x86_64 x86_64 GNU/Linux
 
-[root@xefs-51 ~]# modinfo xfs
-filename:       /lib/modules/3.10.0-693.el7.x86_64/kernel/fs/xfs/xfs.ko.xz
-license:        GPL
-description:    SGI XFS with ACLs, security attributes, no debug enabled
-author:         Silicon Graphics, Inc.
-alias:          fs-xfs
-rhelversion:    7.4
-srcversion:     6CAAE7A01207B73522C8412
-depends:        libcrc32c
-intree:         Y
-vermagic:       3.10.0-693.el7.x86_64 SMP mod_unload modversions
-signer:         CentOS Linux kernel signing key
-sig_key:        DA:18:7D:CA:7D:BE:53:AB:05:BD:13:BD:0C:4E:21:F4:22:B6:A4:9C
-sig_hashalgo:   sha256
+On 2/19/19 7:50 PM, Dave Chinner wrote:
+> On Tue, Feb 19, 2019 at 05:23:38PM -0600, Eric Sandeen wrote:
+>> openfile() stats a path to determine whether it is a pipe, and then
+>> opens it with flags based on the type it saw during the stat.  It's
+>> possible that the file at that path changes in between, and Coverity
+>> points this out.
+>>
+>> Instead, always open O_NONBLOCK, stat the fd we got, and turn the
+>> flag back off via fcntl() if it's not a pipe.
+>>
+>> Addresses-Coverity-ID: 1442788 ("Time of check time of use")
+> 
+> For O_NONBLOCK I think there is zero harm in the code as it stands,
+> but I don't really care about it tht much.
+> 
+> I do wonder what happens if need to conditionally use O_NONBLOCK on
+> open(), though....
+> 
+>> @@ -112,6 +106,22 @@ openfile(
+>>  		}
+>>  	}
+>>  
+>> +	if (fstat(fd, &st) < 0) {
+>> +		perror("stat");
+>> +		close(fd);
+>> +		return -1;
+>> +	}
+>> +
+>> +	/* We only want to keep nonblocking behavior for pipes */
+>> +	if (!S_ISFIFO(st.st_mode)) {
+>> +		oflags &= ~O_NONBLOCK;
+>> +		if (fcntl(fd, F_SETFL, oflags) < 0) {
+> 
+> Don't you need to do oflags = fcntl(fd, F_GETFL, NULL) first?
 
-We mount /dev/sdc2 on /mnt after machine boot
-[root@xefs-51 ~]# df -iT /mnt/
-=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
-=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
-=E8=BD=BD=E7=82=B9
-/dev/sdc2      xfs  107374144       6 107374138       1% /mnt
-[root@xefs-51 ~]# ls /mnt
-jjj  kkk  xfs.strace
+maybe? We just opened it with oflags, but *shrug* I guess it doesn't
+hurt?
 
-And we add files to /mnt at first,
-[root@xefs-51 ~]# cp /mnt/jjj /mnt/123
-[root@xefs-51 ~]# df -iT /mnt
-=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
-=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
-=E8=BD=BD=E7=82=B9
-/dev/sdc2      xfs  107374144       7 107374137       1% /mnt
-[root@xefs-51 ~]# cp /mnt/jjj /mnt/111
-[root@xefs-51 ~]# df -iT /mnt
-=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
-=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
-=E8=BD=BD=E7=82=B9
-/dev/sdc2      xfs  107374144       8 107374136       1% /mnt
-[root@xefs-51 ~]# cp /mnt/jjj /mnt/222
-[root@xefs-51 ~]# df -iT /mnt
-=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
-=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
-=E8=BD=BD=E7=82=B9
-/dev/sdc2      xfs  107374144       9 107374135       1% /mnt
-[root@xefs-51 ~]# cp /mnt/jjj /mnt/333
-[root@xefs-51 ~]# df -iT /mnt
-=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
-=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
-=E8=BD=BD=E7=82=B9
-/dev/sdc2      xfs  107374144      10 107374134       1% /mnt
+> 
+>> +			perror("fcntl");
+>> +			close(fd);
+>> +			return -1;
+>> +		}
+> 
+> can you add a "goto out_close;" error jump to this function now that
+> this is the fourth and fifth places that have this same close/return
+> on error...
 
-and then remove some, but the inodes used in 'df -iT /mnt' not changed
-[root@xefs-51 ~]# rm -f /mnt/jjj
-[root@xefs-51 ~]# df -iT /mnt
-=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E7=
-=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=E8=BD=BD=
-=E7=82=B9
-/dev/sdc2      xfs  107374144      10 107374134       1% /mnt
-[root@xefs-51 ~]# rm -f /mnt/kkk
-[root@xefs-51 ~]# df -iT /mnt
-=E6=96=87=E4=BB=B6=E7=B3=BB=E7=BB=9F       =E7=B1=BB=E5=9E=8B     Inode =E5=
-=B7=B2=E7=94=A8(I)   =E5=8F=AF=E7=94=A8(I) =E5=B7=B2=E7=94=A8(I)% =E6=8C=82=
-=E8=BD=BD=E7=82=B9
-/dev/sdc2      xfs  107374144      10 107374134       1% /mnt
+yeah, good point.
 
-and if we umount /mnt at this time, the machine will reboot,
-and no related log in /var/log/messages after boot and the inodes used
-become normal.
-As googled a lot, we tried some ways:
-1) lsof /mnt: shows nobody use this mount point.
-2) lsof |grep deleted: shows empty
-What should i do to find the problem out?
-
---
-Thank you!
+> CHeers,
+> 
+> Dave.
+> 
