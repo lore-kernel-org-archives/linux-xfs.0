@@ -1,70 +1,251 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:14945 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726262AbfBTBuh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Feb 2019 20:50:37 -0500
-Date: Wed, 20 Feb 2019 12:50:34 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfs_io: fix TOCTOU in openfile()
-Message-ID: <20190220015034.GI14116@dastard>
-References: <c4b7eff6-8395-3d01-eaaf-736e32e6e1dc@redhat.com>
- <acf1deea-a637-571b-e501-c7cbcde95c38@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:54886 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725842AbfBTPMO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Feb 2019 10:12:14 -0500
+Date: Wed, 20 Feb 2019 10:12:07 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/3] xfs: EOF blocks are not busy extents
+Message-ID: <20190220151207.GA4930@localhost.localdomain>
+References: <20190207050813.24271-1-david@fromorbit.com>
+ <20190218022619.GD14116@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <acf1deea-a637-571b-e501-c7cbcde95c38@redhat.com>
+In-Reply-To: <20190218022619.GD14116@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Feb 19, 2019 at 05:23:38PM -0600, Eric Sandeen wrote:
-> openfile() stats a path to determine whether it is a pipe, and then
-> opens it with flags based on the type it saw during the stat.  It's
-> possible that the file at that path changes in between, and Coverity
-> points this out.
+On Mon, Feb 18, 2019 at 01:26:19PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Instead, always open O_NONBLOCK, stat the fd we got, and turn the
-> flag back off via fcntl() if it's not a pipe.
+> Userdata extents are considered as "busy extents" when they are
+> freed to ensure that they ar enot reallocated and written to before
+> the transaction that frees the user data extent has been committed
+> to disk.
 > 
-> Addresses-Coverity-ID: 1442788 ("Time of check time of use")
+> However, in the case of post EOF blocks, these block have
+> never been exposed to user applications and so don't contain valid
+> data. Hence they don't need to be considered "busy" when they've
+> been freed because there is no data in them that can be destroyed
+> if they are reallocated and have data written to them before the
+> free transaction is committed.
+> 
+> We already have XFS_BMAPI_NODISCARD to extent freeing that the data
 
-For O_NONBLOCK I think there is zero harm in the code as it stands,
-but I don't really care about it tht much.
+"to extent freeing" ?
 
-I do wonder what happens if need to conditionally use O_NONBLOCK on
-open(), though....
+> extent has never been used so it doesn't need discards issued on it.
+> This new functionality is just an extension of that concept - the
+> extent is actually unused, so doesn't even need to be marked busy.
+> 
+> Hence fix this by adding XFS_BMAPI_UNUSED and update the EOF block
+> data extent truncate with XFS_BMAPI_UNUSED and propagate that all
+> the way through the various structures an use it to avoid inserting
+> the extent into the busy list.
+> 
+> [ Note: this seems like a bit of a hack, but I just don't see the
+> point of inserting it into the busy list, then adding a new busy
+> list unused flag, then allowing every allocation type to use it in
+> the _trim code, then have every caller have to call _reuse to remove
+> the range from the busy tree. It just seems like complexity that
+> doesn't need to exist because anyone can reallocate an
+> unused extent for immediate use. ]
+> 
 
-> @@ -112,6 +106,22 @@ openfile(
+Yeah, I'm not a fan of adding that kind of noop code to achieve behavior
+that's equivalent to bypassing subsystems or removing unnecessary code.
+
+> This avoids the problem of free space fragmentation when multiple
+> files are written sequentially  via synchronous writes or post-write
+> fsync calls before the next file is written. This results in the
+> post-eof blocks being marked busy and can't be immediately
+> reallocated resulting in the files packing poorly and unnecessarily
+> leaving free space between them.
+> 
+> Freespace fragmentation from sequential multi-file synchronous write
+> workload:
+> 
+> Before:
+>   from      to extents  blocks    pct
+>       1       1       7       7   0.00
+>       2       3      34      80   0.00
+>       4       7      65     345   0.01
+>       8      15     208    2417   0.05
+>      16      31     147    2982   0.06
+>      32      63       1      49   0.00
+> 1048576 1310720       4 5185064  99.89
+> 
+> After:
+>    from      to extents  blocks    pct
+>       1       1       3       3   0.00
+>       2       3       1       3   0.00
+> 1048576 1310720       4 5190871 100.00
+> 
+> Much better.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+
+This seems reasonable to me in principle. Some comments...
+
+>  fs/xfs/libxfs/xfs_alloc.c  | 7 +++----
+>  fs/xfs/libxfs/xfs_bmap.c   | 6 +++---
+>  fs/xfs/libxfs/xfs_bmap.h   | 8 ++++++--
+>  fs/xfs/xfs_bmap_util.c     | 2 +-
+>  fs/xfs/xfs_trans_extfree.c | 6 +++---
+>  5 files changed, 16 insertions(+), 13 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 659bb9133955..729136ef0ed1 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -3014,7 +3014,7 @@ __xfs_free_extent(
+>  	xfs_extlen_t			len,
+>  	const struct xfs_owner_info	*oinfo,
+>  	enum xfs_ag_resv_type		type,
+> -	bool				skip_discard)
+> +	bool				unused)
+>  {
+>  	struct xfs_mount		*mp = tp->t_mountp;
+>  	struct xfs_buf			*agbp;
+> @@ -3045,9 +3045,8 @@ __xfs_free_extent(
+>  	if (error)
+>  		goto err;
+>  
+> -	if (skip_discard)
+> -		busy_flags |= XFS_EXTENT_BUSY_SKIP_DISCARD;
+> -	xfs_extent_busy_insert(tp, agno, agbno, len, busy_flags);
+> +	if (!unused)
+> +		xfs_extent_busy_insert(tp, agno, agbno, len, busy_flags);
+
+busy_flags now serves no purpose in this function (it's hardcoded to
+zero).
+
+>  	return 0;
+>  
+>  err:
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 332eefa2700b..ba0fd80eede4 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -537,7 +537,7 @@ __xfs_bmap_add_free(
+>  	xfs_fsblock_t			bno,
+>  	xfs_filblks_t			len,
+>  	const struct xfs_owner_info	*oinfo,
+> -	bool				skip_discard)
+> +	bool				unused)
+>  {
+>  	struct xfs_extent_free_item	*new;		/* new element */
+>  #ifdef DEBUG
+> @@ -565,7 +565,7 @@ __xfs_bmap_add_free(
+>  		new->xefi_oinfo = *oinfo;
+>  	else
+>  		new->xefi_oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
+> -	new->xefi_skip_discard = skip_discard;
+> +	new->xefi_unused = unused;
+>  	trace_xfs_bmap_free_defer(tp->t_mountp,
+>  			XFS_FSB_TO_AGNO(tp->t_mountp, bno), 0,
+>  			XFS_FSB_TO_AGBNO(tp->t_mountp, bno), len);
+> @@ -5069,7 +5069,7 @@ xfs_bmap_del_extent_real(
+>  		} else {
+>  			__xfs_bmap_add_free(tp, del->br_startblock,
+>  					del->br_blockcount, NULL,
+> -					(bflags & XFS_BMAPI_NODISCARD) ||
+> +					(bflags & XFS_BMAPI_UNUSED) ||
+>  					del->br_state == XFS_EXT_UNWRITTEN);
+
+Note that this does technically change unrelated behavior as we now
+consider unwritten extents as unused (along with post-eof blocks). I
+think that's still fine for similar reasons as for eofblocks, but this
+should at least be noted in the commit log.
+
 >  		}
 >  	}
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 09d3ea97cc15..33fb95f84ea0 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -54,7 +54,7 @@ struct xfs_extent_free_item
+>  	xfs_extlen_t		xefi_blockcount;/* number of blocks in extent */
+>  	struct list_head	xefi_list;
+>  	struct xfs_owner_info	xefi_oinfo;	/* extent owner */
+> -	bool			xefi_skip_discard;
+> +	bool			xefi_unused;
+>  };
 >  
-> +	if (fstat(fd, &st) < 0) {
-> +		perror("stat");
-> +		close(fd);
-> +		return -1;
-> +	}
+>  #define	XFS_BMAP_MAX_NMAP	4
+> @@ -107,6 +107,9 @@ struct xfs_extent_free_item
+>  /* Do not update the rmap btree.  Used for reconstructing bmbt from rmapbt. */
+>  #define XFS_BMAPI_NORMAP	0x2000
+>  
+> +/* Unused freed data extent, no need to mark busy */
+> +#define XFS_BMAPI_UNUSED	0x4000
 > +
-> +	/* We only want to keep nonblocking behavior for pipes */
-> +	if (!S_ISFIFO(st.st_mode)) {
-> +		oflags &= ~O_NONBLOCK;
-> +		if (fcntl(fd, F_SETFL, oflags) < 0) {
+>  #define XFS_BMAPI_FLAGS \
+>  	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+>  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+> @@ -120,7 +123,8 @@ struct xfs_extent_free_item
+>  	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }, \
+>  	{ XFS_BMAPI_CONVERT_ONLY, "CONVERT_ONLY" }, \
+>  	{ XFS_BMAPI_NODISCARD,	"NODISCARD" }, \
+> -	{ XFS_BMAPI_NORMAP,	"NORMAP" }
+> +	{ XFS_BMAPI_NORMAP,	"NORMAP" }, \
+> +	{ XFS_BMAPI_UNUSED,	"UNUSED" }
 
-Don't you need to do oflags = fcntl(fd, F_GETFL, NULL) first?
+We can kill XFS_BMAPI_NODISCARD since _UNUSED replaces the only usage of
+it. I suppose we might as well just rename it as you've done for the
+related plumbing.
 
-> +			perror("fcntl");
-> +			close(fd);
-> +			return -1;
-> +		}
+Brian
 
-can you add a "goto out_close;" error jump to this function now that
-this is the fourth and fifth places that have this same close/return
-on error...
-
-CHeers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  
+>  
+>  static inline int xfs_bmapi_aflag(int w)
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index af2e30d33794..f5a8a4385512 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -841,7 +841,7 @@ xfs_free_eofblocks(
+>  		 * may be full of holes (ie NULL files bug).
+>  		 */
+>  		error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
+> -					XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
+> +					XFS_ISIZE(ip), XFS_BMAPI_UNUSED);
+>  		if (error) {
+>  			/*
+>  			 * If we get an error at this point we simply don't
+> diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
+> index 0710434eb240..d06fb2cd6ffb 100644
+> --- a/fs/xfs/xfs_trans_extfree.c
+> +++ b/fs/xfs/xfs_trans_extfree.c
+> @@ -58,7 +58,7 @@ xfs_trans_free_extent(
+>  	xfs_fsblock_t			start_block,
+>  	xfs_extlen_t			ext_len,
+>  	const struct xfs_owner_info	*oinfo,
+> -	bool				skip_discard)
+> +	bool				unused)
+>  {
+>  	struct xfs_mount		*mp = tp->t_mountp;
+>  	struct xfs_extent		*extp;
+> @@ -71,7 +71,7 @@ xfs_trans_free_extent(
+>  	trace_xfs_bmap_free_deferred(tp->t_mountp, agno, 0, agbno, ext_len);
+>  
+>  	error = __xfs_free_extent(tp, start_block, ext_len,
+> -				  oinfo, XFS_AG_RESV_NONE, skip_discard);
+> +				  oinfo, XFS_AG_RESV_NONE, unused);
+>  	/*
+>  	 * Mark the transaction dirty, even on error. This ensures the
+>  	 * transaction is aborted, which:
+> @@ -184,7 +184,7 @@ xfs_extent_free_finish_item(
+>  	error = xfs_trans_free_extent(tp, done_item,
+>  			free->xefi_startblock,
+>  			free->xefi_blockcount,
+> -			&free->xefi_oinfo, free->xefi_skip_discard);
+> +			&free->xefi_oinfo, free->xefi_unused);
+>  	kmem_free(free);
+>  	return error;
+>  }
