@@ -1,142 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:58424 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725891AbfBUW4p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Feb 2019 17:56:45 -0500
-Date: Thu, 21 Feb 2019 14:56:37 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/8] xfs: don't use delalloc extents for COW on files
- with extsize hints
-Message-ID: <20190221225637.GB6471@magnolia>
-References: <20190218091827.12619-1-hch@lst.de>
- <20190218091827.12619-4-hch@lst.de>
- <20190221175817.GA51494@bfoster>
+Received: from mx2.suse.de ([195.135.220.15]:52034 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726335AbfBUXzK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Feb 2019 18:55:10 -0500
+Subject: Re: [LSF/MM TOPIC] More async operations for file systems - async
+ discard?
+References: <92ab41f7-35bc-0f56-056f-ed88526b8ea4@gmail.com>
+ <20190217210948.GB14116@dastard>
+ <46540876-c222-0889-ddce-44815dcaad04@gmail.com>
+ <20190220234723.GA5999@localhost.localdomain>
+From: Jeff Mahoney <jeffm@suse.com>
+Message-ID: <45c27fea-6d74-2adc-fe9d-e314ce4f3672@suse.com>
+Date: Thu, 21 Feb 2019 18:55:05 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190221175817.GA51494@bfoster>
+In-Reply-To: <20190220234723.GA5999@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Keith Busch <keith.busch@intel.com>, Ric Wheeler <ricwheeler@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-block@vger.kernel.org
 
-On Thu, Feb 21, 2019 at 12:58:17PM -0500, Brian Foster wrote:
-> On Mon, Feb 18, 2019 at 10:18:22AM +0100, Christoph Hellwig wrote:
-> > While using delalloc for extsize hints is generally a good idea, the
-> > current code that does so only for COW doesn't help us much and creates
-> > a lot of special cases.  Switch it to use real allocations like we
-> > do for direct I/O.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/xfs_iomap.c   | 28 +++++++++++++++++-----------
-> >  fs/xfs/xfs_reflink.c | 10 +++++++++-
-> >  fs/xfs/xfs_reflink.h |  3 ++-
-> >  3 files changed, 28 insertions(+), 13 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index a7599b084571..19a3331b4a56 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -918,22 +918,28 @@ xfs_file_iomap_begin(
-> >  	 * been done up front, so we don't need to do them here.
-> >  	 */
-> >  	if (xfs_is_reflink_inode(ip)) {
-> > +		struct xfs_bmbt_irec	orig = imap;
-> > +
-> ...
-> > +		error = xfs_reflink_allocate_cow(ip, &imap, &shared, &lockmode,
-> > +						 flags);
-> > +		if (error)
-> > +			goto out_unlock;
-> > +
-> > +		/*
-> > +		 * For buffered writes we need to report the address of the
-> > +		 * previous block (if there was any) so that the higher level
-> > +		 * write code can perform read-modify-write operations.  For
-> > +		 * direct I/O code, which must be block aligned we need to
-> > +		 * report the newly allocated address.
-> > +		 */
-> > +		if (!(flags & IOMAP_DIRECT) &&
-> > +		    orig.br_startblock != HOLESTARTBLOCK)
-> > +			imap = orig;
+On 2/20/19 6:47 PM, Keith Busch wrote:
+> On Sun, Feb 17, 2019 at 06:42:59PM -0500, Ric Wheeler wrote:
+>> I think the variability makes life really miserable for layers above it.
+>>
+>> Might be worth constructing some tooling that we can use to validate or
+>> shame vendors over - testing things like a full device discard, discard of
+>> fs block size and big chunks, discard against already discarded, etc.
 > 
-> I find the logic here kind of confusing. The buffered write (reflink)
-> path basically expects to allocated COW blocks over an existing shared
-> extent. It thus makes no modification to the caller's imap because it
-> (read-modify-)writes into cache and writeback determines where to send
-> the I/O. Why not follow the same flow here? For example:
+> With respect to fs block sizes, one thing making discards suck is that
+> many high capacity SSDs' physical page sizes are larger than the fs block
+> size, and a sub-page discard is worse than doing nothing.
 > 
-> 	cmap = orig;
-> 	error = xfs_reflink_allocate_cow(ip, &cmap, ...);
-> 	/* ... */
-> 	if ((flags & IOMAP_DIRECT) || (imap.br_startblock == HOLESTARTBLOCK))
-> 		imap = cmap;
+> We've discussed previously about supporting block size larger than
+> the system's page size, but it doesn't look like that's gone anywhere.
+> Maybe it's worth revisiting since it's really inefficient if you write
+> or discard at the smaller granularity.
 
-Admittedly, I think that flows better.
+Isn't this addressing the problem at the wrong layer?  There are other
+efficiencies to be gained by larger block sizes, but better discard
+behavior is a side effect.  As Dave said, the major file systems already
+assemble contiguous extents as large we can can before sending them to
+discard.  The lower bound for that is the larger of minimum lengths
+passed by the user or provided by the block layer.  We've always been
+told "don't worry about what the internal block size is, that only
+matters to the FTL."  That's obviously not true, but when devices only
+report a 512 byte granularity, we believe them and will issue discard
+for the smallest size that makes sense for the file system regardless of
+whether it makes sense (internally) for the SSD.  That means 4k for
+pretty much anything except btrfs metadata nodes, which are 16k.
 
-> And also, what's the point of the hole check.. to avoid an unnecessary
-> data fork allocation below? That should be explained in the comment.
->
-> >  
-> >  		end_fsb = imap.br_startoff + imap.br_blockcount;
-> >  		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 2babc2cbe103..8a5353daf9ab 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -397,7 +397,8 @@ xfs_reflink_allocate_cow(
-> >  	struct xfs_inode	*ip,
-> >  	struct xfs_bmbt_irec	*imap,
-> >  	bool			*shared,
-> > -	uint			*lockmode)
-> > +	uint			*lockmode,
-> > +	unsigned		iomap_flags)
-> 
-> I don't see why a lower level reflink mechanism needs to care about
-> direct I/O or not. IMO this should just be a 'bool convert' param.
+So, I don't think changing the file system block size is the right
+approach.  It *may* bring benefits, but I think many of the same
+benefits can be gained by using the minimum-size option for fstrim and
+allowing the discard mount options to accept a minimum size as well.
 
-I forgot I'd complained about this the last time I read this patch.
+-Jeff
 
-Well maybe I'll just fix it, seeing as I already pushed the whole lot to
-for-next. :/
-
---D
-
-> Brian
-> 
-> >  {
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> >  	xfs_fileoff_t		offset_fsb = imap->br_startoff;
-> > @@ -471,6 +472,13 @@ xfs_reflink_allocate_cow(
-> >  	if (nimaps == 0)
-> >  		return -ENOSPC;
-> >  convert:
-> > +	/*
-> > +	 * COW fork extents are supposed to remain unwritten until we're ready
-> > +	 * to initiate a disk write.  For direct I/O we are going to write the
-> > +	 * data and need the conversion, but for buffered writes we're done.
-> > +	 */
-> > +	if (!(iomap_flags & IOMAP_DIRECT))
-> > +		return 0;
-> >  	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
-> >  
-> >  out_unreserve:
-> > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> > index 6d73daef1f13..70d68a1a9b49 100644
-> > --- a/fs/xfs/xfs_reflink.h
-> > +++ b/fs/xfs/xfs_reflink.h
-> > @@ -15,7 +15,8 @@ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
-> >  extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
-> >  		struct xfs_bmbt_irec *imap);
-> >  extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
-> > -		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
-> > +		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode,
-> > +		unsigned iomap_flags);
-> >  extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
-> >  		xfs_off_t count);
-> >  
-> > -- 
-> > 2.20.1
-> > 
+-- 
+Jeff Mahoney
+SUSE Labs
