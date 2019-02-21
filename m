@@ -1,62 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37254 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725826AbfBTN2e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 Feb 2019 08:28:34 -0500
-Date: Wed, 20 Feb 2019 14:29:52 +0100
-From: David Sterba <dsterba@suse.cz>
-Subject: Re: [PATCH 4/3] generic: posix acl extended attribute memory
- corruption test
-Message-ID: <20190220132952.GW9874@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-References: <154993784038.1948.7502664832930298472.stgit@magnolia>
- <20190213204814.GB6477@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:52140 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725943AbfBUKRB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Feb 2019 05:17:01 -0500
+Date: Thu, 21 Feb 2019 18:16:19 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V15 14/18] block: enable multipage bvecs
+Message-ID: <20190221101618.GB12448@ming.t460p>
+References: <20190215111324.30129-1-ming.lei@redhat.com>
+ <20190215111324.30129-15-ming.lei@redhat.com>
+ <CGME20190221084301eucas1p11e8841a62b4b1da3cccca661b6f4c29d@eucas1p1.samsung.com>
+ <6c9ae4de-c56f-a2b3-2542-da7d8b95601d@samsung.com>
+ <20190221095733.GA12448@ming.t460p>
+ <ba39138d-d65b-335d-d709-b95dbde1fd5c@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20190213204814.GB6477@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ba39138d-d65b-335d-d709-b95dbde1fd5c@samsung.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Marek Szyprowski <m.szyprowski@samsung.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ulf Hansson <ulf.hansson@linaro.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, 'Linux Samsung SOC' <linux-samsung-soc@vger.kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, Adrian Hunter <adrian.hunter@intel.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-On Wed, Feb 13, 2019 at 12:48:14PM -0800, Darrick J. Wong wrote:
-> --- /dev/null
-> +++ b/src/t_attr_corruption.c
-> @@ -0,0 +1,122 @@
-> +// SPDX-License-Identifier: GPL-2.0+
-> +/*
-> + * Copyright (C) 2019 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + *
-> + * Test program to tickle a use-after-free bug in xfs.
-> + *
-> + * XFS had a use-after-free bug when xfs_xattr_put_listent runs out of
-> + * listxattr buffer space while trying to store the name
-> + * "system.posix_acl_access" and then corrupts memory by not checking the
-> + * seen_enough state and then trying to shove "trusted.SGI_ACL_FILE" into the
-> + * buffer as well.
-> + *
-> + * In order to tickle the bug in a user visible way we must have already put a
-> + * name in the buffer, so we take advantage of the fact that "security.evm"
-> + * sorts before "system.posix_acl_access" to make sure this happens.
-> + *
-> + * If we trigger the bug, the program will print the garbled string
-> + * "rusted.SGI_ACL_FILE".  If the bug is fixed, the flistxattr call returns
-> + * ERANGE.
-> + */
-> +#include <sys/types.h>
-> +#include <sys/stat.h>
-> +#include <fcntl.h>
-> +#include <stdlib.h>
-> +#include <stdio.h>
-> +#include <string.h>
-> +#include <stdint.h>
-> +#include <unistd.h>
-> +#include <attr/xattr.h>
+On Thu, Feb 21, 2019 at 11:08:19AM +0100, Marek Szyprowski wrote:
+> Hi Ming,
+> 
+> On 2019-02-21 10:57, Ming Lei wrote:
+> > On Thu, Feb 21, 2019 at 09:42:59AM +0100, Marek Szyprowski wrote:
+> >> On 2019-02-15 12:13, Ming Lei wrote:
+> >>> This patch pulls the trigger for multi-page bvecs.
+> >>>
+> >>> Reviewed-by: Omar Sandoval <osandov@fb.com>
+> >>> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> >> Since Linux next-20190218 I've observed problems with block layer on one
+> >> of my test devices (Odroid U3 with EXT4 rootfs on SD card). Bisecting
+> >> this issue led me to this change. This is also the first linux-next
+> >> release with this change merged. The issue is fully reproducible and can
+> >> be observed in the following kernel log:
+> >>
+> >> sdhci: Secure Digital Host Controller Interface driver
+> >> sdhci: Copyright(c) Pierre Ossman
+> >> s3c-sdhci 12530000.sdhci: clock source 2: mmc_busclk.2 (100000000 Hz)
+> >> s3c-sdhci 12530000.sdhci: Got CD GPIO
+> >> mmc0: SDHCI controller on samsung-hsmmc [12530000.sdhci] using ADMA
+> >> mmc0: new high speed SDHC card at address aaaa
+> >> mmcblk0: mmc0:aaaa SL16G 14.8 GiB
+> >>
+> >> ...
+> >>
+> >> EXT4-fs (mmcblk0p2): INFO: recovery required on readonly filesystem
+> >> EXT4-fs (mmcblk0p2): write access will be enabled during recovery
+> >> EXT4-fs (mmcblk0p2): recovery complete
+> >> EXT4-fs (mmcblk0p2): mounted filesystem with ordered data mode. Opts: (null)
+> >> VFS: Mounted root (ext4 filesystem) readonly on device 179:2.
+> >> devtmpfs: mounted
+> >> Freeing unused kernel memory: 1024K
+> >> hub 1-3:1.0: USB hub found
+> >> Run /sbin/init as init process
+> >> hub 1-3:1.0: 3 ports detected
+> >> *** stack smashing detected ***: <unknown> terminated
+> >> Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000004
+> >> CPU: 1 PID: 1 Comm: init Not tainted 5.0.0-rc6-next-20190218 #1546
+> >> Hardware name: SAMSUNG EXYNOS (Flattened Device Tree)
+> >> [<c01118d0>] (unwind_backtrace) from [<c010d794>] (show_stack+0x10/0x14)
+> >> [<c010d794>] (show_stack) from [<c09ff8a4>] (dump_stack+0x90/0xc8)
+> >> [<c09ff8a4>] (dump_stack) from [<c0125944>] (panic+0xfc/0x304)
+> >> [<c0125944>] (panic) from [<c012bc98>] (do_exit+0xabc/0xc6c)
+> >> [<c012bc98>] (do_exit) from [<c012c100>] (do_group_exit+0x3c/0xbc)
+> >> [<c012c100>] (do_group_exit) from [<c0138908>] (get_signal+0x130/0xbf4)
+> >> [<c0138908>] (get_signal) from [<c010c7a0>] (do_work_pending+0x130/0x618)
+> >> [<c010c7a0>] (do_work_pending) from [<c0101034>]
+> >> (slow_work_pending+0xc/0x20)
+> >> Exception stack(0xe88c3fb0 to 0xe88c3ff8)
+> >> 3fa0:                                     00000000 bea7787c 00000005
+> >> b6e8d0b8
+> >> 3fc0: bea77a18 b6f92010 b6e8d0b8 00000001 b6e8d0c8 00000001 b6e8c000
+> >> bea77b60
+> >> 3fe0: 00000020 bea77998 ffffffff b6d52368 60000050 ffffffff
+> >> CPU3: stopping
+> >>
+> >> I would like to help debugging and fixing this issue, but I don't really
+> >> have idea where to start. Here are some more detailed information about
+> >> my test system:
+> >>
+> >> 1. Board: ARM 32bit Samsung Exynos4412-based Odroid U3 (device tree
+> >> source: arch/arm/boot/dts/exynos4412-odroidu3.dts)
+> >>
+> >> 2. Block device: MMC/SDHCI/SDHCI-S3C with SD card
+> >> (drivers/mmc/host/sdhci-s3c.c driver, sdhci_2 device node in the device
+> >> tree)
+> >>
+> >> 3. Rootfs: Ext4
+> >>
+> >> 4. Kernel config: arch/arm/configs/exynos_defconfig
+> >>
+> >> I can gather more logs if needed, just let me which kernel option to
+> >> enable. Reverting this commit on top of next-20190218 as well as current
+> >> linux-next (tested with next-20190221) fixes this issue and makes the
+> >> system bootable again.
+> > Could you test the patch in following link and see if it can make a difference?
+> >
+> > https://marc.info/?l=linux-aio&m=155070355614541&w=2
+> 
+> I've tested that patch, but it doesn't make any difference on the test
+> system. In the log I see no warning added by it.
 
-This does not compile on some systems, sys/xattr.h works (it's provided
-by glibc) and is also used by other fstests' sources. I'm not sure where
-does attr/xattr.h come from, my devel package for libattr provides only
-attr/libattr.h.
+I guess it might be related with memory corruption, could you enable the
+following debug options and post the dmesg log?
+
+CONFIG_DEBUG_STACKOVERFLOW=y
+CONFIG_KASAN=y
+
+Thanks,
+Ming
