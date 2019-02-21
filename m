@@ -1,75 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:55974 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727051AbfBZLNE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Feb 2019 06:13:04 -0500
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:12196
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726220AbfBUUIH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Feb 2019 15:08:07 -0500
+Date: Fri, 22 Feb 2019 07:08:02 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [LSF/MM TOPIC] More async operations for file systems - async
+ discard?
+Message-ID: <20190221200802.GJ14116@dastard>
+References: <92ab41f7-35bc-0f56-056f-ed88526b8ea4@gmail.com>
+ <20190217210948.GB14116@dastard>
+ <46540876-c222-0889-ddce-44815dcaad04@gmail.com>
+ <20190220234723.GA5999@localhost.localdomain>
 MIME-Version: 1.0
-References: <20190225040904.5557-1-ming.lei@redhat.com> <20190225043648.GE23020@dastard>
- <5ad2ef83-8b3a-0a15-d72e-72652b807aad@suse.cz> <20190225202630.GG23020@dastard>
- <20190226022249.GA17747@ming.t460p> <20190226030214.GI23020@dastard>
- <20190226032737.GA11592@bombadil.infradead.org> <20190226045826.GJ23020@dastard>
- <20190226093302.GA24879@ming.t460p> <a641feb8-ceb2-2dac-27aa-7b1df10f5ae5@suse.cz>
-In-Reply-To: <a641feb8-ceb2-2dac-27aa-7b1df10f5ae5@suse.cz>
-From: Ming Lei <tom.leiming@gmail.com>
-Date: Tue, 26 Feb 2019 19:12:49 +0800
-Message-ID: <CACVXFVMX=WpTRBbDTSibfXkTZxckk3ootetbE+rkJtHhsZkRAw@mail.gmail.com>
-Subject: Re: [PATCH] xfs: allocate sector sized IO buffer via page_frag_alloc
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190220234723.GA5999@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, linux-block <linux-block@vger.kernel.org>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Ric Wheeler <ricwheeler@gmail.com>, lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-block@vger.kernel.org
 
-On Tue, Feb 26, 2019 at 6:07 PM Vlastimil Babka <vbabka@suse.cz> wrote:
->
-> On 2/26/19 10:33 AM, Ming Lei wrote:
-> > On Tue, Feb 26, 2019 at 03:58:26PM +1100, Dave Chinner wrote:
-> >> On Mon, Feb 25, 2019 at 07:27:37PM -0800, Matthew Wilcox wrote:
-> >>> On Tue, Feb 26, 2019 at 02:02:14PM +1100, Dave Chinner wrote:
-> >>>>> Or what is the exact size of sub-page IO in xfs most of time? For
-> >>>>
-> >>>> Determined by mkfs parameters. Any power of 2 between 512 bytes and
-> >>>> 64kB needs to be supported. e.g:
-> >>>>
-> >>>> # mkfs.xfs -s size=512 -b size=1k -i size=2k -n size=8k ....
-> >>>>
-> >>>> will have metadata that is sector sized (512 bytes), filesystem
-> >>>> block sized (1k), directory block sized (8k) and inode cluster sized
-> >>>> (32k), and will use all of them in large quantities.
-> >>>
-> >>> If XFS is going to use each of these in large quantities, then it doesn't
-> >>> seem unreasonable for XFS to create a slab for each type of metadata?
-> >>
-> >>
-> >> Well, that is the question, isn't it? How many other filesystems
-> >> will want to make similar "don't use entire pages just for 4k of
-> >> metadata" optimisations as 64k page size machines become more
-> >> common? There are others that have the same "use slab for sector
-> >> aligned IO" which will fall foul of the same problem that has been
-> >> reported for XFS....
-> >>
-> >> If nobody else cares/wants it, then it can be XFS only. But it's
-> >> only fair we address the "will it be useful to others" question
-> >> first.....
-> >
-> > This kind of slab cache should have been global, just like interface of
-> > kmalloc(size).
-> >
-> > However, the alignment requirement depends on block device's block size,
-> > then it becomes hard to implement as genera interface, for example:
-> >
-> >       block size: 512, 1024, 2048, 4096
-> >       slab size: 512*N, 0 < N < PAGE_SIZE/512
-> >
-> > For 4k page size, 28(7*4) slabs need to be created, and 64k page size
-> > needs to create 127*4 slabs.
-> >
->
-> Where does the '*4' multiplier come from?
+On Wed, Feb 20, 2019 at 04:47:24PM -0700, Keith Busch wrote:
+> On Sun, Feb 17, 2019 at 06:42:59PM -0500, Ric Wheeler wrote:
+> > I think the variability makes life really miserable for layers above it.
+> > 
+> > Might be worth constructing some tooling that we can use to validate or
+> > shame vendors over - testing things like a full device discard, discard of
+> > fs block size and big chunks, discard against already discarded, etc.
+> 
+> With respect to fs block sizes, one thing making discards suck is that
+> many high capacity SSDs' physical page sizes are larger than the fs block
+> size, and a sub-page discard is worse than doing nothing.
+> 
+> We've discussed previously about supporting block size larger than
+> the system's page size, but it doesn't look like that's gone anywhere.
 
-The buffer needs to be device block size aligned for dio, and now the block
-size can be 512, 1024, 2048 and 4096.
+You mean in filesystems?  Work for XFS is in progress:
 
-Thanks,
-Ming Lei
+https://lwn.net/Articles/770975/
+
+But it's still only a maximum of 64k block size. Essentially, that's
+a hard limit backed into the on-disk format (similar to max sector
+size limits of 32k)
+
+> Maybe it's worth revisiting since it's really inefficient if you write
+> or discard at the smaller granularity.
+
+Filesystems discard extents these days, not individual blocks. If
+you free a 1MB file, they you are likely to get a 1MB discard. Or if
+you use fstrim, then it's free space extent sizes (on XFS can be
+hundred of GBs) and small free spaces can be ignored. So the
+filesystem block size is often not an issue at all...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
