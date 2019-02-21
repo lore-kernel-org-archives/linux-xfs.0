@@ -1,189 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43896 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725681AbfBSFNJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Feb 2019 00:13:09 -0500
-Date: Mon, 18 Feb 2019 21:13:03 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/8] xfs: fix SEEK_DATA for speculative COW fork
- preallocation
-Message-ID: <20190219051303.GC32253@magnolia>
-References: <20190218091827.12619-1-hch@lst.de>
- <20190218091827.12619-3-hch@lst.de>
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:44395 "EHLO
+        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726246AbfBUKI0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Feb 2019 05:08:26 -0500
+Subject: Re: [PATCH V15 14/18] block: enable multipage bvecs
+From: Marek Szyprowski <m.szyprowski@samsung.com>
+Message-ID: <ba39138d-d65b-335d-d709-b95dbde1fd5c@samsung.com>
+Date: Thu, 21 Feb 2019 11:08:19 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190218091827.12619-3-hch@lst.de>
+In-Reply-To: <20190221095733.GA12448@ming.t460p>
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+References: <20190215111324.30129-1-ming.lei@redhat.com>
+        <20190215111324.30129-15-ming.lei@redhat.com>
+        <CGME20190221084301eucas1p11e8841a62b4b1da3cccca661b6f4c29d@eucas1p1.samsung.com>
+        <6c9ae4de-c56f-a2b3-2542-da7d8b95601d@samsung.com>
+        <20190221095733.GA12448@ming.t460p>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ulf Hansson <ulf.hansson@linaro.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, 'Linux Samsung SOC' <linux-samsung-soc@vger.kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, Adrian Hunter <adrian.hunter@intel.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-On Mon, Feb 18, 2019 at 10:18:21AM +0100, Christoph Hellwig wrote:
-> We speculatively allocate extents in the COW fork to reduce
-> fragmentation.  But when we write data into such COW fork blocks that
-> do now shadow an allocation in the data fork SEEK_DATA will not
-> correctly report it, as it only looks at the data fork extents.
-> The only reason why that hasn't been an issue so far is because
-> we even use these speculative COW fork preallocations over holes in
-> the data fork at all for buffered writes, and blocks in the COW
-> fork that are written by direct writes are moved into the data
-> fork immediately at I/O completion time.
-> 
-> Add a new set of iomap_ops for SEEK_HOLE/SEEK_DATA which looks into
-> both the COW and data fork, and reports all COW extents as unwritten
-> to the iomap layer.  While this isn't strictly true for COW fork
-> extents that were already converted to real extents, the practical
-> semantics that you can't read data from them until they are moved
-> into the data fork are very similar, and this will force the iomap
-> layer into probing the extents for actually present data.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_file.c  |  4 +--
->  fs/xfs/xfs_iomap.c | 85 ++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_iomap.h |  1 +
->  3 files changed, 88 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index e47425071e65..1d07dcfbbff3 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1068,10 +1068,10 @@ xfs_file_llseek(
->  	default:
->  		return generic_file_llseek(file, offset, whence);
->  	case SEEK_HOLE:
-> -		offset = iomap_seek_hole(inode, offset, &xfs_iomap_ops);
-> +		offset = iomap_seek_hole(inode, offset, &xfs_seek_iomap_ops);
->  		break;
->  	case SEEK_DATA:
-> -		offset = iomap_seek_data(inode, offset, &xfs_iomap_ops);
-> +		offset = iomap_seek_data(inode, offset, &xfs_seek_iomap_ops);
->  		break;
->  	}
->  
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 284c5e68f695..a7599b084571 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1068,6 +1068,91 @@ const struct iomap_ops xfs_iomap_ops = {
->  	.iomap_end		= xfs_file_iomap_end,
->  };
->  
-> +static int
-> +xfs_seek_iomap_begin(
-> +	struct inode		*inode,
-> +	loff_t			offset,
-> +	loff_t			length,
-> +	unsigned		flags,
-> +	struct iomap		*iomap)
-> +{
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + length);
-> +	xfs_fileoff_t		cow_fsb = NULLFILEOFF, data_fsb = NULLFILEOFF;
-> +	struct xfs_iext_cursor	icur;
-> +	struct xfs_bmbt_irec	imap, cmap;
-> +	int			error = 0;
-> +	unsigned		lockmode;
-> +
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		return -EIO;
-> +
-> +	lockmode = xfs_ilock_data_map_shared(ip);
-> +	if (!(ip->i_df.if_flags & XFS_IFEXTENTS)) {
-> +		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> +		if (error)
-> +			goto out_unlock;
-> +	}
-> +
-> +	if (xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap)) {
-> +		/*
-> +		 * If we found a data extent we are done.
-> +		 */
-> +		if (imap.br_startoff <= offset_fsb)
-> +			goto done;
-> +		data_fsb = imap.br_startoff;
-> +	} else {
-> +		/*
-> +		 * Fake a hole until the end of the file.
-> +		 */
-> +		data_fsb = min(XFS_B_TO_FSB(mp, offset + length),
-> +			       XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes));
-> +	}
-> +
-> +	/*
-> +	 * If a COW fork extent covers the hole, report it - capped to the next
-> +	 * data fork extent:
-> +	 */
-> +	if (xfs_inode_has_cow_data(ip) &&
-> +	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &cmap))
-> +		cow_fsb = cmap.br_startoff;
-> +	if (cow_fsb != NULLFILEOFF && cow_fsb <= offset_fsb) {
-> +		if (data_fsb < cow_fsb + cmap.br_blockcount)
-> +			end_fsb = min(end_fsb, data_fsb);
-> +		xfs_trim_extent(&cmap, offset_fsb, end_fsb);
-> +		error = xfs_bmbt_to_iomap(ip, iomap, &cmap, true);
-> +		/*
-> +		 * Force page cache probing to avoid reporting COW extents as
-> +		 * data even if they haven't been written to:
+Hi Ming,
 
-This comment is a little awkward, I'll change it to:
+On 2019-02-21 10:57, Ming Lei wrote:
+> On Thu, Feb 21, 2019 at 09:42:59AM +0100, Marek Szyprowski wrote:
+>> On 2019-02-15 12:13, Ming Lei wrote:
+>>> This patch pulls the trigger for multi-page bvecs.
+>>>
+>>> Reviewed-by: Omar Sandoval <osandov@fb.com>
+>>> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+>> Since Linux next-20190218 I've observed problems with block layer on one
+>> of my test devices (Odroid U3 with EXT4 rootfs on SD card). Bisecting
+>> this issue led me to this change. This is also the first linux-next
+>> release with this change merged. The issue is fully reproducible and can
+>> be observed in the following kernel log:
+>>
+>> sdhci: Secure Digital Host Controller Interface driver
+>> sdhci: Copyright(c) Pierre Ossman
+>> s3c-sdhci 12530000.sdhci: clock source 2: mmc_busclk.2 (100000000 Hz)
+>> s3c-sdhci 12530000.sdhci: Got CD GPIO
+>> mmc0: SDHCI controller on samsung-hsmmc [12530000.sdhci] using ADMA
+>> mmc0: new high speed SDHC card at address aaaa
+>> mmcblk0: mmc0:aaaa SL16G 14.8 GiB
+>>
+>> ...
+>>
+>> EXT4-fs (mmcblk0p2): INFO: recovery required on readonly filesystem
+>> EXT4-fs (mmcblk0p2): write access will be enabled during recovery
+>> EXT4-fs (mmcblk0p2): recovery complete
+>> EXT4-fs (mmcblk0p2): mounted filesystem with ordered data mode. Opts: (null)
+>> VFS: Mounted root (ext4 filesystem) readonly on device 179:2.
+>> devtmpfs: mounted
+>> Freeing unused kernel memory: 1024K
+>> hub 1-3:1.0: USB hub found
+>> Run /sbin/init as init process
+>> hub 1-3:1.0: 3 ports detected
+>> *** stack smashing detected ***: <unknown> terminated
+>> Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000004
+>> CPU: 1 PID: 1 Comm: init Not tainted 5.0.0-rc6-next-20190218 #1546
+>> Hardware name: SAMSUNG EXYNOS (Flattened Device Tree)
+>> [<c01118d0>] (unwind_backtrace) from [<c010d794>] (show_stack+0x10/0x14)
+>> [<c010d794>] (show_stack) from [<c09ff8a4>] (dump_stack+0x90/0xc8)
+>> [<c09ff8a4>] (dump_stack) from [<c0125944>] (panic+0xfc/0x304)
+>> [<c0125944>] (panic) from [<c012bc98>] (do_exit+0xabc/0xc6c)
+>> [<c012bc98>] (do_exit) from [<c012c100>] (do_group_exit+0x3c/0xbc)
+>> [<c012c100>] (do_group_exit) from [<c0138908>] (get_signal+0x130/0xbf4)
+>> [<c0138908>] (get_signal) from [<c010c7a0>] (do_work_pending+0x130/0x618)
+>> [<c010c7a0>] (do_work_pending) from [<c0101034>]
+>> (slow_work_pending+0xc/0x20)
+>> Exception stack(0xe88c3fb0 to 0xe88c3ff8)
+>> 3fa0:                                     00000000 bea7787c 00000005
+>> b6e8d0b8
+>> 3fc0: bea77a18 b6f92010 b6e8d0b8 00000001 b6e8d0c8 00000001 b6e8c000
+>> bea77b60
+>> 3fe0: 00000020 bea77998 ffffffff b6d52368 60000050 ffffffff
+>> CPU3: stopping
+>>
+>> I would like to help debugging and fixing this issue, but I don't really
+>> have idea where to start. Here are some more detailed information about
+>> my test system:
+>>
+>> 1. Board: ARM 32bit Samsung Exynos4412-based Odroid U3 (device tree
+>> source: arch/arm/boot/dts/exynos4412-odroidu3.dts)
+>>
+>> 2. Block device: MMC/SDHCI/SDHCI-S3C with SD card
+>> (drivers/mmc/host/sdhci-s3c.c driver, sdhci_2 device node in the device
+>> tree)
+>>
+>> 3. Rootfs: Ext4
+>>
+>> 4. Kernel config: arch/arm/configs/exynos_defconfig
+>>
+>> I can gather more logs if needed, just let me which kernel option to
+>> enable. Reverting this commit on top of next-20190218 as well as current
+>> linux-next (tested with next-20190221) fixes this issue and makes the
+>> system bootable again.
+> Could you test the patch in following link and see if it can make a difference?
+>
+> https://marc.info/?l=linux-aio&m=155070355614541&w=2
 
-/*
- * This is a COW extent, so we must probe the page cache because there
- * could be dirty page cache being backed by this extent.
- */
+I've tested that patch, but it doesn't make any difference on the test
+system. In the log I see no warning added by it.
 
-Otherwise looks fine to me,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> +		 */
-> +		iomap->type = IOMAP_UNWRITTEN;
-> +		goto out_unlock;
-> +	}
-> +
-> +	/*
-> +	 * Else report a hole, capped to the next found data or COW extent.
-> +	 */
-> +	if (cow_fsb != NULLFILEOFF && cow_fsb < data_fsb)
-> +		imap.br_blockcount = cow_fsb - offset_fsb;
-> +	else
-> +		imap.br_blockcount = data_fsb - offset_fsb;
-> +	imap.br_startoff = offset_fsb;
-> +	imap.br_startblock = HOLESTARTBLOCK;
-> +	imap.br_state = XFS_EXT_NORM;
-> +done:
-> +	xfs_trim_extent(&imap, offset_fsb, end_fsb);
-> +	error = xfs_bmbt_to_iomap(ip, iomap, &imap, false);
-> +out_unlock:
-> +	xfs_iunlock(ip, lockmode);
-> +	return error;
-> +}
-> +
-> +const struct iomap_ops xfs_seek_iomap_ops = {
-> +	.iomap_begin		= xfs_seek_iomap_begin,
-> +};
-> +
->  static int
->  xfs_xattr_iomap_begin(
->  	struct inode		*inode,
-> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-> index 37b584c3069b..5c2f6aa6d78f 100644
-> --- a/fs/xfs/xfs_iomap.h
-> +++ b/fs/xfs/xfs_iomap.h
-> @@ -40,6 +40,7 @@ xfs_aligned_fsb_count(
->  }
->  
->  extern const struct iomap_ops xfs_iomap_ops;
-> +extern const struct iomap_ops xfs_seek_iomap_ops;
->  extern const struct iomap_ops xfs_xattr_iomap_ops;
->  
->  #endif /* __XFS_IOMAP_H__*/
-> -- 
-> 2.20.1
-> 
+Best regards
+-- 
+Marek Szyprowski, PhD
+Samsung R&D Institute Poland
