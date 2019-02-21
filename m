@@ -1,88 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38402 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727662AbfBZKGR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Feb 2019 05:06:17 -0500
-Subject: Re: [PATCH] xfs: allocate sector sized IO buffer via page_frag_alloc
-References: <20190225040904.5557-1-ming.lei@redhat.com>
- <20190225043648.GE23020@dastard>
- <5ad2ef83-8b3a-0a15-d72e-72652b807aad@suse.cz>
- <20190225202630.GG23020@dastard> <20190226022249.GA17747@ming.t460p>
- <20190226030214.GI23020@dastard>
- <20190226032737.GA11592@bombadil.infradead.org>
- <20190226045826.GJ23020@dastard> <20190226093302.GA24879@ming.t460p>
-From: Vlastimil Babka <vbabka@suse.cz>
-Message-ID: <a641feb8-ceb2-2dac-27aa-7b1df10f5ae5@suse.cz>
-Date: Tue, 26 Feb 2019 11:06:12 +0100
+Received: from mx1.redhat.com ([209.132.183.28]:40210 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725845AbfBUR6U (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Feb 2019 12:58:20 -0500
+Date: Thu, 21 Feb 2019 12:58:17 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/8] xfs: don't use delalloc extents for COW on files
+ with extsize hints
+Message-ID: <20190221175817.GA51494@bfoster>
+References: <20190218091827.12619-1-hch@lst.de>
+ <20190218091827.12619-4-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20190226093302.GA24879@ming.t460p>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190218091827.12619-4-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>
-Cc: Matthew Wilcox <willy@infradead.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, linux-block@vger.kernel.orgChristoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On 2/26/19 10:33 AM, Ming Lei wrote:
-> On Tue, Feb 26, 2019 at 03:58:26PM +1100, Dave Chinner wrote:
->> On Mon, Feb 25, 2019 at 07:27:37PM -0800, Matthew Wilcox wrote:
->>> On Tue, Feb 26, 2019 at 02:02:14PM +1100, Dave Chinner wrote:
->>>>> Or what is the exact size of sub-page IO in xfs most of time? For
->>>>
->>>> Determined by mkfs parameters. Any power of 2 between 512 bytes and
->>>> 64kB needs to be supported. e.g:
->>>>
->>>> # mkfs.xfs -s size=512 -b size=1k -i size=2k -n size=8k ....
->>>>
->>>> will have metadata that is sector sized (512 bytes), filesystem
->>>> block sized (1k), directory block sized (8k) and inode cluster sized
->>>> (32k), and will use all of them in large quantities.
->>>
->>> If XFS is going to use each of these in large quantities, then it doesn't
->>> seem unreasonable for XFS to create a slab for each type of metadata?
->>
->>
->> Well, that is the question, isn't it? How many other filesystems
->> will want to make similar "don't use entire pages just for 4k of
->> metadata" optimisations as 64k page size machines become more
->> common? There are others that have the same "use slab for sector
->> aligned IO" which will fall foul of the same problem that has been
->> reported for XFS....
->>
->> If nobody else cares/wants it, then it can be XFS only. But it's
->> only fair we address the "will it be useful to others" question
->> first.....
+On Mon, Feb 18, 2019 at 10:18:22AM +0100, Christoph Hellwig wrote:
+> While using delalloc for extsize hints is generally a good idea, the
+> current code that does so only for COW doesn't help us much and creates
+> a lot of special cases.  Switch it to use real allocations like we
+> do for direct I/O.
 > 
-> This kind of slab cache should have been global, just like interface of
-> kmalloc(size).
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_iomap.c   | 28 +++++++++++++++++-----------
+>  fs/xfs/xfs_reflink.c | 10 +++++++++-
+>  fs/xfs/xfs_reflink.h |  3 ++-
+>  3 files changed, 28 insertions(+), 13 deletions(-)
 > 
-> However, the alignment requirement depends on block device's block size,
-> then it becomes hard to implement as genera interface, for example:
-> 
-> 	block size: 512, 1024, 2048, 4096
-> 	slab size: 512*N, 0 < N < PAGE_SIZE/512
-> 
-> For 4k page size, 28(7*4) slabs need to be created, and 64k page size
-> needs to create 127*4 slabs.
->
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index a7599b084571..19a3331b4a56 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -918,22 +918,28 @@ xfs_file_iomap_begin(
+>  	 * been done up front, so we don't need to do them here.
+>  	 */
+>  	if (xfs_is_reflink_inode(ip)) {
+> +		struct xfs_bmbt_irec	orig = imap;
+> +
+...
+> +		error = xfs_reflink_allocate_cow(ip, &imap, &shared, &lockmode,
+> +						 flags);
+> +		if (error)
+> +			goto out_unlock;
+> +
+> +		/*
+> +		 * For buffered writes we need to report the address of the
+> +		 * previous block (if there was any) so that the higher level
+> +		 * write code can perform read-modify-write operations.  For
+> +		 * direct I/O code, which must be block aligned we need to
+> +		 * report the newly allocated address.
+> +		 */
+> +		if (!(flags & IOMAP_DIRECT) &&
+> +		    orig.br_startblock != HOLESTARTBLOCK)
+> +			imap = orig;
 
-Where does the '*4' multiplier come from?
+I find the logic here kind of confusing. The buffered write (reflink)
+path basically expects to allocated COW blocks over an existing shared
+extent. It thus makes no modification to the caller's imap because it
+(read-modify-)writes into cache and writeback determines where to send
+the I/O. Why not follow the same flow here? For example:
 
-So I wonder how hard would it actually be (+CC slab maintainers) to just
-guarantee generic kmalloc() alignment for power-of-two sizes. If we can
-do that for kmem_cache_create() then the code should be already there.
-AFAIK the alignment happens anyway (albeit not guaranteed) in the
-non-debug cases, and if guaranteeing alignment for certain debugging
-configurations (that need some space before the object) means larger
-memory overhead, then the cost should still be bearable since its
-non-standard configuration where the point is to catch bug and not have
-peak performance?
+	cmap = orig;
+	error = xfs_reflink_allocate_cow(ip, &cmap, ...);
+	/* ... */
+	if ((flags & IOMAP_DIRECT) || (imap.br_startblock == HOLESTARTBLOCK))
+		imap = cmap;
 
-> But, specific file system may only use some of them, and it depends
-> on meta data size.
-> 
-> Thanks,
-> Ming
+And also, what's the point of the hole check.. to avoid an unnecessary
+data fork allocation below? That should be explained in the comment.
+
+>  
+>  		end_fsb = imap.br_startoff + imap.br_blockcount;
+>  		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 2babc2cbe103..8a5353daf9ab 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -397,7 +397,8 @@ xfs_reflink_allocate_cow(
+>  	struct xfs_inode	*ip,
+>  	struct xfs_bmbt_irec	*imap,
+>  	bool			*shared,
+> -	uint			*lockmode)
+> +	uint			*lockmode,
+> +	unsigned		iomap_flags)
+
+I don't see why a lower level reflink mechanism needs to care about
+direct I/O or not. IMO this should just be a 'bool convert' param.
+
+Brian
+
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+> @@ -471,6 +472,13 @@ xfs_reflink_allocate_cow(
+>  	if (nimaps == 0)
+>  		return -ENOSPC;
+>  convert:
+> +	/*
+> +	 * COW fork extents are supposed to remain unwritten until we're ready
+> +	 * to initiate a disk write.  For direct I/O we are going to write the
+> +	 * data and need the conversion, but for buffered writes we're done.
+> +	 */
+> +	if (!(iomap_flags & IOMAP_DIRECT))
+> +		return 0;
+>  	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
+>  
+>  out_unreserve:
+> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> index 6d73daef1f13..70d68a1a9b49 100644
+> --- a/fs/xfs/xfs_reflink.h
+> +++ b/fs/xfs/xfs_reflink.h
+> @@ -15,7 +15,8 @@ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+>  extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
+>  		struct xfs_bmbt_irec *imap);
+>  extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
+> -		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
+> +		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode,
+> +		unsigned iomap_flags);
+>  extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
+>  		xfs_off_t count);
+>  
+> -- 
+> 2.20.1
 > 
