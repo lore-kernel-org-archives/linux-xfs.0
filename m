@@ -1,66 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:43335 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726260AbfBVTAw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Feb 2019 14:00:52 -0500
-Received: by mail-pf1-f193.google.com with SMTP id q17so1495759pfh.10
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 11:00:51 -0800 (PST)
-Date: Fri, 22 Feb 2019 11:00:48 -0800
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [RFC PATCH 0/6] Allow setting file birth time with utimensat()
-Message-ID: <20190222190048.GA29624@vader>
-References: <cover.1550136164.git.osandov@fb.com>
- <20190214220626.GV14116@dastard>
- <20190214231429.GE9819@vader>
- <20190215001657.GY14116@dastard>
- <20190215065947.GG9819@vader>
- <72A04438-5991-4A60-8AAB-021A41DE6711@dilger.ca>
- <20190218221820.GF14116@dastard>
+Received: from tmailer.gwdg.de ([134.76.10.23]:41632 "EHLO tmailer.gwdg.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726109AbfBVTzk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Feb 2019 14:55:40 -0500
+Date: Fri, 22 Feb 2019 20:55:37 +0100
+From: Andre Noll <maan@tuebingen.mpg.de>
+Subject: Re: [PATCH 1/4] xfs_restore: refactor open-coded file creation code
+Message-ID: <20190222195537.GG15048@tuebingen.mpg.de>
+References: <155085403848.5141.1866278990901950186.stgit@magnolia>
+ <155085404462.5141.11851529133557195388.stgit@magnolia>
+ <20190222192053.GF15048@tuebingen.mpg.de>
+ <20190222192836.GB21626@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="udcq9yAoWb9A4FsZ"
 Content-Disposition: inline
-In-Reply-To: <20190218221820.GF14116@dastard>
+In-Reply-To: <20190222192836.GB21626@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, kernel-team@fb.com, Linux API <linux-api@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Steve French <sfrench@samba.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Feb 19, 2019 at 09:18:20AM +1100, Dave Chinner wrote:
-> On Sat, Feb 16, 2019 at 06:57:45PM -0700, Andreas Dilger wrote:
-> > While it may be a bit of a stretch to call this "forensic evidence", making
-> 
-> We do forensic analysis of corrupt filesystems looking for evidence
-> of what went wrong, not just looking for evidence of what happened
-> on systems that have been broken into.
-> 
-> > it hard to change from except via total root compromise by a skilled hacker
-> > is very useful.
-> 
-> *nod*.
-> 
-> > If this were to go in (which I'm not in favour of), then there would need to
-> > be a CONFIG and/or runtime knob to turn it off (or better to only turn it on),
-> > similar to how FIPS and other security options can only go in one direction.
-> 
-> The problem here is that "inode birth time" is being conflated with
-> "user document creation time". These two things are very different.
-> 
-> i.e. One is filesystem internal information and is not related to
-> when the original copy of the data in the file was created, the
-> other is user specified metadata that is related to the file data
-> contents and needs to travel with the data, not the filesystem.
-> 
-> IMO, trying to make one on-disk field hold two different types of
-> information defeats one or the other purpose, and nobody knows which
-> one the field stores for any given file.
-> 
-> I'd suggest that "authored date" should be a generic system xattr so
-> most filesystems support it, not just those that have a birth time
-> field on disk. Sure, modify it through utimesat() and expose it
-> through statx() (as authored time, not birth time), but store it a
-> system xattr rather than an internal filesystem metadata field that
-> requires was never intended to be user modifiable.
 
-It seems that this is the general consensus, so I'll look into
-implementing this functionality as an xattr.
+--udcq9yAoWb9A4FsZ
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, Feb 22, 11:28, Darrick J. Wong wrote
+> > > +_("attempt to reserve %lld bytes for %s using %s failed: %s (%d)\n"),
+> > > +				size, pathname, "XFS_IOC_RESVSP64",
+> > > +				strerror(errno), errno);
+> >=20
+> > The "XFS_IOC_RESVSP64" string literal can be included in the format str=
+ing.
+>=20
+> I was trying not to force an update of the i18n message catalogs.
+
+Point.
+
+> > > +	if (ret =3D=3D 0)
+> > > +		goto done;
+> > > +
+> > > +done:
+> >=20
+> > LOL
+>=20
+> Yes, it's silly, but gcc will complain if the label doesn't get
+> used, which it won't if you apply the rest of the series and build
+> xfsdump on a system that (somehow) doesn't know about fallocate.
+
+True. It does trigger a WTF event in wetware though, at least if you
+read the patch without context of 4/4.
+
+Anyway, thanks for the explanations
+Andre
+--=20
+Max Planck Institute for Developmental Biology
+Max-Planck-Ring 5, 72076 T=C3=BCbingen, Germany. Phone: (+49) 7071 601 829
+http://people.tuebingen.mpg.de/maan/
+
+--udcq9yAoWb9A4FsZ
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQSHtF/cbZGyylvqq1Ra2jVAMQCTDwUCXHBTtgAKCRBa2jVAMQCT
+Dy1pAJ42H/Nxl/e6MXDiXjkhmXRSW78GngCfS1P39PL7LJ35YSwYL+G4JL1SVu4=
+=2M0C
+-----END PGP SIGNATURE-----
+
+--udcq9yAoWb9A4FsZ--
