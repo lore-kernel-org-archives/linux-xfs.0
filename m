@@ -1,66 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:44737 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:44800 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726131AbfBVORA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Feb 2019 09:17:00 -0500
-Date: Fri, 22 Feb 2019 15:16:58 +0100
+        id S1725942AbfBVOU7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Feb 2019 09:20:59 -0500
+Date: Fri, 22 Feb 2019 15:20:58 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/8] xfs: don't use delalloc extents for COW on files
- with extsize hints
-Message-ID: <20190222141658.GA2484@lst.de>
-References: <20190218091827.12619-1-hch@lst.de> <20190218091827.12619-4-hch@lst.de> <20190221175817.GA51494@bfoster>
+Subject: Re: [PATCH 5/8] xfs: merge COW handling into
+ xfs_file_iomap_begin_delay
+Message-ID: <20190222142058.GB2484@lst.de>
+References: <20190218091827.12619-1-hch@lst.de> <20190218091827.12619-6-hch@lst.de> <20190221175903.GB51494@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190221175817.GA51494@bfoster>
+In-Reply-To: <20190221175903.GB51494@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Thu, Feb 21, 2019 at 12:58:17PM -0500, Brian Foster wrote:
-> > +		/*
-> > +		 * For buffered writes we need to report the address of the
-> > +		 * previous block (if there was any) so that the higher level
-> > +		 * write code can perform read-modify-write operations.  For
-> > +		 * direct I/O code, which must be block aligned we need to
-> > +		 * report the newly allocated address.
+On Thu, Feb 21, 2019 at 12:59:03PM -0500, Brian Foster wrote:
+> On Mon, Feb 18, 2019 at 10:18:24AM +0100, Christoph Hellwig wrote:
+> > Besides simplifying the code a bit this allows to actually implement
+> > the behavior of using COW preallocation for non-COW data mentioned
+> > in the current comments.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> 
+> Heh, I'm somewhat amused by the fact that I sent a variant of this patch
+> two years ago (for a different purpose) and you explicitly complained
+> about the factoring. I'm glad you've finally come around. ;)
+> 
+> https://marc.info/?l=linux-xfs&m=149498124730442&w=2
+
+
+
+> 
+> >  fs/xfs/xfs_iomap.c   | 133 ++++++++++++++++++++++++++++++-------------
+> >  fs/xfs/xfs_reflink.c |  67 ----------------------
+> >  fs/xfs/xfs_reflink.h |   2 -
+> >  fs/xfs/xfs_trace.h   |   3 -
+> >  4 files changed, 94 insertions(+), 111 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > index 19a3331b4a56..c9fd1e4a1f99 100644
+> > --- a/fs/xfs/xfs_iomap.c
+> > +++ b/fs/xfs/xfs_iomap.c
+> ...
+> > @@ -568,51 +569,92 @@ xfs_file_iomap_begin_delay(
+> >  
+> >  	end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
+> >  
+> > -	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got);
+> > +	/*
+> > +	 * Search the data fork fork first to look up our source mapping.  We
+> > +	 * always need the data fork map, as we have to return it to the
+> > +	 * iomap code so that the higher level write code can read data in to
+> > +	 * perform read-modify-write cycles for unaligned writes.
+> > +	 */
+> > +	eof = !xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap);
+> >  	if (eof)
+> > -		got.br_startoff = end_fsb; /* fake hole until the end */
+> > +		imap.br_startoff = end_fsb; /* fake hole until the end */
+> > +
+> > +	/* We never need to allocate blocks for zeroing a hole. */
+> > +	if ((flags & IOMAP_ZERO) && imap.br_startoff > offset_fsb) {
+> > +		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
+> > +		goto out_unlock;
+> > +	}
+> > +
+> 
+> So does this need to account for the case of an overlapping cow block
+> over a hole in the data fork (with cached data, if that is possible)?
+> IIUC we introduce that possibility just below.
+
+Yes, it probably should, although I need to find a reproducer for that
+first. 
+
+> > +		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
+> > +		 * pages to keep the chunks of work done where somewhat
+> > +		 * symmetric with the work writeback does.  This is a completely
+> > +		 * arbitrary number pulled out of thin air.
+> > +		 *
+> > +		 * Note that the values needs to be less than 32-bits wide until
+> > +		 * the lower level functions are updated.
 > > +		 */
-> > +		if (!(flags & IOMAP_DIRECT) &&
-> > +		    orig.br_startblock != HOLESTARTBLOCK)
-> > +			imap = orig;
+> > +		count = min_t(loff_t, count, 1024 * PAGE_SIZE);
+> > +		end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
 > 
-> I find the logic here kind of confusing. The buffered write (reflink)
-> path basically expects to allocated COW blocks over an existing shared
-> extent. It thus makes no modification to the caller's imap because it
-> (read-modify-)writes into cache and writeback determines where to send
-> the I/O. Why not follow the same flow here? For example:
+> The existing code doesn't currently do this but ISTM this should apply
+> to either allocation case, not just data fork delalloc. That could be
+> something for a separate patch though.
 
-This is to optimize for the command case.  Both in direct I/O being
-actually common over extent size hints, and also over this being
-the sensible behavior while the buffered I/O behavior of returning
-the old map is somewhat odd.
+I wonder if we need to keep this cap at all, we apply it very
+inconsistently through the writeback path.
 
-I have outstanding todo items to switch extent size hint based buffered
-I/O to use delalloc reservations, and to clean up how the iomap code
-currently hacks around the lack of a clear interface for the
-read-modify-write cycles in buffered I/O, both of which would remove
-this hack above without touching the surrounding code.
-
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 2babc2cbe103..8a5353daf9ab 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -397,7 +397,8 @@ xfs_reflink_allocate_cow(
-> >  	struct xfs_inode	*ip,
-> >  	struct xfs_bmbt_irec	*imap,
-> >  	bool			*shared,
-> > -	uint			*lockmode)
-> > +	uint			*lockmode,
-> > +	unsigned		iomap_flags)
+> > @@ -659,9 +703,20 @@ xfs_file_iomap_begin_delay(
+> >  	 * them out if the write happens to fail.
+> >  	 */
+> >  	iomap->flags |= IOMAP_F_NEW;
 > 
-> I don't see why a lower level reflink mechanism needs to care about
-> direct I/O or not. IMO this should just be a 'bool convert' param.
+> This looks like it flags the mapping new if we reserve cow blocks, which
+> I don't think is quite right.
 
-My memory is a little vague, but I think Darrick preferred it this way.
+To some extent marking it as new makes a lot of sense, especially if
+allocating to a hole.  But we probably only want it for that latter
+case.
+
+> 
+> > -	trace_xfs_iomap_alloc(ip, offset, count, XFS_DATA_FORK, &got);
+> > +	trace_xfs_iomap_alloc(ip, offset, count, whichfork,
+> > +			whichfork == XFS_DATA_FORK ? &imap : &cmap);
+> >  done:
+> > -	error = xfs_bmbt_to_iomap(ip, iomap, &got, false);
+> > +	if (whichfork == XFS_COW_FORK) {
+> > +		if (imap.br_startoff > offset_fsb) {
+> > +			xfs_trim_extent(&cmap, offset_fsb,
+> > +					imap.br_startoff - offset_fsb);
+> > +			error = xfs_bmbt_to_iomap(ip, iomap, &cmap, false);
+> > +			goto out_unlock;
+> > +		}
+> 
+> Hmm, so this looks like it is in fact handling a COW blocks over a hole
+> case, pushing the COW mapping into the iomap. We never accounted for
+> that case before where we'd always just allocate to the data fork. The
+> change in behavior probably makes sense, but this really should be
+> separate from the refactoring bits to reuse the data fork delalloc code.
+> Beyond making this a bit easier to follow, it warrants its own commit
+> log description and this one makes no mention of it at all.
+
+Look at the last sentence of the commit log..
