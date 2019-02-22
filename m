@@ -1,47 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57214 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725866AbfBUSHw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Feb 2019 13:07:52 -0500
-Date: Thu, 21 Feb 2019 19:09:13 +0100
-From: David Sterba <dsterba@suse.cz>
-Subject: Re: [PATCH] t_attr_corruption: fix xattr.h include problems
-Message-ID: <20190221180913.GB9874@suse.cz>
-Reply-To: dsterba@suse.cz
-References: <20190220172005.GJ6477@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:56850 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726023AbfBVSpk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Feb 2019 13:45:40 -0500
+Date: Fri, 22 Feb 2019 10:45:25 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC PATCH] pmem: advertise page alignment for pmem devices
+ supporting fsdax
+Message-ID: <20190222184525.GA21626@magnolia>
+References: <20190222182008.GT6503@magnolia>
+ <CAPcyv4jz5wS4tZV0HrNkADpQ_-EQoxbHi7LHi8RcsTHHFdUaew@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190220172005.GJ6477@magnolia>
+In-Reply-To: <CAPcyv4jz5wS4tZV0HrNkADpQ_-EQoxbHi7LHi8RcsTHHFdUaew@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: guaneryu@gmail.com, Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Ross Zwisler <zwisler@kernel.org>, Vishal L Verma <vishal.l.verma@intel.com>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Wed, Feb 20, 2019 at 09:20:05AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Feb 22, 2019 at 10:28:15AM -0800, Dan Williams wrote:
+> On Fri, Feb 22, 2019 at 10:21 AM Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
+> >
+> > Hi all!
+> >
+> > Uh, we have an internal customer <cough> who's been trying out MAP_SYNC
+> > on pmem, and they've observed that one has to do a fair amount of
+> > legwork (in the form of mkfs.xfs parameters) to get the kernel to set up
+> > 2M PMD mappings.  They (of course) want to mmap hundreds of GB of pmem,
+> > so the PMD mappings are much more efficient.
+> >
+> > I started poking around w.r.t. what mkfs.xfs was doing and realized that
+> > if the fsdax pmem device advertised iomin/ioopt of 2MB, then mkfs will
+> > set up all the parameters automatically.  Below is my ham-handed attempt
+> > to teach the kernel to do this.
+> >
+> > Comments, flames, "WTF is this guy smoking?" are all welcome. :)
+> >
+> > --D
+> >
+> > ---
+> > Configure pmem devices to advertise the default page alignment when said
+> > block device supports fsdax.  Certain filesystems use these iomin/ioopt
+> > hints to try to create aligned file extents, which makes it much easier
+> > for mmaps to take advantage of huge page table entries.
+> >
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  drivers/nvdimm/pmem.c |    5 ++++-
+> >  1 file changed, 4 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+> > index bc2f700feef8..3eeb9dd117d5 100644
+> > --- a/drivers/nvdimm/pmem.c
+> > +++ b/drivers/nvdimm/pmem.c
+> > @@ -441,8 +441,11 @@ static int pmem_attach_disk(struct device *dev,
+> >         blk_queue_logical_block_size(q, pmem_sector_size(ndns));
+> >         blk_queue_max_hw_sectors(q, UINT_MAX);
+> >         blk_queue_flag_set(QUEUE_FLAG_NONROT, q);
+> > -       if (pmem->pfn_flags & PFN_MAP)
+> > +       if (pmem->pfn_flags & PFN_MAP) {
+> >                 blk_queue_flag_set(QUEUE_FLAG_DAX, q);
+> > +               blk_queue_io_min(q, PFN_DEFAULT_ALIGNMENT);
+> > +               blk_queue_io_opt(q, PFN_DEFAULT_ALIGNMENT);
 > 
-> Apparently newer versions of libattr (which haven't yet been picked up
-> by Debian or Ubuntu) don't ship xattr.h anymore, because we're supposed
-> to use the libc version in sys/xattr.h.  So do that.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  src/t_attr_corruption.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/src/t_attr_corruption.c b/src/t_attr_corruption.c
-> index 1fa5e41f..f26611f9 100644
-> --- a/src/t_attr_corruption.c
-> +++ b/src/t_attr_corruption.c
-> @@ -27,7 +27,7 @@
->  #include <string.h>
->  #include <stdint.h>
->  #include <unistd.h>
-> -#include <attr/xattr.h>
-> +#include <sys/xattr.h>
+> The device alignment might sometimes be bigger than this default.
+> Would there be any detrimental effects for filesystems if io_min and
+> io_opt were set to 1GB?
 
-Works for me, thanks
+Hmmm, that's going to be a struggle on ext4 and the xfs data device
+because we'd be preferentially skipping the 1023.8MB immediately after
+each allocation group's metadata.  It already does this now with a 2MB
+io hint, but losing 1.8MB here and there isn't so bad.
 
-Reviewed-by: David Sterba <dsterba@suse.com>
+We'd have to study it further, though; filesystems historically have
+interpreted the iomin/ioopt hints as RAID striping geometry, and I don't
+think very many people set up 1GB raid stripe units.
+
+(I doubt very many people have done 2M raid stripes either, but it seems
+to work easily where we've tried it...)
+
+> I'm thinking and xfs-realtime configuration might be able to support
+> 1GB mappings in the future.
+
+The xfs realtime device ought to be able to support 1g alignment pretty
+easily though. :)
+
+--D
