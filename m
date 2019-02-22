@@ -1,73 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:41832 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726415AbfBVS21 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Feb 2019 13:28:27 -0500
-Received: by mail-ot1-f67.google.com with SMTP id t7so2662072otk.8
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 10:28:26 -0800 (PST)
+Received: from userp2130.oracle.com ([156.151.31.86]:34532 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726298AbfBVT2s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Feb 2019 14:28:48 -0500
+Date: Fri, 22 Feb 2019 11:28:36 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/4] xfs_restore: refactor open-coded file creation code
+Message-ID: <20190222192836.GB21626@magnolia>
+References: <155085403848.5141.1866278990901950186.stgit@magnolia>
+ <155085404462.5141.11851529133557195388.stgit@magnolia>
+ <20190222192053.GF15048@tuebingen.mpg.de>
 MIME-Version: 1.0
-References: <20190222182008.GT6503@magnolia>
-In-Reply-To: <20190222182008.GT6503@magnolia>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 22 Feb 2019 10:28:15 -0800
-Message-ID: <CAPcyv4jz5wS4tZV0HrNkADpQ_-EQoxbHi7LHi8RcsTHHFdUaew@mail.gmail.com>
-Subject: Re: [RFC PATCH] pmem: advertise page alignment for pmem devices
- supporting fsdax
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190222192053.GF15048@tuebingen.mpg.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Ross Zwisler <zwisler@kernel.org>, Vishal L Verma <vishal.l.verma@intel.com>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Andre Noll <maan@tuebingen.mpg.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Feb 22, 2019 at 10:21 AM Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
->
-> Hi all!
->
-> Uh, we have an internal customer <cough> who's been trying out MAP_SYNC
-> on pmem, and they've observed that one has to do a fair amount of
-> legwork (in the form of mkfs.xfs parameters) to get the kernel to set up
-> 2M PMD mappings.  They (of course) want to mmap hundreds of GB of pmem,
-> so the PMD mappings are much more efficient.
->
-> I started poking around w.r.t. what mkfs.xfs was doing and realized that
-> if the fsdax pmem device advertised iomin/ioopt of 2MB, then mkfs will
-> set up all the parameters automatically.  Below is my ham-handed attempt
-> to teach the kernel to do this.
->
-> Comments, flames, "WTF is this guy smoking?" are all welcome. :)
->
-> --D
->
-> ---
-> Configure pmem devices to advertise the default page alignment when said
-> block device supports fsdax.  Certain filesystems use these iomin/ioopt
-> hints to try to create aligned file extents, which makes it much easier
-> for mmaps to take advantage of huge page table entries.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  drivers/nvdimm/pmem.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> index bc2f700feef8..3eeb9dd117d5 100644
-> --- a/drivers/nvdimm/pmem.c
-> +++ b/drivers/nvdimm/pmem.c
-> @@ -441,8 +441,11 @@ static int pmem_attach_disk(struct device *dev,
->         blk_queue_logical_block_size(q, pmem_sector_size(ndns));
->         blk_queue_max_hw_sectors(q, UINT_MAX);
->         blk_queue_flag_set(QUEUE_FLAG_NONROT, q);
-> -       if (pmem->pfn_flags & PFN_MAP)
-> +       if (pmem->pfn_flags & PFN_MAP) {
->                 blk_queue_flag_set(QUEUE_FLAG_DAX, q);
-> +               blk_queue_io_min(q, PFN_DEFAULT_ALIGNMENT);
-> +               blk_queue_io_opt(q, PFN_DEFAULT_ALIGNMENT);
+On Fri, Feb 22, 2019 at 08:20:53PM +0100, Andre Noll wrote:
+> On Fri, Feb 22, 08:47, Darrick J. Wong wrote
+> > +	ret = ioctl(fd, XFS_IOC_RESVSP64, &fl);
+> > +	if (ret && errno != ENOTTY)
+> > +		mlog(MLOG_VERBOSE | MLOG_NOTE,
+> > +_("attempt to reserve %lld bytes for %s using %s failed: %s (%d)\n"),
+> > +				size, pathname, "XFS_IOC_RESVSP64",
+> > +				strerror(errno), errno);
+> 
+> The "XFS_IOC_RESVSP64" string literal can be included in the format string.
 
-The device alignment might sometimes be bigger than this default.
-Would there be any detrimental effects for filesystems if io_min and
-io_opt were set to 1GB?
+I was trying not to force an update of the i18n message catalogs.
 
-I'm thinking and xfs-realtime configuration might be able to support
-1GB mappings in the future.
+> > +	if (ret == 0)
+> > +		goto done;
+> > +
+> > +done:
+> 
+> LOL
+
+Yes, it's silly, but gcc will complain if the label doesn't get
+used, which it won't if you apply the rest of the series and build
+xfsdump on a system that (somehow) doesn't know about fallocate.
+
+> > +	return fd;
+> 
+> If you really want to return success even if the ioctl() failed, this might
+> deserve a comment.
+
+That's what the old code did, hence "try" in "try to reserve space" in
+the comment describing what this function does.
+
+--D
+
+> 
+> Andre
+> -- 
+> Max Planck Institute for Developmental Biology
+> Max-Planck-Ring 5, 72076 Tübingen, Germany. Phone: (+49) 7071 601 829
+> http://people.tuebingen.mpg.de/maan/
