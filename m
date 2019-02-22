@@ -1,133 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:44800 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:44816 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725942AbfBVOU7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Feb 2019 09:20:59 -0500
-Date: Fri, 22 Feb 2019 15:20:58 +0100
+        id S1726303AbfBVOWi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Feb 2019 09:22:38 -0500
+Date: Fri, 22 Feb 2019 15:22:37 +0100
 From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH 5/8] xfs: merge COW handling into
  xfs_file_iomap_begin_delay
-Message-ID: <20190222142058.GB2484@lst.de>
-References: <20190218091827.12619-1-hch@lst.de> <20190218091827.12619-6-hch@lst.de> <20190221175903.GB51494@bfoster>
+Message-ID: <20190222142237.GC2484@lst.de>
+References: <20190218091827.12619-1-hch@lst.de> <20190218091827.12619-6-hch@lst.de> <20190221175903.GB51494@bfoster> <20190221213052.GT32253@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190221175903.GB51494@bfoster>
+In-Reply-To: <20190221213052.GT32253@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Thu, Feb 21, 2019 at 12:59:03PM -0500, Brian Foster wrote:
-> On Mon, Feb 18, 2019 at 10:18:24AM +0100, Christoph Hellwig wrote:
-> > Besides simplifying the code a bit this allows to actually implement
-> > the behavior of using COW preallocation for non-COW data mentioned
-> > in the current comments.
+On Thu, Feb 21, 2019 at 01:30:52PM -0800, Darrick J. Wong wrote:
+> > So does this need to account for the case of an overlapping cow block
+> > over a hole in the data fork (with cached data, if that is possible)?
+> > IIUC we introduce that possibility just below.
+> 
+> I think it makes sense to ignore overlapping cow blocks for zeroing a
+> hole in the data fork -- the user told us to zero part of a file that
+> didn't have nonzero contents in it, so we just leave the speculative cow
+> allocation for that block alone.
+
+For a speculative preallocation I agree.  But if we have valid data
+in there due to a cowextsize preallocation being used for data we
+should handle it properly.
+
+> > >  	iomap->flags |= IOMAP_F_NEW;
 > > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
+> > This looks like it flags the mapping new if we reserve cow blocks, which
+> > I don't think is quite right.
 > 
-> Heh, I'm somewhat amused by the fact that I sent a variant of this patch
-> two years ago (for a different purpose) and you explicitly complained
-> about the factoring. I'm glad you've finally come around. ;)
-> 
-> https://marc.info/?l=linux-xfs&m=149498124730442&w=2
+> Hmmm.  I thought it was correct -- if the write fails, we punch out the
+> pagecache and trim any delalloc blocks in the data fork.  If they user
+> tries to reread the area of the failed write we'll just read them back
+> in from disk...?
 
-
-
-> 
-> >  fs/xfs/xfs_iomap.c   | 133 ++++++++++++++++++++++++++++++-------------
-> >  fs/xfs/xfs_reflink.c |  67 ----------------------
-> >  fs/xfs/xfs_reflink.h |   2 -
-> >  fs/xfs/xfs_trace.h   |   3 -
-> >  4 files changed, 94 insertions(+), 111 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index 19a3331b4a56..c9fd1e4a1f99 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> ...
-> > @@ -568,51 +569,92 @@ xfs_file_iomap_begin_delay(
-> >  
-> >  	end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
-> >  
-> > -	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got);
-> > +	/*
-> > +	 * Search the data fork fork first to look up our source mapping.  We
-> > +	 * always need the data fork map, as we have to return it to the
-> > +	 * iomap code so that the higher level write code can read data in to
-> > +	 * perform read-modify-write cycles for unaligned writes.
-> > +	 */
-> > +	eof = !xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap);
-> >  	if (eof)
-> > -		got.br_startoff = end_fsb; /* fake hole until the end */
-> > +		imap.br_startoff = end_fsb; /* fake hole until the end */
-> > +
-> > +	/* We never need to allocate blocks for zeroing a hole. */
-> > +	if ((flags & IOMAP_ZERO) && imap.br_startoff > offset_fsb) {
-> > +		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
-> > +		goto out_unlock;
-> > +	}
-> > +
-> 
-> So does this need to account for the case of an overlapping cow block
-> over a hole in the data fork (with cached data, if that is possible)?
-> IIUC we introduce that possibility just below.
-
-Yes, it probably should, although I need to find a reproducer for that
-first. 
-
-> > +		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
-> > +		 * pages to keep the chunks of work done where somewhat
-> > +		 * symmetric with the work writeback does.  This is a completely
-> > +		 * arbitrary number pulled out of thin air.
-> > +		 *
-> > +		 * Note that the values needs to be less than 32-bits wide until
-> > +		 * the lower level functions are updated.
-> > +		 */
-> > +		count = min_t(loff_t, count, 1024 * PAGE_SIZE);
-> > +		end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
-> 
-> The existing code doesn't currently do this but ISTM this should apply
-> to either allocation case, not just data fork delalloc. That could be
-> something for a separate patch though.
-
-I wonder if we need to keep this cap at all, we apply it very
-inconsistently through the writeback path.
-
-> > @@ -659,9 +703,20 @@ xfs_file_iomap_begin_delay(
-> >  	 * them out if the write happens to fail.
-> >  	 */
-> >  	iomap->flags |= IOMAP_F_NEW;
-> 
-> This looks like it flags the mapping new if we reserve cow blocks, which
-> I don't think is quite right.
-
-To some extent marking it as new makes a lot of sense, especially if
-allocating to a hole.  But we probably only want it for that latter
-case.
-
-> 
-> > -	trace_xfs_iomap_alloc(ip, offset, count, XFS_DATA_FORK, &got);
-> > +	trace_xfs_iomap_alloc(ip, offset, count, whichfork,
-> > +			whichfork == XFS_DATA_FORK ? &imap : &cmap);
-> >  done:
-> > -	error = xfs_bmbt_to_iomap(ip, iomap, &got, false);
-> > +	if (whichfork == XFS_COW_FORK) {
-> > +		if (imap.br_startoff > offset_fsb) {
-> > +			xfs_trim_extent(&cmap, offset_fsb,
-> > +					imap.br_startoff - offset_fsb);
-> > +			error = xfs_bmbt_to_iomap(ip, iomap, &cmap, false);
-> > +			goto out_unlock;
-> > +		}
-> 
-> Hmm, so this looks like it is in fact handling a COW blocks over a hole
-> case, pushing the COW mapping into the iomap. We never accounted for
-> that case before where we'd always just allocate to the data fork. The
-> change in behavior probably makes sense, but this really should be
-> separate from the refactoring bits to reuse the data fork delalloc code.
-> Beyond making this a bit easier to follow, it warrants its own commit
-> log description and this one makes no mention of it at all.
-
-Look at the last sentence of the commit log..
+Yes, I don't think it is actively harmful, but we don't really need
+it either.
