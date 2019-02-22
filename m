@@ -1,95 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49446 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726362AbfBVON2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Feb 2019 09:13:28 -0500
-Subject: Re: [LSF/MM TOPIC] More async operations for file systems - async discard?
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <92ab41f7-35bc-0f56-056f-ed88526b8ea4@gmail.com>
-        <20190217210948.GB14116@dastard>
-        <46540876-c222-0889-ddce-44815dcaad04@gmail.com>
-        <20190220234723.GA5999@localhost.localdomain>
-        <45c27fea-6d74-2adc-fe9d-e314ce4f3672@suse.com>
-        <yq17edsil17.fsf@oracle.com> <20190222111532.4ead81dc@natsu>
-Date: Fri, 22 Feb 2019 09:12:44 -0500
-In-Reply-To: <20190222111532.4ead81dc@natsu> (Roman Mamedov's message of "Fri,
-        22 Feb 2019 11:15:32 +0500")
-Message-ID: <yq136ofj4ir.fsf@oracle.com>
+Received: from verein.lst.de ([213.95.11.211]:44737 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726131AbfBVORA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Feb 2019 09:17:00 -0500
+Date: Fri, 22 Feb 2019 15:16:58 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/8] xfs: don't use delalloc extents for COW on files
+ with extsize hints
+Message-ID: <20190222141658.GA2484@lst.de>
+References: <20190218091827.12619-1-hch@lst.de> <20190218091827.12619-4-hch@lst.de> <20190221175817.GA51494@bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190221175817.GA51494@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Roman Mamedov <rm@romanrm.net>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Mahoney <jeffm@suse.com>, Keith Busch <keith.busch@intel.com>, Ric Wheeler <ricwheeler@gmail.com>, Dave Chinner <david@fromorbit.com>, lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-block@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
+On Thu, Feb 21, 2019 at 12:58:17PM -0500, Brian Foster wrote:
+> > +		/*
+> > +		 * For buffered writes we need to report the address of the
+> > +		 * previous block (if there was any) so that the higher level
+> > +		 * write code can perform read-modify-write operations.  For
+> > +		 * direct I/O code, which must be block aligned we need to
+> > +		 * report the newly allocated address.
+> > +		 */
+> > +		if (!(flags & IOMAP_DIRECT) &&
+> > +		    orig.br_startblock != HOLESTARTBLOCK)
+> > +			imap = orig;
+> 
+> I find the logic here kind of confusing. The buffered write (reflink)
+> path basically expects to allocated COW blocks over an existing shared
+> extent. It thus makes no modification to the caller's imap because it
+> (read-modify-)writes into cache and writeback determines where to send
+> the I/O. Why not follow the same flow here? For example:
 
-Roman,
+This is to optimize for the command case.  Both in direct I/O being
+actually common over extent size hints, and also over this being
+the sensible behavior while the buffered I/O behavior of returning
+the old map is somewhat odd.
 
->> Consequently, many of the modern devices that claim to support
->> discard to make us software folks happy (or to satisfy a purchase
->> order requirements) complete the commands without doing anything at
->> all.  We're simply wasting queue slots.
->
-> Any example of such devices? Let alone "many"? Where you would issue a
-> full-device blkdiscard, but then just read back old data.
+I have outstanding todo items to switch extent size hint based buffered
+I/O to use delalloc reservations, and to clean up how the iomap code
+currently hacks around the lack of a clear interface for the
+read-modify-write cycles in buffered I/O, both of which would remove
+this hack above without touching the surrounding code.
 
-I obviously can't mention names or go into implementation details. But
-there are many drives out there that return old data. And that's
-perfectly within spec.
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index 2babc2cbe103..8a5353daf9ab 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -397,7 +397,8 @@ xfs_reflink_allocate_cow(
+> >  	struct xfs_inode	*ip,
+> >  	struct xfs_bmbt_irec	*imap,
+> >  	bool			*shared,
+> > -	uint			*lockmode)
+> > +	uint			*lockmode,
+> > +	unsigned		iomap_flags)
+> 
+> I don't see why a lower level reflink mechanism needs to care about
+> direct I/O or not. IMO this should just be a 'bool convert' param.
 
-At least some of the pain in the industry in this department can be
-attributed to us Linux folks and RAID device vendors. We all wanted
-deterministic zeroes on completion of DSM TRIM, UNMAP, or DEALLOCATE.
-The device vendors weren't happy about that and we ended up with weasel
-language in the specs. This lead to the current libata whitelist mess
-for SATA SSDs and ongoing vendor implementation confusion in SCSI and
-NVMe devices.
-
-On the Linux side the problem was that we originally used discard for
-two distinct purposes: Clearing block ranges and deallocating block
-ranges. We cleaned that up a while back and now have BLKZEROOUT and
-BLKDISCARD. Those operations get translated to different operations
-depending on the device. We also cleaned up several of the
-inconsistencies in the SCSI and NVMe specs to facilitate making this
-distinction possible in the kernel.
-
-In the meantime the SSD vendors made great strides in refining their
-flash management. To the point where pretty much all enterprise device
-vendors will ask you not to issue discards. The benefits simply do not
-outweigh the costs.
-
-If you have special workloads where write amplification is a major
-concern it may still be advantageous to do the discards and reduce WA
-and prolong drive life. However, these workloads are increasingly moving
-away from the classic LBA read/write model. Open Channel originally
-targeted this space. Right now work is underway on Zoned Namespaces and
-Key-Value command sets in NVMe.
-
-These curated application workload protocols are fundamental departures
-from the traditional way of accessing storage. And my postulate is that
-where tail latency and drive lifetime management is important, those new
-command sets offer much better bang for the buck. And they make the
-notion of discard completely moot. That's why I don't think it's going
-to be terribly important in the long term.
-
-This leaves consumer devices and enterprise devices using the
-traditional LBA I/O model.
-
-For consumer devices I still think fstrim is a good compromise. Lack of
-queuing for DSM hurt us for a long time. And when it was finally added
-to the ATA command set, many device vendors got their implementations
-wrong. So it sucked for a lot longer than it should have. And of course
-FTL implementations differ.
-
-For enterprise devices we're still in the situation where vendors
-generally prefer for us not to use discard. I would love for the
-DEALLOCATE/WRITE ZEROES mess to be sorted out in their FTLs, but I have
-fairly low confidence that it's going to happen. Case in point: Despite
-a lot of leverage and purchasing power, the cloud industry has not been
-terribly successful in compelling the drive manufacturers to make
-DEALLOCATE perform well for typical application workloads. So I'm not
-holding my breath...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+My memory is a little vague, but I think Darrick preferred it this way.
