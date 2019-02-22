@@ -1,202 +1,276 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:41679 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2437904AbfBNKBC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Feb 2019 05:01:02 -0500
-Received: by mail-pg1-f195.google.com with SMTP id m1so2804328pgq.8
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Feb 2019 02:01:01 -0800 (PST)
-From: Omar Sandoval <osandov@osandov.com>
-Subject: [RFC PATCH 2/6] fs: add AT_UTIME_BTIME for utimensat()
-Date: Thu, 14 Feb 2019 02:00:09 -0800
-Message-Id: <383aea1b93edf69d4f96a898ef4878881867d33e.1550136164.git.osandov@fb.com>
-In-Reply-To: <cover.1550136164.git.osandov@fb.com>
-References: <cover.1550136164.git.osandov@fb.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:54188 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725986AbfBVQrc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Feb 2019 11:47:32 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x1MGiAV2158986
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:31 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2qp81erevq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:30 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x1MGlP7B011316
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:25 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x1MGlOp5030474
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:25 GMT
+Subject: [PATCH 1/4] xfs_restore: refactor open-coded file creation code
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 22 Feb 2019 08:47:24 -0800
+Message-ID: <155085404462.5141.11851529133557195388.stgit@magnolia>
+In-Reply-To: <155085403848.5141.1866278990901950186.stgit@magnolia>
+References: <155085403848.5141.1866278990901950186.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
-Cc: kernel-team@fb.com, linux-api@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Omar Sandoval <osandov@fb.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that we have a btime iattr, use it to allow updating btime from
-utimensat(). We do so by adding a new AT_UTIME_BTIME flag. Iff this flag
-is given, the btime is set to times[2] (unless times is NULL, in which
-case the current time is used).
+Create a helper to unlink, recreate, and reserve space in a file so that
+we don't have two open-coded versions.  We lose the broken ALLOCSP code
+since it never worked anyway.
 
-Signed-off-by: Omar Sandoval <osandov@fb.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/utimes.c                | 86 +++++++++++++++++++++++---------------
- include/uapi/linux/fcntl.h |  2 +
- 2 files changed, 55 insertions(+), 33 deletions(-)
+ restore/dirattr.c |   97 ++++++++++++++++++-----------------------------------
+ restore/dirattr.h |    2 +
+ restore/namreg.c  |   70 +++-----------------------------------
+ 3 files changed, 41 insertions(+), 128 deletions(-)
 
-diff --git a/fs/utimes.c b/fs/utimes.c
-index bdcf2daf39c1..cb9fe77e5f91 100644
---- a/fs/utimes.c
-+++ b/fs/utimes.c
-@@ -16,7 +16,20 @@ static bool nsec_valid(long nsec)
- 	return nsec >= 0 && nsec <= 999999999;
- }
+
+diff --git a/restore/dirattr.c b/restore/dirattr.c
+index 5368664..0fb2877 100644
+--- a/restore/dirattr.c
++++ b/restore/dirattr.c
+@@ -55,6 +55,37 @@
+ #include "openutil.h"
+ #include "mmap.h"
  
--static int utimes_common(const struct path *path, struct timespec64 *times)
-+static void init_time_attr(struct iattr *newattrs, struct timespec64 *time_attr,
-+			   struct timespec64 time, unsigned int attr,
-+			   unsigned int attr_set)
++/* Create a file, try to reserve space for it, and return the fd. */
++int
++create_filled_file(
++	const char	*pathname,
++	off64_t		size)
 +{
-+	if (time.tv_nsec == UTIME_OMIT) {
-+		newattrs->ia_valid &= ~attr;
-+	} else {
-+		*time_attr = time;
-+		newattrs->ia_valid |= attr_set;
-+	}
++	struct flock64	fl = {
++		.l_len = size,
++	};
++	int		fd;
++	int		ret;
++
++	(void)unlink(pathname);
++
++	fd = open(pathname, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
++	if (fd < 0)
++		return fd;
++
++	ret = ioctl(fd, XFS_IOC_RESVSP64, &fl);
++	if (ret && errno != ENOTTY)
++		mlog(MLOG_VERBOSE | MLOG_NOTE,
++_("attempt to reserve %lld bytes for %s using %s failed: %s (%d)\n"),
++				size, pathname, "XFS_IOC_RESVSP64",
++				strerror(errno), errno);
++	if (ret == 0)
++		goto done;
++
++done:
++	return fd;
 +}
 +
-+static int utimes_common(const struct path *path, struct timespec64 *times,
-+			 bool btime)
- {
- 	int error;
- 	struct iattr newattrs;
-@@ -28,25 +41,21 @@ static int utimes_common(const struct path *path, struct timespec64 *times)
- 		goto out;
+ /* structure definitions used locally ****************************************/
  
- 	if (times && times[0].tv_nsec == UTIME_NOW &&
--		     times[1].tv_nsec == UTIME_NOW)
-+	    times[1].tv_nsec == UTIME_NOW &&
-+	    (!btime || times[2].tv_nsec == UTIME_NOW))
- 		times = NULL;
- 
- 	newattrs.ia_valid = ATTR_CTIME | ATTR_MTIME | ATTR_ATIME;
-+	if (btime)
-+		newattrs.ia_valid |= ATTR_BTIME;
- 	if (times) {
--		if (times[0].tv_nsec == UTIME_OMIT)
--			newattrs.ia_valid &= ~ATTR_ATIME;
--		else if (times[0].tv_nsec != UTIME_NOW) {
--			newattrs.ia_atime.tv_sec = times[0].tv_sec;
--			newattrs.ia_atime.tv_nsec = times[0].tv_nsec;
--			newattrs.ia_valid |= ATTR_ATIME_SET;
--		}
--
--		if (times[1].tv_nsec == UTIME_OMIT)
--			newattrs.ia_valid &= ~ATTR_MTIME;
--		else if (times[1].tv_nsec != UTIME_NOW) {
--			newattrs.ia_mtime.tv_sec = times[1].tv_sec;
--			newattrs.ia_mtime.tv_nsec = times[1].tv_nsec;
--			newattrs.ia_valid |= ATTR_MTIME_SET;
-+		init_time_attr(&newattrs, &newattrs.ia_atime, times[0],
-+			       ATTR_ATIME, ATTR_ATIME_SET);
-+		init_time_attr(&newattrs, &newattrs.ia_mtime, times[1],
-+			       ATTR_MTIME, ATTR_MTIME_SET);
-+		if (btime) {
-+			init_time_attr(&newattrs, &newattrs.ia_btime, times[2],
-+				       ATTR_BTIME, ATTR_BTIME_SET);
+ /* node handle limits
+@@ -238,13 +269,8 @@ dirattr_init(char *hkdir, bool_t resume, uint64_t dircnt)
+ 			return BOOL_FALSE;
  		}
- 		/*
- 		 * Tell setattr_prepare(), that this is an explicit time
-@@ -90,14 +99,16 @@ static int utimes_common(const struct path *path, struct timespec64 *times)
- long do_utimes(int dfd, const char __user *filename, struct timespec64 *times,
- 	       int flags)
- {
-+	bool btime = flags & AT_UTIME_BTIME;
- 	int error = -EINVAL;
- 
- 	if (times && (!nsec_valid(times[0].tv_nsec) ||
--		      !nsec_valid(times[1].tv_nsec))) {
-+		      !nsec_valid(times[1].tv_nsec) ||
-+		      (btime && !nsec_valid(times[2].tv_nsec)))) {
- 		goto out;
- 	}
- 
--	if (flags & ~AT_SYMLINK_NOFOLLOW)
-+	if (flags & ~(AT_SYMLINK_NOFOLLOW | AT_UTIME_BTIME))
- 		goto out;
- 
- 	if (filename == NULL && dfd != AT_FDCWD) {
-@@ -111,7 +122,7 @@ long do_utimes(int dfd, const char __user *filename, struct timespec64 *times,
- 		if (!f.file)
- 			goto out;
- 
--		error = utimes_common(&f.file->f_path, times);
-+		error = utimes_common(&f.file->f_path, times, btime);
- 		fdput(f);
  	} else {
- 		struct path path;
-@@ -124,7 +135,7 @@ long do_utimes(int dfd, const char __user *filename, struct timespec64 *times,
- 		if (error)
- 			goto out;
- 
--		error = utimes_common(&path, times);
-+		error = utimes_common(&path, times, btime);
- 		path_put(&path);
- 		if (retry_estale(error, lookup_flags)) {
- 			lookup_flags |= LOOKUP_REVAL;
-@@ -139,16 +150,20 @@ long do_utimes(int dfd, const char __user *filename, struct timespec64 *times,
- SYSCALL_DEFINE4(utimensat, int, dfd, const char __user *, filename,
- 		struct __kernel_timespec __user *, utimes, int, flags)
- {
--	struct timespec64 tstimes[2];
-+	struct timespec64 tstimes[3];
- 
- 	if (utimes) {
--		if ((get_timespec64(&tstimes[0], &utimes[0]) ||
--			get_timespec64(&tstimes[1], &utimes[1])))
--			return -EFAULT;
+-		/* create the dirattr file, first unlinking any older version
+-		 * laying around
+-		 */
+-		(void)unlink(dtp->dt_pathname);
+-		dtp->dt_fd = open(dtp->dt_pathname,
+-				   O_RDWR | O_CREAT | O_EXCL,
+-				   S_IRUSR | S_IWUSR);
++		dtp->dt_fd = create_filled_file(dtp->dt_pathname,
++			DIRATTR_PERS_SZ + (dircnt * sizeof(struct dirattr)));
+ 		if (dtp->dt_fd < 0) {
+ 			mlog(MLOG_NORMAL | MLOG_ERROR, _(
+ 			      "could not create directory attributes file %s: "
+@@ -253,63 +279,6 @@ dirattr_init(char *hkdir, bool_t resume, uint64_t dircnt)
+ 			      strerror(errno));
+ 			return BOOL_FALSE;
+ 		}
 -
-+		int i, n = (flags & AT_UTIME_BTIME) ? 3 : 2;
-+		bool all_omit = true;
-+
-+		for (i = 0; i < n; i++) {
-+			if (get_timespec64(&tstimes[i], &utimes[i]))
-+				return -EFAULT;
-+			if (tstimes[i].tv_nsec != UTIME_OMIT)
-+				all_omit = false;
-+		}
- 		/* Nothing to do, we must not even check the path.  */
--		if (tstimes[0].tv_nsec == UTIME_OMIT &&
--		    tstimes[1].tv_nsec == UTIME_OMIT)
-+		if (all_omit)
- 			return 0;
+-		/* reserve space for the backing store. try to use RESVSP64.
+-		 * if doesn't work, try ALLOCSP64. the former is faster, as
+-		 * it does not zero the space.
+-		 */
+-		{
+-		bool_t successpr;
+-		unsigned int ioctlcmd;
+-		int loglevel;
+-		size_t trycnt;
+-
+-		for (trycnt = 0,
+-		      successpr = BOOL_FALSE,
+-		      ioctlcmd = XFS_IOC_RESVSP64,
+-		      loglevel = MLOG_VERBOSE
+-		      ;
+-		      ! successpr && trycnt < 2
+-		      ;
+-		      trycnt++,
+-		      ioctlcmd = XFS_IOC_ALLOCSP64,
+-		      loglevel = max(MLOG_NORMAL, loglevel - 1)) {
+-			off64_t initsz;
+-			struct flock64 flock64;
+-			int rval;
+-
+-			if (! ioctlcmd) {
+-				continue;
+-			}
+-
+-			initsz = (off64_t)DIRATTR_PERS_SZ
+-				 +
+-				 ((off64_t)dircnt * sizeof(dirattr_t));
+-			flock64.l_whence = 0;
+-			flock64.l_start = 0;
+-			flock64.l_len = initsz;
+-			rval = ioctl(dtp->dt_fd, ioctlcmd, &flock64);
+-			if (rval) {
+-				if (errno != ENOTTY) {
+-					mlog(loglevel | MLOG_NOTE, _(
+-					      "attempt to reserve %lld bytes for %s "
+-					      "using %s "
+-					      "failed: %s (%d)\n"),
+-					      initsz,
+-					      dtp->dt_pathname,
+-					      ioctlcmd == XFS_IOC_RESVSP64
+-					      ?
+-					      "XFS_IOC_RESVSP64"
+-					      :
+-					      "XFS_IOC_ALLOCSP64",
+-					      strerror(errno),
+-					      errno);
+-				}
+-			} else {
+-				successpr = BOOL_TRUE;
+-			}
+-		}
+-		}
  	}
  
-@@ -242,14 +257,19 @@ COMPAT_SYSCALL_DEFINE2(utime, const char __user *, filename,
+ 	/* mmap the persistent descriptor
+diff --git a/restore/dirattr.h b/restore/dirattr.h
+index dd37a98..e81e69c 100644
+--- a/restore/dirattr.h
++++ b/restore/dirattr.h
+@@ -88,4 +88,6 @@ extern bool_t dirattr_cb_extattr(dah_t dah,
+ 				  extattrhdr_t *ahdrp,
+ 				  void *ctxp);
  
- COMPAT_SYSCALL_DEFINE4(utimensat, unsigned int, dfd, const char __user *, filename, struct old_timespec32 __user *, t, int, flags)
- {
--	struct timespec64 tv[2];
-+	struct timespec64 tv[3];
++int create_filled_file(const char *pathname, off64_t size);
++
+ #endif /* DIRATTR_H */
+diff --git a/restore/namreg.c b/restore/namreg.c
+index 89fa5ef..d0d5e89 100644
+--- a/restore/namreg.c
++++ b/restore/namreg.c
+@@ -37,6 +37,10 @@
+ #include "namreg.h"
+ #include "openutil.h"
+ #include "mmap.h"
++#include "global.h"
++#include "content.h"
++#include "content_inode.h"
++#include "dirattr.h"
  
- 	if  (t) {
--		if (get_old_timespec32(&tv[0], &t[0]) ||
--		    get_old_timespec32(&tv[1], &t[1]))
--			return -EFAULT;
+ /* structure definitions used locally ****************************************/
+ 
+@@ -153,13 +157,8 @@ namreg_init(char *hkdir, bool_t resume, uint64_t inocnt)
+ 			return BOOL_FALSE;
+ 		}
+ 	} else {
+-		/* create the namreg file, first unlinking any older version
+-		 * laying around
+-		 */
+-		(void)unlink(ntp->nt_pathname);
+-		ntp->nt_fd = open(ntp->nt_pathname,
+-				   O_RDWR | O_CREAT | O_EXCL,
+-				   S_IRUSR | S_IWUSR);
++		ntp->nt_fd = create_filled_file(ntp->nt_pathname,
++			NAMREG_PERS_SZ + (inocnt * NAMREG_AVGLEN));
+ 		if (ntp->nt_fd < 0) {
+ 			mlog(MLOG_NORMAL | MLOG_ERROR, _(
+ 			      "could not create name registry file %s: "
+@@ -168,63 +167,6 @@ namreg_init(char *hkdir, bool_t resume, uint64_t inocnt)
+ 			      strerror(errno));
+ 			return BOOL_FALSE;
+ 		}
 -
--		if (tv[0].tv_nsec == UTIME_OMIT && tv[1].tv_nsec == UTIME_OMIT)
-+		int i, n = (flags & AT_UTIME_BTIME) ? 3 : 2;
-+		bool all_omit = true;
-+
-+		for (i = 0; i < n; i++) {
-+			if (get_old_timespec32(&tv[i], &t[i]))
-+				return -EFAULT;
-+			if (tv[i].tv_nsec != UTIME_OMIT)
-+				all_omit = false;
-+		}
-+		if (all_omit)
- 			return 0;
+-		/* reserve space for the backing store. try to use RESVSP64.
+-		 * if doesn't work, try ALLOCSP64. the former is faster, as
+-		 * it does not zero the space.
+-		 */
+-		{
+-		bool_t successpr;
+-		unsigned int ioctlcmd;
+-		int loglevel;
+-		size_t trycnt;
+-
+-		for (trycnt = 0,
+-		      successpr = BOOL_FALSE,
+-		      ioctlcmd = XFS_IOC_RESVSP64,
+-		      loglevel = MLOG_VERBOSE
+-		      ;
+-		      ! successpr && trycnt < 2
+-		      ;
+-		      trycnt++,
+-		      ioctlcmd = XFS_IOC_ALLOCSP64,
+-		      loglevel = max(MLOG_NORMAL, loglevel - 1)) {
+-			off64_t initsz;
+-			struct flock64 flock64;
+-			int rval;
+-
+-			if (! ioctlcmd) {
+-				continue;
+-			}
+-
+-			initsz = (off64_t)NAMREG_PERS_SZ
+-				 +
+-				 ((off64_t)inocnt * NAMREG_AVGLEN);
+-			flock64.l_whence = 0;
+-			flock64.l_start = 0;
+-			flock64.l_len = initsz;
+-			rval = ioctl(ntp->nt_fd, ioctlcmd, &flock64);
+-			if (rval) {
+-				if (errno != ENOTTY) {
+-					mlog(loglevel | MLOG_NOTE, _(
+-					      "attempt to reserve %lld bytes for %s "
+-					      "using %s "
+-					      "failed: %s (%d)\n"),
+-					      initsz,
+-					      ntp->nt_pathname,
+-					      ioctlcmd == XFS_IOC_RESVSP64
+-					      ?
+-					      "XFS_IOC_RESVSP64"
+-					      :
+-					      "XFS_IOC_ALLOCSP64",
+-					      strerror(errno),
+-					      errno);
+-				}
+-			} else {
+-				successpr = BOOL_TRUE;
+-			}
+-		}
+-		}
  	}
- 	return do_utimes(dfd, filename, t ? tv : NULL, flags);
-diff --git a/include/uapi/linux/fcntl.h b/include/uapi/linux/fcntl.h
-index 6448cdd9a350..fc5b02439697 100644
---- a/include/uapi/linux/fcntl.h
-+++ b/include/uapi/linux/fcntl.h
-@@ -90,5 +90,7 @@
- #define AT_STATX_FORCE_SYNC	0x2000	/* - Force the attributes to be sync'd with the server */
- #define AT_STATX_DONT_SYNC	0x4000	/* - Don't sync attributes with the server */
  
-+#define AT_UTIME_BTIME		0x8000	/* Also update file creation time */
-+
- 
- #endif /* _UAPI_LINUX_FCNTL_H */
--- 
-2.20.1
+ 	/* mmap the persistent descriptor
