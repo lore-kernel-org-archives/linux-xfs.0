@@ -1,59 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:52012 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726229AbfBVQrc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Feb 2019 11:47:32 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x1MGiL6R159692
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:31 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2qpb5s071p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:31 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x1MGlVcZ010477
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:31 GMT
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x1MGlVEV016733
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:31 GMT
-Subject: [PATCH 2/4] xfs_restore: check return value
+Received: from userp2130.oracle.com ([156.151.31.86]:52222 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726246AbfBVSUQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Feb 2019 13:20:16 -0500
+Date: Fri, 22 Feb 2019 10:20:08 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 22 Feb 2019 08:47:30 -0800
-Message-ID: <155085405082.5141.12150949924461780415.stgit@magnolia>
-In-Reply-To: <155085403848.5141.1866278990901950186.stgit@magnolia>
-References: <155085403848.5141.1866278990901950186.stgit@magnolia>
+Subject: [RFC PATCH] pmem: advertise page alignment for pmem devices
+ supporting fsdax
+Message-ID: <20190222182008.GT6503@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: dan.j.williams@intel.com
+Cc: linux-nvdimm@lists.01.org, zwisler@kernel.org, vishal.l.verma@intel.com, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all!
 
-Check the return value of the unlink call when creating a new file.
+Uh, we have an internal customer <cough> who's been trying out MAP_SYNC
+on pmem, and they've observed that one has to do a fair amount of
+legwork (in the form of mkfs.xfs parameters) to get the kernel to set up
+2M PMD mappings.  They (of course) want to mmap hundreds of GB of pmem,
+so the PMD mappings are much more efficient.
+
+I started poking around w.r.t. what mkfs.xfs was doing and realized that
+if the fsdax pmem device advertised iomin/ioopt of 2MB, then mkfs will
+set up all the parameters automatically.  Below is my ham-handed attempt
+to teach the kernel to do this.
+
+Comments, flames, "WTF is this guy smoking?" are all welcome. :)
+
+--D
+
+---
+Configure pmem devices to advertise the default page alignment when said
+block device supports fsdax.  Certain filesystems use these iomin/ioopt
+hints to try to create aligned file extents, which makes it much easier
+for mmaps to take advantage of huge page table entries.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- restore/dirattr.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/nvdimm/pmem.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-
-diff --git a/restore/dirattr.c b/restore/dirattr.c
-index 0fb2877..4257a1b 100644
---- a/restore/dirattr.c
-+++ b/restore/dirattr.c
-@@ -67,7 +67,9 @@ create_filled_file(
- 	int		fd;
- 	int		ret;
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index bc2f700feef8..3eeb9dd117d5 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -441,8 +441,11 @@ static int pmem_attach_disk(struct device *dev,
+ 	blk_queue_logical_block_size(q, pmem_sector_size(ndns));
+ 	blk_queue_max_hw_sectors(q, UINT_MAX);
+ 	blk_queue_flag_set(QUEUE_FLAG_NONROT, q);
+-	if (pmem->pfn_flags & PFN_MAP)
++	if (pmem->pfn_flags & PFN_MAP) {
+ 		blk_queue_flag_set(QUEUE_FLAG_DAX, q);
++		blk_queue_io_min(q, PFN_DEFAULT_ALIGNMENT);
++		blk_queue_io_opt(q, PFN_DEFAULT_ALIGNMENT);
++	}
+ 	q->queuedata = pmem;
  
--	(void)unlink(pathname);
-+	ret = unlink(pathname);
-+	if (ret && errno != ENOENT)
-+		return ret;
- 
- 	fd = open(pathname, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
- 	if (fd < 0)
+ 	disk = alloc_disk_node(0, nid);
