@@ -1,63 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:34532 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726298AbfBVT2s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Feb 2019 14:28:48 -0500
-Date: Fri, 22 Feb 2019 11:28:36 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/4] xfs_restore: refactor open-coded file creation code
-Message-ID: <20190222192836.GB21626@magnolia>
-References: <155085403848.5141.1866278990901950186.stgit@magnolia>
- <155085404462.5141.11851529133557195388.stgit@magnolia>
- <20190222192053.GF15048@tuebingen.mpg.de>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:36908 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725811AbfBVXLp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Feb 2019 18:11:45 -0500
+Date: Sat, 23 Feb 2019 10:11:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH] pmem: advertise page alignment for pmem devices
+ supporting fsdax
+Message-ID: <20190222231136.GC23020@dastard>
+References: <20190222182008.GT6503@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190222192053.GF15048@tuebingen.mpg.de>
+In-Reply-To: <20190222182008.GT6503@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andre Noll <maan@tuebingen.mpg.de>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: dan.j.williams@intel.com, linux-nvdimm@lists.01.org, zwisler@kernel.org, vishal.l.verma@intel.com, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Fri, Feb 22, 2019 at 08:20:53PM +0100, Andre Noll wrote:
-> On Fri, Feb 22, 08:47, Darrick J. Wong wrote
-> > +	ret = ioctl(fd, XFS_IOC_RESVSP64, &fl);
-> > +	if (ret && errno != ENOTTY)
-> > +		mlog(MLOG_VERBOSE | MLOG_NOTE,
-> > +_("attempt to reserve %lld bytes for %s using %s failed: %s (%d)\n"),
-> > +				size, pathname, "XFS_IOC_RESVSP64",
-> > +				strerror(errno), errno);
+On Fri, Feb 22, 2019 at 10:20:08AM -0800, Darrick J. Wong wrote:
+> Hi all!
 > 
-> The "XFS_IOC_RESVSP64" string literal can be included in the format string.
-
-I was trying not to force an update of the i18n message catalogs.
-
-> > +	if (ret == 0)
-> > +		goto done;
-> > +
-> > +done:
+> Uh, we have an internal customer <cough> who's been trying out MAP_SYNC
+> on pmem, and they've observed that one has to do a fair amount of
+> legwork (in the form of mkfs.xfs parameters) to get the kernel to set up
+> 2M PMD mappings.  They (of course) want to mmap hundreds of GB of pmem,
+> so the PMD mappings are much more efficient.
 > 
-> LOL
+> I started poking around w.r.t. what mkfs.xfs was doing and realized that
+> if the fsdax pmem device advertised iomin/ioopt of 2MB, then mkfs will
+> set up all the parameters automatically.  Below is my ham-handed attempt
+> to teach the kernel to do this.
 
-Yes, it's silly, but gcc will complain if the label doesn't get
-used, which it won't if you apply the rest of the series and build
-xfsdump on a system that (somehow) doesn't know about fallocate.
+What's the before and after mkfs output?
 
-> > +	return fd;
-> 
-> If you really want to return success even if the ioctl() failed, this might
-> deserve a comment.
+(need to see the context that this "fixes" before I comment)
 
-That's what the old code did, hence "try" in "try to reserve space" in
-the comment describing what this function does.
+Cheers,
 
---D
-
-> 
-> Andre
-> -- 
-> Max Planck Institute for Developmental Biology
-> Max-Planck-Ring 5, 72076 Tübingen, Germany. Phone: (+49) 7071 601 829
-> http://people.tuebingen.mpg.de/maan/
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
