@@ -1,139 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50722 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:47872 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725936AbfBYRno (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Feb 2019 12:43:44 -0500
-Date: Mon, 25 Feb 2019 09:43:38 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: don't pass iomap flags to
- xfs_reflink_allocate_cow
-Message-ID: <20190225174338.GE21626@magnolia>
-References: <155104025871.24373.7462613353398620970.stgit@magnolia>
- <20190225125501.GA2916@bfoster>
- <20190225165936.GX6503@magnolia>
- <20190225171854.GA4690@bfoster>
+        with ESMTP id S1725936AbfBYSJX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Feb 2019 13:09:23 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x1PI9LB2142759
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Feb 2019 18:09:21 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2qtwktys5m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Feb 2019 18:09:21 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x1PI9FCD017339
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Feb 2019 18:09:15 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x1PI9FHl030151
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Feb 2019 18:09:15 GMT
+Subject: Re: [PATCH 2/2] xfs: fix backwards endian conversion in scrub
+References: <155111649548.15126.8995811550165658297.stgit@magnolia>
+ <155111650186.15126.5896442701967175896.stgit@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <94dc02ba-ba62-012c-40b6-afb5d1bb201d@oracle.com>
+Date: Mon, 25 Feb 2019 11:09:14 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190225171854.GA4690@bfoster>
+In-Reply-To: <155111650186.15126.5896442701967175896.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Feb 25, 2019 at 12:18:54PM -0500, Brian Foster wrote:
-> On Mon, Feb 25, 2019 at 08:59:36AM -0800, Darrick J. Wong wrote:
-> > On Mon, Feb 25, 2019 at 07:55:02AM -0500, Brian Foster wrote:
-> > > On Sun, Feb 24, 2019 at 12:30:58PM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Don't pass raw iomap flags to xfs_reflink_allocate_cow; signal our
-> > > > intention with a boolean argument.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  fs/xfs/xfs_iomap.c   |    6 +++---
-> > > >  fs/xfs/xfs_reflink.c |    4 ++--
-> > > >  fs/xfs/xfs_reflink.h |    2 +-
-> > > >  3 files changed, 6 insertions(+), 6 deletions(-)
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > > > index 01210eae8bf3..a376fb2d4b94 100644
-> > > > --- a/fs/xfs/xfs_iomap.c
-> > > > +++ b/fs/xfs/xfs_iomap.c
-> > > > @@ -983,6 +983,7 @@ xfs_file_iomap_begin(
-> > > >  	 */
-> > > >  	if (xfs_is_cow_inode(ip)) {
-> > > >  		struct xfs_bmbt_irec	orig = imap;
-> > > > +		bool			convert_now = (flags & IOMAP_DIRECT);
-> > > >  
-> > > >  		/* if zeroing doesn't need COW allocation, then we are done. */
-> > > >  		if ((flags & IOMAP_ZERO) &&
-> > > > @@ -991,7 +992,7 @@ xfs_file_iomap_begin(
-> > > >  
-> > > >  		/* may drop and re-acquire the ilock */
-> > > >  		error = xfs_reflink_allocate_cow(ip, &imap, &shared, &lockmode,
-> > > > -						 flags);
-> > > > +				convert_now);
-> > > >  		if (error)
-> > > >  			goto out_unlock;
-> > > >  
-> > > > @@ -1002,8 +1003,7 @@ xfs_file_iomap_begin(
-> > > >  		 * direct I/O code, which must be block aligned we need to
-> > > >  		 * report the newly allocated address.
-> > > >  		 */
-> > > > -		if (!(flags & IOMAP_DIRECT) &&
-> > > > -		    orig.br_startblock != HOLESTARTBLOCK)
-> > > > +		if (!convert_now && orig.br_startblock != HOLESTARTBLOCK)
-> > > 
-> > > FWIW, I thought the original dio check made sense here (in the iomap
-> > > callback), whereas the flags parameter to the external function seemed
-> > > more of a layering hack. Looks fine, anyways:
-> > 
-> > Yeah, I went back and forth about this 'convert_now'.  The flag is
-> > trying to convey that we need to return the disk location of where we
-> > want the write to land.
-> > 
-> > bool		need_real_write_location = (flags & IOMAP_DIRECT);
-> > 
-> > But that's a long name.  "need_write_map", perhaps?
-> > 
+On 2/25/19 10:41 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> What I mean to say is that (IMO) the existing IOMAP_DIRECT checks seemed
-> fine as long as we changed the param name. FWIW, if we wanted to factor
-> it out to a bool I'd personally just call it 'direct_io' or 'dio' or
-> something in xfs_file_iomap_begin() (and leave it as 'convert' or
-> whatever in the reflink func), but I'm fine with it as is too.
-
-<nod> I'll change 'convert_now' -> 'directio' in this function.  The
-reflink function will retain the 'convert_now' name.
-
---D
-
-> Brian
+> Fix a backwards endian conversion of a constant.
 > 
-> > --D
-> > 
-> > > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > > 
-> > > >  			imap = orig;
-> > > >  
-> > > >  		end_fsb = imap.br_startoff + imap.br_blockcount;
-> > > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > > > index e2d9179bd50d..d42e3ef9050e 100644
-> > > > --- a/fs/xfs/xfs_reflink.c
-> > > > +++ b/fs/xfs/xfs_reflink.c
-> > > > @@ -361,7 +361,7 @@ xfs_reflink_allocate_cow(
-> > > >  	struct xfs_bmbt_irec	*imap,
-> > > >  	bool			*shared,
-> > > >  	uint			*lockmode,
-> > > > -	unsigned		iomap_flags)
-> > > > +	bool			convert_now)
-> > > >  {
-> > > >  	struct xfs_mount	*mp = ip->i_mount;
-> > > >  	xfs_fileoff_t		offset_fsb = imap->br_startoff;
-> > > > @@ -444,7 +444,7 @@ xfs_reflink_allocate_cow(
-> > > >  	 * to initiate a disk write.  For direct I/O we are going to write the
-> > > >  	 * data and need the conversion, but for buffered writes we're done.
-> > > >  	 */
-> > > > -	if (!(iomap_flags & IOMAP_DIRECT) || imap->br_state == XFS_EXT_NORM)
-> > > > +	if (!convert_now || imap->br_state == XFS_EXT_NORM)
-> > > >  		return 0;
-> > > >  	trace_xfs_reflink_convert_cow(ip, imap);
-> > > >  	return xfs_reflink_convert_cow_locked(ip, offset_fsb, count_fsb);
-> > > > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> > > > index 2a3052fbe23e..28a43b7f581d 100644
-> > > > --- a/fs/xfs/xfs_reflink.h
-> > > > +++ b/fs/xfs/xfs_reflink.h
-> > > > @@ -27,7 +27,7 @@ bool xfs_inode_need_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
-> > > >  
-> > > >  extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
-> > > >  		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode,
-> > > > -		unsigned iomap_flags);
-> > > > +		bool convert_now);
-> > > >  extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
-> > > >  		xfs_off_t count);
-> > > >  
-> > > > 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>   fs/xfs/scrub/agheader.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+> index 9d4e8293d37e..ddf06bfaa29d 100644
+> --- a/fs/xfs/scrub/agheader.c
+> +++ b/fs/xfs/scrub/agheader.c
+> @@ -399,7 +399,7 @@ xchk_agf_xref_cntbt(
+>   	if (!xchk_should_check_xref(sc, &error, &sc->sa.cnt_cur))
+>   		return;
+>   	if (!have) {
+> -		if (agf->agf_freeblks != be32_to_cpu(0))
+> +		if (agf->agf_freeblks != cpu_to_be32(0))
+>   			xchk_block_xref_set_corrupt(sc, sc->sa.agf_bp);
+>   		return;
+>   	}
+> 
+
+Good catch.  I suppose there's not as much need to do the conversion if 
+the value is 0?  But I think the call helps to make clear that the value 
+is supposed to be in big endian.
+
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
