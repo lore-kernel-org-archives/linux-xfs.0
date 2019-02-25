@@ -1,28 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from a9-31.smtp-out.amazonses.com ([54.240.9.31]:37470 "EHLO
-        a9-31.smtp-out.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726333AbfBZPU1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Feb 2019 10:20:27 -0500
-Date: Tue, 26 Feb 2019 15:20:26 +0000
-From: Christopher Lameter <cl@linux.com>
-Subject: Re: [PATCH] xfs: allocate sector sized IO buffer via
- page_frag_alloc
-In-Reply-To: <5ad2ef83-8b3a-0a15-d72e-72652b807aad@suse.cz>
-Message-ID: <010001692a648c57-4215863f-7d66-4086-90ba-2c0832117e3c-000000@email.amazonses.com>
-References: <20190225040904.5557-1-ming.lei@redhat.com> <20190225043648.GE23020@dastard> <5ad2ef83-8b3a-0a15-d72e-72652b807aad@suse.cz>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:42637 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727421AbfBYXLB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Feb 2019 18:11:01 -0500
+Date: Tue, 26 Feb 2019 10:10:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS root filesystem corruption after selinux-policy-targeted
+ update
+Message-ID: <20190225231057.GH23020@dastard>
+References: <CAJCQCtRODsGw85CdJRD7EF9U2vx7EwFkaFQCtC1mPwckUkUBNw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJCQCtRODsGw85CdJRD7EF9U2vx7EwFkaFQCtC1mPwckUkUBNw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: Dave Chinner <david@fromorbit.com>, Ming Lei <ming.lei@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, linux-block@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: xfs list <linux-xfs@vger.kernel.org>
 
-On Mon, 25 Feb 2019, Vlastimil Babka wrote:
+On Mon, Feb 25, 2019 at 03:16:40PM -0700, Chris Murphy wrote:
+> https://bugzilla.redhat.com/show_bug.cgi?id=1679697
+> 
+> I'm not sure what the call trace is saying. User has been requested to
+> run xfs_repair -n to see if it's really corrupt and maybe get more
+> information in what manner it's corrupted.
 
-> What about kmem_cache_create() with align parameter? That *should* be
-> guaranteed regardless of whatever debugging is enabled - if not, I would
-> consider it a bug.
+A free space tree is corrupted. What caused it is unknown, and
+without a reproducer we are unlikely to be able to find it.
+xfs_repair is needed to rebuild the free space trees and hence fix
+the corruption.
 
-It definitely guarantees that. What would be the point of the alignment
-parameter otherwise?
+> I don't think it's
+> selinux-policy related at all,
+
+It's not. Might be xattr related (because relabelling manipulates
+xattrs), but there's really nothing to go on at this point.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
