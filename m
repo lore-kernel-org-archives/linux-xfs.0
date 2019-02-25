@@ -1,118 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:46910 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729128AbfB0Dmf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Feb 2019 22:42:35 -0500
-Received: by mail-ot1-f68.google.com with SMTP id c18so13123198otl.13
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Feb 2019 19:42:34 -0800 (PST)
-MIME-Version: 1.0
-References: <CALe3CaAcu02u4GcFefDs5PGHuGNuCz2zR4oxsAwcbBZjwah-_A@mail.gmail.com>
-In-Reply-To: <CALe3CaAcu02u4GcFefDs5PGHuGNuCz2zR4oxsAwcbBZjwah-_A@mail.gmail.com>
-From: Su Hua <suhua.tanke@gmail.com>
-Date: Wed, 27 Feb 2019 11:41:54 +0800
-Message-ID: <CALe3CaA7r5G4Gs58u--uxOExqaHWZS03NB8+GUyzP+ZZqQKwJA@mail.gmail.com>
-Subject: Re: Umount D status issue after unplugging the disk
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Received: from mx1.redhat.com ([209.132.183.28]:45836 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726199AbfBYEJQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 24 Feb 2019 23:09:16 -0500
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH] xfs: allocate sector sized IO buffer via page_frag_alloc
+Date: Mon, 25 Feb 2019 12:09:04 +0800
+Message-Id: <20190225040904.5557-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: cmaiolino@redhat.com
-Cc: linux-xfs@vger.kernel.org, Su Hua <suhua.tanke@gmail.com>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, linux-block@vger.kernel.org
 
-Thank you for your tips, I will try it down.
+XFS uses kmalloc() to allocate sector sized IO buffer.
 
-regards
+Turns out buffer allocated via kmalloc(sector sized) can't
+be guaranteed to be 512 byte aligned, and actually slab only provides
+ARCH_KMALLOC_MINALIGN alignment, even though it is observed
+that the sector size allocation is often 512 byte aligned. When
+KASAN or other memory debug options are enabled, the allocated
+buffer becomes not aliged with 512 byte any more.
 
+This unalgined IO buffer causes at least two issues:
 
-Su Hua <suhua.tanke@gmail.com> =E4=BA=8E2019=E5=B9=B42=E6=9C=8821=E6=97=A5=
-=E5=91=A8=E5=9B=9B =E4=B8=8A=E5=8D=8810:54=E5=86=99=E9=81=93=EF=BC=9A
->
-> Hi Carlos
-> I am using the kernel version 4.4.163. There is a problem that umount is =
-in the D state after the disk is unplugged. This problem was solved after v=
-ersion 4.7. Now that we have not upgraded the kernel version, I want to try=
- backport on this 4.4.163 first. I added these two patches separately. But =
-there are still problems, can you still recall where i need to change?
-> patch=EF=BC=9A
-> e6b3bb78962e6 ("xfs: add "fail at unmount" error handling configuration")
-> 9356413  Release buffer locks in case of IO error
->
-> This is the information I used to communicate with Brian.
-> https://www.spinics.net/lists/linux-xfs/msg24740.html
->
-> problem=EF=BC=9A
-> ...
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> Feb 20 18:07:56 node-1 kernel: XFS (sdc): xfs_imap_to_bp: xfs_trans_read_=
-buf() returned error -5.
-> ...
->
-> This is where I modified according to the second patch.
-> 440     /*
-> 441      * Someone else is already flushing the inode.  Nothing we can do
-> 442      * here but wait for the flush to finish and remove the item from
-> 443      * the AIL.
-> 444      */
-> 445     if (!xfs_iflock_nowait(ip)) {
-> 446
-> 447             if (lip->li_mountp->m_flags & XFS_MOUNT_UNMOUNTING) {
-> 448                     int error;
-> 449                     struct xfs_dinode *dip;
-> 450
-> 451                     error =3D xfs_imap_to_bp(ip->i_mount, NULL, &ip->=
-i_imap, &dip,
-> 452                                     &bp, XBF_TRYLOCK, 0);
-> 453                     if (error) {
-> 454                             rval =3D XFS_ITEM_FLUSHING;
-> 455                             goto out_unlock;
-> 456                     }
-> 457
-> 458                     if (!(bp->b_flags & XBF_WRITE_FAIL)) {
-> 459                             rval =3D XFS_ITEM_FLUSHING;
-> 460                             xfs_buf_relse(bp);
-> 461                             goto out_unlock;
-> 462                     }
-> 463
-> 464                     if (!xfs_buf_delwri_queue(bp, buffer_list))
-> 465                             rval =3D XFS_ITEM_FLUSHING;
-> 466
-> 467                     xfs_buf_relse(bp);
-> 468             } else
-> 469                     rval =3D XFS_ITEM_FLUSHING;
-> 470         goto out_unlock;
-> 471     }
->
-> regards
-> su
->
->
+1) some storage controller requires IO buffer to be 512 byte aligned,
+and data corruption is observed
+
+2) loop/dio requires the IO buffer to be logical block size aligned,
+and loop's default logcial block size is 512 byte, then one xfs image
+can't be mounted via loop/dio any more.
+
+Use page_frag_alloc() to allocate the sector sized buffer, then the
+above issue can be fixed because offset_in_page of allocated buffer
+is always sector aligned.
+
+Not see any regression with this patch on xfstests.
+
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+Cc: Aaron Lu <aaron.lu@intel.com>
+Cc: Christopher Lameter <cl@linux.com>
+Cc: Linux FS Devel <linux-fsdevel@vger.kernel.org>
+Cc: linux-mm@kvack.org
+Cc: linux-block@vger.kernel.org
+Link: https://marc.info/?t=153734857500004&r=1&w=2
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ fs/xfs/xfs_buf.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 4f5f2ff3f70f..92b8cdf5e51c 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -340,12 +340,27 @@ xfs_buf_free(
+ 			__free_page(page);
+ 		}
+ 	} else if (bp->b_flags & _XBF_KMEM)
+-		kmem_free(bp->b_addr);
++		page_frag_free(bp->b_addr);
+ 	_xfs_buf_free_pages(bp);
+ 	xfs_buf_free_maps(bp);
+ 	kmem_zone_free(xfs_buf_zone, bp);
+ }
+ 
++static DEFINE_PER_CPU(struct page_frag_cache, xfs_frag_cache);
++
++static void *xfs_alloc_frag(int size)
++{
++	struct page_frag_cache *nc;
++	void *data;
++
++	preempt_disable();
++	nc = this_cpu_ptr(&xfs_frag_cache);
++	data = page_frag_alloc(nc, size, GFP_ATOMIC);
++	preempt_enable();
++
++	return data;
++}
++
+ /*
+  * Allocates all the pages for buffer in question and builds it's page list.
+  */
+@@ -368,7 +383,7 @@ xfs_buf_allocate_memory(
+ 	 */
+ 	size = BBTOB(bp->b_length);
+ 	if (size < PAGE_SIZE) {
+-		bp->b_addr = kmem_alloc(size, KM_NOFS);
++		bp->b_addr = xfs_alloc_frag(size);
+ 		if (!bp->b_addr) {
+ 			/* low memory - use alloc_page loop instead */
+ 			goto use_alloc_page;
+@@ -377,7 +392,7 @@ xfs_buf_allocate_memory(
+ 		if (((unsigned long)(bp->b_addr + size - 1) & PAGE_MASK) !=
+ 		    ((unsigned long)bp->b_addr & PAGE_MASK)) {
+ 			/* b_addr spans two pages - use alloc_page instead */
+-			kmem_free(bp->b_addr);
++			page_frag_free(bp->b_addr);
+ 			bp->b_addr = NULL;
+ 			goto use_alloc_page;
+ 		}
+-- 
+2.9.5
