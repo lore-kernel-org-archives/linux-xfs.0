@@ -1,117 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52140 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725943AbfBUKRB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Feb 2019 05:17:01 -0500
-Date: Thu, 21 Feb 2019 18:16:19 +0800
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V15 14/18] block: enable multipage bvecs
-Message-ID: <20190221101618.GB12448@ming.t460p>
-References: <20190215111324.30129-1-ming.lei@redhat.com>
- <20190215111324.30129-15-ming.lei@redhat.com>
- <CGME20190221084301eucas1p11e8841a62b4b1da3cccca661b6f4c29d@eucas1p1.samsung.com>
- <6c9ae4de-c56f-a2b3-2542-da7d8b95601d@samsung.com>
- <20190221095733.GA12448@ming.t460p>
- <ba39138d-d65b-335d-d709-b95dbde1fd5c@samsung.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:60606 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725936AbfBYRxl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Feb 2019 12:53:41 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x1PHnCHp130968
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Feb 2019 17:53:40 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2qtxtrfk46-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Feb 2019 17:53:40 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x1PHrdSG012946
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Feb 2019 17:53:39 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x1PHrdI0007291
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Feb 2019 17:53:39 GMT
+Subject: Re: [PATCH 1/2] xfs: fix uninitialized error variables
+References: <155111649548.15126.8995811550165658297.stgit@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <ea7f24d1-cfb7-c6cb-7e96-6b3e297299ee@oracle.com>
+Date: Mon, 25 Feb 2019 10:53:38 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ba39138d-d65b-335d-d709-b95dbde1fd5c@samsung.com>
+In-Reply-To: <155111649548.15126.8995811550165658297.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Marek Szyprowski <m.szyprowski@samsung.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ulf Hansson <ulf.hansson@linaro.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, 'Linux Samsung SOC' <linux-samsung-soc@vger.kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, Adrian Hunter <adrian.hunter@intel.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Feb 21, 2019 at 11:08:19AM +0100, Marek Szyprowski wrote:
-> Hi Ming,
+On 2/25/19 10:41 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> On 2019-02-21 10:57, Ming Lei wrote:
-> > On Thu, Feb 21, 2019 at 09:42:59AM +0100, Marek Szyprowski wrote:
-> >> On 2019-02-15 12:13, Ming Lei wrote:
-> >>> This patch pulls the trigger for multi-page bvecs.
-> >>>
-> >>> Reviewed-by: Omar Sandoval <osandov@fb.com>
-> >>> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> >> Since Linux next-20190218 I've observed problems with block layer on one
-> >> of my test devices (Odroid U3 with EXT4 rootfs on SD card). Bisecting
-> >> this issue led me to this change. This is also the first linux-next
-> >> release with this change merged. The issue is fully reproducible and can
-> >> be observed in the following kernel log:
-> >>
-> >> sdhci: Secure Digital Host Controller Interface driver
-> >> sdhci: Copyright(c) Pierre Ossman
-> >> s3c-sdhci 12530000.sdhci: clock source 2: mmc_busclk.2 (100000000 Hz)
-> >> s3c-sdhci 12530000.sdhci: Got CD GPIO
-> >> mmc0: SDHCI controller on samsung-hsmmc [12530000.sdhci] using ADMA
-> >> mmc0: new high speed SDHC card at address aaaa
-> >> mmcblk0: mmc0:aaaa SL16G 14.8 GiB
-> >>
-> >> ...
-> >>
-> >> EXT4-fs (mmcblk0p2): INFO: recovery required on readonly filesystem
-> >> EXT4-fs (mmcblk0p2): write access will be enabled during recovery
-> >> EXT4-fs (mmcblk0p2): recovery complete
-> >> EXT4-fs (mmcblk0p2): mounted filesystem with ordered data mode. Opts: (null)
-> >> VFS: Mounted root (ext4 filesystem) readonly on device 179:2.
-> >> devtmpfs: mounted
-> >> Freeing unused kernel memory: 1024K
-> >> hub 1-3:1.0: USB hub found
-> >> Run /sbin/init as init process
-> >> hub 1-3:1.0: 3 ports detected
-> >> *** stack smashing detected ***: <unknown> terminated
-> >> Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000004
-> >> CPU: 1 PID: 1 Comm: init Not tainted 5.0.0-rc6-next-20190218 #1546
-> >> Hardware name: SAMSUNG EXYNOS (Flattened Device Tree)
-> >> [<c01118d0>] (unwind_backtrace) from [<c010d794>] (show_stack+0x10/0x14)
-> >> [<c010d794>] (show_stack) from [<c09ff8a4>] (dump_stack+0x90/0xc8)
-> >> [<c09ff8a4>] (dump_stack) from [<c0125944>] (panic+0xfc/0x304)
-> >> [<c0125944>] (panic) from [<c012bc98>] (do_exit+0xabc/0xc6c)
-> >> [<c012bc98>] (do_exit) from [<c012c100>] (do_group_exit+0x3c/0xbc)
-> >> [<c012c100>] (do_group_exit) from [<c0138908>] (get_signal+0x130/0xbf4)
-> >> [<c0138908>] (get_signal) from [<c010c7a0>] (do_work_pending+0x130/0x618)
-> >> [<c010c7a0>] (do_work_pending) from [<c0101034>]
-> >> (slow_work_pending+0xc/0x20)
-> >> Exception stack(0xe88c3fb0 to 0xe88c3ff8)
-> >> 3fa0:                                     00000000 bea7787c 00000005
-> >> b6e8d0b8
-> >> 3fc0: bea77a18 b6f92010 b6e8d0b8 00000001 b6e8d0c8 00000001 b6e8c000
-> >> bea77b60
-> >> 3fe0: 00000020 bea77998 ffffffff b6d52368 60000050 ffffffff
-> >> CPU3: stopping
-> >>
-> >> I would like to help debugging and fixing this issue, but I don't really
-> >> have idea where to start. Here are some more detailed information about
-> >> my test system:
-> >>
-> >> 1. Board: ARM 32bit Samsung Exynos4412-based Odroid U3 (device tree
-> >> source: arch/arm/boot/dts/exynos4412-odroidu3.dts)
-> >>
-> >> 2. Block device: MMC/SDHCI/SDHCI-S3C with SD card
-> >> (drivers/mmc/host/sdhci-s3c.c driver, sdhci_2 device node in the device
-> >> tree)
-> >>
-> >> 3. Rootfs: Ext4
-> >>
-> >> 4. Kernel config: arch/arm/configs/exynos_defconfig
-> >>
-> >> I can gather more logs if needed, just let me which kernel option to
-> >> enable. Reverting this commit on top of next-20190218 as well as current
-> >> linux-next (tested with next-20190221) fixes this issue and makes the
-> >> system bootable again.
-> > Could you test the patch in following link and see if it can make a difference?
-> >
-> > https://marc.info/?l=linux-aio&m=155070355614541&w=2
+> smatch complained about some uninitialized error returns, so fix those.
 > 
-> I've tested that patch, but it doesn't make any difference on the test
-> system. In the log I see no warning added by it.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>   fs/xfs/libxfs/xfs_sb.c |    2 +-
+>   fs/xfs/xfs_reflink.c   |    2 +-
+>   2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 4e5029c37966..77a3a4085de3 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -877,7 +877,7 @@ xfs_initialize_perag_data(
+>   	uint64_t	bfreelst = 0;
+>   	uint64_t	btree = 0;
+>   	uint64_t	fdblocks;
+> -	int		error;
+> +	int		error = 0;
+>   
+>   	for (index = 0; index < agcount; index++) {
+>   		/*
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index d42e3ef9050e..680ae7662a78 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -261,7 +261,7 @@ xfs_reflink_convert_cow_locked(
+>   	struct xfs_bmbt_irec	got;
+>   	struct xfs_btree_cur	*dummy_cur = NULL;
+>   	int			dummy_logflags;
+> -	int			error;
+> +	int			error = 0;
+>   
+>   	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got))
+>   		return 0;
+> 
 
-I guess it might be related with memory corruption, could you enable the
-following debug options and post the dmesg log?
+Looks fine to me. Thank you!!
 
-CONFIG_DEBUG_STACKOVERFLOW=y
-CONFIG_KASAN=y
-
-Thanks,
-Ming
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
