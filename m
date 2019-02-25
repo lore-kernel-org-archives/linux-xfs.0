@@ -1,109 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55450 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726921AbfBYMzE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Feb 2019 07:55:04 -0500
-Date: Mon, 25 Feb 2019 07:55:02 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: don't pass iomap flags to
- xfs_reflink_allocate_cow
-Message-ID: <20190225125501.GA2916@bfoster>
-References: <155104025871.24373.7462613353398620970.stgit@magnolia>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:19127 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727021AbfBYU0h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Feb 2019 15:26:37 -0500
+Date: Tue, 26 Feb 2019 07:26:30 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: allocate sector sized IO buffer via page_frag_alloc
+Message-ID: <20190225202630.GG23020@dastard>
+References: <20190225040904.5557-1-ming.lei@redhat.com>
+ <20190225043648.GE23020@dastard>
+ <5ad2ef83-8b3a-0a15-d72e-72652b807aad@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155104025871.24373.7462613353398620970.stgit@magnolia>
+In-Reply-To: <5ad2ef83-8b3a-0a15-d72e-72652b807aad@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: Ming Lei <ming.lei@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, linux-block@vger.kernel.org
 
-On Sun, Feb 24, 2019 at 12:30:58PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Feb 25, 2019 at 02:15:59PM +0100, Vlastimil Babka wrote:
+> On 2/25/19 5:36 AM, Dave Chinner wrote:
+> > On Mon, Feb 25, 2019 at 12:09:04PM +0800, Ming Lei wrote:
+> >> XFS uses kmalloc() to allocate sector sized IO buffer.
+> > ....
+> >> Use page_frag_alloc() to allocate the sector sized buffer, then the
+> >> above issue can be fixed because offset_in_page of allocated buffer
+> >> is always sector aligned.
+> > 
+> > Didn't we already reject this approach because page frags cannot be
+> > reused and that pages allocated to the frag pool are pinned in
+> > memory until all fragments allocated on the page have been freed?
 > 
-> Don't pass raw iomap flags to xfs_reflink_allocate_cow; signal our
-> intention with a boolean argument.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_iomap.c   |    6 +++---
->  fs/xfs/xfs_reflink.c |    4 ++--
->  fs/xfs/xfs_reflink.h |    2 +-
->  3 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 01210eae8bf3..a376fb2d4b94 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -983,6 +983,7 @@ xfs_file_iomap_begin(
->  	 */
->  	if (xfs_is_cow_inode(ip)) {
->  		struct xfs_bmbt_irec	orig = imap;
-> +		bool			convert_now = (flags & IOMAP_DIRECT);
->  
->  		/* if zeroing doesn't need COW allocation, then we are done. */
->  		if ((flags & IOMAP_ZERO) &&
-> @@ -991,7 +992,7 @@ xfs_file_iomap_begin(
->  
->  		/* may drop and re-acquire the ilock */
->  		error = xfs_reflink_allocate_cow(ip, &imap, &shared, &lockmode,
-> -						 flags);
-> +				convert_now);
->  		if (error)
->  			goto out_unlock;
->  
-> @@ -1002,8 +1003,7 @@ xfs_file_iomap_begin(
->  		 * direct I/O code, which must be block aligned we need to
->  		 * report the newly allocated address.
->  		 */
-> -		if (!(flags & IOMAP_DIRECT) &&
-> -		    orig.br_startblock != HOLESTARTBLOCK)
-> +		if (!convert_now && orig.br_startblock != HOLESTARTBLOCK)
+> I don't know if you did, but it's certainly true., Also I don't think
+> there's any specified alignment guarantee for page_frag_alloc().
 
-FWIW, I thought the original dio check made sense here (in the iomap
-callback), whereas the flags parameter to the external function seemed
-more of a layering hack. Looks fine, anyways:
+We did, and the alignment guarantee would have come from all
+fragments having an aligned size.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+> What about kmem_cache_create() with align parameter? That *should* be
+> guaranteed regardless of whatever debugging is enabled - if not, I would
+> consider it a bug.
 
->  			imap = orig;
->  
->  		end_fsb = imap.br_startoff + imap.br_blockcount;
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index e2d9179bd50d..d42e3ef9050e 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -361,7 +361,7 @@ xfs_reflink_allocate_cow(
->  	struct xfs_bmbt_irec	*imap,
->  	bool			*shared,
->  	uint			*lockmode,
-> -	unsigned		iomap_flags)
-> +	bool			convert_now)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  	xfs_fileoff_t		offset_fsb = imap->br_startoff;
-> @@ -444,7 +444,7 @@ xfs_reflink_allocate_cow(
->  	 * to initiate a disk write.  For direct I/O we are going to write the
->  	 * data and need the conversion, but for buffered writes we're done.
->  	 */
-> -	if (!(iomap_flags & IOMAP_DIRECT) || imap->br_state == XFS_EXT_NORM)
-> +	if (!convert_now || imap->br_state == XFS_EXT_NORM)
->  		return 0;
->  	trace_xfs_reflink_convert_cow(ip, imap);
->  	return xfs_reflink_convert_cow_locked(ip, offset_fsb, count_fsb);
-> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> index 2a3052fbe23e..28a43b7f581d 100644
-> --- a/fs/xfs/xfs_reflink.h
-> +++ b/fs/xfs/xfs_reflink.h
-> @@ -27,7 +27,7 @@ bool xfs_inode_need_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
->  
->  extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
->  		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode,
-> -		unsigned iomap_flags);
-> +		bool convert_now);
->  extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
->  		xfs_off_t count);
->  
-> 
+Yup, that's pretty much what was decided. The sticking point was
+whether is should be block layer infrastructure (because the actual
+memory buffer alignment is a block/device driver requirement not
+visible to the filesystem) or whether "sector size alignement is
+good enough for everyone".
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
