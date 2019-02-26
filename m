@@ -1,139 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47700 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727488AbfB0VjU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 27 Feb 2019 16:39:20 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id F1BA9326C
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Feb 2019 15:38:53 -0600 (CST)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 6f490d6
-Message-ID: <e1bd5016-cef2-c61b-7540-cf75d960c16d@sandeen.net>
-Date: Wed, 27 Feb 2019 15:39:18 -0600
+Received: from bombadil.infradead.org ([198.137.202.133]:53772 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725935AbfBZMMN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Feb 2019 07:12:13 -0500
+Date: Tue, 26 Feb 2019 04:12:09 -0800
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH] xfs: allocate sector sized IO buffer via page_frag_alloc
+Message-ID: <20190226121209.GC11592@bombadil.infradead.org>
+References: <20190225043648.GE23020@dastard>
+ <5ad2ef83-8b3a-0a15-d72e-72652b807aad@suse.cz>
+ <20190225202630.GG23020@dastard>
+ <20190226022249.GA17747@ming.t460p>
+ <20190226030214.GI23020@dastard>
+ <20190226032737.GA11592@bombadil.infradead.org>
+ <20190226045826.GJ23020@dastard>
+ <20190226093302.GA24879@ming.t460p>
+ <a641feb8-ceb2-2dac-27aa-7b1df10f5ae5@suse.cz>
+ <CACVXFVMX=WpTRBbDTSibfXkTZxckk3ootetbE+rkJtHhsZkRAw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="zVIXI0CLXQcJddIEZUgwXwlnyavnhqlkY"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CACVXFVMX=WpTRBbDTSibfXkTZxckk3ootetbE+rkJtHhsZkRAw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Vlastimil Babka <vbabka@suse.cz>, Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, linux-block <linux-block@vger.kernel.org>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---zVIXI0CLXQcJddIEZUgwXwlnyavnhqlkY
-Content-Type: multipart/mixed; boundary="9tPldOOFcvwrqKVSZwzQYXHnovjLgNRGz";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <e1bd5016-cef2-c61b-7540-cf75d960c16d@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 6f490d6
+On Tue, Feb 26, 2019 at 07:12:49PM +0800, Ming Lei wrote:
+> On Tue, Feb 26, 2019 at 6:07 PM Vlastimil Babka <vbabka@suse.cz> wrote:
+> > On 2/26/19 10:33 AM, Ming Lei wrote:
+> > > On Tue, Feb 26, 2019 at 03:58:26PM +1100, Dave Chinner wrote:
+> > >> On Mon, Feb 25, 2019 at 07:27:37PM -0800, Matthew Wilcox wrote:
+> > >>> On Tue, Feb 26, 2019 at 02:02:14PM +1100, Dave Chinner wrote:
+> > >>>>> Or what is the exact size of sub-page IO in xfs most of time? For
+> > >>>>
+> > >>>> Determined by mkfs parameters. Any power of 2 between 512 bytes and
+> > >>>> 64kB needs to be supported. e.g:
+> > >>>>
+> > >>>> # mkfs.xfs -s size=512 -b size=1k -i size=2k -n size=8k ....
+> > >>>>
+> > >>>> will have metadata that is sector sized (512 bytes), filesystem
+> > >>>> block sized (1k), directory block sized (8k) and inode cluster sized
+> > >>>> (32k), and will use all of them in large quantities.
+> > >>>
+> > >>> If XFS is going to use each of these in large quantities, then it doesn't
+> > >>> seem unreasonable for XFS to create a slab for each type of metadata?
+> > >>
+> > >>
+> > >> Well, that is the question, isn't it? How many other filesystems
+> > >> will want to make similar "don't use entire pages just for 4k of
+> > >> metadata" optimisations as 64k page size machines become more
+> > >> common? There are others that have the same "use slab for sector
+> > >> aligned IO" which will fall foul of the same problem that has been
+> > >> reported for XFS....
+> > >>
+> > >> If nobody else cares/wants it, then it can be XFS only. But it's
+> > >> only fair we address the "will it be useful to others" question
+> > >> first.....
+> > >
+> > > This kind of slab cache should have been global, just like interface of
+> > > kmalloc(size).
+> > >
+> > > However, the alignment requirement depends on block device's block size,
+> > > then it becomes hard to implement as genera interface, for example:
+> > >
+> > >       block size: 512, 1024, 2048, 4096
+> > >       slab size: 512*N, 0 < N < PAGE_SIZE/512
+> > >
+> > > For 4k page size, 28(7*4) slabs need to be created, and 64k page size
+> > > needs to create 127*4 slabs.
+> > >
+> >
+> > Where does the '*4' multiplier come from?
+> 
+> The buffer needs to be device block size aligned for dio, and now the block
+> size can be 512, 1024, 2048 and 4096.
 
---9tPldOOFcvwrqKVSZwzQYXHnovjLgNRGz
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-
-Hi folks,
-
-The xfsprogs repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.
-
-This contains only the sync to the kernel's libxfs updates for v5.0.
-
-The new head of the for-next branch is commit:
-
-6f490d6 xfs: stringify btree cursor types in ftrace output
-
-New Commits:
-
-Darrick J. Wong (11):
-      [5afb131] xfs: idiotproof defer op type configuration
-      [5a23b29] xfs: streamline defer op type handling
-      [c2d5dd0] xfs: const-ify xfs_owner_info arguments
-      [9ef0cb4] xfs: remove xfs_rmap_ag_owner and friends
-      [09c23f4] xfs: add a block to inode count converter
-      [c43dd96] xfs: precalculate inodes and blocks per inode cluster
-      [af22104] xfs: precalculate cluster alignment in inodes and blocks
-      [5ff3ed4] xfs: fix symbolic enum printing in ftrace output
-      [57a6c0e] xfs: move XFS_AG_BTREE_CMP_FORMAT_STR mappings to libxfs
-      [51e1848] xfs: move XFS_INODE_FORMAT_STR mappings to libxfs
-      [6f490d6] xfs: stringify btree cursor types in ftrace output
-
-Dave Chinner (1):
-      [7ab21d5] xfs: zero length symlinks are not valid
-
-Omar Sandoval (1):
-      [5dc4588] xfs: cache minimum realtime summary level
-
-Pan Bian (1):
-      [972ca59] xfs: libxfs: move xfs_perag_put late
-
-
-Code Diffstat:
-
- db/check.c                  |   8 +-
- db/convert.c                |   4 +-
- db/frag.c                   |   4 +-
- db/io.c                     |   2 +-
- db/metadump.c               |   4 +-
- include/xfs_mount.h         |  11 ++
- include/xfs_trans.h         |   5 -
- libxfs/defer_item.c         |  44 +-------
- libxfs/init.c               |  16 +--
- libxfs/libxfs_api_defs.h    |   1 -
- libxfs/xfs_ag.c             |   9 +-
- libxfs/xfs_alloc.c          |  79 +++++++--------
- libxfs/xfs_alloc.h          |   4 +-
- libxfs/xfs_bmap.c           |   6 +-
- libxfs/xfs_bmap.h           |   4 +-
- libxfs/xfs_defer.c          |  67 +++++++------
- libxfs/xfs_defer.h          |  37 +++----
- libxfs/xfs_format.h         |  12 +++
- libxfs/xfs_ialloc.c         |  56 +++++------
- libxfs/xfs_ialloc_btree.c   |   7 +-
- libxfs/xfs_refcount_btree.c |   6 +-
- libxfs/xfs_rmap.c           | 240 +++++++++++++++++++++++++-------------=
-------
- libxfs/xfs_rmap.h           |  54 ++++------
- libxfs/xfs_rtbitmap.c       |   6 ++
- libxfs/xfs_symlink_remote.c |  14 ++-
- libxfs/xfs_types.c          |   9 +-
- libxfs/xfs_types.h          |  22 ++++
- repair/dino_chunks.c        |  12 +--
- repair/phase5.c             |   4 +-
- repair/rmap.c               |   5 +-
- repair/xfs_repair.c         |  13 ++-
- 31 files changed, 393 insertions(+), 372 deletions(-)
-
-
---9tPldOOFcvwrqKVSZwzQYXHnovjLgNRGz--
-
---zVIXI0CLXQcJddIEZUgwXwlnyavnhqlkY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlx3A4cACgkQIK4WkuE9
-3uD88Q/9HBPAZhZugsDDDQKe0+wUrl+F6ah3qECCl+HW2BGJM7LYzUFcxomOcvsW
-H9n4Ou47vIBczkrDC7hx61QL2/wWtC+bwvScXuxQ9xcgYyO2OppQpFqoIDVkweAA
-4hPbNi8mHcX2/fJomMH+YR5vssks8qP8dx367JXSiv0l1PIhbouzSFmxsbREnQW9
-jx1WT8E9hzQOueu+oVzvzfYCuqEIGuSXOOeVKa3RwLKSRAYcDe/knTxixySC1072
-dowrDwAzKk063MDs4lWFeHN2u0WPM7ZNBUjqjMEoCwaVgMcuH1dSpRi5Egxjq2aR
-e5OZbliLbrkyk7GOlefGpoxGoT4D4of2y5F+OzzmKu8tsDFhP61UFFadVNVmuw6d
-VmCckPBALTJkg8yeTMcf3tWVQFo20QtExippsTeNDfUtlodvSmBXlg/F/msjf6OR
-alxKa7TaVeeJ39xuT51/GiBMBstXq2opDAPRmfygIoDrfcjFIViAw2CjAEWIGkaD
-g3Cl3hmxfrdPaBVqIW7gp7zss3Z0tLzXbyKSLeVpE3K2roHkT87xzCg8rkEDHFl3
-nf7ptfas3tk7vNewXJ8tHGalYL2buiS7lDyZ60gsQPj3NgRl2O98djBLIWHuA26+
-XuNQc6Y2Y62NcrXl3dN/S18EirvhXVGtRESbORUtTpcjLVypp5w=
-=uT50
------END PGP SIGNATURE-----
-
---zVIXI0CLXQcJddIEZUgwXwlnyavnhqlkY--
+Why does the block size make a difference?  This requirement is due to
+some storage devices having shoddy DMA controllers.  Are you saying there
+are devices which can't even do 512-byte aligned I/O?
