@@ -1,210 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:51141 "EHLO mout.gmx.net"
+Received: from muffat.debian.org ([209.87.16.33]:60424 "EHLO muffat.debian.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729716AbfB0EUH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Feb 2019 23:20:07 -0500
-Subject: Re: [PATCH] generic: skip dm-log-writes tests on XFS v5 superblock
- filesystems
-References: <20190226181407.44612-1-bfoster@redhat.com>
- <CAOQ4uxg12SAKrSpX8_cdx4Cs56FVjdXiH5U1e8Y3yyCegNYDSw@mail.gmail.com>
- <20190226232212.GD16436@dastard>
- <CAOQ4uxgueAtF5o+Zjd+N0_h7784veL2FNd7-aB+33HWEN07gHg@mail.gmail.com>
-From: Qu Wenruo <quwenruo.btrfs@gmx.com>
-Message-ID: <ed870e00-1931-d7b1-a3ed-8a184889f6fc@gmx.com>
-Date: Wed, 27 Feb 2019 12:19:46 +0800
+        id S1728791AbfBZXM7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Feb 2019 18:12:59 -0500
+From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxgueAtF5o+Zjd+N0_h7784veL2FNd7-aB+33HWEN07gHg@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="ChiFC2KT5KUJIuviS5dy0wrtGv08C8fkt"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Subject: xfsprogs_4.20.0-1_amd64.changes ACCEPTED into unstable
+Message-Id: <E1gylp8-0006Va-7X@fasolo.debian.org>
+Date: Tue, 26 Feb 2019 23:07:42 +0000
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Qu Wenruo <wqu@suse.com>, Josef Bacik <josef@toxicpanda.com>
-
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---ChiFC2KT5KUJIuviS5dy0wrtGv08C8fkt
-Content-Type: multipart/mixed; boundary="HKCqvA6W6O9uO40Nyf23IbRsAooZKEfvC";
- protected-headers="v1"
-From: Qu Wenruo <quwenruo.btrfs@gmx.com>
-To: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, fstests <fstests@vger.kernel.org>,
- linux-xfs <linux-xfs@vger.kernel.org>, Qu Wenruo <wqu@suse.com>,
- Josef Bacik <josef@toxicpanda.com>
-Message-ID: <ed870e00-1931-d7b1-a3ed-8a184889f6fc@gmx.com>
-Subject: Re: [PATCH] generic: skip dm-log-writes tests on XFS v5 superblock
- filesystems
-References: <20190226181407.44612-1-bfoster@redhat.com>
- <CAOQ4uxg12SAKrSpX8_cdx4Cs56FVjdXiH5U1e8Y3yyCegNYDSw@mail.gmail.com>
- <20190226232212.GD16436@dastard>
- <CAOQ4uxgueAtF5o+Zjd+N0_h7784veL2FNd7-aB+33HWEN07gHg@mail.gmail.com>
-In-Reply-To: <CAOQ4uxgueAtF5o+Zjd+N0_h7784veL2FNd7-aB+33HWEN07gHg@mail.gmail.com>
-
---HKCqvA6W6O9uO40Nyf23IbRsAooZKEfvC
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+To: XFS Development Team <linux-xfs@vger.kernel.org>, Nathan Scott <nathans@debian.org>
 
 
 
-On 2019/2/27 =E4=B8=8B=E5=8D=8812:06, Amir Goldstein wrote:
-> On Wed, Feb 27, 2019 at 1:22 AM Dave Chinner <david@fromorbit.com> wrot=
-e:
->>
->> On Tue, Feb 26, 2019 at 11:10:02PM +0200, Amir Goldstein wrote:
->>> On Tue, Feb 26, 2019 at 8:14 PM Brian Foster <bfoster@redhat.com> wro=
-te:
->>>>
->>>> The dm-log-writes mechanism runs a workload against a filesystem,
->>>> tracks underlying FUAs and restores the filesystem to various points=
+Accepted:
 
->>>> in time based on FUA marks. This allows fstests to check fs
->>>> consistency at various points and verify log recovery works as
->>>> expected.
->>>>
->>>
->>> Inaccurate. generic/482 restores to FUA points.
->>> generic/45[57] restore to user defined points in time (marks).
->>> dm-log-writes mechanism is capable of restoring either.
->>>
->>>> This mechanism does not play well with LSN based log recovery
->>>> ordering behavior on XFS v5 superblocks, however. For example,
->>>> generic/482 can reproduce false positive corruptions based on extent=
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
 
->>>> to btree conversion of an inode if the inode and associated btree
->>>> block are written back after different checkpoints. Even though both=
-
->>>> items are logged correctly in the extent-to-btree transaction, the
->>>> btree block can be relogged (multiple times) and only written back
->>>> once when the filesystem unmounts. If the inode was written back
->>>> after the initial conversion, recovery points between that mark and
->>>> when the btree block is ultimately written back will show corruption=
-
->>>> because log recovery sees that the destination buffer is newer than
->>>> the recovered buffer and intentionally skips the buffer. This is a
->>>> false positive because the destination buffer was resiliently
->>>> written back after being physically relogged one or more times.
->>>>
->>>
->>> This story doesn't add up.
->>> Either dm-log-writes emulated power failure correctly or it doesn't.
->>> My understanding is that the issue you are seeing is a result of
->>> XFS seeing "data from the future" after a restore of a power failure
->>> snapshot, because the scratch device is not a clean slate.
->>> If I am right, then the correct solution is to wipe the journal befor=
-e
->>> starting to replay restore points.
->>
->> If that is the problem, then I think we should be wiping the entire
->> block device before replaying the recorded logwrite.
->>
->=20
-> Indeed.
-
-May I ask a stupid question?
-
-How does it matter whether the device is clean or not?
-Shouldn't the journal/metadata or whatever be self-contained?
-
->=20
->> i.e. this sounds like a "block device we are replaying onto has
->> stale data in it" problem because we are replaying the same
->> filesystem over the top of itself.  Hence there are no unique
->> identifiers in the metadata that can detect stale metadata in
->> the block device.
->>
->> I'm surprised that we haven't tripped over this much earlier that
->> this...
->>
->=20
-> I remember asking myself the same thing... it's coming back to me
-> now. I really remember having this discussion during test review.
-> generic/482 is an adaptation of Josef's test script [1], which
-> does log recovery onto a snapshot on every FUA checkpoint.
->=20
-> [1] https://github.com/josefbacik/log-writes/blob/master/replay-fsck-wr=
-apper.sh
->=20
-> Setting up snapshots for every checkpoint was found empirically to take=
-
-> more test runtime, than replaying log from the start for each checkpoin=
-t.
-> That observation was limited to the systems that Qu and Eryu tested on.=
-
->=20
-> IRC, what usually took care of cleaning the block device is replaying t=
-he
-> "discard everything" IO from mkfs time.
-
-This "discard everything" assumption doesn't look right to me.
-Although most mkfs would discard at least part of the device, even
-without discarding the newly created fs should be self-contained, no
-wild pointer points to some garbage.
-
-I though all metadata/journal write should be self-contained even for
-later fs writes.
-
-Am I missing something? Or do I get too poisoned by btrfs CoW?
-
-Thanks,
-Qu
-
-> dm-log-writes driver should take care
-> of zeroing blocks upon replaying a discard IO even on a target device t=
-hat
-> doesn't support discard, but maybe if original device doesn't support d=
-iscard,
-> the IO is not recorded at all and therefore not replayed?
->=20
-> Brian, can you check if your log-writes stream contains a discard IO fo=
-r
-> the entire block device? I do remember that the initial log-writes test=
-s worked
-> very reliably on my laptop with SSD and were a bit flaky on another tes=
-t machine
-> with spinning rust, but that machine had other hardware reliability iss=
-ues at
-> the time (bad SATA cable) so I attributed all issues to that problem.
->=20
-> BTW, looking closer at generic/482, $prev does not seem to be used at a=
-ll
-> in the replay loop.
->=20
->>>> Update the dm-log-writes require checks to enforce v4 superblocks
->>>> when running against XFS and skip the test otherwise.
->>>
->>> You might as well disable dm-log-writes test for XFS completely.
->>> Who cares about v4 superblocks these days?
->>
->> Enough of the inflammatory hyperbole, Amir. Statements like this
->> serve no useful purpose.
->>
->=20
-> <deep breath> Agreed.
->=20
-> Thanks,
-> Amir.
->=20
-
-
---HKCqvA6W6O9uO40Nyf23IbRsAooZKEfvC--
-
---ChiFC2KT5KUJIuviS5dy0wrtGv08C8fkt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+Format: 1.8
+Date: Fri, 22 Feb 2019 12:04:48 -0600
+Source: xfsprogs
+Binary: xfsprogs xfslibs-dev xfsprogs-udeb
+Architecture: source amd64
+Version: 4.20.0-1
+Distribution: unstable
+Urgency: low
+Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+Changed-By: Nathan Scott <nathans@debian.org>
+Description:
+ xfslibs-dev - XFS filesystem-specific static libraries and headers
+ xfsprogs   - Utilities for managing the XFS filesystem
+ xfsprogs-udeb - A stripped-down version of xfsprogs, for debian-installer (udeb)
+Changes:
+ xfsprogs (4.20.0-1) unstable; urgency=low
+ .
+   * New upstream release
+Checksums-Sha1:
+ f4d9f7de74724e15e4f55f1337f4a113550012c0 2099 xfsprogs_4.20.0-1.dsc
+ 797e77d1d4b074e5cc5f0cd81dda374aab9068cc 1784796 xfsprogs_4.20.0.orig.tar.gz
+ 333935301a412df53e895ccd42379ddbc26f8b8b 9260 xfsprogs_4.20.0-1.debian.tar.xz
+ fd3423ef997f2cf66a99166cea4eef01e7e24bf6 90916 xfslibs-dev_4.20.0-1_amd64.deb
+ 844d71995a66cd8fc93c2f0a56f58bc442835851 71740 xfsprogs-dbgsym_4.20.0-1_amd64.deb
+ 0caa0762c7bd6f6f67b1884c37c31dc3d7a2b8f5 128972 xfsprogs-udeb_4.20.0-1_amd64.udeb
+ 790baf61648bbe81ce6b20f81d72992620b4d17b 7392 xfsprogs_4.20.0-1_amd64.buildinfo
+ bf83eb0178e0972781abc6f75f84691796a09ed8 908956 xfsprogs_4.20.0-1_amd64.deb
+Checksums-Sha256:
+ d1e20ddac8fc8a7932e65bf9503b54b2b8564233a7f5a515b789669b9647d791 2099 xfsprogs_4.20.0-1.dsc
+ d6881c9c50238f84b0cce5c95bcf6770539c8fdd80b5e915ad3139306f268d34 1784796 xfsprogs_4.20.0.orig.tar.gz
+ 59b75ef3912ed09068cb81692650a39716722f88fc22ac76eacf4419336a94c8 9260 xfsprogs_4.20.0-1.debian.tar.xz
+ fd6fe3d33e6d1a2d250622face2f39abb38e7e93c1d2cb60912f092060927716 90916 xfslibs-dev_4.20.0-1_amd64.deb
+ 883f60338a930f83c1a9f181ef3502f1736b647abeb7aa400181e2a4dbd3ecff 71740 xfsprogs-dbgsym_4.20.0-1_amd64.deb
+ e5ee4c35d6ae1e748200f75a11451e4f2acc6b7979b091b84251e9689eb8b3b9 128972 xfsprogs-udeb_4.20.0-1_amd64.udeb
+ 021f000a0f597537c966ce0f9561640820be8efc351a3c0d42af932c7bfa3909 7392 xfsprogs_4.20.0-1_amd64.buildinfo
+ 4c4d3fbb8a8971447618bf3307e6e9f377f0f27e70c63891e6aac2f29503b2fc 908956 xfsprogs_4.20.0-1_amd64.deb
+Files:
+ 49a72ea6315a0c8e7b765eabea9ca73b 2099 admin optional xfsprogs_4.20.0-1.dsc
+ ff3ea22429c05deb763d75039d63adef 1784796 admin optional xfsprogs_4.20.0.orig.tar.gz
+ cb7d5ea0780b73521acd3ae904319e73 9260 admin optional xfsprogs_4.20.0-1.debian.tar.xz
+ c1baf112aebbf6e39e4672c15f1f4435 90916 libdevel extra xfslibs-dev_4.20.0-1_amd64.deb
+ a01b7963060a8767c8733ac3819fea26 71740 debug optional xfsprogs-dbgsym_4.20.0-1_amd64.deb
+ 1ab18adcca75b3ac34c9d4f5eab92e29 128972 debian-installer optional xfsprogs-udeb_4.20.0-1_amd64.udeb
+ fd84a6f78cff7bc67bd4b9194cfcc766 7392 admin optional xfsprogs_4.20.0-1_amd64.buildinfo
+ ef0e68ecec7fbdae9e06f34bfce92c3f 908956 admin optional xfsprogs_4.20.0-1_amd64.deb
+Package-Type: udeb
 
 -----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-iQEzBAEBCAAdFiEELd9y5aWlW6idqkLhwj2R86El/qgFAlx2D+IACgkQwj2R86El
-/qhAiQgAjOTOgEz21qiWZc9QjQDqMnkaZdkoTMOF0DzIC2Aop3aSOQUf9b3KtWXl
-s0TJaApC0kskrDiYSPfk/DXkxtxdvBB8X7gQ1m280vLIdh3UjmSjaCCBXCdQj7QE
-JT57RN5n3bdBIpDiGmCznyEALpi3EnUAE/kjczrdlotTGNNIknAdyB/4KwzeGzDV
-a3Lat9zHZjRX+Im77KI0k2AjyvFvijB4DgaPCTBaWPdmkNwPy6FBf4GNBv0N60un
-OPYr2AOPMhhc0TJeCScdiZLRHHSU4ox29S2tZMlQJtwpahN1+iQSe7HBJoKXDVCK
-A8YO6WaQmrUSnV1zTJxC+tgRjw64tg==
-=RrWC
+iQIcBAEBCAAGBQJcdcAYAAoJEP4IQu423YwMs8UQAIAKMFvwx3V/6z4HN49tmrWx
+L/eGrAHGXE1/9Vyq9GGZFFn/Sv3XOZi5eiLE217Lu2uKfMMPNbmk8xk0tUXy2wFl
+EmgOko6tQ8mJYr0AaXjuQ7VOjH1EKTsUYpqFrs31Pu3YDmpk4KDRak+iDebiWmLf
+VbZpLjoEP/xA6rl70qa3G7CCOVq+xl+szDPhnsro3QQuYSt6jhfFAul23zVNrcxd
+AQDCXwN91qOPf27fkySHE0GBr9RKpU6MfQNOoRs669EEU+Uq7wLIzwNYON4k5uIc
+3f40cTU/XF0gOY8V8d9ialUGn2gCgUlLgC6vu1NBv29bdovgYopFxCa+tsWIkzKK
+RPPgVATCWMwkPe2Vp/Pz+KYqFvnB6Q/KJDqrYwiYJRXYOA2pS30VIvn1R2RlhQzo
+eEAc5SAIrZMeQioKggo0gTDl2UMlLD5vlAakqar/6WGxxZQNYb1xmpsgaXc6i2Bb
+XNyu8nuvuwYT2vPQkhFH+uCczlnylkOV5PJjkDFOzvuTTsvvmhQIzc2JFc9NIfQ3
+omINLA3Jb/IFtGJxjIj6/nAKsH1kx/1epWHj6IGu/a/dH5EM/fXpVl7wnSKzgiVR
+DsR5MaQV42lSFaPgp8UaIx5yLEnyshmj+qipqBDfE49C11NFrw2Oo68CGBdMNBMW
+Vm27c3tIrdDqeDNA52aN
+=aJe0
 -----END PGP SIGNATURE-----
 
---ChiFC2KT5KUJIuviS5dy0wrtGv08C8fkt--
+
+Thank you for your contribution to Debian.
