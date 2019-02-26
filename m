@@ -1,45 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:42637 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727421AbfBYXLB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Feb 2019 18:11:01 -0500
-Date: Tue, 26 Feb 2019 10:10:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS root filesystem corruption after selinux-policy-targeted
- update
-Message-ID: <20190225231057.GH23020@dastard>
-References: <CAJCQCtRODsGw85CdJRD7EF9U2vx7EwFkaFQCtC1mPwckUkUBNw@mail.gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:43898 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726116AbfBZDqi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Feb 2019 22:46:38 -0500
+Date: Mon, 25 Feb 2019 19:46:28 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 3/2] xfs/010: use correct type for finobt corrupting
+Message-ID: <20190226034628.GB7159@magnolia>
+References: <155114852926.9683.4048206997940455508.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJCQCtRODsGw85CdJRD7EF9U2vx7EwFkaFQCtC1mPwckUkUBNw@mail.gmail.com>
+In-Reply-To: <155114852926.9683.4048206997940455508.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: xfs list <linux-xfs@vger.kernel.org>
+To: guaneryu@gmail.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Feb 25, 2019 at 03:16:40PM -0700, Chris Murphy wrote:
-> https://bugzilla.redhat.com/show_bug.cgi?id=1679697
-> 
-> I'm not sure what the call trace is saying. User has been requested to
-> run xfs_repair -n to see if it's really corrupt and maybe get more
-> information in what manner it's corrupted.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-A free space tree is corrupted. What caused it is unknown, and
-without a reproducer we are unlikely to be able to find it.
-xfs_repair is needed to rebuild the free space trees and hence fix
-the corruption.
+Use 'type finobt' for corrupting the finobt.
 
-> I don't think it's
-> selinux-policy related at all,
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/xfs/010 |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-It's not. Might be xattr related (because relabelling manipulates
-xattrs), but there's really nothing to go on at this point.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/tests/xfs/010 b/tests/xfs/010
+index ee1595c8..e220a651 100755
+--- a/tests/xfs/010
++++ b/tests/xfs/010
+@@ -63,14 +63,14 @@ _corrupt_finobt_records()
+ 			_filter_dbval`
+ 
+ 	# Corrupt a freecount value. This should never exceed 64.
+-	$XFS_DB_PROG -x -c "fsb $free_root" -c "type inobt" \
++	$XFS_DB_PROG -x -c "fsb $free_root" -c "type finobt" \
+ 		-c "write recs[1].freecount 70" $dev
+ 
+ 	# Create a corrupted non-free record, which should never appear in the
+ 	# finobt.
+-	$XFS_DB_PROG -x -c "fsb $free_root" -c "type inobt" \
++	$XFS_DB_PROG -x -c "fsb $free_root" -c "type finobt" \
+ 		 -c "write recs[2].freecount 0" $dev
+-	$XFS_DB_PROG -x -c "fsb $free_root" -c "type inobt" \
++	$XFS_DB_PROG -x -c "fsb $free_root" -c "type finobt" \
+ 		-c "write recs[2].free 0" $dev
+ }
+ 
