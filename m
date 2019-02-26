@@ -1,84 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37168 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726037AbfBZCfk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Feb 2019 21:35:40 -0500
-Subject: [PATCH 2/2] t_attr_corruption: fix this yet again
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 25 Feb 2019 18:35:35 -0800
-Message-ID: <155114853550.9683.11298191063436471344.stgit@magnolia>
-In-Reply-To: <155114852926.9683.4048206997940455508.stgit@magnolia>
-References: <155114852926.9683.4048206997940455508.stgit@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:14379 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725881AbfBZE6a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Feb 2019 23:58:30 -0500
+Date: Tue, 26 Feb 2019 15:58:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: allocate sector sized IO buffer via page_frag_alloc
+Message-ID: <20190226045826.GJ23020@dastard>
+References: <20190225040904.5557-1-ming.lei@redhat.com>
+ <20190225043648.GE23020@dastard>
+ <5ad2ef83-8b3a-0a15-d72e-72652b807aad@suse.cz>
+ <20190225202630.GG23020@dastard>
+ <20190226022249.GA17747@ming.t460p>
+ <20190226030214.GI23020@dastard>
+ <20190226032737.GA11592@bombadil.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190226032737.GA11592@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Ming Lei <ming.lei@redhat.com>, Vlastimil Babka <vbabka@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, linux-block@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Feb 25, 2019 at 07:27:37PM -0800, Matthew Wilcox wrote:
+> On Tue, Feb 26, 2019 at 02:02:14PM +1100, Dave Chinner wrote:
+> > > Or what is the exact size of sub-page IO in xfs most of time? For
+> > 
+> > Determined by mkfs parameters. Any power of 2 between 512 bytes and
+> > 64kB needs to be supported. e.g:
+> > 
+> > # mkfs.xfs -s size=512 -b size=1k -i size=2k -n size=8k ....
+> > 
+> > will have metadata that is sector sized (512 bytes), filesystem
+> > block sized (1k), directory block sized (8k) and inode cluster sized
+> > (32k), and will use all of them in large quantities.
+> 
+> If XFS is going to use each of these in large quantities, then it doesn't
+> seem unreasonable for XFS to create a slab for each type of metadata?
 
-Jeff Moyer pointed out that 'security.evm' actually has an expected
-value format, which breaks the test if EVM is enabled.  It turns out
-that the 'security.evm' setxattr call in the original syzkaller report
-was a total red herring, as this bug can be reproduced without it.
 
-Fix the test case to do the minimum amount of work needed to reproduce
-the corruption.
+Well, that is the question, isn't it? How many other filesystems
+will want to make similar "don't use entire pages just for 4k of
+metadata" optimisations as 64k page size machines become more
+common? There are others that have the same "use slab for sector
+aligned IO" which will fall foul of the same problem that has been
+reported for XFS....
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- src/t_attr_corruption.c |   28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+If nobody else cares/wants it, then it can be XFS only. But it's
+only fair we address the "will it be useful to others" question
+first.....
 
-
-diff --git a/src/t_attr_corruption.c b/src/t_attr_corruption.c
-index f26611f9..9101024e 100644
---- a/src/t_attr_corruption.c
-+++ b/src/t_attr_corruption.c
-@@ -3,17 +3,21 @@
-  * Copyright (C) 2019 Oracle.  All Rights Reserved.
-  * Author: Darrick J. Wong <darrick.wong@oracle.com>
-  *
-- * Test program to tickle a use-after-free bug in xfs.
-+ * XFS had a memory corruption bug in its handling of the POSIX ACL attribute
-+ * names during a listxattr call.
-  *
-- * XFS had a use-after-free bug when xfs_xattr_put_listent runs out of
-- * listxattr buffer space while trying to store the name
-- * "system.posix_acl_access" and then corrupts memory by not checking the
-- * seen_enough state and then trying to shove "trusted.SGI_ACL_FILE" into the
-- * buffer as well.
-+ * On IRIX, file ACLs were stored under the name "trusted.SGI_ACL_FILE",
-+ * whereas on Linux the name is "system.posix_acl_access".  In order to
-+ * maintain compatibility with old filesystems, XFS internally continues to
-+ * use the old SGI_ACL_FILE name on disk and remap the new name whenever it
-+ * sees it.
-  *
-- * In order to tickle the bug in a user visible way we must have already put a
-- * name in the buffer, so we take advantage of the fact that "security.evm"
-- * sorts before "system.posix_acl_access" to make sure this happens.
-+ * In order to make this magic happen, XFS' listxattr implementation will emit
-+ * first the Linux name and then the on-disk name.  Unfortunately, it doesn't
-+ * correctly check the buffer length, so if the buffer is large enough to fit
-+ * the on-disk name but not large enough to fit the Linux name, we screw up
-+ * the buffer position accounting while trying to emit the Linux name and then
-+ * corrupt memory when we try to emit the on-disk name.
-  *
-  * If we trigger the bug, the program will print the garbled string
-  * "rusted.SGI_ACL_FILE".  If the bug is fixed, the flistxattr call returns
-@@ -76,11 +80,7 @@ int main(int argc, char *argv[])
- 	if (ret)
- 		die("set posix acl");
- 
--	ret = fsetxattr(fd, "security.evm", buf, 1, 1);
--	if (ret)
--		die("set evm");
--
--	sz = flistxattr(fd, buf, 30);
-+	sz = flistxattr(fd, buf, 20);
- 	if (sz < 0)
- 		die("list attr");
- 
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
