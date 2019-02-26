@@ -1,61 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:40428 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727704AbfBZURk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Feb 2019 15:17:40 -0500
-Subject: Re: [PATCH 3/2] xfs/010: use correct type for finobt corrupting
-References: <155114852926.9683.4048206997940455508.stgit@magnolia>
- <20190226034628.GB7159@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <0ea07e96-bdf0-9b6a-ef70-55c624a97b2e@oracle.com>
-Date: Tue, 26 Feb 2019 13:17:35 -0700
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:63677 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728303AbfBZUpz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Feb 2019 15:45:55 -0500
+Date: Wed, 27 Feb 2019 07:45:50 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: allocate sector sized IO buffer via page_frag_alloc
+Message-ID: <20190226204550.GK23020@dastard>
+References: <20190225040904.5557-1-ming.lei@redhat.com>
+ <20190225043648.GE23020@dastard>
+ <5ad2ef83-8b3a-0a15-d72e-72652b807aad@suse.cz>
+ <20190225202630.GG23020@dastard>
+ <20190226022249.GA17747@ming.t460p>
+ <20190226030214.GI23020@dastard>
+ <20190226032737.GA11592@bombadil.infradead.org>
+ <20190226045826.GJ23020@dastard>
+ <20190226093302.GA24879@ming.t460p>
 MIME-Version: 1.0
-In-Reply-To: <20190226034628.GB7159@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190226093302.GA24879@ming.t460p>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, guaneryu@gmail.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Matthew Wilcox <willy@infradead.org>, Vlastimil Babka <vbabka@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, linux-block@vger.kernel.org
 
-
-
-On 2/25/19 8:46 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Feb 26, 2019 at 05:33:04PM +0800, Ming Lei wrote:
+> On Tue, Feb 26, 2019 at 03:58:26PM +1100, Dave Chinner wrote:
+> > On Mon, Feb 25, 2019 at 07:27:37PM -0800, Matthew Wilcox wrote:
+> > > On Tue, Feb 26, 2019 at 02:02:14PM +1100, Dave Chinner wrote:
+> > > > > Or what is the exact size of sub-page IO in xfs most of time? For
+> > > > 
+> > > > Determined by mkfs parameters. Any power of 2 between 512 bytes and
+> > > > 64kB needs to be supported. e.g:
+> > > > 
+> > > > # mkfs.xfs -s size=512 -b size=1k -i size=2k -n size=8k ....
+> > > > 
+> > > > will have metadata that is sector sized (512 bytes), filesystem
+> > > > block sized (1k), directory block sized (8k) and inode cluster sized
+> > > > (32k), and will use all of them in large quantities.
+> > > 
+> > > If XFS is going to use each of these in large quantities, then it doesn't
+> > > seem unreasonable for XFS to create a slab for each type of metadata?
+> > 
+> > 
+> > Well, that is the question, isn't it? How many other filesystems
+> > will want to make similar "don't use entire pages just for 4k of
+> > metadata" optimisations as 64k page size machines become more
+> > common? There are others that have the same "use slab for sector
+> > aligned IO" which will fall foul of the same problem that has been
+> > reported for XFS....
+> > 
+> > If nobody else cares/wants it, then it can be XFS only. But it's
+> > only fair we address the "will it be useful to others" question
+> > first.....
 > 
-> Use 'type finobt' for corrupting the finobt.
+> This kind of slab cache should have been global, just like interface of
+> kmalloc(size).
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   tests/xfs/010 |    6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
+> However, the alignment requirement depends on block device's block size,
+> then it becomes hard to implement as genera interface, for example:
 > 
-> diff --git a/tests/xfs/010 b/tests/xfs/010
-> index ee1595c8..e220a651 100755
-> --- a/tests/xfs/010
-> +++ b/tests/xfs/010
-> @@ -63,14 +63,14 @@ _corrupt_finobt_records()
->   			_filter_dbval`
->   
->   	# Corrupt a freecount value. This should never exceed 64.
-> -	$XFS_DB_PROG -x -c "fsb $free_root" -c "type inobt" \
-> +	$XFS_DB_PROG -x -c "fsb $free_root" -c "type finobt" \
->   		-c "write recs[1].freecount 70" $dev
->   
->   	# Create a corrupted non-free record, which should never appear in the
->   	# finobt.
-> -	$XFS_DB_PROG -x -c "fsb $free_root" -c "type inobt" \
-> +	$XFS_DB_PROG -x -c "fsb $free_root" -c "type finobt" \
->   		 -c "write recs[2].freecount 0" $dev
-> -	$XFS_DB_PROG -x -c "fsb $free_root" -c "type inobt" \
-> +	$XFS_DB_PROG -x -c "fsb $free_root" -c "type finobt" \
->   		-c "write recs[2].free 0" $dev
->   }
->   
+> 	block size: 512, 1024, 2048, 4096
+> 	slab size: 512*N, 0 < N < PAGE_SIZE/512
 > 
+> For 4k page size, 28(7*4) slabs need to be created, and 64k page size
+> needs to create 127*4 slabs.
 
-Good catch, this looks like a pretty old test too.  Thanks for the fix!
+IDGI. Where's the 7/127 come from?
 
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+We only require sector alignment at most, so as long as each slab
+object is aligned to it's size, we only need one slab for each block
+size.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
