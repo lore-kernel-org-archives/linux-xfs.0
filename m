@@ -1,57 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:44402 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725927AbfB0LkM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Feb 2019 06:40:12 -0500
-Subject: Re: [LSF/MM TOPIC] More async operations for file systems - async
- discard?
-References: <92ab41f7-35bc-0f56-056f-ed88526b8ea4@gmail.com>
- <20190217210948.GB14116@dastard>
- <46540876-c222-0889-ddce-44815dcaad04@gmail.com>
- <20190220234723.GA5999@localhost.localdomain> <yq18sy8ili7.fsf@oracle.com>
- <20190222164504.GB10066@localhost.localdomain>
-From: Ric Wheeler <ricwheeler@gmail.com>
-Message-ID: <ec70ef66-cc7a-5a07-9e09-8154d332067a@gmail.com>
-Date: Wed, 27 Feb 2019 06:40:08 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:38148 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728397AbfB0XDI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Feb 2019 18:03:08 -0500
+Date: Wed, 27 Feb 2019 15:03:02 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [ANNOUNCE] xfsprogs for-next updated to bb83d20
+Message-ID: <20190227230302.GL21626@magnolia>
+References: <e1bd5016-cef2-c61b-7540-cf75d960c16d@sandeen.net>
+ <65344cb3-31af-2f5c-3d1f-fb45bc609b77@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20190222164504.GB10066@localhost.localdomain>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <65344cb3-31af-2f5c-3d1f-fb45bc609b77@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Keith Busch <keith.busch@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-block@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 2/22/19 11:45 AM, Keith Busch wrote:
-> On Thu, Feb 21, 2019 at 09:51:12PM -0500, Martin K. Petersen wrote:
->> Keith,
->>
->>> With respect to fs block sizes, one thing making discards suck is that
->>> many high capacity SSDs' physical page sizes are larger than the fs
->>> block size, and a sub-page discard is worse than doing nothing.
->> That ties into the whole zeroing as a side-effect thing.
->>
->> The devices really need to distinguish between discard-as-a-hint where
->> it is free to ignore anything that's not a whole multiple of whatever
->> the internal granularity is, and the WRITE ZEROES use case where the end
->> result needs to be deterministic.
-> Exactly, yes, considering the deterministic zeroing behavior. For devices
-> supporting that, sub-page discards turn into a read-modify-write instead
-> of invalidating the page.  That increases WAF instead of improving it
-> as intended, and large page SSDs are most likely to have relatively poor
-> write endurance in the first place.
->
-> We have NVMe spec changes in the pipeline so devices can report this
-> granularity. But my real concern isn't with discard per se, but more
-> with the writes since we don't support "sector" sizes greater than the
-> system's page size. This is a bit of a different topic from where this
-> thread started, though.
+On Wed, Feb 27, 2019 at 04:19:03PM -0600, Eric Sandeen wrote:
+> On 2/27/19 3:39 PM, Eric Sandeen wrote:
+> > Hi folks,
+> > 
+> > The xfsprogs repository at:
+> > 
+> > 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> > 
+> > has just been updated.
+> > 
+> > This contains only the sync to the kernel's libxfs updates for v5.0.
+> > 
+> > The new head of the for-next branch is commit:
+> 
+> Fixed a thinko stray ; caught by coverity and did a forced push on
+> these branches right quick before anyone but djwong pulled it down. ;)
 
-All of this behavior I think could be helped if we can get some discard testing 
-tooling that large customers could use to validate/quantify performance issues. 
-Most vendors are moderately good at jumping through hoops held up by large deals 
-when the path through that hoop leads to a big deal :)
+Hmmm, I still some discrepancies...
 
-Ric
+diff -Naurp xfsprogs/libxfs/xfs_ialloc.c kernel/libxfs/xfs_ialloc.c
+--- xfsprogs/libxfs/xfs_ialloc.c	2019-02-27 14:58:30.286319523 -0800
++++ kernel/libxfs/xfs_ialloc.c	2019-02-27 14:58:48.512355119 -0800
+@@ -34,7 +34,7 @@ xfs_ialloc_cluster_alignment(
+ 	struct xfs_mount	*mp)
+ {
+ 	if (xfs_sb_version_hasalign(&mp->m_sb) &&
+-	    mp->m_sb.sb_inoalignmt >= mp->m_blocks_per_cluster)
++	    mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
+ 		return mp->m_sb.sb_inoalignmt;
+ 	return 1;
+ }
+
+
+Over on the kernel side we're still using xfs_icluster_size_fsb in the
+comparison test.  TBH I don't remember whether this is actually required
+on the kernel side or not, but in any case this ought to go through the
+kernel.
+
+I /think/ the reason is that I didn't want the initializer functions for
+the xfs_mount inode goemetry fields to depend on them being set in any
+particular order.
+
+
+
+diff -Naurp xfsprogs/libxfs/xfs_types.h kernel/libxfs/xfs_types.h
+--- xfsprogs/libxfs/xfs_types.h	2019-02-27 14:58:30.287319525 -0800
++++ kernel/libxfs/xfs_types.h	2019-02-27 14:58:48.516355127 -0800
+@@ -114,8 +114,8 @@ typedef enum {
+ 	{ XFS_LOOKUP_GEi,	"ge" }
+ 
+ /*
+- * This enum is used in string mapping in xfs_trace.h; please keep the
+- * TRACE_DEFINE_ENUMs for it up to date.
++ * This enum is used in string mapping in xfs_trace.h and scrub/trace.h;
++ * please keep the TRACE_DEFINE_ENUMs for it up to date.
+  */
+ typedef enum {
+ 	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_RMAPi, XFS_BTNUM_BMAPi,
+
+I think you're missing "xfs: stringify scrub types in ftrace output".
+
+--D
+
+> Now we're at:
+> 
+> bb83d20 xfs: stringify btree cursor types in ftrace output
+> 
+> New Commits:
+> 
+> Darrick J. Wong (11):
+>       [5afb131] xfs: idiotproof defer op type configuration
+>       [5a23b29] xfs: streamline defer op type handling
+>       [c2d5dd0] xfs: const-ify xfs_owner_info arguments
+>       [9ef0cb4] xfs: remove xfs_rmap_ag_owner and friends
+>       [09c23f4] xfs: add a block to inode count converter
+>       [ad5eff9] xfs: precalculate inodes and blocks per inode cluster
+>       [6180d69] xfs: precalculate cluster alignment in inodes and blocks
+>       [ef1b0a2] xfs: fix symbolic enum printing in ftrace output
+>       [a97fc90] xfs: move XFS_AG_BTREE_CMP_FORMAT_STR mappings to libxfs
+>       [e01dc40] xfs: move XFS_INODE_FORMAT_STR mappings to libxfs
+>       [bb83d20] xfs: stringify btree cursor types in ftrace output
+> 
+> Dave Chinner (1):
+>       [7ab21d5] xfs: zero length symlinks are not valid
+> 
+> Omar Sandoval (1):
+>       [6890a4c] xfs: cache minimum realtime summary level
+> 
+> Pan Bian (1):
+>       [972ca59] xfs: libxfs: move xfs_perag_put late
+> 
+> 
