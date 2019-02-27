@@ -1,104 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38516 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732996AbfB1U4p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Feb 2019 15:56:45 -0500
-Subject: Re: [PATCH 2/2] t_attr_corruption: fix this yet again
-References: <155114852926.9683.4048206997940455508.stgit@magnolia>
- <155114853550.9683.11298191063436471344.stgit@magnolia>
-From: Jeff Mahoney <jeffm@suse.com>
-Message-ID: <ed56f33a-5fff-1200-7353-ba411c863baa@suse.com>
-Date: Thu, 28 Feb 2019 15:56:40 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:54984 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729291AbfB0UpZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Feb 2019 15:45:25 -0500
+Date: Wed, 27 Feb 2019 15:45:22 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] generic: skip dm-log-writes tests on XFS v5 superblock
+ filesystems
+Message-ID: <20190227204521.GB50261@bfoster>
+References: <20190226181407.44612-1-bfoster@redhat.com>
+ <CAOQ4uxg12SAKrSpX8_cdx4Cs56FVjdXiH5U1e8Y3yyCegNYDSw@mail.gmail.com>
+ <20190227131838.GA49593@bfoster>
+ <20190227141732.GA49946@bfoster>
+ <20190227155419.qmjzfbviolg6cwht@MacBook-Pro-91.local>
+ <20190227171337.GA50261@bfoster>
+ <CAOQ4uxgZruCPAgk0-GP8=Ngecn=Yjv+6KKLmkUuDjh+QDqTWUg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <155114853550.9683.11298191063436471344.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxgZruCPAgk0-GP8=Ngecn=Yjv+6KKLmkUuDjh+QDqTWUg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, guaneryu@gmail.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Josef Bacik <josef@toxicpanda.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Qu Wenruo <wqu@suse.com>
 
-On 2/25/19 9:35 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Feb 27, 2019 at 08:46:42PM +0200, Amir Goldstein wrote:
+> > > > FYI, I gave this a try and it didn't ultimately work because mkfs didn't
+> > > > clear the device either. I ended up reproducing the problem, physically
+> > > > zeroing the device, replaying the associated FUA and observing the
+> > > > problem go away. From there, if I replay to the final FUA mark and go
+> > > > back to the (originally) problematic FUA, the problem is reintroduced.
+> > > >
+> > >
+> > > Sorry guys, whenever I run log-writes on xfs I use my helper script here
+> > >
+> > > https://github.com/josefbacik/log-writes
+> > >
+> > > specifically replay-individual-faster.sh.  This creates a snapshot at every
+> > > replay point, mounts and checks the fs, and then destroys the snapshot and keeps
+> > > going.  This way you don't end up with the "new" data still being on the device.
+> > > It's not super fast, but this is usually a fire and forget sort of thing.  I
+> > > could probably integrate this into xfstests for our log-writes tests, those tend
+> > > to not generate large logs so wouldn't take super long.  Does this fix the
+> > > problem for you Brian?
+> > >
+> >
+> > Thanks Josef. At a glance at that script I'm not quite following how
+> > this fits together. Are you taking a snapshot of the original device
+> > before the workload being tested is run against dm-log-writes, then
+> > replaying on top of that? In general, anything that puts the device back
+> > into the state from before the workload ran and replays from there
+> > should be enough to fix the problem I think. As long as a replay
+> > sequence runs in order, I don't think snapshots of each replay point
+> > should technically be necessary (vs a single replay snapshot, for e.g.).
+> >
+> > Note that I ended up testing generic/482 with a loop device for a
+> > scratch device and that also worked around the problem, I suspect
+> > because that allowed the aforementioned discards to actually reset the
+> > underlying the device via loop discard->hole punch (which doesn't occur
+> > with my original, non-loop scratch dev). So it seems that another option
 > 
-> Jeff Moyer pointed out that 'security.evm' actually has an expected
-
-Mahoney :)
-
-> value format, which breaks the test if EVM is enabled.  It turns out
-> that the 'security.evm' setxattr call in the original syzkaller report
-> was a total red herring, as this bug can be reproduced without it.
+> Urrgh! take a look at src/log-writes/log-writes.c:log_discard()->zero_range().
+> I remembered correctly the replay log falls back to zeroing device with no
+> discard support, but wasn't aware that it drops large discard requests
+> (> 128MB), so there we have it.
 > 
-> Fix the test case to do the minimum amount of work needed to reproduce
-> the corruption.
+
+Heh, Ok.
+
+> > for more deterministic behavior in fstests could be to just enforce the
+> > use of a loop device as the underlying target in these particular tests.
+> > For example, have the log-writes init create a file on the test device
+> > and loop mount that rather than using the scratch device. Just a thought
+> > though, it's not clear to me that's any more simple than what you have
+> > already implemented here..
+> >
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Otherwise, works for me in the case that failed for me previously.
-
-Thanks,
-
--Jeff
-
+> Seems like a pretty good idea to me, but in doing that we may loose
+> diversity in the tested block devices. On different test machines mkfs
+> and later fsstress ops will result in slightly different io patterns.
+> Since generic/482 is not a deterministic test (random fsstress seed)
+> than we cannot argue that reproducible results are better than
+> deterministic results.
+> 
+> Another option is to relax the  log->max_zero_size limit of
+> log_discard() and allow it to zero out devices that don't support
+> discard, but that is likely going to cost much more runtime.
+> Note that this simple patch could also work for you:
+> 
+> --- a/src/log-writes/log-writes.c
+> +++ b/src/log-writes/log-writes.c
+> @@ -95,7 +95,7 @@ int log_discard(struct log *log, struct
+> log_write_entry *entry)
+>  {
+>         u64 start = le64_to_cpu(entry->sector) * log->sectorsize;
+>         u64 size = le64_to_cpu(entry->nr_sectors) * log->sectorsize;
+> -       u64 max_chunk = 1 * 1024 * 1024 * 1024;
+> +       u64 max_chunk = log->max_zero_size;
+> 
 > ---
->  src/t_attr_corruption.c |   28 ++++++++++++++--------------
->  1 file changed, 14 insertions(+), 14 deletions(-)
 > 
+> Brian,
 > 
-> diff --git a/src/t_attr_corruption.c b/src/t_attr_corruption.c
-> index f26611f9..9101024e 100644
-> --- a/src/t_attr_corruption.c
-> +++ b/src/t_attr_corruption.c
-> @@ -3,17 +3,21 @@
->   * Copyright (C) 2019 Oracle.  All Rights Reserved.
->   * Author: Darrick J. Wong <darrick.wong@oracle.com>
->   *
-> - * Test program to tickle a use-after-free bug in xfs.
-> + * XFS had a memory corruption bug in its handling of the POSIX ACL attribute
-> + * names during a listxattr call.
->   *
-> - * XFS had a use-after-free bug when xfs_xattr_put_listent runs out of
-> - * listxattr buffer space while trying to store the name
-> - * "system.posix_acl_access" and then corrupts memory by not checking the
-> - * seen_enough state and then trying to shove "trusted.SGI_ACL_FILE" into the
-> - * buffer as well.
-> + * On IRIX, file ACLs were stored under the name "trusted.SGI_ACL_FILE",
-> + * whereas on Linux the name is "system.posix_acl_access".  In order to
-> + * maintain compatibility with old filesystems, XFS internally continues to
-> + * use the old SGI_ACL_FILE name on disk and remap the new name whenever it
-> + * sees it.
->   *
-> - * In order to tickle the bug in a user visible way we must have already put a
-> - * name in the buffer, so we take advantage of the fact that "security.evm"
-> - * sorts before "system.posix_acl_access" to make sure this happens.
-> + * In order to make this magic happen, XFS' listxattr implementation will emit
-> + * first the Linux name and then the on-disk name.  Unfortunately, it doesn't
-> + * correctly check the buffer length, so if the buffer is large enough to fit
-> + * the on-disk name but not large enough to fit the Linux name, we screw up
-> + * the buffer position accounting while trying to emit the Linux name and then
-> + * corrupt memory when we try to emit the on-disk name.
->   *
->   * If we trigger the bug, the program will print the garbled string
->   * "rusted.SGI_ACL_FILE".  If the bug is fixed, the flistxattr call returns
-> @@ -76,11 +80,7 @@ int main(int argc, char *argv[])
->  	if (ret)
->  		die("set posix acl");
->  
-> -	ret = fsetxattr(fd, "security.evm", buf, 1, 1);
-> -	if (ret)
-> -		die("set evm");
-> -
-> -	sz = flistxattr(fd, buf, 30);
-> +	sz = flistxattr(fd, buf, 20);
->  	if (sz < 0)
->  		die("list attr");
->  
+> Can you try this patch on you test machine and say how much
+> worse the runtime is compared to the loop device setup?
 > 
+> In general, I am in favor of the simplest possible fix
+> and in keeping runtime shortest, so if the above fix
+> results in longer runtime, I would prefer to make the test always
+> run on loopdev as you suggested.
 > 
 
+Note that this is a low resource VM with a spinning disk. The scratch
+device is a 15G LVM volume. My last run of generic/482 was 139s (which I
+think was using loop for a scratch device). With this change and back to
+using the LVM volume, I ended up stopping it because I started seeing a
+~160s or so delay between XFS mount cycles in the syslog (i.e., per
+replay iteration). ;P
 
--- 
-Jeff Mahoney
-SUSE Labs
+Brian
+
+> Thanks,
+> Amir.
