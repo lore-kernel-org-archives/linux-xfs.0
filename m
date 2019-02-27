@@ -1,73 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51510 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727216AbfBZQTQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Feb 2019 11:19:16 -0500
-Date: Tue, 26 Feb 2019 08:19:12 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH] xfs: allocate sector sized IO buffer via page_frag_alloc
-Message-ID: <20190226161912.GG11592@bombadil.infradead.org>
-References: <20190226045826.GJ23020@dastard>
- <20190226093302.GA24879@ming.t460p>
- <a641feb8-ceb2-2dac-27aa-7b1df10f5ae5@suse.cz>
- <CACVXFVMX=WpTRBbDTSibfXkTZxckk3ootetbE+rkJtHhsZkRAw@mail.gmail.com>
- <20190226121209.GC11592@bombadil.infradead.org>
- <20190226123545.GA6163@ming.t460p>
- <20190226130230.GD11592@bombadil.infradead.org>
- <20190226134247.GA30942@ming.t460p>
- <20190226140440.GF11592@bombadil.infradead.org>
- <20190226161433.GH21626@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:50092 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730139AbfB0XaM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Feb 2019 18:30:12 -0500
+Date: Thu, 28 Feb 2019 07:29:41 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V15 14/18] block: enable multipage bvecs
+Message-ID: <20190227232940.GA13319@ming.t460p>
+References: <20190215111324.30129-1-ming.lei@redhat.com>
+ <20190215111324.30129-15-ming.lei@redhat.com>
+ <CGME20190221084301eucas1p11e8841a62b4b1da3cccca661b6f4c29d@eucas1p1.samsung.com>
+ <6c9ae4de-c56f-a2b3-2542-da7d8b95601d@samsung.com>
+ <0dbbee64-5c6b-0374-4360-6dc218c70d58@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190226161433.GH21626@magnolia>
+In-Reply-To: <0dbbee64-5c6b-0374-4360-6dc218c70d58@nvidia.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ming Lei <ming.lei@redhat.com>, Ming Lei <tom.leiming@gmail.com>, Vlastimil Babka <vbabka@suse.cz>, Dave Chinner <david@fromorbit.com>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, linux-block <linux-block@vger.kernel.org>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>
+To: Jon Hunter <jonathanh@nvidia.com>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ulf Hansson <ulf.hansson@linaro.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, 'Linux Samsung SOC' <linux-samsung-soc@vger.kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, Adrian Hunter <adrian.hunter@intel.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-tegra <linux-tegra@vger.kernel.org>
 
-On Tue, Feb 26, 2019 at 08:14:33AM -0800, Darrick J. Wong wrote:
-> On Tue, Feb 26, 2019 at 06:04:40AM -0800, Matthew Wilcox wrote:
-> > On Tue, Feb 26, 2019 at 09:42:48PM +0800, Ming Lei wrote:
-> > > On Tue, Feb 26, 2019 at 05:02:30AM -0800, Matthew Wilcox wrote:
-> > > > Wait, we're imposing a ridiculous amount of complexity on XFS for no
-> > > > reason at all?  We should just change this to 512-byte alignment.  Tying
-> > > > it to the blocksize of the device never made any sense.
-> > > 
-> > > OK, that is fine since we can fallback to buffered IO for loop in case of
-> > > unaligned dio.
-> > > 
-> > > Then something like the following patch should work for all fs, could
-> > > anyone comment on this approach?
+On Wed, Feb 27, 2019 at 08:47:09PM +0000, Jon Hunter wrote:
+> 
+> On 21/02/2019 08:42, Marek Szyprowski wrote:
+> > Dear All,
 > > 
-> > That's not even close to what I meant.
+> > On 2019-02-15 12:13, Ming Lei wrote:
+> >> This patch pulls the trigger for multi-page bvecs.
+> >>
+> >> Reviewed-by: Omar Sandoval <osandov@fb.com>
+> >> Signed-off-by: Ming Lei <ming.lei@redhat.com>
 > > 
-> > diff --git a/fs/direct-io.c b/fs/direct-io.c
-> > index ec2fb6fe6d37..dee1fc47a7fc 100644
-> > --- a/fs/direct-io.c
-> > +++ b/fs/direct-io.c
-> > @@ -1185,18 +1185,20 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+> > Since Linux next-20190218 I've observed problems with block layer on one
+> > of my test devices (Odroid U3 with EXT4 rootfs on SD card). Bisecting
+> > this issue led me to this change. This is also the first linux-next
+> > release with this change merged. The issue is fully reproducible and can
+> > be observed in the following kernel log:
+> > 
+> > sdhci: Secure Digital Host Controller Interface driver
+> > sdhci: Copyright(c) Pierre Ossman
+> > s3c-sdhci 12530000.sdhci: clock source 2: mmc_busclk.2 (100000000 Hz)
+> > s3c-sdhci 12530000.sdhci: Got CD GPIO
+> > mmc0: SDHCI controller on samsung-hsmmc [12530000.sdhci] using ADMA
+> > mmc0: new high speed SDHC card at address aaaa
+> > mmcblk0: mmc0:aaaa SL16G 14.8 GiB
+> I have also noticed some failures when writing to an eMMC device on one
+> of our Tegra boards. We have a simple eMMC write/read test and it is
+> currently failing because the data written does not match the source.
 > 
-> Wait a minute, are you all saying that /directio/ is broken on XFS too??
-> XFS doesn't use blockdev_direct_IO anymore.
-> 
-> I thought we were talking about alignment of XFS metadata buffers
-> (xfs_buf.c), which is a very different topic.
-> 
-> As I understand the problem, in non-debug mode the slab caches give
-> xfs_buf chunks of memory that are aligned well enough to work, but in
-> debug mode the slabs allocate slightly more bytes to carry debug
-> information which pushes the returned address up slightly, thus breaking
-> the alignment requirements.
-> 
-> So why can't we just move the debug info to the end of the object?  If
-> our 512 byte allocation turns into a (512 + a few more) bytes we'll end
-> up using 1024 bytes on the allocation regardless, so it shouldn't matter
-> to put the debug info at offset 512.  If the reason is fear that kernel
-> code will scribble off the end of the object, then return (*obj + 512).
-> Maybe you all have already covered this, though?
+> I did not seem the same crash as reported here, however, in our case the
+> rootfs is NFS mounted and so probably would not. However, the bisect
+> points to this commit and reverting on top of -next fixes the issues.
 
-I don't know _what_ Ming Lei is saying.  I thought the problem was
-with slab redzones, which need to be before and after each object,
-but apparently the problem is with KASAN as well.
+It is sdhci, probably related with max segment size, could you test the
+following patch:
+
+https://marc.info/?l=linux-mmc&m=155128334122951&w=2
+
+Thanks,
+Ming
