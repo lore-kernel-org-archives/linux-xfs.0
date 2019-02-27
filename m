@@ -1,87 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:52773 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726353AbfBZXWR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Feb 2019 18:22:17 -0500
-Date: Wed, 27 Feb 2019 10:22:12 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] generic: skip dm-log-writes tests on XFS v5 superblock
- filesystems
-Message-ID: <20190226232212.GD16436@dastard>
-References: <20190226181407.44612-1-bfoster@redhat.com>
- <CAOQ4uxg12SAKrSpX8_cdx4Cs56FVjdXiH5U1e8Y3yyCegNYDSw@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60656 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729187AbfB0Blx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Feb 2019 20:41:53 -0500
+Date: Wed, 27 Feb 2019 09:41:34 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH] xfs: allocate sector sized IO buffer via page_frag_alloc
+Message-ID: <20190227014133.GB16802@ming.t460p>
+References: <20190226093302.GA24879@ming.t460p>
+ <a641feb8-ceb2-2dac-27aa-7b1df10f5ae5@suse.cz>
+ <CACVXFVMX=WpTRBbDTSibfXkTZxckk3ootetbE+rkJtHhsZkRAw@mail.gmail.com>
+ <20190226121209.GC11592@bombadil.infradead.org>
+ <20190226123545.GA6163@ming.t460p>
+ <20190226130230.GD11592@bombadil.infradead.org>
+ <20190226134247.GA30942@ming.t460p>
+ <20190226140440.GF11592@bombadil.infradead.org>
+ <20190226161433.GH21626@magnolia>
+ <20190226161912.GG11592@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxg12SAKrSpX8_cdx4Cs56FVjdXiH5U1e8Y3yyCegNYDSw@mail.gmail.com>
+In-Reply-To: <20190226161912.GG11592@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Brian Foster <bfoster@redhat.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Qu Wenruo <wqu@suse.com>, Josef Bacik <josef@toxicpanda.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ming Lei <tom.leiming@gmail.com>, Vlastimil Babka <vbabka@suse.cz>, Dave Chinner <david@fromorbit.com>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, linux-block <linux-block@vger.kernel.org>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>
 
-On Tue, Feb 26, 2019 at 11:10:02PM +0200, Amir Goldstein wrote:
-> On Tue, Feb 26, 2019 at 8:14 PM Brian Foster <bfoster@redhat.com> wrote:
-> >
-> > The dm-log-writes mechanism runs a workload against a filesystem,
-> > tracks underlying FUAs and restores the filesystem to various points
-> > in time based on FUA marks. This allows fstests to check fs
-> > consistency at various points and verify log recovery works as
-> > expected.
-> >
+On Tue, Feb 26, 2019 at 08:19:12AM -0800, Matthew Wilcox wrote:
+> On Tue, Feb 26, 2019 at 08:14:33AM -0800, Darrick J. Wong wrote:
+> > On Tue, Feb 26, 2019 at 06:04:40AM -0800, Matthew Wilcox wrote:
+> > > On Tue, Feb 26, 2019 at 09:42:48PM +0800, Ming Lei wrote:
+> > > > On Tue, Feb 26, 2019 at 05:02:30AM -0800, Matthew Wilcox wrote:
+> > > > > Wait, we're imposing a ridiculous amount of complexity on XFS for no
+> > > > > reason at all?  We should just change this to 512-byte alignment.  Tying
+> > > > > it to the blocksize of the device never made any sense.
+> > > > 
+> > > > OK, that is fine since we can fallback to buffered IO for loop in case of
+> > > > unaligned dio.
+> > > > 
+> > > > Then something like the following patch should work for all fs, could
+> > > > anyone comment on this approach?
+> > > 
+> > > That's not even close to what I meant.
+> > > 
+> > > diff --git a/fs/direct-io.c b/fs/direct-io.c
+> > > index ec2fb6fe6d37..dee1fc47a7fc 100644
+> > > --- a/fs/direct-io.c
+> > > +++ b/fs/direct-io.c
+> > > @@ -1185,18 +1185,20 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+> > 
+> > Wait a minute, are you all saying that /directio/ is broken on XFS too??
+> > XFS doesn't use blockdev_direct_IO anymore.
+> > 
+> > I thought we were talking about alignment of XFS metadata buffers
+> > (xfs_buf.c), which is a very different topic.
+> > 
+> > As I understand the problem, in non-debug mode the slab caches give
+> > xfs_buf chunks of memory that are aligned well enough to work, but in
+> > debug mode the slabs allocate slightly more bytes to carry debug
+> > information which pushes the returned address up slightly, thus breaking
+> > the alignment requirements.
+> > 
+> > So why can't we just move the debug info to the end of the object?  If
+> > our 512 byte allocation turns into a (512 + a few more) bytes we'll end
+> > up using 1024 bytes on the allocation regardless, so it shouldn't matter
+> > to put the debug info at offset 512.  If the reason is fear that kernel
+> > code will scribble off the end of the object, then return (*obj + 512).
+> > Maybe you all have already covered this, though?
 > 
-> Inaccurate. generic/482 restores to FUA points.
-> generic/45[57] restore to user defined points in time (marks).
-> dm-log-writes mechanism is capable of restoring either.
-> 
-> > This mechanism does not play well with LSN based log recovery
-> > ordering behavior on XFS v5 superblocks, however. For example,
-> > generic/482 can reproduce false positive corruptions based on extent
-> > to btree conversion of an inode if the inode and associated btree
-> > block are written back after different checkpoints. Even though both
-> > items are logged correctly in the extent-to-btree transaction, the
-> > btree block can be relogged (multiple times) and only written back
-> > once when the filesystem unmounts. If the inode was written back
-> > after the initial conversion, recovery points between that mark and
-> > when the btree block is ultimately written back will show corruption
-> > because log recovery sees that the destination buffer is newer than
-> > the recovered buffer and intentionally skips the buffer. This is a
-> > false positive because the destination buffer was resiliently
-> > written back after being physically relogged one or more times.
-> >
-> 
-> This story doesn't add up.
-> Either dm-log-writes emulated power failure correctly or it doesn't.
-> My understanding is that the issue you are seeing is a result of
-> XFS seeing "data from the future" after a restore of a power failure
-> snapshot, because the scratch device is not a clean slate.
-> If I am right, then the correct solution is to wipe the journal before
-> starting to replay restore points.
+> I don't know _what_ Ming Lei is saying.  I thought the problem was
+> with slab redzones, which need to be before and after each object,
+> but apparently the problem is with KASAN as well.
 
-If that is the problem, then I think we should be wiping the entire
-block device before replaying the recorded logwrite.
+I have mentioned several times that it is triggered on xfs over
+loop/dio, however it may be addressed by falling back to buffered IO
+in case unaligned buffer.
 
-i.e. this sounds like a "block device we are replaying onto has
-stale data in it" problem because we are replaying the same
-filesystem over the top of itself.  Hence there are no unique
-identifiers in the metadata that can detect stale metadata in
-the block device.
+Please see lo_rw_aio().
 
-I'm surprised that we haven't tripped over this much earlier that
-this...
-
-> > Update the dm-log-writes require checks to enforce v4 superblocks
-> > when running against XFS and skip the test otherwise.
-> 
-> You might as well disable dm-log-writes test for XFS completely.
-> Who cares about v4 superblocks these days?
-
-Enough of the inflammatory hyperbole, Amir. Statements like this
-serve no useful purpose.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Ming
