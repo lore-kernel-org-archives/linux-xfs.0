@@ -1,106 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41380 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728791AbfBZSOI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Feb 2019 13:14:08 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] generic: skip dm-log-writes tests on XFS v5 superblock filesystems
-Date: Tue, 26 Feb 2019 13:14:07 -0500
-Message-Id: <20190226181407.44612-1-bfoster@redhat.com>
+Received: from mail-qk1-f195.google.com ([209.85.222.195]:44402 "EHLO
+        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725927AbfB0LkM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Feb 2019 06:40:12 -0500
+Subject: Re: [LSF/MM TOPIC] More async operations for file systems - async
+ discard?
+References: <92ab41f7-35bc-0f56-056f-ed88526b8ea4@gmail.com>
+ <20190217210948.GB14116@dastard>
+ <46540876-c222-0889-ddce-44815dcaad04@gmail.com>
+ <20190220234723.GA5999@localhost.localdomain> <yq18sy8ili7.fsf@oracle.com>
+ <20190222164504.GB10066@localhost.localdomain>
+From: Ric Wheeler <ricwheeler@gmail.com>
+Message-ID: <ec70ef66-cc7a-5a07-9e09-8154d332067a@gmail.com>
+Date: Wed, 27 Feb 2019 06:40:08 -0500
+MIME-Version: 1.0
+In-Reply-To: <20190222164504.GB10066@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Keith Busch <keith.busch@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, lsf-pc@lists.linux-foundation.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-block@vger.kernel.org
 
-The dm-log-writes mechanism runs a workload against a filesystem,
-tracks underlying FUAs and restores the filesystem to various points
-in time based on FUA marks. This allows fstests to check fs
-consistency at various points and verify log recovery works as
-expected.
+On 2/22/19 11:45 AM, Keith Busch wrote:
+> On Thu, Feb 21, 2019 at 09:51:12PM -0500, Martin K. Petersen wrote:
+>> Keith,
+>>
+>>> With respect to fs block sizes, one thing making discards suck is that
+>>> many high capacity SSDs' physical page sizes are larger than the fs
+>>> block size, and a sub-page discard is worse than doing nothing.
+>> That ties into the whole zeroing as a side-effect thing.
+>>
+>> The devices really need to distinguish between discard-as-a-hint where
+>> it is free to ignore anything that's not a whole multiple of whatever
+>> the internal granularity is, and the WRITE ZEROES use case where the end
+>> result needs to be deterministic.
+> Exactly, yes, considering the deterministic zeroing behavior. For devices
+> supporting that, sub-page discards turn into a read-modify-write instead
+> of invalidating the page.  That increases WAF instead of improving it
+> as intended, and large page SSDs are most likely to have relatively poor
+> write endurance in the first place.
+>
+> We have NVMe spec changes in the pipeline so devices can report this
+> granularity. But my real concern isn't with discard per se, but more
+> with the writes since we don't support "sector" sizes greater than the
+> system's page size. This is a bit of a different topic from where this
+> thread started, though.
 
-This mechanism does not play well with LSN based log recovery
-ordering behavior on XFS v5 superblocks, however. For example,
-generic/482 can reproduce false positive corruptions based on extent
-to btree conversion of an inode if the inode and associated btree
-block are written back after different checkpoints. Even though both
-items are logged correctly in the extent-to-btree transaction, the
-btree block can be relogged (multiple times) and only written back
-once when the filesystem unmounts. If the inode was written back
-after the initial conversion, recovery points between that mark and
-when the btree block is ultimately written back will show corruption
-because log recovery sees that the destination buffer is newer than
-the recovered buffer and intentionally skips the buffer. This is a
-false positive because the destination buffer was resiliently
-written back after being physically relogged one or more times.
+All of this behavior I think could be helped if we can get some discard testing 
+tooling that large customers could use to validate/quantify performance issues. 
+Most vendors are moderately good at jumping through hoops held up by large deals 
+when the path through that hoop leads to a big deal :)
 
-Update the dm-log-writes require checks to enforce v4 superblocks
-when running against XFS and skip the test otherwise.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- common/dmlogwrites |  6 ++++++
- common/xfs         | 11 +++++++++++
- tests/generic/482  |  1 -
- 3 files changed, 17 insertions(+), 1 deletion(-)
-
-diff --git a/common/dmlogwrites b/common/dmlogwrites
-index b9cbae7a..f2fbb733 100644
---- a/common/dmlogwrites
-+++ b/common/dmlogwrites
-@@ -12,6 +12,9 @@ _require_log_writes()
- 	_exclude_scratch_mount_option dax
- 	_require_dm_target log-writes
- 	_require_test_program "log-writes/replay-log"
-+	if [ "$FSTYP" == "xfs" ]; then
-+		_require_scratch_xfs_nocrc
-+	fi
- }
- 
- # Starting from v4.15-rc1, DAX support was added to dm-log-writes, but note
-@@ -30,6 +33,9 @@ _require_log_writes_dax()
- 
- 	_require_dm_target log-writes
- 	_require_test_program "log-writes/replay-log"
-+	if [ "$FSTYP" == "xfs" ]; then
-+		_require_scratch_xfs_nocrc
-+	fi
- 
- 	local ret=0
- 	_log_writes_init
-diff --git a/common/xfs b/common/xfs
-index 24065813..525cb9cb 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -240,6 +240,17 @@ _require_scratch_xfs_crc()
- 	_scratch_unmount
- }
- 
-+# this test requires the scratch dev to be formatted as v4
-+#
-+_require_scratch_xfs_nocrc()
-+{
-+	_scratch_mkfs_xfs >/dev/null 2>&1
-+	_scratch_mount >/dev/null 2>&1
-+	$XFS_INFO_PROG $SCRATCH_MNT | grep -q 'crc=0' ||
-+		_notrun "XFS v5 superblocks not supported by this test"
-+	_scratch_unmount
-+}
-+
- # this test requires the finobt feature to be available in mkfs.xfs
- #
- _require_xfs_mkfs_finobt()
-diff --git a/tests/generic/482 b/tests/generic/482
-index 7595aa59..7870ac5b 100755
---- a/tests/generic/482
-+++ b/tests/generic/482
-@@ -45,7 +45,6 @@ _require_scratch
- # and we need extra device as log device
- _require_log_writes
- 
--
- nr_cpus=$("$here/src/feature" -o)
- # cap nr_cpus to 8 to avoid spending too much time on hosts with many cpus
- if [ $nr_cpus -gt 8 ]; then
--- 
-2.17.2
+Ric
