@@ -1,54 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51816 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725986AbfBVQrV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Feb 2019 11:47:21 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x1MGiR8t159736
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:20 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2qpb5s070s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:20 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x1MGlJcn011075
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:19 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x1MGlIw6030443
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Feb 2019 16:47:18 GMT
-Subject: [PATCH 0/4] xfsdump: update to use fallocate
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 22 Feb 2019 08:47:18 -0800
-Message-ID: <155085403848.5141.1866278990901950186.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:41050 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728905AbfB0HKp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Feb 2019 02:10:45 -0500
+Subject: Re: [PATCH] xfs: allocate sector sized IO buffer via page_frag_alloc
+References: <20190226045826.GJ23020@dastard>
+ <20190226093302.GA24879@ming.t460p>
+ <a641feb8-ceb2-2dac-27aa-7b1df10f5ae5@suse.cz>
+ <CACVXFVMX=WpTRBbDTSibfXkTZxckk3ootetbE+rkJtHhsZkRAw@mail.gmail.com>
+ <20190226121209.GC11592@bombadil.infradead.org>
+ <20190226123545.GA6163@ming.t460p>
+ <20190226130230.GD11592@bombadil.infradead.org>
+ <20190226134247.GA30942@ming.t460p>
+ <20190226140440.GF11592@bombadil.infradead.org>
+ <20190226161433.GH21626@magnolia>
+ <20190226161912.GG11592@bombadil.infradead.org>
+From: Vlastimil Babka <vbabka@suse.cz>
+Message-ID: <095ae112-f98e-9516-910a-43b49ea5bf0d@suse.cz>
+Date: Wed, 27 Feb 2019 08:07:31 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20190226161912.GG11592@bombadil.infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ming Lei <ming.lei@redhat.com>, Ming Lei <tom.leiming@gmail.com>, Dave Chinner <david@fromorbit.com>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, linux-block <linux-block@vger.kernel.org>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>
 
-Hi all,
+On 2/26/19 5:19 PM, Matthew Wilcox wrote:
+> On Tue, Feb 26, 2019 at 08:14:33AM -0800, Darrick J. Wong wrote:
+>> On Tue, Feb 26, 2019 at 06:04:40AM -0800, Matthew Wilcox wrote:
+>> Wait a minute, are you all saying that /directio/ is broken on XFS too??
+>> XFS doesn't use blockdev_direct_IO anymore.
+>>
+>> I thought we were talking about alignment of XFS metadata buffers
+>> (xfs_buf.c), which is a very different topic.
+>>
+>> As I understand the problem, in non-debug mode the slab caches give
+>> xfs_buf chunks of memory that are aligned well enough to work, but in
+>> debug mode the slabs allocate slightly more bytes to carry debug
+>> information which pushes the returned address up slightly, thus breaking
+>> the alignment requirements.
+>>
+>> So why can't we just move the debug info to the end of the object?  If
+>> our 512 byte allocation turns into a (512 + a few more) bytes we'll end
+>> up using 1024 bytes on the allocation regardless, so it shouldn't matter
+>> to put the debug info at offset 512.  If the reason is fear that kernel
+>> code will scribble off the end of the object, then return (*obj + 512).
+>> Maybe you all have already covered this, though?
+> 
+> I don't know _what_ Ming Lei is saying.  I thought the problem was
+> with slab redzones, which need to be before and after each object,
+> but apparently the problem is with KASAN as well.
 
-This is a series to update the "create file and preallocate blocks"
-code in xfs_restore.
-
-The first patch refactors the existing copy-pasta into a single helper
-function to create and preallocate space in files, as well as removing
-the totally broken ALLOCSP code.
-
-The next two patches fix unchecked return values and insufficient
-unsupported-ioctl code.
-
-The final patch upgrades xfs_restore to try fallocate before RESVSP
-simply because it is the newer API.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
+That's what I thought as well. But if we can solve it for caches created
+by kmem_cache_create(..., align, ...) then IMHO we could guarantee
+natural alignment for power-of-two kmalloc caches as well.
