@@ -1,83 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60656 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54057 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729187AbfB0Blx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Feb 2019 20:41:53 -0500
-Date: Wed, 27 Feb 2019 09:41:34 +0800
+        id S1729335AbfB0BvN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Feb 2019 20:51:13 -0500
+Date: Wed, 27 Feb 2019 09:50:55 +0800
 From: Ming Lei <ming.lei@redhat.com>
 Subject: Re: [PATCH] xfs: allocate sector sized IO buffer via page_frag_alloc
-Message-ID: <20190227014133.GB16802@ming.t460p>
-References: <20190226093302.GA24879@ming.t460p>
- <a641feb8-ceb2-2dac-27aa-7b1df10f5ae5@suse.cz>
- <CACVXFVMX=WpTRBbDTSibfXkTZxckk3ootetbE+rkJtHhsZkRAw@mail.gmail.com>
- <20190226121209.GC11592@bombadil.infradead.org>
- <20190226123545.GA6163@ming.t460p>
- <20190226130230.GD11592@bombadil.infradead.org>
- <20190226134247.GA30942@ming.t460p>
- <20190226140440.GF11592@bombadil.infradead.org>
- <20190226161433.GH21626@magnolia>
- <20190226161912.GG11592@bombadil.infradead.org>
+Message-ID: <20190227015054.GC16802@ming.t460p>
+References: <20190225040904.5557-1-ming.lei@redhat.com>
+ <20190225043648.GE23020@dastard>
+ <5ad2ef83-8b3a-0a15-d72e-72652b807aad@suse.cz>
+ <20190225202630.GG23020@dastard>
+ <20190226022249.GA17747@ming.t460p>
+ <20190226030214.GI23020@dastard>
+ <20190226032737.GA11592@bombadil.infradead.org>
+ <20190226045826.GJ23020@dastard>
+ <20190226093302.GA24879@ming.t460p>
+ <20190226204550.GK23020@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190226161912.GG11592@bombadil.infradead.org>
+In-Reply-To: <20190226204550.GK23020@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ming Lei <tom.leiming@gmail.com>, Vlastimil Babka <vbabka@suse.cz>, Dave Chinner <david@fromorbit.com>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, linux-block <linux-block@vger.kernel.org>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Matthew Wilcox <willy@infradead.org>, Vlastimil Babka <vbabka@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, linux-block@vger.kernel.org
 
-On Tue, Feb 26, 2019 at 08:19:12AM -0800, Matthew Wilcox wrote:
-> On Tue, Feb 26, 2019 at 08:14:33AM -0800, Darrick J. Wong wrote:
-> > On Tue, Feb 26, 2019 at 06:04:40AM -0800, Matthew Wilcox wrote:
-> > > On Tue, Feb 26, 2019 at 09:42:48PM +0800, Ming Lei wrote:
-> > > > On Tue, Feb 26, 2019 at 05:02:30AM -0800, Matthew Wilcox wrote:
-> > > > > Wait, we're imposing a ridiculous amount of complexity on XFS for no
-> > > > > reason at all?  We should just change this to 512-byte alignment.  Tying
-> > > > > it to the blocksize of the device never made any sense.
+On Wed, Feb 27, 2019 at 07:45:50AM +1100, Dave Chinner wrote:
+> On Tue, Feb 26, 2019 at 05:33:04PM +0800, Ming Lei wrote:
+> > On Tue, Feb 26, 2019 at 03:58:26PM +1100, Dave Chinner wrote:
+> > > On Mon, Feb 25, 2019 at 07:27:37PM -0800, Matthew Wilcox wrote:
+> > > > On Tue, Feb 26, 2019 at 02:02:14PM +1100, Dave Chinner wrote:
+> > > > > > Or what is the exact size of sub-page IO in xfs most of time? For
+> > > > > 
+> > > > > Determined by mkfs parameters. Any power of 2 between 512 bytes and
+> > > > > 64kB needs to be supported. e.g:
+> > > > > 
+> > > > > # mkfs.xfs -s size=512 -b size=1k -i size=2k -n size=8k ....
+> > > > > 
+> > > > > will have metadata that is sector sized (512 bytes), filesystem
+> > > > > block sized (1k), directory block sized (8k) and inode cluster sized
+> > > > > (32k), and will use all of them in large quantities.
 > > > > 
-> > > > OK, that is fine since we can fallback to buffered IO for loop in case of
-> > > > unaligned dio.
-> > > > 
-> > > > Then something like the following patch should work for all fs, could
-> > > > anyone comment on this approach?
+> > > > If XFS is going to use each of these in large quantities, then it doesn't
+> > > > seem unreasonable for XFS to create a slab for each type of metadata?
 > > > 
-> > > That's not even close to what I meant.
 > > > 
-> > > diff --git a/fs/direct-io.c b/fs/direct-io.c
-> > > index ec2fb6fe6d37..dee1fc47a7fc 100644
-> > > --- a/fs/direct-io.c
-> > > +++ b/fs/direct-io.c
-> > > @@ -1185,18 +1185,20 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+> > > Well, that is the question, isn't it? How many other filesystems
+> > > will want to make similar "don't use entire pages just for 4k of
+> > > metadata" optimisations as 64k page size machines become more
+> > > common? There are others that have the same "use slab for sector
+> > > aligned IO" which will fall foul of the same problem that has been
+> > > reported for XFS....
+> > > 
+> > > If nobody else cares/wants it, then it can be XFS only. But it's
+> > > only fair we address the "will it be useful to others" question
+> > > first.....
 > > 
-> > Wait a minute, are you all saying that /directio/ is broken on XFS too??
-> > XFS doesn't use blockdev_direct_IO anymore.
+> > This kind of slab cache should have been global, just like interface of
+> > kmalloc(size).
 > > 
-> > I thought we were talking about alignment of XFS metadata buffers
-> > (xfs_buf.c), which is a very different topic.
+> > However, the alignment requirement depends on block device's block size,
+> > then it becomes hard to implement as genera interface, for example:
 > > 
-> > As I understand the problem, in non-debug mode the slab caches give
-> > xfs_buf chunks of memory that are aligned well enough to work, but in
-> > debug mode the slabs allocate slightly more bytes to carry debug
-> > information which pushes the returned address up slightly, thus breaking
-> > the alignment requirements.
+> > 	block size: 512, 1024, 2048, 4096
+> > 	slab size: 512*N, 0 < N < PAGE_SIZE/512
 > > 
-> > So why can't we just move the debug info to the end of the object?  If
-> > our 512 byte allocation turns into a (512 + a few more) bytes we'll end
-> > up using 1024 bytes on the allocation regardless, so it shouldn't matter
-> > to put the debug info at offset 512.  If the reason is fear that kernel
-> > code will scribble off the end of the object, then return (*obj + 512).
-> > Maybe you all have already covered this, though?
+> > For 4k page size, 28(7*4) slabs need to be created, and 64k page size
+> > needs to create 127*4 slabs.
 > 
-> I don't know _what_ Ming Lei is saying.  I thought the problem was
-> with slab redzones, which need to be before and after each object,
-> but apparently the problem is with KASAN as well.
+> IDGI. Where's the 7/127 come from?
+> 
+> We only require sector alignment at most, so as long as each slab
+> object is aligned to it's size, we only need one slab for each block
+> size.
 
-I have mentioned several times that it is triggered on xfs over
-loop/dio, however it may be addressed by falling back to buffered IO
-in case unaligned buffer.
+Each slab has fixed size, I remembered that you mentioned that the meta
+data size can be 512 * N (1 <= N <= PAGE_SIZE / 512).
 
-Please see lo_rw_aio().
+https://marc.info/?l=linux-fsdevel&m=155115014513355&w=2
 
-Thanks,
+
+Thanks, 
 Ming
