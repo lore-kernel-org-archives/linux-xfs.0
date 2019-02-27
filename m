@@ -1,95 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:52354 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727704AbfBZUDr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Feb 2019 15:03:47 -0500
-Subject: Re: [PATCH 2/2] t_attr_corruption: fix this yet again
-References: <155114852926.9683.4048206997940455508.stgit@magnolia>
- <155114853550.9683.11298191063436471344.stgit@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <e2e10092-da81-e883-8745-50be9658b877@oracle.com>
-Date: Tue, 26 Feb 2019 13:03:37 -0700
+Received: from mx1.redhat.com ([209.132.183.28]:58272 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726911AbfB0NSm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Feb 2019 08:18:42 -0500
+Date: Wed, 27 Feb 2019 08:18:39 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] generic: skip dm-log-writes tests on XFS v5 superblock
+ filesystems
+Message-ID: <20190227131838.GA49593@bfoster>
+References: <20190226181407.44612-1-bfoster@redhat.com>
+ <CAOQ4uxg12SAKrSpX8_cdx4Cs56FVjdXiH5U1e8Y3yyCegNYDSw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <155114853550.9683.11298191063436471344.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxg12SAKrSpX8_cdx4Cs56FVjdXiH5U1e8Y3yyCegNYDSw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, guaneryu@gmail.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Qu Wenruo <wqu@suse.com>, Josef Bacik <josef@toxicpanda.com>
 
+On Tue, Feb 26, 2019 at 11:10:02PM +0200, Amir Goldstein wrote:
+> On Tue, Feb 26, 2019 at 8:14 PM Brian Foster <bfoster@redhat.com> wrote:
+> >
+> > The dm-log-writes mechanism runs a workload against a filesystem,
+> > tracks underlying FUAs and restores the filesystem to various points
+> > in time based on FUA marks. This allows fstests to check fs
+> > consistency at various points and verify log recovery works as
+> > expected.
+> >
+> 
+> Inaccurate. generic/482 restores to FUA points.
+> generic/45[57] restore to user defined points in time (marks).
+> dm-log-writes mechanism is capable of restoring either.
+> 
 
+The above is poorly worded. I'm aware of the separate tests and I've
+used the mechanism to bounce around to various marks. Note that my
+understanding of the mechanism beyond that is rudimentary. I'll reword
+this if the patch survives, but it sounds like there may be opportunity
+to fix the mechanism, which clearly would be ideal.
 
-On 2/25/19 7:35 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+> > This mechanism does not play well with LSN based log recovery
+> > ordering behavior on XFS v5 superblocks, however. For example,
+> > generic/482 can reproduce false positive corruptions based on extent
+> > to btree conversion of an inode if the inode and associated btree
+> > block are written back after different checkpoints. Even though both
+> > items are logged correctly in the extent-to-btree transaction, the
+> > btree block can be relogged (multiple times) and only written back
+> > once when the filesystem unmounts. If the inode was written back
+> > after the initial conversion, recovery points between that mark and
+> > when the btree block is ultimately written back will show corruption
+> > because log recovery sees that the destination buffer is newer than
+> > the recovered buffer and intentionally skips the buffer. This is a
+> > false positive because the destination buffer was resiliently
+> > written back after being physically relogged one or more times.
+> >
 > 
-> Jeff Moyer pointed out that 'security.evm' actually has an expected
-> value format, which breaks the test if EVM is enabled.  It turns out
-> that the 'security.evm' setxattr call in the original syzkaller report
-> was a total red herring, as this bug can be reproduced without it.
-> 
-> Fix the test case to do the minimum amount of work needed to reproduce
-> the corruption.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   src/t_attr_corruption.c |   28 ++++++++++++++--------------
->   1 file changed, 14 insertions(+), 14 deletions(-)
-> 
-> 
-> diff --git a/src/t_attr_corruption.c b/src/t_attr_corruption.c
-> index f26611f9..9101024e 100644
-> --- a/src/t_attr_corruption.c
-> +++ b/src/t_attr_corruption.c
-> @@ -3,17 +3,21 @@
->    * Copyright (C) 2019 Oracle.  All Rights Reserved.
->    * Author: Darrick J. Wong <darrick.wong@oracle.com>
->    *
-> - * Test program to tickle a use-after-free bug in xfs.
-> + * XFS had a memory corruption bug in its handling of the POSIX ACL attribute
-> + * names during a listxattr call.
->    *
-> - * XFS had a use-after-free bug when xfs_xattr_put_listent runs out of
-> - * listxattr buffer space while trying to store the name
-> - * "system.posix_acl_access" and then corrupts memory by not checking the
-> - * seen_enough state and then trying to shove "trusted.SGI_ACL_FILE" into the
-> - * buffer as well.
-> + * On IRIX, file ACLs were stored under the name "trusted.SGI_ACL_FILE",
-> + * whereas on Linux the name is "system.posix_acl_access".  In order to
-> + * maintain compatibility with old filesystems, XFS internally continues to
-> + * use the old SGI_ACL_FILE name on disk and remap the new name whenever it
-> + * sees it.
->    *
-> - * In order to tickle the bug in a user visible way we must have already put a
-> - * name in the buffer, so we take advantage of the fact that "security.evm"
-> - * sorts before "system.posix_acl_access" to make sure this happens.
-> + * In order to make this magic happen, XFS' listxattr implementation will emit
-> + * first the Linux name and then the on-disk name.  Unfortunately, it doesn't
-> + * correctly check the buffer length, so if the buffer is large enough to fit
-> + * the on-disk name but not large enough to fit the Linux name, we screw up
-> + * the buffer position accounting while trying to emit the Linux name and then
-> + * corrupt memory when we try to emit the on-disk name.
+> This story doesn't add up.
+> Either dm-log-writes emulated power failure correctly or it doesn't.
 
-Ok, thanks for the explanation!  You can add my review:
+It doesn't. It leaves the log and broader filesystem in a state that
+makes no sense with respect to a power failure.
 
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-
->    *
->    * If we trigger the bug, the program will print the garbled string
->    * "rusted.SGI_ACL_FILE".  If the bug is fixed, the flistxattr call returns
-> @@ -76,11 +80,7 @@ int main(int argc, char *argv[])
->   	if (ret)
->   		die("set posix acl");
->   
-> -	ret = fsetxattr(fd, "security.evm", buf, 1, 1);
-> -	if (ret)
-> -		die("set evm");
-> -
-> -	sz = flistxattr(fd, buf, 30);
-> +	sz = flistxattr(fd, buf, 20);
->   	if (sz < 0)
->   		die("list attr");
->   
+> My understanding is that the issue you are seeing is a result of
+> XFS seeing "data from the future" after a restore of a power failure
+> snapshot, because the scratch device is not a clean slate.
+> If I am right, then the correct solution is to wipe the journal before
+> starting to replay restore points.
 > 
+> Am I misunderstanding whats going on?
+> 
+
+Slightly. Wiping the journal will not help. I _think_ that a wipe of the
+broader filesystem before recovering from the initial fua and replaying
+in order from there would mitigate the problem. Is there an easy way to
+test that theory? For example, would a mkfs of the scratch device before
+the replay sequence of generic/482 begins allow the test to still
+otherwise function correctly?
+
+I was going to elaborate further on the sequence of events, but I see
+Dave has already nicely described this generically in his most recent
+reply.
+
+> IIRC, some of Josef's earlier versions used dm snapshots to restore
+> the blockdev to a clean state before replying log-writes.
+> I think that one of the earlier versions of generic/482 also took
+> that approach, but that resulted in longer test runtime (not sure).
+> 
+> > Update the dm-log-writes require checks to enforce v4 superblocks
+> > when running against XFS and skip the test otherwise.
+> 
+> You might as well disable dm-log-writes test for XFS completely.
+> Who cares about v4 superblocks these days?
+> We need a tool to make sure the NEW features are crash resilient.
+> 
+> dm-log-writes proved itself to be a powerful generic test tool that found
+> some serious crash consistency bugs in every one of the major filesystems
+> and it found bugs with XFS reflink log recovery as well, so IMO
+> disabling dm-log-writes for v5 would be "very unwise!".
+> 
+
+Thanks for the insight
+
+Brian
+
+> Thanks,
+> Amir.
