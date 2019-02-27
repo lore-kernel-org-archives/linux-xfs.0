@@ -1,125 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54984 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729291AbfB0UpZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 27 Feb 2019 15:45:25 -0500
-Date: Wed, 27 Feb 2019 15:45:22 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] generic: skip dm-log-writes tests on XFS v5 superblock
- filesystems
-Message-ID: <20190227204521.GB50261@bfoster>
-References: <20190226181407.44612-1-bfoster@redhat.com>
- <CAOQ4uxg12SAKrSpX8_cdx4Cs56FVjdXiH5U1e8Y3yyCegNYDSw@mail.gmail.com>
- <20190227131838.GA49593@bfoster>
- <20190227141732.GA49946@bfoster>
- <20190227155419.qmjzfbviolg6cwht@MacBook-Pro-91.local>
- <20190227171337.GA50261@bfoster>
- <CAOQ4uxgZruCPAgk0-GP8=Ngecn=Yjv+6KKLmkUuDjh+QDqTWUg@mail.gmail.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:2174 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729291AbfB0UrY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Feb 2019 15:47:24 -0500
+Subject: Re: [PATCH V15 14/18] block: enable multipage bvecs
+References: <20190215111324.30129-1-ming.lei@redhat.com>
+ <20190215111324.30129-15-ming.lei@redhat.com>
+ <CGME20190221084301eucas1p11e8841a62b4b1da3cccca661b6f4c29d@eucas1p1.samsung.com>
+ <6c9ae4de-c56f-a2b3-2542-da7d8b95601d@samsung.com>
+From: Jon Hunter <jonathanh@nvidia.com>
+Message-ID: <0dbbee64-5c6b-0374-4360-6dc218c70d58@nvidia.com>
+Date: Wed, 27 Feb 2019 20:47:09 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgZruCPAgk0-GP8=Ngecn=Yjv+6KKLmkUuDjh+QDqTWUg@mail.gmail.com>
+In-Reply-To: <6c9ae4de-c56f-a2b3-2542-da7d8b95601d@samsung.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Josef Bacik <josef@toxicpanda.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Qu Wenruo <wqu@suse.com>
+To: Marek Szyprowski <m.szyprowski@samsung.com>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>, Omar Sandoval <osandov@fb.com>, Sagi Grimberg <sagi@grimberg.me>, Dave Chinner <dchinner@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@lst.de>, linux-ext4@vger.kernel.org, Coly Li <colyli@suse.de>, linux-bcache@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com, Ulf Hansson <ulf.hansson@linaro.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, 'Linux Samsung SOC' <linux-samsung-soc@vger.kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, Adrian Hunter <adrian.hunter@intel.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-tegra <linux-tegra@vger.kernel.org>
 
-On Wed, Feb 27, 2019 at 08:46:42PM +0200, Amir Goldstein wrote:
-> > > > FYI, I gave this a try and it didn't ultimately work because mkfs didn't
-> > > > clear the device either. I ended up reproducing the problem, physically
-> > > > zeroing the device, replaying the associated FUA and observing the
-> > > > problem go away. From there, if I replay to the final FUA mark and go
-> > > > back to the (originally) problematic FUA, the problem is reintroduced.
-> > > >
-> > >
-> > > Sorry guys, whenever I run log-writes on xfs I use my helper script here
-> > >
-> > > https://github.com/josefbacik/log-writes
-> > >
-> > > specifically replay-individual-faster.sh.  This creates a snapshot at every
-> > > replay point, mounts and checks the fs, and then destroys the snapshot and keeps
-> > > going.  This way you don't end up with the "new" data still being on the device.
-> > > It's not super fast, but this is usually a fire and forget sort of thing.  I
-> > > could probably integrate this into xfstests for our log-writes tests, those tend
-> > > to not generate large logs so wouldn't take super long.  Does this fix the
-> > > problem for you Brian?
-> > >
-> >
-> > Thanks Josef. At a glance at that script I'm not quite following how
-> > this fits together. Are you taking a snapshot of the original device
-> > before the workload being tested is run against dm-log-writes, then
-> > replaying on top of that? In general, anything that puts the device back
-> > into the state from before the workload ran and replays from there
-> > should be enough to fix the problem I think. As long as a replay
-> > sequence runs in order, I don't think snapshots of each replay point
-> > should technically be necessary (vs a single replay snapshot, for e.g.).
-> >
-> > Note that I ended up testing generic/482 with a loop device for a
-> > scratch device and that also worked around the problem, I suspect
-> > because that allowed the aforementioned discards to actually reset the
-> > underlying the device via loop discard->hole punch (which doesn't occur
-> > with my original, non-loop scratch dev). So it seems that another option
-> 
-> Urrgh! take a look at src/log-writes/log-writes.c:log_discard()->zero_range().
-> I remembered correctly the replay log falls back to zeroing device with no
-> discard support, but wasn't aware that it drops large discard requests
-> (> 128MB), so there we have it.
-> 
 
-Heh, Ok.
+On 21/02/2019 08:42, Marek Szyprowski wrote:
+> Dear All,
+> 
+> On 2019-02-15 12:13, Ming Lei wrote:
+>> This patch pulls the trigger for multi-page bvecs.
+>>
+>> Reviewed-by: Omar Sandoval <osandov@fb.com>
+>> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> 
+> Since Linux next-20190218 I've observed problems with block layer on one
+> of my test devices (Odroid U3 with EXT4 rootfs on SD card). Bisecting
+> this issue led me to this change. This is also the first linux-next
+> release with this change merged. The issue is fully reproducible and can
+> be observed in the following kernel log:
+> 
+> sdhci: Secure Digital Host Controller Interface driver
+> sdhci: Copyright(c) Pierre Ossman
+> s3c-sdhci 12530000.sdhci: clock source 2: mmc_busclk.2 (100000000 Hz)
+> s3c-sdhci 12530000.sdhci: Got CD GPIO
+> mmc0: SDHCI controller on samsung-hsmmc [12530000.sdhci] using ADMA
+> mmc0: new high speed SDHC card at address aaaa
+> mmcblk0: mmc0:aaaa SL16G 14.8 GiB
+I have also noticed some failures when writing to an eMMC device on one
+of our Tegra boards. We have a simple eMMC write/read test and it is
+currently failing because the data written does not match the source.
 
-> > for more deterministic behavior in fstests could be to just enforce the
-> > use of a loop device as the underlying target in these particular tests.
-> > For example, have the log-writes init create a file on the test device
-> > and loop mount that rather than using the scratch device. Just a thought
-> > though, it's not clear to me that's any more simple than what you have
-> > already implemented here..
-> >
-> 
-> Seems like a pretty good idea to me, but in doing that we may loose
-> diversity in the tested block devices. On different test machines mkfs
-> and later fsstress ops will result in slightly different io patterns.
-> Since generic/482 is not a deterministic test (random fsstress seed)
-> than we cannot argue that reproducible results are better than
-> deterministic results.
-> 
-> Another option is to relax the  log->max_zero_size limit of
-> log_discard() and allow it to zero out devices that don't support
-> discard, but that is likely going to cost much more runtime.
-> Note that this simple patch could also work for you:
-> 
-> --- a/src/log-writes/log-writes.c
-> +++ b/src/log-writes/log-writes.c
-> @@ -95,7 +95,7 @@ int log_discard(struct log *log, struct
-> log_write_entry *entry)
->  {
->         u64 start = le64_to_cpu(entry->sector) * log->sectorsize;
->         u64 size = le64_to_cpu(entry->nr_sectors) * log->sectorsize;
-> -       u64 max_chunk = 1 * 1024 * 1024 * 1024;
-> +       u64 max_chunk = log->max_zero_size;
-> 
-> ---
-> 
-> Brian,
-> 
-> Can you try this patch on you test machine and say how much
-> worse the runtime is compared to the loop device setup?
-> 
-> In general, I am in favor of the simplest possible fix
-> and in keeping runtime shortest, so if the above fix
-> results in longer runtime, I would prefer to make the test always
-> run on loopdev as you suggested.
-> 
+I did not seem the same crash as reported here, however, in our case the
+rootfs is NFS mounted and so probably would not. However, the bisect
+points to this commit and reverting on top of -next fixes the issues.
 
-Note that this is a low resource VM with a spinning disk. The scratch
-device is a 15G LVM volume. My last run of generic/482 was 139s (which I
-think was using loop for a scratch device). With this change and back to
-using the LVM volume, I ended up stopping it because I started seeing a
-~160s or so delay between XFS mount cycles in the syslog (i.e., per
-replay iteration). ;P
+Cheers
+Jon
 
-Brian
-
-> Thanks,
-> Amir.
+-- 
+nvpublic
