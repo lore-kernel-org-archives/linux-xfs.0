@@ -1,54 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:33378 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391011AbfBRSRm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Feb 2019 13:17:42 -0500
-Received: by mail-ot1-f66.google.com with SMTP id i20so29902164otl.0
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Feb 2019 10:17:41 -0800 (PST)
+Received: from userp2120.oracle.com ([156.151.31.85]:55772 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727864AbfB1X3K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Feb 2019 18:29:10 -0500
+Date: Thu, 28 Feb 2019 15:29:01 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: sporadic shared/298 failures?
+Message-ID: <20190228232901.GC6471@magnolia>
 MIME-Version: 1.0
-References: <CAPcyv4jyCDJTpGZB6qVX7_FiaxJfDzWA1cw8dfPjHM2j3j3yqQ@mail.gmail.com>
- <3eb67ffa-76c9-aa66-d162-d4e209330f48@gmail.com>
-In-Reply-To: <3eb67ffa-76c9-aa66-d162-d4e209330f48@gmail.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 18 Feb 2019 10:17:30 -0800
-Message-ID: <CAPcyv4grMnrviSDJrA5FQOFvxuAMUXoKvgNpdy9sF9zi+OHJNA@mail.gmail.com>
-Subject: Re: [LSF/MM TOPIC] The end of the DAX experiment
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-nvdimm <linux-nvdimm@lists.01.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Eric Whitney <enwlinux@gmail.com>
+Cc: linux-ext4@vger.kernel.org, tytso@mit.edu, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-On Sun, Feb 17, 2019 at 12:29 PM Ric Wheeler <ricwheeler@gmail.com> wrote:
->
-> On 2/6/19 4:12 PM, Dan Williams wrote:
-> > Before people get too excited this isn't a proposal to kill DAX. The
-> > topic proposal is a discussion to resolve lingering open questions
-> > that currently motivate ext4 and xfs to scream "EXPERIMENTAL" when the
-> > current DAX facilities are enabled. The are 2 primary concerns to
-> > resolve. Enumerate the remaining features/fixes, and identify a path
-> > to implement it all without regressing any existing application use
-> > cases.
-> >
-> > An enumeration of remaining projects follows, please expand this list
-> > if I missed something:
-> >
-> > * "DAX" has no specific meaning by itself, users have 2 use cases for
-> > "DAX" capabilities: userspace cache management via MAP_SYNC, and page
-> > cache avoidance where the latter aspect of DAX has no current api to
-> > discover / use it. The project is to supplement MAP_SYNC with a
-> > MAP_DIRECT facility and MADV_SYNC / MADV_DIRECT to indicate the same
-> > dynamically via madvise. Similar to O_DIRECT, MAP_DIRECT would be an
-> > application hint to avoid / minimiize page cache usage, but no strict
-> > guarantee like what MAP_SYNC provides.
->
->
-> Sounds like a great topic to me. Having just gone through a new round of USENIX
-> paper reviews, it is interesting to see how many academic systems are being
-> pitched in this space (and most of them don't mention the kernel based xfs/ext4
-> with dax).
+Hi Eric,
 
-Makes sense, the current fsdax facility is chasing feature
-deficiencies relative to device-dax (longterm pin support) and nova
-(dax techniques for fs-metadata).
+On this morning's ext4 concall you mentioned that you saw sporadic
+failures in shared/298, and I mentioned that I'd seen similar symptoms
+on xfs.  I had a look at 298 and discovered that it probes the file
+image for holes while the filesystem is loop-mounted!  Yikes!  I don't
+remember the exact circumstances of your testing (I think you said it
+was related to bigalloc?) but this reproduces on XFS with blocksize = 1k
+every time.
+
+Does the following patch fix your sporadic failures?
+
+(This isn't the last word on this test -- both ext4 and XFS now /do/
+support live queries of the freep space map, so we're probably going
+to want a similar test that doesn't clunkily unmount the fs so much.)
+
+I'll send this patch out with proper subject line and whatnot next week
+after I give it more thorough testing on xfs.
+
+--D
+
+This test does some weird things with live filesystems -- it seems to be
+validating the behavior of fstrim by comparing the filesystem's free
+space map to holes in the file image that backs the filesystem.
+However, this doesn't account for the fact that some filesystems
+maintain in-core preallocations and/or can perturb the free space data
+during unmount.  This causes sporadic test failures when the two become
+out of sync.
+
+Therefore, make sure we unmount the filesystem before we start running
+tools against the filesystem image file to eliminate the possibility of
+changes to the free space map.  This was found by running shared/298 on
+xfs with a 1k block size.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/shared/298 |   18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/tests/shared/298 b/tests/shared/298
+index aafdc25f..5d6c6ccf 100755
+--- a/tests/shared/298
++++ b/tests/shared/298
+@@ -46,13 +46,21 @@ _cleanup()
+ 
+ get_holes()
+ {
++	# It's not a good idea to be running tools against the image file
++	# backing a live filesystem because the filesystem could be maintaining
++	# in-core state that will perturb the free space map on umount.  Stick
++	# to established convention which requires the filesystem to be
++	# unmounted while we probe the underlying file.
++	$UMOUNT_PROG $loop_mnt
+ 	$XFS_IO_PROG -F -c fiemap $1 | grep hole | $SED_PROG 's/.*\[\(.*\)\.\.\(.*\)\].*/\1 \2/'
++	_mount $loop_dev $loop_mnt
+ }
+ 
+ get_free_sectors()
+ {
+ 	case $FSTYP in
+ 	ext4)
++	$UMOUNT_PROG $loop_mnt
+ 	$DUMPE2FS_PROG $img_file  2>&1 | grep " Free blocks" | cut -d ":" -f2- | \
+ 		tr ',' '\n' | $SED_PROG 's/^ //' | \
+ 		$AWK_PROG -v spb=$sectors_per_block 'BEGIN{FS="-"};
+@@ -195,6 +203,16 @@ while read line; do
+ 		END { if(found) exit 0; else exit 1}' $merged_sectors
+ 	then
+ 		echo "Sectors $from-$to are not marked as free!"
++
++		# Dump the state to make it easier to debug this...
++		echo free_sectors >> $seqres.full
++		sort -g < $free_sectors >> $seqres.full
++		echo fiemap_ref >> $seqres.full
++		sort -g < $fiemap_ref >> $seqres.full
++		echo merged_sectors >> $seqres.full
++		sort -g < $merged_sectors >> $seqres.full
++		echo fiemap_after >> $seqres.full
++		sort -g < $fiemap_after >> $seqres.full
+ 		exit
+ 	fi
+ done < $fiemap_after
