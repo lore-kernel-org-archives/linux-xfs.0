@@ -1,80 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51582 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:54650 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728172AbfCAPwG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Mar 2019 10:52:06 -0500
-Date: Fri, 1 Mar 2019 07:51:45 -0800
+        with ESMTP id S1725966AbfCAQRf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Mar 2019 11:17:35 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x21GEAq6180969
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 16:17:34 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2qtwkur9y7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 01 Mar 2019 16:17:34 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x21GHSKj011995
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 16:17:28 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x21GHS1k010127
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 16:17:28 GMT
+Date: Fri, 1 Mar 2019 08:17:27 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] statx.2: add project support update
-Message-ID: <20190301155145.GO21626@magnolia>
-References: <1551449184-7942-1-git-send-email-wshilong1991@gmail.com>
- <1551449184-7942-3-git-send-email-wshilong1991@gmail.com>
+Subject: [PATCH] xfs: set attributes_mask in xfs_vn_getattr
+Message-ID: <20190301161727.GP21626@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1551449184-7942-3-git-send-email-wshilong1991@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Wang Shilong <wangshilong1991@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, lixi@ddn.com, adilger@dilger.ca, Wang Shilong <wshilong@ddn.com>, linux-man@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Mar 01, 2019 at 11:06:24PM +0900, Wang Shilong wrote:
-> From: Wang Shilong <wshilong@ddn.com>
-> 
-> Cc: linux-man@vger.kernel.org
-> Signed-off-by: Wang Shilong <wshilong@ddn.com>
-> ---
->  man2/statx.2 | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/man2/statx.2 b/man2/statx.2
-> index 7265d8ace..6a9dede8b 100644
-> --- a/man2/statx.2
-> +++ b/man2/statx.2
-> @@ -82,6 +82,7 @@ struct statx {
->         containing the filesystem where the file resides */
->      __u32 stx_dev_major;   /* Major ID */
->      __u32 stx_dev_minor;   /* Minor ID */
-> +    __u32 stx_projid;      /* Project ID of file */
->  };
->  .EE
->  .in
-> @@ -261,6 +262,7 @@ STATX_SIZE	Want stx_size
->  STATX_BLOCKS	Want stx_blocks
->  STATX_BASIC_STATS	[All of the above]
->  STATX_BTIME	Want stx_btime
-> +STATX_PROJID	Want stx_projid
->  STATX_ALL	[All currently available fields]
->  .TE
->  .in
-> @@ -412,6 +414,9 @@ The device on which this file (inode) resides.
->  .IR stx_rdev_major " and "  stx_rdev_minor
->  The device that this file (inode) represents if the file is of block or
->  character device type.
-> +.TP
-> +.I stx_projid
-> +The file's project ID.
->  .PP
->  For further information on the above fields, see
->  .BR inode (7).
-> @@ -458,6 +463,9 @@ See
->  .TP
->  .B STATX_ATTR_ENCRYPTED
->  A key is required for the file to be encrypted by the filesystem.
-> +.TP
-> +.B STATX_ATTR_PROJINHERIT
-> +Sub directories or files will inherit parent's project ID automatically.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-"Newly created files and directories will inherit...", I think?
+According to the statx documentation we're supposed to set a bit in
+attributes_mask for every inode flag that the filesystem can support.
+We don't, so fix this.
 
-I appreciate the manpage and fstests updates immensely. :)
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_iops.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
---D
-
->  .SH RETURN VALUE
->  On success, zero is returned.
->  On error, \-1 is returned, and
-> -- 
-> 2.19.1
-> 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 1efef69a7f1c..74047bd0c1ae 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -531,6 +531,10 @@ xfs_vn_getattr(
+ 		}
+ 	}
+ 
++	/*
++	 * Note: If you add another clause to set an attribute flag, please
++	 * update attributes_mask below.
++	 */
+ 	if (ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE)
+ 		stat->attributes |= STATX_ATTR_IMMUTABLE;
+ 	if (ip->i_d.di_flags & XFS_DIFLAG_APPEND)
+@@ -538,6 +542,10 @@ xfs_vn_getattr(
+ 	if (ip->i_d.di_flags & XFS_DIFLAG_NODUMP)
+ 		stat->attributes |= STATX_ATTR_NODUMP;
+ 
++	stat->attributes_mask |= (STATX_ATTR_IMMUTABLE |
++				  STATX_ATTR_APPEND |
++				  STATX_ATTR_NODUMP);
++
+ 	switch (inode->i_mode & S_IFMT) {
+ 	case S_IFBLK:
+ 	case S_IFCHR:
