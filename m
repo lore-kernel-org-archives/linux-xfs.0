@@ -1,58 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:34890 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387836AbfCAOFw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Mar 2019 09:05:52 -0500
-From: Wang Shilong <wangshilong1991@gmail.com>
-Subject: [PATCH 0/8] add generic interface to set/get project
-Date: Fri,  1 Mar 2019 23:05:33 +0900
-Message-Id: <1551449141-7884-1-git-send-email-wshilong1991@gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:45302 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725958AbfCAX06 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Mar 2019 18:26:58 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x21NOOIP123090
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:26:56 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2qtwkut8wc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 01 Mar 2019 23:26:56 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x21NQui8030826
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:26:56 GMT
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x21NQu4N007449
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:26:56 GMT
+Subject: [PATCH 01/23] configure: use sys/xattr.h for fsetxattr detection
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 01 Mar 2019 15:26:55 -0800
+Message-ID: <155148281495.16677.12629575032379173191.stgit@magnolia>
+In-Reply-To: <155148280859.16677.6057998944865066232.stgit@magnolia>
+References: <155148280859.16677.6057998944865066232.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net
-Cc: lixi@ddn.com, adilger@dilger.ca, Wang Shilong <wshilong@ddn.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Wang Shilong <wshilong@ddn.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Currently, Filesystem use FS_IOC_FS_SETXATTR ioctl
-to change project ID of file. However we don't
-support ioctl on symlink files, and it is desirable
-to change symlink files' project ID just like uid/gid.
+The only user of fsetxattr and HAVE_FSETXATTR is fsr, which includes
+sys/xattr.h (from libc).  However, the m4 macro to detect fsetxattr
+support requires attr/xattr.h (from libattr).  libattr dropped xattr.h
+last year, so update the check.
 
-This patch try to reuse existed interface fchownat(),
-use group id to set project ID if flag AT_FCHOWN_PROJID
-passed in.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ m4/package_libcdev.m4 |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Also extend statx() calles to get symlink files' project
-ID and inherit attribute.
 
-Wang Shilong (8):
-  fs: add support to change project ID
-  ext4: support project ID in ext4_setattr()
-  f2fs: support project ID in f2fs_setattr()
-  xfs: support project ID in xfs_setattr()
-  fs: add project support to statx
-  ext4: support project in ext4_getattr()
-  f2fs: support project in f2fs_getattr()
-  xfs: support project in xfs_getattr()
-
- fs/attr.c                        | 26 +++++++++++++--
- fs/ext4/inode.c                  | 15 +++++++--
- fs/f2fs/file.c                   | 12 +++++--
- fs/open.c                        | 29 +++++++++++++----
- fs/quota/dquot.c                 | 23 ++++++++++++++
- fs/stat.c                        |  1 +
- fs/xfs/xfs_iops.c                | 54 ++++++++++++++++++++++++++------
- fs/xfs/xfs_linux.h               | 10 ++++++
- include/linux/fs.h               |  3 ++
- include/linux/quotaops.h         |  9 ++++++
- include/linux/stat.h             |  2 ++
- include/uapi/linux/fcntl.h       |  1 +
- include/uapi/linux/stat.h        |  8 +++--
- tools/include/uapi/linux/fcntl.h |  1 +
- tools/include/uapi/linux/stat.h  |  8 +++--
- 15 files changed, 175 insertions(+), 27 deletions(-)
-
--- 
-2.19.1
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 7ee4acdd..2c0c72ce 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -223,14 +223,14 @@ AC_DEFUN([AC_HAVE_FLS],
+   ])
+ 
+ #
+-# Check if we have a fsetxattr call (Mac OS X)
++# Check if we have a fsetxattr call
+ #
+ AC_DEFUN([AC_HAVE_FSETXATTR],
+   [ AC_CHECK_DECL([fsetxattr],
+        have_fsetxattr=yes,
+        [],
+        [#include <sys/types.h>
+-        #include <attr/xattr.h>]
++        #include <sys/xattr.h>]
+        )
+     AC_SUBST(have_fsetxattr)
+   ])
