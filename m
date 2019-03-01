@@ -1,26 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47384 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725996AbfCAX26 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Mar 2019 18:28:58 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x21NSsaW126361
-        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:54 GMT
+Received: from aserp2130.oracle.com ([141.146.126.79]:43688 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726041AbfCAX3C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Mar 2019 18:29:02 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x21NT0rZ126077
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:29:00 GMT
 Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2qtwkut932-1
+        by aserp2130.oracle.com with ESMTP id 2qtupeteq1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Mar 2019 23:28:53 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x21NSr9g011693
+        for <linux-xfs@vger.kernel.org>; Fri, 01 Mar 2019 23:29:00 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x21NSxe4011878
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:53 GMT
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x21NSrO6021439
-        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:53 GMT
-Subject: [PATCH 19/23] libfrog: hoist bitmap out of scrub
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:59 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x21NSx2B029980
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:59 GMT
+Subject: [PATCH 20/23] xfs_repair: correctly account for free space btree
+ shrinks when fixing freelist
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 01 Mar 2019 15:28:52 -0800
-Message-ID: <155148293203.16677.14341643034136071964.stgit@magnolia>
+Date: Fri, 01 Mar 2019 15:28:58 -0800
+Message-ID: <155148293830.16677.3496892046491854044.stgit@magnolia>
 In-Reply-To: <155148280859.16677.6057998944865066232.stgit@magnolia>
 References: <155148280859.16677.6057998944865066232.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,911 +35,134 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move the bitmap code to libfrog so that we can use bitmaps in
-xfs_repair.
+When we fix the freelist at the end of build_agf_agfl in phase 5 of
+repair, we need to create incore rmap records for the blocks that get
+added to the AGFL.  We can't let the regular freelist fixing code use
+the regular on-disk rmapbt update code because the rmapbt isn't fully
+set up yet.
+
+Unfortunately, the original code fails to account for the fact that the
+free space btrees can shrink when we allocate blocks to fix the
+freelist; those blocks are also put on the freelist, but there are
+already incore rmaps for all the free space btree blocks.  We must not
+create (redundant) incore rmaps for those blocks.  If we do, repair
+fails with a complaint that rebuilding the rmapbt failed during phase 5.
+xfs/137 on a 1k block size occasionally triggers this bug.
+
+To fix the problem, construct a bitmap of all OWN_AG blocks that we know
+about before traversing the AGFL, and only create new incore rmaps for
+those AGFL blocks that are not already tracked in the bitmap.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/bitmap.h |   24 +++
- libfrog/Makefile |    1 
- libfrog/bitmap.c |  393 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/Makefile   |    2 
- scrub/bitmap.c   |  393 ------------------------------------------------------
- scrub/bitmap.h   |   24 ---
- 6 files changed, 418 insertions(+), 419 deletions(-)
- create mode 100644 include/bitmap.h
- create mode 100644 libfrog/bitmap.c
- delete mode 100644 scrub/bitmap.c
- delete mode 100644 scrub/bitmap.h
+ repair/rmap.c |   54 ++++++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 44 insertions(+), 10 deletions(-)
 
 
-diff --git a/include/bitmap.h b/include/bitmap.h
-new file mode 100644
-index 00000000..e29a4335
---- /dev/null
-+++ b/include/bitmap.h
-@@ -0,0 +1,24 @@
-+// SPDX-License-Identifier: GPL-2.0+
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#ifndef LIBFROG_BITMAP_H_
-+#define LIBFROG_BITMAP_H_
-+
-+struct bitmap {
-+	pthread_mutex_t		bt_lock;
-+	struct avl64tree_desc	*bt_tree;
-+};
-+
-+bool bitmap_init(struct bitmap **bmap);
-+void bitmap_free(struct bitmap **bmap);
-+bool bitmap_set(struct bitmap *bmap, uint64_t start, uint64_t length);
-+bool bitmap_iterate(struct bitmap *bmap,
-+		bool (*fn)(uint64_t, uint64_t, void *), void *arg);
-+bool bitmap_test(struct bitmap *bmap, uint64_t start,
-+		uint64_t len);
-+bool bitmap_empty(struct bitmap *bmap);
-+void bitmap_dump(struct bitmap *bmap);
-+
-+#endif /* LIBFROG_BITMAP_H_ */
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index dbff9596..f5a0539b 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -12,6 +12,7 @@ LT_AGE = 0
- 
- CFILES = \
- avl64.c \
-+bitmap.c \
- convert.c \
- crc32.c \
- fsgeom.c \
-diff --git a/libfrog/bitmap.c b/libfrog/bitmap.c
-new file mode 100644
-index 00000000..aecdba0d
---- /dev/null
-+++ b/libfrog/bitmap.c
-@@ -0,0 +1,393 @@
-+// SPDX-License-Identifier: GPL-2.0+
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#include "xfs.h"
-+#include <stdint.h>
-+#include <stdlib.h>
-+#include <assert.h>
-+#include <pthread.h>
-+#include "platform_defs.h"
-+#include "avl64.h"
-+#include "list.h"
+diff --git a/repair/rmap.c b/repair/rmap.c
+index d0156f9d..19cceca3 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -12,6 +12,7 @@
+ #include "dinode.h"
+ #include "slab.h"
+ #include "rmap.h"
 +#include "bitmap.h"
-+
-+/*
-+ * Space Efficient Bitmap
-+ *
-+ * Implements a space-efficient bitmap.  We use an AVL tree to manage
-+ * extent records that tell us which ranges are set; the bitmap key is
-+ * an arbitrary uint64_t.  The usual bitmap operations (set, clear,
-+ * test, test and set) are supported, plus we can iterate set ranges.
-+ */
-+
-+#define avl_for_each_range_safe(pos, n, l, first, last) \
-+	for (pos = (first), n = pos->avl_nextino, l = (last)->avl_nextino; pos != (l); \
-+			pos = n, n = pos ? pos->avl_nextino : NULL)
-+
-+#define avl_for_each_safe(tree, pos, n) \
-+	for (pos = (tree)->avl_firstino, n = pos ? pos->avl_nextino : NULL; \
-+			pos != NULL; \
-+			pos = n, n = pos ? pos->avl_nextino : NULL)
-+
-+#define avl_for_each(tree, pos) \
-+	for (pos = (tree)->avl_firstino; pos != NULL; pos = pos->avl_nextino)
-+
-+struct bitmap_node {
-+	struct avl64node	btn_node;
-+	uint64_t		btn_start;
-+	uint64_t		btn_length;
-+};
-+
-+static uint64_t
-+extent_start(
-+	struct avl64node	*node)
-+{
-+	struct bitmap_node	*btn;
-+
-+	btn = container_of(node, struct bitmap_node, btn_node);
-+	return btn->btn_start;
-+}
-+
-+static uint64_t
-+extent_end(
-+	struct avl64node	*node)
-+{
-+	struct bitmap_node	*btn;
-+
-+	btn = container_of(node, struct bitmap_node, btn_node);
-+	return btn->btn_start + btn->btn_length;
-+}
-+
-+static struct avl64ops bitmap_ops = {
-+	extent_start,
-+	extent_end,
-+};
-+
-+/* Initialize a bitmap. */
-+bool
-+bitmap_init(
-+	struct bitmap		**bmapp)
-+{
-+	struct bitmap		*bmap;
-+
-+	bmap = calloc(1, sizeof(struct bitmap));
-+	if (!bmap)
-+		return false;
-+	bmap->bt_tree = malloc(sizeof(struct avl64tree_desc));
-+	if (!bmap->bt_tree) {
-+		free(bmap);
-+		return false;
-+	}
-+
-+	pthread_mutex_init(&bmap->bt_lock, NULL);
-+	avl64_init_tree(bmap->bt_tree, &bitmap_ops);
-+	*bmapp = bmap;
-+
-+	return true;
-+}
-+
-+/* Free a bitmap. */
-+void
-+bitmap_free(
-+	struct bitmap		**bmapp)
-+{
-+	struct bitmap		*bmap;
-+	struct avl64node	*node;
-+	struct avl64node	*n;
-+	struct bitmap_node	*ext;
-+
-+	bmap = *bmapp;
-+	avl_for_each_safe(bmap->bt_tree, node, n) {
-+		ext = container_of(node, struct bitmap_node, btn_node);
-+		free(ext);
-+	}
-+	free(bmap->bt_tree);
-+	*bmapp = NULL;
-+}
-+
-+/* Create a new bitmap extent node. */
-+static struct bitmap_node *
-+bitmap_node_init(
-+	uint64_t		start,
-+	uint64_t		len)
-+{
-+	struct bitmap_node	*ext;
-+
-+	ext = malloc(sizeof(struct bitmap_node));
-+	if (!ext)
-+		return NULL;
-+
-+	ext->btn_node.avl_nextino = NULL;
-+	ext->btn_start = start;
-+	ext->btn_length = len;
-+
-+	return ext;
-+}
-+
-+/* Set a region of bits (locked). */
-+static bool
-+__bitmap_set(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		length)
-+{
-+	struct avl64node	*firstn;
-+	struct avl64node	*lastn;
-+	struct avl64node	*pos;
-+	struct avl64node	*n;
-+	struct avl64node	*l;
-+	struct bitmap_node	*ext;
-+	uint64_t		new_start;
-+	uint64_t		new_length;
-+	struct avl64node	*node;
-+	bool			res = true;
-+
-+	/* Find any existing nodes adjacent or within that range. */
-+	avl64_findranges(bmap->bt_tree, start - 1, start + length + 1,
-+			&firstn, &lastn);
-+
-+	/* Nothing, just insert a new extent. */
-+	if (firstn == NULL && lastn == NULL) {
-+		ext = bitmap_node_init(start, length);
-+		if (!ext)
-+			return false;
-+
-+		node = avl64_insert(bmap->bt_tree, &ext->btn_node);
-+		if (node == NULL) {
-+			free(ext);
-+			errno = EEXIST;
-+			return false;
-+		}
-+
-+		return true;
-+	}
-+
-+	assert(firstn != NULL && lastn != NULL);
-+	new_start = start;
-+	new_length = length;
-+
-+	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
-+		ext = container_of(pos, struct bitmap_node, btn_node);
-+
-+		/* Bail if the new extent is contained within an old one. */
-+		if (ext->btn_start <= start &&
-+		    ext->btn_start + ext->btn_length >= start + length)
-+			return res;
-+
-+		/* Check for overlapping and adjacent extents. */
-+		if (ext->btn_start + ext->btn_length >= start ||
-+		    ext->btn_start <= start + length) {
-+			if (ext->btn_start < start) {
-+				new_start = ext->btn_start;
-+				new_length += ext->btn_length;
-+			}
-+
-+			if (ext->btn_start + ext->btn_length >
-+			    new_start + new_length)
-+				new_length = ext->btn_start + ext->btn_length -
-+						new_start;
-+
-+			avl64_delete(bmap->bt_tree, pos);
-+			free(ext);
-+		}
-+	}
-+
-+	ext = bitmap_node_init(new_start, new_length);
-+	if (!ext)
-+		return false;
-+
-+	node = avl64_insert(bmap->bt_tree, &ext->btn_node);
-+	if (node == NULL) {
-+		free(ext);
-+		errno = EEXIST;
-+		return false;
-+	}
-+
-+	return res;
-+}
-+
-+/* Set a region of bits. */
-+bool
-+bitmap_set(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		length)
-+{
-+	bool			res;
-+
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	res = __bitmap_set(bmap, start, length);
-+	pthread_mutex_unlock(&bmap->bt_lock);
-+
-+	return res;
-+}
-+
-+#if 0	/* Unused, provided for completeness. */
-+/* Clear a region of bits. */
-+bool
-+bitmap_clear(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		len)
-+{
-+	struct avl64node	*firstn;
-+	struct avl64node	*lastn;
-+	struct avl64node	*pos;
-+	struct avl64node	*n;
-+	struct avl64node	*l;
-+	struct bitmap_node	*ext;
-+	uint64_t		new_start;
-+	uint64_t		new_length;
-+	struct avl64node	*node;
-+	int			stat;
-+
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	/* Find any existing nodes over that range. */
-+	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
-+
-+	/* Nothing, we're done. */
-+	if (firstn == NULL && lastn == NULL) {
-+		pthread_mutex_unlock(&bmap->bt_lock);
-+		return true;
-+	}
-+
-+	assert(firstn != NULL && lastn != NULL);
-+
-+	/* Delete or truncate everything in sight. */
-+	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
-+		ext = container_of(pos, struct bitmap_node, btn_node);
-+
-+		stat = 0;
-+		if (ext->btn_start < start)
-+			stat |= 1;
-+		if (ext->btn_start + ext->btn_length > start + len)
-+			stat |= 2;
-+		switch (stat) {
-+		case 0:
-+			/* Extent totally within range; delete. */
-+			avl64_delete(bmap->bt_tree, pos);
-+			free(ext);
-+			break;
-+		case 1:
-+			/* Extent is left-adjacent; truncate. */
-+			ext->btn_length = start - ext->btn_start;
-+			break;
-+		case 2:
-+			/* Extent is right-adjacent; move it. */
-+			ext->btn_length = ext->btn_start + ext->btn_length -
-+					(start + len);
-+			ext->btn_start = start + len;
-+			break;
-+		case 3:
-+			/* Extent overlaps both ends. */
-+			ext->btn_length = start - ext->btn_start;
-+			new_start = start + len;
-+			new_length = ext->btn_start + ext->btn_length -
-+					new_start;
-+
-+			ext = bitmap_node_init(new_start, new_length);
-+			if (!ext)
-+				return false;
-+
-+			node = avl64_insert(bmap->bt_tree, &ext->btn_node);
-+			if (node == NULL) {
-+				errno = EEXIST;
-+				return false;
-+			}
-+			break;
-+		}
-+	}
-+
-+	pthread_mutex_unlock(&bmap->bt_lock);
-+	return true;
-+}
-+#endif
-+
-+#ifdef DEBUG
-+/* Iterate the set regions of this bitmap. */
-+bool
-+bitmap_iterate(
-+	struct bitmap		*bmap,
-+	bool			(*fn)(uint64_t, uint64_t, void *),
-+	void			*arg)
-+{
-+	struct avl64node	*node;
-+	struct bitmap_node	*ext;
-+	bool			moveon = true;
-+
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	avl_for_each(bmap->bt_tree, node) {
-+		ext = container_of(node, struct bitmap_node, btn_node);
-+		moveon = fn(ext->btn_start, ext->btn_length, arg);
-+		if (!moveon)
-+			break;
-+	}
-+	pthread_mutex_unlock(&bmap->bt_lock);
-+
-+	return moveon;
-+}
-+#endif
-+
-+/* Do any bitmap extents overlap the given one?  (locked) */
-+static bool
-+__bitmap_test(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		len)
-+{
-+	struct avl64node	*firstn;
-+	struct avl64node	*lastn;
-+
-+	/* Find any existing nodes over that range. */
-+	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
-+
-+	return firstn != NULL && lastn != NULL;
-+}
-+
-+/* Is any part of this range set? */
-+bool
-+bitmap_test(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		len)
-+{
-+	bool			res;
-+
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	res = __bitmap_test(bmap, start, len);
-+	pthread_mutex_unlock(&bmap->bt_lock);
-+
-+	return res;
-+}
-+
-+/* Are none of the bits set? */
-+bool
-+bitmap_empty(
-+	struct bitmap		*bmap)
-+{
-+	return bmap->bt_tree->avl_firstino == NULL;
-+}
-+
-+#ifdef DEBUG
-+static bool
-+bitmap_dump_fn(
-+	uint64_t		startblock,
-+	uint64_t		blockcount,
-+	void			*arg)
-+{
-+	printf("%"PRIu64":%"PRIu64"\n", startblock, blockcount);
-+	return true;
-+}
-+
-+/* Dump bitmap. */
-+void
-+bitmap_dump(
-+	struct bitmap		*bmap)
-+{
-+	printf("BITMAP DUMP %p\n", bmap);
-+	bitmap_iterate(bmap, bitmap_dump_fn, NULL);
-+	printf("BITMAP DUMP DONE\n");
-+}
-+#endif
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 04921888..1fb9ed1d 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -31,7 +31,6 @@ endif
- endif	# scrub_prereqs
  
- HFILES = \
--bitmap.h \
- common.h \
- counter.h \
- disk.h \
-@@ -48,7 +47,6 @@ vfs.h \
- xfs_scrub.h
+ #undef RMAP_DEBUG
  
- CFILES = \
--bitmap.c \
- common.c \
- counter.c \
- disk.c \
-diff --git a/scrub/bitmap.c b/scrub/bitmap.c
-deleted file mode 100644
-index aecdba0d..00000000
---- a/scrub/bitmap.c
-+++ /dev/null
-@@ -1,393 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0+
--/*
-- * Copyright (C) 2018 Oracle.  All Rights Reserved.
-- * Author: Darrick J. Wong <darrick.wong@oracle.com>
-- */
--#include "xfs.h"
--#include <stdint.h>
--#include <stdlib.h>
--#include <assert.h>
--#include <pthread.h>
--#include "platform_defs.h"
--#include "avl64.h"
--#include "list.h"
--#include "bitmap.h"
--
--/*
-- * Space Efficient Bitmap
-- *
-- * Implements a space-efficient bitmap.  We use an AVL tree to manage
-- * extent records that tell us which ranges are set; the bitmap key is
-- * an arbitrary uint64_t.  The usual bitmap operations (set, clear,
-- * test, test and set) are supported, plus we can iterate set ranges.
-- */
--
--#define avl_for_each_range_safe(pos, n, l, first, last) \
--	for (pos = (first), n = pos->avl_nextino, l = (last)->avl_nextino; pos != (l); \
--			pos = n, n = pos ? pos->avl_nextino : NULL)
--
--#define avl_for_each_safe(tree, pos, n) \
--	for (pos = (tree)->avl_firstino, n = pos ? pos->avl_nextino : NULL; \
--			pos != NULL; \
--			pos = n, n = pos ? pos->avl_nextino : NULL)
--
--#define avl_for_each(tree, pos) \
--	for (pos = (tree)->avl_firstino; pos != NULL; pos = pos->avl_nextino)
--
--struct bitmap_node {
--	struct avl64node	btn_node;
--	uint64_t		btn_start;
--	uint64_t		btn_length;
--};
--
--static uint64_t
--extent_start(
--	struct avl64node	*node)
--{
--	struct bitmap_node	*btn;
--
--	btn = container_of(node, struct bitmap_node, btn_node);
--	return btn->btn_start;
--}
--
--static uint64_t
--extent_end(
--	struct avl64node	*node)
--{
--	struct bitmap_node	*btn;
--
--	btn = container_of(node, struct bitmap_node, btn_node);
--	return btn->btn_start + btn->btn_length;
--}
--
--static struct avl64ops bitmap_ops = {
--	extent_start,
--	extent_end,
--};
--
--/* Initialize a bitmap. */
--bool
--bitmap_init(
--	struct bitmap		**bmapp)
--{
--	struct bitmap		*bmap;
--
--	bmap = calloc(1, sizeof(struct bitmap));
--	if (!bmap)
--		return false;
--	bmap->bt_tree = malloc(sizeof(struct avl64tree_desc));
--	if (!bmap->bt_tree) {
--		free(bmap);
--		return false;
--	}
--
--	pthread_mutex_init(&bmap->bt_lock, NULL);
--	avl64_init_tree(bmap->bt_tree, &bitmap_ops);
--	*bmapp = bmap;
--
--	return true;
--}
--
--/* Free a bitmap. */
--void
--bitmap_free(
--	struct bitmap		**bmapp)
--{
--	struct bitmap		*bmap;
--	struct avl64node	*node;
--	struct avl64node	*n;
--	struct bitmap_node	*ext;
--
--	bmap = *bmapp;
--	avl_for_each_safe(bmap->bt_tree, node, n) {
--		ext = container_of(node, struct bitmap_node, btn_node);
--		free(ext);
--	}
--	free(bmap->bt_tree);
--	*bmapp = NULL;
--}
--
--/* Create a new bitmap extent node. */
--static struct bitmap_node *
--bitmap_node_init(
--	uint64_t		start,
--	uint64_t		len)
--{
--	struct bitmap_node	*ext;
--
--	ext = malloc(sizeof(struct bitmap_node));
--	if (!ext)
--		return NULL;
--
--	ext->btn_node.avl_nextino = NULL;
--	ext->btn_start = start;
--	ext->btn_length = len;
--
--	return ext;
--}
--
--/* Set a region of bits (locked). */
--static bool
--__bitmap_set(
--	struct bitmap		*bmap,
--	uint64_t		start,
--	uint64_t		length)
--{
--	struct avl64node	*firstn;
--	struct avl64node	*lastn;
--	struct avl64node	*pos;
--	struct avl64node	*n;
--	struct avl64node	*l;
--	struct bitmap_node	*ext;
--	uint64_t		new_start;
--	uint64_t		new_length;
--	struct avl64node	*node;
--	bool			res = true;
--
--	/* Find any existing nodes adjacent or within that range. */
--	avl64_findranges(bmap->bt_tree, start - 1, start + length + 1,
--			&firstn, &lastn);
--
--	/* Nothing, just insert a new extent. */
--	if (firstn == NULL && lastn == NULL) {
--		ext = bitmap_node_init(start, length);
--		if (!ext)
--			return false;
--
--		node = avl64_insert(bmap->bt_tree, &ext->btn_node);
--		if (node == NULL) {
--			free(ext);
--			errno = EEXIST;
--			return false;
--		}
--
--		return true;
--	}
--
--	assert(firstn != NULL && lastn != NULL);
--	new_start = start;
--	new_length = length;
--
--	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
--		ext = container_of(pos, struct bitmap_node, btn_node);
--
--		/* Bail if the new extent is contained within an old one. */
--		if (ext->btn_start <= start &&
--		    ext->btn_start + ext->btn_length >= start + length)
--			return res;
--
--		/* Check for overlapping and adjacent extents. */
--		if (ext->btn_start + ext->btn_length >= start ||
--		    ext->btn_start <= start + length) {
--			if (ext->btn_start < start) {
--				new_start = ext->btn_start;
--				new_length += ext->btn_length;
--			}
--
--			if (ext->btn_start + ext->btn_length >
--			    new_start + new_length)
--				new_length = ext->btn_start + ext->btn_length -
--						new_start;
--
--			avl64_delete(bmap->bt_tree, pos);
--			free(ext);
--		}
--	}
--
--	ext = bitmap_node_init(new_start, new_length);
--	if (!ext)
--		return false;
--
--	node = avl64_insert(bmap->bt_tree, &ext->btn_node);
--	if (node == NULL) {
--		free(ext);
--		errno = EEXIST;
--		return false;
--	}
--
--	return res;
--}
--
--/* Set a region of bits. */
--bool
--bitmap_set(
--	struct bitmap		*bmap,
--	uint64_t		start,
--	uint64_t		length)
--{
--	bool			res;
--
--	pthread_mutex_lock(&bmap->bt_lock);
--	res = __bitmap_set(bmap, start, length);
--	pthread_mutex_unlock(&bmap->bt_lock);
--
--	return res;
--}
--
--#if 0	/* Unused, provided for completeness. */
--/* Clear a region of bits. */
--bool
--bitmap_clear(
--	struct bitmap		*bmap,
--	uint64_t		start,
--	uint64_t		len)
--{
--	struct avl64node	*firstn;
--	struct avl64node	*lastn;
--	struct avl64node	*pos;
--	struct avl64node	*n;
--	struct avl64node	*l;
--	struct bitmap_node	*ext;
--	uint64_t		new_start;
--	uint64_t		new_length;
--	struct avl64node	*node;
--	int			stat;
--
--	pthread_mutex_lock(&bmap->bt_lock);
--	/* Find any existing nodes over that range. */
--	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
--
--	/* Nothing, we're done. */
--	if (firstn == NULL && lastn == NULL) {
--		pthread_mutex_unlock(&bmap->bt_lock);
--		return true;
--	}
--
--	assert(firstn != NULL && lastn != NULL);
--
--	/* Delete or truncate everything in sight. */
--	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
--		ext = container_of(pos, struct bitmap_node, btn_node);
--
--		stat = 0;
--		if (ext->btn_start < start)
--			stat |= 1;
--		if (ext->btn_start + ext->btn_length > start + len)
--			stat |= 2;
--		switch (stat) {
--		case 0:
--			/* Extent totally within range; delete. */
--			avl64_delete(bmap->bt_tree, pos);
--			free(ext);
--			break;
--		case 1:
--			/* Extent is left-adjacent; truncate. */
--			ext->btn_length = start - ext->btn_start;
--			break;
--		case 2:
--			/* Extent is right-adjacent; move it. */
--			ext->btn_length = ext->btn_start + ext->btn_length -
--					(start + len);
--			ext->btn_start = start + len;
--			break;
--		case 3:
--			/* Extent overlaps both ends. */
--			ext->btn_length = start - ext->btn_start;
--			new_start = start + len;
--			new_length = ext->btn_start + ext->btn_length -
--					new_start;
--
--			ext = bitmap_node_init(new_start, new_length);
--			if (!ext)
--				return false;
--
--			node = avl64_insert(bmap->bt_tree, &ext->btn_node);
--			if (node == NULL) {
--				errno = EEXIST;
--				return false;
--			}
--			break;
--		}
--	}
--
--	pthread_mutex_unlock(&bmap->bt_lock);
--	return true;
--}
--#endif
--
--#ifdef DEBUG
--/* Iterate the set regions of this bitmap. */
--bool
--bitmap_iterate(
--	struct bitmap		*bmap,
--	bool			(*fn)(uint64_t, uint64_t, void *),
--	void			*arg)
--{
--	struct avl64node	*node;
--	struct bitmap_node	*ext;
--	bool			moveon = true;
--
--	pthread_mutex_lock(&bmap->bt_lock);
--	avl_for_each(bmap->bt_tree, node) {
--		ext = container_of(node, struct bitmap_node, btn_node);
--		moveon = fn(ext->btn_start, ext->btn_length, arg);
--		if (!moveon)
--			break;
--	}
--	pthread_mutex_unlock(&bmap->bt_lock);
--
--	return moveon;
--}
--#endif
--
--/* Do any bitmap extents overlap the given one?  (locked) */
--static bool
--__bitmap_test(
--	struct bitmap		*bmap,
--	uint64_t		start,
--	uint64_t		len)
--{
--	struct avl64node	*firstn;
--	struct avl64node	*lastn;
--
--	/* Find any existing nodes over that range. */
--	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
--
--	return firstn != NULL && lastn != NULL;
--}
--
--/* Is any part of this range set? */
--bool
--bitmap_test(
--	struct bitmap		*bmap,
--	uint64_t		start,
--	uint64_t		len)
--{
--	bool			res;
--
--	pthread_mutex_lock(&bmap->bt_lock);
--	res = __bitmap_test(bmap, start, len);
--	pthread_mutex_unlock(&bmap->bt_lock);
--
--	return res;
--}
--
--/* Are none of the bits set? */
--bool
--bitmap_empty(
--	struct bitmap		*bmap)
--{
--	return bmap->bt_tree->avl_firstino == NULL;
--}
--
--#ifdef DEBUG
--static bool
--bitmap_dump_fn(
--	uint64_t		startblock,
--	uint64_t		blockcount,
--	void			*arg)
--{
--	printf("%"PRIu64":%"PRIu64"\n", startblock, blockcount);
--	return true;
--}
--
--/* Dump bitmap. */
--void
--bitmap_dump(
--	struct bitmap		*bmap)
--{
--	printf("BITMAP DUMP %p\n", bmap);
--	bitmap_iterate(bmap, bitmap_dump_fn, NULL);
--	printf("BITMAP DUMP DONE\n");
--}
--#endif
-diff --git a/scrub/bitmap.h b/scrub/bitmap.h
-deleted file mode 100644
-index e9746a12..00000000
---- a/scrub/bitmap.h
-+++ /dev/null
-@@ -1,24 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0+
--/*
-- * Copyright (C) 2018 Oracle.  All Rights Reserved.
-- * Author: Darrick J. Wong <darrick.wong@oracle.com>
-- */
--#ifndef XFS_SCRUB_BITMAP_H_
--#define XFS_SCRUB_BITMAP_H_
--
--struct bitmap {
--	pthread_mutex_t		bt_lock;
--	struct avl64tree_desc	*bt_tree;
--};
--
--bool bitmap_init(struct bitmap **bmap);
--void bitmap_free(struct bitmap **bmap);
--bool bitmap_set(struct bitmap *bmap, uint64_t start, uint64_t length);
--bool bitmap_iterate(struct bitmap *bmap,
--		bool (*fn)(uint64_t, uint64_t, void *), void *arg);
--bool bitmap_test(struct bitmap *bmap, uint64_t start,
--		uint64_t len);
--bool bitmap_empty(struct bitmap *bmap);
--void bitmap_dump(struct bitmap *bmap);
--
--#endif /* XFS_SCRUB_BITMAP_H_ */
+@@ -450,15 +451,16 @@ rmap_store_ag_btree_rec(
+ 	struct xfs_buf		*agflbp = NULL;
+ 	struct xfs_trans	*tp;
+ 	__be32			*agfl_bno, *b;
++	struct xfs_ag_rmap	*ag_rmap = &ag_rmaps[agno];
++	struct bitmap		*own_ag_bitmap = NULL;
+ 	int			error = 0;
+ 
+ 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+ 		return 0;
+ 
+ 	/* Release the ar_rmaps; they were put into the rmapbt during p5. */
+-	free_slab(&ag_rmaps[agno].ar_rmaps);
+-	error = init_slab(&ag_rmaps[agno].ar_rmaps,
+-				  sizeof(struct xfs_rmap_irec));
++	free_slab(&ag_rmap->ar_rmaps);
++	error = init_slab(&ag_rmap->ar_rmaps, sizeof(struct xfs_rmap_irec));
+ 	if (error)
+ 		goto err;
+ 
+@@ -478,19 +480,50 @@ rmap_store_ag_btree_rec(
+ 	 * rmap, we only need to add rmap records for AGFL blocks past
+ 	 * that point in the AGFL because those blocks are a result of a
+ 	 * no-rmap no-shrink freelist fixup that we did earlier.
++	 *
++	 * However, some blocks end up on the AGFL because the free space
++	 * btrees shed blocks as a result of allocating space to fix the
++	 * freelist.  We already created in-core rmap records for the free
++	 * space btree blocks, so we must be careful not to create those
++	 * records again.  Create a bitmap of already-recorded OWN_AG rmaps.
+ 	 */
++	error = init_slab_cursor(ag_rmap->ar_raw_rmaps, rmap_compare, &rm_cur);
++	if (error)
++		goto err;
++	if (!bitmap_init(&own_ag_bitmap)) {
++		error = -ENOMEM;
++		goto err_slab;
++	}
++	while ((rm_rec = pop_slab_cursor(rm_cur)) != NULL) {
++		if (rm_rec->rm_owner != XFS_RMAP_OWN_AG)
++			continue;
++		if (!bitmap_set(own_ag_bitmap, rm_rec->rm_startblock,
++					rm_rec->rm_blockcount)) {
++			error = EFSCORRUPTED;
++			goto err_slab;
++		}
++	}
++	free_slab_cursor(&rm_cur);
++
++	/* Create rmaps for any AGFL blocks that aren't already rmapped. */
+ 	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+-	b = agfl_bno + ag_rmaps[agno].ar_flcount;
++	b = agfl_bno + ag_rmap->ar_flcount;
+ 	while (*b != cpu_to_be32(NULLAGBLOCK) &&
+ 	       b - agfl_bno < libxfs_agfl_size(mp)) {
+-		error = rmap_add_ag_rec(mp, agno, be32_to_cpu(*b), 1,
+-				XFS_RMAP_OWN_AG);
+-		if (error)
+-			goto err;
++		xfs_agblock_t	agbno;
++
++		agbno = be32_to_cpu(*b);
++		if (!bitmap_test(own_ag_bitmap, agbno, 1)) {
++			error = rmap_add_ag_rec(mp, agno, agbno, 1,
++					XFS_RMAP_OWN_AG);
++			if (error)
++				goto err;
++		}
+ 		b++;
+ 	}
+ 	libxfs_putbuf(agflbp);
+ 	agflbp = NULL;
++	bitmap_free(&own_ag_bitmap);
+ 
+ 	/* Merge all the raw rmaps into the main list */
+ 	error = rmap_fold_raw_recs(mp, agno);
+@@ -498,8 +531,7 @@ rmap_store_ag_btree_rec(
+ 		goto err;
+ 
+ 	/* Create cursors to refcount structures */
+-	error = init_slab_cursor(ag_rmaps[agno].ar_rmaps, rmap_compare,
+-			&rm_cur);
++	error = init_slab_cursor(ag_rmap->ar_rmaps, rmap_compare, &rm_cur);
+ 	if (error)
+ 		goto err;
+ 
+@@ -542,6 +574,8 @@ rmap_store_ag_btree_rec(
+ err:
+ 	if (agflbp)
+ 		libxfs_putbuf(agflbp);
++	if (own_ag_bitmap)
++		bitmap_free(&own_ag_bitmap);
+ 	return error;
+ }
+ 
