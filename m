@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:46570 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725996AbfCAX2G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Mar 2019 18:28:06 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x21NOOIT123090
-        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:05 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2qtwkut916-1
+Received: from userp2120.oracle.com ([156.151.31.85]:35416 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725966AbfCAX2N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Mar 2019 18:28:13 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x21NOL4Z124312
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:12 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2qtxtsa54y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Mar 2019 23:28:04 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 01 Mar 2019 23:28:12 +0000
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x21NS42n010696
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x21NSAh4022167
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:04 GMT
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x21NS4pg021111
-        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:04 GMT
-Subject: [PATCH 11/23] xfs_scrub: check label for misleading characters
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:11 GMT
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x21NSA8k021162
+        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:10 GMT
+Subject: [PATCH 12/23] mkfs: validate extent size hint parameters
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 01 Mar 2019 15:28:03 -0800
-Message-ID: <155148288327.16677.4796655865947441541.stgit@magnolia>
+Date: Fri, 01 Mar 2019 15:28:09 -0800
+Message-ID: <155148288940.16677.2273100850595552446.stgit@magnolia>
 In-Reply-To: <155148280859.16677.6057998944865066232.stgit@magnolia>
 References: <155148280859.16677.6057998944865066232.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,228 +34,94 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Make sure that we can retrieve the label and that it doesn't contain
-anything potentially misleading.
+Validate extent and cow extent size hints that are passed to mkfs so
+that we avoid formatting a filesystem that will never mount.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- configure.ac          |    1 +
- include/builddefs.in  |    1 +
- m4/package_libcdev.m4 |   17 +++++++++++++++
- scrub/Makefile        |    4 ++++
- scrub/phase5.c        |   55 +++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/unicrash.c      |   24 +++++++++++++++++++++
- scrub/unicrash.h      |    5 ++++
- 7 files changed, 107 insertions(+)
+ mkfs/xfs_mkfs.c |   64 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 64 insertions(+)
 
 
-diff --git a/configure.ac b/configure.ac
-index ccc6e292..c64742b7 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -197,6 +197,7 @@ AC_HAVE_SG_IO
- AC_HAVE_HDIO_GETGEO
- AC_CONFIG_SYSTEMD_SYSTEM_UNIT_DIR
- AC_CONFIG_CROND_DIR
-+AC_HAVE_GETFSLABEL
- 
- if test "$enable_blkid" = yes; then
- AC_HAVE_BLKID_TOPO
-diff --git a/include/builddefs.in b/include/builddefs.in
-index c5b38b07..b4839d9a 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -117,6 +117,7 @@ HAVE_SYSTEMD = @have_systemd@
- SYSTEMD_SYSTEM_UNIT_DIR = @systemd_system_unit_dir@
- HAVE_CROND = @have_crond@
- CROND_DIR = @crond_dir@
-+HAVE_GETFSLABEL = @have_getfslabel@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 2c0c72ce..6f8e3811 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -429,3 +429,20 @@ AC_DEFUN([AC_PACKAGE_CHECK_LTO],
-     AC_SUBST(lto_cflags)
-     AC_SUBST(lto_ldflags)
-   ])
-+
-+#
-+# Check if we have the GETFSLABEL ioctl
-+#
-+AC_DEFUN([AC_HAVE_GETFSLABEL],
-+  [ AC_MSG_CHECKING([for FS_IOC_GETFSLABEL])
-+    AC_TRY_LINK([
-+#define _GNU_SOURCE
-+#include <linux/fs.h>
-+    ], [
-+         char label[FSLABEL_MAX];
-+         ioctl(0, FS_IOC_GETFSLABEL, &label);
-+    ], have_getfslabel=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_getfslabel)
-+  ])
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 6e155c2c..04921888 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -99,6 +99,10 @@ ifeq ($(HAVE_HDIO_GETGEO),yes)
- LCFLAGS += -DHAVE_HDIO_GETGEO
- endif
- 
-+ifeq ($(HAVE_GETFSLABEL),yes)
-+LCFLAGS += -DHAVE_GETFSLABEL
-+endif
-+
- LDIRT = $(XFS_SCRUB_ALL_PROG) *.service *.cron
- 
- default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(OPTIONAL_TARGETS)
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 6ffcec2d..331492b7 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -11,6 +11,9 @@
- #ifdef HAVE_LIBATTR
- # include <attr/attributes.h>
- #endif
-+#ifdef HAVE_GETFSLABEL
-+# include <linux/fs.h>
-+#endif
- #include "handle.h"
- #include "list.h"
- #include "path.h"
-@@ -282,6 +285,54 @@ xfs_scrub_connections(
- 	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index d1387ddf..9e1c6ec5 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2202,6 +2202,66 @@ validate_rtextsize(
+ 	ASSERT(cfg->rtextblocks);
  }
  
-+#ifdef HAVE_GETFSLABEL
-+/*
-+ * Check the filesystem label for Unicode normalization problems or misleading
-+ * sequences.
-+ */
-+static bool
-+xfs_scrub_fs_label(
-+	struct scrub_ctx		*ctx)
++/* Validate the incoming extsize hint as if we were a file. */
++static void
++validate_extsize_hint(
++	struct xfs_mount	*mp,
++	struct cli_params	*cli)
 +{
-+	char				label[FSLABEL_MAX];
-+	struct unicrash			*uc = NULL;
-+	bool				moveon = true;
-+	int				error;
++	xfs_failaddr_t		fa;
++	bool			rt;
++	uint16_t		flags = 0;
 +
-+	moveon = unicrash_fs_label_init(&uc, ctx);
-+	if (!moveon)
-+		return false;
++	rt = (cli->fsx.fsx_xflags & XFS_DIFLAG_RTINHERIT);
 +
-+	/* Retrieve label; quietly bail if we don't support that. */
-+	error = ioctl(ctx->mnt_fd, FS_IOC_GETFSLABEL, &label);
-+	if (error) {
-+		if (errno != EOPNOTSUPP && errno != ENOTTY) {
-+			moveon = false;
-+			perror(ctx->mntpoint);
-+		}
-+		goto out;
-+	}
++	if (cli->fsx.fsx_xflags & XFS_DIFLAG_EXTSZINHERIT)
++		flags |= XFS_DIFLAG_EXTSIZE;
 +
-+	/* Ignore empty labels. */
-+	if (label[0] == 0)
-+		goto out;
++	fa = libxfs_inode_validate_extsize(mp, cli->fsx.fsx_extsize, S_IFREG,
++			flags);
++	if (rt && fa == NULL)
++		fa = libxfs_inode_validate_extsize(mp, cli->fsx.fsx_extsize,
++				S_IFREG, flags | XFS_DIFLAG_REALTIME);
++	if (fa == NULL)
++		return;
 +
-+	/* Otherwise check for weirdness. */
-+	if (uc)
-+		moveon = unicrash_check_fs_label(uc, ctx->mntpoint, label);
++	if (rt && mp->m_sb.sb_rextsize > 1)
++		fprintf(stderr,
++	_("illegal extent size hint %lld, must be less than %u and a multiple of %u.\n"),
++				(long long)cli->fsx.fsx_extsize,
++				min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2),
++				mp->m_sb.sb_rextsize);
 +	else
-+		moveon = xfs_scrub_check_name(ctx, ctx->mntpoint,
-+				_("filesystem label"), label);
-+	if (!moveon)
-+		goto out;
-+out:
-+	unicrash_free(uc);
-+	return moveon;
++		fprintf(stderr,
++	_("illegal extent size hint %lld, must be less than %u.\n"),
++				(long long)cli->fsx.fsx_extsize,
++				min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2));
++	usage();
 +}
-+#else
-+# define xfs_scrub_fs_label(c)	(true)
-+#endif /* HAVE_GETFSLABEL */
 +
- /* Check directory connectivity. */
- bool
- xfs_scan_connections(
-@@ -296,6 +347,10 @@ _("Filesystem has errors, skipping connectivity checks."));
- 		return true;
- 	}
- 
-+	moveon = xfs_scrub_fs_label(ctx);
-+	if (!moveon)
-+		return false;
-+
- 	ret = xfs_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
- 	if (!ret)
- 		moveon = false;
-diff --git a/scrub/unicrash.c b/scrub/unicrash.c
-index a95fc305..121eedbc 100644
---- a/scrub/unicrash.c
-+++ b/scrub/unicrash.c
-@@ -465,6 +465,15 @@ unicrash_xattr_init(
- 			is_only_root_writable(bstat));
- }
- 
-+/* Initialize the collision detector for a filesystem label. */
-+bool
-+unicrash_fs_label_init(
-+	struct unicrash		**ucp,
-+	struct scrub_ctx	*ctx)
++/* Validate the incoming CoW extsize hint as if we were a file. */
++static void
++validate_cowextsize_hint(
++	struct xfs_mount	*mp,
++	struct cli_params	*cli)
 +{
-+	return unicrash_init(ucp, ctx, false, 16, true);
++	xfs_failaddr_t		fa;
++	uint64_t		flags2 = 0;
++
++	if (cli->fsx.fsx_xflags & FS_XFLAG_COWEXTSIZE)
++		flags2 |= XFS_DIFLAG2_COWEXTSIZE;
++	fa = libxfs_inode_validate_cowextsize(mp, cli->fsx.fsx_cowextsize,
++			S_IFREG, 0, flags2);
++	if (fa == NULL)
++		return;
++
++	fprintf(stderr,
++_("illegal CoW extent size hint %lld, must be less than %u.\n"),
++			(long long)cli->fsx.fsx_cowextsize,
++			min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2));
++	usage();
 +}
 +
- /* Free the crash detector. */
- void
- unicrash_free(
-@@ -698,3 +707,18 @@ unicrash_check_xattr_name(
- 	return __unicrash_check_name(uc, descr, _("extended attribute"),
- 			attrname, 0);
- }
-+
-+/*
-+ * Check the fs label for unicode normalization problems or misleading bits.
-+ */
-+bool
-+unicrash_check_fs_label(
-+	struct unicrash		*uc,
-+	const char		*descr,
-+	const char		*label)
-+{
-+	if (!uc)
-+		return true;
-+	return __unicrash_check_name(uc, descr, _("filesystem label"),
-+			label, 0);
-+}
-diff --git a/scrub/unicrash.h b/scrub/unicrash.h
-index 7d7276a8..85fcabc6 100644
---- a/scrub/unicrash.h
-+++ b/scrub/unicrash.h
-@@ -17,17 +17,22 @@ bool unicrash_dir_init(struct unicrash **ucp, struct scrub_ctx *ctx,
- 		struct xfs_bstat *bstat);
- bool unicrash_xattr_init(struct unicrash **ucp, struct scrub_ctx *ctx,
- 		struct xfs_bstat *bstat);
-+bool unicrash_fs_label_init(struct unicrash **ucp, struct scrub_ctx *ctx);
- void unicrash_free(struct unicrash *uc);
- bool unicrash_check_dir_name(struct unicrash *uc, const char *descr,
- 		struct dirent *dirent);
- bool unicrash_check_xattr_name(struct unicrash *uc, const char *descr,
- 		const char *attrname);
-+bool unicrash_check_fs_label(struct unicrash *uc, const char *descr,
-+		const char *label);
- #else
- # define unicrash_dir_init(u, c, b)		(true)
- # define unicrash_xattr_init(u, c, b)		(true)
-+# define unicrash_label_init(u, c)		(true)
- # define unicrash_free(u)			do {(u) = (u);} while (0)
- # define unicrash_check_dir_name(u, d, n)	(true)
- # define unicrash_check_xattr_name(u, d, n)	(true)
-+# define unicrash_check_fs_label(u, d, n)	(true)
- #endif /* HAVE_LIBICU */
+ /*
+  * Validate the configured stripe geometry, or is none is specified, pull
+  * the configuration from the underlying device.
+@@ -3945,6 +4005,10 @@ main(
  
- #endif /* XFS_SCRUB_UNICRASH_H_ */
+ 	finish_superblock_setup(&cfg, mp, sbp);
+ 
++	/* Validate the extent size hints now that @mp is fully set up. */
++	validate_extsize_hint(mp, &cli);
++	validate_cowextsize_hint(mp, &cli);
++
+ 	/* Print the intended geometry of the fs. */
+ 	if (!quiet || dry_run) {
+ 		struct xfs_fsop_geom	geo;
