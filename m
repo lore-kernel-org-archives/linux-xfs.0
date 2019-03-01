@@ -1,303 +1,277 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:40980 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726545AbfCLFnD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Mar 2019 01:43:03 -0400
-Date: Mon, 11 Mar 2019 22:42:48 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfstests: test swapext log replay
-Message-ID: <20190312054248.GF4359@magnolia>
-References: <20181223141721.5318-1-zlang@redhat.com>
- <20190312054234.GC7200@dhcp-12-102.nay.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190312054234.GC7200@dhcp-12-102.nay.redhat.com>
+Received: from mail-pl1-f169.google.com ([209.85.214.169]:40143 "EHLO
+        mail-pl1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387836AbfCAOFz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Mar 2019 09:05:55 -0500
+From: Wang Shilong <wangshilong1991@gmail.com>
+Subject: [PATCH 1/8] fs: add support to change project ID
+Date: Fri,  1 Mar 2019 23:05:34 +0900
+Message-Id: <1551449141-7884-2-git-send-email-wshilong1991@gmail.com>
+In-Reply-To: <1551449141-7884-1-git-send-email-wshilong1991@gmail.com>
+References: <1551449141-7884-1-git-send-email-wshilong1991@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net
+Cc: lixi@ddn.com, adilger@dilger.ca, Wang Shilong <wshilong@ddn.com>
 
-On Tue, Mar 12, 2019 at 01:42:34PM +0800, Zorro Lang wrote:
-> On Sun, Dec 23, 2018 at 10:17:21PM +0800, Zorro Lang wrote:
-> > If an inode had been in btree format and had a data fork owner change
-> > logged (XFS_ILOG_DOWNER), after changing the format to non-btree, will
-> > hit an ASSERT in xfs_recover_inode_owner_change() which enforces that
-> > if XFS_ILOG_[AD]OWNER is set.
-> > 
-> > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > ---
-> > 
-> > This case is written for Eric's patchset:
-> > [PATCH 0/2] xfs: swapext replay fixes
-> > 
-> > Thanks for the reproducer which is provided by Eric. I've tested on latest
-> > xfs-linux for-next branch with the 2 patches of Eric:
-> > # git log --oneline
-> > 39a9114528e4 (HEAD -> for-next) xfs: clear XFS_ILOG_[AD]OWNER for non-btree formats
-> > 46fe0206d242 xfs: handle bad flags in xfs_recover_inode_owner_change
-> > 86d163dbfe2a (tag: xfs-4.21-merge-1, origin/xfs-4.21-merge, origin/for-next) xfs: stringify scrub types in ftrace output
-> > ...
-> > ...
-> > 
-> > But I still can hit a fs corruption which can't be log replayed[1]. Only
-> > "xfs_repair -L" can help to fix that.
-> 
-> Ping ....
-> 
-> Long time passed, but this failure still can be reproduced on latest upstream
-> linux kernel(v5.0).
-> 
-> A weird thing is:
-> MKFS_OPTIONS="reflink=1,rmapbt=0,finobt=1,crc=1 -i sparse=1"
-> MKFS_OPTIONS="reflink=0,rmapbt=0,finobt=1,crc=1 -i sparse=1"
-> can reproduce this issue. But
-> MKFS_OPTIONS="reflink=1,rmapbt=1,finobt=1,crc=1 -i sparse=1"
-> can't.
-> 
-> Can anyone help to take a look at it?
+From: Wang Shilong <wshilong@ddn.com>
 
-rmapbt=1 uses a totally different code path in the kernel, which is why
-this test doesn't fail in that situation.
+From: Wang Shilong <wshilong@ddn.com>
 
---D
+Currently, Filesystem use FS_IOC_FS_SETXATTR ioctl
+to change project ID of file. However we don't
+support ioctl on symlink files, and it is desirable
+to change symlink files' project ID just like uid/gid.
 
-> Thanks,
-> Zorro
-> 
-> > 
-> > Thanks,
-> > Zorro
-> > 
-> > [1]
-> > # ./check xfs/999
-> > FSTYP         -- xfs (non-debug)
-> > PLATFORM      -- Linux/x86_64 xxx-xxxx-xx 4.20.0-rc6+
-> > MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=0,finobt=1,crc=1 -i sparse=1 /dev/mapper/rhel_xxx-xxxx-xx-xfscratch
-> > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/rhel_xxx-xxxx-xx-xfscratch /mnt/scratch
-> > 
-> > xfs/999 82s ... [failed, exit status 1]- output mismatch (see /root/git/xfstests-zlang/results//xfs/999.out.bad)
-> >     --- tests/xfs/999.out       2018-12-23 08:27:02.524495164 -0500
-> >     +++ /root/git/xfstests-zlang/results//xfs/999.out.bad       2018-12-23 08:58:01.826244128 -0500
-> >     @@ -1,2 +1,4 @@
-> >      QA output created by 999
-> >     -Silence is golden
-> >     +mount: /mnt/scratch: mount(2) system call failed: Structure needs cleaning.
-> >     +cycle mount failed
-> >     +(see /root/git/xfstests-zlang/results//xfs/999.full for details)
-> >     ...
-> >     (Run 'diff -u /root/git/xfstests-zlang/tests/xfs/999.out /root/git/xfstests-zlang/results//xfs/999.out.bad'  to see the entire diff)
-> > Ran: xfs/999
-> > Failures: xfs/999
-> > Failed 1 of 1 tests
-> > 
-> > # dmesg
-> > [ 1961.335700] run fstests xfs/999 at 2018-12-23 08:56:53
-> > [ 1962.270422] XFS (dm-5): Unmounting Filesystem
-> > [ 1964.097509] XFS (dm-5): Mounting V5 Filesystem
-> > [ 1964.217909] XFS (dm-5): Ending clean mount
-> > [ 2026.309500] XFS (dm-5): User initiated shutdown received. Shutting down filesystem
-> > [ 2026.343161] XFS (dm-5): Unmounting Filesystem
-> > [ 2026.420747] XFS (dm-5): Mounting V5 Filesystem
-> > [ 2028.557423] XFS (dm-5): Starting recovery (logdev: internal)
-> > [ 2029.162746] XFS (dm-5): Corruption warning: Metadata has LSN (-842150451:-842150451) ahead of current LSN (1:785). Please unmount and run xfs_repair (>= v4.3) to resolve.
-> > [ 2029.179889] XFS (dm-5): Metadata CRC error detected at xfs_bmbt_read_verify+0x1b/0x2d0 [xfs], xfs_bmbt block 0x5830 
-> > [ 2029.191678] XFS (dm-5): Unmount and run xfs_repair
-> > [ 2029.197051] XFS (dm-5): First 128 bytes of corrupted metadata buffer:
-> > [ 2029.204262] 00000000: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.213220] 00000010: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.222178] 00000020: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.231151] 00000030: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.240107] 00000040: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.249171] 00000050: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.258134] 00000060: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.267083] 00000070: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.282435] XFS (dm-5): Corruption warning: Metadata has LSN (-842150451:-842150451) ahead of current LSN (1:785). Please unmount and run xfs_repair (>= v4.3) to resolve.
-> > [ 2029.299516] XFS (dm-5): Metadata CRC error detected at xfs_bmbt_read_verify+0x1b/0x2d0 [xfs], xfs_bmbt block 0x5830 
-> > [ 2029.311295] XFS (dm-5): Unmount and run xfs_repair
-> > [ 2029.316666] XFS (dm-5): First 128 bytes of corrupted metadata buffer:
-> > [ 2029.323887] 00000000: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.332844] 00000010: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.341817] 00000020: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.350776] 00000030: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.359731] 00000040: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.368690] 00000050: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.377648] 00000060: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.386607] 00000070: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> > [ 2029.395599] XFS (dm-5): metadata I/O error in "xfs_trans_read_buf_map" at daddr 0x5830 len 8 error 74
-> > [ 2029.499375] XFS (dm-5): log mount/recovery failed: error -117
-> > [ 2029.506425] XFS (dm-5): log mount failed
-> > [ 2029.552080] XFS (dm-2): Unmounting Filesystem
-> > 
-> > # xfs_repair /dev/mapper/rhel_xxx-xxxx-xx-xfscratch
-> > Phase 1 - find and verify superblock...
-> > Phase 2 - using internal log
-> >         - zero log...
-> > ERROR: The filesystem has valuable metadata changes in a log which needs to
-> > be replayed.  Mount the filesystem to replay the log, and unmount it before
-> > re-running xfs_repair.  If you are unable to mount the filesystem, then use
-> > the -L option to destroy the log and attempt a repair.
-> > Note that destroying the log may cause corruption -- please attempt a mount
-> > of the filesystem before doing this
-> > 
-> > # mount /dev/mapper/rhel_xxx-xxxx-xx-xfscratch /mnt/scratch
-> > mount: /mnt/scratch: mount(2) system call failed: Structure needs cleaning.
-> > 
-> > # xfs_repair -L /dev/mapper/rhel_xxx-xxxx-xx-xfscratch 
-> > Phase 1 - find and verify superblock...
-> > Phase 2 - using internal log
-> >         - zero log...
-> > ALERT: The filesystem has valuable metadata changes in a log which is being
-> > destroyed because the -L option was used.
-> >         - scan filesystem freespace and inode maps...
-> > sb_ifree 61, counted 60
-> > sb_fdblocks 22271328, counted 22270327
-> >         - found root inode chunk
-> > Phase 3 - for each AG...
-> >         - scan and clear agi unlinked lists...
-> >         - process known inodes and perform inode discovery...
-> >         - agno = 0
-> > Metadata CRC error detected at 0x449c9d, xfs_bmbt block 0x5830/0x1000
-> > btree block 0/2822 is suspect, error -74
-> > bad magic # 0xcdcdcdcd in inode 131 (data fork) bmbt block 2822
-> > bad data fork in inode 131
-> > cleared inode 131
-> >         - agno = 1
-> >         - agno = 2
-> >         - agno = 3
-> >         - process newly discovered inodes...
-> > Phase 4 - check for duplicate blocks...
-> >         - setting up duplicate extent list...
-> >         - check for inodes claiming duplicate blocks...
-> >         - agno = 0
-> > entry "fragfile" in shortform directory 128 references free inode 131
-> > junking entry "fragfile" in directory inode 128
-> >         - agno = 1
-> >         - agno = 3
-> >         - agno = 2
-> > Phase 5 - rebuild AG headers and trees...
-> >         - reset superblock...
-> > Phase 6 - check inode connectivity...
-> >         - resetting contents of realtime bitmap and summary inodes
-> >         - traversing filesystem ...
-> >         - traversal finished ...
-> >         - moving disconnected inodes to lost+found ...
-> > Phase 7 - verify and correct link counts...
-> > Metadata corruption detected at 0x449b47, xfs_bmbt block 0x5830/0x1000
-> > libxfs_writebufr: write verifer failed on xfs_bmbt bno 0x5830/0x1000
-> > Maximum metadata LSN (1:237) is ahead of log (1:2).
-> > Format log to cycle 4.
-> > releasing dirty buffer (bulk) to free list!done
-> > 
-> > 
-> > 
-> >  tests/xfs/999     | 76 +++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/999.out |  2 ++
-> >  tests/xfs/group   |  1 +
-> >  3 files changed, 79 insertions(+)
-> >  create mode 100755 tests/xfs/999
-> >  create mode 100644 tests/xfs/999.out
-> > 
-> > diff --git a/tests/xfs/999 b/tests/xfs/999
-> > new file mode 100755
-> > index 00000000..cfe5c4d4
-> > --- /dev/null
-> > +++ b/tests/xfs/999
-> > @@ -0,0 +1,76 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2018 Red Hat Inc. All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 999
-> > +#
-> > +# If an inode had been in btree format and had a data fork owner change
-> > +# logged, after changing the format to non-btree, will hit an ASSERT or
-> > +# fs corruption.
-> > +#
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# remove previous $seqres.full before test
-> > +rm -f $seqres.full
-> > +
-> > +# real QA test starts here
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +_require_scratch
-> > +
-> > +_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-> > +. $tmp.mkfs
-> > +
-> > +_scratch_mount
-> > +localfile=$SCRATCH_MNT/fragfile
-> > +
-> > +# Try to create a file with 1024 * (3 blocks + 1 hole):
-> > +# +----------+--------+-------+----------+--------+
-> > +# | 3 blocks | 1 hole |  ...  | 3 blocks | 1 hole |
-> > +# +----------+--------+-------+----------+--------+
-> > +#
-> > +# The number of extents we can get maybe more or less than 1024, this method
-> > +# just to get a btree inode format.
-> > +filesize=$((dbsize * 1024 * 4))
-> > +for i in `seq $filesize -$dbsize 0`; do
-> > +	if [ $((i % (3 * dbsize))) -eq 0 ]; then
-> > +		continue
-> > +	fi
-> > +	$XFS_IO_PROG -f -d -c "pwrite $i $dbsize" $localfile >> $seqres.full
-> > +done
-> > +
-> > +# Make a data fork owner change log
-> > +$XFS_FSR_PROG -v -d $localfile >> $seqres.full 2>&1
-> > +
-> > +# Truncate the file to 0, and change the inode format to extent, then shutdown
-> > +# the fs to keep the XFS_ILOG_DOWNER flag
-> > +$XFS_IO_PROG -t -x -c "pwrite 0 $dbsize" \
-> > +	     -c "fsync" \
-> > +	     -c "shutdown" $localfile >> $seqres.full
-> > +
-> > +# Cycle mount, to replay the log
-> > +_scratch_cycle_mount
-> > +
-> > +echo "Silence is golden"
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-> > new file mode 100644
-> > index 00000000..3b276ca8
-> > --- /dev/null
-> > +++ b/tests/xfs/999.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 999
-> > +Silence is golden
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index dfaae2bc..9171144e 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -496,3 +496,4 @@
-> >  496 dangerous_fuzzers dangerous_scrub dangerous_repair
-> >  497 dangerous_fuzzers dangerous_scrub dangerous_online_repair
-> >  498 dangerous_fuzzers dangerous_norepair
-> > +999 auto quick
-> > -- 
-> > 2.17.2
-> > 
+This patch try to reuse existed interface fchownat(),
+use group id to set project ID if flag AT_FCHOWN_PROJID
+passed in.
+
+Signed-off-by: Wang Shilong <wshilong@ddn.com>
+---
+ fs/attr.c                        | 26 ++++++++++++++++++++++++--
+ fs/open.c                        | 29 +++++++++++++++++++++++------
+ fs/quota/dquot.c                 | 23 +++++++++++++++++++++++
+ include/linux/fs.h               |  3 +++
+ include/linux/quotaops.h         |  9 +++++++++
+ include/uapi/linux/fcntl.h       |  1 +
+ tools/include/uapi/linux/fcntl.h |  1 +
+ 7 files changed, 84 insertions(+), 8 deletions(-)
+
+diff --git a/fs/attr.c b/fs/attr.c
+index d22e8187477f..c6b1c1132c8f 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -85,6 +85,28 @@ int setattr_prepare(struct dentry *dentry, struct iattr *attr)
+ 	if ((ia_valid & ATTR_GID) && !chgrp_ok(inode, attr->ia_gid))
+ 		return -EPERM;
+ 
++	/*
++	 * Project Quota ID state is only allowed to change from within the init
++	 * namespace. Enforce that restriction only if we are trying to change
++	 * the quota ID state. Everything else is allowed in user namespaces.
++	 */
++	if ((ia_valid & ATTR_PROJID) && current_user_ns() != &init_user_ns) {
++		kprojid_t projid;
++		int rc;
++
++		/*
++		 * Filesystem like xfs does't have ->get_projid hook
++		 * should check permission by themselves.
++		 */
++		if (inode->i_sb->dq_op->get_projid) {
++			rc = inode->i_sb->dq_op->get_projid(inode, &projid);
++			if (rc)
++				return rc;
++			if (!projid_eq(projid, attr->ia_projid))
++				return -EPERM;
++		}
++	}
++
+ 	/* Make sure a caller can chmod. */
+ 	if (ia_valid & ATTR_MODE) {
+ 		if (!inode_owner_or_capable(inode))
+@@ -232,8 +254,8 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
+ 	unsigned int ia_valid = attr->ia_valid;
+ 
+ 	WARN_ON_ONCE(!inode_is_locked(inode));
+-
+-	if (ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) {
++	if (ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_PROJID |
++			ATTR_TIMES_SET)) {
+ 		if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+ 			return -EPERM;
+ 	}
+diff --git a/fs/open.c b/fs/open.c
+index 0285ce7dbd51..4e58c6ee23b3 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -597,7 +597,8 @@ SYSCALL_DEFINE2(chmod, const char __user *, filename, umode_t, mode)
+ 	return do_fchmodat(AT_FDCWD, filename, mode);
+ }
+ 
+-static int chown_common(const struct path *path, uid_t user, gid_t group)
++static int chown_common(const struct path *path, uid_t user, gid_t group,
++			bool set_project)
+ {
+ 	struct inode *inode = path->dentry->d_inode;
+ 	struct inode *delegated_inode = NULL;
+@@ -605,9 +606,11 @@ static int chown_common(const struct path *path, uid_t user, gid_t group)
+ 	struct iattr newattrs;
+ 	kuid_t uid;
+ 	kgid_t gid;
++	kprojid_t projid;
+ 
+ 	uid = make_kuid(current_user_ns(), user);
+ 	gid = make_kgid(current_user_ns(), group);
++	projid = make_kprojid(current_user_ns(), (projid_t)group);
+ 
+ retry_deleg:
+ 	newattrs.ia_valid =  ATTR_CTIME;
+@@ -620,13 +623,22 @@ static int chown_common(const struct path *path, uid_t user, gid_t group)
+ 	if (group != (gid_t) -1) {
+ 		if (!gid_valid(gid))
+ 			return -EINVAL;
+-		newattrs.ia_valid |= ATTR_GID;
+-		newattrs.ia_gid = gid;
++		if (!set_project) {
++			newattrs.ia_valid |= ATTR_GID;
++			newattrs.ia_gid = gid;
++		} else {
++			newattrs.ia_valid |= ATTR_PROJID;
++			newattrs.ia_projid = projid;
++		}
++	} else if (set_project) {
++		return -EINVAL;
+ 	}
+ 	if (!S_ISDIR(inode->i_mode))
+ 		newattrs.ia_valid |=
+ 			ATTR_KILL_SUID | ATTR_KILL_SGID | ATTR_KILL_PRIV;
+ 	inode_lock(inode);
++	if (set_project)
++		gid = make_kgid(current_user_ns(), (gid_t) -1);
+ 	error = security_path_chown(path, uid, gid);
+ 	if (!error)
+ 		error = notify_change(path->dentry, &newattrs, &delegated_inode);
+@@ -645,10 +657,15 @@ int do_fchownat(int dfd, const char __user *filename, uid_t user, gid_t group,
+ 	struct path path;
+ 	int error = -EINVAL;
+ 	int lookup_flags;
++	bool set_project = false;
+ 
+-	if ((flag & ~(AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH)) != 0)
++	if ((flag & ~(AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH |
++		      AT_FCHOWN_PROJID)) != 0)
+ 		goto out;
+ 
++	if (flag & AT_FCHOWN_PROJID)
++		set_project = true;
++
+ 	lookup_flags = (flag & AT_SYMLINK_NOFOLLOW) ? 0 : LOOKUP_FOLLOW;
+ 	if (flag & AT_EMPTY_PATH)
+ 		lookup_flags |= LOOKUP_EMPTY;
+@@ -659,7 +676,7 @@ int do_fchownat(int dfd, const char __user *filename, uid_t user, gid_t group,
+ 	error = mnt_want_write(path.mnt);
+ 	if (error)
+ 		goto out_release;
+-	error = chown_common(&path, user, group);
++	error = chown_common(&path, user, group, set_project);
+ 	mnt_drop_write(path.mnt);
+ out_release:
+ 	path_put(&path);
+@@ -700,7 +717,7 @@ int ksys_fchown(unsigned int fd, uid_t user, gid_t group)
+ 	if (error)
+ 		goto out_fput;
+ 	audit_file(f.file);
+-	error = chown_common(&f.file->f_path, user, group);
++	error = chown_common(&f.file->f_path, user, group, false);
+ 	mnt_drop_write_file(f.file);
+ out_fput:
+ 	fdput(f);
+diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
+index fc20e06c56ba..46f39ee87312 100644
+--- a/fs/quota/dquot.c
++++ b/fs/quota/dquot.c
+@@ -2095,6 +2095,29 @@ int dquot_transfer(struct inode *inode, struct iattr *iattr)
+ 		}
+ 		transfer_to[GRPQUOTA] = dquot;
+ 	}
++
++	if (iattr->ia_valid & ATTR_PROJID) {
++		kprojid_t projid;
++
++		if (!inode->i_sb->dq_op->get_projid)
++			return -ENOTSUPP;
++
++		ret = inode->i_sb->dq_op->get_projid(inode, &projid);
++		if (ret)
++			return ret;
++		if (!projid_eq(iattr->ia_projid, projid)) {
++			dquot = dqget(sb, make_kqid_projid(iattr->ia_projid));
++			if (IS_ERR(dquot)) {
++				if (PTR_ERR(dquot) != -ESRCH) {
++					ret = PTR_ERR(dquot);
++					goto out_put;
++				}
++				dquot = NULL;
++			}
++			transfer_to[PRJQUOTA] = dquot;
++		}
++	}
++
+ 	ret = __dquot_transfer(inode, transfer_to);
+ out_put:
+ 	dqput_all(transfer_to);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 29d8e2cfed0e..2a878a2b90e3 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -37,6 +37,7 @@
+ #include <linux/uuid.h>
+ #include <linux/errseq.h>
+ #include <linux/ioprio.h>
++#include <linux/projid.h>
+ 
+ #include <asm/byteorder.h>
+ #include <uapi/linux/fs.h>
+@@ -191,6 +192,7 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
+ #define ATTR_OPEN	(1 << 15) /* Truncating from open(O_TRUNC) */
+ #define ATTR_TIMES_SET	(1 << 16)
+ #define ATTR_TOUCH	(1 << 17)
++#define ATTR_PROJID	(1 << 18)
+ 
+ /*
+  * Whiteout is represented by a char device.  The following constants define the
+@@ -213,6 +215,7 @@ struct iattr {
+ 	umode_t		ia_mode;
+ 	kuid_t		ia_uid;
+ 	kgid_t		ia_gid;
++	kprojid_t	ia_projid;
+ 	loff_t		ia_size;
+ 	struct timespec64 ia_atime;
+ 	struct timespec64 ia_mtime;
+diff --git a/include/linux/quotaops.h b/include/linux/quotaops.h
+index dc905a4ff8d7..84d3aeb43e2c 100644
+--- a/include/linux/quotaops.h
++++ b/include/linux/quotaops.h
+@@ -22,6 +22,15 @@ static inline struct quota_info *sb_dqopt(struct super_block *sb)
+ /* i_mutex must being held */
+ static inline bool is_quota_modification(struct inode *inode, struct iattr *ia)
+ {
++	if (ia->ia_valid & ATTR_PROJID && inode->i_sb->dq_op->get_projid) {
++		kprojid_t projid;
++		int rc;
++
++		rc = inode->i_sb->dq_op->get_projid(inode, &projid);
++		if (!rc && !projid_eq(projid, ia->ia_projid))
++			return true;
++	}
++
+ 	return (ia->ia_valid & ATTR_SIZE && ia->ia_size != inode->i_size) ||
+ 		(ia->ia_valid & ATTR_UID && !uid_eq(ia->ia_uid, inode->i_uid)) ||
+ 		(ia->ia_valid & ATTR_GID && !gid_eq(ia->ia_gid, inode->i_gid));
+diff --git a/include/uapi/linux/fcntl.h b/include/uapi/linux/fcntl.h
+index 6448cdd9a350..712c60d7f727 100644
+--- a/include/uapi/linux/fcntl.h
++++ b/include/uapi/linux/fcntl.h
+@@ -90,5 +90,6 @@
+ #define AT_STATX_FORCE_SYNC	0x2000	/* - Force the attributes to be sync'd with the server */
+ #define AT_STATX_DONT_SYNC	0x4000	/* - Don't sync attributes with the server */
+ 
++#define AT_FCHOWN_PROJID	0x40000000 /* Change project ID instead of group id */
+ 
+ #endif /* _UAPI_LINUX_FCNTL_H */
+diff --git a/tools/include/uapi/linux/fcntl.h b/tools/include/uapi/linux/fcntl.h
+index 6448cdd9a350..712c60d7f727 100644
+--- a/tools/include/uapi/linux/fcntl.h
++++ b/tools/include/uapi/linux/fcntl.h
+@@ -90,5 +90,6 @@
+ #define AT_STATX_FORCE_SYNC	0x2000	/* - Force the attributes to be sync'd with the server */
+ #define AT_STATX_DONT_SYNC	0x4000	/* - Don't sync attributes with the server */
+ 
++#define AT_FCHOWN_PROJID	0x40000000 /* Change project ID instead of group id */
+ 
+ #endif /* _UAPI_LINUX_FCNTL_H */
+-- 
+2.19.1
