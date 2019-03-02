@@ -1,92 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:45085 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726972AbfCDNxM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 08:53:12 -0500
+Received: from mail-io1-f69.google.com ([209.85.166.69]:43778 "EHLO
+        mail-io1-f69.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726733AbfCBHGG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Mar 2019 02:06:06 -0500
+Received: by mail-io1-f69.google.com with SMTP id x22so116912iob.10
+        for <linux-xfs@vger.kernel.org>; Fri, 01 Mar 2019 23:06:05 -0800 (PST)
 MIME-Version: 1.0
-References: <1551449184-7942-1-git-send-email-wshilong1991@gmail.com> <1551449184-7942-3-git-send-email-wshilong1991@gmail.com>
-In-Reply-To: <1551449184-7942-3-git-send-email-wshilong1991@gmail.com>
-Reply-To: mtk.manpages@gmail.com
-From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Date: Mon, 4 Mar 2019 14:52:59 +0100
-Message-ID: <CAKgNAkitiDEYSZDnJ5iQ6coaE=q45BHxnG2z_bZtWs=kk+2g3w@mail.gmail.com>
-Subject: Re: [PATCH 2/2] statx.2: add project support update
-Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Mar 2019 23:06:04 -0800
+Message-ID: <000000000000299b190583172880@google.com>
+Subject: BUG: MAX_STACK_TRACE_ENTRIES too low!
+From: syzbot <syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Wang Shilong <wangshilong1991@gmail.com>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, lixi@ddn.com, Andreas Dilger <adilger@dilger.ca>, Wang Shilong <wshilong@ddn.com>, linux-man <linux-man@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 
-Hello Wang Shilong,
+Hello,
 
-On Fri, 1 Mar 2019 at 15:06, Wang Shilong <wangshilong1991@gmail.com> wrote:
->
-> From: Wang Shilong <wshilong@ddn.com>
+syzbot found the following crash on:
 
-I take it that these patches relate to some API changes that are not
-yet merged into the kernel, right?
+HEAD commit:    c63e9e91a254 Add linux-next specific files for 20190301
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=16a559b2c00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=f5875f9dc6e009b2
+dashboard link: https://syzkaller.appspot.com/bug?extid=78923eea7cf44364f4fb
+compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
 
-Also, I think we need some accompanying info to describe project IDs.
-Can you point me at any documents/resources?
+Unfortunately, I don't have any reproducer for this crash yet.
 
-Thanks,
+IMPORTANT: if you fix the bug, please add the following tag to the commit:
+Reported-by: syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com
 
-Michael
-
->
-> Cc: linux-man@vger.kernel.org
-> Signed-off-by: Wang Shilong <wshilong@ddn.com>
-> ---
->  man2/statx.2 | 8 ++++++++
->  1 file changed, 8 insertions(+)
->
-> diff --git a/man2/statx.2 b/man2/statx.2
-> index 7265d8ace..6a9dede8b 100644
-> --- a/man2/statx.2
-> +++ b/man2/statx.2
-> @@ -82,6 +82,7 @@ struct statx {
->         containing the filesystem where the file resides */
->      __u32 stx_dev_major;   /* Major ID */
->      __u32 stx_dev_minor;   /* Minor ID */
-> +    __u32 stx_projid;      /* Project ID of file */
->  };
->  .EE
->  .in
-> @@ -261,6 +262,7 @@ STATX_SIZE  Want stx_size
->  STATX_BLOCKS   Want stx_blocks
->  STATX_BASIC_STATS      [All of the above]
->  STATX_BTIME    Want stx_btime
-> +STATX_PROJID   Want stx_projid
->  STATX_ALL      [All currently available fields]
->  .TE
->  .in
-> @@ -412,6 +414,9 @@ The device on which this file (inode) resides.
->  .IR stx_rdev_major " and "  stx_rdev_minor
->  The device that this file (inode) represents if the file is of block or
->  character device type.
-> +.TP
-> +.I stx_projid
-> +The file's project ID.
->  .PP
->  For further information on the above fields, see
->  .BR inode (7).
-> @@ -458,6 +463,9 @@ See
->  .TP
->  .B STATX_ATTR_ENCRYPTED
->  A key is required for the file to be encrypted by the filesystem.
-> +.TP
-> +.B STATX_ATTR_PROJINHERIT
-> +Sub directories or files will inherit parent's project ID automatically.
->  .SH RETURN VALUE
->  On success, zero is returned.
->  On error, \-1 is returned, and
-> --
-> 2.19.1
->
+BUG: MAX_STACK_TRACE_ENTRIES too low!
+turning off the locking correctness validator.
+CPU: 0 PID: 19385 Comm: syz-executor.0 Not tainted 5.0.0-rc8-next-20190301  
+#1
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
+Google 01/01/2011
+Call Trace:
+  __dump_stack lib/dump_stack.c:77 [inline]
+  dump_stack+0x172/0x1f0 lib/dump_stack.c:113
+  save_trace kernel/locking/lockdep.c:467 [inline]
+  save_trace.cold+0x14/0x19 kernel/locking/lockdep.c:437
+  mark_lock+0x2fb/0x1380 kernel/locking/lockdep.c:3401
+  __lock_acquire+0x548/0x3fb0 kernel/locking/lockdep.c:3648
+  lock_acquire+0x16f/0x3f0 kernel/locking/lockdep.c:4202
+  flush_workqueue+0x126/0x14c0 kernel/workqueue.c:2774
+  drain_workqueue+0x1b4/0x470 kernel/workqueue.c:2939
+  destroy_workqueue+0x21/0x700 kernel/workqueue.c:4315
+  xfs_destroy_mount_workqueues+0x11d/0x1c0 fs/xfs/xfs_super.c:906
+  xfs_fs_fill_super+0x8e9/0x1670 fs/xfs/xfs_super.c:1786
+  mount_bdev+0x307/0x3c0 fs/super.c:1346
+  xfs_fs_mount+0x35/0x40 fs/xfs/xfs_super.c:1834
+  legacy_get_tree+0xf2/0x200 fs/fs_context.c:584
+  vfs_get_tree+0x123/0x450 fs/super.c:1481
+  do_new_mount fs/namespace.c:2622 [inline]
+  do_mount+0x1436/0x2c40 fs/namespace.c:2942
+  ksys_mount+0xdb/0x150 fs/namespace.c:3151
+  __do_sys_mount fs/namespace.c:3165 [inline]
+  __se_sys_mount fs/namespace.c:3162 [inline]
+  __x64_sys_mount+0xbe/0x150 fs/namespace.c:3162
+  do_syscall_64+0x103/0x610 arch/x86/entry/common.c:290
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x45a89a
+Code: b8 a6 00 00 00 0f 05 48 3d 01 f0 ff ff 0f 83 2d 8e fb ff c3 66 2e 0f  
+1f 84 00 00 00 00 00 66 90 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff  
+ff 0f 83 0a 8e fb ff c3 66 0f 1f 84 00 00 00 00 00
+RSP: 002b:00007f6d038b0a88 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
+RAX: ffffffffffffffda RBX: 00007f6d038b0b30 RCX: 000000000045a89a
+RDX: 00007f6d038b0ad0 RSI: 0000000020000140 RDI: 00007f6d038b0af0
+RBP: 0000000020000140 R08: 00007f6d038b0b30 R09: 00007f6d038b0ad0
+R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000000003
+R13: 0000000000000000 R14: 00000000004dbde0 R15: 00000000ffffffff
 
 
--- 
-Michael Kerrisk
-Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
-Linux/UNIX System Programming Training: http://man7.org/training/
+---
+This bug is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this bug report. See:
+https://goo.gl/tpsmEJ#bug-status-tracking for how to communicate with  
+syzbot.
