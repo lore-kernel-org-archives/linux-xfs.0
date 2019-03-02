@@ -1,252 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:44374 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726038AbfCDVm2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 16:42:28 -0500
-Date: Mon, 4 Mar 2019 13:42:23 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] Add xfs_only flag to fs_table_initialise_mounts()
- function
-Message-ID: <20190304214223.GA1170@magnolia>
-References: <20190304213124.552-1-tgill@redhat.com>
+Received: from mail-it1-f197.google.com ([209.85.166.197]:41271 "EHLO
+        mail-it1-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726415AbfCBLpG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Mar 2019 06:45:06 -0500
+Received: by mail-it1-f197.google.com with SMTP id q184so722301itd.6
+        for <linux-xfs@vger.kernel.org>; Sat, 02 Mar 2019 03:45:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190304213124.552-1-tgill@redhat.com>
+Date: Sat, 02 Mar 2019 03:45:05 -0800
+In-Reply-To: <000000000000299b190583172880@google.com>
+Message-ID: <000000000000fdc7da05831b0df8@google.com>
+Subject: Re: BUG: MAX_STACK_TRACE_ENTRIES too low!
+From: syzbot <syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: tgill@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 
-On Mon, Mar 04, 2019 at 04:31:24PM -0500, tgill@redhat.com wrote:
-> From: Todd Gill <tgill@redhat.com>
-> 
-> The xfs_only flag will allow the caller to request only XFS filesystems are
-> added to the fs table.
-> 
-> For commands that are XFS specific (xfs_fsr, xfs_growfs, xfs_scrub) - pass
-> the flag as 1.
+syzbot has found a reproducer for the following crash on:
 
-We're supposed to use a magic value of 1??
+HEAD commit:    c63e9e91a254 Add linux-next specific files for 20190301
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=10856157200000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=f5875f9dc6e009b2
+dashboard link: https://syzkaller.appspot.com/bug?extid=78923eea7cf44364f4fb
+compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=149ae1eb200000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=15ee41eb200000
 
-Please, "#define FSTABLE_XFS_ONLY 1" and make it a proper flags
-parameter...
+IMPORTANT: if you fix the bug, please add the following tag to the commit:
+Reported-by: syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com
 
-...and that's assuming there isn't some better way to avoid networked
-mounts?
-
-> The change avoids a hang when remote filesystem (like NFS) are non
-> responsive.
-
-Which programs hang?  Where do they hang?  Is this the problem where
-some stat somewhere on a ... mount point? freezes because the network
-died?
-
-> Signed-off-by: Todd Gill <tgill@redhat.com>
-> ---
->  fsr/xfs_fsr.c       |  2 +-
->  growfs/xfs_growfs.c |  2 +-
->  include/path.h      |  2 +-
->  io/fsmap.c          |  2 +-
->  io/init.c           |  2 +-
->  io/parent.c         |  2 +-
->  libfrog/paths.c     | 20 +++++++++++++-------
->  quota/init.c        |  2 +-
->  scrub/xfs_scrub.c   |  2 +-
->  spaceman/init.c     |  2 +-
->  10 files changed, 22 insertions(+), 16 deletions(-)
-> 
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index fef6262c..ea0b1167 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -247,7 +247,7 @@ main(int argc, char **argv)
->  	RealUid = getuid();
->  
->  	pagesize = getpagesize();
-> -	fs_table_initialise(0, NULL, 0, NULL);
-> +	fs_table_initialise(0, NULL, 0, NULL, 1);
->  	if (optind < argc) {
->  		for (; optind < argc; optind++) {
->  			argname = argv[optind];
-> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-> index 2af7e5ba..b4855b6d 100644
-> --- a/growfs/xfs_growfs.c
-> +++ b/growfs/xfs_growfs.c
-> @@ -131,7 +131,7 @@ main(int argc, char **argv)
->  	if (dflag + lflag + rflag + mflag == 0)
->  		aflag = 1;
->  
-> -	fs_table_initialise(0, NULL, 0, NULL);
-> +	fs_table_initialise(0, NULL, 0, NULL, 1);
->  
->  	if (!realpath(argv[optind], rpath)) {
->  		fprintf(stderr, _("%s: path resolution failed for %s: %s\n"),
-> diff --git a/include/path.h b/include/path.h
-> index 2d6c3c53..580048a6 100644
-> --- a/include/path.h
-> +++ b/include/path.h
-> @@ -37,7 +37,7 @@ extern fs_path_t *fs_table;	/* array of entries in fs table  */
->  extern fs_path_t *fs_path;	/* current entry in the fs table */
->  extern char *mtab_file;
->  
-> -extern void fs_table_initialise(int, char *[], int, char *[]);
-> +extern void fs_table_initialise(int, char *[], int, char *[], int);
->  extern void fs_table_destroy(void);
->  
->  extern void fs_table_insert_project_path(char *__dir, uint __projid);
-> diff --git a/io/fsmap.c b/io/fsmap.c
-> index 477c36fc..53528361 100644
-> --- a/io/fsmap.c
-> +++ b/io/fsmap.c
-> @@ -518,7 +518,7 @@ fsmap_f(
->  	 * (We report AG number/block for data device extents on XFS).
->  	 */
->  	if (!tab_init) {
-> -		fs_table_initialise(0, NULL, 0, NULL);
-> +		fs_table_initialise(0, NULL, 0, NULL, 0);
->  		tab_init = true;
->  	}
->  	fs = fs_table_lookup(file->name, FS_MOUNT_POINT);
-> diff --git a/io/init.c b/io/init.c
-> index 83f08f2d..8ed3b47c 100644
-> --- a/io/init.c
-> +++ b/io/init.c
-> @@ -144,7 +144,7 @@ init(
->  	pagesize = getpagesize();
->  	gettimeofday(&stopwatch, NULL);
->  
-> -	fs_table_initialise(0, NULL, 0, NULL);
-> +	fs_table_initialise(0, NULL, 0, NULL, 0);
->  	while ((c = getopt(argc, argv, "ac:C:dFfiLm:p:PnrRstTVx")) != EOF) {
->  		switch (c) {
->  		case 'a':
-> diff --git a/io/parent.c b/io/parent.c
-> index ffa55f6d..3e321be4 100644
-> --- a/io/parent.c
-> +++ b/io/parent.c
-> @@ -369,7 +369,7 @@ parent_f(int argc, char **argv)
->  
->  	if (!tab_init) {
->  		tab_init = 1;
-> -		fs_table_initialise(0, NULL, 0, NULL);
-> +		fs_table_initialise(0, NULL, 0, NULL, 0);
->  	}
->  	fs = fs_table_lookup(file->name, FS_MOUNT_POINT);
->  	if (!fs) {
-> diff --git a/libfrog/paths.c b/libfrog/paths.c
-> index 6e266654..f4d0a61e 100644
-> --- a/libfrog/paths.c
-> +++ b/libfrog/paths.c
-> @@ -363,7 +363,8 @@ out_nomem:
->   */
->  static int
->  fs_table_initialise_mounts(
-> -	char		*path)
-> +	char		*path,
-> +	int			xfs_only)
-
-Borken indentation?
-
---D
-
->  {
->  	struct mntent	*mnt;
->  	FILE		*mtp;
-> @@ -389,6 +390,8 @@ fs_table_initialise_mounts(
->  			return errno;
->  
->  	while ((mnt = getmntent(mtp)) != NULL) {
-> +		if (xfs_only && strcmp(mnt->mnt_type, "xfs") != 0)
-> +			continue;
->  		if (!realpath(mnt->mnt_dir, rmnt_dir))
->  			continue;
->  		if (!realpath(mnt->mnt_fsname, rmnt_fsname))
-> @@ -443,11 +446,12 @@ fs_mount_point_from_path(
->  
->  static void
->  fs_table_insert_mount(
-> -	char		*mount)
-> +	char		*mount,
-> +	int			xfs_only)
->  {
->  	int		error;
->  
-> -	error = fs_table_initialise_mounts(mount);
-> +	error = fs_table_initialise_mounts(mount, xfs_only);
->  	if (error)
->  		fprintf(stderr, _("%s: cannot setup path for mount %s: %s\n"),
->  			progname, mount, strerror(error));
-> @@ -508,23 +512,25 @@ fs_table_insert_project(
->   * projects.  If mount_count is zero, mounts is ignored and the
->   * table is populated with mounted filesystems.  If project_count is
->   * zero, projects is ignored and the table is populated with all
-> - * projects defined in the projects file.
-> + * projects defined in the projects file.  If xfs_only is 1, filter
-> + * out non-XFS filesystems.
->   */
->  void
->  fs_table_initialise(
->  	int	mount_count,
->  	char	*mounts[],
->  	int	project_count,
-> -	char	*projects[])
-> +	char	*projects[],
-> +	int	xfs_only)
->  {
->  	int	error;
->  	int	i;
->  
->  	if (mount_count) {
->  		for (i = 0; i < mount_count; i++)
-> -			fs_table_insert_mount(mounts[i]);
-> +			fs_table_insert_mount(mounts[i], xfs_only);
->  	} else {
-> -		error = fs_table_initialise_mounts(NULL);
-> +		error = fs_table_initialise_mounts(NULL, xfs_only);
->  		if (error)
->  			goto out_error;
->  	}
-> diff --git a/quota/init.c b/quota/init.c
-> index 8244e38d..06ac3d0f 100644
-> --- a/quota/init.c
-> +++ b/quota/init.c
-> @@ -174,7 +174,7 @@ init(
->  		}
->  	}
->  
-> -	fs_table_initialise(argc - optind, &argv[optind], nprojopts, projopts);
-> +	fs_table_initialise(argc - optind, &argv[optind], nprojopts, projopts, 0);
->  	free(projopts);
->  
->  	init_commands();
-> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-> index b8138000..3da606bc 100644
-> --- a/scrub/xfs_scrub.c
-> +++ b/scrub/xfs_scrub.c
-> @@ -705,7 +705,7 @@ main(
->  			mtab = _PATH_MOUNTED;
->  	}
->  
-> -	fs_table_initialise(0, NULL, 0, NULL);
-> +	fs_table_initialise(0, NULL, 0, NULL, 1);
->  	fsp = fs_table_lookup_mount(ctx.mntpoint);
->  	if (!fsp) {
->  		fprintf(stderr, _("%s: Not a XFS mount point.\n"),
-> diff --git a/spaceman/init.c b/spaceman/init.c
-> index 181a3446..30d98c8f 100644
-> --- a/spaceman/init.c
-> +++ b/spaceman/init.c
-> @@ -68,7 +68,7 @@ init(
->  	bindtextdomain(PACKAGE, LOCALEDIR);
->  	textdomain(PACKAGE);
->  
-> -	fs_table_initialise(0, NULL, 0, NULL);
-> +	fs_table_initialise(0, NULL, 0, NULL, 0);
->  	while ((c = getopt(argc, argv, "c:p:V")) != EOF) {
->  		switch (c) {
->  		case 'c':
-> -- 
-> 2.17.2
-> 
+BUG: MAX_STACK_TRACE_ENTRIES too low!
+turning off the locking correctness validator.
+CPU: 0 PID: 1176 Comm: kworker/u5:0 Not tainted 5.0.0-rc8-next-20190301 #1
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
+Google 01/01/2011
+Workqueue: hci1 hci_power_on
+Call Trace:
+  __dump_stack lib/dump_stack.c:77 [inline]
+  dump_stack+0x172/0x1f0 lib/dump_stack.c:113
+  save_trace kernel/locking/lockdep.c:467 [inline]
+  save_trace.cold+0x14/0x19 kernel/locking/lockdep.c:437
+  mark_lock+0x2fb/0x1380 kernel/locking/lockdep.c:3401
+  mark_irqflags kernel/locking/lockdep.c:3304 [inline]
+  __lock_acquire+0xf2c/0x3fb0 kernel/locking/lockdep.c:3644
+  lock_acquire+0x16f/0x3f0 kernel/locking/lockdep.c:4202
+  process_one_work+0x8df/0x1790 kernel/workqueue.c:2244
+  worker_thread+0x98/0xe40 kernel/workqueue.c:2415
+  kthread+0x357/0x430 kernel/kthread.c:253
+  ret_from_fork+0x3a/0x50 arch/x86/entry/entry_64.S:352
