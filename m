@@ -1,94 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:38311 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726342AbfCHSnM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Mar 2019 13:43:12 -0500
-Received: by mail-pg1-f194.google.com with SMTP id m2so14801444pgl.5
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Mar 2019 10:43:11 -0800 (PST)
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:45204 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726626AbfCCVLN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Mar 2019 16:11:13 -0500
+Date: Mon, 4 Mar 2019 08:11:02 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/8] add generic interface to set/get project
+Message-ID: <20190303211102.GP23020@dastard>
+References: <1551449141-7884-1-git-send-email-wshilong1991@gmail.com>
 MIME-Version: 1.0
-References: <20190308161308.GC4676@magnolia> <CAKwvOdn0=1svhDUBEP+391NvUXhm8bkzBzNMgNphML8kRzrRJQ@mail.gmail.com>
- <20190308183830.GC20533@magnolia>
-In-Reply-To: <20190308183830.GC20533@magnolia>
-From: Nick Desaulniers <ndesaulniers@google.com>
-Date: Fri, 8 Mar 2019 10:42:59 -0800
-Message-ID: <CAKwvOdnpfQ_v3Hx0Y0ZjzQEet9DH+39RzMeG6rFqp6nw0ha7GQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: clean up xfs_dir2_leafn_add
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1551449141-7884-1-git-send-email-wshilong1991@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>, LKML <linux-kernel@vger.kernel.org>, clang-built-linux@googlegroups.com
+To: Wang Shilong <wangshilong1991@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, lixi@ddn.com, adilger@dilger.ca, Wang Shilong <wshilong@ddn.com>
 
-On Fri, Mar 8, 2019 at 10:38 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> On Fri, Mar 08, 2019 at 10:12:33AM -0800, Nick Desaulniers wrote:
-> > On Fri, Mar 8, 2019 at 8:13 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > >
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > >
-> > > Remove typedefs and consolidate local variable initialization.
-> > >
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_dir2_node.c |   20 ++++++++------------
-> > >  1 file changed, 8 insertions(+), 12 deletions(-)
-> > >
-> > > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> > > index de46f26c5292..16731d2d684b 100644
-> > > --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> > > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> > > @@ -426,26 +426,22 @@ xfs_dir2_leaf_to_node(
-> > >  static int                                     /* error */
-> > >  xfs_dir2_leafn_add(
-> > >         struct xfs_buf          *bp,            /* leaf buffer */
-> > > -       xfs_da_args_t           *args,          /* operation arguments */
-> > > +       struct xfs_da_args      *args,          /* operation arguments */
-> > >         int                     index)          /* insertion pt for new entry */
-> > >  {
-> > > +       struct xfs_dir3_icleaf_hdr leafhdr;
-> > > +       struct xfs_inode        *dp = args->dp;
-> > > +       struct xfs_dir2_leaf    *leaf = bp->b_addr;
-> > > +       struct xfs_dir2_leaf_entry *lep;
-> > > +       struct xfs_dir2_leaf_entry *ents;
-> > >         int                     compact;        /* compacting stale leaves */
-> > > -       xfs_inode_t             *dp;            /* incore directory inode */
-> > > -       int                     highstale;      /* next stale entry */
-> > > -       xfs_dir2_leaf_t         *leaf;          /* leaf structure */
-> > > -       xfs_dir2_leaf_entry_t   *lep;           /* leaf entry */
-> > > +       int                     highstale = 0;  /* next stale entry */
-> > >         int                     lfloghigh;      /* high leaf entry logging */
-> > >         int                     lfloglow;       /* low leaf entry logging */
-> > > -       int                     lowstale;       /* previous stale entry */
-> > > -       struct xfs_dir3_icleaf_hdr leafhdr;
-> > > -       struct xfs_dir2_leaf_entry *ents;
-> > > +       int                     lowstale = 0;   /* previous stale entry */
-> > >
-> > >         trace_xfs_dir2_leafn_add(args, index);
-> > >
-> > > -       dp = args->dp;
-> > > -       leaf = bp->b_addr;
-> > > -       highstale = 0;
-> > > -       lowstale = 0;
-> > >         dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
-> > >         ents = dp->d_ops->leaf_ents_p(leaf);
-> >
-> > What about moving the initialization of `ents` above? (Or would that
-> > be over the line limit?)
->
-> It might be over the line limit, but more importantly I prefer to have
-> the tracepoint fire before we start interpreting the on-disk metadata.
-> That way, ftrace data will show exactly where we were in the kernel
-> if any corruption warnings are emitted during that interpretation.
->
-> I don't think either of those two functions do that today, but I don't
-> want to leave a logic bomb in case they ever start doing that.
+On Fri, Mar 01, 2019 at 11:05:33PM +0900, Wang Shilong wrote:
+> From: Wang Shilong <wshilong@ddn.com>
+> 
+> Currently, Filesystem use FS_IOC_FS_SETXATTR ioctl
+> to change project ID of file. However we don't
+> support ioctl on symlink files, and it is desirable
+> to change symlink files' project ID just like uid/gid.
+> 
+> This patch try to reuse existed interface fchownat(),
+> use group id to set project ID if flag AT_FCHOWN_PROJID
+> passed in.
+> 
+> Also extend statx() calles to get symlink files' project
+> ID and inherit attribute.
 
-Makes sense, ents is initialized to the results of function call.
-Thanks for the additional info, for accepting the earlier patch, and
-this additional cleanup.
-Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+I'll mention the generic book-keeping stuff here:
+
+- Series needs to be cc'd to linux-api@vger.kernel.org
+- commit messages should be formatted similar to email. i.e. line
+  wrap at 68-72 columns, not 50
+- all of the patches have duplicate "From:" lines in the commit
+  message.
+- most of the patches are missing commit messages.
+
+Cheers,
+
+Dave.
 
 -- 
-Thanks,
-~Nick Desaulniers
+Dave Chinner
+david@fromorbit.com
