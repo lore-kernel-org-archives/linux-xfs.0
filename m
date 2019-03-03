@@ -1,45 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:23382 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725938AbfCCXDx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Mar 2019 18:03:53 -0500
-Date: Mon, 4 Mar 2019 10:03:34 +1100
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:64434 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725971AbfCCXSO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Mar 2019 18:18:14 -0500
+Date: Mon, 4 Mar 2019 10:18:09 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 8/8] xfs: support project in xfs_getattr()
-Message-ID: <20190303230334.GT23020@dastard>
-References: <1551449141-7884-1-git-send-email-wshilong1991@gmail.com>
- <1551449141-7884-9-git-send-email-wshilong1991@gmail.com>
+Subject: Re: [RFC PATCH v2 0/9] Block/XFS: Support alternative mirror device
+ retry
+Message-ID: <20190303231809.GV23020@dastard>
+References: <20190213095044.29628-1-bob.liu@oracle.com>
+ <20190218213150.GE14116@dastard>
+ <ba78a587-04ba-58a4-f282-63e200c81e2d@oracle.com>
+ <20190228214949.GO23020@dastard>
+ <4c930f97-31cd-cbd9-effb-db3090e0f273@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1551449141-7884-9-git-send-email-wshilong1991@gmail.com>
+In-Reply-To: <4c930f97-31cd-cbd9-effb-db3090e0f273@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Wang Shilong <wangshilong1991@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, lixi@ddn.com, adilger@dilger.ca, Wang Shilong <wshilong@ddn.com>
+To: Bob Liu <bob.liu@oracle.com>
+Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, allison.henderson@oracle.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca
 
-On Fri, Mar 01, 2019 at 11:05:41PM +0900, Wang Shilong wrote:
-> From: Wang Shilong <wshilong@ddn.com>
+On Sun, Mar 03, 2019 at 10:37:59AM +0800, Bob Liu wrote:
+> On 3/1/19 5:49 AM, Dave Chinner wrote:
+> > On Thu, Feb 28, 2019 at 10:22:02PM +0800, Bob Liu wrote:
+> >> On 2/19/19 5:31 AM, Dave Chinner wrote:
+> >>> On Wed, Feb 13, 2019 at 05:50:35PM +0800, Bob Liu wrote:
+> >>>> Motivation:
+> >>>> When fs data/metadata checksum mismatch, lower block devices may have other
+> >>>> correct copies. e.g. If XFS successfully reads a metadata buffer off a raid1 but
+> >>>> decides that the metadata is garbage, today it will shut down the entire
+> >>>> filesystem without trying any of the other mirrors.  This is a severe
+> >>>> loss of service, and we propose these patches to have XFS try harder to
+> >>>> avoid failure.
+> >>>>
+> >>>> This patch prototype this mirror retry idea by:
+> >>>> * Adding @nr_mirrors to struct request_queue which is similar as
+> >>>>   blk_queue_nonrot(), filesystem can grab device request queue and check max
+> >>>>   mirrors this block device has.
+> >>>>   Helper functions were also added to get/set the nr_mirrors.
+> >>>>
+> >>>> * Introducing bi_rd_hint just like bi_write_hint, but bi_rd_hint is a long bitmap
+> >>>> in order to support stacked layer case.
+> >>>>
+> >>>> * Modify md/raid1 to support this retry feature.
+> >>>>
+> >>>> * Adapter xfs to use this feature.
+> >>>>   If the read verify fails, we loop over the available mirrors and retry the read.
+> >>>
+> >>> Why does the filesystem have to iterate every single posible
+> >>> combination of devices that are underneath it?
+> >>>
+> >>> Wouldn't it be much simpler to be able to attach a verifier
+> >>> function to the bio, and have each layer that gets called iterate
+> >>> over all it's copies internally until the verfier function passes
+> >>> or all copies are exhausted?
+> >>>
+> >>> This works for stacked mirrors - it can pass the higher layer
+> >>> verifier down as far as necessary. It can work for RAID5/6, too, by
+> >>> having that layer supply it's own verifier for reads that verifies
+> >>> parity and can reconstruct of failure, then when it's reconstructed
+> >>> a valid stripe it can run the verifier that was supplied to it from
+> >>> above, etc.
+> >>>
+> >>> i.e. I dont see why only filesystems should drive retries or have to
+> >>> be aware of the underlying storage stacking. ISTM that each
+> >>> layer of the storage stack should be able to verify what has been
+> >>> returned to it is valid independently of the higher layer
+> >>> requirements. The only difference from a caller point of view should
+> >>> be submit_bio(bio); vs submit_bio_verify(bio, verifier_cb_func);
+> >>>
+> >>
+> >> We already have bio->bi_end_io(), how about do the verification inside bi_end_io()?
+> >>
+> >> Then the whole sequence would like:
+> >> bio_endio()
+> >>     > 1.bio->bi_end_io()
+> >>         > xfs_buf_bio_end_io()
+> >>             > verify, set bio->bi_status = "please retry" if verify fail
+> >>         
+> >>     > 2.if found bio->bi_status = retry
+> >>     > 3.resubmit bio
+> > 
+> > As I mentioned to Darrick, this isn't cwas simple as it seems
+> > because what XFS actually does is this:
+> > 
+> > IO completion thread			Workqueue Thread
+> > bio_endio(bio)
+> >   bio->bi_end_io(bio)
+> >     xfs_buf_bio_end_io(bio)
+> >       bp->b_error = bio->bi_status
+> >       xfs_buf_ioend_async(bp)
+> >         queue_work(bp->b_ioend_wq, bp)
+> >       bio_put(bio)
+> > <io completion done>
+> > 					.....
+> > 					xfs_buf_ioend(bp)
+> > 					  bp->b_ops->read_verify()
+> > 					.....
+> > 
+> > IOWs, XFS does not do read verification inside the bio completion
+> > context, but instead defers it to an external workqueue so it does
+> > not delay processing incoming bio IO completions. Hence there is no
+> > way to get the verification status back to the bio completion (the
+> > bio has already been freed!) to resubmit from there.
+> > 
+> > This is one of the reasons I suggested a verifier be added to the
+> > submission, so the bio itself is wholly responsible for running it,
 > 
-> From: Wang Shilong <wshilong@ddn.com>
-> 
-> Signed-off-by: Wang Shilong <wshilong@ddn.com>
-> ---
->  fs/xfs/xfs_iops.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index c10466fe6ed4..a2f8c0f048cf 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -501,6 +501,7 @@ xfs_vn_getattr(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
->  
-> +	stat->projid = xfs_projid_to_kprojid(xfs_get_projid(ip));
+> But then completion time of an i/o would be longer if calling verifier function inside bio_endio().
+> Would that be a problem?
 
-Should only be set if the caller is in the init_user_ns.
+No, because then we don't have to do it in the filesystem. i.e. the
+filesystem doesn't complete the IO until after the verifier has run,
+so it from the perspective of the waiting reader is doesn't matter
+where it is run because the overall I/O latency is the same.
 
 Cheers,
 
