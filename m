@@ -1,188 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:19185 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725933AbfCCXqD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Mar 2019 18:46:03 -0500
-Date: Mon, 4 Mar 2019 10:45:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH v2 0/9] Block/XFS: Support alternative mirror device
- retry
-Message-ID: <20190303234540.GW23020@dastard>
-References: <20190213095044.29628-1-bob.liu@oracle.com>
- <20190218213150.GE14116@dastard>
- <ba78a587-04ba-58a4-f282-63e200c81e2d@oracle.com>
- <D0A57CD2-1EE2-43C9-9E79-7B09F4FCEAC6@dilger.ca>
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:45085 "EHLO
+        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726972AbfCDNxM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 08:53:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <D0A57CD2-1EE2-43C9-9E79-7B09F4FCEAC6@dilger.ca>
+References: <1551449184-7942-1-git-send-email-wshilong1991@gmail.com> <1551449184-7942-3-git-send-email-wshilong1991@gmail.com>
+In-Reply-To: <1551449184-7942-3-git-send-email-wshilong1991@gmail.com>
+Reply-To: mtk.manpages@gmail.com
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Date: Mon, 4 Mar 2019 14:52:59 +0100
+Message-ID: <CAKgNAkitiDEYSZDnJ5iQ6coaE=q45BHxnG2z_bZtWs=kk+2g3w@mail.gmail.com>
+Subject: Re: [PATCH 2/2] statx.2: add project support update
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Bob Liu <bob.liu@oracle.com>, linux-block <linux-block@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Martin Petersen <martin.petersen@oracle.com>, shirley.ma@oracle.com, Allison Henderson <allison.henderson@oracle.com>, darrick.wong@oracle.com, hch@infradead.org
+To: Wang Shilong <wangshilong1991@gmail.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, lixi@ddn.com, Andreas Dilger <adilger@dilger.ca>, Wang Shilong <wshilong@ddn.com>, linux-man <linux-man@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Thu, Feb 28, 2019 at 04:28:53PM -0700, Andreas Dilger wrote:
-> On Feb 28, 2019, at 7:22 AM, Bob Liu <bob.liu@oracle.com> wrote:
-> > 
-> > On 2/19/19 5:31 AM, Dave Chinner wrote:
-> >> On Wed, Feb 13, 2019 at 05:50:35PM +0800, Bob Liu wrote:
-> >>> Motivation:
-> >>> When fs data/metadata checksum mismatch, lower block devices may have other
-> >>> correct copies. e.g. If XFS successfully reads a metadata buffer off a raid1 but
-> >>> decides that the metadata is garbage, today it will shut down the entire
-> >>> filesystem without trying any of the other mirrors.  This is a severe
-> >>> loss of service, and we propose these patches to have XFS try harder to
-> >>> avoid failure.
-> >>> 
-> >>> This patch prototype this mirror retry idea by:
-> >>> * Adding @nr_mirrors to struct request_queue which is similar as
-> >>>  blk_queue_nonrot(), filesystem can grab device request queue and check max
-> >>>  mirrors this block device has.
-> >>>  Helper functions were also added to get/set the nr_mirrors.
-> >>> 
-> >>> * Introducing bi_rd_hint just like bi_write_hint, but bi_rd_hint is a long bitmap
-> >>> in order to support stacked layer case.
-> >>> 
-> >>> * Modify md/raid1 to support this retry feature.
-> >>> 
-> >>> * Adapter xfs to use this feature.
-> >>>  If the read verify fails, we loop over the available mirrors and retry the read.
-> >> 
-> >> Why does the filesystem have to iterate every single posible
-> >> combination of devices that are underneath it?
-> 
-> Even if the filesystem isn't doing this iteration, there needs to be
-> some way to track which devices or combinations of devices have been
-> tried for the bio, which likely still means something inside the bio.
+Hello Wang Shilong,
 
-I don't beleive it needs to be "in the bio". The thing that does
-the iteration (i.e. the layer with multiple copies or rebuild
-capability) is the one that captures the IO completion state, runs
-the verifier it is supplied with and re-issues the read if the
-verifier or initial IO fails.
-
-i.e. it moves the iteration down to the thing that knows what can be
-iterated, and so there's no state needed in the bio itself.
-
-> >> Wouldn't it be much simpler to be able to attach a verifier
-> >> function to the bio, and have each layer that gets called iterate
-> >> over all it's copies internally until the verfier function passes
-> >> or all copies are exhausted?
-> >> 
-> >> This works for stacked mirrors - it can pass the higher layer
-> >> verifier down as far as necessary. It can work for RAID5/6, too, by
-> >> having that layer supply it's own verifier for reads that verifies
-> >> parity and can reconstruct of failure, then when it's reconstructed
-> >> a valid stripe it can run the verifier that was supplied to it from
-> >> above, etc.
-> >> 
-> >> i.e. I dont see why only filesystems should drive retries or have to
-> >> be aware of the underlying storage stacking. ISTM that each
-> >> layer of the storage stack should be able to verify what has been
-> >> returned to it is valid independently of the higher layer
-> >> requirements. The only difference from a caller point of view should
-> >> be submit_bio(bio); vs submit_bio_verify(bio, verifier_cb_func);
-> 
-> I don't think the filesystem should be aware of the stacking (nor are
-> they in the proposed implementation).  That said, the filesystem-level
-> checksums should, IMHO, be checked at the filesystem level, and this
-> proposal allows the filesystem to tell the lower layer "this read was
-> bad, try something else".
-
-After the fact, yes. I want the verification during the IO while
-the layer that knows about iteration and recovery can do this
-easily.
-
-i.e. all the complexity right now is because we back out of the
-layer that can do iteration before we can run the verification, and
-so we have to carry some state up to a higher level and then pass it
-back down in a completely separate IO context. That's where all this
-"need to carry satate in the bio" stuff comes from, and that's what
-I'm trying to get rid of.
-
-> One option, instead of having a bitmap, with one bit for every possible
-> device/combination in the system, would be to have a counter instead.
-> This is much denser, and even the existing "__u16 bio_write_hint" field
-> would be enough for 2^16 different devices/combinations of devices to
-> be tried.  The main difference would be that the retry layers in the
-> device layer would need to have a deterministic iterator for the bio.
-
-The problem there is stacked layers - each layer needs a unique
-ID for it's iterator function, as this complexity:
-
-> For stacked devices it would need to use the same API to determine how
-> many possible combinations are below it, and do a modulus to pass down
-> the per-device iteration number.  The easiest would be to iterate in
-> numeric order, but it would also be possible to use something like a
-> PRNG seeded by e.g. the block number to change the order on a per-bio
-> basis to even out the load, if that is desirable.
-> 
-> > For a two layer stacked md case like:
-> >                              /dev/md0
-> >             /                  |                  \
-> >      /dev/md1-a             /dev/md1-b          /dev/sdf
-> >   /        \           /       |        \
-> > /dev/sda /dev/sdb  /dev/sdc /dev/sdd  /dev/sde
-> 
-> In this case, the top-level md0 would call blk_queue_get_copies() on each
-> sub-devices to determine how many sub-devices/combinations they have,
-> and pick the maximum (3 in this case), multiplied by the number of
-> top-level devices (also 3 in this case).  That means the top-level device
-> would return blk_queue_get_copies() == 9 combinations, but the same
-> could be done recursively for more/non-uniform layers if needed.
+On Fri, 1 Mar 2019 at 15:06, Wang Shilong <wangshilong1991@gmail.com> wrote:
 >
-> The top-level device maps md1-a = [0-2], md1-b = [3-5], md1-c = [6-8],
-> and can easily map an incoming bio_read_hint to the next device, either
-> by simple increment or by predetermining a device ordering and following
-> that (e.g. 0, 3, 6, 1, 4, 7, 2, 5, 8), or any other deterministic order
-> that hits all of the devices exactly once).  During submission bio_read_hint
-> is set to the modulus of the value (so that each layer in the stack sees
-> only values in the range [0, copies), and when the bio completes the top-level
-> device will set bio_read_hint to be the next sub-device to try (like the
-> original proposal was splitting and combining the bitmaps).  If a sub-device
-> gets a bad index (e.g. md1-a sees bio_read_hint == 2, or sdf sees anything
-> other than 0) it is a no-op and returns e.g. -EAGAIN to the upper device
-> so that it moves to the next device without returning to the caller.
+> From: Wang Shilong <wshilong@ddn.com>
 
-.... clearly demonstrates.
+I take it that these patches relate to some API changes that are not
+yet merged into the kernel, right?
 
-I'd much prefer stacking completions and running them on demand as
-it should work for all stacked types and not require magic to
-iterate constructs like the above.
+Also, I think we need some accompanying info to describe project IDs.
+Can you point me at any documents/resources?
 
-Passing the verifier down also allows the underlying layer to repair
-itself. i.e. if it gets a verifier failure, then retries and gets
-success, it knows immediately which part of the mirror contains bad
-data and can repair it. It can also trigger a region scrub, knowing
-which device might be bad and which is likely to contain good data.
-i.e. we can start to think about automated block device self-repair
-if we can supply a data verifier with submit_bio()...
+Thanks,
 
-> >> I suspect there's a more important issue to worry about: we run the
-> >> XFS read verifiers in an async work queue context after collecting
-> >> the IO completion status from the bio, rather than running directly
-> >> in bio->bi_end_io() call chain.
-> 
-> In this proposal, XFS would just have to save the __u16 bio_read_hint
-> field from the previous bio completion and set it in the retried bio,
-> so that it could start at the next device/combination.  Obviously,
-> this would mean that the internal device iterator couldn't have any
-> hidden state for the bio so that just setting bio_read_hint would be
-> the same as resubmitting the original bio again, but that is already
-> a given or this whole problem wouldn't exist in the first place.
+Michael
 
-It still requires code in the filesystem to iterate and retry N
-times, instead of never. And we still have to re-write the data we
-read to fix the underlying device issue (which the device should
-already know about and have fixed by this point!) i.e. we either get
-verified data returned on bio completion or we get an error to say
-the data was corrupt and unrecoverable. If someone wants "fail fast"
-semantics, then they simply don't provide a verifier....
+>
+> Cc: linux-man@vger.kernel.org
+> Signed-off-by: Wang Shilong <wshilong@ddn.com>
+> ---
+>  man2/statx.2 | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+>
+> diff --git a/man2/statx.2 b/man2/statx.2
+> index 7265d8ace..6a9dede8b 100644
+> --- a/man2/statx.2
+> +++ b/man2/statx.2
+> @@ -82,6 +82,7 @@ struct statx {
+>         containing the filesystem where the file resides */
+>      __u32 stx_dev_major;   /* Major ID */
+>      __u32 stx_dev_minor;   /* Minor ID */
+> +    __u32 stx_projid;      /* Project ID of file */
+>  };
+>  .EE
+>  .in
+> @@ -261,6 +262,7 @@ STATX_SIZE  Want stx_size
+>  STATX_BLOCKS   Want stx_blocks
+>  STATX_BASIC_STATS      [All of the above]
+>  STATX_BTIME    Want stx_btime
+> +STATX_PROJID   Want stx_projid
+>  STATX_ALL      [All currently available fields]
+>  .TE
+>  .in
+> @@ -412,6 +414,9 @@ The device on which this file (inode) resides.
+>  .IR stx_rdev_major " and "  stx_rdev_minor
+>  The device that this file (inode) represents if the file is of block or
+>  character device type.
+> +.TP
+> +.I stx_projid
+> +The file's project ID.
+>  .PP
+>  For further information on the above fields, see
+>  .BR inode (7).
+> @@ -458,6 +463,9 @@ See
+>  .TP
+>  .B STATX_ATTR_ENCRYPTED
+>  A key is required for the file to be encrypted by the filesystem.
+> +.TP
+> +.B STATX_ATTR_PROJINHERIT
+> +Sub directories or files will inherit parent's project ID automatically.
+>  .SH RETURN VALUE
+>  On success, zero is returned.
+>  On error, \-1 is returned, and
+> --
+> 2.19.1
+>
 
-Cheers,
 
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
