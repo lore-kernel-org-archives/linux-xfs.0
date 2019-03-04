@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37714 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:37998 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726038AbfCDVT0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 16:19:26 -0500
-Subject: [PATCH 2/5] xfs/010: use correct type for finobt corrupting
+        with ESMTP id S1726038AbfCDVTq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 16:19:46 -0500
+Subject: [PATCH 5/5] populate: force large finobt creation on xfs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 04 Mar 2019 13:19:22 -0800
-Message-ID: <155173436278.767.10161710001222466116.stgit@magnolia>
+Date: Mon, 04 Mar 2019 13:19:41 -0800
+Message-ID: <155173438168.767.3984211596797515595.stgit@magnolia>
 In-Reply-To: <155173434205.767.15128498725168844621.stgit@magnolia>
 References: <155173434205.767.15128498725168844621.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,33 +20,47 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use 'type finobt' for corrupting the finobt.
+Teach the populate routines to create enough inodes that we end up with
+multi-level inode btrees.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/010 |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ common/populate |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
 
-diff --git a/tests/xfs/010 b/tests/xfs/010
-index ee1595c8..e220a651 100755
---- a/tests/xfs/010
-+++ b/tests/xfs/010
-@@ -63,14 +63,14 @@ _corrupt_finobt_records()
- 			_filter_dbval`
+diff --git a/common/populate b/common/populate
+index d49fbc29..95953476 100644
+--- a/common/populate
++++ b/common/populate
+@@ -260,6 +260,21 @@ _scratch_xfs_populate() {
+ 	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/BNOBT"
+ 	./src/punch-alternating "${SCRATCH_MNT}/BNOBT"
  
- 	# Corrupt a freecount value. This should never exceed 64.
--	$XFS_DB_PROG -x -c "fsb $free_root" -c "type inobt" \
-+	$XFS_DB_PROG -x -c "fsb $free_root" -c "type finobt" \
- 		-c "write recs[1].freecount 70" $dev
- 
- 	# Create a corrupted non-free record, which should never appear in the
- 	# finobt.
--	$XFS_DB_PROG -x -c "fsb $free_root" -c "type inobt" \
-+	$XFS_DB_PROG -x -c "fsb $free_root" -c "type finobt" \
- 		 -c "write recs[2].freecount 0" $dev
--	$XFS_DB_PROG -x -c "fsb $free_root" -c "type inobt" \
-+	$XFS_DB_PROG -x -c "fsb $free_root" -c "type finobt" \
- 		-c "write recs[2].free 0" $dev
++	# Inode btree
++	echo "+ inobt btree"
++	local ino_per_rec=64
++	local rec_per_btblock=16
++	local nr="$(( 2 * (blksz / rec_per_btblock) * ino_per_rec ))"
++	local dir="${SCRATCH_MNT}/INOBT"
++	mkdir -p "${dir}"
++	seq 0 "${nr}" | while read f; do
++		touch "${dir}/${f}"
++	done
++
++	seq 0 "$((ino_per_rec + 1))" "${nr}" | while read f; do
++		rm -f "${dir}/${f}"
++	done
++
+ 	# Reverse-mapping btree
+ 	is_rmapbt="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep -c 'rmapbt=1')"
+ 	if [ $is_rmapbt -gt 0 ]; then
+@@ -562,6 +577,8 @@ _scratch_xfs_populate_check() {
+ 	__populate_check_xfs_aformat "${btree_attr}" "btree"
+ 	__populate_check_xfs_agbtree_height "bno"
+ 	__populate_check_xfs_agbtree_height "cnt"
++	__populate_check_xfs_agbtree_height "ino"
++	test $is_finobt -ne 0 && __populate_check_xfs_agbtree_height "fino"
+ 	test $is_rmapbt -ne 0 && __populate_check_xfs_agbtree_height "rmap"
+ 	test $is_reflink -ne 0 && __populate_check_xfs_agbtree_height "refcnt"
  }
- 
