@@ -1,50 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:60856 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726087AbfCDUuM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 15:50:12 -0500
-Date: Tue, 5 Mar 2019 07:50:06 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] statx.2: add project support update
-Message-ID: <20190304205006.GX23020@dastard>
-References: <1551449184-7942-1-git-send-email-wshilong1991@gmail.com>
- <1551449184-7942-3-git-send-email-wshilong1991@gmail.com>
- <CAKgNAkitiDEYSZDnJ5iQ6coaE=q45BHxnG2z_bZtWs=kk+2g3w@mail.gmail.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:41706 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726038AbfCDVTH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 16:19:07 -0500
+Subject: [PATCH 0/5] fstests: various fixes
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 04 Mar 2019 13:19:02 -0800
+Message-ID: <155173434205.767.15128498725168844621.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAKgNAkitiDEYSZDnJ5iQ6coaE=q45BHxnG2z_bZtWs=kk+2g3w@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Cc: Wang Shilong <wangshilong1991@gmail.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, lixi@ddn.com, Andreas Dilger <adilger@dilger.ca>, Wang Shilong <wshilong@ddn.com>, linux-man <linux-man@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Mar 04, 2019 at 02:52:59PM +0100, Michael Kerrisk (man-pages) wrote:
-> Hello Wang Shilong,
-> 
-> On Fri, 1 Mar 2019 at 15:06, Wang Shilong <wangshilong1991@gmail.com> wrote:
-> >
-> > From: Wang Shilong <wshilong@ddn.com>
-> 
-> I take it that these patches relate to some API changes that are not
-> yet merged into the kernel, right?
-> 
-> Also, I think we need some accompanying info to describe project IDs.
-> Can you point me at any documents/resources?
+Hi all,
 
-Probably "best" documented in the man pages that ship with xfsprogs.
-Basically, it's just another quota ID that can be used to account
-for files/directories in arbitrary admin defined groups. i.e. quotas
-that aren't bound by user/group identities.
+Various fixes for the new tests:
 
-$ man 8 xfs_quota
-$ man 5 projects
-$ man 5 projid
+- Fix get_max_lfs_filesize naming breakage
+- Don't OOM the box when opening tempfiles
+- More fixes to the generic/529 attribute test
+- Fix incorrect btree block type usage when fuzzing
+- Fix tool usage in shared/298
+- Check statx attributes_mask
+- Force the XFS fs population helper to create multilevel inode btrees
 
-Cheers,
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
