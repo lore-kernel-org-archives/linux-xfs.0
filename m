@@ -1,66 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37998 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726038AbfCDVTq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 16:19:46 -0500
-Subject: [PATCH 5/5] populate: force large finobt creation on xfs
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 04 Mar 2019 13:19:41 -0800
-Message-ID: <155173438168.767.3984211596797515595.stgit@magnolia>
-In-Reply-To: <155173434205.767.15128498725168844621.stgit@magnolia>
-References: <155173434205.767.15128498725168844621.stgit@magnolia>
+Received: from mail-io1-f66.google.com ([209.85.166.66]:37903 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726066AbfCDW4O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 17:56:14 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <1551449184-7942-1-git-send-email-wshilong1991@gmail.com>
+ <1551449184-7942-3-git-send-email-wshilong1991@gmail.com> <CAKgNAkitiDEYSZDnJ5iQ6coaE=q45BHxnG2z_bZtWs=kk+2g3w@mail.gmail.com>
+ <20190304205006.GX23020@dastard>
+In-Reply-To: <20190304205006.GX23020@dastard>
+From: Eugene Syromyatnikov <evgsyr@gmail.com>
+Date: Mon, 4 Mar 2019 23:56:09 +0100
+Message-ID: <CACGkJdsdVPKNOnhuAza=Lnh1b=KW2N2yycp6YxJ2tsLFxWJiYg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] statx.2: add project support update
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, Wang Shilong <wangshilong1991@gmail.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, lixi@ddn.com, Andreas Dilger <adilger@dilger.ca>, Wang Shilong <wshilong@ddn.com>, linux-man <linux-man@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Mar 4, 2019 at 9:57 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Mon, Mar 04, 2019 at 02:52:59PM +0100, Michael Kerrisk (man-pages) wrote:
+> > Hello Wang Shilong,
+> >
+> > On Fri, 1 Mar 2019 at 15:06, Wang Shilong <wangshilong1991@gmail.com> wrote:
+> > >
+> > > From: Wang Shilong <wshilong@ddn.com>
+> >
+> > I take it that these patches relate to some API changes that are not
+> > yet merged into the kernel, right?
+> >
+> > Also, I think we need some accompanying info to describe project IDs.
+> > Can you point me at any documents/resources?
+>
+> Probably "best" documented in the man pages that ship with xfsprogs.
+> Basically, it's just another quota ID that can be used to account
+> for files/directories in arbitrary admin defined groups. i.e. quotas
+> that aren't bound by user/group identities.
+>
+> $ man 8 xfs_quota
+> $ man 5 projects
+> $ man 5 projid
 
-Teach the populate routines to create enough inodes that we end up with
-multi-level inode btrees.
+Project quotas also mentioned in quotactl(2).
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/populate |   17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-
-diff --git a/common/populate b/common/populate
-index d49fbc29..95953476 100644
---- a/common/populate
-+++ b/common/populate
-@@ -260,6 +260,21 @@ _scratch_xfs_populate() {
- 	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/BNOBT"
- 	./src/punch-alternating "${SCRATCH_MNT}/BNOBT"
- 
-+	# Inode btree
-+	echo "+ inobt btree"
-+	local ino_per_rec=64
-+	local rec_per_btblock=16
-+	local nr="$(( 2 * (blksz / rec_per_btblock) * ino_per_rec ))"
-+	local dir="${SCRATCH_MNT}/INOBT"
-+	mkdir -p "${dir}"
-+	seq 0 "${nr}" | while read f; do
-+		touch "${dir}/${f}"
-+	done
-+
-+	seq 0 "$((ino_per_rec + 1))" "${nr}" | while read f; do
-+		rm -f "${dir}/${f}"
-+	done
-+
- 	# Reverse-mapping btree
- 	is_rmapbt="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep -c 'rmapbt=1')"
- 	if [ $is_rmapbt -gt 0 ]; then
-@@ -562,6 +577,8 @@ _scratch_xfs_populate_check() {
- 	__populate_check_xfs_aformat "${btree_attr}" "btree"
- 	__populate_check_xfs_agbtree_height "bno"
- 	__populate_check_xfs_agbtree_height "cnt"
-+	__populate_check_xfs_agbtree_height "ino"
-+	test $is_finobt -ne 0 && __populate_check_xfs_agbtree_height "fino"
- 	test $is_rmapbt -ne 0 && __populate_check_xfs_agbtree_height "rmap"
- 	test $is_reflink -ne 0 && __populate_check_xfs_agbtree_height "refcnt"
- }
+-- 
+Eugene Syromyatnikov
+mailto:evgsyr@gmail.com
+xmpp:esyr@jabber.{ru|org}
