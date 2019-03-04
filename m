@@ -1,252 +1,252 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-eopbgr690081.outbound.protection.outlook.com ([40.107.69.81]:49230
-        "EHLO NAM04-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726066AbfCDXgI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Mar 2019 18:36:08 -0500
-From: Wang Shilong <wshilong@ddn.com>
-Subject: =?gb2312?B?tPC4tDogW1BBVENIIDEvOF0gZnM6IGFkZCBzdXBwb3J0IHRvIGNoYW5nZSBw?=
- =?gb2312?Q?roject_ID?=
-Date: Mon, 4 Mar 2019 23:36:04 +0000
-Message-ID: <BYAPR19MB2758060411E4950092A159C6D4710@BYAPR19MB2758.namprd19.prod.outlook.com>
-References: <1551449141-7884-1-git-send-email-wshilong1991@gmail.com>
- <1551449141-7884-2-git-send-email-wshilong1991@gmail.com>,<20190303215335.GQ23020@dastard>
-In-Reply-To: <20190303215335.GQ23020@dastard>
-Content-Language: zh-CN
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Received: from userp2120.oracle.com ([156.151.31.85]:44374 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726038AbfCDVm2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 16:42:28 -0500
+Date: Mon, 4 Mar 2019 13:42:23 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] Add xfs_only flag to fs_table_initialise_mounts()
+ function
+Message-ID: <20190304214223.GA1170@magnolia>
+References: <20190304213124.552-1-tgill@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190304213124.552-1-tgill@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Wang Shilong <wangshilong1991@gmail.com>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>, Li Xi <lixi@ddn.com>, "adilger@dilger.ca" <adilger@dilger.ca>
+To: tgill@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-SGkgRGF2ZSwNCg0KICAgVGhhbmtzIHZlcnkgbXVjaCBmb3IgZGV0YWlsZWQgcmV2aWV3IGFuZCBn
-b29kIHN1Z2dlc3Rpb25zLCB3aWxsDQpyZWZyZXNoIGFuZCBzZW5kIGEgVjIgc29vbiENCg0KDQpU
-aGFua3MsDQpTaGlsb25nDQoNCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18NCreivP7IyzogRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPg0Kt6LLzcqxvOQ6
-IDIwMTnE6jPUwjTI1SA1OjUzDQrK1bz+yMs6IFdhbmcgU2hpbG9uZw0Ks63LzTogbGludXgtZnNk
-ZXZlbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWV4dDRAdmdlci5rZXJuZWwub3JnOyBsaW51eC14
-ZnNAdmdlci5rZXJuZWwub3JnOyBsaW51eC1mMmZzLWRldmVsQGxpc3RzLnNvdXJjZWZvcmdlLm5l
-dDsgTGkgWGk7IGFkaWxnZXJAZGlsZ2VyLmNhOyBXYW5nIFNoaWxvbmcNCtb3zOI6IFJlOiBbUEFU
-Q0ggMS84XSBmczogYWRkIHN1cHBvcnQgdG8gY2hhbmdlIHByb2plY3QgSUQNCg0KT24gRnJpLCBN
-YXIgMDEsIDIwMTkgYXQgMTE6MDU6MzRQTSArMDkwMCwgV2FuZyBTaGlsb25nIHdyb3RlOg0KPiBG
-cm9tOiBXYW5nIFNoaWxvbmcgPHdzaGlsb25nQGRkbi5jb20+DQo+DQo+IEZyb206IFdhbmcgU2hp
-bG9uZyA8d3NoaWxvbmdAZGRuLmNvbT4NCj4NCj4gQ3VycmVudGx5LCBGaWxlc3lzdGVtIHVzZSBG
-U19JT0NfRlNfU0VUWEFUVFIgaW9jdGwNCj4gdG8gY2hhbmdlIHByb2plY3QgSUQgb2YgZmlsZS4g
-SG93ZXZlciB3ZSBkb24ndA0KPiBzdXBwb3J0IGlvY3RsIG9uIHN5bWxpbmsgZmlsZXMsIGFuZCBp
-dCBpcyBkZXNpcmFibGUNCj4gdG8gY2hhbmdlIHN5bWxpbmsgZmlsZXMnIHByb2plY3QgSUQganVz
-dCBsaWtlIHVpZC9naWQuDQo+DQo+IFRoaXMgcGF0Y2ggdHJ5IHRvIHJldXNlIGV4aXN0ZWQgaW50
-ZXJmYWNlIGZjaG93bmF0KCksDQo+IHVzZSBncm91cCBpZCB0byBzZXQgcHJvamVjdCBJRCBpZiBm
-bGFnIEFUX0ZDSE9XTl9QUk9KSUQNCj4gcGFzc2VkIGluLg0KPg0KPiBTaWduZWQtb2ZmLWJ5OiBX
-YW5nIFNoaWxvbmcgPHdzaGlsb25nQGRkbi5jb20+DQo+IC0tLQ0KPiAgZnMvYXR0ci5jICAgICAg
-ICAgICAgICAgICAgICAgICAgfCAyNiArKysrKysrKysrKysrKysrKysrKysrKystLQ0KPiAgZnMv
-b3Blbi5jICAgICAgICAgICAgICAgICAgICAgICAgfCAyOSArKysrKysrKysrKysrKysrKysrKysr
-Ky0tLS0tLQ0KPiAgZnMvcXVvdGEvZHF1b3QuYyAgICAgICAgICAgICAgICAgfCAyMyArKysrKysr
-KysrKysrKysrKysrKysrKw0KPiAgaW5jbHVkZS9saW51eC9mcy5oICAgICAgICAgICAgICAgfCAg
-MyArKysNCj4gIGluY2x1ZGUvbGludXgvcXVvdGFvcHMuaCAgICAgICAgIHwgIDkgKysrKysrKysr
-DQo+ICBpbmNsdWRlL3VhcGkvbGludXgvZmNudGwuaCAgICAgICB8ICAxICsNCj4gIHRvb2xzL2lu
-Y2x1ZGUvdWFwaS9saW51eC9mY250bC5oIHwgIDEgKw0KPiAgNyBmaWxlcyBjaGFuZ2VkLCA4NCBp
-bnNlcnRpb25zKCspLCA4IGRlbGV0aW9ucygtKQ0KPg0KPiBkaWZmIC0tZ2l0IGEvZnMvYXR0ci5j
-IGIvZnMvYXR0ci5jDQo+IGluZGV4IGQyMmU4MTg3NDc3Zi4uYzZiMWMxMTMyYzhmIDEwMDY0NA0K
-PiAtLS0gYS9mcy9hdHRyLmMNCj4gKysrIGIvZnMvYXR0ci5jDQo+IEBAIC04NSw2ICs4NSwyOCBA
-QCBpbnQgc2V0YXR0cl9wcmVwYXJlKHN0cnVjdCBkZW50cnkgKmRlbnRyeSwgc3RydWN0IGlhdHRy
-ICphdHRyKQ0KPiAgICAgICBpZiAoKGlhX3ZhbGlkICYgQVRUUl9HSUQpICYmICFjaGdycF9vayhp
-bm9kZSwgYXR0ci0+aWFfZ2lkKSkNCj4gICAgICAgICAgICAgICByZXR1cm4gLUVQRVJNOw0KPg0K
-PiArICAgICAvKg0KPiArICAgICAgKiBQcm9qZWN0IFF1b3RhIElEIHN0YXRlIGlzIG9ubHkgYWxs
-b3dlZCB0byBjaGFuZ2UgZnJvbSB3aXRoaW4gdGhlIGluaXQNCj4gKyAgICAgICogbmFtZXNwYWNl
-LiBFbmZvcmNlIHRoYXQgcmVzdHJpY3Rpb24gb25seSBpZiB3ZSBhcmUgdHJ5aW5nIHRvIGNoYW5n
-ZQ0KPiArICAgICAgKiB0aGUgcXVvdGEgSUQgc3RhdGUuIEV2ZXJ5dGhpbmcgZWxzZSBpcyBhbGxv
-d2VkIGluIHVzZXIgbmFtZXNwYWNlcy4NCj4gKyAgICAgICovDQo+ICsgICAgIGlmICgoaWFfdmFs
-aWQgJiBBVFRSX1BST0pJRCkgJiYgY3VycmVudF91c2VyX25zKCkgIT0gJmluaXRfdXNlcl9ucykg
-ew0KPiArICAgICAgICAgICAgIGtwcm9qaWRfdCBwcm9qaWQ7DQo+ICsgICAgICAgICAgICAgaW50
-IHJjOw0KPiArDQo+ICsgICAgICAgICAgICAgLyoNCj4gKyAgICAgICAgICAgICAgKiBGaWxlc3lz
-dGVtIGxpa2UgeGZzIGRvZXMndCBoYXZlIC0+Z2V0X3Byb2ppZCBob29rDQo+ICsgICAgICAgICAg
-ICAgICogc2hvdWxkIGNoZWNrIHBlcm1pc3Npb24gYnkgdGhlbXNlbHZlcy4NCj4gKyAgICAgICAg
-ICAgICAgKi8NCj4gKyAgICAgICAgICAgICBpZiAoaW5vZGUtPmlfc2ItPmRxX29wLT5nZXRfcHJv
-amlkKSB7DQo+ICsgICAgICAgICAgICAgICAgICAgICByYyA9IGlub2RlLT5pX3NiLT5kcV9vcC0+
-Z2V0X3Byb2ppZChpbm9kZSwgJnByb2ppZCk7DQo+ICsgICAgICAgICAgICAgICAgICAgICBpZiAo
-cmMpDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHJldHVybiByYzsNCj4gKyAgICAg
-ICAgICAgICAgICAgICAgIGlmICghcHJvamlkX2VxKHByb2ppZCwgYXR0ci0+aWFfcHJvamlkKSkN
-Cj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIC1FUEVSTTsNCj4gKyAgICAg
-ICAgICAgICB9DQo+ICsgICAgIH0NCg0KVGhhdCdzIGEgbmFzdHkgbGFuZG1pbmUsIGFuZCB3ZSBz
-aG91bGRuJ3QgYmUgbWFraW5nIGV4Y2VwdGlvbnMgbGlrZQ0KdGhpcyBpbiBnZW5lcmljIGNvZGUu
-ICBBbmQsIHJlYWxseSwgaXQgbWFrZXMgbm8gc2Vuc2UgdG8gbWUgdG8gYmUNCmNoZWNraW5nIGlm
-IHRoZSBwcm9qaWQgaXMgY2hhbmdpbmcsIGVpdGhlci4gSWYgQVRUUl9QUk9KSUQgaXMgc2V0LA0K
-YW5kIHdlIGFyZW4ndCBpbiB0aGUgaW5pdF91c2VyX25zIHRoZW4gcmVqZWN0IGl0Lg0KDQppLmUu
-IENhbGxlcnMgc2hvdWxkIG5vdCBzZXQgQVRUUl9QUk9KSUQgaWYgdGhleSBhcmVuJ3QgY2hhbmdp
-bmcgaXQsDQpub3QgZXhwZWN0IHRoZSBpbmZyYXN0cnVjdHVyZSB0byBzaWxlbnRseSBpZ25vcmUg
-YXR0ZW1wdHMgdG8gY2hhbmdlDQphdHRyaWJ1dGVzIHRoZXkgZG8gbm90IGhhdmUgcGVybWlzc2lv
-biB0byBjaGFuZ2Ugd2hlbiBubyBjaGFuZ2Ugd2lsbA0KZXZlbnR1YWxseSBvY2N1ci4NCg0KDQo+
-ICAgICAgIC8qIE1ha2Ugc3VyZSBhIGNhbGxlciBjYW4gY2htb2QuICovDQo+ICAgICAgIGlmIChp
-YV92YWxpZCAmIEFUVFJfTU9ERSkgew0KPiAgICAgICAgICAgICAgIGlmICghaW5vZGVfb3duZXJf
-b3JfY2FwYWJsZShpbm9kZSkpDQo+IEBAIC0yMzIsOCArMjU0LDggQEAgaW50IG5vdGlmeV9jaGFu
-Z2Uoc3RydWN0IGRlbnRyeSAqIGRlbnRyeSwgc3RydWN0IGlhdHRyICogYXR0ciwgc3RydWN0IGlu
-b2RlICoqZGUNCj4gICAgICAgdW5zaWduZWQgaW50IGlhX3ZhbGlkID0gYXR0ci0+aWFfdmFsaWQ7
-DQo+DQo+ICAgICAgIFdBUk5fT05fT05DRSghaW5vZGVfaXNfbG9ja2VkKGlub2RlKSk7DQo+IC0N
-Cj4gLSAgICAgaWYgKGlhX3ZhbGlkICYgKEFUVFJfTU9ERSB8IEFUVFJfVUlEIHwgQVRUUl9HSUQg
-fCBBVFRSX1RJTUVTX1NFVCkpIHsNCj4gKyAgICAgaWYgKGlhX3ZhbGlkICYgKEFUVFJfTU9ERSB8
-IEFUVFJfVUlEIHwgQVRUUl9HSUQgfCBBVFRSX1BST0pJRCB8DQo+ICsgICAgICAgICAgICAgICAg
-ICAgICBBVFRSX1RJTUVTX1NFVCkpIHsNCj4gICAgICAgICAgICAgICBpZiAoSVNfSU1NVVRBQkxF
-KGlub2RlKSB8fCBJU19BUFBFTkQoaW5vZGUpKQ0KPiAgICAgICAgICAgICAgICAgICAgICAgcmV0
-dXJuIC1FUEVSTTsNCj4gICAgICAgfQ0KPiBkaWZmIC0tZ2l0IGEvZnMvb3Blbi5jIGIvZnMvb3Bl
-bi5jDQo+IGluZGV4IDAyODVjZTdkYmQ1MS4uNGU1OGM2ZWUyM2IzIDEwMDY0NA0KPiAtLS0gYS9m
-cy9vcGVuLmMNCj4gKysrIGIvZnMvb3Blbi5jDQo+IEBAIC01OTcsNyArNTk3LDggQEAgU1lTQ0FM
-TF9ERUZJTkUyKGNobW9kLCBjb25zdCBjaGFyIF9fdXNlciAqLCBmaWxlbmFtZSwgdW1vZGVfdCwg
-bW9kZSkNCj4gICAgICAgcmV0dXJuIGRvX2ZjaG1vZGF0KEFUX0ZEQ1dELCBmaWxlbmFtZSwgbW9k
-ZSk7DQo+ICB9DQo+DQo+IC1zdGF0aWMgaW50IGNob3duX2NvbW1vbihjb25zdCBzdHJ1Y3QgcGF0
-aCAqcGF0aCwgdWlkX3QgdXNlciwgZ2lkX3QgZ3JvdXApDQo+ICtzdGF0aWMgaW50IGNob3duX2Nv
-bW1vbihjb25zdCBzdHJ1Y3QgcGF0aCAqcGF0aCwgdWlkX3QgdXNlciwgZ2lkX3QgZ3JvdXAsDQo+
-ICsgICAgICAgICAgICAgICAgICAgICBib29sIHNldF9wcm9qZWN0KQ0KDQpXaHkgbm90IGp1c3Qg
-cGFzcyB0aGUgcHJvamlkPyBUaGlzIGJsZWVkcyBBUEkgZGVmaW5pdGlvbiBpbnRvIHRoZQ0KaW1w
-bGVtZW50YXRpb24uIGNob3duX2NvbW1vbigpIHNob3VsIGRiZSBhYmxlIHRvc2V0IGFsbCB0aHJl
-ZSBJRHMgaW4NCm9uZSBjYWxsIGFzIGl0IGlzIG5vdCByZXN0cmljdGVkIGJ5IHRoZSBjaG93bmF0
-KCkgdXNlcnNwYWNlIEFQSS4NCmkuZS46DQoNCnN0YXRpYyBpbnQgY2hvd25fY29tbW9uKGNvbnN0
-IHN0cnVjdCBwYXRoICpwYXRoLCB1aWRfdCB1c2VyLCBnaWRfdCBncm91cCwgcHJvamlkX3QgcHJv
-amVjdCkNCg0KYW5kIHRoZSBJRHMgdGhhdCBhcmVuJ3QgZ2V0dGluZyBzZXQgc2hvdWxkIGJlIHBh
-c3NlZCB3aXRoIHRoZSB2YWx1ZQ0Kb2YgLTEuDQoNCj4gIHsNCj4gICAgICAgc3RydWN0IGlub2Rl
-ICppbm9kZSA9IHBhdGgtPmRlbnRyeS0+ZF9pbm9kZTsNCj4gICAgICAgc3RydWN0IGlub2RlICpk
-ZWxlZ2F0ZWRfaW5vZGUgPSBOVUxMOw0KPiBAQCAtNjA1LDkgKzYwNiwxMSBAQCBzdGF0aWMgaW50
-IGNob3duX2NvbW1vbihjb25zdCBzdHJ1Y3QgcGF0aCAqcGF0aCwgdWlkX3QgdXNlciwgZ2lkX3Qg
-Z3JvdXApDQo+ICAgICAgIHN0cnVjdCBpYXR0ciBuZXdhdHRyczsNCj4gICAgICAga3VpZF90IHVp
-ZDsNCj4gICAgICAga2dpZF90IGdpZDsNCj4gKyAgICAga3Byb2ppZF90IHByb2ppZDsNCj4NCj4g
-ICAgICAgdWlkID0gbWFrZV9rdWlkKGN1cnJlbnRfdXNlcl9ucygpLCB1c2VyKTsNCj4gICAgICAg
-Z2lkID0gbWFrZV9rZ2lkKGN1cnJlbnRfdXNlcl9ucygpLCBncm91cCk7DQo+ICsgICAgIHByb2pp
-ZCA9IG1ha2Vfa3Byb2ppZChjdXJyZW50X3VzZXJfbnMoKSwgKHByb2ppZF90KWdyb3VwKTsNCg0K
-VGhpcyBkb2Vzbid0IGxvb2sgcmlnaHQuIHByb2plY3QgSURzIGFyZSBub3QgdG8gYmUgbWFwcGVk
-IHRvIHRoZQ0KY3VycmVudF91c2VyX25zIC0gdGhleSBzaG91bGQgb25seSBiZSB2aXNpYmxlIHRv
-IHRoZSBpbml0X3VzZXJfbnMuDQoNCj4gIHJldHJ5X2RlbGVnOg0KPiAgICAgICBuZXdhdHRycy5p
-YV92YWxpZCA9ICBBVFRSX0NUSU1FOw0KPiBAQCAtNjIwLDEzICs2MjMsMjIgQEAgc3RhdGljIGlu
-dCBjaG93bl9jb21tb24oY29uc3Qgc3RydWN0IHBhdGggKnBhdGgsIHVpZF90IHVzZXIsIGdpZF90
-IGdyb3VwKQ0KPiAgICAgICBpZiAoZ3JvdXAgIT0gKGdpZF90KSAtMSkgew0KPiAgICAgICAgICAg
-ICAgIGlmICghZ2lkX3ZhbGlkKGdpZCkpDQo+ICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4g
-LUVJTlZBTDsNCj4gLSAgICAgICAgICAgICBuZXdhdHRycy5pYV92YWxpZCB8PSBBVFRSX0dJRDsN
-Cj4gLSAgICAgICAgICAgICBuZXdhdHRycy5pYV9naWQgPSBnaWQ7DQo+ICsgICAgICAgICAgICAg
-aWYgKCFzZXRfcHJvamVjdCkgew0KPiArICAgICAgICAgICAgICAgICAgICAgbmV3YXR0cnMuaWFf
-dmFsaWQgfD0gQVRUUl9HSUQ7DQo+ICsgICAgICAgICAgICAgICAgICAgICBuZXdhdHRycy5pYV9n
-aWQgPSBnaWQ7DQo+ICsgICAgICAgICAgICAgfSBlbHNlIHsNCj4gKyAgICAgICAgICAgICAgICAg
-ICAgIG5ld2F0dHJzLmlhX3ZhbGlkIHw9IEFUVFJfUFJPSklEOw0KPiArICAgICAgICAgICAgICAg
-ICAgICAgbmV3YXR0cnMuaWFfcHJvamlkID0gcHJvamlkOw0KPiArICAgICAgICAgICAgIH0NCj4g
-KyAgICAgfSBlbHNlIGlmIChzZXRfcHJvamVjdCkgew0KPiArICAgICAgICAgICAgIHJldHVybiAt
-RUlOVkFMOw0KPiAgICAgICB9DQo+ICAgICAgIGlmICghU19JU0RJUihpbm9kZS0+aV9tb2RlKSkN
-Cj4gICAgICAgICAgICAgICBuZXdhdHRycy5pYV92YWxpZCB8PQ0KPiAgICAgICAgICAgICAgICAg
-ICAgICAgQVRUUl9LSUxMX1NVSUQgfCBBVFRSX0tJTExfU0dJRCB8IEFUVFJfS0lMTF9QUklWOw0K
-PiAgICAgICBpbm9kZV9sb2NrKGlub2RlKTsNCj4gKyAgICAgaWYgKHNldF9wcm9qZWN0KQ0KPiAr
-ICAgICAgICAgICAgIGdpZCA9IG1ha2Vfa2dpZChjdXJyZW50X3VzZXJfbnMoKSwgKGdpZF90KSAt
-MSk7DQoNClRoaXMgaXMgY3VtYmVyc29tZSBiZWNhdXNlIHlvdSBkaWRuJ3QgcGFzcyB0aGUgcHJv
-amVjdCBJRCBhcyBpdCdzDQpvd24gdHlwZS4gaXQgYWxzbyByZW1vdmVzIHRoZSBnaWRfdmFsaWQo
-KSBjaGVjay4gTGVhdmUgdGhlIGdyb3VwDQpjb2RlIGFsb25lLCB0aGVuIGFkZDoNCg0KICAgICAg
-ICBpZiAocHJvamlkICE9IChwcm9qaWRfdCktMSkgew0KICAgICAgICAgICAgICAgIGlmIChjdXJy
-ZW50X3VzZXJfbnMoKSAhPSAmaW5pdF91c2VyX25zKQ0KICAgICAgICAgICAgICAgICAgICAgICAg
-cmV0dXJuIC1FUEVSTTsNCiAgICAgICAgICAgICAgICBuZXdhdHRycy5pYV9wcm9qaWQgPSBtYWtl
-X2twcm9qaWQoJmluaXRfdXNlcl9ucywgcHJvamlkKTsNCiAgICAgICAgICAgICAgICBpZiAoIXBy
-b2ppZF92YWxpZChuZXdhdHRycy5pYV9wcm9qaWQpKQ0KICAgICAgICAgICAgICAgICAgICAgICAg
-cmV0dXJuIC1FSU5WQUw7DQogICAgICAgICAgICAgICAgbmV3YXR0cnMuaWFfdmFsaWQgfD0gQVRU
-Ul9QUk9KSUQ7DQogICAgICAgIH0NCg0KVGhpcyB3YXkgY2FsbGVycyBvZiBjaG93bl9jb21tb24o
-KSBjYW4gc2V0IGFsbCB0aHJlZSB0eXBlcyBpbiBvbmUNCmNhbGwgaWYgbmVlZCBiZS4NCg0KPiAg
-ICAgICBlcnJvciA9IHNlY3VyaXR5X3BhdGhfY2hvd24ocGF0aCwgdWlkLCBnaWQpOw0KPiAgICAg
-ICBpZiAoIWVycm9yKQ0KPiAgICAgICAgICAgICAgIGVycm9yID0gbm90aWZ5X2NoYW5nZShwYXRo
-LT5kZW50cnksICZuZXdhdHRycywgJmRlbGVnYXRlZF9pbm9kZSk7DQo+IEBAIC02NDUsMTAgKzY1
-NywxNSBAQCBpbnQgZG9fZmNob3duYXQoaW50IGRmZCwgY29uc3QgY2hhciBfX3VzZXIgKmZpbGVu
-YW1lLCB1aWRfdCB1c2VyLCBnaWRfdCBncm91cCwNCj4gICAgICAgc3RydWN0IHBhdGggcGF0aDsN
-Cj4gICAgICAgaW50IGVycm9yID0gLUVJTlZBTDsNCj4gICAgICAgaW50IGxvb2t1cF9mbGFnczsN
-Cj4gKyAgICAgYm9vbCBzZXRfcHJvamVjdCA9IGZhbHNlOw0KPg0KPiAtICAgICBpZiAoKGZsYWcg
-JiB+KEFUX1NZTUxJTktfTk9GT0xMT1cgfCBBVF9FTVBUWV9QQVRIKSkgIT0gMCkNCj4gKyAgICAg
-aWYgKChmbGFnICYgfihBVF9TWU1MSU5LX05PRk9MTE9XIHwgQVRfRU1QVFlfUEFUSCB8DQo+ICsg
-ICAgICAgICAgICAgICAgICAgQVRfRkNIT1dOX1BST0pJRCkpICE9IDApDQo+ICAgICAgICAgICAg
-ICAgZ290byBvdXQ7DQo+DQo+ICsgICAgIGlmIChmbGFnICYgQVRfRkNIT1dOX1BST0pJRCkNCj4g
-KyAgICAgICAgICAgICBzZXRfcHJvamVjdCA9IHRydWU7DQo+ICsNCj4gICAgICAgbG9va3VwX2Zs
-YWdzID0gKGZsYWcgJiBBVF9TWU1MSU5LX05PRk9MTE9XKSA/IDAgOiBMT09LVVBfRk9MTE9XOw0K
-PiAgICAgICBpZiAoZmxhZyAmIEFUX0VNUFRZX1BBVEgpDQo+ICAgICAgICAgICAgICAgbG9va3Vw
-X2ZsYWdzIHw9IExPT0tVUF9FTVBUWTsNCj4gQEAgLTY1OSw3ICs2NzYsNyBAQCBpbnQgZG9fZmNo
-b3duYXQoaW50IGRmZCwgY29uc3QgY2hhciBfX3VzZXIgKmZpbGVuYW1lLCB1aWRfdCB1c2VyLCBn
-aWRfdCBncm91cCwNCj4gICAgICAgZXJyb3IgPSBtbnRfd2FudF93cml0ZShwYXRoLm1udCk7DQo+
-ICAgICAgIGlmIChlcnJvcikNCj4gICAgICAgICAgICAgICBnb3RvIG91dF9yZWxlYXNlOw0KPiAt
-ICAgICBlcnJvciA9IGNob3duX2NvbW1vbigmcGF0aCwgdXNlciwgZ3JvdXApOw0KPiArICAgICBl
-cnJvciA9IGNob3duX2NvbW1vbigmcGF0aCwgdXNlciwgZ3JvdXAsIHNldF9wcm9qZWN0KTsNCj4g
-ICAgICAgbW50X2Ryb3Bfd3JpdGUocGF0aC5tbnQpOw0KDQogICAgICAgIC8qDQogICAgICAgICAq
-IElmIHRoZSBwcm9qZWN0IElEIGZsYWcgaXMgc2V0LCB0aGUgZ3JvdXAgZmllbGQgY29udGFpbnMg
-dGhlDQogICAgICAgICAqIFByb2plY3QgSUQsIG5vdCBhIEdyb3VwIElELg0KICAgICAgICAgKi8N
-CiAgICAgICAgaWYgKGZsYWcgJiBBVF9GQ0hPV05fUFJPSklEKQ0KICAgICAgICAgICAgICAgIGVy
-cm9yID0gY2hvd25fY29tbW9uKCZwYXRoLCB1c2VyLCAtMSwgZ3JvdXApOw0KICAgICAgICBlbHNl
-DQogICAgICAgICAgICAgICAgZXJyb3IgPSBjaG93bl9jb21tb24oJnBhdGgsIHVzZXIsIGdyb3Vw
-LCAtMSk7DQoNCj4gIG91dF9yZWxlYXNlOg0KPiAgICAgICBwYXRoX3B1dCgmcGF0aCk7DQo+IEBA
-IC03MDAsNyArNzE3LDcgQEAgaW50IGtzeXNfZmNob3duKHVuc2lnbmVkIGludCBmZCwgdWlkX3Qg
-dXNlciwgZ2lkX3QgZ3JvdXApDQo+ICAgICAgIGlmIChlcnJvcikNCj4gICAgICAgICAgICAgICBn
-b3RvIG91dF9mcHV0Ow0KPiAgICAgICBhdWRpdF9maWxlKGYuZmlsZSk7DQo+IC0gICAgIGVycm9y
-ID0gY2hvd25fY29tbW9uKCZmLmZpbGUtPmZfcGF0aCwgdXNlciwgZ3JvdXApOw0KPiArICAgICBl
-cnJvciA9IGNob3duX2NvbW1vbigmZi5maWxlLT5mX3BhdGgsIHVzZXIsIGdyb3VwLCBmYWxzZSk7
-DQoNCiAgICAgICAgZXJyb3IgPSBjaG93bl9jb21tb24oJmYuZmlsZS0+Zl9wYXRoLCB1c2VyLCBn
-cm91cCwgLTEpOw0KDQo+ICAgICAgIG1udF9kcm9wX3dyaXRlX2ZpbGUoZi5maWxlKTsNCj4gIG91
-dF9mcHV0Og0KPiAgICAgICBmZHB1dChmKTsNCj4gZGlmZiAtLWdpdCBhL2ZzL3F1b3RhL2RxdW90
-LmMgYi9mcy9xdW90YS9kcXVvdC5jDQo+IGluZGV4IGZjMjBlMDZjNTZiYS4uNDZmMzllZTg3MzEy
-IDEwMDY0NA0KPiAtLS0gYS9mcy9xdW90YS9kcXVvdC5jDQo+ICsrKyBiL2ZzL3F1b3RhL2RxdW90
-LmMNCj4gQEAgLTIwOTUsNiArMjA5NSwyOSBAQCBpbnQgZHF1b3RfdHJhbnNmZXIoc3RydWN0IGlu
-b2RlICppbm9kZSwgc3RydWN0IGlhdHRyICppYXR0cikNCj4gICAgICAgICAgICAgICB9DQo+ICAg
-ICAgICAgICAgICAgdHJhbnNmZXJfdG9bR1JQUVVPVEFdID0gZHF1b3Q7DQo+ICAgICAgIH0NCj4g
-Kw0KPiArICAgICBpZiAoaWF0dHItPmlhX3ZhbGlkICYgQVRUUl9QUk9KSUQpIHsNCj4gKyAgICAg
-ICAgICAgICBrcHJvamlkX3QgcHJvamlkOw0KPiArDQo+ICsgICAgICAgICAgICAgaWYgKCFpbm9k
-ZS0+aV9zYi0+ZHFfb3AtPmdldF9wcm9qaWQpDQo+ICsgICAgICAgICAgICAgICAgICAgICByZXR1
-cm4gLUVOT1RTVVBQOw0KPiArDQo+ICsgICAgICAgICAgICAgcmV0ID0gaW5vZGUtPmlfc2ItPmRx
-X29wLT5nZXRfcHJvamlkKGlub2RlLCAmcHJvamlkKTsNCj4gKyAgICAgICAgICAgICBpZiAocmV0
-KQ0KPiArICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIHJldDsNCj4gKyAgICAgICAgICAgICBp
-ZiAoIXByb2ppZF9lcShpYXR0ci0+aWFfcHJvamlkLCBwcm9qaWQpKSB7DQo+ICsgICAgICAgICAg
-ICAgICAgICAgICBkcXVvdCA9IGRxZ2V0KHNiLCBtYWtlX2txaWRfcHJvamlkKGlhdHRyLT5pYV9w
-cm9qaWQpKTsNCj4gKyAgICAgICAgICAgICAgICAgICAgIGlmIChJU19FUlIoZHF1b3QpKSB7DQo+
-ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlmIChQVFJfRVJSKGRxdW90KSAhPSAtRVNS
-Q0gpIHsNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICByZXQgPSBQVFJf
-RVJSKGRxdW90KTsNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBnb3Rv
-IG91dF9wdXQ7DQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgIH0NCj4gKyAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgZHF1b3QgPSBOVUxMOw0KPiArICAgICAgICAgICAgICAgICAg
-ICAgfQ0KPiArICAgICAgICAgICAgICAgICAgICAgdHJhbnNmZXJfdG9bUFJKUVVPVEFdID0gZHF1
-b3Q7DQo+ICsgICAgICAgICAgICAgfQ0KPiArICAgICB9DQo+ICsNCj4gICAgICAgcmV0ID0gX19k
-cXVvdF90cmFuc2Zlcihpbm9kZSwgdHJhbnNmZXJfdG8pOw0KDQpPSywgbm8gSSBzZWUgd2h5IHRo
-aXMgaXMgc3VjaCBhIG1lc3MuIFRoZXJlJ3Mgbm8gcHJvamVjdCBJRCBmaWVsZA0KaW4gdGhlIHN0
-cnVjdCBpbm9kZSwgd2hpY2ggd291bGQgZ2V0IHJpZCBvZiB0aGUgbmVlZCB0byBjYWxsDQpnZXRf
-cHJvamlkKCkgdG8gZXh0cmFjdCBpdCBmcm9tIHRoZSBpbm9kZSBxdW90YSBpbnRlcmZhY2UuDQoN
-Ck9rLCBJIHRoaW5rIHRoaXMgcGF0Y2ggbmVlZHMgdG8gYmUgc3BsaXQgdXAgaW50byBzeXN0ZW0g
-Y2FsbA0KZnVuY3Rpb25hbGl0eSBhbmQgcXVvdGEgaW5mcmFzdHJ1Y3R1cmUsIHJhdGhlciB0aGFu
-IGR1bXBpbmcgdGhlbQ0KaW50byB0aGUgc2FtZSBwYXRjaC4gVGhhdCB3YXkgd2UgY2FuIGRpc2N1
-c3MgdGhlbSBzZXBhcmF0ZWx5LCBhbmQNCmhhdmUgdGhlIGNvbnZlcnNpb24gb2Ygd2hldGhlciB3
-ZSBzaG91bCBkYmVtYWtpbmcgdGhlIHByb2plY3QgSUQgYQ0KbWVtYmVyIG9mIHN0cnVjdCBpbm9k
-ZSBvciBub3QgdG8gc2ltcGxpZnkgdGhpcyBjb2RlLg0KDQo+IGRpZmYgLS1naXQgYS9pbmNsdWRl
-L2xpbnV4L3F1b3Rhb3BzLmggYi9pbmNsdWRlL2xpbnV4L3F1b3Rhb3BzLmgNCj4gaW5kZXggZGM5
-MDVhNGZmOGQ3Li44NGQzYWViNDNlMmMgMTAwNjQ0DQo+IC0tLSBhL2luY2x1ZGUvbGludXgvcXVv
-dGFvcHMuaA0KPiArKysgYi9pbmNsdWRlL2xpbnV4L3F1b3Rhb3BzLmgNCj4gQEAgLTIyLDYgKzIy
-LDE1IEBAIHN0YXRpYyBpbmxpbmUgc3RydWN0IHF1b3RhX2luZm8gKnNiX2Rxb3B0KHN0cnVjdCBz
-dXBlcl9ibG9jayAqc2IpDQo+ICAvKiBpX211dGV4IG11c3QgYmVpbmcgaGVsZCAqLw0KPiAgc3Rh
-dGljIGlubGluZSBib29sIGlzX3F1b3RhX21vZGlmaWNhdGlvbihzdHJ1Y3QgaW5vZGUgKmlub2Rl
-LCBzdHJ1Y3QgaWF0dHIgKmlhKQ0KPiAgew0KPiArICAgICBpZiAoaWEtPmlhX3ZhbGlkICYgQVRU
-Ul9QUk9KSUQgJiYgaW5vZGUtPmlfc2ItPmRxX29wLT5nZXRfcHJvamlkKSB7DQo+ICsgICAgICAg
-ICAgICAga3Byb2ppZF90IHByb2ppZDsNCj4gKyAgICAgICAgICAgICBpbnQgcmM7DQo+ICsNCj4g
-KyAgICAgICAgICAgICByYyA9IGlub2RlLT5pX3NiLT5kcV9vcC0+Z2V0X3Byb2ppZChpbm9kZSwg
-JnByb2ppZCk7DQo+ICsgICAgICAgICAgICAgaWYgKCFyYyAmJiAhcHJvamlkX2VxKHByb2ppZCwg
-aWEtPmlhX3Byb2ppZCkpDQo+ICsgICAgICAgICAgICAgICAgICAgICByZXR1cm4gdHJ1ZTsNCj4g
-KyAgICAgfQ0KPiArDQo+ICAgICAgIHJldHVybiAoaWEtPmlhX3ZhbGlkICYgQVRUUl9TSVpFICYm
-IGlhLT5pYV9zaXplICE9IGlub2RlLT5pX3NpemUpIHx8DQo+ICAgICAgICAgICAgICAgKGlhLT5p
-YV92YWxpZCAmIEFUVFJfVUlEICYmICF1aWRfZXEoaWEtPmlhX3VpZCwgaW5vZGUtPmlfdWlkKSkg
-fHwNCj4gICAgICAgICAgICAgICAoaWEtPmlhX3ZhbGlkICYgQVRUUl9HSUQgJiYgIWdpZF9lcShp
-YS0+aWFfZ2lkLCBpbm9kZS0+aV9naWQpKTsNCg0KQmVjYXVzZSB0aGUgc2FtZSBpc3N1ZXMga2Vl
-cCBjb21pbmcgdXAuLi4uDQoNCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvdWFwaS9saW51eC9mY250
-bC5oIGIvaW5jbHVkZS91YXBpL2xpbnV4L2ZjbnRsLmgNCj4gaW5kZXggNjQ0OGNkZDlhMzUwLi43
-MTJjNjBkN2Y3MjcgMTAwNjQ0DQo+IC0tLSBhL2luY2x1ZGUvdWFwaS9saW51eC9mY250bC5oDQo+
-ICsrKyBiL2luY2x1ZGUvdWFwaS9saW51eC9mY250bC5oDQo+IEBAIC05MCw1ICs5MCw2IEBADQo+
-ICAjZGVmaW5lIEFUX1NUQVRYX0ZPUkNFX1NZTkMgIDB4MjAwMCAgLyogLSBGb3JjZSB0aGUgYXR0
-cmlidXRlcyB0byBiZSBzeW5jJ2Qgd2l0aCB0aGUgc2VydmVyICovDQo+ICAjZGVmaW5lIEFUX1NU
-QVRYX0RPTlRfU1lOQyAgIDB4NDAwMCAgLyogLSBEb24ndCBzeW5jIGF0dHJpYnV0ZXMgd2l0aCB0
-aGUgc2VydmVyICovDQo+DQo+ICsjZGVmaW5lIEFUX0ZDSE9XTl9QUk9KSUQgICAgIDB4NDAwMDAw
-MDAgLyogQ2hhbmdlIHByb2plY3QgSUQgaW5zdGVhZCBvZiBncm91cCBpZCAqLw0KPg0KPiAgI2Vu
-ZGlmIC8qIF9VQVBJX0xJTlVYX0ZDTlRMX0ggKi8NCj4gZGlmZiAtLWdpdCBhL3Rvb2xzL2luY2x1
-ZGUvdWFwaS9saW51eC9mY250bC5oIGIvdG9vbHMvaW5jbHVkZS91YXBpL2xpbnV4L2ZjbnRsLmgN
-Cj4gaW5kZXggNjQ0OGNkZDlhMzUwLi43MTJjNjBkN2Y3MjcgMTAwNjQ0DQo+IC0tLSBhL3Rvb2xz
-L2luY2x1ZGUvdWFwaS9saW51eC9mY250bC5oDQo+ICsrKyBiL3Rvb2xzL2luY2x1ZGUvdWFwaS9s
-aW51eC9mY250bC5oDQo+IEBAIC05MCw1ICs5MCw2IEBADQo+ICAjZGVmaW5lIEFUX1NUQVRYX0ZP
-UkNFX1NZTkMgIDB4MjAwMCAgLyogLSBGb3JjZSB0aGUgYXR0cmlidXRlcyB0byBiZSBzeW5jJ2Qg
-d2l0aCB0aGUgc2VydmVyICovDQo+ICAjZGVmaW5lIEFUX1NUQVRYX0RPTlRfU1lOQyAgIDB4NDAw
-MCAgLyogLSBEb24ndCBzeW5jIGF0dHJpYnV0ZXMgd2l0aCB0aGUgc2VydmVyICovDQo+DQo+ICsj
-ZGVmaW5lIEFUX0ZDSE9XTl9QUk9KSUQgICAgIDB4NDAwMDAwMDAgLyogQ2hhbmdlIHByb2plY3Qg
-SUQgaW5zdGVhZCBvZiBncm91cCBpZCAqLw0KDQpXaGF0IGlzIHRoZSBzaWduaWZpY2FuY2Ugb2Yg
-dGhpcyBudW1iZXI/IFdoeSBub3QganVzdCB0aGUgbmV4dA0KaGlnaGVzdCBmbGFnIGJpdCBpbiB0
-aGUgc2VxdWVuY2UgKGkuZS4gMHg4MDAwKT8NCg0KQ2hlZXJzLA0KDQpEYXZlLg0KLS0NCkRhdmUg
-Q2hpbm5lcg0KZGF2aWRAZnJvbW9yYml0LmNvbQ0K
+On Mon, Mar 04, 2019 at 04:31:24PM -0500, tgill@redhat.com wrote:
+> From: Todd Gill <tgill@redhat.com>
+> 
+> The xfs_only flag will allow the caller to request only XFS filesystems are
+> added to the fs table.
+> 
+> For commands that are XFS specific (xfs_fsr, xfs_growfs, xfs_scrub) - pass
+> the flag as 1.
+
+We're supposed to use a magic value of 1??
+
+Please, "#define FSTABLE_XFS_ONLY 1" and make it a proper flags
+parameter...
+
+...and that's assuming there isn't some better way to avoid networked
+mounts?
+
+> The change avoids a hang when remote filesystem (like NFS) are non
+> responsive.
+
+Which programs hang?  Where do they hang?  Is this the problem where
+some stat somewhere on a ... mount point? freezes because the network
+died?
+
+> Signed-off-by: Todd Gill <tgill@redhat.com>
+> ---
+>  fsr/xfs_fsr.c       |  2 +-
+>  growfs/xfs_growfs.c |  2 +-
+>  include/path.h      |  2 +-
+>  io/fsmap.c          |  2 +-
+>  io/init.c           |  2 +-
+>  io/parent.c         |  2 +-
+>  libfrog/paths.c     | 20 +++++++++++++-------
+>  quota/init.c        |  2 +-
+>  scrub/xfs_scrub.c   |  2 +-
+>  spaceman/init.c     |  2 +-
+>  10 files changed, 22 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index fef6262c..ea0b1167 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -247,7 +247,7 @@ main(int argc, char **argv)
+>  	RealUid = getuid();
+>  
+>  	pagesize = getpagesize();
+> -	fs_table_initialise(0, NULL, 0, NULL);
+> +	fs_table_initialise(0, NULL, 0, NULL, 1);
+>  	if (optind < argc) {
+>  		for (; optind < argc; optind++) {
+>  			argname = argv[optind];
+> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+> index 2af7e5ba..b4855b6d 100644
+> --- a/growfs/xfs_growfs.c
+> +++ b/growfs/xfs_growfs.c
+> @@ -131,7 +131,7 @@ main(int argc, char **argv)
+>  	if (dflag + lflag + rflag + mflag == 0)
+>  		aflag = 1;
+>  
+> -	fs_table_initialise(0, NULL, 0, NULL);
+> +	fs_table_initialise(0, NULL, 0, NULL, 1);
+>  
+>  	if (!realpath(argv[optind], rpath)) {
+>  		fprintf(stderr, _("%s: path resolution failed for %s: %s\n"),
+> diff --git a/include/path.h b/include/path.h
+> index 2d6c3c53..580048a6 100644
+> --- a/include/path.h
+> +++ b/include/path.h
+> @@ -37,7 +37,7 @@ extern fs_path_t *fs_table;	/* array of entries in fs table  */
+>  extern fs_path_t *fs_path;	/* current entry in the fs table */
+>  extern char *mtab_file;
+>  
+> -extern void fs_table_initialise(int, char *[], int, char *[]);
+> +extern void fs_table_initialise(int, char *[], int, char *[], int);
+>  extern void fs_table_destroy(void);
+>  
+>  extern void fs_table_insert_project_path(char *__dir, uint __projid);
+> diff --git a/io/fsmap.c b/io/fsmap.c
+> index 477c36fc..53528361 100644
+> --- a/io/fsmap.c
+> +++ b/io/fsmap.c
+> @@ -518,7 +518,7 @@ fsmap_f(
+>  	 * (We report AG number/block for data device extents on XFS).
+>  	 */
+>  	if (!tab_init) {
+> -		fs_table_initialise(0, NULL, 0, NULL);
+> +		fs_table_initialise(0, NULL, 0, NULL, 0);
+>  		tab_init = true;
+>  	}
+>  	fs = fs_table_lookup(file->name, FS_MOUNT_POINT);
+> diff --git a/io/init.c b/io/init.c
+> index 83f08f2d..8ed3b47c 100644
+> --- a/io/init.c
+> +++ b/io/init.c
+> @@ -144,7 +144,7 @@ init(
+>  	pagesize = getpagesize();
+>  	gettimeofday(&stopwatch, NULL);
+>  
+> -	fs_table_initialise(0, NULL, 0, NULL);
+> +	fs_table_initialise(0, NULL, 0, NULL, 0);
+>  	while ((c = getopt(argc, argv, "ac:C:dFfiLm:p:PnrRstTVx")) != EOF) {
+>  		switch (c) {
+>  		case 'a':
+> diff --git a/io/parent.c b/io/parent.c
+> index ffa55f6d..3e321be4 100644
+> --- a/io/parent.c
+> +++ b/io/parent.c
+> @@ -369,7 +369,7 @@ parent_f(int argc, char **argv)
+>  
+>  	if (!tab_init) {
+>  		tab_init = 1;
+> -		fs_table_initialise(0, NULL, 0, NULL);
+> +		fs_table_initialise(0, NULL, 0, NULL, 0);
+>  	}
+>  	fs = fs_table_lookup(file->name, FS_MOUNT_POINT);
+>  	if (!fs) {
+> diff --git a/libfrog/paths.c b/libfrog/paths.c
+> index 6e266654..f4d0a61e 100644
+> --- a/libfrog/paths.c
+> +++ b/libfrog/paths.c
+> @@ -363,7 +363,8 @@ out_nomem:
+>   */
+>  static int
+>  fs_table_initialise_mounts(
+> -	char		*path)
+> +	char		*path,
+> +	int			xfs_only)
+
+Borken indentation?
+
+--D
+
+>  {
+>  	struct mntent	*mnt;
+>  	FILE		*mtp;
+> @@ -389,6 +390,8 @@ fs_table_initialise_mounts(
+>  			return errno;
+>  
+>  	while ((mnt = getmntent(mtp)) != NULL) {
+> +		if (xfs_only && strcmp(mnt->mnt_type, "xfs") != 0)
+> +			continue;
+>  		if (!realpath(mnt->mnt_dir, rmnt_dir))
+>  			continue;
+>  		if (!realpath(mnt->mnt_fsname, rmnt_fsname))
+> @@ -443,11 +446,12 @@ fs_mount_point_from_path(
+>  
+>  static void
+>  fs_table_insert_mount(
+> -	char		*mount)
+> +	char		*mount,
+> +	int			xfs_only)
+>  {
+>  	int		error;
+>  
+> -	error = fs_table_initialise_mounts(mount);
+> +	error = fs_table_initialise_mounts(mount, xfs_only);
+>  	if (error)
+>  		fprintf(stderr, _("%s: cannot setup path for mount %s: %s\n"),
+>  			progname, mount, strerror(error));
+> @@ -508,23 +512,25 @@ fs_table_insert_project(
+>   * projects.  If mount_count is zero, mounts is ignored and the
+>   * table is populated with mounted filesystems.  If project_count is
+>   * zero, projects is ignored and the table is populated with all
+> - * projects defined in the projects file.
+> + * projects defined in the projects file.  If xfs_only is 1, filter
+> + * out non-XFS filesystems.
+>   */
+>  void
+>  fs_table_initialise(
+>  	int	mount_count,
+>  	char	*mounts[],
+>  	int	project_count,
+> -	char	*projects[])
+> +	char	*projects[],
+> +	int	xfs_only)
+>  {
+>  	int	error;
+>  	int	i;
+>  
+>  	if (mount_count) {
+>  		for (i = 0; i < mount_count; i++)
+> -			fs_table_insert_mount(mounts[i]);
+> +			fs_table_insert_mount(mounts[i], xfs_only);
+>  	} else {
+> -		error = fs_table_initialise_mounts(NULL);
+> +		error = fs_table_initialise_mounts(NULL, xfs_only);
+>  		if (error)
+>  			goto out_error;
+>  	}
+> diff --git a/quota/init.c b/quota/init.c
+> index 8244e38d..06ac3d0f 100644
+> --- a/quota/init.c
+> +++ b/quota/init.c
+> @@ -174,7 +174,7 @@ init(
+>  		}
+>  	}
+>  
+> -	fs_table_initialise(argc - optind, &argv[optind], nprojopts, projopts);
+> +	fs_table_initialise(argc - optind, &argv[optind], nprojopts, projopts, 0);
+>  	free(projopts);
+>  
+>  	init_commands();
+> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+> index b8138000..3da606bc 100644
+> --- a/scrub/xfs_scrub.c
+> +++ b/scrub/xfs_scrub.c
+> @@ -705,7 +705,7 @@ main(
+>  			mtab = _PATH_MOUNTED;
+>  	}
+>  
+> -	fs_table_initialise(0, NULL, 0, NULL);
+> +	fs_table_initialise(0, NULL, 0, NULL, 1);
+>  	fsp = fs_table_lookup_mount(ctx.mntpoint);
+>  	if (!fsp) {
+>  		fprintf(stderr, _("%s: Not a XFS mount point.\n"),
+> diff --git a/spaceman/init.c b/spaceman/init.c
+> index 181a3446..30d98c8f 100644
+> --- a/spaceman/init.c
+> +++ b/spaceman/init.c
+> @@ -68,7 +68,7 @@ init(
+>  	bindtextdomain(PACKAGE, LOCALEDIR);
+>  	textdomain(PACKAGE);
+>  
+> -	fs_table_initialise(0, NULL, 0, NULL);
+> +	fs_table_initialise(0, NULL, 0, NULL, 0);
+>  	while ((c = getopt(argc, argv, "c:p:V")) != EOF) {
+>  		switch (c) {
+>  		case 'c':
+> -- 
+> 2.17.2
+> 
