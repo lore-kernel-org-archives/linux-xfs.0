@@ -1,51 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f66.google.com ([209.85.166.66]:37903 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726066AbfCDW4O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 17:56:14 -0500
+Received: from mout.kundenserver.de ([212.227.126.130]:41843 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726038AbfCDThg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 14:37:36 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] xfs: mark xfs_dir2_sf_entry_t as __packed again
+Date: Mon,  4 Mar 2019 20:36:47 +0100
+Message-Id: <20190304193723.657089-1-arnd@arndb.de>
 MIME-Version: 1.0
-References: <1551449184-7942-1-git-send-email-wshilong1991@gmail.com>
- <1551449184-7942-3-git-send-email-wshilong1991@gmail.com> <CAKgNAkitiDEYSZDnJ5iQ6coaE=q45BHxnG2z_bZtWs=kk+2g3w@mail.gmail.com>
- <20190304205006.GX23020@dastard>
-In-Reply-To: <20190304205006.GX23020@dastard>
-From: Eugene Syromyatnikov <evgsyr@gmail.com>
-Date: Mon, 4 Mar 2019 23:56:09 +0100
-Message-ID: <CACGkJdsdVPKNOnhuAza=Lnh1b=KW2N2yycp6YxJ2tsLFxWJiYg@mail.gmail.com>
-Subject: Re: [PATCH 2/2] statx.2: add project support update
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, Wang Shilong <wangshilong1991@gmail.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, lixi@ddn.com, Andreas Dilger <adilger@dilger.ca>, Wang Shilong <wshilong@ddn.com>, linux-man <linux-man@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, Arnd Bergmann <arnd@arndb.de>, Dave Chinner <dchinner@redhat.com>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org
 
-On Mon, Mar 4, 2019 at 9:57 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Mon, Mar 04, 2019 at 02:52:59PM +0100, Michael Kerrisk (man-pages) wrote:
-> > Hello Wang Shilong,
-> >
-> > On Fri, 1 Mar 2019 at 15:06, Wang Shilong <wangshilong1991@gmail.com> wrote:
-> > >
-> > > From: Wang Shilong <wshilong@ddn.com>
-> >
-> > I take it that these patches relate to some API changes that are not
-> > yet merged into the kernel, right?
-> >
-> > Also, I think we need some accompanying info to describe project IDs.
-> > Can you point me at any documents/resources?
->
-> Probably "best" documented in the man pages that ship with xfsprogs.
-> Basically, it's just another quota ID that can be used to account
-> for files/directories in arbitrary admin defined groups. i.e. quotas
-> that aren't bound by user/group identities.
->
-> $ man 8 xfs_quota
-> $ man 5 projects
-> $ man 5 projid
+For ARM OABI builds, we run into a compile time assertion:
 
-Project quotas also mentioned in quotactl(2).
+inlined from 'init_xfs_fs' at /git/arm-soc/fs/xfs/xfs_super.c:1991:2:
+fs/xfs/xfs_ondisk.h:119:208: error: call to '__compiletime_assert_119' declared with attribute error: XFS: sizeof(xfs_dir2_sf_entry_t) is wrong, expected 3
 
+While ARM OABI is pretty much dead and fails to build for typical
+configurations on modern architectures (ARMv6 or higher), and has
+been declared deprecated in user space since gcc-4.6, the kernel
+still allows it to used for building the kernel.
+
+In commit 8353a649f577 ("xfs: kill xfs_dir2_sf_off_t"), Christoph
+removed the old __arch_pack annotation that made it possible to
+build xfs with oddball ABIs. However, OABI not only requrires
+padding around short structure but still adds padding after this
+change. There is no harm to unconditionally mark the structure as
+__packed now, and that will do the right thing here.
+
+As of commit aa2dd0ad4d6d ("xfs: remove __arch_pack"), we need to
+use __packed here as well, instead of the old __arch_pack.
+
+Fixes: 8353a649f577 ("xfs: kill xfs_dir2_sf_off_t")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ fs/xfs/libxfs/xfs_da_format.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index ae654e06b2fb..fa8f07451d39 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -230,7 +230,7 @@ typedef struct xfs_dir2_sf_entry {
+ 	 * A 64-bit or 32-bit inode number follows here, at a variable offset
+ 	 * after the name.
+ 	 */
+-} xfs_dir2_sf_entry_t;
++} __packed xfs_dir2_sf_entry_t;
+ 
+ static inline int xfs_dir2_sf_hdr_size(int i8count)
+ {
 -- 
-Eugene Syromyatnikov
-mailto:evgsyr@gmail.com
-xmpp:esyr@jabber.{ru|org}
+2.20.0
