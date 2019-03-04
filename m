@@ -1,127 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60770 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726334AbfCIRe6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Mar 2019 12:34:58 -0500
-Date: Sat, 9 Mar 2019 09:34:43 -0800
+Received: from userp2120.oracle.com ([156.151.31.85]:36998 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726061AbfCDU7F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 15:59:05 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x24KsYlq191947
+        for <linux-xfs@vger.kernel.org>; Mon, 4 Mar 2019 20:59:03 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2qyjfr94ha-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Mar 2019 20:59:03 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x24KwvaI018386
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 4 Mar 2019 20:58:58 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x24KwvHF024012
+        for <linux-xfs@vger.kernel.org>; Mon, 4 Mar 2019 20:58:57 GMT
+Date: Mon, 4 Mar 2019 12:58:54 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: xfs/420 and xfs/421: don't disturb unwritten status with md5sum
-Message-ID: <20190309173443.GB4359@magnolia>
-References: <20190218091827.12619-1-hch@lst.de>
- <20190218091951.GA5171@lst.de>
- <20190309103211.GP2824@desktop>
+Subject: [PATCH 24/23] xfs_io: don't walk off the end of argv in fzero_f
+Message-ID: <20190304205854.GA6520@magnolia>
+References: <155148280859.16677.6057998944865066232.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190309103211.GP2824@desktop>
+In-Reply-To: <155148280859.16677.6057998944865066232.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Sat, Mar 09, 2019 at 06:32:11PM +0800, Eryu Guan wrote:
-> On Mon, Feb 18, 2019 at 10:19:51AM +0100, Christoph Hellwig wrote:
-> > The way we decided if an unwritten extent is considered a hole or data
-> > is by checking if the page and/or blocks are marked uptodate, that is
-> > contain valid data in the page cache.
-> > 
-> > xfs/420 and xfs/421 try to exercise SEEK_HOLE / SEEK_DATA in the
-> > presence of cowextsize preallocations over holes in the data fork.  The
-> > current XFS code never actually uses those for buffer writes, but a
-> > pending patch changes that.  For SEEK_HOLE / SEEK_DATA to work properly
-> > in that case we also need to look at the COW fork in their
-> > implementations and thus have to rely on the unwritten extent page cache
-> > probing.  But the tests for it ensure we do have valid data in the
-> > pagecache by calling md5sum on the test files, and thus reading their
-> > contents (including the zero-filled holes) in, and thus making them
-> > all valid data.
-> > 
-> > Fix that by dropping the page cache content after the md5sum calls.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Hi Darrick, would you please help review this version of the fix as
-> well? I basically have no idea about the implementation of the "pending
-> patch" and what it changes.. Thanks a lot!
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-/me wonders if the "md5sum and drop caches" could be refactored a bit,
-but as a strict bugfix for always_cow mode this looks ok to me:
+The fzero_f function doesn't check that there are enough non-switch
+parameters to supply offset and length arguments to fallocate.  As a
+result, we can walk off the end of the argv array and crash.  A
+secondary problem is that we don't use getopt to detect the -k, which is
+not how most xfs_io commands work.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Therefore, use getopt to detect the -k argument and rewire the offset
+and length interpretation code to check optind and use argv correctly.
+This bug is trivially reproduced by "xfs_io -c 'fzero -k 0' /some/file".
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ io/prealloc.c |   20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
-
-> Eryu
-> 
-> > ---
-> >  tests/xfs/420 | 6 ++++++
-> >  tests/xfs/421 | 6 ++++++
-> >  2 files changed, 12 insertions(+)
-> > 
-> > diff --git a/tests/xfs/420 b/tests/xfs/420
-> > index a083a12b..34199637 100755
-> > --- a/tests/xfs/420
-> > +++ b/tests/xfs/420
-> > @@ -83,6 +83,8 @@ echo "Compare files"
-> >  md5sum $testdir/file1 | _filter_scratch
-> >  md5sum $testdir/file2 | _filter_scratch
-> >  md5sum $testdir/file3 | _filter_scratch
-> > +# drop caches to make sure the page cache for the unwritten extents is clean
-> > +echo 1 > /proc/sys/vm/drop_caches
-> >  
-> >  echo "CoW the shared part then write into the empty part" | tee -a $seqres.full
-> >  $XFS_IO_PROG -c "cowextsize" $testdir/file1 >> $seqres.full
-> > @@ -106,6 +108,8 @@ echo "Compare files"
-> >  md5sum $testdir/file1 | _filter_scratch
-> >  md5sum $testdir/file2 | _filter_scratch
-> >  md5sum $testdir/file3 | _filter_scratch
-> > +# drop caches to make sure the page cache for the unwritten extents is clean
-> > +echo 1 > /proc/sys/vm/drop_caches
-> >  
-> >  echo "sync filesystem" | tee -a $seqres.full
-> >  sync
-> > @@ -123,6 +127,8 @@ echo "Compare files"
-> >  md5sum $testdir/file1 | _filter_scratch
-> >  md5sum $testdir/file2 | _filter_scratch
-> >  md5sum $testdir/file3 | _filter_scratch
-> > +# drop caches to make sure the page cache for the unwritten extents is clean
-> > +echo 1 > /proc/sys/vm/drop_caches
-> >  
-> >  echo "Remount" | tee -a $seqres.full
-> >  _scratch_cycle_mount
-> > diff --git a/tests/xfs/421 b/tests/xfs/421
-> > index a2734aba..374389bd 100755
-> > --- a/tests/xfs/421
-> > +++ b/tests/xfs/421
-> > @@ -83,6 +83,8 @@ echo "Compare files"
-> >  md5sum $testdir/file1 | _filter_scratch
-> >  md5sum $testdir/file2 | _filter_scratch
-> >  md5sum $testdir/file3 | _filter_scratch
-> > +# drop caches to make sure the page cache for the unwritten extents is clean
-> > +echo 1 > /proc/sys/vm/drop_caches
-> >  
-> >  echo "CoW the shared part then write into the empty part" | tee -a $seqres.full
-> >  $XFS_IO_PROG -c "cowextsize" $testdir/file1 >> $seqres.full
-> > @@ -106,6 +108,8 @@ echo "Compare files"
-> >  md5sum $testdir/file1 | _filter_scratch
-> >  md5sum $testdir/file2 | _filter_scratch
-> >  md5sum $testdir/file3 | _filter_scratch
-> > +# drop caches to make sure the page cache for the unwritten extents is clean
-> > +echo 1 > /proc/sys/vm/drop_caches
-> >  
-> >  echo "sync filesystem" | tee -a $seqres.full
-> >  sync
-> > @@ -123,6 +127,8 @@ echo "Compare files"
-> >  md5sum $testdir/file1 | _filter_scratch
-> >  md5sum $testdir/file2 | _filter_scratch
-> >  md5sum $testdir/file3 | _filter_scratch
-> > +# drop caches to make sure the page cache for the unwritten extents is clean
-> > +echo 1 > /proc/sys/vm/drop_caches
-> >  
-> >  echo "Remount" | tee -a $seqres.full
-> >  _scratch_cycle_mount
-> > -- 
-> > 2.20.1
-> > 
+diff --git a/io/prealloc.c b/io/prealloc.c
+index 9a372bae..6d452354 100644
+--- a/io/prealloc.c
++++ b/io/prealloc.c
+@@ -285,18 +285,24 @@ fzero_f(
+ {
+ 	xfs_flock64_t	segment;
+ 	int		mode = FALLOC_FL_ZERO_RANGE;
+-	int		index = 1;
++	int		c;
+ 
+-	if (strncmp(argv[index], "-k", 3) == 0) {
+-		mode |= FALLOC_FL_KEEP_SIZE;
+-		index++;
++	while ((c = getopt(argc, argv, "k")) != EOF) {
++		switch (c) {
++		case 'k':
++			mode |= FALLOC_FL_KEEP_SIZE;
++			break;
++		default:
++			command_usage(&fzero_cmd);
++		}
+ 	}
++        if (optind != argc - 2)
++                return command_usage(&fzero_cmd);
+ 
+-	if (!offset_length(argv[index], argv[index + 1], &segment))
++	if (!offset_length(argv[optind], argv[optind + 1], &segment))
+ 		return 0;
+ 
+-	if (fallocate(file->fd, mode,
+-			segment.l_start, segment.l_len)) {
++	if (fallocate(file->fd, mode, segment.l_start, segment.l_len)) {
+ 		perror("fallocate");
+ 		return 0;
+ 	}
