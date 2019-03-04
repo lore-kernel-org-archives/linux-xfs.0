@@ -1,117 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:33219 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726164AbfCIKcR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Mar 2019 05:32:17 -0500
-Date: Sat, 9 Mar 2019 18:32:11 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: xfs/420 and xfs/421: don't disturb unwritten status with md5sum
-Message-ID: <20190309103211.GP2824@desktop>
-References: <20190218091827.12619-1-hch@lst.de>
- <20190218091951.GA5171@lst.de>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:60856 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726087AbfCDUuM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 15:50:12 -0500
+Date: Tue, 5 Mar 2019 07:50:06 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] statx.2: add project support update
+Message-ID: <20190304205006.GX23020@dastard>
+References: <1551449184-7942-1-git-send-email-wshilong1991@gmail.com>
+ <1551449184-7942-3-git-send-email-wshilong1991@gmail.com>
+ <CAKgNAkitiDEYSZDnJ5iQ6coaE=q45BHxnG2z_bZtWs=kk+2g3w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190218091951.GA5171@lst.de>
+In-Reply-To: <CAKgNAkitiDEYSZDnJ5iQ6coaE=q45BHxnG2z_bZtWs=kk+2g3w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Cc: Wang Shilong <wangshilong1991@gmail.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, lixi@ddn.com, Andreas Dilger <adilger@dilger.ca>, Wang Shilong <wshilong@ddn.com>, linux-man <linux-man@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Mon, Feb 18, 2019 at 10:19:51AM +0100, Christoph Hellwig wrote:
-> The way we decided if an unwritten extent is considered a hole or data
-> is by checking if the page and/or blocks are marked uptodate, that is
-> contain valid data in the page cache.
+On Mon, Mar 04, 2019 at 02:52:59PM +0100, Michael Kerrisk (man-pages) wrote:
+> Hello Wang Shilong,
 > 
-> xfs/420 and xfs/421 try to exercise SEEK_HOLE / SEEK_DATA in the
-> presence of cowextsize preallocations over holes in the data fork.  The
-> current XFS code never actually uses those for buffer writes, but a
-> pending patch changes that.  For SEEK_HOLE / SEEK_DATA to work properly
-> in that case we also need to look at the COW fork in their
-> implementations and thus have to rely on the unwritten extent page cache
-> probing.  But the tests for it ensure we do have valid data in the
-> pagecache by calling md5sum on the test files, and thus reading their
-> contents (including the zero-filled holes) in, and thus making them
-> all valid data.
+> On Fri, 1 Mar 2019 at 15:06, Wang Shilong <wangshilong1991@gmail.com> wrote:
+> >
+> > From: Wang Shilong <wshilong@ddn.com>
 > 
-> Fix that by dropping the page cache content after the md5sum calls.
+> I take it that these patches relate to some API changes that are not
+> yet merged into the kernel, right?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Also, I think we need some accompanying info to describe project IDs.
+> Can you point me at any documents/resources?
 
-Hi Darrick, would you please help review this version of the fix as
-well? I basically have no idea about the implementation of the "pending
-patch" and what it changes.. Thanks a lot!
+Probably "best" documented in the man pages that ship with xfsprogs.
+Basically, it's just another quota ID that can be used to account
+for files/directories in arbitrary admin defined groups. i.e. quotas
+that aren't bound by user/group identities.
 
-Eryu
+$ man 8 xfs_quota
+$ man 5 projects
+$ man 5 projid
 
-> ---
->  tests/xfs/420 | 6 ++++++
->  tests/xfs/421 | 6 ++++++
->  2 files changed, 12 insertions(+)
-> 
-> diff --git a/tests/xfs/420 b/tests/xfs/420
-> index a083a12b..34199637 100755
-> --- a/tests/xfs/420
-> +++ b/tests/xfs/420
-> @@ -83,6 +83,8 @@ echo "Compare files"
->  md5sum $testdir/file1 | _filter_scratch
->  md5sum $testdir/file2 | _filter_scratch
->  md5sum $testdir/file3 | _filter_scratch
-> +# drop caches to make sure the page cache for the unwritten extents is clean
-> +echo 1 > /proc/sys/vm/drop_caches
->  
->  echo "CoW the shared part then write into the empty part" | tee -a $seqres.full
->  $XFS_IO_PROG -c "cowextsize" $testdir/file1 >> $seqres.full
-> @@ -106,6 +108,8 @@ echo "Compare files"
->  md5sum $testdir/file1 | _filter_scratch
->  md5sum $testdir/file2 | _filter_scratch
->  md5sum $testdir/file3 | _filter_scratch
-> +# drop caches to make sure the page cache for the unwritten extents is clean
-> +echo 1 > /proc/sys/vm/drop_caches
->  
->  echo "sync filesystem" | tee -a $seqres.full
->  sync
-> @@ -123,6 +127,8 @@ echo "Compare files"
->  md5sum $testdir/file1 | _filter_scratch
->  md5sum $testdir/file2 | _filter_scratch
->  md5sum $testdir/file3 | _filter_scratch
-> +# drop caches to make sure the page cache for the unwritten extents is clean
-> +echo 1 > /proc/sys/vm/drop_caches
->  
->  echo "Remount" | tee -a $seqres.full
->  _scratch_cycle_mount
-> diff --git a/tests/xfs/421 b/tests/xfs/421
-> index a2734aba..374389bd 100755
-> --- a/tests/xfs/421
-> +++ b/tests/xfs/421
-> @@ -83,6 +83,8 @@ echo "Compare files"
->  md5sum $testdir/file1 | _filter_scratch
->  md5sum $testdir/file2 | _filter_scratch
->  md5sum $testdir/file3 | _filter_scratch
-> +# drop caches to make sure the page cache for the unwritten extents is clean
-> +echo 1 > /proc/sys/vm/drop_caches
->  
->  echo "CoW the shared part then write into the empty part" | tee -a $seqres.full
->  $XFS_IO_PROG -c "cowextsize" $testdir/file1 >> $seqres.full
-> @@ -106,6 +108,8 @@ echo "Compare files"
->  md5sum $testdir/file1 | _filter_scratch
->  md5sum $testdir/file2 | _filter_scratch
->  md5sum $testdir/file3 | _filter_scratch
-> +# drop caches to make sure the page cache for the unwritten extents is clean
-> +echo 1 > /proc/sys/vm/drop_caches
->  
->  echo "sync filesystem" | tee -a $seqres.full
->  sync
-> @@ -123,6 +127,8 @@ echo "Compare files"
->  md5sum $testdir/file1 | _filter_scratch
->  md5sum $testdir/file2 | _filter_scratch
->  md5sum $testdir/file3 | _filter_scratch
-> +# drop caches to make sure the page cache for the unwritten extents is clean
-> +echo 1 > /proc/sys/vm/drop_caches
->  
->  echo "Remount" | tee -a $seqres.full
->  _scratch_cycle_mount
-> -- 
-> 2.20.1
-> 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
