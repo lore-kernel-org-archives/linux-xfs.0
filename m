@@ -1,104 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:55972 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726286AbfCHXLc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Mar 2019 18:11:32 -0500
-Date: Fri, 8 Mar 2019 15:11:14 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: clean up xfs_dir2_leafn_add
-Message-ID: <20190308231114.GD4676@magnolia>
-References: <20190308161308.GC4676@magnolia>
- <CAKwvOdn0=1svhDUBEP+391NvUXhm8bkzBzNMgNphML8kRzrRJQ@mail.gmail.com>
- <20190308183830.GC20533@magnolia>
- <CAKwvOdnpfQ_v3Hx0Y0ZjzQEet9DH+39RzMeG6rFqp6nw0ha7GQ@mail.gmail.com>
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:36863 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726038AbfCDVQm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 16:16:42 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAKwvOdnpfQ_v3Hx0Y0ZjzQEet9DH+39RzMeG6rFqp6nw0ha7GQ@mail.gmail.com>
+References: <1551449184-7942-1-git-send-email-wshilong1991@gmail.com>
+ <1551449184-7942-3-git-send-email-wshilong1991@gmail.com> <CAKgNAkitiDEYSZDnJ5iQ6coaE=q45BHxnG2z_bZtWs=kk+2g3w@mail.gmail.com>
+ <20190304205006.GX23020@dastard>
+In-Reply-To: <20190304205006.GX23020@dastard>
+Reply-To: mtk.manpages@gmail.com
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Date: Mon, 4 Mar 2019 22:16:29 +0100
+Message-ID: <CAKgNAki3teB9-9D-D2yObqLfAB4VUdr-Pg0qz735RfHmP+YzBg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] statx.2: add project support update
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nick Desaulniers <ndesaulniers@google.com>
-Cc: linux-xfs@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>, LKML <linux-kernel@vger.kernel.org>, clang-built-linux@googlegroups.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Wang Shilong <wangshilong1991@gmail.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, lixi@ddn.com, Andreas Dilger <adilger@dilger.ca>, Wang Shilong <wshilong@ddn.com>, linux-man <linux-man@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Fri, Mar 08, 2019 at 10:42:59AM -0800, Nick Desaulniers wrote:
-> On Fri, Mar 8, 2019 at 10:38 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+Hi Dave,
+On Mon, 4 Mar 2019 at 21:50, Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Mon, Mar 04, 2019 at 02:52:59PM +0100, Michael Kerrisk (man-pages) wrote:
+> > Hello Wang Shilong,
 > >
-> > On Fri, Mar 08, 2019 at 10:12:33AM -0800, Nick Desaulniers wrote:
-> > > On Fri, Mar 8, 2019 at 8:13 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > > >
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > >
-> > > > Remove typedefs and consolidate local variable initialization.
-> > > >
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_dir2_node.c |   20 ++++++++------------
-> > > >  1 file changed, 8 insertions(+), 12 deletions(-)
-> > > >
-> > > > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> > > > index de46f26c5292..16731d2d684b 100644
-> > > > --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> > > > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> > > > @@ -426,26 +426,22 @@ xfs_dir2_leaf_to_node(
-> > > >  static int                                     /* error */
-> > > >  xfs_dir2_leafn_add(
-> > > >         struct xfs_buf          *bp,            /* leaf buffer */
-> > > > -       xfs_da_args_t           *args,          /* operation arguments */
-> > > > +       struct xfs_da_args      *args,          /* operation arguments */
-> > > >         int                     index)          /* insertion pt for new entry */
-> > > >  {
-> > > > +       struct xfs_dir3_icleaf_hdr leafhdr;
-> > > > +       struct xfs_inode        *dp = args->dp;
-> > > > +       struct xfs_dir2_leaf    *leaf = bp->b_addr;
-> > > > +       struct xfs_dir2_leaf_entry *lep;
-> > > > +       struct xfs_dir2_leaf_entry *ents;
-> > > >         int                     compact;        /* compacting stale leaves */
-> > > > -       xfs_inode_t             *dp;            /* incore directory inode */
-> > > > -       int                     highstale;      /* next stale entry */
-> > > > -       xfs_dir2_leaf_t         *leaf;          /* leaf structure */
-> > > > -       xfs_dir2_leaf_entry_t   *lep;           /* leaf entry */
-> > > > +       int                     highstale = 0;  /* next stale entry */
-> > > >         int                     lfloghigh;      /* high leaf entry logging */
-> > > >         int                     lfloglow;       /* low leaf entry logging */
-> > > > -       int                     lowstale;       /* previous stale entry */
-> > > > -       struct xfs_dir3_icleaf_hdr leafhdr;
-> > > > -       struct xfs_dir2_leaf_entry *ents;
-> > > > +       int                     lowstale = 0;   /* previous stale entry */
-> > > >
-> > > >         trace_xfs_dir2_leafn_add(args, index);
-> > > >
-> > > > -       dp = args->dp;
-> > > > -       leaf = bp->b_addr;
-> > > > -       highstale = 0;
-> > > > -       lowstale = 0;
-> > > >         dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
-> > > >         ents = dp->d_ops->leaf_ents_p(leaf);
+> > On Fri, 1 Mar 2019 at 15:06, Wang Shilong <wangshilong1991@gmail.com> wrote:
 > > >
-> > > What about moving the initialization of `ents` above? (Or would that
-> > > be over the line limit?)
+> > > From: Wang Shilong <wshilong@ddn.com>
 > >
-> > It might be over the line limit, but more importantly I prefer to have
-> > the tracepoint fire before we start interpreting the on-disk metadata.
-> > That way, ftrace data will show exactly where we were in the kernel
-> > if any corruption warnings are emitted during that interpretation.
+> > I take it that these patches relate to some API changes that are not
+> > yet merged into the kernel, right?
 > >
-> > I don't think either of those two functions do that today, but I don't
-> > want to leave a logic bomb in case they ever start doing that.
-> 
-> Makes sense, ents is initialized to the results of function call.
-> Thanks for the additional info, for accepting the earlier patch, and
-> this additional cleanup.
-> Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+> > Also, I think we need some accompanying info to describe project IDs.
+> > Can you point me at any documents/resources?
+>
+> Probably "best" documented in the man pages that ship with xfsprogs.
 
-Thanks for the review!
+But, these IDs are a kernel construct, right? Is their scope limited
+just to XFS, or do other filesystems have the concept also?
 
-By the way, does clang complain about highstale/lowstale in
-xfs_dir2_leaf_addname being uninitialized too?  Just wondering since
-smatch/sparse do...
+Cheers,
 
---D
+Michael
 
-> -- 
-> Thanks,
-> ~Nick Desaulniers
+> Basically, it's just another quota ID that can be used to account
+> for files/directories in arbitrary admin defined groups. i.e. quotas
+> that aren't bound by user/group identities.
+>
+> $ man 8 xfs_quota
+> $ man 5 projects
+> $ man 5 projid
