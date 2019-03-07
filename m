@@ -1,52 +1,146 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f197.google.com ([209.85.166.197]:41271 "EHLO
-        mail-it1-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726415AbfCBLpG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Mar 2019 06:45:06 -0500
-Received: by mail-it1-f197.google.com with SMTP id q184so722301itd.6
-        for <linux-xfs@vger.kernel.org>; Sat, 02 Mar 2019 03:45:06 -0800 (PST)
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:35251 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726028AbfCGGOY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Mar 2019 01:14:24 -0500
+Date: Thu, 7 Mar 2019 14:14:18 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 4/5] generic: test statx attribute_mask setting
+Message-ID: <20190307061418.GL2824@desktop>
+References: <155173434205.767.15128498725168844621.stgit@magnolia>
+ <155173437536.767.4083133841860983852.stgit@magnolia>
 MIME-Version: 1.0
-Date: Sat, 02 Mar 2019 03:45:05 -0800
-In-Reply-To: <000000000000299b190583172880@google.com>
-Message-ID: <000000000000fdc7da05831b0df8@google.com>
-Subject: Re: BUG: MAX_STACK_TRACE_ENTRIES too low!
-From: syzbot <syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155173437536.767.4083133841860983852.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-syzbot has found a reproducer for the following crash on:
+On Mon, Mar 04, 2019 at 01:19:35PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Make sure the filesystem reports attribute_mask for the attributes it
+> supports.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-HEAD commit:    c63e9e91a254 Add linux-next specific files for 20190301
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=10856157200000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=f5875f9dc6e009b2
-dashboard link: https://syzkaller.appspot.com/bug?extid=78923eea7cf44364f4fb
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=149ae1eb200000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=15ee41eb200000
+A few minor issues, and I can fix them all on commit (I'm sure I do test
+the changes this time :)).
 
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com
+> ---
+>  tests/generic/713     |   67 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/713.out |    1 +
+>  tests/generic/group   |    1 +
+>  3 files changed, 69 insertions(+)
+>  create mode 100755 tests/generic/713
+>  create mode 100644 tests/generic/713.out
+> 
+> 
+> diff --git a/tests/generic/713 b/tests/generic/713
+> new file mode 100755
+> index 00000000..cd128d9c
+> --- /dev/null
+> +++ b/tests/generic/713
+> @@ -0,0 +1,67 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0+
+> +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 713
+> +#
+> +# Regression test for a bug where XFS fails to set statx attributes_mask but
+> +# sets attribute flags anyway.
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.* $testfile
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_test
+> +
+> +get_attributes() {
+> +	$XFS_IO_PROG -r -c "statx -r" $1 | grep 'stat.attributes =' | cut -d ' ' -f 3
+> +}
+> +
+> +get_attributes_mask() {
+> +	$XFS_IO_PROG -r -c "statx -r" $1 | grep 'stat.attributes_mask =' | cut -d ' ' -f 3
+> +}
+> +
+> +check_statx_attributes()
+> +{
+> +	attrs=$(get_attributes $testfile)
+> +	mask=$(get_attributes_mask $testfile)
 
-BUG: MAX_STACK_TRACE_ENTRIES too low!
-turning off the locking correctness validator.
-CPU: 0 PID: 1176 Comm: kworker/u5:0 Not tainted 5.0.0-rc8-next-20190301 #1
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
-Google 01/01/2011
-Workqueue: hci1 hci_power_on
-Call Trace:
-  __dump_stack lib/dump_stack.c:77 [inline]
-  dump_stack+0x172/0x1f0 lib/dump_stack.c:113
-  save_trace kernel/locking/lockdep.c:467 [inline]
-  save_trace.cold+0x14/0x19 kernel/locking/lockdep.c:437
-  mark_lock+0x2fb/0x1380 kernel/locking/lockdep.c:3401
-  mark_irqflags kernel/locking/lockdep.c:3304 [inline]
-  __lock_acquire+0xf2c/0x3fb0 kernel/locking/lockdep.c:3644
-  lock_acquire+0x16f/0x3f0 kernel/locking/lockdep.c:4202
-  process_one_work+0x8df/0x1790 kernel/workqueue.c:2244
-  worker_thread+0x98/0xe40 kernel/workqueue.c:2415
-  kthread+0x357/0x430 kernel/kthread.c:253
-  ret_from_fork+0x3a/0x50 arch/x86/entry/entry_64.S:352
+Declare them as 'local'.
+
+> +
+> +	echo "MASK:$mask:ATTRS:$attrs:" >> $seqres.full
+> +
+> +	test -z "$mask" && _notrun "xfs_io statx command does not support attributes_mask"
+> +	test $(( mask )) -eq 0 && echo "attributes mask is zero"
+> +	test $(( attrs & ~(mask) )) -ne 0 && echo "attributes $attrs do not appear in mask $mask"
+> +}
+> +
+
+Added the below here:
+
+rm -f $seqres.full
+echo "Silence is golden"
+
+> +# Create file, check for incorrect mask
+> +testfile=$TEST_DIR/$$.test
+> +touch $testfile
+> +check_statx_attributes
+> +
+> +# Do it again, but this time try to turn on one of the attributes.
+> +if chattr +i $testfile > /dev/null 2>&1; then
+> +	check_statx_attributes
+> +	chattr -i $testfile
+> +fi
+> +if chattr +a $testfile > /dev/null 2>&1; then
+> +	check_statx_attributes
+> +	chattr -a $testfile
+
+Change 'chattr' to '$CHATTR_PROG'.
+
+Thanks,
+Eryu
+
+> +fi
+> +
+> +status=0
+> +exit
+> diff --git a/tests/generic/713.out b/tests/generic/713.out
+> new file mode 100644
+> index 00000000..066598d3
+> --- /dev/null
+> +++ b/tests/generic/713.out
+> @@ -0,0 +1 @@
+> +QA output created by 713
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 15227b67..d04bf39f 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -534,3 +534,4 @@
+>  529 auto quick attr
+>  530 auto quick unlink
+>  531 auto quick unlink
+> +713 auto quick
+> 
