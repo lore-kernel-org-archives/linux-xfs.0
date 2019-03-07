@@ -1,85 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f69.google.com ([209.85.166.69]:43778 "EHLO
-        mail-io1-f69.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726733AbfCBHGG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Mar 2019 02:06:06 -0500
-Received: by mail-io1-f69.google.com with SMTP id x22so116912iob.10
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Mar 2019 23:06:05 -0800 (PST)
-MIME-Version: 1.0
-Date: Fri, 01 Mar 2019 23:06:04 -0800
-Message-ID: <000000000000299b190583172880@google.com>
-Subject: BUG: MAX_STACK_TRACE_ENTRIES too low!
-From: syzbot <syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Received: from mx1.redhat.com ([209.132.183.28]:56512 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726172AbfCGRYZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Mar 2019 12:24:25 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 17ACE3092656
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Mar 2019 17:24:25 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-66.bos.redhat.com [10.18.41.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id CB1D96090C
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Mar 2019 17:24:24 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH RFCv2 0/3] XFS near block allocation algorithm prototype
+Date: Thu,  7 Mar 2019 12:24:21 -0500
+Message-Id: <20190307172424.30316-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+To: linux-xfs@vger.kernel.org
 
-Hello,
+Hi all,
 
-syzbot found the following crash on:
+Here's an RFCv2 of the near block allocation algorithm rework. The
+changes since the first rfc are primarily to clean out a bunch of
+unnecessary refactoring, further improvements/cleanups to the code and
+the addition of minlen support.
 
-HEAD commit:    c63e9e91a254 Add linux-next specific files for 20190301
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=16a559b2c00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=f5875f9dc6e009b2
-dashboard link: https://syzkaller.appspot.com/bug?extid=78923eea7cf44364f4fb
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
+While I ran some basic performance tests against the initial version as
+I was fleshing out the high level algorithm, this has mostly only seen
+functional testing since then. Hence this is still RFC until I've had a
+chance to do more thorough testing. The limited performance testing that
+I have run consists of a simple single-writer fs_mark test against the
+pre-fragmented metadump image provided by the user. A single threaded
+fs_mark writes in the range of 30-100 files/sec (150k sized files) on a
+baseline kernel and 550-800 files/sec with the updated allocator
+algorithm. The latter range is about the same as the result for both
+kernels against a newly created filesystem on the same system. More
+testing is certainly required, but I'd like to solicit high level
+design feedback before getting too far down the targeted testing path,
+including any thoughts on specific performance tests that might be
+worthwhile.
 
-Unfortunately, I don't have any reproducer for this crash yet.
+The background and motivation for this change is described in the patch
+2 commit log as well as in the original thread referenced in the rfcv1
+cover letter. The original idea was to replace the current allocator
+with a single locality-enhanced cntbt lookup. This refines that idea to
+something that combines the cntbt and bnobt searches in a manner that is
+optimal for the size of the request (for example, a single fsb near
+alloc is a trivial bnobt lookup) and repeats the cntbt lookup to provide
+a bit more locality.
 
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com
+While this is written as new code, this is really based on the existing
+allocation algorithm and rewritten in a way to facilitate reuse for the
+other allocation modes. The longer term objective beyond improving worst
+case near mode allocation behavior is to be able to reuse this code for
+all of the near, exact and size allocation modes. The latter bits will
+likely occur as follow on work.
 
-BUG: MAX_STACK_TRACE_ENTRIES too low!
-turning off the locking correctness validator.
-CPU: 0 PID: 19385 Comm: syz-executor.0 Not tainted 5.0.0-rc8-next-20190301  
-#1
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
-Google 01/01/2011
-Call Trace:
-  __dump_stack lib/dump_stack.c:77 [inline]
-  dump_stack+0x172/0x1f0 lib/dump_stack.c:113
-  save_trace kernel/locking/lockdep.c:467 [inline]
-  save_trace.cold+0x14/0x19 kernel/locking/lockdep.c:437
-  mark_lock+0x2fb/0x1380 kernel/locking/lockdep.c:3401
-  __lock_acquire+0x548/0x3fb0 kernel/locking/lockdep.c:3648
-  lock_acquire+0x16f/0x3f0 kernel/locking/lockdep.c:4202
-  flush_workqueue+0x126/0x14c0 kernel/workqueue.c:2774
-  drain_workqueue+0x1b4/0x470 kernel/workqueue.c:2939
-  destroy_workqueue+0x21/0x700 kernel/workqueue.c:4315
-  xfs_destroy_mount_workqueues+0x11d/0x1c0 fs/xfs/xfs_super.c:906
-  xfs_fs_fill_super+0x8e9/0x1670 fs/xfs/xfs_super.c:1786
-  mount_bdev+0x307/0x3c0 fs/super.c:1346
-  xfs_fs_mount+0x35/0x40 fs/xfs/xfs_super.c:1834
-  legacy_get_tree+0xf2/0x200 fs/fs_context.c:584
-  vfs_get_tree+0x123/0x450 fs/super.c:1481
-  do_new_mount fs/namespace.c:2622 [inline]
-  do_mount+0x1436/0x2c40 fs/namespace.c:2942
-  ksys_mount+0xdb/0x150 fs/namespace.c:3151
-  __do_sys_mount fs/namespace.c:3165 [inline]
-  __se_sys_mount fs/namespace.c:3162 [inline]
-  __x64_sys_mount+0xbe/0x150 fs/namespace.c:3162
-  do_syscall_64+0x103/0x610 arch/x86/entry/common.c:290
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-RIP: 0033:0x45a89a
-Code: b8 a6 00 00 00 0f 05 48 3d 01 f0 ff ff 0f 83 2d 8e fb ff c3 66 2e 0f  
-1f 84 00 00 00 00 00 66 90 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff  
-ff 0f 83 0a 8e fb ff c3 66 0f 1f 84 00 00 00 00 00
-RSP: 002b:00007f6d038b0a88 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-RAX: ffffffffffffffda RBX: 00007f6d038b0b30 RCX: 000000000045a89a
-RDX: 00007f6d038b0ad0 RSI: 0000000020000140 RDI: 00007f6d038b0af0
-RBP: 0000000020000140 R08: 00007f6d038b0b30 R09: 00007f6d038b0ad0
-R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000000003
-R13: 0000000000000000 R14: 00000000004dbde0 R15: 00000000ffffffff
+Note that this series should technically only consist of two patches.
+Patch 1 is a dependency fixup for the small allocation fallback. Patches
+2 and 3 are artificially split into two to improve readability in patch
+form. Patch 2 adds the new mechanism and patch 3 changes the near
+allocation path to use it. Thoughts, reviews, flames appreciated.
 
+Brian
 
----
-This bug is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+rfcv2:
+- Dropped spurious initial refactoring.
+- Added minlen functionality.
+- Properly tied into near alloc path.
+- General refactoring and cleanups.
+rfcv1: https://marc.info/?l=linux-xfs&m=154479089914351&w=2
 
-syzbot will keep track of this bug report. See:
-https://goo.gl/tpsmEJ#bug-status-tracking for how to communicate with  
-syzbot.
+Brian Foster (3):
+  xfs: refactor small allocation helper to skip cntbt attempt
+  xfs: introduce generic extent allocation infrastructure
+  xfs: use generic extent alloc mechanism for near mode allocs
+
+ fs/xfs/libxfs/xfs_alloc.c | 928 +++++++++++++++++++-------------------
+ fs/xfs/xfs_trace.h        |  26 +-
+ 2 files changed, 493 insertions(+), 461 deletions(-)
+
+-- 
+2.17.2
