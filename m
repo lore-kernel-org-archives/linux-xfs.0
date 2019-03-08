@@ -1,29 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43712 "EHLO mail.kernel.org"
+Received: from verein.lst.de ([213.95.11.211]:52351 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727058AbfCGRuS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Mar 2019 12:50:18 -0500
-Subject: Re: [GIT PULL] xfs: new features for v5.1
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20190307165441.GA20533@magnolia>
-References: <20190307165441.GA20533@magnolia>
-Message-Id: <155198101824.21542.270770516129363172.pr-tracker-bot@kernel.org>
-Date: Thu, 07 Mar 2019 17:50:18 +0000
+        id S1725776AbfCHISO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 8 Mar 2019 03:18:14 -0500
+Date: Fri, 8 Mar 2019 09:18:07 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] xfs: allocate sector sized IO buffer via
+ page_frag_alloc
+Message-ID: <20190308081807.GB12909@lst.de>
+References: <a641feb8-ceb2-2dac-27aa-7b1df10f5ae5@suse.cz> <CACVXFVMX=WpTRBbDTSibfXkTZxckk3ootetbE+rkJtHhsZkRAw@mail.gmail.com> <20190226121209.GC11592@bombadil.infradead.org> <20190226123545.GA6163@ming.t460p> <20190226130230.GD11592@bombadil.infradead.org> <20190226134247.GA30942@ming.t460p> <20190226140440.GF11592@bombadil.infradead.org> <20190226161433.GH21626@magnolia> <20190226161912.GG11592@bombadil.infradead.org> <095ae112-f98e-9516-910a-43b49ea5bf0d@suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <095ae112-f98e-9516-910a-43b49ea5bf0d@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: torvalds@linux-foundation.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: Matthew Wilcox <willy@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ming Lei <ming.lei@redhat.com>, Ming Lei <tom.leiming@gmail.com>, Dave Chinner <david@fromorbit.com>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Aaron Lu <aaron.lu@intel.com>, Christopher Lameter <cl@linux.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, linux-block <linux-block@vger.kernel.org>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>
 
-The pull request you sent on Thu, 7 Mar 2019 08:54:41 -0800:
+On Wed, Feb 27, 2019 at 08:07:31AM +0100, Vlastimil Babka wrote:
+> > I don't know _what_ Ming Lei is saying.  I thought the problem was
+> > with slab redzones, which need to be before and after each object,
+> > but apparently the problem is with KASAN as well.
+> 
+> That's what I thought as well. But if we can solve it for caches created
+> by kmem_cache_create(..., align, ...) then IMHO we could guarantee
+> natural alignment for power-of-two kmalloc caches as well.
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.1-merge-4
-
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/9e1fd794cb6bf813a40849a1fc236703bdcbc1a7
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+Yes, having a version of kmalloc that guarantees power of two alignment
+would be extremely helpful and avoid a lot of pointless boilerplate code.
