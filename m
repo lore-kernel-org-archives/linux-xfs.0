@@ -1,47 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53068 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726961AbfCOAZd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Mar 2019 20:25:33 -0400
-Subject: [PATCH 09.5/36] xfs_io: document fzero_f -k option in manpage
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <155259748531.31886.6568534900832262149.stgit@magnolia>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <9784a4eb-f90c-c57a-34af-0039e24e9e78@redhat.com>
-Date: Thu, 14 Mar 2019 19:25:28 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:60008 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725975AbfCHILK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Mar 2019 03:11:10 -0500
+Date: Fri, 8 Mar 2019 00:11:07 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: BUG: MAX_STACK_TRACE_ENTRIES too low!
+Message-ID: <20190308081107.GD22834@infradead.org>
+References: <000000000000299b190583172880@google.com>
 MIME-Version: 1.0
-In-Reply-To: <155259748531.31886.6568534900832262149.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <000000000000299b190583172880@google.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: syzbot <syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com>
+Cc: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Will Deacon <will.deacon@arm.com>
 
-Perhaps the reason -k was broken is that nobody knew it existed?
+Probably more a lockdep than XFS thing..
 
-Fixes: 938904c4 ("xfs_io: add fzero command for zeroing range via fallocate")
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index fbf50df..980dcfd 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -516,10 +516,13 @@ Call fallocate with FALLOC_FL_UNSHARE_RANGE flag as described in the
- .BR fallocate (2)
- manual page to unshare all shared blocks within the range.
- .TP
--.BI fzero " offset length"
-+.BI "fzero [ \-k ]" " offset length"
- Call fallocate with FALLOC_FL_ZERO_RANGE flag as described in the
- .BR fallocate (2)
- manual page to allocate and zero blocks within the range.
-+With the
-+.B -k
-+option, use the FALLOC_FL_KEEP_SIZE flag as well.
- .TP
- .BI zero " offset length"
- Call xfsctl with
+On Fri, Mar 01, 2019 at 11:06:04PM -0800, syzbot wrote:
+> Hello,
+> 
+> syzbot found the following crash on:
+> 
+> HEAD commit:    c63e9e91a254 Add linux-next specific files for 20190301
+> git tree:       linux-next
+> console output: https://syzkaller.appspot.com/x/log.txt?x=16a559b2c00000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=f5875f9dc6e009b2
+> dashboard link: https://syzkaller.appspot.com/bug?extid=78923eea7cf44364f4fb
+> compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
+> 
+> Unfortunately, I don't have any reproducer for this crash yet.
+> 
+> IMPORTANT: if you fix the bug, please add the following tag to the commit:
+> Reported-by: syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com
+> 
+> BUG: MAX_STACK_TRACE_ENTRIES too low!
+> turning off the locking correctness validator.
+> CPU: 0 PID: 19385 Comm: syz-executor.0 Not tainted 5.0.0-rc8-next-20190301
+> #1
+> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS
+> Google 01/01/2011
+> Call Trace:
+>  __dump_stack lib/dump_stack.c:77 [inline]
+>  dump_stack+0x172/0x1f0 lib/dump_stack.c:113
+>  save_trace kernel/locking/lockdep.c:467 [inline]
+>  save_trace.cold+0x14/0x19 kernel/locking/lockdep.c:437
+>  mark_lock+0x2fb/0x1380 kernel/locking/lockdep.c:3401
+>  __lock_acquire+0x548/0x3fb0 kernel/locking/lockdep.c:3648
+>  lock_acquire+0x16f/0x3f0 kernel/locking/lockdep.c:4202
+>  flush_workqueue+0x126/0x14c0 kernel/workqueue.c:2774
+>  drain_workqueue+0x1b4/0x470 kernel/workqueue.c:2939
+>  destroy_workqueue+0x21/0x700 kernel/workqueue.c:4315
+>  xfs_destroy_mount_workqueues+0x11d/0x1c0 fs/xfs/xfs_super.c:906
+>  xfs_fs_fill_super+0x8e9/0x1670 fs/xfs/xfs_super.c:1786
+>  mount_bdev+0x307/0x3c0 fs/super.c:1346
+>  xfs_fs_mount+0x35/0x40 fs/xfs/xfs_super.c:1834
+>  legacy_get_tree+0xf2/0x200 fs/fs_context.c:584
+>  vfs_get_tree+0x123/0x450 fs/super.c:1481
+>  do_new_mount fs/namespace.c:2622 [inline]
+>  do_mount+0x1436/0x2c40 fs/namespace.c:2942
+>  ksys_mount+0xdb/0x150 fs/namespace.c:3151
+>  __do_sys_mount fs/namespace.c:3165 [inline]
+>  __se_sys_mount fs/namespace.c:3162 [inline]
+>  __x64_sys_mount+0xbe/0x150 fs/namespace.c:3162
+>  do_syscall_64+0x103/0x610 arch/x86/entry/common.c:290
+>  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> RIP: 0033:0x45a89a
+> Code: b8 a6 00 00 00 0f 05 48 3d 01 f0 ff ff 0f 83 2d 8e fb ff c3 66 2e 0f
+> 1f 84 00 00 00 00 00 66 90 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff
+> 0f 83 0a 8e fb ff c3 66 0f 1f 84 00 00 00 00 00
+> RSP: 002b:00007f6d038b0a88 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
+> RAX: ffffffffffffffda RBX: 00007f6d038b0b30 RCX: 000000000045a89a
+> RDX: 00007f6d038b0ad0 RSI: 0000000020000140 RDI: 00007f6d038b0af0
+> RBP: 0000000020000140 R08: 00007f6d038b0b30 R09: 00007f6d038b0ad0
+> R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000000003
+> R13: 0000000000000000 R14: 00000000004dbde0 R15: 00000000ffffffff
+> 
+> 
+> ---
+> This bug is generated by a bot. It may contain errors.
+> See https://goo.gl/tpsmEJ for more information about syzbot.
+> syzbot engineers can be reached at syzkaller@googlegroups.com.
+> 
+> syzbot will keep track of this bug report. See:
+> https://goo.gl/tpsmEJ#bug-status-tracking for how to communicate with
+> syzbot.
+---end quoted text---
