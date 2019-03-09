@@ -1,86 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:44889 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726761AbfCHSMp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Mar 2019 13:12:45 -0500
-Received: by mail-pg1-f195.google.com with SMTP id j3so14735152pgm.11
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Mar 2019 10:12:45 -0800 (PST)
+Received: from userp2130.oracle.com ([156.151.31.86]:60770 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726334AbfCIRe6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Mar 2019 12:34:58 -0500
+Date: Sat, 9 Mar 2019 09:34:43 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: xfs/420 and xfs/421: don't disturb unwritten status with md5sum
+Message-ID: <20190309173443.GB4359@magnolia>
+References: <20190218091827.12619-1-hch@lst.de>
+ <20190218091951.GA5171@lst.de>
+ <20190309103211.GP2824@desktop>
 MIME-Version: 1.0
-References: <20190308161308.GC4676@magnolia>
-In-Reply-To: <20190308161308.GC4676@magnolia>
-From: Nick Desaulniers <ndesaulniers@google.com>
-Date: Fri, 8 Mar 2019 10:12:33 -0800
-Message-ID: <CAKwvOdn0=1svhDUBEP+391NvUXhm8bkzBzNMgNphML8kRzrRJQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: clean up xfs_dir2_leafn_add
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190309103211.GP2824@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>, LKML <linux-kernel@vger.kernel.org>, clang-built-linux@googlegroups.com
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Fri, Mar 8, 2019 at 8:13 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> Remove typedefs and consolidate local variable initialization.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_dir2_node.c |   20 ++++++++------------
->  1 file changed, 8 insertions(+), 12 deletions(-)
->
-> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> index de46f26c5292..16731d2d684b 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> @@ -426,26 +426,22 @@ xfs_dir2_leaf_to_node(
->  static int                                     /* error */
->  xfs_dir2_leafn_add(
->         struct xfs_buf          *bp,            /* leaf buffer */
-> -       xfs_da_args_t           *args,          /* operation arguments */
-> +       struct xfs_da_args      *args,          /* operation arguments */
->         int                     index)          /* insertion pt for new entry */
->  {
-> +       struct xfs_dir3_icleaf_hdr leafhdr;
-> +       struct xfs_inode        *dp = args->dp;
-> +       struct xfs_dir2_leaf    *leaf = bp->b_addr;
-> +       struct xfs_dir2_leaf_entry *lep;
-> +       struct xfs_dir2_leaf_entry *ents;
->         int                     compact;        /* compacting stale leaves */
-> -       xfs_inode_t             *dp;            /* incore directory inode */
-> -       int                     highstale;      /* next stale entry */
-> -       xfs_dir2_leaf_t         *leaf;          /* leaf structure */
-> -       xfs_dir2_leaf_entry_t   *lep;           /* leaf entry */
-> +       int                     highstale = 0;  /* next stale entry */
->         int                     lfloghigh;      /* high leaf entry logging */
->         int                     lfloglow;       /* low leaf entry logging */
-> -       int                     lowstale;       /* previous stale entry */
-> -       struct xfs_dir3_icleaf_hdr leafhdr;
-> -       struct xfs_dir2_leaf_entry *ents;
-> +       int                     lowstale = 0;   /* previous stale entry */
->
->         trace_xfs_dir2_leafn_add(args, index);
->
-> -       dp = args->dp;
-> -       leaf = bp->b_addr;
-> -       highstale = 0;
-> -       lowstale = 0;
->         dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
->         ents = dp->d_ops->leaf_ents_p(leaf);
+On Sat, Mar 09, 2019 at 06:32:11PM +0800, Eryu Guan wrote:
+> On Mon, Feb 18, 2019 at 10:19:51AM +0100, Christoph Hellwig wrote:
+> > The way we decided if an unwritten extent is considered a hole or data
+> > is by checking if the page and/or blocks are marked uptodate, that is
+> > contain valid data in the page cache.
+> > 
+> > xfs/420 and xfs/421 try to exercise SEEK_HOLE / SEEK_DATA in the
+> > presence of cowextsize preallocations over holes in the data fork.  The
+> > current XFS code never actually uses those for buffer writes, but a
+> > pending patch changes that.  For SEEK_HOLE / SEEK_DATA to work properly
+> > in that case we also need to look at the COW fork in their
+> > implementations and thus have to rely on the unwritten extent page cache
+> > probing.  But the tests for it ensure we do have valid data in the
+> > pagecache by calling md5sum on the test files, and thus reading their
+> > contents (including the zero-filled holes) in, and thus making them
+> > all valid data.
+> > 
+> > Fix that by dropping the page cache content after the md5sum calls.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Hi Darrick, would you please help review this version of the fix as
+> well? I basically have no idea about the implementation of the "pending
+> patch" and what it changes.. Thanks a lot!
 
-What about moving the initialization of `ents` above? (Or would that
-be over the line limit?)
+/me wonders if the "md5sum and drop caches" could be refactored a bit,
+but as a strict bugfix for always_cow mode this looks ok to me:
 
-In general, I like this change (I considered asking Nathan to do the
-consolidation of declaration and initialization as you've done).  The
-additional part of converting from _t to struct * is less interesting
-(but still ok).  It's better to be consistent within the function
-scope, but this translation unit is still a mismatch of styles.  If
-the goal is to avoid typedefs, consider removing them from existence
-and the required work to consistently not use them throughout this
-code.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
--- 
-Thanks,
-~Nick Desaulniers
+--D
+
+
+> Eryu
+> 
+> > ---
+> >  tests/xfs/420 | 6 ++++++
+> >  tests/xfs/421 | 6 ++++++
+> >  2 files changed, 12 insertions(+)
+> > 
+> > diff --git a/tests/xfs/420 b/tests/xfs/420
+> > index a083a12b..34199637 100755
+> > --- a/tests/xfs/420
+> > +++ b/tests/xfs/420
+> > @@ -83,6 +83,8 @@ echo "Compare files"
+> >  md5sum $testdir/file1 | _filter_scratch
+> >  md5sum $testdir/file2 | _filter_scratch
+> >  md5sum $testdir/file3 | _filter_scratch
+> > +# drop caches to make sure the page cache for the unwritten extents is clean
+> > +echo 1 > /proc/sys/vm/drop_caches
+> >  
+> >  echo "CoW the shared part then write into the empty part" | tee -a $seqres.full
+> >  $XFS_IO_PROG -c "cowextsize" $testdir/file1 >> $seqres.full
+> > @@ -106,6 +108,8 @@ echo "Compare files"
+> >  md5sum $testdir/file1 | _filter_scratch
+> >  md5sum $testdir/file2 | _filter_scratch
+> >  md5sum $testdir/file3 | _filter_scratch
+> > +# drop caches to make sure the page cache for the unwritten extents is clean
+> > +echo 1 > /proc/sys/vm/drop_caches
+> >  
+> >  echo "sync filesystem" | tee -a $seqres.full
+> >  sync
+> > @@ -123,6 +127,8 @@ echo "Compare files"
+> >  md5sum $testdir/file1 | _filter_scratch
+> >  md5sum $testdir/file2 | _filter_scratch
+> >  md5sum $testdir/file3 | _filter_scratch
+> > +# drop caches to make sure the page cache for the unwritten extents is clean
+> > +echo 1 > /proc/sys/vm/drop_caches
+> >  
+> >  echo "Remount" | tee -a $seqres.full
+> >  _scratch_cycle_mount
+> > diff --git a/tests/xfs/421 b/tests/xfs/421
+> > index a2734aba..374389bd 100755
+> > --- a/tests/xfs/421
+> > +++ b/tests/xfs/421
+> > @@ -83,6 +83,8 @@ echo "Compare files"
+> >  md5sum $testdir/file1 | _filter_scratch
+> >  md5sum $testdir/file2 | _filter_scratch
+> >  md5sum $testdir/file3 | _filter_scratch
+> > +# drop caches to make sure the page cache for the unwritten extents is clean
+> > +echo 1 > /proc/sys/vm/drop_caches
+> >  
+> >  echo "CoW the shared part then write into the empty part" | tee -a $seqres.full
+> >  $XFS_IO_PROG -c "cowextsize" $testdir/file1 >> $seqres.full
+> > @@ -106,6 +108,8 @@ echo "Compare files"
+> >  md5sum $testdir/file1 | _filter_scratch
+> >  md5sum $testdir/file2 | _filter_scratch
+> >  md5sum $testdir/file3 | _filter_scratch
+> > +# drop caches to make sure the page cache for the unwritten extents is clean
+> > +echo 1 > /proc/sys/vm/drop_caches
+> >  
+> >  echo "sync filesystem" | tee -a $seqres.full
+> >  sync
+> > @@ -123,6 +127,8 @@ echo "Compare files"
+> >  md5sum $testdir/file1 | _filter_scratch
+> >  md5sum $testdir/file2 | _filter_scratch
+> >  md5sum $testdir/file3 | _filter_scratch
+> > +# drop caches to make sure the page cache for the unwritten extents is clean
+> > +echo 1 > /proc/sys/vm/drop_caches
+> >  
+> >  echo "Remount" | tee -a $seqres.full
+> >  _scratch_cycle_mount
+> > -- 
+> > 2.20.1
+> > 
