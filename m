@@ -1,104 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59866 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728630AbfCHSin (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Mar 2019 13:38:43 -0500
-Date: Fri, 8 Mar 2019 10:38:30 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: clean up xfs_dir2_leafn_add
-Message-ID: <20190308183830.GC20533@magnolia>
-References: <20190308161308.GC4676@magnolia>
- <CAKwvOdn0=1svhDUBEP+391NvUXhm8bkzBzNMgNphML8kRzrRJQ@mail.gmail.com>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:41959 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726687AbfCJVyB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Mar 2019 17:54:01 -0400
+Date: Mon, 11 Mar 2019 08:53:55 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: Use kmem_zalloc for bp->b_pages.
+Message-ID: <20190310215355.GC23020@dastard>
+References: <20190309153636.14154-1-fxinrong@gmail.com>
+ <20190309173230.GA4359@magnolia>
+ <20190310050608.dtidrfuqepze6uoh@linux-xjtn>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAKwvOdn0=1svhDUBEP+391NvUXhm8bkzBzNMgNphML8kRzrRJQ@mail.gmail.com>
+In-Reply-To: <20190310050608.dtidrfuqepze6uoh@linux-xjtn>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nick Desaulniers <ndesaulniers@google.com>
-Cc: linux-xfs@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>, LKML <linux-kernel@vger.kernel.org>, clang-built-linux@googlegroups.com
+To: Sean Fu <fxinrong@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Mar 08, 2019 at 10:12:33AM -0800, Nick Desaulniers wrote:
-> On Fri, Mar 8, 2019 at 8:13 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+On Sun, Mar 10, 2019 at 01:07:32PM +0800, Sean Fu wrote:
+> On Sat, Mar 09, 2019 at 09:32:30AM -0800, Darrick J. Wong wrote:
+> > On Sat, Mar 09, 2019 at 11:36:36PM +0800, Sean Fu wrote:
+> > > Change the allocation of bp->b_pages to use kmem_zalloc instead of
+> > > kmem_alloc.
+> > > Remove unnecessary memset for bp->b_pages.
+> > >
+> > > This reduces text size by 42 bytes.
+> > > Before:
+> > >    text	   data	    bss	    dec	    hex	filename
+> > >   23335	    588	      8	  23931	   5d7b	./fs/xfs/xfs_buf.o
+> > > After:
+> > >    text	   data	    bss	    dec	    hex	filename
+> > >   23293	    588	      8	  23889	   5d51	./fs/xfs/xfs_buf.o
+> > >
+> > > Signed-off-by: Sean Fu <fxinrong@gmail.com>
+> > > ---
+> > >  fs/xfs/xfs_buf.c | 3 +--
+> > >  1 file changed, 1 insertion(+), 2 deletions(-)
+> > >
+> > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > > index 4f5f2ff3f70f..be4f740b97c1 100644
+> > > --- a/fs/xfs/xfs_buf.c
+> > > +++ b/fs/xfs/xfs_buf.c
+> > > @@ -289,12 +289,11 @@ _xfs_buf_get_pages(
+> > >  		if (page_count <= XB_PAGES) {
+> > >  			bp->b_pages = bp->b_page_array;
+> > >  		} else {
+> > > -			bp->b_pages = kmem_alloc(sizeof(struct page *) *
+> > > +			bp->b_pages = kmem_zalloc(sizeof(struct page *) *
+> > >  						 page_count, KM_NOFS);
+> > >  			if (bp->b_pages == NULL)
+> > >  				return -ENOMEM;
+> > >  		}
+> > > -		memset(bp->b_pages, 0, sizeof(struct page *) * page_count);
 > >
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> >
-> > Remove typedefs and consolidate local variable initialization.
-> >
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_dir2_node.c |   20 ++++++++------------
-> >  1 file changed, 8 insertions(+), 12 deletions(-)
-> >
-> > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> > index de46f26c5292..16731d2d684b 100644
-> > --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> > @@ -426,26 +426,22 @@ xfs_dir2_leaf_to_node(
-> >  static int                                     /* error */
-> >  xfs_dir2_leafn_add(
-> >         struct xfs_buf          *bp,            /* leaf buffer */
-> > -       xfs_da_args_t           *args,          /* operation arguments */
-> > +       struct xfs_da_args      *args,          /* operation arguments */
-> >         int                     index)          /* insertion pt for new entry */
-> >  {
-> > +       struct xfs_dir3_icleaf_hdr leafhdr;
-> > +       struct xfs_inode        *dp = args->dp;
-> > +       struct xfs_dir2_leaf    *leaf = bp->b_addr;
-> > +       struct xfs_dir2_leaf_entry *lep;
-> > +       struct xfs_dir2_leaf_entry *ents;
-> >         int                     compact;        /* compacting stale leaves */
-> > -       xfs_inode_t             *dp;            /* incore directory inode */
-> > -       int                     highstale;      /* next stale entry */
-> > -       xfs_dir2_leaf_t         *leaf;          /* leaf structure */
-> > -       xfs_dir2_leaf_entry_t   *lep;           /* leaf entry */
-> > +       int                     highstale = 0;  /* next stale entry */
-> >         int                     lfloghigh;      /* high leaf entry logging */
-> >         int                     lfloglow;       /* low leaf entry logging */
-> > -       int                     lowstale;       /* previous stale entry */
-> > -       struct xfs_dir3_icleaf_hdr leafhdr;
-> > -       struct xfs_dir2_leaf_entry *ents;
-> > +       int                     lowstale = 0;   /* previous stale entry */
-> >
-> >         trace_xfs_dir2_leafn_add(args, index);
-> >
-> > -       dp = args->dp;
-> > -       leaf = bp->b_addr;
-> > -       highstale = 0;
-> > -       lowstale = 0;
-> >         dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
-> >         ents = dp->d_ops->leaf_ents_p(leaf);
-> 
-> What about moving the initialization of `ents` above? (Or would that
-> be over the line limit?)
+> > Does this leave b_pages uninitialized in the page_count <= XB_PAGES
+> > case?
+> bp is allocated by kmem_zone_zalloc, But i will take a deep look at xfs_buf_associate_memory.
 
-It might be over the line limit, but more importantly I prefer to have
-the tracepoint fire before we start interpreting the on-disk metadata.
-That way, ftrace data will show exactly where we were in the kernel
-if any corruption warnings are emitted during that interpretation.
+We can (and do) reuse buffers with different memory buffers via
+xfs_buf_associate_memory() (e.g. see the split log buffer code in
+xlog_sync()].
 
-I don't think either of those two functions do that today, but I don't
-want to leave a logic bomb in case they ever start doing that.
+I'd prefer that we leave the explicit memset here for this re-use
+case - leaving the page pointer array with stale page pointers (even
+though beyond b_page_count) means any page array overrun turns into
+a memory corruption (via access of a stale page) rather than a NULL
+pointer dereference and immediate fail.
 
-> In general, I like this change (I considered asking Nathan to do the
-> consolidation of declaration and initialization as you've done).  The
-> additional part of converting from _t to struct * is less interesting
-> (but still ok).  It's better to be consistent within the function
-> scope, but this translation unit is still a mismatch of styles.  If
-> the goal is to avoid typedefs, consider removing them from existence
-> and the required work to consistently not use them throughout this
-> code.
+IMO, a small decrease in binary size is not worth changing the
+failure behaviour from a definite, immediate fail to a random memory
+corruption failure some time in the future...
 
-Yeah, we're slowly converting away from the _t typedefs (and other
-IRIXisms) as parts of code get reworked, though of course there's
-nothing obvious to suggest that this (slow transition) is in progress
-nor that we're ok with the inconsistent formatting in the meantime,
-which is why I accepted the original patch and added this one to do the
-style conversions.
+Cheers,
 
---D
-
-> -- 
-> Thanks,
-> ~Nick Desaulniers
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
