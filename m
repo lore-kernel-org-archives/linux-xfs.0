@@ -1,91 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:60008 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725975AbfCHILK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Mar 2019 03:11:10 -0500
-Date: Fri, 8 Mar 2019 00:11:07 -0800
-From: Christoph Hellwig <hch@infradead.org>
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:42523 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726352AbfCKPTi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Mar 2019 11:19:38 -0400
+Message-ID: <1552317574.45180.94.camel@acm.org>
 Subject: Re: BUG: MAX_STACK_TRACE_ENTRIES too low!
-Message-ID: <20190308081107.GD22834@infradead.org>
-References: <000000000000299b190583172880@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <000000000000299b190583172880@google.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Date: Mon, 11 Mar 2019 08:19:34 -0700
+In-Reply-To: <00000000000080952b0583d183f0@google.com>
+References: <00000000000080952b0583d183f0@google.com>
+Content-Type: text/plain; charset="UTF-7"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: syzbot <syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com>
-Cc: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Will Deacon <will.deacon@arm.com>
+To: syzbot <syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com>, akpm@linux-foundation.org, darrick.wong@oracle.com, dledford@redhat.com, gustavo@embeddedor.com, hch@infradead.org, jannh@google.com, jgg@ziepe.ca, johannes.berg@intel.com, leon@kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-xfs@vger.kernel.org, longman@redhat.com, mingo@kernel.org, mingo@redhat.com, paulmck@linux.vnet.ibm.com, peterz@infradead.org, roland@purestorage.com, sean.hefty@intel.com, shamir.rabinovitch@oracle.com, swise@opengridcomputing.com, syzkaller-bugs@googlegroups.com, tglx@linutronix.de, tj@kernel.org, torvalds@linux-foundation.org, will.deacon@arm.com, xiyou.wangcong@gmail.com
 
-Probably more a lockdep than XFS thing..
+On Mon, 2019-03-11 at 06:26 -0700, syzbot wrote:
++AD4 syzbot has bisected this bug to:
++AD4 
++AD4 commit 669de8bda87b92ab9a2fc663b3f5743c2ad1ae9f
++AD4 Author: Bart Van Assche +ADw-bvanassche+AEA-acm.org+AD4
++AD4 Date:   Thu Feb 14 23:00:54 2019 +-0000
++AD4 
++AD4      kernel/workqueue: Use dynamic lockdep keys for workqueues
++AD4 
++AD4 bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x+AD0-17dec757200000
++AD4 start commit:   669de8bd kernel/workqueue: Use dynamic lockdep keys for wo..
++AD4 git tree:       upstream
++AD4 final crash:    https://syzkaller.appspot.com/x/report.txt?x+AD0-143ec757200000
++AD4 console output: https://syzkaller.appspot.com/x/log.txt?x+AD0-103ec757200000
++AD4 kernel config:  https://syzkaller.appspot.com/x/.config?x+AD0-bd349f14600e1305
++AD4 dashboard link: https://syzkaller.appspot.com/bug?extid+AD0-78923eea7cf44364f4fb
++AD4 userspace arch: amd64
++AD4 syz repro:      https://syzkaller.appspot.com/x/repro.syz?x+AD0-149c858d200000
++AD4 C reproducer:   https://syzkaller.appspot.com/x/repro.c?x+AD0-111aee33200000
++AD4 
++AD4 Reported-by: syzbot+-78923eea7cf44364f4fb+AEA-syzkaller.appspotmail.com
++AD4 Fixes: 669de8bd (+ACI-kernel/workqueue: Use dynamic lockdep keys for  
++AD4 workqueues+ACI)
 
-On Fri, Mar 01, 2019 at 11:06:04PM -0800, syzbot wrote:
-> Hello,
-> 
-> syzbot found the following crash on:
-> 
-> HEAD commit:    c63e9e91a254 Add linux-next specific files for 20190301
-> git tree:       linux-next
-> console output: https://syzkaller.appspot.com/x/log.txt?x=16a559b2c00000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=f5875f9dc6e009b2
-> dashboard link: https://syzkaller.appspot.com/bug?extid=78923eea7cf44364f4fb
-> compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
-> 
-> Unfortunately, I don't have any reproducer for this crash yet.
-> 
-> IMPORTANT: if you fix the bug, please add the following tag to the commit:
-> Reported-by: syzbot+78923eea7cf44364f4fb@syzkaller.appspotmail.com
-> 
-> BUG: MAX_STACK_TRACE_ENTRIES too low!
-> turning off the locking correctness validator.
-> CPU: 0 PID: 19385 Comm: syz-executor.0 Not tainted 5.0.0-rc8-next-20190301
-> #1
-> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS
-> Google 01/01/2011
-> Call Trace:
->  __dump_stack lib/dump_stack.c:77 [inline]
->  dump_stack+0x172/0x1f0 lib/dump_stack.c:113
->  save_trace kernel/locking/lockdep.c:467 [inline]
->  save_trace.cold+0x14/0x19 kernel/locking/lockdep.c:437
->  mark_lock+0x2fb/0x1380 kernel/locking/lockdep.c:3401
->  __lock_acquire+0x548/0x3fb0 kernel/locking/lockdep.c:3648
->  lock_acquire+0x16f/0x3f0 kernel/locking/lockdep.c:4202
->  flush_workqueue+0x126/0x14c0 kernel/workqueue.c:2774
->  drain_workqueue+0x1b4/0x470 kernel/workqueue.c:2939
->  destroy_workqueue+0x21/0x700 kernel/workqueue.c:4315
->  xfs_destroy_mount_workqueues+0x11d/0x1c0 fs/xfs/xfs_super.c:906
->  xfs_fs_fill_super+0x8e9/0x1670 fs/xfs/xfs_super.c:1786
->  mount_bdev+0x307/0x3c0 fs/super.c:1346
->  xfs_fs_mount+0x35/0x40 fs/xfs/xfs_super.c:1834
->  legacy_get_tree+0xf2/0x200 fs/fs_context.c:584
->  vfs_get_tree+0x123/0x450 fs/super.c:1481
->  do_new_mount fs/namespace.c:2622 [inline]
->  do_mount+0x1436/0x2c40 fs/namespace.c:2942
->  ksys_mount+0xdb/0x150 fs/namespace.c:3151
->  __do_sys_mount fs/namespace.c:3165 [inline]
->  __se_sys_mount fs/namespace.c:3162 [inline]
->  __x64_sys_mount+0xbe/0x150 fs/namespace.c:3162
->  do_syscall_64+0x103/0x610 arch/x86/entry/common.c:290
->  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> RIP: 0033:0x45a89a
-> Code: b8 a6 00 00 00 0f 05 48 3d 01 f0 ff ff 0f 83 2d 8e fb ff c3 66 2e 0f
-> 1f 84 00 00 00 00 00 66 90 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff
-> 0f 83 0a 8e fb ff c3 66 0f 1f 84 00 00 00 00 00
-> RSP: 002b:00007f6d038b0a88 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-> RAX: ffffffffffffffda RBX: 00007f6d038b0b30 RCX: 000000000045a89a
-> RDX: 00007f6d038b0ad0 RSI: 0000000020000140 RDI: 00007f6d038b0af0
-> RBP: 0000000020000140 R08: 00007f6d038b0b30 R09: 00007f6d038b0ad0
-> R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000000003
-> R13: 0000000000000000 R14: 00000000004dbde0 R15: 00000000ffffffff
-> 
-> 
-> ---
-> This bug is generated by a bot. It may contain errors.
-> See https://goo.gl/tpsmEJ for more information about syzbot.
-> syzbot engineers can be reached at syzkaller@googlegroups.com.
-> 
-> syzbot will keep track of this bug report. See:
-> https://goo.gl/tpsmEJ#bug-status-tracking for how to communicate with
-> syzbot.
----end quoted text---
+I think this issue has been fixed by a commit that went upstream yesterday. Hence:
+
++ACM-syz fix: workqueue, lockdep: Fix an alloc+AF8-workqueue() error path
