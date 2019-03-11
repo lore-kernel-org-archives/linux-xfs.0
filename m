@@ -1,16 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:59074 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726675AbfCKQUA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Mar 2019 12:20:00 -0400
-Date: Mon, 11 Mar 2019 09:19:48 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:40266 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726977AbfCKQWo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Mar 2019 12:22:44 -0400
+Date: Mon, 11 Mar 2019 09:22:32 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 1/2] xfs: zero initialize highstale and lowstale in
- xfs_dir2_leaf_addname
-Message-ID: <20190311161948.GC4359@magnolia>
+Subject: [PATCH 2/2] xfs: clean up xfs_dir2_leaf_addname
+Message-ID: <20190311162232.GD4359@magnolia>
+References: <20190311161948.GC4359@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190311161948.GC4359@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -19,43 +20,73 @@ Cc: Nathan Chancellor <natechancellor@gmail.com>, linux-kernel@vger.kernel.org, 
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Smatch complains about the following:
-
-fs/xfs/libxfs/xfs_dir2_leaf.c:848 xfs_dir2_leaf_addname() error:
-uninitialized symbol 'lowstale'.
-
-fs/xfs/libxfs/xfs_dir2_leaf.c:849 xfs_dir2_leaf_addname() error:
-uninitialized symbol 'highstale'.
-
-I don't think there's any incorrect behavior associated with the
-uninitialized variable, but as the author of the previous zero-init
-patch points out, it's best not to be passing around pointers to
-uninitialized stack areas.
+Remove typedefs and consolidate local variable initialization.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_dir2_leaf.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_dir2_leaf.c |   33 +++++++++++++++------------------
+ 1 file changed, 15 insertions(+), 18 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index 9a3767818c50..2abf945e5844 100644
+index 2abf945e5844..9c2a0a13ed61 100644
 --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
 +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -574,7 +574,7 @@ xfs_dir2_leaf_addname(
- 	xfs_dir2_data_unused_t	*dup;		/* data unused entry */
+@@ -563,43 +563,40 @@ xfs_dir3_leaf_find_entry(
+  */
+ int						/* error */
+ xfs_dir2_leaf_addname(
+-	xfs_da_args_t		*args)		/* operation arguments */
++	struct xfs_da_args	*args)		/* operation arguments */
+ {
++	struct xfs_dir3_icleaf_hdr leafhdr;
++	struct xfs_trans	*tp = args->trans;
+ 	__be16			*bestsp;	/* freespace table in leaf */
+-	int			compact;	/* need to compact leaves */
+-	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
++	__be16			*tagp;		/* end of data entry */
+ 	struct xfs_buf		*dbp;		/* data block buffer */
+-	xfs_dir2_data_entry_t	*dep;		/* data block entry */
+-	xfs_inode_t		*dp;		/* incore directory inode */
+-	xfs_dir2_data_unused_t	*dup;		/* data unused entry */
++	struct xfs_buf		*lbp;		/* leaf's buffer */
++	struct xfs_dir2_leaf	*leaf;		/* leaf structure */
++	struct xfs_inode	*dp = args->dp;	/* incore directory inode */
++	struct xfs_dir2_data_hdr *hdr;		/* data block header */
++	struct xfs_dir2_data_entry *dep;	/* data block entry */
++	struct xfs_dir2_leaf_entry *lep;	/* leaf entry table pointer */
++	struct xfs_dir2_leaf_entry *ents;
++	struct xfs_dir2_data_unused *dup;	/* data unused entry */
++	struct xfs_dir2_leaf_tail *ltp;		/* leaf tail pointer */
++	struct xfs_dir2_data_free *bf;		/* bestfree table */
++	int			compact;	/* need to compact leaves */
  	int			error;		/* error return value */
  	int			grown;		/* allocated new data block */
--	int			highstale;	/* index of next stale leaf */
-+	int			highstale = 0;	/* index of next stale leaf */
+ 	int			highstale = 0;	/* index of next stale leaf */
  	int			i;		/* temporary, index */
  	int			index;		/* leaf table position */
- 	struct xfs_buf		*lbp;		/* leaf's buffer */
-@@ -583,7 +583,7 @@ xfs_dir2_leaf_addname(
- 	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry table pointer */
+-	struct xfs_buf		*lbp;		/* leaf's buffer */
+-	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
+ 	int			length;		/* length of new entry */
+-	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry table pointer */
  	int			lfloglow;	/* low leaf logging index */
  	int			lfloghigh;	/* high leaf logging index */
--	int			lowstale;	/* index of prev stale leaf */
-+	int			lowstale = 0;	/* index of prev stale leaf */
- 	xfs_dir2_leaf_tail_t	*ltp;		/* leaf tail pointer */
+ 	int			lowstale = 0;	/* index of prev stale leaf */
+-	xfs_dir2_leaf_tail_t	*ltp;		/* leaf tail pointer */
  	int			needbytes;	/* leaf block bytes needed */
  	int			needlog;	/* need to log data header */
+ 	int			needscan;	/* need to rescan data free */
+-	__be16			*tagp;		/* end of data entry */
+-	xfs_trans_t		*tp;		/* transaction pointer */
+ 	xfs_dir2_db_t		use_block;	/* data block number */
+-	struct xfs_dir2_data_free *bf;		/* bestfree table */
+-	struct xfs_dir2_leaf_entry *ents;
+-	struct xfs_dir3_icleaf_hdr leafhdr;
+ 
+ 	trace_xfs_dir2_leaf_addname(args);
+ 
+-	dp = args->dp;
+-	tp = args->trans;
+-
+ 	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk, -1, &lbp);
+ 	if (error)
+ 		return error;
