@@ -1,296 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50572 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57016 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726521AbfCLFio (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Mar 2019 01:38:44 -0400
-Date: Tue, 12 Mar 2019 13:42:34 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH] xfstests: test swapext log replay
-Message-ID: <20190312054234.GC7200@dhcp-12-102.nay.redhat.com>
-References: <20181223141721.5318-1-zlang@redhat.com>
+        id S1725894AbfCLOXJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Mar 2019 10:23:09 -0400
+Date: Tue, 12 Mar 2019 09:23:05 -0500
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: clean up xfs_dir2_leaf_addname
+Message-ID: <20190312142305.GB28037@redhat.com>
+References: <20190311161948.GC4359@magnolia>
+ <20190311162232.GD4359@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181223141721.5318-1-zlang@redhat.com>
+In-Reply-To: <20190311162232.GD4359@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>, clang-built-linux@googlegroups.com
 
-On Sun, Dec 23, 2018 at 10:17:21PM +0800, Zorro Lang wrote:
-> If an inode had been in btree format and had a data fork owner change
-> logged (XFS_ILOG_DOWNER), after changing the format to non-btree, will
-> hit an ASSERT in xfs_recover_inode_owner_change() which enforces that
-> if XFS_ILOG_[AD]OWNER is set.
+On Mon, Mar 11, 2019 at 09:22:32AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> Remove typedefs and consolidate local variable initialization.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+
 > ---
+>  fs/xfs/libxfs/xfs_dir2_leaf.c |   33 +++++++++++++++------------------
+>  1 file changed, 15 insertions(+), 18 deletions(-)
 > 
-> This case is written for Eric's patchset:
-> [PATCH 0/2] xfs: swapext replay fixes
-> 
-> Thanks for the reproducer which is provided by Eric. I've tested on latest
-> xfs-linux for-next branch with the 2 patches of Eric:
-> # git log --oneline
-> 39a9114528e4 (HEAD -> for-next) xfs: clear XFS_ILOG_[AD]OWNER for non-btree formats
-> 46fe0206d242 xfs: handle bad flags in xfs_recover_inode_owner_change
-> 86d163dbfe2a (tag: xfs-4.21-merge-1, origin/xfs-4.21-merge, origin/for-next) xfs: stringify scrub types in ftrace output
-> ...
-> ...
-> 
-> But I still can hit a fs corruption which can't be log replayed[1]. Only
-> "xfs_repair -L" can help to fix that.
-
-Ping ....
-
-Long time passed, but this failure still can be reproduced on latest upstream
-linux kernel(v5.0).
-
-A weird thing is:
-MKFS_OPTIONS="reflink=1,rmapbt=0,finobt=1,crc=1 -i sparse=1"
-MKFS_OPTIONS="reflink=0,rmapbt=0,finobt=1,crc=1 -i sparse=1"
-can reproduce this issue. But
-MKFS_OPTIONS="reflink=1,rmapbt=1,finobt=1,crc=1 -i sparse=1"
-can't.
-
-Can anyone help to take a look at it?
-
-Thanks,
-Zorro
-
-> 
-> Thanks,
-> Zorro
-> 
-> [1]
-> # ./check xfs/999
-> FSTYP         -- xfs (non-debug)
-> PLATFORM      -- Linux/x86_64 xxx-xxxx-xx 4.20.0-rc6+
-> MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=0,finobt=1,crc=1 -i sparse=1 /dev/mapper/rhel_xxx-xxxx-xx-xfscratch
-> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/rhel_xxx-xxxx-xx-xfscratch /mnt/scratch
-> 
-> xfs/999 82s ... [failed, exit status 1]- output mismatch (see /root/git/xfstests-zlang/results//xfs/999.out.bad)
->     --- tests/xfs/999.out       2018-12-23 08:27:02.524495164 -0500
->     +++ /root/git/xfstests-zlang/results//xfs/999.out.bad       2018-12-23 08:58:01.826244128 -0500
->     @@ -1,2 +1,4 @@
->      QA output created by 999
->     -Silence is golden
->     +mount: /mnt/scratch: mount(2) system call failed: Structure needs cleaning.
->     +cycle mount failed
->     +(see /root/git/xfstests-zlang/results//xfs/999.full for details)
->     ...
->     (Run 'diff -u /root/git/xfstests-zlang/tests/xfs/999.out /root/git/xfstests-zlang/results//xfs/999.out.bad'  to see the entire diff)
-> Ran: xfs/999
-> Failures: xfs/999
-> Failed 1 of 1 tests
-> 
-> # dmesg
-> [ 1961.335700] run fstests xfs/999 at 2018-12-23 08:56:53
-> [ 1962.270422] XFS (dm-5): Unmounting Filesystem
-> [ 1964.097509] XFS (dm-5): Mounting V5 Filesystem
-> [ 1964.217909] XFS (dm-5): Ending clean mount
-> [ 2026.309500] XFS (dm-5): User initiated shutdown received. Shutting down filesystem
-> [ 2026.343161] XFS (dm-5): Unmounting Filesystem
-> [ 2026.420747] XFS (dm-5): Mounting V5 Filesystem
-> [ 2028.557423] XFS (dm-5): Starting recovery (logdev: internal)
-> [ 2029.162746] XFS (dm-5): Corruption warning: Metadata has LSN (-842150451:-842150451) ahead of current LSN (1:785). Please unmount and run xfs_repair (>= v4.3) to resolve.
-> [ 2029.179889] XFS (dm-5): Metadata CRC error detected at xfs_bmbt_read_verify+0x1b/0x2d0 [xfs], xfs_bmbt block 0x5830 
-> [ 2029.191678] XFS (dm-5): Unmount and run xfs_repair
-> [ 2029.197051] XFS (dm-5): First 128 bytes of corrupted metadata buffer:
-> [ 2029.204262] 00000000: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.213220] 00000010: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.222178] 00000020: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.231151] 00000030: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.240107] 00000040: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.249171] 00000050: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.258134] 00000060: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.267083] 00000070: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.282435] XFS (dm-5): Corruption warning: Metadata has LSN (-842150451:-842150451) ahead of current LSN (1:785). Please unmount and run xfs_repair (>= v4.3) to resolve.
-> [ 2029.299516] XFS (dm-5): Metadata CRC error detected at xfs_bmbt_read_verify+0x1b/0x2d0 [xfs], xfs_bmbt block 0x5830 
-> [ 2029.311295] XFS (dm-5): Unmount and run xfs_repair
-> [ 2029.316666] XFS (dm-5): First 128 bytes of corrupted metadata buffer:
-> [ 2029.323887] 00000000: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.332844] 00000010: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.341817] 00000020: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.350776] 00000030: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.359731] 00000040: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.368690] 00000050: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.377648] 00000060: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.386607] 00000070: cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd  ................
-> [ 2029.395599] XFS (dm-5): metadata I/O error in "xfs_trans_read_buf_map" at daddr 0x5830 len 8 error 74
-> [ 2029.499375] XFS (dm-5): log mount/recovery failed: error -117
-> [ 2029.506425] XFS (dm-5): log mount failed
-> [ 2029.552080] XFS (dm-2): Unmounting Filesystem
-> 
-> # xfs_repair /dev/mapper/rhel_xxx-xxxx-xx-xfscratch
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
-> ERROR: The filesystem has valuable metadata changes in a log which needs to
-> be replayed.  Mount the filesystem to replay the log, and unmount it before
-> re-running xfs_repair.  If you are unable to mount the filesystem, then use
-> the -L option to destroy the log and attempt a repair.
-> Note that destroying the log may cause corruption -- please attempt a mount
-> of the filesystem before doing this
-> 
-> # mount /dev/mapper/rhel_xxx-xxxx-xx-xfscratch /mnt/scratch
-> mount: /mnt/scratch: mount(2) system call failed: Structure needs cleaning.
-> 
-> # xfs_repair -L /dev/mapper/rhel_xxx-xxxx-xx-xfscratch 
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
-> ALERT: The filesystem has valuable metadata changes in a log which is being
-> destroyed because the -L option was used.
->         - scan filesystem freespace and inode maps...
-> sb_ifree 61, counted 60
-> sb_fdblocks 22271328, counted 22270327
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan and clear agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
-> Metadata CRC error detected at 0x449c9d, xfs_bmbt block 0x5830/0x1000
-> btree block 0/2822 is suspect, error -74
-> bad magic # 0xcdcdcdcd in inode 131 (data fork) bmbt block 2822
-> bad data fork in inode 131
-> cleared inode 131
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
-> entry "fragfile" in shortform directory 128 references free inode 131
-> junking entry "fragfile" in directory inode 128
->         - agno = 1
->         - agno = 3
->         - agno = 2
-> Phase 5 - rebuild AG headers and trees...
->         - reset superblock...
-> Phase 6 - check inode connectivity...
->         - resetting contents of realtime bitmap and summary inodes
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify and correct link counts...
-> Metadata corruption detected at 0x449b47, xfs_bmbt block 0x5830/0x1000
-> libxfs_writebufr: write verifer failed on xfs_bmbt bno 0x5830/0x1000
-> Maximum metadata LSN (1:237) is ahead of log (1:2).
-> Format log to cycle 4.
-> releasing dirty buffer (bulk) to free list!done
-> 
-> 
-> 
->  tests/xfs/999     | 76 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/999.out |  2 ++
->  tests/xfs/group   |  1 +
->  3 files changed, 79 insertions(+)
->  create mode 100755 tests/xfs/999
->  create mode 100644 tests/xfs/999.out
-> 
-> diff --git a/tests/xfs/999 b/tests/xfs/999
-> new file mode 100755
-> index 00000000..cfe5c4d4
-> --- /dev/null
-> +++ b/tests/xfs/999
-> @@ -0,0 +1,76 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2018 Red Hat Inc. All Rights Reserved.
-> +#
-> +# FS QA Test No. 999
-> +#
-> +# If an inode had been in btree format and had a data fork owner change
-> +# logged, after changing the format to non-btree, will hit an ASSERT or
-> +# fs corruption.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_scratch
-> +
-> +_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-> +. $tmp.mkfs
-> +
-> +_scratch_mount
-> +localfile=$SCRATCH_MNT/fragfile
-> +
-> +# Try to create a file with 1024 * (3 blocks + 1 hole):
-> +# +----------+--------+-------+----------+--------+
-> +# | 3 blocks | 1 hole |  ...  | 3 blocks | 1 hole |
-> +# +----------+--------+-------+----------+--------+
-> +#
-> +# The number of extents we can get maybe more or less than 1024, this method
-> +# just to get a btree inode format.
-> +filesize=$((dbsize * 1024 * 4))
-> +for i in `seq $filesize -$dbsize 0`; do
-> +	if [ $((i % (3 * dbsize))) -eq 0 ]; then
-> +		continue
-> +	fi
-> +	$XFS_IO_PROG -f -d -c "pwrite $i $dbsize" $localfile >> $seqres.full
-> +done
-> +
-> +# Make a data fork owner change log
-> +$XFS_FSR_PROG -v -d $localfile >> $seqres.full 2>&1
-> +
-> +# Truncate the file to 0, and change the inode format to extent, then shutdown
-> +# the fs to keep the XFS_ILOG_DOWNER flag
-> +$XFS_IO_PROG -t -x -c "pwrite 0 $dbsize" \
-> +	     -c "fsync" \
-> +	     -c "shutdown" $localfile >> $seqres.full
-> +
-> +# Cycle mount, to replay the log
-> +_scratch_cycle_mount
-> +
-> +echo "Silence is golden"
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-> new file mode 100644
-> index 00000000..3b276ca8
-> --- /dev/null
-> +++ b/tests/xfs/999.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 999
-> +Silence is golden
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index dfaae2bc..9171144e 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -496,3 +496,4 @@
->  496 dangerous_fuzzers dangerous_scrub dangerous_repair
->  497 dangerous_fuzzers dangerous_scrub dangerous_online_repair
->  498 dangerous_fuzzers dangerous_norepair
-> +999 auto quick
-> -- 
-> 2.17.2
-> 
+> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> index 2abf945e5844..9c2a0a13ed61 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> @@ -563,43 +563,40 @@ xfs_dir3_leaf_find_entry(
+>   */
+>  int						/* error */
+>  xfs_dir2_leaf_addname(
+> -	xfs_da_args_t		*args)		/* operation arguments */
+> +	struct xfs_da_args	*args)		/* operation arguments */
+>  {
+> +	struct xfs_dir3_icleaf_hdr leafhdr;
+> +	struct xfs_trans	*tp = args->trans;
+>  	__be16			*bestsp;	/* freespace table in leaf */
+> -	int			compact;	/* need to compact leaves */
+> -	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+> +	__be16			*tagp;		/* end of data entry */
+>  	struct xfs_buf		*dbp;		/* data block buffer */
+> -	xfs_dir2_data_entry_t	*dep;		/* data block entry */
+> -	xfs_inode_t		*dp;		/* incore directory inode */
+> -	xfs_dir2_data_unused_t	*dup;		/* data unused entry */
+> +	struct xfs_buf		*lbp;		/* leaf's buffer */
+> +	struct xfs_dir2_leaf	*leaf;		/* leaf structure */
+> +	struct xfs_inode	*dp = args->dp;	/* incore directory inode */
+> +	struct xfs_dir2_data_hdr *hdr;		/* data block header */
+> +	struct xfs_dir2_data_entry *dep;	/* data block entry */
+> +	struct xfs_dir2_leaf_entry *lep;	/* leaf entry table pointer */
+> +	struct xfs_dir2_leaf_entry *ents;
+> +	struct xfs_dir2_data_unused *dup;	/* data unused entry */
+> +	struct xfs_dir2_leaf_tail *ltp;		/* leaf tail pointer */
+> +	struct xfs_dir2_data_free *bf;		/* bestfree table */
+> +	int			compact;	/* need to compact leaves */
+>  	int			error;		/* error return value */
+>  	int			grown;		/* allocated new data block */
+>  	int			highstale = 0;	/* index of next stale leaf */
+>  	int			i;		/* temporary, index */
+>  	int			index;		/* leaf table position */
+> -	struct xfs_buf		*lbp;		/* leaf's buffer */
+> -	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
+>  	int			length;		/* length of new entry */
+> -	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry table pointer */
+>  	int			lfloglow;	/* low leaf logging index */
+>  	int			lfloghigh;	/* high leaf logging index */
+>  	int			lowstale = 0;	/* index of prev stale leaf */
+> -	xfs_dir2_leaf_tail_t	*ltp;		/* leaf tail pointer */
+>  	int			needbytes;	/* leaf block bytes needed */
+>  	int			needlog;	/* need to log data header */
+>  	int			needscan;	/* need to rescan data free */
+> -	__be16			*tagp;		/* end of data entry */
+> -	xfs_trans_t		*tp;		/* transaction pointer */
+>  	xfs_dir2_db_t		use_block;	/* data block number */
+> -	struct xfs_dir2_data_free *bf;		/* bestfree table */
+> -	struct xfs_dir2_leaf_entry *ents;
+> -	struct xfs_dir3_icleaf_hdr leafhdr;
+>  
+>  	trace_xfs_dir2_leaf_addname(args);
+>  
+> -	dp = args->dp;
+> -	tp = args->trans;
+> -
+>  	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk, -1, &lbp);
+>  	if (error)
+>  		return error;
