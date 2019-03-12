@@ -1,86 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37872 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726054AbfCDVTi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Mar 2019 16:19:38 -0500
-Subject: [PATCH 3/5] shared/298: unmount filesystem before examining
- underlying storage
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 04 Mar 2019 13:19:29 -0800
-Message-ID: <155173436903.767.2030031690929754940.stgit@magnolia>
-In-Reply-To: <155173434205.767.15128498725168844621.stgit@magnolia>
-References: <155173434205.767.15128498725168844621.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:34522 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726657AbfCLOWG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Mar 2019 10:22:06 -0400
+Date: Tue, 12 Mar 2019 09:22:02 -0500
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: zero initialize highstale and lowstale in
+ xfs_dir2_leaf_addname
+Message-ID: <20190312142202.GA28037@redhat.com>
+References: <20190311161948.GC4359@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190311161948.GC4359@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, enwlinux@gmail.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Nathan Chancellor <natechancellor@gmail.com>, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>, clang-built-linux@googlegroups.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Mar 11, 2019 at 09:19:48AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Smatch complains about the following:
+> 
+> fs/xfs/libxfs/xfs_dir2_leaf.c:848 xfs_dir2_leaf_addname() error:
+> uninitialized symbol 'lowstale'.
+> 
+> fs/xfs/libxfs/xfs_dir2_leaf.c:849 xfs_dir2_leaf_addname() error:
+> uninitialized symbol 'highstale'.
+> 
+> I don't think there's any incorrect behavior associated with the
+> uninitialized variable, but as the author of the previous zero-init
+> patch points out, it's best not to be passing around pointers to
+> uninitialized stack areas.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-This test does some weird things with live filesystems -- it seems to be
-validating the behavior of fstrim by comparing the filesystem's free
-space map to holes in the file image that backs the filesystem.
-However, this doesn't account for the fact that some filesystems
-maintain in-core preallocations and/or can perturb the free space data
-during unmount.  This causes sporadic test failures when the two become
-out of sync.
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-Therefore, make sure we unmount the filesystem before we start running
-tools against the filesystem image file to eliminate the possibility of
-changes to the free space map.  This was found by running shared/298 on
-xfs with a 1k block size.
-
-cc: enwlinux@gmail.com
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/shared/298 |   18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
-
-
-diff --git a/tests/shared/298 b/tests/shared/298
-index aafdc25f..5d6c6ccf 100755
---- a/tests/shared/298
-+++ b/tests/shared/298
-@@ -46,13 +46,21 @@ _cleanup()
- 
- get_holes()
- {
-+	# It's not a good idea to be running tools against the image file
-+	# backing a live filesystem because the filesystem could be maintaining
-+	# in-core state that will perturb the free space map on umount.  Stick
-+	# to established convention which requires the filesystem to be
-+	# unmounted while we probe the underlying file.
-+	$UMOUNT_PROG $loop_mnt
- 	$XFS_IO_PROG -F -c fiemap $1 | grep hole | $SED_PROG 's/.*\[\(.*\)\.\.\(.*\)\].*/\1 \2/'
-+	_mount $loop_dev $loop_mnt
- }
- 
- get_free_sectors()
- {
- 	case $FSTYP in
- 	ext4)
-+	$UMOUNT_PROG $loop_mnt
- 	$DUMPE2FS_PROG $img_file  2>&1 | grep " Free blocks" | cut -d ":" -f2- | \
- 		tr ',' '\n' | $SED_PROG 's/^ //' | \
- 		$AWK_PROG -v spb=$sectors_per_block 'BEGIN{FS="-"};
-@@ -195,6 +203,16 @@ while read line; do
- 		END { if(found) exit 0; else exit 1}' $merged_sectors
- 	then
- 		echo "Sectors $from-$to are not marked as free!"
-+
-+		# Dump the state to make it easier to debug this...
-+		echo free_sectors >> $seqres.full
-+		sort -g < $free_sectors >> $seqres.full
-+		echo fiemap_ref >> $seqres.full
-+		sort -g < $fiemap_ref >> $seqres.full
-+		echo merged_sectors >> $seqres.full
-+		sort -g < $merged_sectors >> $seqres.full
-+		echo fiemap_after >> $seqres.full
-+		sort -g < $fiemap_after >> $seqres.full
- 		exit
- 	fi
- done < $fiemap_after
+> ---
+>  fs/xfs/libxfs/xfs_dir2_leaf.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> index 9a3767818c50..2abf945e5844 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> @@ -574,7 +574,7 @@ xfs_dir2_leaf_addname(
+>  	xfs_dir2_data_unused_t	*dup;		/* data unused entry */
+>  	int			error;		/* error return value */
+>  	int			grown;		/* allocated new data block */
+> -	int			highstale;	/* index of next stale leaf */
+> +	int			highstale = 0;	/* index of next stale leaf */
+>  	int			i;		/* temporary, index */
+>  	int			index;		/* leaf table position */
+>  	struct xfs_buf		*lbp;		/* leaf's buffer */
+> @@ -583,7 +583,7 @@ xfs_dir2_leaf_addname(
+>  	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry table pointer */
+>  	int			lfloglow;	/* low leaf logging index */
+>  	int			lfloghigh;	/* high leaf logging index */
+> -	int			lowstale;	/* index of prev stale leaf */
+> +	int			lowstale = 0;	/* index of prev stale leaf */
+>  	xfs_dir2_leaf_tail_t	*ltp;		/* leaf tail pointer */
+>  	int			needbytes;	/* leaf block bytes needed */
+>  	int			needlog;	/* need to log data header */
