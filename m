@@ -1,166 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:40388 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:40602 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725958AbfCTApw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Mar 2019 20:45:52 -0400
-Subject: [PATCH 10/12] xfs: test xfs_copy and xfs_mdrestore on the populate
- images
+        with ESMTP id S1726339AbfCLSSm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Mar 2019 14:18:42 -0400
+Date: Tue, 12 Mar 2019 11:18:25 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 19 Mar 2019 17:45:49 -0700
-Message-ID: <155304274924.31707.623436868976936668.stgit@magnolia>
-In-Reply-To: <155304267647.31707.14180452399822113095.stgit@magnolia>
-References: <155304267647.31707.14180452399822113095.stgit@magnolia>
+Subject: xlog_grant_head_wait deadlocks on high-rolling transactions?
+Message-ID: <20190312181825.GH4359@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-Make sure that copy, metadump, and mdrestore work on a filesystem with
-all known metadata types.
+Does anyone /else/ occasionally see fstests hang with a hojillion
+threads stuck in xlog_grant_head_wait?  I periodically see xfs/347 hang
+with a hojillion threads stuck in:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/740     |   97 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/740.out |   12 +++++++
- tests/xfs/group   |    1 +
- 3 files changed, 110 insertions(+)
- create mode 100755 tests/xfs/740
- create mode 100644 tests/xfs/740.out
+kworker/0:214   D13120 26117      2 0x80000000
+Workqueue: xfs-conv/sdf xfs_end_io [xfs]
+Call Trace:
+ schedule+0x36/0x90
+ xlog_grant_head_wait+0x66/0x450 [xfs]
+ xlog_grant_head_check+0xf0/0x170 [xfs]
+ xfs_log_reserve+0x166/0x500 [xfs]
+ xfs_trans_reserve+0x1ac/0x2b0 [xfs]
+ xfs_trans_alloc+0xda/0x220 [xfs]
+ xfs_reflink_end_cow_extent+0xda/0x3a0 [xfs]
+ xfs_reflink_end_cow+0x92/0x2a0 [xfs]
+ xfs_end_io+0xd0/0x120 [xfs]
+ process_one_work+0x252/0x600
+ worker_thread+0x3d/0x390
+ kthread+0x11f/0x140
+ ret_from_fork+0x24/0x30
 
+Which is the end io worker stalled under xfs_trans_alloc trying to
+reserve log space to remap extents from the COW fork to the data fork.
+I also observe one thread stuck here:
 
-diff --git a/tests/xfs/740 b/tests/xfs/740
-new file mode 100755
-index 00000000..0ff548cb
---- /dev/null
-+++ b/tests/xfs/740
-@@ -0,0 +1,97 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0+
-+# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 740
-+#
-+# Populate a XFS filesystem and ensure that metadump, mdrestore, and copy
-+# all work properly.
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -rf $tmp.* $testdir
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/populate
-+
-+testdir=$TEST_DIR/test-$seq
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+
-+_require_scratch_nocheck
-+_require_populate_commands
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+mkdir -p $testdir
-+metadump_file=$testdir/scratch.md
-+metadump_file_a=${metadump_file}.a
-+metadump_file_g=${metadump_file}.g
-+metadump_file_ag=${metadump_file}.ag
-+copy_file=$testdir/copy.img
-+
-+echo metadump
-+_scratch_metadump $metadump_file
-+
-+echo metadump a
-+_scratch_metadump $metadump_file_a
-+
-+echo metadump g
-+_scratch_metadump $metadump_file_g
-+
-+echo metadump ag
-+_scratch_metadump $metadump_file_ag
-+
-+echo copy
-+$XFS_COPY_PROG $SCRATCH_DEV $copy_file >> $seqres.full
-+_check_scratch_fs $copy_file
-+
-+echo recopy
-+$XFS_COPY_PROG $copy_file $SCRATCH_DEV >> $seqres.full
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+echo mdrestore
-+xfs_mdrestore $metadump_file $SCRATCH_DEV
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+echo mdrestore a
-+xfs_mdrestore $metadump_file_a $SCRATCH_DEV
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+echo mdrestore g
-+xfs_mdrestore $metadump_file_g $SCRATCH_DEV
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+echo mdrestore ag
-+xfs_mdrestore $metadump_file_ag $SCRATCH_DEV
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/740.out b/tests/xfs/740.out
-new file mode 100644
-index 00000000..0c979dc4
---- /dev/null
-+++ b/tests/xfs/740.out
-@@ -0,0 +1,12 @@
-+QA output created by 740
-+Format and populate
-+metadump
-+metadump a
-+metadump g
-+metadump ag
-+copy
-+recopy
-+mdrestore
-+mdrestore a
-+mdrestore g
-+mdrestore ag
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 9d9458b8..b8bd1012 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -500,3 +500,4 @@
- 500 auto quick mkfs prealloc mkfs
- 501 auto quick unlink
- 502 auto quick unlink
-+740 auto copy metadump
+kworker/0:215   D13120 26118      2 0x80000000
+Workqueue: xfs-conv/sdf xfs_end_io [xfs]
+Call Trace:
+ schedule+0x36/0x90
+ xlog_grant_head_wait+0x66/0x450 [xfs]
+ xlog_grant_head_check+0xf0/0x170 [xfs]
+ xfs_log_regrant+0x155/0x3b0 [xfs]
+ xfs_trans_reserve+0xa5/0x2b0 [xfs]
+ xfs_trans_roll+0x9c/0x190 [xfs]
+ xfs_defer_trans_roll+0x16e/0x5b0 [xfs]
+ xfs_defer_finish_noroll+0xf1/0x7e0 [xfs]
+ __xfs_trans_commit+0x1c3/0x630 [xfs]
+ xfs_reflink_end_cow_extent+0x285/0x3a0 [xfs]
+ xfs_reflink_end_cow+0x92/0x2a0 [xfs]
+ xfs_end_io+0xd0/0x120 [xfs]
+ process_one_work+0x252/0x600
+ worker_thread+0x3d/0x390
+ kthread+0x11f/0x140
+ ret_from_fork+0x24/0x30
+
+This thread is stalled under xfs_trans_roll trying to reserve more log
+space because it rolled more times than tr_write.tr_logcount
+anticipated.  logcount = 8, but (having added a patch to trace log
+tickets that roll more than logcount guessed) we actually roll these
+end_cow transactions 10 times.
+
+I think the problem was introduced when we added the deferred AGFL log
+item, because the bunmapi of the old data fork extent and the map_extent
+of the new extent can both add separate deferred AGFL log items to the
+defer chain.  It's also possible that I underestimated
+XFS_WRITE_LOG_COUNT_REFLINK way back when.
+
+Either way, the xfs_trans_roll transaction wants (logres) more space,
+and the xfs_trans_alloc transactions want (logres * logcount) space.
+Unfortunately, the alloc transactions got to the grant waiter list
+first, and there's not enough space for them, so the entire list waits.
+There seems to be enough space to grant the rolling transaction its
+smaller amount of space, so at least in theory that transaction could
+finish (and release a lot of space) if it could be bumped to the head of
+the waiter list.
+
+Another way to solve this problem of course is to increase tr_logcount
+from 8 to 10, though this could cause some user heartburn for small
+filesystems because the minimum log size would increase.  However, I'm
+not sure about the relative merits of either approach, so I'm kicking
+this to the list for further input (while I go have lunch :P)
+
+The second problem I noticed is that the reflink cancel cow and reflink
+remap functions follow the pattern of allocating one transaction and
+rolling it for every extent it encounters.  This results in /very/ high
+roll counts for the transaction, which (on a very busy system with a
+smallish log) seems like it could land us right back in this deadlock.
+I think the answer is to split those up to run one transaction per
+extent (like I did for reflink end_cow), though I'd have to ensure that
+we can drop the ILOCK safely to get a new transaction.
+
+Thoughts?
+
+--D
