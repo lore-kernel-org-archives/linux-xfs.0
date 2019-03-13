@@ -1,108 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43222 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:57722 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726845AbfCOCq2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Mar 2019 22:46:28 -0400
-Subject: Re: [PATCH 10/36] xfs_scrub_all: walk the lsblk device/fs hierarchy
- correctly
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <155259749135.31886.17642733861513368966.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <08cb3064-6fd1-db42-444d-17d2a018825a@sandeen.net>
-Date: Thu, 14 Mar 2019 21:46:26 -0500
+        id S1726074AbfCMRnd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Mar 2019 13:43:33 -0400
+Date: Wed, 13 Mar 2019 13:43:30 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xlog_grant_head_wait deadlocks on high-rolling transactions?
+Message-ID: <20190313174330.GB58708@bfoster>
+References: <20190312181825.GH4359@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <155259749135.31886.17642733861513368966.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190312181825.GH4359@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
 
-On 3/14/19 4:04 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Mar 12, 2019 at 11:18:25AM -0700, Darrick J. Wong wrote:
+> Hi all,
 > 
-> Back when I was designing xfs_scrub_all, I naïvely assumed that the
-> emitted output would always list physical storage before the virtual
-> devices stacked atop it.  However, this is not actually true when one
-> omits the "NAME" column,
-
-I think I asked this on IRC but for the record, is this incidental
-or guaranteed by lsblk?  I don't see this distinction in the manpage.
-
-I worry about depending on undocumented behavior...
-
-Looking back through IRC, I think we shrugged over this, I asked kzak
-but didn't get a reply, will try to find him again.
-
-(also FWIW, older lsblk rejects -J, do we care?)
-
--Eric
-
-> which is crucial to forcing the output (json or
-> otherwise) to capture the block device hierarchy.  If the assumption is
-> violated, the program crashes with a python exception.
+> Does anyone /else/ occasionally see fstests hang with a hojillion
+> threads stuck in xlog_grant_head_wait?  I periodically see xfs/347 hang
+> with a hojillion threads stuck in:
 > 
-> To fix this, force the hierarchal json output and restructure the
-> discovery routines to walk the json object that we receive, from the top
-> (physical devices) downwards to wherever there are live xfs filesystems.
+> kworker/0:214   D13120 26117      2 0x80000000
+> Workqueue: xfs-conv/sdf xfs_end_io [xfs]
+> Call Trace:
+>  schedule+0x36/0x90
+>  xlog_grant_head_wait+0x66/0x450 [xfs]
+>  xlog_grant_head_check+0xf0/0x170 [xfs]
+>  xfs_log_reserve+0x166/0x500 [xfs]
+>  xfs_trans_reserve+0x1ac/0x2b0 [xfs]
+>  xfs_trans_alloc+0xda/0x220 [xfs]
+>  xfs_reflink_end_cow_extent+0xda/0x3a0 [xfs]
+>  xfs_reflink_end_cow+0x92/0x2a0 [xfs]
+>  xfs_end_io+0xd0/0x120 [xfs]
+>  process_one_work+0x252/0x600
+>  worker_thread+0x3d/0x390
+>  kthread+0x11f/0x140
+>  ret_from_fork+0x24/0x30
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  scrub/xfs_scrub_all.in |   28 +++++++++++++++++-----------
->  1 file changed, 17 insertions(+), 11 deletions(-)
+> Which is the end io worker stalled under xfs_trans_alloc trying to
+> reserve log space to remap extents from the COW fork to the data fork.
+> I also observe one thread stuck here:
 > 
+> kworker/0:215   D13120 26118      2 0x80000000
+> Workqueue: xfs-conv/sdf xfs_end_io [xfs]
+> Call Trace:
+>  schedule+0x36/0x90
+>  xlog_grant_head_wait+0x66/0x450 [xfs]
+>  xlog_grant_head_check+0xf0/0x170 [xfs]
+>  xfs_log_regrant+0x155/0x3b0 [xfs]
+>  xfs_trans_reserve+0xa5/0x2b0 [xfs]
+>  xfs_trans_roll+0x9c/0x190 [xfs]
+>  xfs_defer_trans_roll+0x16e/0x5b0 [xfs]
+>  xfs_defer_finish_noroll+0xf1/0x7e0 [xfs]
+>  __xfs_trans_commit+0x1c3/0x630 [xfs]
+>  xfs_reflink_end_cow_extent+0x285/0x3a0 [xfs]
+>  xfs_reflink_end_cow+0x92/0x2a0 [xfs]
+>  xfs_end_io+0xd0/0x120 [xfs]
+>  process_one_work+0x252/0x600
+>  worker_thread+0x3d/0x390
+>  kthread+0x11f/0x140
+>  ret_from_fork+0x24/0x30
 > 
-> diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-> index c4e9899d..5b76b49a 100644
-> --- a/scrub/xfs_scrub_all.in
-> +++ b/scrub/xfs_scrub_all.in
-> @@ -28,9 +28,21 @@ def DEVNULL():
->  
->  def find_mounts():
->  	'''Map mountpoints to physical disks.'''
-> +	def find_xfs_mounts(bdev, fs, lastdisk):
-> +		'''Attach lastdisk to each fs found under bdev.'''
-> +		if bdev['fstype'] == 'xfs' and bdev['mountpoint'] is not None:
-> +			mnt = bdev['mountpoint']
-> +			if mnt in fs:
-> +				fs[mnt].add(lastdisk)
-> +			else:
-> +				fs[mnt] = set([lastdisk])
-> +		if 'children' not in bdev:
-> +			return
-> +		for child in bdev['children']:
-> +			find_xfs_mounts(child, fs, lastdisk)
->  
->  	fs = {}
-> -	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
-> +	cmd=['lsblk', '-o', 'NAME,KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
->  	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
->  	result.wait()
->  	if result.returncode != 0:
-> @@ -38,18 +50,12 @@ def find_mounts():
->  	sarray = [x.decode(sys.stdout.encoding) for x in result.stdout.readlines()]
->  	output = ' '.join(sarray)
->  	bdevdata = json.loads(output)
-> +
->  	# The lsblk output had better be in disks-then-partitions order
->  	for bdev in bdevdata['blockdevices']:
-> -		if bdev['type'] in ('disk', 'loop'):
-> -			lastdisk = bdev['kname']
-> -		if bdev['fstype'] == 'xfs':
-> -			mnt = bdev['mountpoint']
-> -			if mnt is None:
-> -				continue
-> -			if mnt in fs:
-> -				fs[mnt].add(lastdisk)
-> -			else:
-> -				fs[mnt] = set([lastdisk])
-> +		lastdisk = bdev['kname']
-> +		find_xfs_mounts(bdev, fs, lastdisk)
-> +
->  	return fs
->  
->  def kill_systemd(unit, proc):
+> This thread is stalled under xfs_trans_roll trying to reserve more log
+> space because it rolled more times than tr_write.tr_logcount
+> anticipated.  logcount = 8, but (having added a patch to trace log
+> tickets that roll more than logcount guessed) we actually roll these
+> end_cow transactions 10 times.
 > 
+
+I've not seen this behavior myself, FWIW.
+
+> I think the problem was introduced when we added the deferred AGFL log
+> item, because the bunmapi of the old data fork extent and the map_extent
+> of the new extent can both add separate deferred AGFL log items to the
+> defer chain.  It's also possible that I underestimated
+> XFS_WRITE_LOG_COUNT_REFLINK way back when.
+> 
+
+Sounds plausible, but IIRC a rolling transaction isn't necessarily
+required to make the entire reservation up front. The initial
+reservation (regrant) size is essentially a tradeoff between minimizing
+the need to wait on additional log regrants in the common case vs.
+having a reasonably sized initial reservation.
+
+Am I following correctly that you are reproducing a hard lockup and not
+necessarily stalls or otherwise similar performance problems? If so, is
+the problem you're seeing that a long-running rolling transaction is
+essentially blocked on acquiring new reservation by new transaction
+reservations that have come in since the rolling transaction started,
+and then those new transactions are somehow or another blocked on the
+rolling transaction(s) that cannot complete?
+
+> Either way, the xfs_trans_roll transaction wants (logres) more space,
+> and the xfs_trans_alloc transactions want (logres * logcount) space.
+> Unfortunately, the alloc transactions got to the grant waiter list
+> first, and there's not enough space for them, so the entire list waits.
+> There seems to be enough space to grant the rolling transaction its
+> smaller amount of space, so at least in theory that transaction could
+> finish (and release a lot of space) if it could be bumped to the head of
+> the waiter list.
+> 
+
+I have to read through and page in the reservation code to make more
+sense of this whole issue, but I think it's an interesting idea to
+consider if it's possible to give an in-progress rolling transaction
+(that has run out of reservation) priority over new transaction
+allocations in the queue. That said, I'm still fuzzy on the underlying
+problem and so it's not clear if that's an ideal solution.
+
+> Another way to solve this problem of course is to increase tr_logcount
+> from 8 to 10, though this could cause some user heartburn for small
+> filesystems because the minimum log size would increase.  However, I'm
+> not sure about the relative merits of either approach, so I'm kicking
+> this to the list for further input (while I go have lunch :P)
+> 
+
+We may want to do that regardless if that's the ideal reservation, but
+if there's a deadlock involved I wouldn't necessarily consider that a
+fix for the underlying problem. We'd just be avoiding the case where a
+rolling transaction needs to acquire more reservation in these reflink
+contexts. We'd still be fundamentally susceptible to deadlocks if there
+are less common conditions where blocking regrants can occur, right?
+
+Brian
+
+> The second problem I noticed is that the reflink cancel cow and reflink
+> remap functions follow the pattern of allocating one transaction and
+> rolling it for every extent it encounters.  This results in /very/ high
+> roll counts for the transaction, which (on a very busy system with a
+> smallish log) seems like it could land us right back in this deadlock.
+> I think the answer is to split those up to run one transaction per
+> extent (like I did for reflink end_cow), though I'd have to ensure that
+> we can drop the ILOCK safely to get a new transaction.
+> 
+> Thoughts?
+> 
+> --D
