@@ -1,82 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:41959 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726687AbfCJVyB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Mar 2019 17:54:01 -0400
-Date: Mon, 11 Mar 2019 08:53:55 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Use kmem_zalloc for bp->b_pages.
-Message-ID: <20190310215355.GC23020@dastard>
-References: <20190309153636.14154-1-fxinrong@gmail.com>
- <20190309173230.GA4359@magnolia>
- <20190310050608.dtidrfuqepze6uoh@linux-xjtn>
+Received: from userp2130.oracle.com ([156.151.31.86]:52194 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727625AbfCNVF4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:05:56 -0400
+Subject: [PATCH 20/36] xfs_db: fix finobt record decoding when sparse inodes
+ enabled
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 14 Mar 2019 14:05:53 -0700
+Message-ID: <155259755345.31886.7689089384611545119.stgit@magnolia>
+In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190310050608.dtidrfuqepze6uoh@linux-xjtn>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sean Fu <fxinrong@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Sun, Mar 10, 2019 at 01:07:32PM +0800, Sean Fu wrote:
-> On Sat, Mar 09, 2019 at 09:32:30AM -0800, Darrick J. Wong wrote:
-> > On Sat, Mar 09, 2019 at 11:36:36PM +0800, Sean Fu wrote:
-> > > Change the allocation of bp->b_pages to use kmem_zalloc instead of
-> > > kmem_alloc.
-> > > Remove unnecessary memset for bp->b_pages.
-> > >
-> > > This reduces text size by 42 bytes.
-> > > Before:
-> > >    text	   data	    bss	    dec	    hex	filename
-> > >   23335	    588	      8	  23931	   5d7b	./fs/xfs/xfs_buf.o
-> > > After:
-> > >    text	   data	    bss	    dec	    hex	filename
-> > >   23293	    588	      8	  23889	   5d51	./fs/xfs/xfs_buf.o
-> > >
-> > > Signed-off-by: Sean Fu <fxinrong@gmail.com>
-> > > ---
-> > >  fs/xfs/xfs_buf.c | 3 +--
-> > >  1 file changed, 1 insertion(+), 2 deletions(-)
-> > >
-> > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > index 4f5f2ff3f70f..be4f740b97c1 100644
-> > > --- a/fs/xfs/xfs_buf.c
-> > > +++ b/fs/xfs/xfs_buf.c
-> > > @@ -289,12 +289,11 @@ _xfs_buf_get_pages(
-> > >  		if (page_count <= XB_PAGES) {
-> > >  			bp->b_pages = bp->b_page_array;
-> > >  		} else {
-> > > -			bp->b_pages = kmem_alloc(sizeof(struct page *) *
-> > > +			bp->b_pages = kmem_zalloc(sizeof(struct page *) *
-> > >  						 page_count, KM_NOFS);
-> > >  			if (bp->b_pages == NULL)
-> > >  				return -ENOMEM;
-> > >  		}
-> > > -		memset(bp->b_pages, 0, sizeof(struct page *) * page_count);
-> >
-> > Does this leave b_pages uninitialized in the page_count <= XB_PAGES
-> > case?
-> bp is allocated by kmem_zone_zalloc, But i will take a deep look at xfs_buf_associate_memory.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-We can (and do) reuse buffers with different memory buffers via
-xfs_buf_associate_memory() (e.g. see the split log buffer code in
-xlog_sync()].
+Use the sparse inobt record field decoder (inobt_spcrc_hfld) to decode
+finobt records when sparse inodes are enabled.  Otherwise, xfs_db
+prints out bogus things like:
 
-I'd prefer that we leave the explicit memset here for this re-use
-case - leaving the page pointer array with stale page pointers (even
-though beyond b_page_count) means any page array overrun turns into
-a memory corruption (via access of a stale page) rather than a NULL
-pointer dereference and immediate fail.
+recs[1] = [startino,freecount,free]
+1:[214720,16429,0xfffffffffff80000]
 
-IMO, a small decrease in binary size is not worth changing the
-failure behaviour from a definite, immediate fail to a random memory
-corruption failure some time in the future...
+There can never be 16429 records in an inode btree record; instead it
+should print:
 
-Cheers,
+recs[1] = [startino,holemask,count,freecount,free]
+1:[214720,0,64,45,0xfffffffffff80000]
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/type.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+diff --git a/db/type.c b/db/type.c
+index f5f65042..d42935a2 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -107,7 +107,7 @@ static const typ_t	__typtab_crc[] = {
+ 	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
+ 		&xfs_symlink_buf_ops, XFS_SYMLINK_CRC_OFF },
+ 	{ TYP_TEXT, "text", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
+-	{ TYP_FINOBT, "finobt", handle_struct, inobt_crc_hfld,
++	{ TYP_FINOBT, "finobt", handle_struct, inobt_spcrc_hfld,
+ 		&xfs_inobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
+ 	{ TYP_NONE, NULL }
+ };
