@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49784 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727412AbfCNVD4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:03:56 -0400
-Subject: [PATCH 01/36] libxfs: fix repair deadlock due to failed inode
- flushes.
+Received: from aserp2130.oracle.com ([141.146.126.79]:49658 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727749AbfCNVEG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:04:06 -0400
+Subject: [PATCH 03/36] configure.ac: fix alignment of features
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:03:49 -0700
-Message-ID: <155259742930.31886.16675099707553706623.stgit@magnolia>
+Date: Thu, 14 Mar 2019 14:04:01 -0700
+Message-ID: <155259744173.31886.6475707140088498779.stgit@magnolia>
 In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
 MIME-Version: 1.0
@@ -17,70 +16,116 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Arkadiusz Miskiewicz <arekm@maven.pl>, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If inode_item_done() fails to flush an inode after we've grabbed a
-reference to the underlying buffer during a transaction commit, we
-fail to put the buffer and hence leak it. We then deadlock on the
-next lookup ofthe inode buffer as it is still locked and no-one owns
-it.
+Fix the alignment of the feature options in the --help screen.
 
-To fix it, put the buffer on error so that it gets unlocked and
-can be recovered appropriately in a later phase of repair.
-
-Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
-Fixes: d15188a1ec14 ("xfs: rework the inline directory verifiers")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/trans.c |   17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+ configure.ac |   28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
 
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index 46ff8b4a..10a35dd4 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -824,8 +824,10 @@ _("Transaction block reservation exceeded! %u > %u\n"),
+diff --git a/configure.ac b/configure.ac
+index ccc6e292..5a4e55ad 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -28,82 +28,82 @@ if test "${BUILD_CFLAGS+set}" != "set"; then
+ fi
  
- /*
-  * Transaction commital code follows (i.e. write to disk in libxfs)
-+ *
-+ * XXX (dgc): should failure to flush the inode (e.g. due to uncorrected
-+ * corruption) result in transaction commit failure w/ EFSCORRUPTED?
-  */
--
- static void
- inode_item_done(
- 	xfs_inode_log_item_t	*iip)
-@@ -856,17 +858,24 @@ inode_item_done(
- 		return;
- 	}
+ AC_ARG_ENABLE(shared,
+-[ --enable-shared=[yes/no] Enable use of shared libraries [default=yes]],,
++[  --enable-shared=[yes/no]  Enable use of shared libraries [default=yes]],,
+ 	enable_shared=yes)
+ AC_SUBST(enable_shared)
  
-+	/*
-+	 * Flush the inode and disassociate it from the transaction regardless
-+	 * of whether the flush succeed or not. If we fail the flush, make sure
-+	 * we still release the buffer reference we currently hold.
-+	 */
- 	bp->b_log_item = iip;
- 	error = libxfs_iflush_int(ip, bp);
-+	ip->i_transp = NULL;	/* disassociate from transaction */
-+	bp->b_log_item = NULL;	/* remove log item */
-+	bp->b_transp = NULL;	/* remove xact ptr */
-+
- 	if (error) {
- 		fprintf(stderr, _("%s: warning - iflush_int failed (%d)\n"),
- 			progname, error);
-+		libxfs_putbuf(bp);
- 		return;
- 	}
+ AC_ARG_ENABLE(gettext,
+-[ --enable-gettext=[yes/no] Enable alternate language support [default=yes]],,
++[  --enable-gettext=[yes/no] Enable alternate language support [default=yes]],,
+ 	enable_gettext=yes)
+ AC_SUBST(enable_gettext)
  
--	ip->i_transp = NULL;	/* disassociate from transaction */
--	bp->b_log_item = NULL;	/* remove log item */
--	bp->b_transp = NULL;	/* remove xact ptr */
- 	libxfs_writebuf(bp, 0);
- #ifdef XACT_DEBUG
- 	fprintf(stderr, "flushing dirty inode %llu, buffer %p\n",
+ AC_ARG_ENABLE(blkid,
+-[ --enable-blkid=[yes/no] Enable use of block device id library [default=yes]],,
++[  --enable-blkid=[yes/no]   Enable use of block device id library [default=yes]],,
+ 	enable_blkid=yes)
+ AC_SUBST(enable_blkid)
+ 
+ AC_ARG_ENABLE(readline,
+-[ --enable-readline=[yes/no] Enable readline command editing [default=no]],
++[  --enable-readline=[yes/no] Enable readline command editing [default=no]],
+ 	test $enable_readline = yes && libreadline="-lreadline",
+ 	enable_readline=no)
+ AC_SUBST(libreadline)
+ AC_SUBST(enable_readline)
+ 
+ AC_ARG_ENABLE(editline,
+-[ --enable-editline=[yes/no] Enable editline command editing [default=no]],
++[  --enable-editline=[yes/no] Enable editline command editing [default=no]],
+ 	test $enable_editline = yes && libeditline="-ledit",
+ 	enable_editline=no)
+ AC_SUBST(libeditline)
+ AC_SUBST(enable_editline)
+ 
+ AC_ARG_ENABLE(termcap,
+-[ --enable-termcap=[yes/no] Enable terminal capabilities library [default=no]],
++[  --enable-termcap=[yes/no] Enable terminal capabilities library [default=no]],
+ 	test $enable_termcap = yes && libtermcap="-ltermcap",)
+ AC_SUBST(libtermcap)
+ 
+ 
+ AC_ARG_ENABLE(lib64,
+-[ --enable-lib64=[yes/no] Enable lib64 support [default=yes]],,
++[  --enable-lib64=[yes/no]   Enable lib64 support [default=yes]],,
+ 	enable_lib64=yes)
+ AC_SUBST(enable_lib64)
+ 
+ AC_ARG_ENABLE(librt,
+-[ --enable-librt=[yes/no] Enable librt support [default=yes]],,
++[  --enable-librt=[yes/no]   Enable librt support [default=yes]],,
+ 	enable_librt=yes)
+ AC_SUBST(enable_librt)
+ 
+ # Enable UBSAN; set enable_ubsan=probe below to enable autoprobe.
+ AC_ARG_ENABLE(ubsan,
+-[ --enable-ubsan=[yes/no] Enable Undefined Behavior Sanitizer (UBSAN) [default=no]],,
++[  --enable-ubsan=[yes/no]   Enable Undefined Behavior Sanitizer (UBSAN) [default=no]],,
+ 	enable_ubsan=no)
+ AC_SUBST(enable_ubsan)
+ 
+ # Enable ADDRSAN; set enable_addrsan=probe below to enable autoprobe.
+ AC_ARG_ENABLE(addrsan,
+-[ --enable-addrsan=[yes/no] Enable Address Sanitizer (ADDRSAN) [default=no]],,
++[  --enable-addrsan=[yes/no] Enable Address Sanitizer (ADDRSAN) [default=no]],,
+ 	enable_addrsan=no)
+ AC_SUBST(enable_addrsan)
+ 
+ # Enable THREADSAN; set enable_threadsan=probe to enable autoprobe.
+ AC_ARG_ENABLE(threadsan,
+-[ --enable-threadsan=[yes/no] Enable Thread Sanitizer (THREADSAN) [default=no]],,
++[  --enable-threadsan=[yes/no] Enable Thread Sanitizer (THREADSAN) [default=no]],,
+ 	enable_threadsan=no)
+ AC_SUBST(enable_threadsan)
+ 
+ AC_ARG_ENABLE(lto,
+-[ --enable-lto=[yes/no]      Enable link time optimization (LTO) [default=no]],,
++[  --enable-lto=[yes/no]     Enable link time optimization (LTO) [default=no]],,
+ 	enable_lto=no)
+ AC_SUBST(enable_lto)
+ 
+ # Enable xfs_scrub build
+ AC_ARG_ENABLE(scrub,
+-[ --enable-scrub=[yes/no]    Enable build of xfs_scrub utility [default=yes]],,
++[  --enable-scrub=[yes/no]   Enable build of xfs_scrub utility [default=yes]],,
+ 	enable_scrub=yes)
+ AC_SUBST(enable_scrub)
+ 
+ # Enable libicu for xfs_scrubbing of malicious unicode sequences in names
+ AC_ARG_ENABLE(libicu,
+-[ --enable-libicu=[yes/no]   Enable Unicode name scanning in xfs_scrub (libicu) [default=probe]],,
++[  --enable-libicu=[yes/no]  Enable Unicode name scanning in xfs_scrub (libicu) [default=probe]],,
+ 	enable_libicu=probe)
+ 
+ #
