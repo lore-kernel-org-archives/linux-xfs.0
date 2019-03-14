@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:53594 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:53832 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727204AbfCNVHH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:07:07 -0400
-Subject: [PATCH 30/36] libxfs: retain ifork_ops when flushing inode
+        with ESMTP id S1727832AbfCNVHT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:07:19 -0400
+Subject: [PATCH 33/36] libxfs: don't touch buffer log item pointer when
+ flushing inode log item
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:06:57 -0700
-Message-ID: <155259761740.31886.12775146464846669280.stgit@magnolia>
+Date: Thu, 14 Mar 2019 14:07:15 -0700
+Message-ID: <155259763568.31886.8011442389519021944.stgit@magnolia>
 In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,72 +17,33 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Arkadiusz Miskiewicz <arekm@maven.pl>
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Retain the ifork ops used to validate the inode so that we can use the
-same one to iflush it.  xfs_repair phase 6 can use multiple transactions
-to fix various inode problems, which means that the inode might not be
-fully fixed when each transaction commits.
+When we're flushing an inode log item, it is not necessary to mess with
+the inode cluster buffer's log item because the iflush code paths pass
+the inode log item directly.  The unconditional reset causes us to leak
+buffer log items.
 
-This can be a particular problem if there's a shortform directory with
-both invalid directory entries and incorrect i8count.  Phase 3 will set
-the parent inode to "0" to signal to phase 6 that it needs to reset the
-parent and i8count, but phase 6 starts a transaction to junk the bad
-entries which fail to commit because the parent is invalid:
-
-fixing i8count in inode 69022994673
-Invalid inode number 0x0
-xfs_dir_ino_validate: XFS_ERROR_REPORT
-Metadata corruption detected at 0x464eb0, inode 0x10121750f1 data fork
-xfs_repair: warning - iflush_int failed (-117)
-
-And thus the inode fixes never get written out.
-
-Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/xfs_inode.h |    1 +
- libxfs/rdwr.c       |    1 +
- libxfs/util.c       |    2 +-
- 3 files changed, 3 insertions(+), 1 deletion(-)
+ libxfs/trans.c |    2 --
+ 1 file changed, 2 deletions(-)
 
 
-diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-index 79ec3a2d..e1e8b430 100644
---- a/include/xfs_inode.h
-+++ b/include/xfs_inode.h
-@@ -51,6 +51,7 @@ typedef struct xfs_inode {
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 295e687e..bd7bbc69 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -861,10 +861,8 @@ inode_item_done(
+ 	 * of whether the flush succeed or not. If we fail the flush, make sure
+ 	 * we still release the buffer reference we currently hold.
+ 	 */
+-	bp->b_log_item = iip;
+ 	error = libxfs_iflush_int(ip, bp);
+ 	ip->i_transp = NULL;	/* disassociate from transaction */
+-	bp->b_log_item = NULL;	/* remove log item */
+ 	bp->b_transp = NULL;	/* remove xact ptr */
  
- 	xfs_fsize_t		i_size;		/* in-memory size */
- 	const struct xfs_dir_ops *d_ops;	/* directory ops vector */
-+	struct xfs_ifork_ops	*i_fork_ops;	/* fork verifiers */
- 	struct inode		i_vnode;
- } xfs_inode_t;
- 
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index a00360e7..69d5abb2 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1391,6 +1391,7 @@ libxfs_iget(
- 		return error;
- 	}
- 
-+	ip->i_fork_ops = ifork_ops;
- 	if (!libxfs_inode_verify_forks(ip, ifork_ops)) {
- 		libxfs_irele(ip);
- 		return -EFSCORRUPTED;
-diff --git a/libxfs/util.c b/libxfs/util.c
-index bd414043..0799f965 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -420,7 +420,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
- 		VFS_I(ip)->i_version++;
- 
- 	/* Check the inline fork data before we write out. */
--	if (!libxfs_inode_verify_forks(ip, &xfs_default_ifork_ops))
-+	if (!libxfs_inode_verify_forks(ip, ip->i_fork_ops))
- 		return -EFSCORRUPTED;
- 
- 	/*
+ 	if (error) {
