@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:52372 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:52504 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727204AbfCNVGd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:06:33 -0400
-Subject: [PATCH 26/36] xfs_repair: refactor buffer ops assignments during
- phase 5
+        with ESMTP id S1727204AbfCNVGk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:06:40 -0400
+Subject: [PATCH 27/36] xfs_repair: pass ops through during scan
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:06:29 -0700
-Message-ID: <155259758961.31886.4826767055567611572.stgit@magnolia>
+Date: Thu, 14 Mar 2019 14:06:35 -0700
+Message-ID: <155259759563.31886.2004896919962409807.stgit@magnolia>
 In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,127 +20,126 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor the buffer ops assignments in phase 5 to use a helper function
-to determine the correct buf_ops instead of open-coding them.
+Pass the buffer ops through scan_sbtree so that we detect finobt blocks
+properly and we don't have to keep switching on magic numbers for the
+free space btrees.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/phase5.c |   34 ++++++++++++++++++++++++++++------
- 1 file changed, 28 insertions(+), 6 deletions(-)
+ repair/scan.c |   39 ++++++++++++++++-----------------------
+ 1 file changed, 16 insertions(+), 23 deletions(-)
 
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 367c3ab9..0c53096f 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -615,6 +615,24 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	return(extra_blocks);
+diff --git a/repair/scan.c b/repair/scan.c
+index 12ca3144..edc375a9 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -59,7 +59,8 @@ scan_sbtree(
+ 				int			suspect,
+ 				int			isroot,
+ 				uint32_t		magic,
+-				void			*priv),
++				void			*priv,
++				const struct xfs_buf_ops *ops),
+ 	int		isroot,
+ 	uint32_t	magic,
+ 	void		*priv,
+@@ -80,7 +81,7 @@ scan_sbtree(
+ 	}
+ 
+ 	(*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1, root, agno, suspect,
+-							isroot, magic, priv);
++			isroot, magic, priv, ops);
+ 	libxfs_putbuf(bp);
  }
  
-+/* Map btnum to buffer ops for the types that need it. */
-+static const struct xfs_buf_ops *
-+btnum_to_ops(
-+	xfs_btnum_t	btnum)
-+{
-+	switch (btnum) {
-+	case XFS_BTNUM_BNO:
-+	case XFS_BTNUM_CNT:
-+		return &xfs_allocbt_buf_ops;
-+	case XFS_BTNUM_INO:
-+	case XFS_BTNUM_FINO:
-+		return &xfs_inobt_buf_ops;
-+	default:
-+		ASSERT(0);
-+		return NULL;
-+	}
-+}
-+
- static void
- prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		bt_status_t *btree_curs, xfs_agblock_t startblock,
-@@ -625,6 +643,7 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	xfs_alloc_ptr_t		*bt_ptr;
- 	xfs_agblock_t		agbno;
- 	bt_stat_level_t		*lptr;
-+	const struct xfs_buf_ops *ops = btnum_to_ops(btnum);
- 
- 	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
- 
-@@ -675,7 +694,7 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		/*
- 		 * initialize block header
+@@ -543,7 +544,8 @@ scan_allocbt(
+ 	int			suspect,
+ 	int			isroot,
+ 	uint32_t		magic,
+-	void			*priv)
++	void			*priv,
++	const struct xfs_buf_ops *ops)
+ {
+ 	struct aghdr_cnts	*agcnts = priv;
+ 	const char 		*name;
+@@ -750,20 +752,8 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+ 		 * as possible.
  		 */
--		lptr->buf_p->b_ops = &xfs_allocbt_buf_ops;
-+		lptr->buf_p->b_ops = ops;
- 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
- 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
- 		libxfs_btree_init_block(mp, lptr->buf_p, btnum, level,
-@@ -723,6 +742,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	extent_tree_node_t	*ext_ptr;
- 	bt_stat_level_t		*lptr;
- 	xfs_extlen_t		freeblks;
-+	const struct xfs_buf_ops *ops = btnum_to_ops(btnum);
+ 		if (agbno != 0 && verify_agbno(mp, agno, agbno)) {
+-			switch (magic) {
+-			case XFS_ABTB_CRC_MAGIC:
+-			case XFS_ABTB_MAGIC:
+-				scan_sbtree(agbno, level, agno, suspect,
+-					    scan_allocbt, 0, magic, priv,
+-					    &xfs_allocbt_buf_ops);
+-				break;
+-			case XFS_ABTC_CRC_MAGIC:
+-			case XFS_ABTC_MAGIC:
+-				scan_sbtree(agbno, level, agno, suspect,
+-					    scan_allocbt, 0, magic, priv,
+-					    &xfs_allocbt_buf_ops);
+-				break;
+-			}
++			scan_sbtree(agbno, level, agno, suspect, scan_allocbt,
++				    0, magic, priv, ops);
+ 		}
+ 	}
+ }
+@@ -926,7 +916,8 @@ scan_rmapbt(
+ 	int			suspect,
+ 	int			isroot,
+ 	uint32_t		magic,
+-	void			*priv)
++	void			*priv,
++	const struct xfs_buf_ops *ops)
+ {
+ 	const char		*name = "rmap";
+ 	int			i;
+@@ -1205,7 +1196,7 @@ _("%s rmap btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
  
- 	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
+ 		if (agbno != 0 && verify_agbno(mp, agno, agbno)) {
+ 			scan_sbtree(agbno, level, agno, suspect, scan_rmapbt, 0,
+-				    magic, priv, &xfs_rmapbt_buf_ops);
++				    magic, priv, ops);
+ 		}
+ 	}
  
-@@ -754,7 +774,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		/*
- 		 * initialize block header
- 		 */
--		lptr->buf_p->b_ops = &xfs_allocbt_buf_ops;
-+		lptr->buf_p->b_ops = ops;
- 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
- 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
- 		libxfs_btree_init_block(mp, lptr->buf_p, btnum, i, 0, agno, 0);
-@@ -781,7 +801,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		/*
- 		 * block initialization, lay in block header
- 		 */
--		lptr->buf_p->b_ops = &xfs_allocbt_buf_ops;
-+		lptr->buf_p->b_ops = ops;
- 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
- 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
- 		libxfs_btree_init_block(mp, lptr->buf_p, btnum, 0, 0, agno, 0);
-@@ -990,6 +1010,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
- 	xfs_inobt_ptr_t		*bt_ptr;
- 	xfs_agblock_t		agbno;
- 	bt_stat_level_t		*lptr;
-+	const struct xfs_buf_ops *ops = btnum_to_ops(btnum);
+@@ -1229,7 +1220,8 @@ scan_refcbt(
+ 	int			suspect,
+ 	int			isroot,
+ 	uint32_t		magic,
+-	void			*priv)
++	void			*priv,
++	const struct xfs_buf_ops *ops)
+ {
+ 	const char		*name = "refcount";
+ 	int			i;
+@@ -1423,7 +1415,7 @@ _("extent (%u/%u) len %u claimed, state is %d\n"),
  
- 	level++;
+ 		if (agbno != 0 && verify_agbno(mp, agno, agbno)) {
+ 			scan_sbtree(agbno, level, agno, suspect, scan_refcbt, 0,
+-				    magic, priv, &xfs_refcountbt_buf_ops);
++				    magic, priv, ops);
+ 		}
+ 	}
+ out:
+@@ -1935,7 +1927,8 @@ scan_inobt(
+ 	int			suspect,
+ 	int			isroot,
+ 	uint32_t		magic,
+-	void			*priv)
++	void			*priv,
++	const struct xfs_buf_ops *ops)
+ {
+ 	struct aghdr_cnts	*agcnts = priv;
+ 	int			i;
+@@ -2091,7 +2084,7 @@ _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+ 							be32_to_cpu(pp[i])))
+ 			scan_sbtree(be32_to_cpu(pp[i]), level, agno,
+ 					suspect, scan_inobt, 0, magic, priv,
+-					&xfs_inobt_buf_ops);
++					ops);
+ 	}
+ }
  
-@@ -1038,7 +1059,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
- 		/*
- 		 * initialize block header
- 		 */
--		lptr->buf_p->b_ops = &xfs_inobt_buf_ops;
-+		lptr->buf_p->b_ops = ops;
- 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
- 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
- 		libxfs_btree_init_block(mp, lptr->buf_p, btnum,
-@@ -1130,6 +1151,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	xfs_inobt_rec_t		*bt_rec;
- 	ino_tree_node_t		*ino_rec;
- 	bt_stat_level_t		*lptr;
-+	const struct xfs_buf_ops *ops = btnum_to_ops(btnum);
- 	xfs_agino_t		count = 0;
- 	xfs_agino_t		freecount = 0;
- 	int			inocnt;
-@@ -1160,7 +1182,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		 * initialize block header
- 		 */
- 
--		lptr->buf_p->b_ops = &xfs_inobt_buf_ops;
-+		lptr->buf_p->b_ops = ops;
- 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
- 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
- 		libxfs_btree_init_block(mp, lptr->buf_p, btnum, i, 0, agno, 0);
-@@ -1188,7 +1210,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		/*
- 		 * block initialization, lay in block header
- 		 */
--		lptr->buf_p->b_ops = &xfs_inobt_buf_ops;
-+		lptr->buf_p->b_ops = ops;
- 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
- 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
- 		libxfs_btree_init_block(mp, lptr->buf_p, btnum, 0, 0, agno, 0);
