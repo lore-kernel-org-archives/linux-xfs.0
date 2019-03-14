@@ -1,18 +1,18 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50918 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727412AbfCNVEz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:04:55 -0400
-Subject: [PATCH 10/36] xfs_scrub_all: walk the lsblk device/fs hierarchy
- correctly
+Received: from userp2120.oracle.com ([156.151.31.85]:50680 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727412AbfCNVFA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:05:00 -0400
+Subject: [PATCH 11/36] xfs_scrub_all.timer: activate after most of the
+ system is up
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:04:51 -0700
-Message-ID: <155259749135.31886.17642733861513368966.stgit@magnolia>
+Date: Thu, 14 Mar 2019 14:04:57 -0700
+Message-ID: <155259749738.31886.13894651790702916465.stgit@magnolia>
 In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -21,70 +21,27 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Back when I was designing xfs_scrub_all, I naïvely assumed that the
-emitted output would always list physical storage before the virtual
-devices stacked atop it.  However, this is not actually true when one
-omits the "NAME" column, which is crucial to forcing the output (json or
-otherwise) to capture the block device hierarchy.  If the assumption is
-violated, the program crashes with a python exception.
-
-To fix this, force the hierarchal json output and restructure the
-discovery routines to walk the json object that we receive, from the top
-(physical devices) downwards to wherever there are live xfs filesystems.
+We really don't want the xfs_scrub_all timer triggering while the system
+is booting up because not all the mounts will have finished, networking
+might not be up for reporting, and slowing down bootup annoys people.
+Therefore, delay the xfs_scrub_all service's activation until after the
+system has started all the big pieces it's going to start.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/xfs_scrub_all.in |   28 +++++++++++++++++-----------
- 1 file changed, 17 insertions(+), 11 deletions(-)
+ scrub/xfs_scrub_all.service.in |    1 +
+ 1 file changed, 1 insertion(+)
 
 
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index c4e9899d..5b76b49a 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -28,9 +28,21 @@ def DEVNULL():
+diff --git a/scrub/xfs_scrub_all.service.in b/scrub/xfs_scrub_all.service.in
+index 66f82fc7..b1b80da4 100644
+--- a/scrub/xfs_scrub_all.service.in
++++ b/scrub/xfs_scrub_all.service.in
+@@ -2,6 +2,7 @@
+ Description=Online XFS Metadata Check for All Filesystems
+ ConditionACPower=true
+ Documentation=man:xfs_scrub_all(8)
++After=paths.target multi-user.target network.target network-online.target systemd-networkd.service NetworkManager.service connman.service
  
- def find_mounts():
- 	'''Map mountpoints to physical disks.'''
-+	def find_xfs_mounts(bdev, fs, lastdisk):
-+		'''Attach lastdisk to each fs found under bdev.'''
-+		if bdev['fstype'] == 'xfs' and bdev['mountpoint'] is not None:
-+			mnt = bdev['mountpoint']
-+			if mnt in fs:
-+				fs[mnt].add(lastdisk)
-+			else:
-+				fs[mnt] = set([lastdisk])
-+		if 'children' not in bdev:
-+			return
-+		for child in bdev['children']:
-+			find_xfs_mounts(child, fs, lastdisk)
- 
- 	fs = {}
--	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
-+	cmd=['lsblk', '-o', 'NAME,KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
- 	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
- 	result.wait()
- 	if result.returncode != 0:
-@@ -38,18 +50,12 @@ def find_mounts():
- 	sarray = [x.decode(sys.stdout.encoding) for x in result.stdout.readlines()]
- 	output = ' '.join(sarray)
- 	bdevdata = json.loads(output)
-+
- 	# The lsblk output had better be in disks-then-partitions order
- 	for bdev in bdevdata['blockdevices']:
--		if bdev['type'] in ('disk', 'loop'):
--			lastdisk = bdev['kname']
--		if bdev['fstype'] == 'xfs':
--			mnt = bdev['mountpoint']
--			if mnt is None:
--				continue
--			if mnt in fs:
--				fs[mnt].add(lastdisk)
--			else:
--				fs[mnt] = set([lastdisk])
-+		lastdisk = bdev['kname']
-+		find_xfs_mounts(bdev, fs, lastdisk)
-+
- 	return fs
- 
- def kill_systemd(unit, proc):
+ [Service]
+ Type=oneshot
