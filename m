@@ -1,247 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:53848 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727366AbfCNVHj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:07:39 -0400
-Subject: [PATCH 36/36] libxfs: remove libxfs_trans_iget
+Received: from userp2130.oracle.com ([156.151.31.86]:48316 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726731AbfCNV3P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:29:15 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x2ELSt5D118190
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 21:29:13 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2r44wukj9n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 21:29:13 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x2ELTCTQ019510
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 21:29:12 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x2ELTC1L014492
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 21:29:12 GMT
+Subject: [PATCH 3/4] xfs: trace transaction reservation logcount overflow
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:07:33 -0700
-Message-ID: <155259765381.31886.8973943242633989393.stgit@magnolia>
-In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+Date: Thu, 14 Mar 2019 14:29:12 -0700
+Message-ID: <155259895225.30230.16620449818865521574.stgit@magnolia>
+In-Reply-To: <155259893433.30230.6566995969675098053.stgit@magnolia>
+References: <155259893433.30230.6566995969675098053.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-libxfs_trans_iget no longer has a counterpart in the kernel.  Remove it
-and make the xfs_iget/xfs_trans_ijoin usage consistent throughout
-xfsprogs.
+This is a debugging patch to keep track of cases where transaction
+reservations with permanent reservations do not reserve enough logcount
+to handle the entire workflow.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/xfs_trans.h      |    2 --
- libxfs/libxfs_api_defs.h |    1 -
- libxfs/trans.c           |   35 -----------------------------------
- libxfs/util.c            |    4 +++-
- repair/phase6.c          |   21 +++++++++++++++------
- repair/phase7.c          |    4 ++--
- 6 files changed, 20 insertions(+), 47 deletions(-)
+ fs/xfs/xfs_log.c      |   11 +++++++++++
+ fs/xfs/xfs_log_priv.h |    3 +++
+ fs/xfs/xfs_trace.h    |   10 +++++++++-
+ 3 files changed, 23 insertions(+), 1 deletion(-)
 
 
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index 9e44d18e..e6bb74c4 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -98,8 +98,6 @@ void xfs_defer_cancel(struct xfs_trans *);
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index c3b610b687d1..8832cc86566f 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -385,6 +385,9 @@ xfs_log_regrant(
  
- struct xfs_buf *libxfs_trans_getsb(struct xfs_trans *, struct xfs_mount *, int);
+ 	if (tic->t_cnt > 0)
+ 		return 0;
++#ifdef DEBUG
++	tic->t_spillcnt++;
++#endif
  
--int	libxfs_trans_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
--				uint, uint, struct xfs_inode **);
- void	libxfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
- void	libxfs_trans_ijoin_ref(struct xfs_trans *, struct xfs_inode *, int);
- void	libxfs_trans_log_inode (struct xfs_trans *, struct xfs_inode *,
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index e10d78cd..bb0f07bd 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -31,7 +31,6 @@
- #define xfs_trans_del_item		libxfs_trans_del_item
- #define xfs_trans_get_buf		libxfs_trans_get_buf
- #define xfs_trans_getsb			libxfs_trans_getsb
--#define xfs_trans_iget			libxfs_trans_iget
- #define xfs_trans_ichgtime		libxfs_trans_ichgtime
- #define xfs_trans_ijoin			libxfs_trans_ijoin
- #define xfs_trans_init			libxfs_trans_init
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index ce199654..d6785e20 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -336,41 +336,6 @@ libxfs_trans_cancel(
- 	return;
- }
+ 	trace_xfs_log_regrant(log, tic);
  
--int
--libxfs_trans_iget(
--	xfs_mount_t		*mp,
--	xfs_trans_t		*tp,
--	xfs_ino_t		ino,
--	uint			flags,
--	uint			lock_flags,
--	xfs_inode_t		**ipp)
--{
--	int			error;
--	xfs_inode_t		*ip;
--	xfs_inode_log_item_t	*iip;
--
--	if (tp == NULL)
--		return libxfs_iget(mp, tp, ino, lock_flags, ipp,
--				&xfs_default_ifork_ops);
--
--	error = libxfs_iget(mp, tp, ino, lock_flags, &ip,
--			&xfs_default_ifork_ops);
--	if (error)
--		return error;
--	ASSERT(ip != NULL);
--
--	if (ip->i_itemp == NULL)
--		xfs_inode_item_init(ip, mp);
--	iip = ip->i_itemp;
--	xfs_trans_add_item(tp, (xfs_log_item_t *)(iip));
--
--	/* initialize i_transp so we can find it incore */
--	ip->i_transp = tp;
--
--	*ipp = ip;
--	return 0;
--}
--
- void
- libxfs_trans_ijoin(
- 	xfs_trans_t		*tp,
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 0799f965..2e3b9d51 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -262,7 +262,8 @@ libxfs_ialloc(
- 	}
- 	ASSERT(*ialloc_context == NULL);
+@@ -3124,6 +3127,9 @@ xlog_regrant_reserve_log_space(
+ 	/* just return if we still have some of the pre-reserved space */
+ 	if (ticket->t_cnt > 0)
+ 		return;
++#ifdef DEBUG
++	ticket->t_spillcnt++;
++#endif
  
--	error = xfs_trans_iget(tp->t_mountp, tp, ino, 0, 0, &ip);
-+	error = libxfs_iget(tp->t_mountp, tp, ino, 0, &ip,
-+			&xfs_default_ifork_ops);
- 	if (error != 0)
- 		return error;
- 	ASSERT(ip != NULL);
-@@ -376,6 +377,7 @@ libxfs_ialloc(
- 	/*
- 	 * Log the new values stuffed into the inode.
- 	 */
-+	xfs_trans_ijoin(tp, ip, 0);
- 	xfs_trans_log_inode(tp, ip, flags);
- 	*ipp = ip;
- 	return 0;
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 194cfdbf..28e633de 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -535,7 +535,8 @@ mk_rbmino(xfs_mount_t *mp)
- 	if (i)
- 		res_failed(i);
+ 	xlog_grant_add_space(log, &log->l_reserve_head.grant,
+ 					ticket->t_unit_res);
+@@ -3159,6 +3165,11 @@ xlog_ungrant_log_space(
+ 	if (ticket->t_cnt > 0)
+ 		ticket->t_cnt--;
  
--	error = -libxfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0, 0, &ip);
-+	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rbmino, 0, &ip,
-+			&xfs_default_ifork_ops);
- 	if (error) {
- 		do_error(
- 		_("couldn't iget realtime bitmap inode -- error - %d\n"),
-@@ -572,6 +573,7 @@ mk_rbmino(xfs_mount_t *mp)
- 	/*
- 	 * commit changes
- 	 */
-+	libxfs_trans_ijoin(tp, ip, 0);
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	error = -libxfs_trans_commit(tp);
- 	if (error)
-@@ -634,7 +636,8 @@ fill_rbmino(xfs_mount_t *mp)
- 	if (error)
- 		res_failed(error);
++#ifdef DEBUG
++	if (ticket->t_spillcnt > 0)
++		trace_xfs_log_ungrant_spill(log, ticket);
++#endif
++
+ 	trace_xfs_log_ungrant_enter(log, ticket);
+ 	trace_xfs_log_ungrant_sub(log, ticket);
  
--	error = -libxfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0, 0, &ip);
-+	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rbmino, 0, &ip,
-+			&xfs_default_ifork_ops);
- 	if (error) {
- 		do_error(
- 		_("couldn't iget realtime bitmap inode -- error - %d\n"),
-@@ -645,6 +648,7 @@ fill_rbmino(xfs_mount_t *mp)
- 		/*
- 		 * fill the file one block at a time
- 		 */
-+		libxfs_trans_ijoin(tp, ip, 0);
- 		nmap = 1;
- 		error = -libxfs_bmapi_write(tp, ip, bno, 1, 0, 1, &map, &nmap);
- 		if (error || nmap != 1) {
-@@ -703,7 +707,8 @@ fill_rsumino(xfs_mount_t *mp)
- 	if (error)
- 		res_failed(error);
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index b5f82cb36202..37302d2ad288 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -161,6 +161,9 @@ typedef struct xlog_ticket {
+ 	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
+ 	char		   t_ocnt;	 /* original count		 : 1  */
+ 	char		   t_cnt;	 /* current count		 : 1  */
++#ifdef DEBUG
++	char		   t_spillcnt;	 /* underestimation of ocnt	 : 1  */
++#endif
+ 	char		   t_clientid;	 /* who does this belong to;	 : 1  */
+ 	char		   t_flags;	 /* properties of reservation	 : 1  */
  
--	error = -libxfs_trans_iget(mp, tp, mp->m_sb.sb_rsumino, 0, 0, &ip);
-+	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rsumino, 0, &ip,
-+			&xfs_default_ifork_ops);
- 	if (error) {
- 		do_error(
- 		_("couldn't iget realtime summary inode -- error - %d\n"),
-@@ -714,6 +719,7 @@ fill_rsumino(xfs_mount_t *mp)
- 		/*
- 		 * fill the file one block at a time
- 		 */
-+		libxfs_trans_ijoin(tp, ip, 0);
- 		nmap = 1;
- 		error = -libxfs_bmapi_write(tp, ip, bno, 1, 0, 1, &map, &nmap);
- 		if (error || nmap != 1) {
-@@ -775,7 +781,8 @@ mk_rsumino(xfs_mount_t *mp)
- 	if (i)
- 		res_failed(i);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index bd9a48fa80ba..b765b2761382 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -937,6 +937,7 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
+ 		__field(dev_t, dev)
+ 		__field(char, ocnt)
+ 		__field(char, cnt)
++		__field(int, spillcnt)
+ 		__field(int, curr_res)
+ 		__field(int, unit_res)
+ 		__field(unsigned int, flags)
+@@ -954,6 +955,11 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
+ 		__entry->dev = log->l_mp->m_super->s_dev;
+ 		__entry->ocnt = tic->t_ocnt;
+ 		__entry->cnt = tic->t_cnt;
++#ifdef DEBUG
++		__entry->spillcnt = tic->t_spillcnt;
++#else
++		__entry->spillcnt = -1;
++#endif
+ 		__entry->curr_res = tic->t_curr_res;
+ 		__entry->unit_res = tic->t_unit_res;
+ 		__entry->flags = tic->t_flags;
+@@ -969,7 +975,7 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
+ 		__entry->curr_block = log->l_curr_block;
+ 		__entry->tail_lsn = atomic64_read(&log->l_tail_lsn);
+ 	),
+-	TP_printk("dev %d:%d t_ocnt %u t_cnt %u t_curr_res %u "
++	TP_printk("dev %d:%d t_ocnt %u t_cnt %u spill %u t_curr_res %u "
+ 		  "t_unit_res %u t_flags %s reserveq %s "
+ 		  "writeq %s grant_reserve_cycle %d "
+ 		  "grant_reserve_bytes %d grant_write_cycle %d "
+@@ -978,6 +984,7 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ocnt,
+ 		  __entry->cnt,
++		  __entry->spillcnt,
+ 		  __entry->curr_res,
+ 		  __entry->unit_res,
+ 		  __print_flags(__entry->flags, "|", XLOG_TIC_FLAGS),
+@@ -1014,6 +1021,7 @@ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_sub);
+ DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_enter);
+ DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_exit);
+ DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_sub);
++DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_spill);
  
--	error = -libxfs_trans_iget(mp, tp, mp->m_sb.sb_rsumino, 0, 0, &ip);
-+	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rsumino, 0, &ip,
-+			&xfs_default_ifork_ops);
- 	if (error) {
- 		do_error(
- 		_("couldn't iget realtime summary inode -- error - %d\n"),
-@@ -812,6 +819,7 @@ mk_rsumino(xfs_mount_t *mp)
- 	/*
- 	 * commit changes
- 	 */
-+	libxfs_trans_ijoin(tp, ip, 0);
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	error = -libxfs_trans_commit(tp);
- 	if (error)
-@@ -875,7 +883,8 @@ mk_root_dir(xfs_mount_t *mp)
- 	if (i)
- 		res_failed(i);
- 
--	error = -libxfs_trans_iget(mp, tp, mp->m_sb.sb_rootino, 0, 0, &ip);
-+	error = -libxfs_iget(mp, tp, mp->m_sb.sb_rootino, 0, &ip,
-+			&xfs_default_ifork_ops);
- 	if (error) {
- 		do_error(_("could not iget root inode -- error - %d\n"), error);
- 	}
-@@ -900,7 +909,7 @@ mk_root_dir(xfs_mount_t *mp)
- 		times |= XFS_ICHGTIME_CREATE;
- 	}
- 	libxfs_trans_ichgtime(tp, ip, times);
--
-+	libxfs_trans_ijoin(tp, ip, 0);
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
- 	/*
-diff --git a/repair/phase7.c b/repair/phase7.c
-index c2a60a93..c2996470 100644
---- a/repair/phase7.c
-+++ b/repair/phase7.c
-@@ -32,8 +32,7 @@ update_inode_nlinks(
- 	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_remove, nres, 0, 0, &tp);
- 	ASSERT(error == 0);
- 
--	error = -libxfs_trans_iget(mp, tp, ino, 0, 0, &ip);
--
-+	error = -libxfs_iget(mp, tp, ino, 0, &ip, &xfs_default_ifork_ops);
- 	if (error)  {
- 		if (!no_modify)
- 			do_error(
-@@ -67,6 +66,7 @@ update_inode_nlinks(
- 	if (!dirty)  {
- 		libxfs_trans_cancel(tp);
- 	} else  {
-+		libxfs_trans_ijoin(tp, ip, 0);
- 		libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 		/*
- 		 * no need to do a bmap finish since
+ DECLARE_EVENT_CLASS(xfs_log_item_class,
+ 	TP_PROTO(struct xfs_log_item *lip),
