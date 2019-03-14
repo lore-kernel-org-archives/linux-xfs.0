@@ -1,112 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:54172 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:48080 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727366AbfCNVHh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:07:37 -0400
-Subject: [PATCH 35/36] libxfs: shorten inode item lifetime
+        with ESMTP id S1726731AbfCNV3C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:29:02 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x2ELSsZE118148
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 21:29:01 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2r44wukj95-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 21:29:01 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x2ELT0ld018664
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 21:29:00 GMT
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x2ELT0E4023039
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 21:29:00 GMT
+Subject: [PATCH 1/4] xfs: only free posteof blocks on first close
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:07:27 -0700
-Message-ID: <155259764777.31886.5969876849048391381.stgit@magnolia>
-In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+Date: Thu, 14 Mar 2019 14:29:00 -0700
+Message-ID: <155259894034.30230.7188877605950498518.stgit@magnolia>
+In-Reply-To: <155259893433.30230.6566995969675098053.stgit@magnolia>
+References: <155259893433.30230.6566995969675098053.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Shorten the inode item lifetime so that we only keep them around while
-the inode is joined with a transaction.
+Certain workloads fragment files on XFS very badly, such as a software
+package that creates a number of threads, each of which repeatedly run
+the sequence: open a file, perform a synchronous write, and close the
+file, which defeats the speculative preallocation mechanism.  We work
+around this problem by only deleting posteof blocks the /first/ time a
+file is closed to preserve the behavior that unpacking a tarball lays
+out files one after the other with no gaps.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/rdwr.c  |    4 +---
- libxfs/trans.c |   19 ++++++++++++++++---
- 2 files changed, 17 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_inode.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
 
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 69d5abb2..fd8c6591 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1429,9 +1429,7 @@ void
- libxfs_irele(
- 	struct xfs_inode	*ip)
- {
--	if (ip->i_itemp)
--		kmem_zone_free(xfs_ili_zone, ip->i_itemp);
--	ip->i_itemp = NULL;
-+	ASSERT(ip->i_itemp == NULL);
- 	libxfs_idestroy(ip);
- 	kmem_zone_free(xfs_inode_zone, ip);
- }
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index 2ceb9838..ce199654 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -820,6 +820,16 @@ _("Transaction block reservation exceeded! %u > %u\n"),
- 	tp->t_flags |= (XFS_TRANS_SB_DIRTY | XFS_TRANS_DIRTY);
- }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 665fb2518a66..981c34bdec25 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1262,9 +1262,7 @@ xfs_release(
+ 				return error;
+ 		}
  
-+void
-+xfs_inode_item_put(
-+	struct xfs_inode_log_item	*iip)
-+{
-+	struct xfs_inode		*ip = iip->ili_inode;
-+
-+	ip->i_itemp = NULL;
-+	kmem_zone_free(xfs_ili_zone, iip);
-+}
-+
- 
- /*
-  * Transaction commital code follows (i.e. write to disk in libxfs)
-@@ -844,7 +854,7 @@ inode_item_done(
- 	if (!(iip->ili_fields & XFS_ILOG_ALL)) {
- 		ip->i_transp = NULL;	/* disassociate from transaction */
- 		iip->ili_flags = 0;	/* reset all flags */
--		return;
-+		goto free;
+-		/* delalloc blocks after truncation means it really is dirty */
+-		if (ip->i_delayed_blks)
+-			xfs_iflags_set(ip, XFS_IDIRTY_RELEASE);
++		xfs_iflags_set(ip, XFS_IDIRTY_RELEASE);
  	}
- 
- 	/*
-@@ -854,7 +864,7 @@ inode_item_done(
- 	if (error) {
- 		fprintf(stderr, _("%s: warning - imap_to_bp failed (%d)\n"),
- 			progname, error);
--		return;
-+		goto free;
- 	}
- 
- 	/*
-@@ -870,7 +880,7 @@ inode_item_done(
- 		fprintf(stderr, _("%s: warning - iflush_int failed (%d)\n"),
- 			progname, error);
- 		libxfs_putbuf(bp);
--		return;
-+		goto free;
- 	}
- 
- 	libxfs_writebuf(bp, 0);
-@@ -878,6 +888,8 @@ inode_item_done(
- 	fprintf(stderr, "flushing dirty inode %llu, buffer %p\n",
- 			ip->i_ino, bp);
- #endif
-+free:
-+	xfs_inode_item_put(iip);
+ 	return 0;
  }
- 
- static void
-@@ -955,6 +967,7 @@ inode_item_unlock(
- 	ip->i_transp = NULL;
- 
- 	iip->ili_flags = 0;
-+	xfs_inode_item_put(iip);
- }
- 
- /* Detach and unlock all of the items in a transaction */
