@@ -1,52 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:46818 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725841AbfCIPgp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Mar 2019 10:36:45 -0500
-From: Sean Fu <fxinrong@gmail.com>
-Subject: [PATCH] xfs: Use kmem_zalloc for bp->b_pages.
-Date: Sat,  9 Mar 2019 23:36:36 +0800
-Message-Id: <20190309153636.14154-1-fxinrong@gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:53594 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727204AbfCNVHH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:07:07 -0400
+Subject: [PATCH 30/36] libxfs: retain ifork_ops when flushing inode
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 14 Mar 2019 14:06:57 -0700
+Message-ID: <155259761740.31886.12775146464846669280.stgit@magnolia>
+In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Sean Fu <fxinrong@gmail.com>
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Arkadiusz Miskiewicz <arekm@maven.pl>
 
-Change the allocation of bp->b_pages to use kmem_zalloc instead of
-kmem_alloc.
-Remove unnecessary memset for bp->b_pages.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This reduces text size by 42 bytes.
-Before:
-   text	   data	    bss	    dec	    hex	filename
-  23335	    588	      8	  23931	   5d7b	./fs/xfs/xfs_buf.o
-After:
-   text	   data	    bss	    dec	    hex	filename
-  23293	    588	      8	  23889	   5d51	./fs/xfs/xfs_buf.o
+Retain the ifork ops used to validate the inode so that we can use the
+same one to iflush it.  xfs_repair phase 6 can use multiple transactions
+to fix various inode problems, which means that the inode might not be
+fully fixed when each transaction commits.
 
-Signed-off-by: Sean Fu <fxinrong@gmail.com>
+This can be a particular problem if there's a shortform directory with
+both invalid directory entries and incorrect i8count.  Phase 3 will set
+the parent inode to "0" to signal to phase 6 that it needs to reset the
+parent and i8count, but phase 6 starts a transaction to junk the bad
+entries which fail to commit because the parent is invalid:
+
+fixing i8count in inode 69022994673
+Invalid inode number 0x0
+xfs_dir_ino_validate: XFS_ERROR_REPORT
+Metadata corruption detected at 0x464eb0, inode 0x10121750f1 data fork
+xfs_repair: warning - iflush_int failed (-117)
+
+And thus the inode fixes never get written out.
+
+Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_buf.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ include/xfs_inode.h |    1 +
+ libxfs/rdwr.c       |    1 +
+ libxfs/util.c       |    2 +-
+ 3 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 4f5f2ff3f70f..be4f740b97c1 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -289,12 +289,11 @@ _xfs_buf_get_pages(
- 		if (page_count <= XB_PAGES) {
- 			bp->b_pages = bp->b_page_array;
- 		} else {
--			bp->b_pages = kmem_alloc(sizeof(struct page *) *
-+			bp->b_pages = kmem_zalloc(sizeof(struct page *) *
- 						 page_count, KM_NOFS);
- 			if (bp->b_pages == NULL)
- 				return -ENOMEM;
- 		}
--		memset(bp->b_pages, 0, sizeof(struct page *) * page_count);
+
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 79ec3a2d..e1e8b430 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -51,6 +51,7 @@ typedef struct xfs_inode {
+ 
+ 	xfs_fsize_t		i_size;		/* in-memory size */
+ 	const struct xfs_dir_ops *d_ops;	/* directory ops vector */
++	struct xfs_ifork_ops	*i_fork_ops;	/* fork verifiers */
+ 	struct inode		i_vnode;
+ } xfs_inode_t;
+ 
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index a00360e7..69d5abb2 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1391,6 +1391,7 @@ libxfs_iget(
+ 		return error;
  	}
- 	return 0;
- }
--- 
-2.16.4
+ 
++	ip->i_fork_ops = ifork_ops;
+ 	if (!libxfs_inode_verify_forks(ip, ifork_ops)) {
+ 		libxfs_irele(ip);
+ 		return -EFSCORRUPTED;
+diff --git a/libxfs/util.c b/libxfs/util.c
+index bd414043..0799f965 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -420,7 +420,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
+ 		VFS_I(ip)->i_version++;
+ 
+ 	/* Check the inline fork data before we write out. */
+-	if (!libxfs_inode_verify_forks(ip, &xfs_default_ifork_ops))
++	if (!libxfs_inode_verify_forks(ip, ip->i_fork_ops))
+ 		return -EFSCORRUPTED;
+ 
+ 	/*
