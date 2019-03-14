@@ -1,148 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua1-f68.google.com ([209.85.222.68]:39280 "EHLO
-        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726111AbfCZMVd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Mar 2019 08:21:33 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:52090 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727899AbfCNVFv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:05:51 -0400
+Subject: [PATCH 19/36] mkfs: validate extent size hint parameters
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 14 Mar 2019 14:05:47 -0700
+Message-ID: <155259754740.31886.13886644609473939892.stgit@magnolia>
+In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
 MIME-Version: 1.0
-References: <20190323003532.GB1180@magnolia>
-In-Reply-To: <20190323003532.GB1180@magnolia>
-From: Filipe David Manana <fdmanana@apache.org>
-Date: Tue, 26 Mar 2019 12:21:20 +0000
-Message-ID: <CAL3q7H4Un5e5xOkTgAVXthfr-N1CXwf6e4qOyQ9WeXQoj3E8Uw@mail.gmail.com>
-Subject: Re: [PATCH] generic: prohibit fstrim on journalled filesystems with norecovery
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eryu Guan <guaneryu@gmail.com>, fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Sat, Mar 23, 2019 at 12:35 AM Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
->
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> This test makes sure that we can't use stale unrecovered fs metadata to
-> drive a DISCARD festival on a disk and thereby destroy user data by
-> accident.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It would help to have listed the name of the patches that fix the
-issues on xfs/ext4/btrfs, to make it faster.
+Validate extent and cow extent size hints that are passed to mkfs so
+that we avoid formatting a filesystem that will never mount.
 
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Reviewed-by: Filipe Manana <fdmanana@suse.com>
-
-Looks good, thanks for doing this. Just one question below.
-
-> ---
->  tests/generic/714     |   61 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/714.out |    4 +++
->  tests/generic/group   |    1 +
->  3 files changed, 66 insertions(+)
->  create mode 100755 tests/generic/714
->  create mode 100644 tests/generic/714.out
->
-> diff --git a/tests/generic/714 b/tests/generic/714
-> new file mode 100755
-> index 00000000..1849a5e9
-> --- /dev/null
-> +++ b/tests/generic/714
-> @@ -0,0 +1,61 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0+
-> +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 714
-> +#
-> +# Ensure that we can't call fstrim on filesystems mounted norecovery, because
-> +# FSTRIM implementations use free space metadata to drive the discard requests
-> +# and we told the filesystem not to make sure the metadata are up to date.
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    cd /
-> +    rm -rf $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_os Linux
-> +_require_scratch
-> +_require_fstrim
-> +
-> +rm -f $seqres.full
-> +
-> +_scratch_mkfs > $seqres.full 2>&1
-> +_require_metadata_journaling $SCRATCH_DEV
-> +
-> +echo "fstrim on regular mount"
-> +_scratch_mount >> $seqres.full 2>&1
-> +$FSTRIM_PROG -v $SCRATCH_MNT >> $seqres.full 2>&1 || \
-> +       _notrun "FSTRIM not supported"
-> +_scratch_unmount
-> +
-> +echo "fstrim on ro mount"
-> +_scratch_mount -o ro >> $seqres.full 2>&1
-> +$FSTRIM_PROG -v $SCRATCH_MNT >> $seqres.full 2>&1
-> +_scratch_unmount
-> +
-> +echo "fstrim on ro mount with no log replay"
-> +norecovery="norecovery"
-> +test $FSTYP = "btrfs" && norecovery=nologreplay
-> +_scratch_mount -o ro,$norecovery >> $seqres.full 2>&1
-> +$FSTRIM_PROG -v $SCRATCH_MNT >> $seqres.full 2>&1 && \
-> +       echo "fstrim with unrecovered metadata just ate your filesystem"
-> +_scratch_unmount
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/714.out b/tests/generic/714.out
-> new file mode 100644
-> index 00000000..1158a2ff
-> --- /dev/null
-> +++ b/tests/generic/714.out
-> @@ -0,0 +1,4 @@
-> +QA output created by 714
-> +fstrim on regular mount
-> +fstrim on ro mount
-> +fstrim on ro mount with no log replay
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 2e4341fb..c2046293 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -538,6 +538,7 @@
->  533 auto quick attr
->  534 auto quick log
->  535 auto quick log
-> +714 auto trim
-
-Any reason to not add the 'quick' group as well? It runs in 1 second
-for me on btrfs, xfs and ext4 with a debug kernel.
-
->  940 auto quick clone punch
->  941 auto quick clone punch
->  942 auto quick clone punch
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ mkfs/xfs_mkfs.c |   64 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 64 insertions(+)
 
 
-
--- 
-Filipe David Manana,
-
-"Reasonable men adapt themselves to the world.
- Unreasonable men adapt the world to themselves.
- That's why all progress depends on unreasonable men."
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index d1387ddf..9e1c6ec5 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2202,6 +2202,66 @@ validate_rtextsize(
+ 	ASSERT(cfg->rtextblocks);
+ }
+ 
++/* Validate the incoming extsize hint as if we were a file. */
++static void
++validate_extsize_hint(
++	struct xfs_mount	*mp,
++	struct cli_params	*cli)
++{
++	xfs_failaddr_t		fa;
++	bool			rt;
++	uint16_t		flags = 0;
++
++	rt = (cli->fsx.fsx_xflags & XFS_DIFLAG_RTINHERIT);
++
++	if (cli->fsx.fsx_xflags & XFS_DIFLAG_EXTSZINHERIT)
++		flags |= XFS_DIFLAG_EXTSIZE;
++
++	fa = libxfs_inode_validate_extsize(mp, cli->fsx.fsx_extsize, S_IFREG,
++			flags);
++	if (rt && fa == NULL)
++		fa = libxfs_inode_validate_extsize(mp, cli->fsx.fsx_extsize,
++				S_IFREG, flags | XFS_DIFLAG_REALTIME);
++	if (fa == NULL)
++		return;
++
++	if (rt && mp->m_sb.sb_rextsize > 1)
++		fprintf(stderr,
++	_("illegal extent size hint %lld, must be less than %u and a multiple of %u.\n"),
++				(long long)cli->fsx.fsx_extsize,
++				min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2),
++				mp->m_sb.sb_rextsize);
++	else
++		fprintf(stderr,
++	_("illegal extent size hint %lld, must be less than %u.\n"),
++				(long long)cli->fsx.fsx_extsize,
++				min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2));
++	usage();
++}
++
++/* Validate the incoming CoW extsize hint as if we were a file. */
++static void
++validate_cowextsize_hint(
++	struct xfs_mount	*mp,
++	struct cli_params	*cli)
++{
++	xfs_failaddr_t		fa;
++	uint64_t		flags2 = 0;
++
++	if (cli->fsx.fsx_xflags & FS_XFLAG_COWEXTSIZE)
++		flags2 |= XFS_DIFLAG2_COWEXTSIZE;
++	fa = libxfs_inode_validate_cowextsize(mp, cli->fsx.fsx_cowextsize,
++			S_IFREG, 0, flags2);
++	if (fa == NULL)
++		return;
++
++	fprintf(stderr,
++_("illegal CoW extent size hint %lld, must be less than %u.\n"),
++			(long long)cli->fsx.fsx_cowextsize,
++			min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2));
++	usage();
++}
++
+ /*
+  * Validate the configured stripe geometry, or is none is specified, pull
+  * the configuration from the underlying device.
+@@ -3945,6 +4005,10 @@ main(
+ 
+ 	finish_superblock_setup(&cfg, mp, sbp);
+ 
++	/* Validate the extent size hints now that @mp is fully set up. */
++	validate_extsize_hint(mp, &cli);
++	validate_cowextsize_hint(mp, &cli);
++
+ 	/* Print the intended geometry of the fs. */
+ 	if (!quiet || dry_run) {
+ 		struct xfs_fsop_geom	geo;
