@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49704 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727736AbfCNVEL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:04:11 -0400
-Subject: [PATCH 04/36] debian: drop dangling libhandle.a symlinks in
- xfslibs-dev
+Received: from aserp2130.oracle.com ([141.146.126.79]:49980 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727625AbfCNVEX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:04:23 -0400
+Subject: [PATCH 05/36] debian: don't bypass top level Makefile when building
+ subdirs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:04:07 -0700
-Message-ID: <155259744781.31886.15637750109545213350.stgit@magnolia>
+Date: Thu, 14 Mar 2019 14:04:14 -0700
+Message-ID: <155259745436.31886.466306969009991047.stgit@magnolia>
 In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,25 +21,32 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-We don't ship static libhandle libraries anymore, so make sure we drop
-the symlink.
+The top level Makefile does some processing to set build environment
+variables (Q and CHECK_CMD).  debian/rules uses -C to build subdirs
+directly, which bypases this feature of the top-level makefile, which
+causes more build spew than necessary (because Q never gets set to quiet
+the build).
 
-Fixes: ec1cf08dbeb2d ("Several updates to use more modern Debian packaging")
+Since the top level makefile can be used to build the subdirs
+debian/rules cares about, drop the -C and build subdirs via the top
+level Makefile to quiet the build.
+
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- debian/rules |    1 +
- 1 file changed, 1 insertion(+)
+ debian/rules |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
 diff --git a/debian/rules b/debian/rules
-index 4c50654c..80dff4bb 100755
+index 80dff4bb..7c2a8b3c 100755
 --- a/debian/rules
 +++ b/debian/rules
-@@ -80,6 +80,7 @@ binary-arch: checkroot built
- 	install -D -m 0755 debian/local/initramfs.hook debian/xfsprogs/usr/share/initramfs-tools/hooks/xfs
- 	rmdir debian/xfslibs-dev/usr/share/doc/xfsprogs
- 	rm -f debian/xfslibs-dev/lib/libhandle.la
-+	rm -f debian/xfslibs-dev/lib/libhandle.a
- 	rm -fr debian/xfslibs-dev/usr/lib
- 	dh_installdocs
- 	dh_installchangelogs
+@@ -51,7 +51,7 @@ dibuild:
+ 			$(MAKE) -C $$dir NODEP=1 install-headers; \
+ 		done; \
+ 		for dir in include libxfs libxcmd libfrog mkfs; do \
+-			$(MAKE) -C $$dir; \
++			$(MAKE) $$dir; \
+ 		done; \
+ 		mv mkfs/mkfs.xfs mkfs/mkfs.xfs-$(bootpkg); \
+ 		$(MAKE) distclean; \
