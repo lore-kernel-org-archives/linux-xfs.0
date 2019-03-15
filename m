@@ -1,122 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55368 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42640 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727671AbfCOM3m (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Mar 2019 08:29:42 -0400
-Date: Fri, 15 Mar 2019 08:29:40 -0400
+        id S1728157AbfCOMaD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Mar 2019 08:30:03 -0400
+Date: Fri, 15 Mar 2019 08:30:00 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/4] xfs: force writes to delalloc regions to unwritten
-Message-ID: <20190315122939.GB5182@bfoster>
+Subject: Re: [PATCH 3/4] xfs: trace transaction reservation logcount overflow
+Message-ID: <20190315123000.GC5182@bfoster>
 References: <155259893433.30230.6566995969675098053.stgit@magnolia>
- <155259894630.30230.10064390935593758177.stgit@magnolia>
- <20190314230841.GJ23020@dastard>
- <20190315031302.GF4929@magnolia>
- <20190315034038.GK23020@dastard>
+ <155259895225.30230.16620449818865521574.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190315034038.GK23020@dastard>
+In-Reply-To: <155259895225.30230.16620449818865521574.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Mar 15, 2019 at 02:40:38PM +1100, Dave Chinner wrote:
-> On Thu, Mar 14, 2019 at 08:13:03PM -0700, Darrick J. Wong wrote:
-> > On Fri, Mar 15, 2019 at 10:08:41AM +1100, Dave Chinner wrote:
-> > > On Thu, Mar 14, 2019 at 02:29:06PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > When writing to a delalloc region in the data fork, commit the new
-> > > > allocations (of the da reservation) as unwritten so that the mappings
-> > > > are only marked written once writeback completes successfully.  This
-> > > > fixes the problem of stale data exposure if the system goes down during
-> > > > targeted writeback of a specific region of a file, as tested by
-> > > > generic/042.
-> > > 
-> > > So what does this do to buffered sequential and random write
-> > > performance?
-> > 
-> > Whacks it quite a bit -- 10-20% depending on how fast the storage is in
-> > the first place.  I barely noticed on my usb thumb drive, however. :P
+On Thu, Mar 14, 2019 at 02:29:12PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I figured that would be the case, with random writes being much
-> worse...
+> This is a debugging patch to keep track of cases where transaction
+> reservations with permanent reservations do not reserve enough logcount
+> to handle the entire workflow.
 > 
-> > That said, shovelling that many writes through the completion workqueues
-> > creates a thundering herd problem on the ILOCK so maybe it wouldn't be
-> > so bad if we simply dumped the completions on a per-inode queue and only
-> > had one thread handling the completions.
-> > 
-> > (As we've been discussing on IRC.)
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_log.c      |   11 +++++++++++
+>  fs/xfs/xfs_log_priv.h |    3 +++
+>  fs/xfs/xfs_trace.h    |   10 +++++++++-
+>  3 files changed, 23 insertions(+), 1 deletion(-)
 > 
-> *nod*
 > 
-> > > Next, if the entire delalloc extent being allocated is beyond the
-> > > on-disk EOF (typical for extending sequential buffered writes), why
-> > > do we want those to be allocated as unwritten? i.e. isn't "allocate
-> > > as unwritten" only necessary for delalloc extent allocation
-> > > inside EOF?
-> > 
-> > I wasn't sure on this point -- for delalloc extents that start at or
-> > above EOF, we can continue go straight to real like we do today.  We
-> > still have to use the setfilesize transaction to update isize on disk,
-> > so it probably doesn't make that big of a difference.
-> 
-> We have to keep the setfilesize completion code, anyway (think
-> partial last block file extensions), but the setfilesize stuff is
-> much, much lower overhead than unwritten extent conversion so i
-> think we want to avoid unwritten extents where-ever they are
-> unnecessary.
-> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index c3b610b687d1..8832cc86566f 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -385,6 +385,9 @@ xfs_log_regrant(
+>  
+>  	if (tic->t_cnt > 0)
+>  		return 0;
+> +#ifdef DEBUG
+> +	tic->t_spillcnt++;
+> +#endif
+>  
+>  	trace_xfs_log_regrant(log, tic);
+>  
 
-The additional tradeoff to consider for fully post-eof extents is
-eliminating the need to zero them out entirely on extending writes (or
-truncates) that jump over them but pull them within EOF. That could
-eliminate quite a bit of data I/O with large enough preallocations in
-place.
+Don't we already kind of have this contextual information with the
+xfs_log_regrant* tracepoints? I guess we don't have the count
+information explicitly, but it seems it can be deduced from a trace
+dump.
 
-Of course, this is a different (and probably less common) write pattern
-from straightforward sequential writes, but IIRC it comes for free
-simply by mapping extents as unwritten since the zeroing code is smart
-enough to know when zeroing is unnecessary. It would be nice if we could
-figure out a way to take advantage of that optimization without
-disrupting performance or whatever of the sequential case. Though I
-wouldn't suggest this as a blocker to addressing the stale data exposure
-problem, of course. (Another angle could be to determine when extent
-conversions might be optimal to data zeroing and do the former in place
-of the latter on file extension..).
-
-> 
-> > If the delalloc extent crosses EOF then I think it makes sense to map it
-> > in as unwritten, issue the write, and convert the extent to real during
-> > io completion, and not split it up just to avoid having unwritten
-> > extents past EOF.
-> 
-> Yup, makes sense. For a sequential write, they should always be
-> beyond EOF. For anything else, we use unwritten.
-> 
-
-I'm not quite sure I follow the suggested change in behavior here tbh so
-maybe this is not an issue, but another thing to consider is whether
-selective delalloc -> real conversion for post-eof extents translates to
-conditional stale data exposure vectors in certain file extension
-scenarios. I think even the post-eof zeroing code may be susceptible to
-this problem if the log happens to push after a truncate transaction
-commits but before the associated dirty pages are written back..
+We also already have an 'xs_try_logspace' stat in the reservation cases.
+I wonder if a similar regrant stat for the exhausted reservation case
+might be useful enough (and not require debug code) to determine whether
+a particular workload is experiencing this problem.
 
 Brian
 
-> > IOWS, there wasn't any particular intentionality behind having the code
-> > not set PREALLOC if the extent is totally beyond EOF; this was just the
-> > bare minimum to get a discussion started. :)
+> @@ -3124,6 +3127,9 @@ xlog_regrant_reserve_log_space(
+>  	/* just return if we still have some of the pre-reserved space */
+>  	if (ticket->t_cnt > 0)
+>  		return;
+> +#ifdef DEBUG
+> +	ticket->t_spillcnt++;
+> +#endif
+>  
+>  	xlog_grant_add_space(log, &log->l_reserve_head.grant,
+>  					ticket->t_unit_res);
+> @@ -3159,6 +3165,11 @@ xlog_ungrant_log_space(
+>  	if (ticket->t_cnt > 0)
+>  		ticket->t_cnt--;
+>  
+> +#ifdef DEBUG
+> +	if (ticket->t_spillcnt > 0)
+> +		trace_xfs_log_ungrant_spill(log, ticket);
+> +#endif
+> +
+>  	trace_xfs_log_ungrant_enter(log, ticket);
+>  	trace_xfs_log_ungrant_sub(log, ticket);
+>  
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index b5f82cb36202..37302d2ad288 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -161,6 +161,9 @@ typedef struct xlog_ticket {
+>  	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
+>  	char		   t_ocnt;	 /* original count		 : 1  */
+>  	char		   t_cnt;	 /* current count		 : 1  */
+> +#ifdef DEBUG
+> +	char		   t_spillcnt;	 /* underestimation of ocnt	 : 1  */
+> +#endif
+>  	char		   t_clientid;	 /* who does this belong to;	 : 1  */
+>  	char		   t_flags;	 /* properties of reservation	 : 1  */
+>  
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index bd9a48fa80ba..b765b2761382 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -937,6 +937,7 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
+>  		__field(dev_t, dev)
+>  		__field(char, ocnt)
+>  		__field(char, cnt)
+> +		__field(int, spillcnt)
+>  		__field(int, curr_res)
+>  		__field(int, unit_res)
+>  		__field(unsigned int, flags)
+> @@ -954,6 +955,11 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
+>  		__entry->dev = log->l_mp->m_super->s_dev;
+>  		__entry->ocnt = tic->t_ocnt;
+>  		__entry->cnt = tic->t_cnt;
+> +#ifdef DEBUG
+> +		__entry->spillcnt = tic->t_spillcnt;
+> +#else
+> +		__entry->spillcnt = -1;
+> +#endif
+>  		__entry->curr_res = tic->t_curr_res;
+>  		__entry->unit_res = tic->t_unit_res;
+>  		__entry->flags = tic->t_flags;
+> @@ -969,7 +975,7 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
+>  		__entry->curr_block = log->l_curr_block;
+>  		__entry->tail_lsn = atomic64_read(&log->l_tail_lsn);
+>  	),
+> -	TP_printk("dev %d:%d t_ocnt %u t_cnt %u t_curr_res %u "
+> +	TP_printk("dev %d:%d t_ocnt %u t_cnt %u spill %u t_curr_res %u "
+>  		  "t_unit_res %u t_flags %s reserveq %s "
+>  		  "writeq %s grant_reserve_cycle %d "
+>  		  "grant_reserve_bytes %d grant_write_cycle %d "
+> @@ -978,6 +984,7 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->ocnt,
+>  		  __entry->cnt,
+> +		  __entry->spillcnt,
+>  		  __entry->curr_res,
+>  		  __entry->unit_res,
+>  		  __print_flags(__entry->flags, "|", XLOG_TIC_FLAGS),
+> @@ -1014,6 +1021,7 @@ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_sub);
+>  DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_enter);
+>  DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_exit);
+>  DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_sub);
+> +DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_spill);
+>  
+>  DECLARE_EVENT_CLASS(xfs_log_item_class,
+>  	TP_PROTO(struct xfs_log_item *lip),
 > 
-> *nod*
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
