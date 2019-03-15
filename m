@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:44834 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726513AbfCOWCJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Mar 2019 18:02:09 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:55226 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726757AbfCOWCL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Mar 2019 18:02:11 -0400
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 02/36] configure: use sys/xattr.h for fsetxattr detection
+Subject: Re: [PATCH 03/36] configure.ac: fix alignment of features
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <155259743543.31886.18053722203157328922.stgit@magnolia>
-Message-ID: <8edf9102-e497-dff8-cd94-e00bfe60bd9e@oracle.com>
-Date: Fri, 15 Mar 2019 15:01:59 -0700
+ <155259744173.31886.6475707140088498779.stgit@magnolia>
+Message-ID: <636307b6-a0fe-e575-c4ea-43aa805bc410@oracle.com>
+Date: Fri, 15 Mar 2019 15:02:06 -0700
 MIME-Version: 1.0
-In-Reply-To: <155259743543.31886.18053722203157328922.stgit@magnolia>
+In-Reply-To: <155259744173.31886.6475707140088498779.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -18,46 +18,122 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-Looks ok to me.
+Looks good.  Thanks!
 
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
-On 3/14/19 2:03 PM, Darrick J. Wong wrote:
+On 3/14/19 2:04 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The only user of fsetxattr and HAVE_FSETXATTR is fsr, which includes
-> sys/xattr.h (from libc).  However, the m4 macro to detect fsetxattr
-> support requires attr/xattr.h (from libattr).  libattr dropped xattr.h
-> last year, so update the check.
+> Fix the alignment of the feature options in the --help screen.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
->   m4/package_libcdev.m4 |    4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
+>   configure.ac |   28 ++++++++++++++--------------
+>   1 file changed, 14 insertions(+), 14 deletions(-)
 > 
 > 
-> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-> index 7ee4acdd..2c0c72ce 100644
-> --- a/m4/package_libcdev.m4
-> +++ b/m4/package_libcdev.m4
-> @@ -223,14 +223,14 @@ AC_DEFUN([AC_HAVE_FLS],
->     ])
+> diff --git a/configure.ac b/configure.ac
+> index ccc6e292..5a4e55ad 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -28,82 +28,82 @@ if test "${BUILD_CFLAGS+set}" != "set"; then
+>   fi
+>   
+>   AC_ARG_ENABLE(shared,
+> -[ --enable-shared=[yes/no] Enable use of shared libraries [default=yes]],,
+> +[  --enable-shared=[yes/no]  Enable use of shared libraries [default=yes]],,
+>   	enable_shared=yes)
+>   AC_SUBST(enable_shared)
+>   
+>   AC_ARG_ENABLE(gettext,
+> -[ --enable-gettext=[yes/no] Enable alternate language support [default=yes]],,
+> +[  --enable-gettext=[yes/no] Enable alternate language support [default=yes]],,
+>   	enable_gettext=yes)
+>   AC_SUBST(enable_gettext)
+>   
+>   AC_ARG_ENABLE(blkid,
+> -[ --enable-blkid=[yes/no] Enable use of block device id library [default=yes]],,
+> +[  --enable-blkid=[yes/no]   Enable use of block device id library [default=yes]],,
+>   	enable_blkid=yes)
+>   AC_SUBST(enable_blkid)
+>   
+>   AC_ARG_ENABLE(readline,
+> -[ --enable-readline=[yes/no] Enable readline command editing [default=no]],
+> +[  --enable-readline=[yes/no] Enable readline command editing [default=no]],
+>   	test $enable_readline = yes && libreadline="-lreadline",
+>   	enable_readline=no)
+>   AC_SUBST(libreadline)
+>   AC_SUBST(enable_readline)
+>   
+>   AC_ARG_ENABLE(editline,
+> -[ --enable-editline=[yes/no] Enable editline command editing [default=no]],
+> +[  --enable-editline=[yes/no] Enable editline command editing [default=no]],
+>   	test $enable_editline = yes && libeditline="-ledit",
+>   	enable_editline=no)
+>   AC_SUBST(libeditline)
+>   AC_SUBST(enable_editline)
+>   
+>   AC_ARG_ENABLE(termcap,
+> -[ --enable-termcap=[yes/no] Enable terminal capabilities library [default=no]],
+> +[  --enable-termcap=[yes/no] Enable terminal capabilities library [default=no]],
+>   	test $enable_termcap = yes && libtermcap="-ltermcap",)
+>   AC_SUBST(libtermcap)
+>   
+>   
+>   AC_ARG_ENABLE(lib64,
+> -[ --enable-lib64=[yes/no] Enable lib64 support [default=yes]],,
+> +[  --enable-lib64=[yes/no]   Enable lib64 support [default=yes]],,
+>   	enable_lib64=yes)
+>   AC_SUBST(enable_lib64)
+>   
+>   AC_ARG_ENABLE(librt,
+> -[ --enable-librt=[yes/no] Enable librt support [default=yes]],,
+> +[  --enable-librt=[yes/no]   Enable librt support [default=yes]],,
+>   	enable_librt=yes)
+>   AC_SUBST(enable_librt)
+>   
+>   # Enable UBSAN; set enable_ubsan=probe below to enable autoprobe.
+>   AC_ARG_ENABLE(ubsan,
+> -[ --enable-ubsan=[yes/no] Enable Undefined Behavior Sanitizer (UBSAN) [default=no]],,
+> +[  --enable-ubsan=[yes/no]   Enable Undefined Behavior Sanitizer (UBSAN) [default=no]],,
+>   	enable_ubsan=no)
+>   AC_SUBST(enable_ubsan)
+>   
+>   # Enable ADDRSAN; set enable_addrsan=probe below to enable autoprobe.
+>   AC_ARG_ENABLE(addrsan,
+> -[ --enable-addrsan=[yes/no] Enable Address Sanitizer (ADDRSAN) [default=no]],,
+> +[  --enable-addrsan=[yes/no] Enable Address Sanitizer (ADDRSAN) [default=no]],,
+>   	enable_addrsan=no)
+>   AC_SUBST(enable_addrsan)
+>   
+>   # Enable THREADSAN; set enable_threadsan=probe to enable autoprobe.
+>   AC_ARG_ENABLE(threadsan,
+> -[ --enable-threadsan=[yes/no] Enable Thread Sanitizer (THREADSAN) [default=no]],,
+> +[  --enable-threadsan=[yes/no] Enable Thread Sanitizer (THREADSAN) [default=no]],,
+>   	enable_threadsan=no)
+>   AC_SUBST(enable_threadsan)
+>   
+>   AC_ARG_ENABLE(lto,
+> -[ --enable-lto=[yes/no]      Enable link time optimization (LTO) [default=no]],,
+> +[  --enable-lto=[yes/no]     Enable link time optimization (LTO) [default=no]],,
+>   	enable_lto=no)
+>   AC_SUBST(enable_lto)
+>   
+>   # Enable xfs_scrub build
+>   AC_ARG_ENABLE(scrub,
+> -[ --enable-scrub=[yes/no]    Enable build of xfs_scrub utility [default=yes]],,
+> +[  --enable-scrub=[yes/no]   Enable build of xfs_scrub utility [default=yes]],,
+>   	enable_scrub=yes)
+>   AC_SUBST(enable_scrub)
+>   
+>   # Enable libicu for xfs_scrubbing of malicious unicode sequences in names
+>   AC_ARG_ENABLE(libicu,
+> -[ --enable-libicu=[yes/no]   Enable Unicode name scanning in xfs_scrub (libicu) [default=probe]],,
+> +[  --enable-libicu=[yes/no]  Enable Unicode name scanning in xfs_scrub (libicu) [default=probe]],,
+>   	enable_libicu=probe)
 >   
 >   #
-> -# Check if we have a fsetxattr call (Mac OS X)
-> +# Check if we have a fsetxattr call
->   #
->   AC_DEFUN([AC_HAVE_FSETXATTR],
->     [ AC_CHECK_DECL([fsetxattr],
->          have_fsetxattr=yes,
->          [],
->          [#include <sys/types.h>
-> -        #include <attr/xattr.h>]
-> +        #include <sys/xattr.h>]
->          )
->       AC_SUBST(have_fsetxattr)
->     ])
 > 
