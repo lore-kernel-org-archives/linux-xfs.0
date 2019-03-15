@@ -1,82 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:57032 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726969AbfCTAor (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Mar 2019 20:44:47 -0400
-Subject: [PATCH 01/12] check: improve test list randomization
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 19 Mar 2019 17:44:42 -0700
-Message-ID: <155304268284.31707.10338119992472996728.stgit@magnolia>
-In-Reply-To: <155304267647.31707.14180452399822113095.stgit@magnolia>
-References: <155304267647.31707.14180452399822113095.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mail.kernel.org ([198.145.29.99]:42052 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727207AbfCOVpW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Mar 2019 17:45:22 -0400
+Subject: Re: [GIT PULL] xfs: minor cleanups for 5.1-rc1
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20190315160706.GI4929@magnolia>
+References: <20190315160706.GI4929@magnolia>
+Message-Id: <155268632152.16247.17715679919899654983.pr-tracker-bot@kernel.org>
+Date: Fri, 15 Mar 2019 21:45:21 +0000
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: torvalds@linux-foundation.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+The pull request you sent on Fri, 15 Mar 2019 09:07:06 -0700:
 
-awk doesn't have a particularly good random number generator -- it seeds
-from the Unix epoch time in seconds, which means that the run order
-across a bunch of VMs started at exactly the same time are unsettlingly
-predictable.  Therefore, at least try to seed it with bash's $RANDOM,
-which is slightly less predictable.
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.1-merge-5
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- check         |   12 ++++++------
- randomize.awk |   12 ++++++++----
- 2 files changed, 14 insertions(+), 10 deletions(-)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/de578188ed0161713c9515eeafa394296516ff27
 
+Thank you!
 
-diff --git a/check b/check
-index 20e95302..ecd1d39a 100755
---- a/check
-+++ b/check
-@@ -242,13 +242,13 @@ _prepare_test_list()
- 	done
- 
- 	# sort the list of tests into numeric order
--	list=`sort -n $tmp.list | uniq`
--	rm -f $tmp.list
--
--	if $randomize
--	then
--		list=`echo $list | awk -f randomize.awk`
-+	if $randomize; then
-+		sorter="awk -v seed=$RANDOM -f randomize.awk"
-+	else
-+		sorter="cat"
- 	fi
-+	list=`sort -n $tmp.list | uniq | $sorter`
-+	rm -f $tmp.list
- }
- 
- # Process command arguments first.
-diff --git a/randomize.awk b/randomize.awk
-index 0a8ad71a..d979fb03 100644
---- a/randomize.awk
-+++ b/randomize.awk
-@@ -15,10 +15,14 @@ function randomize(array, N) {
- return
- }
- 
-+BEGIN {
-+	srand(seed)
-+}
- {
--    srand()
--    for (i = 0; i < NF; i++ ) array[i] = $(i+1)
--    randomize(array, NF)
--    for (i = 0; i < NF; i++) printf("%s ", array[i])
-+	array[NR - 1] = $0
-+}
-+END {
-+    randomize(array, NR)
-+    for (i = 0; i < NR; i++) printf("%s ", array[i])
- }
- 
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
