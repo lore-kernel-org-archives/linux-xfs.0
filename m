@@ -1,19 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59698 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:37620 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727940AbfC1XAm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Mar 2019 19:00:42 -0400
-Subject: Re: [PATCH 17/36] xfs_scrub: check label for misleading characters
+        id S1729576AbfCORgf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Mar 2019 13:36:35 -0400
+Subject: Re: [PATCH 13/36] xfs_scrub: use datadev parallelization estimates
+ for thread count
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <155259753535.31886.7933186379056372168.stgit@magnolia>
+ <155259750953.31886.7244219282258067422.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a950b125-3068-f091-8c49-51e2c90e31a9@sandeen.net>
-Date: Thu, 28 Mar 2019 18:00:41 -0500
+Message-ID: <f5165fad-9128-c469-4142-8c8012c8fa70@sandeen.net>
+Date: Fri, 15 Mar 2019 12:36:34 -0500
 MIME-Version: 1.0
-In-Reply-To: <155259753535.31886.7933186379056372168.stgit@magnolia>
+In-Reply-To: <155259750953.31886.7244219282258067422.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -23,165 +24,55 @@ Cc: linux-xfs@vger.kernel.org
 On 3/14/19 4:05 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Make sure that we can retrieve the label and that it doesn't contain
-> anything potentially misleading.
+> During phases 2-5, xfs_scrub should estimate the level of
+> parallelization possible on the data device to determine the number of
+> threads spawned to scrub filesystem metadata, not just blindly using the
+> number of CPUs.  This avoids flooding non-rotational storage with random
+> reads, which totally destroys performance and makes scrub runtimes
+> higher.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok nitpick withdrawn
+seems like when I first looked at this I had a concern but now I don't
+remember, and today it seems fine? :)
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
->  scrub/phase5.c   |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  scrub/unicrash.c |   24 ++++++++++++++++++++++++
->  scrub/unicrash.h |    5 +++++
->  3 files changed, 83 insertions(+)
+>  scrub/phase1.c |   14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
 > 
 > 
-> diff --git a/scrub/phase5.c b/scrub/phase5.c
-> index 6ffcec2d..49886e6f 100644
-> --- a/scrub/phase5.c
-> +++ b/scrub/phase5.c
-> @@ -11,6 +11,7 @@
->  #ifdef HAVE_LIBATTR
->  # include <attr/attributes.h>
->  #endif
-> +#include <linux/fs.h>
->  #include "handle.h"
->  #include "list.h"
->  #include "path.h"
-> @@ -282,6 +283,55 @@ xfs_scrub_connections(
->  	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
->  }
->  
-> +#ifndef FS_IOC_GETFSLABEL
-> +# define FSLABEL_MAX		256
-> +# define FS_IOC_GETFSLABEL	_IOR(0x94, 49, char[FSLABEL_MAX])
-> +#endif /* FS_IOC_GETFSLABEL */
-> +
-> +/*
-> + * Check the filesystem label for Unicode normalization problems or misleading
-> + * sequences.
-> + */
-> +static bool
-> +xfs_scrub_fs_label(
-> +	struct scrub_ctx		*ctx)
-> +{
-> +	char				label[FSLABEL_MAX];
-> +	struct unicrash			*uc = NULL;
-> +	bool				moveon = true;
-> +	int				error;
-> +
-> +	moveon = unicrash_fs_label_init(&uc, ctx);
-> +	if (!moveon)
-> +		return false;
-> +
-> +	/* Retrieve label; quietly bail if we don't support that. */
-> +	error = ioctl(ctx->mnt_fd, FS_IOC_GETFSLABEL, &label);
-> +	if (error) {
-> +		if (errno != EOPNOTSUPP && errno != ENOTTY) {
-> +			moveon = false;
-> +			perror(ctx->mntpoint);
-> +		}
-> +		goto out;
-> +	}
-> +
-> +	/* Ignore empty labels. */
-> +	if (label[0] == 0)
-> +		goto out;
-> +
-> +	/* Otherwise check for weirdness. */
-> +	if (uc)
-> +		moveon = unicrash_check_fs_label(uc, ctx->mntpoint, label);
-> +	else
-> +		moveon = xfs_scrub_check_name(ctx, ctx->mntpoint,
-> +				_("filesystem label"), label);
-> +	if (!moveon)
-> +		goto out;
-> +out:
-> +	unicrash_free(uc);
-> +	return moveon;
-> +}
-> +
->  /* Check directory connectivity. */
->  bool
->  xfs_scan_connections(
-> @@ -296,6 +346,10 @@ _("Filesystem has errors, skipping connectivity checks."));
->  		return true;
+> diff --git a/scrub/phase1.c b/scrub/phase1.c
+> index 2113014b..6b472147 100644
+> --- a/scrub/phase1.c
+> +++ b/scrub/phase1.c
+> @@ -109,13 +109,6 @@ _("Must be root to run scrub."));
+>  		return false;
 >  	}
 >  
-> +	moveon = xfs_scrub_fs_label(ctx);
-> +	if (!moveon)
-> +		return false;
-> +
->  	ret = xfs_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
->  	if (!ret)
->  		moveon = false;
-> diff --git a/scrub/unicrash.c b/scrub/unicrash.c
-> index a95fc305..121eedbc 100644
-> --- a/scrub/unicrash.c
-> +++ b/scrub/unicrash.c
-> @@ -465,6 +465,15 @@ unicrash_xattr_init(
->  			is_only_root_writable(bstat));
->  }
+> -	ctx->nr_io_threads = nproc;
+> -	if (verbose) {
+> -		fprintf(stdout, _("%s: using %d threads to scrub.\n"),
+> -				ctx->mntpoint, scrub_nproc(ctx));
+> -		fflush(stdout);
+> -	}
+> -
+>  	if (!platform_test_xfs_fd(ctx->mnt_fd)) {
+>  		str_info(ctx, ctx->mntpoint,
+>  _("Does not appear to be an XFS filesystem!"));
+> @@ -193,6 +186,13 @@ _("Unable to find realtime device path."));
+>  		return false;
+>  	}
 >  
-> +/* Initialize the collision detector for a filesystem label. */
-> +bool
-> +unicrash_fs_label_init(
-> +	struct unicrash		**ucp,
-> +	struct scrub_ctx	*ctx)
-> +{
-> +	return unicrash_init(ucp, ctx, false, 16, true);
-> +}
+> +	ctx->nr_io_threads = disk_heads(ctx->datadev);
+> +	if (verbose) {
+> +		fprintf(stdout, _("%s: using %d threads to scrub.\n"),
+> +				ctx->mntpoint, scrub_nproc(ctx));
+> +		fflush(stdout);
+> +	}
 > +
->  /* Free the crash detector. */
->  void
->  unicrash_free(
-> @@ -698,3 +707,18 @@ unicrash_check_xattr_name(
->  	return __unicrash_check_name(uc, descr, _("extended attribute"),
->  			attrname, 0);
->  }
-> +
-> +/*
-> + * Check the fs label for unicode normalization problems or misleading bits.
-> + */
-> +bool
-> +unicrash_check_fs_label(
-> +	struct unicrash		*uc,
-> +	const char		*descr,
-> +	const char		*label)
-> +{
-> +	if (!uc)
-> +		return true;
-> +	return __unicrash_check_name(uc, descr, _("filesystem label"),
-> +			label, 0);
-> +}
-> diff --git a/scrub/unicrash.h b/scrub/unicrash.h
-> index 7d7276a8..85fcabc6 100644
-> --- a/scrub/unicrash.h
-> +++ b/scrub/unicrash.h
-> @@ -17,17 +17,22 @@ bool unicrash_dir_init(struct unicrash **ucp, struct scrub_ctx *ctx,
->  		struct xfs_bstat *bstat);
->  bool unicrash_xattr_init(struct unicrash **ucp, struct scrub_ctx *ctx,
->  		struct xfs_bstat *bstat);
-> +bool unicrash_fs_label_init(struct unicrash **ucp, struct scrub_ctx *ctx);
->  void unicrash_free(struct unicrash *uc);
->  bool unicrash_check_dir_name(struct unicrash *uc, const char *descr,
->  		struct dirent *dirent);
->  bool unicrash_check_xattr_name(struct unicrash *uc, const char *descr,
->  		const char *attrname);
-> +bool unicrash_check_fs_label(struct unicrash *uc, const char *descr,
-> +		const char *label);
->  #else
->  # define unicrash_dir_init(u, c, b)		(true)
->  # define unicrash_xattr_init(u, c, b)		(true)
-> +# define unicrash_label_init(u, c)		(true)
->  # define unicrash_free(u)			do {(u) = (u);} while (0)
->  # define unicrash_check_dir_name(u, d, n)	(true)
->  # define unicrash_check_xattr_name(u, d, n)	(true)
-> +# define unicrash_check_fs_label(u, d, n)	(true)
->  #endif /* HAVE_LIBICU */
->  
->  #endif /* XFS_SCRUB_UNICRASH_H_ */
+>  	if (ctx->fsinfo.fs_log) {
+>  		ctx->logdev = disk_open(ctx->fsinfo.fs_log);
+>  		if (error) {
 > 
