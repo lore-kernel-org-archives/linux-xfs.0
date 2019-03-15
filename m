@@ -1,74 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50808 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727412AbfCNVEt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:04:49 -0400
-Subject: [PATCH 09/36] xfs_io: don't walk off the end of argv in fzero_f
+Received: from aserp2130.oracle.com ([141.146.126.79]:33412 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728212AbfCOBBS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 21:01:18 -0400
+Date: Thu, 14 Mar 2019 18:01:13 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:04:45 -0700
-Message-ID: <155259748531.31886.6568534900832262149.stgit@magnolia>
-In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
+Subject: Re: [PATCH 06/36] debian: enable parallel make
+Message-ID: <20190315010113.GB4929@magnolia>
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <155259746044.31886.13633380455067163247.stgit@magnolia>
+ <CAFMei7MhwDDLvZ41Op5ij7S0_h3FpK19eXZdX6=guS_nBJ361A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAFMei7MhwDDLvZ41Op5ij7S0_h3FpK19eXZdX6=guS_nBJ361A@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Nathan Scott <nathans@redhat.com>
+Cc: "Sandeen, Eric" <sandeen@sandeen.net>, xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Mar 15, 2019 at 11:18:32AM +1100, Nathan Scott wrote:
+> On Fri, Mar 15, 2019 at 8:04 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> > Use parallel make to speed up dpkg builds.
+> 
+> Seems a little more involved than I woulda expected, but LGTM.
+> 
+> Reviewed-by: Nathan Scott <nathans@debian.org>
+> 
+> >                 for dir in include libxfs; do \
+> > -                       $(MAKE) -C $$dir NODEP=1 install-headers; \
+> > +                       $(MAKE) $(PMAKEFLAGS) -C $$dir NODEP=1 install-headers; \
+> >                 done; \
+> 
+> OOC, does the $(MAKE) -C above warrant the same treatment as the earlier patch?
+> (i.e. removing the -C there for less verbosity)
 
-The fzero_f function doesn't check that there are enough non-switch
-parameters to supply offset and length arguments to fallocate.  As a
-result, we can walk off the end of the argv array and crash.  A
-secondary problem is that we don't use getopt to detect the -k, which is
-not how most xfs_io commands work.
+Hmm, that seems like it could be the case.  I'll have a look tomorrow.
 
-Therefore, use getopt to detect the -k argument and rewire the offset
-and length interpretation code to check optind and use argv correctly.
-This bug is trivially reproduced by "xfs_io -c 'fzero -k 0' /some/file".
+--D
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- io/prealloc.c |   20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
-
-
-diff --git a/io/prealloc.c b/io/prealloc.c
-index 9a372bae..6d452354 100644
---- a/io/prealloc.c
-+++ b/io/prealloc.c
-@@ -285,18 +285,24 @@ fzero_f(
- {
- 	xfs_flock64_t	segment;
- 	int		mode = FALLOC_FL_ZERO_RANGE;
--	int		index = 1;
-+	int		c;
- 
--	if (strncmp(argv[index], "-k", 3) == 0) {
--		mode |= FALLOC_FL_KEEP_SIZE;
--		index++;
-+	while ((c = getopt(argc, argv, "k")) != EOF) {
-+		switch (c) {
-+		case 'k':
-+			mode |= FALLOC_FL_KEEP_SIZE;
-+			break;
-+		default:
-+			command_usage(&fzero_cmd);
-+		}
- 	}
-+        if (optind != argc - 2)
-+                return command_usage(&fzero_cmd);
- 
--	if (!offset_length(argv[index], argv[index + 1], &segment))
-+	if (!offset_length(argv[optind], argv[optind + 1], &segment))
- 		return 0;
- 
--	if (fallocate(file->fd, mode,
--			segment.l_start, segment.l_len)) {
-+	if (fallocate(file->fd, mode, segment.l_start, segment.l_len)) {
- 		perror("fallocate");
- 		return 0;
- 	}
+> cheers.
+> 
+> --
+> Nathan
