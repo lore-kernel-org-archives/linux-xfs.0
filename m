@@ -1,29 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42052 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727207AbfCOVpW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Mar 2019 17:45:22 -0400
-Subject: Re: [GIT PULL] xfs: minor cleanups for 5.1-rc1
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20190315160706.GI4929@magnolia>
-References: <20190315160706.GI4929@magnolia>
-Message-Id: <155268632152.16247.17715679919899654983.pr-tracker-bot@kernel.org>
-Date: Fri, 15 Mar 2019 21:45:21 +0000
+Received: from aserp2130.oracle.com ([141.146.126.79]:44834 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726513AbfCOWCJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Mar 2019 18:02:09 -0400
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH 02/36] configure: use sys/xattr.h for fsetxattr detection
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <155259743543.31886.18053722203157328922.stgit@magnolia>
+Message-ID: <8edf9102-e497-dff8-cd94-e00bfe60bd9e@oracle.com>
+Date: Fri, 15 Mar 2019 15:01:59 -0700
+MIME-Version: 1.0
+In-Reply-To: <155259743543.31886.18053722203157328922.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: torvalds@linux-foundation.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-The pull request you sent on Fri, 15 Mar 2019 09:07:06 -0700:
+Looks ok to me.
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.1-merge-5
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/de578188ed0161713c9515eeafa394296516ff27
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+On 3/14/19 2:03 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> The only user of fsetxattr and HAVE_FSETXATTR is fsr, which includes
+> sys/xattr.h (from libc).  However, the m4 macro to detect fsetxattr
+> support requires attr/xattr.h (from libattr).  libattr dropped xattr.h
+> last year, so update the check.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   m4/package_libcdev.m4 |    4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+> index 7ee4acdd..2c0c72ce 100644
+> --- a/m4/package_libcdev.m4
+> +++ b/m4/package_libcdev.m4
+> @@ -223,14 +223,14 @@ AC_DEFUN([AC_HAVE_FLS],
+>     ])
+>   
+>   #
+> -# Check if we have a fsetxattr call (Mac OS X)
+> +# Check if we have a fsetxattr call
+>   #
+>   AC_DEFUN([AC_HAVE_FSETXATTR],
+>     [ AC_CHECK_DECL([fsetxattr],
+>          have_fsetxattr=yes,
+>          [],
+>          [#include <sys/types.h>
+> -        #include <attr/xattr.h>]
+> +        #include <sys/xattr.h>]
+>          )
+>       AC_SUBST(have_fsetxattr)
+>     ])
+> 
