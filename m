@@ -1,67 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from a9-114.smtp-out.amazonses.com ([54.240.9.114]:42366 "EHLO
-        a9-114.smtp-out.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726529AbfCTSUh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 14:20:37 -0400
-Date: Wed, 20 Mar 2019 18:20:35 +0000
-From: Christopher Lameter <cl@linux.com>
-Subject: Re: [RFC 0/2] guarantee natural alignment for kmalloc()
-In-Reply-To: <5d7fee9c-1a80-6ac9-ac1d-b1ce05ed27a8@suse.cz>
-Message-ID: <010001699c5563f8-36c6909f-ed43-4839-82da-b5f9f21594b8-000000@email.amazonses.com>
-References: <20190319211108.15495-1-vbabka@suse.cz> <01000169988d4e34-b4178f68-c390-472b-b62f-a57a4f459a76-000000@email.amazonses.com> <5d7fee9c-1a80-6ac9-ac1d-b1ce05ed27a8@suse.cz>
+Received: from aserp2130.oracle.com ([141.146.126.79]:46502 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726771AbfCODNG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 23:13:06 -0400
+Date: Thu, 14 Mar 2019 20:13:03 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/4] xfs: force writes to delalloc regions to unwritten
+Message-ID: <20190315031302.GF4929@magnolia>
+References: <155259893433.30230.6566995969675098053.stgit@magnolia>
+ <155259894630.30230.10064390935593758177.stgit@magnolia>
+ <20190314230841.GJ23020@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190314230841.GJ23020@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Michal Hocko <mhocko@kernel.org>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, 20 Mar 2019, Vlastimil Babka wrote:
+On Fri, Mar 15, 2019 at 10:08:41AM +1100, Dave Chinner wrote:
+> On Thu, Mar 14, 2019 at 02:29:06PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > When writing to a delalloc region in the data fork, commit the new
+> > allocations (of the da reservation) as unwritten so that the mappings
+> > are only marked written once writeback completes successfully.  This
+> > fixes the problem of stale data exposure if the system goes down during
+> > targeted writeback of a specific region of a file, as tested by
+> > generic/042.
+> 
+> So what does this do to buffered sequential and random write
+> performance?
 
-> > This means that the alignments are no longer uniform for all kmalloc
-> > caches and we get back to code making all sorts of assumptions about
-> > kmalloc alignments.
->
-> Natural alignment to size is rather well defined, no? Would anyone ever
-> assume a larger one, for what reason?
-> It's now where some make assumptions (even unknowingly) for natural
-> There are two 'odd' sizes 96 and 192, which will keep cacheline size
-> alignment, would anyone really expect more than 64 bytes?
+Whacks it quite a bit -- 10-20% depending on how fast the storage is in
+the first place.  I barely noticed on my usb thumb drive, however. :P
 
-I think one would expect one set of alighment for any kmalloc object.
+That said, shovelling that many writes through the completion workqueues
+creates a thundering herd problem on the ILOCK so maybe it wouldn't be
+so bad if we simply dumped the completions on a per-inode queue and only
+had one thread handling the completions.
 
-> > Currently all kmalloc objects are aligned to KMALLOC_MIN_ALIGN. That will
-> > no longer be the case and alignments will become inconsistent.
->
-> KMALLOC_MIN_ALIGN is still the minimum, but in practice it's larger
-> which is not a problem.
+(As we've been discussing on IRC.)
 
-"In practice" refers to the current way that slab allocators arrange
-objects within the page. They are free to do otherwise if new ideas come
-up for object arrangements etc.
+> Next, if the entire delalloc extent being allocated is beyond the
+> on-disk EOF (typical for extending sequential buffered writes), why
+> do we want those to be allocated as unwritten? i.e. isn't "allocate
+> as unwritten" only necessary for delalloc extent allocation
+> inside EOF?
 
-The slab allocators already may have to store data in addition to the user
-accessible part (f.e. for RCU or ctor). The "natural alighnment" of a
-power of 2 cache is no longer as you expect for these cases. Debugging is
-not the only case where we extend the object.
+I wasn't sure on this point -- for delalloc extents that start at or
+above EOF, we can continue go straight to real like we do today.  We
+still have to use the setfilesize transaction to update isize on disk,
+so it probably doesn't make that big of a difference.
 
-> Also let me stress again that nothing really changes except for SLOB,
-> and SLUB with debug options. The natural alignment for power-of-two
-> sizes already happens as SLAB and SLUB both allocate objects starting on
-> the page boundary. So people make assumptions based on that, and then
-> break with SLOB, or SLUB with debug. This patch just prevents that
-> breakage by guaranteeing those natural assumptions at all times.
+If the delalloc extent crosses EOF then I think it makes sense to map it
+in as unwritten, issue the write, and convert the extent to real during
+io completion, and not split it up just to avoid having unwritten
+extents past EOF.
 
-As explained before there is nothing "natural" here. Doing so restricts
-future features and creates a mess within the allocator of exceptions for
-debuggin etc etc (see what happened to SLAB). "Natural" is just a
-simplistic thought of a user how he would arrange power of 2 objects.
-These assumption should not be made but specified explicitly.
+IOWS, there wasn't any particular intentionality behind having the code
+not set PREALLOC if the extent is totally beyond EOF; this was just the
+bare minimum to get a discussion started. :)
 
-> > I think its valuable that alignment requirements need to be explicitly
-> > requested.
->
-> That's still possible for named caches created by kmem_cache_create().
+--D
 
-So lets leave it as it is now then.
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
