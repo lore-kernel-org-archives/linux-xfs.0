@@ -1,68 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:50544 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727412AbfCNVEv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:04:51 -0400
-Subject: [PATCH 08/36] xfs_io: statx -r should print attributes_mask
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:04:39 -0700
-Message-ID: <155259747924.31886.11402658884761183760.stgit@magnolia>
-In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:40492 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726271AbfCRNSj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Mar 2019 09:18:39 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1647E3082E68
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2019 13:18:39 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C7A1E60C4C
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2019 13:18:38 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs_io: allow combination of sync_file_range() flags
+Date: Mon, 18 Mar 2019 09:18:38 -0400
+Message-Id: <20190318131838.19019-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+The sync_file_range() functionality supports a flags argument that
+allows the caller to specify any combination of initiating writeback
+or waiting for write completion before and/or after the write. The
+xfs_io handler supports the ability to specify combinations of flags
+on the command line, but fails to OR the flags together and thus
+only performs one action per invocation.
 
-We're dumping the raw structure, so we ought to dump everything,
-including the attributes_mask field.
+This is inconsistent with the syscall and command interpretation.
+Update the sync_file_range() handler to populate the flags mask as
+specified by the user.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- io/stat.c  |    4 ++++
- io/statx.h |    2 +-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ io/sync_file_range.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-
-diff --git a/io/stat.c b/io/stat.c
-index 64662b43..517be66e 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -6,6 +6,9 @@
-  * Portions of statx support written by David Howells (dhowells@redhat.com)
-  */
- 
-+/* Try to pick up statx definitions from the system headers. */
-+#include <linux/stat.h>
-+
- #include "command.h"
- #include "input.h"
- #include "init.h"
-@@ -272,6 +275,7 @@ dump_raw_statx(struct statx *stx)
- 	printf("stat.ino = %llu\n", (unsigned long long)stx->stx_ino);
- 	printf("stat.size = %llu\n", (unsigned long long)stx->stx_size);
- 	printf("stat.blocks = %llu\n", (unsigned long long)stx->stx_blocks);
-+	printf("stat.attributes_mask = 0x%llx\n", (unsigned long long)stx->stx_attributes_mask);
- 	printf("stat.atime.tv_sec = %lld\n", (long long)stx->stx_atime.tv_sec);
- 	printf("stat.atime.tv_nsec = %d\n", stx->stx_atime.tv_nsec);
- 	printf("stat.btime.tv_sec = %lld\n", (long long)stx->stx_btime.tv_sec);
-diff --git a/io/statx.h b/io/statx.h
-index 4e4b31ee..4f40eaa1 100644
---- a/io/statx.h
-+++ b/io/statx.h
-@@ -107,7 +107,7 @@ struct statx {
- 	__u64	stx_ino;	/* Inode number */
- 	__u64	stx_size;	/* File size */
- 	__u64	stx_blocks;	/* Number of 512-byte blocks allocated */
--	__u64	__spare1[1];
-+	__u64	stx_attributes_mask; /* Mask to show what's supported in stx_attributes */
- 	/* 0x40 */
- 	struct statx_timestamp	stx_atime;	/* Last access time */
- 	struct statx_timestamp	stx_btime;	/* File creation time */
+diff --git a/io/sync_file_range.c b/io/sync_file_range.c
+index 30bbc93d..8b5345c5 100644
+--- a/io/sync_file_range.c
++++ b/io/sync_file_range.c
+@@ -37,13 +37,13 @@ sync_range_f(
+ 	while ((c = getopt(argc, argv, "abw")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+-			sync_mode = SYNC_FILE_RANGE_WAIT_AFTER;
++			sync_mode |= SYNC_FILE_RANGE_WAIT_AFTER;
+ 			break;
+ 		case 'b':
+-			sync_mode = SYNC_FILE_RANGE_WAIT_BEFORE;
++			sync_mode |= SYNC_FILE_RANGE_WAIT_BEFORE;
+ 			break;
+ 		case 'w':
+-			sync_mode = SYNC_FILE_RANGE_WRITE;
++			sync_mode |= SYNC_FILE_RANGE_WRITE;
+ 			break;
+ 		default:
+ 			return command_usage(&sync_range_cmd);
+-- 
+2.17.2
