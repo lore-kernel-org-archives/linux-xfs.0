@@ -1,61 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40492 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726271AbfCRNSj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Mar 2019 09:18:39 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1647E3082E68
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2019 13:18:39 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C7A1E60C4C
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Mar 2019 13:18:38 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs_io: allow combination of sync_file_range() flags
-Date: Mon, 18 Mar 2019 09:18:38 -0400
-Message-Id: <20190318131838.19019-1-bfoster@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:44130 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726788AbfCRP6E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Mar 2019 11:58:04 -0400
+Date: Mon, 18 Mar 2019 08:57:57 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] mkfs: Round down log device size if aligned value is
+ larger than device size
+Message-ID: <20190318155757.GM4929@magnolia>
+References: <20190317091943.18222-1-chandan@linux.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190317091943.18222-1-chandan@linux.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Chandan Rajendra <chandan@linux.ibm.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-The sync_file_range() functionality supports a flags argument that
-allows the caller to specify any combination of initiating writeback
-or waiting for write completion before and/or after the write. The
-xfs_io handler supports the ability to specify combinations of flags
-on the command line, but fails to OR the flags together and thus
-only performs one action per invocation.
+On Sun, Mar 17, 2019 at 02:49:43PM +0530, Chandan Rajendra wrote:
+> When using a disk of size 798903808 bytes as the log device and when
+> having a log stripe unit size of 32768, align_log_size() rounds up log
+> device size to 195048 4k blocks i.e. 798916608. This value is larger
+> than the device size. Hence the last call to write(2) inside
+> libxfs_device_zero() would end up returning an error.
+> 
+> To fix this bug, we now round down the log device size if the newly
+> computed size is larger than the actual log device size.
+> 
+> Signed-off-by: Chandan Rajendra <chandan@linux.ibm.com>
+> ---
+>  mkfs/xfs_mkfs.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index d1387ddf..bd05d071 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2938,7 +2938,8 @@ _("log size %lld is not a multiple of the log stripe unit %d\n"),
+>  
+>  	/* If the log is too large, round down instead of round up */
+>  	if ((tmp_logblocks > XFS_MAX_LOG_BLOCKS) ||
+> -	    ((tmp_logblocks << cfg->blocklog) > XFS_MAX_LOG_BYTES)) {
+> +		((tmp_logblocks << cfg->blocklog) > XFS_MAX_LOG_BYTES) ||
+> +		(tmp_logblocks > cfg->logblocks)) {
 
-This is inconsistent with the syscall and command interpretation.
-Update the sync_file_range() handler to populate the flags mask as
-specified by the user.
+I kinda wish you had turned all that into:
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- io/sync_file_range.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+if (tmp_logblocks > XFS_MAX_LOG_BLOCKS ||
+    tmp_logblocks > cfg->logblocks ||
+    (tmp_logblocks << cfg->blocklog) > XFS_MAX_LOG_BYTES) {
+	/* foo bar baz */
+}
 
-diff --git a/io/sync_file_range.c b/io/sync_file_range.c
-index 30bbc93d..8b5345c5 100644
---- a/io/sync_file_range.c
-+++ b/io/sync_file_range.c
-@@ -37,13 +37,13 @@ sync_range_f(
- 	while ((c = getopt(argc, argv, "abw")) != EOF) {
- 		switch (c) {
- 		case 'a':
--			sync_mode = SYNC_FILE_RANGE_WAIT_AFTER;
-+			sync_mode |= SYNC_FILE_RANGE_WAIT_AFTER;
- 			break;
- 		case 'b':
--			sync_mode = SYNC_FILE_RANGE_WAIT_BEFORE;
-+			sync_mode |= SYNC_FILE_RANGE_WAIT_BEFORE;
- 			break;
- 		case 'w':
--			sync_mode = SYNC_FILE_RANGE_WRITE;
-+			sync_mode |= SYNC_FILE_RANGE_WRITE;
- 			break;
- 		default:
- 			return command_usage(&sync_range_cmd);
--- 
-2.17.2
+But otherwise the idea seems ok to me...
+
+--D
+
+>  		tmp_logblocks = (cfg->logblocks / sunit) * sunit;
+>  	}
+>  	cfg->logblocks = tmp_logblocks;
+> -- 
+> 2.19.1
+> 
