@@ -1,69 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:35784 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725966AbfCAX2h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Mar 2019 18:28:37 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x21NORxA124373
-        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:36 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2qtxtsa560-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Mar 2019 23:28:36 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x21NSZnB022698
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:35 GMT
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x21NSYoq007979
-        for <linux-xfs@vger.kernel.org>; Fri, 1 Mar 2019 23:28:35 GMT
-Subject: [PATCH 16/23] xfs_db: fix finobt record decoding when sparse inodes
- enabled
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 01 Mar 2019 15:28:33 -0800
-Message-ID: <155148291379.16677.16422787097321462419.stgit@magnolia>
-In-Reply-To: <155148280859.16677.6057998944865066232.stgit@magnolia>
-References: <155148280859.16677.6057998944865066232.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:41338 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726627AbfCSVL3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Mar 2019 17:11:29 -0400
+From: Vlastimil Babka <vbabka@suse.cz>
+Subject: [RFC 0/2] guarantee natural alignment for kmalloc()
+Date: Tue, 19 Mar 2019 22:11:06 +0100
+Message-Id: <20190319211108.15495-1-vbabka@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-mm@kvack.org
+Cc: Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Michal Hocko <mhocko@kernel.org>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+The recent thread [1] inspired me to look into guaranteeing alignment for
+kmalloc() for power-of-two sizes. Turns out it's not difficult and in most
+configuration nothing really changes as it happens implicitly. More details in
+the first patch. If we agree we want to do this, I will see where to update
+documentation and perhaps if there are any workarounds in the tree that can be
+converted to plain kmalloc() afterwards.
 
-Use the sparse inobt record field decoder (inobt_spcrc_hfld) to decode
-finobt records when sparse inodes are enabled.  Otherwise, xfs_db
-prints out bogus things like:
+The second patch is quick and dirty selftest for the alignment. Suggestions
+welcome whether and how to include this kind of selftest that has to be
+in-kernel.
 
-recs[1] = [startino,freecount,free]
-1:[214720,16429,0xfffffffffff80000]
+[1] https://lore.kernel.org/linux-fsdevel/20190225040904.5557-1-ming.lei@redhat.com/T/#u
 
-There can never be 16429 records in an inode btree record; instead it
-should print:
+Vlastimil Babka (2):
+  mm, sl[aou]b: guarantee natural alignment for kmalloc(power-of-two)
+  mm, sl[aou]b: test whether kmalloc() alignment works as expected
 
-recs[1] = [startino,holemask,count,freecount,free]
-1:[214720,0,64,45,0xfffffffffff80000]
+ mm/slab_common.c | 30 +++++++++++++++++++++++++++++-
+ mm/slob.c        | 42 +++++++++++++++++++++++++++++++-----------
+ 2 files changed, 60 insertions(+), 12 deletions(-)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- db/type.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
-diff --git a/db/type.c b/db/type.c
-index f5f65042..d42935a2 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -107,7 +107,7 @@ static const typ_t	__typtab_crc[] = {
- 	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
- 		&xfs_symlink_buf_ops, XFS_SYMLINK_CRC_OFF },
- 	{ TYP_TEXT, "text", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
--	{ TYP_FINOBT, "finobt", handle_struct, inobt_crc_hfld,
-+	{ TYP_FINOBT, "finobt", handle_struct, inobt_spcrc_hfld,
- 		&xfs_inobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
- 	{ TYP_NONE, NULL }
- };
+-- 
+2.21.0
