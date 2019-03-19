@@ -1,50 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36200 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34270 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726244AbfCSNAS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Mar 2019 09:00:18 -0400
-Date: Tue, 19 Mar 2019 09:00:16 -0400
+        id S1726002AbfCSNAy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Mar 2019 09:00:54 -0400
+Date: Tue, 19 Mar 2019 09:00:52 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: dabtree scrub needs to range-check level
-Message-ID: <20190319130015.GA23863@bfoster>
-References: <20190318164215.GN4929@magnolia>
+Subject: Re: [PATCH] xfs: fix btree scrub checking with regards to
+ root-in-inode
+Message-ID: <20190319130051.GB23863@bfoster>
+References: <20190318164336.GO4929@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190318164215.GN4929@magnolia>
+In-Reply-To: <20190318164336.GO4929@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Mar 18, 2019 at 09:42:15AM -0700, Darrick J. Wong wrote:
+On Mon, Mar 18, 2019 at 09:43:36AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Make sure scrub's dabtree iterator function checks that we're not
-> going deeper in the stack than our cursor permits.  Found by sparse.
+> In xchk_btree_check_owner, we can be passed a null buffer pointer.  This
+> should only happen for the root of a root-in-inode btree type, but we
+> should program defensively in case the btree cursor state ever gets
+> screwed up and we get a null buffer anyway.
 > 
+> Coverity-id: 1438713
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/scrub/dabtree.c |    5 +++++
->  1 file changed, 5 insertions(+)
+>  fs/xfs/scrub/btree.c |   11 ++++++++++-
+>  1 file changed, 10 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-> index c6ab123b6051..5c6175d074e0 100644
-> --- a/fs/xfs/scrub/dabtree.c
-> +++ b/fs/xfs/scrub/dabtree.c
-> @@ -604,6 +604,11 @@ xchk_da_btree(
->  		/* Drill another level deeper. */
->  		blkno = be32_to_cpu(key->before);
->  		level++;
-> +		if (level >= XFS_DA_NODE_MAXDEPTH) {
-> +			/* Too deep! */
-> +			xchk_da_set_corrupt(&ds, level - 1);
-> +			break;
-> +		}
->  		ds.tree_level--;
->  		error = xchk_da_btree_block(&ds, level, blkno);
->  		if (error)
+> diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+> index 6271a277eabe..cf4046c9e250 100644
+> --- a/fs/xfs/scrub/btree.c
+> +++ b/fs/xfs/scrub/btree.c
+> @@ -481,8 +481,17 @@ xchk_btree_check_owner(
+>  	struct xfs_btree_cur	*cur = bs->cur;
+>  	struct check_owner	*co;
+>  
+> -	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) && bp == NULL)
+> +	/*
+> +	 * In theory, xfs_btree_get_block should only give us a null buffer
+> +	 * pointer for the root of a root-in-inode btree type, but we need
+> +	 * to check defensively here in case the cursor state is also screwed
+> +	 * up.
+> +	 */
+> +	if (bp == NULL) {
+> +		if (!(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE))
+> +			xchk_btree_set_corrupt(bs->sc, bs->cur, level);
+>  		return 0;
+> +	}
+>  
+>  	/*
+>  	 * We want to cross-reference each btree block with the bnobt
