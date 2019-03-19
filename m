@@ -1,79 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:44222 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726839AbfCSPPs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Mar 2019 11:15:48 -0400
-Date: Tue, 19 Mar 2019 08:15:39 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:36976 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726857AbfCSPRy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Mar 2019 11:17:54 -0400
+Date: Tue, 19 Mar 2019 08:17:47 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: always init bma in xfs_bmapi_write
-Message-ID: <20190319151539.GQ4929@magnolia>
-References: <20190318164401.GP4929@magnolia>
- <20190319130112.GC23863@bfoster>
+Subject: Re: [PATCH V2] mkfs: Round down log device size if aligned value is
+ larger than device size
+Message-ID: <20190319151747.GR4929@magnolia>
+References: <20190318155757.GM4929@magnolia>
+ <20190319051027.27897-1-chandan@linux.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190319130112.GC23863@bfoster>
+In-Reply-To: <20190319051027.27897-1-chandan@linux.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Chandan Rajendra <chandan@linux.ibm.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On Tue, Mar 19, 2019 at 09:01:13AM -0400, Brian Foster wrote:
-> On Mon, Mar 18, 2019 at 09:44:01AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Always init the tp/ip fields of bma in xfs_bmapi_write so that the
-> > bmapi_finish at the bottom never trips over null transaction or inode
-> > pointers.
-> > 
-> > Coverity-id: 1443964
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c |   10 +++++-----
-> >  1 file changed, 5 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index 625ddfb9653e..17c7168966c6 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -4254,9 +4254,13 @@ xfs_bmapi_write(
-> >  	struct xfs_bmbt_irec	*mval,		/* output: map values */
-> >  	int			*nmap)		/* i/o: mval size/count */
-> >  {
-> > +	struct xfs_bmalloca	bma = {
-> > +		.tp		= tp,
-> > +		.ip		= ip,
-> > +		.total		= total,
-> > +	};
+On Tue, Mar 19, 2019 at 10:40:27AM +0530, Chandan Rajendra wrote:
+> When using a disk of size 798903808 bytes as the log device and when
+> having a log stripe unit size of 32768, align_log_size() rounds up log
+> device size to 195048 4k blocks i.e. 798916608. This value is larger
+> than the device size. Hence the last call to write(2) inside
+> libxfs_device_zero() would end up returning an error.
 > 
-> This should continue to zero-init the rest of the structure, right?
+> To fix this bug, we now round down the log device size if the newly
+> computed size is larger than the actual log device size.
+> 
+> Signed-off-by: Chandan Rajendra <chandan@linux.ibm.com>
+> ---
+> Changelog:
+> v1 -> v2:
+> 1. Remove extraneous parenthesis around conditions.
+> 
+>  mkfs/xfs_mkfs.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index d1387ddf..c9e22560 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2937,8 +2937,9 @@ _("log size %lld is not a multiple of the log stripe unit %d\n"),
+>  	tmp_logblocks = ((cfg->logblocks + (sunit - 1)) / sunit) * sunit;
+>  
+>  	/* If the log is too large, round down instead of round up */
+> -	if ((tmp_logblocks > XFS_MAX_LOG_BLOCKS) ||
+> -	    ((tmp_logblocks << cfg->blocklog) > XFS_MAX_LOG_BYTES)) {
+> +	if (tmp_logblocks > XFS_MAX_LOG_BLOCKS ||
+> +	    tmp_logblocks > cfg->logblocks ||
+> +	    (tmp_logblocks << cfg->blocklog) > XFS_MAX_LOG_BYTES) {
+>  		tmp_logblocks = (cfg->logblocks / sunit) * sunit;
 
-I hope so.  If not, there's going to be a lot of corrupt in-core structs
-in the kernel... :)
-
-Thanks for the review, btw.
+Looks better,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> If so, looks fine:
+>  	}
+>  	cfg->logblocks = tmp_logblocks;
+> -- 
+> 2.19.1
 > 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> >  	struct xfs_ifork	*ifp;
-> > -	struct xfs_bmalloca	bma = { NULL };	/* args for xfs_bmap_alloc */
-> >  	xfs_fileoff_t		end;		/* end of mapped file region */
-> >  	bool			eof = false;	/* after the end of extents */
-> >  	int			error;		/* error return */
-> > @@ -4324,10 +4328,6 @@ xfs_bmapi_write(
-> >  		eof = true;
-> >  	if (!xfs_iext_peek_prev_extent(ifp, &bma.icur, &bma.prev))
-> >  		bma.prev.br_startoff = NULLFILEOFF;
-> > -	bma.tp = tp;
-> > -	bma.ip = ip;
-> > -	bma.total = total;
-> > -	bma.datatype = 0;
-> >  	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
-> >  
-> >  	n = 0;
