@@ -1,176 +1,199 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:57036 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726023AbfCTUFQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 16:05:16 -0400
-Date: Wed, 20 Mar 2019 13:05:13 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:54872 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726023AbfCTUN6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 16:13:58 -0400
+Date: Wed, 20 Mar 2019 13:13:55 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 47/36] xfs_scrub: remove xfs_ prefixes from structure names
-Message-ID: <20190320200513.GK1183@magnolia>
+Subject: Re: [PATCH 17/36] xfs_scrub: check label for misleading characters
+Message-ID: <20190320201355.GM1183@magnolia>
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <155259753535.31886.7933186379056372168.stgit@magnolia>
+ <74f2b4e3-5248-d1d6-94e4-a90fd53cbecc@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
+In-Reply-To: <74f2b4e3-5248-d1d6-94e4-a90fd53cbecc@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 20, 2019 at 03:09:56PM -0500, Eric Sandeen wrote:
+> On 3/14/19 4:05 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Make sure that we can retrieve the label and that it doesn't contain
+> > anything potentially misleading.
+> 
+> I still don't know for sure what the risk is here of having weird
+> chars in a label, but sure?  :)  Anyway, nitpick below.
+> 
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  scrub/phase5.c   |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  scrub/unicrash.c |   24 ++++++++++++++++++++++++
+> >  scrub/unicrash.h |    5 +++++
+> >  3 files changed, 83 insertions(+)
+> > 
+> > 
+> > diff --git a/scrub/phase5.c b/scrub/phase5.c
+> > index 6ffcec2d..49886e6f 100644
+> > --- a/scrub/phase5.c
+> > +++ b/scrub/phase5.c
+> > @@ -11,6 +11,7 @@
+> >  #ifdef HAVE_LIBATTR
+> >  # include <attr/attributes.h>
+> >  #endif
+> > +#include <linux/fs.h>
+> >  #include "handle.h"
+> >  #include "list.h"
+> >  #include "path.h"
+> > @@ -282,6 +283,55 @@ xfs_scrub_connections(
+> >  	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
+> >  }
+> >  
+> > +#ifndef FS_IOC_GETFSLABEL
+> > +# define FSLABEL_MAX		256
+> > +# define FS_IOC_GETFSLABEL	_IOR(0x94, 49, char[FSLABEL_MAX])
+> > +#endif /* FS_IOC_GETFSLABEL */
+> > +
+> > +/*
+> > + * Check the filesystem label for Unicode normalization problems or misleading
+> > + * sequences.
+> > + */
+> > +static bool
+> > +xfs_scrub_fs_label(
+> > +	struct scrub_ctx		*ctx)
+> > +{
+> > +	char				label[FSLABEL_MAX];
+> > +	struct unicrash			*uc = NULL;
+> > +	bool				moveon = true;
+> > +	int				error;
+> > +
+> > +	moveon = unicrash_fs_label_init(&uc, ctx);
+> > +	if (!moveon)
+> > +		return false;
+> > +
+> > +	/* Retrieve label; quietly bail if we don't support that. */
+> > +	error = ioctl(ctx->mnt_fd, FS_IOC_GETFSLABEL, &label);
+> > +	if (error) {
+> > +		if (errno != EOPNOTSUPP && errno != ENOTTY) {
+> > +			moveon = false;
+> > +			perror(ctx->mntpoint);
+> > +		}
+> > +		goto out;
+> > +	}
+> > +
+> > +	/* Ignore empty labels. */
+> > +	if (label[0] == 0)
+> > +		goto out;
+> > +
+> > +	/* Otherwise check for weirdness. */
+> > +	if (uc)
+> > +		moveon = unicrash_check_fs_label(uc, ctx->mntpoint, label);
+> > +	else
+> > +		moveon = xfs_scrub_check_name(ctx, ctx->mntpoint,
+> > +				_("filesystem label"), label);
+> > +	if (!moveon)
+> > +		goto out;
+> 
+> This test & goto ^^^ seems rather pointless...
 
-Drop the xfs_ prefix from scrub's struct definitions since they're
-private to the program.
+Yes, it's currently pointless seeing as there's nothing else that goes
+on before the label.  I didn't want to leave the logic bomb that if
+anyone ever /does/ add something here they'll have to add back the
+if-goto-out part.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/phase5.c |    8 +++----
- scrub/phase7.c |   66 ++++++++++++++++++++++++++++----------------------------
- 2 files changed, 37 insertions(+), 37 deletions(-)
+/me shrugs, will take it out and resubmit if you like. :)
 
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 49886e6f..1743119d 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -119,12 +119,12 @@ xfs_scrub_scan_dirents(
- 
- #ifdef HAVE_LIBATTR
- /* Routines to scan all of an inode's xattrs for name problems. */
--struct xfs_attr_ns {
-+struct attrns_decode {
- 	int			flags;
- 	const char		*name;
- };
- 
--static const struct xfs_attr_ns attr_ns[] = {
-+static const struct attrns_decode attr_ns[] = {
- 	{0,			"user"},
- 	{ATTR_ROOT,		"system"},
- 	{ATTR_SECURE,		"secure"},
-@@ -141,7 +141,7 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
- 	const char			*descr,
- 	struct xfs_handle		*handle,
- 	struct xfs_bstat		*bstat,
--	const struct xfs_attr_ns	*attr_ns)
-+	const struct attrns_decode	*attr_ns)
- {
- 	struct attrlist_cursor		cur;
- 	char				attrbuf[XFS_XATTR_LIST_MAX];
-@@ -202,7 +202,7 @@ xfs_scrub_scan_fhandle_xattrs(
- 	struct xfs_handle		*handle,
- 	struct xfs_bstat		*bstat)
- {
--	const struct xfs_attr_ns	*ns;
-+	const struct attrns_decode	*ns;
- 	bool				moveon = true;
- 
- 	for (ns = attr_ns; ns->name; ns++) {
-diff --git a/scrub/phase7.c b/scrub/phase7.c
-index 504a6927..0c3202e4 100644
---- a/scrub/phase7.c
-+++ b/scrub/phase7.c
-@@ -16,7 +16,7 @@
- 
- /* Phase 7: Check summary counters. */
- 
--struct xfs_summary_counts {
-+struct summary_counts {
- 	unsigned long long	dbytes;		/* data dev bytes */
- 	unsigned long long	rbytes;		/* rt dev bytes */
- 	unsigned long long	next_phys;	/* next phys bytes we see? */
-@@ -26,13 +26,13 @@ struct xfs_summary_counts {
- /* Record block usage. */
- static bool
- xfs_record_block_summary(
--	struct scrub_ctx		*ctx,
--	const char			*descr,
--	struct fsmap			*fsmap,
--	void				*arg)
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	struct fsmap		*fsmap,
-+	void			*arg)
- {
--	struct xfs_summary_counts	*counts;
--	unsigned long long		len;
-+	struct summary_counts	*counts;
-+	unsigned long long	len;
- 
- 	counts = ptvar_get((struct ptvar *)arg);
- 	if (fsmap->fmr_device == ctx->fsinfo.fs_logdev)
-@@ -67,12 +67,12 @@ xfs_record_block_summary(
- /* Add all the summaries in the per-thread counter */
- static bool
- xfs_add_summaries(
--	struct ptvar			*ptv,
--	void				*data,
--	void				*arg)
-+	struct ptvar		*ptv,
-+	void			*data,
-+	void			*arg)
- {
--	struct xfs_summary_counts	*total = arg;
--	struct xfs_summary_counts	*item = data;
-+	struct summary_counts	*total = arg;
-+	struct summary_counts	*item = data;
- 
- 	total->dbytes += item->dbytes;
- 	total->rbytes += item->rbytes;
-@@ -88,27 +88,27 @@ xfs_add_summaries(
-  */
- bool
- xfs_scan_summary(
--	struct scrub_ctx		*ctx)
-+	struct scrub_ctx	*ctx)
- {
--	struct xfs_summary_counts	totalcount = {0};
--	struct ptvar			*ptvar;
--	unsigned long long		used_data;
--	unsigned long long		used_rt;
--	unsigned long long		used_files;
--	unsigned long long		stat_data;
--	unsigned long long		stat_rt;
--	uint64_t			counted_inodes = 0;
--	unsigned long long		absdiff;
--	unsigned long long		d_blocks;
--	unsigned long long		d_bfree;
--	unsigned long long		r_blocks;
--	unsigned long long		r_bfree;
--	unsigned long long		f_files;
--	unsigned long long		f_free;
--	bool				moveon;
--	bool				complain;
--	int				ip;
--	int				error;
-+	struct summary_counts	totalcount = {0};
-+	struct ptvar		*ptvar;
-+	unsigned long long	used_data;
-+	unsigned long long	used_rt;
-+	unsigned long long	used_files;
-+	unsigned long long	stat_data;
-+	unsigned long long	stat_rt;
-+	uint64_t		counted_inodes = 0;
-+	unsigned long long	absdiff;
-+	unsigned long long	d_blocks;
-+	unsigned long long	d_bfree;
-+	unsigned long long	r_blocks;
-+	unsigned long long	r_bfree;
-+	unsigned long long	f_files;
-+	unsigned long long	f_free;
-+	bool			moveon;
-+	bool			complain;
-+	int			ip;
-+	int			error;
- 
- 	/* Flush everything out to disk before we start counting. */
- 	error = syncfs(ctx->mnt_fd);
-@@ -117,7 +117,7 @@ xfs_scan_summary(
- 		return false;
- 	}
- 
--	ptvar = ptvar_init(scrub_nproc(ctx), sizeof(struct xfs_summary_counts));
-+	ptvar = ptvar_init(scrub_nproc(ctx), sizeof(struct summary_counts));
- 	if (!ptvar) {
- 		str_errno(ctx, ctx->mntpoint);
- 		return false;
+--D
+
+> > +out:
+> > +	unicrash_free(uc);
+> > +	return moveon;
+> > +}
+> > +
+> >  /* Check directory connectivity. */
+> >  bool
+> >  xfs_scan_connections(
+> > @@ -296,6 +346,10 @@ _("Filesystem has errors, skipping connectivity checks."));
+> >  		return true;
+> >  	}
+> >  
+> > +	moveon = xfs_scrub_fs_label(ctx);
+> > +	if (!moveon)
+> > +		return false;
+> > +
+> >  	ret = xfs_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
+> >  	if (!ret)
+> >  		moveon = false;
+> > diff --git a/scrub/unicrash.c b/scrub/unicrash.c
+> > index a95fc305..121eedbc 100644
+> > --- a/scrub/unicrash.c
+> > +++ b/scrub/unicrash.c
+> > @@ -465,6 +465,15 @@ unicrash_xattr_init(
+> >  			is_only_root_writable(bstat));
+> >  }
+> >  
+> > +/* Initialize the collision detector for a filesystem label. */
+> > +bool
+> > +unicrash_fs_label_init(
+> > +	struct unicrash		**ucp,
+> > +	struct scrub_ctx	*ctx)
+> > +{
+> > +	return unicrash_init(ucp, ctx, false, 16, true);
+> > +}
+> > +
+> >  /* Free the crash detector. */
+> >  void
+> >  unicrash_free(
+> > @@ -698,3 +707,18 @@ unicrash_check_xattr_name(
+> >  	return __unicrash_check_name(uc, descr, _("extended attribute"),
+> >  			attrname, 0);
+> >  }
+> > +
+> > +/*
+> > + * Check the fs label for unicode normalization problems or misleading bits.
+> > + */
+> > +bool
+> > +unicrash_check_fs_label(
+> > +	struct unicrash		*uc,
+> > +	const char		*descr,
+> > +	const char		*label)
+> > +{
+> > +	if (!uc)
+> > +		return true;
+> > +	return __unicrash_check_name(uc, descr, _("filesystem label"),
+> > +			label, 0);
+> > +}
+> > diff --git a/scrub/unicrash.h b/scrub/unicrash.h
+> > index 7d7276a8..85fcabc6 100644
+> > --- a/scrub/unicrash.h
+> > +++ b/scrub/unicrash.h
+> > @@ -17,17 +17,22 @@ bool unicrash_dir_init(struct unicrash **ucp, struct scrub_ctx *ctx,
+> >  		struct xfs_bstat *bstat);
+> >  bool unicrash_xattr_init(struct unicrash **ucp, struct scrub_ctx *ctx,
+> >  		struct xfs_bstat *bstat);
+> > +bool unicrash_fs_label_init(struct unicrash **ucp, struct scrub_ctx *ctx);
+> >  void unicrash_free(struct unicrash *uc);
+> >  bool unicrash_check_dir_name(struct unicrash *uc, const char *descr,
+> >  		struct dirent *dirent);
+> >  bool unicrash_check_xattr_name(struct unicrash *uc, const char *descr,
+> >  		const char *attrname);
+> > +bool unicrash_check_fs_label(struct unicrash *uc, const char *descr,
+> > +		const char *label);
+> >  #else
+> >  # define unicrash_dir_init(u, c, b)		(true)
+> >  # define unicrash_xattr_init(u, c, b)		(true)
+> > +# define unicrash_label_init(u, c)		(true)
+> >  # define unicrash_free(u)			do {(u) = (u);} while (0)
+> >  # define unicrash_check_dir_name(u, d, n)	(true)
+> >  # define unicrash_check_xattr_name(u, d, n)	(true)
+> > +# define unicrash_check_fs_label(u, d, n)	(true)
+> >  #endif /* HAVE_LIBICU */
+> >  
+> >  #endif /* XFS_SCRUB_UNICRASH_H_ */
+> > 
