@@ -1,275 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38872 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725956AbfCORtb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Mar 2019 13:49:31 -0400
-Subject: Re: [PATCH 14/36] xfs_scrub: don't expose internal pool state
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <155259751554.31886.1451967052557022474.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <fb6a3a77-b121-49ba-1128-aad16d67b7d6@sandeen.net>
-Date: Fri, 15 Mar 2019 12:49:26 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:46708 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726123AbfCTOUf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 10:20:35 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x2KE9CKn113670
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Mar 2019 10:20:33 -0400
+Received: from e13.ny.us.ibm.com (e13.ny.us.ibm.com [129.33.205.203])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2rbnnbpe75-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Mar 2019 10:20:33 -0400
+Received: from localhost
+        by e13.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
+        Wed, 20 Mar 2019 14:20:31 -0000
+From: Chandan Rajendra <chandan@linux.ibm.com>
+Subject: [PATCH] _require_prjquota: Disable tests only when using realtime fs
+Date: Wed, 20 Mar 2019 19:51:12 +0530
 MIME-Version: 1.0
-In-Reply-To: <155259751554.31886.1451967052557022474.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+Message-Id: <20190320142112.31239-1-chandan@linux.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.ibm.com>, guaneryu@gmail.com, linux-xfs@vger.kernel.org
 
-On 3/14/19 4:05 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In xfs_scrub, the read/verify pool tries to coalesce the media
-> verification requests into a smaller number of large IOs.  There's no
-> need to force callers to keep track of this internal state, so just move
-> all that into read_verify.c.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+$USE_EXTERNAL needs to be set when using external log devices. In such a
+setup, tests which have "_require_prjquota
+$SCRATCH_DEV" (e.g. generic/383)  incorrectly end up being marked as
+"not run" since the test "[ "$USE_EXTERNAL" = yes -a ! -z "$_dev" ]"
+evaluates to true.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+This commit fixes the bug by marking the test as "not run" only when
+$USE_EXTERNAL is set and one of $TEST_RTDEV or $SCRATCH_RTDEV is set.
 
-> ---
->  scrub/phase6.c      |   23 +++++++----------------
->  scrub/read_verify.c |   40 ++++++++++++++++++++++++++++++++++------
->  scrub/read_verify.h |   16 ++++------------
->  3 files changed, 45 insertions(+), 34 deletions(-)
-> 
-> 
-> diff --git a/scrub/phase6.c b/scrub/phase6.c
-> index ead48d77..fe121769 100644
-> --- a/scrub/phase6.c
-> +++ b/scrub/phase6.c
-> @@ -9,7 +9,6 @@
->  #include <sys/statvfs.h>
->  #include "handle.h"
->  #include "path.h"
-> -#include "ptvar.h"
->  #include "workqueue.h"
->  #include "xfs_scrub.h"
->  #include "common.h"
-> @@ -290,7 +289,6 @@ xfs_report_verify_errors(
->  
->  struct xfs_verify_extent {
->  	struct read_verify_pool	*readverify;
-> -	struct ptvar		*rvstate;
->  	struct bitmap		*d_bad;		/* bytes */
->  	struct bitmap		*r_bad;		/* bytes */
->  };
-> @@ -424,13 +422,13 @@ xfs_check_rmap(
->  	/* Schedule the read verify command for (eventual) running. */
->  	disk = xfs_dev_to_disk(ctx, map->fmr_device);
->  
-> -	read_verify_schedule_io(ve->readverify, ptvar_get(ve->rvstate), disk,
-> -			map->fmr_physical, map->fmr_length, ve);
-> +	read_verify_schedule_io(ve->readverify, disk, map->fmr_physical,
-> +			map->fmr_length, ve);
->  
->  out:
->  	/* Is this the last extent?  Fire off the read. */
->  	if (map->fmr_flags & FMR_OF_LAST)
-> -		read_verify_force_io(ve->readverify, ptvar_get(ve->rvstate));
-> +		read_verify_force_io(ve->readverify);
->  
->  	return true;
->  }
-> @@ -450,16 +448,10 @@ xfs_scan_blocks(
->  	struct xfs_verify_extent	ve;
->  	bool				moveon;
->  
-> -	ve.rvstate = ptvar_init(scrub_nproc(ctx), sizeof(struct read_verify));
-> -	if (!ve.rvstate) {
-> -		str_errno(ctx, ctx->mntpoint);
-> -		return false;
-> -	}
-> -
->  	moveon = bitmap_init(&ve.d_bad);
->  	if (!moveon) {
->  		str_errno(ctx, ctx->mntpoint);
-> -		goto out_ve;
-> +		goto out;
->  	}
->  
->  	moveon = bitmap_init(&ve.r_bad);
-> @@ -469,7 +461,8 @@ xfs_scan_blocks(
->  	}
->  
->  	ve.readverify = read_verify_pool_init(ctx, ctx->geo.blocksize,
-> -			xfs_check_rmap_ioerr, disk_heads(ctx->datadev));
-> +			xfs_check_rmap_ioerr, disk_heads(ctx->datadev),
-> +			scrub_nproc(ctx));
->  	if (!ve.readverify) {
->  		moveon = false;
->  		str_info(ctx, ctx->mntpoint,
-> @@ -489,7 +482,6 @@ _("Could not create media verifier."));
->  
->  	bitmap_free(&ve.r_bad);
->  	bitmap_free(&ve.d_bad);
-> -	ptvar_free(ve.rvstate);
->  	return moveon;
->  
->  out_pool:
-> @@ -498,8 +490,7 @@ _("Could not create media verifier."));
->  	bitmap_free(&ve.r_bad);
->  out_dbad:
->  	bitmap_free(&ve.d_bad);
-> -out_ve:
-> -	ptvar_free(ve.rvstate);
-> +out:
->  	return moveon;
->  }
->  
-> diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-> index 75cb53ca..b5774736 100644
-> --- a/scrub/read_verify.c
-> +++ b/scrub/read_verify.c
-> @@ -7,6 +7,7 @@
->  #include <stdint.h>
->  #include <stdlib.h>
->  #include <sys/statvfs.h>
-> +#include "ptvar.h"
->  #include "workqueue.h"
->  #include "path.h"
->  #include "xfs_scrub.h"
-> @@ -36,22 +37,40 @@
->  /* Tolerate 64k holes in adjacent read verify requests. */
->  #define RVP_IO_BATCH_LOCALITY	(65536)
->  
-> +struct read_verify {
-> +	void			*io_end_arg;
-> +	struct disk		*io_disk;
-> +	uint64_t		io_start;	/* bytes */
-> +	uint64_t		io_length;	/* bytes */
-> +};
-> +
->  struct read_verify_pool {
->  	struct workqueue	wq;		/* thread pool */
->  	struct scrub_ctx	*ctx;		/* scrub context */
->  	void			*readbuf;	/* read buffer */
->  	struct ptcounter	*verified_bytes;
-> +	struct ptvar		*rvstate;	/* combines read requests */
->  	read_verify_ioerr_fn_t	ioerr_fn;	/* io error callback */
->  	size_t			miniosz;	/* minimum io size, bytes */
->  };
->  
-> -/* Create a thread pool to run read verifiers. */
-> +/*
-> + * Create a thread pool to run read verifiers.
-> + *
-> + * @miniosz is the minimum size of an IO to expect (in bytes).
-> + * @ioerr_fn will be called when IO errors occur.
-> + * @nproc is the maximum number of verify requests that may be sent to a disk
-> + * at any given time.
-> + * @submitter_threads is the number of threads that may be sending verify
-> + * requests at any given time.
-> + */
->  struct read_verify_pool *
->  read_verify_pool_init(
->  	struct scrub_ctx		*ctx,
->  	size_t				miniosz,
->  	read_verify_ioerr_fn_t		ioerr_fn,
-> -	unsigned int			nproc)
-> +	unsigned int			nproc,
-> +	unsigned int			submitter_threads)
->  {
->  	struct read_verify_pool		*rvp;
->  	bool				ret;
-> @@ -71,14 +90,20 @@ read_verify_pool_init(
->  	rvp->miniosz = miniosz;
->  	rvp->ctx = ctx;
->  	rvp->ioerr_fn = ioerr_fn;
-> +	rvp->rvstate = ptvar_init(submitter_threads,
-> +			sizeof(struct read_verify));
-> +	if (rvp->rvstate == NULL)
-> +		goto out_counter;
->  	/* Run in the main thread if we only want one thread. */
->  	if (nproc == 1)
->  		nproc = 0;
->  	ret = workqueue_create(&rvp->wq, (struct xfs_mount *)rvp, nproc);
->  	if (ret)
-> -		goto out_counter;
-> +		goto out_rvstate;
->  	return rvp;
->  
-> +out_rvstate:
-> +	ptvar_free(rvp->rvstate);
->  out_counter:
->  	ptcounter_free(rvp->verified_bytes);
->  out_buf:
-> @@ -101,6 +126,7 @@ void
->  read_verify_pool_destroy(
->  	struct read_verify_pool		*rvp)
->  {
-> +	ptvar_free(rvp->rvstate);
->  	ptcounter_free(rvp->verified_bytes);
->  	free(rvp->readbuf);
->  	free(rvp);
-> @@ -186,16 +212,17 @@ _("Could not queue read-verify work."));
->  bool
->  read_verify_schedule_io(
->  	struct read_verify_pool		*rvp,
-> -	struct read_verify		*rv,
->  	struct disk			*disk,
->  	uint64_t			start,
->  	uint64_t			length,
->  	void				*end_arg)
->  {
-> +	struct read_verify		*rv;
->  	uint64_t			req_end;
->  	uint64_t			rv_end;
->  
->  	assert(rvp->readbuf);
-> +	rv = ptvar_get(rvp->rvstate);
->  	req_end = start + length;
->  	rv_end = rv->io_start + rv->io_length;
->  
-> @@ -229,12 +256,13 @@ read_verify_schedule_io(
->  /* Force any stashed IOs into the verifier. */
->  bool
->  read_verify_force_io(
-> -	struct read_verify_pool		*rvp,
-> -	struct read_verify		*rv)
-> +	struct read_verify_pool		*rvp)
->  {
-> +	struct read_verify		*rv;
->  	bool				moveon;
->  
->  	assert(rvp->readbuf);
-> +	rv = ptvar_get(rvp->rvstate);
->  	if (rv->io_length == 0)
->  		return true;
->  
-> diff --git a/scrub/read_verify.h b/scrub/read_verify.h
-> index 38f1cd1a..1e7fd83f 100644
-> --- a/scrub/read_verify.h
-> +++ b/scrub/read_verify.h
-> @@ -16,21 +16,13 @@ typedef void (*read_verify_ioerr_fn_t)(struct scrub_ctx *ctx,
->  
->  struct read_verify_pool *read_verify_pool_init(struct scrub_ctx *ctx,
->  		size_t miniosz, read_verify_ioerr_fn_t ioerr_fn,
-> -		unsigned int nproc);
-> +		unsigned int nproc, unsigned int submitter_threads);
->  void read_verify_pool_flush(struct read_verify_pool *rvp);
->  void read_verify_pool_destroy(struct read_verify_pool *rvp);
->  
-> -struct read_verify {
-> -	void			*io_end_arg;
-> -	struct disk		*io_disk;
-> -	uint64_t		io_start;	/* bytes */
-> -	uint64_t		io_length;	/* bytes */
-> -};
-> -
-> -bool read_verify_schedule_io(struct read_verify_pool *rvp,
-> -		struct read_verify *rv, struct disk *disk, uint64_t start,
-> -		uint64_t length, void *end_arg);
-> -bool read_verify_force_io(struct read_verify_pool *rvp, struct read_verify *rv);
-> +bool read_verify_schedule_io(struct read_verify_pool *rvp, struct disk *disk,
-> +		uint64_t start, uint64_t length, void *end_arg);
-> +bool read_verify_force_io(struct read_verify_pool *rvp);
->  uint64_t read_verify_bytes(struct read_verify_pool *rvp);
->  
->  #endif /* XFS_SCRUB_READ_VERIFY_H_ */
-> 
+Signed-off-by: Chandan Rajendra <chandan@linux.ibm.com>
+---
+ common/quota | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/common/quota b/common/quota
+index 9309e786..cb627f19 100644
+--- a/common/quota
++++ b/common/quota
+@@ -86,8 +86,9 @@ _require_prjquota()
+     fi
+     src/feature -P $_dev
+     [ $? -ne 0 ] && _notrun "Installed kernel does not support project quotas"
+-    if [ "$USE_EXTERNAL" = yes -a ! -z "$_dev" ]; then
+-	_notrun "Project quotas not supported on realtime filesystem"
++    if [ "$USE_EXTERNAL" = yes -a \
++		 \( ! -z "$TEST_RTDEV" \-o ! -z "$SCRATCH_RTDEV" \) ]; then
++        _notrun "Project quotas not supported on realtime filesystem"
+     fi
+ }
+ 
+-- 
+2.19.1
