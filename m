@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49770 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726115AbfCTTgK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 15:36:10 -0400
-Date: Wed, 20 Mar 2019 12:36:08 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:59568 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726006AbfCTThA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 15:37:00 -0400
+Date: Wed, 20 Mar 2019 12:36:58 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 40/36] xfs_io: fix label parsing and validation
-Message-ID: <20190320193608.GD1183@magnolia>
+Subject: [PATCH 42/36] xfs_db: refactor metadump handling of multi-fsb objects
+Message-ID: <20190320193658.GF1183@magnolia>
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -20,40 +20,63 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When we're trying to set a new label, check the length to make sure we
-won't overflow the label size, and size label[] so that we can use
-strncpy without static checker complaints.
+Separate the multi-fsb object dispatch from actual dir block processing
+so that we can implement symlink handling correctly as a multi-fsb file.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- io/label.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ db/metadump.c |   27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/io/label.c b/io/label.c
-index 602ece89..72e07964 100644
---- a/io/label.c
-+++ b/io/label.c
-@@ -40,7 +40,7 @@ label_f(
- {
- 	int		c;
- 	int		error;
--	char		label[FSLABEL_MAX];
-+	char		label[FSLABEL_MAX + 1];
+diff --git a/db/metadump.c b/db/metadump.c
+index 3cce3012..83a257d0 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1911,7 +1911,7 @@ static struct bbmap mfsb_map;
+ static int mfsb_length;
  
- 	if (argc == 1) {
- 		memset(label, 0, sizeof(label));
-@@ -54,7 +54,13 @@ label_f(
- 			label[0] = '\0';
- 			break;
- 		case 's':
--			strncpy(label, optarg, sizeof(label));
-+			if (strlen(optarg) > FSLABEL_MAX) {
-+				errno = EINVAL;
-+				error = 1;
-+				goto out;
-+			}
-+			strncpy(label, optarg, sizeof(label) - 1);
-+			label[sizeof(label) - 1] = 0;
- 			break;
- 		default:
- 			return command_usage(&label_cmd);
+ static int
+-process_multi_fsb_objects(
++process_multi_fsb_dir(
+ 	xfs_fileoff_t	o,
+ 	xfs_fsblock_t	s,
+ 	xfs_filblks_t	c,
+@@ -1921,14 +1921,6 @@ process_multi_fsb_objects(
+ 	char		*dp;
+ 	int		ret = 0;
+ 
+-	switch (btype) {
+-	case TYP_DIR2:
+-		break;
+-	default:
+-		print_warning("bad type for multi-fsb object %d", btype);
+-		return -EINVAL;
+-	}
+-
+ 	while (c > 0) {
+ 		unsigned int	bm_len;
+ 
+@@ -1987,6 +1979,23 @@ process_multi_fsb_objects(
+ 	return ret;
+ }
+ 
++static int
++process_multi_fsb_objects(
++	xfs_fileoff_t	o,
++	xfs_fsblock_t	s,
++	xfs_filblks_t	c,
++	typnm_t		btype,
++	xfs_fileoff_t	last)
++{
++	switch (btype) {
++	case TYP_DIR2:
++		return process_multi_fsb_dir(o, s, c, btype, last);
++	default:
++		print_warning("bad type for multi-fsb object %d", btype);
++		return -EINVAL;
++	}
++}
++
+ /* inode copy routines */
+ static int
+ process_bmbt_reclist(
