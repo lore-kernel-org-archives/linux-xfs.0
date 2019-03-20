@@ -1,372 +1,224 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59410 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:39754 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727818AbfC1W53 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Mar 2019 18:57:29 -0400
-Subject: Re: [PATCH v2 15/36] xfs_scrub: one read/verify pool per disk
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <155259752166.31886.13004303237464337185.stgit@magnolia>
- <20190320200637.GL1183@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <1885ce5a-6f37-bf38-ea41-4a09838c5c5c@sandeen.net>
-Date: Thu, 28 Mar 2019 17:57:27 -0500
+        id S1725905AbfCTMCI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Mar 2019 08:02:08 -0400
+Date: Wed, 20 Mar 2019 08:02:05 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/4] xfs: force writes to delalloc regions to unwritten
+Message-ID: <20190320120204.GA28268@bfoster>
+References: <20190314230841.GJ23020@dastard>
+ <20190315031302.GF4929@magnolia>
+ <20190315034038.GK23020@dastard>
+ <20190315122939.GB5182@bfoster>
+ <20190317224011.GO23020@dastard>
+ <20190318124039.GA17956@bfoster>
+ <20190318203506.GQ23020@dastard>
+ <20190318215014.GA21231@bfoster>
+ <20190319180249.GS4929@magnolia>
+ <20190319202537.GR23020@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20190320200637.GL1183@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190319202537.GR23020@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On 3/20/19 3:06 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 20, 2019 at 07:25:37AM +1100, Dave Chinner wrote:
+> On Tue, Mar 19, 2019 at 11:02:49AM -0700, Darrick J. Wong wrote:
+> > On Mon, Mar 18, 2019 at 05:50:14PM -0400, Brian Foster wrote:
+> > > On Tue, Mar 19, 2019 at 07:35:06AM +1100, Dave Chinner wrote:
+> > > > On Mon, Mar 18, 2019 at 08:40:39AM -0400, Brian Foster wrote:
+> > > > > On Mon, Mar 18, 2019 at 09:40:11AM +1100, Dave Chinner wrote:
+> > > > > > On Fri, Mar 15, 2019 at 08:29:40AM -0400, Brian Foster wrote:
+> > > > > > > On Fri, Mar 15, 2019 at 02:40:38PM +1100, Dave Chinner wrote:
+> > > > > > > > > If the delalloc extent crosses EOF then I think it makes sense to map it
+> > > > > > > > > in as unwritten, issue the write, and convert the extent to real during
+> > > > > > > > > io completion, and not split it up just to avoid having unwritten
+> > > > > > > > > extents past EOF.
+> > > > > > > > 
+> > > > > > > > Yup, makes sense. For a sequential write, they should always be
+> > > > > > > > beyond EOF. For anything else, we use unwritten.
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > I'm not quite sure I follow the suggested change in behavior here tbh so
+> > > > > > > maybe this is not an issue, but another thing to consider is whether
+> > > > > > > selective delalloc -> real conversion for post-eof extents translates to
+> > > > > > > conditional stale data exposure vectors in certain file extension
+> > > > > > > scenarios.
+> > > > > > 
+> > > > > > No, it doesn't because the transaction that moves EOF is done after
+> > > > > > the data write into the region it exposes is complete. hence the
+> > > > > > device cache flush that occurs before the log write containing the
+> > > > > > transaction that moves the EOF will always result in the data being
+> > > > > > on stable storage *before* the extending szie transaction hits the
+> > > > > > journal and exposes it.
+> > > > > > 
+> > > > > 
+> > > > > Ok, but this ordering alone doesn't guarantee the data we've just
+> > > > > written is on-disk before the transaction hits the log.
+> > > > 
+> > > > Which transaction are you talking about? This ordering guarantees
+> > > > that the data is on stable storage before the EOF size change
+> > > > transactions that exposes the region is on disk (that's the whole
+> > > > point of updates after data writes).
+> > > > 
+> > > > If you are talking about the allocation transaction taht we are
+> > > > going to write the data into, then you are right that it doesn't
+> > > > guarantee that the data is on disk before that commits, but when the
+> > > > allocation is beyond EOF it doesn't matter ebcause is won't be
+> > > > exposed until after the data is written and the EOF moving
+> > > > transaction is committed.
+> > > > 
+> > > 
+> > > The extending transaction that you referred to above and with respect to
+> > > the device cache flush. I'm simply saying that the transaction has to be
+> > > ordered with respect to full writeback completion as well, which is also
+> > > what you are saying further down. (We're in agreement... ;)).
+> > > 
+> > > > As I've previously proposed, what I suspect we should be doing is
+> > > > not commiting the allocation transaction until IO completion, which
+> > > > closes this stale data exposure hole completely and removes the need
+> > > > for allocating unwritten extentsi and then having to convert them.
+> > > > Direct IO could also do this, and so it could stop using unwritten
+> > > > extents, too....
+> > > > 
+> > > 
+> > > That sounds like an interesting (and potentially more efficient)
+> > > alternative to using unwritten extents across the board only to convert
+> > > them as I/Os complete. I guess we'd need to make sure that the
+> > > allocation transaction holds across potentially many ioends considering
+> > > the max extents size of 8GB or so. I suppose the locking and handling of
+> > > fragmented allocation cases could get a bit interesting there as well,
+> > > but it's probably worth a prototype attempt at least to survey the
+> > > concept... (I wonder if Darrick is still paying attention or found
+> > > something more interesting to do..? :D)
+> > 
+> > /me wandered off into fixing the io completion mess; if either of you
+> > want to work on a better prototype, I encourage you to go for it. :)
+> > 
+> > Though I wonder how bad would be the effects of holding the allocation
+> > transaction open across a (potentially very slow) writeout.  We'd still
+> > be holding onto the dirty inode's ilock as well as the AGF header and
+> > whatever bnobt/cntbt blocks are dirty.  Wouldn't that stall any other
+> > thread that was walking the AGs looking for free space?
 > 
-> Simplify the read/verify pool code further by creating one pool per
-> disk.  This enables us to tailor the concurrency levels of each disk to
-> that specific disk so that if we have a mixed hdd/ssd environment we
-> don't flood the hdd with a lot of requests.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Indeed, that's the type of stuff I was wondering about as well.
 
-> ---
-> v2: fix uninitialized variable error pointed out by Eric Sandeen
-> ---
->  scrub/phase6.c      |  110 ++++++++++++++++++++++++++++++++++++---------------
->  scrub/read_verify.c |   29 ++++++-------
->  scrub/read_verify.h |   10 +++--
->  3 files changed, 98 insertions(+), 51 deletions(-)
+> Yeah, which is why I mentioned on IRC that it may be better to use
+> an intent/done transaction pair similar to an EFI/EFD. i.e. on IO
+> completion we only have to log the "write done" and it can contain
+> just hte range for the specific IO, hence we can do large
+> allocations and only mark the areas we write as containing data.
+> That would allow zeroing of the regions that aren't covered by a
+> done intent within EOF during recovery....
 > 
-> diff --git a/scrub/phase6.c b/scrub/phase6.c
-> index fe121769..5e2b9ee3 100644
-> --- a/scrub/phase6.c
-> +++ b/scrub/phase6.c
-> @@ -33,18 +33,29 @@
->   * and report the paths of the now corrupt files.
->   */
->  
-> +/* Verify disk blocks with GETFSMAP */
-> +
-> +struct xfs_verify_extent {
-> +	struct read_verify_pool	*rvp_data;
-> +	struct read_verify_pool	*rvp_log;
-> +	struct read_verify_pool	*rvp_realtime;
-> +	struct bitmap		*d_bad;		/* bytes */
-> +	struct bitmap		*r_bad;		/* bytes */
-> +};
-> +
->  /* Find the fd for a given device identifier. */
-> -static struct disk *
-> -xfs_dev_to_disk(
-> -	struct scrub_ctx	*ctx,
-> -	dev_t			dev)
-> +static struct read_verify_pool *
-> +xfs_dev_to_pool(
-> +	struct scrub_ctx		*ctx,
-> +	struct xfs_verify_extent	*ve,
-> +	dev_t				dev)
->  {
->  	if (dev == ctx->fsinfo.fs_datadev)
-> -		return ctx->datadev;
-> +		return ve->rvp_data;
->  	else if (dev == ctx->fsinfo.fs_logdev)
-> -		return ctx->logdev;
-> +		return ve->rvp_log;
->  	else if (dev == ctx->fsinfo.fs_rtdev)
-> -		return ctx->rtdev;
-> +		return ve->rvp_realtime;
->  	abort();
->  }
->  
-> @@ -285,14 +296,6 @@ xfs_report_verify_errors(
->  	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, &vei);
->  }
->  
-> -/* Verify disk blocks with GETFSMAP */
-> -
-> -struct xfs_verify_extent {
-> -	struct read_verify_pool	*readverify;
-> -	struct bitmap		*d_bad;		/* bytes */
-> -	struct bitmap		*r_bad;		/* bytes */
-> -};
-> -
->  /* Report an IO error resulting from read-verify based off getfsmap. */
->  static bool
->  xfs_check_rmap_error_report(
-> @@ -393,7 +396,9 @@ xfs_check_rmap(
->  	void				*arg)
->  {
->  	struct xfs_verify_extent	*ve = arg;
-> -	struct disk			*disk;
-> +	struct read_verify_pool		*rvp;
-> +
-> +	rvp = xfs_dev_to_pool(ctx, ve, map->fmr_device);
->  
->  	dbg_printf("rmap dev %d:%d phys %"PRIu64" owner %"PRId64
->  			" offset %"PRIu64" len %"PRIu64" flags 0x%x\n",
-> @@ -420,19 +425,32 @@ xfs_check_rmap(
->  	/* XXX: Filter out directory data blocks. */
->  
->  	/* Schedule the read verify command for (eventual) running. */
-> -	disk = xfs_dev_to_disk(ctx, map->fmr_device);
-> -
-> -	read_verify_schedule_io(ve->readverify, disk, map->fmr_physical,
-> -			map->fmr_length, ve);
-> +	read_verify_schedule_io(rvp, map->fmr_physical, map->fmr_length, ve);
->  
->  out:
->  	/* Is this the last extent?  Fire off the read. */
->  	if (map->fmr_flags & FMR_OF_LAST)
-> -		read_verify_force_io(ve->readverify);
-> +		read_verify_force_io(rvp);
->  
->  	return true;
->  }
->  
-> +/* Wait for read/verify actions to finish, then return # bytes checked. */
-> +static uint64_t
-> +clean_pool(
-> +	struct read_verify_pool	*rvp)
-> +{
-> +	uint64_t		ret;
-> +
-> +	if (!rvp)
-> +		return 0;
-> +
-> +	read_verify_pool_flush(rvp);
-> +	ret = read_verify_bytes(rvp);
-> +	read_verify_pool_destroy(rvp);
-> +	return ret;
-> +}
-> +
->  /*
->   * Read verify all the file data blocks in a filesystem.  Since XFS doesn't
->   * do data checksums, we trust that the underlying storage will pass back
-> @@ -445,7 +463,7 @@ bool
->  xfs_scan_blocks(
->  	struct scrub_ctx		*ctx)
->  {
-> -	struct xfs_verify_extent	ve;
-> +	struct xfs_verify_extent	ve = { NULL };
->  	bool				moveon;
->  
->  	moveon = bitmap_init(&ve.d_bad);
-> @@ -460,21 +478,43 @@ xfs_scan_blocks(
->  		goto out_dbad;
->  	}
->  
-> -	ve.readverify = read_verify_pool_init(ctx, ctx->geo.blocksize,
-> -			xfs_check_rmap_ioerr, disk_heads(ctx->datadev),
-> +	ve.rvp_data = read_verify_pool_init(ctx, ctx->datadev,
-> +			ctx->geo.blocksize, xfs_check_rmap_ioerr,
->  			scrub_nproc(ctx));
-> -	if (!ve.readverify) {
-> +	if (!ve.rvp_data) {
->  		moveon = false;
->  		str_info(ctx, ctx->mntpoint,
-> -_("Could not create media verifier."));
-> +_("Could not create data device media verifier."));
->  		goto out_rbad;
->  	}
-> +	if (ctx->logdev) {
-> +		ve.rvp_log = read_verify_pool_init(ctx, ctx->logdev,
-> +				ctx->geo.blocksize, xfs_check_rmap_ioerr,
-> +				scrub_nproc(ctx));
-> +		if (!ve.rvp_log) {
-> +			moveon = false;
-> +			str_info(ctx, ctx->mntpoint,
-> +	_("Could not create log device media verifier."));
-> +			goto out_datapool;
-> +		}
-> +	}
-> +	if (ctx->rtdev) {
-> +		ve.rvp_realtime = read_verify_pool_init(ctx, ctx->rtdev,
-> +				ctx->geo.blocksize, xfs_check_rmap_ioerr,
-> +				scrub_nproc(ctx));
-> +		if (!ve.rvp_realtime) {
-> +			moveon = false;
-> +			str_info(ctx, ctx->mntpoint,
-> +	_("Could not create realtime device media verifier."));
-> +			goto out_logpool;
-> +		}
-> +	}
->  	moveon = xfs_scan_all_spacemaps(ctx, xfs_check_rmap, &ve);
->  	if (!moveon)
-> -		goto out_pool;
-> -	read_verify_pool_flush(ve.readverify);
-> -	ctx->bytes_checked += read_verify_bytes(ve.readverify);
-> -	read_verify_pool_destroy(ve.readverify);
-> +		goto out_rtpool;
-> +	ctx->bytes_checked += clean_pool(ve.rvp_data);
-> +	ctx->bytes_checked += clean_pool(ve.rvp_log);
-> +	ctx->bytes_checked += clean_pool(ve.rvp_realtime);
->  
->  	/* Scan the whole dir tree to see what matches the bad extents. */
->  	if (!bitmap_empty(ve.d_bad) || !bitmap_empty(ve.r_bad))
-> @@ -484,8 +524,14 @@ _("Could not create media verifier."));
->  	bitmap_free(&ve.d_bad);
->  	return moveon;
->  
-> -out_pool:
-> -	read_verify_pool_destroy(ve.readverify);
-> +out_rtpool:
-> +	if (ve.rvp_realtime)
-> +		read_verify_pool_destroy(ve.rvp_realtime);
-> +out_logpool:
-> +	if (ve.rvp_log)
-> +		read_verify_pool_destroy(ve.rvp_log);
-> +out_datapool:
-> +	read_verify_pool_destroy(ve.rvp_data);
->  out_rbad:
->  	bitmap_free(&ve.r_bad);
->  out_dbad:
-> diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-> index b5774736..4a9b91f2 100644
-> --- a/scrub/read_verify.c
-> +++ b/scrub/read_verify.c
-> @@ -50,6 +50,7 @@ struct read_verify_pool {
->  	void			*readbuf;	/* read buffer */
->  	struct ptcounter	*verified_bytes;
->  	struct ptvar		*rvstate;	/* combines read requests */
-> +	struct disk		*disk;		/* which disk? */
->  	read_verify_ioerr_fn_t	ioerr_fn;	/* io error callback */
->  	size_t			miniosz;	/* minimum io size, bytes */
->  };
-> @@ -57,19 +58,18 @@ struct read_verify_pool {
->  /*
->   * Create a thread pool to run read verifiers.
->   *
-> + * @disk is the disk we want to verify.
->   * @miniosz is the minimum size of an IO to expect (in bytes).
->   * @ioerr_fn will be called when IO errors occur.
-> - * @nproc is the maximum number of verify requests that may be sent to a disk
-> - * at any given time.
->   * @submitter_threads is the number of threads that may be sending verify
->   * requests at any given time.
->   */
->  struct read_verify_pool *
->  read_verify_pool_init(
->  	struct scrub_ctx		*ctx,
-> +	struct disk			*disk,
->  	size_t				miniosz,
->  	read_verify_ioerr_fn_t		ioerr_fn,
-> -	unsigned int			nproc,
->  	unsigned int			submitter_threads)
->  {
->  	struct read_verify_pool		*rvp;
-> @@ -89,6 +89,7 @@ read_verify_pool_init(
->  		goto out_buf;
->  	rvp->miniosz = miniosz;
->  	rvp->ctx = ctx;
-> +	rvp->disk = disk;
->  	rvp->ioerr_fn = ioerr_fn;
->  	rvp->rvstate = ptvar_init(submitter_threads,
->  			sizeof(struct read_verify));
-> @@ -97,7 +98,8 @@ read_verify_pool_init(
->  	/* Run in the main thread if we only want one thread. */
->  	if (nproc == 1)
->  		nproc = 0;
-> -	ret = workqueue_create(&rvp->wq, (struct xfs_mount *)rvp, nproc);
-> +	ret = workqueue_create(&rvp->wq, (struct xfs_mount *)rvp,
-> +			disk_heads(disk));
->  	if (ret)
->  		goto out_rvstate;
->  	return rvp;
-> @@ -150,17 +152,16 @@ read_verify(
->  	rvp = (struct read_verify_pool *)wq->wq_ctx;
->  	while (rv->io_length > 0) {
->  		len = min(rv->io_length, RVP_IO_MAX_SIZE);
-> -		dbg_printf("diskverify %d %"PRIu64" %zu\n", rv->io_disk->d_fd,
-> -				rv->io_start, len);
-> -		sz = disk_read_verify(rv->io_disk, rvp->readbuf,
-> +		dbg_printf("diskverify %d %"PRIu64" %zu\n", rvp->disk->d_fd,
->  				rv->io_start, len);
-> +		sz = disk_read_verify(rvp->disk, rvp->readbuf, rv->io_start,
-> +				len);
->  		if (sz < 0) {
->  			dbg_printf("IOERR %d %"PRIu64" %zu\n",
-> -					rv->io_disk->d_fd,
-> -					rv->io_start, len);
-> +					rvp->disk->d_fd, rv->io_start, len);
->  			/* IO error, so try the next logical block. */
->  			len = rvp->miniosz;
-> -			rvp->ioerr_fn(rvp->ctx, rv->io_disk, rv->io_start, len,
-> +			rvp->ioerr_fn(rvp->ctx, rvp->disk, rv->io_start, len,
->  					errno, rv->io_end_arg);
->  		}
->  
-> @@ -184,11 +185,11 @@ read_verify_queue(
->  	bool				ret;
->  
->  	dbg_printf("verify fd %d start %"PRIu64" len %"PRIu64"\n",
-> -			rv->io_disk->d_fd, rv->io_start, rv->io_length);
-> +			rvp->disk->d_fd, rv->io_start, rv->io_length);
->  
->  	tmp = malloc(sizeof(struct read_verify));
->  	if (!tmp) {
-> -		rvp->ioerr_fn(rvp->ctx, rv->io_disk, rv->io_start,
-> +		rvp->ioerr_fn(rvp->ctx, rvp->disk, rv->io_start,
->  				rv->io_length, errno, rv->io_end_arg);
->  		return true;
->  	}
-> @@ -212,7 +213,6 @@ _("Could not queue read-verify work."));
->  bool
->  read_verify_schedule_io(
->  	struct read_verify_pool		*rvp,
-> -	struct disk			*disk,
->  	uint64_t			start,
->  	uint64_t			length,
->  	void				*end_arg)
-> @@ -231,7 +231,7 @@ read_verify_schedule_io(
->  	 * reporting is the same, and the two extents are close,
->  	 * we can combine them.
->  	 */
-> -	if (rv->io_length > 0 && disk == rv->io_disk &&
-> +	if (rv->io_length > 0 &&
->  	    end_arg == rv->io_end_arg &&
->  	    ((start >= rv->io_start && start <= rv_end + RVP_IO_BATCH_LOCALITY) ||
->  	     (rv->io_start >= start &&
-> @@ -244,7 +244,6 @@ read_verify_schedule_io(
->  			return read_verify_queue(rvp, rv);
->  
->  		/* Stash the new IO. */
-> -		rv->io_disk = disk;
->  		rv->io_start = start;
->  		rv->io_length = length;
->  		rv->io_end_arg = end_arg;
-> diff --git a/scrub/read_verify.h b/scrub/read_verify.h
-> index 1e7fd83f..5fabe5e0 100644
-> --- a/scrub/read_verify.h
-> +++ b/scrub/read_verify.h
-> @@ -8,6 +8,7 @@
->  
->  struct scrub_ctx;
->  struct read_verify_pool;
-> +struct disk;
->  
->  /* Function called when an IO error happens. */
->  typedef void (*read_verify_ioerr_fn_t)(struct scrub_ctx *ctx,
-> @@ -15,13 +16,14 @@ typedef void (*read_verify_ioerr_fn_t)(struct scrub_ctx *ctx,
->  		int error, void *arg);
->  
->  struct read_verify_pool *read_verify_pool_init(struct scrub_ctx *ctx,
-> -		size_t miniosz, read_verify_ioerr_fn_t ioerr_fn,
-> -		unsigned int nproc, unsigned int submitter_threads);
-> +		struct disk *disk, size_t miniosz,
-> +		read_verify_ioerr_fn_t ioerr_fn,
-> +		unsigned int submitter_threads);
->  void read_verify_pool_flush(struct read_verify_pool *rvp);
->  void read_verify_pool_destroy(struct read_verify_pool *rvp);
->  
-> -bool read_verify_schedule_io(struct read_verify_pool *rvp, struct disk *disk,
-> -		uint64_t start, uint64_t length, void *end_arg);
-> +bool read_verify_schedule_io(struct read_verify_pool *rvp, uint64_t start,
-> +		uint64_t length, void *end_arg);
->  bool read_verify_force_io(struct read_verify_pool *rvp);
->  uint64_t read_verify_bytes(struct read_verify_pool *rvp);
->  
+
+This wasn't exactly what comes to mind for me with the thought of using
+intent items. I was thinking this meant to separate the block allocation
+from block mapping such that I/O can be issued to allocated blocks, but
+new blocks aren't mapped into the file until the I/O (or conversion to
+unwritten, etc.) completes, similar to how COW remapping works. The
+objective here would be to never map uninitialized blocks to accessible
+regions of a file. This of course would somehow or another need to make
+sure new extent regions that aren't the target of I/O still end up
+properly mapped, that allocated but unmapped blocks are handled on log
+recovery, etc. (reflink is essentially a reference implementation of all
+this).
+
+It sounds like what you're suggesting above is more along the lines of
+leaving writeback as it works today, but log a write start intent in the
+transaction that maps new blocks and pair it with write done completions
+that occurs as blocks are initialized (again via I/O completion, extent
+conversion, etc.), such that in the event of a crash log recovery can do
+whatever is necessary to initialize the blocks correctly. The objective
+here is to track uninitialized regions of a file such that log recovery
+can do the initialization. This would more naturally handle the post-eof
+scenario as we already issue zeroing buffered writes to those blocks on
+file extension, but we'd need to be Ok with either issuing quite a bit
+of I/O from log recovery, converting newly mapped extents to unwritten
+(putting us in a similar performance situation as the original patch to
+always use unwritten extents for affected files), or doing something
+wonky like punching holes, etc.
+
+Am I following the high level idea correctly? If so, both seem like
+reasonable ideas, the latter probably more simple at a glance. I'd need
+to think about it more to have more concrete feedback on feasibility,
+etc..
+
+> > > I also assume we'd still need to use unwritten extents for cases where
+> > > the allocation completes before all of the extent is within EOF (i.e.,
+> > > the extent zeroing idea you mentioned on irc..).
+> > 
+> > Yes, I think it would still be necessary.  My guess is that
+> > xfs_bmapi_convert_delalloc has to create unwritten extents for any
+> > extent starting before the on-disk EOF but can create real extents for
+> > anything past the on-disk isize (because we don't set the on-disk isize
+> > to match the in-core isize until writes complete).
 > 
+> Yes, that was my assumption too, but I suspect that with an
+> intent/done pair, even that is not necessary.
+> 
+
+Ok, so then this is an implementation side effect and probably not worth
+digging too far into without a higher level design.
+
+> > I guess the "zero
+> > pages between old isize and new isize" code can simply reset any real
+> > extents it finds to be unwritten too, as we've been discussing.
+> 
+> *nod*
+> 
+> > > The broader point is that by controlling writeback ordering, we can
+> > > explicitly demonstrate stale data exposure. If fixed properly, we should
+> > > never expect stale data exposure even in the event of out of order
+> > > writeback completion, regardless of the cause.
+> > 
+> > Agree.  Even if s_f_r is a giant trash fire, if we're exposing stale
+> > disk contents it's game over anyway and we ought to fix it.
+> 
+> Well, that's exactly the problem with SFR, isn't it? The dirty data
+> is outside the range the user asks to sync and the implementation
+> doesn't go anywhere near the filesystem so we can't actually do the
+> right thing here. So we are left to either hack fixes around a
+> shitty, broken interface and everyone pays the penalty, or we ignore
+> it. We've simply ignored it for the past 10+ years because it really
+> can't be used safely for it's intended purposes (as everyone who
+> tries to use it finds out eventually)...
+> 
+
+Just to make this abundantly clear, there is nothing unique, magic or
+special required of sync_file_range() to reproduce this stale data
+exposure. See the following variation of a command sequence from the
+fstest I posted the other day:
+
+...
+# xfs_io -fc "pwrite 0 68k" -c fsync -c "pwrite 96k 4k" \
+	-c "fpunch 96k 4k" <file>
+...
+# hexdump <file>
+0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+*
+0011000 abab abab abab abab abab abab abab abab
+*
+0018000 0000 0000 0000 0000 0000 0000 0000 0000
+*
+0019000
+
+Same problem, and it can be reproduced just as easily with a reflink or
+even an overlapping direct I/O. I haven't confirmed, but I suspect with
+enough effort background writeback is susceptible to this problem as
+well.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
