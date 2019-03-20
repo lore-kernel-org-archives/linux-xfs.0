@@ -1,39 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f68.google.com ([209.85.166.68]:43632 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727603AbfCOAOo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 20:14:44 -0400
-Received: by mail-io1-f68.google.com with SMTP id y6so6760202ioq.10
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 17:14:44 -0700 (PDT)
+Received: from userp2130.oracle.com ([156.151.31.86]:45548 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726067AbfCTUDh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 16:03:37 -0400
+Date: Wed, 20 Mar 2019 13:03:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 45/36] xfs_scrub: rename confusing structure
+Message-ID: <20190320200330.GI1183@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
 MIME-Version: 1.0
-References: <155259742281.31886.17157720770696604377.stgit@magnolia> <155259744781.31886.15637750109545213350.stgit@magnolia>
-In-Reply-To: <155259744781.31886.15637750109545213350.stgit@magnolia>
-From: Nathan Scott <nathans@redhat.com>
-Date: Fri, 15 Mar 2019 11:14:32 +1100
-Message-ID: <CAFMei7N0xs69bVH03FecvFQr6s1M=1MH6JvMjjxcXQMisbUYCw@mail.gmail.com>
-Subject: Re: [PATCH 04/36] debian: drop dangling libhandle.a symlinks in xfslibs-dev
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "Sandeen, Eric" <sandeen@sandeen.net>, xfs <linux-xfs@vger.kernel.org>
+To: sandeen@sandeen.net
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Mar 15, 2019 at 8:04 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> We don't ship static libhandle libraries anymore, so make sure we drop
-> the symlink.
->
-> Fixes: ec1cf08dbeb2d ("Several updates to use more modern Debian packaging")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-LGTM.
+Rename xfs_verify_extent to media_verify_state so that the name more
+accurately reflects what we're storing in the structure.
 
-Reviewed-by: Nathan Scott <nathans@debian.org>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/phase6.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-cheers.
-
---
-Nathan
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index 5e2b9ee3..2b4f6ff1 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -35,7 +35,7 @@
+ 
+ /* Verify disk blocks with GETFSMAP */
+ 
+-struct xfs_verify_extent {
++struct media_verify_state {
+ 	struct read_verify_pool	*rvp_data;
+ 	struct read_verify_pool	*rvp_log;
+ 	struct read_verify_pool	*rvp_realtime;
+@@ -47,7 +47,7 @@ struct xfs_verify_extent {
+ static struct read_verify_pool *
+ xfs_dev_to_pool(
+ 	struct scrub_ctx		*ctx,
+-	struct xfs_verify_extent	*ve,
++	struct media_verify_state	*ve,
+ 	dev_t				dev)
+ {
+ 	if (dev == ctx->fsinfo.fs_datadev)
+@@ -348,7 +348,7 @@ xfs_check_rmap_ioerr(
+ {
+ 	struct fsmap			keys[2];
+ 	char				descr[DESCR_BUFSZ];
+-	struct xfs_verify_extent	*ve = arg;
++	struct media_verify_state	*ve = arg;
+ 	struct bitmap			*tree;
+ 	dev_t				dev;
+ 	bool				moveon;
+@@ -395,7 +395,7 @@ xfs_check_rmap(
+ 	struct fsmap			*map,
+ 	void				*arg)
+ {
+-	struct xfs_verify_extent	*ve = arg;
++	struct media_verify_state	*ve = arg;
+ 	struct read_verify_pool		*rvp;
+ 
+ 	rvp = xfs_dev_to_pool(ctx, ve, map->fmr_device);
+@@ -463,7 +463,7 @@ bool
+ xfs_scan_blocks(
+ 	struct scrub_ctx		*ctx)
+ {
+-	struct xfs_verify_extent	ve = { NULL };
++	struct media_verify_state	ve = { NULL };
+ 	bool				moveon;
+ 
+ 	moveon = bitmap_init(&ve.d_bad);
