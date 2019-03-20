@@ -1,48 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:40365 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727062AbfCTAxx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Mar 2019 20:53:53 -0400
-Received: by mail-pg1-f194.google.com with SMTP id u9so421642pgo.7
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Mar 2019 17:53:53 -0700 (PDT)
-Date: Tue, 19 Mar 2019 17:53:51 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [RFC 0/2] guarantee natural alignment for kmalloc()
-In-Reply-To: <01000169988d4e34-b4178f68-c390-472b-b62f-a57a4f459a76-000000@email.amazonses.com>
-Message-ID: <alpine.DEB.2.21.1903191751560.18028@chino.kir.corp.google.com>
-References: <20190319211108.15495-1-vbabka@suse.cz> <01000169988d4e34-b4178f68-c390-472b-b62f-a57a4f459a76-000000@email.amazonses.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:33576 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725988AbfCTThY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 15:37:24 -0400
+Date: Wed, 20 Mar 2019 12:37:22 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 43/36] xfs_db: refactor multi-fsb object detection decision
+ making
+Message-ID: <20190320193721.GG1183@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christopher Lameter <cl@linux.com>
-Cc: Vlastimil Babka <vbabka@suse.cz>, linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Michal Hocko <mhocko@kernel.org>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
+To: sandeen@sandeen.net
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, 20 Mar 2019, Christopher Lameter wrote:
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-> > The recent thread [1] inspired me to look into guaranteeing alignment for
-> > kmalloc() for power-of-two sizes. Turns out it's not difficult and in most
-> > configuration nothing really changes as it happens implicitly. More details in
-> > the first patch. If we agree we want to do this, I will see where to update
-> > documentation and perhaps if there are any workarounds in the tree that can be
-> > converted to plain kmalloc() afterwards.
-> 
-> This means that the alignments are no longer uniform for all kmalloc
-> caches and we get back to code making all sorts of assumptions about
-> kmalloc alignments.
-> 
-> Currently all kmalloc objects are aligned to KMALLOC_MIN_ALIGN. That will
-> no longer be the case and alignments will become inconsistent.
-> 
-> I think its valuable that alignment requirements need to be explicitly
-> requested.
-> 
-> Lets add an array of power of two aligned kmalloc caches if that is really
-> necessary. Add some GFP_XXX flag to kmalloc to make it ^2 aligned maybe?
-> 
+Pull the "is this a multi-fsb object" decision into a separate function
+that we can keep close to the actual multi-fsb object dispatcher.  We
+will soon make the machinery more complex so we do this to avoid having
+a big hairy if statement.
 
-No objection, but I think the GFP flags should remain what they are for: 
-to Get Free Pages.  If we are to add additional flags to specify 
-characteristics of slab objects, can we add a kmalloc_flags() variant that 
-will take a new set of flags?  SLAB_OBJ_ALIGN_POW2?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/metadump.c |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/db/metadump.c b/db/metadump.c
+index 83a257d0..57216291 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1979,6 +1979,16 @@ process_multi_fsb_dir(
+ 	return ret;
+ }
+ 
++static bool
++is_multi_fsb_object(
++	struct xfs_mount	*mp,
++	typnm_t			btype)
++{
++	if (btype == TYP_DIR2 && mp->m_dir_geo->fsbcount > 1)
++		return true;
++	return false;
++}
++
+ static int
+ process_multi_fsb_objects(
+ 	xfs_fileoff_t	o,
+@@ -2011,6 +2021,7 @@ process_bmbt_reclist(
+ 	xfs_fileoff_t		last;
+ 	xfs_agnumber_t		agno;
+ 	xfs_agblock_t		agbno;
++	bool			is_multi_fsb = is_multi_fsb_object(mp, btype);
+ 	int			error;
+ 
+ 	if (btype == TYP_DATA)
+@@ -2074,7 +2085,7 @@ process_bmbt_reclist(
+ 		}
+ 
+ 		/* multi-extent blocks require special handling */
+-		if (btype != TYP_DIR2 || mp->m_dir_geo->fsbcount == 1) {
++		if (!is_multi_fsb) {
+ 			error = process_single_fsb_objects(o, s, c, btype, last);
+ 		} else {
+ 			error = process_multi_fsb_objects(o, s, c, btype, last);
