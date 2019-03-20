@@ -1,71 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:53112 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727832AbfCNVHM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:07:12 -0400
-Subject: [PATCH 32/36] libxfs: refactor buffer item release code
+Received: from aserp2130.oracle.com ([141.146.126.79]:59222 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726006AbfCTTe0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 15:34:26 -0400
+Date: Wed, 20 Mar 2019 12:34:17 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:07:09 -0700
-Message-ID: <155259762965.31886.1477262840183695209.stgit@magnolia>
-In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
+Subject: [PATCH 37/36] xfs_scrub: include unicrash.h in unicrash.c
+Message-ID: <20190320193417.GA1183@magnolia>
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
+To: sandeen@sandeen.net
 Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor the buffer item release code into a helper, which we will use
-in subsequent patches to make the buffer log item lifetime match the
-kernel equivalents.
+Fix broken function prototype checking in unicrash.c by actually
+including its header.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/trans.c |   14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ scrub/unicrash.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index 7bdd1544..295e687e 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -540,6 +540,16 @@ libxfs_trans_ordered_buf(
- 	return ret;
- }
+diff --git a/scrub/unicrash.c b/scrub/unicrash.c
+index 121eedbc..824b10f0 100644
+--- a/scrub/unicrash.c
++++ b/scrub/unicrash.c
+@@ -16,6 +16,7 @@
+ #include "path.h"
+ #include "xfs_scrub.h"
+ #include "common.h"
++#include "unicrash.h"
  
-+void
-+xfs_buf_item_put(
-+	struct xfs_buf_log_item	*bip)
-+{
-+	struct xfs_buf		*bp = bip->bli_buf;
-+
-+	bp->b_log_item = NULL;
-+	kmem_zone_free(xfs_buf_item_zone, bip);
-+}
-+
- void
- libxfs_trans_brelse(
- 	xfs_trans_t		*tp,
-@@ -881,7 +891,6 @@ buf_item_done(
- 
- 	bp = bip->bli_buf;
- 	ASSERT(bp != NULL);
--	bp->b_log_item = NULL;			/* remove log item */
- 	bp->b_transp = NULL;			/* remove xact ptr */
- 
- 	hold = (bip->bli_flags & XFS_BLI_HOLD);
-@@ -896,8 +905,7 @@ buf_item_done(
- 		bip->bli_flags &= ~XFS_BLI_HOLD;
- 	else
- 		libxfs_putbuf(bp);
--	/* release the buf item */
--	kmem_zone_free(xfs_buf_item_zone, bip);
-+	xfs_buf_item_put(bip);
- }
- 
- static void
+ /*
+  * Detect Unicode confusable names in directories and attributes.
