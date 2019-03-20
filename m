@@ -1,109 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51186 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727985AbfCNVFH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:05:07 -0400
-Subject: [PATCH 12/36] xfs_scrub: rename the global nr_threads
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:05:03 -0700
-Message-ID: <155259750338.31886.12656336161988116486.stgit@magnolia>
-In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+Received: from a9-114.smtp-out.amazonses.com ([54.240.9.114]:42366 "EHLO
+        a9-114.smtp-out.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726529AbfCTSUh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 14:20:37 -0400
+Date: Wed, 20 Mar 2019 18:20:35 +0000
+From: Christopher Lameter <cl@linux.com>
+Subject: Re: [RFC 0/2] guarantee natural alignment for kmalloc()
+In-Reply-To: <5d7fee9c-1a80-6ac9-ac1d-b1ce05ed27a8@suse.cz>
+Message-ID: <010001699c5563f8-36c6909f-ed43-4839-82da-b5f9f21594b8-000000@email.amazonses.com>
+References: <20190319211108.15495-1-vbabka@suse.cz> <01000169988d4e34-b4178f68-c390-472b-b62f-a57a4f459a76-000000@email.amazonses.com> <5d7fee9c-1a80-6ac9-ac1d-b1ce05ed27a8@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Michal Hocko <mhocko@kernel.org>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, 20 Mar 2019, Vlastimil Babka wrote:
 
-Various functions have nr_threads local variables that shadow the global
-one.  Since the global one forces the number of threads we use, change
-its name to remove this ambiguity and reflect what it really does.
+> > This means that the alignments are no longer uniform for all kmalloc
+> > caches and we get back to code making all sorts of assumptions about
+> > kmalloc alignments.
+>
+> Natural alignment to size is rather well defined, no? Would anyone ever
+> assume a larger one, for what reason?
+> It's now where some make assumptions (even unknowingly) for natural
+> There are two 'odd' sizes 96 and 192, which will keep cacheline size
+> alignment, would anyone really expect more than 64 bytes?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/common.c    |    4 ++--
- scrub/disk.c      |    4 ++--
- scrub/xfs_scrub.c |    6 +++---
- scrub/xfs_scrub.h |    2 +-
- 4 files changed, 8 insertions(+), 8 deletions(-)
+I think one would expect one set of alighment for any kmalloc object.
 
+> > Currently all kmalloc objects are aligned to KMALLOC_MIN_ALIGN. That will
+> > no longer be the case and alignments will become inconsistent.
+>
+> KMALLOC_MIN_ALIGN is still the minimum, but in practice it's larger
+> which is not a problem.
 
-diff --git a/scrub/common.c b/scrub/common.c
-index 78afc4bf..c877c7c8 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -231,8 +231,8 @@ unsigned int
- scrub_nproc(
- 	struct scrub_ctx	*ctx)
- {
--	if (nr_threads)
--		return nr_threads;
-+	if (force_nr_threads)
-+		return force_nr_threads;
- 	return ctx->nr_io_threads;
- }
- 
-diff --git a/scrub/disk.c b/scrub/disk.c
-index 7daa508e..dd109533 100644
---- a/scrub/disk.c
-+++ b/scrub/disk.c
-@@ -75,8 +75,8 @@ unsigned int
- disk_heads(
- 	struct disk		*disk)
- {
--	if (nr_threads)
--		return nr_threads;
-+	if (force_nr_threads)
-+		return force_nr_threads;
- 	return __disk_heads(disk);
- }
- 
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index b8138000..71fc274f 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -133,7 +133,7 @@ unsigned int			bg_mode;
- int				nproc;
- 
- /* Number of threads we're allowed to use. */
--unsigned int			nr_threads;
-+unsigned int			force_nr_threads;
- 
- /* Verbosity; higher values print more information. */
- bool				verbose;
-@@ -589,7 +589,7 @@ main(
- 			}
- 			break;
- 		case 'b':
--			nr_threads = 1;
-+			force_nr_threads = 1;
- 			bg_mode++;
- 			break;
- 		case 'C':
-@@ -659,7 +659,7 @@ main(
- 			perror("nr_threads");
- 			usage();
- 		}
--		nr_threads = x;
-+		force_nr_threads = x;
- 	}
- 
- 	if (optind != argc - 1)
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index a961d8fd..a459e4b5 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -10,7 +10,7 @@ extern char *progname;
- 
- #define _PATH_PROC_MOUNTS	"/proc/mounts"
- 
--extern unsigned int		nr_threads;
-+extern unsigned int		force_nr_threads;
- extern unsigned int		bg_mode;
- extern unsigned int		debug;
- extern int			nproc;
+"In practice" refers to the current way that slab allocators arrange
+objects within the page. They are free to do otherwise if new ideas come
+up for object arrangements etc.
+
+The slab allocators already may have to store data in addition to the user
+accessible part (f.e. for RCU or ctor). The "natural alighnment" of a
+power of 2 cache is no longer as you expect for these cases. Debugging is
+not the only case where we extend the object.
+
+> Also let me stress again that nothing really changes except for SLOB,
+> and SLUB with debug options. The natural alignment for power-of-two
+> sizes already happens as SLAB and SLUB both allocate objects starting on
+> the page boundary. So people make assumptions based on that, and then
+> break with SLOB, or SLUB with debug. This patch just prevents that
+> breakage by guaranteeing those natural assumptions at all times.
+
+As explained before there is nothing "natural" here. Doing so restricts
+future features and creates a mess within the allocator of exceptions for
+debuggin etc etc (see what happened to SLAB). "Natural" is just a
+simplistic thought of a user how he would arrange power of 2 objects.
+These assumption should not be made but specified explicitly.
+
+> > I think its valuable that alignment requirements need to be explicitly
+> > requested.
+>
+> That's still possible for named caches created by kmem_cache_create().
+
+So lets leave it as it is now then.
