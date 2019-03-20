@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:57096 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726969AbfCTAow (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Mar 2019 20:44:52 -0400
-Subject: [PATCH 02/12] check: really improve test list randomization
+Received: from userp2130.oracle.com ([156.151.31.86]:52248 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726801AbfCTAp0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Mar 2019 20:45:26 -0400
+Subject: [PATCH 06/12] ext4/023: don't require scrub for ext4 populated
+ image creation
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 19 Mar 2019 17:44:49 -0700
-Message-ID: <155304268908.31707.9639554348139720057.stgit@magnolia>
+Date: Tue, 19 Mar 2019 17:45:22 -0700
+Message-ID: <155304272254.31707.3761494827323670805.stgit@magnolia>
 In-Reply-To: <155304267647.31707.14180452399822113095.stgit@magnolia>
 References: <155304267647.31707.14180452399822113095.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,30 +21,24 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-coreutils provides the shuf(1) utility that randomizes the order of a
-list and seeds its random number generator with /dev/urandom.  It's a
-bit speedier than awk, so use it if available.
+Don't require scrub for ext4's populated fs creation test because there
+is no general online scrub program for ext*.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- check |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ tests/ext4/023 |    1 -
+ 1 file changed, 1 deletion(-)
 
 
-diff --git a/check b/check
-index ecd1d39a..a2c5ba21 100755
---- a/check
-+++ b/check
-@@ -243,7 +243,11 @@ _prepare_test_list()
+diff --git a/tests/ext4/023 b/tests/ext4/023
+index a598e2b4..1dadb29f 100755
+--- a/tests/ext4/023
++++ b/tests/ext4/023
+@@ -33,7 +33,6 @@ _cleanup()
+ _supported_os Linux
+ _supported_fs ext4
+ _require_scratch
+-_require_scrub
  
- 	# sort the list of tests into numeric order
- 	if $randomize; then
--		sorter="awk -v seed=$RANDOM -f randomize.awk"
-+		if type shuf >& /dev/null; then
-+			sorter="shuf"
-+		else
-+			sorter="awk -v seed=$RANDOM -f randomize.awk"
-+		fi
- 	else
- 		sorter="cat"
- 	fi
+ echo "Format and populate"
+ _scratch_populate_cached > $seqres.full 2>&1
