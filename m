@@ -1,69 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47936 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726856AbfCNV24 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:28:56 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x2ELStxI118195
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 21:28:55 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2r44wukj8p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 21:28:55 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x2ELStp4006135
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 21:28:55 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x2ELSsOH031853
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Mar 2019 21:28:54 GMT
-Subject: [PATCH 0/4] xfs: various rough fixes
+Received: from userp2120.oracle.com ([156.151.31.85]:39800 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726969AbfCTAo6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Mar 2019 20:44:58 -0400
+Subject: [PATCH 03/12] generic/042: fix stale disk contents check
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:28:54 -0700
-Message-ID: <155259893433.30230.6566995969675098053.stgit@magnolia>
+Date: Tue, 19 Mar 2019 17:44:55 -0700
+Message-ID: <155304269533.31707.10962791945845709289.stgit@magnolia>
+In-Reply-To: <155304267647.31707.14180452399822113095.stgit@magnolia>
+References: <155304267647.31707.14180452399822113095.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Here's a bunch of crazy fixes that I've been working on.  The first one
-tries to solve the fragmentation problems that Dave reported[1] in the
-stupidest way possible.  Namely, we only ever trim post-eof speculative
-preallocations the /first/ time that we close a file, regardless of the
-dirty state.
+This test doesn't call fsync or sync to force writeback of the first 60k
+of the file, which means that we could end up with a file full of
+zeroes or an empty file.  Since this is a regression test that looks for
+stale disk contents slipping through, change the test to look for the
+stale bytes.
 
-The second patch tries to fix a stale data exposure bug revealed by
-generic/042.  It does this by changing xfs to convert delalloc extents
-to unwritten extents and only converting those into real extents once
-the data write succeeds.  We already do this for the cow fork, so it
-seems pretty straightforward to do the same for the data fork.
-
-The third patch adds instrumentation to make it easier to detect when
-we roll a transaction beyond the initial logcount, and therefore are
-having to reserve more log space.
-
-The fourth patch effectively increases the number of times we can roll
-an end_cow transaction without having to go back for more reservation.
-This is intended to fix the problem outlined in [2] which will fix the
-periodic xfs/347 deadlocks.
-
-[1] https://marc.info/?l=linux-xfs&m=154951612101291&w=2
-[2] https://marc.info/?l=linux-xfs&m=155241472431249&w=2
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/generic/042 |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=rough-fixes
+diff --git a/tests/generic/042 b/tests/generic/042
+index 1aa18f9b..6c62eb63 100755
+--- a/tests/generic/042
++++ b/tests/generic/042
+@@ -44,7 +44,7 @@ _crashtest()
+ 
+ 	# Create an fs on a small, initialized image. The pattern is written to
+ 	# the image to detect stale data exposure.
+-	$XFS_IO_PROG -f -c "truncate 0" -c "pwrite 0 25M" $img \
++	$XFS_IO_PROG -f -c "truncate 0" -c "pwrite -S 0xCD 0 25M" $img \
+ 		>> $seqres.full 2>&1
+ 	_mkfs_dev $img >> $seqres.full 2>&1
+ 
+@@ -61,8 +61,12 @@ _crashtest()
+ 	$UMOUNT_PROG $mnt
+ 	_mount $img $mnt
+ 
+-	# we generally expect a zero-sized file (this should be silent)
+-	hexdump $file
++	# We should /never/ see 0xCD in the file, because we wrote that pattern
++	# to the filesystem image to expose stale data.
++	if hexdump -v -e '/1 "%02X "' $file | grep -q "CD"; then
++		echo "Saw stale data!!!"
++		hexdump $file
++	fi
+ 
+ 	$UMOUNT_PROG $mnt
+ }
