@@ -1,86 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f67.google.com ([209.85.166.67]:46736 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726351AbfCFUdP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Mar 2019 15:33:15 -0500
-Received: by mail-io1-f67.google.com with SMTP id k21so11404585ior.13
-        for <linux-xfs@vger.kernel.org>; Wed, 06 Mar 2019 12:33:14 -0800 (PST)
+Received: from userp2120.oracle.com ([156.151.31.85]:40388 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725958AbfCTApw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Mar 2019 20:45:52 -0400
+Subject: [PATCH 10/12] xfs: test xfs_copy and xfs_mdrestore on the populate
+ images
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 19 Mar 2019 17:45:49 -0700
+Message-ID: <155304274924.31707.623436868976936668.stgit@magnolia>
+In-Reply-To: <155304267647.31707.14180452399822113095.stgit@magnolia>
+References: <155304267647.31707.14180452399822113095.stgit@magnolia>
 MIME-Version: 1.0
-References: <20190304213124.552-1-tgill@redhat.com> <20190304234512.GZ23020@dastard>
- <49bacedd-ade9-ed6e-4efa-0271babfbc6d@sandeen.net>
-In-Reply-To: <49bacedd-ade9-ed6e-4efa-0271babfbc6d@sandeen.net>
-From: Todd Gill <tgill@redhat.com>
-Date: Wed, 6 Mar 2019 15:33:03 -0500
-Message-ID: <CAP1pc6Zr5aj5rjoyCJw2SuFviOxua70t+P0bDakgWy-u3bGCfQ@mail.gmail.com>
-Subject: Re: [PATCH] Add xfs_only flag to fs_table_initialise_mounts() function
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Mar 4, 2019 at 10:06 PM Eric Sandeen <sandeen@sandeen.net> wrote:
->
->
->
-> On 3/4/19 5:45 PM, Dave Chinner wrote:
-> > On Mon, Mar 04, 2019 at 04:31:24PM -0500, tgill@redhat.com wrote:
-> >> From: Todd Gill <tgill@redhat.com>
-> >>
-> >> The xfs_only flag will allow the caller to request only XFS filesystems are
-> >> added to the fs table.
-> >>
-> >> For commands that are XFS specific (xfs_fsr, xfs_growfs, xfs_scrub) - pass
-> >> the flag as 1.
-> >>
-> >> The change avoids a hang when remote filesystem (like NFS) are non
-> >> responsive.
-> >
-> > I have the nagging feeling that this has been proposed, discussed
-> > and rejected previously. However, my search skills are sadly lacking
-> > today, because I can't find it in my local archive. Probably worth
-> > doing some more searching rather than repeating the discussion over
-> > again...
->
-> FWIW, this problem is relatively new.  It crept in when we decided that
-> xfs_quota should work on ext4, and so we had to slurp in non-xfs
-> mountpoints.  Yay.
->
-> Dave, I'm wondering if I didn't discuss this on IRC briefly and that's
-> what's triggering your memory...
->
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It may also be commit 29647c8d572d9364c0f599932f2153af8f306966 that
-added xfs_quota support for ext4.  In that change
-thestrcmp(mnt->mnt_type, "xfs") check was removed from
-fs_table_initialize_mounts().
+Make sure that copy, metadump, and mdrestore work on a filesystem with
+all known metadata types.
 
-If folks this this is a reasonable change, I'll make the requested
-improvements and send a new version.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/xfs/740     |   97 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/740.out |   12 +++++++
+ tests/xfs/group   |    1 +
+ 3 files changed, 110 insertions(+)
+ create mode 100755 tests/xfs/740
+ create mode 100644 tests/xfs/740.out
 
-> May 03 17:32:07 <sandeen>       dchinner, i'm not sure waht to do about our crazy is-it-mounted checks w.r.t. your subvols at this point.
-> May 03 17:32:18 <sandeen>       I Kinda need to fix the "mkfs.xfs hangs on stuck nfs mounts, wut?!" problem
-> May 03 17:34:54 <djwong>        check fsname[0] == '/' like e2fsprogs does :D
-> May 03 17:35:34 <sandeen>       I pointed and laughed at that, but actually ...
-> May 03 17:35:46 <sandeen>       dave's fs/volume paths will be full paths from /
-> May 03 17:36:12 <sandeen>       you ... can't really get an actual device node in /proc/mounts w/ a relative path either, right?
-> May 03 17:36:15 <sandeen>       maybe that's not so bad.
-> May 03 17:37:00 <sandeen>       see if the "device" contains a : and then try to ping the stuff before it ;)
-> May 03 17:37:07 <sandeen>       (I AM KIDDING)
-> May 03 17:37:44 <sandeen>       anyway, skipping anything that doesn't start with '/' might actually be smart/ok
-> May 03 17:40:33 <sandeen>       if youv'e somehow contrived an actual device that doesn't have a path in /proc/mounts and you go to try to mkfs it while mounted I think you get to keep all the explody bits.
-> May 03 17:53:00 <dchinner>      sandeen: just ignore them - I'll do whatever I need to do to make them work again when your code hits the tree...
->
-> but ... I don't know if anything ever got sent.
->
-> I had also mused about something like:
->
-> May 02 14:36:27 <sandeen>       I wonder if this is safe in the "is it mounted" loop:
-> May 02 14:36:27 <sandeen>               while ((mnt = getmntent(f)) != NULL) {
-> May 02 14:36:27 <sandeen>                       /* If the "fsname" is't a stat-able device, skip it */
-> May 02 14:36:27 <sandeen>                       if (stat(mnt->mnt_fsname, &mst) < 0)
-> May 02 14:36:27 <sandeen>                               continue;
-> May 02 14:37:01 <sandeen>       i.e. don't bother checking every procfs, nfs mount, tmpfs, cgroup, etc.
->
-> -Eric
+
+diff --git a/tests/xfs/740 b/tests/xfs/740
+new file mode 100755
+index 00000000..0ff548cb
+--- /dev/null
++++ b/tests/xfs/740
+@@ -0,0 +1,97 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0+
++# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 740
++#
++# Populate a XFS filesystem and ensure that metadump, mdrestore, and copy
++# all work properly.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.* $testdir
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++
++testdir=$TEST_DIR/test-$seq
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++
++_require_scratch_nocheck
++_require_populate_commands
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++mkdir -p $testdir
++metadump_file=$testdir/scratch.md
++metadump_file_a=${metadump_file}.a
++metadump_file_g=${metadump_file}.g
++metadump_file_ag=${metadump_file}.ag
++copy_file=$testdir/copy.img
++
++echo metadump
++_scratch_metadump $metadump_file
++
++echo metadump a
++_scratch_metadump $metadump_file_a
++
++echo metadump g
++_scratch_metadump $metadump_file_g
++
++echo metadump ag
++_scratch_metadump $metadump_file_ag
++
++echo copy
++$XFS_COPY_PROG $SCRATCH_DEV $copy_file >> $seqres.full
++_check_scratch_fs $copy_file
++
++echo recopy
++$XFS_COPY_PROG $copy_file $SCRATCH_DEV >> $seqres.full
++_scratch_mount
++_check_scratch_fs
++_scratch_unmount
++
++echo mdrestore
++xfs_mdrestore $metadump_file $SCRATCH_DEV
++_scratch_mount
++_check_scratch_fs
++_scratch_unmount
++
++echo mdrestore a
++xfs_mdrestore $metadump_file_a $SCRATCH_DEV
++_scratch_mount
++_check_scratch_fs
++_scratch_unmount
++
++echo mdrestore g
++xfs_mdrestore $metadump_file_g $SCRATCH_DEV
++_scratch_mount
++_check_scratch_fs
++_scratch_unmount
++
++echo mdrestore ag
++xfs_mdrestore $metadump_file_ag $SCRATCH_DEV
++_scratch_mount
++_check_scratch_fs
++_scratch_unmount
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/740.out b/tests/xfs/740.out
+new file mode 100644
+index 00000000..0c979dc4
+--- /dev/null
++++ b/tests/xfs/740.out
+@@ -0,0 +1,12 @@
++QA output created by 740
++Format and populate
++metadump
++metadump a
++metadump g
++metadump ag
++copy
++recopy
++mdrestore
++mdrestore a
++mdrestore g
++mdrestore ag
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 9d9458b8..b8bd1012 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -500,3 +500,4 @@
+ 500 auto quick mkfs prealloc mkfs
+ 501 auto quick unlink
+ 502 auto quick unlink
++740 auto copy metadump
