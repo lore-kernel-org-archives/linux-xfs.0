@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:59568 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726006AbfCTThA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 15:37:00 -0400
-Date: Wed, 20 Mar 2019 12:36:58 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:34048 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726023AbfCTTh5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 15:37:57 -0400
+Date: Wed, 20 Mar 2019 12:37:50 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 42/36] xfs_db: refactor metadump handling of multi-fsb objects
-Message-ID: <20190320193658.GF1183@magnolia>
+Subject: [PATCH 44/36] xfs_db: metadump should handle symlinks properly
+Message-ID: <20190320193750.GH1183@magnolia>
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -20,63 +20,105 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Separate the multi-fsb object dispatch from actual dir block processing
-so that we can implement symlink handling correctly as a multi-fsb file.
+Remote symlink target blocks are multi-fsb objects on XFS v5 filesystems
+because we only write one rmt header per data fork extent.  For fs
+blocksize >= 2048 we never have more than one block and therefore nobody
+noticed, but for blocksize == 1024 this is definitely not true and leads
+to metadump spraying error messages about symlink block crc errors.
+Therefore, reformulate the symlink metadump into a multi-fsb dump
+function.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/metadump.c |   27 ++++++++++++++++++---------
- 1 file changed, 18 insertions(+), 9 deletions(-)
+ db/metadump.c |   48 +++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 41 insertions(+), 7 deletions(-)
 
 diff --git a/db/metadump.c b/db/metadump.c
-index 3cce3012..83a257d0 100644
+index 57216291..e0dd463f 100644
 --- a/db/metadump.c
 +++ b/db/metadump.c
-@@ -1911,7 +1911,7 @@ static struct bbmap mfsb_map;
- static int mfsb_length;
- 
- static int
--process_multi_fsb_objects(
-+process_multi_fsb_dir(
- 	xfs_fileoff_t	o,
- 	xfs_fsblock_t	s,
- 	xfs_filblks_t	c,
-@@ -1921,14 +1921,6 @@ process_multi_fsb_objects(
- 	char		*dp;
- 	int		ret = 0;
- 
--	switch (btype) {
--	case TYP_DIR2:
--		break;
--	default:
--		print_warning("bad type for multi-fsb object %d", btype);
--		return -EINVAL;
--	}
--
- 	while (c > 0) {
- 		unsigned int	bm_len;
- 
-@@ -1987,6 +1979,23 @@ process_multi_fsb_objects(
- 	return ret;
+@@ -1638,11 +1638,39 @@ process_dir_data_block(
+ 	}
  }
  
+-static void
 +static int
-+process_multi_fsb_objects(
+ process_symlink_block(
+-	char			*block)
 +	xfs_fileoff_t	o,
 +	xfs_fsblock_t	s,
 +	xfs_filblks_t	c,
 +	typnm_t		btype,
 +	xfs_fileoff_t	last)
-+{
-+	switch (btype) {
-+	case TYP_DIR2:
-+		return process_multi_fsb_dir(o, s, c, btype, last);
-+	default:
-+		print_warning("bad type for multi-fsb object %d", btype);
-+		return -EINVAL;
-+	}
-+}
+ {
+-	char *link = block;
++	struct bbmap	map = {
++		.nmaps	= 1,
++		.b	= {
++			{
++				.bm_bn = XFS_FSB_TO_DADDR(mp, s),
++				.bm_len = XFS_FSB_TO_BB(mp, c),
++			}
++		},
++	};
++	char		*link;
++	int		ret = 0;
 +
- /* inode copy routines */
- static int
- process_bmbt_reclist(
++	push_cur();
++	set_cur(&typtab[btype], 0, 0, DB_RING_IGN, &map);
++	if (!iocur_top->data) {
++		xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
++		xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
++
++		print_warning("cannot read %s block %u/%u (%llu)",
++				typtab[btype].name, agno, agbno, s);
++		if (stop_on_read_error)
++			ret = -1;
++		goto out_pop;
++	}
++	link = iocur_top->data;
+ 
+ 	if (xfs_sb_version_hascrc(&(mp)->m_sb))
+ 		link += sizeof(struct xfs_dsymlink_hdr);
+@@ -1660,6 +1688,12 @@ process_symlink_block(
+ 		if (zlen < mp->m_sb.sb_blocksize)
+ 			memset(link + linklen, 0, zlen);
+ 	}
++
++	iocur_top->need_crc = 1;
++	ret = write_buf(iocur_top);
++out_pop:
++	pop_cur();
++	return ret;
+ }
+ 
+ #define MAX_REMOTE_VALS		4095
+@@ -1879,10 +1913,6 @@ process_single_fsb_objects(
+ 			}
+ 			iocur_top->need_crc = 1;
+ 			break;
+-		case TYP_SYMLINK:
+-			process_symlink_block(dp);
+-			iocur_top->need_crc = 1;
+-			break;
+ 		case TYP_ATTR:
+ 			process_attr_block(dp, o);
+ 			iocur_top->need_crc = 1;
+@@ -1986,6 +2016,8 @@ is_multi_fsb_object(
+ {
+ 	if (btype == TYP_DIR2 && mp->m_dir_geo->fsbcount > 1)
+ 		return true;
++	if (btype == TYP_SYMLINK)
++		return true;
+ 	return false;
+ }
+ 
+@@ -2000,6 +2032,8 @@ process_multi_fsb_objects(
+ 	switch (btype) {
+ 	case TYP_DIR2:
+ 		return process_multi_fsb_dir(o, s, c, btype, last);
++	case TYP_SYMLINK:
++		return process_symlink_block(o, s, c, btype, last);
+ 	default:
+ 		print_warning("bad type for multi-fsb object %d", btype);
+ 		return -EINVAL;
