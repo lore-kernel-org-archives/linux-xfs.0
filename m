@@ -1,94 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:39746
-        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727116AbfCTVtn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 17:49:43 -0400
-Date: Thu, 21 Mar 2019 08:49:38 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: generic/475 deadlock?
-Message-ID: <20190320214938.GU23020@dastard>
-References: <20190320050408.GA24923@magnolia>
- <20190320170305.GA29010@bfoster>
- <20190320174551.GA1186@magnolia>
- <20190320175922.GB29010@bfoster>
+Received: from bombadil.infradead.org ([198.137.202.133]:49340 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726983AbfCUCYE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 22:24:04 -0400
+Date: Wed, 20 Mar 2019 19:23:55 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [RFC 0/2] guarantee natural alignment for kmalloc()
+Message-ID: <20190321022355.GA19508@bombadil.infradead.org>
+References: <20190319211108.15495-1-vbabka@suse.cz>
+ <01000169988d4e34-b4178f68-c390-472b-b62f-a57a4f459a76-000000@email.amazonses.com>
+ <5d7fee9c-1a80-6ac9-ac1d-b1ce05ed27a8@suse.cz>
+ <20190320185347.GZ19508@bombadil.infradead.org>
+ <b5290e04-6f29-c237-78a7-511821183efe@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190320175922.GB29010@bfoster>
+In-Reply-To: <b5290e04-6f29-c237-78a7-511821183efe@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: Christopher Lameter <cl@linux.com>, linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Michal Hocko <mhocko@kernel.org>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
 
-On Wed, Mar 20, 2019 at 01:59:22PM -0400, Brian Foster wrote:
-> On Wed, Mar 20, 2019 at 10:45:51AM -0700, Darrick J. Wong wrote:
-> > On Wed, Mar 20, 2019 at 01:03:05PM -0400, Brian Foster wrote:
-> > > On Tue, Mar 19, 2019 at 10:04:08PM -0700, Darrick J. Wong wrote:
-> > > And unmount is doing a log force as well..
-> > > 
-> > > Hmm.. yeah, I think we need to figure out how/why the buffer is locked.
+On Wed, Mar 20, 2019 at 10:48:03PM +0100, Vlastimil Babka wrote:
+> On 3/20/2019 7:53 PM, Matthew Wilcox wrote:
+> > On Wed, Mar 20, 2019 at 09:48:47AM +0100, Vlastimil Babka wrote:
+> >> Natural alignment to size is rather well defined, no? Would anyone ever
+> >> assume a larger one, for what reason?
+> >> It's now where some make assumptions (even unknowingly) for natural
+> >> There are two 'odd' sizes 96 and 192, which will keep cacheline size
+> >> alignment, would anyone really expect more than 64 bytes?
 > > 
-> > AFAICT it's xfs_inode_item_push -> xfs_iflush -> xfs_imap_to_bp that
-> > returns the locked cluster buffer (code extract from xfs_iflush):
-....
-> > ...but if the buffer is also pinned then we kick the log (while holding
-> > the buffer lock) to unpin the buffer.  Since the fs is shutdown, the cil
-> > will just be trying to remove everything, but it needs to lock the
-> > buffer to simulate EIO.
-> > 
+> > Presumably 96 will keep being aligned to 32 bytes, as aligning 96 to 64
+> > just results in 128-byte allocations.
 > 
-> Yeah, makes sense.
+> Well, looks like that's what happens. This is with SLAB, but the alignment
+> calculations should be common: 
+> 
+> slabinfo - version: 2.1
+> # name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> : tunables <limit> <batchcount> <sharedfactor> : slabdata <active_slabs> <num_slabs> <sharedavail>
+> kmalloc-96          2611   4896    128   32    1 : tunables  120   60    8 : slabdata    153    153      0
+> kmalloc-128         4798   5536    128   32    1 : tunables  120   60    8 : slabdata    173    173      0
 
-Yup, and this same problem means any buffer we hold locked when we
-issue a blocking log force can deadlock in the same way. If it's a
-non-blocking log force (i.e. a log flush we don't wait for) then we
-can move onwards and eventually we unlock the buffer and the log can
-make progress.
+Hmm.  On my laptop, I see:
 
-> > A naive fix to the deadlock is to see if the inode buf ops are attached
-> > and downgrade to a trylock and go ahead even if we can't lock it, but ick.
-> > It resolves the deadlock so the umount can proceed but we also trigger a
-> > lot of unlocked buffer asserts.
+kmalloc-96         28050  35364     96   42    1 : tunables    0    0    0 : slabdata    842    842      0
 
-Yuck!
+That'd take me from 842 * 4k pages to 1105 4k pages -- an extra megabyte of
+memory.
 
-> > I'm not sure what "too long" means in that code chunk.  It was added to
-> > reduce stalls in pdflush, which these days I think translates to trying
-> > to reduce the amount of time reclaim can stall while flushing inodes...?
+This is running Debian's 4.19 kernel:
 
-"too long" means that if there is no log pressure, it might be the
-next periodic log work that forces the log and unpins the buffer.
-i.e. it could be several seconds before the buffer gets unpinned.
-This is the same reason we have the log force in xfs_buf_lock() - if
-we have to wait for the next log force to unlock/unpin a stale
-buffer, we can stall for several seconds.
-
-> I'm not sure either. I was wondering why we'd need that given that
-> xfsaild() has its own log force logic in cases where the delwri submit
-> didn't fully complete (i.e., for pinned buffers). Relying on that seems
-> more appropriate since we'd force the log per delwri submission for
-> multiple potential buffers as opposed to per inode cluster buffer.
-> Perhaps we could just kill this log force?
-
-If the writeback is coming from the AIL, then we could check if the
-buffer is pinned and then return EDEADLOCK or something like that to
-get the item push return value set to XFS_ITEM_PINNED, in which case
-the AIL will then do the log force that will unpin the object. This
-will happen after we have added the buffer to the AIL delwri list
-and unlocked the buffer, so everything should work just fine in that
-case. Similar for dquot flushing from the AIL.
-
-If the writeback is coming from inode reclaim, we've already
-guaranteed the inode is unpinned, so we'll never hit this case
-through there.
-
-As for the busy extent code, I'll need to look at that much more
-closely to determine if there's a way around this....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+# CONFIG_SLAB is not set
+CONFIG_SLUB=y
+# CONFIG_SLOB is not set
+CONFIG_SLAB_MERGE_DEFAULT=y
+CONFIG_SLAB_FREELIST_RANDOM=y
+CONFIG_SLAB_FREELIST_HARDENED=y
+CONFIG_SLUB_CPU_PARTIAL=y
