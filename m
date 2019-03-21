@@ -1,96 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:42274 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725871AbfCUEPv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Mar 2019 00:15:51 -0400
-Date: Wed, 20 Mar 2019 21:15:44 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/12] check: wipe scratch devices between tests
-Message-ID: <20190321041544.GD1186@magnolia>
-References: <155304267647.31707.14180452399822113095.stgit@magnolia>
- <155304275552.31707.6473598082840688691.stgit@magnolia>
- <CAOQ4uxhu52G1hw6h-uc50-n5Bq0OT+4pLZjdnfPxK784F=nG0Q@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:51942 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725985AbfCUHCg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Mar 2019 03:02:36 -0400
+Subject: Re: [RFC 0/2] guarantee natural alignment for kmalloc()
+References: <20190319211108.15495-1-vbabka@suse.cz>
+ <01000169988d4e34-b4178f68-c390-472b-b62f-a57a4f459a76-000000@email.amazonses.com>
+ <5d7fee9c-1a80-6ac9-ac1d-b1ce05ed27a8@suse.cz>
+ <20190320185347.GZ19508@bombadil.infradead.org>
+ <b5290e04-6f29-c237-78a7-511821183efe@suse.cz>
+ <20190321022355.GA19508@bombadil.infradead.org>
+From: Vlastimil Babka <vbabka@suse.cz>
+Message-ID: <718a767c-5f0c-7435-3f9b-c63bcd5b488f@suse.cz>
+Date: Thu, 21 Mar 2019 08:02:32 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxhu52G1hw6h-uc50-n5Bq0OT+4pLZjdnfPxK784F=nG0Q@mail.gmail.com>
+In-Reply-To: <20190321022355.GA19508@bombadil.infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Eryu Guan <guaneryu@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Christopher Lameter <cl@linux.com>, linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Michal Hocko <mhocko@kernel.org>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
 
-On Wed, Mar 20, 2019 at 09:06:08AM +0200, Amir Goldstein wrote:
-> On Wed, Mar 20, 2019 at 2:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> >
-> > Wipe the scratch devices in between each test to ensure that tests are
-> > formatting them and not making assumptions about previous contents.
-> >
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  check      |    1 +
-> >  common/rc  |    6 ++++++
-> >  common/xfs |    1 +
-> >  3 files changed, 8 insertions(+)
-> >
-> >
-> > diff --git a/check b/check
-> > index a2c5ba21..bcf08dfe 100755
-> > --- a/check
-> > +++ b/check
-> > @@ -737,6 +737,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
-> >                         # _check_dmesg depends on this log in dmesg
-> >                         touch ${RESULT_DIR}/check_dmesg
-> >                 fi
-> > +               _try_wipe_scratch_devs > /dev/null 2>&1
-> >                 if [ "$DUMP_OUTPUT" = true ]; then
-> >                         ./$seq 2>&1 | tee $tmp.out
-> >                         # Because $? would get tee's return code
-> > diff --git a/common/rc b/common/rc
-> > index 1c42515f..40eef80f 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -3942,6 +3942,12 @@ _require_fibmap()
-> >         rm -f $file
-> >  }
-> >
-> > +_try_wipe_scratch_devs()
-> > +{
-> > +       _scratch_unmount
+On 3/21/19 3:23 AM, Matthew Wilcox wrote:
+> On Wed, Mar 20, 2019 at 10:48:03PM +0100, Vlastimil Babka wrote:
+>>
+>> Well, looks like that's what happens. This is with SLAB, but the alignment
+>> calculations should be common: 
+>>
+>> slabinfo - version: 2.1
+>> # name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> : tunables <limit> <batchcount> <sharedfactor> : slabdata <active_slabs> <num_slabs> <sharedavail>
+>> kmalloc-96          2611   4896    128   32    1 : tunables  120   60    8 : slabdata    153    153      0
+>> kmalloc-128         4798   5536    128   32    1 : tunables  120   60    8 : slabdata    173    173      0
 > 
-> So I find this change strange, not because it doesn't make sense
-> to start every test with scratch unmounted, but because today scratch *is*
-> mounted on test start and there is quite a bit of code to make it mounted
-> on test start, which seems backwards.
-
-Huh?  On XFS the test device is always mounted, but the scratch device
-is never mounted before the test starts.
-
-Hmmm, maybe this is one of those weird things that different with
-nonblock filesystems...?
-
-> IOW, instead of unmounting scratch just before the test runs, seems
-> better to make sure it is unmounted at the end of each test and before
-> starting the loop.
+> Hmm.  On my laptop, I see:
 > 
-> Note that for a test with _require_scratch_nocheck, _check_filesystems()
-> will unmount scratch, but for a test with _require_scratch, _check_scratch_fs()
-> will unmount+fsck+mount scratch - inconsistent.
-> Or am I reading this wrong?
+> kmalloc-96         28050  35364     96   42    1 : tunables    0    0    0 : slabdata    842    842      0
 > 
+> That'd take me from 842 * 4k pages to 1105 4k pages -- an extra megabyte of
+> memory.
 > 
-> > +       test -x "$WIPEFS_PROG" && $WIPEFS_PROG -a $SCRATCH_DEV_POOL $SCRATCH_DEV $SCRATCH_LOGDEV $SCRATCH_RTDEV
+> This is running Debian's 4.19 kernel:
 > 
-> Please check that $SCRATCH_DEV is not a network name (nfs|cifs) and that it
-> is really a blockdev (overlayfs) before trying to wipefs.
+> # CONFIG_SLAB is not set
+> CONFIG_SLUB=y
 
-I wonder if maybe we only bother with wipefs for filesystems where
-all tests have been fixed to not stumble over unformatted scratchdev
-(i.e. xfs and ext* only)
+Ah, you're right. SLAB creates kmalloc caches with:
 
---D
+#ifndef ARCH_KMALLOC_FLAGS
+#define ARCH_KMALLOC_FLAGS SLAB_HWCACHE_ALIGN
+#endif
 
-> Thanks,
-> Amir.
+create_kmalloc_caches(ARCH_KMALLOC_FLAGS);
+
+While SLUB just:
+
+create_kmalloc_caches(0);
+
+even though it uses SLAB_HWCACHE_ALIGN for kmem_cache_node and
+kmem_cache caches.
