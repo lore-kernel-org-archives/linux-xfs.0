@@ -1,208 +1,186 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:32545 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726186AbfCYXnO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Mar 2019 19:43:14 -0400
-Date: Tue, 26 Mar 2019 10:43:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [QUESTION] Long read latencies on mixed rw buffered IO
-Message-ID: <20190325234309.GB23020@dastard>
-References: <CAOQ4uxi0pGczXBX7GRAFs88Uw0n1ERJZno3JSeZR71S1dXg+2w@mail.gmail.com>
- <20190325001044.GA23020@dastard>
- <CAOQ4uxhu=Qtme9RJ7uZXYXt0UE+=xD+OC4gQ9EYkDC1ap8Hizg@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38604 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388240AbfCVMBj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Mar 2019 08:01:39 -0400
+Date: Fri, 22 Mar 2019 08:01:36 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: generic/475 deadlock?
+Message-ID: <20190322120136.GA37888@bfoster>
+References: <20190320050408.GA24923@magnolia>
+ <20190320170305.GA29010@bfoster>
+ <20190320174551.GA1186@magnolia>
+ <20190320175922.GB29010@bfoster>
+ <20190320214938.GU23020@dastard>
+ <20190321121152.GA33001@bfoster>
+ <20190321211051.GV23020@dastard>
+ <20190321215307.GA35644@bfoster>
+ <20190321235045.GW23020@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxhu=Qtme9RJ7uZXYXt0UE+=xD+OC4gQ9EYkDC1ap8Hizg@mail.gmail.com>
+In-Reply-To: <20190321235045.GW23020@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Mar 25, 2019 at 09:49:33AM +0200, Amir Goldstein wrote:
-> On Mon, Mar 25, 2019 at 2:10 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > On Sun, Mar 24, 2019 at 08:18:10PM +0200, Amir Goldstein wrote:
-> > > Hi All,
-> > >
-> > > Christoph's re-factoring to xfs_ilock() brought up this question,
-> > > but AFAICS, current behavior seems to have always been that
-> > > way for xfs (?).
-> > >
-> > > Since commit 6552321831dc ("xfs: remove i_iolock and use
-> > > i_rwsem in the VFS inode instead"), xfs_file_buffered_aio_read()
-> > > is the only call sites I know of to call generic_file_read_iter() with
-> > > i_rwsem read side held.
-> >
-> > That did not change the locking behaviour of XFS at all.
+On Fri, Mar 22, 2019 at 10:50:45AM +1100, Dave Chinner wrote:
+> On Thu, Mar 21, 2019 at 05:53:07PM -0400, Brian Foster wrote:
+> > On Fri, Mar 22, 2019 at 08:10:51AM +1100, Dave Chinner wrote:
+> > > On Thu, Mar 21, 2019 at 08:11:52AM -0400, Brian Foster wrote:
+> > > > On Thu, Mar 21, 2019 at 08:49:38AM +1100, Dave Chinner wrote:
+> > > > The current xfsaild() log force logic is still tied to PINNED objects,
+> > > > but it has additional logic to detect skipped buffers at delwri queue
+> > > > submit time (i.e., due to being pinned) that should cover the pinned
+> > > > inode cluster buffer case.
+> > > 
+> > > And it's not skipped buffers, either. Skipped buffers are only for
+> > > determining timeouts - it's the ail->ail_log_flush counter that
+> > > determines whether a log flush should be done or not, and that's
+> > > only incremented on ITEM_PINNED objects. This is why I was
+> > > suggesting returning that if the backing buffer is pinned, but I
+> > > forgot all about how we already handle this case...
+> > > 
+> > > > But given the above, couldn't we just remove the log force from
+> > > > xfs_iflush() and let the existing xfsaild_push() logic handle it?
+> > > 
+> > > We can, but not for the reasons you are suggesting.
+> > > 
+> > 
+> > The reason I suggested is because we currently "detect skipped buffers
+> > at delwri queue submit time (i.e., due to being pinned)," which causes
+> > xfsaild to force the log.  I'm not sure how exactly you read that, but it
+> > refers exactly to the code snippet you posted below where we bump the
+> > log flush counter due to skipped buffers on submit (because they were
+> > pinned).
 > 
-> I know. Said so above.
-
-Followed by a (?), which seems to indicate you were unsure and
-seeking clarification.
-
-> > I'm guessing what we are seeing here is a rwsem starvation problem.
-> > The only reason a read would get delayed for mor ethan a few hundred
-> > microseconds is ifthere are a continual stream of write holders
-> > starving pending reads.
-> >
+> In the context of the AIL pushing, "skipped" has specific meaning -
+> it refers to items that could not be flushed for whatever reason.
+> And the actions that are taken based on the number of "skipped"
+> objects is taken after delwri queue submit time.
 > 
-> Yes. That seems to be the case.
-
-And both your fio testing and the testing I've done locally seems to
-indicate that this is the case - a constant stream of writers will
-block readers for very long periods of time.
-
-> > I don't recall it being this bad historically but rwsems have been
-> > severely performance optimised for various corner cases over the
-> > past few years and it is extremely likely that behaviour has
-> > changed.  Definitely needs looking at, but rwsems are so fragile
-> > these days (highly dependent on memory ordering that nobody seems to
-> > be able to get right) and impossible to validate as correct that we
-> > might just end up having to live with it.
-> >
-> > FWIW, What kernel did you test this on?
+> You used all the terminology that refers to /skipped/ item
+> handling, not /pinned/ item handling - if you re-read what I wrote
+> above with this difference in mind, then it will make a lot more
+> sense to you.
 > 
-> The results above are from kernel 4.20.7-1.el7.elrepo.x86_64.
-> Your assumption about change of behavior of rwsem over the
-> years seems to be correct.
-> The original report we got from customer was with kernel 4.9.134
-> In the original report, long latencies were on writes rather than on reads.
-> The following output of filebench randomrw workload summarizes the results:
 
-To summarise: "behaviour used to be constant stream of readers block
-writers".
+Perhaps I could have phrased it better, but I specifically referred to
+skipped buffers (not items), in the context of delwri submission and
+qualified it with those skipped due to being pinned. ;) Even in my
+earlier reply right after Darrick corrected my mischaracterization of
+the deadlock, I said the following about the log force in xfs_iflush():
 
-Yay us!
+"I was wondering why we'd need that given that xfsaild() has its own log
+force logic in cases where the delwri submit didn't fully complete
+(i.e., for pinned buffers)."
 
-> rand-write1          1128ops       19ops/s   0.1mb/s    340.3ms/op
-> [0.03ms - 7933.27ms]
-> rand-read1           2954684ops    49238ops/s 384.7mb/s      0.2ms/op
-> [0.02ms - 5873.27ms]
-> 61.026: IO Summary: 2955812 ops 49257.253 ops/s 49238/19 rd/wr
-> 384.8mb/s   0.3ms/op
+But no matter, I can see where the disconnect is now at least. I just
+think you misread me in this case.
+
+> FWIW, this skipped/pinned terminology difference goes right down
+> into the delwri list handling I quoted - I'll add the next few lines
+> so it's clear what I'm talking about:
 > 
-> With more recent kernel (4.20), the latencies have shifted to the read ops:
 > 
-> rand-write1          467706ops     7794ops/s  60.9mb/s    0.733ms/op
-> [0.004ms - 3899.167ms]
-> rand-read1           1970ops       33ops/s   0.3mb/s  164.277ms/op
-> [0.017ms - 3905.929ms]
-> 61.032: IO Summary: 469676 ops 7826.760 ops/s 33/7794 rd/wr  61.1mb/s 1.419ms/op
+> > > 	list_for_each_entry_safe(bp, n, buffer_list, b_list) {
+> > > 		if (!wait_list) {
+> > > 			if (xfs_buf_ispinned(bp)) {
+> > > 				pinned++;
+> > > 				continue;
+> > > 			}
+> 			if (!xfs_buf_trylock(bp))
+> 				continue;
+> 		}
 > 
-> In a workload of 100% reads or 100% writes, there are no extreme
-> latencies or neither
-> old nor new kernel.
-
-Yup, because there's no reader/writer contention on the lock. The
-change of behaviour here is due to the rwsem implementation lacking
-proper barrier semantics, and so the imlpementation changes
-behaviour according to what microbenchmark goes faster this week.
-
-We never had these problems with Irix rwsems, because:
-
-commit a7724543560e9b6434710abcd5528234f108e204
-Author: Doug Doucette <doucette@engr.sgi.com>
-Date:   Sat Jun 14 01:44:30 1997 +0000
-
-    Make the iolock be a BARRIER mrlock instead of the default.
-    This makes it force new readers to wait if there's a writer
-    waiting, insuring some fairness.
-
-Almost all XFS rwsems were configured as MRLOCK_BARRIER rwsems,
-which had mostly fair queuing behaviour.
-
-	- if held by read, other readers can grab until pending
-	  writer.
-	- if held by read and pending writer, reads queue behind
-	  writer.
-	- if held by read, no pending reads and pending writer, writers get batched
-	  with pending writer
-	- if held by writer and no pending reader, new writer is
-	  queued to run after writer and before any new pending
-	  readers.
-	- if held by writer and pending reader, new writers get queued
-	  behind reads
-	- if held by writer and pending reader, readers get batched
-	  with pending reader
-
-basically, these barrier semantics prevented new readers from
-starving waiting writers, and prevented new writers from starving
-pending readers.
-
-/me wonders if he should just implement this as a new type of lock
-so that we don't end up having read/write balance change whenever
-somebody modifies rwsem behaviour to make some microbenchmark go
-faster....
-
-
-
-> > I'd be interested in seeing if a fio workload using 16 randrw
-> > threads demonstrate the same latency profile (i.e. threads aren't
-> > exclusively read- or write- only), or is profile coming about
-> > specifically because you have dedicated write-only threads that will
-> > continually bash on the IO locks and hence starve readers?
+> This code branch also avoid blocking on locked buffers. In AIL
+> terms these locked buffers have been "skipped", but the code only
+> counts and indicates pinned buffers to the caller. And the delwri
+> submission code in the AIL pushing acts on this specific
+> distinction - it triggers a log force if pinned buffers were
+> encountered, not if the flush skipped locked buffers.
 > 
-> I guess it depends on the rw mix. With 50% r/w mix run on kernel
-> 4.20.7-1.el7, long latencies are mostly on the write ops.
 
-Worst case latencies are roughly equal at ~500ms, distribution is
-almost identical - ~50% of writes are not blocking at all, the rest
-are waiting behind reads and so showing >=50th percentile latencies
-largely similar to the read side.
+Yep..
 
-fio displays this behaviour because it bounds the run length of the
-pending write or read IO stream as each thread selects read or write
-randomly. Hence each thread will soon issue an IO that will get
-blocked and so the exclusion stream is essentially bound in depth by
-the random number generator. 
-
-> > > My question is, is the purpose of this lock syncing
-> > > dio/buffered io?
-> >
-> > That's one part of it. The other is POSIX atomic write semantics.
-> >
-> > https://pubs.opengroup.org/onlinepubs/009695399/functions/read.html
-> >
-> > "I/O is intended to be atomic to ordinary files and pipes and FIFOs.
-> > Atomic means that all the bytes from a single operation that started
-> > out together end up together, without interleaving from other I/O
-> > operations."
+> > > ....
+> > > 	return pinned;
+> > > 
+> > 
+> > "detect skipped buffers at delwri queue submit time (i.e., due to being
+> > pinned)"
 > 
-> I see... Are you aware of any applications that depend on this POSIX
-> atomic write behavior? It would seem very unlikely that such applications
-> exist, if only xfs provides this guaranty on Linux...
+> If the AIL code was detecting skipped buffers, it would do:
+> 
+> 	xfs_buf_delwri_submit_nowait(&ailp->ail_buf_list);
+> 	if (!list_empty(&ailp->ail_buf_list)) {
+> 		/* we skipped buffers */
+> 		.....
+> 	}
+> 
+> But it's not doing this.
+> 
 
-Databases like this behaviour very much....
+In general, if you think I'm mischaracterizing code/behavior, it's
+helpful to point out how you interpret the specified reasoning so we can
+correct mistaken assumptions/understandings, clarify descriptions or use
+better terminology or whatever. That helps to get onto the same page
+more efficiently, particularly for cases where it so happens we were
+talking about the same exact thing in the first place and just happen to
+think about it a bit differently. ;)
 
-> IMO, it would be best if applications that desire atomic writes semantics
-> would opt for it using a preadv2 flag. Or, for backward compat, we can allow
-> applications to opt out of atomic write semantics. [CC fsdevel]
+For example, to just say "We can, but not for the reasons you are
+suggesting." doesn't tell me much about how you interpreted my
+reasoning. I thus assume you interpreted it exactly as I meant it. That
+ambiguity leads to confusion when you then go on and explain the same
+behavior I was (trying to) refer to. ;P If you said something like "we
+can but not because of <reason>," it would have probably been
+immediately apparent to me that the reason I intended to describe is not
+exactly how you read it.
 
-You seem to have already decided that it is going to be optional
-behaviour in XFS. perhaps you should wait for people to decide
-whether we want to do that or not....
+> i.e. "Pinned" vs "skipped" may be a subtle terminology difference,
+> but it is an important difference and they are not interchangable...
+> 
+> > > remove them and issue IO on them, and tell the caller that we left
+> > > pinned/locked buffers on the list that still need to be submitted.
+> > > The AIL takes this as an indication it needs to flush the log to
+> > > unpin the buffers it can't flush, and because they are still on it's
+> > > delwri list, it will attempt to submit them again next time around
+> > > after the log has been forced.
+> > > 
+> > 
+> > Right, so this is exactly the reason I suggested.
+> 
+> OK, we're on the same page. :)
+> 
 
-> All right. I am reading the above as no prior objection to adding
-> an XFS mount option and/or preadv2() flag to opt out of this
-> behavior and align with the reckless behavior of the other local
-> filesystems on Linux.
-> Please correct me if I am wrong and I would like to hear what
-> other people thing w.r.t mount option vs. preadv2() flag.
-> It could also be an open flag, but I prefer not to go down that road...
+Indeed.
 
-"No prior objection" doesn't mean "yes, we are going to do this".
+> Do want to submit a patch that fixes the inode and dquot flushing?
+> I haven't looked any further at the busy extent stuff, that's likely
+> to be a more difficult problem to solve...
+> 
 
-Indeed, if you are doing high performance, concurrent mixed
-read/write IO to the same file, then we've already got a solution
-for this problem. i.e. using AIO+DIO on XFS will allow
-both reads and writes to be issued concurrently and not block the
-main thread of execution. That solves all the problems in one go...
+I'll add it to the todo list and make a pass through the log items...
 
-Cheers,
+I missed where the busy extent stuff came into play here.. are you
+pointing out that log forces from the busy extent code can occur under
+buffer locks and thus we're susceptible to similar problems there? If
+so, aren't we protected by the transaction in that context?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+IOW, wouldn't a log force from busy extent context always occur with
+locked buffers joined to a transaction? If so, then doesn't the active
+transaction hold a bli reference and prevent such items from being
+"freed" in log completion context (i.e. xfs_buf_item_unpin()) if they
+happened to be pinned? Perhaps I'm missing something...
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
