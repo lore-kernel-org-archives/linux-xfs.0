@@ -1,78 +1,360 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:24684 "EHLO
-        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726446AbfCQWqC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Mar 2019 18:46:02 -0400
-Date: Mon, 18 Mar 2019 09:45:59 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 07/36] xfs_io: actually check copy file range helper
- return values
-Message-ID: <20190317224559.GP23020@dastard>
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <155259746648.31886.15984241616376190830.stgit@magnolia>
- <53e2bd63-6bd1-648a-d9dd-020b42565e6d@sandeen.net>
- <20190315025638.GD4929@magnolia>
- <6d0275dc-cc56-b62d-16df-dbf65951eb20@sandeen.net>
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:39293 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726014AbfCVJMh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Mar 2019 05:12:37 -0400
+Received: by mail-ot1-f66.google.com with SMTP id f10so1311485otb.6
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Mar 2019 02:12:37 -0700 (PDT)
+From: Shyam Kaushik <shyam@zadara.com>
+References: <63920C3663124B75BC0983A17533395A@alyakaslap> <20170810145248.GE3777@bfoster.bfoster>
+ <20170810175548.GX24087@magnolia> <20170810183233.GG3777@bfoster.bfoster>
+ <20170811022204.GQ21024@dastard> <20170811142741.GA18609@bfoster.bfoster>
+ <20170812001637.GW21024@dastard> <20170812140433.GA31523@bfoster.bfoster>
+ <20170814002809.GA21024@dastard> <A86C45842A15447CAB819133E6AF76CF@alyakaslap>
+ <20170814122216.GA39742@bfoster.bfoster>
+In-Reply-To: <20170814122216.GA39742@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6d0275dc-cc56-b62d-16df-dbf65951eb20@sandeen.net>
+Date: Fri, 22 Mar 2019 14:42:36 +0530
+Message-ID: <0df483623d7b9464691d44de67c7264f@mail.gmail.com>
+Subject: RE: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
+ conversion and the addition of an attribute
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Anna Schumaker <Anna.Schumaker@Netapp.com>, Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, Alex Lyakas <alex@zadarastorage.com>, linux-xfs@vger.kernel.org, libor.klepac@bcom.cz
 
-On Fri, Mar 15, 2019 at 11:51:56AM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 3/14/19 9:56 PM, Darrick J. Wong wrote:
-> > On Thu, Mar 14, 2019 at 09:12:11PM -0500, Eric Sandeen wrote:
-> >> On 3/14/19 4:04 PM, Darrick J. Wong wrote:
-> >>> From: Darrick J. Wong <darrick.wong@oracle.com>
-> >>>
-> >>> We need to check the return value of copy_src_filesize and
-> >>> copy_dst_truncate because either could return -1 due to fstat/ftruncate
-> >>> failure.
-> >>>
-> >>> Fixes: 628e112afdd98c5 ("xfs_io: implement 'copy_range' command")
-> >>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> >>> Reviewed-by: Anna Schumaker <Anna.Schumaker@Netapp.com>
-> >>> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> >>
-> >> I see this has reviews already, but I'm not conviced 1 is the right
-> >> return on error.
-> >>
-> >> i.e. the error condition just prior returns 0:
-> >>
-> >>         fd = openfile(argv[optind], NULL, IO_READONLY, 0, NULL);
-> >>         if (fd < 0)
-> >>                 return 0;
-> >>
-> >> but OTOH if copy_file_range_cmd() fails we return nonzero.  Argh.
-> >>
-> >> Is there a rhyme or reason here that I'm missing?  Is it broken now
-> >> so just do a coinflip on the new return for now?
-> > 
-> > Pretty much. :(
-> > 
-> > I don't really care if you change the return value, I just thought it
-> > was bad form not to check the syscall/helper return values at all.
-> 
-> Yeah no argument there.  Ok, so this function already returns inconsistently,
-> I'll worry about that later (I hope)
+Hi Darrick,
 
-I think I've still got a patch sitting around that fixes the
-inconsistent return values across most of xfs_io. Oh, I posted it at
-one point, too.
+We are trying to port your patch
+https://github.com/torvalds/linux/commit/6e643cd094de3bd0f97edcc1db0089afa
+24d909f to 4.14 LTS kernel. In 4.14 there is no xfs_defer_bjoin(). Can you
+please comment if the below 4.14 LTS kernel patch looks ok to you? Do you
+see any issues with it?
 
-https://marc.info/?l=linux-xfs&m=152644986309024&w=2
+Thanks.
 
-I guess I should resurrect it at some point.
+--Shyam
 
-Cheers,
+PATCH
+-----
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index ea66f04f46f7..f7316138a8db 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -218,6 +218,7 @@ xfs_attr_set(
+        xfs_fsblock_t           firstblock;
+        int                     rsvd = (flags & ATTR_ROOT) != 0;
+        int                     error, err2, local;
++       struct xfs_buf          *leaf_bp = NULL;
+
+        XFS_STATS_INC(mp, xs_attr_set);
+
+@@ -327,9 +328,15 @@ xfs_attr_set(
+                 * GROT: another possible req'mt for a double-split btree
+op.
+                 */
+                xfs_defer_init(args.dfops, args.firstblock);
+-               error = xfs_attr_shortform_to_leaf(&args);
++               error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
+                if (error)
+                        goto out_defer_cancel;
++               /*
++                * Prevent the leaf buffer from being unlocked so that a
++                * concurrent AIL push cannot grab the half-baked leaf
++                * buffer and run into problems with the write verifier.
++                */
++               xfs_trans_bhold(args.trans, leaf_bp);
+                xfs_defer_ijoin(args.dfops, dp);
+                error = xfs_defer_finish(&args.trans, args.dfops);
+                if (error)
+@@ -337,13 +344,15 @@ xfs_attr_set(
+
+                /*
+                 * Commit the leaf transformation.  We'll need another
+(linked)
+-                * transaction to add the new attribute to the leaf.
++                * transaction to add the new attribute to the leaf, which
++                * means that we have to hold & join the leaf buffer here
+too.
+                 */
+
+                error = xfs_trans_roll_inode(&args.trans, dp);
+                if (error)
+                        goto out;
+-
++               xfs_trans_bjoin(args.trans, leaf_bp);
++               leaf_bp = NULL;
+        }
+
+        if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+@@ -374,8 +383,9 @@ xfs_attr_set(
+
+ out_defer_cancel:
+        xfs_defer_cancel(&dfops);
+-       args.trans = NULL;
+ out:
++       if (leaf_bp)
++               xfs_buf_relse(leaf_bp);
+        if (args.trans)
+                xfs_trans_cancel(args.trans);
+        xfs_iunlock(dp, XFS_ILOCK_EXCL);
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 40e53a4fc0a6..92ae04ac413a 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -739,10 +739,13 @@ xfs_attr_shortform_getvalue(xfs_da_args_t *args)
+ }
+
+ /*
+- * Convert from using the shortform to the leaf.
++ * Convert from using the shortform to the leaf.  On success, return the
++ * buffer so that we can keep it locked until we're totally done with it.
+  */
+ int
+-xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
++xfs_attr_shortform_to_leaf(
++       xfs_da_args_t *args,
++       struct xfs_buf **leaf_bp)
+ {
+        xfs_inode_t *dp;
+        xfs_attr_shortform_t *sf;
+@@ -821,6 +824,7 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+                sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
+        }
+        error = 0;
++       *leaf_bp = bp;
+
+ out:
+        kmem_free(tmpbuffer);
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index f7dda0c237b0..894124efb421 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -48,7 +48,8 @@ void  xfs_attr_shortform_create(struct xfs_da_args
+*args);
+ void   xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
+ int    xfs_attr_shortform_lookup(struct xfs_da_args *args);
+ int    xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+-int    xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
++int    xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
++                       struct xfs_buf **leaf_bp);
+ int    xfs_attr_shortform_remove(struct xfs_da_args *args);
+ int    xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode
+*dp);
+ int    xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+
+
+
+-----Original Message-----
+From: linux-xfs-owner@vger.kernel.org
+[mailto:linux-xfs-owner@vger.kernel.org] On Behalf Of Brian Foster
+Sent: 14 August 2017 17:52
+To: Alex Lyakas
+Cc: Dave Chinner; Darrick J. Wong; linux-xfs@vger.kernel.org;
+libor.klepac@bcom.cz
+Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
+conversion and the addition of an attribute
+
+On Mon, Aug 14, 2017 at 11:11:41AM +0300, Alex Lyakas wrote:
+> Hello David, Brian,
+>
+> I was not able to follow the details, unfortunately. Can you confirm
+that
+> this patch is safe to go into kernel 3.18?
+>
+
+This is the open question in the separate subthread (this one is
+discussion around designing a solution for the current code):
+
+http://marc.info/?l=linux-xfs&m=150246184413604&w=2
+
+This could use confirmation, but my understanding is that this is safe
+because v3.18 doesn't have the more advanced deferred ops
+infrastructure. It uses xfs_bmap_finish() which has a max roll count of
+one and a transaction with enough reservation for 2 rolls before
+blocking reservation is required.
+
+Note that doesn't mean we'd officially post a v3.18 stable patch before
+this is fixed in the upstream code. We always fix upstream first and
+backport from there to ensure a consistent base going forward (we don't
+want to go change v3.18, end up with a slightly different upstream
+patch, then have to backport more changes to fix the original patch).
+This may be safe enough for you to use locally in the meantime, however.
+
+Brian
+
+> Thanks,
+> Alex.
+>
+>
+> -----Original Message----- From: Dave Chinner
+> Sent: Monday, August 14, 2017 3:28 AM
+> To: Brian Foster
+> Cc: Darrick J. Wong ; Alex Lyakas ; linux-xfs@vger.kernel.org ;
+> libor.klepac@bcom.cz
+> Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
+> conversion and the addition of an attribute
+>
+> On Sat, Aug 12, 2017 at 10:04:34AM -0400, Brian Foster wrote:
+> > On Sat, Aug 12, 2017 at 10:16:37AM +1000, Dave Chinner wrote:
+> > > On Fri, Aug 11, 2017 at 10:27:43AM -0400, Brian Foster wrote:
+> > > > On Fri, Aug 11, 2017 at 12:22:04PM +1000, Dave Chinner wrote:
+> > > Using XFS_BLI_ORDERED allows us to log the buffer without recording
+> > > a new dirty range on the buffer. IOWs, it retains whatever dirty
+range
+> > > it already had, and so after joining, marking it ordered and then
+> > > logging the buffer, we have a XFS_BLI_DIRTY | XFS_BLI_ORDERED buffer
+> > > in the transaction.
+> > >
+> > > The question is this: what happens when a XFS_BLI_ORDERED buffer
+> > > with a pre-existing dirty region is formatted for the CIL? We
+> > > haven't done that before, so I'm betting that we don't relog the
+> > > dirty region like we should be doing....
+> > >
+> > > ... and we don't relog the existing dirty range because the
+> > > ordered flag takes precedence.
+> > >
+> >
+> > Right.. so it seems that the current implementation for ordered
+buffers
+> > assumes a buffer is only ever used in one mode or the other.
+> > Additionally, the AIL assumes that any reinserted item has been fully
+> > relogged and so it moves the LSN forward unconditionally. Current
+> > ordered buffer processing violates this constraint for an already
+logged
+> > buffer.
+>
+> Right, but it's not been a concern until now because we've only ever
+> used ordered buffers on newly allocated buffers that haven't been
+> previously logged.
+>
+> > > Ok, the ordered buffer checks in xfs_buf_item_size() and
+> > > xfs_buf_item_format() need to also check for dirty regions. If dirty
+> > > regions exist, then we treat it like a normal buffer rather than an
+> > > ordered buffer. We can factor the dirty region check out of
+> > > xfs_buf_item_unlock() for this...
+> > >
+> > > Actually, check the case in xfs_buf_item_size() and remove the
+> > > ordered flag if there are dirty regions. Then xfs_buf_item_format()
+> > > will do the right thing without needing a duplicate check...
+> > >
+> >
+> > I think that would work, assuming we actually check the
+> > xfs_buf_log_format for dirty-ness rather than just the log item. As it
+> > is, note that ordered buffers are still "logged" in the transaction
+> > because otherwise the transaction infrastructure will assume it made
+no
+> > change to the buf and toss the log item at commit time (we also need
+to
+> > set up I/O completion on the buf and whatnot).
+>
+> *nod*
+>
+> > What concerns me about this approach is that I think we introduce the
+> > possibility for subtle bugs. Existing ordered buffer code does this:
+> >
+> >         xfs_trans_ordered_buf(tp, fbuf);
+> >         xfs_trans_log_buf(tp, fbuf, 0,
+> >                           BBTOB(fbuf->b_length) - 1);
+> >
+> > ... which should continue to work fine. Allowing ordered buffers to
+> > physically log means that something like this:
+> >
+> >         xfs_trans_log_buf(tp, fbuf, 0,
+> >                           BBTOB(fbuf->b_length) - 1);
+> >         xfs_trans_ordered_buf(tp, fbuf);
+> >
+> > ... is now a bug that is only apparent after scrutiny of xfs_trans_*()
+> > and logging internals. Granted, the above already is incorrect, but it
+> > technically still works as expected. I don't see the need to turn that
+> > into a real problem by actually logging the buffer when we might not
+> > expect to.
+>
+> Well, it's not a "things go bad" bug. It's a "we screwed up an
+> optimisation" bug, because logging the buffer contents unnecessarily
+> only increases the required log bandwidth. It shouldn't affect
+> replay because the buffer is still correctly ordered in the log.
+> Hence both the transient and end states of the buffer during replay
+> will still be the same...
+>
+> > So while I agree that this could probably be made to work and I think
+it
+> > is ideal to doing any kind of logged range tracking in the deferred
+ops
+> > code, it still seems more tricky than it needs to be. To relog a held
+> > buffer in a new transaction, why not just mark the lidp dirty in the
+new
+> > transaction so it inherits all existing dirty segments? AFAICT, all we
+> > really need to do is:
+> >
+> >         tp->t_flags |= XFS_TRANS_DIRTY;
+> >         lidp->lid_flags |= XFS_LID_DIRTY;
+> >
+> > ... on the new transaction and everything should just work as designed
+> > (for a buffer that has been previously logged, held, rolled and
+> > rejoined).
+>
+> We would also need to set:
+>
+> bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
+>
+> which means we should....
+>
+> > To elaborate a bit, I think we could refactor xfs_trans_log_buf() into
+a
+> > new xfs_trans_dirty_buf() helper that covers all of the relevant bits
+> > not related to actually dirtying the bli. xfs_trans_log_buf() would
+call
+> > xfs_trans_dirty_buf() and thus would not change functionally.
+> > xfs_trans_ordered_buf() could now call xfs_trans_dirty_buf() and thus
+> > the existing ordered buf users would no longer need to log a range of
+> > the buffer (which doesn't make much sense anyways).
+>
+> ... do this. :)
+>
+> > Finally, the
+> > deferred infrastructure could join/dirty/hold the buffer to the new
+> > transaction after each roll without needing to track and relog
+specific
+> > regions of the buffer. Thoughts?
+>
+> Yup, that's exactly what I was thinking should be possible by using
+> ordered buffers.... :)
+>
+> And Christoph's rework of the transaction roll and deferred inode
+> handling that he just posted should make adding buffer handling
+> quite a bit neater and cleaner.
+>
+> > Unless I'm missing something as to why this is busted, I'll take a
+> > closer look at the code and float an rfc next week since otherwise it
+> > sounds like this is something we could actually fix up in the ordered
+> > buffer code today.
+>
+> Cool.
+>
+> > > Nothing in XFS is ever simple, is it? :P
+> >
+> > There used to be a level of satisfaction at feeling I understood some
+> > new corner of XFS. Nowadays I know that just means I'm not yet aware
+of
+> > whatever dragons remain in that corner (is that paranoia? not if it's
+> > true!). :P
+>
+> Ah, the true signs of expertise: developing a knowledge base and
+> insight deep enough to understand that there is always another
+> hidden dragon poised to bite your head off. :)
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
