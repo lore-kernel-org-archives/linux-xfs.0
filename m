@@ -1,105 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53428 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728274AbfCVQwn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Mar 2019 12:52:43 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: serialize unaligned dio writes against all other dio writes
-Date: Fri, 22 Mar 2019 12:52:42 -0400
-Message-Id: <20190322165242.40662-1-bfoster@redhat.com>
+Received: from a9-46.smtp-out.amazonses.com ([54.240.9.46]:49172 "EHLO
+        a9-46.smtp-out.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727801AbfCVRw1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Mar 2019 13:52:27 -0400
+Date: Fri, 22 Mar 2019 17:52:25 +0000
+From: Christopher Lameter <cl@linux.com>
+Subject: Re: [RFC 0/2] guarantee natural alignment for kmalloc()
+In-Reply-To: <4d2a55dc-b29f-1309-0a8e-83b057e186e6@suse.cz>
+Message-ID: <01000169a68852ed-d621a35c-af0c-4759-a8a3-e97e7dfc17a5-000000@email.amazonses.com>
+References: <20190319211108.15495-1-vbabka@suse.cz> <01000169988d4e34-b4178f68-c390-472b-b62f-a57a4f459a76-000000@email.amazonses.com> <5d7fee9c-1a80-6ac9-ac1d-b1ce05ed27a8@suse.cz> <010001699c5563f8-36c6909f-ed43-4839-82da-b5f9f21594b8-000000@email.amazonses.com>
+ <4d2a55dc-b29f-1309-0a8e-83b057e186e6@suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Michal Hocko <mhocko@kernel.org>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
 
-XFS applies more strict serialization constraints to unaligned
-direct writes to accommodate things like direct I/O layer zeroing,
-unwritten extent conversion, etc. Unaligned submissions acquire the
-exclusive iolock and wait for in-flight dio to complete to ensure
-multiple submissions do not race on the same block and cause data
-corruption.
+On Thu, 21 Mar 2019, Vlastimil Babka wrote:
 
-This generally works in the case of an aligned dio followed by an
-unaligned dio, but the serialization is lost if I/Os occur in the
-opposite order. If an unaligned write is submitted first and
-immediately followed by an overlapping, aligned write, the latter
-submits without the typical unaligned serialization barriers because
-there is no indication of an unaligned dio still in-flight. This can
-lead to unpredictable results.
+> That however doesn't work well for the xfs/IO case where block sizes are
+> not known in advance:
+>
+> https://lore.kernel.org/linux-fsdevel/20190225040904.5557-1-ming.lei@redhat.com/T/#ec3a292c358d05a6b29cc4a9ce3ae6b2faf31a23f
 
-To provide proper unaligned dio serialization, require that such
-direct writes are always the only dio allowed in-flight at one time
-for a particular inode. We already acquire the exclusive iolock and
-drain pending dio before submitting the unaligned dio. Wait once
-more after the dio submission to hold the iolock across the I/O and
-prevent further submissions until the unaligned I/O completes. This
-is heavy handed, but consistent with the current pre-submission
-serialization for unaligned direct writes.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
-
-I was originally going to deal with this problem by hacking in an inode
-flag to track unaligned dio writes in-flight and use that to block any
-follow on dio writes until cleared. Dave suggested we could use the
-iolock to serialize by converting unaligned async dio writes to sync dio
-writes and just letting the unaligned dio itself always block. That
-seemed reasonable to me, but I morphed the approach slightly to just use
-inode_dio_wait() because it seemed a bit cleaner. Thoughts?
-
-Zorro,
-
-You reproduced this problem originally. It addresses the problem in the
-test case that reproduced for me. Care to confirm whether this patch
-fixes the problem for you? Thanks.
-
-Brian
-
- fs/xfs/xfs_file.c | 21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 770cc2edf777..8b2aaed82343 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -529,18 +529,19 @@ xfs_file_dio_aio_write(
- 	count = iov_iter_count(from);
- 
- 	/*
--	 * If we are doing unaligned IO, wait for all other IO to drain,
--	 * otherwise demote the lock if we had to take the exclusive lock
--	 * for other reasons in xfs_file_aio_write_checks.
-+	 * If we are doing unaligned IO, we can't allow any other IO in-flight
-+	 * at the same time or we risk data corruption. Wait for all other IO to
-+	 * drain, submit and wait for completion before we release the iolock.
-+	 *
-+	 * If the IO is aligned, demote the iolock if we had to take the
-+	 * exclusive lock in xfs_file_aio_write_checks() for other reasons.
- 	 */
- 	if (unaligned_io) {
--		/* If we are going to wait for other DIO to finish, bail */
--		if (iocb->ki_flags & IOCB_NOWAIT) {
--			if (atomic_read(&inode->i_dio_count))
--				return -EAGAIN;
--		} else {
-+		/* unaligned dio always waits, bail */
-+		if (iocb->ki_flags & IOCB_NOWAIT)
-+			return -EAGAIN;
-+		else
- 			inode_dio_wait(inode);
--		}
- 	} else if (iolock == XFS_IOLOCK_EXCL) {
- 		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
- 		iolock = XFS_IOLOCK_SHARED;
-@@ -548,6 +549,8 @@ xfs_file_dio_aio_write(
- 
- 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
- 	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
-+	if (unaligned_io && !is_sync_kiocb(iocb))
-+		inode_dio_wait(inode);
- out:
- 	xfs_iunlock(ip, iolock);
- 
--- 
-2.17.2
+I thought we agreed to use custom slab caches for that?
