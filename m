@@ -1,183 +1,257 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38604 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45244 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388240AbfCVMBj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Mar 2019 08:01:39 -0400
-Date: Fri, 22 Mar 2019 08:01:36 -0400
+        id S2387473AbfCVMqS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Mar 2019 08:46:18 -0400
+Date: Fri, 22 Mar 2019 08:46:15 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: generic/475 deadlock?
-Message-ID: <20190322120136.GA37888@bfoster>
-References: <20190320050408.GA24923@magnolia>
- <20190320170305.GA29010@bfoster>
- <20190320174551.GA1186@magnolia>
- <20190320175922.GB29010@bfoster>
- <20190320214938.GU23020@dastard>
- <20190321121152.GA33001@bfoster>
- <20190321211051.GV23020@dastard>
- <20190321215307.GA35644@bfoster>
- <20190321235045.GW23020@dastard>
+Subject: Re: [PATCH 2/4] xfs: force writes to delalloc regions to unwritten
+Message-ID: <20190322124615.GB37888@bfoster>
+References: <20190317224011.GO23020@dastard>
+ <20190318124039.GA17956@bfoster>
+ <20190318203506.GQ23020@dastard>
+ <20190318215014.GA21231@bfoster>
+ <20190319180249.GS4929@magnolia>
+ <20190319202537.GR23020@dastard>
+ <20190320120204.GA28268@bfoster>
+ <20190320211019.GS23020@dastard>
+ <20190321122740.GB33001@bfoster>
+ <20190322015240.GX23020@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190321235045.GW23020@dastard>
+In-Reply-To: <20190322015240.GX23020@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Fri, Mar 22, 2019 at 10:50:45AM +1100, Dave Chinner wrote:
-> On Thu, Mar 21, 2019 at 05:53:07PM -0400, Brian Foster wrote:
-> > On Fri, Mar 22, 2019 at 08:10:51AM +1100, Dave Chinner wrote:
-> > > On Thu, Mar 21, 2019 at 08:11:52AM -0400, Brian Foster wrote:
-> > > > On Thu, Mar 21, 2019 at 08:49:38AM +1100, Dave Chinner wrote:
-> > > > The current xfsaild() log force logic is still tied to PINNED objects,
-> > > > but it has additional logic to detect skipped buffers at delwri queue
-> > > > submit time (i.e., due to being pinned) that should cover the pinned
-> > > > inode cluster buffer case.
+On Fri, Mar 22, 2019 at 12:52:40PM +1100, Dave Chinner wrote:
+> On Thu, Mar 21, 2019 at 08:27:40AM -0400, Brian Foster wrote:
+> > On Thu, Mar 21, 2019 at 08:10:19AM +1100, Dave Chinner wrote:
+> > > On Wed, Mar 20, 2019 at 08:02:05AM -0400, Brian Foster wrote:
+> > > > On Wed, Mar 20, 2019 at 07:25:37AM +1100, Dave Chinner wrote:
+> > > > > > > The broader point is that by controlling writeback ordering, we can
+> > > > > > > explicitly demonstrate stale data exposure. If fixed properly, we should
+> > > > > > > never expect stale data exposure even in the event of out of order
+> > > > > > > writeback completion, regardless of the cause.
+> > > > > > 
+> > > > > > Agree.  Even if s_f_r is a giant trash fire, if we're exposing stale
+> > > > > > disk contents it's game over anyway and we ought to fix it.
+> > > > > 
+> > > > > Well, that's exactly the problem with SFR, isn't it? The dirty data
+> > > > > is outside the range the user asks to sync and the implementation
+> > > > > doesn't go anywhere near the filesystem so we can't actually do the
+> > > > > right thing here. So we are left to either hack fixes around a
+> > > > > shitty, broken interface and everyone pays the penalty, or we ignore
+> > > > > it. We've simply ignored it for the past 10+ years because it really
+> > > > > can't be used safely for it's intended purposes (as everyone who
+> > > > > tries to use it finds out eventually)...
+> > > > > 
+> > > > 
+> > > > Just to make this abundantly clear, there is nothing unique, magic or
+> > > > special required of sync_file_range() to reproduce this stale data
+> > > > exposure. See the following variation of a command sequence from the
+> > > > fstest I posted the other day:
+> > > > 
+> > > > ...
+> > > > # xfs_io -fc "pwrite 0 68k" -c fsync -c "pwrite 96k 4k" \
+> > > > 	-c "fpunch 96k 4k" <file>
+> > > > ...
+> > > > # hexdump <file>
+> > > > 0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+> > > > *
+> > > > 0011000 abab abab abab abab abab abab abab abab
+> > > > *
+> > > > 0018000 0000 0000 0000 0000 0000 0000 0000 0000
+> > > > *
+> > > > 0019000
+> > > > 
+> > > > Same problem, and it can be reproduced just as easily with a reflink or
+> > > > even an overlapping direct I/O.
 > > > 
-> > > And it's not skipped buffers, either. Skipped buffers are only for
-> > > determining timeouts - it's the ail->ail_log_flush counter that
-> > > determines whether a log flush should be done or not, and that's
-> > > only incremented on ITEM_PINNED objects. This is why I was
-> > > suggesting returning that if the backing buffer is pinned, but I
-> > > forgot all about how we already handle this case...
-> > > 
-> > > > But given the above, couldn't we just remove the log force from
-> > > > xfs_iflush() and let the existing xfsaild_push() logic handle it?
-> > > 
-> > > We can, but not for the reasons you are suggesting.
-> > > 
-> > 
-> > The reason I suggested is because we currently "detect skipped buffers
-> > at delwri queue submit time (i.e., due to being pinned)," which causes
-> > xfsaild to force the log.  I'm not sure how exactly you read that, but it
-> > refers exactly to the code snippet you posted below where we bump the
-> > log flush counter due to skipped buffers on submit (because they were
-> > pinned).
-> 
-> In the context of the AIL pushing, "skipped" has specific meaning -
-> it refers to items that could not be flushed for whatever reason.
-> And the actions that are taken based on the number of "skipped"
-> objects is taken after delwri queue submit time.
-> 
-> You used all the terminology that refers to /skipped/ item
-> handling, not /pinned/ item handling - if you re-read what I wrote
-> above with this difference in mind, then it will make a lot more
-> sense to you.
-> 
-
-Perhaps I could have phrased it better, but I specifically referred to
-skipped buffers (not items), in the context of delwri submission and
-qualified it with those skipped due to being pinned. ;) Even in my
-earlier reply right after Darrick corrected my mischaracterization of
-the deadlock, I said the following about the log force in xfs_iflush():
-
-"I was wondering why we'd need that given that xfsaild() has its own log
-force logic in cases where the delwri submit didn't fully complete
-(i.e., for pinned buffers)."
-
-But no matter, I can see where the disconnect is now at least. I just
-think you misread me in this case.
-
-> FWIW, this skipped/pinned terminology difference goes right down
-> into the delwri list handling I quoted - I'll add the next few lines
-> so it's clear what I'm talking about:
-> 
-> 
-> > > 	list_for_each_entry_safe(bp, n, buffer_list, b_list) {
-> > > 		if (!wait_list) {
-> > > 			if (xfs_buf_ispinned(bp)) {
-> > > 				pinned++;
-> > > 				continue;
-> > > 			}
-> 			if (!xfs_buf_trylock(bp))
-> 				continue;
-> 		}
-> 
-> This code branch also avoid blocking on locked buffers. In AIL
-> terms these locked buffers have been "skipped", but the code only
-> counts and indicates pinned buffers to the caller. And the delwri
-> submission code in the AIL pushing acts on this specific
-> distinction - it triggers a log force if pinned buffers were
-> encountered, not if the flush skipped locked buffers.
-> 
-
-Yep..
-
-> > > ....
-> > > 	return pinned;
+> > > How does overlapping direct IO cause stale data exposure given that
+> > > it uses unwritten extent allocation? That, of course, is ignoring
+> > > the fact that the result of overlapping concurent direct IO is, by
+> > > definition, undefined and an application bug if it occurs....
 > > > 
 > > 
-> > "detect skipped buffers at delwri queue submit time (i.e., due to being
-> > pinned)"
+> > It's overlapping a buffered write and so starts with a flush instead of
 > 
-> If the AIL code was detecting skipped buffers, it would do:
+> Ok, but that's not the normal usage of the phrase "overlapping
+> direct IO".  Overlapping direct IO means two concurrent direct IOs
+> to the same LBA range in the device underlying the filesystem. i.e.
+> they overlap in both the temporal and physical (device LBA) domains.
 > 
-> 	xfs_buf_delwri_submit_nowait(&ailp->ail_buf_list);
-> 	if (!list_empty(&ailp->ail_buf_list)) {
-> 		/* we skipped buffers */
-> 		.....
-> 	}
-> 
-> But it's not doing this.
+> Subtle difference, yes, but a very important one.
 > 
 
-In general, if you think I'm mischaracterizing code/behavior, it's
-helpful to point out how you interpret the specified reasoning so we can
-correct mistaken assumptions/understandings, clarify descriptions or use
-better terminology or whatever. That helps to get onto the same page
-more efficiently, particularly for cases where it so happens we were
-talking about the same exact thing in the first place and just happen to
-think about it a bit differently. ;)
+Yeah, I just referenced it in passing and was unclear. The point is just
+that there are multiple vectors to the problem, some of which are sane
+sequences and some apparently not, and I'd rather not get caught up in
+the minutiae of why some of those sequences are not sane. I'm trying to
+see if we can find a solution to the fundamental data exposure problem.
 
-For example, to just say "We can, but not for the reasons you are
-suggesting." doesn't tell me much about how you interpreted my
-reasoning. I thus assume you interpreted it exactly as I meant it. That
-ambiguity leads to confusion when you then go on and explain the same
-behavior I was (trying to) refer to. ;P If you said something like "we
-can but not because of <reason>," it would have probably been
-immediately apparent to me that the reason I intended to describe is not
-exactly how you read it.
-
-> i.e. "Pinned" vs "skipped" may be a subtle terminology difference,
-> but it is an important difference and they are not interchangable...
+> > an unwritten allocation (so even a dio read is sufficient). Also, the
+> > target of the dio isn't where stale data is exposed, so even if there
+> > was an existing underlying unwritten block before the initial buffered
+> > write it wouldn't change anything.
+> > 
+> > Yes, this is technically usage with undefined behavior, but that still
+> > misses the forest from the trees.
 > 
-> > > remove them and issue IO on them, and tell the caller that we left
-> > > pinned/locked buffers on the list that still need to be submitted.
-> > > The AIL takes this as an indication it needs to flush the log to
-> > > unpin the buffers it can't flush, and because they are still on it's
-> > > delwri list, it will attempt to submit them again next time around
-> > > after the log has been forced.
+> No, I'm not missing the forest for the trees.
+> 
+> > I'm not claiming this is good or
+> > supported practice just as I'm not not claiming sync_file_range() should
+> > be used for anything in practice. I'm just pointing out it's one of
+> > several possible, obvious data exposure vectors. I suspect there are
+> > others; these were just the easy variants to reproduce.
+> 
+> I'm aware that we have these problems - we've known about them for
+> 20+ years and the many ways they can be exposed. Indeed, We've been
+> talking about using unwritten extents for delalloc for as long as I
+> can remember, but never done it because the actual occurrence of
+> these problems in production systems is /extremely/ rare and the
+> cost of using unwritten extents everywhere will affect /everyone/.
+> 
+> i.e. It's always been easy to create test conditions to expose stale
+> data, but reported cases of stale data exposure after a production
+> system crash are pretty much non-existent. This just isn't a common
+> problem that users are experiencing, but solving it with "unwritten
+> extents for everyone" comes at a substantial cost for /everyone/,
+> /all the time/.
+> 
+
+I know you're aware. I'm pretty sure we've discussed this directly in
+the past (with regard to how buffer heads were an impediment to a
+solution) and that you made me aware of the issue in the first place. ;)
+
+> That's why a) it hasn't been done yet; and b) any discussion about
+> "use unwritten extents everywhere" always ends up in trying to find
+> a solution that isn't just applying the "big hammer" and ignoring
+> the problems that causes.
+> 
+
+Right..
+
+> > If you prefer to
+> > reason about reproducer patterns that don't use operations with quirks
+> > or undefined behaviors, that's fine, just use the reflink or hole punch
+> > example posted above that produce the same behavior.
+> 
+> Well, yes. But it does go both ways - if you don't want people to
+> say "that's undefined" or "that makes no sense", then don't use
+> those quirky examples if you can use better, unambiguous examples.
+> 
+
+The sync_file_range() reproducer was a poor example in that regard. I'm
+not concerned over that being pointed out, but I've explained several
+times subsequently that we can replace the sync_file_range() calls with
+a sane command (hole punch) to reproduce the same general behavior and
+resulting data exposure problem and thus the quirks of the former are
+not a primary factor. Despite that, this discussion has somehow turned
+into an appraisal of sync_file_range(). Moving on..
+
+I posted some comments/questions around your log item suggestion for
+extent zeroing during recovery in my previous reply and that part
+apparently got completely snipped out and ignored. :/ Any feedback on
+that?
+
+> For example, that's exactly how I phrased this extension flushing
+> mechanism trigger:
+> 
+> > > Eseentially, what this says to me is we need to track when we
+> > > extended the file via a write beyond EOF via an inode flag. Then if we need to
+> > > flush a data range from the file for integrity reasons (such as a
+> > > fpnuch) and this flag is set, we ignore the "start" parameter of the
+> 
+> See? Entirely generic trigger description, uses hole punch as an
+> example, but also covers all the quirky cases such as direct IO
+> range flushing without having to mention them explicitly.
+> 
+> > > range and flush from the start of the file instead. i.e. we
+> > > guarantee that any dirty zeroed pages between the start of the file
+> > > and the end of the range we are operating on gets written back. This
+> > > will capture all these "didn't flush regions zeroed on file
+> > > extension" problems in one go, without needing to change the way we
+> > > do allocation or EOF zeroing.
 > > > 
 > > 
-> > Right, so this is exactly the reason I suggested.
+> > I don't think that would prevent the problem outside of the common write
+> > extension case.
 > 
-> OK, we're on the same page. :)
-> 
-
-Indeed.
-
-> Do want to submit a patch that fixes the inode and dquot flushing?
-> I haven't looked any further at the busy extent stuff, that's likely
-> to be a more difficult problem to solve...
+> I feel like we're going around in circles now, Brian. :/
 > 
 
-I'll add it to the todo list and make a pass through the log items...
+Yes, let's try to reset here...
 
-I missed where the busy extent stuff came into play here.. are you
-pointing out that log forces from the busy extent code can occur under
-buffer locks and thus we're susceptible to similar problems there? If
-so, aren't we protected by the transaction in that context?
+> I didn't propose this as the "only solution we need". I've proposed
+> it in the context that we use "only use unwritten extents for
+> allocations within EOF" to solve the common "write within EOF" case.
+> This, however, doesn't solve this common write extension case where
+> we don't want to use unwritten extents because of the performance
+> cost.
+> 
+> And now you're saying that "well, this extending write thing
+> doesn't solve the inside EOF problem"......
+> 
 
-IOW, wouldn't a log force from busy extent context always occur with
-locked buffers joined to a transaction? If so, then doesn't the active
-transaction hold a bli reference and prevent such items from being
-"freed" in log completion context (i.e. xfs_buf_item_unpin()) if they
-happened to be pinned? Perhaps I'm missing something...
+Ok, I lost that context. As I said above, I can see how this could be
+useful in combination with another approach to handle inside eof
+allocations. There are still some loose ends (in my mind) to consider
+with this technique, however...
+
+This requires that we always guarantee in-order writeback, right? I can
+see how we can do that in the cases we control based on the flag based
+approach you suggested. But do we really have enough control within the
+fs to always prevent out of order writeback? What about non-integrity
+background writeback? AFAICT it's technically possible to writeback out
+of expected order (the cyclic range logic looks particularly suspicious
+to me if you consider a mapping can be truncated and repopulated many
+times over without resetting the cycle index). What about memory
+reclaim? Is it not possible to hit the ->writepage() path via reclaim
+for an arbitrary page in a mapping? It's not clear to me if page
+migration is a factor for us as well, but it also looks like it has some
+specific page writeback hooks.
+
+I suppose there are technically ways around these things. We could skip
+writeback of certain pages in some cases (but that may have unacceptable
+consequences) or make the decision to use one exposure preventation
+approach or another dynamically at writepage time based on the state of
+the inode, mapping and associated page. I'd think background writeback
+is the common case as opposed to things like hole punch and whatnot,
+however, so a dynamic solution leaves the effectiveness of this approach
+somewhat open ended unless we characterize how all possible writeback
+scenarios behave.
+
+Given that, it seems more useful to me to work through the inside eof
+extent allocation scenario first and work back from there. Then we can
+at least try to establish potential performance impact and determine if
+we should try to work around it in certain cases, etc. On that note,
+please see the part that was snipped out of my earlier reply[1], in
+particular the part that ended with "Am I following the high level idea
+correctly?" :P Thanks.
 
 Brian
 
+[1] https://marc.info/?l=linux-xfs&m=155308332901975&w=2
+
+> > It may be possible to selectively (i.e. as an optimization) use an
+> > XFS_ITRUNCATED like algorithm as you propose here to always force in
+> > order writeback in the cases where writeback extends the on-disk isize
+> > (and thus isize protects from stale exposure), but I think we'd still
+> > need something tied to extent allocation one way or another in addition
+> > (like Darrick's original unwritten extent patch or your proposed
+> > intent/done idea in the previous reply) to address the fundamental
+> > problem. The question is what is the ideal solution..
+> 
+> The solution will be a combination of things that work together, not
+> one big hammer. The more we can avoid exposure vectors by
+> operational ordering rather than transactional state changes, the
+> better the solution will perform.
+> 
 > Cheers,
 > 
 > Dave.
