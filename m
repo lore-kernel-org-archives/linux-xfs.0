@@ -1,163 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41402 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725554AbfCYNpV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Mar 2019 09:45:21 -0400
-Date: Mon, 25 Mar 2019 09:45:13 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: serialize unaligned dio writes against all other
- dio writes
-Message-ID: <20190325134513.GB52167@bfoster>
-References: <20190322165242.40662-1-bfoster@redhat.com>
- <20190323102930.GS7200@dhcp-12-102.nay.redhat.com>
- <20190325034721.GT7200@dhcp-12-102.nay.redhat.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:52086 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726589AbfCWAfk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Mar 2019 20:35:40 -0400
+Date: Fri, 22 Mar 2019 17:35:32 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] generic: prohibit fstrim on journalled filesystems with
+ norecovery
+Message-ID: <20190323003532.GB1180@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190325034721.GT7200@dhcp-12-102.nay.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Mon, Mar 25, 2019 at 11:47:22AM +0800, Zorro Lang wrote:
-> On Sat, Mar 23, 2019 at 06:29:30PM +0800, Zorro Lang wrote:
-> > On Fri, Mar 22, 2019 at 12:52:42PM -0400, Brian Foster wrote:
-> > > XFS applies more strict serialization constraints to unaligned
-> > > direct writes to accommodate things like direct I/O layer zeroing,
-> > > unwritten extent conversion, etc. Unaligned submissions acquire the
-> > > exclusive iolock and wait for in-flight dio to complete to ensure
-> > > multiple submissions do not race on the same block and cause data
-> > > corruption.
-> > > 
-> > > This generally works in the case of an aligned dio followed by an
-> > > unaligned dio, but the serialization is lost if I/Os occur in the
-> > > opposite order. If an unaligned write is submitted first and
-> > > immediately followed by an overlapping, aligned write, the latter
-> > > submits without the typical unaligned serialization barriers because
-> > > there is no indication of an unaligned dio still in-flight. This can
-> > > lead to unpredictable results.
-> > > 
-> > > To provide proper unaligned dio serialization, require that such
-> > > direct writes are always the only dio allowed in-flight at one time
-> > > for a particular inode. We already acquire the exclusive iolock and
-> > > drain pending dio before submitting the unaligned dio. Wait once
-> > > more after the dio submission to hold the iolock across the I/O and
-> > > prevent further submissions until the unaligned I/O completes. This
-> > > is heavy handed, but consistent with the current pre-submission
-> > > serialization for unaligned direct writes.
-> > > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > > 
-> > > I was originally going to deal with this problem by hacking in an inode
-> > > flag to track unaligned dio writes in-flight and use that to block any
-> > > follow on dio writes until cleared. Dave suggested we could use the
-> > > iolock to serialize by converting unaligned async dio writes to sync dio
-> > > writes and just letting the unaligned dio itself always block. That
-> > > seemed reasonable to me, but I morphed the approach slightly to just use
-> > > inode_dio_wait() because it seemed a bit cleaner. Thoughts?
-> > > 
-> > > Zorro,
-> > > 
-> > > You reproduced this problem originally. It addresses the problem in the
-> > > test case that reproduced for me. Care to confirm whether this patch
-> > > fixes the problem for you? Thanks.
-> > 
-> > Hi Brian,
-> > 
-> > Sure, but I can't reproduce this bug on upstream kernel. I have to merge
-> > it into an older kernel(you know that:), to verify if it works.
-> 
-> I merged your patch into an older kernel which I can reproduce this bug.
-> Then test passed.
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Excellent, thanks.
+This test makes sure that we can't use stale unrecovered fs metadata to
+drive a DISCARD festival on a disk and thereby destroy user data by
+accident.
 
-> BTW, Eryu said he hit this bug on upstream v5.0, on a KVM machine with LVM
-> devices, when he ran the case which I sent to fstests@. So I think
-> it's reproducible on upstream kernel. Just we need some conditions to trigger
-> that. So if you know how to make this 'condition', please tell me, I'll
-> think about if I can write anther case to cover this bug specially.
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/generic/714     |   61 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/714.out |    4 +++
+ tests/generic/group   |    1 +
+ 3 files changed, 66 insertions(+)
+ create mode 100755 tests/generic/714
+ create mode 100644 tests/generic/714.out
 
-Ok. I could only reproduce with your custom reproducer (over loop) on
-kernels between v4.14 and v4.20 (inclusive). More specifically, I could
-reproduce between commits 546e7be824 ("iomap_dio_rw: Allocate AIO
-completion queue before submitting dio") and a79d40e9b0 ("aio: only use
-blk plugs for > 2 depth submissions"). As discussed, these commits
-mostly just alter timing and thus affect the issue indirectly.
-
-I haven't taken a closer look at the fstest yet beyond the custom
-variant you provided. I wonder if a test could reproduce this more
-effectively by increasing the load of the test..? For example, can you
-reproduce by running many iterations of the I/O? What about running a
-deeper queue and submitting many such overlapping aligned/unaligned I/Os
-all at once (to the same or different offsets of the file)? Just a
-thought..
-
-Brian
-
-> Thanks,
-> Zorro
-> 
-> > 
-> > If upstream kernel has this issue too, do you have a better idea to reproduce
-> > it on upstream? Maybe I can improve my case to cover more.
-> > 
-> > Thanks,
-> > Zorro
-> > 
-> > > 
-> > > Brian
-> > > 
-> > >  fs/xfs/xfs_file.c | 21 ++++++++++++---------
-> > >  1 file changed, 12 insertions(+), 9 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > > index 770cc2edf777..8b2aaed82343 100644
-> > > --- a/fs/xfs/xfs_file.c
-> > > +++ b/fs/xfs/xfs_file.c
-> > > @@ -529,18 +529,19 @@ xfs_file_dio_aio_write(
-> > >  	count = iov_iter_count(from);
-> > >  
-> > >  	/*
-> > > -	 * If we are doing unaligned IO, wait for all other IO to drain,
-> > > -	 * otherwise demote the lock if we had to take the exclusive lock
-> > > -	 * for other reasons in xfs_file_aio_write_checks.
-> > > +	 * If we are doing unaligned IO, we can't allow any other IO in-flight
-> > > +	 * at the same time or we risk data corruption. Wait for all other IO to
-> > > +	 * drain, submit and wait for completion before we release the iolock.
-> > > +	 *
-> > > +	 * If the IO is aligned, demote the iolock if we had to take the
-> > > +	 * exclusive lock in xfs_file_aio_write_checks() for other reasons.
-> > >  	 */
-> > >  	if (unaligned_io) {
-> > > -		/* If we are going to wait for other DIO to finish, bail */
-> > > -		if (iocb->ki_flags & IOCB_NOWAIT) {
-> > > -			if (atomic_read(&inode->i_dio_count))
-> > > -				return -EAGAIN;
-> > > -		} else {
-> > > +		/* unaligned dio always waits, bail */
-> > > +		if (iocb->ki_flags & IOCB_NOWAIT)
-> > > +			return -EAGAIN;
-> > > +		else
-> > >  			inode_dio_wait(inode);
-> > > -		}
-> > >  	} else if (iolock == XFS_IOLOCK_EXCL) {
-> > >  		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
-> > >  		iolock = XFS_IOLOCK_SHARED;
-> > > @@ -548,6 +549,8 @@ xfs_file_dio_aio_write(
-> > >  
-> > >  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
-> > >  	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
-> > > +	if (unaligned_io && !is_sync_kiocb(iocb))
-> > > +		inode_dio_wait(inode);
-> > >  out:
-> > >  	xfs_iunlock(ip, iolock);
-> > >  
-> > > -- 
-> > > 2.17.2
-> > > 
+diff --git a/tests/generic/714 b/tests/generic/714
+new file mode 100755
+index 00000000..1849a5e9
+--- /dev/null
++++ b/tests/generic/714
+@@ -0,0 +1,61 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0+
++# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# FS QA Test No. 714
++#
++# Ensure that we can't call fstrim on filesystems mounted norecovery, because
++# FSTRIM implementations use free space metadata to drive the discard requests
++# and we told the filesystem not to make sure the metadata are up to date.
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_os Linux
++_require_scratch
++_require_fstrim
++
++rm -f $seqres.full
++
++_scratch_mkfs > $seqres.full 2>&1
++_require_metadata_journaling $SCRATCH_DEV
++
++echo "fstrim on regular mount"
++_scratch_mount >> $seqres.full 2>&1
++$FSTRIM_PROG -v $SCRATCH_MNT >> $seqres.full 2>&1 || \
++	_notrun "FSTRIM not supported"
++_scratch_unmount
++
++echo "fstrim on ro mount"
++_scratch_mount -o ro >> $seqres.full 2>&1
++$FSTRIM_PROG -v $SCRATCH_MNT >> $seqres.full 2>&1
++_scratch_unmount
++
++echo "fstrim on ro mount with no log replay"
++norecovery="norecovery"
++test $FSTYP = "btrfs" && norecovery=nologreplay
++_scratch_mount -o ro,$norecovery >> $seqres.full 2>&1
++$FSTRIM_PROG -v $SCRATCH_MNT >> $seqres.full 2>&1 && \
++	echo "fstrim with unrecovered metadata just ate your filesystem"
++_scratch_unmount
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/714.out b/tests/generic/714.out
+new file mode 100644
+index 00000000..1158a2ff
+--- /dev/null
++++ b/tests/generic/714.out
+@@ -0,0 +1,4 @@
++QA output created by 714
++fstrim on regular mount
++fstrim on ro mount
++fstrim on ro mount with no log replay
+diff --git a/tests/generic/group b/tests/generic/group
+index 2e4341fb..c2046293 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -538,6 +538,7 @@
+ 533 auto quick attr
+ 534 auto quick log
+ 535 auto quick log
++714 auto trim
+ 940 auto quick clone punch
+ 941 auto quick clone punch
+ 942 auto quick clone punch
