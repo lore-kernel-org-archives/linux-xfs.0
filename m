@@ -1,114 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:33254 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727434AbfCWN35 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Mar 2019 09:29:57 -0400
-Date: Sat, 23 Mar 2019 21:29:48 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 11/12] check: wipe scratch devices between tests
-Message-ID: <20190323132948.GW2824@desktop>
-References: <155304267647.31707.14180452399822113095.stgit@magnolia>
- <155304275552.31707.6473598082840688691.stgit@magnolia>
- <CAOQ4uxhu52G1hw6h-uc50-n5Bq0OT+4pLZjdnfPxK784F=nG0Q@mail.gmail.com>
- <20190321041544.GD1186@magnolia>
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:51765 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727482AbfCWQNr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Mar 2019 12:13:47 -0400
+Date: Sat, 23 Mar 2019 12:13:34 -0400
+From: "Theodore Ts'o" <tytso@mit.edu>
+Subject: Re: [PATCH] ext4: prohibit fstrim in norecovery mode
+Message-ID: <20190323161334.GE5675@mit.edu>
+References: <20190323003532.GB1180@magnolia>
+ <20190323003813.GR1183@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190321041544.GD1186@magnolia>
+In-Reply-To: <20190323003813.GR1183@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+Cc: Eryu Guan <guaneryu@gmail.com>, fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Wed, Mar 20, 2019 at 09:15:44PM -0700, Darrick J. Wong wrote:
-> On Wed, Mar 20, 2019 at 09:06:08AM +0200, Amir Goldstein wrote:
-> > On Wed, Mar 20, 2019 at 2:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > >
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > >
-> > > Wipe the scratch devices in between each test to ensure that tests are
-> > > formatting them and not making assumptions about previous contents.
-> > >
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  check      |    1 +
-> > >  common/rc  |    6 ++++++
-> > >  common/xfs |    1 +
-> > >  3 files changed, 8 insertions(+)
-> > >
-> > >
-> > > diff --git a/check b/check
-> > > index a2c5ba21..bcf08dfe 100755
-> > > --- a/check
-> > > +++ b/check
-> > > @@ -737,6 +737,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
-> > >                         # _check_dmesg depends on this log in dmesg
-> > >                         touch ${RESULT_DIR}/check_dmesg
-> > >                 fi
-> > > +               _try_wipe_scratch_devs > /dev/null 2>&1
-> > >                 if [ "$DUMP_OUTPUT" = true ]; then
-> > >                         ./$seq 2>&1 | tee $tmp.out
-> > >                         # Because $? would get tee's return code
-> > > diff --git a/common/rc b/common/rc
-> > > index 1c42515f..40eef80f 100644
-> > > --- a/common/rc
-> > > +++ b/common/rc
-> > > @@ -3942,6 +3942,12 @@ _require_fibmap()
-> > >         rm -f $file
-> > >  }
-> > >
-> > > +_try_wipe_scratch_devs()
-> > > +{
-> > > +       _scratch_unmount
-> > 
-> > So I find this change strange, not because it doesn't make sense
-> > to start every test with scratch unmounted, but because today scratch *is*
-> > mounted on test start and there is quite a bit of code to make it mounted
-> > on test start, which seems backwards.
+On Fri, Mar 22, 2019 at 05:38:13PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Huh?  On XFS the test device is always mounted, but the scratch device
-> is never mounted before the test starts.
-
-Yes, as _require_test always mounts TEST_DEV and
-_require_scratch_nocheck always umounts SCRATCH_DEV.
-
+> The ext4 fstrim implementation uses the block bitmaps to find free space
+> that can be discarded.  If we haven't replayed the journal, the bitmaps
+> will be stale and we absolutely *cannot* use stale metadata to zap the
+> underlying storage.
 > 
-> Hmmm, maybe this is one of those weird things that different with
-> nonblock filesystems...?
-> 
-> > IOW, instead of unmounting scratch just before the test runs, seems
-> > better to make sure it is unmounted at the end of each test and before
-> > starting the loop.
-> > 
-> > Note that for a test with _require_scratch_nocheck, _check_filesystems()
-> > will unmount scratch, but for a test with _require_scratch, _check_scratch_fs()
-> > will unmount+fsck+mount scratch - inconsistent.
-> > Or am I reading this wrong?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-For tests that don't call _require_scratch{_nocheck}, to make sure
-SCRATCH_DEV is umounted I think we could just call _scratch_unmount
-unconditionally in _check_filesystems(), then we could wipefs before
-test safely.
+Thanks, applied.
 
-> > 
-> > 
-> > > +       test -x "$WIPEFS_PROG" && $WIPEFS_PROG -a $SCRATCH_DEV_POOL $SCRATCH_DEV $SCRATCH_LOGDEV $SCRATCH_RTDEV
-> > 
-> > Please check that $SCRATCH_DEV is not a network name (nfs|cifs) and that it
-> > is really a blockdev (overlayfs) before trying to wipefs.
-
-Yes, good catch!
-
-Thanks,
-Eryu
-
-> 
-> I wonder if maybe we only bother with wipefs for filesystems where
-> all tests have been fixed to not stumble over unformatted scratchdev
-> (i.e. xfs and ext* only)
-> 
-> --D
-> 
-> > Thanks,
-> > Amir.
+					- Ted
