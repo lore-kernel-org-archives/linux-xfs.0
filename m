@@ -1,178 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:41869 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727628AbfCXChA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Mar 2019 22:37:00 -0400
-Date: Sun, 24 Mar 2019 10:36:53 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 10/12] xfs: test xfs_copy and xfs_mdrestore on the
- populate images
-Message-ID: <20190324023653.GX2824@desktop>
-References: <155304267647.31707.14180452399822113095.stgit@magnolia>
- <155304274924.31707.623436868976936668.stgit@magnolia>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38274 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725268AbfCXELl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Mar 2019 00:11:41 -0400
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x2O48spP016534
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Mar 2019 00:11:40 -0400
+Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2re1q31sst-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Mar 2019 00:11:39 -0400
+Received: from localhost
+        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
+        Sun, 24 Mar 2019 04:11:24 -0000
+From: Chandan Rajendra <chandan@linux.ibm.com>
+Subject: Re: [PATCH] _require_prjquota: Disable tests only when using realtime fs
+Date: Sun, 24 Mar 2019 09:42:24 +0530
+In-Reply-To: <20190323114432.GV2824@desktop>
+References: <20190320142112.31239-1-chandan@linux.ibm.com> <20190323114432.GV2824@desktop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <155304274924.31707.623436868976936668.stgit@magnolia>
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+Message-Id: <2345183.pjMOytfh8P@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, Mar 19, 2019 at 05:45:49PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Saturday, March 23, 2019 5:14:32 PM IST Eryu Guan wrote:
+> On Wed, Mar 20, 2019 at 07:51:12PM +0530, Chandan Rajendra wrote:
+> > $USE_EXTERNAL needs to be set when using external log devices. In such a
+> > setup, tests which have "_require_prjquota
+> > $SCRATCH_DEV" (e.g. generic/383)  incorrectly end up being marked as
+> > "not run" since the test "[ "$USE_EXTERNAL" = yes -a ! -z "$_dev" ]"
+> > evaluates to true.
+> > 
+> > This commit fixes the bug by marking the test as "not run" only when
+> > $USE_EXTERNAL is set and one of $TEST_RTDEV or $SCRATCH_RTDEV is set.
+> > 
+> > Signed-off-by: Chandan Rajendra <chandan@linux.ibm.com>
+> > ---
+> >  common/quota | 5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/common/quota b/common/quota
+> > index 9309e786..cb627f19 100644
+> > --- a/common/quota
+> > +++ b/common/quota
+> > @@ -86,8 +86,9 @@ _require_prjquota()
+> >      fi
+> >      src/feature -P $_dev
+> >      [ $? -ne 0 ] && _notrun "Installed kernel does not support project quotas"
+> > -    if [ "$USE_EXTERNAL" = yes -a ! -z "$_dev" ]; then
+> > -	_notrun "Project quotas not supported on realtime filesystem"
+> > +    if [ "$USE_EXTERNAL" = yes -a \
+> > +		 \( ! -z "$TEST_RTDEV" \-o ! -z "$SCRATCH_RTDEV" \) ]; then
+> > +        _notrun "Project quotas not supported on realtime filesystem"
 > 
-> Make sure that copy, metadump, and mdrestore work on a filesystem with
-> all known metadata types.
+> I changed this to
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/xfs/740     |   97 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/740.out |   12 +++++++
->  tests/xfs/group   |    1 +
->  3 files changed, 110 insertions(+)
->  create mode 100755 tests/xfs/740
->  create mode 100644 tests/xfs/740.out
+>     if [ "$USE_EXTERNAL" = yes ]; then
+>         if [ -n "$TEST_RTDEV" -o -n "$SCRATCH_RTDEV" ]; then
+>             _notrun "Project quotas not supported on realtime filesystem"
+>         fi
+>     fi
 > 
-> 
-> diff --git a/tests/xfs/740 b/tests/xfs/740
-> new file mode 100755
-> index 00000000..0ff548cb
-> --- /dev/null
-> +++ b/tests/xfs/740
-> @@ -0,0 +1,97 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0+
-> +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 740
-> +#
-> +# Populate a XFS filesystem and ensure that metadump, mdrestore, and copy
-> +# all work properly.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 7 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -rf $tmp.* $testdir
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/populate
-> +
-> +testdir=$TEST_DIR/test-$seq
-> +
-> +# real QA test starts here
-> +_supported_os Linux
-> +_supported_fs xfs
-> +
-> +_require_scratch_nocheck
-> +_require_populate_commands
-> +
-> +echo "Format and populate"
-> +_scratch_populate_cached nofill > $seqres.full 2>&1
-> +
-> +mkdir -p $testdir
-> +metadump_file=$testdir/scratch.md
-> +metadump_file_a=${metadump_file}.a
-> +metadump_file_g=${metadump_file}.g
-> +metadump_file_ag=${metadump_file}.ag
-> +copy_file=$testdir/copy.img
-> +
-> +echo metadump
-> +_scratch_metadump $metadump_file
-> +
-> +echo metadump a
-> +_scratch_metadump $metadump_file_a
-> +
-> +echo metadump g
-> +_scratch_metadump $metadump_file_g
-> +
-> +echo metadump ag
-> +_scratch_metadump $metadump_file_ag
+> which seems easier to read.
+>
 
-I may miss something here, but I'm a bit confused, what's the difference
-between all these metadump files? Looks like scratch device is just
-dumped multiple times to different dump files? And later restored
-multiple times?
+I agree that the above change makes the code more readable.
 
-Thanks,
-Eryu
-
-> +
-> +echo copy
-> +$XFS_COPY_PROG $SCRATCH_DEV $copy_file >> $seqres.full
-> +_check_scratch_fs $copy_file
-> +
-> +echo recopy
-> +$XFS_COPY_PROG $copy_file $SCRATCH_DEV >> $seqres.full
-> +_scratch_mount
-> +_check_scratch_fs
-> +_scratch_unmount
-> +
-> +echo mdrestore
-> +xfs_mdrestore $metadump_file $SCRATCH_DEV
-> +_scratch_mount
-> +_check_scratch_fs
-> +_scratch_unmount
-> +
-> +echo mdrestore a
-> +xfs_mdrestore $metadump_file_a $SCRATCH_DEV
-> +_scratch_mount
-> +_check_scratch_fs
-> +_scratch_unmount
-> +
-> +echo mdrestore g
-> +xfs_mdrestore $metadump_file_g $SCRATCH_DEV
-> +_scratch_mount
-> +_check_scratch_fs
-> +_scratch_unmount
-> +
-> +echo mdrestore ag
-> +xfs_mdrestore $metadump_file_ag $SCRATCH_DEV
-> +_scratch_mount
-> +_check_scratch_fs
-> +_scratch_unmount
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/740.out b/tests/xfs/740.out
-> new file mode 100644
-> index 00000000..0c979dc4
-> --- /dev/null
-> +++ b/tests/xfs/740.out
-> @@ -0,0 +1,12 @@
-> +QA output created by 740
-> +Format and populate
-> +metadump
-> +metadump a
-> +metadump g
-> +metadump ag
-> +copy
-> +recopy
-> +mdrestore
-> +mdrestore a
-> +mdrestore g
-> +mdrestore ag
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 9d9458b8..b8bd1012 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -500,3 +500,4 @@
->  500 auto quick mkfs prealloc mkfs
->  501 auto quick unlink
->  502 auto quick unlink
-> +740 auto copy metadump
-> 
+-- 
+chandan
