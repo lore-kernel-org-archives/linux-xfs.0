@@ -1,215 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f68.google.com ([209.85.161.68]:39096 "EHLO
-        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726743AbfCXSSW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Mar 2019 14:18:22 -0400
-Received: by mail-yw1-f68.google.com with SMTP id z9so1866756ywd.6
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Mar 2019 11:18:22 -0700 (PDT)
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:56253 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726743AbfCXU7b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Mar 2019 16:59:31 -0400
+Date: Mon, 25 Mar 2019 07:59:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: serialize unaligned dio writes against all other
+ dio writes
+Message-ID: <20190324205926.GY23020@dastard>
+References: <20190322165242.40662-1-bfoster@redhat.com>
 MIME-Version: 1.0
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Sun, 24 Mar 2019 20:18:10 +0200
-Message-ID: <CAOQ4uxi0pGczXBX7GRAFs88Uw0n1ERJZno3JSeZR71S1dXg+2w@mail.gmail.com>
-Subject: [QUESTION] Long read latencies on mixed rw buffered IO
-Content-Type: multipart/mixed; boundary="000000000000e9d8f00584db1c40"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190322165242.40662-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Zorro Lang <zlang@redhat.com>
 
---000000000000e9d8f00584db1c40
-Content-Type: text/plain; charset="UTF-8"
+On Fri, Mar 22, 2019 at 12:52:42PM -0400, Brian Foster wrote:
+> XFS applies more strict serialization constraints to unaligned
+> direct writes to accommodate things like direct I/O layer zeroing,
+> unwritten extent conversion, etc. Unaligned submissions acquire the
+> exclusive iolock and wait for in-flight dio to complete to ensure
+> multiple submissions do not race on the same block and cause data
+> corruption.
+> 
+> This generally works in the case of an aligned dio followed by an
+> unaligned dio, but the serialization is lost if I/Os occur in the
+> opposite order. If an unaligned write is submitted first and
+> immediately followed by an overlapping, aligned write, the latter
+> submits without the typical unaligned serialization barriers because
+> there is no indication of an unaligned dio still in-flight. This can
+> lead to unpredictable results.
+> 
+> To provide proper unaligned dio serialization, require that such
+> direct writes are always the only dio allowed in-flight at one time
+> for a particular inode. We already acquire the exclusive iolock and
+> drain pending dio before submitting the unaligned dio. Wait once
+> more after the dio submission to hold the iolock across the I/O and
+> prevent further submissions until the unaligned I/O completes. This
+> is heavy handed, but consistent with the current pre-submission
+> serialization for unaligned direct writes.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> I was originally going to deal with this problem by hacking in an inode
+> flag to track unaligned dio writes in-flight and use that to block any
+> follow on dio writes until cleared. Dave suggested we could use the
+> iolock to serialize by converting unaligned async dio writes to sync dio
+> writes and just letting the unaligned dio itself always block. That
+> seemed reasonable to me, but I morphed the approach slightly to just use
+> inode_dio_wait() because it seemed a bit cleaner. Thoughts?
+> 
+> Zorro,
+> 
+> You reproduced this problem originally. It addresses the problem in the
+> test case that reproduced for me. Care to confirm whether this patch
+> fixes the problem for you? Thanks.
+> 
+> Brian
+> 
+>  fs/xfs/xfs_file.c | 21 ++++++++++++---------
+>  1 file changed, 12 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 770cc2edf777..8b2aaed82343 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -529,18 +529,19 @@ xfs_file_dio_aio_write(
+>  	count = iov_iter_count(from);
+>  
+>  	/*
+> -	 * If we are doing unaligned IO, wait for all other IO to drain,
+> -	 * otherwise demote the lock if we had to take the exclusive lock
+> -	 * for other reasons in xfs_file_aio_write_checks.
+> +	 * If we are doing unaligned IO, we can't allow any other IO in-flight
 
-Hi All,
+* any other overlapping IO in-flight
 
-Christoph's re-factoring to xfs_ilock() brought up this question,
-but AFAICS, current behavior seems to have always been that
-way for xfs (?).
+> +	 * at the same time or we risk data corruption. Wait for all other IO to
+> +	 * drain, submit and wait for completion before we release the iolock.
+> +	 *
+> +	 * If the IO is aligned, demote the iolock if we had to take the
+> +	 * exclusive lock in xfs_file_aio_write_checks() for other reasons.
+>  	 */
+>  	if (unaligned_io) {
+> -		/* If we are going to wait for other DIO to finish, bail */
+> -		if (iocb->ki_flags & IOCB_NOWAIT) {
+> -			if (atomic_read(&inode->i_dio_count))
+> -				return -EAGAIN;
+> -		} else {
+> +		/* unaligned dio always waits, bail */
+> +		if (iocb->ki_flags & IOCB_NOWAIT)
+> +			return -EAGAIN;
+> +		else
+>  			inode_dio_wait(inode);
+> -		}
+>  	} else if (iolock == XFS_IOLOCK_EXCL) {
+>  		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+>  		iolock = XFS_IOLOCK_SHARED;
+> @@ -548,6 +549,8 @@ xfs_file_dio_aio_write(
+>  
+>  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
+>  	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
+> +	if (unaligned_io && !is_sync_kiocb(iocb))
+> +		inode_dio_wait(inode);
 
-Since commit 6552321831dc ("xfs: remove i_iolock and use
-i_rwsem in the VFS inode instead"), xfs_file_buffered_aio_read()
-is the only call sites I know of to call generic_file_read_iter() with
-i_rwsem read side held.
+If it's AIO and it has already been completed, then this wait is
+unnecessary. i.e. we only need to wait in the case where AIO has
+been queued but not completed:
 
-This lock is killing performance of multi-threaded buffered
-read/write mixed workload on the same file [1].
-Attached output of bcc tools [2] script xfsdist and ext4dist
-for latency distribution on the same mixed read/write workload.
-Compared to ext4, avg. read latency on RAID of spindles
-can be two orders of magnitude higher (>100ms).
-I can provide more performance numbers if needed with fio,
-but they won't surprise anyone considering the extra lock.
+	/*
+	 * If we are doing unaligned IO, it will be the only IO in
+	 * progress right now. If it has not completed yet, wait on
+	 * it before we drop the IOLOCK.
+	 */
+	if (ret == -EIOCBQUEUED && unaligned_io)
+		inode_dio_wait(inode);
 
-This workload simulates a performance issue we are seeing
-on deployed systems. There are other ways for us to work
-around the issue, not using xfs on those systems would be
-one way, but I wanted to figure out the reason for this
-behavior first.
+Next question: do we need to change the return value here to reflect
+the actual completion result?
 
-My question is, is the purpose of this lock syncing
-dio/buffered io?
-If so, was making this behavior optional via mount option
-ever considered for xfs?
-Am I the first one who is asking about this specific workload
-on xfs (Couldn't found anything on Google), or is this a known
-issue/trade off/design choice of xfs?
+Hmmmm.  iomap_dio_complete() will return either the IO byte count or
+an error for synchronous IO. And for AIO, ki->complete will only be
+called by the iomap bio completion path if it's the last reference.
+So for AIO that is completed before the submitter returns, it will
+return the result of iomap_dio_complete() without having called
+iocb->ki_complete(). Which means we want to return a byte count or
+IO error to the higher layers, and that will result in
+aio_read/aio_write calling aio_rw_done() and calling the completion
+appropriately.
 
-Thanks,
-Amir.
+Ok, so we don't need to futz with the return value, and we only
+need to check for ret == -EIOCBQUEUED to determine if we should wait
+or not, because any other return value indicates either IO completion
+or an error has already occurred.
 
-[1] https://github.com/amir73il/filebench/blob/overlayfs-devel/workloads/randomrw.f
-[2] https://github.com/iovisor/bcc
+Cheers,
 
---000000000000e9d8f00584db1c40
-Content-Type: application/octet-stream; name="ext4dist.out"
-Content-Disposition: attachment; filename="ext4dist.out"
-Content-Transfer-Encoding: base64
-Content-ID: <f_jtn7i7y91>
-X-Attachment-Id: f_jtn7i7y91
-
-b3BlcmF0aW9uID0gcmVhZAogICAgIHVzZWNzICAgICAgICAgICAgICAgOiBjb3VudCAgICAgZGlz
-dHJpYnV0aW9uCiAgICAgICAgIDAgLT4gMSAgICAgICAgICA6IDAgICAgICAgIHwgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICAgICAyIC0+IDMgICAgICAgICAg
-OiA4ICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAg
-ICAgICAgNCAtPiA3ICAgICAgICAgIDogMjYxMCAgICAgfCoqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKip8CiAgICAgICAgIDggLT4gMTUgICAgICAgICA6IDU3ICAgICAgIHwg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICAgIDE2IC0+IDMx
-ICAgICAgICAgOiA1MyAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIHwKICAgICAgICAzMiAtPiA2MyAgICAgICAgIDogMTEgICAgICAgfCAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICAgNjQgLT4gMTI3ICAgICAgICA6IDIg
-ICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICAg
-MTI4IC0+IDI1NSAgICAgICAgOiAxICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIHwKICAgICAgIDI1NiAtPiA1MTEgICAgICAgIDogMjQgICAgICAgfCAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICA1MTIgLT4gMTAyMyAg
-ICAgICA6IDIwICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-fAogICAgICAxMDI0IC0+IDIwNDcgICAgICAgOiAzMiAgICAgICB8ICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgMjA0OCAtPiA0MDk1ICAgICAgIDogMjMyICAg
-ICAgfCoqKiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgIDQwOTYg
-LT4gODE5MSAgICAgICA6IDYzMiAgICAgIHwqKioqKioqKiogICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgfAogICAgICA4MTkyIC0+IDE2MzgzICAgICAgOiA5MjUgICAgICB8KioqKioqKioq
-KioqKiogICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAxNjM4NCAtPiAzMjc2NyAgICAg
-IDogNDA4ICAgICAgfCoqKioqKiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAg
-ICAgMzI3NjggLT4gNjU1MzUgICAgICA6IDEyOSAgICAgIHwqICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgfAogICAgIDY1NTM2IC0+IDEzMTA3MSAgICAgOiA4NiAgICAgICB8
-KiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgIDEzMTA3MiAtPiAy
-NjIxNDMgICAgIDogMTA2ICAgICAgfCogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICB8CiAgICAyNjIxNDQgLT4gNTI0Mjg3ICAgICA6IDk1ICAgICAgIHwqICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgNTI0Mjg4IC0+IDEwNDg1NzUgICAgOiAx
-MTAgICAgICB8KiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgMTA0
-ODU3NiAtPiAyMDk3MTUxICAgIDogMjEgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICB8CiAgIDIwOTcxNTIgLT4gNDE5NDMwMyAgICA6IDQgICAgICAgIHwgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICA0MTk0MzA0IC0+IDgzODg2
-MDcgICAgOiA0ICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-IHwKICAgODM4ODYwOCAtPiAxNjc3NzIxNSAgIDogMCAgICAgICAgfCAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICB8CgpvcGVyYXRpb24gPSB3cml0ZQogICAgIHVzZWNzICAg
-ICAgICAgICAgICAgOiBjb3VudCAgICAgZGlzdHJpYnV0aW9uCiAgICAgICAgIDAgLT4gMSAgICAg
-ICAgICA6IDAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-fAogICAgICAgICAyIC0+IDMgICAgICAgICAgOiAwICAgICAgICB8ICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgICAgNCAtPiA3ICAgICAgICAgIDogMTY3MzIg
-ICAgfCoqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICAgIDgg
-LT4gMTUgICAgICAgICA6IDgxNzEyICAgIHwqKioqKioqKioqKioqKioqKioqKioqKioqKiAgICAg
-ICAgICAgICAgfAogICAgICAgIDE2IC0+IDMxICAgICAgICAgOiAxMjE0NTAgICB8KioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKnwKICAgICAgICAzMiAtPiA2MyAgICAgICAg
-IDogMjk2MzggICAgfCoqKioqKioqKiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAg
-ICAgICAgNjQgLT4gMTI3ICAgICAgICA6IDEyNzEgICAgIHwgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgfAogICAgICAgMTI4IC0+IDI1NSAgICAgICAgOiAxNzEgICAgICB8
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgIDI1NiAtPiA1
-MTEgICAgICAgIDogMTI2ICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICB8CiAgICAgICA1MTIgLT4gMTAyMyAgICAgICA6IDM5ICAgICAgIHwgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICAxMDI0IC0+IDIwNDcgICAgICAgOiA2
-ICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAg
-MjA0OCAtPiA0MDk1ICAgICAgIDogMiAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICB8CiAgICAgIDQwOTYgLT4gODE5MSAgICAgICA6IDQgICAgICAgIHwgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICA4MTkyIC0+IDE2Mzgz
-ICAgICAgOiA0OCAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-IHwKICAgICAxNjM4NCAtPiAzMjc2NyAgICAgIDogMTYwICAgICAgfCAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgMzI3NjggLT4gNjU1MzUgICAgICA6IDE0NyAg
-ICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgIDY1NTM2
-IC0+IDEzMTA3MSAgICAgOiA3MyAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIHwKICAgIDEzMTA3MiAtPiAyNjIxNDMgICAgIDogMTM0ICAgICAgfCAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAyNjIxNDQgLT4gNTI0Mjg3ICAg
-ICA6IDE4ICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAog
-ICAgNTI0Mjg4IC0+IDEwNDg1NzUgICAgOiAxNyAgICAgICB8ICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIHwKICAgMTA0ODU3NiAtPiAyMDk3MTUxICAgIDogMyAgICAgICAg
-fCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgIDIwOTcxNTIgLT4g
-NDE5NDMwMyAgICA6IDEwICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgfAogICA0MTk0MzA0IC0+IDgzODg2MDcgICAgOiA5ICAgICAgICB8ICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgODM4ODYwOCAtPiAxNjc3NzIxNSAgIDog
-NyAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8Cg==
---000000000000e9d8f00584db1c40
-Content-Type: application/octet-stream; name="xfsdist.out"
-Content-Disposition: attachment; filename="xfsdist.out"
-Content-Transfer-Encoding: base64
-Content-ID: <f_jtn7i7xx0>
-X-Attachment-Id: f_jtn7i7xx0
-
-b3BlcmF0aW9uID0gJ3JlYWQnCiAgICAgdXNlY3MgICAgICAgICAgICAgICA6IGNvdW50ICAgICBk
-aXN0cmlidXRpb24KICAgICAgICAgMCAtPiAxICAgICAgICAgIDogOCAgICAgICAgfCoqKiAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICAgIDIgLT4gMyAgICAgICAg
-ICA6IDIxICAgICAgIHwqKioqKioqKiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAog
-ICAgICAgICA0IC0+IDcgICAgICAgICAgOiAxNyAgICAgICB8KioqKioqICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIHwKICAgICAgICAgOCAtPiAxNSAgICAgICAgIDogNCAgICAgICAg
-fCogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICAgMTYgLT4g
-MzEgICAgICAgICA6IDAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgfAogICAgICAgIDMyIC0+IDYzICAgICAgICAgOiAwICAgICAgICB8ICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgICA2NCAtPiAxMjcgICAgICAgIDog
-MCAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAg
-ICAxMjggLT4gMjU1ICAgICAgICA6IDAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgfAogICAgICAgMjU2IC0+IDUxMSAgICAgICAgOiAwICAgICAgICB8ICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgIDUxMiAtPiAxMDIz
-ICAgICAgIDogMCAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICB8CiAgICAgIDEwMjQgLT4gMjA0NyAgICAgICA6IDEgICAgICAgIHwgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICAyMDQ4IC0+IDQwOTUgICAgICAgOiAwICAg
-ICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgNDA5
-NiAtPiA4MTkxICAgICAgIDogMCAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICB8CiAgICAgIDgxOTIgLT4gMTYzODMgICAgICA6IDQgICAgICAgIHwqICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgIDE2Mzg0IC0+IDMyNzY3ICAg
-ICAgOiA4ICAgICAgICB8KioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwK
-ICAgICAzMjc2OCAtPiA2NTUzNSAgICAgIDogMTcgICAgICAgfCoqKioqKiAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICB8CiAgICAgNjU1MzYgLT4gMTMxMDcxICAgICA6IDU1ICAgICAg
-IHwqKioqKioqKioqKioqKioqKioqKiogICAgICAgICAgICAgICAgICAgfAogICAgMTMxMDcyIC0+
-IDI2MjE0MyAgICAgOiA0MSAgICAgICB8KioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAg
-ICAgICAgIHwKICAgIDI2MjE0NCAtPiA1MjQyODcgICAgIDogMTA0ICAgICAgfCoqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKip8CiAgICA1MjQyODggLT4gMTA0ODU3NSAgICA6
-IDEwMSAgICAgIHwqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiAgfAogICAx
-MDQ4NTc2IC0+IDIwOTcxNTEgICAgOiAzNCAgICAgICB8KioqKioqKioqKioqKiAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIHwKICAgMjA5NzE1MiAtPiA0MTk0MzAzICAgIDogMiAgICAgICAgfCAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgIDQxOTQzMDQgLT4gODM4
-ODYwNyAgICA6IDAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgfAogICA4Mzg4NjA4IC0+IDE2Nzc3MjE1ICAgOiA0ICAgICAgICB8KiAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIHwKCm9wZXJhdGlvbiA9ICd3cml0ZScKICAgICB1c2Vj
-cyAgICAgICAgICAgICAgIDogY291bnQgICAgIGRpc3RyaWJ1dGlvbgogICAgICAgICAwIC0+IDEg
-ICAgICAgICAgOiAwICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIHwKICAgICAgICAgMiAtPiAzICAgICAgICAgIDogMCAgICAgICAgfCAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICAgIDQgLT4gNyAgICAgICAgICA6IDEw
-MDg3ICAgIHwqKioqKioqKioqKiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICAg
-ICA4IC0+IDE1ICAgICAgICAgOiAzNDgxNSAgICB8KioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKnwKICAgICAgICAxNiAtPiAzMSAgICAgICAgIDogMzI0NDYgICAgfCoqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiogICB8CiAgICAgICAgMzIgLT4gNjMgICAg
-ICAgICA6IDM4ODggICAgIHwqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-fAogICAgICAgIDY0IC0+IDEyNyAgICAgICAgOiAxNTUgICAgICB8ICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgIDEyOCAtPiAyNTUgICAgICAgIDogMTAgICAg
-ICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICAyNTYg
-LT4gNTExICAgICAgICA6IDEyICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgfAogICAgICAgNTEyIC0+IDEwMjMgICAgICAgOiAxICAgICAgICB8ICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgMTAyNCAtPiAyMDQ3ICAgICAg
-IDogMCAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAg
-ICAgIDIwNDggLT4gNDA5NSAgICAgICA6IDAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgfAogICAgICA0MDk2IC0+IDgxOTEgICAgICAgOiAwICAgICAgICB8
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgODE5MiAtPiAx
-NjM4MyAgICAgIDogMyAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICB8CiAgICAgMTYzODQgLT4gMzI3NjcgICAgICA6IDYgICAgICAgIHwgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgIDMyNzY4IC0+IDY1NTM1ICAgICAgOiAx
-OCAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICA2
-NTUzNiAtPiAxMzEwNzEgICAgIDogNjAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICB8CiAgICAxMzEwNzIgLT4gMjYyMTQzICAgICA6IDMzICAgICAgIHwgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgMjYyMTQ0IC0+IDUyNDI4
-NyAgICAgOiA5NiAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-IHwKICAgIDUyNDI4OCAtPiAxMDQ4NTc1ICAgIDogMTA4ICAgICAgfCAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICB8CiAgIDEwNDg1NzYgLT4gMjA5NzE1MSAgICA6IDM0ICAg
-ICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAyMDk3MTUy
-IC0+IDQxOTQzMDMgICAgOiA0ICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIHwKICAgNDE5NDMwNCAtPiA4Mzg4NjA3ICAgIDogMCAgICAgICAgfCAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgIDgzODg2MDggLT4gMTY3NzcyMTUg
-ICA6IDQgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAoK
---000000000000e9d8f00584db1c40--
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
