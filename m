@@ -1,166 +1,215 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49262 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726160AbfCXGsa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Mar 2019 02:48:30 -0400
-Date: Sat, 23 Mar 2019 23:48:24 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 10/12] xfs: test xfs_copy and xfs_mdrestore on the
- populate images
-Message-ID: <20190324064824.GS1183@magnolia>
-References: <155304267647.31707.14180452399822113095.stgit@magnolia>
- <155304274924.31707.623436868976936668.stgit@magnolia>
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:39096 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726743AbfCXSSW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Mar 2019 14:18:22 -0400
+Received: by mail-yw1-f68.google.com with SMTP id z9so1866756ywd.6
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Mar 2019 11:18:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <155304274924.31707.623436868976936668.stgit@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sun, 24 Mar 2019 20:18:10 +0200
+Message-ID: <CAOQ4uxi0pGczXBX7GRAFs88Uw0n1ERJZno3JSeZR71S1dXg+2w@mail.gmail.com>
+Subject: [QUESTION] Long read latencies on mixed rw buffered IO
+Content-Type: multipart/mixed; boundary="000000000000e9d8f00584db1c40"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+--000000000000e9d8f00584db1c40
+Content-Type: text/plain; charset="UTF-8"
 
-Make sure that copy, metadump, and mdrestore work on a filesystem with
-all known metadata types.
+Hi All,
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/740     |   97 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/740.out |   12 +++++++
- tests/xfs/group   |    1 +
- 3 files changed, 110 insertions(+)
- create mode 100755 tests/xfs/740
- create mode 100644 tests/xfs/740.out
+Christoph's re-factoring to xfs_ilock() brought up this question,
+but AFAICS, current behavior seems to have always been that
+way for xfs (?).
 
-diff --git a/tests/xfs/740 b/tests/xfs/740
-new file mode 100755
-index 00000000..bd0a4577
---- /dev/null
-+++ b/tests/xfs/740
-@@ -0,0 +1,97 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0+
-+# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 740
-+#
-+# Populate a XFS filesystem and ensure that metadump, mdrestore, and copy
-+# all work properly.
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -rf $tmp.* $testdir
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/populate
-+
-+testdir=$TEST_DIR/test-$seq
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+
-+_require_scratch_nocheck
-+_require_populate_commands
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+mkdir -p $testdir
-+metadump_file=$testdir/scratch.md
-+metadump_file_a=${metadump_file}.a
-+metadump_file_g=${metadump_file}.g
-+metadump_file_ag=${metadump_file}.ag
-+copy_file=$testdir/copy.img
-+
-+echo metadump
-+_scratch_metadump $metadump_file >> $seqres.full
-+
-+echo metadump a
-+_scratch_metadump $metadump_file_a -a >> $seqres.full
-+
-+echo metadump g
-+_scratch_metadump $metadump_file_g -g >> $seqres.full
-+
-+echo metadump ag
-+_scratch_metadump $metadump_file_ag -a -g >> $seqres.full
-+
-+echo copy
-+$XFS_COPY_PROG $SCRATCH_DEV $copy_file >> $seqres.full
-+_check_scratch_fs $copy_file
-+
-+echo recopy
-+$XFS_COPY_PROG $copy_file $SCRATCH_DEV >> $seqres.full
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+echo mdrestore
-+xfs_mdrestore $metadump_file $SCRATCH_DEV
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+echo mdrestore a
-+xfs_mdrestore $metadump_file_a $SCRATCH_DEV
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+echo mdrestore g
-+xfs_mdrestore $metadump_file_g $SCRATCH_DEV
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+echo mdrestore ag
-+xfs_mdrestore $metadump_file_ag $SCRATCH_DEV
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/740.out b/tests/xfs/740.out
-new file mode 100644
-index 00000000..0c979dc4
---- /dev/null
-+++ b/tests/xfs/740.out
-@@ -0,0 +1,12 @@
-+QA output created by 740
-+Format and populate
-+metadump
-+metadump a
-+metadump g
-+metadump ag
-+copy
-+recopy
-+mdrestore
-+mdrestore a
-+mdrestore g
-+mdrestore ag
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 9d9458b8..b8bd1012 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -500,3 +500,4 @@
- 500 auto quick mkfs prealloc mkfs
- 501 auto quick unlink
- 502 auto quick unlink
-+740 auto copy metadump
+Since commit 6552321831dc ("xfs: remove i_iolock and use
+i_rwsem in the VFS inode instead"), xfs_file_buffered_aio_read()
+is the only call sites I know of to call generic_file_read_iter() with
+i_rwsem read side held.
+
+This lock is killing performance of multi-threaded buffered
+read/write mixed workload on the same file [1].
+Attached output of bcc tools [2] script xfsdist and ext4dist
+for latency distribution on the same mixed read/write workload.
+Compared to ext4, avg. read latency on RAID of spindles
+can be two orders of magnitude higher (>100ms).
+I can provide more performance numbers if needed with fio,
+but they won't surprise anyone considering the extra lock.
+
+This workload simulates a performance issue we are seeing
+on deployed systems. There are other ways for us to work
+around the issue, not using xfs on those systems would be
+one way, but I wanted to figure out the reason for this
+behavior first.
+
+My question is, is the purpose of this lock syncing
+dio/buffered io?
+If so, was making this behavior optional via mount option
+ever considered for xfs?
+Am I the first one who is asking about this specific workload
+on xfs (Couldn't found anything on Google), or is this a known
+issue/trade off/design choice of xfs?
+
+Thanks,
+Amir.
+
+[1] https://github.com/amir73il/filebench/blob/overlayfs-devel/workloads/randomrw.f
+[2] https://github.com/iovisor/bcc
+
+--000000000000e9d8f00584db1c40
+Content-Type: application/octet-stream; name="ext4dist.out"
+Content-Disposition: attachment; filename="ext4dist.out"
+Content-Transfer-Encoding: base64
+Content-ID: <f_jtn7i7y91>
+X-Attachment-Id: f_jtn7i7y91
+
+b3BlcmF0aW9uID0gcmVhZAogICAgIHVzZWNzICAgICAgICAgICAgICAgOiBjb3VudCAgICAgZGlz
+dHJpYnV0aW9uCiAgICAgICAgIDAgLT4gMSAgICAgICAgICA6IDAgICAgICAgIHwgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICAgICAyIC0+IDMgICAgICAgICAg
+OiA4ICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAg
+ICAgICAgNCAtPiA3ICAgICAgICAgIDogMjYxMCAgICAgfCoqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKip8CiAgICAgICAgIDggLT4gMTUgICAgICAgICA6IDU3ICAgICAgIHwg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICAgIDE2IC0+IDMx
+ICAgICAgICAgOiA1MyAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIHwKICAgICAgICAzMiAtPiA2MyAgICAgICAgIDogMTEgICAgICAgfCAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICAgNjQgLT4gMTI3ICAgICAgICA6IDIg
+ICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICAg
+MTI4IC0+IDI1NSAgICAgICAgOiAxICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgIHwKICAgICAgIDI1NiAtPiA1MTEgICAgICAgIDogMjQgICAgICAgfCAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICA1MTIgLT4gMTAyMyAg
+ICAgICA6IDIwICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+fAogICAgICAxMDI0IC0+IDIwNDcgICAgICAgOiAzMiAgICAgICB8ICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgMjA0OCAtPiA0MDk1ICAgICAgIDogMjMyICAg
+ICAgfCoqKiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgIDQwOTYg
+LT4gODE5MSAgICAgICA6IDYzMiAgICAgIHwqKioqKioqKiogICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgfAogICAgICA4MTkyIC0+IDE2MzgzICAgICAgOiA5MjUgICAgICB8KioqKioqKioq
+KioqKiogICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAxNjM4NCAtPiAzMjc2NyAgICAg
+IDogNDA4ICAgICAgfCoqKioqKiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAg
+ICAgMzI3NjggLT4gNjU1MzUgICAgICA6IDEyOSAgICAgIHwqICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgfAogICAgIDY1NTM2IC0+IDEzMTA3MSAgICAgOiA4NiAgICAgICB8
+KiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgIDEzMTA3MiAtPiAy
+NjIxNDMgICAgIDogMTA2ICAgICAgfCogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICB8CiAgICAyNjIxNDQgLT4gNTI0Mjg3ICAgICA6IDk1ICAgICAgIHwqICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgNTI0Mjg4IC0+IDEwNDg1NzUgICAgOiAx
+MTAgICAgICB8KiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgMTA0
+ODU3NiAtPiAyMDk3MTUxICAgIDogMjEgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICB8CiAgIDIwOTcxNTIgLT4gNDE5NDMwMyAgICA6IDQgICAgICAgIHwgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICA0MTk0MzA0IC0+IDgzODg2
+MDcgICAgOiA0ICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+IHwKICAgODM4ODYwOCAtPiAxNjc3NzIxNSAgIDogMCAgICAgICAgfCAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICB8CgpvcGVyYXRpb24gPSB3cml0ZQogICAgIHVzZWNzICAg
+ICAgICAgICAgICAgOiBjb3VudCAgICAgZGlzdHJpYnV0aW9uCiAgICAgICAgIDAgLT4gMSAgICAg
+ICAgICA6IDAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+fAogICAgICAgICAyIC0+IDMgICAgICAgICAgOiAwICAgICAgICB8ICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgICAgNCAtPiA3ICAgICAgICAgIDogMTY3MzIg
+ICAgfCoqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICAgIDgg
+LT4gMTUgICAgICAgICA6IDgxNzEyICAgIHwqKioqKioqKioqKioqKioqKioqKioqKioqKiAgICAg
+ICAgICAgICAgfAogICAgICAgIDE2IC0+IDMxICAgICAgICAgOiAxMjE0NTAgICB8KioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKnwKICAgICAgICAzMiAtPiA2MyAgICAgICAg
+IDogMjk2MzggICAgfCoqKioqKioqKiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAg
+ICAgICAgNjQgLT4gMTI3ICAgICAgICA6IDEyNzEgICAgIHwgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgfAogICAgICAgMTI4IC0+IDI1NSAgICAgICAgOiAxNzEgICAgICB8
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgIDI1NiAtPiA1
+MTEgICAgICAgIDogMTI2ICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICB8CiAgICAgICA1MTIgLT4gMTAyMyAgICAgICA6IDM5ICAgICAgIHwgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICAxMDI0IC0+IDIwNDcgICAgICAgOiA2
+ICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAg
+MjA0OCAtPiA0MDk1ICAgICAgIDogMiAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICB8CiAgICAgIDQwOTYgLT4gODE5MSAgICAgICA6IDQgICAgICAgIHwgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICA4MTkyIC0+IDE2Mzgz
+ICAgICAgOiA0OCAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+IHwKICAgICAxNjM4NCAtPiAzMjc2NyAgICAgIDogMTYwICAgICAgfCAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgMzI3NjggLT4gNjU1MzUgICAgICA6IDE0NyAg
+ICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgIDY1NTM2
+IC0+IDEzMTA3MSAgICAgOiA3MyAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIHwKICAgIDEzMTA3MiAtPiAyNjIxNDMgICAgIDogMTM0ICAgICAgfCAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAyNjIxNDQgLT4gNTI0Mjg3ICAg
+ICA6IDE4ICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAog
+ICAgNTI0Mjg4IC0+IDEwNDg1NzUgICAgOiAxNyAgICAgICB8ICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIHwKICAgMTA0ODU3NiAtPiAyMDk3MTUxICAgIDogMyAgICAgICAg
+fCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgIDIwOTcxNTIgLT4g
+NDE5NDMwMyAgICA6IDEwICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgfAogICA0MTk0MzA0IC0+IDgzODg2MDcgICAgOiA5ICAgICAgICB8ICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgODM4ODYwOCAtPiAxNjc3NzIxNSAgIDog
+NyAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8Cg==
+--000000000000e9d8f00584db1c40
+Content-Type: application/octet-stream; name="xfsdist.out"
+Content-Disposition: attachment; filename="xfsdist.out"
+Content-Transfer-Encoding: base64
+Content-ID: <f_jtn7i7xx0>
+X-Attachment-Id: f_jtn7i7xx0
+
+b3BlcmF0aW9uID0gJ3JlYWQnCiAgICAgdXNlY3MgICAgICAgICAgICAgICA6IGNvdW50ICAgICBk
+aXN0cmlidXRpb24KICAgICAgICAgMCAtPiAxICAgICAgICAgIDogOCAgICAgICAgfCoqKiAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICAgIDIgLT4gMyAgICAgICAg
+ICA6IDIxICAgICAgIHwqKioqKioqKiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAog
+ICAgICAgICA0IC0+IDcgICAgICAgICAgOiAxNyAgICAgICB8KioqKioqICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIHwKICAgICAgICAgOCAtPiAxNSAgICAgICAgIDogNCAgICAgICAg
+fCogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICAgMTYgLT4g
+MzEgICAgICAgICA6IDAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgfAogICAgICAgIDMyIC0+IDYzICAgICAgICAgOiAwICAgICAgICB8ICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgICA2NCAtPiAxMjcgICAgICAgIDog
+MCAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAg
+ICAxMjggLT4gMjU1ICAgICAgICA6IDAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgfAogICAgICAgMjU2IC0+IDUxMSAgICAgICAgOiAwICAgICAgICB8ICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgIDUxMiAtPiAxMDIz
+ICAgICAgIDogMCAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICB8CiAgICAgIDEwMjQgLT4gMjA0NyAgICAgICA6IDEgICAgICAgIHwgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICAyMDQ4IC0+IDQwOTUgICAgICAgOiAwICAg
+ICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgNDA5
+NiAtPiA4MTkxICAgICAgIDogMCAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICB8CiAgICAgIDgxOTIgLT4gMTYzODMgICAgICA6IDQgICAgICAgIHwqICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgIDE2Mzg0IC0+IDMyNzY3ICAg
+ICAgOiA4ICAgICAgICB8KioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwK
+ICAgICAzMjc2OCAtPiA2NTUzNSAgICAgIDogMTcgICAgICAgfCoqKioqKiAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICB8CiAgICAgNjU1MzYgLT4gMTMxMDcxICAgICA6IDU1ICAgICAg
+IHwqKioqKioqKioqKioqKioqKioqKiogICAgICAgICAgICAgICAgICAgfAogICAgMTMxMDcyIC0+
+IDI2MjE0MyAgICAgOiA0MSAgICAgICB8KioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAg
+ICAgICAgIHwKICAgIDI2MjE0NCAtPiA1MjQyODcgICAgIDogMTA0ICAgICAgfCoqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKip8CiAgICA1MjQyODggLT4gMTA0ODU3NSAgICA6
+IDEwMSAgICAgIHwqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiAgfAogICAx
+MDQ4NTc2IC0+IDIwOTcxNTEgICAgOiAzNCAgICAgICB8KioqKioqKioqKioqKiAgICAgICAgICAg
+ICAgICAgICAgICAgICAgIHwKICAgMjA5NzE1MiAtPiA0MTk0MzAzICAgIDogMiAgICAgICAgfCAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgIDQxOTQzMDQgLT4gODM4
+ODYwNyAgICA6IDAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgfAogICA4Mzg4NjA4IC0+IDE2Nzc3MjE1ICAgOiA0ICAgICAgICB8KiAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgIHwKCm9wZXJhdGlvbiA9ICd3cml0ZScKICAgICB1c2Vj
+cyAgICAgICAgICAgICAgIDogY291bnQgICAgIGRpc3RyaWJ1dGlvbgogICAgICAgICAwIC0+IDEg
+ICAgICAgICAgOiAwICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIHwKICAgICAgICAgMiAtPiAzICAgICAgICAgIDogMCAgICAgICAgfCAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICAgIDQgLT4gNyAgICAgICAgICA6IDEw
+MDg3ICAgIHwqKioqKioqKioqKiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgICAg
+ICA4IC0+IDE1ICAgICAgICAgOiAzNDgxNSAgICB8KioqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKnwKICAgICAgICAxNiAtPiAzMSAgICAgICAgIDogMzI0NDYgICAgfCoqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiogICB8CiAgICAgICAgMzIgLT4gNjMgICAg
+ICAgICA6IDM4ODggICAgIHwqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+fAogICAgICAgIDY0IC0+IDEyNyAgICAgICAgOiAxNTUgICAgICB8ICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgIDEyOCAtPiAyNTUgICAgICAgIDogMTAgICAg
+ICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgICAgICAyNTYg
+LT4gNTExICAgICAgICA6IDEyICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgfAogICAgICAgNTEyIC0+IDEwMjMgICAgICAgOiAxICAgICAgICB8ICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgMTAyNCAtPiAyMDQ3ICAgICAg
+IDogMCAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAg
+ICAgIDIwNDggLT4gNDA5NSAgICAgICA6IDAgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgfAogICAgICA0MDk2IC0+IDgxOTEgICAgICAgOiAwICAgICAgICB8
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICAgODE5MiAtPiAx
+NjM4MyAgICAgIDogMyAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICB8CiAgICAgMTYzODQgLT4gMzI3NjcgICAgICA6IDYgICAgICAgIHwgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgIDMyNzY4IC0+IDY1NTM1ICAgICAgOiAx
+OCAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwKICAgICA2
+NTUzNiAtPiAxMzEwNzEgICAgIDogNjAgICAgICAgfCAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICB8CiAgICAxMzEwNzIgLT4gMjYyMTQzICAgICA6IDMzICAgICAgIHwgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAgMjYyMTQ0IC0+IDUyNDI4
+NyAgICAgOiA5NiAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+IHwKICAgIDUyNDI4OCAtPiAxMDQ4NTc1ICAgIDogMTA4ICAgICAgfCAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICB8CiAgIDEwNDg1NzYgLT4gMjA5NzE1MSAgICA6IDM0ICAg
+ICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAogICAyMDk3MTUy
+IC0+IDQxOTQzMDMgICAgOiA0ICAgICAgICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIHwKICAgNDE5NDMwNCAtPiA4Mzg4NjA3ICAgIDogMCAgICAgICAgfCAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8CiAgIDgzODg2MDggLT4gMTY3NzcyMTUg
+ICA6IDQgICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfAoK
+--000000000000e9d8f00584db1c40--
