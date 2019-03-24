@@ -1,143 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:56253 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726743AbfCXU7b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Mar 2019 16:59:31 -0400
-Date: Mon, 25 Mar 2019 07:59:26 +1100
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:59344 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729031AbfCXXDc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Mar 2019 19:03:32 -0400
+Date: Mon, 25 Mar 2019 10:03:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: serialize unaligned dio writes against all other
- dio writes
-Message-ID: <20190324205926.GY23020@dastard>
-References: <20190322165242.40662-1-bfoster@redhat.com>
+Subject: Re: generic/475 deadlock?
+Message-ID: <20190324230327.GZ23020@dastard>
+References: <20190320050408.GA24923@magnolia>
+ <20190320170305.GA29010@bfoster>
+ <20190320174551.GA1186@magnolia>
+ <20190320175922.GB29010@bfoster>
+ <20190320214938.GU23020@dastard>
+ <20190321121152.GA33001@bfoster>
+ <20190321211051.GV23020@dastard>
+ <20190321215307.GA35644@bfoster>
+ <20190321235045.GW23020@dastard>
+ <20190322120136.GA37888@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190322165242.40662-1-bfoster@redhat.com>
+In-Reply-To: <20190322120136.GA37888@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Zorro Lang <zlang@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Mar 22, 2019 at 12:52:42PM -0400, Brian Foster wrote:
-> XFS applies more strict serialization constraints to unaligned
-> direct writes to accommodate things like direct I/O layer zeroing,
-> unwritten extent conversion, etc. Unaligned submissions acquire the
-> exclusive iolock and wait for in-flight dio to complete to ensure
-> multiple submissions do not race on the same block and cause data
-> corruption.
+On Fri, Mar 22, 2019 at 08:01:36AM -0400, Brian Foster wrote:
+> On Fri, Mar 22, 2019 at 10:50:45AM +1100, Dave Chinner wrote:
+> > > > 	return pinned;
+> > > > 
+> > > 
+> > > "detect skipped buffers at delwri queue submit time (i.e., due to being
+> > > pinned)"
+> > 
+> > If the AIL code was detecting skipped buffers, it would do:
+> > 
+> > 	xfs_buf_delwri_submit_nowait(&ailp->ail_buf_list);
+> > 	if (!list_empty(&ailp->ail_buf_list)) {
+> > 		/* we skipped buffers */
+> > 		.....
+> > 	}
+> > 
+> > But it's not doing this.
+> > 
 > 
-> This generally works in the case of an aligned dio followed by an
-> unaligned dio, but the serialization is lost if I/Os occur in the
-> opposite order. If an unaligned write is submitted first and
-> immediately followed by an overlapping, aligned write, the latter
-> submits without the typical unaligned serialization barriers because
-> there is no indication of an unaligned dio still in-flight. This can
-> lead to unpredictable results.
-> 
-> To provide proper unaligned dio serialization, require that such
-> direct writes are always the only dio allowed in-flight at one time
-> for a particular inode. We already acquire the exclusive iolock and
-> drain pending dio before submitting the unaligned dio. Wait once
-> more after the dio submission to hold the iolock across the I/O and
-> prevent further submissions until the unaligned I/O completes. This
-> is heavy handed, but consistent with the current pre-submission
-> serialization for unaligned direct writes.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> I was originally going to deal with this problem by hacking in an inode
-> flag to track unaligned dio writes in-flight and use that to block any
-> follow on dio writes until cleared. Dave suggested we could use the
-> iolock to serialize by converting unaligned async dio writes to sync dio
-> writes and just letting the unaligned dio itself always block. That
-> seemed reasonable to me, but I morphed the approach slightly to just use
-> inode_dio_wait() because it seemed a bit cleaner. Thoughts?
-> 
-> Zorro,
-> 
-> You reproduced this problem originally. It addresses the problem in the
-> test case that reproduced for me. Care to confirm whether this patch
-> fixes the problem for you? Thanks.
-> 
-> Brian
-> 
->  fs/xfs/xfs_file.c | 21 ++++++++++++---------
->  1 file changed, 12 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 770cc2edf777..8b2aaed82343 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -529,18 +529,19 @@ xfs_file_dio_aio_write(
->  	count = iov_iter_count(from);
->  
->  	/*
-> -	 * If we are doing unaligned IO, wait for all other IO to drain,
-> -	 * otherwise demote the lock if we had to take the exclusive lock
-> -	 * for other reasons in xfs_file_aio_write_checks.
-> +	 * If we are doing unaligned IO, we can't allow any other IO in-flight
+> In general, if you think I'm mischaracterizing code/behavior, it's
+> helpful to point out how you interpret the specified reasoning so we can
+> correct mistaken assumptions/understandings, clarify descriptions or use
+> better terminology or whatever. That helps to get onto the same page
+> more efficiently, particularly for cases where it so happens we were
+> talking about the same exact thing in the first place and just happen to
+> think about it a bit differently. ;)
 
-* any other overlapping IO in-flight
+Well, i didn't realise you had mis-applied the terminology until you
+replied to me saying "we're describing the same thing". It's easy to
+say in hindsight "-you- should have just point out the problem", but
+that's laying blame for something that nobody is at fault for.
 
-> +	 * at the same time or we risk data corruption. Wait for all other IO to
-> +	 * drain, submit and wait for completion before we release the iolock.
-> +	 *
-> +	 * If the IO is aligned, demote the iolock if we had to take the
-> +	 * exclusive lock in xfs_file_aio_write_checks() for other reasons.
->  	 */
->  	if (unaligned_io) {
-> -		/* If we are going to wait for other DIO to finish, bail */
-> -		if (iocb->ki_flags & IOCB_NOWAIT) {
-> -			if (atomic_read(&inode->i_dio_count))
-> -				return -EAGAIN;
-> -		} else {
-> +		/* unaligned dio always waits, bail */
-> +		if (iocb->ki_flags & IOCB_NOWAIT)
-> +			return -EAGAIN;
-> +		else
->  			inode_dio_wait(inode);
-> -		}
->  	} else if (iolock == XFS_IOLOCK_EXCL) {
->  		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
->  		iolock = XFS_IOLOCK_SHARED;
-> @@ -548,6 +549,8 @@ xfs_file_dio_aio_write(
->  
->  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
->  	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
-> +	if (unaligned_io && !is_sync_kiocb(iocb))
-> +		inode_dio_wait(inode);
+> For example, to just say "We can, but not for the reasons you are
+> suggesting." doesn't tell me much about how you interpreted my
+> reasoning.
 
-If it's AIO and it has already been completed, then this wait is
-unnecessary. i.e. we only need to wait in the case where AIO has
-been queued but not completed:
+I think you're being unreasonable here, Brian - I explained the
+skipped vs pinned difference once I understood there was a
+terminology mismatch issue. :/
 
-	/*
-	 * If we are doing unaligned IO, it will be the only IO in
-	 * progress right now. If it has not completed yet, wait on
-	 * it before we drop the IOLOCK.
-	 */
-	if (ret == -EIOCBQUEUED && unaligned_io)
-		inode_dio_wait(inode);
+I don't expect to have to rewrite emails in my own words just so the
+other party can determine if I've understood the terms they used
+correctly. We have definitions and try to use common, clear
+terminology so that code and communication is efficient and we don't
+need to endlessly repeat what the other person has said.
 
-Next question: do we need to change the return value here to reflect
-the actual completion result?
+Misunderstandings over terminology are relatively rare - as soon as
+I understood that you were using terminology with a different
+definition to the code you were refering to, I pointed it out and
+explained where the misunderstanding was.
 
-Hmmmm.  iomap_dio_complete() will return either the IO byte count or
-an error for synchronous IO. And for AIO, ki->complete will only be
-called by the iomap bio completion path if it's the last reference.
-So for AIO that is completed before the submitter returns, it will
-return the result of iomap_dio_complete() without having called
-iocb->ki_complete(). Which means we want to return a byte count or
-IO error to the higher layers, and that will result in
-aio_read/aio_write calling aio_rw_done() and calling the completion
-appropriately.
+I cannot do any more than that, and to expect more from /anyone/ is
+entirely unreasonable.
 
-Ok, so we don't need to futz with the return value, and we only
-need to check for ret == -EIOCBQUEUED to determine if we should wait
-or not, because any other return value indicates either IO completion
-or an error has already occurred.
+> I missed where the busy extent stuff came into play here.. are you
+> pointing out that log forces from the busy extent code can occur under
+> buffer locks and thus we're susceptible to similar problems there? If
+> so, aren't we protected by the transaction in that context?
+
+I'm not sure - as I said I have not traced/reasoned the logic right
+through yet.  All I was doing is pointing out that these are other
+places we are doing a log force with buffers locked so might have
+the same problem, and....
+
+> IOW, wouldn't a log force from busy extent context always occur with
+> locked buffers joined to a transaction? If so, then doesn't the active
+> transaction hold a bli reference and prevent such items from being
+> "freed" in log completion context (i.e. xfs_buf_item_unpin()) if they
+> happened to be pinned? Perhaps I'm missing something...
+
+... now you've looked at it in more detail that I have.
+
+What you've described is why it was considered to be safe, but now
+we have things like defered AGFL block freeing that pick up and drop
+the AGF lock repeatedly as the single transaction rolls and -
+eventually - starts calling xfs_trans_reserve() on transaction roll.
+That's something we never used to do.  It may still be safe, but it
+is unclear to me how this all interacts in the presence of
+filesystem shutdown conditions.....
+
+---
+
+What it comes down to is that the only way I can answer questions
+like this is to do the complete analysis myself, which simply does
+not scale. Having to jump between multiple separate complex
+questions completely derails my own workflow, and it's recently been
+resulting in me spending >75% of every day answering complex
+questions like this. Duplication of effort is not an efficient use
+of our time or expertise.
+
+If I see something and say "these other code paths look similar, we
+should check them too", all it means that I noticed a pattern of
+usage and they need to be checked for similar issues.  It does not
+mean "dave has enough spare time on hand and can drop everything to
+analyse the code in question and answer every little detail about
+the similar problem path he noticed."
+
+Brian, you're way better than me at analysing these complex
+interactions. Be confident in your analysis, just say "no, it's safe
+because...." rather than asking a question that requires me to
+repeat the analysis you've already done.  If there's something that
+you've missed that I spot, I'll point it out, but I really don't
+want to have to repeat everything you've already done just to answer
+a "did I miss anything" question.
 
 Cheers,
 
