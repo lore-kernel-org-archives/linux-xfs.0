@@ -1,44 +1,22 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f67.google.com ([209.85.166.67]:46241 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728853AbfC2Ow6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 10:52:58 -0400
-Received: by mail-io1-f67.google.com with SMTP id b9so1922787iot.13
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Mar 2019 07:52:58 -0700 (PDT)
-Subject: Re: [PATCH v3 2/3] block: verify data when endio
-References: <20190329142346.1677-1-bob.liu@oracle.com>
- <20190329142346.1677-3-bob.liu@oracle.com>
- <41c8688a-65bd-96ac-9b23-4facd0ade4a7@kernel.dk> <yq1ftr5rbq1.fsf@oracle.com>
- <f65d6a7b-9e69-ae1e-b8b8-8769dc650311@kernel.dk> <yq1bm1trb4y.fsf@oracle.com>
- <feefa611-b744-326c-29d5-c64bcda45d9f@kernel.dk> <yq17echrax1.fsf@oracle.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <1b638dc2-56fd-6ab4-dcca-ad2adb9931bb@kernel.dk>
-Date: Fri, 29 Mar 2019 08:52:55 -0600
+Received: from stars.com.ua ([207.154.231.91]:54396 "EHLO stars.com.ua"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726143AbfC1CEO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Mar 2019 22:04:14 -0400
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <yq17echrax1.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Description: Mail message body
+Subject: PRIVATE...
+From: svetlana@stars.com.ua
+Date: Mon, 25 Mar 2019 06:52:53 +0000
+Reply-To: mrmichealwuu17@yahoo.com.hk
+Message-Id: <E1h8JTg-0004gm-6V@stars.com.ua>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bob Liu <bob.liu@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, shirley.ma@oracle.com, allison.henderson@oracle.com, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca, tytso@mit.edu
+To: Recipients <svetlana@stars.com.ua>
 
-On 3/29/19 8:51 AM, Martin K. Petersen wrote:
-> 
-> Jens,
-> 
->> The integrity stuff still has that nasty pointer in there. It'd be
->> nice to get rid of that as well, and hide it all in a parent container
->> of the bio.
-> 
-> That's fine with me. We really didn't have that option a decade ago.
-
-Right, but now we do. Hence trying to nudge things in that direction,
-instead of adding another pointer to struct bio for a new use case. I'd
-much rather go that route, instead of unionizing with another pointer
-that should be going away instead.
-
--- 
-Jens Axboe
+I have a business Proposal that will be of benefit to the both of us.Kindly=
+ contact me on mrmichealwuu17@yahoo.com.hk should this be of interest to yo=
+u.
