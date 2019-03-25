@@ -1,218 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38754 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726182AbfCYREH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Mar 2019 13:04:07 -0400
-Date: Mon, 25 Mar 2019 13:04:04 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] generic: test stale data exposure after writeback crash
-Message-ID: <20190325170404.GE52167@bfoster>
-References: <20190318172216.20098-1-bfoster@redhat.com>
- <20190323082339.GR2824@desktop>
- <20190325125614.GA52167@bfoster>
+Received: from mail-yw1-f53.google.com ([209.85.161.53]:37505 "EHLO
+        mail-yw1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728563AbfCYRaw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Mar 2019 13:30:52 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190325125614.GA52167@bfoster>
+References: <CAOQ4uxi0pGczXBX7GRAFs88Uw0n1ERJZno3JSeZR71S1dXg+2w@mail.gmail.com>
+ <20190325001044.GA23020@dastard> <CAOQ4uxhu=Qtme9RJ7uZXYXt0UE+=xD+OC4gQ9EYkDC1ap8Hizg@mail.gmail.com>
+ <20190325154731.GT1183@magnolia> <20190325164129.GH10344@bombadil.infradead.org>
+In-Reply-To: <20190325164129.GH10344@bombadil.infradead.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 25 Mar 2019 19:30:39 +0200
+Message-ID: <CAOQ4uximHOCM8Fo_WctXAjpft31OS+VBcjUqteuK6kjn+nVoKA@mail.gmail.com>
+Subject: Re: [QUESTION] Long read latencies on mixed rw buffered IO
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Mon, Mar 25, 2019 at 08:56:15AM -0400, Brian Foster wrote:
-> On Sat, Mar 23, 2019 at 04:23:39PM +0800, Eryu Guan wrote:
-> > On Mon, Mar 18, 2019 at 01:22:16PM -0400, Brian Foster wrote:
-> > > XFS has historically had a stale data exposure window if a crash
-> > > occurs after a delalloc->physical extent conversion but before
-> > > writeback completes to the associated extent. While this should be a
-> > > rare occurrence in production environments due to typical writeback
-> > > ordering and such, it is not guaranteed in all cases until data
-> > > extents are initialized as unwritten (or otherwise zeroed) before
-> > > they are written.
-> > > 
-> > > Add a test that performs selective writeback ordering to reproduce
-> > > stale data exposure after a crash. Note that this test currently
-> > > fails on XFS.
-> > > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > > 
-> > > As noted in the commit log, this test currently fails on XFS. I think
-> > > it's worth considering regardless because we're pretty close to fixing
-> > > this problem in the kernel. Darrick has posted a patch[1] that while
-> > > apparently still needs a bit of work to accommodate performance
-> > > concerns, does allow XFS to pass this test.
-> > > 
-> > > Thoughts, reviews, flames appreciated.
-> > > 
-> > > Brian
-> > > 
-> > > [1] https://marc.info/?l=linux-xfs&m=155259894926863&w=2
-> > > 
-> > >  tests/generic/999     | 70 +++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/generic/999.out | 13 ++++++++
-> > >  tests/generic/group   |  1 +
-> > >  3 files changed, 84 insertions(+)
-> > >  create mode 100755 tests/generic/999
-> > >  create mode 100644 tests/generic/999.out
-> > > 
-> > > diff --git a/tests/generic/999 b/tests/generic/999
-> > > new file mode 100755
-> > > index 00000000..46c85d07
-> > > --- /dev/null
-> > > +++ b/tests/generic/999
-> > > @@ -0,0 +1,70 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test 999
-> > > +#
-> > > +# Test a some write patterns for stale data exposure after a crash.  XFS is
-> > > +# historically susceptible to this problem in the window between delalloc to
-> > > +# physical extent conversion and writeback completion.
-> > > +#
-> > > +seq=`basename $0`
-> > > +seqres=$RESULT_DIR/$seq
-> > > +echo "QA output created by $seq"
-> > > +
-> > > +here=`pwd`
-> > > +tmp=/tmp/$$
-> > > +status=1	# failure is the default!
-> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > > +
-> > > +_cleanup()
-> > > +{
-> > > +	cd /
-> > > +	rm -f $tmp.*
-> > > +}
-> > > +
-> > > +# get standard environment, filters and checks
-> > > +. ./common/rc
-> > > +
-> > > +# remove previous $seqres.full before test
-> > > +rm -f $seqres.full
-> > > +
-> > > +# real QA test starts here
-> > > +
-> > > +# Modify as appropriate.
-> > > +_supported_fs generic
-> > > +_supported_os Linux
-> > > +_require_scratch
-> > > +_require_scratch_shutdown
-> > > +
-> > > +# create a small fs and initialize free blocks with a unique pattern
-> > > +_scratch_mkfs_sized $((1024 * 1024 * 100)) >> $seqres.full 2>&1
-> > > +_scratch_mount
-> > > +$XFS_IO_PROG -f -c "pwrite -S 0xab 0 100m" -c fsync $SCRATCH_MNT/spc \
-> > > +	>> $seqres.full 2>&1
-> > > +rm -f $SCRATCH_MNT/spc
-> > > +$XFS_IO_PROG -c fsync $SCRATCH_MNT
-> > > +
-> > > +# Write a couple files with particular writeback sequences. The first writes a
-> > > +# delalloc extent and triggers writeback on the last page. The second triggers
-> > > +# post-eof preallocation (on XFS), write extends into the preallocation and
-> > > +# triggers writeback of the last written page.
-> > > +$XFS_IO_PROG -fc "pwrite 0 64k" -c "sync_range -w 60k 4k" \
-> > > +	-c "sync_range -a 60k 4k" $SCRATCH_MNT/file.1 >> $seqres.full 2>&1
-> > 
-> > I suspect that on hosts with 64k pagesize, the sync_range call will
-> > write the whole page back and we see no zero after shutdown, but I don't
-> > have the hardware to test..
-> > 
-> 
-> Good point. I'll give that a whirl on a 64k page box and see if I can
-> get away with just adjusting the offsets to reproduce this more
-> generically.
-> 
-> > Also, 0-60k being zero only happens if delalloc is enabled, so testing
-> > on ext4 with "nodelalloc" mount option fails the test. Perhaps we could
-> > skip the test on ext4 if "nodelalloc" is given in mount option.
-> > 
-> 
-> Hmm, so I'm assuming that these blocks not being zero means they expose
-> stale data. Is stale data exposure expected behavior in this ext4 mode?
-> ISTM that this test should be expected to fail in that case. That said,
-> I'll defer to ext4 devs on how to handle this scenario; perhaps this is
-> something that there is no intention to fix and so the failure is
-> ultimately noise. I would prefer not to unilaterally decide on that,
-> however, so I'll probably leave this as is unless an ext4 person chimes
-> in before I get to v2. Somebody can always patch it later if it turns
-> out to be a problem.
-> 
+On Mon, Mar 25, 2019 at 6:41 PM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> On Mon, Mar 25, 2019 at 08:47:31AM -0700, Darrick J. Wong wrote:
+> > Hmmm.... so it looks like the rw_semaphore behavior has shifted over
+> > time, then?
+>
+> Yes.
+>
+> > I thought rwsem was supposed to queue read and write waiters in order,
+> > at least on x86?  Though I suppose that might not matter much since we
+> > can only run one writer at a time vs. waking up all the readers at once.
+> > Now I'm wondering if there ever was a time when the readers all got
+> > batched to the front and starved the writers, but eh I haven't drank
+> > enough coffee to remember things like that. :P
+> >
+> > (I wonder what would happen if rw_semaphore decided to wake up some
+> > number of the readers in the rwsem wait_list, not just the ones at the
+> > front...)
+>
+> rwsems currently allow a limited amount of queue-jumping; if a semaphore
+> is currently not acquired (it's in transition between two owners), a
+> running process can acquire it.
+>
+> I think it is a bug that we only wake readers at the front of the queue;
+> I think we would get better performance if we wake all readers.  ie here:
+>
+>         /*
+> -        * Grant an infinite number of read locks to the readers at the front
+> -        * of the queue. We know that woken will be at least 1 as we accounted
+> +        * Grant an infinite number of read locks.  We know that woken will
+> +        * be at least 1 as we accounted
+>          * for above. Note we increment the 'active part' of the count by the
+>          * number of readers before waking any processes up.
+>          */
+>         list_for_each_entry_safe(waiter, tmp, &sem->wait_list, list) {
+>                 struct task_struct *tsk;
+>
+> -               if (waiter->type == RWSEM_WAITING_FOR_WRITE)
+> -                       break;
+>
+> Amir, it seems like you have a good test-case for trying this out ...
 
-A couple quick followups..
+Sure, but please explain. Why are you waking up the writers?
 
-Changing the offsets around has the potential to trigger different
-written back ranges of the file (unless we do something like always sync
-64k chunks) which causes the test to fail, as currently written. Rather
-than enforce a particular writeback pattern, I'll update the offsets
-appropriately and verify the result by checking for stale bytes in the
-file rather than dumping the raw file as part of the magic output.
-
-Also, I tried out the nodelalloc ext4 mount option and see that this
-doesn't expose stale data, it just shows the file written to disk in
-full. The change above also allows this configuration to pass because we
-accommodate any behavior that doesn't expose stale data.
-
-Brian
-
-> > > +$XFS_IO_PROG -fc "pwrite 0 68k" -c fsync -c "pwrite 96k 4k" \
-> > > +	-c "sync_range -w 96k 4k" -c "sync_range -a 96k 4k" \
-> > > +	$SCRATCH_MNT/file.2 >> $seqres.full 2>&1
-> > > +
-> > > +# Shut down before any other writeback completes. Flush the log to persist inode
-> > > +# size updates.
-> > > +_scratch_shutdown -f
-> > > +
-> > > +# Now dump both files. The region prior to the last page in the first file
-> > > +# should be zero filled. The region between the two writes to the second file
-> > > +# should also be zero filled.
-> > > +_scratch_cycle_mount
-> > > +hexdump $SCRATCH_MNT/file.1
-> > > +hexdump $SCRATCH_MNT/file.2
-> > > +
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/generic/999.out b/tests/generic/999.out
-> > > new file mode 100644
-> > > index 00000000..db3c5b7e
-> > > --- /dev/null
-> > > +++ b/tests/generic/999.out
-> > > @@ -0,0 +1,13 @@
-> > > +QA output created by 999
-> > > +0000000 0000 0000 0000 0000 0000 0000 0000 0000
-> > > +*
-> > > +000f000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-> > > +*
-> > > +0010000
-> > > +0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-> > > +*
-> > > +0011000 0000 0000 0000 0000 0000 0000 0000 0000
-> > > +*
-> > > +0018000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-> > > +*
-> > > +0019000
-> > > diff --git a/tests/generic/group b/tests/generic/group
-> > > index 78b9b45d..aa4734af 100644
-> > > --- a/tests/generic/group
-> > > +++ b/tests/generic/group
-> > > @@ -538,3 +538,4 @@
-> > >  533 auto quick attr
-> > >  534 auto quick log
-> > >  535 auto quick log
-> > > +999 auto quick rw
-> > 
-> > Also in 'shutdown' group.
-> > 
-> 
-> Ack, thanks.
-> 
-> Brian
-> 
-> > Thanks,
-> > Eryu
-> > > -- 
-> > > 2.17.2
-> > > 
+Thanks,
+Amir.
