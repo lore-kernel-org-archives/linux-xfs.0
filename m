@@ -1,186 +1,199 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16806 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39302 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730603AbfCYMfB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Mar 2019 08:35:01 -0400
-Date: Mon, 25 Mar 2019 08:34:59 -0400
+        id S1730889AbfCYM4S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 25 Mar 2019 08:56:18 -0400
+Date: Mon, 25 Mar 2019 08:56:15 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: generic/475 deadlock?
-Message-ID: <20190325123458.GA51547@bfoster>
-References: <20190320170305.GA29010@bfoster>
- <20190320174551.GA1186@magnolia>
- <20190320175922.GB29010@bfoster>
- <20190320214938.GU23020@dastard>
- <20190321121152.GA33001@bfoster>
- <20190321211051.GV23020@dastard>
- <20190321215307.GA35644@bfoster>
- <20190321235045.GW23020@dastard>
- <20190322120136.GA37888@bfoster>
- <20190324230327.GZ23020@dastard>
+Subject: Re: [PATCH] generic: test stale data exposure after writeback crash
+Message-ID: <20190325125614.GA52167@bfoster>
+References: <20190318172216.20098-1-bfoster@redhat.com>
+ <20190323082339.GR2824@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190324230327.GZ23020@dastard>
+In-Reply-To: <20190323082339.GR2824@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Mar 25, 2019 at 10:03:27AM +1100, Dave Chinner wrote:
-> On Fri, Mar 22, 2019 at 08:01:36AM -0400, Brian Foster wrote:
-> > On Fri, Mar 22, 2019 at 10:50:45AM +1100, Dave Chinner wrote:
-> > > > > 	return pinned;
-> > > > > 
-> > > > 
-> > > > "detect skipped buffers at delwri queue submit time (i.e., due to being
-> > > > pinned)"
-> > > 
-> > > If the AIL code was detecting skipped buffers, it would do:
-> > > 
-> > > 	xfs_buf_delwri_submit_nowait(&ailp->ail_buf_list);
-> > > 	if (!list_empty(&ailp->ail_buf_list)) {
-> > > 		/* we skipped buffers */
-> > > 		.....
-> > > 	}
-> > > 
-> > > But it's not doing this.
-> > > 
+On Sat, Mar 23, 2019 at 04:23:39PM +0800, Eryu Guan wrote:
+> On Mon, Mar 18, 2019 at 01:22:16PM -0400, Brian Foster wrote:
+> > XFS has historically had a stale data exposure window if a crash
+> > occurs after a delalloc->physical extent conversion but before
+> > writeback completes to the associated extent. While this should be a
+> > rare occurrence in production environments due to typical writeback
+> > ordering and such, it is not guaranteed in all cases until data
+> > extents are initialized as unwritten (or otherwise zeroed) before
+> > they are written.
 > > 
-> > In general, if you think I'm mischaracterizing code/behavior, it's
-> > helpful to point out how you interpret the specified reasoning so we can
-> > correct mistaken assumptions/understandings, clarify descriptions or use
-> > better terminology or whatever. That helps to get onto the same page
-> > more efficiently, particularly for cases where it so happens we were
-> > talking about the same exact thing in the first place and just happen to
-> > think about it a bit differently. ;)
+> > Add a test that performs selective writeback ordering to reproduce
+> > stale data exposure after a crash. Note that this test currently
+> > fails on XFS.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > As noted in the commit log, this test currently fails on XFS. I think
+> > it's worth considering regardless because we're pretty close to fixing
+> > this problem in the kernel. Darrick has posted a patch[1] that while
+> > apparently still needs a bit of work to accommodate performance
+> > concerns, does allow XFS to pass this test.
+> > 
+> > Thoughts, reviews, flames appreciated.
+> > 
+> > Brian
+> > 
+> > [1] https://marc.info/?l=linux-xfs&m=155259894926863&w=2
+> > 
+> >  tests/generic/999     | 70 +++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/999.out | 13 ++++++++
+> >  tests/generic/group   |  1 +
+> >  3 files changed, 84 insertions(+)
+> >  create mode 100755 tests/generic/999
+> >  create mode 100644 tests/generic/999.out
+> > 
+> > diff --git a/tests/generic/999 b/tests/generic/999
+> > new file mode 100755
+> > index 00000000..46c85d07
+> > --- /dev/null
+> > +++ b/tests/generic/999
+> > @@ -0,0 +1,70 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test 999
+> > +#
+> > +# Test a some write patterns for stale data exposure after a crash.  XFS is
+> > +# historically susceptible to this problem in the window between delalloc to
+> > +# physical extent conversion and writeback completion.
+> > +#
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +
+> > +# remove previous $seqres.full before test
+> > +rm -f $seqres.full
+> > +
+> > +# real QA test starts here
+> > +
+> > +# Modify as appropriate.
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +_require_scratch
+> > +_require_scratch_shutdown
+> > +
+> > +# create a small fs and initialize free blocks with a unique pattern
+> > +_scratch_mkfs_sized $((1024 * 1024 * 100)) >> $seqres.full 2>&1
+> > +_scratch_mount
+> > +$XFS_IO_PROG -f -c "pwrite -S 0xab 0 100m" -c fsync $SCRATCH_MNT/spc \
+> > +	>> $seqres.full 2>&1
+> > +rm -f $SCRATCH_MNT/spc
+> > +$XFS_IO_PROG -c fsync $SCRATCH_MNT
+> > +
+> > +# Write a couple files with particular writeback sequences. The first writes a
+> > +# delalloc extent and triggers writeback on the last page. The second triggers
+> > +# post-eof preallocation (on XFS), write extends into the preallocation and
+> > +# triggers writeback of the last written page.
+> > +$XFS_IO_PROG -fc "pwrite 0 64k" -c "sync_range -w 60k 4k" \
+> > +	-c "sync_range -a 60k 4k" $SCRATCH_MNT/file.1 >> $seqres.full 2>&1
 > 
-> Well, i didn't realise you had mis-applied the terminology until you
-> replied to me saying "we're describing the same thing". It's easy to
-> say in hindsight "-you- should have just point out the problem", but
-> that's laying blame for something that nobody is at fault for.
-> 
-> > For example, to just say "We can, but not for the reasons you are
-> > suggesting." doesn't tell me much about how you interpreted my
-> > reasoning.
-> 
-> I think you're being unreasonable here, Brian - I explained the
-> skipped vs pinned difference once I understood there was a
-> terminology mismatch issue. :/
-> 
-> I don't expect to have to rewrite emails in my own words just so the
-> other party can determine if I've understood the terms they used
-> correctly. We have definitions and try to use common, clear
-> terminology so that code and communication is efficient and we don't
-> need to endlessly repeat what the other person has said.
-> 
-> Misunderstandings over terminology are relatively rare - as soon as
-> I understood that you were using terminology with a different
-> definition to the code you were refering to, I pointed it out and
-> explained where the misunderstanding was.
-> 
-> I cannot do any more than that, and to expect more from /anyone/ is
-> entirely unreasonable.
-> 
-
-Fair enough. I'm just trying to see if we can improve communication
-signal a bit here, but I suppose some degree of miscommunication is
-inevitable in a highly technical forum. Not worth fussing over too much
-I guess..
-
-> > I missed where the busy extent stuff came into play here.. are you
-> > pointing out that log forces from the busy extent code can occur under
-> > buffer locks and thus we're susceptible to similar problems there? If
-> > so, aren't we protected by the transaction in that context?
-> 
-> I'm not sure - as I said I have not traced/reasoned the logic right
-> through yet.  All I was doing is pointing out that these are other
-> places we are doing a log force with buffers locked so might have
-> the same problem, and....
-> 
-
-Ok, that's all I was asking..
-
-> > IOW, wouldn't a log force from busy extent context always occur with
-> > locked buffers joined to a transaction? If so, then doesn't the active
-> > transaction hold a bli reference and prevent such items from being
-> > "freed" in log completion context (i.e. xfs_buf_item_unpin()) if they
-> > happened to be pinned? Perhaps I'm missing something...
-> 
-> ... now you've looked at it in more detail that I have.
-> 
-> What you've described is why it was considered to be safe, but now
-> we have things like defered AGFL block freeing that pick up and drop
-> the AGF lock repeatedly as the single transaction rolls and -
-> eventually - starts calling xfs_trans_reserve() on transaction roll.
-> That's something we never used to do.  It may still be safe, but it
-> is unclear to me how this all interacts in the presence of
-> filesystem shutdown conditions.....
-> 
-
-Some higher level thoughts...
-
-IME, we've had these kind of quirky shutdown issues since I've been
-working on XFS. Similar to log recovery, it's a rarely enough hit
-scenario that keeping it robust and reliable across new
-features/development is a bit of a challenge. LR is certainly more
-critical and I think our test coverage in both areas has improved
-significantly over the past few years.
-
-The point is just that I don't think it's worth getting too crazy by
-trying to audit every possible path to a sync log force or changing how
-various bits of core infrastructure work just to accommodate a very rare
-shutdown case. If this turns out to be the only place we require an
-object lock in the synchronous log force sequence, it might be best to
-find a way to remove it (as Darrick posited earlier). If not, it might
-also be more useful to figure a way to detect the "sync log force while
-holding (certain) locks" pattern dynamically and provide some assertions
-against it to improve test coverage going forward. I'm not quite sure
-how to do that off the top of my head. I'll have to think about that
-some more. I'm sure we could always come up with a test that reproduces
-this particular instance of the problem more reliably, but that test
-becomes far less useful once we address the particular instance it
-reproduces in the kernel.
-
-> ---
-> 
-> What it comes down to is that the only way I can answer questions
-> like this is to do the complete analysis myself, which simply does
-> not scale. Having to jump between multiple separate complex
-> questions completely derails my own workflow, and it's recently been
-> resulting in me spending >75% of every day answering complex
-> questions like this. Duplication of effort is not an efficient use
-> of our time or expertise.
+> I suspect that on hosts with 64k pagesize, the sync_range call will
+> write the whole page back and we see no zero after shutdown, but I don't
+> have the hardware to test..
 > 
 
-Agreed.
+Good point. I'll give that a whirl on a 64k page box and see if I can
+get away with just adjusting the offsets to reproduce this more
+generically.
 
-> If I see something and say "these other code paths look similar, we
-> should check them too", all it means that I noticed a pattern of
-> usage and they need to be checked for similar issues.  It does not
-> mean "dave has enough spare time on hand and can drop everything to
-> analyse the code in question and answer every little detail about
-> the similar problem path he noticed."
-> 
-> Brian, you're way better than me at analysing these complex
-> interactions. Be confident in your analysis, just say "no, it's safe
-> because...." rather than asking a question that requires me to
-> repeat the analysis you've already done.  If there's something that
-> you've missed that I spot, I'll point it out, but I really don't
-> want to have to repeat everything you've already done just to answer
-> a "did I miss anything" question.
+> Also, 0-60k being zero only happens if delalloc is enabled, so testing
+> on ext4 with "nodelalloc" mount option fails the test. Perhaps we could
+> skip the test on ext4 if "nodelalloc" is given in mount option.
 > 
 
-Note that my question was more around establishing context since I
-didn't see an issue/concern pointed out for the busy extent code (even
-after reading back through the thread), but point taken. Thanks for the
-feedback.
+Hmm, so I'm assuming that these blocks not being zero means they expose
+stale data. Is stale data exposure expected behavior in this ext4 mode?
+ISTM that this test should be expected to fail in that case. That said,
+I'll defer to ext4 devs on how to handle this scenario; perhaps this is
+something that there is no intention to fix and so the failure is
+ultimately noise. I would prefer not to unilaterally decide on that,
+however, so I'll probably leave this as is unless an ext4 person chimes
+in before I get to v2. Somebody can always patch it later if it turns
+out to be a problem.
+
+> > +$XFS_IO_PROG -fc "pwrite 0 68k" -c fsync -c "pwrite 96k 4k" \
+> > +	-c "sync_range -w 96k 4k" -c "sync_range -a 96k 4k" \
+> > +	$SCRATCH_MNT/file.2 >> $seqres.full 2>&1
+> > +
+> > +# Shut down before any other writeback completes. Flush the log to persist inode
+> > +# size updates.
+> > +_scratch_shutdown -f
+> > +
+> > +# Now dump both files. The region prior to the last page in the first file
+> > +# should be zero filled. The region between the two writes to the second file
+> > +# should also be zero filled.
+> > +_scratch_cycle_mount
+> > +hexdump $SCRATCH_MNT/file.1
+> > +hexdump $SCRATCH_MNT/file.2
+> > +
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/999.out b/tests/generic/999.out
+> > new file mode 100644
+> > index 00000000..db3c5b7e
+> > --- /dev/null
+> > +++ b/tests/generic/999.out
+> > @@ -0,0 +1,13 @@
+> > +QA output created by 999
+> > +0000000 0000 0000 0000 0000 0000 0000 0000 0000
+> > +*
+> > +000f000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+> > +*
+> > +0010000
+> > +0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+> > +*
+> > +0011000 0000 0000 0000 0000 0000 0000 0000 0000
+> > +*
+> > +0018000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+> > +*
+> > +0019000
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index 78b9b45d..aa4734af 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -538,3 +538,4 @@
+> >  533 auto quick attr
+> >  534 auto quick log
+> >  535 auto quick log
+> > +999 auto quick rw
+> 
+> Also in 'shutdown' group.
+> 
+
+Ack, thanks.
 
 Brian
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Thanks,
+> Eryu
+> > -- 
+> > 2.17.2
+> > 
