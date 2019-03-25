@@ -1,182 +1,204 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:59377 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:32545 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727484AbfCVBwp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Mar 2019 21:52:45 -0400
-Date: Fri, 22 Mar 2019 12:52:40 +1100
+        by vger.kernel.org with ESMTP id S1726186AbfCYXnO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Mar 2019 19:43:14 -0400
+Date: Tue, 26 Mar 2019 10:43:09 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfs: force writes to delalloc regions to unwritten
-Message-ID: <20190322015240.GX23020@dastard>
-References: <20190315122939.GB5182@bfoster>
- <20190317224011.GO23020@dastard>
- <20190318124039.GA17956@bfoster>
- <20190318203506.GQ23020@dastard>
- <20190318215014.GA21231@bfoster>
- <20190319180249.GS4929@magnolia>
- <20190319202537.GR23020@dastard>
- <20190320120204.GA28268@bfoster>
- <20190320211019.GS23020@dastard>
- <20190321122740.GB33001@bfoster>
+Subject: Re: [QUESTION] Long read latencies on mixed rw buffered IO
+Message-ID: <20190325234309.GB23020@dastard>
+References: <CAOQ4uxi0pGczXBX7GRAFs88Uw0n1ERJZno3JSeZR71S1dXg+2w@mail.gmail.com>
+ <20190325001044.GA23020@dastard>
+ <CAOQ4uxhu=Qtme9RJ7uZXYXt0UE+=xD+OC4gQ9EYkDC1ap8Hizg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190321122740.GB33001@bfoster>
+In-Reply-To: <CAOQ4uxhu=Qtme9RJ7uZXYXt0UE+=xD+OC4gQ9EYkDC1ap8Hizg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Thu, Mar 21, 2019 at 08:27:40AM -0400, Brian Foster wrote:
-> On Thu, Mar 21, 2019 at 08:10:19AM +1100, Dave Chinner wrote:
-> > On Wed, Mar 20, 2019 at 08:02:05AM -0400, Brian Foster wrote:
-> > > On Wed, Mar 20, 2019 at 07:25:37AM +1100, Dave Chinner wrote:
-> > > > > > The broader point is that by controlling writeback ordering, we can
-> > > > > > explicitly demonstrate stale data exposure. If fixed properly, we should
-> > > > > > never expect stale data exposure even in the event of out of order
-> > > > > > writeback completion, regardless of the cause.
-> > > > > 
-> > > > > Agree.  Even if s_f_r is a giant trash fire, if we're exposing stale
-> > > > > disk contents it's game over anyway and we ought to fix it.
-> > > > 
-> > > > Well, that's exactly the problem with SFR, isn't it? The dirty data
-> > > > is outside the range the user asks to sync and the implementation
-> > > > doesn't go anywhere near the filesystem so we can't actually do the
-> > > > right thing here. So we are left to either hack fixes around a
-> > > > shitty, broken interface and everyone pays the penalty, or we ignore
-> > > > it. We've simply ignored it for the past 10+ years because it really
-> > > > can't be used safely for it's intended purposes (as everyone who
-> > > > tries to use it finds out eventually)...
-> > > > 
-> > > 
-> > > Just to make this abundantly clear, there is nothing unique, magic or
-> > > special required of sync_file_range() to reproduce this stale data
-> > > exposure. See the following variation of a command sequence from the
-> > > fstest I posted the other day:
-> > > 
-> > > ...
-> > > # xfs_io -fc "pwrite 0 68k" -c fsync -c "pwrite 96k 4k" \
-> > > 	-c "fpunch 96k 4k" <file>
-> > > ...
-> > > # hexdump <file>
-> > > 0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-> > > *
-> > > 0011000 abab abab abab abab abab abab abab abab
-> > > *
-> > > 0018000 0000 0000 0000 0000 0000 0000 0000 0000
-> > > *
-> > > 0019000
-> > > 
-> > > Same problem, and it can be reproduced just as easily with a reflink or
-> > > even an overlapping direct I/O.
-> > 
-> > How does overlapping direct IO cause stale data exposure given that
-> > it uses unwritten extent allocation? That, of course, is ignoring
-> > the fact that the result of overlapping concurent direct IO is, by
-> > definition, undefined and an application bug if it occurs....
-> > 
+On Mon, Mar 25, 2019 at 09:49:33AM +0200, Amir Goldstein wrote:
+> On Mon, Mar 25, 2019 at 2:10 AM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Sun, Mar 24, 2019 at 08:18:10PM +0200, Amir Goldstein wrote:
+> > > Hi All,
+> > >
+> > > Christoph's re-factoring to xfs_ilock() brought up this question,
+> > > but AFAICS, current behavior seems to have always been that
+> > > way for xfs (?).
+> > >
+> > > Since commit 6552321831dc ("xfs: remove i_iolock and use
+> > > i_rwsem in the VFS inode instead"), xfs_file_buffered_aio_read()
+> > > is the only call sites I know of to call generic_file_read_iter() with
+> > > i_rwsem read side held.
+> >
+> > That did not change the locking behaviour of XFS at all.
 > 
-> It's overlapping a buffered write and so starts with a flush instead of
+> I know. Said so above.
 
-Ok, but that's not the normal usage of the phrase "overlapping
-direct IO".  Overlapping direct IO means two concurrent direct IOs
-to the same LBA range in the device underlying the filesystem. i.e.
-they overlap in both the temporal and physical (device LBA) domains.
+Followed by a (?), which seems to indicate you were unsure and
+seeking clarification.
 
-Subtle difference, yes, but a very important one.
-
-> an unwritten allocation (so even a dio read is sufficient). Also, the
-> target of the dio isn't where stale data is exposed, so even if there
-> was an existing underlying unwritten block before the initial buffered
-> write it wouldn't change anything.
+> > I'm guessing what we are seeing here is a rwsem starvation problem.
+> > The only reason a read would get delayed for mor ethan a few hundred
+> > microseconds is ifthere are a continual stream of write holders
+> > starving pending reads.
+> >
 > 
-> Yes, this is technically usage with undefined behavior, but that still
-> misses the forest from the trees.
+> Yes. That seems to be the case.
 
-No, I'm not missing the forest for the trees.
+And both your fio testing and the testing I've done locally seems to
+indicate that this is the case - a constant stream of writers will
+block readers for very long periods of time.
 
-> I'm not claiming this is good or
-> supported practice just as I'm not not claiming sync_file_range() should
-> be used for anything in practice. I'm just pointing out it's one of
-> several possible, obvious data exposure vectors. I suspect there are
-> others; these were just the easy variants to reproduce.
-
-I'm aware that we have these problems - we've known about them for
-20+ years and the many ways they can be exposed. Indeed, We've been
-talking about using unwritten extents for delalloc for as long as I
-can remember, but never done it because the actual occurrence of
-these problems in production systems is /extremely/ rare and the
-cost of using unwritten extents everywhere will affect /everyone/.
-
-i.e. It's always been easy to create test conditions to expose stale
-data, but reported cases of stale data exposure after a production
-system crash are pretty much non-existent. This just isn't a common
-problem that users are experiencing, but solving it with "unwritten
-extents for everyone" comes at a substantial cost for /everyone/,
-/all the time/.
-
-That's why a) it hasn't been done yet; and b) any discussion about
-"use unwritten extents everywhere" always ends up in trying to find
-a solution that isn't just applying the "big hammer" and ignoring
-the problems that causes.
-
-> If you prefer to
-> reason about reproducer patterns that don't use operations with quirks
-> or undefined behaviors, that's fine, just use the reflink or hole punch
-> example posted above that produce the same behavior.
-
-Well, yes. But it does go both ways - if you don't want people to
-say "that's undefined" or "that makes no sense", then don't use
-those quirky examples if you can use better, unambiguous examples.
-
-For example, that's exactly how I phrased this extension flushing
-mechanism trigger:
-
-> > Eseentially, what this says to me is we need to track when we
-> > extended the file via a write beyond EOF via an inode flag. Then if we need to
-> > flush a data range from the file for integrity reasons (such as a
-> > fpnuch) and this flag is set, we ignore the "start" parameter of the
-
-See? Entirely generic trigger description, uses hole punch as an
-example, but also covers all the quirky cases such as direct IO
-range flushing without having to mention them explicitly.
-
-> > range and flush from the start of the file instead. i.e. we
-> > guarantee that any dirty zeroed pages between the start of the file
-> > and the end of the range we are operating on gets written back. This
-> > will capture all these "didn't flush regions zeroed on file
-> > extension" problems in one go, without needing to change the way we
-> > do allocation or EOF zeroing.
-> > 
+> > I don't recall it being this bad historically but rwsems have been
+> > severely performance optimised for various corner cases over the
+> > past few years and it is extremely likely that behaviour has
+> > changed.  Definitely needs looking at, but rwsems are so fragile
+> > these days (highly dependent on memory ordering that nobody seems to
+> > be able to get right) and impossible to validate as correct that we
+> > might just end up having to live with it.
+> >
+> > FWIW, What kernel did you test this on?
 > 
-> I don't think that would prevent the problem outside of the common write
-> extension case.
+> The results above are from kernel 4.20.7-1.el7.elrepo.x86_64.
+> Your assumption about change of behavior of rwsem over the
+> years seems to be correct.
+> The original report we got from customer was with kernel 4.9.134
+> In the original report, long latencies were on writes rather than on reads.
+> The following output of filebench randomrw workload summarizes the results:
 
-I feel like we're going around in circles now, Brian. :/
+To summarise: "behaviour used to be constant stream of readers block
+writers".
 
-I didn't propose this as the "only solution we need". I've proposed
-it in the context that we use "only use unwritten extents for
-allocations within EOF" to solve the common "write within EOF" case.
-This, however, doesn't solve this common write extension case where
-we don't want to use unwritten extents because of the performance
-cost.
+Yay us!
 
-And now you're saying that "well, this extending write thing
-doesn't solve the inside EOF problem"......
+> rand-write1          1128ops       19ops/s   0.1mb/s    340.3ms/op
+> [0.03ms - 7933.27ms]
+> rand-read1           2954684ops    49238ops/s 384.7mb/s      0.2ms/op
+> [0.02ms - 5873.27ms]
+> 61.026: IO Summary: 2955812 ops 49257.253 ops/s 49238/19 rd/wr
+> 384.8mb/s   0.3ms/op
+> 
+> With more recent kernel (4.20), the latencies have shifted to the read ops:
+> 
+> rand-write1          467706ops     7794ops/s  60.9mb/s    0.733ms/op
+> [0.004ms - 3899.167ms]
+> rand-read1           1970ops       33ops/s   0.3mb/s  164.277ms/op
+> [0.017ms - 3905.929ms]
+> 61.032: IO Summary: 469676 ops 7826.760 ops/s 33/7794 rd/wr  61.1mb/s 1.419ms/op
+> 
+> In a workload of 100% reads or 100% writes, there are no extreme
+> latencies or neither
+> old nor new kernel.
 
-> It may be possible to selectively (i.e. as an optimization) use an
-> XFS_ITRUNCATED like algorithm as you propose here to always force in
-> order writeback in the cases where writeback extends the on-disk isize
-> (and thus isize protects from stale exposure), but I think we'd still
-> need something tied to extent allocation one way or another in addition
-> (like Darrick's original unwritten extent patch or your proposed
-> intent/done idea in the previous reply) to address the fundamental
-> problem. The question is what is the ideal solution..
+Yup, because there's no reader/writer contention on the lock. The
+change of behaviour here is due to the rwsem implementation lacking
+proper barrier semantics, and so the imlpementation changes
+behaviour according to what microbenchmark goes faster this week.
 
-The solution will be a combination of things that work together, not
-one big hammer. The more we can avoid exposure vectors by
-operational ordering rather than transactional state changes, the
-better the solution will perform.
+We never had these problems with Irix rwsems, because:
+
+commit a7724543560e9b6434710abcd5528234f108e204
+Author: Doug Doucette <doucette@engr.sgi.com>
+Date:   Sat Jun 14 01:44:30 1997 +0000
+
+    Make the iolock be a BARRIER mrlock instead of the default.
+    This makes it force new readers to wait if there's a writer
+    waiting, insuring some fairness.
+
+Almost all XFS rwsems were configured as MRLOCK_BARRIER rwsems,
+which had mostly fair queuing behaviour.
+
+	- if held by read, other readers can grab until pending
+	  writer.
+	- if held by read and pending writer, reads queue behind
+	  writer.
+	- if held by read, no pending reads and pending writer, writers get batched
+	  with pending writer
+	- if held by writer and no pending reader, new writer is
+	  queued to run after writer and before any new pending
+	  readers.
+	- if held by writer and pending reader, new writers get queued
+	  behind reads
+	- if held by writer and pending reader, readers get batched
+	  with pending reader
+
+basically, these barrier semantics prevented new readers from
+starving waiting writers, and prevented new writers from starving
+pending readers.
+
+/me wonders if he should just implement this as a new type of lock
+so that we don't end up having read/write balance change whenever
+somebody modifies rwsem behaviour to make some microbenchmark go
+faster....
+
+
+
+> > I'd be interested in seeing if a fio workload using 16 randrw
+> > threads demonstrate the same latency profile (i.e. threads aren't
+> > exclusively read- or write- only), or is profile coming about
+> > specifically because you have dedicated write-only threads that will
+> > continually bash on the IO locks and hence starve readers?
+> 
+> I guess it depends on the rw mix. With 50% r/w mix run on kernel
+> 4.20.7-1.el7, long latencies are mostly on the write ops.
+
+Worst case latencies are roughly equal at ~500ms, distribution is
+almost identical - ~50% of writes are not blocking at all, the rest
+are waiting behind reads and so showing >=50th percentile latencies
+largely similar to the read side.
+
+fio displays this behaviour because it bounds the run length of the
+pending write or read IO stream as each thread selects read or write
+randomly. Hence each thread will soon issue an IO that will get
+blocked and so the exclusion stream is essentially bound in depth by
+the random number generator. 
+
+> > > My question is, is the purpose of this lock syncing
+> > > dio/buffered io?
+> >
+> > That's one part of it. The other is POSIX atomic write semantics.
+> >
+> > https://pubs.opengroup.org/onlinepubs/009695399/functions/read.html
+> >
+> > "I/O is intended to be atomic to ordinary files and pipes and FIFOs.
+> > Atomic means that all the bytes from a single operation that started
+> > out together end up together, without interleaving from other I/O
+> > operations."
+> 
+> I see... Are you aware of any applications that depend on this POSIX
+> atomic write behavior? It would seem very unlikely that such applications
+> exist, if only xfs provides this guaranty on Linux...
+
+Databases like this behaviour very much....
+
+> IMO, it would be best if applications that desire atomic writes semantics
+> would opt for it using a preadv2 flag. Or, for backward compat, we can allow
+> applications to opt out of atomic write semantics. [CC fsdevel]
+
+You seem to have already decided that it is going to be optional
+behaviour in XFS. perhaps you should wait for people to decide
+whether we want to do that or not....
+
+> All right. I am reading the above as no prior objection to adding
+> an XFS mount option and/or preadv2() flag to opt out of this
+> behavior and align with the reckless behavior of the other local
+> filesystems on Linux.
+> Please correct me if I am wrong and I would like to hear what
+> other people thing w.r.t mount option vs. preadv2() flag.
+> It could also be an open flag, but I prefer not to go down that road...
+
+"No prior objection" doesn't mean "yes, we are going to do this".
+
+Indeed, if you are doing high performance, concurrent mixed
+read/write IO to the same file, then we've already got a solution
+for this problem. i.e. using AIO+DIO on XFS will allow
+both reads and writes to be issued concurrently and not block the
+main thread of execution. That solves all the problems in one go...
 
 Cheers,
 
