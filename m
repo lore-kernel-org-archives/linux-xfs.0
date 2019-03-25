@@ -1,107 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36554 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728912AbfCYRYt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Mar 2019 13:24:49 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 18364356DE
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2019 17:24:49 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C5FF3909E6
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2019 17:24:48 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] xfs: serialize unaligned dio writes against all other dio writes
-Date: Mon, 25 Mar 2019 13:24:48 -0400
-Message-Id: <20190325172448.55284-1-bfoster@redhat.com>
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:43599 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729473AbfCYTTD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Mar 2019 15:19:03 -0400
+MIME-Version: 1.0
+References: <CAOQ4uxi0pGczXBX7GRAFs88Uw0n1ERJZno3JSeZR71S1dXg+2w@mail.gmail.com>
+ <20190325001044.GA23020@dastard> <CAOQ4uxhu=Qtme9RJ7uZXYXt0UE+=xD+OC4gQ9EYkDC1ap8Hizg@mail.gmail.com>
+ <20190325154731.GT1183@magnolia> <20190325164129.GH10344@bombadil.infradead.org>
+ <CAOQ4uximHOCM8Fo_WctXAjpft31OS+VBcjUqteuK6kjn+nVoKA@mail.gmail.com> <20190325182239.GI10344@bombadil.infradead.org>
+In-Reply-To: <20190325182239.GI10344@bombadil.infradead.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 25 Mar 2019 21:18:51 +0200
+Message-ID: <CAOQ4uxicH-f4TBx_anwWfTb=z6xDvV=dW3HFwG8+eKkqwKMuPw@mail.gmail.com>
+Subject: Re: [QUESTION] Long read latencies on mixed rw buffered IO
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-XFS applies more strict serialization constraints to unaligned
-direct writes to accommodate things like direct I/O layer zeroing,
-unwritten extent conversion, etc. Unaligned submissions acquire the
-exclusive iolock and wait for in-flight dio to complete to ensure
-multiple submissions do not race on the same block and cause data
-corruption.
+On Mon, Mar 25, 2019 at 8:22 PM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> On Mon, Mar 25, 2019 at 07:30:39PM +0200, Amir Goldstein wrote:
+> > On Mon, Mar 25, 2019 at 6:41 PM Matthew Wilcox <willy@infradead.org> wrote:
+> > >
+> > > On Mon, Mar 25, 2019 at 08:47:31AM -0700, Darrick J. Wong wrote:
+> > > > Hmmm.... so it looks like the rw_semaphore behavior has shifted over
+> > > > time, then?
+> > >
+> > > Yes.
+> > >
+> > > > I thought rwsem was supposed to queue read and write waiters in order,
+> > > > at least on x86?  Though I suppose that might not matter much since we
+> > > > can only run one writer at a time vs. waking up all the readers at once.
+> > > > Now I'm wondering if there ever was a time when the readers all got
+> > > > batched to the front and starved the writers, but eh I haven't drank
+> > > > enough coffee to remember things like that. :P
+> > > >
+> > > > (I wonder what would happen if rw_semaphore decided to wake up some
+> > > > number of the readers in the rwsem wait_list, not just the ones at the
+> > > > front...)
+> > >
+> > > rwsems currently allow a limited amount of queue-jumping; if a semaphore
+> > > is currently not acquired (it's in transition between two owners), a
+> > > running process can acquire it.
+> > >
+> > > I think it is a bug that we only wake readers at the front of the queue;
+> > > I think we would get better performance if we wake all readers.  ie here:
+> > >
+> > >         /*
+> > > -        * Grant an infinite number of read locks to the readers at the front
+> > > -        * of the queue. We know that woken will be at least 1 as we accounted
+> > > +        * Grant an infinite number of read locks.  We know that woken will
+> > > +        * be at least 1 as we accounted
+> > >          * for above. Note we increment the 'active part' of the count by the
+> > >          * number of readers before waking any processes up.
+> > >          */
+> > >         list_for_each_entry_safe(waiter, tmp, &sem->wait_list, list) {
+> > >                 struct task_struct *tsk;
+> > >
+> > > -               if (waiter->type == RWSEM_WAITING_FOR_WRITE)
+> > > -                       break;
+> > >
+> > > Amir, it seems like you have a good test-case for trying this out ...
+> >
+> > Sure, but please explain. Why are you waking up the writers?
+>
+> Oh ... duh.  I didn't mean to wake up the writers.  I meant ...
+>
+>                if (waiter->type == RWSEM_WAITING_FOR_WRITE)
+> -                       break;
+> +                       continue;
+>
 
-This generally works in the case of an aligned dio followed by an
-unaligned dio, but the serialization is lost if I/Os occur in the
-opposite order. If an unaligned write is submitted first and
-immediately followed by an overlapping, aligned write, the latter
-submits without the typical unaligned serialization barriers because
-there is no indication of an unaligned dio still in-flight. This can
-lead to unpredictable results.
+So I have no access to the test machine of former tests right now,
+but when running the same filebench randomrw workload
+(8 writers, 8 readers) on VM with 2 CPUs and SSD drive, results
+are not looking good for this patch:
 
-To provide proper unaligned dio serialization, require that such
-direct writes are always the only dio allowed in-flight at one time
-for a particular inode. We already acquire the exclusive iolock and
-drain pending dio before submitting the unaligned dio. Wait once
-more after the dio submission to hold the iolock across the I/O and
-prevent further submissions until the unaligned I/O completes. This
-is heavy handed, but consistent with the current pre-submission
-serialization for unaligned direct writes.
+--- v5.1-rc1 / xfs ---
+rand-write1          852404ops    14202ops/s 110.9mb/s      0.6ms/op
+[0.01ms - 553.45ms]
+rand-read1           26117ops      435ops/s   3.4mb/s     18.4ms/op
+[0.04ms - 632.29ms]
+61.088: IO Summary: 878521 ops 14636.774 ops/s 435/14202 rd/wr
+114.3mb/s   1.1ms/op
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
----
+--- v5.1-rc1 / xfs + patch above ---
+rand-write1          1117998ops    18621ops/s 145.5mb/s      0.4ms/op
+[0.01ms - 788.19ms]
+rand-read1           7089ops      118ops/s   0.9mb/s     67.4ms/op
+[0.03ms - 792.67ms]
+61.091: IO Summary: 1125087 ops 18738.961 ops/s 118/18621 rd/wr
+146.4mb/s   0.8ms/op
 
-v2:
-- Use dio return value instead of I/O type in wait logic.
-- Drop spurious else logic and fix up comments.
-v1: https://marc.info/?l=linux-xfs&m=155327356800415&w=2
+--- v5.1-rc1 / xfs + remove XFS_IOLOCK_SHARED from
+xfs_file_buffered_aio_read ---
+rand-write1          1025826ops    17091ops/s 133.5mb/s      0.5ms/op
+[0.01ms - 909.20ms]
+rand-read1           115162ops     1919ops/s  15.0mb/s      4.2ms/op
+[0.00ms - 157.46ms]
+61.084: IO Summary: 1140988 ops 19009.369 ops/s 1919/17091 rd/wr
+148.5mb/s   0.8ms/op
 
- fs/xfs/xfs_file.c | 27 +++++++++++++++++----------
- 1 file changed, 17 insertions(+), 10 deletions(-)
+--- v5.1-rc1 / ext4 ---
+rand-write1          867926ops    14459ops/s 113.0mb/s      0.6ms/op
+[0.01ms - 886.89ms]
+rand-read1           121893ops     2031ops/s  15.9mb/s      3.9ms/op
+[0.00ms - 149.24ms]
+61.102: IO Summary: 989819 ops 16489.132 ops/s 2031/14459 rd/wr
+128.8mb/s   1.0ms/op
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 770cc2edf777..933d9c467f56 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -529,18 +529,17 @@ xfs_file_dio_aio_write(
- 	count = iov_iter_count(from);
- 
- 	/*
--	 * If we are doing unaligned IO, wait for all other IO to drain,
--	 * otherwise demote the lock if we had to take the exclusive lock
--	 * for other reasons in xfs_file_aio_write_checks.
-+	 * If we are doing unaligned IO, we can't allow any other overlapping IO
-+	 * in-flight at the same time or we risk data corruption. Wait for all
-+	 * other IO to drain before we submit. If the IO is aligned, demote the
-+	 * iolock if we had to take the exclusive lock in
-+	 * xfs_file_aio_write_checks() for other reasons.
- 	 */
- 	if (unaligned_io) {
--		/* If we are going to wait for other DIO to finish, bail */
--		if (iocb->ki_flags & IOCB_NOWAIT) {
--			if (atomic_read(&inode->i_dio_count))
--				return -EAGAIN;
--		} else {
--			inode_dio_wait(inode);
--		}
-+		/* unaligned dio always waits, bail */
-+		if (iocb->ki_flags & IOCB_NOWAIT)
-+			return -EAGAIN;
-+		inode_dio_wait(inode);
- 	} else if (iolock == XFS_IOLOCK_EXCL) {
- 		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
- 		iolock = XFS_IOLOCK_SHARED;
-@@ -548,6 +547,14 @@ xfs_file_dio_aio_write(
- 
- 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
- 	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
-+
-+	/*
-+	 * If unaligned, this is the only IO in-flight. If it has not yet
-+	 * completed, wait on it before we release the iolock to prevent
-+	 * subsequent overlapping IO.
-+	 */
-+	if (ret == -EIOCBQUEUED && unaligned_io)
-+		inode_dio_wait(inode);
- out:
- 	xfs_iunlock(ip, iolock);
- 
--- 
-2.17.2
+So rw_semaphore fix is not in the ballpark, not even looking in the
+right direction...
+
+Any other ideas to try?
+
+Thanks,
+Amir.
