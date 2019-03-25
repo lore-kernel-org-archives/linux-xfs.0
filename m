@@ -1,38 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:45832 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729823AbfCYIqo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Mar 2019 04:46:44 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 5729B29281
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Mar 2019 08:46:44 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 202127] cannot mount or create xfs on a  597T device
-Date: Mon, 25 Mar 2019 08:46:42 +0000
-Message-ID: <bug-202127-201763-CcV8o6d7iR@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-202127-201763@https.bugzilla.kernel.org/>
-References: <bug-202127-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from aserp2130.oracle.com ([141.146.126.79]:56878 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726061AbfCYXsr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Mar 2019 19:48:47 -0400
+Date: Mon, 25 Mar 2019 16:48:39 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 11/12] check: wipe scratch devices between tests
+Message-ID: <20190325234839.GA15524@magnolia>
+References: <155304267647.31707.14180452399822113095.stgit@magnolia>
+ <155304275552.31707.6473598082840688691.stgit@magnolia>
+ <CAOQ4uxhu52G1hw6h-uc50-n5Bq0OT+4pLZjdnfPxK784F=nG0Q@mail.gmail.com>
+ <20190321041544.GD1186@magnolia>
+ <20190323132948.GW2824@desktop>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190323132948.GW2824@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202127
+On Sat, Mar 23, 2019 at 09:29:48PM +0800, Eryu Guan wrote:
+> On Wed, Mar 20, 2019 at 09:15:44PM -0700, Darrick J. Wong wrote:
+> > On Wed, Mar 20, 2019 at 09:06:08AM +0200, Amir Goldstein wrote:
+> > > On Wed, Mar 20, 2019 at 2:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > > >
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > >
+> > > > Wipe the scratch devices in between each test to ensure that tests are
+> > > > formatting them and not making assumptions about previous contents.
+> > > >
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > >  check      |    1 +
+> > > >  common/rc  |    6 ++++++
+> > > >  common/xfs |    1 +
+> > > >  3 files changed, 8 insertions(+)
+> > > >
+> > > >
+> > > > diff --git a/check b/check
+> > > > index a2c5ba21..bcf08dfe 100755
+> > > > --- a/check
+> > > > +++ b/check
+> > > > @@ -737,6 +737,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
+> > > >                         # _check_dmesg depends on this log in dmesg
+> > > >                         touch ${RESULT_DIR}/check_dmesg
+> > > >                 fi
+> > > > +               _try_wipe_scratch_devs > /dev/null 2>&1
+> > > >                 if [ "$DUMP_OUTPUT" = true ]; then
+> > > >                         ./$seq 2>&1 | tee $tmp.out
+> > > >                         # Because $? would get tee's return code
+> > > > diff --git a/common/rc b/common/rc
+> > > > index 1c42515f..40eef80f 100644
+> > > > --- a/common/rc
+> > > > +++ b/common/rc
+> > > > @@ -3942,6 +3942,12 @@ _require_fibmap()
+> > > >         rm -f $file
+> > > >  }
+> > > >
+> > > > +_try_wipe_scratch_devs()
+> > > > +{
+> > > > +       _scratch_unmount
+> > > 
+> > > So I find this change strange, not because it doesn't make sense
+> > > to start every test with scratch unmounted, but because today scratch *is*
+> > > mounted on test start and there is quite a bit of code to make it mounted
+> > > on test start, which seems backwards.
+> > 
+> > Huh?  On XFS the test device is always mounted, but the scratch device
+> > is never mounted before the test starts.
+> 
+> Yes, as _require_test always mounts TEST_DEV and
+> _require_scratch_nocheck always umounts SCRATCH_DEV.
 
-Pingmin Fenlly Liu (Pingmin@Fenlly.org) changed:
+Heh, both of you were right and I was wrong, we format and mount the
+scratch device before we start the loop.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |Pingmin@Fenlly.org
+> > 
+> > Hmmm, maybe this is one of those weird things that different with
+> > nonblock filesystems...?
+> > 
+> > > IOW, instead of unmounting scratch just before the test runs, seems
+> > > better to make sure it is unmounted at the end of each test and before
+> > > starting the loop.
+> > > 
+> > > Note that for a test with _require_scratch_nocheck, _check_filesystems()
+> > > will unmount scratch, but for a test with _require_scratch, _check_scratch_fs()
+> > > will unmount+fsck+mount scratch - inconsistent.
+> > > Or am I reading this wrong?
+> 
+> For tests that don't call _require_scratch{_nocheck}, to make sure
+> SCRATCH_DEV is umounted I think we could just call _scratch_unmount
+> unconditionally in _check_filesystems(), then we could wipefs before
+> test safely.
 
---- Comment #36 from Pingmin Fenlly Liu (Pingmin@Fenlly.org) ---
-By reading this discussion, I just enjoyed the great benefit from you guys!
+I think it does this already:
 
-I'm just a newbie and thanks!
+	if [ -f ${RESULT_DIR}/require_scratch ]; then
+		_check_scratch_fs || err=true
+		rm -f ${RESULT_DIR}/require_scratch*
+	else
+		_scratch_unmount 2> /dev/null
+	fi
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Right?  So I think we're covered for unmounting the scratch device after
+each test, and it's just the first time through the loop where we have
+to unmount the scratch device.
+
+--D
+
+> 
+> > > 
+> > > 
+> > > > +       test -x "$WIPEFS_PROG" && $WIPEFS_PROG -a $SCRATCH_DEV_POOL $SCRATCH_DEV $SCRATCH_LOGDEV $SCRATCH_RTDEV
+> > > 
+> > > Please check that $SCRATCH_DEV is not a network name (nfs|cifs) and that it
+> > > is really a blockdev (overlayfs) before trying to wipefs.
+> 
+> Yes, good catch!
+> 
+> Thanks,
+> Eryu
+> 
+> > 
+> > I wonder if maybe we only bother with wipefs for filesystems where
+> > all tests have been fixed to not stumble over unformatted scratchdev
+> > (i.e. xfs and ext* only)
+> > 
+> > --D
+> > 
+> > > Thanks,
+> > > Amir.
