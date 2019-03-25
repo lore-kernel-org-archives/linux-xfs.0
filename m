@@ -1,83 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55182 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726166AbfCYNv1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Mar 2019 09:51:27 -0400
-Date: Mon, 25 Mar 2019 09:51:25 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: serialize unaligned dio writes against all other
- dio writes
-Message-ID: <20190325135124.GD52167@bfoster>
-References: <20190322165242.40662-1-bfoster@redhat.com>
- <20190325110646.GA7890@infradead.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:37282 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729489AbfCYSWr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Mar 2019 14:22:47 -0400
+Date: Mon, 25 Mar 2019 11:22:39 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [QUESTION] Long read latencies on mixed rw buffered IO
+Message-ID: <20190325182239.GI10344@bombadil.infradead.org>
+References: <CAOQ4uxi0pGczXBX7GRAFs88Uw0n1ERJZno3JSeZR71S1dXg+2w@mail.gmail.com>
+ <20190325001044.GA23020@dastard>
+ <CAOQ4uxhu=Qtme9RJ7uZXYXt0UE+=xD+OC4gQ9EYkDC1ap8Hizg@mail.gmail.com>
+ <20190325154731.GT1183@magnolia>
+ <20190325164129.GH10344@bombadil.infradead.org>
+ <CAOQ4uximHOCM8Fo_WctXAjpft31OS+VBcjUqteuK6kjn+nVoKA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190325110646.GA7890@infradead.org>
+In-Reply-To: <CAOQ4uximHOCM8Fo_WctXAjpft31OS+VBcjUqteuK6kjn+nVoKA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Mon, Mar 25, 2019 at 04:06:46AM -0700, Christoph Hellwig wrote:
-> >  	if (unaligned_io) {
-> > +		/* unaligned dio always waits, bail */
-> > +		if (iocb->ki_flags & IOCB_NOWAIT)
-> > +			return -EAGAIN;
-> > +		else
-> >  			inode_dio_wait(inode);
+On Mon, Mar 25, 2019 at 07:30:39PM +0200, Amir Goldstein wrote:
+> On Mon, Mar 25, 2019 at 6:41 PM Matthew Wilcox <willy@infradead.org> wrote:
+> >
+> > On Mon, Mar 25, 2019 at 08:47:31AM -0700, Darrick J. Wong wrote:
+> > > Hmmm.... so it looks like the rw_semaphore behavior has shifted over
+> > > time, then?
+> >
+> > Yes.
+> >
+> > > I thought rwsem was supposed to queue read and write waiters in order,
+> > > at least on x86?  Though I suppose that might not matter much since we
+> > > can only run one writer at a time vs. waking up all the readers at once.
+> > > Now I'm wondering if there ever was a time when the readers all got
+> > > batched to the front and starved the writers, but eh I haven't drank
+> > > enough coffee to remember things like that. :P
+> > >
+> > > (I wonder what would happen if rw_semaphore decided to wake up some
+> > > number of the readers in the rwsem wait_list, not just the ones at the
+> > > front...)
+> >
+> > rwsems currently allow a limited amount of queue-jumping; if a semaphore
+> > is currently not acquired (it's in transition between two owners), a
+> > running process can acquire it.
+> >
+> > I think it is a bug that we only wake readers at the front of the queue;
+> > I think we would get better performance if we wake all readers.  ie here:
+> >
+> >         /*
+> > -        * Grant an infinite number of read locks to the readers at the front
+> > -        * of the queue. We know that woken will be at least 1 as we accounted
+> > +        * Grant an infinite number of read locks.  We know that woken will
+> > +        * be at least 1 as we accounted
+> >          * for above. Note we increment the 'active part' of the count by the
+> >          * number of readers before waking any processes up.
+> >          */
+> >         list_for_each_entry_safe(waiter, tmp, &sem->wait_list, list) {
+> >                 struct task_struct *tsk;
+> >
+> > -               if (waiter->type == RWSEM_WAITING_FOR_WRITE)
+> > -                       break;
+> >
+> > Amir, it seems like you have a good test-case for trying this out ...
 > 
-> No need for the else here.
-> 
+> Sure, but please explain. Why are you waking up the writers?
 
-Ack.
+Oh ... duh.  I didn't mean to wake up the writers.  I meant ...
 
-> >  	} else if (iolock == XFS_IOLOCK_EXCL) {
-> >  		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
-> >  		iolock = XFS_IOLOCK_SHARED;
-> > @@ -548,6 +549,8 @@ xfs_file_dio_aio_write(
-> >  
-> >  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
-> >  	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
-> > +	if (unaligned_io && !is_sync_kiocb(iocb))
-> > +		inode_dio_wait(inode);
-> 
-> Instead of explicittly waiting here I'd much rather just mark the
-> I/O as sync before submitting it.  The only thing needed for that
-> is to clear iocb->ki_complete.  To avoid too much low-level hacking
-> that is probably best done with a:
-> 
-> static inline void mark_kiocb_sync(struct kiocb *kiocb)
-> {
-> 	kiocb->ki_complete = NULL;
-> }
-> 
-> helper in fs.h.
-
-It's not quite that simple..
-
-FWIW, the discussion (between Dave and I) for how best to solve this
-started offline prior to sending the patch and pretty much started with
-the idea of changing the async I/O to sync as you suggest here. I backed
-off from that because it's too subtle given the semantics between the
-higher level aio code and lower level dio code for async I/O. By that I
-mean either can be responsible for calling the ->ki_complete() callback
-in the iocb on I/O completion.
-
-IOW, if we receive an async direct I/O, clear ->ki_complete() as you
-describe above and submit it, the dio code will wait on I/O and return
-the size of the I/O on successful completion. It will not have called
-->ki_complete(), however. Rather, the >0 return value indicates that
-aio_rw_done() must call ->ki_complete() after xfs_file_write_iter()
-returns, but we would have already cleared the function pointer.
-
-I think it is technically possible to use this technique by clearing and
-restoring ->ki_complete(), but in general we've visited this "change the
-I/O type" approach twice now and we've (collectively) got it wrong both
-times (the first error in thinking was that XFS would need to call
-->ki_complete()). IMO, this demonstrates that it's not worth the
-complexity to insert ourselves into this dependency chain when we can
-accomplish the same thing with a simple dio wait call.
-
-Brian
+               if (waiter->type == RWSEM_WAITING_FOR_WRITE)
+-			break;
++			continue;
