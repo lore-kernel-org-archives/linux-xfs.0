@@ -1,365 +1,218 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58264 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726123AbfCTUGq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Mar 2019 16:06:46 -0400
-Date: Wed, 20 Mar 2019 13:06:37 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 15/36] xfs_scrub: one read/verify pool per disk
-Message-ID: <20190320200637.GL1183@magnolia>
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <155259752166.31886.13004303237464337185.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:38754 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726182AbfCYREH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 25 Mar 2019 13:04:07 -0400
+Date: Mon, 25 Mar 2019 13:04:04 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] generic: test stale data exposure after writeback crash
+Message-ID: <20190325170404.GE52167@bfoster>
+References: <20190318172216.20098-1-bfoster@redhat.com>
+ <20190323082339.GR2824@desktop>
+ <20190325125614.GA52167@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155259752166.31886.13004303237464337185.stgit@magnolia>
+In-Reply-To: <20190325125614.GA52167@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Mar 25, 2019 at 08:56:15AM -0400, Brian Foster wrote:
+> On Sat, Mar 23, 2019 at 04:23:39PM +0800, Eryu Guan wrote:
+> > On Mon, Mar 18, 2019 at 01:22:16PM -0400, Brian Foster wrote:
+> > > XFS has historically had a stale data exposure window if a crash
+> > > occurs after a delalloc->physical extent conversion but before
+> > > writeback completes to the associated extent. While this should be a
+> > > rare occurrence in production environments due to typical writeback
+> > > ordering and such, it is not guaranteed in all cases until data
+> > > extents are initialized as unwritten (or otherwise zeroed) before
+> > > they are written.
+> > > 
+> > > Add a test that performs selective writeback ordering to reproduce
+> > > stale data exposure after a crash. Note that this test currently
+> > > fails on XFS.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > > 
+> > > As noted in the commit log, this test currently fails on XFS. I think
+> > > it's worth considering regardless because we're pretty close to fixing
+> > > this problem in the kernel. Darrick has posted a patch[1] that while
+> > > apparently still needs a bit of work to accommodate performance
+> > > concerns, does allow XFS to pass this test.
+> > > 
+> > > Thoughts, reviews, flames appreciated.
+> > > 
+> > > Brian
+> > > 
+> > > [1] https://marc.info/?l=linux-xfs&m=155259894926863&w=2
+> > > 
+> > >  tests/generic/999     | 70 +++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/generic/999.out | 13 ++++++++
+> > >  tests/generic/group   |  1 +
+> > >  3 files changed, 84 insertions(+)
+> > >  create mode 100755 tests/generic/999
+> > >  create mode 100644 tests/generic/999.out
+> > > 
+> > > diff --git a/tests/generic/999 b/tests/generic/999
+> > > new file mode 100755
+> > > index 00000000..46c85d07
+> > > --- /dev/null
+> > > +++ b/tests/generic/999
+> > > @@ -0,0 +1,70 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test 999
+> > > +#
+> > > +# Test a some write patterns for stale data exposure after a crash.  XFS is
+> > > +# historically susceptible to this problem in the window between delalloc to
+> > > +# physical extent conversion and writeback completion.
+> > > +#
+> > > +seq=`basename $0`
+> > > +seqres=$RESULT_DIR/$seq
+> > > +echo "QA output created by $seq"
+> > > +
+> > > +here=`pwd`
+> > > +tmp=/tmp/$$
+> > > +status=1	# failure is the default!
+> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > > +
+> > > +_cleanup()
+> > > +{
+> > > +	cd /
+> > > +	rm -f $tmp.*
+> > > +}
+> > > +
+> > > +# get standard environment, filters and checks
+> > > +. ./common/rc
+> > > +
+> > > +# remove previous $seqres.full before test
+> > > +rm -f $seqres.full
+> > > +
+> > > +# real QA test starts here
+> > > +
+> > > +# Modify as appropriate.
+> > > +_supported_fs generic
+> > > +_supported_os Linux
+> > > +_require_scratch
+> > > +_require_scratch_shutdown
+> > > +
+> > > +# create a small fs and initialize free blocks with a unique pattern
+> > > +_scratch_mkfs_sized $((1024 * 1024 * 100)) >> $seqres.full 2>&1
+> > > +_scratch_mount
+> > > +$XFS_IO_PROG -f -c "pwrite -S 0xab 0 100m" -c fsync $SCRATCH_MNT/spc \
+> > > +	>> $seqres.full 2>&1
+> > > +rm -f $SCRATCH_MNT/spc
+> > > +$XFS_IO_PROG -c fsync $SCRATCH_MNT
+> > > +
+> > > +# Write a couple files with particular writeback sequences. The first writes a
+> > > +# delalloc extent and triggers writeback on the last page. The second triggers
+> > > +# post-eof preallocation (on XFS), write extends into the preallocation and
+> > > +# triggers writeback of the last written page.
+> > > +$XFS_IO_PROG -fc "pwrite 0 64k" -c "sync_range -w 60k 4k" \
+> > > +	-c "sync_range -a 60k 4k" $SCRATCH_MNT/file.1 >> $seqres.full 2>&1
+> > 
+> > I suspect that on hosts with 64k pagesize, the sync_range call will
+> > write the whole page back and we see no zero after shutdown, but I don't
+> > have the hardware to test..
+> > 
+> 
+> Good point. I'll give that a whirl on a 64k page box and see if I can
+> get away with just adjusting the offsets to reproduce this more
+> generically.
+> 
+> > Also, 0-60k being zero only happens if delalloc is enabled, so testing
+> > on ext4 with "nodelalloc" mount option fails the test. Perhaps we could
+> > skip the test on ext4 if "nodelalloc" is given in mount option.
+> > 
+> 
+> Hmm, so I'm assuming that these blocks not being zero means they expose
+> stale data. Is stale data exposure expected behavior in this ext4 mode?
+> ISTM that this test should be expected to fail in that case. That said,
+> I'll defer to ext4 devs on how to handle this scenario; perhaps this is
+> something that there is no intention to fix and so the failure is
+> ultimately noise. I would prefer not to unilaterally decide on that,
+> however, so I'll probably leave this as is unless an ext4 person chimes
+> in before I get to v2. Somebody can always patch it later if it turns
+> out to be a problem.
+> 
 
-Simplify the read/verify pool code further by creating one pool per
-disk.  This enables us to tailor the concurrency levels of each disk to
-that specific disk so that if we have a mixed hdd/ssd environment we
-don't flood the hdd with a lot of requests.
+A couple quick followups..
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: fix uninitialized variable error pointed out by Eric Sandeen
----
- scrub/phase6.c      |  110 ++++++++++++++++++++++++++++++++++++---------------
- scrub/read_verify.c |   29 ++++++-------
- scrub/read_verify.h |   10 +++--
- 3 files changed, 98 insertions(+), 51 deletions(-)
+Changing the offsets around has the potential to trigger different
+written back ranges of the file (unless we do something like always sync
+64k chunks) which causes the test to fail, as currently written. Rather
+than enforce a particular writeback pattern, I'll update the offsets
+appropriately and verify the result by checking for stale bytes in the
+file rather than dumping the raw file as part of the magic output.
 
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index fe121769..5e2b9ee3 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -33,18 +33,29 @@
-  * and report the paths of the now corrupt files.
-  */
- 
-+/* Verify disk blocks with GETFSMAP */
-+
-+struct xfs_verify_extent {
-+	struct read_verify_pool	*rvp_data;
-+	struct read_verify_pool	*rvp_log;
-+	struct read_verify_pool	*rvp_realtime;
-+	struct bitmap		*d_bad;		/* bytes */
-+	struct bitmap		*r_bad;		/* bytes */
-+};
-+
- /* Find the fd for a given device identifier. */
--static struct disk *
--xfs_dev_to_disk(
--	struct scrub_ctx	*ctx,
--	dev_t			dev)
-+static struct read_verify_pool *
-+xfs_dev_to_pool(
-+	struct scrub_ctx		*ctx,
-+	struct xfs_verify_extent	*ve,
-+	dev_t				dev)
- {
- 	if (dev == ctx->fsinfo.fs_datadev)
--		return ctx->datadev;
-+		return ve->rvp_data;
- 	else if (dev == ctx->fsinfo.fs_logdev)
--		return ctx->logdev;
-+		return ve->rvp_log;
- 	else if (dev == ctx->fsinfo.fs_rtdev)
--		return ctx->rtdev;
-+		return ve->rvp_realtime;
- 	abort();
- }
- 
-@@ -285,14 +296,6 @@ xfs_report_verify_errors(
- 	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, &vei);
- }
- 
--/* Verify disk blocks with GETFSMAP */
--
--struct xfs_verify_extent {
--	struct read_verify_pool	*readverify;
--	struct bitmap		*d_bad;		/* bytes */
--	struct bitmap		*r_bad;		/* bytes */
--};
--
- /* Report an IO error resulting from read-verify based off getfsmap. */
- static bool
- xfs_check_rmap_error_report(
-@@ -393,7 +396,9 @@ xfs_check_rmap(
- 	void				*arg)
- {
- 	struct xfs_verify_extent	*ve = arg;
--	struct disk			*disk;
-+	struct read_verify_pool		*rvp;
-+
-+	rvp = xfs_dev_to_pool(ctx, ve, map->fmr_device);
- 
- 	dbg_printf("rmap dev %d:%d phys %"PRIu64" owner %"PRId64
- 			" offset %"PRIu64" len %"PRIu64" flags 0x%x\n",
-@@ -420,19 +425,32 @@ xfs_check_rmap(
- 	/* XXX: Filter out directory data blocks. */
- 
- 	/* Schedule the read verify command for (eventual) running. */
--	disk = xfs_dev_to_disk(ctx, map->fmr_device);
--
--	read_verify_schedule_io(ve->readverify, disk, map->fmr_physical,
--			map->fmr_length, ve);
-+	read_verify_schedule_io(rvp, map->fmr_physical, map->fmr_length, ve);
- 
- out:
- 	/* Is this the last extent?  Fire off the read. */
- 	if (map->fmr_flags & FMR_OF_LAST)
--		read_verify_force_io(ve->readverify);
-+		read_verify_force_io(rvp);
- 
- 	return true;
- }
- 
-+/* Wait for read/verify actions to finish, then return # bytes checked. */
-+static uint64_t
-+clean_pool(
-+	struct read_verify_pool	*rvp)
-+{
-+	uint64_t		ret;
-+
-+	if (!rvp)
-+		return 0;
-+
-+	read_verify_pool_flush(rvp);
-+	ret = read_verify_bytes(rvp);
-+	read_verify_pool_destroy(rvp);
-+	return ret;
-+}
-+
- /*
-  * Read verify all the file data blocks in a filesystem.  Since XFS doesn't
-  * do data checksums, we trust that the underlying storage will pass back
-@@ -445,7 +463,7 @@ bool
- xfs_scan_blocks(
- 	struct scrub_ctx		*ctx)
- {
--	struct xfs_verify_extent	ve;
-+	struct xfs_verify_extent	ve = { NULL };
- 	bool				moveon;
- 
- 	moveon = bitmap_init(&ve.d_bad);
-@@ -460,21 +478,43 @@ xfs_scan_blocks(
- 		goto out_dbad;
- 	}
- 
--	ve.readverify = read_verify_pool_init(ctx, ctx->geo.blocksize,
--			xfs_check_rmap_ioerr, disk_heads(ctx->datadev),
-+	ve.rvp_data = read_verify_pool_init(ctx, ctx->datadev,
-+			ctx->geo.blocksize, xfs_check_rmap_ioerr,
- 			scrub_nproc(ctx));
--	if (!ve.readverify) {
-+	if (!ve.rvp_data) {
- 		moveon = false;
- 		str_info(ctx, ctx->mntpoint,
--_("Could not create media verifier."));
-+_("Could not create data device media verifier."));
- 		goto out_rbad;
- 	}
-+	if (ctx->logdev) {
-+		ve.rvp_log = read_verify_pool_init(ctx, ctx->logdev,
-+				ctx->geo.blocksize, xfs_check_rmap_ioerr,
-+				scrub_nproc(ctx));
-+		if (!ve.rvp_log) {
-+			moveon = false;
-+			str_info(ctx, ctx->mntpoint,
-+	_("Could not create log device media verifier."));
-+			goto out_datapool;
-+		}
-+	}
-+	if (ctx->rtdev) {
-+		ve.rvp_realtime = read_verify_pool_init(ctx, ctx->rtdev,
-+				ctx->geo.blocksize, xfs_check_rmap_ioerr,
-+				scrub_nproc(ctx));
-+		if (!ve.rvp_realtime) {
-+			moveon = false;
-+			str_info(ctx, ctx->mntpoint,
-+	_("Could not create realtime device media verifier."));
-+			goto out_logpool;
-+		}
-+	}
- 	moveon = xfs_scan_all_spacemaps(ctx, xfs_check_rmap, &ve);
- 	if (!moveon)
--		goto out_pool;
--	read_verify_pool_flush(ve.readverify);
--	ctx->bytes_checked += read_verify_bytes(ve.readverify);
--	read_verify_pool_destroy(ve.readverify);
-+		goto out_rtpool;
-+	ctx->bytes_checked += clean_pool(ve.rvp_data);
-+	ctx->bytes_checked += clean_pool(ve.rvp_log);
-+	ctx->bytes_checked += clean_pool(ve.rvp_realtime);
- 
- 	/* Scan the whole dir tree to see what matches the bad extents. */
- 	if (!bitmap_empty(ve.d_bad) || !bitmap_empty(ve.r_bad))
-@@ -484,8 +524,14 @@ _("Could not create media verifier."));
- 	bitmap_free(&ve.d_bad);
- 	return moveon;
- 
--out_pool:
--	read_verify_pool_destroy(ve.readverify);
-+out_rtpool:
-+	if (ve.rvp_realtime)
-+		read_verify_pool_destroy(ve.rvp_realtime);
-+out_logpool:
-+	if (ve.rvp_log)
-+		read_verify_pool_destroy(ve.rvp_log);
-+out_datapool:
-+	read_verify_pool_destroy(ve.rvp_data);
- out_rbad:
- 	bitmap_free(&ve.r_bad);
- out_dbad:
-diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index b5774736..4a9b91f2 100644
---- a/scrub/read_verify.c
-+++ b/scrub/read_verify.c
-@@ -50,6 +50,7 @@ struct read_verify_pool {
- 	void			*readbuf;	/* read buffer */
- 	struct ptcounter	*verified_bytes;
- 	struct ptvar		*rvstate;	/* combines read requests */
-+	struct disk		*disk;		/* which disk? */
- 	read_verify_ioerr_fn_t	ioerr_fn;	/* io error callback */
- 	size_t			miniosz;	/* minimum io size, bytes */
- };
-@@ -57,19 +58,18 @@ struct read_verify_pool {
- /*
-  * Create a thread pool to run read verifiers.
-  *
-+ * @disk is the disk we want to verify.
-  * @miniosz is the minimum size of an IO to expect (in bytes).
-  * @ioerr_fn will be called when IO errors occur.
-- * @nproc is the maximum number of verify requests that may be sent to a disk
-- * at any given time.
-  * @submitter_threads is the number of threads that may be sending verify
-  * requests at any given time.
-  */
- struct read_verify_pool *
- read_verify_pool_init(
- 	struct scrub_ctx		*ctx,
-+	struct disk			*disk,
- 	size_t				miniosz,
- 	read_verify_ioerr_fn_t		ioerr_fn,
--	unsigned int			nproc,
- 	unsigned int			submitter_threads)
- {
- 	struct read_verify_pool		*rvp;
-@@ -89,6 +89,7 @@ read_verify_pool_init(
- 		goto out_buf;
- 	rvp->miniosz = miniosz;
- 	rvp->ctx = ctx;
-+	rvp->disk = disk;
- 	rvp->ioerr_fn = ioerr_fn;
- 	rvp->rvstate = ptvar_init(submitter_threads,
- 			sizeof(struct read_verify));
-@@ -97,7 +98,8 @@ read_verify_pool_init(
- 	/* Run in the main thread if we only want one thread. */
- 	if (nproc == 1)
- 		nproc = 0;
--	ret = workqueue_create(&rvp->wq, (struct xfs_mount *)rvp, nproc);
-+	ret = workqueue_create(&rvp->wq, (struct xfs_mount *)rvp,
-+			disk_heads(disk));
- 	if (ret)
- 		goto out_rvstate;
- 	return rvp;
-@@ -150,17 +152,16 @@ read_verify(
- 	rvp = (struct read_verify_pool *)wq->wq_ctx;
- 	while (rv->io_length > 0) {
- 		len = min(rv->io_length, RVP_IO_MAX_SIZE);
--		dbg_printf("diskverify %d %"PRIu64" %zu\n", rv->io_disk->d_fd,
--				rv->io_start, len);
--		sz = disk_read_verify(rv->io_disk, rvp->readbuf,
-+		dbg_printf("diskverify %d %"PRIu64" %zu\n", rvp->disk->d_fd,
- 				rv->io_start, len);
-+		sz = disk_read_verify(rvp->disk, rvp->readbuf, rv->io_start,
-+				len);
- 		if (sz < 0) {
- 			dbg_printf("IOERR %d %"PRIu64" %zu\n",
--					rv->io_disk->d_fd,
--					rv->io_start, len);
-+					rvp->disk->d_fd, rv->io_start, len);
- 			/* IO error, so try the next logical block. */
- 			len = rvp->miniosz;
--			rvp->ioerr_fn(rvp->ctx, rv->io_disk, rv->io_start, len,
-+			rvp->ioerr_fn(rvp->ctx, rvp->disk, rv->io_start, len,
- 					errno, rv->io_end_arg);
- 		}
- 
-@@ -184,11 +185,11 @@ read_verify_queue(
- 	bool				ret;
- 
- 	dbg_printf("verify fd %d start %"PRIu64" len %"PRIu64"\n",
--			rv->io_disk->d_fd, rv->io_start, rv->io_length);
-+			rvp->disk->d_fd, rv->io_start, rv->io_length);
- 
- 	tmp = malloc(sizeof(struct read_verify));
- 	if (!tmp) {
--		rvp->ioerr_fn(rvp->ctx, rv->io_disk, rv->io_start,
-+		rvp->ioerr_fn(rvp->ctx, rvp->disk, rv->io_start,
- 				rv->io_length, errno, rv->io_end_arg);
- 		return true;
- 	}
-@@ -212,7 +213,6 @@ _("Could not queue read-verify work."));
- bool
- read_verify_schedule_io(
- 	struct read_verify_pool		*rvp,
--	struct disk			*disk,
- 	uint64_t			start,
- 	uint64_t			length,
- 	void				*end_arg)
-@@ -231,7 +231,7 @@ read_verify_schedule_io(
- 	 * reporting is the same, and the two extents are close,
- 	 * we can combine them.
- 	 */
--	if (rv->io_length > 0 && disk == rv->io_disk &&
-+	if (rv->io_length > 0 &&
- 	    end_arg == rv->io_end_arg &&
- 	    ((start >= rv->io_start && start <= rv_end + RVP_IO_BATCH_LOCALITY) ||
- 	     (rv->io_start >= start &&
-@@ -244,7 +244,6 @@ read_verify_schedule_io(
- 			return read_verify_queue(rvp, rv);
- 
- 		/* Stash the new IO. */
--		rv->io_disk = disk;
- 		rv->io_start = start;
- 		rv->io_length = length;
- 		rv->io_end_arg = end_arg;
-diff --git a/scrub/read_verify.h b/scrub/read_verify.h
-index 1e7fd83f..5fabe5e0 100644
---- a/scrub/read_verify.h
-+++ b/scrub/read_verify.h
-@@ -8,6 +8,7 @@
- 
- struct scrub_ctx;
- struct read_verify_pool;
-+struct disk;
- 
- /* Function called when an IO error happens. */
- typedef void (*read_verify_ioerr_fn_t)(struct scrub_ctx *ctx,
-@@ -15,13 +16,14 @@ typedef void (*read_verify_ioerr_fn_t)(struct scrub_ctx *ctx,
- 		int error, void *arg);
- 
- struct read_verify_pool *read_verify_pool_init(struct scrub_ctx *ctx,
--		size_t miniosz, read_verify_ioerr_fn_t ioerr_fn,
--		unsigned int nproc, unsigned int submitter_threads);
-+		struct disk *disk, size_t miniosz,
-+		read_verify_ioerr_fn_t ioerr_fn,
-+		unsigned int submitter_threads);
- void read_verify_pool_flush(struct read_verify_pool *rvp);
- void read_verify_pool_destroy(struct read_verify_pool *rvp);
- 
--bool read_verify_schedule_io(struct read_verify_pool *rvp, struct disk *disk,
--		uint64_t start, uint64_t length, void *end_arg);
-+bool read_verify_schedule_io(struct read_verify_pool *rvp, uint64_t start,
-+		uint64_t length, void *end_arg);
- bool read_verify_force_io(struct read_verify_pool *rvp);
- uint64_t read_verify_bytes(struct read_verify_pool *rvp);
- 
+Also, I tried out the nodelalloc ext4 mount option and see that this
+doesn't expose stale data, it just shows the file written to disk in
+full. The change above also allows this configuration to pass because we
+accommodate any behavior that doesn't expose stale data.
+
+Brian
+
+> > > +$XFS_IO_PROG -fc "pwrite 0 68k" -c fsync -c "pwrite 96k 4k" \
+> > > +	-c "sync_range -w 96k 4k" -c "sync_range -a 96k 4k" \
+> > > +	$SCRATCH_MNT/file.2 >> $seqres.full 2>&1
+> > > +
+> > > +# Shut down before any other writeback completes. Flush the log to persist inode
+> > > +# size updates.
+> > > +_scratch_shutdown -f
+> > > +
+> > > +# Now dump both files. The region prior to the last page in the first file
+> > > +# should be zero filled. The region between the two writes to the second file
+> > > +# should also be zero filled.
+> > > +_scratch_cycle_mount
+> > > +hexdump $SCRATCH_MNT/file.1
+> > > +hexdump $SCRATCH_MNT/file.2
+> > > +
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/generic/999.out b/tests/generic/999.out
+> > > new file mode 100644
+> > > index 00000000..db3c5b7e
+> > > --- /dev/null
+> > > +++ b/tests/generic/999.out
+> > > @@ -0,0 +1,13 @@
+> > > +QA output created by 999
+> > > +0000000 0000 0000 0000 0000 0000 0000 0000 0000
+> > > +*
+> > > +000f000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+> > > +*
+> > > +0010000
+> > > +0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+> > > +*
+> > > +0011000 0000 0000 0000 0000 0000 0000 0000 0000
+> > > +*
+> > > +0018000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+> > > +*
+> > > +0019000
+> > > diff --git a/tests/generic/group b/tests/generic/group
+> > > index 78b9b45d..aa4734af 100644
+> > > --- a/tests/generic/group
+> > > +++ b/tests/generic/group
+> > > @@ -538,3 +538,4 @@
+> > >  533 auto quick attr
+> > >  534 auto quick log
+> > >  535 auto quick log
+> > > +999 auto quick rw
+> > 
+> > Also in 'shutdown' group.
+> > 
+> 
+> Ack, thanks.
+> 
+> Brian
+> 
+> > Thanks,
+> > Eryu
+> > > -- 
+> > > 2.17.2
+> > > 
