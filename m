@@ -1,148 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33772 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727585AbfCVAHd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Mar 2019 20:07:33 -0400
-Date: Thu, 21 Mar 2019 17:07:21 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: generic/475 deadlock?
-Message-ID: <20190322000721.GO1183@magnolia>
-References: <20190320050408.GA24923@magnolia>
- <20190320170305.GA29010@bfoster>
- <20190320174551.GA1186@magnolia>
- <20190320175922.GB29010@bfoster>
- <20190320214938.GU23020@dastard>
- <20190321121152.GA33001@bfoster>
- <20190321211051.GV23020@dastard>
- <20190321215307.GA35644@bfoster>
- <20190321235045.GW23020@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:55182 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726166AbfCYNv1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 25 Mar 2019 09:51:27 -0400
+Date: Mon, 25 Mar 2019 09:51:25 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: serialize unaligned dio writes against all other
+ dio writes
+Message-ID: <20190325135124.GD52167@bfoster>
+References: <20190322165242.40662-1-bfoster@redhat.com>
+ <20190325110646.GA7890@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190321235045.GW23020@dastard>
+In-Reply-To: <20190325110646.GA7890@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>
 
-On Fri, Mar 22, 2019 at 10:50:45AM +1100, Dave Chinner wrote:
-> On Thu, Mar 21, 2019 at 05:53:07PM -0400, Brian Foster wrote:
-> > On Fri, Mar 22, 2019 at 08:10:51AM +1100, Dave Chinner wrote:
-> > > On Thu, Mar 21, 2019 at 08:11:52AM -0400, Brian Foster wrote:
-> > > > On Thu, Mar 21, 2019 at 08:49:38AM +1100, Dave Chinner wrote:
-> > > > The current xfsaild() log force logic is still tied to PINNED objects,
-> > > > but it has additional logic to detect skipped buffers at delwri queue
-> > > > submit time (i.e., due to being pinned) that should cover the pinned
-> > > > inode cluster buffer case.
-> > > 
-> > > And it's not skipped buffers, either. Skipped buffers are only for
-> > > determining timeouts - it's the ail->ail_log_flush counter that
-> > > determines whether a log flush should be done or not, and that's
-> > > only incremented on ITEM_PINNED objects. This is why I was
-> > > suggesting returning that if the backing buffer is pinned, but I
-> > > forgot all about how we already handle this case...
-> > > 
-> > > > But given the above, couldn't we just remove the log force from
-> > > > xfs_iflush() and let the existing xfsaild_push() logic handle it?
-> > > 
-> > > We can, but not for the reasons you are suggesting.
-> > > 
-> > 
-> > The reason I suggested is because we currently "detect skipped buffers
-> > at delwri queue submit time (i.e., due to being pinned)," which causes
-> > xfsaild to force the log.  I'm not sure how exactly you read that, but it
-> > refers exactly to the code snippet you posted below where we bump the
-> > log flush counter due to skipped buffers on submit (because they were
-> > pinned).
+On Mon, Mar 25, 2019 at 04:06:46AM -0700, Christoph Hellwig wrote:
+> >  	if (unaligned_io) {
+> > +		/* unaligned dio always waits, bail */
+> > +		if (iocb->ki_flags & IOCB_NOWAIT)
+> > +			return -EAGAIN;
+> > +		else
+> >  			inode_dio_wait(inode);
 > 
-> In the context of the AIL pushing, "skipped" has specific meaning -
-> it refers to items that could not be flushed for whatever reason.
-> And the actions that are taken based on the number of "skipped"
-> objects is taken after delwri queue submit time.
+> No need for the else here.
 > 
-> You used all the terminology that refers to /skipped/ item
-> handling, not /pinned/ item handling - if you re-read what I wrote
-> above with this difference in mind, then it will make a lot more
-> sense to you.
-> 
-> FWIW, this skipped/pinned terminology difference goes right down
-> into the delwri list handling I quoted - I'll add the next few lines
-> so it's clear what I'm talking about:
-> 
-> 
-> > > 	list_for_each_entry_safe(bp, n, buffer_list, b_list) {
-> > > 		if (!wait_list) {
-> > > 			if (xfs_buf_ispinned(bp)) {
-> > > 				pinned++;
-> > > 				continue;
-> > > 			}
-> 			if (!xfs_buf_trylock(bp))
-> 				continue;
-> 		}
-> 
-> This code branch also avoid blocking on locked buffers. In AIL
-> terms these locked buffers have been "skipped", but the code only
-> counts and indicates pinned buffers to the caller. And the delwri
-> submission code in the AIL pushing acts on this specific
-> distinction - it triggers a log force if pinned buffers were
-> encountered, not if the flush skipped locked buffers.
-> 
-> > > ....
-> > > 	return pinned;
-> > > 
-> > 
-> > "detect skipped buffers at delwri queue submit time (i.e., due to being
-> > pinned)"
-> 
-> If the AIL code was detecting skipped buffers, it would do:
-> 
-> 	xfs_buf_delwri_submit_nowait(&ailp->ail_buf_list);
-> 	if (!list_empty(&ailp->ail_buf_list)) {
-> 		/* we skipped buffers */
-> 		.....
-> 	}
-> 
-> But it's not doing this.
-> 
-> i.e. "Pinned" vs "skipped" may be a subtle terminology difference,
-> but it is an important difference and they are not interchangable...
-> 
-> > > remove them and issue IO on them, and tell the caller that we left
-> > > pinned/locked buffers on the list that still need to be submitted.
-> > > The AIL takes this as an indication it needs to flush the log to
-> > > unpin the buffers it can't flush, and because they are still on it's
-> > > delwri list, it will attempt to submit them again next time around
-> > > after the log has been forced.
 
-<nod> That's kinda what I thought too, having looked through the code,
-but TBH I defer to the two of you as far as knowing how things work in
-the logging code. :)
+Ack.
 
-> > > 
-> > 
-> > Right, so this is exactly the reason I suggested.
+> >  	} else if (iolock == XFS_IOLOCK_EXCL) {
+> >  		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+> >  		iolock = XFS_IOLOCK_SHARED;
+> > @@ -548,6 +549,8 @@ xfs_file_dio_aio_write(
+> >  
+> >  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
+> >  	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
+> > +	if (unaligned_io && !is_sync_kiocb(iocb))
+> > +		inode_dio_wait(inode);
 > 
-> OK, we're on the same page. :)
+> Instead of explicittly waiting here I'd much rather just mark the
+> I/O as sync before submitting it.  The only thing needed for that
+> is to clear iocb->ki_complete.  To avoid too much low-level hacking
+> that is probably best done with a:
 > 
-> Do want to submit a patch that fixes the inode and dquot flushing?
-
-I'd review any such patch that shows up. :)
-
-[He says having not written a patch since the yucky one a few days ago
-and not likely having time to write one anyway.]
-
-> I haven't looked any further at the busy extent stuff, that's likely
-> to be a more difficult problem to solve...
-
-<nod>  Thank you both for taking time to dig through my question!
-
---D
-
+> static inline void mark_kiocb_sync(struct kiocb *kiocb)
+> {
+> 	kiocb->ki_complete = NULL;
+> }
 > 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> helper in fs.h.
+
+It's not quite that simple..
+
+FWIW, the discussion (between Dave and I) for how best to solve this
+started offline prior to sending the patch and pretty much started with
+the idea of changing the async I/O to sync as you suggest here. I backed
+off from that because it's too subtle given the semantics between the
+higher level aio code and lower level dio code for async I/O. By that I
+mean either can be responsible for calling the ->ki_complete() callback
+in the iocb on I/O completion.
+
+IOW, if we receive an async direct I/O, clear ->ki_complete() as you
+describe above and submit it, the dio code will wait on I/O and return
+the size of the I/O on successful completion. It will not have called
+->ki_complete(), however. Rather, the >0 return value indicates that
+aio_rw_done() must call ->ki_complete() after xfs_file_write_iter()
+returns, but we would have already cleared the function pointer.
+
+I think it is technically possible to use this technique by clearing and
+restoring ->ki_complete(), but in general we've visited this "change the
+I/O type" approach twice now and we've (collectively) got it wrong both
+times (the first error in thinking was that XFS would need to call
+->ki_complete()). IMO, this demonstrates that it's not worth the
+complexity to insert ourselves into this dependency chain when we can
+accomplish the same thing with a simple dio wait call.
+
+Brian
