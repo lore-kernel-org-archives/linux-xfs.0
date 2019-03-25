@@ -1,199 +1,163 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39302 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41402 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730889AbfCYM4S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Mar 2019 08:56:18 -0400
-Date: Mon, 25 Mar 2019 08:56:15 -0400
+        id S1725554AbfCYNpV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 25 Mar 2019 09:45:21 -0400
+Date: Mon, 25 Mar 2019 09:45:13 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] generic: test stale data exposure after writeback crash
-Message-ID: <20190325125614.GA52167@bfoster>
-References: <20190318172216.20098-1-bfoster@redhat.com>
- <20190323082339.GR2824@desktop>
+Subject: Re: [PATCH] xfs: serialize unaligned dio writes against all other
+ dio writes
+Message-ID: <20190325134513.GB52167@bfoster>
+References: <20190322165242.40662-1-bfoster@redhat.com>
+ <20190323102930.GS7200@dhcp-12-102.nay.redhat.com>
+ <20190325034721.GT7200@dhcp-12-102.nay.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190323082339.GR2824@desktop>
+In-Reply-To: <20190325034721.GT7200@dhcp-12-102.nay.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
 
-On Sat, Mar 23, 2019 at 04:23:39PM +0800, Eryu Guan wrote:
-> On Mon, Mar 18, 2019 at 01:22:16PM -0400, Brian Foster wrote:
-> > XFS has historically had a stale data exposure window if a crash
-> > occurs after a delalloc->physical extent conversion but before
-> > writeback completes to the associated extent. While this should be a
-> > rare occurrence in production environments due to typical writeback
-> > ordering and such, it is not guaranteed in all cases until data
-> > extents are initialized as unwritten (or otherwise zeroed) before
-> > they are written.
+On Mon, Mar 25, 2019 at 11:47:22AM +0800, Zorro Lang wrote:
+> On Sat, Mar 23, 2019 at 06:29:30PM +0800, Zorro Lang wrote:
+> > On Fri, Mar 22, 2019 at 12:52:42PM -0400, Brian Foster wrote:
+> > > XFS applies more strict serialization constraints to unaligned
+> > > direct writes to accommodate things like direct I/O layer zeroing,
+> > > unwritten extent conversion, etc. Unaligned submissions acquire the
+> > > exclusive iolock and wait for in-flight dio to complete to ensure
+> > > multiple submissions do not race on the same block and cause data
+> > > corruption.
+> > > 
+> > > This generally works in the case of an aligned dio followed by an
+> > > unaligned dio, but the serialization is lost if I/Os occur in the
+> > > opposite order. If an unaligned write is submitted first and
+> > > immediately followed by an overlapping, aligned write, the latter
+> > > submits without the typical unaligned serialization barriers because
+> > > there is no indication of an unaligned dio still in-flight. This can
+> > > lead to unpredictable results.
+> > > 
+> > > To provide proper unaligned dio serialization, require that such
+> > > direct writes are always the only dio allowed in-flight at one time
+> > > for a particular inode. We already acquire the exclusive iolock and
+> > > drain pending dio before submitting the unaligned dio. Wait once
+> > > more after the dio submission to hold the iolock across the I/O and
+> > > prevent further submissions until the unaligned I/O completes. This
+> > > is heavy handed, but consistent with the current pre-submission
+> > > serialization for unaligned direct writes.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > > 
+> > > I was originally going to deal with this problem by hacking in an inode
+> > > flag to track unaligned dio writes in-flight and use that to block any
+> > > follow on dio writes until cleared. Dave suggested we could use the
+> > > iolock to serialize by converting unaligned async dio writes to sync dio
+> > > writes and just letting the unaligned dio itself always block. That
+> > > seemed reasonable to me, but I morphed the approach slightly to just use
+> > > inode_dio_wait() because it seemed a bit cleaner. Thoughts?
+> > > 
+> > > Zorro,
+> > > 
+> > > You reproduced this problem originally. It addresses the problem in the
+> > > test case that reproduced for me. Care to confirm whether this patch
+> > > fixes the problem for you? Thanks.
 > > 
-> > Add a test that performs selective writeback ordering to reproduce
-> > stale data exposure after a crash. Note that this test currently
-> > fails on XFS.
+> > Hi Brian,
 > > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > As noted in the commit log, this test currently fails on XFS. I think
-> > it's worth considering regardless because we're pretty close to fixing
-> > this problem in the kernel. Darrick has posted a patch[1] that while
-> > apparently still needs a bit of work to accommodate performance
-> > concerns, does allow XFS to pass this test.
-> > 
-> > Thoughts, reviews, flames appreciated.
-> > 
-> > Brian
-> > 
-> > [1] https://marc.info/?l=linux-xfs&m=155259894926863&w=2
-> > 
-> >  tests/generic/999     | 70 +++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/999.out | 13 ++++++++
-> >  tests/generic/group   |  1 +
-> >  3 files changed, 84 insertions(+)
-> >  create mode 100755 tests/generic/999
-> >  create mode 100644 tests/generic/999.out
-> > 
-> > diff --git a/tests/generic/999 b/tests/generic/999
-> > new file mode 100755
-> > index 00000000..46c85d07
-> > --- /dev/null
-> > +++ b/tests/generic/999
-> > @@ -0,0 +1,70 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 999
-> > +#
-> > +# Test a some write patterns for stale data exposure after a crash.  XFS is
-> > +# historically susceptible to this problem in the window between delalloc to
-> > +# physical extent conversion and writeback completion.
-> > +#
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +
-> > +# remove previous $seqres.full before test
-> > +rm -f $seqres.full
-> > +
-> > +# real QA test starts here
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +_require_scratch
-> > +_require_scratch_shutdown
-> > +
-> > +# create a small fs and initialize free blocks with a unique pattern
-> > +_scratch_mkfs_sized $((1024 * 1024 * 100)) >> $seqres.full 2>&1
-> > +_scratch_mount
-> > +$XFS_IO_PROG -f -c "pwrite -S 0xab 0 100m" -c fsync $SCRATCH_MNT/spc \
-> > +	>> $seqres.full 2>&1
-> > +rm -f $SCRATCH_MNT/spc
-> > +$XFS_IO_PROG -c fsync $SCRATCH_MNT
-> > +
-> > +# Write a couple files with particular writeback sequences. The first writes a
-> > +# delalloc extent and triggers writeback on the last page. The second triggers
-> > +# post-eof preallocation (on XFS), write extends into the preallocation and
-> > +# triggers writeback of the last written page.
-> > +$XFS_IO_PROG -fc "pwrite 0 64k" -c "sync_range -w 60k 4k" \
-> > +	-c "sync_range -a 60k 4k" $SCRATCH_MNT/file.1 >> $seqres.full 2>&1
+> > Sure, but I can't reproduce this bug on upstream kernel. I have to merge
+> > it into an older kernel(you know that:), to verify if it works.
 > 
-> I suspect that on hosts with 64k pagesize, the sync_range call will
-> write the whole page back and we see no zero after shutdown, but I don't
-> have the hardware to test..
+> I merged your patch into an older kernel which I can reproduce this bug.
+> Then test passed.
 > 
 
-Good point. I'll give that a whirl on a 64k page box and see if I can
-get away with just adjusting the offsets to reproduce this more
-generically.
+Excellent, thanks.
 
-> Also, 0-60k being zero only happens if delalloc is enabled, so testing
-> on ext4 with "nodelalloc" mount option fails the test. Perhaps we could
-> skip the test on ext4 if "nodelalloc" is given in mount option.
+> BTW, Eryu said he hit this bug on upstream v5.0, on a KVM machine with LVM
+> devices, when he ran the case which I sent to fstests@. So I think
+> it's reproducible on upstream kernel. Just we need some conditions to trigger
+> that. So if you know how to make this 'condition', please tell me, I'll
+> think about if I can write anther case to cover this bug specially.
 > 
 
-Hmm, so I'm assuming that these blocks not being zero means they expose
-stale data. Is stale data exposure expected behavior in this ext4 mode?
-ISTM that this test should be expected to fail in that case. That said,
-I'll defer to ext4 devs on how to handle this scenario; perhaps this is
-something that there is no intention to fix and so the failure is
-ultimately noise. I would prefer not to unilaterally decide on that,
-however, so I'll probably leave this as is unless an ext4 person chimes
-in before I get to v2. Somebody can always patch it later if it turns
-out to be a problem.
+Ok. I could only reproduce with your custom reproducer (over loop) on
+kernels between v4.14 and v4.20 (inclusive). More specifically, I could
+reproduce between commits 546e7be824 ("iomap_dio_rw: Allocate AIO
+completion queue before submitting dio") and a79d40e9b0 ("aio: only use
+blk plugs for > 2 depth submissions"). As discussed, these commits
+mostly just alter timing and thus affect the issue indirectly.
 
-> > +$XFS_IO_PROG -fc "pwrite 0 68k" -c fsync -c "pwrite 96k 4k" \
-> > +	-c "sync_range -w 96k 4k" -c "sync_range -a 96k 4k" \
-> > +	$SCRATCH_MNT/file.2 >> $seqres.full 2>&1
-> > +
-> > +# Shut down before any other writeback completes. Flush the log to persist inode
-> > +# size updates.
-> > +_scratch_shutdown -f
-> > +
-> > +# Now dump both files. The region prior to the last page in the first file
-> > +# should be zero filled. The region between the two writes to the second file
-> > +# should also be zero filled.
-> > +_scratch_cycle_mount
-> > +hexdump $SCRATCH_MNT/file.1
-> > +hexdump $SCRATCH_MNT/file.2
-> > +
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/999.out b/tests/generic/999.out
-> > new file mode 100644
-> > index 00000000..db3c5b7e
-> > --- /dev/null
-> > +++ b/tests/generic/999.out
-> > @@ -0,0 +1,13 @@
-> > +QA output created by 999
-> > +0000000 0000 0000 0000 0000 0000 0000 0000 0000
-> > +*
-> > +000f000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-> > +*
-> > +0010000
-> > +0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-> > +*
-> > +0011000 0000 0000 0000 0000 0000 0000 0000 0000
-> > +*
-> > +0018000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-> > +*
-> > +0019000
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index 78b9b45d..aa4734af 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -538,3 +538,4 @@
-> >  533 auto quick attr
-> >  534 auto quick log
-> >  535 auto quick log
-> > +999 auto quick rw
-> 
-> Also in 'shutdown' group.
-> 
-
-Ack, thanks.
+I haven't taken a closer look at the fstest yet beyond the custom
+variant you provided. I wonder if a test could reproduce this more
+effectively by increasing the load of the test..? For example, can you
+reproduce by running many iterations of the I/O? What about running a
+deeper queue and submitting many such overlapping aligned/unaligned I/Os
+all at once (to the same or different offsets of the file)? Just a
+thought..
 
 Brian
 
 > Thanks,
-> Eryu
-> > -- 
-> > 2.17.2
+> Zorro
+> 
 > > 
+> > If upstream kernel has this issue too, do you have a better idea to reproduce
+> > it on upstream? Maybe I can improve my case to cover more.
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> > > 
+> > > Brian
+> > > 
+> > >  fs/xfs/xfs_file.c | 21 ++++++++++++---------
+> > >  1 file changed, 12 insertions(+), 9 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > index 770cc2edf777..8b2aaed82343 100644
+> > > --- a/fs/xfs/xfs_file.c
+> > > +++ b/fs/xfs/xfs_file.c
+> > > @@ -529,18 +529,19 @@ xfs_file_dio_aio_write(
+> > >  	count = iov_iter_count(from);
+> > >  
+> > >  	/*
+> > > -	 * If we are doing unaligned IO, wait for all other IO to drain,
+> > > -	 * otherwise demote the lock if we had to take the exclusive lock
+> > > -	 * for other reasons in xfs_file_aio_write_checks.
+> > > +	 * If we are doing unaligned IO, we can't allow any other IO in-flight
+> > > +	 * at the same time or we risk data corruption. Wait for all other IO to
+> > > +	 * drain, submit and wait for completion before we release the iolock.
+> > > +	 *
+> > > +	 * If the IO is aligned, demote the iolock if we had to take the
+> > > +	 * exclusive lock in xfs_file_aio_write_checks() for other reasons.
+> > >  	 */
+> > >  	if (unaligned_io) {
+> > > -		/* If we are going to wait for other DIO to finish, bail */
+> > > -		if (iocb->ki_flags & IOCB_NOWAIT) {
+> > > -			if (atomic_read(&inode->i_dio_count))
+> > > -				return -EAGAIN;
+> > > -		} else {
+> > > +		/* unaligned dio always waits, bail */
+> > > +		if (iocb->ki_flags & IOCB_NOWAIT)
+> > > +			return -EAGAIN;
+> > > +		else
+> > >  			inode_dio_wait(inode);
+> > > -		}
+> > >  	} else if (iolock == XFS_IOLOCK_EXCL) {
+> > >  		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+> > >  		iolock = XFS_IOLOCK_SHARED;
+> > > @@ -548,6 +549,8 @@ xfs_file_dio_aio_write(
+> > >  
+> > >  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
+> > >  	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
+> > > +	if (unaligned_io && !is_sync_kiocb(iocb))
+> > > +		inode_dio_wait(inode);
+> > >  out:
+> > >  	xfs_iunlock(ip, iolock);
+> > >  
+> > > -- 
+> > > 2.17.2
+> > > 
