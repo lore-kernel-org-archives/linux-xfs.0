@@ -1,50 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cmfo-0002.xspmail.jp ([202.238.198.89]:61616 "EHLO
-        cmfo-0002.xspmail.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732150AbfCZQOn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Mar 2019 12:14:43 -0400
-Date: Wed, 27 Mar 2019 00:44:35 +0900 (JST)
-From: World Economic Forum <eternal0.luna_blue@iris.eonet.ne.jp>
-Reply-To: michael@gettmg.com
-Message-ID: <1367360335.3620441.1553615075473.JavaMail.root@iris.eonet.ne.jp>
-Subject: RE:From World Economic Forum
+Received: from userp2120.oracle.com ([156.151.31.85]:54478 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732121AbfCZR4g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Mar 2019 13:56:36 -0400
+Date: Tue, 26 Mar 2019 10:56:31 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 19/36] mkfs: validate extent size hint parameters
+Message-ID: <20190326175631.GX1183@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <155259754740.31886.13886644609473939892.stgit@magnolia>
+ <b440242a-5a9c-9772-0fc1-6becf6641221@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b440242a-5a9c-9772-0fc1-6becf6641221@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-Dear Sir/Madam,
-My name is Mauro Michael of the World Economic Forum.
-At the end of the World Economic Forum  Annual Meeting in Davos-Klosters  o=
-n 22-25 January 2019 which convened world leaders to discuss the global, re=
-gional and industry agendas at the beginning of each year. The World Econom=
-ic Forum=E2=80=99s mission is to improve the state of the world, which has =
-driven the design and development of the Annual Meeting objectives.
-The forum hosted over 3,000 delegates representing 114 Countries,
-It was agreed among other things and in agreement with the IMF that making =
-growth sustainable, making growth inclusive and harnessing technology for g=
-ood  is a priority and must be tackled without delay.
-Therefore the World Economic Forum initiated an electronic random pick and =
-through this electronic random pick your name and email was chosen for  the=
- implementation of making sustainable growth and harnessing technology for =
-good.
-Funds has been mapped out for those randomly picked.
-This disbursement will be monitored by the Newedge Financial Group(NFG). Yo=
-u are therefore advised to contact the NFG Commissioner who will mentor the=
- disbursement of the funds mapped out for you.
-NAME: Mr. Ab=C3=A9lard Brice GAUTIER,
-EMAIL: abelard.gautier@newedgegroup.org
-The World Economic Forum is the International Organization for Public-Priva=
-te Cooperation.The Forum engages the foremost political, business and other=
- leaders of society to shape global, regional and industry agendas.
-It was established in 1971 as a not-for-profit foundation and is headquarte=
-red in Geneva, Switzerland. It is independent, impartial and not tied to an=
-y special interests. The Forum strives in all its efforts to demonstrate en=
-trepreneurship in the global public interest while upholding the highest st=
-andards of governance. Moral and intellectual integrity is at the heart of =
-everything it does.
-Best Regards,
-Mauro Michael,
-World Economic Forum=20
+On Tue, Mar 26, 2019 at 11:59:22AM -0500, Eric Sandeen wrote:
+> On 3/14/19 4:05 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Validate extent and cow extent size hints that are passed to mkfs so
+> > that we avoid formatting a filesystem that will never mount.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  mkfs/xfs_mkfs.c |   64 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 64 insertions(+)
+> > 
+> > 
+> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > index d1387ddf..9e1c6ec5 100644
+> > --- a/mkfs/xfs_mkfs.c
+> > +++ b/mkfs/xfs_mkfs.c
+> > @@ -2202,6 +2202,66 @@ validate_rtextsize(
+> >  	ASSERT(cfg->rtextblocks);
+> >  }
+> >  
+> > +/* Validate the incoming extsize hint as if we were a file. */
+> 
+> I wonder why "as a file" when hints go on directories, right?
+
+The hint is applied to the root directory with the intention of
+spreading it to newly created files, so that's why I thought we should
+simulate the extsize check with a file to make sure we're not formatting
+a broken filesystem.
+
+The current extsize validator code works the same between regular files
+with extsize set and directories with extszinherit set, so you're right
+in wondering why not simulate a directory check instead of pretending to
+be a file?
+
+My immediate answer to that is ... I had to make an arbitrary choice, so
+I picked one and went with it.  A more forward-thinking answer is that
+if we ever change libxfs to validate extent size hints different (or not
+at all) for directories then it'd be nice to avoid leaving that logic
+bomb.  Though mkfs is tightly coupled to libxfs so perhaps that's not
+worth worrying about.
+
+So, yes we could simulate the directory extsize check and then move on
+to the rt file extsize if the fs is being formatted with a rt volume.
+I'll change it & resubmit.
+
+> > +static void
+> > +validate_extsize_hint(
+> > +	struct xfs_mount	*mp,
+> > +	struct cli_params	*cli)
+> > +{
+> > +	xfs_failaddr_t		fa;
+> > +	bool			rt;
+> > +	uint16_t		flags = 0;
+> > +
+> > +	rt = (cli->fsx.fsx_xflags & XFS_DIFLAG_RTINHERIT);
+> > +
+> > +	if (cli->fsx.fsx_xflags & XFS_DIFLAG_EXTSZINHERIT)
+> > +		flags |= XFS_DIFLAG_EXTSIZE;
+> 
+> i.e. that feels like a weird switch from dir inherit flag to file extsize
+> flag, and I'm not sure why it's done here.
+> 
+> since the mkfs option essentially sets the inherit flag on the root inode,
+> (right?) I'd kind of expected this to be:
+> 
+> +	if (cli->fsx.fsx_xflags & XFS_DIFLAG_EXTSZINHERIT)
+> +		flags |= XFS_DIFLAG_EXTSZINHERIT;
+> 
+> (also surely fsx_xflags should contain XFLAGs? but that's another patch)
+> 
+> > +
+> > +	fa = libxfs_inode_validate_extsize(mp, cli->fsx.fsx_extsize, S_IFREG,
+> > +			flags);
+> 
+> and then:
+> 
+> +	fa = libxfs_inode_validate_extsize(mp, cli->fsx.fsx_extsize, S_IFDIR,
+> +			flags);
+> 
+> doesn't really matter to the validator, but conceptually this seems like a
+> root dir flag, not a "pretend it's a file!" flag, and seems more consistent.
+> 
+> > +	if (rt && fa == NULL)
+> > +		fa = libxfs_inode_validate_extsize(mp, cli->fsx.fsx_extsize,
+> > +				S_IFREG, flags | XFS_DIFLAG_REALTIME);
+> 
+> here too...?
+
+This bit here checks that the extent size hint is appropriate for a
+realtime file.  There's no other way to do this than to pretend to be a
+file because there are no rt directories.
+
+> We talked about this a little on irc but maybe you can remind me why you
+> switch to "it's a file!"
+> 
+> > +	if (fa == NULL)
+> > +		return;
+> > +
+> 
+> I wonder if there should be a comment here about keeping these calculations in
+> sync with xfs_inode_validate_extsize()?
+
+Yeah.  It's too bad we can't just throw an exception containing a nice
+human readable description of the exact thing we got mad about.
+
+> > +	if (rt && mp->m_sb.sb_rextsize > 1)
+> > +		fprintf(stderr,
+> > +	_("illegal extent size hint %lld, must be less than %u and a multiple of %u.\n"),
+> > +				(long long)cli->fsx.fsx_extsize,
+> > +				min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2),
+> > +				mp->m_sb.sb_rextsize);
+> > +	else
+> > +		fprintf(stderr,
+> > +	_("illegal extent size hint %lld, must be less than %u.\n"),
+> > +				(long long)cli->fsx.fsx_extsize,
+> > +				min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2));
+> > +	usage();
+> > +}
+> > +
+> > +/* Validate the incoming CoW extsize hint as if we were a file. */
+> > +static void
+> > +validate_cowextsize_hint(
+> > +	struct xfs_mount	*mp,
+> > +	struct cli_params	*cli)
+> > +{
+> > +	xfs_failaddr_t		fa;
+> > +	uint64_t		flags2 = 0;
+> > +
+> > +	if (cli->fsx.fsx_xflags & FS_XFLAG_COWEXTSIZE)
+> > +		flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+> 
+> (here the flag is the same for dir or file, but same basic question)
+
+Same answers as above.
+
+--D
+
+> > +	fa = libxfs_inode_validate_cowextsize(mp, cli->fsx.fsx_cowextsize,
+> > +			S_IFREG, 0, flags2);
+> > +	if (fa == NULL)
+> > +		return;
+> > +
+> > +	fprintf(stderr,
+> > +_("illegal CoW extent size hint %lld, must be less than %u.\n"),
+> > +			(long long)cli->fsx.fsx_cowextsize,
+> > +			min(MAXEXTLEN, mp->m_sb.sb_agblocks / 2));
+> > +	usage();
+> > +}
+> > +
+> >  /*
+> >   * Validate the configured stripe geometry, or is none is specified, pull
+> >   * the configuration from the underlying device.
+> > @@ -3945,6 +4005,10 @@ main(
+> >  
+> >  	finish_superblock_setup(&cfg, mp, sbp);
+> >  
+> > +	/* Validate the extent size hints now that @mp is fully set up. */
+> > +	validate_extsize_hint(mp, &cli);
+> > +	validate_cowextsize_hint(mp, &cli);
+> > +
+> >  	/* Print the intended geometry of the fs. */
+> >  	if (!quiet || dry_run) {
+> >  		struct xfs_fsop_geom	geo;
+> > 
+> 
+> 
