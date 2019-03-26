@@ -1,437 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48036 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729961AbfCYSS0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Mar 2019 14:18:26 -0400
-Date: Mon, 25 Mar 2019 11:17:51 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
- conversion and the addition of an attribute
-Message-ID: <20190325181751.GU1183@magnolia>
-References: <20170811022204.GQ21024@dastard>
- <20170811142741.GA18609@bfoster.bfoster>
- <20170812001637.GW21024@dastard>
- <20170812140433.GA31523@bfoster.bfoster>
- <20170814002809.GA21024@dastard>
- <A86C45842A15447CAB819133E6AF76CF@alyakaslap>
- <20170814122216.GA39742@bfoster.bfoster>
- <0df483623d7b9464691d44de67c7264f@mail.gmail.com>
- <20190322160836.GP1183@magnolia>
- <1d13a515062de477bc6009ca6333442b@mail.gmail.com>
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:34776 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727492AbfCZQYV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Mar 2019 12:24:21 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1d13a515062de477bc6009ca6333442b@mail.gmail.com>
+References: <155304267647.31707.14180452399822113095.stgit@magnolia>
+ <155304275552.31707.6473598082840688691.stgit@magnolia> <CAOQ4uxhu52G1hw6h-uc50-n5Bq0OT+4pLZjdnfPxK784F=nG0Q@mail.gmail.com>
+ <20190321041544.GD1186@magnolia> <20190323132948.GW2824@desktop> <20190325234839.GA15524@magnolia>
+In-Reply-To: <20190325234839.GA15524@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 26 Mar 2019 18:24:09 +0200
+Message-ID: <CAOQ4uxjN8HHbo-UXxK-gWQAEfJHT4g3a9K7NTr4GLtFm-4tC2A@mail.gmail.com>
+Subject: Re: [PATCH 11/12] check: wipe scratch devices between tests
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Shyam Kaushik <shyam@zadara.com>
-Cc: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, Alex Lyakas <alex@zadarastorage.com>, linux-xfs@vger.kernel.org, libor.klepac@bcom.cz
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eryu Guan <guaneryu@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-On Mon, Mar 25, 2019 at 07:19:18PM +0530, Shyam Kaushik wrote:
-> Hi Darrick,
-> 
-> The original patch that was posted for 3.18-stable kernel
-> https://patchwork.kernel.org/patch/9885843/ didn't use xfs_defer_bjoin().
-> 
-> Question is, is it safe to port the original patch to 4.14 kernel (without
-> xfs_defer_bjoin()) or do you think its mandatory to get equivalent of
-> xfs_defer_bjoin() in 4.14 kernel to have this patch?
-> 
-> Can you please suggest? Thanks.
+On Tue, Mar 26, 2019 at 1:48 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Sat, Mar 23, 2019 at 09:29:48PM +0800, Eryu Guan wrote:
+> > On Wed, Mar 20, 2019 at 09:15:44PM -0700, Darrick J. Wong wrote:
+> > > On Wed, Mar 20, 2019 at 09:06:08AM +0200, Amir Goldstein wrote:
+> > > > On Wed, Mar 20, 2019 at 2:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > > > >
+> > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > >
+> > > > > Wipe the scratch devices in between each test to ensure that tests are
+> > > > > formatting them and not making assumptions about previous contents.
+> > > > >
+> > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > ---
+> > > > >  check      |    1 +
+> > > > >  common/rc  |    6 ++++++
+> > > > >  common/xfs |    1 +
+> > > > >  3 files changed, 8 insertions(+)
+> > > > >
+> > > > >
+> > > > > diff --git a/check b/check
+> > > > > index a2c5ba21..bcf08dfe 100755
+> > > > > --- a/check
+> > > > > +++ b/check
+> > > > > @@ -737,6 +737,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
+> > > > >                         # _check_dmesg depends on this log in dmesg
+> > > > >                         touch ${RESULT_DIR}/check_dmesg
+> > > > >                 fi
+> > > > > +               _try_wipe_scratch_devs > /dev/null 2>&1
+> > > > >                 if [ "$DUMP_OUTPUT" = true ]; then
+> > > > >                         ./$seq 2>&1 | tee $tmp.out
+> > > > >                         # Because $? would get tee's return code
+> > > > > diff --git a/common/rc b/common/rc
+> > > > > index 1c42515f..40eef80f 100644
+> > > > > --- a/common/rc
+> > > > > +++ b/common/rc
+> > > > > @@ -3942,6 +3942,12 @@ _require_fibmap()
+> > > > >         rm -f $file
+> > > > >  }
+> > > > >
+> > > > > +_try_wipe_scratch_devs()
+> > > > > +{
+> > > > > +       _scratch_unmount
+> > > >
+> > > > So I find this change strange, not because it doesn't make sense
+> > > > to start every test with scratch unmounted, but because today scratch *is*
+> > > > mounted on test start and there is quite a bit of code to make it mounted
+> > > > on test start, which seems backwards.
+> > >
+> > > Huh?  On XFS the test device is always mounted, but the scratch device
+> > > is never mounted before the test starts.
+> >
+> > Yes, as _require_test always mounts TEST_DEV and
+> > _require_scratch_nocheck always umounts SCRATCH_DEV.
+>
+> Heh, both of you were right and I was wrong, we format and mount the
+> scratch device before we start the loop.
+>
+> > >
+> > > Hmmm, maybe this is one of those weird things that different with
+> > > nonblock filesystems...?
+> > >
+> > > > IOW, instead of unmounting scratch just before the test runs, seems
+> > > > better to make sure it is unmounted at the end of each test and before
+> > > > starting the loop.
+> > > >
+> > > > Note that for a test with _require_scratch_nocheck, _check_filesystems()
+> > > > will unmount scratch, but for a test with _require_scratch, _check_scratch_fs()
+> > > > will unmount+fsck+mount scratch - inconsistent.
+> > > > Or am I reading this wrong?
+> >
+> > For tests that don't call _require_scratch{_nocheck}, to make sure
+> > SCRATCH_DEV is umounted I think we could just call _scratch_unmount
+> > unconditionally in _check_filesystems(), then we could wipefs before
+> > test safely.
+>
+> I think it does this already:
+>
+>         if [ -f ${RESULT_DIR}/require_scratch ]; then
+>                 _check_scratch_fs || err=true
+>                 rm -f ${RESULT_DIR}/require_scratch*
+>         else
+>                 _scratch_unmount 2> /dev/null
+>         fi
+>
+> Right?  So I think we're covered for unmounting the scratch device after
+> each test, and it's just the first time through the loop where we have
+> to unmount the scratch device.
+>
 
-I have no idea.  It depends entirely on whether your kernel and intended
-configuration require the functionality that xfs_defer_bjoin provided.
+Right about _require_scratch_nocheck and no _require_scratch.
+Test with _require_scratch will call _check_filesystems().
+_check_scratch_fs() will unmount scratch; fsck; mount scratch.
+So as far as I can see, its not only the first time through the loop.
 
---D
-
-> --Shyam
-> 
-> -----Original Message-----
-> From: Darrick J. Wong [mailto:darrick.wong@oracle.com]
-> Sent: 22 March 2019 21:39
-> To: Shyam Kaushik
-> Cc: Dave Chinner; Brian Foster; Alex Lyakas; linux-xfs@vger.kernel.org;
-> libor.klepac@bcom.cz
-> Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
-> conversion and the addition of an attribute
-> 
-> On Fri, Mar 22, 2019 at 02:42:36PM +0530, Shyam Kaushik wrote:
-> > Hi Darrick,
-> >
-> > We are trying to port your patch
-> >
-> https://github.com/torvalds/linux/commit/6e643cd094de3bd0f97edcc1db0089afa
-> > 24d909f to 4.14 LTS kernel. In 4.14 there is no xfs_defer_bjoin(). Can
-> you
-> > please comment if the below 4.14 LTS kernel patch looks ok to you? Do
-> you
-> > see any issues with it?
-> 
-> I don't see anything that resembles what xfs_defer_bjoin used to do
-> here, so it's hard to say without knowing if you've already backported
-> the pieces that made that function unnecessary or if you simply dropped
-> the call to satisfy the compiler...
-> 
-> --D
-> 
-> > Thanks.
-> >
-> > --Shyam
-> >
-> > PATCH
-> > -----
-> >
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index ea66f04f46f7..f7316138a8db 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -218,6 +218,7 @@ xfs_attr_set(
-> >         xfs_fsblock_t           firstblock;
-> >         int                     rsvd = (flags & ATTR_ROOT) != 0;
-> >         int                     error, err2, local;
-> > +       struct xfs_buf          *leaf_bp = NULL;
-> >
-> >         XFS_STATS_INC(mp, xs_attr_set);
-> >
-> > @@ -327,9 +328,15 @@ xfs_attr_set(
-> >                  * GROT: another possible req'mt for a double-split
-> btree
-> > op.
-> >                  */
-> >                 xfs_defer_init(args.dfops, args.firstblock);
-> > -               error = xfs_attr_shortform_to_leaf(&args);
-> > +               error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
-> >                 if (error)
-> >                         goto out_defer_cancel;
-> > +               /*
-> > +                * Prevent the leaf buffer from being unlocked so that a
-> > +                * concurrent AIL push cannot grab the half-baked leaf
-> > +                * buffer and run into problems with the write verifier.
-> > +                */
-> > +               xfs_trans_bhold(args.trans, leaf_bp);
-> >                 xfs_defer_ijoin(args.dfops, dp);
-> >                 error = xfs_defer_finish(&args.trans, args.dfops);
-> >                 if (error)
-> > @@ -337,13 +344,15 @@ xfs_attr_set(
-> >
-> >                 /*
-> >                  * Commit the leaf transformation.  We'll need another
-> > (linked)
-> > -                * transaction to add the new attribute to the leaf.
-> > +                * transaction to add the new attribute to the leaf,
-> which
-> > +                * means that we have to hold & join the leaf buffer
-> here
-> > too.
-> >                  */
-> >
-> >                 error = xfs_trans_roll_inode(&args.trans, dp);
-> >                 if (error)
-> >                         goto out;
-> > -
-> > +               xfs_trans_bjoin(args.trans, leaf_bp);
-> > +               leaf_bp = NULL;
-> >         }
-> >
-> >         if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-> > @@ -374,8 +383,9 @@ xfs_attr_set(
-> >
-> >  out_defer_cancel:
-> >         xfs_defer_cancel(&dfops);
-> > -       args.trans = NULL;
-> >  out:
-> > +       if (leaf_bp)
-> > +               xfs_buf_relse(leaf_bp);
-> >         if (args.trans)
-> >                 xfs_trans_cancel(args.trans);
-> >         xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c
-> b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > index 40e53a4fc0a6..92ae04ac413a 100644
-> > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > @@ -739,10 +739,13 @@ xfs_attr_shortform_getvalue(xfs_da_args_t *args)
-> >  }
-> >
-> >  /*
-> > - * Convert from using the shortform to the leaf.
-> > + * Convert from using the shortform to the leaf.  On success, return
-> the
-> > + * buffer so that we can keep it locked until we're totally done with
-> it.
-> >   */
-> >  int
-> > -xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
-> > +xfs_attr_shortform_to_leaf(
-> > +       xfs_da_args_t *args,
-> > +       struct xfs_buf **leaf_bp)
-> >  {
-> >         xfs_inode_t *dp;
-> >         xfs_attr_shortform_t *sf;
-> > @@ -821,6 +824,7 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
-> >                 sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
-> >         }
-> >         error = 0;
-> > +       *leaf_bp = bp;
-> >
-> >  out:
-> >         kmem_free(tmpbuffer);
-> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h
-> b/fs/xfs/libxfs/xfs_attr_leaf.h
-> > index f7dda0c237b0..894124efb421 100644
-> > --- a/fs/xfs/libxfs/xfs_attr_leaf.h
-> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-> > @@ -48,7 +48,8 @@ void  xfs_attr_shortform_create(struct xfs_da_args
-> > *args);
-> >  void   xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
-> >  int    xfs_attr_shortform_lookup(struct xfs_da_args *args);
-> >  int    xfs_attr_shortform_getvalue(struct xfs_da_args *args);
-> > -int    xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
-> > +int    xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
-> > +                       struct xfs_buf **leaf_bp);
-> >  int    xfs_attr_shortform_remove(struct xfs_da_args *args);
-> >  int    xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode
-> > *dp);
-> >  int    xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
-> >
-> >
-> >
-> > -----Original Message-----
-> > From: linux-xfs-owner@vger.kernel.org
-> > [mailto:linux-xfs-owner@vger.kernel.org] On Behalf Of Brian Foster
-> > Sent: 14 August 2017 17:52
-> > To: Alex Lyakas
-> > Cc: Dave Chinner; Darrick J. Wong; linux-xfs@vger.kernel.org;
-> > libor.klepac@bcom.cz
-> > Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
-> > conversion and the addition of an attribute
-> >
-> > On Mon, Aug 14, 2017 at 11:11:41AM +0300, Alex Lyakas wrote:
-> > > Hello David, Brian,
-> > >
-> > > I was not able to follow the details, unfortunately. Can you confirm
-> > that
-> > > this patch is safe to go into kernel 3.18?
-> > >
-> >
-> > This is the open question in the separate subthread (this one is
-> > discussion around designing a solution for the current code):
-> >
-> > http://marc.info/?l=linux-xfs&m=150246184413604&w=2
-> >
-> > This could use confirmation, but my understanding is that this is safe
-> > because v3.18 doesn't have the more advanced deferred ops
-> > infrastructure. It uses xfs_bmap_finish() which has a max roll count of
-> > one and a transaction with enough reservation for 2 rolls before
-> > blocking reservation is required.
-> >
-> > Note that doesn't mean we'd officially post a v3.18 stable patch before
-> > this is fixed in the upstream code. We always fix upstream first and
-> > backport from there to ensure a consistent base going forward (we don't
-> > want to go change v3.18, end up with a slightly different upstream
-> > patch, then have to backport more changes to fix the original patch).
-> > This may be safe enough for you to use locally in the meantime, however.
-> >
-> > Brian
-> >
-> > > Thanks,
-> > > Alex.
-> > >
-> > >
-> > > -----Original Message----- From: Dave Chinner
-> > > Sent: Monday, August 14, 2017 3:28 AM
-> > > To: Brian Foster
-> > > Cc: Darrick J. Wong ; Alex Lyakas ; linux-xfs@vger.kernel.org ;
-> > > libor.klepac@bcom.cz
-> > > Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
-> > > conversion and the addition of an attribute
-> > >
-> > > On Sat, Aug 12, 2017 at 10:04:34AM -0400, Brian Foster wrote:
-> > > > On Sat, Aug 12, 2017 at 10:16:37AM +1000, Dave Chinner wrote:
-> > > > > On Fri, Aug 11, 2017 at 10:27:43AM -0400, Brian Foster wrote:
-> > > > > > On Fri, Aug 11, 2017 at 12:22:04PM +1000, Dave Chinner wrote:
-> > > > > Using XFS_BLI_ORDERED allows us to log the buffer without
-> recording
-> > > > > a new dirty range on the buffer. IOWs, it retains whatever dirty
-> > range
-> > > > > it already had, and so after joining, marking it ordered and then
-> > > > > logging the buffer, we have a XFS_BLI_DIRTY | XFS_BLI_ORDERED
-> buffer
-> > > > > in the transaction.
-> > > > >
-> > > > > The question is this: what happens when a XFS_BLI_ORDERED buffer
-> > > > > with a pre-existing dirty region is formatted for the CIL? We
-> > > > > haven't done that before, so I'm betting that we don't relog the
-> > > > > dirty region like we should be doing....
-> > > > >
-> > > > > ... and we don't relog the existing dirty range because the
-> > > > > ordered flag takes precedence.
-> > > > >
-> > > >
-> > > > Right.. so it seems that the current implementation for ordered
-> > buffers
-> > > > assumes a buffer is only ever used in one mode or the other.
-> > > > Additionally, the AIL assumes that any reinserted item has been
-> fully
-> > > > relogged and so it moves the LSN forward unconditionally. Current
-> > > > ordered buffer processing violates this constraint for an already
-> > logged
-> > > > buffer.
-> > >
-> > > Right, but it's not been a concern until now because we've only ever
-> > > used ordered buffers on newly allocated buffers that haven't been
-> > > previously logged.
-> > >
-> > > > > Ok, the ordered buffer checks in xfs_buf_item_size() and
-> > > > > xfs_buf_item_format() need to also check for dirty regions. If
-> dirty
-> > > > > regions exist, then we treat it like a normal buffer rather than
-> an
-> > > > > ordered buffer. We can factor the dirty region check out of
-> > > > > xfs_buf_item_unlock() for this...
-> > > > >
-> > > > > Actually, check the case in xfs_buf_item_size() and remove the
-> > > > > ordered flag if there are dirty regions. Then
-> xfs_buf_item_format()
-> > > > > will do the right thing without needing a duplicate check...
-> > > > >
-> > > >
-> > > > I think that would work, assuming we actually check the
-> > > > xfs_buf_log_format for dirty-ness rather than just the log item. As
-> it
-> > > > is, note that ordered buffers are still "logged" in the transaction
-> > > > because otherwise the transaction infrastructure will assume it made
-> > no
-> > > > change to the buf and toss the log item at commit time (we also need
-> > to
-> > > > set up I/O completion on the buf and whatnot).
-> > >
-> > > *nod*
-> > >
-> > > > What concerns me about this approach is that I think we introduce
-> the
-> > > > possibility for subtle bugs. Existing ordered buffer code does this:
-> > > >
-> > > >         xfs_trans_ordered_buf(tp, fbuf);
-> > > >         xfs_trans_log_buf(tp, fbuf, 0,
-> > > >                           BBTOB(fbuf->b_length) - 1);
-> > > >
-> > > > ... which should continue to work fine. Allowing ordered buffers to
-> > > > physically log means that something like this:
-> > > >
-> > > >         xfs_trans_log_buf(tp, fbuf, 0,
-> > > >                           BBTOB(fbuf->b_length) - 1);
-> > > >         xfs_trans_ordered_buf(tp, fbuf);
-> > > >
-> > > > ... is now a bug that is only apparent after scrutiny of
-> xfs_trans_*()
-> > > > and logging internals. Granted, the above already is incorrect, but
-> it
-> > > > technically still works as expected. I don't see the need to turn
-> that
-> > > > into a real problem by actually logging the buffer when we might not
-> > > > expect to.
-> > >
-> > > Well, it's not a "things go bad" bug. It's a "we screwed up an
-> > > optimisation" bug, because logging the buffer contents unnecessarily
-> > > only increases the required log bandwidth. It shouldn't affect
-> > > replay because the buffer is still correctly ordered in the log.
-> > > Hence both the transient and end states of the buffer during replay
-> > > will still be the same...
-> > >
-> > > > So while I agree that this could probably be made to work and I
-> think
-> > it
-> > > > is ideal to doing any kind of logged range tracking in the deferred
-> > ops
-> > > > code, it still seems more tricky than it needs to be. To relog a
-> held
-> > > > buffer in a new transaction, why not just mark the lidp dirty in the
-> > new
-> > > > transaction so it inherits all existing dirty segments? AFAICT, all
-> we
-> > > > really need to do is:
-> > > >
-> > > >         tp->t_flags |= XFS_TRANS_DIRTY;
-> > > >         lidp->lid_flags |= XFS_LID_DIRTY;
-> > > >
-> > > > ... on the new transaction and everything should just work as
-> designed
-> > > > (for a buffer that has been previously logged, held, rolled and
-> > > > rejoined).
-> > >
-> > > We would also need to set:
-> > >
-> > > bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
-> > >
-> > > which means we should....
-> > >
-> > > > To elaborate a bit, I think we could refactor xfs_trans_log_buf()
-> into
-> > a
-> > > > new xfs_trans_dirty_buf() helper that covers all of the relevant
-> bits
-> > > > not related to actually dirtying the bli. xfs_trans_log_buf() would
-> > call
-> > > > xfs_trans_dirty_buf() and thus would not change functionally.
-> > > > xfs_trans_ordered_buf() could now call xfs_trans_dirty_buf() and
-> thus
-> > > > the existing ordered buf users would no longer need to log a range
-> of
-> > > > the buffer (which doesn't make much sense anyways).
-> > >
-> > > ... do this. :)
-> > >
-> > > > Finally, the
-> > > > deferred infrastructure could join/dirty/hold the buffer to the new
-> > > > transaction after each roll without needing to track and relog
-> > specific
-> > > > regions of the buffer. Thoughts?
-> > >
-> > > Yup, that's exactly what I was thinking should be possible by using
-> > > ordered buffers.... :)
-> > >
-> > > And Christoph's rework of the transaction roll and deferred inode
-> > > handling that he just posted should make adding buffer handling
-> > > quite a bit neater and cleaner.
-> > >
-> > > > Unless I'm missing something as to why this is busted, I'll take a
-> > > > closer look at the code and float an rfc next week since otherwise
-> it
-> > > > sounds like this is something we could actually fix up in the
-> ordered
-> > > > buffer code today.
-> > >
-> > > Cool.
-> > >
-> > > > > Nothing in XFS is ever simple, is it? :P
-> > > >
-> > > > There used to be a level of satisfaction at feeling I understood
-> some
-> > > > new corner of XFS. Nowadays I know that just means I'm not yet aware
-> > of
-> > > > whatever dragons remain in that corner (is that paranoia? not if
-> it's
-> > > > true!). :P
-> > >
-> > > Ah, the true signs of expertise: developing a knowledge base and
-> > > insight deep enough to understand that there is always another
-> > > hidden dragon poised to bite your head off. :)
-> > >
-> > > Cheers,
-> > >
-> > > Dave.
-> > > --
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > >
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs"
-> in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Amir.
