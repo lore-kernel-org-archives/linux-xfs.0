@@ -1,46 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:46568 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728853AbfC2PBb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 11:01:31 -0400
-Subject: Re: [PATCH v3 2/3] block: verify data when endio
-References: <20190329142346.1677-1-bob.liu@oracle.com>
- <20190329142346.1677-3-bob.liu@oracle.com>
- <41c8688a-65bd-96ac-9b23-4facd0ade4a7@kernel.dk> <yq1ftr5rbq1.fsf@oracle.com>
- <f65d6a7b-9e69-ae1e-b8b8-8769dc650311@kernel.dk> <yq1bm1trb4y.fsf@oracle.com>
- <feefa611-b744-326c-29d5-c64bcda45d9f@kernel.dk> <yq17echrax1.fsf@oracle.com>
- <1b638dc2-56fd-6ab4-dcca-ad2adb9931bb@kernel.dk>
-From: Bob Liu <bob.liu@oracle.com>
-Message-ID: <c9adb48c-7b6e-2017-9480-aa2342b3523b@oracle.com>
-Date: Fri, 29 Mar 2019 23:00:58 +0800
+Received: from userp2120.oracle.com ([156.151.31.85]:48712 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726811AbfCZVV1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Mar 2019 17:21:27 -0400
+Date: Tue, 26 Mar 2019 14:21:20 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 25/36] xfs_repair: fix uninitialized variable warnings
+Message-ID: <20190326212120.GY1183@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <155259758358.31886.2042156413647033104.stgit@magnolia>
+ <86dce7d4-e637-8a94-e210-cdc804c6f0dc@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <1b638dc2-56fd-6ab4-dcca-ad2adb9931bb@kernel.dk>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <86dce7d4-e637-8a94-e210-cdc804c6f0dc@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, shirley.ma@oracle.com, allison.henderson@oracle.com, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca, tytso@mit.edu
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On 3/29/19 10:52 PM, Jens Axboe wrote:
-> On 3/29/19 8:51 AM, Martin K. Petersen wrote:
->>
->> Jens,
->>
->>> The integrity stuff still has that nasty pointer in there. It'd be
->>> nice to get rid of that as well, and hide it all in a parent container
->>> of the bio.
->>
->> That's fine with me. We really didn't have that option a decade ago.
+On Tue, Mar 26, 2019 at 02:56:02PM -0500, Eric Sandeen wrote:
+> On 3/14/19 4:06 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Fix some uninitialized variable warnings because ASSERT disappears if
+> > DEBUG is not defined.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Right, but now we do. Hence trying to nudge things in that direction,
-> instead of adding another pointer to struct bio for a new use case. I'd
-> much rather go that route, instead of unionizing with another pointer
-> that should be going away instead.
+> Fixes: commit 5857dce9e ("xfs_repair: check and repair quota metadata")
 > 
+> which was mine ;)
+> 
+> But, I wonder if we should really just happily carry on w/ an invalid
+> quota type 0 on a non-debug build.  I don't know how that will end.
+> 
+> Maybe we should just switch it to a hard assert(0) because it really
+> can only happen on a programming error today.
 
-No problem, will update in next version.
-Let me wait a while for feedback about the verify callback.
-Thank you!
+Yeah, we ought to be more defensive about that, since in theory we could
+introduce a subtle bug some day where we validate a corrupt dquot with
+flags == 0.
+
+/me kinda wonders why we define away the asserts for repair, since it's
+not like continuing under invalid premises in a repair tool is a good
+idea.
+
+--D
+
+> 
+> > ---
+> >  repair/dinode.c |    4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/repair/dinode.c b/repair/dinode.c
+> > index f670bf87..c0a56daa 100644
+> > --- a/repair/dinode.c
+> > +++ b/repair/dinode.c
+> > @@ -1176,8 +1176,8 @@ process_quota_inode(
+> >  	struct xfs_buf		*bp;
+> >  	xfs_filblks_t		dqchunklen;
+> >  	uint			dqperchunk;
+> > -	int			quota_type;
+> > -	char			*quota_string;
+> > +	int			quota_type = 0;
+> > +	char			*quota_string = NULL;
+> >  	xfs_dqid_t		dqid;
+> >  	xfs_fileoff_t		qbno;
+> >  	int			i;
+> > 
