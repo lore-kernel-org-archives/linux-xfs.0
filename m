@@ -1,80 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:58700 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729421AbfC2OYs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 10:24:48 -0400
-From: Bob Liu <bob.liu@oracle.com>
-Subject: [PATCH v3 1/3] block: introduce submit_bio_verify()
-Date: Fri, 29 Mar 2019 22:23:44 +0800
-Message-Id: <20190329142346.1677-2-bob.liu@oracle.com>
-In-Reply-To: <20190329142346.1677-1-bob.liu@oracle.com>
-References: <20190329142346.1677-1-bob.liu@oracle.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:45636 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728314AbfCZRSY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Mar 2019 13:18:24 -0400
+Date: Tue, 26 Mar 2019 10:18:19 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 48/36] mkfs: don't use DIFLAG values for fsx_xflags
+Message-ID: <20190326171819.GW1183@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-block@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, allison.henderson@oracle.com, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca, axboe@kernel.dk, tytso@mit.edu, Bob Liu <bob.liu@oracle.com>
+To: sandeen@sandeen.net
+Cc: linux-xfs@vger.kernel.org
 
-This patch adds a function verifier callback to submit_bio.  The
-filesystem layer can use submit_bio_verify to pass a call back
-to the block layer which can then be used to verify if the data
-read is correct.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Bob Liu <bob.liu@oracle.com>
+mkfs shouldn't be using DIFLAG values where FS_XFLAG values are
+required.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- block/blk-core.c    | 13 ++++++++++---
- include/linux/bio.h |  2 ++
- 2 files changed, 12 insertions(+), 3 deletions(-)
+ mkfs/xfs_mkfs.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 6b78ec56a4f2..d265d2924c32 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1156,15 +1156,16 @@ blk_qc_t direct_make_request(struct bio *bio)
- EXPORT_SYMBOL_GPL(direct_make_request);
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index e87c692c..19ad1c90 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1451,15 +1451,15 @@ data_opts_parser(
+ 		break;
+ 	case D_RTINHERIT:
+ 		if (getnum(value, opts, subopt))
+-			cli->fsx.fsx_xflags |= XFS_DIFLAG_RTINHERIT;
++			cli->fsx.fsx_xflags |= FS_XFLAG_RTINHERIT;
+ 		break;
+ 	case D_PROJINHERIT:
+ 		cli->fsx.fsx_projid = getnum(value, opts, subopt);
+-		cli->fsx.fsx_xflags |= XFS_DIFLAG_PROJINHERIT;
++		cli->fsx.fsx_xflags |= FS_XFLAG_PROJINHERIT;
+ 		break;
+ 	case D_EXTSZINHERIT:
+ 		cli->fsx.fsx_extsize = getnum(value, opts, subopt);
+-		cli->fsx.fsx_xflags |= XFS_DIFLAG_EXTSZINHERIT;
++		cli->fsx.fsx_xflags |= FS_XFLAG_EXTSZINHERIT;
+ 		break;
+ 	case D_COWEXTSIZE:
+ 		cli->fsx.fsx_cowextsize = getnum(value, opts, subopt);
+@@ -2212,9 +2212,9 @@ validate_extsize_hint(
+ 	bool			rt;
+ 	uint16_t		flags = 0;
  
- /**
-- * submit_bio - submit a bio to the block device layer for I/O
-+ * submit_bio_verify - submit a bio to the block device layer for I/O
-  * @bio: The &struct bio which describes the I/O
-  *
-- * submit_bio() is very similar in purpose to generic_make_request(), and
-+ * submit_bio_verify() is very similar in purpose to generic_make_request(), and
-  * uses that function to do most of the work. Both are fairly rough
-  * interfaces; @bio must be presetup and ready for I/O.
-  *
-  */
--blk_qc_t submit_bio(struct bio *bio)
-+blk_qc_t submit_bio_verify(struct bio *bio,
-+		int (*verifier_cb_func)(struct bio *))
- {
- 	/*
- 	 * If it's a regular read/write or a barrier with data attached,
-@@ -1197,6 +1198,12 @@ blk_qc_t submit_bio(struct bio *bio)
+-	rt = (cli->fsx.fsx_xflags & XFS_DIFLAG_RTINHERIT);
++	rt = (cli->fsx.fsx_xflags & FS_XFLAG_RTINHERIT);
  
- 	return generic_make_request(bio);
- }
-+EXPORT_SYMBOL(submit_bio_verify);
-+
-+blk_qc_t submit_bio(struct bio *bio)
-+{
-+	return submit_bio_verify(bio, NULL);
-+}
- EXPORT_SYMBOL(submit_bio);
+-	if (cli->fsx.fsx_xflags & XFS_DIFLAG_EXTSZINHERIT)
++	if (cli->fsx.fsx_xflags & FS_XFLAG_EXTSZINHERIT)
+ 		flags |= XFS_DIFLAG_EXTSIZE;
  
- /**
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 7380b094dcca..ddaadab74dcf 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -398,6 +398,8 @@ static inline struct bio *bio_kmalloc(gfp_t gfp_mask, unsigned int nr_iovecs)
- 	return bio_alloc_bioset(gfp_mask, nr_iovecs, NULL);
- }
- 
-+extern blk_qc_t submit_bio_verify(struct bio *,
-+		int (*verifier_cb_func)(struct bio *));
- extern blk_qc_t submit_bio(struct bio *);
- 
- extern void bio_endio(struct bio *);
--- 
-2.17.1
+ 	fa = libxfs_inode_validate_extsize(mp, cli->fsx.fsx_extsize, S_IFREG,
