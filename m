@@ -1,50 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f194.google.com ([209.85.166.194]:40017 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728848AbfC2OiI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 10:38:08 -0400
-Received: by mail-it1-f194.google.com with SMTP id y63so4186186itb.5
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Mar 2019 07:38:07 -0700 (PDT)
-Subject: Re: [PATCH v3 2/3] block: verify data when endio
-References: <20190329142346.1677-1-bob.liu@oracle.com>
- <20190329142346.1677-3-bob.liu@oracle.com>
- <41c8688a-65bd-96ac-9b23-4facd0ade4a7@kernel.dk> <yq1ftr5rbq1.fsf@oracle.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <f65d6a7b-9e69-ae1e-b8b8-8769dc650311@kernel.dk>
-Date: Fri, 29 Mar 2019 08:38:04 -0600
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:31330 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727500AbfC0B3H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Mar 2019 21:29:07 -0400
+Date: Wed, 27 Mar 2019 12:29:03 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [QUESTION] Long read latencies on mixed rw buffered IO
+Message-ID: <20190327012903.GH23020@dastard>
+References: <CAOQ4uxhu=Qtme9RJ7uZXYXt0UE+=xD+OC4gQ9EYkDC1ap8Hizg@mail.gmail.com>
+ <20190325154731.GT1183@magnolia>
+ <20190325164129.GH10344@bombadil.infradead.org>
+ <CAOQ4uximHOCM8Fo_WctXAjpft31OS+VBcjUqteuK6kjn+nVoKA@mail.gmail.com>
+ <20190325182239.GI10344@bombadil.infradead.org>
+ <CAOQ4uxicH-f4TBx_anwWfTb=z6xDvV=dW3HFwG8+eKkqwKMuPw@mail.gmail.com>
+ <20190325194021.GJ10344@bombadil.infradead.org>
+ <CAOQ4uxiTRUe2EUYcuN5xi3SCw6C-=DM+yA1rsRKh_fi0YPEf6Q@mail.gmail.com>
+ <20190325234838.GC23020@dastard>
+ <CAOQ4uxh9gArhXZdSgOJgT12Ov9JYyPNoMf9H=h-Q-2vwcd8k=Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <yq1ftr5rbq1.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxh9gArhXZdSgOJgT12Ov9JYyPNoMf9H=h-Q-2vwcd8k=Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bob Liu <bob.liu@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, shirley.ma@oracle.com, allison.henderson@oracle.com, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca, tytso@mit.edu
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Matthew Wilcox <willy@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On 3/29/19 8:34 AM, Martin K. Petersen wrote:
+On Tue, Mar 26, 2019 at 05:44:34AM +0200, Amir Goldstein wrote:
+> On Tue, Mar 26, 2019 at 1:48 AM Dave Chinner <david@fromorbit.com> wrote:
+> > On Mon, Mar 25, 2019 at 09:57:46PM +0200, Amir Goldstein wrote:
+> > > Not as bad as v1. Only a little bit worse than master...
+> > > The whole deal with the read/write balance and on SSD, I imagine
+> > > the balance really changes. That's why I was skeptical about
+> > > one-size-fits all read/write balance.
+> >
+> > You're not testing your SSD. You're testing writes into cache vs
+> > reads from disk. There is a massive latency difference in the two
+> > operations, so unless you use O_DSYNC for the writes, you are going
+> > to see this cache-vs-uncached performance unbalance. i.e. unless the
+> > rwsem is truly fair, there is always going to be more writer
+> > access to the lock because they spend less time holding it and so
+> > can put much more pressure on it.
+> >
 > 
-> Jens,
-> 
->> I told you this for the initial posting, and the objection still
->> stands.  Adding 40 bytes to struct bio is a no-go.
->>
->> So that's a big NAK on that series.
-> 
-> I think you missed Bob's comment that this will go in the existing
-> bio_integrity field. I believe the main purpose of the series is to
-> solicit feedback on the callback approach.
+> Yeh, I know. SSD makes the balance better because of faster reads
+> from disk. Was pointing out that the worse case I am interested in is
+> on spindles. That said, O_DSYNC certainly does improve the balance
+> and gives shorter worse case latencies. However, it does not make the
+> problem go away. i_rwsem taken (even for 4K reads) takes its toll
+> on write latencies (compared to ext4).
 
-I didn't miss that, but it fixes nothing. That will unify the 40 bytes
-with 8 bytes, we're still growing the bio by a LOT. And we can't even
-nicely hide this behind some ifdef, sine distros enable everything and
-hence we're solving nothing by doing that.
+Sure, that's because it's serialising access across the entire file,
+not just the page that is being read/written to.
 
-One potential solution could be to setup a specific bio_set for this,
-and allocate your read bios out of that. Growing struct bio by an
-enormous amount for this is just a non-starter to begin with, end of
-story.
+The solution here is to move to concurrent buffered writes
+similar to how we do direct IO. We need to track IO ranges for that,
+though, so we can serialise unaligned and/or overlapping IOs. We
+need fast, efficient range locks for this, though.
 
+Cheers,
+
+Dave.
 -- 
-Jens Axboe
+Dave Chinner
+david@fromorbit.com
