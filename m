@@ -1,111 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52772 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726324AbfC0OuB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 27 Mar 2019 10:50:01 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9C8FE307E078
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2019 14:50:01 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 564205DF28
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2019 14:50:01 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: don't account extra agfl blocks as available
-Date: Wed, 27 Mar 2019 10:50:00 -0400
-Message-Id: <20190327145000.10756-1-bfoster@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:48868 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726453AbfC1Rux (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Mar 2019 13:50:53 -0400
+Subject: [PATCH 2/3] xfs: reset page mappings after setting immutable
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 28 Mar 2019 10:50:47 -0700
+Message-ID: <155379544747.24796.1807309281507099911.stgit@magnolia>
+In-Reply-To: <155379543409.24796.5783716624820175068.stgit@magnolia>
+References: <155379543409.24796.5783716624820175068.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
 
-The block allocation AG selection code has parameters that allow a
-caller to perform multiple allocations from a single AG and
-transaction (under certain conditions). The parameters specify the
-total block allocation count required by the transaction and the AG
-selection code selects and locks an AG that will be able to satisfy
-the overall requirement. If the available block accounting
-calculation turns out to be inaccurate and a subsequent allocation
-call fails with -ENOSPC, the resulting transaction cancel leads to
-filesystem shutdown because the transaction is dirty.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This exact problem can be reproduced with a highly parallel space
-consumer and fsstress workload running long enough to a large
-filesystem against -ENOSPC conditions. A bmbt block allocation
-request made for inode extent to bmap format conversion after an
-extent allocation is expected to be satisfied by the same AG and the
-same transaction as the extent allocation. The bmbt block allocation
-fails, however, because the block availability of the AG has changed
-since the AG was selected (outside of the blocks used for the extent
-itself).
+The chattr manpage has this to say about immutable files:
 
-The inconsistent block availability calculation is caused by the
-deferred block freeing behavior of the AGFL. This immediately
-removes extra blocks from the AGFL to free up AGFL slots, but rather
-than immediately freeing such blocks as was done in the past, the
-block free is deferred such that said blocks are not available for
-allocation until the current transaction commits. The AG selection
-logic currently considers all AGFL blocks as available and executes
-shortly before any extra AGFL blocks are freed. This means the block
-availability of the current AG can change before the first
-allocation even occurs, but in practice a failure is more likely to
-manifest via a subsequent allocation because extent allocation
-usually has a contiguity requirement larger than a single block that
-can't be satisfied from the AGFL.
+"A file with the 'i' attribute cannot be modified: it cannot be deleted
+or renamed, no link can be created to this file, most of the file's
+metadata can not be modified, and the file can not be opened in write
+mode."
 
-In general, XFS prefers operational robustness to absolute
-allocation efficiency. In other words, we prefer to return -ENOSPC
-slightly earlier at the expense of not being able to allocate every
-last block in an AG to avoid this kind of problem. As such, update
-the AG block availability calculation to consider extra AGFL blocks
-as unavailable since they are immediately removed following the
-calculation and will not become available until the current
-transaction commits.
+This means that we need to flush the page cache when setting the
+immutable flag so that programs cannot continue to write to writable
+mappings.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ fs/xfs/xfs_ioctl.c |   63 +++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 43 insertions(+), 20 deletions(-)
 
-This problem is reasonably difficult to reproduce. Zorro put together a
-system/test that could reproduce fairly reliably, even then it takes
-several hours. I eventually reproduced a shutdown once with this fix in
-place, but I was never able to reproduce again during about a week of
-attempts to try and further root cause. So I think it's possible there
-are still problems in this area, but I suspect it's a separate problem
-from this one.
 
-Brian
-
- fs/xfs/libxfs/xfs_alloc.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index bc3367b8b7bb..857a53e58b94 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2042,6 +2042,7 @@ xfs_alloc_space_available(
- 	xfs_extlen_t		alloc_len, longest;
- 	xfs_extlen_t		reservation; /* blocks that are still reserved */
- 	int			available;
-+	xfs_extlen_t		agflcount;
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 6ecdbb3af7de..2bd1c5ab5008 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -998,6 +998,37 @@ xfs_diflags_to_linux(
+ #endif
+ }
  
- 	if (flags & XFS_ALLOC_FLAG_FREEING)
- 		return true;
-@@ -2054,8 +2055,13 @@ xfs_alloc_space_available(
- 	if (longest < alloc_len)
- 		return false;
++static int
++xfs_ioctl_setattr_flush(
++	struct xfs_inode	*ip,
++	int			*join_flags)
++{
++	struct inode		*inode = VFS_I(ip);
++	int			error;
++
++	if (S_ISDIR(inode->i_mode))
++		return 0;
++	if ((*join_flags) & (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL))
++		return 0;
++
++	/* lock, flush and invalidate mapping in preparation for flag change */
++	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
++	error = filemap_write_and_wait(inode->i_mapping);
++	if (error)
++		goto out_unlock;
++	error = invalidate_inode_pages2(inode->i_mapping);
++	if (error)
++		goto out_unlock;
++
++	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
++	return 0;
++
++out_unlock:
++	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
++	return error;
++
++}
++
+ static int
+ xfs_ioctl_setattr_xflags(
+ 	struct xfs_trans	*tp,
+@@ -1067,7 +1098,6 @@ xfs_ioctl_setattr_dax_invalidate(
+ {
+ 	struct inode		*inode = VFS_I(ip);
+ 	struct super_block	*sb = inode->i_sb;
+-	int			error;
  
--	/* do we have enough free space remaining for the allocation? */
--	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
+ 	*join_flags = 0;
+ 
+@@ -1092,25 +1122,7 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
+ 		return 0;
+ 
+-	if (S_ISDIR(inode->i_mode))
+-		return 0;
+-
+-	/* lock, flush and invalidate mapping in preparation for flag change */
+-	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
+-	error = filemap_write_and_wait(inode->i_mapping);
+-	if (error)
+-		goto out_unlock;
+-	error = invalidate_inode_pages2(inode->i_mapping);
+-	if (error)
+-		goto out_unlock;
+-
+-	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
+-	return 0;
+-
+-out_unlock:
+-	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
+-	return error;
+-
++	return xfs_ioctl_setattr_flush(ip, join_flags);
+ }
+ 
+ /*
+@@ -1356,6 +1368,17 @@ xfs_ioctl_setattr(
+ 	if (code)
+ 		goto error_free_dquots;
+ 
 +	/*
-+	 * Do we have enough free space remaining for the allocation? Don't
-+	 * account extra agfl blocks because we are about to defer free them,
-+	 * making them unavailable until the current transaction commits.
++	 * If we are trying to set immutable then flush everything to disk to
++	 * force all writable memory mappings back through the pagefault
++	 * handler.
 +	 */
-+	agflcount = min_t(xfs_extlen_t, pag->pagf_flcount, min_free);
-+	available = (int)(pag->pagf_freeblks + agflcount -
- 			  reservation - min_free - args->minleft);
- 	if (available < (int)max(args->total, alloc_len))
- 		return false;
--- 
-2.17.2
++	if (!IS_IMMUTABLE(VFS_I(ip)) && (fa->fsx_xflags & FS_XFLAG_IMMUTABLE)) {
++		code = xfs_ioctl_setattr_flush(ip, &join_flags);
++		if (code)
++			goto error_free_dquots;
++	}
++
+ 	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
+ 	if (IS_ERR(tp)) {
+ 		code = PTR_ERR(tp);
