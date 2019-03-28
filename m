@@ -1,134 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48868 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726453AbfC1Rux (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Mar 2019 13:50:53 -0400
-Subject: [PATCH 2/3] xfs: reset page mappings after setting immutable
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 28 Mar 2019 10:50:47 -0700
-Message-ID: <155379544747.24796.1807309281507099911.stgit@magnolia>
-In-Reply-To: <155379543409.24796.5783716624820175068.stgit@magnolia>
-References: <155379543409.24796.5783716624820175068.stgit@magnolia>
+Received: from mail-yw1-f66.google.com ([209.85.161.66]:38504 "EHLO
+        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726268AbfC1VZA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Mar 2019 17:25:00 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <155379543409.24796.5783716624820175068.stgit@magnolia> <155379545404.24796.5019142212767521955.stgit@magnolia>
+In-Reply-To: <155379545404.24796.5019142212767521955.stgit@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 28 Mar 2019 23:24:48 +0200
+Message-ID: <CAOQ4uxgTQugRFJnUXA2JcHhzmPzi=PLT4H7UrZKzQzi_eCpVeg@mail.gmail.com>
+Subject: Re: [PATCH 3/3] xfs: don't allow most setxattr to immutable files
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Mar 28, 2019 at 7:51 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> The chattr manpage has this to say about immutable files:
+>
+> "A file with the 'i' attribute cannot be modified: it cannot be deleted
+> or renamed, no link can be created to this file, most of the file's
+> metadata can not be modified, and the file can not be opened in write
+> mode."
+>
+> However, we don't actually check the immutable flag in the setattr code,
+> which means that we can update project ids and extent size hints on
+> supposedly immutable files.  Therefore, reject a setattr call on an
+> immutable file except for the case where we're trying to unset
+> IMMUTABLE.
+>
 
-The chattr manpage has this to say about immutable files:
+I think if preventing modification of projid and extent size hints is what you
+are after you should place the check in xfs_ioctl_setattr() and not in
+xfs_ioctl_setattr_xflags().
 
-"A file with the 'i' attribute cannot be modified: it cannot be deleted
-or renamed, no link can be created to this file, most of the file's
-metadata can not be modified, and the file can not be opened in write
-mode."
+Yes, it sounds tempting to block changes of xfs_ioc_setxflags(),
+but it leads you to a trap of 2nd time chattr +i fails on -EPERM,
+because chattr(1) doesn't optimize out the SETFLAGS ioctl
+in the case of unmodified flags.
+I think if you try to fix that, code will get ugly, so I suggest that
+you let SETFLAGS slide.
 
-This means that we need to flush the page cache when setting the
-immutable flag so that programs cannot continue to write to writable
-mappings.
+Thanks,
+Amir.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_ioctl.c |   63 +++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 43 insertions(+), 20 deletions(-)
-
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 6ecdbb3af7de..2bd1c5ab5008 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -998,6 +998,37 @@ xfs_diflags_to_linux(
- #endif
- }
- 
-+static int
-+xfs_ioctl_setattr_flush(
-+	struct xfs_inode	*ip,
-+	int			*join_flags)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+	int			error;
-+
-+	if (S_ISDIR(inode->i_mode))
-+		return 0;
-+	if ((*join_flags) & (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL))
-+		return 0;
-+
-+	/* lock, flush and invalidate mapping in preparation for flag change */
-+	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-+	error = filemap_write_and_wait(inode->i_mapping);
-+	if (error)
-+		goto out_unlock;
-+	error = invalidate_inode_pages2(inode->i_mapping);
-+	if (error)
-+		goto out_unlock;
-+
-+	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
-+	return 0;
-+
-+out_unlock:
-+	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-+	return error;
-+
-+}
-+
- static int
- xfs_ioctl_setattr_xflags(
- 	struct xfs_trans	*tp,
-@@ -1067,7 +1098,6 @@ xfs_ioctl_setattr_dax_invalidate(
- {
- 	struct inode		*inode = VFS_I(ip);
- 	struct super_block	*sb = inode->i_sb;
--	int			error;
- 
- 	*join_flags = 0;
- 
-@@ -1092,25 +1122,7 @@ xfs_ioctl_setattr_dax_invalidate(
- 	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
- 		return 0;
- 
--	if (S_ISDIR(inode->i_mode))
--		return 0;
--
--	/* lock, flush and invalidate mapping in preparation for flag change */
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
--	error = filemap_write_and_wait(inode->i_mapping);
--	if (error)
--		goto out_unlock;
--	error = invalidate_inode_pages2(inode->i_mapping);
--	if (error)
--		goto out_unlock;
--
--	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
--	return 0;
--
--out_unlock:
--	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
--	return error;
--
-+	return xfs_ioctl_setattr_flush(ip, join_flags);
- }
- 
- /*
-@@ -1356,6 +1368,17 @@ xfs_ioctl_setattr(
- 	if (code)
- 		goto error_free_dquots;
- 
-+	/*
-+	 * If we are trying to set immutable then flush everything to disk to
-+	 * force all writable memory mappings back through the pagefault
-+	 * handler.
-+	 */
-+	if (!IS_IMMUTABLE(VFS_I(ip)) && (fa->fsx_xflags & FS_XFLAG_IMMUTABLE)) {
-+		code = xfs_ioctl_setattr_flush(ip, &join_flags);
-+		if (code)
-+			goto error_free_dquots;
-+	}
-+
- 	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
- 	if (IS_ERR(tp)) {
- 		code = PTR_ERR(tp);
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_ioctl.c |    8 ++++++++
+>  1 file changed, 8 insertions(+)
+>
+>
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 2bd1c5ab5008..9cf0bc0ae2bd 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1067,6 +1067,14 @@ xfs_ioctl_setattr_xflags(
+>             !capable(CAP_LINUX_IMMUTABLE))
+>                 return -EPERM;
+>
+> +       /*
+> +        * If immutable is set and we are not clearing it, we're not allowed
+> +        * to change anything else in the inode.
+> +        */
+> +       if ((ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE) &&
+> +           (fa->fsx_xflags & FS_XFLAG_IMMUTABLE))
+> +               return -EPERM;
+> +
+>         /* diflags2 only valid for v3 inodes. */
+>         di_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
+>         if (di_flags2 && ip->i_d.di_version < 3)
+>
