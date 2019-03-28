@@ -1,86 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f197.google.com ([209.85.166.197]:37179 "EHLO
-        mail-it1-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728550AbfC2KmF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 06:42:05 -0400
-Received: by mail-it1-f197.google.com with SMTP id q203so1755174itb.2
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Mar 2019 03:42:05 -0700 (PDT)
+Received: from aserp2130.oracle.com ([141.146.126.79]:40288 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726453AbfC1Rur (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Mar 2019 13:50:47 -0400
+Subject: [PATCH 1/3] mm/fs: don't allow writes to immutable files
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 28 Mar 2019 10:50:40 -0700
+Message-ID: <155379544071.24796.11489520877297987568.stgit@magnolia>
+In-Reply-To: <155379543409.24796.5783716624820175068.stgit@magnolia>
+References: <155379543409.24796.5783716624820175068.stgit@magnolia>
 MIME-Version: 1.0
-Date: Fri, 29 Mar 2019 03:42:05 -0700
-Message-ID: <0000000000005ff8b20585395280@google.com>
-Subject: BUG: MAX_STACK_TRACE_ENTRIES too low! (2)
-From: syzbot <syzbot+6f39a9deb697359fe520@syzkaller.appspotmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
 
-Hello,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-syzbot found the following crash on:
+The chattr manpage has this to say about immutable files:
 
-HEAD commit:    1a9df9e2 Merge git://git.kernel.org/pub/scm/linux/kernel/g..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=14dc2f2b200000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=8dcdce25ea72bedf
-dashboard link: https://syzkaller.appspot.com/bug?extid=6f39a9deb697359fe520
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
+"A file with the 'i' attribute cannot be modified: it cannot be deleted
+or renamed, no link can be created to this file, most of the file's
+metadata can not be modified, and the file can not be opened in write
+mode."
 
-Unfortunately, I don't have any reproducer for this crash yet.
+Once the flag is set, it is enforced for quite a few file operations,
+such as fallocate, fpunch, fzero, rm, touch, open, etc.  However, we
+don't check for immutability when doing a write(), a PROT_WRITE mmap(),
+a truncate(), or a write to a previously established mmap.
 
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+6f39a9deb697359fe520@syzkaller.appspotmail.com
+If a program has an open write fd to a file that the administrator
+subsequently marks immutable, the program still can change the file
+contents.  Weird!
 
-XFS (loop4): Invalid superblock magic number
-BUG: MAX_STACK_TRACE_ENTRIES too low!
-turning off the locking correctness validator.
-CPU: 0 PID: 1067 Comm: syz-executor.4 Not tainted 5.1.0-rc2+ #40
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
-Google 01/01/2011
-Call Trace:
-  __dump_stack lib/dump_stack.c:77 [inline]
-  dump_stack+0x172/0x1f0 lib/dump_stack.c:113
-  save_trace kernel/locking/lockdep.c:467 [inline]
-  save_trace.cold+0x14/0x19 kernel/locking/lockdep.c:437
-  check_prev_add.constprop.0+0x8dc/0x23c0 kernel/locking/lockdep.c:2268
-  check_prevs_add kernel/locking/lockdep.c:2333 [inline]
-  validate_chain kernel/locking/lockdep.c:2714 [inline]
-  __lock_acquire+0x239c/0x3fb0 kernel/locking/lockdep.c:3701
-  lock_acquire+0x16f/0x3f0 kernel/locking/lockdep.c:4211
-  flush_workqueue+0x126/0x14c0 kernel/workqueue.c:2774
-  drain_workqueue+0x1b4/0x470 kernel/workqueue.c:2939
-  destroy_workqueue+0x21/0x700 kernel/workqueue.c:4320
-  xfs_destroy_mount_workqueues+0xc5/0x1c0 fs/xfs/xfs_super.c:904
-  xfs_fs_fill_super+0x8e9/0x1670 fs/xfs/xfs_super.c:1786
-  mount_bdev+0x307/0x3c0 fs/super.c:1346
-  xfs_fs_mount+0x35/0x40 fs/xfs/xfs_super.c:1834
-  legacy_get_tree+0xf2/0x200 fs/fs_context.c:584
-  vfs_get_tree+0x123/0x450 fs/super.c:1481
-  do_new_mount fs/namespace.c:2622 [inline]
-  do_mount+0x1436/0x2c40 fs/namespace.c:2942
-  ksys_mount+0xdb/0x150 fs/namespace.c:3151
-  __do_sys_mount fs/namespace.c:3165 [inline]
-  __se_sys_mount fs/namespace.c:3162 [inline]
-  __x64_sys_mount+0xbe/0x150 fs/namespace.c:3162
-  do_syscall_64+0x103/0x610 arch/x86/entry/common.c:290
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-RIP: 0033:0x45ac7a
-Code: b8 a6 00 00 00 0f 05 48 3d 01 f0 ff ff 0f 83 2d 8e fb ff c3 66 2e 0f  
-1f 84 00 00 00 00 00 66 90 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff  
-ff 0f 83 0a 8e fb ff c3 66 0f 1f 84 00 00 00 00 00
-RSP: 002b:00007f5a0187aa88 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-RAX: ffffffffffffffda RBX: 00007f5a0187ab40 RCX: 000000000045ac7a
-RDX: 00007f5a0187aae0 RSI: 00000000200006c0 RDI: 00007f5a0187ab00
-RBP: 0000000000000000 R08: 00007f5a0187ab40 R09: 00007f5a0187aae0
-R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000000003
-R13: 00000000004c6bd2 R14: 00000000004dc5b0 R15: 00000000ffffffff
+The ability to write to an immutable file does not follow the manpage
+promise that immutable files cannot be modified.  Worse yet it's
+inconsistent with the behavior of other syscalls which don't allow
+modifications of immutable files.
 
+Therefore, add the necessary checks to make the write, mmap, and
+truncate behavior consistent with what the manpage says and consistent
+with other syscalls on filesystems which support IMMUTABLE.
 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-This bug is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+ fs/attr.c    |   13 ++++++-------
+ mm/filemap.c |    3 +++
+ mm/memory.c  |    3 +++
+ mm/mmap.c    |    3 +++
+ 4 files changed, 15 insertions(+), 7 deletions(-)
 
-syzbot will keep track of this bug report. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+diff --git a/fs/attr.c b/fs/attr.c
+index d22e8187477f..1fcfdcc5b367 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -233,19 +233,18 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
+ 
+ 	WARN_ON_ONCE(!inode_is_locked(inode));
+ 
+-	if (ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) {
+-		if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+-			return -EPERM;
+-	}
++	if (IS_IMMUTABLE(inode))
++		return -EPERM;
++
++	if ((ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) &&
++	    IS_APPEND(inode))
++		return -EPERM;
+ 
+ 	/*
+ 	 * If utimes(2) and friends are called with times == NULL (or both
+ 	 * times are UTIME_NOW), then we need to check for write permission
+ 	 */
+ 	if (ia_valid & ATTR_TOUCH) {
+-		if (IS_IMMUTABLE(inode))
+-			return -EPERM;
+-
+ 		if (!inode_owner_or_capable(inode)) {
+ 			error = inode_permission(inode, MAY_WRITE);
+ 			if (error)
+diff --git a/mm/filemap.c b/mm/filemap.c
+index d78f577baef2..9fed698f4c63 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -3033,6 +3033,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+ 	loff_t count;
+ 	int ret;
+ 
++	if (IS_IMMUTABLE(inode))
++		return -EPERM;
++
+ 	if (!iov_iter_count(from))
+ 		return 0;
+ 
+diff --git a/mm/memory.c b/mm/memory.c
+index 47fe250307c7..c493db22413a 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -2148,6 +2148,9 @@ static vm_fault_t do_page_mkwrite(struct vm_fault *vmf)
+ 
+ 	vmf->flags = FAULT_FLAG_WRITE|FAULT_FLAG_MKWRITE;
+ 
++	if (vmf->vma->vm_file && IS_IMMUTABLE(file_inode(vmf->vma->vm_file)))
++		return VM_FAULT_SIGBUS;
++
+ 	ret = vmf->vma->vm_ops->page_mkwrite(vmf);
+ 	/* Restore original flags so that caller is not surprised */
+ 	vmf->flags = old_flags;
+diff --git a/mm/mmap.c b/mm/mmap.c
+index 41eb48d9b527..e49dcbeda461 100644
+--- a/mm/mmap.c
++++ b/mm/mmap.c
+@@ -1394,6 +1394,9 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+ 	if (!len)
+ 		return -EINVAL;
+ 
++	if (file && IS_IMMUTABLE(file_inode(file)))
++		return -EPERM;
++
+ 	/*
+ 	 * Does the application expect PROT_READ to imply PROT_EXEC?
+ 	 *
