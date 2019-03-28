@@ -1,54 +1,197 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48114 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729639AbfC2NlA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 29 Mar 2019 09:41:00 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 237FB369A0
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Mar 2019 13:41:00 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D2C47282EE
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Mar 2019 13:40:59 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 0/2] xfs: a couple minor shutdown fixes
-Date: Fri, 29 Mar 2019 09:40:57 -0400
-Message-Id: <20190329134059.12723-1-bfoster@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:53394 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726029AbfC1PSC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Mar 2019 11:18:02 -0400
+Date: Thu, 28 Mar 2019 08:17:44 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC PATCH] xfs: merge adjacent io completions of the same type
+Message-ID: <20190328151744.GB18833@magnolia>
+References: <20190327030550.GZ1183@magnolia>
+ <20190327030634.GA1183@magnolia>
+ <20190328141009.GB17056@bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190328141009.GB17056@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-Hi all,
+On Thu, Mar 28, 2019 at 10:10:10AM -0400, Brian Foster wrote:
+> On Tue, Mar 26, 2019 at 08:06:34PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > When we're processing an ioend on the list of io completions, check to
+> > see if the next items on the list are both adjacent and of the same
+> > type.  If so, we can merge the completions to reduce transaction
+> > overhead.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> 
+> I'm curious of the value of this one... what situations allow for
+> batching on the ioend completion side that we haven't already accounted
+> for in the ioend construction side?
 
-Here are a couple of shutdown fixups that fell out of Darrick's recent
-report of a deadlock problem via generic/475. I've still not been able
-to reproduce the generic/475 deadlock, but Darrick has tested patch 1
-and last I heard reported that the deadlock had not reoccurred. Patch 2
-fixes up a buffer leak and reorders the shutdown in the
-xfs_iflush_cluster() abort codepath.
+I was skeptical too, but Dave (I think?) pointed out that writeback can
+split into 1GB chunks so it actually is possible to end up with adjacent
+ioends.  So I wrote this patch and added a tracepoint, and lo it
+actually did trigger when there's a lot of data to flush out, and we
+succeed at allocating a single extent for the entire delalloc reservation.
 
-After making a higher level pass across the codebase, there are still
-places where we technically invoke synchronous log forces (or filesystem
-shutdowns, which can induce a sync log force) with various object locks
-held. This isn't always a problem as some are contexts where a buffer
-should never be pinned, etc. That said, if we want to institute a
-general policy of never inducing sync log forces or shutdowns from
-contexts with held locks then I'd suggest that's something we should
-evolve opportunistically over time.
+> The latter already batches until we
+> cross a change in fork type, extent state, or a break in logical or
+> physical contiguity. The former looks like it follows similar logic for
+> merging with the exceptions of allowing for merges of physically
+> discontiguous extents and disallowing merges of those with different
+> append status. That seems like a smallish window of opportunity to me..
+> am I missing something?
 
-Thoughts, reviews, flames appreciated.
+Yep, it's a smallish window; small discontiguous writes don't benefit
+here at all.
 
-Brian
+> If that is the gist but there is enough benefit for the more lenient
+> merging, I also wonder whether it would be more efficient to try and
+> also accomplish that on the construction side rather than via completion
+> post-processing. For example, could we abstract a single ioend to cover
+> an arbitrary list of bio/page -> sector mappings with the same higher
+> level semantics? We already have a bio chaining mechanism, it's just
+> only used for when a bio is full. Could we reuse that for dealing with
+> physical discontiguity?
 
-Brian Foster (2):
-  xfs: wake commit waiters on CIL abort before log item abort
-  xfs: shutdown after buf release in iflush cluster abort path
+I suppose we could, though the bigger the ioend the longer it'll take to
+process responses.  Also, I think it's the case that if any of the bios
+fail then we treat all of the chained ones as failed?  (Meh, it's
+writeback, it's not like you get to know /which/ writes failed unless
+you do a stupid write()/fsync() dance...)
 
- fs/xfs/xfs_inode.c   |  4 +++-
- fs/xfs/xfs_log_cil.c | 21 +++++++++++++--------
- 2 files changed, 16 insertions(+), 9 deletions(-)
+The other thing is that directio completions look very similar to
+writeback completions, including the potential for having the thundering
+herds pounding on the ILOCK.  I was thinking about refactoring those to
+use the per-inode queue as a next step, though the directio completion
+paths are murky.
 
--- 
-2.17.2
+> Brian
+> 
+> >  fs/xfs/xfs_aops.c |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 86 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index f7a9bb661826..53afa2e6e3e7 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -237,6 +237,7 @@ STATIC void
+> >  xfs_end_ioend(
+> >  	struct xfs_ioend	*ioend)
+> >  {
+> > +	struct list_head	ioend_list;
+> >  	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+> >  	xfs_off_t		offset = ioend->io_offset;
+> >  	size_t			size = ioend->io_size;
+> > @@ -273,7 +274,89 @@ xfs_end_ioend(
+> >  done:
+> >  	if (ioend->io_append_trans)
+> >  		error = xfs_setfilesize_ioend(ioend, error);
+> > +	list_replace_init(&ioend->io_list, &ioend_list);
+> >  	xfs_destroy_ioend(ioend, error);
+> > +
+> > +	while (!list_empty(&ioend_list)) {
+> > +		ioend = list_first_entry(&ioend_list, struct xfs_ioend,
+> > +				io_list);
+> > +		list_del_init(&ioend->io_list);
+> > +		xfs_destroy_ioend(ioend, error);
+> > +	}
+> > +}
+> > +
+> > +/*
+> > + * We can merge two adjacent ioends if they have the same set of work to do.
+> > + */
+> > +static bool
+> > +xfs_ioend_can_merge(
+> > +	struct xfs_ioend	*ioend,
+> > +	int			ioend_error,
+> > +	struct xfs_ioend	*next)
+> > +{
+> > +	int			next_error;
+> > +
+> > +	next_error = blk_status_to_errno(next->io_bio->bi_status);
+> > +	if (ioend_error != next_error)
+> > +		return false;
+> > +	if ((ioend->io_fork == XFS_COW_FORK) ^ (next->io_fork == XFS_COW_FORK))
+> > +		return false;
+> > +	if ((ioend->io_state == XFS_EXT_UNWRITTEN) ^
+> > +	    (next->io_state == XFS_EXT_UNWRITTEN))
+> > +		return false;
+> > +	if (ioend->io_offset + ioend->io_size != next->io_offset)
+> > +		return false;
+> > +	if (xfs_ioend_is_append(ioend) != xfs_ioend_is_append(next))
+> > +		return false;
+> > +	return true;
+> > +}
+> > +
+> > +/* Try to merge adjacent completions. */
+> > +STATIC void
+> > +xfs_ioend_try_merge(
+> > +	struct xfs_ioend	*ioend,
+> > +	struct list_head	*more_ioends)
+> > +{
+> > +	struct xfs_ioend	*next_ioend;
+> > +	int			ioend_error;
+> > +	int			error;
+> > +
+> > +	if (list_empty(more_ioends))
+> > +		return;
+> > +
+> > +	ioend_error = blk_status_to_errno(ioend->io_bio->bi_status);
+> > +
+> > +	while (!list_empty(more_ioends)) {
+> > +		next_ioend = list_first_entry(more_ioends, struct xfs_ioend,
+> > +				io_list);
+> > +		if (!xfs_ioend_can_merge(ioend, ioend_error, next_ioend))
+> > +			break;
+> > +		list_move_tail(&next_ioend->io_list, &ioend->io_list);
+> > +		ioend->io_size += next_ioend->io_size;
+> > +		if (ioend->io_append_trans) {
+> > +			error = xfs_setfilesize_ioend(next_ioend, 1);
+> > +			ASSERT(error == 1);
+> > +		}
+> > +	}
+> > +}
+> > +
+> > +/* list_sort compare function for ioends */
+> > +static int
+> > +xfs_ioend_compare(
+> > +	void			*priv,
+> > +	struct list_head	*a,
+> > +	struct list_head	*b)
+> > +{
+> > +	struct xfs_ioend	*ia;
+> > +	struct xfs_ioend	*ib;
+> > +
+> > +	ia = container_of(a, struct xfs_ioend, io_list);
+> > +	ib = container_of(b, struct xfs_ioend, io_list);
+> > +	if (ia->io_offset < ib->io_offset)
+> > +		return -1;
+> > +	else if (ia->io_offset > ib->io_offset)
+> > +		return 1;
+> > +	return 0;
+> >  }
+> >  
+> >  /* Finish all pending io completions. */
+> > @@ -292,10 +375,13 @@ xfs_end_io(
+> >  	list_replace_init(&ip->i_iodone_list, &completion_list);
+> >  	spin_unlock_irqrestore(&ip->i_iodone_lock, flags);
+> >  
+> > +	list_sort(NULL, &completion_list, xfs_ioend_compare);
+> > +
+> >  	while (!list_empty(&completion_list)) {
+> >  		ioend = list_first_entry(&completion_list, struct xfs_ioend,
+> >  				io_list);
+> >  		list_del_init(&ioend->io_list);
+> > +		xfs_ioend_try_merge(ioend, &completion_list);
+> >  		xfs_end_ioend(ioend);
+> >  	}
+> >  }
