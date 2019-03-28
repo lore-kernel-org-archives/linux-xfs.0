@@ -1,42 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f197.google.com ([209.85.166.197]:57577 "EHLO
-        mail-it1-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730666AbfC3V6C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Mar 2019 17:58:02 -0400
-Received: by mail-it1-f197.google.com with SMTP id p23so5839003itc.7
-        for <linux-xfs@vger.kernel.org>; Sat, 30 Mar 2019 14:58:01 -0700 (PDT)
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:26737 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726393AbfC1V3x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Mar 2019 17:29:53 -0400
+Date: Fri, 29 Mar 2019 08:29:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs: don't allow most setxattr to immutable files
+Message-ID: <20190328212948.GL23020@dastard>
+References: <155379543409.24796.5783716624820175068.stgit@magnolia>
+ <155379545404.24796.5019142212767521955.stgit@magnolia>
 MIME-Version: 1.0
-Date: Sat, 30 Mar 2019 14:58:01 -0700
-In-Reply-To: <0000000000005ff8b20585395280@google.com>
-Message-ID: <00000000000089a718058556e1d8@google.com>
-Subject: Re: BUG: MAX_STACK_TRACE_ENTRIES too low! (2)
-From: syzbot <syzbot+6f39a9deb697359fe520@syzkaller.appspotmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155379545404.24796.5019142212767521955.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: akpm@linux-foundation.org, bvanassche@acm.org, danitg@mellanox.com, darrick.wong@oracle.com, dledford@redhat.com, gustavo@embeddedor.com, jannh@google.com, jgg@ziepe.ca, johannes.berg@intel.com, leon@kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-xfs@vger.kernel.org, longman@redhat.com, mingo@kernel.org, paulmck@linux.vnet.ibm.com, peterz@infradead.org, roland@purestorage.com, shamir.rabinovitch@oracle.com, syzkaller-bugs@googlegroups.com, tglx@linutronix.de, tj@kernel.org, torvalds@linux-foundation.org, will.deacon@arm.com, xiyou.wangcong@gmail.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
 
-syzbot has bisected this bug to:
+On Thu, Mar 28, 2019 at 10:50:54AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> The chattr manpage has this to say about immutable files:
+> 
+> "A file with the 'i' attribute cannot be modified: it cannot be deleted
+> or renamed, no link can be created to this file, most of the file's
+> metadata can not be modified, and the file can not be opened in write
+> mode."
+> 
+> However, we don't actually check the immutable flag in the setattr code,
+> which means that we can update project ids and extent size hints on
+> supposedly immutable files.  Therefore, reject a setattr call on an
+> immutable file except for the case where we're trying to unset
+> IMMUTABLE.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_ioctl.c |    8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 2bd1c5ab5008..9cf0bc0ae2bd 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1067,6 +1067,14 @@ xfs_ioctl_setattr_xflags(
+>  	    !capable(CAP_LINUX_IMMUTABLE))
+>  		return -EPERM;
+>  
+> +	/*
+> +	 * If immutable is set and we are not clearing it, we're not allowed
+> +	 * to change anything else in the inode.
+> +	 */
+> +	if ((ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE) &&
+> +	    (fa->fsx_xflags & FS_XFLAG_IMMUTABLE))
+> +		return -EPERM;
+> +
+>  	/* diflags2 only valid for v3 inodes. */
+>  	di_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
+>  	if (di_flags2 && ip->i_d.di_version < 3)
 
-commit 669de8bda87b92ab9a2fc663b3f5743c2ad1ae9f
-Author: Bart Van Assche <bvanassche@acm.org>
-Date:   Thu Feb 14 23:00:54 2019 +0000
+Looks fine - catches both FS_IOC_SETFLAGS and FS_IOC_FSSETXATTR
+for XFS.
 
-     kernel/workqueue: Use dynamic lockdep keys for workqueues
+Do the other filesystems that implement FS_IOC_FSSETXATTR have
+the same bug?
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=17f1bacd200000
-start commit:   0e40da3e Merge tag 'kbuild-fixes-v5.1' of git://git.kernel..
-git tree:       upstream
-final crash:    https://syzkaller.appspot.com/x/report.txt?x=1409bacd200000
-console output: https://syzkaller.appspot.com/x/log.txt?x=1009bacd200000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=8dcdce25ea72bedf
-dashboard link: https://syzkaller.appspot.com/bug?extid=6f39a9deb697359fe520
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=10e1bacd200000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1120fe0f200000
+Cheers,
 
-Reported-by: syzbot+6f39a9deb697359fe520@syzkaller.appspotmail.com
-Fixes: 669de8bda87b ("kernel/workqueue: Use dynamic lockdep keys for  
-workqueues")
-
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
