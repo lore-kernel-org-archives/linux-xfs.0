@@ -1,29 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37042 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729982AbfC2VuL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 29 Mar 2019 17:50:11 -0400
-Subject: Re: [GIT PULL] xfs: bug fixes for 5.1-rc3
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20190329133311.GD18833@magnolia>
-References: <20190329133311.GD18833@magnolia>
-Message-Id: <155389621112.28625.10371773111263951960.pr-tracker-bot@kernel.org>
-Date: Fri, 29 Mar 2019 21:50:11 +0000
+Received: from mail-io1-f68.google.com ([209.85.166.68]:47076 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726275AbfC1PHG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Mar 2019 11:07:06 -0400
+Received: by mail-io1-f68.google.com with SMTP id b9so17478971iot.13
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2019 08:07:05 -0700 (PDT)
+Subject: Re: [PATCH] block: clarify that bio_add_page() and related helpers
+ can add multi pages
+References: <20190328035001.26276-1-ming.lei@redhat.com>
+ <5258cad3-b324-660f-589f-73eb7fb8fa04@kernel.dk>
+ <20190328150320.GB9265@infradead.org>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <8e53a36f-2b73-55bf-e404-52cfa0192981@kernel.dk>
+Date: Thu, 28 Mar 2019 09:07:03 -0600
+MIME-Version: 1.0
+In-Reply-To: <20190328150320.GB9265@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: torvalds@linux-foundation.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-The pull request you sent on Fri, 29 Mar 2019 06:33:11 -0700:
+On 3/28/19 9:03 AM, Christoph Hellwig wrote:
+> On Thu, Mar 28, 2019 at 08:21:55AM -0600, Jens Axboe wrote:
+>> This is going to create a needless conflict between 5.1 and the 5.2
+>> block tree. I haven't pushed the 5.2 tree out yet, plan to do so
+>> this week after I've pushed the current 5.1 patches. Can you respin
+>> this one on top of for-5.2/block when it comes out?
+> 
+> Can we also drop the parameter name rename and just add the comments?
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.1-fixes-1
-
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/c6503f12d135a616b25be99a492765fc9e9fe07e
-
-Thank you!
+Yeah, that might be better to avoid needless churn.
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+Jens Axboe
