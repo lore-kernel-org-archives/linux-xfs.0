@@ -1,268 +1,187 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51082 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727366AbfCNVFT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Mar 2019 17:05:19 -0400
-Subject: [PATCH 14/36] xfs_scrub: don't expose internal pool state
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 14 Mar 2019 14:05:15 -0700
-Message-ID: <155259751554.31886.1451967052557022474.stgit@magnolia>
-In-Reply-To: <155259742281.31886.17157720770696604377.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:59698 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727940AbfC1XAm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Mar 2019 19:00:42 -0400
+Subject: Re: [PATCH 17/36] xfs_scrub: check label for misleading characters
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <155259753535.31886.7933186379056372168.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <a950b125-3068-f091-8c49-51e2c90e31a9@sandeen.net>
+Date: Thu, 28 Mar 2019 18:00:41 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <155259753535.31886.7933186379056372168.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 3/14/19 4:05 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Make sure that we can retrieve the label and that it doesn't contain
+> anything potentially misleading.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-In xfs_scrub, the read/verify pool tries to coalesce the media
-verification requests into a smaller number of large IOs.  There's no
-need to force callers to keep track of this internal state, so just move
-all that into read_verify.c.
+Ok nitpick withdrawn
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/phase6.c      |   23 +++++++----------------
- scrub/read_verify.c |   40 ++++++++++++++++++++++++++++++++++------
- scrub/read_verify.h |   16 ++++------------
- 3 files changed, 45 insertions(+), 34 deletions(-)
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index ead48d77..fe121769 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -9,7 +9,6 @@
- #include <sys/statvfs.h>
- #include "handle.h"
- #include "path.h"
--#include "ptvar.h"
- #include "workqueue.h"
- #include "xfs_scrub.h"
- #include "common.h"
-@@ -290,7 +289,6 @@ xfs_report_verify_errors(
- 
- struct xfs_verify_extent {
- 	struct read_verify_pool	*readverify;
--	struct ptvar		*rvstate;
- 	struct bitmap		*d_bad;		/* bytes */
- 	struct bitmap		*r_bad;		/* bytes */
- };
-@@ -424,13 +422,13 @@ xfs_check_rmap(
- 	/* Schedule the read verify command for (eventual) running. */
- 	disk = xfs_dev_to_disk(ctx, map->fmr_device);
- 
--	read_verify_schedule_io(ve->readverify, ptvar_get(ve->rvstate), disk,
--			map->fmr_physical, map->fmr_length, ve);
-+	read_verify_schedule_io(ve->readverify, disk, map->fmr_physical,
-+			map->fmr_length, ve);
- 
- out:
- 	/* Is this the last extent?  Fire off the read. */
- 	if (map->fmr_flags & FMR_OF_LAST)
--		read_verify_force_io(ve->readverify, ptvar_get(ve->rvstate));
-+		read_verify_force_io(ve->readverify);
- 
- 	return true;
- }
-@@ -450,16 +448,10 @@ xfs_scan_blocks(
- 	struct xfs_verify_extent	ve;
- 	bool				moveon;
- 
--	ve.rvstate = ptvar_init(scrub_nproc(ctx), sizeof(struct read_verify));
--	if (!ve.rvstate) {
--		str_errno(ctx, ctx->mntpoint);
--		return false;
--	}
--
- 	moveon = bitmap_init(&ve.d_bad);
- 	if (!moveon) {
- 		str_errno(ctx, ctx->mntpoint);
--		goto out_ve;
-+		goto out;
- 	}
- 
- 	moveon = bitmap_init(&ve.r_bad);
-@@ -469,7 +461,8 @@ xfs_scan_blocks(
- 	}
- 
- 	ve.readverify = read_verify_pool_init(ctx, ctx->geo.blocksize,
--			xfs_check_rmap_ioerr, disk_heads(ctx->datadev));
-+			xfs_check_rmap_ioerr, disk_heads(ctx->datadev),
-+			scrub_nproc(ctx));
- 	if (!ve.readverify) {
- 		moveon = false;
- 		str_info(ctx, ctx->mntpoint,
-@@ -489,7 +482,6 @@ _("Could not create media verifier."));
- 
- 	bitmap_free(&ve.r_bad);
- 	bitmap_free(&ve.d_bad);
--	ptvar_free(ve.rvstate);
- 	return moveon;
- 
- out_pool:
-@@ -498,8 +490,7 @@ _("Could not create media verifier."));
- 	bitmap_free(&ve.r_bad);
- out_dbad:
- 	bitmap_free(&ve.d_bad);
--out_ve:
--	ptvar_free(ve.rvstate);
-+out:
- 	return moveon;
- }
- 
-diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index 75cb53ca..b5774736 100644
---- a/scrub/read_verify.c
-+++ b/scrub/read_verify.c
-@@ -7,6 +7,7 @@
- #include <stdint.h>
- #include <stdlib.h>
- #include <sys/statvfs.h>
-+#include "ptvar.h"
- #include "workqueue.h"
- #include "path.h"
- #include "xfs_scrub.h"
-@@ -36,22 +37,40 @@
- /* Tolerate 64k holes in adjacent read verify requests. */
- #define RVP_IO_BATCH_LOCALITY	(65536)
- 
-+struct read_verify {
-+	void			*io_end_arg;
-+	struct disk		*io_disk;
-+	uint64_t		io_start;	/* bytes */
-+	uint64_t		io_length;	/* bytes */
-+};
-+
- struct read_verify_pool {
- 	struct workqueue	wq;		/* thread pool */
- 	struct scrub_ctx	*ctx;		/* scrub context */
- 	void			*readbuf;	/* read buffer */
- 	struct ptcounter	*verified_bytes;
-+	struct ptvar		*rvstate;	/* combines read requests */
- 	read_verify_ioerr_fn_t	ioerr_fn;	/* io error callback */
- 	size_t			miniosz;	/* minimum io size, bytes */
- };
- 
--/* Create a thread pool to run read verifiers. */
-+/*
-+ * Create a thread pool to run read verifiers.
-+ *
-+ * @miniosz is the minimum size of an IO to expect (in bytes).
-+ * @ioerr_fn will be called when IO errors occur.
-+ * @nproc is the maximum number of verify requests that may be sent to a disk
-+ * at any given time.
-+ * @submitter_threads is the number of threads that may be sending verify
-+ * requests at any given time.
-+ */
- struct read_verify_pool *
- read_verify_pool_init(
- 	struct scrub_ctx		*ctx,
- 	size_t				miniosz,
- 	read_verify_ioerr_fn_t		ioerr_fn,
--	unsigned int			nproc)
-+	unsigned int			nproc,
-+	unsigned int			submitter_threads)
- {
- 	struct read_verify_pool		*rvp;
- 	bool				ret;
-@@ -71,14 +90,20 @@ read_verify_pool_init(
- 	rvp->miniosz = miniosz;
- 	rvp->ctx = ctx;
- 	rvp->ioerr_fn = ioerr_fn;
-+	rvp->rvstate = ptvar_init(submitter_threads,
-+			sizeof(struct read_verify));
-+	if (rvp->rvstate == NULL)
-+		goto out_counter;
- 	/* Run in the main thread if we only want one thread. */
- 	if (nproc == 1)
- 		nproc = 0;
- 	ret = workqueue_create(&rvp->wq, (struct xfs_mount *)rvp, nproc);
- 	if (ret)
--		goto out_counter;
-+		goto out_rvstate;
- 	return rvp;
- 
-+out_rvstate:
-+	ptvar_free(rvp->rvstate);
- out_counter:
- 	ptcounter_free(rvp->verified_bytes);
- out_buf:
-@@ -101,6 +126,7 @@ void
- read_verify_pool_destroy(
- 	struct read_verify_pool		*rvp)
- {
-+	ptvar_free(rvp->rvstate);
- 	ptcounter_free(rvp->verified_bytes);
- 	free(rvp->readbuf);
- 	free(rvp);
-@@ -186,16 +212,17 @@ _("Could not queue read-verify work."));
- bool
- read_verify_schedule_io(
- 	struct read_verify_pool		*rvp,
--	struct read_verify		*rv,
- 	struct disk			*disk,
- 	uint64_t			start,
- 	uint64_t			length,
- 	void				*end_arg)
- {
-+	struct read_verify		*rv;
- 	uint64_t			req_end;
- 	uint64_t			rv_end;
- 
- 	assert(rvp->readbuf);
-+	rv = ptvar_get(rvp->rvstate);
- 	req_end = start + length;
- 	rv_end = rv->io_start + rv->io_length;
- 
-@@ -229,12 +256,13 @@ read_verify_schedule_io(
- /* Force any stashed IOs into the verifier. */
- bool
- read_verify_force_io(
--	struct read_verify_pool		*rvp,
--	struct read_verify		*rv)
-+	struct read_verify_pool		*rvp)
- {
-+	struct read_verify		*rv;
- 	bool				moveon;
- 
- 	assert(rvp->readbuf);
-+	rv = ptvar_get(rvp->rvstate);
- 	if (rv->io_length == 0)
- 		return true;
- 
-diff --git a/scrub/read_verify.h b/scrub/read_verify.h
-index 38f1cd1a..1e7fd83f 100644
---- a/scrub/read_verify.h
-+++ b/scrub/read_verify.h
-@@ -16,21 +16,13 @@ typedef void (*read_verify_ioerr_fn_t)(struct scrub_ctx *ctx,
- 
- struct read_verify_pool *read_verify_pool_init(struct scrub_ctx *ctx,
- 		size_t miniosz, read_verify_ioerr_fn_t ioerr_fn,
--		unsigned int nproc);
-+		unsigned int nproc, unsigned int submitter_threads);
- void read_verify_pool_flush(struct read_verify_pool *rvp);
- void read_verify_pool_destroy(struct read_verify_pool *rvp);
- 
--struct read_verify {
--	void			*io_end_arg;
--	struct disk		*io_disk;
--	uint64_t		io_start;	/* bytes */
--	uint64_t		io_length;	/* bytes */
--};
--
--bool read_verify_schedule_io(struct read_verify_pool *rvp,
--		struct read_verify *rv, struct disk *disk, uint64_t start,
--		uint64_t length, void *end_arg);
--bool read_verify_force_io(struct read_verify_pool *rvp, struct read_verify *rv);
-+bool read_verify_schedule_io(struct read_verify_pool *rvp, struct disk *disk,
-+		uint64_t start, uint64_t length, void *end_arg);
-+bool read_verify_force_io(struct read_verify_pool *rvp);
- uint64_t read_verify_bytes(struct read_verify_pool *rvp);
- 
- #endif /* XFS_SCRUB_READ_VERIFY_H_ */
+> ---
+>  scrub/phase5.c   |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  scrub/unicrash.c |   24 ++++++++++++++++++++++++
+>  scrub/unicrash.h |    5 +++++
+>  3 files changed, 83 insertions(+)
+> 
+> 
+> diff --git a/scrub/phase5.c b/scrub/phase5.c
+> index 6ffcec2d..49886e6f 100644
+> --- a/scrub/phase5.c
+> +++ b/scrub/phase5.c
+> @@ -11,6 +11,7 @@
+>  #ifdef HAVE_LIBATTR
+>  # include <attr/attributes.h>
+>  #endif
+> +#include <linux/fs.h>
+>  #include "handle.h"
+>  #include "list.h"
+>  #include "path.h"
+> @@ -282,6 +283,55 @@ xfs_scrub_connections(
+>  	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
+>  }
+>  
+> +#ifndef FS_IOC_GETFSLABEL
+> +# define FSLABEL_MAX		256
+> +# define FS_IOC_GETFSLABEL	_IOR(0x94, 49, char[FSLABEL_MAX])
+> +#endif /* FS_IOC_GETFSLABEL */
+> +
+> +/*
+> + * Check the filesystem label for Unicode normalization problems or misleading
+> + * sequences.
+> + */
+> +static bool
+> +xfs_scrub_fs_label(
+> +	struct scrub_ctx		*ctx)
+> +{
+> +	char				label[FSLABEL_MAX];
+> +	struct unicrash			*uc = NULL;
+> +	bool				moveon = true;
+> +	int				error;
+> +
+> +	moveon = unicrash_fs_label_init(&uc, ctx);
+> +	if (!moveon)
+> +		return false;
+> +
+> +	/* Retrieve label; quietly bail if we don't support that. */
+> +	error = ioctl(ctx->mnt_fd, FS_IOC_GETFSLABEL, &label);
+> +	if (error) {
+> +		if (errno != EOPNOTSUPP && errno != ENOTTY) {
+> +			moveon = false;
+> +			perror(ctx->mntpoint);
+> +		}
+> +		goto out;
+> +	}
+> +
+> +	/* Ignore empty labels. */
+> +	if (label[0] == 0)
+> +		goto out;
+> +
+> +	/* Otherwise check for weirdness. */
+> +	if (uc)
+> +		moveon = unicrash_check_fs_label(uc, ctx->mntpoint, label);
+> +	else
+> +		moveon = xfs_scrub_check_name(ctx, ctx->mntpoint,
+> +				_("filesystem label"), label);
+> +	if (!moveon)
+> +		goto out;
+> +out:
+> +	unicrash_free(uc);
+> +	return moveon;
+> +}
+> +
+>  /* Check directory connectivity. */
+>  bool
+>  xfs_scan_connections(
+> @@ -296,6 +346,10 @@ _("Filesystem has errors, skipping connectivity checks."));
+>  		return true;
+>  	}
+>  
+> +	moveon = xfs_scrub_fs_label(ctx);
+> +	if (!moveon)
+> +		return false;
+> +
+>  	ret = xfs_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
+>  	if (!ret)
+>  		moveon = false;
+> diff --git a/scrub/unicrash.c b/scrub/unicrash.c
+> index a95fc305..121eedbc 100644
+> --- a/scrub/unicrash.c
+> +++ b/scrub/unicrash.c
+> @@ -465,6 +465,15 @@ unicrash_xattr_init(
+>  			is_only_root_writable(bstat));
+>  }
+>  
+> +/* Initialize the collision detector for a filesystem label. */
+> +bool
+> +unicrash_fs_label_init(
+> +	struct unicrash		**ucp,
+> +	struct scrub_ctx	*ctx)
+> +{
+> +	return unicrash_init(ucp, ctx, false, 16, true);
+> +}
+> +
+>  /* Free the crash detector. */
+>  void
+>  unicrash_free(
+> @@ -698,3 +707,18 @@ unicrash_check_xattr_name(
+>  	return __unicrash_check_name(uc, descr, _("extended attribute"),
+>  			attrname, 0);
+>  }
+> +
+> +/*
+> + * Check the fs label for unicode normalization problems or misleading bits.
+> + */
+> +bool
+> +unicrash_check_fs_label(
+> +	struct unicrash		*uc,
+> +	const char		*descr,
+> +	const char		*label)
+> +{
+> +	if (!uc)
+> +		return true;
+> +	return __unicrash_check_name(uc, descr, _("filesystem label"),
+> +			label, 0);
+> +}
+> diff --git a/scrub/unicrash.h b/scrub/unicrash.h
+> index 7d7276a8..85fcabc6 100644
+> --- a/scrub/unicrash.h
+> +++ b/scrub/unicrash.h
+> @@ -17,17 +17,22 @@ bool unicrash_dir_init(struct unicrash **ucp, struct scrub_ctx *ctx,
+>  		struct xfs_bstat *bstat);
+>  bool unicrash_xattr_init(struct unicrash **ucp, struct scrub_ctx *ctx,
+>  		struct xfs_bstat *bstat);
+> +bool unicrash_fs_label_init(struct unicrash **ucp, struct scrub_ctx *ctx);
+>  void unicrash_free(struct unicrash *uc);
+>  bool unicrash_check_dir_name(struct unicrash *uc, const char *descr,
+>  		struct dirent *dirent);
+>  bool unicrash_check_xattr_name(struct unicrash *uc, const char *descr,
+>  		const char *attrname);
+> +bool unicrash_check_fs_label(struct unicrash *uc, const char *descr,
+> +		const char *label);
+>  #else
+>  # define unicrash_dir_init(u, c, b)		(true)
+>  # define unicrash_xattr_init(u, c, b)		(true)
+> +# define unicrash_label_init(u, c)		(true)
+>  # define unicrash_free(u)			do {(u) = (u);} while (0)
+>  # define unicrash_check_dir_name(u, d, n)	(true)
+>  # define unicrash_check_xattr_name(u, d, n)	(true)
+> +# define unicrash_check_fs_label(u, d, n)	(true)
+>  #endif /* HAVE_LIBICU */
+>  
+>  #endif /* XFS_SCRUB_UNICRASH_H_ */
+> 
