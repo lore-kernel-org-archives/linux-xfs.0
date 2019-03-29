@@ -1,95 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f194.google.com ([209.85.166.194]:50424 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725779AbfC1L01 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Mar 2019 07:26:27 -0400
-Received: by mail-it1-f194.google.com with SMTP id m137so5402718ita.0
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2019 04:26:26 -0700 (PDT)
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:34371 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728956AbfC2Pjf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 11:39:35 -0400
 MIME-Version: 1.0
-References: <20170812001637.GW21024@dastard> <20170812140433.GA31523@bfoster.bfoster>
- <20170814002809.GA21024@dastard> <A86C45842A15447CAB819133E6AF76CF@alyakaslap>
- <20170814122216.GA39742@bfoster.bfoster> <0df483623d7b9464691d44de67c7264f@mail.gmail.com>
- <20190322160836.GP1183@magnolia> <1d13a515062de477bc6009ca6333442b@mail.gmail.com>
- <20190325181751.GU1183@magnolia> <CAOcd+r0yjfdWxoUoxVrRQNUuCkP-iG0KBSO8yggoh4DMeu4vKA@mail.gmail.com>
- <20190327204637.GI23020@dastard>
-In-Reply-To: <20190327204637.GI23020@dastard>
-From: Alex Lyakas <alex@zadara.com>
-Date: Thu, 28 Mar 2019 13:26:13 +0200
-Message-ID: <CAOcd+r1cHpcn4rihxo7gC23RgSM9VoECSDmf01DWYfjUdDVU+g@mail.gmail.com>
-Subject: Re: [PATCH] xfs: hold xfs_buf locked between shortform->leaf
- conversion and the addition of an attribute
+References: <20190329142346.1677-1-bob.liu@oracle.com> <20190329142346.1677-3-bob.liu@oracle.com>
+In-Reply-To: <20190329142346.1677-3-bob.liu@oracle.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Date: Fri, 29 Mar 2019 23:39:19 +0800
+Message-ID: <CACVXFVO58YmCHdZiopxysjPoWzLEQpZYoogrYcXDTGc0B5f0qg@mail.gmail.com>
+Subject: Re: [PATCH v3 2/3] block: verify data when endio
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Shyam Kaushik <shyam@zadara.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Bob Liu <bob.liu@oracle.com>
+Cc: linux-block <linux-block@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, shirley.ma@oracle.com, allison.henderson@oracle.com, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger@dilger.ca>, Jens Axboe <axboe@kernel.dk>, Ted Tso <tytso@mit.edu>
 
-Hi Dave,
-Thank you for your response.
+Hi Bob,
 
-On Wed, Mar 27, 2019 at 10:46 PM Dave Chinner <david@fromorbit.com> wrote:
+On Fri, Mar 29, 2019 at 10:25 PM Bob Liu <bob.liu@oracle.com> wrote:
 >
-> On Wed, Mar 27, 2019 at 06:03:38PM +0200, Alex Lyakas wrote:
-> > Hi Darrick,
-> >
-> > I started this long email thread originally, and posted a patch with
-> > the proposed fix to the "Metadata corruption at
-> > xfs_attr3_leaf_write_verify" problem. We reported this problem
-> > originally. Eventually we found a stable reproducer for the issue,
-> > added different prints in the code, and posted our analysis to
-> > community in https://www.spinics.net/lists/linux-xfs/msg08752.html.
-> > The community (Dave) confirmed that we found a "zero day" bug, and
-> > gave us some hints on how to fix it. Hence this thread.
-> >
-> > After reviewing my patch, Dave expressed the following concern:
-> >
-> > "The problem is that the locked buffer is not joined and logged in
-> > the rolling transactions run in xfs_defer_ops. Hence it can pin the
-> > tail of the AIL, and this can prevent the transaction roll from
-> > regranting the log space necessary to continue rolling the
-> > transaction for the required number of transactions to complete the
-> > deferred ops. If this happens, we end up with a log space deadlock."
-> >
-> > However, after more discussions, there was more or less a consensus
-> > that for kernel 3.18 this fix should be safe. We went ahead, applied
-> > and qualified the fix. With this fix we did not see the issue in any
-> > of the production systems, which were hitting the issue frequently.
-> >
-> > We are now in the process of moving to long-term kernel 4.14.x. We
-> > see, however, that this problem was fixed by the community only for
-> > kernels 4.15 and later. Since we had several production systems
-> > hitting this issue frequently, we need a fix for it in kernel 4.14.
-> >
-> > Hence our question: whether our original patch should be safe to apply
-> > to kernel 4.14?
-> >
-> > Brian, Dave, can you perhaps also comment?
+> Call verify callback same as bio integrity.
+> If verify fail, drivers like MD will try other mirrors until get a correct
+> one or return failure after all mirrors are tried.
+> The MD driver already works like this, so no extra changed.
 >
-> The right thing to do is to backport the upstream fix and all it's
-> dependencies to the LTS kernel. If it's 4.15 to 4.14, everything
-> should pretty much just drop in without too much hassle. Then test
-> the backport fixes the problem it was intended to fix, post the
-> patch series to the XFS list as [STABLE PATCH X/Y] with a cc to
-> stable@kernel.org, and if it passes review (shouldn't be an issue if
-> it's a straight backport) it will get merged into the 4.14-LTS kernel
-> tree and go through the stable kernel QA process.
-We will work on backporting the fix to kernel 4.14. We will post the
-fix for community review once it ready.
+> Todo:
+> - union with "struct bio_integrity_payload *bi_integrity" to save bio space.
+>
+> Signed-off-by: Bob Liu <bob.liu@oracle.com>
+> ---
+>  block/bio-integrity.c     | 45 +++++++++++++++++++++++++++++++++++++++
+>  block/bio.c               |  3 +++
+>  block/blk-core.c          |  4 ++++
+>  block/blk.h               |  8 +++++++
+>  block/bounce.c            |  1 +
+>  drivers/md/raid1.c        |  1 +
+>  drivers/md/raid5-ppl.c    |  1 +
+>  include/linux/blk_types.h |  5 +++++
+>  8 files changed, 68 insertions(+)
+>
+> diff --git a/block/bio-integrity.c b/block/bio-integrity.c
+> index 1b633a3526d4..90a47ad31dbf 100644
+> --- a/block/bio-integrity.c
+> +++ b/block/bio-integrity.c
+> @@ -372,6 +372,51 @@ bool __bio_integrity_endio(struct bio *bio)
+>         return true;
+>  }
+>
+> +/**
+> + * bio_verify_fn - Verify I/O completion worker
+> + * @work:      Work struct stored in bio to be verified
+> + *
+> + * Description: This workqueue function is called to complete a READ
+> + * request.  The function call verifier callack that fs pass down
+> + * and then calls the original bio end_io function.
+> + */
+> +static void bio_verify_fn(struct work_struct *work)
+> +{
+> +       struct bio *bio =
+> +               container_of(work, struct bio, bi_work);
+> +
+> +       bio->bi_status = bio->bi_verifier(bio);
+> +       /* Clear flag if verify succeed to avoid verifing
+> +        * it unnecessary by parent bio
+> +        */
+> +       if (!bio->bi_status)
+> +               bio->bi_opf &= ~REQ_VERIFY;
+> +       bio_endio(bio);
+> +}
+
+1) why is bio->bi_verifier run from workqueue context instead of being
+called directly
+from bio_endio()?
+
+2) the followings part of bio_endio(bio) may be run twice, will this
+way work correctly?
+
+        if (!bio_remaining_done(bio))
+                return;
+        if (!bio_integrity_endio(bio))
+                return;
+
+> +
+> +/**
+> + * __bio_verify_endio - Verify I/O completion function
+> + * @bio:       Protected bio
+> + *
+> + * Description: Completion for verify I/O
+> + *
+> + * Normally I/O completion is done in interrupt context.  However,
+> + * verifying I/O is a time-consuming task which must be run
+> + * in process context. This function postpones completion
+> + * accordingly.
+> + */
+> +bool __bio_verify_endio(struct bio *bio)
+> +{
+> +       if (bio_op(bio) == REQ_OP_READ && !bio->bi_status &&
+> +           (bio->bi_opf & REQ_VERIFY) && bio->bi_verifier) {
+> +               INIT_WORK(&bio->bi_work, bio_verify_fn);
+> +               queue_work(kintegrityd_wq, &bio->bi_work);
+> +               return false;
+> +       }
+> +
+> +       return true;
+> +}
+> +
+>  /**
+>   * bio_integrity_advance - Advance integrity vector
+>   * @bio:       bio whose integrity vector to update
+> diff --git a/block/bio.c b/block/bio.c
+> index 4db1008309ed..8928806acda6 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -608,6 +608,7 @@ void __bio_clone_fast(struct bio *bio, struct bio *bio_src)
+>         bio->bi_write_hint = bio_src->bi_write_hint;
+>         bio->bi_iter = bio_src->bi_iter;
+>         bio->bi_io_vec = bio_src->bi_io_vec;
+> +       bio->bi_verifier = bio_src->bi_verifier;
+
+->bi_verifier is cloned along the IO stack, is this .bi_verifier
+capable of covering
+the cloned bio which may be just a part of original bio? such as, bio split.
+
+Given in the 3rd patch, .bi_verifier is implemented in fs, I guess it should
+only work for the bio submitted from fs because the verifier uses fs's
+knowledge.
+
+If yes, looks not necessary to clone .bi_verifier here. Otherwise, could you
+explain a bit how ->bi_verifier can work for the cloned bio in the stack?
+
 
 Thanks,
-Alex.
-
-
-
->
-> This gets the problem fixed for all users of the LTS kernel, and you
-> do not have to maintain the backport yourself as you update to new
-> LTS kernels over the life of your product....
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+Ming Lei
