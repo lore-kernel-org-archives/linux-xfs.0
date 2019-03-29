@@ -1,69 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:41946 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727234AbfC0Qza (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Mar 2019 12:55:30 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x2RGn2Y0009849
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2019 16:55:29 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2130.oracle.com with ESMTP id 2re6g11udc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2019 16:55:28 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x2RGtSNk012180
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2019 16:55:28 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x2RGtSAu011817
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Mar 2019 16:55:28 GMT
-Date: Wed, 27 Mar 2019 09:55:27 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 2032a8a27b5c
-Message-ID: <20190327165527.GC1183@magnolia>
+Received: from mail-io1-f67.google.com ([209.85.166.67]:46241 "EHLO
+        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728853AbfC2Ow6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 10:52:58 -0400
+Received: by mail-io1-f67.google.com with SMTP id b9so1922787iot.13
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Mar 2019 07:52:58 -0700 (PDT)
+Subject: Re: [PATCH v3 2/3] block: verify data when endio
+References: <20190329142346.1677-1-bob.liu@oracle.com>
+ <20190329142346.1677-3-bob.liu@oracle.com>
+ <41c8688a-65bd-96ac-9b23-4facd0ade4a7@kernel.dk> <yq1ftr5rbq1.fsf@oracle.com>
+ <f65d6a7b-9e69-ae1e-b8b8-8769dc650311@kernel.dk> <yq1bm1trb4y.fsf@oracle.com>
+ <feefa611-b744-326c-29d5-c64bcda45d9f@kernel.dk> <yq17echrax1.fsf@oracle.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <1b638dc2-56fd-6ab4-dcca-ad2adb9931bb@kernel.dk>
+Date: Fri, 29 Mar 2019 08:52:55 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <yq17echrax1.fsf@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Bob Liu <bob.liu@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, shirley.ma@oracle.com, allison.henderson@oracle.com, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca, tytso@mit.edu
 
-Hi folks,
+On 3/29/19 8:51 AM, Martin K. Petersen wrote:
+> 
+> Jens,
+> 
+>> The integrity stuff still has that nasty pointer in there. It'd be
+>> nice to get rid of that as well, and hide it all in a parent container
+>> of the bio.
+> 
+> That's fine with me. We really didn't have that option a decade ago.
 
-The for-next branch of the xfs-linux repository at:
+Right, but now we do. Hence trying to nudge things in that direction,
+instead of adding another pointer to struct bio for a new use case. I'd
+much rather go that route, instead of unionizing with another pointer
+that should be going away instead.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-2032a8a27b5c xfs: serialize unaligned dio writes against all other dio writes
-
-New Commits:
-
-Brian Foster (2):
-      [6958d11f77d4] xfs: don't trip over uninitialized buffer on extent read of corrupted inode
-      [2032a8a27b5c] xfs: serialize unaligned dio writes against all other dio writes
-
-Darrick J. Wong (4):
-      [228de124f290] xfs: dabtree scrub needs to range-check level
-      [a72e9d8d69e7] xfs: fix btree scrub checking with regards to root-in-inode
-      [4b0bce30f39b] xfs: always init bma in xfs_bmapi_write
-      [ed79dac98c5e] xfs: prohibit fstrim in norecovery mode
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_bmap.c | 15 +++++++++------
- fs/xfs/scrub/btree.c     | 11 ++++++++++-
- fs/xfs/scrub/dabtree.c   |  5 +++++
- fs/xfs/xfs_discard.c     |  8 ++++++++
- fs/xfs/xfs_file.c        | 27 +++++++++++++++++----------
- 5 files changed, 49 insertions(+), 17 deletions(-)
+-- 
+Jens Axboe
