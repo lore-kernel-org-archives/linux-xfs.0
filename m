@@ -1,81 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:34374 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725801AbfC2ECa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 00:02:30 -0400
-Date: Thu, 28 Mar 2019 21:02:22 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/3] xfs: don't allow most setxattr to immutable files
-Message-ID: <20190329040222.GC18833@magnolia>
-References: <155379543409.24796.5783716624820175068.stgit@magnolia>
- <155379545404.24796.5019142212767521955.stgit@magnolia>
- <20190328212948.GL23020@dastard>
+Received: from mail-it1-f197.google.com ([209.85.166.197]:37179 "EHLO
+        mail-it1-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728550AbfC2KmF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 06:42:05 -0400
+Received: by mail-it1-f197.google.com with SMTP id q203so1755174itb.2
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Mar 2019 03:42:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190328212948.GL23020@dastard>
+Date: Fri, 29 Mar 2019 03:42:05 -0700
+Message-ID: <0000000000005ff8b20585395280@google.com>
+Subject: BUG: MAX_STACK_TRACE_ENTRIES too low! (2)
+From: syzbot <syzbot+6f39a9deb697359fe520@syzkaller.appspotmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
+To: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 
-On Fri, Mar 29, 2019 at 08:29:48AM +1100, Dave Chinner wrote:
-> On Thu, Mar 28, 2019 at 10:50:54AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > The chattr manpage has this to say about immutable files:
-> > 
-> > "A file with the 'i' attribute cannot be modified: it cannot be deleted
-> > or renamed, no link can be created to this file, most of the file's
-> > metadata can not be modified, and the file can not be opened in write
-> > mode."
-> > 
-> > However, we don't actually check the immutable flag in the setattr code,
-> > which means that we can update project ids and extent size hints on
-> > supposedly immutable files.  Therefore, reject a setattr call on an
-> > immutable file except for the case where we're trying to unset
-> > IMMUTABLE.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_ioctl.c |    8 ++++++++
-> >  1 file changed, 8 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index 2bd1c5ab5008..9cf0bc0ae2bd 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -1067,6 +1067,14 @@ xfs_ioctl_setattr_xflags(
-> >  	    !capable(CAP_LINUX_IMMUTABLE))
-> >  		return -EPERM;
-> >  
-> > +	/*
-> > +	 * If immutable is set and we are not clearing it, we're not allowed
-> > +	 * to change anything else in the inode.
-> > +	 */
-> > +	if ((ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE) &&
-> > +	    (fa->fsx_xflags & FS_XFLAG_IMMUTABLE))
-> > +		return -EPERM;
-> > +
-> >  	/* diflags2 only valid for v3 inodes. */
-> >  	di_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
-> >  	if (di_flags2 && ip->i_d.di_version < 3)
-> 
-> Looks fine - catches both FS_IOC_SETFLAGS and FS_IOC_FSSETXATTR
-> for XFS.
-> 
-> Do the other filesystems that implement FS_IOC_FSSETXATTR have
-> the same bug?
+Hello,
 
-Yes.  I'm not even 100% sure I've finished playing xfs whackamole yet.
+syzbot found the following crash on:
 
---D
+HEAD commit:    1a9df9e2 Merge git://git.kernel.org/pub/scm/linux/kernel/g..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=14dc2f2b200000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=8dcdce25ea72bedf
+dashboard link: https://syzkaller.appspot.com/bug?extid=6f39a9deb697359fe520
+compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Unfortunately, I don't have any reproducer for this crash yet.
+
+IMPORTANT: if you fix the bug, please add the following tag to the commit:
+Reported-by: syzbot+6f39a9deb697359fe520@syzkaller.appspotmail.com
+
+XFS (loop4): Invalid superblock magic number
+BUG: MAX_STACK_TRACE_ENTRIES too low!
+turning off the locking correctness validator.
+CPU: 0 PID: 1067 Comm: syz-executor.4 Not tainted 5.1.0-rc2+ #40
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
+Google 01/01/2011
+Call Trace:
+  __dump_stack lib/dump_stack.c:77 [inline]
+  dump_stack+0x172/0x1f0 lib/dump_stack.c:113
+  save_trace kernel/locking/lockdep.c:467 [inline]
+  save_trace.cold+0x14/0x19 kernel/locking/lockdep.c:437
+  check_prev_add.constprop.0+0x8dc/0x23c0 kernel/locking/lockdep.c:2268
+  check_prevs_add kernel/locking/lockdep.c:2333 [inline]
+  validate_chain kernel/locking/lockdep.c:2714 [inline]
+  __lock_acquire+0x239c/0x3fb0 kernel/locking/lockdep.c:3701
+  lock_acquire+0x16f/0x3f0 kernel/locking/lockdep.c:4211
+  flush_workqueue+0x126/0x14c0 kernel/workqueue.c:2774
+  drain_workqueue+0x1b4/0x470 kernel/workqueue.c:2939
+  destroy_workqueue+0x21/0x700 kernel/workqueue.c:4320
+  xfs_destroy_mount_workqueues+0xc5/0x1c0 fs/xfs/xfs_super.c:904
+  xfs_fs_fill_super+0x8e9/0x1670 fs/xfs/xfs_super.c:1786
+  mount_bdev+0x307/0x3c0 fs/super.c:1346
+  xfs_fs_mount+0x35/0x40 fs/xfs/xfs_super.c:1834
+  legacy_get_tree+0xf2/0x200 fs/fs_context.c:584
+  vfs_get_tree+0x123/0x450 fs/super.c:1481
+  do_new_mount fs/namespace.c:2622 [inline]
+  do_mount+0x1436/0x2c40 fs/namespace.c:2942
+  ksys_mount+0xdb/0x150 fs/namespace.c:3151
+  __do_sys_mount fs/namespace.c:3165 [inline]
+  __se_sys_mount fs/namespace.c:3162 [inline]
+  __x64_sys_mount+0xbe/0x150 fs/namespace.c:3162
+  do_syscall_64+0x103/0x610 arch/x86/entry/common.c:290
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x45ac7a
+Code: b8 a6 00 00 00 0f 05 48 3d 01 f0 ff ff 0f 83 2d 8e fb ff c3 66 2e 0f  
+1f 84 00 00 00 00 00 66 90 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff  
+ff 0f 83 0a 8e fb ff c3 66 0f 1f 84 00 00 00 00 00
+RSP: 002b:00007f5a0187aa88 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
+RAX: ffffffffffffffda RBX: 00007f5a0187ab40 RCX: 000000000045ac7a
+RDX: 00007f5a0187aae0 RSI: 00000000200006c0 RDI: 00007f5a0187ab00
+RBP: 0000000000000000 R08: 00007f5a0187ab40 R09: 00007f5a0187aae0
+R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000000003
+R13: 00000000004c6bd2 R14: 00000000004dc5b0 R15: 00000000ffffffff
+
+
+---
+This bug is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this bug report. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
