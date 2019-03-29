@@ -1,39 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f68.google.com ([209.85.166.68]:47076 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726275AbfC1PHG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Mar 2019 11:07:06 -0400
-Received: by mail-io1-f68.google.com with SMTP id b9so17478971iot.13
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Mar 2019 08:07:05 -0700 (PDT)
-Subject: Re: [PATCH] block: clarify that bio_add_page() and related helpers
- can add multi pages
-References: <20190328035001.26276-1-ming.lei@redhat.com>
- <5258cad3-b324-660f-589f-73eb7fb8fa04@kernel.dk>
- <20190328150320.GB9265@infradead.org>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <8e53a36f-2b73-55bf-e404-52cfa0192981@kernel.dk>
-Date: Thu, 28 Mar 2019 09:07:03 -0600
-MIME-Version: 1.0
-In-Reply-To: <20190328150320.GB9265@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:48114 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729639AbfC2NlA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 29 Mar 2019 09:41:00 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 237FB369A0
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Mar 2019 13:41:00 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D2C47282EE
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Mar 2019 13:40:59 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 0/2] xfs: a couple minor shutdown fixes
+Date: Fri, 29 Mar 2019 09:40:57 -0400
+Message-Id: <20190329134059.12723-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 3/28/19 9:03 AM, Christoph Hellwig wrote:
-> On Thu, Mar 28, 2019 at 08:21:55AM -0600, Jens Axboe wrote:
->> This is going to create a needless conflict between 5.1 and the 5.2
->> block tree. I haven't pushed the 5.2 tree out yet, plan to do so
->> this week after I've pushed the current 5.1 patches. Can you respin
->> this one on top of for-5.2/block when it comes out?
-> 
-> Can we also drop the parameter name rename and just add the comments?
+Hi all,
 
-Yeah, that might be better to avoid needless churn.
+Here are a couple of shutdown fixups that fell out of Darrick's recent
+report of a deadlock problem via generic/475. I've still not been able
+to reproduce the generic/475 deadlock, but Darrick has tested patch 1
+and last I heard reported that the deadlock had not reoccurred. Patch 2
+fixes up a buffer leak and reorders the shutdown in the
+xfs_iflush_cluster() abort codepath.
+
+After making a higher level pass across the codebase, there are still
+places where we technically invoke synchronous log forces (or filesystem
+shutdowns, which can induce a sync log force) with various object locks
+held. This isn't always a problem as some are contexts where a buffer
+should never be pinned, etc. That said, if we want to institute a
+general policy of never inducing sync log forces or shutdowns from
+contexts with held locks then I'd suggest that's something we should
+evolve opportunistically over time.
+
+Thoughts, reviews, flames appreciated.
+
+Brian
+
+Brian Foster (2):
+  xfs: wake commit waiters on CIL abort before log item abort
+  xfs: shutdown after buf release in iflush cluster abort path
+
+ fs/xfs/xfs_inode.c   |  4 +++-
+ fs/xfs/xfs_log_cil.c | 21 +++++++++++++--------
+ 2 files changed, 16 insertions(+), 9 deletions(-)
 
 -- 
-Jens Axboe
+2.17.2
