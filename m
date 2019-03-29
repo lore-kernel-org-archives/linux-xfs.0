@@ -1,103 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:30370 "EHLO
-        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726268AbfC1VVv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Mar 2019 17:21:51 -0400
-Date: Fri, 29 Mar 2019 08:21:47 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfs: reset page mappings after setting immutable
-Message-ID: <20190328212147.GK23020@dastard>
-References: <155379543409.24796.5783716624820175068.stgit@magnolia>
- <155379544747.24796.1807309281507099911.stgit@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:43064 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728815AbfC2ONE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 10:13:04 -0400
+Date: Fri, 29 Mar 2019 07:13:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix use after free in buf log item unlock assert
+Message-ID: <20190329141300.GE18833@magnolia>
+References: <20190206160107.63672-1-bfoster@redhat.com>
+ <20190329140328.GA12358@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155379544747.24796.1807309281507099911.stgit@magnolia>
+In-Reply-To: <20190329140328.GA12358@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Mar 28, 2019 at 10:50:47AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Mar 29, 2019 at 10:03:28AM -0400, Brian Foster wrote:
+> On Wed, Feb 06, 2019 at 11:01:07AM -0500, Brian Foster wrote:
+> > The xfs_buf_log_item ->iop_unlock() callback asserts that the buffer
+> > is unlocked when either non-stale or aborted. This assert occurs
+> > after the bli refcount has been dropped and the log item potentially
+> > freed. The aborted check is thus a potential use after free. This
+> > problem has been reproduced with KASAN enabled via generic/475.
+> > 
+> > Fix up xfs_buf_item_unlock() to query aborted state before the bli
+> > reference is dropped to prevent a potential use after free.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
 > 
-> The chattr manpage has this to say about immutable files:
+> Ping on this one.. looks like it was reviewed and maybe fell through the
+> cracks?
+
+Yep.  Spreadsheet says it's in 5.0-rc6, and ... totally not upstream. :(
+Sorry about that.
+
+--D
+
+> Brian
 > 
-> "A file with the 'i' attribute cannot be modified: it cannot be deleted
-> or renamed, no link can be created to this file, most of the file's
-> metadata can not be modified, and the file can not be opened in write
-> mode."
-> 
-> This means that we need to flush the page cache when setting the
-
-nit: flush and invalidate the page cache.
-
-> immutable flag so that programs cannot continue to write to writable
-> mappings.
-
-Do we even need to invalidate the page cache for this? i.e. we've
-cleaned the pages so that any new write to them will fault,
-that will see the immutable flag via ->page_mkwrite and then the
-app should segv, right?
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_ioctl.c |   63 +++++++++++++++++++++++++++++++++++-----------------
->  1 file changed, 43 insertions(+), 20 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 6ecdbb3af7de..2bd1c5ab5008 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -998,6 +998,37 @@ xfs_diflags_to_linux(
->  #endif
->  }
->  
-> +static int
-> +xfs_ioctl_setattr_flush(
-> +	struct xfs_inode	*ip,
-> +	int			*join_flags)
-> +{
-> +	struct inode		*inode = VFS_I(ip);
-> +	int			error;
-> +
-> +	if (S_ISDIR(inode->i_mode))
-> +		return 0;
-> +	if ((*join_flags) & (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL))
-> +		return 0;
-> +
-> +	/* lock, flush and invalidate mapping in preparation for flag change */
-> +	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-> +	error = filemap_write_and_wait(inode->i_mapping);
-> +	if (error)
-> +		goto out_unlock;
-> +	error = invalidate_inode_pages2(inode->i_mapping);
-> +	if (error)
-> +		goto out_unlock;
-> +
-> +	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
-> +	return 0;
-> +
-> +out_unlock:
-> +	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-> +	return error;
-> +
-> +}
-
-Doesn't wait for direct IO to drain. Wouldn't it be better to do
-this?
-
-	lock()
-	xfs_flush_unmap_range(ip, 0, XFS_SIZE(ip));
-	unlock()
-
-Otherwise looks ok.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> >  fs/xfs/xfs_buf_item.c | 4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> > index 010db5f8fb00..65b32acfa0f6 100644
+> > --- a/fs/xfs/xfs_buf_item.c
+> > +++ b/fs/xfs/xfs_buf_item.c
+> > @@ -605,6 +605,8 @@ xfs_buf_item_unlock(
+> >  #if defined(DEBUG) || defined(XFS_WARN)
+> >  	bool			ordered = bip->bli_flags & XFS_BLI_ORDERED;
+> >  	bool			dirty = bip->bli_flags & XFS_BLI_DIRTY;
+> > +	bool			aborted = test_bit(XFS_LI_ABORTED,
+> > +						   &lip->li_flags);
+> >  #endif
+> >  
+> >  	trace_xfs_buf_item_unlock(bip);
+> > @@ -633,7 +635,7 @@ xfs_buf_item_unlock(
+> >  	released = xfs_buf_item_put(bip);
+> >  	if (hold || (stale && !released))
+> >  		return;
+> > -	ASSERT(!stale || test_bit(XFS_LI_ABORTED, &lip->li_flags));
+> > +	ASSERT(!stale || aborted);
+> >  	xfs_buf_relse(bp);
+> >  }
+> >  
+> > -- 
+> > 2.17.2
+> > 
