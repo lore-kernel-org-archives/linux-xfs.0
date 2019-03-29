@@ -1,77 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54424 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726111AbfCZRNa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Mar 2019 13:13:30 -0400
-Date: Tue, 26 Mar 2019 13:13:24 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: generic/475 deadlock?
-Message-ID: <20190326171324.GA58320@bfoster>
-References: <20190320050408.GA24923@magnolia>
- <20190320170305.GA29010@bfoster>
- <20190320174551.GA1186@magnolia>
- <20190320175922.GB29010@bfoster>
- <20190320214938.GU23020@dastard>
- <20190321121152.GA33001@bfoster>
- <20190321211051.GV23020@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190321211051.GV23020@dastard>
+Received: from aserp2130.oracle.com ([141.146.126.79]:58700 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729421AbfC2OYs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 10:24:48 -0400
+From: Bob Liu <bob.liu@oracle.com>
+Subject: [PATCH v3 1/3] block: introduce submit_bio_verify()
+Date: Fri, 29 Mar 2019 22:23:44 +0800
+Message-Id: <20190329142346.1677-2-bob.liu@oracle.com>
+In-Reply-To: <20190329142346.1677-1-bob.liu@oracle.com>
+References: <20190329142346.1677-1-bob.liu@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: linux-block@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, allison.henderson@oracle.com, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca, axboe@kernel.dk, tytso@mit.edu, Bob Liu <bob.liu@oracle.com>
 
-On Fri, Mar 22, 2019 at 08:10:51AM +1100, Dave Chinner wrote:
-...
-> 
-> So given that inode reclaim already waits for inodes to be unpinned
-> and there is a xfs_buf_unpin_wait() call in
-> xfs_bwrite()->xfs_buf_submit() path that will issue a log force on
-> the buffer from the inode reclaim path, we don't actually need the
-> log force in xfs_iflush() at all. i.e.  the AIL will capture the
-> buffer state and unpin inode and dquot buffers automatically, and so
-> we can simply remove the pinned-buffer log forces from the
-> inode/dquot flush code....
-> 
+This patch adds a function verifier callback to submit_bio.  The
+filesystem layer can use submit_bio_verify to pass a call back
+to the block layer which can then be used to verify if the data
+read is correct.
 
-Hmm, where is the log force you reference above in the inode reclaim (->
-xfs_bwrite()) path if the buffer happens to be pinned? I see the
-xfs_buf_wait_unpin() in the submit path, but that just waits on the pin
-count (which I think is safe). It actually looks to me that reclaim
-could be susceptible to the write delay problem you referenced earlier
-in this thread without the log force from xfs_iflush()..
+Signed-off-by: Bob Liu <bob.liu@oracle.com>
+---
+ block/blk-core.c    | 13 ++++++++++---
+ include/linux/bio.h |  2 ++
+ 2 files changed, 12 insertions(+), 3 deletions(-)
 
-It also occurs to me that the xfs_iflush() log force isn't blocking
-because it's a a sync force, but rather because there is already a CIL
-push in progress. The flush_work() call basically means that a non-sync
-force can either queue a workqueue job and return or turn somewhat
-synchronous by waiting for whatever push happens to be in progress. That
-implies another potential workaround could be to find a way around this
-sync behavior (assuming that would be fundamentally more simple than
-just avoiding log forces entirely while holding non-transactional buffer
-locks).
-
-Of course that assumes there aren't other variants of this. I still need
-to poke around more to get a better idea of the scope. One that looks
-like a possibility to me right now is the xfs_iflush_cluster() ->
-xfs_force_shutdown() -> xfs_log_force() sequence (in the event of a
-corrupt in-core inode on the same pinned buffer) down in the same iflush
-path. Another could be in xfs_trans_read_buf_map() where if we somehow
-grab a dirty+pinned buffer with b_error set, we can issue a shutdown if
-the transaction is dirty before we release the failed buffer. That
-combination of events should probably never happen (and the vector is
-probably closed by just releasing the buffer before the shutdown), but
-it kind of illustrates the potential for whack-a-mole with log forces
-and shutdown calls scattered around in so many places.. :/
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 6b78ec56a4f2..d265d2924c32 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1156,15 +1156,16 @@ blk_qc_t direct_make_request(struct bio *bio)
+ EXPORT_SYMBOL_GPL(direct_make_request);
+ 
+ /**
+- * submit_bio - submit a bio to the block device layer for I/O
++ * submit_bio_verify - submit a bio to the block device layer for I/O
+  * @bio: The &struct bio which describes the I/O
+  *
+- * submit_bio() is very similar in purpose to generic_make_request(), and
++ * submit_bio_verify() is very similar in purpose to generic_make_request(), and
+  * uses that function to do most of the work. Both are fairly rough
+  * interfaces; @bio must be presetup and ready for I/O.
+  *
+  */
+-blk_qc_t submit_bio(struct bio *bio)
++blk_qc_t submit_bio_verify(struct bio *bio,
++		int (*verifier_cb_func)(struct bio *))
+ {
+ 	/*
+ 	 * If it's a regular read/write or a barrier with data attached,
+@@ -1197,6 +1198,12 @@ blk_qc_t submit_bio(struct bio *bio)
+ 
+ 	return generic_make_request(bio);
+ }
++EXPORT_SYMBOL(submit_bio_verify);
++
++blk_qc_t submit_bio(struct bio *bio)
++{
++	return submit_bio_verify(bio, NULL);
++}
+ EXPORT_SYMBOL(submit_bio);
+ 
+ /**
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 7380b094dcca..ddaadab74dcf 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -398,6 +398,8 @@ static inline struct bio *bio_kmalloc(gfp_t gfp_mask, unsigned int nr_iovecs)
+ 	return bio_alloc_bioset(gfp_mask, nr_iovecs, NULL);
+ }
+ 
++extern blk_qc_t submit_bio_verify(struct bio *,
++		int (*verifier_cb_func)(struct bio *));
+ extern blk_qc_t submit_bio(struct bio *);
+ 
+ extern void bio_endio(struct bio *);
+-- 
+2.17.1
