@@ -1,29 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:47120 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726150AbfC1PDY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Mar 2019 11:03:24 -0400
-Date: Thu, 28 Mar 2019 08:03:20 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] block: clarify that bio_add_page() and related helpers
- can add multi pages
-Message-ID: <20190328150320.GB9265@infradead.org>
-References: <20190328035001.26276-1-ming.lei@redhat.com>
- <5258cad3-b324-660f-589f-73eb7fb8fa04@kernel.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5258cad3-b324-660f-589f-73eb7fb8fa04@kernel.dk>
+Received: from mail.kernel.org ([198.145.29.99]:37042 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729982AbfC2VuL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 29 Mar 2019 17:50:11 -0400
+Subject: Re: [GIT PULL] xfs: bug fixes for 5.1-rc3
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20190329133311.GD18833@magnolia>
+References: <20190329133311.GD18833@magnolia>
+Message-Id: <155389621112.28625.10371773111263951960.pr-tracker-bot@kernel.org>
+Date: Fri, 29 Mar 2019 21:50:11 +0000
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: torvalds@linux-foundation.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
 
-On Thu, Mar 28, 2019 at 08:21:55AM -0600, Jens Axboe wrote:
-> This is going to create a needless conflict between 5.1 and the 5.2
-> block tree. I haven't pushed the 5.2 tree out yet, plan to do so
-> this week after I've pushed the current 5.1 patches. Can you respin
-> this one on top of for-5.2/block when it comes out?
+The pull request you sent on Fri, 29 Mar 2019 06:33:11 -0700:
 
-Can we also drop the parameter name rename and just add the comments?
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.1-fixes-1
+
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/c6503f12d135a616b25be99a492765fc9e9fe07e
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
