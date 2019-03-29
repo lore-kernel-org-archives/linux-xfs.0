@@ -1,95 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:57008 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726278AbfCZRIt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Mar 2019 13:08:49 -0400
-Date: Tue, 26 Mar 2019 10:08:45 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 20/36] xfs_db: fix finobt record decoding when sparse
- inodes enabled
-Message-ID: <20190326170845.GV1183@magnolia>
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <155259755345.31886.7689089384611545119.stgit@magnolia>
- <30c90f32-8edb-639a-331a-cfddea80e87b@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <30c90f32-8edb-639a-331a-cfddea80e87b@sandeen.net>
+Received: from aserp2130.oracle.com ([141.146.126.79]:58390 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729212AbfC2OYh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 10:24:37 -0400
+From: Bob Liu <bob.liu@oracle.com>
+Subject: [RFC PATCH v3 0/3] Block/XFS: Support alternative mirror device retry
+Date: Fri, 29 Mar 2019 22:23:43 +0800
+Message-Id: <20190329142346.1677-1-bob.liu@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: linux-block@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, allison.henderson@oracle.com, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca, axboe@kernel.dk, tytso@mit.edu, Bob Liu <bob.liu@oracle.com>
 
-On Tue, Mar 26, 2019 at 12:05:04PM -0500, Eric Sandeen wrote:
-> On 3/14/19 4:05 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Use the sparse inobt record field decoder (inobt_spcrc_hfld) to decode
-> > finobt records when sparse inodes are enabled.  Otherwise, xfs_db
-> > prints out bogus things like:
-> > 
-> > recs[1] = [startino,freecount,free]
-> > 1:[214720,16429,0xfffffffffff80000]
-> > 
-> > There can never be 16429 records in an inode btree record; instead it
-> > should print:
-> > 
-> > recs[1] = [startino,holemask,count,freecount,free]
-> > 1:[214720,0,64,45,0xfffffffffff80000]
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Um... :) 
-> 
-> commit 38c599e7782ced7d2d1b41c3182daeaddad2cee4
-> Author: Darrick J. Wong <darrick.wong@oracle.com>
-> Date:   Mon Jan 28 13:03:15 2019 -0600
-> 
->     xfs_db: fix finobt record decoding when sparse inodes enabled
->     
->     Use the sparse inobt record field decoder (inobt_spcrc_hfld) to decode
->     finobt records when sparse inodes are enabled.  Otherwise, xfs_db
->     prints out bogus things like:
->     
->     recs[1] = [startino,freecount,free]
->     1:[214720,16429,0xfffffffffff80000]
->     
->     There can never be 16429 records in an inode btree record; instead it
->     should print:
->     
->     recs[1] = [startino,holemask,count,freecount,free]
->     1:[214720,0,64,45,0xfffffffffff80000]
->     
->     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->     Reviewed-by: Dave Chinner <dchinner@redhat.com>
->     Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> 
-> > ---
-> >  db/type.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/db/type.c b/db/type.c
-> > index f5f65042..d42935a2 100644
-> > --- a/db/type.c
-> > +++ b/db/type.c
-> > @@ -107,7 +107,7 @@ static const typ_t	__typtab_crc[] = {
+Motivation:
+When fs data/metadata checksum mismatch, lower block devices may have other
+correct copies. e.g. If XFS successfully reads a metadata buffer off a raid1 but
+decides that the metadata is garbage, today it will shut down the entire
+filesystem without trying any of the other mirrors.  This is a severe
+loss of service, and we propose these patches to have XFS try harder to
+avoid failure.
 
-Heh.  Apparently the stgit rebase didn't notice that this patch was
-already applied and cleverly went and broke non-sparse finobt.  And then
-I didn't notice either. :( :(
+This patch prototype this mirror retry idea by adding a function verifier
+callback to submit_bio.  Filesystem can use submit_bio_verify() to pass a
+callback to the block layer which can then be used to verify if the data read is
+correct.
 
-Strike this patch, please.
+Reused some of bio-integrity code, can be separated if necessary.
 
---D
+Changes v3:
+- Total new implementation, pass down verify function to block layer as
+  suggested by Dave.
 
-> >  	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
-> >  		&xfs_symlink_buf_ops, XFS_SYMLINK_CRC_OFF },
-> >  	{ TYP_TEXT, "text", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
-> > -	{ TYP_FINOBT, "finobt", handle_struct, inobt_crc_hfld,
-> > +	{ TYP_FINOBT, "finobt", handle_struct, inobt_spcrc_hfld,
-> >  		&xfs_inobt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
-> >  	{ TYP_NONE, NULL }
-> >  };
-> > 
+Bob Liu (3):
+  block: introduce submit_bio_verify()
+  block: verify data when endio
+  fs: xfs: add read_verifier() function
+
+ block/bio-integrity.c     | 45 +++++++++++++++++++++++++++++++++++++++
+ block/bio.c               |  3 +++
+ block/blk-core.c          | 17 ++++++++++++---
+ block/blk.h               |  8 +++++++
+ block/bounce.c            |  1 +
+ drivers/md/raid1.c        |  1 +
+ drivers/md/raid5-ppl.c    |  1 +
+ fs/xfs/xfs_buf.c          | 23 ++++++++++++++++++--
+ fs/xfs/xfs_buf.h          |  1 +
+ include/linux/bio.h       |  2 ++
+ include/linux/blk_types.h |  5 +++++
+ 11 files changed, 102 insertions(+), 5 deletions(-)
+
+-- 
+2.17.1
