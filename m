@@ -1,73 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48712 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726811AbfCZVV1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Mar 2019 17:21:27 -0400
-Date: Tue, 26 Mar 2019 14:21:20 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 25/36] xfs_repair: fix uninitialized variable warnings
-Message-ID: <20190326212120.GY1183@magnolia>
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <155259758358.31886.2042156413647033104.stgit@magnolia>
- <86dce7d4-e637-8a94-e210-cdc804c6f0dc@sandeen.net>
+Received: from mail-it1-f195.google.com ([209.85.166.195]:52378 "EHLO
+        mail-it1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728737AbfC2O20 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Mar 2019 10:28:26 -0400
+Received: by mail-it1-f195.google.com with SMTP id g17so3987703ita.2
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Mar 2019 07:28:25 -0700 (PDT)
+Subject: Re: [PATCH v3 2/3] block: verify data when endio
+References: <20190329142346.1677-1-bob.liu@oracle.com>
+ <20190329142346.1677-3-bob.liu@oracle.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <41c8688a-65bd-96ac-9b23-4facd0ade4a7@kernel.dk>
+Date: Fri, 29 Mar 2019 08:28:23 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <86dce7d4-e637-8a94-e210-cdc804c6f0dc@sandeen.net>
+In-Reply-To: <20190329142346.1677-3-bob.liu@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Bob Liu <bob.liu@oracle.com>, linux-block@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, martin.petersen@oracle.com, shirley.ma@oracle.com, allison.henderson@oracle.com, david@fromorbit.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca, tytso@mit.edu
 
-On Tue, Mar 26, 2019 at 02:56:02PM -0500, Eric Sandeen wrote:
-> On 3/14/19 4:06 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Fix some uninitialized variable warnings because ASSERT disappears if
-> > DEBUG is not defined.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Fixes: commit 5857dce9e ("xfs_repair: check and repair quota metadata")
-> 
-> which was mine ;)
-> 
-> But, I wonder if we should really just happily carry on w/ an invalid
-> quota type 0 on a non-debug build.  I don't know how that will end.
-> 
-> Maybe we should just switch it to a hard assert(0) because it really
-> can only happen on a programming error today.
+On 3/29/19 8:23 AM, Bob Liu wrote:
+> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+> index d66bf5f32610..e9f25f162138 100644
+> --- a/include/linux/blk_types.h
+> +++ b/include/linux/blk_types.h
+> @@ -18,6 +18,7 @@ struct block_device;
+>  struct io_context;
+>  struct cgroup_subsys_state;
+>  typedef void (bio_end_io_t) (struct bio *);
+> +typedef int (bio_verifier_t) (struct bio *);
+>  
+>  /*
+>   * Block error status values.  See block/blk-core:blk_errors for the details.
+> @@ -187,6 +188,8 @@ struct bio {
+>  		struct bio_integrity_payload *bi_integrity; /* data integrity */
+>  #endif
+>  	};
+> +	bio_verifier_t		*bi_verifier;	/* verify callback when endio */
+> +	struct work_struct      bi_work;	/* I/O completion */
+>  
+>  	unsigned short		bi_vcnt;	/* how many bio_vec's */
 
-Yeah, we ought to be more defensive about that, since in theory we could
-introduce a subtle bug some day where we validate a corrupt dquot with
-flags == 0.
+I told you this for the initial posting, and the objection still stands.
+Adding 40 bytes to struct bio is a no-go.
 
-/me kinda wonders why we define away the asserts for repair, since it's
-not like continuing under invalid premises in a repair tool is a good
-idea.
+So that's a big NAK on that series.
 
---D
-
-> 
-> > ---
-> >  repair/dinode.c |    4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/repair/dinode.c b/repair/dinode.c
-> > index f670bf87..c0a56daa 100644
-> > --- a/repair/dinode.c
-> > +++ b/repair/dinode.c
-> > @@ -1176,8 +1176,8 @@ process_quota_inode(
-> >  	struct xfs_buf		*bp;
-> >  	xfs_filblks_t		dqchunklen;
-> >  	uint			dqperchunk;
-> > -	int			quota_type;
-> > -	char			*quota_string;
-> > +	int			quota_type = 0;
-> > +	char			*quota_string = NULL;
-> >  	xfs_dqid_t		dqid;
-> >  	xfs_fileoff_t		qbno;
-> >  	int			i;
-> > 
+-- 
+Jens Axboe
