@@ -1,136 +1,167 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:34213 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731172AbfCaOZe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 31 Mar 2019 10:25:34 -0400
-Received: by mail-wr1-f68.google.com with SMTP id p10so8514748wrq.1
-        for <linux-xfs@vger.kernel.org>; Sun, 31 Mar 2019 07:25:33 -0700 (PDT)
-From: Alex Lyakas <alex@zadara.com>
-Subject: [STABLE PATCH 1/2] xfs: add the ability to join a held buffer to a defer_ops
-Date: Sun, 31 Mar 2019 17:24:42 +0300
-Message-Id: <1554042282-3344-1-git-send-email-alex@zadara.com>
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:37153 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730502AbfC3KJ4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Mar 2019 06:09:56 -0400
+Date: Sat, 30 Mar 2019 18:09:49 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH] generic: prohibit fstrim on journalled filesystems with
+ norecovery
+Message-ID: <20190330100949.GA2824@desktop>
+References: <20190323003532.GB1180@magnolia>
+ <CAL3q7H4Un5e5xOkTgAVXthfr-N1CXwf6e4qOyQ9WeXQoj3E8Uw@mail.gmail.com>
+ <20190327032645.GB1183@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190327032645.GB1183@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: stable@vger.kernel.org, darrick.wong@oracle.com, hch@lst.de, shyam@zadara.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Filipe David Manana <fdmanana@apache.org>, fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+On Tue, Mar 26, 2019 at 08:26:45PM -0700, Darrick J. Wong wrote:
+> On Tue, Mar 26, 2019 at 12:21:20PM +0000, Filipe David Manana wrote:
+> > On Sat, Mar 23, 2019 at 12:35 AM Darrick J. Wong
+> > <darrick.wong@oracle.com> wrote:
+> > >
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > >
+> > > This test makes sure that we can't use stale unrecovered fs metadata to
+> > > drive a DISCARD festival on a disk and thereby destroy user data by
+> > > accident.
+> > 
+> > It would help to have listed the name of the patches that fix the
+> > issues on xfs/ext4/btrfs, to make it faster.
+> > 
+> > >
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Reviewed-by: Filipe Manana <fdmanana@suse.com>
+> > 
+> > Looks good, thanks for doing this. Just one question below.
+> > 
+> > > ---
+> > >  tests/generic/714     |   61 +++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/generic/714.out |    4 +++
+> > >  tests/generic/group   |    1 +
+> > >  3 files changed, 66 insertions(+)
+> > >  create mode 100755 tests/generic/714
+> > >  create mode 100644 tests/generic/714.out
+> > >
+> > > diff --git a/tests/generic/714 b/tests/generic/714
+> > > new file mode 100755
+> > > index 00000000..1849a5e9
+> > > --- /dev/null
+> > > +++ b/tests/generic/714
+> > > @@ -0,0 +1,61 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0+
+> > > +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test No. 714
+> > > +#
+> > > +# Ensure that we can't call fstrim on filesystems mounted norecovery, because
+> > > +# FSTRIM implementations use free space metadata to drive the discard requests
+> > > +# and we told the filesystem not to make sure the metadata are up to date.
+> > > +
+> > > +seq=`basename $0`
+> > > +seqres=$RESULT_DIR/$seq
+> > > +echo "QA output created by $seq"
+> > > +
+> > > +here=`pwd`
+> > > +tmp=/tmp/$$
+> > > +status=1    # failure is the default!
+> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > > +
+> > > +_cleanup()
+> > > +{
+> > > +    cd /
+> > > +    rm -rf $tmp.*
+> > > +}
+> > > +
+> > > +# get standard environment, filters and checks
+> > > +. ./common/rc
+> > > +. ./common/filter
+> > > +
+> > > +# real QA test starts here
+> > > +_supported_os Linux
+> > > +_require_scratch
+> > > +_require_fstrim
+> > > +
+> > > +rm -f $seqres.full
+> > > +
+> > > +_scratch_mkfs > $seqres.full 2>&1
+> > > +_require_metadata_journaling $SCRATCH_DEV
+> > > +
+> > > +echo "fstrim on regular mount"
+> > > +_scratch_mount >> $seqres.full 2>&1
+> > > +$FSTRIM_PROG -v $SCRATCH_MNT >> $seqres.full 2>&1 || \
+> > > +       _notrun "FSTRIM not supported"
+> > > +_scratch_unmount
+> > > +
+> > > +echo "fstrim on ro mount"
+> > > +_scratch_mount -o ro >> $seqres.full 2>&1
+> > > +$FSTRIM_PROG -v $SCRATCH_MNT >> $seqres.full 2>&1
+> > > +_scratch_unmount
+> > > +
+> > > +echo "fstrim on ro mount with no log replay"
+> > > +norecovery="norecovery"
+> > > +test $FSTYP = "btrfs" && norecovery=nologreplay
+> > > +_scratch_mount -o ro,$norecovery >> $seqres.full 2>&1
+> > > +$FSTRIM_PROG -v $SCRATCH_MNT >> $seqres.full 2>&1 && \
+> > > +       echo "fstrim with unrecovered metadata just ate your filesystem"
+> > > +_scratch_unmount
+> > > +
+> > > +# success, all done
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/generic/714.out b/tests/generic/714.out
+> > > new file mode 100644
+> > > index 00000000..1158a2ff
+> > > --- /dev/null
+> > > +++ b/tests/generic/714.out
+> > > @@ -0,0 +1,4 @@
+> > > +QA output created by 714
+> > > +fstrim on regular mount
+> > > +fstrim on ro mount
+> > > +fstrim on ro mount with no log replay
+> > > diff --git a/tests/generic/group b/tests/generic/group
+> > > index 2e4341fb..c2046293 100644
+> > > --- a/tests/generic/group
+> > > +++ b/tests/generic/group
+> > > @@ -538,6 +538,7 @@
+> > >  533 auto quick attr
+> > >  534 auto quick log
+> > >  535 auto quick log
+> > > +714 auto trim
+> > 
+> > Any reason to not add the 'quick' group as well? It runs in 1 second
+> > for me on btrfs, xfs and ext4 with a debug kernel.
+> 
+> Probably just an oversight, I'll add it when I resubmit tomorrow.
 
-In certain cases, defer_ops callers will lock a buffer and want to hold
-the lock across transaction rolls.  Similar to ijoined inodes, we want
-to dirty & join the buffer with each transaction roll in defer_finish so
-that afterwards the caller still owns the buffer lock and we haven't
-inadvertently pinned the log.
+I'll just add it on commit.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Alex Lyakas <alex@zadara.com>
----
- fs/xfs/libxfs/xfs_defer.c | 39 ++++++++++++++++++++++++++++++++++++---
- fs/xfs/libxfs/xfs_defer.h |  5 ++++-
- 2 files changed, 40 insertions(+), 4 deletions(-)
+> 
+> Thanks for the review + btrfs fix. :)
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 072ebfe..087fea0 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -249,6 +249,10 @@
- 	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
- 		xfs_trans_log_inode(*tp, dop->dop_inodes[i], XFS_ILOG_CORE);
- 
-+	/* Hold the (previously bjoin'd) buffer locked across the roll. */
-+	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++)
-+		xfs_trans_dirty_buf(*tp, dop->dop_bufs[i]);
-+
- 	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
- 
- 	/* Roll the transaction. */
-@@ -264,6 +268,12 @@
- 	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
- 		xfs_trans_ijoin(*tp, dop->dop_inodes[i], 0);
- 
-+	/* Rejoin the buffers and dirty them so the log moves forward. */
-+	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++) {
-+		xfs_trans_bjoin(*tp, dop->dop_bufs[i]);
-+		xfs_trans_bhold(*tp, dop->dop_bufs[i]);
-+	}
-+
- 	return error;
- }
- 
-@@ -295,6 +305,31 @@
- 		}
- 	}
- 
-+	ASSERT(0);
-+	return -EFSCORRUPTED;
-+}
-+
-+/*
-+ * Add this buffer to the deferred op.  Each joined buffer is relogged
-+ * each time we roll the transaction.
-+ */
-+int
-+xfs_defer_bjoin(
-+	struct xfs_defer_ops		*dop,
-+	struct xfs_buf			*bp)
-+{
-+	int				i;
-+
-+	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS; i++) {
-+		if (dop->dop_bufs[i] == bp)
-+			return 0;
-+		else if (dop->dop_bufs[i] == NULL) {
-+			dop->dop_bufs[i] = bp;
-+			return 0;
-+		}
-+	}
-+
-+	ASSERT(0);
- 	return -EFSCORRUPTED;
- }
- 
-@@ -493,9 +528,7 @@
- 	struct xfs_defer_ops		*dop,
- 	xfs_fsblock_t			*fbp)
- {
--	dop->dop_committed = false;
--	dop->dop_low = false;
--	memset(&dop->dop_inodes, 0, sizeof(dop->dop_inodes));
-+	memset(dop, 0, sizeof(struct xfs_defer_ops));
- 	*fbp = NULLFSBLOCK;
- 	INIT_LIST_HEAD(&dop->dop_intake);
- 	INIT_LIST_HEAD(&dop->dop_pending);
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index d4f046d..045beac 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -59,6 +59,7 @@ enum xfs_defer_ops_type {
- };
- 
- #define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
-+#define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
- 
- struct xfs_defer_ops {
- 	bool			dop_committed;	/* did any trans commit? */
-@@ -66,8 +67,9 @@ struct xfs_defer_ops {
- 	struct list_head	dop_intake;	/* unlogged pending work */
- 	struct list_head	dop_pending;	/* logged pending work */
- 
--	/* relog these inodes with each roll */
-+	/* relog these with each roll */
- 	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
-+	struct xfs_buf		*dop_bufs[XFS_DEFER_OPS_NR_BUFS];
- };
- 
- void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
-@@ -77,6 +79,7 @@ void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
- void xfs_defer_init(struct xfs_defer_ops *dop, xfs_fsblock_t *fbp);
- bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
- int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
-+int xfs_defer_bjoin(struct xfs_defer_ops *dop, struct xfs_buf *bp);
- 
- /* Description of a deferred type. */
- struct xfs_defer_op_type {
--- 
-1.9.1
+Thanks again! :)
+
+Eryu
+> 
+> --D
+> 
+> > >  940 auto quick clone punch
+> > >  941 auto quick clone punch
+> > >  942 auto quick clone punch
+> > 
+> > 
+> > 
+> > -- 
+> > Filipe David Manana,
+> > 
+> > "Reasonable men adapt themselves to the world.
+> >  Unreasonable men adapt the world to themselves.
+> >  That's why all progress depends on unreasonable men."
