@@ -1,27 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:46822 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:46416 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729539AbfDARLP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Apr 2019 13:11:15 -0400
+        with ESMTP id S1730065AbfDARKz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Apr 2019 13:10:55 -0400
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x31H9px6134674
-        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:11:14 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2130.oracle.com with ESMTP id 2rhwyd0gp6-1
+        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x31H9HC9134152
+        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:10:53 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2130.oracle.com with ESMTP id 2rhwyd0gm5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Apr 2019 17:11:14 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x31HBD5b015363
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Apr 2019 17:10:53 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x31HAlSe015315
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:11:13 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x31HBDl9007662
-        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:11:13 GMT
-Subject: [PATCH 09/10] xfs: scrub/repair should update filesystem metadata
- health
+        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:10:48 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x31HAlFE016998
+        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:10:47 GMT
+Subject: [PATCH 06/10] xfs: report fs and rt health via geometry structure
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 01 Apr 2019 10:11:12 -0700
-Message-ID: <155413867262.4966.18080677522827911800.stgit@magnolia>
+Date: Mon, 01 Apr 2019 10:10:46 -0700
+Message-ID: <155413864658.4966.5585966135005160342.stgit@magnolia>
 In-Reply-To: <155413860964.4966.6087725033542837255.stgit@magnolia>
 References: <155413860964.4966.6087725033542837255.stgit@magnolia>
 MIME-Version: 1.0
@@ -35,310 +34,114 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that we have the ability to track sick metadata in-core, make scrub
-and repair update those health assessments after doing work.
+Use our newly expanded geometry structure to report the overall fs and
+realtime health status.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile       |    1 
- fs/xfs/scrub/health.c |  180 +++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/health.h |   12 +++
- fs/xfs/scrub/scrub.c  |    8 ++
- fs/xfs/scrub/scrub.h  |   11 +++
- 5 files changed, 212 insertions(+)
- create mode 100644 fs/xfs/scrub/health.c
- create mode 100644 fs/xfs/scrub/health.h
+ fs/xfs/libxfs/xfs_fs.h     |   11 ++++++++++-
+ fs/xfs/libxfs/xfs_health.h |    3 +++
+ fs/xfs/xfs_health.c        |   27 +++++++++++++++++++++++++++
+ fs/xfs/xfs_ioctl.c         |    3 +++
+ 4 files changed, 43 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 786379c143f4..b20964e26a22 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -143,6 +143,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   common.o \
- 				   dabtree.o \
- 				   dir.o \
-+				   health.o \
- 				   ialloc.o \
- 				   inode.o \
- 				   parent.o \
-diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
-new file mode 100644
-index 000000000000..dd9986500801
---- /dev/null
-+++ b/fs/xfs/scrub/health.c
-@@ -0,0 +1,180 @@
-+// SPDX-License-Identifier: GPL-2.0+
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_health.h"
-+#include "scrub/scrub.h"
-+#include "scrub/health.h"
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 87226e00e7bd..ddbfde7ff79d 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -199,9 +199,18 @@ typedef struct xfs_fsop_geom {
+ 	__u32		rtsectsize;	/* realtime sector size, bytes	*/
+ 	__u32		dirblocksize;	/* directory block size, bytes	*/
+ 	__u32		logsunit;	/* log stripe unit, bytes */
+-	__u64		reserved[18];	/* reserved space */
++	__u32		health;		/* o: unhealthy fs & rt metadata */
++	__u32		reserved32;	/* reserved space */
++	__u64		reserved[17];	/* reserved space */
+ } xfs_fsop_geom_t;
+ 
++#define XFS_FSOP_GEOM_HEALTH_FS_COUNTERS (1 << 0) /* summary counters */
++#define XFS_FSOP_GEOM_HEALTH_FS_UQUOTA	(1 << 1)  /* user quota */
++#define XFS_FSOP_GEOM_HEALTH_FS_GQUOTA	(1 << 2)  /* group quota */
++#define XFS_FSOP_GEOM_HEALTH_FS_PQUOTA	(1 << 3)  /* project quota */
++#define XFS_FSOP_GEOM_HEALTH_RT_BITMAP	(1 << 4)  /* realtime bitmap */
++#define XFS_FSOP_GEOM_HEALTH_RT_SUMMARY	(1 << 5)  /* realtime summary */
 +
-+static const unsigned int xchk_type_to_health_flag[XFS_SCRUB_TYPE_NR] = {
-+	[XFS_SCRUB_TYPE_SB]		= XFS_HEALTH_AG_SB,
-+	[XFS_SCRUB_TYPE_AGF]		= XFS_HEALTH_AG_AGF,
-+	[XFS_SCRUB_TYPE_AGFL]		= XFS_HEALTH_AG_AGFL,
-+	[XFS_SCRUB_TYPE_AGI]		= XFS_HEALTH_AG_AGI,
-+	[XFS_SCRUB_TYPE_BNOBT]		= XFS_HEALTH_AG_BNOBT,
-+	[XFS_SCRUB_TYPE_CNTBT]		= XFS_HEALTH_AG_CNTBT,
-+	[XFS_SCRUB_TYPE_INOBT]		= XFS_HEALTH_AG_INOBT,
-+	[XFS_SCRUB_TYPE_FINOBT]		= XFS_HEALTH_AG_FINOBT,
-+	[XFS_SCRUB_TYPE_RMAPBT]		= XFS_HEALTH_AG_RMAPBT,
-+	[XFS_SCRUB_TYPE_REFCNTBT]	= XFS_HEALTH_AG_REFCNTBT,
-+	[XFS_SCRUB_TYPE_INODE]		= XFS_HEALTH_INO_CORE,
-+	[XFS_SCRUB_TYPE_BMBTD]		= XFS_HEALTH_INO_BMBTD,
-+	[XFS_SCRUB_TYPE_BMBTA]		= XFS_HEALTH_INO_BMBTA,
-+	[XFS_SCRUB_TYPE_BMBTC]		= XFS_HEALTH_INO_BMBTC,
-+	[XFS_SCRUB_TYPE_DIR]		= XFS_HEALTH_INO_DIR,
-+	[XFS_SCRUB_TYPE_XATTR]		= XFS_HEALTH_INO_XATTR,
-+	[XFS_SCRUB_TYPE_SYMLINK]	= XFS_HEALTH_INO_SYMLINK,
-+	[XFS_SCRUB_TYPE_PARENT]		= XFS_HEALTH_INO_PARENT,
-+	[XFS_SCRUB_TYPE_RTBITMAP]	= XFS_HEALTH_RT_BITMAP,
-+	[XFS_SCRUB_TYPE_RTSUM]		= XFS_HEALTH_RT_SUMMARY,
-+	[XFS_SCRUB_TYPE_UQUOTA]		= XFS_HEALTH_FS_UQUOTA,
-+	[XFS_SCRUB_TYPE_GQUOTA]		= XFS_HEALTH_FS_GQUOTA,
-+	[XFS_SCRUB_TYPE_PQUOTA]		= XFS_HEALTH_FS_PQUOTA,
-+};
+ /* Output for XFS_FS_COUNTS */
+ typedef struct xfs_fsop_counts {
+ 	__u64	freedata;	/* free data section blocks */
+diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+index 269b124dc1d7..36736d54a3e3 100644
+--- a/fs/xfs/libxfs/xfs_health.h
++++ b/fs/xfs/libxfs/xfs_health.h
+@@ -39,6 +39,7 @@
+ struct xfs_mount;
+ struct xfs_perag;
+ struct xfs_inode;
++struct xfs_fsop_geom;
+ 
+ /* Observable health issues for metadata spanning the entire filesystem. */
+ #define XFS_HEALTH_FS_COUNTERS	(1 << 0)  /* summary counters */
+@@ -200,4 +201,6 @@ xfs_inode_healthy(struct xfs_inode *ip)
+ 	return xfs_inode_measure_sickness(ip) == 0;
+ }
+ 
++void xfs_fsop_geom_health(struct xfs_mount *mp, struct xfs_fsop_geom *geo);
 +
-+/* Return the health status mask for this scrub type. */
-+unsigned int
-+xchk_health_mask_for_scrub_type(
-+	__u32			scrub_type)
-+{
-+	return xchk_type_to_health_flag[scrub_type];
-+}
+ #endif	/* __XFS_HEALTH_H__ */
+diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+index 6e2da858c356..151c98693bef 100644
+--- a/fs/xfs/xfs_health.c
++++ b/fs/xfs/xfs_health.c
+@@ -249,3 +249,30 @@ xfs_inode_measure_sickness(
+ 	spin_unlock(&ip->i_flags_lock);
+ 	return ret;
+ }
 +
-+/* Mark metadata unhealthy. */
-+static void
-+xchk_mark_sick(
-+	struct xfs_scrub	*sc,
-+	unsigned int		mask)
-+{
-+	struct xfs_perag	*pag;
-+
-+	if (!mask)
-+		return;
-+
-+	switch (sc->sm->sm_type) {
-+	case XFS_SCRUB_TYPE_SB:
-+	case XFS_SCRUB_TYPE_AGF:
-+	case XFS_SCRUB_TYPE_AGFL:
-+	case XFS_SCRUB_TYPE_AGI:
-+	case XFS_SCRUB_TYPE_BNOBT:
-+	case XFS_SCRUB_TYPE_CNTBT:
-+	case XFS_SCRUB_TYPE_INOBT:
-+	case XFS_SCRUB_TYPE_FINOBT:
-+	case XFS_SCRUB_TYPE_RMAPBT:
-+	case XFS_SCRUB_TYPE_REFCNTBT:
-+		pag = xfs_perag_get(sc->mp, sc->sm->sm_agno);
-+		xfs_ag_mark_sick(pag, mask);
-+		xfs_perag_put(pag);
-+		break;
-+	case XFS_SCRUB_TYPE_INODE:
-+	case XFS_SCRUB_TYPE_BMBTD:
-+	case XFS_SCRUB_TYPE_BMBTA:
-+	case XFS_SCRUB_TYPE_BMBTC:
-+	case XFS_SCRUB_TYPE_DIR:
-+	case XFS_SCRUB_TYPE_XATTR:
-+	case XFS_SCRUB_TYPE_SYMLINK:
-+	case XFS_SCRUB_TYPE_PARENT:
-+		xfs_inode_mark_sick(sc->ip, mask);
-+		break;
-+	case XFS_SCRUB_TYPE_UQUOTA:
-+	case XFS_SCRUB_TYPE_GQUOTA:
-+	case XFS_SCRUB_TYPE_PQUOTA:
-+		xfs_fs_mark_sick(sc->mp, mask);
-+		break;
-+	case XFS_SCRUB_TYPE_RTBITMAP:
-+	case XFS_SCRUB_TYPE_RTSUM:
-+		xfs_rt_mark_sick(sc->mp, mask);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
-+/* Mark metadata healed after a repair or healthy after a clean scan. */
-+static void
-+xchk_mark_healthy(
-+	struct xfs_scrub	*sc,
-+	unsigned int		mask)
-+{
-+	struct xfs_perag	*pag;
-+
-+	if (!mask)
-+		return;
-+
-+	switch (sc->sm->sm_type) {
-+	case XFS_SCRUB_TYPE_SB:
-+	case XFS_SCRUB_TYPE_AGF:
-+	case XFS_SCRUB_TYPE_AGFL:
-+	case XFS_SCRUB_TYPE_AGI:
-+	case XFS_SCRUB_TYPE_BNOBT:
-+	case XFS_SCRUB_TYPE_CNTBT:
-+	case XFS_SCRUB_TYPE_INOBT:
-+	case XFS_SCRUB_TYPE_FINOBT:
-+	case XFS_SCRUB_TYPE_RMAPBT:
-+	case XFS_SCRUB_TYPE_REFCNTBT:
-+		pag = xfs_perag_get(sc->mp, sc->sm->sm_agno);
-+		xfs_ag_mark_healthy(pag, mask);
-+		xfs_perag_put(pag);
-+		break;
-+	case XFS_SCRUB_TYPE_INODE:
-+	case XFS_SCRUB_TYPE_BMBTD:
-+	case XFS_SCRUB_TYPE_BMBTA:
-+	case XFS_SCRUB_TYPE_BMBTC:
-+	case XFS_SCRUB_TYPE_DIR:
-+	case XFS_SCRUB_TYPE_XATTR:
-+	case XFS_SCRUB_TYPE_SYMLINK:
-+	case XFS_SCRUB_TYPE_PARENT:
-+		xfs_inode_mark_healthy(sc->ip, mask);
-+		break;
-+	case XFS_SCRUB_TYPE_UQUOTA:
-+	case XFS_SCRUB_TYPE_GQUOTA:
-+	case XFS_SCRUB_TYPE_PQUOTA:
-+		xfs_fs_mark_healthy(sc->mp, mask);
-+		break;
-+	case XFS_SCRUB_TYPE_RTBITMAP:
-+	case XFS_SCRUB_TYPE_RTSUM:
-+		xfs_rt_mark_healthy(sc->mp, mask);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
-+/* Update filesystem health assessments based on what we found and did. */
++/* Fill out fs geometry health info. */
 +void
-+xchk_update_health(
-+	struct xfs_scrub	*sc,
-+	bool			already_fixed)
++xfs_fsop_geom_health(
++	struct xfs_mount	*mp,
++	struct xfs_fsop_geom	*geo)
 +{
-+	/*
-+	 * If the scrubber finds errors, we mark sick whatever's mentioned in
-+	 * sick_mask, no matter whether this is a first scan or an evaluation
-+	 * of repair effectiveness.
-+	 *
-+	 * If there is no direct corruption and we're called after a repair,
-+	 * clear whatever's in heal_mask because that's what we fixed.
-+	 *
-+	 * Otherwise, there's no direct corruption and we didn't repair
-+	 * anything, so mark whatever's in sick_mask as healthy.
-+	 */
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		xchk_mark_sick(sc, sc->sick_mask);
-+	else if (already_fixed)
-+		xchk_mark_healthy(sc, sc->heal_mask);
-+	else
-+		xchk_mark_healthy(sc, sc->sick_mask);
++	unsigned int		sick;
++
++	geo->health = 0;
++
++	sick = xfs_fs_measure_sickness(mp);
++	if (sick & XFS_HEALTH_FS_COUNTERS)
++		geo->health |= XFS_FSOP_GEOM_HEALTH_FS_COUNTERS;
++	if (sick & XFS_HEALTH_FS_UQUOTA)
++		geo->health |= XFS_FSOP_GEOM_HEALTH_FS_UQUOTA;
++	if (sick & XFS_HEALTH_FS_GQUOTA)
++		geo->health |= XFS_FSOP_GEOM_HEALTH_FS_GQUOTA;
++	if (sick & XFS_HEALTH_FS_PQUOTA)
++		geo->health |= XFS_FSOP_GEOM_HEALTH_FS_PQUOTA;
++
++	sick = xfs_rt_measure_sickness(mp);
++	if (sick & XFS_HEALTH_RT_BITMAP)
++		geo->health |= XFS_FSOP_GEOM_HEALTH_RT_BITMAP;
++	if (sick & XFS_HEALTH_RT_SUMMARY)
++		geo->health |= XFS_FSOP_GEOM_HEALTH_RT_SUMMARY;
 +}
-diff --git a/fs/xfs/scrub/health.h b/fs/xfs/scrub/health.h
-new file mode 100644
-index 000000000000..e795f4c9a23c
---- /dev/null
-+++ b/fs/xfs/scrub/health.h
-@@ -0,0 +1,12 @@
-+// SPDX-License-Identifier: GPL-2.0+
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#ifndef __XFS_SCRUB_HEALTH_H__
-+#define __XFS_SCRUB_HEALTH_H__
-+
-+unsigned int xchk_health_mask_for_scrub_type(__u32 scrub_type);
-+void xchk_update_health(struct xfs_scrub *sc, bool already_fixed);
-+
-+#endif /* __XFS_SCRUB_HEALTH_H__ */
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 1b2344d00525..b1519dfc5811 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -40,6 +40,7 @@
- #include "scrub/trace.h"
- #include "scrub/btree.h"
- #include "scrub/repair.h"
-+#include "scrub/health.h"
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index b5918ce656bd..f9bf11b6a055 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -34,6 +34,7 @@
+ #include "scrub/xfs_scrub.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
++#include "xfs_health.h"
  
- /*
-  * Online Scrub and Repair
-@@ -468,6 +469,7 @@ xfs_scrub_metadata(
- {
- 	struct xfs_scrub		sc;
- 	struct xfs_mount		*mp = ip->i_mount;
-+	unsigned int			heal_mask;
- 	bool				try_harder = false;
- 	bool				already_fixed = false;
- 	int				error = 0;
-@@ -488,6 +490,7 @@ xfs_scrub_metadata(
- 	error = xchk_validate_inputs(mp, sm);
+ #include <linux/capability.h>
+ #include <linux/cred.h>
+@@ -830,6 +831,8 @@ xfs_ioc_fsgeometry(
  	if (error)
- 		goto out;
-+	heal_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
+ 		return error;
  
- 	xchk_experimental_warning(mp);
- 
-@@ -499,6 +502,8 @@ xfs_scrub_metadata(
- 	sc.ops = &meta_scrub_ops[sm->sm_type];
- 	sc.try_harder = try_harder;
- 	sc.sa.agno = NULLAGNUMBER;
-+	sc.heal_mask = heal_mask;
-+	sc.sick_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
- 	error = sc.ops->setup(&sc, ip);
- 	if (error)
- 		goto out_teardown;
-@@ -519,6 +524,8 @@ xfs_scrub_metadata(
- 	} else if (error)
- 		goto out_teardown;
- 
-+	xchk_update_health(&sc, already_fixed);
++	xfs_fsop_geom_health(mp, &fsgeo);
 +
- 	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed) {
- 		bool needs_fix;
- 
-@@ -551,6 +558,7 @@ xfs_scrub_metadata(
- 				xrep_failure(mp);
- 				goto out;
- 			}
-+			heal_mask = sc.heal_mask;
- 			goto retry_op;
- 		}
- 	}
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 22f754fba8e5..05f1ad242a35 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -62,6 +62,17 @@ struct xfs_scrub {
- 	struct xfs_inode		*ip;
- 	void				*buf;
- 	uint				ilock_flags;
-+
-+	/* Metadata to be marked sick if scrub finds errors. */
-+	unsigned int			sick_mask;
-+
-+	/*
-+	 * Metadata to be marked healthy if repair fixes errors.  Some repair
-+	 * functions can fix multiple data structures at once, so we have to
-+	 * treat sick and heal masks separately.
-+	 */
-+	unsigned int			heal_mask;
-+
- 	bool				try_harder;
- 	bool				has_quotaofflock;
- 
+ 	if (copy_to_user(arg, &fsgeo, sizeof(fsgeo)))
+ 		return -EFAULT;
+ 	return 0;
