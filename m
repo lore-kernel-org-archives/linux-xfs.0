@@ -1,188 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58222 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726858AbfDCKlu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Apr 2019 06:41:50 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v4 3/5] libnvdimm: add dax_dev sync flag
-Date: Wed,  3 Apr 2019 16:10:16 +0530
-Message-Id: <20190403104018.23947-4-pagupta@redhat.com>
-In-Reply-To: <20190403104018.23947-1-pagupta@redhat.com>
-References: <20190403104018.23947-1-pagupta@redhat.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:45782 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726657AbfDAOFJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Apr 2019 10:05:09 -0400
+Subject: Re: [PATCH v3 2/3] block: verify data when endio
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <41c8688a-65bd-96ac-9b23-4facd0ade4a7@kernel.dk>
+        <yq1ftr5rbq1.fsf@oracle.com>
+        <f65d6a7b-9e69-ae1e-b8b8-8769dc650311@kernel.dk>
+        <yq1bm1trb4y.fsf@oracle.com>
+        <feefa611-b744-326c-29d5-c64bcda45d9f@kernel.dk>
+        <yq17echrax1.fsf@oracle.com>
+        <1b638dc2-56fd-6ab4-dcca-ad2adb9931bb@kernel.dk>
+        <c9adb48c-7b6e-2017-9480-aa2342b3523b@oracle.com>
+        <7599b239-46f4-9799-a87a-3ca3891d4a08@kernel.dk>
+        <yq1imw1p0lp.fsf@oracle.com> <20190331220001.GM23020@dastard>
+Date: Mon, 01 Apr 2019 10:04:43 -0400
+In-Reply-To: <20190331220001.GM23020@dastard> (Dave Chinner's message of "Mon,
+        1 Apr 2019 09:00:01 +1100")
+Message-ID: <yq1ef6lq0sk.fsf@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Bob Liu <bob.liu@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, shirley.ma@oracle.com, allison.henderson@oracle.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca, tytso@mit.edu
 
-This patch adds 'DAXDEV_SYNC' flag which is set
-for nd_region doing synchronous flush. This later 
-is used to disable MAP_SYNC functionality for 
-ext4 & xfs filesystem for devices don't support
-synchronous flush.
 
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
----
- drivers/dax/bus.c            |  2 +-
- drivers/dax/super.c          | 13 ++++++++++++-
- drivers/md/dm.c              |  2 +-
- drivers/nvdimm/pmem.c        |  3 ++-
- drivers/nvdimm/region_devs.c |  7 +++++++
- include/linux/dax.h          |  9 +++++++--
- include/linux/libnvdimm.h    |  1 +
- 7 files changed, 31 insertions(+), 6 deletions(-)
+Hi Dave!
 
-diff --git a/drivers/dax/bus.c b/drivers/dax/bus.c
-index 2109cfe80219..431bf7d2a7f9 100644
---- a/drivers/dax/bus.c
-+++ b/drivers/dax/bus.c
-@@ -388,7 +388,7 @@ struct dev_dax *__devm_create_dev_dax(struct dax_region *dax_region, int id,
- 	 * No 'host' or dax_operations since there is no access to this
- 	 * device outside of mmap of the resulting character device.
- 	 */
--	dax_dev = alloc_dax(dev_dax, NULL, NULL);
-+	dax_dev = alloc_dax(dev_dax, NULL, NULL, true);
- 	if (!dax_dev)
- 		goto err;
- 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 0a339b85133e..bd6509308d05 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -186,6 +186,8 @@ enum dax_device_flags {
- 	DAXDEV_ALIVE,
- 	/* gate whether dax_flush() calls the low level flush routine */
- 	DAXDEV_WRITE_CACHE,
-+	/* flag to check if device supports synchronous flush */
-+	DAXDEV_SYNC,
- };
- 
- /**
-@@ -354,6 +356,12 @@ bool dax_write_cache_enabled(struct dax_device *dax_dev)
- }
- EXPORT_SYMBOL_GPL(dax_write_cache_enabled);
- 
-+bool dax_synchronous(struct dax_device *dax_dev)
-+{
-+	return test_bit(DAXDEV_SYNC, &dax_dev->flags);
-+}
-+EXPORT_SYMBOL_GPL(dax_synchronous);
-+
- bool dax_alive(struct dax_device *dax_dev)
- {
- 	lockdep_assert_held(&dax_srcu);
-@@ -511,7 +519,7 @@ static void dax_add_host(struct dax_device *dax_dev, const char *host)
- }
- 
- struct dax_device *alloc_dax(void *private, const char *__host,
--		const struct dax_operations *ops)
-+		const struct dax_operations *ops, bool sync)
- {
- 	struct dax_device *dax_dev;
- 	const char *host;
-@@ -534,6 +542,9 @@ struct dax_device *alloc_dax(void *private, const char *__host,
- 	dax_add_host(dax_dev, host);
- 	dax_dev->ops = ops;
- 	dax_dev->private = private;
-+	if (sync)
-+		set_bit(DAXDEV_SYNC, &dax_dev->flags);
-+
- 	return dax_dev;
- 
-  err_dev:
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 68d24056d0b1..534e12ca6329 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1965,7 +1965,7 @@ static struct mapped_device *alloc_dev(int minor)
- 	sprintf(md->disk->disk_name, "dm-%d", minor);
- 
- 	if (IS_ENABLED(CONFIG_DAX_DRIVER)) {
--		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops);
-+		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops, true);
- 		if (!dax_dev)
- 			goto bad;
- 	}
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index 5a5b3ea4d073..78f71ba0e7cf 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -466,7 +466,8 @@ static int pmem_attach_disk(struct device *dev,
- 	nvdimm_badblocks_populate(nd_region, &pmem->bb, &bb_res);
- 	disk->bb = &pmem->bb;
- 
--	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
-+	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops,
-+					is_nvdimm_sync(nd_region));
- 
- 	if (!dax_dev) {
- 		put_disk(disk);
-diff --git a/drivers/nvdimm/region_devs.c b/drivers/nvdimm/region_devs.c
-index fb1041ab32a6..8c7aa047fe2b 100644
---- a/drivers/nvdimm/region_devs.c
-+++ b/drivers/nvdimm/region_devs.c
-@@ -1231,6 +1231,13 @@ int nvdimm_has_cache(struct nd_region *nd_region)
- }
- EXPORT_SYMBOL_GPL(nvdimm_has_cache);
- 
-+bool is_nvdimm_sync(struct nd_region *nd_region)
-+{
-+	return is_nd_pmem(&nd_region->dev) &&
-+		!test_bit(ND_REGION_ASYNC, &nd_region->flags);
-+}
-+EXPORT_SYMBOL_GPL(is_nvdimm_sync);
-+
- struct conflict_context {
- 	struct nd_region *nd_region;
- 	resource_size_t start, size;
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 0dd316a74a29..9bdd50d06ef6 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -32,18 +32,19 @@ extern struct attribute_group dax_attribute_group;
- #if IS_ENABLED(CONFIG_DAX)
- struct dax_device *dax_get_by_host(const char *host);
- struct dax_device *alloc_dax(void *private, const char *host,
--		const struct dax_operations *ops);
-+		const struct dax_operations *ops, bool sync);
- void put_dax(struct dax_device *dax_dev);
- void kill_dax(struct dax_device *dax_dev);
- void dax_write_cache(struct dax_device *dax_dev, bool wc);
- bool dax_write_cache_enabled(struct dax_device *dax_dev);
-+bool dax_synchronous(struct dax_device *dax_dev);
- #else
- static inline struct dax_device *dax_get_by_host(const char *host)
- {
- 	return NULL;
- }
- static inline struct dax_device *alloc_dax(void *private, const char *host,
--		const struct dax_operations *ops)
-+		const struct dax_operations *ops, bool sync)
- {
- 	/*
- 	 * Callers should check IS_ENABLED(CONFIG_DAX) to know if this
-@@ -64,6 +65,10 @@ static inline bool dax_write_cache_enabled(struct dax_device *dax_dev)
- {
- 	return false;
- }
-+static inline bool dax_synchronous(struct dax_device *dax_dev)
-+{
-+	return false;
-+}
- #endif
- 
- struct writeback_control;
-diff --git a/include/linux/libnvdimm.h b/include/linux/libnvdimm.h
-index d9d2ab8a6e64..9a8aea370cbc 100644
---- a/include/linux/libnvdimm.h
-+++ b/include/linux/libnvdimm.h
-@@ -270,6 +270,7 @@ int generic_nvdimm_flush(struct nd_region *nd_region);
- int nvdimm_has_flush(struct nd_region *nd_region);
- int nvdimm_has_cache(struct nd_region *nd_region);
- int nvdimm_in_overwrite(struct nvdimm *nvdimm);
-+bool is_nvdimm_sync(struct nd_region *nd_region);
- 
- static inline int nvdimm_ctl(struct nvdimm *nvdimm, unsigned int cmd, void *buf,
- 		unsigned int buf_len, int *cmd_rc)
+>> However, that suffers from another headache in that the I/O can get
+>> arbitrarily sliced and diced in units of 512 bytes.
+>
+> Right, but we don't need support that insane case. Indeed, if
+> it wasn't already obvious, we _can't support it_ because the
+> filesystem verifiers can't do partial verification. i.e.  part of
+> the verification is CRC validation of the whole bio, not to mention
+> that filesystem structure fragments cannot be safely parsed,
+> interpretted and/or verified without the whole structure first being
+> read in.
+
+What I thought. There are some things I can verify by masking but it's
+limited.
+
+What about journal entries? Would they be validated with 512-byte
+granularity or in bundles thereof? Only a problem during recovery, but
+potentially a case where we care deeply about trying another copy if it
+exists.
+
+What I'm asking is if we should have a block size argument for the
+verification? Or would you want to submit bios capped to the size you
+care about and let the block layer take care of coalescing?
+
+Validation of units bigger than the logical block size is an area which
+our older Oracle HARD technology handles gracefully but which T10 PI has
+been unable to address. So this is an area of particular interest to me,
+although it's somewhat orthogonal to Bob's retry plumbing.
+
+Another question for you wrt. retries: Once a copy has been identified
+as bad and a good copy read from media, who does the rewrite? Does the
+filesystem send a new I/O (which would overwrite all copies) or does the
+retry plumbing own the responsibility of writing the good bio to the bad
+location?
+
+> IOWs, we need to look at this problem from a "whole stack" point of
+> view, not just cry about how "bios are too flexible and so make this
+> too hard!". The filesystem greatly constrains the alignment and
+> slicing/dicing problem to the point where it should be non-existent,
+> we have a clearly defined hard stop where verifier propagation
+> terminates, and if all else fails we can still detect corruption at
+> the filesystem level just like we do now. The worst thing that
+> happens here is we give up the capability for automatic block device
+> recovery and repair of damaged copies, which we can't do right now,
+> so it's essentially status quo...
+
+Having gone down the path of the one-to-many relationship when I did the
+original heterogeneous I/O topology attempt, it's pure hell. Also dealt
+with similar conundrums for the integrity stuff. So I don't like the
+breadcrumb approach. Perfect is the enemy of good and all that.
+
+And I am 100% in agreement on the careful alignment and not making
+things complex for crazy use cases (although occasional straddling I/Os
+are not as uncommon as we'd like to think). However, I do have concerns
+about this particular feature when it comes to your status quo comment.
+
+In order for us to build highly reliable systems, we have to have a
+better building block than "this redundancy retry feature works most of
+the time". So to me it is imperative that we provide hard guarantees
+once a particular configuration has been set up and stacked. And if the
+retry guarantee is somehow invalidated, then we really need to let the
+user know about it.
+
 -- 
-2.20.1
+Martin K. Petersen	Oracle Linux Engineering
