@@ -1,182 +1,182 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55720 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726263AbfDCKko (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Apr 2019 06:40:44 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v4 0/5] virtio pmem driver 
-Date: Wed,  3 Apr 2019 16:10:13 +0530
-Message-Id: <20190403104018.23947-1-pagupta@redhat.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:16916 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726412AbfDAVVX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Apr 2019 17:21:23 -0400
+Date: Tue, 2 Apr 2019 08:21:15 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 2/3] block: verify data when endio
+Message-ID: <20190401212115.GQ26298@dastard>
+References: <f65d6a7b-9e69-ae1e-b8b8-8769dc650311@kernel.dk>
+ <yq1bm1trb4y.fsf@oracle.com>
+ <feefa611-b744-326c-29d5-c64bcda45d9f@kernel.dk>
+ <yq17echrax1.fsf@oracle.com>
+ <1b638dc2-56fd-6ab4-dcca-ad2adb9931bb@kernel.dk>
+ <c9adb48c-7b6e-2017-9480-aa2342b3523b@oracle.com>
+ <7599b239-46f4-9799-a87a-3ca3891d4a08@kernel.dk>
+ <yq1imw1p0lp.fsf@oracle.com>
+ <20190331220001.GM23020@dastard>
+ <yq1ef6lq0sk.fsf@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq1ef6lq0sk.fsf@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Bob Liu <bob.liu@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, shirley.ma@oracle.com, allison.henderson@oracle.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca, tytso@mit.edu
 
- This patch series has implementation for "virtio pmem". 
- "virtio pmem" is fake persistent memory(nvdimm) in guest 
- which allows to bypass the guest page cache. This also
- implements a VIRTIO based asynchronous flush mechanism.  
- 
- Sharing guest kernel driver in this patchset with the 
- changes suggested in v3. Tested with Qemu side device 
- emulation [6] for virtio-pmem. 
+On Mon, Apr 01, 2019 at 10:04:43AM -0400, Martin K. Petersen wrote:
+> 
+> Hi Dave!
 
- We have incorporated all the suggestions in V3. Documented 
- the impact of possible page cache side channel attacks with 
- suggested countermeasures.
- 
- Details of project idea for 'virtio pmem' flushing interface 
- is shared [3] & [4].
+Hi Martin!
 
- Implementation is divided into two parts:
- New virtio pmem guest driver and qemu code changes for new 
- virtio pmem paravirtualized device.
+> >> However, that suffers from another headache in that the I/O can get
+> >> arbitrarily sliced and diced in units of 512 bytes.
+> >
+> > Right, but we don't need support that insane case. Indeed, if
+> > it wasn't already obvious, we _can't support it_ because the
+> > filesystem verifiers can't do partial verification. i.e.  part of
+> > the verification is CRC validation of the whole bio, not to mention
+> > that filesystem structure fragments cannot be safely parsed,
+> > interpretted and/or verified without the whole structure first being
+> > read in.
+> 
+> What I thought. There are some things I can verify by masking but it's
+> limited.
+> 
+> What about journal entries? Would they be validated with 512-byte
+> granularity or in bundles thereof? Only a problem during recovery, but
+> potentially a case where we care deeply about trying another copy if it
+> exists.
 
-1. Guest virtio-pmem kernel driver
----------------------------------
-   - Reads persistent memory range from paravirt device and 
-     registers with 'nvdimm_bus'.  
-   - 'nvdimm/pmem' driver uses this information to allocate 
-     persistent memory region and setup filesystem operations 
-     to the allocated memory. 
-   - virtio pmem driver implements asynchronous flushing 
-     interface to flush from guest to host.
+Journal writes are padded to the specified mkfs alignment (i.e. the
+"log stripe unit") and are checksummed individually, so they can be
+explicitly configured not to cross device boundaries (e.g 32kB
+stripe unit on 64k chunk size means exactly 2 journal writes to each
+chunk). I took this into account when I said "the filesystem can
+constrain the alignment problem entirely at mkfs time"....
 
-2. Qemu virtio-pmem device
----------------------------------
-   - Creates virtio pmem device and exposes a memory range to 
-     KVM guest. 
-   - At host side this is file backed memory which acts as 
-     persistent memory. 
-   - Qemu side flush uses aio thread pool API's and virtio 
-     for asynchronous guest multi request handling. 
+> What I'm asking is if we should have a block size argument for the
+> verification? Or would you want to submit bios capped to the size you
+> care about and let the block layer take care of coalescing?
 
-   David Hildenbrand CCed also posted a modified version[7] of 
-   qemu virtio-pmem code based on updated Qemu memory device API. 
+Not sure what you mean by "capped to the size you care about". The
+verifier attached to a bio will exactly match the size of the bio
+being issued. AFAICT, coalescing with other bios in the request
+queues should not affect how the completion of that bio is
+handled by things like the RAID layers...
 
- Virtio-pmem security implications and countermeasures:
- -----------------------------------------------------
+> Validation of units bigger than the logical block size is an area which
+> our older Oracle HARD technology handles gracefully but which T10 PI has
+> been unable to address. So this is an area of particular interest to me,
+> although it's somewhat orthogonal to Bob's retry plumbing.
+> 
+> Another question for you wrt. retries: Once a copy has been identified
+> as bad and a good copy read from media, who does the rewrite?
 
- In previous posting of kernel driver, there was discussion [9]
- on possible implications of page cache side channel attacks with 
- virtio pmem. After thorough analysis of details of known side 
- channel attacks, below are the suggestions:
+As far as I'm concerned, correcting bad copies is the responisbility
+of the layer that manages the copies. It has nothing to do with the
+filesystem.
 
- - Depends entirely on how host backing image file is mapped 
-   into guest address space. 
+> Does the
+> filesystem send a new I/O (which would overwrite all copies) or does the
+> retry plumbing own the responsibility of writing the good bio to the bad
+> location?
 
- - virtio-pmem device emulation, by default shared mapping is used
-   to map host backing file. It is recommended to use separate
-   backing file at host side for every guest. This will prevent
-   any possibility of executing common code from multiple guests
-   and any chance of inferring guest local data based based on 
-   execution time.
+There is so many varied storage algorithms and recovery options
+(rewrite, partial rewrite, recalc parity/erasure codes and rewrite,
+full stripe rewrite, rebuild onto hot spare due to too many errors,
+etc) it doesn't make sense to only allow repair to be done by
+completely error context-free rewriting from a higher layer. The
+layer that owns the redundancy can make much better decisions aout
+repair
 
- - If backing file is required to be shared among multiple guests 
-   it is recommended to don't support host page cache eviction 
-   commands from the guest driver. This will avoid any possibility
-   of inferring guest local data or host data from another guest. 
+And let's face it: we don't want to have to add complex IO retry
+logic to every single filesystem.
 
- - Proposed device specification [8] for virtio-pmem device with 
-   details of possible security implications and suggested 
-   countermeasures for device emulation.
+> > IOWs, we need to look at this problem from a "whole stack" point of
+> > view, not just cry about how "bios are too flexible and so make this
+> > too hard!". The filesystem greatly constrains the alignment and
+> > slicing/dicing problem to the point where it should be non-existent,
+> > we have a clearly defined hard stop where verifier propagation
+> > terminates, and if all else fails we can still detect corruption at
+> > the filesystem level just like we do now. The worst thing that
+> > happens here is we give up the capability for automatic block device
+> > recovery and repair of damaged copies, which we can't do right now,
+> > so it's essentially status quo...
+> 
+> Having gone down the path of the one-to-many relationship when I did the
+> original heterogeneous I/O topology attempt, it's pure hell. Also dealt
+> with similar conundrums for the integrity stuff. So I don't like the
+> breadcrumb approach. Perfect is the enemy of good and all that.
+> 
+> And I am 100% in agreement on the careful alignment and not making
+> things complex for crazy use cases (although occasional straddling I/Os
+> are not as uncommon as we'd like to think). However, I do have concerns
+> about this particular feature when it comes to your status quo comment.
 
- Virtio-pmem errors handling:
- ----------------------------------------
-  Checked behaviour of virtio-pmem for below types of errors
-  Need suggestions on expected behaviour for handling these errors?
+In what way? This is only one layer of defense from the filesystem
+perspective. i.e. If the underlying device cannot verify or correct
+the bad metadata it found from another copy/rebuild, then we still
+have to fall back to the filesystem rebuilding the metadata. That's
+what all the online scrubbing and repair code we're working on in
+XFS does, and btrfs is already capable of doing this when CRC errors
+are detected.  i.e. the post-IO metadata verifier detects the error,
+the online scrub and repair code then kicks in and rebuilds the
+bad metadata block from other information in the filesystem.
 
-  - Hardware Errors: Uncorrectable recoverable Errors: 
-  a] virtio-pmem: 
-    - As per current logic if error page belongs to Qemu process, 
-      host MCE handler isolates(hwpoison) that page and send SIGBUS. 
-      Qemu SIGBUS handler injects exception to KVM guest. 
-    - KVM guest then isolates the page and send SIGBUS to guest 
-      userspace process which has mapped the page. 
-  
-  b] Existing implementation for ACPI pmem driver: 
-    - Handles such errors with MCE notifier and creates a list 
-      of bad blocks. Read/direct access DAX operation return EIO 
-      if accessed memory page fall in bad block list.
-    - It also starts backgound scrubbing.  
-    - Similar functionality can be reused in virtio-pmem with MCE 
-      notifier but without scrubbing(no ACPI/ARS)? Need inputs to 
-      confirm if this behaviour is ok or needs any change?
+What we are trying to do is avoid the scrub-and-repair stage in the
+filesystem (as it is costly!) by ensuring that the underlying
+storage has exhausted all redundancy and repair capabilities it has
+before we run the filesystem rebuild phase. Recovering a bad block
+from a RAID1/5/6 stripe is much, much faster than rebuilding a
+metadata block from other metadata references in the filesystem....
 
-Changes from PATCH v3: [1]
+> In order for us to build highly reliable systems, we have to have a
+> better building block than "this redundancy retry feature works most of
+> the time".
 
-- Use generic dax_synchronous() helper to check for DAXDEV_SYNC 
-  flag - [Dan, Darrick, Jan]
-- Add 'is_nvdimm_async' function
-- Document page cache side channel attacks implications & 
-  countermeasures - [Dave Chinner, Michael]
+But that is actually good enough when you put a self-repairing
+filesystem on top of a block layer that can recover from redundant
+information /most of the time/. i.e. to build a reliable storage
+system, the filesystem *must* be able to tolerate storage failures
+because IO errors and hardware/media corruption can and do happen.
 
-Changes from PATCH v2: [2]
-- Disable MAP_SYNC for ext4 & XFS filesystems - [Dan] 
-- Use name 'virtio pmem' in place of 'fake dax' 
+> So to me it is imperative that we provide hard guarantees
+> once a particular configuration has been set up and stacked. And if the
+> retry guarantee is somehow invalidated, then we really need to let the
+> user know about it.
 
-Changes from PATCH v1: 
-- 0-day build test for build dependency on libnvdimm 
+If the storage fails (and it will) and the filesystem cannot recover
+the lost metadata, then it will let the user know and potentially
+shut down the filesystem to protect the rest of the filesystem from
+further damage. That is the current status quo, and the presence or
+absence of automatic block layer retry and repair does not change
+this at all.
 
- Changes suggested by - [Dan Williams]
-- Split the driver into two parts virtio & pmem  
-- Move queuing of async block request to block layer
-- Add "sync" parameter in nvdimm_flush function
-- Use indirect call for nvdimm_flush
-- Don’t move declarations to common global header e.g nd.h
-- nvdimm_flush() return 0 or -EIO if it fails
-- Teach nsio_rw_bytes() that the flush can fail
-- Rename nvdimm_flush() to generic_nvdimm_flush()
-- Use 'nd_region->provider_data' for long dereferencing
-- Remove virtio_pmem_freeze/restore functions
-- Remove BSD license text with SPDX license text
+IOWs, I think you're still looking at the problem as a "block
+storage layers need to be perfect" problem when, in fact, we do not
+need that nor are we asking for it. We have redundancy, rebuild and
+reporting apabilities above the block storage layers (i.e. in
+filesystems like btrfs and XFS) these days which mean we can
+tolerate the lower layers of the storage being less than perfect.
 
-- Add might_sleep() in virtio_pmem_flush - [Luiz]
-- Make spin_lock_irqsave() narrow
+IOWs, the filesystem doesn't expect hard "always correct" guarantees
+from the storage layers - we always have to assume IO failures will
+occur because they do, even with T10 PI. Hence it makes no sense to
+for an automatic retry-and-recovery infrastructure for filesystems
+to require hard guarantees that the block device will always return
+good data.  Automatic repair doesn't guarantee the storage is free
+from errors - it just provides a mechanism to detect errors and
+perform optimistic, best effort recovery at the lowest possible
+layer in the stack as early as possible.
 
-Changes from RFC v3
-- Rebase to latest upstream - Luiz
-- Call ndregion->flush in place of nvdimm_flush- Luiz
-- kmalloc return check - Luiz
-- virtqueue full handling - Stefan
-- Don't map entire virtio_pmem_req to device - Stefan
-- request leak, correct sizeof req- Stefan
-- Move declaration to virtio_pmem.c
+Cheers,
 
-Changes from RFC v2:
-- Add flush function in the nd_region in place of switching
-  on a flag - Dan & Stefan
-- Add flush completion function with proper locking and wait
-  for host side flush completion - Stefan & Dan
-- Keep userspace API in uapi header file - Stefan, MST
-- Use LE fields & New device id - MST
-- Indentation & spacing suggestions - MST & Eric
-- Remove extra header files & add licensing - Stefan
-
-Changes from RFC v1:
-- Reuse existing 'pmem' code for registering persistent 
-  memory and other operations instead of creating an entirely 
-  new block driver.
-- Use VIRTIO driver to register memory information with 
-  nvdimm_bus and create region_type accordingly. 
-- Call VIRTIO flush from existing pmem driver.
-
-Pankaj Gupta (5):
-   libnvdimm: nd_region flush callback support
-   virtio-pmem: Add virtio-pmem guest driver
-   libnvdimm: add nd_region buffered dax_dev flag
-   ext4: disable map_sync for virtio pmem
-   xfs: disable map_sync for virtio pmem
-
-[1] https://lkml.org/lkml/2019/1/9/471
-[2] https://lkml.org/lkml/2018/10/13/117
-[3] https://www.spinics.net/lists/kvm/msg149761.html
-[4] https://www.spinics.net/lists/kvm/msg153095.html  
-[5] https://lkml.org/lkml/2018/8/31/413
-[6] https://marc.info/?l=linux-kernel&m=153572228719237&w=2 
-[7] https://marc.info/?l=qemu-devel&m=153555721901824&w=2
-[8] https://lists.oasis-open.org/archives/virtio-dev/201903/msg00083.html
+dave.
+-- 
+Dave Chinner
+david@fromorbit.com
