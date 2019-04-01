@@ -1,492 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46868 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728748AbfD2RqB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 29 Apr 2019 13:46:01 -0400
-Date: Mon, 29 Apr 2019 13:45:36 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3] xfs: add online scrub for superblock counters
-Message-ID: <20190429174533.GA56119@bfoster>
-References: <20190428221006.GD5217@magnolia>
- <20190429120029.GA49787@bfoster>
- <20190429171011.GE5207@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:60190 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730016AbfDARKn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Apr 2019 13:10:43 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x31H9GxF131404
+        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:10:42 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2rhyvt0cu0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Apr 2019 17:10:41 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x31HAZXc012092
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:10:36 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x31HAZfW017582
+        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:10:35 GMT
+Subject: [PATCH 04/10] xfs: expand xfs_fsop_geom
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 01 Apr 2019 10:10:34 -0700
+Message-ID: <155413863414.4966.13609556795695536711.stgit@magnolia>
+In-Reply-To: <155413860964.4966.6087725033542837255.stgit@magnolia>
+References: <155413860964.4966.6087725033542837255.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190429171011.GE5207@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 29, 2019 at 10:10:11AM -0700, Darrick J. Wong wrote:
-> On Mon, Apr 29, 2019 at 08:00:29AM -0400, Brian Foster wrote:
-> > On Sun, Apr 28, 2019 at 03:10:06PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Teach online scrub how to check the filesystem summary counters.  We use
-> > > the incore delalloc block counter along with the incore AG headers to
-> > > compute expected values for fdblocks, icount, and ifree, and then check
-> > > that the percpu counter is within a certain threshold of the expected
-> > > value.  This is done to avoid having to freeze or otherwise lock the
-> > > filesystem, which means that we're only checking that the counters are
-> > > fairly close, not that they're exactly correct.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > > v2: move all the io generating calls into a warmup function
-> > > v3: tighten the aggregation loop and rework the threshold check function
-> > > ---
-> > >  fs/xfs/Makefile           |    1 
-> > >  fs/xfs/libxfs/xfs_fs.h    |    3 
-> > >  fs/xfs/libxfs/xfs_types.c |    2 
-> > >  fs/xfs/libxfs/xfs_types.h |    2 
-> > >  fs/xfs/scrub/common.c     |    9 +
-> > >  fs/xfs/scrub/common.h     |    2 
-> > >  fs/xfs/scrub/fscounters.c |  360 +++++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/scrub/health.c     |    1 
-> > >  fs/xfs/scrub/scrub.c      |    6 +
-> > >  fs/xfs/scrub/scrub.h      |    9 +
-> > >  fs/xfs/scrub/trace.h      |   63 ++++++++
-> > >  11 files changed, 455 insertions(+), 3 deletions(-)
-> > >  create mode 100644 fs/xfs/scrub/fscounters.c
-> > > 
-> > ...
-> > > diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-> > > new file mode 100644
-> > > index 000000000000..aeb753dd0eaa
-> > > --- /dev/null
-> > > +++ b/fs/xfs/scrub/fscounters.c
-> > > @@ -0,0 +1,360 @@
-> > ...
-> > > +/*
-> > > + * Make sure the per-AG structure has been initialized from the on-disk header
-> > > + * contents and that the incore counters match the ondisk counters.  Do this
-> > > + * from the setup function so that the inner summation loop runs as quickly as
-> > > + * possible.
-> > > + *
-> > 
-> > I don't see this function matching incore counters against ondisk
-> > counters anywhere.
-> 
-> Oops, that was moved to the AG[FI] scrubbers.  How about I change the
-> comment to:
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok, figured it was just stale content..
+Rename the current (v2-v4) geometry ioctl XFS_IOC_FSGEOMETRY_V2 and
+expand the existing xfs_fsop_geom to reserve empty space for more
+fields.  This means that newly built binaries will pick up the new
+format and existing programs will simply end up in the V2 handler.
 
-> /*
->  * Make sure the per-AG structure has been initialized from the on-disk
->  * header contents and trust that the incore counters match the ondisk
->  * counters.  (The AGF and AGI scrubbers check them, and a normal
->  * xfs_scrub run checks the summary counters after checking all AG
->  * headers).  Do this from the setup function so that the inner AG
->  * aggregation loop runs as quickly as possible.
->  *
->  * This function runs during the setup phase /before/ we start checking
->  * any metadata.
->  */
-> 
-> ?
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_fs.h |   32 +++++++++++++++++++++++++++++++-
+ fs/xfs/libxfs/xfs_sb.c |    5 +++++
+ fs/xfs/xfs_ioctl.c     |   22 ++++++++++++++++++++--
+ fs/xfs/xfs_ioctl32.c   |    1 +
+ 4 files changed, 57 insertions(+), 3 deletions(-)
 
-Sounds good.
 
-> > 
-> > > + * This function runs during the setup phase /before/ we start checking any
-> > > + * metadata.
-> > > + */
-> > > +STATIC int
-> > > +xchk_fscount_warmup(
-> > > +	struct xfs_scrub	*sc)
-> > > +{
-> > > +	struct xfs_mount	*mp = sc->mp;
-> > > +	struct xfs_buf		*agi_bp = NULL;
-> > > +	struct xfs_buf		*agf_bp = NULL;
-> > > +	struct xfs_perag	*pag = NULL;
-> > > +	xfs_agnumber_t		agno;
-> > > +	int			error = 0;
-> > > +
-> > > +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-> > > +		pag = xfs_perag_get(mp, agno);
-> > > +
-> > > +		if (pag->pagi_init && pag->pagf_init)
-> > > +			goto next_loop_perag;
-> > > +
-> > > +		/* Lock both AG headers. */
-> > > +		error = xfs_ialloc_read_agi(mp, sc->tp, agno, &agi_bp);
-> > > +		if (error)
-> > > +			break;
-> > > +		error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, &agf_bp);
-> > > +		if (error)
-> > > +			break;
-> > > +		error = -ENOMEM;
-> > > +		if (!agf_bp || !agi_bp)
-> > > +			break;
-> > > +
-> > > +		/*
-> > > +		 * These are supposed to be initialized by the header read
-> > > +		 * function.
-> > > +		 */
-> > > +		error = -EFSCORRUPTED;
-> > > +		if (!pag->pagi_init || !pag->pagf_init)
-> > > +			break;
-> > > +
-> > > +		xfs_buf_relse(agf_bp);
-> > > +		agf_bp = NULL;
-> > > +		xfs_buf_relse(agi_bp);
-> > > +		agi_bp = NULL;
-> > > +next_loop_perag:
-> > > +		xfs_perag_put(pag);
-> > > +		pag = NULL;
-> > > +		error = 0;
-> > > +
-> > > +		if (fatal_signal_pending(current))
-> > > +			break;
-> > > +	}
-> > > +
-> > > +	if (agf_bp)
-> > > +		xfs_buf_relse(agf_bp);
-> > > +	if (agi_bp)
-> > > +		xfs_buf_relse(agi_bp);
-> > > +	if (pag)
-> > > +		xfs_perag_put(pag);
-> > > +	return error;
-> > > +}
-> > > +
-> > ...
-> > > +/*
-> > > + * Is the @counter reasonably close to the @expected value?
-> > > + *
-> > > + * We neither locked nor froze anything in the filesystem while aggregating the
-> > > + * per-AG data to compute the @expected value, which means that the counter
-> > > + * could have changed.  We know the @old_value of the summation of the counter
-> > > + * before the aggregation, and we re-sum the counter now.  If the expected
-> > > + * value falls between the two summations, we're ok.
-> > > + *
-> > > + * Otherwise, we /might/ have a problem.  If the change in the summations is
-> > > + * more than we want to tolerate, the filesystem is probably busy and we should
-> > > + * just send back INCOMPLETE and see if userspace will try again.
-> > > + */
-> > > +static inline bool
-> > > +xchk_fscount_within_range(
-> > > +	struct xfs_scrub	*sc,
-> > > +	const int64_t		old_value,
-> > > +	struct percpu_counter	*counter,
-> > > +	uint64_t		expected)
-> > > +{
-> > > +	int64_t			min_value, max_value;
-> > > +	int64_t			curr_value = percpu_counter_sum(counter);
-> > > +
-> > > +	trace_xchk_fscounters_within_range(sc->mp, expected, curr_value,
-> > > +			old_value);
-> > > +
-> > > +	/* Negative values are always wrong. */
-> > > +	if (curr_value < 0)
-> > > +		return false;
-> > > +
-> > > +	/* Exact matches are always ok. */
-> > > +	if (curr_value == expected)
-> > > +		return true;
-> > > +
-> > > +	min_value = min(old_value, curr_value);
-> > > +	max_value = max(old_value, curr_value);
-> > > +
-> > > +	/* Within the before-and-after range is ok. */
-> > > +	if (expected >= min_value && expected <= max_value)
-> > > +		return true;
-> > > +
-> > 
-> > If the max/min variance is subject to restrictions, why do we allow the
-> > expected value to pass against those values before we check the variance
-> > below? Is the variance intended to only filter out false corruption
-> > reports?
-> 
-> For now, yes, the placement is deliberate to filter only false
-> corruption reports, because the only thing we can do for now is set the
-> OFLAG_INCOMPLETE.  xfs_scrub reports that status but doesn't otherwise
-> do anything with that information...
-> 
-> > It seems a little strange to me to establish a variance rule
-> > like this where we don't trust them enough to indicate corruption, but
-> > would trust them enough to confirm lack of corruption (as opposed to
-> > telling the user "you might want to try again").
-> 
-> ...because "INCOMPLETE" isn't specific enough to suggest to xfs_scrub
-> how it might improve the odds of a complete check when it tries again.
-> We ran the race on a busy system once and didn't win, so there's little
-> point in doing that all over again.
-> 
-> In a future online repair patchset I'll add the ability to freeze the
-> filesystem for certain fsck operations, which should solve the
-> variability problems; and add a new return value (EUSERS) that the
-> kernel will use to signal to xfs_scrub that it should try the scrub
-> again, but this time granting the kernel permission to freeze the fs
-> (IFLAG_FREEZE_OK).  (Or xfs_scrub can decide that it doesn't care.)
-> 
-> At that point, I'll move the MIN_VARIANCE check above the min/max_value
-> check and have it return EUSERS so that userspace can be asked to call
-> back with freezing enabled.  For now I aim only to avoid triggering
-> false corruption reports and warning about incomplete checks when scrub
-> can't really do much better.
-> 
-
-That all sounds reasonable to me. You basically end up with a pass, fail
-or "fs too busy/inconclusive, retry with blocking enabled" status. I
-still don't really see the point of even temporarily putting the
-variance check after the passing check though. If the current gap in the
-feature is the blocking mechanism, as a user, I'd still prefer to see
-the "too busy" status in the meantime over some semi-false "everything
-checks out" status. At least then I know to either run a check during
-downtime or to stop whatever fs activity is going on to get a legitimate
-result. As it is, a user could be running this check repeatedly
-concurrent with a workload that would never satisfy the variance check
-even if it found something wrong and thus not even be aware the check is
-simply a waste of time.
-
-That said, it's not a big deal to me if this is all WIP and we're moving
-in the direction where the "too much variance" state overrides the
-pass/fail state (in the non blocking scrub) once all the parts are in
-place..
-
-> Hmm, maybe that should be wrapped up in a comment...
-> 
-> 	/*
-> 	 * If the difference between the two summations is too large, the fs
-> 	 * might just be busy and so we'll mark the scrub incomplete.  Return
-> 	 * true here so that we don't mark the counter corrupt.
-> 	 *
-> 	 * XXX: In the future when userspace can grant scrub permission to
-> 	 * quiesce the filesystem to solve the outsized variance problem, this
-> 	 * check should be moved up and the return code changed to signal to
-> 	 * userspace that we need quiesce permission.
-> 	 */
-> 
-> How about that?
-> 
-
-That works for me. With those comment fixups in place:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> --D
-> 
-> > Brian
-> > 
-> > > +	/*
-> > > +	 * If the difference between the two summations is too large, the fs
-> > > +	 * might just be busy and so we'll mark the scrub incomplete.  Return
-> > > +	 * true here so that we don't mark the counter corrupt.
-> > > +	 */
-> > > +	if (max_value - min_value >= XCHK_FSCOUNT_MIN_VARIANCE) {
-> > > +		xchk_set_incomplete(sc);
-> > > +		return true;
-> > > +	}
-> > > +
-> > > +	return false;
-> > > +}
-> > > +
-> > > +/* Check the superblock counters. */
-> > > +int
-> > > +xchk_fscounters(
-> > > +	struct xfs_scrub	*sc)
-> > > +{
-> > > +	struct xfs_mount	*mp = sc->mp;
-> > > +	struct xchk_fscounters	*fsc = sc->buf;
-> > > +	int64_t			icount, ifree, fdblocks;
-> > > +	int			error;
-> > > +
-> > > +	/* Snapshot the percpu counters. */
-> > > +	icount = percpu_counter_sum(&mp->m_icount);
-> > > +	ifree = percpu_counter_sum(&mp->m_ifree);
-> > > +	fdblocks = percpu_counter_sum(&mp->m_fdblocks);
-> > > +
-> > > +	/* No negative values, please! */
-> > > +	if (icount < 0 || ifree < 0 || fdblocks < 0)
-> > > +		xchk_set_corrupt(sc);
-> > > +
-> > > +	/* See if icount is obviously wrong. */
-> > > +	if (icount < fsc->icount_min || icount > fsc->icount_max)
-> > > +		xchk_set_corrupt(sc);
-> > > +
-> > > +	/* See if fdblocks is obviously wrong. */
-> > > +	if (fdblocks > mp->m_sb.sb_dblocks)
-> > > +		xchk_set_corrupt(sc);
-> > > +
-> > > +	/*
-> > > +	 * If ifree exceeds icount by more than the minimum variance then
-> > > +	 * something's probably wrong with the counters.
-> > > +	 */
-> > > +	if (ifree > icount && ifree - icount > XCHK_FSCOUNT_MIN_VARIANCE)
-> > > +		xchk_set_corrupt(sc);
-> > > +
-> > > +	/* Walk the incore AG headers to calculate the expected counters. */
-> > > +	error = xchk_fscount_aggregate_agcounts(sc, fsc);
-> > > +	if (!xchk_process_error(sc, 0, XFS_SB_BLOCK(mp), &error))
-> > > +		return error;
-> > > +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE)
-> > > +		return 0;
-> > > +
-> > > +	/* Compare the in-core counters with whatever we counted. */
-> > > +	if (!xchk_fscount_within_range(sc, icount, &mp->m_icount, fsc->icount))
-> > > +		xchk_set_corrupt(sc);
-> > > +
-> > > +	if (!xchk_fscount_within_range(sc, ifree, &mp->m_ifree, fsc->ifree))
-> > > +		xchk_set_corrupt(sc);
-> > > +
-> > > +	if (!xchk_fscount_within_range(sc, fdblocks, &mp->m_fdblocks,
-> > > +			fsc->fdblocks))
-> > > +		xchk_set_corrupt(sc);
-> > > +
-> > > +	return 0;
-> > > +}
-> > > diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
-> > > index 16b536aa125e..23cf8e2f25db 100644
-> > > --- a/fs/xfs/scrub/health.c
-> > > +++ b/fs/xfs/scrub/health.c
-> > > @@ -109,6 +109,7 @@ static const struct xchk_health_map type_to_health_flag[XFS_SCRUB_TYPE_NR] = {
-> > >  	[XFS_SCRUB_TYPE_UQUOTA]		= { XHG_FS,  XFS_SICK_FS_UQUOTA },
-> > >  	[XFS_SCRUB_TYPE_GQUOTA]		= { XHG_FS,  XFS_SICK_FS_GQUOTA },
-> > >  	[XFS_SCRUB_TYPE_PQUOTA]		= { XHG_FS,  XFS_SICK_FS_PQUOTA },
-> > > +	[XFS_SCRUB_TYPE_FSCOUNTERS]	= { XHG_FS,  XFS_SICK_FS_COUNTERS },
-> > >  };
-> > >  
-> > >  /* Return the health status mask for this scrub type. */
-> > > diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-> > > index ce13c1c366db..f630389ee176 100644
-> > > --- a/fs/xfs/scrub/scrub.c
-> > > +++ b/fs/xfs/scrub/scrub.c
-> > > @@ -352,6 +352,12 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
-> > >  		.scrub	= xchk_quota,
-> > >  		.repair	= xrep_notsupported,
-> > >  	},
-> > > +	[XFS_SCRUB_TYPE_FSCOUNTERS] = {	/* fs summary counters */
-> > > +		.type	= ST_FS,
-> > > +		.setup	= xchk_setup_fscounters,
-> > > +		.scrub	= xchk_fscounters,
-> > > +		.repair	= xrep_notsupported,
-> > > +	},
-> > >  };
-> > >  
-> > >  /* This isn't a stable feature, warn once per day. */
-> > > diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-> > > index 01986ed364db..ad1ceb44a628 100644
-> > > --- a/fs/xfs/scrub/scrub.h
-> > > +++ b/fs/xfs/scrub/scrub.h
-> > > @@ -127,6 +127,7 @@ xchk_quota(struct xfs_scrub *sc)
-> > >  	return -ENOENT;
-> > >  }
-> > >  #endif
-> > > +int xchk_fscounters(struct xfs_scrub *sc);
-> > >  
-> > >  /* cross-referencing helpers */
-> > >  void xchk_xref_is_used_space(struct xfs_scrub *sc, xfs_agblock_t agbno,
-> > > @@ -152,4 +153,12 @@ void xchk_xref_is_used_rt_space(struct xfs_scrub *sc, xfs_rtblock_t rtbno,
-> > >  # define xchk_xref_is_used_rt_space(sc, rtbno, len) do { } while (0)
-> > >  #endif
-> > >  
-> > > +struct xchk_fscounters {
-> > > +	uint64_t		icount;
-> > > +	uint64_t		ifree;
-> > > +	uint64_t		fdblocks;
-> > > +	unsigned long long	icount_min;
-> > > +	unsigned long long	icount_max;
-> > > +};
-> > > +
-> > >  #endif	/* __XFS_SCRUB_SCRUB_H__ */
-> > > diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-> > > index 3c83e8b3b39c..3362bae28b46 100644
-> > > --- a/fs/xfs/scrub/trace.h
-> > > +++ b/fs/xfs/scrub/trace.h
-> > > @@ -50,6 +50,7 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_RTSUM);
-> > >  TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_UQUOTA);
-> > >  TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_GQUOTA);
-> > >  TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PQUOTA);
-> > > +TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_FSCOUNTERS);
-> > >  
-> > >  #define XFS_SCRUB_TYPE_STRINGS \
-> > >  	{ XFS_SCRUB_TYPE_PROBE,		"probe" }, \
-> > > @@ -75,7 +76,8 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PQUOTA);
-> > >  	{ XFS_SCRUB_TYPE_RTSUM,		"rtsummary" }, \
-> > >  	{ XFS_SCRUB_TYPE_UQUOTA,	"usrquota" }, \
-> > >  	{ XFS_SCRUB_TYPE_GQUOTA,	"grpquota" }, \
-> > > -	{ XFS_SCRUB_TYPE_PQUOTA,	"prjquota" }
-> > > +	{ XFS_SCRUB_TYPE_PQUOTA,	"prjquota" }, \
-> > > +	{ XFS_SCRUB_TYPE_FSCOUNTERS,	"fscounters" }
-> > >  
-> > >  DECLARE_EVENT_CLASS(xchk_class,
-> > >  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
-> > > @@ -223,6 +225,7 @@ DEFINE_EVENT(xchk_block_error_class, name, \
-> > >  		 void *ret_ip), \
-> > >  	TP_ARGS(sc, daddr, ret_ip))
-> > >  
-> > > +DEFINE_SCRUB_BLOCK_ERROR_EVENT(xchk_fs_error);
-> > >  DEFINE_SCRUB_BLOCK_ERROR_EVENT(xchk_block_error);
-> > >  DEFINE_SCRUB_BLOCK_ERROR_EVENT(xchk_block_preen);
-> > >  
-> > > @@ -590,6 +593,64 @@ TRACE_EVENT(xchk_iallocbt_check_cluster,
-> > >  		  __entry->cluster_ino)
-> > >  )
-> > >  
-> > > +TRACE_EVENT(xchk_fscounters_calc,
-> > > +	TP_PROTO(struct xfs_mount *mp, uint64_t icount, uint64_t ifree,
-> > > +		 uint64_t fdblocks, uint64_t delalloc),
-> > > +	TP_ARGS(mp, icount, ifree, fdblocks, delalloc),
-> > > +	TP_STRUCT__entry(
-> > > +		__field(dev_t, dev)
-> > > +		__field(int64_t, icount_sb)
-> > > +		__field(uint64_t, icount_calculated)
-> > > +		__field(int64_t, ifree_sb)
-> > > +		__field(uint64_t, ifree_calculated)
-> > > +		__field(int64_t, fdblocks_sb)
-> > > +		__field(uint64_t, fdblocks_calculated)
-> > > +		__field(uint64_t, delalloc)
-> > > +	),
-> > > +	TP_fast_assign(
-> > > +		__entry->dev = mp->m_super->s_dev;
-> > > +		__entry->icount_sb = mp->m_sb.sb_icount;
-> > > +		__entry->icount_calculated = icount;
-> > > +		__entry->ifree_sb = mp->m_sb.sb_ifree;
-> > > +		__entry->ifree_calculated = ifree;
-> > > +		__entry->fdblocks_sb = mp->m_sb.sb_fdblocks;
-> > > +		__entry->fdblocks_calculated = fdblocks;
-> > > +		__entry->delalloc = delalloc;
-> > > +	),
-> > > +	TP_printk("dev %d:%d icount %lld:%llu ifree %lld::%llu fdblocks %lld::%llu delalloc %llu",
-> > > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > > +		  __entry->icount_sb,
-> > > +		  __entry->icount_calculated,
-> > > +		  __entry->ifree_sb,
-> > > +		  __entry->ifree_calculated,
-> > > +		  __entry->fdblocks_sb,
-> > > +		  __entry->fdblocks_calculated,
-> > > +		  __entry->delalloc)
-> > > +)
-> > > +
-> > > +TRACE_EVENT(xchk_fscounters_within_range,
-> > > +	TP_PROTO(struct xfs_mount *mp, uint64_t expected, int64_t curr_value,
-> > > +		 int64_t old_value),
-> > > +	TP_ARGS(mp, expected, curr_value, old_value),
-> > > +	TP_STRUCT__entry(
-> > > +		__field(dev_t, dev)
-> > > +		__field(uint64_t, expected)
-> > > +		__field(int64_t, curr_value)
-> > > +		__field(int64_t, old_value)
-> > > +	),
-> > > +	TP_fast_assign(
-> > > +		__entry->dev = mp->m_super->s_dev;
-> > > +		__entry->expected = expected;
-> > > +		__entry->curr_value = curr_value;
-> > > +		__entry->old_value = old_value;
-> > > +	),
-> > > +	TP_printk("dev %d:%d expected %llu curr_value %lld old_value %lld",
-> > > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > > +		  __entry->expected,
-> > > +		  __entry->curr_value,
-> > > +		  __entry->old_value)
-> > > +)
-> > > +
-> > >  /* repair tracepoints */
-> > >  #if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
-> > >  
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index f3aa59302fef..1dba751cde60 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -148,7 +148,34 @@ typedef struct xfs_fsop_geom_v1 {
+ } xfs_fsop_geom_v1_t;
+ 
+ /*
+- * Output for XFS_IOC_FSGEOMETRY
++ * Output for XFS_IOC_FSGEOMETRY_V2
++ */
++typedef struct xfs_fsop_geom_v2 {
++	__u32		blocksize;	/* filesystem (data) block size */
++	__u32		rtextsize;	/* realtime extent size		*/
++	__u32		agblocks;	/* fsblocks in an AG		*/
++	__u32		agcount;	/* number of allocation groups	*/
++	__u32		logblocks;	/* fsblocks in the log		*/
++	__u32		sectsize;	/* (data) sector size, bytes	*/
++	__u32		inodesize;	/* inode size in bytes		*/
++	__u32		imaxpct;	/* max allowed inode space(%)	*/
++	__u64		datablocks;	/* fsblocks in data subvolume	*/
++	__u64		rtblocks;	/* fsblocks in realtime subvol	*/
++	__u64		rtextents;	/* rt extents in realtime subvol*/
++	__u64		logstart;	/* starting fsblock of the log	*/
++	unsigned char	uuid[16];	/* unique id of the filesystem	*/
++	__u32		sunit;		/* stripe unit, fsblocks	*/
++	__u32		swidth;		/* stripe width, fsblocks	*/
++	__s32		version;	/* structure version		*/
++	__u32		flags;		/* superblock version flags	*/
++	__u32		logsectsize;	/* log sector size, bytes	*/
++	__u32		rtsectsize;	/* realtime sector size, bytes	*/
++	__u32		dirblocksize;	/* directory block size, bytes	*/
++	__u32		logsunit;	/* log stripe unit, bytes */
++} xfs_fsop_geom_v2_t;
++
++/*
++ * Output for XFS_IOC_FSGEOMETRY (v5)
+  */
+ typedef struct xfs_fsop_geom {
+ 	__u32		blocksize;	/* filesystem (data) block size */
+@@ -172,6 +199,7 @@ typedef struct xfs_fsop_geom {
+ 	__u32		rtsectsize;	/* realtime sector size, bytes	*/
+ 	__u32		dirblocksize;	/* directory block size, bytes	*/
+ 	__u32		logsunit;	/* log stripe unit, bytes */
++	__u64		reserved[18];	/* reserved space */
+ } xfs_fsop_geom_t;
+ 
+ /* Output for XFS_FS_COUNTS */
+@@ -189,6 +217,7 @@ typedef struct xfs_fsop_resblks {
+ } xfs_fsop_resblks_t;
+ 
+ #define XFS_FSOP_GEOM_VERSION	0
++#define XFS_FSOP_GEOM_V5	5
+ 
+ #define XFS_FSOP_GEOM_FLAGS_ATTR	0x0001	/* attributes in use	*/
+ #define XFS_FSOP_GEOM_FLAGS_NLINK	0x0002	/* 32-bit nlink values	*/
+@@ -620,6 +649,7 @@ struct xfs_scrub_metadata {
+ #define XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
+ #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
++#define XFS_IOC_FSGEOMETRY_V2	     _IOR ('X', 124, struct xfs_fsop_geom_v2)
+ #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, uint32_t)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index f0309b74e377..c2ca3a816c41 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -1168,6 +1168,11 @@ xfs_fs_geometry(
+ 
+ 	geo->logsunit = sbp->sb_logsunit;
+ 
++	if (struct_version < 5)
++		return 0;
++
++	geo->version = XFS_FSOP_GEOM_V5;
++
+ 	return 0;
+ }
+ 
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 6ecdbb3af7de..7fd8815633dc 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -801,7 +801,7 @@ xfs_ioc_fsgeometry_v1(
+ }
+ 
+ STATIC int
+-xfs_ioc_fsgeometry(
++xfs_ioc_fsgeometry_v2(
+ 	xfs_mount_t		*mp,
+ 	void			__user *arg)
+ {
+@@ -812,6 +812,23 @@ xfs_ioc_fsgeometry(
+ 	if (error)
+ 		return error;
+ 
++	if (copy_to_user(arg, &fsgeo, sizeof(struct xfs_fsop_geom_v2)))
++		return -EFAULT;
++	return 0;
++}
++
++STATIC int
++xfs_ioc_fsgeometry(
++	struct xfs_mount	*mp,
++	void			__user *arg)
++{
++	struct xfs_fsop_geom	fsgeo;
++	int			error;
++
++	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 5);
++	if (error)
++		return error;
++
+ 	if (copy_to_user(arg, &fsgeo, sizeof(fsgeo)))
+ 		return -EFAULT;
+ 	return 0;
+@@ -1938,7 +1955,8 @@ xfs_file_ioctl(
+ 
+ 	case XFS_IOC_FSGEOMETRY_V1:
+ 		return xfs_ioc_fsgeometry_v1(mp, arg);
+-
++	case XFS_IOC_FSGEOMETRY_V2:
++		return xfs_ioc_fsgeometry_v2(mp, arg);
+ 	case XFS_IOC_FSGEOMETRY:
+ 		return xfs_ioc_fsgeometry(mp, arg);
+ 
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 5001dca361e9..323cfd4b15dc 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -561,6 +561,7 @@ xfs_file_compat_ioctl(
+ 	switch (cmd) {
+ 	/* No size or alignment issues on any arch */
+ 	case XFS_IOC_DIOINFO:
++	case XFS_IOC_FSGEOMETRY_V2:
+ 	case XFS_IOC_FSGEOMETRY:
+ 	case XFS_IOC_FSGETXATTR:
+ 	case XFS_IOC_FSSETXATTR:
