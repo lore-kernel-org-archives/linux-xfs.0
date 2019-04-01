@@ -1,26 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:46712 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730089AbfDARLK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Apr 2019 13:11:10 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x31H9Hjm134155
-        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:11:09 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2130.oracle.com with ESMTP id 2rhwyd0gnv-1
+Received: from userp2130.oracle.com ([156.151.31.86]:60916 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729526AbfDARLW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Apr 2019 13:11:22 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x31H9Lkx131470
+        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:11:20 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2rhyvt0cxy-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Apr 2019 17:11:08 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id x31HB7Ep017868
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Apr 2019 17:11:20 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x31HBJ3n015532
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:11:07 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x31HB75q012215
-        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:11:07 GMT
-Subject: [PATCH 08/10] xfs: report inode health via bulkstat
+        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:11:19 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x31HBJiw007802
+        for <linux-xfs@vger.kernel.org>; Mon, 1 Apr 2019 17:11:19 GMT
+Subject: [PATCH 10/10] xfs: update health status if we get a clean bill of
+ health
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 01 Apr 2019 10:11:02 -0700
-Message-ID: <155413866259.4966.15271041361179138786.stgit@magnolia>
+Date: Mon, 01 Apr 2019 10:11:18 -0700
+Message-ID: <155413867884.4966.3786317285199498710.stgit@magnolia>
 In-Reply-To: <155413860964.4966.6087725033542837255.stgit@magnolia>
 References: <155413860964.4966.6087725033542837255.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,111 +35,217 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use space in the bulkstat ioctl structure to report any problems
-observed with the inode.
+If scrub finds that everything is ok with the filesystem, we need a way
+to tell the health tracking that it can let go of indirect health flags,
+since indirect flags only mean that at some point in the past we lost
+some context.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h     |   13 ++++++++++++-
- fs/xfs/libxfs/xfs_health.h |    1 +
- fs/xfs/xfs_health.c        |   27 +++++++++++++++++++++++++++
- fs/xfs/xfs_itable.c        |    2 ++
- 4 files changed, 42 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_fs.h |    3 ++
+ fs/xfs/scrub/common.c  |   12 ++++++++++
+ fs/xfs/scrub/common.h  |    1 +
+ fs/xfs/scrub/health.c  |   58 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/health.h  |    1 +
+ fs/xfs/scrub/repair.c  |    1 +
+ fs/xfs/scrub/scrub.c   |    6 +++++
+ fs/xfs/scrub/trace.h   |    4 ++-
+ 8 files changed, 84 insertions(+), 2 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index dc2c538e6b92..fffaead718a5 100644
+index fffaead718a5..320274d3809a 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -346,13 +346,24 @@ typedef struct xfs_bstat {
- #define	bs_projid	bs_projid_lo	/* (previously just bs_projid)	*/
- 	__u16		bs_forkoff;	/* inode fork offset in bytes	*/
- 	__u16		bs_projid_hi;	/* higher part of project id	*/
--	unsigned char	bs_pad[6];	/* pad space, unused		*/
-+	uint16_t	bs_health;	/* sick inode metadata		*/
-+	unsigned char	bs_pad[4];	/* pad space, unused		*/
- 	__u32		bs_cowextsize;	/* cow extent size		*/
- 	__u32		bs_dmevmask;	/* DMIG event mask		*/
- 	__u16		bs_dmstate;	/* DMIG state info		*/
- 	__u16		bs_aextents;	/* attribute number of extents	*/
- } xfs_bstat_t;
+@@ -574,9 +574,10 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_TYPE_UQUOTA	21	/* user quotas */
+ #define XFS_SCRUB_TYPE_GQUOTA	22	/* group quotas */
+ #define XFS_SCRUB_TYPE_PQUOTA	23	/* project quotas */
++#define XFS_SCRUB_TYPE_HEALTHY	24	/* everything checked out ok */
  
-+/* bs_health flags */
-+#define XFS_BS_HEALTH_INODE	(1 << 0)  /* inode core */
-+#define XFS_BS_HEALTH_BMBTD	(1 << 1)  /* data fork */
-+#define XFS_BS_HEALTH_BMBTA	(1 << 2)  /* attr fork */
-+#define XFS_BS_HEALTH_BMBTC	(1 << 3)  /* cow fork */
-+#define XFS_BS_HEALTH_DIR	(1 << 4)  /* directory */
-+#define XFS_BS_HEALTH_XATTR	(1 << 5)  /* extended attributes */
-+#define XFS_BS_HEALTH_SYMLINK	(1 << 6)  /* symbolic link remote target */
-+#define XFS_BS_HEALTH_PARENT	(1 << 7)  /* parent pointers */
-+
- /*
-  * Project quota id helpers (previously projid was 16bit only
-  * and using two 16bit values to hold new 32bit projid was choosen
-diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
-index 2d3b879da9b5..a6446d1dd8a7 100644
---- a/fs/xfs/libxfs/xfs_health.h
-+++ b/fs/xfs/libxfs/xfs_health.h
-@@ -204,5 +204,6 @@ xfs_inode_healthy(struct xfs_inode *ip)
- void xfs_fsop_geom_health(struct xfs_mount *mp, struct xfs_fsop_geom *geo);
- void xfs_ag_geom_health(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		struct xfs_ag_geometry *ageo);
-+void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bstat *bs);
+ /* Number of scrub subcommands. */
+-#define XFS_SCRUB_TYPE_NR	24
++#define XFS_SCRUB_TYPE_NR	25
  
- #endif	/* __XFS_HEALTH_H__ */
-diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-index 5ca471bd41ad..1c9b71949410 100644
---- a/fs/xfs/xfs_health.c
-+++ b/fs/xfs/xfs_health.c
-@@ -316,3 +316,30 @@ xfs_ag_geom_health(
- 		ageo->ag_health |= XFS_AG_GEOM_HEALTH_AG_REFCNTBT;
- 	xfs_perag_put(pag);
+ /* i: Repair this metadata. */
+ #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 0c54ff55b901..9064ed567e37 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -208,6 +208,18 @@ xchk_ino_set_preen(
+ 	trace_xchk_ino_preen(sc, ino, __return_address);
  }
-+
-+/* Fill out bulkstat health info. */
-+void
-+xfs_bulkstat_health(
-+	struct xfs_inode	*ip,
-+	struct xfs_bstat	*bs)
-+{
-+	unsigned int		sick = xfs_inode_measure_sickness(ip);
-+
-+	bs->bs_health = 0;
-+	if (sick & XFS_HEALTH_INO_CORE)
-+		bs->bs_health |= XFS_BS_HEALTH_INODE;
-+	if (sick & XFS_HEALTH_INO_BMBTD)
-+		bs->bs_health |= XFS_BS_HEALTH_BMBTD;
-+	if (sick & XFS_HEALTH_INO_BMBTA)
-+		bs->bs_health |= XFS_BS_HEALTH_BMBTA;
-+	if (sick & XFS_HEALTH_INO_BMBTC)
-+		bs->bs_health |= XFS_BS_HEALTH_BMBTC;
-+	if (sick & XFS_HEALTH_INO_DIR)
-+		bs->bs_health |= XFS_BS_HEALTH_DIR;
-+	if (sick & XFS_HEALTH_INO_XATTR)
-+		bs->bs_health |= XFS_BS_HEALTH_XATTR;
-+	if (sick & XFS_HEALTH_INO_SYMLINK)
-+		bs->bs_health |= XFS_BS_HEALTH_SYMLINK;
-+	if (sick & XFS_HEALTH_INO_PARENT)
-+		bs->bs_health |= XFS_BS_HEALTH_PARENT;
-+}
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 1861289bf823..cff28ee73deb 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -18,6 +18,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-+#include "xfs_health.h"
  
- /*
-  * Return stat information for one inode.
-@@ -84,6 +85,7 @@ xfs_bulkstat_one_int(
- 	buf->bs_extsize = dic->di_extsize << mp->m_sb.sb_blocklog;
- 	buf->bs_extents = dic->di_nextents;
- 	memset(buf->bs_pad, 0, sizeof(buf->bs_pad));
-+	xfs_bulkstat_health(ip, buf);
- 	buf->bs_dmevmask = dic->di_dmevmask;
- 	buf->bs_dmstate = dic->di_dmstate;
- 	buf->bs_aextents = dic->di_anextents;
++/* Record non-specific corruption. */
++void
++xchk_set_corrupt(
++	struct xfs_scrub	*sc)
++{
++	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++	xfs_scrub_whine(sc->mp, "type %d ret_ip %pS",
++			sc->sm->sm_type,
++			__return_address);
++	trace_xchk_fs_error(sc, 0, __return_address);
++}
++
+ /* Record a corrupt block. */
+ void
+ xchk_block_set_corrupt(
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index e26a430bd466..1b7b8c555f2e 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -39,6 +39,7 @@ void xchk_block_set_preen(struct xfs_scrub *sc,
+ 		struct xfs_buf *bp);
+ void xchk_ino_set_preen(struct xfs_scrub *sc, xfs_ino_t ino);
+ 
++void xchk_set_corrupt(struct xfs_scrub *sc);
+ void xchk_block_set_corrupt(struct xfs_scrub *sc,
+ 		struct xfs_buf *bp);
+ void xchk_ino_set_corrupt(struct xfs_scrub *sc, xfs_ino_t ino);
+diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
+index dd9986500801..049e802b9418 100644
+--- a/fs/xfs/scrub/health.c
++++ b/fs/xfs/scrub/health.c
+@@ -19,6 +19,7 @@
+ #include "xfs_health.h"
+ #include "scrub/scrub.h"
+ #include "scrub/health.h"
++#include "scrub/common.h"
+ 
+ static const unsigned int xchk_type_to_health_flag[XFS_SCRUB_TYPE_NR] = {
+ 	[XFS_SCRUB_TYPE_SB]		= XFS_HEALTH_AG_SB,
+@@ -54,6 +55,60 @@ xchk_health_mask_for_scrub_type(
+ 	return xchk_type_to_health_flag[scrub_type];
+ }
+ 
++/*
++ * Quick scan to double-check that there isn't any evidence of lingering
++ * primary health problems.  If we're still clear, then the health update will
++ * take care of clearing the indirect evidence.
++ */
++int
++xchk_health_record(
++	struct xfs_scrub	*sc)
++{
++	struct xfs_mount	*mp = sc->mp;
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		agno;
++	unsigned int		sick;
++
++	sick = xfs_fs_measure_sickness(mp);
++	if (sick & XFS_HEALTH_FS_PRIMARY)
++		xchk_set_corrupt(sc);
++
++	sick = xfs_rt_measure_sickness(mp);
++	if (sick & XFS_HEALTH_RT_PRIMARY)
++		xchk_set_corrupt(sc);
++
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		pag = xfs_perag_get(mp, agno);
++		sick = xfs_ag_measure_sickness(pag);
++		if (sick & XFS_HEALTH_AG_PRIMARY)
++			xchk_set_corrupt(sc);
++		xfs_perag_put(pag);
++	}
++
++	return 0;
++}
++
++/*
++ * Scrub gave the filesystem a clean bill of health, so clear all the indirect
++ * markers of past problems (at least for the fs and ags) so that we can be
++ * healthy again.
++ */
++STATIC void
++xchk_mark_all_healthy(
++	struct xfs_mount	*mp)
++{
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		agno;
++	int			error = 0;
++
++	xfs_fs_mark_healthy(mp, XFS_HEALTH_FS_INDIRECT);
++	xfs_rt_mark_healthy(mp, XFS_HEALTH_RT_INDIRECT);
++	for (agno = 0; error == 0 && agno < mp->m_sb.sb_agcount; agno++) {
++		pag = xfs_perag_get(mp, agno);
++		xfs_ag_mark_healthy(pag, XFS_HEALTH_AG_INDIRECT);
++		xfs_perag_put(pag);
++	}
++}
+ /* Mark metadata unhealthy. */
+ static void
+ xchk_mark_sick(
+@@ -149,6 +204,9 @@ xchk_mark_healthy(
+ 	case XFS_SCRUB_TYPE_RTSUM:
+ 		xfs_rt_mark_healthy(sc->mp, mask);
+ 		break;
++	case XFS_SCRUB_TYPE_HEALTHY:
++		xchk_mark_all_healthy(sc->mp);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/fs/xfs/scrub/health.h b/fs/xfs/scrub/health.h
+index e795f4c9a23c..001e5a93273d 100644
+--- a/fs/xfs/scrub/health.h
++++ b/fs/xfs/scrub/health.h
+@@ -8,5 +8,6 @@
+ 
+ unsigned int xchk_health_mask_for_scrub_type(__u32 scrub_type);
+ void xchk_update_health(struct xfs_scrub *sc, bool already_fixed);
++int xchk_health_record(struct xfs_scrub *sc);
+ 
+ #endif /* __XFS_SCRUB_HEALTH_H__ */
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index f28f4bad317b..5df67fe5d8ac 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -31,6 +31,7 @@
+ #include "xfs_quota.h"
+ #include "xfs_attr.h"
+ #include "xfs_reflink.h"
++#include "xfs_health.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index b1519dfc5811..f446ab57d7b0 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -348,6 +348,12 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+ 		.scrub	= xchk_quota,
+ 		.repair	= xrep_notsupported,
+ 	},
++	[XFS_SCRUB_TYPE_HEALTHY] = {	/* fs healthy; clean all reminders */
++		.type	= ST_FS,
++		.setup	= xchk_setup_fs,
++		.scrub	= xchk_health_record,
++		.repair = xrep_notsupported,
++	},
+ };
+ 
+ /* This isn't a stable feature, warn once per day. */
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 3c83e8b3b39c..7c25a38c6f81 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -75,7 +75,8 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PQUOTA);
+ 	{ XFS_SCRUB_TYPE_RTSUM,		"rtsummary" }, \
+ 	{ XFS_SCRUB_TYPE_UQUOTA,	"usrquota" }, \
+ 	{ XFS_SCRUB_TYPE_GQUOTA,	"grpquota" }, \
+-	{ XFS_SCRUB_TYPE_PQUOTA,	"prjquota" }
++	{ XFS_SCRUB_TYPE_PQUOTA,	"prjquota" }, \
++	{ XFS_SCRUB_TYPE_HEALTHY,	"healthy" }
+ 
+ DECLARE_EVENT_CLASS(xchk_class,
+ 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
+@@ -223,6 +224,7 @@ DEFINE_EVENT(xchk_block_error_class, name, \
+ 		 void *ret_ip), \
+ 	TP_ARGS(sc, daddr, ret_ip))
+ 
++DEFINE_SCRUB_BLOCK_ERROR_EVENT(xchk_fs_error);
+ DEFINE_SCRUB_BLOCK_ERROR_EVENT(xchk_block_error);
+ DEFINE_SCRUB_BLOCK_ERROR_EVENT(xchk_block_preen);
+ 
