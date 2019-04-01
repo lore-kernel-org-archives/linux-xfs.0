@@ -1,96 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:45782 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726657AbfDAOFJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Apr 2019 10:05:09 -0400
-Subject: Re: [PATCH v3 2/3] block: verify data when endio
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <41c8688a-65bd-96ac-9b23-4facd0ade4a7@kernel.dk>
-        <yq1ftr5rbq1.fsf@oracle.com>
-        <f65d6a7b-9e69-ae1e-b8b8-8769dc650311@kernel.dk>
-        <yq1bm1trb4y.fsf@oracle.com>
-        <feefa611-b744-326c-29d5-c64bcda45d9f@kernel.dk>
-        <yq17echrax1.fsf@oracle.com>
-        <1b638dc2-56fd-6ab4-dcca-ad2adb9931bb@kernel.dk>
-        <c9adb48c-7b6e-2017-9480-aa2342b3523b@oracle.com>
-        <7599b239-46f4-9799-a87a-3ca3891d4a08@kernel.dk>
-        <yq1imw1p0lp.fsf@oracle.com> <20190331220001.GM23020@dastard>
-Date: Mon, 01 Apr 2019 10:04:43 -0400
-In-Reply-To: <20190331220001.GM23020@dastard> (Dave Chinner's message of "Mon,
-        1 Apr 2019 09:00:01 +1100")
-Message-ID: <yq1ef6lq0sk.fsf@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:41134 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726514AbfDAO7h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Apr 2019 10:59:37 -0400
+Date: Mon, 1 Apr 2019 10:59:35 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH] xfs: merge adjacent io completions of the same type
+Message-ID: <20190401145934.GA30751@bfoster>
+References: <20190327030550.GZ1183@magnolia>
+ <20190327030634.GA1183@magnolia>
+ <20190328141009.GB17056@bfoster>
+ <20190328151744.GB18833@magnolia>
+ <20190328210628.GJ23020@dastard>
+ <20190329125129.GA11664@bfoster>
+ <20190331222456.GN23020@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190331222456.GN23020@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, Bob Liu <bob.liu@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, shirley.ma@oracle.com, allison.henderson@oracle.com, darrick.wong@oracle.com, hch@infradead.org, adilger@dilger.ca, tytso@mit.edu
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
 
+On Mon, Apr 01, 2019 at 09:24:56AM +1100, Dave Chinner wrote:
+> On Fri, Mar 29, 2019 at 08:51:29AM -0400, Brian Foster wrote:
+> > On Fri, Mar 29, 2019 at 08:06:28AM +1100, Dave Chinner wrote:
+> > > On Thu, Mar 28, 2019 at 08:17:44AM -0700, Darrick J. Wong wrote:
+> > > > On Thu, Mar 28, 2019 at 10:10:10AM -0400, Brian Foster wrote:
+> > > > > On Tue, Mar 26, 2019 at 08:06:34PM -0700, Darrick J. Wong wrote:
+> > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > 
+> > > > > > When we're processing an ioend on the list of io completions, check to
+> > > > > > see if the next items on the list are both adjacent and of the same
+> > > > > > type.  If so, we can merge the completions to reduce transaction
+> > > > > > overhead.
+> > > > > > 
+> > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > ---
+> > > > > 
+> > > > > I'm curious of the value of this one... what situations allow for
+> > > > > batching on the ioend completion side that we haven't already accounted
+> > > > > for in the ioend construction side?
+> > > > 
+> > > > I was skeptical too, but Dave (I think?) pointed out that writeback can
+> > > > split into 1GB chunks so it actually is possible to end up with adjacent
+> > > > ioends.
+> > > 
+> > > When there amount of writeback for a single file exceeds the
+> > > measured bandwidth of the device, or there are a number of dirty files
+> > > that the writeback bandwidthis shared between, then writeback code
+> > > breaks up the amount of data that can be written in any single
+> > > writepages call to any single inode. This can get down as low as
+> > > MIN_WRITEBACK_PAGES (which ends up being 4MB of pages), and so we
+> > > can end up writing large files in lots of very small chunks.
+> > > 
+> > 
+> > Ok, so in general this has more to do with working around higher level
+> > writeback behavior than improving our own ioend batching/mapping from a
+> > single ->writepages() instance.
+> 
+> I wouldn't say "working around", because the higher level stuff is
+> avoiding inode writeback starvation which is entirely necessary. The
+> MIN_WRITEBACK_PAGES limit is essentially a mechanism to prevent
+> falling into thrashing with small IOs to lots of files and becoming
+> seek bound rather than bandwidth bound on spinning disks.  It's only
+> when there are so many writers that dirty page throttling occurs
+> before a process can dirty 4MB of pages that we see writeback chunks
+> drop below this limit, and that's where the IO being really
+> efficient at cleaning pages really matters....
+> 
 
-Hi Dave!
+Sure, I just mean that the potential optimization targets
+inter-writepages patterns as opposed to intra-writepages..
 
->> However, that suffers from another headache in that the I/O can get
->> arbitrarily sliced and diced in units of 512 bytes.
->
-> Right, but we don't need support that insane case. Indeed, if
-> it wasn't already obvious, we _can't support it_ because the
-> filesystem verifiers can't do partial verification. i.e.  part of
-> the verification is CRC validation of the whole bio, not to mention
-> that filesystem structure fragments cannot be safely parsed,
-> interpretted and/or verified without the whole structure first being
-> read in.
+> > Taking a look at the writeback code, this sounds more relevant to
+> > background writeback because integrity writeback uses the LONG_MAX chunk
+> > size for ->writepages() calls. Background writeback calculates a chunk
+> > size based on bandwidth, etc. as you've noted and looks like it rotors
+> > across dirty inodes in a given superblock until a higher level writeback
+> > count is achieved. Makes sense.
+> 
+> *nod*
+> 
+> > 
+> > > > So I wrote this patch and added a tracepoint, and lo it
+> > > > actually did trigger when there's a lot of data to flush out, and we
+> > > > succeed at allocating a single extent for the entire delalloc reservation.
+> > > 
+> > > I'd expect it to fire more when there are lots of large files being
+> > > written concurently than just for single files (i.e. the writeback
+> > > interleaving fragmentation problem that speculative delalloc
+> > > avoids).
+> > > 
+> > > > > The latter already batches until we
+> > > > > cross a change in fork type, extent state, or a break in logical or
+> > > > > physical contiguity. The former looks like it follows similar logic for
+> > > > > merging with the exceptions of allowing for merges of physically
+> > > > > discontiguous extents and disallowing merges of those with different
+> > > > > append status. That seems like a smallish window of opportunity to me..
+> > > > > am I missing something?
+> > > > 
+> > > > Yep, it's a smallish window; small discontiguous writes don't benefit
+> > > > here at all.
+> > > > 
+> > > > > If that is the gist but there is enough benefit for the more lenient
+> > > > > merging, I also wonder whether it would be more efficient to try and
+> > > > > also accomplish that on the construction side rather than via completion
+> > > > > post-processing. For example, could we abstract a single ioend to cover
+> > > > > an arbitrary list of bio/page -> sector mappings with the same higher
+> > > > > level semantics? We already have a bio chaining mechanism, it's just
+> > > > > only used for when a bio is full. Could we reuse that for dealing with
+> > > > > physical discontiguity?
+> > > 
+> > > While possible, I think that's way more complex and problematic than
+> > > merging successful completions optimistically...
+> > > 
+> > 
+> > Note again that the suggestion above applies only to ioend batching
+> > within a single ->writepages() instance as opposed to across multiple
+> > writebacks. It's less relevant given the context you added above around
+> > potentially optimizing background writeback completion across multiple
+> > ->writepages() calls.
+> 
+> Ah, ok, I was thinking you were talking about cross-writepages()
+> clustering....
+> 
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index 3619e9e8d359..c9bed8f3cb90 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -654,13 +654,13 @@ xfs_add_to_ioend(
+> >  	if (!wpc->ioend ||
+> >  	    wpc->fork != wpc->ioend->io_fork ||
+> >  	    wpc->imap.br_state != wpc->ioend->io_state ||
+> > -	    sector != bio_end_sector(wpc->ioend->io_bio) ||
+> >  	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
+> >  		if (wpc->ioend)
+> >  			list_add(&wpc->ioend->io_list, iolist);
+> >  		wpc->ioend = xfs_alloc_ioend(inode, wpc->fork,
+> >  				wpc->imap.br_state, offset, bdev, sector);
+> > -	}
+> > +	} else if (sector != bio_end_sector(wpc->ioend->io_bio))
+> > +		xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
+> 
+> That might make sense from a completion optimisation POV, but it's
+> going to have a significant impact on IO latency. i.e. we now delay
+> the completion of the first IO to after we've seeked to the second
+> IO and compelted that (and potentially many more). This will
+> increase the latency of cleaning dirty pages on spinning disks, so i
+> suspect this would be detrimental under heavy memory pressure and
+> lots of dirty pages to write back....
+> 
 
-What I thought. There are some things I can verify by masking but it's
-limited.
+(By cleaning pages I assume you refer to making dirty pages available
+for reclaim/reuse and not clearing of the dirty bit, which happens
+before writeback submission.)
 
-What about journal entries? Would they be validated with 512-byte
-granularity or in bundles thereof? Only a problem during recovery, but
-potentially a case where we care deeply about trying another copy if it
-exists.
+Yeah, I could see the potential for that. I don't think it's necessarily
+imminent if you consider all of the existing writeback chunk size
+heuristics, plugging, and the fact that a large contiguous writeback can
+impose a similar per-page writeback latency cost by constructing a huge
+bio chain. Sequential I/O is certainly much faster in the spinning disk
+example you cited, but we can already block a single page writeback
+waiter on potentially GBs of bios in certain cases without any currently
+known problems. We could always implement a heuristic to restrict the
+length of more "random" bio chains for ioends that don't have enough
+anticipated transaction completion overhead to trade off for the
+additional completion latency. (In fact, if this is a concern I wonder
+if we should have some chain limiting logic anyways..).
 
-What I'm asking is if we should have a block size argument for the
-verification? Or would you want to submit bios capped to the size you
-care about and let the block layer take care of coalescing?
+Anyways, I think the larger takeaway right now is that if
+post-completion batching is useful and effective across multiple
+writepages() calls, it's probably not worth the additional complexity of
+this kind of submission batching when we can get the same primary
+transaction overhead reduction benefit from a more comprehensive
+implementation.
 
-Validation of units bigger than the logical block size is an area which
-our older Oracle HARD technology handles gracefully but which T10 PI has
-been unable to address. So this is an area of particular interest to me,
-although it's somewhat orthogonal to Bob's retry plumbing.
+Brian
 
-Another question for you wrt. retries: Once a copy has been identified
-as bad and a good copy read from media, who does the rewrite? Does the
-filesystem send a new I/O (which would overwrite all copies) or does the
-retry plumbing own the responsibility of writing the good bio to the bad
-location?
-
-> IOWs, we need to look at this problem from a "whole stack" point of
-> view, not just cry about how "bios are too flexible and so make this
-> too hard!". The filesystem greatly constrains the alignment and
-> slicing/dicing problem to the point where it should be non-existent,
-> we have a clearly defined hard stop where verifier propagation
-> terminates, and if all else fails we can still detect corruption at
-> the filesystem level just like we do now. The worst thing that
-> happens here is we give up the capability for automatic block device
-> recovery and repair of damaged copies, which we can't do right now,
-> so it's essentially status quo...
-
-Having gone down the path of the one-to-many relationship when I did the
-original heterogeneous I/O topology attempt, it's pure hell. Also dealt
-with similar conundrums for the integrity stuff. So I don't like the
-breadcrumb approach. Perfect is the enemy of good and all that.
-
-And I am 100% in agreement on the careful alignment and not making
-things complex for crazy use cases (although occasional straddling I/Os
-are not as uncommon as we'd like to think). However, I do have concerns
-about this particular feature when it comes to your status quo comment.
-
-In order for us to build highly reliable systems, we have to have a
-better building block than "this redundancy retry feature works most of
-the time". So to me it is imperative that we provide hard guarantees
-once a particular configuration has been set up and stacked. And if the
-retry guarantee is somehow invalidated, then we really need to let the
-user know about it.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
