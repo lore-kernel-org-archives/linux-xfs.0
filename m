@@ -1,38 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from wout1-smtp.messagingengine.com ([64.147.123.24]:51091 "EHLO
-        wout1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726074AbfDCOI1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Apr 2019 10:08:27 -0400
-Date: Wed, 3 Apr 2019 16:08:22 +0200
-From: Greg KH <greg@kroah.com>
-Subject: Re: [STABLE PATCH 0/2] Fix in-memory metadata corruption at
- xfs_attr3_leaf_write_verify()
-Message-ID: <20190403140822.GH8633@kroah.com>
-References: <1554042273-3307-1-git-send-email-alex@zadara.com>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:47446 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725889AbfDAVqg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Apr 2019 17:46:36 -0400
+Date: Tue, 2 Apr 2019 08:46:32 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] bootfs: simple bootloader filesystem
+Message-ID: <20190401214632.GS26298@dastard>
+References: <20190401070001.GJ1173@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1554042273-3307-1-git-send-email-alex@zadara.com>
+In-Reply-To: <20190401070001.GJ1173@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alex Lyakas <alex@zadara.com>
-Cc: linux-xfs@vger.kernel.org, stable@vger.kernel.org, darrick.wong@oracle.com, hch@lst.de, shyam@zadara.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Mar 31, 2019 at 05:24:33PM +0300, Alex Lyakas wrote:
-> This is a partial backport of original Darrick's series "xfs: logging fixes" to kernel 4.14.
-> It fixes the in-memory metadata corruption error, which happens
-> when a partially initialized attribute buffer is attemped to be written to disk. 
-> This issue is reproducible with kernel 4.14, when adding a 1-sec sleep in xfs_attr_set(),
-> between the call to  xfs_attr_shortform_to_leaf() and the call to xfs_attr_leaf_addname().
+On Mon, Apr 01, 2019 at 12:00:01AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Darrick J. Wong (2):
->   xfs: add the ability to join a held buffer to a defer_ops
->   xfs: hold xfs_buf locked between shortform->leaf conversion and the
->     addition of an attribute
+> Does your computer use a bootloader which arrogantly declares that it can
+> read boot files off a filesystem but isn't sophisticated enough even to
+> recognize when that filesystem needs journal recovery?
+> 
+> Does your system software deployment program foolishly omit system calls
+> to flush newly unwrapped packages to disk?  Do you sometimes wonder if
+> they've forgotten that old maxim, "wait for the disk drive light to turn
+> off /before/ you power down"?
+> 
+> Are your computer operators aggressively derpy?  Do they have a habit of
+> leaving disk cables on the floor so they can trip over them twenty times
+> a day?  Does this leave you with sad files full of zeroes?
+> 
+> If so, bootfs is for you!  This new filesystem type uses journalling to
+> ensure metadata integrity, but forces all writes and directory tree
+> updates to be synchronous, fsyncs files on close, and checkpoints its
+> journal whenever a synchronization event happens.  Some allege this is
+> very slow, but I've been able to max out the iops on both of my double
+> height floppy drives!  In a power-cycling stress test, I found that the
+> switch broke off in my hand before I lost any data.  This concept may
+> sound terrible, but like any good crutch, it _is_ made of wood!
+> 
+> Singed-off-by: Darrick J. Wong <djwong@kernel.org>
+  ^^^^^^^^^^
 
-What are the git commit ids of these patches in Linus's tree?
+Ooooo - such a hot topic! Finally bootfs is more than just
+we-really-should-do-this conference talk!
 
-thanks,
+Looks good to me - with this we can finally move on from LILO....
 
-greg k-h
+Acked-by: Dave Chinner <david@fromorbit.com>
+
+FWIW, Should this have a cc: stable@kernel.org tag on
+it so it gets out into distro-world ASAP?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
