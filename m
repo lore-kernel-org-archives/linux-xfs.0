@@ -1,147 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:57034 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725959AbfDCQLL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Apr 2019 12:11:11 -0400
-Date: Wed, 3 Apr 2019 09:11:06 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 07/10] xfs: report AG health via AG geometry ioctl
-Message-ID: <20190403161106.GK5147@magnolia>
-References: <155413860964.4966.6087725033542837255.stgit@magnolia>
- <155413865266.4966.1015973371094452528.stgit@magnolia>
- <20190403143002.GA25805@bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190403143002.GA25805@bfoster>
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:41305 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725990AbfDBVxs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Apr 2019 17:53:48 -0400
+Received: by mail-pf1-f195.google.com with SMTP id 188so7036508pfd.8
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2019 14:53:47 -0700 (PDT)
+From: Andreas Dilger <adilger@dilger.ca>
+Message-Id: <E2E8A5E4-D174-4E90-8D8F-F1D69E98F20E@dilger.ca>
+Content-Type: multipart/signed;
+ boundary="Apple-Mail=_D8A70B35-FA94-4D5A-A584-5EC534E16F63";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH] bootfs: simple bootloader filesystem
+Date: Tue, 2 Apr 2019 15:52:59 -0600
+In-Reply-To: <20190402045519.GK1173@magnolia>
+References: <20190401070001.GJ1173@magnolia> <20190401214632.GS26298@dastard>
+ <20190402045519.GK1173@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Apr 03, 2019 at 10:30:05AM -0400, Brian Foster wrote:
-> On Mon, Apr 01, 2019 at 10:10:52AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Use the AG geometry info ioctl to report health status too.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_fs.h     |   12 +++++++++++-
-> >  fs/xfs/libxfs/xfs_health.h |    2 ++
-> >  fs/xfs/xfs_health.c        |   40 ++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_ioctl.c         |    2 ++
-> >  4 files changed, 55 insertions(+), 1 deletion(-)
-> > 
-> > 
-> ...
-> > diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-> > index 151c98693bef..5ca471bd41ad 100644
-> > --- a/fs/xfs/xfs_health.c
-> > +++ b/fs/xfs/xfs_health.c
-> > @@ -276,3 +276,43 @@ xfs_fsop_geom_health(
-> >  	if (sick & XFS_HEALTH_RT_SUMMARY)
-> >  		geo->health |= XFS_FSOP_GEOM_HEALTH_RT_SUMMARY;
-> >  }
-> > +
-> > +/* Fill out ag geometry health info. */
-> > +void
-> > +xfs_ag_geom_health(
-> > +	struct xfs_mount	*mp,
-> > +	xfs_agnumber_t		agno,
-> > +	struct xfs_ag_geometry	*ageo)
-> > +{
-> > +	struct xfs_perag	*pag;
-> > +	unsigned int		sick;
-> > +
-> > +	if (agno >= mp->m_sb.sb_agcount)
-> > +		return;
+
+--Apple-Mail=_D8A70B35-FA94-4D5A-A584-5EC534E16F63
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii
+
+On Apr 1, 2019, at 10:55 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
 > 
-> The call to xfs_ag_get_geometry() would have already returned an error
-> in the ioctl path for the above scenario. It might still make sense to
-> check here, but perhaps we could let this function also return an int
-> and return an error for consistency?
-
-Or maybe just ASSERT on the agno and add a note that the caller is
-required to pass in a valid ag number.
-
-> > +
-> > +	ageo->ag_health = 0;
-> > +
-> > +	pag = xfs_perag_get(mp, agno);
-> > +	sick = xfs_ag_measure_sickness(pag);
-> > +	if (sick & XFS_HEALTH_AG_SB)
-> > +		ageo->ag_health |= XFS_AG_GEOM_HEALTH_AG_SB;
+> On Tue, Apr 02, 2019 at 08:46:32AM +1100, Dave Chinner wrote:
+>> On Mon, Apr 01, 2019 at 12:00:01AM -0700, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <djwong@kernel.org>
+>>> 
+>>> Does your computer use a bootloader which arrogantly declares that it can
+>>> read boot files off a filesystem but isn't sophisticated enough even to
+>>> recognize when that filesystem needs journal recovery?
+>>> 
+>>> Does your system software deployment program foolishly omit system calls
+>>> to flush newly unwrapped packages to disk?  Do you sometimes wonder if
+>>> they've forgotten that old maxim, "wait for the disk drive light to turn
+>>> off /before/ you power down"?
+>>> 
+>>> Are your computer operators aggressively derpy?  Do they have a habit of
+>>> leaving disk cables on the floor so they can trip over them twenty times
+>>> a day?  Does this leave you with sad files full of zeroes?
+>>> 
+>>> If so, bootfs is for you!  This new filesystem type uses journalling to
+>>> ensure metadata integrity, but forces all writes and directory tree
+>>> updates to be synchronous, fsyncs files on close, and checkpoints its
+>>> journal whenever a synchronization event happens.  Some allege this is
+>>> very slow, but I've been able to max out the iops on both of my double
+>>> height floppy drives!  In a power-cycling stress test, I found that the
+>>> switch broke off in my hand before I lost any data.  This concept may
+>>> sound terrible, but like any good crutch, it _is_ made of wood!
+>>> 
+>>> Singed-off-by: Darrick J. Wong <djwong@kernel.org>
+>>  ^^^^^^^^^^
+>> 
+>> Ooooo - such a hot topic! Finally bootfs is more than just
+>> we-really-should-do-this conference talk!
+>> 
+>> Looks good to me - with this we can finally move on from LILO....
 > 
-> I'm starting to wonder whether "health" is the best term to use for the
-> interface bits just because it reads a little weird to measure
-> "sickness" and then apply all the sick state to something called
-> "health." I don't have a better suggestion off the top of my head,
-> though. Just something to think about a bit more from an API
-> standpoint..
-
-I had the same conundrum.  I guess we could start the bitset with -1 and
-clear bits when scrub says they've gone bad?  That would be much clearer
-with regards to the names, but technically we don't know the health of a
-structure until we scan it, so I wouldn't want to represent the fs as
-being "healthy" having not actually looked for problems.
-
-What we /really/ need is a tri-state bitset[1]:
-
-enum Bool
-{
-    True,
-    False,
-    FileNotFound
-};
-
-But maybe I will try renaming all this to "sick" again.
-
-if (sick & XFS_SICK_AG_AGF)
-	ageo->ag_sick |= XFS_AG_GEOM_SICK_AG_AGF;
-
-Gosh.  That second name is gross.  XFS_AG_GEOM_SICK_AGF.
-
-Sick sick sick sick sick.  Ok, I've convinced myself of the name change. :P
-
---D
-
-[1] https://thedailywtf.com/articles/What_Is_Truth_0x3f_
-
-> Brian
+> When Ted is done laughing, I really would like to consider something
+> like this to solve the problem of grub-style bootloaders requiring a
+> lease on the blocks underneath a file with a term exceeding that of the
+> running kernel.
 > 
-> > +	if (sick & XFS_HEALTH_AG_AGF)
-> > +		ageo->ag_health |= XFS_AG_GEOM_HEALTH_AG_AGF;
-> > +	if (sick & XFS_HEALTH_AG_AGFL)
-> > +		ageo->ag_health |= XFS_AG_GEOM_HEALTH_AG_AGFL;
-> > +	if (sick & XFS_HEALTH_AG_AGI)
-> > +		ageo->ag_health |= XFS_AG_GEOM_HEALTH_AG_AGI;
-> > +	if (sick & XFS_HEALTH_AG_BNOBT)
-> > +		ageo->ag_health |= XFS_AG_GEOM_HEALTH_AG_BNOBT;
-> > +	if (sick & XFS_HEALTH_AG_CNTBT)
-> > +		ageo->ag_health |= XFS_AG_GEOM_HEALTH_AG_CNTBT;
-> > +	if (sick & XFS_HEALTH_AG_INOBT)
-> > +		ageo->ag_health |= XFS_AG_GEOM_HEALTH_AG_INOBT;
-> > +	if (sick & XFS_HEALTH_AG_FINOBT)
-> > +		ageo->ag_health |= XFS_AG_GEOM_HEALTH_AG_FINOBT;
-> > +	if (sick & XFS_HEALTH_AG_RMAPBT)
-> > +		ageo->ag_health |= XFS_AG_GEOM_HEALTH_AG_RMAPBT;
-> > +	if (sick & XFS_HEALTH_AG_REFCNTBT)
-> > +		ageo->ag_health |= XFS_AG_GEOM_HEALTH_AG_REFCNTBT;
-> > +	xfs_perag_put(pag);
-> > +}
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index f9bf11b6a055..f1fc5e53cfc1 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -853,6 +853,8 @@ xfs_ioc_ag_geometry(
-> >  	if (error)
-> >  		return error;
-> >  
-> > +	xfs_ag_geom_health(mp, ageo.ag_number, &ageo);
-> > +
-> >  	if (copy_to_user(arg, &ageo, sizeof(ageo)))
-> >  		return -EFAULT;
-> >  	return 0;
-> > 
+> We can probably skip the harsh synchronous writes in favor of fsync on
+> close, but we would need to keep the critical component of checkpointing
+> the journal on fsync and syncfs.
+
+Wouldn't it be enough if Grub marked the file IMMUTABLE so that it didn't
+get remapped/rewritten?  The RPM pre/post kernel update scripts already
+have hooks to rerun grub and update /etc/grub.conf, so they should also
+be able to handle set/clear of the immutable flag during upgrade.
+
+Cheers, Andreas
+
+
+
+
+
+
+--Apple-Mail=_D8A70B35-FA94-4D5A-A584-5EC534E16F63
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAlyj2bsACgkQcqXauRfM
+H+DWkg//X1jYUiafEu+/scS71lJAVRIzn4JYpIbEHnfzCKYe+dsd9/UInxyYpJxY
+t5+P57fnkAifscITGA8DO+N3u6KH/5w9XpK7s5r3jqjammsCw6fYS4KaG55Kl1J1
+nww3gr63kAuADOEV/3Y98fA/40EJ6+kN7wSjRpVyJRRLxmvqCfNxqPBmSMtELOfw
+xgBAAcR0fTMbXN1L6TdEAUirjODVbSS1Loq7oao4N1saKZE+uhiuf0bROjk7FFLn
+/uBDUdUppwvS/jRlvgyjzhVfV7vQ7YdQ8rmgGPAz0hwnm906KmpANk94DEmOTWfd
+XfrtCA3E9WwWrHB51g0Pbsr4+GM2lpER8Hobts7wlYW99CJzQjckc7Y3pvTntbCs
+b0WsQ0mJpzRjTF1cm1Js2DGKney0WXMOnE0YrDoi7bAtL0Jx9ItU6FyzHtYXX1SJ
+941QzkbW7HjNwgO9+UwRnMtkgZ5BSeUVRx2ag1OSHmW5P4NPiwm301hXXeZdgkqu
+r+RWwV15MzHcfhIAzJ1765g8oas/4LETedWE3qnuMGeGgGahErSHjl7xfINNzDQt
+uPu3iw7YaybQFj0sVsemj3/ZpW4/XEOhpGeKpoqAF/h90+a4EF8sKKZwXxTQMIhN
+Drj2QbOzgNVE8UFUsM3dyucW42KMJQIzO8vgy25GTwGXvVukFIU=
+=mAtL
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_D8A70B35-FA94-4D5A-A584-5EC534E16F63--
