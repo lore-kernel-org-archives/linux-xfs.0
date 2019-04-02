@@ -1,64 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:47446 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725889AbfDAVqg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Apr 2019 17:46:36 -0400
-Date: Tue, 2 Apr 2019 08:46:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] bootfs: simple bootloader filesystem
-Message-ID: <20190401214632.GS26298@dastard>
-References: <20190401070001.GJ1173@magnolia>
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:37954 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728479AbfDBSzA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Apr 2019 14:55:00 -0400
+Received: by mail-lf1-f68.google.com with SMTP id a6so9826826lfl.5
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2019 11:54:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190401070001.GJ1173@magnolia>
+References: <20181211183203.7fdbca0f@lud1.home> <20190331224918.GO23020@dastard>
+ <20190401181311.334e96e8@lud1.home> <20190401213226.GR26298@dastard> <20190402132357.0f72e3a9@lud1.home>
+In-Reply-To: <20190402132357.0f72e3a9@lud1.home>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Tue, 2 Apr 2019 12:54:47 -0600
+Message-ID: <CAJCQCtT3Sy5zoWDZg+kh_KyLs3hzejhskN+k9ofjfw00yeyShw@mail.gmail.com>
+Subject: Re: File system corruption in two hard disks
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: Luciano ES <lucmove@gmail.com>
+Cc: XFS mailing list <linux-xfs@vger.kernel.org>
 
-On Mon, Apr 01, 2019 at 12:00:01AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Does your computer use a bootloader which arrogantly declares that it can
-> read boot files off a filesystem but isn't sophisticated enough even to
-> recognize when that filesystem needs journal recovery?
-> 
-> Does your system software deployment program foolishly omit system calls
-> to flush newly unwrapped packages to disk?  Do you sometimes wonder if
-> they've forgotten that old maxim, "wait for the disk drive light to turn
-> off /before/ you power down"?
-> 
-> Are your computer operators aggressively derpy?  Do they have a habit of
-> leaving disk cables on the floor so they can trip over them twenty times
-> a day?  Does this leave you with sad files full of zeroes?
-> 
-> If so, bootfs is for you!  This new filesystem type uses journalling to
-> ensure metadata integrity, but forces all writes and directory tree
-> updates to be synchronous, fsyncs files on close, and checkpoints its
-> journal whenever a synchronization event happens.  Some allege this is
-> very slow, but I've been able to max out the iops on both of my double
-> height floppy drives!  In a power-cycling stress test, I found that the
-> switch broke off in my hand before I lost any data.  This concept may
-> sound terrible, but like any good crutch, it _is_ made of wood!
-> 
-> Singed-off-by: Darrick J. Wong <djwong@kernel.org>
-  ^^^^^^^^^^
+On Tue, Apr 2, 2019 at 10:24 AM Luciano ES <lucmove@gmail.com> wrote:
 
-Ooooo - such a hot topic! Finally bootfs is more than just
-we-really-should-do-this conference talk!
+> [    3.790321] sd 1:0:0:0: [sdb] tag#12 CDB: Read(10) 28 00 00 00 0a 00 00 01 00 00
+> [    3.790323] blk_update_request: I/O error, dev sdb, sector 2640
 
-Looks good to me - with this we can finally move on from LILO....
+Common bad sector error, includes the LBA for the sector.
 
-Acked-by: Dave Chinner <david@fromorbit.com>
+There's a scant chance it's recoverable if the drive supports
+configurable SCT ERC, and just happens to have a low timeout value
+(common on NAS and enterprise drives). You can check it with:
 
-FWIW, Should this have a cc: stable@kernel.org tag on
-it so it gets out into distro-world ASAP?
+# smartctl -l scterc /dev/sdb
+# cat /sys/block/sdb/device/timeout
 
-Cheers,
+These are two different things. The first is internal to the drive
+(firmware). The second is the kernel's command queue timer for that
+block device. If the SCT ERC value is something short like 70
+deciseconds, you can try disabling it.
 
-Dave.
+# smartctl -l scterc,0,0 /dev/sdb
+
+And then increase the kernel command timer to something ridiculous
+like 180 seconds.
+
+# echo 180 > /sys/block/sdb/device/timeout
+
+Try your repair again. xfs_repair might appear to hang. My guess is it
+fails again right away. But there's some chance giving the drive more
+time to recover that sector, and it might just do it. Thing is, if
+there's no problem with the contents on that bad sector, it won't
+likely be overwritten, and it only gets "repaired" by an overwrite.
+Once the xfs_repair completes and if successful, you'll want to mount
+the file system rw, make some trivial change like touching a file,
+then unmount.
+
+A reboot will reset all of these values, and you'll quickly learn if
+this is fixed. If not...well cross that bridge later depending on what
+results you get.
+
+
+> [    8.298754] sd 1:0:0:0: [sdb] tag#14 Add. Sense: Unrecovered read error - auto reallocate failed
+> [    8.298757] sd 1:0:0:0: [sdb] tag#14 CDB: Read(10) 28 00 00 00 0a 56 00 00 02 00
+> [    8.298758] blk_update_request: I/O error, dev sdb, sector 2646
+
+2640 and 2646 are likely the same 4096 physical sector; they get
+different values because of 512 byte sector emulation. What do you get
+for
+
+# blockdev --getss --getpbsz
+
+
+> I didn't have time to investigate more so I didn't even try smartctl on it.
+> But looks like that disk is dead, doesn't it?
+> :-(
+
+Uncertain. Some number of bad sectors are considered acceptable by the
+manufacturer if they remap. Well, yours went bad before the remap so
+I'd complain if the drive is under warranty. But that's separate from
+recovery...
+
+# smartctl -x /dev/sdb
+
+
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Chris Murphy
