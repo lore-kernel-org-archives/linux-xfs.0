@@ -1,153 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:36658 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729148AbfDBSXQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Apr 2019 14:23:16 -0400
-Date: Tue, 2 Apr 2019 11:23:10 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/10] xfs: report fs and rt health via geometry structure
-Message-ID: <20190402182310.GF5147@magnolia>
-References: <155413860964.4966.6087725033542837255.stgit@magnolia>
- <155413864658.4966.5585966135005160342.stgit@magnolia>
- <20190402173503.GJ2899@bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:38664 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725889AbfDBSIr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Apr 2019 14:08:47 -0400
+Subject: Re: [PATCH] xfs: return correct XFS_IOC_DIOINFO for DAX inode
+References: <b3af182f-a547-9d04-3b29-232857e83fc4@redhat.com>
+ <20190402175632.GD5147@magnolia>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <c265b333-9eb1-4dc1-f915-b72af8b50a88@redhat.com>
+Date: Tue, 2 Apr 2019 13:08:45 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190402173503.GJ2899@bfoster>
+In-Reply-To: <20190402175632.GD5147@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Jeff Moyer <jmoyer@redhat.com>
 
-On Tue, Apr 02, 2019 at 01:35:04PM -0400, Brian Foster wrote:
-> On Mon, Apr 01, 2019 at 10:10:46AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Use our newly expanded geometry structure to report the overall fs and
-> > realtime health status.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
+On 4/2/19 12:56 PM, Darrick J. Wong wrote:
+> On Tue, Apr 02, 2019 at 10:44:38AM -0500, Eric Sandeen wrote:
+>> pmem is byte addressable, and indeed byte-aligned DIO works on
+>> a DAX file.  So, teach XFS_IOC_DIOINFO to return the correct
+>> alignment information if IS_DAX(inode).
 > 
-> I kind of wonder whether it's possible (or makes sense) to make the core
-> sickness bits exportable to userspace and thus avoid some of the
-> translation code, but that aside this looks fine to me:
+> If it's a DAX filesystem, do we want to try to steer people towards
+> things like 2MB pages since (in theory) we can get away with fewer page
+> table mappings?  And (seeing as that's mmap that cares, not directio)
+> would advertising preferential page mapping sizes be more appropriate
+> advertised in a different ioctl?
 
-Not sure -- for now I went with having separate bits and mapping
-functions so that the internal implementation doesn't get fused to the
-userspace interface, but seeing as the defines are the same we really
-could just copy straight from the incore structure and have a bunch of
-BUILD_BUG_ON(internal bit == ioctl bit) until they diverge more.
+The xfsctl(3) manpage documents XFS_IOC_DIOINFO as providing the
+minimum/required alignments to avoid DIO failure.  Says nothing about
+optimal.  So, if you'd like to advertise preferences, it seems like
+this is not the interface to use...
 
---D
+-Eric
 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> --D
 > 
-> >  fs/xfs/libxfs/xfs_fs.h     |   11 ++++++++++-
-> >  fs/xfs/libxfs/xfs_health.h |    3 +++
-> >  fs/xfs/xfs_health.c        |   27 +++++++++++++++++++++++++++
-> >  fs/xfs/xfs_ioctl.c         |    3 +++
-> >  4 files changed, 43 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index 87226e00e7bd..ddbfde7ff79d 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -199,9 +199,18 @@ typedef struct xfs_fsop_geom {
-> >  	__u32		rtsectsize;	/* realtime sector size, bytes	*/
-> >  	__u32		dirblocksize;	/* directory block size, bytes	*/
-> >  	__u32		logsunit;	/* log stripe unit, bytes */
-> > -	__u64		reserved[18];	/* reserved space */
-> > +	__u32		health;		/* o: unhealthy fs & rt metadata */
-> > +	__u32		reserved32;	/* reserved space */
-> > +	__u64		reserved[17];	/* reserved space */
-> >  } xfs_fsop_geom_t;
-> >  
-> > +#define XFS_FSOP_GEOM_HEALTH_FS_COUNTERS (1 << 0) /* summary counters */
-> > +#define XFS_FSOP_GEOM_HEALTH_FS_UQUOTA	(1 << 1)  /* user quota */
-> > +#define XFS_FSOP_GEOM_HEALTH_FS_GQUOTA	(1 << 2)  /* group quota */
-> > +#define XFS_FSOP_GEOM_HEALTH_FS_PQUOTA	(1 << 3)  /* project quota */
-> > +#define XFS_FSOP_GEOM_HEALTH_RT_BITMAP	(1 << 4)  /* realtime bitmap */
-> > +#define XFS_FSOP_GEOM_HEALTH_RT_SUMMARY	(1 << 5)  /* realtime summary */
-> > +
-> >  /* Output for XFS_FS_COUNTS */
-> >  typedef struct xfs_fsop_counts {
-> >  	__u64	freedata;	/* free data section blocks */
-> > diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
-> > index 269b124dc1d7..36736d54a3e3 100644
-> > --- a/fs/xfs/libxfs/xfs_health.h
-> > +++ b/fs/xfs/libxfs/xfs_health.h
-> > @@ -39,6 +39,7 @@
-> >  struct xfs_mount;
-> >  struct xfs_perag;
-> >  struct xfs_inode;
-> > +struct xfs_fsop_geom;
-> >  
-> >  /* Observable health issues for metadata spanning the entire filesystem. */
-> >  #define XFS_HEALTH_FS_COUNTERS	(1 << 0)  /* summary counters */
-> > @@ -200,4 +201,6 @@ xfs_inode_healthy(struct xfs_inode *ip)
-> >  	return xfs_inode_measure_sickness(ip) == 0;
-> >  }
-> >  
-> > +void xfs_fsop_geom_health(struct xfs_mount *mp, struct xfs_fsop_geom *geo);
-> > +
-> >  #endif	/* __XFS_HEALTH_H__ */
-> > diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-> > index 6e2da858c356..151c98693bef 100644
-> > --- a/fs/xfs/xfs_health.c
-> > +++ b/fs/xfs/xfs_health.c
-> > @@ -249,3 +249,30 @@ xfs_inode_measure_sickness(
-> >  	spin_unlock(&ip->i_flags_lock);
-> >  	return ret;
-> >  }
-> > +
-> > +/* Fill out fs geometry health info. */
-> > +void
-> > +xfs_fsop_geom_health(
-> > +	struct xfs_mount	*mp,
-> > +	struct xfs_fsop_geom	*geo)
-> > +{
-> > +	unsigned int		sick;
-> > +
-> > +	geo->health = 0;
-> > +
-> > +	sick = xfs_fs_measure_sickness(mp);
-> > +	if (sick & XFS_HEALTH_FS_COUNTERS)
-> > +		geo->health |= XFS_FSOP_GEOM_HEALTH_FS_COUNTERS;
-> > +	if (sick & XFS_HEALTH_FS_UQUOTA)
-> > +		geo->health |= XFS_FSOP_GEOM_HEALTH_FS_UQUOTA;
-> > +	if (sick & XFS_HEALTH_FS_GQUOTA)
-> > +		geo->health |= XFS_FSOP_GEOM_HEALTH_FS_GQUOTA;
-> > +	if (sick & XFS_HEALTH_FS_PQUOTA)
-> > +		geo->health |= XFS_FSOP_GEOM_HEALTH_FS_PQUOTA;
-> > +
-> > +	sick = xfs_rt_measure_sickness(mp);
-> > +	if (sick & XFS_HEALTH_RT_BITMAP)
-> > +		geo->health |= XFS_FSOP_GEOM_HEALTH_RT_BITMAP;
-> > +	if (sick & XFS_HEALTH_RT_SUMMARY)
-> > +		geo->health |= XFS_FSOP_GEOM_HEALTH_RT_SUMMARY;
-> > +}
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index b5918ce656bd..f9bf11b6a055 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -34,6 +34,7 @@
-> >  #include "scrub/xfs_scrub.h"
-> >  #include "xfs_sb.h"
-> >  #include "xfs_ag.h"
-> > +#include "xfs_health.h"
-> >  
-> >  #include <linux/capability.h>
-> >  #include <linux/cred.h>
-> > @@ -830,6 +831,8 @@ xfs_ioc_fsgeometry(
-> >  	if (error)
-> >  		return error;
-> >  
-> > +	xfs_fsop_geom_health(mp, &fsgeo);
-> > +
-> >  	if (copy_to_user(arg, &fsgeo, sizeof(fsgeo)))
-> >  		return -EFAULT;
-> >  	return 0;
-> > 
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>> index 6ecdbb3..35eae7d 100644
+>> --- a/fs/xfs/xfs_ioctl.c
+>> +++ b/fs/xfs/xfs_ioctl.c
+>> @@ -1919,12 +1919,21 @@ xfs_file_ioctl(
+>>  	}
+>>  	case XFS_IOC_DIOINFO: {
+>>  		struct dioattr	da;
+>> -		xfs_buftarg_t	*target =
+>> -			XFS_IS_REALTIME_INODE(ip) ?
+>> -			mp->m_rtdev_targp : mp->m_ddev_targp;
+>>  
+>> -		da.d_mem =  da.d_miniosz = target->bt_logical_sectorsize;
+>> -		da.d_maxiosz = INT_MAX & ~(da.d_miniosz - 1);
+>> +		if (IS_DAX(inode)) {
+>> +			/* pmem is byte addressable */
+>> +			da.d_mem = 1;
+>> +			da.d_miniosz = 1;
+>> +			da.d_maxiosz = INT_MAX;
+>> +		} else {
+>> +			xfs_buftarg_t	*target =
+>> +				XFS_IS_REALTIME_INODE(ip) ?
+>> +				mp->m_rtdev_targp : mp->m_ddev_targp;
+>> +
+>> +			da.d_mem = target->bt_logical_sectorsize;
+>> +			da.d_miniosz = target->bt_logical_sectorsize;
+>> +			da.d_maxiosz = INT_MAX & ~(da.d_miniosz - 1);
+>> +		}
+>>  
+>>  		if (copy_to_user(arg, &da, sizeof(da)))
+>>  			return -EFAULT;
+>>
