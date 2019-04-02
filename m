@@ -1,66 +1,243 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f66.google.com ([209.85.166.66]:42275 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731151AbfDBNdu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Apr 2019 09:33:50 -0400
-Received: by mail-io1-f66.google.com with SMTP id c4so10871763ioh.9
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2019 06:33:50 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:38504 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726790AbfDBNxo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Apr 2019 09:53:44 -0400
+Date: Tue, 2 Apr 2019 09:53:41 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 03/10] xfs: clear BAD_SUMMARY if unmounting an unhealthy
+ filesystem
+Message-ID: <20190402135341.GF2899@bfoster>
+References: <155413860964.4966.6087725033542837255.stgit@magnolia>
+ <155413862812.4966.6543791189302248422.stgit@magnolia>
+ <20190402132442.GE2899@bfoster>
+ <20190402134010.GC5147@magnolia>
 MIME-Version: 1.0
-References: <1554042273-3307-1-git-send-email-alex@zadara.com> <20190402114450.GB2899@bfoster>
-In-Reply-To: <20190402114450.GB2899@bfoster>
-From: Alex Lyakas <alex@zadara.com>
-Date: Tue, 2 Apr 2019 16:33:38 +0300
-Message-ID: <CAOcd+r0fc+ctiAX+RrhMdByCmf1yU=E=57wU_a0hm2becTTzKg@mail.gmail.com>
-Subject: Re: [STABLE PATCH 0/2] Fix in-memory metadata corruption at xfs_attr3_leaf_write_verify()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190402134010.GC5147@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, stable@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, hch@lst.de, Shyam Kaushik <shyam@zadara.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi Brian,
+On Tue, Apr 02, 2019 at 06:40:10AM -0700, Darrick J. Wong wrote:
+> On Tue, Apr 02, 2019 at 09:24:45AM -0400, Brian Foster wrote:
+> > On Mon, Apr 01, 2019 at 10:10:28AM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > If we know the filesystem metadata isn't healthy during unmount, we want
+> > > to encourage the administrator to run xfs_repair right away.  We can't
+> > > do this if BAD_SUMMARY will cause an unclean log unmount to force
+> > > summary recalculation, so turn it off if the fs is bad.
+> > > 
+> > 
+> > Do you mean we don't want to suggest xfs_repair because we intentionally
+> > cause a dirty log and thus xfs_repair will require to zap it? If so, the
+> > wording above and the comment in xfs_health_unmount() could be a bit
+> > more specific on the reasoning.
+> 
+> Sort of the opposite?  We want to suggest xfs_repair, but we don't want
+> to leave the log dirty because that adds the additional step of running
+> xfs_repair -L to zap the log.  I get the sense that we don't really want
+> to encourage admins to be cavalier about running that...?
+> 
 
-On Tue, Apr 2, 2019 at 2:44 PM Brian Foster <bfoster@redhat.com> wrote:
->
-> On Sun, Mar 31, 2019 at 05:24:33PM +0300, Alex Lyakas wrote:
-> > This is a partial backport of original Darrick's series "xfs: logging fixes" to kernel 4.14.
-> > It fixes the in-memory metadata corruption error, which happens
-> > when a partially initialized attribute buffer is attemped to be written to disk.
-> > This issue is reproducible with kernel 4.14, when adding a 1-sec sleep in xfs_attr_set(),
-> > between the call to  xfs_attr_shortform_to_leaf() and the call to xfs_attr_leaf_addname().
-> >
->
-> For future reference, you probably want to make sure the patch series is
-> threaded when it's posted to the list.
-I am not sure what you mean by this. I used "git-send-email" to send
-all the patches one-by-one. Perhaps you mean that I should have sent
-them in one "git-send-email" command?
+Ok.. I guess what sounded funny to me is the suggestion that "we can't"
+leave a dirty log and suggest repair to the user. xfs_repair can clearly
+handle a dirty log, so it suggested to me that perhaps there was some
+other critical side effect I wasn't thinking of that we wanted to avoid
+as a result of needing to zap the log.
 
-> That aside, this looks like a
-> reasonable and straightforward backport to me:
->
-> Acked-by: Brian Foster <bfoster@redhat.com>
-I assume that I can treat your "Acked-by" as "Reviewed-by" (Dave asked
-for this to pass a review).
+To be clear, I don't feel strongly about it and still think the change
+is reasonable enough (it only matters when something else is broken in
+the fs after all). I just wanted to clarify the above, call out the
+potential tradeoff in the event that others might have further thoughts
+on it, and suggest the full reasoning eventually make it into the commit
+log for future reference.
 
-Thanks!
-Alex.
+> (Would be nice if we could just port log recovery to repair, but that's
+> a whole separate project...)
+> 
 
+Or work around the whole "trigger summary recalc via log recovery"
+thing, but I guess that might not be trivial either..
 
->
-> > Darrick J. Wong (2):
-> >   xfs: add the ability to join a held buffer to a defer_ops
-> >   xfs: hold xfs_buf locked between shortform->leaf conversion and the
-> >     addition of an attribute
-> >
-> >  fs/xfs/libxfs/xfs_attr.c      | 20 +++++++++++++++-----
-> >  fs/xfs/libxfs/xfs_attr_leaf.c |  9 ++++++---
-> >  fs/xfs/libxfs/xfs_attr_leaf.h |  3 ++-
-> >  fs/xfs/libxfs/xfs_defer.c     | 39 ++++++++++++++++++++++++++++++++++++---
-> >  fs/xfs/libxfs/xfs_defer.h     |  5 ++++-
-> >  5 files changed, 63 insertions(+), 13 deletions(-)
-> >
-> > --
-> > 1.9.1
-> >
+> > Also, what exactly is the side effect without this change in place? The
+> > user would have to zap the log from xfs_repair, but the somewhat
+> > artificial unclean unmount doesn't actually require log recovery to fix
+> > up the fs outside of the whole summary counter thing, right? IOW, would
+> > the user zapping the log actually lose anything besides the bad summary
+> > counter indication?
+> 
+> The log checkpoints at unmount, right?  So I think it's ok to zap the
+> log when its status is "cleanly unmounted but we didn't record the clean
+> unmount because we want to force summary recalculation at next mount".
+> 
+
+That's what I would expect, but I haven't tested it. :)
+
+Brian
+
+> > I ask just because even though we warn the user to
+> > run repair, that doesn't mean they'll actually do it and so it seems
+> > there is a bit of a tradeoff in that regard.
+> 
+> Yeah, it's a pity we can't just run xfs_repair ourselves. :)
+> 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > 
+> > BTW, I get the following compiler warning on this patch:
+> > 
+> > In file included from fs/xfs/xfs_trace.h:12,
+> >                  from fs/xfs/xfs_health.c:19:
+> > fs/xfs/xfs_health.c: In function ‘xfs_health_unmount’:
+> > ./include/linux/tracepoint.h:195:6: warning: ‘sick’ may be used uninitialized in this function [-Wmaybe-uninitialized]                                                                                            
+> >      ((void(*)(proto))(it_func))(args); \
+> >       ^
+> > fs/xfs/xfs_health.c:33:16: note: ‘sick’ was declared here
+> >   unsigned int  sick;
+> 
+> <nod> Thanks, will fix that for v2.
+> 
+> --D
+> 
+> > Brian
+> > 
+> > >  fs/xfs/libxfs/xfs_health.h |    2 +
+> > >  fs/xfs/xfs_health.c        |   59 ++++++++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/xfs_mount.c         |    2 +
+> > >  fs/xfs/xfs_trace.h         |    3 ++
+> > >  4 files changed, 66 insertions(+)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+> > > index 0d51bd2689ea..269b124dc1d7 100644
+> > > --- a/fs/xfs/libxfs/xfs_health.h
+> > > +++ b/fs/xfs/libxfs/xfs_health.h
+> > > @@ -148,6 +148,8 @@ void xfs_inode_mark_sick(struct xfs_inode *ip, unsigned int mask);
+> > >  void xfs_inode_mark_healthy(struct xfs_inode *ip, unsigned int mask);
+> > >  unsigned int xfs_inode_measure_sickness(struct xfs_inode *ip);
+> > >  
+> > > +void xfs_health_unmount(struct xfs_mount *mp);
+> > > +
+> > >  /* Now some helpers. */
+> > >  
+> > >  static inline bool
+> > > diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+> > > index e9d6859f7501..6e2da858c356 100644
+> > > --- a/fs/xfs/xfs_health.c
+> > > +++ b/fs/xfs/xfs_health.c
+> > > @@ -19,6 +19,65 @@
+> > >  #include "xfs_trace.h"
+> > >  #include "xfs_health.h"
+> > >  
+> > > +/*
+> > > + * Warn about metadata corruption that we detected but haven't fixed, and
+> > > + * make sure we're not sitting on anything that would get in the way of
+> > > + * recovery.
+> > > + */
+> > > +void
+> > > +xfs_health_unmount(
+> > > +	struct xfs_mount	*mp)
+> > > +{
+> > > +	struct xfs_perag	*pag;
+> > > +	xfs_agnumber_t		agno;
+> > > +	unsigned int		sick;
+> > > +	bool			warn = false;
+> > > +
+> > > +	if (XFS_FORCED_SHUTDOWN(mp))
+> > > +		return;
+> > > +
+> > > +	/* Measure AG corruption levels. */
+> > > +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> > > +		pag = xfs_perag_get(mp, agno);
+> > > +		spin_lock(&pag->pag_state_lock);
+> > > +		if (pag->pag_sick) {
+> > > +			trace_xfs_ag_unfixed_corruption(mp, agno, sick);
+> > > +			warn = true;
+> > > +		}
+> > > +		spin_unlock(&pag->pag_state_lock);
+> > > +		xfs_perag_put(pag);
+> > > +	}
+> > > +
+> > > +	/* Measure realtime volume corruption levels. */
+> > > +	sick = xfs_rt_measure_sickness(mp);
+> > > +	if (sick) {
+> > > +		trace_xfs_rt_unfixed_corruption(mp, sick);
+> > > +		warn = true;
+> > > +	}
+> > > +
+> > > +	/* Measure fs corruption and keep the sample around for the warning. */
+> > > +	sick = xfs_fs_measure_sickness(mp);
+> > > +	if (sick) {
+> > > +		trace_xfs_fs_unfixed_corruption(mp, sick);
+> > > +		warn = true;
+> > > +	}
+> > > +
+> > > +	if (warn) {
+> > > +		xfs_warn(mp,
+> > > +"Uncorrected metadata errors detected; please run xfs_repair.");
+> > > +
+> > > +		/*
+> > > +		 * If we have unhealthy metadata, we want the admin to run
+> > > +		 * xfs_repair after unmounting.  They can't do that if the log
+> > > +		 * is written out without a clean unmount record (such as when
+> > > +		 * the summary counters are marked unhealthy to force
+> > > +		 * recalculation of the summary counters) so clear it.
+> > > +		 */
+> > > +		if (sick & XFS_HEALTH_FS_COUNTERS)
+> > > +			xfs_fs_mark_healthy(mp, XFS_HEALTH_FS_COUNTERS);
+> > > +	}
+> > > +}
+> > > +
+> > >  /* Mark unhealthy per-fs metadata. */
+> > >  void
+> > >  xfs_fs_mark_sick(
+> > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > > index a43ca655a431..f0f73d598a0c 100644
+> > > --- a/fs/xfs/xfs_mount.c
+> > > +++ b/fs/xfs/xfs_mount.c
+> > > @@ -1075,6 +1075,7 @@ xfs_mountfs(
+> > >  	 */
+> > >  	cancel_delayed_work_sync(&mp->m_reclaim_work);
+> > >  	xfs_reclaim_inodes(mp, SYNC_WAIT);
+> > > +	xfs_health_unmount(mp);
+> > >   out_log_dealloc:
+> > >  	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
+> > >  	xfs_log_mount_cancel(mp);
+> > > @@ -1157,6 +1158,7 @@ xfs_unmountfs(
+> > >  	 */
+> > >  	cancel_delayed_work_sync(&mp->m_reclaim_work);
+> > >  	xfs_reclaim_inodes(mp, SYNC_WAIT);
+> > > +	xfs_health_unmount(mp);
+> > >  
+> > >  	xfs_qm_unmount(mp);
+> > >  
+> > > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > > index f079841c7af6..2464ea351f83 100644
+> > > --- a/fs/xfs/xfs_trace.h
+> > > +++ b/fs/xfs/xfs_trace.h
+> > > @@ -3461,8 +3461,10 @@ DEFINE_EVENT(xfs_fs_corrupt_class, name,	\
+> > >  	TP_ARGS(mp, flags))
+> > >  DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_sick);
+> > >  DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_healthy);
+> > > +DEFINE_FS_CORRUPT_EVENT(xfs_fs_unfixed_corruption);
+> > >  DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_sick);
+> > >  DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_healthy);
+> > > +DEFINE_FS_CORRUPT_EVENT(xfs_rt_unfixed_corruption);
+> > >  
+> > >  DECLARE_EVENT_CLASS(xfs_ag_corrupt_class,
+> > >  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, unsigned int flags),
+> > > @@ -3488,6 +3490,7 @@ DEFINE_EVENT(xfs_ag_corrupt_class, name,	\
+> > >  	TP_ARGS(mp, agno, flags))
+> > >  DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_sick);
+> > >  DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_healthy);
+> > > +DEFINE_AG_CORRUPT_EVENT(xfs_ag_unfixed_corruption);
+> > >  
+> > >  DECLARE_EVENT_CLASS(xfs_inode_corrupt_class,
+> > >  	TP_PROTO(struct xfs_inode *ip, unsigned int flags),
+> > > 
