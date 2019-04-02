@@ -1,221 +1,278 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40446 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725959AbfDBRet (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Apr 2019 13:34:49 -0400
-Date: Tue, 2 Apr 2019 13:34:46 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 05/10] xfs: add a new ioctl to describe allocation group
- geometry
-Message-ID: <20190402173446.GI2899@bfoster>
+Received: from aserp2120.oracle.com ([141.146.126.78]:60478 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725991AbfDBSSW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Apr 2019 14:18:22 -0400
+Date: Tue, 2 Apr 2019 11:16:14 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 03/10] xfs: clear BAD_SUMMARY if unmounting an unhealthy
+ filesystem
+Message-ID: <20190402181613.GE5147@magnolia>
 References: <155413860964.4966.6087725033542837255.stgit@magnolia>
- <155413864032.4966.11238815153270272807.stgit@magnolia>
+ <155413862812.4966.6543791189302248422.stgit@magnolia>
+ <20190402132442.GE2899@bfoster>
+ <20190402134010.GC5147@magnolia>
+ <20190402135341.GF2899@bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <155413864032.4966.11238815153270272807.stgit@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190402135341.GF2899@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 01, 2019 at 10:10:40AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Apr 02, 2019 at 09:53:41AM -0400, Brian Foster wrote:
+> On Tue, Apr 02, 2019 at 06:40:10AM -0700, Darrick J. Wong wrote:
+> > On Tue, Apr 02, 2019 at 09:24:45AM -0400, Brian Foster wrote:
+> > > On Mon, Apr 01, 2019 at 10:10:28AM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > If we know the filesystem metadata isn't healthy during unmount, we want
+> > > > to encourage the administrator to run xfs_repair right away.  We can't
+> > > > do this if BAD_SUMMARY will cause an unclean log unmount to force
+> > > > summary recalculation, so turn it off if the fs is bad.
+> > > > 
+> > > 
+> > > Do you mean we don't want to suggest xfs_repair because we intentionally
+> > > cause a dirty log and thus xfs_repair will require to zap it? If so, the
+> > > wording above and the comment in xfs_health_unmount() could be a bit
+> > > more specific on the reasoning.
+> > 
+> > Sort of the opposite?  We want to suggest xfs_repair, but we don't want
+> > to leave the log dirty because that adds the additional step of running
+> > xfs_repair -L to zap the log.  I get the sense that we don't really want
+> > to encourage admins to be cavalier about running that...?
+> > 
 > 
-> Add a new ioctl to describe an allocation group's geometry.
+> Ok.. I guess what sounded funny to me is the suggestion that "we can't"
+> leave a dirty log and suggest repair to the user. xfs_repair can clearly
+> handle a dirty log, so it suggested to me that perhaps there was some
+> other critical side effect I wasn't thinking of that we wanted to avoid
+> as a result of needing to zap the log.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> To be clear, I don't feel strongly about it and still think the change
+> is reasonable enough (it only matters when something else is broken in
+> the fs after all). I just wanted to clarify the above, call out the
+> potential tradeoff in the event that others might have further thoughts
+> on it, and suggest the full reasoning eventually make it into the commit
+> log for future reference.
 
-Just a couple nits...
+Ahh, I see the confusion here.  What if I reworked the comment:
 
->  fs/xfs/libxfs/xfs_ag.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_ag.h |    2 ++
->  fs/xfs/libxfs/xfs_fs.h |   14 ++++++++++++++
->  fs/xfs/xfs_ioctl.c     |   24 ++++++++++++++++++++++++
->  fs/xfs/xfs_ioctl32.c   |    1 +
->  5 files changed, 89 insertions(+)
+/*
+ * We discovered uncorrected metadata problems at some point during this
+ * filesystem mount and have advised the administrator to run repair
+ * once the unmount completes.
+ *
+ * However, we must be careful -- when FSCOUNTERS are flagged unhealthy,
+ * the unmount procedure omits writing the clean unmount record to the
+ * log so that the next mount will run recovery and recompute the
+ * summary counters.  In other words, we leave a dirty log to get the
+ * counters fixed.
+ *
+ * Unfortunately, xfs_repair cannot recover dirty logs, so if there were
+ * filesystem problems, FSCOUNTERS was flagged, and the administrator
+ * takes our advice to run xfs_repair, they'll have to zap the log
+ * before repairing structures.  We don't really want to encourage this,
+ * so we mark the FSCOUNTERS healthy so that a subsequent repair run
+ * won't see a dirty log.
+ */
+
+Also the "if (sick)" check needs to mask off FSCOUNTERS; I'll fix that
+too.
+
+> > (Would be nice if we could just port log recovery to repair, but that's
+> > a whole separate project...)
+> > 
 > 
+> Or work around the whole "trigger summary recalc via log recovery"
+> thing, but I guess that might not be trivial either..
+
+Well I do have a prototype fscounters scrubber and repairer, so in the
+future we might be able to avoid this dirty log dance.
+
+> > > Also, what exactly is the side effect without this change in place? The
+> > > user would have to zap the log from xfs_repair, but the somewhat
+> > > artificial unclean unmount doesn't actually require log recovery to fix
+> > > up the fs outside of the whole summary counter thing, right? IOW, would
+> > > the user zapping the log actually lose anything besides the bad summary
+> > > counter indication?
+> > 
+> > The log checkpoints at unmount, right?  So I think it's ok to zap the
+> > log when its status is "cleanly unmounted but we didn't record the clean
+> > unmount because we want to force summary recalculation at next mount".
+> > 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-> index 1ef8acf35e7d..1679e37fe28d 100644
-> --- a/fs/xfs/libxfs/xfs_ag.c
-> +++ b/fs/xfs/libxfs/xfs_ag.c
-> @@ -19,6 +19,7 @@
->  #include "xfs_ialloc.h"
->  #include "xfs_rmap.h"
->  #include "xfs_ag.h"
-> +#include "xfs_ag_resv.h"
->  
->  static struct xfs_buf *
->  xfs_get_aghdr_buf(
-> @@ -461,3 +462,50 @@ xfs_ag_extend_space(
->  				len, &XFS_RMAP_OINFO_SKIP_UPDATE,
->  				XFS_AG_RESV_NONE);
->  }
-> +
-> +/* Retrieve AG geometry. */
-> +int
-> +xfs_ag_get_geometry(
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno,
-> +	struct xfs_ag_geometry	*ageo)
-> +{
-> +	struct xfs_buf		*bp;
-> +	struct xfs_agi		*agi;
-> +	struct xfs_agf		*agf;
-> +	struct xfs_perag	*pag;
-> +	unsigned int		freeblks;
-> +	int			error;
-> +
-> +	memset(ageo, 0, sizeof(*ageo));
-> +
-> +	if (agno >= mp->m_sb.sb_agcount)
-> +		return -EINVAL;
-> +
+> That's what I would expect, but I haven't tested it. :)
 
-I'd probably error check prior to the memset().
+Technically, I have, what with this obnoxious "hard shutdowns are a
+normal part of our workflow" user case I've been wrangling with... the
+clean umounts /do/ seem to leave a clean log.
 
-> +	error = xfs_ialloc_read_agi(mp, NULL, agno, &bp);
-> +	if (error)
-> +		return error;
-> +
-> +	agi = XFS_BUF_TO_AGI(bp);
-> +	ageo->ag_icount = be32_to_cpu(agi->agi_count);
-> +	ageo->ag_ifree = be32_to_cpu(agi->agi_freecount);
-> +	xfs_buf_relse(bp);
-> +
-> +	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &bp);
-> +	if (error)
-> +		return error;
-> +
-> +	agf = XFS_BUF_TO_AGF(bp);
-> +	pag = xfs_perag_get(mp, agno);
-> +	ageo->ag_length = be32_to_cpu(agf->agf_length);
-> +	freeblks = pag->pagf_freeblks +
-> +		   pag->pagf_flcount +
-> +		   pag->pagf_btreeblks -
-> +		   xfs_ag_resv_needed(pag, XFS_AG_RESV_NONE);
-> +	ageo->ag_freeblks = freeblks;
-> +	xfs_perag_put(pag);
-> +	xfs_buf_relse(bp);
-> +
+--D
 
-I wonder if we should lock down the agi and agf together to prevent any
-potential incoherent reporting between them..? For example, suppose we
-collect the agi values, release the agi and lose a race to the agf by an
-inode allocator who consumes more free blocks before we ultimately read
-the agf values and return.
-
-Brian
-
-> +	ageo->ag_number = agno;
-> +	return 0;
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-> index 412702e23f61..5166322807e7 100644
-> --- a/fs/xfs/libxfs/xfs_ag.h
-> +++ b/fs/xfs/libxfs/xfs_ag.h
-> @@ -26,5 +26,7 @@ struct aghdr_init_data {
->  int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
->  int xfs_ag_extend_space(struct xfs_mount *mp, struct xfs_trans *tp,
->  			struct aghdr_init_data *id, xfs_extlen_t len);
-> +int xfs_ag_get_geometry(struct xfs_mount *mp, xfs_agnumber_t agno,
-> +			struct xfs_ag_geometry *ageo);
->  
->  #endif /* __LIBXFS_AG_H */
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index 1dba751cde60..87226e00e7bd 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -266,6 +266,19 @@ typedef struct xfs_fsop_resblks {
->  #define XFS_MIN_DBLOCKS(s) ((xfs_rfsblock_t)((s)->sb_agcount - 1) *	\
->  			 (s)->sb_agblocks + XFS_MIN_AG_BLOCKS)
->  
-> +/*
-> + * Output for XFS_IOC_AG_GEOMETRY
-> + */
-> +struct xfs_ag_geometry {
-> +	__u32		ag_number;	/* i/o: AG number */
-> +	__u32		ag_length;	/* o: length in blocks */
-> +	__u32		ag_freeblks;	/* o: free space */
-> +	__u32		ag_icount;	/* o: inodes allocated */
-> +	__u32		ag_ifree;	/* o: inodes free */
-> +	__u32		ag_reserved32;	/* o: zero */
-> +	__u64		ag_reserved[5];	/* o: zero */
-> +};
-> +
->  /*
->   * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
->   */
-> @@ -619,6 +632,7 @@ struct xfs_scrub_metadata {
->  #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
->  /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
->  #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
-> +#define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
->  
->  /*
->   * ioctl commands that replace IRIX syssgi()'s
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 7fd8815633dc..b5918ce656bd 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -33,6 +33,7 @@
->  #include "xfs_fsmap.h"
->  #include "scrub/xfs_scrub.h"
->  #include "xfs_sb.h"
-> +#include "xfs_ag.h"
->  
->  #include <linux/capability.h>
->  #include <linux/cred.h>
-> @@ -834,6 +835,26 @@ xfs_ioc_fsgeometry(
->  	return 0;
->  }
->  
-> +STATIC int
-> +xfs_ioc_ag_geometry(
-> +	struct xfs_mount	*mp,
-> +	void			__user *arg)
-> +{
-> +	struct xfs_ag_geometry	ageo;
-> +	int			error;
-> +
-> +	if (copy_from_user(&ageo, arg, sizeof(ageo)))
-> +		return -EFAULT;
-> +
-> +	error = xfs_ag_get_geometry(mp, ageo.ag_number, &ageo);
-> +	if (error)
-> +		return error;
-> +
-> +	if (copy_to_user(arg, &ageo, sizeof(ageo)))
-> +		return -EFAULT;
-> +	return 0;
-> +}
-> +
->  /*
->   * Linux extended inode flags interface.
->   */
-> @@ -1960,6 +1981,9 @@ xfs_file_ioctl(
->  	case XFS_IOC_FSGEOMETRY:
->  		return xfs_ioc_fsgeometry(mp, arg);
->  
-> +	case XFS_IOC_AG_GEOMETRY:
-> +		return xfs_ioc_ag_geometry(mp, arg);
-> +
->  	case XFS_IOC_GETVERSION:
->  		return put_user(inode->i_generation, (int __user *)arg);
->  
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index 323cfd4b15dc..28d2110dd871 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -563,6 +563,7 @@ xfs_file_compat_ioctl(
->  	case XFS_IOC_DIOINFO:
->  	case XFS_IOC_FSGEOMETRY_V2:
->  	case XFS_IOC_FSGEOMETRY:
-> +	case XFS_IOC_AG_GEOMETRY:
->  	case XFS_IOC_FSGETXATTR:
->  	case XFS_IOC_FSSETXATTR:
->  	case XFS_IOC_FSGETXATTRA:
+> Brian
 > 
+> > > I ask just because even though we warn the user to
+> > > run repair, that doesn't mean they'll actually do it and so it seems
+> > > there is a bit of a tradeoff in that regard.
+> > 
+> > Yeah, it's a pity we can't just run xfs_repair ourselves. :)
+> > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > 
+> > > BTW, I get the following compiler warning on this patch:
+> > > 
+> > > In file included from fs/xfs/xfs_trace.h:12,
+> > >                  from fs/xfs/xfs_health.c:19:
+> > > fs/xfs/xfs_health.c: In function ‘xfs_health_unmount’:
+> > > ./include/linux/tracepoint.h:195:6: warning: ‘sick’ may be used uninitialized in this function [-Wmaybe-uninitialized]                                                                                            
+> > >      ((void(*)(proto))(it_func))(args); \
+> > >       ^
+> > > fs/xfs/xfs_health.c:33:16: note: ‘sick’ was declared here
+> > >   unsigned int  sick;
+> > 
+> > <nod> Thanks, will fix that for v2.
+> > 
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > >  fs/xfs/libxfs/xfs_health.h |    2 +
+> > > >  fs/xfs/xfs_health.c        |   59 ++++++++++++++++++++++++++++++++++++++++++++
+> > > >  fs/xfs/xfs_mount.c         |    2 +
+> > > >  fs/xfs/xfs_trace.h         |    3 ++
+> > > >  4 files changed, 66 insertions(+)
+> > > > 
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+> > > > index 0d51bd2689ea..269b124dc1d7 100644
+> > > > --- a/fs/xfs/libxfs/xfs_health.h
+> > > > +++ b/fs/xfs/libxfs/xfs_health.h
+> > > > @@ -148,6 +148,8 @@ void xfs_inode_mark_sick(struct xfs_inode *ip, unsigned int mask);
+> > > >  void xfs_inode_mark_healthy(struct xfs_inode *ip, unsigned int mask);
+> > > >  unsigned int xfs_inode_measure_sickness(struct xfs_inode *ip);
+> > > >  
+> > > > +void xfs_health_unmount(struct xfs_mount *mp);
+> > > > +
+> > > >  /* Now some helpers. */
+> > > >  
+> > > >  static inline bool
+> > > > diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+> > > > index e9d6859f7501..6e2da858c356 100644
+> > > > --- a/fs/xfs/xfs_health.c
+> > > > +++ b/fs/xfs/xfs_health.c
+> > > > @@ -19,6 +19,65 @@
+> > > >  #include "xfs_trace.h"
+> > > >  #include "xfs_health.h"
+> > > >  
+> > > > +/*
+> > > > + * Warn about metadata corruption that we detected but haven't fixed, and
+> > > > + * make sure we're not sitting on anything that would get in the way of
+> > > > + * recovery.
+> > > > + */
+> > > > +void
+> > > > +xfs_health_unmount(
+> > > > +	struct xfs_mount	*mp)
+> > > > +{
+> > > > +	struct xfs_perag	*pag;
+> > > > +	xfs_agnumber_t		agno;
+> > > > +	unsigned int		sick;
+> > > > +	bool			warn = false;
+> > > > +
+> > > > +	if (XFS_FORCED_SHUTDOWN(mp))
+> > > > +		return;
+> > > > +
+> > > > +	/* Measure AG corruption levels. */
+> > > > +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> > > > +		pag = xfs_perag_get(mp, agno);
+> > > > +		spin_lock(&pag->pag_state_lock);
+> > > > +		if (pag->pag_sick) {
+> > > > +			trace_xfs_ag_unfixed_corruption(mp, agno, sick);
+> > > > +			warn = true;
+> > > > +		}
+> > > > +		spin_unlock(&pag->pag_state_lock);
+> > > > +		xfs_perag_put(pag);
+> > > > +	}
+> > > > +
+> > > > +	/* Measure realtime volume corruption levels. */
+> > > > +	sick = xfs_rt_measure_sickness(mp);
+> > > > +	if (sick) {
+> > > > +		trace_xfs_rt_unfixed_corruption(mp, sick);
+> > > > +		warn = true;
+> > > > +	}
+> > > > +
+> > > > +	/* Measure fs corruption and keep the sample around for the warning. */
+> > > > +	sick = xfs_fs_measure_sickness(mp);
+> > > > +	if (sick) {
+> > > > +		trace_xfs_fs_unfixed_corruption(mp, sick);
+> > > > +		warn = true;
+> > > > +	}
+> > > > +
+> > > > +	if (warn) {
+> > > > +		xfs_warn(mp,
+> > > > +"Uncorrected metadata errors detected; please run xfs_repair.");
+> > > > +
+> > > > +		/*
+> > > > +		 * If we have unhealthy metadata, we want the admin to run
+> > > > +		 * xfs_repair after unmounting.  They can't do that if the log
+> > > > +		 * is written out without a clean unmount record (such as when
+> > > > +		 * the summary counters are marked unhealthy to force
+> > > > +		 * recalculation of the summary counters) so clear it.
+> > > > +		 */
+> > > > +		if (sick & XFS_HEALTH_FS_COUNTERS)
+> > > > +			xfs_fs_mark_healthy(mp, XFS_HEALTH_FS_COUNTERS);
+> > > > +	}
+> > > > +}
+> > > > +
+> > > >  /* Mark unhealthy per-fs metadata. */
+> > > >  void
+> > > >  xfs_fs_mark_sick(
+> > > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > > > index a43ca655a431..f0f73d598a0c 100644
+> > > > --- a/fs/xfs/xfs_mount.c
+> > > > +++ b/fs/xfs/xfs_mount.c
+> > > > @@ -1075,6 +1075,7 @@ xfs_mountfs(
+> > > >  	 */
+> > > >  	cancel_delayed_work_sync(&mp->m_reclaim_work);
+> > > >  	xfs_reclaim_inodes(mp, SYNC_WAIT);
+> > > > +	xfs_health_unmount(mp);
+> > > >   out_log_dealloc:
+> > > >  	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
+> > > >  	xfs_log_mount_cancel(mp);
+> > > > @@ -1157,6 +1158,7 @@ xfs_unmountfs(
+> > > >  	 */
+> > > >  	cancel_delayed_work_sync(&mp->m_reclaim_work);
+> > > >  	xfs_reclaim_inodes(mp, SYNC_WAIT);
+> > > > +	xfs_health_unmount(mp);
+> > > >  
+> > > >  	xfs_qm_unmount(mp);
+> > > >  
+> > > > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > > > index f079841c7af6..2464ea351f83 100644
+> > > > --- a/fs/xfs/xfs_trace.h
+> > > > +++ b/fs/xfs/xfs_trace.h
+> > > > @@ -3461,8 +3461,10 @@ DEFINE_EVENT(xfs_fs_corrupt_class, name,	\
+> > > >  	TP_ARGS(mp, flags))
+> > > >  DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_sick);
+> > > >  DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_healthy);
+> > > > +DEFINE_FS_CORRUPT_EVENT(xfs_fs_unfixed_corruption);
+> > > >  DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_sick);
+> > > >  DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_healthy);
+> > > > +DEFINE_FS_CORRUPT_EVENT(xfs_rt_unfixed_corruption);
+> > > >  
+> > > >  DECLARE_EVENT_CLASS(xfs_ag_corrupt_class,
+> > > >  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, unsigned int flags),
+> > > > @@ -3488,6 +3490,7 @@ DEFINE_EVENT(xfs_ag_corrupt_class, name,	\
+> > > >  	TP_ARGS(mp, agno, flags))
+> > > >  DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_sick);
+> > > >  DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_healthy);
+> > > > +DEFINE_AG_CORRUPT_EVENT(xfs_ag_unfixed_corruption);
+> > > >  
+> > > >  DECLARE_EVENT_CLASS(xfs_inode_corrupt_class,
+> > > >  	TP_PROTO(struct xfs_inode *ip, unsigned int flags),
+> > > > 
