@@ -1,85 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51614 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726130AbfDCBIp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Apr 2019 21:08:45 -0400
-Subject: Re: [PATCH] xfs: return correct XFS_IOC_DIOINFO for DAX inode
-References: <b3af182f-a547-9d04-3b29-232857e83fc4@redhat.com>
- <20190402175632.GD5147@magnolia> <20190402213119.GU26298@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ced3ea37-b77f-f53b-2fdd-d24fbdf8653e@sandeen.net>
-Date: Tue, 2 Apr 2019 20:08:43 -0500
+Received: from wout1-smtp.messagingengine.com ([64.147.123.24]:51091 "EHLO
+        wout1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726074AbfDCOI1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Apr 2019 10:08:27 -0400
+Date: Wed, 3 Apr 2019 16:08:22 +0200
+From: Greg KH <greg@kroah.com>
+Subject: Re: [STABLE PATCH 0/2] Fix in-memory metadata corruption at
+ xfs_attr3_leaf_write_verify()
+Message-ID: <20190403140822.GH8633@kroah.com>
+References: <1554042273-3307-1-git-send-email-alex@zadara.com>
 MIME-Version: 1.0
-In-Reply-To: <20190402213119.GU26298@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1554042273-3307-1-git-send-email-alex@zadara.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jeff Moyer <jmoyer@redhat.com>
+To: Alex Lyakas <alex@zadara.com>
+Cc: linux-xfs@vger.kernel.org, stable@vger.kernel.org, darrick.wong@oracle.com, hch@lst.de, shyam@zadara.com
 
-
-
-On 4/2/19 4:31 PM, Dave Chinner wrote:
-> On Tue, Apr 02, 2019 at 10:56:32AM -0700, Darrick J. Wong wrote:
->> On Tue, Apr 02, 2019 at 10:44:38AM -0500, Eric Sandeen wrote:
->>> pmem is byte addressable, and indeed byte-aligned DIO works on
->>> a DAX file.  So, teach XFS_IOC_DIOINFO to return the correct
->>> alignment information if IS_DAX(inode).
->>
->> If it's a DAX filesystem, do we want to try to steer people towards
->> things like 2MB pages since (in theory) we can get away with fewer page
->> table mappings?  And (seeing as that's mmap that cares, not directio)
->> would advertising preferential page mapping sizes be more appropriate
->> advertised in a different ioctl?
->>
->> --D
->>
->>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->>> ---
->>>
->>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->>> index 6ecdbb3..35eae7d 100644
->>> --- a/fs/xfs/xfs_ioctl.c
->>> +++ b/fs/xfs/xfs_ioctl.c
->>> @@ -1919,12 +1919,21 @@ xfs_file_ioctl(
->>>  	}
->>>  	case XFS_IOC_DIOINFO: {
->>>  		struct dioattr	da;
->>> -		xfs_buftarg_t	*target =
->>> -			XFS_IS_REALTIME_INODE(ip) ?
->>> -			mp->m_rtdev_targp : mp->m_ddev_targp;
->>>  
->>> -		da.d_mem =  da.d_miniosz = target->bt_logical_sectorsize;
->>> -		da.d_maxiosz = INT_MAX & ~(da.d_miniosz - 1);
->>> +		if (IS_DAX(inode)) {
->>> +			/* pmem is byte addressable */
->>> +			da.d_mem = 1;
->>> +			da.d_miniosz = 1;
->>> +			da.d_maxiosz = INT_MAX;
+On Sun, Mar 31, 2019 at 05:24:33PM +0300, Alex Lyakas wrote:
+> This is a partial backport of original Darrick's series "xfs: logging fixes" to kernel 4.14.
+> It fixes the in-memory metadata corruption error, which happens
+> when a partially initialized attribute buffer is attemped to be written to disk. 
+> This issue is reproducible with kernel 4.14, when adding a 1-sec sleep in xfs_attr_set(),
+> between the call to  xfs_attr_shortform_to_leaf() and the call to xfs_attr_leaf_addname().
 > 
-> I don't think we want to open that can of worms.
+> Darrick J. Wong (2):
+>   xfs: add the ability to join a held buffer to a defer_ops
+>   xfs: hold xfs_buf locked between shortform->leaf conversion and the
+>     addition of an attribute
 
-It's already open... byte-granularity dax+dio succeeds today.
-Does it work? ;)
+What are the git commit ids of these patches in Linus's tree?
 
-> Have you run fsx on dax mixing mmap/dio with byte range granularity?
+thanks,
 
-Like:
-
-# fsx -Z -r 1 -w 1 daxfile
-
-?
-
-yes (now that you asked) ;)
-not to a bazillion ops, but I've not seen a failure yet.
-This is on simulated pmem, on a 5.0 kernel.
-
--Eric
-
-> Cheers,
-> 
-> Dave.
-> 
+greg k-h
