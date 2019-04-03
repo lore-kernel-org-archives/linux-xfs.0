@@ -1,114 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:41305 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725990AbfDBVxs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Apr 2019 17:53:48 -0400
-Received: by mail-pf1-f195.google.com with SMTP id 188so7036508pfd.8
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Apr 2019 14:53:47 -0700 (PDT)
-From: Andreas Dilger <adilger@dilger.ca>
-Message-Id: <E2E8A5E4-D174-4E90-8D8F-F1D69E98F20E@dilger.ca>
-Content-Type: multipart/signed;
- boundary="Apple-Mail=_D8A70B35-FA94-4D5A-A584-5EC534E16F63";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH] bootfs: simple bootloader filesystem
-Date: Tue, 2 Apr 2019 15:52:59 -0600
-In-Reply-To: <20190402045519.GK1173@magnolia>
-References: <20190401070001.GJ1173@magnolia> <20190401214632.GS26298@dastard>
- <20190402045519.GK1173@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:58222 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726858AbfDCKlu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Apr 2019 06:41:50 -0400
+From: Pankaj Gupta <pagupta@redhat.com>
+Subject: [PATCH v4 3/5] libnvdimm: add dax_dev sync flag
+Date: Wed,  3 Apr 2019 16:10:16 +0530
+Message-Id: <20190403104018.23947-4-pagupta@redhat.com>
+In-Reply-To: <20190403104018.23947-1-pagupta@redhat.com>
+References: <20190403104018.23947-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com
 
+This patch adds 'DAXDEV_SYNC' flag which is set
+for nd_region doing synchronous flush. This later 
+is used to disable MAP_SYNC functionality for 
+ext4 & xfs filesystem for devices don't support
+synchronous flush.
 
---Apple-Mail=_D8A70B35-FA94-4D5A-A584-5EC534E16F63
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=us-ascii
+Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+---
+ drivers/dax/bus.c            |  2 +-
+ drivers/dax/super.c          | 13 ++++++++++++-
+ drivers/md/dm.c              |  2 +-
+ drivers/nvdimm/pmem.c        |  3 ++-
+ drivers/nvdimm/region_devs.c |  7 +++++++
+ include/linux/dax.h          |  9 +++++++--
+ include/linux/libnvdimm.h    |  1 +
+ 7 files changed, 31 insertions(+), 6 deletions(-)
 
-On Apr 1, 2019, at 10:55 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> 
-> On Tue, Apr 02, 2019 at 08:46:32AM +1100, Dave Chinner wrote:
->> On Mon, Apr 01, 2019 at 12:00:01AM -0700, Darrick J. Wong wrote:
->>> From: Darrick J. Wong <djwong@kernel.org>
->>> 
->>> Does your computer use a bootloader which arrogantly declares that it can
->>> read boot files off a filesystem but isn't sophisticated enough even to
->>> recognize when that filesystem needs journal recovery?
->>> 
->>> Does your system software deployment program foolishly omit system calls
->>> to flush newly unwrapped packages to disk?  Do you sometimes wonder if
->>> they've forgotten that old maxim, "wait for the disk drive light to turn
->>> off /before/ you power down"?
->>> 
->>> Are your computer operators aggressively derpy?  Do they have a habit of
->>> leaving disk cables on the floor so they can trip over them twenty times
->>> a day?  Does this leave you with sad files full of zeroes?
->>> 
->>> If so, bootfs is for you!  This new filesystem type uses journalling to
->>> ensure metadata integrity, but forces all writes and directory tree
->>> updates to be synchronous, fsyncs files on close, and checkpoints its
->>> journal whenever a synchronization event happens.  Some allege this is
->>> very slow, but I've been able to max out the iops on both of my double
->>> height floppy drives!  In a power-cycling stress test, I found that the
->>> switch broke off in my hand before I lost any data.  This concept may
->>> sound terrible, but like any good crutch, it _is_ made of wood!
->>> 
->>> Singed-off-by: Darrick J. Wong <djwong@kernel.org>
->>  ^^^^^^^^^^
->> 
->> Ooooo - such a hot topic! Finally bootfs is more than just
->> we-really-should-do-this conference talk!
->> 
->> Looks good to me - with this we can finally move on from LILO....
-> 
-> When Ted is done laughing, I really would like to consider something
-> like this to solve the problem of grub-style bootloaders requiring a
-> lease on the blocks underneath a file with a term exceeding that of the
-> running kernel.
-> 
-> We can probably skip the harsh synchronous writes in favor of fsync on
-> close, but we would need to keep the critical component of checkpointing
-> the journal on fsync and syncfs.
-
-Wouldn't it be enough if Grub marked the file IMMUTABLE so that it didn't
-get remapped/rewritten?  The RPM pre/post kernel update scripts already
-have hooks to rerun grub and update /etc/grub.conf, so they should also
-be able to handle set/clear of the immutable flag during upgrade.
-
-Cheers, Andreas
-
-
-
-
-
-
---Apple-Mail=_D8A70B35-FA94-4D5A-A584-5EC534E16F63
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAlyj2bsACgkQcqXauRfM
-H+DWkg//X1jYUiafEu+/scS71lJAVRIzn4JYpIbEHnfzCKYe+dsd9/UInxyYpJxY
-t5+P57fnkAifscITGA8DO+N3u6KH/5w9XpK7s5r3jqjammsCw6fYS4KaG55Kl1J1
-nww3gr63kAuADOEV/3Y98fA/40EJ6+kN7wSjRpVyJRRLxmvqCfNxqPBmSMtELOfw
-xgBAAcR0fTMbXN1L6TdEAUirjODVbSS1Loq7oao4N1saKZE+uhiuf0bROjk7FFLn
-/uBDUdUppwvS/jRlvgyjzhVfV7vQ7YdQ8rmgGPAz0hwnm906KmpANk94DEmOTWfd
-XfrtCA3E9WwWrHB51g0Pbsr4+GM2lpER8Hobts7wlYW99CJzQjckc7Y3pvTntbCs
-b0WsQ0mJpzRjTF1cm1Js2DGKney0WXMOnE0YrDoi7bAtL0Jx9ItU6FyzHtYXX1SJ
-941QzkbW7HjNwgO9+UwRnMtkgZ5BSeUVRx2ag1OSHmW5P4NPiwm301hXXeZdgkqu
-r+RWwV15MzHcfhIAzJ1765g8oas/4LETedWE3qnuMGeGgGahErSHjl7xfINNzDQt
-uPu3iw7YaybQFj0sVsemj3/ZpW4/XEOhpGeKpoqAF/h90+a4EF8sKKZwXxTQMIhN
-Drj2QbOzgNVE8UFUsM3dyucW42KMJQIzO8vgy25GTwGXvVukFIU=
-=mAtL
------END PGP SIGNATURE-----
-
---Apple-Mail=_D8A70B35-FA94-4D5A-A584-5EC534E16F63--
+diff --git a/drivers/dax/bus.c b/drivers/dax/bus.c
+index 2109cfe80219..431bf7d2a7f9 100644
+--- a/drivers/dax/bus.c
++++ b/drivers/dax/bus.c
+@@ -388,7 +388,7 @@ struct dev_dax *__devm_create_dev_dax(struct dax_region *dax_region, int id,
+ 	 * No 'host' or dax_operations since there is no access to this
+ 	 * device outside of mmap of the resulting character device.
+ 	 */
+-	dax_dev = alloc_dax(dev_dax, NULL, NULL);
++	dax_dev = alloc_dax(dev_dax, NULL, NULL, true);
+ 	if (!dax_dev)
+ 		goto err;
+ 
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index 0a339b85133e..bd6509308d05 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -186,6 +186,8 @@ enum dax_device_flags {
+ 	DAXDEV_ALIVE,
+ 	/* gate whether dax_flush() calls the low level flush routine */
+ 	DAXDEV_WRITE_CACHE,
++	/* flag to check if device supports synchronous flush */
++	DAXDEV_SYNC,
+ };
+ 
+ /**
+@@ -354,6 +356,12 @@ bool dax_write_cache_enabled(struct dax_device *dax_dev)
+ }
+ EXPORT_SYMBOL_GPL(dax_write_cache_enabled);
+ 
++bool dax_synchronous(struct dax_device *dax_dev)
++{
++	return test_bit(DAXDEV_SYNC, &dax_dev->flags);
++}
++EXPORT_SYMBOL_GPL(dax_synchronous);
++
+ bool dax_alive(struct dax_device *dax_dev)
+ {
+ 	lockdep_assert_held(&dax_srcu);
+@@ -511,7 +519,7 @@ static void dax_add_host(struct dax_device *dax_dev, const char *host)
+ }
+ 
+ struct dax_device *alloc_dax(void *private, const char *__host,
+-		const struct dax_operations *ops)
++		const struct dax_operations *ops, bool sync)
+ {
+ 	struct dax_device *dax_dev;
+ 	const char *host;
+@@ -534,6 +542,9 @@ struct dax_device *alloc_dax(void *private, const char *__host,
+ 	dax_add_host(dax_dev, host);
+ 	dax_dev->ops = ops;
+ 	dax_dev->private = private;
++	if (sync)
++		set_bit(DAXDEV_SYNC, &dax_dev->flags);
++
+ 	return dax_dev;
+ 
+  err_dev:
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 68d24056d0b1..534e12ca6329 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1965,7 +1965,7 @@ static struct mapped_device *alloc_dev(int minor)
+ 	sprintf(md->disk->disk_name, "dm-%d", minor);
+ 
+ 	if (IS_ENABLED(CONFIG_DAX_DRIVER)) {
+-		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops);
++		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops, true);
+ 		if (!dax_dev)
+ 			goto bad;
+ 	}
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index 5a5b3ea4d073..78f71ba0e7cf 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -466,7 +466,8 @@ static int pmem_attach_disk(struct device *dev,
+ 	nvdimm_badblocks_populate(nd_region, &pmem->bb, &bb_res);
+ 	disk->bb = &pmem->bb;
+ 
+-	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
++	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops,
++					is_nvdimm_sync(nd_region));
+ 
+ 	if (!dax_dev) {
+ 		put_disk(disk);
+diff --git a/drivers/nvdimm/region_devs.c b/drivers/nvdimm/region_devs.c
+index fb1041ab32a6..8c7aa047fe2b 100644
+--- a/drivers/nvdimm/region_devs.c
++++ b/drivers/nvdimm/region_devs.c
+@@ -1231,6 +1231,13 @@ int nvdimm_has_cache(struct nd_region *nd_region)
+ }
+ EXPORT_SYMBOL_GPL(nvdimm_has_cache);
+ 
++bool is_nvdimm_sync(struct nd_region *nd_region)
++{
++	return is_nd_pmem(&nd_region->dev) &&
++		!test_bit(ND_REGION_ASYNC, &nd_region->flags);
++}
++EXPORT_SYMBOL_GPL(is_nvdimm_sync);
++
+ struct conflict_context {
+ 	struct nd_region *nd_region;
+ 	resource_size_t start, size;
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 0dd316a74a29..9bdd50d06ef6 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -32,18 +32,19 @@ extern struct attribute_group dax_attribute_group;
+ #if IS_ENABLED(CONFIG_DAX)
+ struct dax_device *dax_get_by_host(const char *host);
+ struct dax_device *alloc_dax(void *private, const char *host,
+-		const struct dax_operations *ops);
++		const struct dax_operations *ops, bool sync);
+ void put_dax(struct dax_device *dax_dev);
+ void kill_dax(struct dax_device *dax_dev);
+ void dax_write_cache(struct dax_device *dax_dev, bool wc);
+ bool dax_write_cache_enabled(struct dax_device *dax_dev);
++bool dax_synchronous(struct dax_device *dax_dev);
+ #else
+ static inline struct dax_device *dax_get_by_host(const char *host)
+ {
+ 	return NULL;
+ }
+ static inline struct dax_device *alloc_dax(void *private, const char *host,
+-		const struct dax_operations *ops)
++		const struct dax_operations *ops, bool sync)
+ {
+ 	/*
+ 	 * Callers should check IS_ENABLED(CONFIG_DAX) to know if this
+@@ -64,6 +65,10 @@ static inline bool dax_write_cache_enabled(struct dax_device *dax_dev)
+ {
+ 	return false;
+ }
++static inline bool dax_synchronous(struct dax_device *dax_dev)
++{
++	return false;
++}
+ #endif
+ 
+ struct writeback_control;
+diff --git a/include/linux/libnvdimm.h b/include/linux/libnvdimm.h
+index d9d2ab8a6e64..9a8aea370cbc 100644
+--- a/include/linux/libnvdimm.h
++++ b/include/linux/libnvdimm.h
+@@ -270,6 +270,7 @@ int generic_nvdimm_flush(struct nd_region *nd_region);
+ int nvdimm_has_flush(struct nd_region *nd_region);
+ int nvdimm_has_cache(struct nd_region *nd_region);
+ int nvdimm_in_overwrite(struct nvdimm *nvdimm);
++bool is_nvdimm_sync(struct nd_region *nd_region);
+ 
+ static inline int nvdimm_ctl(struct nvdimm *nvdimm, unsigned int cmd, void *buf,
+ 		unsigned int buf_len, int *cmd_rc)
+-- 
+2.20.1
