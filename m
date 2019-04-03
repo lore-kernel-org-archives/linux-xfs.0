@@ -1,78 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38664 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725889AbfDBSIr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Apr 2019 14:08:47 -0400
-Subject: Re: [PATCH] xfs: return correct XFS_IOC_DIOINFO for DAX inode
-References: <b3af182f-a547-9d04-3b29-232857e83fc4@redhat.com>
- <20190402175632.GD5147@magnolia>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <c265b333-9eb1-4dc1-f915-b72af8b50a88@redhat.com>
-Date: Tue, 2 Apr 2019 13:08:45 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:43484 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726099AbfDCWkr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Apr 2019 18:40:47 -0400
+Date: Wed, 3 Apr 2019 15:39:22 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v4 5/5] xfs: disable map_sync for async flush
+Message-ID: <20190403223921.GM5147@magnolia>
+References: <20190403104018.23947-1-pagupta@redhat.com>
+ <20190403104018.23947-6-pagupta@redhat.com>
+ <20190403220912.GB26298@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20190402175632.GD5147@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190403220912.GB26298@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Jeff Moyer <jmoyer@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Pankaj Gupta <pagupta@redhat.com>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com
 
-On 4/2/19 12:56 PM, Darrick J. Wong wrote:
-> On Tue, Apr 02, 2019 at 10:44:38AM -0500, Eric Sandeen wrote:
->> pmem is byte addressable, and indeed byte-aligned DIO works on
->> a DAX file.  So, teach XFS_IOC_DIOINFO to return the correct
->> alignment information if IS_DAX(inode).
+On Thu, Apr 04, 2019 at 09:09:12AM +1100, Dave Chinner wrote:
+> On Wed, Apr 03, 2019 at 04:10:18PM +0530, Pankaj Gupta wrote:
+> > Virtio pmem provides asynchronous host page cache flush
+> > mechanism. we don't support 'MAP_SYNC' with virtio pmem 
+> > and xfs.
+> > 
+> > Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> > ---
+> >  fs/xfs/xfs_file.c | 8 ++++++++
+> >  1 file changed, 8 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index 1f2e2845eb76..dced2eb8c91a 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -1203,6 +1203,14 @@ xfs_file_mmap(
+> >  	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
+> >  		return -EOPNOTSUPP;
+> >  
+> > +	/* We don't support synchronous mappings with DAX files if
+> > +	 * dax_device is not synchronous.
+> > +	 */
+> > +	if (IS_DAX(file_inode(filp)) && !dax_synchronous(
+> > +		xfs_find_daxdev_for_inode(file_inode(filp))) &&
+> > +					(vma->vm_flags & VM_SYNC))
+> > +		return -EOPNOTSUPP;
+> > +
+> >  	file_accessed(filp);
+> >  	vma->vm_ops = &xfs_file_vm_ops;
+> >  	if (IS_DAX(file_inode(filp)))
 > 
-> If it's a DAX filesystem, do we want to try to steer people towards
-> things like 2MB pages since (in theory) we can get away with fewer page
-> table mappings?  And (seeing as that's mmap that cares, not directio)
-> would advertising preferential page mapping sizes be more appropriate
-> advertised in a different ioctl?
-
-The xfsctl(3) manpage documents XFS_IOC_DIOINFO as providing the
-minimum/required alignments to avoid DIO failure.  Says nothing about
-optimal.  So, if you'd like to advertise preferences, it seems like
-this is not the interface to use...
-
--Eric
-
-> --D
+> All this ad hoc IS_DAX conditional logic is getting pretty nasty.
 > 
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->> index 6ecdbb3..35eae7d 100644
->> --- a/fs/xfs/xfs_ioctl.c
->> +++ b/fs/xfs/xfs_ioctl.c
->> @@ -1919,12 +1919,21 @@ xfs_file_ioctl(
->>  	}
->>  	case XFS_IOC_DIOINFO: {
->>  		struct dioattr	da;
->> -		xfs_buftarg_t	*target =
->> -			XFS_IS_REALTIME_INODE(ip) ?
->> -			mp->m_rtdev_targp : mp->m_ddev_targp;
->>  
->> -		da.d_mem =  da.d_miniosz = target->bt_logical_sectorsize;
->> -		da.d_maxiosz = INT_MAX & ~(da.d_miniosz - 1);
->> +		if (IS_DAX(inode)) {
->> +			/* pmem is byte addressable */
->> +			da.d_mem = 1;
->> +			da.d_miniosz = 1;
->> +			da.d_maxiosz = INT_MAX;
->> +		} else {
->> +			xfs_buftarg_t	*target =
->> +				XFS_IS_REALTIME_INODE(ip) ?
->> +				mp->m_rtdev_targp : mp->m_ddev_targp;
->> +
->> +			da.d_mem = target->bt_logical_sectorsize;
->> +			da.d_miniosz = target->bt_logical_sectorsize;
->> +			da.d_maxiosz = INT_MAX & ~(da.d_miniosz - 1);
->> +		}
->>  
->>  		if (copy_to_user(arg, &da, sizeof(da)))
->>  			return -EFAULT;
->>
+> xfs_file_mmap(
+> ....
+> {
+> 	struct inode	*inode = file_inode(filp);
+> 
+> 	if (vma->vm_flags & VM_SYNC) {
+> 		if (!IS_DAX(inode))
+> 			return -EOPNOTSUPP;
+> 		if (!dax_synchronous(xfs_find_daxdev_for_inode(inode))
+> 			return -EOPNOTSUPP;
+> 	}
+> 
+> 	file_accessed(filp);
+> 	vma->vm_ops = &xfs_file_vm_ops;
+> 	if (IS_DAX(inode))
+> 		vma->vm_flags |= VM_HUGEPAGE;
+> 	return 0;
+> }
+> 
+> 
+> Even better, factor out all the "MAP_SYNC supported" checks into a
+> helper so that the filesystem code just doesn't have to care about
+> the details of checking for DAX+MAP_SYNC support....
+
+Seconded, since ext4 has nearly the same flag validation logic.
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
