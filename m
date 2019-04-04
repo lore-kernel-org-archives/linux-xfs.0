@@ -1,113 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:47688 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727053AbfDEA3j (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Apr 2019 20:29:39 -0400
-Date: Thu, 4 Apr 2019 17:29:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/3] xfs: reset page mappings after setting immutable
-Message-ID: <20190405002929.GD1177@magnolia>
-References: <155379543409.24796.5783716624820175068.stgit@magnolia>
- <155379544747.24796.1807309281507099911.stgit@magnolia>
- <20190328212147.GK23020@dastard>
+Received: from sandeen.net ([63.231.237.45]:54954 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727212AbfDDQrk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Apr 2019 12:47:40 -0400
+Subject: Re: [PATCH 46/36] xfs_scrub: remove pointless xfs_verify_error_info
+ struct
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <20190320200444.GJ1183@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <16fc5c2a-bd48-ca0d-b9fc-d1d4bfd9dc1d@sandeen.net>
+Date: Thu, 4 Apr 2019 11:47:38 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190328212147.GK23020@dastard>
+In-Reply-To: <20190320200444.GJ1183@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Mar 29, 2019 at 08:21:47AM +1100, Dave Chinner wrote:
-> On Thu, Mar 28, 2019 at 10:50:47AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > The chattr manpage has this to say about immutable files:
-> > 
-> > "A file with the 'i' attribute cannot be modified: it cannot be deleted
-> > or renamed, no link can be created to this file, most of the file's
-> > metadata can not be modified, and the file can not be opened in write
-> > mode."
-> > 
-> > This means that we need to flush the page cache when setting the
+On 3/20/19 3:04 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> nit: flush and invalidate the page cache.
+> The xfs_verify_error_info structure is a strict subset of
+> media_verify_info so just pass that around.
 > 
-> > immutable flag so that programs cannot continue to write to writable
-> > mappings.
-> 
-> Do we even need to invalidate the page cache for this? i.e. we've
-> cleaned the pages so that any new write to them will fault,
-> that will see the immutable flag via ->page_mkwrite and then the
-> app should segv, right?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yeah, we only need to flush the pages.  No need to invalidate.
+Uh, sorry but again, "*vei" isn't intuitive anymore...
 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_ioctl.c |   63 +++++++++++++++++++++++++++++++++++-----------------
-> >  1 file changed, 43 insertions(+), 20 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index 6ecdbb3af7de..2bd1c5ab5008 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -998,6 +998,37 @@ xfs_diflags_to_linux(
-> >  #endif
-> >  }
-> >  
-> > +static int
-> > +xfs_ioctl_setattr_flush(
-> > +	struct xfs_inode	*ip,
-> > +	int			*join_flags)
-> > +{
-> > +	struct inode		*inode = VFS_I(ip);
-> > +	int			error;
-> > +
-> > +	if (S_ISDIR(inode->i_mode))
-> > +		return 0;
-> > +	if ((*join_flags) & (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL))
-> > +		return 0;
-> > +
-> > +	/* lock, flush and invalidate mapping in preparation for flag change */
-> > +	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-> > +	error = filemap_write_and_wait(inode->i_mapping);
-> > +	if (error)
-> > +		goto out_unlock;
-> > +	error = invalidate_inode_pages2(inode->i_mapping);
-> > +	if (error)
-> > +		goto out_unlock;
-> > +
-> > +	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
-> > +	return 0;
-> > +
-> > +out_unlock:
-> > +	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-> > +	return error;
-> > +
-> > +}
+> ---
+>  scrub/phase6.c |   20 +++++---------------
+>  1 file changed, 5 insertions(+), 15 deletions(-)
 > 
-> Doesn't wait for direct IO to drain. Wouldn't it be better to do
-> this?
+> diff --git a/scrub/phase6.c b/scrub/phase6.c
+> index 2b4f6ff1..f173f248 100644
+> --- a/scrub/phase6.c
+> +++ b/scrub/phase6.c
+> @@ -111,11 +111,6 @@ xfs_decode_special_owner(
+>  
+>  /* Routines to translate bad physical extents into file paths and offsets. */
+>  
+> -struct xfs_verify_error_info {
+> -	struct bitmap			*d_bad;		/* bytes */
+> -	struct bitmap			*r_bad;		/* bytes */
+> -};
+> -
+>  /* Report if this extent overlaps a bad region. */
+>  static bool
+>  xfs_report_verify_inode_bmap(
+> @@ -127,7 +122,7 @@ xfs_report_verify_inode_bmap(
+>  	struct xfs_bmap			*bmap,
+>  	void				*arg)
+>  {
+> -	struct xfs_verify_error_info	*vei = arg;
+> +	struct media_verify_state	*vei = arg;
+>  	struct bitmap			*bmp;
+>  
+>  	/* Only report errors for real extents. */
+> @@ -277,23 +272,18 @@ xfs_report_verify_dirent(
+>  static bool
+>  xfs_report_verify_errors(
+>  	struct scrub_ctx		*ctx,
+> -	struct bitmap			*d_bad,
+> -	struct bitmap			*r_bad)
+> +	struct media_verify_state	*ve)
+>  {
+> -	struct xfs_verify_error_info	vei;
+>  	bool				moveon;
+>  
+> -	vei.d_bad = d_bad;
+> -	vei.r_bad = r_bad;
+> -
+>  	/* Scan the directory tree to get file paths. */
+>  	moveon = scan_fs_tree(ctx, xfs_report_verify_dir,
+> -			xfs_report_verify_dirent, &vei);
+> +			xfs_report_verify_dirent, ve);
+>  	if (!moveon)
+>  		return false;
+>  
+>  	/* Scan for unlinked files. */
+> -	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, &vei);
+> +	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, ve);
+>  }
+>  
+>  /* Report an IO error resulting from read-verify based off getfsmap. */
+> @@ -518,7 +508,7 @@ _("Could not create data device media verifier."));
+>  
+>  	/* Scan the whole dir tree to see what matches the bad extents. */
+>  	if (!bitmap_empty(ve.d_bad) || !bitmap_empty(ve.r_bad))
+> -		moveon = xfs_report_verify_errors(ctx, ve.d_bad, ve.r_bad);
+> +		moveon = xfs_report_verify_errors(ctx, &ve);
+>  
+>  	bitmap_free(&ve.r_bad);
+>  	bitmap_free(&ve.d_bad);
 > 
-> 	lock()
-> 	xfs_flush_unmap_range(ip, 0, XFS_SIZE(ip));
-> 	unlock()
-
-But if we only need to filemap_write_and_wait, then calling flush_unmap
-(which also calls truncate_pagecache_range) is too much work.
-
---D
-
-> 
-> Otherwise looks ok.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
