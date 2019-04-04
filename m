@@ -1,163 +1,199 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:62100 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726223AbfDHARs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Apr 2019 20:17:48 -0400
-Date: Mon, 8 Apr 2019 10:17:41 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfs: force writes to delalloc regions to unwritten
-Message-ID: <20190408001741.GG26298@dastard>
-References: <20190320120204.GA28268@bfoster>
- <20190320211019.GS23020@dastard>
- <20190321122740.GB33001@bfoster>
- <20190322015240.GX23020@dastard>
- <20190322124615.GB37888@bfoster>
- <20190403223809.GL5147@magnolia>
- <20190404125054.GA38253@bfoster>
- <20190404220845.GE26298@dastard>
- <20190405112441.GA43111@bfoster>
- <20190405151232.GY5147@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:44910 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726942AbfDDPBW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Apr 2019 11:01:22 -0400
+Date: Thu, 4 Apr 2019 08:00:25 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [Qemu-devel] [PATCH v4 5/5] xfs: disable map_sync for async flush
+Message-ID: <20190404150025.GN5147@magnolia>
+References: <20190403104018.23947-1-pagupta@redhat.com>
+ <20190403104018.23947-6-pagupta@redhat.com>
+ <20190403220912.GB26298@dastard>
+ <20190403223921.GM5147@magnolia>
+ <1508883801.17367965.1554358418550.JavaMail.zimbra@redhat.com>
+ <651986267.17402634.1554368950178.JavaMail.zimbra@redhat.com>
+ <20190404094029.GD16131@quack2.suse.cz>
+ <527416483.17415178.1554372524196.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190405151232.GY5147@magnolia>
+In-Reply-To: <527416483.17415178.1554372524196.JavaMail.zimbra@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Pankaj Gupta <pagupta@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, cohuck@redhat.com, kvm@vger.kernel.org, mst@redhat.com, jasowang@redhat.com, qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org, adilger kernel <adilger.kernel@dilger.ca>, zwisler@kernel.org, aarcange@redhat.com, dave jiang <dave.jiang@intel.com>, linux-nvdimm@lists.01.org, vishal l verma <vishal.l.verma@intel.com>, david@redhat.com, willy@infradead.org, hch@infradead.org, linux-acpi@vger.kernel.org, jmoyer@redhat.com, linux-ext4@vger.kernel.org, lenb@kernel.org, riel@surriel.com, stefanha@redhat.com, dan j williams <dan.j.williams@intel.com>, lcapitulino@redhat.com, kwolf@redhat.com, nilal@redhat.com, tytso@mit.edu, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, rjw@rjwysocki.net, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, imammedo@redhat.com
 
-On Fri, Apr 05, 2019 at 08:12:32AM -0700, Darrick J. Wong wrote:
-> On Fri, Apr 05, 2019 at 07:24:44AM -0400, Brian Foster wrote:
-> > On Fri, Apr 05, 2019 at 09:08:45AM +1100, Dave Chinner wrote:
-> > > On Thu, Apr 04, 2019 at 08:50:54AM -0400, Brian Foster wrote:
-> > > If we want to expand the writeback range, (i.e. move the offset we
-> > > start at) then we need to do that in xfs_vm_writepages(), before we
-> > > call write_cache_pages(). This means all the tagged writepages stuff
-> > > will continue to work, and we don't end up doing redundant page
-> > > cache lookups because we're trying to write back the same range from
-> > > two different places.
-> > > 
-> > 
-> > IMO, messing around with writeback like this is a mitigation and/or a
-> > contributer to a broader solution, not a fundamental fix by itself. For
-> > example, I could see doing something like that if we already put proper
-> > writeback vs. append transaction ordering in place and we identify
-> > certain corner cases where we want to prevent delaying an on-disk i_size
-> > update for too long because a user indirectly triggered writeback of a
-> > high index page.
-
-*nod*
-
-Yeah, the problem is when we come to really large files on large
-memory machines where there might be gigabytes of dirty pages over a
-relatively slow disk...
-
-> > > > I'm not sure if doing that alone is worth the effort if you consider
-> > > > it's more of a mitigation than a solution to the underlying problem.
-> > > > Once we convert the associated delalloc extent, we're open to stale data
-> > > > exposure (assuming we're not protected by on-disk EOF and whatnot) until
-> > > > all of the remaining pages over the extent are written back, whether
-> > > > that occurs in the current writeback cycle or a subsequent one.
-> > > 
-> > > If we were to do a read iomap lookup in xfs_vm_writepages() we could
-> > > determine if the delalloc conversion would allocate a range outside
-> > > the current write that is bing flushed, and either modify the
-> > > writeback control range/offset to match the delalloc extent.
-> > > 
-> > > however, this runs the risk of breaking all the fairness algorithms
-> > > in high level writeback, so we'd need to be very careful about how
-> > > we extend the write range for writeback inside EOF....
-> > > 
-> > 
-> > Indeed. The more I think about this, the more I think we'd have an
-> > easier time trying to schedule the on-disk i_size update vs. trying to
-> > control the size and range of writeback in all possible scenarios. The
-> > former would still require non-trivial tracking and logic, but that's
-> > something writeback control described above could actually help with.
-> >
-> > For example, we don't currently have any way to track "stale" state of
-> > just allocated but not yet fully written extents. If we established a
-> > rule that we always wrote back such extents in entirety and via a single
-> > ioend, then writeback completion code would simply need to check for
-> > delalloc extents within in-core eof to determine when it's safe to
-> > update on-disk eof.
-
-The problem with this is that it either limits the size of the
-allocation we can make (due to writeback chunk size) or we break the
-writeback fairness algorithms by having to write back allocation
-sized chunks...
-
-> > If there are cases where we determine we can't
-> > writeback an entire delalloc extent because of some fairness reasons or
-> > whatever, we could decide to only physically allocate the subset of that
-> > delalloc extent that we can write back rather than the whole thing
-> > (trading off stale data exposure for some increased fragmentation). That
-> > way writeback completion still sees existence of delalloc blocks and
-> > knows to hold off on the on-disk size update.
-
-The moment we get concurrent writes we are going to interleave and
-fragment the files with this approach. It's the large speculative
-delalloc beyond EOF that prevents fragmentation in the this case, so
-the moment we decide that we aren't going to allocate the entire
-delalloc extent we essentially throw away a significant amount of
-the benefit that the speculative delalloc provides us with.
-
-> > One challenge with an approach like that is if we do skip completion
-> > time on-disk i_size updates, we'd have to make sure that those updates
-> > still happen eventually if the address space happens to change outside
-> > of writeback. For example, if those remaining dirty delalloc pages
-> > somehow end up invalidated and never become real blocks, we may never
-> > see another writeback cycle on the inode and we'd need to update on-disk
-> > size from some other context (in a timely fashion).
-> > 
-> > Of course this only deals with the append case. We'd still need to
-> > select a mechanism for dealing with inside EOF allocations (such as the
-> > whole write-intent thing or unwritten extents). To me, the intent thing
-> > still seems like the most simple/elegant option we've discussed so far
-> > because the potential for low impact. Part of me thinks that if we
-> > determine we'll fall back to that approach for certain cases anyways
-> > (like inside EOF allocs), it might be worth just doing that first and
-> > evaluate using it unconditionally.
+On Thu, Apr 04, 2019 at 06:08:44AM -0400, Pankaj Gupta wrote:
 > 
-> /me wonders if we could solve this by using a bitmap to track all the
-> in-flight post-ondisk-eof writeback such that when a particular
-> writeback completes it can check if there aren't any writeback at a
-> lower offset still in progress and only then update the ondisk eof?
+> > On Thu 04-04-19 05:09:10, Pankaj Gupta wrote:
+> > > 
+> > > > > On Thu, Apr 04, 2019 at 09:09:12AM +1100, Dave Chinner wrote:
+> > > > > > On Wed, Apr 03, 2019 at 04:10:18PM +0530, Pankaj Gupta wrote:
+> > > > > > > Virtio pmem provides asynchronous host page cache flush
+> > > > > > > mechanism. we don't support 'MAP_SYNC' with virtio pmem
+> > > > > > > and xfs.
+> > > > > > > 
+> > > > > > > Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> > > > > > > ---
+> > > > > > >  fs/xfs/xfs_file.c | 8 ++++++++
+> > > > > > >  1 file changed, 8 insertions(+)
+> > > > > > > 
+> > > > > > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > > > > > index 1f2e2845eb76..dced2eb8c91a 100644
+> > > > > > > --- a/fs/xfs/xfs_file.c
+> > > > > > > +++ b/fs/xfs/xfs_file.c
+> > > > > > > @@ -1203,6 +1203,14 @@ xfs_file_mmap(
+> > > > > > >  	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
+> > > > > > >  		return -EOPNOTSUPP;
+> > > > > > >  
+> > > > > > > +	/* We don't support synchronous mappings with DAX files if
+> > > > > > > +	 * dax_device is not synchronous.
+> > > > > > > +	 */
+> > > > > > > +	if (IS_DAX(file_inode(filp)) && !dax_synchronous(
+> > > > > > > +		xfs_find_daxdev_for_inode(file_inode(filp))) &&
+> > > > > > > +					(vma->vm_flags & VM_SYNC))
+> > > > > > > +		return -EOPNOTSUPP;
+> > > > > > > +
+> > > > > > >  	file_accessed(filp);
+> > > > > > >  	vma->vm_ops = &xfs_file_vm_ops;
+> > > > > > >  	if (IS_DAX(file_inode(filp)))
+> > > > > > 
+> > > > > > All this ad hoc IS_DAX conditional logic is getting pretty nasty.
+> > > > > > 
+> > > > > > xfs_file_mmap(
+> > > > > > ....
+> > > > > > {
+> > > > > > 	struct inode	*inode = file_inode(filp);
+> > > > > > 
+> > > > > > 	if (vma->vm_flags & VM_SYNC) {
+> > > > > > 		if (!IS_DAX(inode))
+> > > > > > 			return -EOPNOTSUPP;
+> > > > > > 		if (!dax_synchronous(xfs_find_daxdev_for_inode(inode))
+> > > > > > 			return -EOPNOTSUPP;
+> > > > > > 	}
+> > > > > > 
+> > > > > > 	file_accessed(filp);
+> > > > > > 	vma->vm_ops = &xfs_file_vm_ops;
+> > > > > > 	if (IS_DAX(inode))
+> > > > > > 		vma->vm_flags |= VM_HUGEPAGE;
+> > > > > > 	return 0;
+> > > > > > }
+> > > > > > 
+> > > > > > 
+> > > > > > Even better, factor out all the "MAP_SYNC supported" checks into a
+> > > > > > helper so that the filesystem code just doesn't have to care about
+> > > > > > the details of checking for DAX+MAP_SYNC support....
+> > > > > 
+> > > > > Seconded, since ext4 has nearly the same flag validation logic.
+> > > > 
+> > > 
+> > > Only issue with this I see is we need the helper function only for
+> > > supported
+> > > filesystems ext4 & xfs (right now). If I create the function in "fs.h" it
+> > > will be compiled for every filesystem, even for those don't need it.
+> > > 
+> > > Sample patch below, does below patch is near to what you have in mind?
+> > 
+> > So I would put the helper in include/linux/dax.h and have it like:
+> > 
+> > bool daxdev_mapping_supported(struct vm_area_struct *vma,
+
+Should this be static inline if you're putting it in the header file?
+
+A comment ought to be added to describe what this predicate function
+does.
+
+> > 			      struct dax_device *dax_dev)
+> > {
+> > 	if (!(vma->vm_flags & VM_SYNC))
+> > 		return true;
+> > 	if (!IS_DAX(file_inode(vma->vm_file)))
+> > 		return false;
+> > 	return dax_synchronous(dax_dev);
+> > }
 > 
-> (Where "a bitmap or something" could just use another instance of Dave's
-> range lock structure...)
+> Sure. This is much better. I was also not sure what to name the helper function.
+> I will go ahead with this unless 'Dave' & 'Darrick' have anything to add.
 
-I'm not sure we need to do that. Perhaps all we need is a new
-in-core iext_tree record extent type flag. i.e. we have an
-unwritten flag that mirrors the on-disk unwritten flag, but what we
-are really talking about here is having a new in-memory extent state
-that is "allocated but contains no data".
+Jan's approach (modulo that one comment) looks good to me.
 
-This flag never makes it to disk. When we allocate a delalloc region
-we tag the entire extent in with this magic flag, and as IO
-completes we do the equivalent of unwritten extent conversion except
-it only touches the in-memory tree records. When the entire range
-between the current on-disk EOF and end of this completing IO has
-the "not yet written" flag cleared, we then log the EOF size change.
+--D
 
-For non-random IO, we'll essentially just be trimming one extent and
-extending another, so it should be pretty fast. If we want to add
-intents (so it works inside EOF), then we can simply log a new DONE
-(or UPDATE) intent every time we convert a range. That would leave
-log recovery with an allocation intent plus a series of updates that
-document written ranges.
-
-This seems to me like it solves the tracking problem for both cases
-and provides a simple hook for logging intent completions. It also
-seems to me like it would work for direct IO, too, getting rid of
-the need for unconditional unwritten extent allocation and
-conversion. That's potentially a big win for database and VM folks
-who want to write into sparse files safely....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Thank you very much.
+> 
+> Best regards,
+> Pankaj 
+> 
+> > 
+> > 								Honza
+> > > 
+> > > =================
+> > > 
+> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > index 1f2e2845eb76..614995170cac 100644
+> > > --- a/fs/xfs/xfs_file.c
+> > > +++ b/fs/xfs/xfs_file.c
+> > > @@ -1196,12 +1196,17 @@ xfs_file_mmap(
+> > >         struct file     *filp,
+> > >         struct vm_area_struct *vma)
+> > >  {
+> > > +       struct dax_device *dax_dev =
+> > > xfs_find_daxdev_for_inode(file_inode(filp));
+> > > +
+> > >         /*
+> > > -        * We don't support synchronous mappings for non-DAX files. At
+> > > least
+> > > -        * until someone comes with a sensible use case.
+> > > +        * We don't support synchronous mappings for non-DAX files and
+> > > +        * for DAX files if underneath dax_device is not synchronous.
+> > >          */
+> > > -       if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
+> > > -               return -EOPNOTSUPP;
+> > > +       if (vma->vm_flags & VM_SYNC) {
+> > > +               int err = is_synchronous(filp, dax_dev);
+> > > +               if (err)
+> > > +                       return err;
+> > > +       }
+> > >  
+> > >         file_accessed(filp);
+> > >         vma->vm_ops = &xfs_file_vm_ops;
+> > > diff --git a/include/linux/fs.h b/include/linux/fs.h
+> > > index 8b42df09b04c..add017de3dd7 100644
+> > > --- a/include/linux/fs.h
+> > > +++ b/include/linux/fs.h
+> > > @@ -2162,6 +2162,20 @@ static inline void file_accessed(struct file *file)
+> > >                 touch_atime(&file->f_path);
+> > >  }
+> > >  
+> > > +struct dax_device;
+> > > +extern bool dax_synchronous(struct dax_device *dax_dev);
+> > > +static inline int is_synchronous(struct file *filp, struct dax_device
+> > > *dax_dev)
+> > > +{
+> > > +       struct inode *inode = file_inode(filp);
+> > > +
+> > > +       if (!IS_DAX(inode))
+> > > +               return -EOPNOTSUPP;
+> > > +       if (!dax_synchronous(dax_dev))
+> > > +               return -EOPNOTSUPP;
+> > > +
+> > > +       return 0;
+> > > +}
+> > > +
+> > >  int sync_inode(struct inode *inode, struct writeback_control *wbc);
+> > >  int sync_inode_metadata(struct inode *inode, int wait);
+> > >  
+> > > ---------
+> > > 
+> > > Thanks,
+> > > Pankaj
+> > > 
+> > > 
+> > > 
+> > --
+> > Jan Kara <jack@suse.com>
+> > SUSE Labs, CR
+> > 
+> > 
