@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57970 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:54388 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728683AbfDESRL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Apr 2019 14:17:11 -0400
-Subject: Re: [PATCH 30/36] libxfs: retain ifork_ops when flushing inode
+        id S1727051AbfDDQky (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Apr 2019 12:40:54 -0400
+Subject: Re: [PATCH 45/36] xfs_scrub: rename confusing structure
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <155259761740.31886.12775146464846669280.stgit@magnolia>
+ <20190320200330.GI1183@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a443e2be-2e79-fcee-5cff-abfd1f8da50b@sandeen.net>
-Date: Fri, 5 Apr 2019 13:17:09 -0500
+Message-ID: <34a79955-0121-5a50-dbf9-45c230fea153@sandeen.net>
+Date: Thu, 4 Apr 2019 11:40:53 -0500
 MIME-Version: 1.0
-In-Reply-To: <155259761740.31886.12775146464846669280.stgit@magnolia>
+In-Reply-To: <20190320200330.GI1183@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -18,83 +18,71 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Arkadiusz Miskiewicz <arekm@maven.pl>
+Cc: linux-xfs@vger.kernel.org
 
-On 3/14/19 4:06 PM, Darrick J. Wong wrote:
+On 3/20/19 3:03 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Retain the ifork ops used to validate the inode so that we can use the
-> same one to iflush it.  xfs_repair phase 6 can use multiple transactions
-> to fix various inode problems, which means that the inode might not be
-> fully fixed when each transaction commits.
+> Rename xfs_verify_extent to media_verify_state so that the name more
+> accurately reflects what we're storing in the structure.
 > 
-> This can be a particular problem if there's a shortform directory with
-> both invalid directory entries and incorrect i8count.  Phase 3 will set
-> the parent inode to "0" to signal to phase 6 that it needs to reset the
-> parent and i8count, but phase 6 starts a transaction to junk the bad
-> entries which fail to commit because the parent is invalid:
-> 
-> fixing i8count in inode 69022994673
-> Invalid inode number 0x0
-> xfs_dir_ino_validate: XFS_ERROR_REPORT
-> Metadata corruption detected at 0x464eb0, inode 0x10121750f1 data fork
-> xfs_repair: warning - iflush_int failed (-117)
-> 
-> And thus the inode fixes never get written out.
-
-This feels like it would be better to use consistently by dropping the ops
-arg to libxfs_inode_verify_forks, using ->i_fork_ops inside it, and setting
-it prior to the call.  Er, same for libxfs_iget?
-
-A mishmash of grabbing what was last set in the inode vs. explicitly pointing
-at a global ops structure seems a bit ad hoc.  Thoughts?
-
-
-> 
-> Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Hate to do this, but "*ve" made sense for "verify extent" but
+really doesn't for "verify state..."  If the point is clarity, I
+think s/ve/vs/ would be reasonable as well?  It's about 35 instances.
+
 > ---
->  include/xfs_inode.h |    1 +
->  libxfs/rdwr.c       |    1 +
->  libxfs/util.c       |    2 +-
->  3 files changed, 3 insertions(+), 1 deletion(-)
+>  scrub/phase6.c |   10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
 > 
-> 
-> diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-> index 79ec3a2d..e1e8b430 100644
-> --- a/include/xfs_inode.h
-> +++ b/include/xfs_inode.h
-> @@ -51,6 +51,7 @@ typedef struct xfs_inode {
+> diff --git a/scrub/phase6.c b/scrub/phase6.c
+> index 5e2b9ee3..2b4f6ff1 100644
+> --- a/scrub/phase6.c
+> +++ b/scrub/phase6.c
+> @@ -35,7 +35,7 @@
 >  
->  	xfs_fsize_t		i_size;		/* in-memory size */
->  	const struct xfs_dir_ops *d_ops;	/* directory ops vector */
-> +	struct xfs_ifork_ops	*i_fork_ops;	/* fork verifiers */
->  	struct inode		i_vnode;
->  } xfs_inode_t;
+>  /* Verify disk blocks with GETFSMAP */
 >  
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index a00360e7..69d5abb2 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -1391,6 +1391,7 @@ libxfs_iget(
->  		return error;
->  	}
+> -struct xfs_verify_extent {
+> +struct media_verify_state {
+>  	struct read_verify_pool	*rvp_data;
+>  	struct read_verify_pool	*rvp_log;
+>  	struct read_verify_pool	*rvp_realtime;
+> @@ -47,7 +47,7 @@ struct xfs_verify_extent {
+>  static struct read_verify_pool *
+>  xfs_dev_to_pool(
+>  	struct scrub_ctx		*ctx,
+> -	struct xfs_verify_extent	*ve,
+> +	struct media_verify_state	*ve,
+>  	dev_t				dev)
+>  {
+>  	if (dev == ctx->fsinfo.fs_datadev)
+> @@ -348,7 +348,7 @@ xfs_check_rmap_ioerr(
+>  {
+>  	struct fsmap			keys[2];
+>  	char				descr[DESCR_BUFSZ];
+> -	struct xfs_verify_extent	*ve = arg;
+> +	struct media_verify_state	*ve = arg;
+>  	struct bitmap			*tree;
+>  	dev_t				dev;
+>  	bool				moveon;
+> @@ -395,7 +395,7 @@ xfs_check_rmap(
+>  	struct fsmap			*map,
+>  	void				*arg)
+>  {
+> -	struct xfs_verify_extent	*ve = arg;
+> +	struct media_verify_state	*ve = arg;
+>  	struct read_verify_pool		*rvp;
 >  
-> +	ip->i_fork_ops = ifork_ops;
->  	if (!libxfs_inode_verify_forks(ip, ifork_ops)) {
->  		libxfs_irele(ip);
->  		return -EFSCORRUPTED;
-> diff --git a/libxfs/util.c b/libxfs/util.c
-> index bd414043..0799f965 100644
-> --- a/libxfs/util.c
-> +++ b/libxfs/util.c
-> @@ -420,7 +420,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
->  		VFS_I(ip)->i_version++;
+>  	rvp = xfs_dev_to_pool(ctx, ve, map->fmr_device);
+> @@ -463,7 +463,7 @@ bool
+>  xfs_scan_blocks(
+>  	struct scrub_ctx		*ctx)
+>  {
+> -	struct xfs_verify_extent	ve = { NULL };
+> +	struct media_verify_state	ve = { NULL };
+>  	bool				moveon;
 >  
->  	/* Check the inline fork data before we write out. */
-> -	if (!libxfs_inode_verify_forks(ip, &xfs_default_ifork_ops))
-> +	if (!libxfs_inode_verify_forks(ip, ip->i_fork_ops))
->  		return -EFSCORRUPTED;
->  
->  	/*
+>  	moveon = bitmap_init(&ve.d_bad);
 > 
