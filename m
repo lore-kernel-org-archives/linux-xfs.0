@@ -1,46 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:52154 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:40826 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726397AbfDGU12 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Apr 2019 16:27:28 -0400
-Subject: [PATCH 2/4] xfs: unlock inode when xfs_ioctl_setattr_get_trans
- can't get transaction
+        with ESMTP id S1726418AbfDDVkD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Apr 2019 17:40:03 -0400
+Date: Thu, 4 Apr 2019 14:39:55 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 07 Apr 2019 13:27:16 -0700
-Message-ID: <155466883603.633834.5683596746694707981.stgit@magnolia>
-In-Reply-To: <155466882175.633834.15261194784129614735.stgit@magnolia>
-References: <155466882175.633834.15261194784129614735.stgit@magnolia>
+Subject: Re: [PATCH 38/36] xfs_io: don't read garbage stack contents if
+ INUMBERS goes nuts
+Message-ID: <20190404213955.GU5147@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <20190320193444.GB1183@magnolia>
+ <5a34954c-6174-ce78-73ad-a04f804c79c9@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5a34954c-6174-ce78-73ad-a04f804c79c9@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Apr 04, 2019 at 04:12:18PM -0500, Eric Sandeen wrote:
+> On 3/20/19 2:34 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > In theory INUMBERS will never return an ocount of zero, but on the off
+> > chance it ever does we'll negative index the igroup array and return
+> > stack contents for an inode number.  Don't do that.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Is there more of a story behind this?  ;)
 
-We passed an inode into xfs_ioctl_setattr_get_trans with join_flags
-indicating which locks are held on that inode.  If we can't allocate a
-transaction then we need to unlock the inode before we bail out.
+/me can't remember, I think it was just shutting up coverity complaints.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_ioctl.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--D
 
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 6ecdbb3af7de..91938c4f3c67 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1142,7 +1142,7 @@ xfs_ioctl_setattr_get_trans(
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
- 	if (error)
--		return ERR_PTR(error);
-+		goto out_unlock;
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | join_flags);
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> > ---
+> >  io/open.c |    3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/io/open.c b/io/open.c
+> > index f5fbd2c4..a406ea54 100644
+> > --- a/io/open.c
+> > +++ b/io/open.c
+> > @@ -698,6 +698,9 @@ get_last_inode(void)
+> >  		lastgrp = ocount;
+> >  	}
+> >  
+> > +	if (lastgrp == 0)
+> > +		return 0;
+> > +
+> >  	lastgrp--;
+> >  
+> >  	/* The last inode number in use */
+> > 
