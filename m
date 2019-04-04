@@ -1,138 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54380 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725995AbfDHFtV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Apr 2019 01:49:21 -0400
-Subject: Re: [PATCH 3/4] xfs: flush page mappings as part of setting immutable
-References: <155466882175.633834.15261194784129614735.stgit@magnolia>
- <155466884294.633834.1486289166159962611.stgit@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <e5749655-2c12-a3a0-7ce8-8f5a9a9eb20e@oracle.com>
-Date: Sun, 7 Apr 2019 22:49:14 -0700
-MIME-Version: 1.0
-In-Reply-To: <155466884294.633834.1486289166159962611.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:44620 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727415AbfDDQ5s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Apr 2019 12:57:48 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [POC][PATCH] xfs: reduce ilock contention on buffered randrw workload
+Date: Thu,  4 Apr 2019 19:57:37 +0300
+Message-Id: <20190404165737.30889-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On 4/7/19 1:27 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> The chattr manpage has this to say about immutable files:
-> 
-> "A file with the 'i' attribute cannot be modified: it cannot be deleted
-> or renamed, no link can be created to this file, most of the file's
-> metadata can not be modified, and the file can not be opened in write
-> mode."
-> 
-> This means that we need to flush the page cache when setting the
-> immutable flag so that all mappings will become read-only again and
-> therefore programs cannot continue to write to writable mappings.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   fs/xfs/xfs_ioctl.c |   51 ++++++++++++++++++++++++++++++++++++++++++++-------
->   1 file changed, 44 insertions(+), 7 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 91938c4f3c67..5a1b96dad901 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -998,6 +998,31 @@ xfs_diflags_to_linux(
->   #endif
->   }
->   
-> +/*
-> + * Lock the inode against file io and page faults, then flush all dirty pages
-> + * and wait for writeback and direct IO operations to finish.  Returns with
-> + * the relevant inode lock flags set in @join_flags.  Caller is responsible for
-> + * unlocking even on error return.
-> + */
-> +static int
-> +xfs_ioctl_setattr_flush(
-> +	struct xfs_inode	*ip,
-> +	int			*join_flags)
-> +{
-> +	struct inode		*inode = VFS_I(ip);
-> +
-> +	/* Already locked the inode from IO?  Assume we're done. */
-> +	if (((*join_flags) & (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL)) ==
-> +			     (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL))
-> +		return 0;
-> +
-> +	/* Lock and flush all mappings and IO in preparation for flag change */
-> +	*join_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
-Did you mean |= here?  It looks like this code came from 
-xfs_ioctl_setattr_dax_invalidate, but now calling from 
-xfs_ioctl_setattr, we may be over writing flags where we previously had 
-not, so that may not be expected.
+This patch improves performance of mixed random rw workload
+on xfs without relaxing the atomic buffered read/write guaranty
+that xfs has always provided.
 
-Allison
+We achieve that by calling generic_file_read_iter() twice.
+Once with a discard iterator to warm up page cache before taking
+the shared ilock and once again under shared ilock.
 
-> +	xfs_ilock(ip, *join_flags);
-> +	inode_dio_wait(inode);
-> +	return filemap_write_and_wait(inode->i_mapping);
-> +}
-> +
->   static int
->   xfs_ioctl_setattr_xflags(
->   	struct xfs_trans	*tp,
-> @@ -1092,25 +1117,22 @@ xfs_ioctl_setattr_dax_invalidate(
->   	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
->   		return 0;
->   
-> -	if (S_ISDIR(inode->i_mode))
-> +	if (!S_ISREG(inode->i_mode))
->   		return 0;
->   
->   	/* lock, flush and invalidate mapping in preparation for flag change */
-> -	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-> -	error = filemap_write_and_wait(inode->i_mapping);
-> +	error = xfs_ioctl_setattr_flush(ip, join_flags);
->   	if (error)
->   		goto out_unlock;
->   	error = invalidate_inode_pages2(inode->i_mapping);
->   	if (error)
->   		goto out_unlock;
-> -
-> -	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
->   	return 0;
->   
->   out_unlock:
-> -	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-> +	xfs_iunlock(ip, *join_flags);
-> +	*join_flags = 0;
->   	return error;
-> -
->   }
->   
->   /*
-> @@ -1356,6 +1378,21 @@ xfs_ioctl_setattr(
->   	if (code)
->   		goto error_free_dquots;
->   
-> +	/*
-> +	 * If we are trying to set immutable on a file then flush everything to
-> +	 * disk to force all writable memory mappings back through the
-> +	 * pagefault handler.
-> +	 */
-> +	if (S_ISREG(VFS_I(ip)->i_mode) && !IS_IMMUTABLE(VFS_I(ip)) &&
-> +	    (fa->fsx_xflags & FS_XFLAG_IMMUTABLE)) {
-> +		code = xfs_ioctl_setattr_flush(ip, &join_flags);
-> +		if (code) {
-> +			xfs_iunlock(ip, join_flags);
-> +			join_flags = 0;
-> +			goto error_free_dquots;
-> +		}
-> +	}
-> +
->   	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
->   	if (IS_ERR(tp)) {
->   		code = PTR_ERR(tp);
-> 
+Since this is a POC patch it also includes a separate fix to the
+copy_page_to_iter() helper when called with discard iterator.
+There is no other caller in the kernel to this method with a
+discard iterator as far as I could see.
+
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+
+Hi Folks,
+
+With this experimenital patch I was able to bring performance
+of random rw workload benchmark on xfs much closer to ext4.
+
+Ext4, as most Linux filesystems doesn't take the shared inode
+lock on buffered reads and does not provide atomic buffered
+reads w.r.t buffered writes.
+
+Following are the numbers I got with filebench randomrw workload [1]
+on a VM with 4 CPUs and spindles.
+
+Note that this improvement is unrelated to the rw_semaphore starvation
+issue that was observed when running the same benchmark on fast SDD
+drive [2].
+
+=== random read/write - cold page cache ===
+--- EXT4 ---
+ filebench randomrw (8 read threads, 8 write threads)
+ kernel 5.1.0-rc2, ext4
+ rand-write1          862304ops    14235ops/s 111.2mb/s      0.5ms/op
+ rand-read1           22065ops      364ops/s   2.8mb/s     21.5ms/op
+
+--- XFS ---
+ filebench randomrw (8 read threads, 8 write threads)
+ kernel 5.1.0-rc2, xfs
+ rand-write1          39451ops      657ops/s   5.1mb/s     12.0ms/op
+ rand-read1           2035ops       34ops/s   0.3mb/s    232.7ms/op
+
+--- XFS+ ---
+ filebench randomrw (8 read threads, 8 write threads)
+ kernel 5.1.0-rc2+ (xfs page cache warmup patch)
+ rand-write1          935597ops    15592ops/s 121.8mb/s      0.5ms/op
+ rand-read1           4446ops       74ops/s   0.6mb/s    107.6ms/op
+
+To measure the effects of two passes of generic_file_read_iter(), I ran
+a random read [2] benchmark on 5GB file with warm and cold page cache.
+
+=== random read - cold page cache ===
+--- EXT4 ---
+ filebench randomread (8 read threads) - cold page cache
+ kernel 5.1.0-rc2
+ rand-read1           23589ops      393ops/s   3.1mb/s     20.3ms/op
+
+--- XFS ---
+ filebench randomread (8 read threads) - cold page cache
+ kernel 5.1.0-rc2
+ rand-read1           20578ops      343ops/s   2.7mb/s     23.3ms/op
+
+--- XFS+ ---
+ filebench randomread (8 read threads) - cold page cache
+ kernel 5.1.0-rc2+ (xfs page cache warmup patch)
+ rand-read1           20476ops      341ops/s   2.7mb/s     23.4ms/op
+
+=== random read - warm page cache ===
+--- EXT4 ---
+ filebench randomread (8 read threads) - warm page cache
+ kernel 5.1.0-rc2
+ rand-read1           58168696ops   969410ops/s 7573.5mb/s      0.0ms/op
+
+--- XFS ---
+ filebench randomread (8 read threads) - warm page cache
+ kernel 5.1.0-rc2
+ rand-read1           52748818ops   878951ops/s 6866.8mb/s      0.0ms/op
+
+--- XFS+ ---
+ filebench randomread (8 read threads) - warm page cache
+ kernel 5.1.0-rc2+ (xfs page cache warmup patch)
+ rand-read1           52770537ops   879445ops/s 6870.7mb/s      0.0ms/op
+
+The numbers of this benchmark do not show and measurable difference for
+readers only workload with either cold or warm page cache.
+
+If needed I can provide more measurments with fio or with different
+workloads and different drives.
+
+Fire away!
+
+Thanks,
+Amir.
+
+[1] https://github.com/amir73il/filebench/blob/overlayfs-devel/workloads/randomrw.f
+[2] https://marc.info/?l=linux-xfs&m=155347265016053&w=2
+[3] https://github.com/amir73il/filebench/blob/overlayfs-devel/workloads/randomread.f
+
+ fs/xfs/xfs_file.c | 14 ++++++++++++++
+ lib/iov_iter.c    |  5 +++--
+ 2 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 1f2e284..4e5f88a 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -240,6 +240,20 @@ xfs_file_buffered_aio_read(
+ 		if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED))
+ 			return -EAGAIN;
+ 	} else {
++		/*
++		 * Warm up page cache to minimize time spent under
++		 * shared ilock.
++		 */
++		struct iov_iter	iter;
++		loff_t pos = iocb->ki_pos;
++
++		iov_iter_discard(&iter, READ, iov_iter_count(to));
++		ret = generic_file_read_iter(iocb, &iter);
++		if (ret <= 0)
++			return ret;
++
++		iocb->ki_pos = pos;
++
+ 		xfs_ilock(ip, XFS_IOLOCK_SHARED);
+ 	}
+ 	ret = generic_file_read_iter(iocb, to);
+diff --git a/lib/iov_iter.c b/lib/iov_iter.c
+index ea36dc3..b22e433 100644
+--- a/lib/iov_iter.c
++++ b/lib/iov_iter.c
+@@ -893,9 +893,10 @@ size_t copy_page_to_iter(struct page *page, size_t offset, size_t bytes,
+ 		size_t wanted = copy_to_iter(kaddr + offset, bytes, i);
+ 		kunmap_atomic(kaddr);
+ 		return wanted;
+-	} else if (unlikely(iov_iter_is_discard(i)))
++	} else if (unlikely(iov_iter_is_discard(i))) {
++		i->count -= bytes;
+ 		return bytes;
+-	else if (likely(!iov_iter_is_pipe(i)))
++	} else if (likely(!iov_iter_is_pipe(i)))
+ 		return copy_page_to_iter_iovec(page, offset, bytes, i);
+ 	else
+ 		return copy_page_to_iter_pipe(page, offset, bytes, i);
+-- 
+2.7.4
