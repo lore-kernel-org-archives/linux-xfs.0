@@ -1,40 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55520 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730870AbfDERLV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Apr 2019 13:11:21 -0400
-Subject: Re: [RFC 0/2] guarantee natural alignment for kmalloc()
-References: <20190319211108.15495-1-vbabka@suse.cz>
- <01000169988d4e34-b4178f68-c390-472b-b62f-a57a4f459a76-000000@email.amazonses.com>
- <5d7fee9c-1a80-6ac9-ac1d-b1ce05ed27a8@suse.cz>
- <010001699c5563f8-36c6909f-ed43-4839-82da-b5f9f21594b8-000000@email.amazonses.com>
- <4d2a55dc-b29f-1309-0a8e-83b057e186e6@suse.cz>
- <01000169a68852ed-d621a35c-af0c-4759-a8a3-e97e7dfc17a5-000000@email.amazonses.com>
-From: Vlastimil Babka <vbabka@suse.cz>
-Message-ID: <2b129aec-f9a5-7ab8-ca4a-0a325621d111@suse.cz>
-Date: Fri, 5 Apr 2019 19:11:17 +0200
+Received: from sandeen.net ([63.231.237.45]:56106 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727263AbfDDWI4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Apr 2019 18:08:56 -0400
+Subject: Re: [PATCH 41/36] xfs_repair: better cli option parameter checking
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <20190320193630.GE1183@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <95ecad84-34ba-92c7-8c6d-17457dc42dbb@sandeen.net>
+Date: Thu, 4 Apr 2019 17:08:54 -0500
 MIME-Version: 1.0
-In-Reply-To: <01000169a68852ed-d621a35c-af0c-4759-a8a3-e97e7dfc17a5-000000@email.amazonses.com>
+In-Reply-To: <20190320193630.GE1183@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christopher Lameter <cl@linux.com>
-Cc: linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Michal Hocko <mhocko@kernel.org>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 3/22/19 6:52 PM, Christopher Lameter wrote:
-> On Thu, 21 Mar 2019, Vlastimil Babka wrote:
+On 3/20/19 2:36 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
->> That however doesn't work well for the xfs/IO case where block sizes are
->> not known in advance:
->>
->> https://lore.kernel.org/linux-fsdevel/20190225040904.5557-1-ming.lei@redhat.com/T/#ec3a292c358d05a6b29cc4a9ce3ae6b2faf31a23f
+> For the xfs_repair options that require a parameter, check that the user
+> actually provided one instead of segfaulting.
 > 
-> I thought we agreed to use custom slab caches for that?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hm maybe I missed something but my impression was that xfs/IO folks would have
-to create lots of them for various sizes not known in advance, and that it
-wasn't practical and would welcome if kmalloc just guaranteed the alignment.
-But so far they haven't chimed in here in this thread, so I guess I'm wrong.
+looks good, but, uh, neither 
+
+-c lazycount=
+nor
+-o phase2_threads=
+
+is documented in the man page.  :(
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  repair/xfs_repair.c |   12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index 2d333d50..9657503f 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -233,10 +233,16 @@ process_args(int argc, char **argv)
+>  					if (max_mem_specified)
+>  						do_abort(
+>  		_("-o bhash option cannot be used with -m option\n"));
+> +					if (!val)
+> +						do_abort(
+> +		_("-o bhash requires a parameter\n"));
+>  					libxfs_bhash_size = (int)strtol(val, NULL, 0);
+>  					bhash_option_used = 1;
+>  					break;
+>  				case AG_STRIDE:
+> +					if (!val)
+> +						do_abort(
+> +		_("-o ag_stride requires a parameter\n"));
+>  					ag_stride = (int)strtol(val, NULL, 0);
+>  					break;
+>  				case FORCE_GEO:
+> @@ -247,6 +253,9 @@ process_args(int argc, char **argv)
+>  					force_geo = 1;
+>  					break;
+>  				case PHASE2_THREADS:
+> +					if (!val)
+> +						do_abort(
+> +		_("-o phase2_threads requires a parameter\n"));
+>  					phase2_threads = (int)strtol(val, NULL, 0);
+>  					break;
+>  				default:
+> @@ -262,6 +271,9 @@ process_args(int argc, char **argv)
+>  
+>  				switch (getsubopt(&p, c_opts, &val)) {
+>  				case CONVERT_LAZY_COUNT:
+> +					if (!val)
+> +						do_abort(
+> +		_("-c lazycount requires a parameter\n"));
+>  					lazy_count = (int)strtol(val, NULL, 0);
+>  					convert_lazy_count = 1;
+>  					break;
+> 
