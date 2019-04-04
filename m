@@ -1,81 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60230 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726373AbfDHOLR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Apr 2019 10:11:17 -0400
-Date: Mon, 8 Apr 2019 16:11:14 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw
- workload
-Message-ID: <20190408141114.GC15023@quack2.suse.cz>
-References: <20190404165737.30889-1-amir73il@gmail.com>
- <20190404211730.GD26298@dastard>
- <CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com>
- <20190407232728.GF26298@dastard>
- <CAOQ4uxgD4ErSUtbu0xqb5dSm_tM4J92qt6=hGH8GRc5KNGqP9A@mail.gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:33530 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727152AbfDDRLC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Apr 2019 13:11:02 -0400
+Date: Thu, 4 Apr 2019 10:10:56 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 46/36] xfs_scrub: remove pointless xfs_verify_error_info
+ struct
+Message-ID: <20190404171056.GR5147@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <20190320200444.GJ1183@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgD4ErSUtbu0xqb5dSm_tM4J92qt6=hGH8GRc5KNGqP9A@mail.gmail.com>
+In-Reply-To: <20190320200444.GJ1183@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Lukas Czerner <lczerner@redhat.com>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>
+To: sandeen@sandeen.net
+Cc: linux-xfs@vger.kernel.org
 
-On Mon 08-04-19 12:02:34, Amir Goldstein wrote:
-> On Mon, Apr 8, 2019 at 2:27 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > On Fri, Apr 05, 2019 at 05:02:33PM +0300, Amir Goldstein wrote:
-> > > On Fri, Apr 5, 2019 at 12:17 AM Dave Chinner <david@fromorbit.com> wrote:
-> > > >
-> > > > On Thu, Apr 04, 2019 at 07:57:37PM +0300, Amir Goldstein wrote:
-> > > > > This patch improves performance of mixed random rw workload
-> > > > > on xfs without relaxing the atomic buffered read/write guaranty
-> > > > > that xfs has always provided.
-> > > > >
-> > > > > We achieve that by calling generic_file_read_iter() twice.
-> > > > > Once with a discard iterator to warm up page cache before taking
-> > > > > the shared ilock and once again under shared ilock.
-> > > >
-> > > > This will race with thing like truncate, hole punching, etc that
-> > > > serialise IO and invalidate the page cache for data integrity
-> > > > reasons under the IOLOCK. These rely on there being no IO to the
-> > > > inode in progress at all to work correctly, which this patch
-> > > > violates. IOWs, while this is fast, it is not safe and so not a
-> > > > viable approach to solving the problem.
-> > > >
-> > >
-> > > This statement leaves me wondering, if ext4 does not takes
-> > > i_rwsem on generic_file_read_iter(), how does ext4 (or any other
-> > > fs for that matter) guaranty buffered read synchronization with
-> > > truncate, hole punching etc?
-> > > The answer in ext4 case is i_mmap_sem, which is read locked
-> > > in the page fault handler.
-> >
-> > Nope, the  i_mmap_sem is for serialisation of /page faults/ against
-> > truncate, holepunching, etc. Completely irrelevant to the read()
-> > path.
-> >
-> 
-> I'm at lost here. Why are page faults completely irrelevant to read()
-> path? Aren't full pages supposed to be faulted in on read() after
-> truncate_pagecache_range()?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-During read(2), pages are not "faulted in". Just look at
-what generic_file_buffered_read() does. It uses completely separate code to
-add page to page cache, trigger readahead, and possibly call ->readpage() to
-fill the page with data. "fault" path (handled by filemap_fault()) applies
-only to accesses from userspace to mmaps.
+The xfs_verify_error_info structure is a strict subset of
+media_verify_info so just pass that around.
 
-> And aren't partial pages supposed to be partially zeroed and uptodate
-> after truncate_pagecache_range()?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/phase6.c |   24 +++++++-----------------
+ 1 file changed, 7 insertions(+), 17 deletions(-)
 
-truncate_pagecache_range() does take care of page zeroing, that is correct
-(if those pages are in page cache in the first place). I'm not sure how
-this relates to the above discussion though.
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index 91e4443e..e819e085 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -111,11 +111,6 @@ xfs_decode_special_owner(
+ 
+ /* Routines to translate bad physical extents into file paths and offsets. */
+ 
+-struct xfs_verify_error_info {
+-	struct bitmap			*d_bad;		/* bytes */
+-	struct bitmap			*r_bad;		/* bytes */
+-};
+-
+ /* Report if this extent overlaps a bad region. */
+ static bool
+ xfs_report_verify_inode_bmap(
+@@ -127,7 +122,7 @@ xfs_report_verify_inode_bmap(
+ 	struct xfs_bmap			*bmap,
+ 	void				*arg)
+ {
+-	struct xfs_verify_error_info	*vei = arg;
++	struct media_verify_state	*vs = arg;
+ 	struct bitmap			*bmp;
+ 
+ 	/* Only report errors for real extents. */
+@@ -135,9 +130,9 @@ xfs_report_verify_inode_bmap(
+ 		return true;
+ 
+ 	if (fsx->fsx_xflags & FS_XFLAG_REALTIME)
+-		bmp = vei->r_bad;
++		bmp = vs->r_bad;
+ 	else
+-		bmp = vei->d_bad;
++		bmp = vs->d_bad;
+ 
+ 	if (!bitmap_test(bmp, bmap->bm_physical, bmap->bm_length))
+ 		return true;
+@@ -277,23 +272,18 @@ xfs_report_verify_dirent(
+ static bool
+ xfs_report_verify_errors(
+ 	struct scrub_ctx		*ctx,
+-	struct bitmap			*d_bad,
+-	struct bitmap			*r_bad)
++	struct media_verify_state	*ve)
+ {
+-	struct xfs_verify_error_info	vei;
+ 	bool				moveon;
+ 
+-	vei.d_bad = d_bad;
+-	vei.r_bad = r_bad;
+-
+ 	/* Scan the directory tree to get file paths. */
+ 	moveon = scan_fs_tree(ctx, xfs_report_verify_dir,
+-			xfs_report_verify_dirent, &vei);
++			xfs_report_verify_dirent, ve);
+ 	if (!moveon)
+ 		return false;
+ 
+ 	/* Scan for unlinked files. */
+-	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, &vei);
++	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, ve);
+ }
+ 
+ /* Report an IO error resulting from read-verify based off getfsmap. */
+@@ -518,7 +508,7 @@ _("Could not create data device media verifier."));
+ 
+ 	/* Scan the whole dir tree to see what matches the bad extents. */
+ 	if (!bitmap_empty(vs.d_bad) || !bitmap_empty(vs.r_bad))
+-		moveon = xfs_report_verify_errors(ctx, vs.d_bad, vs.r_bad);
++		moveon = xfs_report_verify_errors(ctx, &vs);
+ 
+ 	bitmap_free(&vs.r_bad);
+ 	bitmap_free(&vs.d_bad);
