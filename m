@@ -1,186 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42620 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58730 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726618AbfDDLuO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Apr 2019 07:50:14 -0400
-Date: Thu, 4 Apr 2019 07:50:11 -0400
+        id S1726618AbfDDLvp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Apr 2019 07:51:45 -0400
+Date: Thu, 4 Apr 2019 07:51:43 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 09/10] xfs: scrub/repair should update filesystem
- metadata health
-Message-ID: <20190404115009.GB37737@bfoster>
+Subject: Re: [PATCH 10/10] xfs: update health status if we get a clean bill
+ of health
+Message-ID: <20190404115140.GC37737@bfoster>
 References: <155413860964.4966.6087725033542837255.stgit@magnolia>
- <155413867262.4966.18080677522827911800.stgit@magnolia>
+ <155413867884.4966.3786317285199498710.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <155413867262.4966.18080677522827911800.stgit@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <155413867884.4966.3786317285199498710.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 01, 2019 at 10:11:12AM -0700, Darrick J. Wong wrote:
+On Mon, Apr 01, 2019 at 10:11:18AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Now that we have the ability to track sick metadata in-core, make scrub
-> and repair update those health assessments after doing work.
+> If scrub finds that everything is ok with the filesystem, we need a way
+> to tell the health tracking that it can let go of indirect health flags,
+> since indirect flags only mean that at some point in the past we lost
+> some context.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/Makefile       |    1 
->  fs/xfs/scrub/health.c |  180 +++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/health.h |   12 +++
->  fs/xfs/scrub/scrub.c  |    8 ++
->  fs/xfs/scrub/scrub.h  |   11 +++
->  5 files changed, 212 insertions(+)
->  create mode 100644 fs/xfs/scrub/health.c
->  create mode 100644 fs/xfs/scrub/health.h
+
+FYI this one doesn't compile for me:
+
+...
+fs/xfs/scrub/common.c: In function ‘xchk_set_corrupt’:
+fs/xfs/scrub/common.c:217:2: error: implicit declaration of function ‘xfs_scrub_whine’; did you mean ‘xfs_bmapi_write’? [-Werror=implicit-function-declaration]
+  xfs_scrub_whine(sc->mp, "type %d ret_ip %pS",
+...
+
+>  fs/xfs/libxfs/xfs_fs.h |    3 ++
+>  fs/xfs/scrub/common.c  |   12 ++++++++++
+>  fs/xfs/scrub/common.h  |    1 +
+>  fs/xfs/scrub/health.c  |   58 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/health.h  |    1 +
+>  fs/xfs/scrub/repair.c  |    1 +
+>  fs/xfs/scrub/scrub.c   |    6 +++++
+>  fs/xfs/scrub/trace.h   |    4 ++-
+>  8 files changed, 84 insertions(+), 2 deletions(-)
 > 
 > 
 ...
 > diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
-> new file mode 100644
-> index 000000000000..dd9986500801
-> --- /dev/null
+> index dd9986500801..049e802b9418 100644
+> --- a/fs/xfs/scrub/health.c
 > +++ b/fs/xfs/scrub/health.c
-> @@ -0,0 +1,180 @@
 ...
-> +/* Update filesystem health assessments based on what we found and did. */
-> +void
-> +xchk_update_health(
-> +	struct xfs_scrub	*sc,
-> +	bool			already_fixed)
+> @@ -54,6 +55,60 @@ xchk_health_mask_for_scrub_type(
+...
+> +/*
+> + * Scrub gave the filesystem a clean bill of health, so clear all the indirect
+> + * markers of past problems (at least for the fs and ags) so that we can be
+> + * healthy again.
+> + */
+> +STATIC void
+> +xchk_mark_all_healthy(
+> +	struct xfs_mount	*mp)
 > +{
-> +	/*
-> +	 * If the scrubber finds errors, we mark sick whatever's mentioned in
-> +	 * sick_mask, no matter whether this is a first scan or an evaluation
-> +	 * of repair effectiveness.
-> +	 *
-> +	 * If there is no direct corruption and we're called after a repair,
-> +	 * clear whatever's in heal_mask because that's what we fixed.
-> +	 *
-> +	 * Otherwise, there's no direct corruption and we didn't repair
-> +	 * anything, so mark whatever's in sick_mask as healthy.
-> +	 */
-> +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> +		xchk_mark_sick(sc, sc->sick_mask);
-> +	else if (already_fixed)
-> +		xchk_mark_healthy(sc, sc->heal_mask);
-> +	else
-> +		xchk_mark_healthy(sc, sc->sick_mask);
-> +}
-
-Hmm, I think I follow what we're doing here but it's a bit confusing
-without the additional context of where these bits will be set/cleared
-at the lower scrub layers (or at least without an example). Some
-questions on that below...
-
-...
-> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-> index 1b2344d00525..b1519dfc5811 100644
-> --- a/fs/xfs/scrub/scrub.c
-> +++ b/fs/xfs/scrub/scrub.c
-> @@ -40,6 +40,7 @@
->  #include "scrub/trace.h"
->  #include "scrub/btree.h"
->  #include "scrub/repair.h"
-> +#include "scrub/health.h"
->  
->  /*
->   * Online Scrub and Repair
-> @@ -468,6 +469,7 @@ xfs_scrub_metadata(
->  {
->  	struct xfs_scrub		sc;
->  	struct xfs_mount		*mp = ip->i_mount;
-> +	unsigned int			heal_mask;
->  	bool				try_harder = false;
->  	bool				already_fixed = false;
->  	int				error = 0;
-> @@ -488,6 +490,7 @@ xfs_scrub_metadata(
->  	error = xchk_validate_inputs(mp, sm);
->  	if (error)
->  		goto out;
-> +	heal_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
->  
->  	xchk_experimental_warning(mp);
->  
-> @@ -499,6 +502,8 @@ xfs_scrub_metadata(
->  	sc.ops = &meta_scrub_ops[sm->sm_type];
->  	sc.try_harder = try_harder;
->  	sc.sa.agno = NULLAGNUMBER;
-> +	sc.heal_mask = heal_mask;
-> +	sc.sick_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
-
-Ok, so we initialize the heal/sick masks based on the scrub type that
-was requested on the first pass through...
-
->  	error = sc.ops->setup(&sc, ip);
->  	if (error)
->  		goto out_teardown;
-> @@ -519,6 +524,8 @@ xfs_scrub_metadata(
->  	} else if (error)
->  		goto out_teardown;
->  
-> +	xchk_update_health(&sc, already_fixed);
+> +	struct xfs_perag	*pag;
+> +	xfs_agnumber_t		agno;
+> +	int			error = 0;
 > +
+> +	xfs_fs_mark_healthy(mp, XFS_HEALTH_FS_INDIRECT);
+> +	xfs_rt_mark_healthy(mp, XFS_HEALTH_RT_INDIRECT);
+> +	for (agno = 0; error == 0 && agno < mp->m_sb.sb_agcount; agno++) {
+> +		pag = xfs_perag_get(mp, agno);
+> +		xfs_ag_mark_healthy(pag, XFS_HEALTH_AG_INDIRECT);
+> +		xfs_perag_put(pag);
+> +	}
+> +}
+>  /* Mark metadata unhealthy. */
+>  static void
+>  xchk_mark_sick(
+> @@ -149,6 +204,9 @@ xchk_mark_healthy(
+>  	case XFS_SCRUB_TYPE_RTSUM:
+>  		xfs_rt_mark_healthy(sc->mp, mask);
+>  		break;
+> +	case XFS_SCRUB_TYPE_HEALTHY:
+> +		xchk_mark_all_healthy(sc->mp);
+> +		break;
 
-... then update the in-core fs health state based on the sick mask. Is
-it possible for the scrub operation to set more sick mask bits based on
-what it finds? More specifically, I'm wondering why the masks wouldn't
-start as zero and toggle based on finding/fixing corruption(s). Or if
-the sick mask value is essentially fixed, whether we need to store it in
-the xfs_scrub context...
-
->  	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed) {
->  		bool needs_fix;
->  
-> @@ -551,6 +558,7 @@ xfs_scrub_metadata(
->  				xrep_failure(mp);
->  				goto out;
->  			}
-> +			heal_mask = sc.heal_mask;
-
-And if we end up doing a repair, we presumably can repair multiple
-things and so we track that separately and persist the heal mask across
-a potential retry. What about the case where we don't retry, but scrub
-finds something and then immediately repairs it? Should we update the fs
-state after both detecting and clearing the problem, or does that happen
-elsewhere?
-
-Also, if repair can potentially clear multiple bits, what's the
-possibility of a repair clearing one failure and then failing on
-another, causing the broader repair op to return an error or jump into
-this retry? ISTM that it might be possible to skip clearing one fail
-state bit so long as the original thing remained corrupted, but I feel
-like I'm still missing some context on the bigger picture scrub
-tracking...
+Should this scrub type have a corresponding health flag? It kind of
+looks like it being zeroed could prevent us from getting here because of
+the 'if (!mask)' check in xchk_update_health(), but it's a bit twisty
+from there to here.. :P
 
 Brian
 
->  			goto retry_op;
->  		}
+>  	default:
+>  		break;
 >  	}
-> diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-> index 22f754fba8e5..05f1ad242a35 100644
-> --- a/fs/xfs/scrub/scrub.h
-> +++ b/fs/xfs/scrub/scrub.h
-> @@ -62,6 +62,17 @@ struct xfs_scrub {
->  	struct xfs_inode		*ip;
->  	void				*buf;
->  	uint				ilock_flags;
-> +
-> +	/* Metadata to be marked sick if scrub finds errors. */
-> +	unsigned int			sick_mask;
-> +
-> +	/*
-> +	 * Metadata to be marked healthy if repair fixes errors.  Some repair
-> +	 * functions can fix multiple data structures at once, so we have to
-> +	 * treat sick and heal masks separately.
-> +	 */
-> +	unsigned int			heal_mask;
-> +
->  	bool				try_harder;
->  	bool				has_quotaofflock;
+> diff --git a/fs/xfs/scrub/health.h b/fs/xfs/scrub/health.h
+> index e795f4c9a23c..001e5a93273d 100644
+> --- a/fs/xfs/scrub/health.h
+> +++ b/fs/xfs/scrub/health.h
+> @@ -8,5 +8,6 @@
+>  
+>  unsigned int xchk_health_mask_for_scrub_type(__u32 scrub_type);
+>  void xchk_update_health(struct xfs_scrub *sc, bool already_fixed);
+> +int xchk_health_record(struct xfs_scrub *sc);
+>  
+>  #endif /* __XFS_SCRUB_HEALTH_H__ */
+> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> index f28f4bad317b..5df67fe5d8ac 100644
+> --- a/fs/xfs/scrub/repair.c
+> +++ b/fs/xfs/scrub/repair.c
+> @@ -31,6 +31,7 @@
+>  #include "xfs_quota.h"
+>  #include "xfs_attr.h"
+>  #include "xfs_reflink.h"
+> +#include "xfs_health.h"
+>  #include "scrub/xfs_scrub.h"
+>  #include "scrub/scrub.h"
+>  #include "scrub/common.h"
+> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+> index b1519dfc5811..f446ab57d7b0 100644
+> --- a/fs/xfs/scrub/scrub.c
+> +++ b/fs/xfs/scrub/scrub.c
+> @@ -348,6 +348,12 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+>  		.scrub	= xchk_quota,
+>  		.repair	= xrep_notsupported,
+>  	},
+> +	[XFS_SCRUB_TYPE_HEALTHY] = {	/* fs healthy; clean all reminders */
+> +		.type	= ST_FS,
+> +		.setup	= xchk_setup_fs,
+> +		.scrub	= xchk_health_record,
+> +		.repair = xrep_notsupported,
+> +	},
+>  };
+>  
+>  /* This isn't a stable feature, warn once per day. */
+> diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+> index 3c83e8b3b39c..7c25a38c6f81 100644
+> --- a/fs/xfs/scrub/trace.h
+> +++ b/fs/xfs/scrub/trace.h
+> @@ -75,7 +75,8 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PQUOTA);
+>  	{ XFS_SCRUB_TYPE_RTSUM,		"rtsummary" }, \
+>  	{ XFS_SCRUB_TYPE_UQUOTA,	"usrquota" }, \
+>  	{ XFS_SCRUB_TYPE_GQUOTA,	"grpquota" }, \
+> -	{ XFS_SCRUB_TYPE_PQUOTA,	"prjquota" }
+> +	{ XFS_SCRUB_TYPE_PQUOTA,	"prjquota" }, \
+> +	{ XFS_SCRUB_TYPE_HEALTHY,	"healthy" }
+>  
+>  DECLARE_EVENT_CLASS(xchk_class,
+>  	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
+> @@ -223,6 +224,7 @@ DEFINE_EVENT(xchk_block_error_class, name, \
+>  		 void *ret_ip), \
+>  	TP_ARGS(sc, daddr, ret_ip))
+>  
+> +DEFINE_SCRUB_BLOCK_ERROR_EVENT(xchk_fs_error);
+>  DEFINE_SCRUB_BLOCK_ERROR_EVENT(xchk_block_error);
+>  DEFINE_SCRUB_BLOCK_ERROR_EVENT(xchk_block_preen);
 >  
 > 
