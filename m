@@ -1,268 +1,206 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33270 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726418AbfDDSBo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Apr 2019 14:01:44 -0400
-Date: Thu, 4 Apr 2019 11:01:33 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:33912 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726730AbfDEPMn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Apr 2019 11:12:43 -0400
+Date: Fri, 5 Apr 2019 08:12:32 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 09/10] xfs: scrub/repair should update filesystem
- metadata health
-Message-ID: <20190404180133.GS5147@magnolia>
-References: <155413860964.4966.6087725033542837255.stgit@magnolia>
- <155413867262.4966.18080677522827911800.stgit@magnolia>
- <20190404115009.GB37737@bfoster>
+Subject: Re: [PATCH 2/4] xfs: force writes to delalloc regions to unwritten
+Message-ID: <20190405151232.GY5147@magnolia>
+References: <20190319202537.GR23020@dastard>
+ <20190320120204.GA28268@bfoster>
+ <20190320211019.GS23020@dastard>
+ <20190321122740.GB33001@bfoster>
+ <20190322015240.GX23020@dastard>
+ <20190322124615.GB37888@bfoster>
+ <20190403223809.GL5147@magnolia>
+ <20190404125054.GA38253@bfoster>
+ <20190404220845.GE26298@dastard>
+ <20190405112441.GA43111@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190404115009.GB37737@bfoster>
+In-Reply-To: <20190405112441.GA43111@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Thu, Apr 04, 2019 at 07:50:11AM -0400, Brian Foster wrote:
-> On Mon, Apr 01, 2019 at 10:11:12AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Apr 05, 2019 at 07:24:44AM -0400, Brian Foster wrote:
+> On Fri, Apr 05, 2019 at 09:08:45AM +1100, Dave Chinner wrote:
+> > On Thu, Apr 04, 2019 at 08:50:54AM -0400, Brian Foster wrote:
+> > > On Wed, Apr 03, 2019 at 03:38:09PM -0700, Darrick J. Wong wrote:
+> > > > On Fri, Mar 22, 2019 at 08:46:15AM -0400, Brian Foster wrote:
+> > > > > On Fri, Mar 22, 2019 at 12:52:40PM +1100, Dave Chinner wrote:
+> > > > > > On Thu, Mar 21, 2019 at 08:27:40AM -0400, Brian Foster wrote:
+> > > > > > > On Thu, Mar 21, 2019 at 08:10:19AM +1100, Dave Chinner wrote:
+> > > > > > > > On Wed, Mar 20, 2019 at 08:02:05AM -0400, Brian Foster wrote:
+> > > > > > > > > On Wed, Mar 20, 2019 at 07:25:37AM +1100, Dave Chinner wrote:
+> > > > > > > > > > > > The broader point is that by controlling writeback ordering, we can
+> > > > > > > > > > > > explicitly demonstrate stale data exposure. If fixed properly, we should
+> > > > > > > > > > > > never expect stale data exposure even in the event of out of order
+> > > > > > > > > > > > writeback completion, regardless of the cause.
+> > > > > > > > > > > 
+> > > > > > > > > > > Agree.  Even if s_f_r is a giant trash fire, if we're exposing stale
+> > > > > > > > > > > disk contents it's game over anyway and we ought to fix it.
+> > > > > > > > > > 
+> > > > > > > > > > Well, that's exactly the problem with SFR, isn't it? The dirty data
+> > > > > > > > > > is outside the range the user asks to sync and the implementation
+> > > > > > > > > > doesn't go anywhere near the filesystem so we can't actually do the
+> > > > > > > > > > right thing here. So we are left to either hack fixes around a
+> > > > > > > > > > shitty, broken interface and everyone pays the penalty, or we ignore
+> > > > > > > > > > it. We've simply ignored it for the past 10+ years because it really
+> > > > > > > > > > can't be used safely for it's intended purposes (as everyone who
+> > > > > > > > > > tries to use it finds out eventually)...
+> > > > > > > > > > 
+> > > > > > > > > 
+> > > > > > > > > Just to make this abundantly clear, there is nothing unique, magic or
+> > > > > > > > > special required of sync_file_range() to reproduce this stale data
+> > > > > > > > > exposure. See the following variation of a command sequence from the
+> > > > > > > > > fstest I posted the other day:
+> > > > > > > > > 
+> > > > > > > > > ...
+> > > > > > > > > # xfs_io -fc "pwrite 0 68k" -c fsync -c "pwrite 96k 4k" \
+> > > > > > > > > 	-c "fpunch 96k 4k" <file>
+> > > > > > > > > ...
+> > > > > > > > > # hexdump <file>
+> > > > > > > > > 0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+> > > > > > > > > *
+> > > > > > > > > 0011000 abab abab abab abab abab abab abab abab
+> > > > > > > > > *
+> > > > > > > > > 0018000 0000 0000 0000 0000 0000 0000 0000 0000
+> > > > > > > > > *
+> > > > > > > > > 0019000
+> > > > > > > > > 
+> > > > > > > > > Same problem, and it can be reproduced just as easily with a reflink or
+> > > > > > > > > even an overlapping direct I/O.
+> > > > > > > > 
+> > > > > > > > How does overlapping direct IO cause stale data exposure given that
+> > > > > > > > it uses unwritten extent allocation? That, of course, is ignoring
+> > > > > > > > the fact that the result of overlapping concurent direct IO is, by
+> > > > > > > > definition, undefined and an application bug if it occurs....
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > It's overlapping a buffered write and so starts with a flush instead of
+> > > > > > 
+> > > > > > Ok, but that's not the normal usage of the phrase "overlapping
+> > > > > > direct IO".  Overlapping direct IO means two concurrent direct IOs
+> > > > > > to the same LBA range in the device underlying the filesystem. i.e.
+> > > > > > they overlap in both the temporal and physical (device LBA) domains.
+> > > > > > 
+> > > > > > Subtle difference, yes, but a very important one.
+> > > > > > 
+> > > > > 
+> > > > > Yeah, I just referenced it in passing and was unclear. The point is just
+> > > > > that there are multiple vectors to the problem, some of which are sane
+> > > > > sequences and some apparently not, and I'd rather not get caught up in
+> > > > > the minutiae of why some of those sequences are not sane. I'm trying to
+> > > > > see if we can find a solution to the fundamental data exposure problem.
+> > > > 
+> > > > Is there a way to increase the amount of writeback?  Say for example
+> > > > that we have a delalloc reservation for blocks 0-9, and writeback asks
+> > > > us to write back block 7.  If we succeed at converting the entire
+> > > > 10-block reservation into a real extent, why can't we come back and say
+> > > > "Hey, we also need to flush the pages for blocks 0-6,8-9"?  Are we going
+> > > > to need something like that for blocksize > pagesize filesystems too?
+> > > > 
+> > > 
+> > > That might be possible in various places. In fact, I think we used to do
+> > > something like this in XFS (perhaps not for this purpose). I just jumped
+> > > back to v2.6.32 and see that the xfs_cluster_write() mechanism still
+> > > exists at that point down in the ->writepage() path.
 > > 
-> > Now that we have the ability to track sick metadata in-core, make scrub
-> > and repair update those health assessments after doing work.
+> > We /really/ don't want to go back to that. This caused us to have to
+> > essentially implement write_cache_pages() inside ->writepage.
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/Makefile       |    1 
-> >  fs/xfs/scrub/health.c |  180 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/scrub/health.h |   12 +++
-> >  fs/xfs/scrub/scrub.c  |    8 ++
-> >  fs/xfs/scrub/scrub.h  |   11 +++
-> >  5 files changed, 212 insertions(+)
-> >  create mode 100644 fs/xfs/scrub/health.c
-> >  create mode 100644 fs/xfs/scrub/health.h
+> 
+> Agreed..
+> 
+> > If we want to expand the writeback range, (i.e. move the offset we
+> > start at) then we need to do that in xfs_vm_writepages(), before we
+> > call write_cache_pages(). This means all the tagged writepages stuff
+> > will continue to work, and we don't end up doing redundant page
+> > cache lookups because we're trying to write back the same range from
+> > two different places.
 > > 
+> 
+> IMO, messing around with writeback like this is a mitigation and/or a
+> contributer to a broader solution, not a fundamental fix by itself. For
+> example, I could see doing something like that if we already put proper
+> writeback vs. append transaction ordering in place and we identify
+> certain corner cases where we want to prevent delaying an on-disk i_size
+> update for too long because a user indirectly triggered writeback of a
+> high index page.
+> 
+> > > I'm not sure if doing that alone is worth the effort if you consider
+> > > it's more of a mitigation than a solution to the underlying problem.
+> > > Once we convert the associated delalloc extent, we're open to stale data
+> > > exposure (assuming we're not protected by on-disk EOF and whatnot) until
+> > > all of the remaining pages over the extent are written back, whether
+> > > that occurs in the current writeback cycle or a subsequent one.
 > > 
-> ...
-> > diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
-> > new file mode 100644
-> > index 000000000000..dd9986500801
-> > --- /dev/null
-> > +++ b/fs/xfs/scrub/health.c
-> > @@ -0,0 +1,180 @@
-> ...
-> > +/* Update filesystem health assessments based on what we found and did. */
-> > +void
-> > +xchk_update_health(
-> > +	struct xfs_scrub	*sc,
-> > +	bool			already_fixed)
-> > +{
-> > +	/*
-> > +	 * If the scrubber finds errors, we mark sick whatever's mentioned in
-> > +	 * sick_mask, no matter whether this is a first scan or an evaluation
-> > +	 * of repair effectiveness.
-> > +	 *
-> > +	 * If there is no direct corruption and we're called after a repair,
-> > +	 * clear whatever's in heal_mask because that's what we fixed.
-> > +	 *
-> > +	 * Otherwise, there's no direct corruption and we didn't repair
-> > +	 * anything, so mark whatever's in sick_mask as healthy.
-> > +	 */
-> > +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> > +		xchk_mark_sick(sc, sc->sick_mask);
-> > +	else if (already_fixed)
-> > +		xchk_mark_healthy(sc, sc->heal_mask);
-> > +	else
-> > +		xchk_mark_healthy(sc, sc->sick_mask);
-> > +}
+> > If we were to do a read iomap lookup in xfs_vm_writepages() we could
+> > determine if the delalloc conversion would allocate a range outside
+> > the current write that is bing flushed, and either modify the
+> > writeback control range/offset to match the delalloc extent.
+> > 
+> > however, this runs the risk of breaking all the fairness algorithms
+> > in high level writeback, so we'd need to be very careful about how
+> > we extend the write range for writeback inside EOF....
+> > 
 > 
-> Hmm, I think I follow what we're doing here but it's a bit confusing
-> without the additional context of where these bits will be set/cleared
-> at the lower scrub layers (or at least without an example). Some
-> questions on that below...
+> Indeed. The more I think about this, the more I think we'd have an
+> easier time trying to schedule the on-disk i_size update vs. trying to
+> control the size and range of writeback in all possible scenarios. The
+> former would still require non-trivial tracking and logic, but that's
+> something writeback control described above could actually help with.
 > 
-> ...
-> > diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-> > index 1b2344d00525..b1519dfc5811 100644
-> > --- a/fs/xfs/scrub/scrub.c
-> > +++ b/fs/xfs/scrub/scrub.c
-> > @@ -40,6 +40,7 @@
-> >  #include "scrub/trace.h"
-> >  #include "scrub/btree.h"
-> >  #include "scrub/repair.h"
-> > +#include "scrub/health.h"
-> >  
-> >  /*
-> >   * Online Scrub and Repair
-> > @@ -468,6 +469,7 @@ xfs_scrub_metadata(
-> >  {
-> >  	struct xfs_scrub		sc;
-> >  	struct xfs_mount		*mp = ip->i_mount;
-> > +	unsigned int			heal_mask;
-> >  	bool				try_harder = false;
-> >  	bool				already_fixed = false;
-> >  	int				error = 0;
-> > @@ -488,6 +490,7 @@ xfs_scrub_metadata(
-> >  	error = xchk_validate_inputs(mp, sm);
-> >  	if (error)
-> >  		goto out;
-> > +	heal_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
-> >  
-> >  	xchk_experimental_warning(mp);
-> >  
-> > @@ -499,6 +502,8 @@ xfs_scrub_metadata(
-> >  	sc.ops = &meta_scrub_ops[sm->sm_type];
-> >  	sc.try_harder = try_harder;
-> >  	sc.sa.agno = NULLAGNUMBER;
-> > +	sc.heal_mask = heal_mask;
-> > +	sc.sick_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
+> For example, we don't currently have any way to track "stale" state of
+> just allocated but not yet fully written extents. If we established a
+> rule that we always wrote back such extents in entirety and via a single
+> ioend, then writeback completion code would simply need to check for
+> delalloc extents within in-core eof to determine when it's safe to
+> update on-disk eof. If there are cases where we determine we can't
+> writeback an entire delalloc extent because of some fairness reasons or
+> whatever, we could decide to only physically allocate the subset of that
+> delalloc extent that we can write back rather than the whole thing
+> (trading off stale data exposure for some increased fragmentation). That
+> way writeback completion still sees existence of delalloc blocks and
+> knows to hold off on the on-disk size update.
 > 
-> Ok, so we initialize the heal/sick masks based on the scrub type that
-> was requested on the first pass through...
+> One challenge with an approach like that is if we do skip completion
+> time on-disk i_size updates, we'd have to make sure that those updates
+> still happen eventually if the address space happens to change outside
+> of writeback. For example, if those remaining dirty delalloc pages
+> somehow end up invalidated and never become real blocks, we may never
+> see another writeback cycle on the inode and we'd need to update on-disk
+> size from some other context (in a timely fashion).
 > 
-> >  	error = sc.ops->setup(&sc, ip);
-> >  	if (error)
-> >  		goto out_teardown;
-> > @@ -519,6 +524,8 @@ xfs_scrub_metadata(
-> >  	} else if (error)
-> >  		goto out_teardown;
-> >  
-> > +	xchk_update_health(&sc, already_fixed);
-> > +
-> 
-> ... then update the in-core fs health state based on the sick mask. Is
-> it possible for the scrub operation to set more sick mask bits based on
-> what it finds?
+> Of course this only deals with the append case. We'd still need to
+> select a mechanism for dealing with inside EOF allocations (such as the
+> whole write-intent thing or unwritten extents). To me, the intent thing
+> still seems like the most simple/elegant option we've discussed so far
+> because the potential for low impact. Part of me thinks that if we
+> determine we'll fall back to that approach for certain cases anyways
+> (like inside EOF allocs), it might be worth just doing that first and
+> evaluate using it unconditionally.
 
-Theoretically, yes, but in practice none of the current scrubbers need
-to touch sick_mask.
+/me wonders if we could solve this by using a bitmap to track all the
+in-flight post-ondisk-eof writeback such that when a particular
+writeback completes it can check if there aren't any writeback at a
+lower offset still in progress and only then update the ondisk eof?
 
-heal_mask, OTOH, will be adjusted by the free space / inode repair
-functions since they rebuild multiple structures.
-
-> More specifically, I'm wondering why the masks wouldn't start as zero
-> and toggle based on finding/fixing corruption(s).
-
-sick_mask is also the mask we feed to xfs_*_mark_healthy if the scan
-returns clean, which is why we set the default value before dispatching
-the scrub.
-
-> Or if the sick mask value is essentially fixed, whether we need to
-> store it in the xfs_scrub context...
-
-We could probably get away with generating it in xchk_update_health at
-the end, but it feels weird to have heal_mask in the scrub context but
-sick_mask gets auto-generated.
-
-> 
-> >  	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed) {
-> >  		bool needs_fix;
-> >  
-> > @@ -551,6 +558,7 @@ xfs_scrub_metadata(
-> >  				xrep_failure(mp);
-> >  				goto out;
-> >  			}
-> > +			heal_mask = sc.heal_mask;
-> 
-> And if we end up doing a repair, we presumably can repair multiple
-> things and so we track that separately and persist the heal mask across
-> a potential retry.
-
-Right.
-
-> What about the case where we don't retry, but scrub finds something
-> and then immediately repairs it?
-
-The repair jumps back to retry_op if either (a) we couldn't get all the
-resources we needed and therefore sc.try_harder = true and we need to
-start over; or (b) repair thinks it fixed a thing, so we need to scrub
-the thing again to see if it's really fixed...
-
-> Should we update the fs state after both detecting and clearing the
-> problem, or does that happen elsewhere?
-
-...so if scrub immediately repairs a thing, we preserve heal_mask, jump
-back to the scrub, and if the scrub says clean we'll mark heal mask
-healthy.
-
-If the repair has to retry then the we'll call the repair function
-again, which (presumably) will set (again) the heal_mask appropriately,
-and then we have the same post-repair state updating as above.
-
-Does that make sense? :)
-
-> Also, if repair can potentially clear multiple bits, what's the
-> possibility of a repair clearing one failure and then failing on
-> another, causing the broader repair op to return an error or jump into
-> this retry?
-
-Scrub doesn't touch the fs health state at all until after the ->scrub
-or ->repair function succeeds.  If the scrub or the repair functions
-fail for any non-retry reason, we back out to userspace without updating
-anything.  It's as if we'd never called the failed function.
-
-Maybe some worked examples will help?
-
-Let's say both inode btrees are corrupt.  We run xfs_scrub -n,
-xchk_inobt will record the corruption, and (assuming it hits no runtime
-errors) once we return to xfs_scrub_metadata, it'll set
-XFS_SICK_AG_INOBT.  Presumably xfs_scrub will also call the finobt scrub
-and SICK_AG_FINOBT will also get set.
-
-If we run xfs_scrub without the -n, xchk_inobt will record the
-corruption and set SICK_AG_INOBT per above.  Then it'll run xrep_inobt,
-which will set heal_mask to SICK_AG_INOBT | SICK_AG_FINOBT.  If the
-repair fails with a non-retry runtime error, we exit to userspace and
-ignore heal_mask.
-
-If instead the repair succeeds, we scan the inobt again.  If that comes
-up clear then we use heal_mask to clear SICK_AG_INOBT | SICK_AG_FINOBT.
-xfs_scrub will call again later to repair the finobt, but the initial
-finobt scan will see no errors in the finobt, clear SICK_AG_FINOBT
-(which isn't set) and exit.
-
-If the inobt repair function is buggy and says it repaired the inode
-btrees but leaves corruptions, then the rescan of the inobt will notice
-and set SICK_AG_INOBT (which is already set) and exit.  Similarly, when
-xfs_scrub calls back about the finobt, it will notice the corrupt
-finobt, try to set SICK_AG_FINOBT (also already set), try to fix it, and
-the rescan of the finobt will notice that the finobt is still corrupt
-and try to set SICK_AG_FINOBT (which is still set).
-
-The end result (I think) is that we always set the sick bits if a scan
-shows problems, and we only clear the sick bits for things if we can
-prove that the things are no longer sick.  Does that help?
-
-> ISTM that it might be possible to skip clearing one fail state bit so
-> long as the original thing remained corrupted, but I feel like I'm
-> still missing some context on the bigger picture scrub tracking...
-
-Yeah, the state machine is pretty squirrely. :/
+(Where "a bitmap or something" could just use another instance of Dave's
+range lock structure...)
 
 --D
 
 > Brian
 > 
-> >  			goto retry_op;
-> >  		}
-> >  	}
-> > diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-> > index 22f754fba8e5..05f1ad242a35 100644
-> > --- a/fs/xfs/scrub/scrub.h
-> > +++ b/fs/xfs/scrub/scrub.h
-> > @@ -62,6 +62,17 @@ struct xfs_scrub {
-> >  	struct xfs_inode		*ip;
-> >  	void				*buf;
-> >  	uint				ilock_flags;
-> > +
-> > +	/* Metadata to be marked sick if scrub finds errors. */
-> > +	unsigned int			sick_mask;
-> > +
-> > +	/*
-> > +	 * Metadata to be marked healthy if repair fixes errors.  Some repair
-> > +	 * functions can fix multiple data structures at once, so we have to
-> > +	 * treat sick and heal masks separately.
-> > +	 */
-> > +	unsigned int			heal_mask;
-> > +
-> >  	bool				try_harder;
-> >  	bool				has_quotaofflock;
-> >  
+> > Cheers,
 > > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
