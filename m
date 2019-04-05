@@ -1,54 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:14819 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729863AbfDDVRe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Apr 2019 17:17:34 -0400
-Date: Fri, 5 Apr 2019 08:17:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw
- workload
-Message-ID: <20190404211730.GD26298@dastard>
-References: <20190404165737.30889-1-amir73il@gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:55520 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730870AbfDERLV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Apr 2019 13:11:21 -0400
+Subject: Re: [RFC 0/2] guarantee natural alignment for kmalloc()
+References: <20190319211108.15495-1-vbabka@suse.cz>
+ <01000169988d4e34-b4178f68-c390-472b-b62f-a57a4f459a76-000000@email.amazonses.com>
+ <5d7fee9c-1a80-6ac9-ac1d-b1ce05ed27a8@suse.cz>
+ <010001699c5563f8-36c6909f-ed43-4839-82da-b5f9f21594b8-000000@email.amazonses.com>
+ <4d2a55dc-b29f-1309-0a8e-83b057e186e6@suse.cz>
+ <01000169a68852ed-d621a35c-af0c-4759-a8a3-e97e7dfc17a5-000000@email.amazonses.com>
+From: Vlastimil Babka <vbabka@suse.cz>
+Message-ID: <2b129aec-f9a5-7ab8-ca4a-0a325621d111@suse.cz>
+Date: Fri, 5 Apr 2019 19:11:17 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190404165737.30889-1-amir73il@gmail.com>
+In-Reply-To: <01000169a68852ed-d621a35c-af0c-4759-a8a3-e97e7dfc17a5-000000@email.amazonses.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Christopher Lameter <cl@linux.com>
+Cc: linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Michal Hocko <mhocko@kernel.org>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
 
-On Thu, Apr 04, 2019 at 07:57:37PM +0300, Amir Goldstein wrote:
-> This patch improves performance of mixed random rw workload
-> on xfs without relaxing the atomic buffered read/write guaranty
-> that xfs has always provided.
+On 3/22/19 6:52 PM, Christopher Lameter wrote:
+> On Thu, 21 Mar 2019, Vlastimil Babka wrote:
 > 
-> We achieve that by calling generic_file_read_iter() twice.
-> Once with a discard iterator to warm up page cache before taking
-> the shared ilock and once again under shared ilock.
+>> That however doesn't work well for the xfs/IO case where block sizes are
+>> not known in advance:
+>>
+>> https://lore.kernel.org/linux-fsdevel/20190225040904.5557-1-ming.lei@redhat.com/T/#ec3a292c358d05a6b29cc4a9ce3ae6b2faf31a23f
+> 
+> I thought we agreed to use custom slab caches for that?
 
-This will race with thing like truncate, hole punching, etc that
-serialise IO and invalidate the page cache for data integrity
-reasons under the IOLOCK. These rely on there being no IO to the
-inode in progress at all to work correctly, which this patch
-violates. IOWs, while this is fast, it is not safe and so not a
-viable approach to solving the problem.
-
-FYI, I'm working on a range lock implementation that should both
-solve the performance issue and the reader starvation issue at the
-same time by allowing concurrent buffered reads and writes to
-different file ranges.
-
-IO range locks will allow proper exclusion for other extent
-manipulation operations like fallocate and truncate, and eventually
-even allow truncate, hole punch, file extension, etc to run
-concurrently with other non-overlapping IO. They solve more than
-just the performance issue you are seeing....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Hm maybe I missed something but my impression was that xfs/IO folks would have
+to create lots of them for various sizes not known in advance, and that it
+wasn't practical and would welcome if kmalloc just guaranteed the alignment.
+But so far they haven't chimed in here in this thread, so I guess I'm wrong.
