@@ -1,89 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:43740 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726266AbfD0BYO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Apr 2019 21:24:14 -0400
-Date: Fri, 26 Apr 2019 18:24:06 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_db: Scan entire file system when using 'frag'
-Message-ID: <20190427012406.GO178290@magnolia>
-References: <20190426225920.34359-1-jorgeguerra@gmail.com>
- <4c0ed0bf-c980-9379-3816-c8e5dddd61b5@sandeen.net>
+Received: from sandeen.net ([63.231.237.45]:60130 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731739AbfDESjG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Apr 2019 14:39:06 -0400
+Subject: Re: [PATCH 31/36] libxfs: refactor the open-coded libxfs_trans_bjoin
+ calls
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <155259762358.31886.5732556054840025852.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <747e30c7-1e37-7f71-347a-95074ca1ec5e@sandeen.net>
+Date: Fri, 5 Apr 2019 13:39:05 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4c0ed0bf-c980-9379-3816-c8e5dddd61b5@sandeen.net>
+In-Reply-To: <155259762358.31886.5732556054840025852.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Jorge Guerra <jorge.guerra@gmail.com>, linux-xfs@vger.kernel.org, osandov@osandov.com, Jorge Guerra <jorgeguerra@fb.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Apr 26, 2019 at 07:13:49PM -0500, Eric Sandeen wrote:
-> On 4/26/19 5:59 PM, Jorge Guerra wrote:
-> > From: Jorge Guerra <jorgeguerra@fb.com>
-> > 
-> > While running the 'frag' command of 'xfs_db' we noticed that the
-> > tool is not scanning all the files in the file system.  We noticed
-> > this when we modified the tool to print the inodes of all the files
-> > scanned.  For example:
-> > 
-> >  $ find /mnt/xfsdisk -type f | wc -l
-> >  1782674
-> >  $ xfs_db -r -c frag /dev/sdXX  | grep MB | awk '{print $5}' | paste -s -d+ | bc
-> >  656818
-> > 
-> > Upon inspecting the code we noticed that the scanfunc_ino function
-> > stops processing a given inode block once it encounters a free leaf.
-> > However, in practice we see that inodes are necessarily always layed
-> > out contiguously on the leaf node.  This resulted in the 'frag'
-> > command skipping some valid inodes.
-> > 
-> > In this change we modify the scanfunc_ino function to skip freed
-> > inodes.  With the change in place we ran the same experiment again
-> > and noticed a more accurate file count:
-> > 
-> >  $ find /mnt/d0 -type f | wc -l
-> >  1810442
-> >  $ xfs_db -r -c frag /dev/sdXX  | grep MB | awk '{print $5}' | paste -s -d+ | bc
-> >  1810442
-> > 
-> > Signed-off-by: Jorge Guerra <jorgeguerra@fb.com>
+On 3/14/19 4:07 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> This looks right, but I'll warn you that xfs_db's frag command is largely
-> useless in the first place.  ;)
+> Refactor open-coded bjoin code to use libxfs_trans_bjoin.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I was looking through the manpages for the part where it says frag is
-useless but couldn't find it.  Oh well. :(
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
+> ---
+>  libxfs/trans.c |   18 +++---------------
+>  1 file changed, 3 insertions(+), 15 deletions(-)
 > 
-> Also, I think:
 > 
-> Fixes: 2a5eb70c ("xfs_db: teach the frag command about sparse inode chunks")
+> diff --git a/libxfs/trans.c b/libxfs/trans.c
+> index 10a35dd4..7bdd1544 100644
+> --- a/libxfs/trans.c
+> +++ b/libxfs/trans.c
+> @@ -663,13 +663,9 @@ libxfs_trans_get_buf_map(
+>  	fprintf(stderr, "trans_get_buf buffer %p, transaction %p\n", bp, tp);
+>  #endif
+>  
+> -	xfs_buf_item_init(bp, tp->t_mountp);
+> +	libxfs_trans_bjoin(tp, bp);
+>  	bip = bp->b_log_item;
+>  	bip->bli_recur = 0;
+> -	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
+> -
+> -	/* initialize b_transp so we can find it incore */
+> -	bp->b_transp = tp;
+>  	return bp;
+>  }
+>  
+> @@ -701,13 +697,9 @@ libxfs_trans_getsb(
+>  	fprintf(stderr, "trans_get_sb buffer %p, transaction %p\n", bp, tp);
+>  #endif
+>  
+> -	xfs_buf_item_init(bp, mp);
+> +	libxfs_trans_bjoin(tp, bp);
+>  	bip = bp->b_log_item;
+>  	bip->bli_recur = 0;
+> -	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
+> -
+> -	/* initialize b_transp so we can find it incore */
+> -	bp->b_transp = tp;
+>  	return bp;
+>  }
+>  
+> @@ -758,13 +750,9 @@ libxfs_trans_read_buf_map(
+>  	fprintf(stderr, "trans_read_buf buffer %p, transaction %p\n", bp, tp);
+>  #endif
+>  
+> -	xfs_buf_item_init(bp, tp->t_mountp);
+> +	xfs_trans_bjoin(tp, bp);
+>  	bip = bp->b_log_item;
+>  	bip->bli_recur = 0z
+> -	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
+> -
+> -	/* initialise b_transp so we can find it incore */
+> -	bp->b_transp = tp;
+>  done:
+>  	*bpp = bp;
+>  	return 0;
 > 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> Thanks!
-> 
-> > ---
-> >  db/frag.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/db/frag.c b/db/frag.c
-> > index 5f33cb73..91395234 100644
-> > --- a/db/frag.c
-> > +++ b/db/frag.c
-> > @@ -507,7 +507,7 @@ scanfunc_ino(
-> >  
-> >  				for (j = 0; j < inodes_per_buf; j++) {
-> >  					if (XFS_INOBT_IS_FREE_DISK(&rp[i], ioff + j))
-> > -						goto next_buf;
-> > +						continue;
-> >  					dip = (xfs_dinode_t *)((char *)iocur_top->data +
-> >  						((off + j) << mp->m_sb.sb_inodelog));
-> >  					process_inode(agf, agino + ioff + j, dip);
-> > 
