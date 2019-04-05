@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34974 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:57970 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726291AbfDEOTA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Apr 2019 10:19:00 -0400
-Subject: Re: [PATCH 44/36] xfs_db: metadump should handle symlinks properly
+        id S1728683AbfDESRL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Apr 2019 14:17:11 -0400
+Subject: Re: [PATCH 30/36] libxfs: retain ifork_ops when flushing inode
 References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <20190320193750.GH1183@magnolia>
+ <155259761740.31886.12775146464846669280.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <cdd4b217-f914-c944-0fda-9a81245206e1@sandeen.net>
-Date: Fri, 5 Apr 2019 09:18:58 -0500
+Message-ID: <a443e2be-2e79-fcee-5cff-abfd1f8da50b@sandeen.net>
+Date: Fri, 5 Apr 2019 13:17:09 -0500
 MIME-Version: 1.0
-In-Reply-To: <20190320193750.GH1183@magnolia>
+In-Reply-To: <155259761740.31886.12775146464846669280.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -18,130 +18,83 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Arkadiusz Miskiewicz <arekm@maven.pl>
 
-On 3/20/19 2:37 PM, Darrick J. Wong wrote:
+On 3/14/19 4:06 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Remote symlink target blocks are multi-fsb objects on XFS v5 filesystems
-> because we only write one rmt header per data fork extent.  For fs
-> blocksize >= 2048 we never have more than one block and therefore nobody
-> noticed, but for blocksize == 1024 this is definitely not true and leads
-> to metadump spraying error messages about symlink block crc errors.
-> Therefore, reformulate the symlink metadump into a multi-fsb dump
-> function.
+> Retain the ifork ops used to validate the inode so that we can use the
+> same one to iflush it.  xfs_repair phase 6 can use multiple transactions
+> to fix various inode problems, which means that the inode might not be
+> fully fixed when each transaction commits.
 > 
+> This can be a particular problem if there's a shortform directory with
+> both invalid directory entries and incorrect i8count.  Phase 3 will set
+> the parent inode to "0" to signal to phase 6 that it needs to reset the
+> parent and i8count, but phase 6 starts a transaction to junk the bad
+> entries which fail to commit because the parent is invalid:
+> 
+> fixing i8count in inode 69022994673
+> Invalid inode number 0x0
+> xfs_dir_ino_validate: XFS_ERROR_REPORT
+> Metadata corruption detected at 0x464eb0, inode 0x10121750f1 data fork
+> xfs_repair: warning - iflush_int failed (-117)
+> 
+> And thus the inode fixes never get written out.
+
+This feels like it would be better to use consistently by dropping the ops
+arg to libxfs_inode_verify_forks, using ->i_fork_ops inside it, and setting
+it prior to the call.  Er, same for libxfs_iget?
+
+A mishmash of grabbing what was last set in the inode vs. explicitly pointing
+at a global ops structure seems a bit ad hoc.  Thoughts?
+
+
+> 
+> Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Ok, thanks for the patient re-explanation on IRC, and after a bit of testing,
-even with fragmented multi-block symlinks, this does work fine.
-
-I'd kind of like to fully understand why, with a single map, it handles
-fragmented links, but for now, moving on ... 
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-I'd like to change the struct bbmap initialization to outside the
-declaration, though, to be more in line with other similar code.
-Any heartburn over that?
-
-	map.nmaps = 1;
-	map.b[0].bm_bn = XFS_FSB_TO_DADDR(mp, s);
-	map.b[0].bm_len = XFS_FSB_TO_BB(mp, c);
-
-
-
 > ---
->  db/metadump.c |   48 +++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 41 insertions(+), 7 deletions(-)
+>  include/xfs_inode.h |    1 +
+>  libxfs/rdwr.c       |    1 +
+>  libxfs/util.c       |    2 +-
+>  3 files changed, 3 insertions(+), 1 deletion(-)
 > 
-> diff --git a/db/metadump.c b/db/metadump.c
-> index 57216291..e0dd463f 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -1638,11 +1638,39 @@ process_dir_data_block(
+> 
+> diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+> index 79ec3a2d..e1e8b430 100644
+> --- a/include/xfs_inode.h
+> +++ b/include/xfs_inode.h
+> @@ -51,6 +51,7 @@ typedef struct xfs_inode {
+>  
+>  	xfs_fsize_t		i_size;		/* in-memory size */
+>  	const struct xfs_dir_ops *d_ops;	/* directory ops vector */
+> +	struct xfs_ifork_ops	*i_fork_ops;	/* fork verifiers */
+>  	struct inode		i_vnode;
+>  } xfs_inode_t;
+>  
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index a00360e7..69d5abb2 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -1391,6 +1391,7 @@ libxfs_iget(
+>  		return error;
 >  	}
->  }
 >  
-> -static void
-> +static int
->  process_symlink_block(
-> -	char			*block)
-> +	xfs_fileoff_t	o,
-> +	xfs_fsblock_t	s,
-> +	xfs_filblks_t	c,
-> +	typnm_t		btype,
-> +	xfs_fileoff_t	last)
->  {
-> -	char *link = block;
-> +	struct bbmap	map = {
-> +		.nmaps	= 1,
-> +		.b	= {
-> +			{
-> +				.bm_bn = XFS_FSB_TO_DADDR(mp, s),
-> +				.bm_len = XFS_FSB_TO_BB(mp, c),
-> +			}
-> +		},
-> +	};
-> +	char		*link;
-> +	int		ret = 0;
-> +
-> +	push_cur();
-> +	set_cur(&typtab[btype], 0, 0, DB_RING_IGN, &map);
-> +	if (!iocur_top->data) {
-> +		xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
-> +		xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
-> +
-> +		print_warning("cannot read %s block %u/%u (%llu)",
-> +				typtab[btype].name, agno, agbno, s);
-> +		if (stop_on_read_error)
-> +			ret = -1;
-> +		goto out_pop;
-> +	}
-> +	link = iocur_top->data;
+> +	ip->i_fork_ops = ifork_ops;
+>  	if (!libxfs_inode_verify_forks(ip, ifork_ops)) {
+>  		libxfs_irele(ip);
+>  		return -EFSCORRUPTED;
+> diff --git a/libxfs/util.c b/libxfs/util.c
+> index bd414043..0799f965 100644
+> --- a/libxfs/util.c
+> +++ b/libxfs/util.c
+> @@ -420,7 +420,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
+>  		VFS_I(ip)->i_version++;
 >  
->  	if (xfs_sb_version_hascrc(&(mp)->m_sb))
->  		link += sizeof(struct xfs_dsymlink_hdr);
-> @@ -1660,6 +1688,12 @@ process_symlink_block(
->  		if (zlen < mp->m_sb.sb_blocksize)
->  			memset(link + linklen, 0, zlen);
->  	}
-> +
-> +	iocur_top->need_crc = 1;
-> +	ret = write_buf(iocur_top);
-> +out_pop:
-> +	pop_cur();
-> +	return ret;
->  }
+>  	/* Check the inline fork data before we write out. */
+> -	if (!libxfs_inode_verify_forks(ip, &xfs_default_ifork_ops))
+> +	if (!libxfs_inode_verify_forks(ip, ip->i_fork_ops))
+>  		return -EFSCORRUPTED;
 >  
->  #define MAX_REMOTE_VALS		4095
-> @@ -1879,10 +1913,6 @@ process_single_fsb_objects(
->  			}
->  			iocur_top->need_crc = 1;
->  			break;
-> -		case TYP_SYMLINK:
-> -			process_symlink_block(dp);
-> -			iocur_top->need_crc = 1;
-> -			break;
->  		case TYP_ATTR:
->  			process_attr_block(dp, o);
->  			iocur_top->need_crc = 1;
-> @@ -1986,6 +2016,8 @@ is_multi_fsb_object(
->  {
->  	if (btype == TYP_DIR2 && mp->m_dir_geo->fsbcount > 1)
->  		return true;
-> +	if (btype == TYP_SYMLINK)
-> +		return true;
->  	return false;
->  }
->  
-> @@ -2000,6 +2032,8 @@ process_multi_fsb_objects(
->  	switch (btype) {
->  	case TYP_DIR2:
->  		return process_multi_fsb_dir(o, s, c, btype, last);
-> +	case TYP_SYMLINK:
-> +		return process_symlink_block(o, s, c, btype, last);
->  	default:
->  		print_warning("bad type for multi-fsb object %d", btype);
->  		return -EINVAL;
+>  	/*
 > 
