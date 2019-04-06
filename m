@@ -1,64 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36980 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725967AbfDEUHI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Apr 2019 16:07:08 -0400
-Date: Fri, 5 Apr 2019 13:06:54 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 30/36] libxfs: retain ifork_ops when flushing inode
-Message-ID: <20190405200654.GZ5147@magnolia>
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <155259761740.31886.12775146464846669280.stgit@magnolia>
- <a443e2be-2e79-fcee-5cff-abfd1f8da50b@sandeen.net>
- <75521ddc-a1f6-7797-0af6-7937da0cadd0@sandeen.net>
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:49749 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726184AbfDGCN5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Apr 2019 22:13:57 -0400
+Date: Sat, 6 Apr 2019 19:27:17 -0400
+From: "Theodore Ts'o" <tytso@mit.edu>
+Subject: Re: [PATCH] bootfs: simple bootloader filesystem
+Message-ID: <20190406232717.GH18897@mit.edu>
+References: <20190401070001.GJ1173@magnolia>
+ <20190401214632.GS26298@dastard>
+ <20190402045519.GK1173@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <75521ddc-a1f6-7797-0af6-7937da0cadd0@sandeen.net>
+In-Reply-To: <20190402045519.GK1173@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, Arkadiusz Miskiewicz <arekm@maven.pl>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Apr 05, 2019 at 01:19:52PM -0500, Eric Sandeen wrote:
+On Mon, Apr 01, 2019 at 09:55:19PM -0700, Darrick J. Wong wrote:
 > 
+> When Ted is done laughing, I really would like to consider something
+> like this to solve the problem of grub-style bootloaders requiring a
+> lease on the blocks underneath a file with a term exceeding that of the
+> running kernel.
 > 
-> On 4/5/19 1:17 PM, Eric Sandeen wrote:
-> > On 3/14/19 4:06 PM, Darrick J. Wong wrote:
-> >> From: Darrick J. Wong <darrick.wong@oracle.com>
-> >>
-> >> Retain the ifork ops used to validate the inode so that we can use the
-> >> same one to iflush it.  xfs_repair phase 6 can use multiple transactions
-> >> to fix various inode problems, which means that the inode might not be
-> >> fully fixed when each transaction commits.
-> >>
-> >> This can be a particular problem if there's a shortform directory with
-> >> both invalid directory entries and incorrect i8count.  Phase 3 will set
-> >> the parent inode to "0" to signal to phase 6 that it needs to reset the
-> >> parent and i8count, but phase 6 starts a transaction to junk the bad
-> >> entries which fail to commit because the parent is invalid:
-> >>
-> >> fixing i8count in inode 69022994673
-> >> Invalid inode number 0x0
-> >> xfs_dir_ino_validate: XFS_ERROR_REPORT
-> >> Metadata corruption detected at 0x464eb0, inode 0x10121750f1 data fork
-> >> xfs_repair: warning - iflush_int failed (-117)
-> >>
-> >> And thus the inode fixes never get written out.
-> > 
-> > This feels like it would be better to use consistently by dropping the ops
-> > arg to libxfs_inode_verify_forks, using ->i_fork_ops inside it, and setting
-> > it prior to the call.  Er, same for libxfs_iget?
-> 
-> er, no not for libxfs_iget, sorry.  But libxfs_iget can set the ops on
-> the inode if found and from then on stuff like libxfs_inode_verify_forks
-> uses what's currently set in the inode ....)
-> 
-> > A mishmash of grabbing what was last set in the inode vs. explicitly pointing
-> > at a global ops structure seems a bit ad hoc.  Thoughts?
+> We can probably skip the harsh synchronous writes in favor of fsync on
+> close, but we would need to keep the critical component of checkpointing
+> the journal on fsync and syncfs.
 
-Yeah, there's no reason to have the second parameter when we've already
-got it in @ip, so I'll make a new patch to refactor it out.
+At least for ext4, we don't need to add anything new, since FIFREEZE
+force a journal checkpoint.  So we could try to get a patch into grub
+which causes update_grub to open each kernel that it finds, and calls
+fsync(2) on it, and then for all file systems where it finds a kernel,
+it can call FIFREEZE and FITHAW on it, and that would be that.
 
---D
+That's not guaranteed to work for all file systems, of course.  So the
+right answer may be to define a new IOCTL which causes all file system
+to do whatever log truncation is needed so that grub will do the right
+thing.
+
+					- Ted
