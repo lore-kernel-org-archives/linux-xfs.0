@@ -1,88 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54388 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727051AbfDDQky (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Apr 2019 12:40:54 -0400
-Subject: Re: [PATCH 45/36] xfs_scrub: rename confusing structure
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <20190320200330.GI1183@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <34a79955-0121-5a50-dbf9-45c230fea153@sandeen.net>
-Date: Thu, 4 Apr 2019 11:40:53 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:53648 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726397AbfDGU1d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Apr 2019 16:27:33 -0400
+Subject: [PATCH 3/4] xfs: flush page mappings as part of setting immutable
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 07 Apr 2019 13:27:23 -0700
+Message-ID: <155466884294.633834.1486289166159962611.stgit@magnolia>
+In-Reply-To: <155466882175.633834.15261194784129614735.stgit@magnolia>
+References: <155466882175.633834.15261194784129614735.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20190320200330.GI1183@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On 3/20/19 3:03 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Rename xfs_verify_extent to media_verify_state so that the name more
-> accurately reflects what we're storing in the structure.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hate to do this, but "*ve" made sense for "verify extent" but
-really doesn't for "verify state..."  If the point is clarity, I
-think s/ve/vs/ would be reasonable as well?  It's about 35 instances.
+The chattr manpage has this to say about immutable files:
 
-> ---
->  scrub/phase6.c |   10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/scrub/phase6.c b/scrub/phase6.c
-> index 5e2b9ee3..2b4f6ff1 100644
-> --- a/scrub/phase6.c
-> +++ b/scrub/phase6.c
-> @@ -35,7 +35,7 @@
->  
->  /* Verify disk blocks with GETFSMAP */
->  
-> -struct xfs_verify_extent {
-> +struct media_verify_state {
->  	struct read_verify_pool	*rvp_data;
->  	struct read_verify_pool	*rvp_log;
->  	struct read_verify_pool	*rvp_realtime;
-> @@ -47,7 +47,7 @@ struct xfs_verify_extent {
->  static struct read_verify_pool *
->  xfs_dev_to_pool(
->  	struct scrub_ctx		*ctx,
-> -	struct xfs_verify_extent	*ve,
-> +	struct media_verify_state	*ve,
->  	dev_t				dev)
->  {
->  	if (dev == ctx->fsinfo.fs_datadev)
-> @@ -348,7 +348,7 @@ xfs_check_rmap_ioerr(
->  {
->  	struct fsmap			keys[2];
->  	char				descr[DESCR_BUFSZ];
-> -	struct xfs_verify_extent	*ve = arg;
-> +	struct media_verify_state	*ve = arg;
->  	struct bitmap			*tree;
->  	dev_t				dev;
->  	bool				moveon;
-> @@ -395,7 +395,7 @@ xfs_check_rmap(
->  	struct fsmap			*map,
->  	void				*arg)
->  {
-> -	struct xfs_verify_extent	*ve = arg;
-> +	struct media_verify_state	*ve = arg;
->  	struct read_verify_pool		*rvp;
->  
->  	rvp = xfs_dev_to_pool(ctx, ve, map->fmr_device);
-> @@ -463,7 +463,7 @@ bool
->  xfs_scan_blocks(
->  	struct scrub_ctx		*ctx)
->  {
-> -	struct xfs_verify_extent	ve = { NULL };
-> +	struct media_verify_state	ve = { NULL };
->  	bool				moveon;
->  
->  	moveon = bitmap_init(&ve.d_bad);
-> 
+"A file with the 'i' attribute cannot be modified: it cannot be deleted
+or renamed, no link can be created to this file, most of the file's
+metadata can not be modified, and the file can not be opened in write
+mode."
+
+This means that we need to flush the page cache when setting the
+immutable flag so that all mappings will become read-only again and
+therefore programs cannot continue to write to writable mappings.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_ioctl.c |   51 ++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 44 insertions(+), 7 deletions(-)
+
+
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 91938c4f3c67..5a1b96dad901 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -998,6 +998,31 @@ xfs_diflags_to_linux(
+ #endif
+ }
+ 
++/*
++ * Lock the inode against file io and page faults, then flush all dirty pages
++ * and wait for writeback and direct IO operations to finish.  Returns with
++ * the relevant inode lock flags set in @join_flags.  Caller is responsible for
++ * unlocking even on error return.
++ */
++static int
++xfs_ioctl_setattr_flush(
++	struct xfs_inode	*ip,
++	int			*join_flags)
++{
++	struct inode		*inode = VFS_I(ip);
++
++	/* Already locked the inode from IO?  Assume we're done. */
++	if (((*join_flags) & (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL)) ==
++			     (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL))
++		return 0;
++
++	/* Lock and flush all mappings and IO in preparation for flag change */
++	*join_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
++	xfs_ilock(ip, *join_flags);
++	inode_dio_wait(inode);
++	return filemap_write_and_wait(inode->i_mapping);
++}
++
+ static int
+ xfs_ioctl_setattr_xflags(
+ 	struct xfs_trans	*tp,
+@@ -1092,25 +1117,22 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
+ 		return 0;
+ 
+-	if (S_ISDIR(inode->i_mode))
++	if (!S_ISREG(inode->i_mode))
+ 		return 0;
+ 
+ 	/* lock, flush and invalidate mapping in preparation for flag change */
+-	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
+-	error = filemap_write_and_wait(inode->i_mapping);
++	error = xfs_ioctl_setattr_flush(ip, join_flags);
+ 	if (error)
+ 		goto out_unlock;
+ 	error = invalidate_inode_pages2(inode->i_mapping);
+ 	if (error)
+ 		goto out_unlock;
+-
+-	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
+ 	return 0;
+ 
+ out_unlock:
+-	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
++	xfs_iunlock(ip, *join_flags);
++	*join_flags = 0;
+ 	return error;
+-
+ }
+ 
+ /*
+@@ -1356,6 +1378,21 @@ xfs_ioctl_setattr(
+ 	if (code)
+ 		goto error_free_dquots;
+ 
++	/*
++	 * If we are trying to set immutable on a file then flush everything to
++	 * disk to force all writable memory mappings back through the
++	 * pagefault handler.
++	 */
++	if (S_ISREG(VFS_I(ip)->i_mode) && !IS_IMMUTABLE(VFS_I(ip)) &&
++	    (fa->fsx_xflags & FS_XFLAG_IMMUTABLE)) {
++		code = xfs_ioctl_setattr_flush(ip, &join_flags);
++		if (code) {
++			xfs_iunlock(ip, join_flags);
++			join_flags = 0;
++			goto error_free_dquots;
++		}
++	}
++
+ 	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
+ 	if (IS_ERR(tp)) {
+ 		code = PTR_ERR(tp);
