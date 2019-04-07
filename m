@@ -1,57 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37548 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726335AbfDGSK5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 7 Apr 2019 14:10:57 -0400
-Subject: Re: [PATCH] bootfs: simple bootloader filesystem
-References: <20190401070001.GJ1173@magnolia> <20190401214632.GS26298@dastard>
- <20190402045519.GK1173@magnolia> <20190406232717.GH18897@mit.edu>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e358c920-d49e-8319-ee19-4b3fa930b0f5@sandeen.net>
-Date: Sun, 7 Apr 2019 13:10:55 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:47864 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726397AbfDGU1U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Apr 2019 16:27:20 -0400
+Subject: [PATCH 1/4] mm/fs: don't allow writes to immutable files
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 07 Apr 2019 13:27:08 -0700
+Message-ID: <155466882886.633834.9877039193610671186.stgit@magnolia>
+In-Reply-To: <155466882175.633834.15261194784129614735.stgit@magnolia>
+References: <155466882175.633834.15261194784129614735.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20190406232717.GH18897@mit.edu>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On 4/6/19 6:27 PM, Theodore Ts'o wrote:
-> On Mon, Apr 01, 2019 at 09:55:19PM -0700, Darrick J. Wong wrote:
->>
->> When Ted is done laughing, I really would like to consider something
->> like this to solve the problem of grub-style bootloaders requiring a
->> lease on the blocks underneath a file with a term exceeding that of the
->> running kernel.
->>
->> We can probably skip the harsh synchronous writes in favor of fsync on
->> close, but we would need to keep the critical component of checkpointing
->> the journal on fsync and syncfs.
-> 
-> At least for ext4, we don't need to add anything new, since FIFREEZE
-> force a journal checkpoint.  So we could try to get a patch into grub
-> which causes update_grub to open each kernel that it finds, and calls
-> fsync(2) on it, and then for all file systems where it finds a kernel,
-> it can call FIFREEZE and FITHAW on it, and that would be that.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Certain operating systems have hacked this in.  My concern would be when
-/boot is on / ... calling FIFREEZE on the root fs would most likely be
-a bad thing.  Certain operating systems avoid calling FIFREEZE for
-/boot-on-root.  ;)
+The chattr manpage has this to say about immutable files:
 
-Doing it for a standalone /boot seems like a reasonable (if hacky)
-workaround as long as we lack a more targeted quiesce interface...
+"A file with the 'i' attribute cannot be modified: it cannot be deleted
+or renamed, no link can be created to this file, most of the file's
+metadata can not be modified, and the file can not be opened in write
+mode."
 
--Eric
+Once the flag is set, it is enforced for quite a few file operations,
+such as fallocate, fpunch, fzero, rm, touch, open, etc.  However, we
+don't check for immutability when doing a write(), a PROT_WRITE mmap(),
+a truncate(), or a write to a previously established mmap.
+
+If a program has an open write fd to a file that the administrator
+subsequently marks immutable, the program still can change the file
+contents.  Weird!
+
+The ability to write to an immutable file does not follow the manpage
+promise that immutable files cannot be modified.  Worse yet it's
+inconsistent with the behavior of other syscalls which don't allow
+modifications of immutable files.
+
+Therefore, add the necessary checks to make the write, mmap, and
+truncate behavior consistent with what the manpage says and consistent
+with other syscalls on filesystems which support IMMUTABLE.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/attr.c    |   13 ++++++-------
+ mm/filemap.c |    3 +++
+ mm/memory.c  |    3 +++
+ mm/mmap.c    |    3 +++
+ 4 files changed, 15 insertions(+), 7 deletions(-)
+
+
+diff --git a/fs/attr.c b/fs/attr.c
+index d22e8187477f..1fcfdcc5b367 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -233,19 +233,18 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
  
-> That's not guaranteed to work for all file systems, of course.  So the
-> right answer may be to define a new IOCTL which causes all file system
-> to do whatever log truncation is needed so that grub will do the right
-> thing.
-> 
-> 					- Ted
-> 
+ 	WARN_ON_ONCE(!inode_is_locked(inode));
+ 
+-	if (ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) {
+-		if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+-			return -EPERM;
+-	}
++	if (IS_IMMUTABLE(inode))
++		return -EPERM;
++
++	if ((ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) &&
++	    IS_APPEND(inode))
++		return -EPERM;
+ 
+ 	/*
+ 	 * If utimes(2) and friends are called with times == NULL (or both
+ 	 * times are UTIME_NOW), then we need to check for write permission
+ 	 */
+ 	if (ia_valid & ATTR_TOUCH) {
+-		if (IS_IMMUTABLE(inode))
+-			return -EPERM;
+-
+ 		if (!inode_owner_or_capable(inode)) {
+ 			error = inode_permission(inode, MAY_WRITE);
+ 			if (error)
+diff --git a/mm/filemap.c b/mm/filemap.c
+index d78f577baef2..9fed698f4c63 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -3033,6 +3033,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+ 	loff_t count;
+ 	int ret;
+ 
++	if (IS_IMMUTABLE(inode))
++		return -EPERM;
++
+ 	if (!iov_iter_count(from))
+ 		return 0;
+ 
+diff --git a/mm/memory.c b/mm/memory.c
+index 47fe250307c7..c493db22413a 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -2148,6 +2148,9 @@ static vm_fault_t do_page_mkwrite(struct vm_fault *vmf)
+ 
+ 	vmf->flags = FAULT_FLAG_WRITE|FAULT_FLAG_MKWRITE;
+ 
++	if (vmf->vma->vm_file && IS_IMMUTABLE(file_inode(vmf->vma->vm_file)))
++		return VM_FAULT_SIGBUS;
++
+ 	ret = vmf->vma->vm_ops->page_mkwrite(vmf);
+ 	/* Restore original flags so that caller is not surprised */
+ 	vmf->flags = old_flags;
+diff --git a/mm/mmap.c b/mm/mmap.c
+index 41eb48d9b527..e49dcbeda461 100644
+--- a/mm/mmap.c
++++ b/mm/mmap.c
+@@ -1394,6 +1394,9 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+ 	if (!len)
+ 		return -EINVAL;
+ 
++	if (file && IS_IMMUTABLE(file_inode(file)))
++		return -EPERM;
++
+ 	/*
+ 	 * Does the application expect PROT_READ to imply PROT_EXEC?
+ 	 *
