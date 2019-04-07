@@ -1,86 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56106 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727263AbfDDWI4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Apr 2019 18:08:56 -0400
-Subject: Re: [PATCH 41/36] xfs_repair: better cli option parameter checking
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <20190320193630.GE1183@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <95ecad84-34ba-92c7-8c6d-17457dc42dbb@sandeen.net>
-Date: Thu, 4 Apr 2019 17:08:54 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:52154 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726397AbfDGU12 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Apr 2019 16:27:28 -0400
+Subject: [PATCH 2/4] xfs: unlock inode when xfs_ioctl_setattr_get_trans
+ can't get transaction
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 07 Apr 2019 13:27:16 -0700
+Message-ID: <155466883603.633834.5683596746694707981.stgit@magnolia>
+In-Reply-To: <155466882175.633834.15261194784129614735.stgit@magnolia>
+References: <155466882175.633834.15261194784129614735.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20190320193630.GE1183@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On 3/20/19 2:36 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> For the xfs_repair options that require a parameter, check that the user
-> actually provided one instead of segfaulting.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-looks good, but, uh, neither 
+We passed an inode into xfs_ioctl_setattr_get_trans with join_flags
+indicating which locks are held on that inode.  If we can't allocate a
+transaction then we need to unlock the inode before we bail out.
 
--c lazycount=
-nor
--o phase2_threads=
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_ioctl.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-is documented in the man page.  :(
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  repair/xfs_repair.c |   12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 2d333d50..9657503f 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -233,10 +233,16 @@ process_args(int argc, char **argv)
->  					if (max_mem_specified)
->  						do_abort(
->  		_("-o bhash option cannot be used with -m option\n"));
-> +					if (!val)
-> +						do_abort(
-> +		_("-o bhash requires a parameter\n"));
->  					libxfs_bhash_size = (int)strtol(val, NULL, 0);
->  					bhash_option_used = 1;
->  					break;
->  				case AG_STRIDE:
-> +					if (!val)
-> +						do_abort(
-> +		_("-o ag_stride requires a parameter\n"));
->  					ag_stride = (int)strtol(val, NULL, 0);
->  					break;
->  				case FORCE_GEO:
-> @@ -247,6 +253,9 @@ process_args(int argc, char **argv)
->  					force_geo = 1;
->  					break;
->  				case PHASE2_THREADS:
-> +					if (!val)
-> +						do_abort(
-> +		_("-o phase2_threads requires a parameter\n"));
->  					phase2_threads = (int)strtol(val, NULL, 0);
->  					break;
->  				default:
-> @@ -262,6 +271,9 @@ process_args(int argc, char **argv)
->  
->  				switch (getsubopt(&p, c_opts, &val)) {
->  				case CONVERT_LAZY_COUNT:
-> +					if (!val)
-> +						do_abort(
-> +		_("-c lazycount requires a parameter\n"));
->  					lazy_count = (int)strtol(val, NULL, 0);
->  					convert_lazy_count = 1;
->  					break;
-> 
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 6ecdbb3af7de..91938c4f3c67 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1142,7 +1142,7 @@ xfs_ioctl_setattr_get_trans(
+ 
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
+ 	if (error)
+-		return ERR_PTR(error);
++		goto out_unlock;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | join_flags);
