@@ -1,45 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:49749 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726184AbfDGCN5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Apr 2019 22:13:57 -0400
-Date: Sat, 6 Apr 2019 19:27:17 -0400
-From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: [PATCH] bootfs: simple bootloader filesystem
-Message-ID: <20190406232717.GH18897@mit.edu>
-References: <20190401070001.GJ1173@magnolia>
- <20190401214632.GS26298@dastard>
- <20190402045519.GK1173@magnolia>
+Received: from mail-yb1-f195.google.com ([209.85.219.195]:41421 "EHLO
+        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725854AbfDHGVA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Apr 2019 02:21:00 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190402045519.GK1173@magnolia>
+References: <155466882175.633834.15261194784129614735.stgit@magnolia> <155466884962.633834.14320700092446721044.stgit@magnolia>
+In-Reply-To: <155466884962.633834.14320700092446721044.stgit@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 8 Apr 2019 09:20:47 +0300
+Message-ID: <CAOQ4uxj4WLX8sWbnm11Ps+rmCNTPecV-w9YUzJfKDtDs+qTx3Q@mail.gmail.com>
+Subject: Re: [PATCH 4/4] xfs: don't allow most setxattr to immutable files
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>
 
-On Mon, Apr 01, 2019 at 09:55:19PM -0700, Darrick J. Wong wrote:
-> 
-> When Ted is done laughing, I really would like to consider something
-> like this to solve the problem of grub-style bootloaders requiring a
-> lease on the blocks underneath a file with a term exceeding that of the
-> running kernel.
-> 
-> We can probably skip the harsh synchronous writes in favor of fsync on
-> close, but we would need to keep the critical component of checkpointing
-> the journal on fsync and syncfs.
+On Sun, Apr 7, 2019 at 11:28 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> The chattr manpage has this to say about immutable files:
+>
+> "A file with the 'i' attribute cannot be modified: it cannot be deleted
+> or renamed, no link can be created to this file, most of the file's
+> metadata can not be modified, and the file can not be opened in write
+> mode."
+>
+> However, we don't actually check the immutable flag in the setattr code,
+> which means that we can update project ids and extent size hints on
+> supposedly immutable files.  Therefore, reject a setattr call on an
+> immutable file except for the case where we're trying to unset
+> IMMUTABLE.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-At least for ext4, we don't need to add anything new, since FIFREEZE
-force a journal checkpoint.  So we could try to get a patch into grub
-which causes update_grub to open each kernel that it finds, and calls
-fsync(2) on it, and then for all file systems where it finds a kernel,
-it can call FIFREEZE and FITHAW on it, and that would be that.
+Did you miss my comment on v1, or do you not think this use case
+is going to hurt any application that is not a rootkit?
 
-That's not guaranteed to work for all file systems, of course.  So the
-right answer may be to define a new IOCTL which causes all file system
-to do whatever log truncation is needed so that grub will do the right
-thing.
+chattr +i foo => OK
+chattr +i foo => -EPERM
 
-					- Ted
+Thanks,
+Amir.
