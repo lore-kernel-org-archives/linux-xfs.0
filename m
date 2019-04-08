@@ -1,128 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:47864 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726397AbfDGU1U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Apr 2019 16:27:20 -0400
-Subject: [PATCH 1/4] mm/fs: don't allow writes to immutable files
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 07 Apr 2019 13:27:08 -0700
-Message-ID: <155466882886.633834.9877039193610671186.stgit@magnolia>
-In-Reply-To: <155466882175.633834.15261194784129614735.stgit@magnolia>
-References: <155466882175.633834.15261194784129614735.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:60230 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726373AbfDHOLR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Apr 2019 10:11:17 -0400
+Date: Mon, 8 Apr 2019 16:11:14 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw
+ workload
+Message-ID: <20190408141114.GC15023@quack2.suse.cz>
+References: <20190404165737.30889-1-amir73il@gmail.com>
+ <20190404211730.GD26298@dastard>
+ <CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com>
+ <20190407232728.GF26298@dastard>
+ <CAOQ4uxgD4ErSUtbu0xqb5dSm_tM4J92qt6=hGH8GRc5KNGqP9A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxgD4ErSUtbu0xqb5dSm_tM4J92qt6=hGH8GRc5KNGqP9A@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Lukas Czerner <lczerner@redhat.com>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon 08-04-19 12:02:34, Amir Goldstein wrote:
+> On Mon, Apr 8, 2019 at 2:27 AM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Fri, Apr 05, 2019 at 05:02:33PM +0300, Amir Goldstein wrote:
+> > > On Fri, Apr 5, 2019 at 12:17 AM Dave Chinner <david@fromorbit.com> wrote:
+> > > >
+> > > > On Thu, Apr 04, 2019 at 07:57:37PM +0300, Amir Goldstein wrote:
+> > > > > This patch improves performance of mixed random rw workload
+> > > > > on xfs without relaxing the atomic buffered read/write guaranty
+> > > > > that xfs has always provided.
+> > > > >
+> > > > > We achieve that by calling generic_file_read_iter() twice.
+> > > > > Once with a discard iterator to warm up page cache before taking
+> > > > > the shared ilock and once again under shared ilock.
+> > > >
+> > > > This will race with thing like truncate, hole punching, etc that
+> > > > serialise IO and invalidate the page cache for data integrity
+> > > > reasons under the IOLOCK. These rely on there being no IO to the
+> > > > inode in progress at all to work correctly, which this patch
+> > > > violates. IOWs, while this is fast, it is not safe and so not a
+> > > > viable approach to solving the problem.
+> > > >
+> > >
+> > > This statement leaves me wondering, if ext4 does not takes
+> > > i_rwsem on generic_file_read_iter(), how does ext4 (or any other
+> > > fs for that matter) guaranty buffered read synchronization with
+> > > truncate, hole punching etc?
+> > > The answer in ext4 case is i_mmap_sem, which is read locked
+> > > in the page fault handler.
+> >
+> > Nope, the  i_mmap_sem is for serialisation of /page faults/ against
+> > truncate, holepunching, etc. Completely irrelevant to the read()
+> > path.
+> >
+> 
+> I'm at lost here. Why are page faults completely irrelevant to read()
+> path? Aren't full pages supposed to be faulted in on read() after
+> truncate_pagecache_range()?
 
-The chattr manpage has this to say about immutable files:
+During read(2), pages are not "faulted in". Just look at
+what generic_file_buffered_read() does. It uses completely separate code to
+add page to page cache, trigger readahead, and possibly call ->readpage() to
+fill the page with data. "fault" path (handled by filemap_fault()) applies
+only to accesses from userspace to mmaps.
 
-"A file with the 'i' attribute cannot be modified: it cannot be deleted
-or renamed, no link can be created to this file, most of the file's
-metadata can not be modified, and the file can not be opened in write
-mode."
+> And aren't partial pages supposed to be partially zeroed and uptodate
+> after truncate_pagecache_range()?
 
-Once the flag is set, it is enforced for quite a few file operations,
-such as fallocate, fpunch, fzero, rm, touch, open, etc.  However, we
-don't check for immutability when doing a write(), a PROT_WRITE mmap(),
-a truncate(), or a write to a previously established mmap.
+truncate_pagecache_range() does take care of page zeroing, that is correct
+(if those pages are in page cache in the first place). I'm not sure how
+this relates to the above discussion though.
 
-If a program has an open write fd to a file that the administrator
-subsequently marks immutable, the program still can change the file
-contents.  Weird!
-
-The ability to write to an immutable file does not follow the manpage
-promise that immutable files cannot be modified.  Worse yet it's
-inconsistent with the behavior of other syscalls which don't allow
-modifications of immutable files.
-
-Therefore, add the necessary checks to make the write, mmap, and
-truncate behavior consistent with what the manpage says and consistent
-with other syscalls on filesystems which support IMMUTABLE.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/attr.c    |   13 ++++++-------
- mm/filemap.c |    3 +++
- mm/memory.c  |    3 +++
- mm/mmap.c    |    3 +++
- 4 files changed, 15 insertions(+), 7 deletions(-)
-
-
-diff --git a/fs/attr.c b/fs/attr.c
-index d22e8187477f..1fcfdcc5b367 100644
---- a/fs/attr.c
-+++ b/fs/attr.c
-@@ -233,19 +233,18 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
- 
- 	WARN_ON_ONCE(!inode_is_locked(inode));
- 
--	if (ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) {
--		if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
--			return -EPERM;
--	}
-+	if (IS_IMMUTABLE(inode))
-+		return -EPERM;
-+
-+	if ((ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) &&
-+	    IS_APPEND(inode))
-+		return -EPERM;
- 
- 	/*
- 	 * If utimes(2) and friends are called with times == NULL (or both
- 	 * times are UTIME_NOW), then we need to check for write permission
- 	 */
- 	if (ia_valid & ATTR_TOUCH) {
--		if (IS_IMMUTABLE(inode))
--			return -EPERM;
--
- 		if (!inode_owner_or_capable(inode)) {
- 			error = inode_permission(inode, MAY_WRITE);
- 			if (error)
-diff --git a/mm/filemap.c b/mm/filemap.c
-index d78f577baef2..9fed698f4c63 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -3033,6 +3033,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 	loff_t count;
- 	int ret;
- 
-+	if (IS_IMMUTABLE(inode))
-+		return -EPERM;
-+
- 	if (!iov_iter_count(from))
- 		return 0;
- 
-diff --git a/mm/memory.c b/mm/memory.c
-index 47fe250307c7..c493db22413a 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -2148,6 +2148,9 @@ static vm_fault_t do_page_mkwrite(struct vm_fault *vmf)
- 
- 	vmf->flags = FAULT_FLAG_WRITE|FAULT_FLAG_MKWRITE;
- 
-+	if (vmf->vma->vm_file && IS_IMMUTABLE(file_inode(vmf->vma->vm_file)))
-+		return VM_FAULT_SIGBUS;
-+
- 	ret = vmf->vma->vm_ops->page_mkwrite(vmf);
- 	/* Restore original flags so that caller is not surprised */
- 	vmf->flags = old_flags;
-diff --git a/mm/mmap.c b/mm/mmap.c
-index 41eb48d9b527..e49dcbeda461 100644
---- a/mm/mmap.c
-+++ b/mm/mmap.c
-@@ -1394,6 +1394,9 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
- 	if (!len)
- 		return -EINVAL;
- 
-+	if (file && IS_IMMUTABLE(file_inode(file)))
-+		return -EPERM;
-+
- 	/*
- 	 * Does the application expect PROT_READ to imply PROT_EXEC?
- 	 *
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
