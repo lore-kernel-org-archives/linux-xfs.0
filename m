@@ -1,127 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:53648 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726397AbfDGU1d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Apr 2019 16:27:33 -0400
-Subject: [PATCH 3/4] xfs: flush page mappings as part of setting immutable
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 07 Apr 2019 13:27:23 -0700
-Message-ID: <155466884294.633834.1486289166159962611.stgit@magnolia>
-In-Reply-To: <155466882175.633834.15261194784129614735.stgit@magnolia>
-References: <155466882175.633834.15261194784129614735.stgit@magnolia>
+Received: from mail-yb1-f195.google.com ([209.85.219.195]:35383 "EHLO
+        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726554AbfDHRlV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Apr 2019 13:41:21 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <20190404165737.30889-1-amir73il@gmail.com> <20190404211730.GD26298@dastard>
+ <CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com>
+ <20190407232728.GF26298@dastard> <CAOQ4uxgD4ErSUtbu0xqb5dSm_tM4J92qt6=hGH8GRc5KNGqP9A@mail.gmail.com>
+ <20190408141114.GC15023@quack2.suse.cz>
+In-Reply-To: <20190408141114.GC15023@quack2.suse.cz>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 8 Apr 2019 20:41:09 +0300
+Message-ID: <CAOQ4uxhxgYASST1k-UaqfbLL9ERquHaKL2jtydB2+iF9aT8SRQ@mail.gmail.com>
+Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw workload
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Lukas Czerner <lczerner@redhat.com>, Theodore Tso <tytso@mit.edu>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Apr 8, 2019 at 5:11 PM Jan Kara <jack@suse.cz> wrote:
+>
+> On Mon 08-04-19 12:02:34, Amir Goldstein wrote:
+> > On Mon, Apr 8, 2019 at 2:27 AM Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > On Fri, Apr 05, 2019 at 05:02:33PM +0300, Amir Goldstein wrote:
+> > > > On Fri, Apr 5, 2019 at 12:17 AM Dave Chinner <david@fromorbit.com> wrote:
+> > > > >
+> > > > > On Thu, Apr 04, 2019 at 07:57:37PM +0300, Amir Goldstein wrote:
+> > > > > > This patch improves performance of mixed random rw workload
+> > > > > > on xfs without relaxing the atomic buffered read/write guaranty
+> > > > > > that xfs has always provided.
+> > > > > >
+> > > > > > We achieve that by calling generic_file_read_iter() twice.
+> > > > > > Once with a discard iterator to warm up page cache before taking
+> > > > > > the shared ilock and once again under shared ilock.
+> > > > >
+> > > > > This will race with thing like truncate, hole punching, etc that
+> > > > > serialise IO and invalidate the page cache for data integrity
+> > > > > reasons under the IOLOCK. These rely on there being no IO to the
+> > > > > inode in progress at all to work correctly, which this patch
+> > > > > violates. IOWs, while this is fast, it is not safe and so not a
+> > > > > viable approach to solving the problem.
+> > > > >
+> > > >
+> > > > This statement leaves me wondering, if ext4 does not takes
+> > > > i_rwsem on generic_file_read_iter(), how does ext4 (or any other
+> > > > fs for that matter) guaranty buffered read synchronization with
+> > > > truncate, hole punching etc?
+> > > > The answer in ext4 case is i_mmap_sem, which is read locked
+> > > > in the page fault handler.
+> > >
+> > > Nope, the  i_mmap_sem is for serialisation of /page faults/ against
+> > > truncate, holepunching, etc. Completely irrelevant to the read()
+> > > path.
+> > >
+> >
+> > I'm at lost here. Why are page faults completely irrelevant to read()
+> > path? Aren't full pages supposed to be faulted in on read() after
+> > truncate_pagecache_range()?
+>
+> During read(2), pages are not "faulted in". Just look at
+> what generic_file_buffered_read() does. It uses completely separate code to
+> add page to page cache, trigger readahead, and possibly call ->readpage() to
+> fill the page with data. "fault" path (handled by filemap_fault()) applies
+> only to accesses from userspace to mmaps.
+>
 
-The chattr manpage has this to say about immutable files:
+Oh! thanks for fixing my blind spot.
+So if you agree with Dave that ext4, and who knows what other fs,
+are vulnerable to populating page cache with stale "uptodate" data,
+then it seems to me that also xfs is vulnerable via readahead(2) and
+posix_fadvise().
+Mind you, I recently added an fadvise f_op, so it could be used by
+xfs to synchronize with IOLOCK.
 
-"A file with the 'i' attribute cannot be modified: it cannot be deleted
-or renamed, no link can be created to this file, most of the file's
-metadata can not be modified, and the file can not be opened in write
-mode."
+Perhaps a better solution would be for truncate_pagecache_range()
+to leave zeroed or Unwritten (i.e. lazy zeroed by read) pages in page
+cache. When we have shared pages for files, these pages could be
+deduped.
 
-This means that we need to flush the page cache when setting the
-immutable flag so that all mappings will become read-only again and
-therefore programs cannot continue to write to writable mappings.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_ioctl.c |   51 ++++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 44 insertions(+), 7 deletions(-)
-
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 91938c4f3c67..5a1b96dad901 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -998,6 +998,31 @@ xfs_diflags_to_linux(
- #endif
- }
- 
-+/*
-+ * Lock the inode against file io and page faults, then flush all dirty pages
-+ * and wait for writeback and direct IO operations to finish.  Returns with
-+ * the relevant inode lock flags set in @join_flags.  Caller is responsible for
-+ * unlocking even on error return.
-+ */
-+static int
-+xfs_ioctl_setattr_flush(
-+	struct xfs_inode	*ip,
-+	int			*join_flags)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+
-+	/* Already locked the inode from IO?  Assume we're done. */
-+	if (((*join_flags) & (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL)) ==
-+			     (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL))
-+		return 0;
-+
-+	/* Lock and flush all mappings and IO in preparation for flag change */
-+	*join_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
-+	xfs_ilock(ip, *join_flags);
-+	inode_dio_wait(inode);
-+	return filemap_write_and_wait(inode->i_mapping);
-+}
-+
- static int
- xfs_ioctl_setattr_xflags(
- 	struct xfs_trans	*tp,
-@@ -1092,25 +1117,22 @@ xfs_ioctl_setattr_dax_invalidate(
- 	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
- 		return 0;
- 
--	if (S_ISDIR(inode->i_mode))
-+	if (!S_ISREG(inode->i_mode))
- 		return 0;
- 
- 	/* lock, flush and invalidate mapping in preparation for flag change */
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
--	error = filemap_write_and_wait(inode->i_mapping);
-+	error = xfs_ioctl_setattr_flush(ip, join_flags);
- 	if (error)
- 		goto out_unlock;
- 	error = invalidate_inode_pages2(inode->i_mapping);
- 	if (error)
- 		goto out_unlock;
--
--	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
- 	return 0;
- 
- out_unlock:
--	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-+	xfs_iunlock(ip, *join_flags);
-+	*join_flags = 0;
- 	return error;
--
- }
- 
- /*
-@@ -1356,6 +1378,21 @@ xfs_ioctl_setattr(
- 	if (code)
- 		goto error_free_dquots;
- 
-+	/*
-+	 * If we are trying to set immutable on a file then flush everything to
-+	 * disk to force all writable memory mappings back through the
-+	 * pagefault handler.
-+	 */
-+	if (S_ISREG(VFS_I(ip)->i_mode) && !IS_IMMUTABLE(VFS_I(ip)) &&
-+	    (fa->fsx_xflags & FS_XFLAG_IMMUTABLE)) {
-+		code = xfs_ioctl_setattr_flush(ip, &join_flags);
-+		if (code) {
-+			xfs_iunlock(ip, join_flags);
-+			join_flags = 0;
-+			goto error_free_dquots;
-+		}
-+	}
-+
- 	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
- 	if (IS_ERR(tp)) {
- 		code = PTR_ERR(tp);
+Thanks,
+Amir.
