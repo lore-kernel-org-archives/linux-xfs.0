@@ -1,97 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56026 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726106AbfDKNJ7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Apr 2019 09:09:59 -0400
-Date: Thu, 11 Apr 2019 09:09:57 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 7/8] xfs: report AG health via AG geometry ioctl
-Message-ID: <20190411130957.GG2888@bfoster>
-References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
- <155494717070.1090518.15401214807663806671.stgit@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:35998 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726228AbfDHWm2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Apr 2019 18:42:28 -0400
+Date: Mon, 8 Apr 2019 15:42:14 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfsprogs: remove unused function prototypes
+Message-ID: <20190408224214.GC5147@magnolia>
+References: <d708b5f4-a955-43eb-dbee-56e8a0606aa4@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155494717070.1090518.15401214807663806671.stgit@magnolia>
+In-Reply-To: <d708b5f4-a955-43eb-dbee-56e8a0606aa4@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Apr 10, 2019 at 06:46:10PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Apr 08, 2019 at 05:39:31PM -0500, Eric Sandeen wrote:
+> These are prototypes for functions that aren't defined anywhere in
+> the code, so remove them.
 > 
-> Use the AG geometry info ioctl to report health status too.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+LGTM
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
 > ---
->  fs/xfs/libxfs/xfs_fs.h     |   14 +++++++++++++-
->  fs/xfs/libxfs/xfs_health.h |    2 ++
->  fs/xfs/xfs_health.c        |   43 +++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_ioctl.c         |    2 ++
->  4 files changed, 60 insertions(+), 1 deletion(-)
 > 
-> 
-...
-> diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-> index eb8dbc3a952a..0315b95a8d84 100644
-> --- a/fs/xfs/xfs_health.c
-> +++ b/fs/xfs/xfs_health.c
-> @@ -321,3 +321,46 @@ xfs_fsop_geom_health(
-...
-> +/* Fill out ag geometry health info. */
-> +void
-> +xfs_ag_geom_health(
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno,
-> +	struct xfs_ag_geometry	*ageo)
-> +{
-> +	struct xfs_perag	*pag;
-> +	const struct ioctl_sick_map *m;
-> +	unsigned int		sick;
-> +	unsigned int		checked;
-> +
-> +	ASSERT(agno < mp->m_sb.sb_agcount);
-> +
-> +	ageo->ag_sick = 0;
-> +	ageo->ag_checked = 0;
-> +
-> +	pag = xfs_perag_get(mp, agno);
-> +	xfs_ag_measure_sickness(pag, &sick, &checked);
-> +	for (m = ag_map; m->sick_mask; m++) {
-> +		if (checked & m->sick_mask)
-> +			ageo->ag_checked |= m->ioctl_mask;
-> +		if (sick & m->sick_mask)
-> +			ageo->ag_sick |= m->ioctl_mask;
-> +	}
-
-FWIW this is pretty much what I was asking for in the mapping helper in
-the previous patch. I didn't realize this was going to be reused for
-another ioctl/struct, however, so disregard my previous comment about
-renaming ->ioctl_mask. ;)
-
-> +
-> +	xfs_perag_put(pag);
-> +}
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 3e3ee197bd0f..c47f4201452c 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -822,6 +822,8 @@ xfs_ioc_ag_geometry(
->  	if (error)
->  		return error;
+> diff --git a/db/crc.h b/db/crc.h
+> index ca2621f..e5cc53d 100644
+> --- a/db/crc.h
+> +++ b/db/crc.h
+> @@ -7,4 +7,3 @@
+>  struct field;
 >  
-> +	xfs_ag_geom_health(mp, ageo.ag_number, &ageo);
-> +
-
-Any reason not to push this down into the get_geom() helper since it's
-part of the initial version of the ag geometry structure and we already
-have the xfs_perag there?
-
-Brian
-
->  	if (copy_to_user(arg, &ageo, sizeof(ageo)))
->  		return -EFAULT;
->  	return 0;
+>  extern void	crc_init(void);
+> -extern void	crc_struct(const field_t *fields, int argc, char **argv);
+> diff --git a/db/faddr.h b/db/faddr.h
+> index 371bef4..50c4b01 100644
+> --- a/db/faddr.h
+> +++ b/db/faddr.h
+> @@ -13,7 +13,6 @@ extern void	fa_cfileoffd(void *obj, int bit, typnm_t next);
+>  extern void	fa_cfsblock(void *obj, int bit, typnm_t next);
+>  extern void	fa_dfiloffd(void *obj, int bit, typnm_t next);
+>  extern void	fa_dfsbno(void *obj, int bit, typnm_t next);
+> -extern void	fa_dinode_union(void *obj, int bit, typnm_t next);
+>  extern void	fa_dirblock(void *obj, int bit, typnm_t next);
+>  extern void	fa_drfsbno(void *obj, int bit, typnm_t next);
+>  extern void	fa_drtbno(void *obj, int bit, typnm_t next);
+> diff --git a/db/io.h b/db/io.h
+> index 7618be4..c29a748 100644
+> --- a/db/io.h
+> +++ b/db/io.h
+> @@ -46,8 +46,7 @@ extern void	pop_cur(void);
+>  extern void	print_iocur(char *tag, iocur_t *ioc);
+>  extern void	push_cur(void);
+>  extern void	push_cur_and_set_type(void);
+> -extern int	read_buf(int64_t daddr, int count, void *bufp);
+> -extern void     write_cur(void);
+> +extern void	write_cur(void);
+>  extern void	set_cur(const struct typ *type, xfs_daddr_t blknum,
+>  			int len, int ring_add, bbmap_t *bbmap);
+>  extern void     ring_add(void);
+> diff --git a/include/input.h b/include/input.h
+> index 4878d69..6d8dbcc 100644
+> --- a/include/input.h
+> +++ b/include/input.h
+> @@ -19,7 +19,6 @@ extern char	*fetchline(void);
+>  
+>  extern size_t numlen(uint64_t val, size_t base);
+>  
+> -extern struct timeval tadd(struct timeval t1, struct timeval t2);
+>  extern struct timeval tsub(struct timeval t1, struct timeval t2);
+>  extern double	tdiv(double value, struct timeval tv);
+>  
+> diff --git a/include/libxlog.h b/include/libxlog.h
+> index 6c79115..92c54f4 100644
+> --- a/include/libxlog.h
+> +++ b/include/libxlog.h
+> @@ -88,7 +88,6 @@ extern int	xlog_find_cycle_start(struct xlog *log, xfs_buf_t *bp,
+>  extern int	xlog_find_tail(struct xlog *log, xfs_daddr_t *head_blk,
+>  				xfs_daddr_t *tail_blk);
+>  
+> -extern int	xlog_test_footer(struct xlog *log);
+>  extern int	xlog_recover(struct xlog *log, int readonly);
+>  extern void	xlog_recover_print_data(char *p, int len);
+>  extern void	xlog_recover_print_logitem(xlog_recover_item_t *item);
+> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+> index 12064d7..5bcf733 100644
+> --- a/libxfs/libxfs_io.h
+> +++ b/libxfs/libxfs_io.h
+> @@ -176,7 +176,6 @@ extern void	libxfs_bcache_free(void);
+>  extern void	libxfs_bcache_flush(void);
+>  extern void	libxfs_purgebuf(xfs_buf_t *);
+>  extern int	libxfs_bcache_overflowed(void);
+> -extern int	libxfs_bcache_usage(void);
+>  
+>  /* Buffer (Raw) Interfaces */
+>  extern xfs_buf_t *libxfs_getbufr(struct xfs_buftarg *, xfs_daddr_t, int);
+> diff --git a/libxfs/xfs_dir2_priv.h b/libxfs/xfs_dir2_priv.h
+> index 59f9fb2..08643a3 100644
+> --- a/libxfs/xfs_dir2_priv.h
+> +++ b/libxfs/xfs_dir2_priv.h
+> @@ -119,8 +119,4 @@ extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
+>  extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
+>  extern xfs_failaddr_t xfs_dir2_sf_verify(struct xfs_inode *ip);
+>  
+> -/* xfs_dir2_readdir.c */
+> -extern int xfs_readdir(struct xfs_trans *tp, struct xfs_inode *dp,
+> -		       struct dir_context *ctx, size_t bufsize);
+> -
+>  #endif /* __XFS_DIR2_PRIV_H__ */
 > 
