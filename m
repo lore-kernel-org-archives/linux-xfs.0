@@ -1,82 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f65.google.com ([209.85.161.65]:32918 "EHLO
-        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726643AbfDEOCq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Apr 2019 10:02:46 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:48322 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726415AbfDHWjc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Apr 2019 18:39:32 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1046A30821FF
+        for <linux-xfs@vger.kernel.org>; Mon,  8 Apr 2019 22:39:32 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D8E555D72E
+        for <linux-xfs@vger.kernel.org>; Mon,  8 Apr 2019 22:39:31 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfsprogs: remove unused function prototypes
+Message-ID: <d708b5f4-a955-43eb-dbee-56e8a0606aa4@redhat.com>
+Date: Mon, 8 Apr 2019 17:39:31 -0500
 MIME-Version: 1.0
-References: <20190404165737.30889-1-amir73il@gmail.com> <20190404211730.GD26298@dastard>
-In-Reply-To: <20190404211730.GD26298@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 5 Apr 2019 17:02:33 +0300
-Message-ID: <CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com>
-Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw workload
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Apr 5, 2019 at 12:17 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Thu, Apr 04, 2019 at 07:57:37PM +0300, Amir Goldstein wrote:
-> > This patch improves performance of mixed random rw workload
-> > on xfs without relaxing the atomic buffered read/write guaranty
-> > that xfs has always provided.
-> >
-> > We achieve that by calling generic_file_read_iter() twice.
-> > Once with a discard iterator to warm up page cache before taking
-> > the shared ilock and once again under shared ilock.
->
-> This will race with thing like truncate, hole punching, etc that
-> serialise IO and invalidate the page cache for data integrity
-> reasons under the IOLOCK. These rely on there being no IO to the
-> inode in progress at all to work correctly, which this patch
-> violates. IOWs, while this is fast, it is not safe and so not a
-> viable approach to solving the problem.
->
+These are prototypes for functions that aren't defined anywhere in
+the code, so remove them.
 
-This statement leaves me wondering, if ext4 does not takes
-i_rwsem on generic_file_read_iter(), how does ext4 (or any other
-fs for that matter) guaranty buffered read synchronization with
-truncate, hole punching etc?
-The answer in ext4 case is i_mmap_sem, which is read locked
-in the page fault handler.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-And xfs does the same type of synchronization with MMAPLOCK,
-so while my patch may not be safe, I cannot follow why from your
-explanation, so please explain if I am missing something.
-
-One thing that Darrick mentioned earlier was that IOLOCK is also
-used by xfs to synchronization pNFS leases (probably listed under
-'etc' in your explanation). I consent that my patch does not look safe
-w.r.t pNFS leases, but that can be sorted out with a hammer
-#ifndef CONFIG_EXPORTFS_BLOCK_OPS
-or with finer instruments.
-
-> FYI, I'm working on a range lock implementation that should both
-> solve the performance issue and the reader starvation issue at the
-> same time by allowing concurrent buffered reads and writes to
-> different file ranges.
->
-> IO range locks will allow proper exclusion for other extent
-> manipulation operations like fallocate and truncate, and eventually
-> even allow truncate, hole punch, file extension, etc to run
-> concurrently with other non-overlapping IO. They solve more than
-> just the performance issue you are seeing....
->
-
-I'm glad to hear that. IO range locks are definitely a more wholesome
-solution to the problem looking forward.
-
-However, I am still interested to continue the discussion on my POC
-patch. One reason is that I am guessing it would be much easier for
-distros to backport and pick up to solve performance issues.
-
-Even if my patch doesn't get applied upstream nor picked by distros,
-I would still like to understand its flaws and limitations. I know...
-if I break it, I get to keep the pieces, but the information that you
-provide helps me make my risk assessments.
-
-Thanks,
-Amir.
+diff --git a/db/crc.h b/db/crc.h
+index ca2621f..e5cc53d 100644
+--- a/db/crc.h
++++ b/db/crc.h
+@@ -7,4 +7,3 @@
+ struct field;
+ 
+ extern void	crc_init(void);
+-extern void	crc_struct(const field_t *fields, int argc, char **argv);
+diff --git a/db/faddr.h b/db/faddr.h
+index 371bef4..50c4b01 100644
+--- a/db/faddr.h
++++ b/db/faddr.h
+@@ -13,7 +13,6 @@ extern void	fa_cfileoffd(void *obj, int bit, typnm_t next);
+ extern void	fa_cfsblock(void *obj, int bit, typnm_t next);
+ extern void	fa_dfiloffd(void *obj, int bit, typnm_t next);
+ extern void	fa_dfsbno(void *obj, int bit, typnm_t next);
+-extern void	fa_dinode_union(void *obj, int bit, typnm_t next);
+ extern void	fa_dirblock(void *obj, int bit, typnm_t next);
+ extern void	fa_drfsbno(void *obj, int bit, typnm_t next);
+ extern void	fa_drtbno(void *obj, int bit, typnm_t next);
+diff --git a/db/io.h b/db/io.h
+index 7618be4..c29a748 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -46,8 +46,7 @@ extern void	pop_cur(void);
+ extern void	print_iocur(char *tag, iocur_t *ioc);
+ extern void	push_cur(void);
+ extern void	push_cur_and_set_type(void);
+-extern int	read_buf(int64_t daddr, int count, void *bufp);
+-extern void     write_cur(void);
++extern void	write_cur(void);
+ extern void	set_cur(const struct typ *type, xfs_daddr_t blknum,
+ 			int len, int ring_add, bbmap_t *bbmap);
+ extern void     ring_add(void);
+diff --git a/include/input.h b/include/input.h
+index 4878d69..6d8dbcc 100644
+--- a/include/input.h
++++ b/include/input.h
+@@ -19,7 +19,6 @@ extern char	*fetchline(void);
+ 
+ extern size_t numlen(uint64_t val, size_t base);
+ 
+-extern struct timeval tadd(struct timeval t1, struct timeval t2);
+ extern struct timeval tsub(struct timeval t1, struct timeval t2);
+ extern double	tdiv(double value, struct timeval tv);
+ 
+diff --git a/include/libxlog.h b/include/libxlog.h
+index 6c79115..92c54f4 100644
+--- a/include/libxlog.h
++++ b/include/libxlog.h
+@@ -88,7 +88,6 @@ extern int	xlog_find_cycle_start(struct xlog *log, xfs_buf_t *bp,
+ extern int	xlog_find_tail(struct xlog *log, xfs_daddr_t *head_blk,
+ 				xfs_daddr_t *tail_blk);
+ 
+-extern int	xlog_test_footer(struct xlog *log);
+ extern int	xlog_recover(struct xlog *log, int readonly);
+ extern void	xlog_recover_print_data(char *p, int len);
+ extern void	xlog_recover_print_logitem(xlog_recover_item_t *item);
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index 12064d7..5bcf733 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -176,7 +176,6 @@ extern void	libxfs_bcache_free(void);
+ extern void	libxfs_bcache_flush(void);
+ extern void	libxfs_purgebuf(xfs_buf_t *);
+ extern int	libxfs_bcache_overflowed(void);
+-extern int	libxfs_bcache_usage(void);
+ 
+ /* Buffer (Raw) Interfaces */
+ extern xfs_buf_t *libxfs_getbufr(struct xfs_buftarg *, xfs_daddr_t, int);
+diff --git a/libxfs/xfs_dir2_priv.h b/libxfs/xfs_dir2_priv.h
+index 59f9fb2..08643a3 100644
+--- a/libxfs/xfs_dir2_priv.h
++++ b/libxfs/xfs_dir2_priv.h
+@@ -119,8 +119,4 @@ extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
+ extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
+ extern xfs_failaddr_t xfs_dir2_sf_verify(struct xfs_inode *ip);
+ 
+-/* xfs_dir2_readdir.c */
+-extern int xfs_readdir(struct xfs_trans *tp, struct xfs_inode *dp,
+-		       struct dir_context *ctx, size_t bufsize);
+-
+ #endif /* __XFS_DIR2_PRIV_H__ */
