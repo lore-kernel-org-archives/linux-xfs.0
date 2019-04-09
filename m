@@ -1,112 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:43175 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726538AbfDKOwA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Apr 2019 10:52:00 -0400
-Received: by mail-ot1-f68.google.com with SMTP id u15so5453482otq.10
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 07:52:00 -0700 (PDT)
+Received: from sandeen.net ([63.231.237.45]:58232 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726412AbfDIUqX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Apr 2019 16:46:23 -0400
+Subject: Re: [PATCH 24/36] xfs_repair: bump the irec on-disk nlink when adding
+ lost+found
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <155259757750.31886.15831311797503004248.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3c0b7240-f2bf-63e3-2133-e169340c9293@sandeen.net>
+Date: Tue, 9 Apr 2019 15:46:22 -0500
 MIME-Version: 1.0
-References: <20190410040826.24371-1-pagupta@redhat.com> <20190410040826.24371-2-pagupta@redhat.com>
-In-Reply-To: <20190410040826.24371-2-pagupta@redhat.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 11 Apr 2019 07:51:48 -0700
-Message-ID: <CAPcyv4i1FjBzfcWtzeCvj-giHa9xaX0dMQ==q4LZC_L8VEqkHg@mail.gmail.com>
-Subject: Re: [PATCH v5 1/6] libnvdimm: nd_region flush callback support
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <155259757750.31886.15831311797503004248.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, KVM list <kvm@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ross Zwisler <zwisler@kernel.org>, Vishal L Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, Matthew Wilcox <willy@infradead.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Christoph Hellwig <hch@infradead.org>, Len Brown <lenb@kernel.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, lcapitulino@redhat.com, Kevin Wolf <kwolf@redhat.com>, Igor Mammedov <imammedo@redhat.com>, jmoyer <jmoyer@redhat.com>, Nitesh Narayan Lal <nilal@redhat.com>, Rik van Riel <riel@surriel.com>, Stefan Hajnoczi <stefanha@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Hildenbrand <david@redhat.com>, david <david@fromorbit.com>, cohuck@redhat.com, Xiao Guangrong <xiaoguangrong.eric@gmail.com>, Paolo Bonzini <pbonzini@redhat.com>, kilobyte@angband.pl, yuval.shaia@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Apr 9, 2019 at 9:09 PM Pankaj Gupta <pagupta@redhat.com> wrote:
->
-> This patch adds functionality to perform flush from guest
-> to host over VIRTIO. We are registering a callback based
-> on 'nd_region' type. virtio_pmem driver requires this special
-> flush function. For rest of the region types we are registering
-> existing flush function. Report error returned by host fsync
-> failure to userspace.
->
-> This also handles asynchronous flush requests from the block layer
-> by creating a child bio and chaining it with parent bio.
->
-> Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+On 3/14/19 4:06 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> We increment the nlink of the root directory inode when creating a
+> "lost+found" directory during phase 6, but we don't update the irec copy
+> of the root dir nlink.  This normally gets papered over by phase 7, but
+> this can fail badly if:
+> 
+> 1) The root directory had an entry to a busted subdirectory, so
+>    that root directory will have nlink == 3, but in the ino_tree,
+>    counted_nlinks == 2 and disk_nlinks == 3.
+> 
+> 2) Phase 6 creates lost+found to root the files that were in the busted
+>    directory, we'll set nlink = 4 and counted_nlinks = 3.  The correct
+>    nlink is 3 ('.', '..', 'lost+found'), not 4.
+> 
+> 3) During phase 7, we see that counted_nlinks == disk_nlinks and so we
+>    totally fail to correct the on-disk inode.
+> 
+> 4) A subsequent run of xfs_repair complains about the nlink being 4
+>    instead of 3.
+> 
+> To fix this, we have to adjust the irec's disk_nlinks in step 2 so that
+> phase 7 seeds that counted_nlinks < disk_nlinks and resets nlink to
+> counted_nlinks.  This can be reproduced somewhat frequently by xfs/117.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
-[..]
-> diff --git a/drivers/nvdimm/region_devs.c b/drivers/nvdimm/region_devs.c
-> index b4ef7d9ff22e..fb1041ab32a6 100644
-> --- a/drivers/nvdimm/region_devs.c
-> +++ b/drivers/nvdimm/region_devs.c
-> @@ -295,7 +295,9 @@ static ssize_t deep_flush_store(struct device *dev, struct device_attribute *att
->                 return rc;
->         if (!flush)
->                 return -EINVAL;
-> -       nvdimm_flush(nd_region);
-> +       rc = nvdimm_flush(nd_region, NULL, false);
-> +       if (rc)
-> +               return rc;
->
->         return len;
+>  repair/phase6.c |   14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
+> 
+> 
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 8a50b350..194cfdbf 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -1019,6 +1019,7 @@ mk_orphanage(xfs_mount_t *mp)
+>  	 */
+>  	set_inode_used(irec, ino_offset);
+>  	add_inode_ref(irec, ino_offset);
+> +	add_inode_reached(irec, ino_offset);
+>  
+>  	/*
+>  	 * now that we know the transaction will stay around,
+> @@ -1037,14 +1038,14 @@ mk_orphanage(xfs_mount_t *mp)
+>  
+>  	/*
+>  	 * bump up the link count in the root directory to account
+> -	 * for .. in the new directory
+> +	 * for .. in the new directory, and update the irec copy of the
+> +	 * on-disk nlink so we don't fail the link count check later.
+>  	 */
+>  	inc_nlink(VFS_I(pip));
+> -	add_inode_ref(find_inode_rec(mp,
+> -				XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
+> -				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino)), 0);
+> -
+> -
+> +	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
+> +				  XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
+> +	add_inode_ref(irec, 0);
+> +	set_inode_disk_nlinks(irec, 0, get_inode_disk_nlinks(irec, 0) + 1);
+>  
+>  	libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
+>  	libxfs_dir_init(tp, ip, pip);
+> @@ -1056,7 +1057,6 @@ mk_orphanage(xfs_mount_t *mp)
+>  	}
+>  	libxfs_irele(ip);
+>  	libxfs_irele(pip);
+> -	add_inode_reached(irec,ino_offset);
+>  
+>  	return(ino);
 >  }
-> @@ -1085,6 +1087,11 @@ static struct nd_region *nd_region_create(struct nvdimm_bus *nvdimm_bus,
->         dev->of_node = ndr_desc->of_node;
->         nd_region->ndr_size = resource_size(ndr_desc->res);
->         nd_region->ndr_start = ndr_desc->res->start;
-> +       if (ndr_desc->flush)
-> +               nd_region->flush = ndr_desc->flush;
-> +       else
-> +               nd_region->flush = generic_nvdimm_flush;
-> +
->         nd_device_register(dev);
->
->         return nd_region;
-> @@ -1125,11 +1132,36 @@ struct nd_region *nvdimm_volatile_region_create(struct nvdimm_bus *nvdimm_bus,
->  }
->  EXPORT_SYMBOL_GPL(nvdimm_volatile_region_create);
->
-> +int nvdimm_flush(struct nd_region *nd_region, struct bio *bio, bool async)
-> +{
-
-I don't quite see the point of the 'async' argument. All the usages of
-this routine are either
-
-nvdimm_flush(nd_region, bio, true)
-...or:
-nvdimm_flush(nd_region, NULL, false)
-
-...so why not gate async behavior on the presence of the 'bio' argument?
-
-
-> +       int rc = 0;
-> +
-> +       /* Create child bio for asynchronous flush and chain with
-> +        * parent bio. Otherwise directly call nd_region flush.
-> +        */
-> +       if (async && bio->bi_iter.bi_sector != -1) {
-> +
-> +               struct bio *child = bio_alloc(GFP_ATOMIC, 0);
-> +
-> +               if (!child)
-> +                       return -ENOMEM;
-> +               bio_copy_dev(child, bio);
-> +               child->bi_opf = REQ_PREFLUSH;
-> +               child->bi_iter.bi_sector = -1;
-> +               bio_chain(child, bio);
-> +               submit_bio(child);
-
-I understand how this works, but it's a bit too "magical" for my
-taste. I would prefer that all flush implementations take an optional
-'bio' argument rather than rely on the make_request implementation to
-stash the bio away on a driver specific list.
-
-> +       } else {
-> +               if (nd_region->flush(nd_region))
-> +                       rc = -EIO;
-
-Given the common case wants to be fast and synchronous I think we
-should try to avoid retpoline overhead by default. So something like
-this:
-
-if (nd_region->flush == generic_nvdimm_flush)
-    rc = generic_nvdimm_flush(...);
+> 
