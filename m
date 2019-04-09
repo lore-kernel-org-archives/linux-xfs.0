@@ -1,50 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44388 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726588AbfDIIHp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Apr 2019 04:07:45 -0400
-Subject: Re: [RFC 0/2] guarantee natural alignment for kmalloc()
-References: <20190319211108.15495-1-vbabka@suse.cz>
- <01000169988d4e34-b4178f68-c390-472b-b62f-a57a4f459a76-000000@email.amazonses.com>
- <5d7fee9c-1a80-6ac9-ac1d-b1ce05ed27a8@suse.cz>
- <010001699c5563f8-36c6909f-ed43-4839-82da-b5f9f21594b8-000000@email.amazonses.com>
- <4d2a55dc-b29f-1309-0a8e-83b057e186e6@suse.cz>
- <01000169a68852ed-d621a35c-af0c-4759-a8a3-e97e7dfc17a5-000000@email.amazonses.com>
- <2b129aec-f9a5-7ab8-ca4a-0a325621d111@suse.cz> <20190407080020.GA9949@lst.de>
-From: Vlastimil Babka <vbabka@suse.cz>
-Message-ID: <af1e0b95-f654-4fa9-d400-af01043907ab@suse.cz>
-Date: Tue, 9 Apr 2019 10:07:42 +0200
+Received: from mail-yw1-f66.google.com ([209.85.161.66]:39618 "EHLO
+        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726372AbfDIIYX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Apr 2019 04:24:23 -0400
 MIME-Version: 1.0
-In-Reply-To: <20190407080020.GA9949@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <155466882175.633834.15261194784129614735.stgit@magnolia>
+ <155466884962.633834.14320700092446721044.stgit@magnolia> <20190409031929.GE5147@magnolia>
+In-Reply-To: <20190409031929.GE5147@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 9 Apr 2019 11:24:10 +0300
+Message-ID: <CAOQ4uxgDQHJntoO6EZ1fn-iBVo8gshsSpHd_UB1cnXUJ3CXOTg@mail.gmail.com>
+Subject: Re: [PATCH v2 4/4] xfs: don't allow most setxattr to immutable files
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christopher Lameter <cl@linux.com>, linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Michal Hocko <mhocko@kernel.org>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, lsf-pc@lists.linux-foundation.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>
 
-On 4/7/19 10:00 AM, Christoph Hellwig wrote:
-> On Fri, Apr 05, 2019 at 07:11:17PM +0200, Vlastimil Babka wrote:
->> On 3/22/19 6:52 PM, Christopher Lameter wrote:
->> > On Thu, 21 Mar 2019, Vlastimil Babka wrote:
->> > 
->> >> That however doesn't work well for the xfs/IO case where block sizes are
->> >> not known in advance:
->> >>
->> >> https://lore.kernel.org/linux-fsdevel/20190225040904.5557-1-ming.lei@redhat.com/T/#ec3a292c358d05a6b29cc4a9ce3ae6b2faf31a23f
->> > 
->> > I thought we agreed to use custom slab caches for that?
->> 
->> Hm maybe I missed something but my impression was that xfs/IO folks would have
->> to create lots of them for various sizes not known in advance, and that it
->> wasn't practical and would welcome if kmalloc just guaranteed the alignment.
->> But so far they haven't chimed in here in this thread, so I guess I'm wrong.
-> 
-> Yes, in XFS we might have quite a few.  Never mind all the other
-> block level consumers that might have similar reasonable expectations
-> but haven't triggered the problematic drivers yet.
+On Tue, Apr 9, 2019 at 6:19 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> The chattr manpage has this to say about immutable files:
+>
+> "A file with the 'i' attribute cannot be modified: it cannot be deleted
+> or renamed, no link can be created to this file, most of the file's
+> metadata can not be modified, and the file can not be opened in write
+> mode."
+>
+> However, we don't actually check the immutable flag in the setattr code,
+> which means that we can update project ids and extent size hints on
+> supposedly immutable files.  Therefore, reject a setattr call on an
+> immutable file except for the case where we're trying to unset
+> IMMUTABLE.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_ioctl.c |   46 ++++++++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 44 insertions(+), 2 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 5a1b96dad901..67d12027f563 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1023,6 +1023,40 @@ xfs_ioctl_setattr_flush(
+>         return filemap_write_and_wait(inode->i_mapping);
+>  }
+>
+> +/*
+> + * If immutable is set and we are not clearing it, we're not allowed to change
+> + * anything else in the inode.
 
-What about a LSF session/BoF to sort this out, then? Would need to have people
-from all three MM+FS+IO groups, I suppose.
+This looks correct, but FYI, neither xfs_io nor chattr clears 'immutable'
+and sets projid/*extsize in one ioctl/xfsctl, so there is no justification to
+making an extra effort to support that use case. You could do with
+checking 'immutable' inside xfs_ioctl_setattr_check_projid/*extsize()
+and leave only the di_flags check here.
+
+Some would say that will be cleaner code.
+Its a matter of taste and its your subsystem, so feel free to dismiss
+this comments.
+
+Thanks,
+Amir.
+
+> Don't error out if we're only trying to set
+> + * immutable on an immutable file.
+> + */
+> +static int
+> +xfs_ioctl_setattr_immutable(
+> +       struct xfs_inode        *ip,
+> +       struct fsxattr          *fa,
+> +       uint16_t                di_flags,
+> +       uint64_t                di_flags2)
+> +{
+> +       struct xfs_mount        *mp = ip->i_mount;
+> +
+> +       if (!(ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE) ||
+> +           !(fa->fsx_xflags & FS_XFLAG_IMMUTABLE))
+> +               return 0;
+> +
+> +       if ((ip->i_d.di_flags & ~XFS_DIFLAG_IMMUTABLE) !=
+> +           (di_flags & ~XFS_DIFLAG_IMMUTABLE))
+> +               return -EPERM;
+> +       if (ip->i_d.di_version >= 3 && ip->i_d.di_flags2 != di_flags2)
+> +               return -EPERM;
+> +       if (xfs_get_projid(ip) != fa->fsx_projid)
+> +               return -EPERM;
+> +       if (ip->i_d.di_extsize != fa->fsx_extsize >> mp->m_sb.sb_blocklog)
+> +               return -EPERM;
+> +       if (ip->i_d.di_version >= 3 && (di_flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
+> +           ip->i_d.di_cowextsize != fa->fsx_cowextsize >> mp->m_sb.sb_blocklog)
+> +               return -EPERM;
+> +
+> +       return 0;
+> +}
+> +
+>  static int
+>  xfs_ioctl_setattr_xflags(
+>         struct xfs_trans        *tp,
+> @@ -1030,7 +1064,9 @@ xfs_ioctl_setattr_xflags(
+>         struct fsxattr          *fa)
+>  {
+>         struct xfs_mount        *mp = ip->i_mount;
+> +       uint16_t                di_flags;
+>         uint64_t                di_flags2;
+> +       int                     error;
+>
+>         /* Can't change realtime flag if any extents are allocated. */
+>         if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+> @@ -1061,12 +1097,18 @@ xfs_ioctl_setattr_xflags(
+>             !capable(CAP_LINUX_IMMUTABLE))
+>                 return -EPERM;
+>
+> -       /* diflags2 only valid for v3 inodes. */
+> +       /* Don't allow changes to an immutable inode. */
+> +       di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
+>         di_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
+> +       error = xfs_ioctl_setattr_immutable(ip, fa, di_flags, di_flags2);
+> +       if (error)
+> +               return error;
+> +
+> +       /* diflags2 only valid for v3 inodes. */
+>         if (di_flags2 && ip->i_d.di_version < 3)
+>                 return -EINVAL;
+>
+> -       ip->i_d.di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
+> +       ip->i_d.di_flags = di_flags;
+>         ip->i_d.di_flags2 = di_flags2;
+>
+>         xfs_diflags_to_linux(ip);
