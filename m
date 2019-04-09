@@ -1,43 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:34362 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726264AbfDKN2W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Apr 2019 09:28:22 -0400
-Date: Thu, 11 Apr 2019 06:28:19 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [LSF/MM TOPIC] guarantee natural alignment for kmalloc()?
-Message-ID: <20190411132819.GB22763@bombadil.infradead.org>
-References: <790b68b7-3689-0ff6-08ae-936728bc6458@suse.cz>
+Received: from sandeen.net ([63.231.237.45]:58024 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726333AbfDIUny (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Apr 2019 16:43:54 -0400
+Subject: Re: [PATCH 13/23] xfs_repair: reinitialize the root directory nlink
+ correctly
+References: <155148280859.16677.6057998944865066232.stgit@magnolia>
+ <155148289561.16677.8657255567421403873.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <16d6af36-c9c0-fb05-2db8-dca0584cac61@sandeen.net>
+Date: Tue, 9 Apr 2019 15:43:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <790b68b7-3689-0ff6-08ae-936728bc6458@suse.cz>
+In-Reply-To: <155148289561.16677.8657255567421403873.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: lsf-pc@lists.linux-foundation.org, Linux-FSDevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, linux-block@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 11, 2019 at 02:52:08PM +0200, Vlastimil Babka wrote:
-> In the session I hope to resolve the question whether this is indeed the
-> right thing to do for all kmalloc() users, without an explicit alignment
-> requests, and if it's worth the potentially worse
-> performance/fragmentation it would impose on a hypothetical new slab
-> implementation for which it wouldn't be optimal to split power-of-two
-> sized pages into power-of-two-sized objects (or whether there are any
-> other downsides).
+On 3/1/19 5:28 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> In mk_root_dir, we reinitialize the root directory inode with a link
+> count of 1.  This differs from mkfs parseproto, which initializes the
+> root to have a link count of 2.  The nlink discrepancy in repair is
+> caught and corrected during phase 7, but this is unnecessary since we
+> should set it properly in the first place.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I think this is exactly the kind of discussion that LSFMM is for!  It's
-really a whole-system question; is Linux better-off having the flexibility
-for allocators to return non-power-of-two aligned memory, or allowing
-consumers of the kmalloc API to assume that "sufficiently large" memory
-is naturally aligned.
 
-Another possibility that should be considered is introducing a kmalloc()
-variant like posix_memalign() that allows for specifying the alignment,
-or just kmalloc_naturally_aligned().
+I have this nagging feeling that we've pingponged some of this back
+and forth, but this seems totally legitimate, so ...
+embrace the fear ;)
 
-And we probably need to reiterate for the benefit of those not following
-the discussion that creating a slab cache (which does allow for alignment
-to be specified) is impractical for this use case because the actual
-allocations are of variable size, but always need to be 512-byte aligned.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  repair/phase6.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> 
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 9477bc25..8a50b350 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -891,7 +891,7 @@ mk_root_dir(xfs_mount_t *mp)
+>  	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+>  	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
+>  
+> -	set_nlink(VFS_I(ip), 1);	/* account for . */
+> +	set_nlink(VFS_I(ip), 2);	/* account for . and .. */
+>  
+>  	times = XFS_ICHGTIME_CHG | XFS_ICHGTIME_MOD;
+>  	if (ip->i_d.di_version == 3) {
+> 
