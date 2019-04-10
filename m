@@ -1,396 +1,239 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2630 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725838AbfDJEJk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Apr 2019 00:09:40 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v5 2/5] virtio-pmem: Add virtio pmem driver
-Date: Wed, 10 Apr 2019 09:38:22 +0530
-Message-Id: <20190410040826.24371-3-pagupta@redhat.com>
-In-Reply-To: <20190410040826.24371-1-pagupta@redhat.com>
-References: <20190410040826.24371-1-pagupta@redhat.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:40662 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730974AbfDJP0A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 11:26:00 -0400
+Date: Wed, 10 Apr 2019 08:25:54 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 26/36] xfs_repair: refactor buffer ops assignments during
+ phase 5
+Message-ID: <20190410152554.GB1019523@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <155259758961.31886.4826767055567611572.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155259758961.31886.4826767055567611572.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, pagupta@redhat.com
+To: sandeen@sandeen.net
+Cc: linux-xfs@vger.kernel.org
 
-This patch adds virtio-pmem driver for KVM guest.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Guest reads the persistent memory range information from
-Qemu over VIRTIO and registers it on nvdimm_bus. It also
-creates a nd_region object with the persistent memory
-range information so that existing 'nvdimm/pmem' driver
-can reserve this into system memory map. This way
-'virtio-pmem' driver uses existing functionality of pmem
-driver to register persistent memory compatible for DAX
-capable filesystems.
+Refactor the buffer ops assignments in phase 5 to use a helper function
+to determine the correct buf_ops instead of open-coding them.
 
-This also provides function to perform guest flush over
-VIRTIO from 'pmem' driver when userspace performs flush
-on DAX memory range.
-
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- drivers/nvdimm/virtio_pmem.c     |  88 ++++++++++++++++++++++
- drivers/virtio/Kconfig           |  10 +++
- drivers/virtio/Makefile          |   1 +
- drivers/virtio/pmem.c            | 124 +++++++++++++++++++++++++++++++
- include/linux/virtio_pmem.h      |  60 +++++++++++++++
- include/uapi/linux/virtio_ids.h  |   1 +
- include/uapi/linux/virtio_pmem.h |  10 +++
- 7 files changed, 294 insertions(+)
- create mode 100644 drivers/nvdimm/virtio_pmem.c
- create mode 100644 drivers/virtio/pmem.c
- create mode 100644 include/linux/virtio_pmem.h
- create mode 100644 include/uapi/linux/virtio_pmem.h
+v2: convert all the ag btree types
+---
+ repair/phase5.c |   54 ++++++++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 42 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/nvdimm/virtio_pmem.c b/drivers/nvdimm/virtio_pmem.c
-new file mode 100644
-index 000000000000..01044cc2f3a3
---- /dev/null
-+++ b/drivers/nvdimm/virtio_pmem.c
-@@ -0,0 +1,88 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * virtio_pmem.c: Virtio pmem Driver
-+ *
-+ * Discovers persistent memory range information
-+ * from host and provides a virtio based flushing
-+ * interface.
-+ */
-+#include <linux/virtio_pmem.h>
-+#include "nd.h"
-+
-+ /* The interrupt handler */
-+void host_ack(struct virtqueue *vq)
-+{
-+	unsigned int len;
-+	unsigned long flags;
-+	struct virtio_pmem_request *req, *req_buf;
-+	struct virtio_pmem *vpmem = vq->vdev->priv;
-+
-+	spin_lock_irqsave(&vpmem->pmem_lock, flags);
-+	while ((req = virtqueue_get_buf(vq, &len)) != NULL) {
-+		req->done = true;
-+		wake_up(&req->host_acked);
-+
-+		if (!list_empty(&vpmem->req_list)) {
-+			req_buf = list_first_entry(&vpmem->req_list,
-+					struct virtio_pmem_request, list);
-+			list_del(&vpmem->req_list);
-+			req_buf->wq_buf_avail = true;
-+			wake_up(&req_buf->wq_buf);
-+		}
-+	}
-+	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(host_ack);
-+
-+ /* The request submission function */
-+int virtio_pmem_flush(struct nd_region *nd_region)
-+{
-+	int err;
-+	unsigned long flags;
-+	struct scatterlist *sgs[2], sg, ret;
-+	struct virtio_device *vdev = nd_region->provider_data;
-+	struct virtio_pmem *vpmem = vdev->priv;
-+	struct virtio_pmem_request *req;
-+
-+	might_sleep();
-+	req = kmalloc(sizeof(*req), GFP_KERNEL);
-+	if (!req)
-+		return -ENOMEM;
-+
-+	req->done = req->wq_buf_avail = false;
-+	strcpy(req->name, "FLUSH");
-+	init_waitqueue_head(&req->host_acked);
-+	init_waitqueue_head(&req->wq_buf);
-+	sg_init_one(&sg, req->name, strlen(req->name));
-+	sgs[0] = &sg;
-+	sg_init_one(&ret, &req->ret, sizeof(req->ret));
-+	sgs[1] = &ret;
-+
-+	spin_lock_irqsave(&vpmem->pmem_lock, flags);
-+	err = virtqueue_add_sgs(vpmem->req_vq, sgs, 1, 1, req, GFP_ATOMIC);
-+	if (err) {
-+		dev_err(&vdev->dev, "failed to send command to virtio pmem device\n");
-+
-+		list_add_tail(&vpmem->req_list, &req->list);
-+		spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
-+
-+		/* When host has read buffer, this completes via host_ack */
-+		wait_event(req->wq_buf, req->wq_buf_avail);
-+		spin_lock_irqsave(&vpmem->pmem_lock, flags);
-+	}
-+	err = virtqueue_kick(vpmem->req_vq);
-+	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
-+
-+	if (!err) {
-+		err = -EIO;
-+		goto ret;
-+	}
-+	/* When host has read buffer, this completes via host_ack */
-+	wait_event(req->host_acked, req->done);
-+	err = req->ret;
-+ret:
-+	kfree(req);
-+	return err;
-+};
-+EXPORT_SYMBOL_GPL(virtio_pmem_flush);
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/virtio/Kconfig b/drivers/virtio/Kconfig
-index 35897649c24f..9f634a2ed638 100644
---- a/drivers/virtio/Kconfig
-+++ b/drivers/virtio/Kconfig
-@@ -42,6 +42,16 @@ config VIRTIO_PCI_LEGACY
+diff --git a/repair/phase5.c b/repair/phase5.c
+index 367c3ab9..5d9c542a 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -615,6 +615,28 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 	return(extra_blocks);
+ }
  
- 	  If unsure, say Y.
- 
-+config VIRTIO_PMEM
-+	tristate "Support for virtio pmem driver"
-+	depends on VIRTIO
-+	depends on LIBNVDIMM
-+	help
-+	This driver provides support for virtio based flushing interface
-+	for persistent memory range.
-+
-+	If unsure, say M.
-+
- config VIRTIO_BALLOON
- 	tristate "Virtio balloon driver"
- 	depends on VIRTIO
-diff --git a/drivers/virtio/Makefile b/drivers/virtio/Makefile
-index 3a2b5c5dcf46..143ce91eabe9 100644
---- a/drivers/virtio/Makefile
-+++ b/drivers/virtio/Makefile
-@@ -6,3 +6,4 @@ virtio_pci-y := virtio_pci_modern.o virtio_pci_common.o
- virtio_pci-$(CONFIG_VIRTIO_PCI_LEGACY) += virtio_pci_legacy.o
- obj-$(CONFIG_VIRTIO_BALLOON) += virtio_balloon.o
- obj-$(CONFIG_VIRTIO_INPUT) += virtio_input.o
-+obj-$(CONFIG_VIRTIO_PMEM) += pmem.o ../nvdimm/virtio_pmem.o
-diff --git a/drivers/virtio/pmem.c b/drivers/virtio/pmem.c
-new file mode 100644
-index 000000000000..cc9de9589d56
---- /dev/null
-+++ b/drivers/virtio/pmem.c
-@@ -0,0 +1,124 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * virtio_pmem.c: Virtio pmem Driver
-+ *
-+ * Discovers persistent memory range information
-+ * from host and registers the virtual pmem device
-+ * with libnvdimm core.
-+ */
-+#include <linux/virtio_pmem.h>
-+#include <../../drivers/nvdimm/nd.h>
-+
-+static struct virtio_device_id id_table[] = {
-+	{ VIRTIO_ID_PMEM, VIRTIO_DEV_ANY_ID },
-+	{ 0 },
-+};
-+
-+ /* Initialize virt queue */
-+static int init_vq(struct virtio_pmem *vpmem)
++/* Map btnum to buffer ops for the types that need it. */
++static const struct xfs_buf_ops *
++btnum_to_ops(
++	xfs_btnum_t	btnum)
 +{
-+	struct virtqueue *vq;
-+
-+	/* single vq */
-+	vpmem->req_vq = vq = virtio_find_single_vq(vpmem->vdev,
-+				host_ack, "flush_queue");
-+	if (IS_ERR(vq))
-+		return PTR_ERR(vq);
-+
-+	spin_lock_init(&vpmem->pmem_lock);
-+	INIT_LIST_HEAD(&vpmem->req_list);
-+
-+	return 0;
-+};
-+
-+static int virtio_pmem_probe(struct virtio_device *vdev)
-+{
-+	int err = 0;
-+	struct resource res;
-+	struct virtio_pmem *vpmem;
-+	struct nvdimm_bus *nvdimm_bus;
-+	struct nd_region_desc ndr_desc = {};
-+	int nid = dev_to_node(&vdev->dev);
-+	struct nd_region *nd_region;
-+
-+	if (!vdev->config->get) {
-+		dev_err(&vdev->dev, "%s failure: config disabled\n",
-+			__func__);
-+		return -EINVAL;
++	switch (btnum) {
++	case XFS_BTNUM_BNO:
++	case XFS_BTNUM_CNT:
++		return &xfs_allocbt_buf_ops;
++	case XFS_BTNUM_INO:
++	case XFS_BTNUM_FINO:
++		return &xfs_inobt_buf_ops;
++	case XFS_BTNUM_RMAP:
++		return &xfs_rmapbt_buf_ops;
++	case XFS_BTNUM_REFC:
++		return &xfs_refcountbt_buf_ops;
++	default:
++		ASSERT(0);
++		return NULL;
 +	}
-+
-+	vdev->priv = vpmem = devm_kzalloc(&vdev->dev, sizeof(*vpmem),
-+					GFP_KERNEL);
-+	if (!vpmem) {
-+		err = -ENOMEM;
-+		goto out_err;
-+	}
-+
-+	vpmem->vdev = vdev;
-+	err = init_vq(vpmem);
-+	if (err)
-+		goto out_err;
-+
-+	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
-+			start, &vpmem->start);
-+	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
-+			size, &vpmem->size);
-+
-+	res.start = vpmem->start;
-+	res.end   = vpmem->start + vpmem->size-1;
-+	vpmem->nd_desc.provider_name = "virtio-pmem";
-+	vpmem->nd_desc.module = THIS_MODULE;
-+
-+	vpmem->nvdimm_bus = nvdimm_bus = nvdimm_bus_register(&vdev->dev,
-+						&vpmem->nd_desc);
-+	if (!nvdimm_bus)
-+		goto out_vq;
-+
-+	dev_set_drvdata(&vdev->dev, nvdimm_bus);
-+
-+	ndr_desc.res = &res;
-+	ndr_desc.numa_node = nid;
-+	ndr_desc.flush = virtio_pmem_flush;
-+	set_bit(ND_REGION_PAGEMAP, &ndr_desc.flags);
-+	set_bit(ND_REGION_ASYNC, &ndr_desc.flags);
-+	nd_region = nvdimm_pmem_region_create(nvdimm_bus, &ndr_desc);
-+	nd_region->provider_data =  dev_to_virtio
-+					(nd_region->dev.parent->parent);
-+
-+	if (!nd_region)
-+		goto out_nd;
-+
-+	return 0;
-+out_nd:
-+	err = -ENXIO;
-+	nvdimm_bus_unregister(nvdimm_bus);
-+out_vq:
-+	vdev->config->del_vqs(vdev);
-+out_err:
-+	dev_err(&vdev->dev, "failed to register virtio pmem memory\n");
-+	return err;
 +}
 +
-+static void virtio_pmem_remove(struct virtio_device *vdev)
-+{
-+	struct virtio_pmem *vpmem = vdev->priv;
-+	struct nvdimm_bus *nvdimm_bus = dev_get_drvdata(&vdev->dev);
-+
-+	nvdimm_bus_unregister(nvdimm_bus);
-+	vdev->config->del_vqs(vdev);
-+	vdev->config->reset(vdev);
-+	kfree(vpmem);
-+}
-+
-+static struct virtio_driver virtio_pmem_driver = {
-+	.driver.name		= KBUILD_MODNAME,
-+	.driver.owner		= THIS_MODULE,
-+	.id_table		= id_table,
-+	.probe			= virtio_pmem_probe,
-+	.remove			= virtio_pmem_remove,
-+};
-+
-+module_virtio_driver(virtio_pmem_driver);
-+MODULE_DEVICE_TABLE(virtio, id_table);
-+MODULE_DESCRIPTION("Virtio pmem driver");
-+MODULE_LICENSE("GPL");
-diff --git a/include/linux/virtio_pmem.h b/include/linux/virtio_pmem.h
-new file mode 100644
-index 000000000000..224f9d934be6
---- /dev/null
-+++ b/include/linux/virtio_pmem.h
-@@ -0,0 +1,60 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * virtio_pmem.h: virtio pmem Driver
-+ *
-+ * Discovers persistent memory range information
-+ * from host and provides a virtio based flushing
-+ * interface.
-+ **/
-+
-+#ifndef _LINUX_VIRTIO_PMEM_H
-+#define _LINUX_VIRTIO_PMEM_H
-+
-+#include <linux/virtio_ids.h>
-+#include <linux/module.h>
-+#include <linux/virtio_config.h>
-+#include <uapi/linux/virtio_pmem.h>
-+#include <linux/libnvdimm.h>
-+#include <linux/spinlock.h>
-+
-+struct virtio_pmem_request {
-+	/* Host return status corresponding to flush request */
-+	int ret;
-+
-+	/* command name*/
-+	char name[16];
-+
-+	/* Wait queue to process deferred work after ack from host */
-+	wait_queue_head_t host_acked;
-+	bool done;
-+
-+	/* Wait queue to process deferred work after virt queue buffer avail */
-+	wait_queue_head_t wq_buf;
-+	bool wq_buf_avail;
-+	struct list_head list;
-+};
-+
-+struct virtio_pmem {
-+	struct virtio_device *vdev;
-+
-+	/* Virtio pmem request queue */
-+	struct virtqueue *req_vq;
-+
-+	/* nvdimm bus registers virtio pmem device */
-+	struct nvdimm_bus *nvdimm_bus;
-+	struct nvdimm_bus_descriptor nd_desc;
-+
-+	/* List to store deferred work if virtqueue is full */
-+	struct list_head req_list;
-+
-+	/* Synchronize virtqueue data */
-+	spinlock_t pmem_lock;
-+
-+	/* Memory region information */
-+	uint64_t start;
-+	uint64_t size;
-+};
-+
-+void host_ack(struct virtqueue *vq);
-+int virtio_pmem_flush(struct nd_region *nd_region);
-+#endif
-diff --git a/include/uapi/linux/virtio_ids.h b/include/uapi/linux/virtio_ids.h
-index 6d5c3b2d4f4d..346389565ac1 100644
---- a/include/uapi/linux/virtio_ids.h
-+++ b/include/uapi/linux/virtio_ids.h
-@@ -43,5 +43,6 @@
- #define VIRTIO_ID_INPUT        18 /* virtio input */
- #define VIRTIO_ID_VSOCK        19 /* virtio vsock transport */
- #define VIRTIO_ID_CRYPTO       20 /* virtio crypto */
-+#define VIRTIO_ID_PMEM         25 /* virtio pmem */
+ static void
+ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		bt_status_t *btree_curs, xfs_agblock_t startblock,
+@@ -625,6 +647,7 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 	xfs_alloc_ptr_t		*bt_ptr;
+ 	xfs_agblock_t		agbno;
+ 	bt_stat_level_t		*lptr;
++	const struct xfs_buf_ops *ops = btnum_to_ops(btnum);
  
- #endif /* _LINUX_VIRTIO_IDS_H */
-diff --git a/include/uapi/linux/virtio_pmem.h b/include/uapi/linux/virtio_pmem.h
-new file mode 100644
-index 000000000000..fa3f7d52717a
---- /dev/null
-+++ b/include/uapi/linux/virtio_pmem.h
-@@ -0,0 +1,10 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+
-+#ifndef _UAPI_LINUX_VIRTIO_PMEM_H
-+#define _UAPI_LINUX_VIRTIO_PMEM_H
-+
-+struct virtio_pmem_config {
-+	__le64 start;
-+	__le64 size;
-+};
-+#endif
--- 
-2.20.1
+ 	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
+ 
+@@ -675,7 +698,7 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		/*
+ 		 * initialize block header
+ 		 */
+-		lptr->buf_p->b_ops = &xfs_allocbt_buf_ops;
++		lptr->buf_p->b_ops = ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		libxfs_btree_init_block(mp, lptr->buf_p, btnum, level,
+@@ -723,6 +746,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 	extent_tree_node_t	*ext_ptr;
+ 	bt_stat_level_t		*lptr;
+ 	xfs_extlen_t		freeblks;
++	const struct xfs_buf_ops *ops = btnum_to_ops(btnum);
+ 
+ 	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
+ 
+@@ -754,7 +778,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		/*
+ 		 * initialize block header
+ 		 */
+-		lptr->buf_p->b_ops = &xfs_allocbt_buf_ops;
++		lptr->buf_p->b_ops = ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		libxfs_btree_init_block(mp, lptr->buf_p, btnum, i, 0, agno, 0);
+@@ -781,7 +805,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		/*
+ 		 * block initialization, lay in block header
+ 		 */
+-		lptr->buf_p->b_ops = &xfs_allocbt_buf_ops;
++		lptr->buf_p->b_ops = ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		libxfs_btree_init_block(mp, lptr->buf_p, btnum, 0, 0, agno, 0);
+@@ -990,6 +1014,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+ 	xfs_inobt_ptr_t		*bt_ptr;
+ 	xfs_agblock_t		agbno;
+ 	bt_stat_level_t		*lptr;
++	const struct xfs_buf_ops *ops = btnum_to_ops(btnum);
+ 
+ 	level++;
+ 
+@@ -1038,7 +1063,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+ 		/*
+ 		 * initialize block header
+ 		 */
+-		lptr->buf_p->b_ops = &xfs_inobt_buf_ops;
++		lptr->buf_p->b_ops = ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		libxfs_btree_init_block(mp, lptr->buf_p, btnum,
+@@ -1130,6 +1155,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 	xfs_inobt_rec_t		*bt_rec;
+ 	ino_tree_node_t		*ino_rec;
+ 	bt_stat_level_t		*lptr;
++	const struct xfs_buf_ops *ops = btnum_to_ops(btnum);
+ 	xfs_agino_t		count = 0;
+ 	xfs_agino_t		freecount = 0;
+ 	int			inocnt;
+@@ -1160,7 +1186,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		 * initialize block header
+ 		 */
+ 
+-		lptr->buf_p->b_ops = &xfs_inobt_buf_ops;
++		lptr->buf_p->b_ops = ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		libxfs_btree_init_block(mp, lptr->buf_p, btnum, i, 0, agno, 0);
+@@ -1188,7 +1214,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		/*
+ 		 * block initialization, lay in block header
+ 		 */
+-		lptr->buf_p->b_ops = &xfs_inobt_buf_ops;
++		lptr->buf_p->b_ops = ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		libxfs_btree_init_block(mp, lptr->buf_p, btnum, 0, 0, agno, 0);
+@@ -1393,6 +1419,7 @@ prop_rmap_cursor(
+ 	xfs_rmap_ptr_t		*bt_ptr;
+ 	xfs_agblock_t		agbno;
+ 	struct bt_stat_level	*lptr;
++	const struct xfs_buf_ops *ops = btnum_to_ops(XFS_BTNUM_RMAP);
+ 
+ 	level++;
+ 
+@@ -1441,7 +1468,7 @@ prop_rmap_cursor(
+ 		/*
+ 		 * initialize block header
+ 		 */
+-		lptr->buf_p->b_ops = &xfs_rmapbt_buf_ops;
++		lptr->buf_p->b_ops = ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_RMAP,
+@@ -1530,6 +1557,7 @@ build_rmap_tree(
+ 	struct xfs_rmap_irec	highest_key = {0};
+ 	struct xfs_rmap_irec	hi_key = {0};
+ 	struct bt_stat_level	*lptr;
++	const struct xfs_buf_ops *ops = btnum_to_ops(XFS_BTNUM_RMAP);
+ 	int			numrecs;
+ 	int			level = btree_curs->num_levels;
+ 	int			error;
+@@ -1553,7 +1581,7 @@ build_rmap_tree(
+ 		 * initialize block header
+ 		 */
+ 
+-		lptr->buf_p->b_ops = &xfs_rmapbt_buf_ops;
++		lptr->buf_p->b_ops = ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_RMAP,
+@@ -1580,7 +1608,7 @@ _("Insufficient memory to construct reverse-map cursor."));
+ 		/*
+ 		 * block initialization, lay in block header
+ 		 */
+-		lptr->buf_p->b_ops = &xfs_rmapbt_buf_ops;
++		lptr->buf_p->b_ops = ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_RMAP,
+@@ -1741,6 +1769,7 @@ prop_refc_cursor(
+ 	xfs_refcount_ptr_t	*bt_ptr;
+ 	xfs_agblock_t		agbno;
+ 	struct bt_stat_level	*lptr;
++	const struct xfs_buf_ops *ops = btnum_to_ops(XFS_BTNUM_REFC);
+ 
+ 	level++;
+ 
+@@ -1789,7 +1818,7 @@ prop_refc_cursor(
+ 		/*
+ 		 * initialize block header
+ 		 */
+-		lptr->buf_p->b_ops = &xfs_refcountbt_buf_ops;
++		lptr->buf_p->b_ops = ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_REFC,
+@@ -1834,6 +1863,7 @@ build_refcount_tree(
+ 	struct xfs_slab_cursor	*refc_cur;
+ 	struct xfs_refcount_rec	*bt_rec;
+ 	struct bt_stat_level	*lptr;
++	const struct xfs_buf_ops *ops = btnum_to_ops(XFS_BTNUM_REFC);
+ 	int			numrecs;
+ 	int			level = btree_curs->num_levels;
+ 	int			error;
+@@ -1856,7 +1886,7 @@ build_refcount_tree(
+ 		 * initialize block header
+ 		 */
+ 
+-		lptr->buf_p->b_ops = &xfs_refcountbt_buf_ops;
++		lptr->buf_p->b_ops = ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_REFC,
+@@ -1883,7 +1913,7 @@ _("Insufficient memory to construct refcount cursor."));
+ 		/*
+ 		 * block initialization, lay in block header
+ 		 */
+-		lptr->buf_p->b_ops = &xfs_refcountbt_buf_ops;
++		lptr->buf_p->b_ops = ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_REFC,
