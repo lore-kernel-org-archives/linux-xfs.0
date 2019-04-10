@@ -1,171 +1,258 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.shannon-data.com ([116.236.169.22]:50470 "EHLO
-        mail.shannon-data.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726513AbfDJCIL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Apr 2019 22:08:11 -0400
-From: Ming Li <liming@shannon-data.com>
-Subject: deadlock in XFS
-Message-ID: <5CAD4BAA.6070805@shannon-data.com>
-Date: Wed, 10 Apr 2019 09:49:30 +0800
+Received: from mx1.redhat.com ([209.132.183.28]:37336 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726494AbfDJPiC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Apr 2019 11:38:02 -0400
+Date: Wed, 10 Apr 2019 11:38:00 -0400 (EDT)
+From: Pankaj Gupta <pagupta@redhat.com>
+Message-ID: <1663006162.20832248.1554910680080.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20190410142426.5bf0d9a4.cohuck@redhat.com>
+References: <20190410040826.24371-1-pagupta@redhat.com> <20190410040826.24371-3-pagupta@redhat.com> <20190410142426.5bf0d9a4.cohuck@redhat.com>
+Subject: Re: [PATCH v5 2/5] virtio-pmem: Add virtio pmem driver
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com, linux-xfs@vger.kernel.org
-Cc: Ming Li <liming@shannon-data.com>
-
-hi,
-     It is my great honor writing to you.I`m a driver engineer from 
-china, I have a problem when I`m testing xfs iops on Intel P4510 2.0T. 
-xfs deadlocks in my testcase. messages as this:
-
-kworker/23:75(11126) possible memory allocation deadlock size 4194320 in 
-kmem_alloc (mode:0x250)    (this memory allocation need more than 4M 
-memory from  once kmalloc, I think it will failure always.)
-
-or like this:
-
-Apr  8 06:10:33 r720_1 kernel: XFS: kworker/3:129(7679) possible memory 
-allocation deadlock size 2316352 in kmem_alloc (mode:0x250)
-Apr  8 06:10:33 r720_1 kernel: [292720.008492] XFS: kworker/2:30(7476) 
-possible memory allocation deadlock size 2221840 in kmem_alloc (mode:0x250)
-Apr  8 06:10:33 r720_1 kernel: XFS: kworker/2:30(7476) possible memory 
-allocation deadlock size 2221840 in kmem_alloc (mode:0x250)
-Apr  8 06:10:34 r720_1 kernel: [292720.168489] XFS: kworker/2:80(7554) 
-possible memory allocation deadlock size 2208848 in kmem_alloc (mode:0x250)
-Apr  8 06:10:34 r720_1 kernel: XFS: kworker/2:80(7554) possible memory 
-allocation deadlock size 2208848 in kmem_alloc (mode:0x250)
-Apr  8 06:10:34 r720_1 kernel: [292720.308505] XFS: kworker/2:1(6884) 
-possible memory allocation deadlock size 2367680 in kmem_alloc (mode:0x250)
-Apr  8 06:10:34 r720_1 kernel: XFS: kworker/2:1(6884) possible memory 
-allocation deadlock size 2367680 in kmem_alloc (mode:0x250)
-Apr  8 06:10:34 r720_1 kernel: [292720.728593] XFS: kworker/7:22(7098) 
-possible memory allocation deadlock size 2228800 in kmem_alloc (mode:0x250)
-Apr  8 06:10:34 r720_1 kernel: XFS: kworker/7:22(7098) possible memory 
-allocation deadlock size 2228800 in kmem_alloc (mode:0x250)
-Apr  8 06:10:34 r720_1 kernel: [292720.828529] XFS: kworker/7:95(7512) 
-possible memory allocation deadlock size 2097728 in kmem_alloc (mode:0x250)
-Apr  8 06:10:34 r720_1 kernel: XFS: kworker/7:95(7512) possible memory 
-allocation deadlock size 2097728 in kmem_alloc (mode:0x250)
-Apr  8 06:10:35 r720_1 kernel: [292721.428557] XFS: kworker/5:1(7134) 
-possible memory allocation deadlock size 2097184 in kmem_alloc (mode:0x250)
-Apr  8 06:10:35 r720_1 kernel: XFS: kworker/5:1(7134) possible memory 
-allocation deadlock size 2097184 in kmem_alloc (mode:0x250)
-Apr  8 06:10:35 r720_1 kernel: [292721.468569] XFS: kworker/4:235(7923) 
-possible memory allocation deadlock size 2097168 in kmem_alloc (mode:0x250)
-Apr  8 06:10:35 r720_1 kernel: XFS: kworker/4:235(7923) possible memory 
-allocation deadlock size 2097168 in kmem_alloc (mode:0x250)
-Apr  8 06:10:35 r720_1 kernel: [292721.588576] XFS: kworker/3:129(7679) 
-possible memory allocation deadlock size 2316352 in kmem_alloc (mode:0x250)
-Apr  8 06:10:35 r720_1 kernel: XFS: kworker/3:129(7679) possible memory 
-allocation deadlock size 2316352 in kmem_alloc (mode:0x250)
-Apr  8 06:10:35 r720_1 kernel: [292722.008652] XFS: kworker/2:30(7476) 
-possible memory allocation deadlock size 2221840 in kmem_alloc (mode:0x250)
-
-(although xfs need memory less than 4M, but it still deadlocks.)
-
-And, I catched CallTrace:
-Call Trace:
-[<ffffffff8613a282>] dump_stack+0x19/0x1b
-[<ffffffffc055bcb7>] kmem_realloc+0x127/0x140 [xfs]
-[<ffffffffc052e1b2>] xfs_iext_realloc_indirect+0x22/0x40 [xfs]
-[<ffffffffc052e9bf>] xfs_iext_irec_new+0x3f/0x170 [xfs]
-[<ffffffffc052ec6a>] xfs_iext_add_indirect_multi+0x17a/0x2d0 [xfs]
-[<ffffffffc052efd1>] xfs_iext_add+0x211/0x2c0 [xfs]
-[<ffffffffc052f6f8>] xfs_iext_insert+0x58/0xf0 [xfs]
-[<ffffffffc0508bcd>] ? xfs_bmap_add_extent_unwritten_real+0x38d/0x18f0 
-[xfs]
-[<ffffffffc0508bcd>] xfs_bmap_add_extent_unwritten_real+0x38d/0x18f0 [xfs]
-[<ffffffffc050a246>] xfs_bmapi_convert_unwritten+0x116/0x1c0 [xfs]
-[<ffffffffc050f2e9>] xfs_bmapi_write+0x269/0xab0 [xfs]
-[<ffffffffc054aeb7>] xfs_iomap_write_unwritten+0x117/0x300 [xfs]
-[<ffffffffc0535f63>] xfs_end_io_direct_write+0x133/0x170 [xfs]
-[<ffffffff85c6e465>] dio_complete+0x125/0x2a0
-[<ffffffff85c6e761>] dio_aio_complete_work+0x21/0x30
-[<ffffffff85ab952f>] process_one_work+0x17f/0x440
-[<ffffffff85aba5c6>] worker_thread+0x126/0x3c0
-[<ffffffff85aba4a0>] ? manage_workers.isra.25+0x2a0/0x2a0
-[<ffffffff85ac1341>] kthread+0xd1/0xe0
-[<ffffffff85ac1270>] ? insert_kthread_work+0x40/0x40
-[<ffffffff8614caf7>] ret_from_fork_nospec_begin+0x21/0x21
-[<ffffffff85ac1270>] ? insert_kthread_work+0x40/0x40
+To: Cornelia Huck <cohuck@redhat.com>
+Cc: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dan j williams <dan.j.williams@intel.com>, zwisler@kernel.org, vishal l verma <vishal.l.verma@intel.com>, dave jiang <dave.jiang@intel.com>, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger kernel <adilger.kernel@dilger.ca>, darrick wong <darrick.wong@oracle.com>, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, pbonzini@redhat.com, kilobyte@angband.pl, yuval shaia <yuval.shaia@oracle.com>
 
 
-my test platform is:
-Architecture:          x86_64
-CPU op-mode(s):        32-bit, 64-bit
-Byte Order:            Little Endian
-CPU(s):                8
-On-line CPU(s) list:   0-7
-Thread(s) per core:    1
-Core(s) per socket:    4
-Socket(s):             2
-NUMA node(s):          2
-Vendor ID:             GenuineIntel
-CPU family:            6
-Model:                 62
-Model name:            Intel(R) Xeon(R) CPU E5-2609 v2 @ 2.50GHz
-Stepping:              4
-CPU MHz:               1199.951
-BogoMIPS:              5005.23
-Virtualization:        VT-x
-L1d cache:             32K
-L1i cache:             32K
-L2 cache:              256K
-L3 cache:              10240K
-NUMA node0 CPU(s):     0,2,4,6
-NUMA node1 CPU(s):     1,3,5,7
+> 
+> > This patch adds virtio-pmem driver for KVM guest.
+> > 
+> > Guest reads the persistent memory range information from
+> > Qemu over VIRTIO and registers it on nvdimm_bus. It also
+> > creates a nd_region object with the persistent memory
+> > range information so that existing 'nvdimm/pmem' driver
+> > can reserve this into system memory map. This way
+> > 'virtio-pmem' driver uses existing functionality of pmem
+> > driver to register persistent memory compatible for DAX
+> > capable filesystems.
+> > 
+> > This also provides function to perform guest flush over
+> > VIRTIO from 'pmem' driver when userspace performs flush
+> > on DAX memory range.
+> > 
+> > Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> > ---
+> >  drivers/nvdimm/virtio_pmem.c     |  88 ++++++++++++++++++++++
+> >  drivers/virtio/Kconfig           |  10 +++
+> >  drivers/virtio/Makefile          |   1 +
+> >  drivers/virtio/pmem.c            | 124 +++++++++++++++++++++++++++++++
+> >  include/linux/virtio_pmem.h      |  60 +++++++++++++++
+> >  include/uapi/linux/virtio_ids.h  |   1 +
+> >  include/uapi/linux/virtio_pmem.h |  10 +++
+> >  7 files changed, 294 insertions(+)
+> >  create mode 100644 drivers/nvdimm/virtio_pmem.c
+> >  create mode 100644 drivers/virtio/pmem.c
+> >  create mode 100644 include/linux/virtio_pmem.h
+> >  create mode 100644 include/uapi/linux/virtio_pmem.h
+> > 
+> (...)
+> > diff --git a/drivers/virtio/pmem.c b/drivers/virtio/pmem.c
+> > new file mode 100644
+> > index 000000000000..cc9de9589d56
+> > --- /dev/null
+> > +++ b/drivers/virtio/pmem.c
+> > @@ -0,0 +1,124 @@
+> > +// SPDX-License-Identifier: GPL-2.0
+> > +/*
+> > + * virtio_pmem.c: Virtio pmem Driver
+> > + *
+> > + * Discovers persistent memory range information
+> > + * from host and registers the virtual pmem device
+> > + * with libnvdimm core.
+> > + */
+> > +#include <linux/virtio_pmem.h>
+> > +#include <../../drivers/nvdimm/nd.h>
+> > +
+> > +static struct virtio_device_id id_table[] = {
+> > +	{ VIRTIO_ID_PMEM, VIRTIO_DEV_ANY_ID },
+> > +	{ 0 },
+> > +};
+> > +
+> > + /* Initialize virt queue */
+> > +static int init_vq(struct virtio_pmem *vpmem)
+> 
+> IMHO, you don't gain much by splitting off this function...
 
+o.k. I kept this for better code structure.
 
-memory size is(this problem is still in the server that has 256G memory, 
-so i think it is not about memory size and swap is truned off):
-               total        used        free      shared buff/cache 
-available
-Mem:             23          10          12           0 0 12
-Swap:            15           0          15
+> 
+> > +{
+> > +	struct virtqueue *vq;
+> > +
+> > +	/* single vq */
+> > +	vpmem->req_vq = vq = virtio_find_single_vq(vpmem->vdev,
+> > +				host_ack, "flush_queue");
+> > +	if (IS_ERR(vq))
+> > +		return PTR_ERR(vq);
+> 
+> I'm personally not a fan of chained assignments... I think I'd just
+> drop the 'vq' variable and operate on vpmem->req_vq directly.
 
-system:
-centos 7.3.1611
+Sure.
 
-kernel:
-3.10.0-957.10.1.el7.x86_64
+> 
+> > +
+> > +	spin_lock_init(&vpmem->pmem_lock);
+> > +	INIT_LIST_HEAD(&vpmem->req_list);
+> > +
+> > +	return 0;
+> > +};
+> > +
+> > +static int virtio_pmem_probe(struct virtio_device *vdev)
+> > +{
+> > +	int err = 0;
+> > +	struct resource res;
+> > +	struct virtio_pmem *vpmem;
+> > +	struct nvdimm_bus *nvdimm_bus;
+> > +	struct nd_region_desc ndr_desc = {};
+> > +	int nid = dev_to_node(&vdev->dev);
+> > +	struct nd_region *nd_region;
+> > +
+> > +	if (!vdev->config->get) {
+> > +		dev_err(&vdev->dev, "%s failure: config disabled\n",
+> 
+> Maybe s/config disabled/config access disabled/ ? That seems to be the
+> more common message.
 
-test step(fio version: 2.2.9):
-1. mkfs.xfs /dev/nvme0n1
-2. mount /dev/nvme0n1 /nvme0n1
-3. fio --ioengine=libaio --randrepeat=0 --norandommap --thread 
---direct=1 --group_reporting --time_based --random_generator=tausworthe 
---runtime=7200 
---output=20190409-174239+0800/fsiops/log/fsiops_xfs_randwrite_iops.log 
---directory=/nvme0n1 --size=190679M --bs=4k --name=xfs_randwrite_iops 
---rw=randwrite --numjobs=8 --iodepth=32
+This is better.
 
-xfs will deadlocks when running about 1 hours and 45 minutes, and i must 
-cold restart my server.
+> 
+> > +			__func__);
+> > +		return -EINVAL;
+> > +	}
+> > +
+> > +	vdev->priv = vpmem = devm_kzalloc(&vdev->dev, sizeof(*vpmem),
+> > +					GFP_KERNEL);
+> 
+> Here, the vpmem variable makes sense for convenience, but I'm again not
+> a fan of the chaining :)
 
-And i found a patch in community, it is:
-https://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git/commit/?id=b3f03bac8132207a20286d5602eda64500c19724 
+Sure will change :)
 
+> 
+> > +	if (!vpmem) {
+> > +		err = -ENOMEM;
+> > +		goto out_err;
+> > +	}
+> > +
+> > +	vpmem->vdev = vdev;
+> > +	err = init_vq(vpmem);
+> > +	if (err)
+> > +		goto out_err;
+> > +
+> > +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
+> > +			start, &vpmem->start);
+> > +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
+> > +			size, &vpmem->size);
+> > +
+> > +	res.start = vpmem->start;
+> > +	res.end   = vpmem->start + vpmem->size-1;
+> > +	vpmem->nd_desc.provider_name = "virtio-pmem";
+> > +	vpmem->nd_desc.module = THIS_MODULE;
+> > +
+> > +	vpmem->nvdimm_bus = nvdimm_bus = nvdimm_bus_register(&vdev->dev,
+> > +						&vpmem->nd_desc);
+> 
+> And here :)
 
-it have been merged since kernel 3.14, and i`m sure that this patch is 
-not in 3.10.0-957.10.1.el7.x86_64.
-So, I use 3.14 to do my test, and this appearance was not appeared in 3.14.
+Sure.
 
-I don`t know about architecture of XFS, so i`m not sure whether they 
-have relevant. Because i think the deadlock was in 
-xfs_iext_realloc_indirect(), but the patch fixed about 
-xfs_dir2_block_to_sf(). But the true is this problem don`t appear in 
-kernel 3.14 anymore, so i think this problem have been fixed completely 
-in 3.14.but i don`t know which patch fixed it.
+> 
+> > +	if (!nvdimm_bus)
+> > +		goto out_vq;
+> > +
+> > +	dev_set_drvdata(&vdev->dev, nvdimm_bus);
+> > +
+> > +	ndr_desc.res = &res;
+> > +	ndr_desc.numa_node = nid;
+> > +	ndr_desc.flush = virtio_pmem_flush;
+> > +	set_bit(ND_REGION_PAGEMAP, &ndr_desc.flags);
+> > +	set_bit(ND_REGION_ASYNC, &ndr_desc.flags);
+> > +	nd_region = nvdimm_pmem_region_create(nvdimm_bus, &ndr_desc);
+> > +	nd_region->provider_data =  dev_to_virtio
+> > +					(nd_region->dev.parent->parent);
+> 
+> Isn't it clear that this parent chain will always end up at &vdev->dev?
 
-So, Would you tell me whether this patch is root cause, or which patch 
-fixed it.
+Yes, It will resolve to &vdev->dev.
 
-Thank you for your attention to this matter.
+> Maybe simply set ->provider_data to vdev directly? (Does it need to
+> grab a reference count of the device, BTW?)
 
-Best regards
+reference is already taken when registering the device with nvdimm_bus.
 
+> 
+> > +
+> > +	if (!nd_region)
+> > +		goto out_nd;
+> 
+> Probably better to do this check before you access nd_region's
+> members :)
 
-Ming.Li
+ah Sorry! Will correct this.
+
+> 
+> > +
+> > +	return 0;
+> > +out_nd:
+> > +	err = -ENXIO;
+> > +	nvdimm_bus_unregister(nvdimm_bus);
+> > +out_vq:
+> > +	vdev->config->del_vqs(vdev);
+> > +out_err:
+> > +	dev_err(&vdev->dev, "failed to register virtio pmem memory\n");
+> > +	return err;
+> > +}
+> > +
+> > +static void virtio_pmem_remove(struct virtio_device *vdev)
+> > +{
+> > +	struct virtio_pmem *vpmem = vdev->priv;
+> > +	struct nvdimm_bus *nvdimm_bus = dev_get_drvdata(&vdev->dev);
+> > +
+> > +	nvdimm_bus_unregister(nvdimm_bus);
+> 
+> I haven't followed this around the nvdimm code, but is the nd_region
+> you created during probe cleaned up automatically, or would you need to
+> do something here?
+
+'nvdimm_bus_unregister' does that.
+> 
+> > +	vdev->config->del_vqs(vdev);
+> > +	vdev->config->reset(vdev);
+> > +	kfree(vpmem);
+> 
+> You allocated vpmem via devm_kzalloc; isn't it freed automatically on
+> remove?
+
+yes. Will remove free(vpmem).
+
+> 
+> > +}
+> > +
+> > +static struct virtio_driver virtio_pmem_driver = {
+> > +	.driver.name		= KBUILD_MODNAME,
+> > +	.driver.owner		= THIS_MODULE,
+> > +	.id_table		= id_table,
+> > +	.probe			= virtio_pmem_probe,
+> > +	.remove			= virtio_pmem_remove,
+> > +};
+> > +
+> > +module_virtio_driver(virtio_pmem_driver);
+> > +MODULE_DEVICE_TABLE(virtio, id_table);
+> > +MODULE_DESCRIPTION("Virtio pmem driver");
+> > +MODULE_LICENSE("GPL");
+> 
+> Only looked at this from the general virtio driver angle; seems fine
+> apart from some easy-to-fix issues and some personal style preference
+> things.
+
+Thank you for the review.
+
+Best regards,
+Pankaj
+> 
