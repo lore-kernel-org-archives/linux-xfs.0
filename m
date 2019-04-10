@@ -1,305 +1,427 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40620 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53284 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726538AbfDKQFd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Apr 2019 12:05:33 -0400
-Date: Thu, 11 Apr 2019 12:05:30 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/8] xfs: track metadata health status
-Message-ID: <20190411160529.GJ2888@bfoster>
-References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
- <155494713235.1090518.11696420703305243139.stgit@magnolia>
- <20190411122900.GB2888@bfoster>
- <20190411151845.GD1019523@magnolia>
+        id S1727171AbfDJODE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Apr 2019 10:03:04 -0400
+Date: Wed, 10 Apr 2019 10:03:01 -0400 (EDT)
+From: Pankaj Gupta <pagupta@redhat.com>
+Message-ID: <127904196.20807948.1554904981681.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20190410091216-mutt-send-email-mst@kernel.org>
+References: <20190410040826.24371-1-pagupta@redhat.com> <20190410040826.24371-3-pagupta@redhat.com> <20190410091216-mutt-send-email-mst@kernel.org>
+Subject: Re: [Qemu-devel] [PATCH v5 2/5] virtio-pmem: Add virtio pmem driver
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190411151845.GD1019523@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: cohuck@redhat.com, jack@suse.cz, kvm@vger.kernel.org, david@redhat.com, jasowang@redhat.com, david@fromorbit.com, qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org, adilger kernel <adilger.kernel@dilger.ca>, zwisler@kernel.org, aarcange@redhat.com, dave jiang <dave.jiang@intel.com>, linux-nvdimm@lists.01.org, vishal l verma <vishal.l.verma@intel.com>, willy@infradead.org, hch@infradead.org, linux-acpi@vger.kernel.org, jmoyer@redhat.com, linux-ext4@vger.kernel.org, lenb@kernel.org, kilobyte@angband.pl, riel@surriel.com, yuval shaia <yuval.shaia@oracle.com>, stefanha@redhat.com, pbonzini@redhat.com, dan j williams <dan.j.williams@intel.com>, lcapitulino@redhat.com, kwolf@redhat.com, nilal@redhat.com, tytso@mit.edu, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, darrick wong <darrick.wong@oracle.com>, rjw@rjwysocki.net, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, imammedo@redhat.com
 
-On Thu, Apr 11, 2019 at 08:18:45AM -0700, Darrick J. Wong wrote:
-> On Thu, Apr 11, 2019 at 08:29:04AM -0400, Brian Foster wrote:
-> > On Wed, Apr 10, 2019 at 06:45:32PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Add the necessary in-core metadata fields to keep track of which parts
-> > > of the filesystem have been observed and which parts were observed to be
-> > > unhealthy, and print a warning at unmount time if we have unfixed
-> > > problems.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/Makefile            |    1 
-> > >  fs/xfs/libxfs/xfs_health.h |  175 ++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/xfs_health.c        |  192 ++++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/xfs_icache.c        |    8 ++
-> > >  fs/xfs/xfs_inode.h         |    8 ++
-> > >  fs/xfs/xfs_mount.c         |    1 
-> > >  fs/xfs/xfs_mount.h         |   23 +++++
-> > >  fs/xfs/xfs_trace.h         |   73 +++++++++++++++++
-> > >  8 files changed, 481 insertions(+)
-> > >  create mode 100644 fs/xfs/libxfs/xfs_health.h
-> > >  create mode 100644 fs/xfs/xfs_health.c
-> > > 
-> > > 
-> > ...
-> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > index e70e7db29026..885decab4735 100644
-> > > --- a/fs/xfs/xfs_icache.c
-> > > +++ b/fs/xfs/xfs_icache.c
-> > > @@ -73,6 +73,8 @@ xfs_inode_alloc(
-> > >  	INIT_WORK(&ip->i_iodone_work, xfs_end_io);
-> > >  	INIT_LIST_HEAD(&ip->i_iodone_list);
-> > >  	spin_lock_init(&ip->i_iodone_lock);
-> > > +	ip->i_sick = 0;
-> > > +	ip->i_checked = 0;
-> > >  
-> > >  	return ip;
-> > >  }
-> > > @@ -133,6 +135,8 @@ xfs_inode_free(
-> > >  	spin_lock(&ip->i_flags_lock);
-> > >  	ip->i_flags = XFS_IRECLAIM;
-> > >  	ip->i_ino = 0;
-> > > +	ip->i_sick = 0;
-> > > +	ip->i_checked = 0;
-> > >  	spin_unlock(&ip->i_flags_lock);
-> > >  
+
+> 
+> On Wed, Apr 10, 2019 at 09:38:22AM +0530, Pankaj Gupta wrote:
+> > This patch adds virtio-pmem driver for KVM guest.
 > > 
-> > FWIW, I'm not totally clear on what the i_checked mask is for yet.
-> 
-> Bleh, I forgot to update the introductory comment. :(
-> 
-> /*
->  * <introductory stuff that's in xfs_health.h now>
->  *
->  * Each health tracking group uses a pair of fields for reporting.  The
->  * "checked" field tell us if a given piece of metadata has ever been examined,
->  * and the "sick" field tells us if that piece was found to need repairs.
->  * Therefore we can conclude that for a given mask:
->  *
->  *  - checked && sick  => metadata needs repair
->  *  - checked && !sick => metadata is ok
->  *  - !checked         => has not been examined since mount
->  */
-> 
-> In any case, I worked out the need for this new checked field when I was
-> writing the manual pages describing how all this worked:
-> 
-> https://djwong.org/docs/man/ioctl_xfs_fsop_geometry.2.html
-> https://djwong.org/docs/man/ioctl_xfs_ag_geometry.2.html
-> https://djwong.org/docs/man/ioctl_xfs_fsbulkstat.2.html
-> 
-> (See the part "The fields sick and checked indicate...")
-> 
-> @checked is a mask of all the metadata types that scrub has looked at,
-> whether or not the metadata was any good.  @sick is the mask of all the
-> metadata that scrub thought was bad, so we now can report to userspace
-> if something's good, bad, or unchecked.
-> 
-
-Ok, thanks.
-
-> > That aside, is it necessary to reset these fields in the free/reclaim
-> > paths?  I wonder if it's sufficient to zero them on alloc and the
-> > cache hit path just below..?
-> 
-> I think it's not strictly needed, but once we've broken the association
-> between a (struct xfs_inode *) buffer and a particular inode number, we
-> ought to zero out the health data just in case that buffer resurfaces
-> during the rcu grace period.
-> 
-
-I thought freeing the inode was imminent at that point. We set
-XFS_IRECLAIM then call into the RCU mechanism to free the memory. If
-lookup finds the inode, we retry on XFS_IRECLAIM or attempt to reuse on
-XFS_IRECLAIMABLE (which is covered by the fields being reset in
-iget_cache_hit()).
-
-Brian
-
-> --D
-> 
-> > Otherwise looks fine:
+> > Guest reads the persistent memory range information from
+> > Qemu over VIRTIO and registers it on nvdimm_bus. It also
+> > creates a nd_region object with the persistent memory
+> > range information so that existing 'nvdimm/pmem' driver
+> > can reserve this into system memory map. This way
+> > 'virtio-pmem' driver uses existing functionality of pmem
+> > driver to register persistent memory compatible for DAX
+> > capable filesystems.
 > > 
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > This also provides function to perform guest flush over
+> > VIRTIO from 'pmem' driver when userspace performs flush
+> > on DAX memory range.
 > > 
-> > >  	__xfs_inode_free(ip);
-> > > @@ -449,6 +453,8 @@ xfs_iget_cache_hit(
-> > >  		ip->i_flags |= XFS_INEW;
-> > >  		xfs_inode_clear_reclaim_tag(pag, ip->i_ino);
-> > >  		inode->i_state = I_NEW;
-> > > +		ip->i_sick = 0;
-> > > +		ip->i_checked = 0;
-> > >  
-> > >  		ASSERT(!rwsem_is_locked(&inode->i_rwsem));
-> > >  		init_rwsem(&inode->i_rwsem);
-> > > @@ -1177,6 +1183,8 @@ xfs_reclaim_inode(
-> > >  	spin_lock(&ip->i_flags_lock);
-> > >  	ip->i_flags = XFS_IRECLAIM;
-> > >  	ip->i_ino = 0;
-> > > +	ip->i_sick = 0;
-> > > +	ip->i_checked = 0;
-> > >  	spin_unlock(&ip->i_flags_lock);
-> > >  
-> > >  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> > > index 88239c2dd824..494e47ef42cb 100644
-> > > --- a/fs/xfs/xfs_inode.h
-> > > +++ b/fs/xfs/xfs_inode.h
-> > > @@ -45,6 +45,14 @@ typedef struct xfs_inode {
-> > >  	mrlock_t		i_lock;		/* inode lock */
-> > >  	mrlock_t		i_mmaplock;	/* inode mmap IO lock */
-> > >  	atomic_t		i_pincount;	/* inode pin count */
-> > > +
-> > > +	/*
-> > > +	 * Bitsets of inode metadata that have been checked and/or are sick.
-> > > +	 * Callers must hold i_flags_lock before accessing this field.
-> > > +	 */
-> > > +	uint16_t		i_checked;
-> > > +	uint16_t		i_sick;
-> > > +
-> > >  	spinlock_t		i_flags_lock;	/* inode i_flags lock */
-> > >  	/* Miscellaneous state. */
-> > >  	unsigned long		i_flags;	/* see defined flags below */
-> > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > > index fd63b0b1307c..6581381c12be 100644
-> > > --- a/fs/xfs/xfs_mount.c
-> > > +++ b/fs/xfs/xfs_mount.c
-> > > @@ -231,6 +231,7 @@ xfs_initialize_perag(
-> > >  		error = xfs_iunlink_init(pag);
-> > >  		if (error)
-> > >  			goto out_hash_destroy;
-> > > +		spin_lock_init(&pag->pag_state_lock);
-> > >  	}
-> > >  
-> > >  	index = xfs_set_inode_alloc(mp, agcount);
-> > > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > > index 110f927cf943..cf7facc36a5f 100644
-> > > --- a/fs/xfs/xfs_mount.h
-> > > +++ b/fs/xfs/xfs_mount.h
-> > > @@ -60,6 +60,20 @@ struct xfs_error_cfg {
-> > >  typedef struct xfs_mount {
-> > >  	struct super_block	*m_super;
-> > >  	xfs_tid_t		m_tid;		/* next unused tid for fs */
-> > > +
-> > > +	/*
-> > > +	 * Bitsets of per-fs metadata that have been checked and/or are sick.
-> > > +	 * Callers must hold m_sb_lock to access these two fields.
-> > > +	 */
-> > > +	uint8_t			m_fs_checked;
-> > > +	uint8_t			m_fs_sick;
-> > > +	/*
-> > > +	 * Bitsets of rt metadata that have been checked and/or are sick.
-> > > +	 * Callers must hold m_sb_lock to access this field.
-> > > +	 */
-> > > +	uint8_t			m_rt_checked;
-> > > +	uint8_t			m_rt_sick;
-> > > +
-> > >  	struct xfs_ail		*m_ail;		/* fs active log item list */
-> > >  
-> > >  	struct xfs_sb		m_sb;		/* copy of fs superblock */
-> > > @@ -369,6 +383,15 @@ typedef struct xfs_perag {
-> > >  	xfs_agino_t	pagl_pagino;
-> > >  	xfs_agino_t	pagl_leftrec;
-> > >  	xfs_agino_t	pagl_rightrec;
-> > > +
-> > > +	/*
-> > > +	 * Bitsets of per-ag metadata that have been checked and/or are sick.
-> > > +	 * Callers should hold pag_state_lock before accessing this field.
-> > > +	 */
-> > > +	uint16_t	pag_checked;
-> > > +	uint16_t	pag_sick;
-> > > +	spinlock_t	pag_state_lock;
-> > > +
-> > >  	spinlock_t	pagb_lock;	/* lock for pagb_tree */
-> > >  	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
-> > >  	unsigned int	pagb_gen;	/* generation count for pagb_tree */
-> > > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > > index 47fb07d86efd..f079841c7af6 100644
-> > > --- a/fs/xfs/xfs_trace.h
-> > > +++ b/fs/xfs/xfs_trace.h
-> > > @@ -3440,6 +3440,79 @@ DEFINE_AGINODE_EVENT(xfs_iunlink);
-> > >  DEFINE_AGINODE_EVENT(xfs_iunlink_remove);
-> > >  DEFINE_AG_EVENT(xfs_iunlink_map_prev_fallback);
-> > >  
-> > > +DECLARE_EVENT_CLASS(xfs_fs_corrupt_class,
-> > > +	TP_PROTO(struct xfs_mount *mp, unsigned int flags),
-> > > +	TP_ARGS(mp, flags),
-> > > +	TP_STRUCT__entry(
-> > > +		__field(dev_t, dev)
-> > > +		__field(unsigned int, flags)
-> > > +	),
-> > > +	TP_fast_assign(
-> > > +		__entry->dev = mp->m_super->s_dev;
-> > > +		__entry->flags = flags;
-> > > +	),
-> > > +	TP_printk("dev %d:%d flags 0x%x",
-> > > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > > +		  __entry->flags)
-> > > +);
-> > > +#define DEFINE_FS_CORRUPT_EVENT(name)	\
-> > > +DEFINE_EVENT(xfs_fs_corrupt_class, name,	\
-> > > +	TP_PROTO(struct xfs_mount *mp, unsigned int flags), \
-> > > +	TP_ARGS(mp, flags))
-> > > +DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_sick);
-> > > +DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_healthy);
-> > > +DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_sick);
-> > > +DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_healthy);
-> > > +
-> > > +DECLARE_EVENT_CLASS(xfs_ag_corrupt_class,
-> > > +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, unsigned int flags),
-> > > +	TP_ARGS(mp, agno, flags),
-> > > +	TP_STRUCT__entry(
-> > > +		__field(dev_t, dev)
-> > > +		__field(xfs_agnumber_t, agno)
-> > > +		__field(unsigned int, flags)
-> > > +	),
-> > > +	TP_fast_assign(
-> > > +		__entry->dev = mp->m_super->s_dev;
-> > > +		__entry->agno = agno;
-> > > +		__entry->flags = flags;
-> > > +	),
-> > > +	TP_printk("dev %d:%d agno %u flags 0x%x",
-> > > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > > +		  __entry->agno, __entry->flags)
-> > > +);
-> > > +#define DEFINE_AG_CORRUPT_EVENT(name)	\
-> > > +DEFINE_EVENT(xfs_ag_corrupt_class, name,	\
-> > > +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-> > > +		 unsigned int flags), \
-> > > +	TP_ARGS(mp, agno, flags))
-> > > +DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_sick);
-> > > +DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_healthy);
-> > > +
-> > > +DECLARE_EVENT_CLASS(xfs_inode_corrupt_class,
-> > > +	TP_PROTO(struct xfs_inode *ip, unsigned int flags),
-> > > +	TP_ARGS(ip, flags),
-> > > +	TP_STRUCT__entry(
-> > > +		__field(dev_t, dev)
-> > > +		__field(xfs_ino_t, ino)
-> > > +		__field(unsigned int, flags)
-> > > +	),
-> > > +	TP_fast_assign(
-> > > +		__entry->dev = ip->i_mount->m_super->s_dev;
-> > > +		__entry->ino = ip->i_ino;
-> > > +		__entry->flags = flags;
-> > > +	),
-> > > +	TP_printk("dev %d:%d ino 0x%llx flags 0x%x",
-> > > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > > +		  __entry->ino, __entry->flags)
-> > > +);
-> > > +#define DEFINE_INODE_CORRUPT_EVENT(name)	\
-> > > +DEFINE_EVENT(xfs_inode_corrupt_class, name,	\
-> > > +	TP_PROTO(struct xfs_inode *ip, unsigned int flags), \
-> > > +	TP_ARGS(ip, flags))
-> > > +DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_sick);
-> > > +DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_healthy);
-> > > +
-> > >  #endif /* _TRACE_XFS_H */
-> > >  
-> > >  #undef TRACE_INCLUDE_PATH
-> > > 
+> > Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> > ---
+> >  drivers/nvdimm/virtio_pmem.c     |  88 ++++++++++++++++++++++
+> >  drivers/virtio/Kconfig           |  10 +++
+> >  drivers/virtio/Makefile          |   1 +
+> >  drivers/virtio/pmem.c            | 124 +++++++++++++++++++++++++++++++
+> >  include/linux/virtio_pmem.h      |  60 +++++++++++++++
+> >  include/uapi/linux/virtio_ids.h  |   1 +
+> >  include/uapi/linux/virtio_pmem.h |  10 +++
+> >  7 files changed, 294 insertions(+)
+> >  create mode 100644 drivers/nvdimm/virtio_pmem.c
+> >  create mode 100644 drivers/virtio/pmem.c
+> >  create mode 100644 include/linux/virtio_pmem.h
+> >  create mode 100644 include/uapi/linux/virtio_pmem.h
+> > 
+> > diff --git a/drivers/nvdimm/virtio_pmem.c b/drivers/nvdimm/virtio_pmem.c
+> > new file mode 100644
+> > index 000000000000..01044cc2f3a3
+> > --- /dev/null
+> > +++ b/drivers/nvdimm/virtio_pmem.c
+> > @@ -0,0 +1,88 @@
+> > +// SPDX-License-Identifier: GPL-2.0
+> > +/*
+> > + * virtio_pmem.c: Virtio pmem Driver
+> > + *
+> > + * Discovers persistent memory range information
+> > + * from host and provides a virtio based flushing
+> > + * interface.
+> > + */
+> > +#include <linux/virtio_pmem.h>
+> > +#include "nd.h"
+> > +
+> > + /* The interrupt handler */
+> > +void host_ack(struct virtqueue *vq)
+> > +{
+> > +	unsigned int len;
+> > +	unsigned long flags;
+> > +	struct virtio_pmem_request *req, *req_buf;
+> > +	struct virtio_pmem *vpmem = vq->vdev->priv;
+> > +
+> > +	spin_lock_irqsave(&vpmem->pmem_lock, flags);
+> > +	while ((req = virtqueue_get_buf(vq, &len)) != NULL) {
+> > +		req->done = true;
+> > +		wake_up(&req->host_acked);
+> > +
+> > +		if (!list_empty(&vpmem->req_list)) {
+> > +			req_buf = list_first_entry(&vpmem->req_list,
+> > +					struct virtio_pmem_request, list);
+> > +			list_del(&vpmem->req_list);
+> > +			req_buf->wq_buf_avail = true;
+> > +			wake_up(&req_buf->wq_buf);
+> > +		}
+> > +	}
+> > +	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
+> > +}
+> > +EXPORT_SYMBOL_GPL(host_ack);
+> > +
+> > + /* The request submission function */
+> > +int virtio_pmem_flush(struct nd_region *nd_region)
+> > +{
+> > +	int err;
+> > +	unsigned long flags;
+> > +	struct scatterlist *sgs[2], sg, ret;
+> > +	struct virtio_device *vdev = nd_region->provider_data;
+> > +	struct virtio_pmem *vpmem = vdev->priv;
+> > +	struct virtio_pmem_request *req;
+> > +
+> > +	might_sleep();
+> > +	req = kmalloc(sizeof(*req), GFP_KERNEL);
+> > +	if (!req)
+> > +		return -ENOMEM;
+> > +
+> > +	req->done = req->wq_buf_avail = false;
+> > +	strcpy(req->name, "FLUSH");
+> > +	init_waitqueue_head(&req->host_acked);
+> > +	init_waitqueue_head(&req->wq_buf);
+> > +	sg_init_one(&sg, req->name, strlen(req->name));
+> > +	sgs[0] = &sg;
+> > +	sg_init_one(&ret, &req->ret, sizeof(req->ret));
+> > +	sgs[1] = &ret;
+> > +
+> > +	spin_lock_irqsave(&vpmem->pmem_lock, flags);
+> > +	err = virtqueue_add_sgs(vpmem->req_vq, sgs, 1, 1, req, GFP_ATOMIC);
+> > +	if (err) {
+> > +		dev_err(&vdev->dev, "failed to send command to virtio pmem device\n");
+> > +
+> > +		list_add_tail(&vpmem->req_list, &req->list);
+> > +		spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
+> > +
+> > +		/* When host has read buffer, this completes via host_ack */
+> > +		wait_event(req->wq_buf, req->wq_buf_avail);
+> > +		spin_lock_irqsave(&vpmem->pmem_lock, flags);
+> > +	}
+> > +	err = virtqueue_kick(vpmem->req_vq);
+> > +	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
+> > +
+> > +	if (!err) {
+> > +		err = -EIO;
+> > +		goto ret;
+> > +	}
+> > +	/* When host has read buffer, this completes via host_ack */
+> > +	wait_event(req->host_acked, req->done);
+> > +	err = req->ret;
+> > +ret:
+> > +	kfree(req);
+> > +	return err;
+> > +};
+> > +EXPORT_SYMBOL_GPL(virtio_pmem_flush);
+> > +MODULE_LICENSE("GPL");
+> > diff --git a/drivers/virtio/Kconfig b/drivers/virtio/Kconfig
+> > index 35897649c24f..9f634a2ed638 100644
+> > --- a/drivers/virtio/Kconfig
+> > +++ b/drivers/virtio/Kconfig
+> > @@ -42,6 +42,16 @@ config VIRTIO_PCI_LEGACY
+> >  
+> >  	  If unsure, say Y.
+> >  
+> > +config VIRTIO_PMEM
+> > +	tristate "Support for virtio pmem driver"
+> > +	depends on VIRTIO
+> > +	depends on LIBNVDIMM
+> > +	help
+> > +	This driver provides support for virtio based flushing interface
+> > +	for persistent memory range.
+> > +
+> > +	If unsure, say M.
+> > +
+> >  config VIRTIO_BALLOON
+> >  	tristate "Virtio balloon driver"
+> >  	depends on VIRTIO
+> > diff --git a/drivers/virtio/Makefile b/drivers/virtio/Makefile
+> > index 3a2b5c5dcf46..143ce91eabe9 100644
+> > --- a/drivers/virtio/Makefile
+> > +++ b/drivers/virtio/Makefile
+> > @@ -6,3 +6,4 @@ virtio_pci-y := virtio_pci_modern.o virtio_pci_common.o
+> >  virtio_pci-$(CONFIG_VIRTIO_PCI_LEGACY) += virtio_pci_legacy.o
+> >  obj-$(CONFIG_VIRTIO_BALLOON) += virtio_balloon.o
+> >  obj-$(CONFIG_VIRTIO_INPUT) += virtio_input.o
+> > +obj-$(CONFIG_VIRTIO_PMEM) += pmem.o ../nvdimm/virtio_pmem.o
+> > diff --git a/drivers/virtio/pmem.c b/drivers/virtio/pmem.c
+> > new file mode 100644
+> > index 000000000000..cc9de9589d56
+> > --- /dev/null
+> > +++ b/drivers/virtio/pmem.c
+> > @@ -0,0 +1,124 @@
+> > +// SPDX-License-Identifier: GPL-2.0
+> > +/*
+> > + * virtio_pmem.c: Virtio pmem Driver
+> > + *
+> > + * Discovers persistent memory range information
+> > + * from host and registers the virtual pmem device
+> > + * with libnvdimm core.
+> > + */
+> > +#include <linux/virtio_pmem.h>
+> > +#include <../../drivers/nvdimm/nd.h>
+> > +
+> > +static struct virtio_device_id id_table[] = {
+> > +	{ VIRTIO_ID_PMEM, VIRTIO_DEV_ANY_ID },
+> > +	{ 0 },
+> > +};
+> > +
+> > + /* Initialize virt queue */
+> > +static int init_vq(struct virtio_pmem *vpmem)
+> > +{
+> > +	struct virtqueue *vq;
+> > +
+> > +	/* single vq */
+> > +	vpmem->req_vq = vq = virtio_find_single_vq(vpmem->vdev,
+> > +				host_ack, "flush_queue");
+> > +	if (IS_ERR(vq))
+> > +		return PTR_ERR(vq);
+> > +
+> > +	spin_lock_init(&vpmem->pmem_lock);
+> > +	INIT_LIST_HEAD(&vpmem->req_list);
+> > +
+> > +	return 0;
+> > +};
+> > +
+> > +static int virtio_pmem_probe(struct virtio_device *vdev)
+> > +{
+> > +	int err = 0;
+> > +	struct resource res;
+> > +	struct virtio_pmem *vpmem;
+> > +	struct nvdimm_bus *nvdimm_bus;
+> > +	struct nd_region_desc ndr_desc = {};
+> > +	int nid = dev_to_node(&vdev->dev);
+> > +	struct nd_region *nd_region;
+> > +
+> > +	if (!vdev->config->get) {
+> > +		dev_err(&vdev->dev, "%s failure: config disabled\n",
+> > +			__func__);
+> > +		return -EINVAL;
+> > +	}
+> > +
+> > +	vdev->priv = vpmem = devm_kzalloc(&vdev->dev, sizeof(*vpmem),
+> > +					GFP_KERNEL);
+> > +	if (!vpmem) {
+> > +		err = -ENOMEM;
+> > +		goto out_err;
+> > +	}
+> > +
+> > +	vpmem->vdev = vdev;
+> > +	err = init_vq(vpmem);
+> > +	if (err)
+> > +		goto out_err;
+> > +
+> > +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
+> > +			start, &vpmem->start);
+> > +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
+> > +			size, &vpmem->size);
+> > +
+> > +	res.start = vpmem->start;
+> > +	res.end   = vpmem->start + vpmem->size-1;
+> > +	vpmem->nd_desc.provider_name = "virtio-pmem";
+> > +	vpmem->nd_desc.module = THIS_MODULE;
+> > +
+> > +	vpmem->nvdimm_bus = nvdimm_bus = nvdimm_bus_register(&vdev->dev,
+> > +						&vpmem->nd_desc);
+> > +	if (!nvdimm_bus)
+> > +		goto out_vq;
+> > +
+> > +	dev_set_drvdata(&vdev->dev, nvdimm_bus);
+> > +
+> > +	ndr_desc.res = &res;
+> > +	ndr_desc.numa_node = nid;
+> > +	ndr_desc.flush = virtio_pmem_flush;
+> > +	set_bit(ND_REGION_PAGEMAP, &ndr_desc.flags);
+> > +	set_bit(ND_REGION_ASYNC, &ndr_desc.flags);
+> > +	nd_region = nvdimm_pmem_region_create(nvdimm_bus, &ndr_desc);
+> > +	nd_region->provider_data =  dev_to_virtio
+> > +					(nd_region->dev.parent->parent);
+> > +
+> > +	if (!nd_region)
+> > +		goto out_nd;
+> > +
+> > +	return 0;
+> > +out_nd:
+> > +	err = -ENXIO;
+> > +	nvdimm_bus_unregister(nvdimm_bus);
+> > +out_vq:
+> > +	vdev->config->del_vqs(vdev);
+> > +out_err:
+> > +	dev_err(&vdev->dev, "failed to register virtio pmem memory\n");
+> > +	return err;
+> > +}
+> > +
+> > +static void virtio_pmem_remove(struct virtio_device *vdev)
+> > +{
+> > +	struct virtio_pmem *vpmem = vdev->priv;
+> > +	struct nvdimm_bus *nvdimm_bus = dev_get_drvdata(&vdev->dev);
+> > +
+> > +	nvdimm_bus_unregister(nvdimm_bus);
+> > +	vdev->config->del_vqs(vdev);
+> > +	vdev->config->reset(vdev);
+> > +	kfree(vpmem);
+> > +}
+> > +
+> > +static struct virtio_driver virtio_pmem_driver = {
+> > +	.driver.name		= KBUILD_MODNAME,
+> > +	.driver.owner		= THIS_MODULE,
+> > +	.id_table		= id_table,
+> > +	.probe			= virtio_pmem_probe,
+> > +	.remove			= virtio_pmem_remove,
+> > +};
+> > +
+> > +module_virtio_driver(virtio_pmem_driver);
+> > +MODULE_DEVICE_TABLE(virtio, id_table);
+> > +MODULE_DESCRIPTION("Virtio pmem driver");
+> > +MODULE_LICENSE("GPL");
+> > diff --git a/include/linux/virtio_pmem.h b/include/linux/virtio_pmem.h
+> > new file mode 100644
+> > index 000000000000..224f9d934be6
+> > --- /dev/null
+> > +++ b/include/linux/virtio_pmem.h
+> > @@ -0,0 +1,60 @@
+> > +/* SPDX-License-Identifier: GPL-2.0 */
+> > +/*
+> > + * virtio_pmem.h: virtio pmem Driver
+> > + *
+> > + * Discovers persistent memory range information
+> > + * from host and provides a virtio based flushing
+> > + * interface.
+> > + **/
+> > +
+> > +#ifndef _LINUX_VIRTIO_PMEM_H
+> > +#define _LINUX_VIRTIO_PMEM_H
+> > +
+> > +#include <linux/virtio_ids.h>
+> > +#include <linux/module.h>
+> > +#include <linux/virtio_config.h>
+> > +#include <uapi/linux/virtio_pmem.h>
+> > +#include <linux/libnvdimm.h>
+> > +#include <linux/spinlock.h>
+> > +
+> > +struct virtio_pmem_request {
+> > +	/* Host return status corresponding to flush request */
+> > +	int ret;
+> > +
+> > +	/* command name*/
+> > +	char name[16];
+> > +
+> > +	/* Wait queue to process deferred work after ack from host */
+> > +	wait_queue_head_t host_acked;
+> > +	bool done;
+> > +
+> > +	/* Wait queue to process deferred work after virt queue buffer avail */
+> > +	wait_queue_head_t wq_buf;
+> > +	bool wq_buf_avail;
+> > +	struct list_head list;
+> > +};
+> > +
+> > +struct virtio_pmem {
+> > +	struct virtio_device *vdev;
+> > +
+> > +	/* Virtio pmem request queue */
+> > +	struct virtqueue *req_vq;
+> > +
+> > +	/* nvdimm bus registers virtio pmem device */
+> > +	struct nvdimm_bus *nvdimm_bus;
+> > +	struct nvdimm_bus_descriptor nd_desc;
+> > +
+> > +	/* List to store deferred work if virtqueue is full */
+> > +	struct list_head req_list;
+> > +
+> > +	/* Synchronize virtqueue data */
+> > +	spinlock_t pmem_lock;
+> > +
+> > +	/* Memory region information */
+> > +	uint64_t start;
+> > +	uint64_t size;
+> > +};
+> > +
+> > +void host_ack(struct virtqueue *vq);
+> > +int virtio_pmem_flush(struct nd_region *nd_region);
+> > +#endif
+> > diff --git a/include/uapi/linux/virtio_ids.h
+> > b/include/uapi/linux/virtio_ids.h
+> > index 6d5c3b2d4f4d..346389565ac1 100644
+> > --- a/include/uapi/linux/virtio_ids.h
+> > +++ b/include/uapi/linux/virtio_ids.h
+> > @@ -43,5 +43,6 @@
+> >  #define VIRTIO_ID_INPUT        18 /* virtio input */
+> >  #define VIRTIO_ID_VSOCK        19 /* virtio vsock transport */
+> >  #define VIRTIO_ID_CRYPTO       20 /* virtio crypto */
+> > +#define VIRTIO_ID_PMEM         25 /* virtio pmem */
+> >  
+> >  #endif /* _LINUX_VIRTIO_IDS_H */
+> 
+> Didn't Paolo point out someone is using 25 for audio?
+
+
+Sorry! I did not notice this.
+
+> 
+> Please, reserve an ID with the Virtio TC before using it.
+
+I thought I requested[1] ID 25.
+
+[1] https://github.com/oasis-tcs/virtio-spec/issues/38
+[2] https://lists.oasis-open.org/archives/virtio-dev/201805/threads.html
+
+In that case I will send request for next available ID i.e 26?
+
+Thanks,
+Pankaj
+
+
+> 
+> > diff --git a/include/uapi/linux/virtio_pmem.h
+> > b/include/uapi/linux/virtio_pmem.h
+> > new file mode 100644
+> > index 000000000000..fa3f7d52717a
+> > --- /dev/null
+> > +++ b/include/uapi/linux/virtio_pmem.h
+> > @@ -0,0 +1,10 @@
+> > +/* SPDX-License-Identifier: GPL-2.0 */
+> > +
+> > +#ifndef _UAPI_LINUX_VIRTIO_PMEM_H
+> > +#define _UAPI_LINUX_VIRTIO_PMEM_H
+> > +
+> > +struct virtio_pmem_config {
+> > +	__le64 start;
+> > +	__le64 size;
+> > +};
+> > +#endif
+> > --
+> > 2.20.1
+> 
+> 
