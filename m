@@ -1,291 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54314 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726827AbfDKPTL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Apr 2019 11:19:11 -0400
-Date: Thu, 11 Apr 2019 08:18:45 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/8] xfs: track metadata health status
-Message-ID: <20190411151845.GD1019523@magnolia>
-References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
- <155494713235.1090518.11696420703305243139.stgit@magnolia>
- <20190411122900.GB2888@bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190411122900.GB2888@bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:36718 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726247AbfDJEKE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Apr 2019 00:10:04 -0400
+From: Pankaj Gupta <pagupta@redhat.com>
+Subject: [PATCH v5 3/6] libnvdimm: add dax_dev sync flag
+Date: Wed, 10 Apr 2019 09:38:23 +0530
+Message-Id: <20190410040826.24371-4-pagupta@redhat.com>
+In-Reply-To: <20190410040826.24371-1-pagupta@redhat.com>
+References: <20190410040826.24371-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, pagupta@redhat.com
 
-On Thu, Apr 11, 2019 at 08:29:04AM -0400, Brian Foster wrote:
-> On Wed, Apr 10, 2019 at 06:45:32PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add the necessary in-core metadata fields to keep track of which parts
-> > of the filesystem have been observed and which parts were observed to be
-> > unhealthy, and print a warning at unmount time if we have unfixed
-> > problems.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/Makefile            |    1 
-> >  fs/xfs/libxfs/xfs_health.h |  175 ++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_health.c        |  192 ++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_icache.c        |    8 ++
-> >  fs/xfs/xfs_inode.h         |    8 ++
-> >  fs/xfs/xfs_mount.c         |    1 
-> >  fs/xfs/xfs_mount.h         |   23 +++++
-> >  fs/xfs/xfs_trace.h         |   73 +++++++++++++++++
-> >  8 files changed, 481 insertions(+)
-> >  create mode 100644 fs/xfs/libxfs/xfs_health.h
-> >  create mode 100644 fs/xfs/xfs_health.c
-> > 
-> > 
-> ...
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index e70e7db29026..885decab4735 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -73,6 +73,8 @@ xfs_inode_alloc(
-> >  	INIT_WORK(&ip->i_iodone_work, xfs_end_io);
-> >  	INIT_LIST_HEAD(&ip->i_iodone_list);
-> >  	spin_lock_init(&ip->i_iodone_lock);
-> > +	ip->i_sick = 0;
-> > +	ip->i_checked = 0;
-> >  
-> >  	return ip;
-> >  }
-> > @@ -133,6 +135,8 @@ xfs_inode_free(
-> >  	spin_lock(&ip->i_flags_lock);
-> >  	ip->i_flags = XFS_IRECLAIM;
-> >  	ip->i_ino = 0;
-> > +	ip->i_sick = 0;
-> > +	ip->i_checked = 0;
-> >  	spin_unlock(&ip->i_flags_lock);
-> >  
-> 
-> FWIW, I'm not totally clear on what the i_checked mask is for yet.
+This patch adds 'DAXDEV_SYNC' flag which is set
+for nd_region doing synchronous flush. This later
+is used to disable MAP_SYNC functionality for
+ext4 & xfs filesystem for devices don't support
+synchronous flush.
 
-Bleh, I forgot to update the introductory comment. :(
+Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+---
+ drivers/dax/bus.c            |  2 +-
+ drivers/dax/super.c          | 13 ++++++++++++-
+ drivers/md/dm.c              |  2 +-
+ drivers/nvdimm/pmem.c        |  3 ++-
+ drivers/nvdimm/region_devs.c |  7 +++++++
+ include/linux/dax.h          |  9 +++++++--
+ include/linux/libnvdimm.h    |  1 +
+ 7 files changed, 31 insertions(+), 6 deletions(-)
 
-/*
- * <introductory stuff that's in xfs_health.h now>
- *
- * Each health tracking group uses a pair of fields for reporting.  The
- * "checked" field tell us if a given piece of metadata has ever been examined,
- * and the "sick" field tells us if that piece was found to need repairs.
- * Therefore we can conclude that for a given mask:
- *
- *  - checked && sick  => metadata needs repair
- *  - checked && !sick => metadata is ok
- *  - !checked         => has not been examined since mount
- */
-
-In any case, I worked out the need for this new checked field when I was
-writing the manual pages describing how all this worked:
-
-https://djwong.org/docs/man/ioctl_xfs_fsop_geometry.2.html
-https://djwong.org/docs/man/ioctl_xfs_ag_geometry.2.html
-https://djwong.org/docs/man/ioctl_xfs_fsbulkstat.2.html
-
-(See the part "The fields sick and checked indicate...")
-
-@checked is a mask of all the metadata types that scrub has looked at,
-whether or not the metadata was any good.  @sick is the mask of all the
-metadata that scrub thought was bad, so we now can report to userspace
-if something's good, bad, or unchecked.
-
-> That aside, is it necessary to reset these fields in the free/reclaim
-> paths?  I wonder if it's sufficient to zero them on alloc and the
-> cache hit path just below..?
-
-I think it's not strictly needed, but once we've broken the association
-between a (struct xfs_inode *) buffer and a particular inode number, we
-ought to zero out the health data just in case that buffer resurfaces
-during the rcu grace period.
-
---D
-
-> Otherwise looks fine:
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> >  	__xfs_inode_free(ip);
-> > @@ -449,6 +453,8 @@ xfs_iget_cache_hit(
-> >  		ip->i_flags |= XFS_INEW;
-> >  		xfs_inode_clear_reclaim_tag(pag, ip->i_ino);
-> >  		inode->i_state = I_NEW;
-> > +		ip->i_sick = 0;
-> > +		ip->i_checked = 0;
-> >  
-> >  		ASSERT(!rwsem_is_locked(&inode->i_rwsem));
-> >  		init_rwsem(&inode->i_rwsem);
-> > @@ -1177,6 +1183,8 @@ xfs_reclaim_inode(
-> >  	spin_lock(&ip->i_flags_lock);
-> >  	ip->i_flags = XFS_IRECLAIM;
-> >  	ip->i_ino = 0;
-> > +	ip->i_sick = 0;
-> > +	ip->i_checked = 0;
-> >  	spin_unlock(&ip->i_flags_lock);
-> >  
-> >  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> > index 88239c2dd824..494e47ef42cb 100644
-> > --- a/fs/xfs/xfs_inode.h
-> > +++ b/fs/xfs/xfs_inode.h
-> > @@ -45,6 +45,14 @@ typedef struct xfs_inode {
-> >  	mrlock_t		i_lock;		/* inode lock */
-> >  	mrlock_t		i_mmaplock;	/* inode mmap IO lock */
-> >  	atomic_t		i_pincount;	/* inode pin count */
-> > +
-> > +	/*
-> > +	 * Bitsets of inode metadata that have been checked and/or are sick.
-> > +	 * Callers must hold i_flags_lock before accessing this field.
-> > +	 */
-> > +	uint16_t		i_checked;
-> > +	uint16_t		i_sick;
-> > +
-> >  	spinlock_t		i_flags_lock;	/* inode i_flags lock */
-> >  	/* Miscellaneous state. */
-> >  	unsigned long		i_flags;	/* see defined flags below */
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index fd63b0b1307c..6581381c12be 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -231,6 +231,7 @@ xfs_initialize_perag(
-> >  		error = xfs_iunlink_init(pag);
-> >  		if (error)
-> >  			goto out_hash_destroy;
-> > +		spin_lock_init(&pag->pag_state_lock);
-> >  	}
-> >  
-> >  	index = xfs_set_inode_alloc(mp, agcount);
-> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > index 110f927cf943..cf7facc36a5f 100644
-> > --- a/fs/xfs/xfs_mount.h
-> > +++ b/fs/xfs/xfs_mount.h
-> > @@ -60,6 +60,20 @@ struct xfs_error_cfg {
-> >  typedef struct xfs_mount {
-> >  	struct super_block	*m_super;
-> >  	xfs_tid_t		m_tid;		/* next unused tid for fs */
-> > +
-> > +	/*
-> > +	 * Bitsets of per-fs metadata that have been checked and/or are sick.
-> > +	 * Callers must hold m_sb_lock to access these two fields.
-> > +	 */
-> > +	uint8_t			m_fs_checked;
-> > +	uint8_t			m_fs_sick;
-> > +	/*
-> > +	 * Bitsets of rt metadata that have been checked and/or are sick.
-> > +	 * Callers must hold m_sb_lock to access this field.
-> > +	 */
-> > +	uint8_t			m_rt_checked;
-> > +	uint8_t			m_rt_sick;
-> > +
-> >  	struct xfs_ail		*m_ail;		/* fs active log item list */
-> >  
-> >  	struct xfs_sb		m_sb;		/* copy of fs superblock */
-> > @@ -369,6 +383,15 @@ typedef struct xfs_perag {
-> >  	xfs_agino_t	pagl_pagino;
-> >  	xfs_agino_t	pagl_leftrec;
-> >  	xfs_agino_t	pagl_rightrec;
-> > +
-> > +	/*
-> > +	 * Bitsets of per-ag metadata that have been checked and/or are sick.
-> > +	 * Callers should hold pag_state_lock before accessing this field.
-> > +	 */
-> > +	uint16_t	pag_checked;
-> > +	uint16_t	pag_sick;
-> > +	spinlock_t	pag_state_lock;
-> > +
-> >  	spinlock_t	pagb_lock;	/* lock for pagb_tree */
-> >  	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
-> >  	unsigned int	pagb_gen;	/* generation count for pagb_tree */
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index 47fb07d86efd..f079841c7af6 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -3440,6 +3440,79 @@ DEFINE_AGINODE_EVENT(xfs_iunlink);
-> >  DEFINE_AGINODE_EVENT(xfs_iunlink_remove);
-> >  DEFINE_AG_EVENT(xfs_iunlink_map_prev_fallback);
-> >  
-> > +DECLARE_EVENT_CLASS(xfs_fs_corrupt_class,
-> > +	TP_PROTO(struct xfs_mount *mp, unsigned int flags),
-> > +	TP_ARGS(mp, flags),
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t, dev)
-> > +		__field(unsigned int, flags)
-> > +	),
-> > +	TP_fast_assign(
-> > +		__entry->dev = mp->m_super->s_dev;
-> > +		__entry->flags = flags;
-> > +	),
-> > +	TP_printk("dev %d:%d flags 0x%x",
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > +		  __entry->flags)
-> > +);
-> > +#define DEFINE_FS_CORRUPT_EVENT(name)	\
-> > +DEFINE_EVENT(xfs_fs_corrupt_class, name,	\
-> > +	TP_PROTO(struct xfs_mount *mp, unsigned int flags), \
-> > +	TP_ARGS(mp, flags))
-> > +DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_sick);
-> > +DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_healthy);
-> > +DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_sick);
-> > +DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_healthy);
-> > +
-> > +DECLARE_EVENT_CLASS(xfs_ag_corrupt_class,
-> > +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, unsigned int flags),
-> > +	TP_ARGS(mp, agno, flags),
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t, dev)
-> > +		__field(xfs_agnumber_t, agno)
-> > +		__field(unsigned int, flags)
-> > +	),
-> > +	TP_fast_assign(
-> > +		__entry->dev = mp->m_super->s_dev;
-> > +		__entry->agno = agno;
-> > +		__entry->flags = flags;
-> > +	),
-> > +	TP_printk("dev %d:%d agno %u flags 0x%x",
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > +		  __entry->agno, __entry->flags)
-> > +);
-> > +#define DEFINE_AG_CORRUPT_EVENT(name)	\
-> > +DEFINE_EVENT(xfs_ag_corrupt_class, name,	\
-> > +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-> > +		 unsigned int flags), \
-> > +	TP_ARGS(mp, agno, flags))
-> > +DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_sick);
-> > +DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_healthy);
-> > +
-> > +DECLARE_EVENT_CLASS(xfs_inode_corrupt_class,
-> > +	TP_PROTO(struct xfs_inode *ip, unsigned int flags),
-> > +	TP_ARGS(ip, flags),
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t, dev)
-> > +		__field(xfs_ino_t, ino)
-> > +		__field(unsigned int, flags)
-> > +	),
-> > +	TP_fast_assign(
-> > +		__entry->dev = ip->i_mount->m_super->s_dev;
-> > +		__entry->ino = ip->i_ino;
-> > +		__entry->flags = flags;
-> > +	),
-> > +	TP_printk("dev %d:%d ino 0x%llx flags 0x%x",
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > +		  __entry->ino, __entry->flags)
-> > +);
-> > +#define DEFINE_INODE_CORRUPT_EVENT(name)	\
-> > +DEFINE_EVENT(xfs_inode_corrupt_class, name,	\
-> > +	TP_PROTO(struct xfs_inode *ip, unsigned int flags), \
-> > +	TP_ARGS(ip, flags))
-> > +DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_sick);
-> > +DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_healthy);
-> > +
-> >  #endif /* _TRACE_XFS_H */
-> >  
-> >  #undef TRACE_INCLUDE_PATH
-> > 
+diff --git a/drivers/dax/bus.c b/drivers/dax/bus.c
+index 2109cfe80219..431bf7d2a7f9 100644
+--- a/drivers/dax/bus.c
++++ b/drivers/dax/bus.c
+@@ -388,7 +388,7 @@ struct dev_dax *__devm_create_dev_dax(struct dax_region *dax_region, int id,
+ 	 * No 'host' or dax_operations since there is no access to this
+ 	 * device outside of mmap of the resulting character device.
+ 	 */
+-	dax_dev = alloc_dax(dev_dax, NULL, NULL);
++	dax_dev = alloc_dax(dev_dax, NULL, NULL, true);
+ 	if (!dax_dev)
+ 		goto err;
+ 
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index 0a339b85133e..bd6509308d05 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -186,6 +186,8 @@ enum dax_device_flags {
+ 	DAXDEV_ALIVE,
+ 	/* gate whether dax_flush() calls the low level flush routine */
+ 	DAXDEV_WRITE_CACHE,
++	/* flag to check if device supports synchronous flush */
++	DAXDEV_SYNC,
+ };
+ 
+ /**
+@@ -354,6 +356,12 @@ bool dax_write_cache_enabled(struct dax_device *dax_dev)
+ }
+ EXPORT_SYMBOL_GPL(dax_write_cache_enabled);
+ 
++bool dax_synchronous(struct dax_device *dax_dev)
++{
++	return test_bit(DAXDEV_SYNC, &dax_dev->flags);
++}
++EXPORT_SYMBOL_GPL(dax_synchronous);
++
+ bool dax_alive(struct dax_device *dax_dev)
+ {
+ 	lockdep_assert_held(&dax_srcu);
+@@ -511,7 +519,7 @@ static void dax_add_host(struct dax_device *dax_dev, const char *host)
+ }
+ 
+ struct dax_device *alloc_dax(void *private, const char *__host,
+-		const struct dax_operations *ops)
++		const struct dax_operations *ops, bool sync)
+ {
+ 	struct dax_device *dax_dev;
+ 	const char *host;
+@@ -534,6 +542,9 @@ struct dax_device *alloc_dax(void *private, const char *__host,
+ 	dax_add_host(dax_dev, host);
+ 	dax_dev->ops = ops;
+ 	dax_dev->private = private;
++	if (sync)
++		set_bit(DAXDEV_SYNC, &dax_dev->flags);
++
+ 	return dax_dev;
+ 
+  err_dev:
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 68d24056d0b1..534e12ca6329 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1965,7 +1965,7 @@ static struct mapped_device *alloc_dev(int minor)
+ 	sprintf(md->disk->disk_name, "dm-%d", minor);
+ 
+ 	if (IS_ENABLED(CONFIG_DAX_DRIVER)) {
+-		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops);
++		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops, true);
+ 		if (!dax_dev)
+ 			goto bad;
+ 	}
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index 5a5b3ea4d073..78f71ba0e7cf 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -466,7 +466,8 @@ static int pmem_attach_disk(struct device *dev,
+ 	nvdimm_badblocks_populate(nd_region, &pmem->bb, &bb_res);
+ 	disk->bb = &pmem->bb;
+ 
+-	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
++	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops,
++					is_nvdimm_sync(nd_region));
+ 
+ 	if (!dax_dev) {
+ 		put_disk(disk);
+diff --git a/drivers/nvdimm/region_devs.c b/drivers/nvdimm/region_devs.c
+index fb1041ab32a6..8c7aa047fe2b 100644
+--- a/drivers/nvdimm/region_devs.c
++++ b/drivers/nvdimm/region_devs.c
+@@ -1231,6 +1231,13 @@ int nvdimm_has_cache(struct nd_region *nd_region)
+ }
+ EXPORT_SYMBOL_GPL(nvdimm_has_cache);
+ 
++bool is_nvdimm_sync(struct nd_region *nd_region)
++{
++	return is_nd_pmem(&nd_region->dev) &&
++		!test_bit(ND_REGION_ASYNC, &nd_region->flags);
++}
++EXPORT_SYMBOL_GPL(is_nvdimm_sync);
++
+ struct conflict_context {
+ 	struct nd_region *nd_region;
+ 	resource_size_t start, size;
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 0dd316a74a29..b896706a5ee9 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -32,18 +32,19 @@ extern struct attribute_group dax_attribute_group;
+ #if IS_ENABLED(CONFIG_DAX)
+ struct dax_device *dax_get_by_host(const char *host);
+ struct dax_device *alloc_dax(void *private, const char *host,
+-		const struct dax_operations *ops);
++		const struct dax_operations *ops, bool sync);
+ void put_dax(struct dax_device *dax_dev);
+ void kill_dax(struct dax_device *dax_dev);
+ void dax_write_cache(struct dax_device *dax_dev, bool wc);
+ bool dax_write_cache_enabled(struct dax_device *dax_dev);
++bool dax_synchronous(struct dax_device *dax_dev);
+ #else
+ static inline struct dax_device *dax_get_by_host(const char *host)
+ {
+ 	return NULL;
+ }
+ static inline struct dax_device *alloc_dax(void *private, const char *host,
+-		const struct dax_operations *ops)
++		const struct dax_operations *ops, bool sync)
+ {
+ 	/*
+ 	 * Callers should check IS_ENABLED(CONFIG_DAX) to know if this
+@@ -64,6 +65,10 @@ static inline bool dax_write_cache_enabled(struct dax_device *dax_dev)
+ {
+ 	return false;
+ }
++static inline bool dax_synchronous(struct dax_device *dax_dev)
++{
++	return true;
++}
+ #endif
+ 
+ struct writeback_control;
+diff --git a/include/linux/libnvdimm.h b/include/linux/libnvdimm.h
+index d9d2ab8a6e64..9a8aea370cbc 100644
+--- a/include/linux/libnvdimm.h
++++ b/include/linux/libnvdimm.h
+@@ -270,6 +270,7 @@ int generic_nvdimm_flush(struct nd_region *nd_region);
+ int nvdimm_has_flush(struct nd_region *nd_region);
+ int nvdimm_has_cache(struct nd_region *nd_region);
+ int nvdimm_in_overwrite(struct nvdimm *nvdimm);
++bool is_nvdimm_sync(struct nd_region *nd_region);
+ 
+ static inline int nvdimm_ctl(struct nvdimm *nvdimm, unsigned int cmd, void *buf,
+ 		unsigned int buf_len, int *cmd_rc)
+-- 
+2.20.1
