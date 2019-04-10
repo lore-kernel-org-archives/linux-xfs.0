@@ -1,209 +1,276 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41788 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56306 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725982AbfDJEIz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Apr 2019 00:08:55 -0400
+        id S1725976AbfDJEJT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Apr 2019 00:09:19 -0400
 From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v5 0/6] virtio pmem driver 
-Date: Wed, 10 Apr 2019 09:38:20 +0530
-Message-Id: <20190410040826.24371-1-pagupta@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH v5 1/6] libnvdimm: nd_region flush callback support
+Date: Wed, 10 Apr 2019 09:38:21 +0530
+Message-Id: <20190410040826.24371-2-pagupta@redhat.com>
+In-Reply-To: <20190410040826.24371-1-pagupta@redhat.com>
+References: <20190410040826.24371-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, pagupta@redhat.com
 
- This patch series has implementation for "virtio pmem". 
- "virtio pmem" is fake persistent memory(nvdimm) in guest 
- which allows to bypass the guest page cache. This also
- implements a VIRTIO based asynchronous flush mechanism.  
+This patch adds functionality to perform flush from guest
+to host over VIRTIO. We are registering a callback based
+on 'nd_region' type. virtio_pmem driver requires this special
+flush function. For rest of the region types we are registering
+existing flush function. Report error returned by host fsync
+failure to userspace.
+
+This also handles asynchronous flush requests from the block layer
+by creating a child bio and chaining it with parent bio.
+
+Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+---
+ drivers/acpi/nfit/core.c     |  4 ++--
+ drivers/nvdimm/claim.c       |  6 ++++--
+ drivers/nvdimm/nd.h          |  1 +
+ drivers/nvdimm/pmem.c        | 14 ++++++++-----
+ drivers/nvdimm/region_devs.c | 38 ++++++++++++++++++++++++++++++++++--
+ include/linux/libnvdimm.h    |  8 +++++++-
+ 6 files changed, 59 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/acpi/nfit/core.c b/drivers/acpi/nfit/core.c
+index 5a389a4f4f65..567017a2190e 100644
+--- a/drivers/acpi/nfit/core.c
++++ b/drivers/acpi/nfit/core.c
+@@ -2434,7 +2434,7 @@ static void write_blk_ctl(struct nfit_blk *nfit_blk, unsigned int bw,
+ 		offset = to_interleave_offset(offset, mmio);
  
- Sharing guest kernel driver in this patchset with the 
- changes suggested in v4. Tested with Qemu side device 
- emulation [6] for virtio-pmem. 
-
- We have incorporated all the suggestions in V4. Documented 
- the impact of possible page cache side channel attacks with 
- suggested countermeasures.
+ 	writeq(cmd, mmio->addr.base + offset);
+-	nvdimm_flush(nfit_blk->nd_region);
++	nvdimm_flush(nfit_blk->nd_region, NULL, false);
  
- Details of project idea for 'virtio pmem' flushing interface 
- is shared [3] & [4].
-
- Implementation is divided into two parts:
- New virtio pmem guest driver and qemu code changes for new 
- virtio pmem paravirtualized device.
-
-1. Guest virtio-pmem kernel driver
----------------------------------
-   - Reads persistent memory range from paravirt device and 
-     registers with 'nvdimm_bus'.  
-   - 'nvdimm/pmem' driver uses this information to allocate 
-     persistent memory region and setup filesystem operations 
-     to the allocated memory. 
-   - virtio pmem driver implements asynchronous flushing 
-     interface to flush from guest to host.
-
-2. Qemu virtio-pmem device
----------------------------------
-   - Creates virtio pmem device and exposes a memory range to 
-     KVM guest. 
-   - At host side this is file backed memory which acts as 
-     persistent memory. 
-   - Qemu side flush uses aio thread pool API's and virtio 
-     for asynchronous guest multi request handling. 
-
-   David Hildenbrand CCed also posted a modified version[7] of 
-   qemu virtio-pmem code based on updated Qemu memory device API. 
-
- Virtio-pmem security implications and countermeasures:
- -----------------------------------------------------
-
- In previous posting of kernel driver, there was discussion [9]
- on possible implications of page cache side channel attacks with 
- virtio pmem. After thorough analysis of details of known side 
- channel attacks, below are the suggestions:
-
- - Depends entirely on how host backing image file is mapped 
-   into guest address space. 
-
- - virtio-pmem device emulation, by default shared mapping is used
-   to map host backing file. It is recommended to use separate
-   backing file at host side for every guest. This will prevent
-   any possibility of executing common code from multiple guests
-   and any chance of inferring guest local data based based on 
-   execution time.
-
- - If backing file is required to be shared among multiple guests 
-   it is recommended to don't support host page cache eviction 
-   commands from the guest driver. This will avoid any possibility
-   of inferring guest local data or host data from another guest. 
-
- - Proposed device specification [8] for virtio-pmem device with 
-   details of possible security implications and suggested 
-   countermeasures for device emulation.
-
- Virtio-pmem errors handling:
- ----------------------------------------
-  Checked behaviour of virtio-pmem for below types of errors
-  Need suggestions on expected behaviour for handling these errors?
-
-  - Hardware Errors: Uncorrectable recoverable Errors: 
-  a] virtio-pmem: 
-    - As per current logic if error page belongs to Qemu process, 
-      host MCE handler isolates(hwpoison) that page and send SIGBUS. 
-      Qemu SIGBUS handler injects exception to KVM guest. 
-    - KVM guest then isolates the page and send SIGBUS to guest 
-      userspace process which has mapped the page. 
-  
-  b] Existing implementation for ACPI pmem driver: 
-    - Handles such errors with MCE notifier and creates a list 
-      of bad blocks. Read/direct access DAX operation return EIO 
-      if accessed memory page fall in bad block list.
-    - It also starts backgound scrubbing.  
-    - Similar functionality can be reused in virtio-pmem with MCE 
-      notifier but without scrubbing(no ACPI/ARS)? Need inputs to 
-      confirm if this behaviour is ok or needs any change?
-
-Changes from PATCH v4: [1]
-- Factor out MAP_SYNC supported functionality to a common helper
-				[Dave, Darrick, Jan]
-- Comment, indentation and virtqueue_kick failure handle - Yuval Shaia
-
-Changes from PATCH v3: [2]
-- Use generic dax_synchronous() helper to check for DAXDEV_SYNC 
-  flag - [Dan, Darrick, Jan]
-- Add 'is_nvdimm_async' function
-- Document page cache side channel attacks implications & 
-  countermeasures - [Dave Chinner, Michael]
-
-Changes from PATCH v2: 
-- Disable MAP_SYNC for ext4 & XFS filesystems - [Dan] 
-- Use name 'virtio pmem' in place of 'fake dax' 
-
-Changes from PATCH v1: 
-- 0-day build test for build dependency on libnvdimm 
-
- Changes suggested by - [Dan Williams]
-- Split the driver into two parts virtio & pmem  
-- Move queuing of async block request to block layer
-- Add "sync" parameter in nvdimm_flush function
-- Use indirect call for nvdimm_flush
-- Don’t move declarations to common global header e.g nd.h
-- nvdimm_flush() return 0 or -EIO if it fails
-- Teach nsio_rw_bytes() that the flush can fail
-- Rename nvdimm_flush() to generic_nvdimm_flush()
-- Use 'nd_region->provider_data' for long dereferencing
-- Remove virtio_pmem_freeze/restore functions
-- Remove BSD license text with SPDX license text
-
-- Add might_sleep() in virtio_pmem_flush - [Luiz]
-- Make spin_lock_irqsave() narrow
-
-Changes from RFC v3
-- Rebase to latest upstream - Luiz
-- Call ndregion->flush in place of nvdimm_flush- Luiz
-- kmalloc return check - Luiz
-- virtqueue full handling - Stefan
-- Don't map entire virtio_pmem_req to device - Stefan
-- request leak, correct sizeof req- Stefan
-- Move declaration to virtio_pmem.c
-
-Changes from RFC v2:
-- Add flush function in the nd_region in place of switching
-  on a flag - Dan & Stefan
-- Add flush completion function with proper locking and wait
-  for host side flush completion - Stefan & Dan
-- Keep userspace API in uapi header file - Stefan, MST
-- Use LE fields & New device id - MST
-- Indentation & spacing suggestions - MST & Eric
-- Remove extra header files & add licensing - Stefan
-
-Changes from RFC v1:
-- Reuse existing 'pmem' code for registering persistent 
-  memory and other operations instead of creating an entirely 
-  new block driver.
-- Use VIRTIO driver to register memory information with 
-  nvdimm_bus and create region_type accordingly. 
-- Call VIRTIO flush from existing pmem driver.
-
-Pankaj Gupta (6):
-   libnvdimm: nd_region flush callback support
-   virtio-pmem: Add virtio-pmem guest driver
-   libnvdimm: add nd_region buffered dax_dev flag
-   dax: check synchronous mapping is supported
-   ext4: disable map_sync for virtio pmem
-   xfs: disable map_sync for virtio pmem
-
-[1] https://lkml.org/lkml/2019/4/3/394
-[2] https://lkml.org/lkml/2019/1/9/471
-[3] https://www.spinics.net/lists/kvm/msg149761.html
-[4] https://www.spinics.net/lists/kvm/msg153095.html  
-[5] https://lkml.org/lkml/2018/8/31/413
-[6] https://marc.info/?l=linux-kernel&m=153572228719237&w=2 
-[7] https://marc.info/?l=qemu-devel&m=153555721901824&w=2
-[8] https://lists.oasis-open.org/archives/virtio-dev/201903/msg00083.html
-[9] https://lkml.org/lkml/2019/1/9/1191
-
- drivers/acpi/nfit/core.c         |    4 -
- drivers/dax/bus.c                |    2 
- drivers/dax/super.c              |   13 +++-
- drivers/md/dm.c                  |    2 
- drivers/nvdimm/claim.c           |    6 +
- drivers/nvdimm/nd.h              |    1 
- drivers/nvdimm/pmem.c            |   17 +++--
- drivers/nvdimm/region_devs.c     |   45 +++++++++++++-
- drivers/nvdimm/virtio_pmem.c     |   88 +++++++++++++++++++++++++++
- drivers/virtio/Kconfig           |   10 +++
- drivers/virtio/Makefile          |    1 
- drivers/virtio/pmem.c            |  124 +++++++++++++++++++++++++++++++++++++++
- fs/ext4/file.c                   |   11 +--
- fs/xfs/xfs_file.c                |   10 +--
- include/linux/dax.h              |   32 +++++++++-
- include/linux/libnvdimm.h        |    9 ++
- include/linux/virtio_pmem.h      |   60 ++++++++++++++++++
- include/uapi/linux/virtio_ids.h  |    1 
- include/uapi/linux/virtio_pmem.h |   10 +++
- 19 files changed, 419 insertions(+), 27 deletions(-)
+ 	if (nfit_blk->dimm_flags & NFIT_BLK_DCR_LATCH)
+ 		readq(mmio->addr.base + offset);
+@@ -2483,7 +2483,7 @@ static int acpi_nfit_blk_single_io(struct nfit_blk *nfit_blk,
+ 	}
+ 
+ 	if (rw)
+-		nvdimm_flush(nfit_blk->nd_region);
++		nvdimm_flush(nfit_blk->nd_region, NULL, false);
+ 
+ 	rc = read_blk_stat(nfit_blk, lane) ? -EIO : 0;
+ 	return rc;
+diff --git a/drivers/nvdimm/claim.c b/drivers/nvdimm/claim.c
+index fb667bf469c7..a1dfa066786b 100644
+--- a/drivers/nvdimm/claim.c
++++ b/drivers/nvdimm/claim.c
+@@ -263,7 +263,7 @@ static int nsio_rw_bytes(struct nd_namespace_common *ndns,
+ 	struct nd_namespace_io *nsio = to_nd_namespace_io(&ndns->dev);
+ 	unsigned int sz_align = ALIGN(size + (offset & (512 - 1)), 512);
+ 	sector_t sector = offset >> 9;
+-	int rc = 0;
++	int rc = 0, ret = 0;
+ 
+ 	if (unlikely(!size))
+ 		return 0;
+@@ -301,7 +301,9 @@ static int nsio_rw_bytes(struct nd_namespace_common *ndns,
+ 	}
+ 
+ 	memcpy_flushcache(nsio->addr + offset, buf, size);
+-	nvdimm_flush(to_nd_region(ndns->dev.parent));
++	ret = nvdimm_flush(to_nd_region(ndns->dev.parent), NULL, false);
++	if (ret)
++		rc = ret;
+ 
+ 	return rc;
+ }
+diff --git a/drivers/nvdimm/nd.h b/drivers/nvdimm/nd.h
+index a5ac3b240293..916cd6c5451a 100644
+--- a/drivers/nvdimm/nd.h
++++ b/drivers/nvdimm/nd.h
+@@ -159,6 +159,7 @@ struct nd_region {
+ 	struct badblocks bb;
+ 	struct nd_interleave_set *nd_set;
+ 	struct nd_percpu_lane __percpu *lane;
++	int (*flush)(struct nd_region *nd_region);
+ 	struct nd_mapping mapping[0];
+ };
+ 
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index bc2f700feef8..5a5b3ea4d073 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -192,6 +192,7 @@ static blk_status_t pmem_do_bvec(struct pmem_device *pmem, struct page *page,
+ 
+ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
+ {
++	int ret = 0;
+ 	blk_status_t rc = 0;
+ 	bool do_acct;
+ 	unsigned long start;
+@@ -201,7 +202,7 @@ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
+ 	struct nd_region *nd_region = to_region(pmem);
+ 
+ 	if (bio->bi_opf & REQ_PREFLUSH)
+-		nvdimm_flush(nd_region);
++		ret = nvdimm_flush(nd_region, bio, true);
+ 
+ 	do_acct = nd_iostat_start(bio, &start);
+ 	bio_for_each_segment(bvec, bio, iter) {
+@@ -216,7 +217,10 @@ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
+ 		nd_iostat_end(bio, start);
+ 
+ 	if (bio->bi_opf & REQ_FUA)
+-		nvdimm_flush(nd_region);
++		ret = nvdimm_flush(nd_region, bio, true);
++
++	if (ret)
++		bio->bi_status = errno_to_blk_status(ret);
+ 
+ 	bio_endio(bio);
+ 	return BLK_QC_T_NONE;
+@@ -463,13 +467,13 @@ static int pmem_attach_disk(struct device *dev,
+ 	disk->bb = &pmem->bb;
+ 
+ 	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
++
+ 	if (!dax_dev) {
+ 		put_disk(disk);
+ 		return -ENOMEM;
+ 	}
+ 	dax_write_cache(dax_dev, nvdimm_has_cache(nd_region));
+ 	pmem->dax_dev = dax_dev;
+-
+ 	gendev = disk_to_dev(disk);
+ 	gendev->groups = pmem_attribute_groups;
+ 
+@@ -527,14 +531,14 @@ static int nd_pmem_remove(struct device *dev)
+ 		sysfs_put(pmem->bb_state);
+ 		pmem->bb_state = NULL;
+ 	}
+-	nvdimm_flush(to_nd_region(dev->parent));
++	nvdimm_flush(to_nd_region(dev->parent), NULL, false);
+ 
+ 	return 0;
+ }
+ 
+ static void nd_pmem_shutdown(struct device *dev)
+ {
+-	nvdimm_flush(to_nd_region(dev->parent));
++	nvdimm_flush(to_nd_region(dev->parent), NULL, false);
+ }
+ 
+ static void nd_pmem_notify(struct device *dev, enum nvdimm_event event)
+diff --git a/drivers/nvdimm/region_devs.c b/drivers/nvdimm/region_devs.c
+index b4ef7d9ff22e..fb1041ab32a6 100644
+--- a/drivers/nvdimm/region_devs.c
++++ b/drivers/nvdimm/region_devs.c
+@@ -295,7 +295,9 @@ static ssize_t deep_flush_store(struct device *dev, struct device_attribute *att
+ 		return rc;
+ 	if (!flush)
+ 		return -EINVAL;
+-	nvdimm_flush(nd_region);
++	rc = nvdimm_flush(nd_region, NULL, false);
++	if (rc)
++		return rc;
+ 
+ 	return len;
+ }
+@@ -1085,6 +1087,11 @@ static struct nd_region *nd_region_create(struct nvdimm_bus *nvdimm_bus,
+ 	dev->of_node = ndr_desc->of_node;
+ 	nd_region->ndr_size = resource_size(ndr_desc->res);
+ 	nd_region->ndr_start = ndr_desc->res->start;
++	if (ndr_desc->flush)
++		nd_region->flush = ndr_desc->flush;
++	else
++		nd_region->flush = generic_nvdimm_flush;
++
+ 	nd_device_register(dev);
+ 
+ 	return nd_region;
+@@ -1125,11 +1132,36 @@ struct nd_region *nvdimm_volatile_region_create(struct nvdimm_bus *nvdimm_bus,
+ }
+ EXPORT_SYMBOL_GPL(nvdimm_volatile_region_create);
+ 
++int nvdimm_flush(struct nd_region *nd_region, struct bio *bio, bool async)
++{
++	int rc = 0;
++
++	/* Create child bio for asynchronous flush and chain with
++	 * parent bio. Otherwise directly call nd_region flush.
++	 */
++	if (async && bio->bi_iter.bi_sector != -1) {
++
++		struct bio *child = bio_alloc(GFP_ATOMIC, 0);
++
++		if (!child)
++			return -ENOMEM;
++		bio_copy_dev(child, bio);
++		child->bi_opf = REQ_PREFLUSH;
++		child->bi_iter.bi_sector = -1;
++		bio_chain(child, bio);
++		submit_bio(child);
++	} else {
++		if (nd_region->flush(nd_region))
++			rc = -EIO;
++	}
++
++	return rc;
++}
+ /**
+  * nvdimm_flush - flush any posted write queues between the cpu and pmem media
+  * @nd_region: blk or interleaved pmem region
+  */
+-void nvdimm_flush(struct nd_region *nd_region)
++int generic_nvdimm_flush(struct nd_region *nd_region)
+ {
+ 	struct nd_region_data *ndrd = dev_get_drvdata(&nd_region->dev);
+ 	int i, idx;
+@@ -1153,6 +1185,8 @@ void nvdimm_flush(struct nd_region *nd_region)
+ 		if (ndrd_get_flush_wpq(ndrd, i, 0))
+ 			writeq(1, ndrd_get_flush_wpq(ndrd, i, idx));
+ 	wmb();
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(nvdimm_flush);
+ 
+diff --git a/include/linux/libnvdimm.h b/include/linux/libnvdimm.h
+index feb342d026f2..d9d2ab8a6e64 100644
+--- a/include/linux/libnvdimm.h
++++ b/include/linux/libnvdimm.h
+@@ -65,6 +65,9 @@ enum {
+ 	 */
+ 	ND_REGION_PERSIST_MEMCTRL = 2,
+ 
++	/* Platform provides asynchronous flush mechanism */
++	ND_REGION_ASYNC = 3,
++
+ 	/* mark newly adjusted resources as requiring a label update */
+ 	DPA_RESOURCE_ADJUSTED = 1 << 0,
+ };
+@@ -121,6 +124,7 @@ struct nd_mapping_desc {
+ 	int position;
+ };
+ 
++struct nd_region;
+ struct nd_region_desc {
+ 	struct resource *res;
+ 	struct nd_mapping_desc *mapping;
+@@ -133,6 +137,7 @@ struct nd_region_desc {
+ 	int target_node;
+ 	unsigned long flags;
+ 	struct device_node *of_node;
++	int (*flush)(struct nd_region *nd_region);
+ };
+ 
+ struct device;
+@@ -260,7 +265,8 @@ unsigned long nd_blk_memremap_flags(struct nd_blk_region *ndbr);
+ unsigned int nd_region_acquire_lane(struct nd_region *nd_region);
+ void nd_region_release_lane(struct nd_region *nd_region, unsigned int lane);
+ u64 nd_fletcher64(void *addr, size_t len, bool le);
+-void nvdimm_flush(struct nd_region *nd_region);
++int nvdimm_flush(struct nd_region *nd_region, struct bio *bio, bool async);
++int generic_nvdimm_flush(struct nd_region *nd_region);
+ int nvdimm_has_flush(struct nd_region *nd_region);
+ int nvdimm_has_cache(struct nd_region *nd_region);
+ int nvdimm_in_overwrite(struct nvdimm *nvdimm);
+-- 
+2.20.1
