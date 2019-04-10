@@ -1,98 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36684 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726106AbfDKPae (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Apr 2019 11:30:34 -0400
-Date: Thu, 11 Apr 2019 08:30:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/8] xfs: report fs and rt health via geometry structure
-Message-ID: <20190411153016.GE1019523@magnolia>
-References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
- <155494716446.1090518.6511378096384851735.stgit@magnolia>
- <20190411130910.GF2888@bfoster>
+Received: from mx2.suse.de ([195.135.220.15]:52422 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729258AbfDJIZI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Apr 2019 04:25:08 -0400
+Date: Wed, 10 Apr 2019 10:25:04 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v5 4/6] dax: check synchronous mapping is supported
+Message-ID: <20190410082504.GF1426@quack2.suse.cz>
+References: <20190410040826.24371-1-pagupta@redhat.com>
+ <20190410040826.24371-5-pagupta@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190411130910.GF2888@bfoster>
+In-Reply-To: <20190410040826.24371-5-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Pankaj Gupta <pagupta@redhat.com>
+Cc: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com
 
-On Thu, Apr 11, 2019 at 09:09:10AM -0400, Brian Foster wrote:
-> On Wed, Apr 10, 2019 at 06:46:04PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Use our newly expanded geometry structure to report the overall fs and
-> > realtime health status.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_fs.h     |   11 ++++++++
-> >  fs/xfs/libxfs/xfs_health.h |    3 ++
-> >  fs/xfs/xfs_health.c        |   57 ++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_ioctl.c         |    2 ++
-> >  4 files changed, 72 insertions(+), 1 deletion(-)
-> > 
-> > 
-> ...
-> > diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-> > index 21728228e08b..eb8dbc3a952a 100644
-> > --- a/fs/xfs/xfs_health.c
-> > +++ b/fs/xfs/xfs_health.c
-> > @@ -264,3 +264,60 @@ xfs_inode_measure_sickness(
-> >  	*checked = ip->i_checked;
-> >  	spin_unlock(&ip->i_flags_lock);
-> >  }
-> ...
-> > +
-> > +static inline void
-> > +xfgeo_health_tick(
-> > +	struct xfs_fsop_geom	*geo,
-> > +	unsigned int		sick,
-> > +	unsigned int		checked,
-> > +	unsigned int		sick_mask,
-> > +	unsigned int		fsop_mask)
-> > +{
+On Wed 10-04-19 09:38:24, Pankaj Gupta wrote:
+> This patch introduces 'daxdev_mapping_supported' helper
+> which checks if 'MAP_SYNC' is supported with filesystem
+> mapping. It also checks if corresponding dax_device is
+> synchronous. Virtio pmem device is asynchronous and
+> does not not support VM_SYNC. 
 > 
-> Could we just pass the struct ioctl_sick_map to this helper? IMO, that
-> makes the mapping logic a bit more explicit and also doesn't introduce
-> an unnecessary field name change between ->ioctl_mask and fsop_mask.
-
-Ok.
-
-> FWIW, I might also rename ->ioctl_mask to ->geom_mask since it's
-> specific to that structure.
-
-> > +	if (checked & sick_mask)
-> > +		geo->checked |= fsop_mask;
-> > +	if (sick & sick_mask)
-> > +		geo->sick |= fsop_mask;
-> > +}
-> > +
-> ...
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index 0aaf4f88524d..3e3ee197bd0f 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> ...
-> > @@ -792,6 +793,7 @@ xfs_ioc_fsgeometry(
-> >  	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, struct_version);
-> >  	if (error)
-> >  		return error;
-> > +	xfs_fsop_geom_health(mp, &fsgeo);
-> >  
+> Suggested-by: Jan Kara <jack@suse.cz>
+> Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> ---
+>  include/linux/dax.h | 23 +++++++++++++++++++++++
+>  1 file changed, 23 insertions(+)
 > 
-> Not really a problem, but it might make sense to not bother with this
-> unless struct_version >= 5 (via the already existing check below).
+> diff --git a/include/linux/dax.h b/include/linux/dax.h
+> index b896706a5ee9..4a2a60ffec86 100644
+> --- a/include/linux/dax.h
+> +++ b/include/linux/dax.h
+> @@ -38,6 +38,24 @@ void kill_dax(struct dax_device *dax_dev);
+>  void dax_write_cache(struct dax_device *dax_dev, bool wc);
+>  bool dax_write_cache_enabled(struct dax_device *dax_dev);
+>  bool dax_synchronous(struct dax_device *dax_dev);
+> +
+> +/*
+> + * Callers check if synchronous mapping is enabled for DAX file
+> + * and attached dax device is also synchronous.
+> + *
+> + * dax_synchronous function verifies if dax device is synchronous.
+> + * Currently, only virtio pmem device supports asynchronous device
+> + * flush.
+> + */
 
-Ok.
+Thanks for the patch! I'd restructure this comment like:
 
---D
+/*
+ * Check if given mapping is supported by the file / underlying device.
+ */
+> +static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
+> +				struct dax_device *dax_dev)
+> +{
 
-> Brian
-> 
-> >  	if (struct_version <= 3)
-> >  		len = sizeof(struct xfs_fsop_geom_v1);
-> > 
+	/* Everyone supports non-sync mappings */
+> +	if (!(vma->vm_flags & VM_SYNC))
+> +		return true;
+	/* Sync mappings are supported only for files using DAX */
+> +	if (!IS_DAX(file_inode(vma->vm_file)))
+> +		return false;
+	/* Underlying device must support persisting through CPU instructions */
+> +	return dax_synchronous(dax_dev);
+> +}
+>  #else
+>  static inline struct dax_device *dax_get_by_host(const char *host)
+>  {
+> @@ -69,6 +87,11 @@ static inline bool dax_synchronous(struct dax_device *dax_dev)
+>  {
+>  	return true;
+>  }
+> +static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
+> +				struct dax_device *dax_dev)
+> +{
+> +	return true;
+
+This looks wrong. Shouldn't it rather be:
+
+	return !(vma->flags & VM_SYNC);
+
+?
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
