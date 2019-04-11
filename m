@@ -1,29 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60054 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725981AbfDKBpb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:45:31 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1hP8A044912
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:45:30 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2rpkht66um-1
+Received: from userp2120.oracle.com ([156.151.31.85]:57898 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725981AbfDKBpu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:45:50 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1hVkw051540
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:45:48 GMT
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2rpmrqe2t4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:45:30 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1hlLg009760
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:45:29 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2rpytchsd6-1
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:45:48 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1iaUx049216
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:45:48 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2rph7tgpcy-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:45:29 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x3B1jSsO017593
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:45:28 GMT
-Subject: [PATCH v2 0/8] xfs: online health tracking support
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:45:48 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3B1jl0C013317
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:45:47 GMT
+Subject: [PATCH 3/8] xfs: clear BAD_SUMMARY if unmounting an unhealthy
+ filesystem
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 10 Apr 2019 18:45:24 -0700
-Message-ID: <155494712442.1090518.2784809287026447547.stgit@magnolia>
+Date: Wed, 10 Apr 2019 18:45:45 -0700
+Message-ID: <155494714539.1090518.9582107800209578968.stgit@magnolia>
+In-Reply-To: <155494712442.1090518.2784809287026447547.stgit@magnolia>
+References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -33,41 +36,160 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This series adds online health tracking capabilities to XFS, which
-enables userspace to discover if any metadata corruptions have been
-found (and not fixed) within a given class of metadata.
+If we know the filesystem metadata isn't healthy during unmount, we want
+to encourage the administrator to run xfs_repair right away.  We can't
+do this if BAD_SUMMARY will cause an unclean log unmount to force
+summary recalculation, so turn it off if the fs is bad.
 
-Reporting to userspace is handled by three ioctl modifications:
-enhancements of the existing fs geometry ioctl to include sickness
-information; enhancement of the existing bulkstat ioctl to report
-sickness information, and a totally new ioctl to report allocation group
-geometry and sickness data.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_health.h |    2 +
+ fs/xfs/xfs_health.c        |   74 ++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_mount.c         |    2 +
+ fs/xfs/xfs_trace.h         |    3 ++
+ 4 files changed, 81 insertions(+)
 
-On the userspace side of things, xfs_scrub will be adapted to give a
-clean bill of health to the kernel when it is warranted, and
-xfs_spaceman will be able to report the health status of a filesystem.
 
-The first three patches add the internals of the health reporting
-infrastructure and convert the "bad summary" code to use it instead of
-a mount state flag.
-
-The five patches after that implement the ioctls to report health status
-to userspace by enlarging the fs geometry ioctl, creating a new ag
-geometry ioctl, and then adding fields to all three so that the kernel
-can report what it has checked and what it knows to be good or bad.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=health-tracking
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-tracking
+diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+index 30762a5d4862..a434b47f2aa0 100644
+--- a/fs/xfs/libxfs/xfs_health.h
++++ b/fs/xfs/libxfs/xfs_health.h
+@@ -110,6 +110,8 @@ void xfs_inode_mark_healthy(struct xfs_inode *ip, unsigned int mask);
+ void xfs_inode_measure_sickness(struct xfs_inode *ip, unsigned int *sick,
+ 		unsigned int *checked);
+ 
++void xfs_health_unmount(struct xfs_mount *mp);
++
+ /* Now some helpers. */
+ 
+ static inline bool
+diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+index 941f33037e2f..21728228e08b 100644
+--- a/fs/xfs/xfs_health.c
++++ b/fs/xfs/xfs_health.c
+@@ -19,6 +19,80 @@
+ #include "xfs_trace.h"
+ #include "xfs_health.h"
+ 
++/*
++ * Warn about metadata corruption that we detected but haven't fixed, and
++ * make sure we're not sitting on anything that would get in the way of
++ * recovery.
++ */
++void
++xfs_health_unmount(
++	struct xfs_mount	*mp)
++{
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		agno;
++	unsigned int		sick = 0;
++	unsigned int		checked = 0;
++	bool			warn = false;
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return;
++
++	/* Measure AG corruption levels. */
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		pag = xfs_perag_get(mp, agno);
++		xfs_ag_measure_sickness(pag, &sick, &checked);
++		if (sick) {
++			trace_xfs_ag_unfixed_corruption(mp, agno, sick);
++			warn = true;
++		}
++		xfs_perag_put(pag);
++	}
++
++	/* Measure realtime volume corruption levels. */
++	xfs_rt_measure_sickness(mp, &sick, &checked);
++	if (sick) {
++		trace_xfs_rt_unfixed_corruption(mp, sick);
++		warn = true;
++	}
++
++	/*
++	 * Measure fs corruption and keep the sample around for the warning.
++	 * See the note below for why we exempt FS_COUNTERS.
++	 */
++	xfs_fs_measure_sickness(mp, &sick, &checked);
++	if (sick & ~XFS_SICK_FS_COUNTERS) {
++		trace_xfs_fs_unfixed_corruption(mp, sick);
++		warn = true;
++	}
++
++	if (warn) {
++		xfs_warn(mp,
++"Uncorrected metadata errors detected; please run xfs_repair.");
++
++		/*
++		 * We discovered uncorrected metadata problems at some point
++		 * during this filesystem mount and have advised the
++		 * administrator to run repair once the unmount completes.
++		 *
++		 * However, we must be careful -- when FSCOUNTERS are flagged
++		 * unhealthy, the unmount procedure omits writing the clean
++		 * unmount record to the log so that the next mount will run
++		 * recovery and recompute the summary counters.  In other
++		 * words, we leave a dirty log to get the counters fixed.
++		 *
++		 * Unfortunately, xfs_repair cannot recover dirty logs, so if
++		 * there were filesystem problems, FSCOUNTERS was flagged, and
++		 * the administrator takes our advice to run xfs_repair,
++		 * they'll have to zap the log before repairing structures.
++		 * We don't really want to encourage this, so we mark the
++		 * FSCOUNTERS healthy so that a subsequent repair run won't see
++		 * a dirty log.
++		 */
++		if (sick & XFS_SICK_FS_COUNTERS)
++			xfs_fs_mark_healthy(mp, XFS_SICK_FS_COUNTERS);
++	}
++}
++
+ /* Mark unhealthy per-fs metadata. */
+ void
+ xfs_fs_mark_sick(
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 14f454e09e6e..eff8b4c3eb3e 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1070,6 +1070,7 @@ xfs_mountfs(
+ 	 */
+ 	cancel_delayed_work_sync(&mp->m_reclaim_work);
+ 	xfs_reclaim_inodes(mp, SYNC_WAIT);
++	xfs_health_unmount(mp);
+  out_log_dealloc:
+ 	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
+ 	xfs_log_mount_cancel(mp);
+@@ -1152,6 +1153,7 @@ xfs_unmountfs(
+ 	 */
+ 	cancel_delayed_work_sync(&mp->m_reclaim_work);
+ 	xfs_reclaim_inodes(mp, SYNC_WAIT);
++	xfs_health_unmount(mp);
+ 
+ 	xfs_qm_unmount(mp);
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index f079841c7af6..2464ea351f83 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3461,8 +3461,10 @@ DEFINE_EVENT(xfs_fs_corrupt_class, name,	\
+ 	TP_ARGS(mp, flags))
+ DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_sick);
+ DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_healthy);
++DEFINE_FS_CORRUPT_EVENT(xfs_fs_unfixed_corruption);
+ DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_sick);
+ DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_healthy);
++DEFINE_FS_CORRUPT_EVENT(xfs_rt_unfixed_corruption);
+ 
+ DECLARE_EVENT_CLASS(xfs_ag_corrupt_class,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, unsigned int flags),
+@@ -3488,6 +3490,7 @@ DEFINE_EVENT(xfs_ag_corrupt_class, name,	\
+ 	TP_ARGS(mp, agno, flags))
+ DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_sick);
+ DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_healthy);
++DEFINE_AG_CORRUPT_EVENT(xfs_ag_unfixed_corruption);
+ 
+ DECLARE_EVENT_CLASS(xfs_inode_corrupt_class,
+ 	TP_PROTO(struct xfs_inode *ip, unsigned int flags),
