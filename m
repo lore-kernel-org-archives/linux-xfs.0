@@ -1,172 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53162 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56026 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726121AbfDKIqq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Apr 2019 04:46:46 -0400
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] generic: test statfs on project quota directory
-Date: Thu, 11 Apr 2019 16:46:38 +0800
-Message-Id: <20190411084638.29063-1-zlang@redhat.com>
+        id S1726106AbfDKNJ7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Apr 2019 09:09:59 -0400
+Date: Thu, 11 Apr 2019 09:09:57 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 7/8] xfs: report AG health via AG geometry ioctl
+Message-ID: <20190411130957.GG2888@bfoster>
+References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
+ <155494717070.1090518.15401214807663806671.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155494717070.1090518.15401214807663806671.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-There's a bug on xfs cause statfs get negative f_ffree value from
-a project quota directory. It's fixed by "de7243057 fs/xfs: fix
-f_ffree value for statfs when project quota is set". So add statfs
-testing on project quota block and inode count limit.
+On Wed, Apr 10, 2019 at 06:46:10PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Use the AG geometry info ioctl to report health status too.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_fs.h     |   14 +++++++++++++-
+>  fs/xfs/libxfs/xfs_health.h |    2 ++
+>  fs/xfs/xfs_health.c        |   43 +++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_ioctl.c         |    2 ++
+>  4 files changed, 60 insertions(+), 1 deletion(-)
+> 
+> 
+...
+> diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+> index eb8dbc3a952a..0315b95a8d84 100644
+> --- a/fs/xfs/xfs_health.c
+> +++ b/fs/xfs/xfs_health.c
+> @@ -321,3 +321,46 @@ xfs_fsop_geom_health(
+...
+> +/* Fill out ag geometry health info. */
+> +void
+> +xfs_ag_geom_health(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno,
+> +	struct xfs_ag_geometry	*ageo)
+> +{
+> +	struct xfs_perag	*pag;
+> +	const struct ioctl_sick_map *m;
+> +	unsigned int		sick;
+> +	unsigned int		checked;
+> +
+> +	ASSERT(agno < mp->m_sb.sb_agcount);
+> +
+> +	ageo->ag_sick = 0;
+> +	ageo->ag_checked = 0;
+> +
+> +	pag = xfs_perag_get(mp, agno);
+> +	xfs_ag_measure_sickness(pag, &sick, &checked);
+> +	for (m = ag_map; m->sick_mask; m++) {
+> +		if (checked & m->sick_mask)
+> +			ageo->ag_checked |= m->ioctl_mask;
+> +		if (sick & m->sick_mask)
+> +			ageo->ag_sick |= m->ioctl_mask;
+> +	}
 
-For testing foreign fs quota, change _qmount() function, turn on
-project if quotaon support.
+FWIW this is pretty much what I was asking for in the mapping helper in
+the previous patch. I didn't realize this was going to be reused for
+another ioctl/struct, however, so disregard my previous comment about
+renaming ->ioctl_mask. ;)
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
+> +
+> +	xfs_perag_put(pag);
+> +}
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 3e3ee197bd0f..c47f4201452c 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -822,6 +822,8 @@ xfs_ioc_ag_geometry(
+>  	if (error)
+>  		return error;
+>  
+> +	xfs_ag_geom_health(mp, ageo.ag_number, &ageo);
+> +
 
-Hi,
+Any reason not to push this down into the get_geom() helper since it's
+part of the initial version of the ag geometry structure and we already
+have the xfs_perag there?
 
-There's one thing I don't understand, so CC ext4 mail list. Please
-feel free to reply, if anyone knows that:
+Brian
 
-$ mkfs.ext4 $SCRATCH_DEV
-$ tune2fs -O quota,project $SCRATCH_DEV
-$ mount $SCRATCH_DEV $SCRATCH_MNT -o prjquota
-$ quotaon -P $SCRATCH_MNT
-$ mkdir $SCRATCH_MNT/t
-$ xfs_quota -f -x -c "project -p $SCRATCH_MNT/t -s 42" $SCRATCH_MNT
-$ xfs_quota -f -x -c "limit -p bsoft=100m answer" $SCRATCH_MNT
-$ df -k $SCRATCH_MNT/t
-Filesystem    1K-blocks  Used Available Use% Mounted on
-SCRATCH_DEV    102400     4    102396   1% SCRATCH_MNT
-
-On XFS, the 'Used' field always shows '0'. But why ext4 always has
-more 4k? Is it a bug or expected.
-
-Thanks,
-Zorro
-
-
- common/quota          |  4 +++
- tests/generic/999     | 74 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/999.out |  3 ++
- tests/generic/group   |  1 +
- 4 files changed, 82 insertions(+)
- create mode 100755 tests/generic/999
- create mode 100644 tests/generic/999.out
-
-diff --git a/common/quota b/common/quota
-index f19f81a1..315df8cb 100644
---- a/common/quota
-+++ b/common/quota
-@@ -200,6 +200,10 @@ _qmount()
-     if [ "$FSTYP" != "xfs" ]; then
-         quotacheck -ug $SCRATCH_MNT >>$seqres.full 2>&1
-         quotaon -ug $SCRATCH_MNT >>$seqres.full 2>&1
-+	# try to turn on project quota if it's supported
-+	if quotaon --help 2>&1 | grep -q '\-\-project'; then
-+		quotaon --project $SCRATCH_MNT >>$seqres.full 2>&1
-+	fi
-     fi
-     chmod ugo+rwx $SCRATCH_MNT
- }
-diff --git a/tests/generic/999 b/tests/generic/999
-new file mode 100755
-index 00000000..555341f1
---- /dev/null
-+++ b/tests/generic/999
-@@ -0,0 +1,74 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 999
-+#
-+# Test statfs when project quota is set.
-+# Uncover de7243057 fs/xfs: fix f_ffree value for statfs when project quota is set
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	_scratch_unmount
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/quota
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_quota
-+_require_xfs_quota_foreign
-+
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_enable_pquota
-+_qmount_option "prjquota"
-+_qmount
-+_require_prjquota $SCRATCH_DEV
-+
-+# Create a directory to be project object, and create a file to take 64k space
-+mkdir $SCRATCH_MNT/t
-+$XFS_IO_PROG -f -c "pwrite 0 65536" -c sync $SCRATCH_MNT/t/file >>$seqres.full
-+
-+# Setup temporary replacements for /etc/projects and /etc/projid
-+cat >$tmp.projects <<EOF
-+42:$SCRATCH_MNT/t
-+EOF
-+
-+cat >$tmp.projid <<EOF
-+answer:42
-+EOF
-+
-+quota_cmd="$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid"
-+$quota_cmd -x -c 'project -s answer' $SCRATCH_MNT >/dev/null 2>&1
-+$quota_cmd -x -c 'limit -p isoft=53 bsoft=100m answer' $SCRATCH_MNT
-+
-+# The itotal and size should be 53 and 102400(k), as above project quota limit.
-+# The isued and used should be 2 and 64(k), as this case takes. But ext4 always
-+# shows more 4k 'used' space than XFS, it prints 68k at here. So filter the
-+# 6[48] at the end.
-+df -k --output=file,itotal,iused,size,used $SCRATCH_MNT/t | \
-+	_filter_scratch | _filter_spaces | \
-+	sed -e "/SCRATCH_MNT/s/6[48]/N/"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/999.out b/tests/generic/999.out
-new file mode 100644
-index 00000000..1bebabd4
---- /dev/null
-+++ b/tests/generic/999.out
-@@ -0,0 +1,3 @@
-+QA output created by 999
-+File Inodes IUsed 1K-blocks Used
-+SCRATCH_MNT/t 53 2 102400 N
-diff --git a/tests/generic/group b/tests/generic/group
-index 9f4845c6..35da10a5 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -542,3 +542,4 @@
- 537 auto quick trim
- 538 auto quick aio
- 539 auto quick punch seek
-+999 auto quick quota
--- 
-2.17.2
+>  	if (copy_to_user(arg, &ageo, sizeof(ageo)))
+>  		return -EFAULT;
+>  	return 0;
+> 
