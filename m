@@ -1,30 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58050 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725981AbfDKBqC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:46:02 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1hPXB051514
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:01 GMT
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2rpmrqe2th-1
+Received: from userp2130.oracle.com ([156.151.31.86]:60614 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725981AbfDKBqV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:46:21 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1iLEL045439
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:20 GMT
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2rpkht66vx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:01 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1jwwV151773
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:00 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2rpkek76bu-1
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:20 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1k262189918
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:19 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2rpj5bg2h8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:00 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x3B1k0Zd017825
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:00 GMT
-Subject: [PATCH 5/8] xfs: add a new ioctl to describe allocation group
- geometry
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:19 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x3B1kIFe003865
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:18 GMT
+Subject: [PATCH 8/8] xfs: report inode health via bulkstat
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 10 Apr 2019 18:45:58 -0700
-Message-ID: <155494715806.1090518.13259730969995378693.stgit@magnolia>
+Date: Wed, 10 Apr 2019 18:46:17 -0700
+Message-ID: <155494717696.1090518.6312243852549172491.stgit@magnolia>
 In-Reply-To: <155494712442.1090518.2784809287026447547.stgit@magnolia>
 References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
 MIME-Version: 1.0
@@ -38,187 +37,119 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a new ioctl to describe an allocation group's geometry.
+Use space in the bulkstat ioctl structure to report any problems
+observed with the inode.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_ag.c |   52 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_ag.h |    2 ++
- fs/xfs/libxfs/xfs_fs.h |   14 +++++++++++++
- fs/xfs/xfs_ioctl.c     |   24 ++++++++++++++++++++++
- fs/xfs/xfs_ioctl32.c   |    1 +
- 5 files changed, 93 insertions(+)
+ fs/xfs/libxfs/xfs_fs.h     |   14 +++++++++++++-
+ fs/xfs/libxfs/xfs_health.h |    1 +
+ fs/xfs/xfs_health.c        |   34 ++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_itable.c        |    2 ++
+ 4 files changed, 50 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index 1ef8acf35e7d..1c0f2a6c10b4 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -19,6 +19,7 @@
- #include "xfs_ialloc.h"
- #include "xfs_rmap.h"
- #include "xfs_ag.h"
-+#include "xfs_ag_resv.h"
- 
- static struct xfs_buf *
- xfs_get_aghdr_buf(
-@@ -461,3 +462,54 @@ xfs_ag_extend_space(
- 				len, &XFS_RMAP_OINFO_SKIP_UPDATE,
- 				XFS_AG_RESV_NONE);
- }
-+
-+/* Retrieve AG geometry. */
-+int
-+xfs_ag_get_geometry(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	struct xfs_ag_geometry	*ageo)
-+{
-+	struct xfs_buf		*agi_bp;
-+	struct xfs_buf		*agf_bp;
-+	struct xfs_agi		*agi;
-+	struct xfs_agf		*agf;
-+	struct xfs_perag	*pag;
-+	unsigned int		freeblks;
-+	int			error;
-+
-+	if (agno >= mp->m_sb.sb_agcount)
-+		return -EINVAL;
-+
-+	/* Lock the AG headers. */
-+	error = xfs_ialloc_read_agi(mp, NULL, agno, &agi_bp);
-+	if (error)
-+		return error;
-+	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agf_bp);
-+	if (error)
-+		goto out_agi;
-+	pag = xfs_perag_get(mp, agno);
-+
-+	/* Fill out form. */
-+	memset(ageo, 0, sizeof(*ageo));
-+	ageo->ag_number = agno;
-+
-+	agi = XFS_BUF_TO_AGI(agi_bp);
-+	ageo->ag_icount = be32_to_cpu(agi->agi_count);
-+	ageo->ag_ifree = be32_to_cpu(agi->agi_freecount);
-+
-+	agf = XFS_BUF_TO_AGF(agf_bp);
-+	ageo->ag_length = be32_to_cpu(agf->agf_length);
-+	freeblks = pag->pagf_freeblks +
-+		   pag->pagf_flcount +
-+		   pag->pagf_btreeblks -
-+		   xfs_ag_resv_needed(pag, XFS_AG_RESV_NONE);
-+	ageo->ag_freeblks = freeblks;
-+
-+	/* Release resources. */
-+	xfs_perag_put(pag);
-+	xfs_buf_relse(agf_bp);
-+out_agi:
-+	xfs_buf_relse(agi_bp);
-+	return error;
-+}
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index 412702e23f61..5166322807e7 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -26,5 +26,7 @@ struct aghdr_init_data {
- int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
- int xfs_ag_extend_space(struct xfs_mount *mp, struct xfs_trans *tp,
- 			struct aghdr_init_data *id, xfs_extlen_t len);
-+int xfs_ag_get_geometry(struct xfs_mount *mp, xfs_agnumber_t agno,
-+			struct xfs_ag_geometry *ageo);
- 
- #endif /* __LIBXFS_AG_H */
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index cb7d0b1453cd..ee33d628a240 100644
+index 35d60f8017cd..43a53b03247b 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -267,6 +267,19 @@ typedef struct xfs_fsop_resblks {
- #define XFS_MIN_DBLOCKS(s) ((xfs_rfsblock_t)((s)->sb_agcount - 1) *	\
- 			 (s)->sb_agblocks + XFS_MIN_AG_BLOCKS)
+@@ -349,13 +349,25 @@ typedef struct xfs_bstat {
+ #define	bs_projid	bs_projid_lo	/* (previously just bs_projid)	*/
+ 	__u16		bs_forkoff;	/* inode fork offset in bytes	*/
+ 	__u16		bs_projid_hi;	/* higher part of project id	*/
+-	unsigned char	bs_pad[6];	/* pad space, unused		*/
++	uint16_t	bs_sick;	/* sick inode metadata		*/
++	uint16_t	bs_checked;	/* checked inode metadata	*/
++	unsigned char	bs_pad[2];	/* pad space, unused		*/
+ 	__u32		bs_cowextsize;	/* cow extent size		*/
+ 	__u32		bs_dmevmask;	/* DMIG event mask		*/
+ 	__u16		bs_dmstate;	/* DMIG state info		*/
+ 	__u16		bs_aextents;	/* attribute number of extents	*/
+ } xfs_bstat_t;
  
-+/*
-+ * Output for XFS_IOC_AG_GEOMETRY
-+ */
-+struct xfs_ag_geometry {
-+	uint32_t	ag_number;	/* i/o: AG number */
-+	uint32_t	ag_length;	/* o: length in blocks */
-+	uint32_t	ag_freeblks;	/* o: free space */
-+	uint32_t	ag_icount;	/* o: inodes allocated */
-+	uint32_t	ag_ifree;	/* o: inodes free */
-+	uint32_t	ag_reserved32;	/* o: zero */
-+	uint64_t	ag_reserved[13];/* o: zero */
++/* bs_sick flags */
++#define XFS_BS_SICK_INODE	(1 << 0)  /* inode core */
++#define XFS_BS_SICK_BMBTD	(1 << 1)  /* data fork */
++#define XFS_BS_SICK_BMBTA	(1 << 2)  /* attr fork */
++#define XFS_BS_SICK_BMBTC	(1 << 3)  /* cow fork */
++#define XFS_BS_SICK_DIR		(1 << 4)  /* directory */
++#define XFS_BS_SICK_XATTR	(1 << 5)  /* extended attributes */
++#define XFS_BS_SICK_SYMLINK	(1 << 6)  /* symbolic link remote target */
++#define XFS_BS_SICK_PARENT	(1 << 7)  /* parent pointers */
++
+ /*
+  * Project quota id helpers (previously projid was 16bit only
+  * and using two 16bit values to hold new 32bit projid was choosen
+diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+index adf9d41843a5..4979bf1f9bcb 100644
+--- a/fs/xfs/libxfs/xfs_health.h
++++ b/fs/xfs/libxfs/xfs_health.h
+@@ -178,5 +178,6 @@ xfs_inode_is_healthy(struct xfs_inode *ip)
+ void xfs_fsop_geom_health(struct xfs_mount *mp, struct xfs_fsop_geom *geo);
+ void xfs_ag_geom_health(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 		struct xfs_ag_geometry *ageo);
++void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bstat *bs);
+ 
+ #endif	/* __XFS_HEALTH_H__ */
+diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+index 0315b95a8d84..c40b8d9ef6bd 100644
+--- a/fs/xfs/xfs_health.c
++++ b/fs/xfs/xfs_health.c
+@@ -364,3 +364,37 @@ xfs_ag_geom_health(
+ 
+ 	xfs_perag_put(pag);
+ }
++
++static const struct ioctl_sick_map ino_map[] = {
++	{ XFS_SICK_INO_CORE,	XFS_BS_SICK_INODE },
++	{ XFS_SICK_INO_BMBTD,	XFS_BS_SICK_BMBTD },
++	{ XFS_SICK_INO_BMBTA,	XFS_BS_SICK_BMBTA },
++	{ XFS_SICK_INO_BMBTC,	XFS_BS_SICK_BMBTC },
++	{ XFS_SICK_INO_DIR,	XFS_BS_SICK_DIR },
++	{ XFS_SICK_INO_XATTR,	XFS_BS_SICK_XATTR },
++	{ XFS_SICK_INO_SYMLINK,	XFS_BS_SICK_SYMLINK },
++	{ XFS_SICK_INO_PARENT,	XFS_BS_SICK_PARENT },
++	{ 0, 0 },
 +};
 +
- /*
-  * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
-  */
-@@ -620,6 +633,7 @@ struct xfs_scrub_metadata {
- #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
- /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
- #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
-+#define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
- 
- /*
-  * ioctl commands that replace IRIX syssgi()'s
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index d243660f1826..0aaf4f88524d 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -33,6 +33,7 @@
- #include "xfs_fsmap.h"
- #include "scrub/xfs_scrub.h"
- #include "xfs_sb.h"
-+#include "xfs_ag.h"
- 
- #include <linux/capability.h>
- #include <linux/cred.h>
-@@ -804,6 +805,26 @@ xfs_ioc_fsgeometry(
- 	return 0;
- }
- 
-+STATIC int
-+xfs_ioc_ag_geometry(
-+	struct xfs_mount	*mp,
-+	void			__user *arg)
++/* Fill out bulkstat health info. */
++void
++xfs_bulkstat_health(
++	struct xfs_inode	*ip,
++	struct xfs_bstat	*bs)
 +{
-+	struct xfs_ag_geometry	ageo;
-+	int			error;
++	const struct ioctl_sick_map *m;
++	unsigned int		sick;
++	unsigned int		checked;
 +
-+	if (copy_from_user(&ageo, arg, sizeof(ageo)))
-+		return -EFAULT;
++	bs->bs_sick = 0;
++	bs->bs_checked = 0;
 +
-+	error = xfs_ag_get_geometry(mp, ageo.ag_number, &ageo);
-+	if (error)
-+		return error;
-+
-+	if (copy_to_user(arg, &ageo, sizeof(ageo)))
-+		return -EFAULT;
-+	return 0;
++	xfs_inode_measure_sickness(ip, &sick, &checked);
++	for (m = ino_map; m->sick_mask; m++) {
++		if (checked & m->sick_mask)
++			bs->bs_checked |= m->ioctl_mask;
++		if (sick & m->sick_mask)
++			bs->bs_sick |= m->ioctl_mask;
++	}
 +}
-+
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 942e4aa5e729..1e1a0af1dd34 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -18,6 +18,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
++#include "xfs_health.h"
+ 
  /*
-  * Linux extended inode flags interface.
-  */
-@@ -2009,6 +2030,9 @@ xfs_file_ioctl(
- 	case XFS_IOC_FSGEOMETRY:
- 		return xfs_ioc_fsgeometry(mp, arg, 5);
- 
-+	case XFS_IOC_AG_GEOMETRY:
-+		return xfs_ioc_ag_geometry(mp, arg);
-+
- 	case XFS_IOC_GETVERSION:
- 		return put_user(inode->i_generation, (int __user *)arg);
- 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 55ace6308637..65997a6315e9 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -563,6 +563,7 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_DIOINFO:
- 	case XFS_IOC_FSGEOMETRY_V4:
- 	case XFS_IOC_FSGEOMETRY:
-+	case XFS_IOC_AG_GEOMETRY:
- 	case XFS_IOC_FSGETXATTR:
- 	case XFS_IOC_FSSETXATTR:
- 	case XFS_IOC_FSGETXATTRA:
+  * Return stat information for one inode.
+@@ -84,6 +85,7 @@ xfs_bulkstat_one_int(
+ 	buf->bs_extsize = dic->di_extsize << mp->m_sb.sb_blocklog;
+ 	buf->bs_extents = dic->di_nextents;
+ 	memset(buf->bs_pad, 0, sizeof(buf->bs_pad));
++	xfs_bulkstat_health(ip, buf);
+ 	buf->bs_dmevmask = dic->di_dmevmask;
+ 	buf->bs_dmstate = dic->di_dmstate;
+ 	buf->bs_aextents = dic->di_anextents;
