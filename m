@@ -1,13 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:52924 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725981AbfDKBpp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:45:45 -0400
-Subject: [PATCH 2/8] xfs: replace the BAD_SUMMARY mount flag with the
- equivalent health code
+Received: from userp2120.oracle.com ([156.151.31.85]:58050 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725981AbfDKBqC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:46:02 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1hPXB051514
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:01 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2rpmrqe2th-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:01 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1jwwV151773
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:00 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2rpkek76bu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:00 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x3B1k0Zd017825
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:00 GMT
+Subject: [PATCH 5/8] xfs: add a new ioctl to describe allocation group
+ geometry
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 10 Apr 2019 18:45:38 -0700
-Message-ID: <155494713887.1090518.1885118694886652287.stgit@magnolia>
+Date: Wed, 10 Apr 2019 18:45:58 -0700
+Message-ID: <155494715806.1090518.13259730969995378693.stgit@magnolia>
 In-Reply-To: <155494712442.1090518.2784809287026447547.stgit@magnolia>
 References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
 MIME-Version: 1.0
@@ -17,122 +34,191 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Replace the BAD_SUMMARY mount flag with calls to the equivalent health
-tracking code.
+Add a new ioctl to describe an allocation group's geometry.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_sb.c |    5 +++--
- fs/xfs/xfs_log.c       |    3 ++-
- fs/xfs/xfs_mount.c     |    9 ++++-----
- fs/xfs/xfs_mount.h     |    1 -
- 4 files changed, 9 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c |   52 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h |    2 ++
+ fs/xfs/libxfs/xfs_fs.h |   14 +++++++++++++
+ fs/xfs/xfs_ioctl.c     |   24 ++++++++++++++++++++++
+ fs/xfs/xfs_ioctl32.c   |    1 +
+ 5 files changed, 93 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 77a3a4085de3..dc5be0c631c8 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -30,6 +30,7 @@
- #include "xfs_refcount_btree.h"
- #include "xfs_da_format.h"
- #include "xfs_da_btree.h"
-+#include "xfs_health.h"
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 1ef8acf35e7d..1c0f2a6c10b4 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -19,6 +19,7 @@
+ #include "xfs_ialloc.h"
+ #include "xfs_rmap.h"
+ #include "xfs_ag.h"
++#include "xfs_ag_resv.h"
+ 
+ static struct xfs_buf *
+ xfs_get_aghdr_buf(
+@@ -461,3 +462,54 @@ xfs_ag_extend_space(
+ 				len, &XFS_RMAP_OINFO_SKIP_UPDATE,
+ 				XFS_AG_RESV_NONE);
+ }
++
++/* Retrieve AG geometry. */
++int
++xfs_ag_get_geometry(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	struct xfs_ag_geometry	*ageo)
++{
++	struct xfs_buf		*agi_bp;
++	struct xfs_buf		*agf_bp;
++	struct xfs_agi		*agi;
++	struct xfs_agf		*agf;
++	struct xfs_perag	*pag;
++	unsigned int		freeblks;
++	int			error;
++
++	if (agno >= mp->m_sb.sb_agcount)
++		return -EINVAL;
++
++	/* Lock the AG headers. */
++	error = xfs_ialloc_read_agi(mp, NULL, agno, &agi_bp);
++	if (error)
++		return error;
++	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agf_bp);
++	if (error)
++		goto out_agi;
++	pag = xfs_perag_get(mp, agno);
++
++	/* Fill out form. */
++	memset(ageo, 0, sizeof(*ageo));
++	ageo->ag_number = agno;
++
++	agi = XFS_BUF_TO_AGI(agi_bp);
++	ageo->ag_icount = be32_to_cpu(agi->agi_count);
++	ageo->ag_ifree = be32_to_cpu(agi->agi_freecount);
++
++	agf = XFS_BUF_TO_AGF(agf_bp);
++	ageo->ag_length = be32_to_cpu(agf->agf_length);
++	freeblks = pag->pagf_freeblks +
++		   pag->pagf_flcount +
++		   pag->pagf_btreeblks -
++		   xfs_ag_resv_needed(pag, XFS_AG_RESV_NONE);
++	ageo->ag_freeblks = freeblks;
++
++	/* Release resources. */
++	xfs_perag_put(pag);
++	xfs_buf_relse(agf_bp);
++out_agi:
++	xfs_buf_relse(agi_bp);
++	return error;
++}
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 412702e23f61..5166322807e7 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -26,5 +26,7 @@ struct aghdr_init_data {
+ int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
+ int xfs_ag_extend_space(struct xfs_mount *mp, struct xfs_trans *tp,
+ 			struct aghdr_init_data *id, xfs_extlen_t len);
++int xfs_ag_get_geometry(struct xfs_mount *mp, xfs_agnumber_t agno,
++			struct xfs_ag_geometry *ageo);
+ 
+ #endif /* __LIBXFS_AG_H */
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index cb7d0b1453cd..ee33d628a240 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -267,6 +267,19 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_MIN_DBLOCKS(s) ((xfs_rfsblock_t)((s)->sb_agcount - 1) *	\
+ 			 (s)->sb_agblocks + XFS_MIN_AG_BLOCKS)
+ 
++/*
++ * Output for XFS_IOC_AG_GEOMETRY
++ */
++struct xfs_ag_geometry {
++	uint32_t	ag_number;	/* i/o: AG number */
++	uint32_t	ag_length;	/* o: length in blocks */
++	uint32_t	ag_freeblks;	/* o: free space */
++	uint32_t	ag_icount;	/* o: inodes allocated */
++	uint32_t	ag_ifree;	/* o: inodes free */
++	uint32_t	ag_reserved32;	/* o: zero */
++	uint64_t	ag_reserved[13];/* o: zero */
++};
++
+ /*
+  * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
+  */
+@@ -620,6 +633,7 @@ struct xfs_scrub_metadata {
+ #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
+ /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
+ #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
++#define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
  
  /*
-  * Physical superblock buffer manipulations. Shared with libxfs in userspace.
-@@ -905,7 +906,7 @@ xfs_initialize_perag_data(
- 	/*
- 	 * If the new summary counts are obviously incorrect, fail the
- 	 * mount operation because that implies the AGFs are also corrupt.
--	 * Clear BAD_SUMMARY so that we don't unmount with a dirty log, which
-+	 * Clear FS_COUNTERS so that we don't unmount with a dirty log, which
- 	 * will prevent xfs_repair from fixing anything.
- 	 */
- 	if (fdblocks > sbp->sb_dblocks || ifree > ialloc) {
-@@ -923,7 +924,7 @@ xfs_initialize_perag_data(
- 
- 	xfs_reinit_percpu_counters(mp);
- out:
--	mp->m_flags &= ~XFS_MOUNT_BAD_SUMMARY;
-+	xfs_fs_mark_healthy(mp, XFS_SICK_FS_COUNTERS);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index c3b610b687d1..457ced3ee3e1 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -23,6 +23,7 @@
- #include "xfs_cksum.h"
- #include "xfs_sysfs.h"
+  * ioctl commands that replace IRIX syssgi()'s
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index d243660f1826..0aaf4f88524d 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -33,6 +33,7 @@
+ #include "xfs_fsmap.h"
+ #include "scrub/xfs_scrub.h"
  #include "xfs_sb.h"
-+#include "xfs_health.h"
++#include "xfs_ag.h"
  
- kmem_zone_t	*xfs_log_ticket_zone;
- 
-@@ -861,7 +862,7 @@ xfs_log_write_unmount_record(
- 	 * recalculated during log recovery at next mount.  Refer to
- 	 * xlog_check_unmount_rec for more details.
- 	 */
--	if (XFS_TEST_ERROR((mp->m_flags & XFS_MOUNT_BAD_SUMMARY), mp,
-+	if (XFS_TEST_ERROR(xfs_fs_has_sickness(mp, XFS_SICK_FS_COUNTERS), mp,
- 			XFS_ERRTAG_FORCE_SUMMARY_RECALC)) {
- 		xfs_alert(mp, "%s: will fix summary counters at next mount",
- 				__func__);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 6581381c12be..14f454e09e6e 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -34,6 +34,7 @@
- #include "xfs_refcount_btree.h"
- #include "xfs_reflink.h"
- #include "xfs_extent_busy.h"
-+#include "xfs_health.h"
- 
- 
- static DEFINE_MUTEX(xfs_uuid_table_mutex);
-@@ -645,7 +646,7 @@ xfs_check_summary_counts(
- 	    (mp->m_sb.sb_fdblocks > mp->m_sb.sb_dblocks ||
- 	     !xfs_verify_icount(mp, mp->m_sb.sb_icount) ||
- 	     mp->m_sb.sb_ifree > mp->m_sb.sb_icount))
--		mp->m_flags |= XFS_MOUNT_BAD_SUMMARY;
-+		xfs_fs_mark_sick(mp, XFS_SICK_FS_COUNTERS);
- 
- 	/*
- 	 * We can safely re-initialise incore superblock counters from the
-@@ -660,7 +661,7 @@ xfs_check_summary_counts(
- 	 */
- 	if ((!xfs_sb_version_haslazysbcount(&mp->m_sb) ||
- 	     XFS_LAST_UNMOUNT_WAS_CLEAN(mp)) &&
--	    !(mp->m_flags & XFS_MOUNT_BAD_SUMMARY))
-+	    !xfs_fs_has_sickness(mp, XFS_SICK_FS_COUNTERS))
- 		return 0;
- 
- 	return xfs_initialize_perag_data(mp, mp->m_sb.sb_agcount);
-@@ -1446,7 +1447,5 @@ xfs_force_summary_recalc(
- 	if (!xfs_sb_version_haslazysbcount(&mp->m_sb))
- 		return;
- 
--	spin_lock(&mp->m_sb_lock);
--	mp->m_flags |= XFS_MOUNT_BAD_SUMMARY;
--	spin_unlock(&mp->m_sb_lock);
-+	xfs_fs_mark_sick(mp, XFS_SICK_FS_COUNTERS);
+ #include <linux/capability.h>
+ #include <linux/cred.h>
+@@ -804,6 +805,26 @@ xfs_ioc_fsgeometry(
+ 	return 0;
  }
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index cf7facc36a5f..42b980862203 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -228,7 +228,6 @@ typedef struct xfs_mount {
- 						   must be synchronous except
- 						   for space allocations */
- #define XFS_MOUNT_UNMOUNTING	(1ULL << 1)	/* filesystem is unmounting */
--#define XFS_MOUNT_BAD_SUMMARY	(1ULL << 2)	/* summary counters are bad */
- #define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
- #define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
- 						   operations, typically for
+ 
++STATIC int
++xfs_ioc_ag_geometry(
++	struct xfs_mount	*mp,
++	void			__user *arg)
++{
++	struct xfs_ag_geometry	ageo;
++	int			error;
++
++	if (copy_from_user(&ageo, arg, sizeof(ageo)))
++		return -EFAULT;
++
++	error = xfs_ag_get_geometry(mp, ageo.ag_number, &ageo);
++	if (error)
++		return error;
++
++	if (copy_to_user(arg, &ageo, sizeof(ageo)))
++		return -EFAULT;
++	return 0;
++}
++
+ /*
+  * Linux extended inode flags interface.
+  */
+@@ -2009,6 +2030,9 @@ xfs_file_ioctl(
+ 	case XFS_IOC_FSGEOMETRY:
+ 		return xfs_ioc_fsgeometry(mp, arg, 5);
+ 
++	case XFS_IOC_AG_GEOMETRY:
++		return xfs_ioc_ag_geometry(mp, arg);
++
+ 	case XFS_IOC_GETVERSION:
+ 		return put_user(inode->i_generation, (int __user *)arg);
+ 
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 55ace6308637..65997a6315e9 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -563,6 +563,7 @@ xfs_file_compat_ioctl(
+ 	case XFS_IOC_DIOINFO:
+ 	case XFS_IOC_FSGEOMETRY_V4:
+ 	case XFS_IOC_FSGEOMETRY:
++	case XFS_IOC_AG_GEOMETRY:
+ 	case XFS_IOC_FSGETXATTR:
+ 	case XFS_IOC_FSSETXATTR:
+ 	case XFS_IOC_FSGETXATTRA:
