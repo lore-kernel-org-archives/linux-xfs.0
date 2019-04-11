@@ -1,310 +1,252 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:53600 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725981AbfDKBqt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:46:49 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1hRI0047256
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:47 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 2rphmepaht-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:47 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1jfeh013714
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:47 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2rpytchspk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:47 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x3B1kkM5018214
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:46 GMT
-Subject: [PATCH 4/4] xfs: scrub/repair should update filesystem metadata
- health
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 10 Apr 2019 18:46:44 -0700
-Message-ID: <155494720415.1090718.14943757174174761892.stgit@magnolia>
-In-Reply-To: <155494717912.1090718.9199703658765720229.stgit@magnolia>
-References: <155494717912.1090718.9199703658765720229.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:44122 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726826AbfDKM3G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Apr 2019 08:29:06 -0400
+Date: Thu, 11 Apr 2019 08:29:04 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/8] xfs: track metadata health status
+Message-ID: <20190411122900.GB2888@bfoster>
+References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
+ <155494713235.1090518.11696420703305243139.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155494713235.1090518.11696420703305243139.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Apr 10, 2019 at 06:45:32PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add the necessary in-core metadata fields to keep track of which parts
+> of the filesystem have been observed and which parts were observed to be
+> unhealthy, and print a warning at unmount time if we have unfixed
+> problems.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/Makefile            |    1 
+>  fs/xfs/libxfs/xfs_health.h |  175 ++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_health.c        |  192 ++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_icache.c        |    8 ++
+>  fs/xfs/xfs_inode.h         |    8 ++
+>  fs/xfs/xfs_mount.c         |    1 
+>  fs/xfs/xfs_mount.h         |   23 +++++
+>  fs/xfs/xfs_trace.h         |   73 +++++++++++++++++
+>  8 files changed, 481 insertions(+)
+>  create mode 100644 fs/xfs/libxfs/xfs_health.h
+>  create mode 100644 fs/xfs/xfs_health.c
+> 
+> 
+...
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index e70e7db29026..885decab4735 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -73,6 +73,8 @@ xfs_inode_alloc(
+>  	INIT_WORK(&ip->i_iodone_work, xfs_end_io);
+>  	INIT_LIST_HEAD(&ip->i_iodone_list);
+>  	spin_lock_init(&ip->i_iodone_lock);
+> +	ip->i_sick = 0;
+> +	ip->i_checked = 0;
+>  
+>  	return ip;
+>  }
+> @@ -133,6 +135,8 @@ xfs_inode_free(
+>  	spin_lock(&ip->i_flags_lock);
+>  	ip->i_flags = XFS_IRECLAIM;
+>  	ip->i_ino = 0;
+> +	ip->i_sick = 0;
+> +	ip->i_checked = 0;
+>  	spin_unlock(&ip->i_flags_lock);
+>  
 
-Now that we have the ability to track sick metadata in-core, make scrub
-and repair update those health assessments after doing work.
+FWIW, I'm not totally clear on what the i_checked mask is for yet. That
+aside, is it necessary to reset these fields in the free/reclaim paths?
+I wonder if it's sufficient to zero them on alloc and the cache hit path
+just below..?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/Makefile       |    1 
- fs/xfs/scrub/health.c |  172 +++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/health.h |   12 +++
- fs/xfs/scrub/scrub.c  |    4 +
- fs/xfs/scrub/scrub.h  |    7 ++
- 5 files changed, 196 insertions(+)
- create mode 100644 fs/xfs/scrub/health.c
- create mode 100644 fs/xfs/scrub/health.h
+Otherwise looks fine:
 
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 786379c143f4..b20964e26a22 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -143,6 +143,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   common.o \
- 				   dabtree.o \
- 				   dir.o \
-+				   health.o \
- 				   ialloc.o \
- 				   inode.o \
- 				   parent.o \
-diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
-new file mode 100644
-index 000000000000..9738e4d5f0b2
---- /dev/null
-+++ b/fs/xfs/scrub/health.c
-@@ -0,0 +1,172 @@
-+// SPDX-License-Identifier: GPL-2.0+
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_health.h"
-+#include "scrub/scrub.h"
-+#include "scrub/health.h"
-+
-+/*
-+ * Scrub and In-Core Filesystem Health Assessments
-+ * ===============================================
-+ *
-+ * Online scrub and repair have the time and the ability to perform stronger
-+ * checks than we can do from the metadata verifiers, because they can
-+ * cross-reference records between data structures.  Therefore, scrub is in a
-+ * good position to update the online filesystem health assessments to reflect
-+ * the good/bad state of the data structure.
-+ *
-+ * We therefore extend scrub in the following ways to achieve this:
-+ *
-+ * 1. Create a "sick_mask_update" field in the scrub context.  When we're
-+ * setting up a scrub call, set this to the default XFS_SICK_* flag(s) for the
-+ * selected scrub type (call it A).  Scrub and repair functions can override
-+ * the default sick_mask_update value if they choose.
-+ *
-+ * 2. If the scrubber returns a runtime error code, we exit making no changes
-+ * to the incore sick state.
-+ *
-+ * 3. If the scrubber finds that A is clean, use sick_mask_update to clear the
-+ * incore sick flags before exiting.
-+ *
-+ * 4. If the scrubber finds that A is corrupt, use sick_mask_update to set the
-+ * incore sick flags.  If the user didn't want to repair then we exit, leaving
-+ * the metadata structure unfixed and the sick flag set.
-+ *
-+ * 5. Now we know that A is corrupt and the user wants to repair, so run the
-+ * repairer.  If the repairer returns an error code, we exit with that error
-+ * code, having made no further changes to the incore sick state.
-+ *
-+ * 6. If repair rebuilds A correctly and the subsequent re-scrub of A is
-+ * clean, use sick_mask_update to clear the incore sick flags.  This should
-+ * have the effect that A is no longer marked sick.
-+ *
-+ * 7. If repair rebuilds A incorrectly, the re-scrub will find it corrupt and
-+ * use sick_mask_update to set the incore sick flags.  This should have no
-+ * externally visible effect since we already set them in step (4).
-+ *
-+ * There are some complications to this story, however.  For certain types of
-+ * complementary metadata indices (e.g. inobt/finobt), it is easier to rebuild
-+ * both structures at the same time.  The following principles apply to this
-+ * type of repair strategy:
-+ *
-+ * 8. Any repair function that rebuilds multiple structures should update
-+ * sick_mask_visible to reflect whatever other structures are rebuilt, and
-+ * verify that all the rebuilt structures can pass a scrub check.  The
-+ * outcomes of 5-7 still apply, but with a sick_mask_update that covers
-+ * everything being rebuilt.
-+ */
-+
-+/* Map our scrub type to a sick mask and a set of health update functions. */
-+
-+enum xchk_health_group {
-+	XHG_FS = 1,
-+	XHG_RT,
-+	XHG_AG,
-+	XHG_INO,
-+};
-+
-+struct xchk_health_map {
-+	enum xchk_health_group	group;
-+	unsigned int		sick_mask;
-+};
-+
-+static const struct xchk_health_map type_to_health_flag[XFS_SCRUB_TYPE_NR] = {
-+	[XFS_SCRUB_TYPE_SB]		= { XHG_AG,  XFS_SICK_AG_SB },
-+	[XFS_SCRUB_TYPE_AGF]		= { XHG_AG,  XFS_SICK_AG_AGF },
-+	[XFS_SCRUB_TYPE_AGFL]		= { XHG_AG,  XFS_SICK_AG_AGFL },
-+	[XFS_SCRUB_TYPE_AGI]		= { XHG_AG,  XFS_SICK_AG_AGI },
-+	[XFS_SCRUB_TYPE_BNOBT]		= { XHG_AG,  XFS_SICK_AG_BNOBT },
-+	[XFS_SCRUB_TYPE_CNTBT]		= { XHG_AG,  XFS_SICK_AG_CNTBT },
-+	[XFS_SCRUB_TYPE_INOBT]		= { XHG_AG,  XFS_SICK_AG_INOBT },
-+	[XFS_SCRUB_TYPE_FINOBT]		= { XHG_AG,  XFS_SICK_AG_FINOBT },
-+	[XFS_SCRUB_TYPE_RMAPBT]		= { XHG_AG,  XFS_SICK_AG_RMAPBT },
-+	[XFS_SCRUB_TYPE_REFCNTBT]	= { XHG_AG,  XFS_SICK_AG_REFCNTBT },
-+	[XFS_SCRUB_TYPE_INODE]		= { XHG_INO, XFS_SICK_INO_CORE },
-+	[XFS_SCRUB_TYPE_BMBTD]		= { XHG_INO, XFS_SICK_INO_BMBTD },
-+	[XFS_SCRUB_TYPE_BMBTA]		= { XHG_INO, XFS_SICK_INO_BMBTA },
-+	[XFS_SCRUB_TYPE_BMBTC]		= { XHG_INO, XFS_SICK_INO_BMBTC },
-+	[XFS_SCRUB_TYPE_DIR]		= { XHG_INO, XFS_SICK_INO_DIR },
-+	[XFS_SCRUB_TYPE_XATTR]		= { XHG_INO, XFS_SICK_INO_XATTR },
-+	[XFS_SCRUB_TYPE_SYMLINK]	= { XHG_INO, XFS_SICK_INO_SYMLINK },
-+	[XFS_SCRUB_TYPE_PARENT]		= { XHG_INO, XFS_SICK_INO_PARENT },
-+	[XFS_SCRUB_TYPE_RTBITMAP]	= { XHG_RT,  XFS_SICK_RT_BITMAP },
-+	[XFS_SCRUB_TYPE_RTSUM]		= { XHG_RT,  XFS_SICK_RT_SUMMARY },
-+	[XFS_SCRUB_TYPE_UQUOTA]		= { XHG_FS,  XFS_SICK_FS_UQUOTA },
-+	[XFS_SCRUB_TYPE_GQUOTA]		= { XHG_FS,  XFS_SICK_FS_GQUOTA },
-+	[XFS_SCRUB_TYPE_PQUOTA]		= { XHG_FS,  XFS_SICK_FS_PQUOTA },
-+};
-+
-+/* Return the health status mask for this scrub type. */
-+unsigned int
-+xchk_health_mask_for_scrub_type(
-+	__u32			scrub_type)
-+{
-+	return type_to_health_flag[scrub_type].sick_mask;
-+}
-+
-+/*
-+ * Update filesystem health assessments based on what we found and did.
-+ *
-+ * If the scrubber finds errors, we mark sick whatever's mentioned in
-+ * sick_mask_update, no matter whether this is a first scan or an
-+ * evaluation of repair effectiveness.
-+ *
-+ * Otherwise, no direct corruption was found, so mark whatever's in
-+ * sick_mask_update as healthy.
-+ */
-+void
-+xchk_update_health(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xfs_perag	*pag;
-+
-+	if (!sc->sick_mask_update)
-+		return;
-+
-+	switch (type_to_health_flag[sc->sm->sm_type].group) {
-+	case XHG_AG:
-+		pag = xfs_perag_get(sc->mp, sc->sm->sm_agno);
-+		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+			xfs_ag_mark_sick(pag, sc->sick_mask_update);
-+		else
-+			xfs_ag_mark_healthy(pag, sc->sick_mask_update);
-+		xfs_perag_put(pag);
-+		break;
-+	case XHG_INO:
-+		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+			xfs_inode_mark_sick(sc->ip, sc->sick_mask_update);
-+		else
-+			xfs_inode_mark_healthy(sc->ip, sc->sick_mask_update);
-+		break;
-+	case XHG_FS:
-+		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+			xfs_fs_mark_sick(sc->mp, sc->sick_mask_update);
-+		else
-+			xfs_fs_mark_healthy(sc->mp, sc->sick_mask_update);
-+		break;
-+	case XHG_RT:
-+		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+			xfs_rt_mark_sick(sc->mp, sc->sick_mask_update);
-+		else
-+			xfs_rt_mark_healthy(sc->mp, sc->sick_mask_update);
-+		break;
-+	default:
-+		ASSERT(0);
-+		break;
-+	}
-+}
-diff --git a/fs/xfs/scrub/health.h b/fs/xfs/scrub/health.h
-new file mode 100644
-index 000000000000..fd0d466c8658
---- /dev/null
-+++ b/fs/xfs/scrub/health.h
-@@ -0,0 +1,12 @@
-+// SPDX-License-Identifier: GPL-2.0+
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#ifndef __XFS_SCRUB_HEALTH_H__
-+#define __XFS_SCRUB_HEALTH_H__
-+
-+unsigned int xchk_health_mask_for_scrub_type(__u32 scrub_type);
-+void xchk_update_health(struct xfs_scrub *sc);
-+
-+#endif /* __XFS_SCRUB_HEALTH_H__ */
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 02d278b7d20b..01d5bfc1917c 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -40,6 +40,7 @@
- #include "scrub/trace.h"
- #include "scrub/btree.h"
- #include "scrub/repair.h"
-+#include "scrub/health.h"
- 
- /*
-  * Online Scrub and Repair
-@@ -498,6 +499,7 @@ xfs_scrub_metadata(
- 	xchk_experimental_warning(mp);
- 
- 	sc.ops = &meta_scrub_ops[sm->sm_type];
-+	sc.sick_mask_update = xchk_health_mask_for_scrub_type(sm->sm_type);
- retry_op:
- 	/* Set up for the operation. */
- 	error = sc.ops->setup(&sc, ip);
-@@ -520,6 +522,8 @@ xfs_scrub_metadata(
- 	} else if (error)
- 		goto out_teardown;
- 
-+	xchk_update_health(&sc);
-+
- 	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
- 	    !(sc.flags & XREP_ALREADY_FIXED)) {
- 		bool needs_fix;
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 1b23bf141438..b1d632f1c5ff 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -66,6 +66,13 @@ struct xfs_scrub {
- 	/* See the XCHK/XREP state flags below. */
- 	unsigned int			flags;
- 
-+	/*
-+	 * The XFS_SICK_* flags that correspond to the metadata being scrubbed
-+	 * or repaired.  We will use this mask to update the in-core fs health
-+	 * status with whatever we find.
-+	 */
-+	unsigned int			sick_mask_update;
-+
- 	/* State tracking for single-AG operations. */
- 	struct xchk_ag			sa;
- };
+>  	__xfs_inode_free(ip);
+> @@ -449,6 +453,8 @@ xfs_iget_cache_hit(
+>  		ip->i_flags |= XFS_INEW;
+>  		xfs_inode_clear_reclaim_tag(pag, ip->i_ino);
+>  		inode->i_state = I_NEW;
+> +		ip->i_sick = 0;
+> +		ip->i_checked = 0;
+>  
+>  		ASSERT(!rwsem_is_locked(&inode->i_rwsem));
+>  		init_rwsem(&inode->i_rwsem);
+> @@ -1177,6 +1183,8 @@ xfs_reclaim_inode(
+>  	spin_lock(&ip->i_flags_lock);
+>  	ip->i_flags = XFS_IRECLAIM;
+>  	ip->i_ino = 0;
+> +	ip->i_sick = 0;
+> +	ip->i_checked = 0;
+>  	spin_unlock(&ip->i_flags_lock);
+>  
+>  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 88239c2dd824..494e47ef42cb 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -45,6 +45,14 @@ typedef struct xfs_inode {
+>  	mrlock_t		i_lock;		/* inode lock */
+>  	mrlock_t		i_mmaplock;	/* inode mmap IO lock */
+>  	atomic_t		i_pincount;	/* inode pin count */
+> +
+> +	/*
+> +	 * Bitsets of inode metadata that have been checked and/or are sick.
+> +	 * Callers must hold i_flags_lock before accessing this field.
+> +	 */
+> +	uint16_t		i_checked;
+> +	uint16_t		i_sick;
+> +
+>  	spinlock_t		i_flags_lock;	/* inode i_flags lock */
+>  	/* Miscellaneous state. */
+>  	unsigned long		i_flags;	/* see defined flags below */
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index fd63b0b1307c..6581381c12be 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -231,6 +231,7 @@ xfs_initialize_perag(
+>  		error = xfs_iunlink_init(pag);
+>  		if (error)
+>  			goto out_hash_destroy;
+> +		spin_lock_init(&pag->pag_state_lock);
+>  	}
+>  
+>  	index = xfs_set_inode_alloc(mp, agcount);
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 110f927cf943..cf7facc36a5f 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -60,6 +60,20 @@ struct xfs_error_cfg {
+>  typedef struct xfs_mount {
+>  	struct super_block	*m_super;
+>  	xfs_tid_t		m_tid;		/* next unused tid for fs */
+> +
+> +	/*
+> +	 * Bitsets of per-fs metadata that have been checked and/or are sick.
+> +	 * Callers must hold m_sb_lock to access these two fields.
+> +	 */
+> +	uint8_t			m_fs_checked;
+> +	uint8_t			m_fs_sick;
+> +	/*
+> +	 * Bitsets of rt metadata that have been checked and/or are sick.
+> +	 * Callers must hold m_sb_lock to access this field.
+> +	 */
+> +	uint8_t			m_rt_checked;
+> +	uint8_t			m_rt_sick;
+> +
+>  	struct xfs_ail		*m_ail;		/* fs active log item list */
+>  
+>  	struct xfs_sb		m_sb;		/* copy of fs superblock */
+> @@ -369,6 +383,15 @@ typedef struct xfs_perag {
+>  	xfs_agino_t	pagl_pagino;
+>  	xfs_agino_t	pagl_leftrec;
+>  	xfs_agino_t	pagl_rightrec;
+> +
+> +	/*
+> +	 * Bitsets of per-ag metadata that have been checked and/or are sick.
+> +	 * Callers should hold pag_state_lock before accessing this field.
+> +	 */
+> +	uint16_t	pag_checked;
+> +	uint16_t	pag_sick;
+> +	spinlock_t	pag_state_lock;
+> +
+>  	spinlock_t	pagb_lock;	/* lock for pagb_tree */
+>  	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
+>  	unsigned int	pagb_gen;	/* generation count for pagb_tree */
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 47fb07d86efd..f079841c7af6 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3440,6 +3440,79 @@ DEFINE_AGINODE_EVENT(xfs_iunlink);
+>  DEFINE_AGINODE_EVENT(xfs_iunlink_remove);
+>  DEFINE_AG_EVENT(xfs_iunlink_map_prev_fallback);
+>  
+> +DECLARE_EVENT_CLASS(xfs_fs_corrupt_class,
+> +	TP_PROTO(struct xfs_mount *mp, unsigned int flags),
+> +	TP_ARGS(mp, flags),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(unsigned int, flags)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = mp->m_super->s_dev;
+> +		__entry->flags = flags;
+> +	),
+> +	TP_printk("dev %d:%d flags 0x%x",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->flags)
+> +);
+> +#define DEFINE_FS_CORRUPT_EVENT(name)	\
+> +DEFINE_EVENT(xfs_fs_corrupt_class, name,	\
+> +	TP_PROTO(struct xfs_mount *mp, unsigned int flags), \
+> +	TP_ARGS(mp, flags))
+> +DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_sick);
+> +DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_healthy);
+> +DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_sick);
+> +DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_healthy);
+> +
+> +DECLARE_EVENT_CLASS(xfs_ag_corrupt_class,
+> +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, unsigned int flags),
+> +	TP_ARGS(mp, agno, flags),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(xfs_agnumber_t, agno)
+> +		__field(unsigned int, flags)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = mp->m_super->s_dev;
+> +		__entry->agno = agno;
+> +		__entry->flags = flags;
+> +	),
+> +	TP_printk("dev %d:%d agno %u flags 0x%x",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->agno, __entry->flags)
+> +);
+> +#define DEFINE_AG_CORRUPT_EVENT(name)	\
+> +DEFINE_EVENT(xfs_ag_corrupt_class, name,	\
+> +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
+> +		 unsigned int flags), \
+> +	TP_ARGS(mp, agno, flags))
+> +DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_sick);
+> +DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_healthy);
+> +
+> +DECLARE_EVENT_CLASS(xfs_inode_corrupt_class,
+> +	TP_PROTO(struct xfs_inode *ip, unsigned int flags),
+> +	TP_ARGS(ip, flags),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(xfs_ino_t, ino)
+> +		__field(unsigned int, flags)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = ip->i_mount->m_super->s_dev;
+> +		__entry->ino = ip->i_ino;
+> +		__entry->flags = flags;
+> +	),
+> +	TP_printk("dev %d:%d ino 0x%llx flags 0x%x",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->ino, __entry->flags)
+> +);
+> +#define DEFINE_INODE_CORRUPT_EVENT(name)	\
+> +DEFINE_EVENT(xfs_inode_corrupt_class, name,	\
+> +	TP_PROTO(struct xfs_inode *ip, unsigned int flags), \
+> +	TP_ARGS(ip, flags))
+> +DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_sick);
+> +DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_healthy);
+> +
+>  #endif /* _TRACE_XFS_H */
+>  
+>  #undef TRACE_INCLUDE_PATH
+> 
