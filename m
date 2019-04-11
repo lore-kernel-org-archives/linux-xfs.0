@@ -1,59 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38886 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726530AbfDIJUq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Apr 2019 05:20:46 -0400
-Date: Tue, 9 Apr 2019 11:20:42 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [RFC 0/2] guarantee natural alignment for kmalloc()
-Message-ID: <20190409092042.GB10383@dhcp22.suse.cz>
-References: <20190319211108.15495-1-vbabka@suse.cz>
- <01000169988d4e34-b4178f68-c390-472b-b62f-a57a4f459a76-000000@email.amazonses.com>
- <5d7fee9c-1a80-6ac9-ac1d-b1ce05ed27a8@suse.cz>
- <010001699c5563f8-36c6909f-ed43-4839-82da-b5f9f21594b8-000000@email.amazonses.com>
- <4d2a55dc-b29f-1309-0a8e-83b057e186e6@suse.cz>
- <01000169a68852ed-d621a35c-af0c-4759-a8a3-e97e7dfc17a5-000000@email.amazonses.com>
- <2b129aec-f9a5-7ab8-ca4a-0a325621d111@suse.cz>
- <20190407080020.GA9949@lst.de>
- <af1e0b95-f654-4fa9-d400-af01043907ab@suse.cz>
+Received: from userp2130.oracle.com ([156.151.31.86]:33746 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726686AbfDKBs3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:48:29 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1hgwN044988
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:48:28 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2rpkht670g-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:48:28 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1k25v151900
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:28 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2rpkek76gp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:27 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x3B1kRJ4018046
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:27 GMT
+Subject: [PATCH 1/4] xfs: refactor scrub context initialization
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 10 Apr 2019 18:46:25 -0700
+Message-ID: <155494718537.1090718.3285783717973479090.stgit@magnolia>
+In-Reply-To: <155494717912.1090718.9199703658765720229.stgit@magnolia>
+References: <155494717912.1090718.9199703658765720229.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <af1e0b95-f654-4fa9-d400-af01043907ab@suse.cz>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Christopher Lameter <cl@linux.com>, linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, lsf-pc@lists.linux-foundation.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue 09-04-19 10:07:42, Vlastimil Babka wrote:
-> On 4/7/19 10:00 AM, Christoph Hellwig wrote:
-> > On Fri, Apr 05, 2019 at 07:11:17PM +0200, Vlastimil Babka wrote:
-> >> On 3/22/19 6:52 PM, Christopher Lameter wrote:
-> >> > On Thu, 21 Mar 2019, Vlastimil Babka wrote:
-> >> > 
-> >> >> That however doesn't work well for the xfs/IO case where block sizes are
-> >> >> not known in advance:
-> >> >>
-> >> >> https://lore.kernel.org/linux-fsdevel/20190225040904.5557-1-ming.lei@redhat.com/T/#ec3a292c358d05a6b29cc4a9ce3ae6b2faf31a23f
-> >> > 
-> >> > I thought we agreed to use custom slab caches for that?
-> >> 
-> >> Hm maybe I missed something but my impression was that xfs/IO folks would have
-> >> to create lots of them for various sizes not known in advance, and that it
-> >> wasn't practical and would welcome if kmalloc just guaranteed the alignment.
-> >> But so far they haven't chimed in here in this thread, so I guess I'm wrong.
-> > 
-> > Yes, in XFS we might have quite a few.  Never mind all the other
-> > block level consumers that might have similar reasonable expectations
-> > but haven't triggered the problematic drivers yet.
-> 
-> What about a LSF session/BoF to sort this out, then? Would need to have people
-> from all three MM+FS+IO groups, I suppose.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Sounds like a good plan. Care to send an email to lsf-pc mailing list so
-that it doesn't fall through cracks please?
+It's a little silly how the memset in scrub context initialization
+forces us to declare stack variables to preserve context variables
+across a retry.  Since the teardown functions already null out most of
+the ephemeral state (buffer pointers, btree cursors, etc.), just skip
+the memset and move the initialization as needed.
 
--- 
-Michal Hocko
-SUSE Labs
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/scrub.c |   31 ++++++++++++++++++-------------
+ 1 file changed, 18 insertions(+), 13 deletions(-)
+
+
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 1b2344d00525..08df00911dd3 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -186,8 +186,10 @@ xchk_teardown(
+ 			xfs_irele(sc->ip);
+ 		sc->ip = NULL;
+ 	}
+-	if (sc->has_quotaofflock)
++	if (sc->has_quotaofflock) {
+ 		mutex_unlock(&sc->mp->m_quotainfo->qi_quotaofflock);
++		sc->has_quotaofflock = false;
++	}
+ 	if (sc->buf) {
+ 		kmem_free(sc->buf);
+ 		sc->buf = NULL;
+@@ -466,9 +468,14 @@ xfs_scrub_metadata(
+ 	struct xfs_inode		*ip,
+ 	struct xfs_scrub_metadata	*sm)
+ {
+-	struct xfs_scrub		sc;
++	struct xfs_scrub		sc = {
++		.mp			= ip->i_mount,
++		.sm			= sm,
++		.sa			= {
++			.agno		= NULLAGNUMBER,
++		},
++	};
+ 	struct xfs_mount		*mp = ip->i_mount;
+-	bool				try_harder = false;
+ 	bool				already_fixed = false;
+ 	int				error = 0;
+ 
+@@ -491,21 +498,16 @@ xfs_scrub_metadata(
+ 
+ 	xchk_experimental_warning(mp);
+ 
++	sc.ops = &meta_scrub_ops[sm->sm_type];
+ retry_op:
+ 	/* Set up for the operation. */
+-	memset(&sc, 0, sizeof(sc));
+-	sc.mp = ip->i_mount;
+-	sc.sm = sm;
+-	sc.ops = &meta_scrub_ops[sm->sm_type];
+-	sc.try_harder = try_harder;
+-	sc.sa.agno = NULLAGNUMBER;
+ 	error = sc.ops->setup(&sc, ip);
+ 	if (error)
+ 		goto out_teardown;
+ 
+ 	/* Scrub for errors. */
+ 	error = sc.ops->scrub(&sc);
+-	if (!try_harder && error == -EDEADLOCK) {
++	if (!sc.try_harder && error == -EDEADLOCK) {
+ 		/*
+ 		 * Scrubbers return -EDEADLOCK to mean 'try harder'.
+ 		 * Tear down everything we hold, then set up again with
+@@ -514,7 +516,7 @@ xfs_scrub_metadata(
+ 		error = xchk_teardown(&sc, ip, 0);
+ 		if (error)
+ 			goto out;
+-		try_harder = true;
++		sc.try_harder = true;
+ 		goto retry_op;
+ 	} else if (error)
+ 		goto out_teardown;
+@@ -544,8 +546,11 @@ xfs_scrub_metadata(
+ 		 */
+ 		error = xrep_attempt(ip, &sc, &already_fixed);
+ 		if (error == -EAGAIN) {
+-			if (sc.try_harder)
+-				try_harder = true;
++			/*
++			 * Either the repair function succeeded or it couldn't
++			 * get all the resources it needs; either way, we go
++			 * back to the beginning and call the scrub function.
++			 */
+ 			error = xchk_teardown(&sc, ip, 0);
+ 			if (error) {
+ 				xrep_failure(mp);
