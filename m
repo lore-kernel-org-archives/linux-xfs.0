@@ -1,50 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57448 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729450AbfDJIie (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Apr 2019 04:38:34 -0400
-Date: Wed, 10 Apr 2019 04:38:33 -0400 (EDT)
-From: Pankaj Gupta <pagupta@redhat.com>
-Message-ID: <1336073020.20708683.1554885513376.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20190410082804.GG1426@quack2.suse.cz>
-References: <20190410040826.24371-1-pagupta@redhat.com> <20190410040826.24371-4-pagupta@redhat.com> <20190410082804.GG1426@quack2.suse.cz>
-Subject: Re: [PATCH v5 3/6] libnvdimm: add dax_dev sync flag
+Received: from userp2130.oracle.com ([156.151.31.86]:39884 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726073AbfDKPdn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Apr 2019 11:33:43 -0400
+Date: Thu, 11 Apr 2019 08:33:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 7/8] xfs: report AG health via AG geometry ioctl
+Message-ID: <20190411153330.GF1019523@magnolia>
+References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
+ <155494717070.1090518.15401214807663806671.stgit@magnolia>
+ <20190411130957.GG2888@bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190411130957.GG2888@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dan j williams <dan.j.williams@intel.com>, zwisler@kernel.org, vishal l verma <vishal.l.verma@intel.com>, dave jiang <dave.jiang@intel.com>, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, tytso@mit.edu, adilger kernel <adilger.kernel@dilger.ca>, darrick wong <darrick.wong@oracle.com>, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, pbonzini@redhat.com, kilobyte@angband.pl, yuval shaia <yuval.shaia@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-
-> 
-> On Wed 10-04-19 09:38:23, Pankaj Gupta wrote:
-> > @@ -64,6 +65,10 @@ static inline bool dax_write_cache_enabled(struct
-> > dax_device *dax_dev)
-> >  {
-> >  	return false;
-> >  }
-> > +static inline bool dax_synchronous(struct dax_device *dax_dev)
+On Thu, Apr 11, 2019 at 09:09:57AM -0400, Brian Foster wrote:
+> On Wed, Apr 10, 2019 at 06:46:10PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Use the AG geometry info ioctl to report health status too.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_fs.h     |   14 +++++++++++++-
+> >  fs/xfs/libxfs/xfs_health.h |    2 ++
+> >  fs/xfs/xfs_health.c        |   43 +++++++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_ioctl.c         |    2 ++
+> >  4 files changed, 60 insertions(+), 1 deletion(-)
+> > 
+> > 
+> ...
+> > diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+> > index eb8dbc3a952a..0315b95a8d84 100644
+> > --- a/fs/xfs/xfs_health.c
+> > +++ b/fs/xfs/xfs_health.c
+> > @@ -321,3 +321,46 @@ xfs_fsop_geom_health(
+> ...
+> > +/* Fill out ag geometry health info. */
+> > +void
+> > +xfs_ag_geom_health(
+> > +	struct xfs_mount	*mp,
+> > +	xfs_agnumber_t		agno,
+> > +	struct xfs_ag_geometry	*ageo)
 > > +{
-> > +	return true;
+> > +	struct xfs_perag	*pag;
+> > +	const struct ioctl_sick_map *m;
+> > +	unsigned int		sick;
+> > +	unsigned int		checked;
+> > +
+> > +	ASSERT(agno < mp->m_sb.sb_agcount);
+> > +
+> > +	ageo->ag_sick = 0;
+> > +	ageo->ag_checked = 0;
+> > +
+> > +	pag = xfs_perag_get(mp, agno);
+> > +	xfs_ag_measure_sickness(pag, &sick, &checked);
+> > +	for (m = ag_map; m->sick_mask; m++) {
+> > +		if (checked & m->sick_mask)
+> > +			ageo->ag_checked |= m->ioctl_mask;
+> > +		if (sick & m->sick_mask)
+> > +			ageo->ag_sick |= m->ioctl_mask;
+> > +	}
+> 
+> FWIW this is pretty much what I was asking for in the mapping helper in
+> the previous patch. I didn't realize this was going to be reused for
+> another ioctl/struct, however, so disregard my previous comment about
+> renaming ->ioctl_mask. ;)
+> 
+> > +
+> > +	xfs_perag_put(pag);
 > > +}
+> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > index 3e3ee197bd0f..c47f4201452c 100644
+> > --- a/fs/xfs/xfs_ioctl.c
+> > +++ b/fs/xfs/xfs_ioctl.c
+> > @@ -822,6 +822,8 @@ xfs_ioc_ag_geometry(
+> >  	if (error)
+> >  		return error;
+> >  
+> > +	xfs_ag_geom_health(mp, ageo.ag_number, &ageo);
+> > +
 > 
-> Is there a need to define dax_synchronous() for !CONFIG_DAX? Because that
-> property of dax device is pretty much undefined and I don't see anything
-> needing to call it for !CONFIG_DAX...
+> Any reason not to push this down into the get_geom() helper since it's
+> part of the initial version of the ag geometry structure and we already
+> have the xfs_perag there?
 
-You are right. Will remove this.
+No particularly strong reason not to.  Will fix.
 
-Thanks for the review.
+Thanks for reviewing all this stuff!
 
-Best regards,
-Pankaj
+--D
 
+> Brian
 > 
-> 								Honza
-> --
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
-> 
+> >  	if (copy_to_user(arg, &ageo, sizeof(ageo)))
+> >  		return -EFAULT;
+> >  	return 0;
+> > 
