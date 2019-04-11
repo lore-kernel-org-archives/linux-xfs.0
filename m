@@ -1,154 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58484 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725981AbfDKBqm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:46:42 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1htQN051923
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:41 GMT
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2rpmrqe2un-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:41 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1jgUY189649
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:40 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2rpj5bg2m6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:40 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3B1kdRv013578
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:39 GMT
-Subject: [PATCH 3/4] xfs: hoist the already_fixed variable to the scrub
- context
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 10 Apr 2019 18:46:37 -0700
-Message-ID: <155494719789.1090718.977007417482721779.stgit@magnolia>
-In-Reply-To: <155494717912.1090718.9199703658765720229.stgit@magnolia>
-References: <155494717912.1090718.9199703658765720229.stgit@magnolia>
+Received: from mail-eopbgr820071.outbound.protection.outlook.com ([40.107.82.71]:54736
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725782AbfDKCFM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Apr 2019 22:05:12 -0400
+From: Wang Shilong <wshilong@ddn.com>
+Subject: =?gb2312?B?u9i4tDogW1BBVENIXSB4ZnMsZnN0cmltOiBmaXggdG8gcmV0dXJuIGNvcnJl?=
+ =?gb2312?Q?ct_minlen?=
+Date: Thu, 11 Apr 2019 02:05:08 +0000
+Message-ID: <BYAPR19MB27582F4FC44A885242364A78D42F0@BYAPR19MB2758.namprd19.prod.outlook.com>
+References: <1554885748-7071-1-git-send-email-wshilong1991@gmail.com>,<20190411015446.GC1019523@magnolia>
+In-Reply-To: <20190411015446.GC1019523@magnolia>
+Content-Language: zh-CN
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Wang Shilong <wangshilong1991@gmail.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Now that we no longer memset the scrub context, we can move the
-already_fixed variable into the scrub context's state flags instead of
-passing around pointers to separate stack variables.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/repair.c |    5 ++---
- fs/xfs/scrub/repair.h |    5 ++---
- fs/xfs/scrub/scrub.c  |    6 +++---
- fs/xfs/scrub/scrub.h  |    5 +++--
- 4 files changed, 10 insertions(+), 11 deletions(-)
-
-
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index c093939fe35a..5e7e36cdf3d5 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -46,8 +46,7 @@
- int
- xrep_attempt(
- 	struct xfs_inode	*ip,
--	struct xfs_scrub	*sc,
--	bool			*fixed)
-+	struct xfs_scrub	*sc)
- {
- 	int			error = 0;
- 
-@@ -66,7 +65,7 @@ xrep_attempt(
- 		 * scrub so that we can tell userspace if we fixed the problem.
- 		 */
- 		sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
--		*fixed = true;
-+		sc->flags |= XREP_ALREADY_FIXED;
- 		return -EAGAIN;
- 	case -EDEADLOCK:
- 	case -EAGAIN:
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index d990314eb08b..60c61d7052a8 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -15,7 +15,7 @@ static inline int xrep_notsupported(struct xfs_scrub *sc)
- 
- /* Repair helpers */
- 
--int xrep_attempt(struct xfs_inode *ip, struct xfs_scrub *sc, bool *fixed);
-+int xrep_attempt(struct xfs_inode *ip, struct xfs_scrub *sc);
- void xrep_failure(struct xfs_mount *mp);
- int xrep_roll_ag_trans(struct xfs_scrub *sc);
- bool xrep_ag_has_space(struct xfs_perag *pag, xfs_extlen_t nr_blocks,
-@@ -64,8 +64,7 @@ int xrep_agi(struct xfs_scrub *sc);
- 
- static inline int xrep_attempt(
- 	struct xfs_inode	*ip,
--	struct xfs_scrub	*sc,
--	bool			*fixed)
-+	struct xfs_scrub	*sc)
- {
- 	return -EOPNOTSUPP;
- }
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 6e18a1178e26..02d278b7d20b 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -476,7 +476,6 @@ xfs_scrub_metadata(
- 		},
- 	};
- 	struct xfs_mount		*mp = ip->i_mount;
--	bool				already_fixed = false;
- 	int				error = 0;
- 
- 	BUILD_BUG_ON(sizeof(meta_scrub_ops) !=
-@@ -521,7 +520,8 @@ xfs_scrub_metadata(
- 	} else if (error)
- 		goto out_teardown;
- 
--	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed) {
-+	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
-+	    !(sc.flags & XREP_ALREADY_FIXED)) {
- 		bool needs_fix;
- 
- 		/* Let debug users force us into the repair routines. */
-@@ -544,7 +544,7 @@ xfs_scrub_metadata(
- 		 * If it's broken, userspace wants us to fix it, and we haven't
- 		 * already tried to fix it, then attempt a repair.
- 		 */
--		error = xrep_attempt(ip, &sc, &already_fixed);
-+		error = xrep_attempt(ip, &sc);
- 		if (error == -EAGAIN) {
- 			/*
- 			 * Either the repair function succeeded or it couldn't
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 60359e7de930..1b23bf141438 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -63,16 +63,17 @@ struct xfs_scrub {
- 	void				*buf;
- 	uint				ilock_flags;
- 
--	/* See the XCHK state flags below. */
-+	/* See the XCHK/XREP state flags below. */
- 	unsigned int			flags;
- 
- 	/* State tracking for single-AG operations. */
- 	struct xchk_ag			sa;
- };
- 
--/* XCHK state flags */
-+/* XCHK/XREP state flags */
- #define XCHK_TRY_HARDER		(1 << 0)  /* can't get resources, try again */
- #define XCHK_HAS_QUOTAOFFLOCK	(1 << 1)  /* we hold the quotaoff lock */
-+#define XREP_ALREADY_FIXED	(1 << 31) /* checking our repair work */
- 
- /* Metadata scrubbers */
- int xchk_tester(struct xfs_scrub *sc);
+SGkgRGFycmljaywKCgpPbiBXZWQsIEFwciAxMCwgMjAxOSBhdCAwNTo0MjoyOFBNICswOTAwLCBX
+YW5nIFNoaWxvbmcgd3JvdGU6Cj4gRnJvbTogV2FuZyBTaGlsb25nIDx3c2hpbG9uZ0BkZG4uY29t
+Pgo+Cj4gVGhpcyBwYXRjaCB0cmllcyB0byBhZGRyZXNzIHR3byBwcm9ibGVtczoKPgo+IDEpIHJl
+dHVybiBAbWlubGVuIHdlIHVzZWQgdG8gdHJpbSB0bwo+IHVzZXIgc3BhY2UuCj4KPiAyKSByZXR1
+cm4gRUlOVkFMIGlmIGdyYW51bGFyaXR5IGlzIGxhcmdlciB0aGFuCj4gYXZnIHNpemUsIGV2ZW4g
+bW9zdCBvZiBjYXNlcywgZ3JhbnVsYXJpdHkgaXMgc21hbGwoNEspLAo+IGJ1dCBpZiBkZXZpY2Vz
+IHJldHVybiBhIGxhZ2VyIGdyYW51bGFyaXR5IGZvciBzb21lIHJlYW9ucwo+ICh0ZXN0aW5nLCBi
+dWdzIGV0YyksIGZzdHJpbSBzaG91bGQgcmV0dXJuIGZhaWx1cmUgZGlyZWN0bHkuCgpJdCByZWFs
+bHkgaXMgYSBwaXR5XldeV2Fubm95aW5nIHRoYXQgdGhlcmUncyBubyBtYW51YWwgcGFnZSBmb3Ig
+RklUUklNLApiZWNhdXNlIEkgaGF2ZSBubyBpZGVhIGlmIHRoaXMgaXMgdGhlIHJpZ2h0IG9yIGRl
+c2lyZWQgYmVoYXZpb3IgZm9yIHRoaXMKaW9jdGwuCgpEbyB0aGUgb3RoZXIgZmlsZXN5c3RlbXMg
+dXBkYXRlIEBtaW5sZW4gc28gdGhhdCB1c2Vyc3BhY2Uga25vd3MgdGhlCmdyYW51bGFyaXR5PwoK
+LS1ECgotLS0tLS0tLS0+CkFzIGZhciBhcyBJIGNoZWNrZWQgZXh0NCwgZjJmcywgQnRyZnMgZGlk
+IHNvLCBJIHRoaW5rIGl0IG1ha2VzIHNlbnNlIHdlCnJldHVybiB0aGlzIHZhbHVlIHRvIHVzZXJz
+cGFjZSwgd2UnZCBiZXR0ZXIgdG8gZG9jIGl0IHNvbWV3aGVyZSAnbWFuIGZzdHJpbSc/Cgp0aGFu
+a3MsClNoaWxvbmcK
