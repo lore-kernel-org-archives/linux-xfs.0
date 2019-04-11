@@ -1,213 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45706 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58814 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726106AbfDKNIN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Apr 2019 09:08:13 -0400
-Date: Thu, 11 Apr 2019 09:08:10 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 5/8] xfs: add a new ioctl to describe allocation group
- geometry
-Message-ID: <20190411130810.GE2888@bfoster>
-References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
- <155494715806.1090518.13259730969995378693.stgit@magnolia>
+        id S1726264AbfDKQXD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Apr 2019 12:23:03 -0400
+Date: Thu, 11 Apr 2019 12:23:00 -0400 (EDT)
+From: Pankaj Gupta <pagupta@redhat.com>
+Message-ID: <1150671088.21162726.1554999780030.JavaMail.zimbra@redhat.com>
+In-Reply-To: <CAPcyv4gOPtgmVyk+zayRBtkbSivEvBNn1tyKL2ycT_q_nTHUUA@mail.gmail.com>
+References: <20190410040826.24371-1-pagupta@redhat.com> <20190410040826.24371-2-pagupta@redhat.com> <CAPcyv4i1FjBzfcWtzeCvj-giHa9xaX0dMQ==q4LZC_L8VEqkHg@mail.gmail.com> <1463291806.21158433.1554998258746.JavaMail.zimbra@redhat.com> <CAPcyv4gOPtgmVyk+zayRBtkbSivEvBNn1tyKL2ycT_q_nTHUUA@mail.gmail.com>
+Subject: Re: [Qemu-devel] [PATCH v5 1/6] libnvdimm: nd_region flush callback
+ support
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <155494715806.1090518.13259730969995378693.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: cohuck@redhat.com, Jan Kara <jack@suse.cz>, KVM list <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, david <david@fromorbit.com>, Qemu Developers <qemu-devel@nongnu.org>, virtualization@lists.linux-foundation.org, Andreas Dilger <adilger.kernel@dilger.ca>, Ross Zwisler <zwisler@kernel.org>, Andrea Arcangeli <aarcange@redhat.com>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Vishal L Verma <vishal.l.verma@intel.com>, David Hildenbrand <david@redhat.com>, Matthew Wilcox <willy@infradead.org>, Christoph Hellwig <hch@infradead.org>, Linux ACPI <linux-acpi@vger.kernel.org>, jmoyer <jmoyer@redhat.com>, linux-ext4 <linux-ext4@vger.kernel.org>, Len Brown <lenb@kernel.org>, kilobyte@angband.pl, Rik van Riel <riel@surriel.com>, yuval shaia <yuval.shaia@oracle.com>, Stefan Hajnoczi <stefanha@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, lcapitulino@redhat.com, Kevin Wolf <kwolf@redhat.com>, Nitesh Narayan Lal <nilal@redhat.com>, Theodore Ts'o <tytso@mit.edu>, Xiao Guangrong <xiaoguangrong.eric@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Igor Mammedov <imammedo@redhat.com>
 
-On Wed, Apr 10, 2019 at 06:45:58PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Add a new ioctl to describe an allocation group's geometry.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > > > This patch adds functionality to perform flush from guest
+> > > > to host over VIRTIO. We are registering a callback based
+> > > > on 'nd_region' type. virtio_pmem driver requires this special
+> > > > flush function. For rest of the region types we are registering
+> > > > existing flush function. Report error returned by host fsync
+> > > > failure to userspace.
+> > > >
+> > > > This also handles asynchronous flush requests from the block layer
+> > > > by creating a child bio and chaining it with parent bio.
+> > > >
+> > > > Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> > > > ---bio_chain Dan williams
+> > > [..]
+> > > > diff --git a/drivers/nvdimm/region_devs.c
+> > > > b/drivers/nvdimm/region_devs.c
+> > > > index b4ef7d9ff22e..fb1041ab32a6 100644
+> > > > --- a/drivers/nvdimm/region_devs.c
+> > > > +++ b/drivers/nvdimm/region_devs.c
+> > > > @@ -295,7 +295,9 @@ static ssize_t deep_flush_store(struct device *dev,
+> > > > struct device_attribute *att
+> > > >                 return rc;
+> > > >         if (!flush)
+> > > >                 return -EINVAL;
+> > > > -       nvdimm_flush(nd_region);
+> > > > +       rc = nvdimm_flush(nd_region, NULL, false);
+> > > > +       if (rc)
+> > > > +               return rc;
+> > > >
+> > > >         return len;
+> > > >  }
+> > > > @@ -1085,6 +1087,11 @@ static struct nd_region *nd_region_create(struct
+> > > > nvdimm_bus *nvdimm_bus,
+> > > >         dev->of_node = ndr_desc->of_node;
+> > > >         nd_region->ndr_size = resource_size(ndr_desc->res);
+> > > >         nd_region->ndr_start = ndr_desc->res->start;
+> > > > +       if (ndr_desc->flush)
+> > > > +               nd_region->flush = ndr_desc->flush;
+> > > > +       else
+> > > > +               nd_region->flush = generic_nvdimm_flush;
+> > > > +
+> > > >         nd_device_register(dev);
+> > > >
+> > > >         return nd_region;
+> > > > @@ -1125,11 +1132,36 @@ struct nd_region
+> > > > *nvdimm_volatile_region_create(struct nvdimm_bus *nvdimm_bus,
+> > > >  }
+> > > >  EXPORT_SYMBOL_GPL(nvdimm_volatile_region_create);
+> > > >
+> > > > +int nvdimm_flush(struct nd_region *nd_region, struct bio *bio, bool
+> > > > async)
+> > > > +{
+> > >
+> > > I don't quite see the point of the 'async' argument. All the usages of
+> > > this routine are either
+> > >
+> > > nvdimm_flush(nd_region, bio, true)
+> > > ...or:
+> > > nvdimm_flush(nd_region, NULL, false)
+> >
+> > Agree.
+> >
+> > >
+> > > ...so why not gate async behavior on the presence of the 'bio' argument?
+> >
+> > Sure.
+> >
+> > >
+> > >
+> > > > +       int rc = 0;
+> > > > +
+> > > > +       /* Create child bio for asynchronous flush and chain with
+> > > > +        * parent bio. Otherwise directly call nd_region flush.
+> > > > +        */
+> > > > +       if (async && bio->bi_iter.bi_sector != -1) {
+> > > > +
+> > > > +               struct bio *child = bio_alloc(GFP_ATOMIC, 0);
+> > > > +
+> > > > +               if (!child)
+> > > > +                       return -ENOMEM;
+> > > > +               bio_copy_dev(child, bio);
+> > > > +               child->bi_opf = REQ_PREFLUSH;
+> > > > +               child->bi_iter.bi_sector = -1;
+> > > > +               bio_chain(child, bio);
+> > > > +               submit_bio(child);
+> > >
+> > > I understand how this works, but it's a bit too "magical" for my
+> > > taste. I would prefer that all flush implementations take an optional
+> > > 'bio' argument rather than rely on the make_request implementation to
+> > > stash the bio away on a driver specific list.
+> >
+> > I did this to make use of "bio_chain" for chaining child bio for async
+> > flush
+> > suggested [1]. Are you saying to remove this and just call "flush" based on
+> > bio argument? Or I implemented the 'bio_chain' request entirely wrong?
+> 
+> No, I think you implemented it correctly. I'm just asking for the
+> chaining to be performed internal to the ->flush() callback rather
+> than in the common nvdimm_flush() front-end.
 
->  fs/xfs/libxfs/xfs_ag.c |   52 ++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_ag.h |    2 ++
->  fs/xfs/libxfs/xfs_fs.h |   14 +++++++++++++
->  fs/xfs/xfs_ioctl.c     |   24 ++++++++++++++++++++++
->  fs/xfs/xfs_ioctl32.c   |    1 +
->  5 files changed, 93 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-> index 1ef8acf35e7d..1c0f2a6c10b4 100644
-> --- a/fs/xfs/libxfs/xfs_ag.c
-> +++ b/fs/xfs/libxfs/xfs_ag.c
-> @@ -19,6 +19,7 @@
->  #include "xfs_ialloc.h"
->  #include "xfs_rmap.h"
->  #include "xfs_ag.h"
-> +#include "xfs_ag_resv.h"
->  
->  static struct xfs_buf *
->  xfs_get_aghdr_buf(
-> @@ -461,3 +462,54 @@ xfs_ag_extend_space(
->  				len, &XFS_RMAP_OINFO_SKIP_UPDATE,
->  				XFS_AG_RESV_NONE);
->  }
-> +
-> +/* Retrieve AG geometry. */
-> +int
-> +xfs_ag_get_geometry(
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno,
-> +	struct xfs_ag_geometry	*ageo)
-> +{
-> +	struct xfs_buf		*agi_bp;
-> +	struct xfs_buf		*agf_bp;
-> +	struct xfs_agi		*agi;
-> +	struct xfs_agf		*agf;
-> +	struct xfs_perag	*pag;
-> +	unsigned int		freeblks;
-> +	int			error;
-> +
-> +	if (agno >= mp->m_sb.sb_agcount)
-> +		return -EINVAL;
-> +
-> +	/* Lock the AG headers. */
-> +	error = xfs_ialloc_read_agi(mp, NULL, agno, &agi_bp);
-> +	if (error)
-> +		return error;
-> +	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agf_bp);
-> +	if (error)
-> +		goto out_agi;
-> +	pag = xfs_perag_get(mp, agno);
-> +
-> +	/* Fill out form. */
-> +	memset(ageo, 0, sizeof(*ageo));
-> +	ageo->ag_number = agno;
-> +
-> +	agi = XFS_BUF_TO_AGI(agi_bp);
-> +	ageo->ag_icount = be32_to_cpu(agi->agi_count);
-> +	ageo->ag_ifree = be32_to_cpu(agi->agi_freecount);
-> +
-> +	agf = XFS_BUF_TO_AGF(agf_bp);
-> +	ageo->ag_length = be32_to_cpu(agf->agf_length);
-> +	freeblks = pag->pagf_freeblks +
-> +		   pag->pagf_flcount +
-> +		   pag->pagf_btreeblks -
-> +		   xfs_ag_resv_needed(pag, XFS_AG_RESV_NONE);
-> +	ageo->ag_freeblks = freeblks;
-> +
-> +	/* Release resources. */
-> +	xfs_perag_put(pag);
-> +	xfs_buf_relse(agf_bp);
-> +out_agi:
-> +	xfs_buf_relse(agi_bp);
-> +	return error;
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-> index 412702e23f61..5166322807e7 100644
-> --- a/fs/xfs/libxfs/xfs_ag.h
-> +++ b/fs/xfs/libxfs/xfs_ag.h
-> @@ -26,5 +26,7 @@ struct aghdr_init_data {
->  int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
->  int xfs_ag_extend_space(struct xfs_mount *mp, struct xfs_trans *tp,
->  			struct aghdr_init_data *id, xfs_extlen_t len);
-> +int xfs_ag_get_geometry(struct xfs_mount *mp, xfs_agnumber_t agno,
-> +			struct xfs_ag_geometry *ageo);
->  
->  #endif /* __LIBXFS_AG_H */
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index cb7d0b1453cd..ee33d628a240 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -267,6 +267,19 @@ typedef struct xfs_fsop_resblks {
->  #define XFS_MIN_DBLOCKS(s) ((xfs_rfsblock_t)((s)->sb_agcount - 1) *	\
->  			 (s)->sb_agblocks + XFS_MIN_AG_BLOCKS)
->  
-> +/*
-> + * Output for XFS_IOC_AG_GEOMETRY
-> + */
-> +struct xfs_ag_geometry {
-> +	uint32_t	ag_number;	/* i/o: AG number */
-> +	uint32_t	ag_length;	/* o: length in blocks */
-> +	uint32_t	ag_freeblks;	/* o: free space */
-> +	uint32_t	ag_icount;	/* o: inodes allocated */
-> +	uint32_t	ag_ifree;	/* o: inodes free */
-> +	uint32_t	ag_reserved32;	/* o: zero */
-> +	uint64_t	ag_reserved[13];/* o: zero */
-> +};
-> +
->  /*
->   * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
->   */
-> @@ -620,6 +633,7 @@ struct xfs_scrub_metadata {
->  #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
->  /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
->  #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
-> +#define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
->  
->  /*
->   * ioctl commands that replace IRIX syssgi()'s
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index d243660f1826..0aaf4f88524d 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -33,6 +33,7 @@
->  #include "xfs_fsmap.h"
->  #include "scrub/xfs_scrub.h"
->  #include "xfs_sb.h"
-> +#include "xfs_ag.h"
->  
->  #include <linux/capability.h>
->  #include <linux/cred.h>
-> @@ -804,6 +805,26 @@ xfs_ioc_fsgeometry(
->  	return 0;
->  }
->  
-> +STATIC int
-> +xfs_ioc_ag_geometry(
-> +	struct xfs_mount	*mp,
-> +	void			__user *arg)
-> +{
-> +	struct xfs_ag_geometry	ageo;
-> +	int			error;
-> +
-> +	if (copy_from_user(&ageo, arg, sizeof(ageo)))
-> +		return -EFAULT;
-> +
-> +	error = xfs_ag_get_geometry(mp, ageo.ag_number, &ageo);
-> +	if (error)
-> +		return error;
-> +
-> +	if (copy_to_user(arg, &ageo, sizeof(ageo)))
-> +		return -EFAULT;
-> +	return 0;
-> +}
-> +
->  /*
->   * Linux extended inode flags interface.
->   */
-> @@ -2009,6 +2030,9 @@ xfs_file_ioctl(
->  	case XFS_IOC_FSGEOMETRY:
->  		return xfs_ioc_fsgeometry(mp, arg, 5);
->  
-> +	case XFS_IOC_AG_GEOMETRY:
-> +		return xfs_ioc_ag_geometry(mp, arg);
-> +
->  	case XFS_IOC_GETVERSION:
->  		return put_user(inode->i_generation, (int __user *)arg);
->  
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index 55ace6308637..65997a6315e9 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -563,6 +563,7 @@ xfs_file_compat_ioctl(
->  	case XFS_IOC_DIOINFO:
->  	case XFS_IOC_FSGEOMETRY_V4:
->  	case XFS_IOC_FSGEOMETRY:
-> +	case XFS_IOC_AG_GEOMETRY:
->  	case XFS_IOC_FSGETXATTR:
->  	case XFS_IOC_FSSETXATTR:
->  	case XFS_IOC_FSGETXATTRA:
+Sure. Perfect!
+
+Thank you very much for all the suggestions. 
+
+Best regards,
+Pankaj
 > 
