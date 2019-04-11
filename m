@@ -1,31 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60614 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725981AbfDKBqV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:46:21 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1iLEL045439
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:20 GMT
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2rpkht66vx-1
+Received: from userp2120.oracle.com ([156.151.31.85]:59666 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726690AbfDKBsg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:48:36 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1hPXF051514
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:48:35 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2rpmrqe2x7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:20 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1k262189918
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:19 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2rpj5bg2h8-1
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:48:34 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1juFW151707
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:34 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2rpkek76h3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:19 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x3B1kIFe003865
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:18 GMT
-Subject: [PATCH 8/8] xfs: report inode health via bulkstat
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:34 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3B1kXnw013569
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:33 GMT
+Subject: [PATCH 2/4] xfs: collapse scrub bool state flags into a single
+ unsigned int
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 10 Apr 2019 18:46:17 -0700
-Message-ID: <155494717696.1090518.6312243852549172491.stgit@magnolia>
-In-Reply-To: <155494712442.1090518.2784809287026447547.stgit@magnolia>
-References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
+Date: Wed, 10 Apr 2019 18:46:31 -0700
+Message-ID: <155494719169.1090718.8828591491718849977.stgit@magnolia>
+In-Reply-To: <155494717912.1090718.9199703658765720229.stgit@magnolia>
+References: <155494717912.1090718.9199703658765720229.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -37,119 +38,139 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use space in the bulkstat ioctl structure to report any problems
-observed with the inode.
+Combine all the boolean state flags in struct xfs_scrub into a single
+unsigned int, because we're going to be adding more state flags soon.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h     |   14 +++++++++++++-
- fs/xfs/libxfs/xfs_health.h |    1 +
- fs/xfs/xfs_health.c        |   34 ++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_itable.c        |    2 ++
- 4 files changed, 50 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/ialloc.c |    4 ++--
+ fs/xfs/scrub/parent.c |    2 +-
+ fs/xfs/scrub/quota.c  |    2 +-
+ fs/xfs/scrub/repair.c |    4 ++--
+ fs/xfs/scrub/scrub.c  |    8 ++++----
+ fs/xfs/scrub/scrub.h  |    9 +++++++--
+ 6 files changed, 17 insertions(+), 12 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 35d60f8017cd..43a53b03247b 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -349,13 +349,25 @@ typedef struct xfs_bstat {
- #define	bs_projid	bs_projid_lo	/* (previously just bs_projid)	*/
- 	__u16		bs_forkoff;	/* inode fork offset in bytes	*/
- 	__u16		bs_projid_hi;	/* higher part of project id	*/
--	unsigned char	bs_pad[6];	/* pad space, unused		*/
-+	uint16_t	bs_sick;	/* sick inode metadata		*/
-+	uint16_t	bs_checked;	/* checked inode metadata	*/
-+	unsigned char	bs_pad[2];	/* pad space, unused		*/
- 	__u32		bs_cowextsize;	/* cow extent size		*/
- 	__u32		bs_dmevmask;	/* DMIG event mask		*/
- 	__u16		bs_dmstate;	/* DMIG state info		*/
- 	__u16		bs_aextents;	/* attribute number of extents	*/
- } xfs_bstat_t;
- 
-+/* bs_sick flags */
-+#define XFS_BS_SICK_INODE	(1 << 0)  /* inode core */
-+#define XFS_BS_SICK_BMBTD	(1 << 1)  /* data fork */
-+#define XFS_BS_SICK_BMBTA	(1 << 2)  /* attr fork */
-+#define XFS_BS_SICK_BMBTC	(1 << 3)  /* cow fork */
-+#define XFS_BS_SICK_DIR		(1 << 4)  /* directory */
-+#define XFS_BS_SICK_XATTR	(1 << 5)  /* extended attributes */
-+#define XFS_BS_SICK_SYMLINK	(1 << 6)  /* symbolic link remote target */
-+#define XFS_BS_SICK_PARENT	(1 << 7)  /* parent pointers */
-+
- /*
-  * Project quota id helpers (previously projid was 16bit only
-  * and using two 16bit values to hold new 32bit projid was choosen
-diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
-index adf9d41843a5..4979bf1f9bcb 100644
---- a/fs/xfs/libxfs/xfs_health.h
-+++ b/fs/xfs/libxfs/xfs_health.h
-@@ -178,5 +178,6 @@ xfs_inode_is_healthy(struct xfs_inode *ip)
- void xfs_fsop_geom_health(struct xfs_mount *mp, struct xfs_fsop_geom *geo);
- void xfs_ag_geom_health(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		struct xfs_ag_geometry *ageo);
-+void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bstat *bs);
- 
- #endif	/* __XFS_HEALTH_H__ */
-diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-index 0315b95a8d84..c40b8d9ef6bd 100644
---- a/fs/xfs/xfs_health.c
-+++ b/fs/xfs/xfs_health.c
-@@ -364,3 +364,37 @@ xfs_ag_geom_health(
- 
- 	xfs_perag_put(pag);
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 700114f79a7d..693eb51f5efb 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -39,7 +39,7 @@ xchk_setup_ag_iallocbt(
+ 	struct xfs_scrub	*sc,
+ 	struct xfs_inode	*ip)
+ {
+-	return xchk_setup_ag_btree(sc, ip, sc->try_harder);
++	return xchk_setup_ag_btree(sc, ip, sc->flags & XCHK_TRY_HARDER);
  }
-+
-+static const struct ioctl_sick_map ino_map[] = {
-+	{ XFS_SICK_INO_CORE,	XFS_BS_SICK_INODE },
-+	{ XFS_SICK_INO_BMBTD,	XFS_BS_SICK_BMBTD },
-+	{ XFS_SICK_INO_BMBTA,	XFS_BS_SICK_BMBTA },
-+	{ XFS_SICK_INO_BMBTC,	XFS_BS_SICK_BMBTC },
-+	{ XFS_SICK_INO_DIR,	XFS_BS_SICK_DIR },
-+	{ XFS_SICK_INO_XATTR,	XFS_BS_SICK_XATTR },
-+	{ XFS_SICK_INO_SYMLINK,	XFS_BS_SICK_SYMLINK },
-+	{ XFS_SICK_INO_PARENT,	XFS_BS_SICK_PARENT },
-+	{ 0, 0 },
-+};
-+
-+/* Fill out bulkstat health info. */
-+void
-+xfs_bulkstat_health(
-+	struct xfs_inode	*ip,
-+	struct xfs_bstat	*bs)
-+{
-+	const struct ioctl_sick_map *m;
-+	unsigned int		sick;
-+	unsigned int		checked;
-+
-+	bs->bs_sick = 0;
-+	bs->bs_checked = 0;
-+
-+	xfs_inode_measure_sickness(ip, &sick, &checked);
-+	for (m = ino_map; m->sick_mask; m++) {
-+		if (checked & m->sick_mask)
-+			bs->bs_checked |= m->ioctl_mask;
-+		if (sick & m->sick_mask)
-+			bs->bs_sick |= m->ioctl_mask;
-+	}
-+}
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 942e4aa5e729..1e1a0af1dd34 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -18,6 +18,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-+#include "xfs_health.h"
  
- /*
-  * Return stat information for one inode.
-@@ -84,6 +85,7 @@ xfs_bulkstat_one_int(
- 	buf->bs_extsize = dic->di_extsize << mp->m_sb.sb_blocklog;
- 	buf->bs_extents = dic->di_nextents;
- 	memset(buf->bs_pad, 0, sizeof(buf->bs_pad));
-+	xfs_bulkstat_health(ip, buf);
- 	buf->bs_dmevmask = dic->di_dmevmask;
- 	buf->bs_dmstate = dic->di_dmstate;
- 	buf->bs_aextents = dic->di_anextents;
+ /* Inode btree scrubber. */
+@@ -185,7 +185,7 @@ xchk_iallocbt_check_cluster_ifree(
+ 	if (error == -ENODATA) {
+ 		/* Not cached, just read the disk buffer */
+ 		freemask_ok = irec_free ^ !!(dip->di_mode);
+-		if (!bs->sc->try_harder && !freemask_ok)
++		if (!(bs->sc->flags & XCHK_TRY_HARDER) && !freemask_ok)
+ 			return -EDEADLOCK;
+ 	} else if (error < 0) {
+ 		/*
+diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
+index 1c9d7c7f64f5..d5d197f1b80f 100644
+--- a/fs/xfs/scrub/parent.c
++++ b/fs/xfs/scrub/parent.c
+@@ -320,7 +320,7 @@ xchk_parent(
+ 	 * If we failed to lock the parent inode even after a retry, just mark
+ 	 * this scrub incomplete and return.
+ 	 */
+-	if (sc->try_harder && error == -EDEADLOCK) {
++	if ((sc->flags & XCHK_TRY_HARDER) && error == -EDEADLOCK) {
+ 		error = 0;
+ 		xchk_set_incomplete(sc);
+ 	}
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index 782d582d3edd..5dfe2b5924db 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -60,7 +60,7 @@ xchk_setup_quota(
+ 	dqtype = xchk_quota_to_dqtype(sc);
+ 	if (dqtype == 0)
+ 		return -EINVAL;
+-	sc->has_quotaofflock = true;
++	sc->flags |= XCHK_HAS_QUOTAOFFLOCK;
+ 	mutex_lock(&sc->mp->m_quotainfo->qi_quotaofflock);
+ 	if (!xfs_this_quota_on(sc->mp, dqtype))
+ 		return -ENOENT;
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index f28f4bad317b..c093939fe35a 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -71,8 +71,8 @@ xrep_attempt(
+ 	case -EDEADLOCK:
+ 	case -EAGAIN:
+ 		/* Tell the caller to try again having grabbed all the locks. */
+-		if (!sc->try_harder) {
+-			sc->try_harder = true;
++		if (!(sc->flags & XCHK_TRY_HARDER)) {
++			sc->flags |= XCHK_TRY_HARDER;
+ 			return -EAGAIN;
+ 		}
+ 		/*
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 08df00911dd3..6e18a1178e26 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -186,9 +186,9 @@ xchk_teardown(
+ 			xfs_irele(sc->ip);
+ 		sc->ip = NULL;
+ 	}
+-	if (sc->has_quotaofflock) {
++	if (sc->flags & XCHK_HAS_QUOTAOFFLOCK) {
+ 		mutex_unlock(&sc->mp->m_quotainfo->qi_quotaofflock);
+-		sc->has_quotaofflock = false;
++		sc->flags &= ~XCHK_HAS_QUOTAOFFLOCK;
+ 	}
+ 	if (sc->buf) {
+ 		kmem_free(sc->buf);
+@@ -507,7 +507,7 @@ xfs_scrub_metadata(
+ 
+ 	/* Scrub for errors. */
+ 	error = sc.ops->scrub(&sc);
+-	if (!sc.try_harder && error == -EDEADLOCK) {
++	if (!(sc.flags & XCHK_TRY_HARDER) && error == -EDEADLOCK) {
+ 		/*
+ 		 * Scrubbers return -EDEADLOCK to mean 'try harder'.
+ 		 * Tear down everything we hold, then set up again with
+@@ -516,7 +516,7 @@ xfs_scrub_metadata(
+ 		error = xchk_teardown(&sc, ip, 0);
+ 		if (error)
+ 			goto out;
+-		sc.try_harder = true;
++		sc.flags |= XCHK_TRY_HARDER;
+ 		goto retry_op;
+ 	} else if (error)
+ 		goto out_teardown;
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 22f754fba8e5..60359e7de930 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -62,13 +62,18 @@ struct xfs_scrub {
+ 	struct xfs_inode		*ip;
+ 	void				*buf;
+ 	uint				ilock_flags;
+-	bool				try_harder;
+-	bool				has_quotaofflock;
++
++	/* See the XCHK state flags below. */
++	unsigned int			flags;
+ 
+ 	/* State tracking for single-AG operations. */
+ 	struct xchk_ag			sa;
+ };
+ 
++/* XCHK state flags */
++#define XCHK_TRY_HARDER		(1 << 0)  /* can't get resources, try again */
++#define XCHK_HAS_QUOTAOFFLOCK	(1 << 1)  /* we hold the quotaoff lock */
++
+ /* Metadata scrubbers */
+ int xchk_tester(struct xfs_scrub *sc);
+ int xchk_superblock(struct xfs_scrub *sc);
