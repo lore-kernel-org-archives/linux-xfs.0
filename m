@@ -1,31 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58128 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:58484 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725981AbfDKBqK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:46:10 -0400
+        with ESMTP id S1725981AbfDKBqm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:46:42 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1hxXl051933
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:08 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1htQN051923
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:41 GMT
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2rpmrqe2tn-1
+        by userp2120.oracle.com with ESMTP id 2rpmrqe2un-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:08 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:41 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1jcVp189496
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:07 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2rpj5bg2f2-1
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3B1jgUY189649
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:40 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2rpj5bg2m6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:07 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:40 +0000
 Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x3B1k69Z017947
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:06 GMT
-Subject: [PATCH 6/8] xfs: report fs and rt health via geometry structure
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3B1kdRv013578
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 01:46:39 GMT
+Subject: [PATCH 3/4] xfs: hoist the already_fixed variable to the scrub
+ context
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 10 Apr 2019 18:46:04 -0700
-Message-ID: <155494716446.1090518.6511378096384851735.stgit@magnolia>
-In-Reply-To: <155494712442.1090518.2784809287026447547.stgit@magnolia>
-References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
+Date: Wed, 10 Apr 2019 18:46:37 -0700
+Message-ID: <155494719789.1090718.977007417482721779.stgit@magnolia>
+In-Reply-To: <155494717912.1090718.9199703658765720229.stgit@magnolia>
+References: <155494717912.1090718.9199703658765720229.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -37,143 +38,117 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use our newly expanded geometry structure to report the overall fs and
-realtime health status.
+Now that we no longer memset the scrub context, we can move the
+already_fixed variable into the scrub context's state flags instead of
+passing around pointers to separate stack variables.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h     |   11 ++++++++
- fs/xfs/libxfs/xfs_health.h |    3 ++
- fs/xfs/xfs_health.c        |   57 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_ioctl.c         |    2 ++
- 4 files changed, 72 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/repair.c |    5 ++---
+ fs/xfs/scrub/repair.h |    5 ++---
+ fs/xfs/scrub/scrub.c  |    6 +++---
+ fs/xfs/scrub/scrub.h  |    5 +++--
+ 4 files changed, 10 insertions(+), 11 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index ee33d628a240..6b8956dbf49d 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -199,9 +199,18 @@ struct xfs_fsop_geom {
- 	__u32		rtsectsize;	/* realtime sector size, bytes	*/
- 	__u32		dirblocksize;	/* directory block size, bytes	*/
- 	__u32		logsunit;	/* log stripe unit, bytes	*/
--	__u64		reserved[18];	/* reserved space		*/
-+	uint32_t	sick;		/* o: unhealthy fs & rt metadata */
-+	uint32_t	checked;	/* o: checked fs & rt metadata	*/
-+	__u64		reserved[17];	/* reserved space		*/
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index c093939fe35a..5e7e36cdf3d5 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -46,8 +46,7 @@
+ int
+ xrep_attempt(
+ 	struct xfs_inode	*ip,
+-	struct xfs_scrub	*sc,
+-	bool			*fixed)
++	struct xfs_scrub	*sc)
+ {
+ 	int			error = 0;
+ 
+@@ -66,7 +65,7 @@ xrep_attempt(
+ 		 * scrub so that we can tell userspace if we fixed the problem.
+ 		 */
+ 		sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
+-		*fixed = true;
++		sc->flags |= XREP_ALREADY_FIXED;
+ 		return -EAGAIN;
+ 	case -EDEADLOCK:
+ 	case -EAGAIN:
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index d990314eb08b..60c61d7052a8 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -15,7 +15,7 @@ static inline int xrep_notsupported(struct xfs_scrub *sc)
+ 
+ /* Repair helpers */
+ 
+-int xrep_attempt(struct xfs_inode *ip, struct xfs_scrub *sc, bool *fixed);
++int xrep_attempt(struct xfs_inode *ip, struct xfs_scrub *sc);
+ void xrep_failure(struct xfs_mount *mp);
+ int xrep_roll_ag_trans(struct xfs_scrub *sc);
+ bool xrep_ag_has_space(struct xfs_perag *pag, xfs_extlen_t nr_blocks,
+@@ -64,8 +64,7 @@ int xrep_agi(struct xfs_scrub *sc);
+ 
+ static inline int xrep_attempt(
+ 	struct xfs_inode	*ip,
+-	struct xfs_scrub	*sc,
+-	bool			*fixed)
++	struct xfs_scrub	*sc)
+ {
+ 	return -EOPNOTSUPP;
+ }
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 6e18a1178e26..02d278b7d20b 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -476,7 +476,6 @@ xfs_scrub_metadata(
+ 		},
+ 	};
+ 	struct xfs_mount		*mp = ip->i_mount;
+-	bool				already_fixed = false;
+ 	int				error = 0;
+ 
+ 	BUILD_BUG_ON(sizeof(meta_scrub_ops) !=
+@@ -521,7 +520,8 @@ xfs_scrub_metadata(
+ 	} else if (error)
+ 		goto out_teardown;
+ 
+-	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed) {
++	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
++	    !(sc.flags & XREP_ALREADY_FIXED)) {
+ 		bool needs_fix;
+ 
+ 		/* Let debug users force us into the repair routines. */
+@@ -544,7 +544,7 @@ xfs_scrub_metadata(
+ 		 * If it's broken, userspace wants us to fix it, and we haven't
+ 		 * already tried to fix it, then attempt a repair.
+ 		 */
+-		error = xrep_attempt(ip, &sc, &already_fixed);
++		error = xrep_attempt(ip, &sc);
+ 		if (error == -EAGAIN) {
+ 			/*
+ 			 * Either the repair function succeeded or it couldn't
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 60359e7de930..1b23bf141438 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -63,16 +63,17 @@ struct xfs_scrub {
+ 	void				*buf;
+ 	uint				ilock_flags;
+ 
+-	/* See the XCHK state flags below. */
++	/* See the XCHK/XREP state flags below. */
+ 	unsigned int			flags;
+ 
+ 	/* State tracking for single-AG operations. */
+ 	struct xchk_ag			sa;
  };
  
-+#define XFS_FSOP_GEOM_SICK_COUNTERS	(1 << 0)  /* summary counters */
-+#define XFS_FSOP_GEOM_SICK_UQUOTA	(1 << 1)  /* user quota */
-+#define XFS_FSOP_GEOM_SICK_GQUOTA	(1 << 2)  /* group quota */
-+#define XFS_FSOP_GEOM_SICK_PQUOTA	(1 << 3)  /* project quota */
-+#define XFS_FSOP_GEOM_SICK_RT_BITMAP	(1 << 4)  /* realtime bitmap */
-+#define XFS_FSOP_GEOM_SICK_RT_SUMMARY	(1 << 5)  /* realtime summary */
-+
- /* Output for XFS_FS_COUNTS */
- typedef struct xfs_fsop_counts {
- 	__u64	freedata;	/* free data section blocks */
-diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
-index a434b47f2aa0..c72142ec7cbb 100644
---- a/fs/xfs/libxfs/xfs_health.h
-+++ b/fs/xfs/libxfs/xfs_health.h
-@@ -26,6 +26,7 @@
- struct xfs_mount;
- struct xfs_perag;
- struct xfs_inode;
-+struct xfs_fsop_geom;
+-/* XCHK state flags */
++/* XCHK/XREP state flags */
+ #define XCHK_TRY_HARDER		(1 << 0)  /* can't get resources, try again */
+ #define XCHK_HAS_QUOTAOFFLOCK	(1 << 1)  /* we hold the quotaoff lock */
++#define XREP_ALREADY_FIXED	(1 << 31) /* checking our repair work */
  
- /* Observable health issues for metadata spanning the entire filesystem. */
- #define XFS_SICK_FS_COUNTERS	(1 << 0)  /* summary counters */
-@@ -174,4 +175,6 @@ xfs_inode_is_healthy(struct xfs_inode *ip)
- 	return !xfs_inode_has_sickness(ip, -1U);
- }
- 
-+void xfs_fsop_geom_health(struct xfs_mount *mp, struct xfs_fsop_geom *geo);
-+
- #endif	/* __XFS_HEALTH_H__ */
-diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-index 21728228e08b..eb8dbc3a952a 100644
---- a/fs/xfs/xfs_health.c
-+++ b/fs/xfs/xfs_health.c
-@@ -264,3 +264,60 @@ xfs_inode_measure_sickness(
- 	*checked = ip->i_checked;
- 	spin_unlock(&ip->i_flags_lock);
- }
-+
-+struct ioctl_sick_map {
-+	unsigned int		sick_mask;
-+	unsigned int		ioctl_mask;
-+};
-+
-+static const struct ioctl_sick_map fs_map[] = {
-+	{ XFS_SICK_FS_COUNTERS,	XFS_FSOP_GEOM_SICK_COUNTERS},
-+	{ XFS_SICK_FS_UQUOTA,	XFS_FSOP_GEOM_SICK_UQUOTA },
-+	{ XFS_SICK_FS_GQUOTA,	XFS_FSOP_GEOM_SICK_GQUOTA },
-+	{ XFS_SICK_FS_PQUOTA,	XFS_FSOP_GEOM_SICK_PQUOTA },
-+	{ 0, 0 },
-+};
-+
-+static const struct ioctl_sick_map rt_map[] = {
-+	{ XFS_SICK_RT_BITMAP,	XFS_FSOP_GEOM_SICK_RT_BITMAP },
-+	{ XFS_SICK_RT_SUMMARY,	XFS_FSOP_GEOM_SICK_RT_SUMMARY },
-+	{ 0, 0 },
-+};
-+
-+static inline void
-+xfgeo_health_tick(
-+	struct xfs_fsop_geom	*geo,
-+	unsigned int		sick,
-+	unsigned int		checked,
-+	unsigned int		sick_mask,
-+	unsigned int		fsop_mask)
-+{
-+	if (checked & sick_mask)
-+		geo->checked |= fsop_mask;
-+	if (sick & sick_mask)
-+		geo->sick |= fsop_mask;
-+}
-+
-+/* Fill out fs geometry health info. */
-+void
-+xfs_fsop_geom_health(
-+	struct xfs_mount	*mp,
-+	struct xfs_fsop_geom	*geo)
-+{
-+	const struct ioctl_sick_map *m;
-+	unsigned int		sick;
-+	unsigned int		checked;
-+
-+	geo->sick = 0;
-+	geo->checked = 0;
-+
-+	xfs_fs_measure_sickness(mp, &sick, &checked);
-+	for (m = fs_map; m->sick_mask; m++)
-+		xfgeo_health_tick(geo, sick, checked, m->sick_mask,
-+				m->ioctl_mask);
-+
-+	xfs_rt_measure_sickness(mp, &sick, &checked);
-+	for (m = rt_map; m->sick_mask; m++)
-+		xfgeo_health_tick(geo, sick, checked, m->sick_mask,
-+				m->ioctl_mask);
-+}
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 0aaf4f88524d..3e3ee197bd0f 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -34,6 +34,7 @@
- #include "scrub/xfs_scrub.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
-+#include "xfs_health.h"
- 
- #include <linux/capability.h>
- #include <linux/cred.h>
-@@ -792,6 +793,7 @@ xfs_ioc_fsgeometry(
- 	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, struct_version);
- 	if (error)
- 		return error;
-+	xfs_fsop_geom_health(mp, &fsgeo);
- 
- 	if (struct_version <= 3)
- 		len = sizeof(struct xfs_fsop_geom_v1);
+ /* Metadata scrubbers */
+ int xchk_tester(struct xfs_scrub *sc);
