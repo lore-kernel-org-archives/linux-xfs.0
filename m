@@ -1,89 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56608 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726106AbfDKNJM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Apr 2019 09:09:12 -0400
-Date: Thu, 11 Apr 2019 09:09:10 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/8] xfs: report fs and rt health via geometry structure
-Message-ID: <20190411130910.GF2888@bfoster>
-References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
- <155494716446.1090518.6511378096384851735.stgit@magnolia>
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:52637 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726682AbfDKVp4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Apr 2019 17:45:56 -0400
+Date: Fri, 12 Apr 2019 07:45:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Deadlock waiting for log space
+Message-ID: <20190411214552.GD29573@dread.disaster.area>
+References: <20190411161500.43svvbxeqt6wbis2@macbook-pro-91.dhcp.thefacebook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155494716446.1090518.6511378096384851735.stgit@magnolia>
+In-Reply-To: <20190411161500.43svvbxeqt6wbis2@macbook-pro-91.dhcp.thefacebook.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Josef Bacik <josef@toxicpanda.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Apr 10, 2019 at 06:46:04PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Apr 11, 2019 at 12:15:01PM -0400, Josef Bacik wrote:
+> Hello,
 > 
-> Use our newly expanded geometry structure to report the overall fs and
-> realtime health status.
+> We're seeing a deadlock on xfs in a few kernels in production and are having a
+> hard time figuring out what's happening.  Here is a breakdown of the stack
+> traces on a box I could get to before it was rebooted, all the boxes we've found
+> have been similar
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_fs.h     |   11 ++++++++
->  fs/xfs/libxfs/xfs_health.h |    3 ++
->  fs/xfs/xfs_health.c        |   57 ++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_ioctl.c         |    2 ++
->  4 files changed, 72 insertions(+), 1 deletion(-)
+> 100 hits:
+> [<ffffffff813bd7ae>] xlog_grant_head_wait+0xbe/0x1e0
+> [<ffffffff813bd958>] xlog_grant_head_check+0x88/0xe0
+> [<ffffffff813bff89>] xfs_log_reserve+0xc9/0x1c0
+> [<ffffffff813ba3dd>] xfs_trans_reserve+0x17d/0x1f0
+> [<ffffffff813bb72e>] xfs_trans_alloc+0xbe/0x130
+.....
+
+Which means you've run out of log space, and it's waiting for
+metadata writeback to move the tail of the log and release grant
+space, at which point these waiters will wake up.
+
+If there is a deadlock, then it's caused by other threads getting
+blocked somewhere, not but these ones that are waiting on log space.
+
+
+> The only "fishy" thing is in our kernels (4.6, 4.11, and 4.16) xfs_vm_writepages
+> calls xfs_submit_ioend with the page locked, whereas upstream doesn't.  However
+> the change that introduced this is
 > 
-> 
-...
-> diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-> index 21728228e08b..eb8dbc3a952a 100644
-> --- a/fs/xfs/xfs_health.c
-> +++ b/fs/xfs/xfs_health.c
-> @@ -264,3 +264,60 @@ xfs_inode_measure_sickness(
->  	*checked = ip->i_checked;
->  	spin_unlock(&ip->i_flags_lock);
->  }
-...
-> +
-> +static inline void
-> +xfgeo_health_tick(
-> +	struct xfs_fsop_geom	*geo,
-> +	unsigned int		sick,
-> +	unsigned int		checked,
-> +	unsigned int		sick_mask,
-> +	unsigned int		fsop_mask)
-> +{
+> 8e1f065bea1b ("xfs: refactor the tail of xfs_writepage_map")
 
-Could we just pass the struct ioctl_sick_map to this helper? IMO, that
-makes the mapping logic a bit more explicit and also doesn't introduce
-an unnecessary field name change between ->ioctl_mask and fsop_mask.
-FWIW, I might also rename ->ioctl_mask to ->geom_mask since it's
-specific to that structure.
+Shouldn't matter. What you are looking for is fixes of this sort:
 
-> +	if (checked & sick_mask)
-> +		geo->checked |= fsop_mask;
-> +	if (sick & sick_mask)
-> +		geo->sick |= fsop_mask;
-> +}
-> +
-...
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 0aaf4f88524d..3e3ee197bd0f 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-...
-> @@ -792,6 +793,7 @@ xfs_ioc_fsgeometry(
->  	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, struct_version);
->  	if (error)
->  		return error;
-> +	xfs_fsop_geom_health(mp, &fsgeo);
->  
+4df0f7f145f2 xfs: fix transaction allocation deadlock in IO path
 
-Not really a problem, but it might make sense to not bother with this
-unless struct_version >= 5 (via the already existing check below).
+which went into 4.17. There's been a few transaction deadlock
+vectors fixed since 4.16 (e.g. in how we roll transactions and relog
+items that are joined to the them), so we really need to know about
+the context of all the other blocked threads rather than just the
+ones that are waiting on log space....
 
-Brian
+Cheers,
 
->  	if (struct_version <= 3)
->  		len = sizeof(struct xfs_fsop_geom_v1);
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
