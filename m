@@ -1,39 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-eopbgr820071.outbound.protection.outlook.com ([40.107.82.71]:54736
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725782AbfDKCFM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Apr 2019 22:05:12 -0400
-From: Wang Shilong <wshilong@ddn.com>
-Subject: =?gb2312?B?u9i4tDogW1BBVENIXSB4ZnMsZnN0cmltOiBmaXggdG8gcmV0dXJuIGNvcnJl?=
- =?gb2312?Q?ct_minlen?=
-Date: Thu, 11 Apr 2019 02:05:08 +0000
-Message-ID: <BYAPR19MB27582F4FC44A885242364A78D42F0@BYAPR19MB2758.namprd19.prod.outlook.com>
-References: <1554885748-7071-1-git-send-email-wshilong1991@gmail.com>,<20190411015446.GC1019523@magnolia>
-In-Reply-To: <20190411015446.GC1019523@magnolia>
-Content-Language: zh-CN
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Received: from mx1.redhat.com ([209.132.183.28]:56608 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726106AbfDKNJM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Apr 2019 09:09:12 -0400
+Date: Thu, 11 Apr 2019 09:09:10 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 6/8] xfs: report fs and rt health via geometry structure
+Message-ID: <20190411130910.GF2888@bfoster>
+References: <155494712442.1090518.2784809287026447547.stgit@magnolia>
+ <155494716446.1090518.6511378096384851735.stgit@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155494716446.1090518.6511378096384851735.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Wang Shilong <wangshilong1991@gmail.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-SGkgRGFycmljaywKCgpPbiBXZWQsIEFwciAxMCwgMjAxOSBhdCAwNTo0MjoyOFBNICswOTAwLCBX
-YW5nIFNoaWxvbmcgd3JvdGU6Cj4gRnJvbTogV2FuZyBTaGlsb25nIDx3c2hpbG9uZ0BkZG4uY29t
-Pgo+Cj4gVGhpcyBwYXRjaCB0cmllcyB0byBhZGRyZXNzIHR3byBwcm9ibGVtczoKPgo+IDEpIHJl
-dHVybiBAbWlubGVuIHdlIHVzZWQgdG8gdHJpbSB0bwo+IHVzZXIgc3BhY2UuCj4KPiAyKSByZXR1
-cm4gRUlOVkFMIGlmIGdyYW51bGFyaXR5IGlzIGxhcmdlciB0aGFuCj4gYXZnIHNpemUsIGV2ZW4g
-bW9zdCBvZiBjYXNlcywgZ3JhbnVsYXJpdHkgaXMgc21hbGwoNEspLAo+IGJ1dCBpZiBkZXZpY2Vz
-IHJldHVybiBhIGxhZ2VyIGdyYW51bGFyaXR5IGZvciBzb21lIHJlYW9ucwo+ICh0ZXN0aW5nLCBi
-dWdzIGV0YyksIGZzdHJpbSBzaG91bGQgcmV0dXJuIGZhaWx1cmUgZGlyZWN0bHkuCgpJdCByZWFs
-bHkgaXMgYSBwaXR5XldeV2Fubm95aW5nIHRoYXQgdGhlcmUncyBubyBtYW51YWwgcGFnZSBmb3Ig
-RklUUklNLApiZWNhdXNlIEkgaGF2ZSBubyBpZGVhIGlmIHRoaXMgaXMgdGhlIHJpZ2h0IG9yIGRl
-c2lyZWQgYmVoYXZpb3IgZm9yIHRoaXMKaW9jdGwuCgpEbyB0aGUgb3RoZXIgZmlsZXN5c3RlbXMg
-dXBkYXRlIEBtaW5sZW4gc28gdGhhdCB1c2Vyc3BhY2Uga25vd3MgdGhlCmdyYW51bGFyaXR5PwoK
-LS1ECgotLS0tLS0tLS0+CkFzIGZhciBhcyBJIGNoZWNrZWQgZXh0NCwgZjJmcywgQnRyZnMgZGlk
-IHNvLCBJIHRoaW5rIGl0IG1ha2VzIHNlbnNlIHdlCnJldHVybiB0aGlzIHZhbHVlIHRvIHVzZXJz
-cGFjZSwgd2UnZCBiZXR0ZXIgdG8gZG9jIGl0IHNvbWV3aGVyZSAnbWFuIGZzdHJpbSc/Cgp0aGFu
-a3MsClNoaWxvbmcK
+On Wed, Apr 10, 2019 at 06:46:04PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Use our newly expanded geometry structure to report the overall fs and
+> realtime health status.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_fs.h     |   11 ++++++++
+>  fs/xfs/libxfs/xfs_health.h |    3 ++
+>  fs/xfs/xfs_health.c        |   57 ++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_ioctl.c         |    2 ++
+>  4 files changed, 72 insertions(+), 1 deletion(-)
+> 
+> 
+...
+> diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+> index 21728228e08b..eb8dbc3a952a 100644
+> --- a/fs/xfs/xfs_health.c
+> +++ b/fs/xfs/xfs_health.c
+> @@ -264,3 +264,60 @@ xfs_inode_measure_sickness(
+>  	*checked = ip->i_checked;
+>  	spin_unlock(&ip->i_flags_lock);
+>  }
+...
+> +
+> +static inline void
+> +xfgeo_health_tick(
+> +	struct xfs_fsop_geom	*geo,
+> +	unsigned int		sick,
+> +	unsigned int		checked,
+> +	unsigned int		sick_mask,
+> +	unsigned int		fsop_mask)
+> +{
+
+Could we just pass the struct ioctl_sick_map to this helper? IMO, that
+makes the mapping logic a bit more explicit and also doesn't introduce
+an unnecessary field name change between ->ioctl_mask and fsop_mask.
+FWIW, I might also rename ->ioctl_mask to ->geom_mask since it's
+specific to that structure.
+
+> +	if (checked & sick_mask)
+> +		geo->checked |= fsop_mask;
+> +	if (sick & sick_mask)
+> +		geo->sick |= fsop_mask;
+> +}
+> +
+...
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 0aaf4f88524d..3e3ee197bd0f 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+...
+> @@ -792,6 +793,7 @@ xfs_ioc_fsgeometry(
+>  	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, struct_version);
+>  	if (error)
+>  		return error;
+> +	xfs_fsop_geom_health(mp, &fsgeo);
+>  
+
+Not really a problem, but it might make sense to not bother with this
+unless struct_version >= 5 (via the already existing check below).
+
+Brian
+
+>  	if (struct_version <= 3)
+>  		len = sizeof(struct xfs_fsop_geom_v1);
+> 
