@@ -1,29 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:60666 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725747AbfDLG2p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Apr 2019 02:28:45 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3C68oMm001785
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 06:28:43 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2rpmrqmjrf-1
+Received: from userp2130.oracle.com ([156.151.31.86]:51250 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725747AbfDLG2v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Apr 2019 02:28:51 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3C690ln190033
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 06:28:50 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2rpkhtcp3v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 06:28:43 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3C6S9cs181724
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 06:28:43 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2rpytd5f36-1
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 06:28:49 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3C6SAHI113059
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 06:28:49 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2rtd84cv94-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 06:28:42 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3C6SgVf022801
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 06:28:42 GMT
-Subject: [PATCH 6/8] xfs: report fs and rt health via geometry structure
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 06:28:49 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3C6SmYZ008498
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 06:28:49 GMT
+Subject: [PATCH 7/8] xfs: report AG health via AG geometry ioctl
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 11 Apr 2019 23:28:41 -0700
-Message-ID: <155505052098.1279757.6681709526284365789.stgit@magnolia>
+Date: Thu, 11 Apr 2019 23:28:47 -0700
+Message-ID: <155505052747.1279757.8384383083144164193.stgit@magnolia>
 In-Reply-To: <155505048097.1279757.13952335054480511366.stgit@magnolia>
 References: <155505048097.1279757.13952335054480511366.stgit@magnolia>
 MIME-Version: 1.0
@@ -37,146 +37,116 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use our newly expanded geometry structure to report the overall fs and
-realtime health status.
+Use the AG geometry info ioctl to report health status too.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h     |   11 ++++++++-
- fs/xfs/libxfs/xfs_health.h |    3 ++
- fs/xfs/xfs_health.c        |   56 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_ioctl.c         |    5 +++-
- 4 files changed, 73 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c     |    2 ++
+ fs/xfs/libxfs/xfs_fs.h     |   14 +++++++++++++-
+ fs/xfs/libxfs/xfs_health.h |    1 +
+ fs/xfs/xfs_health.c        |   36 ++++++++++++++++++++++++++++++++++++
+ 4 files changed, 52 insertions(+), 1 deletion(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 1c0f2a6c10b4..b0c89f54d1bb 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -20,6 +20,7 @@
+ #include "xfs_rmap.h"
+ #include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
++#include "xfs_health.h"
+ 
+ static struct xfs_buf *
+ xfs_get_aghdr_buf(
+@@ -505,6 +506,7 @@ xfs_ag_get_geometry(
+ 		   pag->pagf_btreeblks -
+ 		   xfs_ag_resv_needed(pag, XFS_AG_RESV_NONE);
+ 	ageo->ag_freeblks = freeblks;
++	xfs_ag_geom_health(pag, ageo);
+ 
+ 	/* Release resources. */
+ 	xfs_perag_put(pag);
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index ee33d628a240..6b8956dbf49d 100644
+index 6b8956dbf49d..35d60f8017cd 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -199,9 +199,18 @@ struct xfs_fsop_geom {
- 	__u32		rtsectsize;	/* realtime sector size, bytes	*/
- 	__u32		dirblocksize;	/* directory block size, bytes	*/
- 	__u32		logsunit;	/* log stripe unit, bytes	*/
--	__u64		reserved[18];	/* reserved space		*/
-+	uint32_t	sick;		/* o: unhealthy fs & rt metadata */
-+	uint32_t	checked;	/* o: checked fs & rt metadata	*/
-+	__u64		reserved[17];	/* reserved space		*/
+@@ -285,9 +285,21 @@ struct xfs_ag_geometry {
+ 	uint32_t	ag_freeblks;	/* o: free space */
+ 	uint32_t	ag_icount;	/* o: inodes allocated */
+ 	uint32_t	ag_ifree;	/* o: inodes free */
++	uint32_t	ag_sick;	/* o: sick things in ag */
++	uint32_t	ag_checked;	/* o: checked metadata in ag */
+ 	uint32_t	ag_reserved32;	/* o: zero */
+-	uint64_t	ag_reserved[13];/* o: zero */
++	uint64_t	ag_reserved[12];/* o: zero */
  };
++#define XFS_AG_GEOM_SICK_SB	(1 << 0)  /* superblock */
++#define XFS_AG_GEOM_SICK_AGF	(1 << 1)  /* AGF header */
++#define XFS_AG_GEOM_SICK_AGFL	(1 << 2)  /* AGFL header */
++#define XFS_AG_GEOM_SICK_AGI	(1 << 3)  /* AGI header */
++#define XFS_AG_GEOM_SICK_BNOBT	(1 << 4)  /* free space by block */
++#define XFS_AG_GEOM_SICK_CNTBT	(1 << 5)  /* free space by length */
++#define XFS_AG_GEOM_SICK_INOBT	(1 << 6)  /* inode index */
++#define XFS_AG_GEOM_SICK_FINOBT	(1 << 7)  /* free inode index */
++#define XFS_AG_GEOM_SICK_RMAPBT	(1 << 8)  /* reverse mappings */
++#define XFS_AG_GEOM_SICK_REFCNTBT (1 << 9)  /* reference counts */
  
-+#define XFS_FSOP_GEOM_SICK_COUNTERS	(1 << 0)  /* summary counters */
-+#define XFS_FSOP_GEOM_SICK_UQUOTA	(1 << 1)  /* user quota */
-+#define XFS_FSOP_GEOM_SICK_GQUOTA	(1 << 2)  /* group quota */
-+#define XFS_FSOP_GEOM_SICK_PQUOTA	(1 << 3)  /* project quota */
-+#define XFS_FSOP_GEOM_SICK_RT_BITMAP	(1 << 4)  /* realtime bitmap */
-+#define XFS_FSOP_GEOM_SICK_RT_SUMMARY	(1 << 5)  /* realtime summary */
-+
- /* Output for XFS_FS_COUNTS */
- typedef struct xfs_fsop_counts {
- 	__u64	freedata;	/* free data section blocks */
+ /*
+  * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
 diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
-index 0915d20975be..3fffdcc80970 100644
+index 3fffdcc80970..e392457023a4 100644
 --- a/fs/xfs/libxfs/xfs_health.h
 +++ b/fs/xfs/libxfs/xfs_health.h
-@@ -34,6 +34,7 @@
- struct xfs_mount;
- struct xfs_perag;
- struct xfs_inode;
-+struct xfs_fsop_geom;
- 
- /* Observable health issues for metadata spanning the entire filesystem. */
- #define XFS_SICK_FS_COUNTERS	(1 << 0)  /* summary counters */
-@@ -182,4 +183,6 @@ xfs_inode_is_healthy(struct xfs_inode *ip)
- 	return !xfs_inode_has_sickness(ip, -1U);
+@@ -184,5 +184,6 @@ xfs_inode_is_healthy(struct xfs_inode *ip)
  }
  
-+void xfs_fsop_geom_health(struct xfs_mount *mp, struct xfs_fsop_geom *geo);
-+
+ void xfs_fsop_geom_health(struct xfs_mount *mp, struct xfs_fsop_geom *geo);
++void xfs_ag_geom_health(struct xfs_perag *pag, struct xfs_ag_geometry *ageo);
+ 
  #endif	/* __XFS_HEALTH_H__ */
 diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-index 21728228e08b..d137b8f13869 100644
+index d137b8f13869..5431c4070f27 100644
 --- a/fs/xfs/xfs_health.c
 +++ b/fs/xfs/xfs_health.c
-@@ -264,3 +264,59 @@ xfs_inode_measure_sickness(
- 	*checked = ip->i_checked;
- 	spin_unlock(&ip->i_flags_lock);
+@@ -320,3 +320,39 @@ xfs_fsop_geom_health(
+ 	for (m = rt_map; m->sick_mask; m++)
+ 		xfgeo_health_tick(geo, sick, checked, m);
  }
 +
-+/* Mappings between internal sick masks and ioctl sick masks. */
-+
-+struct ioctl_sick_map {
-+	unsigned int		sick_mask;
-+	unsigned int		ioctl_mask;
-+};
-+
-+static const struct ioctl_sick_map fs_map[] = {
-+	{ XFS_SICK_FS_COUNTERS,	XFS_FSOP_GEOM_SICK_COUNTERS},
-+	{ XFS_SICK_FS_UQUOTA,	XFS_FSOP_GEOM_SICK_UQUOTA },
-+	{ XFS_SICK_FS_GQUOTA,	XFS_FSOP_GEOM_SICK_GQUOTA },
-+	{ XFS_SICK_FS_PQUOTA,	XFS_FSOP_GEOM_SICK_PQUOTA },
++static const struct ioctl_sick_map ag_map[] = {
++	{ XFS_SICK_AG_SB,	XFS_AG_GEOM_SICK_SB },
++	{ XFS_SICK_AG_AGF,	XFS_AG_GEOM_SICK_AGF },
++	{ XFS_SICK_AG_AGFL,	XFS_AG_GEOM_SICK_AGFL },
++	{ XFS_SICK_AG_AGI,	XFS_AG_GEOM_SICK_AGI },
++	{ XFS_SICK_AG_BNOBT,	XFS_AG_GEOM_SICK_BNOBT },
++	{ XFS_SICK_AG_CNTBT,	XFS_AG_GEOM_SICK_CNTBT },
++	{ XFS_SICK_AG_INOBT,	XFS_AG_GEOM_SICK_INOBT },
++	{ XFS_SICK_AG_FINOBT,	XFS_AG_GEOM_SICK_FINOBT },
++	{ XFS_SICK_AG_RMAPBT,	XFS_AG_GEOM_SICK_RMAPBT },
++	{ XFS_SICK_AG_REFCNTBT,	XFS_AG_GEOM_SICK_REFCNTBT },
 +	{ 0, 0 },
 +};
 +
-+static const struct ioctl_sick_map rt_map[] = {
-+	{ XFS_SICK_RT_BITMAP,	XFS_FSOP_GEOM_SICK_RT_BITMAP },
-+	{ XFS_SICK_RT_SUMMARY,	XFS_FSOP_GEOM_SICK_RT_SUMMARY },
-+	{ 0, 0 },
-+};
-+
-+static inline void
-+xfgeo_health_tick(
-+	struct xfs_fsop_geom		*geo,
-+	unsigned int			sick,
-+	unsigned int			checked,
-+	const struct ioctl_sick_map	*m)
-+{
-+	if (checked & m->sick_mask)
-+		geo->checked |= m->ioctl_mask;
-+	if (sick & m->sick_mask)
-+		geo->sick |= m->ioctl_mask;
-+}
-+
-+/* Fill out fs geometry health info. */
++/* Fill out ag geometry health info. */
 +void
-+xfs_fsop_geom_health(
-+	struct xfs_mount		*mp,
-+	struct xfs_fsop_geom		*geo)
++xfs_ag_geom_health(
++	struct xfs_perag		*pag,
++	struct xfs_ag_geometry		*ageo)
 +{
 +	const struct ioctl_sick_map	*m;
 +	unsigned int			sick;
 +	unsigned int			checked;
 +
-+	geo->sick = 0;
-+	geo->checked = 0;
++	ageo->ag_sick = 0;
++	ageo->ag_checked = 0;
 +
-+	xfs_fs_measure_sickness(mp, &sick, &checked);
-+	for (m = fs_map; m->sick_mask; m++)
-+		xfgeo_health_tick(geo, sick, checked, m);
-+
-+	xfs_rt_measure_sickness(mp, &sick, &checked);
-+	for (m = rt_map; m->sick_mask; m++)
-+		xfgeo_health_tick(geo, sick, checked, m);
-+}
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 0aaf4f88524d..aa5cd95707a0 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -34,6 +34,7 @@
- #include "scrub/xfs_scrub.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
-+#include "xfs_health.h"
- 
- #include <linux/capability.h>
- #include <linux/cred.h>
-@@ -797,8 +798,10 @@ xfs_ioc_fsgeometry(
- 		len = sizeof(struct xfs_fsop_geom_v1);
- 	else if (struct_version == 4)
- 		len = sizeof(struct xfs_fsop_geom_v4);
--	else
-+	else {
-+		xfs_fsop_geom_health(mp, &fsgeo);
- 		len = sizeof(fsgeo);
++	xfs_ag_measure_sickness(pag, &sick, &checked);
++	for (m = ag_map; m->sick_mask; m++) {
++		if (checked & m->sick_mask)
++			ageo->ag_checked |= m->ioctl_mask;
++		if (sick & m->sick_mask)
++			ageo->ag_sick |= m->ioctl_mask;
 +	}
- 
- 	if (copy_to_user(arg, &fsgeo, len))
- 		return -EFAULT;
++}
