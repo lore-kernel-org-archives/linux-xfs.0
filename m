@@ -1,152 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42802 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:46734 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726014AbfDJERI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Apr 2019 00:17:08 -0400
-Subject: Re: deadlock in XFS
-References: <5CAD4BAA.6070805@shannon-data.com>
+        id S1726755AbfDLTYA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 Apr 2019 15:24:00 -0400
+Subject: Re: [PATCH v2 46/36] xfs_scrub: remove pointless
+ xfs_verify_error_info struct
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <20190320200444.GJ1183@magnolia> <20190404171056.GR5147@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6b2bb427-537a-3ae0-e865-87212478234d@sandeen.net>
-Date: Tue, 9 Apr 2019 23:17:07 -0500
+Message-ID: <3c804a15-b7d9-ead5-c754-602d2b901f96@sandeen.net>
+Date: Fri, 12 Apr 2019 14:23:59 -0500
 MIME-Version: 1.0
-In-Reply-To: <5CAD4BAA.6070805@shannon-data.com>
+In-Reply-To: <20190404171056.GR5147@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Li <liming@shannon-data.com>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 4/9/19 8:49 PM, Ming Li wrote:
-> hi,
->     It is my great honor writing to you.I`m a driver engineer from china, I have a problem when I`m testing xfs iops on Intel P4510 2.0T. xfs deadlocks in my testcase. messages as this:
+On 4/4/19 12:10 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> kworker/23:75(11126) possible memory allocation deadlock size 4194320 in kmem_alloc (mode:0x250)    (this memory allocation need more than 4M memory from  once kmalloc, I think it will failure always.)
+> The xfs_verify_error_info structure is a strict subset of
+> media_verify_info so just pass that around.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-This is a known deficiency in older kernels, because xfs requires contiguous
-memory for extent management.  If a file is highly fragmented, you may run
-into this.  It's fixed upstream in newer kernels with a different extent
-management infrastructure.
+imagonna change 
 
-Best thing to do on an older kernel is to work around it by using something like
-an extent size hint to minimize fragmentation.
+> +	struct media_verify_state	*ve)
 
--Eric
+to
 
+> +	struct media_verify_state	*vs)
 
+as well on commit, and if that's ok with you, 
 
- 
-> or like this:
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  scrub/phase6.c |   24 +++++++-----------------
+>  1 file changed, 7 insertions(+), 17 deletions(-)
 > 
-> Apr  8 06:10:33 r720_1 kernel: XFS: kworker/3:129(7679) possible memory allocation deadlock size 2316352 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:33 r720_1 kernel: [292720.008492] XFS: kworker/2:30(7476) possible memory allocation deadlock size 2221840 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:33 r720_1 kernel: XFS: kworker/2:30(7476) possible memory allocation deadlock size 2221840 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:34 r720_1 kernel: [292720.168489] XFS: kworker/2:80(7554) possible memory allocation deadlock size 2208848 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:34 r720_1 kernel: XFS: kworker/2:80(7554) possible memory allocation deadlock size 2208848 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:34 r720_1 kernel: [292720.308505] XFS: kworker/2:1(6884) possible memory allocation deadlock size 2367680 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:34 r720_1 kernel: XFS: kworker/2:1(6884) possible memory allocation deadlock size 2367680 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:34 r720_1 kernel: [292720.728593] XFS: kworker/7:22(7098) possible memory allocation deadlock size 2228800 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:34 r720_1 kernel: XFS: kworker/7:22(7098) possible memory allocation deadlock size 2228800 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:34 r720_1 kernel: [292720.828529] XFS: kworker/7:95(7512) possible memory allocation deadlock size 2097728 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:34 r720_1 kernel: XFS: kworker/7:95(7512) possible memory allocation deadlock size 2097728 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:35 r720_1 kernel: [292721.428557] XFS: kworker/5:1(7134) possible memory allocation deadlock size 2097184 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:35 r720_1 kernel: XFS: kworker/5:1(7134) possible memory allocation deadlock size 2097184 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:35 r720_1 kernel: [292721.468569] XFS: kworker/4:235(7923) possible memory allocation deadlock size 2097168 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:35 r720_1 kernel: XFS: kworker/4:235(7923) possible memory allocation deadlock size 2097168 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:35 r720_1 kernel: [292721.588576] XFS: kworker/3:129(7679) possible memory allocation deadlock size 2316352 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:35 r720_1 kernel: XFS: kworker/3:129(7679) possible memory allocation deadlock size 2316352 in kmem_alloc (mode:0x250)
-> Apr  8 06:10:35 r720_1 kernel: [292722.008652] XFS: kworker/2:30(7476) possible memory allocation deadlock size 2221840 in kmem_alloc (mode:0x250)
-> 
-> (although xfs need memory less than 4M, but it still deadlocks.)
-> 
-> And, I catched CallTrace:
-> Call Trace:
-> [<ffffffff8613a282>] dump_stack+0x19/0x1b
-> [<ffffffffc055bcb7>] kmem_realloc+0x127/0x140 [xfs]
-> [<ffffffffc052e1b2>] xfs_iext_realloc_indirect+0x22/0x40 [xfs]
-> [<ffffffffc052e9bf>] xfs_iext_irec_new+0x3f/0x170 [xfs]
-> [<ffffffffc052ec6a>] xfs_iext_add_indirect_multi+0x17a/0x2d0 [xfs]
-> [<ffffffffc052efd1>] xfs_iext_add+0x211/0x2c0 [xfs]
-> [<ffffffffc052f6f8>] xfs_iext_insert+0x58/0xf0 [xfs]
-> [<ffffffffc0508bcd>] ? xfs_bmap_add_extent_unwritten_real+0x38d/0x18f0 [xfs]
-> [<ffffffffc0508bcd>] xfs_bmap_add_extent_unwritten_real+0x38d/0x18f0 [xfs]
-> [<ffffffffc050a246>] xfs_bmapi_convert_unwritten+0x116/0x1c0 [xfs]
-> [<ffffffffc050f2e9>] xfs_bmapi_write+0x269/0xab0 [xfs]
-> [<ffffffffc054aeb7>] xfs_iomap_write_unwritten+0x117/0x300 [xfs]
-> [<ffffffffc0535f63>] xfs_end_io_direct_write+0x133/0x170 [xfs]
-> [<ffffffff85c6e465>] dio_complete+0x125/0x2a0
-> [<ffffffff85c6e761>] dio_aio_complete_work+0x21/0x30
-> [<ffffffff85ab952f>] process_one_work+0x17f/0x440
-> [<ffffffff85aba5c6>] worker_thread+0x126/0x3c0
-> [<ffffffff85aba4a0>] ? manage_workers.isra.25+0x2a0/0x2a0
-> [<ffffffff85ac1341>] kthread+0xd1/0xe0
-> [<ffffffff85ac1270>] ? insert_kthread_work+0x40/0x40
-> [<ffffffff8614caf7>] ret_from_fork_nospec_begin+0x21/0x21
-> [<ffffffff85ac1270>] ? insert_kthread_work+0x40/0x40
-> 
-> 
-> my test platform is:
-> Architecture:          x86_64
-> CPU op-mode(s):        32-bit, 64-bit
-> Byte Order:            Little Endian
-> CPU(s):                8
-> On-line CPU(s) list:   0-7
-> Thread(s) per core:    1
-> Core(s) per socket:    4
-> Socket(s):             2
-> NUMA node(s):          2
-> Vendor ID:             GenuineIntel
-> CPU family:            6
-> Model:                 62
-> Model name:            Intel(R) Xeon(R) CPU E5-2609 v2 @ 2.50GHz
-> Stepping:              4
-> CPU MHz:               1199.951
-> BogoMIPS:              5005.23
-> Virtualization:        VT-x
-> L1d cache:             32K
-> L1i cache:             32K
-> L2 cache:              256K
-> L3 cache:              10240K
-> NUMA node0 CPU(s):     0,2,4,6
-> NUMA node1 CPU(s):     1,3,5,7
-> 
-> 
-> memory size is(this problem is still in the server that has 256G memory, so i think it is not about memory size and swap is truned off):
->               total        used        free      shared buff/cache available
-> Mem:             23          10          12           0 0 12
-> Swap:            15           0          15
-> 
-> system:
-> centos 7.3.1611
-> 
-> kernel:
-> 3.10.0-957.10.1.el7.x86_64
-> 
-> test step(fio version: 2.2.9):
-> 1. mkfs.xfs /dev/nvme0n1
-> 2. mount /dev/nvme0n1 /nvme0n1
-> 3. fio --ioengine=libaio --randrepeat=0 --norandommap --thread --direct=1 --group_reporting --time_based --random_generator=tausworthe --runtime=7200 --output=20190409-174239+0800/fsiops/log/fsiops_xfs_randwrite_iops.log --directory=/nvme0n1 --size=190679M --bs=4k --name=xfs_randwrite_iops --rw=randwrite --numjobs=8 --iodepth=32
-> 
-> xfs will deadlocks when running about 1 hours and 45 minutes, and i must cold restart my server.
-> 
-> And i found a patch in community, it is:
-> https://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git/commit/?id=b3f03bac8132207a20286d5602eda64500c19724
-> 
-> it have been merged since kernel 3.14, and i`m sure that this patch is not in 3.10.0-957.10.1.el7.x86_64.
-> So, I use 3.14 to do my test, and this appearance was not appeared in 3.14.
-> 
-> I don`t know about architecture of XFS, so i`m not sure whether they have relevant. Because i think the deadlock was in xfs_iext_realloc_indirect(), but the patch fixed about xfs_dir2_block_to_sf(). But the true is this problem don`t appear in kernel 3.14 anymore, so i think this problem have been fixed completely in 3.14.but i don`t know which patch fixed it.
-> 
-> So, Would you tell me whether this patch is root cause, or which patch fixed it.
-> 
-> Thank you for your attention to this matter.
-> 
-> Best regards
-> 
-> 
-> Ming.Li
-> 
-> 
-> 
+> diff --git a/scrub/phase6.c b/scrub/phase6.c
+> index 91e4443e..e819e085 100644
+> --- a/scrub/phase6.c
+> +++ b/scrub/phase6.c
+> @@ -111,11 +111,6 @@ xfs_decode_special_owner(
+>  
+>  /* Routines to translate bad physical extents into file paths and offsets. */
+>  
+> -struct xfs_verify_error_info {
+> -	struct bitmap			*d_bad;		/* bytes */
+> -	struct bitmap			*r_bad;		/* bytes */
+> -};
+> -
+>  /* Report if this extent overlaps a bad region. */
+>  static bool
+>  xfs_report_verify_inode_bmap(
+> @@ -127,7 +122,7 @@ xfs_report_verify_inode_bmap(
+>  	struct xfs_bmap			*bmap,
+>  	void				*arg)
+>  {
+> -	struct xfs_verify_error_info	*vei = arg;
+> +	struct media_verify_state	*vs = arg;
+>  	struct bitmap			*bmp;
+>  
+>  	/* Only report errors for real extents. */
+> @@ -135,9 +130,9 @@ xfs_report_verify_inode_bmap(
+>  		return true;
+>  
+>  	if (fsx->fsx_xflags & FS_XFLAG_REALTIME)
+> -		bmp = vei->r_bad;
+> +		bmp = vs->r_bad;
+>  	else
+> -		bmp = vei->d_bad;
+> +		bmp = vs->d_bad;
+>  
+>  	if (!bitmap_test(bmp, bmap->bm_physical, bmap->bm_length))
+>  		return true;
+> @@ -277,23 +272,18 @@ xfs_report_verify_dirent(
+>  static bool
+>  xfs_report_verify_errors(
+>  	struct scrub_ctx		*ctx,
+> -	struct bitmap			*d_bad,
+> -	struct bitmap			*r_bad)
+> +	struct media_verify_state	*ve)
+>  {
+> -	struct xfs_verify_error_info	vei;
+>  	bool				moveon;
+>  
+> -	vei.d_bad = d_bad;
+> -	vei.r_bad = r_bad;
+> -
+>  	/* Scan the directory tree to get file paths. */
+>  	moveon = scan_fs_tree(ctx, xfs_report_verify_dir,
+> -			xfs_report_verify_dirent, &vei);
+> +			xfs_report_verify_dirent, ve);
+>  	if (!moveon)
+>  		return false;
+>  
+>  	/* Scan for unlinked files. */
+> -	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, &vei);
+> +	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, ve);
+>  }
+>  
+>  /* Report an IO error resulting from read-verify based off getfsmap. */
+> @@ -518,7 +508,7 @@ _("Could not create data device media verifier."));
+>  
+>  	/* Scan the whole dir tree to see what matches the bad extents. */
+>  	if (!bitmap_empty(vs.d_bad) || !bitmap_empty(vs.r_bad))
+> -		moveon = xfs_report_verify_errors(ctx, vs.d_bad, vs.r_bad);
+> +		moveon = xfs_report_verify_errors(ctx, &vs);
+>  
+>  	bitmap_free(&vs.r_bad);
+>  	bitmap_free(&vs.d_bad);
 > 
