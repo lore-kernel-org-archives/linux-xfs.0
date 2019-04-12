@@ -1,71 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:38238 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725982AbfDKBzB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Apr 2019 21:55:01 -0400
-Date: Wed, 10 Apr 2019 18:54:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs,fstrim: fix to return correct minlen
-Message-ID: <20190411015446.GC1019523@magnolia>
-References: <1554885748-7071-1-git-send-email-wshilong1991@gmail.com>
+Received: from gateway34.websitewelcome.com ([192.185.148.204]:23407 "EHLO
+        gateway34.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726640AbfDLCpa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Apr 2019 22:45:30 -0400
+Received: from cm12.websitewelcome.com (cm12.websitewelcome.com [100.42.49.8])
+        by gateway34.websitewelcome.com (Postfix) with ESMTP id 00228615D3
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Apr 2019 20:57:19 -0500 (CDT)
+Subject: Re: [PATCH] xfs: use struct_size() helper
+References: <20190411233758.GA19031@embeddedor>
+ <20190412001941.GV15524@magnolia>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-ID: <51407603-d144-ece9-6cd5-edea72374527@embeddedor.com>
+Date: Thu, 11 Apr 2019 20:57:14 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1554885748-7071-1-git-send-email-wshilong1991@gmail.com>
+In-Reply-To: <20190412001941.GV15524@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Wang Shilong <wangshilong1991@gmail.com>
-Cc: linux-xfs@vger.kernel.org, Wang Shilong <wshilong@ddn.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Apr 10, 2019 at 05:42:28PM +0900, Wang Shilong wrote:
-> From: Wang Shilong <wshilong@ddn.com>
-> 
-> This patch tries to address two problems:
-> 
-> 1) return @minlen we used to trim to
-> user space.
-> 
-> 2) return EINVAL if granularity is larger than
-> avg size, even most of cases, granularity is small(4K),
-> but if devices return a lager granularity for some reaons
-> (testing, bugs etc), fstrim should return failure directly.
 
-It really is a pity^W^Wannoying that there's no manual page for FITRIM,
-because I have no idea if this is the right or desired behavior for this
-ioctl.
 
-Do the other filesystems update @minlen so that userspace knows the
-granularity?
-
---D
-
-> Signed-off-by: Wang Shilong <wshilong@ddn.com>
-> ---
->  fs/xfs/xfs_discard.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+On 4/11/19 7:19 PM, Darrick J. Wong wrote:
+> [fixing linux-xfs cc]
 > 
-> diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-> index 93f07edafd81..66702b03587a 100644
-> --- a/fs/xfs/xfs_discard.c
-> +++ b/fs/xfs/xfs_discard.c
-> @@ -164,6 +164,8 @@ xfs_ioc_trim(
->  	if (copy_from_user(&range, urange, sizeof(range)))
->  		return -EFAULT;
->  
-> +	range.minlen = max_t(u64, granularity, range.minlen);
-> +	minlen = BTOBB(range.minlen);
->  	/*
->  	 * Truncating down the len isn't actually quite correct, but using
->  	 * BBTOB would mean we trivially get overflows for values
-> @@ -178,7 +180,6 @@ xfs_ioc_trim(
->  
->  	start = BTOBB(range.start);
->  	end = start + BTOBBT(range.len) - 1;
-> -	minlen = BTOBB(max_t(u64, granularity, range.minlen));
->  
->  	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1)
->  		end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks)- 1;
-> -- 
-> 2.20.1
+
+Thanks for this.
+
+> On Thu, Apr 11, 2019 at 06:37:58PM -0500, Gustavo A. R. Silva wrote:
+>> Make use of the struct_size() helper instead of an open-coded  version
+>> in order to avoid any potential type mistakes, in particular in the
+>> context in which this code is being used.
+>>
+>> So, replace code of the following form:
+>>
+>> sizeof(*alist) + context->count * sizeof(alist->al_offset[0]
+>>
+>> with:
+>>
+>> struct_size(alist, al_offset, context->count)
+>>
+>> and remove unnecessary variable arraytop.
+>>
+>> This code was detected with the help of Coccinelle.
+>>
+>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 > 
+> Has this been run through xfstests?
+> 
+
+No.  Is this a requirement?
+
+Thanks
+--
+Gustavo
+
+> --D
+> 
+>>  fs/xfs/xfs_attr_list.c | 5 +----
+>>  1 file changed, 1 insertion(+), 4 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+>> index 3d213a7394c5..05e03348553e 100644
+>> --- a/fs/xfs/xfs_attr_list.c
+>> +++ b/fs/xfs/xfs_attr_list.c
+>> @@ -553,7 +553,6 @@ xfs_attr_put_listent(
+>>  {
+>>  	struct attrlist *alist = (struct attrlist *)context->alist;
+>>  	attrlist_ent_t *aep;
+>> -	int arraytop;
+>>  
+>>  	ASSERT(!context->seen_enough);
+>>  	ASSERT(!(context->flags & ATTR_KERNOVAL));
+>> @@ -572,10 +571,8 @@ xfs_attr_put_listent(
+>>  	    ((flags & XFS_ATTR_ROOT) == 0))
+>>  		return;
+>>  
+>> -	arraytop = sizeof(*alist) +
+>> -			context->count * sizeof(alist->al_offset[0]);
+>>  	context->firstu -= ATTR_ENTSIZE(namelen);
+>> -	if (context->firstu < arraytop) {
+>> +	if (context->firstu < struct_size(alist, al_offset, context->count)) {
+>>  		trace_xfs_attr_list_full(context);
+>>  		alist->al_more = 1;
+>>  		context->seen_enough = 1;
+>> -- 
+>> 2.21.0
+>>
