@@ -1,96 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:52452 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725747AbfDLGai (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Apr 2019 02:30:38 -0400
-Date: Thu, 11 Apr 2019 23:30:23 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: use struct_size() helper
-Message-ID: <20190412063023.GI1019523@magnolia>
-References: <20190411233758.GA19031@embeddedor>
- <20190412001941.GV15524@magnolia>
- <51407603-d144-ece9-6cd5-edea72374527@embeddedor.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <51407603-d144-ece9-6cd5-edea72374527@embeddedor.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54292 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726061AbfDLHPC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Apr 2019 03:15:02 -0400
+Message-ID: <1555053293.3046.4.camel@HansenPartnership.com>
+Subject: Re: [LSF/MM TOPIC] guarantee natural alignment for kmalloc()?
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Fri, 12 Apr 2019 09:14:53 +0200
+In-Reply-To: <790b68b7-3689-0ff6-08ae-936728bc6458@suse.cz>
+References: <790b68b7-3689-0ff6-08ae-936728bc6458@suse.cz>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Vlastimil Babka <vbabka@suse.cz>, lsf-pc@lists.linux-foundation.org
+Cc: Linux-FSDevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, linux-block@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Ming Lei <ming.lei@redhat.com>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-On Thu, Apr 11, 2019 at 08:57:14PM -0500, Gustavo A. R. Silva wrote:
+On Thu, 2019-04-11 at 14:52 +0200, Vlastimil Babka wrote:
+> Hi,
 > 
+> here's a late topic for discussion that came out of my patchset [1].
+> It would likely have to involve all three groups, as FS/IO people
+> would benefit, but it's MM area.
 > 
-> On 4/11/19 7:19 PM, Darrick J. Wong wrote:
-> > [fixing linux-xfs cc]
-> > 
+> Background:
+> The recent thread [2] inspired me to look into guaranteeing alignment
+> for kmalloc() for power-of-two sizes. IIUC some usecases (see [2])
+> don't know the required sizes in advance in order to create named
+> caches via kmem_cache_create() with explicit alignment parameter
+> (which is the only way to guarantee alignment right now). Moreover,
+> in most cases the alignment happens naturally as the slab allocators
+> split power-of-two-sized pages into smaller power-of-two-sized
+> objects. kmalloc() users then might rely on the alignment even
+> unknowingly, until it breaks when e.g. SLUB debugging is enabled.
 > 
-> Thanks for this.
+> Turns out it's not difficult to add the guarantees [1] and in the
+> production SLAB/SLUB configurations nothing really changes as
+> explained above. Then folks wouldn't have to come up with workarounds
+> as in [2]. Technical downsides would be for SLUB debug mode
+> (increased memory fragmentation, should be acceptable in a bug
+> hunting scenario?), and SLOB (potentially worse performance due to
+> increased packing effort, but this slab variant is rather marginal).
 > 
-> > On Thu, Apr 11, 2019 at 06:37:58PM -0500, Gustavo A. R. Silva wrote:
-> >> Make use of the struct_size() helper instead of an open-coded  version
-> >> in order to avoid any potential type mistakes, in particular in the
-> >> context in which this code is being used.
-> >>
-> >> So, replace code of the following form:
-> >>
-> >> sizeof(*alist) + context->count * sizeof(alist->al_offset[0]
-> >>
-> >> with:
-> >>
-> >> struct_size(alist, al_offset, context->count)
-> >>
-> >> and remove unnecessary variable arraytop.
-> >>
-> >> This code was detected with the help of Coccinelle.
-> >>
-> >> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> > 
-> > Has this been run through xfstests?
-> > 
-> 
-> No.  Is this a requirement?
+> In the session I hope to resolve the question whether this is indeed
+> the right thing to do for all kmalloc() users, without an explicit
+> alignment requests, and if it's worth the potentially worse
+> performance/fragmentation it would impose on a hypothetical new slab
+> implementation for which it wouldn't be optimal to split power-of-two
+> sized pages into power-of-two-sized objects (or whether there are any
+> other downsides).
 
-Yes, since this is a change to core functionality (and my eyes aren't so
-good at digging through preprocessor macros...)
+I think so.  The question is how aligned?  explicit flushing arch's
+definitely need at least cache line alignment when using kmalloc for
+I/O and if allocations cross cache lines they have serious coherency
+problems.   The question of how much more aligned than this is
+interesting ... I've got to say that the power of two allocator implies
+same alignment as size and we seem to keep growing use cases that
+assume this.  I'm not so keen on growing a separate API unless there's
+a really useful mm efficiency in breaking the kmalloc alignment
+assumptions.
 
---D
-
-> Thanks
-> --
-> Gustavo
-> 
-> > --D
-> > 
-> >>  fs/xfs/xfs_attr_list.c | 5 +----
-> >>  1 file changed, 1 insertion(+), 4 deletions(-)
-> >>
-> >> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> >> index 3d213a7394c5..05e03348553e 100644
-> >> --- a/fs/xfs/xfs_attr_list.c
-> >> +++ b/fs/xfs/xfs_attr_list.c
-> >> @@ -553,7 +553,6 @@ xfs_attr_put_listent(
-> >>  {
-> >>  	struct attrlist *alist = (struct attrlist *)context->alist;
-> >>  	attrlist_ent_t *aep;
-> >> -	int arraytop;
-> >>  
-> >>  	ASSERT(!context->seen_enough);
-> >>  	ASSERT(!(context->flags & ATTR_KERNOVAL));
-> >> @@ -572,10 +571,8 @@ xfs_attr_put_listent(
-> >>  	    ((flags & XFS_ATTR_ROOT) == 0))
-> >>  		return;
-> >>  
-> >> -	arraytop = sizeof(*alist) +
-> >> -			context->count * sizeof(alist->al_offset[0]);
-> >>  	context->firstu -= ATTR_ENTSIZE(namelen);
-> >> -	if (context->firstu < arraytop) {
-> >> +	if (context->firstu < struct_size(alist, al_offset, context->count)) {
-> >>  		trace_xfs_attr_list_full(context);
-> >>  		alist->al_more = 1;
-> >>  		context->seen_enough = 1;
-> >> -- 
-> >> 2.21.0
-> >>
+James
