@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:60350 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:60492 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725747AbfDLG21 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Apr 2019 02:28:27 -0400
-Subject: [PATCH 3/8] xfs: clear BAD_SUMMARY if unmounting an unhealthy
- filesystem
+        with ESMTP id S1725747AbfDLG2e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Apr 2019 02:28:34 -0400
+Subject: [PATCH 4/8] xfs: bump XFS_IOC_FSGEOMETRY to v5 structures
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 11 Apr 2019 23:28:21 -0700
-Message-ID: <155505050178.1279757.887154260964173712.stgit@magnolia>
+Date: Thu, 11 Apr 2019 23:28:28 -0700
+Message-ID: <155505050810.1279757.11541546448922962811.stgit@magnolia>
 In-Reply-To: <155505048097.1279757.13952335054480511366.stgit@magnolia>
 References: <155505048097.1279757.13952335054480511366.stgit@magnolia>
 MIME-Version: 1.0
@@ -17,163 +16,270 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-If we know the filesystem metadata isn't healthy during unmount, we want
-to encourage the administrator to run xfs_repair right away.  We can't
-do this if BAD_SUMMARY will cause an unclean log unmount to force
-summary recalculation, so turn it off if the fs is bad.
+Unfortunately, the V4 XFS_IOC_FSGEOMETRY structure is out of space so we
+can't just add a new field to it. Hence we need to bump the definition
+to V5 and and treat the V4 ioctl and structure similar to v1 to v3.
 
+While doing this, clean up all the definitions associated with the
+XFS_IOC_FSGEOMETRY ioctl.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+[darrick: forward port to 5.1, expand structure size to 256 bytes]
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_health.h |    2 +
- fs/xfs/xfs_health.c        |   74 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_mount.c         |    2 +
- fs/xfs/xfs_trace.h         |    3 ++
- 4 files changed, 81 insertions(+)
+ fs/xfs/libxfs/xfs_fs.h |   87 +++++++++++++++++++++++++++++++++---------------
+ fs/xfs/libxfs/xfs_sb.c |    5 +++
+ fs/xfs/xfs_ioctl.c     |   48 ++++++++++----------------
+ fs/xfs/xfs_ioctl32.c   |    3 +-
+ 4 files changed, 84 insertions(+), 59 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
-index 95053564a0d5..0915d20975be 100644
---- a/fs/xfs/libxfs/xfs_health.h
-+++ b/fs/xfs/libxfs/xfs_health.h
-@@ -118,6 +118,8 @@ void xfs_inode_mark_healthy(struct xfs_inode *ip, unsigned int mask);
- void xfs_inode_measure_sickness(struct xfs_inode *ip, unsigned int *sick,
- 		unsigned int *checked);
- 
-+void xfs_health_unmount(struct xfs_mount *mp);
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index f3aa59302fef..cb7d0b1453cd 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -124,7 +124,7 @@ typedef struct xfs_flock64 {
+ /*
+  * Output for XFS_IOC_FSGEOMETRY_V1
+  */
+-typedef struct xfs_fsop_geom_v1 {
++struct xfs_fsop_geom_v1 {
+ 	__u32		blocksize;	/* filesystem (data) block size */
+ 	__u32		rtextsize;	/* realtime extent size		*/
+ 	__u32		agblocks;	/* fsblocks in an AG		*/
+@@ -145,12 +145,39 @@ typedef struct xfs_fsop_geom_v1 {
+ 	__u32		logsectsize;	/* log sector size, bytes	*/
+ 	__u32		rtsectsize;	/* realtime sector size, bytes	*/
+ 	__u32		dirblocksize;	/* directory block size, bytes	*/
+-} xfs_fsop_geom_v1_t;
++};
 +
- /* Now some helpers. */
- 
- static inline bool
-diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-index 941f33037e2f..21728228e08b 100644
---- a/fs/xfs/xfs_health.c
-+++ b/fs/xfs/xfs_health.c
-@@ -19,6 +19,80 @@
- #include "xfs_trace.h"
- #include "xfs_health.h"
- 
 +/*
-+ * Warn about metadata corruption that we detected but haven't fixed, and
-+ * make sure we're not sitting on anything that would get in the way of
-+ * recovery.
++ * Output for XFS_IOC_FSGEOMETRY_V4
 + */
-+void
-+xfs_health_unmount(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_perag	*pag;
-+	xfs_agnumber_t		agno;
-+	unsigned int		sick = 0;
-+	unsigned int		checked = 0;
-+	bool			warn = false;
-+
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return;
-+
-+	/* Measure AG corruption levels. */
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		pag = xfs_perag_get(mp, agno);
-+		xfs_ag_measure_sickness(pag, &sick, &checked);
-+		if (sick) {
-+			trace_xfs_ag_unfixed_corruption(mp, agno, sick);
-+			warn = true;
-+		}
-+		xfs_perag_put(pag);
-+	}
-+
-+	/* Measure realtime volume corruption levels. */
-+	xfs_rt_measure_sickness(mp, &sick, &checked);
-+	if (sick) {
-+		trace_xfs_rt_unfixed_corruption(mp, sick);
-+		warn = true;
-+	}
-+
-+	/*
-+	 * Measure fs corruption and keep the sample around for the warning.
-+	 * See the note below for why we exempt FS_COUNTERS.
-+	 */
-+	xfs_fs_measure_sickness(mp, &sick, &checked);
-+	if (sick & ~XFS_SICK_FS_COUNTERS) {
-+		trace_xfs_fs_unfixed_corruption(mp, sick);
-+		warn = true;
-+	}
-+
-+	if (warn) {
-+		xfs_warn(mp,
-+"Uncorrected metadata errors detected; please run xfs_repair.");
-+
-+		/*
-+		 * We discovered uncorrected metadata problems at some point
-+		 * during this filesystem mount and have advised the
-+		 * administrator to run repair once the unmount completes.
-+		 *
-+		 * However, we must be careful -- when FSCOUNTERS are flagged
-+		 * unhealthy, the unmount procedure omits writing the clean
-+		 * unmount record to the log so that the next mount will run
-+		 * recovery and recompute the summary counters.  In other
-+		 * words, we leave a dirty log to get the counters fixed.
-+		 *
-+		 * Unfortunately, xfs_repair cannot recover dirty logs, so if
-+		 * there were filesystem problems, FSCOUNTERS was flagged, and
-+		 * the administrator takes our advice to run xfs_repair,
-+		 * they'll have to zap the log before repairing structures.
-+		 * We don't really want to encourage this, so we mark the
-+		 * FSCOUNTERS healthy so that a subsequent repair run won't see
-+		 * a dirty log.
-+		 */
-+		if (sick & XFS_SICK_FS_COUNTERS)
-+			xfs_fs_mark_healthy(mp, XFS_SICK_FS_COUNTERS);
-+	}
-+}
-+
- /* Mark unhealthy per-fs metadata. */
- void
- xfs_fs_mark_sick(
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 14f454e09e6e..eff8b4c3eb3e 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1070,6 +1070,7 @@ xfs_mountfs(
- 	 */
- 	cancel_delayed_work_sync(&mp->m_reclaim_work);
- 	xfs_reclaim_inodes(mp, SYNC_WAIT);
-+	xfs_health_unmount(mp);
-  out_log_dealloc:
- 	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
- 	xfs_log_mount_cancel(mp);
-@@ -1152,6 +1153,7 @@ xfs_unmountfs(
- 	 */
- 	cancel_delayed_work_sync(&mp->m_reclaim_work);
- 	xfs_reclaim_inodes(mp, SYNC_WAIT);
-+	xfs_health_unmount(mp);
++struct xfs_fsop_geom_v4 {
++	__u32		blocksize;	/* filesystem (data) block size */
++	__u32		rtextsize;	/* realtime extent size		*/
++	__u32		agblocks;	/* fsblocks in an AG		*/
++	__u32		agcount;	/* number of allocation groups	*/
++	__u32		logblocks;	/* fsblocks in the log		*/
++	__u32		sectsize;	/* (data) sector size, bytes	*/
++	__u32		inodesize;	/* inode size in bytes		*/
++	__u32		imaxpct;	/* max allowed inode space(%)	*/
++	__u64		datablocks;	/* fsblocks in data subvolume	*/
++	__u64		rtblocks;	/* fsblocks in realtime subvol	*/
++	__u64		rtextents;	/* rt extents in realtime subvol*/
++	__u64		logstart;	/* starting fsblock of the log	*/
++	unsigned char	uuid[16];	/* unique id of the filesystem	*/
++	__u32		sunit;		/* stripe unit, fsblocks	*/
++	__u32		swidth;		/* stripe width, fsblocks	*/
++	__s32		version;	/* structure version		*/
++	__u32		flags;		/* superblock version flags	*/
++	__u32		logsectsize;	/* log sector size, bytes	*/
++	__u32		rtsectsize;	/* realtime sector size, bytes	*/
++	__u32		dirblocksize;	/* directory block size, bytes	*/
++	__u32		logsunit;	/* log stripe unit, bytes	*/
++};
  
- 	xfs_qm_unmount(mp);
+ /*
+  * Output for XFS_IOC_FSGEOMETRY
+  */
+-typedef struct xfs_fsop_geom {
++struct xfs_fsop_geom {
+ 	__u32		blocksize;	/* filesystem (data) block size */
+ 	__u32		rtextsize;	/* realtime extent size		*/
+ 	__u32		agblocks;	/* fsblocks in an AG		*/
+@@ -171,8 +198,9 @@ typedef struct xfs_fsop_geom {
+ 	__u32		logsectsize;	/* log sector size, bytes	*/
+ 	__u32		rtsectsize;	/* realtime sector size, bytes	*/
+ 	__u32		dirblocksize;	/* directory block size, bytes	*/
+-	__u32		logsunit;	/* log stripe unit, bytes */
+-} xfs_fsop_geom_t;
++	__u32		logsunit;	/* log stripe unit, bytes	*/
++	__u64		reserved[18];	/* reserved space		*/
++};
  
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index f079841c7af6..2464ea351f83 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3461,8 +3461,10 @@ DEFINE_EVENT(xfs_fs_corrupt_class, name,	\
- 	TP_ARGS(mp, flags))
- DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_sick);
- DEFINE_FS_CORRUPT_EVENT(xfs_fs_mark_healthy);
-+DEFINE_FS_CORRUPT_EVENT(xfs_fs_unfixed_corruption);
- DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_sick);
- DEFINE_FS_CORRUPT_EVENT(xfs_rt_mark_healthy);
-+DEFINE_FS_CORRUPT_EVENT(xfs_rt_unfixed_corruption);
+ /* Output for XFS_FS_COUNTS */
+ typedef struct xfs_fsop_counts {
+@@ -188,28 +216,30 @@ typedef struct xfs_fsop_resblks {
+ 	__u64  resblks_avail;
+ } xfs_fsop_resblks_t;
  
- DECLARE_EVENT_CLASS(xfs_ag_corrupt_class,
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, unsigned int flags),
-@@ -3488,6 +3490,7 @@ DEFINE_EVENT(xfs_ag_corrupt_class, name,	\
- 	TP_ARGS(mp, agno, flags))
- DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_sick);
- DEFINE_AG_CORRUPT_EVENT(xfs_ag_mark_healthy);
-+DEFINE_AG_CORRUPT_EVENT(xfs_ag_unfixed_corruption);
+-#define XFS_FSOP_GEOM_VERSION	0
+-
+-#define XFS_FSOP_GEOM_FLAGS_ATTR	0x0001	/* attributes in use	*/
+-#define XFS_FSOP_GEOM_FLAGS_NLINK	0x0002	/* 32-bit nlink values	*/
+-#define XFS_FSOP_GEOM_FLAGS_QUOTA	0x0004	/* quotas enabled	*/
+-#define XFS_FSOP_GEOM_FLAGS_IALIGN	0x0008	/* inode alignment	*/
+-#define XFS_FSOP_GEOM_FLAGS_DALIGN	0x0010	/* large data alignment */
+-#define XFS_FSOP_GEOM_FLAGS_SHARED	0x0020	/* read-only shared	*/
+-#define XFS_FSOP_GEOM_FLAGS_EXTFLG	0x0040	/* special extent flag	*/
+-#define XFS_FSOP_GEOM_FLAGS_DIRV2	0x0080	/* directory version 2	*/
+-#define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
+-#define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
+-#define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
+-#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800	/* 32-bit project IDs	*/
+-#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names	*/
+-#define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
+-#define XFS_FSOP_GEOM_FLAGS_V5SB	0x8000	/* version 5 superblock */
+-#define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
+-#define XFS_FSOP_GEOM_FLAGS_FINOBT	0x20000	/* free inode btree */
+-#define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
+-#define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
+-#define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
++#define XFS_FSOP_GEOM_VERSION		0
++#define XFS_FSOP_GEOM_VERSION_V5	5
++
++#define XFS_FSOP_GEOM_FLAGS_ATTR	(1 << 0)  /* attributes in use	   */
++#define XFS_FSOP_GEOM_FLAGS_NLINK	(1 << 1)  /* 32-bit nlink values   */
++#define XFS_FSOP_GEOM_FLAGS_QUOTA	(1 << 2)  /* quotas enabled	   */
++#define XFS_FSOP_GEOM_FLAGS_IALIGN	(1 << 3)  /* inode alignment	   */
++#define XFS_FSOP_GEOM_FLAGS_DALIGN	(1 << 4)  /* large data alignment  */
++#define XFS_FSOP_GEOM_FLAGS_SHARED	(1 << 5)  /* read-only shared	   */
++#define XFS_FSOP_GEOM_FLAGS_EXTFLG	(1 << 6)  /* special extent flag   */
++#define XFS_FSOP_GEOM_FLAGS_DIRV2	(1 << 7)  /* directory version 2   */
++#define XFS_FSOP_GEOM_FLAGS_LOGV2	(1 << 8)  /* log format version 2  */
++#define XFS_FSOP_GEOM_FLAGS_SECTOR	(1 << 9)  /* sector sizes >1BB	   */
++#define XFS_FSOP_GEOM_FLAGS_ATTR2	(1 << 10) /* inline attributes rework */
++#define XFS_FSOP_GEOM_FLAGS_PROJID32	(1 << 11) /* 32-bit project IDs	   */
++#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	(1 << 12) /* ASCII only CI names   */
++	/*  -- Do not use --		(1 << 13)    SGI parent pointers   */
++#define XFS_FSOP_GEOM_FLAGS_LAZYSB	(1 << 14) /* lazy superblock counters */
++#define XFS_FSOP_GEOM_FLAGS_V5SB	(1 << 15) /* version 5 superblock  */
++#define XFS_FSOP_GEOM_FLAGS_FTYPE	(1 << 16) /* inode directory types */
++#define XFS_FSOP_GEOM_FLAGS_FINOBT	(1 << 17) /* free inode btree	   */
++#define XFS_FSOP_GEOM_FLAGS_SPINODES	(1 << 18) /* sparse inode chunks   */
++#define XFS_FSOP_GEOM_FLAGS_RMAPBT	(1 << 19) /* reverse mapping btree */
++#define XFS_FSOP_GEOM_FLAGS_REFLINK	(1 << 20) /* files can share blocks */
  
- DECLARE_EVENT_CLASS(xfs_inode_corrupt_class,
- 	TP_PROTO(struct xfs_inode *ip, unsigned int flags),
+ /*
+  * Minimum and maximum sizes need for growth checks.
+@@ -620,8 +650,9 @@ struct xfs_scrub_metadata {
+ #define XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
+ #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+-#define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
++#define XFS_IOC_FSGEOMETRY_V4	     _IOR ('X', 124, struct xfs_fsop_geom_v4)
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, uint32_t)
++#define XFS_IOC_FSGEOMETRY	     _IOR ('X', 126, struct xfs_fsop_geom)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+ 
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index dc5be0c631c8..6fab49f6070b 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -1166,6 +1166,11 @@ xfs_fs_geometry(
+ 
+ 	geo->logsunit = sbp->sb_logsunit;
+ 
++	if (struct_version < 5)
++		return 0;
++
++	geo->version = XFS_FSOP_GEOM_VERSION_V5;
++
+ 	return 0;
+ }
+ 
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 67d12027f563..d243660f1826 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -778,41 +778,28 @@ xfs_ioc_bulkstat(
+ 	return 0;
+ }
+ 
+-STATIC int
+-xfs_ioc_fsgeometry_v1(
+-	xfs_mount_t		*mp,
+-	void			__user *arg)
+-{
+-	xfs_fsop_geom_t         fsgeo;
+-	int			error;
+-
+-	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
+-	if (error)
+-		return error;
+-
+-	/*
+-	 * Caller should have passed an argument of type
+-	 * xfs_fsop_geom_v1_t.  This is a proper subset of the
+-	 * xfs_fsop_geom_t that xfs_fs_geometry() fills in.
+-	 */
+-	if (copy_to_user(arg, &fsgeo, sizeof(xfs_fsop_geom_v1_t)))
+-		return -EFAULT;
+-	return 0;
+-}
+-
+ STATIC int
+ xfs_ioc_fsgeometry(
+-	xfs_mount_t		*mp,
+-	void			__user *arg)
++	struct xfs_mount	*mp,
++	void			__user *arg,
++	int			struct_version)
+ {
+-	xfs_fsop_geom_t		fsgeo;
++	struct xfs_fsop_geom	fsgeo;
++	size_t			len;
+ 	int			error;
+ 
+-	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 4);
++	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, struct_version);
+ 	if (error)
+ 		return error;
+ 
+-	if (copy_to_user(arg, &fsgeo, sizeof(fsgeo)))
++	if (struct_version <= 3)
++		len = sizeof(struct xfs_fsop_geom_v1);
++	else if (struct_version == 4)
++		len = sizeof(struct xfs_fsop_geom_v4);
++	else
++		len = sizeof(fsgeo);
++
++	if (copy_to_user(arg, &fsgeo, len))
+ 		return -EFAULT;
+ 	return 0;
+ }
+@@ -2016,10 +2003,11 @@ xfs_file_ioctl(
+ 		return xfs_ioc_bulkstat(mp, cmd, arg);
+ 
+ 	case XFS_IOC_FSGEOMETRY_V1:
+-		return xfs_ioc_fsgeometry_v1(mp, arg);
+-
++		return xfs_ioc_fsgeometry(mp, arg, 3);
++	case XFS_IOC_FSGEOMETRY_V4:
++		return xfs_ioc_fsgeometry(mp, arg, 4);
+ 	case XFS_IOC_FSGEOMETRY:
+-		return xfs_ioc_fsgeometry(mp, arg);
++		return xfs_ioc_fsgeometry(mp, arg, 5);
+ 
+ 	case XFS_IOC_GETVERSION:
+ 		return put_user(inode->i_generation, (int __user *)arg);
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 5001dca361e9..55ace6308637 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -52,7 +52,7 @@ xfs_compat_ioc_fsgeometry_v1(
+ 	struct xfs_mount	  *mp,
+ 	compat_xfs_fsop_geom_v1_t __user *arg32)
+ {
+-	xfs_fsop_geom_t		  fsgeo;
++	struct xfs_fsop_geom	  fsgeo;
+ 	int			  error;
+ 
+ 	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
+@@ -561,6 +561,7 @@ xfs_file_compat_ioctl(
+ 	switch (cmd) {
+ 	/* No size or alignment issues on any arch */
+ 	case XFS_IOC_DIOINFO:
++	case XFS_IOC_FSGEOMETRY_V4:
+ 	case XFS_IOC_FSGEOMETRY:
+ 	case XFS_IOC_FSGETXATTR:
+ 	case XFS_IOC_FSSETXATTR:
