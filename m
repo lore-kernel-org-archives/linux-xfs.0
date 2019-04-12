@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:60492 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:60566 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725747AbfDLG2e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Apr 2019 02:28:34 -0400
-Subject: [PATCH 4/8] xfs: bump XFS_IOC_FSGEOMETRY to v5 structures
+        with ESMTP id S1725747AbfDLG2j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Apr 2019 02:28:39 -0400
+Subject: [PATCH 5/8] xfs: add a new ioctl to describe allocation group
+ geometry
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 11 Apr 2019 23:28:28 -0700
-Message-ID: <155505050810.1279757.11541546448922962811.stgit@magnolia>
+Date: Thu, 11 Apr 2019 23:28:34 -0700
+Message-ID: <155505051450.1279757.2043979663481593026.stgit@magnolia>
 In-Reply-To: <155505048097.1279757.13952335054480511366.stgit@magnolia>
 References: <155505048097.1279757.13952335054480511366.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,270 +17,192 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Unfortunately, the V4 XFS_IOC_FSGEOMETRY structure is out of space so we
-can't just add a new field to it. Hence we need to bump the definition
-to V5 and and treat the V4 ioctl and structure similar to v1 to v3.
+Add a new ioctl to describe an allocation group's geometry.
 
-While doing this, clean up all the definitions associated with the
-XFS_IOC_FSGEOMETRY ioctl.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-[darrick: forward port to 5.1, expand structure size to 256 bytes]
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_fs.h |   87 +++++++++++++++++++++++++++++++++---------------
- fs/xfs/libxfs/xfs_sb.c |    5 +++
- fs/xfs/xfs_ioctl.c     |   48 ++++++++++----------------
- fs/xfs/xfs_ioctl32.c   |    3 +-
- 4 files changed, 84 insertions(+), 59 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c |   52 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h |    2 ++
+ fs/xfs/libxfs/xfs_fs.h |   14 +++++++++++++
+ fs/xfs/xfs_ioctl.c     |   24 ++++++++++++++++++++++
+ fs/xfs/xfs_ioctl32.c   |    1 +
+ 5 files changed, 93 insertions(+)
 
 
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 1ef8acf35e7d..1c0f2a6c10b4 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -19,6 +19,7 @@
+ #include "xfs_ialloc.h"
+ #include "xfs_rmap.h"
+ #include "xfs_ag.h"
++#include "xfs_ag_resv.h"
+ 
+ static struct xfs_buf *
+ xfs_get_aghdr_buf(
+@@ -461,3 +462,54 @@ xfs_ag_extend_space(
+ 				len, &XFS_RMAP_OINFO_SKIP_UPDATE,
+ 				XFS_AG_RESV_NONE);
+ }
++
++/* Retrieve AG geometry. */
++int
++xfs_ag_get_geometry(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	struct xfs_ag_geometry	*ageo)
++{
++	struct xfs_buf		*agi_bp;
++	struct xfs_buf		*agf_bp;
++	struct xfs_agi		*agi;
++	struct xfs_agf		*agf;
++	struct xfs_perag	*pag;
++	unsigned int		freeblks;
++	int			error;
++
++	if (agno >= mp->m_sb.sb_agcount)
++		return -EINVAL;
++
++	/* Lock the AG headers. */
++	error = xfs_ialloc_read_agi(mp, NULL, agno, &agi_bp);
++	if (error)
++		return error;
++	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agf_bp);
++	if (error)
++		goto out_agi;
++	pag = xfs_perag_get(mp, agno);
++
++	/* Fill out form. */
++	memset(ageo, 0, sizeof(*ageo));
++	ageo->ag_number = agno;
++
++	agi = XFS_BUF_TO_AGI(agi_bp);
++	ageo->ag_icount = be32_to_cpu(agi->agi_count);
++	ageo->ag_ifree = be32_to_cpu(agi->agi_freecount);
++
++	agf = XFS_BUF_TO_AGF(agf_bp);
++	ageo->ag_length = be32_to_cpu(agf->agf_length);
++	freeblks = pag->pagf_freeblks +
++		   pag->pagf_flcount +
++		   pag->pagf_btreeblks -
++		   xfs_ag_resv_needed(pag, XFS_AG_RESV_NONE);
++	ageo->ag_freeblks = freeblks;
++
++	/* Release resources. */
++	xfs_perag_put(pag);
++	xfs_buf_relse(agf_bp);
++out_agi:
++	xfs_buf_relse(agi_bp);
++	return error;
++}
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 412702e23f61..5166322807e7 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -26,5 +26,7 @@ struct aghdr_init_data {
+ int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
+ int xfs_ag_extend_space(struct xfs_mount *mp, struct xfs_trans *tp,
+ 			struct aghdr_init_data *id, xfs_extlen_t len);
++int xfs_ag_get_geometry(struct xfs_mount *mp, xfs_agnumber_t agno,
++			struct xfs_ag_geometry *ageo);
+ 
+ #endif /* __LIBXFS_AG_H */
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index f3aa59302fef..cb7d0b1453cd 100644
+index cb7d0b1453cd..ee33d628a240 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -124,7 +124,7 @@ typedef struct xfs_flock64 {
- /*
-  * Output for XFS_IOC_FSGEOMETRY_V1
-  */
--typedef struct xfs_fsop_geom_v1 {
-+struct xfs_fsop_geom_v1 {
- 	__u32		blocksize;	/* filesystem (data) block size */
- 	__u32		rtextsize;	/* realtime extent size		*/
- 	__u32		agblocks;	/* fsblocks in an AG		*/
-@@ -145,12 +145,39 @@ typedef struct xfs_fsop_geom_v1 {
- 	__u32		logsectsize;	/* log sector size, bytes	*/
- 	__u32		rtsectsize;	/* realtime sector size, bytes	*/
- 	__u32		dirblocksize;	/* directory block size, bytes	*/
--} xfs_fsop_geom_v1_t;
-+};
-+
+@@ -267,6 +267,19 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_MIN_DBLOCKS(s) ((xfs_rfsblock_t)((s)->sb_agcount - 1) *	\
+ 			 (s)->sb_agblocks + XFS_MIN_AG_BLOCKS)
+ 
 +/*
-+ * Output for XFS_IOC_FSGEOMETRY_V4
++ * Output for XFS_IOC_AG_GEOMETRY
 + */
-+struct xfs_fsop_geom_v4 {
-+	__u32		blocksize;	/* filesystem (data) block size */
-+	__u32		rtextsize;	/* realtime extent size		*/
-+	__u32		agblocks;	/* fsblocks in an AG		*/
-+	__u32		agcount;	/* number of allocation groups	*/
-+	__u32		logblocks;	/* fsblocks in the log		*/
-+	__u32		sectsize;	/* (data) sector size, bytes	*/
-+	__u32		inodesize;	/* inode size in bytes		*/
-+	__u32		imaxpct;	/* max allowed inode space(%)	*/
-+	__u64		datablocks;	/* fsblocks in data subvolume	*/
-+	__u64		rtblocks;	/* fsblocks in realtime subvol	*/
-+	__u64		rtextents;	/* rt extents in realtime subvol*/
-+	__u64		logstart;	/* starting fsblock of the log	*/
-+	unsigned char	uuid[16];	/* unique id of the filesystem	*/
-+	__u32		sunit;		/* stripe unit, fsblocks	*/
-+	__u32		swidth;		/* stripe width, fsblocks	*/
-+	__s32		version;	/* structure version		*/
-+	__u32		flags;		/* superblock version flags	*/
-+	__u32		logsectsize;	/* log sector size, bytes	*/
-+	__u32		rtsectsize;	/* realtime sector size, bytes	*/
-+	__u32		dirblocksize;	/* directory block size, bytes	*/
-+	__u32		logsunit;	/* log stripe unit, bytes	*/
++struct xfs_ag_geometry {
++	uint32_t	ag_number;	/* i/o: AG number */
++	uint32_t	ag_length;	/* o: length in blocks */
++	uint32_t	ag_freeblks;	/* o: free space */
++	uint32_t	ag_icount;	/* o: inodes allocated */
++	uint32_t	ag_ifree;	/* o: inodes free */
++	uint32_t	ag_reserved32;	/* o: zero */
++	uint64_t	ag_reserved[13];/* o: zero */
 +};
- 
++
  /*
-  * Output for XFS_IOC_FSGEOMETRY
+  * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
   */
--typedef struct xfs_fsop_geom {
-+struct xfs_fsop_geom {
- 	__u32		blocksize;	/* filesystem (data) block size */
- 	__u32		rtextsize;	/* realtime extent size		*/
- 	__u32		agblocks;	/* fsblocks in an AG		*/
-@@ -171,8 +198,9 @@ typedef struct xfs_fsop_geom {
- 	__u32		logsectsize;	/* log sector size, bytes	*/
- 	__u32		rtsectsize;	/* realtime sector size, bytes	*/
- 	__u32		dirblocksize;	/* directory block size, bytes	*/
--	__u32		logsunit;	/* log stripe unit, bytes */
--} xfs_fsop_geom_t;
-+	__u32		logsunit;	/* log stripe unit, bytes	*/
-+	__u64		reserved[18];	/* reserved space		*/
-+};
- 
- /* Output for XFS_FS_COUNTS */
- typedef struct xfs_fsop_counts {
-@@ -188,28 +216,30 @@ typedef struct xfs_fsop_resblks {
- 	__u64  resblks_avail;
- } xfs_fsop_resblks_t;
- 
--#define XFS_FSOP_GEOM_VERSION	0
--
--#define XFS_FSOP_GEOM_FLAGS_ATTR	0x0001	/* attributes in use	*/
--#define XFS_FSOP_GEOM_FLAGS_NLINK	0x0002	/* 32-bit nlink values	*/
--#define XFS_FSOP_GEOM_FLAGS_QUOTA	0x0004	/* quotas enabled	*/
--#define XFS_FSOP_GEOM_FLAGS_IALIGN	0x0008	/* inode alignment	*/
--#define XFS_FSOP_GEOM_FLAGS_DALIGN	0x0010	/* large data alignment */
--#define XFS_FSOP_GEOM_FLAGS_SHARED	0x0020	/* read-only shared	*/
--#define XFS_FSOP_GEOM_FLAGS_EXTFLG	0x0040	/* special extent flag	*/
--#define XFS_FSOP_GEOM_FLAGS_DIRV2	0x0080	/* directory version 2	*/
--#define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
--#define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
--#define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
--#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800	/* 32-bit project IDs	*/
--#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names	*/
--#define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
--#define XFS_FSOP_GEOM_FLAGS_V5SB	0x8000	/* version 5 superblock */
--#define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
--#define XFS_FSOP_GEOM_FLAGS_FINOBT	0x20000	/* free inode btree */
--#define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
--#define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
--#define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
-+#define XFS_FSOP_GEOM_VERSION		0
-+#define XFS_FSOP_GEOM_VERSION_V5	5
-+
-+#define XFS_FSOP_GEOM_FLAGS_ATTR	(1 << 0)  /* attributes in use	   */
-+#define XFS_FSOP_GEOM_FLAGS_NLINK	(1 << 1)  /* 32-bit nlink values   */
-+#define XFS_FSOP_GEOM_FLAGS_QUOTA	(1 << 2)  /* quotas enabled	   */
-+#define XFS_FSOP_GEOM_FLAGS_IALIGN	(1 << 3)  /* inode alignment	   */
-+#define XFS_FSOP_GEOM_FLAGS_DALIGN	(1 << 4)  /* large data alignment  */
-+#define XFS_FSOP_GEOM_FLAGS_SHARED	(1 << 5)  /* read-only shared	   */
-+#define XFS_FSOP_GEOM_FLAGS_EXTFLG	(1 << 6)  /* special extent flag   */
-+#define XFS_FSOP_GEOM_FLAGS_DIRV2	(1 << 7)  /* directory version 2   */
-+#define XFS_FSOP_GEOM_FLAGS_LOGV2	(1 << 8)  /* log format version 2  */
-+#define XFS_FSOP_GEOM_FLAGS_SECTOR	(1 << 9)  /* sector sizes >1BB	   */
-+#define XFS_FSOP_GEOM_FLAGS_ATTR2	(1 << 10) /* inline attributes rework */
-+#define XFS_FSOP_GEOM_FLAGS_PROJID32	(1 << 11) /* 32-bit project IDs	   */
-+#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	(1 << 12) /* ASCII only CI names   */
-+	/*  -- Do not use --		(1 << 13)    SGI parent pointers   */
-+#define XFS_FSOP_GEOM_FLAGS_LAZYSB	(1 << 14) /* lazy superblock counters */
-+#define XFS_FSOP_GEOM_FLAGS_V5SB	(1 << 15) /* version 5 superblock  */
-+#define XFS_FSOP_GEOM_FLAGS_FTYPE	(1 << 16) /* inode directory types */
-+#define XFS_FSOP_GEOM_FLAGS_FINOBT	(1 << 17) /* free inode btree	   */
-+#define XFS_FSOP_GEOM_FLAGS_SPINODES	(1 << 18) /* sparse inode chunks   */
-+#define XFS_FSOP_GEOM_FLAGS_RMAPBT	(1 << 19) /* reverse mapping btree */
-+#define XFS_FSOP_GEOM_FLAGS_REFLINK	(1 << 20) /* files can share blocks */
+@@ -620,6 +633,7 @@ struct xfs_scrub_metadata {
+ #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
+ /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
+ #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
++#define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
  
  /*
-  * Minimum and maximum sizes need for growth checks.
-@@ -620,8 +650,9 @@ struct xfs_scrub_metadata {
- #define XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
- #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
- #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
--#define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
-+#define XFS_IOC_FSGEOMETRY_V4	     _IOR ('X', 124, struct xfs_fsop_geom_v4)
- #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, uint32_t)
-+#define XFS_IOC_FSGEOMETRY	     _IOR ('X', 126, struct xfs_fsop_geom)
- /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
- 
- 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index dc5be0c631c8..6fab49f6070b 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -1166,6 +1166,11 @@ xfs_fs_geometry(
- 
- 	geo->logsunit = sbp->sb_logsunit;
- 
-+	if (struct_version < 5)
-+		return 0;
-+
-+	geo->version = XFS_FSOP_GEOM_VERSION_V5;
-+
- 	return 0;
- }
- 
+  * ioctl commands that replace IRIX syssgi()'s
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 67d12027f563..d243660f1826 100644
+index d243660f1826..0aaf4f88524d 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -778,41 +778,28 @@ xfs_ioc_bulkstat(
+@@ -33,6 +33,7 @@
+ #include "xfs_fsmap.h"
+ #include "scrub/xfs_scrub.h"
+ #include "xfs_sb.h"
++#include "xfs_ag.h"
+ 
+ #include <linux/capability.h>
+ #include <linux/cred.h>
+@@ -804,6 +805,26 @@ xfs_ioc_fsgeometry(
  	return 0;
  }
  
--STATIC int
--xfs_ioc_fsgeometry_v1(
--	xfs_mount_t		*mp,
--	void			__user *arg)
--{
--	xfs_fsop_geom_t         fsgeo;
--	int			error;
--
--	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
--	if (error)
--		return error;
--
--	/*
--	 * Caller should have passed an argument of type
--	 * xfs_fsop_geom_v1_t.  This is a proper subset of the
--	 * xfs_fsop_geom_t that xfs_fs_geometry() fills in.
--	 */
--	if (copy_to_user(arg, &fsgeo, sizeof(xfs_fsop_geom_v1_t)))
--		return -EFAULT;
--	return 0;
--}
--
- STATIC int
- xfs_ioc_fsgeometry(
--	xfs_mount_t		*mp,
--	void			__user *arg)
++STATIC int
++xfs_ioc_ag_geometry(
 +	struct xfs_mount	*mp,
-+	void			__user *arg,
-+	int			struct_version)
- {
--	xfs_fsop_geom_t		fsgeo;
-+	struct xfs_fsop_geom	fsgeo;
-+	size_t			len;
- 	int			error;
- 
--	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 4);
-+	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, struct_version);
- 	if (error)
- 		return error;
- 
--	if (copy_to_user(arg, &fsgeo, sizeof(fsgeo)))
-+	if (struct_version <= 3)
-+		len = sizeof(struct xfs_fsop_geom_v1);
-+	else if (struct_version == 4)
-+		len = sizeof(struct xfs_fsop_geom_v4);
-+	else
-+		len = sizeof(fsgeo);
++	void			__user *arg)
++{
++	struct xfs_ag_geometry	ageo;
++	int			error;
 +
-+	if (copy_to_user(arg, &fsgeo, len))
- 		return -EFAULT;
- 	return 0;
- }
-@@ -2016,10 +2003,11 @@ xfs_file_ioctl(
- 		return xfs_ioc_bulkstat(mp, cmd, arg);
- 
- 	case XFS_IOC_FSGEOMETRY_V1:
--		return xfs_ioc_fsgeometry_v1(mp, arg);
--
-+		return xfs_ioc_fsgeometry(mp, arg, 3);
-+	case XFS_IOC_FSGEOMETRY_V4:
-+		return xfs_ioc_fsgeometry(mp, arg, 4);
++	if (copy_from_user(&ageo, arg, sizeof(ageo)))
++		return -EFAULT;
++
++	error = xfs_ag_get_geometry(mp, ageo.ag_number, &ageo);
++	if (error)
++		return error;
++
++	if (copy_to_user(arg, &ageo, sizeof(ageo)))
++		return -EFAULT;
++	return 0;
++}
++
+ /*
+  * Linux extended inode flags interface.
+  */
+@@ -2009,6 +2030,9 @@ xfs_file_ioctl(
  	case XFS_IOC_FSGEOMETRY:
--		return xfs_ioc_fsgeometry(mp, arg);
-+		return xfs_ioc_fsgeometry(mp, arg, 5);
+ 		return xfs_ioc_fsgeometry(mp, arg, 5);
  
++	case XFS_IOC_AG_GEOMETRY:
++		return xfs_ioc_ag_geometry(mp, arg);
++
  	case XFS_IOC_GETVERSION:
  		return put_user(inode->i_generation, (int __user *)arg);
+ 
 diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 5001dca361e9..55ace6308637 100644
+index 55ace6308637..65997a6315e9 100644
 --- a/fs/xfs/xfs_ioctl32.c
 +++ b/fs/xfs/xfs_ioctl32.c
-@@ -52,7 +52,7 @@ xfs_compat_ioc_fsgeometry_v1(
- 	struct xfs_mount	  *mp,
- 	compat_xfs_fsop_geom_v1_t __user *arg32)
- {
--	xfs_fsop_geom_t		  fsgeo;
-+	struct xfs_fsop_geom	  fsgeo;
- 	int			  error;
- 
- 	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
-@@ -561,6 +561,7 @@ xfs_file_compat_ioctl(
- 	switch (cmd) {
- 	/* No size or alignment issues on any arch */
+@@ -563,6 +563,7 @@ xfs_file_compat_ioctl(
  	case XFS_IOC_DIOINFO:
-+	case XFS_IOC_FSGEOMETRY_V4:
+ 	case XFS_IOC_FSGEOMETRY_V4:
  	case XFS_IOC_FSGEOMETRY:
++	case XFS_IOC_AG_GEOMETRY:
  	case XFS_IOC_FSGETXATTR:
  	case XFS_IOC_FSSETXATTR:
+ 	case XFS_IOC_FSGETXATTRA:
