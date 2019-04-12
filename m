@@ -1,644 +1,671 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:53148 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725939AbfDSAXn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Apr 2019 20:23:43 -0400
-Subject: [PATCH 5/5] xfs: add online scrub for superblock counters
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 18 Apr 2019 17:21:29 -0700
-Message-ID: <155563328923.112668.18007995408695103782.stgit@magnolia>
-In-Reply-To: <155563325882.112668.3605935077532891922.stgit@magnolia>
-References: <155563325882.112668.3605935077532891922.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from userp2120.oracle.com ([156.151.31.85]:35038 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726983AbfDLWww (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Apr 2019 18:52:52 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3CMdpnE021387
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 22:52:49 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2rpmrqrs0t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 22:52:48 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3CMq0ds100896
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 22:52:48 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2rtyj2ub7h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 22:52:48 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3CMqlS4002548
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 22:52:47 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 9/9] xfs: Remove roll_trans boolean
+Date: Fri, 12 Apr 2019 15:50:36 -0700
+Message-Id: <20190412225036.22939-10-allison.henderson@oracle.com>
+In-Reply-To: <20190412225036.22939-1-allison.henderson@oracle.com>
+References: <20190412225036.22939-1-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+All calls to functions using this parameter are now passing a
+false value.  We can now remove the boolean and all affected
+code.
 
-Teach online scrub how to check the filesystem summary counters.  We use
-the incore delalloc block counter along with the incore AG headers to
-compute expected values for fdblocks, icount, and ifree, and then check
-that the percpu counter is within a certain threshold of the expected
-value.  This is done to avoid having to freeze or otherwise lock the
-filesystem, which means that we're only checking that the counters are
-fairly close, not that they're exactly correct.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/Makefile           |    1 
- fs/xfs/libxfs/xfs_fs.h    |    3 
- fs/xfs/libxfs/xfs_types.c |    2 
- fs/xfs/libxfs/xfs_types.h |    2 
- fs/xfs/scrub/common.c     |    9 +
- fs/xfs/scrub/common.h     |    2 
- fs/xfs/scrub/fscounters.c |  348 +++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/health.c     |    1 
- fs/xfs/scrub/scrub.c      |    6 +
- fs/xfs/scrub/scrub.h      |    7 +
- fs/xfs/scrub/trace.h      |   66 ++++++++-
- 11 files changed, 444 insertions(+), 3 deletions(-)
- create mode 100644 fs/xfs/scrub/fscounters.c
+ fs/xfs/libxfs/xfs_attr.c        | 178 ++++++----------------------------------
+ fs/xfs/libxfs/xfs_attr.h        |   4 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c   |  25 +-----
+ fs/xfs/libxfs/xfs_attr_leaf.h   |   6 +-
+ fs/xfs/libxfs/xfs_attr_remote.c |  34 +-------
+ fs/xfs/libxfs/xfs_attr_remote.h |   4 +-
+ fs/xfs/xfs_trans_attr.c         |   4 +-
+ 7 files changed, 41 insertions(+), 214 deletions(-)
 
-
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index b20964e26a22..1dfc6df2e2bd 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -143,6 +143,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   common.o \
- 				   dabtree.o \
- 				   dir.o \
-+				   fscounters.o \
- 				   health.o \
- 				   ialloc.o \
- 				   inode.o \
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 43a53b03247b..e7382c780ed7 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -578,9 +578,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_UQUOTA	21	/* user quotas */
- #define XFS_SCRUB_TYPE_GQUOTA	22	/* group quotas */
- #define XFS_SCRUB_TYPE_PQUOTA	23	/* project quotas */
-+#define XFS_SCRUB_TYPE_FSCOUNTERS 24	/* fs summary counters */
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 4ddd86b..bd8fd32 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -51,16 +51,16 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
+  * Internal routines when attribute list is one block.
+  */
+ STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
+-STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args, bool roll_trans);
+-STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args, bool roll_trans);
++STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args);
++STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
+ STATIC int xfs_leaf_has_attr(xfs_da_args_t *args);
  
- /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	24
-+#define XFS_SCRUB_TYPE_NR	25
+ /*
+  * Internal routines when attribute list is more than one block.
+  */
+ STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+-STATIC int xfs_attr_node_addname(xfs_da_args_t *args, bool roll_trans);
+-STATIC int xfs_attr_node_removename(xfs_da_args_t *args, bool roll_trans);
++STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
++STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
+ STATIC int xfs_attr_node_hasname(xfs_da_args_t *args);
+ STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+ STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+@@ -200,8 +200,7 @@ xfs_attr_calc_size(
+ STATIC int
+ xfs_attr_try_sf_addname(
+ 	struct xfs_inode	*dp,
+-	struct xfs_da_args	*args,
+-	bool			roll_trans)
++	struct xfs_da_args	*args)
+ {
  
- /* i: Repair this metadata. */
- #define XFS_SCRUB_IFLAG_REPAIR		(1 << 0)
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index de310712dd6d..d51acc95bc00 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -185,7 +185,7 @@ xfs_verify_rtbno(
+ 	struct xfs_mount	*mp = dp->i_mount;
+@@ -221,11 +220,6 @@ xfs_attr_try_sf_addname(
+ 	if (mp->m_flags & XFS_MOUNT_WSYNC)
+ 		xfs_trans_set_sync(args->trans);
+ 
+-	if (roll_trans) {
+-		error2 = xfs_trans_commit(args->trans);
+-		args->trans = NULL;
+-	}
+-
+ 	return error ? error : error2;
  }
  
- /* Calculate the range of valid icount values. */
--static void
-+void
- xfs_icount_range(
- 	struct xfs_mount	*mp,
- 	unsigned long long	*min,
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index c5a25403b4db..802b34cd10fe 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -191,5 +191,7 @@ bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
- bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
- bool xfs_verify_dablk(struct xfs_mount *mp, xfs_fileoff_t off);
-+void xfs_icount_range(struct xfs_mount *mp, unsigned long long *min,
-+		unsigned long long *max);
+@@ -236,8 +230,7 @@ int
+ xfs_attr_set_args(
+ 	struct xfs_da_args	*args,
+ 	struct xfs_buf          **leaf_bp,
+-	enum xfs_attr_state	*state,
+-	bool			roll_trans)
++	enum xfs_attr_state	*state)
+ {
+ 	struct xfs_inode	*dp = args->dp;
+ 	int			error = 0;
+@@ -284,7 +277,7 @@ xfs_attr_set_args(
+ 		/*
+ 		 * Try to add the attr to the attribute list in the inode.
+ 		 */
+-		error = xfs_attr_try_sf_addname(dp, args, roll_trans);
++		error = xfs_attr_try_sf_addname(dp, args);
+ 		if (error != -ENOSPC)
+ 			return error;
  
- #endif	/* __XFS_TYPES_H__ */
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 7d7e91a7bb86..973aa59975e3 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -209,6 +209,15 @@ xchk_ino_set_preen(
- 	trace_xchk_ino_preen(sc, ino, __return_address);
+@@ -306,23 +299,6 @@ xfs_attr_set_args(
+ 		 */
+ 		xfs_trans_bhold(args->trans, *leaf_bp);
+ 
+-		if (roll_trans) {
+-			error = xfs_defer_finish(&args->trans);
+-			if (error)
+-				return error;
+-
+-			/*
+-			 * Commit the leaf transformation.  We'll need another
+-			 * (linked) transaction to add the new attribute to the
+-			 * leaf.
+-			 */
+-			error = xfs_trans_roll_inode(&args->trans, dp);
+-			if (error)
+-				return error;
+-			xfs_trans_bjoin(args->trans, *leaf_bp);
+-			*leaf_bp = NULL;
+-		}
+-
+ 		*state = XFS_ATTR_STATE3;
+ 		return -EAGAIN;
+ state3:
+@@ -331,9 +307,9 @@ xfs_attr_set_args(
+ 	}
+ 
+ 	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+-		error = xfs_attr_leaf_addname(args, roll_trans);
++		error = xfs_attr_leaf_addname(args);
+ 	else
+-		error = xfs_attr_node_addname(args, roll_trans);
++		error = xfs_attr_node_addname(args);
+ 	return error;
  }
  
-+/* Record something being wrong with the filesystem primary superblock. */
-+void
-+xchk_set_corrupt(
-+	struct xfs_scrub	*sc)
-+{
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+	trace_xchk_fs_error(sc, 0, __return_address);
-+}
-+
- /* Record a corrupt block. */
- void
- xchk_block_set_corrupt(
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 84900bfad852..003a772cd26c 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -39,6 +39,7 @@ void xchk_block_set_preen(struct xfs_scrub *sc,
- 		struct xfs_buf *bp);
- void xchk_ino_set_preen(struct xfs_scrub *sc, xfs_ino_t ino);
+@@ -365,8 +341,7 @@ xfs_has_attr(
+  */
+ int
+ xfs_attr_remove_args(
+-	struct xfs_da_args      *args,
+-	bool                    roll_trans)
++	struct xfs_da_args	*args)
+ {
+ 	struct xfs_inode	*dp = args->dp;
+ 	int			error;
+@@ -377,9 +352,9 @@ xfs_attr_remove_args(
+ 		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+ 		error = xfs_attr_shortform_remove(args);
+ 	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+-		error = xfs_attr_leaf_removename(args, roll_trans);
++		error = xfs_attr_leaf_removename(args);
+ 	} else {
+-		error = xfs_attr_node_removename(args, roll_trans);
++		error = xfs_attr_node_removename(args);
+ 	}
  
-+void xchk_set_corrupt(struct xfs_scrub *sc);
- void xchk_block_set_corrupt(struct xfs_scrub *sc,
- 		struct xfs_buf *bp);
- void xchk_ino_set_corrupt(struct xfs_scrub *sc, xfs_ino_t ino);
-@@ -105,6 +106,7 @@ xchk_setup_quota(struct xfs_scrub *sc, struct xfs_inode *ip)
- 	return -ENOENT;
+ 	return error;
+@@ -720,8 +695,7 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+  */
+ STATIC int
+ xfs_attr_leaf_addname(
+-	struct xfs_da_args	*args,
+-	bool			roll_trans)
++	struct xfs_da_args	*args)
+ {
+ 	struct xfs_inode	*dp;
+ 	struct xfs_buf		*bp;
+@@ -787,37 +761,13 @@ xfs_attr_leaf_addname(
+ 		if (error)
+ 			return error;
+ 
+-		if (roll_trans) {
+-			error = xfs_defer_finish(&args->trans);
+-			if (error)
+-				return error;
+-
+-			/*
+-			 * Commit the current trans (including the inode) and
+-			 * start a new one.
+-			 */
+-			error = xfs_trans_roll_inode(&args->trans, dp);
+-			if (error)
+-				return error;
+-		}
+-
+ 		/*
+ 		 * Fob the whole rest of the problem off on the Btree code.
+ 		 */
+-		error = xfs_attr_node_addname(args, roll_trans);
++		error = xfs_attr_node_addname(args);
+ 		return error;
+ 	}
+ 
+-	if (roll_trans) {
+-		/*
+-		 * Commit the transaction that added the attr name so that
+-		 * later routines can manage their own transactions.
+-		 */
+-		error = xfs_trans_roll_inode(&args->trans, dp);
+-		if (error)
+-			return error;
+-	}
+-
+ 	/*
+ 	 * If there was an out-of-line value, allocate the blocks we
+ 	 * identified for its storage and copy the value.  This is done
+@@ -825,7 +775,7 @@ xfs_attr_leaf_addname(
+ 	 * maximum size of a transaction and/or hit a deadlock.
+ 	 */
+ 	if (args->rmtblkno > 0) {
+-		error = xfs_attr_rmtval_set(args, roll_trans);
++		error = xfs_attr_rmtval_set(args);
+ 		if (error)
+ 			return error;
+ 	}
+@@ -841,7 +791,7 @@ xfs_attr_leaf_addname(
+ 		 * In a separate transaction, set the incomplete flag on the
+ 		 * "old" attr and clear the incomplete flag on the "new" attr.
+ 		 */
+-		error = xfs_attr3_leaf_flipflags(args, roll_trans);
++		error = xfs_attr3_leaf_flipflags(args);
+ 		if (error)
+ 			return error;
+ 
+@@ -855,7 +805,7 @@ xfs_attr_leaf_addname(
+ 		args->rmtblkcnt = args->rmtblkcnt2;
+ 		args->rmtvaluelen = args->rmtvaluelen2;
+ 		if (args->rmtblkno) {
+-			error = xfs_attr_rmtval_remove(args, roll_trans);
++			error = xfs_attr_rmtval_remove(args);
+ 			if (error)
+ 				return error;
+ 		}
+@@ -879,25 +829,13 @@ xfs_attr_leaf_addname(
+ 			/* bp is gone due to xfs_da_shrink_inode */
+ 			if (error)
+ 				return error;
+-
+-			if (roll_trans) {
+-				error = xfs_defer_finish(&args->trans);
+-				if (error)
+-					return error;
+-			}
+ 		}
+ 
+-		/*
+-		 * Commit the remove and start the next trans in series.
+-		 */
+-		if (roll_trans)
+-			error = xfs_trans_roll_inode(&args->trans, dp);
+-
+ 	} else if (args->rmtblkno > 0) {
+ 		/*
+ 		 * Added a "remote" value, just clear the incomplete flag.
+ 		 */
+-		error = xfs_attr3_leaf_clearflag(args, roll_trans);
++		error = xfs_attr3_leaf_clearflag(args);
+ 	}
+ 	return error;
  }
- #endif
-+int xchk_setup_fscounters(struct xfs_scrub *sc, struct xfs_inode *ip);
- 
- void xchk_ag_free(struct xfs_scrub *sc, struct xchk_ag *sa);
- int xchk_ag_init(struct xfs_scrub *sc, xfs_agnumber_t agno,
-diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-new file mode 100644
-index 000000000000..c48a8c1ae978
---- /dev/null
-+++ b/fs/xfs/scrub/fscounters.c
-@@ -0,0 +1,348 @@
-+// SPDX-License-Identifier: GPL-2.0+
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_alloc.h"
-+#include "xfs_ialloc.h"
-+#include "xfs_rmap.h"
-+#include "xfs_error.h"
-+#include "xfs_errortag.h"
-+#include "xfs_icache.h"
-+#include "xfs_health.h"
-+#include "xfs_bmap.h"
-+#include "scrub/xfs_scrub.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/trace.h"
-+
-+/*
-+ * FS Summary Counters
-+ * ===================
-+ *
-+ * The basics of filesystem summary counter checking are that we iterate the
-+ * AGs counting the number of free blocks, free space btree blocks, per-AG
-+ * reservations, inodes, delayed allocation reservations, and free inodes.
-+ * Then we compare what we computed against the in-core counters.
-+ *
-+ * However, the reality is that summary counters are a tricky beast to check.
-+ * While we /could/ freeze the filesystem and scramble around the AGs counting
-+ * the free blocks, in practice we prefer not do that for a scan because
-+ * freezing is costly.  To get around this, we added a per-cpu counter of the
-+ * delalloc reservations so that we can rotor around the AGs relatively
-+ * quickly, and we allow the counts to be slightly off because we're not
-+ * taking any locks while we do this.
-+ *
-+ * So the first thing we do is warm up the buffer cache in the setup routine
-+ * by walking all the AGs to make sure the incore per-AG structure has been
-+ * initialized.  The expected value calculation then iterates the incore per-AG
-+ * structures as quickly as it can.  We snapshot the percpu counters before and
-+ * after this operation and use the difference in counter values to guess at
-+ * our tolerance for mismatch between expected and actual counter values.
-+ */
-+
-+/*
-+ * Since the expected value computation is lockless but only browses incore
-+ * values, the percpu counters should be fairly close to each other.  However,
-+ * we'll allow ourselves to be off by at least this (arbitrary) amount.
-+ */
-+#define XCHK_FSC_MIN_VARIANCE	(512)
-+
-+/*
-+ * Make sure the per-AG structure has been initialized from the on-disk header
-+ * contents and that the incore counters match the ondisk counters.  Do this
-+ * from the setup function so that the inner summation loop runs as quickly
-+ * as possible.
-+ */
-+STATIC int
-+xchk_fsc_warmup(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xfs_mount	*mp = sc->mp;
-+	struct xfs_buf		*agi_bp = NULL;
-+	struct xfs_buf		*agf_bp = NULL;
-+	struct xfs_agi		*agi;
-+	struct xfs_agf		*agf;
-+	struct xfs_perag	*pag = NULL;
-+	xfs_agnumber_t		agno;
-+	int			error = 0;
-+
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		/* Lock both AG headers. */
-+		error = xfs_ialloc_read_agi(mp, sc->tp, agno, &agi_bp);
-+		if (error)
-+			break;
-+		error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, &agf_bp);
-+		if (error)
-+			break;
-+		error = -ENOMEM;
-+		if (!agf_bp)
-+			break;
-+
-+		pag = xfs_perag_get(mp, agno);
-+
-+		/*
-+		 * These are supposed to be initialized by the header read
-+		 * function.
-+		 */
-+		error = -EFSCORRUPTED;
-+		if (!pag->pagi_init || !pag->pagf_init)
-+			break;
-+
-+		/* Spot-check the incore counters against the ondisk headers */
-+		agi = XFS_BUF_TO_AGI(agi_bp);
-+		agf = XFS_BUF_TO_AGF(agf_bp);
-+		if (pag->pagi_count != be32_to_cpu(agi->agi_count))
-+			break;
-+		if (pag->pagi_freecount != be32_to_cpu(agi->agi_freecount))
-+			break;
-+		if (pag->pagf_freeblks != be32_to_cpu(agf->agf_freeblks))
-+			break;
-+		if (pag->pagf_flcount != be32_to_cpu(agf->agf_flcount))
-+			break;
-+		if (pag->pagf_btreeblks != be32_to_cpu(agf->agf_btreeblks))
-+			break;
-+
-+		xfs_perag_put(pag);
-+		pag = NULL;
-+		xfs_buf_relse(agf_bp);
-+		agf_bp = NULL;
-+		xfs_buf_relse(agi_bp);
-+		agi_bp = NULL;
-+		error = 0;
-+	}
-+
-+	if (pag)
-+		xfs_perag_put(pag);
-+	if (agf_bp)
-+		xfs_buf_relse(agf_bp);
-+	if (agi_bp)
-+		xfs_buf_relse(agi_bp);
-+	return error;
-+}
-+
-+int
-+xchk_setup_fscounters(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*ip)
-+{
-+	int			error;
-+
-+	sc->buf = kmem_zalloc(sizeof(struct xchk_fscounters), KM_SLEEP);
-+	if (!sc->buf)
-+		return -ENOMEM;
-+
-+	/* We must get the incore counters set up before we can proceed. */
-+	error = xchk_fsc_warmup(sc);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Pause background reclaim while we're scrubbing to reduce the
-+	 * likelihood of background perturbations to the counters throwing
-+	 * off our calculations.
-+	 */
-+	xchk_stop_reaping(sc);
-+
-+	return xchk_trans_alloc(sc, 0);
-+}
-+
-+/*
-+ * Calculate what the global in-core counters ought to be from the incore
-+ * per-AG structure.  Callers can compare this to the actual in-core counters
-+ * to estimate by how much both in-core and on-disk counters need to be
-+ * adjusted.
-+ */
-+STATIC int
-+xchk_fsc_calc(
-+	struct xfs_scrub	*sc,
-+	struct xchk_fscounters	*fsc)
-+{
-+	struct xfs_mount	*mp = sc->mp;
-+	struct xfs_perag	*pag;
-+	unsigned long long	min_icount, max_icount;
-+	uint64_t		delayed;
-+	xfs_agnumber_t		agno;
-+	int			tries = 8;
-+
-+retry:
-+	fsc->icount = 0;
-+	fsc->ifree = 0;
-+	fsc->fdblocks = 0;
-+
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		pag = xfs_perag_get(mp, agno);
-+
-+		/* This somehow got unset since the warmup? */
-+		if (!pag->pagi_init || !pag->pagf_init) {
-+			xfs_perag_put(pag);
-+			return -EFSCORRUPTED;
-+		}
-+
-+		/* Count all the inodes */
-+		fsc->icount += pag->pagi_count;
-+		fsc->ifree += pag->pagi_freecount;
-+
-+		/* Add up the free/freelist/bnobt/cntbt blocks */
-+		fsc->fdblocks += pag->pagf_freeblks;
-+		fsc->fdblocks += pag->pagf_flcount;
-+		fsc->fdblocks += pag->pagf_btreeblks;
-+
-+		/*
-+		 * Per-AG reservations are taken out of the incore counters,
-+		 * so they must be left out of the free blocks computation.
-+		 */
-+		fsc->fdblocks -= pag->pag_meta_resv.ar_reserved;
-+		fsc->fdblocks -= pag->pag_rmapbt_resv.ar_orig_reserved;
-+
-+		xfs_perag_put(pag);
-+	}
-+
-+	/*
-+	 * The global incore space reservation is taken from the incore
-+	 * counters, so leave that out of the computation.
-+	 */
-+	fsc->fdblocks -= mp->m_resblks_avail;
-+
-+	/*
-+	 * Delayed allocation reservations are taken out of the incore counters
-+	 * but not recorded on disk, so leave them and their indlen blocks out
-+	 * of the computation.
-+	 */
-+	delayed = percpu_counter_sum(&mp->m_delalloc_blks);
-+	fsc->fdblocks -= delayed;
-+
-+	trace_xchk_fscounters_calc(mp, fsc->icount, fsc->ifree, fsc->fdblocks,
-+			delayed);
-+
-+	xfs_icount_range(mp, &min_icount, &max_icount);
-+
-+	/* Bail out if the values we compute are totally nonsense. */
-+	if (!xfs_verify_icount(mp, fsc->icount) ||
-+	    fsc->fdblocks > mp->m_sb.sb_dblocks ||
-+	    fsc->ifree > max_icount)
-+		return -EFSCORRUPTED;
-+
-+	/*
-+	 * If ifree > icount then we probably had some perturbation in the
-+	 * counters while we were calculating things.  We'll try a few times
-+	 * to maintain ifree <= icount before giving up.
-+	 */
-+	if (fsc->ifree > fsc->icount) {
-+		if (tries--)
-+			goto retry;
-+		return -EFSCORRUPTED;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Is the @counter reasonably close to the @expected value?
-+ *
-+ * We neither locked nor froze anything in the filesystem while calculating
-+ * @expected, which means that the counter could have changed.  We know the
-+ * @old_value of the counter, which means that we also know how much the counter
-+ * changed while calculating the expected value, and we'll take that as a rough
-+ * guess at how accurate we have to be.  The expected value calculation runs in
-+ * memory and never does any IO, so the window ought to be pretty small.
-+ *
-+ * First, ensure that @counter must never be negative.
-+ *
-+ * Next, compute the variance from the expected value that we'll accept.
-+ * For now we'll use twice the change in the counter from start to finish
-+ * or the minimum variance, whichever is larger.
-+ */
-+static inline bool
-+xchk_fsc_within_range(
-+	struct xfs_scrub	*sc,
-+	const int64_t		old_value,
-+	struct percpu_counter	*counter,
-+	uint64_t		expected)
-+{
-+	int64_t			curr_value = percpu_counter_sum(counter);
-+	int64_t			range;
-+
-+	range = abs(2 * (curr_value - old_value));
-+	if (range < XCHK_FSC_MIN_VARIANCE)
-+		range = XCHK_FSC_MIN_VARIANCE;
-+
-+	trace_xchk_fscounters_within_range(sc->mp, expected, curr_value,
-+			old_value, range);
-+
-+	if (curr_value < 0)
-+		return false;
-+	if (curr_value == expected)
-+		return true;
-+	if (range < expected && curr_value < expected - range)
-+		return false;
-+	if ((int64_t)(expected + range) >= 0 && curr_value > expected + range)
-+		return false;
-+	return true;
-+}
-+
-+/* Check the superblock counters. */
-+int
-+xchk_fscounters(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xfs_mount	*mp = sc->mp;
-+	struct xchk_fscounters	*fsc = sc->buf;
-+	int64_t			icount, ifree, fdblocks;
-+	int			error;
-+
-+	/* Snapshot the percpu counters. */
-+	icount = percpu_counter_sum(&mp->m_icount);
-+	ifree = percpu_counter_sum(&mp->m_ifree);
-+	fdblocks = percpu_counter_sum(&mp->m_fdblocks);
-+
-+	/* No negative values, please! */
-+	if (icount < 0 || ifree < 0 || fdblocks < 0)
-+		xchk_set_corrupt(sc);
-+
-+	/* See if icount is obviously wrong. */
-+	if (!xfs_verify_icount(mp, icount))
-+		xchk_set_corrupt(sc);
-+
-+	/* See if fdblocks is obviously wrong. */
-+	if (fdblocks > mp->m_sb.sb_dblocks)
-+		xchk_set_corrupt(sc);
-+
-+	/*
-+	 * If ifree exceeds icount by more than the minimum variance then
-+	 * something's probably wrong with the counters.
-+	 */
-+	if (ifree > icount && ifree - icount > XCHK_FSC_MIN_VARIANCE)
-+		xchk_set_corrupt(sc);
-+
-+	/* Walk the incore AG headers to calculate the expected counters. */
-+	error = xchk_fsc_calc(sc, fsc);
-+	if (!xchk_process_error(sc, 0, XFS_SB_BLOCK(mp), &error))
-+		return error;
-+
-+	/* Compare the in-core counters with whatever we counted. */
-+	if (!xchk_fsc_within_range(sc, icount, &mp->m_icount, fsc->icount))
-+		xchk_set_corrupt(sc);
-+
-+	if (!xchk_fsc_within_range(sc, ifree, &mp->m_ifree, fsc->ifree))
-+		xchk_set_corrupt(sc);
-+
-+	if (!xchk_fsc_within_range(sc, fdblocks, &mp->m_fdblocks,
-+				fsc->fdblocks))
-+		xchk_set_corrupt(sc);
-+
-+	return 0;
-+}
-diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
-index 16b536aa125e..23cf8e2f25db 100644
---- a/fs/xfs/scrub/health.c
-+++ b/fs/xfs/scrub/health.c
-@@ -109,6 +109,7 @@ static const struct xchk_health_map type_to_health_flag[XFS_SCRUB_TYPE_NR] = {
- 	[XFS_SCRUB_TYPE_UQUOTA]		= { XHG_FS,  XFS_SICK_FS_UQUOTA },
- 	[XFS_SCRUB_TYPE_GQUOTA]		= { XHG_FS,  XFS_SICK_FS_GQUOTA },
- 	[XFS_SCRUB_TYPE_PQUOTA]		= { XHG_FS,  XFS_SICK_FS_PQUOTA },
-+	[XFS_SCRUB_TYPE_FSCOUNTERS]	= { XHG_FS,  XFS_SICK_FS_COUNTERS },
- };
- 
- /* Return the health status mask for this scrub type. */
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index ce13c1c366db..f630389ee176 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -352,6 +352,12 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
- 		.scrub	= xchk_quota,
- 		.repair	= xrep_notsupported,
- 	},
-+	[XFS_SCRUB_TYPE_FSCOUNTERS] = {	/* fs summary counters */
-+		.type	= ST_FS,
-+		.setup	= xchk_setup_fscounters,
-+		.scrub	= xchk_fscounters,
-+		.repair	= xrep_notsupported,
-+	},
- };
- 
- /* This isn't a stable feature, warn once per day. */
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 01986ed364db..aa3d395d5287 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -127,6 +127,7 @@ xchk_quota(struct xfs_scrub *sc)
- 	return -ENOENT;
+@@ -933,8 +871,7 @@ xfs_leaf_has_attr(
+  */
+ STATIC int
+ xfs_attr_leaf_removename(
+-	struct xfs_da_args	*args,
+-	bool roll_trans)
++	struct xfs_da_args	*args)
+ {
+ 	struct xfs_inode	*dp;
+ 	struct xfs_buf		*bp;
+@@ -967,12 +904,6 @@ xfs_attr_leaf_removename(
+ 		/* bp is gone due to xfs_da_shrink_inode */
+ 		if (error)
+ 			return error;
+-
+-		if (roll_trans) {
+-			error = xfs_defer_finish(&args->trans);
+-			if (error)
+-				return error;
+-		}
+ 	}
+ 	return 0;
  }
- #endif
-+int xchk_fscounters(struct xfs_scrub *sc);
+@@ -1025,8 +956,7 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
+  */
+ STATIC int
+ xfs_attr_node_addname(
+-	struct xfs_da_args	*args,
+-	bool			roll_trans)
++	struct xfs_da_args	*args)
+ {
+ 	struct xfs_da_state	*state;
+ 	struct xfs_da_state_blk	*blk;
+@@ -1095,20 +1025,6 @@ xfs_attr_node_addname(
+ 			if (error)
+ 				goto out;
  
- /* cross-referencing helpers */
- void xchk_xref_is_used_space(struct xfs_scrub *sc, xfs_agblock_t agbno,
-@@ -152,4 +153,10 @@ void xchk_xref_is_used_rt_space(struct xfs_scrub *sc, xfs_rtblock_t rtbno,
- # define xchk_xref_is_used_rt_space(sc, rtbno, len) do { } while (0)
- #endif
+-			if (roll_trans) {
+-				error = xfs_defer_finish(&args->trans);
+-				if (error)
+-					goto out;
+-
+-				/*
+-				 * Commit the node conversion and start the next
+-				 * trans in the chain.
+-				 */
+-				error = xfs_trans_roll_inode(&args->trans, dp);
+-				if (error)
+-					goto out;
+-			}
+-
+ 			goto restart;
+ 		}
  
-+struct xchk_fscounters {
-+	uint64_t		icount;
-+	uint64_t		ifree;
-+	uint64_t		fdblocks;
-+};
-+
- #endif	/* __XFS_SCRUB_SCRUB_H__ */
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 3c83e8b3b39c..7763d7043915 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -50,6 +50,7 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_RTSUM);
- TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_UQUOTA);
- TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_GQUOTA);
- TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PQUOTA);
-+TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_FSCOUNTERS);
+@@ -1122,12 +1038,6 @@ xfs_attr_node_addname(
+ 		if (error)
+ 			goto out;
  
- #define XFS_SCRUB_TYPE_STRINGS \
- 	{ XFS_SCRUB_TYPE_PROBE,		"probe" }, \
-@@ -75,7 +76,8 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PQUOTA);
- 	{ XFS_SCRUB_TYPE_RTSUM,		"rtsummary" }, \
- 	{ XFS_SCRUB_TYPE_UQUOTA,	"usrquota" }, \
- 	{ XFS_SCRUB_TYPE_GQUOTA,	"grpquota" }, \
--	{ XFS_SCRUB_TYPE_PQUOTA,	"prjquota" }
-+	{ XFS_SCRUB_TYPE_PQUOTA,	"prjquota" }, \
-+	{ XFS_SCRUB_TYPE_FSCOUNTERS,	"fscounters" }
+-		if (roll_trans) {
+-			error = xfs_defer_finish(&args->trans);
+-			if (error)
+-				goto out;
+-		}
+-
+ 	} else {
+ 		/*
+ 		 * Addition succeeded, update Btree hashvals.
+@@ -1143,23 +1053,13 @@ xfs_attr_node_addname(
+ 	state = NULL;
  
- DECLARE_EVENT_CLASS(xchk_class,
- 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
-@@ -223,6 +225,7 @@ DEFINE_EVENT(xchk_block_error_class, name, \
- 		 void *ret_ip), \
- 	TP_ARGS(sc, daddr, ret_ip))
+ 	/*
+-	 * Commit the leaf addition or btree split and start the next
+-	 * trans in the chain.
+-	 */
+-	if (roll_trans) {
+-		error = xfs_trans_roll_inode(&args->trans, dp);
+-		if (error)
+-			goto out;
+-	}
+-
+-	/*
+ 	 * If there was an out-of-line value, allocate the blocks we
+ 	 * identified for its storage and copy the value.  This is done
+ 	 * after we create the attribute so that we don't overflow the
+ 	 * maximum size of a transaction and/or hit a deadlock.
+ 	 */
+ 	if (args->rmtblkno > 0) {
+-		error = xfs_attr_rmtval_set(args, roll_trans);
++		error = xfs_attr_rmtval_set(args);
+ 		if (error)
+ 			return error;
+ 	}
+@@ -1175,7 +1075,7 @@ xfs_attr_node_addname(
+ 		 * In a separate transaction, set the incomplete flag on the
+ 		 * "old" attr and clear the incomplete flag on the "new" attr.
+ 		 */
+-		error = xfs_attr3_leaf_flipflags(args, roll_trans);
++		error = xfs_attr3_leaf_flipflags(args);
+ 		if (error)
+ 			goto out;
  
-+DEFINE_SCRUB_BLOCK_ERROR_EVENT(xchk_fs_error);
- DEFINE_SCRUB_BLOCK_ERROR_EVENT(xchk_block_error);
- DEFINE_SCRUB_BLOCK_ERROR_EVENT(xchk_block_preen);
+@@ -1189,7 +1089,7 @@ xfs_attr_node_addname(
+ 		args->rmtblkcnt = args->rmtblkcnt2;
+ 		args->rmtvaluelen = args->rmtvaluelen2;
+ 		if (args->rmtblkno) {
+-			error = xfs_attr_rmtval_remove(args, roll_trans);
++			error = xfs_attr_rmtval_remove(args);
+ 			if (error)
+ 				return error;
+ 		}
+@@ -1223,11 +1123,6 @@ xfs_attr_node_addname(
+ 			error = xfs_da3_join(state);
+ 			if (error)
+ 				goto out;
+-			if (roll_trans) {
+-				error = xfs_defer_finish(&args->trans);
+-				if (error)
+-					goto out;
+-			}
+ 		}
  
-@@ -590,6 +593,67 @@ TRACE_EVENT(xchk_iallocbt_check_cluster,
- 		  __entry->cluster_ino)
- )
+ 		/*
+@@ -1241,7 +1136,7 @@ xfs_attr_node_addname(
+ 		/*
+ 		 * Added a "remote" value, just clear the incomplete flag.
+ 		 */
+-		error = xfs_attr3_leaf_clearflag(args, roll_trans);
++		error = xfs_attr3_leaf_clearflag(args);
+ 		if (error)
+ 			goto out;
+ 	}
+@@ -1294,8 +1189,7 @@ xfs_attr_node_hasname(
+  */
+ STATIC int
+ xfs_attr_node_removename(
+-	struct xfs_da_args	*args,
+-	bool			roll_trans)
++	struct xfs_da_args	*args)
+ {
+ 	struct xfs_da_state	*state;
+ 	struct xfs_da_state_blk	*blk;
+@@ -1345,10 +1239,10 @@ xfs_attr_node_removename(
+ 		 * Mark the attribute as INCOMPLETE, then bunmapi() the
+ 		 * remote value.
+ 		 */
+-		error = xfs_attr3_leaf_setflag(args, roll_trans);
++		error = xfs_attr3_leaf_setflag(args);
+ 		if (error)
+ 			goto out;
+-		error = xfs_attr_rmtval_remove(args, roll_trans);
++		error = xfs_attr_rmtval_remove(args);
+ 		if (error)
+ 			goto out;
  
-+TRACE_EVENT(xchk_fscounters_calc,
-+	TP_PROTO(struct xfs_mount *mp, uint64_t icount, uint64_t ifree,
-+		 uint64_t fdblocks, uint64_t delalloc),
-+	TP_ARGS(mp, icount, ifree, fdblocks, delalloc),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(int64_t, icount_sb)
-+		__field(uint64_t, icount_calculated)
-+		__field(int64_t, ifree_sb)
-+		__field(uint64_t, ifree_calculated)
-+		__field(int64_t, fdblocks_sb)
-+		__field(uint64_t, fdblocks_calculated)
-+		__field(uint64_t, delalloc)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->icount_sb = mp->m_sb.sb_icount;
-+		__entry->icount_calculated = icount;
-+		__entry->ifree_sb = mp->m_sb.sb_ifree;
-+		__entry->ifree_calculated = ifree;
-+		__entry->fdblocks_sb = mp->m_sb.sb_fdblocks;
-+		__entry->fdblocks_calculated = fdblocks;
-+		__entry->delalloc = delalloc;
-+	),
-+	TP_printk("dev %d:%d icount %lld:%llu ifree %lld::%llu fdblocks %lld::%llu delalloc %llu",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->icount_sb,
-+		  __entry->icount_calculated,
-+		  __entry->ifree_sb,
-+		  __entry->ifree_calculated,
-+		  __entry->fdblocks_sb,
-+		  __entry->fdblocks_calculated,
-+		  __entry->delalloc)
-+)
-+
-+TRACE_EVENT(xchk_fscounters_within_range,
-+	TP_PROTO(struct xfs_mount *mp, uint64_t expected, int64_t curr_value,
-+		 int64_t old_value, int64_t range),
-+	TP_ARGS(mp, expected, curr_value, old_value, range),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(uint64_t, expected)
-+		__field(int64_t, curr_value)
-+		__field(int64_t, old_value)
-+		__field(int64_t, range)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->expected = expected;
-+		__entry->curr_value = curr_value;
-+		__entry->old_value = old_value;
-+		__entry->range = range;
-+	),
-+	TP_printk("dev %d:%d expected %llu curr_value %lld old_value %lld range %lld",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->expected,
-+		  __entry->curr_value,
-+		  __entry->old_value,
-+		  __entry->range)
-+)
-+
- /* repair tracepoints */
- #if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
+@@ -1376,19 +1270,6 @@ xfs_attr_node_removename(
+ 		error = xfs_da3_join(state);
+ 		if (error)
+ 			goto out;
+-
+-		if (roll_trans) {
+-			error = xfs_defer_finish(&args->trans);
+-			if (error)
+-				goto out;
+-			/*
+-			 * Commit the Btree join operation and start
+-			 * a new trans.
+-			 */
+-			error = xfs_trans_roll_inode(&args->trans, dp);
+-			if (error)
+-				goto out;
+-		}
+ 	}
  
+ 	/*
+@@ -1412,11 +1293,6 @@ xfs_attr_node_removename(
+ 			if (error)
+ 				goto out;
+ 
+-			if (roll_trans) {
+-				error = xfs_defer_finish(&args->trans);
+-				if (error)
+-					goto out;
+-			}
+ 		} else
+ 			xfs_trans_brelse(args->trans, bp);
+ 	}
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index da95e69..f369895 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -181,11 +181,11 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+ 		 size_t namelen, unsigned char *value, int valuelen,
+ 		 int flags);
+ int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp,
+-		 enum xfs_attr_state *state, bool roll_trans);
++		 enum xfs_attr_state *state);
+ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
+ 		    size_t namelen, int flags);
+ int xfs_has_attr(struct xfs_da_args *args);
+-int xfs_attr_remove_args(struct xfs_da_args *args, bool roll_trans);
++int xfs_attr_remove_args(struct xfs_da_args *args);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		  int flags, struct attrlist_cursor_kern *cursor);
+ bool xfs_attr_namecheck(const void *name, size_t length);
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index e9f2f53..90dfa53 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -2670,8 +2670,7 @@ xfs_attr_leaf_newentsize(
+  */
+ int
+ xfs_attr3_leaf_clearflag(
+-	struct xfs_da_args	*args,
+-	bool			roll_trans)
++	struct xfs_da_args	*args)
+ {
+ 	struct xfs_attr_leafblock *leaf;
+ 	struct xfs_attr_leaf_entry *entry;
+@@ -2729,11 +2728,6 @@ xfs_attr3_leaf_clearflag(
+ 			 XFS_DA_LOGRANGE(leaf, name_rmt, sizeof(*name_rmt)));
+ 	}
+ 
+-	/*
+-	 * Commit the flag value change and start the next trans in series.
+-	 */
+-	if (roll_trans)
+-		error = xfs_trans_roll_inode(&args->trans, args->dp);
+ 	return error;
+ }
+ 
+@@ -2742,8 +2736,7 @@ xfs_attr3_leaf_clearflag(
+  */
+ int
+ xfs_attr3_leaf_setflag(
+-	struct xfs_da_args	*args,
+-	bool			roll_trans)
++	struct xfs_da_args	*args)
+ {
+ 	struct xfs_attr_leafblock *leaf;
+ 	struct xfs_attr_leaf_entry *entry;
+@@ -2783,11 +2776,6 @@ xfs_attr3_leaf_setflag(
+ 			 XFS_DA_LOGRANGE(leaf, name_rmt, sizeof(*name_rmt)));
+ 	}
+ 
+-	/*
+-	 * Commit the flag value change and start the next trans in series.
+-	 */
+-	if (roll_trans)
+-		error = xfs_trans_roll_inode(&args->trans, args->dp);
+ 	return error;
+ }
+ 
+@@ -2800,8 +2788,7 @@ xfs_attr3_leaf_setflag(
+  */
+ int
+ xfs_attr3_leaf_flipflags(
+-	struct xfs_da_args	*args,
+-	bool			roll_trans)
++	struct xfs_da_args	*args)
+ {
+ 	struct xfs_attr_leafblock *leaf1;
+ 	struct xfs_attr_leafblock *leaf2;
+@@ -2904,11 +2891,5 @@ xfs_attr3_leaf_flipflags(
+ 			 XFS_DA_LOGRANGE(leaf2, name_rmt, sizeof(*name_rmt)));
+ 	}
+ 
+-	/*
+-	 * Commit the flag value change and start the next trans in series.
+-	 */
+-	if (roll_trans)
+-		error = xfs_trans_roll_inode(&args->trans, args->dp);
+-
+ 	return error;
+ }
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index 98dd169..d38c558 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -51,9 +51,9 @@ void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
+ int	xfs_attr3_leaf_to_node(struct xfs_da_args *args);
+ int	xfs_attr3_leaf_to_shortform(struct xfs_buf *bp,
+ 			struct xfs_da_args *args, int forkoff);
+-int	xfs_attr3_leaf_clearflag(struct xfs_da_args *args, bool roll_trans);
+-int	xfs_attr3_leaf_setflag(struct xfs_da_args *args, bool roll_trans);
+-int	xfs_attr3_leaf_flipflags(struct xfs_da_args *args, bool roll_trans);
++int	xfs_attr3_leaf_clearflag(struct xfs_da_args *args);
++int	xfs_attr3_leaf_setflag(struct xfs_da_args *args);
++int	xfs_attr3_leaf_flipflags(struct xfs_da_args *args);
+ 
+ /*
+  * Routines used for growing the Btree.
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index 18fbd22..9054f98 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -435,8 +435,7 @@ xfs_attr_rmtval_get(
+  */
+ int
+ xfs_attr_rmtval_set(
+-	struct xfs_da_args	*args,
+-	bool			roll_trans)
++	struct xfs_da_args	*args)
+ {
+ 	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_mount	*mp = dp->i_mount;
+@@ -490,26 +489,11 @@ xfs_attr_rmtval_set(
+ 		if (error)
+ 			return error;
+ 
+-		if (roll_trans) {
+-			error = xfs_defer_finish(&args->trans);
+-			if (error)
+-				return error;
+-		}
+-
+ 		ASSERT(nmap == 1);
+ 		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
+ 		       (map.br_startblock != HOLESTARTBLOCK));
+ 		lblkno += map.br_blockcount;
+ 		blkcnt -= map.br_blockcount;
+-
+-		if (roll_trans) {
+-			/*
+-			 * Start the next trans in the chain.
+-			 */
+-			error = xfs_trans_roll_inode(&args->trans, dp);
+-			if (error)
+-				return error;
+-		}
+ 	}
+ 
+ 	/*
+@@ -569,8 +553,7 @@ xfs_attr_rmtval_set(
+  */
+ int
+ xfs_attr_rmtval_remove(
+-	struct xfs_da_args	*args,
+-	bool			roll_trans)
++	struct xfs_da_args	*args)
+ {
+ 	struct xfs_mount	*mp = args->dp->i_mount;
+ 	xfs_dablk_t		lblkno;
+@@ -632,19 +615,6 @@ xfs_attr_rmtval_remove(
+ 				    XFS_BMAPI_ATTRFORK, 1, &done);
+ 		if (error)
+ 			return error;
+-
+-		if (roll_trans) {
+-			error = xfs_defer_finish(&args->trans);
+-			if (error)
+-				return error;
+-
+-			/*
+-			 * Close out trans and start the next one in the chain.
+-			 */
+-			error = xfs_trans_roll_inode(&args->trans, args->dp);
+-			if (error)
+-				return error;
+-		}
+ 	}
+ 	return 0;
+ }
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+index c7c073d..9d20b66 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.h
++++ b/fs/xfs/libxfs/xfs_attr_remote.h
+@@ -9,7 +9,7 @@
+ int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
+ 
+ int xfs_attr_rmtval_get(struct xfs_da_args *args);
+-int xfs_attr_rmtval_set(struct xfs_da_args *args, bool roll_trans);
+-int xfs_attr_rmtval_remove(struct xfs_da_args *args, bool roll_trans);
++int xfs_attr_rmtval_set(struct xfs_da_args *args);
++int xfs_attr_rmtval_remove(struct xfs_da_args *args);
+ 
+ #endif /* __XFS_ATTR_REMOTE_H__ */
+diff --git a/fs/xfs/xfs_trans_attr.c b/fs/xfs/xfs_trans_attr.c
+index a3339ea..4144ecf 100644
+--- a/fs/xfs/xfs_trans_attr.c
++++ b/fs/xfs/xfs_trans_attr.c
+@@ -70,11 +70,11 @@ xfs_trans_attr(
+ 	case XFS_ATTR_OP_FLAGS_SET:
+ 		args->op_flags |= XFS_DA_OP_ADDNAME;
+ 		error = xfs_attr_set_args(args, leaf_bp,
+-				(enum xfs_attr_state *)state, false);
++				(enum xfs_attr_state *)state);
+ 		break;
+ 	case XFS_ATTR_OP_FLAGS_REMOVE:
+ 		ASSERT(XFS_IFORK_Q((args->dp)));
+-		error = xfs_attr_remove_args(args, false);
++		error = xfs_attr_remove_args(args);
+ 		break;
+ 	default:
+ 		error = -EFSCORRUPTED;
+-- 
+2.7.4
