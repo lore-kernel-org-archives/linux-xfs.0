@@ -1,38 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:41035 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726261AbfDPArF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 20:47:05 -0400
-Date: Tue, 16 Apr 2019 10:47:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/5] xfs: refactor scrub context initialization
-Message-ID: <20190416004702.GG29573@dread.disaster.area>
-References: <155537397092.27935.16073573221774618735.stgit@magnolia>
- <155537397718.27935.17999873230143153206.stgit@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:38898 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726832AbfDLTcc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Apr 2019 15:32:32 -0400
+Date: Fri, 12 Apr 2019 12:32:26 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 46/36] xfs_scrub: remove pointless
+ xfs_verify_error_info struct
+Message-ID: <20190412193226.GK1019523@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <20190320200444.GJ1183@magnolia>
+ <20190404171056.GR5147@magnolia>
+ <3c804a15-b7d9-ead5-c754-602d2b901f96@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155537397718.27935.17999873230143153206.stgit@magnolia>
+In-Reply-To: <3c804a15-b7d9-ead5-c754-602d2b901f96@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 15, 2019 at 05:19:37PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Apr 12, 2019 at 02:23:59PM -0500, Eric Sandeen wrote:
+> On 4/4/19 12:10 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > The xfs_verify_error_info structure is a strict subset of
+> > media_verify_info so just pass that around.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> It's a little silly how the memset in scrub context initialization
-> forces us to declare stack variables to preserve context variables
-> across a retry.  Since the teardown functions already null out most of
-> the ephemeral state (buffer pointers, btree cursors, etc.), just skip
-> the memset and move the initialization as needed.
+> imagonna change 
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > +	struct media_verify_state	*ve)
+> 
+> to
+> 
+> > +	struct media_verify_state	*vs)
+> 
+> as well on commit, and if that's ok with you, 
 
-Looks sane
+Yep, fine with me.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> > ---
+> >  scrub/phase6.c |   24 +++++++-----------------
+> >  1 file changed, 7 insertions(+), 17 deletions(-)
+> > 
+> > diff --git a/scrub/phase6.c b/scrub/phase6.c
+> > index 91e4443e..e819e085 100644
+> > --- a/scrub/phase6.c
+> > +++ b/scrub/phase6.c
+> > @@ -111,11 +111,6 @@ xfs_decode_special_owner(
+> >  
+> >  /* Routines to translate bad physical extents into file paths and offsets. */
+> >  
+> > -struct xfs_verify_error_info {
+> > -	struct bitmap			*d_bad;		/* bytes */
+> > -	struct bitmap			*r_bad;		/* bytes */
+> > -};
+> > -
+> >  /* Report if this extent overlaps a bad region. */
+> >  static bool
+> >  xfs_report_verify_inode_bmap(
+> > @@ -127,7 +122,7 @@ xfs_report_verify_inode_bmap(
+> >  	struct xfs_bmap			*bmap,
+> >  	void				*arg)
+> >  {
+> > -	struct xfs_verify_error_info	*vei = arg;
+> > +	struct media_verify_state	*vs = arg;
+> >  	struct bitmap			*bmp;
+> >  
+> >  	/* Only report errors for real extents. */
+> > @@ -135,9 +130,9 @@ xfs_report_verify_inode_bmap(
+> >  		return true;
+> >  
+> >  	if (fsx->fsx_xflags & FS_XFLAG_REALTIME)
+> > -		bmp = vei->r_bad;
+> > +		bmp = vs->r_bad;
+> >  	else
+> > -		bmp = vei->d_bad;
+> > +		bmp = vs->d_bad;
+> >  
+> >  	if (!bitmap_test(bmp, bmap->bm_physical, bmap->bm_length))
+> >  		return true;
+> > @@ -277,23 +272,18 @@ xfs_report_verify_dirent(
+> >  static bool
+> >  xfs_report_verify_errors(
+> >  	struct scrub_ctx		*ctx,
+> > -	struct bitmap			*d_bad,
+> > -	struct bitmap			*r_bad)
+> > +	struct media_verify_state	*ve)
+> >  {
+> > -	struct xfs_verify_error_info	vei;
+> >  	bool				moveon;
+> >  
+> > -	vei.d_bad = d_bad;
+> > -	vei.r_bad = r_bad;
+> > -
+> >  	/* Scan the directory tree to get file paths. */
+> >  	moveon = scan_fs_tree(ctx, xfs_report_verify_dir,
+> > -			xfs_report_verify_dirent, &vei);
+> > +			xfs_report_verify_dirent, ve);
+> >  	if (!moveon)
+> >  		return false;
+> >  
+> >  	/* Scan for unlinked files. */
+> > -	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, &vei);
+> > +	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, ve);
+> >  }
+> >  
+> >  /* Report an IO error resulting from read-verify based off getfsmap. */
+> > @@ -518,7 +508,7 @@ _("Could not create data device media verifier."));
+> >  
+> >  	/* Scan the whole dir tree to see what matches the bad extents. */
+> >  	if (!bitmap_empty(vs.d_bad) || !bitmap_empty(vs.r_bad))
+> > -		moveon = xfs_report_verify_errors(ctx, vs.d_bad, vs.r_bad);
+> > +		moveon = xfs_report_verify_errors(ctx, &vs);
+> >  
+> >  	bitmap_free(&vs.r_bad);
+> >  	bitmap_free(&vs.d_bad);
+> > 
