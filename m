@@ -1,46 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46064 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726714AbfDLNMi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 Apr 2019 09:12:38 -0400
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH v5 1/6] libnvdimm: nd_region flush callback support
-References: <20190410040826.24371-1-pagupta@redhat.com>
-        <20190410040826.24371-2-pagupta@redhat.com>
-        <CAPcyv4i1FjBzfcWtzeCvj-giHa9xaX0dMQ==q4LZC_L8VEqkHg@mail.gmail.com>
-        <20190412083230.GA29850@quack2.suse.cz>
-Date: Fri, 12 Apr 2019 09:12:10 -0400
-In-Reply-To: <20190412083230.GA29850@quack2.suse.cz> (Jan Kara's message of
-        "Fri, 12 Apr 2019 10:32:30 +0200")
-Message-ID: <x494l73z7th.fsf@segfault.boston.devel.redhat.com>
+Received: from mail-vs1-f54.google.com ([209.85.217.54]:43007 "EHLO
+        mail-vs1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726327AbfDLOat (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Apr 2019 10:30:49 -0400
+Received: by mail-vs1-f54.google.com with SMTP id f15so5645088vsk.9
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 07:30:49 -0700 (PDT)
+Subject: Re: About http://man7.org/linux/man-pages/man8/xfs_repair.8.html
+References: <20190410150122.GA1019523@magnolia>
+From: "Michael Kerrisk (man-opages)" <mtk.manpages@gmail.com>
+Message-ID: <489d2955-93b5-f051-e0f8-e8fe83794a24@gmail.com>
+Date: Fri, 12 Apr 2019 16:30:46 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20190410150122.GA1019523@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@intel.com>, Pankaj Gupta <pagupta@redhat.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, KVM list <kvm@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ross Zwisler <zwisler@kernel.org>, Vishal L Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, Matthew Wilcox <willy@infradead.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Christoph Hellwig <hch@infradead.org>, Len Brown <lenb@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, lcapitulino@redhat.com, Kevin Wolf <kwolf@redhat.com>, Igor Mammedov <imammedo@redhat.com>, Nitesh Narayan Lal <nilal@redhat.com>, Rik van Riel <riel@surriel.com>, Stefan Hajnoczi <stefanha@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Hildenbrand <david@redhat.com>, david <david@fromorbit.com>, cohuck@redhat.com, Xiao Guangrong <xiaoguangrong.eric@gmail.com>, Paolo Bonzini <pbonzini@redhat.com>, kilobyte@angband.pl, yuval.shaia@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Manual Pages <man-pages@man7.org>
+Cc: mtk.manpages@gmail.com, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-Jan Kara <jack@suse.cz> writes:
+Hello Darrick
 
-> On Thu 11-04-19 07:51:48, Dan Williams wrote:
->> On Tue, Apr 9, 2019 at 9:09 PM Pankaj Gupta <pagupta@redhat.com> wrote:
->> > +       } else {
->> > +               if (nd_region->flush(nd_region))
->> > +                       rc = -EIO;
->> 
->> Given the common case wants to be fast and synchronous I think we
->> should try to avoid retpoline overhead by default. So something like
->> this:
->> 
->> if (nd_region->flush == generic_nvdimm_flush)
->>     rc = generic_nvdimm_flush(...);
->
-> I'd either add a comment about avoiding retpoline overhead here or just
-> make ->flush == NULL mean generic_nvdimm_flush(). Just so that people don't
-> get confused by the code.
+On 4/10/19 5:01 PM, Darrick J. Wong wrote:
+> Hi,
+> 
+> I was browsing man7.org looking for manual pages and came across this:
+> 
+> http://man7.org/linux/man-pages/man8/xfs_repair.8.html
+> 
+> Hm, that's cool that it pulls in xfsprogs manpages now. :)
+> 
+> Unfortunately, I got to the bottom and saw:
+> 
+>     "Information about the project can be found at ⟨http://xfs.org/⟩. If
+>     you have a bug report for this manual page, see
+>     ⟨http://oss.sgi.com/bugzilla/buglist.cgi?product=XFS⟩.  This page was
+>     obtained from the project's upstream Git repository
+>     ⟨git://oss.sgi.com/xfs/cmds/xfsprogs⟩ on 2019-03-06.  (At that time,
+>     the date of the most recent commit that was found in the repository
+>     was 2019-02-22.)"
+> 
+> The last two URLs here are incorrect.  Linux XFS no longer uses any SGI
+> servers, I think oss.sgi.com has been dead for 18 months, and xfs.org .
+> In any case, bug reports should go to [1] and the upstream git repo is
+> [2].  Could you please update whatever's generating man7.org?
+> 
+> Thanks,
+> 
+> --D
+> 
+> [1] mailto:linux-xfs@vger.kernel.org
+> [2] https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/
 
-Isn't this premature optimization?  I really don't like adding things
-like this without some numbers to show it's worth it.
+Thanks for the report. I've updated the URLs for my scripts.
+The fix will roll out to the site with the next refresh.
 
--Jeff
+Thanks,
+
+Michael
