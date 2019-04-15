@@ -1,315 +1,200 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:40052 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729289AbfDOT1u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 15:27:50 -0400
-Date: Mon, 15 Apr 2019 12:27:39 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:56918 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726041AbfDOWu7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 18:50:59 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3FMmbRk192437
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2019 22:50:58 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2rusneqdpx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2019 22:50:58 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3FMo6GA043522
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2019 22:50:57 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2rv2tued4m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2019 22:50:57 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x3FMouul025120
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2019 22:50:56 GMT
+Date: Mon, 15 Apr 2019 15:50:54 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] xfs: implement per-inode writeback completion queues
-Message-ID: <20190415192739.GE4752@magnolia>
-References: <155529406249.243484.1307333973877627694.stgit@magnolia>
- <155529406877.243484.8074329168835632578.stgit@magnolia>
- <20190415144925.GA4222@bfoster>
- <20190415155320.GA4752@magnolia>
- <20190415161347.GD4222@bfoster>
- <20190415170935.GC4752@magnolia>
- <20190415173150.GE4222@bfoster>
- <20190415180042.GD4752@magnolia>
- <20190415181327.GF4222@bfoster>
+Subject: Re: [PATCH 7/9] xfs: Add attr context to log item
+Message-ID: <20190415225054.GF4752@magnolia>
+References: <20190412225036.22939-1-allison.henderson@oracle.com>
+ <20190412225036.22939-8-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190415181327.GF4222@bfoster>
+In-Reply-To: <20190412225036.22939-8-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Allison Henderson <allison.henderson@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 15, 2019 at 02:13:27PM -0400, Brian Foster wrote:
-> On Mon, Apr 15, 2019 at 11:00:43AM -0700, Darrick J. Wong wrote:
-> > On Mon, Apr 15, 2019 at 01:31:50PM -0400, Brian Foster wrote:
-> > > On Mon, Apr 15, 2019 at 10:09:35AM -0700, Darrick J. Wong wrote:
-> > > > On Mon, Apr 15, 2019 at 12:13:47PM -0400, Brian Foster wrote:
-> > > > > On Mon, Apr 15, 2019 at 08:53:20AM -0700, Darrick J. Wong wrote:
-> > > > > > On Mon, Apr 15, 2019 at 10:49:28AM -0400, Brian Foster wrote:
-> > > > > > > On Sun, Apr 14, 2019 at 07:07:48PM -0700, Darrick J. Wong wrote:
-> > > > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > > > 
-> > > > > > > > When scheduling writeback of dirty file data in the page cache, XFS uses
-> > > > > > > > IO completion workqueue items to ensure that filesystem metadata only
-> > > > > > > > updates after the write completes successfully.  This is essential for
-> > > > > > > > converting unwritten extents to real extents at the right time and
-> > > > > > > > performing COW remappings.
-> > > > > > > > 
-> > > > > > > > Unfortunately, XFS queues each IO completion work item to an unbounded
-> > > > > > > > workqueue, which means that the kernel can spawn dozens of threads to
-> > > > > > > > try to handle the items quickly.  These threads need to take the ILOCK
-> > > > > > > > to update file metadata, which results in heavy ILOCK contention if a
-> > > > > > > > large number of the work items target a single file, which is
-> > > > > > > > inefficient.
-> > > > > > > > 
-> > > > > > > > Worse yet, the writeback completion threads get stuck waiting for the
-> > > > > > > > ILOCK while holding transaction reservations, which can use up all
-> > > > > > > > available log reservation space.  When that happens, metadata updates to
-> > > > > > > > other parts of the filesystem grind to a halt, even if the filesystem
-> > > > > > > > could otherwise have handled it.
-> > > > > > > > 
-> > > > > > > > Even worse, if one of the things grinding to a halt happens to be a
-> > > > > > > > thread in the middle of a defer-ops finish holding the same ILOCK and
-> > > > > > > > trying to obtain more log reservation having exhausted the permanent
-> > > > > > > > reservation, we now have an ABBA deadlock - writeback has a transaction
-> > > > > > > > reserved and wants the ILOCK, and someone else has the ILOCk and wants a
-> > > > > > > > transaction reservation.
-> > > > > > > > 
-> > > > > > > > Therefore, we create a per-inode writeback io completion queue + work
-> > > > > > > > item.  When writeback finishes, it can add the ioend to the per-inode
-> > > > > > > > queue and let the single worker item process that queue.  This
-> > > > > > > > dramatically cuts down on the number of kworkers and ILOCK contention in
-> > > > > > > > the system, and seems to have eliminated an occasional deadlock I was
-> > > > > > > > seeing while running generic/476.
-> > > > > > > > 
-> > > > > > > > Testing with a program that simulates a heavy random-write workload to a
-> > > > > > > > single file demonstrates that the number of kworkers drops from
-> > > > > > > > approximately 120 threads per file to 1, without dramatically changing
-> > > > > > > > write bandwidth or pagecache access latency.
-> > > > > > > > 
-> > > > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > > > ---
-> > > > > > > 
-> > > > > > > Thanks for the updated commit log. It looks like a couple nits from the
-> > > > > > > rfc weren't addressed though. Specifically, to rename the workqueue and
-> > > > > > > iodone bits to ioend_[workqueue|list|lock] so as to not confuse with log
-> > > > > > > buf (iodone) completion callbacks.
-> > > > > > 
-> > > > > > Oops, I did forget to rename the iodone part.  Will fix.
-> > > > > > 
-> > > > > > > Also, this patch essentially turns the unbound completion work queue
-> > > > > > > into something that should only expect one task running at a time,
-> > > > > > > right? If so, it might make sense to fix up the max_active parameter to
-> > > > > > > the alloc_workqueue() call and ...
-> > > > > > 
-> > > > > > It's fine to leave max_active == 0 (i.e. "spawn as many kworker threads
-> > > > > > as you decide are necessary to handle the queued work items") here
-> > > > > > because while we only want to have one ioend worker per inode, we still
-> > > > > > want to have as many inodes undergoing ioend processing simultaneously
-> > > > > > as the storage can handle.
-> > > > > > 
-> > > > > 
-> > > > > Ah, right. For some reason I was thinking this would be per-work..
-> > > > > disregard the thinko..
-> > > > > 
-> > > > > > > 
-> > > > > > > >  fs/xfs/xfs_aops.c   |   48 +++++++++++++++++++++++++++++++++++++-----------
-> > > > > > > >  fs/xfs/xfs_aops.h   |    1 -
-> > > > > > > >  fs/xfs/xfs_icache.c |    3 +++
-> > > > > > > >  fs/xfs/xfs_inode.h  |    7 +++++++
-> > > > > > > >  4 files changed, 47 insertions(+), 12 deletions(-)
-> > > > > > > > 
-> > > > > > > > 
-> > > > > > > > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > > > > > > > index 3619e9e8d359..f7a9bb661826 100644
-> > > > > > > > --- a/fs/xfs/xfs_aops.c
-> > > > > > > > +++ b/fs/xfs/xfs_aops.c
-> > > > > > > ...
-> > > > > > > > @@ -278,19 +276,48 @@ xfs_end_io(
-> > > > > > > ...
-> > > > > > > >  STATIC void
-> > > > > > > >  xfs_end_bio(
-> > > > > > > >  	struct bio		*bio)
-> > > > > > > >  {
-> > > > > > > >  	struct xfs_ioend	*ioend = bio->bi_private;
-> > > > > > > > -	struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
-> > > > > > > > +	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-> > > > > > > > +	struct xfs_mount	*mp = ip->i_mount;
-> > > > > > > > +	unsigned long		flags;
-> > > > > > > >  
-> > > > > > > >  	if (ioend->io_fork == XFS_COW_FORK ||
-> > > > > > > > -	    ioend->io_state == XFS_EXT_UNWRITTEN)
-> > > > > > > > -		queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
-> > > > > > > > -	else if (ioend->io_append_trans)
-> > > > > > > > -		queue_work(mp->m_data_workqueue, &ioend->io_work);
-> > > > > > > > -	else
-> > > > > > > > +	    ioend->io_state == XFS_EXT_UNWRITTEN ||
-> > > > > > > > +	    ioend->io_append_trans != NULL) {
-> > > > > > > > +		spin_lock_irqsave(&ip->i_iodone_lock, flags);
-> > > > > > > > +		if (list_empty(&ip->i_iodone_list))
-> > > > > > > > +			queue_work(mp->m_unwritten_workqueue, &ip->i_iodone_work);
-> > > > > > > 
-> > > > > > > ... assert that queue_work() always returns true.
-> > > > > > 
-> > > > > > queue_work can return false here because the worker function only holds
-> > > > > > i_ioend_lock long enough to move the i_ioend_list onto a function-local
-> > > > > > list head.  Once it drops the lock and begins issuing ioend transactions,
-> > > > > > there's nothing preventing another xfs_end_bio from taking the lock,
-> > > > > > seeing the empty list, and (re)queuing i_ioend_work while the worker is
-> > > > > > running.
-> > > > > > 
-> > > > > 
-> > > > > So I'm not familiar with the details of the wq implementation, but I was
-> > > > > assuming that the return value essentially tells us if we've scheduled a
-> > > > > new execution of this work or not. IOW, that the case above would return
-> > > > > true because the current execution has already dequeued the work and
-> > > > > began running it.
-> > > > 
-> > > > It does return true if we've scheduled a new execution of work.  If the
-> > > > work has already been dequeued and is running then it'll queue it again,
-> > > > because process_one_work calls set_work_pool_and_clear_pending to clear
-> > > > the PENDING bit after it's decided to run the work item but before it
-> > > > actually invokes the work function.
-> > > > 
-> > > > > Is that not the case? FWIW, if the queue_work() call doesn't actually
-> > > > > requeue the task if it happens to be running (aside from the semantics
-> > > > 
-> > > > As far as queue_work is concerned there's no difference between a work
-> > > > item that is currently running and a work item that has never been
-> > > > queued -- the result for both cases is to put it on the queue.  So I
-> > > > think the answer to "is that not the case?" is "no, you got it right in
-> > > > the previous paragraph".
-> > > > 
-> > > > But maybe I'll just work out some examples to satisfy my own sense of
-> > > > "egad I looked at the workqueue code and OH MY EYES" :)
-> > > > 
-> > > 
-> > > ;)
-> > > 
-> > > > If queue_work observes that the PENDING bit was set, it'll return false
-> > > > immediately because we know that the work function hasn't been called
-> > > > yet, so whatever we just added to the i_ioend_list will get picked up
-> > > > when the work function gets called.
-> > > > 
-> > > > If queue_work observes that PENDING was not set and the work item isn't
-> > > > queued or being processed anywhere in the system, it'll add the work
-> > > > item to the queue and xfs_end_io can pick up the work from the ioend
-> > > > list whenever it does get called.
-> > > > 
-> > > > If queue_work observes that PENDING was not set and process_one_work has
-> > > > picked up the work item and it is after the point where it clears the
-> > > > bit but before the work function picks up the ioend list, then we'll
-> > > > reqeueue the work item, but the current the work function invocation
-> > > > will process our ioend.  The requeued item will be called again, but it
-> > > > won't find any work and returns.
-> > > > 
-> > > 
-> > > Wouldn't we skip the queue_work() call in this case because the list is
-> > > presumably not empty (since the work being dequeued hasn't run yet to
-> > > empty it)?
-> > 
-> > Oh, right.  Missed the forest for the weeds, ignore this case. :)
-> > 
-> > > > If queue_work observes that PENDING was not set and process_one_work has
-> > > > picked up the work item and it is after the point where the work
-> > > > function picks up the ioend list, then we'll reqeueue the work item, the
-> > > > current work function invocation won't see our new ioend, and the
-> > > > requeued item will be called again and it'll process our new ioend.
-> > > > 
-> > > 
-> > > Doesn't this mean that our queue_work() call should always return true?
-> > > We're only calling it if the list is empty, which means either nothing
-> > > was queued yet or a work item is currently running and is processing
-> > > ioends.
-> > 
-> > Oh. Yep.  I think you're right that it should always return true.  But,
-> > how would we set up an assert that won't just trigger unused variable
-> > warnings if we're #defining away ASSERT?
-> > 
+On Fri, Apr 12, 2019 at 03:50:34PM -0700, Allison Henderson wrote:
+> This patch modifies xfs_attr_item to store a xfs_da_args, a xfs_buf pointer
+> and a new state type. We will use these in the next patch when
+> we modify xfs_set_attr_args to roll transactions by returning EAGAIN.
+> Because the subroutines of this function modify the contents of these
+> structures, we need to find a place to store them where they remain
+> instantiated across multiple calls to xfs_set_attr_args.
 > 
-> Ok. I guess we'd have to ifdef it (or use a WARN_ON[_ONCE]() or
-> something), but now that we're on the same page, it's probably not worth
-> resending again just for this anyways.
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.h | 18 +++++++++++++++++-
+>  fs/xfs/scrub/common.c    |  2 ++
+>  fs/xfs/xfs_acl.c         |  2 ++
+>  fs/xfs/xfs_attr_item.c   |  2 +-
+>  fs/xfs/xfs_ioctl.c       |  2 ++
+>  fs/xfs/xfs_ioctl32.c     |  2 ++
+>  fs/xfs/xfs_iops.c        |  1 +
+>  fs/xfs/xfs_xattr.c       |  1 +
+>  8 files changed, 28 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 974c963..4ce3b0a 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -77,6 +77,13 @@ typedef struct attrlist_ent {	/* data from attr_list() */
+>  	char	a_name[1];	/* attr name (NULL terminated) */
+>  } attrlist_ent_t;
+>  
+> +/* Attr state machine types */
+> +enum xfs_attr_state {
+> +	XFS_ATTR_STATE1 = 1,
+> +	XFS_ATTR_STATE2 = 2,
+> +	XFS_ATTR_STATE3 = 3,
 
-Yeah, I'll add a WARN_ON_ONCE on the way in.  Thanks for reviewing! :)
+Um... to what states do these refer?
+
+> +};
+> +
+>  /*
+>   * List of attrs to commit later.
+>   */
+> @@ -88,7 +95,16 @@ struct xfs_attr_item {
+>  	void		  *xattri_name;	      /* attr name */
+>  	uint32_t	  xattri_name_len;    /* length of name */
+>  	uint32_t	  xattri_flags;       /* attr flags */
+> -	struct list_head  xattri_list;
+> +
+> +	/*
+> +	 * Delayed attr parameters that need to remain instantiated
+> +	 * across transaction rolls during the defer finish
+> +	 */
+> +	struct xfs_buf		*xattri_leaf_bp;  /* Leaf buf to release */
+> +	enum xfs_attr_state	xattri_state;	  /* state machine marker */
+> +	struct xfs_da_args	xattri_args;	  /* args context */
+
+Assuming we're keeping xattri_args.trans up to date here?
+
+> +
+> +	struct list_head	xattri_list;
+
+What's this for?
 
 --D
 
+>  
+>  	/*
+>  	 * A byte array follows the header containing the file name and
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> index 0c54ff5..270c32e 100644
+> --- a/fs/xfs/scrub/common.c
+> +++ b/fs/xfs/scrub/common.c
+> @@ -30,6 +30,8 @@
+>  #include "xfs_rmap_btree.h"
+>  #include "xfs_log.h"
+>  #include "xfs_trans_priv.h"
+> +#include "xfs_da_format.h"
+> +#include "xfs_da_btree.h"
+>  #include "xfs_attr.h"
+>  #include "xfs_reflink.h"
+>  #include "scrub/xfs_scrub.h"
+> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> index 142de8d..9b1b93e 100644
+> --- a/fs/xfs/xfs_acl.c
+> +++ b/fs/xfs/xfs_acl.c
+> @@ -10,6 +10,8 @@
+>  #include "xfs_mount.h"
+>  #include "xfs_inode.h"
+>  #include "xfs_acl.h"
+> +#include "xfs_da_format.h"
+> +#include "xfs_da_btree.h"
+>  #include "xfs_attr.h"
+>  #include "xfs_trace.h"
+>  #include <linux/slab.h>
+> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+> index 0ea19b4..36e6d1e 100644
+> --- a/fs/xfs/xfs_attr_item.c
+> +++ b/fs/xfs/xfs_attr_item.c
+> @@ -19,10 +19,10 @@
+>  #include "xfs_rmap.h"
+>  #include "xfs_inode.h"
+>  #include "xfs_icache.h"
+> -#include "xfs_attr.h"
+>  #include "xfs_shared.h"
+>  #include "xfs_da_format.h"
+>  #include "xfs_da_btree.h"
+> +#include "xfs_attr.h"
+>  
+>  static inline struct xfs_attri_log_item *ATTRI_ITEM(struct xfs_log_item *lip)
+>  {
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index ab341d6..c8728ca 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -16,6 +16,8 @@
+>  #include "xfs_rtalloc.h"
+>  #include "xfs_itable.h"
+>  #include "xfs_error.h"
+> +#include "xfs_da_format.h"
+> +#include "xfs_da_btree.h"
+>  #include "xfs_attr.h"
+>  #include "xfs_bmap.h"
+>  #include "xfs_bmap_util.h"
+> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+> index 5001dca..23f6990 100644
+> --- a/fs/xfs/xfs_ioctl32.c
+> +++ b/fs/xfs/xfs_ioctl32.c
+> @@ -21,6 +21,8 @@
+>  #include "xfs_fsops.h"
+>  #include "xfs_alloc.h"
+>  #include "xfs_rtalloc.h"
+> +#include "xfs_da_format.h"
+> +#include "xfs_da_btree.h"
+>  #include "xfs_attr.h"
+>  #include "xfs_ioctl.h"
+>  #include "xfs_ioctl32.h"
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index e73c21a..561c467 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -17,6 +17,7 @@
+>  #include "xfs_acl.h"
+>  #include "xfs_quota.h"
+>  #include "xfs_error.h"
+> +#include "xfs_da_btree.h"
+>  #include "xfs_attr.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_trace.h"
+> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> index 3013746..938e81d 100644
+> --- a/fs/xfs/xfs_xattr.c
+> +++ b/fs/xfs/xfs_xattr.c
+> @@ -11,6 +11,7 @@
+>  #include "xfs_mount.h"
+>  #include "xfs_da_format.h"
+>  #include "xfs_inode.h"
+> +#include "xfs_da_btree.h"
+>  #include "xfs_attr.h"
+>  #include "xfs_attr_leaf.h"
+>  #include "xfs_acl.h"
+> -- 
+> 2.7.4
 > 
-> Brian
-> 
-> > --D
-> > 
-> > > Brian
-> > > 
-> > > > > of the return value), ISTM that we're at risk of leaving ioends around
-> > > > > until something else comes along to kick the handler. A quick look at
-> > > > > the wq code suggests queue_work() returns false only when a particular
-> > > > > queued bit is set and thus the call is essentially a no-op, but that
-> > > > > state appears to be cleared (via set_work_pool_and_clear_pending())
-> > > > > before the work callback is invoked. Hm?
-> > > > 
-> > > > <nod> Does that clear things up?  The wq documentation isn't
-> > > > particularly clear in its description of how queues work for end users
-> > > > like us. :)
-> > > > 
-> > > > --D
-> > > > 
-> > > > > 
-> > > > > Brian
-> > > > > 
-> > > > > > --D
-> > > > > > 
-> > > > > > > Brian
-> > > > > > > 
-> > > > > > > > +		list_add_tail(&ioend->io_list, &ip->i_iodone_list);
-> > > > > > > > +		spin_unlock_irqrestore(&ip->i_iodone_lock, flags);
-> > > > > > > > +	} else
-> > > > > > > >  		xfs_destroy_ioend(ioend, blk_status_to_errno(bio->bi_status));
-> > > > > > > >  }
-> > > > > > > >  
-> > > > > > > > @@ -594,7 +621,6 @@ xfs_alloc_ioend(
-> > > > > > > >  	ioend->io_inode = inode;
-> > > > > > > >  	ioend->io_size = 0;
-> > > > > > > >  	ioend->io_offset = offset;
-> > > > > > > > -	INIT_WORK(&ioend->io_work, xfs_end_io);
-> > > > > > > >  	ioend->io_append_trans = NULL;
-> > > > > > > >  	ioend->io_bio = bio;
-> > > > > > > >  	return ioend;
-> > > > > > > > diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> > > > > > > > index 6c2615b83c5d..f62b03186c62 100644
-> > > > > > > > --- a/fs/xfs/xfs_aops.h
-> > > > > > > > +++ b/fs/xfs/xfs_aops.h
-> > > > > > > > @@ -18,7 +18,6 @@ struct xfs_ioend {
-> > > > > > > >  	struct inode		*io_inode;	/* file being written to */
-> > > > > > > >  	size_t			io_size;	/* size of the extent */
-> > > > > > > >  	xfs_off_t		io_offset;	/* offset in the file */
-> > > > > > > > -	struct work_struct	io_work;	/* xfsdatad work queue */
-> > > > > > > >  	struct xfs_trans	*io_append_trans;/* xact. for size update */
-> > > > > > > >  	struct bio		*io_bio;	/* bio being built */
-> > > > > > > >  	struct bio		io_inline_bio;	/* MUST BE LAST! */
-> > > > > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > > > > > > index 245483cc282b..e70e7db29026 100644
-> > > > > > > > --- a/fs/xfs/xfs_icache.c
-> > > > > > > > +++ b/fs/xfs/xfs_icache.c
-> > > > > > > > @@ -70,6 +70,9 @@ xfs_inode_alloc(
-> > > > > > > >  	ip->i_flags = 0;
-> > > > > > > >  	ip->i_delayed_blks = 0;
-> > > > > > > >  	memset(&ip->i_d, 0, sizeof(ip->i_d));
-> > > > > > > > +	INIT_WORK(&ip->i_iodone_work, xfs_end_io);
-> > > > > > > > +	INIT_LIST_HEAD(&ip->i_iodone_list);
-> > > > > > > > +	spin_lock_init(&ip->i_iodone_lock);
-> > > > > > > >  
-> > > > > > > >  	return ip;
-> > > > > > > >  }
-> > > > > > > > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> > > > > > > > index e62074a5257c..88239c2dd824 100644
-> > > > > > > > --- a/fs/xfs/xfs_inode.h
-> > > > > > > > +++ b/fs/xfs/xfs_inode.h
-> > > > > > > > @@ -57,6 +57,11 @@ typedef struct xfs_inode {
-> > > > > > > >  
-> > > > > > > >  	/* VFS inode */
-> > > > > > > >  	struct inode		i_vnode;	/* embedded VFS inode */
-> > > > > > > > +
-> > > > > > > > +	/* pending io completions */
-> > > > > > > > +	spinlock_t		i_iodone_lock;
-> > > > > > > > +	struct work_struct	i_iodone_work;
-> > > > > > > > +	struct list_head	i_iodone_list;
-> > > > > > > >  } xfs_inode_t;
-> > > > > > > >  
-> > > > > > > >  /* Convert from vfs inode to xfs inode */
-> > > > > > > > @@ -503,4 +508,6 @@ bool xfs_inode_verify_forks(struct xfs_inode *ip);
-> > > > > > > >  int xfs_iunlink_init(struct xfs_perag *pag);
-> > > > > > > >  void xfs_iunlink_destroy(struct xfs_perag *pag);
-> > > > > > > >  
-> > > > > > > > +void xfs_end_io(struct work_struct *work);
-> > > > > > > > +
-> > > > > > > >  #endif	/* __XFS_INODE_H__ */
-> > > > > > > > 
