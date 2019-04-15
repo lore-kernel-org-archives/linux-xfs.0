@@ -1,155 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:37116 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726291AbfDEOom (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Apr 2019 10:44:42 -0400
-Date: Fri, 5 Apr 2019 07:44:33 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 44/36] xfs_db: metadump should handle symlinks properly
-Message-ID: <20190405144433.GX5147@magnolia>
-References: <155259742281.31886.17157720770696604377.stgit@magnolia>
- <20190320193750.GH1183@magnolia>
- <cdd4b217-f914-c944-0fda-9a81245206e1@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cdd4b217-f914-c944-0fda-9a81245206e1@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:50484 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726415AbfDOBWl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 14 Apr 2019 21:22:41 -0400
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH] nvme/012 & 013: avoid extremely slow xfs IO
+Date: Mon, 15 Apr 2019 09:22:29 +0800
+Message-Id: <20190415012229.20689-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Omar Sandoval <osandov@fb.com>
+Cc: linux-block@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Eric Sandeen <esandeen@redhat.com>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+
+It is observed that nvme/012 may take ~17 minutes to complete on aarch64,
+even worse it may trigger IO timeout on nvme-loop.
+
+Eric and Dave replied that it is because of too small log size on small
+disk.
+
+So pass '-l size=32m' to avoid the issue.
+
+With this patch, nvme/012 can be completed in one minute.
+
+Cc: Eric Sandeen <esandeen@redhat.com>
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ tests/nvme/012 | 2 +-
+ tests/nvme/013 | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-On Fri, Apr 05, 2019 at 09:18:58AM -0500, Eric Sandeen wrote:
-> On 3/20/19 2:37 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Remote symlink target blocks are multi-fsb objects on XFS v5 filesystems
-> > because we only write one rmt header per data fork extent.  For fs
-> > blocksize >= 2048 we never have more than one block and therefore nobody
-> > noticed, but for blocksize == 1024 this is definitely not true and leads
-> > to metadump spraying error messages about symlink block crc errors.
-> > Therefore, reformulate the symlink metadump into a multi-fsb dump
-> > function.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Ok, thanks for the patient re-explanation on IRC, and after a bit of testing,
-> even with fragmented multi-block symlinks, this does work fine.
-> 
-> I'd kind of like to fully understand why, with a single map, it handles
-> fragmented links, but for now, moving on ... 
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> I'd like to change the struct bbmap initialization to outside the
-> declaration, though, to be more in line with other similar code.
-> Any heartburn over that?
-> 
-> 	map.nmaps = 1;
-> 	map.b[0].bm_bn = XFS_FSB_TO_DADDR(mp, s);
-> 	map.b[0].bm_len = XFS_FSB_TO_BB(mp, c);
-
-No, that's fine.  Admittedly that thing I wrote is five lines longer
-than it needs to be; I'll write myself a BMW, etc.  Feel free to change
-it. :)
-
---D
-
-> 
-> 
-> 
-> > ---
-> >  db/metadump.c |   48 +++++++++++++++++++++++++++++++++++++++++-------
-> >  1 file changed, 41 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/db/metadump.c b/db/metadump.c
-> > index 57216291..e0dd463f 100644
-> > --- a/db/metadump.c
-> > +++ b/db/metadump.c
-> > @@ -1638,11 +1638,39 @@ process_dir_data_block(
-> >  	}
-> >  }
-> >  
-> > -static void
-> > +static int
-> >  process_symlink_block(
-> > -	char			*block)
-> > +	xfs_fileoff_t	o,
-> > +	xfs_fsblock_t	s,
-> > +	xfs_filblks_t	c,
-> > +	typnm_t		btype,
-> > +	xfs_fileoff_t	last)
-> >  {
-> > -	char *link = block;
-> > +	struct bbmap	map = {
-> > +		.nmaps	= 1,
-> > +		.b	= {
-> > +			{
-> > +				.bm_bn = XFS_FSB_TO_DADDR(mp, s),
-> > +				.bm_len = XFS_FSB_TO_BB(mp, c),
-> > +			}
-> > +		},
-> > +	};
-> > +	char		*link;
-> > +	int		ret = 0;
-> > +
-> > +	push_cur();
-> > +	set_cur(&typtab[btype], 0, 0, DB_RING_IGN, &map);
-> > +	if (!iocur_top->data) {
-> > +		xfs_agnumber_t	agno = XFS_FSB_TO_AGNO(mp, s);
-> > +		xfs_agblock_t	agbno = XFS_FSB_TO_AGBNO(mp, s);
-> > +
-> > +		print_warning("cannot read %s block %u/%u (%llu)",
-> > +				typtab[btype].name, agno, agbno, s);
-> > +		if (stop_on_read_error)
-> > +			ret = -1;
-> > +		goto out_pop;
-> > +	}
-> > +	link = iocur_top->data;
-> >  
-> >  	if (xfs_sb_version_hascrc(&(mp)->m_sb))
-> >  		link += sizeof(struct xfs_dsymlink_hdr);
-> > @@ -1660,6 +1688,12 @@ process_symlink_block(
-> >  		if (zlen < mp->m_sb.sb_blocksize)
-> >  			memset(link + linklen, 0, zlen);
-> >  	}
-> > +
-> > +	iocur_top->need_crc = 1;
-> > +	ret = write_buf(iocur_top);
-> > +out_pop:
-> > +	pop_cur();
-> > +	return ret;
-> >  }
-> >  
-> >  #define MAX_REMOTE_VALS		4095
-> > @@ -1879,10 +1913,6 @@ process_single_fsb_objects(
-> >  			}
-> >  			iocur_top->need_crc = 1;
-> >  			break;
-> > -		case TYP_SYMLINK:
-> > -			process_symlink_block(dp);
-> > -			iocur_top->need_crc = 1;
-> > -			break;
-> >  		case TYP_ATTR:
-> >  			process_attr_block(dp, o);
-> >  			iocur_top->need_crc = 1;
-> > @@ -1986,6 +2016,8 @@ is_multi_fsb_object(
-> >  {
-> >  	if (btype == TYP_DIR2 && mp->m_dir_geo->fsbcount > 1)
-> >  		return true;
-> > +	if (btype == TYP_SYMLINK)
-> > +		return true;
-> >  	return false;
-> >  }
-> >  
-> > @@ -2000,6 +2032,8 @@ process_multi_fsb_objects(
-> >  	switch (btype) {
-> >  	case TYP_DIR2:
-> >  		return process_multi_fsb_dir(o, s, c, btype, last);
-> > +	case TYP_SYMLINK:
-> > +		return process_symlink_block(o, s, c, btype, last);
-> >  	default:
-> >  		print_warning("bad type for multi-fsb object %d", btype);
-> >  		return -EINVAL;
-> > 
+diff --git a/tests/nvme/012 b/tests/nvme/012
+index 9a6801511df7..d7a8751ec752 100755
+--- a/tests/nvme/012
++++ b/tests/nvme/012
+@@ -46,7 +46,7 @@ test() {
+ 
+ 	umount ${mount_dir} > /dev/null 2>&1
+ 
+-	mkfs.xfs -f /dev/"${nvmedev}n1" > /dev/null 2>&1
++	mkfs.xfs -l size=32m -f /dev/"${nvmedev}n1" > /dev/null 2>&1
+ 
+ 	mount /dev/"${nvmedev}n1" "${mount_dir}"
+ 
+diff --git a/tests/nvme/013 b/tests/nvme/013
+index e346cd4baa35..bc435f752dca 100755
+--- a/tests/nvme/013
++++ b/tests/nvme/013
+@@ -44,7 +44,7 @@ test() {
+ 
+ 	umount ${mount_dir} > /dev/null 2>&1
+ 
+-	mkfs.xfs -f /dev/"${nvmedev}n1" > /dev/null 2>&1
++	mkfs.xfs -l size=32m  -f /dev/"${nvmedev}n1" > /dev/null 2>&1
+ 
+ 	mount /dev/"${nvmedev}n1" "${mount_dir}"
+ 
+-- 
+2.9.5
