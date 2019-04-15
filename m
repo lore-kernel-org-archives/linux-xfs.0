@@ -1,66 +1,248 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:52637 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726682AbfDKVp4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Apr 2019 17:45:56 -0400
-Date: Fri, 12 Apr 2019 07:45:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Deadlock waiting for log space
-Message-ID: <20190411214552.GD29573@dread.disaster.area>
-References: <20190411161500.43svvbxeqt6wbis2@macbook-pro-91.dhcp.thefacebook.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:39792 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728148AbfDOUN2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 16:13:28 -0400
+Subject: Re: [PATCH 6/9] xfs: Add xfs_has_attr and subroutines
+References: <20190412225036.22939-1-allison.henderson@oracle.com>
+ <20190412225036.22939-7-allison.henderson@oracle.com>
+ <b245cb89-f801-03eb-f3bb-0d8177651f65@gmx.com>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <c312f957-f2d2-ee51-a714-4a19c8f54210@oracle.com>
+Date: Mon, 15 Apr 2019 13:13:21 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190411161500.43svvbxeqt6wbis2@macbook-pro-91.dhcp.thefacebook.com>
+In-Reply-To: <b245cb89-f801-03eb-f3bb-0d8177651f65@gmx.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: linux-xfs@vger.kernel.org
+To: Su Yue <Damenly_Su@gmx.com>, linux-xfs@vger.kernel.org
 
-On Thu, Apr 11, 2019 at 12:15:01PM -0400, Josef Bacik wrote:
-> Hello,
+On 4/14/19 7:46 PM, Su Yue wrote:
 > 
-> We're seeing a deadlock on xfs in a few kernels in production and are having a
-> hard time figuring out what's happening.  Here is a breakdown of the stack
-> traces on a box I could get to before it was rebooted, all the boxes we've found
-> have been similar
 > 
-> 100 hits:
-> [<ffffffff813bd7ae>] xlog_grant_head_wait+0xbe/0x1e0
-> [<ffffffff813bd958>] xlog_grant_head_check+0x88/0xe0
-> [<ffffffff813bff89>] xfs_log_reserve+0xc9/0x1c0
-> [<ffffffff813ba3dd>] xfs_trans_reserve+0x17d/0x1f0
-> [<ffffffff813bb72e>] xfs_trans_alloc+0xbe/0x130
-.....
-
-Which means you've run out of log space, and it's waiting for
-metadata writeback to move the tail of the log and release grant
-space, at which point these waiters will wake up.
-
-If there is a deadlock, then it's caused by other threads getting
-blocked somewhere, not but these ones that are waiting on log space.
-
-
-> The only "fishy" thing is in our kernels (4.6, 4.11, and 4.16) xfs_vm_writepages
-> calls xfs_submit_ioend with the page locked, whereas upstream doesn't.  However
-> the change that introduced this is
+> On 2019/4/13 6:50 AM, Allison Henderson wrote:
+>> This patch adds a new functions to check for the existence of
+>> an attribute.  Subroutines are also added to handle the cases
+>> of leaf blocks, nodes or shortform.  We will need this later
+>> for delayed attributes since delayed operations cannot return
+>> error codes.
+>>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_attr.c      | 78 
+>> +++++++++++++++++++++++++++++++++++++++++++
+>>   fs/xfs/libxfs/xfs_attr.h      |  1 +
+>>   fs/xfs/libxfs/xfs_attr_leaf.c | 33 ++++++++++++++++++
+>>   fs/xfs/libxfs/xfs_attr_leaf.h |  1 +
+>>   4 files changed, 113 insertions(+)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index c3477fa7..0042708 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -53,6 +53,7 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t 
+>> *args);
+>>   STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
+>>   STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args, bool roll_trans);
+>>   STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args, bool 
+>> roll_trans);
+>> +STATIC int xfs_leaf_has_attr(xfs_da_args_t *args);
+>>
+>>   /*
+>>    * Internal routines when attribute list is more than one block.
+>> @@ -60,6 +61,7 @@ STATIC int xfs_attr_leaf_removename(xfs_da_args_t 
+>> *args, bool roll_trans);
+>>   STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+>>   STATIC int xfs_attr_node_addname(xfs_da_args_t *args, bool roll_trans);
+>>   STATIC int xfs_attr_node_removename(xfs_da_args_t *args, bool 
+>> roll_trans);
+>> +STATIC int xfs_attr_node_hasname(xfs_da_args_t *args);
+>>   STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+>>   STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+>>
+>> @@ -301,6 +303,29 @@ xfs_attr_set_args(
+>>   }
+>>
+>>   /*
+>> + * Return successful if attr is found, or ENOATTR if not
+>> + */
+>> +int
+>> +xfs_has_attr(
+>> +    struct xfs_da_args      *args)
+>> +{
+>> +    struct xfs_inode        *dp = args->dp;
+>> +    int                     error;
+>> +
+>> +    if (!xfs_inode_hasattr(dp))
+>> +        error = -ENOATTR;
+>> +    else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+>> +        ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+>> +        error = xfs_shortform_has_attr(args);
+>> +    } else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+>> +        error = xfs_leaf_has_attr(args);
+>> +    else
+>> +        error = xfs_attr_node_hasname(args);
+>> +
+>> +    return error;
+>> +}
+>> +
+>> +/*
+>>    * Remove the attribute specified in @args.
+>>    */
+>>   int
+>> @@ -836,6 +861,29 @@ xfs_attr_leaf_addname(
+>>   }
+>>
+>>   /*
+>> + * Return successful if attr is found, or ENOATTR if not
+>> + */
+>> +STATIC int
+>> +xfs_leaf_has_attr(
+>> +    struct xfs_da_args      *args)
+>> +{
+>> +    struct xfs_buf          *bp;
+>> +    int                     error = 0;
+>> +
+>> +    args->blkno = 0;
+>> +    error = xfs_attr3_leaf_read(args->trans, args->dp,
+>> +            args->blkno, -1, &bp);
+>> +    if (error)
+>> +        return error;
+>> +
+>> +    error = xfs_attr3_leaf_lookup_int(bp, args);
+>> +    error = (error == -ENOATTR) ? -ENOATTR : 0;
+>> +    xfs_trans_brelse(args->trans, bp);
+>> +
+>> +    return error;
+>> +}
+>> +
+>> +/*
+>>    * Remove a name from the leaf attribute list structure
+>>    *
+>>    * This leaf block cannot have a "remote" value, we only call this 
+>> routine
+>> @@ -1166,6 +1214,36 @@ xfs_attr_node_addname(
+>>   }
+>>
+>>   /*
+>> + * Return successful if attr is found, or ENOATTR if not
+>> + */
+>> +STATIC int
+>> +xfs_attr_node_hasname(
+>> +    struct xfs_da_args    *args)
+>> +{
+>> +    struct xfs_da_state    *state;
+>> +    struct xfs_inode    *dp;
+>> +    int            retval, error;
+>> +
+>> +    /*
+>> +     * Tie a string around our finger to remind us where we are.
+>> +     */
+>> +    dp = args->dp;
+>> +    state = xfs_da_state_alloc();
 > 
-> 8e1f065bea1b ("xfs: refactor the tail of xfs_writepage_map")
+> The corresponding xfs_da_state_free(state) seems lost...
+> 
+> ---
+> Su
 
-Shouldn't matter. What you are looking for is fixes of this sort:
+Good catch, you are right.  I will add that in the next version.
 
-4df0f7f145f2 xfs: fix transaction allocation deadlock in IO path
+Thanks!
+Allison
 
-which went into 4.17. There's been a few transaction deadlock
-vectors fixed since 4.16 (e.g. in how we roll transactions and relog
-items that are joined to the them), so we really need to know about
-the context of all the other blocked threads rather than just the
-ones that are waiting on log space....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>> +    state->args = args;
+>> +    state->mp = dp->i_mount;
+>> +
+>> +    /*
+>> +     * Search to see if name exists, and get back a pointer to it.
+>> +     */
+>> +    error = xfs_da3_node_lookup_int(state, &retval);
+>> +    if (error || (retval != -EEXIST)) {
+>> +        if (error == 0)
+>> +            error = retval;
+>> +    }
+>> +    return error;
+>> +}
+>> +
+>> +/*
+>>    * Remove a name from a B-tree attribute list.
+>>    *
+>>    * This will involve walking down the Btree, and may involve joining
+>> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+>> index 83b3621..974c963 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.h
+>> +++ b/fs/xfs/libxfs/xfs_attr.h
+>> @@ -168,6 +168,7 @@ int xfs_attr_set_args(struct xfs_da_args *args, 
+>> struct xfs_buf **leaf_bp,
+>>            bool roll_trans);
+>>   int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
+>>               size_t namelen, int flags);
+>> +int xfs_has_attr(struct xfs_da_args *args);
+>>   int xfs_attr_remove_args(struct xfs_da_args *args, bool roll_trans);
+>>   int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+>>             int flags, struct attrlist_cursor_kern *cursor);
+>> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c 
+>> b/fs/xfs/libxfs/xfs_attr_leaf.c
+>> index 128bfe9..e9f2f53 100644
+>> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+>> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+>> @@ -622,6 +622,39 @@ xfs_attr_fork_remove(
+>>   }
+>>
+>>   /*
+>> + * Return successful if attr is found, or ENOATTR if not
+>> + */
+>> +int
+>> +xfs_shortform_has_attr(
+>> +    struct xfs_da_args     *args)
+>> +{
+>> +    struct xfs_attr_shortform *sf;
+>> +    struct xfs_attr_sf_entry *sfe;
+>> +    int            base = sizeof(struct xfs_attr_sf_hdr);
+>> +    int            size = 0;
+>> +    int            end;
+>> +    int            i;
+>> +
+>> +    sf = (struct xfs_attr_shortform *)args->dp->i_afp->if_u1.if_data;
+>> +    sfe = &sf->list[0];
+>> +    end = sf->hdr.count;
+>> +    for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
+>> +            base += size, i++) {
+>> +        size = XFS_ATTR_SF_ENTSIZE(sfe);
+>> +        if (sfe->namelen != args->namelen)
+>> +            continue;
+>> +        if (memcmp(sfe->nameval, args->name, args->namelen) != 0)
+>> +            continue;
+>> +        if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+>> +            continue;
+>> +        break;
+>> +    }
+>> +    if (i == end)
+>> +        return -ENOATTR;
+>> +    return 0;
+>> +}
+>> +
+>> +/*
+>>    * Remove an attribute from the shortform attribute list structure.
+>>    */
+>>   int
+>> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h 
+>> b/fs/xfs/libxfs/xfs_attr_leaf.h
+>> index 9d830ec..98dd169 100644
+>> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
+>> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+>> @@ -39,6 +39,7 @@ int    xfs_attr_shortform_getvalue(struct 
+>> xfs_da_args *args);
+>>   int    xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
+>>               struct xfs_buf **leaf_bp);
+>>   int    xfs_attr_shortform_remove(struct xfs_da_args *args);
+>> +int    xfs_shortform_has_attr(struct xfs_da_args *args);
+>>   int    xfs_attr_shortform_allfit(struct xfs_buf *bp, struct 
+>> xfs_inode *dp);
+>>   int    xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+>>   xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
+>>
