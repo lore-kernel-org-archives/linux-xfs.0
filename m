@@ -1,213 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54622 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726182AbfDOSN4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 Apr 2019 14:13:56 -0400
-Date: Mon, 15 Apr 2019 14:13:53 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 1/3] xfs: implement per-inode writeback completion
- queues
-Message-ID: <20190415181353.GG4222@bfoster>
-References: <155529406249.243484.1307333973877627694.stgit@magnolia>
- <155529406877.243484.8074329168835632578.stgit@magnolia>
- <20190415161336.GB4752@magnolia>
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:40014 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725804AbfDOVSy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 17:18:54 -0400
+Date: Tue, 16 Apr 2019 07:18:51 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/9] xfs: Remove all strlen in all xfs_attr_* functions
+ for attr names.
+Message-ID: <20190415211851.GF29573@dread.disaster.area>
+References: <20190412225036.22939-1-allison.henderson@oracle.com>
+ <20190412225036.22939-2-allison.henderson@oracle.com>
+ <20190414230259.GE29573@dread.disaster.area>
+ <c2ef788f-223c-a31d-566b-f3c185ff0a06@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190415161336.GB4752@magnolia>
+In-Reply-To: <c2ef788f-223c-a31d-566b-f3c185ff0a06@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Allison Henderson <allison.henderson@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 15, 2019 at 09:13:36AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Apr 15, 2019 at 01:08:50PM -0700, Allison Henderson wrote:
+> On 4/14/19 4:02 PM, Dave Chinner wrote:
+> > On Fri, Apr 12, 2019 at 03:50:28PM -0700, Allison Henderson wrote:
+> > > This helps to pre-simplify the extra handling of the null terminator in
+> > > delayed operations which use memcpy rather than strlen.  Later
+> > > when we introduce parent pointers, attribute names will become binary,
+> > > so strlen will not work at all.  Removing uses of strlen now will
+> > > help reduce complexities later
+> > > 
+> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Hmmm. If we are going to pass name/namelen pairs around everywhere,
+> > can we convert these to a struct xfs_name?
+> > 
+> > I also wonder where we should convert the name/namelen pairs in the
+> > attr args struct to an xfs_name, too, then we can just do:
+> > 
+> > 	args->name = *name;
+> > 
+> > to copy in the string pointer and the name length in one go.
+> > 
+> > And we might even be able to put the attribute flags (e.g.
+> > ATTR_ROOT) in the name.type field, and get rid of that parameter
+> > being passed around, too...
+> > 
+> > Cheers,
+> > 
+> > Dave.
 > 
-> When scheduling writeback of dirty file data in the page cache, XFS uses
-> IO completion workqueue items to ensure that filesystem metadata only
-> updates after the write completes successfully.  This is essential for
-> converting unwritten extents to real extents at the right time and
-> performing COW remappings.
+> I think a new struct xfs_name is reasonable.  Or maybe a general purpose
+> xfs_array?  The value/valuelen parameters have a similar relation that could
+> make use of that too.  How would people feel about something like this:
 > 
-> Unfortunately, XFS queues each IO completion work item to an unbounded
-> workqueue, which means that the kernel can spawn dozens of threads to
-> try to handle the items quickly.  These threads need to take the ILOCK
-> to update file metadata, which results in heavy ILOCK contention if a
-> large number of the work items target a single file, which is
-> inefficient.
+> struct xfs_array {
+> 	unsigned char *bytes;
+> 	size_t		len;
+> }
 > 
-> Worse yet, the writeback completion threads get stuck waiting for the
-> ILOCK while holding transaction reservations, which can use up all
-> available log reservation space.  When that happens, metadata updates to
-> other parts of the filesystem grind to a halt, even if the filesystem
-> could otherwise have handled it.
-> 
-> Even worse, if one of the things grinding to a halt happens to be a
-> thread in the middle of a defer-ops finish holding the same ILOCK and
-> trying to obtain more log reservation having exhausted the permanent
-> reservation, we now have an ABBA deadlock - writeback has a transaction
-> reserved and wants the ILOCK, and someone else has the ILOCk and wants a
-> transaction reservation.
-> 
-> Therefore, we create a per-inode writeback io completion queue + work
-> item.  When writeback finishes, it can add the ioend to the per-inode
-> queue and let the single worker item process that queue.  This
-> dramatically cuts down on the number of kworkers and ILOCK contention in
-> the system, and seems to have eliminated an occasional deadlock I was
-> seeing while running generic/476.
-> 
-> Testing with a program that simulates a heavy random-write workload to a
-> single file demonstrates that the number of kworkers drops from
-> approximately 120 threads per file to 1, without dramatically changing
-> write bandwidth or pagecache access latency.
-> 
-> Note that we leave the xfs-conv workqueue's max_active alone because we
-> still want to be able to run ioend processing for as many inodes as the
-> system can handle.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: rename i_iodone_* -> i_ioend_* to avoid naming collision
-> ---
+> struct xfs_attribute {
+> 	struct xfs_array	name;
+> 	int			flags;
+> }
 
-Looks good, thanks!
+Hmmm. I think that's overkill - we really don't need that much
+abstraction and it makes the code more complex rather than
+simplifies it. i.e. args->name.name.bytes isn't really a
+simplification...
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Also the above means we have to discard the const part of the names
+we are passed because this construction doesn't appear to be
+intended for read only strings. i.e.:
 
->  fs/xfs/xfs_aops.c   |   48 +++++++++++++++++++++++++++++++++++++-----------
->  fs/xfs/xfs_aops.h   |    1 -
->  fs/xfs/xfs_icache.c |    3 +++
->  fs/xfs/xfs_inode.h  |    7 +++++++
->  4 files changed, 47 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 3619e9e8d359..0dd249115f3c 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -234,11 +234,9 @@ xfs_setfilesize_ioend(
->   * IO write completion.
->   */
->  STATIC void
-> -xfs_end_io(
-> -	struct work_struct *work)
-> +xfs_end_ioend(
-> +	struct xfs_ioend	*ioend)
->  {
-> -	struct xfs_ioend	*ioend =
-> -		container_of(work, struct xfs_ioend, io_work);
->  	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
->  	xfs_off_t		offset = ioend->io_offset;
->  	size_t			size = ioend->io_size;
-> @@ -278,19 +276,48 @@ xfs_end_io(
->  	xfs_destroy_ioend(ioend, error);
->  }
->  
-> +/* Finish all pending io completions. */
-> +void
-> +xfs_end_io(
-> +	struct work_struct	*work)
-> +{
-> +	struct xfs_inode	*ip;
-> +	struct xfs_ioend	*ioend;
-> +	struct list_head	completion_list;
-> +	unsigned long		flags;
-> +
-> +	ip = container_of(work, struct xfs_inode, i_ioend_work);
-> +
-> +	spin_lock_irqsave(&ip->i_ioend_lock, flags);
-> +	list_replace_init(&ip->i_ioend_list, &completion_list);
-> +	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
-> +
-> +	while (!list_empty(&completion_list)) {
-> +		ioend = list_first_entry(&completion_list, struct xfs_ioend,
-> +				io_list);
-> +		list_del_init(&ioend->io_list);
-> +		xfs_end_ioend(ioend);
-> +	}
-> +}
-> +
->  STATIC void
->  xfs_end_bio(
->  	struct bio		*bio)
->  {
->  	struct xfs_ioend	*ioend = bio->bi_private;
-> -	struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
-> +	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	unsigned long		flags;
->  
->  	if (ioend->io_fork == XFS_COW_FORK ||
-> -	    ioend->io_state == XFS_EXT_UNWRITTEN)
-> -		queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
-> -	else if (ioend->io_append_trans)
-> -		queue_work(mp->m_data_workqueue, &ioend->io_work);
-> -	else
-> +	    ioend->io_state == XFS_EXT_UNWRITTEN ||
-> +	    ioend->io_append_trans != NULL) {
-> +		spin_lock_irqsave(&ip->i_ioend_lock, flags);
-> +		if (list_empty(&ip->i_ioend_list))
-> +			queue_work(mp->m_unwritten_workqueue, &ip->i_ioend_work);
-> +		list_add_tail(&ioend->io_list, &ip->i_ioend_list);
-> +		spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
-> +	} else
->  		xfs_destroy_ioend(ioend, blk_status_to_errno(bio->bi_status));
->  }
->  
-> @@ -594,7 +621,6 @@ xfs_alloc_ioend(
->  	ioend->io_inode = inode;
->  	ioend->io_size = 0;
->  	ioend->io_offset = offset;
-> -	INIT_WORK(&ioend->io_work, xfs_end_io);
->  	ioend->io_append_trans = NULL;
->  	ioend->io_bio = bio;
->  	return ioend;
-> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> index 6c2615b83c5d..f62b03186c62 100644
-> --- a/fs/xfs/xfs_aops.h
-> +++ b/fs/xfs/xfs_aops.h
-> @@ -18,7 +18,6 @@ struct xfs_ioend {
->  	struct inode		*io_inode;	/* file being written to */
->  	size_t			io_size;	/* size of the extent */
->  	xfs_off_t		io_offset;	/* offset in the file */
-> -	struct work_struct	io_work;	/* xfsdatad work queue */
->  	struct xfs_trans	*io_append_trans;/* xact. for size update */
->  	struct bio		*io_bio;	/* bio being built */
->  	struct bio		io_inline_bio;	/* MUST BE LAST! */
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 245483cc282b..1237b775d7f7 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -70,6 +70,9 @@ xfs_inode_alloc(
->  	ip->i_flags = 0;
->  	ip->i_delayed_blks = 0;
->  	memset(&ip->i_d, 0, sizeof(ip->i_d));
-> +	INIT_WORK(&ip->i_ioend_work, xfs_end_io);
-> +	INIT_LIST_HEAD(&ip->i_ioend_list);
-> +	spin_lock_init(&ip->i_ioend_lock);
->  
->  	return ip;
->  }
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index e62074a5257c..b9ee3dfc104a 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -57,6 +57,11 @@ typedef struct xfs_inode {
->  
->  	/* VFS inode */
->  	struct inode		i_vnode;	/* embedded VFS inode */
-> +
-> +	/* pending io completions */
-> +	spinlock_t		i_ioend_lock;
-> +	struct work_struct	i_ioend_work;
-> +	struct list_head	i_ioend_list;
->  } xfs_inode_t;
->  
->  /* Convert from vfs inode to xfs inode */
-> @@ -503,4 +508,6 @@ bool xfs_inode_verify_forks(struct xfs_inode *ip);
->  int xfs_iunlink_init(struct xfs_perag *pag);
->  void xfs_iunlink_destroy(struct xfs_perag *pag);
->  
-> +void xfs_end_io(struct work_struct *work);
-> +
->  #endif	/* __XFS_INODE_H__ */
+> We could add the value member in here too. 
+
+Which is something that isn't const. :)
+
+> It tends to get passed around
+> just as much with the exception of attr remove operations which only need
+> the name.  I think changing the actual members of xfs_da_args should be
+> another patch though, since that's a bigger change that affects a wider
+> scope of code.  I can look into it though.
+
+I don't think we want anything more complex or to extent it to
+include other parts of the attr API - that just means we have a
+special snowflake for the API rather than a generic way of encoding
+a name string across all the internal interfaces that space a name/len
+pair...
+
+Really, I was just suggesting using the struct xfs_name because
+it already exists and encodes/documents exactly what we are passing
+here, hence getting rid of some of the mess around passing the attr
+names around.
+
+> Also, do I still keep the old reviewed-by on the patch if the patch is still
+> going through changes?  I have a few signed-off patches in the parent
+> pointer set that have changed quite a bit since we've started too.
+
+If the changes are significant, then it needs review again and so
+you should drop it.
+
+But I'd do the name/len -> xfsname conversion as a separate patch,
+so this patch doesn't need changing.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
