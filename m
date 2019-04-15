@@ -1,177 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:57704 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725975AbfDOCKD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Apr 2019 22:10:03 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3F253lG156556
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2019 02:10:01 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 2ru59cv4fe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2019 02:10:01 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3F275oi177065
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2019 02:08:00 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2ru4vsbw3w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2019 02:08:00 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3F27xTR017608
-        for <linux-xfs@vger.kernel.org>; Mon, 15 Apr 2019 02:08:00 GMT
-Subject: [PATCH 3/3] xfs: merge adjacent io completions of the same type
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 14 Apr 2019 19:08:01 -0700
-Message-ID: <155529408121.243484.4204906013564330851.stgit@magnolia>
-In-Reply-To: <155529406249.243484.1307333973877627694.stgit@magnolia>
-References: <155529406249.243484.1307333973877627694.stgit@magnolia>
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:7246 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725789AbfDOCVa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Apr 2019 22:21:30 -0400
+From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+Subject: Re: [PATCH] nvme/012 & 013: avoid extremely slow xfs IO
+Date: Mon, 15 Apr 2019 02:21:27 +0000
+Message-ID: <SN6PR04MB45271891C853B09EFEB0E2A6862B0@SN6PR04MB4527.namprd04.prod.outlook.com>
+References: <20190415012229.20689-1-ming.lei@redhat.com>
+ <SN6PR04MB4527DD7C84A15184AE5F7947862B0@SN6PR04MB4527.namprd04.prod.outlook.com>
+ <CACVXFVMa1Zvqm=GYf=4_oB+wTuoKMGaStfsKSTGBbVKACGvGQQ@mail.gmail.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Eric Sandeen <esandeen@redhat.com>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-It's possible for pagecache writeback to split up a large amount of work
-into smaller pieces for throttling purposes or to reduce the amount of
-time a writeback operation is pending.  Whatever the reason, XFS can end
-up with a bunch of IO completions that call for the same operation to be
-performed on a contiguous extent mapping.  Since mappings are extent
-based in XFS, we'd prefer to run fewer transactions when we can.
-
-When we're processing an ioend on the list of io completions, check to
-see if the next items on the list are both adjacent and of the same
-type.  If so, we can merge the completions to reduce transaction
-overhead.
-
-On fast storage this doesn't seem to make much of a difference in
-performance, though the number of transactions for an overnight xfstests
-run seems to drop by ~5%.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_aops.c |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 86 insertions(+)
-
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index f7a9bb661826..53afa2e6e3e7 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -237,6 +237,7 @@ STATIC void
- xfs_end_ioend(
- 	struct xfs_ioend	*ioend)
- {
-+	struct list_head	ioend_list;
- 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
- 	xfs_off_t		offset = ioend->io_offset;
- 	size_t			size = ioend->io_size;
-@@ -273,7 +274,89 @@ xfs_end_ioend(
- done:
- 	if (ioend->io_append_trans)
- 		error = xfs_setfilesize_ioend(ioend, error);
-+	list_replace_init(&ioend->io_list, &ioend_list);
- 	xfs_destroy_ioend(ioend, error);
-+
-+	while (!list_empty(&ioend_list)) {
-+		ioend = list_first_entry(&ioend_list, struct xfs_ioend,
-+				io_list);
-+		list_del_init(&ioend->io_list);
-+		xfs_destroy_ioend(ioend, error);
-+	}
-+}
-+
-+/*
-+ * We can merge two adjacent ioends if they have the same set of work to do.
-+ */
-+static bool
-+xfs_ioend_can_merge(
-+	struct xfs_ioend	*ioend,
-+	int			ioend_error,
-+	struct xfs_ioend	*next)
-+{
-+	int			next_error;
-+
-+	next_error = blk_status_to_errno(next->io_bio->bi_status);
-+	if (ioend_error != next_error)
-+		return false;
-+	if ((ioend->io_fork == XFS_COW_FORK) ^ (next->io_fork == XFS_COW_FORK))
-+		return false;
-+	if ((ioend->io_state == XFS_EXT_UNWRITTEN) ^
-+	    (next->io_state == XFS_EXT_UNWRITTEN))
-+		return false;
-+	if (ioend->io_offset + ioend->io_size != next->io_offset)
-+		return false;
-+	if (xfs_ioend_is_append(ioend) != xfs_ioend_is_append(next))
-+		return false;
-+	return true;
-+}
-+
-+/* Try to merge adjacent completions. */
-+STATIC void
-+xfs_ioend_try_merge(
-+	struct xfs_ioend	*ioend,
-+	struct list_head	*more_ioends)
-+{
-+	struct xfs_ioend	*next_ioend;
-+	int			ioend_error;
-+	int			error;
-+
-+	if (list_empty(more_ioends))
-+		return;
-+
-+	ioend_error = blk_status_to_errno(ioend->io_bio->bi_status);
-+
-+	while (!list_empty(more_ioends)) {
-+		next_ioend = list_first_entry(more_ioends, struct xfs_ioend,
-+				io_list);
-+		if (!xfs_ioend_can_merge(ioend, ioend_error, next_ioend))
-+			break;
-+		list_move_tail(&next_ioend->io_list, &ioend->io_list);
-+		ioend->io_size += next_ioend->io_size;
-+		if (ioend->io_append_trans) {
-+			error = xfs_setfilesize_ioend(next_ioend, 1);
-+			ASSERT(error == 1);
-+		}
-+	}
-+}
-+
-+/* list_sort compare function for ioends */
-+static int
-+xfs_ioend_compare(
-+	void			*priv,
-+	struct list_head	*a,
-+	struct list_head	*b)
-+{
-+	struct xfs_ioend	*ia;
-+	struct xfs_ioend	*ib;
-+
-+	ia = container_of(a, struct xfs_ioend, io_list);
-+	ib = container_of(b, struct xfs_ioend, io_list);
-+	if (ia->io_offset < ib->io_offset)
-+		return -1;
-+	else if (ia->io_offset > ib->io_offset)
-+		return 1;
-+	return 0;
- }
- 
- /* Finish all pending io completions. */
-@@ -292,10 +375,13 @@ xfs_end_io(
- 	list_replace_init(&ip->i_iodone_list, &completion_list);
- 	spin_unlock_irqrestore(&ip->i_iodone_lock, flags);
- 
-+	list_sort(NULL, &completion_list, xfs_ioend_compare);
-+
- 	while (!list_empty(&completion_list)) {
- 		ioend = list_first_entry(&completion_list, struct xfs_ioend,
- 				io_list);
- 		list_del_init(&ioend->io_list);
-+		xfs_ioend_try_merge(ioend, &completion_list);
- 		xfs_end_ioend(ioend);
- 	}
- }
+On 4/14/19 7:11 PM, Ming Lei wrote:=0A=
+> On Mon, Apr 15, 2019 at 10:02 AM Chaitanya Kulkarni=0A=
+> <Chaitanya.Kulkarni@wdc.com> wrote:=0A=
+>>=0A=
+>> Thanks for the patch Ming. Couple of comments below.=0A=
+>> On 4/14/19 6:22 PM, Ming Lei wrote:=0A=
+>>> It is observed that nvme/012 may take ~17 minutes to complete on aarch6=
+4,=0A=
+>>> even worse it may trigger IO timeout on nvme-loop.=0A=
+>>>=0A=
+>>> Eric and Dave replied that it is because of too small log size on small=
+=0A=
+>>> disk.=0A=
+>>>=0A=
+>>> So pass '-l size=3D32m' to avoid the issue.=0A=
+>>>=0A=
+>>> With this patch, nvme/012 can be completed in one minute.=0A=
+>>>=0A=
+>> Then we should set the QUICK=3D1 if its taking shorter time.=0A=
+> =0A=
+> That should have been a QUICK test, it is fine to set it, but it shouldn'=
+t=0A=
+> belong to this patch.=0A=
+> =0A=
+>>=0A=
+>>> Cc: Eric Sandeen <esandeen@redhat.com>=0A=
+>>> Cc: Dave Chinner <dchinner@redhat.com>=0A=
+>>> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>=0A=
+>>> Cc: linux-xfs@vger.kernel.org=0A=
+>>> Signed-off-by: Ming Lei <ming.lei@redhat.com>=0A=
+>>> ---=0A=
+>>>    tests/nvme/012 | 2 +-=0A=
+>>>    tests/nvme/013 | 2 +-=0A=
+>>>    2 files changed, 2 insertions(+), 2 deletions(-)=0A=
+>>>=0A=
+>>> diff --git a/tests/nvme/012 b/tests/nvme/012=0A=
+>>> index 9a6801511df7..d7a8751ec752 100755=0A=
+>>> --- a/tests/nvme/012=0A=
+>>> +++ b/tests/nvme/012=0A=
+>>> @@ -46,7 +46,7 @@ test() {=0A=
+>>>=0A=
+>>>        umount ${mount_dir} > /dev/null 2>&1=0A=
+>>>=0A=
+>>> -     mkfs.xfs -f /dev/"${nvmedev}n1" > /dev/null 2>&1=0A=
+>>> +     mkfs.xfs -l size=3D32m -f /dev/"${nvmedev}n1" > /dev/null 2>&1=0A=
+>>>=0A=
+>> As a part of this series lets move this to the helper mkfs in the=0A=
+>> nvme/rc and use that call in all the file-backed ns related testcases.=
+=0A=
+>> Let me know if you want me to do that or you would like to do that as a=
+=0A=
+>> part of this series. I'm okay with anything.=0A=
+> =0A=
+> I am fine with either way.=0A=
+> =0A=
+Okay, let's get this in, will send out the refactoring.=0A=
+> Thanks,=0A=
+> Ming Lei=0A=
+> =0A=
+=0A=
