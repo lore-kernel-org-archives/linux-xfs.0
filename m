@@ -1,97 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:44188 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726788AbfDLWws (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Apr 2019 18:52:48 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3CMd48I014826
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 22:52:46 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 2rphmf0yp4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 22:52:46 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3CMqb05076140
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 22:52:45 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2rtqnpaknc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 22:52:45 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3CMqitd002524
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Apr 2019 22:52:44 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 0/9] xfs: Delayed Attributes
-Date: Fri, 12 Apr 2019 15:50:27 -0700
-Message-Id: <20190412225036.22939-1-allison.henderson@oracle.com>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:46933 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726399AbfDOCGK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Apr 2019 22:06:10 -0400
+From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+Subject: Re: [PATCH] nvme/012 & 013: avoid extremely slow xfs IO
+Date: Mon, 15 Apr 2019 02:06:07 +0000
+Message-ID: <SN6PR04MB4527CE00058ED7118310BF2F862B0@SN6PR04MB4527.namprd04.prod.outlook.com>
+References: <20190415012229.20689-1-ming.lei@redhat.com>
+ <SN6PR04MB4527DD7C84A15184AE5F7947862B0@SN6PR04MB4527.namprd04.prod.outlook.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Eric Sandeen <esandeen@redhat.com>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-Hi all,
-
-This set is a subset of a larger series for parent pointers (v9). 
-Delayed attributes allow attribute operations (set and remove) to be 
-logged and committed in the same way that other delayed operations do.
-This will help break up more complex operations when we later introduce
-parent pointers which can be used in a number of optimizations.  Since
-delayed attributes can be implemented as a stand alone feature, I've
-decided to subdivide the set to help make it more manageable.
-
-Changes since parent pointers v9:
-This is mostly to update the set onto more recent code.  Some time
-during v8, concerns were raised about the transaction becoming too
-large, and we discussed breaking up the set operation by periodically
-returning EAGAIN to cycle out the transaction during the finish routine. 
-This is done in patches 7 and 8, but I dont recall them getting feedback 
-as people were quite busy at the time.
-
-Questions, comments, feedback appreciated!
-
-Thanks all!
-Allion
-
-Allison Henderson (9):
-  xfs: Remove all strlen in all xfs_attr_* functions for attr names.
-  xfs: Hold inode locks in xfs_ialloc
-  xfs: Add trans toggle to attr routines
-  xfs: Set up infastructure for deferred attribute operations
-  xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
-  xfs: Add xfs_has_attr and subroutines
-  xfs: Add attr context to log item
-  xfs: Roll delayed attr operations by returning EAGAIN
-  xfs: Remove roll_trans boolean
-
- fs/xfs/Makefile                 |   2 +
- fs/xfs/libxfs/xfs_attr.c        | 316 ++++++++++++++-------
- fs/xfs/libxfs/xfs_attr.h        |  61 ++++-
- fs/xfs/libxfs/xfs_attr_leaf.c   |  48 +++-
- fs/xfs/libxfs/xfs_attr_leaf.h   |   3 +-
- fs/xfs/libxfs/xfs_attr_remote.c |  20 --
- fs/xfs/libxfs/xfs_defer.c       |   1 +
- fs/xfs/libxfs/xfs_defer.h       |   3 +
- fs/xfs/libxfs/xfs_log_format.h  |  44 ++-
- fs/xfs/libxfs/xfs_types.h       |   1 +
- fs/xfs/scrub/common.c           |   2 +
- fs/xfs/xfs_acl.c                |  14 +-
- fs/xfs/xfs_attr_item.c          | 587 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_attr_item.h          | 103 +++++++
- fs/xfs/xfs_inode.c              |   6 +-
- fs/xfs/xfs_ioctl.c              |  15 +-
- fs/xfs/xfs_ioctl32.c            |   2 +
- fs/xfs/xfs_iops.c               |   7 +-
- fs/xfs/xfs_log_recover.c        | 172 ++++++++++++
- fs/xfs/xfs_ondisk.h             |   2 +
- fs/xfs/xfs_qm.c                 |   1 +
- fs/xfs/xfs_symlink.c            |   3 +
- fs/xfs/xfs_trans.h              |  12 +
- fs/xfs/xfs_trans_attr.c         | 250 +++++++++++++++++
- fs/xfs/xfs_xattr.c              |  11 +-
- 25 files changed, 1535 insertions(+), 151 deletions(-)
- create mode 100644 fs/xfs/xfs_attr_item.c
- create mode 100644 fs/xfs/xfs_attr_item.h
- create mode 100644 fs/xfs/xfs_trans_attr.c
-
--- 
-2.7.4
+On 4/14/19 7:01 PM, Chaitanya Kulkarni wrote:=0A=
+> Thanks for the patch Ming. Couple of comments below.=0A=
+> On 4/14/19 6:22 PM, Ming Lei wrote:=0A=
+>> It is observed that nvme/012 may take ~17 minutes to complete on aarch64=
+,=0A=
+>> even worse it may trigger IO timeout on nvme-loop.=0A=
+>>=0A=
+>> Eric and Dave replied that it is because of too small log size on small=
+=0A=
+>> disk.=0A=
+>>=0A=
+>> So pass '-l size=3D32m' to avoid the issue.=0A=
+>>=0A=
+>> With this patch, nvme/012 can be completed in one minute.=0A=
+>>=0A=
+> Then we should set the QUICK=3D1 if its taking shorter time.=0A=
+> =0A=
+>> Cc: Eric Sandeen <esandeen@redhat.com>=0A=
+>> Cc: Dave Chinner <dchinner@redhat.com>=0A=
+>> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>=0A=
+>> Cc: linux-xfs@vger.kernel.org=0A=
+>> Signed-off-by: Ming Lei <ming.lei@redhat.com>=0A=
+>> ---=0A=
+>>    tests/nvme/012 | 2 +-=0A=
+>>    tests/nvme/013 | 2 +-=0A=
+>>    2 files changed, 2 insertions(+), 2 deletions(-)=0A=
+>>=0A=
+>> diff --git a/tests/nvme/012 b/tests/nvme/012=0A=
+>> index 9a6801511df7..d7a8751ec752 100755=0A=
+>> --- a/tests/nvme/012=0A=
+>> +++ b/tests/nvme/012=0A=
+>> @@ -46,7 +46,7 @@ test() {=0A=
+>>    =0A=
+>>    	umount ${mount_dir} > /dev/null 2>&1=0A=
+>>    =0A=
+>> -	mkfs.xfs -f /dev/"${nvmedev}n1" > /dev/null 2>&1=0A=
+>> +	mkfs.xfs -l size=3D32m -f /dev/"${nvmedev}n1" > /dev/null 2>&1=0A=
+>>    =0A=
+> As a part of this series lets move this to the helper mkfs in the=0A=
+> nvme/rc and use that call in all the file-backed ns related testcases.=0A=
+> Let me know if you want me to do that or you want me to do that as a=0A=
+> part of this series. I'm okay with anything.=0A=
+>>    	mount /dev/"${nvmedev}n1" "${mount_dir}"=0A=
+>>    =0A=
+>> diff --git a/tests/nvme/013 b/tests/nvme/013=0A=
+>> index e346cd4baa35..bc435f752dca 100755=0A=
+>> --- a/tests/nvme/013=0A=
+>> +++ b/tests/nvme/013=0A=
+>> @@ -44,7 +44,7 @@ test() {=0A=
+>>    =0A=
+>>    	umount ${mount_dir} > /dev/null 2>&1=0A=
+>>    =0A=
+>> -	mkfs.xfs -f /dev/"${nvmedev}n1" > /dev/null 2>&1=0A=
+>> +	mkfs.xfs -l size=3D32m  -f /dev/"${nvmedev}n1" > /dev/null 2>&1=0A=
+>>    =0A=
+> Extra space here but can be ignored once we move mkfs to the helper call.=
+=0A=
+>>    	mount /dev/"${nvmedev}n1" "${mount_dir}"=0A=
+>>    =0A=
+>>=0A=
+> =0A=
+> =0A=
+=0A=
