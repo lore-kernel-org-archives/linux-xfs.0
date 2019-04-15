@@ -1,93 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56122 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40200 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727244AbfDONqH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 Apr 2019 09:46:07 -0400
-Reply-To: sandeen@redhat.com
-Subject: Re: [PATCH] nvme/012 & 013: avoid extremely slow xfs IO
-References: <20190415012229.20689-1-ming.lei@redhat.com>
- <SN6PR04MB4527DD7C84A15184AE5F7947862B0@SN6PR04MB4527.namprd04.prod.outlook.com>
-From: Eric Sandeen <esandeen@redhat.com>
-Message-ID: <57a5b163-5d7a-d5a0-fe9a-614b1d638472@redhat.com>
-Date: Mon, 15 Apr 2019 09:46:02 -0400
+        id S1726147AbfDOOtm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 15 Apr 2019 10:49:42 -0400
+Date: Mon, 15 Apr 2019 10:49:39 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/3] xfs: remove unused m_data_workqueue
+Message-ID: <20190415144936.GB4222@bfoster>
+References: <155529406249.243484.1307333973877627694.stgit@magnolia>
+ <155529407512.243484.4836699205659210299.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <SN6PR04MB4527DD7C84A15184AE5F7947862B0@SN6PR04MB4527.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155529407512.243484.4836699205659210299.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>, Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 4/14/19 9:01 PM, Chaitanya Kulkarni wrote:
-> Thanks for the patch Ming. Couple of comments below.
-> On 4/14/19 6:22 PM, Ming Lei wrote:
->> It is observed that nvme/012 may take ~17 minutes to complete on aarch64,
->> even worse it may trigger IO timeout on nvme-loop.
->>
->> Eric and Dave replied that it is because of too small log size on small
->> disk.
->>
->> So pass '-l size=32m' to avoid the issue.
->>
->> With this patch, nvme/012 can be completed in one minute.
->>
-> Then we should set the QUICK=1 if its taking shorter time.
+On Sun, Apr 14, 2019 at 07:07:55PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
->> Cc: Eric Sandeen <esandeen@redhat.com>
->> Cc: Dave Chinner <dchinner@redhat.com>
->> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
->> Cc: linux-xfs@vger.kernel.org
->> Signed-off-by: Ming Lei <ming.lei@redhat.com>
->> ---
->>   tests/nvme/012 | 2 +-
->>   tests/nvme/013 | 2 +-
->>   2 files changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/tests/nvme/012 b/tests/nvme/012
->> index 9a6801511df7..d7a8751ec752 100755
->> --- a/tests/nvme/012
->> +++ b/tests/nvme/012
->> @@ -46,7 +46,7 @@ test() {
->>   
->>   	umount ${mount_dir} > /dev/null 2>&1
->>   
->> -	mkfs.xfs -f /dev/"${nvmedev}n1" > /dev/null 2>&1
->> +	mkfs.xfs -l size=32m -f /dev/"${nvmedev}n1" > /dev/null 2>&1
->>   
-> As a part of this series lets move this to the helper mkfs in the 
-> nvme/rc and use that call in all the file-backed ns related testcases.
-> Let me know if you want me to do that or you would like to do that as a 
-> part of this series. I'm okay with anything.
+> Now that we're no longer using m_data_workqueue, remove it.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-We also discussed making the log size larger by default, on small fielsystems,
-but that won't help you yet.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-My only caution is that manually setting the log to 32m may actually create
-a smaller than default log if your backing file happens to be very large.
-Just something to consider.  If the backing files are typically around the
-4G size of this test (?) then 32m seems reasonable, 128m certainly would
-not hurt.
-
--Eric
-
->>   	mount /dev/"${nvmedev}n1" "${mount_dir}"
->>   
->> diff --git a/tests/nvme/013 b/tests/nvme/013
->> index e346cd4baa35..bc435f752dca 100755
->> --- a/tests/nvme/013
->> +++ b/tests/nvme/013
->> @@ -44,7 +44,7 @@ test() {
->>   
->>   	umount ${mount_dir} > /dev/null 2>&1
->>   
->> -	mkfs.xfs -f /dev/"${nvmedev}n1" > /dev/null 2>&1
->> +	mkfs.xfs -l size=32m  -f /dev/"${nvmedev}n1" > /dev/null 2>&1
->>   
-> Extra space here but can be ignored once we move mkfs to the helper call.
->>   	mount /dev/"${nvmedev}n1" "${mount_dir}"
->>   
->>
+>  fs/xfs/xfs_mount.h |    1 -
+>  fs/xfs/xfs_super.c |   10 +---------
+>  2 files changed, 1 insertion(+), 10 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 110f927cf943..1d3a4b2bdc2f 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -175,7 +175,6 @@ typedef struct xfs_mount {
+>  	struct xstats		m_stats;	/* per-fs stats */
+>  
+>  	struct workqueue_struct *m_buf_workqueue;
+> -	struct workqueue_struct	*m_data_workqueue;
+>  	struct workqueue_struct	*m_unwritten_workqueue;
+>  	struct workqueue_struct	*m_cil_workqueue;
+>  	struct workqueue_struct	*m_reclaim_workqueue;
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index f093ea244849..df917f41ca46 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -838,15 +838,10 @@ xfs_init_mount_workqueues(
+>  	if (!mp->m_buf_workqueue)
+>  		goto out;
+>  
+> -	mp->m_data_workqueue = alloc_workqueue("xfs-data/%s",
+> -			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
+> -	if (!mp->m_data_workqueue)
+> -		goto out_destroy_buf;
+> -
+>  	mp->m_unwritten_workqueue = alloc_workqueue("xfs-conv/%s",
+>  			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
+>  	if (!mp->m_unwritten_workqueue)
+> -		goto out_destroy_data_iodone_queue;
+> +		goto out_destroy_buf;
+>  
+>  	mp->m_cil_workqueue = alloc_workqueue("xfs-cil/%s",
+>  			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
+> @@ -886,8 +881,6 @@ xfs_init_mount_workqueues(
+>  	destroy_workqueue(mp->m_cil_workqueue);
+>  out_destroy_unwritten:
+>  	destroy_workqueue(mp->m_unwritten_workqueue);
+> -out_destroy_data_iodone_queue:
+> -	destroy_workqueue(mp->m_data_workqueue);
+>  out_destroy_buf:
+>  	destroy_workqueue(mp->m_buf_workqueue);
+>  out:
+> @@ -903,7 +896,6 @@ xfs_destroy_mount_workqueues(
+>  	destroy_workqueue(mp->m_log_workqueue);
+>  	destroy_workqueue(mp->m_reclaim_workqueue);
+>  	destroy_workqueue(mp->m_cil_workqueue);
+> -	destroy_workqueue(mp->m_data_workqueue);
+>  	destroy_workqueue(mp->m_unwritten_workqueue);
+>  	destroy_workqueue(mp->m_buf_workqueue);
+>  }
 > 
