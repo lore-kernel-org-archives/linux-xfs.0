@@ -1,299 +1,342 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55388 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:37634 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726182AbfDOSCu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 14:02:50 -0400
-Date: Mon, 15 Apr 2019 11:00:43 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] xfs: implement per-inode writeback completion queues
-Message-ID: <20190415180042.GD4752@magnolia>
-References: <155529406249.243484.1307333973877627694.stgit@magnolia>
- <155529406877.243484.8074329168835632578.stgit@magnolia>
- <20190415144925.GA4222@bfoster>
- <20190415155320.GA4752@magnolia>
- <20190415161347.GD4222@bfoster>
- <20190415170935.GC4752@magnolia>
- <20190415173150.GE4222@bfoster>
+        with ESMTP id S1728148AbfDOULD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 16:11:03 -0400
+Subject: Re: [PATCH 1/9] xfs: Remove all strlen in all xfs_attr_* functions
+ for attr names.
+References: <20190412225036.22939-1-allison.henderson@oracle.com>
+ <20190412225036.22939-2-allison.henderson@oracle.com>
+ <20190414230259.GE29573@dread.disaster.area>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <c2ef788f-223c-a31d-566b-f3c185ff0a06@oracle.com>
+Date: Mon, 15 Apr 2019 13:08:50 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190415173150.GE4222@bfoster>
+In-Reply-To: <20190414230259.GE29573@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 15, 2019 at 01:31:50PM -0400, Brian Foster wrote:
-> On Mon, Apr 15, 2019 at 10:09:35AM -0700, Darrick J. Wong wrote:
-> > On Mon, Apr 15, 2019 at 12:13:47PM -0400, Brian Foster wrote:
-> > > On Mon, Apr 15, 2019 at 08:53:20AM -0700, Darrick J. Wong wrote:
-> > > > On Mon, Apr 15, 2019 at 10:49:28AM -0400, Brian Foster wrote:
-> > > > > On Sun, Apr 14, 2019 at 07:07:48PM -0700, Darrick J. Wong wrote:
-> > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > 
-> > > > > > When scheduling writeback of dirty file data in the page cache, XFS uses
-> > > > > > IO completion workqueue items to ensure that filesystem metadata only
-> > > > > > updates after the write completes successfully.  This is essential for
-> > > > > > converting unwritten extents to real extents at the right time and
-> > > > > > performing COW remappings.
-> > > > > > 
-> > > > > > Unfortunately, XFS queues each IO completion work item to an unbounded
-> > > > > > workqueue, which means that the kernel can spawn dozens of threads to
-> > > > > > try to handle the items quickly.  These threads need to take the ILOCK
-> > > > > > to update file metadata, which results in heavy ILOCK contention if a
-> > > > > > large number of the work items target a single file, which is
-> > > > > > inefficient.
-> > > > > > 
-> > > > > > Worse yet, the writeback completion threads get stuck waiting for the
-> > > > > > ILOCK while holding transaction reservations, which can use up all
-> > > > > > available log reservation space.  When that happens, metadata updates to
-> > > > > > other parts of the filesystem grind to a halt, even if the filesystem
-> > > > > > could otherwise have handled it.
-> > > > > > 
-> > > > > > Even worse, if one of the things grinding to a halt happens to be a
-> > > > > > thread in the middle of a defer-ops finish holding the same ILOCK and
-> > > > > > trying to obtain more log reservation having exhausted the permanent
-> > > > > > reservation, we now have an ABBA deadlock - writeback has a transaction
-> > > > > > reserved and wants the ILOCK, and someone else has the ILOCk and wants a
-> > > > > > transaction reservation.
-> > > > > > 
-> > > > > > Therefore, we create a per-inode writeback io completion queue + work
-> > > > > > item.  When writeback finishes, it can add the ioend to the per-inode
-> > > > > > queue and let the single worker item process that queue.  This
-> > > > > > dramatically cuts down on the number of kworkers and ILOCK contention in
-> > > > > > the system, and seems to have eliminated an occasional deadlock I was
-> > > > > > seeing while running generic/476.
-> > > > > > 
-> > > > > > Testing with a program that simulates a heavy random-write workload to a
-> > > > > > single file demonstrates that the number of kworkers drops from
-> > > > > > approximately 120 threads per file to 1, without dramatically changing
-> > > > > > write bandwidth or pagecache access latency.
-> > > > > > 
-> > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > ---
-> > > > > 
-> > > > > Thanks for the updated commit log. It looks like a couple nits from the
-> > > > > rfc weren't addressed though. Specifically, to rename the workqueue and
-> > > > > iodone bits to ioend_[workqueue|list|lock] so as to not confuse with log
-> > > > > buf (iodone) completion callbacks.
-> > > > 
-> > > > Oops, I did forget to rename the iodone part.  Will fix.
-> > > > 
-> > > > > Also, this patch essentially turns the unbound completion work queue
-> > > > > into something that should only expect one task running at a time,
-> > > > > right? If so, it might make sense to fix up the max_active parameter to
-> > > > > the alloc_workqueue() call and ...
-> > > > 
-> > > > It's fine to leave max_active == 0 (i.e. "spawn as many kworker threads
-> > > > as you decide are necessary to handle the queued work items") here
-> > > > because while we only want to have one ioend worker per inode, we still
-> > > > want to have as many inodes undergoing ioend processing simultaneously
-> > > > as the storage can handle.
-> > > > 
-> > > 
-> > > Ah, right. For some reason I was thinking this would be per-work..
-> > > disregard the thinko..
-> > > 
-> > > > > 
-> > > > > >  fs/xfs/xfs_aops.c   |   48 +++++++++++++++++++++++++++++++++++++-----------
-> > > > > >  fs/xfs/xfs_aops.h   |    1 -
-> > > > > >  fs/xfs/xfs_icache.c |    3 +++
-> > > > > >  fs/xfs/xfs_inode.h  |    7 +++++++
-> > > > > >  4 files changed, 47 insertions(+), 12 deletions(-)
-> > > > > > 
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > > > > > index 3619e9e8d359..f7a9bb661826 100644
-> > > > > > --- a/fs/xfs/xfs_aops.c
-> > > > > > +++ b/fs/xfs/xfs_aops.c
-> > > > > ...
-> > > > > > @@ -278,19 +276,48 @@ xfs_end_io(
-> > > > > ...
-> > > > > >  STATIC void
-> > > > > >  xfs_end_bio(
-> > > > > >  	struct bio		*bio)
-> > > > > >  {
-> > > > > >  	struct xfs_ioend	*ioend = bio->bi_private;
-> > > > > > -	struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
-> > > > > > +	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-> > > > > > +	struct xfs_mount	*mp = ip->i_mount;
-> > > > > > +	unsigned long		flags;
-> > > > > >  
-> > > > > >  	if (ioend->io_fork == XFS_COW_FORK ||
-> > > > > > -	    ioend->io_state == XFS_EXT_UNWRITTEN)
-> > > > > > -		queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
-> > > > > > -	else if (ioend->io_append_trans)
-> > > > > > -		queue_work(mp->m_data_workqueue, &ioend->io_work);
-> > > > > > -	else
-> > > > > > +	    ioend->io_state == XFS_EXT_UNWRITTEN ||
-> > > > > > +	    ioend->io_append_trans != NULL) {
-> > > > > > +		spin_lock_irqsave(&ip->i_iodone_lock, flags);
-> > > > > > +		if (list_empty(&ip->i_iodone_list))
-> > > > > > +			queue_work(mp->m_unwritten_workqueue, &ip->i_iodone_work);
-> > > > > 
-> > > > > ... assert that queue_work() always returns true.
-> > > > 
-> > > > queue_work can return false here because the worker function only holds
-> > > > i_ioend_lock long enough to move the i_ioend_list onto a function-local
-> > > > list head.  Once it drops the lock and begins issuing ioend transactions,
-> > > > there's nothing preventing another xfs_end_bio from taking the lock,
-> > > > seeing the empty list, and (re)queuing i_ioend_work while the worker is
-> > > > running.
-> > > > 
-> > > 
-> > > So I'm not familiar with the details of the wq implementation, but I was
-> > > assuming that the return value essentially tells us if we've scheduled a
-> > > new execution of this work or not. IOW, that the case above would return
-> > > true because the current execution has already dequeued the work and
-> > > began running it.
-> > 
-> > It does return true if we've scheduled a new execution of work.  If the
-> > work has already been dequeued and is running then it'll queue it again,
-> > because process_one_work calls set_work_pool_and_clear_pending to clear
-> > the PENDING bit after it's decided to run the work item but before it
-> > actually invokes the work function.
-> > 
-> > > Is that not the case? FWIW, if the queue_work() call doesn't actually
-> > > requeue the task if it happens to be running (aside from the semantics
-> > 
-> > As far as queue_work is concerned there's no difference between a work
-> > item that is currently running and a work item that has never been
-> > queued -- the result for both cases is to put it on the queue.  So I
-> > think the answer to "is that not the case?" is "no, you got it right in
-> > the previous paragraph".
-> > 
-> > But maybe I'll just work out some examples to satisfy my own sense of
-> > "egad I looked at the workqueue code and OH MY EYES" :)
-> > 
-> 
-> ;)
-> 
-> > If queue_work observes that the PENDING bit was set, it'll return false
-> > immediately because we know that the work function hasn't been called
-> > yet, so whatever we just added to the i_ioend_list will get picked up
-> > when the work function gets called.
-> > 
-> > If queue_work observes that PENDING was not set and the work item isn't
-> > queued or being processed anywhere in the system, it'll add the work
-> > item to the queue and xfs_end_io can pick up the work from the ioend
-> > list whenever it does get called.
-> > 
-> > If queue_work observes that PENDING was not set and process_one_work has
-> > picked up the work item and it is after the point where it clears the
-> > bit but before the work function picks up the ioend list, then we'll
-> > reqeueue the work item, but the current the work function invocation
-> > will process our ioend.  The requeued item will be called again, but it
-> > won't find any work and returns.
-> > 
-> 
-> Wouldn't we skip the queue_work() call in this case because the list is
-> presumably not empty (since the work being dequeued hasn't run yet to
-> empty it)?
 
-Oh, right.  Missed the forest for the weeds, ignore this case. :)
 
-> > If queue_work observes that PENDING was not set and process_one_work has
-> > picked up the work item and it is after the point where the work
-> > function picks up the ioend list, then we'll reqeueue the work item, the
-> > current work function invocation won't see our new ioend, and the
-> > requeued item will be called again and it'll process our new ioend.
-> > 
+On 4/14/19 4:02 PM, Dave Chinner wrote:
+> On Fri, Apr 12, 2019 at 03:50:28PM -0700, Allison Henderson wrote:
+>> This helps to pre-simplify the extra handling of the null terminator in
+>> delayed operations which use memcpy rather than strlen.  Later
+>> when we introduce parent pointers, attribute names will become binary,
+>> so strlen will not work at all.  Removing uses of strlen now will
+>> help reduce complexities later
+>>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Doesn't this mean that our queue_work() call should always return true?
-> We're only calling it if the list is empty, which means either nothing
-> was queued yet or a work item is currently running and is processing
-> ioends.
-
-Oh. Yep.  I think you're right that it should always return true.  But,
-how would we set up an assert that won't just trigger unused variable
-warnings if we're #defining away ASSERT?
-
---D
-
-> Brian
+> Hmmm. If we are going to pass name/namelen pairs around everywhere,
+> can we convert these to a struct xfs_name?
 > 
-> > > of the return value), ISTM that we're at risk of leaving ioends around
-> > > until something else comes along to kick the handler. A quick look at
-> > > the wq code suggests queue_work() returns false only when a particular
-> > > queued bit is set and thus the call is essentially a no-op, but that
-> > > state appears to be cleared (via set_work_pool_and_clear_pending())
-> > > before the work callback is invoked. Hm?
-> > 
-> > <nod> Does that clear things up?  The wq documentation isn't
-> > particularly clear in its description of how queues work for end users
-> > like us. :)
-> > 
-> > --D
-> > 
-> > > 
-> > > Brian
-> > > 
-> > > > --D
-> > > > 
-> > > > > Brian
-> > > > > 
-> > > > > > +		list_add_tail(&ioend->io_list, &ip->i_iodone_list);
-> > > > > > +		spin_unlock_irqrestore(&ip->i_iodone_lock, flags);
-> > > > > > +	} else
-> > > > > >  		xfs_destroy_ioend(ioend, blk_status_to_errno(bio->bi_status));
-> > > > > >  }
-> > > > > >  
-> > > > > > @@ -594,7 +621,6 @@ xfs_alloc_ioend(
-> > > > > >  	ioend->io_inode = inode;
-> > > > > >  	ioend->io_size = 0;
-> > > > > >  	ioend->io_offset = offset;
-> > > > > > -	INIT_WORK(&ioend->io_work, xfs_end_io);
-> > > > > >  	ioend->io_append_trans = NULL;
-> > > > > >  	ioend->io_bio = bio;
-> > > > > >  	return ioend;
-> > > > > > diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> > > > > > index 6c2615b83c5d..f62b03186c62 100644
-> > > > > > --- a/fs/xfs/xfs_aops.h
-> > > > > > +++ b/fs/xfs/xfs_aops.h
-> > > > > > @@ -18,7 +18,6 @@ struct xfs_ioend {
-> > > > > >  	struct inode		*io_inode;	/* file being written to */
-> > > > > >  	size_t			io_size;	/* size of the extent */
-> > > > > >  	xfs_off_t		io_offset;	/* offset in the file */
-> > > > > > -	struct work_struct	io_work;	/* xfsdatad work queue */
-> > > > > >  	struct xfs_trans	*io_append_trans;/* xact. for size update */
-> > > > > >  	struct bio		*io_bio;	/* bio being built */
-> > > > > >  	struct bio		io_inline_bio;	/* MUST BE LAST! */
-> > > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > > > > index 245483cc282b..e70e7db29026 100644
-> > > > > > --- a/fs/xfs/xfs_icache.c
-> > > > > > +++ b/fs/xfs/xfs_icache.c
-> > > > > > @@ -70,6 +70,9 @@ xfs_inode_alloc(
-> > > > > >  	ip->i_flags = 0;
-> > > > > >  	ip->i_delayed_blks = 0;
-> > > > > >  	memset(&ip->i_d, 0, sizeof(ip->i_d));
-> > > > > > +	INIT_WORK(&ip->i_iodone_work, xfs_end_io);
-> > > > > > +	INIT_LIST_HEAD(&ip->i_iodone_list);
-> > > > > > +	spin_lock_init(&ip->i_iodone_lock);
-> > > > > >  
-> > > > > >  	return ip;
-> > > > > >  }
-> > > > > > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> > > > > > index e62074a5257c..88239c2dd824 100644
-> > > > > > --- a/fs/xfs/xfs_inode.h
-> > > > > > +++ b/fs/xfs/xfs_inode.h
-> > > > > > @@ -57,6 +57,11 @@ typedef struct xfs_inode {
-> > > > > >  
-> > > > > >  	/* VFS inode */
-> > > > > >  	struct inode		i_vnode;	/* embedded VFS inode */
-> > > > > > +
-> > > > > > +	/* pending io completions */
-> > > > > > +	spinlock_t		i_iodone_lock;
-> > > > > > +	struct work_struct	i_iodone_work;
-> > > > > > +	struct list_head	i_iodone_list;
-> > > > > >  } xfs_inode_t;
-> > > > > >  
-> > > > > >  /* Convert from vfs inode to xfs inode */
-> > > > > > @@ -503,4 +508,6 @@ bool xfs_inode_verify_forks(struct xfs_inode *ip);
-> > > > > >  int xfs_iunlink_init(struct xfs_perag *pag);
-> > > > > >  void xfs_iunlink_destroy(struct xfs_perag *pag);
-> > > > > >  
-> > > > > > +void xfs_end_io(struct work_struct *work);
-> > > > > > +
-> > > > > >  #endif	/* __XFS_INODE_H__ */
-> > > > > > 
+> I also wonder where we should convert the name/namelen pairs in the
+> attr args struct to an xfs_name, too, then we can just do:
+> 
+> 	args->name = *name;
+> 
+> to copy in the string pointer and the name length in one go.
+> 
+> And we might even be able to put the attribute flags (e.g.
+> ATTR_ROOT) in the name.type field, and get rid of that parameter
+> being passed around, too...
+> 
+> Cheers,
+> 
+> Dave.
+
+I think a new struct xfs_name is reasonable.  Or maybe a general purpose 
+xfs_array?  The value/valuelen parameters have a similar relation that 
+could make use of that too.  How would people feel about something like 
+this:
+
+struct xfs_array {
+	unsigned char *bytes;
+	size_t		len;
+}
+
+struct xfs_attribute {
+	struct xfs_array	name;
+	int			flags;
+}
+
+We could add the value member in here too.  It tends to get passed 
+around just as much with the exception of attr remove operations which 
+only need the name.  I think changing the actual members of xfs_da_args 
+should be another patch though, since that's a bigger change that 
+affects a wider scope of code.  I can look into it though.
+
+Also, do I still keep the old reviewed-by on the patch if the patch is 
+still going through changes?  I have a few signed-off patches in the 
+parent pointer set that have changed quite a bit since we've started too.
+
+Thanks!
+Allison
+
+> 
+>> ---
+>>   fs/xfs/libxfs/xfs_attr.c | 12 ++++++++----
+>>   fs/xfs/libxfs/xfs_attr.h |  9 ++++++---
+>>   fs/xfs/xfs_acl.c         | 12 +++++++-----
+>>   fs/xfs/xfs_ioctl.c       | 13 ++++++++++---
+>>   fs/xfs/xfs_iops.c        |  6 ++++--
+>>   fs/xfs/xfs_xattr.c       | 10 ++++++----
+>>   6 files changed, 41 insertions(+), 21 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index 2dd9ee2..3da6b0d 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -67,6 +67,7 @@ xfs_attr_args_init(
+>>   	struct xfs_da_args	*args,
+>>   	struct xfs_inode	*dp,
+>>   	const unsigned char	*name,
+>> +	size_t			namelen,
+>>   	int			flags)
+>>   {
+>>   
+>> @@ -79,7 +80,7 @@ xfs_attr_args_init(
+>>   	args->dp = dp;
+>>   	args->flags = flags;
+>>   	args->name = name;
+>> -	args->namelen = strlen((const char *)name);
+>> +	args->namelen = namelen;
+>>   	if (args->namelen >= MAXNAMELEN)
+>>   		return -EFAULT;		/* match IRIX behaviour */
+>>   
+>> @@ -125,6 +126,7 @@ int
+>>   xfs_attr_get(
+>>   	struct xfs_inode	*ip,
+>>   	const unsigned char	*name,
+>> +	size_t			namelen,
+>>   	unsigned char		*value,
+>>   	int			*valuelenp,
+>>   	int			flags)
+>> @@ -138,7 +140,7 @@ xfs_attr_get(
+>>   	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+>>   		return -EIO;
+>>   
+>> -	error = xfs_attr_args_init(&args, ip, name, flags);
+>> +	error = xfs_attr_args_init(&args, ip, name, namelen, flags);
+>>   	if (error)
+>>   		return error;
+>>   
+>> @@ -317,6 +319,7 @@ int
+>>   xfs_attr_set(
+>>   	struct xfs_inode	*dp,
+>>   	const unsigned char	*name,
+>> +	size_t			namelen,
+>>   	unsigned char		*value,
+>>   	int			valuelen,
+>>   	int			flags)
+>> @@ -333,7 +336,7 @@ xfs_attr_set(
+>>   	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+>>   		return -EIO;
+>>   
+>> -	error = xfs_attr_args_init(&args, dp, name, flags);
+>> +	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
+>>   	if (error)
+>>   		return error;
+>>   
+>> @@ -425,6 +428,7 @@ int
+>>   xfs_attr_remove(
+>>   	struct xfs_inode	*dp,
+>>   	const unsigned char	*name,
+>> +	size_t			namelen,
+>>   	int			flags)
+>>   {
+>>   	struct xfs_mount	*mp = dp->i_mount;
+>> @@ -436,7 +440,7 @@ xfs_attr_remove(
+>>   	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+>>   		return -EIO;
+>>   
+>> -	error = xfs_attr_args_init(&args, dp, name, flags);
+>> +	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
+>>   	if (error)
+>>   		return error;
+>>   
+>> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+>> index 2297d84..52f63dc 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.h
+>> +++ b/fs/xfs/libxfs/xfs_attr.h
+>> @@ -137,11 +137,14 @@ int xfs_attr_list_int(struct xfs_attr_list_context *);
+>>   int xfs_inode_hasattr(struct xfs_inode *ip);
+>>   int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
+>>   int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+>> -		 unsigned char *value, int *valuelenp, int flags);
+>> +		 size_t namelen, unsigned char *value, int *valuelenp,
+>> +		 int flags);
+>>   int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+>> -		 unsigned char *value, int valuelen, int flags);
+>> +		 size_t namelen, unsigned char *value, int valuelen,
+>> +		 int flags);
+>>   int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp);
+>> -int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+>> +int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
+>> +		    size_t namelen, int flags);
+>>   int xfs_attr_remove_args(struct xfs_da_args *args);
+>>   int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+>>   		  int flags, struct attrlist_cursor_kern *cursor);
+>> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+>> index 8039e35..142de8d 100644
+>> --- a/fs/xfs/xfs_acl.c
+>> +++ b/fs/xfs/xfs_acl.c
+>> @@ -141,8 +141,8 @@ xfs_get_acl(struct inode *inode, int type)
+>>   	if (!xfs_acl)
+>>   		return ERR_PTR(-ENOMEM);
+>>   
+>> -	error = xfs_attr_get(ip, ea_name, (unsigned char *)xfs_acl,
+>> -							&len, ATTR_ROOT);
+>> +	error = xfs_attr_get(ip, ea_name, strlen(ea_name),
+>> +			     (unsigned char *)xfs_acl, &len, ATTR_ROOT);
+>>   	if (error) {
+>>   		/*
+>>   		 * If the attribute doesn't exist make sure we have a negative
+>> @@ -192,15 +192,17 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+>>   		len -= sizeof(struct xfs_acl_entry) *
+>>   			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
+>>   
+>> -		error = xfs_attr_set(ip, ea_name, (unsigned char *)xfs_acl,
+>> -				len, ATTR_ROOT);
+>> +		error = xfs_attr_set(ip, ea_name, strlen(ea_name),
+>> +				     (unsigned char *)xfs_acl, len, ATTR_ROOT);
+>>   
+>>   		kmem_free(xfs_acl);
+>>   	} else {
+>>   		/*
+>>   		 * A NULL ACL argument means we want to remove the ACL.
+>>   		 */
+>> -		error = xfs_attr_remove(ip, ea_name, ATTR_ROOT);
+>> +		error = xfs_attr_remove(ip, ea_name,
+>> +					strlen(ea_name),
+>> +					ATTR_ROOT);
+>>   
+>>   		/*
+>>   		 * If the attribute didn't exist to start with that's fine.
+>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>> index 6ecdbb3..ab341d6 100644
+>> --- a/fs/xfs/xfs_ioctl.c
+>> +++ b/fs/xfs/xfs_ioctl.c
+>> @@ -437,6 +437,7 @@ xfs_attrmulti_attr_get(
+>>   {
+>>   	unsigned char		*kbuf;
+>>   	int			error = -EFAULT;
+>> +	size_t			namelen;
+>>   
+>>   	if (*len > XFS_XATTR_SIZE_MAX)
+>>   		return -EINVAL;
+>> @@ -444,7 +445,9 @@ xfs_attrmulti_attr_get(
+>>   	if (!kbuf)
+>>   		return -ENOMEM;
+>>   
+>> -	error = xfs_attr_get(XFS_I(inode), name, kbuf, (int *)len, flags);
+>> +	namelen = strlen(name);
+>> +	error = xfs_attr_get(XFS_I(inode), name, namelen,
+>> +			     kbuf, (int *)len, flags);
+>>   	if (error)
+>>   		goto out_kfree;
+>>   
+>> @@ -466,6 +469,7 @@ xfs_attrmulti_attr_set(
+>>   {
+>>   	unsigned char		*kbuf;
+>>   	int			error;
+>> +	size_t			namelen;
+>>   
+>>   	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+>>   		return -EPERM;
+>> @@ -476,7 +480,8 @@ xfs_attrmulti_attr_set(
+>>   	if (IS_ERR(kbuf))
+>>   		return PTR_ERR(kbuf);
+>>   
+>> -	error = xfs_attr_set(XFS_I(inode), name, kbuf, len, flags);
+>> +	namelen = strlen(name);
+>> +	error = xfs_attr_set(XFS_I(inode), name, namelen, kbuf, len, flags);
+>>   	if (!error)
+>>   		xfs_forget_acl(inode, name, flags);
+>>   	kfree(kbuf);
+>> @@ -490,10 +495,12 @@ xfs_attrmulti_attr_remove(
+>>   	uint32_t		flags)
+>>   {
+>>   	int			error;
+>> +	size_t			namelen;
+>>   
+>>   	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+>>   		return -EPERM;
+>> -	error = xfs_attr_remove(XFS_I(inode), name, flags);
+>> +	namelen = strlen(name);
+>> +	error = xfs_attr_remove(XFS_I(inode), name, namelen, flags);
+>>   	if (!error)
+>>   		xfs_forget_acl(inode, name, flags);
+>>   	return error;
+>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+>> index 74047bd..e73c21a 100644
+>> --- a/fs/xfs/xfs_iops.c
+>> +++ b/fs/xfs/xfs_iops.c
+>> @@ -59,8 +59,10 @@ xfs_initxattrs(
+>>   	int			error = 0;
+>>   
+>>   	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
+>> -		error = xfs_attr_set(ip, xattr->name, xattr->value,
+>> -				      xattr->value_len, ATTR_SECURE);
+>> +		error = xfs_attr_set(ip, xattr->name,
+>> +				     strlen(xattr->name),
+>> +				     xattr->value, xattr->value_len,
+>> +				     ATTR_SECURE);
+>>   		if (error < 0)
+>>   			break;
+>>   	}
+>> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+>> index 9a63016..3013746 100644
+>> --- a/fs/xfs/xfs_xattr.c
+>> +++ b/fs/xfs/xfs_xattr.c
+>> @@ -26,6 +26,7 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
+>>   	int xflags = handler->flags;
+>>   	struct xfs_inode *ip = XFS_I(inode);
+>>   	int error, asize = size;
+>> +	size_t namelen = strlen(name);
+>>   
+>>   	/* Convert Linux syscall to XFS internal ATTR flags */
+>>   	if (!size) {
+>> @@ -33,7 +34,7 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
+>>   		value = NULL;
+>>   	}
+>>   
+>> -	error = xfs_attr_get(ip, (unsigned char *)name, value, &asize, xflags);
+>> +	error = xfs_attr_get(ip, name, namelen, value, &asize, xflags);
+>>   	if (error)
+>>   		return error;
+>>   	return asize;
+>> @@ -69,6 +70,7 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+>>   	int			xflags = handler->flags;
+>>   	struct xfs_inode	*ip = XFS_I(inode);
+>>   	int			error;
+>> +	size_t			namelen = strlen(name);
+>>   
+>>   	/* Convert Linux syscall to XFS internal ATTR flags */
+>>   	if (flags & XATTR_CREATE)
+>> @@ -77,9 +79,9 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+>>   		xflags |= ATTR_REPLACE;
+>>   
+>>   	if (!value)
+>> -		return xfs_attr_remove(ip, (unsigned char *)name, xflags);
+>> -	error = xfs_attr_set(ip, (unsigned char *)name,
+>> -				(void *)value, size, xflags);
+>> +		return xfs_attr_remove(ip, name,
+>> +				       namelen, xflags);
+>> +	error = xfs_attr_set(ip, name, namelen, (void *)value, size, xflags);
+>>   	if (!error)
+>>   		xfs_forget_acl(inode, name, xflags);
+>>   
+>> -- 
+>> 2.7.4
+>>
+>>
+> 
