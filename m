@@ -1,168 +1,205 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37732 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727566AbfDOOtx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 Apr 2019 10:49:53 -0400
-Date: Mon, 15 Apr 2019 10:49:50 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/3] xfs: merge adjacent io completions of the same type
-Message-ID: <20190415144947.GC4222@bfoster>
+Received: from aserp2130.oracle.com ([141.146.126.79]:39784 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727301AbfDOQNo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 12:13:44 -0400
+Date: Mon, 15 Apr 2019 09:13:36 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 1/3] xfs: implement per-inode writeback completion queues
+Message-ID: <20190415161336.GB4752@magnolia>
 References: <155529406249.243484.1307333973877627694.stgit@magnolia>
- <155529408121.243484.4204906013564330851.stgit@magnolia>
+ <155529406877.243484.8074329168835632578.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155529408121.243484.4204906013564330851.stgit@magnolia>
+In-Reply-To: <155529406877.243484.8074329168835632578.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>
 
-On Sun, Apr 14, 2019 at 07:08:01PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> It's possible for pagecache writeback to split up a large amount of work
-> into smaller pieces for throttling purposes or to reduce the amount of
-> time a writeback operation is pending.  Whatever the reason, XFS can end
-> up with a bunch of IO completions that call for the same operation to be
-> performed on a contiguous extent mapping.  Since mappings are extent
-> based in XFS, we'd prefer to run fewer transactions when we can.
-> 
-> When we're processing an ioend on the list of io completions, check to
-> see if the next items on the list are both adjacent and of the same
-> type.  If so, we can merge the completions to reduce transaction
-> overhead.
-> 
-> On fast storage this doesn't seem to make much of a difference in
-> performance, though the number of transactions for an overnight xfstests
-> run seems to drop by ~5%.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-LGTM:
+When scheduling writeback of dirty file data in the page cache, XFS uses
+IO completion workqueue items to ensure that filesystem metadata only
+updates after the write completes successfully.  This is essential for
+converting unwritten extents to real extents at the right time and
+performing COW remappings.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Unfortunately, XFS queues each IO completion work item to an unbounded
+workqueue, which means that the kernel can spawn dozens of threads to
+try to handle the items quickly.  These threads need to take the ILOCK
+to update file metadata, which results in heavy ILOCK contention if a
+large number of the work items target a single file, which is
+inefficient.
 
->  fs/xfs/xfs_aops.c |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 86 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index f7a9bb661826..53afa2e6e3e7 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -237,6 +237,7 @@ STATIC void
->  xfs_end_ioend(
->  	struct xfs_ioend	*ioend)
->  {
-> +	struct list_head	ioend_list;
->  	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
->  	xfs_off_t		offset = ioend->io_offset;
->  	size_t			size = ioend->io_size;
-> @@ -273,7 +274,89 @@ xfs_end_ioend(
->  done:
->  	if (ioend->io_append_trans)
->  		error = xfs_setfilesize_ioend(ioend, error);
-> +	list_replace_init(&ioend->io_list, &ioend_list);
->  	xfs_destroy_ioend(ioend, error);
-> +
-> +	while (!list_empty(&ioend_list)) {
-> +		ioend = list_first_entry(&ioend_list, struct xfs_ioend,
-> +				io_list);
-> +		list_del_init(&ioend->io_list);
-> +		xfs_destroy_ioend(ioend, error);
-> +	}
-> +}
-> +
-> +/*
-> + * We can merge two adjacent ioends if they have the same set of work to do.
-> + */
-> +static bool
-> +xfs_ioend_can_merge(
-> +	struct xfs_ioend	*ioend,
-> +	int			ioend_error,
-> +	struct xfs_ioend	*next)
-> +{
-> +	int			next_error;
-> +
-> +	next_error = blk_status_to_errno(next->io_bio->bi_status);
-> +	if (ioend_error != next_error)
-> +		return false;
-> +	if ((ioend->io_fork == XFS_COW_FORK) ^ (next->io_fork == XFS_COW_FORK))
-> +		return false;
-> +	if ((ioend->io_state == XFS_EXT_UNWRITTEN) ^
-> +	    (next->io_state == XFS_EXT_UNWRITTEN))
-> +		return false;
-> +	if (ioend->io_offset + ioend->io_size != next->io_offset)
-> +		return false;
-> +	if (xfs_ioend_is_append(ioend) != xfs_ioend_is_append(next))
-> +		return false;
-> +	return true;
-> +}
-> +
-> +/* Try to merge adjacent completions. */
-> +STATIC void
-> +xfs_ioend_try_merge(
-> +	struct xfs_ioend	*ioend,
-> +	struct list_head	*more_ioends)
-> +{
-> +	struct xfs_ioend	*next_ioend;
-> +	int			ioend_error;
-> +	int			error;
-> +
-> +	if (list_empty(more_ioends))
-> +		return;
-> +
-> +	ioend_error = blk_status_to_errno(ioend->io_bio->bi_status);
-> +
-> +	while (!list_empty(more_ioends)) {
-> +		next_ioend = list_first_entry(more_ioends, struct xfs_ioend,
-> +				io_list);
-> +		if (!xfs_ioend_can_merge(ioend, ioend_error, next_ioend))
-> +			break;
-> +		list_move_tail(&next_ioend->io_list, &ioend->io_list);
-> +		ioend->io_size += next_ioend->io_size;
-> +		if (ioend->io_append_trans) {
-> +			error = xfs_setfilesize_ioend(next_ioend, 1);
-> +			ASSERT(error == 1);
-> +		}
-> +	}
-> +}
-> +
-> +/* list_sort compare function for ioends */
-> +static int
-> +xfs_ioend_compare(
-> +	void			*priv,
-> +	struct list_head	*a,
-> +	struct list_head	*b)
-> +{
-> +	struct xfs_ioend	*ia;
-> +	struct xfs_ioend	*ib;
-> +
-> +	ia = container_of(a, struct xfs_ioend, io_list);
-> +	ib = container_of(b, struct xfs_ioend, io_list);
-> +	if (ia->io_offset < ib->io_offset)
-> +		return -1;
-> +	else if (ia->io_offset > ib->io_offset)
-> +		return 1;
-> +	return 0;
->  }
->  
->  /* Finish all pending io completions. */
-> @@ -292,10 +375,13 @@ xfs_end_io(
->  	list_replace_init(&ip->i_iodone_list, &completion_list);
->  	spin_unlock_irqrestore(&ip->i_iodone_lock, flags);
->  
-> +	list_sort(NULL, &completion_list, xfs_ioend_compare);
-> +
->  	while (!list_empty(&completion_list)) {
->  		ioend = list_first_entry(&completion_list, struct xfs_ioend,
->  				io_list);
->  		list_del_init(&ioend->io_list);
-> +		xfs_ioend_try_merge(ioend, &completion_list);
->  		xfs_end_ioend(ioend);
->  	}
->  }
-> 
+Worse yet, the writeback completion threads get stuck waiting for the
+ILOCK while holding transaction reservations, which can use up all
+available log reservation space.  When that happens, metadata updates to
+other parts of the filesystem grind to a halt, even if the filesystem
+could otherwise have handled it.
+
+Even worse, if one of the things grinding to a halt happens to be a
+thread in the middle of a defer-ops finish holding the same ILOCK and
+trying to obtain more log reservation having exhausted the permanent
+reservation, we now have an ABBA deadlock - writeback has a transaction
+reserved and wants the ILOCK, and someone else has the ILOCk and wants a
+transaction reservation.
+
+Therefore, we create a per-inode writeback io completion queue + work
+item.  When writeback finishes, it can add the ioend to the per-inode
+queue and let the single worker item process that queue.  This
+dramatically cuts down on the number of kworkers and ILOCK contention in
+the system, and seems to have eliminated an occasional deadlock I was
+seeing while running generic/476.
+
+Testing with a program that simulates a heavy random-write workload to a
+single file demonstrates that the number of kworkers drops from
+approximately 120 threads per file to 1, without dramatically changing
+write bandwidth or pagecache access latency.
+
+Note that we leave the xfs-conv workqueue's max_active alone because we
+still want to be able to run ioend processing for as many inodes as the
+system can handle.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: rename i_iodone_* -> i_ioend_* to avoid naming collision
+---
+ fs/xfs/xfs_aops.c   |   48 +++++++++++++++++++++++++++++++++++++-----------
+ fs/xfs/xfs_aops.h   |    1 -
+ fs/xfs/xfs_icache.c |    3 +++
+ fs/xfs/xfs_inode.h  |    7 +++++++
+ 4 files changed, 47 insertions(+), 12 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 3619e9e8d359..0dd249115f3c 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -234,11 +234,9 @@ xfs_setfilesize_ioend(
+  * IO write completion.
+  */
+ STATIC void
+-xfs_end_io(
+-	struct work_struct *work)
++xfs_end_ioend(
++	struct xfs_ioend	*ioend)
+ {
+-	struct xfs_ioend	*ioend =
+-		container_of(work, struct xfs_ioend, io_work);
+ 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+ 	xfs_off_t		offset = ioend->io_offset;
+ 	size_t			size = ioend->io_size;
+@@ -278,19 +276,48 @@ xfs_end_io(
+ 	xfs_destroy_ioend(ioend, error);
+ }
+ 
++/* Finish all pending io completions. */
++void
++xfs_end_io(
++	struct work_struct	*work)
++{
++	struct xfs_inode	*ip;
++	struct xfs_ioend	*ioend;
++	struct list_head	completion_list;
++	unsigned long		flags;
++
++	ip = container_of(work, struct xfs_inode, i_ioend_work);
++
++	spin_lock_irqsave(&ip->i_ioend_lock, flags);
++	list_replace_init(&ip->i_ioend_list, &completion_list);
++	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
++
++	while (!list_empty(&completion_list)) {
++		ioend = list_first_entry(&completion_list, struct xfs_ioend,
++				io_list);
++		list_del_init(&ioend->io_list);
++		xfs_end_ioend(ioend);
++	}
++}
++
+ STATIC void
+ xfs_end_bio(
+ 	struct bio		*bio)
+ {
+ 	struct xfs_ioend	*ioend = bio->bi_private;
+-	struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
++	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
++	struct xfs_mount	*mp = ip->i_mount;
++	unsigned long		flags;
+ 
+ 	if (ioend->io_fork == XFS_COW_FORK ||
+-	    ioend->io_state == XFS_EXT_UNWRITTEN)
+-		queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
+-	else if (ioend->io_append_trans)
+-		queue_work(mp->m_data_workqueue, &ioend->io_work);
+-	else
++	    ioend->io_state == XFS_EXT_UNWRITTEN ||
++	    ioend->io_append_trans != NULL) {
++		spin_lock_irqsave(&ip->i_ioend_lock, flags);
++		if (list_empty(&ip->i_ioend_list))
++			queue_work(mp->m_unwritten_workqueue, &ip->i_ioend_work);
++		list_add_tail(&ioend->io_list, &ip->i_ioend_list);
++		spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
++	} else
+ 		xfs_destroy_ioend(ioend, blk_status_to_errno(bio->bi_status));
+ }
+ 
+@@ -594,7 +621,6 @@ xfs_alloc_ioend(
+ 	ioend->io_inode = inode;
+ 	ioend->io_size = 0;
+ 	ioend->io_offset = offset;
+-	INIT_WORK(&ioend->io_work, xfs_end_io);
+ 	ioend->io_append_trans = NULL;
+ 	ioend->io_bio = bio;
+ 	return ioend;
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 6c2615b83c5d..f62b03186c62 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -18,7 +18,6 @@ struct xfs_ioend {
+ 	struct inode		*io_inode;	/* file being written to */
+ 	size_t			io_size;	/* size of the extent */
+ 	xfs_off_t		io_offset;	/* offset in the file */
+-	struct work_struct	io_work;	/* xfsdatad work queue */
+ 	struct xfs_trans	*io_append_trans;/* xact. for size update */
+ 	struct bio		*io_bio;	/* bio being built */
+ 	struct bio		io_inline_bio;	/* MUST BE LAST! */
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 245483cc282b..1237b775d7f7 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -70,6 +70,9 @@ xfs_inode_alloc(
+ 	ip->i_flags = 0;
+ 	ip->i_delayed_blks = 0;
+ 	memset(&ip->i_d, 0, sizeof(ip->i_d));
++	INIT_WORK(&ip->i_ioend_work, xfs_end_io);
++	INIT_LIST_HEAD(&ip->i_ioend_list);
++	spin_lock_init(&ip->i_ioend_lock);
+ 
+ 	return ip;
+ }
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index e62074a5257c..b9ee3dfc104a 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -57,6 +57,11 @@ typedef struct xfs_inode {
+ 
+ 	/* VFS inode */
+ 	struct inode		i_vnode;	/* embedded VFS inode */
++
++	/* pending io completions */
++	spinlock_t		i_ioend_lock;
++	struct work_struct	i_ioend_work;
++	struct list_head	i_ioend_list;
+ } xfs_inode_t;
+ 
+ /* Convert from vfs inode to xfs inode */
+@@ -503,4 +508,6 @@ bool xfs_inode_verify_forks(struct xfs_inode *ip);
+ int xfs_iunlink_init(struct xfs_perag *pag);
+ void xfs_iunlink_destroy(struct xfs_perag *pag);
+ 
++void xfs_end_io(struct work_struct *work);
++
+ #endif	/* __XFS_INODE_H__ */
