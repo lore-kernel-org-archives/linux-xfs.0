@@ -1,38 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33384 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726857AbfDPH5j (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Apr 2019 03:57:39 -0400
-Date: Tue, 16 Apr 2019 17:57:37 +1000
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:47389 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727856AbfDPH6G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Apr 2019 03:58:06 -0400
+Date: Tue, 16 Apr 2019 17:58:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 4/5] xfs: scrub/repair should update filesystem
- metadata health
-Message-ID: <20190416075737.GL29573@dread.disaster.area>
+Subject: Re: [PATCH v2 5/5] xfs: scrub should only cross-reference with
+ healthy btrees
+Message-ID: <20190416075804.GM29573@dread.disaster.area>
 References: <155537397092.27935.16073573221774618735.stgit@magnolia>
- <155537399567.27935.2695652869908662243.stgit@magnolia>
- <20190416014309.GJ4752@magnolia>
+ <155537400192.27935.5071586825961103642.stgit@magnolia>
+ <20190416014502.GK4752@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190416014309.GJ4752@magnolia>
+In-Reply-To: <20190416014502.GK4752@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Mon, Apr 15, 2019 at 06:43:09PM -0700, Darrick J. Wong wrote:
+On Mon, Apr 15, 2019 at 06:45:02PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Now that we have the ability to track sick metadata in-core, make scrub
-> and repair update those health assessments after doing work.
+> Skip cross-referencing with a btree if the health report tells us that
+> it's known to be bad.  This should reduce the dmesg spew considerably.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-> v2: rename sick_mask_update to sick_mask.
-> ---
+> v2: condense the switch cases per dchinner suggestion
 
-LGTM.
+Much nicer :)
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
