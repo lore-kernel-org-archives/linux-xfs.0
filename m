@@ -1,233 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52370 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726237AbfDPDWA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 23:22:00 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3G39e8k154847
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2019 03:21:59 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2rvwk3j509-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2019 03:21:58 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3G3KuMg165133
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2019 03:21:58 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2ru4vsxv8u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2019 03:21:58 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3G3LvRj018090
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2019 03:21:57 GMT
-Subject: Re: [PATCH 7/9] xfs: Add attr context to log item
-From: Allison Henderson <allison.henderson@oracle.com>
-References: <20190412225036.22939-1-allison.henderson@oracle.com>
- <20190412225036.22939-8-allison.henderson@oracle.com>
- <20190415225054.GF4752@magnolia>
- <ff27d614-0808-969b-0e95-4cb3c36138d2@oracle.com>
-Message-ID: <bd7ece25-b56d-fe91-fff2-41abeec9ef26@oracle.com>
-Date: Mon, 15 Apr 2019 20:21:56 -0700
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33384 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726857AbfDPH5j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Apr 2019 03:57:39 -0400
+Date: Tue, 16 Apr 2019 17:57:37 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 4/5] xfs: scrub/repair should update filesystem
+ metadata health
+Message-ID: <20190416075737.GL29573@dread.disaster.area>
+References: <155537397092.27935.16073573221774618735.stgit@magnolia>
+ <155537399567.27935.2695652869908662243.stgit@magnolia>
+ <20190416014309.GJ4752@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <ff27d614-0808-969b-0e95-4cb3c36138d2@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190416014309.GJ4752@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
+On Mon, Apr 15, 2019 at 06:43:09PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Now that we have the ability to track sick metadata in-core, make scrub
+> and repair update those health assessments after doing work.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: rename sick_mask_update to sick_mask.
+> ---
 
+LGTM.
 
-On 4/15/19 7:30 PM, Allison Henderson wrote:
-> On 4/15/19 3:50 PM,  wrote:
->> On Fri, Apr 12, 2019 at 03:50:34PM -0700, Allison Henderson wrote:
->>> This patch modifies xfs_attr_item to store a xfs_da_args, a xfs_buf 
->>> pointer
->>> and a new state type. We will use these in the next patch when
->>> we modify xfs_set_attr_args to roll transactions by returning EAGAIN.
->>> Because the subroutines of this function modify the contents of these
->>> structures, we need to find a place to store them where they remain
->>> instantiated across multiple calls to xfs_set_attr_args.
->>>
->>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
->>> ---
->>>   fs/xfs/libxfs/xfs_attr.h | 18 +++++++++++++++++-
->>>   fs/xfs/scrub/common.c    |  2 ++
->>>   fs/xfs/xfs_acl.c         |  2 ++
->>>   fs/xfs/xfs_attr_item.c   |  2 +-
->>>   fs/xfs/xfs_ioctl.c       |  2 ++
->>>   fs/xfs/xfs_ioctl32.c     |  2 ++
->>>   fs/xfs/xfs_iops.c        |  1 +
->>>   fs/xfs/xfs_xattr.c       |  1 +
->>>   8 files changed, 28 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
->>> index 974c963..4ce3b0a 100644
->>> --- a/fs/xfs/libxfs/xfs_attr.h
->>> +++ b/fs/xfs/libxfs/xfs_attr.h
->>> @@ -77,6 +77,13 @@ typedef struct attrlist_ent {    /* data from 
->>> attr_list() */
->>>       char    a_name[1];    /* attr name (NULL terminated) */
->>>   } attrlist_ent_t;
->>> +/* Attr state machine types */
->>> +enum xfs_attr_state {
->>> +    XFS_ATTR_STATE1 = 1,
->>> +    XFS_ATTR_STATE2 = 2,
->>> +    XFS_ATTR_STATE3 = 3,
->>
->> Um... to what states do these refer?
-> 
-> I actually struggled with what to call these other than state machine 
-> types.  They are sort of "you were here" bookmark for xfs_attr_set_args. 
->   The idea is that when we return EAGAIN, and then get recalled with a 
-> new transaction, we jump back to where we were based on this marker.
-> 
->>
->>> +};
->>> +
->>>   /*
->>>    * List of attrs to commit later.
->>>    */
->>> @@ -88,7 +95,16 @@ struct xfs_attr_item {
->>>       void          *xattri_name;          /* attr name */
->>>       uint32_t      xattri_name_len;    /* length of name */
->>>       uint32_t      xattri_flags;       /* attr flags */
->>> -    struct list_head  xattri_list;
->>> +
->>> +    /*
->>> +     * Delayed attr parameters that need to remain instantiated
->>> +     * across transaction rolls during the defer finish
->>> +     */
->>> +    struct xfs_buf        *xattri_leaf_bp;  /* Leaf buf to release */
->>> +    enum xfs_attr_state    xattri_state;      /* state machine 
->>> marker */
->>> +    struct xfs_da_args    xattri_args;      /* args context */
->>
->> Assuming we're keeping xattri_args.trans up to date here?
-> 
-> Yes, that happens in xfs_attr_finish_item in the next patch.
-> 
->>
->>> +
->>> +    struct list_head    xattri_list;
->>
->> What's this for?
-> 
-> xattri_list is introduced in patch 2, which I loosely modeled off other 
-
-Sorry, typo: xattri_list is introduced in patch 4, not 2.
-
-> delayed items at the time.  It a list of intents that have been logged 
-> to this item.  Though it could use a comment :-)
-> 
-> It doesn't relate directly to the "re-roll with EAGAIN" mechanics being 
-> added in this patch if that's what you are asking.  It just needs to be 
-> the last member of the struct because it's followed by a byte array.
-> 
-> I hope that helps to explain some.  Let me know if you have any other 
-> questions.  Thanks!
-> 
-> Allison
->>
->> --D
->>
->>>       /*
->>>        * A byte array follows the header containing the file name and
->>> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
->>> index 0c54ff5..270c32e 100644
->>> --- a/fs/xfs/scrub/common.c
->>> +++ b/fs/xfs/scrub/common.c
->>> @@ -30,6 +30,8 @@
->>>   #include "xfs_rmap_btree.h"
->>>   #include "xfs_log.h"
->>>   #include "xfs_trans_priv.h"
->>> +#include "xfs_da_format.h"
->>> +#include "xfs_da_btree.h"
->>>   #include "xfs_attr.h"
->>>   #include "xfs_reflink.h"
->>>   #include "scrub/xfs_scrub.h"
->>> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
->>> index 142de8d..9b1b93e 100644
->>> --- a/fs/xfs/xfs_acl.c
->>> +++ b/fs/xfs/xfs_acl.c
->>> @@ -10,6 +10,8 @@
->>>   #include "xfs_mount.h"
->>>   #include "xfs_inode.h"
->>>   #include "xfs_acl.h"
->>> +#include "xfs_da_format.h"
->>> +#include "xfs_da_btree.h"
->>>   #include "xfs_attr.h"
->>>   #include "xfs_trace.h"
->>>   #include <linux/slab.h>
->>> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
->>> index 0ea19b4..36e6d1e 100644
->>> --- a/fs/xfs/xfs_attr_item.c
->>> +++ b/fs/xfs/xfs_attr_item.c
->>> @@ -19,10 +19,10 @@
->>>   #include "xfs_rmap.h"
->>>   #include "xfs_inode.h"
->>>   #include "xfs_icache.h"
->>> -#include "xfs_attr.h"
->>>   #include "xfs_shared.h"
->>>   #include "xfs_da_format.h"
->>>   #include "xfs_da_btree.h"
->>> +#include "xfs_attr.h"
->>>   static inline struct xfs_attri_log_item *ATTRI_ITEM(struct 
->>> xfs_log_item *lip)
->>>   {
->>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->>> index ab341d6..c8728ca 100644
->>> --- a/fs/xfs/xfs_ioctl.c
->>> +++ b/fs/xfs/xfs_ioctl.c
->>> @@ -16,6 +16,8 @@
->>>   #include "xfs_rtalloc.h"
->>>   #include "xfs_itable.h"
->>>   #include "xfs_error.h"
->>> +#include "xfs_da_format.h"
->>> +#include "xfs_da_btree.h"
->>>   #include "xfs_attr.h"
->>>   #include "xfs_bmap.h"
->>>   #include "xfs_bmap_util.h"
->>> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
->>> index 5001dca..23f6990 100644
->>> --- a/fs/xfs/xfs_ioctl32.c
->>> +++ b/fs/xfs/xfs_ioctl32.c
->>> @@ -21,6 +21,8 @@
->>>   #include "xfs_fsops.h"
->>>   #include "xfs_alloc.h"
->>>   #include "xfs_rtalloc.h"
->>> +#include "xfs_da_format.h"
->>> +#include "xfs_da_btree.h"
->>>   #include "xfs_attr.h"
->>>   #include "xfs_ioctl.h"
->>>   #include "xfs_ioctl32.h"
->>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->>> index e73c21a..561c467 100644
->>> --- a/fs/xfs/xfs_iops.c
->>> +++ b/fs/xfs/xfs_iops.c
->>> @@ -17,6 +17,7 @@
->>>   #include "xfs_acl.h"
->>>   #include "xfs_quota.h"
->>>   #include "xfs_error.h"
->>> +#include "xfs_da_btree.h"
->>>   #include "xfs_attr.h"
->>>   #include "xfs_trans.h"
->>>   #include "xfs_trace.h"
->>> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
->>> index 3013746..938e81d 100644
->>> --- a/fs/xfs/xfs_xattr.c
->>> +++ b/fs/xfs/xfs_xattr.c
->>> @@ -11,6 +11,7 @@
->>>   #include "xfs_mount.h"
->>>   #include "xfs_da_format.h"
->>>   #include "xfs_inode.h"
->>> +#include "xfs_da_btree.h"
->>>   #include "xfs_attr.h"
->>>   #include "xfs_attr_leaf.h"
->>>   #include "xfs_acl.h"
->>> -- 
->>> 2.7.4
->>>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
