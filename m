@@ -1,78 +1,202 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41574 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727012AbfDPAGu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 Apr 2019 20:06:50 -0400
-Date: Tue, 16 Apr 2019 08:06:33 +0800
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH] nvme/012 & 013: avoid extremely slow xfs IO
-Message-ID: <20190416000632.GA670@ming.t460p>
-References: <20190415012229.20689-1-ming.lei@redhat.com>
- <SN6PR04MB4527DD7C84A15184AE5F7947862B0@SN6PR04MB4527.namprd04.prod.outlook.com>
- <57a5b163-5d7a-d5a0-fe9a-614b1d638472@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:50062 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727938AbfDPAUL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 20:20:11 -0400
+Subject: [PATCH 5/5] xfs: scrub should only cross-reference with healthy
+ btrees
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 15 Apr 2019 17:20:01 -0700
+Message-ID: <155537400192.27935.5071586825961103642.stgit@magnolia>
+In-Reply-To: <155537397092.27935.16073573221774618735.stgit@magnolia>
+References: <155537397092.27935.16073573221774618735.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <57a5b163-5d7a-d5a0-fe9a-614b1d638472@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>, Omar Sandoval <osandov@fb.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Mon, Apr 15, 2019 at 09:46:02AM -0400, Eric Sandeen wrote:
-> On 4/14/19 9:01 PM, Chaitanya Kulkarni wrote:
-> > Thanks for the patch Ming. Couple of comments below.
-> > On 4/14/19 6:22 PM, Ming Lei wrote:
-> >> It is observed that nvme/012 may take ~17 minutes to complete on aarch64,
-> >> even worse it may trigger IO timeout on nvme-loop.
-> >>
-> >> Eric and Dave replied that it is because of too small log size on small
-> >> disk.
-> >>
-> >> So pass '-l size=32m' to avoid the issue.
-> >>
-> >> With this patch, nvme/012 can be completed in one minute.
-> >>
-> > Then we should set the QUICK=1 if its taking shorter time.
-> > 
-> >> Cc: Eric Sandeen <esandeen@redhat.com>
-> >> Cc: Dave Chinner <dchinner@redhat.com>
-> >> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> >> Cc: linux-xfs@vger.kernel.org
-> >> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> >> ---
-> >>   tests/nvme/012 | 2 +-
-> >>   tests/nvme/013 | 2 +-
-> >>   2 files changed, 2 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/tests/nvme/012 b/tests/nvme/012
-> >> index 9a6801511df7..d7a8751ec752 100755
-> >> --- a/tests/nvme/012
-> >> +++ b/tests/nvme/012
-> >> @@ -46,7 +46,7 @@ test() {
-> >>   
-> >>   	umount ${mount_dir} > /dev/null 2>&1
-> >>   
-> >> -	mkfs.xfs -f /dev/"${nvmedev}n1" > /dev/null 2>&1
-> >> +	mkfs.xfs -l size=32m -f /dev/"${nvmedev}n1" > /dev/null 2>&1
-> >>   
-> > As a part of this series lets move this to the helper mkfs in the 
-> > nvme/rc and use that call in all the file-backed ns related testcases.
-> > Let me know if you want me to do that or you would like to do that as a 
-> > part of this series. I'm okay with anything.
-> 
-> We also discussed making the log size larger by default, on small fielsystems,
-> but that won't help you yet.
-> 
-> My only caution is that manually setting the log to 32m may actually create
-> a smaller than default log if your backing file happens to be very large.
-> Just something to consider.  If the backing files are typically around the
-> 4G size of this test (?) then 32m seems reasonable, 128m certainly would
-> not hurt.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In the two tests, the device size is 1G, and looks 32m log size works
-just fine. 
+Skip cross-referencing with a btree if the health report tells us that
+it's known to be bad.  This should reduce the dmesg spew considerably.
 
-thanks,
-Ming
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/common.c |   20 ++++++++++---
+ fs/xfs/scrub/health.c |   76 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/health.h |    2 +
+ 3 files changed, 93 insertions(+), 5 deletions(-)
+
+
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 0c54ff55b901..7076d5c98151 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -38,6 +38,7 @@
+ #include "scrub/trace.h"
+ #include "scrub/btree.h"
+ #include "scrub/repair.h"
++#include "scrub/health.h"
+ 
+ /* Common code for the metadata scrubbers. */
+ 
+@@ -458,13 +459,18 @@ xchk_ag_btcur_init(
+ 	struct xfs_mount	*mp = sc->mp;
+ 	xfs_agnumber_t		agno = sa->agno;
+ 
+-	if (sa->agf_bp) {
++	xchk_perag_get(sc->mp, sa);
++	if (sa->agf_bp &&
++	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_BNO)) {
+ 		/* Set up a bnobt cursor for cross-referencing. */
+ 		sa->bno_cur = xfs_allocbt_init_cursor(mp, sc->tp, sa->agf_bp,
+ 				agno, XFS_BTNUM_BNO);
+ 		if (!sa->bno_cur)
+ 			goto err;
++	}
+ 
++	if (sa->agf_bp &&
++	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_CNT)) {
+ 		/* Set up a cntbt cursor for cross-referencing. */
+ 		sa->cnt_cur = xfs_allocbt_init_cursor(mp, sc->tp, sa->agf_bp,
+ 				agno, XFS_BTNUM_CNT);
+@@ -473,7 +479,8 @@ xchk_ag_btcur_init(
+ 	}
+ 
+ 	/* Set up a inobt cursor for cross-referencing. */
+-	if (sa->agi_bp) {
++	if (sa->agi_bp &&
++	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_INO)) {
+ 		sa->ino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
+ 					agno, XFS_BTNUM_INO);
+ 		if (!sa->ino_cur)
+@@ -481,7 +488,8 @@ xchk_ag_btcur_init(
+ 	}
+ 
+ 	/* Set up a finobt cursor for cross-referencing. */
+-	if (sa->agi_bp && xfs_sb_version_hasfinobt(&mp->m_sb)) {
++	if (sa->agi_bp && xfs_sb_version_hasfinobt(&mp->m_sb) &&
++	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_FINO)) {
+ 		sa->fino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
+ 				agno, XFS_BTNUM_FINO);
+ 		if (!sa->fino_cur)
+@@ -489,7 +497,8 @@ xchk_ag_btcur_init(
+ 	}
+ 
+ 	/* Set up a rmapbt cursor for cross-referencing. */
+-	if (sa->agf_bp && xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++	if (sa->agf_bp && xfs_sb_version_hasrmapbt(&mp->m_sb) &&
++	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_RMAP)) {
+ 		sa->rmap_cur = xfs_rmapbt_init_cursor(mp, sc->tp, sa->agf_bp,
+ 				agno);
+ 		if (!sa->rmap_cur)
+@@ -497,7 +506,8 @@ xchk_ag_btcur_init(
+ 	}
+ 
+ 	/* Set up a refcountbt cursor for cross-referencing. */
+-	if (sa->agf_bp && xfs_sb_version_hasreflink(&mp->m_sb)) {
++	if (sa->agf_bp && xfs_sb_version_hasreflink(&mp->m_sb) &&
++	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_REFC)) {
+ 		sa->refc_cur = xfs_refcountbt_init_cursor(mp, sc->tp,
+ 				sa->agf_bp, agno);
+ 		if (!sa->refc_cur)
+diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
+index 770ab0723a38..bc0715eea123 100644
+--- a/fs/xfs/scrub/health.c
++++ b/fs/xfs/scrub/health.c
+@@ -174,3 +174,79 @@ xchk_update_health(
+ 		break;
+ 	}
+ }
++
++/* Is the given per-AG btree healthy enough for scanning? */
++bool
++xchk_ag_btree_healthy_enough(
++	struct xfs_scrub	*sc,
++	struct xfs_perag	*pag,
++	xfs_btnum_t		btnum)
++{
++	unsigned int		mask = 0;
++
++	/*
++	 * We always want the cursor if it's the same type as whatever we're
++	 * scrubbing, even if we already know the structure is corrupt.
++	 */
++	switch (sc->sm->sm_type) {
++	case XFS_SCRUB_TYPE_BNOBT:
++		if (btnum == XFS_BTNUM_BNO)
++			return true;
++		break;
++	case XFS_SCRUB_TYPE_CNTBT:
++		if (btnum == XFS_BTNUM_CNT)
++			return true;
++		break;
++	case XFS_SCRUB_TYPE_INOBT:
++		if (btnum == XFS_BTNUM_INO)
++			return true;
++		break;
++	case XFS_SCRUB_TYPE_FINOBT:
++		if (btnum == XFS_BTNUM_FINO)
++			return true;
++		break;
++	case XFS_SCRUB_TYPE_RMAPBT:
++		if (btnum == XFS_BTNUM_RMAP)
++			return true;
++		break;
++	case XFS_SCRUB_TYPE_REFCNTBT:
++		if (btnum == XFS_BTNUM_REFC)
++			return true;
++		break;
++	}
++
++	/*
++	 * Otherwise, we're only interested in the btree for cross-referencing.
++	 * If we know the btree is bad then don't bother, just set XFAIL.
++	 */
++	switch (btnum) {
++	case XFS_BTNUM_BNO:
++		mask = XFS_SICK_AG_BNOBT;
++		break;
++	case XFS_BTNUM_CNT:
++		mask = XFS_SICK_AG_CNTBT;
++		break;
++	case XFS_BTNUM_INO:
++		mask = XFS_SICK_AG_INOBT;
++		break;
++	case XFS_BTNUM_FINO:
++		mask = XFS_SICK_AG_FINOBT;
++		break;
++	case XFS_BTNUM_RMAP:
++		mask = XFS_SICK_AG_RMAPBT;
++		break;
++	case XFS_BTNUM_REFC:
++		mask = XFS_SICK_AG_REFCNTBT;
++		break;
++	default:
++		ASSERT(0);
++		return true;
++	}
++
++	if (xfs_ag_has_sickness(pag, mask)) {
++		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XFAIL;
++		return false;
++	}
++
++	return true;
++}
+diff --git a/fs/xfs/scrub/health.h b/fs/xfs/scrub/health.h
+index fd0d466c8658..d0b938d3d028 100644
+--- a/fs/xfs/scrub/health.h
++++ b/fs/xfs/scrub/health.h
+@@ -8,5 +8,7 @@
+ 
+ unsigned int xchk_health_mask_for_scrub_type(__u32 scrub_type);
+ void xchk_update_health(struct xfs_scrub *sc);
++bool xchk_ag_btree_healthy_enough(struct xfs_scrub *sc, struct xfs_perag *pag,
++		xfs_btnum_t btnum);
+ 
+ #endif /* __XFS_SCRUB_HEALTH_H__ */
