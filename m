@@ -1,425 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:35932 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:39510 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726860AbfDPTyi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Apr 2019 15:54:38 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3GJsEmO026612
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2019 19:54:35 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2rvwk3q0bv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2019 19:54:35 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3GJs8mH165046
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2019 19:54:34 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2rv2tuyarx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2019 19:54:34 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x3GJsYoY016521
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Apr 2019 19:54:34 GMT
-Subject: Re: [PATCH 8/9] xfs: Roll delayed attr operations by returning EAGAIN
-References: <20190412225036.22939-1-allison.henderson@oracle.com>
- <20190412225036.22939-9-allison.henderson@oracle.com>
- <20190415233149.GG4752@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <fd5b98ed-009a-e02a-adca-9afe1e356255@oracle.com>
-Date: Tue, 16 Apr 2019 12:54:31 -0700
+        with ESMTP id S1726986AbfDPVVz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Apr 2019 17:21:55 -0400
+Date: Tue, 16 Apr 2019 14:21:46 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: Assertions tripping in xfs/104
+Message-ID: <20190416212146.GC114154@magnolia>
+References: <20190416015328.GL4752@magnolia>
+ <20190416120056.GA14042@bfoster>
+ <20190416152639.GN4752@magnolia>
+ <20190416182346.GB10746@bfoster>
+ <20190416185937.GA114154@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20190415233149.GG4752@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190416185937.GA114154@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 4/15/19 4:31 PM, Darrick J. Wong wrote:
-> On Fri, Apr 12, 2019 at 03:50:35PM -0700, Allison Henderson wrote:
->> This patch modifies xfs_attr_set_args to return -EAGAIN
->> when a transaction needs to be rolled.  All functions
->> currently calling xfs_attr_set_args are modified to use
->> the deferred attr operation, or handle the -EAGAIN return
->> code
->>
->> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_attr.c | 62 ++++++++++++++++++++++++++++++++++++++++--------
->>   fs/xfs/libxfs/xfs_attr.h |  2 +-
->>   fs/xfs/xfs_attr_item.c   | 41 +++++++++++++++++++++++++++-----
->>   fs/xfs/xfs_trans.h       |  2 ++
->>   fs/xfs/xfs_trans_attr.c  | 56 +++++++++++++++++++++++++------------------
->>   5 files changed, 123 insertions(+), 40 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index 0042708..4ddd86b 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -236,10 +236,37 @@ int
->>   xfs_attr_set_args(
->>   	struct xfs_da_args	*args,
->>   	struct xfs_buf          **leaf_bp,
->> +	enum xfs_attr_state	*state,
->>   	bool			roll_trans)
->>   {
->>   	struct xfs_inode	*dp = args->dp;
->>   	int			error = 0;
->> +	int			sf_size;
->> +
->> +	switch (*state) {
->> +	case (XFS_ATTR_STATE1):
->> +		goto state1;
->> +	case (XFS_ATTR_STATE2):
->> +		goto state2;
->> +	case (XFS_ATTR_STATE3):
->> +		goto state3;
->> +	}
+On Tue, Apr 16, 2019 at 11:59:37AM -0700, Darrick J. Wong wrote:
+> On Tue, Apr 16, 2019 at 02:23:46PM -0400, Brian Foster wrote:
+> > On Tue, Apr 16, 2019 at 08:26:39AM -0700, Darrick J. Wong wrote:
+> > > On Tue, Apr 16, 2019 at 08:00:59AM -0400, Brian Foster wrote:
+> > > > On Mon, Apr 15, 2019 at 06:53:28PM -0700, Darrick J. Wong wrote:
+> > > > > Hi Brian,
+> > > > > 
+> > > > > When running fstests against what will become the xfs-5.2-merge tree, I
+> > > > > hit an assert in xfs/104; the dmesg for that is pasted below.
+> > > > > 
+> > > > > I'm pretty sure that what's going on here is that we hit a deferred AGFL
+> > > > > free while growing the filesystem and need to do a defer_roll, but
+> > > > > tr_growdata is not one of the permanent reservation transactions and
+> > > > > that's why we trip some asserts.
+> > > > > 
+> > > > 
+> > > > Yeah, it looks like we can hit this in the case where a growfs extends
+> > > > the last pre-existing AG in the fs. We "free" the additional space into
+> > > > the AG, happen to come across an overpopulated AGFL and end up doing
+> > > > deferred ops from a non-permanent transaction.
+> > > > 
+> > > > I think we should probably just update the tr_growdata transaction to
+> > > > reflect how it's used and mark it permanent with the default permanent
+> > > > log count (2). That obviously increases the reservation size, but it's
+> > > > not like grow is a high frequency or performance critical operation.
+> > > > 
+> > > > > FSTYP         -- xfs (debug)
+> > > > > PLATFORM      -- Linux/x86_64 mtr01 5.1.0-rc5-djw
+> > > > > MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1, -i sparse=1, -b size=1024, /dev/sdd
+> > > > > MOUNT_OPTIONS -- -o usrquota,grpquota,prjquota, /dev/sdd /opt
+> > > > > 
+> > > > > Granted this is the first time I've seen this in several months of
+> > > > > nightly fstests runs, so chances are this one is hard to reproduce.
+> > > > > 
+> > > > 
+> > > > I don't recall seeing this and don't reproduce in a few iterations of
+> > > > xfs/104 with the above geometry. I'll keep trying for a bit. In the
+> > > > meantime, a diff is appended if you'd like to give that a try. Thoughts?
+> > > 
+> > > That looks reasonable, though I think we end up playing whackamole
+> > > trying to find all the transactions that could result in a deferred agfl
+> > > free on a non-permanent transaction type.
+> > > 
+> > > Maybe a debugging patch along the lines of:
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > > index 857a53e58b94..e597164641a1 100644
+> > > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > > @@ -2324,6 +2324,8 @@ xfs_alloc_fix_freelist(
+> > >                 targs.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
+> > >         else
+> > >                 targs.oinfo = XFS_RMAP_OINFO_AG;
+> > > +       ASSERT((flags & XFS_ALLOC_FLAG_NOSHRINK) ||
+> > > +              (tp->t_flags & XFS_TRANS_PERM_LOG_RES));
+> > >         while (!(flags & XFS_ALLOC_FLAG_NOSHRINK) && pag->pagf_flcount > need) {
+> > >                 error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
+> > >                 if (error)
+> > > 
+> > > Though this is a blunt instrument since as we've seen with x/104 not all
+> > > of the freelist fix calls ever result in shrinking the agfl.
+> > > 
+> > 
+> > Yeah, but I think it's a reasonable rule given the current
+> > implementation of unconditionally deferring AGFL frees. This certainly
+> > would have helped detect this situation when this functionality was
+> > initially added. I'll send a patch with the transaction fixup and this
+> > assert once I get it through some testing.
 > 
-> I still don't understand what these there states are, though evidently
-> if we get to this line then we weren't in any of the three possible
-> states?
-> 
-> XFS_ATTR_STATE_INIT...?
-> 
->> +
->> +	/*
->> +	 * New inodes may not have an attribute fork yet. So set the attribute
->> +	 * fork appropriately
->> +	 */
->> +	if (XFS_IFORK_Q((args->dp)) == 0) {
->> +		sf_size = sizeof(struct xfs_attr_sf_hdr) +
->> +		     XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen, args->valuelen);
->> +		xfs_bmap_set_attrforkoff(args->dp, sf_size, NULL);
->> +		args->dp->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
->> +		args->dp->i_afp->if_flags = XFS_IFEXTENTS;
->> +	}
->> +
->> +	*state = XFS_ATTR_STATE1;
-> 
-> XFS_ATTR_STATE_ADDED_FORK...
-> 
->> +	return -EAGAIN;
->> +state1:
->>   
->>   	/*
->>   	 * If the attribute list is non-existent or a shortform list,
->> @@ -248,7 +275,6 @@ xfs_attr_set_args(
->>   	if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
->>   	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
->>   	     dp->i_d.di_anextents == 0)) {
->> -
->>   		/*
->>   		 * Build initial attribute list (if required).
->>   		 */
->> @@ -262,6 +288,9 @@ xfs_attr_set_args(
->>   		if (error != -ENOSPC)
->>   			return error;
->>   
->> +		*state = XFS_ATTR_STATE2;
-> 
-> XFS_ATTR_STATE_FAILED_SF_ADD...
-> 
->> +		return -EAGAIN;
->> +state2:
->>   		/*
->>   		 * It won't fit in the shortform, transform to a leaf block.
->>   		 * GROT: another possible req'mt for a double-split btree op.
->> @@ -270,14 +299,14 @@ xfs_attr_set_args(
->>   		if (error)
->>   			return error;
->>   
->> -		if (roll_trans) {
->> -			/*
->> -			 * Prevent the leaf buffer from being unlocked so that a
->> -			 * concurrent AIL push cannot grab the half-baked leaf
->> -			 * buffer and run into problems with the write verifier.
->> -			 */
->> -			xfs_trans_bhold(args->trans, *leaf_bp);
->> +		/*
->> +		 * Prevent the leaf buffer from being unlocked so that a
->> +		 * concurrent AIL push cannot grab the half-baked leaf
->> +		 * buffer and run into problems with the write verifier.
->> +		 */
->> +		xfs_trans_bhold(args->trans, *leaf_bp);
->>   
->> +		if (roll_trans) {
->>   			error = xfs_defer_finish(&args->trans);
->>   			if (error)
->>   				return error;
->> @@ -293,6 +322,12 @@ xfs_attr_set_args(
->>   			xfs_trans_bjoin(args->trans, *leaf_bp);
->>   			*leaf_bp = NULL;
->>   		}
->> +
->> +		*state = XFS_ATTR_STATE3;
-> 
-> XFS_ATTR_STATE_LEAF_AVAIL...
-> 
->> +		return -EAGAIN;
->> +state3:
->> +		if (*leaf_bp != NULL)
->> +			xfs_trans_brelse(args->trans, *leaf_bp);
->>   	}
->>   
->>   	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
->> @@ -419,7 +454,9 @@ xfs_attr_set(
->>   		goto out_trans_cancel;
->>   
->>   	xfs_trans_ijoin(args.trans, dp, 0);
->> -	error = xfs_attr_set_args(&args, &leaf_bp, true);
->> +
->> +	error = xfs_attr_set_deferred(dp, args.trans, name, namelen,
->> +			value, valuelen, flags);
-> 
-> Oh, I see, the XFS_ATTR_STATE[1-3] added in the previous patch are
-> supposed to record restart points when we have to duck out to roll a
-> transaction or something.
-> 
-> Hmm, why does this have to happen?  Is it because the current attr
-> setting code will allocate and commit transactions, but now that we have
-> deferred attr items, each of those commits has to turn into backing out
-> to whomever allocated the transaction to get another?
-> 
-> Oh right, there's that whole mess where the log recovery transaction
-> isn't supposed to be rolled or committed, ever, so that the defer ops
-> can be ripped off and run after the recovered items are all more or less
-> written out.  Ugh.
-> 
-> Uh... meeting time, I'll think about this and continue this reply later.
-> 
+> Ok.  I started a test run with just the assert to see if I could weed
+> out any more problem transactions and I'll let you know if it finds any.
+
+The test run completed and the only transaction type that hit the
+assertion was the tr_growdata, so I think the patch you described above
+will fix the problem.
+
+--D
+
 > --D
-
-Sorry I just noticed your reply on patch 8 just now. i seem to be having 
-some delays with my inbox.  In any case, it seems you have pieced 
-together the idea I was aiming for.  To clarify, no, it doesn't have to 
-happen.  Patches 7 and 8 could disappear from the set, and it should 
-still work, but we end up with a lot of activity on one transaction.  So 
-we were looking for a way to break it up a bit.  This solution appears 
-to work, but to be honest, I do think it's a bit convoluted.  So I am 
-open to suggestions.
-
-Ideally it would be nice to roll the transaction in all the spots they 
-used to.  They're easy to find: they are marked by all the "roll_trans" 
-booleans that get removed in the next patch.  They are just hard to get 
-to in so far as a "restart point" because they're buried in subroutines.
-
-Alternately, I had toyed with the idea of using a child thread that 
-signals the parent thread to go roll the transaction and then wake me 
-when it's done.  That way the stack doesn't back out, and we don't need 
-these state markers.  I'm not sure child thread management is really 
-less of a head ache though, and it's probably not great for performance 
-either.  :-(
-
-Allison
-
 > 
->>   	if (error)
->>   		goto out_release_leaf;
->>   	if (!args.trans) {
->> @@ -554,8 +591,13 @@ xfs_attr_remove(
->>   	 */
->>   	xfs_trans_ijoin(args.trans, dp, 0);
->>   
->> -	error = xfs_attr_remove_args(&args, true);
->> +	error = xfs_has_attr(&args);
->> +	if (error)
->> +		goto out;
->> +
->>   
->> +	error = xfs_attr_remove_deferred(dp, args.trans,
->> +			name, namelen, flags);
->>   	if (error)
->>   		goto out;
->>   
->> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
->> index 4ce3b0a..da95e69 100644
->> --- a/fs/xfs/libxfs/xfs_attr.h
->> +++ b/fs/xfs/libxfs/xfs_attr.h
->> @@ -181,7 +181,7 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
->>   		 size_t namelen, unsigned char *value, int valuelen,
->>   		 int flags);
->>   int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp,
->> -		 bool roll_trans);
->> +		 enum xfs_attr_state *state, bool roll_trans);
->>   int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
->>   		    size_t namelen, int flags);
->>   int xfs_has_attr(struct xfs_da_args *args);
->> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
->> index 36e6d1e..292d608 100644
->> --- a/fs/xfs/xfs_attr_item.c
->> +++ b/fs/xfs/xfs_attr_item.c
->> @@ -464,8 +464,11 @@ xfs_attri_recover(
->>   	struct xfs_attri_log_format	*attrp;
->>   	struct xfs_trans_res		tres;
->>   	int				local;
->> -	int				error = 0;
->> +	int				error, err2 = 0;
->>   	int				rsvd = 0;
->> +	enum xfs_attr_state		state = 0;
->> +	struct xfs_buf			*leaf_bp = NULL;
->> +
->>   
->>   	ASSERT(!test_bit(XFS_ATTRI_RECOVERED, &attrip->flags));
->>   
->> @@ -540,14 +543,40 @@ xfs_attri_recover(
->>   	xfs_ilock(ip, XFS_ILOCK_EXCL);
->>   
->>   	xfs_trans_ijoin(args.trans, ip, 0);
->> -	error = xfs_trans_attr(&args, attrdp, attrp->alfi_op_flags);
->> -	if (error)
->> -		goto abort_error;
->>   
->> +	do {
->> +		leaf_bp = NULL;
->> +
->> +		error = xfs_trans_attr(&args, attrdp, &leaf_bp, &state,
->> +				attrp->alfi_op_flags);
->> +		if (error && error != -EAGAIN)
->> +			goto abort_error;
->> +
->> +		xfs_trans_log_inode(args.trans, ip,
->> +				XFS_ILOG_CORE | XFS_ILOG_ADATA);
->> +
->> +		err2 = xfs_trans_commit(args.trans);
->> +		if (err2) {
->> +			error = err2;
->> +			goto abort_error;
->> +		}
->> +
->> +		if (error == -EAGAIN) {
->> +			err2 = xfs_trans_alloc(mp, &tres, args.total, 0,
->> +				XFS_TRANS_PERM_LOG_RES, &args.trans);
->> +			if (err2) {
->> +				error = err2;
->> +				goto abort_error;
->> +			}
->> +			xfs_trans_ijoin(args.trans, ip, 0);
->> +		}
->> +
->> +	} while (error == -EAGAIN);
->> +
->> +	if (leaf_bp)
->> +		xfs_trans_brelse(args.trans, leaf_bp);
->>   
->>   	set_bit(XFS_ATTRI_RECOVERED, &attrip->flags);
->> -	xfs_trans_log_inode(args.trans, ip, XFS_ILOG_CORE | XFS_ILOG_ADATA);
->> -	error = xfs_trans_commit(args.trans);
->>   	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->>   	return error;
->>   
->> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
->> index 7bb9d8e..c785cd7 100644
->> --- a/fs/xfs/xfs_trans.h
->> +++ b/fs/xfs/xfs_trans.h
->> @@ -239,6 +239,8 @@ xfs_trans_get_attrd(struct xfs_trans *tp,
->>   		    struct xfs_attri_log_item *attrip);
->>   int xfs_trans_attr(struct xfs_da_args *args,
->>   		   struct xfs_attrd_log_item *attrdp,
->> +		   struct xfs_buf **leaf_bp,
->> +		   void *state,
->>   		   uint32_t attr_op_flags);
->>   
->>   int		xfs_trans_commit(struct xfs_trans *);
->> diff --git a/fs/xfs/xfs_trans_attr.c b/fs/xfs/xfs_trans_attr.c
->> index 3679348..a3339ea 100644
->> --- a/fs/xfs/xfs_trans_attr.c
->> +++ b/fs/xfs/xfs_trans_attr.c
->> @@ -56,10 +56,11 @@ int
->>   xfs_trans_attr(
->>   	struct xfs_da_args		*args,
->>   	struct xfs_attrd_log_item	*attrdp,
->> +	struct xfs_buf			**leaf_bp,
->> +	void				*state,
->>   	uint32_t			op_flags)
->>   {
->>   	int				error;
->> -	struct xfs_buf			*leaf_bp = NULL;
->>   
->>   	error = xfs_qm_dqattach_locked(args->dp, 0);
->>   	if (error)
->> @@ -68,7 +69,8 @@ xfs_trans_attr(
->>   	switch (op_flags) {
->>   	case XFS_ATTR_OP_FLAGS_SET:
->>   		args->op_flags |= XFS_DA_OP_ADDNAME;
->> -		error = xfs_attr_set_args(args, &leaf_bp, false);
->> +		error = xfs_attr_set_args(args, leaf_bp,
->> +				(enum xfs_attr_state *)state, false);
->>   		break;
->>   	case XFS_ATTR_OP_FLAGS_REMOVE:
->>   		ASSERT(XFS_IFORK_Q((args->dp)));
->> @@ -78,11 +80,6 @@ xfs_trans_attr(
->>   		error = -EFSCORRUPTED;
->>   	}
->>   
->> -	if (error) {
->> -		if (leaf_bp)
->> -			xfs_trans_brelse(args->trans, leaf_bp);
->> -	}
->> -
->>   	/*
->>   	 * Mark the transaction dirty, even on error. This ensures the
->>   	 * transaction is aborted, which:
->> @@ -184,27 +181,40 @@ xfs_attr_finish_item(
->>   	char				*name_value;
->>   	int				error;
->>   	int				local;
->> -	struct xfs_da_args		args;
->> +	struct xfs_da_args		*args;
->>   
->>   	attr = container_of(item, struct xfs_attr_item, xattri_list);
->> -	name_value = ((char *)attr) + sizeof(struct xfs_attr_item);
->> -
->> -	error = xfs_attr_args_init(&args, attr->xattri_ip, name_value,
->> -				   attr->xattri_name_len, attr->xattri_flags);
->> -	if (error)
->> -		goto out;
->> +	args = &attr->xattri_args;
->> +
->> +	if (attr->xattri_state == 0) {
->> +		/* Only need to initialize args context once */
->> +		name_value = ((char *)attr) + sizeof(struct xfs_attr_item);
->> +		error = xfs_attr_args_init(args, attr->xattri_ip, name_value,
->> +					   attr->xattri_name_len,
->> +					   attr->xattri_flags);
->> +		if (error)
->> +			goto out;
->> +
->> +		args->hashval = xfs_da_hashname(args->name, args->namelen);
->> +		args->value = &name_value[attr->xattri_name_len];
->> +		args->valuelen = attr->xattri_value_len;
->> +		args->op_flags = XFS_DA_OP_OKNOENT;
->> +		args->total = xfs_attr_calc_size(args, &local);
->> +		attr->xattri_leaf_bp = NULL;
->> +	}
->>   
->> -	args.hashval = xfs_da_hashname(args.name, args.namelen);
->> -	args.value = &name_value[attr->xattri_name_len];
->> -	args.valuelen = attr->xattri_value_len;
->> -	args.op_flags = XFS_DA_OP_OKNOENT;
->> -	args.total = xfs_attr_calc_size(&args, &local);
->> -	args.trans = tp;
->> +	/*
->> +	 * Always reset trans after EAGAIN cycle
->> +	 * since the transaction is new
->> +	 */
->> +	args->trans = tp;
->>   
->> -	error = xfs_trans_attr(&args, done_item,
->> -			attr->xattri_op_flags);
->> +	error = xfs_trans_attr(args, done_item, &attr->xattri_leaf_bp,
->> +			&attr->xattri_state, attr->xattri_op_flags);
->>   out:
->> -	kmem_free(attr);
->> +	if (error != -EAGAIN)
->> +		kmem_free(attr);
->> +
->>   	return error;
->>   }
->>   
->> -- 
->> 2.7.4
->>
+> > Brian
+> > 
+> > 
+> > > --D
+> > > 
+> > > > Brian
+> > > > 
+> > > > --- 8< ---
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> > > > index f99a7aefe418..83f4ee2afc49 100644
+> > > > --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> > > > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> > > > @@ -876,9 +876,13 @@ xfs_trans_resv_calc(
+> > > >  	resp->tr_sb.tr_logres = xfs_calc_sb_reservation(mp);
+> > > >  	resp->tr_sb.tr_logcount = XFS_DEFAULT_LOG_COUNT;
+> > > >  
+> > > > +	/* growdata requires permanent res; it can free space to the last AG */
+> > > > +	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
+> > > > +	resp->tr_growdata.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
+> > > > +	resp->tr_growdata.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> > > > +
+> > > >  	/* The following transaction are logged in logical format */
+> > > >  	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
+> > > > -	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
+> > > >  	resp->tr_fsyncts.tr_logres = xfs_calc_swrite_reservation(mp);
+> > > >  	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
+> > > >  	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
