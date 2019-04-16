@@ -1,114 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:40014 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725804AbfDOVSy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 17:18:54 -0400
-Date: Tue, 16 Apr 2019 07:18:51 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/9] xfs: Remove all strlen in all xfs_attr_* functions
- for attr names.
-Message-ID: <20190415211851.GF29573@dread.disaster.area>
-References: <20190412225036.22939-1-allison.henderson@oracle.com>
- <20190412225036.22939-2-allison.henderson@oracle.com>
- <20190414230259.GE29573@dread.disaster.area>
- <c2ef788f-223c-a31d-566b-f3c185ff0a06@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:41574 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727012AbfDPAGu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 15 Apr 2019 20:06:50 -0400
+Date: Tue, 16 Apr 2019 08:06:33 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH] nvme/012 & 013: avoid extremely slow xfs IO
+Message-ID: <20190416000632.GA670@ming.t460p>
+References: <20190415012229.20689-1-ming.lei@redhat.com>
+ <SN6PR04MB4527DD7C84A15184AE5F7947862B0@SN6PR04MB4527.namprd04.prod.outlook.com>
+ <57a5b163-5d7a-d5a0-fe9a-614b1d638472@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c2ef788f-223c-a31d-566b-f3c185ff0a06@oracle.com>
+In-Reply-To: <57a5b163-5d7a-d5a0-fe9a-614b1d638472@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: sandeen@redhat.com
+Cc: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>, Omar Sandoval <osandov@fb.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Mon, Apr 15, 2019 at 01:08:50PM -0700, Allison Henderson wrote:
-> On 4/14/19 4:02 PM, Dave Chinner wrote:
-> > On Fri, Apr 12, 2019 at 03:50:28PM -0700, Allison Henderson wrote:
-> > > This helps to pre-simplify the extra handling of the null terminator in
-> > > delayed operations which use memcpy rather than strlen.  Later
-> > > when we introduce parent pointers, attribute names will become binary,
-> > > so strlen will not work at all.  Removing uses of strlen now will
-> > > help reduce complexities later
-> > > 
-> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Apr 15, 2019 at 09:46:02AM -0400, Eric Sandeen wrote:
+> On 4/14/19 9:01 PM, Chaitanya Kulkarni wrote:
+> > Thanks for the patch Ming. Couple of comments below.
+> > On 4/14/19 6:22 PM, Ming Lei wrote:
+> >> It is observed that nvme/012 may take ~17 minutes to complete on aarch64,
+> >> even worse it may trigger IO timeout on nvme-loop.
+> >>
+> >> Eric and Dave replied that it is because of too small log size on small
+> >> disk.
+> >>
+> >> So pass '-l size=32m' to avoid the issue.
+> >>
+> >> With this patch, nvme/012 can be completed in one minute.
+> >>
+> > Then we should set the QUICK=1 if its taking shorter time.
 > > 
-> > Hmmm. If we are going to pass name/namelen pairs around everywhere,
-> > can we convert these to a struct xfs_name?
-> > 
-> > I also wonder where we should convert the name/namelen pairs in the
-> > attr args struct to an xfs_name, too, then we can just do:
-> > 
-> > 	args->name = *name;
-> > 
-> > to copy in the string pointer and the name length in one go.
-> > 
-> > And we might even be able to put the attribute flags (e.g.
-> > ATTR_ROOT) in the name.type field, and get rid of that parameter
-> > being passed around, too...
-> > 
-> > Cheers,
-> > 
-> > Dave.
+> >> Cc: Eric Sandeen <esandeen@redhat.com>
+> >> Cc: Dave Chinner <dchinner@redhat.com>
+> >> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> >> Cc: linux-xfs@vger.kernel.org
+> >> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> >> ---
+> >>   tests/nvme/012 | 2 +-
+> >>   tests/nvme/013 | 2 +-
+> >>   2 files changed, 2 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/tests/nvme/012 b/tests/nvme/012
+> >> index 9a6801511df7..d7a8751ec752 100755
+> >> --- a/tests/nvme/012
+> >> +++ b/tests/nvme/012
+> >> @@ -46,7 +46,7 @@ test() {
+> >>   
+> >>   	umount ${mount_dir} > /dev/null 2>&1
+> >>   
+> >> -	mkfs.xfs -f /dev/"${nvmedev}n1" > /dev/null 2>&1
+> >> +	mkfs.xfs -l size=32m -f /dev/"${nvmedev}n1" > /dev/null 2>&1
+> >>   
+> > As a part of this series lets move this to the helper mkfs in the 
+> > nvme/rc and use that call in all the file-backed ns related testcases.
+> > Let me know if you want me to do that or you would like to do that as a 
+> > part of this series. I'm okay with anything.
 > 
-> I think a new struct xfs_name is reasonable.  Or maybe a general purpose
-> xfs_array?  The value/valuelen parameters have a similar relation that could
-> make use of that too.  How would people feel about something like this:
+> We also discussed making the log size larger by default, on small fielsystems,
+> but that won't help you yet.
 > 
-> struct xfs_array {
-> 	unsigned char *bytes;
-> 	size_t		len;
-> }
-> 
-> struct xfs_attribute {
-> 	struct xfs_array	name;
-> 	int			flags;
-> }
+> My only caution is that manually setting the log to 32m may actually create
+> a smaller than default log if your backing file happens to be very large.
+> Just something to consider.  If the backing files are typically around the
+> 4G size of this test (?) then 32m seems reasonable, 128m certainly would
+> not hurt.
 
-Hmmm. I think that's overkill - we really don't need that much
-abstraction and it makes the code more complex rather than
-simplifies it. i.e. args->name.name.bytes isn't really a
-simplification...
+In the two tests, the device size is 1G, and looks 32m log size works
+just fine. 
 
-Also the above means we have to discard the const part of the names
-we are passed because this construction doesn't appear to be
-intended for read only strings. i.e.:
-
-> We could add the value member in here too. 
-
-Which is something that isn't const. :)
-
-> It tends to get passed around
-> just as much with the exception of attr remove operations which only need
-> the name.  I think changing the actual members of xfs_da_args should be
-> another patch though, since that's a bigger change that affects a wider
-> scope of code.  I can look into it though.
-
-I don't think we want anything more complex or to extent it to
-include other parts of the attr API - that just means we have a
-special snowflake for the API rather than a generic way of encoding
-a name string across all the internal interfaces that space a name/len
-pair...
-
-Really, I was just suggesting using the struct xfs_name because
-it already exists and encodes/documents exactly what we are passing
-here, hence getting rid of some of the mess around passing the attr
-names around.
-
-> Also, do I still keep the old reviewed-by on the patch if the patch is still
-> going through changes?  I have a few signed-off patches in the parent
-> pointer set that have changed quite a bit since we've started too.
-
-If the changes are significant, then it needs review again and so
-you should drop it.
-
-But I'd do the name/len -> xfsname conversion as a separate patch,
-so this patch doesn't need changing.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+thanks,
+Ming
