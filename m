@@ -1,124 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:50408 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727136AbfDPS7r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Apr 2019 14:59:47 -0400
-Date: Tue, 16 Apr 2019 11:59:37 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:41188 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730277AbfDPTDX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Apr 2019 15:03:23 -0400
+Date: Tue, 16 Apr 2019 12:03:09 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Assertions tripping in xfs/104
-Message-ID: <20190416185937.GA114154@magnolia>
-References: <20190416015328.GL4752@magnolia>
- <20190416120056.GA14042@bfoster>
- <20190416152639.GN4752@magnolia>
- <20190416182346.GB10746@bfoster>
+Subject: Re: [PATCH v2] xfs: serialize unaligned dio writes against all other
+ dio writes
+Message-ID: <20190416190309.GB114154@magnolia>
+References: <20190325172448.55284-1-bfoster@redhat.com>
+ <20190416151434.GM4752@magnolia>
+ <20190416181830.GA10746@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190416182346.GB10746@bfoster>
+In-Reply-To: <20190416181830.GA10746@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Tue, Apr 16, 2019 at 02:23:46PM -0400, Brian Foster wrote:
-> On Tue, Apr 16, 2019 at 08:26:39AM -0700, Darrick J. Wong wrote:
-> > On Tue, Apr 16, 2019 at 08:00:59AM -0400, Brian Foster wrote:
-> > > On Mon, Apr 15, 2019 at 06:53:28PM -0700, Darrick J. Wong wrote:
-> > > > Hi Brian,
-> > > > 
-> > > > When running fstests against what will become the xfs-5.2-merge tree, I
-> > > > hit an assert in xfs/104; the dmesg for that is pasted below.
-> > > > 
-> > > > I'm pretty sure that what's going on here is that we hit a deferred AGFL
-> > > > free while growing the filesystem and need to do a defer_roll, but
-> > > > tr_growdata is not one of the permanent reservation transactions and
-> > > > that's why we trip some asserts.
-> > > > 
+On Tue, Apr 16, 2019 at 02:18:31PM -0400, Brian Foster wrote:
+> On Tue, Apr 16, 2019 at 08:14:34AM -0700, Darrick J. Wong wrote:
+> > On Mon, Mar 25, 2019 at 01:24:48PM -0400, Brian Foster wrote:
+> > > XFS applies more strict serialization constraints to unaligned
+> > > direct writes to accommodate things like direct I/O layer zeroing,
+> > > unwritten extent conversion, etc. Unaligned submissions acquire the
+> > > exclusive iolock and wait for in-flight dio to complete to ensure
+> > > multiple submissions do not race on the same block and cause data
+> > > corruption.
 > > > 
-> > > Yeah, it looks like we can hit this in the case where a growfs extends
-> > > the last pre-existing AG in the fs. We "free" the additional space into
-> > > the AG, happen to come across an overpopulated AGFL and end up doing
-> > > deferred ops from a non-permanent transaction.
+> > > This generally works in the case of an aligned dio followed by an
+> > > unaligned dio, but the serialization is lost if I/Os occur in the
+> > > opposite order. If an unaligned write is submitted first and
+> > > immediately followed by an overlapping, aligned write, the latter
+> > > submits without the typical unaligned serialization barriers because
+> > > there is no indication of an unaligned dio still in-flight. This can
+> > > lead to unpredictable results.
 > > > 
-> > > I think we should probably just update the tr_growdata transaction to
-> > > reflect how it's used and mark it permanent with the default permanent
-> > > log count (2). That obviously increases the reservation size, but it's
-> > > not like grow is a high frequency or performance critical operation.
+> > > To provide proper unaligned dio serialization, require that such
+> > > direct writes are always the only dio allowed in-flight at one time
+> > > for a particular inode. We already acquire the exclusive iolock and
+> > > drain pending dio before submitting the unaligned dio. Wait once
+> > > more after the dio submission to hold the iolock across the I/O and
+> > > prevent further submissions until the unaligned I/O completes. This
+> > > is heavy handed, but consistent with the current pre-submission
+> > > serialization for unaligned direct writes.
 > > > 
-> > > > FSTYP         -- xfs (debug)
-> > > > PLATFORM      -- Linux/x86_64 mtr01 5.1.0-rc5-djw
-> > > > MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1, -i sparse=1, -b size=1024, /dev/sdd
-> > > > MOUNT_OPTIONS -- -o usrquota,grpquota,prjquota, /dev/sdd /opt
-> > > > 
-> > > > Granted this is the first time I've seen this in several months of
-> > > > nightly fstests runs, so chances are this one is hard to reproduce.
-> > > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> > > ---
 > > > 
-> > > I don't recall seeing this and don't reproduce in a few iterations of
-> > > xfs/104 with the above geometry. I'll keep trying for a bit. In the
-> > > meantime, a diff is appended if you'd like to give that a try. Thoughts?
+> > > v2:
+> > > - Use dio return value instead of I/O type in wait logic.
+> > > - Drop spurious else logic and fix up comments.
+> > > v1: https://marc.info/?l=linux-xfs&m=155327356800415&w=2
+> > > 
+> > >  fs/xfs/xfs_file.c | 27 +++++++++++++++++----------
+> > >  1 file changed, 17 insertions(+), 10 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > index 770cc2edf777..933d9c467f56 100644
+> > > --- a/fs/xfs/xfs_file.c
+> > > +++ b/fs/xfs/xfs_file.c
+> > > @@ -529,18 +529,17 @@ xfs_file_dio_aio_write(
+> > >  	count = iov_iter_count(from);
+> > >  
+> > >  	/*
+> > > -	 * If we are doing unaligned IO, wait for all other IO to drain,
+> > > -	 * otherwise demote the lock if we had to take the exclusive lock
+> > > -	 * for other reasons in xfs_file_aio_write_checks.
+> > > +	 * If we are doing unaligned IO, we can't allow any other overlapping IO
+> > > +	 * in-flight at the same time or we risk data corruption. Wait for all
+> > > +	 * other IO to drain before we submit. If the IO is aligned, demote the
+> > > +	 * iolock if we had to take the exclusive lock in
+> > > +	 * xfs_file_aio_write_checks() for other reasons.
+> > >  	 */
+> > >  	if (unaligned_io) {
+> > > -		/* If we are going to wait for other DIO to finish, bail */
+> > > -		if (iocb->ki_flags & IOCB_NOWAIT) {
+> > > -			if (atomic_read(&inode->i_dio_count))
+> > > -				return -EAGAIN;
+> > > -		} else {
+> > > -			inode_dio_wait(inode);
+> > > -		}
+> > > +		/* unaligned dio always waits, bail */
+> > > +		if (iocb->ki_flags & IOCB_NOWAIT)
+> > > +			return -EAGAIN;
 > > 
-> > That looks reasonable, though I think we end up playing whackamole
-> > trying to find all the transactions that could result in a deferred agfl
-> > free on a non-permanent transaction type.
-> > 
-> > Maybe a debugging patch along the lines of:
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index 857a53e58b94..e597164641a1 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -2324,6 +2324,8 @@ xfs_alloc_fix_freelist(
-> >                 targs.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
-> >         else
-> >                 targs.oinfo = XFS_RMAP_OINFO_AG;
-> > +       ASSERT((flags & XFS_ALLOC_FLAG_NOSHRINK) ||
-> > +              (tp->t_flags & XFS_TRANS_PERM_LOG_RES));
-> >         while (!(flags & XFS_ALLOC_FLAG_NOSHRINK) && pag->pagf_flcount > need) {
-> >                 error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
-> >                 if (error)
-> > 
-> > Though this is a blunt instrument since as we've seen with x/104 not all
-> > of the freelist fix calls ever result in shrinking the agfl.
+> > Hmm, Dave pointed out on IRC that this looks like we're bailing out with
+> > *iolock held.  I took another look at the function and wondered why
+> > wouldn't we bail out as soon as we know that we're doing unaligned
+> > nowait directio, which is before we take all the locks and such?
 > > 
 > 
-> Yeah, but I think it's a reasonable rule given the current
-> implementation of unconditionally deferring AGFL frees. This certainly
-> would have helped detect this situation when this functionality was
-> initially added. I'll send a patch with the transaction fixup and this
-> assert once I get it through some testing.
+> Yeah, though it doesn't look like that's due to the patch above (though
+> I wish I noticed it then :P)..? The above patch basically just removed
+> the dio count check in that first hunk.
 
-Ok.  I started a test run with just the assert to see if I could weed
-out any more problem transactions and I'll let you know if it finds any.
+Yes, the leak was there before this patch came along.  My first impulse
+was simply to change it to "ret = -EAGAIN; goto out;" but then I noticed
+that now that we no longer have that i_dio_count conditional we might as
+well fail without bothering to take any locks at all.
+
+> 
+> > --D
+> > 
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index cdcc75735521..c586fd9f244c 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -517,7 +517,8 @@ xfs_file_dio_aio_write(
+> >         }
+> >  
+> >         if (iocb->ki_flags & IOCB_NOWAIT) {
+> > -               if (!xfs_ilock_nowait(ip, iolock))
+> > +               /* unaligned dio always waits, bail */
+> > +               if (unaligned_io || !xfs_ilock_nowait(ip, iolock))
+> 
+> I'd prefer to see the lock on a line of its own, but otherwise I think
+> that's reasonable. After the patch above, an unaligned dio is by
+> definition going to wait on itself at the very least.
+
+Ok.  The tricky part here is that the side effects are different with
+this change -- now we won't break layouts, update mtime, or cancel
+security privileges before failing.  Seeing as the write doesn't go
+through I don't think that's a big deal, but who knows...?
 
 --D
 
 > Brian
 > 
-> 
-> > --D
+> >                         return -EAGAIN;
+> >         } else {
+> >                 xfs_ilock(ip, iolock);
+> > @@ -536,9 +537,6 @@ xfs_file_dio_aio_write(
+> >          * xfs_file_aio_write_checks() for other reasons.
+> >          */
+> >         if (unaligned_io) {
+> > -               /* unaligned dio always waits, bail */
+> > -               if (iocb->ki_flags & IOCB_NOWAIT)
+> > -                       return -EAGAIN;
+> >                 inode_dio_wait(inode);
+> >         } else if (iolock == XFS_IOLOCK_EXCL) {
+> >                 xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
 > > 
-> > > Brian
-> > > 
-> > > --- 8< ---
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> > > index f99a7aefe418..83f4ee2afc49 100644
-> > > --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> > > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> > > @@ -876,9 +876,13 @@ xfs_trans_resv_calc(
-> > >  	resp->tr_sb.tr_logres = xfs_calc_sb_reservation(mp);
-> > >  	resp->tr_sb.tr_logcount = XFS_DEFAULT_LOG_COUNT;
+> > 
+> > > +		inode_dio_wait(inode);
+> > >  	} else if (iolock == XFS_IOLOCK_EXCL) {
+> > >  		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+> > >  		iolock = XFS_IOLOCK_SHARED;
+> > > @@ -548,6 +547,14 @@ xfs_file_dio_aio_write(
 > > >  
-> > > +	/* growdata requires permanent res; it can free space to the last AG */
-> > > +	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
-> > > +	resp->tr_growdata.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
-> > > +	resp->tr_growdata.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> > >  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
+> > >  	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
 > > > +
-> > >  	/* The following transaction are logged in logical format */
-> > >  	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
-> > > -	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
-> > >  	resp->tr_fsyncts.tr_logres = xfs_calc_swrite_reservation(mp);
-> > >  	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
-> > >  	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
+> > > +	/*
+> > > +	 * If unaligned, this is the only IO in-flight. If it has not yet
+> > > +	 * completed, wait on it before we release the iolock to prevent
+> > > +	 * subsequent overlapping IO.
+> > > +	 */
+> > > +	if (ret == -EIOCBQUEUED && unaligned_io)
+> > > +		inode_dio_wait(inode);
+> > >  out:
+> > >  	xfs_iunlock(ip, iolock);
+> > >  
+> > > -- 
+> > > 2.17.2
+> > > 
