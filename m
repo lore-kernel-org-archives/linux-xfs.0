@@ -1,78 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35818 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726907AbfDPMBB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 16 Apr 2019 08:01:01 -0400
-Date: Tue, 16 Apr 2019 08:00:59 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Assertions tripping in xfs/104
-Message-ID: <20190416120056.GA14042@bfoster>
-References: <20190416015328.GL4752@magnolia>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:41838 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726241AbfDPMWp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Apr 2019 08:22:45 -0400
+Date: Tue, 16 Apr 2019 22:22:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw
+ workload
+Message-ID: <20190416122240.GN29573@dread.disaster.area>
+References: <20190404165737.30889-1-amir73il@gmail.com>
+ <20190404211730.GD26298@dastard>
+ <20190408103303.GA18239@quack2.suse.cz>
+ <1554741429.3326.43.camel@suse.com>
+ <20190411011117.GC29573@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190416015328.GL4752@magnolia>
+In-Reply-To: <20190411011117.GC29573@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Davidlohr Bueso <dbueso@suse.com>
+Cc: Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Mon, Apr 15, 2019 at 06:53:28PM -0700, Darrick J. Wong wrote:
-> Hi Brian,
+On Thu, Apr 11, 2019 at 11:11:17AM +1000, Dave Chinner wrote:
+> On Mon, Apr 08, 2019 at 09:37:09AM -0700, Davidlohr Bueso wrote:
+> > On Mon, 2019-04-08 at 12:33 +0200, Jan Kara wrote:
+> > > On Fri 05-04-19 08:17:30, Dave Chinner wrote:
+> > > > FYI, I'm working on a range lock implementation that should both
+> > > > solve the performance issue and the reader starvation issue at the
+> > > > same time by allowing concurrent buffered reads and writes to
+> > > > different file ranges.
+> > > 
+> > > Are you aware of range locks Davidlohr has implemented [1]? It didn't get
+> > > merged because he had no in-tree user at the time (he was more aiming at
+> > > converting mmap_sem which is rather difficult). But the generic lock
+> > > implementation should be well usable.
+> > > 
+> > > Added Davidlohr to CC.
+> > > 
+> > > 								Honza
+> > > 
+> > > [1] https://lkml.org/lkml/2017/3/7/22
+> > 
+> > fyi this was the latest version (had some naming updates per peterz).
+> > 
+> > https://lkml.org/lkml/2018/2/4/232
 > 
-> When running fstests against what will become the xfs-5.2-merge tree, I
-> hit an assert in xfs/104; the dmesg for that is pasted below.
-> 
-> I'm pretty sure that what's going on here is that we hit a deferred AGFL
-> free while growing the filesystem and need to do a defer_roll, but
-> tr_growdata is not one of the permanent reservation transactions and
-> that's why we trip some asserts.
-> 
+> No, I wasn't aware of these because they haven't ever been posted to
+> a list I subscribe to and they haven't been merged. I'll go have a
+> look at them over the next few days.
 
-Yeah, it looks like we can hit this in the case where a growfs extends
-the last pre-existing AG in the fs. We "free" the additional space into
-the AG, happen to come across an overpopulated AGFL and end up doing
-deferred ops from a non-permanent transaction.
+Rather disappointing, to tell the truth.
 
-I think we should probably just update the tr_growdata transaction to
-reflect how it's used and mark it permanent with the default permanent
-log count (2). That obviously increases the reservation size, but it's
-not like grow is a high frequency or performance critical operation.
+The implementation doesn't scale nearly as a rwsem for concurrent IO
+using shared access (i.e. XFS direct IO). That's the baseline we
+need to get close to for range locks to be a viable prospect.
 
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 mtr01 5.1.0-rc5-djw
-> MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1, -i sparse=1, -b size=1024, /dev/sdd
-> MOUNT_OPTIONS -- -o usrquota,grpquota,prjquota, /dev/sdd /opt
-> 
-> Granted this is the first time I've seen this in several months of
-> nightly fstests runs, so chances are this one is hard to reproduce.
-> 
+Fio randrw numbers on a single file on a pmem device on a 16p
+machine using 4kB AIO-DIO iodepth 128 w/ fio on 5.1.0-rc3:
 
-I don't recall seeing this and don't reproduce in a few iterations of
-xfs/104 with the above geometry. I'll keep trying for a bit. In the
-meantime, a diff is appended if you'd like to give that a try. Thoughts?
+			IOPS read/write (direct IO)
+fio processes		rwsem			rangelock
+ 1			78k / 78k		75k / 75k
+ 2			131k / 131k		123k / 123k
+ 4			267k / 267k		183k / 183k
+ 8			372k / 372k		177k / 177k
+ 16			315k / 315k		135k / 135k
 
-Brian
+So uncontended, non-overlapping range performance is not
+really even in the ballpark right now, unfortunately.
 
---- 8< ---
+To indicate that range locking is actually working, let's do
+buffered read/write, which takes the rwsem exclusive for writes
+and so will be bound by that:
 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index f99a7aefe418..83f4ee2afc49 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -876,9 +876,13 @@ xfs_trans_resv_calc(
- 	resp->tr_sb.tr_logres = xfs_calc_sb_reservation(mp);
- 	resp->tr_sb.tr_logcount = XFS_DEFAULT_LOG_COUNT;
- 
-+	/* growdata requires permanent res; it can free space to the last AG */
-+	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
-+	resp->tr_growdata.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
-+	resp->tr_growdata.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
- 	/* The following transaction are logged in logical format */
- 	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
--	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
- 	resp->tr_fsyncts.tr_logres = xfs_calc_swrite_reservation(mp);
- 	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
- 	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
+			IOPS read/write (buffered IO)
+fio processes		rwsem			rangelock
+ 1			57k / 57k		64k / 64k
+ 2			61k / 61k		111k / 111k
+ 4			61k / 61k		228k / 228k
+ 8			55k / 55k		195k / 195k
+ 16			15k / 15k		 40k /  40k
+
+So the win for mixed buffered IO is huge but it's at the cost
+of direct IO performance. We can't make that tradeoff, so if this
+implementation cannot be substantially improved we really can'ti
+use it.
+
+FUndamentally, the problem is that the interval tree work is all
+done under a spinlock, so by the time we get to 16p, 70% of the 16p
+that is being burnt is on the spinlock, and only 30% of the CPU time
+is actually doing IO work:
+
++   70.78%     2.50%  [kernel]             [k] do_raw_spin_lock
++   69.72%     0.07%  [kernel]             [k] _raw_spin_lock_irqsave
+-   68.27%    68.10%  [kernel]             [k] __pv_queued_spin_lock_slowpath
+.....
++   15.61%     0.07%  [kernel]             [k] range_write_unlock
++   15.39%     0.06%  [kernel]             [k] range_read_unlock
++   15.11%     0.12%  [kernel]             [k] range_read_lock
++   15.11%     0.13%  [kernel]             [k] range_write_lock
+.....
++   12.92%     0.11%  [kernel]             [k] range_is_locked
+
+FWIW, I'm not convinced about the scalability of the rb/interval
+tree, to tell you the truth. We got rid of the rbtree in XFS for
+cache indexing because the multi-level pointer chasing was just too
+expensive to do under a spinlock - it's just not a cache efficient
+structure for random index object storage.
+
+FWIW, I have basic hack to replace the i_rwsem in XFS with a full
+range read or write lock with my XFS range lock implementation so it
+just behaves like a rwsem at this point. It is not in any way
+optimised at this point. Numbers for same AIO-DIO test are:
+
+			IOPS read/write (direct IO)
+processes	rwsem		DB rangelock	XFS rangelock
+ 1		78k / 78k	75k / 75k	74k / 74k
+ 2		131k / 131k	123k / 123k	134k / 134k
+ 4		267k / 267k	183k / 183k	246k / 246k
+ 8		372k / 372k	177k / 177k	306k / 306k
+ 16		315k / 315k	135k / 135k	240k / 240k
+
+Performance is much closer to rwsems, but the single lock critical
+section still causes serious amounts of cacheline contention on pure
+shared-read lock workloads like this.
+
+FWIW, the XFS rangelock numbers match what I've been seeing with
+userspace perf tests using unoptimised pthread mutexes - ~600,000
+lock/unlock cycles a second over ~100 concurrent non-overlapping
+ranges seem to be the limitation before futex contention burns down
+the house
+
+AS it is, I've done all the work to make XFS use proper range locks
+on top of your patch - I'll go back tomorrow and modify the XFS
+range locks to use the same API as your lock implementation. I'm
+interested to see what falls out when they are used as real range
+locks rather than a glorified rwsem....
+
+Cheers,
+
+Dave.
+
+PS: there's a double lock bug in range_is_locked().....
+-- 
+Dave Chinner
+david@fromorbit.com
