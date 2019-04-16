@@ -1,19 +1,19 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:58704 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726527AbfDPBnT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 21:43:19 -0400
-Date: Mon, 15 Apr 2019 18:43:09 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:33684 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728036AbfDPBpK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Apr 2019 21:45:10 -0400
+Date: Mon, 15 Apr 2019 18:45:02 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 4/5] xfs: scrub/repair should update filesystem metadata
- health
-Message-ID: <20190416014309.GJ4752@magnolia>
+Subject: [PATCH v2 5/5] xfs: scrub should only cross-reference with healthy
+ btrees
+Message-ID: <20190416014502.GK4752@magnolia>
 References: <155537397092.27935.16073573221774618735.stgit@magnolia>
- <155537399567.27935.2695652869908662243.stgit@magnolia>
+ <155537400192.27935.5071586825961103642.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155537399567.27935.2695652869908662243.stgit@magnolia>
+In-Reply-To: <155537400192.27935.5071586825961103642.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -22,278 +22,167 @@ Cc: Brian Foster <bfoster@redhat.com>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that we have the ability to track sick metadata in-core, make scrub
-and repair update those health assessments after doing work.
+Skip cross-referencing with a btree if the health report tells us that
+it's known to be bad.  This should reduce the dmesg spew considerably.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: rename sick_mask_update to sick_mask.
+v2: condense the switch cases per dchinner suggestion
 ---
- fs/xfs/Makefile       |    1 
- fs/xfs/scrub/health.c |  176 +++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/health.h |   12 +++
- fs/xfs/scrub/scrub.c  |    4 +
- fs/xfs/scrub/scrub.h  |    7 ++
- 5 files changed, 200 insertions(+)
- create mode 100644 fs/xfs/scrub/health.c
- create mode 100644 fs/xfs/scrub/health.h
+ fs/xfs/scrub/common.c |   20 ++++++++++++----
+ fs/xfs/scrub/health.c |   60 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/health.h |    2 ++
+ 3 files changed, 77 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index d490db3915d4..55ba187a93f8 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -150,6 +150,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   common.o \
- 				   dabtree.o \
- 				   dir.o \
-+				   health.o \
- 				   ialloc.o \
- 				   inode.o \
- 				   parent.o \
-diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
-new file mode 100644
-index 000000000000..df99e0066c54
---- /dev/null
-+++ b/fs/xfs/scrub/health.c
-@@ -0,0 +1,176 @@
-+// SPDX-License-Identifier: GPL-2.0+
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_health.h"
-+#include "scrub/scrub.h"
-+#include "scrub/health.h"
-+
-+/*
-+ * Scrub and In-Core Filesystem Health Assessments
-+ * ===============================================
-+ *
-+ * Online scrub and repair have the time and the ability to perform stronger
-+ * checks than we can do from the metadata verifiers, because they can
-+ * cross-reference records between data structures.  Therefore, scrub is in a
-+ * good position to update the online filesystem health assessments to reflect
-+ * the good/bad state of the data structure.
-+ *
-+ * We therefore extend scrub in the following ways to achieve this:
-+ *
-+ * 1. Create a "sick_mask" field in the scrub context.  When we're setting up a
-+ * scrub call, set this to the default XFS_SICK_* flag(s) for the selected
-+ * scrub type (call it A).  Scrub and repair functions can override the default
-+ * sick_mask value if they choose.
-+ *
-+ * 2. If the scrubber returns a runtime error code, we exit making no changes
-+ * to the incore sick state.
-+ *
-+ * 3. If the scrubber finds that A is clean, use sick_mask to clear the incore
-+ * sick flags before exiting.
-+ *
-+ * 4. If the scrubber finds that A is corrupt, use sick_mask to set the incore
-+ * sick flags.  If the user didn't want to repair then we exit, leaving the
-+ * metadata structure unfixed and the sick flag set.
-+ *
-+ * 5. Now we know that A is corrupt and the user wants to repair, so run the
-+ * repairer.  If the repairer returns an error code, we exit with that error
-+ * code, having made no further changes to the incore sick state.
-+ *
-+ * 6. If repair rebuilds A correctly and the subsequent re-scrub of A is clean,
-+ * use sick_mask to clear the incore sick flags.  This should have the effect
-+ * that A is no longer marked sick.
-+ *
-+ * 7. If repair rebuilds A incorrectly, the re-scrub will find it corrupt and
-+ * use sick_mask to set the incore sick flags.  This should have no externally
-+ * visible effect since we already set them in step (4).
-+ *
-+ * There are some complications to this story, however.  For certain types of
-+ * complementary metadata indices (e.g. inobt/finobt), it is easier to rebuild
-+ * both structures at the same time.  The following principles apply to this
-+ * type of repair strategy:
-+ *
-+ * 8. Any repair function that rebuilds multiple structures should update
-+ * sick_mask_visible to reflect whatever other structures are rebuilt, and
-+ * verify that all the rebuilt structures can pass a scrub check.  The outcomes
-+ * of 5-7 still apply, but with a sick_mask that covers everything being
-+ * rebuilt.
-+ */
-+
-+/* Map our scrub type to a sick mask and a set of health update functions. */
-+
-+enum xchk_health_group {
-+	XHG_FS = 1,
-+	XHG_RT,
-+	XHG_AG,
-+	XHG_INO,
-+};
-+
-+struct xchk_health_map {
-+	enum xchk_health_group	group;
-+	unsigned int		sick_mask;
-+};
-+
-+static const struct xchk_health_map type_to_health_flag[XFS_SCRUB_TYPE_NR] = {
-+	[XFS_SCRUB_TYPE_SB]		= { XHG_AG,  XFS_SICK_AG_SB },
-+	[XFS_SCRUB_TYPE_AGF]		= { XHG_AG,  XFS_SICK_AG_AGF },
-+	[XFS_SCRUB_TYPE_AGFL]		= { XHG_AG,  XFS_SICK_AG_AGFL },
-+	[XFS_SCRUB_TYPE_AGI]		= { XHG_AG,  XFS_SICK_AG_AGI },
-+	[XFS_SCRUB_TYPE_BNOBT]		= { XHG_AG,  XFS_SICK_AG_BNOBT },
-+	[XFS_SCRUB_TYPE_CNTBT]		= { XHG_AG,  XFS_SICK_AG_CNTBT },
-+	[XFS_SCRUB_TYPE_INOBT]		= { XHG_AG,  XFS_SICK_AG_INOBT },
-+	[XFS_SCRUB_TYPE_FINOBT]		= { XHG_AG,  XFS_SICK_AG_FINOBT },
-+	[XFS_SCRUB_TYPE_RMAPBT]		= { XHG_AG,  XFS_SICK_AG_RMAPBT },
-+	[XFS_SCRUB_TYPE_REFCNTBT]	= { XHG_AG,  XFS_SICK_AG_REFCNTBT },
-+	[XFS_SCRUB_TYPE_INODE]		= { XHG_INO, XFS_SICK_INO_CORE },
-+	[XFS_SCRUB_TYPE_BMBTD]		= { XHG_INO, XFS_SICK_INO_BMBTD },
-+	[XFS_SCRUB_TYPE_BMBTA]		= { XHG_INO, XFS_SICK_INO_BMBTA },
-+	[XFS_SCRUB_TYPE_BMBTC]		= { XHG_INO, XFS_SICK_INO_BMBTC },
-+	[XFS_SCRUB_TYPE_DIR]		= { XHG_INO, XFS_SICK_INO_DIR },
-+	[XFS_SCRUB_TYPE_XATTR]		= { XHG_INO, XFS_SICK_INO_XATTR },
-+	[XFS_SCRUB_TYPE_SYMLINK]	= { XHG_INO, XFS_SICK_INO_SYMLINK },
-+	[XFS_SCRUB_TYPE_PARENT]		= { XHG_INO, XFS_SICK_INO_PARENT },
-+	[XFS_SCRUB_TYPE_RTBITMAP]	= { XHG_RT,  XFS_SICK_RT_BITMAP },
-+	[XFS_SCRUB_TYPE_RTSUM]		= { XHG_RT,  XFS_SICK_RT_SUMMARY },
-+	[XFS_SCRUB_TYPE_UQUOTA]		= { XHG_FS,  XFS_SICK_FS_UQUOTA },
-+	[XFS_SCRUB_TYPE_GQUOTA]		= { XHG_FS,  XFS_SICK_FS_GQUOTA },
-+	[XFS_SCRUB_TYPE_PQUOTA]		= { XHG_FS,  XFS_SICK_FS_PQUOTA },
-+};
-+
-+/* Return the health status mask for this scrub type. */
-+unsigned int
-+xchk_health_mask_for_scrub_type(
-+	__u32			scrub_type)
-+{
-+	return type_to_health_flag[scrub_type].sick_mask;
-+}
-+
-+/*
-+ * Update filesystem health assessments based on what we found and did.
-+ *
-+ * If the scrubber finds errors, we mark sick whatever's mentioned in
-+ * sick_mask, no matter whether this is a first scan or an
-+ * evaluation of repair effectiveness.
-+ *
-+ * Otherwise, no direct corruption was found, so mark whatever's in
-+ * sick_mask as healthy.
-+ */
-+void
-+xchk_update_health(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xfs_perag	*pag;
-+	bool			bad;
-+
-+	if (!sc->sick_mask)
-+		return;
-+
-+	bad = (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT);
-+	switch (type_to_health_flag[sc->sm->sm_type].group) {
-+	case XHG_AG:
-+		pag = xfs_perag_get(sc->mp, sc->sm->sm_agno);
-+		if (bad)
-+			xfs_ag_mark_sick(pag, sc->sick_mask);
-+		else
-+			xfs_ag_mark_healthy(pag, sc->sick_mask);
-+		xfs_perag_put(pag);
-+		break;
-+	case XHG_INO:
-+		if (!sc->ip)
-+			return;
-+		if (bad)
-+			xfs_inode_mark_sick(sc->ip, sc->sick_mask);
-+		else
-+			xfs_inode_mark_healthy(sc->ip, sc->sick_mask);
-+		break;
-+	case XHG_FS:
-+		if (bad)
-+			xfs_fs_mark_sick(sc->mp, sc->sick_mask);
-+		else
-+			xfs_fs_mark_healthy(sc->mp, sc->sick_mask);
-+		break;
-+	case XHG_RT:
-+		if (bad)
-+			xfs_rt_mark_sick(sc->mp, sc->sick_mask);
-+		else
-+			xfs_rt_mark_healthy(sc->mp, sc->sick_mask);
-+		break;
-+	default:
-+		ASSERT(0);
-+		break;
-+	}
-+}
-diff --git a/fs/xfs/scrub/health.h b/fs/xfs/scrub/health.h
-new file mode 100644
-index 000000000000..fd0d466c8658
---- /dev/null
-+++ b/fs/xfs/scrub/health.h
-@@ -0,0 +1,12 @@
-+// SPDX-License-Identifier: GPL-2.0+
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#ifndef __XFS_SCRUB_HEALTH_H__
-+#define __XFS_SCRUB_HEALTH_H__
-+
-+unsigned int xchk_health_mask_for_scrub_type(__u32 scrub_type);
-+void xchk_update_health(struct xfs_scrub *sc);
-+
-+#endif /* __XFS_SCRUB_HEALTH_H__ */
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 02d278b7d20b..93b0f075a4d3 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -40,6 +40,7 @@
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 0c54ff55b901..7076d5c98151 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -38,6 +38,7 @@
  #include "scrub/trace.h"
  #include "scrub/btree.h"
  #include "scrub/repair.h"
 +#include "scrub/health.h"
  
- /*
-  * Online Scrub and Repair
-@@ -498,6 +499,7 @@ xfs_scrub_metadata(
- 	xchk_experimental_warning(mp);
+ /* Common code for the metadata scrubbers. */
  
- 	sc.ops = &meta_scrub_ops[sm->sm_type];
-+	sc.sick_mask = xchk_health_mask_for_scrub_type(sm->sm_type);
- retry_op:
- 	/* Set up for the operation. */
- 	error = sc.ops->setup(&sc, ip);
-@@ -520,6 +522,8 @@ xfs_scrub_metadata(
- 	} else if (error)
- 		goto out_teardown;
+@@ -458,13 +459,18 @@ xchk_ag_btcur_init(
+ 	struct xfs_mount	*mp = sc->mp;
+ 	xfs_agnumber_t		agno = sa->agno;
  
-+	xchk_update_health(&sc);
+-	if (sa->agf_bp) {
++	xchk_perag_get(sc->mp, sa);
++	if (sa->agf_bp &&
++	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_BNO)) {
+ 		/* Set up a bnobt cursor for cross-referencing. */
+ 		sa->bno_cur = xfs_allocbt_init_cursor(mp, sc->tp, sa->agf_bp,
+ 				agno, XFS_BTNUM_BNO);
+ 		if (!sa->bno_cur)
+ 			goto err;
++	}
+ 
++	if (sa->agf_bp &&
++	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_CNT)) {
+ 		/* Set up a cntbt cursor for cross-referencing. */
+ 		sa->cnt_cur = xfs_allocbt_init_cursor(mp, sc->tp, sa->agf_bp,
+ 				agno, XFS_BTNUM_CNT);
+@@ -473,7 +479,8 @@ xchk_ag_btcur_init(
+ 	}
+ 
+ 	/* Set up a inobt cursor for cross-referencing. */
+-	if (sa->agi_bp) {
++	if (sa->agi_bp &&
++	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_INO)) {
+ 		sa->ino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
+ 					agno, XFS_BTNUM_INO);
+ 		if (!sa->ino_cur)
+@@ -481,7 +488,8 @@ xchk_ag_btcur_init(
+ 	}
+ 
+ 	/* Set up a finobt cursor for cross-referencing. */
+-	if (sa->agi_bp && xfs_sb_version_hasfinobt(&mp->m_sb)) {
++	if (sa->agi_bp && xfs_sb_version_hasfinobt(&mp->m_sb) &&
++	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_FINO)) {
+ 		sa->fino_cur = xfs_inobt_init_cursor(mp, sc->tp, sa->agi_bp,
+ 				agno, XFS_BTNUM_FINO);
+ 		if (!sa->fino_cur)
+@@ -489,7 +497,8 @@ xchk_ag_btcur_init(
+ 	}
+ 
+ 	/* Set up a rmapbt cursor for cross-referencing. */
+-	if (sa->agf_bp && xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++	if (sa->agf_bp && xfs_sb_version_hasrmapbt(&mp->m_sb) &&
++	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_RMAP)) {
+ 		sa->rmap_cur = xfs_rmapbt_init_cursor(mp, sc->tp, sa->agf_bp,
+ 				agno);
+ 		if (!sa->rmap_cur)
+@@ -497,7 +506,8 @@ xchk_ag_btcur_init(
+ 	}
+ 
+ 	/* Set up a refcountbt cursor for cross-referencing. */
+-	if (sa->agf_bp && xfs_sb_version_hasreflink(&mp->m_sb)) {
++	if (sa->agf_bp && xfs_sb_version_hasreflink(&mp->m_sb) &&
++	    xchk_ag_btree_healthy_enough(sc, sa->pag, XFS_BTNUM_REFC)) {
+ 		sa->refc_cur = xfs_refcountbt_init_cursor(mp, sc->tp,
+ 				sa->agf_bp, agno);
+ 		if (!sa->refc_cur)
+diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
+index df99e0066c54..16b536aa125e 100644
+--- a/fs/xfs/scrub/health.c
++++ b/fs/xfs/scrub/health.c
+@@ -174,3 +174,63 @@ xchk_update_health(
+ 		break;
+ 	}
+ }
 +
- 	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
- 	    !(sc.flags & XREP_ALREADY_FIXED)) {
- 		bool needs_fix;
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 9e8d3d7377f2..1b280f8f185a 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -66,6 +66,13 @@ struct xfs_scrub {
- 	/* See the XCHK/XREP state flags below. */
- 	unsigned int			flags;
- 
++/* Is the given per-AG btree healthy enough for scanning? */
++bool
++xchk_ag_btree_healthy_enough(
++	struct xfs_scrub	*sc,
++	struct xfs_perag	*pag,
++	xfs_btnum_t		btnum)
++{
++	unsigned int		mask = 0;
++
 +	/*
-+	 * The XFS_SICK_* flags that correspond to the metadata being scrubbed
-+	 * or repaired.  We will use this mask to update the in-core fs health
-+	 * status with whatever we find.
++	 * We always want the cursor if it's the same type as whatever we're
++	 * scrubbing, even if we already know the structure is corrupt.
++	 *
++	 * Otherwise, we're only interested in the btree for cross-referencing.
++	 * If we know the btree is bad then don't bother, just set XFAIL.
 +	 */
-+	unsigned int			sick_mask;
++	switch (btnum) {
++	case XFS_BTNUM_BNO:
++		if (sc->sm->sm_type == XFS_SCRUB_TYPE_BNOBT)
++			return true;
++		mask = XFS_SICK_AG_BNOBT;
++		break;
++	case XFS_BTNUM_CNT:
++		if (sc->sm->sm_type == XFS_SCRUB_TYPE_CNTBT)
++			return true;
++		mask = XFS_SICK_AG_CNTBT;
++		break;
++	case XFS_BTNUM_INO:
++		if (sc->sm->sm_type == XFS_SCRUB_TYPE_INOBT)
++			return true;
++		mask = XFS_SICK_AG_INOBT;
++		break;
++	case XFS_BTNUM_FINO:
++		if (sc->sm->sm_type == XFS_SCRUB_TYPE_FINOBT)
++			return true;
++		mask = XFS_SICK_AG_FINOBT;
++		break;
++	case XFS_BTNUM_RMAP:
++		if (sc->sm->sm_type == XFS_SCRUB_TYPE_RMAPBT)
++			return true;
++		mask = XFS_SICK_AG_RMAPBT;
++		break;
++	case XFS_BTNUM_REFC:
++		if (sc->sm->sm_type == XFS_SCRUB_TYPE_REFCNTBT)
++			return true;
++		mask = XFS_SICK_AG_REFCNTBT;
++		break;
++	default:
++		ASSERT(0);
++		return true;
++	}
 +
- 	/* State tracking for single-AG operations. */
- 	struct xchk_ag			sa;
- };
++	if (xfs_ag_has_sickness(pag, mask)) {
++		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XFAIL;
++		return false;
++	}
++
++	return true;
++}
+diff --git a/fs/xfs/scrub/health.h b/fs/xfs/scrub/health.h
+index fd0d466c8658..d0b938d3d028 100644
+--- a/fs/xfs/scrub/health.h
++++ b/fs/xfs/scrub/health.h
+@@ -8,5 +8,7 @@
+ 
+ unsigned int xchk_health_mask_for_scrub_type(__u32 scrub_type);
+ void xchk_update_health(struct xfs_scrub *sc);
++bool xchk_ag_btree_healthy_enough(struct xfs_scrub *sc, struct xfs_perag *pag,
++		xfs_btnum_t btnum);
+ 
+ #endif /* __XFS_SCRUB_HEALTH_H__ */
