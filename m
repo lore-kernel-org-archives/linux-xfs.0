@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:59792 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729291AbfDQTE7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 15:04:59 -0400
-Subject: [PATCH 4/8] xfs: refactor setflags to use setattr code directly
+Received: from userp2130.oracle.com ([156.151.31.86]:43072 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729291AbfDQTFL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 15:05:11 -0400
+Subject: [PATCH 6/8] xfs: don't allow most setxattr to immutable files
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Apr 2019 12:04:54 -0700
-Message-ID: <155552789415.20411.7571353210034623032.stgit@magnolia>
+Date: Wed, 17 Apr 2019 12:05:07 -0700
+Message-ID: <155552790705.20411.14086909835362619590.stgit@magnolia>
 In-Reply-To: <155552786671.20411.6442426840435740050.stgit@magnolia>
 References: <155552786671.20411.6442426840435740050.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,137 +20,99 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.ke
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor the SETFLAGS implementation to use the SETXATTR code directly
-instead of partially constructing a struct fsxattr and calling bits and
-pieces of the setxattr code.  This reduces code size and becomes
-necessary in the next patch to maintain the behavior of allowing
-userspace to set immutable on an immutable file so long as nothing
-/else/ about the attributes change.
+The chattr manpage has this to say about immutable files:
+
+"A file with the 'i' attribute cannot be modified: it cannot be deleted
+or renamed, no link can be created to this file, most of the file's
+metadata can not be modified, and the file can not be opened in write
+mode."
+
+However, we don't actually check the immutable flag in the setattr code,
+which means that we can update project ids and extent size hints on
+supposedly immutable files.  Therefore, reject a setattr call on an
+immutable file except for the case where we're trying to unset
+IMMUTABLE.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_ioctl.c |   76 ++++++++++++++++++++--------------------------------
- 1 file changed, 29 insertions(+), 47 deletions(-)
+ fs/xfs/xfs_ioctl.c |   47 +++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 45 insertions(+), 2 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index de35cf4469f6..fdabf47532ed 100644
+index 5862b7cead4c..b5b50006e807 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -882,38 +882,46 @@ xfs_di2lxflags(
- 	return flags;
+@@ -1038,6 +1038,41 @@ xfs_ioctl_setattr_flush(
+ 	return filemap_write_and_wait(inode->i_mapping);
  }
  
--STATIC int
--xfs_ioc_fsgetxattr(
--	xfs_inode_t		*ip,
--	int			attr,
--	void			__user *arg)
-+static inline void
-+xfs_inode_getfsxattr(
++/*
++ * If immutable is set and we are not clearing it, we're not allowed to change
++ * anything else in the inode.  Don't error out if we're only trying to set
++ * immutable on an immutable file.
++ */
++static int
++xfs_ioctl_setattr_immutable(
 +	struct xfs_inode	*ip,
-+	bool			attr,
-+	struct fsxattr		*fa)
- {
--	struct fsxattr		fa;
--
--	memset(&fa, 0, sizeof(struct fsxattr));
-+	memset(fa, 0, sizeof(struct fsxattr));
- 
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	fa.fsx_xflags = xfs_ip2xflags(ip);
--	fa.fsx_extsize = ip->i_d.di_extsize << ip->i_mount->m_sb.sb_blocklog;
--	fa.fsx_cowextsize = ip->i_d.di_cowextsize <<
--			ip->i_mount->m_sb.sb_blocklog;
--	fa.fsx_projid = xfs_get_projid(ip);
-+	fa->fsx_xflags = xfs_ip2xflags(ip);
-+	fa->fsx_extsize = XFS_FSB_TO_B(ip->i_mount, ip->i_d.di_extsize);
-+	fa->fsx_cowextsize = XFS_FSB_TO_B(ip->i_mount, ip->i_d.di_cowextsize);
-+	fa->fsx_projid = xfs_get_projid(ip);
- 
- 	if (attr) {
- 		if (ip->i_afp) {
- 			if (ip->i_afp->if_flags & XFS_IFEXTENTS)
--				fa.fsx_nextents = xfs_iext_count(ip->i_afp);
-+				fa->fsx_nextents = xfs_iext_count(ip->i_afp);
- 			else
--				fa.fsx_nextents = ip->i_d.di_anextents;
-+				fa->fsx_nextents = ip->i_d.di_anextents;
- 		} else
--			fa.fsx_nextents = 0;
-+			fa->fsx_nextents = 0;
- 	} else {
- 		if (ip->i_df.if_flags & XFS_IFEXTENTS)
--			fa.fsx_nextents = xfs_iext_count(&ip->i_df);
-+			fa->fsx_nextents = xfs_iext_count(&ip->i_df);
- 		else
--			fa.fsx_nextents = ip->i_d.di_nextents;
-+			fa->fsx_nextents = ip->i_d.di_nextents;
- 	}
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	struct fsxattr		*fa,
++	uint16_t		di_flags,
++	uint64_t		di_flags2)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++
++	if (!(ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE) ||
++	    !(di_flags & XFS_DIFLAG_IMMUTABLE))
++		return 0;
++
++	if ((ip->i_d.di_flags & ~XFS_DIFLAG_IMMUTABLE) !=
++	    (di_flags & ~XFS_DIFLAG_IMMUTABLE))
++		return -EPERM;
++	if (ip->i_d.di_version >= 3 && ip->i_d.di_flags2 != di_flags2)
++		return -EPERM;
++	if (xfs_get_projid(ip) != fa->fsx_projid)
++		return -EPERM;
++	if ((di_flags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT)) &&
++	    ip->i_d.di_extsize != fa->fsx_extsize >> mp->m_sb.sb_blocklog)
++		return -EPERM;
++	if (ip->i_d.di_version >= 3 && (di_flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
++	    ip->i_d.di_cowextsize != fa->fsx_cowextsize >> mp->m_sb.sb_blocklog)
++		return -EPERM;
++
++	return 0;
 +}
 +
-+STATIC int
-+xfs_ioc_fsgetxattr(
-+	xfs_inode_t		*ip,
-+	int			attr,
-+	void			__user *arg)
-+{
-+	struct fsxattr		fa;
-+
-+	xfs_inode_getfsxattr(ip, attr, &fa);
- 
- 	if (copy_to_user(arg, &fa, sizeof(fa)))
- 		return -EFAULT;
-@@ -1528,10 +1536,8 @@ xfs_ioc_setxflags(
- 	struct file		*filp,
- 	void			__user *arg)
+ static int
+ xfs_ioctl_setattr_xflags(
+ 	struct xfs_trans	*tp,
+@@ -1045,7 +1080,9 @@ xfs_ioctl_setattr_xflags(
+ 	struct fsxattr		*fa)
  {
--	struct xfs_trans	*tp;
- 	struct fsxattr		fa;
- 	unsigned int		flags;
--	int			join_flags = 0;
- 	int			error;
+ 	struct xfs_mount	*mp = ip->i_mount;
++	uint16_t		di_flags;
+ 	uint64_t		di_flags2;
++	int			error;
  
- 	if (copy_from_user(&flags, arg, sizeof(flags)))
-@@ -1542,37 +1548,13 @@ xfs_ioc_setxflags(
- 		      FS_SYNC_FL))
- 		return -EOPNOTSUPP;
+ 	/* Can't change realtime flag if any extents are allocated. */
+ 	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+@@ -1076,12 +1113,18 @@ xfs_ioctl_setattr_xflags(
+ 	    !capable(CAP_LINUX_IMMUTABLE))
+ 		return -EPERM;
  
--	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, xfs_ip2xflags(ip));
-+	xfs_inode_getfsxattr(ip, false, &fa);
-+	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, fa.fsx_xflags);
+-	/* diflags2 only valid for v3 inodes. */
++	/* Don't allow changes to an immutable inode. */
++	di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
+ 	di_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
++	error = xfs_ioctl_setattr_immutable(ip, fa, di_flags, di_flags2);
++	if (error)
++		return error;
++
++	/* diflags2 only valid for v3 inodes. */
+ 	if (di_flags2 && ip->i_d.di_version < 3)
+ 		return -EINVAL;
  
- 	error = mnt_want_write_file(filp);
- 	if (error)
- 		return error;
--
--	/*
--	 * Changing DAX config may require inode locking for mapping
--	 * invalidation. These need to be held all the way to transaction commit
--	 * or cancel time, so need to be passed through to
--	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
--	 * appropriately.
--	 */
--	error = xfs_ioctl_setattr_dax_invalidate(ip, &fa, &join_flags);
--	if (error)
--		goto out_drop_write;
--
--	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
--	if (IS_ERR(tp)) {
--		error = PTR_ERR(tp);
--		goto out_drop_write;
--	}
--
--	error = xfs_ioctl_setattr_xflags(tp, ip, &fa);
--	if (error) {
--		xfs_trans_cancel(tp);
--		goto out_drop_write;
--	}
--
--	error = xfs_trans_commit(tp);
--out_drop_write:
-+	error = xfs_ioctl_setattr(ip, &fa);
- 	mnt_drop_write_file(filp);
- 	return error;
- }
+-	ip->i_d.di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
++	ip->i_d.di_flags = di_flags;
+ 	ip->i_d.di_flags2 = di_flags2;
+ 
+ 	xfs_diflags_to_linux(ip);
