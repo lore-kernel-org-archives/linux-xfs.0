@@ -1,14 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36572 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729291AbfDQTFY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 15:05:24 -0400
-Subject: [PATCH 8/8] ext4: don't allow any modifications to an immutable file
+Received: from userp2120.oracle.com ([156.151.31.85]:37848 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728514AbfDQBjq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Apr 2019 21:39:46 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3H1cSnV097296
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 01:39:45 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2rusnewxjv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 01:39:44 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3H1c9b5048771
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 01:39:44 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2rv2tv31vd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 01:39:44 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3H1dhRi006910
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 01:39:43 GMT
+Subject: [PATCH 0/2] xfs: prevent overflow of delalloc block counters
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Apr 2019 12:05:19 -0700
-Message-ID: <155552791984.20411.6785112966155823848.stgit@magnolia>
-In-Reply-To: <155552786671.20411.6442426840435740050.stgit@magnolia>
-References: <155552786671.20411.6442426840435740050.stgit@magnolia>
+Date: Tue, 16 Apr 2019 18:39:42 -0700
+Message-ID: <155546518260.176148.16583864799178682873.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,95 +31,42 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-Don't allow any modifications to a file that's marked immutable, which
-means that we have to flush all the writable pages to make the readonly
-and we have to check the setattr/setflags parameters more closely.
+This series corrects an integer overflow problem in the inode
+i_delayed_blks counter that tracks the number of blocks assigned to the
+in-core inode but not reflected in the on-disk metadata.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/ext4/ioctl.c |   46 +++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 45 insertions(+), 1 deletion(-)
+The first patch widens the in-core dquot to handle block reservations
+counts that are 64 bits in size.  This is a requirement for the second
+patch, which widens i_delayed_blks to 64 bits.
 
+This rework is required to handle large amounts of COW staging blocks.
+Right now the only way to trigger it is to set the maximum cow extent
+size hint, reflink a very large (> 16T on a 4k block fs) sparse file,
+and then touch enough blocks to cause the cow reservations to exceed
+2^32 blocks.
 
-diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-index bab3da4f1e0d..abf3b88d5af7 100644
---- a/fs/ext4/ioctl.c
-+++ b/fs/ext4/ioctl.c
-@@ -269,6 +269,29 @@ static int uuid_is_zero(__u8 u[16])
- }
- #endif
- 
-+/*
-+ * If immutable is set and we are not clearing it, we're not allowed to change
-+ * anything else in the inode.  Don't error out if we're only trying to set
-+ * immutable on an immutable file.
-+ */
-+static int ext4_ioctl_check_immutable(struct inode *inode, __u32 new_projid,
-+				      unsigned int flags)
-+{
-+	struct ext4_inode_info *ei = EXT4_I(inode);
-+	unsigned int oldflags = ei->i_flags;
-+
-+	if (!(oldflags & EXT4_IMMUTABLE_FL) || !(flags & EXT4_IMMUTABLE_FL))
-+		return 0;
-+
-+	if ((oldflags & ~EXT4_IMMUTABLE_FL) != (flags & ~EXT4_IMMUTABLE_FL))
-+		return -EPERM;
-+	if (ext4_has_feature_project(inode->i_sb) &&
-+	    __kprojid_val(ei->i_projid) != new_projid)
-+		return -EPERM;
-+
-+	return 0;
-+}
-+
- static int ext4_ioctl_setflags(struct inode *inode,
- 			       unsigned int flags)
- {
-@@ -322,6 +345,20 @@ static int ext4_ioctl_setflags(struct inode *inode,
- 			goto flags_out;
- 	}
- 
-+	/*
-+	 * Wait for all pending directio and then flush all the dirty pages
-+	 * for this file.  The flush marks all the pages readonly, so any
-+	 * subsequent attempt to write to the file (particularly mmap pages)
-+	 * will come through the filesystem and fail.
-+	 */
-+	if (S_ISREG(inode->i_mode) && !IS_IMMUTABLE(inode) &&
-+	    (flags & EXT4_IMMUTABLE_FL)) {
-+		inode_dio_wait(inode);
-+		err = filemap_write_and_wait(inode->i_mapping);
-+		if (err)
-+			goto flags_out;
-+	}
-+
- 	handle = ext4_journal_start(inode, EXT4_HT_INODE, 1);
- 	if (IS_ERR(handle)) {
- 		err = PTR_ERR(handle);
-@@ -751,7 +788,11 @@ long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 			return err;
- 
- 		inode_lock(inode);
--		err = ext4_ioctl_setflags(inode, flags);
-+		err = ext4_ioctl_check_immutable(inode,
-+				from_kprojid(&init_user_ns, ei->i_projid),
-+				flags);
-+		if (!err)
-+			err = ext4_ioctl_setflags(inode, flags);
- 		inode_unlock(inode);
- 		mnt_drop_write_file(filp);
- 		return err;
-@@ -1121,6 +1162,9 @@ long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 			goto out;
- 		flags = (ei->i_flags & ~EXT4_FL_XFLAG_VISIBLE) |
- 			 (flags & EXT4_FL_XFLAG_VISIBLE);
-+		err = ext4_ioctl_check_immutable(inode, fa.fsx_projid, flags);
-+		if (err)
-+			goto out;
- 		err = ext4_ioctl_setflags(inode, flags);
- 		if (err)
- 			goto out;
+This happens because i_delayed_blks tracks both actual delalloc
+reservations in data and cow forks as well as allocated but not yet
+remapped real extents in the cow fork.  The overflow will become more
+practical when the atomic writes patch lands, whenever that is.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=widen-idelayed
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=widen-idelayed
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=widen-idelayed
