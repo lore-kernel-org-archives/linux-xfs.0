@@ -1,39 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:38197 "EHLO
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:36157 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726162AbfDQVxi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 17:53:38 -0400
-Date: Thu, 18 Apr 2019 07:53:35 +1000
+        by vger.kernel.org with ESMTP id S1725848AbfDQWp5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 18:45:57 -0400
+Date: Thu, 18 Apr 2019 08:45:55 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: abort unaligned nowait directio early
-Message-ID: <20190417215335.GT29573@dread.disaster.area>
-References: <20190417144006.GH114154@magnolia>
+Subject: Re: [PATCH 2/3] xfs: allow scrubbers to pause background reclaim
+Message-ID: <20190417224555.GV29573@dread.disaster.area>
+References: <155546519998.176278.8300210828717055034.stgit@magnolia>
+ <155546521227.176278.16067700926705972688.stgit@magnolia>
+ <20190417215228.GS29573@dread.disaster.area>
+ <20190417222953.GB5072@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190417144006.GH114154@magnolia>
+In-Reply-To: <20190417222953.GB5072@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Apr 17, 2019 at 07:40:06AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Apr 17, 2019 at 03:29:53PM -0700, Darrick J. Wong wrote:
+> On Thu, Apr 18, 2019 at 07:52:28AM +1000, Dave Chinner wrote:
+> > On Tue, Apr 16, 2019 at 06:40:12PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > The forthcoming summary counter patch races with regular filesystem
+> > > activity to compute rough expected values for the counters.  This design
+> > > was chosen to avoid having to freeze the entire filesystem to check the
+> > > counters, but while that's running we'd prefer to minimize background
+> > > reclamation activity to reduce the perturbations to the incore free
+> > > block count.  Therefore, provide a way for scrubbers to disable
+> > > background posteof and cowblock reclamation.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/scrub/common.c |   18 ++++++++++++++++++
+> > >  fs/xfs/scrub/common.h |    2 ++
+> > >  fs/xfs/scrub/scrub.c  |    2 ++
+> > >  fs/xfs/scrub/scrub.h  |    1 +
+> > >  4 files changed, 23 insertions(+)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> > > index 7076d5c98151..a406a22a734f 100644
+> > > --- a/fs/xfs/scrub/common.c
+> > > +++ b/fs/xfs/scrub/common.c
+> > > @@ -894,3 +894,21 @@ xchk_ilock_inverted(
+> > >  	}
+> > >  	return -EDEADLOCK;
+> > >  }
+> > > +
+> > > +/* Pause background reclamation and inactivation. */
+> > > +void
+> > > +xchk_disable_reclaim(
+> > > +	struct xfs_scrub	*sc)
+> > > +{
+> > > +	sc->flags |= XCHK_RECLAIM_DISABLED;
+> > > +	xfs_icache_disable_reclaim(sc->mp);
+> > > +}
+> > 
+> > Hmmm. Poorly named function.  "reclaim" in the context of
+> > xfs_icache.c means inode cache reclaim...
+> > 
+> > We're not actually disabling inode reclaim here, we
+> > are disabling background block reaping.
+> > 
+> > Can we change this all to be named more appropriately (including the
+> > icache.c functions? Then it is all fine because I don't look at
+> > it and think "that'll break under memory pressure"....
 > 
-> Dave Chinner noticed that xfs_file_dio_aio_write returns EAGAIN without
-> dropping the IOLOCK when its deciding not to wait, which means that we
-> leak the IOLOCK there.  Since we now make unaligned directio always
-> wait, we have the opportunity to bail out before trying to take the
-> lock, which should reduce the overhead of this never-gonna-work case
-> considerably while also solving the dropped lock problem.
+> Ah, reaping!  That's the word I was looking for. :(
 > 
-> Reported-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> xfs_icache_disable_speculative_reaping
+> xchk_disable_speculative_reaping
 
-Looks good.
+disable_block_reaping?
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+but, really, purple or pink at this point...
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
