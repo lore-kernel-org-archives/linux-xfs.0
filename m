@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36476 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:37830 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729291AbfDQTFS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 15:05:18 -0400
-Subject: [PATCH 7/8] btrfs: don't allow any modifications to an immutable
- file
+        with ESMTP id S1730230AbfDQTGi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 15:06:38 -0400
+Subject: [PATCH 1/8] mm/fs: don't allow writes to immutable files
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Apr 2019 12:05:13 -0700
-Message-ID: <155552791345.20411.13373076079148473736.stgit@magnolia>
+Date: Wed, 17 Apr 2019 12:04:33 -0700
+Message-ID: <155552787330.20411.11893581890744963309.stgit@magnolia>
 In-Reply-To: <155552786671.20411.6442426840435740050.stgit@magnolia>
 References: <155552786671.20411.6442426840435740050.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,85 +20,114 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.ke
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Don't allow any modifications to a file that's marked immutable, which
-means that we have to flush all the writable pages to make the readonly
-and we have to check the setattr/setflags parameters more closely.
+The chattr manpage has this to say about immutable files:
+
+"A file with the 'i' attribute cannot be modified: it cannot be deleted
+or renamed, no link can be created to this file, most of the file's
+metadata can not be modified, and the file can not be opened in write
+mode."
+
+Once the flag is set, it is enforced for quite a few file operations,
+such as fallocate, fpunch, fzero, rm, touch, open, etc.  However, we
+don't check for immutability when doing a write(), a PROT_WRITE mmap(),
+a truncate(), or a write to a previously established mmap.
+
+If a program has an open write fd to a file that the administrator
+subsequently marks immutable, the program still can change the file
+contents.  Weird!
+
+The ability to write to an immutable file does not follow the manpage
+promise that immutable files cannot be modified.  Worse yet it's
+inconsistent with the behavior of other syscalls which don't allow
+modifications of immutable files.
+
+Therefore, add the necessary checks to make the write, mmap, and
+truncate behavior consistent with what the manpage says and consistent
+with other syscalls on filesystems which support IMMUTABLE.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/btrfs/ioctl.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
+ fs/attr.c    |   13 ++++++-------
+ mm/filemap.c |    3 +++
+ mm/memory.c  |    3 +++
+ mm/mmap.c    |    8 ++++++--
+ 4 files changed, 18 insertions(+), 9 deletions(-)
 
 
-diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-index cd4e693406a0..632600e4be0a 100644
---- a/fs/btrfs/ioctl.c
-+++ b/fs/btrfs/ioctl.c
-@@ -180,6 +180,44 @@ static int check_fsflags(unsigned int flags)
- 	return 0;
- }
+diff --git a/fs/attr.c b/fs/attr.c
+index d22e8187477f..1fcfdcc5b367 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -233,19 +233,18 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
  
-+/* Do all the prep work to check immutable status and all that. */
-+static int btrfs_ioctl_check_immutable(struct inode *inode,
-+				       unsigned int fsflags,
-+				       const unsigned int immutable_fsflag)
-+{
-+	struct btrfs_inode *binode = BTRFS_I(inode);
-+	int ret;
-+
-+	/*
-+	 * Wait for all pending directio and then flush all the dirty pages
-+	 * for this file.  The flush marks all the pages readonly, so any
-+	 * subsequent attempt to write to the file (particularly mmap pages)
-+	 * will come through the filesystem and fail.
-+	 */
-+	if (S_ISREG(inode->i_mode) && !IS_IMMUTABLE(inode) &&
-+	    (fsflags & immutable_fsflag)) {
-+		inode_dio_wait(inode);
-+		ret = filemap_write_and_wait(inode->i_mapping);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	/*
-+	 * If immutable is set and we are not clearing it, we're not allowed to
-+	 * change anything else in the inode.  Don't error out if we're only
-+	 * trying to set immutable on an immutable file.
-+	 */
-+	if (!(binode->flags & BTRFS_INODE_IMMUTABLE) ||
-+	    !(fsflags & immutable_fsflag))
-+		return 0;
-+
-+	if ((binode->flags & ~BTRFS_INODE_IMMUTABLE) !=
-+	    (fsflags & ~immutable_fsflag))
+ 	WARN_ON_ONCE(!inode_is_locked(inode));
+ 
+-	if (ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) {
+-		if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+-			return -EPERM;
+-	}
++	if (IS_IMMUTABLE(inode))
 +		return -EPERM;
 +
-+	return 0;
-+}
-+
- static int btrfs_ioctl_setflags(struct file *file, void __user *arg)
- {
- 	struct inode *inode = file_inode(file);
-@@ -225,6 +263,10 @@ static int btrfs_ioctl_setflags(struct file *file, void __user *arg)
- 		}
- 	}
++	if ((ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) &&
++	    IS_APPEND(inode))
++		return -EPERM;
  
-+	ret = btrfs_ioctl_check_immutable(inode, fsflags, FS_IMMUTABLE_FL);
-+	if (ret)
-+		goto out_unlock;
-+
- 	if (fsflags & FS_SYNC_FL)
- 		binode->flags |= BTRFS_INODE_SYNC;
- 	else
-@@ -433,6 +475,11 @@ static int btrfs_ioctl_fssetxattr(struct file *file, void __user *arg)
- 		goto out_unlock;
- 	}
+ 	/*
+ 	 * If utimes(2) and friends are called with times == NULL (or both
+ 	 * times are UTIME_NOW), then we need to check for write permission
+ 	 */
+ 	if (ia_valid & ATTR_TOUCH) {
+-		if (IS_IMMUTABLE(inode))
+-			return -EPERM;
+-
+ 		if (!inode_owner_or_capable(inode)) {
+ 			error = inode_permission(inode, MAY_WRITE);
+ 			if (error)
+diff --git a/mm/filemap.c b/mm/filemap.c
+index d78f577baef2..9fed698f4c63 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -3033,6 +3033,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+ 	loff_t count;
+ 	int ret;
  
-+	ret = btrfs_ioctl_check_immutable(inode, fa.fsx_xflags,
-+					  FS_XFLAG_IMMUTABLE);
-+	if (ret)
-+		goto out_unlock;
++	if (IS_IMMUTABLE(inode))
++		return -EPERM;
 +
- 	if (fa.fsx_xflags & FS_XFLAG_SYNC)
- 		binode->flags |= BTRFS_INODE_SYNC;
- 	else
+ 	if (!iov_iter_count(from))
+ 		return 0;
+ 
+diff --git a/mm/memory.c b/mm/memory.c
+index ab650c21bccd..dfd5eba278d6 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -2149,6 +2149,9 @@ static vm_fault_t do_page_mkwrite(struct vm_fault *vmf)
+ 
+ 	vmf->flags = FAULT_FLAG_WRITE|FAULT_FLAG_MKWRITE;
+ 
++	if (vmf->vma->vm_file && IS_IMMUTABLE(file_inode(vmf->vma->vm_file)))
++		return VM_FAULT_SIGBUS;
++
+ 	ret = vmf->vma->vm_ops->page_mkwrite(vmf);
+ 	/* Restore original flags so that caller is not surprised */
+ 	vmf->flags = old_flags;
+diff --git a/mm/mmap.c b/mm/mmap.c
+index 41eb48d9b527..697a101bda59 100644
+--- a/mm/mmap.c
++++ b/mm/mmap.c
+@@ -1481,8 +1481,12 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+ 		case MAP_SHARED_VALIDATE:
+ 			if (flags & ~flags_mask)
+ 				return -EOPNOTSUPP;
+-			if ((prot&PROT_WRITE) && !(file->f_mode&FMODE_WRITE))
+-				return -EACCES;
++			if (prot & PROT_WRITE) {
++				if (!(file->f_mode & FMODE_WRITE))
++					return -EACCES;
++				if (IS_IMMUTABLE(file_inode(file)))
++					return -EPERM;
++			}
+ 
+ 			/*
+ 			 * Make sure we don't allow writing to an append-only
