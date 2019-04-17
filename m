@@ -1,157 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46402 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726005AbfDZSRo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 Apr 2019 14:17:44 -0400
-Date: Fri, 26 Apr 2019 14:17:41 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/8] mm/fs: don't allow writes to immutable files
-Message-ID: <20190426181738.GB34536@bfoster>
-References: <155552786671.20411.6442426840435740050.stgit@magnolia>
- <155552787330.20411.11893581890744963309.stgit@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:50810 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729395AbfDQRfq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 13:35:46 -0400
+Subject: Re: [PATCH 2/9] xfs: Hold inode locks in xfs_ialloc
+References: <20190412225036.22939-1-allison.henderson@oracle.com>
+ <20190412225036.22939-3-allison.henderson@oracle.com>
+ <20190417154411.GE16377@bfoster>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <8003c9b3-8b74-c972-05a1-ef8cea4eee74@oracle.com>
+Date: Wed, 17 Apr 2019 10:35:36 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <155552787330.20411.11893581890744963309.stgit@magnolia>
+In-Reply-To: <20190417154411.GE16377@bfoster>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Apr 17, 2019 at 12:04:33PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 4/17/19 8:44 AM, Brian Foster wrote:
+> On Fri, Apr 12, 2019 at 03:50:29PM -0700, Allison Henderson wrote:
+>> Modify xfs_ialloc to hold locks after return.  Caller
+>> will be responsible for manual unlock.  We will need
+>> this later to hold locks across parent pointer operations
+>>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
 > 
-> The chattr manpage has this to say about immutable files:
+> Is this needed for this series, or can it be deferred to the parent
+> pointer stuff? (If it is needed now, it might be a good idea to update
+> the commit log to explain why.)
 > 
-> "A file with the 'i' attribute cannot be modified: it cannot be deleted
-> or renamed, no link can be created to this file, most of the file's
-> metadata can not be modified, and the file can not be opened in write
-> mode."
-> 
-> Once the flag is set, it is enforced for quite a few file operations,
-> such as fallocate, fpunch, fzero, rm, touch, open, etc.  However, we
-> don't check for immutability when doing a write(), a PROT_WRITE mmap(),
-> a truncate(), or a write to a previously established mmap.
-> 
-> If a program has an open write fd to a file that the administrator
-> subsequently marks immutable, the program still can change the file
-> contents.  Weird!
-> 
-> The ability to write to an immutable file does not follow the manpage
-> promise that immutable files cannot be modified.  Worse yet it's
-> inconsistent with the behavior of other syscalls which don't allow
-> modifications of immutable files.
-> 
-> Therefore, add the necessary checks to make the write, mmap, and
-> truncate behavior consistent with what the manpage says and consistent
-> with other syscalls on filesystems which support IMMUTABLE.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> Brian
 
-This mostly seems reasonable to me. I assume you'll want some mm acks. A
-couple notes..
+I think I can defer this one.  I seem to be able to take it out and 
+still get through the attribute test group, so I don't think it's really 
+having an effect just yet.  I will save it for the pptr series then. 
+Thanks!
 
->  fs/attr.c    |   13 ++++++-------
->  mm/filemap.c |    3 +++
->  mm/memory.c  |    3 +++
->  mm/mmap.c    |    8 ++++++--
->  4 files changed, 18 insertions(+), 9 deletions(-)
+Allison
+
 > 
-> 
-> diff --git a/fs/attr.c b/fs/attr.c
-> index d22e8187477f..1fcfdcc5b367 100644
-> --- a/fs/attr.c
-> +++ b/fs/attr.c
-> @@ -233,19 +233,18 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
->  
->  	WARN_ON_ONCE(!inode_is_locked(inode));
->  
-> -	if (ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) {
-> -		if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
-> -			return -EPERM;
-> -	}
-> +	if (IS_IMMUTABLE(inode))
-> +		return -EPERM;
-> +
-> +	if ((ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) &&
-> +	    IS_APPEND(inode))
-> +		return -EPERM;
->  
->  	/*
->  	 * If utimes(2) and friends are called with times == NULL (or both
->  	 * times are UTIME_NOW), then we need to check for write permission
->  	 */
->  	if (ia_valid & ATTR_TOUCH) {
-> -		if (IS_IMMUTABLE(inode))
-> -			return -EPERM;
-> -
->  		if (!inode_owner_or_capable(inode)) {
->  			error = inode_permission(inode, MAY_WRITE);
->  			if (error)
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index d78f577baef2..9fed698f4c63 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -3033,6 +3033,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
->  	loff_t count;
->  	int ret;
->  
-> +	if (IS_IMMUTABLE(inode))
-> +		return -EPERM;
-> +
->  	if (!iov_iter_count(from))
->  		return 0;
->  
-> diff --git a/mm/memory.c b/mm/memory.c
-> index ab650c21bccd..dfd5eba278d6 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-> @@ -2149,6 +2149,9 @@ static vm_fault_t do_page_mkwrite(struct vm_fault *vmf)
->  
->  	vmf->flags = FAULT_FLAG_WRITE|FAULT_FLAG_MKWRITE;
->  
-> +	if (vmf->vma->vm_file && IS_IMMUTABLE(file_inode(vmf->vma->vm_file)))
-> +		return VM_FAULT_SIGBUS;
-> +
-
-I take it this depends on cleaning already dirty pages when the
-immutable bit is set. That appears to be done later in the series, but I
-notice it occurs at the filesystem level (presumably due to the ioctl).
-That of course is fine, but it makes me wonder a bit whether we should
-have a generic helper for each fs to call that does the requisite
-writeback and dio wait (similar to generic_remap_file_range_prep() for
-example). Thoughts?
-
->  	ret = vmf->vma->vm_ops->page_mkwrite(vmf);
->  	/* Restore original flags so that caller is not surprised */
->  	vmf->flags = old_flags;
-> diff --git a/mm/mmap.c b/mm/mmap.c
-> index 41eb48d9b527..697a101bda59 100644
-> --- a/mm/mmap.c
-> +++ b/mm/mmap.c
-> @@ -1481,8 +1481,12 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
->  		case MAP_SHARED_VALIDATE:
->  			if (flags & ~flags_mask)
->  				return -EOPNOTSUPP;
-> -			if ((prot&PROT_WRITE) && !(file->f_mode&FMODE_WRITE))
-> -				return -EACCES;
-> +			if (prot & PROT_WRITE) {
-> +				if (!(file->f_mode & FMODE_WRITE))
-> +					return -EACCES;
-> +				if (IS_IMMUTABLE(file_inode(file)))
-> +					return -EPERM;
-> +			}
-
-We haven't done anything to clean up writeable mappings on marking the
-inode immutable, right? It seems a little strange that we can have some
-writeable mappings hang around while we can't create new ones, but
-perhaps it doesn't matter if the write fault behavior is the same.
-
-Brian
-
->  
->  			/*
->  			 * Make sure we don't allow writing to an append-only
-> 
+>>   fs/xfs/xfs_inode.c   | 6 +++++-
+>>   fs/xfs/xfs_qm.c      | 1 +
+>>   fs/xfs/xfs_symlink.c | 3 +++
+>>   3 files changed, 9 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>> index f643a92..30a3130 100644
+>> --- a/fs/xfs/xfs_inode.c
+>> +++ b/fs/xfs/xfs_inode.c
+>> @@ -744,6 +744,8 @@ xfs_lookup(
+>>    * to attach to or associate with (i.e. pip == NULL) because they
+>>    * are not linked into the directory structure - they are attached
+>>    * directly to the superblock - and so have no parent.
+>> + *
+>> + * Caller is responsible for unlocking the inode manually upon return
+>>    */
+>>   static int
+>>   xfs_ialloc(
+>> @@ -942,7 +944,7 @@ xfs_ialloc(
+>>   	/*
+>>   	 * Log the new values stuffed into the inode.
+>>   	 */
+>> -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>> +	xfs_trans_ijoin(tp, ip, 0);
+>>   	xfs_trans_log_inode(tp, ip, flags);
+>>   
+>>   	/* now that we have an i_mode we can setup the inode structure */
+>> @@ -1264,6 +1266,7 @@ xfs_create(
+>>   	xfs_qm_dqrele(pdqp);
+>>   
+>>   	*ipp = ip;
+>> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>>   	return 0;
+>>   
+>>    out_trans_cancel:
+>> @@ -1359,6 +1362,7 @@ xfs_create_tmpfile(
+>>   	xfs_qm_dqrele(pdqp);
+>>   
+>>   	*ipp = ip;
+>> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>>   	return 0;
+>>   
+>>    out_trans_cancel:
+>> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+>> index 52ed790..69006e5 100644
+>> --- a/fs/xfs/xfs_qm.c
+>> +++ b/fs/xfs/xfs_qm.c
+>> @@ -820,6 +820,7 @@ xfs_qm_qino_alloc(
+>>   	}
+>>   	if (need_alloc)
+>>   		xfs_finish_inode_setup(*ip);
+>> +	xfs_iunlock(*ip, XFS_ILOCK_EXCL);
+>>   	return error;
+>>   }
+>>   
+>> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+>> index b2c1177..13d31fe 100644
+>> --- a/fs/xfs/xfs_symlink.c
+>> +++ b/fs/xfs/xfs_symlink.c
+>> @@ -353,6 +353,7 @@ xfs_symlink(
+>>   	xfs_qm_dqrele(pdqp);
+>>   
+>>   	*ipp = ip;
+>> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>>   	return 0;
+>>   
+>>   out_trans_cancel:
+>> @@ -374,6 +375,8 @@ xfs_symlink(
+>>   
+>>   	if (unlock_dp_on_error)
+>>   		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+>> +	if (ip)
+>> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>>   	return error;
+>>   }
+>>   
+>> -- 
+>> 2.7.4
+>>
