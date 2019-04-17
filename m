@@ -1,12 +1,15 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42338 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729291AbfDQTEb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 15:04:31 -0400
-Subject: [PATCH v2 0/8] vfs: make immutable files actually immutable
+Received: from userp2120.oracle.com ([156.151.31.85]:59582 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729291AbfDQTEp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 15:04:45 -0400
+Subject: [PATCH 2/8] xfs: unlock inode when xfs_ioctl_setattr_get_trans
+ can't get transaction
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Apr 2019 12:04:26 -0700
-Message-ID: <155552786671.20411.6442426840435740050.stgit@magnolia>
+Date: Wed, 17 Apr 2019 12:04:39 -0700
+Message-ID: <155552787973.20411.3438010430489882890.stgit@magnolia>
+In-Reply-To: <155552786671.20411.6442426840435740050.stgit@magnolia>
+References: <155552786671.20411.6442426840435740050.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,36 +19,28 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The chattr(1) manpage has this to say about the immutable bit that
-system administrators can set on files:
+We passed an inode into xfs_ioctl_setattr_get_trans with join_flags
+indicating which locks are held on that inode.  If we can't allocate a
+transaction then we need to unlock the inode before we bail out.
 
-"A file with the 'i' attribute cannot be modified: it cannot be deleted
-or renamed, no link can be created to this file, most of the file's
-metadata can not be modified, and the file can not be opened in write
-mode."
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_ioctl.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Given the clause about how the file 'cannot be modified', it is
-surprising that programs holding writable file descriptors can continue
-to write to and truncate files after the immutable flag has been set,
-but they cannot call other things such as utimes, fallocate, unlink,
-link, setxattr, or reflink.
 
-Since the immutable flag is only settable by administrators, resolve
-this inconsistent behavior in favor of the documented behavior -- once
-the flag is set, the file cannot be modified, period.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=immutable-files
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=immutable-files
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index ae615a79b266..21d6f433c375 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1153,7 +1153,7 @@ xfs_ioctl_setattr_get_trans(
+ 
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
+ 	if (error)
+-		return ERR_PTR(error);
++		goto out_unlock;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | join_flags);
