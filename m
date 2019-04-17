@@ -1,269 +1,250 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:34206 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728032AbfDQDGZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Apr 2019 23:06:25 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3H34tZH138752
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 03:06:23 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2rvwk3r8y8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 03:06:23 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3H34x43067836
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 03:06:23 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2ru4vthqfj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 03:06:23 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3H36MxS018754
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 03:06:22 GMT
-Subject: Re: [PATCH 1/2] xfs: widen quota block counters to 64-bit integers
-References: <155546518260.176148.16583864799178682873.stgit@magnolia>
- <155546518873.176148.11756573764233413857.stgit@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <7dd27e9a-4f3c-4b2a-d927-c3aa085f824c@oracle.com>
-Date: Tue, 16 Apr 2019 20:06:20 -0700
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:57252 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725848AbfDQWt5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 18:49:57 -0400
+Date: Thu, 18 Apr 2019 08:30:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs: add online scrub/repair for superblock counters
+Message-ID: <20190417223052.GU29573@dread.disaster.area>
+References: <155546519998.176278.8300210828717055034.stgit@magnolia>
+ <155546522160.176278.12189319767486072198.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <155546518873.176148.11756573764233413857.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155546522160.176278.12189319767486072198.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 4/16/19 6:39 PM, Darrick J. Wong wrote:
+On Tue, Apr 16, 2019 at 06:40:21PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Widen the incore quota transaction delta structure to treat block
-> counters as 64-bit integers.  This is a necessary addition so that we
-> can widen the i_delayed_blks counter to be a 64-bit integer.
+> Teach online scrub and repair how to check and reset the superblock
+> inode and block counters.  The AG rebuilding functions will need these
+> to adjust the counts if they need to change as a part of recovering from
+> corruption.  We must use the repair freeze mechanism to prevent any
+> other changes while we do this.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   fs/xfs/xfs_qm.h          |    8 ++------
->   fs/xfs/xfs_quota.h       |   31 +++++++++++++++++--------------
->   fs/xfs/xfs_trans_dquot.c |   28 ++++++++++++++--------------
->   3 files changed, 33 insertions(+), 34 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-> index 3ccf0fbc9071..b41b75089548 100644
-> --- a/fs/xfs/xfs_qm.h
-> +++ b/fs/xfs/xfs_qm.h
-> @@ -113,12 +113,8 @@ xfs_quota_inode(xfs_mount_t *mp, uint dq_flags)
->   	return NULL;
->   }
->   
-> -extern void	xfs_trans_mod_dquot(struct xfs_trans *,
-> -					struct xfs_dquot *, uint, long);
-> -extern int	xfs_trans_reserve_quota_bydquots(struct xfs_trans *,
-> -			struct xfs_mount *, struct xfs_dquot *,
-> -			struct xfs_dquot *, struct xfs_dquot *,
-> -			long, long, uint);
-Did you mean to remove this last one?  I don't see it redefined, but I'm 
-guessing maybe it wasn't needed in this scope.
+.....
+> +/*
+> + * FS Summary Counters
+> + * ===================
+> + *
+> + * The basics of filesystem summary counter checking are that we iterate the
+> + * AGs counting the number of free blocks, free space btree blocks, per-AG
+> + * reservations, inodes, delayed allocation reservations, and free inodes.
+> + * Then we compare what we computed against the in-core counters.
+> + *
+> + * However, the reality is that summary counters are a tricky beast to check.
+> + * While we /could/ freeze the filesystem and scramble around the AGs counting
+> + * the free blocks, in practice we prefer not do that for a scan because
+> + * freezing is costly.  To get around this, we added a per-cpu counter of the
+> + * delalloc reservations so that we can rotor around the AGs relatively
+> + * quickly, and we allow the counts to be slightly off because we're not
+> + * taking any locks while we do this.
+> + */
+> +
+> +int
+> +xchk_setup_fscounters(
+> +	struct xfs_scrub	*sc,
+> +	struct xfs_inode	*ip)
+> +{
+> +	sc->buf = kmem_zalloc(sizeof(struct xchk_fscounters), KM_SLEEP);
+> +	if (!sc->buf)
+> +		return -ENOMEM;
+> +
+> +	/*
+> +	 * Pause background reclaim while we're scrubbing to reduce the
+> +	 * likelihood of background perturbations to the counters throwing
+> +	 * off our calculations.
+> +	 */
+> +	xchk_disable_reclaim(sc);
 
-Other than that it looks ok though.  You can add my review:
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Naming :)
 
-> +extern void	xfs_trans_mod_dquot(struct xfs_trans *tp, struct xfs_dquot *dqp,
-> +				    uint field, int64_t delta);
->   extern void	xfs_trans_dqjoin(struct xfs_trans *, struct xfs_dquot *);
->   extern void	xfs_trans_log_dquot(struct xfs_trans *, struct xfs_dquot *);
->   
-> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-> index 55b798265ef7..215cb39e3a04 100644
-> --- a/fs/xfs/xfs_quota.h
-> +++ b/fs/xfs/xfs_quota.h
-> @@ -58,30 +58,33 @@ xfs_quota_chkd_flag(
->    */
->   typedef struct xfs_dqtrx {
->   	struct xfs_dquot *qt_dquot;	  /* the dquot this refers to */
-> -	ulong		qt_blk_res;	  /* blks reserved on a dquot */
-> -	ulong		qt_ino_res;	  /* inode reserved on a dquot */
-> -	ulong		qt_ino_res_used;  /* inodes used from the reservation */
-> -	long		qt_bcount_delta;  /* dquot blk count changes */
-> -	long		qt_delbcnt_delta; /* delayed dquot blk count changes */
 > +
-> +	uint64_t	qt_blk_res;	  /* blks reserved on a dquot */
-> +	int64_t		qt_bcount_delta;  /* dquot blk count changes */
-> +	int64_t		qt_delbcnt_delta; /* delayed dquot blk count changes */
+> +	return xchk_trans_alloc(sc, 0);
+> +}
 > +
-> +	uint64_t	qt_rtblk_res;	  /* # blks reserved on a dquot */
-> +	uint64_t	qt_rtblk_res_used;/* # blks used from reservation */
-> +	int64_t		qt_rtbcount_delta;/* dquot realtime blk changes */
-> +	int64_t		qt_delrtb_delta;  /* delayed RT blk count changes */
+> +/*
+> + * Calculate what the global in-core counters ought to be from the AG header
+> + * contents.  Callers can compare this to the actual in-core counters to
+> + * calculate by how much both in-core and on-disk counters need to be
+> + * adjusted.
+> + */
+> +STATIC int
+> +xchk_fscounters_calc(
+> +	struct xfs_scrub	*sc,
+> +	struct xchk_fscounters	*fsc)
+> +{
+> +	struct xfs_mount	*mp = sc->mp;
+> +	struct xfs_buf		*agi_bp;
+> +	struct xfs_buf		*agf_bp;
+> +	struct xfs_agi		*agi;
+> +	struct xfs_agf		*agf;
+> +	struct xfs_perag	*pag;
+> +	uint64_t		delayed;
+> +	xfs_agnumber_t		agno;
+> +	int			error;
 > +
-> +	unsigned long	qt_ino_res;	  /* inode reserved on a dquot */
-> +	unsigned long	qt_ino_res_used;  /* inodes used from the reservation */
->   	long		qt_icount_delta;  /* dquot inode count changes */
-> -	ulong		qt_rtblk_res;	  /* # blks reserved on a dquot */
-> -	ulong		qt_rtblk_res_used;/* # blks used from reservation */
-> -	long		qt_rtbcount_delta;/* dquot realtime blk changes */
-> -	long		qt_delrtb_delta;  /* delayed RT blk count changes */
->   } xfs_dqtrx_t;
->   
->   #ifdef CONFIG_XFS_QUOTA
->   extern void xfs_trans_dup_dqinfo(struct xfs_trans *, struct xfs_trans *);
->   extern void xfs_trans_free_dqinfo(struct xfs_trans *);
->   extern void xfs_trans_mod_dquot_byino(struct xfs_trans *, struct xfs_inode *,
-> -		uint, long);
-> +		uint, int64_t);
->   extern void xfs_trans_apply_dquot_deltas(struct xfs_trans *);
->   extern void xfs_trans_unreserve_and_mod_dquots(struct xfs_trans *);
->   extern int xfs_trans_reserve_quota_nblks(struct xfs_trans *,
-> -		struct xfs_inode *, long, long, uint);
-> +		struct xfs_inode *, int64_t, long, uint);
->   extern int xfs_trans_reserve_quota_bydquots(struct xfs_trans *,
->   		struct xfs_mount *, struct xfs_dquot *,
-> -		struct xfs_dquot *, struct xfs_dquot *, long, long, uint);
-> +		struct xfs_dquot *, struct xfs_dquot *, int64_t, long, uint);
->   
->   extern int xfs_qm_vop_dqalloc(struct xfs_inode *, xfs_dqid_t, xfs_dqid_t,
->   		prid_t, uint, struct xfs_dquot **, struct xfs_dquot **,
-> @@ -121,14 +124,14 @@ xfs_qm_vop_dqalloc(struct xfs_inode *ip, xfs_dqid_t uid, xfs_dqid_t gid,
->   #define xfs_trans_apply_dquot_deltas(tp)
->   #define xfs_trans_unreserve_and_mod_dquots(tp)
->   static inline int xfs_trans_reserve_quota_nblks(struct xfs_trans *tp,
-> -		struct xfs_inode *ip, long nblks, long ninos, uint flags)
-> +		struct xfs_inode *ip, int64_t nblks, long ninos, uint flags)
->   {
->   	return 0;
->   }
->   static inline int xfs_trans_reserve_quota_bydquots(struct xfs_trans *tp,
->   		struct xfs_mount *mp, struct xfs_dquot *udqp,
->   		struct xfs_dquot *gdqp, struct xfs_dquot *pdqp,
-> -		long nblks, long nions, uint flags)
-> +		int64_t nblks, long nions, uint flags)
->   {
->   	return 0;
->   }
-> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> index c23257a26c2b..840ec456c9a8 100644
-> --- a/fs/xfs/xfs_trans_dquot.c
-> +++ b/fs/xfs/xfs_trans_dquot.c
-> @@ -80,7 +80,7 @@ xfs_trans_dup_dqinfo(
->   	xfs_dqtrx_t	*oq, *nq;
->   	int		i, j;
->   	xfs_dqtrx_t	*oqa, *nqa;
-> -	ulong		blk_res_used;
-> +	uint64_t	blk_res_used;
->   
->   	if (!otp->t_dqinfo)
->   		return;
-> @@ -137,7 +137,7 @@ xfs_trans_mod_dquot_byino(
->   	xfs_trans_t	*tp,
->   	xfs_inode_t	*ip,
->   	uint		field,
-> -	long		delta)
-> +	int64_t		delta)
->   {
->   	xfs_mount_t	*mp = tp->t_mountp;
->   
-> @@ -194,7 +194,7 @@ xfs_trans_mod_dquot(
->   	xfs_trans_t	*tp,
->   	xfs_dquot_t	*dqp,
->   	uint		field,
-> -	long		delta)
-> +	int64_t		delta)
->   {
->   	xfs_dqtrx_t	*qtrx;
->   
-> @@ -219,14 +219,14 @@ xfs_trans_mod_dquot(
->   		 * regular disk blk reservation
->   		 */
->   	      case XFS_TRANS_DQ_RES_BLKS:
-> -		qtrx->qt_blk_res += (ulong)delta;
-> +		qtrx->qt_blk_res += delta;
->   		break;
->   
->   		/*
->   		 * inode reservation
->   		 */
->   	      case XFS_TRANS_DQ_RES_INOS:
-> -		qtrx->qt_ino_res += (ulong)delta;
-> +		qtrx->qt_ino_res += (unsigned long)delta;
->   		break;
->   
->   		/*
-> @@ -245,7 +245,7 @@ xfs_trans_mod_dquot(
->   		 */
->   	      case XFS_TRANS_DQ_ICOUNT:
->   		if (qtrx->qt_ino_res && delta > 0) {
-> -			qtrx->qt_ino_res_used += (ulong)delta;
-> +			qtrx->qt_ino_res_used += (unsigned long)delta;
->   			ASSERT(qtrx->qt_ino_res >= qtrx->qt_ino_res_used);
->   		}
->   		qtrx->qt_icount_delta += delta;
-> @@ -255,7 +255,7 @@ xfs_trans_mod_dquot(
->   		 * rtblk reservation
->   		 */
->   	      case XFS_TRANS_DQ_RES_RTBLKS:
-> -		qtrx->qt_rtblk_res += (ulong)delta;
-> +		qtrx->qt_rtblk_res += delta;
->   		break;
->   
->   		/*
-> @@ -263,7 +263,7 @@ xfs_trans_mod_dquot(
->   		 */
->   	      case XFS_TRANS_DQ_RTBCOUNT:
->   		if (qtrx->qt_rtblk_res && delta > 0) {
-> -			qtrx->qt_rtblk_res_used += (ulong)delta;
-> +			qtrx->qt_rtblk_res_used += delta;
->   			ASSERT(qtrx->qt_rtblk_res >= qtrx->qt_rtblk_res_used);
->   		}
->   		qtrx->qt_rtbcount_delta += delta;
-> @@ -320,8 +320,8 @@ xfs_trans_apply_dquot_deltas(
->   	struct xfs_dquot	*dqp;
->   	struct xfs_dqtrx	*qtrx, *qa;
->   	struct xfs_disk_dquot	*d;
-> -	long			totalbdelta;
-> -	long			totalrtbdelta;
-> +	int64_t			totalbdelta;
-> +	int64_t			totalrtbdelta;
->   
->   	if (!(tp->t_flags & XFS_TRANS_DQ_DIRTY))
->   		return;
-> @@ -413,7 +413,7 @@ xfs_trans_apply_dquot_deltas(
->   			 * reservation that a transaction structure knows of.
->   			 */
->   			if (qtrx->qt_blk_res != 0) {
-> -				ulong blk_res_used = 0;
-> +				uint64_t	blk_res_used = 0;
->   
->   				if (qtrx->qt_bcount_delta > 0)
->   					blk_res_used = qtrx->qt_bcount_delta;
-> @@ -585,7 +585,7 @@ xfs_trans_dqresv(
->   	xfs_trans_t	*tp,
->   	xfs_mount_t	*mp,
->   	xfs_dquot_t	*dqp,
-> -	long		nblks,
-> +	int64_t		nblks,
->   	long		ninos,
->   	uint		flags)
->   {
-> @@ -745,7 +745,7 @@ xfs_trans_reserve_quota_bydquots(
->   	struct xfs_dquot	*udqp,
->   	struct xfs_dquot	*gdqp,
->   	struct xfs_dquot	*pdqp,
-> -	long			nblks,
-> +	int64_t			nblks,
->   	long			ninos,
->   	uint			flags)
->   {
-> @@ -804,7 +804,7 @@ int
->   xfs_trans_reserve_quota_nblks(
->   	struct xfs_trans	*tp,
->   	struct xfs_inode	*ip,
-> -	long			nblks,
-> +	int64_t			nblks,
->   	long			ninos,
->   	uint			flags)
->   {
-> 
+> +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> +		/* Lock both AG headers. */
+> +		error = xfs_ialloc_read_agi(mp, sc->tp, agno, &agi_bp);
+> +		if (error)
+> +			return error;
+> +		error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, &agf_bp);
+> +		if (error)
+> +			return error;
+> +		if (!agf_bp)
+> +			return -ENOMEM;
+> +
+> +		/* Count all the inodes */
+> +		agi = XFS_BUF_TO_AGI(agi_bp);
+> +		fsc->icount += be32_to_cpu(agi->agi_count);
+> +		fsc->ifree += be32_to_cpu(agi->agi_freecount);
+> +
+> +		/* Add up the free/freelist/bnobt/cntbt blocks */
+> +		agf = XFS_BUF_TO_AGF(agf_bp);
+> +		fsc->fdblocks += be32_to_cpu(agf->agf_freeblks);
+> +		fsc->fdblocks += be32_to_cpu(agf->agf_flcount);
+> +		fsc->fdblocks += be32_to_cpu(agf->agf_btreeblks);
+> +
+> +		/*
+> +		 * Per-AG reservations are taken out of the incore counters,
+> +		 * so they must be left out of the free blocks computation.
+> +		 */
+> +		pag = xfs_perag_get(mp, agno);
+> +		fsc->fdblocks -= pag->pag_meta_resv.ar_reserved;
+> +		fsc->fdblocks -= pag->pag_rmapbt_resv.ar_orig_reserved;
+> +		xfs_perag_put(pag);
+> +
+> +		xfs_trans_brelse(sc->tp, agf_bp);
+> +		xfs_trans_brelse(sc->tp, agi_bp);
+> +	}
+
+Hmmmm. Do we have all these counters in the perag? If we do, we've
+already checked them against the on-disk structures, yes? So can we
+just do a pass across the perags to sum the space usage?
+
+And if we don't ahve them all in the perag, should we add them?
+
+> +
+> +	/*
+> +	 * The global incore space reservation is taken from the incore
+> +	 * counters, so leave that out of the computation.
+> +	 */
+> +	fsc->fdblocks -= mp->m_resblks_avail;
+> +
+> +	/*
+> +	 * Delayed allocation reservations are taken out of the incore counters
+> +	 * but not recorded on disk, so leave them and their indlen blocks out
+> +	 * of the computation.
+> +	 */
+> +	delayed = percpu_counter_sum(&mp->m_delalloc_blks);
+> +	fsc->fdblocks -= delayed;
+> +
+> +	trace_xchk_fscounters_calc(mp, fsc->icount, fsc->ifree, fsc->fdblocks,
+> +			delayed);
+> +
+> +	/* Bail out if the values we compute are totally nonsense. */
+> +	if (!xfs_verify_icount(mp, fsc->icount) ||
+> +	    fsc->fdblocks > mp->m_sb.sb_dblocks ||
+> +	    fsc->ifree > fsc->icount)
+> +		return -EFSCORRUPTED;
+
+I suspect we need some tolerance here on ifree vs icount as icount
+can decrease as we free inode chunks....
+
+> +/*
+> + * Is the @counter within an acceptable range of @expected?
+> + *
+> + * Currently that means 1/16th (6%) or @nr_range of the @expected value.
+> + */
+
+6% is a lot for large filesystems, especially for block counts. That
+can be entire AGs missing. I suspect the tolerance should be
+related to AG count in some way....
+
+> +static inline bool
+> +xchk_fscounter_within_range(
+> +	struct xfs_scrub	*sc,
+> +	struct percpu_counter	*counter,
+> +	uint64_t		expected,
+> +	uint64_t		nr_range)
+> +{
+> +	int64_t			value = percpu_counter_sum(counter);
+> +	uint64_t		range;
+> +
+> +	range = max_t(uint64_t, expected >> 4, nr_range);
+> +	if (value < 0)
+> +		return false;
+> +	if (range < expected && value < expected - range)
+> +		return false;
+> +	if ((int64_t)(expected + range) >= 0 && value > expected + range)
+> +		return false;
+> +	return true;
+> +}
+> +
+> +/* Check the superblock counters. */
+> +int
+> +xchk_fscounters(
+> +	struct xfs_scrub	*sc)
+> +{
+> +	struct xfs_mount	*mp = sc->mp;
+> +	struct xchk_fscounters	*fsc = sc->buf;
+> +	int64_t			icount, ifree, fdblocks;
+> +	int			error;
+> +
+> +	icount = percpu_counter_sum(&sc->mp->m_icount);
+> +	ifree = percpu_counter_sum(&sc->mp->m_ifree);
+> +	fdblocks = percpu_counter_sum(&sc->mp->m_fdblocks);
+
+We have a local mp var in this function :)
+
+> +
+> +	if (icount < 0 || ifree < 0 || fdblocks < 0)
+> +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> +
+> +	/* See if icount is obviously wrong. */
+> +	if (!xfs_verify_icount(mp, icount))
+> +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> +
+> +	/* See if fdblocks / ifree are obviously wrong. */
+> +	if (fdblocks > mp->m_sb.sb_dblocks)
+> +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> +	if (ifree > icount)
+> +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> +
+> +	/* If we already know it's bad, we can skip the AG iteration. */
+> +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> +		return 0;
+> +
+> +	/* Counters seem ok, but let's count them. */
+> +	error = xchk_fscounters_calc(sc, fsc);
+> +	if (!xchk_process_error(sc, 0, XFS_SB_BLOCK(sc->mp), &error))
+> +		return error;
+> +
+> +	/*
+> +	 * Compare the in-core counters with whatever we counted.  We'll
+> +	 * consider the inode counts ok if they're within 1024 inodes, and the
+> +	 * free block counts if they're within 1/64th of the filesystem size.
+> +	 */
+> +	if (!xchk_fscounter_within_range(sc, &mp->m_icount, fsc->icount, 1024))
+> +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+
+We've already summed the percpu counters at this point - why do we
+pass them into xchk_fscounter_within_range() and them sum them
+again?
+
+Also, what's the magic 1024 here?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
