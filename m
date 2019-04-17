@@ -1,114 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38472 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729395AbfDQPoO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 17 Apr 2019 11:44:14 -0400
-Date: Wed, 17 Apr 2019 11:44:12 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/9] xfs: Hold inode locks in xfs_ialloc
-Message-ID: <20190417154411.GE16377@bfoster>
-References: <20190412225036.22939-1-allison.henderson@oracle.com>
- <20190412225036.22939-3-allison.henderson@oracle.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:39150 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732305AbfDQPsA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 11:48:00 -0400
+Date: Wed, 17 Apr 2019 08:47:47 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: make tr_growdata a permanent transaction
+Message-ID: <20190417154747.GI114154@magnolia>
+References: <20190417093608.17146-1-bfoster@redhat.com>
+ <20190417143759.GG114154@magnolia>
+ <20190417153308.GB16377@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190412225036.22939-3-allison.henderson@oracle.com>
+In-Reply-To: <20190417153308.GB16377@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Apr 12, 2019 at 03:50:29PM -0700, Allison Henderson wrote:
-> Modify xfs_ialloc to hold locks after return.  Caller
-> will be responsible for manual unlock.  We will need
-> this later to hold locks across parent pointer operations
+On Wed, Apr 17, 2019 at 11:33:15AM -0400, Brian Foster wrote:
+> On Wed, Apr 17, 2019 at 07:37:59AM -0700, Darrick J. Wong wrote:
+> > On Wed, Apr 17, 2019 at 05:36:08AM -0400, Brian Foster wrote:
+> > > The growdata transaction is used by growfs operations to increase
+> > > the data size of the filesystem. Part of this sequence involves
+> > > extending the size of the last preexisting AG in the fs, if
+> > > necessary. This is implemented by freeing the newly available
+> > > physical range to the AG.
+> > > 
+> > > tr_growdata is not a permanent transaction, however, and block
+> > > allocation transactions must be permanent to handle deferred frees
+> > > of AGFL blocks. If the grow operation extends an existing AG that
+> > > requires AGFL fixing, assert failures occur due to a populated dfops
+> > > list on a non-permanent transaction and the AGFL free does not
+> > > occur. This is reproduced (rarely) by xfs/104.
+> > > 
+> > > Change tr_growdata to a permanent transaction with a default log
+> > > count. This increases initial transaction reservation size, but
+> > > growfs is an infrequent and non-performance critical operation and
+> > > so should have minimal impact. Also add an assert in the block
+> > > allocation path to make this transaction requirement explicit and
+> > > obvious to future callers.
+> > > 
+> > > Reported-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > > 
+> > > This is motivated by Darrick's recent xfs/104 failure report[1]. Note
+> > > that I made the assert a bit more explicit than originally suggested
+> > > because I think any transaction that performs block allocation should be
+> > > expected to be able to handle arbitrary AGFL fixups. This survives an
+> > > fstests auto run without any regressions[2] or assert failures.
+> > > 
+> > > Brian
+> > > 
+> > > [1] https://marc.info/?l=linux-xfs&m=155537961822223&w=2
+> > > [2] Note that I was never able to reproduce the original xfs/104
+> > > failure.
+> > > 
+> > >  fs/xfs/libxfs/xfs_alloc.c      | 2 ++
+> > >  fs/xfs/libxfs/xfs_trans_resv.c | 6 +++++-
+> > >  2 files changed, 7 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > > index bc3367b8b7bb..e4df1866f949 100644
+> > > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > > @@ -2237,6 +2237,8 @@ xfs_alloc_fix_freelist(
+> > >  	xfs_extlen_t		need;	/* total blocks needed in freelist */
+> > >  	int			error = 0;
+> > >  
+> > > +	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+> > 
+> > /me wonders if we ought to have a comment here about why we're asserting
+> > on this? i.e.
+> > 
 > 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> ---
-
-Is this needed for this series, or can it be deferred to the parent
-pointer stuff? (If it is needed now, it might be a good idea to update
-the commit log to explain why.)
-
-Brian
-
->  fs/xfs/xfs_inode.c   | 6 +++++-
->  fs/xfs/xfs_qm.c      | 1 +
->  fs/xfs/xfs_symlink.c | 3 +++
->  3 files changed, 9 insertions(+), 1 deletion(-)
+> Yep.
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index f643a92..30a3130 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -744,6 +744,8 @@ xfs_lookup(
->   * to attach to or associate with (i.e. pip == NULL) because they
->   * are not linked into the directory structure - they are attached
->   * directly to the superblock - and so have no parent.
-> + *
-> + * Caller is responsible for unlocking the inode manually upon return
->   */
->  static int
->  xfs_ialloc(
-> @@ -942,7 +944,7 @@ xfs_ialloc(
->  	/*
->  	 * Log the new values stuffed into the inode.
->  	 */
-> -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> +	xfs_trans_ijoin(tp, ip, 0);
->  	xfs_trans_log_inode(tp, ip, flags);
->  
->  	/* now that we have an i_mode we can setup the inode structure */
-> @@ -1264,6 +1266,7 @@ xfs_create(
->  	xfs_qm_dqrele(pdqp);
->  
->  	*ipp = ip;
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return 0;
->  
->   out_trans_cancel:
-> @@ -1359,6 +1362,7 @@ xfs_create_tmpfile(
->  	xfs_qm_dqrele(pdqp);
->  
->  	*ipp = ip;
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return 0;
->  
->   out_trans_cancel:
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 52ed790..69006e5 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -820,6 +820,7 @@ xfs_qm_qino_alloc(
->  	}
->  	if (need_alloc)
->  		xfs_finish_inode_setup(*ip);
-> +	xfs_iunlock(*ip, XFS_ILOCK_EXCL);
->  	return error;
->  }
->  
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index b2c1177..13d31fe 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -353,6 +353,7 @@ xfs_symlink(
->  	xfs_qm_dqrele(pdqp);
->  
->  	*ipp = ip;
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return 0;
->  
->  out_trans_cancel:
-> @@ -374,6 +375,8 @@ xfs_symlink(
->  
->  	if (unlock_dp_on_error)
->  		xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> +	if (ip)
-> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return error;
->  }
->  
-> -- 
-> 2.7.4
+> > /*
+> >  * This function can shrink the AGFL, which uses a deferred op to avoid
+> >  * exceeding transaction reservation (or whatever the original reason
+> >  * was).  Deferred ops require a transaction with a permanent
+> >  * reservation, so check that here.
+> >  */
+> > ASSERT(...);
+> > 
+> > Send me back a finished comment and I'll add it on its way in; the rest
+> > of the patch looks ok to me.
+> > 
 > 
+> Though to me a one-liner seems sufficient since this is just an assert.
+> E.g.,
+> 
+> 	/* deferred ops (AGFL block frees) require permanent transactions */
+> 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+> 
+> ... seems enough to document the intent. Hm?
+
+Yep.  Comment added.
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> Brian
+> 
+> > --D
+> > 
+> > > +
+> > >  	if (!pag->pagf_init) {
+> > >  		error = xfs_alloc_read_agf(mp, tp, args->agno, flags, &agbp);
+> > >  		if (error)
+> > > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> > > index f99a7aefe418..83f4ee2afc49 100644
+> > > --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> > > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> > > @@ -876,9 +876,13 @@ xfs_trans_resv_calc(
+> > >  	resp->tr_sb.tr_logres = xfs_calc_sb_reservation(mp);
+> > >  	resp->tr_sb.tr_logcount = XFS_DEFAULT_LOG_COUNT;
+> > >  
+> > > +	/* growdata requires permanent res; it can free space to the last AG */
+> > > +	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
+> > > +	resp->tr_growdata.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
+> > > +	resp->tr_growdata.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> > > +
+> > >  	/* The following transaction are logged in logical format */
+> > >  	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
+> > > -	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
+> > >  	resp->tr_fsyncts.tr_logres = xfs_calc_swrite_reservation(mp);
+> > >  	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
+> > >  	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
+> > > -- 
+> > > 2.17.2
+> > > 
