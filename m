@@ -1,72 +1,162 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37848 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728514AbfDQBjq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Apr 2019 21:39:46 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3H1cSnV097296
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 01:39:45 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2rusnewxjv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 01:39:44 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3H1c9b5048771
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 01:39:44 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2rv2tv31vd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 01:39:44 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3H1dhRi006910
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Apr 2019 01:39:43 GMT
-Subject: [PATCH 0/2] xfs: prevent overflow of delalloc block counters
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 16 Apr 2019 18:39:42 -0700
-Message-ID: <155546518260.176148.16583864799178682873.stgit@magnolia>
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:39205 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725848AbfDQV3x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 17:29:53 -0400
+Date: Thu, 18 Apr 2019 07:29:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/2] xfstests: check for COW overflows in i_delayed_blks
+Message-ID: <20190417212950.GQ29573@dread.disaster.area>
+References: <155546518260.176148.16583864799178682873.stgit@magnolia>
+ <20190417062450.GD114154@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190417062450.GD114154@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+On Tue, Apr 16, 2019 at 11:24:50PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> With the new copy on write functionality it's possible to reserve so
+> much COW space for a file that we end up overflowing i_delayed_blks.
+> The only user-visible effect of this is to cause totally wrong i_blocks
+> output in stat, so check for that.
+....
+> 
+> +	umount $loop_mount > /dev/null 2>&1
+> +	rm -rf $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/reflink
+> +
+> +# real QA test starts here
+> +_supported_os Linux
+> +_supported_fs xfs
+> +_require_scratch_reflink
+> +_require_loop
+> +_require_xfs_debug
+> +
+> +echo "Format and mount"
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount
+> +_require_fs_space $SCRATCH_MNT 2400000	# 100T fs requires ~2.4GB of space
+> +
+> +loop_file=$SCRATCH_MNT/a.img
+> +loop_mount=$SCRATCH_MNT/a
+> +truncate -s 100T $loop_file
+> +$MKFS_XFS_PROG $MKFS_OPTIONS -f $loop_file >> $seqres.full
 
-This series corrects an integer overflow problem in the inode
-i_delayed_blks counter that tracks the number of blocks assigned to the
-in-core inode but not reflected in the on-disk metadata.
+Hmm - that's going to create a 2GB log and zero it, meaning on slow
+devices this is going to take some time.
 
-The first patch widens the in-core dquot to handle block reservations
-counts that are 64 bits in size.  This is a requirement for the second
-patch, which widens i_delayed_blks to 64 bits.
+lodev=$(_create_loop_device $file)
+_mkfs_dev -l size=128m $lodev
 
-This rework is required to handle large amounts of COW staging blocks.
-Right now the only way to trigger it is to set the maximum cow extent
-size hint, reflink a very large (> 16T on a 4k block fs) sparse file,
-and then touch enough blocks to cause the cow reservations to exceed
-2^32 blocks.
 
-This happens because i_delayed_blks tracks both actual delalloc
-reservations in data and cow forks as well as allocated but not yet
-remapped real extents in the cow fork.  The overflow will become more
-practical when the atomic writes patch lands, whenever that is.
+> +mkdir $loop_mount
+> +mount -o loop -t xfs $loop_file $loop_mount
+> +
+> +echo "Create crazy huge file"
+> +touch "${loop_mount}/a"
+> +blksz="$(stat -f -c '%S' "${loop_mount}")"
+> +MAXEXTLEN=2097151	# cowextsize can't be more than MAXEXTLEN
+> +extsize="$(( ((2 ** 32) - 1) / blksz ))"
+> +test "${extsize}" -gt "${MAXEXTLEN}" && extsize="${MAXEXTLEN}"
+> +extsize_bytes="$(( extsize * blksz ))"
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+This is overkill, yes? When is extsize_bytes not equal to MAXEXTLEN
+* blksz on this 100TB filesystem?
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
 
---D
+> +# Set the largest cowextsize we can
+> +$XFS_IO_PROG -c "cowextsize ${extsize_bytes}" "${loop_mount}/a"
+> +set_cowextsize="$($XFS_IO_PROG -c 'cowextsize' "${loop_mount}/a" | sed -e 's/^.\([0-9]*\).*$/\1/g')"
+> +test "${set_cowextsize}" -eq 0 && _fail "could not set cowextsize?"
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=widen-idelayed
+Run the test anyway, even if the cowextsize setting fails. WHo knows
+what random crap will fall out....
 
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=widen-idelayed
+> +statB="$(stat -c '%B' "${loop_mount}/a")"
+> +
+> +# Write a single byte every cowextsize bytes so that we minimize the space
+> +# required to create maximally sized cow reservations
+> +nr="$(( ((2 ** 32) / extsize) + 100 ))"
 
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=widen-idelayed
+What's the magic 2^32 here?
+
+> +seq 0 "${nr}" | tac | while read n; do
+
+seq ${nr} -1 0 | while read n; do
+
+> +	off="$((n * extsize * blksz))"
+> +	$XFS_IO_PROG -c "pwrite ${off} 1" "${loop_mount}/a" > /dev/null
+> +done
+> +
+> +echo "Reflink crazy huge file"
+> +cp --reflink=always "${loop_mount}/a" "${loop_mount}/b"
+> +
+> +echo "COW crazy huge file"
+> +# Try to create enough maximally sized cow reservations to overflow
+> +# i_delayed_blks
+> +seq 0 "${nr}" | tac | while read n; do
+> +	off="$((n * extsize * blksz))"
+> +	$XFS_IO_PROG -c "pwrite ${off} 1" "${loop_mount}/a" > /dev/null
+> +done
+> +
+> +echo "Check crazy huge file"
+> +blocks="$(stat -c '%b' "${loop_mount}/a")"
+> +fsblocks="$((blocks * statB / blksz))"
+> +
+> +# Make sure we got enough COW reservations to overflow a 32-bit counter.
+> +$XFS_IO_PROG -c 'bmap -clpv' "${loop_mount}/a" > $tmp.extents
+> +echo "COW EXTENT STATE" >> $seqres.full
+> +cat $tmp.extents >> $seqres.full
+> +cat > $tmp.awk << ENDL
+> +{
+> +	if (\$3 == "delalloc") {
+> +		x += \$4;
+> +	} else if (\$3 == "hole") {
+> +		;
+> +	} else {
+> +		x += \$6;
+> +	}
+> +}
+> +END {
+> +	printf("%d\\n", x / ($blksz / 512));
+> +}
+> +ENDL
+
+Write that as a filter function and use tee to direct it to
+seqres.full and the filter function at the same time?
+
+> +cat $tmp.awk >> $seqres.full
+> +cowblocks="$(awk -f $tmp.awk $tmp.extents)"
+> +echo "cowblocks is ${cowblocks}" >> $seqres.full
+> +if [ "${cowblocks}" -lt "$((2 ** 32))" ]; then
+> +	echo "cowblocks (${cowblocks}) should be more than 2^32!"
+> +fi
+> +
+> +# And finally, see if i_delayed_blks overflowed.
+> +echo "stat blocks is ${fsblocks}" >> $seqres.full
+> +if [ "${fsblocks}" -lt "$((2 ** 32))" ]; then
+> +	echo "stat blocks (${fsblocks}) should be more than 2^32!"
+> +	if [ "${cowblocks}" -lt "$((2 ** 32))" ]; then
+> +		echo "cowblocks (${cowblocks}) is more than 2^32, your system has overflowed!!!"
+> +	fi
+> +fi
+
+_within_tolerance?
+
+CHeers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
