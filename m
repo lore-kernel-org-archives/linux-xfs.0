@@ -1,170 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:57356 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:49972 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727588AbfDVWBd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Apr 2019 18:01:33 -0400
-Subject: Re: [PATCH 5/9] xfs: Add xfs_attr_set_deferred and
- xfs_attr_remove_deferred
-References: <20190412225036.22939-1-allison.henderson@oracle.com>
- <20190412225036.22939-6-allison.henderson@oracle.com>
- <20190418154911.GC2885@bfoster>
- <8be843b1-7a12-57b5-101a-25485261484a@oracle.com>
- <20190422110127.GB55937@bfoster>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <730071a4-1eeb-b734-e5a1-5eadea7827f5@oracle.com>
-Date: Mon, 22 Apr 2019 15:01:14 -0700
+        with ESMTP id S2388450AbfDRSva (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Apr 2019 14:51:30 -0400
+Date: Thu, 18 Apr 2019 11:51:24 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 39/36] misc: fix strncpy length complaints
+Message-ID: <20190418185124.GA4931@magnolia>
+References: <155259742281.31886.17157720770696604377.stgit@magnolia>
+ <20190320193542.GC1183@magnolia>
+ <a238d47e-3867-8f85-7534-985a6e79058a@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20190422110127.GB55937@bfoster>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a238d47e-3867-8f85-7534-985a6e79058a@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@vger.kernel.org
 
-
-
-On 4/22/19 4:01 AM, Brian Foster wrote:
-> On Thu, Apr 18, 2019 at 02:28:00PM -0700, Allison Henderson wrote:
->> On 4/18/19 8:49 AM, Brian Foster wrote:
->>> On Fri, Apr 12, 2019 at 03:50:32PM -0700, Allison Henderson wrote:
->>>> These routines set up set and start a new deferred attribute
->>>> operation.  These functions are meant to be called by other
->>>> code needing to initiate a deferred attribute operation.  We
->>>> will use these routines later in the parent pointer patches.
->>>>
->>>
->>> We probably don't need to reference the parent pointer stuff any more
->>> for this, right? I'm assuming we'll be converting generic attr
->>> infrastructure over to this mechanism in subsequent patches..?
->>
->> Right, some of these comments are a little stale.  I will clean then up a
->> bit.
->>
->>>
->>>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
->>>> ---
->>>>    fs/xfs/libxfs/xfs_attr.c | 80 ++++++++++++++++++++++++++++++++++++++++++++++++
->>>>    fs/xfs/libxfs/xfs_attr.h |  7 +++++
->>>>    2 files changed, 87 insertions(+)
->>>>
->>>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->>>> index fadd485..c3477fa7 100644
->>>> --- a/fs/xfs/libxfs/xfs_attr.c
->>>> +++ b/fs/xfs/libxfs/xfs_attr.c
-> ...
->>>> @@ -513,6 +560,39 @@ xfs_attr_remove(
->>>>    	return error;
->>>>    }
->>>> +/* Removes an attribute for an inode as a deferred operation */
->>>> +int
->>>> +xfs_attr_remove_deferred(
->>>
->>> Hmm.. I'm kind of wondering if we actually need to defer attr removes.
->>> Do we have the same kind of challenges for attr removal as for attr
->>> creation, or is there some future scenario where this is needed?
->>
->> I suppose we don't have to have it?  The motivation was to help break up the
->> amount of transaction activity that happens on inode create/rename/remove
->> operations once pptrs go in.  Attr remove does not look as complex as attr
->> set, but I suppose it helps to some degree?
->>
+On Thu, Apr 04, 2019 at 04:30:38PM -0500, Eric Sandeen wrote:
+> On 3/20/19 2:35 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Fix a number of complaints about feeding sizeof(dest) directly to
+> > strncpy.  We do this by declaring the char arrays to be one larger
+> > than necessary and subtracting one, to ensure that we never overfill
+> > the buffer.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  mkfs/xfs_mkfs.c |   13 +++++++++++--
+> >  quota/edit.c    |    9 ++++++---
+> >  2 files changed, 17 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > index 9e1c6ec5..e87c692c 100644
+> > --- a/mkfs/xfs_mkfs.c
+> > +++ b/mkfs/xfs_mkfs.c
+> > @@ -3251,8 +3251,17 @@ finish_superblock_setup(
+> >  	struct xfs_mount	*mp,
+> >  	struct xfs_sb		*sbp)
+> >  {
+> > -	if (cfg->label)
+> > -		strncpy(sbp->sb_fname, cfg->label, sizeof(sbp->sb_fname));
+> > +	if (cfg->label) {
+> > +		size_t		label_len;
+> > +
+> > +		/*
+> > +		 * Labels are null terminated unless the string fits exactly
+> > +		 * in the label field, so assume sb_fname is zeroed and then
+> > +		 * do a memcpy because the destination isn't a normal C string.
+> > +		 */
+> > +		label_len = min(sizeof(sbp->sb_fname), strlen(cfg->label));
 > 
-> Ok, this probably needs more thought. On one hand, I'm not a huge fan of
-> using complex infrastructure where not required just because it's there.
-> On the other, it could just be more simple to have consistency between
-> xattr ops. As you note above, perhaps we do want the ability to defer
-> xattr removes so we can use it in particular contexts (parent pointer
-> updates) and not others (direct xattr remove requests from userspace).
-> Perhaps the right thing to do for the time being is to continue on with
-> the support for deferred xattr remove but don't invoke it from the
-> direct xattr remove codepath..?
+> Heh, comparing this to the patch I wrote in <checks notes> December and never
+> sent *cough*, it seems like it might be wise to memset the whole thing to 0,
+> to be sure we're not leaking bytes here and there in a short label?
+> 
+> +               memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
+> 
+> Although, I suppose the prior strncpy had the same issue... *shrug*
 
-We can do this, but it means we need to keep the "roll_trans" boolean 
-for all code paths that want to retain their original functionality, and 
-also still be able to function as a delayed operation too.
+I think the initialization is fine because...
 
-It's not a big deal I suppose.  The remove code path does not have as 
-many uses of the boolean.  But I seem to recall people thinking that the 
-boolean was not particularly elegant, so I was careful to point out that 
-it was going away at the end of the set :-)
+finish_superblock_setup sets fields in *sbp.  It gets *sbp from the top
+of main(), which does:
+
+	struct xfs_mount	mbuf = {};
+	struct xfs_mount	*mp = &mbuf;
+	struct xfs_sb		*sbp = &mp->m_sb;
+
+So assuming the empty mbuf initializer causes the whole stack variable
+to be initialized to zero, we don't need to do a memset here.
 
 > 
-> Note that if we took that approach, we could add a DEBUG option and/or
-> an errortag to (randomly) defer xattr removes in the common path for
-> test coverage purposes.
+> > +		memcpy(sbp->sb_fname, cfg->label, label_len);
+> > +	}
+> >  
+> >  	sbp->sb_dblocks = cfg->dblocks;
+> >  	sbp->sb_rblocks = cfg->rtblocks;
+> > diff --git a/quota/edit.c b/quota/edit.c
+> > index b10a5b34..f9938b8a 100644
+> > --- a/quota/edit.c
+> > +++ b/quota/edit.c
+> > @@ -368,8 +368,7 @@ restore_file(
+> >  	uint		type)
+> >  {
+> >  	char		buffer[512];
+> > -	char		devbuffer[512];
+> > -	char		*dev = NULL;
+> > +	char		dev[512];
+> >  	uint		mask;
+> >  	int		cnt;
+> >  	uint32_t	id;
+> > @@ -377,7 +376,11 @@ restore_file(
+> >  
+> >  	while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+> >  		if (strncmp("fs = ", buffer, 5) == 0) {
+> > -			dev = strncpy(devbuffer, buffer+5, sizeof(devbuffer));
+> > +			/*
+> > +			 * Copy the device name to dev, strip off the trailing
+> > +			 * newline, and move on to the next line.
+> > +			 */
+> > +			strncpy(dev, buffer + 5, sizeof(dev) - 1);
+> >  			dev[strlen(dev) - 1] = '\0';
+> >  			continue;
+> >  		}
+> 
+> Ok.
+> 
+> I had something in io/label.c: label_f() as well.  Do you not get complaints
+> about strncpy(label, optarg, sizeof(label)); ?
 
-Sure, that would be an easy thing to stitch in.  Once parent pointers go 
-in, delayed attrs will get a lot more exorcise since they will be a part 
-of inode create/move/remove too.
-
-Allison
+I do, that's why I changed it...?  io/label.c got changed to shut up the
+warning about the sizeof(firstarg) as the third parameter.
 
 > 
-> Brian
+> I essentially did the same thing as for mkfs, though with my gratuitous
+> memset:
 > 
->>>
->>>> +	struct xfs_inode        *dp,
->>>> +	struct xfs_trans	*tp,
->>>> +	const unsigned char	*name,
->>>> +	unsigned int		namelen,
->>>> +	int                     flags)
->>>> +{
->>>> +
->>>> +	struct xfs_attr_item	*new;
->>>> +	char			*name_value;
->>>> +
->>>> +	if (!namelen) {
->>>> +		ASSERT(0);
->>>> +		return -EFSCORRUPTED;
->>>
->>> Similar comment around -EFSCORRUPTED vs. -EINVAL (or something else..).
->> Ok, I will change to EINVAL here too.
->>
->> Thanks again for the reviews!!  They are very helpful!
->>
->> Allison
->>>
->>> Brian
->>>
->>>> +	}
->>>> +
->>>> +	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, 0), KM_SLEEP|KM_NOFS);
->>>> +	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
->>>> +	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, 0));
->>>> +	new->xattri_ip = dp;
->>>> +	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_REMOVE;
->>>> +	new->xattri_name_len = namelen;
->>>> +	new->xattri_value_len = 0;
->>>> +	new->xattri_flags = flags;
->>>> +	memcpy(name_value, name, namelen);
->>>> +
->>>> +	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
->>>> +
->>>> +	return 0;
->>>> +}
->>>> +
->>>>    /*========================================================================
->>>>     * External routines when attribute list is inside the inode
->>>>     *========================================================================*/
->>>> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
->>>> index 92d9a15..83b3621 100644
->>>> --- a/fs/xfs/libxfs/xfs_attr.h
->>>> +++ b/fs/xfs/libxfs/xfs_attr.h
->>>> @@ -175,5 +175,12 @@ bool xfs_attr_namecheck(const void *name, size_t length);
->>>>    int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
->>>>    			const unsigned char *name, size_t namelen, int flags);
->>>>    int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
->>>> +int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
->>>> +			  const unsigned char *name, unsigned int name_len,
->>>> +			  const unsigned char *value, unsigned int valuelen,
->>>> +			  int flags);
->>>> +int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
->>>> +			    const unsigned char *name, unsigned int namelen,
->>>> +			    int flags);
->>>>    #endif	/* __XFS_ATTR_H__ */
->>>> -- 
->>>> 2.7.4
->>>>
+>                         break;
+>                 case 's':
+> -                       strncpy(label, optarg, sizeof(label));
+> +                       len = min(strlen(optarg), sizeof(label));
+> +                       /* Kernel doesn't care about null termination */
+> +                       memset(label, 0, sizeof(label));
+> +                       memcpy(label, optarg, len);
+>                         break;
+>                 default:
+> 
+
+(FWIW I'm not sure I remember what we were talking about here.)
+
+Anyway, maybe I'll just resend the remaining patches as a rollup since
+this series is already huge.
+
+--D
