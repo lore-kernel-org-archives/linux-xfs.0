@@ -1,125 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:50810 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729395AbfDQRfq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 13:35:46 -0400
-Subject: Re: [PATCH 2/9] xfs: Hold inode locks in xfs_ialloc
-References: <20190412225036.22939-1-allison.henderson@oracle.com>
- <20190412225036.22939-3-allison.henderson@oracle.com>
- <20190417154411.GE16377@bfoster>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <8003c9b3-8b74-c972-05a1-ef8cea4eee74@oracle.com>
-Date: Wed, 17 Apr 2019 10:35:36 -0700
+Received: from bombadil.infradead.org ([198.137.202.133]:40612 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389016AbfDRQSl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Apr 2019 12:18:41 -0400
+Date: Thu, 18 Apr 2019 09:18:34 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v5 1/6] libnvdimm: nd_region flush callback support
+Message-ID: <20190418161833.GA22970@infradead.org>
+References: <20190410040826.24371-1-pagupta@redhat.com>
+ <20190410040826.24371-2-pagupta@redhat.com>
+ <CAPcyv4i1FjBzfcWtzeCvj-giHa9xaX0dMQ==q4LZC_L8VEqkHg@mail.gmail.com>
+ <20190412083230.GA29850@quack2.suse.cz>
+ <x494l73z7th.fsf@segfault.boston.devel.redhat.com>
+ <CAPcyv4jrNHqW3FuGkeo==ZoJr7LKahCv4_esnokfy7enek8=2Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20190417154411.GE16377@bfoster>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4jrNHqW3FuGkeo==ZoJr7LKahCv4_esnokfy7enek8=2Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jeff Moyer <jmoyer@redhat.com>, Jan Kara <jack@suse.cz>, Pankaj Gupta <pagupta@redhat.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, KVM list <kvm@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ross Zwisler <zwisler@kernel.org>, Vishal L Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, Matthew Wilcox <willy@infradead.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Christoph Hellwig <hch@infradead.org>, Len Brown <lenb@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, lcapitulino@redhat.com, Kevin Wolf <kwolf@redhat.com>, Igor Mammedov <imammedo@redhat.com>, Nitesh Narayan Lal <nilal@redhat.com>, Rik van Riel <riel@surriel.com>, Stefan Hajnoczi <stefanha@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Hildenbrand <david@redhat.com>, david <david@fromorbit.com>, cohuck@redhat.com, Xiao Guangrong <xiaoguangrong.eric@gmail.com>, Paolo Bonzini <pbonzini@redhat.com>, kilobyte@angband.pl, yuval shaia <yuval.shaia@oracle.com>
 
-On 4/17/19 8:44 AM, Brian Foster wrote:
-> On Fri, Apr 12, 2019 at 03:50:29PM -0700, Allison Henderson wrote:
->> Modify xfs_ialloc to hold locks after return.  Caller
->> will be responsible for manual unlock.  We will need
->> this later to hold locks across parent pointer operations
->>
->> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
->> ---
+On Thu, Apr 18, 2019 at 09:05:05AM -0700, Dan Williams wrote:
+> > > I'd either add a comment about avoiding retpoline overhead here or just
+> > > make ->flush == NULL mean generic_nvdimm_flush(). Just so that people don't
+> > > get confused by the code.
+> >
+> > Isn't this premature optimization?  I really don't like adding things
+> > like this without some numbers to show it's worth it.
 > 
-> Is this needed for this series, or can it be deferred to the parent
-> pointer stuff? (If it is needed now, it might be a good idea to update
-> the commit log to explain why.)
+> I don't think it's premature given this optimization technique is
+> already being deployed elsewhere, see:
 > 
-> Brian
+> https://lwn.net/Articles/774347/
 
-I think I can defer this one.  I seem to be able to take it out and 
-still get through the attribute test group, so I don't think it's really 
-having an effect just yet.  I will save it for the pptr series then. 
-Thanks!
-
-Allison
-
-> 
->>   fs/xfs/xfs_inode.c   | 6 +++++-
->>   fs/xfs/xfs_qm.c      | 1 +
->>   fs/xfs/xfs_symlink.c | 3 +++
->>   3 files changed, 9 insertions(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
->> index f643a92..30a3130 100644
->> --- a/fs/xfs/xfs_inode.c
->> +++ b/fs/xfs/xfs_inode.c
->> @@ -744,6 +744,8 @@ xfs_lookup(
->>    * to attach to or associate with (i.e. pip == NULL) because they
->>    * are not linked into the directory structure - they are attached
->>    * directly to the superblock - and so have no parent.
->> + *
->> + * Caller is responsible for unlocking the inode manually upon return
->>    */
->>   static int
->>   xfs_ialloc(
->> @@ -942,7 +944,7 @@ xfs_ialloc(
->>   	/*
->>   	 * Log the new values stuffed into the inode.
->>   	 */
->> -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
->> +	xfs_trans_ijoin(tp, ip, 0);
->>   	xfs_trans_log_inode(tp, ip, flags);
->>   
->>   	/* now that we have an i_mode we can setup the inode structure */
->> @@ -1264,6 +1266,7 @@ xfs_create(
->>   	xfs_qm_dqrele(pdqp);
->>   
->>   	*ipp = ip;
->> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->>   	return 0;
->>   
->>    out_trans_cancel:
->> @@ -1359,6 +1362,7 @@ xfs_create_tmpfile(
->>   	xfs_qm_dqrele(pdqp);
->>   
->>   	*ipp = ip;
->> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->>   	return 0;
->>   
->>    out_trans_cancel:
->> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
->> index 52ed790..69006e5 100644
->> --- a/fs/xfs/xfs_qm.c
->> +++ b/fs/xfs/xfs_qm.c
->> @@ -820,6 +820,7 @@ xfs_qm_qino_alloc(
->>   	}
->>   	if (need_alloc)
->>   		xfs_finish_inode_setup(*ip);
->> +	xfs_iunlock(*ip, XFS_ILOCK_EXCL);
->>   	return error;
->>   }
->>   
->> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
->> index b2c1177..13d31fe 100644
->> --- a/fs/xfs/xfs_symlink.c
->> +++ b/fs/xfs/xfs_symlink.c
->> @@ -353,6 +353,7 @@ xfs_symlink(
->>   	xfs_qm_dqrele(pdqp);
->>   
->>   	*ipp = ip;
->> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->>   	return 0;
->>   
->>   out_trans_cancel:
->> @@ -374,6 +375,8 @@ xfs_symlink(
->>   
->>   	if (unlock_dp_on_error)
->>   		xfs_iunlock(dp, XFS_ILOCK_EXCL);
->> +	if (ip)
->> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
->>   	return error;
->>   }
->>   
->> -- 
->> 2.7.4
->>
+For one this one was backed by numbers, and second after feedback
+from Linux we switched to the NULL pointer check instead.
