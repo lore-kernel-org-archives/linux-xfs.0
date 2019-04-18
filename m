@@ -1,114 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52840 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731160AbfDWCvO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Apr 2019 22:51:14 -0400
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V3] block: clarify that bio_add_page() and related helpers can add multi pages
-Date: Tue, 23 Apr 2019 10:51:04 +0800
-Message-Id: <20190423025104.3843-1-ming.lei@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:42380 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725887AbfDRXjQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Apr 2019 19:39:16 -0400
+Date: Thu, 18 Apr 2019 16:39:12 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/3] xfs: add online scrub/repair for superblock counters
+Message-ID: <20190418233912.GB4787@magnolia>
+References: <155546519998.176278.8300210828717055034.stgit@magnolia>
+ <155546522160.176278.12189319767486072198.stgit@magnolia>
+ <20190417223052.GU29573@dread.disaster.area>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190417223052.GU29573@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-
-bio_add_page() and __bio_add_page() are capable of adding pages into
-bio, and now we have at least two such usages alreay:
-
-	- __bio_iov_bvec_add_pages()
-	- nvmet_bdev_execute_rw().
-
-So update comments on these two helpers.
-
-The thing is a bit special for __bio_try_merge_page(), given the caller
-needs to know if the new added page is same with the last added page,
-then it isn't safe to pass multi-page in case that 'same_page' is true,
-so adds warning on potential misuse, and updates comment on
-__bio_try_merge_page().
-
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>
-Reviewed-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
-V3:
-	- fix build failure caused by rebase via 'patch -p1 <'
-V2:
-	- add Reviewed-by tag
-	- rebase on latest for-5.2/block
- block/bio.c | 26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 5959141d4e46..c81ed2dfee53 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -667,6 +667,8 @@ static inline bool page_is_mergeable(const struct bio_vec *bv,
- 			return false;
- 	}
- 
-+	WARN_ON_ONCE(same_page && (len + off) > PAGE_SIZE);
-+
- 	return true;
- }
- 
-@@ -786,9 +788,9 @@ EXPORT_SYMBOL(bio_add_pc_page);
- /**
-  * __bio_try_merge_page - try appending data to an existing bvec.
-  * @bio: destination bio
-- * @page: page to add
-+ * @page: start page to add
-  * @len: length of the data to add
-- * @off: offset of the data in @page
-+ * @off: offset of the data relative to @page
-  * @same_page: if %true only merge if the new data is in the same physical
-  *		page as the last segment of the bio.
-  *
-@@ -796,6 +798,8 @@ EXPORT_SYMBOL(bio_add_pc_page);
-  * a useful optimisation for file systems with a block size smaller than the
-  * page size.
-  *
-+ * Warn if (@len, @off) crosses pages in case that @same_page is true.
-+ *
-  * Return %true on success or %false on failure.
-  */
- bool __bio_try_merge_page(struct bio *bio, struct page *page,
-@@ -818,11 +822,11 @@ bool __bio_try_merge_page(struct bio *bio, struct page *page,
- EXPORT_SYMBOL_GPL(__bio_try_merge_page);
- 
- /**
-- * __bio_add_page - add page to a bio in a new segment
-+ * __bio_add_page - add page(s) to a bio in a new segment
-  * @bio: destination bio
-- * @page: page to add
-- * @len: length of the data to add
-- * @off: offset of the data in @page
-+ * @page: start page to add
-+ * @len: length of the data to add, may cross pages
-+ * @off: offset of the data relative to @page, may cross pages
-  *
-  * Add the data at @page + @off to @bio as a new bvec.  The caller must ensure
-  * that @bio has space for another bvec.
-@@ -845,13 +849,13 @@ void __bio_add_page(struct bio *bio, struct page *page,
- EXPORT_SYMBOL_GPL(__bio_add_page);
- 
- /**
-- *	bio_add_page	-	attempt to add page to bio
-+ *	bio_add_page	-	attempt to add page(s) to bio
-  *	@bio: destination bio
-- *	@page: page to add
-- *	@len: vec entry length
-- *	@offset: vec entry offset
-+ *	@page: start page to add
-+ *	@len: vec entry length, may cross pages
-+ *	@offset: vec entry offset relative to @page, may cross pages
-  *
-- *	Attempt to add a page to the bio_vec maplist. This will only fail
-+ *	Attempt to add page(s) to the bio_vec maplist. This will only fail
-  *	if either bio->bi_vcnt == bio->bi_max_vecs or it's a cloned bio.
-  */
- int bio_add_page(struct bio *bio, struct page *page,
--- 
-2.9.5
+[This reply is only about the thresholding stuff...]
+
+On Thu, Apr 18, 2019 at 08:30:52AM +1000, Dave Chinner wrote:
+> On Tue, Apr 16, 2019 at 06:40:21PM -0700, Darrick J. Wong wrote:
+
+<snip>
+
+> > +/*
+> > + * Is the @counter within an acceptable range of @expected?
+> > + *
+> > + * Currently that means 1/16th (6%) or @nr_range of the @expected value.
+> > + */
+> 
+> 6% is a lot for large filesystems, especially for block counts. That
+> can be entire AGs missing. I suspect the tolerance should be
+> related to AG count in some way....
+
+Agreed, 6% is a lot, especially since that's large enough to swallow
+several entire AGs.  The other approach (which I've also been testing)
+is that we base the threshold on the delta between the
+percpu_counter_sum at the start of xchk_fscounters and the second call
+in _within_range -- the more that it changes while we're racing to
+compute the expected value, the more we let the counter be off by, with
+some minimum amount of variance that we tolerate.
+
+Prior to this review, the runtime of the _calc function varied quite a
+bit when the fs was running a heavy load because of buffer lock
+contention, which made the amount of variance fairly unstable even with
+a fairly steady IO load on the filesystem, so I sent the simpler
+version.
+
+However, your suggestion of using only the incore perag counters cuts
+the runtime down to nearly zero even on crazy-agcount filesystems since
+that cuts the synchronization overhead way down, which means that the
+counter variance has stabilized and no longer seems quite so crazy of a
+way to do it.
+
+Now we have:
+
+counter = percpu_counter_sum()
+range = min(512, 2 * (old_counter - counter))
+counter >= (expected - range) && counter <= (expected + range)
+
+Granted that 1024 (now 512) value that I use now is more or less
+arbitrarily picked to prevent complaints while providing a solid check
+that we're at least in the ballpark.
+
+Patches soon,
+
+--D
+
+> > +static inline bool
+> > +xchk_fscounter_within_range(
+> > +	struct xfs_scrub	*sc,
+> > +	struct percpu_counter	*counter,
+> > +	uint64_t		expected,
+> > +	uint64_t		nr_range)
+> > +{
+> > +	int64_t			value = percpu_counter_sum(counter);
+> > +	uint64_t		range;
+> > +
+> > +	range = max_t(uint64_t, expected >> 4, nr_range);
+> > +	if (value < 0)
+> > +		return false;
+> > +	if (range < expected && value < expected - range)
+> > +		return false;
+> > +	if ((int64_t)(expected + range) >= 0 && value > expected + range)
+> > +		return false;
+> > +	return true;
+> > +}
+> > +
+> > +/* Check the superblock counters. */
+> > +int
+> > +xchk_fscounters(
+> > +	struct xfs_scrub	*sc)
+> > +{
+> > +	struct xfs_mount	*mp = sc->mp;
+> > +	struct xchk_fscounters	*fsc = sc->buf;
+> > +	int64_t			icount, ifree, fdblocks;
+> > +	int			error;
+> > +
+> > +	icount = percpu_counter_sum(&sc->mp->m_icount);
+> > +	ifree = percpu_counter_sum(&sc->mp->m_ifree);
+> > +	fdblocks = percpu_counter_sum(&sc->mp->m_fdblocks);
+> 
+> We have a local mp var in this function :)
+> 
+> > +
+> > +	if (icount < 0 || ifree < 0 || fdblocks < 0)
+> > +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> > +
+> > +	/* See if icount is obviously wrong. */
+> > +	if (!xfs_verify_icount(mp, icount))
+> > +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> > +
+> > +	/* See if fdblocks / ifree are obviously wrong. */
+> > +	if (fdblocks > mp->m_sb.sb_dblocks)
+> > +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> > +	if (ifree > icount)
+> > +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> > +
+> > +	/* If we already know it's bad, we can skip the AG iteration. */
+> > +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> > +		return 0;
+> > +
+> > +	/* Counters seem ok, but let's count them. */
+> > +	error = xchk_fscounters_calc(sc, fsc);
+> > +	if (!xchk_process_error(sc, 0, XFS_SB_BLOCK(sc->mp), &error))
+> > +		return error;
+> > +
+> > +	/*
+> > +	 * Compare the in-core counters with whatever we counted.  We'll
+> > +	 * consider the inode counts ok if they're within 1024 inodes, and the
+> > +	 * free block counts if they're within 1/64th of the filesystem size.
+> > +	 */
+> > +	if (!xchk_fscounter_within_range(sc, &mp->m_icount, fsc->icount, 1024))
+> > +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> 
+> We've already summed the percpu counters at this point - why do we
+> pass them into xchk_fscounter_within_range() and them sum them
+> again?
+> 
+> Also, what's the magic 1024 here?
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
