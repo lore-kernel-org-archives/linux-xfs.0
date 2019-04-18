@@ -1,241 +1,227 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:34326 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727588AbfDVWBl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Apr 2019 18:01:41 -0400
-Subject: Re: [PATCH 7/9] xfs: Add attr context to log item
+Received: from aserp2130.oracle.com ([141.146.126.79]:60650 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728264AbfDRV2T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Apr 2019 17:28:19 -0400
+Subject: Re: [PATCH 5/9] xfs: Add xfs_attr_set_deferred and
+ xfs_attr_remove_deferred
 References: <20190412225036.22939-1-allison.henderson@oracle.com>
- <20190412225036.22939-8-allison.henderson@oracle.com>
- <20190422130338.GB56876@bfoster>
+ <20190412225036.22939-6-allison.henderson@oracle.com>
+ <20190418154911.GC2885@bfoster>
 From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <e60582d4-289d-92be-21d0-1d83d37bbd22@oracle.com>
-Date: Mon, 22 Apr 2019 15:01:27 -0700
+Message-ID: <8be843b1-7a12-57b5-101a-25485261484a@oracle.com>
+Date: Thu, 18 Apr 2019 14:28:00 -0700
 MIME-Version: 1.0
-In-Reply-To: <20190422130338.GB56876@bfoster>
+In-Reply-To: <20190418154911.GC2885@bfoster>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-
-
-On 4/22/19 6:03 AM, Brian Foster wrote:
-> On Fri, Apr 12, 2019 at 03:50:34PM -0700, Allison Henderson wrote:
->> This patch modifies xfs_attr_item to store a xfs_da_args, a xfs_buf pointer
->> and a new state type. We will use these in the next patch when
->> we modify xfs_set_attr_args to roll transactions by returning EAGAIN.
->> Because the subroutines of this function modify the contents of these
->> structures, we need to find a place to store them where they remain
->> instantiated across multiple calls to xfs_set_attr_args.
+On 4/18/19 8:49 AM, Brian Foster wrote:
+> On Fri, Apr 12, 2019 at 03:50:32PM -0700, Allison Henderson wrote:
+>> These routines set up set and start a new deferred attribute
+>> operation.  These functions are meant to be called by other
+>> code needing to initiate a deferred attribute operation.  We
+>> will use these routines later in the parent pointer patches.
 >>
+> 
+> We probably don't need to reference the parent pointer stuff any more
+> for this, right? I'm assuming we'll be converting generic attr
+> infrastructure over to this mechanism in subsequent patches..?
+
+Right, some of these comments are a little stale.  I will clean then up 
+a bit.
+
+> 
 >> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 >> ---
+>>   fs/xfs/libxfs/xfs_attr.c | 80 ++++++++++++++++++++++++++++++++++++++++++++++++
+>>   fs/xfs/libxfs/xfs_attr.h |  7 +++++
+>>   2 files changed, 87 insertions(+)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>> index fadd485..c3477fa7 100644
+>> --- a/fs/xfs/libxfs/xfs_attr.c
+>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>> @@ -30,6 +30,7 @@
+>>   #include "xfs_trans_space.h"
+>>   #include "xfs_trace.h"
+>>   #include "xfs_attr_item.h"
+>> +#include "xfs_attr.h"
+>>   
+>>   /*
+>>    * xfs_attr.c
+>> @@ -429,6 +430,52 @@ xfs_attr_set(
+>>   	goto out_unlock;
+>>   }
+>>   
+>> +/* Sets an attribute for an inode as a deferred operation */
+>> +int
+>> +xfs_attr_set_deferred(
+>> +	struct xfs_inode	*dp,
+>> +	struct xfs_trans	*tp,
+>> +	const unsigned char	*name,
+>> +	unsigned int		namelen,
+>> +	const unsigned char	*value,
+>> +	unsigned int		valuelen,
+>> +	int			flags)
+>> +{
+>> +
+>> +	struct xfs_attr_item	*new;
+>> +	char			*name_value;
+>> +
+>> +	/*
+>> +	 * All set operations must have a name
+>> +	 * but not necessarily a value.
+>> +	 * Generic 062
 > 
-> I see Darrick has already commented on the whole state thing. I'll
-> probably have to grok the next patch to comment further, but just a
-> couple initial thoughts:
-> 
-> First, I hit a build failure with this patch. It looks like there's a
-> missed include in the scrub code:
-> 
->    ...
->    CC [M]  fs/xfs/scrub/repair.o
-> In file included from fs/xfs/scrub/repair.c:32:
-> fs/xfs/libxfs/xfs_attr.h:105:21: error: field ‘xattri_args’ has incomplete type
->    struct xfs_da_args xattri_args;   /* args context */
-Hmm, ok.  I'll get that corrected, I probably need to clean out my 
-workspace and build from scratch.
+> Comment formatting, also looks like there's some stale text or
+> something.
+I think I left that as a reminder to myself at one point and forgot to 
+take it out :-)  I believe there was some discussion in earlier reviews 
+about checking both name and value length, but later I ran into test 
+cases that expect to be able to set an attribute with no value, so I 
+guess not.  In any case, I will clean up the commentary here.
 
->    ...
 > 
-> Second, the commit log suggests that the states will reflect the current
-> transaction roll points (i.e., establishing re-entry points down in
-> xfs_attr_set_args(). I'm kind of wondering if we should break these
-> xattr set sub-sequences down into smaller helper functions (refactoring
-> the existing code as we go) such that the mechanism could technically be
-> used deferred or not. Re: the previous thought on whether to defer xattr
-> removes or not, there might also be cases where there's not a need to
-> defer xattr sets.
+>> +	 */
+>> +	if (!namelen) {
+>> +		ASSERT(0);
+>> +		return -EFSCORRUPTED;
 > 
-> E.g., taking a quick peek into the next patch, the state 1 case in
-> xfs_attr_try_sf_addname() is actually a transaction commit, which I
-> think means we're done. We'd have done an attr memory allocation,
-> deferred op and transaction roll where none was necessary so it might
-> not be worth it to defer in that scenario. Hmm, it also looks like we
-> return -EAGAIN in places where we've not actually done any work, like if
-> a shortform add attempt returns -ENOSPC (or the -EAGAIN return before we
-> even attempt the sf add). That kind of looks like a waste of transaction
-> rolls and further suggests it might be cleaner to break this whole path
-> down into helpers and put it back together in a way more conducive to
-> deferred operations.
+> This is essentially a requested operation from userspace, right? If so,
+> I'd think -EINVAL or something makes more sense than -EFSCORRUPTED.
 
-Yes, this area is a bit of a wart the way it is right now.  I think 
-you're right in that ultimately we may end up having to do a lot of 
-refactoring in order to have more efficient "re-entry points".  The 
-state machine is hard to get into subroutines, so it's limited in use in 
-the top level function.
+Yeah, I think initially the plan was to have only parent pointers use 
+the defer operations, but since now we are using them for all attr 
+operations, it should probably be EINVAL.
 
-I was also starting to wonder if maybe I could do some refactoring in 
-xfs_defer_finish_noroll to capture the common code associated with the 
--EAGAIN handling.  Then maybe we could make a function pointer that we 
-can pass through the finish_item interface.  The idea being that 
-subroutines could use the function pointer to cycle out the transaction 
-when needed instead of having to record states and back out like this. 
-It'd be a new parameter to pipe around, but it'd be more efficient than 
-the state machine, and less surgery in the refactor.  And maybe a 
-blessing to any other operations that might need to go through this 
-transition in the future.  Thoughts?
+> 
+>> +	}
+>> +
+>> +	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, valuelen),
+>> +			 KM_SLEEP|KM_NOFS);
+> 
+> This could get interesting with larger attrs (up to 64k IIRC). We might
+> want to consider kmem_alloc_large().
 
-Thanks again for the reviews!
+Thats a good point, I'll move it to the larger allocation.  Maybe I can 
+make a test case for it as well.
+
+> 
+>> +	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
+>> +	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, valuelen));
+>> +	new->xattri_ip = dp;
+>> +	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_SET;
+>> +	new->xattri_name_len = namelen;
+>> +	new->xattri_value_len = valuelen;
+>> +	new->xattri_flags = flags;
+>> +	memcpy(&name_value[0], name, namelen);
+> 
+> name_value is just a char pointer. Do we need the whole array index just
+> to deref thing here? Meh, I guess it's consistent with the value copy
+> below. No big deal.
+It's not needed.  I guess it just looks a little more consistent since 
+we have things getting copied out at different offsets in the buffer.
+
+> 
+>> +	new->xattri_name = name_value;
+>> +	new->xattri_value = name_value + namelen;
+>> +
+>> +	if (valuelen > 0)
+>> +		memcpy(&name_value[namelen], value, valuelen);
+>> +
+>> +	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>   /*
+>>    * Generic handler routine to remove a name from an attribute list.
+>>    * Transitions attribute list from Btree to shortform as necessary.
+>> @@ -513,6 +560,39 @@ xfs_attr_remove(
+>>   	return error;
+>>   }
+>>   
+>> +/* Removes an attribute for an inode as a deferred operation */
+>> +int
+>> +xfs_attr_remove_deferred(
+> 
+> Hmm.. I'm kind of wondering if we actually need to defer attr removes.
+> Do we have the same kind of challenges for attr removal as for attr
+> creation, or is there some future scenario where this is needed?
+
+I suppose we don't have to have it?  The motivation was to help break up 
+the amount of transaction activity that happens on inode 
+create/rename/remove operations once pptrs go in.  Attr remove does not 
+look as complex as attr set, but I suppose it helps to some degree?
+
+> 
+>> +	struct xfs_inode        *dp,
+>> +	struct xfs_trans	*tp,
+>> +	const unsigned char	*name,
+>> +	unsigned int		namelen,
+>> +	int                     flags)
+>> +{
+>> +
+>> +	struct xfs_attr_item	*new;
+>> +	char			*name_value;
+>> +
+>> +	if (!namelen) {
+>> +		ASSERT(0);
+>> +		return -EFSCORRUPTED;
+> 
+> Similar comment around -EFSCORRUPTED vs. -EINVAL (or something else..).
+Ok, I will change to EINVAL here too.
+
+Thanks again for the reviews!!  They are very helpful!
 
 Allison
-
 > 
 > Brian
 > 
-> 
->>   fs/xfs/libxfs/xfs_attr.h | 18 +++++++++++++++++-
->>   fs/xfs/scrub/common.c    |  2 ++
->>   fs/xfs/xfs_acl.c         |  2 ++
->>   fs/xfs/xfs_attr_item.c   |  2 +-
->>   fs/xfs/xfs_ioctl.c       |  2 ++
->>   fs/xfs/xfs_ioctl32.c     |  2 ++
->>   fs/xfs/xfs_iops.c        |  1 +
->>   fs/xfs/xfs_xattr.c       |  1 +
->>   8 files changed, 28 insertions(+), 2 deletions(-)
->>
+>> +	}
+>> +
+>> +	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, 0), KM_SLEEP|KM_NOFS);
+>> +	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
+>> +	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, 0));
+>> +	new->xattri_ip = dp;
+>> +	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_REMOVE;
+>> +	new->xattri_name_len = namelen;
+>> +	new->xattri_value_len = 0;
+>> +	new->xattri_flags = flags;
+>> +	memcpy(name_value, name, namelen);
+>> +
+>> +	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>   /*========================================================================
+>>    * External routines when attribute list is inside the inode
+>>    *========================================================================*/
 >> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
->> index 974c963..4ce3b0a 100644
+>> index 92d9a15..83b3621 100644
 >> --- a/fs/xfs/libxfs/xfs_attr.h
 >> +++ b/fs/xfs/libxfs/xfs_attr.h
->> @@ -77,6 +77,13 @@ typedef struct attrlist_ent {	/* data from attr_list() */
->>   	char	a_name[1];	/* attr name (NULL terminated) */
->>   } attrlist_ent_t;
+>> @@ -175,5 +175,12 @@ bool xfs_attr_namecheck(const void *name, size_t length);
+>>   int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
+>>   			const unsigned char *name, size_t namelen, int flags);
+>>   int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+>> +int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
+>> +			  const unsigned char *name, unsigned int name_len,
+>> +			  const unsigned char *value, unsigned int valuelen,
+>> +			  int flags);
+>> +int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
+>> +			    const unsigned char *name, unsigned int namelen,
+>> +			    int flags);
 >>   
->> +/* Attr state machine types */
->> +enum xfs_attr_state {
->> +	XFS_ATTR_STATE1 = 1,
->> +	XFS_ATTR_STATE2 = 2,
->> +	XFS_ATTR_STATE3 = 3,
->> +};
->> +
->>   /*
->>    * List of attrs to commit later.
->>    */
->> @@ -88,7 +95,16 @@ struct xfs_attr_item {
->>   	void		  *xattri_name;	      /* attr name */
->>   	uint32_t	  xattri_name_len;    /* length of name */
->>   	uint32_t	  xattri_flags;       /* attr flags */
->> -	struct list_head  xattri_list;
->> +
->> +	/*
->> +	 * Delayed attr parameters that need to remain instantiated
->> +	 * across transaction rolls during the defer finish
->> +	 */
->> +	struct xfs_buf		*xattri_leaf_bp;  /* Leaf buf to release */
->> +	enum xfs_attr_state	xattri_state;	  /* state machine marker */
->> +	struct xfs_da_args	xattri_args;	  /* args context */
->> +
->> +	struct list_head	xattri_list;
->>   
->>   	/*
->>   	 * A byte array follows the header containing the file name and
->> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
->> index 0c54ff5..270c32e 100644
->> --- a/fs/xfs/scrub/common.c
->> +++ b/fs/xfs/scrub/common.c
->> @@ -30,6 +30,8 @@
->>   #include "xfs_rmap_btree.h"
->>   #include "xfs_log.h"
->>   #include "xfs_trans_priv.h"
->> +#include "xfs_da_format.h"
->> +#include "xfs_da_btree.h"
->>   #include "xfs_attr.h"
->>   #include "xfs_reflink.h"
->>   #include "scrub/xfs_scrub.h"
->> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
->> index 142de8d..9b1b93e 100644
->> --- a/fs/xfs/xfs_acl.c
->> +++ b/fs/xfs/xfs_acl.c
->> @@ -10,6 +10,8 @@
->>   #include "xfs_mount.h"
->>   #include "xfs_inode.h"
->>   #include "xfs_acl.h"
->> +#include "xfs_da_format.h"
->> +#include "xfs_da_btree.h"
->>   #include "xfs_attr.h"
->>   #include "xfs_trace.h"
->>   #include <linux/slab.h>
->> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
->> index 0ea19b4..36e6d1e 100644
->> --- a/fs/xfs/xfs_attr_item.c
->> +++ b/fs/xfs/xfs_attr_item.c
->> @@ -19,10 +19,10 @@
->>   #include "xfs_rmap.h"
->>   #include "xfs_inode.h"
->>   #include "xfs_icache.h"
->> -#include "xfs_attr.h"
->>   #include "xfs_shared.h"
->>   #include "xfs_da_format.h"
->>   #include "xfs_da_btree.h"
->> +#include "xfs_attr.h"
->>   
->>   static inline struct xfs_attri_log_item *ATTRI_ITEM(struct xfs_log_item *lip)
->>   {
->> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->> index ab341d6..c8728ca 100644
->> --- a/fs/xfs/xfs_ioctl.c
->> +++ b/fs/xfs/xfs_ioctl.c
->> @@ -16,6 +16,8 @@
->>   #include "xfs_rtalloc.h"
->>   #include "xfs_itable.h"
->>   #include "xfs_error.h"
->> +#include "xfs_da_format.h"
->> +#include "xfs_da_btree.h"
->>   #include "xfs_attr.h"
->>   #include "xfs_bmap.h"
->>   #include "xfs_bmap_util.h"
->> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
->> index 5001dca..23f6990 100644
->> --- a/fs/xfs/xfs_ioctl32.c
->> +++ b/fs/xfs/xfs_ioctl32.c
->> @@ -21,6 +21,8 @@
->>   #include "xfs_fsops.h"
->>   #include "xfs_alloc.h"
->>   #include "xfs_rtalloc.h"
->> +#include "xfs_da_format.h"
->> +#include "xfs_da_btree.h"
->>   #include "xfs_attr.h"
->>   #include "xfs_ioctl.h"
->>   #include "xfs_ioctl32.h"
->> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->> index e73c21a..561c467 100644
->> --- a/fs/xfs/xfs_iops.c
->> +++ b/fs/xfs/xfs_iops.c
->> @@ -17,6 +17,7 @@
->>   #include "xfs_acl.h"
->>   #include "xfs_quota.h"
->>   #include "xfs_error.h"
->> +#include "xfs_da_btree.h"
->>   #include "xfs_attr.h"
->>   #include "xfs_trans.h"
->>   #include "xfs_trace.h"
->> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
->> index 3013746..938e81d 100644
->> --- a/fs/xfs/xfs_xattr.c
->> +++ b/fs/xfs/xfs_xattr.c
->> @@ -11,6 +11,7 @@
->>   #include "xfs_mount.h"
->>   #include "xfs_da_format.h"
->>   #include "xfs_inode.h"
->> +#include "xfs_da_btree.h"
->>   #include "xfs_attr.h"
->>   #include "xfs_attr_leaf.h"
->>   #include "xfs_acl.h"
+>>   #endif	/* __XFS_ATTR_H__ */
 >> -- 
 >> 2.7.4
 >>
