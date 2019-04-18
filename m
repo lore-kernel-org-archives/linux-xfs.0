@@ -1,113 +1,286 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:58678 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725848AbfDQWnO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 18:43:14 -0400
-Date: Wed, 17 Apr 2019 15:43:06 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:41164 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729446AbfDRAcV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 20:32:21 -0400
+Date: Wed, 17 Apr 2019 17:32:15 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: kill the xfs_dqtrx_t typedef
-Message-ID: <20190417224306.GC5072@magnolia>
+Subject: Re: [PATCH 3/3] xfs: add online scrub/repair for superblock counters
+Message-ID: <20190418003215.GE5072@magnolia>
+References: <155546519998.176278.8300210828717055034.stgit@magnolia>
+ <155546522160.176278.12189319767486072198.stgit@magnolia>
+ <20190417223052.GU29573@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190417223052.GU29573@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Apr 18, 2019 at 08:30:52AM +1000, Dave Chinner wrote:
+> On Tue, Apr 16, 2019 at 06:40:21PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Teach online scrub and repair how to check and reset the superblock
+> > inode and block counters.  The AG rebuilding functions will need these
+> > to adjust the counts if they need to change as a part of recovering from
+> > corruption.  We must use the repair freeze mechanism to prevent any
+> > other changes while we do this.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> .....
+> > +/*
+> > + * FS Summary Counters
+> > + * ===================
+> > + *
+> > + * The basics of filesystem summary counter checking are that we iterate the
+> > + * AGs counting the number of free blocks, free space btree blocks, per-AG
+> > + * reservations, inodes, delayed allocation reservations, and free inodes.
+> > + * Then we compare what we computed against the in-core counters.
+> > + *
+> > + * However, the reality is that summary counters are a tricky beast to check.
+> > + * While we /could/ freeze the filesystem and scramble around the AGs counting
+> > + * the free blocks, in practice we prefer not do that for a scan because
+> > + * freezing is costly.  To get around this, we added a per-cpu counter of the
+> > + * delalloc reservations so that we can rotor around the AGs relatively
+> > + * quickly, and we allow the counts to be slightly off because we're not
+> > + * taking any locks while we do this.
+> > + */
+> > +
+> > +int
+> > +xchk_setup_fscounters(
+> > +	struct xfs_scrub	*sc,
+> > +	struct xfs_inode	*ip)
+> > +{
+> > +	sc->buf = kmem_zalloc(sizeof(struct xchk_fscounters), KM_SLEEP);
+> > +	if (!sc->buf)
+> > +		return -ENOMEM;
+> > +
+> > +	/*
+> > +	 * Pause background reclaim while we're scrubbing to reduce the
+> > +	 * likelihood of background perturbations to the counters throwing
+> > +	 * off our calculations.
+> > +	 */
+> > +	xchk_disable_reclaim(sc);
+> 
+> Naming :)
 
-There's only a few uses left, so just kill the typedef while we're at
-it.
+Fixed.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_quota.h       |    4 ++--
- fs/xfs/xfs_trans_dquot.c |   28 ++++++++++++++--------------
- 2 files changed, 16 insertions(+), 16 deletions(-)
+> > +
+> > +	return xchk_trans_alloc(sc, 0);
+> > +}
+> > +
+> > +/*
+> > + * Calculate what the global in-core counters ought to be from the AG header
+> > + * contents.  Callers can compare this to the actual in-core counters to
+> > + * calculate by how much both in-core and on-disk counters need to be
+> > + * adjusted.
+> > + */
+> > +STATIC int
+> > +xchk_fscounters_calc(
+> > +	struct xfs_scrub	*sc,
+> > +	struct xchk_fscounters	*fsc)
+> > +{
+> > +	struct xfs_mount	*mp = sc->mp;
+> > +	struct xfs_buf		*agi_bp;
+> > +	struct xfs_buf		*agf_bp;
+> > +	struct xfs_agi		*agi;
+> > +	struct xfs_agf		*agf;
+> > +	struct xfs_perag	*pag;
+> > +	uint64_t		delayed;
+> > +	xfs_agnumber_t		agno;
+> > +	int			error;
+> > +
+> > +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> > +		/* Lock both AG headers. */
+> > +		error = xfs_ialloc_read_agi(mp, sc->tp, agno, &agi_bp);
+> > +		if (error)
+> > +			return error;
+> > +		error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, &agf_bp);
+> > +		if (error)
+> > +			return error;
+> > +		if (!agf_bp)
+> > +			return -ENOMEM;
+> > +
+> > +		/* Count all the inodes */
+> > +		agi = XFS_BUF_TO_AGI(agi_bp);
+> > +		fsc->icount += be32_to_cpu(agi->agi_count);
+> > +		fsc->ifree += be32_to_cpu(agi->agi_freecount);
+> > +
+> > +		/* Add up the free/freelist/bnobt/cntbt blocks */
+> > +		agf = XFS_BUF_TO_AGF(agf_bp);
+> > +		fsc->fdblocks += be32_to_cpu(agf->agf_freeblks);
+> > +		fsc->fdblocks += be32_to_cpu(agf->agf_flcount);
+> > +		fsc->fdblocks += be32_to_cpu(agf->agf_btreeblks);
+> > +
+> > +		/*
+> > +		 * Per-AG reservations are taken out of the incore counters,
+> > +		 * so they must be left out of the free blocks computation.
+> > +		 */
+> > +		pag = xfs_perag_get(mp, agno);
+> > +		fsc->fdblocks -= pag->pag_meta_resv.ar_reserved;
+> > +		fsc->fdblocks -= pag->pag_rmapbt_resv.ar_orig_reserved;
+> > +		xfs_perag_put(pag);
+> > +
+> > +		xfs_trans_brelse(sc->tp, agf_bp);
+> > +		xfs_trans_brelse(sc->tp, agi_bp);
+> > +	}
+> 
+> Hmmmm. Do we have all these counters in the perag?
 
-diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index f3cf4fcf66e8..efe42ae7a2f3 100644
---- a/fs/xfs/xfs_quota.h
-+++ b/fs/xfs/xfs_quota.h
-@@ -56,7 +56,7 @@ xfs_quota_chkd_flag(
-  * The structure kept inside the xfs_trans_t keep track of dquot changes
-  * within a transaction and apply them later.
-  */
--typedef struct xfs_dqtrx {
-+struct xfs_dqtrx {
- 	struct xfs_dquot *qt_dquot;	  /* the dquot this refers to */
- 
- 	uint64_t	qt_blk_res;	  /* blks reserved on a dquot */
-@@ -71,7 +71,7 @@ typedef struct xfs_dqtrx {
- 	uint64_t	qt_ino_res;	  /* inode reserved on a dquot */
- 	uint64_t	qt_ino_res_used;  /* inodes used from the reservation */
- 	int64_t		qt_icount_delta;  /* dquot inode count changes */
--} xfs_dqtrx_t;
-+};
- 
- #ifdef CONFIG_XFS_QUOTA
- extern void xfs_trans_dup_dqinfo(struct xfs_trans *, struct xfs_trans *);
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 7d6253528aee..cd664a03613f 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -74,13 +74,13 @@ xfs_trans_log_dquot(
-  */
- void
- xfs_trans_dup_dqinfo(
--	xfs_trans_t	*otp,
--	xfs_trans_t	*ntp)
-+	struct xfs_trans	*otp,
-+	struct xfs_trans	*ntp)
- {
--	xfs_dqtrx_t	*oq, *nq;
--	int		i, j;
--	xfs_dqtrx_t	*oqa, *nqa;
--	uint64_t	blk_res_used;
-+	struct xfs_dqtrx	*oq, *nq;
-+	int			i, j;
-+	struct xfs_dqtrx	*oqa, *nqa;
-+	uint64_t		blk_res_used;
- 
- 	if (!otp->t_dqinfo)
- 		return;
-@@ -191,12 +191,12 @@ xfs_trans_get_dqtrx(
-  */
- void
- xfs_trans_mod_dquot(
--	xfs_trans_t	*tp,
--	xfs_dquot_t	*dqp,
--	uint		field,
--	int64_t		delta)
-+	struct xfs_trans	*tp,
-+	struct xfs_dquot	*dqp,
-+	uint			field,
-+	int64_t			delta)
- {
--	xfs_dqtrx_t	*qtrx;
-+	struct xfs_dqtrx	*qtrx;
- 
- 	ASSERT(tp);
- 	ASSERT(XFS_IS_QUOTA_RUNNING(tp->t_mountp));
-@@ -288,8 +288,8 @@ xfs_trans_mod_dquot(
-  */
- STATIC void
- xfs_trans_dqlockedjoin(
--	xfs_trans_t	*tp,
--	xfs_dqtrx_t	*q)
-+	struct xfs_trans	*tp,
-+	struct xfs_dqtrx	*q)
- {
- 	ASSERT(q[0].qt_dquot != NULL);
- 	if (q[1].qt_dquot == NULL) {
-@@ -501,7 +501,7 @@ xfs_trans_unreserve_and_mod_dquots(
- {
- 	int			i, j;
- 	xfs_dquot_t		*dqp;
--	xfs_dqtrx_t		*qtrx, *qa;
-+	struct xfs_dqtrx	*qtrx, *qa;
- 	bool                    locked;
- 
- 	if (!tp->t_dqinfo || !(tp->t_flags & XFS_TRANS_DQ_DIRTY))
+Yes.
+
+> If we do, we've already checked them against the on-disk structures,
+> yes?
+
+Not necessarily, if someone calls the fscounter scrubber without calling
+the ag header scrubbers then they could be wrong.  Granted, the incore
+counters are supposed to match ondisk counters and unless there's a
+software bug or bad memory then they're going to match.  Ok, I think I'm
+convinced that we can use the incore counters here, along with a warmup
+function in the setup function to make sure pagf_init and pagi_init == 1
+and spot check the correspondence.
+
+Oh, hey, the ag header scrubbers don't check the incore counters either.
+I'll add that too.
+
+> So can we just do a pass across the perags to sum the space usage?
+
+That sounds like a nice way to speed this up further.
+
+> And if we don't ahve them all in the perag, should we add them?
+> 
+> > +
+> > +	/*
+> > +	 * The global incore space reservation is taken from the incore
+> > +	 * counters, so leave that out of the computation.
+> > +	 */
+> > +	fsc->fdblocks -= mp->m_resblks_avail;
+> > +
+> > +	/*
+> > +	 * Delayed allocation reservations are taken out of the incore counters
+> > +	 * but not recorded on disk, so leave them and their indlen blocks out
+> > +	 * of the computation.
+> > +	 */
+> > +	delayed = percpu_counter_sum(&mp->m_delalloc_blks);
+> > +	fsc->fdblocks -= delayed;
+> > +
+> > +	trace_xchk_fscounters_calc(mp, fsc->icount, fsc->ifree, fsc->fdblocks,
+> > +			delayed);
+> > +
+> > +	/* Bail out if the values we compute are totally nonsense. */
+> > +	if (!xfs_verify_icount(mp, fsc->icount) ||
+> > +	    fsc->fdblocks > mp->m_sb.sb_dblocks ||
+> > +	    fsc->ifree > fsc->icount)
+> > +		return -EFSCORRUPTED;
+> 
+> I suspect we need some tolerance here on ifree vs icount as icount
+> can decrease as we free inode chunks....
+
+TBH I was half convinced that the ifree check here only needed to make
+sure that the value isn't larger than the number of possible inodes in
+the filesystem, since we do all the thresholding stuff later anyway.
+
+> > +/*
+> > + * Is the @counter within an acceptable range of @expected?
+> > + *
+> > + * Currently that means 1/16th (6%) or @nr_range of the @expected value.
+> > + */
+> 
+> 6% is a lot for large filesystems, especially for block counts. That
+> can be entire AGs missing. I suspect the tolerance should be
+> related to AG count in some way....
+
+Yeah, I'm going to ponder this while I make dinner...
+
+> > +static inline bool
+> > +xchk_fscounter_within_range(
+> > +	struct xfs_scrub	*sc,
+> > +	struct percpu_counter	*counter,
+> > +	uint64_t		expected,
+> > +	uint64_t		nr_range)
+> > +{
+> > +	int64_t			value = percpu_counter_sum(counter);
+> > +	uint64_t		range;
+> > +
+> > +	range = max_t(uint64_t, expected >> 4, nr_range);
+> > +	if (value < 0)
+> > +		return false;
+> > +	if (range < expected && value < expected - range)
+> > +		return false;
+> > +	if ((int64_t)(expected + range) >= 0 && value > expected + range)
+> > +		return false;
+> > +	return true;
+> > +}
+> > +
+> > +/* Check the superblock counters. */
+> > +int
+> > +xchk_fscounters(
+> > +	struct xfs_scrub	*sc)
+> > +{
+> > +	struct xfs_mount	*mp = sc->mp;
+> > +	struct xchk_fscounters	*fsc = sc->buf;
+> > +	int64_t			icount, ifree, fdblocks;
+> > +	int			error;
+> > +
+> > +	icount = percpu_counter_sum(&sc->mp->m_icount);
+> > +	ifree = percpu_counter_sum(&sc->mp->m_ifree);
+> > +	fdblocks = percpu_counter_sum(&sc->mp->m_fdblocks);
+> 
+> We have a local mp var in this function :)
+
+Ok.
+
+> > +
+> > +	if (icount < 0 || ifree < 0 || fdblocks < 0)
+> > +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> > +
+> > +	/* See if icount is obviously wrong. */
+> > +	if (!xfs_verify_icount(mp, icount))
+> > +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> > +
+> > +	/* See if fdblocks / ifree are obviously wrong. */
+> > +	if (fdblocks > mp->m_sb.sb_dblocks)
+> > +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> > +	if (ifree > icount)
+> > +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> > +
+> > +	/* If we already know it's bad, we can skip the AG iteration. */
+> > +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> > +		return 0;
+> > +
+> > +	/* Counters seem ok, but let's count them. */
+> > +	error = xchk_fscounters_calc(sc, fsc);
+> > +	if (!xchk_process_error(sc, 0, XFS_SB_BLOCK(sc->mp), &error))
+> > +		return error;
+> > +
+> > +	/*
+> > +	 * Compare the in-core counters with whatever we counted.  We'll
+> > +	 * consider the inode counts ok if they're within 1024 inodes, and the
+> > +	 * free block counts if they're within 1/64th of the filesystem size.
+> > +	 */
+> > +	if (!xchk_fscounter_within_range(sc, &mp->m_icount, fsc->icount, 1024))
+> > +		xchk_block_set_corrupt(sc, mp->m_sb_bp);
+> 
+> We've already summed the percpu counters at this point - why do we
+> pass them into xchk_fscounter_within_range() and them sum them
+> again?
+
+Hmm.  Yeah, we don't need to do that again.
+
+> Also, what's the magic 1024 here?
+
+100% Magic. :)
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
