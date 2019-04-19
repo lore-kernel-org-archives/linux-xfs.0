@@ -1,133 +1,178 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:37830 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730230AbfDQTGi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Apr 2019 15:06:38 -0400
-Subject: [PATCH 1/8] mm/fs: don't allow writes to immutable files
+Received: from userp2120.oracle.com ([156.151.31.85]:60654 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725839AbfDSUlK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Apr 2019 16:41:10 -0400
+Date: Fri, 19 Apr 2019 13:41:04 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Apr 2019 12:04:33 -0700
-Message-ID: <155552787330.20411.11893581890744963309.stgit@magnolia>
-In-Reply-To: <155552786671.20411.6442426840435740050.stgit@magnolia>
-References: <155552786671.20411.6442426840435740050.stgit@magnolia>
+Subject: Re: [PATCH (resend)] libxfs: refactor manage_zones()
+Message-ID: <20190419204104.GA6736@magnolia>
+References: <065a30cb-7340-3f2f-47dd-209f82f15cce@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <065a30cb-7340-3f2f-47dd-209f82f15cce@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Apr 19, 2019 at 01:36:45PM -0500, Eric Sandeen wrote:
+> It's bizarre to have manage_zones() both set up and tear down zones.
+> It's even more bizarre to have xfs_dir_startup() buried in there.
+> 
+> Refactor init/destory into 2 functions, and call xfs_dir_startup()
+> separately from zone init similar to what kernelspace does.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> (resend as vger seemed to eat the one I sent from work...?)
+> 
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index 37bd2829..2a65ba9a 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -31,8 +31,6 @@ int libxfs_bhash_size;		/* #buckets in bcache */
+>  
+>  int	use_xfs_buf_lock;	/* global flag: use xfs_buf_t locks for MT */
+>  
+> -static int manage_zones(int);	/* setup/teardown global zones */
+> -
+>  /*
+>   * dev_map - map open devices to fd.
+>   */
+> @@ -217,6 +215,49 @@ check_open(char *path, int flags, char **rawfile, char **blockfile)
+>  	return 1;
+>  }
+>  
+> +/*
+> + * Initialize/destroy all of the zone allocators we use.
+> + */
+> +static void
+> +init_zones(void)
+> +{
+> +	/* initialise zone allocation */
+> +	xfs_buf_zone = kmem_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
+> +	xfs_inode_zone = kmem_zone_init(sizeof(struct xfs_inode), "xfs_inode");
+> +	xfs_ifork_zone = kmem_zone_init(sizeof(struct xfs_ifork), "xfs_ifork");
+> +	xfs_ili_zone = kmem_zone_init(
+> +			sizeof(xfs_inode_log_item_t), "xfs_inode_log_item");
 
-The chattr manpage has this to say about immutable files:
+Aww, my version was going to kill the typedef uses here. :)
 
-"A file with the 'i' attribute cannot be modified: it cannot be deleted
-or renamed, no link can be created to this file, most of the file's
-metadata can not be modified, and the file can not be opened in write
-mode."
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Once the flag is set, it is enforced for quite a few file operations,
-such as fallocate, fpunch, fzero, rm, touch, open, etc.  However, we
-don't check for immutability when doing a write(), a PROT_WRITE mmap(),
-a truncate(), or a write to a previously established mmap.
+(If you decide to change them as a result of this message then just go
+ahead and do that, no need for another patch.)
 
-If a program has an open write fd to a file that the administrator
-subsequently marks immutable, the program still can change the file
-contents.  Weird!
+--D
 
-The ability to write to an immutable file does not follow the manpage
-promise that immutable files cannot be modified.  Worse yet it's
-inconsistent with the behavior of other syscalls which don't allow
-modifications of immutable files.
-
-Therefore, add the necessary checks to make the write, mmap, and
-truncate behavior consistent with what the manpage says and consistent
-with other syscalls on filesystems which support IMMUTABLE.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/attr.c    |   13 ++++++-------
- mm/filemap.c |    3 +++
- mm/memory.c  |    3 +++
- mm/mmap.c    |    8 ++++++--
- 4 files changed, 18 insertions(+), 9 deletions(-)
-
-
-diff --git a/fs/attr.c b/fs/attr.c
-index d22e8187477f..1fcfdcc5b367 100644
---- a/fs/attr.c
-+++ b/fs/attr.c
-@@ -233,19 +233,18 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
- 
- 	WARN_ON_ONCE(!inode_is_locked(inode));
- 
--	if (ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) {
--		if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
--			return -EPERM;
--	}
-+	if (IS_IMMUTABLE(inode))
-+		return -EPERM;
-+
-+	if ((ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) &&
-+	    IS_APPEND(inode))
-+		return -EPERM;
- 
- 	/*
- 	 * If utimes(2) and friends are called with times == NULL (or both
- 	 * times are UTIME_NOW), then we need to check for write permission
- 	 */
- 	if (ia_valid & ATTR_TOUCH) {
--		if (IS_IMMUTABLE(inode))
--			return -EPERM;
--
- 		if (!inode_owner_or_capable(inode)) {
- 			error = inode_permission(inode, MAY_WRITE);
- 			if (error)
-diff --git a/mm/filemap.c b/mm/filemap.c
-index d78f577baef2..9fed698f4c63 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -3033,6 +3033,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 	loff_t count;
- 	int ret;
- 
-+	if (IS_IMMUTABLE(inode))
-+		return -EPERM;
-+
- 	if (!iov_iter_count(from))
- 		return 0;
- 
-diff --git a/mm/memory.c b/mm/memory.c
-index ab650c21bccd..dfd5eba278d6 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -2149,6 +2149,9 @@ static vm_fault_t do_page_mkwrite(struct vm_fault *vmf)
- 
- 	vmf->flags = FAULT_FLAG_WRITE|FAULT_FLAG_MKWRITE;
- 
-+	if (vmf->vma->vm_file && IS_IMMUTABLE(file_inode(vmf->vma->vm_file)))
-+		return VM_FAULT_SIGBUS;
-+
- 	ret = vmf->vma->vm_ops->page_mkwrite(vmf);
- 	/* Restore original flags so that caller is not surprised */
- 	vmf->flags = old_flags;
-diff --git a/mm/mmap.c b/mm/mmap.c
-index 41eb48d9b527..697a101bda59 100644
---- a/mm/mmap.c
-+++ b/mm/mmap.c
-@@ -1481,8 +1481,12 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
- 		case MAP_SHARED_VALIDATE:
- 			if (flags & ~flags_mask)
- 				return -EOPNOTSUPP;
--			if ((prot&PROT_WRITE) && !(file->f_mode&FMODE_WRITE))
--				return -EACCES;
-+			if (prot & PROT_WRITE) {
-+				if (!(file->f_mode & FMODE_WRITE))
-+					return -EACCES;
-+				if (IS_IMMUTABLE(file_inode(file)))
-+					return -EPERM;
-+			}
- 
- 			/*
- 			 * Make sure we don't allow writing to an append-only
+> +	xfs_buf_item_zone = kmem_zone_init(
+> +			sizeof(xfs_buf_log_item_t), "xfs_buf_log_item");
+> +	xfs_da_state_zone = kmem_zone_init(
+> +			sizeof(xfs_da_state_t), "xfs_da_state");
+> +	xfs_btree_cur_zone = kmem_zone_init(
+> +			sizeof(xfs_btree_cur_t), "xfs_btree_cur");
+> +	xfs_bmap_free_item_zone = kmem_zone_init(
+> +			sizeof(struct xfs_extent_free_item),
+> +			"xfs_bmap_free_item");
+> +	xfs_trans_zone = kmem_zone_init(
+> +			sizeof(struct xfs_trans), "xfs_trans");
+> +}
+> +
+> +static int
+> +destroy_zones(void)
+> +{
+> +	int	leaked = 0;
+> +
+> +	leaked += kmem_zone_destroy(xfs_buf_zone);
+> +	leaked += kmem_zone_destroy(xfs_ili_zone);
+> +	leaked += kmem_zone_destroy(xfs_inode_zone);
+> +	leaked += kmem_zone_destroy(xfs_ifork_zone);
+> +	leaked += kmem_zone_destroy(xfs_buf_item_zone);
+> +	leaked += kmem_zone_destroy(xfs_da_state_zone);
+> +	leaked += kmem_zone_destroy(xfs_btree_cur_zone);
+> +	leaked += kmem_zone_destroy(xfs_bmap_free_item_zone);
+> +	leaked += kmem_zone_destroy(xfs_trans_zone);
+> +
+> +	return leaked;
+> +}
+> +
+>  /*
+>   * libxfs initialization.
+>   * Caller gets a 0 on failure (and we print a message), 1 on success.
+> @@ -331,7 +372,8 @@ libxfs_init(libxfs_init_t *a)
+>  	libxfs_bcache = cache_init(a->bcache_flags, libxfs_bhash_size,
+>  				   &libxfs_bcache_operations);
+>  	use_xfs_buf_lock = a->usebuflock;
+> -	manage_zones(0);
+> +	xfs_dir_startup();
+> +	init_zones();
+>  	rval = 1;
+>  done:
+>  	if (dpath[0])
+> @@ -352,51 +394,6 @@ done:
+>  }
+>  
+>  
+> -/*
+> - * Initialize/destroy all of the zone allocators we use.
+> - */
+> -static int
+> -manage_zones(int release)
+> -{
+> -	extern void		xfs_dir_startup();
+> -
+> -	if (release) {	/* free zone allocation */
+> -		int	leaked = 0;
+> -
+> -		leaked += kmem_zone_destroy(xfs_buf_zone);
+> -		leaked += kmem_zone_destroy(xfs_ili_zone);
+> -		leaked += kmem_zone_destroy(xfs_inode_zone);
+> -		leaked += kmem_zone_destroy(xfs_ifork_zone);
+> -		leaked += kmem_zone_destroy(xfs_buf_item_zone);
+> -		leaked += kmem_zone_destroy(xfs_da_state_zone);
+> -		leaked += kmem_zone_destroy(xfs_btree_cur_zone);
+> -		leaked += kmem_zone_destroy(xfs_bmap_free_item_zone);
+> -		leaked += kmem_zone_destroy(xfs_trans_zone);
+> -
+> -		return leaked;
+> -	}
+> -	/* otherwise initialise zone allocation */
+> -	xfs_buf_zone = kmem_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
+> -	xfs_inode_zone = kmem_zone_init(sizeof(struct xfs_inode), "xfs_inode");
+> -	xfs_ifork_zone = kmem_zone_init(sizeof(struct xfs_ifork), "xfs_ifork");
+> -	xfs_ili_zone = kmem_zone_init(
+> -			sizeof(xfs_inode_log_item_t), "xfs_inode_log_item");
+> -	xfs_buf_item_zone = kmem_zone_init(
+> -			sizeof(xfs_buf_log_item_t), "xfs_buf_log_item");
+> -	xfs_da_state_zone = kmem_zone_init(
+> -			sizeof(xfs_da_state_t), "xfs_da_state");
+> -	xfs_btree_cur_zone = kmem_zone_init(
+> -			sizeof(xfs_btree_cur_t), "xfs_btree_cur");
+> -	xfs_bmap_free_item_zone = kmem_zone_init(
+> -			sizeof(struct xfs_extent_free_item),
+> -			"xfs_bmap_free_item");
+> -	xfs_trans_zone = kmem_zone_init(
+> -			sizeof(struct xfs_trans), "xfs_trans");
+> -	xfs_dir_startup();
+> -
+> -	return 0;
+> -}
+> -
+>  /*
+>   * Initialize realtime fields in the mount structure.
+>   */
+> @@ -874,7 +871,7 @@ libxfs_destroy(void)
+>  	libxfs_bcache_purge();
+>  	libxfs_bcache_free();
+>  	cache_destroy(libxfs_bcache);
+> -	leaked = manage_zones(1);
+> +	leaked = destroy_zones();
+>  	if (getenv("LIBXFS_LEAK_CHECK") && leaked)
+>  		exit(1);
+>  }
+> 
+> 
