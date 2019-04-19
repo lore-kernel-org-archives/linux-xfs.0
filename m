@@ -1,85 +1,187 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48734 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726204AbfDWEHG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Apr 2019 00:07:06 -0400
-Date: Tue, 23 Apr 2019 00:07:03 -0400 (EDT)
-From: Pankaj Gupta <pagupta@redhat.com>
-Message-ID: <1744824090.22901808.1555992423081.JavaMail.zimbra@redhat.com>
-In-Reply-To: <x49ef5t7nwp.fsf@segfault.boston.devel.redhat.com>
-References: <20190410040826.24371-1-pagupta@redhat.com> <x494l73z7th.fsf@segfault.boston.devel.redhat.com> <CAPcyv4jrNHqW3FuGkeo==ZoJr7LKahCv4_esnokfy7enek8=2Q@mail.gmail.com> <20190418161833.GA22970@infradead.org> <CAPcyv4jPOF_+R6U17J_+88+X8LC-LSPCugA6gbKxuphuuFB2gg@mail.gmail.com> <x497ebm82d4.fsf@segfault.boston.devel.redhat.com> <CAPcyv4gGmN2LLMPy6BzWpYhRyV7fFNVgh=xAWSAdnnAWu5APtg@mail.gmail.com> <x49ef5t7nwp.fsf@segfault.boston.devel.redhat.com>
-Subject: Re: [PATCH v5 1/6] libnvdimm: nd_region flush callback support
+Received: from userp2120.oracle.com ([156.151.31.85]:34590 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725939AbfDSAVH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Apr 2019 20:21:07 -0400
+Subject: [PATCH 1/5] xfs: track delayed allocation reservations across
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 18 Apr 2019 17:21:05 -0700
+Message-ID: <155563326502.112668.15075629821207212917.stgit@magnolia>
+In-Reply-To: <155563325882.112668.3605935077532891922.stgit@magnolia>
+References: <155563325882.112668.3605935077532891922.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, KVM list <kvm@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ross Zwisler <zwisler@kernel.org>, Vishal L Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, Matthew Wilcox <willy@infradead.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, lcapitulino@redhat.com, Kevin Wolf <kwolf@redhat.com>, Igor Mammedov <imammedo@redhat.com>, Nitesh Narayan Lal <nilal@redhat.com>, Rik van Riel <riel@surriel.com>, Stefan Hajnoczi <stefanha@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Hildenbrand <david@redhat.com>, david <david@fromorbit.com>, cohuck@redhat.com, Xiao Guangrong <xiaoguangrong.eric@gmail.com>, Paolo Bonzini <pbonzini@redhat.com>, kilobyte@angband.pl, yuval shaia <yuval.shaia@oracle.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
+
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+Add a percpu counter to track the number of blocks directly reserved for
+delayed allocations on the data device.  This counter (in contrast to
+i_delayed_blks) does not track allocated CoW staging extents or anything
+going on with the realtime device.  It will be used in the upcoming
+summary counter scrub function to check the free block counts without
+having to freeze the filesystem or walk all the inodes to find the
+delayed allocations.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c |   17 ++++++++++++++---
+ fs/xfs/xfs_mount.c       |   21 +++++++++++++++++++++
+ fs/xfs/xfs_mount.h       |    7 +++++++
+ fs/xfs/xfs_super.c       |    9 +++++++++
+ 4 files changed, 51 insertions(+), 3 deletions(-)
 
 
-> 
-> Dan Williams <dan.j.williams@intel.com> writes:
-> 
-> > On Mon, Apr 22, 2019 at 8:59 AM Jeff Moyer <jmoyer@redhat.com> wrote:
-> >>
-> >> Dan Williams <dan.j.williams@intel.com> writes:
-> >>
-> >> > On Thu, Apr 18, 2019 at 9:18 AM Christoph Hellwig <hch@infradead.org>
-> >> > wrote:
-> >> >>
-> >> >> On Thu, Apr 18, 2019 at 09:05:05AM -0700, Dan Williams wrote:
-> >> >> > > > I'd either add a comment about avoiding retpoline overhead here
-> >> >> > > > or just
-> >> >> > > > make ->flush == NULL mean generic_nvdimm_flush(). Just so that
-> >> >> > > > people don't
-> >> >> > > > get confused by the code.
-> >> >> > >
-> >> >> > > Isn't this premature optimization?  I really don't like adding
-> >> >> > > things
-> >> >> > > like this without some numbers to show it's worth it.
-> >> >> >
-> >> >> > I don't think it's premature given this optimization technique is
-> >> >> > already being deployed elsewhere, see:
-> >> >> >
-> >> >> > https://lwn.net/Articles/774347/
-> >> >>
-> >> >> For one this one was backed by numbers, and second after feedback
-> >> >> from Linux we switched to the NULL pointer check instead.
-> >> >
-> >> > Ok I should have noticed the switch to NULL pointer check. However,
-> >> > the question still stands do we want everyone to run numbers to
-> >> > justify this optimization, or make it a new common kernel coding
-> >> > practice to do:
-> >> >
-> >> >     if (!object->op)
-> >> >         generic_op(object);
-> >> >     else
-> >> >         object->op(object);
-> >> >
-> >> > ...in hot paths?
-> >>
-> >> I don't think nvdimm_flush is a hot path.  Numbers of some
-> >> representative workload would prove one of us right.
-> >
-> > I'd rather say that the if "if (!op) do_generic()" pattern is more
-> > readable in the general case, saves grepping for who set the op in the
-> > common case. The fact that it has the potential to be faster is gravy
-> > at that point.
-> 
-> If the primary motivation is performance, then I'd expect performance
-> numbers to back it up.  If that isn't the primary motivation, then
-> choose whichever way you feel is appropriate.
-
-Agree. This change enhances the code readability. Will add this change in
-v6 with other changes.
-
-Thank you! 
-
-Pankaj
-
-> 
-> Cheers,
-> Jeff
-> 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 4637ae1ae91c..356ebd1cbe82 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2009,6 +2009,9 @@ xfs_bmap_add_extent_delay_real(
+ 			goto done;
+ 	}
+ 
++	if (da_new != da_old)
++		xfs_mod_delalloc(mp, (int64_t)da_new - da_old);
++
+ 	if (bma->cur) {
+ 		da_new += bma->cur->bc_private.b.allocated;
+ 		bma->cur->bc_private.b.allocated = 0;
+@@ -2640,6 +2643,7 @@ xfs_bmap_add_extent_hole_delay(
+ 		/*
+ 		 * Nothing to do for disk quota accounting here.
+ 		 */
++		xfs_mod_delalloc(ip->i_mount, (int64_t)newlen - oldlen);
+ 	}
+ }
+ 
+@@ -3352,8 +3356,10 @@ xfs_bmap_btalloc_accounting(
+ 		 * already have quota reservation and there's nothing to do
+ 		 * yet.
+ 		 */
+-		if (ap->wasdel)
++		if (ap->wasdel) {
++			xfs_mod_delalloc(ap->ip->i_mount, -(int64_t)args->len);
+ 			return;
++		}
+ 
+ 		/*
+ 		 * Otherwise, we've allocated blocks in a hole. The transaction
+@@ -3372,8 +3378,10 @@ xfs_bmap_btalloc_accounting(
+ 	/* data/attr fork only */
+ 	ap->ip->i_d.di_nblocks += args->len;
+ 	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
+-	if (ap->wasdel)
++	if (ap->wasdel) {
+ 		ap->ip->i_delayed_blks -= args->len;
++		xfs_mod_delalloc(ap->ip->i_mount, -(int64_t)args->len);
++	}
+ 	xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
+ 		ap->wasdel ? XFS_TRANS_DQ_DELBCOUNT : XFS_TRANS_DQ_BCOUNT,
+ 		args->len);
+@@ -3969,6 +3977,7 @@ xfs_bmapi_reserve_delalloc(
+ 
+ 
+ 	ip->i_delayed_blks += alen;
++	xfs_mod_delalloc(ip->i_mount, alen + indlen);
+ 
+ 	got->br_startoff = aoff;
+ 	got->br_startblock = nullstartblock(indlen);
+@@ -4840,8 +4849,10 @@ xfs_bmap_del_extent_delay(
+ 	da_diff = da_old - da_new;
+ 	if (!isrt)
+ 		da_diff += del->br_blockcount;
+-	if (da_diff)
++	if (da_diff) {
+ 		xfs_mod_fdblocks(mp, da_diff, false);
++		xfs_mod_delalloc(mp, -da_diff);
++	}
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index eff8b4c3eb3e..4cedf6f8565b 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1451,3 +1451,24 @@ xfs_force_summary_recalc(
+ 
+ 	xfs_fs_mark_sick(mp, XFS_SICK_FS_COUNTERS);
+ }
++
++/*
++ * Update the in-core delayed block counter.
++ *
++ * We prefer to update the counter without having to take a spinlock for every
++ * counter update (i.e. batching).  Each change to delayed allocation
++ * reservations can change can easily exceed the default percpu counter
++ * batching, so we use a larger batch factor here.
++ *
++ * Note that we don't currently have any callers requiring fast summation
++ * (e.g. percpu_counter_read) so we can use a big batch value here.
++ */
++#define XFS_DELALLOC_BATCH	(4096)
++void
++xfs_mod_delalloc(
++	struct xfs_mount	*mp,
++	int64_t			delta)
++{
++	percpu_counter_add_batch(&mp->m_delalloc_blks, delta,
++			XFS_DELALLOC_BATCH);
++}
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 14fba76ab811..c81a5cd7c228 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -81,6 +81,12 @@ typedef struct xfs_mount {
+ 	struct percpu_counter	m_icount;	/* allocated inodes counter */
+ 	struct percpu_counter	m_ifree;	/* free inodes counter */
+ 	struct percpu_counter	m_fdblocks;	/* free block counter */
++	/*
++	 * Count of data device blocks reserved for delayed allocations,
++	 * including indlen blocks.  Does not include allocated CoW staging
++	 * extents or anything related to the rt device.
++	 */
++	struct percpu_counter	m_delalloc_blks;
+ 
+ 	struct xfs_buf		*m_sb_bp;	/* buffer for superblock */
+ 	char			*m_fsname;	/* filesystem name */
+@@ -475,5 +481,6 @@ int	xfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
+ struct xfs_error_cfg * xfs_error_get_cfg(struct xfs_mount *mp,
+ 		int error_class, int error);
+ void xfs_force_summary_recalc(struct xfs_mount *mp);
++void xfs_mod_delalloc(struct xfs_mount *mp, int64_t delta);
+ 
+ #endif	/* __XFS_MOUNT_H__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index df917f41ca46..3a870a194cd9 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1538,8 +1538,14 @@ xfs_init_percpu_counters(
+ 	if (error)
+ 		goto free_ifree;
+ 
++	error = percpu_counter_init(&mp->m_delalloc_blks, 0, GFP_KERNEL);
++	if (error)
++		goto free_fdblocks;
++
+ 	return 0;
+ 
++free_fdblocks:
++	percpu_counter_destroy(&mp->m_fdblocks);
+ free_ifree:
+ 	percpu_counter_destroy(&mp->m_ifree);
+ free_icount:
+@@ -1563,6 +1569,9 @@ xfs_destroy_percpu_counters(
+ 	percpu_counter_destroy(&mp->m_icount);
+ 	percpu_counter_destroy(&mp->m_ifree);
+ 	percpu_counter_destroy(&mp->m_fdblocks);
++	ASSERT(XFS_FORCED_SHUTDOWN(mp) ||
++	       percpu_counter_sum(&mp->m_delalloc_blks) == 0);
++	percpu_counter_destroy(&mp->m_delalloc_blks);
+ }
+ 
+ static struct xfs_mount *
