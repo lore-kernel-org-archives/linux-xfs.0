@@ -1,64 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53080 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725882AbfDWGUf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Apr 2019 02:20:35 -0400
-Date: Mon, 22 Apr 2019 23:20:34 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V2] block: clarify that bio_add_page() and related
- helpers can add multi pages
-Message-ID: <20190423062034.GB28518@infradead.org>
-References: <20190422100207.13057-1-ming.lei@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:34830 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725939AbfDSAV0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Apr 2019 20:21:26 -0400
+Subject: [PATCH 4/5] xfs: scrub should check incore counters against ondisk
+ headers
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 18 Apr 2019 17:21:23 -0700
+Message-ID: <155563328320.112668.15619698497236667722.stgit@magnolia>
+In-Reply-To: <155563325882.112668.3605935077532891922.stgit@magnolia>
+References: <155563325882.112668.3605935077532891922.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190422100207.13057-1-ming.lei@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
 
-On Mon, Apr 22, 2019 at 06:02:07PM +0800, Ming Lei wrote:
-> bio_add_page() and __bio_add_page() are capable of adding pages into
-> bio, and now we have at least two such usages alreay:
-> 
-> 	- __bio_iov_bvec_add_pages()
-> 	- nvmet_bdev_execute_rw().
-> 
-> So update comments on these two helpers.
-> 
-> The thing is a bit special for __bio_try_merge_page(), given the caller
-> needs to know if the new added page is same with the last added page,
-> then it isn't safe to pass multi-page in case that 'same_page' is true,
-> so adds warning on potential misuse, and updates comment on
-> __bio_try_merge_page().
-> 
-> Cc: linux-xfs@vger.kernel.org
-> Cc: linux-fsdevel@vger.kernel.org
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Reviewed-by: Christoph Hellwig <hch@infradead.org>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
-> V2:
-> 	- add Reviewed-by tag
-> 	- rebase on latest for-5.2/block
-> 
->  block/bio.c | 26 +++++++++++++++-----------
->  1 file changed, 15 insertions(+), 11 deletions(-)
-> 
-> diff --git a/block/bio.c b/block/bio.c
-> index 5959141d4e46..e92c37ce20a6 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -688,6 +688,8 @@ static bool can_add_page_to_seg(struct request_queue *q,
->  	if (bv->bv_len + len > queue_max_segment_size(q))
->  		return false;
->  
-> +	WARN_ON_ONCE(same_page && (len + off) > PAGE_SIZE);
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-No need for the inner braces.
+In theory, the incore per-AG structure counters should match the ones on
+disk, so check that.
 
-Otherwise looks good:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/agheader.c |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index ddf06bfaa29d..adaeabdefdd3 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -514,6 +514,7 @@ xchk_agf(
+ {
+ 	struct xfs_mount	*mp = sc->mp;
+ 	struct xfs_agf		*agf;
++	struct xfs_perag	*pag;
+ 	xfs_agnumber_t		agno;
+ 	xfs_agblock_t		agbno;
+ 	xfs_agblock_t		eoag;
+@@ -586,6 +587,16 @@ xchk_agf(
+ 	if (agfl_count != 0 && fl_count != agfl_count)
+ 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
+ 
++	/* Do the incore counters match? */
++	pag = xfs_perag_get(mp, agno);
++	if (pag->pagf_freeblks != be32_to_cpu(agf->agf_freeblks))
++		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
++	if (pag->pagf_flcount != be32_to_cpu(agf->agf_flcount))
++		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
++	if (pag->pagf_btreeblks != be32_to_cpu(agf->agf_btreeblks))
++		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
++	xfs_perag_put(pag);
++
+ 	xchk_agf_xref(sc);
+ out:
+ 	return error;
+@@ -811,6 +822,7 @@ xchk_agi(
+ {
+ 	struct xfs_mount	*mp = sc->mp;
+ 	struct xfs_agi		*agi;
++	struct xfs_perag	*pag;
+ 	xfs_agnumber_t		agno;
+ 	xfs_agblock_t		agbno;
+ 	xfs_agblock_t		eoag;
+@@ -881,6 +893,14 @@ xchk_agi(
+ 	if (agi->agi_pad32 != cpu_to_be32(0))
+ 		xchk_block_set_corrupt(sc, sc->sa.agi_bp);
+ 
++	/* Do the incore counters match? */
++	pag = xfs_perag_get(mp, agno);
++	if (pag->pagi_count != be32_to_cpu(agi->agi_count))
++		xchk_block_set_corrupt(sc, sc->sa.agi_bp);
++	if (pag->pagi_freecount != be32_to_cpu(agi->agi_freecount))
++		xchk_block_set_corrupt(sc, sc->sa.agi_bp);
++	xfs_perag_put(pag);
++
+ 	xchk_agi_xref(sc);
+ out:
+ 	return error;
