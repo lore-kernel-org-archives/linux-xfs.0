@@ -1,86 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38506 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727386AbfDVVfe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Apr 2019 17:35:34 -0400
-Date: Mon, 22 Apr 2019 14:35:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 07/10] libxfs: refactor buffer item release code
-Message-ID: <20190422213529.GD4676@magnolia>
-References: <155594788997.115924.16224143537288136652.stgit@magnolia>
- <155594793429.115924.9115512760848857551.stgit@magnolia>
- <e964dcb8-5a9d-26bf-e5ac-7489c9f259a1@sandeen.net>
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:46138 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729491AbfDVToc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Apr 2019 15:44:32 -0400
+Received: by mail-oi1-f193.google.com with SMTP id x188so9343072oia.13
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2019 12:44:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e964dcb8-5a9d-26bf-e5ac-7489c9f259a1@sandeen.net>
+References: <20190410040826.24371-1-pagupta@redhat.com> <20190410040826.24371-2-pagupta@redhat.com>
+ <CAPcyv4i1FjBzfcWtzeCvj-giHa9xaX0dMQ==q4LZC_L8VEqkHg@mail.gmail.com>
+ <20190412083230.GA29850@quack2.suse.cz> <x494l73z7th.fsf@segfault.boston.devel.redhat.com>
+ <CAPcyv4jrNHqW3FuGkeo==ZoJr7LKahCv4_esnokfy7enek8=2Q@mail.gmail.com>
+ <20190418161833.GA22970@infradead.org> <CAPcyv4jPOF_+R6U17J_+88+X8LC-LSPCugA6gbKxuphuuFB2gg@mail.gmail.com>
+ <x497ebm82d4.fsf@segfault.boston.devel.redhat.com>
+In-Reply-To: <x497ebm82d4.fsf@segfault.boston.devel.redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 22 Apr 2019 12:44:21 -0700
+Message-ID: <CAPcyv4gGmN2LLMPy6BzWpYhRyV7fFNVgh=xAWSAdnnAWu5APtg@mail.gmail.com>
+Subject: Re: [PATCH v5 1/6] libnvdimm: nd_region flush callback support
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, Pankaj Gupta <pagupta@redhat.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, KVM list <kvm@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ross Zwisler <zwisler@kernel.org>, Vishal L Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, Matthew Wilcox <willy@infradead.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, lcapitulino@redhat.com, Kevin Wolf <kwolf@redhat.com>, Igor Mammedov <imammedo@redhat.com>, Nitesh Narayan Lal <nilal@redhat.com>, Rik van Riel <riel@surriel.com>, Stefan Hajnoczi <stefanha@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Hildenbrand <david@redhat.com>, david <david@fromorbit.com>, cohuck@redhat.com, Xiao Guangrong <xiaoguangrong.eric@gmail.com>, Paolo Bonzini <pbonzini@redhat.com>, kilobyte@angband.pl, yuval shaia <yuval.shaia@oracle.com>
 
-On Mon, Apr 22, 2019 at 04:26:58PM -0500, Eric Sandeen wrote:
-> On 4/22/19 10:45 AM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Refactor the buffer item release code into a helper, which we will use
-> > in subsequent patches to make the buffer log item lifetime match the
-> > kernel equivalents.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  libxfs/trans.c |   14 +++++++++++---
-> >  1 file changed, 11 insertions(+), 3 deletions(-)
-> > 
-> > 
-> > diff --git a/libxfs/trans.c b/libxfs/trans.c
-> > index 9de77c8b..629501f8 100644
-> > --- a/libxfs/trans.c
-> > +++ b/libxfs/trans.c
-> > @@ -505,6 +505,16 @@ libxfs_trans_ordered_buf(
-> >  	return ret;
-> >  }
-> >  
-> > +static void
-> > +xfs_buf_item_put(
-> > +	struct xfs_buf_log_item	*bip)
-> > +{
-> > +	struct xfs_buf		*bp = bip->bli_buf;
-> > +
-> > +	bp->b_log_item = NULL;
-> > +	kmem_zone_free(xfs_buf_item_zone, bip);
-> > +}
-> > +
-> >  void
-> >  libxfs_trans_brelse(
-> >  	xfs_trans_t		*tp,
-> > @@ -846,7 +856,6 @@ buf_item_done(
-> >  
-> >  	bp = bip->bli_buf;
-> >  	ASSERT(bp != NULL);
-> > -	bp->b_log_item = NULL;			/* remove log item */
-> >  	bp->b_transp = NULL;			/* remove xact ptr */
-> >  
-> >  	hold = (bip->bli_flags & XFS_BLI_HOLD);
-> > @@ -861,8 +870,7 @@ buf_item_done(
-> >  		bip->bli_flags &= ~XFS_BLI_HOLD;
-> >  	else
-> >  		libxfs_putbuf(bp);
-> > -	/* release the buf item */
-> > -	kmem_zone_free(xfs_buf_item_zone, bip);
-> > +	xfs_buf_item_put(bip);
-> 
-> In xfs_buf_item_put(), we reach back up from bip to bip->bli_buf, which is
-> the bp.  This is after we did a libxfs_putbuf(bp) on that bp.  Is there not
-> a chance of use after free here?  Enough puts and a shaker can run, right?
+On Mon, Apr 22, 2019 at 8:59 AM Jeff Moyer <jmoyer@redhat.com> wrote:
+>
+> Dan Williams <dan.j.williams@intel.com> writes:
+>
+> > On Thu, Apr 18, 2019 at 9:18 AM Christoph Hellwig <hch@infradead.org> wrote:
+> >>
+> >> On Thu, Apr 18, 2019 at 09:05:05AM -0700, Dan Williams wrote:
+> >> > > > I'd either add a comment about avoiding retpoline overhead here or just
+> >> > > > make ->flush == NULL mean generic_nvdimm_flush(). Just so that people don't
+> >> > > > get confused by the code.
+> >> > >
+> >> > > Isn't this premature optimization?  I really don't like adding things
+> >> > > like this without some numbers to show it's worth it.
+> >> >
+> >> > I don't think it's premature given this optimization technique is
+> >> > already being deployed elsewhere, see:
+> >> >
+> >> > https://lwn.net/Articles/774347/
+> >>
+> >> For one this one was backed by numbers, and second after feedback
+> >> from Linux we switched to the NULL pointer check instead.
+> >
+> > Ok I should have noticed the switch to NULL pointer check. However,
+> > the question still stands do we want everyone to run numbers to
+> > justify this optimization, or make it a new common kernel coding
+> > practice to do:
+> >
+> >     if (!object->op)
+> >         generic_op(object);
+> >     else
+> >         object->op(object);
+> >
+> > ...in hot paths?
+>
+> I don't think nvdimm_flush is a hot path.  Numbers of some
+> representative workload would prove one of us right.
 
-I think you're right, the xfs_buf_item_put should come before the
-libxfs_putbuf.
-
---D
-
-> >  }
-> >  
-> >  static void
-> > 
+I'd rather say that the if "if (!op) do_generic()" pattern is more
+readable in the general case, saves grepping for who set the op in the
+common case. The fact that it has the potential to be faster is gravy
+at that point.
