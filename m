@@ -1,56 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:38953 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390940AbfDRSPM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Apr 2019 14:15:12 -0400
-Received: by mail-ot1-f65.google.com with SMTP id f10so2474783otb.6
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Apr 2019 11:15:12 -0700 (PDT)
+Received: from sandeen.net ([63.231.237.45]:34600 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728996AbfDVVFB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Apr 2019 17:05:01 -0400
+Subject: Re: [PATCH 06/10] misc: fix strncpy length complaints
+References: <155594788997.115924.16224143537288136652.stgit@magnolia>
+ <155594792809.115924.2016290538799986694.stgit@magnolia>
+ <5e7bcc5e-7f54-f64e-e76e-94f57ed64e08@sandeen.net>
+ <20190422205703.GC4676@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <0017a715-9a0e-f606-0e88-6226db06920d@sandeen.net>
+Date: Mon, 22 Apr 2019 16:04:59 -0500
 MIME-Version: 1.0
-References: <20190410040826.24371-1-pagupta@redhat.com> <20190410040826.24371-2-pagupta@redhat.com>
- <CAPcyv4i1FjBzfcWtzeCvj-giHa9xaX0dMQ==q4LZC_L8VEqkHg@mail.gmail.com>
- <20190412083230.GA29850@quack2.suse.cz> <x494l73z7th.fsf@segfault.boston.devel.redhat.com>
- <CAPcyv4jrNHqW3FuGkeo==ZoJr7LKahCv4_esnokfy7enek8=2Q@mail.gmail.com> <20190418161833.GA22970@infradead.org>
-In-Reply-To: <20190418161833.GA22970@infradead.org>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 18 Apr 2019 11:14:59 -0700
-Message-ID: <CAPcyv4jPOF_+R6U17J_+88+X8LC-LSPCugA6gbKxuphuuFB2gg@mail.gmail.com>
-Subject: Re: [PATCH v5 1/6] libnvdimm: nd_region flush callback support
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20190422205703.GC4676@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jeff Moyer <jmoyer@redhat.com>, Jan Kara <jack@suse.cz>, Pankaj Gupta <pagupta@redhat.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, KVM list <kvm@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ross Zwisler <zwisler@kernel.org>, Vishal L Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, Matthew Wilcox <willy@infradead.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, lcapitulino@redhat.com, Kevin Wolf <kwolf@redhat.com>, Igor Mammedov <imammedo@redhat.com>, Nitesh Narayan Lal <nilal@redhat.com>, Rik van Riel <riel@surriel.com>, Stefan Hajnoczi <stefanha@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Hildenbrand <david@redhat.com>, david <david@fromorbit.com>, cohuck@redhat.com, Xiao Guangrong <xiaoguangrong.eric@gmail.com>, Paolo Bonzini <pbonzini@redhat.com>, kilobyte@angband.pl, yuval shaia <yuval.shaia@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 18, 2019 at 9:18 AM Christoph Hellwig <hch@infradead.org> wrote:
->
-> On Thu, Apr 18, 2019 at 09:05:05AM -0700, Dan Williams wrote:
-> > > > I'd either add a comment about avoiding retpoline overhead here or just
-> > > > make ->flush == NULL mean generic_nvdimm_flush(). Just so that people don't
-> > > > get confused by the code.
-> > >
-> > > Isn't this premature optimization?  I really don't like adding things
-> > > like this without some numbers to show it's worth it.
-> >
-> > I don't think it's premature given this optimization technique is
-> > already being deployed elsewhere, see:
-> >
-> > https://lwn.net/Articles/774347/
->
-> For one this one was backed by numbers, and second after feedback
-> from Linux we switched to the NULL pointer check instead.
+On 4/22/19 3:57 PM, Darrick J. Wong wrote:
+> On Mon, Apr 22, 2019 at 03:48:03PM -0500, Eric Sandeen wrote:
+>> On 4/22/19 10:45 AM, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>
+>>> Fix a number of complaints about feeding sizeof(dest) directly to
+>>> strncpy.  We do this by declaring the char arrays to be one larger
+>>> than necessary and subtracting one, to ensure that we never overfill
+>>> the buffer.
+>>>
+>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> Hm, you don't actually do what the changelog says, do you?  No buffer
+>> changes size in this patch.
+> 
+> I'll change it to:
+> 
+> "Fix a number of complaints about feeding sizeof(dest) directly to
+> strncpy.  We do this by feeding strncpy the length of the buffer minus
+> one, having checked that the allocated space are long enough."
 
-Ok I should have noticed the switch to NULL pointer check. However,
-the question still stands do we want everyone to run numbers to
-justify this optimization, or make it a new common kernel coding
-practice to do:
+sounds good, I'll just fix that here.
 
-    if (!object->op)
-        generic_op(object);
-    else
-        object->op(object);
-
-...in hot paths? I agree with not doing premature optimization in
-principle, but this hack is minimally intrusive from a readability
-perspective similar to likely()/unlikely() usage which also don't come
-with numbers on a per patch basis.
+>> And FWIW, neither of these was actually a real problem (fgets guarantees
+>> a null in the string) but hey, whatever makes gcc happy I guess?
+>>
+>> (I think we lose a char in the quota array, but 511 chars ought to be
+>> enough for anybody right?)
+> 
+> Well... the quota one is reading lines straight out of a file, right?
+> So that probably ought to be char buf[PATH_MAX + length of other junk in
+> the line], though with the current lower limit now nobody's complained
+> so maybe it's fine....
+> 
+> --D
+> 
+>> Patch seems fine, though.
+>>
+>>> ---
+>>>  mkfs/xfs_mkfs.c |   13 +++++++++++--
+>>>  quota/edit.c    |    9 ++++++---
+>>>  2 files changed, 17 insertions(+), 5 deletions(-)
+>>>
+>>>
+>>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>>> index 3e2ef92d..db3ad38e 100644
+>>> --- a/mkfs/xfs_mkfs.c
+>>> +++ b/mkfs/xfs_mkfs.c
+>>> @@ -3270,8 +3270,17 @@ finish_superblock_setup(
+>>>  	struct xfs_mount	*mp,
+>>>  	struct xfs_sb		*sbp)
+>>>  {
+>>> -	if (cfg->label)
+>>> -		strncpy(sbp->sb_fname, cfg->label, sizeof(sbp->sb_fname));
+>>> +	if (cfg->label) {
+>>> +		size_t		label_len;
+>>> +
+>>> +		/*
+>>> +		 * Labels are null terminated unless the string fits exactly
+>>> +		 * in the label field, so assume sb_fname is zeroed and then
+>>> +		 * do a memcpy because the destination isn't a normal C string.
+>>> +		 */
+>>> +		label_len = min(sizeof(sbp->sb_fname), strlen(cfg->label));
+>>> +		memcpy(sbp->sb_fname, cfg->label, label_len);
+>>> +	}
+>>>  
+>>>  	sbp->sb_dblocks = cfg->dblocks;
+>>>  	sbp->sb_rblocks = cfg->rtblocks;
+>>> diff --git a/quota/edit.c b/quota/edit.c
+>>> index b10a5b34..f9938b8a 100644
+>>> --- a/quota/edit.c
+>>> +++ b/quota/edit.c
+>>> @@ -368,8 +368,7 @@ restore_file(
+>>>  	uint		type)
+>>>  {
+>>>  	char		buffer[512];
+>>> -	char		devbuffer[512];
+>>> -	char		*dev = NULL;
+>>> +	char		dev[512];
+>>>  	uint		mask;
+>>>  	int		cnt;
+>>>  	uint32_t	id;
+>>> @@ -377,7 +376,11 @@ restore_file(
+>>>  
+>>>  	while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+>>>  		if (strncmp("fs = ", buffer, 5) == 0) {
+>>> -			dev = strncpy(devbuffer, buffer+5, sizeof(devbuffer));
+>>> +			/*
+>>> +			 * Copy the device name to dev, strip off the trailing
+>>> +			 * newline, and move on to the next line.
+>>> +			 */
+>>> +			strncpy(dev, buffer + 5, sizeof(dev) - 1);
+>>>  			dev[strlen(dev) - 1] = '\0';
+>>>  			continue;
+>>>  		}
+>>>
+> 
