@@ -1,148 +1,241 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35846 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42122 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726057AbfDVLBc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Apr 2019 07:01:32 -0400
-Date: Mon, 22 Apr 2019 07:01:30 -0400
+        id S1726057AbfDVNAx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Apr 2019 09:00:53 -0400
+Date: Mon, 22 Apr 2019 09:00:51 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 5/9] xfs: Add xfs_attr_set_deferred and
- xfs_attr_remove_deferred
-Message-ID: <20190422110127.GB55937@bfoster>
+Subject: Re: [PATCH 6/9] xfs: Add xfs_has_attr and subroutines
+Message-ID: <20190422130048.GA56876@bfoster>
 References: <20190412225036.22939-1-allison.henderson@oracle.com>
- <20190412225036.22939-6-allison.henderson@oracle.com>
- <20190418154911.GC2885@bfoster>
- <8be843b1-7a12-57b5-101a-25485261484a@oracle.com>
+ <20190412225036.22939-7-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <8be843b1-7a12-57b5-101a-25485261484a@oracle.com>
+In-Reply-To: <20190412225036.22939-7-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Allison Henderson <allison.henderson@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 18, 2019 at 02:28:00PM -0700, Allison Henderson wrote:
-> On 4/18/19 8:49 AM, Brian Foster wrote:
-> > On Fri, Apr 12, 2019 at 03:50:32PM -0700, Allison Henderson wrote:
-> > > These routines set up set and start a new deferred attribute
-> > > operation.  These functions are meant to be called by other
-> > > code needing to initiate a deferred attribute operation.  We
-> > > will use these routines later in the parent pointer patches.
-> > > 
-> > 
-> > We probably don't need to reference the parent pointer stuff any more
-> > for this, right? I'm assuming we'll be converting generic attr
-> > infrastructure over to this mechanism in subsequent patches..?
+On Fri, Apr 12, 2019 at 03:50:33PM -0700, Allison Henderson wrote:
+> This patch adds a new functions to check for the existence of
+> an attribute.  Subroutines are also added to handle the cases
+> of leaf blocks, nodes or shortform.  We will need this later
+> for delayed attributes since delayed operations cannot return
+> error codes.
 > 
-> Right, some of these comments are a little stale.  I will clean then up a
-> bit.
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c      | 78 +++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_attr.h      |  1 +
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 33 ++++++++++++++++++
+>  fs/xfs/libxfs/xfs_attr_leaf.h |  1 +
+>  4 files changed, 113 insertions(+)
 > 
-> > 
-> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > > ---
-> > >   fs/xfs/libxfs/xfs_attr.c | 80 ++++++++++++++++++++++++++++++++++++++++++++++++
-> > >   fs/xfs/libxfs/xfs_attr.h |  7 +++++
-> > >   2 files changed, 87 insertions(+)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > > index fadd485..c3477fa7 100644
-> > > --- a/fs/xfs/libxfs/xfs_attr.c
-> > > +++ b/fs/xfs/libxfs/xfs_attr.c
-...
-> > > @@ -513,6 +560,39 @@ xfs_attr_remove(
-> > >   	return error;
-> > >   }
-> > > +/* Removes an attribute for an inode as a deferred operation */
-> > > +int
-> > > +xfs_attr_remove_deferred(
-> > 
-> > Hmm.. I'm kind of wondering if we actually need to defer attr removes.
-> > Do we have the same kind of challenges for attr removal as for attr
-> > creation, or is there some future scenario where this is needed?
-> 
-> I suppose we don't have to have it?  The motivation was to help break up the
-> amount of transaction activity that happens on inode create/rename/remove
-> operations once pptrs go in.  Attr remove does not look as complex as attr
-> set, but I suppose it helps to some degree?
-> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index c3477fa7..0042708 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -53,6 +53,7 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
+>  STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
+>  STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args, bool roll_trans);
+>  STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args, bool roll_trans);
+> +STATIC int xfs_leaf_has_attr(xfs_da_args_t *args);
+>  
+>  /*
+>   * Internal routines when attribute list is more than one block.
+> @@ -60,6 +61,7 @@ STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args, bool roll_trans);
+>  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+>  STATIC int xfs_attr_node_addname(xfs_da_args_t *args, bool roll_trans);
+>  STATIC int xfs_attr_node_removename(xfs_da_args_t *args, bool roll_trans);
+> +STATIC int xfs_attr_node_hasname(xfs_da_args_t *args);
+>  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+>  STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+>  
+> @@ -301,6 +303,29 @@ xfs_attr_set_args(
+>  }
+>  
+>  /*
+> + * Return successful if attr is found, or ENOATTR if not
+> + */
+> +int
+> +xfs_has_attr(
+> +	struct xfs_da_args      *args)
+> +{
+> +	struct xfs_inode        *dp = args->dp;
+> +	int                     error;
+> +
+> +	if (!xfs_inode_hasattr(dp))
+> +		error = -ENOATTR;
+> +	else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+> +		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+> +		error = xfs_shortform_has_attr(args);
+> +	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+> +		error = xfs_leaf_has_attr(args);
+> +	else
+> +		error = xfs_attr_node_hasname(args);
 
-Ok, this probably needs more thought. On one hand, I'm not a huge fan of
-using complex infrastructure where not required just because it's there.
-On the other, it could just be more simple to have consistency between
-xattr ops. As you note above, perhaps we do want the ability to defer
-xattr removes so we can use it in particular contexts (parent pointer
-updates) and not others (direct xattr remove requests from userspace).
-Perhaps the right thing to do for the time being is to continue on with
-the support for deferred xattr remove but don't invoke it from the
-direct xattr remove codepath..?
+I think it's usually expected to keep the {} braces around each branch
+of a multi-branch if/else when at least one branch has multiple lines.
 
-Note that if we took that approach, we could add a DEBUG option and/or
-an errortag to (randomly) defer xattr removes in the common path for
-test coverage purposes.
+Also, I see that at least some of this code is pulled from existing
+xattr functions. For example, the xfs_shortform_has_attr() code
+currently exists in xfs_attr_shortform_remove(),
+xfs_attr_shortform_add(), etc. Similar for xfs_leaf_has_attr() and
+xfs_attr_leaf_removename(), etc. 
+
+Rather than just adding new, not yet used functions, can we turn this
+patch more into a refactor where these new functions are reused by
+existing code where applicable? That reduces duplication and also
+facilitates review.
 
 Brian
 
-> > 
-> > > +	struct xfs_inode        *dp,
-> > > +	struct xfs_trans	*tp,
-> > > +	const unsigned char	*name,
-> > > +	unsigned int		namelen,
-> > > +	int                     flags)
-> > > +{
-> > > +
-> > > +	struct xfs_attr_item	*new;
-> > > +	char			*name_value;
-> > > +
-> > > +	if (!namelen) {
-> > > +		ASSERT(0);
-> > > +		return -EFSCORRUPTED;
-> > 
-> > Similar comment around -EFSCORRUPTED vs. -EINVAL (or something else..).
-> Ok, I will change to EINVAL here too.
+> +
+> +	return error;
+> +}
+> +
+> +/*
+>   * Remove the attribute specified in @args.
+>   */
+>  int
+> @@ -836,6 +861,29 @@ xfs_attr_leaf_addname(
+>  }
+>  
+>  /*
+> + * Return successful if attr is found, or ENOATTR if not
+> + */
+> +STATIC int
+> +xfs_leaf_has_attr(
+> +	struct xfs_da_args      *args)
+> +{
+> +	struct xfs_buf          *bp;
+> +	int                     error = 0;
+> +
+> +	args->blkno = 0;
+> +	error = xfs_attr3_leaf_read(args->trans, args->dp,
+> +			args->blkno, -1, &bp);
+> +	if (error)
+> +		return error;
+> +
+> +	error = xfs_attr3_leaf_lookup_int(bp, args);
+> +	error = (error == -ENOATTR) ? -ENOATTR : 0;
+> +	xfs_trans_brelse(args->trans, bp);
+> +
+> +	return error;
+> +}
+> +
+> +/*
+>   * Remove a name from the leaf attribute list structure
+>   *
+>   * This leaf block cannot have a "remote" value, we only call this routine
+> @@ -1166,6 +1214,36 @@ xfs_attr_node_addname(
+>  }
+>  
+>  /*
+> + * Return successful if attr is found, or ENOATTR if not
+> + */
+> +STATIC int
+> +xfs_attr_node_hasname(
+> +	struct xfs_da_args	*args)
+> +{
+> +	struct xfs_da_state	*state;
+> +	struct xfs_inode	*dp;
+> +	int			retval, error;
+> +
+> +	/*
+> +	 * Tie a string around our finger to remind us where we are.
+> +	 */
+> +	dp = args->dp;
+> +	state = xfs_da_state_alloc();
+> +	state->args = args;
+> +	state->mp = dp->i_mount;
+> +
+> +	/*
+> +	 * Search to see if name exists, and get back a pointer to it.
+> +	 */
+> +	error = xfs_da3_node_lookup_int(state, &retval);
+> +	if (error || (retval != -EEXIST)) {
+> +		if (error == 0)
+> +			error = retval;
+> +	}
+> +	return error;
+> +}
+> +
+> +/*
+>   * Remove a name from a B-tree attribute list.
+>   *
+>   * This will involve walking down the Btree, and may involve joining
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 83b3621..974c963 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -168,6 +168,7 @@ int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp,
+>  		 bool roll_trans);
+>  int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
+>  		    size_t namelen, int flags);
+> +int xfs_has_attr(struct xfs_da_args *args);
+>  int xfs_attr_remove_args(struct xfs_da_args *args, bool roll_trans);
+>  int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+>  		  int flags, struct attrlist_cursor_kern *cursor);
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 128bfe9..e9f2f53 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -622,6 +622,39 @@ xfs_attr_fork_remove(
+>  }
+>  
+>  /*
+> + * Return successful if attr is found, or ENOATTR if not
+> + */
+> +int
+> +xfs_shortform_has_attr(
+> +	struct xfs_da_args	 *args)
+> +{
+> +	struct xfs_attr_shortform *sf;
+> +	struct xfs_attr_sf_entry *sfe;
+> +	int			base = sizeof(struct xfs_attr_sf_hdr);
+> +	int			size = 0;
+> +	int			end;
+> +	int			i;
+> +
+> +	sf = (struct xfs_attr_shortform *)args->dp->i_afp->if_u1.if_data;
+> +	sfe = &sf->list[0];
+> +	end = sf->hdr.count;
+> +	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
+> +			base += size, i++) {
+> +		size = XFS_ATTR_SF_ENTSIZE(sfe);
+> +		if (sfe->namelen != args->namelen)
+> +			continue;
+> +		if (memcmp(sfe->nameval, args->name, args->namelen) != 0)
+> +			continue;
+> +		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
+> +			continue;
+> +		break;
+> +	}
+> +	if (i == end)
+> +		return -ENOATTR;
+> +	return 0;
+> +}
+> +
+> +/*
+>   * Remove an attribute from the shortform attribute list structure.
+>   */
+>  int
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+> index 9d830ec..98dd169 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+> @@ -39,6 +39,7 @@ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+>  int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
+>  			struct xfs_buf **leaf_bp);
+>  int	xfs_attr_shortform_remove(struct xfs_da_args *args);
+> +int	xfs_shortform_has_attr(struct xfs_da_args *args);
+>  int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+>  int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+>  xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
+> -- 
+> 2.7.4
 > 
-> Thanks again for the reviews!!  They are very helpful!
-> 
-> Allison
-> > 
-> > Brian
-> > 
-> > > +	}
-> > > +
-> > > +	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, 0), KM_SLEEP|KM_NOFS);
-> > > +	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
-> > > +	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, 0));
-> > > +	new->xattri_ip = dp;
-> > > +	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_REMOVE;
-> > > +	new->xattri_name_len = namelen;
-> > > +	new->xattri_value_len = 0;
-> > > +	new->xattri_flags = flags;
-> > > +	memcpy(name_value, name, namelen);
-> > > +
-> > > +	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-> > >   /*========================================================================
-> > >    * External routines when attribute list is inside the inode
-> > >    *========================================================================*/
-> > > diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> > > index 92d9a15..83b3621 100644
-> > > --- a/fs/xfs/libxfs/xfs_attr.h
-> > > +++ b/fs/xfs/libxfs/xfs_attr.h
-> > > @@ -175,5 +175,12 @@ bool xfs_attr_namecheck(const void *name, size_t length);
-> > >   int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
-> > >   			const unsigned char *name, size_t namelen, int flags);
-> > >   int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-> > > +int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
-> > > +			  const unsigned char *name, unsigned int name_len,
-> > > +			  const unsigned char *value, unsigned int valuelen,
-> > > +			  int flags);
-> > > +int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
-> > > +			    const unsigned char *name, unsigned int namelen,
-> > > +			    int flags);
-> > >   #endif	/* __XFS_ATTR_H__ */
-> > > -- 
-> > > 2.7.4
-> > > 
