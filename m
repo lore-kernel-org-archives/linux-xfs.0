@@ -1,93 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49788 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:36688 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726260AbfDVTkn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Apr 2019 15:40:43 -0400
-Date: Mon, 22 Apr 2019 14:40:40 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH 04/10] libxfs: retain ifork_ops when flushing inode
-Message-ID: <20190422194040.GC29660@redhat.com>
+        id S1727386AbfDVV1A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Apr 2019 17:27:00 -0400
+Subject: Re: [PATCH 07/10] libxfs: refactor buffer item release code
 References: <155594788997.115924.16224143537288136652.stgit@magnolia>
- <155594791533.115924.7540619376750686973.stgit@magnolia>
+ <155594793429.115924.9115512760848857551.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <e964dcb8-5a9d-26bf-e5ac-7489c9f259a1@sandeen.net>
+Date: Mon, 22 Apr 2019 16:26:58 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <155594791533.115924.7540619376750686973.stgit@magnolia>
+In-Reply-To: <155594793429.115924.9115512760848857551.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org, Arkadiusz Miskiewicz <arekm@maven.pl>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 22, 2019 at 08:45:15AM -0700, Darrick J. Wong wrote:
+On 4/22/19 10:45 AM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Retain the ifork ops used to validate the inode so that we can use the
-> same one to iflush it.  xfs_repair phase 6 can use multiple transactions
-> to fix various inode problems, which means that the inode might not be
-> fully fixed when each transaction commits.
+> Refactor the buffer item release code into a helper, which we will use
+> in subsequent patches to make the buffer log item lifetime match the
+> kernel equivalents.
 > 
-> This can be a particular problem if there's a shortform directory with
-> both invalid directory entries and incorrect i8count.  Phase 3 will set
-> the parent inode to "0" to signal to phase 6 that it needs to reset the
-> parent and i8count, but phase 6 starts a transaction to junk the bad
-> entries which fail to commit because the parent is invalid:
-> 
-> fixing i8count in inode 69022994673
-> Invalid inode number 0x0
-> xfs_dir_ino_validate: XFS_ERROR_REPORT
-> Metadata corruption detected at 0x464eb0, inode 0x10121750f1 data fork
-> xfs_repair: warning - iflush_int failed (-117)
-> 
-> And thus the inode fixes never get written out.
-> 
-> Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
-
 > ---
->  include/xfs_inode.h |    1 +
->  libxfs/rdwr.c       |    1 +
->  libxfs/util.c       |    2 +-
->  3 files changed, 3 insertions(+), 1 deletion(-)
+>  libxfs/trans.c |   14 +++++++++++---
+>  1 file changed, 11 insertions(+), 3 deletions(-)
 > 
 > 
-> diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-> index 79ec3a2d..e1e8b430 100644
-> --- a/include/xfs_inode.h
-> +++ b/include/xfs_inode.h
-> @@ -51,6 +51,7 @@ typedef struct xfs_inode {
+> diff --git a/libxfs/trans.c b/libxfs/trans.c
+> index 9de77c8b..629501f8 100644
+> --- a/libxfs/trans.c
+> +++ b/libxfs/trans.c
+> @@ -505,6 +505,16 @@ libxfs_trans_ordered_buf(
+>  	return ret;
+>  }
 >  
->  	xfs_fsize_t		i_size;		/* in-memory size */
->  	const struct xfs_dir_ops *d_ops;	/* directory ops vector */
-> +	struct xfs_ifork_ops	*i_fork_ops;	/* fork verifiers */
->  	struct inode		i_vnode;
->  } xfs_inode_t;
+> +static void
+> +xfs_buf_item_put(
+> +	struct xfs_buf_log_item	*bip)
+> +{
+> +	struct xfs_buf		*bp = bip->bli_buf;
+> +
+> +	bp->b_log_item = NULL;
+> +	kmem_zone_free(xfs_buf_item_zone, bip);
+> +}
+> +
+>  void
+>  libxfs_trans_brelse(
+>  	xfs_trans_t		*tp,
+> @@ -846,7 +856,6 @@ buf_item_done(
 >  
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index a00360e7..69d5abb2 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -1391,6 +1391,7 @@ libxfs_iget(
->  		return error;
->  	}
+>  	bp = bip->bli_buf;
+>  	ASSERT(bp != NULL);
+> -	bp->b_log_item = NULL;			/* remove log item */
+>  	bp->b_transp = NULL;			/* remove xact ptr */
 >  
-> +	ip->i_fork_ops = ifork_ops;
->  	if (!libxfs_inode_verify_forks(ip, ifork_ops)) {
->  		libxfs_irele(ip);
->  		return -EFSCORRUPTED;
-> diff --git a/libxfs/util.c b/libxfs/util.c
-> index 4ac151e6..2e3b9d51 100644
-> --- a/libxfs/util.c
-> +++ b/libxfs/util.c
-> @@ -422,7 +422,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
->  		VFS_I(ip)->i_version++;
+>  	hold = (bip->bli_flags & XFS_BLI_HOLD);
+> @@ -861,8 +870,7 @@ buf_item_done(
+>  		bip->bli_flags &= ~XFS_BLI_HOLD;
+>  	else
+>  		libxfs_putbuf(bp);
+> -	/* release the buf item */
+> -	kmem_zone_free(xfs_buf_item_zone, bip);
+> +	xfs_buf_item_put(bip);
+
+In xfs_buf_item_put(), we reach back up from bip to bip->bli_buf, which is
+the bp.  This is after we did a libxfs_putbuf(bp) on that bp.  Is there not
+a chance of use after free here?  Enough puts and a shaker can run, right?
+
+>  }
 >  
->  	/* Check the inline fork data before we write out. */
-> -	if (!libxfs_inode_verify_forks(ip, &xfs_default_ifork_ops))
-> +	if (!libxfs_inode_verify_forks(ip, ip->i_fork_ops))
->  		return -EFSCORRUPTED;
->  
->  	/*
+>  static void
 > 
