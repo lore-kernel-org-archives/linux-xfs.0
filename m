@@ -1,161 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40212 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726260AbfDVTgR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Apr 2019 15:36:17 -0400
-Date: Mon, 22 Apr 2019 14:36:07 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH 03/10] xfs_repair: correctly account for free space btree
- shrinks when fixing freelist
-Message-ID: <20190422193607.GB29660@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:44258 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726132AbfDVPpa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Apr 2019 11:45:30 -0400
+Subject: [PATCH 06/10] misc: fix strncpy length complaints
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 22 Apr 2019 08:45:28 -0700
+Message-ID: <155594792809.115924.2016290538799986694.stgit@magnolia>
+In-Reply-To: <155594788997.115924.16224143537288136652.stgit@magnolia>
 References: <155594788997.115924.16224143537288136652.stgit@magnolia>
- <155594790894.115924.5483344448490636960.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <155594790894.115924.5483344448490636960.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 22, 2019 at 08:45:09AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> When we fix the freelist at the end of build_agf_agfl in phase 5 of
-> repair, we need to create incore rmap records for the blocks that get
-> added to the AGFL.  We can't let the regular freelist fixing code use
-> the regular on-disk rmapbt update code because the rmapbt isn't fully
-> set up yet.
-> 
-> Unfortunately, the original code fails to account for the fact that the
-> free space btrees can shrink when we allocate blocks to fix the
-> freelist; those blocks are also put on the freelist, but there are
-> already incore rmaps for all the free space btree blocks.  We must not
-> create (redundant) incore rmaps for those blocks.  If we do, repair
-> fails with a complaint that rebuilding the rmapbt failed during phase 5.
-> xfs/137 on a 1k block size occasionally triggers this bug.
-> 
-> To fix the problem, construct a bitmap of all OWN_AG blocks that we know
-> about before traversing the AGFL, and only create new incore rmaps for
-> those AGFL blocks that are not already tracked in the bitmap.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-looks good to me.
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Fix a number of complaints about feeding sizeof(dest) directly to
+strncpy.  We do this by declaring the char arrays to be one larger
+than necessary and subtracting one, to ensure that we never overfill
+the buffer.
 
-> ---
->  repair/rmap.c |   54 ++++++++++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 44 insertions(+), 10 deletions(-)
-> 
-> 
-> diff --git a/repair/rmap.c b/repair/rmap.c
-> index d0156f9d..19cceca3 100644
-> --- a/repair/rmap.c
-> +++ b/repair/rmap.c
-> @@ -12,6 +12,7 @@
->  #include "dinode.h"
->  #include "slab.h"
->  #include "rmap.h"
-> +#include "bitmap.h"
->  
->  #undef RMAP_DEBUG
->  
-> @@ -450,15 +451,16 @@ rmap_store_ag_btree_rec(
->  	struct xfs_buf		*agflbp = NULL;
->  	struct xfs_trans	*tp;
->  	__be32			*agfl_bno, *b;
-> +	struct xfs_ag_rmap	*ag_rmap = &ag_rmaps[agno];
-> +	struct bitmap		*own_ag_bitmap = NULL;
->  	int			error = 0;
->  
->  	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
->  		return 0;
->  
->  	/* Release the ar_rmaps; they were put into the rmapbt during p5. */
-> -	free_slab(&ag_rmaps[agno].ar_rmaps);
-> -	error = init_slab(&ag_rmaps[agno].ar_rmaps,
-> -				  sizeof(struct xfs_rmap_irec));
-> +	free_slab(&ag_rmap->ar_rmaps);
-> +	error = init_slab(&ag_rmap->ar_rmaps, sizeof(struct xfs_rmap_irec));
->  	if (error)
->  		goto err;
->  
-> @@ -478,19 +480,50 @@ rmap_store_ag_btree_rec(
->  	 * rmap, we only need to add rmap records for AGFL blocks past
->  	 * that point in the AGFL because those blocks are a result of a
->  	 * no-rmap no-shrink freelist fixup that we did earlier.
-> +	 *
-> +	 * However, some blocks end up on the AGFL because the free space
-> +	 * btrees shed blocks as a result of allocating space to fix the
-> +	 * freelist.  We already created in-core rmap records for the free
-> +	 * space btree blocks, so we must be careful not to create those
-> +	 * records again.  Create a bitmap of already-recorded OWN_AG rmaps.
->  	 */
-> +	error = init_slab_cursor(ag_rmap->ar_raw_rmaps, rmap_compare, &rm_cur);
-> +	if (error)
-> +		goto err;
-> +	if (!bitmap_init(&own_ag_bitmap)) {
-> +		error = -ENOMEM;
-> +		goto err_slab;
-> +	}
-> +	while ((rm_rec = pop_slab_cursor(rm_cur)) != NULL) {
-> +		if (rm_rec->rm_owner != XFS_RMAP_OWN_AG)
-> +			continue;
-> +		if (!bitmap_set(own_ag_bitmap, rm_rec->rm_startblock,
-> +					rm_rec->rm_blockcount)) {
-> +			error = EFSCORRUPTED;
-> +			goto err_slab;
-> +		}
-> +	}
-> +	free_slab_cursor(&rm_cur);
-> +
-> +	/* Create rmaps for any AGFL blocks that aren't already rmapped. */
->  	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
-> -	b = agfl_bno + ag_rmaps[agno].ar_flcount;
-> +	b = agfl_bno + ag_rmap->ar_flcount;
->  	while (*b != cpu_to_be32(NULLAGBLOCK) &&
->  	       b - agfl_bno < libxfs_agfl_size(mp)) {
-> -		error = rmap_add_ag_rec(mp, agno, be32_to_cpu(*b), 1,
-> -				XFS_RMAP_OWN_AG);
-> -		if (error)
-> -			goto err;
-> +		xfs_agblock_t	agbno;
-> +
-> +		agbno = be32_to_cpu(*b);
-> +		if (!bitmap_test(own_ag_bitmap, agbno, 1)) {
-> +			error = rmap_add_ag_rec(mp, agno, agbno, 1,
-> +					XFS_RMAP_OWN_AG);
-> +			if (error)
-> +				goto err;
-> +		}
->  		b++;
->  	}
->  	libxfs_putbuf(agflbp);
->  	agflbp = NULL;
-> +	bitmap_free(&own_ag_bitmap);
->  
->  	/* Merge all the raw rmaps into the main list */
->  	error = rmap_fold_raw_recs(mp, agno);
-> @@ -498,8 +531,7 @@ rmap_store_ag_btree_rec(
->  		goto err;
->  
->  	/* Create cursors to refcount structures */
-> -	error = init_slab_cursor(ag_rmaps[agno].ar_rmaps, rmap_compare,
-> -			&rm_cur);
-> +	error = init_slab_cursor(ag_rmap->ar_rmaps, rmap_compare, &rm_cur);
->  	if (error)
->  		goto err;
->  
-> @@ -542,6 +574,8 @@ rmap_store_ag_btree_rec(
->  err:
->  	if (agflbp)
->  		libxfs_putbuf(agflbp);
-> +	if (own_ag_bitmap)
-> +		bitmap_free(&own_ag_bitmap);
->  	return error;
->  }
->  
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ mkfs/xfs_mkfs.c |   13 +++++++++++--
+ quota/edit.c    |    9 ++++++---
+ 2 files changed, 17 insertions(+), 5 deletions(-)
+
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 3e2ef92d..db3ad38e 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3270,8 +3270,17 @@ finish_superblock_setup(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_sb		*sbp)
+ {
+-	if (cfg->label)
+-		strncpy(sbp->sb_fname, cfg->label, sizeof(sbp->sb_fname));
++	if (cfg->label) {
++		size_t		label_len;
++
++		/*
++		 * Labels are null terminated unless the string fits exactly
++		 * in the label field, so assume sb_fname is zeroed and then
++		 * do a memcpy because the destination isn't a normal C string.
++		 */
++		label_len = min(sizeof(sbp->sb_fname), strlen(cfg->label));
++		memcpy(sbp->sb_fname, cfg->label, label_len);
++	}
+ 
+ 	sbp->sb_dblocks = cfg->dblocks;
+ 	sbp->sb_rblocks = cfg->rtblocks;
+diff --git a/quota/edit.c b/quota/edit.c
+index b10a5b34..f9938b8a 100644
+--- a/quota/edit.c
++++ b/quota/edit.c
+@@ -368,8 +368,7 @@ restore_file(
+ 	uint		type)
+ {
+ 	char		buffer[512];
+-	char		devbuffer[512];
+-	char		*dev = NULL;
++	char		dev[512];
+ 	uint		mask;
+ 	int		cnt;
+ 	uint32_t	id;
+@@ -377,7 +376,11 @@ restore_file(
+ 
+ 	while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+ 		if (strncmp("fs = ", buffer, 5) == 0) {
+-			dev = strncpy(devbuffer, buffer+5, sizeof(devbuffer));
++			/*
++			 * Copy the device name to dev, strip off the trailing
++			 * newline, and move on to the next line.
++			 */
++			strncpy(dev, buffer + 5, sizeof(dev) - 1);
+ 			dev[strlen(dev) - 1] = '\0';
+ 			continue;
+ 		}
