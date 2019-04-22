@@ -1,212 +1,161 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51772 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:53556 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726057AbfDVNDo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Apr 2019 09:03:44 -0400
-Date: Mon, 22 Apr 2019 09:03:40 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 7/9] xfs: Add attr context to log item
-Message-ID: <20190422130338.GB56876@bfoster>
-References: <20190412225036.22939-1-allison.henderson@oracle.com>
- <20190412225036.22939-8-allison.henderson@oracle.com>
+        id S1726305AbfDVTYD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Apr 2019 15:24:03 -0400
+Subject: Re: [PATCH 03/10] xfs_repair: correctly account for free space btree
+ shrinks when fixing freelist
+References: <155594788997.115924.16224143537288136652.stgit@magnolia>
+ <155594790894.115924.5483344448490636960.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <8fc32431-ef38-dbed-cf72-1b53ef27e81c@sandeen.net>
+Date: Mon, 22 Apr 2019 14:24:01 -0500
 MIME-Version: 1.0
+In-Reply-To: <155594790894.115924.5483344448490636960.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190412225036.22939-8-allison.henderson@oracle.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Apr 12, 2019 at 03:50:34PM -0700, Allison Henderson wrote:
-> This patch modifies xfs_attr_item to store a xfs_da_args, a xfs_buf pointer
-> and a new state type. We will use these in the next patch when
-> we modify xfs_set_attr_args to roll transactions by returning EAGAIN.
-> Because the subroutines of this function modify the contents of these
-> structures, we need to find a place to store them where they remain
-> instantiated across multiple calls to xfs_set_attr_args.
+On 4/22/19 10:45 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> When we fix the freelist at the end of build_agf_agfl in phase 5 of
+> repair, we need to create incore rmap records for the blocks that get
+> added to the AGFL.  We can't let the regular freelist fixing code use
+> the regular on-disk rmapbt update code because the rmapbt isn't fully
+> set up yet.
+> 
+> Unfortunately, the original code fails to account for the fact that the
+> free space btrees can shrink when we allocate blocks to fix the
+> freelist; those blocks are also put on the freelist, but there are
+> already incore rmaps for all the free space btree blocks.  We must not
+> create (redundant) incore rmaps for those blocks.  If we do, repair
+> fails with a complaint that rebuilding the rmapbt failed during phase 5.
+> xfs/137 on a 1k block size occasionally triggers this bug.
+> 
+> To fix the problem, construct a bitmap of all OWN_AG blocks that we know
+> about before traversing the AGFL, and only create new incore rmaps for
+> those AGFL blocks that are not already tracked in the bitmap.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
-
-I see Darrick has already commented on the whole state thing. I'll
-probably have to grok the next patch to comment further, but just a
-couple initial thoughts:
-
-First, I hit a build failure with this patch. It looks like there's a
-missed include in the scrub code:
-
-  ...
-  CC [M]  fs/xfs/scrub/repair.o
-In file included from fs/xfs/scrub/repair.c:32:
-fs/xfs/libxfs/xfs_attr.h:105:21: error: field ‘xattri_args’ has incomplete type
-  struct xfs_da_args xattri_args;   /* args context */
-  ...
-
-Second, the commit log suggests that the states will reflect the current
-transaction roll points (i.e., establishing re-entry points down in
-xfs_attr_set_args(). I'm kind of wondering if we should break these
-xattr set sub-sequences down into smaller helper functions (refactoring
-the existing code as we go) such that the mechanism could technically be
-used deferred or not. Re: the previous thought on whether to defer xattr
-removes or not, there might also be cases where there's not a need to
-defer xattr sets.
-
-E.g., taking a quick peek into the next patch, the state 1 case in
-xfs_attr_try_sf_addname() is actually a transaction commit, which I
-think means we're done. We'd have done an attr memory allocation,
-deferred op and transaction roll where none was necessary so it might
-not be worth it to defer in that scenario. Hmm, it also looks like we
-return -EAGAIN in places where we've not actually done any work, like if
-a shortform add attempt returns -ENOSPC (or the -EAGAIN return before we
-even attempt the sf add). That kind of looks like a waste of transaction
-rolls and further suggests it might be cleaner to break this whole path
-down into helpers and put it back together in a way more conducive to
-deferred operations.
-
-Brian
-
-
->  fs/xfs/libxfs/xfs_attr.h | 18 +++++++++++++++++-
->  fs/xfs/scrub/common.c    |  2 ++
->  fs/xfs/xfs_acl.c         |  2 ++
->  fs/xfs/xfs_attr_item.c   |  2 +-
->  fs/xfs/xfs_ioctl.c       |  2 ++
->  fs/xfs/xfs_ioctl32.c     |  2 ++
->  fs/xfs/xfs_iops.c        |  1 +
->  fs/xfs/xfs_xattr.c       |  1 +
->  8 files changed, 28 insertions(+), 2 deletions(-)
+>  repair/rmap.c |   54 ++++++++++++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 44 insertions(+), 10 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index 974c963..4ce3b0a 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -77,6 +77,13 @@ typedef struct attrlist_ent {	/* data from attr_list() */
->  	char	a_name[1];	/* attr name (NULL terminated) */
->  } attrlist_ent_t;
+> 
+> diff --git a/repair/rmap.c b/repair/rmap.c
+> index d0156f9d..19cceca3 100644
+> --- a/repair/rmap.c
+> +++ b/repair/rmap.c
+> @@ -12,6 +12,7 @@
+>  #include "dinode.h"
+>  #include "slab.h"
+>  #include "rmap.h"
+> +#include "bitmap.h"
 >  
-> +/* Attr state machine types */
-> +enum xfs_attr_state {
-> +	XFS_ATTR_STATE1 = 1,
-> +	XFS_ATTR_STATE2 = 2,
-> +	XFS_ATTR_STATE3 = 3,
-> +};
-> +
->  /*
->   * List of attrs to commit later.
->   */
-> @@ -88,7 +95,16 @@ struct xfs_attr_item {
->  	void		  *xattri_name;	      /* attr name */
->  	uint32_t	  xattri_name_len;    /* length of name */
->  	uint32_t	  xattri_flags;       /* attr flags */
-> -	struct list_head  xattri_list;
-> +
-> +	/*
-> +	 * Delayed attr parameters that need to remain instantiated
-> +	 * across transaction rolls during the defer finish
-> +	 */
-> +	struct xfs_buf		*xattri_leaf_bp;  /* Leaf buf to release */
-> +	enum xfs_attr_state	xattri_state;	  /* state machine marker */
-> +	struct xfs_da_args	xattri_args;	  /* args context */
-> +
-> +	struct list_head	xattri_list;
+>  #undef RMAP_DEBUG
 >  
->  	/*
->  	 * A byte array follows the header containing the file name and
-> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> index 0c54ff5..270c32e 100644
-> --- a/fs/xfs/scrub/common.c
-> +++ b/fs/xfs/scrub/common.c
-> @@ -30,6 +30,8 @@
->  #include "xfs_rmap_btree.h"
->  #include "xfs_log.h"
->  #include "xfs_trans_priv.h"
-> +#include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  #include "xfs_reflink.h"
->  #include "scrub/xfs_scrub.h"
-> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> index 142de8d..9b1b93e 100644
-> --- a/fs/xfs/xfs_acl.c
-> +++ b/fs/xfs/xfs_acl.c
-> @@ -10,6 +10,8 @@
->  #include "xfs_mount.h"
->  #include "xfs_inode.h"
->  #include "xfs_acl.h"
-> +#include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  #include "xfs_trace.h"
->  #include <linux/slab.h>
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index 0ea19b4..36e6d1e 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -19,10 +19,10 @@
->  #include "xfs_rmap.h"
->  #include "xfs_inode.h"
->  #include "xfs_icache.h"
-> -#include "xfs_attr.h"
->  #include "xfs_shared.h"
->  #include "xfs_da_format.h"
->  #include "xfs_da_btree.h"
-> +#include "xfs_attr.h"
+> @@ -450,15 +451,16 @@ rmap_store_ag_btree_rec(
+>  	struct xfs_buf		*agflbp = NULL;
+>  	struct xfs_trans	*tp;
+>  	__be32			*agfl_bno, *b;
+> +	struct xfs_ag_rmap	*ag_rmap = &ag_rmaps[agno];
+> +	struct bitmap		*own_ag_bitmap = NULL;
+>  	int			error = 0;
 >  
->  static inline struct xfs_attri_log_item *ATTRI_ITEM(struct xfs_log_item *lip)
->  {
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index ab341d6..c8728ca 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -16,6 +16,8 @@
->  #include "xfs_rtalloc.h"
->  #include "xfs_itable.h"
->  #include "xfs_error.h"
-> +#include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  #include "xfs_bmap.h"
->  #include "xfs_bmap_util.h"
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index 5001dca..23f6990 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -21,6 +21,8 @@
->  #include "xfs_fsops.h"
->  #include "xfs_alloc.h"
->  #include "xfs_rtalloc.h"
-> +#include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  #include "xfs_ioctl.h"
->  #include "xfs_ioctl32.h"
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index e73c21a..561c467 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -17,6 +17,7 @@
->  #include "xfs_acl.h"
->  #include "xfs_quota.h"
->  #include "xfs_error.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  #include "xfs_trans.h"
->  #include "xfs_trace.h"
-> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> index 3013746..938e81d 100644
-> --- a/fs/xfs/xfs_xattr.c
-> +++ b/fs/xfs/xfs_xattr.c
-> @@ -11,6 +11,7 @@
->  #include "xfs_mount.h"
->  #include "xfs_da_format.h"
->  #include "xfs_inode.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  #include "xfs_attr_leaf.h"
->  #include "xfs_acl.h"
-> -- 
-> 2.7.4
+>  	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+>  		return 0;
+>  
+>  	/* Release the ar_rmaps; they were put into the rmapbt during p5. */
+> -	free_slab(&ag_rmaps[agno].ar_rmaps);
+> -	error = init_slab(&ag_rmaps[agno].ar_rmaps,
+> -				  sizeof(struct xfs_rmap_irec));
+> +	free_slab(&ag_rmap->ar_rmaps);
+> +	error = init_slab(&ag_rmap->ar_rmaps, sizeof(struct xfs_rmap_irec));
+>  	if (error)
+>  		goto err;
+>  
+> @@ -478,19 +480,50 @@ rmap_store_ag_btree_rec(
+>  	 * rmap, we only need to add rmap records for AGFL blocks past
+>  	 * that point in the AGFL because those blocks are a result of a
+>  	 * no-rmap no-shrink freelist fixup that we did earlier.
+> +	 *
+> +	 * However, some blocks end up on the AGFL because the free space
+> +	 * btrees shed blocks as a result of allocating space to fix the
+> +	 * freelist.  We already created in-core rmap records for the free
+> +	 * space btree blocks, so we must be careful not to create those
+> +	 * records again.  Create a bitmap of already-recorded OWN_AG rmaps.
+>  	 */
+> +	error = init_slab_cursor(ag_rmap->ar_raw_rmaps, rmap_compare, &rm_cur);
+> +	if (error)
+> +		goto err;
+> +	if (!bitmap_init(&own_ag_bitmap)) {
+> +		error = -ENOMEM;
+> +		goto err_slab;
+> +	}
+> +	while ((rm_rec = pop_slab_cursor(rm_cur)) != NULL) {
+> +		if (rm_rec->rm_owner != XFS_RMAP_OWN_AG)
+> +			continue;
+> +		if (!bitmap_set(own_ag_bitmap, rm_rec->rm_startblock,
+> +					rm_rec->rm_blockcount)) {
+> +			error = EFSCORRUPTED;
+> +			goto err_slab;
+> +		}
+> +	}
+> +	free_slab_cursor(&rm_cur);
+> +
+> +	/* Create rmaps for any AGFL blocks that aren't already rmapped. */
+>  	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+> -	b = agfl_bno + ag_rmaps[agno].ar_flcount;
+> +	b = agfl_bno + ag_rmap->ar_flcount;
+>  	while (*b != cpu_to_be32(NULLAGBLOCK) &&
+>  	       b - agfl_bno < libxfs_agfl_size(mp)) {
+> -		error = rmap_add_ag_rec(mp, agno, be32_to_cpu(*b), 1,
+> -				XFS_RMAP_OWN_AG);
+> -		if (error)
+> -			goto err;
+> +		xfs_agblock_t	agbno;
+> +
+> +		agbno = be32_to_cpu(*b);
+> +		if (!bitmap_test(own_ag_bitmap, agbno, 1)) {
+> +			error = rmap_add_ag_rec(mp, agno, agbno, 1,
+> +					XFS_RMAP_OWN_AG);
+> +			if (error)
+> +				goto err;
+> +		}
+>  		b++;
+>  	}
+>  	libxfs_putbuf(agflbp);
+>  	agflbp = NULL;
+> +	bitmap_free(&own_ag_bitmap);
+>  
+>  	/* Merge all the raw rmaps into the main list */
+>  	error = rmap_fold_raw_recs(mp, agno);
+> @@ -498,8 +531,7 @@ rmap_store_ag_btree_rec(
+>  		goto err;
+>  
+>  	/* Create cursors to refcount structures */
+> -	error = init_slab_cursor(ag_rmaps[agno].ar_rmaps, rmap_compare,
+> -			&rm_cur);
+> +	error = init_slab_cursor(ag_rmap->ar_rmaps, rmap_compare, &rm_cur);
+>  	if (error)
+>  		goto err;
+>  
+> @@ -542,6 +574,8 @@ rmap_store_ag_btree_rec(
+>  err:
+>  	if (agflbp)
+>  		libxfs_putbuf(agflbp);
+> +	if (own_ag_bitmap)
+> +		bitmap_free(&own_ag_bitmap);
+>  	return error;
+>  }
+>  
 > 
