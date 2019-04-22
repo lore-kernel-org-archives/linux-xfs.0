@@ -1,89 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:48464 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726260AbfDVS1E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Apr 2019 14:27:04 -0400
-Subject: Re: [PATCH 01/10] scrub: fix Makefile targets which depend on
- builddefs
+Received: from userp2130.oracle.com ([156.151.31.86]:43820 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726132AbfDVPpF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Apr 2019 11:45:05 -0400
+Subject: [PATCH 02/10] xfs_info: use findmnt to handle mounted block devices
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 22 Apr 2019 08:45:02 -0700
+Message-ID: <155594790268.115924.87682432738525436.stgit@magnolia>
+In-Reply-To: <155594788997.115924.16224143537288136652.stgit@magnolia>
 References: <155594788997.115924.16224143537288136652.stgit@magnolia>
- <155594789626.115924.12751110694998923783.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a2b8a3bf-7bb1-63d3-b607-075548034470@sandeen.net>
-Date: Mon, 22 Apr 2019 13:27:03 -0500
 MIME-Version: 1.0
-In-Reply-To: <155594789626.115924.12751110694998923783.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: sandeen@sandeen.net, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On 4/22/19 10:44 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Add Makefile dependencies for targets that require variables set in
-> builddefs.  Although most of the required variables are file paths
-> defined during the ./configure process, we cannot simply use
-> AC_CONFIG_FILES to generate the scripts because that macro only expands
-> one level deep and its documentation says that it's only to be used for
-> generating makefiles, not build targets themselves.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Use findmnt to determine if the passed-in argument is associated with a
+mount point, and if so, use spaceman to query the mounted filesystem.
+If the user passed in a file, try to find out if it's a loop mounted
+live filesystem and if so query the live filesystem.
 
-> ---
->  scrub/Makefile |   11 ++++++-----
->  1 file changed, 6 insertions(+), 5 deletions(-)
-> 
-> 
-> diff --git a/scrub/Makefile b/scrub/Makefile
-> index f4710d3e..882da8fd 100644
-> --- a/scrub/Makefile
-> +++ b/scrub/Makefile
-> @@ -3,7 +3,8 @@
->  #
->  
->  TOPDIR = ..
-> -include $(TOPDIR)/include/builddefs
-> +builddefs=$(TOPDIR)/include/builddefs
-> +include $(builddefs)
->  
->  # On linux we get fsmap from the system or define it ourselves
->  # so include this based on platform type.  If this reverts to only
-> @@ -101,27 +102,27 @@ LDIRT = $(XFS_SCRUB_ALL_PROG) *.service *.cron
->  
->  default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(OPTIONAL_TARGETS)
->  
-> -xfs_scrub_all: xfs_scrub_all.in
-> +xfs_scrub_all: xfs_scrub_all.in $(builddefs)
->  	@echo "    [SED]    $@"
->  	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" \
->  		   -e "s|@pkg_version@|$(PKG_VERSION)|g" \
->  		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" < $< > $@
->  	$(Q)chmod a+x $@
->  
-> -phase5.o unicrash.o xfs.o: $(TOPDIR)/include/builddefs
-> +phase5.o unicrash.o xfs.o: $(builddefs)
->  
->  include $(BUILDRULES)
->  
->  install: $(INSTALL_SCRUB)
->  
-> -%.service: %.service.in
-> +%.service: %.service.in $(builddefs)
->  	@echo "    [SED]    $@"
->  	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" \
->  		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" \
->  		   -e "s|@pkg_lib_dir@|$(PKG_LIB_DIR)|g" \
->  		   -e "s|@pkg_name@|$(PKG_NAME)|g" < $< > $@
->  
-> -%.cron: %.cron.in
-> +%.cron: %.cron.in $(builddefs)
->  	@echo "    [SED]    $@"
->  	$(Q)$(SED) -e "s|@sbindir@|$(PKG_SBIN_DIR)|g" < $< > $@
->  
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ debian/control       |    2 +-
+ spaceman/xfs_info.sh |   22 +++++++++++++++++++---
+ 2 files changed, 20 insertions(+), 4 deletions(-)
+
+
+diff --git a/debian/control b/debian/control
+index f4f807b0..0b3205f5 100644
+--- a/debian/control
++++ b/debian/control
+@@ -8,7 +8,7 @@ Standards-Version: 4.0.0
+ Homepage: https://xfs.wiki.kernel.org/
+ 
+ Package: xfsprogs
+-Depends: ${shlibs:Depends}, ${misc:Depends}, python3:any
++Depends: ${shlibs:Depends}, ${misc:Depends}, python3:any, util-linux
+ Provides: fsck-backend
+ Suggests: xfsdump, acl, attr, quota
+ Breaks: xfsdump (<< 3.0.0)
+diff --git a/spaceman/xfs_info.sh b/spaceman/xfs_info.sh
+index ecf17f61..1bf6d2c3 100755
+--- a/spaceman/xfs_info.sh
++++ b/spaceman/xfs_info.sh
+@@ -7,6 +7,14 @@
+ OPTS=""
+ USAGE="Usage: xfs_info [-V] [-t mtab] [mountpoint|device|file]"
+ 
++# Try to find a loop device associated with a file.  We only want to return
++# one loopdev (multiple loop devices can attach to a single file) so we grab
++# the last line and return it if it's actually a block device.
++try_find_loop_dev_for_file() {
++	local x="$(losetup -O NAME -j "$1" 2> /dev/null | tail -n 1)"
++	test -b "$x" && echo "$x"
++}
++
+ while getopts "t:V" c
+ do
+ 	case $c in
+@@ -24,11 +32,19 @@ set -- extra "$@"
+ shift $OPTIND
+ case $# in
+ 	1)
+-		if [ -b "$1" ] || [ -f "$1" ]; then
+-			xfs_db -p xfs_info -c "info" $OPTS "$1"
++		arg="$1"
++
++		# See if we can map the arg to a loop device
++		loopdev="$(try_find_loop_dev_for_file "${arg}")"
++		test -n "${loopdev}" && arg="${loopdev}"
++
++		# If we find a mountpoint for the device, do a live query;
++		# otherwise try reading the fs with xfs_db.
++		if mountpt="$(findmnt -f -n -o TARGET "${arg}" 2> /dev/null)"; then
++			xfs_spaceman -p xfs_info -c "info" $OPTS "${mountpt}"
+ 			status=$?
+ 		else
+-			xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
++			xfs_db -p xfs_info -c "info" $OPTS "${arg}"
+ 			status=$?
+ 		fi
+ 		;;
