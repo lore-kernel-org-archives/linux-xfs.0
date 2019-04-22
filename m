@@ -1,27 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:53556 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:40212 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726305AbfDVTYD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Apr 2019 15:24:03 -0400
+        id S1726260AbfDVTgR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Apr 2019 15:36:17 -0400
+Date: Mon, 22 Apr 2019 14:36:07 -0500
+From: Bill O'Donnell <billodo@redhat.com>
 Subject: Re: [PATCH 03/10] xfs_repair: correctly account for free space btree
  shrinks when fixing freelist
+Message-ID: <20190422193607.GB29660@redhat.com>
 References: <155594788997.115924.16224143537288136652.stgit@magnolia>
  <155594790894.115924.5483344448490636960.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <8fc32431-ef38-dbed-cf72-1b53ef27e81c@sandeen.net>
-Date: Mon, 22 Apr 2019 14:24:01 -0500
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <155594790894.115924.5483344448490636960.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org
 
-On 4/22/19 10:45 AM, Darrick J. Wong wrote:
+On Mon, Apr 22, 2019 at 08:45:09AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
 > When we fix the freelist at the end of build_agf_agfl in phase 5 of
@@ -44,7 +43,8 @@ On 4/22/19 10:45 AM, Darrick J. Wong wrote:
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+looks good to me.
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
 > ---
 >  repair/rmap.c |   54 ++++++++++++++++++++++++++++++++++++++++++++----------
