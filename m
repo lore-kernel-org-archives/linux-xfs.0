@@ -1,55 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:44154 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726132AbfDVPqw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Apr 2019 11:46:52 -0400
-Subject: [PATCH v3 00/10] xfsprogs-5.0: fix various problems
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 22 Apr 2019 08:44:50 -0700
-Message-ID: <155594788997.115924.16224143537288136652.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:39908 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728996AbfDVVEE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Apr 2019 17:04:04 -0400
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH v5 1/6] libnvdimm: nd_region flush callback support
+References: <20190410040826.24371-1-pagupta@redhat.com>
+        <20190410040826.24371-2-pagupta@redhat.com>
+        <CAPcyv4i1FjBzfcWtzeCvj-giHa9xaX0dMQ==q4LZC_L8VEqkHg@mail.gmail.com>
+        <20190412083230.GA29850@quack2.suse.cz>
+        <x494l73z7th.fsf@segfault.boston.devel.redhat.com>
+        <CAPcyv4jrNHqW3FuGkeo==ZoJr7LKahCv4_esnokfy7enek8=2Q@mail.gmail.com>
+        <20190418161833.GA22970@infradead.org>
+        <CAPcyv4jPOF_+R6U17J_+88+X8LC-LSPCugA6gbKxuphuuFB2gg@mail.gmail.com>
+        <x497ebm82d4.fsf@segfault.boston.devel.redhat.com>
+        <CAPcyv4gGmN2LLMPy6BzWpYhRyV7fFNVgh=xAWSAdnnAWu5APtg@mail.gmail.com>
+Date: Mon, 22 Apr 2019 17:03:50 -0400
+In-Reply-To: <CAPcyv4gGmN2LLMPy6BzWpYhRyV7fFNVgh=xAWSAdnnAWu5APtg@mail.gmail.com>
+        (Dan Williams's message of "Mon, 22 Apr 2019 12:44:21 -0700")
+Message-ID: <x49ef5t7nwp.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, Pankaj Gupta <pagupta@redhat.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, KVM list <kvm@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ross Zwisler <zwisler@kernel.org>, Vishal L Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, Matthew Wilcox <willy@infradead.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, lcapitulino@redhat.com, Kevin Wolf <kwolf@redhat.com>, Igor Mammedov <imammedo@redhat.com>, Nitesh Narayan Lal <nilal@redhat.com>, Rik van Riel <riel@surriel.com>, Stefan Hajnoczi <stefanha@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Hildenbrand <david@redhat.com>, david <david@fromorbit.com>, cohuck@redhat.com, Xiao Guangrong <xiaoguangrong.eric@gmail.com>, Paolo Bonzini <pbonzini@redhat.com>, kilobyte@angband.pl, yuval shaia <yuval.shaia@oracle.com>
 
-Hi all,
+Dan Williams <dan.j.williams@intel.com> writes:
 
-Here are some fixes for xfsprogs 5.0:
+> On Mon, Apr 22, 2019 at 8:59 AM Jeff Moyer <jmoyer@redhat.com> wrote:
+>>
+>> Dan Williams <dan.j.williams@intel.com> writes:
+>>
+>> > On Thu, Apr 18, 2019 at 9:18 AM Christoph Hellwig <hch@infradead.org> wrote:
+>> >>
+>> >> On Thu, Apr 18, 2019 at 09:05:05AM -0700, Dan Williams wrote:
+>> >> > > > I'd either add a comment about avoiding retpoline overhead here or just
+>> >> > > > make ->flush == NULL mean generic_nvdimm_flush(). Just so that people don't
+>> >> > > > get confused by the code.
+>> >> > >
+>> >> > > Isn't this premature optimization?  I really don't like adding things
+>> >> > > like this without some numbers to show it's worth it.
+>> >> >
+>> >> > I don't think it's premature given this optimization technique is
+>> >> > already being deployed elsewhere, see:
+>> >> >
+>> >> > https://lwn.net/Articles/774347/
+>> >>
+>> >> For one this one was backed by numbers, and second after feedback
+>> >> from Linux we switched to the NULL pointer check instead.
+>> >
+>> > Ok I should have noticed the switch to NULL pointer check. However,
+>> > the question still stands do we want everyone to run numbers to
+>> > justify this optimization, or make it a new common kernel coding
+>> > practice to do:
+>> >
+>> >     if (!object->op)
+>> >         generic_op(object);
+>> >     else
+>> >         object->op(object);
+>> >
+>> > ...in hot paths?
+>>
+>> I don't think nvdimm_flush is a hot path.  Numbers of some
+>> representative workload would prove one of us right.
+>
+> I'd rather say that the if "if (!op) do_generic()" pattern is more
+> readable in the general case, saves grepping for who set the op in the
+> common case. The fact that it has the potential to be faster is gravy
+> at that point.
 
-Patch 1 fixes the problem of xfs_scrub's support scripts not getting
-rebuilt when file path definitions change.
+If the primary motivation is performance, then I'd expect performance
+numbers to back it up.  If that isn't the primary motivation, then
+choose whichever way you feel is appropriate.
 
-Patch 2 fixes a problem xfs_info had in finding mounts.
-
-Patch 3 fixes a crash in xfs_repair where accidentally create duplicate
-rmapbt records for blocks that are initially allocated to the free space
-btrees but then are freed back to the AGFL. while rebuilding the rmap
-btree.
-
-Patches 4-5 fix a problem where xfs_repair phase 6 will fail to flush
-partially corrected inode core data to the inode cluster buffer because
-phase 6 hasn't yet fixed every thing that's wrong with the inode.  This
-patch is part of a continuing series of fixes for Arkadiusz Miśkiewicz's
-broken filesystem.
-
-Patch 6 fixes some static checker complaints about strncpy usage.
-
-Patches 7-10 refactor the userspace buffer and inode log item handling
-so that the item lifetimes make more sense -- they don't need to be kept
-around after a transaction commits (or cancels), and we certainly don't
-need to be leaking them because we got lazy about cleaning them up.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfsprogs-5.0-fixes
+Cheers,
+Jeff
