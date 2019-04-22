@@ -1,55 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59048 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726004AbfDWIIL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Apr 2019 04:08:11 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v6 5/6] ext4: disable map_sync for async flush
-Date: Tue, 23 Apr 2019 13:36:11 +0530
-Message-Id: <20190423080612.15361-6-pagupta@redhat.com>
-In-Reply-To: <20190423080612.15361-1-pagupta@redhat.com>
-References: <20190423080612.15361-1-pagupta@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:42550 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726132AbfDVPpU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Apr 2019 11:45:20 -0400
+Subject: [PATCH 04/10] libxfs: retain ifork_ops when flushing inode
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 22 Apr 2019 08:45:15 -0700
+Message-ID: <155594791533.115924.7540619376750686973.stgit@magnolia>
+In-Reply-To: <155594788997.115924.16224143537288136652.stgit@magnolia>
+References: <155594788997.115924.16224143537288136652.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Arkadiusz Miskiewicz <arekm@maven.pl>
 
-Dont support 'MAP_SYNC' with non-DAX files and DAX files
-with asynchronous dax_device. Virtio pmem provides 
-asynchronous host page cache flush mechanism. We don't
-support 'MAP_SYNC' with virtio pmem and ext4.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+Retain the ifork ops used to validate the inode so that we can use the
+same one to iflush it.  xfs_repair phase 6 can use multiple transactions
+to fix various inode problems, which means that the inode might not be
+fully fixed when each transaction commits.
+
+This can be a particular problem if there's a shortform directory with
+both invalid directory entries and incorrect i8count.  Phase 3 will set
+the parent inode to "0" to signal to phase 6 that it needs to reset the
+parent and i8count, but phase 6 starts a transaction to junk the bad
+entries which fail to commit because the parent is invalid:
+
+fixing i8count in inode 69022994673
+Invalid inode number 0x0
+xfs_dir_ino_validate: XFS_ERROR_REPORT
+Metadata corruption detected at 0x464eb0, inode 0x10121750f1 data fork
+xfs_repair: warning - iflush_int failed (-117)
+
+And thus the inode fixes never get written out.
+
+Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/ext4/file.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ include/xfs_inode.h |    1 +
+ libxfs/rdwr.c       |    1 +
+ libxfs/util.c       |    2 +-
+ 3 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 69d65d49837b..4b2ccaf1932e 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -360,15 +360,16 @@ static const struct vm_operations_struct ext4_file_vm_ops = {
- static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
- {
- 	struct inode *inode = file->f_mapping->host;
-+	struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
-+	struct dax_device *dax_dev = sbi->s_daxdev;
+
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 79ec3a2d..e1e8b430 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -51,6 +51,7 @@ typedef struct xfs_inode {
  
--	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
-+	if (unlikely(ext4_forced_shutdown(sbi)))
- 		return -EIO;
+ 	xfs_fsize_t		i_size;		/* in-memory size */
+ 	const struct xfs_dir_ops *d_ops;	/* directory ops vector */
++	struct xfs_ifork_ops	*i_fork_ops;	/* fork verifiers */
+ 	struct inode		i_vnode;
+ } xfs_inode_t;
  
--	/*
--	 * We don't support synchronous mappings for non-DAX files. At least
--	 * until someone comes with a sensible use case.
-+	/* We don't support synchronous mappings for non-DAX files and
-+	 * for DAX files if underneath dax_device is not synchronous.
- 	 */
--	if (!IS_DAX(file_inode(file)) && (vma->vm_flags & VM_SYNC))
-+	if (!daxdev_mapping_supported(vma, dax_dev))
- 		return -EOPNOTSUPP;
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index a00360e7..69d5abb2 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1391,6 +1391,7 @@ libxfs_iget(
+ 		return error;
+ 	}
  
- 	file_accessed(file);
--- 
-2.20.1
++	ip->i_fork_ops = ifork_ops;
+ 	if (!libxfs_inode_verify_forks(ip, ifork_ops)) {
+ 		libxfs_irele(ip);
+ 		return -EFSCORRUPTED;
+diff --git a/libxfs/util.c b/libxfs/util.c
+index 4ac151e6..2e3b9d51 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -422,7 +422,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
+ 		VFS_I(ip)->i_version++;
+ 
+ 	/* Check the inline fork data before we write out. */
+-	if (!libxfs_inode_verify_forks(ip, &xfs_default_ifork_ops))
++	if (!libxfs_inode_verify_forks(ip, ip->i_fork_ops))
+ 		return -EFSCORRUPTED;
+ 
+ 	/*
