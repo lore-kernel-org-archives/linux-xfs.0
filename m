@@ -1,62 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33640 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725888AbfDWHQh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Apr 2019 03:16:37 -0400
-Subject: Re: [PATCH V3] block: clarify that bio_add_page() and related helpers
- can add multi pages
-References: <20190423025104.3843-1-ming.lei@redhat.com>
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <09668d6f-7e5b-d19a-4e20-f209c11eaa19@suse.de>
-Date: Tue, 23 Apr 2019 09:16:35 +0200
+Received: from sandeen.net ([63.231.237.45]:33122 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728551AbfDVUtH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Apr 2019 16:49:07 -0400
+Subject: Re: [PATCH 05/10] libxfs: drop the ifork_ops parameter from
+ _inode_verify_forks
+References: <155594788997.115924.16224143537288136652.stgit@magnolia>
+ <155594792189.115924.17675145707430115266.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <e7f74fb4-2bc4-847c-5a92-f624c9e3527e@sandeen.net>
+Date: Mon, 22 Apr 2019 15:49:04 -0500
 MIME-Version: 1.0
-In-Reply-To: <20190423025104.3843-1-ming.lei@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <155594792189.115924.17675145707430115266.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 4/23/19 4:51 AM, Ming Lei wrote:
-> bio_add_page() and __bio_add_page() are capable of adding pages into
-> bio, and now we have at least two such usages alreay:
+On 4/22/19 10:45 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> 	- __bio_iov_bvec_add_pages()
-> 	- nvmet_bdev_execute_rw().
+> Now that the inode remembers its own ifork_ops, we can drop the second
+> parameter from libxfs_inode_verify_forks.
 > 
-> So update comments on these two helpers.
-> 
-> The thing is a bit special for __bio_try_merge_page(), given the caller
-> needs to know if the new added page is same with the last added page,
-> then it isn't safe to pass multi-page in case that 'same_page' is true,
-> so adds warning on potential misuse, and updates comment on
-> __bio_try_merge_page().
-> 
-> Cc: linux-xfs@vger.kernel.org
-> Cc: linux-fsdevel@vger.kernel.org
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Reviewed-by: Christoph Hellwig <hch@infradead.org>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
-> V3:
-> 	- fix build failure caused by rebase via 'patch -p1 <'
-> V2:
-> 	- add Reviewed-by tag
-> 	- rebase on latest for-5.2/block
->   block/bio.c | 26 +++++++++++++++-----------
->   1 file changed, 15 insertions(+), 11 deletions(-)
+>  include/xfs_inode.h |    3 +--
+>  libxfs/rdwr.c       |   11 +++++------
+>  libxfs/util.c       |    2 +-
+>  3 files changed, 7 insertions(+), 9 deletions(-)
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
-HRB 21284 (AG Nürnberg)
+> 
+> diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+> index e1e8b430..52d79f3c 100644
+> --- a/include/xfs_inode.h
+> +++ b/include/xfs_inode.h
+> @@ -151,8 +151,7 @@ extern void	libxfs_trans_ichgtime(struct xfs_trans *,
+>  extern int	libxfs_iflush_int (struct xfs_inode *, struct xfs_buf *);
+>  
+>  /* Inode Cache Interfaces */
+> -extern bool	libxfs_inode_verify_forks(struct xfs_inode *ip,
+> -				struct xfs_ifork_ops *);
+> +extern bool	libxfs_inode_verify_forks(struct xfs_inode *ip);
+>  extern int	libxfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
+>  				uint, struct xfs_inode **,
+>  				struct xfs_ifork_ops *);
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index 69d5abb2..bc2ed38c 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -1338,16 +1338,15 @@ extern kmem_zone_t	*xfs_ili_zone;
+>   */
+>  bool
+>  libxfs_inode_verify_forks(
+> -	struct xfs_inode	*ip,
+> -	struct xfs_ifork_ops	*ops)
+> +	struct xfs_inode	*ip)
+>  {
+>  	struct xfs_ifork	*ifp;
+>  	xfs_failaddr_t		fa;
+>  
+> -	if (!ops)
+> +	if (!ip->i_fork_ops)
+>  		return true;
+>  
+> -	fa = xfs_ifork_verify_data(ip, ops);
+> +	fa = xfs_ifork_verify_data(ip, ip->i_fork_ops);
+>  	if (fa) {
+>  		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+>  		xfs_inode_verifier_error(ip, -EFSCORRUPTED, "data fork",
+> @@ -1355,7 +1354,7 @@ libxfs_inode_verify_forks(
+>  		return false;
+>  	}
+>  
+> -	fa = xfs_ifork_verify_attr(ip, ops);
+> +	fa = xfs_ifork_verify_attr(ip, ip->i_fork_ops);
+>  	if (fa) {
+>  		ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
+>  		xfs_inode_verifier_error(ip, -EFSCORRUPTED, "attr fork",
+> @@ -1392,7 +1391,7 @@ libxfs_iget(
+>  	}
+>  
+>  	ip->i_fork_ops = ifork_ops;
+> -	if (!libxfs_inode_verify_forks(ip, ifork_ops)) {
+> +	if (!libxfs_inode_verify_forks(ip)) {
+>  		libxfs_irele(ip);
+>  		return -EFSCORRUPTED;
+>  	}
+> diff --git a/libxfs/util.c b/libxfs/util.c
+> index 2e3b9d51..ea75fa20 100644
+> --- a/libxfs/util.c
+> +++ b/libxfs/util.c
+> @@ -422,7 +422,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
+>  		VFS_I(ip)->i_version++;
+>  
+>  	/* Check the inline fork data before we write out. */
+> -	if (!libxfs_inode_verify_forks(ip, ip->i_fork_ops))
+> +	if (!libxfs_inode_verify_forks(ip))
+>  		return -EFSCORRUPTED;
+>  
+>  	/*
+> 
