@@ -1,122 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:52519 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725880AbfDTXyT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Apr 2019 19:54:19 -0400
-Date: Sun, 21 Apr 2019 09:54:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw
- workload
-Message-ID: <20190420235412.GY29573@dread.disaster.area>
-References: <20190404165737.30889-1-amir73il@gmail.com>
- <20190404211730.GD26298@dastard>
- <20190408103303.GA18239@quack2.suse.cz>
- <1554741429.3326.43.camel@suse.com>
- <20190411011117.GC29573@dread.disaster.area>
- <20190416122240.GN29573@dread.disaster.area>
- <20190418031013.GX29573@dread.disaster.area>
- <1555611694.18313.12.camel@suse.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1555611694.18313.12.camel@suse.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36240 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725817AbfDVKCT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Apr 2019 06:02:19 -0400
+From: Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V2] block: clarify that bio_add_page() and related helpers can add multi pages
+Date: Mon, 22 Apr 2019 18:02:07 +0800
+Message-Id: <20190422100207.13057-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Davidlohr Bueso <dbueso@suse.com>
-Cc: Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-On Thu, Apr 18, 2019 at 11:21:34AM -0700, Davidlohr Bueso wrote:
-> On Thu, 2019-04-18 at 13:10 +1000, Dave Chinner wrote:
-> > Now the stuff I've been working on has the same interface as
-> > Davidlohr's patch, so I can swap and change them without thinking
-> > about it. It's still completely unoptimised, but:
-> > 
-> > 			IOPS read/write (direct IO)
-> > processes	rwsem		DB rangelock	XFS
-> > rangelock
-> >  1		78k / 78k	75k / 75k	72k / 72k
-> >  2		131k / 131k	123k / 123k	133k / 133k
-> >  4		267k / 267k	183k / 183k	237k / 237k
-> >  8		372k / 372k	177k / 177k	265k / 265k
-> >  16		315k / 315k	135k / 135k	228k / 228k
-> > 
-> > It's still substantially faster than the interval tree code.
-> 
-> In general another big difference between both rangelock vs rwsems
-> (when comparing them with full ranges) is that the latter will do
-> writer optimistic spinning, so saving a context switch under the right
-> scenarios provides mayor wins for rwsems -- I'm not sure if this
-> applies to your fio tests, though. And pretty soon readers will also do
-> this, hence rwsem will become a try-hard-not-to-sleep lock.
+bio_add_page() and __bio_add_page() are capable of adding pages into
+bio, and now we have at least two such usages alreay:
 
-Right, the optimistic spin-on-owner behaviour basically causes both
-rwsems and mutexes to behave as spin locks under these fio workloads
-until all CPUs are spinning at 100% CPU usage before they even start
-to behave like a sleeping lock. Essentailly, when I'm using the XFS
-range locks as "full range only" rwsem equivalent locks, they end up
-behaving like rwsems in terms of spinning on the tree mutex as the
-single read-lock range is shared between all concurrent readers and
-so has relatively low lookup and modification cost.
+	- __bio_iov_bvec_add_pages()
+	- nvmet_bdev_execute_rw().
 
-If I optmised the record update, it would be even closer to the
-rwsem performance, but full range read locks are going to be rare.
-Hell, even conflicting lock ranges are going to be rare in the IO
-path, because the application is doing something very wrong if it is
-doing overlapping concurrent IOs....
+So update comments on these two helpers.
 
-> One of the reasons why I was hesitant with Btrees was the fact that
-> insertion requires memory allocation, something I wanted to avoid...
+The thing is a bit special for __bio_try_merge_page(), given the caller
+needs to know if the new added page is same with the last added page,
+then it isn't safe to pass multi-page in case that 'same_page' is true,
+so adds warning on potential misuse, and updates comment on
+__bio_try_merge_page().
 
-Yup, that's an issue, and one of the reasons why I've used a mutex
-for the tree lock rather than a spin lock. But in the end, there's
-no difference to CPU usage on contention as they both act as spin
-locks in these cases...
+Cc: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>
+Reviewed-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+V2:
+	- add Reviewed-by tag
+	- rebase on latest for-5.2/block
 
-If it becomes an issue, I'll add a mempool for the tree nodes and
-make sure that it is pre-populated sufficiently before starting a
-multi-level tree modification.
+ block/bio.c | 26 +++++++++++++++-----------
+ 1 file changed, 15 insertions(+), 11 deletions(-)
 
-> per your numbers, sacrificing tree depth was the wrong choice. Thanks
-> for sharing these numbers.
-
-Yeah, anything that pointer chases through cachelines and dirties
-multiple cachelines on rebalance really doesn't scale for a
-fast-lookup structure. For btrees multi-level split/merge hurt, but
-for the lookup and simple insert/remove case the cacheline miss cost
-is substantially amortised by packing multiple records per
-cacheline.
-
-> > BTW, if I take away the rwsem serialisation altogether, this
-> > test tops out at just under 500k/500k at 8 threads, and at 16
-> > threads has started dropping off (~440k/440k). So the rwsem is
-> > a scalability limitation at just 8 threads....
-> > 
-> > /me goes off and thinks more about adding optimistic lock coupling
-> > to the XFS iext btree to get rid of the need for tree-wide
-> > locking altogether
-> 
-> I was not aware of this code.
-
-It's relatively new, and directly tailored to the needs of caching
-the XFS extent tree - it's not really a generic btree in that it's
-record store format is the XFS on-disk extent record. i.e. it
-only stores 54 bits of start offset and 21 bits of length in it's 16
-byte records, and the rest of the space is for the record data.
-
-As such, I'm not really implementing a generic range lock - it is
-highly tailored to the requirements and constraints of XFS
-filesystem IO. e.g. using max(block size, PAGE_SIZE) granularity
-range indexing means we can support maximum IO sizes (4GB) with 21
-bits of length in the record.  And RANGE_LOCK_FULL is implemented as
-length = MAXEXTLEN + a hidden state bit so it supports exclusive
-locking from (start, RANGE_LOCK_FULL) and things like truncate, EOF
-zeroing use this to exclude IO from the range they are working on
-correctly....
-
-Cheers,
-
-Dave.
+diff --git a/block/bio.c b/block/bio.c
+index 5959141d4e46..e92c37ce20a6 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -688,6 +688,8 @@ static bool can_add_page_to_seg(struct request_queue *q,
+ 	if (bv->bv_len + len > queue_max_segment_size(q))
+ 		return false;
+ 
++	WARN_ON_ONCE(same_page && (len + off) > PAGE_SIZE);
++
+ 	return true;
+ }
+ 
+@@ -786,9 +788,9 @@ EXPORT_SYMBOL(bio_add_pc_page);
+ /**
+  * __bio_try_merge_page - try appending data to an existing bvec.
+  * @bio: destination bio
+- * @page: page to add
++ * @page: start page to add
+  * @len: length of the data to add
+- * @off: offset of the data in @page
++ * @off: offset of the data relative to @page
+  * @same_page: if %true only merge if the new data is in the same physical
+  *		page as the last segment of the bio.
+  *
+@@ -796,6 +798,8 @@ EXPORT_SYMBOL(bio_add_pc_page);
+  * a useful optimisation for file systems with a block size smaller than the
+  * page size.
+  *
++ * Warn if (@len, @off) crosses pages in case that @same_page is true.
++ *
+  * Return %true on success or %false on failure.
+  */
+ bool __bio_try_merge_page(struct bio *bio, struct page *page,
+@@ -818,11 +822,11 @@ bool __bio_try_merge_page(struct bio *bio, struct page *page,
+ EXPORT_SYMBOL_GPL(__bio_try_merge_page);
+ 
+ /**
+- * __bio_add_page - add page to a bio in a new segment
++ * __bio_add_page - add page(s) to a bio in a new segment
+  * @bio: destination bio
+- * @page: page to add
+- * @len: length of the data to add
+- * @off: offset of the data in @page
++ * @page: start page to add
++ * @len: length of the data to add, may cross pages
++ * @off: offset of the data relative to @page, may cross pages
+  *
+  * Add the data at @page + @off to @bio as a new bvec.  The caller must ensure
+  * that @bio has space for another bvec.
+@@ -845,13 +849,13 @@ void __bio_add_page(struct bio *bio, struct page *page,
+ EXPORT_SYMBOL_GPL(__bio_add_page);
+ 
+ /**
+- *	bio_add_page	-	attempt to add page to bio
++ *	bio_add_page	-	attempt to add page(s) to bio
+  *	@bio: destination bio
+- *	@page: page to add
+- *	@len: vec entry length
+- *	@offset: vec entry offset
++ *	@page: start page to add
++ *	@len: vec entry length, may cross pages
++ *	@offset: vec entry offset relative to @page, may cross pages
+  *
+- *	Attempt to add a page to the bio_vec maplist. This will only fail
++ *	Attempt to add page(s) to the bio_vec maplist. This will only fail
+  *	if either bio->bi_vcnt == bio->bi_max_vecs or it's a cloned bio.
+  */
+ int bio_add_page(struct bio *bio, struct page *page,
 -- 
-Dave Chinner
-david@fromorbit.com
+2.9.5
