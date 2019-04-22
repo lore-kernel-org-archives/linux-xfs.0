@@ -1,188 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39878 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725888AbfDWIH3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Apr 2019 04:07:29 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v6 3/6] libnvdimm: add dax_dev sync flag
-Date: Tue, 23 Apr 2019 13:36:09 +0530
-Message-Id: <20190423080612.15361-4-pagupta@redhat.com>
-In-Reply-To: <20190423080612.15361-1-pagupta@redhat.com>
-References: <20190423080612.15361-1-pagupta@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:43486 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726260AbfDVSZq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Apr 2019 14:25:46 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3MINk9T174548
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2019 18:25:45 GMT
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2rytusqspj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2019 18:25:44 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x3MIOTkD181733
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2019 18:25:44 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2s0f0v2ym3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2019 18:25:44 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x3MIPgmS002075
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Apr 2019 18:25:43 GMT
+Date: Mon, 22 Apr 2019 11:25:41 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: unlock inode when xfs_ioctl_setattr_get_trans can't get
+ transaction
+Message-ID: <20190422182541.GA4676@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl
+To: xfs <linux-xfs@vger.kernel.org>
 
-This patch adds 'DAXDEV_SYNC' flag which is set
-for nd_region doing synchronous flush. This later
-is used to disable MAP_SYNC functionality for
-ext4 & xfs filesystem for devices don't support
-synchronous flush.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+We passed an inode into xfs_ioctl_setattr_get_trans with join_flags
+indicating which locks are held on that inode.  If we can't allocate a
+transaction then we need to unlock the inode before we bail out, like
+all the other error paths do.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- drivers/dax/bus.c            |  2 +-
- drivers/dax/super.c          | 13 ++++++++++++-
- drivers/md/dm.c              |  3 ++-
- drivers/nvdimm/pmem.c        |  3 ++-
- drivers/nvdimm/region_devs.c |  7 +++++++
- include/linux/dax.h          |  8 ++++++--
- include/linux/libnvdimm.h    |  1 +
- 7 files changed, 31 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_ioctl.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/dax/bus.c b/drivers/dax/bus.c
-index 2109cfe80219..5f184e751c82 100644
---- a/drivers/dax/bus.c
-+++ b/drivers/dax/bus.c
-@@ -388,7 +388,7 @@ struct dev_dax *__devm_create_dev_dax(struct dax_region *dax_region, int id,
- 	 * No 'host' or dax_operations since there is no access to this
- 	 * device outside of mmap of the resulting character device.
- 	 */
--	dax_dev = alloc_dax(dev_dax, NULL, NULL);
-+	dax_dev = alloc_dax(dev_dax, NULL, NULL, DAXDEV_F_SYNC);
- 	if (!dax_dev)
- 		goto err;
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 744a55092147..272ee6f037ff 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1173,7 +1173,7 @@ xfs_ioctl_setattr_get_trans(
  
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 0a339b85133e..bd6509308d05 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -186,6 +186,8 @@ enum dax_device_flags {
- 	DAXDEV_ALIVE,
- 	/* gate whether dax_flush() calls the low level flush routine */
- 	DAXDEV_WRITE_CACHE,
-+	/* flag to check if device supports synchronous flush */
-+	DAXDEV_SYNC,
- };
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
+ 	if (error)
+-		return ERR_PTR(error);
++		goto out_unlock;
  
- /**
-@@ -354,6 +356,12 @@ bool dax_write_cache_enabled(struct dax_device *dax_dev)
- }
- EXPORT_SYMBOL_GPL(dax_write_cache_enabled);
- 
-+bool dax_synchronous(struct dax_device *dax_dev)
-+{
-+	return test_bit(DAXDEV_SYNC, &dax_dev->flags);
-+}
-+EXPORT_SYMBOL_GPL(dax_synchronous);
-+
- bool dax_alive(struct dax_device *dax_dev)
- {
- 	lockdep_assert_held(&dax_srcu);
-@@ -511,7 +519,7 @@ static void dax_add_host(struct dax_device *dax_dev, const char *host)
- }
- 
- struct dax_device *alloc_dax(void *private, const char *__host,
--		const struct dax_operations *ops)
-+		const struct dax_operations *ops, bool sync)
- {
- 	struct dax_device *dax_dev;
- 	const char *host;
-@@ -534,6 +542,9 @@ struct dax_device *alloc_dax(void *private, const char *__host,
- 	dax_add_host(dax_dev, host);
- 	dax_dev->ops = ops;
- 	dax_dev->private = private;
-+	if (sync)
-+		set_bit(DAXDEV_SYNC, &dax_dev->flags);
-+
- 	return dax_dev;
- 
-  err_dev:
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 68d24056d0b1..dd5266fb5471 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1965,7 +1965,8 @@ static struct mapped_device *alloc_dev(int minor)
- 	sprintf(md->disk->disk_name, "dm-%d", minor);
- 
- 	if (IS_ENABLED(CONFIG_DAX_DRIVER)) {
--		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops);
-+		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops,
-+							DAXDEV_F_SYNC);
- 		if (!dax_dev)
- 			goto bad;
- 	}
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index f719245da170..34fa20381c05 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -466,7 +466,8 @@ static int pmem_attach_disk(struct device *dev,
- 	nvdimm_badblocks_populate(nd_region, &pmem->bb, &bb_res);
- 	disk->bb = &pmem->bb;
- 
--	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
-+	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops,
-+					is_nvdimm_sync(nd_region));
- 	if (!dax_dev) {
- 		put_disk(disk);
- 		return -ENOMEM;
-diff --git a/drivers/nvdimm/region_devs.c b/drivers/nvdimm/region_devs.c
-index e5b59708865e..427cf28380c6 100644
---- a/drivers/nvdimm/region_devs.c
-+++ b/drivers/nvdimm/region_devs.c
-@@ -1219,6 +1219,13 @@ int nvdimm_has_cache(struct nd_region *nd_region)
- }
- EXPORT_SYMBOL_GPL(nvdimm_has_cache);
- 
-+bool is_nvdimm_sync(struct nd_region *nd_region)
-+{
-+	return is_nd_pmem(&nd_region->dev) &&
-+		!test_bit(ND_REGION_ASYNC, &nd_region->flags);
-+}
-+EXPORT_SYMBOL_GPL(is_nvdimm_sync);
-+
- struct conflict_context {
- 	struct nd_region *nd_region;
- 	resource_size_t start, size;
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 0dd316a74a29..c97fc0cc7167 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -7,6 +7,9 @@
- #include <linux/radix-tree.h>
- #include <asm/pgtable.h>
- 
-+/* Flag for synchronous flush */
-+#define DAXDEV_F_SYNC true
-+
- typedef unsigned long dax_entry_t;
- 
- struct iomap_ops;
-@@ -32,18 +35,19 @@ extern struct attribute_group dax_attribute_group;
- #if IS_ENABLED(CONFIG_DAX)
- struct dax_device *dax_get_by_host(const char *host);
- struct dax_device *alloc_dax(void *private, const char *host,
--		const struct dax_operations *ops);
-+		const struct dax_operations *ops, bool sync);
- void put_dax(struct dax_device *dax_dev);
- void kill_dax(struct dax_device *dax_dev);
- void dax_write_cache(struct dax_device *dax_dev, bool wc);
- bool dax_write_cache_enabled(struct dax_device *dax_dev);
-+bool dax_synchronous(struct dax_device *dax_dev);
- #else
- static inline struct dax_device *dax_get_by_host(const char *host)
- {
- 	return NULL;
- }
- static inline struct dax_device *alloc_dax(void *private, const char *host,
--		const struct dax_operations *ops)
-+		const struct dax_operations *ops, bool sync)
- {
- 	/*
- 	 * Callers should check IS_ENABLED(CONFIG_DAX) to know if this
-diff --git a/include/linux/libnvdimm.h b/include/linux/libnvdimm.h
-index a5f369ec3726..8ae6b65d67e2 100644
---- a/include/linux/libnvdimm.h
-+++ b/include/linux/libnvdimm.h
-@@ -270,6 +270,7 @@ int generic_nvdimm_flush(struct nd_region *nd_region);
- int nvdimm_has_flush(struct nd_region *nd_region);
- int nvdimm_has_cache(struct nd_region *nd_region);
- int nvdimm_in_overwrite(struct nvdimm *nvdimm);
-+bool is_nvdimm_sync(struct nd_region *nd_region);
- 
- static inline int nvdimm_ctl(struct nvdimm *nvdimm, unsigned int cmd, void *buf,
- 		unsigned int buf_len, int *cmd_rc)
--- 
-2.20.1
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | join_flags);
