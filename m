@@ -1,80 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56912 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726817AbfD0ANv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 Apr 2019 20:13:51 -0400
-Subject: Re: [PATCH] xfs_db: Scan entire file system when using 'frag'
-References: <20190426225920.34359-1-jorgeguerra@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <4c0ed0bf-c980-9379-3816-c8e5dddd61b5@sandeen.net>
-Date: Fri, 26 Apr 2019 19:13:49 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:43272 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726325AbfDWWM0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Apr 2019 18:12:26 -0400
+Date: Tue, 23 Apr 2019 15:10:11 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v6 6/6] xfs: disable map_sync for async flush
+Message-ID: <20190423221011.GD178290@magnolia>
+References: <20190423080612.15361-1-pagupta@redhat.com>
+ <20190423080612.15361-7-pagupta@redhat.com>
+ <20190423220217.GA29573@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20190426225920.34359-1-jorgeguerra@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190423220217.GA29573@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jorge Guerra <jorge.guerra@gmail.com>, linux-xfs@vger.kernel.org
-Cc: osandov@osandov.com, Jorge Guerra <jorgeguerra@fb.com>
+To: Pankaj Gupta <pagupta@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl
 
-On 4/26/19 5:59 PM, Jorge Guerra wrote:
-> From: Jorge Guerra <jorgeguerra@fb.com>
-> 
-> While running the 'frag' command of 'xfs_db' we noticed that the
-> tool is not scanning all the files in the file system.  We noticed
-> this when we modified the tool to print the inodes of all the files
-> scanned.  For example:
-> 
->  $ find /mnt/xfsdisk -type f | wc -l
->  1782674
->  $ xfs_db -r -c frag /dev/sdXX  | grep MB | awk '{print $5}' | paste -s -d+ | bc
->  656818
-> 
-> Upon inspecting the code we noticed that the scanfunc_ino function
-> stops processing a given inode block once it encounters a free leaf.
-> However, in practice we see that inodes are necessarily always layed
-> out contiguously on the leaf node.  This resulted in the 'frag'
-> command skipping some valid inodes.
-> 
-> In this change we modify the scanfunc_ino function to skip freed
-> inodes.  With the change in place we ran the same experiment again
-> and noticed a more accurate file count:
-> 
->  $ find /mnt/d0 -type f | wc -l
->  1810442
->  $ xfs_db -r -c frag /dev/sdXX  | grep MB | awk '{print $5}' | paste -s -d+ | bc
->  1810442
-> 
-> Signed-off-by: Jorge Guerra <jorgeguerra@fb.com>
+On Wed, Apr 24, 2019 at 08:02:17AM +1000, Dave Chinner wrote:
+> On Tue, Apr 23, 2019 at 01:36:12PM +0530, Pankaj Gupta wrote:
+> > Dont support 'MAP_SYNC' with non-DAX files and DAX files
+> > with asynchronous dax_device. Virtio pmem provides
+> > asynchronous host page cache flush mechanism. We don't
+> > support 'MAP_SYNC' with virtio pmem and xfs.
+> > 
+> > Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> > ---
+> >  fs/xfs/xfs_file.c | 10 ++++++----
+> >  1 file changed, 6 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index 1f2e2845eb76..0e59be018511 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -1196,11 +1196,13 @@ xfs_file_mmap(
+> >  	struct file	*filp,
+> >  	struct vm_area_struct *vma)
+> >  {
+> > -	/*
+> > -	 * We don't support synchronous mappings for non-DAX files. At least
+> > -	 * until someone comes with a sensible use case.
+> > +	struct dax_device *dax_dev = xfs_find_daxdev_for_inode
+> > +						(file_inode(filp));
 
-This looks right, but I'll warn you that xfs_db's frag command is largely
-useless in the first place.  ;)
+    tab separation here ^^^                   ^^^^ and cut
+                                                       down the indent
+                                             while you're at
+						    it, please:
 
-Also, I think:
+	struct dax_device	*dax_dev;
 
-Fixes: 2a5eb70c ("xfs_db: teach the frag command about sparse inode chunks")
+	dax_dev = xfs_find_daxdev_for_inode(file_inode(filp));
+	if (!dax_is_frobbed(dax))
+		return -EMEWANTCOOKIE;
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+--D
 
-Thanks!
-
-> ---
->  db/frag.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> > +
+> > +	/* We don't support synchronous mappings for non-DAX files and
+> > +	 * for DAX files if underneath dax_device is not synchronous.
+> >  	 */
 > 
-> diff --git a/db/frag.c b/db/frag.c
-> index 5f33cb73..91395234 100644
-> --- a/db/frag.c
-> +++ b/db/frag.c
-> @@ -507,7 +507,7 @@ scanfunc_ino(
->  
->  				for (j = 0; j < inodes_per_buf; j++) {
->  					if (XFS_INOBT_IS_FREE_DISK(&rp[i], ioff + j))
-> -						goto next_buf;
-> +						continue;
->  					dip = (xfs_dinode_t *)((char *)iocur_top->data +
->  						((off + j) << mp->m_sb.sb_inodelog));
->  					process_inode(agf, agino + ioff + j, dip);
+> 	/*
+> 	 * This is the correct multi-line comment format. Please
+> 	 * update the patch to maintain the existing comment format.
+> 	 */
 > 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
