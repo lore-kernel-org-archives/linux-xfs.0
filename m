@@ -1,169 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44328 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39878 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725843AbfDSTVi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 19 Apr 2019 15:21:38 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 84E28308A113
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Apr 2019 16:55:28 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C0B375D70A
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Apr 2019 16:55:26 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] libxfs: refactor manage_zones()
-Message-ID: <c2e6e3a1-f6cd-2883-8383-e308bcd5f610@redhat.com>
-Date: Fri, 19 Apr 2019 11:55:25 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1725888AbfDWIH3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Apr 2019 04:07:29 -0400
+From: Pankaj Gupta <pagupta@redhat.com>
+Subject: [PATCH v6 3/6] libnvdimm: add dax_dev sync flag
+Date: Tue, 23 Apr 2019 13:36:09 +0530
+Message-Id: <20190423080612.15361-4-pagupta@redhat.com>
+In-Reply-To: <20190423080612.15361-1-pagupta@redhat.com>
+References: <20190423080612.15361-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl
 
-It's bizarre to have manage_zones() both set up and tear down zones.
-It's even more bizarre to have xfs_dir_startup() buried in there.
+This patch adds 'DAXDEV_SYNC' flag which is set
+for nd_region doing synchronous flush. This later
+is used to disable MAP_SYNC functionality for
+ext4 & xfs filesystem for devices don't support
+synchronous flush.
 
-Refactor init/destory into 2 functions, and call xfs_dir_startup()
-separately from zone init similar to what kernelspace does.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
 ---
+ drivers/dax/bus.c            |  2 +-
+ drivers/dax/super.c          | 13 ++++++++++++-
+ drivers/md/dm.c              |  3 ++-
+ drivers/nvdimm/pmem.c        |  3 ++-
+ drivers/nvdimm/region_devs.c |  7 +++++++
+ include/linux/dax.h          |  8 ++++++--
+ include/linux/libnvdimm.h    |  1 +
+ 7 files changed, 31 insertions(+), 6 deletions(-)
 
-diff --git a/libxfs/init.c b/libxfs/init.c
-index 37bd2829..2a65ba9a 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -31,8 +31,6 @@ int libxfs_bhash_size;		/* #buckets in bcache */
+diff --git a/drivers/dax/bus.c b/drivers/dax/bus.c
+index 2109cfe80219..5f184e751c82 100644
+--- a/drivers/dax/bus.c
++++ b/drivers/dax/bus.c
+@@ -388,7 +388,7 @@ struct dev_dax *__devm_create_dev_dax(struct dax_region *dax_region, int id,
+ 	 * No 'host' or dax_operations since there is no access to this
+ 	 * device outside of mmap of the resulting character device.
+ 	 */
+-	dax_dev = alloc_dax(dev_dax, NULL, NULL);
++	dax_dev = alloc_dax(dev_dax, NULL, NULL, DAXDEV_F_SYNC);
+ 	if (!dax_dev)
+ 		goto err;
  
- int	use_xfs_buf_lock;	/* global flag: use xfs_buf_t locks for MT */
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index 0a339b85133e..bd6509308d05 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -186,6 +186,8 @@ enum dax_device_flags {
+ 	DAXDEV_ALIVE,
+ 	/* gate whether dax_flush() calls the low level flush routine */
+ 	DAXDEV_WRITE_CACHE,
++	/* flag to check if device supports synchronous flush */
++	DAXDEV_SYNC,
+ };
  
--static int manage_zones(int);	/* setup/teardown global zones */
--
- /*
-  * dev_map - map open devices to fd.
-  */
-@@ -217,6 +215,49 @@ check_open(char *path, int flags, char **rawfile, char **blockfile)
- 	return 1;
+ /**
+@@ -354,6 +356,12 @@ bool dax_write_cache_enabled(struct dax_device *dax_dev)
  }
+ EXPORT_SYMBOL_GPL(dax_write_cache_enabled);
  
-+/*
-+ * Initialize/destroy all of the zone allocators we use.
-+ */
-+static void
-+init_zones(void)
++bool dax_synchronous(struct dax_device *dax_dev)
 +{
-+	/* initialise zone allocation */
-+	xfs_buf_zone = kmem_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
-+	xfs_inode_zone = kmem_zone_init(sizeof(struct xfs_inode), "xfs_inode");
-+	xfs_ifork_zone = kmem_zone_init(sizeof(struct xfs_ifork), "xfs_ifork");
-+	xfs_ili_zone = kmem_zone_init(
-+			sizeof(xfs_inode_log_item_t), "xfs_inode_log_item");
-+	xfs_buf_item_zone = kmem_zone_init(
-+			sizeof(xfs_buf_log_item_t), "xfs_buf_log_item");
-+	xfs_da_state_zone = kmem_zone_init(
-+			sizeof(xfs_da_state_t), "xfs_da_state");
-+	xfs_btree_cur_zone = kmem_zone_init(
-+			sizeof(xfs_btree_cur_t), "xfs_btree_cur");
-+	xfs_bmap_free_item_zone = kmem_zone_init(
-+			sizeof(struct xfs_extent_free_item),
-+			"xfs_bmap_free_item");
-+	xfs_trans_zone = kmem_zone_init(
-+			sizeof(struct xfs_trans), "xfs_trans");
++	return test_bit(DAXDEV_SYNC, &dax_dev->flags);
 +}
++EXPORT_SYMBOL_GPL(dax_synchronous);
 +
-+static int
-+destroy_zones(void)
+ bool dax_alive(struct dax_device *dax_dev)
+ {
+ 	lockdep_assert_held(&dax_srcu);
+@@ -511,7 +519,7 @@ static void dax_add_host(struct dax_device *dax_dev, const char *host)
+ }
+ 
+ struct dax_device *alloc_dax(void *private, const char *__host,
+-		const struct dax_operations *ops)
++		const struct dax_operations *ops, bool sync)
+ {
+ 	struct dax_device *dax_dev;
+ 	const char *host;
+@@ -534,6 +542,9 @@ struct dax_device *alloc_dax(void *private, const char *__host,
+ 	dax_add_host(dax_dev, host);
+ 	dax_dev->ops = ops;
+ 	dax_dev->private = private;
++	if (sync)
++		set_bit(DAXDEV_SYNC, &dax_dev->flags);
++
+ 	return dax_dev;
+ 
+  err_dev:
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 68d24056d0b1..dd5266fb5471 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1965,7 +1965,8 @@ static struct mapped_device *alloc_dev(int minor)
+ 	sprintf(md->disk->disk_name, "dm-%d", minor);
+ 
+ 	if (IS_ENABLED(CONFIG_DAX_DRIVER)) {
+-		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops);
++		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops,
++							DAXDEV_F_SYNC);
+ 		if (!dax_dev)
+ 			goto bad;
+ 	}
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index f719245da170..34fa20381c05 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -466,7 +466,8 @@ static int pmem_attach_disk(struct device *dev,
+ 	nvdimm_badblocks_populate(nd_region, &pmem->bb, &bb_res);
+ 	disk->bb = &pmem->bb;
+ 
+-	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
++	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops,
++					is_nvdimm_sync(nd_region));
+ 	if (!dax_dev) {
+ 		put_disk(disk);
+ 		return -ENOMEM;
+diff --git a/drivers/nvdimm/region_devs.c b/drivers/nvdimm/region_devs.c
+index e5b59708865e..427cf28380c6 100644
+--- a/drivers/nvdimm/region_devs.c
++++ b/drivers/nvdimm/region_devs.c
+@@ -1219,6 +1219,13 @@ int nvdimm_has_cache(struct nd_region *nd_region)
+ }
+ EXPORT_SYMBOL_GPL(nvdimm_has_cache);
+ 
++bool is_nvdimm_sync(struct nd_region *nd_region)
 +{
-+	int	leaked = 0;
-+
-+	leaked += kmem_zone_destroy(xfs_buf_zone);
-+	leaked += kmem_zone_destroy(xfs_ili_zone);
-+	leaked += kmem_zone_destroy(xfs_inode_zone);
-+	leaked += kmem_zone_destroy(xfs_ifork_zone);
-+	leaked += kmem_zone_destroy(xfs_buf_item_zone);
-+	leaked += kmem_zone_destroy(xfs_da_state_zone);
-+	leaked += kmem_zone_destroy(xfs_btree_cur_zone);
-+	leaked += kmem_zone_destroy(xfs_bmap_free_item_zone);
-+	leaked += kmem_zone_destroy(xfs_trans_zone);
-+
-+	return leaked;
++	return is_nd_pmem(&nd_region->dev) &&
++		!test_bit(ND_REGION_ASYNC, &nd_region->flags);
 +}
++EXPORT_SYMBOL_GPL(is_nvdimm_sync);
 +
- /*
-  * libxfs initialization.
-  * Caller gets a 0 on failure (and we print a message), 1 on success.
-@@ -331,7 +372,8 @@ libxfs_init(libxfs_init_t *a)
- 	libxfs_bcache = cache_init(a->bcache_flags, libxfs_bhash_size,
- 				   &libxfs_bcache_operations);
- 	use_xfs_buf_lock = a->usebuflock;
--	manage_zones(0);
-+	xfs_dir_startup();
-+	init_zones();
- 	rval = 1;
- done:
- 	if (dpath[0])
-@@ -352,51 +394,6 @@ done:
- }
+ struct conflict_context {
+ 	struct nd_region *nd_region;
+ 	resource_size_t start, size;
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 0dd316a74a29..c97fc0cc7167 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -7,6 +7,9 @@
+ #include <linux/radix-tree.h>
+ #include <asm/pgtable.h>
  
++/* Flag for synchronous flush */
++#define DAXDEV_F_SYNC true
++
+ typedef unsigned long dax_entry_t;
  
--/*
-- * Initialize/destroy all of the zone allocators we use.
-- */
--static int
--manage_zones(int release)
--{
--	extern void		xfs_dir_startup();
--
--	if (release) {	/* free zone allocation */
--		int	leaked = 0;
--
--		leaked += kmem_zone_destroy(xfs_buf_zone);
--		leaked += kmem_zone_destroy(xfs_ili_zone);
--		leaked += kmem_zone_destroy(xfs_inode_zone);
--		leaked += kmem_zone_destroy(xfs_ifork_zone);
--		leaked += kmem_zone_destroy(xfs_buf_item_zone);
--		leaked += kmem_zone_destroy(xfs_da_state_zone);
--		leaked += kmem_zone_destroy(xfs_btree_cur_zone);
--		leaked += kmem_zone_destroy(xfs_bmap_free_item_zone);
--		leaked += kmem_zone_destroy(xfs_trans_zone);
--
--		return leaked;
--	}
--	/* otherwise initialise zone allocation */
--	xfs_buf_zone = kmem_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
--	xfs_inode_zone = kmem_zone_init(sizeof(struct xfs_inode), "xfs_inode");
--	xfs_ifork_zone = kmem_zone_init(sizeof(struct xfs_ifork), "xfs_ifork");
--	xfs_ili_zone = kmem_zone_init(
--			sizeof(xfs_inode_log_item_t), "xfs_inode_log_item");
--	xfs_buf_item_zone = kmem_zone_init(
--			sizeof(xfs_buf_log_item_t), "xfs_buf_log_item");
--	xfs_da_state_zone = kmem_zone_init(
--			sizeof(xfs_da_state_t), "xfs_da_state");
--	xfs_btree_cur_zone = kmem_zone_init(
--			sizeof(xfs_btree_cur_t), "xfs_btree_cur");
--	xfs_bmap_free_item_zone = kmem_zone_init(
--			sizeof(struct xfs_extent_free_item),
--			"xfs_bmap_free_item");
--	xfs_trans_zone = kmem_zone_init(
--			sizeof(struct xfs_trans), "xfs_trans");
--	xfs_dir_startup();
--
--	return 0;
--}
--
- /*
-  * Initialize realtime fields in the mount structure.
-  */
-@@ -874,7 +871,7 @@ libxfs_destroy(void)
- 	libxfs_bcache_purge();
- 	libxfs_bcache_free();
- 	cache_destroy(libxfs_bcache);
--	leaked = manage_zones(1);
-+	leaked = destroy_zones();
- 	if (getenv("LIBXFS_LEAK_CHECK") && leaked)
- 		exit(1);
+ struct iomap_ops;
+@@ -32,18 +35,19 @@ extern struct attribute_group dax_attribute_group;
+ #if IS_ENABLED(CONFIG_DAX)
+ struct dax_device *dax_get_by_host(const char *host);
+ struct dax_device *alloc_dax(void *private, const char *host,
+-		const struct dax_operations *ops);
++		const struct dax_operations *ops, bool sync);
+ void put_dax(struct dax_device *dax_dev);
+ void kill_dax(struct dax_device *dax_dev);
+ void dax_write_cache(struct dax_device *dax_dev, bool wc);
+ bool dax_write_cache_enabled(struct dax_device *dax_dev);
++bool dax_synchronous(struct dax_device *dax_dev);
+ #else
+ static inline struct dax_device *dax_get_by_host(const char *host)
+ {
+ 	return NULL;
  }
+ static inline struct dax_device *alloc_dax(void *private, const char *host,
+-		const struct dax_operations *ops)
++		const struct dax_operations *ops, bool sync)
+ {
+ 	/*
+ 	 * Callers should check IS_ENABLED(CONFIG_DAX) to know if this
+diff --git a/include/linux/libnvdimm.h b/include/linux/libnvdimm.h
+index a5f369ec3726..8ae6b65d67e2 100644
+--- a/include/linux/libnvdimm.h
++++ b/include/linux/libnvdimm.h
+@@ -270,6 +270,7 @@ int generic_nvdimm_flush(struct nd_region *nd_region);
+ int nvdimm_has_flush(struct nd_region *nd_region);
+ int nvdimm_has_cache(struct nd_region *nd_region);
+ int nvdimm_in_overwrite(struct nvdimm *nvdimm);
++bool is_nvdimm_sync(struct nd_region *nd_region);
+ 
+ static inline int nvdimm_ctl(struct nvdimm *nvdimm, unsigned int cmd, void *buf,
+ 		unsigned int buf_len, int *cmd_rc)
+-- 
+2.20.1
