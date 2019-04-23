@@ -1,94 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34894 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728796AbfDVVHM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Apr 2019 17:07:12 -0400
-Subject: Re: [PATCH 06/10] misc: fix strncpy length complaints
-References: <155594788997.115924.16224143537288136652.stgit@magnolia>
- <155594792809.115924.2016290538799986694.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <df3bc6f7-b717-1494-0c69-04d7bba614a9@sandeen.net>
-Date: Mon, 22 Apr 2019 16:07:11 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:36444 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726655AbfDWP3j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Apr 2019 11:29:39 -0400
+Date: Tue, 23 Apr 2019 08:29:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/3] xfs: implement per-inode writeback completion queues
+Message-ID: <20190423152930.GH4676@magnolia>
+References: <155529406249.243484.1307333973877627694.stgit@magnolia>
+ <155529406877.243484.8074329168835632578.stgit@magnolia>
+ <20190423063421.GA6788@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <155594792809.115924.2016290538799986694.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190423063421.GA6788@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
 
-On 4/22/19 10:45 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Apr 22, 2019 at 11:34:21PM -0700, Christoph Hellwig wrote:
+> I'm a little late to the game, sorry..
 > 
-> Fix a number of complaints about feeding sizeof(dest) directly to
-> strncpy.  We do this by declaring the char arrays to be one larger
-> than necessary and subtracting one, to ensure that we never overfill
-> the buffer.
+> But:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > +
+> > +	spin_lock_irqsave(&ip->i_iodone_lock, flags);
+> > +	list_replace_init(&ip->i_iodone_list, &completion_list);
+> > +	spin_unlock_irqrestore(&ip->i_iodone_lock, flags);
+> 
+> I really don't like this new per-inode lock, and the irq disabling at
+> all.  Especially as the pattern perfectly fits the lockless lists (llists).
+> Can you check if these work here?
 
-With a changelog edit,
+They certainly look promising, though the singly-linked list nature
+means it can't be a direct replacement for xfs_ioend.io_list because we
+still need to be able to sort and merge completions.  However, adding
+another pointer to xfs_ioend won't change the objects per slab ratio, so
+avoiding the spinlock heartburn might be worth it...
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  mkfs/xfs_mkfs.c |   13 +++++++++++--
->  quota/edit.c    |    9 ++++++---
->  2 files changed, 17 insertions(+), 5 deletions(-)
-> 
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 3e2ef92d..db3ad38e 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3270,8 +3270,17 @@ finish_superblock_setup(
->  	struct xfs_mount	*mp,
->  	struct xfs_sb		*sbp)
->  {
-> -	if (cfg->label)
-> -		strncpy(sbp->sb_fname, cfg->label, sizeof(sbp->sb_fname));
-> +	if (cfg->label) {
-> +		size_t		label_len;
-> +
-> +		/*
-> +		 * Labels are null terminated unless the string fits exactly
-> +		 * in the label field, so assume sb_fname is zeroed and then
-> +		 * do a memcpy because the destination isn't a normal C string.
-> +		 */
-> +		label_len = min(sizeof(sbp->sb_fname), strlen(cfg->label));
-> +		memcpy(sbp->sb_fname, cfg->label, label_len);
-> +	}
->  
->  	sbp->sb_dblocks = cfg->dblocks;
->  	sbp->sb_rblocks = cfg->rtblocks;
-> diff --git a/quota/edit.c b/quota/edit.c
-> index b10a5b34..f9938b8a 100644
-> --- a/quota/edit.c
-> +++ b/quota/edit.c
-> @@ -368,8 +368,7 @@ restore_file(
->  	uint		type)
->  {
->  	char		buffer[512];
-> -	char		devbuffer[512];
-> -	char		*dev = NULL;
-> +	char		dev[512];
->  	uint		mask;
->  	int		cnt;
->  	uint32_t	id;
-> @@ -377,7 +376,11 @@ restore_file(
->  
->  	while (fgets(buffer, sizeof(buffer), fp) != NULL) {
->  		if (strncmp("fs = ", buffer, 5) == 0) {
-> -			dev = strncpy(devbuffer, buffer+5, sizeof(devbuffer));
-> +			/*
-> +			 * Copy the device name to dev, strip off the trailing
-> +			 * newline, and move on to the next line.
-> +			 */
-> +			strncpy(dev, buffer + 5, sizeof(dev) - 1);
->  			dev[strlen(dev) - 1] = '\0';
->  			continue;
->  		}
-> 
+--D
