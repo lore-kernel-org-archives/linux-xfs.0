@@ -1,72 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43020 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727839AbfDWO1v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Apr 2019 10:27:51 -0400
-Date: Tue, 23 Apr 2019 16:27:48 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v6 5/6] ext4: disable map_sync for async flush
-Message-ID: <20190423142748.GE9910@quack2.suse.cz>
-References: <20190423080612.15361-1-pagupta@redhat.com>
- <20190423080612.15361-6-pagupta@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:36566 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727673AbfDWPFh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Apr 2019 11:05:37 -0400
+Date: Tue, 23 Apr 2019 08:04:55 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: make tr_growdata a permanent transaction
+Message-ID: <20190423150455.GF4676@magnolia>
+References: <20190417093608.17146-1-bfoster@redhat.com>
+ <20190417143759.GG114154@magnolia>
+ <20190423062447.GE28518@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190423080612.15361-6-pagupta@redhat.com>
+In-Reply-To: <20190423062447.GE28518@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>
-Cc: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Tue 23-04-19 13:36:11, Pankaj Gupta wrote:
-> Dont support 'MAP_SYNC' with non-DAX files and DAX files
-> with asynchronous dax_device. Virtio pmem provides 
-> asynchronous host page cache flush mechanism. We don't
-> support 'MAP_SYNC' with virtio pmem and ext4.
+On Mon, Apr 22, 2019 at 11:24:47PM -0700, Christoph Hellwig wrote:
+> On Wed, Apr 17, 2019 at 07:37:59AM -0700, Darrick J. Wong wrote:
+> > 
+> > /me wonders if we ought to have a comment here about why we're asserting
+> > on this? i.e.
+> > /*
+> >  * This function can shrink the AGFL, which uses a deferred op to avoid
+> >  * exceeding transaction reservation (or whatever the original reason
+> >  * was).  Deferred ops require a transaction with a permanent
+> >  * reservation, so check that here.
+> >  */
+> > ASSERT(...);
 > 
-> Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> Yes, I think we should.  Also I think adding this assert should be
+> a separate commit from the original fix to even more clearly document
+> the intention.
 
-The patch looks good to me. You can add:
+<shrug> OK.  I chatted with Brian and we'll just split the assert into a
+new patch...  eh, this patch has changed enough I'm going to send both
+of them to the list for everyone's perusal.  (I'd already added them to
+my tree, but having not pushed to for-next it isn't too late to make
+more changes.)
 
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
-
-> ---
->  fs/ext4/file.c | 11 ++++++-----
->  1 file changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-> index 69d65d49837b..4b2ccaf1932e 100644
-> --- a/fs/ext4/file.c
-> +++ b/fs/ext4/file.c
-> @@ -360,15 +360,16 @@ static const struct vm_operations_struct ext4_file_vm_ops = {
->  static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
->  {
->  	struct inode *inode = file->f_mapping->host;
-> +	struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
-> +	struct dax_device *dax_dev = sbi->s_daxdev;
->  
-> -	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
-> +	if (unlikely(ext4_forced_shutdown(sbi)))
->  		return -EIO;
->  
-> -	/*
-> -	 * We don't support synchronous mappings for non-DAX files. At least
-> -	 * until someone comes with a sensible use case.
-> +	/* We don't support synchronous mappings for non-DAX files and
-> +	 * for DAX files if underneath dax_device is not synchronous.
->  	 */
-> -	if (!IS_DAX(file_inode(file)) && (vma->vm_flags & VM_SYNC))
-> +	if (!daxdev_mapping_supported(vma, dax_dev))
->  		return -EOPNOTSUPP;
->  
->  	file_accessed(file);
-> -- 
-> 2.20.1
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+--D
