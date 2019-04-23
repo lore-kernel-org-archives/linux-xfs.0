@@ -1,52 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:35032 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727086AbfDZXji (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Apr 2019 19:39:38 -0400
-Subject: Re: [PATCH] xfs: add missing error check in xfs_prepare_shift()
-References: <20190426120633.36420-1-bfoster@redhat.com>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <767fe955-e286-eeaa-e09a-e68122447742@oracle.com>
-Date: Fri, 26 Apr 2019 16:39:24 -0700
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:44651 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726953AbfDWWC2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Apr 2019 18:02:28 -0400
+Date: Wed, 24 Apr 2019 08:02:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v6 6/6] xfs: disable map_sync for async flush
+Message-ID: <20190423220217.GA29573@dread.disaster.area>
+References: <20190423080612.15361-1-pagupta@redhat.com>
+ <20190423080612.15361-7-pagupta@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20190426120633.36420-1-bfoster@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190423080612.15361-7-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Pankaj Gupta <pagupta@redhat.com>
+Cc: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl
 
-Looks ok to me.  You can add my review:
-
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
-
-On 4/26/19 5:06 AM, Brian Foster wrote:
-> xfs_prepare_shift() fails to check the error return from
-> xfs_flush_unmap_range(). If the latter fails, that could lead to an
-> insert/collapse range operation over a delalloc range, which is not
-> supported.
+On Tue, Apr 23, 2019 at 01:36:12PM +0530, Pankaj Gupta wrote:
+> Dont support 'MAP_SYNC' with non-DAX files and DAX files
+> with asynchronous dax_device. Virtio pmem provides
+> asynchronous host page cache flush mechanism. We don't
+> support 'MAP_SYNC' with virtio pmem and xfs.
 > 
-> Add an error check and return appropriately. This is reproduced
-> rarely by generic/475.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
 > ---
->   fs/xfs/xfs_bmap_util.c | 2 ++
->   1 file changed, 2 insertions(+)
+>  fs/xfs/xfs_file.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 2db43ff4f8b5..06d07f1e310b 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1193,6 +1193,8 @@ xfs_prepare_shift(
->   	 * about to shift down every extent from offset to EOF.
->   	 */
->   	error = xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip));
-> +	if (error)
-> +		return error;
->   
->   	/*
->   	 * Clean out anything hanging around in the cow fork now that
-> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 1f2e2845eb76..0e59be018511 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1196,11 +1196,13 @@ xfs_file_mmap(
+>  	struct file	*filp,
+>  	struct vm_area_struct *vma)
+>  {
+> -	/*
+> -	 * We don't support synchronous mappings for non-DAX files. At least
+> -	 * until someone comes with a sensible use case.
+> +	struct dax_device *dax_dev = xfs_find_daxdev_for_inode
+> +						(file_inode(filp));
+> +
+> +	/* We don't support synchronous mappings for non-DAX files and
+> +	 * for DAX files if underneath dax_device is not synchronous.
+>  	 */
+
+	/*
+	 * This is the correct multi-line comment format. Please
+	 * update the patch to maintain the existing comment format.
+	 */
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
