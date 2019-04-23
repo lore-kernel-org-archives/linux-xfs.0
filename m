@@ -1,100 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49156 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:59048 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726132AbfDVSfB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Apr 2019 14:35:01 -0400
-Subject: Re: [PATCH 02/10] xfs_info: use findmnt to handle mounted block
- devices
-References: <155594788997.115924.16224143537288136652.stgit@magnolia>
- <155594790268.115924.87682432738525436.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f8374061-d7b2-802d-617c-9e38745332ee@sandeen.net>
-Date: Mon, 22 Apr 2019 13:35:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <155594790268.115924.87682432738525436.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1726004AbfDWIIL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Apr 2019 04:08:11 -0400
+From: Pankaj Gupta <pagupta@redhat.com>
+Subject: [PATCH v6 5/6] ext4: disable map_sync for async flush
+Date: Tue, 23 Apr 2019 13:36:11 +0530
+Message-Id: <20190423080612.15361-6-pagupta@redhat.com>
+In-Reply-To: <20190423080612.15361-1-pagupta@redhat.com>
+References: <20190423080612.15361-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl
 
-On 4/22/19 10:45 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Use findmnt to determine if the passed-in argument is associated with a
-> mount point, and if so, use spaceman to query the mounted filesystem.
-> If the user passed in a file, try to find out if it's a loop mounted
-> live filesystem and if so query the live filesystem.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Dont support 'MAP_SYNC' with non-DAX files and DAX files
+with asynchronous dax_device. Virtio pmem provides 
+asynchronous host page cache flush mechanism. We don't
+support 'MAP_SYNC' with virtio pmem and ext4.
 
-older util-linux doesn't have -O either, but that's getting really old
-and I guess we'll burn that bridge if we come to it.
+Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+---
+ fs/ext4/file.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  debian/control       |    2 +-
->  spaceman/xfs_info.sh |   22 +++++++++++++++++++---
->  2 files changed, 20 insertions(+), 4 deletions(-)
-> 
-> 
-> diff --git a/debian/control b/debian/control
-> index f4f807b0..0b3205f5 100644
-> --- a/debian/control
-> +++ b/debian/control
-> @@ -8,7 +8,7 @@ Standards-Version: 4.0.0
->  Homepage: https://xfs.wiki.kernel.org/
->  
->  Package: xfsprogs
-> -Depends: ${shlibs:Depends}, ${misc:Depends}, python3:any
-> +Depends: ${shlibs:Depends}, ${misc:Depends}, python3:any, util-linux
->  Provides: fsck-backend
->  Suggests: xfsdump, acl, attr, quota
->  Breaks: xfsdump (<< 3.0.0)
-> diff --git a/spaceman/xfs_info.sh b/spaceman/xfs_info.sh
-> index ecf17f61..1bf6d2c3 100755
-> --- a/spaceman/xfs_info.sh
-> +++ b/spaceman/xfs_info.sh
-> @@ -7,6 +7,14 @@
->  OPTS=""
->  USAGE="Usage: xfs_info [-V] [-t mtab] [mountpoint|device|file]"
->  
-> +# Try to find a loop device associated with a file.  We only want to return
-> +# one loopdev (multiple loop devices can attach to a single file) so we grab
-> +# the last line and return it if it's actually a block device.
-> +try_find_loop_dev_for_file() {
-> +	local x="$(losetup -O NAME -j "$1" 2> /dev/null | tail -n 1)"
-> +	test -b "$x" && echo "$x"
-> +}
-> +
->  while getopts "t:V" c
->  do
->  	case $c in
-> @@ -24,11 +32,19 @@ set -- extra "$@"
->  shift $OPTIND
->  case $# in
->  	1)
-> -		if [ -b "$1" ] || [ -f "$1" ]; then
-> -			xfs_db -p xfs_info -c "info" $OPTS "$1"
-> +		arg="$1"
-> +
-> +		# See if we can map the arg to a loop device
-> +		loopdev="$(try_find_loop_dev_for_file "${arg}")"
-> +		test -n "${loopdev}" && arg="${loopdev}"
-> +
-> +		# If we find a mountpoint for the device, do a live query;
-> +		# otherwise try reading the fs with xfs_db.
-> +		if mountpt="$(findmnt -f -n -o TARGET "${arg}" 2> /dev/null)"; then
-> +			xfs_spaceman -p xfs_info -c "info" $OPTS "${mountpt}"
->  			status=$?
->  		else
-> -			xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
-> +			xfs_db -p xfs_info -c "info" $OPTS "${arg}"
->  			status=$?
->  		fi
->  		;;
-> 
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 69d65d49837b..4b2ccaf1932e 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -360,15 +360,16 @@ static const struct vm_operations_struct ext4_file_vm_ops = {
+ static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
+ {
+ 	struct inode *inode = file->f_mapping->host;
++	struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
++	struct dax_device *dax_dev = sbi->s_daxdev;
+ 
+-	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
++	if (unlikely(ext4_forced_shutdown(sbi)))
+ 		return -EIO;
+ 
+-	/*
+-	 * We don't support synchronous mappings for non-DAX files. At least
+-	 * until someone comes with a sensible use case.
++	/* We don't support synchronous mappings for non-DAX files and
++	 * for DAX files if underneath dax_device is not synchronous.
+ 	 */
+-	if (!IS_DAX(file_inode(file)) && (vma->vm_flags & VM_SYNC))
++	if (!daxdev_mapping_supported(vma, dax_dev))
+ 		return -EOPNOTSUPP;
+ 
+ 	file_accessed(file);
+-- 
+2.20.1
