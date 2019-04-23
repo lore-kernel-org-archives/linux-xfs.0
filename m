@@ -1,64 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f180.google.com ([209.85.215.180]:33338 "EHLO
-        mail-pg1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727008AbfDZXAd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Apr 2019 19:00:33 -0400
-Received: by mail-pg1-f180.google.com with SMTP id k19so2289275pgh.0
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2019 16:00:33 -0700 (PDT)
-From: Jorge Guerra <jorge.guerra@gmail.com>
-Subject: [PATCH] xfs_db: Scan entire file system when using 'frag'
-Date: Fri, 26 Apr 2019 15:59:20 -0700
-Message-Id: <20190426225920.34359-1-jorgeguerra@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:40662 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727613AbfDWU43 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Apr 2019 16:56:29 -0400
+Date: Tue, 23 Apr 2019 15:56:27 -0500
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH v2 07/10] libxfs: refactor buffer item release code
+Message-ID: <20190423205627.GB19086@redhat.com>
+References: <155594788997.115924.16224143537288136652.stgit@magnolia>
+ <155594793429.115924.9115512760848857551.stgit@magnolia>
+ <20190423205133.GB178290@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190423205133.GB178290@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: osandov@osandov.com, Jorge Guerra <jorgeguerra@fb.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org
 
-From: Jorge Guerra <jorgeguerra@fb.com>
+On Tue, Apr 23, 2019 at 01:51:33PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Refactor the buffer item release code into a helper, which we will use
+> in subsequent patches to make the buffer log item lifetime match the
+> kernel equivalents.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-While running the 'frag' command of 'xfs_db' we noticed that the
-tool is not scanning all the files in the file system.  We noticed
-this when we modified the tool to print the inodes of all the files
-scanned.  For example:
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
- $ find /mnt/xfsdisk -type f | wc -l
- 1782674
- $ xfs_db -r -c frag /dev/sdXX  | grep MB | awk '{print $5}' | paste -s -d+ | bc
- 656818
-
-Upon inspecting the code we noticed that the scanfunc_ino function
-stops processing a given inode block once it encounters a free leaf.
-However, in practice we see that inodes are necessarily always layed
-out contiguously on the leaf node.  This resulted in the 'frag'
-command skipping some valid inodes.
-
-In this change we modify the scanfunc_ino function to skip freed
-inodes.  With the change in place we ran the same experiment again
-and noticed a more accurate file count:
-
- $ find /mnt/d0 -type f | wc -l
- 1810442
- $ xfs_db -r -c frag /dev/sdXX  | grep MB | awk '{print $5}' | paste -s -d+ | bc
- 1810442
-
-Signed-off-by: Jorge Guerra <jorgeguerra@fb.com>
----
- db/frag.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/db/frag.c b/db/frag.c
-index 5f33cb73..91395234 100644
---- a/db/frag.c
-+++ b/db/frag.c
-@@ -507,7 +507,7 @@ scanfunc_ino(
- 
- 				for (j = 0; j < inodes_per_buf; j++) {
- 					if (XFS_INOBT_IS_FREE_DISK(&rp[i], ioff + j))
--						goto next_buf;
-+						continue;
- 					dip = (xfs_dinode_t *)((char *)iocur_top->data +
- 						((off + j) << mp->m_sb.sb_inodelog));
- 					process_inode(agf, agino + ioff + j, dip);
--- 
-2.13.5
+> ---
+> v2: fix a bug where we put the buf log item after the buf
+> ---
+>  libxfs/trans.c |   21 +++++++++++++++------
+>  1 file changed, 15 insertions(+), 6 deletions(-)
+> 
+> diff --git a/libxfs/trans.c b/libxfs/trans.c
+> index 9de77c8b..121636b5 100644
+> --- a/libxfs/trans.c
+> +++ b/libxfs/trans.c
+> @@ -505,6 +505,16 @@ libxfs_trans_ordered_buf(
+>  	return ret;
+>  }
+>  
+> +static void
+> +xfs_buf_item_put(
+> +	struct xfs_buf_log_item	*bip)
+> +{
+> +	struct xfs_buf		*bp = bip->bli_buf;
+> +
+> +	bp->b_log_item = NULL;
+> +	kmem_zone_free(xfs_buf_item_zone, bip);
+> +}
+> +
+>  void
+>  libxfs_trans_brelse(
+>  	xfs_trans_t		*tp,
+> @@ -846,7 +856,6 @@ buf_item_done(
+>  
+>  	bp = bip->bli_buf;
+>  	ASSERT(bp != NULL);
+> -	bp->b_log_item = NULL;			/* remove log item */
+>  	bp->b_transp = NULL;			/* remove xact ptr */
+>  
+>  	hold = (bip->bli_flags & XFS_BLI_HOLD);
+> @@ -857,12 +866,12 @@ buf_item_done(
+>  #endif
+>  		libxfs_writebuf_int(bp, 0);
+>  	}
+> +
+> +	bip->bli_flags &= ~XFS_BLI_HOLD;
+> +	xfs_buf_item_put(bip);
+>  	if (hold)
+> -		bip->bli_flags &= ~XFS_BLI_HOLD;
+> -	else
+> -		libxfs_putbuf(bp);
+> -	/* release the buf item */
+> -	kmem_zone_free(xfs_buf_item_zone, bip);
+> +		return;
+> +	libxfs_putbuf(bp);
+>  }
+>  
+>  static void
