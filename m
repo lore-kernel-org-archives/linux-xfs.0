@@ -1,20 +1,22 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:41748 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:41944 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726057AbfDXCYq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Apr 2019 22:24:46 -0400
-Subject: Re: [PATCH 8/9] xfs: Roll delayed attr operations by returning EAGAIN
+        with ESMTP id S1726057AbfDXCY5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Apr 2019 22:24:57 -0400
+Subject: Re: [PATCH 7/9] xfs: Add attr context to log item
 References: <20190412225036.22939-1-allison.henderson@oracle.com>
- <20190412225036.22939-9-allison.henderson@oracle.com>
- <20190423141901.GA10224@bfoster>
+ <20190412225036.22939-8-allison.henderson@oracle.com>
+ <20190422130338.GB56876@bfoster>
+ <e60582d4-289d-92be-21d0-1d83d37bbd22@oracle.com>
+ <20190423132024.GC2841@bfoster>
 From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <df3ba345-3c0a-3c3f-3f43-1708fc70b867@oracle.com>
-Date: Tue, 23 Apr 2019 19:24:26 -0700
+Message-ID: <ae2f758b-fe03-23b9-4080-8763296258b0@oracle.com>
+Date: Tue, 23 Apr 2019 19:24:40 -0700
 MIME-Version: 1.0
-In-Reply-To: <20190423141901.GA10224@bfoster>
+In-Reply-To: <20190423132024.GC2841@bfoster>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -22,392 +24,245 @@ To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
 
-
-On 4/23/19 7:19 AM, Brian Foster wrote:
-> On Fri, Apr 12, 2019 at 03:50:35PM -0700, Allison Henderson wrote:
->> This patch modifies xfs_attr_set_args to return -EAGAIN
->> when a transaction needs to be rolled.  All functions
->> currently calling xfs_attr_set_args are modified to use
->> the deferred attr operation, or handle the -EAGAIN return
->> code
+On 4/23/19 6:20 AM, Brian Foster wrote:
+> On Mon, Apr 22, 2019 at 03:01:27PM -0700, Allison Henderson wrote:
 >>
->> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_attr.c | 62 ++++++++++++++++++++++++++++++++++++++++--------
->>   fs/xfs/libxfs/xfs_attr.h |  2 +-
->>   fs/xfs/xfs_attr_item.c   | 41 +++++++++++++++++++++++++++-----
->>   fs/xfs/xfs_trans.h       |  2 ++
->>   fs/xfs/xfs_trans_attr.c  | 56 +++++++++++++++++++++++++------------------
->>   5 files changed, 123 insertions(+), 40 deletions(-)
 >>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index 0042708..4ddd86b 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -236,10 +236,37 @@ int
->>   xfs_attr_set_args(
->>   	struct xfs_da_args	*args,
->>   	struct xfs_buf          **leaf_bp,
->> +	enum xfs_attr_state	*state,
->>   	bool			roll_trans)
->>   {
->>   	struct xfs_inode	*dp = args->dp;
->>   	int			error = 0;
->> +	int			sf_size;
->> +
->> +	switch (*state) {
->> +	case (XFS_ATTR_STATE1):
->> +		goto state1;
->> +	case (XFS_ATTR_STATE2):
->> +		goto state2;
->> +	case (XFS_ATTR_STATE3):
->> +		goto state3;
->> +	}
->> +
->> +	/*
->> +	 * New inodes may not have an attribute fork yet. So set the attribute
->> +	 * fork appropriately
->> +	 */
->> +	if (XFS_IFORK_Q((args->dp)) == 0) {
->> +		sf_size = sizeof(struct xfs_attr_sf_hdr) +
->> +		     XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen, args->valuelen);
->> +		xfs_bmap_set_attrforkoff(args->dp, sf_size, NULL);
->> +		args->dp->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
->> +		args->dp->i_afp->if_flags = XFS_IFEXTENTS;
->> +	}
->> +
->> +	*state = XFS_ATTR_STATE1;
->> +	return -EAGAIN;
+>> On 4/22/19 6:03 AM, Brian Foster wrote:
+>>> On Fri, Apr 12, 2019 at 03:50:34PM -0700, Allison Henderson wrote:
+>>>> This patch modifies xfs_attr_item to store a xfs_da_args, a xfs_buf pointer
+>>>> and a new state type. We will use these in the next patch when
+>>>> we modify xfs_set_attr_args to roll transactions by returning EAGAIN.
+>>>> Because the subroutines of this function modify the contents of these
+>>>> structures, we need to find a place to store them where they remain
+>>>> instantiated across multiple calls to xfs_set_attr_args.
+>>>>
+>>>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>>>> ---
+>>>
+>>> I see Darrick has already commented on the whole state thing. I'll
+>>> probably have to grok the next patch to comment further, but just a
+>>> couple initial thoughts:
+>>>
+>>> First, I hit a build failure with this patch. It looks like there's a
+>>> missed include in the scrub code:
+>>>
+>>>     ...
+>>>     CC [M]  fs/xfs/scrub/repair.o
+>>> In file included from fs/xfs/scrub/repair.c:32:
+>>> fs/xfs/libxfs/xfs_attr.h:105:21: error: field ‘xattri_args’ has incomplete type
+>>>     struct xfs_da_args xattri_args;   /* args context */
+>> Hmm, ok.  I'll get that corrected, I probably need to clean out my workspace
+>> and build from scratch.
+>>
+>>>     ...
+>>>
+>>> Second, the commit log suggests that the states will reflect the current
+>>> transaction roll points (i.e., establishing re-entry points down in
+>>> xfs_attr_set_args(). I'm kind of wondering if we should break these
+>>> xattr set sub-sequences down into smaller helper functions (refactoring
+>>> the existing code as we go) such that the mechanism could technically be
+>>> used deferred or not. Re: the previous thought on whether to defer xattr
+>>> removes or not, there might also be cases where there's not a need to
+>>> defer xattr sets.
+>>>
+>>> E.g., taking a quick peek into the next patch, the state 1 case in
+>>> xfs_attr_try_sf_addname() is actually a transaction commit, which I
+>>> think means we're done. We'd have done an attr memory allocation,
+>>> deferred op and transaction roll where none was necessary so it might
+>>> not be worth it to defer in that scenario. Hmm, it also looks like we
+>>> return -EAGAIN in places where we've not actually done any work, like if
+>>> a shortform add attempt returns -ENOSPC (or the -EAGAIN return before we
+>>> even attempt the sf add). That kind of looks like a waste of transaction
+>>> rolls and further suggests it might be cleaner to break this whole path
+>>> down into helpers and put it back together in a way more conducive to
+>>> deferred operations.
+>>
+>> Yes, this area is a bit of a wart the way it is right now.  I think you're
+>> right in that ultimately we may end up having to do a lot of refactoring in
+>> order to have more efficient "re-entry points".  The state machine is hard
+>> to get into subroutines, so it's limited in use in the top level function.
+>>
+>> I was also starting to wonder if maybe I could do some refactoring in
+>> xfs_defer_finish_noroll to capture the common code associated with the
+>> -EAGAIN handling.  Then maybe we could make a function pointer that we can
+>> pass through the finish_item interface.  The idea being that subroutines
+>> could use the function pointer to cycle out the transaction when needed
+>> instead of having to record states and back out like this. It'd be a new
+>> parameter to pipe around, but it'd be more efficient than the state machine,
+>> and less surgery in the refactor.  And maybe a blessing to any other
+>> operations that might need to go through this transition in the future.
+>> Thoughts?
+>>
 > 
-> As noted previously, this return seems unnecessary since we've not done
-> anything in the transaction to this point.
+> That's an interesting idea. It still strikes me as a bit of a
+> fallback/hack as opposed to organizing the code to properly fit into the
+> dfops infrastructure, but it could be useful as a transient solution.
+>  From a high level, it looks like we'd have to create a new intent, relog
+> this item and all remaining items associated with the dfp to it, roll
+> the tx, and finally create a done item associated with the intent in the
+> new tx. You'd need access to the dfp for some of that, so it's not
+> immediately clear to me that this ends up much easier than fixing up
+> the xattr code.
 > 
->> +state1:
->>   
->>   	/*
->>   	 * If the attribute list is non-existent or a shortform list,
->> @@ -248,7 +275,6 @@ xfs_attr_set_args(
->>   	if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
->>   	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
->>   	     dp->i_d.di_anextents == 0)) {
->> -
->>   		/*
->>   		 * Build initial attribute list (if required).
->>   		 */
->> @@ -262,6 +288,9 @@ xfs_attr_set_args(
->>   		if (error != -ENOSPC)
->>   			return error;
->>   
->> +		*state = XFS_ATTR_STATE2;
->> +		return -EAGAIN;
->> +state2:
-> 
-> Here we've failed the sf add but not yet done the conversion, which
-> means we've still not done anything in the transaction. I suspect we
-> should probably convert to leaf and then return -EAGAIN.
-> 
->>   		/*
->>   		 * It won't fit in the shortform, transform to a leaf block.
->>   		 * GROT: another possible req'mt for a double-split btree op.
->> @@ -270,14 +299,14 @@ xfs_attr_set_args(
->>   		if (error)
->>   			return error;
->>   
->> -		if (roll_trans) {
->> -			/*
->> -			 * Prevent the leaf buffer from being unlocked so that a
->> -			 * concurrent AIL push cannot grab the half-baked leaf
->> -			 * buffer and run into problems with the write verifier.
->> -			 */
->> -			xfs_trans_bhold(args->trans, *leaf_bp);
->> +		/*
->> +		 * Prevent the leaf buffer from being unlocked so that a
->> +		 * concurrent AIL push cannot grab the half-baked leaf
->> +		 * buffer and run into problems with the write verifier.
->> +		 */
->> +		xfs_trans_bhold(args->trans, *leaf_bp);
->>   
->> +		if (roll_trans) {
->>   			error = xfs_defer_finish(&args->trans);
->>   			if (error)
->>   				return error;
->> @@ -293,6 +322,12 @@ xfs_attr_set_args(
->>   			xfs_trans_bjoin(args->trans, *leaf_bp);
->>   			*leaf_bp = NULL;
->>   		}
->> +
->> +		*state = XFS_ATTR_STATE3;
->> +		return -EAGAIN;
->> +state3:
-> 
-> Hmm, and this appears to be the last place we return -EAGAIN from the
-> set code. Am I following this correctly that we basically expect any of
-> the other rolls down in xfs_attr_[leaf|node]_addname() to go away in
-> deferred context? If so, why is that?
-
-Well it looks like the calling function (xfs_defer_finish_noroll) is 
-taking care of logging and rolling the transactions for us, so we need 
-to not be doing that twice.  And then the same routines are used later 
-during the log recovery too.
-
-> 
-> That aside, I'm wondering whether we need the whole state thing to track
-> this. For example, why not have a high level flow as something like the
-> following?
-> 
-> xfs_attr_set_args()
-> {
-> 	...
-> 	if (local format) {
-> 		error = xfs_attr_try_sf_addname(dp, args);
-> 		if (error == -ENOSPC) {
-> 			error = xfs_attr_shortform_to_leaf(args, leaf_bp);
-> 			return -EAGAIN;
-> 		} else
-> 			return error;
-> 	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> 		error = xfs_attr_leaf_addname(args);
-> 	} else {
-> 		error = xfs_attr_node_addname(args);
-> 	}
-> }
-> 
-> Of course, this may need further changes if we do end up incorporating
-> the rolls down in the leaf/node functions. Perhaps we could pull apart
-> those functions such that we -EAGAIN on the conversions required to
-> address -ENOSPC returns. That might provide a natural boundary to
-> re-enter the top-level function without the need for a state machine, at
-> least for any rolls that occurs before we actually do an attr op
-> (post-op rolls may very well require more state to incorporate).
-> Thoughts?
+> BTW, if we did end up with something like that I'd probably prefer to
+> see it as an exported dfops helper function as opposed to a function
+> pointer being passed around, if possible.
 > 
 
-Alrighty, I think that sounds like a good approach.  I'll try to re 
-factor this area as you suggest and see where I get.  Maybe I can 
-isolate the areas that handle the transactions as we talked about 
-earlier too.
+Alrighty, I think for now I may try to pursue something more like what 
+you proposed in the next patch and see where I get first.  Maybe I'll 
+come back to this later if for some reason it doesn't work out, but I 
+think what you have there is reasonable.
 
-Thanks again for the reviews!  They are very helpful!
+Thanks again for the reviews!
 Allison
 
 > Brian
 > 
->> +		if (*leaf_bp != NULL)
->> +			xfs_trans_brelse(args->trans, *leaf_bp);
->>   	}
->>   
->>   	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
->> @@ -419,7 +454,9 @@ xfs_attr_set(
->>   		goto out_trans_cancel;
->>   
->>   	xfs_trans_ijoin(args.trans, dp, 0);
->> -	error = xfs_attr_set_args(&args, &leaf_bp, true);
->> +
->> +	error = xfs_attr_set_deferred(dp, args.trans, name, namelen,
->> +			value, valuelen, flags);
->>   	if (error)
->>   		goto out_release_leaf;
->>   	if (!args.trans) {
->> @@ -554,8 +591,13 @@ xfs_attr_remove(
->>   	 */
->>   	xfs_trans_ijoin(args.trans, dp, 0);
->>   
->> -	error = xfs_attr_remove_args(&args, true);
->> +	error = xfs_has_attr(&args);
->> +	if (error)
->> +		goto out;
->> +
->>   
->> +	error = xfs_attr_remove_deferred(dp, args.trans,
->> +			name, namelen, flags);
->>   	if (error)
->>   		goto out;
->>   
->> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
->> index 4ce3b0a..da95e69 100644
->> --- a/fs/xfs/libxfs/xfs_attr.h
->> +++ b/fs/xfs/libxfs/xfs_attr.h
->> @@ -181,7 +181,7 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
->>   		 size_t namelen, unsigned char *value, int valuelen,
->>   		 int flags);
->>   int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp,
->> -		 bool roll_trans);
->> +		 enum xfs_attr_state *state, bool roll_trans);
->>   int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
->>   		    size_t namelen, int flags);
->>   int xfs_has_attr(struct xfs_da_args *args);
->> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
->> index 36e6d1e..292d608 100644
->> --- a/fs/xfs/xfs_attr_item.c
->> +++ b/fs/xfs/xfs_attr_item.c
->> @@ -464,8 +464,11 @@ xfs_attri_recover(
->>   	struct xfs_attri_log_format	*attrp;
->>   	struct xfs_trans_res		tres;
->>   	int				local;
->> -	int				error = 0;
->> +	int				error, err2 = 0;
->>   	int				rsvd = 0;
->> +	enum xfs_attr_state		state = 0;
->> +	struct xfs_buf			*leaf_bp = NULL;
->> +
->>   
->>   	ASSERT(!test_bit(XFS_ATTRI_RECOVERED, &attrip->flags));
->>   
->> @@ -540,14 +543,40 @@ xfs_attri_recover(
->>   	xfs_ilock(ip, XFS_ILOCK_EXCL);
->>   
->>   	xfs_trans_ijoin(args.trans, ip, 0);
->> -	error = xfs_trans_attr(&args, attrdp, attrp->alfi_op_flags);
->> -	if (error)
->> -		goto abort_error;
->>   
->> +	do {
->> +		leaf_bp = NULL;
->> +
->> +		error = xfs_trans_attr(&args, attrdp, &leaf_bp, &state,
->> +				attrp->alfi_op_flags);
->> +		if (error && error != -EAGAIN)
->> +			goto abort_error;
->> +
->> +		xfs_trans_log_inode(args.trans, ip,
->> +				XFS_ILOG_CORE | XFS_ILOG_ADATA);
->> +
->> +		err2 = xfs_trans_commit(args.trans);
->> +		if (err2) {
->> +			error = err2;
->> +			goto abort_error;
->> +		}
->> +
->> +		if (error == -EAGAIN) {
->> +			err2 = xfs_trans_alloc(mp, &tres, args.total, 0,
->> +				XFS_TRANS_PERM_LOG_RES, &args.trans);
->> +			if (err2) {
->> +				error = err2;
->> +				goto abort_error;
->> +			}
->> +			xfs_trans_ijoin(args.trans, ip, 0);
->> +		}
->> +
->> +	} while (error == -EAGAIN);
->> +
->> +	if (leaf_bp)
->> +		xfs_trans_brelse(args.trans, leaf_bp);
->>   
->>   	set_bit(XFS_ATTRI_RECOVERED, &attrip->flags);
->> -	xfs_trans_log_inode(args.trans, ip, XFS_ILOG_CORE | XFS_ILOG_ADATA);
->> -	error = xfs_trans_commit(args.trans);
->>   	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->>   	return error;
->>   
->> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
->> index 7bb9d8e..c785cd7 100644
->> --- a/fs/xfs/xfs_trans.h
->> +++ b/fs/xfs/xfs_trans.h
->> @@ -239,6 +239,8 @@ xfs_trans_get_attrd(struct xfs_trans *tp,
->>   		    struct xfs_attri_log_item *attrip);
->>   int xfs_trans_attr(struct xfs_da_args *args,
->>   		   struct xfs_attrd_log_item *attrdp,
->> +		   struct xfs_buf **leaf_bp,
->> +		   void *state,
->>   		   uint32_t attr_op_flags);
->>   
->>   int		xfs_trans_commit(struct xfs_trans *);
->> diff --git a/fs/xfs/xfs_trans_attr.c b/fs/xfs/xfs_trans_attr.c
->> index 3679348..a3339ea 100644
->> --- a/fs/xfs/xfs_trans_attr.c
->> +++ b/fs/xfs/xfs_trans_attr.c
->> @@ -56,10 +56,11 @@ int
->>   xfs_trans_attr(
->>   	struct xfs_da_args		*args,
->>   	struct xfs_attrd_log_item	*attrdp,
->> +	struct xfs_buf			**leaf_bp,
->> +	void				*state,
->>   	uint32_t			op_flags)
->>   {
->>   	int				error;
->> -	struct xfs_buf			*leaf_bp = NULL;
->>   
->>   	error = xfs_qm_dqattach_locked(args->dp, 0);
->>   	if (error)
->> @@ -68,7 +69,8 @@ xfs_trans_attr(
->>   	switch (op_flags) {
->>   	case XFS_ATTR_OP_FLAGS_SET:
->>   		args->op_flags |= XFS_DA_OP_ADDNAME;
->> -		error = xfs_attr_set_args(args, &leaf_bp, false);
->> +		error = xfs_attr_set_args(args, leaf_bp,
->> +				(enum xfs_attr_state *)state, false);
->>   		break;
->>   	case XFS_ATTR_OP_FLAGS_REMOVE:
->>   		ASSERT(XFS_IFORK_Q((args->dp)));
->> @@ -78,11 +80,6 @@ xfs_trans_attr(
->>   		error = -EFSCORRUPTED;
->>   	}
->>   
->> -	if (error) {
->> -		if (leaf_bp)
->> -			xfs_trans_brelse(args->trans, leaf_bp);
->> -	}
->> -
->>   	/*
->>   	 * Mark the transaction dirty, even on error. This ensures the
->>   	 * transaction is aborted, which:
->> @@ -184,27 +181,40 @@ xfs_attr_finish_item(
->>   	char				*name_value;
->>   	int				error;
->>   	int				local;
->> -	struct xfs_da_args		args;
->> +	struct xfs_da_args		*args;
->>   
->>   	attr = container_of(item, struct xfs_attr_item, xattri_list);
->> -	name_value = ((char *)attr) + sizeof(struct xfs_attr_item);
->> -
->> -	error = xfs_attr_args_init(&args, attr->xattri_ip, name_value,
->> -				   attr->xattri_name_len, attr->xattri_flags);
->> -	if (error)
->> -		goto out;
->> +	args = &attr->xattri_args;
->> +
->> +	if (attr->xattri_state == 0) {
->> +		/* Only need to initialize args context once */
->> +		name_value = ((char *)attr) + sizeof(struct xfs_attr_item);
->> +		error = xfs_attr_args_init(args, attr->xattri_ip, name_value,
->> +					   attr->xattri_name_len,
->> +					   attr->xattri_flags);
->> +		if (error)
->> +			goto out;
->> +
->> +		args->hashval = xfs_da_hashname(args->name, args->namelen);
->> +		args->value = &name_value[attr->xattri_name_len];
->> +		args->valuelen = attr->xattri_value_len;
->> +		args->op_flags = XFS_DA_OP_OKNOENT;
->> +		args->total = xfs_attr_calc_size(args, &local);
->> +		attr->xattri_leaf_bp = NULL;
->> +	}
->>   
->> -	args.hashval = xfs_da_hashname(args.name, args.namelen);
->> -	args.value = &name_value[attr->xattri_name_len];
->> -	args.valuelen = attr->xattri_value_len;
->> -	args.op_flags = XFS_DA_OP_OKNOENT;
->> -	args.total = xfs_attr_calc_size(&args, &local);
->> -	args.trans = tp;
->> +	/*
->> +	 * Always reset trans after EAGAIN cycle
->> +	 * since the transaction is new
->> +	 */
->> +	args->trans = tp;
->>   
->> -	error = xfs_trans_attr(&args, done_item,
->> -			attr->xattri_op_flags);
->> +	error = xfs_trans_attr(args, done_item, &attr->xattri_leaf_bp,
->> +			&attr->xattri_state, attr->xattri_op_flags);
->>   out:
->> -	kmem_free(attr);
->> +	if (error != -EAGAIN)
->> +		kmem_free(attr);
->> +
->>   	return error;
->>   }
->>   
->> -- 
->> 2.7.4
+>> Thanks again for the reviews!
 >>
+>> Allison
+>>
+>>>
+>>> Brian
+>>>
+>>>
+>>>>    fs/xfs/libxfs/xfs_attr.h | 18 +++++++++++++++++-
+>>>>    fs/xfs/scrub/common.c    |  2 ++
+>>>>    fs/xfs/xfs_acl.c         |  2 ++
+>>>>    fs/xfs/xfs_attr_item.c   |  2 +-
+>>>>    fs/xfs/xfs_ioctl.c       |  2 ++
+>>>>    fs/xfs/xfs_ioctl32.c     |  2 ++
+>>>>    fs/xfs/xfs_iops.c        |  1 +
+>>>>    fs/xfs/xfs_xattr.c       |  1 +
+>>>>    8 files changed, 28 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+>>>> index 974c963..4ce3b0a 100644
+>>>> --- a/fs/xfs/libxfs/xfs_attr.h
+>>>> +++ b/fs/xfs/libxfs/xfs_attr.h
+>>>> @@ -77,6 +77,13 @@ typedef struct attrlist_ent {	/* data from attr_list() */
+>>>>    	char	a_name[1];	/* attr name (NULL terminated) */
+>>>>    } attrlist_ent_t;
+>>>> +/* Attr state machine types */
+>>>> +enum xfs_attr_state {
+>>>> +	XFS_ATTR_STATE1 = 1,
+>>>> +	XFS_ATTR_STATE2 = 2,
+>>>> +	XFS_ATTR_STATE3 = 3,
+>>>> +};
+>>>> +
+>>>>    /*
+>>>>     * List of attrs to commit later.
+>>>>     */
+>>>> @@ -88,7 +95,16 @@ struct xfs_attr_item {
+>>>>    	void		  *xattri_name;	      /* attr name */
+>>>>    	uint32_t	  xattri_name_len;    /* length of name */
+>>>>    	uint32_t	  xattri_flags;       /* attr flags */
+>>>> -	struct list_head  xattri_list;
+>>>> +
+>>>> +	/*
+>>>> +	 * Delayed attr parameters that need to remain instantiated
+>>>> +	 * across transaction rolls during the defer finish
+>>>> +	 */
+>>>> +	struct xfs_buf		*xattri_leaf_bp;  /* Leaf buf to release */
+>>>> +	enum xfs_attr_state	xattri_state;	  /* state machine marker */
+>>>> +	struct xfs_da_args	xattri_args;	  /* args context */
+>>>> +
+>>>> +	struct list_head	xattri_list;
+>>>>    	/*
+>>>>    	 * A byte array follows the header containing the file name and
+>>>> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+>>>> index 0c54ff5..270c32e 100644
+>>>> --- a/fs/xfs/scrub/common.c
+>>>> +++ b/fs/xfs/scrub/common.c
+>>>> @@ -30,6 +30,8 @@
+>>>>    #include "xfs_rmap_btree.h"
+>>>>    #include "xfs_log.h"
+>>>>    #include "xfs_trans_priv.h"
+>>>> +#include "xfs_da_format.h"
+>>>> +#include "xfs_da_btree.h"
+>>>>    #include "xfs_attr.h"
+>>>>    #include "xfs_reflink.h"
+>>>>    #include "scrub/xfs_scrub.h"
+>>>> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+>>>> index 142de8d..9b1b93e 100644
+>>>> --- a/fs/xfs/xfs_acl.c
+>>>> +++ b/fs/xfs/xfs_acl.c
+>>>> @@ -10,6 +10,8 @@
+>>>>    #include "xfs_mount.h"
+>>>>    #include "xfs_inode.h"
+>>>>    #include "xfs_acl.h"
+>>>> +#include "xfs_da_format.h"
+>>>> +#include "xfs_da_btree.h"
+>>>>    #include "xfs_attr.h"
+>>>>    #include "xfs_trace.h"
+>>>>    #include <linux/slab.h>
+>>>> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+>>>> index 0ea19b4..36e6d1e 100644
+>>>> --- a/fs/xfs/xfs_attr_item.c
+>>>> +++ b/fs/xfs/xfs_attr_item.c
+>>>> @@ -19,10 +19,10 @@
+>>>>    #include "xfs_rmap.h"
+>>>>    #include "xfs_inode.h"
+>>>>    #include "xfs_icache.h"
+>>>> -#include "xfs_attr.h"
+>>>>    #include "xfs_shared.h"
+>>>>    #include "xfs_da_format.h"
+>>>>    #include "xfs_da_btree.h"
+>>>> +#include "xfs_attr.h"
+>>>>    static inline struct xfs_attri_log_item *ATTRI_ITEM(struct xfs_log_item *lip)
+>>>>    {
+>>>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>>>> index ab341d6..c8728ca 100644
+>>>> --- a/fs/xfs/xfs_ioctl.c
+>>>> +++ b/fs/xfs/xfs_ioctl.c
+>>>> @@ -16,6 +16,8 @@
+>>>>    #include "xfs_rtalloc.h"
+>>>>    #include "xfs_itable.h"
+>>>>    #include "xfs_error.h"
+>>>> +#include "xfs_da_format.h"
+>>>> +#include "xfs_da_btree.h"
+>>>>    #include "xfs_attr.h"
+>>>>    #include "xfs_bmap.h"
+>>>>    #include "xfs_bmap_util.h"
+>>>> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+>>>> index 5001dca..23f6990 100644
+>>>> --- a/fs/xfs/xfs_ioctl32.c
+>>>> +++ b/fs/xfs/xfs_ioctl32.c
+>>>> @@ -21,6 +21,8 @@
+>>>>    #include "xfs_fsops.h"
+>>>>    #include "xfs_alloc.h"
+>>>>    #include "xfs_rtalloc.h"
+>>>> +#include "xfs_da_format.h"
+>>>> +#include "xfs_da_btree.h"
+>>>>    #include "xfs_attr.h"
+>>>>    #include "xfs_ioctl.h"
+>>>>    #include "xfs_ioctl32.h"
+>>>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+>>>> index e73c21a..561c467 100644
+>>>> --- a/fs/xfs/xfs_iops.c
+>>>> +++ b/fs/xfs/xfs_iops.c
+>>>> @@ -17,6 +17,7 @@
+>>>>    #include "xfs_acl.h"
+>>>>    #include "xfs_quota.h"
+>>>>    #include "xfs_error.h"
+>>>> +#include "xfs_da_btree.h"
+>>>>    #include "xfs_attr.h"
+>>>>    #include "xfs_trans.h"
+>>>>    #include "xfs_trace.h"
+>>>> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+>>>> index 3013746..938e81d 100644
+>>>> --- a/fs/xfs/xfs_xattr.c
+>>>> +++ b/fs/xfs/xfs_xattr.c
+>>>> @@ -11,6 +11,7 @@
+>>>>    #include "xfs_mount.h"
+>>>>    #include "xfs_da_format.h"
+>>>>    #include "xfs_inode.h"
+>>>> +#include "xfs_da_btree.h"
+>>>>    #include "xfs_attr.h"
+>>>>    #include "xfs_attr_leaf.h"
+>>>>    #include "xfs_acl.h"
+>>>> -- 
+>>>> 2.7.4
+>>>>
