@@ -1,84 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43206 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727703AbfDWPt7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Apr 2019 11:49:59 -0400
-Date: Tue, 23 Apr 2019 08:49:38 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:56428 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727309AbfDYFwU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Apr 2019 01:52:20 -0400
+Date: Wed, 24 Apr 2019 22:50:01 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: make tr_growdata a permanent transaction
-Message-ID: <20190423154938.GJ4676@magnolia>
-References: <20190423150709.GG4676@magnolia>
- <20190423152827.GB10224@bfoster>
+Subject: [PATCH 2/2] xfs: fix broken bhold behavior in xrep_roll_ag_trans
+Message-ID: <20190425055000.GH178290@magnolia>
+References: <20190425054747.GG178290@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190423152827.GB10224@bfoster>
+In-Reply-To: <20190425054747.GG178290@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Brian Foster <bfoster@redhat.com>
 
-On Tue, Apr 23, 2019 at 11:28:27AM -0400, Brian Foster wrote:
-> On Tue, Apr 23, 2019 at 08:07:09AM -0700, Darrick J. Wong wrote:
-> > From: Brian Foster <bfoster@redhat.com>
-> > 
-> > The growdata transaction is used by growfs operations to increase
-> > the data size of the filesystem. Part of this sequence involves
-> > extending the size of the last preexisting AG in the fs, if
-> > necessary. This is implemented by freeing the newly available
-> > physical range to the AG.
-> > 
-> > tr_growdata is not a permanent transaction, however, and block
-> > allocation transactions must be permanent to handle deferred frees
-> > of AGFL blocks. If the grow operation extends an existing AG that
-> > requires AGFL fixing, assert failures occur due to a populated dfops
-> > list on a non-permanent transaction and the AGFL free does not
-> > occur. This is reproduced (rarely) by xfs/104.
-> > 
-> > Change tr_growdata to a permanent transaction with a default log
-> > count. This increases initial transaction reservation size, but
-> > growfs is an infrequent and non-performance critical operation and
-> > so should have minimal impact. Also add an assert in the block
-> > allocation path to make this transaction requirement explicit and
-> > obvious to future callers.
-> > 
-> 
-> We should drop the last sentence from this commit log too if we push the
-> assert to its own patch.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok, will do.
+In xrep_roll_ag_trans, the transaction roll will always set sc->tp to
+the new transaction, even if committing the old one fails.  A bare
+transaction roll leaves the buffer(s) locked but not joined to the new
+transaction, so it's not necessary to release the hold if the roll
+fails.  Remove the incorrect xfs_trans_bhold_release calls.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/repair.c |   25 ++++++++-----------------
+ 1 file changed, 8 insertions(+), 17 deletions(-)
 
-> 
-> Brian
-> 
-> > Reported-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > [darrick: add a comment to the assert]
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_trans_resv.c |    6 +++++-
-> >  1 file changed, 5 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> > index f99a7aefe418..83f4ee2afc49 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> > @@ -876,9 +876,13 @@ xfs_trans_resv_calc(
-> >  	resp->tr_sb.tr_logres = xfs_calc_sb_reservation(mp);
-> >  	resp->tr_sb.tr_logcount = XFS_DEFAULT_LOG_COUNT;
-> >  
-> > +	/* growdata requires permanent res; it can free space to the last AG */
-> > +	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
-> > +	resp->tr_growdata.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
-> > +	resp->tr_growdata.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-> > +
-> >  	/* The following transaction are logged in logical format */
-> >  	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
-> > -	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
-> >  	resp->tr_fsyncts.tr_logres = xfs_calc_swrite_reservation(mp);
-> >  	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
-> >  	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 5e7e36cdf3d5..eb358f0f5e0a 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -136,10 +136,16 @@ xrep_roll_ag_trans(
+ 	if (sc->sa.agfl_bp)
+ 		xfs_trans_bhold(sc->tp, sc->sa.agfl_bp);
+ 
+-	/* Roll the transaction. */
++	/*
++	 * Roll the transaction.  We still own the buffer and the buffer lock
++	 * regardless of whether or not the roll succeeds.  If the roll fails,
++	 * the buffers will be released during teardown on our way out of the
++	 * kernel.  If it succeeds, we join them to the new transaction and
++	 * move on.
++	 */
+ 	error = xfs_trans_roll(&sc->tp);
+ 	if (error)
+-		goto out_release;
++		return error;
+ 
+ 	/* Join AG headers to the new transaction. */
+ 	if (sc->sa.agi_bp)
+@@ -150,21 +156,6 @@ xrep_roll_ag_trans(
+ 		xfs_trans_bjoin(sc->tp, sc->sa.agfl_bp);
+ 
+ 	return 0;
+-
+-out_release:
+-	/*
+-	 * Rolling failed, so release the hold on the buffers.  The
+-	 * buffers will be released during teardown on our way out
+-	 * of the kernel.
+-	 */
+-	if (sc->sa.agi_bp)
+-		xfs_trans_bhold_release(sc->tp, sc->sa.agi_bp);
+-	if (sc->sa.agf_bp)
+-		xfs_trans_bhold_release(sc->tp, sc->sa.agf_bp);
+-	if (sc->sa.agfl_bp)
+-		xfs_trans_bhold_release(sc->tp, sc->sa.agfl_bp);
+-
+-	return error;
+ }
+ 
+ /*
