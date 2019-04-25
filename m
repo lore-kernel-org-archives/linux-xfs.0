@@ -1,68 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50354 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727673AbfDWPHl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Apr 2019 11:07:41 -0400
-Date: Tue, 23 Apr 2019 08:07:09 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: make tr_growdata a permanent transaction
-Message-ID: <20190423150709.GG4676@magnolia>
+Received: from w1.tutanota.de ([81.3.6.162]:27562 "EHLO w1.tutanota.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726020AbfDYOee (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Apr 2019 10:34:34 -0400
+Received: from w2.tutanota.de (unknown [192.168.1.163])
+        by w1.tutanota.de (Postfix) with ESMTP id 5602AFA0214
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Apr 2019 14:34:32 +0000 (UTC)
+Date: Thu, 25 Apr 2019 16:34:32 +0200 (CEST)
+From: Jan <bug-reporter@tuta.io>
+Message-ID: <LdJupgK--3-1@tuta.io>
+In-Reply-To: <LUbcIN3--3-1@tuta.io>
+References: <LUbcIN3--3-1@tuta.io>
+Subject: Re: 'stripe width' inconsistency
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>
+To: Linux Xfs <linux-xfs@vger.kernel.org>
 
-From: Brian Foster <bfoster@redhat.com>
+Hi!
 
-The growdata transaction is used by growfs operations to increase
-the data size of the filesystem. Part of this sequence involves
-extending the size of the last preexisting AG in the fs, if
-necessary. This is implemented by freeing the newly available
-physical range to the AG.
+It's been some time but if anybody finds this thread later on, here is how I solved the problem:
 
-tr_growdata is not a permanent transaction, however, and block
-allocation transactions must be permanent to handle deferred frees
-of AGFL blocks. If the grow operation extends an existing AG that
-requires AGFL fixing, assert failures occur due to a populated dfops
-list on a non-permanent transaction and the AGFL free does not
-occur. This is reproduced (rarely) by xfs/104.
+Dec 26, 2018, 12:09 AM by bug-reporter@tuta.io:
 
-Change tr_growdata to a permanent transaction with a default log
-count. This increases initial transaction reservation size, but
-growfs is an infrequent and non-performance critical operation and
-so should have minimal impact. Also add an assert in the block
-allocation path to make this transaction requirement explicit and
-obvious to future callers.
+> Recently, I ran into problems mounting one of my XFS file systems. It's been a while since I used that HDD but I'm almost certain there were no problems. 'xfs_repair' complains about 'bad stripe width in superblock' but 'xfs_db' has no problems parsing the filesystem. It reports (among other information)
+>
+> > unit = 8
+> > width = 65535
+> [...]
+> > crc = 0xe9e260b (correct)
+>
+In the end it worked to use 'xfs_db -x' to change the width to '65536'. (Actually, I used a dm snapshot so I did not have to touch the actual block device, but that was just a safety measure.) After that, I could mount the filesystem normally again. Just to be safe, I mounted it read-only, made a backup and recreated the filesystem with (manually set) sane parameters.
 
-Reported-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-[darrick: add a comment to the assert]
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_trans_resv.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+As a recommendation: it would be nice if such "defect" filesystems were still mountable, even if read only ;-)
 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index f99a7aefe418..83f4ee2afc49 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -876,9 +876,13 @@ xfs_trans_resv_calc(
- 	resp->tr_sb.tr_logres = xfs_calc_sb_reservation(mp);
- 	resp->tr_sb.tr_logcount = XFS_DEFAULT_LOG_COUNT;
- 
-+	/* growdata requires permanent res; it can free space to the last AG */
-+	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
-+	resp->tr_growdata.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
-+	resp->tr_growdata.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
- 	/* The following transaction are logged in logical format */
- 	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
--	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
- 	resp->tr_fsyncts.tr_logres = xfs_calc_swrite_reservation(mp);
- 	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
- 	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
+
+Regards, Jan
