@@ -1,437 +1,294 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47800 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727873AbfDXPoF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Apr 2019 11:44:05 -0400
-Date: Wed, 24 Apr 2019 08:43:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: RFC: what to do when trans_roll fails and we bheld buffers?
- (crash in xfs/141)
-Message-ID: <20190424154346.GF178290@magnolia>
-References: <20190423164947.GK4676@magnolia>
- <20190423180813.GC10224@bfoster>
- <20190423204433.GA178290@magnolia>
- <20190423213359.GA22727@bfoster>
- <20190424033026.GB182714@magnolia>
- <20190424111930.GA24717@bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:40180 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730861AbfDYLQx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Apr 2019 07:16:53 -0400
+Date: Thu, 25 Apr 2019 07:16:50 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: always rejoin held resources during defer roll
+Message-ID: <20190425111650.GA29744@bfoster>
+References: <20190425054747.GG178290@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190424111930.GA24717@bfoster>
+In-Reply-To: <20190425054747.GG178290@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Allison Collins <allison.henderson@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Apr 24, 2019 at 07:19:33AM -0400, Brian Foster wrote:
-> On Tue, Apr 23, 2019 at 08:30:26PM -0700, Darrick J. Wong wrote:
-> > iOn Tue, Apr 24, 2019 at 05:33:59PM -0400, Brian Foster wrote:
-> > > On Tue, Apr 23, 2019 at 01:44:33PM -0700, Darrick J. Wong wrote:
-> > > > On Tue, Apr 23, 2019 at 02:08:16PM -0400, Brian Foster wrote:
-> > > > > On Tue, Apr 23, 2019 at 09:49:47AM -0700, Darrick J. Wong wrote:
-> > > > > > Hi all,
-> > > > > > 
-> > > > > > I saw a crash in xfs/141 last night while testing xfs for-next on a V4
-> > > > > > filesystem.  I think the problem here is that:
-> > > > > > 
-> > > > > >  1. xfs_attr_set calls xfs_attr_set_args.
-> > > > > > 
-> > > > > >  2. xfs_attr_set_args calls xfs_attr_shortform_to_leaf and sets @leaf_bp.
-> > > > > > 
-> > > > > >  3. _set_args calls xfs_defer_finish.
-> > > > > > 
-> > > > > >  4. xfs_defer_finish calls xfs_defer_trans_roll calls xfs_trans_roll.
-> > > > > > 
-> > > > > >  5. xfs_trans_roll sets @args.trans to the new transaction created by
-> > > > > >     xfs_trans_dup.
-> > > > > > 
-> > > > > >  6. xfs_trans_roll calls __xfs_trans_commit on the old transaction and
-> > > > > >     fails because we injected a log error.
-> > > > > > 
-> > > > > >  7. _trans_roll passes the error code up to _defer_finish.
-> > > > > > 
-> > > > > >  8. _defer_finish passes the error code up to _attr_set without joining
-> > > > > >     anything (in particular leaf_bp which we bhold'd so that we would
-> > > > > >     retain the buffer lock) to the new transaction.  Note that
-> > > > > >     @args.trans is still set to the new transaction; nobody's cancelled it.
-> > > > > > 
-> > > > > >  8. xfs_attr_set tries to bail out through out_release_leaf.  The
-> > > > > >     leaf_bp is non-null and args.trans is non-null, so we call
-> > > > > >     xfs_trans_brelse to release leaf_bp from args.trans
-> > > > > > 
-> > > > > >  9. leaf_bp isn't joined to any transaction at all, but we passed in a
-> > > > > >     non-null args.trans so _trans_brelse hits the "bp->b_transp == tp"
-> > > > > >     assert and then crashes trying to assert on the buffer log item
-> > > > > >     which is null because leaf_bp isn't joined to any transaction.
-> > > > > > 
-> > > > > > I think the underlying problem here is that we haven't precisely defined
-> > > > > > what's supposed to happen when the _trans_roll in _defer_trans_roll
-> > > > > > errors out.  Looking at the three callers of trans_bhold (attr setting,
-> > > > > > allocating disk space for a new dquot, and online repair) the handling
-> > > > > > of this situation is not consistent.
-> > > > > > 
-> > > > > > (Embarassingly, the first of those three was RVB'd by me and the latter
-> > > > > > two were written by me :P)
-> > > > > > 
-> > > > > > Should we attach the bholded buffers to the new transaction even if the
-> > > > > > old transaction failed to commit so that callers can xfs_trans_brelse
-> > > > > > the buffer and it all works out (like what the attr code does)?
-> > > > > > 
-> > > > > > Or should we cancel the new transaction and set *tpp to NULL, which will
-> > > > > > also solve this problem for the attr case since args.trans will be null
-> > > > > > after the old commit fails?  But then we run into the problem that now
-> > > > > > every caller has to be prepared to deal with the transaction being null
-> > > > > > if something went wrong.  All of those callers ought to be calling
-> > > > > > xfs_trans_cancel if that's the case, so we might be able to get away
-> > > > > > with adding a if (!tp) return; at the top of that function.
-> > > > > > 
-> > > > > > Or are the callers of _defer_finish/_trans_roll simply supposed to know
-> > > > > > that the buffer might not be joined if the roll fails and deal with it
-> > > > > > appropriately?
-> > > > > > 
-> > > > > > Extra complication: if the rolling succeeds but one of the
-> > > > > > defer_ops->finish_item() calls fails then the buffer /will/ be joined to
-> > > > > > the transaction being passed out.
-> > > > > > 
-> > > > > > I /think/ the easiest answer here is that we ought to join the buffers
-> > > > > > to the new transaction even if committing the old one fails.  I also
-> > > > > > suspect the out_release code in xrep_roll_ag_trans is wrong, but that's
-> > > > > > my problem to fix. :)
-> > > > > > 
-> > > > > 
-> > > > > That seems like the most simple and predictable approach to me. Then the
-> > > > > caller doesn't care whether it has the original transaction or a new
-> > > > > one, it just needs to unwind its actions and cancel the tx in the event
-> > > > > of an error.
-> > > > 
-> > > > <nod> I think it's the most straightforward option, but wanted to hear
-> > > > someone else echo that.  Or tell me I'm a few cards short of a deck. :)
-> > > > 
-> > > > > BTW, a couple other things that look potentially suspicious in this same
-> > > > > codepath:
-> > > > > 
-> > > > > 1.) If the referenced xfs_defer_finish() call succeeds and the
-> > > > > subsequent xfs_trans_roll_inode() fails similarly, it looks like we can
-> > > > > end up in a similar unowned buffer state in the caller.
-> > > > 
-> > > > Yep.  I think the bjoin has to go before the "if (error) return error;".
-> > > > 
-> > > 
-> > > Yeah..
-> > > 
-> > > > > 2.) If we do end up returning to xfs_attr_set_args() with the buffer
-> > > > > held to the transaction, ISTM it's likely dirty and thus
-> > > > > xfs_trans_brelse() may not actually do anything with respect to the
-> > > > > buffer hold. This seems like a potential buffer lock/ref leak vector.
-> > > > 
-> > > > Hm.  I thought we joined and logged the buffer to the first transaction,
-> > > > which should clear the dirty state when the transaction commits (or
-> > > > doesn't)?  Then we add the held buffer to the new transaction, but it's
-> > > > clean, so it should just release...?  Maybe I need to add an error
-> > > > injection knob to make rolling fail to see what happens...
-> > > > 
-> > > 
-> > > I think it just depends where we fail. xfs_attr3_leaf_create() logs the
-> > > buffer and it looks like we have a couple error checks after that but
-> > > before we actually get to the defer finish code. If we fail there, ILTM
-> > > that we return with the original transaction with the leaf buffer joined
-> > > and dirty (but not yet held). If we do the bhold and make it into
-> > > xfs_defer_finish() and fail before we actually roll (it looks like the
-> > > only way this can happen is with a dfops held item overflow and thus
-> > > probably wouldn't happen here outside of memory corruption or
-> > > something), then I suppose we could technically end up in the caller
-> > > with a held+dirty buf from there.
-> > > 
-> > > Once we do roll, the buffer ends up clean+held as you note above, in
-> > > which case an xfs_trans_brelse() will cancel the hold. Though we're also
-> > > assuming that any deferred operation in progress doesn't dirty any held
-> > > buffers in the current transaction and then happen to fail and return to
-> > > the caller with the same buffer hold+dirty state. I don't think that
-> > > applies to the attr case (and it may not apply anywhere in the current
-> > > code, I haven't really looked), but it might be something to consider if
-> > > we're defining general behavior or error handling rules.
-> > > 
-> > > (Regardless I think sticking some error tags in some of this bhold error
-> > > handling code and seeing what actually happens is probably a good idea.)
-> > > 
-> > > > > A quick look at xfs_buf_item_unlock() suggests we don't drop the hold in
-> > > > > the abort case, but I could have missed something. If not, perhaps we'd
-> > > > > also need to make sure we release the hold before we return from
-> > > > > xfs_attr_set_args().
-> > > > 
-> > > > We don't?  I would have thought:
-> > > > 
-> > > > 	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
-> > > > 
-> > > > would do that?  <shrug> Maybe I'm confused.
-> > > > 
-> > > 
-> > > xfs_buf_item_unlock() samples the current state (into the hold, stale,
-> > > etc. bools), clears the bli flags in the line you posted above but then
-> > > acts on the original state:
-> > > 
-> > > 	...
-> > >         if (hold || (stale && !released))
-> > >                 return;
-> > > 
-> > > So AFAICT a commit/cancel/abort of a transaction with a held buffer
-> > > leaves the buffer lock/release as the responsibility of the caller.
-> > 
-> > Hm.  One thing that's been bugging me for a long time about the way we
-> > maintain locks on objects across a defer roll is that we treat inodes
-> > and buffers differently:
-> > 
-> > For inodes we ijoin them to a transaction along with ilock_flags that
-> > tell the transaction what we want to unlock when the transaction commits
-> > or cancels.  We interpret ilock_flags == 0 in the inode log item to mean
-> > "let the caller unlock the inode when the transaction is done", which
-> > means that the caller must xfs_iunlock and xfs_irele after disposing of
-> > that new transaction.
-> > 
-> > However, held buffers are treated differently -- BLI_HOLD being set in
-> > the buffer log item means the transaction commit (or cancel) maintains
-> > the lock but always clears the hold.  Hence the defer roll rejoins and
-> > reholds the buffer to the new transaction unless something goes wrong,
-> > which is how we ended up in this weird place.
-> > 
+On Wed, Apr 24, 2019 at 10:47:47PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The tx commit clears the bli hold state flag, but that's because the bli
-> is no longer associated with the transaction (which has been destroyed).
-> This is similar to how xfs_inode_item_unlock() does the following:
+> During testing of xfs/141 on a V4 filesystem, I observed some
+> inconsistent behavior with regards to resources that are held (i.e.
+> remain locked) across a defer roll.  The transaction roll always gives
+> the defer roll function a new transaction, even if committing the old
+> transaction fails.  However, the defer roll function only rejoins the
+> held resources if the transaction commit succeedied.  This means that
+> callers of defer roll have to figure out whether the held resources are
+> attached to the transaction being passed back.
 > 
->         lock_flags = iip->ili_lock_flags;
->         iip->ili_lock_flags = 0;
->         if (lock_flags)
->                 xfs_iunlock(ip, lock_flags);
+> Worse yet, if the defer roll was part of a defer finish call, we have a
+> third possibility: the defer finish could pass back a dirty transaction
+> with dirty held resources and an error code.
 > 
-> ... to clear the ili state and act on lock_flags. In both cases (a held
-> buf or lock_flags == 0 inode), the object remains owned by the caller.
+> The only sane way to handle all of these scenarios is to require that
+> the code that held the resource either cancel the transaction before
+> unlocking and releasing the resources, or use functions that detach
+> resources from a transaction properly (e.g.  xfs_trans_brelse) if they
+> need to drop the reference before committing or cancelling the
+> transaction.
 > 
-> > So what if we just change the buffer join rules to be more like inodes?
-> > Setting BLI_HOLD means that the buffer will not be unlocked or released
-> > as part of transaction commit or cancel; the defer roll will join the
-> > buffer (and the hold state) to the new transaction if nothing went
-> > wrong, and we make it the responsibility of the caller to xfs_buf_unlock
-> > and xfs_buf_relee the buffer after disposing of the new transaction,
-> > just like we do for inodes.
-> > 
+> In order to make this so, change the defer roll code to join held
+> resources to the new transaction unconditionally and fix all the bhold
+> callers to release the held buffers correctly.
 > 
-> Hmmm not sure I follow... what you describe above sounds like the
-> current behavior of a BLI_HOLD buffer in a transaction. The
-> xfs_defer_finish() call carries that state forward across however many
-> transaction rolls it does and then the final xfs_trans_commit() leaves
-> the objects owned by the caller according to its bhold/lock_flags
-> semantics.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c  |   31 ++++++++++---------------------
+>  fs/xfs/libxfs/xfs_attr.h  |    2 +-
+>  fs/xfs/libxfs/xfs_defer.c |   14 +++++++++-----
+>  fs/xfs/xfs_dquot.c        |   22 +++++++++++-----------
+>  4 files changed, 31 insertions(+), 38 deletions(-)
 > 
-> To put it another way, any caller that does xfs_trans_bhold() or
-> xfs_trans_ijoin(ip, 0) of an associated object currently expects to have
-> to release that object after trans commit. Are you suggesting that we
-> lift that behavior to xfs_defer_finish() such that after the defer call
-> said objects are owned by the caller at that point (i.e., the caller
-> would have to rejoin to the final transaction if that is desired)?
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 2dd9ee2a2e08..ad954138243e 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -224,10 +224,10 @@ xfs_attr_try_sf_addname(
+>   */
+>  int
+>  xfs_attr_set_args(
+> -	struct xfs_da_args	*args,
+> -	struct xfs_buf          **leaf_bp)
+> +	struct xfs_da_args	*args)
+>  {
+>  	struct xfs_inode	*dp = args->dp;
+> +	struct xfs_buf          *leaf_bp = NULL;
+>  	int			error;
+>  
+>  	/*
+> @@ -255,7 +255,7 @@ xfs_attr_set_args(
+>  		 * It won't fit in the shortform, transform to a leaf block.
+>  		 * GROT: another possible req'mt for a double-split btree op.
+>  		 */
+> -		error = xfs_attr_shortform_to_leaf(args, leaf_bp);
+> +		error = xfs_attr_shortform_to_leaf(args, &leaf_bp);
+>  		if (error)
+>  			return error;
+>  
+> @@ -264,22 +264,15 @@ xfs_attr_set_args(
+>  		 * concurrent AIL push cannot grab the half-baked leaf
+>  		 * buffer and run into problems with the write verifier.
+>  		 */
+> -		xfs_trans_bhold(args->trans, *leaf_bp);
+> +		xfs_trans_bhold(args->trans, leaf_bp);
+>  
+>  		error = xfs_defer_finish(&args->trans);
+> -		if (error)
+> +		if (error) {
+> +			xfs_trans_brelse(args->trans, leaf_bp);
+>  			return error;
+> +		}
 
-I ... think I just had a giant thinko last night.  If xfs_defer_finish
-returns an error, we don't know much of anything about the state of the
-transaction -- it could be a fresh tx with nothing joined because
-committing the old tx failed, or it could be a dirty tx with a bunch of
-things joined (our bhold'en buffers included).  For all we know the held
-resources are joined and dirty, which means we have to cancel the
-transaction and /then/ we can safely unlock and release the held inodes
-and buffers.
+Shouldn't we just unconditionally release the bhold here? Then we cover
+the scenario where the buffer might somehow be dirty. It also seems more
+logically consistent since this code is now responsible only for the
+bhold (to keep the buf locked and deal with the AIL writeback verifier
+race thing). Beyond that, the final transaction can release the buffer
+on commit or abort. E.g., something like the following..?
 
---D
+	/*
+	 * Hold the buffer locked to prevent ... Release the hold to
+	 * transfer the buf to the final tx.
+	 */
+	xfs_trans_bhold(args->trans, leaf_bp);
+	error = xfs_defer_finish(&args->trans);
+	xfs_trans_bhold_release(args->trans, leaf_bp);
+	if (error)
+		return error;
 
-> 
-> Brian
-> 
-> > There are only four users of holds: the defer code itself; dquot
-> > allocation; attr leaf conversion; inode allocation; and online repair,
-> > so it won't be hard to audit and fix all four if we change the behavior.
-> > 
-> > --D
-> > 
-> > > 
-> > > > > Hmm, looking around a bit more outside of this attr case I see code like
-> > > > > the following in xfs_dquot_disk_alloc():
-> > > > > 
-> > > > > 	...
-> > > > >         xfs_trans_bhold(tp, bp);
-> > > > >         error = xfs_defer_finish(tpp);
-> > > > >         tp = *tpp;
-> > > > >         if (error) {
-> > > > >                 xfs_buf_relse(bp);
-> > > > >                 return error;
-> > > > > 	}
-> > > > > 	...
-> > > > > 
-> > > > > That code looks like it actually expects the unowned buf state on a
-> > > > > failed finish as it explicitly releases it on error. Perhaps this is an
-> > > > > argument for treating a failed xfs_defer_finish() like a failed commit
-> > > > > and it is the responsibility of the caller to grok that (meaning the
-> > > > > caller now owns the buf, not the tx). Then again, I'm not sure how the
-> > > > > caller knows whether xfs_defer_finish() failed due to a tx roll (where
-> > > > 
-> > > > I don't think the caller has any good way of finding out, aside from
-> > > > probing xfs_buf.b_transp == *tpp and there's a buffer log item and
-> > > > XFS_BLI_HOLD is set, which is kind of gross...
-> > > > 
-> > > 
-> > > Indeed...
-> > > 
-> > > > bool xfs_buf_is_still_held_by_me_or_did_we_screw_up(xfs_buf_t *bp);
-> > > > 
-> > > > > we currently haven't re-held the buf) or something later in dfops
-> > > > > processing (where we might have already re-held the buf), so that seems
-> > > > > fishy too... :/
-> > > > 
-> > > > Yeah.  I think the error handling here (in quota) is simply wrong; that
-> > > > ought to be "xfs_trans_brelse(*tpp, bp);" not a regular xfs_buf_relse.
-> > > > 
-> > > 
-> > > Yeah, I agree. The takeaway I think is just that if we fix up the
-> > > xfs_defer_finish() error path to have more consistent behavior then we
-> > > might want to audit some of these other codepaths that call with held
-> > > bufs/inodes.
-> > > 
-> > > Brian
-> > > 
-> > > > --D
-> > > > 
-> > > > > 
-> > > > > Brian
-> > > > > 
-> > > > > > --D
-> > > > > > 
-> > > > > > run fstests xfs/141 at 2019-04-23 00:01:13
-> > > > > > XFS (sdc): Mounting V4 Filesystem
-> > > > > > XFS (sdc): Ending clean mount
-> > > > > > XFS (sdb): Mounting V4 Filesystem
-> > > > > > XFS (sdb): Ending clean mount
-> > > > > > XFS (sdb): Quotacheck needed: Please wait.
-> > > > > > XFS (sdb): Quotacheck: Done.
-> > > > > > XFS (sdb): Injecting error (false) at file fs/xfs/xfs_log.c, line 1924, on filesystem "sdb"
-> > > > > > XFS (sdb): Intentionally corrupted log record at LSN 0x100000e0e. Shutdown imminent.
-> > > > > > XFS (sdb): metadata I/O error in "xlog_iodone" at daddr 0x23762e len 64 error 0
-> > > > > > XFS (sdb): xfs_do_force_shutdown(0x2) called from line 1272 of file fs/xfs/xfs_log.c. Return address = ffffffffa064e48b
-> > > > > > XFS: Assertion failed: bp->b_transp == tp, file: fs/xfs/xfs_trans_buf.c, line: 385
-> > > > > > potentially unexpected fatal signal 6.
-> > > > > > CPU: 1 PID: 1154887 Comm: fsstress Tainted: G        W         5.1.0-rc5-djw #rc5
-> > > > > > Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.10.2-1ubuntu1djwong0 04/01/2014
-> > > > > > RIP: 0033:0x7fdb91cd9e97
-> > > > > > Code: c2 b8 ea 00 00 00 0f 05 48 3d 00 f0 ff ff 77 3b 41 89 c0 41 ba 08 00 00 00 31 d2 4c 89 ce bf 02 00 00 00 b8 0e 00 00 00 0f 05 <48> 8b 8c 24 08 01 00 00 64 48 33 0c 25 28 00 00 00 44 89 c0 75 1f
-> > > > > > RSP: 002b:00007ffdb0d0f080 EFLAGS: 00000246 ORIG_RAX: 000000000000000e
-> > > > > > RAX: 0000000000000000 RBX: 0000000003aed64a RCX: 00007fdb91cd9e97
-> > > > > > RDX: 0000000000000000 RSI: 00007ffdb0d0f080 RDI: 0000000000000002
-> > > > > > RBP: 0000000000458923 R08: 0000000000000000 R09: 00007ffdb0d0f080
-> > > > > > R10: 0000000000000008 R11: 0000000000000246 R12: 0000000000000005
-> > > > > > R13: 000000000000031e R14: 00007ffdb0d0f3d0 R15: 000055d212696560
-> > > > > > FS:  00007fdb928cdb80 GS:  0000000000000000
-> > > > > > potentially unexpected fatal signal 6.
-> > > > > > CPU: 1 PID: 1154888 Comm: fsstress Tainted: G        W         5.1.0-rc5-djw #rc5
-> > > > > > Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.10.2-1ubuntu1djwong0 04/01/2014
-> > > > > > RIP: 0033:0x7fdb91cd9e97
-> > > > > > Code: c2 b8 ea 00 00 00 0f 05 48 3d 00 f0 ff ff 77 3b 41 89 c0 41 ba 08 00 00 00 31 d2 4c 89 ce bf 02 00 00 00 b8 0e 00 00 00 0f 05 <48> 8b 8c 24 08 01 00 00 64 48 33 0c 25 28 00 00 00 44 89 c0 75 1f
-> > > > > > RSP: 002b:00007ffdb0d0eaf0 EFLAGS: 00000246 ORIG_RAX: 000000000000000e
-> > > > > > RAX: 0000000000000000 RBX: 0000000000000005 RCX: 00007fdb91cd9e97
-> > > > > > RDX: 0000000000000000 RSI: 00007ffdb0d0eaf0 RDI: 0000000000000002
-> > > > > > RBP: 000055d2128a41c0 R08: 0000000000000000 R09: 00007ffdb0d0eaf0
-> > > > > > R10: 0000000000000008 R11: 0000000000000246 R12: 000000000007a120
-> > > > > > R13: 0000000051eb851f R14: 00007ffdb0d0f3d0 R15: 000055d21269ec60
-> > > > > > FS:  00007fdb928cdb80 GS:  0000000000000000
-> > > > > > XFS (sdb): Log I/O Error Detected. Shutting down filesystem
-> > > > > > XFS (sdb): Please unmount the filesystem and rectify the problem(s)
-> > > > > > WARNING: CPU: 0 PID: 1154885 at fs/xfs/xfs_message.c:104 assfail+0x27/0x2a [xfs]
-> > > > > > Modules linked in: dm_snapshot xfs dm_thin_pool dm_persistent_data dm_bio_prison dm_bufio libcrc32c ext2 ext4 mbcache jbd2 dm_flakey ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_tcpudp ip_set_hash_net xt_set ip_set_hash_mac ip_set nfnetlink bfq mq_deadline ip6table_filter ip6_tables iptable_filter dax_pmem_compat device_dax dax_pmem_core nd_pmem sch_fq_codel ip_tables x_tables nfsv4 af_packet [last unloaded: scsi_debug]
-> > > > > > CPU: 0 PID: 1154885 Comm: fsstress Tainted: G        W         5.1.0-rc5-djw #rc5
-> > > > > > Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.10.2-1ubuntu1djwong0 04/01/2014
-> > > > > > RIP: 0010:assfail+0x27/0x2a [xfs]
-> > > > > > Code: 0f 0b c3 66 66 66 66 90 48 89 f1 41 89 d0 48 c7 c6 50 7c 6a a0 48 89 fa 31 ff e8 a6 f8 ff ff 80 3d 45 94 0a 00 00 74 02 0f 0b <0f> 0b c3 48 8b b3 a8 02 00 00 48 c7 c7 e8 80 6a a0 c6 05 66 8f 0a
-> > > > > > RSP: 0018:ffffc9000194bbb0 EFLAGS: 00010246
-> > > > > > RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
-> > > > > > RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffffa0699d13
-> > > > > > RBP: ffff88803c45cb00 R08: 0000000000000000 R09: 0000000000000000
-> > > > > > R10: 000000000000000a R11: f000000000000000 R12: ffff888060e41b80
-> > > > > > R13: 0000000000000010 R14: 000000000000005d R15: 0000000000000000
-> > > > > > FS:  00007fdb928cdb80(0000) GS:ffff88803e800000(0000) knlGS:0000000000000000
-> > > > > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > > > > CR2: 00007fdb9195c000 CR3: 00000000770bd000 CR4: 00000000000006b0
-> > > > > > Call Trace:
-> > > > > >  xfs_trans_brelse+0x185/0x210 [xfs]
-> > > > > >  xfs_attr_set+0x2ce/0x300 [xfs]
-> > > > > >  xfs_xattr_set+0x54/0xa0 [xfs]
-> > > > > >  __vfs_setxattr+0x66/0x80
-> > > > > >  __vfs_setxattr_noperm+0x54/0xf0
-> > > > > >  vfs_setxattr+0x81/0xa0
-> > > > > >  setxattr+0x146/0x1d0
-> > > > > >  path_setxattr+0xd0/0xf0
-> > > > > >  __x64_sys_setxattr+0x27/0x30
-> > > > > >  do_syscall_64+0x50/0x160
-> > > > > >  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> > > > > > RIP: 0033:0x7fdb91db6839
-> > > > > > Code: 00 f3 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 1f f6 2c 00 f7 d8 64 89 01 48
-> > > > > > RSP: 002b:00007ffdb0d0f318 EFLAGS: 00000246 ORIG_RAX: 00000000000000bc
-> > > > > > RAX: ffffffffffffffda RBX: 000000000000005d RCX: 00007fdb91db6839
-> > > > > > RDX: 000055d212bd8b60 RSI: 00007ffdb0d0f360 RDI: 000055d212bf59f0
-> > > > > > RBP: 0000000000000001 R08: 0000000000000001 R09: 00007ffdb0d0f3d0
-> > > > > > R10: 000000000000005d R11: 0000000000000246 R12: 0000000000000001
-> > > > > > R13: 000000000000031a R14: 00007ffdb0d0f360 R15: 000055d212bd8b60
-> > > > > > irq event stamp: 0
-> > > > > > hardirqs last  enabled at (0): [<0000000000000000>]           (null)
-> > > > > > hardirqs last disabled at (0): [<ffffffff81057804>] copy_process+0x8d4/0x2220
-> > > > > > softirqs last  enabled at (0): [<ffffffff81057804>] copy_process+0x8d4/0x2220
-> > > > > > softirqs last disabled at (0): [<0000000000000000>]           (null)
-> > > > > > ---[ end trace f2eeafdb05fd11a1 ]---
-> > > > > > BUG: unable to handle kernel NULL pointer dereference at 0000000000000038
-> > > > > > #PF error: [normal kernel read fault]
-> > > > > > PGD 0 P4D 0 
-> > > > > > Oops: 0000 [#1] PREEMPT SMP
-> > > > > > CPU: 0 PID: 1154885 Comm: fsstress Tainted: G        W         5.1.0-rc5-djw #rc5
-> > > > > > Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.10.2-1ubuntu1djwong0 04/01/2014
-> > > > > > RIP: 0010:xfs_trans_brelse+0x48/0x210 [xfs]
-> > > > > > Code: 85 4a 01 00 00 48 85 ed 0f 84 8a 00 00 00 66 66 66 66 90 65 8b 05 a8 85 9a 5f 89 c0 48 0f a3 05 06 d4 aa e1 0f 82 ee 00 00 00 <81> 7b 38 3c 12 00 00 0f 85 52 01 00 00 8b 83 a8 00 00 00 85 c0 0f
-> > > > > > RSP: 0018:ffffc9000194bbb8 EFLAGS: 00010286
-> > > > > > RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
-> > > > > > RDX: 0000000000000002 RSI: 000000000000000a RDI: ffffffffa0699d13
-> > > > > > RBP: ffff88803c45cb00 R08: 0000000000000000 R09: 0000000000000000
-> > > > > > R10: 000000000000000a R11: f000000000000000 R12: ffff888060e41b80
-> > > > > > R13: 0000000000000010 R14: 000000000000005d R15: 0000000000000000
-> > > > > > FS:  00007fdb928cdb80(0000) GS:ffff88803e800000(0000) knlGS:0000000000000000
-> > > > > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > > > > CR2: 0000000000000038 CR3: 00000000770bd000 CR4: 00000000000006b0
-> > > > > > Call Trace:
-> > > > > >  xfs_attr_set+0x2ce/0x300 [xfs]
-> > > > > >  xfs_xattr_set+0x54/0xa0 [xfs]
-> > > > > >  __vfs_setxattr+0x66/0x80
-> > > > > >  __vfs_setxattr_noperm+0x54/0xf0
-> > > > > >  vfs_setxattr+0x81/0xa0
-> > > > > >  setxattr+0x146/0x1d0
-> > > > > >  path_setxattr+0xd0/0xf0
-> > > > > >  __x64_sys_setxattr+0x27/0x30
-> > > > > >  do_syscall_64+0x50/0x160
-> > > > > >  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> > > > > > RIP: 0033:0x7fdb91db6839
-> > > > > > Code: 00 f3 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 1f f6 2c 00 f7 d8 64 89 01 48
-> > > > > > RSP: 002b:00007ffdb0d0f318 EFLAGS: 00000246 ORIG_RAX: 00000000000000bc
-> > > > > > RAX: ffffffffffffffda RBX: 000000000000005d RCX: 00007fdb91db6839
-> > > > > > RDX: 000055d212bd8b60 RSI: 00007ffdb0d0f360 RDI: 000055d212bf59f0
-> > > > > > RBP: 0000000000000001 R08: 0000000000000001 R09: 00007ffdb0d0f3d0
-> > > > > > R10: 000000000000005d R11: 0000000000000246 R12: 0000000000000001
-> > > > > > R13: 000000000000031a R14: 00007ffdb0d0f360 R15: 000055d212bd8b60
-> > > > > > Modules linked in: dm_snapshot xfs dm_thin_pool dm_persistent_data dm_bio_prison dm_bufio libcrc32c ext2 ext4 mbcache jbd2 dm_flakey ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_tcpudp ip_set_hash_net xt_set ip_set_hash_mac ip_set nfnetlink bfq mq_deadline ip6table_filter ip6_tables iptable_filter dax_pmem_compat device_dax dax_pmem_core nd_pmem sch_fq_codel ip_tables x_tables nfsv4 af_packet [last unloaded: scsi_debug]
-> > > > > > Dumping ftrace buffer:
-> > > > > >    (ftrace buffer empty)
-> > > > > > CR2: 0000000000000038
-> > > > > > ---[ end trace f2eeafdb05fd11a2 ]---
-> > > > > > RIP: 0010:xfs_trans_brelse+0x48/0x210 [xfs]
-> > > > > > Code: 85 4a 01 00 00 48 85 ed 0f 84 8a 00 00 00 66 66 66 66 90 65 8b 05 a8 85 9a 5f 89 c0 48 0f a3 05 06 d4 aa e1 0f 82 ee 00 00 00 <81> 7b 38 3c 12 00 00 0f 85 52 01 00 00 8b 83 a8 00 00 00 85 c0 0f
-> > > > > > RSP: 0018:ffffc9000194bbb8 EFLAGS: 00010286
-> > > > > > RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
-> > > > > > RDX: 0000000000000002 RSI: 000000000000000a RDI: ffffffffa0699d13
-> > > > > > RBP: ffff88803c45cb00 R08: 0000000000000000 R09: 0000000000000000
-> > > > > > R10: 000000000000000a R11: f000000000000000 R12: ffff888060e41b80
-> > > > > > R13: 0000000000000010 R14: 000000000000005d R15: 0000000000000000
-> > > > > > FS:  00007fdb928cdb80(0000) GS:ffff88803e800000(0000) knlGS:0000000000000000
-> > > > > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > > > > CR2: 0000000000000038 CR3: 00000000770bd000 CR4: 00000000000006b0
-> > > > > > 
+BTW out of curiosity, did you happen to identify what deferred operation
+was actually queued here that triggered a tx roll in your xfs/141 test?
+Was it an allocation/agfl fixup or something?
+
+>  
+> -		/*
+> -		 * Commit the leaf transformation.  We'll need another
+> -		 * (linked) transaction to add the new attribute to the
+> -		 * leaf.
+> -		 */
+> -		error = xfs_trans_roll_inode(&args->trans, dp);
+> -		if (error)
+> -			return error;
+> -		xfs_trans_bjoin(args->trans, *leaf_bp);
+> -		*leaf_bp = NULL;
+> +		xfs_trans_bhold_release(args->trans, leaf_bp);
+>  	}
+>  
+>  	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+> @@ -322,7 +315,6 @@ xfs_attr_set(
+>  	int			flags)
+>  {
+>  	struct xfs_mount	*mp = dp->i_mount;
+> -	struct xfs_buf		*leaf_bp = NULL;
+>  	struct xfs_da_args	args;
+>  	struct xfs_trans_res	tres;
+>  	int			rsvd = (flags & ATTR_ROOT) != 0;
+> @@ -381,9 +373,9 @@ xfs_attr_set(
+>  		goto out_trans_cancel;
+>  
+>  	xfs_trans_ijoin(args.trans, dp, 0);
+> -	error = xfs_attr_set_args(&args, &leaf_bp);
+> +	error = xfs_attr_set_args(&args);
+>  	if (error)
+> -		goto out_release_leaf;
+> +		goto out_trans_cancel;
+>  	if (!args.trans) {
+>  		/* shortform attribute has already been committed */
+>  		goto out_unlock;
+> @@ -408,9 +400,6 @@ xfs_attr_set(
+>  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+>  	return error;
+>  
+> -out_release_leaf:
+> -	if (leaf_bp)
+> -		xfs_trans_brelse(args.trans, leaf_bp);
+>  out_trans_cancel:
+>  	if (args.trans)
+>  		xfs_trans_cancel(args.trans);
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 2297d8467666..3b0dce06e454 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -140,7 +140,7 @@ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+>  		 unsigned char *value, int *valuelenp, int flags);
+>  int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+>  		 unsigned char *value, int valuelen, int flags);
+> -int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp);
+> +int xfs_attr_set_args(struct xfs_da_args *args);
+>  int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+>  int xfs_attr_remove_args(struct xfs_da_args *args);
+>  int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 94f00427de98..1c6bf2105939 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -274,13 +274,15 @@ xfs_defer_trans_roll(
+>  
+>  	trace_xfs_defer_trans_roll(tp, _RET_IP_);
+>  
+> -	/* Roll the transaction. */
+> +	/*
+> +	 * Roll the transaction.  Rolling always given a new transaction (even
+> +	 * if committing the old one fails!) to hand back to the caller, so we
+> +	 * join the held resources to the new transaction so that we always
+> +	 * return with the held resources joined to @tpp, no matter what
+> +	 * happened.
+> +	 */
+>  	error = xfs_trans_roll(tpp);
+>  	tp = *tpp;
+> -	if (error) {
+> -		trace_xfs_defer_trans_roll_error(tp, error);
+> -		return error;
+> -	}
+>  
+>  	/* Rejoin the joined inodes. */
+>  	for (i = 0; i < ipcount; i++)
+> @@ -292,6 +294,8 @@ xfs_defer_trans_roll(
+>  		xfs_trans_bhold(tp, bplist[i]);
+>  	}
+>  
+> +	if (error)
+> +		trace_xfs_defer_trans_roll_error(tp, error);
+>  	return error;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 87e6dd5326d5..7f058120a921 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -359,9 +359,8 @@ xfs_dquot_disk_alloc(
+>  	 */
+>  	xfs_trans_bhold(tp, bp);
+>  	error = xfs_defer_finish(tpp);
+> -	tp = *tpp;
+>  	if (error) {
+> -		xfs_buf_relse(bp);
+> +		xfs_trans_brelse(*tpp, bp);
+>  		return error;
+>  	}
+
+Similar comment here wrt to the dirty buf case. This code means that if
+the buffer remained dirty, we'd hold it to the tx, brelse will skip it
+and we wouldn't have set *bpp before we return the error. The caller
+cancels the tx, but still owns the held buf yet doesn't have a pointer
+to it.
+
+The dirty buffer scenario may not play out in either of these contexts,
+but I'd prefer to try and use/propagate error handling patterns that are
+totally robust if at all possible. We'll eventually have that scenario
+play out somewhere I'm sure and chances are this code will be
+reused/copied/referenced for any new bhold+dfops situations. Thinking
+about it, all it would take is some new pre-roll error handling down in
+xfs_defer_finish() to quietly turn these error checks into a leak
+vector.
+
+This case looks like it actually expects the buffer to remain held on
+return so perhaps we just need to set the *bpp pointer sooner. The
+caller can then commit the final tx and set it's *bpp (if the commit is
+successful) or release bp itself and cancel the tx if this function
+returned an error.
+
+>  	*bpp = bp;
+> @@ -521,7 +520,7 @@ xfs_qm_dqread_alloc(
+>  	struct xfs_buf		**bpp)
+>  {
+>  	struct xfs_trans	*tp;
+> -	struct xfs_buf		*bp;
+> +	struct xfs_buf		*bp = NULL;
+>  	int			error;
+>  
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_dqalloc,
+> @@ -529,24 +528,25 @@ xfs_qm_dqread_alloc(
+>  	if (error)
+>  		goto err;
+>  
+> +	/*
+> +	 * This function returns with the buffer held to the transaction, so
+> +	 * either we pass it back to our caller still locked or cancel the
+> +	 * transaction and unlock it manually if we're not passing it back.
+> +	 */
+>  	error = xfs_dquot_disk_alloc(&tp, dqp, &bp);
+>  	if (error)
+>  		goto err_cancel;
+>  
+>  	error = xfs_trans_commit(tp);
+> -	if (error) {
+> -		/*
+> -		 * Buffer was held to the transaction, so we have to unlock it
+> -		 * manually here because we're not passing it back.
+> -		 */
+> -		xfs_buf_relse(bp);
+> -		goto err;
+> -	}
+> +	if (error)
+> +		goto err_cancel;
+
+A failed xfs_trans_commit() is equivalent to an xfs_trans_cancel() (it
+frees the tx) so there's no need to call it here.
+
+Brian
+
+>  	*bpp = bp;
+>  	return 0;
+>  
+>  err_cancel:
+>  	xfs_trans_cancel(tp);
+> +	if (bp)
+> +		xfs_buf_relse(bp);
+>  err:
+>  	return error;
+>  }
