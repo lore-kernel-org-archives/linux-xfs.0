@@ -1,416 +1,241 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45118 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727324AbfDZFBs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 Apr 2019 01:01:48 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v7 2/6] virtio-pmem: Add virtio pmem driver
-Date: Fri, 26 Apr 2019 10:30:35 +0530
-Message-Id: <20190426050039.17460-3-pagupta@redhat.com>
-In-Reply-To: <20190426050039.17460-1-pagupta@redhat.com>
-References: <20190426050039.17460-1-pagupta@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:51928 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387415AbfDYFsB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Apr 2019 01:48:01 -0400
+Date: Wed, 24 Apr 2019 22:47:47 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 1/2] xfs: always rejoin held resources during defer roll
+Message-ID: <20190425054747.GG178290@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, pagupta@redhat.com
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Brian Foster <bfoster@redhat.com>
 
-This patch adds virtio-pmem driver for KVM guest.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Guest reads the persistent memory range information from
-Qemu over VIRTIO and registers it on nvdimm_bus. It also
-creates a nd_region object with the persistent memory
-range information so that existing 'nvdimm/pmem' driver
-can reserve this into system memory map. This way
-'virtio-pmem' driver uses existing functionality of pmem
-driver to register persistent memory compatible for DAX
-capable filesystems.
+During testing of xfs/141 on a V4 filesystem, I observed some
+inconsistent behavior with regards to resources that are held (i.e.
+remain locked) across a defer roll.  The transaction roll always gives
+the defer roll function a new transaction, even if committing the old
+transaction fails.  However, the defer roll function only rejoins the
+held resources if the transaction commit succeedied.  This means that
+callers of defer roll have to figure out whether the held resources are
+attached to the transaction being passed back.
 
-This also provides function to perform guest flush over
-VIRTIO from 'pmem' driver when userspace performs flush
-on DAX memory range.
+Worse yet, if the defer roll was part of a defer finish call, we have a
+third possibility: the defer finish could pass back a dirty transaction
+with dirty held resources and an error code.
 
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+The only sane way to handle all of these scenarios is to require that
+the code that held the resource either cancel the transaction before
+unlocking and releasing the resources, or use functions that detach
+resources from a transaction properly (e.g.  xfs_trans_brelse) if they
+need to drop the reference before committing or cancelling the
+transaction.
+
+In order to make this so, change the defer roll code to join held
+resources to the new transaction unconditionally and fix all the bhold
+callers to release the held buffers correctly.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- drivers/nvdimm/virtio_pmem.c     | 114 +++++++++++++++++++++++++++++
- drivers/virtio/Kconfig           |  10 +++
- drivers/virtio/Makefile          |   1 +
- drivers/virtio/pmem.c            | 118 +++++++++++++++++++++++++++++++
- include/linux/virtio_pmem.h      |  60 ++++++++++++++++
- include/uapi/linux/virtio_ids.h  |   1 +
- include/uapi/linux/virtio_pmem.h |  10 +++
- 7 files changed, 314 insertions(+)
- create mode 100644 drivers/nvdimm/virtio_pmem.c
- create mode 100644 drivers/virtio/pmem.c
- create mode 100644 include/linux/virtio_pmem.h
- create mode 100644 include/uapi/linux/virtio_pmem.h
+ fs/xfs/libxfs/xfs_attr.c  |   31 ++++++++++---------------------
+ fs/xfs/libxfs/xfs_attr.h  |    2 +-
+ fs/xfs/libxfs/xfs_defer.c |   14 +++++++++-----
+ fs/xfs/xfs_dquot.c        |   22 +++++++++++-----------
+ 4 files changed, 31 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/nvdimm/virtio_pmem.c b/drivers/nvdimm/virtio_pmem.c
-new file mode 100644
-index 000000000000..66b582f751a3
---- /dev/null
-+++ b/drivers/nvdimm/virtio_pmem.c
-@@ -0,0 +1,114 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * virtio_pmem.c: Virtio pmem Driver
-+ *
-+ * Discovers persistent memory range information
-+ * from host and provides a virtio based flushing
-+ * interface.
-+ */
-+#include <linux/virtio_pmem.h>
-+#include "nd.h"
-+
-+ /* The interrupt handler */
-+void host_ack(struct virtqueue *vq)
-+{
-+	unsigned int len;
-+	unsigned long flags;
-+	struct virtio_pmem_request *req, *req_buf;
-+	struct virtio_pmem *vpmem = vq->vdev->priv;
-+
-+	spin_lock_irqsave(&vpmem->pmem_lock, flags);
-+	while ((req = virtqueue_get_buf(vq, &len)) != NULL) {
-+		req->done = true;
-+		wake_up(&req->host_acked);
-+
-+		if (!list_empty(&vpmem->req_list)) {
-+			req_buf = list_first_entry(&vpmem->req_list,
-+					struct virtio_pmem_request, list);
-+			list_del(&vpmem->req_list);
-+			req_buf->wq_buf_avail = true;
-+			wake_up(&req_buf->wq_buf);
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 2dd9ee2a2e08..ad954138243e 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -224,10 +224,10 @@ xfs_attr_try_sf_addname(
+  */
+ int
+ xfs_attr_set_args(
+-	struct xfs_da_args	*args,
+-	struct xfs_buf          **leaf_bp)
++	struct xfs_da_args	*args)
+ {
+ 	struct xfs_inode	*dp = args->dp;
++	struct xfs_buf          *leaf_bp = NULL;
+ 	int			error;
+ 
+ 	/*
+@@ -255,7 +255,7 @@ xfs_attr_set_args(
+ 		 * It won't fit in the shortform, transform to a leaf block.
+ 		 * GROT: another possible req'mt for a double-split btree op.
+ 		 */
+-		error = xfs_attr_shortform_to_leaf(args, leaf_bp);
++		error = xfs_attr_shortform_to_leaf(args, &leaf_bp);
+ 		if (error)
+ 			return error;
+ 
+@@ -264,22 +264,15 @@ xfs_attr_set_args(
+ 		 * concurrent AIL push cannot grab the half-baked leaf
+ 		 * buffer and run into problems with the write verifier.
+ 		 */
+-		xfs_trans_bhold(args->trans, *leaf_bp);
++		xfs_trans_bhold(args->trans, leaf_bp);
+ 
+ 		error = xfs_defer_finish(&args->trans);
+-		if (error)
++		if (error) {
++			xfs_trans_brelse(args->trans, leaf_bp);
+ 			return error;
 +		}
-+	}
-+	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(host_ack);
-+
-+ /* The request submission function */
-+int virtio_pmem_flush(struct nd_region *nd_region)
-+{
-+	int err;
-+	unsigned long flags;
-+	struct scatterlist *sgs[2], sg, ret;
-+	struct virtio_device *vdev = nd_region->provider_data;
-+	struct virtio_pmem *vpmem = vdev->priv;
-+	struct virtio_pmem_request *req;
-+
-+	might_sleep();
-+	req = kmalloc(sizeof(*req), GFP_KERNEL);
-+	if (!req)
-+		return -ENOMEM;
-+
-+	req->done = req->wq_buf_avail = false;
-+	strcpy(req->name, "FLUSH");
-+	init_waitqueue_head(&req->host_acked);
-+	init_waitqueue_head(&req->wq_buf);
-+	sg_init_one(&sg, req->name, strlen(req->name));
-+	sgs[0] = &sg;
-+	sg_init_one(&ret, &req->ret, sizeof(req->ret));
-+	sgs[1] = &ret;
-+
-+	spin_lock_irqsave(&vpmem->pmem_lock, flags);
-+	err = virtqueue_add_sgs(vpmem->req_vq, sgs, 1, 1, req, GFP_ATOMIC);
-+	if (err) {
-+		dev_err(&vdev->dev, "failed to send command to virtio pmem device\n");
-+
-+		list_add_tail(&vpmem->req_list, &req->list);
-+		spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
-+
-+		/* When host has read buffer, this completes via host_ack */
-+		wait_event(req->wq_buf, req->wq_buf_avail);
-+		spin_lock_irqsave(&vpmem->pmem_lock, flags);
-+	}
-+	err = virtqueue_kick(vpmem->req_vq);
-+	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
-+
-+	if (!err) {
-+		err = -EIO;
-+		goto ret;
-+	}
-+	/* When host has read buffer, this completes via host_ack */
-+	wait_event(req->host_acked, req->done);
-+	err = req->ret;
-+ret:
-+	kfree(req);
-+	return err;
-+};
-+
-+ /* The asynchronous flush callback function */
-+int async_pmem_flush(struct nd_region *nd_region, struct bio *bio)
-+{
-+	int rc = 0;
-+
-+	/* Create child bio for asynchronous flush and chain with
-+	 * parent bio. Otherwise directly call nd_region flush.
+ 
+-		/*
+-		 * Commit the leaf transformation.  We'll need another
+-		 * (linked) transaction to add the new attribute to the
+-		 * leaf.
+-		 */
+-		error = xfs_trans_roll_inode(&args->trans, dp);
+-		if (error)
+-			return error;
+-		xfs_trans_bjoin(args->trans, *leaf_bp);
+-		*leaf_bp = NULL;
++		xfs_trans_bhold_release(args->trans, leaf_bp);
+ 	}
+ 
+ 	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+@@ -322,7 +315,6 @@ xfs_attr_set(
+ 	int			flags)
+ {
+ 	struct xfs_mount	*mp = dp->i_mount;
+-	struct xfs_buf		*leaf_bp = NULL;
+ 	struct xfs_da_args	args;
+ 	struct xfs_trans_res	tres;
+ 	int			rsvd = (flags & ATTR_ROOT) != 0;
+@@ -381,9 +373,9 @@ xfs_attr_set(
+ 		goto out_trans_cancel;
+ 
+ 	xfs_trans_ijoin(args.trans, dp, 0);
+-	error = xfs_attr_set_args(&args, &leaf_bp);
++	error = xfs_attr_set_args(&args);
+ 	if (error)
+-		goto out_release_leaf;
++		goto out_trans_cancel;
+ 	if (!args.trans) {
+ 		/* shortform attribute has already been committed */
+ 		goto out_unlock;
+@@ -408,9 +400,6 @@ xfs_attr_set(
+ 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 	return error;
+ 
+-out_release_leaf:
+-	if (leaf_bp)
+-		xfs_trans_brelse(args.trans, leaf_bp);
+ out_trans_cancel:
+ 	if (args.trans)
+ 		xfs_trans_cancel(args.trans);
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index 2297d8467666..3b0dce06e454 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -140,7 +140,7 @@ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+ 		 unsigned char *value, int *valuelenp, int flags);
+ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+ 		 unsigned char *value, int valuelen, int flags);
+-int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp);
++int xfs_attr_set_args(struct xfs_da_args *args);
+ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+ int xfs_attr_remove_args(struct xfs_da_args *args);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index 94f00427de98..1c6bf2105939 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -274,13 +274,15 @@ xfs_defer_trans_roll(
+ 
+ 	trace_xfs_defer_trans_roll(tp, _RET_IP_);
+ 
+-	/* Roll the transaction. */
++	/*
++	 * Roll the transaction.  Rolling always given a new transaction (even
++	 * if committing the old one fails!) to hand back to the caller, so we
++	 * join the held resources to the new transaction so that we always
++	 * return with the held resources joined to @tpp, no matter what
++	 * happened.
 +	 */
-+	if (bio && bio->bi_iter.bi_sector != -1) {
-+		struct bio *child = bio_alloc(GFP_ATOMIC, 0);
-+
-+		if (!child)
-+			return -ENOMEM;
-+		bio_copy_dev(child, bio);
-+		child->bi_opf = REQ_PREFLUSH;
-+		child->bi_iter.bi_sector = -1;
-+		bio_chain(child, bio);
-+		submit_bio(child);
-+	} else {
-+		if (virtio_pmem_flush(nd_region))
-+			rc = -EIO;
-+	}
-+
-+	return rc;
-+};
-+EXPORT_SYMBOL_GPL(async_pmem_flush);
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/virtio/Kconfig b/drivers/virtio/Kconfig
-index 35897649c24f..9f634a2ed638 100644
---- a/drivers/virtio/Kconfig
-+++ b/drivers/virtio/Kconfig
-@@ -42,6 +42,16 @@ config VIRTIO_PCI_LEGACY
+ 	error = xfs_trans_roll(tpp);
+ 	tp = *tpp;
+-	if (error) {
+-		trace_xfs_defer_trans_roll_error(tp, error);
+-		return error;
+-	}
  
- 	  If unsure, say Y.
+ 	/* Rejoin the joined inodes. */
+ 	for (i = 0; i < ipcount; i++)
+@@ -292,6 +294,8 @@ xfs_defer_trans_roll(
+ 		xfs_trans_bhold(tp, bplist[i]);
+ 	}
  
-+config VIRTIO_PMEM
-+	tristate "Support for virtio pmem driver"
-+	depends on VIRTIO
-+	depends on LIBNVDIMM
-+	help
-+	This driver provides support for virtio based flushing interface
-+	for persistent memory range.
-+
-+	If unsure, say M.
-+
- config VIRTIO_BALLOON
- 	tristate "Virtio balloon driver"
- 	depends on VIRTIO
-diff --git a/drivers/virtio/Makefile b/drivers/virtio/Makefile
-index 3a2b5c5dcf46..143ce91eabe9 100644
---- a/drivers/virtio/Makefile
-+++ b/drivers/virtio/Makefile
-@@ -6,3 +6,4 @@ virtio_pci-y := virtio_pci_modern.o virtio_pci_common.o
- virtio_pci-$(CONFIG_VIRTIO_PCI_LEGACY) += virtio_pci_legacy.o
- obj-$(CONFIG_VIRTIO_BALLOON) += virtio_balloon.o
- obj-$(CONFIG_VIRTIO_INPUT) += virtio_input.o
-+obj-$(CONFIG_VIRTIO_PMEM) += pmem.o ../nvdimm/virtio_pmem.o
-diff --git a/drivers/virtio/pmem.c b/drivers/virtio/pmem.c
-new file mode 100644
-index 000000000000..309788628e41
---- /dev/null
-+++ b/drivers/virtio/pmem.c
-@@ -0,0 +1,118 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * virtio_pmem.c: Virtio pmem Driver
-+ *
-+ * Discovers persistent memory range information
-+ * from host and registers the virtual pmem device
-+ * with libnvdimm core.
-+ */
-+#include <linux/virtio_pmem.h>
-+#include <../../drivers/nvdimm/nd.h>
-+
-+static struct virtio_device_id id_table[] = {
-+	{ VIRTIO_ID_PMEM, VIRTIO_DEV_ANY_ID },
-+	{ 0 },
-+};
-+
-+ /* Initialize virt queue */
-+static int init_vq(struct virtio_pmem *vpmem)
-+{
-+	/* single vq */
-+	vpmem->req_vq = virtio_find_single_vq(vpmem->vdev,
-+				host_ack, "flush_queue");
-+	if (IS_ERR(vpmem->req_vq))
-+		return PTR_ERR(vpmem->req_vq);
-+
-+	spin_lock_init(&vpmem->pmem_lock);
-+	INIT_LIST_HEAD(&vpmem->req_list);
-+
-+	return 0;
-+};
-+
-+static int virtio_pmem_probe(struct virtio_device *vdev)
-+{
-+	int err = 0;
-+	struct resource res;
-+	struct virtio_pmem *vpmem;
-+	struct nd_region_desc ndr_desc = {};
-+	int nid = dev_to_node(&vdev->dev);
-+	struct nd_region *nd_region;
-+
-+	if (!vdev->config->get) {
-+		dev_err(&vdev->dev, "%s failure: config access disabled\n",
-+			__func__);
-+		return -EINVAL;
-+	}
-+
-+	vpmem = devm_kzalloc(&vdev->dev, sizeof(*vpmem), GFP_KERNEL);
-+	if (!vpmem) {
-+		err = -ENOMEM;
-+		goto out_err;
-+	}
-+
-+	vpmem->vdev = vdev;
-+	vdev->priv = vpmem;
-+	err = init_vq(vpmem);
-+	if (err)
-+		goto out_err;
-+
-+	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
-+			start, &vpmem->start);
-+	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
-+			size, &vpmem->size);
-+
-+	res.start = vpmem->start;
-+	res.end   = vpmem->start + vpmem->size-1;
-+	vpmem->nd_desc.provider_name = "virtio-pmem";
-+	vpmem->nd_desc.module = THIS_MODULE;
-+
-+	vpmem->nvdimm_bus = nvdimm_bus_register(&vdev->dev,
-+						&vpmem->nd_desc);
-+	if (!vpmem->nvdimm_bus)
-+		goto out_vq;
-+
-+	dev_set_drvdata(&vdev->dev, vpmem->nvdimm_bus);
-+
-+	ndr_desc.res = &res;
-+	ndr_desc.numa_node = nid;
-+	ndr_desc.flush = async_pmem_flush;
-+	set_bit(ND_REGION_PAGEMAP, &ndr_desc.flags);
-+	set_bit(ND_REGION_ASYNC, &ndr_desc.flags);
-+	nd_region = nvdimm_pmem_region_create(vpmem->nvdimm_bus, &ndr_desc);
-+
-+	if (!nd_region)
-+		goto out_nd;
-+	nd_region->provider_data =  dev_to_virtio
-+					(nd_region->dev.parent->parent);
-+	return 0;
-+out_nd:
-+	err = -ENXIO;
-+	nvdimm_bus_unregister(vpmem->nvdimm_bus);
-+out_vq:
-+	vdev->config->del_vqs(vdev);
-+out_err:
-+	dev_err(&vdev->dev, "failed to register virtio pmem memory\n");
-+	return err;
-+}
-+
-+static void virtio_pmem_remove(struct virtio_device *vdev)
-+{
-+	struct nvdimm_bus *nvdimm_bus = dev_get_drvdata(&vdev->dev);
-+
-+	nvdimm_bus_unregister(nvdimm_bus);
-+	vdev->config->del_vqs(vdev);
-+	vdev->config->reset(vdev);
-+}
-+
-+static struct virtio_driver virtio_pmem_driver = {
-+	.driver.name		= KBUILD_MODNAME,
-+	.driver.owner		= THIS_MODULE,
-+	.id_table		= id_table,
-+	.probe			= virtio_pmem_probe,
-+	.remove			= virtio_pmem_remove,
-+};
-+
-+module_virtio_driver(virtio_pmem_driver);
-+MODULE_DEVICE_TABLE(virtio, id_table);
-+MODULE_DESCRIPTION("Virtio pmem driver");
-+MODULE_LICENSE("GPL");
-diff --git a/include/linux/virtio_pmem.h b/include/linux/virtio_pmem.h
-new file mode 100644
-index 000000000000..ab1da877575d
---- /dev/null
-+++ b/include/linux/virtio_pmem.h
-@@ -0,0 +1,60 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * virtio_pmem.h: virtio pmem Driver
-+ *
-+ * Discovers persistent memory range information
-+ * from host and provides a virtio based flushing
-+ * interface.
-+ **/
-+
-+#ifndef _LINUX_VIRTIO_PMEM_H
-+#define _LINUX_VIRTIO_PMEM_H
-+
-+#include <linux/virtio_ids.h>
-+#include <linux/module.h>
-+#include <linux/virtio_config.h>
-+#include <uapi/linux/virtio_pmem.h>
-+#include <linux/libnvdimm.h>
-+#include <linux/spinlock.h>
-+
-+struct virtio_pmem_request {
-+	/* Host return status corresponding to flush request */
-+	int ret;
-+
-+	/* command name*/
-+	char name[16];
-+
-+	/* Wait queue to process deferred work after ack from host */
-+	wait_queue_head_t host_acked;
-+	bool done;
-+
-+	/* Wait queue to process deferred work after virt queue buffer avail */
-+	wait_queue_head_t wq_buf;
-+	bool wq_buf_avail;
-+	struct list_head list;
-+};
-+
-+struct virtio_pmem {
-+	struct virtio_device *vdev;
-+
-+	/* Virtio pmem request queue */
-+	struct virtqueue *req_vq;
-+
-+	/* nvdimm bus registers virtio pmem device */
-+	struct nvdimm_bus *nvdimm_bus;
-+	struct nvdimm_bus_descriptor nd_desc;
-+
-+	/* List to store deferred work if virtqueue is full */
-+	struct list_head req_list;
-+
-+	/* Synchronize virtqueue data */
-+	spinlock_t pmem_lock;
-+
-+	/* Memory region information */
-+	uint64_t start;
-+	uint64_t size;
-+};
-+
-+void host_ack(struct virtqueue *vq);
-+int async_pmem_flush(struct nd_region *nd_region, struct bio *bio);
-+#endif
-diff --git a/include/uapi/linux/virtio_ids.h b/include/uapi/linux/virtio_ids.h
-index 6d5c3b2d4f4d..32b2f94d1f58 100644
---- a/include/uapi/linux/virtio_ids.h
-+++ b/include/uapi/linux/virtio_ids.h
-@@ -43,5 +43,6 @@
- #define VIRTIO_ID_INPUT        18 /* virtio input */
- #define VIRTIO_ID_VSOCK        19 /* virtio vsock transport */
- #define VIRTIO_ID_CRYPTO       20 /* virtio crypto */
-+#define VIRTIO_ID_PMEM         27 /* virtio pmem */
++	if (error)
++		trace_xfs_defer_trans_roll_error(tp, error);
+ 	return error;
+ }
  
- #endif /* _LINUX_VIRTIO_IDS_H */
-diff --git a/include/uapi/linux/virtio_pmem.h b/include/uapi/linux/virtio_pmem.h
-new file mode 100644
-index 000000000000..fa3f7d52717a
---- /dev/null
-+++ b/include/uapi/linux/virtio_pmem.h
-@@ -0,0 +1,10 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+
-+#ifndef _UAPI_LINUX_VIRTIO_PMEM_H
-+#define _UAPI_LINUX_VIRTIO_PMEM_H
-+
-+struct virtio_pmem_config {
-+	__le64 start;
-+	__le64 size;
-+};
-+#endif
--- 
-2.20.1
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 87e6dd5326d5..7f058120a921 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -359,9 +359,8 @@ xfs_dquot_disk_alloc(
+ 	 */
+ 	xfs_trans_bhold(tp, bp);
+ 	error = xfs_defer_finish(tpp);
+-	tp = *tpp;
+ 	if (error) {
+-		xfs_buf_relse(bp);
++		xfs_trans_brelse(*tpp, bp);
+ 		return error;
+ 	}
+ 	*bpp = bp;
+@@ -521,7 +520,7 @@ xfs_qm_dqread_alloc(
+ 	struct xfs_buf		**bpp)
+ {
+ 	struct xfs_trans	*tp;
+-	struct xfs_buf		*bp;
++	struct xfs_buf		*bp = NULL;
+ 	int			error;
+ 
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_dqalloc,
+@@ -529,24 +528,25 @@ xfs_qm_dqread_alloc(
+ 	if (error)
+ 		goto err;
+ 
++	/*
++	 * This function returns with the buffer held to the transaction, so
++	 * either we pass it back to our caller still locked or cancel the
++	 * transaction and unlock it manually if we're not passing it back.
++	 */
+ 	error = xfs_dquot_disk_alloc(&tp, dqp, &bp);
+ 	if (error)
+ 		goto err_cancel;
+ 
+ 	error = xfs_trans_commit(tp);
+-	if (error) {
+-		/*
+-		 * Buffer was held to the transaction, so we have to unlock it
+-		 * manually here because we're not passing it back.
+-		 */
+-		xfs_buf_relse(bp);
+-		goto err;
+-	}
++	if (error)
++		goto err_cancel;
+ 	*bpp = bp;
+ 	return 0;
+ 
+ err_cancel:
+ 	xfs_trans_cancel(tp);
++	if (bp)
++		xfs_buf_relse(bp);
+ err:
+ 	return error;
+ }
