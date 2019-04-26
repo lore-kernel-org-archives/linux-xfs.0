@@ -1,51 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39170 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49386 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725950AbfDZFDL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 Apr 2019 01:03:11 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v7 6/6] xfs: disable map_sync for async flush
-Date: Fri, 26 Apr 2019 10:30:39 +0530
-Message-Id: <20190426050039.17460-7-pagupta@redhat.com>
-In-Reply-To: <20190426050039.17460-1-pagupta@redhat.com>
-References: <20190426050039.17460-1-pagupta@redhat.com>
+        id S1725985AbfDZMGd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 Apr 2019 08:06:33 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id BAABC308B475
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2019 12:06:33 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 78B086660B
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2019 12:06:33 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: add missing error check in xfs_prepare_shift()
+Date: Fri, 26 Apr 2019 08:06:33 -0400
+Message-Id: <20190426120633.36420-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, pagupta@redhat.com
+To: linux-xfs@vger.kernel.org
 
-Dont support 'MAP_SYNC' with non-DAX files and DAX files
-with asynchronous dax_device. Virtio pmem provides
-asynchronous host page cache flush mechanism. We don't
-support 'MAP_SYNC' with virtio pmem and xfs.
+xfs_prepare_shift() fails to check the error return from
+xfs_flush_unmap_range(). If the latter fails, that could lead to an
+insert/collapse range operation over a delalloc range, which is not
+supported.
 
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+Add an error check and return appropriately. This is reproduced
+rarely by generic/475.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_file.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index a7ceae90110e..f17652cca5ff 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1203,11 +1203,14 @@ xfs_file_mmap(
- 	struct file	*filp,
- 	struct vm_area_struct *vma)
- {
-+	struct dax_device 	*dax_dev;
-+
-+	dax_dev = xfs_find_daxdev_for_inode(file_inode(filp));
- 	/*
--	 * We don't support synchronous mappings for non-DAX files. At least
--	 * until someone comes with a sensible use case.
-+	 * We don't support synchronous mappings for non-DAX files and
-+	 * for DAX files if underneath dax_device is not synchronous.
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 2db43ff4f8b5..06d07f1e310b 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1193,6 +1193,8 @@ xfs_prepare_shift(
+ 	 * about to shift down every extent from offset to EOF.
  	 */
--	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
-+	if (!daxdev_mapping_supported(vma, dax_dev))
- 		return -EOPNOTSUPP;
+ 	error = xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip));
++	if (error)
++		return error;
  
- 	file_accessed(filp);
+ 	/*
+ 	 * Clean out anything hanging around in the cow fork now that
 -- 
-2.20.1
+2.17.2
