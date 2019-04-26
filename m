@@ -1,251 +1,253 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43140 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726409AbfDZGlw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Apr 2019 02:41:52 -0400
-Date: Thu, 25 Apr 2019 23:41:37 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] xfs: always rejoin held resources during defer roll
-Message-ID: <20190426064137.GM178290@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from mx1.redhat.com ([209.132.183.28]:51732 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726157AbfDZN5B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 Apr 2019 09:57:01 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 7A0EF8E581
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2019 13:57:00 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 34EDE277C6
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2019 13:57:00 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH RFC] xfs: track extra block allocation count separate from total count
+Date: Fri, 26 Apr 2019 09:56:59 -0400
+Message-Id: <20190426135659.37675-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Brian Foster <bfoster@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Physical block allocation uses the total block count calculation to
+try and select an AG that can satisfy the extent allocation itself
+along with any additional btree blocks that might be allocated in
+the same transaction. The file extent allocation code invokes the
+block allocator with the optimal allocation parameters and loosens
+the requirements for subsequent retries if the allocation fails. For
+example, alignment is dropped first, then minlen is reduced from
+maxlen to the originally selected minlen, then total is reduced to
+minlen and the allocation mode is changed, etc.
 
-During testing of xfs/141 on a V4 filesystem, I observed some
-inconsistent behavior with regards to resources that are held (i.e.
-remain locked) across a defer roll.  The transaction roll always gives
-the defer roll function a new transaction, even if committing the old
-transaction fails.  However, the defer roll function only rejoins the
-held resources if the transaction commit succeedied.  This means that
-callers of defer roll have to figure out whether the held resources are
-attached to the transaction being passed back.
+For large extent allocations with an args.total value that exceeds
+the allocation length (i.e., non-delalloc), the args.total value
+tends to dominate despite these fallbacks. For example, an aligned extent
+allocation request of tens to hundreds of MB that cannot be
+satisfied from a particular AG is not going to succeed after
+dropping the alignment requirement or reducing minlen because
+xfs_alloc_space_available() will never select an AG that doesn't
+satisfy the total requirement. The allocation will eventually reduce
+total and ultimately succeed if a minlen extent is available
+somewhere, but the first several retries are effectively pointless.
 
-Worse yet, if the defer roll was part of a defer finish call, we have a
-third possibility: the defer finish could pass back a dirty transaction
-with dirty held resources and an error code.
+Beyond simply being inefficient, another side effect of this
+behavior is dropping alignment requirements too aggressively from
+larger allocations. For example, consider a 1GB fallocate request on
+a 15GB fs with 16 AGs and 128k stripe unit:
 
-The only sane way to handle all of these scenarios is to require that
-the code that held the resource either cancel the transaction before
-unlocking and releasing the resources, or use functions that detach
-resources from a transaction properly (e.g.  xfs_trans_brelse) if they
-need to drop the reference before committing or cancelling the
-transaction.
+ # xfs_io -c "falloc 0 1g" /mnt/file
+ # <xfstests>/src/t_stripealign /mnt/file 32
+ /mnt/file: Start block 347176 not multiple of sunit 32
 
-In order to make this so, change the defer roll code to join held
-resources to the new transaction unconditionally and fix all the bhold
-callers to release the held buffers correctly.
+Despite the filesystem being completely empty, the fact that the
+allocation request cannot be satisifed from a single AG means the
+first extent isn't allocated until xfs_bmap_btalloc() drops total to
+minlen, which occurs after we've dropped the 32 block alignment
+requirement.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Dealing with this problem requires a couple related changes. First,
+the bmap allocator code should respect the fact that the block
+allocator code always attempts to allocate as large an extent as
+possible and reduce the minlen requirement before throwing away
+alignment. Second, dropping minlen is ineffective unless the AG
+selection code can separate the extent allocation length from the
+surplus block requirement requested by the caller. Accomplish this
+with an optional 'extra' field that contains only the surplus block
+count and can be used optionally instead of the total count. The
+extra field is hardcoded for the purpose of this RFC.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
-v2: release the buffer hold after the defer roll unless we're actually
-planning to use the buffer after the transactions are all done
----
- fs/xfs/libxfs/xfs_attr.c  |   35 ++++++++++++-----------------------
- fs/xfs/libxfs/xfs_attr.h  |    2 +-
- fs/xfs/libxfs/xfs_defer.c |   14 +++++++++-----
- fs/xfs/xfs_dquot.c        |   17 +++++++++--------
- 4 files changed, 31 insertions(+), 37 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 2dd9ee2a2e08..c441f41f14e8 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -224,10 +224,10 @@ xfs_attr_try_sf_addname(
-  */
- int
- xfs_attr_set_args(
--	struct xfs_da_args	*args,
--	struct xfs_buf          **leaf_bp)
-+	struct xfs_da_args	*args)
- {
- 	struct xfs_inode	*dp = args->dp;
-+	struct xfs_buf          *leaf_bp = NULL;
- 	int			error;
+Do folks have any thoughts on something like this? This is just an RFC
+that demonstrates improving on the issue in one particular codepath, but
+something that occurred to me when writing up the commit log is that
+doing something like the following on xfs_bmapi_write():
+
+	if (total > len) {
+		bma.extra = total - len;
+		bma.total = 0;
+	}
+
+... might be a decent first step to generalize this for all callers. I
+have to audit the other callers to be sure and get a handle on
+subsequent cleanups. E.g., the existing hardcoded total assignment in
+xfs_bmapi_convert_delalloc() looks kind of bogus (if the delalloc extent
+happens to exceed the block reservation) because of how
+xfs_alloc_space_available() works.
+
+Thoughts? Flames?
+
+Brian
+
+ fs/xfs/libxfs/xfs_alloc.c |  2 +-
+ fs/xfs/libxfs/xfs_alloc.h |  1 +
+ fs/xfs/libxfs/xfs_bmap.c  | 18 +++++++++++++++---
+ fs/xfs/libxfs/xfs_bmap.h  |  1 +
+ fs/xfs/xfs_bmap_util.c    |  4 ++--
+ fs/xfs/xfs_trace.h        |  9 ++++++---
+ 6 files changed, 26 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 857a53e58b94..f8832857daa5 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2063,7 +2063,7 @@ xfs_alloc_space_available(
+ 	agflcount = min_t(xfs_extlen_t, pag->pagf_flcount, min_free);
+ 	available = (int)(pag->pagf_freeblks + agflcount -
+ 			  reservation - min_free - args->minleft);
+-	if (available < (int)max(args->total, alloc_len))
++	if (available < (int)max(args->total, alloc_len + args->extra))
+ 		return false;
  
  	/*
-@@ -255,7 +255,7 @@ xfs_attr_set_args(
- 		 * It won't fit in the shortform, transform to a leaf block.
- 		 * GROT: another possible req'mt for a double-split btree op.
- 		 */
--		error = xfs_attr_shortform_to_leaf(args, leaf_bp);
-+		error = xfs_attr_shortform_to_leaf(args, &leaf_bp);
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index d6ed5d2c07c2..d08d76715996 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -64,6 +64,7 @@ typedef struct xfs_alloc_arg {
+ 	xfs_extlen_t	prod;		/* prod value for extent size */
+ 	xfs_extlen_t	minleft;	/* min blocks must be left after us */
+ 	xfs_extlen_t	total;		/* total blocks needed in xaction */
++	xfs_extlen_t	extra;		/* extra blocks needed in xaction */
+ 	xfs_extlen_t	alignment;	/* align answer to multiple of this */
+ 	xfs_extlen_t	minalignslop;	/* slop for minlen+alignment calcs */
+ 	xfs_agblock_t	min_agbno;	/* set an agbno range for NEAR allocs */
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 4637ae1ae91c..c9d309ff95ff 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3271,6 +3271,7 @@ xfs_bmap_btalloc_nullfb(
+ 
+ 	args->type = XFS_ALLOCTYPE_START_BNO;
+ 	args->total = ap->total;
++	args->extra = ap->extra;
+ 
+ 	startag = ag = XFS_FSB_TO_AGNO(mp, args->fsbno);
+ 	if (startag == NULLAGNUMBER)
+@@ -3485,6 +3486,7 @@ xfs_bmap_btalloc(
+ 	} else {
+ 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+ 		args.total = ap->total;
++		args.extra = ap->extra;
+ 		args.minlen = ap->minlen;
+ 	}
+ 	/* apply extent size hints if obtained earlier */
+@@ -3578,6 +3580,15 @@ xfs_bmap_btalloc(
+ 		if ((error = xfs_alloc_vextent(&args)))
+ 			return error;
+ 	}
++	if (args.fsbno == NULLFSBLOCK && nullfb &&
++	    args.minlen > ap->minlen) {
++		args.minlen = ap->minlen;
++		args.type = atype;
++		args.fsbno = ap->blkno;
++		error = xfs_alloc_vextent(&args);
++		if (error)
++			return error;
++	}
+ 	if (isaligned && args.fsbno == NULLFSBLOCK) {
+ 		/*
+ 		 * allocation failed, so turn off alignment and
+@@ -3589,9 +3600,7 @@ xfs_bmap_btalloc(
+ 		if ((error = xfs_alloc_vextent(&args)))
+ 			return error;
+ 	}
+-	if (args.fsbno == NULLFSBLOCK && nullfb &&
+-	    args.minlen > ap->minlen) {
+-		args.minlen = ap->minlen;
++	if (args.fsbno == NULLFSBLOCK && nullfb) {
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
+ 		args.fsbno = ap->blkno;
+ 		if ((error = xfs_alloc_vextent(&args)))
+@@ -4328,6 +4337,9 @@ xfs_bmapi_write(
+ 		bma.prev.br_startoff = NULLFILEOFF;
+ 	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
+ 
++	if (!bma.total)
++		bma.extra = XFS_EXTENTADD_SPACE_RES(mp, whichfork);
++
+ 	n = 0;
+ 	end = bno + len;
+ 	obno = bno;
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 8f597f9abdbe..5f008dec9c15 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -34,6 +34,7 @@ struct xfs_bmalloca {
+ 	int			logflags;/* flags for transaction logging */
+ 
+ 	xfs_extlen_t		total;	/* total blocks needed for xaction */
++	xfs_extlen_t		extra;	/* extra blocks needed for xaction */
+ 	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
+ 	xfs_extlen_t		minleft; /* amount must be left after alloc */
+ 	bool			eof;	/* set if allocating past last extent */
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 2db43ff4f8b5..8eedea183351 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -967,8 +967,8 @@ xfs_alloc_file_space(
+ 		xfs_trans_ijoin(tp, ip, 0);
+ 
+ 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+-					allocatesize_fsb, alloc_type, resblks,
+-					imapp, &nimaps);
++					allocatesize_fsb, alloc_type, 0, imapp,
++					&nimaps);
  		if (error)
- 			return error;
+ 			goto error0;
  
-@@ -263,23 +263,16 @@ xfs_attr_set_args(
- 		 * Prevent the leaf buffer from being unlocked so that a
- 		 * concurrent AIL push cannot grab the half-baked leaf
- 		 * buffer and run into problems with the write verifier.
-+		 * Once we're done rolling the transaction we can release
-+		 * the hold and add the attr to the leaf.
- 		 */
--		xfs_trans_bhold(args->trans, *leaf_bp);
--
-+		xfs_trans_bhold(args->trans, leaf_bp);
- 		error = xfs_defer_finish(&args->trans);
--		if (error)
--			return error;
--
--		/*
--		 * Commit the leaf transformation.  We'll need another
--		 * (linked) transaction to add the new attribute to the
--		 * leaf.
--		 */
--		error = xfs_trans_roll_inode(&args->trans, dp);
--		if (error)
-+		xfs_trans_bhold_release(args->trans, leaf_bp);
-+		if (error) {
-+			xfs_trans_brelse(args->trans, leaf_bp);
- 			return error;
--		xfs_trans_bjoin(args->trans, *leaf_bp);
--		*leaf_bp = NULL;
-+		}
- 	}
- 
- 	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-@@ -322,7 +315,6 @@ xfs_attr_set(
- 	int			flags)
- {
- 	struct xfs_mount	*mp = dp->i_mount;
--	struct xfs_buf		*leaf_bp = NULL;
- 	struct xfs_da_args	args;
- 	struct xfs_trans_res	tres;
- 	int			rsvd = (flags & ATTR_ROOT) != 0;
-@@ -381,9 +373,9 @@ xfs_attr_set(
- 		goto out_trans_cancel;
- 
- 	xfs_trans_ijoin(args.trans, dp, 0);
--	error = xfs_attr_set_args(&args, &leaf_bp);
-+	error = xfs_attr_set_args(&args);
- 	if (error)
--		goto out_release_leaf;
-+		goto out_trans_cancel;
- 	if (!args.trans) {
- 		/* shortform attribute has already been committed */
- 		goto out_unlock;
-@@ -408,9 +400,6 @@ xfs_attr_set(
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 	return error;
- 
--out_release_leaf:
--	if (leaf_bp)
--		xfs_trans_brelse(args.trans, leaf_bp);
- out_trans_cancel:
- 	if (args.trans)
- 		xfs_trans_cancel(args.trans);
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 2297d8467666..3b0dce06e454 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -140,7 +140,7 @@ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
- 		 unsigned char *value, int *valuelenp, int flags);
- int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
- 		 unsigned char *value, int valuelen, int flags);
--int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp);
-+int xfs_attr_set_args(struct xfs_da_args *args);
- int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
- int xfs_attr_remove_args(struct xfs_da_args *args);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 94f00427de98..1c6bf2105939 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -274,13 +274,15 @@ xfs_defer_trans_roll(
- 
- 	trace_xfs_defer_trans_roll(tp, _RET_IP_);
- 
--	/* Roll the transaction. */
-+	/*
-+	 * Roll the transaction.  Rolling always given a new transaction (even
-+	 * if committing the old one fails!) to hand back to the caller, so we
-+	 * join the held resources to the new transaction so that we always
-+	 * return with the held resources joined to @tpp, no matter what
-+	 * happened.
-+	 */
- 	error = xfs_trans_roll(tpp);
- 	tp = *tpp;
--	if (error) {
--		trace_xfs_defer_trans_roll_error(tp, error);
--		return error;
--	}
- 
- 	/* Rejoin the joined inodes. */
- 	for (i = 0; i < ipcount; i++)
-@@ -292,6 +294,8 @@ xfs_defer_trans_roll(
- 		xfs_trans_bhold(tp, bplist[i]);
- 	}
- 
-+	if (error)
-+		trace_xfs_defer_trans_roll_error(tp, error);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 87e6dd5326d5..a1af984e4913 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -277,7 +277,8 @@ xfs_dquot_set_prealloc_limits(struct xfs_dquot *dqp)
- 
- /*
-  * Ensure that the given in-core dquot has a buffer on disk backing it, and
-- * return the buffer. This is called when the bmapi finds a hole.
-+ * return the buffer locked and held. This is called when the bmapi finds a
-+ * hole.
-  */
- STATIC int
- xfs_dquot_disk_alloc(
-@@ -355,13 +356,14 @@ xfs_dquot_disk_alloc(
- 	 * If everything succeeds, the caller of this function is returned a
- 	 * buffer that is locked and held to the transaction.  The caller
- 	 * is responsible for unlocking any buffer passed back, either
--	 * manually or by committing the transaction.
-+	 * manually or by committing the transaction.  On error, the buffer is
-+	 * released and not passed back.
- 	 */
- 	xfs_trans_bhold(tp, bp);
- 	error = xfs_defer_finish(tpp);
--	tp = *tpp;
- 	if (error) {
--		xfs_buf_relse(bp);
-+		xfs_trans_bhold_release(*tpp, bp);
-+		xfs_trans_brelse(*tpp, bp);
- 		return error;
- 	}
- 	*bpp = bp;
-@@ -521,7 +523,6 @@ xfs_qm_dqread_alloc(
- 	struct xfs_buf		**bpp)
- {
- 	struct xfs_trans	*tp;
--	struct xfs_buf		*bp;
- 	int			error;
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_dqalloc,
-@@ -529,7 +530,7 @@ xfs_qm_dqread_alloc(
- 	if (error)
- 		goto err;
- 
--	error = xfs_dquot_disk_alloc(&tp, dqp, &bp);
-+	error = xfs_dquot_disk_alloc(&tp, dqp, bpp);
- 	if (error)
- 		goto err_cancel;
- 
-@@ -539,10 +540,10 @@ xfs_qm_dqread_alloc(
- 		 * Buffer was held to the transaction, so we have to unlock it
- 		 * manually here because we're not passing it back.
- 		 */
--		xfs_buf_relse(bp);
-+		xfs_buf_relse(*bpp);
-+		*bpp = NULL;
- 		goto err;
- 	}
--	*bpp = bp;
- 	return 0;
- 
- err_cancel:
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 2464ea351f83..389a282bd8c1 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1571,6 +1571,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
+ 		__field(xfs_extlen_t, prod)
+ 		__field(xfs_extlen_t, minleft)
+ 		__field(xfs_extlen_t, total)
++		__field(xfs_extlen_t, extra)
+ 		__field(xfs_extlen_t, alignment)
+ 		__field(xfs_extlen_t, minalignslop)
+ 		__field(xfs_extlen_t, len)
+@@ -1592,6 +1593,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
+ 		__entry->prod = args->prod;
+ 		__entry->minleft = args->minleft;
+ 		__entry->total = args->total;
++		__entry->extra = args->extra;
+ 		__entry->alignment = args->alignment;
+ 		__entry->minalignslop = args->minalignslop;
+ 		__entry->len = args->len;
+@@ -1604,9 +1606,9 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
+ 		__entry->firstblock = args->tp->t_firstblock;
+ 	),
+ 	TP_printk("dev %d:%d agno %u agbno %u minlen %u maxlen %u mod %u "
+-		  "prod %u minleft %u total %u alignment %u minalignslop %u "
+-		  "len %u type %s otype %s wasdel %d wasfromfl %d resv %d "
+-		  "datatype 0x%x firstblock 0x%llx",
++		  "prod %u minleft %u total %u extra %u alignment %u "
++		  "minalignslop %u len %u type %s otype %s wasdel %d "
++		  "wasfromfl %d resv %d datatype 0x%x firstblock 0x%llx",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->agno,
+ 		  __entry->agbno,
+@@ -1616,6 +1618,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
+ 		  __entry->prod,
+ 		  __entry->minleft,
+ 		  __entry->total,
++		  __entry->extra,
+ 		  __entry->alignment,
+ 		  __entry->minalignslop,
+ 		  __entry->len,
+-- 
+2.17.2
