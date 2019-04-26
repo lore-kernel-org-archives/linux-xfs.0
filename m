@@ -1,97 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55554 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:46402 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729877AbfDVTpz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Apr 2019 15:45:55 -0400
-Subject: Re: [PATCH 04/10] libxfs: retain ifork_ops when flushing inode
-References: <155594788997.115924.16224143537288136652.stgit@magnolia>
- <155594791533.115924.7540619376750686973.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <792d8254-9901-5260-a948-1a0466223d90@sandeen.net>
-Date: Mon, 22 Apr 2019 14:45:53 -0500
+        id S1726005AbfDZSRo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 Apr 2019 14:17:44 -0400
+Date: Fri, 26 Apr 2019 14:17:41 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/8] mm/fs: don't allow writes to immutable files
+Message-ID: <20190426181738.GB34536@bfoster>
+References: <155552786671.20411.6442426840435740050.stgit@magnolia>
+ <155552787330.20411.11893581890744963309.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <155594791533.115924.7540619376750686973.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155552787330.20411.11893581890744963309.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Arkadiusz Miskiewicz <arekm@maven.pl>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
 
-On 4/22/19 10:45 AM, Darrick J. Wong wrote:
+On Wed, Apr 17, 2019 at 12:04:33PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Retain the ifork ops used to validate the inode so that we can use the
-> same one to iflush it.  xfs_repair phase 6 can use multiple transactions
-> to fix various inode problems, which means that the inode might not be
-> fully fixed when each transaction commits.
+> The chattr manpage has this to say about immutable files:
 > 
-> This can be a particular problem if there's a shortform directory with
-> both invalid directory entries and incorrect i8count.  Phase 3 will set
-> the parent inode to "0" to signal to phase 6 that it needs to reset the
-> parent and i8count, but phase 6 starts a transaction to junk the bad
-> entries which fail to commit because the parent is invalid:
+> "A file with the 'i' attribute cannot be modified: it cannot be deleted
+> or renamed, no link can be created to this file, most of the file's
+> metadata can not be modified, and the file can not be opened in write
+> mode."
 > 
-> fixing i8count in inode 69022994673
-> Invalid inode number 0x0
-> xfs_dir_ino_validate: XFS_ERROR_REPORT
-> Metadata corruption detected at 0x464eb0, inode 0x10121750f1 data fork
-> xfs_repair: warning - iflush_int failed (-117)
+> Once the flag is set, it is enforced for quite a few file operations,
+> such as fallocate, fpunch, fzero, rm, touch, open, etc.  However, we
+> don't check for immutability when doing a write(), a PROT_WRITE mmap(),
+> a truncate(), or a write to a previously established mmap.
 > 
-> And thus the inode fixes never get written out.
+> If a program has an open write fd to a file that the administrator
+> subsequently marks immutable, the program still can change the file
+> contents.  Weird!
 > 
-> Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
+> The ability to write to an immutable file does not follow the manpage
+> promise that immutable files cannot be modified.  Worse yet it's
+> inconsistent with the behavior of other syscalls which don't allow
+> modifications of immutable files.
+> 
+> Therefore, add the necessary checks to make the write, mmap, and
+> truncate behavior consistent with what the manpage says and consistent
+> with other syscalls on filesystems which support IMMUTABLE.
+> 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-I might have combined this with the next patch, but I guess
-I can see the rationale either way.  :)
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
 > ---
->  include/xfs_inode.h |    1 +
->  libxfs/rdwr.c       |    1 +
->  libxfs/util.c       |    2 +-
->  3 files changed, 3 insertions(+), 1 deletion(-)
+
+This mostly seems reasonable to me. I assume you'll want some mm acks. A
+couple notes..
+
+>  fs/attr.c    |   13 ++++++-------
+>  mm/filemap.c |    3 +++
+>  mm/memory.c  |    3 +++
+>  mm/mmap.c    |    8 ++++++--
+>  4 files changed, 18 insertions(+), 9 deletions(-)
 > 
 > 
-> diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-> index 79ec3a2d..e1e8b430 100644
-> --- a/include/xfs_inode.h
-> +++ b/include/xfs_inode.h
-> @@ -51,6 +51,7 @@ typedef struct xfs_inode {
+> diff --git a/fs/attr.c b/fs/attr.c
+> index d22e8187477f..1fcfdcc5b367 100644
+> --- a/fs/attr.c
+> +++ b/fs/attr.c
+> @@ -233,19 +233,18 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
 >  
->  	xfs_fsize_t		i_size;		/* in-memory size */
->  	const struct xfs_dir_ops *d_ops;	/* directory ops vector */
-> +	struct xfs_ifork_ops	*i_fork_ops;	/* fork verifiers */
->  	struct inode		i_vnode;
->  } xfs_inode_t;
+>  	WARN_ON_ONCE(!inode_is_locked(inode));
 >  
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index a00360e7..69d5abb2 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -1391,6 +1391,7 @@ libxfs_iget(
->  		return error;
->  	}
->  
-> +	ip->i_fork_ops = ifork_ops;
->  	if (!libxfs_inode_verify_forks(ip, ifork_ops)) {
->  		libxfs_irele(ip);
->  		return -EFSCORRUPTED;
-> diff --git a/libxfs/util.c b/libxfs/util.c
-> index 4ac151e6..2e3b9d51 100644
-> --- a/libxfs/util.c
-> +++ b/libxfs/util.c
-> @@ -422,7 +422,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
->  		VFS_I(ip)->i_version++;
->  
->  	/* Check the inline fork data before we write out. */
-> -	if (!libxfs_inode_verify_forks(ip, &xfs_default_ifork_ops))
-> +	if (!libxfs_inode_verify_forks(ip, ip->i_fork_ops))
->  		return -EFSCORRUPTED;
+> -	if (ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) {
+> -		if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+> -			return -EPERM;
+> -	}
+> +	if (IS_IMMUTABLE(inode))
+> +		return -EPERM;
+> +
+> +	if ((ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) &&
+> +	    IS_APPEND(inode))
+> +		return -EPERM;
 >  
 >  	/*
+>  	 * If utimes(2) and friends are called with times == NULL (or both
+>  	 * times are UTIME_NOW), then we need to check for write permission
+>  	 */
+>  	if (ia_valid & ATTR_TOUCH) {
+> -		if (IS_IMMUTABLE(inode))
+> -			return -EPERM;
+> -
+>  		if (!inode_owner_or_capable(inode)) {
+>  			error = inode_permission(inode, MAY_WRITE);
+>  			if (error)
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index d78f577baef2..9fed698f4c63 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -3033,6 +3033,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+>  	loff_t count;
+>  	int ret;
+>  
+> +	if (IS_IMMUTABLE(inode))
+> +		return -EPERM;
+> +
+>  	if (!iov_iter_count(from))
+>  		return 0;
+>  
+> diff --git a/mm/memory.c b/mm/memory.c
+> index ab650c21bccd..dfd5eba278d6 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+> @@ -2149,6 +2149,9 @@ static vm_fault_t do_page_mkwrite(struct vm_fault *vmf)
+>  
+>  	vmf->flags = FAULT_FLAG_WRITE|FAULT_FLAG_MKWRITE;
+>  
+> +	if (vmf->vma->vm_file && IS_IMMUTABLE(file_inode(vmf->vma->vm_file)))
+> +		return VM_FAULT_SIGBUS;
+> +
+
+I take it this depends on cleaning already dirty pages when the
+immutable bit is set. That appears to be done later in the series, but I
+notice it occurs at the filesystem level (presumably due to the ioctl).
+That of course is fine, but it makes me wonder a bit whether we should
+have a generic helper for each fs to call that does the requisite
+writeback and dio wait (similar to generic_remap_file_range_prep() for
+example). Thoughts?
+
+>  	ret = vmf->vma->vm_ops->page_mkwrite(vmf);
+>  	/* Restore original flags so that caller is not surprised */
+>  	vmf->flags = old_flags;
+> diff --git a/mm/mmap.c b/mm/mmap.c
+> index 41eb48d9b527..697a101bda59 100644
+> --- a/mm/mmap.c
+> +++ b/mm/mmap.c
+> @@ -1481,8 +1481,12 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+>  		case MAP_SHARED_VALIDATE:
+>  			if (flags & ~flags_mask)
+>  				return -EOPNOTSUPP;
+> -			if ((prot&PROT_WRITE) && !(file->f_mode&FMODE_WRITE))
+> -				return -EACCES;
+> +			if (prot & PROT_WRITE) {
+> +				if (!(file->f_mode & FMODE_WRITE))
+> +					return -EACCES;
+> +				if (IS_IMMUTABLE(file_inode(file)))
+> +					return -EPERM;
+> +			}
+
+We haven't done anything to clean up writeable mappings on marking the
+inode immutable, right? It seems a little strange that we can have some
+writeable mappings hang around while we can't create new ones, but
+perhaps it doesn't matter if the write fault behavior is the same.
+
+Brian
+
+>  
+>  			/*
+>  			 * Make sure we don't allow writing to an append-only
 > 
