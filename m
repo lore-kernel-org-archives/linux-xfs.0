@@ -1,55 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:39627 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728514AbfDQB13 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Apr 2019 21:27:29 -0400
-From: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Subject: [RFC PATCH 0/4] xfs: add handle for reflink in dax
-Date: Wed, 17 Apr 2019 09:27:11 +0800
-Message-ID: <20190417012715.8287-1-ruansy.fnst@cn.fujitsu.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:43740 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726266AbfD0BYO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Apr 2019 21:24:14 -0400
+Date: Fri, 26 Apr 2019 18:24:06 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_db: Scan entire file system when using 'frag'
+Message-ID: <20190427012406.GO178290@magnolia>
+References: <20190426225920.34359-1-jorgeguerra@gmail.com>
+ <4c0ed0bf-c980-9379-3816-c8e5dddd61b5@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4c0ed0bf-c980-9379-3816-c8e5dddd61b5@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Jorge Guerra <jorge.guerra@gmail.com>, linux-xfs@vger.kernel.org, osandov@osandov.com, Jorge Guerra <jorgeguerra@fb.com>
 
-In XFS (under fsdax mode), reflink did not work correctly because xfs
-iomap operators did not handle the inode with both reflink and dax flag.
+On Fri, Apr 26, 2019 at 07:13:49PM -0500, Eric Sandeen wrote:
+> On 4/26/19 5:59 PM, Jorge Guerra wrote:
+> > From: Jorge Guerra <jorgeguerra@fb.com>
+> > 
+> > While running the 'frag' command of 'xfs_db' we noticed that the
+> > tool is not scanning all the files in the file system.  We noticed
+> > this when we modified the tool to print the inodes of all the files
+> > scanned.  For example:
+> > 
+> >  $ find /mnt/xfsdisk -type f | wc -l
+> >  1782674
+> >  $ xfs_db -r -c frag /dev/sdXX  | grep MB | awk '{print $5}' | paste -s -d+ | bc
+> >  656818
+> > 
+> > Upon inspecting the code we noticed that the scanfunc_ino function
+> > stops processing a given inode block once it encounters a free leaf.
+> > However, in practice we see that inodes are necessarily always layed
+> > out contiguously on the leaf node.  This resulted in the 'frag'
+> > command skipping some valid inodes.
+> > 
+> > In this change we modify the scanfunc_ino function to skip freed
+> > inodes.  With the change in place we ran the same experiment again
+> > and noticed a more accurate file count:
+> > 
+> >  $ find /mnt/d0 -type f | wc -l
+> >  1810442
+> >  $ xfs_db -r -c frag /dev/sdXX  | grep MB | awk '{print $5}' | paste -s -d+ | bc
+> >  1810442
+> > 
+> > Signed-off-by: Jorge Guerra <jorgeguerra@fb.com>
+> 
+> This looks right, but I'll warn you that xfs_db's frag command is largely
+> useless in the first place.  ;)
 
-This patchset aims to take care of this issue to make COW operation work
-correctly in XFS.
+I was looking through the manpages for the part where it says frag is
+useless but couldn't find it.  Oh well. :(
 
-XFS uses iomap to do read/write/mmap operations:
-  vfs interface       xfs:
-    iomap_bengin();     --> xfs_iomap_begin();
-    actor();            --> dax_iomap_actor() / mmap actor function
-    iomap_end();        --> xfs_iomap_end();
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-In xfs_iomap_begin(), COW operation is detected but not told to actor
-function.  To resolve this, a new field 'src_addr' is added into
-'struct iomap' to pass this COW info.  It means the start address of
-source blocks in a COW operation, for actor functions to copy data
-before writing.
+--D
 
-In actor functions, the value of iomap->src_addr determines if it is a
-COW operation.  If it is, copy data from source blocks to destination
-blocks first, and then write user data.
-
-After the COW operation, it is supposed to update the metadata of the
-inode.  Added in xfs_iomap_end().
-
-
-Shiyang Ruan (4):
-  fs/iomap: Introduce src_addr for COW in fsdax mode.
-  fs/xfs: iomap: add handle for reflink in fsdax mode
-  fs/dax: copy source blocks before writing when COW
-  fs/xfs: iomap: update the extent list after a COW
-
- fs/dax.c              | 70 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_iomap.c    | 23 +++++++++++---
- include/linux/iomap.h |  4 +++
- 3 files changed, 93 insertions(+), 4 deletions(-)
-
--- 
-2.17.0
+> 
+> Also, I think:
+> 
+> Fixes: 2a5eb70c ("xfs_db: teach the frag command about sparse inode chunks")
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> Thanks!
+> 
+> > ---
+> >  db/frag.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/db/frag.c b/db/frag.c
+> > index 5f33cb73..91395234 100644
+> > --- a/db/frag.c
+> > +++ b/db/frag.c
+> > @@ -507,7 +507,7 @@ scanfunc_ino(
+> >  
+> >  				for (j = 0; j < inodes_per_buf; j++) {
+> >  					if (XFS_INOBT_IS_FREE_DISK(&rp[i], ioff + j))
+> > -						goto next_buf;
+> > +						continue;
+> >  					dip = (xfs_dinode_t *)((char *)iocur_top->data +
+> >  						((off + j) << mp->m_sb.sb_inodelog));
+> >  					process_inode(agf, agino + ioff + j, dip);
+> > 
