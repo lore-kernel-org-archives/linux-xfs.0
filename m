@@ -1,50 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49386 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725985AbfDZMGd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 Apr 2019 08:06:33 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BAABC308B475
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2019 12:06:33 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 78B086660B
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Apr 2019 12:06:33 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: add missing error check in xfs_prepare_shift()
-Date: Fri, 26 Apr 2019 08:06:33 -0400
-Message-Id: <20190426120633.36420-1-bfoster@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:55252 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726741AbfD1PcB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Apr 2019 11:32:01 -0400
+Date: Sun, 28 Apr 2019 08:31:55 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: don't parse the mtpt mount option
+Message-ID: <20190428153155.GC5207@magnolia>
+References: <20190428120057.14503-1-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190428120057.14503-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-xfs_prepare_shift() fails to check the error return from
-xfs_flush_unmap_range(). If the latter fails, that could lead to an
-insert/collapse range operation over a delalloc range, which is not
-supported.
+On Sun, Apr 28, 2019 at 02:00:57PM +0200, Christoph Hellwig wrote:
+> The text isn't really any more useful than the default unknown option
+> handling.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Add an error check and return appropriately. This is reproduced
-rarely by generic/475.
+Heh.  I guess we can skip the regular deprecation process since this
+mount option hasn't worked (afaict) since ~2010.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_bmap_util.c | 2 ++
- 1 file changed, 2 insertions(+)
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 2db43ff4f8b5..06d07f1e310b 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1193,6 +1193,8 @@ xfs_prepare_shift(
- 	 * about to shift down every extent from offset to EOF.
- 	 */
- 	error = xfs_flush_unmap_range(ip, offset, XFS_ISIZE(ip));
-+	if (error)
-+		return error;
- 
- 	/*
- 	 * Clean out anything hanging around in the cow fork now that
--- 
-2.17.2
+--D
+
+> ---
+>  fs/xfs/xfs_super.c | 6 +-----
+>  1 file changed, 1 insertion(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index f093ea244849..d1bd55d87f49 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -66,7 +66,7 @@ static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
+>  enum {
+>  	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev, Opt_biosize,
+>  	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth, Opt_nouuid,
+> -	Opt_mtpt, Opt_grpid, Opt_nogrpid, Opt_bsdgroups, Opt_sysvgroups,
+> +	Opt_grpid, Opt_nogrpid, Opt_bsdgroups, Opt_sysvgroups,
+>  	Opt_allocsize, Opt_norecovery, Opt_inode64, Opt_inode32, Opt_ikeep,
+>  	Opt_noikeep, Opt_largeio, Opt_nolargeio, Opt_attr2, Opt_noattr2,
+>  	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
+> @@ -87,7 +87,6 @@ static const match_table_t tokens = {
+>  	{Opt_sunit,	"sunit=%u"},	/* data volume stripe unit */
+>  	{Opt_swidth,	"swidth=%u"},	/* data volume stripe width */
+>  	{Opt_nouuid,	"nouuid"},	/* ignore filesystem UUID */
+> -	{Opt_mtpt,	"mtpt"},	/* filesystem mount point */
+>  	{Opt_grpid,	"grpid"},	/* group-ID from parent directory */
+>  	{Opt_nogrpid,	"nogrpid"},	/* group-ID from current process */
+>  	{Opt_bsdgroups,	"bsdgroups"},	/* group-ID from parent directory */
+> @@ -236,9 +235,6 @@ xfs_parseargs(
+>  			if (!mp->m_logname)
+>  				return -ENOMEM;
+>  			break;
+> -		case Opt_mtpt:
+> -			xfs_warn(mp, "%s option not allowed on this system", p);
+> -			return -EINVAL;
+>  		case Opt_rtdev:
+>  			kfree(mp->m_rtname);
+>  			mp->m_rtname = match_strdup(args);
+> -- 
+> 2.20.1
+> 
