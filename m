@@ -1,67 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49986 "EHLO mx1.redhat.com"
+Received: from tmailer.gwdg.de ([134.76.10.23]:39806 "EHLO tmailer.gwdg.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725993AbfDZFCc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 Apr 2019 01:02:32 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v7 4/6]  dax: check synchronous mapping is supported
-Date: Fri, 26 Apr 2019 10:30:37 +0530
-Message-Id: <20190426050039.17460-5-pagupta@redhat.com>
-In-Reply-To: <20190426050039.17460-1-pagupta@redhat.com>
-References: <20190426050039.17460-1-pagupta@redhat.com>
+        id S1726015AbfD3VH2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 30 Apr 2019 17:07:28 -0400
+Date: Tue, 30 Apr 2019 23:07:24 +0200
+From: Andre Noll <maan@tuebingen.mpg.de>
+Subject: Re: xfs: Assertion failed in xfs_ag_resv_init()
+Message-ID: <20190430210724.GD2780@tuebingen.mpg.de>
+References: <20190430121420.GW2780@tuebingen.mpg.de>
+ <20190430151151.GF5207@magnolia>
+ <20190430162506.GZ2780@tuebingen.mpg.de>
+ <20190430174042.GH5207@magnolia>
+ <20190430190525.GB2780@tuebingen.mpg.de>
+ <20190430191825.GF5217@magnolia>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="eu8nj/18vubUeVCi"
+Content-Disposition: inline
+In-Reply-To: <20190430191825.GF5217@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, pagupta@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-This patch introduces 'daxdev_mapping_supported' helper
-which checks if 'MAP_SYNC' is supported with filesystem
-mapping. It also checks if corresponding dax_device is
-synchronous. Virtio pmem device is asynchronous and
-does not not support VM_SYNC. 
 
-Suggested-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- include/linux/dax.h | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+--eu8nj/18vubUeVCi
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index c97fc0cc7167..41b4a5db6305 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -41,6 +41,18 @@ void kill_dax(struct dax_device *dax_dev);
- void dax_write_cache(struct dax_device *dax_dev, bool wc);
- bool dax_write_cache_enabled(struct dax_device *dax_dev);
- bool dax_synchronous(struct dax_device *dax_dev);
-+/*
-+ * Check if given mapping is supported by the file / underlying device.
-+ */
-+static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
-+				struct dax_device *dax_dev)
-+{
-+	if (!(vma->vm_flags & VM_SYNC))
-+		return true;
-+	if (!IS_DAX(file_inode(vma->vm_file)))
-+		return false;
-+	return dax_synchronous(dax_dev);
-+}
- #else
- static inline struct dax_device *dax_get_by_host(const char *host)
- {
-@@ -68,6 +80,11 @@ static inline bool dax_write_cache_enabled(struct dax_device *dax_dev)
- {
- 	return false;
- }
-+static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
-+				struct dax_device *dax_dev)
-+{
-+	return !(vma->flags & VM_SYNC);
-+}
- #endif
- 
- struct writeback_control;
--- 
-2.20.1
+On Tue, Apr 30, 12:18, Darrick J. Wong wrote
+> > commit f847bda4d612744ff1812788417bd8df41a806d3
+> > Author: Dave Chinner <dchinner@redhat.com>
+> > Date:   Mon Nov 19 13:31:08 2018 -0800
+> >=20
+> >     xfs: finobt AG reserves don't consider last AG can be a runt
+> >    =20
+> >     This is a backport of upstream commit c08768977b9 and the part of
+> >     21ec54168b36 which is needed by c08768977b9.
+>=20
+> You could send this patch to the stable list, but my guess is that
+> they'd prefer a straight backport of all three commits...
+
+Hm, cherry-picking the first commit onto 4.9,171 already gives
+four conflicting files. The conflicts are trivial to resolve (git
+cherry-pick -xX theirs 21ec54168b36 does it), but that doesn't
+compile because xfs_btree_query_all() is missing.  So e9a2599a249ed
+(xfs: create a function to query all records in a btree) is needed as
+well. But then, applying 86210fbebae (xfs: move various type verifiers
+to common file) on top of that gives non-trivial conflicts.
+
+So, for automatic backporting we would need to cherry-pick even more,
+and each backported commit should be tested of course. Given this, do
+you still think Greg prefers a rather large set of straight backports
+over the simple commit that just pulls in the missing function?
+
+I guess the important question is how much impact this issue
+has on production systems (i.e., on CONFIG_XFS_DEBUG=3Dn kernels,
+where the assert statement is not compiled in). If the unpatched
+xfs_inobt_max_size() is very unlikely to cause problems on such
+systems, we might as well live with it.
+
+Thanks
+Andre
+--=20
+Max Planck Institute for Developmental Biology
+Max-Planck-Ring 5, 72076 T=C3=BCbingen, Germany. Phone: (+49) 7071 601 829
+http://people.tuebingen.mpg.de/maan/
+
+--eu8nj/18vubUeVCi
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQSHtF/cbZGyylvqq1Ra2jVAMQCTDwUCXMi5CQAKCRBa2jVAMQCT
+DyqRAJ9haZLNWKNF1m2TNS7qlvy9B+Og7QCgkgF+uEQORJ7ALymtB4oypC+7MUY=
+=LEL+
+-----END PGP SIGNATURE-----
+
+--eu8nj/18vubUeVCi--
