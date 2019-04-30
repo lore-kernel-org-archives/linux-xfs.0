@@ -1,35 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41964 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:51870 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726048AbfD3Vyb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 30 Apr 2019 17:54:31 -0400
-Subject: Re: XFS performance decrease as filesystem approaches full
-References: <CA+nYfY_TkSbXZ5kCbAeQN-PthsV5suomdrMqJ3H0tbNx2ZQ3xQ@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a8fbeab8-75c5-608c-d4c5-c1b25582d907@sandeen.net>
-Date: Tue, 30 Apr 2019 16:54:29 -0500
+        id S1726372AbfD3VA2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 30 Apr 2019 17:00:28 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 136BEC0AF78A
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Apr 2019 21:00:28 +0000 (UTC)
+Date: Tue, 30 Apr 2019 16:00:13 -0500
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH] xfs_io: rework includes for statx structures
+Message-ID: <20190430210013.GA30134@redhat.com>
+References: <cec15436-c098-c59f-2663-a6a189e46a0c@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+nYfY_TkSbXZ5kCbAeQN-PthsV5suomdrMqJ3H0tbNx2ZQ3xQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cec15436-c098-c59f-2663-a6a189e46a0c@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michael Allison <trailhounds@gmail.com>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 4/30/19 4:26 PM, Michael Allison wrote:
-> Hello,
+On Tue, Apr 30, 2019 at 03:02:56PM -0500, Eric Sandeen wrote:
+> Only include the kernel's linux/stat.h headers if we haven't
+> already picked up statx bits from glibc, to avoid redefinition.
 > 
+> Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Tested-by: Bill O'Donnell <billodo@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+
+> ---
 > 
-> Many filesystems begin to show decreased performance as the available
-> free space in the defined filesystem approaches the maximum available
-> blocks. Are there any guidelines about this sort of performance drag
-> available for XFS?
-
-What exactly are you seeing?  Not really enough to go on here.
-
--Eric
-
+> diff --git a/io/stat.c b/io/stat.c
+> index 517be66..37c0b2e 100644
+> --- a/io/stat.c
+> +++ b/io/stat.c
+> @@ -6,9 +6,6 @@
+>   * Portions of statx support written by David Howells (dhowells@redhat.com)
+>   */
+>  
+> -/* Try to pick up statx definitions from the system headers. */
+> -#include <linux/stat.h>
+> -
+>  #include "command.h"
+>  #include "input.h"
+>  #include "init.h"
+> diff --git a/io/statx.h b/io/statx.h
+> index 4f40eaa..c6625ac 100644
+> --- a/io/statx.h
+> +++ b/io/statx.h
+> @@ -33,7 +33,14 @@
+>  # endif
+>  #endif
+>  
+> +
+> +#ifndef STATX_TYPE
+> +/* Pick up kernel definitions if glibc didn't already provide them */
+> +#include <linux/stat.h>
+> +#endif
+> +
+>  #ifndef STATX_TYPE
+> +/* Local definitions if glibc & kernel headers didn't already provide them */
+>  
+>  /*
+>   * Timestamp structure for the timestamps in struct statx.
 > 
-> Thanks,
