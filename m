@@ -1,177 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54586 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726646AbfEAPFQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 May 2019 11:05:16 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x41ExK1w181707
-        for <linux-xfs@vger.kernel.org>; Wed, 1 May 2019 15:05:14 GMT
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2s6xhyk5hy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 May 2019 15:05:14 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x41F4h8e191072
-        for <linux-xfs@vger.kernel.org>; Wed, 1 May 2019 15:05:13 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2s6xhgj7y3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 May 2019 15:05:13 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x41F5D3G030847
-        for <linux-xfs@vger.kernel.org>; Wed, 1 May 2019 15:05:13 GMT
-Date: Wed, 1 May 2019 08:05:13 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:46650 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726345AbfEAPjC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 May 2019 11:39:02 -0400
+Date: Wed, 1 May 2019 08:36:43 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to f00b8b784f75
-Message-ID: <20190501150513.GJ5207@magnolia>
+Subject: Re: xfs: Assertion failed in xfs_ag_resv_init()
+Message-ID: <20190501153643.GL5207@magnolia>
+References: <20190430121420.GW2780@tuebingen.mpg.de>
+ <20190430151151.GF5207@magnolia>
+ <20190430162506.GZ2780@tuebingen.mpg.de>
+ <20190430174042.GH5207@magnolia>
+ <20190430190525.GB2780@tuebingen.mpg.de>
+ <20190430191825.GF5217@magnolia>
+ <20190430210724.GD2780@tuebingen.mpg.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190430210724.GD2780@tuebingen.mpg.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Andre Noll <maan@tuebingen.mpg.de>
+Cc: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Tue, Apr 30, 2019 at 11:07:24PM +0200, Andre Noll wrote:
+> On Tue, Apr 30, 12:18, Darrick J. Wong wrote
+> > > commit f847bda4d612744ff1812788417bd8df41a806d3
+> > > Author: Dave Chinner <dchinner@redhat.com>
+> > > Date:   Mon Nov 19 13:31:08 2018 -0800
+> > > 
+> > >     xfs: finobt AG reserves don't consider last AG can be a runt
+> > >     
+> > >     This is a backport of upstream commit c08768977b9 and the part of
+> > >     21ec54168b36 which is needed by c08768977b9.
+> > 
+> > You could send this patch to the stable list, but my guess is that
+> > they'd prefer a straight backport of all three commits...
+> 
+> Hm, cherry-picking the first commit onto 4.9,171 already gives
+> four conflicting files. The conflicts are trivial to resolve (git
+> cherry-pick -xX theirs 21ec54168b36 does it), but that doesn't
+> compile because xfs_btree_query_all() is missing.  So e9a2599a249ed
+> (xfs: create a function to query all records in a btree) is needed as
+> well. But then, applying 86210fbebae (xfs: move various type verifiers
+> to common file) on top of that gives non-trivial conflicts.
 
-The for-next branch of the xfs-linux repository at:
+Ah, I suspected that might happen.  Backports are hard. :(
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+I suppose one saving grace of the patch you sent is that it'll likely
+break the build if anyone ever /does/ attempt a backport of those first
+two commits.  Perhaps that is the most practical way forward.
 
-has just been updated.
+> So, for automatic backporting we would need to cherry-pick even more,
+> and each backported commit should be tested of course. Given this, do
+> you still think Greg prefers a rather large set of straight backports
+> over the simple commit that just pulls in the missing function?
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  This is yesterday's for-next branch with the iomap
-branch merged in; if you want /only/ one branch or the other, please see
-either of the {iomap,xfs}-5.2-merge branches.
+I think you'd have to ask him that, if you decide not to send
+yesterday's patch.
 
-The new head of the for-next branch is commit:
+> I guess the important question is how much impact this issue
+> has on production systems (i.e., on CONFIG_XFS_DEBUG=n kernels,
+> where the assert statement is not compiled in). If the unpatched
+> xfs_inobt_max_size() is very unlikely to cause problems on such
+> systems, we might as well live with it.
 
-f00b8b784f75 Merge remote-tracking branch 'korg/iomap-5.2-merge' into for-next
+...but it's unlikely to cause problems since the allocator will probably
+pass over that runt AG so long as the others have more space and it will
+mostly stay empty.
 
-New Commits:
+(He says knocking on wood knowing that he's now tempted fate :P)
 
-Andreas Gruenbacher (3):
-      [26ddb1f4fd88] fs: Turn __generic_write_end into a void function
-      [7a77dad7e3be] iomap: Fix use-after-free error in page_done callback
-      [df0db3ecdb8f] iomap: Add a page_prepare callback
+--D
 
-Brian Foster (7):
-      [4d09807f2046] xfs: fix use after free in buf log item unlock assert
-      [545aa41f5cba] xfs: wake commit waiters on CIL abort before log item abort
-      [22fedd80b652] xfs: shutdown after buf release in iflush cluster abort path
-      [1ca89fbc48e1] xfs: don't account extra agfl blocks as available
-      [945c941fcd82] xfs: make tr_growdata a permanent transaction
-      [362f5e745ae2] xfs: assert that we don't enter agfl freeing with a non-permanent transaction
-      [1749d1ea89bd] xfs: add missing error check in xfs_prepare_shift()
-
-Christoph Hellwig (3):
-      [73ce6abae5f9] iomap: convert to SPDX identifier
-      [94079285756d] xfs: don't parse the mtpt mount option
-      [dbc582b6fb6a] iomap: Clean up __generic_write_end calling
-
-Darrick J. Wong (28):
-      [6772c1f11206] xfs: track metadata health status
-      [39353ff6e96f] xfs: replace the BAD_SUMMARY mount flag with the equivalent health code
-      [519841c207de] xfs: clear BAD_SUMMARY if unmounting an unhealthy filesystem
-      [7cd5006bdb6f] xfs: add a new ioctl to describe allocation group geometry
-      [c23232d40935] xfs: report fs and rt health via geometry structure
-      [1302c6a24fd9] xfs: report AG health via AG geometry ioctl
-      [89d139d5ad46] xfs: report inode health via bulkstat
-      [9d71e15586fd] xfs: refactor scrub context initialization
-      [f8c2a2257ca1] xfs: collapse scrub bool state flags into a single unsigned int
-      [160b5a784525] xfs: hoist the already_fixed variable to the scrub context
-      [4860a05d2475] xfs: scrub/repair should update filesystem metadata health
-      [4fb7951fde64] xfs: scrub should only cross-reference with healthy btrees
-      [cb357bf3d105] xfs: implement per-inode writeback completion queues
-      [28408243706e] xfs: remove unused m_data_workqueue
-      [3994fc489575] xfs: merge adjacent io completions of the same type
-      [1fdeaea4d92c] xfs: abort unaligned nowait directio early
-      [903b1fc2737f] xfs: widen quota block counters to 64-bit integers
-      [394aafdc15da] xfs: widen inode delalloc block counter to 64-bits
-      [078f4a7d3109] xfs: kill the xfs_dqtrx_t typedef
-      [3de5eab3fde1] xfs: unlock inode when xfs_ioctl_setattr_get_trans can't get transaction
-      [f60be90fc9a9] xfs: fix broken bhold behavior in xrep_roll_ag_trans
-      [9fe82b8c422b] xfs: track delayed allocation reservations across the filesystem
-      [ed30dcbd901c] xfs: rename the speculative block allocation reclaim toggle functions
-      [9a1f3049f473] xfs: allow scrubbers to pause background reclaim
-      [47cd97b5b239] xfs: scrub should check incore counters against ondisk headers
-      [710d707d2fa9] xfs: always rejoin held resources during defer roll
-      [75efa57d0bf5] xfs: add online scrub for superblock counters
-      [f00b8b784f75] Merge remote-tracking branch 'korg/iomap-5.2-merge' into for-next
-
-Dave Chinner (1):
-      [1b6d968de22b] xfs: bump XFS_IOC_FSGEOMETRY to v5 structures
-
-Wang Shilong (1):
-      [2bf9d264efed] xfs,fstrim: fix to return correct minlen
-
-
-Code Diffstat:
-
- fs/buffer.c                    |   8 +-
- fs/gfs2/bmap.c                 |  15 +-
- fs/internal.h                  |   2 +-
- fs/iomap.c                     |  65 ++++---
- fs/xfs/Makefile                |   3 +
- fs/xfs/libxfs/xfs_ag.c         |  54 ++++++
- fs/xfs/libxfs/xfs_ag.h         |   2 +
- fs/xfs/libxfs/xfs_alloc.c      |  13 +-
- fs/xfs/libxfs/xfs_attr.c       |  35 ++--
- fs/xfs/libxfs/xfs_attr.h       |   2 +-
- fs/xfs/libxfs/xfs_bmap.c       |  17 +-
- fs/xfs/libxfs/xfs_defer.c      |  14 +-
- fs/xfs/libxfs/xfs_fs.h         | 139 +++++++++++----
- fs/xfs/libxfs/xfs_health.h     | 190 ++++++++++++++++++++
- fs/xfs/libxfs/xfs_sb.c         |  10 +-
- fs/xfs/libxfs/xfs_trans_resv.c |   6 +-
- fs/xfs/libxfs/xfs_types.c      |   2 +-
- fs/xfs/libxfs/xfs_types.h      |   2 +
- fs/xfs/scrub/agheader.c        |  20 +++
- fs/xfs/scrub/common.c          |  47 ++++-
- fs/xfs/scrub/common.h          |   4 +
- fs/xfs/scrub/fscounters.c      | 366 ++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/health.c          | 237 +++++++++++++++++++++++++
- fs/xfs/scrub/health.h          |  14 ++
- fs/xfs/scrub/ialloc.c          |   4 +-
- fs/xfs/scrub/parent.c          |   2 +-
- fs/xfs/scrub/quota.c           |   2 +-
- fs/xfs/scrub/repair.c          |  34 ++--
- fs/xfs/scrub/repair.h          |   5 +-
- fs/xfs/scrub/scrub.c           |  49 ++++--
- fs/xfs/scrub/scrub.h           |  27 ++-
- fs/xfs/scrub/trace.h           |  63 ++++++-
- fs/xfs/xfs_aops.c              | 135 ++++++++++++--
- fs/xfs/xfs_aops.h              |   1 -
- fs/xfs/xfs_bmap_util.c         |   2 +
- fs/xfs/xfs_buf_item.c          |   4 +-
- fs/xfs/xfs_discard.c           |   3 +-
- fs/xfs/xfs_dquot.c             |  17 +-
- fs/xfs/xfs_file.c              |   6 +-
- fs/xfs/xfs_health.c            | 392 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_icache.c            |  11 +-
- fs/xfs/xfs_icache.h            |   4 +-
- fs/xfs/xfs_inode.c             |   4 +-
- fs/xfs/xfs_inode.h             |  17 +-
- fs/xfs/xfs_ioctl.c             |  55 +++---
- fs/xfs/xfs_ioctl32.c           |   4 +-
- fs/xfs/xfs_itable.c            |   2 +
- fs/xfs/xfs_log.c               |   3 +-
- fs/xfs/xfs_log_cil.c           |  21 ++-
- fs/xfs/xfs_mount.c             |  35 +++-
- fs/xfs/xfs_mount.h             |  32 +++-
- fs/xfs/xfs_qm.c                |   3 +-
- fs/xfs/xfs_qm.h                |   8 +-
- fs/xfs/xfs_quota.h             |  37 ++--
- fs/xfs/xfs_super.c             |  33 ++--
- fs/xfs/xfs_trace.h             |  76 ++++++++
- fs/xfs/xfs_trans_dquot.c       |  52 +++---
- include/linux/iomap.h          |  22 ++-
- 58 files changed, 2130 insertions(+), 302 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_health.h
- create mode 100644 fs/xfs/scrub/fscounters.c
- create mode 100644 fs/xfs/scrub/health.c
- create mode 100644 fs/xfs/scrub/health.h
- create mode 100644 fs/xfs/xfs_health.c
+> 
+> Thanks
+> Andre
+> -- 
+> Max Planck Institute for Developmental Biology
+> Max-Planck-Ring 5, 72076 Tübingen, Germany. Phone: (+49) 7071 601 829
+> http://people.tuebingen.mpg.de/maan/
