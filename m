@@ -1,161 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55050 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41234 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726513AbfEPHtH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 May 2019 03:49:07 -0400
-Date: Thu, 16 May 2019 03:49:05 -0400 (EDT)
-From: Pankaj Gupta <pagupta@redhat.com>
-Message-ID: <1441757090.29182398.1557992945173.JavaMail.zimbra@redhat.com>
-In-Reply-To: <9f6b1d8e-ef90-7d8b-56da-61a426953ba3@redhat.com>
-References: <20190514145422.16923-1-pagupta@redhat.com> <20190514145422.16923-3-pagupta@redhat.com> <9f6b1d8e-ef90-7d8b-56da-61a426953ba3@redhat.com>
-Subject: Re: [PATCH v9 2/7] virtio-pmem: Add virtio pmem driver
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+        id S1726418AbfEAOFF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 May 2019 10:05:05 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0EC3630ADBCC
+        for <linux-xfs@vger.kernel.org>; Wed,  1 May 2019 14:05:05 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BF38517502
+        for <linux-xfs@vger.kernel.org>; Wed,  1 May 2019 14:05:04 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 0/2] xfs: rely on minleft instead of total for bmbt res
+Date: Wed,  1 May 2019 10:05:02 -0400
+Message-Id: <20190501140504.16435-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Hildenbrand <david@redhat.com>
-Cc: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, mst@redhat.com, dan j williams <dan.j.williams@intel.com>, zwisler@kernel.org, vishal l verma <vishal.l.verma@intel.com>, dave jiang <dave.jiang@intel.com>, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger kernel <adilger.kernel@dilger.ca>, darrick wong <darrick.wong@oracle.com>, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, pbonzini@redhat.com, kilobyte@angband.pl, yuval shaia <yuval.shaia@oracle.com>, jstaron@google.com
+To: linux-xfs@vger.kernel.org
 
+Hi all,
 
-> 
-> > +	vpmem->vdev = vdev;
-> > +	vdev->priv = vpmem;
-> > +	err = init_vq(vpmem);
-> > +	if (err) {
-> > +		dev_err(&vdev->dev, "failed to initialize virtio pmem vq's\n");
-> > +		goto out_err;
-> > +	}
-> > +
-> > +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
-> > +			start, &vpmem->start);
-> > +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
-> > +			size, &vpmem->size);
-> > +
-> > +	res.start = vpmem->start;
-> > +	res.end   = vpmem->start + vpmem->size-1;
-> 
-> nit: " - 1;"
+This is a follow up to the RFC[1] I posted the other day. After poking
+around some more, I noticed that the bmapi allocation code already set
+args.minleft based on the state of the associated fork. Based on the
+reasoning in the commit logs, it seems that a bunch of the 'args.total =
+extent length + bmbt res' bmapi allocation callers were superfluous and
+could just rely on the existing minleft logic.
 
-Sure.
+Note that this doesn't address the other users of args.total (inode,
+dquot, xattr, etc.). It remains to be seen whether there is still value
+in having something like args.extra instead of args.total. For one,
+passing zero is somewhat of a landmine if transaction block reservations
+happen to change. It would be nice to clean this all up so the
+additional reservation portion of the mapping request is explicit and
+robust, particularly for callers where minlen < maxlen. As it is, it's
+still kind of pointless to specify minlen < maxlen and total >= maxlen
+because if we can't satisfy maxlen, the total check in
+xfs_alloc_space_available() will never pass until xfs_bmap_btalloc()
+reduces args.total, and it's set to minlen essentially ignoring what the
+caller set it to originally. That might not matter so much in cases
+where the allocation is a strict minlen == maxlen request and we're
+going to simply pass or fail.
 
-> 
-> > +	vpmem->nd_desc.provider_name = "virtio-pmem";
-> > +	vpmem->nd_desc.module = THIS_MODULE;
-> > +
-> > +	vpmem->nvdimm_bus = nvdimm_bus_register(&vdev->dev,
-> > +						&vpmem->nd_desc);
-> > +	if (!vpmem->nvdimm_bus) {
-> > +		dev_err(&vdev->dev, "failed to register device with nvdimm_bus\n");
-> > +		err = -ENXIO;
-> > +		goto out_vq;
-> > +	}
-> > +
-> > +	dev_set_drvdata(&vdev->dev, vpmem->nvdimm_bus);
-> > +
-> > +	ndr_desc.res = &res;
-> > +	ndr_desc.numa_node = nid;
-> > +	ndr_desc.flush = async_pmem_flush;
-> > +	set_bit(ND_REGION_PAGEMAP, &ndr_desc.flags);
-> > +	set_bit(ND_REGION_ASYNC, &ndr_desc.flags);
-> > +	nd_region = nvdimm_pmem_region_create(vpmem->nvdimm_bus, &ndr_desc);
-> > +	if (!nd_region) {
-> > +		dev_err(&vdev->dev, "failed to create nvdimm region\n");
-> > +		err = -ENXIO;
-> > +		goto out_nd;
-> > +	}
-> > +	nd_region->provider_data = dev_to_virtio(nd_region->dev.parent->parent);
-> > +	return 0;
-> > +out_nd:
-> > +	nvdimm_bus_unregister(vpmem->nvdimm_bus);
-> > +out_vq:
-> > +	vdev->config->del_vqs(vdev);
-> > +out_err:
-> > +	return err;
-> > +}
-> > +
-> > +static void virtio_pmem_remove(struct virtio_device *vdev)
-> > +{
-> > +	struct nvdimm_bus *nvdimm_bus = dev_get_drvdata(&vdev->dev);
-> > +
-> > +	nvdimm_bus_unregister(nvdimm_bus);
-> > +	vdev->config->del_vqs(vdev);
-> > +	vdev->config->reset(vdev);
-> > +}
-> > +
-> > +static struct virtio_driver virtio_pmem_driver = {
-> > +	.driver.name		= KBUILD_MODNAME,
-> > +	.driver.owner		= THIS_MODULE,
-> > +	.id_table		= id_table,
-> > +	.probe			= virtio_pmem_probe,
-> > +	.remove			= virtio_pmem_remove,
-> > +};
-> > +
-> > +module_virtio_driver(virtio_pmem_driver);
-> > +MODULE_DEVICE_TABLE(virtio, id_table);
-> > +MODULE_DESCRIPTION("Virtio pmem driver");
-> > +MODULE_LICENSE("GPL");
-> > diff --git a/drivers/nvdimm/virtio_pmem.h b/drivers/nvdimm/virtio_pmem.h
-> > new file mode 100644
-> > index 000000000000..ab1da877575d
-> > --- /dev/null
-> > +++ b/drivers/nvdimm/virtio_pmem.h
-> > @@ -0,0 +1,60 @@
-> > +/* SPDX-License-Identifier: GPL-2.0 */
-> > +/*
-> > + * virtio_pmem.h: virtio pmem Driver
-> > + *
-> > + * Discovers persistent memory range information
-> > + * from host and provides a virtio based flushing
-> > + * interface.
-> > + **/
-> > +
-> > +#ifndef _LINUX_VIRTIO_PMEM_H
-> > +#define _LINUX_VIRTIO_PMEM_H
-> > +
-> > +#include <linux/virtio_ids.h>
-> > +#include <linux/module.h>
-> > +#include <linux/virtio_config.h>
-> > +#include <uapi/linux/virtio_pmem.h>
-> > +#include <linux/libnvdimm.h>
-> > +#include <linux/spinlock.h>
-> > +
-> > +struct virtio_pmem_request {
-> > +	/* Host return status corresponding to flush request */
-> > +	int ret;
-> > +
-> > +	/* command name*/
-> > +	char name[16];
-> 
-> So ... why are we sending string commands and expect native-endianess
-> integers and don't define a proper request/response structure + request
-> types in include/uapi/linux/virtio_pmem.h like
-> 
-> struct virtio_pmem_resp {
-> 	__virtio32 ret;
-> }
-> 
-> #define VIRTIO_PMEM_REQ_TYPE_FLUSH	1
-> struct virtio_pmem_req {
-> 	__virtio16 type;
-> }
-> 
-> ... and this way we also define a proper endianess format for exchange
-> and keep it extensible
+In summary, this whole mechanism is still quite hairy and could probably
+use further improvements. For that reason, careful review of patch 2 is
+probably in order. So far, this has survived a full fstests auto run
+with default geometry and an enospc group run with an agsize=20MB
+geometry (~750+ AGs). I'm currently (sllloowlly) repeating the auto
+group run with the latter format and perhaps will follow that up with an
+fsstress cycle that slams the fs into -ENOSPC for a longish period of
+time (hours/days).
 
-Done the suggested change.
+Thoughts, reviews, flames appreciated. 
 
-Thank you,
-Pankaj
+Brian
 
-> 
-> @MST, what's your take on this?
-> 
-> 
-> --
-> 
-> Thanks,
-> 
-> David / dhildenb
-> 
+[1] https://marc.info/?l=linux-xfs&m=155628702230215&w=2
+
+Brian Foster (2):
+  xfs: drop minlen before tossing alignment on bmap allocs
+  xfs: don't set bmapi total block req where minleft is sufficient
+
+ fs/xfs/libxfs/xfs_bmap.c | 13 +++++++++----
+ fs/xfs/xfs_bmap_util.c   |  4 ++--
+ fs/xfs/xfs_dquot.c       |  4 ++--
+ fs/xfs/xfs_iomap.c       |  4 ++--
+ fs/xfs/xfs_reflink.c     |  4 ++--
+ fs/xfs/xfs_rtalloc.c     |  3 +--
+ 6 files changed, 18 insertions(+), 14 deletions(-)
+
+-- 
+2.17.2
