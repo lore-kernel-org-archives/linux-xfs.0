@@ -1,40 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp1.linuxfoundation.org ([140.211.169.13]:39270 "EHLO
-        smtp1.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725838AbfEALkJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 May 2019 07:40:09 -0400
-Subject: Re: [Kernel.org Helpdesk #61233] Please add linux-xfs@vger.kernel.org to lore.kernel.org
-From: "Amir Goldstein via RT" <kernel-helpdesk@rt.linuxfoundation.org>
-Reply-To: kernel-helpdesk@rt.linuxfoundation.org
-In-Reply-To: <CAOQ4uxiMTQB3joKNj7gJs+TEo4Ru+tGVbYtN1twkonTC7+WU8A@mail.gmail.com>
-References: <RT-Ticket-61233@linuxfoundation>
- <20180923010246.GB4590@magnolia>
- <rt-4.4.0-14016-1537793643-303.61233-6-0@linuxfoundation>
- <CAOQ4uxiMTQB3joKNj7gJs+TEo4Ru+tGVbYtN1twkonTC7+WU8A@mail.gmail.com>
-Message-ID: <rt-4.4.0-12783-1556710443-1750.61233-6-0@linuxfoundation>
-Content-Type: text/plain; charset="utf-8"
-Date: Wed, 01 May 2019 07:34:03 -0400
+Received: from tmailer.gwdg.de ([134.76.10.23]:56342 "EHLO tmailer.gwdg.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725973AbfEARvd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 May 2019 13:51:33 -0400
+Date: Wed, 1 May 2019 19:51:29 +0200
+From: Andre Noll <maan@tuebingen.mpg.de>
+Subject: Re: xfs: Assertion failed in xfs_ag_resv_init()
+Message-ID: <20190501175129.GH2780@tuebingen.mpg.de>
+References: <20190430121420.GW2780@tuebingen.mpg.de>
+ <20190430151151.GF5207@magnolia>
+ <20190430162506.GZ2780@tuebingen.mpg.de>
+ <20190430174042.GH5207@magnolia>
+ <20190430190525.GB2780@tuebingen.mpg.de>
+ <20190430191825.GF5217@magnolia>
+ <20190430210724.GD2780@tuebingen.mpg.de>
+ <20190501153643.GL5207@magnolia>
+ <20190501165933.GF2780@tuebingen.mpg.de>
+ <20190501171529.GB28949@kroah.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="xEruU51OOzV9VdJQ"
+Content-Disposition: inline
+In-Reply-To: <20190501171529.GB28949@kroah.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, stable@vger.kernel.org
 
-On Mon, Sep 24, 2018 at 9:03 AM Konstantin Ryabitsev via RT
-<kernel-helpdesk@rt.linuxfoundation.org> wrote:
->
-> On 2018-09-22 21:02:50, darrick.wong@oracle.com wrote:
-> > Hi, it would be great if you could start archiving the
-> > linux-xfs@vger.kernel.org mailing list on lore.kernel.org.
->
-> The agent has been subscribed to the list. Please proceed with archive collection.
->
 
-Darrick,
+--xEruU51OOzV9VdJQ
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Do you know what's holding that process back?
+On Wed, May 01, 19:15, Greg Kroah-Hartman wrote
+> On Wed, May 01, 2019 at 06:59:33PM +0200, Andre Noll wrote:
+> > On Wed, May 01, 08:36, Darrick J. Wong wrote
+> > > > > You could send this patch to the stable list, but my guess is that
+> > > > > they'd prefer a straight backport of all three commits...
+> > > >=20
+> > > > Hm, cherry-picking the first commit onto 4.9,171 already gives
+> > > > four conflicting files. The conflicts are trivial to resolve (git
+> > > > cherry-pick -xX theirs 21ec54168b36 does it), but that doesn't
+> > > > compile because xfs_btree_query_all() is missing.  So e9a2599a249ed
+> > > > (xfs: create a function to query all records in a btree) is needed =
+as
+> > > > well. But then, applying 86210fbebae (xfs: move various type verifi=
+ers
+> > > > to common file) on top of that gives non-trivial conflicts.
+> > >=20
+> > > Ah, I suspected that might happen.  Backports are hard. :(
+> > >=20
+> > > I suppose one saving grace of the patch you sent is that it'll likely
+> > > break the build if anyone ever /does/ attempt a backport of those fir=
+st
+> > > two commits.  Perhaps that is the most practical way forward.
+> > >=20
+> > > > So, for automatic backporting we would need to cherry-pick even mor=
+e,
+> > > > and each backported commit should be tested of course. Given this, =
+do
+> > > > you still think Greg prefers a rather large set of straight backpor=
+ts
+> > > > over the simple commit that just pulls in the missing function?
+> > >=20
+> > > I think you'd have to ask him that, if you decide not to send
+> > > yesterday's patch.
+> >=20
+> > Let's try. I've added a sentence to the commit message which explains
+> > why a straight backport is not practical, and how to proceed if anyone
+> > wants to backport the earlier commits.
+> >=20
+> > Greg: Under the given circumstances, would you be willing to accept
+> > the patch below for 4.9?
+>=20
+> If the xfs maintainers say this is ok, it is fine with me.
 
-Thanks,
-Amir.
+Darrick said, he's in favor of the patch, so I guess I can add his
+Acked-by. Would you also like to see the ack from Dave (the author
+of the original commit)?
+
+Anything else that needs to be changed?
+
+Thanks
+Andre
+--=20
+Max Planck Institute for Developmental Biology
+Max-Planck-Ring 5, 72076 T=C3=BCbingen, Germany. Phone: (+49) 7071 601 829
+http://people.tuebingen.mpg.de/maan/
+
+--xEruU51OOzV9VdJQ
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQSHtF/cbZGyylvqq1Ra2jVAMQCTDwUCXMncngAKCRBa2jVAMQCT
+D2wJAJ4qsAbTJewdQTxRwl8pthMQHOyfrQCgkjwSl14a7tFQS2iSG5yROXh0x3o=
+=QPop
+-----END PGP SIGNATURE-----
+
+--xEruU51OOzV9VdJQ--
