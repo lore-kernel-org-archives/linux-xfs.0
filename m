@@ -1,84 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:42204 "EHLO
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:59693 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726240AbfEAWLK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 May 2019 18:11:10 -0400
-Date: Thu, 2 May 2019 08:11:07 +1000
+        by vger.kernel.org with ESMTP id S1726133AbfEAXtn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 May 2019 19:49:43 -0400
+Date: Thu, 2 May 2019 09:49:39 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs: Assertion failed in xfs_ag_resv_init()
-Message-ID: <20190501221107.GI29573@dread.disaster.area>
-References: <20190430162506.GZ2780@tuebingen.mpg.de>
- <20190430174042.GH5207@magnolia>
- <20190430190525.GB2780@tuebingen.mpg.de>
- <20190430191825.GF5217@magnolia>
- <20190430210724.GD2780@tuebingen.mpg.de>
- <20190501153643.GL5207@magnolia>
- <20190501165933.GF2780@tuebingen.mpg.de>
- <20190501171529.GB28949@kroah.com>
- <20190501175129.GH2780@tuebingen.mpg.de>
- <20190501192822.GM5207@magnolia>
+Subject: Re: [PATCH V2] xfs: change some error-less functions to void types
+Message-ID: <20190501234939.GK29573@dread.disaster.area>
+References: <a8eec37c-0cb1-0dc6-aa65-7248e367fc08@redhat.com>
+ <2a52ea5e-e056-244b-4d9b-04ed15d996fd@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190501192822.GM5207@magnolia>
+In-Reply-To: <2a52ea5e-e056-244b-4d9b-04ed15d996fd@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Andre Noll <maan@tuebingen.mpg.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, May 01, 2019 at 12:28:22PM -0700, Darrick J. Wong wrote:
-> On Wed, May 01, 2019 at 07:51:29PM +0200, Andre Noll wrote:
-> > On Wed, May 01, 19:15, Greg Kroah-Hartman wrote
-> > > On Wed, May 01, 2019 at 06:59:33PM +0200, Andre Noll wrote:
-> > > > On Wed, May 01, 08:36, Darrick J. Wong wrote
-> > > > > > > You could send this patch to the stable list, but my guess is that
-> > > > > > > they'd prefer a straight backport of all three commits...
-> > > > > > 
-> > > > > > Hm, cherry-picking the first commit onto 4.9,171 already gives
-> > > > > > four conflicting files. The conflicts are trivial to resolve (git
-> > > > > > cherry-pick -xX theirs 21ec54168b36 does it), but that doesn't
-> > > > > > compile because xfs_btree_query_all() is missing.  So e9a2599a249ed
-> > > > > > (xfs: create a function to query all records in a btree) is needed as
-> > > > > > well. But then, applying 86210fbebae (xfs: move various type verifiers
-> > > > > > to common file) on top of that gives non-trivial conflicts.
-> > > > > 
-> > > > > Ah, I suspected that might happen.  Backports are hard. :(
-> > > > > 
-> > > > > I suppose one saving grace of the patch you sent is that it'll likely
-> > > > > break the build if anyone ever /does/ attempt a backport of those first
-> > > > > two commits.  Perhaps that is the most practical way forward.
-> > > > > 
-> > > > > > So, for automatic backporting we would need to cherry-pick even more,
-> > > > > > and each backported commit should be tested of course. Given this, do
-> > > > > > you still think Greg prefers a rather large set of straight backports
-> > > > > > over the simple commit that just pulls in the missing function?
-> > > > > 
-> > > > > I think you'd have to ask him that, if you decide not to send
-> > > > > yesterday's patch.
-> > > > 
-> > > > Let's try. I've added a sentence to the commit message which explains
-> > > > why a straight backport is not practical, and how to proceed if anyone
-> > > > wants to backport the earlier commits.
-> > > > 
-> > > > Greg: Under the given circumstances, would you be willing to accept
-> > > > the patch below for 4.9?
-> > > 
-> > > If the xfs maintainers say this is ok, it is fine with me.
-> > 
-> > Darrick said, he's in favor of the patch, so I guess I can add his
-> > Acked-by. Would you also like to see the ack from Dave (the author
-> > of the original commit)?
+On Wed, May 01, 2019 at 05:20:52PM -0500, Eric Sandeen wrote:
+> There are several functions which have no opportunity to retun
+							   return
+
+> an error, and don't contain any ASSERTs which could be argued
+> to be better constructed as error cases.  So, make them voids
+> to simplify the callers.
+
+Does it make the code smaller? :)
+
 > 
-> FWIW it seems fine to me, though Dave [cc'd] might have stronger opinions...
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Only thing I care about is whether it is QA'd properly. Greg, Sasha,
-is the 4.9 stable kernel having fstests run on it as part of the
-release gating?
+LGTM.
 
-Cheers,
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
