@@ -1,55 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:33073 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726276AbfEGMBb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 May 2019 08:01:31 -0400
-Received: by mail-wr1-f65.google.com with SMTP id e11so8909524wrs.0
-        for <linux-xfs@vger.kernel.org>; Tue, 07 May 2019 05:01:31 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190506115212.9876-1-jtulak@redhat.com> <20190506131418.GA48302@bfoster>
- <206e3aba-2b44-bbda-502b-53d70ed27a4d@sandeen.net>
-In-Reply-To: <206e3aba-2b44-bbda-502b-53d70ed27a4d@sandeen.net>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Tue, 7 May 2019 14:01:18 +0200
-Message-ID: <CACj3i722N2hOa-xQXgO__YQ+af-xXeN86rua3oC_2XqRBtt_Ow@mail.gmail.com>
-Subject: Re: [PATCH] xfsdump: (style) remove spaces in front of commas/semicolons
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:43296 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726501AbfEAOFF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 May 2019 10:05:05 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 732CD85543
+        for <linux-xfs@vger.kernel.org>; Wed,  1 May 2019 14:05:05 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 300BC71932
+        for <linux-xfs@vger.kernel.org>; Wed,  1 May 2019 14:05:05 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 1/2] xfs: drop minlen before tossing alignment on bmap allocs
+Date: Wed,  1 May 2019 10:05:03 -0400
+Message-Id: <20190501140504.16435-2-bfoster@redhat.com>
+In-Reply-To: <20190501140504.16435-1-bfoster@redhat.com>
+References: <20190501140504.16435-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Mon, May 6, 2019 at 8:19 PM Eric Sandeen <sandeen@sandeen.net> wrote:
->
-> On 5/6/19 8:14 AM, Brian Foster wrote:
-> > On Mon, May 06, 2019 at 01:52:12PM +0200, Jan Tulak wrote:
-> >> diff --git a/common/drive.c b/common/drive.c
-> >> index b01b916..a3514a9 100644
-> >> --- a/common/drive.c
-> >> +++ b/common/drive.c
-> > ...
-> >> @@ -3088,7 +3088,7 @@ prepare_drive(drive_t *drivep)
-> >>       * if not present or write-protected during dump, return.
-> >>       */
-> >>      maxtries = 15;
-> >> -    for (try = 1 ; ; sleep(10), try++) {
-> >> +    for (try = 1;; sleep(10), try++) {
-> >
-> > FWIW, I think the spaces actually make sense in contexts like the above
-> > where we've intentionally left a statement empty. Without the space this
-> > kind of looks like a double semicolon, which is slightly misleading at a
-> > glance.
->
-> Haha, yikes, how DOES one make this prettier w/o just killing it
-> with fire? ;)
->
-> -Eric
+The bmap block allocation code issues a sequence of retries to
+perform an optimal allocation, gradually loosening constraints as
+allocations fail. For example, the first attempt might begin at a
+particular bno, with maxlen == minlen and alignment incorporated. As
+allocations fail, the parameters fall back to different modes, drop
+alignment requirements and reduce the minlen and total block
+requirements.
 
-TBH, I thought about rewriting it. But then I realised how deep that
-rabbit hole leads... So I'm sticking with formatting changes for now.
+For large extent allocations with an args.total value that exceeds
+the allocation length (i.e., non-delalloc), the total value tends to
+dominate despite these fallbacks. For example, an aligned extent
+allocation request of tens to hundreds of MB that cannot be
+satisfied from a particular AG will not succeed after dropping
+alignment or minlen because xfs_alloc_space_available() never
+selects an AG that can't satisfy args.total. The retry sequence
+eventually reduces total and ultimately succeeds if a minlen extent
+is available somewhere, but the first several retries are
+effectively pointless in this scenario.
 
-Jan
+Beyond simply being inefficient, another side effect of this
+behavior is that we drop alignment requirements too aggressively.
+Consider a 1GB fallocate on a 15GB fs with 16 AGs and 128k stripe
+unit:
 
---
-Jan Tulak
+ # xfs_io -c "falloc 0 1g" /mnt/file
+ # <xfstests>/src/t_stripealign /mnt/file 32
+ /mnt/file: Start block 347176 not multiple of sunit 32
+
+Despite the filesystem being completely empty, the fact that the
+allocation request cannot be satisifed from a single AG means the
+allocation doesn't succeed until xfs_bmap_btalloc() drops total from
+the original value based on maxlen. This occurs after we've dropped
+minlen and alignment (unnecessarily).
+
+As a step towards addressing this problem, insert a new retry in the
+bmap allocation sequence to drop minlen (from maxlen) before tossing
+alignment. This should still result in as large of an extent as
+possible as the block allocator prioritizes extent size in all but
+exact allocation modes. By itself, this does not change the behavior
+of the command above because the preallocation code still specifies
+total based on maxlen. Instead, this facilitates preservation of
+alignment once extra reservation is separated from the extent length
+portion of the total block requirement.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 356ebd1cbe82..184ce11d9aee 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3586,6 +3586,14 @@ xfs_bmap_btalloc(
+ 		if ((error = xfs_alloc_vextent(&args)))
+ 			return error;
+ 	}
++	if (args.fsbno == NULLFSBLOCK && nullfb &&
++	    args.minlen > ap->minlen) {
++		args.minlen = ap->minlen;
++		args.fsbno = ap->blkno;
++		error = xfs_alloc_vextent(&args);
++		if (error)
++			return error;
++	}
+ 	if (isaligned && args.fsbno == NULLFSBLOCK) {
+ 		/*
+ 		 * allocation failed, so turn off alignment and
+@@ -3597,9 +3605,7 @@ xfs_bmap_btalloc(
+ 		if ((error = xfs_alloc_vextent(&args)))
+ 			return error;
+ 	}
+-	if (args.fsbno == NULLFSBLOCK && nullfb &&
+-	    args.minlen > ap->minlen) {
+-		args.minlen = ap->minlen;
++	if (args.fsbno == NULLFSBLOCK && nullfb) {
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
+ 		args.fsbno = ap->blkno;
+ 		if ((error = xfs_alloc_vextent(&args)))
+-- 
+2.17.2
