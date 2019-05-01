@@ -1,47 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:50638 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725883AbfEFSYZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 May 2019 14:24:25 -0400
-Date: Mon, 6 May 2019 11:24:13 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/4] xfsdump: update to use fallocate
-Message-ID: <20190506182413.GS5207@magnolia>
-References: <155085403848.5141.1866278990901950186.stgit@magnolia>
+Received: from mail.kernel.org ([198.145.29.99]:51686 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726005AbfEARPc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 May 2019 13:15:32 -0400
+Date: Wed, 1 May 2019 19:15:29 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: xfs: Assertion failed in xfs_ag_resv_init()
+Message-ID: <20190501171529.GB28949@kroah.com>
+References: <20190430121420.GW2780@tuebingen.mpg.de>
+ <20190430151151.GF5207@magnolia>
+ <20190430162506.GZ2780@tuebingen.mpg.de>
+ <20190430174042.GH5207@magnolia>
+ <20190430190525.GB2780@tuebingen.mpg.de>
+ <20190430191825.GF5217@magnolia>
+ <20190430210724.GD2780@tuebingen.mpg.de>
+ <20190501153643.GL5207@magnolia>
+ <20190501165933.GF2780@tuebingen.mpg.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155085403848.5141.1866278990901950186.stgit@magnolia>
+In-Reply-To: <20190501165933.GF2780@tuebingen.mpg.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Eric Sandeen <sandeen@redhat.com>
+To: Andre Noll <maan@tuebingen.mpg.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, stable@vger.kernel.org
 
-Uh, ping? :)
+On Wed, May 01, 2019 at 06:59:33PM +0200, Andre Noll wrote:
+> On Wed, May 01, 08:36, Darrick J. Wong wrote
+> > > > You could send this patch to the stable list, but my guess is that
+> > > > they'd prefer a straight backport of all three commits...
+> > > 
+> > > Hm, cherry-picking the first commit onto 4.9,171 already gives
+> > > four conflicting files. The conflicts are trivial to resolve (git
+> > > cherry-pick -xX theirs 21ec54168b36 does it), but that doesn't
+> > > compile because xfs_btree_query_all() is missing.  So e9a2599a249ed
+> > > (xfs: create a function to query all records in a btree) is needed as
+> > > well. But then, applying 86210fbebae (xfs: move various type verifiers
+> > > to common file) on top of that gives non-trivial conflicts.
+> > 
+> > Ah, I suspected that might happen.  Backports are hard. :(
+> > 
+> > I suppose one saving grace of the patch you sent is that it'll likely
+> > break the build if anyone ever /does/ attempt a backport of those first
+> > two commits.  Perhaps that is the most practical way forward.
+> > 
+> > > So, for automatic backporting we would need to cherry-pick even more,
+> > > and each backported commit should be tested of course. Given this, do
+> > > you still think Greg prefers a rather large set of straight backports
+> > > over the simple commit that just pulls in the missing function?
+> > 
+> > I think you'd have to ask him that, if you decide not to send
+> > yesterday's patch.
+> 
+> Let's try. I've added a sentence to the commit message which explains
+> why a straight backport is not practical, and how to proceed if anyone
+> wants to backport the earlier commits.
+> 
+> Greg: Under the given circumstances, would you be willing to accept
+> the patch below for 4.9?
 
---D
+If the xfs maintainers say this is ok, it is fine with me.
 
-On Fri, Feb 22, 2019 at 08:47:18AM -0800, Darrick J. Wong wrote:
-> Hi all,
-> 
-> This is a series to update the "create file and preallocate blocks"
-> code in xfs_restore.
-> 
-> The first patch refactors the existing copy-pasta into a single helper
-> function to create and preallocate space in files, as well as removing
-> the totally broken ALLOCSP code.
-> 
-> The next two patches fix unchecked return values and insufficient
-> unsupported-ioctl code.
-> 
-> The final patch upgrades xfs_restore to try fallocate before RESVSP
-> simply because it is the newer API.
-> 
-> If you're going to start using this mess, you probably ought to just
-> pull from my git trees, which are linked below.
-> 
-> This is an extraordinary way to destroy everything.  Enjoy!
-> Comments and questions are, as always, welcome.
-> 
-> --D
+thanks,
+
+greg k-h
