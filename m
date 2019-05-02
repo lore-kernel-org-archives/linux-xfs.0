@@ -1,220 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:52890 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726095AbfEFNxg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 May 2019 09:53:36 -0400
-Received: by mail-wm1-f66.google.com with SMTP id o25so4768425wmf.2
-        for <linux-xfs@vger.kernel.org>; Mon, 06 May 2019 06:53:35 -0700 (PDT)
+Received: from mail.kernel.org ([198.145.29.99]:57352 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726268AbfEBMeQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 May 2019 08:34:16 -0400
+Date: Thu, 2 May 2019 08:34:14 -0400
+From: Sasha Levin <sashal@kernel.org>
+Subject: Re: xfs: Assertion failed in xfs_ag_resv_init()
+Message-ID: <20190502123414.GA11584@sasha-vm>
+References: <20190430174042.GH5207@magnolia>
+ <20190430190525.GB2780@tuebingen.mpg.de>
+ <20190430191825.GF5217@magnolia>
+ <20190430210724.GD2780@tuebingen.mpg.de>
+ <20190501153643.GL5207@magnolia>
+ <20190501165933.GF2780@tuebingen.mpg.de>
+ <20190501171529.GB28949@kroah.com>
+ <20190501175129.GH2780@tuebingen.mpg.de>
+ <20190501192822.GM5207@magnolia>
+ <20190501221107.GI29573@dread.disaster.area>
 MIME-Version: 1.0
-References: <20190506115212.9876-1-jtulak@redhat.com> <20190506131418.GA48302@bfoster>
-In-Reply-To: <20190506131418.GA48302@bfoster>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Mon, 6 May 2019 15:53:23 +0200
-Message-ID: <CACj3i72AW9ev9yK7+bNhpMR9n6HSSkNsfYwRXQPfpj-6xEovyw@mail.gmail.com>
-Subject: Re: [PATCH] xfsdump: (style) remove spaces in front of commas/semicolons
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20190501221107.GI29573@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Andre Noll <maan@tuebingen.mpg.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, stable@vger.kernel.org
 
-On Mon, May 6, 2019 at 3:14 PM Brian Foster <bfoster@redhat.com> wrote:
+On Thu, May 02, 2019 at 08:11:07AM +1000, Dave Chinner wrote:
+>On Wed, May 01, 2019 at 12:28:22PM -0700, Darrick J. Wong wrote:
+>> On Wed, May 01, 2019 at 07:51:29PM +0200, Andre Noll wrote:
+>> > On Wed, May 01, 19:15, Greg Kroah-Hartman wrote
+>> > > On Wed, May 01, 2019 at 06:59:33PM +0200, Andre Noll wrote:
+>> > > > On Wed, May 01, 08:36, Darrick J. Wong wrote
+>> > > > > > > You could send this patch to the stable list, but my guess is that
+>> > > > > > > they'd prefer a straight backport of all three commits...
+>> > > > > >
+>> > > > > > Hm, cherry-picking the first commit onto 4.9,171 already gives
+>> > > > > > four conflicting files. The conflicts are trivial to resolve (git
+>> > > > > > cherry-pick -xX theirs 21ec54168b36 does it), but that doesn't
+>> > > > > > compile because xfs_btree_query_all() is missing.  So e9a2599a249ed
+>> > > > > > (xfs: create a function to query all records in a btree) is needed as
+>> > > > > > well. But then, applying 86210fbebae (xfs: move various type verifiers
+>> > > > > > to common file) on top of that gives non-trivial conflicts.
+>> > > > >
+>> > > > > Ah, I suspected that might happen.  Backports are hard. :(
+>> > > > >
+>> > > > > I suppose one saving grace of the patch you sent is that it'll likely
+>> > > > > break the build if anyone ever /does/ attempt a backport of those first
+>> > > > > two commits.  Perhaps that is the most practical way forward.
+>> > > > >
+>> > > > > > So, for automatic backporting we would need to cherry-pick even more,
+>> > > > > > and each backported commit should be tested of course. Given this, do
+>> > > > > > you still think Greg prefers a rather large set of straight backports
+>> > > > > > over the simple commit that just pulls in the missing function?
+>> > > > >
+>> > > > > I think you'd have to ask him that, if you decide not to send
+>> > > > > yesterday's patch.
+>> > > >
+>> > > > Let's try. I've added a sentence to the commit message which explains
+>> > > > why a straight backport is not practical, and how to proceed if anyone
+>> > > > wants to backport the earlier commits.
+>> > > >
+>> > > > Greg: Under the given circumstances, would you be willing to accept
+>> > > > the patch below for 4.9?
+>> > >
+>> > > If the xfs maintainers say this is ok, it is fine with me.
+>> >
+>> > Darrick said, he's in favor of the patch, so I guess I can add his
+>> > Acked-by. Would you also like to see the ack from Dave (the author
+>> > of the original commit)?
+>>
+>> FWIW it seems fine to me, though Dave [cc'd] might have stronger opinions...
 >
-> On Mon, May 06, 2019 at 01:52:12PM +0200, Jan Tulak wrote:
-> > Hi guys,
-> >
-> > Here is another xfsdump cleaning patch.
-> > Git stat: 31 files changed, 206 insertions(+), 206 deletions(-)
-> >
-> > Cheers,
-> > Jan
-> >
-> > ---
-> >
-> > Turn all the "x , y , z" into "x, y, z" and "for (moo ; foo ; bar)"
-> > to "for (moo; foo; bar)".
-> >
-> > When doing a clean build, no new warning is produced or existing one
-> > removed.
-> >
-> > Changed macros:
-> > __arch__swab[16,32,64] in include/swab.h.
-> >
-> > Created by this script:
-> > *****
-> > set -euo pipefail
-> >
-> > find . -name '*.[ch]' ! -type d -exec gawk -i inplace '{
-> >     $0 = gensub(/^([^"]*[^[:space:]][^"]*) ,/, "\\1,", "g")
-> >     $0 = gensub(/^([^"]*[^[:space:]][^"]*) ;/, "\\1;", "g")
-> >     $0 = gensub(/^(.*[^[:space:]].*) ,([^"]*)$/, "\\1,\\2", "g")
-> >     $0 = gensub(/(.*[^[:space:]].*) ;([^"]*)$/, "\\1;\\2", "g")
-> > }; {print }' {} \;
-> > *****
-> >
-> > Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> > ---
-> ...
-> > diff --git a/common/drive.c b/common/drive.c
-> > index b01b916..a3514a9 100644
-> > --- a/common/drive.c
-> > +++ b/common/drive.c
-> ...
-> > @@ -3088,7 +3088,7 @@ prepare_drive(drive_t *drivep)
-> >        * if not present or write-protected during dump, return.
-> >        */
-> >       maxtries = 15;
-> > -     for (try = 1 ; ; sleep(10), try++) {
-> > +     for (try = 1;; sleep(10), try++) {
->
-> FWIW, I think the spaces actually make sense in contexts like the above
-> where we've intentionally left a statement empty. Without the space this
-> kind of looks like a double semicolon, which is slightly misleading at a
-> glance.
+>Only thing I care about is whether it is QA'd properly. Greg, Sasha,
+>is the 4.9 stable kernel having fstests run on it as part of the
+>release gating?
 
-Make sense. I'll keep the space in these cases.
+I test only for 5.1 and 4.19 and this point. I don't have a solid
+baseline for anything older.
 
->
-> >               if (cldmgr_stop_requested()) {
-> >                       return DRIVE_ERROR_STOP;
-> >               }
-> > @@ -3139,7 +3139,7 @@ prepare_drive(drive_t *drivep)
-> >       else
-> >               tape_recsz = tape_blksz;
-> >
-> > -     /* if the overwrite option was specified , return.
-> > +     /* if the overwrite option was specified, return.
-> >        */
-> >       if (contextp->dc_overwritepr) {
-> >               mlog(MLOG_DEBUG | MLOG_DRIVE,
-> > @@ -3157,7 +3157,7 @@ prepare_drive(drive_t *drivep)
-> >       maxtries = 5;
-> >       changedblkszpr = BOOL_FALSE;
-> >
-> > -     for (try = 1 ; ; try++) {
-> > +     for (try = 1;; try++) {
-> >               int nread;
-> >               int saved_errno;
-> >
-> > @@ -3896,7 +3896,7 @@ rewind_and_verify(drive_t *drivep)
-> >       int rval;
-> >
-> >       rval = mt_op(contextp->dc_fd, MTREW, 0);
-> > -     for (try = 1 ; ; try++) {
-> > +     for (try = 1;; try++) {
-> >               if (rval) {
-> >                       sleep(1);
-> >                       rval = mt_op(contextp->dc_fd, MTREW, 0);
-> ...
-> > diff --git a/dump/content.c b/dump/content.c
-> > index 43f51db..72ff7c4 100644
-> > --- a/dump/content.c
-> > +++ b/dump/content.c
-> ...
-> > @@ -5240,7 +5240,7 @@ dump_session_inv(drive_t *drivep,
-> >        * until we are successful or until the media layer
-> >        * tells us to give up.
-> >        */
-> > -     for (done = BOOL_FALSE ; ! done ;) {
-> > +     for (done = BOOL_FALSE; ! done;) {
->
-> Perhaps we should remove the space after the ! here and below as well.
-
-Sure. I have a few more patches like this, fixing these one-space
-issues. I just split it to make for smaller, easier-to-review patches.
-E.g. spaces around pointer dereferences, or adding a space after a
-comma where it is missing.
-
->
-> >               uuid_t mediaid;
-> >               char medialabel[GLOBAL_HDR_STRING_SZ];
-> >               bool_t partial;
-> > @@ -5390,7 +5390,7 @@ dump_terminator(drive_t *drivep, context_t *contextp, media_hdr_t *mwhdrp)
-> >        * until we are successful or until the media layer
-> >        * tells us to give up.
-> >        */
-> > -     for (done = BOOL_FALSE ; ! done ;) {
-> > +     for (done = BOOL_FALSE; ! done;) {
-> >               bool_t partial;
-> >               rv_t rv;
-> >
-> ...
-> > diff --git a/inventory/inv_stobj.c b/inventory/inv_stobj.c
-> > index 74893d3..6339e4e 100644
-> > --- a/inventory/inv_stobj.c
-> > +++ b/inventory/inv_stobj.c
-> > @@ -909,7 +909,7 @@ stobj_getsession_bylabel(
-> >  bool_t
-> >  stobj_delete_mobj(int fd,
-> >                 invt_seshdr_t *hdr,
-> > -               void *arg ,
-> > +               void *arg,
-> >                 void **buf)
-> >  {
-> >       /* XXX fd needs to be locked EX, not SH */
-> > @@ -977,7 +977,7 @@ stobj_delete_mobj(int fd,
-> >                                      mfiles[j-1].mf_nextmf = mf->mf_nextmf;
-> >
-> >                               if (j == nmfiles - 1)
-> > -                                    strms[i].st_lastmfile = ;
-> > +                                    strms[i].st_lastmfile =;
->
-> The above code appears to be commented out..?
-
-Yes, it is so. I'm trying to have the patches reproducible, without
-manual changes (the idea is that it could be used for enforcing coding
-style in xfsprogs as a whole) and thought this special case harmless.
-But if it's an issue, I can exclude it.
-
->
-> ...
-> > diff --git a/restore/tree.c b/restore/tree.c
-> > index 3f3084e..9806777 100644
-> > --- a/restore/tree.c
-> > +++ b/restore/tree.c
-> ...
-> > @@ -4821,7 +4821,7 @@ fix_quoted_span(char *string, char *liter)
-> >       /* scan for the next non-literal quote, marking all
-> >        * characters in between as literal
-> >        */
-> > -     for (s = string, l = liter ; *s && (*s != '\"' || *l) ; s++, l++) {
-> > +     for (s = string, l = liter ; *s && (*s != '\"' || *l); s++, l++) {
->
-> Missed one here:                  ^
-
-Thanks for noticing.
-
-Jan
->
-> Brian
->
-> >               *l = (char)1;
-> >       }
-> >
-> > @@ -4839,7 +4839,7 @@ collapse_white(char *string, char *liter)
-> >       size_t cnt;
-> >
-> >       cnt = 0;
-> > -     for (s = string, l = liter ; is_white(*s) && ! *l ; s++, l++) {
-> > +     for (s = string, l = liter; is_white(*s) && ! *l; s++, l++) {
-> >               cnt++;
-> >       }
-> >
-> > @@ -4856,7 +4856,7 @@ distance_to_space(char *s, char *l)
-> >  {
-> >       size_t cnt;
-> >
-> > -     for (cnt = 0 ; *s && (! is_white(*s) || *l) ; s++, l++) {
-> > +     for (cnt = 0; *s && (! is_white(*s) || *l); s++, l++) {
-> >               cnt++;
-> >       }
-> >
-> > --
-> > 2.21.0
-> >
-
-
-
--- 
-Jan Tulak
+--
+Thanks,
+Sasha
