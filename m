@@ -1,67 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47324 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725962AbfEBR4C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 May 2019 13:56:02 -0400
-Date: Thu, 2 May 2019 13:55:59 -0400
-From: Sasha Levin <sashal@kernel.org>
-Subject: Re: xfs: Assertion failed in xfs_ag_resv_init()
-Message-ID: <20190502175559.GB3048@sasha-vm>
-References: <20190501171529.GB28949@kroah.com>
- <20190501175129.GH2780@tuebingen.mpg.de>
- <20190501192822.GM5207@magnolia>
- <20190501221107.GI29573@dread.disaster.area>
- <20190502114440.GB21563@kroah.com>
- <20190502132027.GF11584@sasha-vm>
- <20190502141025.GB13141@kroah.com>
- <20190502152736.GW2780@tuebingen.mpg.de>
- <20190502165244.GB14995@kroah.com>
- <20190502174516.GY2780@tuebingen.mpg.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:48736 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726114AbfECA5e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 May 2019 20:57:34 -0400
+Date: Thu, 2 May 2019 17:57:17 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] mkfs: enable reflink and rmap by default
+Message-ID: <20190503005717.GO5207@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190502174516.GY2780@tuebingen.mpg.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andre Noll <maan@tuebingen.mpg.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Thu, May 02, 2019 at 07:45:16PM +0200, Andre Noll wrote:
->On Thu, May 02, 18:52, Greg Kroah-Hartman wrote
->> On Thu, May 02, 2019 at 05:27:36PM +0200, Andre Noll wrote:
->> > On Thu, May 02, 16:10, Greg Kroah-Hartman wrote
->> > > Ok, then how about we hold off on this patch for 4.9.y then.  "no one"
->> > > should be using 4.9.y in a "server system" anymore, unless you happen to
->> > > have an enterprise kernel based on it.  So we should be fine as the
->> > > users of the older kernels don't run xfs.
->> >
->> > Well, we do run xfs on top of bcache on vanilla 4.9 kernels on a few
->> > dozen production servers here. Mainly because we ran into all sorts
->> > of issues with newer kernels (not necessary related to xfs). 4.9,
->> > OTOH, appears to be rock solid for our workload.
->>
->> Great, but what is wrong with 4.14.y or better yet, 4.19.y?  Do those
->> also work for your workload?  If not, we should fix that, and soon :)
->
->Some months ago we tried 4.14 and it was a real disaster: random
->crashes with nothing in the logs on the file servers and unkillable
->hung processes on the compute machines. The thing is, I can't afford
->an extended downtime of these production systems, or test patches, or
->enable debugging options which slow down the systems too much. Also,
->10 of the compute nodes load the nvidia module, so all bets are off
->anyway. But we've seen the hung processes also on the non-gpu nodes
->where the nvidia module is not loaded.
->
->As for 4.19, xfs on bcache was broken until a couple of weeks
->ago. Meanwhile the fix (e578f90d8a9c) went in, so I benchmarked 4.19.x
->on one system briefly. To my surprise the results were *worse* than
->with 4.9. This seems to be another cache bypass issue, but I need to
->have a closer look, and more reliable numbers.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Is this something you can reproduce outside of those 10 magical
-machines?
+Enable reflink and reverse mapping by default.
 
---
-Thanks,
-Sasha
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ mkfs/xfs_mkfs.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 0862621a..3874f7dd 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2021,14 +2021,14 @@ _("sparse inodes not supported without CRC support\n"));
+ 		}
+ 		cli->sb_feat.spinodes = false;
+ 
+-		if (cli->sb_feat.rmapbt) {
++		if (cli->sb_feat.rmapbt && cli_opt_set(&mopts, M_RMAPBT)) {
+ 			fprintf(stderr,
+ _("rmapbt not supported without CRC support\n"));
+ 			usage();
+ 		}
+ 		cli->sb_feat.rmapbt = false;
+ 
+-		if (cli->sb_feat.reflink) {
++		if (cli->sb_feat.reflink && cli_opt_set(&mopts, M_REFLINK)) {
+ 			fprintf(stderr,
+ _("reflink not supported without CRC support\n"));
+ 			usage();
+@@ -3934,8 +3934,8 @@ main(
+ 			.dirftype = true,
+ 			.finobt = true,
+ 			.spinodes = true,
+-			.rmapbt = false,
+-			.reflink = false,
++			.rmapbt = true,
++			.reflink = true,
+ 			.parent_pointers = false,
+ 			.nodalign = false,
+ 			.nortalign = false,
