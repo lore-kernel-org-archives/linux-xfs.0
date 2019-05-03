@@ -1,69 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mailer.gwdg.de ([134.76.10.26]:37861 "EHLO mailer.gwdg.de"
+Received: from sandeen.net ([63.231.237.45]:41586 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728017AbfEBP1k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 May 2019 11:27:40 -0400
-Date: Thu, 2 May 2019 17:27:36 +0200
-From: Andre Noll <maan@tuebingen.mpg.de>
-Subject: Re: xfs: Assertion failed in xfs_ag_resv_init()
-Message-ID: <20190502152736.GW2780@tuebingen.mpg.de>
-References: <20190430210724.GD2780@tuebingen.mpg.de>
- <20190501153643.GL5207@magnolia>
- <20190501165933.GF2780@tuebingen.mpg.de>
- <20190501171529.GB28949@kroah.com>
- <20190501175129.GH2780@tuebingen.mpg.de>
- <20190501192822.GM5207@magnolia>
- <20190501221107.GI29573@dread.disaster.area>
- <20190502114440.GB21563@kroah.com>
- <20190502132027.GF11584@sasha-vm>
- <20190502141025.GB13141@kroah.com>
+        id S1725793AbfECUGx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 May 2019 16:06:53 -0400
+Received: from Liberator-6.local (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 62B82560
+        for <linux-xfs@vger.kernel.org>; Fri,  3 May 2019 15:06:50 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs master updated to 65dcd3b
+Message-ID: <215c5b02-9eb9-e626-f21b-c5c8404ae8e5@sandeen.net>
+Date: Fri, 3 May 2019 15:06:52 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="p51eBkY87UC7w4vh"
-Content-Disposition: inline
-In-Reply-To: <20190502141025.GB13141@kroah.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Sasha Levin <sashal@kernel.org>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
+
+Hi folks,
+
+The xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+Hi folks,
+
+The xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+65dcd3b xfsprogs: Release v5.0.0
+
+New Commits:
+
+Eric Sandeen (2):
+      [868d0cc] xfs_io: rework includes for statx structures
+      [65dcd3b] xfsprogs: Release v5.0.0
+
+Jorge Guerra (1):
+      [0c1d691] xfs_db: scan entire file system when using 'frag'
 
 
---p51eBkY87UC7w4vh
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Code Diffstat:
 
-On Thu, May 02, 16:10, Greg Kroah-Hartman wrote
-> Ok, then how about we hold off on this patch for 4.9.y then.  "no one"
-> should be using 4.9.y in a "server system" anymore, unless you happen to
-> have an enterprise kernel based on it.  So we should be fine as the
-> users of the older kernels don't run xfs.
+ VERSION          | 2 +-
+ configure.ac     | 2 +-
+ db/frag.c        | 2 +-
+ debian/changelog | 6 ++++++
+ doc/CHANGES      | 4 ++++
+ io/stat.c        | 3 ---
+ io/statx.h       | 7 +++++++
+ 7 files changed, 20 insertions(+), 6 deletions(-)
+ xfsprogs: Release v5.0.0
 
-Well, we do run xfs on top of bcache on vanilla 4.9 kernels on a few
-dozen production servers here. Mainly because we ran into all sorts
-of issues with newer kernels (not necessary related to xfs). 4.9,
-OTOH, appears to be rock solid for our workload.
+New Commits:
 
-But I'm OK with holding off on the patch. According to Darrick, the
-issue that is fixed by the patch should not cause serious problems
-anyway if xfs debugging is turned off.
+Eric Sandeen (2):
+      [868d0cc] xfs_io: rework includes for statx structures
+      [65dcd3b] xfsprogs: Release v5.0.0
 
-Best
-Andre
---=20
-Max Planck Institute for Developmental Biology
-Max-Planck-Ring 5, 72076 T=C3=BCbingen, Germany. Phone: (+49) 7071 601 829
-http://people.tuebingen.mpg.de/maan/
+Jorge Guerra (1):
+      [0c1d691] xfs_db: scan entire file system when using 'frag'
 
---p51eBkY87UC7w4vh
-Content-Type: application/pgp-signature; name="signature.asc"
 
------BEGIN PGP SIGNATURE-----
+Code Diffstat:
 
-iF0EABECAB0WIQSHtF/cbZGyylvqq1Ra2jVAMQCTDwUCXMsMZQAKCRBa2jVAMQCT
-D1twAKCHlJmKSEhsDdu3KQ1I3VhMI0R/SgCeICxAgVEHs43F4Q5AL+8Se1Mjr9U=
-=gd6x
------END PGP SIGNATURE-----
-
---p51eBkY87UC7w4vh--
+ VERSION          | 2 +-
+ configure.ac     | 2 +-
+ db/frag.c        | 2 +-
+ debian/changelog | 6 ++++++
+ doc/CHANGES      | 4 ++++
+ io/stat.c        | 3 ---
+ io/statx.h       | 7 +++++++
+ 7 files changed, 20 insertions(+), 6 deletions(-)
