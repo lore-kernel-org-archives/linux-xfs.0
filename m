@@ -1,234 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34312 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725852AbfEFOD7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 May 2019 10:03:59 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D39DD300272A
-        for <linux-xfs@vger.kernel.org>; Mon,  6 May 2019 14:03:58 +0000 (UTC)
-Date: Mon, 6 May 2019 10:03:56 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfsdump: (style) remove spaces in front of
- commas/semicolons
-Message-ID: <20190506140356.GB48302@bfoster>
-References: <20190506115212.9876-1-jtulak@redhat.com>
- <20190506131418.GA48302@bfoster>
- <CACj3i72AW9ev9yK7+bNhpMR9n6HSSkNsfYwRXQPfpj-6xEovyw@mail.gmail.com>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47883 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725765AbfECERf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 May 2019 00:17:35 -0400
+Date: Fri, 3 May 2019 14:17:27 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [POC][PATCH] xfs: reduce ilock contention on buffered randrw
+ workload
+Message-ID: <20190503041727.GL29573@dread.disaster.area>
+References: <20190404165737.30889-1-amir73il@gmail.com>
+ <20190404211730.GD26298@dastard>
+ <20190408103303.GA18239@quack2.suse.cz>
+ <1554741429.3326.43.camel@suse.com>
+ <20190411011117.GC29573@dread.disaster.area>
+ <20190416122240.GN29573@dread.disaster.area>
+ <20190418031013.GX29573@dread.disaster.area>
+ <1555611694.18313.12.camel@suse.com>
+ <20190420235412.GY29573@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACj3i72AW9ev9yK7+bNhpMR9n6HSSkNsfYwRXQPfpj-6xEovyw@mail.gmail.com>
+In-Reply-To: <20190420235412.GY29573@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Davidlohr Bueso <dbueso@suse.com>
+Cc: Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Mon, May 06, 2019 at 03:53:23PM +0200, Jan Tulak wrote:
-> On Mon, May 6, 2019 at 3:14 PM Brian Foster <bfoster@redhat.com> wrote:
-> >
-> > On Mon, May 06, 2019 at 01:52:12PM +0200, Jan Tulak wrote:
-> > > Hi guys,
-> > >
-> > > Here is another xfsdump cleaning patch.
-> > > Git stat: 31 files changed, 206 insertions(+), 206 deletions(-)
-> > >
-> > > Cheers,
-> > > Jan
-> > >
-> > > ---
-> > >
-> > > Turn all the "x , y , z" into "x, y, z" and "for (moo ; foo ; bar)"
-> > > to "for (moo; foo; bar)".
-> > >
-> > > When doing a clean build, no new warning is produced or existing one
-> > > removed.
-> > >
-> > > Changed macros:
-> > > __arch__swab[16,32,64] in include/swab.h.
-> > >
-> > > Created by this script:
-> > > *****
-> > > set -euo pipefail
-> > >
-> > > find . -name '*.[ch]' ! -type d -exec gawk -i inplace '{
-> > >     $0 = gensub(/^([^"]*[^[:space:]][^"]*) ,/, "\\1,", "g")
-> > >     $0 = gensub(/^([^"]*[^[:space:]][^"]*) ;/, "\\1;", "g")
-> > >     $0 = gensub(/^(.*[^[:space:]].*) ,([^"]*)$/, "\\1,\\2", "g")
-> > >     $0 = gensub(/(.*[^[:space:]].*) ;([^"]*)$/, "\\1;\\2", "g")
-> > > }; {print }' {} \;
-> > > *****
-> > >
-> > > Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> > > ---
-> > ...
-> > > diff --git a/common/drive.c b/common/drive.c
-> > > index b01b916..a3514a9 100644
-> > > --- a/common/drive.c
-> > > +++ b/common/drive.c
-> > ...
-> > > @@ -3088,7 +3088,7 @@ prepare_drive(drive_t *drivep)
-> > >        * if not present or write-protected during dump, return.
-> > >        */
-> > >       maxtries = 15;
-> > > -     for (try = 1 ; ; sleep(10), try++) {
-> > > +     for (try = 1;; sleep(10), try++) {
-> >
-> > FWIW, I think the spaces actually make sense in contexts like the above
-> > where we've intentionally left a statement empty. Without the space this
-> > kind of looks like a double semicolon, which is slightly misleading at a
-> > glance.
+On Sun, Apr 21, 2019 at 09:54:12AM +1000, Dave Chinner wrote:
+> On Thu, Apr 18, 2019 at 11:21:34AM -0700, Davidlohr Bueso wrote:
+> > On Thu, 2019-04-18 at 13:10 +1000, Dave Chinner wrote:
+> > > Now the stuff I've been working on has the same interface as
+> > > Davidlohr's patch, so I can swap and change them without thinking
+> > > about it. It's still completely unoptimised, but:
+> > > 
+> > > 			IOPS read/write (direct IO)
+> > > processes	rwsem		DB rangelock	XFS
+> > > rangelock
+> > >  1		78k / 78k	75k / 75k	72k / 72k
+> > >  2		131k / 131k	123k / 123k	133k / 133k
+> > >  4		267k / 267k	183k / 183k	237k / 237k
+> > >  8		372k / 372k	177k / 177k	265k / 265k
+> > >  16		315k / 315k	135k / 135k	228k / 228k
+> > > 
+> > > It's still substantially faster than the interval tree code.
+....
+> > > /me goes off and thinks more about adding optimistic lock coupling
+> > > to the XFS iext btree to get rid of the need for tree-wide
+> > > locking altogether
+> > 
+> > I was not aware of this code.
 > 
-> Make sense. I'll keep the space in these cases.
-> 
-> >
-> > >               if (cldmgr_stop_requested()) {
-> > >                       return DRIVE_ERROR_STOP;
-> > >               }
-> > > @@ -3139,7 +3139,7 @@ prepare_drive(drive_t *drivep)
-> > >       else
-> > >               tape_recsz = tape_blksz;
-> > >
-> > > -     /* if the overwrite option was specified , return.
-> > > +     /* if the overwrite option was specified, return.
-> > >        */
-> > >       if (contextp->dc_overwritepr) {
-> > >               mlog(MLOG_DEBUG | MLOG_DRIVE,
-> > > @@ -3157,7 +3157,7 @@ prepare_drive(drive_t *drivep)
-> > >       maxtries = 5;
-> > >       changedblkszpr = BOOL_FALSE;
-> > >
-> > > -     for (try = 1 ; ; try++) {
-> > > +     for (try = 1;; try++) {
-> > >               int nread;
-> > >               int saved_errno;
-> > >
-> > > @@ -3896,7 +3896,7 @@ rewind_and_verify(drive_t *drivep)
-> > >       int rval;
-> > >
-> > >       rval = mt_op(contextp->dc_fd, MTREW, 0);
-> > > -     for (try = 1 ; ; try++) {
-> > > +     for (try = 1;; try++) {
-> > >               if (rval) {
-> > >                       sleep(1);
-> > >                       rval = mt_op(contextp->dc_fd, MTREW, 0);
-> > ...
-> > > diff --git a/dump/content.c b/dump/content.c
-> > > index 43f51db..72ff7c4 100644
-> > > --- a/dump/content.c
-> > > +++ b/dump/content.c
-> > ...
-> > > @@ -5240,7 +5240,7 @@ dump_session_inv(drive_t *drivep,
-> > >        * until we are successful or until the media layer
-> > >        * tells us to give up.
-> > >        */
-> > > -     for (done = BOOL_FALSE ; ! done ;) {
-> > > +     for (done = BOOL_FALSE; ! done;) {
-> >
-> > Perhaps we should remove the space after the ! here and below as well.
-> 
-> Sure. I have a few more patches like this, fixing these one-space
-> issues. I just split it to make for smaller, easier-to-review patches.
-> E.g. spaces around pointer dereferences, or adding a space after a
-> comma where it is missing.
-> 
-> >
-> > >               uuid_t mediaid;
-> > >               char medialabel[GLOBAL_HDR_STRING_SZ];
-> > >               bool_t partial;
-> > > @@ -5390,7 +5390,7 @@ dump_terminator(drive_t *drivep, context_t *contextp, media_hdr_t *mwhdrp)
-> > >        * until we are successful or until the media layer
-> > >        * tells us to give up.
-> > >        */
-> > > -     for (done = BOOL_FALSE ; ! done ;) {
-> > > +     for (done = BOOL_FALSE; ! done;) {
-> > >               bool_t partial;
-> > >               rv_t rv;
-> > >
-> > ...
-> > > diff --git a/inventory/inv_stobj.c b/inventory/inv_stobj.c
-> > > index 74893d3..6339e4e 100644
-> > > --- a/inventory/inv_stobj.c
-> > > +++ b/inventory/inv_stobj.c
-> > > @@ -909,7 +909,7 @@ stobj_getsession_bylabel(
-> > >  bool_t
-> > >  stobj_delete_mobj(int fd,
-> > >                 invt_seshdr_t *hdr,
-> > > -               void *arg ,
-> > > +               void *arg,
-> > >                 void **buf)
-> > >  {
-> > >       /* XXX fd needs to be locked EX, not SH */
-> > > @@ -977,7 +977,7 @@ stobj_delete_mobj(int fd,
-> > >                                      mfiles[j-1].mf_nextmf = mf->mf_nextmf;
-> > >
-> > >                               if (j == nmfiles - 1)
-> > > -                                    strms[i].st_lastmfile = ;
-> > > +                                    strms[i].st_lastmfile =;
-> >
-> > The above code appears to be commented out..?
-> 
-> Yes, it is so. I'm trying to have the patches reproducible, without
-> manual changes (the idea is that it could be used for enforcing coding
-> style in xfsprogs as a whole) and thought this special case harmless.
-> But if it's an issue, I can exclude it.
-> 
+> It's relatively new, and directly tailored to the needs of caching
+> the XFS extent tree - it's not really a generic btree in that it's
+> record store format is the XFS on-disk extent record. i.e. it
+> only stores 54 bits of start offset and 21 bits of length in it's 16
+> byte records, and the rest of the space is for the record data.
 
-Ok, just making sure that was intentional. That sounds reasonable enough
-to me.
+SO now I have a mostly working OLC btree based on this tree which is
+plumbed into xfsprogs userspace and some testing code. I think I can
+say now that the code will actually work, and it /should/ scale
+better than a rwsem.
 
-Brian
+The userspace test harness that I have ran a "thread profile" to
+indicated scalability. Basically it ran each thread in a different
+offset range and locked a hundred ranges and then unlocked them, and
+then looped over this. The btree is a single level for the first 14
+locks, 2-level for up to 210 locks, and 3-level for up to 3150
+locks. Hence most of this testing results in the btree being 2-3
+levels and so largely removes the global root node lock as a point
+of contention. It's "best case" for concurrency for an OLC btree.
 
-> >
-> > ...
-> > > diff --git a/restore/tree.c b/restore/tree.c
-> > > index 3f3084e..9806777 100644
-> > > --- a/restore/tree.c
-> > > +++ b/restore/tree.c
-> > ...
-> > > @@ -4821,7 +4821,7 @@ fix_quoted_span(char *string, char *liter)
-> > >       /* scan for the next non-literal quote, marking all
-> > >        * characters in between as literal
-> > >        */
-> > > -     for (s = string, l = liter ; *s && (*s != '\"' || *l) ; s++, l++) {
-> > > +     for (s = string, l = liter ; *s && (*s != '\"' || *l); s++, l++) {
-> >
-> > Missed one here:                  ^
-> 
-> Thanks for noticing.
-> 
-> Jan
-> >
-> > Brian
-> >
-> > >               *l = (char)1;
-> > >       }
-> > >
-> > > @@ -4839,7 +4839,7 @@ collapse_white(char *string, char *liter)
-> > >       size_t cnt;
-> > >
-> > >       cnt = 0;
-> > > -     for (s = string, l = liter ; is_white(*s) && ! *l ; s++, l++) {
-> > > +     for (s = string, l = liter; is_white(*s) && ! *l; s++, l++) {
-> > >               cnt++;
-> > >       }
-> > >
-> > > @@ -4856,7 +4856,7 @@ distance_to_space(char *s, char *l)
-> > >  {
-> > >       size_t cnt;
-> > >
-> > > -     for (cnt = 0 ; *s && (! is_white(*s) || *l) ; s++, l++) {
-> > > +     for (cnt = 0; *s && (! is_white(*s) || *l); s++, l++) {
-> > >               cnt++;
-> > >       }
-> > >
-> > > --
-> > > 2.21.0
-> > >
-> 
-> 
-> 
-> -- 
-> Jan Tulak
+On a 16p machine:
+
+		     Range lock/unlock ops/s
+threads		mutex btree		OLC btree
+  1		  5239442		  949487
+  2		  1014466		 1398539
+  4		   985940		 2405275
+  8		   733195		 3288435
+  16		   653429		 2809225
+
+When looking at these numbers, remember that the mutex btree kernel
+range lock performed a lot better than the interval tree range lock,
+and they were only ~30% down on an rwsem. The mutex btree code shows
+cache residency effects for the single threaded load, hence it looks
+much faster than it is for occasional and multithreaded access.
+
+However, at 2 threads (where hot CPU caches don't affect the
+performance), the OLC btree is 40% faster, and at 8 threads it is
+4.5x faster than the mutex btree. The OLC btree starts slowing down
+at 16 threads, largely because the tree itself doesn't have enough
+depth to provide the interior nodes to scale to higher concurrency
+levels without contention, but it's still running at 4.5x faster
+than the mutex btree....
+
+The best part is when I run worse case threaded workloads on the
+OLC btree. If I run the same 100-lock loops, but this time change
+the offsets of each thread so they interleave into adjacent records
+in the btree (i.e. every thread touches every leaf), then the
+performance is still pretty damn good:
+
+		     Range lock/unlock ops/s
+threads		Worst Case		Best Case
+  1		  1045991		  949487
+  2		  1530212		 1398539
+  4		  1147099		 2405275
+  8		  1602114		 3288435
+  16		  1731890		 2809225
+
+IOWs, performance is down and somewhat variable around tree
+height changes (4 threads straddles the 2-3 level tree height
+threshold), but it's still a massive improvement on the mutex_btree
+and it's not going backwards as threads are added.
+
+Concept proven.
+
+Next steps are:
+
+	- separate the OLC btree from the XFS iext btree
+	  implementation. It will still have a similar interface
+	  (i.e. can't manipulate the btree records directly), but
+	  there's sufficient difference in structure for them to be
+	  separate implementations.
+	- expand records out to full 64bit extents. The iext tree
+	  memory usage constraints no longer apply, so the record
+	  size can go up a little bit.
+	- work out whether RCU read locking and kfree_rcu() will
+	  work with the requirement to do memory allocation while
+	  holding rcu_read_lock(). Alternative is an internal
+	  garbage collector mechanism, kinda like I've hacked up to
+	  simulate kfree_rcu() in userspace.
+	- fix all the little bugs that still exist in the code.
+	- Think about structural optimisations like parent pointers
+	  to avoid costly path walks to find parents for 
+	  modifications.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
