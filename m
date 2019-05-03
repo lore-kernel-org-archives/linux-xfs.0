@@ -1,87 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60204 "EHLO mail.kernel.org"
+Received: from sandeen.net ([63.231.237.45]:49476 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726282AbfEBLpT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 May 2019 07:45:19 -0400
-Date: Thu, 2 May 2019 13:45:16 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: xfs: Assertion failed in xfs_ag_resv_init()
-Message-ID: <20190502114516.GC21563@kroah.com>
-References: <20190430190525.GB2780@tuebingen.mpg.de>
- <20190430191825.GF5217@magnolia>
- <20190430210724.GD2780@tuebingen.mpg.de>
- <20190501153643.GL5207@magnolia>
- <20190501165933.GF2780@tuebingen.mpg.de>
- <20190501171529.GB28949@kroah.com>
- <20190501175129.GH2780@tuebingen.mpg.de>
- <20190501192822.GM5207@magnolia>
- <20190501221107.GI29573@dread.disaster.area>
- <20190502114440.GB21563@kroah.com>
+        id S1726495AbfECPzG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 May 2019 11:55:06 -0400
+Subject: Re: [PATCH] mkfs: enable reflink and rmap by default
+References: <20190503005717.GO5207@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b406bac9-1899-1714-a14f-472fb4bbaffd@sandeen.net>
+Date: Fri, 3 May 2019 10:55:05 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190502114440.GB21563@kroah.com>
+In-Reply-To: <20190503005717.GO5207@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Sasha Levin <sashal@kernel.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Andre Noll <maan@tuebingen.mpg.de>, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Thu, May 02, 2019 at 01:44:40PM +0200, Greg Kroah-Hartman wrote:
-> On Thu, May 02, 2019 at 08:11:07AM +1000, Dave Chinner wrote:
-> > On Wed, May 01, 2019 at 12:28:22PM -0700, Darrick J. Wong wrote:
-> > > On Wed, May 01, 2019 at 07:51:29PM +0200, Andre Noll wrote:
-> > > > On Wed, May 01, 19:15, Greg Kroah-Hartman wrote
-> > > > > On Wed, May 01, 2019 at 06:59:33PM +0200, Andre Noll wrote:
-> > > > > > On Wed, May 01, 08:36, Darrick J. Wong wrote
-> > > > > > > > > You could send this patch to the stable list, but my guess is that
-> > > > > > > > > they'd prefer a straight backport of all three commits...
-> > > > > > > > 
-> > > > > > > > Hm, cherry-picking the first commit onto 4.9,171 already gives
-> > > > > > > > four conflicting files. The conflicts are trivial to resolve (git
-> > > > > > > > cherry-pick -xX theirs 21ec54168b36 does it), but that doesn't
-> > > > > > > > compile because xfs_btree_query_all() is missing.  So e9a2599a249ed
-> > > > > > > > (xfs: create a function to query all records in a btree) is needed as
-> > > > > > > > well. But then, applying 86210fbebae (xfs: move various type verifiers
-> > > > > > > > to common file) on top of that gives non-trivial conflicts.
-> > > > > > > 
-> > > > > > > Ah, I suspected that might happen.  Backports are hard. :(
-> > > > > > > 
-> > > > > > > I suppose one saving grace of the patch you sent is that it'll likely
-> > > > > > > break the build if anyone ever /does/ attempt a backport of those first
-> > > > > > > two commits.  Perhaps that is the most practical way forward.
-> > > > > > > 
-> > > > > > > > So, for automatic backporting we would need to cherry-pick even more,
-> > > > > > > > and each backported commit should be tested of course. Given this, do
-> > > > > > > > you still think Greg prefers a rather large set of straight backports
-> > > > > > > > over the simple commit that just pulls in the missing function?
-> > > > > > > 
-> > > > > > > I think you'd have to ask him that, if you decide not to send
-> > > > > > > yesterday's patch.
-> > > > > > 
-> > > > > > Let's try. I've added a sentence to the commit message which explains
-> > > > > > why a straight backport is not practical, and how to proceed if anyone
-> > > > > > wants to backport the earlier commits.
-> > > > > > 
-> > > > > > Greg: Under the given circumstances, would you be willing to accept
-> > > > > > the patch below for 4.9?
-> > > > > 
-> > > > > If the xfs maintainers say this is ok, it is fine with me.
-> > > > 
-> > > > Darrick said, he's in favor of the patch, so I guess I can add his
-> > > > Acked-by. Would you also like to see the ack from Dave (the author
-> > > > of the original commit)?
-> > > 
-> > > FWIW it seems fine to me, though Dave [cc'd] might have stronger opinions...
-> > 
-> > Only thing I care about is whether it is QA'd properly. Greg, Sasha,
-> > is the 4.9 stable kernel having fstests run on it as part of the
-> > release gating?
+On 5/2/19 7:57 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I do not know about fstests, I know Linaro was looking into doing it as
-> part of the test suites that they verify before I do a release.  But I
-> doubt it's run on an XFS filesystem.
-> 
-> Sasha was doing some work in this area though, Sasha?
+> Enable reflink and reverse mapping by default.
 
-[actually adding Sasha to the email thread this time...]
+Soooo until now, I thought I had understood that rmap was unlikely
+to be default ever, due to performance impacts.  Is this no longer the case?
+Of course I can't find any emails or IRC logs to indicate I didn't
+just dream this up...
+
+Also, at this point, remind me again what uses rmap and why it should
+be enabled now?
+
+-Eric
+
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  mkfs/xfs_mkfs.c |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 0862621a..3874f7dd 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2021,14 +2021,14 @@ _("sparse inodes not supported without CRC support\n"));
+>  		}
+>  		cli->sb_feat.spinodes = false;
+>  
+> -		if (cli->sb_feat.rmapbt) {
+> +		if (cli->sb_feat.rmapbt && cli_opt_set(&mopts, M_RMAPBT)) {
+>  			fprintf(stderr,
+>  _("rmapbt not supported without CRC support\n"));
+>  			usage();
+>  		}
+>  		cli->sb_feat.rmapbt = false;
+>  
+> -		if (cli->sb_feat.reflink) {
+> +		if (cli->sb_feat.reflink && cli_opt_set(&mopts, M_REFLINK)) {
+>  			fprintf(stderr,
+>  _("reflink not supported without CRC support\n"));
+>  			usage();
+> @@ -3934,8 +3934,8 @@ main(
+>  			.dirftype = true,
+>  			.finobt = true,
+>  			.spinodes = true,
+> -			.rmapbt = false,
+> -			.reflink = false,
+> +			.rmapbt = true,
+> +			.reflink = true,
+>  			.parent_pointers = false,
+>  			.nodalign = false,
+>  			.nortalign = false,
+> 
