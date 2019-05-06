@@ -1,74 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49476 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726495AbfECPzG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 3 May 2019 11:55:06 -0400
-Subject: Re: [PATCH] mkfs: enable reflink and rmap by default
-References: <20190503005717.GO5207@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b406bac9-1899-1714-a14f-472fb4bbaffd@sandeen.net>
-Date: Fri, 3 May 2019 10:55:05 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:58221 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726063AbfEFWvF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 May 2019 18:51:05 -0400
+Date: Tue, 7 May 2019 08:51:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] db/malloc: Use posix_memalign instead of deprecated
+ valloc
+Message-ID: <20190506225101.GN29573@dread.disaster.area>
+References: <20190506210326.29581-1-rosenp@gmail.com>
+ <b85f5489-70ed-3145-3989-592ee1de3899@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20190503005717.GO5207@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b85f5489-70ed-3145-3989-592ee1de3899@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Rosen Penev <rosenp@gmail.com>, linux-xfs@vger.kernel.org
 
-On 5/2/19 7:57 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, May 06, 2019 at 05:20:11PM -0500, Eric Sandeen wrote:
 > 
-> Enable reflink and reverse mapping by default.
-
-Soooo until now, I thought I had understood that rmap was unlikely
-to be default ever, due to performance impacts.  Is this no longer the case?
-Of course I can't find any emails or IRC logs to indicate I didn't
-just dream this up...
-
-Also, at this point, remind me again what uses rmap and why it should
-be enabled now?
-
--Eric
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  mkfs/xfs_mkfs.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 0862621a..3874f7dd 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2021,14 +2021,14 @@ _("sparse inodes not supported without CRC support\n"));
->  		}
->  		cli->sb_feat.spinodes = false;
->  
-> -		if (cli->sb_feat.rmapbt) {
-> +		if (cli->sb_feat.rmapbt && cli_opt_set(&mopts, M_RMAPBT)) {
->  			fprintf(stderr,
->  _("rmapbt not supported without CRC support\n"));
->  			usage();
->  		}
->  		cli->sb_feat.rmapbt = false;
->  
-> -		if (cli->sb_feat.reflink) {
-> +		if (cli->sb_feat.reflink && cli_opt_set(&mopts, M_REFLINK)) {
->  			fprintf(stderr,
->  _("reflink not supported without CRC support\n"));
->  			usage();
-> @@ -3934,8 +3934,8 @@ main(
->  			.dirftype = true,
->  			.finobt = true,
->  			.spinodes = true,
-> -			.rmapbt = false,
-> -			.reflink = false,
-> +			.rmapbt = true,
-> +			.reflink = true,
->  			.parent_pointers = false,
->  			.nodalign = false,
->  			.nortalign = false,
+> On 5/6/19 4:03 PM, Rosen Penev wrote:
+> > valloc is not available with uClibc-ng as well as being deprecated, which
+> > causes compilation errors. aligned_alloc is not available before C11 so
+> > used posix_memalign.'
+> > 
+> > Signed-off-by: Rosen Penev <rosenp@gmail.com>
+> > ---
+> >  db/malloc.c | 3 +--
+> >  1 file changed, 1 insertion(+), 2 deletions(-)
+> > 
+> > diff --git a/db/malloc.c b/db/malloc.c
+> > index 77b3e022..38fe0b05 100644
+> > --- a/db/malloc.c
+> > +++ b/db/malloc.c
+> > @@ -44,8 +44,7 @@ xmalloc(
+> >  {
+> >  	void	*ptr;
+> >  
+> > -	ptr = valloc(size);
+> > -	if (ptr)
+> > +	if(!posix_memalign(&ptr, sysconf(_SC_PAGESIZE), size))
 > 
+> 
+> I'll stick a space after the 'if' but otherwise, seems fine, thanks.
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+Can we just get rid of db/malloc.[ch]? They are just a set
+of wrappers that exit() when malloc fails, largely used by the
+deprecated xfs_check functionality we still have hidden inside
+xfs_db. Be a useful code self-documentation exercise to get rid
+of them to indicate that the callers don't actually handle malloc
+failures at all....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
