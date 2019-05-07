@@ -1,35 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f49.google.com ([209.85.167.49]:39945 "EHLO
-        mail-lf1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726415AbfEGTYq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 May 2019 15:24:46 -0400
-Received: by mail-lf1-f49.google.com with SMTP id o16so12692350lfl.7
-        for <linux-xfs@vger.kernel.org>; Tue, 07 May 2019 12:24:45 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190426050039.17460-1-pagupta@redhat.com> <20190426050039.17460-5-pagupta@redhat.com>
-In-Reply-To: <20190426050039.17460-5-pagupta@redhat.com>
-From: =?UTF-8?Q?Jakub_Staro=C5=84?= <jstaron@google.com>
-Date: Tue, 7 May 2019 12:24:32 -0700
-Message-ID: <CA+nGSuOgCAoS4MkbuSL2q5Gyi4jG2oyJqLu_sDgexm5fSBmPLQ@mail.gmail.com>
-Subject: Re: [Qemu-devel] [PATCH v7 4/6] dax: check synchronous mapping is supported
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.kernel.org ([198.145.29.99]:53074 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726706AbfEGTzP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 May 2019 15:55:15 -0400
+Subject: Re: [GIT PULL] xfs: new features for 5.2
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20190507154635.GT5207@magnolia>
+References: <20190507154635.GT5207@magnolia>
+Message-Id: <155725891523.4809.3872123512989253384.pr-tracker-bot@kernel.org>
+Date: Tue, 07 May 2019 19:55:15 +0000
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>
-Cc: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, jack@suse.cz, mst@redhat.com, jasowang@redhat.com, david@fromorbit.com, lcapitulino@redhat.com, adilger.kernel@dilger.ca, zwisler@kernel.org, aarcange@redhat.com, dave.jiang@intel.com, darrick.wong@oracle.com, vishal.l.verma@intel.com, david@redhat.com, willy@infradead.org, hch@infradead.org, jmoyer@redhat.com, nilal@redhat.com, lenb@kernel.org, kilobyte@angband.pl, riel@surriel.com, yuval.shaia@oracle.com, stefanha@redhat.com, pbonzini@redhat.com, dan.j.williams@intel.com, kwolf@redhat.com, tytso@mit.edu, xiaoguangrong.eric@gmail.com, cohuck@redhat.com, rjw@rjwysocki.net, imammedo@redhat.com, Stephen Barber <smbarber@google.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: torvalds@linux-foundation.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
 
-From: Pankaj Gupta <pagupta@redhat.com>
-Date: Thu, Apr 25, 2019 at 10:00 PM
+The pull request you sent on Tue, 7 May 2019 08:46:35 -0700:
 
-> +static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
-> +                               struct dax_device *dax_dev)
-> +{
-> +       return !(vma->flags & VM_SYNC);
-> +}
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.2-merge-4
 
-Shouldn't it be rather `return !(vma->vm_flags & VM_SYNC);`? There is
-no field named `flags` in `struct vm_area_struct`.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/aa26690fab1380735442e027ce4b17849a24493f
 
-Thank you,
-Jakub
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
