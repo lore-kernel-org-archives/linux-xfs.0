@@ -1,271 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42730 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727828AbfEJVlE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 May 2019 17:41:04 -0400
-Subject: Re: [PATCH 05/11] libxfs: de-libxfsify core(-ish) functions.
-References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
- <1557519510-10602-6-git-send-email-sandeen@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b78a858b-8be1-ced1-0f16-f4a916a2e2ca@sandeen.net>
-Date: Fri, 10 May 2019 16:41:03 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:59552 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726000AbfEGPr6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 May 2019 11:47:58 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x47FXkLi099171
+        for <linux-xfs@vger.kernel.org>; Tue, 7 May 2019 15:47:57 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2s94bfxawt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 07 May 2019 15:47:57 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x47Fl2sC040082
+        for <linux-xfs@vger.kernel.org>; Tue, 7 May 2019 15:47:56 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2s9ayey7my-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 07 May 2019 15:47:56 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x47FltDq010604
+        for <linux-xfs@vger.kernel.org>; Tue, 7 May 2019 15:47:55 GMT
+Date: Tue, 7 May 2019 08:47:54 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: don't reserve per-AG space for an internal log
+Message-ID: <20190507154754.GU5207@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <1557519510-10602-6-git-send-email-sandeen@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-On 5/10/19 3:18 PM, Eric Sandeen wrote:
-> There are a ton of "libxfs_" prefixed functions in libxfs/trans.c which
-> are only called internally by code in libxfs/ - As I understand it,
-> these should probably be just "xfs_" functions, and indeed many
-> of them have counterparts in the kernel libxfs/ code.  This is one
-> small step towards better sync-up of some of the misc libxfs/*
-> transaction code with kernel code.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I should have changed internal callers too, will resend after other
-review.
+It turns out that the log can consume nearly all the space in an AG, and
+when this happens this it's possible that there will be less free space
+in the AG than the reservation would try to hide.  On a debug kernel
+this can trigger an ASSERT in xfs/250:
 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
->  libxfs/libxfs_api_defs.h |  1 +
->  libxfs/trans.c           | 48 ++++++++++++++++++++++++------------------------
->  2 files changed, 25 insertions(+), 24 deletions(-)
-> 
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index 1150ec9..64030af 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -17,6 +17,7 @@
->  #define xfs_highbit64			libxfs_highbit64
->  
->  #define xfs_trans_alloc			libxfs_trans_alloc
-> +#define xfs_trans_alloc_rollable	libxfs_trans_alloc_rollable
->  #define xfs_trans_alloc_empty		libxfs_trans_alloc_empty
->  #define xfs_trans_add_item		libxfs_trans_add_item
->  #define xfs_trans_bhold			libxfs_trans_bhold
-> diff --git a/libxfs/trans.c b/libxfs/trans.c
-> index 581ece3..85c3a50 100644
-> --- a/libxfs/trans.c
-> +++ b/libxfs/trans.c
-> @@ -36,7 +36,7 @@ kmem_zone_t	*xfs_trans_zone;
->   * in the mount structure.
->   */
->  void
-> -libxfs_trans_init(
-> +xfs_trans_init(
->  	struct xfs_mount	*mp)
->  {
->  	xfs_trans_resv_calc(mp, &mp->m_resv);
-> @@ -46,7 +46,7 @@ libxfs_trans_init(
->   * Add the given log item to the transaction's list of log items.
->   */
->  void
-> -libxfs_trans_add_item(
-> +xfs_trans_add_item(
->  	struct xfs_trans	*tp,
->  	struct xfs_log_item	*lip)
->  {
-> @@ -62,7 +62,7 @@ libxfs_trans_add_item(
->   * Unlink and free the given descriptor.
->   */
->  void
-> -libxfs_trans_del_item(
-> +xfs_trans_del_item(
->  	struct xfs_log_item	*lip)
->  {
->  	clear_bit(XFS_LI_DIRTY, &lip->li_flags);
-> @@ -77,7 +77,7 @@ libxfs_trans_del_item(
->   * chunk we've been working on and get a new transaction to continue.
->   */
->  int
-> -libxfs_trans_roll(
-> +xfs_trans_roll(
->  	struct xfs_trans	**tpp)
->  {
->  	struct xfs_trans	*trans = *tpp;
-> @@ -245,7 +245,7 @@ undo_blocks:
->  }
->  
->  int
-> -libxfs_trans_alloc(
-> +xfs_trans_alloc(
->  	struct xfs_mount	*mp,
->  	struct xfs_trans_res	*resp,
->  	unsigned int		blocks,
-> @@ -289,7 +289,7 @@ libxfs_trans_alloc(
->   * without any dirty data.
->   */
->  int
-> -libxfs_trans_alloc_empty(
-> +xfs_trans_alloc_empty(
->  	struct xfs_mount		*mp,
->  	struct xfs_trans		**tpp)
->  {
-> @@ -304,7 +304,7 @@ libxfs_trans_alloc_empty(
->   * permanent log reservation flag to avoid blowing asserts.
->   */
->  int
-> -libxfs_trans_alloc_rollable(
-> +xfs_trans_alloc_rollable(
->  	struct xfs_mount	*mp,
->  	unsigned int		blocks,
->  	struct xfs_trans	**tpp)
-> @@ -314,7 +314,7 @@ libxfs_trans_alloc_rollable(
->  }
->  
->  void
-> -libxfs_trans_cancel(
-> +xfs_trans_cancel(
->  	struct xfs_trans	*tp)
->  {
->  #ifdef XACT_DEBUG
-> @@ -337,7 +337,7 @@ out:
->  }
->  
->  void
-> -libxfs_trans_ijoin(
-> +xfs_trans_ijoin(
->  	xfs_trans_t		*tp,
->  	xfs_inode_t		*ip,
->  	uint			lock_flags)
-> @@ -360,7 +360,7 @@ libxfs_trans_ijoin(
->  }
->  
->  void
-> -libxfs_trans_ijoin_ref(
-> +xfs_trans_ijoin_ref(
->  	xfs_trans_t		*tp,
->  	xfs_inode_t		*ip,
->  	int			lock_flags)
-> @@ -375,7 +375,7 @@ libxfs_trans_ijoin_ref(
->  }
->  
->  void
-> -libxfs_trans_inode_alloc_buf(
-> +xfs_trans_inode_alloc_buf(
->  	xfs_trans_t		*tp,
->  	xfs_buf_t		*bp)
->  {
-> @@ -422,7 +422,7 @@ xfs_trans_log_inode(
->  }
->  
->  int
-> -libxfs_trans_roll_inode(
-> +xfs_trans_roll_inode(
->  	struct xfs_trans	**tpp,
->  	struct xfs_inode	*ip)
->  {
-> @@ -440,7 +440,7 @@ libxfs_trans_roll_inode(
->   * Mark a buffer dirty in the transaction.
->   */
->  void
-> -libxfs_trans_dirty_buf(
-> +xfs_trans_dirty_buf(
->  	struct xfs_trans	*tp,
->  	struct xfs_buf		*bp)
->  {
-> @@ -466,7 +466,7 @@ libxfs_trans_dirty_buf(
->   * value of b_blkno.
->   */
->  void
-> -libxfs_trans_log_buf(
-> +xfs_trans_log_buf(
->  	struct xfs_trans	*tp,
->  	struct xfs_buf		*bp,
->  	uint			first,
-> @@ -488,7 +488,7 @@ libxfs_trans_log_buf(
->   * If the buffer is already dirty, trigger the "already logged" return condition.
->   */
->  bool
-> -libxfs_trans_ordered_buf(
-> +xfs_trans_ordered_buf(
->  	struct xfs_trans	*tp,
->  	struct xfs_buf		*bp)
->  {
-> @@ -511,7 +511,7 @@ xfs_buf_item_put(
->  }
->  
->  void
-> -libxfs_trans_brelse(
-> +xfs_trans_brelse(
->  	xfs_trans_t		*tp,
->  	xfs_buf_t		*bp)
->  {
-> @@ -546,7 +546,7 @@ libxfs_trans_brelse(
->  }
->  
->  void
-> -libxfs_trans_binval(
-> +xfs_trans_binval(
->  	xfs_trans_t		*tp,
->  	xfs_buf_t		*bp)
->  {
-> @@ -571,7 +571,7 @@ libxfs_trans_binval(
->  }
->  
->  void
-> -libxfs_trans_bjoin(
-> +xfs_trans_bjoin(
->  	xfs_trans_t		*tp,
->  	xfs_buf_t		*bp)
->  {
-> @@ -589,7 +589,7 @@ libxfs_trans_bjoin(
->  }
->  
->  void
-> -libxfs_trans_bhold(
-> +xfs_trans_bhold(
->  	xfs_trans_t		*tp,
->  	xfs_buf_t		*bp)
->  {
-> @@ -605,7 +605,7 @@ libxfs_trans_bhold(
->  }
->  
->  xfs_buf_t *
-> -libxfs_trans_get_buf_map(
-> +xfs_trans_get_buf_map(
->  	xfs_trans_t		*tp,
->  	struct xfs_buftarg	*btp,
->  	struct xfs_buf_map	*map,
-> @@ -641,7 +641,7 @@ libxfs_trans_get_buf_map(
->  }
->  
->  xfs_buf_t *
-> -libxfs_trans_getsb(
-> +xfs_trans_getsb(
->  	xfs_trans_t		*tp,
->  	xfs_mount_t		*mp,
->  	int			flags)
-> @@ -675,7 +675,7 @@ libxfs_trans_getsb(
->  }
->  
->  int
-> -libxfs_trans_read_buf_map(
-> +xfs_trans_read_buf_map(
->  	xfs_mount_t		*mp,
->  	xfs_trans_t		*tp,
->  	struct xfs_buftarg	*btp,
-> @@ -743,7 +743,7 @@ out_relse:
->   * Originally derived from xfs_trans_mod_sb().
->   */
->  void
-> -libxfs_trans_mod_sb(
-> +xfs_trans_mod_sb(
->  	xfs_trans_t		*tp,
->  	uint			field,
->  	long			delta)
-> @@ -1004,7 +1004,7 @@ out_unreserve:
->  }
->  
->  int
-> -libxfs_trans_commit(
-> +xfs_trans_commit(
->  	struct xfs_trans	*tp)
->  {
->  	return __xfs_trans_commit(tp, false);
-> 
+XFS: Assertion failed: xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved + xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <= pag->pagf_freeblks + pag->pagf_flcount, file: fs/xfs/libxfs/xfs_ag_resv.c, line: 319
+
+The log is permanently allocated, so we know we're never going to have
+to expand the btrees to hold any records associated with the log space.
+We therefore can treat the space as if it doesn't exist.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |    9 +++++++++
+ fs/xfs/libxfs/xfs_refcount_btree.c |    9 +++++++++
+ fs/xfs/libxfs/xfs_rmap_btree.c     |    9 +++++++++
+ 3 files changed, 27 insertions(+)
+
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 1080381ff243..bc2dfacd2f4a 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -549,6 +549,15 @@ xfs_inobt_max_size(
+ 	if (mp->m_inobt_mxr[0] == 0)
+ 		return 0;
+ 
++	/*
++	 * The log is permanently allocated, so the space it occupies will
++	 * never be available for the kinds of things that would require btree
++	 * expansion.  We therefore can pretend the space isn't there.
++	 */
++	if (mp->m_sb.sb_logstart &&
++	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == agno)
++		agblocks -= mp->m_sb.sb_logblocks;
++
+ 	return xfs_btree_calc_size(mp->m_inobt_mnr,
+ 				(uint64_t)agblocks * mp->m_sb.sb_inopblock /
+ 					XFS_INODES_PER_CHUNK);
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index 6f47ab876d90..5d9de9b21726 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -427,6 +427,15 @@ xfs_refcountbt_calc_reserves(
+ 	tree_len = be32_to_cpu(agf->agf_refcount_blocks);
+ 	xfs_trans_brelse(tp, agbp);
+ 
++	/*
++	 * The log is permanently allocated, so the space it occupies will
++	 * never be available for the kinds of things that would require btree
++	 * expansion.  We therefore can pretend the space isn't there.
++	 */
++	if (mp->m_sb.sb_logstart &&
++	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == agno)
++		agblocks -= mp->m_sb.sb_logblocks;
++
+ 	*ask += xfs_refcountbt_max_size(mp, agblocks);
+ 	*used += tree_len;
+ 
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 5738e11055e6..5d1f8884c888 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -578,6 +578,15 @@ xfs_rmapbt_calc_reserves(
+ 	tree_len = be32_to_cpu(agf->agf_rmap_blocks);
+ 	xfs_trans_brelse(tp, agbp);
+ 
++	/*
++	 * The log is permanently allocated, so the space it occupies will
++	 * never be available for the kinds of things that would require btree
++	 * expansion.  We therefore can pretend the space isn't there.
++	 */
++	if (mp->m_sb.sb_logstart &&
++	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == agno)
++		agblocks -= mp->m_sb.sb_logblocks;
++
+ 	/* Reserve 1% of the AG or enough for 1 block per record. */
+ 	*ask += max(agblocks / 100, xfs_rmapbt_max_size(mp, agblocks));
+ 	*used += tree_len;
