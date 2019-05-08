@@ -1,72 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:47158 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725889AbfEHQkG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 May 2019 12:40:06 -0400
-From: Chris Mason <clm@fb.com>
-Subject: Re: [PATCH] fs,xfs: fix missed wakeup on l_flush_wait
-Date: Wed, 8 May 2019 16:39:41 +0000
-Message-ID: <605BF0CA-EB32-46A5-8045-2BAB7EB0BD66@fb.com>
-References: <20190507130528.1d3d471b@imladris.surriel.com>
- <20190507212213.GO29573@dread.disaster.area>
-In-Reply-To: <20190507212213.GO29573@dread.disaster.area>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Received: from aserp2130.oracle.com ([141.146.126.79]:33350 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726709AbfEHUM6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 May 2019 16:12:58 -0400
+Date: Wed, 8 May 2019 13:10:33 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: short circuit xfs_get_acl() if no acl is possible
+Message-ID: <20190508201033.GW5207@magnolia>
+References: <35128e32-d69b-316e-c8d6-8f109646390d@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <35128e32-d69b-316e-c8d6-8f109646390d@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Rik van Riel <riel@surriel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <dchinner@redhat.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, David Valin <dvalin@redhat.com>
 
-T24gNyBNYXkgMjAxOSwgYXQgMTc6MjIsIERhdmUgQ2hpbm5lciB3cm90ZToNCg0KPiBPbiBUdWUs
-IE1heSAwNywgMjAxOSBhdCAwMTowNToyOFBNIC0wNDAwLCBSaWsgdmFuIFJpZWwgd3JvdGU6DQo+
-PiBUaGUgY29kZSBpbiB4bG9nX3dhaXQgdXNlcyB0aGUgc3BpbmxvY2sgdG8gbWFrZSBhZGRpbmcg
-dGhlIHRhc2sgdG8NCj4+IHRoZSB3YWl0IHF1ZXVlLCBhbmQgc2V0dGluZyB0aGUgdGFzayBzdGF0
-ZSB0byBVTklOVEVSUlVQVElCTEUgYXRvbWljDQo+PiB3aXRoIHJlc3BlY3QgdG8gdGhlIHdha2Vy
-Lg0KPj4NCj4+IERvaW5nIHRoZSB3YWtldXAgYWZ0ZXIgcmVsZWFzaW5nIHRoZSBzcGlubG9jayBv
-cGVucyB1cCB0aGUgZm9sbG93aW5nDQo+PiByYWNlIGNvbmRpdGlvbjoNCj4+DQo+PiAtIGFkZCB0
-YXNrIHRvIHdhaXQgcXVldWUNCj4+DQo+PiAtICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICB3YWtlIHVwIHRhc2sNCj4+DQo+PiAtIHNldCB0YXNrIHN0YXRlIHRvIFVOSU5URVJS
-VVBUSUJMRQ0KPj4NCj4+IFNpbXBseSBtb3ZpbmcgdGhlIHNwaW5fdW5sb2NrIHRvIGFmdGVyIHRo
-ZSB3YWtlX3VwX2FsbCByZXN1bHRzDQo+PiBpbiB0aGUgd2FrZXIgbm90IGJlaW5nIGFibGUgdG8g
-c2VlIGEgdGFzayBvbiB0aGUgd2FpdHF1ZXVlIGJlZm9yZQ0KPj4gaXQgaGFzIHNldCBpdHMgc3Rh
-dGUgdG8gVU5JTlRFUlJVUFRJQkxFLg0KPg0KPiBZdXAsIHNlZW1zIGxpa2UgYW4gaXNzdWUuIEdv
-b2QgZmluZCwgUmlrLg0KPg0KPiBTbywgd2hhdCBwcm9ibGVtIGlzIHRoaXMgYWN0dWFsbHkgZml4
-aW5nPyBXYXMgaXQgbm90aWNlZCBieQ0KPiBpbnNwZWN0aW9uLCBvciBpcyBpdCBhY3R1YWxseSBt
-YW5pZmVzdGluZyBvbiBwcm9kdWN0aW9uIG1hY2hpbmVzPw0KPiBJZiBpdCBpcyBtYW5pZmVzdGlu
-ZyBJUkwsIHdoYXQgYXJlIHRoZSBzeW1wdG9tcyAoZS5nLiBoYW5nIHJ1bm5pbmcNCj4gb3V0IG9m
-IGxvZyBzcGFjZT8pIGFuZCBkbyB5b3UgaGF2ZSBhIHRlc3QgY2FzZSBvciBhbnkgd2F5IHRvDQo+
-IGV4ZXJjaXNlIGl0IGVhc2lseT8NCg0KVGhlIHN0ZXBzIHRvIHJlcHJvZHVjZSBhcmUgc2VtaS1j
-b21wbGljYXRlZCwgdGhleSBjcmVhdGUgYSBidW5jaCBvZiANCmZpbGVzLCBkbyBzdHVmZiwgYW5k
-IHRoZW4gZGVsZXRlIGFsbCB0aGUgZmlsZXMgaW4gYSBsb29wLiAgSSB0aGluayB0aGV5IA0Kc2hv
-dGd1bm5lZCBpdCBhY3Jvc3MgNTAwIG9yIHNvIG1hY2hpbmVzIHRvIHRyaWdnZXIgNSB0aW1lcywg
-YW5kIHRoZW4gDQpsZWZ0IHRoZSB3cmVja2FnZSBmb3IgdXMgdG8gcG9rZSBhdC4NCg0KVGhlIHN5
-bXB0b21zIHdlcmUgaWRlbnRpY2FsIHRvIHRoZSBidWcgZml4ZWQgaGVyZToNCg0KY29tbWl0IDY5
-NmE1NjIwNzJlM2MxNGJjZDEzYWU1YWNjMTljZGYyNzY3OWU4NjUNCkF1dGhvcjogQnJpYW4gRm9z
-dGVyIDxiZm9zdGVyQHJlZGhhdC5jb20+DQpEYXRlOiAgIFR1ZSBNYXIgMjggMTQ6NTE6NDQgMjAx
-NyAtMDcwMA0KDQp4ZnM6IHVzZSBkZWRpY2F0ZWQgbG9nIHdvcmtlciB3cSB0byBhdm9pZCBkZWFk
-bG9jayB3aXRoIGNpbCB3cQ0KDQpCdXQgc2luY2Ugb3VyIDQuMTYga2VybmVsIGlzIG5ldyB0aGFu
-IHRoYXQsIEkgYnJpZWZseSBob3BlZCB0aGF0IA0KbV9zeW5jX3dvcmtxdWV1ZSBuZWVkZWQgdG8g
-YmUgZmxhZ2dlZCB3aXRoIFdRX01FTV9SRUNMQUlNLiAgSSBkb24ndCBoYXZlIA0KYSBncmVhdCBw
-aWN0dXJlIG9mIGhvdyBhbGwgb2YgdGhlc2Ugd29ya3F1ZXVlcyBpbnRlcmFjdCwgYnV0IEkgZG8g
-dGhpbmsgDQppdCBuZWVkcyBXUV9NRU1fUkVDTEFJTS4gIEl0IGNhbid0IGJlIHRoZSBjYXVzZSBv
-ZiB0aGlzIGRlYWRsb2NrLCB0aGUgDQp3b3JrcXVldWUgd2F0Y2hkb2cgd291bGQgaGF2ZSBmaXJl
-ZC4NCg0KUmlrIG1lbnRpb25lZCB0aGF0IEkgZm91bmQgc2xlZXBpbmcgcHJvY3Mgd2l0aCBhbiBl
-bXB0eSBpY2xvZyB3YWl0cXVldWUgDQpsaXN0LCB3aGljaCBpcyB3aGVuIGhlIG5vdGljZWQgdGhp
-cyByYWNlLiAgV2Ugc2VudCBhIHdha2V1cCB0byB0aGUgDQpzbGVlcGluZyBwcm9jZXNzLCBhbmQg
-ZnRyYWNlIHNob3dlZCB0aGUgcHJvY2VzcyBsb29waW5nIGJhY2sgYXJvdW5kIHRvIA0Kc2xlZXAg
-b24gdGhlIGljbG9nIGFnYWluLiAgTG9uZyBzdG9yeSBzaG9ydCwgUmlrJ3MgcGF0Y2ggZGVmaW5p
-dGVseSANCndvdWxkbid0IGhhdmUgcHJldmVudGVkIHRoZSBkZWFkbG9jaywgYW5kIHRoZSBpY2xv
-ZyB3YWl0cXVldWUgSSB3YXMgDQpwb2tpbmcgbXVzdCBub3QgaGF2ZSBiZWVuIHRoZSBzYW1lIG9u
-ZSB0aGF0IHByb2Nlc3Mgd2FzIHNsZWVwaW5nIG9uLg0KDQpUaGUgYWN0dWFsIHByb2JsZW0gZW5k
-ZWQgdXAgYmVpbmcgdGhlIGJsa21xIElPIHNjaGVkdWxlcnMgc2l0dGluZyBvbiBhIA0KcmVxdWVz
-dC4gIFN3aXRjaGluZyBzY2hlZHVsZXJzIG1ha2VzIHRoZSBib3ggY29tZSBiYWNrIHRvIGxpZmUs
-IHNvIGl0J3MgDQplaXRoZXIgYSBreWJlciBidWcgb3Igc2xpZ2h0bHkgaGlnaGVyIHVwIGluIGJs
-a21xbGFuZC4NCg0KVGhhdCdzIGEgaHVnZSB0YW5nZW50IGFyb3VuZCBhY2tpbmcgUmlrJ3MgcGF0
-Y2gsIGJ1dCBpdCdzIGhhcmQgdG8gYmUgDQpzdXJlIGlmIHdlJ3ZlIGhpdCB0aGUgbG9zdCB3YWtl
-dXAgaW4gcHJvZC4gIEkgY291bGQgc2VhcmNoIHRocm91Z2ggYWxsIA0KdGhlIHJlbGF0ZWQgaHVu
-ZyB0YXNrIHRpbWVvdXRzLCBidXQgdGhleSBhcmUgcHJvYmFibHkgYWxsIHN0dWNrIGluIA0KYmxr
-bXEuDQoNCkFja2VkLWJ1dC1JJ20tc3RpbGwtYmxhbWluZy1KZW5zLWJ5OiBDaHJpcyBNYXNvbiA8
-Y2xtQGZiLmNvbT4NCg0KLWNocmlzDQo=
+On Wed, May 08, 2019 at 02:28:09PM -0500, Eric Sandeen wrote:
+> If there are no attributes on the inode, don't go through the
+> cost of memory allocation and callling xfs_attr_get when we
+> already know we'll just get -ENOATTR.
+> 
+> Reported-by: David Valin <dvalin@redhat.com>
+> Suggested-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> index 8039e35147dd..b469b44e9e71 100644
+> --- a/fs/xfs/xfs_acl.c
+> +++ b/fs/xfs/xfs_acl.c
+> @@ -132,6 +132,9 @@ xfs_get_acl(struct inode *inode, int type)
+>  		BUG();
+>  	}
+>  
+> +	if (!xfs_inode_hasattr(ip))
+> +		return NULL;
+
+This isn't going to cause problems if someone's adding an ACL to the
+inode at the same time, right?
+
+I'm assuming that's the case since we only would load inodes when
+setting up a vfs inode but before any userspace can get its sticky
+fingers all over the inode, but it sure would be nice to know that
+for sure. :)
+
+--D
+
+> +
+>  	/*
+>  	 * If we have a cached ACLs value just return it, not need to
+>  	 * go out to the disk.
+> 
