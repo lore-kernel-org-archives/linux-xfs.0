@@ -1,121 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from shelob.surriel.com ([96.67.55.147]:54924 "EHLO
-        shelob.surriel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727543AbfEHOJC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 May 2019 10:09:02 -0400
-Message-ID: <3985b9feffe11dcdbb86fa8c2d9ffc4bd7ab8458.camel@surriel.com>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:47158 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725889AbfEHQkG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 May 2019 12:40:06 -0400
+From: Chris Mason <clm@fb.com>
 Subject: Re: [PATCH] fs,xfs: fix missed wakeup on l_flush_wait
-From: Rik van Riel <riel@surriel.com>
-Date: Wed, 08 May 2019 10:08:59 -0400
-In-Reply-To: <20190507212213.GO29573@dread.disaster.area>
+Date: Wed, 8 May 2019 16:39:41 +0000
+Message-ID: <605BF0CA-EB32-46A5-8045-2BAB7EB0BD66@fb.com>
 References: <20190507130528.1d3d471b@imladris.surriel.com>
-         <20190507212213.GO29573@dread.disaster.area>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-LmHS3NdtgcSLKha3w+oN"
+ <20190507212213.GO29573@dread.disaster.area>
+In-Reply-To: <20190507212213.GO29573@dread.disaster.area>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <dchinner@redhat.com>
+Cc: Rik van Riel <riel@surriel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <dchinner@redhat.com>
 
-
---=-LmHS3NdtgcSLKha3w+oN
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2019-05-08 at 07:22 +1000, Dave Chinner wrote:
-> On Tue, May 07, 2019 at 01:05:28PM -0400, Rik van Riel wrote:
-> > The code in xlog_wait uses the spinlock to make adding the task to
-> > the wait queue, and setting the task state to UNINTERRUPTIBLE
-> > atomic
-> > with respect to the waker.
-> >=20
-> > Doing the wakeup after releasing the spinlock opens up the
-> > following
-> > race condition:
-> >=20
-> > - add task to wait queue
-> >=20
-> > -                                      wake up task
-> >=20
-> > - set task state to UNINTERRUPTIBLE
-> >=20
-> > Simply moving the spin_unlock to after the wake_up_all results
-> > in the waker not being able to see a task on the waitqueue before
-> > it has set its state to UNINTERRUPTIBLE.
->=20
-> Yup, seems like an issue. Good find, Rik.
->=20
-> So, what problem is this actually fixing? Was it noticed by
-> inspection, or is it actually manifesting on production machines?
-> If it is manifesting IRL, what are the symptoms (e.g. hang running
-> out of log space?) and do you have a test case or any way to
-> exercise it easily?
-
-Chris spotted a hung kworker task, in UNINTERRUPTIBLE
-state, but with an empty wait queue. This does not seem
-like something that is easily reproducible.
-
-> And, FWIW, did you check all the other xlog_wait() users for the
-> same problem?
-
-I did not, but am looking now. The xlog_wait code itself
-is fine, but it seems there are a few other wakers that
-are doing the wakeup after releasing the lock.
-
-It looks like xfs_log_force_umount() and the other wakeup=20
-in xlog_state_do_callback() suffer from the same issue.
-
-> > The lock ordering of taking the waitqueue lock inside the
-> > l_icloglock
-> > is already used inside xlog_wait; it is unclear why the waker was
-> > doing
-> > things differently.
->=20
-> Historical, most likely, and the wakeup code has changed in years
-> gone by and a race condition that rarely manifests is unlikely to be
-> noticed.
->=20
-> ....
->=20
-> Yeah, the conversion from counting semaphore outside the iclog lock
-> to use wait queues in 2008 introduced this bug. The wait queue
-> addition was moved inside the lock, the wakeup left outside. So:
-
-It looks like that conversion may have introduced the
-same bug in multiple places.
-
-That first wakeup in xlog_state_do_callback() looks pretty
-straightforward. That spin_unlock could be moved down as well,
-or a lock & unlock pair could be placed around the wake_up_all.
-
-I am not sure about xfs_log_force_umount(). Could the unlock=20
-be moved to after the wake_up_all, or does that create lock
-ordering issues with the xlog_grant_head_wake_all calls?
-Could a simple lock + unlock of log->l_icloglock around the
-wake_up_all do the trick, or is there some other state that
-also needs to stay locked?
-
-
---=20
-All Rights Reversed.
-
---=-LmHS3NdtgcSLKha3w+oN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEEKR73pCCtJ5Xj3yADznnekoTE3oMFAlzS4vsACgkQznnekoTE
-3oNRQwf/QACRyTToqIaz1xndSyWZH+qLqp67i7IrcHPiV9FpCtZbhHSwhCH9EmJ0
-OXnOECSOlEcNJUb2rjgc0tr4tvLR9JtjNipzrLDK4cCcJ705ZSK2Ss1o9trQiOmN
-96W4h0GEV1vyYuTkDkgKL8k34EqGQf4vXcvJExqzZwd8EgzDYXtZ3LRLSvAS8wtC
-aPme3zNJ5XUO/7XPmcVQSEpV0WL28DGUV+HF+8Mufglu6NY1fmeX5n2oJN6rlrQ/
-HFfEMBvtnSSmcdpXWh5lf9FSOSx5nbyNtwGSz2wQ8nAVe+R+R2zUDbJZh9WYU+cn
-gd1fwNQIfXhMPBQtfi8Wv9vg1EbSWg==
-=DMDb
------END PGP SIGNATURE-----
-
---=-LmHS3NdtgcSLKha3w+oN--
+T24gNyBNYXkgMjAxOSwgYXQgMTc6MjIsIERhdmUgQ2hpbm5lciB3cm90ZToNCg0KPiBPbiBUdWUs
+IE1heSAwNywgMjAxOSBhdCAwMTowNToyOFBNIC0wNDAwLCBSaWsgdmFuIFJpZWwgd3JvdGU6DQo+
+PiBUaGUgY29kZSBpbiB4bG9nX3dhaXQgdXNlcyB0aGUgc3BpbmxvY2sgdG8gbWFrZSBhZGRpbmcg
+dGhlIHRhc2sgdG8NCj4+IHRoZSB3YWl0IHF1ZXVlLCBhbmQgc2V0dGluZyB0aGUgdGFzayBzdGF0
+ZSB0byBVTklOVEVSUlVQVElCTEUgYXRvbWljDQo+PiB3aXRoIHJlc3BlY3QgdG8gdGhlIHdha2Vy
+Lg0KPj4NCj4+IERvaW5nIHRoZSB3YWtldXAgYWZ0ZXIgcmVsZWFzaW5nIHRoZSBzcGlubG9jayBv
+cGVucyB1cCB0aGUgZm9sbG93aW5nDQo+PiByYWNlIGNvbmRpdGlvbjoNCj4+DQo+PiAtIGFkZCB0
+YXNrIHRvIHdhaXQgcXVldWUNCj4+DQo+PiAtICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICB3YWtlIHVwIHRhc2sNCj4+DQo+PiAtIHNldCB0YXNrIHN0YXRlIHRvIFVOSU5URVJS
+VVBUSUJMRQ0KPj4NCj4+IFNpbXBseSBtb3ZpbmcgdGhlIHNwaW5fdW5sb2NrIHRvIGFmdGVyIHRo
+ZSB3YWtlX3VwX2FsbCByZXN1bHRzDQo+PiBpbiB0aGUgd2FrZXIgbm90IGJlaW5nIGFibGUgdG8g
+c2VlIGEgdGFzayBvbiB0aGUgd2FpdHF1ZXVlIGJlZm9yZQ0KPj4gaXQgaGFzIHNldCBpdHMgc3Rh
+dGUgdG8gVU5JTlRFUlJVUFRJQkxFLg0KPg0KPiBZdXAsIHNlZW1zIGxpa2UgYW4gaXNzdWUuIEdv
+b2QgZmluZCwgUmlrLg0KPg0KPiBTbywgd2hhdCBwcm9ibGVtIGlzIHRoaXMgYWN0dWFsbHkgZml4
+aW5nPyBXYXMgaXQgbm90aWNlZCBieQ0KPiBpbnNwZWN0aW9uLCBvciBpcyBpdCBhY3R1YWxseSBt
+YW5pZmVzdGluZyBvbiBwcm9kdWN0aW9uIG1hY2hpbmVzPw0KPiBJZiBpdCBpcyBtYW5pZmVzdGlu
+ZyBJUkwsIHdoYXQgYXJlIHRoZSBzeW1wdG9tcyAoZS5nLiBoYW5nIHJ1bm5pbmcNCj4gb3V0IG9m
+IGxvZyBzcGFjZT8pIGFuZCBkbyB5b3UgaGF2ZSBhIHRlc3QgY2FzZSBvciBhbnkgd2F5IHRvDQo+
+IGV4ZXJjaXNlIGl0IGVhc2lseT8NCg0KVGhlIHN0ZXBzIHRvIHJlcHJvZHVjZSBhcmUgc2VtaS1j
+b21wbGljYXRlZCwgdGhleSBjcmVhdGUgYSBidW5jaCBvZiANCmZpbGVzLCBkbyBzdHVmZiwgYW5k
+IHRoZW4gZGVsZXRlIGFsbCB0aGUgZmlsZXMgaW4gYSBsb29wLiAgSSB0aGluayB0aGV5IA0Kc2hv
+dGd1bm5lZCBpdCBhY3Jvc3MgNTAwIG9yIHNvIG1hY2hpbmVzIHRvIHRyaWdnZXIgNSB0aW1lcywg
+YW5kIHRoZW4gDQpsZWZ0IHRoZSB3cmVja2FnZSBmb3IgdXMgdG8gcG9rZSBhdC4NCg0KVGhlIHN5
+bXB0b21zIHdlcmUgaWRlbnRpY2FsIHRvIHRoZSBidWcgZml4ZWQgaGVyZToNCg0KY29tbWl0IDY5
+NmE1NjIwNzJlM2MxNGJjZDEzYWU1YWNjMTljZGYyNzY3OWU4NjUNCkF1dGhvcjogQnJpYW4gRm9z
+dGVyIDxiZm9zdGVyQHJlZGhhdC5jb20+DQpEYXRlOiAgIFR1ZSBNYXIgMjggMTQ6NTE6NDQgMjAx
+NyAtMDcwMA0KDQp4ZnM6IHVzZSBkZWRpY2F0ZWQgbG9nIHdvcmtlciB3cSB0byBhdm9pZCBkZWFk
+bG9jayB3aXRoIGNpbCB3cQ0KDQpCdXQgc2luY2Ugb3VyIDQuMTYga2VybmVsIGlzIG5ldyB0aGFu
+IHRoYXQsIEkgYnJpZWZseSBob3BlZCB0aGF0IA0KbV9zeW5jX3dvcmtxdWV1ZSBuZWVkZWQgdG8g
+YmUgZmxhZ2dlZCB3aXRoIFdRX01FTV9SRUNMQUlNLiAgSSBkb24ndCBoYXZlIA0KYSBncmVhdCBw
+aWN0dXJlIG9mIGhvdyBhbGwgb2YgdGhlc2Ugd29ya3F1ZXVlcyBpbnRlcmFjdCwgYnV0IEkgZG8g
+dGhpbmsgDQppdCBuZWVkcyBXUV9NRU1fUkVDTEFJTS4gIEl0IGNhbid0IGJlIHRoZSBjYXVzZSBv
+ZiB0aGlzIGRlYWRsb2NrLCB0aGUgDQp3b3JrcXVldWUgd2F0Y2hkb2cgd291bGQgaGF2ZSBmaXJl
+ZC4NCg0KUmlrIG1lbnRpb25lZCB0aGF0IEkgZm91bmQgc2xlZXBpbmcgcHJvY3Mgd2l0aCBhbiBl
+bXB0eSBpY2xvZyB3YWl0cXVldWUgDQpsaXN0LCB3aGljaCBpcyB3aGVuIGhlIG5vdGljZWQgdGhp
+cyByYWNlLiAgV2Ugc2VudCBhIHdha2V1cCB0byB0aGUgDQpzbGVlcGluZyBwcm9jZXNzLCBhbmQg
+ZnRyYWNlIHNob3dlZCB0aGUgcHJvY2VzcyBsb29waW5nIGJhY2sgYXJvdW5kIHRvIA0Kc2xlZXAg
+b24gdGhlIGljbG9nIGFnYWluLiAgTG9uZyBzdG9yeSBzaG9ydCwgUmlrJ3MgcGF0Y2ggZGVmaW5p
+dGVseSANCndvdWxkbid0IGhhdmUgcHJldmVudGVkIHRoZSBkZWFkbG9jaywgYW5kIHRoZSBpY2xv
+ZyB3YWl0cXVldWUgSSB3YXMgDQpwb2tpbmcgbXVzdCBub3QgaGF2ZSBiZWVuIHRoZSBzYW1lIG9u
+ZSB0aGF0IHByb2Nlc3Mgd2FzIHNsZWVwaW5nIG9uLg0KDQpUaGUgYWN0dWFsIHByb2JsZW0gZW5k
+ZWQgdXAgYmVpbmcgdGhlIGJsa21xIElPIHNjaGVkdWxlcnMgc2l0dGluZyBvbiBhIA0KcmVxdWVz
+dC4gIFN3aXRjaGluZyBzY2hlZHVsZXJzIG1ha2VzIHRoZSBib3ggY29tZSBiYWNrIHRvIGxpZmUs
+IHNvIGl0J3MgDQplaXRoZXIgYSBreWJlciBidWcgb3Igc2xpZ2h0bHkgaGlnaGVyIHVwIGluIGJs
+a21xbGFuZC4NCg0KVGhhdCdzIGEgaHVnZSB0YW5nZW50IGFyb3VuZCBhY2tpbmcgUmlrJ3MgcGF0
+Y2gsIGJ1dCBpdCdzIGhhcmQgdG8gYmUgDQpzdXJlIGlmIHdlJ3ZlIGhpdCB0aGUgbG9zdCB3YWtl
+dXAgaW4gcHJvZC4gIEkgY291bGQgc2VhcmNoIHRocm91Z2ggYWxsIA0KdGhlIHJlbGF0ZWQgaHVu
+ZyB0YXNrIHRpbWVvdXRzLCBidXQgdGhleSBhcmUgcHJvYmFibHkgYWxsIHN0dWNrIGluIA0KYmxr
+bXEuDQoNCkFja2VkLWJ1dC1JJ20tc3RpbGwtYmxhbWluZy1KZW5zLWJ5OiBDaHJpcyBNYXNvbiA8
+Y2xtQGZiLmNvbT4NCg0KLWNocmlzDQo=
