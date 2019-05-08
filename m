@@ -1,263 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36094 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:36314 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727792AbfEJUSn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 May 2019 16:18:43 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 05/11] libxfs: de-libxfsify core(-ish) functions.
-Date: Fri, 10 May 2019 15:18:24 -0500
-Message-Id: <1557519510-10602-6-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
-References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
+        id S1725778AbfEHFbV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 May 2019 01:31:21 -0400
+Date: Wed, 8 May 2019 01:31:18 -0400 (EDT)
+From: Pankaj Gupta <pagupta@redhat.com>
+Message-ID: <1853101606.27182251.1557293478937.JavaMail.zimbra@redhat.com>
+In-Reply-To: <CA+nGSuOgCAoS4MkbuSL2q5Gyi4jG2oyJqLu_sDgexm5fSBmPLQ@mail.gmail.com>
+References: <20190426050039.17460-1-pagupta@redhat.com> <20190426050039.17460-5-pagupta@redhat.com> <CA+nGSuOgCAoS4MkbuSL2q5Gyi4jG2oyJqLu_sDgexm5fSBmPLQ@mail.gmail.com>
+Subject: Re: [Qemu-devel] [PATCH v7 4/6] dax: check synchronous mapping is
+ supported
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Jakub =?utf-8?Q?Staro=C5=84?= <jstaron@google.com>
+Cc: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, jack@suse.cz, mst@redhat.com, jasowang@redhat.com, david@fromorbit.com, lcapitulino@redhat.com, adilger kernel <adilger.kernel@dilger.ca>, zwisler@kernel.org, aarcange@redhat.com, dave jiang <dave.jiang@intel.com>, darrick wong <darrick.wong@oracle.com>, vishal l verma <vishal.l.verma@intel.com>, david@redhat.com, willy@infradead.org, hch@infradead.org, jmoyer@redhat.com, nilal@redhat.com, lenb@kernel.org, kilobyte@angband.pl, riel@surriel.com, yuval shaia <yuval.shaia@oracle.com>, stefanha@redhat.com, pbonzini@redhat.com, dan j williams <dan.j.williams@intel.com>, kwolf@redhat.com, tytso@mit.edu, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, cohuck@redhat.com, rjw@rjwysocki.net, imammedo@redhat.com, Stephen Barber <smbarber@google.com>
 
-There are a ton of "libxfs_" prefixed functions in libxfs/trans.c which
-are only called internally by code in libxfs/ - As I understand it,
-these should probably be just "xfs_" functions, and indeed many
-of them have counterparts in the kernel libxfs/ code.  This is one
-small step towards better sync-up of some of the misc libxfs/*
-transaction code with kernel code.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- libxfs/libxfs_api_defs.h |  1 +
- libxfs/trans.c           | 48 ++++++++++++++++++++++++------------------------
- 2 files changed, 25 insertions(+), 24 deletions(-)
+> 
+> From: Pankaj Gupta <pagupta@redhat.com>
+> Date: Thu, Apr 25, 2019 at 10:00 PM
+> 
+> > +static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
+> > +                               struct dax_device *dax_dev)
+> > +{
+> > +       return !(vma->flags & VM_SYNC);
+> > +}
+> 
+> Shouldn't it be rather `return !(vma->vm_flags & VM_SYNC);`? There is
+> no field named `flags` in `struct vm_area_struct`.
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 1150ec9..64030af 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -17,6 +17,7 @@
- #define xfs_highbit64			libxfs_highbit64
- 
- #define xfs_trans_alloc			libxfs_trans_alloc
-+#define xfs_trans_alloc_rollable	libxfs_trans_alloc_rollable
- #define xfs_trans_alloc_empty		libxfs_trans_alloc_empty
- #define xfs_trans_add_item		libxfs_trans_add_item
- #define xfs_trans_bhold			libxfs_trans_bhold
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index 581ece3..85c3a50 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -36,7 +36,7 @@ kmem_zone_t	*xfs_trans_zone;
-  * in the mount structure.
-  */
- void
--libxfs_trans_init(
-+xfs_trans_init(
- 	struct xfs_mount	*mp)
- {
- 	xfs_trans_resv_calc(mp, &mp->m_resv);
-@@ -46,7 +46,7 @@ libxfs_trans_init(
-  * Add the given log item to the transaction's list of log items.
-  */
- void
--libxfs_trans_add_item(
-+xfs_trans_add_item(
- 	struct xfs_trans	*tp,
- 	struct xfs_log_item	*lip)
- {
-@@ -62,7 +62,7 @@ libxfs_trans_add_item(
-  * Unlink and free the given descriptor.
-  */
- void
--libxfs_trans_del_item(
-+xfs_trans_del_item(
- 	struct xfs_log_item	*lip)
- {
- 	clear_bit(XFS_LI_DIRTY, &lip->li_flags);
-@@ -77,7 +77,7 @@ libxfs_trans_del_item(
-  * chunk we've been working on and get a new transaction to continue.
-  */
- int
--libxfs_trans_roll(
-+xfs_trans_roll(
- 	struct xfs_trans	**tpp)
- {
- 	struct xfs_trans	*trans = *tpp;
-@@ -245,7 +245,7 @@ undo_blocks:
- }
- 
- int
--libxfs_trans_alloc(
-+xfs_trans_alloc(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans_res	*resp,
- 	unsigned int		blocks,
-@@ -289,7 +289,7 @@ libxfs_trans_alloc(
-  * without any dirty data.
-  */
- int
--libxfs_trans_alloc_empty(
-+xfs_trans_alloc_empty(
- 	struct xfs_mount		*mp,
- 	struct xfs_trans		**tpp)
- {
-@@ -304,7 +304,7 @@ libxfs_trans_alloc_empty(
-  * permanent log reservation flag to avoid blowing asserts.
-  */
- int
--libxfs_trans_alloc_rollable(
-+xfs_trans_alloc_rollable(
- 	struct xfs_mount	*mp,
- 	unsigned int		blocks,
- 	struct xfs_trans	**tpp)
-@@ -314,7 +314,7 @@ libxfs_trans_alloc_rollable(
- }
- 
- void
--libxfs_trans_cancel(
-+xfs_trans_cancel(
- 	struct xfs_trans	*tp)
- {
- #ifdef XACT_DEBUG
-@@ -337,7 +337,7 @@ out:
- }
- 
- void
--libxfs_trans_ijoin(
-+xfs_trans_ijoin(
- 	xfs_trans_t		*tp,
- 	xfs_inode_t		*ip,
- 	uint			lock_flags)
-@@ -360,7 +360,7 @@ libxfs_trans_ijoin(
- }
- 
- void
--libxfs_trans_ijoin_ref(
-+xfs_trans_ijoin_ref(
- 	xfs_trans_t		*tp,
- 	xfs_inode_t		*ip,
- 	int			lock_flags)
-@@ -375,7 +375,7 @@ libxfs_trans_ijoin_ref(
- }
- 
- void
--libxfs_trans_inode_alloc_buf(
-+xfs_trans_inode_alloc_buf(
- 	xfs_trans_t		*tp,
- 	xfs_buf_t		*bp)
- {
-@@ -422,7 +422,7 @@ xfs_trans_log_inode(
- }
- 
- int
--libxfs_trans_roll_inode(
-+xfs_trans_roll_inode(
- 	struct xfs_trans	**tpp,
- 	struct xfs_inode	*ip)
- {
-@@ -440,7 +440,7 @@ libxfs_trans_roll_inode(
-  * Mark a buffer dirty in the transaction.
-  */
- void
--libxfs_trans_dirty_buf(
-+xfs_trans_dirty_buf(
- 	struct xfs_trans	*tp,
- 	struct xfs_buf		*bp)
- {
-@@ -466,7 +466,7 @@ libxfs_trans_dirty_buf(
-  * value of b_blkno.
-  */
- void
--libxfs_trans_log_buf(
-+xfs_trans_log_buf(
- 	struct xfs_trans	*tp,
- 	struct xfs_buf		*bp,
- 	uint			first,
-@@ -488,7 +488,7 @@ libxfs_trans_log_buf(
-  * If the buffer is already dirty, trigger the "already logged" return condition.
-  */
- bool
--libxfs_trans_ordered_buf(
-+xfs_trans_ordered_buf(
- 	struct xfs_trans	*tp,
- 	struct xfs_buf		*bp)
- {
-@@ -511,7 +511,7 @@ xfs_buf_item_put(
- }
- 
- void
--libxfs_trans_brelse(
-+xfs_trans_brelse(
- 	xfs_trans_t		*tp,
- 	xfs_buf_t		*bp)
- {
-@@ -546,7 +546,7 @@ libxfs_trans_brelse(
- }
- 
- void
--libxfs_trans_binval(
-+xfs_trans_binval(
- 	xfs_trans_t		*tp,
- 	xfs_buf_t		*bp)
- {
-@@ -571,7 +571,7 @@ libxfs_trans_binval(
- }
- 
- void
--libxfs_trans_bjoin(
-+xfs_trans_bjoin(
- 	xfs_trans_t		*tp,
- 	xfs_buf_t		*bp)
- {
-@@ -589,7 +589,7 @@ libxfs_trans_bjoin(
- }
- 
- void
--libxfs_trans_bhold(
-+xfs_trans_bhold(
- 	xfs_trans_t		*tp,
- 	xfs_buf_t		*bp)
- {
-@@ -605,7 +605,7 @@ libxfs_trans_bhold(
- }
- 
- xfs_buf_t *
--libxfs_trans_get_buf_map(
-+xfs_trans_get_buf_map(
- 	xfs_trans_t		*tp,
- 	struct xfs_buftarg	*btp,
- 	struct xfs_buf_map	*map,
-@@ -641,7 +641,7 @@ libxfs_trans_get_buf_map(
- }
- 
- xfs_buf_t *
--libxfs_trans_getsb(
-+xfs_trans_getsb(
- 	xfs_trans_t		*tp,
- 	xfs_mount_t		*mp,
- 	int			flags)
-@@ -675,7 +675,7 @@ libxfs_trans_getsb(
- }
- 
- int
--libxfs_trans_read_buf_map(
-+xfs_trans_read_buf_map(
- 	xfs_mount_t		*mp,
- 	xfs_trans_t		*tp,
- 	struct xfs_buftarg	*btp,
-@@ -743,7 +743,7 @@ out_relse:
-  * Originally derived from xfs_trans_mod_sb().
-  */
- void
--libxfs_trans_mod_sb(
-+xfs_trans_mod_sb(
- 	xfs_trans_t		*tp,
- 	uint			field,
- 	long			delta)
-@@ -1004,7 +1004,7 @@ out_unreserve:
- }
- 
- int
--libxfs_trans_commit(
-+xfs_trans_commit(
- 	struct xfs_trans	*tp)
- {
- 	return __xfs_trans_commit(tp, false);
--- 
-1.8.3.1
+Thanks for catching. Sorry! for this. 
+
+Will correct in v8.
+
+Thank you,
+Pankaj 
+
+> 
+> Thank you,
+> Jakub
+> 
