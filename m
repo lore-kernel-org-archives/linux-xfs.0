@@ -1,379 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36096 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:44960 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727832AbfEJUSn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 May 2019 16:18:43 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 07/11] libxfs: create new file buf_item.c
-Date: Fri, 10 May 2019 15:18:26 -0500
-Message-Id: <1557519510-10602-8-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
-References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
+        id S1726449AbfEINFn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 May 2019 09:05:43 -0400
+Date: Thu, 9 May 2019 09:05:39 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: short circuit xfs_get_acl() if no acl is possible
+Message-ID: <20190509130535.GB41691@bfoster>
+References: <35128e32-d69b-316e-c8d6-8f109646390d@redhat.com>
+ <20190508201033.GW5207@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190508201033.GW5207@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, David Valin <dvalin@redhat.com>
 
-Pull functions out of libxfs/* into buf_item.c, if they roughly match
-the kernel's xfs_buf_item.c file.
+On Wed, May 08, 2019 at 01:10:33PM -0700, Darrick J. Wong wrote:
+> On Wed, May 08, 2019 at 02:28:09PM -0500, Eric Sandeen wrote:
+> > If there are no attributes on the inode, don't go through the
+> > cost of memory allocation and callling xfs_attr_get when we
+> > already know we'll just get -ENOATTR.
+> > 
+> > Reported-by: David Valin <dvalin@redhat.com>
+> > Suggested-by: Dave Chinner <david@fromorbit.com>
+> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > ---
+> > 
+> > diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> > index 8039e35147dd..b469b44e9e71 100644
+> > --- a/fs/xfs/xfs_acl.c
+> > +++ b/fs/xfs/xfs_acl.c
+> > @@ -132,6 +132,9 @@ xfs_get_acl(struct inode *inode, int type)
+> >  		BUG();
+> >  	}
+> >  
+> > +	if (!xfs_inode_hasattr(ip))
+> > +		return NULL;
+> 
+> This isn't going to cause problems if someone's adding an ACL to the
+> inode at the same time, right?
+> 
+> I'm assuming that's the case since we only would load inodes when
+> setting up a vfs inode but before any userspace can get its sticky
+> fingers all over the inode, but it sure would be nice to know that
+> for sure. :)
+> 
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- libxfs/Makefile      |   1 +
- libxfs/buf_item.c    | 146 +++++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/libxfs_priv.h |   2 +
- libxfs/logitem.c     |  77 ---------------------------
- libxfs/trans.c       |  55 -------------------
- 5 files changed, 149 insertions(+), 132 deletions(-)
- create mode 100644 libxfs/buf_item.c
+Hmm, that's a good question. At first I was thinking it wouldn't matter,
+but then I remembered the fairly recent issue around writing back an
+empty leaf buffer on format conversion a bit too early. That has me
+wondering if that would be an issue here as well. For example, suppose a
+non-empty local format attr fork is being converted to extent format due
+to a concurrent (and unrelated) xattr set. That involves
+xfs_attr_shortform_to_leaf() -> xfs_bmap_local_to_extents_empty(), which
+looks like it creates a transient empty fork state. Might
+xfs_inode_hasattr() catch that as a false negative here? If so, that
+would certainly be a problem if the existing xattr was the ACL the
+caller happens to be interested in. It might be prudent to surround this
+check with ILOCK_SHARED...
 
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index da0ce79..820ffb0 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -52,6 +52,7 @@ HFILES = \
- 	xfs_dir2_priv.h
- 
- CFILES = cache.c \
-+	buf_item.c \
- 	defer_item.c \
- 	init.c \
- 	kmem.c \
-diff --git a/libxfs/buf_item.c b/libxfs/buf_item.c
-new file mode 100644
-index 0000000..2e64c8c
---- /dev/null
-+++ b/libxfs/buf_item.c
-@@ -0,0 +1,146 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ */
-+
-+#include "libxfs_priv.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_trans.h"
-+#include "xfs_inode.h"
-+
-+kmem_zone_t	*xfs_buf_item_zone;
-+
-+/*
-+ * The following are from fs/xfs/xfs_buf_item.c
-+ */
-+
-+void
-+xfs_buf_item_put(
-+	struct xfs_buf_log_item	*bip)
-+{
-+	struct xfs_buf		*bp = bip->bli_buf;
-+
-+	bp->b_log_item = NULL;
-+	kmem_zone_free(xfs_buf_item_zone, bip);
-+}
-+
-+void
-+buf_item_unlock(
-+	xfs_buf_log_item_t	*bip)
-+{
-+	xfs_buf_t		*bp = bip->bli_buf;
-+	uint			hold;
-+
-+	/* Clear the buffer's association with this transaction. */
-+	bip->bli_buf->b_transp = NULL;
-+
-+	hold = bip->bli_flags & XFS_BLI_HOLD;
-+	bip->bli_flags &= ~XFS_BLI_HOLD;
-+	xfs_buf_item_put(bip);
-+	if (!hold)
-+		libxfs_putbuf(bp);
-+}
-+
-+/*
-+ * Allocate a new buf log item to go with the given buffer.
-+ * Set the buffer's b_log_item field to point to the new
-+ * buf log item.  If there are other item's attached to the
-+ * buffer (see xfs_buf_attach_iodone() below), then put the
-+ * buf log item at the front.
-+ */
-+void
-+xfs_buf_item_init(
-+	xfs_buf_t		*bp,
-+	xfs_mount_t		*mp)
-+{
-+	xfs_log_item_t		*lip;
-+	xfs_buf_log_item_t	*bip;
-+
-+#ifdef LI_DEBUG
-+	fprintf(stderr, "buf_item_init for buffer %p\n", bp);
-+#endif
-+
-+	/*
-+	 * Check to see if there is already a buf log item for
-+	 * this buffer.	 If there is, it is guaranteed to be
-+	 * the first.  If we do already have one, there is
-+	 * nothing to do here so return.
-+	 */
-+	XFS_BUF_SET_BDSTRAT_FUNC(bp, xfs_bdstrat_cb);
-+	if (bp->b_log_item != NULL) {
-+		lip = bp->b_log_item;
-+		if (lip->li_type == XFS_LI_BUF) {
-+#ifdef LI_DEBUG
-+			fprintf(stderr,
-+				"reused buf item %p for pre-logged buffer %p\n",
-+				lip, bp);
-+#endif
-+			return;
-+		}
-+	}
-+
-+	bip = (xfs_buf_log_item_t *)kmem_zone_zalloc(xfs_buf_item_zone,
-+						    KM_SLEEP);
-+#ifdef LI_DEBUG
-+	fprintf(stderr, "adding buf item %p for not-logged buffer %p\n",
-+		bip, bp);
-+#endif
-+	bip->bli_item.li_type = XFS_LI_BUF;
-+	bip->bli_item.li_mountp = mp;
-+	INIT_LIST_HEAD(&bip->bli_item.li_trans);
-+	bip->bli_buf = bp;
-+	bip->bli_format.blf_type = XFS_LI_BUF;
-+	bip->bli_format.blf_blkno = (int64_t)XFS_BUF_ADDR(bp);
-+	bip->bli_format.blf_len = (unsigned short)BTOBB(bp->b_bcount);
-+	bp->b_log_item = bip;
-+}
-+
-+/*
-+ * Mark bytes first through last inclusive as dirty in the buf
-+ * item's bitmap.
-+ */
-+void
-+xfs_buf_item_log(
-+	xfs_buf_log_item_t	*bip,
-+	uint			first,
-+	uint			last)
-+{
-+	/*
-+	 * Mark the item as having some dirty data for
-+	 * quick reference in xfs_buf_item_dirty.
-+	 */
-+	bip->bli_flags |= XFS_BLI_DIRTY;
-+}
-+
-+void
-+buf_item_done(
-+	xfs_buf_log_item_t	*bip)
-+{
-+	xfs_buf_t		*bp;
-+	int			hold;
-+
-+	bp = bip->bli_buf;
-+	ASSERT(bp != NULL);
-+	bp->b_transp = NULL;			/* remove xact ptr */
-+
-+	hold = (bip->bli_flags & XFS_BLI_HOLD);
-+	if (bip->bli_flags & XFS_BLI_DIRTY) {
-+#ifdef XACT_DEBUG
-+		fprintf(stderr, "flushing/staling buffer %p (hold=%d)\n",
-+			bp, hold);
-+#endif
-+		libxfs_writebuf_int(bp, 0);
-+	}
-+
-+	bip->bli_flags &= ~XFS_BLI_HOLD;
-+	xfs_buf_item_put(bip);
-+	if (hold)
-+		return;
-+	libxfs_putbuf(bp);
-+}
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 7c07188..155b782 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -520,6 +520,8 @@ void xfs_inode_item_init(struct xfs_inode *, struct xfs_mount *);
- void xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
- void xfs_buf_item_log(struct xfs_buf_log_item *, uint, uint);
- void xfs_buf_item_put(struct xfs_buf_log_item *bip);
-+void buf_item_unlock(struct xfs_buf_log_item *bip);
-+void buf_item_done(struct xfs_buf_log_item *bip);
- 
- /* xfs_trans_buf.c */
- struct xfs_buf *xfs_trans_buf_item_match(struct xfs_trans *,
-diff --git a/libxfs/logitem.c b/libxfs/logitem.c
-index ce34c68..c80e2ed 100644
---- a/libxfs/logitem.c
-+++ b/libxfs/logitem.c
-@@ -16,86 +16,9 @@
- #include "xfs_inode.h"
- #include "xfs_trans.h"
- 
--kmem_zone_t	*xfs_buf_item_zone;
- kmem_zone_t	*xfs_ili_zone;		/* inode log item zone */
- 
- /*
-- * The following are from fs/xfs/xfs_buf_item.c
-- */
--
--/*
-- * Allocate a new buf log item to go with the given buffer.
-- * Set the buffer's b_log_item field to point to the new
-- * buf log item.  If there are other item's attached to the
-- * buffer (see xfs_buf_attach_iodone() below), then put the
-- * buf log item at the front.
-- */
--void
--xfs_buf_item_init(
--	xfs_buf_t		*bp,
--	xfs_mount_t		*mp)
--{
--	xfs_log_item_t		*lip;
--	xfs_buf_log_item_t	*bip;
--
--#ifdef LI_DEBUG
--	fprintf(stderr, "buf_item_init for buffer %p\n", bp);
--#endif
--
--	/*
--	 * Check to see if there is already a buf log item for
--	 * this buffer.	 If there is, it is guaranteed to be
--	 * the first.  If we do already have one, there is
--	 * nothing to do here so return.
--	 */
--	XFS_BUF_SET_BDSTRAT_FUNC(bp, xfs_bdstrat_cb);
--	if (bp->b_log_item != NULL) {
--		lip = bp->b_log_item;
--		if (lip->li_type == XFS_LI_BUF) {
--#ifdef LI_DEBUG
--			fprintf(stderr,
--				"reused buf item %p for pre-logged buffer %p\n",
--				lip, bp);
--#endif
--			return;
--		}
--	}
--
--	bip = (xfs_buf_log_item_t *)kmem_zone_zalloc(xfs_buf_item_zone,
--						    KM_SLEEP);
--#ifdef LI_DEBUG
--	fprintf(stderr, "adding buf item %p for not-logged buffer %p\n",
--		bip, bp);
--#endif
--	bip->bli_item.li_type = XFS_LI_BUF;
--	bip->bli_item.li_mountp = mp;
--	INIT_LIST_HEAD(&bip->bli_item.li_trans);
--	bip->bli_buf = bp;
--	bip->bli_format.blf_type = XFS_LI_BUF;
--	bip->bli_format.blf_blkno = (int64_t)XFS_BUF_ADDR(bp);
--	bip->bli_format.blf_len = (unsigned short)BTOBB(bp->b_bcount);
--	bp->b_log_item = bip;
--}
--
--
--/*
-- * Mark bytes first through last inclusive as dirty in the buf
-- * item's bitmap.
-- */
--void
--xfs_buf_item_log(
--	xfs_buf_log_item_t	*bip,
--	uint			first,
--	uint			last)
--{
--	/*
--	 * Mark the item as having some dirty data for
--	 * quick reference in xfs_buf_item_dirty.
--	 */
--	bip->bli_flags |= XFS_BLI_DIRTY;
--}
--
--/*
-  * Initialize the inode log item for a newly allocated (in-core) inode.
-  */
- void
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index 295f167..7d3899c 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -422,16 +422,6 @@ xfs_trans_roll_inode(
- 	return error;
- }
- 
--void
--xfs_buf_item_put(
--	struct xfs_buf_log_item	*bip)
--{
--	struct xfs_buf		*bp = bip->bli_buf;
--
--	bp->b_log_item = NULL;
--	kmem_zone_free(xfs_buf_item_zone, bip);
--}
--
- /*
-  * Record the indicated change to the given field for application
-  * to the file system's superblock when the transaction commits.
-@@ -548,34 +538,6 @@ free:
- }
- 
- static void
--buf_item_done(
--	xfs_buf_log_item_t	*bip)
--{
--	xfs_buf_t		*bp;
--	int			hold;
--	extern kmem_zone_t	*xfs_buf_item_zone;
--
--	bp = bip->bli_buf;
--	ASSERT(bp != NULL);
--	bp->b_transp = NULL;			/* remove xact ptr */
--
--	hold = (bip->bli_flags & XFS_BLI_HOLD);
--	if (bip->bli_flags & XFS_BLI_DIRTY) {
--#ifdef XACT_DEBUG
--		fprintf(stderr, "flushing/staling buffer %p (hold=%d)\n",
--			bp, hold);
--#endif
--		libxfs_writebuf_int(bp, 0);
--	}
--
--	bip->bli_flags &= ~XFS_BLI_HOLD;
--	xfs_buf_item_put(bip);
--	if (hold)
--		return;
--	libxfs_putbuf(bp);
--}
--
--static void
- trans_committed(
- 	xfs_trans_t		*tp)
- {
-@@ -597,23 +559,6 @@ trans_committed(
- }
- 
- static void
--buf_item_unlock(
--	xfs_buf_log_item_t	*bip)
--{
--	xfs_buf_t		*bp = bip->bli_buf;
--	uint			hold;
--
--	/* Clear the buffer's association with this transaction. */
--	bip->bli_buf->b_transp = NULL;
--
--	hold = bip->bli_flags & XFS_BLI_HOLD;
--	bip->bli_flags &= ~XFS_BLI_HOLD;
--	xfs_buf_item_put(bip);
--	if (!hold)
--		libxfs_putbuf(bp);
--}
--
--static void
- inode_item_unlock(
- 	xfs_inode_log_item_t	*iip)
- {
--- 
-1.8.3.1
+Brian
+
+> --D
+> 
+> > +
+> >  	/*
+> >  	 * If we have a cached ACLs value just return it, not need to
+> >  	 * go out to the disk.
+> > 
