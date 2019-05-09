@@ -1,34 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:59344 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727318AbfEJR0O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 May 2019 13:26:14 -0400
-Date: Fri, 10 May 2019 10:26:13 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/6] xfs: always update params on small allocation
-Message-ID: <20190510172613.GB18992@infradead.org>
-References: <20190509165839.44329-1-bfoster@redhat.com>
- <20190509165839.44329-3-bfoster@redhat.com>
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:19803 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725842AbfEICVP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 May 2019 22:21:15 -0400
+Message-ID: <5CD38E98.8000705@cn.fujitsu.com>
+Date: Thu, 9 May 2019 10:21:12 +0800
+From: xuyang <xuyang2018.jy@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190509165839.44329-3-bfoster@redhat.com>
+Subject: Re: [PATCH 0/3] fstests: various fixes
+References: <155724821034.2624631.4172554705843296757.stgit@magnolia>
+In-Reply-To: <155724821034.2624631.4172554705843296757.stgit@magnolia>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, May 09, 2019 at 12:58:35PM -0400, Brian Foster wrote:
-> xfs_alloc_ag_vextent_small() doesn't update the output parameters in
-> the event of an AGFL allocation. Instead, it updates the
-> xfs_alloc_arg structure directly to complete the allocation.
-> 
-> Update both args and the output params to provide consistent
-> behavior for future callers.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+on 2019/05/08 0:56, Darrick J. Wong wrote:
+> Hi all,
+>
+> Here are three patches fixing various regressions in xfstests when
+> mkfs.xfs defaults to enabling reflink and/or rmap by default.  Most of
+> the changes deal with the change in minimum log size requirements.  They
+> weren't caught until now because there are a number of tests that call
+> mkfs on a loop device or a file without using MKFS_OPTIONS.
+>
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
+>
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
+>
+> --D
+>
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+>
+>
+>
+Hi
 
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Tested-by: Yang Xu<xuyang2018.jy@cn.fujitsu.com>
