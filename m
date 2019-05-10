@@ -1,225 +1,165 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:59554 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727165AbfEGQ51 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 May 2019 12:57:27 -0400
-Subject: [PATCH ] xfs: validate unicode filesystem labels
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 07 May 2019 09:57:23 -0700
-Message-ID: <155724824306.2624769.17050442466246363524.stgit@magnolia>
-In-Reply-To: <155724823157.2624769.14347748235168250309.stgit@magnolia>
-References: <155724823157.2624769.14347748235168250309.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:47680 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727936AbfEJQwZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 May 2019 12:52:25 -0400
+Subject: [PATCH V2] xfs: remove unused flags arg from getsb interfaces
+References: <d678aac9-c213-36ef-1149-4d510bf85008@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <e499ead7-4cbc-163e-02b3-0750f2508e51@sandeen.net>
+Date: Fri, 10 May 2019 11:52:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <d678aac9-c213-36ef-1149-4d510bf85008@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+The flags value is always passed as 0 so remove the argument.
 
-Make sure we can set and retrieve unicode labels, including emoji.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- tests/xfs/739     |  169 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/739.out |    1 
- tests/xfs/group   |    1 
- 3 files changed, 171 insertions(+)
- create mode 100755 tests/xfs/739
- create mode 100644 tests/xfs/739.out
 
+V2: Drop the trylock that's now pointless w/o the flag.
 
-diff --git a/tests/xfs/739 b/tests/xfs/739
-new file mode 100755
-index 00000000..f8796cc3
---- /dev/null
-+++ b/tests/xfs/739
-@@ -0,0 +1,169 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0+
-+# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# FS QA Test No. 739
-+#
-+# Create a directory with multiple filenames that all appear the same
-+# (in unicode, anyway) but point to different inodes.  In theory all
-+# Linux filesystems should allow this (filenames are a sequence of
-+# arbitrary bytes) even if the user implications are horrifying.
-+#
-+seq=`basename "$0"`
-+seqres="$RESULT_DIR/$seq"
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_nocheck
-+_require_xfs_io_command 'label'
-+
-+# Only run this on xfs if xfs_scrub is available and has the unicode checker
-+check_xfs_scrub() {
-+	_scratch_mkfs >> $seqres.full 2>&1
-+	_scratch_mount >> $seqres.full 2>&1
-+	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV"
-+	res=$?
-+	_scratch_unmount
-+
-+	test $res -ne 0 && return 1
-+
-+	# We only care if xfs_scrub has unicode string support...
-+	if ! type ldd > /dev/null 2>&1 || \
-+	   ! ldd "${XFS_SCRUB_PROG}" | grep -q libicui18n; then
-+		return 1
-+	fi
-+
-+	return 0
-+}
-+
-+want_scrub=
-+check_xfs_scrub && want_scrub=yes
-+
-+filter_scrub() {
-+	grep 'Unicode' | sed -e 's/^.*Duplicate/Duplicate/g'
-+}
-+
-+maybe_scrub() {
-+	test "$want_scrub" = "yes" || return
-+
-+	output="$(LC_ALL="C.UTF-8" ${XFS_SCRUB_PROG} -v -n "${SCRATCH_MNT}" 2>&1)"
-+	echo "xfs_scrub output:" >> $seqres.full
-+	echo "$output" >> $seqres.full
-+	echo "$output" >> $tmp.scrub
-+}
-+
-+testlabel() {
-+	local label="$(echo -e "$1")"
-+	local expected_label="label = \"$label\""
-+
-+	echo "Formatting label '$1'." >> $seqres.full
-+	# First, let's see if we can recover the label when we set it
-+	# with mkfs.
-+	_scratch_mkfs -L "$label" >> $seqres.full 2>&1
-+	_scratch_mount >> $seqres.full 2>&1
-+	blkid -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g" >> $seqres.full
-+	blkid -d -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g" >> $seqres.full
-+
-+	# Did it actually stick?
-+	local actual_label="$($XFS_IO_PROG -c label $SCRATCH_MNT)"
-+	echo "$actual_label" >> $seqres.full
-+
-+	if [ "${actual_label}" != "${expected_label}" ]; then
-+		echo "Saw '${expected_label}', expected '${actual_label}'."
-+	fi
-+	maybe_scrub
-+	_scratch_unmount
-+
-+	# Now let's try setting the label online to see what happens.
-+	echo "Setting label '$1'." >> $seqres.full
-+	_scratch_mkfs >> $seqres.full 2>&1
-+	_scratch_mount >> $seqres.full 2>&1
-+	$XFS_IO_PROG -c "label -s $label" $SCRATCH_MNT >> $seqres.full
-+	blkid -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g" >> $seqres.full
-+	blkid -d -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g" >> $seqres.full
-+	_scratch_cycle_mount
-+
-+	# Did it actually stick?
-+	local actual_label="$($XFS_IO_PROG -c label $SCRATCH_MNT)"
-+	echo "$actual_label" >> $seqres.full
-+
-+	if [ "${actual_label}" != "${expected_label}" ]; then
-+		echo "Saw '${expected_label}'; expected '${actual_label}'."
-+	fi
-+	maybe_scrub
-+	_scratch_unmount
-+}
-+
-+# Simple test
-+testlabel "simple"
-+
-+# Two different renderings of the same label
-+testlabel "caf\xc3\xa9.fs"
-+testlabel "cafe\xcc\x81.fs"
-+
-+# Arabic code point can expand into a muuuch longer series
-+testlabel "xfs_\xef\xb7\xba.fs"
-+
-+# Fake slash?
-+testlabel "urk\xc0\xafmoo"
-+
-+# Emoji: octopus butterfly owl giraffe
-+testlabel "\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89"
-+
-+# unicode rtl widgets too...
-+testlabel "mo\xe2\x80\xaegnp.txt"
-+testlabel "motxt.png"
-+
-+# mixed-script confusables
-+testlabel "mixed_t\xce\xbfp"
-+testlabel "mixed_top"
-+
-+# single-script spoofing
-+testlabel "a\xe2\x80\x90b.fs"
-+testlabel "a-b.fs"
-+
-+testlabel "dz_dze.fs"
-+testlabel "dz_\xca\xa3e.fs"
-+
-+# symbols
-+testlabel "_Rs.fs"
-+testlabel "_\xe2\x82\xa8.fs"
-+
-+# zero width joiners
-+testlabel "moocow.fs"
-+testlabel "moo\xe2\x80\x8dcow.fs"
-+
-+# combining marks
-+testlabel "\xe1\x80\x9c\xe1\x80\xad\xe1\x80\xaf.fs"
-+testlabel "\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.fs"
-+
-+# fake dotdot entry
-+testlabel ".\xe2\x80\x8d"
-+testlabel "..\xe2\x80\x8d"
-+
-+# Did scrub choke on anything?
-+if [ "$want_scrub" = "yes" ]; then
-+	grep -q "^Warning.*gnp.txt.*suspicious text direction" $tmp.scrub || \
-+		echo "No complaints about direction overrides?"
-+	grep -q "^Warning.*control characters" $tmp.scrub || \
-+		echo "No complaints about control characters?"
-+fi
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/739.out b/tests/xfs/739.out
-new file mode 100644
-index 00000000..f4f653e2
---- /dev/null
-+++ b/tests/xfs/739.out
-@@ -0,0 +1 @@
-+QA output created by 739
-diff --git a/tests/xfs/group b/tests/xfs/group
-index e71b058f..c8620d72 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -501,3 +501,4 @@
- 501 auto quick unlink
- 502 auto quick unlink
- 503 auto copy metadump
-+739 auto quick mkfs label
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index e76a3e5d28d7..f1c60aa5d312 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -939,7 +939,7 @@ xfs_log_sb(
+ 	struct xfs_trans	*tp)
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+-	struct xfs_buf		*bp = xfs_trans_getsb(tp, mp, 0);
++	struct xfs_buf		*bp = xfs_trans_getsb(tp, mp);
+ 
+ 	mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
+ 	mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
+@@ -1069,7 +1069,7 @@ xfs_sync_sb_buf(
+ 	if (error)
+ 		return error;
+ 
+-	bp = xfs_trans_getsb(tp, mp, 0);
++	bp = xfs_trans_getsb(tp, mp);
+ 	xfs_log_sb(tp);
+ 	xfs_trans_bhold(tp, bp);
+ 	xfs_trans_set_sync(tp);
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 9329f5adbfbe..4cb7d4906c33 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -5687,7 +5687,7 @@ xlog_do_recover(
+ 	 * Now that we've finished replaying all buffer and inode
+ 	 * updates, re-read in the superblock and reverify it.
+ 	 */
+-	bp = xfs_getsb(mp, 0);
++	bp = xfs_getsb(mp);
+ 	bp->b_flags &= ~(XBF_DONE | XBF_ASYNC);
+ 	ASSERT(!(bp->b_flags & XBF_WRITE));
+ 	bp->b_flags |= XBF_READ;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 6b2bfe81dc51..70a93f3b914e 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1385,24 +1385,14 @@ xfs_mod_frextents(
+  * xfs_getsb() is called to obtain the buffer for the superblock.
+  * The buffer is returned locked and read in from disk.
+  * The buffer should be released with a call to xfs_brelse().
+- *
+- * If the flags parameter is BUF_TRYLOCK, then we'll only return
+- * the superblock buffer if it can be locked without sleeping.
+- * If it can't then we'll return NULL.
+  */
+ struct xfs_buf *
+ xfs_getsb(
+-	struct xfs_mount	*mp,
+-	int			flags)
++	struct xfs_mount	*mp)
+ {
+ 	struct xfs_buf		*bp = mp->m_sb_bp;
+ 
+-	if (!xfs_buf_trylock(bp)) {
+-		if (flags & XBF_TRYLOCK)
+-			return NULL;
+-		xfs_buf_lock(bp);
+-	}
+-
++	xfs_buf_lock(bp);
+ 	xfs_buf_hold(bp);
+ 	ASSERT(bp->b_flags & XBF_DONE);
+ 	return bp;
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index c81a5cd7c228..11073b470c41 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -465,7 +465,7 @@ extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
+ 				 bool reserved);
+ extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
+ 
+-extern struct xfs_buf *xfs_getsb(xfs_mount_t *, int);
++extern struct xfs_buf *xfs_getsb(xfs_mount_t *);
+ extern int	xfs_readsb(xfs_mount_t *, int);
+ extern void	xfs_freesb(xfs_mount_t *);
+ extern bool	xfs_fs_writable(struct xfs_mount *mp, int level);
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 912b42f5fe4a..0746b329a937 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -452,7 +452,7 @@ xfs_trans_apply_sb_deltas(
+ 	xfs_buf_t	*bp;
+ 	int		whole = 0;
+ 
+-	bp = xfs_trans_getsb(tp, tp->t_mountp, 0);
++	bp = xfs_trans_getsb(tp, tp->t_mountp);
+ 	sbp = XFS_BUF_TO_SBP(bp);
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index c6e1c5704a8c..fd35da161a2b 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -203,7 +203,7 @@ xfs_trans_read_buf(
+ 				      flags, bpp, ops);
+ }
+ 
+-struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *, int);
++struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *);
+ 
+ void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_bjoin(xfs_trans_t *, struct xfs_buf *);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 7d65ebf1e847..a1764a1dbd99 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -174,8 +174,7 @@ xfs_trans_get_buf_map(
+ xfs_buf_t *
+ xfs_trans_getsb(
+ 	xfs_trans_t		*tp,
+-	struct xfs_mount	*mp,
+-	int			flags)
++	struct xfs_mount	*mp)
+ {
+ 	xfs_buf_t		*bp;
+ 	struct xfs_buf_log_item	*bip;
+@@ -185,7 +184,7 @@ xfs_trans_getsb(
+ 	 * if tp is NULL.
+ 	 */
+ 	if (tp == NULL)
+-		return xfs_getsb(mp, flags);
++		return xfs_getsb(mp);
+ 
+ 	/*
+ 	 * If the superblock buffer already has this transaction
+@@ -203,7 +202,7 @@ xfs_trans_getsb(
+ 		return bp;
+ 	}
+ 
+-	bp = xfs_getsb(mp, flags);
++	bp = xfs_getsb(mp);
+ 	if (bp == NULL)
+ 		return NULL;
+ 
