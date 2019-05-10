@@ -1,145 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43760 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:36084 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727838AbfEJQuW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 May 2019 12:50:22 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 55C28C058CAF
-        for <linux-xfs@vger.kernel.org>; Fri, 10 May 2019 16:50:22 +0000 (UTC)
-Subject: Re: [PATCH] xfs: remove unused flags arg from getsb interfaces
-References: <d678aac9-c213-36ef-1149-4d510bf85008@redhat.com>
- <20190510164456.GB48049@bfoster>
+        id S1727670AbfEJUSn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 May 2019 16:18:43 -0400
 From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <992571d2-b326-40b6-b6e6-b970a85c98b1@redhat.com>
-Date: Fri, 10 May 2019 11:50:21 -0500
-MIME-Version: 1.0
-In-Reply-To: <20190510164456.GB48049@bfoster>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 01/11] libxfs: remove i_transp
+Date: Fri, 10 May 2019 15:18:20 -0500
+Message-Id: <1557519510-10602-2-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
+References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On 5/10/19 11:44 AM, Brian Foster wrote:
-> On Fri, May 10, 2019 at 11:36:46AM -0500, Eric Sandeen wrote:
->> The flags value is always passed as 0 so remove the argument.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
-> ...
->> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
->> index 6b2bfe8..fd0eb81 100644
->> --- a/fs/xfs/xfs_mount.c
->> +++ b/fs/xfs/xfs_mount.c
->> @@ -1385,23 +1385,15 @@ xfs_mod_frextents(
->>   * xfs_getsb() is called to obtain the buffer for the superblock.
->>   * The buffer is returned locked and read in from disk.
->>   * The buffer should be released with a call to xfs_brelse().
->> - *
->> - * If the flags parameter is BUF_TRYLOCK, then we'll only return
->> - * the superblock buffer if it can be locked without sleeping.
->> - * If it can't then we'll return NULL.
->>   */
->>  struct xfs_buf *
->>  xfs_getsb(
->> -	struct xfs_mount	*mp,
->> -	int			flags)
->> +	struct xfs_mount	*mp)
->>  {
->>  	struct xfs_buf		*bp = mp->m_sb_bp;
->>  
->> -	if (!xfs_buf_trylock(bp)) {
->> -		if (flags & XBF_TRYLOCK)
->> -			return NULL;
->> +	if (!xfs_buf_trylock(bp))
->>  		xfs_buf_lock(bp);
-> 
-> Any reason to not just drop the trylock now? Looks fine either way:
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+i_transp was removed from kernel code back in 2011, but it was left
+in userspace.  It's only used in a few asserts in transaction code
+(as it was in the kernel) so there doesnt' seem to be a compelling
+reason to carry it around anymore.
 
-oh good point, I'll send V2, and take your "either way" as
-"you can keep my rvb" :)
+Source kernel commit: f3ca87389dbff0a3dc1a7cb2fa7c62e25421c66c
 
->> -	}
->>  
->>  	xfs_buf_hold(bp);
->>  	ASSERT(bp->b_flags & XBF_DONE);
->> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
->> index c81a5cd..11073b4 100644
->> --- a/fs/xfs/xfs_mount.h
->> +++ b/fs/xfs/xfs_mount.h
->> @@ -465,7 +465,7 @@ extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
->>  				 bool reserved);
->>  extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
->>  
->> -extern struct xfs_buf *xfs_getsb(xfs_mount_t *, int);
->> +extern struct xfs_buf *xfs_getsb(xfs_mount_t *);
->>  extern int	xfs_readsb(xfs_mount_t *, int);
->>  extern void	xfs_freesb(xfs_mount_t *);
->>  extern bool	xfs_fs_writable(struct xfs_mount *mp, int level);
->> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
->> index 912b42f..0746b32 100644
->> --- a/fs/xfs/xfs_trans.c
->> +++ b/fs/xfs/xfs_trans.c
->> @@ -452,7 +452,7 @@ xfs_trans_apply_sb_deltas(
->>  	xfs_buf_t	*bp;
->>  	int		whole = 0;
->>  
->> -	bp = xfs_trans_getsb(tp, tp->t_mountp, 0);
->> +	bp = xfs_trans_getsb(tp, tp->t_mountp);
->>  	sbp = XFS_BUF_TO_SBP(bp);
->>  
->>  	/*
->> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
->> index c6e1c57..fd35da1 100644
->> --- a/fs/xfs/xfs_trans.h
->> +++ b/fs/xfs/xfs_trans.h
->> @@ -203,7 +203,7 @@ xfs_trans_read_buf(
->>  				      flags, bpp, ops);
->>  }
->>  
->> -struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *, int);
->> +struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *);
->>  
->>  void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
->>  void		xfs_trans_bjoin(xfs_trans_t *, struct xfs_buf *);
->> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
->> index 7d65ebf..a1764a1 100644
->> --- a/fs/xfs/xfs_trans_buf.c
->> +++ b/fs/xfs/xfs_trans_buf.c
->> @@ -174,8 +174,7 @@ xfs_trans_get_buf_map(
->>  xfs_buf_t *
->>  xfs_trans_getsb(
->>  	xfs_trans_t		*tp,
->> -	struct xfs_mount	*mp,
->> -	int			flags)
->> +	struct xfs_mount	*mp)
->>  {
->>  	xfs_buf_t		*bp;
->>  	struct xfs_buf_log_item	*bip;
->> @@ -185,7 +184,7 @@ xfs_trans_getsb(
->>  	 * if tp is NULL.
->>  	 */
->>  	if (tp == NULL)
->> -		return xfs_getsb(mp, flags);
->> +		return xfs_getsb(mp);
->>  
->>  	/*
->>  	 * If the superblock buffer already has this transaction
->> @@ -203,7 +202,7 @@ xfs_trans_getsb(
->>  		return bp;
->>  	}
->>  
->> -	bp = xfs_getsb(mp, flags);
->> +	bp = xfs_getsb(mp);
->>  	if (bp == NULL)
->>  		return NULL;
->>  
->>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ include/xfs_inode.h |  1 -
+ libxfs/trans.c      | 11 -----------
+ 2 files changed, 12 deletions(-)
+
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 52d79f3..88b58ac 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -41,7 +41,6 @@ typedef struct xfs_inode {
+ 	struct xfs_ifork	*i_afp;		/* attribute fork pointer */
+ 	struct xfs_ifork	*i_cowfp;	/* copy on write extents */
+ 	struct xfs_ifork	i_df;		/* data fork */
+-	struct xfs_trans	*i_transp;	/* ptr to owning transaction */
+ 	struct xfs_inode_log_item *i_itemp;	/* logging information */
+ 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
+ 	struct xfs_icdinode	i_d;		/* most of ondisk inode */
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index db90624..101019b 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -344,7 +344,6 @@ libxfs_trans_ijoin(
+ {
+ 	xfs_inode_log_item_t	*iip;
+ 
+-	ASSERT(ip->i_transp == NULL);
+ 	if (ip->i_itemp == NULL)
+ 		xfs_inode_item_init(ip, ip->i_mount);
+ 	iip = ip->i_itemp;
+@@ -356,7 +355,6 @@ libxfs_trans_ijoin(
+ 
+ 	xfs_trans_add_item(tp, (xfs_log_item_t *)(iip));
+ 
+-	ip->i_transp = tp;
+ #ifdef XACT_DEBUG
+ 	fprintf(stderr, "ijoin'd inode %llu, transaction %p\n", ip->i_ino, tp);
+ #endif
+@@ -368,7 +366,6 @@ libxfs_trans_ijoin_ref(
+ 	xfs_inode_t		*ip,
+ 	int			lock_flags)
+ {
+-	ASSERT(ip->i_transp == tp);
+ 	ASSERT(ip->i_itemp != NULL);
+ 
+ 	xfs_trans_ijoin(tp, ip, lock_flags);
+@@ -406,7 +403,6 @@ xfs_trans_log_inode(
+ 	xfs_inode_t		*ip,
+ 	uint			flags)
+ {
+-	ASSERT(ip->i_transp == tp);
+ 	ASSERT(ip->i_itemp != NULL);
+ #ifdef XACT_DEBUG
+ 	fprintf(stderr, "dirtied inode %llu, transaction %p\n", ip->i_ino, tp);
+@@ -817,7 +813,6 @@ inode_item_done(
+ 	ASSERT(ip != NULL);
+ 
+ 	if (!(iip->ili_fields & XFS_ILOG_ALL)) {
+-		ip->i_transp = NULL;	/* disassociate from transaction */
+ 		iip->ili_flags = 0;	/* reset all flags */
+ 		goto free;
+ 	}
+@@ -838,7 +833,6 @@ inode_item_done(
+ 	 * we still release the buffer reference we currently hold.
+ 	 */
+ 	error = libxfs_iflush_int(ip, bp);
+-	ip->i_transp = NULL;	/* disassociate from transaction */
+ 	bp->b_transp = NULL;	/* remove xact ptr */
+ 
+ 	if (error) {
+@@ -927,11 +921,6 @@ static void
+ inode_item_unlock(
+ 	xfs_inode_log_item_t	*iip)
+ {
+-	xfs_inode_t		*ip = iip->ili_inode;
+-
+-	/* Clear the transaction pointer in the inode. */
+-	ip->i_transp = NULL;
+-
+ 	iip->ili_flags = 0;
+ 	xfs_inode_item_put(iip);
+ }
+-- 
+1.8.3.1
