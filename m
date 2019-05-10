@@ -1,197 +1,332 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45718 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:36098 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727593AbfEJPxm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 May 2019 11:53:42 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v8 3/6] libnvdimm: add dax_dev sync flag
-Date: Fri, 10 May 2019 21:21:59 +0530
-Message-Id: <20190510155202.14737-4-pagupta@redhat.com>
-In-Reply-To: <20190510155202.14737-1-pagupta@redhat.com>
-References: <20190510155202.14737-1-pagupta@redhat.com>
+        id S1727828AbfEJUSn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 May 2019 16:18:43 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 08/11] libxfs: create new file inode_item.c
+Date: Fri, 10 May 2019 15:18:27 -0500
+Message-Id: <1557519510-10602-9-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
+References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, jstaron@google.com, pagupta@redhat.com
+To: linux-xfs@vger.kernel.org
 
-This patch adds 'DAXDEV_SYNC' flag which is set
-for nd_region doing synchronous flush. This later
-is used to disable MAP_SYNC functionality for
-ext4 & xfs filesystem for devices don't support
-synchronous flush.
+Pull functions out of libxfs/* into inode_item.c, if they roughly match
+the kernel's xfs_inode_item.c file.
 
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- drivers/dax/bus.c            |  2 +-
- drivers/dax/super.c          | 13 ++++++++++++-
- drivers/md/dm.c              |  3 ++-
- drivers/nvdimm/pmem.c        |  5 ++++-
- drivers/nvdimm/region_devs.c |  7 +++++++
- include/linux/dax.h          |  8 ++++++--
- include/linux/libnvdimm.h    |  1 +
- 7 files changed, 33 insertions(+), 6 deletions(-)
+ libxfs/Makefile      |   2 +-
+ libxfs/inode_item.c  | 117 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/libxfs_priv.h |   3 ++
+ libxfs/logitem.c     |  43 -------------------
+ libxfs/trans.c       |  75 ---------------------------------
+ 5 files changed, 121 insertions(+), 119 deletions(-)
+ create mode 100644 libxfs/inode_item.c
+ delete mode 100644 libxfs/logitem.c
 
-diff --git a/drivers/dax/bus.c b/drivers/dax/bus.c
-index 2109cfe80219..5f184e751c82 100644
---- a/drivers/dax/bus.c
-+++ b/drivers/dax/bus.c
-@@ -388,7 +388,7 @@ struct dev_dax *__devm_create_dev_dax(struct dax_region *dax_region, int id,
- 	 * No 'host' or dax_operations since there is no access to this
- 	 * device outside of mmap of the resulting character device.
- 	 */
--	dax_dev = alloc_dax(dev_dax, NULL, NULL);
-+	dax_dev = alloc_dax(dev_dax, NULL, NULL, DAXDEV_F_SYNC);
- 	if (!dax_dev)
- 		goto err;
- 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index bbd57ca0634a..b6c44b5062e9 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -186,6 +186,8 @@ enum dax_device_flags {
- 	DAXDEV_ALIVE,
- 	/* gate whether dax_flush() calls the low level flush routine */
- 	DAXDEV_WRITE_CACHE,
-+	/* flag to check if device supports synchronous flush */
-+	DAXDEV_SYNC,
- };
- 
- /**
-@@ -354,6 +356,12 @@ bool dax_write_cache_enabled(struct dax_device *dax_dev)
- }
- EXPORT_SYMBOL_GPL(dax_write_cache_enabled);
- 
-+bool dax_synchronous(struct dax_device *dax_dev)
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index 820ffb0..fe58ce9 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -55,8 +55,8 @@ CFILES = cache.c \
+ 	buf_item.c \
+ 	defer_item.c \
+ 	init.c \
++	inode_item.c \
+ 	kmem.c \
+-	logitem.c \
+ 	rdwr.c \
+ 	trans.c \
+ 	trans_buf.c \
+diff --git a/libxfs/inode_item.c b/libxfs/inode_item.c
+new file mode 100644
+index 0000000..4e9b1af
+--- /dev/null
++++ b/libxfs/inode_item.c
+@@ -0,0 +1,117 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ */
++
++#include "libxfs_priv.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_inode_buf.h"
++#include "xfs_inode_fork.h"
++#include "xfs_inode.h"
++#include "xfs_trans.h"
++
++kmem_zone_t	*xfs_ili_zone;		/* inode log item zone */
++
++/*
++ * Initialize the inode log item for a newly allocated (in-core) inode.
++ */
++void
++xfs_inode_item_init(
++	xfs_inode_t		*ip,
++	xfs_mount_t		*mp)
 +{
-+	return test_bit(DAXDEV_SYNC, &dax_dev->flags);
-+}
-+EXPORT_SYMBOL_GPL(dax_synchronous);
++	xfs_inode_log_item_t	*iip;
 +
- bool dax_alive(struct dax_device *dax_dev)
- {
- 	lockdep_assert_held(&dax_srcu);
-@@ -508,7 +516,7 @@ static void dax_add_host(struct dax_device *dax_dev, const char *host)
++	ASSERT(ip->i_itemp == NULL);
++	iip = ip->i_itemp = (xfs_inode_log_item_t *)
++			kmem_zone_zalloc(xfs_ili_zone, KM_SLEEP);
++#ifdef LI_DEBUG
++	fprintf(stderr, "inode_item_init for inode %llu, iip=%p\n",
++		ip->i_ino, iip);
++#endif
++
++	iip->ili_item.li_type = XFS_LI_INODE;
++	iip->ili_item.li_mountp = mp;
++	INIT_LIST_HEAD(&iip->ili_item.li_trans);
++	iip->ili_inode = ip;
++}
++
++static void
++xfs_inode_item_put(
++	struct xfs_inode_log_item	*iip)
++{
++	struct xfs_inode		*ip = iip->ili_inode;
++
++	ip->i_itemp = NULL;
++	kmem_zone_free(xfs_ili_zone, iip);
++}
++
++/*
++ * Transaction commital code follows (i.e. write to disk in libxfs)
++ *
++ * XXX (dgc): should failure to flush the inode (e.g. due to uncorrected
++ * corruption) result in transaction commit failure w/ EFSCORRUPTED?
++ */
++void
++inode_item_done(
++	xfs_inode_log_item_t	*iip)
++{
++	xfs_dinode_t		*dip;
++	xfs_inode_t		*ip;
++	xfs_mount_t		*mp;
++	xfs_buf_t		*bp;
++	int			error;
++
++	ip = iip->ili_inode;
++	mp = iip->ili_item.li_mountp;
++	ASSERT(ip != NULL);
++
++	if (!(iip->ili_fields & XFS_ILOG_ALL))
++		goto free;
++
++	/*
++	 * Get the buffer containing the on-disk inode.
++	 */
++	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, 0, 0);
++	if (error) {
++		fprintf(stderr, _("%s: warning - imap_to_bp failed (%d)\n"),
++			progname, error);
++		goto free;
++	}
++
++	/*
++	 * Flush the inode and disassociate it from the transaction regardless
++	 * of whether the flush succeed or not. If we fail the flush, make sure
++	 * we still release the buffer reference we currently hold.
++	 */
++	error = libxfs_iflush_int(ip, bp);
++	bp->b_transp = NULL;	/* remove xact ptr */
++
++	if (error) {
++		fprintf(stderr, _("%s: warning - iflush_int failed (%d)\n"),
++			progname, error);
++		libxfs_putbuf(bp);
++		goto free;
++	}
++
++	libxfs_writebuf(bp, 0);
++#ifdef XACT_DEBUG
++	fprintf(stderr, "flushing dirty inode %llu, buffer %p\n",
++			ip->i_ino, bp);
++#endif
++free:
++	xfs_inode_item_put(iip);
++}
++
++void
++inode_item_unlock(
++	xfs_inode_log_item_t    *iip)
++{
++	xfs_inode_item_put(iip);
++}
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 155b782..cf808d3 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -491,6 +491,7 @@ struct xfs_log_item;
+ struct xfs_buf;
+ struct xfs_buf_map;
+ struct xfs_buf_log_item;
++struct xfs_inode_log_item;
+ struct xfs_buftarg;
+ 
+ /* xfs_attr.c */
+@@ -515,6 +516,8 @@ void xfs_trans_del_item(struct xfs_log_item *);
+ 
+ /* xfs_inode_item.c */
+ void xfs_inode_item_init(struct xfs_inode *, struct xfs_mount *);
++void inode_item_done(struct xfs_inode_log_item *iip);
++void inode_item_unlock(struct xfs_inode_log_item *iip);
+ 
+ /* xfs_buf_item.c */
+ void xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
+diff --git a/libxfs/logitem.c b/libxfs/logitem.c
+deleted file mode 100644
+index c80e2ed..0000000
+--- a/libxfs/logitem.c
++++ /dev/null
+@@ -1,43 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- */
+-
+-#include "libxfs_priv.h"
+-#include "xfs_fs.h"
+-#include "xfs_shared.h"
+-#include "xfs_format.h"
+-#include "xfs_log_format.h"
+-#include "xfs_trans_resv.h"
+-#include "xfs_mount.h"
+-#include "xfs_inode_buf.h"
+-#include "xfs_inode_fork.h"
+-#include "xfs_inode.h"
+-#include "xfs_trans.h"
+-
+-kmem_zone_t	*xfs_ili_zone;		/* inode log item zone */
+-
+-/*
+- * Initialize the inode log item for a newly allocated (in-core) inode.
+- */
+-void
+-xfs_inode_item_init(
+-	xfs_inode_t		*ip,
+-	xfs_mount_t		*mp)
+-{
+-	xfs_inode_log_item_t	*iip;
+-
+-	ASSERT(ip->i_itemp == NULL);
+-	iip = ip->i_itemp = (xfs_inode_log_item_t *)
+-			kmem_zone_zalloc(xfs_ili_zone, KM_SLEEP);
+-#ifdef LI_DEBUG
+-	fprintf(stderr, "inode_item_init for inode %llu, iip=%p\n",
+-		ip->i_ino, iip);
+-#endif
+-
+-	iip->ili_item.li_type = XFS_LI_INODE;
+-	iip->ili_item.li_mountp = mp;
+-	INIT_LIST_HEAD(&iip->ili_item.li_trans);
+-	iip->ili_inode = ip;
+-}
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 7d3899c..b062e07 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -470,74 +470,6 @@ _("Transaction block reservation exceeded! %u > %u\n"),
  }
  
- struct dax_device *alloc_dax(void *private, const char *__host,
--		const struct dax_operations *ops)
-+		const struct dax_operations *ops, unsigned long flags)
+ static void
+-xfs_inode_item_put(
+-	struct xfs_inode_log_item	*iip)
+-{
+-	struct xfs_inode		*ip = iip->ili_inode;
+-
+-	ip->i_itemp = NULL;
+-	kmem_zone_free(xfs_ili_zone, iip);
+-}
+-
+-
+-/*
+- * Transaction commital code follows (i.e. write to disk in libxfs)
+- *
+- * XXX (dgc): should failure to flush the inode (e.g. due to uncorrected
+- * corruption) result in transaction commit failure w/ EFSCORRUPTED?
+- */
+-static void
+-inode_item_done(
+-	xfs_inode_log_item_t	*iip)
+-{
+-	xfs_dinode_t		*dip;
+-	xfs_inode_t		*ip;
+-	xfs_mount_t		*mp;
+-	xfs_buf_t		*bp;
+-	int			error;
+-
+-	ip = iip->ili_inode;
+-	mp = iip->ili_item.li_mountp;
+-	ASSERT(ip != NULL);
+-
+-	if (!(iip->ili_fields & XFS_ILOG_ALL))
+-		goto free;
+-
+-	/*
+-	 * Get the buffer containing the on-disk inode.
+-	 */
+-	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, 0, 0);
+-	if (error) {
+-		fprintf(stderr, _("%s: warning - imap_to_bp failed (%d)\n"),
+-			progname, error);
+-		goto free;
+-	}
+-
+-	/*
+-	 * Flush the inode and disassociate it from the transaction regardless
+-	 * of whether the flush succeed or not. If we fail the flush, make sure
+-	 * we still release the buffer reference we currently hold.
+-	 */
+-	error = libxfs_iflush_int(ip, bp);
+-	bp->b_transp = NULL;	/* remove xact ptr */
+-
+-	if (error) {
+-		fprintf(stderr, _("%s: warning - iflush_int failed (%d)\n"),
+-			progname, error);
+-		libxfs_putbuf(bp);
+-		goto free;
+-	}
+-
+-	libxfs_writebuf(bp, 0);
+-#ifdef XACT_DEBUG
+-	fprintf(stderr, "flushing dirty inode %llu, buffer %p\n",
+-			ip->i_ino, bp);
+-#endif
+-free:
+-	xfs_inode_item_put(iip);
+-}
+-
+-static void
+ trans_committed(
+ 	xfs_trans_t		*tp)
  {
- 	struct dax_device *dax_dev;
- 	const char *host;
-@@ -531,6 +539,9 @@ struct dax_device *alloc_dax(void *private, const char *__host,
- 	dax_add_host(dax_dev, host);
- 	dax_dev->ops = ops;
- 	dax_dev->private = private;
-+	if (flags & DAXDEV_F_SYNC)
-+		set_bit(DAXDEV_SYNC, &dax_dev->flags);
-+
- 	return dax_dev;
- 
-  err_dev:
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 043f0761e4a0..ee007b75d9fd 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1969,7 +1969,8 @@ static struct mapped_device *alloc_dev(int minor)
- 	sprintf(md->disk->disk_name, "dm-%d", minor);
- 
- 	if (IS_ENABLED(CONFIG_DAX_DRIVER)) {
--		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops);
-+		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops,
-+							 DAXDEV_F_SYNC);
- 		if (!dax_dev)
- 			goto bad;
+@@ -558,13 +490,6 @@ trans_committed(
  	}
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index 0279eb1da3ef..bdbd2b414d3d 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -365,6 +365,7 @@ static int pmem_attach_disk(struct device *dev,
- 	struct gendisk *disk;
- 	void *addr;
- 	int rc;
-+	unsigned long flags = 0UL;
- 
- 	pmem = devm_kzalloc(dev, sizeof(*pmem), GFP_KERNEL);
- 	if (!pmem)
-@@ -462,7 +463,9 @@ static int pmem_attach_disk(struct device *dev,
- 	nvdimm_badblocks_populate(nd_region, &pmem->bb, &bb_res);
- 	disk->bb = &pmem->bb;
- 
--	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
-+	if (is_nvdimm_sync(nd_region))
-+		flags = DAXDEV_F_SYNC;
-+	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops, flags);
- 	if (!dax_dev) {
- 		put_disk(disk);
- 		return -ENOMEM;
-diff --git a/drivers/nvdimm/region_devs.c b/drivers/nvdimm/region_devs.c
-index b4ef7d9ff22e..f3ea5369d20a 100644
---- a/drivers/nvdimm/region_devs.c
-+++ b/drivers/nvdimm/region_devs.c
-@@ -1197,6 +1197,13 @@ int nvdimm_has_cache(struct nd_region *nd_region)
  }
- EXPORT_SYMBOL_GPL(nvdimm_has_cache);
  
-+bool is_nvdimm_sync(struct nd_region *nd_region)
-+{
-+	return is_nd_pmem(&nd_region->dev) &&
-+		!test_bit(ND_REGION_ASYNC, &nd_region->flags);
-+}
-+EXPORT_SYMBOL_GPL(is_nvdimm_sync);
-+
- struct conflict_context {
- 	struct nd_region *nd_region;
- 	resource_size_t start, size;
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 0dd316a74a29..ed75b7d9d178 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -7,6 +7,9 @@
- #include <linux/radix-tree.h>
- #include <asm/pgtable.h>
- 
-+/* Flag for synchronous flush */
-+#define DAXDEV_F_SYNC (1UL << 0)
-+
- typedef unsigned long dax_entry_t;
- 
- struct iomap_ops;
-@@ -32,18 +35,19 @@ extern struct attribute_group dax_attribute_group;
- #if IS_ENABLED(CONFIG_DAX)
- struct dax_device *dax_get_by_host(const char *host);
- struct dax_device *alloc_dax(void *private, const char *host,
--		const struct dax_operations *ops);
-+		const struct dax_operations *ops, unsigned long flags);
- void put_dax(struct dax_device *dax_dev);
- void kill_dax(struct dax_device *dax_dev);
- void dax_write_cache(struct dax_device *dax_dev, bool wc);
- bool dax_write_cache_enabled(struct dax_device *dax_dev);
-+bool dax_synchronous(struct dax_device *dax_dev);
- #else
- static inline struct dax_device *dax_get_by_host(const char *host)
- {
- 	return NULL;
- }
- static inline struct dax_device *alloc_dax(void *private, const char *host,
--		const struct dax_operations *ops)
-+		const struct dax_operations *ops, unsigned long flags)
- {
- 	/*
- 	 * Callers should check IS_ENABLED(CONFIG_DAX) to know if this
-diff --git a/include/linux/libnvdimm.h b/include/linux/libnvdimm.h
-index feb342d026f2..3238a206e563 100644
---- a/include/linux/libnvdimm.h
-+++ b/include/linux/libnvdimm.h
-@@ -264,6 +264,7 @@ void nvdimm_flush(struct nd_region *nd_region);
- int nvdimm_has_flush(struct nd_region *nd_region);
- int nvdimm_has_cache(struct nd_region *nd_region);
- int nvdimm_in_overwrite(struct nvdimm *nvdimm);
-+bool is_nvdimm_sync(struct nd_region *nd_region);
- 
- static inline int nvdimm_ctl(struct nvdimm *nvdimm, unsigned int cmd, void *buf,
- 		unsigned int buf_len, int *cmd_rc)
+-static void
+-inode_item_unlock(
+-	xfs_inode_log_item_t	*iip)
+-{
+-	xfs_inode_item_put(iip);
+-}
+-
+ /* Detach and unlock all of the items in a transaction */
+ static void
+ xfs_trans_free_items(
 -- 
-2.20.1
+1.8.3.1
