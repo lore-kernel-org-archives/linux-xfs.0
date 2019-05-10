@@ -1,144 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:34055 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725843AbfEGUZ6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 May 2019 16:25:58 -0400
-Received: by mail-pf1-f196.google.com with SMTP id n19so692015pfa.1
-        for <linux-xfs@vger.kernel.org>; Tue, 07 May 2019 13:25:58 -0700 (PDT)
-Subject: Re: [Qemu-devel] [PATCH v7 2/6] virtio-pmem: Add virtio pmem driver
-References: <20190426050039.17460-1-pagupta@redhat.com>
- <20190426050039.17460-3-pagupta@redhat.com>
-From: =?UTF-8?Q?Jakub_Staro=c5=84?= <jstaron@google.com>
-Message-ID: <3d6479ae-6c39-d614-f1d9-aa1978e2e438@google.com>
-Date: Tue, 7 May 2019 13:25:54 -0700
+Received: from mx1.redhat.com ([209.132.183.28]:43760 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727838AbfEJQuW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 May 2019 12:50:22 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 55C28C058CAF
+        for <linux-xfs@vger.kernel.org>; Fri, 10 May 2019 16:50:22 +0000 (UTC)
+Subject: Re: [PATCH] xfs: remove unused flags arg from getsb interfaces
+References: <d678aac9-c213-36ef-1149-4d510bf85008@redhat.com>
+ <20190510164456.GB48049@bfoster>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <992571d2-b326-40b6-b6e6-b970a85c98b1@redhat.com>
+Date: Fri, 10 May 2019 11:50:21 -0500
 MIME-Version: 1.0
-In-Reply-To: <20190426050039.17460-3-pagupta@redhat.com>
+In-Reply-To: <20190510164456.GB48049@bfoster>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: jack@suse.cz, mst@redhat.com, jasowang@redhat.com, david@fromorbit.com, lcapitulino@redhat.com, adilger.kernel@dilger.ca, zwisler@kernel.org, aarcange@redhat.com, dave.jiang@intel.com, darrick.wong@oracle.com, vishal.l.verma@intel.com, david@redhat.com, willy@infradead.org, hch@infradead.org, jmoyer@redhat.com, nilal@redhat.com, lenb@kernel.org, kilobyte@angband.pl, riel@surriel.com, yuval.shaia@oracle.com, stefanha@redhat.com, pbonzini@redhat.com, dan.j.williams@intel.com, kwolf@redhat.com, tytso@mit.edu, xiaoguangrong.eric@gmail.com, cohuck@redhat.com, rjw@rjwysocki.net, imammedo@redhat.com, smbarber@google.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 4/25/19 10:00 PM, Pankaj Gupta wrote:
+On 5/10/19 11:44 AM, Brian Foster wrote:
+> On Fri, May 10, 2019 at 11:36:46AM -0500, Eric Sandeen wrote:
+>> The flags value is always passed as 0 so remove the argument.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+> ...
+>> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+>> index 6b2bfe8..fd0eb81 100644
+>> --- a/fs/xfs/xfs_mount.c
+>> +++ b/fs/xfs/xfs_mount.c
+>> @@ -1385,23 +1385,15 @@ xfs_mod_frextents(
+>>   * xfs_getsb() is called to obtain the buffer for the superblock.
+>>   * The buffer is returned locked and read in from disk.
+>>   * The buffer should be released with a call to xfs_brelse().
+>> - *
+>> - * If the flags parameter is BUF_TRYLOCK, then we'll only return
+>> - * the superblock buffer if it can be locked without sleeping.
+>> - * If it can't then we'll return NULL.
+>>   */
+>>  struct xfs_buf *
+>>  xfs_getsb(
+>> -	struct xfs_mount	*mp,
+>> -	int			flags)
+>> +	struct xfs_mount	*mp)
+>>  {
+>>  	struct xfs_buf		*bp = mp->m_sb_bp;
+>>  
+>> -	if (!xfs_buf_trylock(bp)) {
+>> -		if (flags & XBF_TRYLOCK)
+>> -			return NULL;
+>> +	if (!xfs_buf_trylock(bp))
+>>  		xfs_buf_lock(bp);
+> 
+> Any reason to not just drop the trylock now? Looks fine either way:
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> +void host_ack(struct virtqueue *vq)
-> +{
-> +	unsigned int len;
-> +	unsigned long flags;
-> +	struct virtio_pmem_request *req, *req_buf;
-> +	struct virtio_pmem *vpmem = vq->vdev->priv;
-> +
-> +	spin_lock_irqsave(&vpmem->pmem_lock, flags);
-> +	while ((req = virtqueue_get_buf(vq, &len)) != NULL) {
-> +		req->done = true;
-> +		wake_up(&req->host_acked);
-> +
-> +		if (!list_empty(&vpmem->req_list)) {
-> +			req_buf = list_first_entry(&vpmem->req_list,
-> +					struct virtio_pmem_request, list);
-> +			list_del(&vpmem->req_list);
+oh good point, I'll send V2, and take your "either way" as
+"you can keep my rvb" :)
 
-Shouldn't it be rather `list_del(vpmem->req_list.next)`? We are trying to unlink
-first element of the list and `vpmem->req_list` is just the list head.
-
-> +int virtio_pmem_flush(struct nd_region *nd_region)
-> +{
-> +	int err;
-> +	unsigned long flags;
-> +	struct scatterlist *sgs[2], sg, ret;
-> +	struct virtio_device *vdev = nd_region->provider_data;
-> +	struct virtio_pmem *vpmem = vdev->priv;
-> +	struct virtio_pmem_request *req;
-> +
-> +	might_sleep();
-> +	req = kmalloc(sizeof(*req), GFP_KERNEL);
-> +	if (!req)
-> +		return -ENOMEM;
-> +
-> +	req->done = req->wq_buf_avail = false;
-> +	strcpy(req->name, "FLUSH");
-> +	init_waitqueue_head(&req->host_acked);
-> +	init_waitqueue_head(&req->wq_buf);
-> +	sg_init_one(&sg, req->name, strlen(req->name));
-> +	sgs[0] = &sg;
-> +	sg_init_one(&ret, &req->ret, sizeof(req->ret));
-> +	sgs[1] = &ret;
-> +
-> +	spin_lock_irqsave(&vpmem->pmem_lock, flags);
-> +	err = virtqueue_add_sgs(vpmem->req_vq, sgs, 1, 1, req, GFP_ATOMIC);
-> +	if (err) {
-> +		dev_err(&vdev->dev, "failed to send command to virtio pmem device\n");
-> +
-> +		list_add_tail(&vpmem->req_list, &req->list);
-> +		spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
-> +
-> +		/* When host has read buffer, this completes via host_ack */
-> +		wait_event(req->wq_buf, req->wq_buf_avail);
-> +		spin_lock_irqsave(&vpmem->pmem_lock, flags);
-> +	}
-
-Aren't the arguments in `list_add_tail` swapped? The element we are adding should
-be first, the list should be second. Also, shouldn't we resubmit the request after
-waking up from `wait_event(req->wq_buf, req->wq_buf_avail)`?
-
-I propose rewriting it like that:
-
-diff --git a/drivers/nvdimm/virtio_pmem.c b/drivers/nvdimm/virtio_pmem.c
-index 66b582f751a3..ff0556b04e86 100644
---- a/drivers/nvdimm/virtio_pmem.c
-+++ b/drivers/nvdimm/virtio_pmem.c
-@@ -25,7 +25,7 @@ void host_ack(struct virtqueue *vq)
- 		if (!list_empty(&vpmem->req_list)) {
- 			req_buf = list_first_entry(&vpmem->req_list,
- 					struct virtio_pmem_request, list);
--			list_del(&vpmem->req_list);
-+			list_del(vpmem->req_list.next);
- 			req_buf->wq_buf_avail = true;
- 			wake_up(&req_buf->wq_buf);
- 		}
-@@ -59,17 +59,33 @@ int virtio_pmem_flush(struct nd_region *nd_region)
- 	sgs[1] = &ret;
- 
- 	spin_lock_irqsave(&vpmem->pmem_lock, flags);
--	err = virtqueue_add_sgs(vpmem->req_vq, sgs, 1, 1, req, GFP_ATOMIC);
--	if (err) {
--		dev_err(&vdev->dev, "failed to send command to virtio pmem device\n");
-+	/*
-+	 * If virtqueue_add_sgs returns -ENOSPC then req_vq virtual queue does not
-+	 * have free descriptor slots. We add the request to req_list and wait
-+	 * for host_ack to wake us up when free slots are available.
-+	 */
-+	while ((err = virtqueue_add_sgs(vpmem->req_vq, sgs, 1, 1, req, GFP_ATOMIC)) == -ENOSPC) {
-+		dev_err(&vdev->dev, "failed to send command to virtio pmem device, no free slots in the virtqueue, postponing request\n");
-+		req->wq_buf_avail = false;
- 
--		list_add_tail(&vpmem->req_list, &req->list);
-+		list_add_tail(&req->list, &vpmem->req_list);
- 		spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
- 
- 		/* When host has read buffer, this completes via host_ack */
- 		wait_event(req->wq_buf, req->wq_buf_avail);
- 		spin_lock_irqsave(&vpmem->pmem_lock, flags);
- 	}
-+
-+	/*
-+	 * virtqueue_add_sgs failed with error different than -ENOSPC, we can't
-+	 * do anything about that.
-+	 */
-+	if (err) {
-+		dev_info(&vdev->dev, "failed to send command to virtio pmem device, error code %d\n", err);
-+		spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
-+		err = -EIO;
-+		goto ret;
-+	}
- 	err = virtqueue_kick(vpmem->req_vq);
- 	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
-
-
-Let me know if it looks reasonable to you.
-
-Thank you,
-Jakub Staron
+>> -	}
+>>  
+>>  	xfs_buf_hold(bp);
+>>  	ASSERT(bp->b_flags & XBF_DONE);
+>> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+>> index c81a5cd..11073b4 100644
+>> --- a/fs/xfs/xfs_mount.h
+>> +++ b/fs/xfs/xfs_mount.h
+>> @@ -465,7 +465,7 @@ extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
+>>  				 bool reserved);
+>>  extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
+>>  
+>> -extern struct xfs_buf *xfs_getsb(xfs_mount_t *, int);
+>> +extern struct xfs_buf *xfs_getsb(xfs_mount_t *);
+>>  extern int	xfs_readsb(xfs_mount_t *, int);
+>>  extern void	xfs_freesb(xfs_mount_t *);
+>>  extern bool	xfs_fs_writable(struct xfs_mount *mp, int level);
+>> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+>> index 912b42f..0746b32 100644
+>> --- a/fs/xfs/xfs_trans.c
+>> +++ b/fs/xfs/xfs_trans.c
+>> @@ -452,7 +452,7 @@ xfs_trans_apply_sb_deltas(
+>>  	xfs_buf_t	*bp;
+>>  	int		whole = 0;
+>>  
+>> -	bp = xfs_trans_getsb(tp, tp->t_mountp, 0);
+>> +	bp = xfs_trans_getsb(tp, tp->t_mountp);
+>>  	sbp = XFS_BUF_TO_SBP(bp);
+>>  
+>>  	/*
+>> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+>> index c6e1c57..fd35da1 100644
+>> --- a/fs/xfs/xfs_trans.h
+>> +++ b/fs/xfs/xfs_trans.h
+>> @@ -203,7 +203,7 @@ xfs_trans_read_buf(
+>>  				      flags, bpp, ops);
+>>  }
+>>  
+>> -struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *, int);
+>> +struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *);
+>>  
+>>  void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
+>>  void		xfs_trans_bjoin(xfs_trans_t *, struct xfs_buf *);
+>> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+>> index 7d65ebf..a1764a1 100644
+>> --- a/fs/xfs/xfs_trans_buf.c
+>> +++ b/fs/xfs/xfs_trans_buf.c
+>> @@ -174,8 +174,7 @@ xfs_trans_get_buf_map(
+>>  xfs_buf_t *
+>>  xfs_trans_getsb(
+>>  	xfs_trans_t		*tp,
+>> -	struct xfs_mount	*mp,
+>> -	int			flags)
+>> +	struct xfs_mount	*mp)
+>>  {
+>>  	xfs_buf_t		*bp;
+>>  	struct xfs_buf_log_item	*bip;
+>> @@ -185,7 +184,7 @@ xfs_trans_getsb(
+>>  	 * if tp is NULL.
+>>  	 */
+>>  	if (tp == NULL)
+>> -		return xfs_getsb(mp, flags);
+>> +		return xfs_getsb(mp);
+>>  
+>>  	/*
+>>  	 * If the superblock buffer already has this transaction
+>> @@ -203,7 +202,7 @@ xfs_trans_getsb(
+>>  		return bp;
+>>  	}
+>>  
+>> -	bp = xfs_getsb(mp, flags);
+>> +	bp = xfs_getsb(mp);
+>>  	if (bp == NULL)
+>>  		return NULL;
+>>  
+>>
