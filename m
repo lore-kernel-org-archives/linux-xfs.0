@@ -1,59 +1,263 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:28792 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727097AbfEJIwV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 May 2019 04:52:21 -0400
-Message-ID: <5CD53BBD.1050605@cn.fujitsu.com>
-Date: Fri, 10 May 2019 16:52:13 +0800
-From: xuyang <xuyang2018.jy@cn.fujitsu.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 0/3] fstests: various fixes
-References: <155724821034.2624631.4172554705843296757.stgit@magnolia> <5CD38E98.8000705@cn.fujitsu.com> <20190510084720.GG15846@desktop>
-In-Reply-To: <20190510084720.GG15846@desktop>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: from sandeen.net ([63.231.237.45]:36094 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727792AbfEJUSn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 May 2019 16:18:43 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 05/11] libxfs: de-libxfsify core(-ish) functions.
+Date: Fri, 10 May 2019 15:18:24 -0500
+Message-Id: <1557519510-10602-6-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
+References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-on 2019/05/10 16:47, Eryu Guan wrote:
+There are a ton of "libxfs_" prefixed functions in libxfs/trans.c which
+are only called internally by code in libxfs/ - As I understand it,
+these should probably be just "xfs_" functions, and indeed many
+of them have counterparts in the kernel libxfs/ code.  This is one
+small step towards better sync-up of some of the misc libxfs/*
+transaction code with kernel code.
 
-> On Thu, May 09, 2019 at 10:21:12AM +0800, xuyang wrote:
->> on 2019/05/08 0:56, Darrick J. Wong wrote:
->>> Hi all,
->>>
->>> Here are three patches fixing various regressions in xfstests when
->>> mkfs.xfs defaults to enabling reflink and/or rmap by default.  Most of
->>> the changes deal with the change in minimum log size requirements.  They
->>> weren't caught until now because there are a number of tests that call
->>> mkfs on a loop device or a file without using MKFS_OPTIONS.
->>>
->>> If you're going to start using this mess, you probably ought to just
->>> pull from my git trees, which are linked below.
->>>
->>> This is an extraordinary way to destroy everything.  Enjoy!
->>> Comments and questions are, as always, welcome.
->>>
->>> --D
->>>
->>> fstests git tree:
->>> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
->>>
->>>
->>>
->> Hi
->>
->> Tested-by: Yang Xu<xuyang2018.jy@cn.fujitsu.com>
-> Thanks for the testing! Just want to make sure that you tested all the
-> three patches so that I can add your Tested-by tag too all of them?
->
-> Thanks,
-> Eryu
-Hi Eryu
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ libxfs/libxfs_api_defs.h |  1 +
+ libxfs/trans.c           | 48 ++++++++++++++++++++++++------------------------
+ 2 files changed, 25 insertions(+), 24 deletions(-)
 
-Yes.  I tested all the three patches.
-
->
->
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 1150ec9..64030af 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -17,6 +17,7 @@
+ #define xfs_highbit64			libxfs_highbit64
+ 
+ #define xfs_trans_alloc			libxfs_trans_alloc
++#define xfs_trans_alloc_rollable	libxfs_trans_alloc_rollable
+ #define xfs_trans_alloc_empty		libxfs_trans_alloc_empty
+ #define xfs_trans_add_item		libxfs_trans_add_item
+ #define xfs_trans_bhold			libxfs_trans_bhold
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 581ece3..85c3a50 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -36,7 +36,7 @@ kmem_zone_t	*xfs_trans_zone;
+  * in the mount structure.
+  */
+ void
+-libxfs_trans_init(
++xfs_trans_init(
+ 	struct xfs_mount	*mp)
+ {
+ 	xfs_trans_resv_calc(mp, &mp->m_resv);
+@@ -46,7 +46,7 @@ libxfs_trans_init(
+  * Add the given log item to the transaction's list of log items.
+  */
+ void
+-libxfs_trans_add_item(
++xfs_trans_add_item(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_log_item	*lip)
+ {
+@@ -62,7 +62,7 @@ libxfs_trans_add_item(
+  * Unlink and free the given descriptor.
+  */
+ void
+-libxfs_trans_del_item(
++xfs_trans_del_item(
+ 	struct xfs_log_item	*lip)
+ {
+ 	clear_bit(XFS_LI_DIRTY, &lip->li_flags);
+@@ -77,7 +77,7 @@ libxfs_trans_del_item(
+  * chunk we've been working on and get a new transaction to continue.
+  */
+ int
+-libxfs_trans_roll(
++xfs_trans_roll(
+ 	struct xfs_trans	**tpp)
+ {
+ 	struct xfs_trans	*trans = *tpp;
+@@ -245,7 +245,7 @@ undo_blocks:
+ }
+ 
+ int
+-libxfs_trans_alloc(
++xfs_trans_alloc(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans_res	*resp,
+ 	unsigned int		blocks,
+@@ -289,7 +289,7 @@ libxfs_trans_alloc(
+  * without any dirty data.
+  */
+ int
+-libxfs_trans_alloc_empty(
++xfs_trans_alloc_empty(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_trans		**tpp)
+ {
+@@ -304,7 +304,7 @@ libxfs_trans_alloc_empty(
+  * permanent log reservation flag to avoid blowing asserts.
+  */
+ int
+-libxfs_trans_alloc_rollable(
++xfs_trans_alloc_rollable(
+ 	struct xfs_mount	*mp,
+ 	unsigned int		blocks,
+ 	struct xfs_trans	**tpp)
+@@ -314,7 +314,7 @@ libxfs_trans_alloc_rollable(
+ }
+ 
+ void
+-libxfs_trans_cancel(
++xfs_trans_cancel(
+ 	struct xfs_trans	*tp)
+ {
+ #ifdef XACT_DEBUG
+@@ -337,7 +337,7 @@ out:
+ }
+ 
+ void
+-libxfs_trans_ijoin(
++xfs_trans_ijoin(
+ 	xfs_trans_t		*tp,
+ 	xfs_inode_t		*ip,
+ 	uint			lock_flags)
+@@ -360,7 +360,7 @@ libxfs_trans_ijoin(
+ }
+ 
+ void
+-libxfs_trans_ijoin_ref(
++xfs_trans_ijoin_ref(
+ 	xfs_trans_t		*tp,
+ 	xfs_inode_t		*ip,
+ 	int			lock_flags)
+@@ -375,7 +375,7 @@ libxfs_trans_ijoin_ref(
+ }
+ 
+ void
+-libxfs_trans_inode_alloc_buf(
++xfs_trans_inode_alloc_buf(
+ 	xfs_trans_t		*tp,
+ 	xfs_buf_t		*bp)
+ {
+@@ -422,7 +422,7 @@ xfs_trans_log_inode(
+ }
+ 
+ int
+-libxfs_trans_roll_inode(
++xfs_trans_roll_inode(
+ 	struct xfs_trans	**tpp,
+ 	struct xfs_inode	*ip)
+ {
+@@ -440,7 +440,7 @@ libxfs_trans_roll_inode(
+  * Mark a buffer dirty in the transaction.
+  */
+ void
+-libxfs_trans_dirty_buf(
++xfs_trans_dirty_buf(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_buf		*bp)
+ {
+@@ -466,7 +466,7 @@ libxfs_trans_dirty_buf(
+  * value of b_blkno.
+  */
+ void
+-libxfs_trans_log_buf(
++xfs_trans_log_buf(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_buf		*bp,
+ 	uint			first,
+@@ -488,7 +488,7 @@ libxfs_trans_log_buf(
+  * If the buffer is already dirty, trigger the "already logged" return condition.
+  */
+ bool
+-libxfs_trans_ordered_buf(
++xfs_trans_ordered_buf(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_buf		*bp)
+ {
+@@ -511,7 +511,7 @@ xfs_buf_item_put(
+ }
+ 
+ void
+-libxfs_trans_brelse(
++xfs_trans_brelse(
+ 	xfs_trans_t		*tp,
+ 	xfs_buf_t		*bp)
+ {
+@@ -546,7 +546,7 @@ libxfs_trans_brelse(
+ }
+ 
+ void
+-libxfs_trans_binval(
++xfs_trans_binval(
+ 	xfs_trans_t		*tp,
+ 	xfs_buf_t		*bp)
+ {
+@@ -571,7 +571,7 @@ libxfs_trans_binval(
+ }
+ 
+ void
+-libxfs_trans_bjoin(
++xfs_trans_bjoin(
+ 	xfs_trans_t		*tp,
+ 	xfs_buf_t		*bp)
+ {
+@@ -589,7 +589,7 @@ libxfs_trans_bjoin(
+ }
+ 
+ void
+-libxfs_trans_bhold(
++xfs_trans_bhold(
+ 	xfs_trans_t		*tp,
+ 	xfs_buf_t		*bp)
+ {
+@@ -605,7 +605,7 @@ libxfs_trans_bhold(
+ }
+ 
+ xfs_buf_t *
+-libxfs_trans_get_buf_map(
++xfs_trans_get_buf_map(
+ 	xfs_trans_t		*tp,
+ 	struct xfs_buftarg	*btp,
+ 	struct xfs_buf_map	*map,
+@@ -641,7 +641,7 @@ libxfs_trans_get_buf_map(
+ }
+ 
+ xfs_buf_t *
+-libxfs_trans_getsb(
++xfs_trans_getsb(
+ 	xfs_trans_t		*tp,
+ 	xfs_mount_t		*mp,
+ 	int			flags)
+@@ -675,7 +675,7 @@ libxfs_trans_getsb(
+ }
+ 
+ int
+-libxfs_trans_read_buf_map(
++xfs_trans_read_buf_map(
+ 	xfs_mount_t		*mp,
+ 	xfs_trans_t		*tp,
+ 	struct xfs_buftarg	*btp,
+@@ -743,7 +743,7 @@ out_relse:
+  * Originally derived from xfs_trans_mod_sb().
+  */
+ void
+-libxfs_trans_mod_sb(
++xfs_trans_mod_sb(
+ 	xfs_trans_t		*tp,
+ 	uint			field,
+ 	long			delta)
+@@ -1004,7 +1004,7 @@ out_unreserve:
+ }
+ 
+ int
+-libxfs_trans_commit(
++xfs_trans_commit(
+ 	struct xfs_trans	*tp)
+ {
+ 	return __xfs_trans_commit(tp, false);
+-- 
+1.8.3.1
