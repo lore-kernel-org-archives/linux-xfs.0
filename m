@@ -1,187 +1,434 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36088 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:51178 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727762AbfEJUSn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 May 2019 16:18:43 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 03/11] libxfs: remove unused cruft
-Date: Fri, 10 May 2019 15:18:22 -0500
-Message-Id: <1557519510-10602-4-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
-References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
+        id S1727000AbfEJPxV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 May 2019 11:53:21 -0400
+From: Pankaj Gupta <pagupta@redhat.com>
+Subject: [PATCH v8 2/6] virtio-pmem: Add virtio pmem driver
+Date: Fri, 10 May 2019 21:21:58 +0530
+Message-Id: <20190510155202.14737-3-pagupta@redhat.com>
+In-Reply-To: <20190510155202.14737-1-pagupta@redhat.com>
+References: <20190510155202.14737-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, jstaron@google.com, pagupta@redhat.com
 
-Remove many unused #defines and functions.
+This patch adds virtio-pmem driver for KVM guest.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Guest reads the persistent memory range information from
+Qemu over VIRTIO and registers it on nvdimm_bus. It also
+creates a nd_region object with the persistent memory
+range information so that existing 'nvdimm/pmem' driver
+can reserve this into system memory map. This way
+'virtio-pmem' driver uses existing functionality of pmem
+driver to register persistent memory compatible for DAX
+capable filesystems.
+
+This also provides function to perform guest flush over
+VIRTIO from 'pmem' driver when userspace performs flush
+on DAX memory range.
+
+Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
 ---
- include/libxfs.h         |  3 ---
- include/xfs_trans.h      |  8 --------
- libxfs/libxfs_api_defs.h |  5 -----
- libxfs/libxfs_priv.h     |  9 ---------
- libxfs/util.c            | 29 -----------------------------
- 5 files changed, 54 deletions(-)
+ drivers/nvdimm/Makefile          |   1 +
+ drivers/nvdimm/nd_virtio.c       | 129 +++++++++++++++++++++++++++++++
+ drivers/nvdimm/virtio_pmem.c     | 117 ++++++++++++++++++++++++++++
+ drivers/virtio/Kconfig           |  10 +++
+ include/linux/virtio_pmem.h      |  60 ++++++++++++++
+ include/uapi/linux/virtio_ids.h  |   1 +
+ include/uapi/linux/virtio_pmem.h |  10 +++
+ 7 files changed, 328 insertions(+)
+ create mode 100644 drivers/nvdimm/nd_virtio.c
+ create mode 100644 drivers/nvdimm/virtio_pmem.c
+ create mode 100644 include/linux/virtio_pmem.h
+ create mode 100644 include/uapi/linux/virtio_pmem.h
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 2bdef70..230bc3e 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -154,9 +154,6 @@ extern int	libxfs_log_header(char *, uuid_t *, int, int, int, xfs_lsn_t,
- extern int	libxfs_alloc_file_space (struct xfs_inode *, xfs_off_t,
- 				xfs_off_t, int, int);
+diff --git a/drivers/nvdimm/Makefile b/drivers/nvdimm/Makefile
+index 6f2a088afad6..cefe233e0b52 100644
+--- a/drivers/nvdimm/Makefile
++++ b/drivers/nvdimm/Makefile
+@@ -5,6 +5,7 @@ obj-$(CONFIG_ND_BTT) += nd_btt.o
+ obj-$(CONFIG_ND_BLK) += nd_blk.o
+ obj-$(CONFIG_X86_PMEM_LEGACY) += nd_e820.o
+ obj-$(CONFIG_OF_PMEM) += of_pmem.o
++obj-$(CONFIG_VIRTIO_PMEM) += virtio_pmem.o nd_virtio.o
  
--extern void	libxfs_fs_repair_cmn_err(int, struct xfs_mount *, char *, ...);
--extern void	libxfs_fs_cmn_err(int, struct xfs_mount *, char *, ...);
--
- /* XXX: this is messy and needs fixing */
- #ifndef __LIBXFS_INTERNAL_XFS_H__
- extern void cmn_err(int, char *, ...);
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index 832bde1..c1b20a7 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -47,13 +47,6 @@ typedef struct xfs_buf_log_item {
- #define XFS_BLI_STALE			(1<<2)
- #define XFS_BLI_INODE_ALLOC_BUF		(1<<3)
+ nd_pmem-y := pmem.o
  
--typedef struct xfs_dq_logitem {
--	xfs_log_item_t		qli_item;	/* common portion */
--	struct xfs_dquot	*qli_dquot;	/* dquot ptr */
--	xfs_lsn_t		qli_flush_lsn;	/* lsn at last flush */
--	xfs_dq_logformat_t	qli_format;	/* logged structure */
--} xfs_dq_logitem_t;
--
- typedef struct xfs_qoff_logitem {
- 	xfs_log_item_t		qql_item;	/* common portion */
- 	struct xfs_qoff_logitem	*qql_start_lip;	/* qoff-start logitem, if any */
-@@ -64,7 +57,6 @@ typedef struct xfs_qoff_logitem {
- #define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
+diff --git a/drivers/nvdimm/nd_virtio.c b/drivers/nvdimm/nd_virtio.c
+new file mode 100644
+index 000000000000..ed7ddcc5a62c
+--- /dev/null
++++ b/drivers/nvdimm/nd_virtio.c
+@@ -0,0 +1,129 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * virtio_pmem.c: Virtio pmem Driver
++ *
++ * Discovers persistent memory range information
++ * from host and provides a virtio based flushing
++ * interface.
++ */
++#include <linux/virtio_pmem.h>
++#include "nd.h"
++
++ /* The interrupt handler */
++void host_ack(struct virtqueue *vq)
++{
++	unsigned int len;
++	unsigned long flags;
++	struct virtio_pmem_request *req, *req_buf;
++	struct virtio_pmem *vpmem = vq->vdev->priv;
++
++	spin_lock_irqsave(&vpmem->pmem_lock, flags);
++	while ((req = virtqueue_get_buf(vq, &len)) != NULL) {
++		req->done = true;
++		wake_up(&req->host_acked);
++
++		if (!list_empty(&vpmem->req_list)) {
++			req_buf = list_first_entry(&vpmem->req_list,
++					struct virtio_pmem_request, list);
++			req_buf->wq_buf_avail = true;
++			wake_up(&req_buf->wq_buf);
++			list_del(&req_buf->list);
++		}
++	}
++	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
++}
++EXPORT_SYMBOL_GPL(host_ack);
++
++ /* The request submission function */
++int virtio_pmem_flush(struct nd_region *nd_region)
++{
++	int err, err1;
++	unsigned long flags;
++	struct scatterlist *sgs[2], sg, ret;
++	struct virtio_device *vdev = nd_region->provider_data;
++	struct virtio_pmem *vpmem = vdev->priv;
++	struct virtio_pmem_request *req;
++
++	might_sleep();
++	req = kmalloc(sizeof(*req), GFP_KERNEL);
++	if (!req)
++		return -ENOMEM;
++
++	req->done = false;
++	strcpy(req->name, "FLUSH");
++	init_waitqueue_head(&req->host_acked);
++	init_waitqueue_head(&req->wq_buf);
++	INIT_LIST_HEAD(&req->list);
++	sg_init_one(&sg, req->name, strlen(req->name));
++	sgs[0] = &sg;
++	sg_init_one(&ret, &req->ret, sizeof(req->ret));
++	sgs[1] = &ret;
++
++	spin_lock_irqsave(&vpmem->pmem_lock, flags);
++	 /*
++	  * If virtqueue_add_sgs returns -ENOSPC then req_vq virtual
++	  * queue does not have free descriptor. We add the request
++	  * to req_list and wait for host_ack to wake us up when free
++	  * slots are available.
++	  */
++	while ((err = virtqueue_add_sgs(vpmem->req_vq, sgs, 1, 1, req,
++					GFP_ATOMIC)) == -ENOSPC) {
++
++		dev_err(&vdev->dev, "failed to send command to virtio pmem"\
++			"device, no free slots in the virtqueue\n");
++		req->wq_buf_avail = false;
++		list_add_tail(&req->list, &vpmem->req_list);
++		spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
++
++		/* When host has read buffer, this completes via host_ack */
++		wait_event(req->wq_buf, req->wq_buf_avail);
++		spin_lock_irqsave(&vpmem->pmem_lock, flags);
++	}
++	err1 = virtqueue_kick(vpmem->req_vq);
++	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
++
++	/*
++	 * virtqueue_add_sgs failed with error different than -ENOSPC, we can't
++	 * do anything about that.
++	 */
++	if (err || !err1) {
++		dev_info(&vdev->dev, "failed to send command to virtio pmem device\n");
++		err = -EIO;
++		goto ret;
++	}
++
++	/* When host has read buffer, this completes via host_ack */
++	wait_event(req->host_acked, req->done);
++	err = req->ret;
++ret:
++	kfree(req);
++	return err;
++};
++
++/* The asynchronous flush callback function */
++int async_pmem_flush(struct nd_region *nd_region, struct bio *bio)
++{
++	int rc = 0;
++
++	/* Create child bio for asynchronous flush and chain with
++	 * parent bio. Otherwise directly call nd_region flush.
++	 */
++	if (bio && bio->bi_iter.bi_sector != -1) {
++		struct bio *child = bio_alloc(GFP_ATOMIC, 0);
++
++		if (!child)
++			return -ENOMEM;
++		bio_copy_dev(child, bio);
++		child->bi_opf = REQ_PREFLUSH;
++		child->bi_iter.bi_sector = -1;
++		bio_chain(child, bio);
++		submit_bio(child);
++	} else {
++		if (virtio_pmem_flush(nd_region))
++			rc = -EIO;
++	}
++
++	return rc;
++};
++EXPORT_SYMBOL_GPL(async_pmem_flush);
++MODULE_LICENSE("GPL");
+diff --git a/drivers/nvdimm/virtio_pmem.c b/drivers/nvdimm/virtio_pmem.c
+new file mode 100644
+index 000000000000..cfc6381c4e5d
+--- /dev/null
++++ b/drivers/nvdimm/virtio_pmem.c
+@@ -0,0 +1,117 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * virtio_pmem.c: Virtio pmem Driver
++ *
++ * Discovers persistent memory range information
++ * from host and registers the virtual pmem device
++ * with libnvdimm core.
++ */
++#include <linux/virtio_pmem.h>
++#include "nd.h"
++
++static struct virtio_device_id id_table[] = {
++	{ VIRTIO_ID_PMEM, VIRTIO_DEV_ANY_ID },
++	{ 0 },
++};
++
++ /* Initialize virt queue */
++static int init_vq(struct virtio_pmem *vpmem)
++{
++	/* single vq */
++	vpmem->req_vq = virtio_find_single_vq(vpmem->vdev,
++				host_ack, "flush_queue");
++	if (IS_ERR(vpmem->req_vq))
++		return PTR_ERR(vpmem->req_vq);
++
++	spin_lock_init(&vpmem->pmem_lock);
++	INIT_LIST_HEAD(&vpmem->req_list);
++
++	return 0;
++};
++
++static int virtio_pmem_probe(struct virtio_device *vdev)
++{
++	int err = 0;
++	struct resource res;
++	struct virtio_pmem *vpmem;
++	struct nd_region_desc ndr_desc = {};
++	int nid = dev_to_node(&vdev->dev);
++	struct nd_region *nd_region;
++
++	if (!vdev->config->get) {
++		dev_err(&vdev->dev, "%s failure: config access disabled\n",
++			__func__);
++		return -EINVAL;
++	}
++
++	vpmem = devm_kzalloc(&vdev->dev, sizeof(*vpmem), GFP_KERNEL);
++	if (!vpmem) {
++		err = -ENOMEM;
++		goto out_err;
++	}
++
++	vpmem->vdev = vdev;
++	vdev->priv = vpmem;
++	err = init_vq(vpmem);
++	if (err)
++		goto out_err;
++
++	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
++			start, &vpmem->start);
++	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
++			size, &vpmem->size);
++
++	res.start = vpmem->start;
++	res.end   = vpmem->start + vpmem->size-1;
++	vpmem->nd_desc.provider_name = "virtio-pmem";
++	vpmem->nd_desc.module = THIS_MODULE;
++
++	vpmem->nvdimm_bus = nvdimm_bus_register(&vdev->dev,
++						&vpmem->nd_desc);
++	if (!vpmem->nvdimm_bus)
++		goto out_vq;
++
++	dev_set_drvdata(&vdev->dev, vpmem->nvdimm_bus);
++
++	ndr_desc.res = &res;
++	ndr_desc.numa_node = nid;
++	ndr_desc.flush = async_pmem_flush;
++	set_bit(ND_REGION_PAGEMAP, &ndr_desc.flags);
++	set_bit(ND_REGION_ASYNC, &ndr_desc.flags);
++	nd_region = nvdimm_pmem_region_create(vpmem->nvdimm_bus, &ndr_desc);
++
++	if (!nd_region)
++		goto out_nd;
++	nd_region->provider_data = dev_to_virtio(nd_region->dev.parent->parent);
++	return 0;
++out_nd:
++	err = -ENXIO;
++	nvdimm_bus_unregister(vpmem->nvdimm_bus);
++out_vq:
++	vdev->config->del_vqs(vdev);
++out_err:
++	dev_err(&vdev->dev, "failed to register virtio pmem memory\n");
++	return err;
++}
++
++static void virtio_pmem_remove(struct virtio_device *vdev)
++{
++	struct nvdimm_bus *nvdimm_bus = dev_get_drvdata(&vdev->dev);
++
++	nvdimm_bus_unregister(nvdimm_bus);
++	vdev->config->del_vqs(vdev);
++	vdev->config->reset(vdev);
++}
++
++static struct virtio_driver virtio_pmem_driver = {
++	.driver.name		= KBUILD_MODNAME,
++	.driver.owner		= THIS_MODULE,
++	.id_table		= id_table,
++	.probe			= virtio_pmem_probe,
++	.remove			= virtio_pmem_remove,
++};
++
++module_virtio_driver(virtio_pmem_driver);
++MODULE_DEVICE_TABLE(virtio, id_table);
++MODULE_DESCRIPTION("Virtio pmem driver");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/virtio/Kconfig b/drivers/virtio/Kconfig
+index 35897649c24f..9f634a2ed638 100644
+--- a/drivers/virtio/Kconfig
++++ b/drivers/virtio/Kconfig
+@@ -42,6 +42,16 @@ config VIRTIO_PCI_LEGACY
  
- typedef struct xfs_trans {
--	unsigned int	t_type;			/* transaction type */
- 	unsigned int	t_log_res;		/* amt of log space resvd */
- 	unsigned int	t_log_count;		/* count for perm log res */
- 	unsigned int	t_blk_res;		/* # of blocks resvd */
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index bb0f07b..1150ec9 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -16,9 +16,6 @@
- #define xfs_highbit32			libxfs_highbit32
- #define xfs_highbit64			libxfs_highbit64
+ 	  If unsure, say Y.
  
--#define xfs_fs_repair_cmn_err		libxfs_fs_repair_cmn_err
--#define xfs_fs_cmn_err			libxfs_fs_cmn_err
--
- #define xfs_trans_alloc			libxfs_trans_alloc
- #define xfs_trans_alloc_empty		libxfs_trans_alloc_empty
- #define xfs_trans_add_item		libxfs_trans_add_item
-@@ -61,7 +58,6 @@
- #define xfs_bmapi_write			libxfs_bmapi_write
- #define xfs_bmapi_read			libxfs_bmapi_read
- #define xfs_bunmapi			libxfs_bunmapi
--#define xfs_bmbt_get_all		libxfs_bmbt_get_all
- #define xfs_rtfree_extent		libxfs_rtfree_extent
- #define xfs_verify_rtbno		libxfs_verify_rtbno
- #define xfs_verify_ino			libxfs_verify_ino
-@@ -70,7 +66,6 @@
- #define xfs_defer_finish		libxfs_defer_finish
- #define xfs_defer_cancel		libxfs_defer_cancel
++config VIRTIO_PMEM
++	tristate "Support for virtio pmem driver"
++	depends on VIRTIO
++	depends on LIBNVDIMM
++	help
++	This driver provides support for virtio based flushing interface
++	for persistent memory range.
++
++	If unsure, say M.
++
+ config VIRTIO_BALLOON
+ 	tristate "Virtio balloon driver"
+ 	depends on VIRTIO
+diff --git a/include/linux/virtio_pmem.h b/include/linux/virtio_pmem.h
+new file mode 100644
+index 000000000000..ab1da877575d
+--- /dev/null
++++ b/include/linux/virtio_pmem.h
+@@ -0,0 +1,60 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * virtio_pmem.h: virtio pmem Driver
++ *
++ * Discovers persistent memory range information
++ * from host and provides a virtio based flushing
++ * interface.
++ **/
++
++#ifndef _LINUX_VIRTIO_PMEM_H
++#define _LINUX_VIRTIO_PMEM_H
++
++#include <linux/virtio_ids.h>
++#include <linux/module.h>
++#include <linux/virtio_config.h>
++#include <uapi/linux/virtio_pmem.h>
++#include <linux/libnvdimm.h>
++#include <linux/spinlock.h>
++
++struct virtio_pmem_request {
++	/* Host return status corresponding to flush request */
++	int ret;
++
++	/* command name*/
++	char name[16];
++
++	/* Wait queue to process deferred work after ack from host */
++	wait_queue_head_t host_acked;
++	bool done;
++
++	/* Wait queue to process deferred work after virt queue buffer avail */
++	wait_queue_head_t wq_buf;
++	bool wq_buf_avail;
++	struct list_head list;
++};
++
++struct virtio_pmem {
++	struct virtio_device *vdev;
++
++	/* Virtio pmem request queue */
++	struct virtqueue *req_vq;
++
++	/* nvdimm bus registers virtio pmem device */
++	struct nvdimm_bus *nvdimm_bus;
++	struct nvdimm_bus_descriptor nd_desc;
++
++	/* List to store deferred work if virtqueue is full */
++	struct list_head req_list;
++
++	/* Synchronize virtqueue data */
++	spinlock_t pmem_lock;
++
++	/* Memory region information */
++	uint64_t start;
++	uint64_t size;
++};
++
++void host_ack(struct virtqueue *vq);
++int async_pmem_flush(struct nd_region *nd_region, struct bio *bio);
++#endif
+diff --git a/include/uapi/linux/virtio_ids.h b/include/uapi/linux/virtio_ids.h
+index 6d5c3b2d4f4d..32b2f94d1f58 100644
+--- a/include/uapi/linux/virtio_ids.h
++++ b/include/uapi/linux/virtio_ids.h
+@@ -43,5 +43,6 @@
+ #define VIRTIO_ID_INPUT        18 /* virtio input */
+ #define VIRTIO_ID_VSOCK        19 /* virtio vsock transport */
+ #define VIRTIO_ID_CRYPTO       20 /* virtio crypto */
++#define VIRTIO_ID_PMEM         27 /* virtio pmem */
  
--#define xfs_da_brelse			libxfs_da_brelse
- #define xfs_da_hashname			libxfs_da_hashname
- #define xfs_da_shrink_inode		libxfs_da_shrink_inode
- #define xfs_da_read_buf			libxfs_da_read_buf
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index a2a8388..d668a15 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -122,7 +122,6 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
- #define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
- #define xfs_err(mp,fmt,args...)			cmn_err(CE_ALERT,fmt, ## args)
- #define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)
--#define xfs_alert_tag(mp,tag,fmt,args...)	cmn_err(CE_ALERT,fmt, ## args)
- 
- #define xfs_hex_dump(d,n)		((void) 0)
- #define xfs_stack_trace()		((void) 0)
-@@ -195,8 +194,6 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
- #endif
- 
- /* miscellaneous kernel routines not in user space */
--#define down_read(a)		((void) 0)
--#define up_read(a)		((void) 0)
- #define spin_lock_init(a)	((void) 0)
- #define spin_lock(a)		((void) 0)
- #define spin_unlock(a)		((void) 0)
-@@ -400,7 +397,6 @@ roundup_64(uint64_t x, uint32_t y)
- 
- #define XBRW_READ			LIBXFS_BREAD
- #define XBRW_WRITE			LIBXFS_BWRITE
--#define xfs_buf_iomove(bp,off,len,data,f)	libxfs_iomove(bp,off,len,data,f)
- #define xfs_buf_zero(bp,off,len)     libxfs_iomove(bp,off,len,NULL,LIBXFS_BZERO)
- 
- /* mount stuff */
-@@ -436,8 +432,6 @@ roundup_64(uint64_t x, uint32_t y)
- #define xfs_sort					qsort
- 
- #define xfs_ilock(ip,mode)				((void) 0)
--#define xfs_ilock_nowait(ip,mode)			((void) 0)
--#define xfs_ilock_demote(ip,mode)			((void) 0)
- #define xfs_ilock_data_map_shared(ip)			(0)
- #define xfs_ilock_attr_map_shared(ip)			(0)
- #define xfs_iunlock(ip,mode)				({	\
-@@ -470,9 +464,6 @@ roundup_64(uint64_t x, uint32_t y)
- #define xfs_filestream_lookup_ag(ip)		(0)
- #define xfs_filestream_new_ag(ip,ag)		(0)
- 
--#define xfs_log_force(mp,flags)			((void) 0)
--#define XFS_LOG_SYNC				1
--
- /* quota bits */
- #define xfs_trans_mod_dquot_byino(t,i,f,d)		((void) 0)
- #define xfs_trans_reserve_quota_nblks(t,i,b,n,f)	(0)
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 9fe9a36..8c9954f 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -603,35 +603,6 @@ libxfs_inode_alloc(
- 	return error;
- }
- 
--/*
-- * Userspace versions of common diagnostic routines (varargs fun).
-- */
--void
--libxfs_fs_repair_cmn_err(int level, xfs_mount_t *mp, char *fmt, ...)
--{
--	va_list	ap;
--
--	va_start(ap, fmt);
--	vfprintf(stderr, fmt, ap);
--	fprintf(stderr, "  This is a bug.\n");
--	fprintf(stderr, "%s version %s\n", progname, VERSION);
--	fprintf(stderr,
--		"Please capture the filesystem metadata with xfs_metadump and\n"
--		"report it to linux-xfs@vger.kernel.org\n");
--	va_end(ap);
--}
--
--void
--libxfs_fs_cmn_err(int level, xfs_mount_t *mp, char *fmt, ...)
--{
--	va_list	ap;
--
--	va_start(ap, fmt);
--	vfprintf(stderr, fmt, ap);
--	fputs("\n", stderr);
--	va_end(ap);
--}
--
- void
- cmn_err(int level, char *fmt, ...)
- {
+ #endif /* _LINUX_VIRTIO_IDS_H */
+diff --git a/include/uapi/linux/virtio_pmem.h b/include/uapi/linux/virtio_pmem.h
+new file mode 100644
+index 000000000000..fa3f7d52717a
+--- /dev/null
++++ b/include/uapi/linux/virtio_pmem.h
+@@ -0,0 +1,10 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++
++#ifndef _UAPI_LINUX_VIRTIO_PMEM_H
++#define _UAPI_LINUX_VIRTIO_PMEM_H
++
++struct virtio_pmem_config {
++	__le64 start;
++	__le64 size;
++};
++#endif
 -- 
-1.8.3.1
+2.20.1
