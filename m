@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36084 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:36090 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727670AbfEJUSn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1727767AbfEJUSn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Fri, 10 May 2019 16:18:43 -0400
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 01/11] libxfs: remove i_transp
-Date: Fri, 10 May 2019 15:18:20 -0500
-Message-Id: <1557519510-10602-2-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 04/11] libxfs: rename bp_transp to b_transp in ASSERTs
+Date: Fri, 10 May 2019 15:18:23 -0500
+Message-Id: <1557519510-10602-5-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
 References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -14,94 +14,104 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-i_transp was removed from kernel code back in 2011, but it was left
-in userspace.  It's only used in a few asserts in transaction code
-(as it was in the kernel) so there doesnt' seem to be a compelling
-reason to carry it around anymore.
-
-Source kernel commit: f3ca87389dbff0a3dc1a7cb2fa7c62e25421c66c
+xfs_buf no longer has a bp_transp member; it's b_transp now.
+These ASSERTs get #defined away, but it's still best to not have
+invalid structure members cluttering up the code.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- include/xfs_inode.h |  1 -
- libxfs/trans.c      | 11 -----------
- 2 files changed, 12 deletions(-)
+ libxfs/trans.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-index 52d79f3..88b58ac 100644
---- a/include/xfs_inode.h
-+++ b/include/xfs_inode.h
-@@ -41,7 +41,6 @@ typedef struct xfs_inode {
- 	struct xfs_ifork	*i_afp;		/* attribute fork pointer */
- 	struct xfs_ifork	*i_cowfp;	/* copy on write extents */
- 	struct xfs_ifork	i_df;		/* data fork */
--	struct xfs_trans	*i_transp;	/* ptr to owning transaction */
- 	struct xfs_inode_log_item *i_itemp;	/* logging information */
- 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
- 	struct xfs_icdinode	i_d;		/* most of ondisk inode */
 diff --git a/libxfs/trans.c b/libxfs/trans.c
-index db90624..101019b 100644
+index 64131b2..581ece3 100644
 --- a/libxfs/trans.c
 +++ b/libxfs/trans.c
-@@ -344,7 +344,6 @@ libxfs_trans_ijoin(
+@@ -381,7 +381,7 @@ libxfs_trans_inode_alloc_buf(
  {
- 	xfs_inode_log_item_t	*iip;
+ 	xfs_buf_log_item_t	*bip = bp->b_log_item;
  
--	ASSERT(ip->i_transp == NULL);
- 	if (ip->i_itemp == NULL)
- 		xfs_inode_item_init(ip, ip->i_mount);
- 	iip = ip->i_itemp;
-@@ -356,7 +355,6 @@ libxfs_trans_ijoin(
+-	ASSERT(bp->bp_transp == tp);
++	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+ 	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+@@ -446,7 +446,7 @@ libxfs_trans_dirty_buf(
+ {
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
  
- 	xfs_trans_add_item(tp, (xfs_log_item_t *)(iip));
+-	ASSERT(bp->bp_transp == tp);
++	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
  
--	ip->i_transp = tp;
  #ifdef XACT_DEBUG
- 	fprintf(stderr, "ijoin'd inode %llu, transaction %p\n", ip->i_ino, tp);
+@@ -521,11 +521,11 @@ libxfs_trans_brelse(
  #endif
-@@ -368,7 +366,6 @@ libxfs_trans_ijoin_ref(
- 	xfs_inode_t		*ip,
- 	int			lock_flags)
- {
--	ASSERT(ip->i_transp == tp);
- 	ASSERT(ip->i_itemp != NULL);
  
- 	xfs_trans_ijoin(tp, ip, lock_flags);
-@@ -406,7 +403,6 @@ xfs_trans_log_inode(
- 	xfs_inode_t		*ip,
- 	uint			flags)
- {
--	ASSERT(ip->i_transp == tp);
- 	ASSERT(ip->i_itemp != NULL);
- #ifdef XACT_DEBUG
- 	fprintf(stderr, "dirtied inode %llu, transaction %p\n", ip->i_ino, tp);
-@@ -817,7 +813,6 @@ inode_item_done(
- 	ASSERT(ip != NULL);
- 
- 	if (!(iip->ili_fields & XFS_ILOG_ALL)) {
--		ip->i_transp = NULL;	/* disassociate from transaction */
- 		iip->ili_flags = 0;	/* reset all flags */
- 		goto free;
+ 	if (tp == NULL) {
+-		ASSERT(bp->bp_transp == NULL);
++		ASSERT(bp->b_transp == NULL);
+ 		libxfs_putbuf(bp);
+ 		return;
  	}
-@@ -838,7 +833,6 @@ inode_item_done(
- 	 * we still release the buffer reference we currently hold.
- 	 */
- 	error = libxfs_iflush_int(ip, bp);
--	ip->i_transp = NULL;	/* disassociate from transaction */
- 	bp->b_transp = NULL;	/* remove xact ptr */
+-	ASSERT(bp->bp_transp == tp);
++	ASSERT(bp->b_transp == tp);
+ 	bip = bp->b_log_item;
+ 	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
+ 	if (bip->bli_recur > 0) {
+@@ -555,7 +555,7 @@ libxfs_trans_binval(
+ 	fprintf(stderr, "binval'd buffer %p, transaction %p\n", bp, tp);
+ #endif
  
- 	if (error) {
-@@ -927,11 +921,6 @@ static void
- inode_item_unlock(
- 	xfs_inode_log_item_t	*iip)
+-	ASSERT(bp->bp_transp == tp);
++	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+ 
+ 	if (bip->bli_flags & XFS_BLI_STALE)
+@@ -577,7 +577,7 @@ libxfs_trans_bjoin(
  {
--	xfs_inode_t		*ip = iip->ili_inode;
--
--	/* Clear the transaction pointer in the inode. */
--	ip->i_transp = NULL;
--
- 	iip->ili_flags = 0;
- 	xfs_inode_item_put(iip);
- }
+ 	xfs_buf_log_item_t	*bip;
+ 
+-	ASSERT(bp->bp_transp == NULL);
++	ASSERT(bp->b_transp == NULL);
+ #ifdef XACT_DEBUG
+ 	fprintf(stderr, "bjoin'd buffer %p, transaction %p\n", bp, tp);
+ #endif
+@@ -595,7 +595,7 @@ libxfs_trans_bhold(
+ {
+ 	xfs_buf_log_item_t	*bip = bp->b_log_item;
+ 
+-	ASSERT(bp->bp_transp == tp);
++	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+ #ifdef XACT_DEBUG
+ 	fprintf(stderr, "bhold'd buffer %p, transaction %p\n", bp, tp);
+@@ -620,7 +620,7 @@ libxfs_trans_get_buf_map(
+ 
+ 	bp = xfs_trans_buf_item_match(tp, btp, map, nmaps);
+ 	if (bp != NULL) {
+-		ASSERT(bp->bp_transp == tp);
++		ASSERT(bp->b_transp == tp);
+ 		bip = bp->b_log_item;
+ 		ASSERT(bip != NULL);
+ 		bip->bli_recur++;
+@@ -656,7 +656,7 @@ libxfs_trans_getsb(
+ 
+ 	bp = xfs_trans_buf_item_match(tp, mp->m_dev, &map, 1);
+ 	if (bp != NULL) {
+-		ASSERT(bp->bp_transp == tp);
++		ASSERT(bp->b_transp == tp);
+ 		bip = bp->b_log_item;
+ 		ASSERT(bip != NULL);
+ 		bip->bli_recur++;
+@@ -703,7 +703,7 @@ libxfs_trans_read_buf_map(
+ 
+ 	bp = xfs_trans_buf_item_match(tp, btp, map, nmaps);
+ 	if (bp != NULL) {
+-		ASSERT(bp->bp_transp == tp);
++		ASSERT(bp->b_transp == tp);
+ 		ASSERT(bp->b_log_item != NULL);
+ 		bip = bp->b_log_item;
+ 		bip->bli_recur++;
 -- 
 1.8.3.1
