@@ -1,67 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57640 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727267AbfEJPyU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 May 2019 11:54:20 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v8 4/6]  dax: check synchronous mapping is supported
-Date: Fri, 10 May 2019 21:22:00 +0530
-Message-Id: <20190510155202.14737-5-pagupta@redhat.com>
-In-Reply-To: <20190510155202.14737-1-pagupta@redhat.com>
-References: <20190510155202.14737-1-pagupta@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:34534 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727383AbfEJReN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 May 2019 13:34:13 -0400
+Date: Fri, 10 May 2019 10:34:13 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 5/6] xfs: refactor by-size extent allocation mode
+Message-ID: <20190510173413.GD18992@infradead.org>
+References: <20190509165839.44329-1-bfoster@redhat.com>
+ <20190509165839.44329-6-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190509165839.44329-6-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, jstaron@google.com, pagupta@redhat.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-This patch introduces 'daxdev_mapping_supported' helper
-which checks if 'MAP_SYNC' is supported with filesystem
-mapping. It also checks if corresponding dax_device is
-synchronous. Virtio pmem device is asynchronous and
-does not not support VM_SYNC. 
+> @@ -724,8 +723,6 @@ xfs_alloc_ag_vextent(
+>  	args->wasfromfl = 0;
+>  	switch (args->type) {
+>  	case XFS_ALLOCTYPE_THIS_AG:
+> -		error = xfs_alloc_ag_vextent_size(args);
+> -		break;
+>  	case XFS_ALLOCTYPE_NEAR_BNO:
+>  	case XFS_ALLOCTYPE_THIS_BNO:
+>  		error = xfs_alloc_ag_vextent_type(args);
+> @@ -817,6 +814,8 @@ xfs_alloc_cur_setup(
+>  
+>  	if (args->agbno != NULLAGBLOCK)
+>  		agbno = args->agbno;
+> +	if (args->type == XFS_ALLOCTYPE_THIS_AG)
+> +		acur->cur_len += args->alignment - 1;
 
-Suggested-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- include/linux/dax.h | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index c97fc0cc7167..41b4a5db6305 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -41,6 +41,18 @@ void kill_dax(struct dax_device *dax_dev);
- void dax_write_cache(struct dax_device *dax_dev, bool wc);
- bool dax_write_cache_enabled(struct dax_device *dax_dev);
- bool dax_synchronous(struct dax_device *dax_dev);
-+/*
-+ * Check if given mapping is supported by the file / underlying device.
-+ */
-+static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
-+				struct dax_device *dax_dev)
-+{
-+	if (!(vma->vm_flags & VM_SYNC))
-+		return true;
-+	if (!IS_DAX(file_inode(vma->vm_file)))
-+		return false;
-+	return dax_synchronous(dax_dev);
-+}
- #else
- static inline struct dax_device *dax_get_by_host(const char *host)
- {
-@@ -68,6 +80,11 @@ static inline bool dax_write_cache_enabled(struct dax_device *dax_dev)
- {
- 	return false;
- }
-+static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
-+				struct dax_device *dax_dev)
-+{
-+	return !(vma->vm_flags & VM_SYNC);
-+}
- #endif
- 
- struct writeback_control;
--- 
-2.20.1
+At this point we can just kill that switch, or even better
+merge xfs_alloc_ag_vextent_type and xfs_alloc_ag_vextent.
