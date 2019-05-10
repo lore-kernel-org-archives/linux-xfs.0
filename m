@@ -1,74 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36086 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727676AbfEJUSn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 May 2019 16:18:43 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 02/11] libxfs: remove xfs_inode_log_item ili_flags
-Date: Fri, 10 May 2019 15:18:21 -0500
-Message-Id: <1557519510-10602-3-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
-References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:28792 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727097AbfEJIwV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 May 2019 04:52:21 -0400
+Message-ID: <5CD53BBD.1050605@cn.fujitsu.com>
+Date: Fri, 10 May 2019 16:52:13 +0800
+From: xuyang <xuyang2018.jy@cn.fujitsu.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 0/3] fstests: various fixes
+References: <155724821034.2624631.4172554705843296757.stgit@magnolia> <5CD38E98.8000705@cn.fujitsu.com> <20190510084720.GG15846@desktop>
+In-Reply-To: <20190510084720.GG15846@desktop>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-ili_flags is only set to zero and asserted to be zero; it serves
-no purpose, so remove it.
+on 2019/05/10 16:47, Eryu Guan wrote:
 
-(it was renamed to ili_lock_flags in the kernel in commit 898621d5,
-for some reason userspace had both, with ili_flags ~unused)
+> On Thu, May 09, 2019 at 10:21:12AM +0800, xuyang wrote:
+>> on 2019/05/08 0:56, Darrick J. Wong wrote:
+>>> Hi all,
+>>>
+>>> Here are three patches fixing various regressions in xfstests when
+>>> mkfs.xfs defaults to enabling reflink and/or rmap by default.  Most of
+>>> the changes deal with the change in minimum log size requirements.  They
+>>> weren't caught until now because there are a number of tests that call
+>>> mkfs on a loop device or a file without using MKFS_OPTIONS.
+>>>
+>>> If you're going to start using this mess, you probably ought to just
+>>> pull from my git trees, which are linked below.
+>>>
+>>> This is an extraordinary way to destroy everything.  Enjoy!
+>>> Comments and questions are, as always, welcome.
+>>>
+>>> --D
+>>>
+>>> fstests git tree:
+>>> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+>>>
+>>>
+>>>
+>> Hi
+>>
+>> Tested-by: Yang Xu<xuyang2018.jy@cn.fujitsu.com>
+> Thanks for the testing! Just want to make sure that you tested all the
+> three patches so that I can add your Tested-by tag too all of them?
+>
+> Thanks,
+> Eryu
+Hi Eryu
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- include/xfs_trans.h | 1 -
- libxfs/trans.c      | 6 +-----
- 2 files changed, 1 insertion(+), 6 deletions(-)
+Yes.  I tested all the three patches.
 
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index e6bb74c..832bde1 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -29,7 +29,6 @@ typedef struct xfs_log_item {
- typedef struct xfs_inode_log_item {
- 	xfs_log_item_t		ili_item;		/* common portion */
- 	struct xfs_inode	*ili_inode;		/* inode pointer */
--	unsigned short		ili_flags;		/* misc flags */
- 	unsigned short		ili_lock_flags;		/* lock flags */
- 	unsigned int		ili_fields;		/* fields to be logged */
- 	unsigned int		ili_last_fields;	/* fields when flushed*/
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index 101019b..64131b2 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -347,7 +347,6 @@ libxfs_trans_ijoin(
- 	if (ip->i_itemp == NULL)
- 		xfs_inode_item_init(ip, ip->i_mount);
- 	iip = ip->i_itemp;
--	ASSERT(iip->ili_flags == 0);
- 	ASSERT(iip->ili_inode != NULL);
- 
- 	ASSERT(iip->ili_lock_flags == 0);
-@@ -812,10 +811,8 @@ inode_item_done(
- 	mp = iip->ili_item.li_mountp;
- 	ASSERT(ip != NULL);
- 
--	if (!(iip->ili_fields & XFS_ILOG_ALL)) {
--		iip->ili_flags = 0;	/* reset all flags */
-+	if (!(iip->ili_fields & XFS_ILOG_ALL))
- 		goto free;
--	}
- 
- 	/*
- 	 * Get the buffer containing the on-disk inode.
-@@ -921,7 +918,6 @@ static void
- inode_item_unlock(
- 	xfs_inode_log_item_t	*iip)
- {
--	iip->ili_flags = 0;
- 	xfs_inode_item_put(iip);
- }
- 
--- 
-1.8.3.1
+>
+>
