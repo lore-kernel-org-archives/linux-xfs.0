@@ -1,43 +1,238 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f172.google.com ([209.85.208.172]:40529 "EHLO
-        mail-lj1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726335AbfEOP5f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 May 2019 11:57:35 -0400
-Received: by mail-lj1-f172.google.com with SMTP id d15so257828ljc.7
-        for <linux-xfs@vger.kernel.org>; Wed, 15 May 2019 08:57:33 -0700 (PDT)
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:41992 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728320AbfEKHhj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 May 2019 03:37:39 -0400
+Date: Sat, 11 May 2019 15:37:32 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH ] xfs: validate unicode filesystem labels
+Message-ID: <20190511073732.GH15846@desktop>
+References: <155724823157.2624769.14347748235168250309.stgit@magnolia>
+ <155724824306.2624769.17050442466246363524.stgit@magnolia>
 MIME-Version: 1.0
-References: <20190514185026.73788-1-jorgeguerra@gmail.com> <4a47cdc4-4a96-cf78-9e48-83d6cd0fe65f@sandeen.net>
-In-Reply-To: <4a47cdc4-4a96-cf78-9e48-83d6cd0fe65f@sandeen.net>
-From: Jorge Guerra <jorge.guerra@gmail.com>
-Date: Wed, 15 May 2019 08:57:21 -0700
-Message-ID: <CAEFkGAx1A3-XXqWSssa3QQsTZW-8BuVU_D+Dq2sYfKAKs0+t_w@mail.gmail.com>
-Subject: Re: [PATCH] xfs_db: add extent count and file size histograms
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155724824306.2624769.17050442466246363524.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, Omar Sandoval <osandov@osandov.com>, Jorge Guerra <jorgeguerra@fb.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Thanks Eric,
+On Tue, May 07, 2019 at 09:57:23AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Make sure we can set and retrieve unicode labels, including emoji.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  tests/xfs/739     |  169 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/739.out |    1 
+>  tests/xfs/group   |    1 
+>  3 files changed, 171 insertions(+)
+>  create mode 100755 tests/xfs/739
+>  create mode 100644 tests/xfs/739.out
+> 
+> 
+> diff --git a/tests/xfs/739 b/tests/xfs/739
+> new file mode 100755
+> index 00000000..f8796cc3
+> --- /dev/null
+> +++ b/tests/xfs/739
+> @@ -0,0 +1,169 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0+
+> +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 739
+> +#
+> +# Create a directory with multiple filenames that all appear the same
+> +# (in unicode, anyway) but point to different inodes.  In theory all
+> +# Linux filesystems should allow this (filenames are a sequence of
+> +# arbitrary bytes) even if the user implications are horrifying.
+> +#
+> +seq=`basename "$0"`
+> +seqres="$RESULT_DIR/$seq"
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +_supported_os Linux
+> +_supported_fs xfs
+> +_require_scratch_nocheck
+> +_require_xfs_io_command 'label'
+> +
+> +# Only run this on xfs if xfs_scrub is available and has the unicode checker
+> +check_xfs_scrub() {
 
-I'm addressing these comments.  Will send an update once we have an
-agreement with Dave into how and where to implement this.
+This function has multiple copies in different tests now, e.g.
+generic/45{34} and xfs/262, make it a common helper?
 
-On Tue, May 14, 2019 at 1:02 PM Eric Sandeen <sandeen@sandeen.net> wrote:
->
-> On 5/14/19 1:50 PM, Jorge Guerra wrote:
-> > +             dbprintf(_("capacity used (bytes): %llu (%.3f %cB)\n"),
-> > +             extstats.logicalused, answer, iec_prefixes[i]);
->
-> I think I missed this instance of "indent please" and probably others...
->
-> (I'm kind of wondering about carrying 'used' in bytes, but I suppose we're
-> ok until we really get zettabyte filesytems in the wild) ;)
->
-> -Eric
+> +	_scratch_mkfs >> $seqres.full 2>&1
+> +	_scratch_mount >> $seqres.full 2>&1
+> +	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV"
+> +	res=$?
+> +	_scratch_unmount
+> +
+> +	test $res -ne 0 && return 1
+> +
+> +	# We only care if xfs_scrub has unicode string support...
+> +	if ! type ldd > /dev/null 2>&1 || \
+> +	   ! ldd "${XFS_SCRUB_PROG}" | grep -q libicui18n; then
+> +		return 1
+> +	fi
+> +
+> +	return 0
+> +}
+> +
+> +want_scrub=
+> +check_xfs_scrub && want_scrub=yes
+> +
+> +filter_scrub() {
+> +	grep 'Unicode' | sed -e 's/^.*Duplicate/Duplicate/g'
+> +}
+> +
+> +maybe_scrub() {
+> +	test "$want_scrub" = "yes" || return
+> +
+> +	output="$(LC_ALL="C.UTF-8" ${XFS_SCRUB_PROG} -v -n "${SCRATCH_MNT}" 2>&1)"
+> +	echo "xfs_scrub output:" >> $seqres.full
+> +	echo "$output" >> $seqres.full
+> +	echo "$output" >> $tmp.scrub
+> +}
+> +
+> +testlabel() {
+> +	local label="$(echo -e "$1")"
+> +	local expected_label="label = \"$label\""
+> +
+> +	echo "Formatting label '$1'." >> $seqres.full
+> +	# First, let's see if we can recover the label when we set it
+> +	# with mkfs.
+> +	_scratch_mkfs -L "$label" >> $seqres.full 2>&1
+> +	_scratch_mount >> $seqres.full 2>&1
+> +	blkid -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g" >> $seqres.full
+> +	blkid -d -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g" >> $seqres.full
+> +
+> +	# Did it actually stick?
+> +	local actual_label="$($XFS_IO_PROG -c label $SCRATCH_MNT)"
+> +	echo "$actual_label" >> $seqres.full
+> +
+> +	if [ "${actual_label}" != "${expected_label}" ]; then
+> +		echo "Saw '${expected_label}', expected '${actual_label}'."
+> +	fi
+> +	maybe_scrub
+> +	_scratch_unmount
+> +
+> +	# Now let's try setting the label online to see what happens.
+> +	echo "Setting label '$1'." >> $seqres.full
+> +	_scratch_mkfs >> $seqres.full 2>&1
+> +	_scratch_mount >> $seqres.full 2>&1
+> +	$XFS_IO_PROG -c "label -s $label" $SCRATCH_MNT >> $seqres.full
+> +	blkid -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g" >> $seqres.full
+> +	blkid -d -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g" >> $seqres.full
+> +	_scratch_cycle_mount
+> +
+> +	# Did it actually stick?
+> +	local actual_label="$($XFS_IO_PROG -c label $SCRATCH_MNT)"
+> +	echo "$actual_label" >> $seqres.full
+> +
+> +	if [ "${actual_label}" != "${expected_label}" ]; then
+> +		echo "Saw '${expected_label}'; expected '${actual_label}'."
+> +	fi
+> +	maybe_scrub
+> +	_scratch_unmount
+> +}
+> +
+> +# Simple test
+> +testlabel "simple"
+> +
+> +# Two different renderings of the same label
+> +testlabel "caf\xc3\xa9.fs"
+> +testlabel "cafe\xcc\x81.fs"
+> +
+> +# Arabic code point can expand into a muuuch longer series
+> +testlabel "xfs_\xef\xb7\xba.fs"
+> +
+> +# Fake slash?
+> +testlabel "urk\xc0\xafmoo"
+> +
+> +# Emoji: octopus butterfly owl giraffe
+> +testlabel "\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89"
+> +
+> +# unicode rtl widgets too...
+> +testlabel "mo\xe2\x80\xaegnp.txt"
+> +testlabel "motxt.png"
+> +
+> +# mixed-script confusables
+> +testlabel "mixed_t\xce\xbfp"
+> +testlabel "mixed_top"
+> +
+> +# single-script spoofing
+> +testlabel "a\xe2\x80\x90b.fs"
+> +testlabel "a-b.fs"
+> +
+> +testlabel "dz_dze.fs"
+> +testlabel "dz_\xca\xa3e.fs"
+> +
+> +# symbols
+> +testlabel "_Rs.fs"
+> +testlabel "_\xe2\x82\xa8.fs"
+> +
+> +# zero width joiners
+> +testlabel "moocow.fs"
+> +testlabel "moo\xe2\x80\x8dcow.fs"
+> +
+> +# combining marks
+> +testlabel "\xe1\x80\x9c\xe1\x80\xad\xe1\x80\xaf.fs"
+> +testlabel "\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.fs"
+> +
+> +# fake dotdot entry
+> +testlabel ".\xe2\x80\x8d"
+> +testlabel "..\xe2\x80\x8d"
+> +
+> +# Did scrub choke on anything?
+> +if [ "$want_scrub" = "yes" ]; then
+> +	grep -q "^Warning.*gnp.txt.*suspicious text direction" $tmp.scrub || \
+> +		echo "No complaints about direction overrides?"
+> +	grep -q "^Warning.*control characters" $tmp.scrub || \
+> +		echo "No complaints about control characters?"
+> +fi
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/739.out b/tests/xfs/739.out
+> new file mode 100644
+> index 00000000..f4f653e2
+> --- /dev/null
+> +++ b/tests/xfs/739.out
+> @@ -0,0 +1 @@
+> +QA output created by 739
 
+"Silence is golden" ?
 
+Thanks,
+Eryu
 
--- 
-Jorge E Guerra D
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index e71b058f..c8620d72 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -501,3 +501,4 @@
+>  501 auto quick unlink
+>  502 auto quick unlink
+>  503 auto copy metadump
+> +739 auto quick mkfs label
+> 
