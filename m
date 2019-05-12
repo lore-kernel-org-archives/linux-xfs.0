@@ -1,238 +1,444 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:41992 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728320AbfEKHhj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 May 2019 03:37:39 -0400
-Date: Sat, 11 May 2019 15:37:32 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH ] xfs: validate unicode filesystem labels
-Message-ID: <20190511073732.GH15846@desktop>
-References: <155724823157.2624769.14347748235168250309.stgit@magnolia>
- <155724824306.2624769.17050442466246363524.stgit@magnolia>
+Received: from mail-qt1-f196.google.com ([209.85.160.196]:36123 "EHLO
+        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726478AbfELQwE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 May 2019 12:52:04 -0400
+Received: by mail-qt1-f196.google.com with SMTP id a17so10942525qth.3
+        for <linux-xfs@vger.kernel.org>; Sun, 12 May 2019 09:52:02 -0700 (PDT)
+Date: Sun, 12 May 2019 12:51:58 -0400
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH v8 2/6] virtio-pmem: Add virtio pmem driver
+Message-ID: <20190512124954-mutt-send-email-mst@kernel.org>
+References: <20190510155202.14737-1-pagupta@redhat.com>
+ <20190510155202.14737-3-pagupta@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155724824306.2624769.17050442466246363524.stgit@magnolia>
+In-Reply-To: <20190510155202.14737-3-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Pankaj Gupta <pagupta@redhat.com>
+Cc: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, jstaron@google.com
 
-On Tue, May 07, 2019 at 09:57:23AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, May 10, 2019 at 09:21:58PM +0530, Pankaj Gupta wrote:
+> This patch adds virtio-pmem driver for KVM guest.
 > 
-> Make sure we can set and retrieve unicode labels, including emoji.
+> Guest reads the persistent memory range information from
+> Qemu over VIRTIO and registers it on nvdimm_bus. It also
+> creates a nd_region object with the persistent memory
+> range information so that existing 'nvdimm/pmem' driver
+> can reserve this into system memory map. This way
+> 'virtio-pmem' driver uses existing functionality of pmem
+> driver to register persistent memory compatible for DAX
+> capable filesystems.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> This also provides function to perform guest flush over
+> VIRTIO from 'pmem' driver when userspace performs flush
+> on DAX memory range.
+> 
+> Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+
+Acked-by: Michael S. Tsirkin <mst@redhat.com>
+
 > ---
->  tests/xfs/739     |  169 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/739.out |    1 
->  tests/xfs/group   |    1 
->  3 files changed, 171 insertions(+)
->  create mode 100755 tests/xfs/739
->  create mode 100644 tests/xfs/739.out
+>  drivers/nvdimm/Makefile          |   1 +
+>  drivers/nvdimm/nd_virtio.c       | 129 +++++++++++++++++++++++++++++++
+>  drivers/nvdimm/virtio_pmem.c     | 117 ++++++++++++++++++++++++++++
+>  drivers/virtio/Kconfig           |  10 +++
+>  include/linux/virtio_pmem.h      |  60 ++++++++++++++
+>  include/uapi/linux/virtio_ids.h  |   1 +
+>  include/uapi/linux/virtio_pmem.h |  10 +++
+>  7 files changed, 328 insertions(+)
+>  create mode 100644 drivers/nvdimm/nd_virtio.c
+>  create mode 100644 drivers/nvdimm/virtio_pmem.c
+>  create mode 100644 include/linux/virtio_pmem.h
+>  create mode 100644 include/uapi/linux/virtio_pmem.h
 > 
-> 
-> diff --git a/tests/xfs/739 b/tests/xfs/739
-> new file mode 100755
-> index 00000000..f8796cc3
-> --- /dev/null
-> +++ b/tests/xfs/739
-> @@ -0,0 +1,169 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0+
-> +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 739
-> +#
-> +# Create a directory with multiple filenames that all appear the same
-> +# (in unicode, anyway) but point to different inodes.  In theory all
-> +# Linux filesystems should allow this (filenames are a sequence of
-> +# arbitrary bytes) even if the user implications are horrifying.
-> +#
-> +seq=`basename "$0"`
-> +seqres="$RESULT_DIR/$seq"
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +_supported_os Linux
-> +_supported_fs xfs
-> +_require_scratch_nocheck
-> +_require_xfs_io_command 'label'
-> +
-> +# Only run this on xfs if xfs_scrub is available and has the unicode checker
-> +check_xfs_scrub() {
-
-This function has multiple copies in different tests now, e.g.
-generic/45{34} and xfs/262, make it a common helper?
-
-> +	_scratch_mkfs >> $seqres.full 2>&1
-> +	_scratch_mount >> $seqres.full 2>&1
-> +	_supports_xfs_scrub "$SCRATCH_MNT" "$SCRATCH_DEV"
-> +	res=$?
-> +	_scratch_unmount
-> +
-> +	test $res -ne 0 && return 1
-> +
-> +	# We only care if xfs_scrub has unicode string support...
-> +	if ! type ldd > /dev/null 2>&1 || \
-> +	   ! ldd "${XFS_SCRUB_PROG}" | grep -q libicui18n; then
-> +		return 1
-> +	fi
-> +
-> +	return 0
-> +}
-> +
-> +want_scrub=
-> +check_xfs_scrub && want_scrub=yes
-> +
-> +filter_scrub() {
-> +	grep 'Unicode' | sed -e 's/^.*Duplicate/Duplicate/g'
-> +}
-> +
-> +maybe_scrub() {
-> +	test "$want_scrub" = "yes" || return
-> +
-> +	output="$(LC_ALL="C.UTF-8" ${XFS_SCRUB_PROG} -v -n "${SCRATCH_MNT}" 2>&1)"
-> +	echo "xfs_scrub output:" >> $seqres.full
-> +	echo "$output" >> $seqres.full
-> +	echo "$output" >> $tmp.scrub
-> +}
-> +
-> +testlabel() {
-> +	local label="$(echo -e "$1")"
-> +	local expected_label="label = \"$label\""
-> +
-> +	echo "Formatting label '$1'." >> $seqres.full
-> +	# First, let's see if we can recover the label when we set it
-> +	# with mkfs.
-> +	_scratch_mkfs -L "$label" >> $seqres.full 2>&1
-> +	_scratch_mount >> $seqres.full 2>&1
-> +	blkid -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g" >> $seqres.full
-> +	blkid -d -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g" >> $seqres.full
-> +
-> +	# Did it actually stick?
-> +	local actual_label="$($XFS_IO_PROG -c label $SCRATCH_MNT)"
-> +	echo "$actual_label" >> $seqres.full
-> +
-> +	if [ "${actual_label}" != "${expected_label}" ]; then
-> +		echo "Saw '${expected_label}', expected '${actual_label}'."
-> +	fi
-> +	maybe_scrub
-> +	_scratch_unmount
-> +
-> +	# Now let's try setting the label online to see what happens.
-> +	echo "Setting label '$1'." >> $seqres.full
-> +	_scratch_mkfs >> $seqres.full 2>&1
-> +	_scratch_mount >> $seqres.full 2>&1
-> +	$XFS_IO_PROG -c "label -s $label" $SCRATCH_MNT >> $seqres.full
-> +	blkid -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g" >> $seqres.full
-> +	blkid -d -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g" >> $seqres.full
-> +	_scratch_cycle_mount
-> +
-> +	# Did it actually stick?
-> +	local actual_label="$($XFS_IO_PROG -c label $SCRATCH_MNT)"
-> +	echo "$actual_label" >> $seqres.full
-> +
-> +	if [ "${actual_label}" != "${expected_label}" ]; then
-> +		echo "Saw '${expected_label}'; expected '${actual_label}'."
-> +	fi
-> +	maybe_scrub
-> +	_scratch_unmount
-> +}
-> +
-> +# Simple test
-> +testlabel "simple"
-> +
-> +# Two different renderings of the same label
-> +testlabel "caf\xc3\xa9.fs"
-> +testlabel "cafe\xcc\x81.fs"
-> +
-> +# Arabic code point can expand into a muuuch longer series
-> +testlabel "xfs_\xef\xb7\xba.fs"
-> +
-> +# Fake slash?
-> +testlabel "urk\xc0\xafmoo"
-> +
-> +# Emoji: octopus butterfly owl giraffe
-> +testlabel "\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89"
-> +
-> +# unicode rtl widgets too...
-> +testlabel "mo\xe2\x80\xaegnp.txt"
-> +testlabel "motxt.png"
-> +
-> +# mixed-script confusables
-> +testlabel "mixed_t\xce\xbfp"
-> +testlabel "mixed_top"
-> +
-> +# single-script spoofing
-> +testlabel "a\xe2\x80\x90b.fs"
-> +testlabel "a-b.fs"
-> +
-> +testlabel "dz_dze.fs"
-> +testlabel "dz_\xca\xa3e.fs"
-> +
-> +# symbols
-> +testlabel "_Rs.fs"
-> +testlabel "_\xe2\x82\xa8.fs"
-> +
-> +# zero width joiners
-> +testlabel "moocow.fs"
-> +testlabel "moo\xe2\x80\x8dcow.fs"
-> +
-> +# combining marks
-> +testlabel "\xe1\x80\x9c\xe1\x80\xad\xe1\x80\xaf.fs"
-> +testlabel "\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.fs"
-> +
-> +# fake dotdot entry
-> +testlabel ".\xe2\x80\x8d"
-> +testlabel "..\xe2\x80\x8d"
-> +
-> +# Did scrub choke on anything?
-> +if [ "$want_scrub" = "yes" ]; then
-> +	grep -q "^Warning.*gnp.txt.*suspicious text direction" $tmp.scrub || \
-> +		echo "No complaints about direction overrides?"
-> +	grep -q "^Warning.*control characters" $tmp.scrub || \
-> +		echo "No complaints about control characters?"
-> +fi
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/739.out b/tests/xfs/739.out
+> diff --git a/drivers/nvdimm/Makefile b/drivers/nvdimm/Makefile
+> index 6f2a088afad6..cefe233e0b52 100644
+> --- a/drivers/nvdimm/Makefile
+> +++ b/drivers/nvdimm/Makefile
+> @@ -5,6 +5,7 @@ obj-$(CONFIG_ND_BTT) += nd_btt.o
+>  obj-$(CONFIG_ND_BLK) += nd_blk.o
+>  obj-$(CONFIG_X86_PMEM_LEGACY) += nd_e820.o
+>  obj-$(CONFIG_OF_PMEM) += of_pmem.o
+> +obj-$(CONFIG_VIRTIO_PMEM) += virtio_pmem.o nd_virtio.o
+>  
+>  nd_pmem-y := pmem.o
+>  
+> diff --git a/drivers/nvdimm/nd_virtio.c b/drivers/nvdimm/nd_virtio.c
 > new file mode 100644
-> index 00000000..f4f653e2
+> index 000000000000..ed7ddcc5a62c
 > --- /dev/null
-> +++ b/tests/xfs/739.out
-> @@ -0,0 +1 @@
-> +QA output created by 739
-
-"Silence is golden" ?
-
-Thanks,
-Eryu
-
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index e71b058f..c8620d72 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -501,3 +501,4 @@
->  501 auto quick unlink
->  502 auto quick unlink
->  503 auto copy metadump
-> +739 auto quick mkfs label
-> 
+> +++ b/drivers/nvdimm/nd_virtio.c
+> @@ -0,0 +1,129 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * virtio_pmem.c: Virtio pmem Driver
+> + *
+> + * Discovers persistent memory range information
+> + * from host and provides a virtio based flushing
+> + * interface.
+> + */
+> +#include <linux/virtio_pmem.h>
+> +#include "nd.h"
+> +
+> + /* The interrupt handler */
+> +void host_ack(struct virtqueue *vq)
+> +{
+> +	unsigned int len;
+> +	unsigned long flags;
+> +	struct virtio_pmem_request *req, *req_buf;
+> +	struct virtio_pmem *vpmem = vq->vdev->priv;
+> +
+> +	spin_lock_irqsave(&vpmem->pmem_lock, flags);
+> +	while ((req = virtqueue_get_buf(vq, &len)) != NULL) {
+> +		req->done = true;
+> +		wake_up(&req->host_acked);
+> +
+> +		if (!list_empty(&vpmem->req_list)) {
+> +			req_buf = list_first_entry(&vpmem->req_list,
+> +					struct virtio_pmem_request, list);
+> +			req_buf->wq_buf_avail = true;
+> +			wake_up(&req_buf->wq_buf);
+> +			list_del(&req_buf->list);
+> +		}
+> +	}
+> +	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
+> +}
+> +EXPORT_SYMBOL_GPL(host_ack);
+> +
+> + /* The request submission function */
+> +int virtio_pmem_flush(struct nd_region *nd_region)
+> +{
+> +	int err, err1;
+> +	unsigned long flags;
+> +	struct scatterlist *sgs[2], sg, ret;
+> +	struct virtio_device *vdev = nd_region->provider_data;
+> +	struct virtio_pmem *vpmem = vdev->priv;
+> +	struct virtio_pmem_request *req;
+> +
+> +	might_sleep();
+> +	req = kmalloc(sizeof(*req), GFP_KERNEL);
+> +	if (!req)
+> +		return -ENOMEM;
+> +
+> +	req->done = false;
+> +	strcpy(req->name, "FLUSH");
+> +	init_waitqueue_head(&req->host_acked);
+> +	init_waitqueue_head(&req->wq_buf);
+> +	INIT_LIST_HEAD(&req->list);
+> +	sg_init_one(&sg, req->name, strlen(req->name));
+> +	sgs[0] = &sg;
+> +	sg_init_one(&ret, &req->ret, sizeof(req->ret));
+> +	sgs[1] = &ret;
+> +
+> +	spin_lock_irqsave(&vpmem->pmem_lock, flags);
+> +	 /*
+> +	  * If virtqueue_add_sgs returns -ENOSPC then req_vq virtual
+> +	  * queue does not have free descriptor. We add the request
+> +	  * to req_list and wait for host_ack to wake us up when free
+> +	  * slots are available.
+> +	  */
+> +	while ((err = virtqueue_add_sgs(vpmem->req_vq, sgs, 1, 1, req,
+> +					GFP_ATOMIC)) == -ENOSPC) {
+> +
+> +		dev_err(&vdev->dev, "failed to send command to virtio pmem"\
+> +			"device, no free slots in the virtqueue\n");
+> +		req->wq_buf_avail = false;
+> +		list_add_tail(&req->list, &vpmem->req_list);
+> +		spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
+> +
+> +		/* When host has read buffer, this completes via host_ack */
+> +		wait_event(req->wq_buf, req->wq_buf_avail);
+> +		spin_lock_irqsave(&vpmem->pmem_lock, flags);
+> +	}
+> +	err1 = virtqueue_kick(vpmem->req_vq);
+> +	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
+> +
+> +	/*
+> +	 * virtqueue_add_sgs failed with error different than -ENOSPC, we can't
+> +	 * do anything about that.
+> +	 */
+> +	if (err || !err1) {
+> +		dev_info(&vdev->dev, "failed to send command to virtio pmem device\n");
+> +		err = -EIO;
+> +		goto ret;
+> +	}
+> +
+> +	/* When host has read buffer, this completes via host_ack */
+> +	wait_event(req->host_acked, req->done);
+> +	err = req->ret;
+> +ret:
+> +	kfree(req);
+> +	return err;
+> +};
+> +
+> +/* The asynchronous flush callback function */
+> +int async_pmem_flush(struct nd_region *nd_region, struct bio *bio)
+> +{
+> +	int rc = 0;
+> +
+> +	/* Create child bio for asynchronous flush and chain with
+> +	 * parent bio. Otherwise directly call nd_region flush.
+> +	 */
+> +	if (bio && bio->bi_iter.bi_sector != -1) {
+> +		struct bio *child = bio_alloc(GFP_ATOMIC, 0);
+> +
+> +		if (!child)
+> +			return -ENOMEM;
+> +		bio_copy_dev(child, bio);
+> +		child->bi_opf = REQ_PREFLUSH;
+> +		child->bi_iter.bi_sector = -1;
+> +		bio_chain(child, bio);
+> +		submit_bio(child);
+> +	} else {
+> +		if (virtio_pmem_flush(nd_region))
+> +			rc = -EIO;
+> +	}
+> +
+> +	return rc;
+> +};
+> +EXPORT_SYMBOL_GPL(async_pmem_flush);
+> +MODULE_LICENSE("GPL");
+> diff --git a/drivers/nvdimm/virtio_pmem.c b/drivers/nvdimm/virtio_pmem.c
+> new file mode 100644
+> index 000000000000..cfc6381c4e5d
+> --- /dev/null
+> +++ b/drivers/nvdimm/virtio_pmem.c
+> @@ -0,0 +1,117 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * virtio_pmem.c: Virtio pmem Driver
+> + *
+> + * Discovers persistent memory range information
+> + * from host and registers the virtual pmem device
+> + * with libnvdimm core.
+> + */
+> +#include <linux/virtio_pmem.h>
+> +#include "nd.h"
+> +
+> +static struct virtio_device_id id_table[] = {
+> +	{ VIRTIO_ID_PMEM, VIRTIO_DEV_ANY_ID },
+> +	{ 0 },
+> +};
+> +
+> + /* Initialize virt queue */
+> +static int init_vq(struct virtio_pmem *vpmem)
+> +{
+> +	/* single vq */
+> +	vpmem->req_vq = virtio_find_single_vq(vpmem->vdev,
+> +				host_ack, "flush_queue");
+> +	if (IS_ERR(vpmem->req_vq))
+> +		return PTR_ERR(vpmem->req_vq);
+> +
+> +	spin_lock_init(&vpmem->pmem_lock);
+> +	INIT_LIST_HEAD(&vpmem->req_list);
+> +
+> +	return 0;
+> +};
+> +
+> +static int virtio_pmem_probe(struct virtio_device *vdev)
+> +{
+> +	int err = 0;
+> +	struct resource res;
+> +	struct virtio_pmem *vpmem;
+> +	struct nd_region_desc ndr_desc = {};
+> +	int nid = dev_to_node(&vdev->dev);
+> +	struct nd_region *nd_region;
+> +
+> +	if (!vdev->config->get) {
+> +		dev_err(&vdev->dev, "%s failure: config access disabled\n",
+> +			__func__);
+> +		return -EINVAL;
+> +	}
+> +
+> +	vpmem = devm_kzalloc(&vdev->dev, sizeof(*vpmem), GFP_KERNEL);
+> +	if (!vpmem) {
+> +		err = -ENOMEM;
+> +		goto out_err;
+> +	}
+> +
+> +	vpmem->vdev = vdev;
+> +	vdev->priv = vpmem;
+> +	err = init_vq(vpmem);
+> +	if (err)
+> +		goto out_err;
+> +
+> +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
+> +			start, &vpmem->start);
+> +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
+> +			size, &vpmem->size);
+> +
+> +	res.start = vpmem->start;
+> +	res.end   = vpmem->start + vpmem->size-1;
+> +	vpmem->nd_desc.provider_name = "virtio-pmem";
+> +	vpmem->nd_desc.module = THIS_MODULE;
+> +
+> +	vpmem->nvdimm_bus = nvdimm_bus_register(&vdev->dev,
+> +						&vpmem->nd_desc);
+> +	if (!vpmem->nvdimm_bus)
+> +		goto out_vq;
+> +
+> +	dev_set_drvdata(&vdev->dev, vpmem->nvdimm_bus);
+> +
+> +	ndr_desc.res = &res;
+> +	ndr_desc.numa_node = nid;
+> +	ndr_desc.flush = async_pmem_flush;
+> +	set_bit(ND_REGION_PAGEMAP, &ndr_desc.flags);
+> +	set_bit(ND_REGION_ASYNC, &ndr_desc.flags);
+> +	nd_region = nvdimm_pmem_region_create(vpmem->nvdimm_bus, &ndr_desc);
+> +
+> +	if (!nd_region)
+> +		goto out_nd;
+> +	nd_region->provider_data = dev_to_virtio(nd_region->dev.parent->parent);
+> +	return 0;
+> +out_nd:
+> +	err = -ENXIO;
+> +	nvdimm_bus_unregister(vpmem->nvdimm_bus);
+> +out_vq:
+> +	vdev->config->del_vqs(vdev);
+> +out_err:
+> +	dev_err(&vdev->dev, "failed to register virtio pmem memory\n");
+> +	return err;
+> +}
+> +
+> +static void virtio_pmem_remove(struct virtio_device *vdev)
+> +{
+> +	struct nvdimm_bus *nvdimm_bus = dev_get_drvdata(&vdev->dev);
+> +
+> +	nvdimm_bus_unregister(nvdimm_bus);
+> +	vdev->config->del_vqs(vdev);
+> +	vdev->config->reset(vdev);
+> +}
+> +
+> +static struct virtio_driver virtio_pmem_driver = {
+> +	.driver.name		= KBUILD_MODNAME,
+> +	.driver.owner		= THIS_MODULE,
+> +	.id_table		= id_table,
+> +	.probe			= virtio_pmem_probe,
+> +	.remove			= virtio_pmem_remove,
+> +};
+> +
+> +module_virtio_driver(virtio_pmem_driver);
+> +MODULE_DEVICE_TABLE(virtio, id_table);
+> +MODULE_DESCRIPTION("Virtio pmem driver");
+> +MODULE_LICENSE("GPL");
+> diff --git a/drivers/virtio/Kconfig b/drivers/virtio/Kconfig
+> index 35897649c24f..9f634a2ed638 100644
+> --- a/drivers/virtio/Kconfig
+> +++ b/drivers/virtio/Kconfig
+> @@ -42,6 +42,16 @@ config VIRTIO_PCI_LEGACY
+>  
+>  	  If unsure, say Y.
+>  
+> +config VIRTIO_PMEM
+> +	tristate "Support for virtio pmem driver"
+> +	depends on VIRTIO
+> +	depends on LIBNVDIMM
+> +	help
+> +	This driver provides support for virtio based flushing interface
+> +	for persistent memory range.
+> +
+> +	If unsure, say M.
+> +
+>  config VIRTIO_BALLOON
+>  	tristate "Virtio balloon driver"
+>  	depends on VIRTIO
+> diff --git a/include/linux/virtio_pmem.h b/include/linux/virtio_pmem.h
+> new file mode 100644
+> index 000000000000..ab1da877575d
+> --- /dev/null
+> +++ b/include/linux/virtio_pmem.h
+> @@ -0,0 +1,60 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +/*
+> + * virtio_pmem.h: virtio pmem Driver
+> + *
+> + * Discovers persistent memory range information
+> + * from host and provides a virtio based flushing
+> + * interface.
+> + **/
+> +
+> +#ifndef _LINUX_VIRTIO_PMEM_H
+> +#define _LINUX_VIRTIO_PMEM_H
+> +
+> +#include <linux/virtio_ids.h>
+> +#include <linux/module.h>
+> +#include <linux/virtio_config.h>
+> +#include <uapi/linux/virtio_pmem.h>
+> +#include <linux/libnvdimm.h>
+> +#include <linux/spinlock.h>
+> +
+> +struct virtio_pmem_request {
+> +	/* Host return status corresponding to flush request */
+> +	int ret;
+> +
+> +	/* command name*/
+> +	char name[16];
+> +
+> +	/* Wait queue to process deferred work after ack from host */
+> +	wait_queue_head_t host_acked;
+> +	bool done;
+> +
+> +	/* Wait queue to process deferred work after virt queue buffer avail */
+> +	wait_queue_head_t wq_buf;
+> +	bool wq_buf_avail;
+> +	struct list_head list;
+> +};
+> +
+> +struct virtio_pmem {
+> +	struct virtio_device *vdev;
+> +
+> +	/* Virtio pmem request queue */
+> +	struct virtqueue *req_vq;
+> +
+> +	/* nvdimm bus registers virtio pmem device */
+> +	struct nvdimm_bus *nvdimm_bus;
+> +	struct nvdimm_bus_descriptor nd_desc;
+> +
+> +	/* List to store deferred work if virtqueue is full */
+> +	struct list_head req_list;
+> +
+> +	/* Synchronize virtqueue data */
+> +	spinlock_t pmem_lock;
+> +
+> +	/* Memory region information */
+> +	uint64_t start;
+> +	uint64_t size;
+> +};
+> +
+> +void host_ack(struct virtqueue *vq);
+> +int async_pmem_flush(struct nd_region *nd_region, struct bio *bio);
+> +#endif
+> diff --git a/include/uapi/linux/virtio_ids.h b/include/uapi/linux/virtio_ids.h
+> index 6d5c3b2d4f4d..32b2f94d1f58 100644
+> --- a/include/uapi/linux/virtio_ids.h
+> +++ b/include/uapi/linux/virtio_ids.h
+> @@ -43,5 +43,6 @@
+>  #define VIRTIO_ID_INPUT        18 /* virtio input */
+>  #define VIRTIO_ID_VSOCK        19 /* virtio vsock transport */
+>  #define VIRTIO_ID_CRYPTO       20 /* virtio crypto */
+> +#define VIRTIO_ID_PMEM         27 /* virtio pmem */
+>  
+>  #endif /* _LINUX_VIRTIO_IDS_H */
+> diff --git a/include/uapi/linux/virtio_pmem.h b/include/uapi/linux/virtio_pmem.h
+> new file mode 100644
+> index 000000000000..fa3f7d52717a
+> --- /dev/null
+> +++ b/include/uapi/linux/virtio_pmem.h
+> @@ -0,0 +1,10 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +
+> +#ifndef _UAPI_LINUX_VIRTIO_PMEM_H
+> +#define _UAPI_LINUX_VIRTIO_PMEM_H
+> +
+> +struct virtio_pmem_config {
+> +	__le64 start;
+> +	__le64 size;
+> +};
+> +#endif
+> -- 
+> 2.20.1
