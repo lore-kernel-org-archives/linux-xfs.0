@@ -1,46 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53872 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726452AbfEOOlq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 May 2019 10:41:46 -0400
-Date: Wed, 15 May 2019 10:41:44 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/6] xfs: refactor small allocation helper to skip cntbt
- attempt
-Message-ID: <20190515144144.GD2898@bfoster>
-References: <20190509165839.44329-1-bfoster@redhat.com>
- <20190509165839.44329-2-bfoster@redhat.com>
- <20190510172446.GA18992@infradead.org>
- <20190513154433.GD61135@bfoster>
- <20190515075253.GG29211@infradead.org>
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:40207 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731914AbfEMRwv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 May 2019 13:52:51 -0400
+Received: by mail-oi1-f194.google.com with SMTP id r136so10016913oie.7
+        for <linux-xfs@vger.kernel.org>; Mon, 13 May 2019 10:52:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190515075253.GG29211@infradead.org>
+References: <20190510155202.14737-1-pagupta@redhat.com> <20190510155202.14737-4-pagupta@redhat.com>
+ <CAPcyv4hbVNRFSyS2CTbmO88uhnbeH4eiukAng2cxgbDzLfizwg@mail.gmail.com>
+ <864186878.28040999.1557535549792.JavaMail.zimbra@redhat.com>
+ <CAPcyv4gL3ODfOr52Ztgq7BM4gVf1cih6cj0271gcpVvpi9aFSA@mail.gmail.com>
+ <2003480558.28042237.1557537797923.JavaMail.zimbra@redhat.com> <116369545.28425569.1557768748009.JavaMail.zimbra@redhat.com>
+In-Reply-To: <116369545.28425569.1557768748009.JavaMail.zimbra@redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 13 May 2019 10:52:39 -0700
+Message-ID: <CAPcyv4genJtCt6dp6N07_6RfPTwC6xXMhLp-dr0GWQy5q52YoA@mail.gmail.com>
+Subject: Re: [Qemu-devel] [PATCH v8 3/6] libnvdimm: add dax_dev sync flag
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: Pankaj Gupta <pagupta@redhat.com>
+Cc: cohuck@redhat.com, Jan Kara <jack@suse.cz>, KVM list <kvm@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, david <david@fromorbit.com>, Qemu Developers <qemu-devel@nongnu.org>, virtualization@lists.linux-foundation.org, Andreas Dilger <adilger.kernel@dilger.ca>, Ross Zwisler <zwisler@kernel.org>, Andrea Arcangeli <aarcange@redhat.com>, Dave Jiang <dave.jiang@intel.com>, jstaron@google.com, linux-nvdimm <linux-nvdimm@lists.01.org>, Vishal L Verma <vishal.l.verma@intel.com>, David Hildenbrand <david@redhat.com>, Matthew Wilcox <willy@infradead.org>, Christoph Hellwig <hch@infradead.org>, Linux ACPI <linux-acpi@vger.kernel.org>, jmoyer <jmoyer@redhat.com>, linux-ext4 <linux-ext4@vger.kernel.org>, Len Brown <lenb@kernel.org>, Adam Borowski <kilobyte@angband.pl>, Rik van Riel <riel@surriel.com>, yuval shaia <yuval.shaia@oracle.com>, Stefan Hajnoczi <stefanha@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, lcapitulino@redhat.com, Kevin Wolf <kwolf@redhat.com>, Nitesh Narayan Lal <nilal@redhat.com>, Theodore Ts'o <tytso@mit.edu>, Xiao Guangrong <xiaoguangrong.eric@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Igor Mammedov <imammedo@redhat.com>
 
-On Wed, May 15, 2019 at 12:52:53AM -0700, Christoph Hellwig wrote:
-> On Mon, May 13, 2019 at 11:44:34AM -0400, Brian Foster wrote:
-> > The only functional change was basically to check for ccur before using
-> > it and initializing i to zero. It just seemed to make sense to clean up
-> > the surrounding code while there, but I can either split out the
-> > aesthetic cleanup or defer that stuff to the broader rework at the end
-> > of the series (where the cursor stuff just gets ripped out anyways) if
-> > either of those is cleaner..
-> 
-> Yeah, I noticed how trivial the actual change was.  That is why just
-> doing the cleanup in pass 1 and applying the change in pass 2 might
-> make it more readbale.  It might also be worth to throw in the use
-> a goto label instead of long conditionals from your last patch into
-> that cleanup prep patch.
+On Mon, May 13, 2019 at 10:32 AM Pankaj Gupta <pagupta@redhat.com> wrote:
+>
+>
+> Hi Dan,
+>
+> While testing device mapper with DAX, I faced a bug with the commit:
+>
+> commit ad428cdb525a97d15c0349fdc80f3d58befb50df
+> Author: Dan Williams <dan.j.williams@intel.com>
+> Date:   Wed Feb 20 21:12:50 2019 -0800
+>
+> When I reverted the condition to old code[1] it worked for me. I
+> am thinking when we map two different devices (e.g with device mapper), will
+> start & end pfn still point to same pgmap? Or there is something else which
+> I am missing here.
+>
+> Note: I tested only EXT4.
+>
+> [1]
+>
+> -               if (pgmap && pgmap->type == MEMORY_DEVICE_FS_DAX)
+> +               end_pgmap = get_dev_pagemap(pfn_t_to_pfn(end_pfn), NULL);
+> +               if (pgmap && pgmap == end_pgmap && pgmap->type == MEMORY_DEVICE_FS_DAX
+> +                               && pfn_t_to_page(pfn)->pgmap == pgmap
+> +                               && pfn_t_to_page(end_pfn)->pgmap == pgmap
+> +                               && pfn_t_to_pfn(pfn) == PHYS_PFN(__pa(kaddr))
+> +                               && pfn_t_to_pfn(end_pfn) == PHYS_PFN(__pa(end_kaddr)))
 
-Ok, I've lifted all of the small mode refactoring (from both this patch
-and the last one) into an initial patch. Unless you indicate otherwise,
-I've also retained your review tag(s), though you might want to take a
-cursory look once the next version lands.
+Ugh, yes, device-mapper continues to be an awkward fit for dax (or
+vice versa). We would either need a way to have a multi-level pfn to
+pagemap lookup for composite devices, or a way to discern that even
+though the pagemap is different that the result is still valid / not
+an indication that we have leaked into an unassociated address range.
+Perhaps a per-daxdev callback for ->dax_supported() so that
+device-mapper internals can be used for this validation.
 
-Brian
+We need to get that fixed up, but I don't see it as a blocker /
+pre-requisite for virtio-pmem.
