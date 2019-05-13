@@ -1,35 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:40926 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725921AbfEOFxe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 May 2019 01:53:34 -0400
-Date: Wed, 15 May 2019 15:53:31 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/11] libxfs: remove xfs_inode_log_item ili_flags
-Message-ID: <20190515055331.GV29573@dread.disaster.area>
-References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
- <1557519510-10602-3-git-send-email-sandeen@redhat.com>
+Received: from mail-ot1-f50.google.com ([209.85.210.50]:44526 "EHLO
+        mail-ot1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727054AbfEMBph (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 May 2019 21:45:37 -0400
+Received: by mail-ot1-f50.google.com with SMTP id g18so10058316otj.11
+        for <linux-xfs@vger.kernel.org>; Sun, 12 May 2019 18:45:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1557519510-10602-3-git-send-email-sandeen@redhat.com>
+From: Tim Smith <tim.smith@vaultcloud.com.au>
+Date: Mon, 13 May 2019 11:45:26 +1000
+Message-ID: <CAHgs-5XkA5xFgxgSaX9m70gduuO1beq6fiY7UEGv1ad6bd19Hw@mail.gmail.com>
+Subject: xfs filesystem reports negative usage - reoccurring problem
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, May 10, 2019 at 03:18:21PM -0500, Eric Sandeen wrote:
-> ili_flags is only set to zero and asserted to be zero; it serves
-> no purpose, so remove it.
-> 
-> (it was renamed to ili_lock_flags in the kernel in commit 898621d5,
-> for some reason userspace had both, with ili_flags ~unused)
+Hey guys,
 
-Probably something that wasn't properly cleaned up in a big merge.
-Good to get rid of it, thought.
+We've got a bunch of hosts with multiple spinning disks providing file
+server duties with xfs.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+Some of the filesystems will go into a state where they report
+negative used space -  e.g. available is greater than total.
+
+This appears to be purely cosmetic, as we can still write data to (and
+read from) the filesystem, but it throws out our reporting data.
+
+We can (temporarily) fix the issue by unmounting and running
+`xfs_repair` on the filesystem, but it soon reoccurs.
+
+Does anybody have any ideas as to why this might be happening and how
+to prevent it? Can userspace processes affect change to the xfs
+superblock?
+
+Example of a 'good' filesystem on the host:
+
+$ sudo df -k /dev/sdac
+Filesystem      1K-blocks       Used  Available Use% Mounted on
+/dev/sdac      9764349952 7926794452 1837555500  82% /srv/node/sdac
+
+$ sudo strace df -k /dev/sdac |& grep statfs
+
+statfs("/srv/node/sdac", {f_type=0x58465342, f_bsize=4096,
+f_blocks=2441087488, f_bfree=459388875, f_bavail=459388875,
+f_files=976643648, f_ffree=922112135, f_fsid={16832, 0},
+f_namelen=255, f_frsize=4096, f_flags=3104}) = 0
+
+$ sudo xfs_db -r /dev/sdac
+[ snip ]
+icount = 54621696
+free = 90183
+fdblocks = 459388955
+
+Example of a 'bad' filesystem on the host:
+
+$ sudo df -k /dev/sdad
+Filesystem      1K-blocks        Used   Available Use% Mounted on
+/dev/sdad      9764349952 -9168705440 18933055392    - /srv/node/sdad
+
+$ sudo strace df -k /dev/sdad |& grep statfs
+statfs("/srv/node/sdad", {f_type=0x58465342, f_bsize=4096,
+f_blocks=2441087488, f_bfree=4733263848, f_bavail=4733263848,
+f_files=976643648, f_ffree=922172221, f_fsid={16848, 0},
+f_namelen=255, f_frsize=4096, f_flags=3104}) = 0
+
+$ sudo xfs_db -r /dev/sdad
+[ snip ]
+icount = 54657600
+ifree = 186173
+fdblocks = 4733263928
+
+Host environment:
+$ uname -a
+Linux hostname 4.15.0-47-generic #50~16.04.1-Ubuntu SMP Fri Mar 15
+16:06:21 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
+
+$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description: Ubuntu 16.04.5 LTS
+Release: 16.04
+Codename: xenial
+
+Thank you!
+Tim
