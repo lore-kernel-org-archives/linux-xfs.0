@@ -1,118 +1,410 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:45219 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728050AbfEWB5E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 May 2019 21:57:04 -0400
-Date: Thu, 23 May 2019 11:56:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 00/11] xfs: rework extent allocation
-Message-ID: <20190523015659.GL29573@dread.disaster.area>
-References: <20190522180546.17063-1-bfoster@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:43254 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725899AbfENIUN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 May 2019 04:20:13 -0400
+Subject: Re: [PATCH v8 2/6] virtio-pmem: Add virtio pmem driver
+References: <20190510155202.14737-1-pagupta@redhat.com>
+ <20190510155202.14737-3-pagupta@redhat.com>
+From: David Hildenbrand <david@redhat.com>
+Message-ID: <f2ea35a6-ec98-447c-44fe-0cb3ab309340@redhat.com>
+Date: Tue, 14 May 2019 10:19:52 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190522180546.17063-1-bfoster@redhat.com>
+In-Reply-To: <20190510155202.14737-3-pagupta@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Pankaj Gupta <pagupta@redhat.com>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, jstaron@google.com
 
-On Wed, May 22, 2019 at 02:05:35PM -0400, Brian Foster wrote:
-> Hi all,
+On 10.05.19 17:51, Pankaj Gupta wrote:
+> This patch adds virtio-pmem driver for KVM guest.
 > 
-> This is v2 of the extent allocation rework series. The changes in this
-> version are mostly associated with code factoring, based on feedback to
-> v1. The small mode helper refactoring has been isolated and pulled to
-> the start of the series. The active flag that necessitated the btree
-> cursor container structure has been pushed into the xfs_btree_cur
-> private area. The resulting high level allocation code in
-> xfs_ag_alloc_vextent() has been cleaned up to remove an unnecessary
-> level of abstraction. Finally, there are various minor cleanups and
-> fixes.
+> Guest reads the persistent memory range information from
+> Qemu over VIRTIO and registers it on nvdimm_bus. It also
+> creates a nd_region object with the persistent memory
+> range information so that existing 'nvdimm/pmem' driver
+> can reserve this into system memory map. This way
+> 'virtio-pmem' driver uses existing functionality of pmem
+> driver to register persistent memory compatible for DAX
+> capable filesystems.
 > 
-> On the testing front, I've run a couple more filebench oriented tests
-> since v1. The first is a high load, large filesystem, parallel file
-> write+fsync test to try and determine whether the modified near mode
-> allocation algorithm resulted in larger latencies in the common
-> (non-fragmented) case. The results show comparable latencies, though the
-> updated algorithm has a slightly faster overall runtime for whatever
-> reason.
+> This also provides function to perform guest flush over
+> VIRTIO from 'pmem' driver when userspace performs flush
+> on DAX memory range.
+> 
+> Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+> ---
+>  drivers/nvdimm/Makefile          |   1 +
+>  drivers/nvdimm/nd_virtio.c       | 129 +++++++++++++++++++++++++++++++
+>  drivers/nvdimm/virtio_pmem.c     | 117 ++++++++++++++++++++++++++++
+>  drivers/virtio/Kconfig           |  10 +++
+>  include/linux/virtio_pmem.h      |  60 ++++++++++++++
+>  include/uapi/linux/virtio_ids.h  |   1 +
+>  include/uapi/linux/virtio_pmem.h |  10 +++
+>  7 files changed, 328 insertions(+)
+>  create mode 100644 drivers/nvdimm/nd_virtio.c
+>  create mode 100644 drivers/nvdimm/virtio_pmem.c
+>  create mode 100644 include/linux/virtio_pmem.h
+>  create mode 100644 include/uapi/linux/virtio_pmem.h
+> 
+> diff --git a/drivers/nvdimm/Makefile b/drivers/nvdimm/Makefile
+> index 6f2a088afad6..cefe233e0b52 100644
+> --- a/drivers/nvdimm/Makefile
+> +++ b/drivers/nvdimm/Makefile
+> @@ -5,6 +5,7 @@ obj-$(CONFIG_ND_BTT) += nd_btt.o
+>  obj-$(CONFIG_ND_BLK) += nd_blk.o
+>  obj-$(CONFIG_X86_PMEM_LEGACY) += nd_e820.o
+>  obj-$(CONFIG_OF_PMEM) += of_pmem.o
+> +obj-$(CONFIG_VIRTIO_PMEM) += virtio_pmem.o nd_virtio.o
+>  
+>  nd_pmem-y := pmem.o
+>  
+> diff --git a/drivers/nvdimm/nd_virtio.c b/drivers/nvdimm/nd_virtio.c
+> new file mode 100644
+> index 000000000000..ed7ddcc5a62c
+> --- /dev/null
+> +++ b/drivers/nvdimm/nd_virtio.c
+> @@ -0,0 +1,129 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * virtio_pmem.c: Virtio pmem Driver
+> + *
+> + * Discovers persistent memory range information
+> + * from host and provides a virtio based flushing
+> + * interface.
+> + */
+> +#include <linux/virtio_pmem.h>
+> +#include "nd.h"
+> +
+> + /* The interrupt handler */
+> +void host_ack(struct virtqueue *vq)
+> +{
+> +	unsigned int len;
+> +	unsigned long flags;
+> +	struct virtio_pmem_request *req, *req_buf;
+> +	struct virtio_pmem *vpmem = vq->vdev->priv;
 
-Probably indicative that over so many allocations, saving a few
-microseconds of CPU time here and there adds up. That's also a fairly
-good indication that the IO behaviour hasn't dramatically changed
-between algorithms - we're not adding or removing a huge number of
-seeks to the workload....
+Nit: use reverse Christmas tree layout :)
 
-> The second is another filebench test (but with a smaller fileset against
-> a smaller filesystem), but with the purpose of measuring "locality
-> effectiveness" of the updated algorithm via post-test analysis of the
-> resulting/populated filesystem. I've been thinking a bit about how to
-> test for locality since starting on this series and ultimately came up
-> with the following, fairly crude heuristic: track and compare the worst
-> locality allocation for each regular file inode in the fs.
+> +
+> +	spin_lock_irqsave(&vpmem->pmem_lock, flags);
+> +	while ((req = virtqueue_get_buf(vq, &len)) != NULL) {
+> +		req->done = true;
+> +		wake_up(&req->host_acked);
+> +
+> +		if (!list_empty(&vpmem->req_list)) {
+> +			req_buf = list_first_entry(&vpmem->req_list,
+> +					struct virtio_pmem_request, list);
+> +			req_buf->wq_buf_avail = true;
+> +			wake_up(&req_buf->wq_buf);
+> +			list_del(&req_buf->list);
+> +		}
+> +	}
+> +	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
+> +}
+> +EXPORT_SYMBOL_GPL(host_ack);
+> +
+> + /* The request submission function */
+> +int virtio_pmem_flush(struct nd_region *nd_region)
+> +{
+> +	int err, err1;
+> +	unsigned long flags;
+> +	struct scatterlist *sgs[2], sg, ret;
+> +	struct virtio_device *vdev = nd_region->provider_data;
+> +	struct virtio_pmem *vpmem = vdev->priv;
+> +	struct virtio_pmem_request *req;
 
-OK, that's pretty crude :P
+Nit: use reverse Christmas tree layout :)
 
-> This
-> essentially locates the most distant extent for each inode, tracks the
-> delta from that extent to the inode location on disk and calculates the
-> average worst case delta across the entire set of regular files. The
-> results show that the updated algorithm provides a comparable level of
-> locality to the existing algorithm.
+> +
+> +	might_sleep();
+> +	req = kmalloc(sizeof(*req), GFP_KERNEL);
+> +	if (!req)
+> +		return -ENOMEM;
+> +
+> +	req->done = false;
+> +	strcpy(req->name, "FLUSH");
+> +	init_waitqueue_head(&req->host_acked);
+> +	init_waitqueue_head(&req->wq_buf);
+> +	INIT_LIST_HEAD(&req->list);
+> +	sg_init_one(&sg, req->name, strlen(req->name));
+> +	sgs[0] = &sg;
+> +	sg_init_one(&ret, &req->ret, sizeof(req->ret));
+> +	sgs[1] = &ret;
+> +
+> +	spin_lock_irqsave(&vpmem->pmem_lock, flags);
+> +	 /*
+> +	  * If virtqueue_add_sgs returns -ENOSPC then req_vq virtual
+> +	  * queue does not have free descriptor. We add the request
+> +	  * to req_list and wait for host_ack to wake us up when free
+> +	  * slots are available.
+> +	  */
+> +	while ((err = virtqueue_add_sgs(vpmem->req_vq, sgs, 1, 1, req,
+> +					GFP_ATOMIC)) == -ENOSPC) {
+> +
+> +		dev_err(&vdev->dev, "failed to send command to virtio pmem"\
+> +			"device, no free slots in the virtqueue\n");
+> +		req->wq_buf_avail = false;
+> +		list_add_tail(&req->list, &vpmem->req_list);
+> +		spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
+> +
+> +		/* When host has read buffer, this completes via host_ack */
 
-The problem with this is that worse case locality isn't a
-particularly useful measure. In general, when you have allocator
-contention it occurs on the AGF locks and so the allocator skips to
-the next AG it can lock. That means if we have 32 AGs and 33
-allocations in progress at once, the AG that it chosen for
-allocation is going to be essentially random. This means worst case
-allocation locality is always going to be "ag skip" distances and so
-the jumps between AGs are going to largely dominate the measured
-locality distances.
+"A host repsonse results in "host_ack" getting called" ... ?
 
-In this case, 7TB, 32AGs = ~220GB per AG, so an AG skip will be
-around 220 * 2^30 / 2^9 = ~460m sectors and:
+> +		wait_event(req->wq_buf, req->wq_buf_avail);
+> +		spin_lock_irqsave(&vpmem->pmem_lock, flags);
+> +	}
+> +	err1 = virtqueue_kick(vpmem->req_vq);
+> +	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
+> +
+> +	/*
+> +	 * virtqueue_add_sgs failed with error different than -ENOSPC, we can't
+> +	 * do anything about that.
+> +	 */
+> +	if (err || !err1) {
+> +		dev_info(&vdev->dev, "failed to send command to virtio pmem device\n");
+> +		err = -EIO;
+> +		goto ret;
 
-> - baseline	- min: 8  max: 568752250 median: 434794.5 mean: 11446328
-> - test		- min: 33 max: 568402234 median: 437405.5 mean: 11752963
-> - by-size only	- min: 33 max: 568593146 median: 784805   mean: 11912300
+Avoid the goto. Just move the following statements into an "else" case.
 
-max are all >460m sectors and so are AG skip distances.
+> +	}
+> +
+> +	/* When host has read buffer, this completes via host_ack */
 
-However, the changes you've made affect locality for allocations
-_within_ an AG, not across the filesystem, and so anything that
-skips to another AG really needs to be measured differently.
+"A host repsonse results in "host_ack" getting called" ... ?
 
-i.e. what we really need to measure here is "how close to target did
-we get?" and for extending writes the target is always the AGBNO of
-the end of the last extent.
+> +	wait_event(req->host_acked, req->done);
+> +	err = req->ret;
+> +ret:
+> +	kfree(req);
+> +	return err;
+> +};
+> +
+> +/* The asynchronous flush callback function */
+> +int async_pmem_flush(struct nd_region *nd_region, struct bio *bio)
+> +{
+> +	int rc = 0;
+> +
+> +	/* Create child bio for asynchronous flush and chain with
+> +	 * parent bio. Otherwise directly call nd_region flush.
+> +	 */
+> +	if (bio && bio->bi_iter.bi_sector != -1) {
+> +		struct bio *child = bio_alloc(GFP_ATOMIC, 0);
+> +
+> +		if (!child)
+> +			return -ENOMEM;
+> +		bio_copy_dev(child, bio);
+> +		child->bi_opf = REQ_PREFLUSH;
+> +		child->bi_iter.bi_sector = -1;
+> +		bio_chain(child, bio);
+> +		submit_bio(child);
 
-The inode itself is only used as the target for the first extent, so
-using it as the only distance comparison ignores the fact we try to
-allocate as close to the end of the last extent as possible, not as
-close to the inode as possible. Hence once a file has jumped AG, it
-will stay in the new AG and not return to the original AG the inode
-is in. This means that once the file data changes locality, it tries
-to keep that same locality for the next data that is written, not
-force another seek back to the original location.
+return 0;
 
-So, AFAICT, the measure of locality we should be using to evaluate
-the impact to locality of the new algorithm is the distance between
-sequential extents in a file allocated within the same AG, not the
-worst case distance from the inode....
+Then, drop the "else" case and "int rc" and do directly
 
-Cheers,
+if (virtio_pmem_flush(nd_region))
+	return -EIO;
 
-Dave.
+> +	} else {
+> +		
+> +			rc = -EIO;
+> +	}
+> +
+> +	return rc;
+> +};
+> +EXPORT_SYMBOL_GPL(async_pmem_flush);
+> +MODULE_LICENSE("GPL");
+> diff --git a/drivers/nvdimm/virtio_pmem.c b/drivers/nvdimm/virtio_pmem.c
+> new file mode 100644
+> index 000000000000..cfc6381c4e5d
+> --- /dev/null
+> +++ b/drivers/nvdimm/virtio_pmem.c
+> @@ -0,0 +1,117 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * virtio_pmem.c: Virtio pmem Driver
+> + *
+> + * Discovers persistent memory range information
+> + * from host and registers the virtual pmem device
+> + * with libnvdimm core.
+> + */
+> +#include <linux/virtio_pmem.h>
+> +#include "nd.h"
+> +
+> +static struct virtio_device_id id_table[] = {
+> +	{ VIRTIO_ID_PMEM, VIRTIO_DEV_ANY_ID },
+> +	{ 0 },
+> +};
+> +
+> + /* Initialize virt queue */
+> +static int init_vq(struct virtio_pmem *vpmem)
+> +{
+> +	/* single vq */
+> +	vpmem->req_vq = virtio_find_single_vq(vpmem->vdev,
+> +				host_ack, "flush_queue");
 
-(*) Which, in reality, we really should reset because once we jump
-AG we have no locality target and so should allow the full AG to be
-considered. This "didn't reset target" issue is something I suspect
-leads to the infamous "backwards allocation for sequential writes"
-problems...
+Nit: Wrong indentation of parameters.
+
+> +	if (IS_ERR(vpmem->req_vq))
+> +		return PTR_ERR(vpmem->req_vq);
+> +
+> +	spin_lock_init(&vpmem->pmem_lock);
+> +	INIT_LIST_HEAD(&vpmem->req_list);
+
+I would initialize the locks in the virtio_pmem_probe() directly,
+earlier (directly after allocating vpmem).
+
+> +
+> +	return 0;
+> +};
+> +
+> +static int virtio_pmem_probe(struct virtio_device *vdev)
+> +{
+> +	int err = 0;
+> +	struct resource res;
+> +	struct virtio_pmem *vpmem;
+> +	struct nd_region_desc ndr_desc = {};
+> +	int nid = dev_to_node(&vdev->dev);
+> +	struct nd_region *nd_region;
+
+Nit: use reverse Christmas tree layout :)
+
+> +
+> +	if (!vdev->config->get) {
+> +		dev_err(&vdev->dev, "%s failure: config access disabled\n",
+> +			__func__);
+> +		return -EINVAL;
+> +	}
+> +
+> +	vpmem = devm_kzalloc(&vdev->dev, sizeof(*vpmem), GFP_KERNEL);
+> +	if (!vpmem) {
+> +		err = -ENOMEM;
+> +		goto out_err;
+> +	}
+> +
+> +	vpmem->vdev = vdev;
+> +	vdev->priv = vpmem;
+> +	err = init_vq(vpmem);
+> +	if (err)
+> +		goto out_err;
+> +
+> +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
+> +			start, &vpmem->start);
+> +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
+> +			size, &vpmem->size);
+> +
+> +	res.start = vpmem->start;
+> +	res.end   = vpmem->start + vpmem->size-1;
+> +	vpmem->nd_desc.provider_name = "virtio-pmem";
+> +	vpmem->nd_desc.module = THIS_MODULE;
+> +
+> +	vpmem->nvdimm_bus = nvdimm_bus_register(&vdev->dev,
+> +						&vpmem->nd_desc);
+> +	if (!vpmem->nvdimm_bus)
+> +		goto out_vq;
+> +
+> +	dev_set_drvdata(&vdev->dev, vpmem->nvdimm_bus);
+> +
+> +	ndr_desc.res = &res;
+> +	ndr_desc.numa_node = nid;
+> +	ndr_desc.flush = async_pmem_flush;
+> +	set_bit(ND_REGION_PAGEMAP, &ndr_desc.flags);
+> +	set_bit(ND_REGION_ASYNC, &ndr_desc.flags);
+> +	nd_region = nvdimm_pmem_region_create(vpmem->nvdimm_bus, &ndr_desc);
+> +
+
+I'd drop this empty line.
+
+> +	if (!nd_region)
+> +		goto out_nd;
+> +	nd_region->provider_data = dev_to_virtio(nd_region->dev.parent->parent);
+
+Does it make sense to move some parts into separate functions for
+readability? E.g., virtio_pmem_init_nvdimm_bus()
+
+> +	return 0;
+> +out_nd:
+> +	err = -ENXIO;
+
+I'd always initialize "err" along with the goto statement for
+readability, especially because ...
+
+> +	nvdimm_bus_unregister(vpmem->nvdimm_bus);
+> +out_vq:
+
+... you don't initialize err in this case. Err is here 0 if I am not wrong.
+
+> +	vdev->config->del_vqs(vdev);
+> +out_err:
+> +	dev_err(&vdev->dev, "failed to register virtio pmem memory\n");
+
+Should we try to give more meaning full messages? I can think of
+scenarios like "memory region is not properly aligned" or "out of memory".
+
+> +	return err;
+> +}
+> +
+> +static void virtio_pmem_remove(struct virtio_device *vdev)
+> +{
+> +	struct nvdimm_bus *nvdimm_bus = dev_get_drvdata(&vdev->dev);
+> +
+
+Is the nd_region implicitly cleaned up?
+
+You are not freeing "vdev->priv".
+
+> +	nvdimm_bus_unregister(nvdimm_bus);
+> +	vdev->config->del_vqs(vdev);
+> +	vdev->config->reset(vdev);
+> +}
+> +
+> +static struct virtio_driver virtio_pmem_driver = {
+> +	.driver.name		= KBUILD_MODNAME,
+> +	.driver.owner		= THIS_MODULE,
+> +	.id_table		= id_table,
+> +	.probe			= virtio_pmem_probe,
+> +	.remove			= virtio_pmem_remove,
+> +};
+> +
+> +module_virtio_driver(virtio_pmem_driver);
+> +MODULE_DEVICE_TABLE(virtio, id_table);
+> +MODULE_DESCRIPTION("Virtio pmem driver");
+> +MODULE_LICENSE("GPL");
+> diff --git a/drivers/virtio/Kconfig b/drivers/virtio/Kconfig
+> index 35897649c24f..9f634a2ed638 100644
+> --- a/drivers/virtio/Kconfig
+> +++ b/drivers/virtio/Kconfig
+> @@ -42,6 +42,16 @@ config VIRTIO_PCI_LEGACY
+>  
+>  	  If unsure, say Y.
+>  
+> +config VIRTIO_PMEM
+> +	tristate "Support for virtio pmem driver"
+> +	depends on VIRTIO
+> +	depends on LIBNVDIMM
+> +	help
+> +	This driver provides support for virtio based flushing interface
+> +	for persistent memory range.
+
+"This driver provides access to virtio-pmem devices, storage devices
+that are mapped into the physical address space - similar to NVDIMMs -
+with a virtio-based flushing interface." ... ?
+
+> +
+> +	If unsure, say M.
+> +
+
 
 -- 
-Dave Chinner
-david@fromorbit.com
+
+Thanks,
+
+David / dhildenb
