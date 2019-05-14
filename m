@@ -1,84 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59776 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:44010 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726325AbfEOQvi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 May 2019 12:51:38 -0400
-Subject: Re: [PATCH] xfs_db: add extent count and file size histograms
-References: <20190514185026.73788-1-jorgeguerra@gmail.com>
- <20190514233119.GS29573@dread.disaster.area>
- <CAEFkGAxFuh5qLrfSTreVLHGaaP9VtxTbfeePEwq2iqm0OLamxA@mail.gmail.com>
- <731994db-9f24-a3a8-02a9-eb92535b93f5@sandeen.net>
- <CAEFkGAwdx6DC1YS_NaChYqz0Zp1+GxtrgpcQ262eLgYfX5U35w@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <cd58e171-8b41-38c2-3ed9-639db82c080a@sandeen.net>
-Date: Wed, 15 May 2019 11:51:37 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAEFkGAwdx6DC1YS_NaChYqz0Zp1+GxtrgpcQ262eLgYfX5U35w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1726009AbfENO6N (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 May 2019 10:58:13 -0400
+From: Pankaj Gupta <pagupta@redhat.com>
+Subject: [PATCH v9 5/7] dax: check synchronous mapping is supported
+Date: Tue, 14 May 2019 20:24:20 +0530
+Message-Id: <20190514145422.16923-6-pagupta@redhat.com>
+In-Reply-To: <20190514145422.16923-1-pagupta@redhat.com>
+References: <20190514145422.16923-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jorge Guerra <jorge.guerra@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Omar Sandoval <osandov@osandov.com>, Jorge Guerra <jorgeguerra@fb.com>
+To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, jstaron@google.com, pagupta@redhat.com
 
-On 5/15/19 11:47 AM, Jorge Guerra wrote:
-> On Wed, May 15, 2019 at 9:24 AM Eric Sandeen <sandeen@sandeen.net> wrote:
->>>> For example, xfs_db is not the right tool for probing online, active
->>>> filesystems. It is not coherent with the active kernel filesystem,
->>>> and is quite capable of walking off into la-la land as a result of
->>>> mis-parsing the inconsistent filesystem that is on disk underneath
->>>> active mounted filesystems. This does not make for a robust, usable
->>>> tool, let alone one that can make use of things like rmap for
->>>> querying usage and ownership information really quickly.
->>>
->>> I see your point, that the FS is constantly changing and that we might
->>> see an inconsistent view.  But if we are generating bucketed
->>> histograms we are anyways approximating the stats.
->>
->> I think that Dave's "inconsistency" concern is literal - if the on-disk
->> metadata is not consistent, you may wander into what looks like corruption
->> if you try to traverse every inode while mounted.
->>
->> It's pretty much never valid for userspace to try to traverse or read
->> the filesystem while mounted.
-> 
-> Sure, I understand this point.  Then can we:
-> 
-> 1) Abort scan if the we detect "corrupt" metadata, the user would then
-> either restart the scan or decide not to.
-> 2) Have a mechanism which detects if the FS changed will scan was in
-> progress and tell the user the results might be stale?
+This patch introduces 'daxdev_mapping_supported' helper
+which checks if 'MAP_SYNC' is supported with filesystem
+mapping. It also checks if corresponding dax_device is
+synchronous. Virtio pmem device is asynchronous and
+does not not support VM_SYNC.
 
-none of that should be shoehorned into xfs_db, tbh.  It's fine to use it
-while unmounted.  If you want to gather these stats on a mounted filesystem,
-xfs_db is the wrong tool for the job.  It's an offline inspection tool.
-The fact that "-r" exists is because developers may need
-it, but normal admin-facing tools should not be designed around it.
+Suggested-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ include/linux/dax.h | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
->>
->>>> To solve this problem, we now have the xfs_spaceman tool and the
->>>> GETFSMAP ioctl for running usage queries on mounted filesystems.
->>>> That avoids all the coherency and crash problems, and for rmap
->>>> enabled filesystems it does not require scanning the entire
->>>> filesystem to work out this information (i.e. it can all be derived
->>>> from the contents of the rmap tree).
->>>>
->>>> So I'd much prefer that new online filesystem queries go into
->>>> xfs-spaceman and use GETFSMAP so they can be accelerated on rmap
->>>> configured filesystems rather than hoping xfs_db will parse the
->>>> entire mounted filesystem correctly while it is being actively
->>>> changed...
->>>
->>> Good to know, I wasn't aware of this tool.  However I seems like I
->>> don't have that ioctl in my systems yet :(
->>
->> It was added in 2017, in kernel-4.12 I believe.
->> What kernel did you test?
-> 
-> Yeap, that's it we tested in 4.11.
-
-Catch up!  *grin*
-
--Eric
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 2b106752b1b8..267251a394fa 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -42,6 +42,18 @@ void dax_write_cache(struct dax_device *dax_dev, bool wc);
+ bool dax_write_cache_enabled(struct dax_device *dax_dev);
+ bool dax_synchronous(struct dax_device *dax_dev);
+ void set_dax_synchronous(struct dax_device *dax_dev);
++/*
++ * Check if given mapping is supported by the file / underlying device.
++ */
++static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
++					    struct dax_device *dax_dev)
++{
++	if (!(vma->vm_flags & VM_SYNC))
++		return true;
++	if (!IS_DAX(file_inode(vma->vm_file)))
++		return false;
++	return dax_synchronous(dax_dev);
++}
+ #else
+ static inline struct dax_device *dax_get_by_host(const char *host)
+ {
+@@ -69,6 +81,11 @@ static inline bool dax_write_cache_enabled(struct dax_device *dax_dev)
+ {
+ 	return false;
+ }
++static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
++				struct dax_device *dax_dev)
++{
++	return !(vma->vm_flags & VM_SYNC);
++}
+ #endif
+ 
+ struct writeback_control;
+-- 
+2.20.1
