@@ -1,46 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51366 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:56790 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726218AbfEOHy2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 May 2019 03:54:28 -0400
-Date: Wed, 15 May 2019 00:54:27 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/6] xfs: use locality optimized cntbt lookups for near
- mode allocations
-Message-ID: <20190515075427.GI29211@infradead.org>
-References: <20190509165839.44329-1-bfoster@redhat.com>
- <20190509165839.44329-4-bfoster@redhat.com>
- <20190510173110.GC18992@infradead.org>
- <20190513154544.GE61135@bfoster>
+        with ESMTP id S1725902AbfEOILG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 May 2019 04:11:06 -0400
+Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hQp0D-0004xj-Tp
+        for linux-xfs@vger.kernel.org; Wed, 15 May 2019 08:11:06 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: merge xfs_buf_zero and xfs_buf_iomove
+Date: Wed, 15 May 2019 10:10:20 +0200
+Message-Id: <20190515081020.3293-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190513154544.GE61135@bfoster>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, May 13, 2019 at 11:45:44AM -0400, Brian Foster wrote:
-> Hmm, I had attempted some tighter integration with the xfs_btree_cur on
-> a previous variant and ran into some roadblocks, the details of which I
-> don't recall. That said, I may have tried to include more than just this
-> active state, ran into header issues, and then never really stepped back
-> from that to explore more incremental changes.
-> 
-> I think extending the priv union with something for the allocation code
-> to use makes sense. Your suggestion has me wondering if down the road we
-> could genericize this further to a bc_valid state or some such that
-> quickly indicates whether a cursor points at a valid record or off into
-> space. That's a matter for another series however..
+xfs_buf_zero is the only caller of xfs_buf_iomove.  Remove support
+for copying from or to the buffer in xfs_buf_iomove and merge the
+two functions.
 
-Yep.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_buf.c | 18 +++---------------
+ fs/xfs/xfs_buf.h | 11 +----------
+ 2 files changed, 4 insertions(+), 25 deletions(-)
 
-> You mean to create tree specific cursor structures of which
-> xfs_btree_cur is a member, then the tree specific logic uses
-> container_of() to pull out whatever it needs from cur..? I'd need to
-> think more about that one, but indeed that is beyond the scope of this
-> work.
-
-Yes.
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 548344e25128..c66788dbaaba 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1617,12 +1617,10 @@ xfs_buf_offset(
+  *	Move data into or out of a buffer.
+  */
+ void
+-xfs_buf_iomove(
++xfs_buf_zero(
+ 	xfs_buf_t		*bp,	/* buffer to process		*/
+ 	size_t			boff,	/* starting buffer offset	*/
+-	size_t			bsize,	/* length to copy		*/
+-	void			*data,	/* data address			*/
+-	xfs_buf_rw_t		mode)	/* read/write/zero flag		*/
++	size_t			bsize)	/* length to copy		*/
+ {
+ 	size_t			bend;
+ 
+@@ -1639,19 +1637,9 @@ xfs_buf_iomove(
+ 
+ 		ASSERT((csize + page_offset) <= PAGE_SIZE);
+ 
+-		switch (mode) {
+-		case XBRW_ZERO:
+-			memset(page_address(page) + page_offset, 0, csize);
+-			break;
+-		case XBRW_READ:
+-			memcpy(data, page_address(page) + page_offset, csize);
+-			break;
+-		case XBRW_WRITE:
+-			memcpy(page_address(page) + page_offset, data, csize);
+-		}
++		memset(page_address(page) + page_offset, 0, csize);
+ 
+ 		boff += csize;
+-		data += csize;
+ 	}
+ }
+ 
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index d0b96e071cec..1701efee4fd4 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -21,12 +21,6 @@
+ 
+ #define XFS_BUF_DADDR_NULL	((xfs_daddr_t) (-1LL))
+ 
+-typedef enum {
+-	XBRW_READ = 1,			/* transfer into target memory */
+-	XBRW_WRITE = 2,			/* transfer from target memory */
+-	XBRW_ZERO = 3,			/* Zero target memory */
+-} xfs_buf_rw_t;
+-
+ #define XBF_READ	 (1 << 0) /* buffer intended for reading from device */
+ #define XBF_WRITE	 (1 << 1) /* buffer intended for writing to device */
+ #define XBF_READ_AHEAD	 (1 << 2) /* asynchronous read-ahead */
+@@ -305,10 +299,7 @@ static inline int xfs_buf_submit(struct xfs_buf *bp)
+ 	return __xfs_buf_submit(bp, wait);
+ }
+ 
+-extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
+-				xfs_buf_rw_t);
+-#define xfs_buf_zero(bp, off, len) \
+-	    xfs_buf_iomove((bp), (off), (len), NULL, XBRW_ZERO)
++void xfs_buf_zero(struct xfs_buf *bp, size_t boff, size_t bsize);
+ 
+ /* Buffer Utility Routines */
+ extern void *xfs_buf_offset(struct xfs_buf *, size_t);
+-- 
+2.20.1
