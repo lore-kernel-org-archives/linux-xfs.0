@@ -1,106 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44406 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728365AbfEQHcp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:45 -0400
-Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hRXMB-0000oS-U8
-        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:44 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/20] xfs: merge xfs_cud_init into xfs_trans_get_cud
-Date: Fri, 17 May 2019 09:31:13 +0200
-Message-Id: <20190517073119.30178-15-hch@lst.de>
-In-Reply-To: <20190517073119.30178-1-hch@lst.de>
-References: <20190517073119.30178-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:37562 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726170AbfEOUqS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 May 2019 16:46:18 -0400
+Subject: Re: [PATCH v9 2/7] virtio-pmem: Add virtio pmem driver
+References: <20190514145422.16923-1-pagupta@redhat.com>
+ <20190514145422.16923-3-pagupta@redhat.com>
+From: David Hildenbrand <david@redhat.com>
+Message-ID: <9f6b1d8e-ef90-7d8b-56da-61a426953ba3@redhat.com>
+Date: Wed, 15 May 2019 22:46:00 +0200
 MIME-Version: 1.0
+In-Reply-To: <20190514145422.16923-3-pagupta@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Pankaj Gupta <pagupta@redhat.com>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, mst@redhat.com
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, jstaron@google.com
 
-There is no good reason to keep these two functions separate.
+> +	vpmem->vdev = vdev;
+> +	vdev->priv = vpmem;
+> +	err = init_vq(vpmem);
+> +	if (err) {
+> +		dev_err(&vdev->dev, "failed to initialize virtio pmem vq's\n");
+> +		goto out_err;
+> +	}
+> +
+> +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
+> +			start, &vpmem->start);
+> +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
+> +			size, &vpmem->size);
+> +
+> +	res.start = vpmem->start;
+> +	res.end   = vpmem->start + vpmem->size-1;
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_refcount_item.c  | 14 ++++++--------
- fs/xfs/xfs_refcount_item.h  |  2 --
- fs/xfs/xfs_trans_refcount.c | 16 ----------------
- 3 files changed, 6 insertions(+), 26 deletions(-)
+nit: " - 1;"
 
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 2b2f6e7ad867..70dcdf40ac92 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -217,22 +217,20 @@ static const struct xfs_item_ops xfs_cud_item_ops = {
- 	.iop_release	= xfs_cud_item_release,
- };
- 
--/*
-- * Allocate and initialize an cud item with the given number of extents.
-- */
- struct xfs_cud_log_item *
--xfs_cud_init(
--	struct xfs_mount		*mp,
-+xfs_trans_get_cud(
-+	struct xfs_trans		*tp,
- 	struct xfs_cui_log_item		*cuip)
--
- {
--	struct xfs_cud_log_item	*cudp;
-+	struct xfs_cud_log_item		*cudp;
- 
- 	cudp = kmem_zone_zalloc(xfs_cud_zone, KM_SLEEP);
--	xfs_log_item_init(mp, &cudp->cud_item, XFS_LI_CUD, &xfs_cud_item_ops);
-+	xfs_log_item_init(tp->t_mountp, &cudp->cud_item, XFS_LI_CUD,
-+			  &xfs_cud_item_ops);
- 	cudp->cud_cuip = cuip;
- 	cudp->cud_format.cud_cui_id = cuip->cui_format.cui_id;
- 
-+	xfs_trans_add_item(tp, &cudp->cud_item);
- 	return cudp;
- }
- 
-diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
-index 3896dcc2368f..e47530f30489 100644
---- a/fs/xfs/xfs_refcount_item.h
-+++ b/fs/xfs/xfs_refcount_item.h
-@@ -78,8 +78,6 @@ extern struct kmem_zone	*xfs_cui_zone;
- extern struct kmem_zone	*xfs_cud_zone;
- 
- struct xfs_cui_log_item *xfs_cui_init(struct xfs_mount *, uint);
--struct xfs_cud_log_item *xfs_cud_init(struct xfs_mount *,
--		struct xfs_cui_log_item *);
- void xfs_cui_item_free(struct xfs_cui_log_item *);
- void xfs_cui_release(struct xfs_cui_log_item *);
- int xfs_cui_recover(struct xfs_trans *parent_tp, struct xfs_cui_log_item *cuip);
-diff --git a/fs/xfs/xfs_trans_refcount.c b/fs/xfs/xfs_trans_refcount.c
-index 8d734728dd1b..d793fb500378 100644
---- a/fs/xfs/xfs_trans_refcount.c
-+++ b/fs/xfs/xfs_trans_refcount.c
-@@ -17,22 +17,6 @@
- #include "xfs_alloc.h"
- #include "xfs_refcount.h"
- 
--/*
-- * This routine is called to allocate a "refcount update done"
-- * log item.
-- */
--struct xfs_cud_log_item *
--xfs_trans_get_cud(
--	struct xfs_trans		*tp,
--	struct xfs_cui_log_item		*cuip)
--{
--	struct xfs_cud_log_item		*cudp;
--
--	cudp = xfs_cud_init(tp->t_mountp, cuip);
--	xfs_trans_add_item(tp, &cudp->cud_item);
--	return cudp;
--}
--
- /*
-  * Finish an refcount update and log it to the CUD. Note that the
-  * transaction is marked dirty regardless of whether the refcount
+> +	vpmem->nd_desc.provider_name = "virtio-pmem";
+> +	vpmem->nd_desc.module = THIS_MODULE;
+> +
+> +	vpmem->nvdimm_bus = nvdimm_bus_register(&vdev->dev,
+> +						&vpmem->nd_desc);
+> +	if (!vpmem->nvdimm_bus) {
+> +		dev_err(&vdev->dev, "failed to register device with nvdimm_bus\n");
+> +		err = -ENXIO;
+> +		goto out_vq;
+> +	}
+> +
+> +	dev_set_drvdata(&vdev->dev, vpmem->nvdimm_bus);
+> +
+> +	ndr_desc.res = &res;
+> +	ndr_desc.numa_node = nid;
+> +	ndr_desc.flush = async_pmem_flush;
+> +	set_bit(ND_REGION_PAGEMAP, &ndr_desc.flags);
+> +	set_bit(ND_REGION_ASYNC, &ndr_desc.flags);
+> +	nd_region = nvdimm_pmem_region_create(vpmem->nvdimm_bus, &ndr_desc);
+> +	if (!nd_region) {
+> +		dev_err(&vdev->dev, "failed to create nvdimm region\n");
+> +		err = -ENXIO;
+> +		goto out_nd;
+> +	}
+> +	nd_region->provider_data = dev_to_virtio(nd_region->dev.parent->parent);
+> +	return 0;
+> +out_nd:
+> +	nvdimm_bus_unregister(vpmem->nvdimm_bus);
+> +out_vq:
+> +	vdev->config->del_vqs(vdev);
+> +out_err:
+> +	return err;
+> +}
+> +
+> +static void virtio_pmem_remove(struct virtio_device *vdev)
+> +{
+> +	struct nvdimm_bus *nvdimm_bus = dev_get_drvdata(&vdev->dev);
+> +
+> +	nvdimm_bus_unregister(nvdimm_bus);
+> +	vdev->config->del_vqs(vdev);
+> +	vdev->config->reset(vdev);
+> +}
+> +
+> +static struct virtio_driver virtio_pmem_driver = {
+> +	.driver.name		= KBUILD_MODNAME,
+> +	.driver.owner		= THIS_MODULE,
+> +	.id_table		= id_table,
+> +	.probe			= virtio_pmem_probe,
+> +	.remove			= virtio_pmem_remove,
+> +};
+> +
+> +module_virtio_driver(virtio_pmem_driver);
+> +MODULE_DEVICE_TABLE(virtio, id_table);
+> +MODULE_DESCRIPTION("Virtio pmem driver");
+> +MODULE_LICENSE("GPL");
+> diff --git a/drivers/nvdimm/virtio_pmem.h b/drivers/nvdimm/virtio_pmem.h
+> new file mode 100644
+> index 000000000000..ab1da877575d
+> --- /dev/null
+> +++ b/drivers/nvdimm/virtio_pmem.h
+> @@ -0,0 +1,60 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +/*
+> + * virtio_pmem.h: virtio pmem Driver
+> + *
+> + * Discovers persistent memory range information
+> + * from host and provides a virtio based flushing
+> + * interface.
+> + **/
+> +
+> +#ifndef _LINUX_VIRTIO_PMEM_H
+> +#define _LINUX_VIRTIO_PMEM_H
+> +
+> +#include <linux/virtio_ids.h>
+> +#include <linux/module.h>
+> +#include <linux/virtio_config.h>
+> +#include <uapi/linux/virtio_pmem.h>
+> +#include <linux/libnvdimm.h>
+> +#include <linux/spinlock.h>
+> +
+> +struct virtio_pmem_request {
+> +	/* Host return status corresponding to flush request */
+> +	int ret;
+> +
+> +	/* command name*/
+> +	char name[16];
+
+So ... why are we sending string commands and expect native-endianess
+integers and don't define a proper request/response structure + request
+types in include/uapi/linux/virtio_pmem.h like
+
+struct virtio_pmem_resp {
+	__virtio32 ret;
+}
+
+#define VIRTIO_PMEM_REQ_TYPE_FLUSH	1
+struct virtio_pmem_req {
+	__virtio16 type;
+}
+
+... and this way we also define a proper endianess format for exchange
+and keep it extensible
+
+@MST, what's your take on this?
+
+
 -- 
-2.20.1
+
+Thanks,
+
+David / dhildenb
