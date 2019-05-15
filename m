@@ -1,34 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48617 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725781AbfEOF5M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 May 2019 01:57:12 -0400
-Date: Wed, 15 May 2019 15:57:09 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 04/11] libxfs: rename bp_transp to b_transp in ASSERTs
-Message-ID: <20190515055709.GX29573@dread.disaster.area>
-References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
- <1557519510-10602-5-git-send-email-sandeen@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:54126 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726533AbfEOMll (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 May 2019 08:41:41 -0400
+Date: Wed, 15 May 2019 05:41:40 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Linus' tree hangs in generic/530
+Message-ID: <20190515124140.GA21791@infradead.org>
+References: <20190515063208.GA6981@infradead.org>
+ <20190515120657.GA2898@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1557519510-10602-5-git-send-email-sandeen@redhat.com>
+In-Reply-To: <20190515120657.GA2898@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Fri, May 10, 2019 at 03:18:23PM -0500, Eric Sandeen wrote:
-> xfs_buf no longer has a bp_transp member; it's b_transp now.
-> These ASSERTs get #defined away, but it's still best to not have
-> invalid structure members cluttering up the code.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Wed, May 15, 2019 at 08:07:01AM -0400, Brian Foster wrote:
+> Have you determined whether this is actually hung btw as opposed to
+> hitting some kind of sequence with pathological performance that isn't
+> typically hit during the test? I don't recall whether the older kernel
+> tests I referred to above resulted in task hung warnings or not, but I
+> guess it wouldn't surprise me given how long the tests seemed to take to
+> complete (I eventually just killed and expunged them).
 
-looks good.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+I just waited for about an hour and then gave up..
