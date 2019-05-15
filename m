@@ -1,204 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48086 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34546 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725854AbfENO5Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 May 2019 10:57:24 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v9 3/7] libnvdimm: add dax_dev sync flag
-Date: Tue, 14 May 2019 20:24:18 +0530
-Message-Id: <20190514145422.16923-4-pagupta@redhat.com>
-In-Reply-To: <20190514145422.16923-1-pagupta@redhat.com>
-References: <20190514145422.16923-1-pagupta@redhat.com>
+        id S1726084AbfEOOma (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 May 2019 10:42:30 -0400
+Date: Wed, 15 May 2019 10:42:28 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 5/6] xfs: refactor by-size extent allocation mode
+Message-ID: <20190515144227.GE2898@bfoster>
+References: <20190509165839.44329-1-bfoster@redhat.com>
+ <20190509165839.44329-6-bfoster@redhat.com>
+ <20190510173413.GD18992@infradead.org>
+ <20190513154610.GF61135@bfoster>
+ <20190515081016.GJ29211@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190515081016.GJ29211@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, jstaron@google.com, pagupta@redhat.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-This patch adds 'DAXDEV_SYNC' flag which is set
-for nd_region doing synchronous flush. This later
-is used to disable MAP_SYNC functionality for
-ext4 & xfs filesystem for devices don't support
-synchronous flush.
+On Wed, May 15, 2019 at 01:10:16AM -0700, Christoph Hellwig wrote:
+> > WRT to merging the functions, I'm a little concerned about the result
+> > being too large. What do you think about folding in _vextent_type() but
+> > at the same time factoring out the rmap/counter/resv post alloc bits
+> > into an xfs_alloc_ag_vextent_accounting() helper or some such?
+> 
+> Sounds good to me.  I've looked at the function and another nice thing
+> to do would be to not pass the ret bno to xfs_alloc_ag_vextent_agfl,
+> but let that function fill out the args structure return value itself.
+> 
 
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
----
- drivers/dax/bus.c            |  2 +-
- drivers/dax/super.c          | 19 ++++++++++++++++++-
- drivers/md/dm.c              |  3 ++-
- drivers/nvdimm/pmem.c        |  5 ++++-
- drivers/nvdimm/region_devs.c |  7 +++++++
- include/linux/dax.h          |  9 +++++++--
- include/linux/libnvdimm.h    |  1 +
- 7 files changed, 40 insertions(+), 6 deletions(-)
+I believe that's what the existing xfs_alloc_ag_vextent_small() function
+does if it happens to allocate from the AGFL. I initially found that
+inconsistent, but looking at the additional refactoring with the _type()
+function folded away and whatnot I think it's actually better. I'll push
+the args update back down into the AGFL helper.
 
-diff --git a/drivers/dax/bus.c b/drivers/dax/bus.c
-index 2109cfe80219..5f184e751c82 100644
---- a/drivers/dax/bus.c
-+++ b/drivers/dax/bus.c
-@@ -388,7 +388,7 @@ struct dev_dax *__devm_create_dev_dax(struct dax_region *dax_region, int id,
- 	 * No 'host' or dax_operations since there is no access to this
- 	 * device outside of mmap of the resulting character device.
- 	 */
--	dax_dev = alloc_dax(dev_dax, NULL, NULL);
-+	dax_dev = alloc_dax(dev_dax, NULL, NULL, DAXDEV_F_SYNC);
- 	if (!dax_dev)
- 		goto err;
- 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index bbd57ca0634a..93b3718b5cfa 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -186,6 +186,8 @@ enum dax_device_flags {
- 	DAXDEV_ALIVE,
- 	/* gate whether dax_flush() calls the low level flush routine */
- 	DAXDEV_WRITE_CACHE,
-+	/* flag to check if device supports synchronous flush */
-+	DAXDEV_SYNC,
- };
- 
- /**
-@@ -354,6 +356,18 @@ bool dax_write_cache_enabled(struct dax_device *dax_dev)
- }
- EXPORT_SYMBOL_GPL(dax_write_cache_enabled);
- 
-+bool dax_synchronous(struct dax_device *dax_dev)
-+{
-+	return test_bit(DAXDEV_SYNC, &dax_dev->flags);
-+}
-+EXPORT_SYMBOL_GPL(dax_synchronous);
-+
-+void set_dax_synchronous(struct dax_device *dax_dev)
-+{
-+	set_bit(DAXDEV_SYNC, &dax_dev->flags);
-+}
-+EXPORT_SYMBOL_GPL(set_dax_synchronous);
-+
- bool dax_alive(struct dax_device *dax_dev)
- {
- 	lockdep_assert_held(&dax_srcu);
-@@ -508,7 +522,7 @@ static void dax_add_host(struct dax_device *dax_dev, const char *host)
- }
- 
- struct dax_device *alloc_dax(void *private, const char *__host,
--		const struct dax_operations *ops)
-+		const struct dax_operations *ops, unsigned long flags)
- {
- 	struct dax_device *dax_dev;
- 	const char *host;
-@@ -531,6 +545,9 @@ struct dax_device *alloc_dax(void *private, const char *__host,
- 	dax_add_host(dax_dev, host);
- 	dax_dev->ops = ops;
- 	dax_dev->private = private;
-+	if (flags & DAXDEV_F_SYNC)
-+		set_dax_synchronous(dax_dev);
-+
- 	return dax_dev;
- 
-  err_dev:
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 043f0761e4a0..ee007b75d9fd 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1969,7 +1969,8 @@ static struct mapped_device *alloc_dev(int minor)
- 	sprintf(md->disk->disk_name, "dm-%d", minor);
- 
- 	if (IS_ENABLED(CONFIG_DAX_DRIVER)) {
--		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops);
-+		dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops,
-+							 DAXDEV_F_SYNC);
- 		if (!dax_dev)
- 			goto bad;
- 	}
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index 0279eb1da3ef..bdbd2b414d3d 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -365,6 +365,7 @@ static int pmem_attach_disk(struct device *dev,
- 	struct gendisk *disk;
- 	void *addr;
- 	int rc;
-+	unsigned long flags = 0UL;
- 
- 	pmem = devm_kzalloc(dev, sizeof(*pmem), GFP_KERNEL);
- 	if (!pmem)
-@@ -462,7 +463,9 @@ static int pmem_attach_disk(struct device *dev,
- 	nvdimm_badblocks_populate(nd_region, &pmem->bb, &bb_res);
- 	disk->bb = &pmem->bb;
- 
--	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
-+	if (is_nvdimm_sync(nd_region))
-+		flags = DAXDEV_F_SYNC;
-+	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops, flags);
- 	if (!dax_dev) {
- 		put_disk(disk);
- 		return -ENOMEM;
-diff --git a/drivers/nvdimm/region_devs.c b/drivers/nvdimm/region_devs.c
-index b4ef7d9ff22e..f3ea5369d20a 100644
---- a/drivers/nvdimm/region_devs.c
-+++ b/drivers/nvdimm/region_devs.c
-@@ -1197,6 +1197,13 @@ int nvdimm_has_cache(struct nd_region *nd_region)
- }
- EXPORT_SYMBOL_GPL(nvdimm_has_cache);
- 
-+bool is_nvdimm_sync(struct nd_region *nd_region)
-+{
-+	return is_nd_pmem(&nd_region->dev) &&
-+		!test_bit(ND_REGION_ASYNC, &nd_region->flags);
-+}
-+EXPORT_SYMBOL_GPL(is_nvdimm_sync);
-+
- struct conflict_context {
- 	struct nd_region *nd_region;
- 	resource_size_t start, size;
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 0dd316a74a29..2b106752b1b8 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -7,6 +7,9 @@
- #include <linux/radix-tree.h>
- #include <asm/pgtable.h>
- 
-+/* Flag for synchronous flush */
-+#define DAXDEV_F_SYNC (1UL << 0)
-+
- typedef unsigned long dax_entry_t;
- 
- struct iomap_ops;
-@@ -32,18 +35,20 @@ extern struct attribute_group dax_attribute_group;
- #if IS_ENABLED(CONFIG_DAX)
- struct dax_device *dax_get_by_host(const char *host);
- struct dax_device *alloc_dax(void *private, const char *host,
--		const struct dax_operations *ops);
-+		const struct dax_operations *ops, unsigned long flags);
- void put_dax(struct dax_device *dax_dev);
- void kill_dax(struct dax_device *dax_dev);
- void dax_write_cache(struct dax_device *dax_dev, bool wc);
- bool dax_write_cache_enabled(struct dax_device *dax_dev);
-+bool dax_synchronous(struct dax_device *dax_dev);
-+void set_dax_synchronous(struct dax_device *dax_dev);
- #else
- static inline struct dax_device *dax_get_by_host(const char *host)
- {
- 	return NULL;
- }
- static inline struct dax_device *alloc_dax(void *private, const char *host,
--		const struct dax_operations *ops)
-+		const struct dax_operations *ops, unsigned long flags)
- {
- 	/*
- 	 * Callers should check IS_ENABLED(CONFIG_DAX) to know if this
-diff --git a/include/linux/libnvdimm.h b/include/linux/libnvdimm.h
-index feb342d026f2..3238a206e563 100644
---- a/include/linux/libnvdimm.h
-+++ b/include/linux/libnvdimm.h
-@@ -264,6 +264,7 @@ void nvdimm_flush(struct nd_region *nd_region);
- int nvdimm_has_flush(struct nd_region *nd_region);
- int nvdimm_has_cache(struct nd_region *nd_region);
- int nvdimm_in_overwrite(struct nvdimm *nvdimm);
-+bool is_nvdimm_sync(struct nd_region *nd_region);
- 
- static inline int nvdimm_ctl(struct nvdimm *nvdimm, unsigned int cmd, void *buf,
- 		unsigned int buf_len, int *cmd_rc)
--- 
-2.20.1
+> Also for the trace piints that still say near in them - maybe we should
+> change that near to ag?
+
+Yeah, I need to make another pass over the tracepoints...
+
+Brian
