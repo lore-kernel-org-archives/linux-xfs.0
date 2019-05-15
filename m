@@ -1,37 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:45394 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725876AbfEOHwy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 May 2019 03:52:54 -0400
-Date: Wed, 15 May 2019 00:52:53 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/6] xfs: refactor small allocation helper to skip cntbt
- attempt
-Message-ID: <20190515075253.GG29211@infradead.org>
-References: <20190509165839.44329-1-bfoster@redhat.com>
- <20190509165839.44329-2-bfoster@redhat.com>
- <20190510172446.GA18992@infradead.org>
- <20190513154433.GD61135@bfoster>
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:60587 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725781AbfEOFwA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 May 2019 01:52:00 -0400
+Date: Wed, 15 May 2019 15:51:56 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/11] libxfs: remove i_transp
+Message-ID: <20190515055156.GU29573@dread.disaster.area>
+References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
+ <1557519510-10602-2-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190513154433.GD61135@bfoster>
+In-Reply-To: <1557519510-10602-2-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 13, 2019 at 11:44:34AM -0400, Brian Foster wrote:
-> The only functional change was basically to check for ccur before using
-> it and initializing i to zero. It just seemed to make sense to clean up
-> the surrounding code while there, but I can either split out the
-> aesthetic cleanup or defer that stuff to the broader rework at the end
-> of the series (where the cursor stuff just gets ripped out anyways) if
-> either of those is cleaner..
+On Fri, May 10, 2019 at 03:18:20PM -0500, Eric Sandeen wrote:
+> i_transp was removed from kernel code back in 2011, but it was left
+> in userspace.  It's only used in a few asserts in transaction code
+> (as it was in the kernel) so there doesnt' seem to be a compelling
+> reason to carry it around anymore.
+> 
+> Source kernel commit: f3ca87389dbff0a3dc1a7cb2fa7c62e25421c66c
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Yeah, I noticed how trivial the actual change was.  That is why just
-doing the cleanup in pass 1 and applying the change in pass 2 might
-make it more readbale.  It might also be worth to throw in the use
-a goto label instead of long conditionals from your last patch into
-that cleanup prep patch.
+looks good.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
