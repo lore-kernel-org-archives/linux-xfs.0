@@ -1,67 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44010 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:49338 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726009AbfENO6N (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 May 2019 10:58:13 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v9 5/7] dax: check synchronous mapping is supported
-Date: Tue, 14 May 2019 20:24:20 +0530
-Message-Id: <20190514145422.16923-6-pagupta@redhat.com>
-In-Reply-To: <20190514145422.16923-1-pagupta@redhat.com>
-References: <20190514145422.16923-1-pagupta@redhat.com>
+        id S1726302AbfEOUrR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 May 2019 16:47:17 -0400
+Subject: Re: [PATCH] xfsdump: (style) remove spaces for pointers and negations
+References: <20190515130340.45155-1-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <eee66375-48aa-71e5-9a34-a6861aa566be@sandeen.net>
+Date: Wed, 15 May 2019 15:47:16 -0500
+MIME-Version: 1.0
+In-Reply-To: <20190515130340.45155-1-jtulak@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, jstaron@google.com, pagupta@redhat.com
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
 
-This patch introduces 'daxdev_mapping_supported' helper
-which checks if 'MAP_SYNC' is supported with filesystem
-mapping. It also checks if corresponding dax_device is
-synchronous. Virtio pmem device is asynchronous and
-does not not support VM_SYNC.
+On 5/15/19 8:03 AM, Jan Tulak wrote:
+> Another case of different xfsdump style, spaces around * and !
+> operators. This style was used a lot through xfsdump:
+> (* foo_t)xxx
+>   ^ space
+> While the rest of XFS omits the space. Same for negations:
+> if (! foo)
+> 
+> This patch changes all occurrences to comply with the rest of xfs/kernel
+> coding style by removing the space. Unlike the previous patches, this
+> one is not fully replicable by a script - I had to manually correct many
+> cases of overzealous replacements in comments or strings.
+> (Regular expressions are a too weak tool for these context-sensitive
+> changes.)
+> 
+> Still, the script that did most of the job is here:
+> 
+> find . -name '*.[ch]' ! -type d -exec gawk -i inplace '{
+>     $0 = gensub(/^([^"]*)\(\* /, "\\1(*", "g") # foo(* bar
+>     $0 = gensub(/\(\* ([^"]*)$/, "(*\\1", "g") #
+>     $0 = gensub(/^([^ *#]{2}[^"]*)! /, "\\1!", "g") # space after exclamation mark
+> }; {print }' {} \;
+> 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-Suggested-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- include/linux/dax.h | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+(starts reading it all, eventually resorts to skimming & spot-checking ...)
 
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 2b106752b1b8..267251a394fa 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -42,6 +42,18 @@ void dax_write_cache(struct dax_device *dax_dev, bool wc);
- bool dax_write_cache_enabled(struct dax_device *dax_dev);
- bool dax_synchronous(struct dax_device *dax_dev);
- void set_dax_synchronous(struct dax_device *dax_dev);
-+/*
-+ * Check if given mapping is supported by the file / underlying device.
-+ */
-+static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
-+					    struct dax_device *dax_dev)
-+{
-+	if (!(vma->vm_flags & VM_SYNC))
-+		return true;
-+	if (!IS_DAX(file_inode(vma->vm_file)))
-+		return false;
-+	return dax_synchronous(dax_dev);
-+}
- #else
- static inline struct dax_device *dax_get_by_host(const char *host)
- {
-@@ -69,6 +81,11 @@ static inline bool dax_write_cache_enabled(struct dax_device *dax_dev)
- {
- 	return false;
- }
-+static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
-+				struct dax_device *dax_dev)
-+{
-+	return !(vma->vm_flags & VM_SYNC);
-+}
- #endif
- 
- struct writeback_control;
--- 
-2.20.1
+Looks good, thanks!
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
