@@ -1,139 +1,220 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:49624 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726571AbfENXb0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 May 2019 19:31:26 -0400
-Date: Wed, 15 May 2019 09:31:19 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_db: add extent count and file size histograms
-Message-ID: <20190514233119.GS29573@dread.disaster.area>
-References: <20190514185026.73788-1-jorgeguerra@gmail.com>
+Received: from sandeen.net ([63.231.237.45]:40680 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726546AbfEOARp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 May 2019 20:17:45 -0400
+Subject: [PATCH 03/11 V2] libxfs: remove unused cruft
+References: <1557519510-10602-1-git-send-email-sandeen@redhat.com>
+ <1557519510-10602-4-git-send-email-sandeen@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <7b7e0bb3-3fac-6602-cff0-c868d6d0540c@sandeen.net>
+Date: Tue, 14 May 2019 19:17:44 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190514185026.73788-1-jorgeguerra@gmail.com>
+In-Reply-To: <1557519510-10602-4-git-send-email-sandeen@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jorge Guerra <jorge.guerra@gmail.com>
-Cc: linux-xfs@vger.kernel.org, osandov@osandov.com, Jorge Guerra <jorgeguerra@fb.com>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
 
-On Tue, May 14, 2019 at 11:50:26AM -0700, Jorge Guerra wrote:
-> From: Jorge Guerra <jorgeguerra@fb.com>
-> 
-> In this change we add two feature to the xfs_db 'frag' command:
-> 
-> 1) Extent count histogram [-e]: This option enables tracking the
->    number of extents per inode (file) as the we traverse the file
->    system.  The end result is a histogram of the number of extents per
->    file in power of 2 buckets.
-> 
-> 2) File size histogram and file system internal fragmentation stats
->    [-s]: This option enables tracking file sizes both in terms of what
->    has been physically allocated and how much has been written to the
->    file.  In addition, we track the amount of internal fragmentation
->    seen per file.  This is particularly useful in the case of real
->    time devices where space is allocated in units of fixed sized
->    extents.
+Remove many unused #defines and functions.
 
-I can see the usefulness of having such information, but xfs_db is
-the wrong tool/interface for generating such usage reports.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> The man page for xfs_db has been updated to reflect these new command
-> line arguments.
-> 
-> Tests:
-> 
-> We tested this change on several XFS file systems with different
-> configurations:
-> 
-> 1) regular XFS:
-> 
-> [root@m1 ~]# xfs_info /mnt/d0
-> meta-data=/dev/sdb1              isize=256    agcount=10, agsize=268435455 blks
->          =                       sectsz=4096  attr=2, projid32bit=1
->          =                       crc=0        finobt=0, sparse=0, rmapbt=0
->          =                       reflink=0
-> data     =                       bsize=4096   blocks=2441608704, imaxpct=100
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=521728, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> [root@m1 ~]# echo "frag -e -s" | xfs_db -r /dev/sdb1
-> xfs_db> actual 494393, ideal 489246, fragmentation factor 1.04%
+V2: Remove libxfs_trans_ijoin_ref as well
 
-For example, xfs_db is not the right tool for probing online, active
-filesystems. It is not coherent with the active kernel filesystem,
-and is quite capable of walking off into la-la land as a result of
-mis-parsing the inconsistent filesystem that is on disk underneath
-active mounted filesystems. This does not make for a robust, usable
-tool, let alone one that can make use of things like rmap for
-querying usage and ownership information really quickly.
-
-To solve this problem, we now have the xfs_spaceman tool and the
-GETFSMAP ioctl for running usage queries on mounted filesystems.
-That avoids all the coherency and crash problems, and for rmap
-enabled filesystems it does not require scanning the entire
-filesystem to work out this information (i.e. it can all be derived
-from the contents of the rmap tree).
-
-So I'd much prefer that new online filesystem queries go into
-xfs-spaceman and use GETFSMAP so they can be accelerated on rmap
-configured filesystems rather than hoping xfs_db will parse the
-entire mounted filesystem correctly while it is being actively
-changed...
-
-> Maximum extents in a file 14
-> Histogram of number of extents per file:
->     bucket =       count        % of total
-> <=       1 =      350934        97.696 %
-> <=       2 =        6231        1.735 %
-> <=       4 =        1001        0.279 %
-> <=       8 =         953        0.265 %
-> <=      16 =          92        0.026 %
-> Maximum file size 26.508 MB
-> Histogram of file size:
->     bucket =    allocated           used        overhead(bytes)
-> <=    4 KB =           0              62           314048512 0.13%
-> <=    8 KB =           0          119911        127209263104 53.28%
-> <=   16 KB =           0           14543         15350194176 6.43%
-> <=   32 KB =         909           12330         11851161600 4.96%
-> <=   64 KB =          92            6704          6828642304 2.86%
-> <=  128 KB =           1            7132          6933372928 2.90%
-> <=  256 KB =           0           10013          8753799168 3.67%
-> <=  512 KB =           0           13616          9049227264 3.79%
-> <=    1 MB =           1           15056          4774912000 2.00%
-> <=    2 MB =      198662           17168          9690226688 4.06%
-> <=    4 MB =       28639           21073         11806654464 4.94%
-> <=    8 MB =       35169           29878         14200553472 5.95%
-> <=   16 MB =       95667           91633         11939287040 5.00%
-> <=   32 MB =          71              62            28471742 0.01%
-> capacity used (bytes): 1097735533058 (1022.346 GB)
-> capacity allocated (bytes): 1336497410048 (1.216 TB)
-> block overhead (bytes): 238761885182 (21.750 %)
-
-BTW, "bytes" as a display unit is stupidly verbose and largely
-unnecessary. The byte count is /always/ going to be a multiple of
-the filesystem block size, and the first thing anyone who wants to
-use this for diagnosis is going to have to do is return the byte
-count to filesystem blocks (which is what the filesystem itself
-tracks everything in. ANd then when you have PB scale filesystems,
-anything more than 3 significant digits is just impossible to read
-and compare - that "overhead" column (what the "overhead" even
-mean?) is largely impossible to read and determine what the actual
-capacity used is without counting individual digits in each number.
-
-FWIW, we already have extent histogram code in xfs_spaceman
-(in spaceman/freesp.c) and in xfs_db (db/freesp.c) so we really
-don't need re-implementation of the same functionality we already
-have duplicate copies of. I'd suggest that the histogram code should
-be factored and moved to libfrog/ and then enhanced if new histogram
-functionality is required...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 2bdef70..230bc3e 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -154,9 +154,6 @@ extern int	libxfs_log_header(char *, uuid_t *, int, int, int, xfs_lsn_t,
+ extern int	libxfs_alloc_file_space (struct xfs_inode *, xfs_off_t,
+ 				xfs_off_t, int, int);
+ 
+-extern void	libxfs_fs_repair_cmn_err(int, struct xfs_mount *, char *, ...);
+-extern void	libxfs_fs_cmn_err(int, struct xfs_mount *, char *, ...);
+-
+ /* XXX: this is messy and needs fixing */
+ #ifndef __LIBXFS_INTERNAL_XFS_H__
+ extern void cmn_err(int, char *, ...);
+diff --git a/include/xfs_trans.h b/include/xfs_trans.h
+index 832bde1..10b7453 100644
+--- a/include/xfs_trans.h
++++ b/include/xfs_trans.h
+@@ -47,13 +47,6 @@ typedef struct xfs_buf_log_item {
+ #define XFS_BLI_STALE			(1<<2)
+ #define XFS_BLI_INODE_ALLOC_BUF		(1<<3)
+ 
+-typedef struct xfs_dq_logitem {
+-	xfs_log_item_t		qli_item;	/* common portion */
+-	struct xfs_dquot	*qli_dquot;	/* dquot ptr */
+-	xfs_lsn_t		qli_flush_lsn;	/* lsn at last flush */
+-	xfs_dq_logformat_t	qli_format;	/* logged structure */
+-} xfs_dq_logitem_t;
+-
+ typedef struct xfs_qoff_logitem {
+ 	xfs_log_item_t		qql_item;	/* common portion */
+ 	struct xfs_qoff_logitem	*qql_start_lip;	/* qoff-start logitem, if any */
+@@ -64,7 +57,6 @@ typedef struct xfs_qoff_logitem {
+ #define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
+ 
+ typedef struct xfs_trans {
+-	unsigned int	t_type;			/* transaction type */
+ 	unsigned int	t_log_res;		/* amt of log space resvd */
+ 	unsigned int	t_log_count;		/* count for perm log res */
+ 	unsigned int	t_blk_res;		/* # of blocks resvd */
+@@ -98,7 +90,6 @@ void xfs_defer_cancel(struct xfs_trans *);
+ struct xfs_buf *libxfs_trans_getsb(struct xfs_trans *, struct xfs_mount *, int);
+ 
+ void	libxfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+-void	libxfs_trans_ijoin_ref(struct xfs_trans *, struct xfs_inode *, int);
+ void	libxfs_trans_log_inode (struct xfs_trans *, struct xfs_inode *,
+ 				uint);
+ int	libxfs_trans_roll_inode (struct xfs_trans **, struct xfs_inode *);
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index bb0f07b..1150ec9 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -16,9 +16,6 @@
+ #define xfs_highbit32			libxfs_highbit32
+ #define xfs_highbit64			libxfs_highbit64
+ 
+-#define xfs_fs_repair_cmn_err		libxfs_fs_repair_cmn_err
+-#define xfs_fs_cmn_err			libxfs_fs_cmn_err
+-
+ #define xfs_trans_alloc			libxfs_trans_alloc
+ #define xfs_trans_alloc_empty		libxfs_trans_alloc_empty
+ #define xfs_trans_add_item		libxfs_trans_add_item
+@@ -61,7 +58,6 @@
+ #define xfs_bmapi_write			libxfs_bmapi_write
+ #define xfs_bmapi_read			libxfs_bmapi_read
+ #define xfs_bunmapi			libxfs_bunmapi
+-#define xfs_bmbt_get_all		libxfs_bmbt_get_all
+ #define xfs_rtfree_extent		libxfs_rtfree_extent
+ #define xfs_verify_rtbno		libxfs_verify_rtbno
+ #define xfs_verify_ino			libxfs_verify_ino
+@@ -70,7 +66,6 @@
+ #define xfs_defer_finish		libxfs_defer_finish
+ #define xfs_defer_cancel		libxfs_defer_cancel
+ 
+-#define xfs_da_brelse			libxfs_da_brelse
+ #define xfs_da_hashname			libxfs_da_hashname
+ #define xfs_da_shrink_inode		libxfs_da_shrink_inode
+ #define xfs_da_read_buf			libxfs_da_read_buf
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index a2a8388..d668a15 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -122,7 +122,6 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+ #define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
+ #define xfs_err(mp,fmt,args...)			cmn_err(CE_ALERT,fmt, ## args)
+ #define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)
+-#define xfs_alert_tag(mp,tag,fmt,args...)	cmn_err(CE_ALERT,fmt, ## args)
+ 
+ #define xfs_hex_dump(d,n)		((void) 0)
+ #define xfs_stack_trace()		((void) 0)
+@@ -195,8 +194,6 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+ #endif
+ 
+ /* miscellaneous kernel routines not in user space */
+-#define down_read(a)		((void) 0)
+-#define up_read(a)		((void) 0)
+ #define spin_lock_init(a)	((void) 0)
+ #define spin_lock(a)		((void) 0)
+ #define spin_unlock(a)		((void) 0)
+@@ -400,7 +397,6 @@ roundup_64(uint64_t x, uint32_t y)
+ 
+ #define XBRW_READ			LIBXFS_BREAD
+ #define XBRW_WRITE			LIBXFS_BWRITE
+-#define xfs_buf_iomove(bp,off,len,data,f)	libxfs_iomove(bp,off,len,data,f)
+ #define xfs_buf_zero(bp,off,len)     libxfs_iomove(bp,off,len,NULL,LIBXFS_BZERO)
+ 
+ /* mount stuff */
+@@ -436,8 +432,6 @@ roundup_64(uint64_t x, uint32_t y)
+ #define xfs_sort					qsort
+ 
+ #define xfs_ilock(ip,mode)				((void) 0)
+-#define xfs_ilock_nowait(ip,mode)			((void) 0)
+-#define xfs_ilock_demote(ip,mode)			((void) 0)
+ #define xfs_ilock_data_map_shared(ip)			(0)
+ #define xfs_ilock_attr_map_shared(ip)			(0)
+ #define xfs_iunlock(ip,mode)				({	\
+@@ -470,9 +464,6 @@ roundup_64(uint64_t x, uint32_t y)
+ #define xfs_filestream_lookup_ag(ip)		(0)
+ #define xfs_filestream_new_ag(ip,ag)		(0)
+ 
+-#define xfs_log_force(mp,flags)			((void) 0)
+-#define XFS_LOG_SYNC				1
+-
+ /* quota bits */
+ #define xfs_trans_mod_dquot_byino(t,i,f,d)		((void) 0)
+ #define xfs_trans_reserve_quota_nblks(t,i,b,n,f)	(0)
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 64131b2..ee79047 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -360,21 +360,6 @@ libxfs_trans_ijoin(
+ }
+ 
+ void
+-libxfs_trans_ijoin_ref(
+-	xfs_trans_t		*tp,
+-	xfs_inode_t		*ip,
+-	int			lock_flags)
+-{
+-	ASSERT(ip->i_itemp != NULL);
+-
+-	xfs_trans_ijoin(tp, ip, lock_flags);
+-
+-#ifdef XACT_DEBUG
+-	fprintf(stderr, "ijoin_ref'd inode %llu, transaction %p\n", ip->i_ino, tp);
+-#endif
+-}
+-
+-void
+ libxfs_trans_inode_alloc_buf(
+ 	xfs_trans_t		*tp,
+ 	xfs_buf_t		*bp)
+diff --git a/libxfs/util.c b/libxfs/util.c
+index 9fe9a36..8c9954f 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -603,35 +603,6 @@ libxfs_inode_alloc(
+ 	return error;
+ }
+ 
+-/*
+- * Userspace versions of common diagnostic routines (varargs fun).
+- */
+-void
+-libxfs_fs_repair_cmn_err(int level, xfs_mount_t *mp, char *fmt, ...)
+-{
+-	va_list	ap;
+-
+-	va_start(ap, fmt);
+-	vfprintf(stderr, fmt, ap);
+-	fprintf(stderr, "  This is a bug.\n");
+-	fprintf(stderr, "%s version %s\n", progname, VERSION);
+-	fprintf(stderr,
+-		"Please capture the filesystem metadata with xfs_metadump and\n"
+-		"report it to linux-xfs@vger.kernel.org\n");
+-	va_end(ap);
+-}
+-
+-void
+-libxfs_fs_cmn_err(int level, xfs_mount_t *mp, char *fmt, ...)
+-{
+-	va_list	ap;
+-
+-	va_start(ap, fmt);
+-	vfprintf(stderr, fmt, ap);
+-	fputs("\n", stderr);
+-	va_end(ap);
+-}
+-
+ void
+ cmn_err(int level, char *fmt, ...)
+ {
