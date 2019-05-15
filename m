@@ -1,56 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12588 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:56032 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725854AbfENO6d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 May 2019 10:58:33 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v9 6/7] ext4: disable map_sync for async flush
-Date: Tue, 14 May 2019 20:24:21 +0530
-Message-Id: <20190514145422.16923-7-pagupta@redhat.com>
-In-Reply-To: <20190514145422.16923-1-pagupta@redhat.com>
-References: <20190514145422.16923-1-pagupta@redhat.com>
+        id S1726168AbfEOQCh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 May 2019 12:02:37 -0400
+Subject: Re: [PATCH] xfs_db: add extent count and file size histograms
+References: <20190514185026.73788-1-jorgeguerra@gmail.com>
+ <4a47cdc4-4a96-cf78-9e48-83d6cd0fe65f@sandeen.net>
+ <CAEFkGAx1A3-XXqWSssa3QQsTZW-8BuVU_D+Dq2sYfKAKs0+t_w@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <7b246a93-cadf-e510-af95-466b99029c2a@sandeen.net>
+Date: Wed, 15 May 2019 11:02:36 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAEFkGAx1A3-XXqWSssa3QQsTZW-8BuVU_D+Dq2sYfKAKs0+t_w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, jstaron@google.com, pagupta@redhat.com
+To: Jorge Guerra <jorge.guerra@gmail.com>
+Cc: linux-xfs@vger.kernel.org, Omar Sandoval <osandov@osandov.com>, Jorge Guerra <jorgeguerra@fb.com>
 
-Dont support 'MAP_SYNC' with non-DAX files and DAX files
-with asynchronous dax_device. Virtio pmem provides
-asynchronous host page cache flush mechanism. We don't
-support 'MAP_SYNC' with virtio pmem and ext4.
+On 5/15/19 10:57 AM, Jorge Guerra wrote:
+> Thanks Eric,
+> 
+> I'm addressing these comments.  Will send an update once we have an
+> agreement with Dave into how and where to implement this.
 
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- fs/ext4/file.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+Might want to give Dave's concerns thought before doing too much
+editing of this patch, but it's up to you.  :)
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 98ec11f69cd4..dee549339e13 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -360,15 +360,17 @@ static const struct vm_operations_struct ext4_file_vm_ops = {
- static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
- {
- 	struct inode *inode = file->f_mapping->host;
-+	struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
-+	struct dax_device *dax_dev = sbi->s_daxdev;
- 
--	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
-+	if (unlikely(ext4_forced_shutdown(sbi)))
- 		return -EIO;
- 
- 	/*
--	 * We don't support synchronous mappings for non-DAX files. At least
--	 * until someone comes with a sensible use case.
-+	 * We don't support synchronous mappings for non-DAX files and
-+	 * for DAX files if underneath dax_device is not synchronous.
- 	 */
--	if (!IS_DAX(file_inode(file)) && (vma->vm_flags & VM_SYNC))
-+	if (!daxdev_mapping_supported(vma, dax_dev))
- 		return -EOPNOTSUPP;
- 
- 	file_accessed(file);
--- 
-2.20.1
+(same style comments will apply to any solution, though)
+
+Thanks,
+-Eric
+
+> On Tue, May 14, 2019 at 1:02 PM Eric Sandeen <sandeen@sandeen.net> wrote:
+>>
+>> On 5/14/19 1:50 PM, Jorge Guerra wrote:
+>>> +             dbprintf(_("capacity used (bytes): %llu (%.3f %cB)\n"),
+>>> +             extstats.logicalused, answer, iec_prefixes[i]);
+>>
+>> I think I missed this instance of "indent please" and probably others...
+>>
+>> (I'm kind of wondering about carrying 'used' in bytes, but I suppose we're
+>> ok until we really get zettabyte filesytems in the wild) ;)
+>>
+>> -Eric
+> 
+> 
+> 
