@@ -1,106 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:45110 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728365AbfEQHcu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:50 -0400
-Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hRXMH-0000vS-7Z
-        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:49 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/20] xfs: merge xfs_bud_init into xfs_trans_get_bud
-Date: Fri, 17 May 2019 09:31:15 +0200
-Message-Id: <20190517073119.30178-17-hch@lst.de>
-In-Reply-To: <20190517073119.30178-1-hch@lst.de>
-References: <20190517073119.30178-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:37760 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726336AbfEPRmq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 May 2019 13:42:46 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 41ADD83F3D
+        for <linux-xfs@vger.kernel.org>; Thu, 16 May 2019 17:42:46 +0000 (UTC)
+Received: from Liberator-6.local (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 037E65D6A9
+        for <linux-xfs@vger.kernel.org>; Thu, 16 May 2019 17:42:45 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 0/3] xfsprogs: more libxfs/ spring cleaning
+Message-ID: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
+Date: Thu, 16 May 2019 12:42:45 -0500
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-There is no good reason to keep these two functions separate.
+It wasn't super clear before - my goal here is to keep reducing
+cosmetic differences between kernelspace & userspace libxfs/*
+files and functions.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_bmap_item.c  | 14 ++++++--------
- fs/xfs/xfs_bmap_item.h  |  2 --
- fs/xfs/xfs_trans_bmap.c | 16 ----------------
- 3 files changed, 6 insertions(+), 26 deletions(-)
+To that end, 3 more patches ... the first one may requires someone
+who groks the libxfs_* API namespace picture (looking at you, Dave!)
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 46dcadf790c2..40385c8b752a 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -212,22 +212,20 @@ static const struct xfs_item_ops xfs_bud_item_ops = {
- 	.iop_release	= xfs_bud_item_release,
- };
- 
--/*
-- * Allocate and initialize an bud item with the given number of extents.
-- */
- struct xfs_bud_log_item *
--xfs_bud_init(
--	struct xfs_mount		*mp,
-+xfs_trans_get_bud(
-+	struct xfs_trans		*tp,
- 	struct xfs_bui_log_item		*buip)
--
- {
--	struct xfs_bud_log_item	*budp;
-+	struct xfs_bud_log_item		*budp;
- 
- 	budp = kmem_zone_zalloc(xfs_bud_zone, KM_SLEEP);
--	xfs_log_item_init(mp, &budp->bud_item, XFS_LI_BUD, &xfs_bud_item_ops);
-+	xfs_log_item_init(tp->t_mountp, &budp->bud_item, XFS_LI_BUD,
-+			  &xfs_bud_item_ops);
- 	budp->bud_buip = buip;
- 	budp->bud_format.bud_bui_id = buip->bui_format.bui_id;
- 
-+	xfs_trans_add_item(tp, &budp->bud_item);
- 	return budp;
- }
- 
-diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
-index 89e043a88bb8..ad479cc73de8 100644
---- a/fs/xfs/xfs_bmap_item.h
-+++ b/fs/xfs/xfs_bmap_item.h
-@@ -75,8 +75,6 @@ extern struct kmem_zone	*xfs_bui_zone;
- extern struct kmem_zone	*xfs_bud_zone;
- 
- struct xfs_bui_log_item *xfs_bui_init(struct xfs_mount *);
--struct xfs_bud_log_item *xfs_bud_init(struct xfs_mount *,
--		struct xfs_bui_log_item *);
- void xfs_bui_item_free(struct xfs_bui_log_item *);
- void xfs_bui_release(struct xfs_bui_log_item *);
- int xfs_bui_recover(struct xfs_trans *parent_tp, struct xfs_bui_log_item *buip);
-diff --git a/fs/xfs/xfs_trans_bmap.c b/fs/xfs/xfs_trans_bmap.c
-index e1c7d55b32c3..c6f5b217d17c 100644
---- a/fs/xfs/xfs_trans_bmap.c
-+++ b/fs/xfs/xfs_trans_bmap.c
-@@ -18,22 +18,6 @@
- #include "xfs_bmap.h"
- #include "xfs_inode.h"
- 
--/*
-- * This routine is called to allocate a "bmap update done"
-- * log item.
-- */
--struct xfs_bud_log_item *
--xfs_trans_get_bud(
--	struct xfs_trans		*tp,
--	struct xfs_bui_log_item		*buip)
--{
--	struct xfs_bud_log_item		*budp;
--
--	budp = xfs_bud_init(tp->t_mountp, buip);
--	xfs_trans_add_item(tp, &budp->bud_item);
--	return budp;
--}
--
- /*
-  * Finish an bmap update and log it to the BUD. Note that the
-  * transaction is marked dirty regardless of whether the bmap update
--- 
-2.20.1
+(this abandons the "make new files" patches I sent before, at least
+for now, I'll heed dave's advice to minimize moves...)
+
+Thanks,
+-Eric
