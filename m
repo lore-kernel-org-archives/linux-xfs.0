@@ -1,97 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40888 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34732 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728971AbfEQRu2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 May 2019 13:50:28 -0400
-Date: Fri, 17 May 2019 13:50:25 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/20] xfs: add a flag to release log items on commit
-Message-ID: <20190517175025.GH7888@bfoster>
-References: <20190517073119.30178-1-hch@lst.de>
- <20190517073119.30178-9-hch@lst.de>
+        id S1726221AbfEPG2Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 May 2019 02:28:24 -0400
+Date: Thu, 16 May 2019 02:28:20 -0400 (EDT)
+From: Pankaj Gupta <pagupta@redhat.com>
+Message-ID: <1906905099.29162562.1557988100975.JavaMail.zimbra@redhat.com>
+In-Reply-To: <CAPcyv4gEr_zPJEQp3k89v2UXfHp9PQwnJXY+W99HwXfxpvua_w@mail.gmail.com>
+References: <20190514145422.16923-1-pagupta@redhat.com> <20190514145422.16923-2-pagupta@redhat.com> <CAPcyv4gEr_zPJEQp3k89v2UXfHp9PQwnJXY+W99HwXfxpvua_w@mail.gmail.com>
+Subject: Re: [PATCH v9 1/7] libnvdimm: nd_region flush callback support
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190517073119.30178-9-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, KVM list <kvm@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ross Zwisler <zwisler@kernel.org>, Vishal L Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, Matthew Wilcox <willy@infradead.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Christoph Hellwig <hch@infradead.org>, Len Brown <lenb@kernel.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, lcapitulino@redhat.com, Kevin Wolf <kwolf@redhat.com>, Igor Mammedov <imammedo@redhat.com>, jmoyer <jmoyer@redhat.com>, Nitesh Narayan Lal <nilal@redhat.com>, Rik van Riel <riel@surriel.com>, Stefan Hajnoczi <stefanha@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Hildenbrand <david@redhat.com>, david <david@fromorbit.com>, cohuck@redhat.com, Xiao Guangrong <xiaoguangrong.eric@gmail.com>, Paolo Bonzini <pbonzini@redhat.com>, Adam Borowski <kilobyte@angband.pl>, yuval shaia <yuval.shaia@oracle.com>, jstaron@google.com
 
-On Fri, May 17, 2019 at 09:31:07AM +0200, Christoph Hellwig wrote:
-> We have various items that are released from ->iop_comitting.  Add a
-> flag to just call ->iop_release from the commit path to avoid tons
-> of boilerplate code.
+
+> >
+> > This patch adds functionality to perform flush from guest
+> > to host over VIRTIO. We are registering a callback based
+> > on 'nd_region' type. virtio_pmem driver requires this special
+> > flush function. For rest of the region types we are registering
+> > existing flush function. Report error returned by host fsync
+> > failure to userspace.
+> >
+> > Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+> > ---
+> >  drivers/acpi/nfit/core.c     |  4 ++--
+> >  drivers/nvdimm/claim.c       |  6 ++++--
+> >  drivers/nvdimm/nd.h          |  1 +
+> >  drivers/nvdimm/pmem.c        | 13 ++++++++-----
+> >  drivers/nvdimm/region_devs.c | 26 ++++++++++++++++++++++++--
+> >  include/linux/libnvdimm.h    |  8 +++++++-
+> >  6 files changed, 46 insertions(+), 12 deletions(-)
+> >
+> > diff --git a/drivers/acpi/nfit/core.c b/drivers/acpi/nfit/core.c
+> > index 5a389a4f4f65..08dde76cf459 100644
+> > --- a/drivers/acpi/nfit/core.c
+> > +++ b/drivers/acpi/nfit/core.c
+> > @@ -2434,7 +2434,7 @@ static void write_blk_ctl(struct nfit_blk *nfit_blk,
+> > unsigned int bw,
+> >                 offset = to_interleave_offset(offset, mmio);
+> >
+> >         writeq(cmd, mmio->addr.base + offset);
+> > -       nvdimm_flush(nfit_blk->nd_region);
+> > +       nvdimm_flush(nfit_blk->nd_region, NULL);
+> >
+> >         if (nfit_blk->dimm_flags & NFIT_BLK_DCR_LATCH)
+> >                 readq(mmio->addr.base + offset);
+> > @@ -2483,7 +2483,7 @@ static int acpi_nfit_blk_single_io(struct nfit_blk
+> > *nfit_blk,
+> >         }
+> >
+> >         if (rw)
+> > -               nvdimm_flush(nfit_blk->nd_region);
+> > +               nvdimm_flush(nfit_blk->nd_region, NULL);
+> >
+> >         rc = read_blk_stat(nfit_blk, lane) ? -EIO : 0;
+> >         return rc;
+> > diff --git a/drivers/nvdimm/claim.c b/drivers/nvdimm/claim.c
+> > index fb667bf469c7..13510bae1e6f 100644
+> > --- a/drivers/nvdimm/claim.c
+> > +++ b/drivers/nvdimm/claim.c
+> > @@ -263,7 +263,7 @@ static int nsio_rw_bytes(struct nd_namespace_common
+> > *ndns,
+> >         struct nd_namespace_io *nsio = to_nd_namespace_io(&ndns->dev);
+> >         unsigned int sz_align = ALIGN(size + (offset & (512 - 1)), 512);
+> >         sector_t sector = offset >> 9;
+> > -       int rc = 0;
+> > +       int rc = 0, ret = 0;
+> >
+> >         if (unlikely(!size))
+> >                 return 0;
+> > @@ -301,7 +301,9 @@ static int nsio_rw_bytes(struct nd_namespace_common
+> > *ndns,
+> >         }
+> >
+> >         memcpy_flushcache(nsio->addr + offset, buf, size);
+> > -       nvdimm_flush(to_nd_region(ndns->dev.parent));
+> > +       ret = nvdimm_flush(to_nd_region(ndns->dev.parent), NULL);
+> > +       if (ret)
+> > +               rc = ret;
+> >
+> >         return rc;
+> >  }
+> > diff --git a/drivers/nvdimm/nd.h b/drivers/nvdimm/nd.h
+> > index a5ac3b240293..0c74d2428bd7 100644
+> > --- a/drivers/nvdimm/nd.h
+> > +++ b/drivers/nvdimm/nd.h
+> > @@ -159,6 +159,7 @@ struct nd_region {
+> >         struct badblocks bb;
+> >         struct nd_interleave_set *nd_set;
+> >         struct nd_percpu_lane __percpu *lane;
+> > +       int (*flush)(struct nd_region *nd_region, struct bio *bio);
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-
-Seems reasonable, but the naming is getting a little confusing. Your
-commit log refers to ->iop_committing() and the patch modifies
-->iop_committed(). Both the committing and committed callbacks still
-exist, while the flag is called *_RELEASE_ON_COMMIT and thus doesn't
-indicate which event it actually refers to. Can we fix this up? Maybe
-just call it *_RELEASE_ON_COMMITTED?
-
->  fs/xfs/xfs_bmap_item.c     | 27 +--------------------------
->  fs/xfs/xfs_extfree_item.c  | 27 +--------------------------
->  fs/xfs/xfs_icreate_item.c  | 18 +-----------------
->  fs/xfs/xfs_refcount_item.c | 27 +--------------------------
->  fs/xfs/xfs_rmap_item.c     | 27 +--------------------------
->  fs/xfs/xfs_trans.c         |  5 +++++
->  fs/xfs/xfs_trans.h         |  7 +++++++
->  7 files changed, 17 insertions(+), 121 deletions(-)
+> So this triggers:
 > 
-...
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 45a39de65997..52a8a8ff2ae9 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -849,6 +849,11 @@ xfs_trans_committed_bulk(
->  		struct xfs_log_item	*lip = lv->lv_item;
->  		xfs_lsn_t		item_lsn;
->  
-> +		if (lip->li_ops->flags & XFS_ITEM_RELEASE_ON_COMMIT) {
-> +			lip->li_ops->iop_release(lip);
-> +			continue;
-> +		}
+> In file included from drivers/nvdimm/e820.c:7:
+> ./include/linux/libnvdimm.h:140:51: warning: ‘struct bio’ declared
+> inside parameter list will not be visible outside of this definition
+> or declaration
+>   int (*flush)(struct nd_region *nd_region, struct bio *bio);
+>                                                    ^~~
 
-It might be appropriate to set the aborted flag before the callback.
-Even though none of the current users happen to care, it's a more
-consistent semantic with the other direct caller of ->iop_release().
+Sorry! for this. Fixed now.
 
-Brian
+> I was already feeling uneasy about trying to squeeze this into v5.2,
+> but this warning and the continued drip of comments leads me to
+> conclude that this driver would do well to wait one more development
+> cycle. Lets close out the final fixups and let this driver soak in
+> -next. Then for the v5.3 cycle I'll redouble my efforts towards the
+> goal of closing patch acceptance at the -rc6 / -rc7 development
+> milestone.
 
-> +
->  		if (aborted)
->  			set_bit(XFS_LI_ABORTED, &lip->li_flags);
->  		if (lip->li_ops->iop_committed)
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 7bd1867613c2..a38af44344bf 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -67,6 +67,7 @@ typedef struct xfs_log_item {
->  	{ (1 << XFS_LI_DIRTY),		"DIRTY" }
->  
->  struct xfs_item_ops {
-> +	unsigned flags;
->  	void (*iop_size)(xfs_log_item_t *, int *, int *);
->  	void (*iop_format)(xfs_log_item_t *, struct xfs_log_vec *);
->  	void (*iop_pin)(xfs_log_item_t *);
-> @@ -78,6 +79,12 @@ struct xfs_item_ops {
->  	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
->  };
->  
-> +/*
-> + * Release the log item as soon as committed.  This is for items just logging
-> + * intents that never need to be written back in place.
-> + */
-> +#define XFS_ITEM_RELEASE_ON_COMMIT	(1 << 0)
-> +
->  void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
->  			  int type, const struct xfs_item_ops *ops);
->  
-> -- 
-> 2.20.1
+o.k. Will wait for Mike's ACK on device mapper patch and send the v10
+with final fix-ups. Thank you for your help.
+
+Best regards,
+Pankaj
+
+
+
 > 
