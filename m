@@ -1,543 +1,427 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49150 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728225AbfEQR61 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 May 2019 13:58:27 -0400
-Date: Fri, 17 May 2019 13:49:16 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 07/20] xfs: split iop_unlock
-Message-ID: <20190517174915.GG7888@bfoster>
-References: <20190517073119.30178-1-hch@lst.de>
- <20190517073119.30178-8-hch@lst.de>
+Received: from aserp2130.oracle.com ([141.146.126.79]:44010 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726449AbfEPQ76 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 May 2019 12:59:58 -0400
+Subject: Re: [PATCH] xfs: remove unused flag arguments
+References: <ed89244f-cc3a-6bcf-316c-68edc8aee4cc@redhat.com>
+From: Allison Collins <allison.henderson@oracle.com>
+Message-ID: <2c38528b-98e6-d1c7-7b26-cdcf65370442@oracle.com>
+Date: Thu, 16 May 2019 09:59:37 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190517073119.30178-8-hch@lst.de>
+In-Reply-To: <ed89244f-cc3a-6bcf-316c-68edc8aee4cc@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, May 17, 2019 at 09:31:06AM +0200, Christoph Hellwig wrote:
-> The iop_unlock is not only misnamed, but also causes deeper problems.
-> We call the method when either comitting a transaction, or when freeing
-> items on a cancelled transaction.  Various item implementations try
-> to distinguish the cases by checking the XFS_LI_ABORTED flag, but that
-> is only set if the cancelled transaction was dirty.  That leads to
-> possible leaks of items when cancelling a clean transaction.  The only
-> thing saving us there is that cancelling clean transactions with
-> attached items is incredibly rare, if we do it at all.
+Look ok to me.  You can add my review:
+
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+
+On 5/15/19 11:37 AM, Eric Sandeen wrote:
+> There are several functions which take a flag argument that is
+> only ever passed as "0," so remove these arguments.
 > 
-
-Refactoring aside, I see that the majority of this patch is focused on
-intent log item implementations. I don't think an item leak is possible
-here because we intentionally dirty transactions when either an intent
-or done item is logged. See xfs_extent_free_log_item() and
-xfs_trans_free_extent() for examples associated with the EFI/EFD items.
-
-On one hand this logic supports the current item reference counting
-logic (for example, so we know whether to drop the log's reference to an
-EFI on transaction abort or wait until physical log commit time). On the
-other hand, the items themselves must be logged to disk so we have to
-mark them dirty (along with the transaction on behalf of the item) for
-that reason as well. FWIW, I do think the current approach of adding the
-intent item and dirtying it separately is slightly confusing,
-particularly since I'm not sure we have any valid use case to have a
-clean intent/done item in a transaction.
-
-I suppose this kind of refactoring might still make sense on its own if
-the resulting code is more clear or streamlined. I.e., perhaps there's
-no need for the separate ->iop_committing() and ->iop_unlock() callbacks
-invoked one after the other. That said, I think the commit log should
-probably be updated to focus on that (unless I'm missing something about
-the potential leak). Hm?
-
-Brian
-
-> This patch replaces iop_unlock with a new iop_release method just for
-> releasing items on a transaction cancellation, and overloads the
-> existing iop_committing method with the commit path behavior that only
-> a few item implementations need to start with.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
->  fs/xfs/xfs_bmap_item.c     | 17 +++++++----------
->  fs/xfs/xfs_buf_item.c      | 15 ++++++++++++---
->  fs/xfs/xfs_dquot_item.c    | 19 +++++++++++--------
->  fs/xfs/xfs_extfree_item.c  | 17 +++++++----------
->  fs/xfs/xfs_icreate_item.c  | 10 +++-------
->  fs/xfs/xfs_inode_item.c    | 11 ++++++-----
->  fs/xfs/xfs_log_cil.c       |  2 --
->  fs/xfs/xfs_refcount_item.c | 17 +++++++----------
->  fs/xfs/xfs_rmap_item.c     | 17 +++++++----------
->  fs/xfs/xfs_trace.h         |  2 +-
->  fs/xfs/xfs_trans.c         |  7 +++----
->  fs/xfs/xfs_trans.h         |  4 ++--
->  fs/xfs/xfs_trans_buf.c     |  2 +-
->  13 files changed, 67 insertions(+), 73 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index 8e57df6d5581..56c1ab161f3b 100644
-> --- a/fs/xfs/xfs_bmap_item.c
-> +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -119,11 +119,10 @@ xfs_bui_item_unpin(
->   * constructed and thus we free the BUI here directly.
->   */
->  STATIC void
-> -xfs_bui_item_unlock(
-> +xfs_bui_item_release(
->  	struct xfs_log_item	*lip)
->  {
-> -	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
-> -		xfs_bui_release(BUI_ITEM(lip));
-> +	xfs_bui_release(BUI_ITEM(lip));
->  }
->  
->  /*
-> @@ -133,7 +132,7 @@ static const struct xfs_item_ops xfs_bui_item_ops = {
->  	.iop_size	= xfs_bui_item_size,
->  	.iop_format	= xfs_bui_item_format,
->  	.iop_unpin	= xfs_bui_item_unpin,
-> -	.iop_unlock	= xfs_bui_item_unlock,
-> +	.iop_release	= xfs_bui_item_release,
->  };
->  
->  /*
-> @@ -200,15 +199,13 @@ xfs_bud_item_format(
->   * BUD.
->   */
->  STATIC void
-> -xfs_bud_item_unlock(
-> +xfs_bud_item_release(
->  	struct xfs_log_item	*lip)
->  {
->  	struct xfs_bud_log_item	*budp = BUD_ITEM(lip);
->  
-> -	if (test_bit(XFS_LI_ABORTED, &lip->li_flags)) {
-> -		xfs_bui_release(budp->bud_buip);
-> -		kmem_zone_free(xfs_bud_zone, budp);
-> -	}
-> +	xfs_bui_release(budp->bud_buip);
-> +	kmem_zone_free(xfs_bud_zone, budp);
->  }
->  
->  /*
-> @@ -242,7 +239,7 @@ xfs_bud_item_committed(
->  static const struct xfs_item_ops xfs_bud_item_ops = {
->  	.iop_size	= xfs_bud_item_size,
->  	.iop_format	= xfs_bud_item_format,
-> -	.iop_unlock	= xfs_bud_item_unlock,
-> +	.iop_release	= xfs_bud_item_release,
->  	.iop_committed	= xfs_bud_item_committed,
->  };
->  
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 3e0d5845e47b..7193ee9ca5b8 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -594,7 +594,7 @@ xfs_buf_item_put(
->   * free the item.
->   */
->  STATIC void
-> -xfs_buf_item_unlock(
-> +xfs_buf_item_release(
->  	struct xfs_log_item	*lip)
->  {
->  	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
-> @@ -609,7 +609,7 @@ xfs_buf_item_unlock(
->  						   &lip->li_flags);
->  #endif
->  
-> -	trace_xfs_buf_item_unlock(bip);
-> +	trace_xfs_buf_item_release(bip);
->  
->  	/*
->  	 * The bli dirty state should match whether the blf has logged segments
-> @@ -639,6 +639,14 @@ xfs_buf_item_unlock(
->  	xfs_buf_relse(bp);
->  }
->  
-> +STATIC void
-> +xfs_buf_item_committing(
-> +	struct xfs_log_item	*lip,
-> +	xfs_lsn_t		commit_lsn)
-> +{
-> +	return xfs_buf_item_release(lip);
-> +}
-> +
->  /*
->   * This is called to find out where the oldest active copy of the
->   * buf log item in the on disk log resides now that the last log
-> @@ -679,7 +687,8 @@ static const struct xfs_item_ops xfs_buf_item_ops = {
->  	.iop_format	= xfs_buf_item_format,
->  	.iop_pin	= xfs_buf_item_pin,
->  	.iop_unpin	= xfs_buf_item_unpin,
-> -	.iop_unlock	= xfs_buf_item_unlock,
-> +	.iop_release	= xfs_buf_item_release,
-> +	.iop_committing	= xfs_buf_item_committing,
->  	.iop_committed	= xfs_buf_item_committed,
->  	.iop_push	= xfs_buf_item_push,
->  };
-> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> index a61a8a770d7f..b8fd81641dfc 100644
-> --- a/fs/xfs/xfs_dquot_item.c
-> +++ b/fs/xfs/xfs_dquot_item.c
-> @@ -197,14 +197,8 @@ xfs_qm_dquot_logitem_push(
->  	return rval;
->  }
->  
-> -/*
-> - * Unlock the dquot associated with the log item.
-> - * Clear the fields of the dquot and dquot log item that
-> - * are specific to the current transaction.  If the
-> - * hold flags is set, do not unlock the dquot.
-> - */
->  STATIC void
-> -xfs_qm_dquot_logitem_unlock(
-> +xfs_qm_dquot_logitem_release(
->  	struct xfs_log_item	*lip)
->  {
->  	struct xfs_dquot	*dqp = DQUOT_ITEM(lip)->qli_dquot;
-> @@ -220,6 +214,14 @@ xfs_qm_dquot_logitem_unlock(
->  	xfs_dqunlock(dqp);
->  }
->  
-> +STATIC void
-> +xfs_qm_dquot_logitem_committing(
-> +	struct xfs_log_item	*lip,
-> +	xfs_lsn_t		commit_lsn)
-> +{
-> +	return xfs_qm_dquot_logitem_release(lip);
-> +}
-> +
->  /*
->   * This is the ops vector for dquots
->   */
-> @@ -228,7 +230,8 @@ static const struct xfs_item_ops xfs_dquot_item_ops = {
->  	.iop_format	= xfs_qm_dquot_logitem_format,
->  	.iop_pin	= xfs_qm_dquot_logitem_pin,
->  	.iop_unpin	= xfs_qm_dquot_logitem_unpin,
-> -	.iop_unlock	= xfs_qm_dquot_logitem_unlock,
-> +	.iop_release	= xfs_qm_dquot_logitem_release,
-> +	.iop_committing	= xfs_qm_dquot_logitem_committing,
->  	.iop_push	= xfs_qm_dquot_logitem_push,
->  	.iop_error	= xfs_dquot_item_error
->  };
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index 655ed0445750..a73a3cff8502 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -129,11 +129,10 @@ xfs_efi_item_unpin(
->   * constructed and thus we free the EFI here directly.
->   */
->  STATIC void
-> -xfs_efi_item_unlock(
-> +xfs_efi_item_release(
->  	struct xfs_log_item	*lip)
->  {
-> -	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
-> -		xfs_efi_release(EFI_ITEM(lip));
-> +	xfs_efi_release(EFI_ITEM(lip));
->  }
->  
->  /*
-> @@ -143,7 +142,7 @@ static const struct xfs_item_ops xfs_efi_item_ops = {
->  	.iop_size	= xfs_efi_item_size,
->  	.iop_format	= xfs_efi_item_format,
->  	.iop_unpin	= xfs_efi_item_unpin,
-> -	.iop_unlock	= xfs_efi_item_unlock,
-> +	.iop_release	= xfs_efi_item_release,
->  };
->  
->  
-> @@ -299,15 +298,13 @@ xfs_efd_item_format(
->   * the transaction is cancelled, drop our reference to the EFI and free the EFD.
->   */
->  STATIC void
-> -xfs_efd_item_unlock(
-> +xfs_efd_item_release(
->  	struct xfs_log_item	*lip)
->  {
->  	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
->  
-> -	if (test_bit(XFS_LI_ABORTED, &lip->li_flags)) {
-> -		xfs_efi_release(efdp->efd_efip);
-> -		xfs_efd_item_free(efdp);
-> -	}
-> +	xfs_efi_release(efdp->efd_efip);
-> +	xfs_efd_item_free(efdp);
->  }
->  
->  /*
-> @@ -341,7 +338,7 @@ xfs_efd_item_committed(
->  static const struct xfs_item_ops xfs_efd_item_ops = {
->  	.iop_size	= xfs_efd_item_size,
->  	.iop_format	= xfs_efd_item_format,
-> -	.iop_unlock	= xfs_efd_item_unlock,
-> +	.iop_release	= xfs_efd_item_release,
->  	.iop_committed	= xfs_efd_item_committed,
->  };
->  
-> diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
-> index cbaabc55f0c9..9aceb35dce24 100644
-> --- a/fs/xfs/xfs_icreate_item.c
-> +++ b/fs/xfs/xfs_icreate_item.c
-> @@ -57,14 +57,10 @@ xfs_icreate_item_format(
->  }
->  
->  STATIC void
-> -xfs_icreate_item_unlock(
-> +xfs_icreate_item_release(
->  	struct xfs_log_item	*lip)
->  {
-> -	struct xfs_icreate_item	*icp = ICR_ITEM(lip);
+> (motivated by simplifying userspace libxfs, TBH)
+> 
+>   libxfs/xfs_ag.c          |    8 ++++----
+>   libxfs/xfs_alloc.c       |    4 ++--
+>   libxfs/xfs_attr_remote.c |    2 +-
+>   libxfs/xfs_bmap.c        |   14 +++++++-------
+>   libxfs/xfs_btree.c       |   30 +++++++++++-------------------
+>   libxfs/xfs_btree.h       |   10 +++-------
+>   libxfs/xfs_sb.c          |    2 +-
+>   scrub/repair.c           |    2 +-
+>   xfs_bmap_util.c          |    6 +++---
+>   xfs_buf.h                |    5 ++---
+>   10 files changed, 35 insertions(+), 48 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> index b0c89f5..5efb827 100644
+> --- a/fs/xfs/libxfs/xfs_ag.c
+> +++ b/fs/xfs/libxfs/xfs_ag.c
+> @@ -53,7 +53,7 @@
+>   	struct xfs_buf		*bp,
+>   	struct aghdr_init_data	*id)
+>   {
+> -	xfs_btree_init_block(mp, bp, id->type, 0, 0, id->agno, 0);
+> +	xfs_btree_init_block(mp, bp, id->type, 0, 0, id->agno);
+>   }
+>   
+>   /*
+> @@ -67,7 +67,7 @@
+>   {
+>   	struct xfs_alloc_rec	*arec;
+>   
+> -	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, id->agno, 0);
+> +	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, id->agno);
+>   	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+>   	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+>   	arec->ar_blockcount = cpu_to_be32(id->agsize -
+> @@ -82,7 +82,7 @@
+>   {
+>   	struct xfs_alloc_rec	*arec;
+>   
+> -	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, id->agno, 0);
+> +	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, id->agno);
+>   	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+>   	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+>   	arec->ar_blockcount = cpu_to_be32(id->agsize -
+> @@ -101,7 +101,7 @@
+>   	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
+>   	struct xfs_rmap_rec	*rrec;
+>   
+> -	xfs_btree_init_block(mp, bp, XFS_BTNUM_RMAP, 0, 4, id->agno, 0);
+> +	xfs_btree_init_block(mp, bp, XFS_BTNUM_RMAP, 0, 4, id->agno);
+>   
+>   	/*
+>   	 * mark the AG header regions as static metadata The BNO
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index a9ff3cf..dbbff82 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -1627,7 +1627,7 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+>   				xfs_buf_t	*bp;
+>   
+>   				bp = xfs_btree_get_bufs(args->mp, args->tp,
+> -					args->agno, fbno, 0);
+> +					args->agno, fbno);
+>   				if (!bp) {
+>   					error = -EFSCORRUPTED;
+>   					goto error0;
+> @@ -2095,7 +2095,7 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+>   	if (error)
+>   		return error;
+>   
+> -	bp = xfs_btree_get_bufs(tp->t_mountp, tp, agno, agbno, 0);
+> +	bp = xfs_btree_get_bufs(tp->t_mountp, tp, agno, agbno);
+>   	if (!bp)
+>   		return -EFSCORRUPTED;
+>   	xfs_trans_binval(tp, bp);
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> index 65ff600..8b47f91 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> @@ -535,7 +535,7 @@
+>   		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
+>   		dblkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
+>   
+> -		bp = xfs_buf_get(mp->m_ddev_targp, dblkno, dblkcnt, 0);
+> +		bp = xfs_buf_get(mp->m_ddev_targp, dblkno, dblkcnt);
+>   		if (!bp)
+>   			return -ENOMEM;
+>   		bp->b_ops = &xfs_attr3_rmt_buf_ops;
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 356ebd1..4133bc46 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -370,7 +370,7 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+>   		bp = xfs_bmap_get_bp(cur, XFS_FSB_TO_DADDR(mp, bno));
+>   		if (!bp) {
+>   			bp_release = 1;
+> -			error = xfs_btree_read_bufl(mp, NULL, bno, 0, &bp,
+> +			error = xfs_btree_read_bufl(mp, NULL, bno, &bp,
+>   						XFS_BMAP_BTREE_REF,
+>   						&xfs_bmbt_buf_ops);
+>   			if (error)
+> @@ -454,7 +454,7 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+>   		bp = xfs_bmap_get_bp(cur, XFS_FSB_TO_DADDR(mp, bno));
+>   		if (!bp) {
+>   			bp_release = 1;
+> -			error = xfs_btree_read_bufl(mp, NULL, bno, 0, &bp,
+> +			error = xfs_btree_read_bufl(mp, NULL, bno, &bp,
+>   						XFS_BMAP_BTREE_REF,
+>   						&xfs_bmbt_buf_ops);
+>   			if (error)
+> @@ -619,7 +619,7 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+>   	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp,
+>   			xfs_btree_check_lptr(cur, cbno, 1));
+>   #endif
+> -	error = xfs_btree_read_bufl(mp, tp, cbno, 0, &cbp, XFS_BMAP_BTREE_REF,
+> +	error = xfs_btree_read_bufl(mp, tp, cbno, &cbp, XFS_BMAP_BTREE_REF,
+>   				&xfs_bmbt_buf_ops);
+>   	if (error)
+>   		return error;
+> @@ -732,7 +732,7 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+>   	cur->bc_private.b.allocated++;
+>   	ip->i_d.di_nblocks++;
+>   	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
+> -	abp = xfs_btree_get_bufl(mp, tp, args.fsbno, 0);
+> +	abp = xfs_btree_get_bufl(mp, tp, args.fsbno);
+>   	if (!abp) {
+>   		error = -EFSCORRUPTED;
+>   		goto out_unreserve_dquot;
+> @@ -878,7 +878,7 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+>   	ASSERT(args.fsbno != NULLFSBLOCK);
+>   	ASSERT(args.len == 1);
+>   	tp->t_firstblock = args.fsbno;
+> -	bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
+> +	bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno);
+>   
+>   	/*
+>   	 * Initialize the block, copy the data and log the remote buffer.
+> @@ -1203,7 +1203,7 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+>   	 * pointer (leftmost) at each level.
+>   	 */
+>   	while (level-- > 0) {
+> -		error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
+> +		error = xfs_btree_read_bufl(mp, tp, bno, &bp,
+>   				XFS_BMAP_BTREE_REF, &xfs_bmbt_buf_ops);
+>   		if (error)
+>   			goto out;
+> @@ -1276,7 +1276,7 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+>   		 */
+>   		if (bno == NULLFSBLOCK)
+>   			break;
+> -		error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
+> +		error = xfs_btree_read_bufl(mp, tp, bno, &bp,
+>   				XFS_BMAP_BTREE_REF, &xfs_bmbt_buf_ops);
+>   		if (error)
+>   			goto out;
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index bbdae2b..7d3d7c4 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -691,14 +691,13 @@ struct xfs_btree_block *		/* generic btree block pointer */
+>   xfs_btree_get_bufl(
+>   	xfs_mount_t	*mp,		/* file system mount point */
+>   	xfs_trans_t	*tp,		/* transaction pointer */
+> -	xfs_fsblock_t	fsbno,		/* file system block number */
+> -	uint		lock)		/* lock flags for get_buf */
+> +	xfs_fsblock_t	fsbno)		/* file system block number */
+>   {
+>   	xfs_daddr_t		d;		/* real disk block address */
+>   
+>   	ASSERT(fsbno != NULLFSBLOCK);
+>   	d = XFS_FSB_TO_DADDR(mp, fsbno);
+> -	return xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, lock);
+> +	return xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, 0);
+>   }
+>   
+>   /*
+> @@ -710,15 +709,14 @@ struct xfs_btree_block *		/* generic btree block pointer */
+>   	xfs_mount_t	*mp,		/* file system mount point */
+>   	xfs_trans_t	*tp,		/* transaction pointer */
+>   	xfs_agnumber_t	agno,		/* allocation group number */
+> -	xfs_agblock_t	agbno,		/* allocation group block number */
+> -	uint		lock)		/* lock flags for get_buf */
+> +	xfs_agblock_t	agbno)		/* allocation group block number */
+>   {
+>   	xfs_daddr_t		d;		/* real disk block address */
+>   
+>   	ASSERT(agno != NULLAGNUMBER);
+>   	ASSERT(agbno != NULLAGBLOCK);
+>   	d = XFS_AGB_TO_DADDR(mp, agno, agbno);
+> -	return xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, lock);
+> +	return xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, 0);
+>   }
+>   
+>   /*
+> @@ -845,7 +843,6 @@ struct xfs_btree_block *		/* generic btree block pointer */
+>   	struct xfs_mount	*mp,		/* file system mount point */
+>   	struct xfs_trans	*tp,		/* transaction pointer */
+>   	xfs_fsblock_t		fsbno,		/* file system block number */
+> -	uint			lock,		/* lock flags for read_buf */
+>   	struct xfs_buf		**bpp,		/* buffer for fsbno */
+>   	int			refval,		/* ref count value for buffer */
+>   	const struct xfs_buf_ops *ops)
+> @@ -858,7 +855,7 @@ struct xfs_btree_block *		/* generic btree block pointer */
+>   		return -EFSCORRUPTED;
+>   	d = XFS_FSB_TO_DADDR(mp, fsbno);
+>   	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
+> -				   mp->m_bsize, lock, &bp, ops);
+> +				   mp->m_bsize, 0, &bp, ops);
+>   	if (error)
+>   		return error;
+>   	if (bp)
+> @@ -1185,11 +1182,10 @@ struct xfs_btree_block *		/* generic btree block pointer */
+>   	xfs_btnum_t	btnum,
+>   	__u16		level,
+>   	__u16		numrecs,
+> -	__u64		owner,
+> -	unsigned int	flags)
+> +	__u64		owner)
+>   {
+>   	xfs_btree_init_block_int(mp, XFS_BUF_TO_BLOCK(bp), bp->b_bn,
+> -				 btnum, level, numrecs, owner, flags);
+> +				 btnum, level, numrecs, owner, 0);
+>   }
+>   
+>   STATIC void
+> @@ -1288,7 +1284,6 @@ struct xfs_btree_block *		/* generic btree block pointer */
+>   xfs_btree_get_buf_block(
+>   	struct xfs_btree_cur	*cur,
+>   	union xfs_btree_ptr	*ptr,
+> -	int			flags,
+>   	struct xfs_btree_block	**block,
+>   	struct xfs_buf		**bpp)
+>   {
+> @@ -1296,14 +1291,11 @@ struct xfs_btree_block *		/* generic btree block pointer */
+>   	xfs_daddr_t		d;
+>   	int			error;
+>   
+> -	/* need to sort out how callers deal with failures first */
+> -	ASSERT(!(flags & XBF_TRYLOCK));
 > -
-> -	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
-> -		kmem_zone_free(xfs_icreate_zone, icp);
-> -	return;
-> +	kmem_zone_free(xfs_icreate_zone, ICR_ITEM(lip));
->  }
->  
->  /*
-> @@ -89,7 +85,7 @@ xfs_icreate_item_committed(
->  static const struct xfs_item_ops xfs_icreate_item_ops = {
->  	.iop_size	= xfs_icreate_item_size,
->  	.iop_format	= xfs_icreate_item_format,
-> -	.iop_unlock	= xfs_icreate_item_unlock,
-> +	.iop_release	= xfs_icreate_item_release,
->  	.iop_committed	= xfs_icreate_item_committed,
->  };
->  
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index fa1c4fe2ffbf..a00f0b6aecc7 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -565,7 +565,7 @@ xfs_inode_item_push(
->   * Unlock the inode associated with the inode log item.
->   */
->  STATIC void
-> -xfs_inode_item_unlock(
-> +xfs_inode_item_release(
->  	struct xfs_log_item	*lip)
->  {
->  	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
-> @@ -621,9 +621,10 @@ xfs_inode_item_committed(
->  STATIC void
->  xfs_inode_item_committing(
->  	struct xfs_log_item	*lip,
-> -	xfs_lsn_t		lsn)
-> +	xfs_lsn_t		commit_lsn)
->  {
-> -	INODE_ITEM(lip)->ili_last_lsn = lsn;
-> +	INODE_ITEM(lip)->ili_last_lsn = commit_lsn;
-> +	return xfs_inode_item_release(lip);
->  }
->  
->  /*
-> @@ -634,10 +635,10 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
->  	.iop_format	= xfs_inode_item_format,
->  	.iop_pin	= xfs_inode_item_pin,
->  	.iop_unpin	= xfs_inode_item_unpin,
-> -	.iop_unlock	= xfs_inode_item_unlock,
-> +	.iop_release	= xfs_inode_item_release,
->  	.iop_committed	= xfs_inode_item_committed,
->  	.iop_push	= xfs_inode_item_push,
-> -	.iop_committing = xfs_inode_item_committing,
-> +	.iop_committing	= xfs_inode_item_committing,
->  	.iop_error	= xfs_inode_item_error
->  };
->  
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index c856bfce5bf2..4cb459f21ad4 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -1024,8 +1024,6 @@ xfs_log_commit_cil(
->  		xfs_trans_del_item(lip);
->  		if (lip->li_ops->iop_committing)
->  			lip->li_ops->iop_committing(lip, xc_commit_lsn);
-> -		if (lip->li_ops->iop_unlock)
-> -			lip->li_ops->iop_unlock(lip);
->  	}
->  	xlog_cil_push_background(log);
->  
-> diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> index 03a61886fe2a..9f8fb23dcc81 100644
-> --- a/fs/xfs/xfs_refcount_item.c
-> +++ b/fs/xfs/xfs_refcount_item.c
-> @@ -118,11 +118,10 @@ xfs_cui_item_unpin(
->   * constructed and thus we free the CUI here directly.
->   */
->  STATIC void
-> -xfs_cui_item_unlock(
-> +xfs_cui_item_release(
->  	struct xfs_log_item	*lip)
->  {
-> -	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
-> -		xfs_cui_release(CUI_ITEM(lip));
-> +	xfs_cui_release(CUI_ITEM(lip));
->  }
->  
->  /*
-> @@ -132,7 +131,7 @@ static const struct xfs_item_ops xfs_cui_item_ops = {
->  	.iop_size	= xfs_cui_item_size,
->  	.iop_format	= xfs_cui_item_format,
->  	.iop_unpin	= xfs_cui_item_unpin,
-> -	.iop_unlock	= xfs_cui_item_unlock,
-> +	.iop_release	= xfs_cui_item_release,
->  };
->  
->  /*
-> @@ -205,15 +204,13 @@ xfs_cud_item_format(
->   * CUD.
->   */
->  STATIC void
-> -xfs_cud_item_unlock(
-> +xfs_cud_item_release(
->  	struct xfs_log_item	*lip)
->  {
->  	struct xfs_cud_log_item	*cudp = CUD_ITEM(lip);
->  
-> -	if (test_bit(XFS_LI_ABORTED, &lip->li_flags)) {
-> -		xfs_cui_release(cudp->cud_cuip);
-> -		kmem_zone_free(xfs_cud_zone, cudp);
-> -	}
-> +	xfs_cui_release(cudp->cud_cuip);
-> +	kmem_zone_free(xfs_cud_zone, cudp);
->  }
->  
->  /*
-> @@ -247,7 +244,7 @@ xfs_cud_item_committed(
->  static const struct xfs_item_ops xfs_cud_item_ops = {
->  	.iop_size	= xfs_cud_item_size,
->  	.iop_format	= xfs_cud_item_format,
-> -	.iop_unlock	= xfs_cud_item_unlock,
-> +	.iop_release	= xfs_cud_item_release,
->  	.iop_committed	= xfs_cud_item_committed,
->  };
->  
-> diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-> index df9f2505c5f3..e907bd169de5 100644
-> --- a/fs/xfs/xfs_rmap_item.c
-> +++ b/fs/xfs/xfs_rmap_item.c
-> @@ -117,11 +117,10 @@ xfs_rui_item_unpin(
->   * constructed and thus we free the RUI here directly.
->   */
->  STATIC void
-> -xfs_rui_item_unlock(
-> +xfs_rui_item_release(
->  	struct xfs_log_item	*lip)
->  {
-> -	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
-> -		xfs_rui_release(RUI_ITEM(lip));
-> +	xfs_rui_release(RUI_ITEM(lip));
->  }
->  
->  /*
-> @@ -131,7 +130,7 @@ static const struct xfs_item_ops xfs_rui_item_ops = {
->  	.iop_size	= xfs_rui_item_size,
->  	.iop_format	= xfs_rui_item_format,
->  	.iop_unpin	= xfs_rui_item_unpin,
-> -	.iop_unlock	= xfs_rui_item_unlock,
-> +	.iop_release	= xfs_rui_item_release,
->  };
->  
->  /*
-> @@ -226,15 +225,13 @@ xfs_rud_item_format(
->   * RUD.
->   */
->  STATIC void
-> -xfs_rud_item_unlock(
-> +xfs_rud_item_release(
->  	struct xfs_log_item	*lip)
->  {
->  	struct xfs_rud_log_item	*rudp = RUD_ITEM(lip);
->  
-> -	if (test_bit(XFS_LI_ABORTED, &lip->li_flags)) {
-> -		xfs_rui_release(rudp->rud_ruip);
-> -		kmem_zone_free(xfs_rud_zone, rudp);
-> -	}
-> +	xfs_rui_release(rudp->rud_ruip);
-> +	kmem_zone_free(xfs_rud_zone, rudp);
->  }
->  
->  /*
-> @@ -268,7 +265,7 @@ xfs_rud_item_committed(
->  static const struct xfs_item_ops xfs_rud_item_ops = {
->  	.iop_size	= xfs_rud_item_size,
->  	.iop_format	= xfs_rud_item_format,
-> -	.iop_unlock	= xfs_rud_item_unlock,
-> +	.iop_release	= xfs_rud_item_release,
->  	.iop_committed	= xfs_rud_item_committed,
->  };
->  
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 195a9cdb954e..65c920554b96 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -475,7 +475,7 @@ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_ordered);
->  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_pin);
->  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_unpin);
->  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_unpin_stale);
-> -DEFINE_BUF_ITEM_EVENT(xfs_buf_item_unlock);
-> +DEFINE_BUF_ITEM_EVENT(xfs_buf_item_release);
->  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_committed);
->  DEFINE_BUF_ITEM_EVENT(xfs_buf_item_push);
->  DEFINE_BUF_ITEM_EVENT(xfs_trans_get_buf);
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 4ed5d032b26f..45a39de65997 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -780,9 +780,8 @@ xfs_trans_free_items(
->  		xfs_trans_del_item(lip);
->  		if (abort)
->  			set_bit(XFS_LI_ABORTED, &lip->li_flags);
-> -
-> -		if (lip->li_ops->iop_unlock)
-> -			lip->li_ops->iop_unlock(lip);
-> +		if (lip->li_ops->iop_release)
-> +			lip->li_ops->iop_release(lip);
->  	}
->  }
->  
-> @@ -815,7 +814,7 @@ xfs_log_item_batch_insert(
->   *
->   * If we are called with the aborted flag set, it is because a log write during
->   * a CIL checkpoint commit has failed. In this case, all the items in the
-> - * checkpoint have already gone through iop_committed and iop_unlock, which
-> + * checkpoint have already gone through iop_committed and iop_committing, which
->   * means that checkpoint commit abort handling is treated exactly the same
->   * as an iclog write error even though we haven't started any IO yet. Hence in
->   * this case all we need to do is iop_committed processing, followed by an
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index c6e1c5704a8c..7bd1867613c2 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -72,9 +72,9 @@ struct xfs_item_ops {
->  	void (*iop_pin)(xfs_log_item_t *);
->  	void (*iop_unpin)(xfs_log_item_t *, int remove);
->  	uint (*iop_push)(struct xfs_log_item *, struct list_head *);
-> -	void (*iop_unlock)(xfs_log_item_t *);
-> +	void (*iop_committing)(struct xfs_log_item *, xfs_lsn_t commit_lsn);
-> +	void (*iop_release)(struct xfs_log_item *);
->  	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
-> -	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
->  	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
->  };
->  
-> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-> index 7d65ebf1e847..3dca9cf40a9f 100644
-> --- a/fs/xfs/xfs_trans_buf.c
-> +++ b/fs/xfs/xfs_trans_buf.c
-> @@ -428,7 +428,7 @@ xfs_trans_brelse(
->  
->  /*
->   * Mark the buffer as not needing to be unlocked when the buf item's
-> - * iop_unlock() routine is called.  The buffer must already be locked
-> + * iop_committing() routine is called.  The buffer must already be locked
->   * and associated with the given transaction.
->   */
->  /* ARGSUSED */
-> -- 
-> 2.20.1
+>   	error = xfs_btree_ptr_to_daddr(cur, ptr, &d);
+>   	if (error)
+>   		return error;
+>   	*bpp = xfs_trans_get_buf(cur->bc_tp, mp->m_ddev_targp, d,
+> -				 mp->m_bsize, flags);
+> +				 mp->m_bsize, 0);
+>   
+>   	if (!*bpp)
+>   		return -ENOMEM;
+> @@ -2706,7 +2698,7 @@ struct xfs_btree_block *		/* generic btree block pointer */
+>   	XFS_BTREE_STATS_INC(cur, alloc);
+>   
+>   	/* Set up the new block as "right". */
+> -	error = xfs_btree_get_buf_block(cur, &rptr, 0, &right, &rbp);
+> +	error = xfs_btree_get_buf_block(cur, &rptr, &right, &rbp);
+>   	if (error)
+>   		goto error0;
+>   
+> @@ -2961,7 +2953,7 @@ struct xfs_btree_split_args {
+>   	XFS_BTREE_STATS_INC(cur, alloc);
+>   
+>   	/* Copy the root into a real block. */
+> -	error = xfs_btree_get_buf_block(cur, &nptr, 0, &cblock, &cbp);
+> +	error = xfs_btree_get_buf_block(cur, &nptr, &cblock, &cbp);
+>   	if (error)
+>   		goto error0;
+>   
+> @@ -3058,7 +3050,7 @@ struct xfs_btree_split_args {
+>   	XFS_BTREE_STATS_INC(cur, alloc);
+>   
+>   	/* Set up the new block. */
+> -	error = xfs_btree_get_buf_block(cur, &lptr, 0, &new, &nbp);
+> +	error = xfs_btree_get_buf_block(cur, &lptr, &new, &nbp);
+>   	if (error)
+>   		goto error0;
+>   
+> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> index e3b3e9d..8d2b250 100644
+> --- a/fs/xfs/libxfs/xfs_btree.h
+> +++ b/fs/xfs/libxfs/xfs_btree.h
+> @@ -301,8 +301,7 @@ struct xfs_buf *				/* buffer for fsbno */
+>   xfs_btree_get_bufl(
+>   	struct xfs_mount	*mp,	/* file system mount point */
+>   	struct xfs_trans	*tp,	/* transaction pointer */
+> -	xfs_fsblock_t		fsbno,	/* file system block number */
+> -	uint			lock);	/* lock flags for get_buf */
+> +	xfs_fsblock_t		fsbno);	/* file system block number */
+>   
+>   /*
+>    * Get a buffer for the block, return it with no data read.
+> @@ -313,8 +312,7 @@ struct xfs_buf *				/* buffer for agno/agbno */
+>   	struct xfs_mount	*mp,	/* file system mount point */
+>   	struct xfs_trans	*tp,	/* transaction pointer */
+>   	xfs_agnumber_t		agno,	/* allocation group number */
+> -	xfs_agblock_t		agbno,	/* allocation group block number */
+> -	uint			lock);	/* lock flags for get_buf */
+> +	xfs_agblock_t		agbno);	/* allocation group block number */
+>   
+>   /*
+>    * Check for the cursor referring to the last block at the given level.
+> @@ -345,7 +343,6 @@ struct xfs_buf *				/* buffer for agno/agbno */
+>   	struct xfs_mount	*mp,	/* file system mount point */
+>   	struct xfs_trans	*tp,	/* transaction pointer */
+>   	xfs_fsblock_t		fsbno,	/* file system block number */
+> -	uint			lock,	/* lock flags for read_buf */
+>   	struct xfs_buf		**bpp,	/* buffer for fsbno */
+>   	int			refval,	/* ref count value for buffer */
+>   	const struct xfs_buf_ops *ops);
+> @@ -383,8 +380,7 @@ struct xfs_buf *				/* buffer for agno/agbno */
+>   	xfs_btnum_t	btnum,
+>   	__u16		level,
+>   	__u16		numrecs,
+> -	__u64		owner,
+> -	unsigned int	flags);
+> +	__u64		owner);
+>   
+>   void
+>   xfs_btree_init_block_int(
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index e76a3e5..8bca140 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -1005,7 +1005,7 @@ struct xfs_perag *
+>   
+>   		bp = xfs_buf_get(mp->m_ddev_targp,
+>   				 XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+> -				 XFS_FSS_TO_BB(mp, 1), 0);
+> +				 XFS_FSS_TO_BB(mp, 1));
+>   		/*
+>   		 * If we get an error reading or writing alternate superblocks,
+>   		 * continue.  xfs_repair chooses the "best" superblock based
+> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> index eb358f0..e710005 100644
+> --- a/fs/xfs/scrub/repair.c
+> +++ b/fs/xfs/scrub/repair.c
+> @@ -357,7 +357,7 @@
+>   	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, XFS_FSB_TO_DADDR(mp, fsb),
+>   			XFS_FSB_TO_BB(mp, 1), 0);
+>   	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
+> -	xfs_btree_init_block(mp, bp, btnum, 0, 0, sc->sa.agno, 0);
+> +	xfs_btree_init_block(mp, bp, btnum, 0, 0, sc->sa.agno);
+>   	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_BTREE_BUF);
+>   	xfs_trans_log_buf(tp, bp, 0, bp->b_length);
+>   	bp->b_ops = ops;
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 06d07f1..b8fa6d3 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -276,7 +276,7 @@
+>   	struct xfs_btree_block	*block, *nextblock;
+>   	int			numrecs;
+>   
+> -	error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp, XFS_BMAP_BTREE_REF,
+> +	error = xfs_btree_read_bufl(mp, tp, bno, &bp, XFS_BMAP_BTREE_REF,
+>   						&xfs_bmbt_buf_ops);
+>   	if (error)
+>   		return error;
+> @@ -287,7 +287,7 @@
+>   		/* Not at node above leaves, count this level of nodes */
+>   		nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
+>   		while (nextbno != NULLFSBLOCK) {
+> -			error = xfs_btree_read_bufl(mp, tp, nextbno, 0, &nbp,
+> +			error = xfs_btree_read_bufl(mp, tp, nextbno, &nbp,
+>   						XFS_BMAP_BTREE_REF,
+>   						&xfs_bmbt_buf_ops);
+>   			if (error)
+> @@ -321,7 +321,7 @@
+>   			if (nextbno == NULLFSBLOCK)
+>   				break;
+>   			bno = nextbno;
+> -			error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
+> +			error = xfs_btree_read_bufl(mp, tp, bno, &bp,
+>   						XFS_BMAP_BTREE_REF,
+>   						&xfs_bmbt_buf_ops);
+>   			if (error)
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index d0b96e0..f13c018 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -239,11 +239,10 @@ void xfs_buf_readahead_map(struct xfs_buftarg *target,
+>   xfs_buf_get(
+>   	struct xfs_buftarg	*target,
+>   	xfs_daddr_t		blkno,
+> -	size_t			numblks,
+> -	xfs_buf_flags_t		flags)
+> +	size_t			numblks)
+>   {
+>   	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
+> -	return xfs_buf_get_map(target, &map, 1, flags);
+> +	return xfs_buf_get_map(target, &map, 1, 0);
+>   }
+>   
+>   static inline struct xfs_buf *
 > 
