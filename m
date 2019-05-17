@@ -1,42 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44032 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727361AbfEQHcL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:11 -0400
-Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hRXLe-0000iU-HY
-        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:10 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/20] xfs: fix a trivial comment typo in the xfs_trans_committed_bulk
-Date: Fri, 17 May 2019 09:31:00 +0200
-Message-Id: <20190517073119.30178-2-hch@lst.de>
-In-Reply-To: <20190517073119.30178-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:53362 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728103AbfEQOHI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 May 2019 10:07:08 -0400
+Date: Fri, 17 May 2019 10:07:05 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 04/20] xfs: remove the dummy iop_push implementation for
+ inode creation items
+Message-ID: <20190517140705.GD7888@bfoster>
 References: <20190517073119.30178-1-hch@lst.de>
+ <20190517073119.30178-5-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190517073119.30178-5-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_trans.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Fri, May 17, 2019 at 09:31:03AM +0200, Christoph Hellwig wrote:
+> This method should never be called, so don't waste code on it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 912b42f5fe4a..19f91312561a 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -815,7 +815,7 @@ xfs_log_item_batch_insert(
-  *
-  * If we are called with the aborted flag set, it is because a log write during
-  * a CIL checkpoint commit has failed. In this case, all the items in the
-- * checkpoint have already gone through iop_commited and iop_unlock, which
-+ * checkpoint have already gone through iop_committed and iop_unlock, which
-  * means that checkpoint commit abort handling is treated exactly the same
-  * as an iclog write error even though we haven't started any IO yet. Hence in
-  * this case all we need to do is iop_committed processing, followed by an
--- 
-2.20.1
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_icreate_item.c | 11 -----------
+>  1 file changed, 11 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
+> index 03c174ff1ab3..cbaabc55f0c9 100644
+> --- a/fs/xfs/xfs_icreate_item.c
+> +++ b/fs/xfs/xfs_icreate_item.c
+> @@ -83,23 +83,12 @@ xfs_icreate_item_committed(
+>  	return (xfs_lsn_t)-1;
+>  }
+>  
+> -/* item can never get into the AIL */
+> -STATIC uint
+> -xfs_icreate_item_push(
+> -	struct xfs_log_item	*lip,
+> -	struct list_head	*buffer_list)
+> -{
+> -	ASSERT(0);
+> -	return XFS_ITEM_SUCCESS;
+> -}
+> -
+>  /*
+>   * This is the ops vector shared by all buf log items.
+>   */
+>  static const struct xfs_item_ops xfs_icreate_item_ops = {
+>  	.iop_size	= xfs_icreate_item_size,
+>  	.iop_format	= xfs_icreate_item_format,
+> -	.iop_push	= xfs_icreate_item_push,
+>  	.iop_unlock	= xfs_icreate_item_unlock,
+>  	.iop_committed	= xfs_icreate_item_committed,
+>  };
+> -- 
+> 2.20.1
+> 
