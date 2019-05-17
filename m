@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44084 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:45362 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728143AbfEQHc3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:29 -0400
+        with ESMTP id S1728365AbfEQHcx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:53 -0400
 Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hRXLw-0000kv-IU
-        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:28 +0000
+        id 1hRXMJ-0000yf-Tl
+        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:52 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/20] xfs: add a flag to release log items on commit
-Date: Fri, 17 May 2019 09:31:07 +0200
-Message-Id: <20190517073119.30178-9-hch@lst.de>
+Subject: [PATCH 17/20] xfs: merge xfs_trans_extfree.c into xfs_extfree_item.c
+Date: Fri, 17 May 2019 09:31:16 +0200
+Message-Id: <20190517073119.30178-18-hch@lst.de>
 In-Reply-To: <20190517073119.30178-1-hch@lst.de>
 References: <20190517073119.30178-1-hch@lst.de>
 MIME-Version: 1.0
@@ -20,277 +20,597 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-We have various items that are released from ->iop_comitting.  Add a
-flag to just call ->iop_release from the commit path to avoid tons
-of boilerplate code.
+Keep all the extree item related code together in one file.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_bmap_item.c     | 27 +--------------------------
- fs/xfs/xfs_extfree_item.c  | 27 +--------------------------
- fs/xfs/xfs_icreate_item.c  | 18 +-----------------
- fs/xfs/xfs_refcount_item.c | 27 +--------------------------
- fs/xfs/xfs_rmap_item.c     | 27 +--------------------------
- fs/xfs/xfs_trans.c         |  5 +++++
- fs/xfs/xfs_trans.h         |  7 +++++++
- 7 files changed, 17 insertions(+), 121 deletions(-)
+ fs/xfs/Makefile            |   1 -
+ fs/xfs/xfs_extfree_item.c  | 247 ++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_trans.h         |   8 --
+ fs/xfs/xfs_trans_extfree.c | 260 -------------------------------------
+ 4 files changed, 246 insertions(+), 270 deletions(-)
+ delete mode 100644 fs/xfs/xfs_trans_extfree.c
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 56c1ab161f3b..d7ceb2d1ae82 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -208,39 +208,14 @@ xfs_bud_item_release(
- 	kmem_zone_free(xfs_bud_zone, budp);
- }
- 
--/*
-- * When the bud item is committed to disk, all we need to do is delete our
-- * reference to our partner bui item and then free ourselves. Since we're
-- * freeing ourselves we must return -1 to keep the transaction code from
-- * further referencing this item.
-- */
--STATIC xfs_lsn_t
--xfs_bud_item_committed(
--	struct xfs_log_item	*lip,
--	xfs_lsn_t		lsn)
--{
--	struct xfs_bud_log_item	*budp = BUD_ITEM(lip);
--
--	/*
--	 * Drop the BUI reference regardless of whether the BUD has been
--	 * aborted. Once the BUD transaction is constructed, it is the sole
--	 * responsibility of the BUD to release the BUI (even if the BUI is
--	 * aborted due to log I/O error).
--	 */
--	xfs_bui_release(budp->bud_buip);
--	kmem_zone_free(xfs_bud_zone, budp);
--
--	return (xfs_lsn_t)-1;
--}
--
- /*
-  * This is the ops vector shared by all bud log items.
-  */
- static const struct xfs_item_ops xfs_bud_item_ops = {
-+	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
- 	.iop_size	= xfs_bud_item_size,
- 	.iop_format	= xfs_bud_item_format,
- 	.iop_release	= xfs_bud_item_release,
--	.iop_committed	= xfs_bud_item_committed,
- };
- 
- /*
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 1dfc6df2e2bd..771a4738abd2 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -106,7 +106,6 @@ xfs-y				+= xfs_log.o \
+ 				   xfs_trans_ail.o \
+ 				   xfs_trans_bmap.o \
+ 				   xfs_trans_buf.o \
+-				   xfs_trans_extfree.o \
+ 				   xfs_trans_inode.o \
+ 				   xfs_trans_refcount.o \
+ 				   xfs_trans_rmap.o \
 diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index a73a3cff8502..762eb288dfe8 100644
+index ccf95cb8234c..219dbaf9d65b 100644
 --- a/fs/xfs/xfs_extfree_item.c
 +++ b/fs/xfs/xfs_extfree_item.c
-@@ -307,39 +307,14 @@ xfs_efd_item_release(
- 	xfs_efd_item_free(efdp);
- }
- 
--/*
-- * When the efd item is committed to disk, all we need to do is delete our
-- * reference to our partner efi item and then free ourselves. Since we're
-- * freeing ourselves we must return -1 to keep the transaction code from further
-- * referencing this item.
-- */
--STATIC xfs_lsn_t
--xfs_efd_item_committed(
--	struct xfs_log_item	*lip,
--	xfs_lsn_t		lsn)
--{
--	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
--
--	/*
--	 * Drop the EFI reference regardless of whether the EFD has been
--	 * aborted. Once the EFD transaction is constructed, it is the sole
--	 * responsibility of the EFD to release the EFI (even if the EFI is
--	 * aborted due to log I/O error).
--	 */
--	xfs_efi_release(efdp->efd_efip);
--	xfs_efd_item_free(efdp);
--
--	return (xfs_lsn_t)-1;
--}
--
- /*
-  * This is the ops vector shared by all efd log items.
+@@ -5,11 +5,14 @@
   */
- static const struct xfs_item_ops xfs_efd_item_ops = {
-+	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
- 	.iop_size	= xfs_efd_item_size,
- 	.iop_format	= xfs_efd_item_format,
- 	.iop_release	= xfs_efd_item_release,
--	.iop_committed	= xfs_efd_item_committed,
- };
+ #include "xfs.h"
+ #include "xfs_fs.h"
++#include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_bit.h"
+ #include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_trans.h"
+ #include "xfs_trans.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_buf_item.h"
+@@ -17,6 +20,9 @@
+ #include "xfs_log.h"
+ #include "xfs_btree.h"
+ #include "xfs_rmap.h"
++#include "xfs_alloc.h"
++#include "xfs_bmap.h"
++#include "xfs_trace.h"
  
- /*
-diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
-index 9aceb35dce24..eb9cb04635be 100644
---- a/fs/xfs/xfs_icreate_item.c
-+++ b/fs/xfs/xfs_icreate_item.c
-@@ -63,30 +63,14 @@ xfs_icreate_item_release(
- 	kmem_zone_free(xfs_icreate_zone, ICR_ITEM(lip));
- }
  
--/*
-- * Because we have ordered buffers being tracked in the AIL for the inode
-- * creation, we don't need the create item after this. Hence we can free
-- * the log item and return -1 to tell the caller we're done with the item.
-- */
--STATIC xfs_lsn_t
--xfs_icreate_item_committed(
--	struct xfs_log_item	*lip,
--	xfs_lsn_t		lsn)
--{
--	struct xfs_icreate_item	*icp = ICR_ITEM(lip);
--
--	kmem_zone_free(xfs_icreate_zone, icp);
--	return (xfs_lsn_t)-1;
--}
--
- /*
-  * This is the ops vector shared by all buf log items.
+ kmem_zone_t	*xfs_efi_zone;
+@@ -316,7 +322,7 @@ static const struct xfs_item_ops xfs_efd_item_ops = {
+  * extents.  The caller must use all nextents extents, because we are not
+  * flexible about this at all.
   */
- static const struct xfs_item_ops xfs_icreate_item_ops = {
-+	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
- 	.iop_size	= xfs_icreate_item_size,
- 	.iop_format	= xfs_icreate_item_format,
- 	.iop_release	= xfs_icreate_item_release,
--	.iop_committed	= xfs_icreate_item_committed,
- };
- 
- 
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 9f8fb23dcc81..b4ab71ce39fc 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -213,39 +213,14 @@ xfs_cud_item_release(
- 	kmem_zone_free(xfs_cud_zone, cudp);
+-struct xfs_efd_log_item *
++static struct xfs_efd_log_item *
+ xfs_trans_get_efd(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_efi_log_item		*efip,
+@@ -344,6 +350,245 @@ xfs_trans_get_efd(
+ 	return efdp;
  }
- 
--/*
-- * When the cud item is committed to disk, all we need to do is delete our
-- * reference to our partner cui item and then free ourselves. Since we're
-- * freeing ourselves we must return -1 to keep the transaction code from
-- * further referencing this item.
-- */
--STATIC xfs_lsn_t
--xfs_cud_item_committed(
--	struct xfs_log_item	*lip,
--	xfs_lsn_t		lsn)
--{
--	struct xfs_cud_log_item	*cudp = CUD_ITEM(lip);
--
--	/*
--	 * Drop the CUI reference regardless of whether the CUD has been
--	 * aborted. Once the CUD transaction is constructed, it is the sole
--	 * responsibility of the CUD to release the CUI (even if the CUI is
--	 * aborted due to log I/O error).
--	 */
--	xfs_cui_release(cudp->cud_cuip);
--	kmem_zone_free(xfs_cud_zone, cudp);
--
--	return (xfs_lsn_t)-1;
--}
--
- /*
-  * This is the ops vector shared by all cud log items.
-  */
- static const struct xfs_item_ops xfs_cud_item_ops = {
-+	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
- 	.iop_size	= xfs_cud_item_size,
- 	.iop_format	= xfs_cud_item_format,
- 	.iop_release	= xfs_cud_item_release,
--	.iop_committed	= xfs_cud_item_committed,
- };
- 
- /*
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index e907bd169de5..1b35b3d38708 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -234,39 +234,14 @@ xfs_rud_item_release(
- 	kmem_zone_free(xfs_rud_zone, rudp);
- }
- 
--/*
-- * When the rud item is committed to disk, all we need to do is delete our
-- * reference to our partner rui item and then free ourselves. Since we're
-- * freeing ourselves we must return -1 to keep the transaction code from
-- * further referencing this item.
-- */
--STATIC xfs_lsn_t
--xfs_rud_item_committed(
--	struct xfs_log_item	*lip,
--	xfs_lsn_t		lsn)
--{
--	struct xfs_rud_log_item	*rudp = RUD_ITEM(lip);
--
--	/*
--	 * Drop the RUI reference regardless of whether the RUD has been
--	 * aborted. Once the RUD transaction is constructed, it is the sole
--	 * responsibility of the RUD to release the RUI (even if the RUI is
--	 * aborted due to log I/O error).
--	 */
--	xfs_rui_release(rudp->rud_ruip);
--	kmem_zone_free(xfs_rud_zone, rudp);
--
--	return (xfs_lsn_t)-1;
--}
--
- /*
-  * This is the ops vector shared by all rud log items.
-  */
- static const struct xfs_item_ops xfs_rud_item_ops = {
-+	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
- 	.iop_size	= xfs_rud_item_size,
- 	.iop_format	= xfs_rud_item_format,
- 	.iop_release	= xfs_rud_item_release,
--	.iop_committed	= xfs_rud_item_committed,
- };
- 
- /*
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 45a39de65997..52a8a8ff2ae9 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -849,6 +849,11 @@ xfs_trans_committed_bulk(
- 		struct xfs_log_item	*lip = lv->lv_item;
- 		xfs_lsn_t		item_lsn;
- 
-+		if (lip->li_ops->flags & XFS_ITEM_RELEASE_ON_COMMIT) {
-+			lip->li_ops->iop_release(lip);
-+			continue;
-+		}
-+
- 		if (aborted)
- 			set_bit(XFS_LI_ABORTED, &lip->li_flags);
- 		if (lip->li_ops->iop_committed)
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 7bd1867613c2..a38af44344bf 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -67,6 +67,7 @@ typedef struct xfs_log_item {
- 	{ (1 << XFS_LI_DIRTY),		"DIRTY" }
- 
- struct xfs_item_ops {
-+	unsigned flags;
- 	void (*iop_size)(xfs_log_item_t *, int *, int *);
- 	void (*iop_format)(xfs_log_item_t *, struct xfs_log_vec *);
- 	void (*iop_pin)(xfs_log_item_t *);
-@@ -78,6 +79,12 @@ struct xfs_item_ops {
- 	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
- };
  
 +/*
-+ * Release the log item as soon as committed.  This is for items just logging
-+ * intents that never need to be written back in place.
++ * Free an extent and log it to the EFD. Note that the transaction is marked
++ * dirty regardless of whether the extent free succeeds or fails to support the
++ * EFI/EFD lifecycle rules.
 + */
-+#define XFS_ITEM_RELEASE_ON_COMMIT	(1 << 0)
++static int
++xfs_trans_free_extent(
++	struct xfs_trans		*tp,
++	struct xfs_efd_log_item		*efdp,
++	xfs_fsblock_t			start_block,
++	xfs_extlen_t			ext_len,
++	const struct xfs_owner_info	*oinfo,
++	bool				skip_discard)
++{
++	struct xfs_mount		*mp = tp->t_mountp;
++	struct xfs_extent		*extp;
++	uint				next_extent;
++	xfs_agnumber_t			agno = XFS_FSB_TO_AGNO(mp, start_block);
++	xfs_agblock_t			agbno = XFS_FSB_TO_AGBNO(mp,
++								start_block);
++	int				error;
 +
- void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
- 			  int type, const struct xfs_item_ops *ops);
++	trace_xfs_bmap_free_deferred(tp->t_mountp, agno, 0, agbno, ext_len);
++
++	error = __xfs_free_extent(tp, start_block, ext_len,
++				  oinfo, XFS_AG_RESV_NONE, skip_discard);
++	/*
++	 * Mark the transaction dirty, even on error. This ensures the
++	 * transaction is aborted, which:
++	 *
++	 * 1.) releases the EFI and frees the EFD
++	 * 2.) shuts down the filesystem
++	 */
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	set_bit(XFS_LI_DIRTY, &efdp->efd_item.li_flags);
++
++	next_extent = efdp->efd_next_extent;
++	ASSERT(next_extent < efdp->efd_format.efd_nextents);
++	extp = &(efdp->efd_format.efd_extents[next_extent]);
++	extp->ext_start = start_block;
++	extp->ext_len = ext_len;
++	efdp->efd_next_extent++;
++
++	return error;
++}
++
++/* Sort bmap items by AG. */
++static int
++xfs_extent_free_diff_items(
++	void				*priv,
++	struct list_head		*a,
++	struct list_head		*b)
++{
++	struct xfs_mount		*mp = priv;
++	struct xfs_extent_free_item	*ra;
++	struct xfs_extent_free_item	*rb;
++
++	ra = container_of(a, struct xfs_extent_free_item, xefi_list);
++	rb = container_of(b, struct xfs_extent_free_item, xefi_list);
++	return  XFS_FSB_TO_AGNO(mp, ra->xefi_startblock) -
++		XFS_FSB_TO_AGNO(mp, rb->xefi_startblock);
++}
++
++/* Get an EFI. */
++STATIC void *
++xfs_extent_free_create_intent(
++	struct xfs_trans		*tp,
++	unsigned int			count)
++{
++	struct xfs_efi_log_item		*efip;
++
++	ASSERT(tp != NULL);
++	ASSERT(count > 0);
++
++	efip = xfs_efi_init(tp->t_mountp, count);
++	ASSERT(efip != NULL);
++
++	/*
++	 * Get a log_item_desc to point at the new item.
++	 */
++	xfs_trans_add_item(tp, &efip->efi_item);
++	return efip;
++}
++
++/* Log a free extent to the intent item. */
++STATIC void
++xfs_extent_free_log_item(
++	struct xfs_trans		*tp,
++	void				*intent,
++	struct list_head		*item)
++{
++	struct xfs_efi_log_item		*efip = intent;
++	struct xfs_extent_free_item	*free;
++	uint				next_extent;
++	struct xfs_extent		*extp;
++
++	free = container_of(item, struct xfs_extent_free_item, xefi_list);
++
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	set_bit(XFS_LI_DIRTY, &efip->efi_item.li_flags);
++
++	/*
++	 * atomic_inc_return gives us the value after the increment;
++	 * we want to use it as an array index so we need to subtract 1 from
++	 * it.
++	 */
++	next_extent = atomic_inc_return(&efip->efi_next_extent) - 1;
++	ASSERT(next_extent < efip->efi_format.efi_nextents);
++	extp = &efip->efi_format.efi_extents[next_extent];
++	extp->ext_start = free->xefi_startblock;
++	extp->ext_len = free->xefi_blockcount;
++}
++
++/* Get an EFD so we can process all the free extents. */
++STATIC void *
++xfs_extent_free_create_done(
++	struct xfs_trans		*tp,
++	void				*intent,
++	unsigned int			count)
++{
++	return xfs_trans_get_efd(tp, intent, count);
++}
++
++/* Process a free extent. */
++STATIC int
++xfs_extent_free_finish_item(
++	struct xfs_trans		*tp,
++	struct list_head		*item,
++	void				*done_item,
++	void				**state)
++{
++	struct xfs_extent_free_item	*free;
++	int				error;
++
++	free = container_of(item, struct xfs_extent_free_item, xefi_list);
++	error = xfs_trans_free_extent(tp, done_item,
++			free->xefi_startblock,
++			free->xefi_blockcount,
++			&free->xefi_oinfo, free->xefi_skip_discard);
++	kmem_free(free);
++	return error;
++}
++
++/* Abort all pending EFIs. */
++STATIC void
++xfs_extent_free_abort_intent(
++	void				*intent)
++{
++	xfs_efi_release(intent);
++}
++
++/* Cancel a free extent. */
++STATIC void
++xfs_extent_free_cancel_item(
++	struct list_head		*item)
++{
++	struct xfs_extent_free_item	*free;
++
++	free = container_of(item, struct xfs_extent_free_item, xefi_list);
++	kmem_free(free);
++}
++
++const struct xfs_defer_op_type xfs_extent_free_defer_type = {
++	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
++	.diff_items	= xfs_extent_free_diff_items,
++	.create_intent	= xfs_extent_free_create_intent,
++	.abort_intent	= xfs_extent_free_abort_intent,
++	.log_item	= xfs_extent_free_log_item,
++	.create_done	= xfs_extent_free_create_done,
++	.finish_item	= xfs_extent_free_finish_item,
++	.cancel_item	= xfs_extent_free_cancel_item,
++};
++
++/*
++ * AGFL blocks are accounted differently in the reserve pools and are not
++ * inserted into the busy extent list.
++ */
++STATIC int
++xfs_agfl_free_finish_item(
++	struct xfs_trans		*tp,
++	struct list_head		*item,
++	void				*done_item,
++	void				**state)
++{
++	struct xfs_mount		*mp = tp->t_mountp;
++	struct xfs_efd_log_item		*efdp = done_item;
++	struct xfs_extent_free_item	*free;
++	struct xfs_extent		*extp;
++	struct xfs_buf			*agbp;
++	int				error;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			agbno;
++	uint				next_extent;
++
++	free = container_of(item, struct xfs_extent_free_item, xefi_list);
++	ASSERT(free->xefi_blockcount == 1);
++	agno = XFS_FSB_TO_AGNO(mp, free->xefi_startblock);
++	agbno = XFS_FSB_TO_AGBNO(mp, free->xefi_startblock);
++
++	trace_xfs_agfl_free_deferred(mp, agno, 0, agbno, free->xefi_blockcount);
++
++	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
++	if (!error)
++		error = xfs_free_agfl_block(tp, agno, agbno, agbp,
++					    &free->xefi_oinfo);
++
++	/*
++	 * Mark the transaction dirty, even on error. This ensures the
++	 * transaction is aborted, which:
++	 *
++	 * 1.) releases the EFI and frees the EFD
++	 * 2.) shuts down the filesystem
++	 */
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	set_bit(XFS_LI_DIRTY, &efdp->efd_item.li_flags);
++
++	next_extent = efdp->efd_next_extent;
++	ASSERT(next_extent < efdp->efd_format.efd_nextents);
++	extp = &(efdp->efd_format.efd_extents[next_extent]);
++	extp->ext_start = free->xefi_startblock;
++	extp->ext_len = free->xefi_blockcount;
++	efdp->efd_next_extent++;
++
++	kmem_free(free);
++	return error;
++}
++
++/* sub-type with special handling for AGFL deferred frees */
++const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
++	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
++	.diff_items	= xfs_extent_free_diff_items,
++	.create_intent	= xfs_extent_free_create_intent,
++	.abort_intent	= xfs_extent_free_abort_intent,
++	.log_item	= xfs_extent_free_log_item,
++	.create_done	= xfs_extent_free_create_done,
++	.finish_item	= xfs_agfl_free_finish_item,
++	.cancel_item	= xfs_extent_free_cancel_item,
++};
++
+ /*
+  * Process an extent free intent item that was recovered from
+  * the log.  We need to free the extents that it describes.
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 7a6ee0c2ce20..cc6549100176 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -230,14 +230,6 @@ void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
+ bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
+ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
  
+-struct xfs_efd_log_item	*xfs_trans_get_efd(struct xfs_trans *,
+-				  struct xfs_efi_log_item *,
+-				  uint);
+-int		xfs_trans_free_extent(struct xfs_trans *,
+-				      struct xfs_efd_log_item *, xfs_fsblock_t,
+-				      xfs_extlen_t,
+-				      const struct xfs_owner_info *,
+-				      bool);
+ int		xfs_trans_commit(struct xfs_trans *);
+ int		xfs_trans_roll(struct xfs_trans **);
+ int		xfs_trans_roll_inode(struct xfs_trans **, struct xfs_inode *);
+diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
+deleted file mode 100644
+index 20ab1c9d758f..000000000000
+--- a/fs/xfs/xfs_trans_extfree.c
++++ /dev/null
+@@ -1,260 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Copyright (c) 2000,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- */
+-#include "xfs.h"
+-#include "xfs_fs.h"
+-#include "xfs_shared.h"
+-#include "xfs_format.h"
+-#include "xfs_log_format.h"
+-#include "xfs_trans_resv.h"
+-#include "xfs_bit.h"
+-#include "xfs_mount.h"
+-#include "xfs_defer.h"
+-#include "xfs_trans.h"
+-#include "xfs_trans_priv.h"
+-#include "xfs_extfree_item.h"
+-#include "xfs_alloc.h"
+-#include "xfs_bmap.h"
+-#include "xfs_trace.h"
+-
+-/*
+- * Free an extent and log it to the EFD. Note that the transaction is marked
+- * dirty regardless of whether the extent free succeeds or fails to support the
+- * EFI/EFD lifecycle rules.
+- */
+-int
+-xfs_trans_free_extent(
+-	struct xfs_trans		*tp,
+-	struct xfs_efd_log_item		*efdp,
+-	xfs_fsblock_t			start_block,
+-	xfs_extlen_t			ext_len,
+-	const struct xfs_owner_info	*oinfo,
+-	bool				skip_discard)
+-{
+-	struct xfs_mount		*mp = tp->t_mountp;
+-	struct xfs_extent		*extp;
+-	uint				next_extent;
+-	xfs_agnumber_t			agno = XFS_FSB_TO_AGNO(mp, start_block);
+-	xfs_agblock_t			agbno = XFS_FSB_TO_AGBNO(mp,
+-								start_block);
+-	int				error;
+-
+-	trace_xfs_bmap_free_deferred(tp->t_mountp, agno, 0, agbno, ext_len);
+-
+-	error = __xfs_free_extent(tp, start_block, ext_len,
+-				  oinfo, XFS_AG_RESV_NONE, skip_discard);
+-	/*
+-	 * Mark the transaction dirty, even on error. This ensures the
+-	 * transaction is aborted, which:
+-	 *
+-	 * 1.) releases the EFI and frees the EFD
+-	 * 2.) shuts down the filesystem
+-	 */
+-	tp->t_flags |= XFS_TRANS_DIRTY;
+-	set_bit(XFS_LI_DIRTY, &efdp->efd_item.li_flags);
+-
+-	next_extent = efdp->efd_next_extent;
+-	ASSERT(next_extent < efdp->efd_format.efd_nextents);
+-	extp = &(efdp->efd_format.efd_extents[next_extent]);
+-	extp->ext_start = start_block;
+-	extp->ext_len = ext_len;
+-	efdp->efd_next_extent++;
+-
+-	return error;
+-}
+-
+-/* Sort bmap items by AG. */
+-static int
+-xfs_extent_free_diff_items(
+-	void				*priv,
+-	struct list_head		*a,
+-	struct list_head		*b)
+-{
+-	struct xfs_mount		*mp = priv;
+-	struct xfs_extent_free_item	*ra;
+-	struct xfs_extent_free_item	*rb;
+-
+-	ra = container_of(a, struct xfs_extent_free_item, xefi_list);
+-	rb = container_of(b, struct xfs_extent_free_item, xefi_list);
+-	return  XFS_FSB_TO_AGNO(mp, ra->xefi_startblock) -
+-		XFS_FSB_TO_AGNO(mp, rb->xefi_startblock);
+-}
+-
+-/* Get an EFI. */
+-STATIC void *
+-xfs_extent_free_create_intent(
+-	struct xfs_trans		*tp,
+-	unsigned int			count)
+-{
+-	struct xfs_efi_log_item		*efip;
+-
+-	ASSERT(tp != NULL);
+-	ASSERT(count > 0);
+-
+-	efip = xfs_efi_init(tp->t_mountp, count);
+-	ASSERT(efip != NULL);
+-
+-	/*
+-	 * Get a log_item_desc to point at the new item.
+-	 */
+-	xfs_trans_add_item(tp, &efip->efi_item);
+-	return efip;
+-}
+-
+-/* Log a free extent to the intent item. */
+-STATIC void
+-xfs_extent_free_log_item(
+-	struct xfs_trans		*tp,
+-	void				*intent,
+-	struct list_head		*item)
+-{
+-	struct xfs_efi_log_item		*efip = intent;
+-	struct xfs_extent_free_item	*free;
+-	uint				next_extent;
+-	struct xfs_extent		*extp;
+-
+-	free = container_of(item, struct xfs_extent_free_item, xefi_list);
+-
+-	tp->t_flags |= XFS_TRANS_DIRTY;
+-	set_bit(XFS_LI_DIRTY, &efip->efi_item.li_flags);
+-
+-	/*
+-	 * atomic_inc_return gives us the value after the increment;
+-	 * we want to use it as an array index so we need to subtract 1 from
+-	 * it.
+-	 */
+-	next_extent = atomic_inc_return(&efip->efi_next_extent) - 1;
+-	ASSERT(next_extent < efip->efi_format.efi_nextents);
+-	extp = &efip->efi_format.efi_extents[next_extent];
+-	extp->ext_start = free->xefi_startblock;
+-	extp->ext_len = free->xefi_blockcount;
+-}
+-
+-/* Get an EFD so we can process all the free extents. */
+-STATIC void *
+-xfs_extent_free_create_done(
+-	struct xfs_trans		*tp,
+-	void				*intent,
+-	unsigned int			count)
+-{
+-	return xfs_trans_get_efd(tp, intent, count);
+-}
+-
+-/* Process a free extent. */
+-STATIC int
+-xfs_extent_free_finish_item(
+-	struct xfs_trans		*tp,
+-	struct list_head		*item,
+-	void				*done_item,
+-	void				**state)
+-{
+-	struct xfs_extent_free_item	*free;
+-	int				error;
+-
+-	free = container_of(item, struct xfs_extent_free_item, xefi_list);
+-	error = xfs_trans_free_extent(tp, done_item,
+-			free->xefi_startblock,
+-			free->xefi_blockcount,
+-			&free->xefi_oinfo, free->xefi_skip_discard);
+-	kmem_free(free);
+-	return error;
+-}
+-
+-/* Abort all pending EFIs. */
+-STATIC void
+-xfs_extent_free_abort_intent(
+-	void				*intent)
+-{
+-	xfs_efi_release(intent);
+-}
+-
+-/* Cancel a free extent. */
+-STATIC void
+-xfs_extent_free_cancel_item(
+-	struct list_head		*item)
+-{
+-	struct xfs_extent_free_item	*free;
+-
+-	free = container_of(item, struct xfs_extent_free_item, xefi_list);
+-	kmem_free(free);
+-}
+-
+-const struct xfs_defer_op_type xfs_extent_free_defer_type = {
+-	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
+-	.diff_items	= xfs_extent_free_diff_items,
+-	.create_intent	= xfs_extent_free_create_intent,
+-	.abort_intent	= xfs_extent_free_abort_intent,
+-	.log_item	= xfs_extent_free_log_item,
+-	.create_done	= xfs_extent_free_create_done,
+-	.finish_item	= xfs_extent_free_finish_item,
+-	.cancel_item	= xfs_extent_free_cancel_item,
+-};
+-
+-/*
+- * AGFL blocks are accounted differently in the reserve pools and are not
+- * inserted into the busy extent list.
+- */
+-STATIC int
+-xfs_agfl_free_finish_item(
+-	struct xfs_trans		*tp,
+-	struct list_head		*item,
+-	void				*done_item,
+-	void				**state)
+-{
+-	struct xfs_mount		*mp = tp->t_mountp;
+-	struct xfs_efd_log_item		*efdp = done_item;
+-	struct xfs_extent_free_item	*free;
+-	struct xfs_extent		*extp;
+-	struct xfs_buf			*agbp;
+-	int				error;
+-	xfs_agnumber_t			agno;
+-	xfs_agblock_t			agbno;
+-	uint				next_extent;
+-
+-	free = container_of(item, struct xfs_extent_free_item, xefi_list);
+-	ASSERT(free->xefi_blockcount == 1);
+-	agno = XFS_FSB_TO_AGNO(mp, free->xefi_startblock);
+-	agbno = XFS_FSB_TO_AGBNO(mp, free->xefi_startblock);
+-
+-	trace_xfs_agfl_free_deferred(mp, agno, 0, agbno, free->xefi_blockcount);
+-
+-	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+-	if (!error)
+-		error = xfs_free_agfl_block(tp, agno, agbno, agbp,
+-					    &free->xefi_oinfo);
+-
+-	/*
+-	 * Mark the transaction dirty, even on error. This ensures the
+-	 * transaction is aborted, which:
+-	 *
+-	 * 1.) releases the EFI and frees the EFD
+-	 * 2.) shuts down the filesystem
+-	 */
+-	tp->t_flags |= XFS_TRANS_DIRTY;
+-	set_bit(XFS_LI_DIRTY, &efdp->efd_item.li_flags);
+-
+-	next_extent = efdp->efd_next_extent;
+-	ASSERT(next_extent < efdp->efd_format.efd_nextents);
+-	extp = &(efdp->efd_format.efd_extents[next_extent]);
+-	extp->ext_start = free->xefi_startblock;
+-	extp->ext_len = free->xefi_blockcount;
+-	efdp->efd_next_extent++;
+-
+-	kmem_free(free);
+-	return error;
+-}
+-
+-
+-/* sub-type with special handling for AGFL deferred frees */
+-const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
+-	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
+-	.diff_items	= xfs_extent_free_diff_items,
+-	.create_intent	= xfs_extent_free_create_intent,
+-	.abort_intent	= xfs_extent_free_abort_intent,
+-	.log_item	= xfs_extent_free_log_item,
+-	.create_done	= xfs_extent_free_create_done,
+-	.finish_item	= xfs_agfl_free_finish_item,
+-	.cancel_item	= xfs_extent_free_cancel_item,
+-};
 -- 
 2.20.1
