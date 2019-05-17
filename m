@@ -1,150 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33412 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:59828 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726282AbfEQS1B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 May 2019 14:27:01 -0400
-Subject: Re: [PATCH 13/20] xfs: merge xfs_efd_init into xfs_trans_get_efd
+        id S1729043AbfEQOI4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 May 2019 10:08:56 -0400
+Date: Fri, 17 May 2019 10:08:53 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 06/20] xfs: don't use xfs_trans_free_items in the commit
+ path
+Message-ID: <20190517140853.GF7888@bfoster>
 References: <20190517073119.30178-1-hch@lst.de>
- <20190517073119.30178-14-hch@lst.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <842291d4-74b5-71bd-5d61-ea513614a9cf@sandeen.net>
-Date: Fri, 17 May 2019 13:26:59 -0500
+ <20190517073119.30178-7-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20190517073119.30178-14-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190517073119.30178-7-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-
-On 5/17/19 2:31 AM, Christoph Hellwig wrote:
-> There is no good reason to keep these two functions separate.
-
-hm, do the thin ->create_done() wrappers make sense either?
-
-/* Get an EFD so we can process all the free extents. */
-STATIC void *
-xfs_extent_free_create_done(
-        struct xfs_trans                *tp,
-        void                            *intent,
-        unsigned int                    count)
-{
-        return xfs_trans_get_efd(tp, intent, count);
-}
-
-should we just hook xfs_trans_get_FOO() directly to ->create_done?
-
- 
+On Fri, May 17, 2019 at 09:31:05AM +0200, Christoph Hellwig wrote:
+> While commiting items looks very similar to freeing them on error it is
+> a different operation, and they will diverge a bit soon.
+> 
+> Split out the commit case from xfs_trans_free_items, inline it into
+> xfs_log_commit_cil and give it a separate trace point.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_extfree_item.c  | 27 +++++++++++++++------------
->  fs/xfs/xfs_extfree_item.h  |  2 --
->  fs/xfs/xfs_trans_extfree.c | 26 --------------------------
->  3 files changed, 15 insertions(+), 40 deletions(-)
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_log_cil.c    | 13 ++++++++++---
+>  fs/xfs/xfs_trace.h      |  1 +
+>  fs/xfs/xfs_trans.c      | 10 +++-------
+>  fs/xfs/xfs_trans_priv.h |  2 --
+>  4 files changed, 14 insertions(+), 12 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index bb0b1e942d00..ccf95cb8234c 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -312,32 +312,35 @@ static const struct xfs_item_ops xfs_efd_item_ops = {
->  };
->  
->  /*
-> - * Allocate and initialize an efd item with the given number of extents.
-> + * Allocate an "extent free done" log item that will hold nextents worth of
-> + * extents.  The caller must use all nextents extents, because we are not
-> + * flexible about this at all.
->   */
->  struct xfs_efd_log_item *
-> -xfs_efd_init(
-> -	struct xfs_mount	*mp,
-> -	struct xfs_efi_log_item	*efip,
-> -	uint			nextents)
-> -
-> +xfs_trans_get_efd(
-> +	struct xfs_trans		*tp,
-> +	struct xfs_efi_log_item		*efip,
-> +	unsigned int			nextents)
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 49f37905c7a7..c856bfce5bf2 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -985,6 +985,7 @@ xfs_log_commit_cil(
 >  {
-> -	struct xfs_efd_log_item	*efdp;
-> -	uint			size;
-> +	struct xfs_efd_log_item		*efdp;
+>  	struct xlog		*log = mp->m_log;
+>  	struct xfs_cil		*cil = log->l_cilp;
+> +	struct xfs_log_item	*lip, *next;
+>  	xfs_lsn_t		xc_commit_lsn;
 >  
->  	ASSERT(nextents > 0);
-> +
->  	if (nextents > XFS_EFD_MAX_FAST_EXTENTS) {
-> -		size = (uint)(sizeof(xfs_efd_log_item_t) +
-> -			((nextents - 1) * sizeof(xfs_extent_t)));
-> -		efdp = kmem_zalloc(size, KM_SLEEP);
-> +		efdp = kmem_zalloc(sizeof(struct xfs_efd_log_item) +
-> +				(nextents - 1) * sizeof(struct xfs_extent),
-> +				KM_SLEEP);
->  	} else {
->  		efdp = kmem_zone_zalloc(xfs_efd_zone, KM_SLEEP);
->  	}
+>  	/*
+> @@ -1009,7 +1010,7 @@ xfs_log_commit_cil(
 >  
-> -	xfs_log_item_init(mp, &efdp->efd_item, XFS_LI_EFD, &xfs_efd_item_ops);
-> +	xfs_log_item_init(tp->t_mountp, &efdp->efd_item, XFS_LI_EFD,
-> +			  &xfs_efd_item_ops);
->  	efdp->efd_efip = efip;
->  	efdp->efd_format.efd_nextents = nextents;
->  	efdp->efd_format.efd_efi_id = efip->efi_format.efi_id;
+>  	/*
+>  	 * Once all the items of the transaction have been copied to the CIL,
+> -	 * the items can be unlocked and freed.
+> +	 * the items can be unlocked and possibly freed.
+>  	 *
+>  	 * This needs to be done before we drop the CIL context lock because we
+>  	 * have to update state in the log items and unlock them before they go
+> @@ -1018,8 +1019,14 @@ xfs_log_commit_cil(
+>  	 * the log items. This affects (at least) processing of stale buffers,
+>  	 * inodes and EFIs.
+>  	 */
+> -	xfs_trans_free_items(tp, xc_commit_lsn, false);
+> -
+> +	trace_xfs_trans_commit_items(tp, _RET_IP_);
+> +	list_for_each_entry_safe(lip, next, &tp->t_items, li_trans) {
+> +		xfs_trans_del_item(lip);
+> +		if (lip->li_ops->iop_committing)
+> +			lip->li_ops->iop_committing(lip, xc_commit_lsn);
+> +		if (lip->li_ops->iop_unlock)
+> +			lip->li_ops->iop_unlock(lip);
+> +	}
+>  	xlog_cil_push_background(log);
 >  
-> +	xfs_trans_add_item(tp, &efdp->efd_item);
->  	return efdp;
+>  	up_read(&cil->xc_ctx_lock);
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 2464ea351f83..195a9cdb954e 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3360,6 +3360,7 @@ DEFINE_TRANS_EVENT(xfs_trans_dup);
+>  DEFINE_TRANS_EVENT(xfs_trans_free);
+>  DEFINE_TRANS_EVENT(xfs_trans_roll);
+>  DEFINE_TRANS_EVENT(xfs_trans_add_item);
+> +DEFINE_TRANS_EVENT(xfs_trans_commit_items);
+>  DEFINE_TRANS_EVENT(xfs_trans_free_items);
+>  
+>  TRACE_EVENT(xfs_iunlink_update_bucket,
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index ed7547b9f66b..4ed5d032b26f 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -767,10 +767,9 @@ xfs_trans_del_item(
 >  }
 >  
-> diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
-> index b0dc4ebe8892..16aaab06d4ec 100644
-> --- a/fs/xfs/xfs_extfree_item.h
-> +++ b/fs/xfs/xfs_extfree_item.h
-> @@ -79,8 +79,6 @@ extern struct kmem_zone	*xfs_efi_zone;
->  extern struct kmem_zone	*xfs_efd_zone;
+>  /* Detach and unlock all of the items in a transaction */
+> -void
+> +static void
+>  xfs_trans_free_items(
+>  	struct xfs_trans	*tp,
+> -	xfs_lsn_t		commit_lsn,
+>  	bool			abort)
+>  {
+>  	struct xfs_log_item	*lip, *next;
+> @@ -779,9 +778,6 @@ xfs_trans_free_items(
 >  
->  xfs_efi_log_item_t	*xfs_efi_init(struct xfs_mount *, uint);
-> -xfs_efd_log_item_t	*xfs_efd_init(struct xfs_mount *, xfs_efi_log_item_t *,
-> -				      uint);
->  int			xfs_efi_copy_format(xfs_log_iovec_t *buf,
->  					    xfs_efi_log_format_t *dst_efi_fmt);
->  void			xfs_efi_item_free(xfs_efi_log_item_t *);
-> diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
-> index 8ee7a3f8bb20..20ab1c9d758f 100644
-> --- a/fs/xfs/xfs_trans_extfree.c
-> +++ b/fs/xfs/xfs_trans_extfree.c
-> @@ -19,32 +19,6 @@
->  #include "xfs_bmap.h"
->  #include "xfs_trace.h"
+>  	list_for_each_entry_safe(lip, next, &tp->t_items, li_trans) {
+>  		xfs_trans_del_item(lip);
+> -		if (commit_lsn != NULLCOMMITLSN &&
+> -		    lip->li_ops->iop_committing)
+> -			lip->li_ops->iop_committing(lip, commit_lsn);
+>  		if (abort)
+>  			set_bit(XFS_LI_ABORTED, &lip->li_flags);
 >  
-> -/*
-> - * This routine is called to allocate an "extent free done"
-> - * log item that will hold nextents worth of extents.  The
-> - * caller must use all nextents extents, because we are not
-> - * flexible about this at all.
-> - */
-> -struct xfs_efd_log_item *
-> -xfs_trans_get_efd(struct xfs_trans		*tp,
-> -		  struct xfs_efi_log_item	*efip,
-> -		  uint				nextents)
-> -{
-> -	struct xfs_efd_log_item			*efdp;
-> -
-> -	ASSERT(tp != NULL);
-> -	ASSERT(nextents > 0);
-> -
-> -	efdp = xfs_efd_init(tp->t_mountp, efip, nextents);
-> -	ASSERT(efdp != NULL);
-> -
-> -	/*
-> -	 * Get a log_item_desc to point at the new item.
-> -	 */
-> -	xfs_trans_add_item(tp, &efdp->efd_item);
-> -	return efdp;
-> -}
-> -
->  /*
->   * Free an extent and log it to the EFD. Note that the transaction is marked
->   * dirty regardless of whether the extent free succeeds or fails to support the
+> @@ -1007,7 +1003,7 @@ __xfs_trans_commit(
+>  		tp->t_ticket = NULL;
+>  	}
+>  	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+> -	xfs_trans_free_items(tp, NULLCOMMITLSN, !!error);
+> +	xfs_trans_free_items(tp, !!error);
+>  	xfs_trans_free(tp);
+>  
+>  	XFS_STATS_INC(mp, xs_trans_empty);
+> @@ -1069,7 +1065,7 @@ xfs_trans_cancel(
+>  	/* mark this thread as no longer being in a transaction */
+>  	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+>  
+> -	xfs_trans_free_items(tp, NULLCOMMITLSN, dirty);
+> +	xfs_trans_free_items(tp, dirty);
+>  	xfs_trans_free(tp);
+>  }
+>  
+> diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+> index 091eae9f4e74..bef1ebf933ed 100644
+> --- a/fs/xfs/xfs_trans_priv.h
+> +++ b/fs/xfs/xfs_trans_priv.h
+> @@ -16,8 +16,6 @@ struct xfs_log_vec;
+>  void	xfs_trans_init(struct xfs_mount *);
+>  void	xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
+>  void	xfs_trans_del_item(struct xfs_log_item *);
+> -void	xfs_trans_free_items(struct xfs_trans *tp, xfs_lsn_t commit_lsn,
+> -				bool abort);
+>  void	xfs_trans_unreserve_and_mod_sb(struct xfs_trans *tp);
+>  
+>  void	xfs_trans_committed_bulk(struct xfs_ail *ailp, struct xfs_log_vec *lv,
+> -- 
+> 2.20.1
 > 
