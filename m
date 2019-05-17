@@ -1,59 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:33940 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727659AbfEOUqU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 May 2019 16:46:20 -0400
-Received: by mail-ot1-f68.google.com with SMTP id l17so1377925otq.1
-        for <linux-xfs@vger.kernel.org>; Wed, 15 May 2019 13:46:20 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.133]:44406 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728365AbfEQHcp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:45 -0400
+Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hRXMB-0000oS-U8
+        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:44 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 14/20] xfs: merge xfs_cud_init into xfs_trans_get_cud
+Date: Fri, 17 May 2019 09:31:13 +0200
+Message-Id: <20190517073119.30178-15-hch@lst.de>
+In-Reply-To: <20190517073119.30178-1-hch@lst.de>
+References: <20190517073119.30178-1-hch@lst.de>
 MIME-Version: 1.0
-References: <20190514145422.16923-1-pagupta@redhat.com> <20190514145422.16923-3-pagupta@redhat.com>
- <c22d42f6-ef94-0310-36f2-e9085d3464c2@infradead.org> <1112624345.28705248.1557847520326.JavaMail.zimbra@redhat.com>
-In-Reply-To: <1112624345.28705248.1557847520326.JavaMail.zimbra@redhat.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 15 May 2019 13:46:08 -0700
-Message-ID: <CAPcyv4iK1ivHkdw3JQV1wVLeLi0TA++VgKDZvYjPGo_i1j_pbA@mail.gmail.com>
-Subject: Re: [Qemu-devel] [PATCH v9 2/7] virtio-pmem: Add virtio pmem driver
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>
-Cc: Randy Dunlap <rdunlap@infradead.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, KVM list <kvm@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, david <david@fromorbit.com>, lcapitulino@redhat.com, adilger kernel <adilger.kernel@dilger.ca>, Ross Zwisler <zwisler@kernel.org>, Andrea Arcangeli <aarcange@redhat.com>, dave jiang <dave.jiang@intel.com>, jstaron@google.com, darrick wong <darrick.wong@oracle.com>, vishal l verma <vishal.l.verma@intel.com>, David Hildenbrand <david@redhat.com>, Matthew Wilcox <willy@infradead.org>, Christoph Hellwig <hch@infradead.org>, jmoyer <jmoyer@redhat.com>, Nitesh Narayan Lal <nilal@redhat.com>, Len Brown <lenb@kernel.org>, Adam Borowski <kilobyte@angband.pl>, Rik van Riel <riel@surriel.com>, yuval shaia <yuval.shaia@oracle.com>, Stefan Hajnoczi <stefanha@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, Kevin Wolf <kwolf@redhat.com>, Theodore Ts'o <tytso@mit.edu>, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, cohuck@redhat.com, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Igor Mammedov <imammedo@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-On Tue, May 14, 2019 at 8:25 AM Pankaj Gupta <pagupta@redhat.com> wrote:
->
->
-> > On 5/14/19 7:54 AM, Pankaj Gupta wrote:
-> > > diff --git a/drivers/virtio/Kconfig b/drivers/virtio/Kconfig
-> > > index 35897649c24f..94bad084ebab 100644
-> > > --- a/drivers/virtio/Kconfig
-> > > +++ b/drivers/virtio/Kconfig
-> > > @@ -42,6 +42,17 @@ config VIRTIO_PCI_LEGACY
-> > >
-> > >       If unsure, say Y.
-> > >
-> > > +config VIRTIO_PMEM
-> > > +   tristate "Support for virtio pmem driver"
-> > > +   depends on VIRTIO
-> > > +   depends on LIBNVDIMM
-> > > +   help
-> > > +   This driver provides access to virtio-pmem devices, storage devices
-> > > +   that are mapped into the physical address space - similar to NVDIMMs
-> > > +    - with a virtio-based flushing interface.
-> > > +
-> > > +   If unsure, say M.
-> >
-> > <beep>
-> > from Documentation/process/coding-style.rst:
-> > "Lines under a ``config`` definition
-> > are indented with one tab, while help text is indented an additional two
-> > spaces."
->
-> ah... I changed help text and 'checkpatch' did not say anything :( .
->
-> Will wait for Dan, If its possible to add two spaces to help text while applying
-> the series.
+There is no good reason to keep these two functions separate.
 
-I'm inclined to handle this with a fixup appended to the end of the
-series just so the patchwork-bot does not get confused by the content
-changing from what was sent to the list.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_refcount_item.c  | 14 ++++++--------
+ fs/xfs/xfs_refcount_item.h  |  2 --
+ fs/xfs/xfs_trans_refcount.c | 16 ----------------
+ 3 files changed, 6 insertions(+), 26 deletions(-)
+
+diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+index 2b2f6e7ad867..70dcdf40ac92 100644
+--- a/fs/xfs/xfs_refcount_item.c
++++ b/fs/xfs/xfs_refcount_item.c
+@@ -217,22 +217,20 @@ static const struct xfs_item_ops xfs_cud_item_ops = {
+ 	.iop_release	= xfs_cud_item_release,
+ };
+ 
+-/*
+- * Allocate and initialize an cud item with the given number of extents.
+- */
+ struct xfs_cud_log_item *
+-xfs_cud_init(
+-	struct xfs_mount		*mp,
++xfs_trans_get_cud(
++	struct xfs_trans		*tp,
+ 	struct xfs_cui_log_item		*cuip)
+-
+ {
+-	struct xfs_cud_log_item	*cudp;
++	struct xfs_cud_log_item		*cudp;
+ 
+ 	cudp = kmem_zone_zalloc(xfs_cud_zone, KM_SLEEP);
+-	xfs_log_item_init(mp, &cudp->cud_item, XFS_LI_CUD, &xfs_cud_item_ops);
++	xfs_log_item_init(tp->t_mountp, &cudp->cud_item, XFS_LI_CUD,
++			  &xfs_cud_item_ops);
+ 	cudp->cud_cuip = cuip;
+ 	cudp->cud_format.cud_cui_id = cuip->cui_format.cui_id;
+ 
++	xfs_trans_add_item(tp, &cudp->cud_item);
+ 	return cudp;
+ }
+ 
+diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
+index 3896dcc2368f..e47530f30489 100644
+--- a/fs/xfs/xfs_refcount_item.h
++++ b/fs/xfs/xfs_refcount_item.h
+@@ -78,8 +78,6 @@ extern struct kmem_zone	*xfs_cui_zone;
+ extern struct kmem_zone	*xfs_cud_zone;
+ 
+ struct xfs_cui_log_item *xfs_cui_init(struct xfs_mount *, uint);
+-struct xfs_cud_log_item *xfs_cud_init(struct xfs_mount *,
+-		struct xfs_cui_log_item *);
+ void xfs_cui_item_free(struct xfs_cui_log_item *);
+ void xfs_cui_release(struct xfs_cui_log_item *);
+ int xfs_cui_recover(struct xfs_trans *parent_tp, struct xfs_cui_log_item *cuip);
+diff --git a/fs/xfs/xfs_trans_refcount.c b/fs/xfs/xfs_trans_refcount.c
+index 8d734728dd1b..d793fb500378 100644
+--- a/fs/xfs/xfs_trans_refcount.c
++++ b/fs/xfs/xfs_trans_refcount.c
+@@ -17,22 +17,6 @@
+ #include "xfs_alloc.h"
+ #include "xfs_refcount.h"
+ 
+-/*
+- * This routine is called to allocate a "refcount update done"
+- * log item.
+- */
+-struct xfs_cud_log_item *
+-xfs_trans_get_cud(
+-	struct xfs_trans		*tp,
+-	struct xfs_cui_log_item		*cuip)
+-{
+-	struct xfs_cud_log_item		*cudp;
+-
+-	cudp = xfs_cud_init(tp->t_mountp, cuip);
+-	xfs_trans_add_item(tp, &cudp->cud_item);
+-	return cudp;
+-}
+-
+ /*
+  * Finish an refcount update and log it to the CUD. Note that the
+  * transaction is marked dirty regardless of whether the refcount
+-- 
+2.20.1
