@@ -1,95 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14423 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728103AbfEQOIo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 May 2019 10:08:44 -0400
-Date: Fri, 17 May 2019 10:08:42 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 05/20] xfs: remove the iop_push implementation for quota
- off items
-Message-ID: <20190517140841.GE7888@bfoster>
-References: <20190517073119.30178-1-hch@lst.de>
- <20190517073119.30178-6-hch@lst.de>
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:36695 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727218AbfEQG7r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 02:59:47 -0400
+Date: Fri, 17 May 2019 16:59:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Question about commit b450672fb66b ("iomap: sub-block dio needs
+ to zeroout beyond EOF")
+Message-ID: <20190517065943.GC29573@dread.disaster.area>
+References: <8b1ba3a1-7ecc-6e1f-c944-26a51baa9747@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190517073119.30178-6-hch@lst.de>
+In-Reply-To: <8b1ba3a1-7ecc-6e1f-c944-26a51baa9747@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Hou Tao <houtao1@huawei.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Fri, May 17, 2019 at 09:31:04AM +0200, Christoph Hellwig wrote:
-> If we want to push the log to make progress on the items we'd need to
-> return XFS_ITEM_PINNED instead of XFS_ITEM_LOCKED.  Removing the
-> method will do exactly that.
+On Fri, May 17, 2019 at 10:41:44AM +0800, Hou Tao wrote:
+> Hi,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_dquot_item.c | 14 --------------
->  1 file changed, 14 deletions(-)
+> I don't understand why the commit b450672fb66b ("iomap: sub-block dio needs to zeroout beyond EOF") is needed here:
 > 
-> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> index 486eea151fdb..a61a8a770d7f 100644
-> --- a/fs/xfs/xfs_dquot_item.c
-> +++ b/fs/xfs/xfs_dquot_item.c
-> @@ -288,18 +288,6 @@ xfs_qm_qoff_logitem_format(
->  	xlog_finish_iovec(lv, vecp, sizeof(struct xfs_qoff_logitem));
->  }
->  
-> -/*
-> - * There isn't much you can do to push a quotaoff item.  It is simply
-> - * stuck waiting for the log to be flushed to disk.
-> - */
-> -STATIC uint
-> -xfs_qm_qoff_logitem_push(
-> -	struct xfs_log_item	*lip,
-> -	struct list_head	*buffer_list)
-> -{
-> -	return XFS_ITEM_LOCKED;
-> -}
-> -
-
-Hmm, this one is a bit interesting because it's a potential change in
-behavior and I'm not sure the comment above accurately reflects the
-situation. In xfs_qm_scall_quotaoff(), we log the first quotaoff item
-and commit it synchronously. I believe this means it immediately goes
-into the AIL. Then we have to iterate inodes to drop all dquot
-references and purge the dquot cache, which can do I/O by writing back
-dquot bufs before we eventually log the quotaoff_end item. All in all
-this can take a bit of time (and we have test scenarios that reproduce
-quotaoff log deadlocks already).
-
-I think this change can cause AIL processing concurrent to a quotaoff in
-progress to potentially force the log on every pass. I would not expect
-that to have a positive effect because a log force doesn't actually help
-the quotaoff progress until the quotaoff_end is committed, and that
-already occurs synchronously as well. I don't think it's wise to change
-behavior here, at least not without some testing and analysis around how
-this impacts those already somewhat flakey quota off operations.
-
-Brian
-
->  STATIC xfs_lsn_t
->  xfs_qm_qoffend_logitem_committed(
->  	struct xfs_log_item	*lip,
-> @@ -327,7 +315,6 @@ static const struct xfs_item_ops xfs_qm_qoffend_logitem_ops = {
->  	.iop_size	= xfs_qm_qoff_logitem_size,
->  	.iop_format	= xfs_qm_qoff_logitem_format,
->  	.iop_committed	= xfs_qm_qoffend_logitem_committed,
-> -	.iop_push	= xfs_qm_qoff_logitem_push,
->  };
->  
->  /*
-> @@ -336,7 +323,6 @@ static const struct xfs_item_ops xfs_qm_qoffend_logitem_ops = {
->  static const struct xfs_item_ops xfs_qm_qoff_logitem_ops = {
->  	.iop_size	= xfs_qm_qoff_logitem_size,
->  	.iop_format	= xfs_qm_qoff_logitem_format,
-> -	.iop_push	= xfs_qm_qoff_logitem_push,
->  };
->  
->  /*
-> -- 
-> 2.20.1
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 72f3864a2e6b..77c214194edf 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -1677,7 +1677,14 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+>                 dio->submit.cookie = submit_bio(bio);
+>         } while (nr_pages);
 > 
+> -       if (need_zeroout) {
+> +       /*
+> +        * We need to zeroout the tail of a sub-block write if the extent type
+> +        * requires zeroing or the write extends beyond EOF. If we don't zero
+> +        * the block tail in the latter case, we can expose stale data via mmap
+> +        * reads of the EOF block.
+> +        */
+> +       if (need_zeroout ||
+> +           ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
+>                 /* zero out from the end of the write to the end of the block */
+>                 pad = pos & (fs_block_size - 1);
+>                 if (pad)
+> 
+> If need_zeroout is false, it means the block neither is a unwritten block nor
+> a newly-mapped block, but that also means the block must had been a unwritten block
+> or a newly-mapped block before this write, so the block must have been zeroed, correct ?
+
+No. One the contrary, it's a direct IO write to beyond the end of
+the file which means the block has not been zeroed at all. If it is
+an unwritten extent, it most definitely does not contain zeroes
+(unwritten extents are a flag in the extent metadata, not zeroed
+disk space) and so it doesn't matter it is written or unwritten we
+must zero it before we update the file size.
+
+Why? Because if we then mmap the page that spans EOF, whatever is on
+disk beyond EOF is exposed to the user process. Hence if we don't
+zero the tail of the block beyond EOF during DIO writes then we can
+leak stale information to unprivileged users....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
