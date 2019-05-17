@@ -1,50 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:40242 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725810AbfETWJG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 18:09:06 -0400
-Date: Mon, 20 May 2019 15:08:59 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/20] xfs: fix a trivial comment typo in the
- xfs_trans_committed_bulk
-Message-ID: <20190520220859.GE5335@magnolia>
-References: <20190517073119.30178-1-hch@lst.de>
- <20190517073119.30178-2-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:37328 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726519AbfEQW5u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 18:57:50 -0400
+Subject: Re: [PATCH 7/3] libxfs: fix argument to xfs_trans_add_item
+References: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
+ <1bd8bba2-b884-02f6-8e49-eb2374481888@redhat.com>
+From: Allison Collins <allison.henderson@oracle.com>
+Message-ID: <e473e37d-433f-9437-2dcd-b7760c70f00c@oracle.com>
+Date: Fri, 17 May 2019 15:57:35 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190517073119.30178-2-hch@lst.de>
+In-Reply-To: <1bd8bba2-b884-02f6-8e49-eb2374481888@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, May 17, 2019 at 09:31:00AM +0200, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 5/16/19 1:40 PM, Eric Sandeen wrote:
+> The hack of casting an inode_log_item or buf_log_item to a
+> xfs_log_item_t is pretty gross; yes it's the first member in the
+> structure, but yuk.  Pass in the correct structure member.
+> 
+> This was fixed in the kernel with commit e98c414f9
+> ("xfs: simplify log item descriptor tracking")
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
+Looks good.
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
 > ---
->  fs/xfs/xfs_trans.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>   libxfs/trans.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 912b42f5fe4a..19f91312561a 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -815,7 +815,7 @@ xfs_log_item_batch_insert(
->   *
->   * If we are called with the aborted flag set, it is because a log write during
->   * a CIL checkpoint commit has failed. In this case, all the items in the
-> - * checkpoint have already gone through iop_commited and iop_unlock, which
-> + * checkpoint have already gone through iop_committed and iop_unlock, which
->   * means that checkpoint commit abort handling is treated exactly the same
->   * as an iclog write error even though we haven't started any IO yet. Hence in
->   * this case all we need to do is iop_committed processing, followed by an
-> -- 
-> 2.20.1
+> diff --git a/libxfs/trans.c b/libxfs/trans.c
+> index f78222fd..6ef4841f 100644
+> --- a/libxfs/trans.c
+> +++ b/libxfs/trans.c
+> @@ -346,7 +346,7 @@ xfs_trans_ijoin(
+>   	ASSERT(iip->ili_lock_flags == 0);
+>   	iip->ili_lock_flags = lock_flags;
+>   
+> -	xfs_trans_add_item(tp, (xfs_log_item_t *)(iip));
+> +	xfs_trans_add_item(tp, &iip->ili_item);
+>   }
+>   
+>   void
+> @@ -570,7 +570,7 @@ _xfs_trans_bjoin(
+>   	 * Attach the item to the transaction so we can find it in
+>   	 * xfs_trans_get_buf() and friends.
+>   	 */
+> -	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
+> +	xfs_trans_add_item(tp, &bip->bli_item);
+>   	bp->b_transp = tp;
+>   
+>   }
 > 
