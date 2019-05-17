@@ -1,114 +1,569 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57738 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726422AbfEOQYj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 May 2019 12:24:39 -0400
-Subject: Re: [PATCH] xfs_db: add extent count and file size histograms
-References: <20190514185026.73788-1-jorgeguerra@gmail.com>
- <20190514233119.GS29573@dread.disaster.area>
- <CAEFkGAxFuh5qLrfSTreVLHGaaP9VtxTbfeePEwq2iqm0OLamxA@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <731994db-9f24-a3a8-02a9-eb92535b93f5@sandeen.net>
-Date: Wed, 15 May 2019 11:24:37 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:45624 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728061AbfEQHc7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:59 -0400
+Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hRXMP-00012m-BQ
+        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:58 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 19/20] xfs: merge xfs_trans_rmap.c into xfs_rmap_item.c
+Date: Fri, 17 May 2019 09:31:18 +0200
+Message-Id: <20190517073119.30178-20-hch@lst.de>
+In-Reply-To: <20190517073119.30178-1-hch@lst.de>
+References: <20190517073119.30178-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <CAEFkGAxFuh5qLrfSTreVLHGaaP9VtxTbfeePEwq2iqm0OLamxA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jorge Guerra <jorge.guerra@gmail.com>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, Omar Sandoval <osandov@osandov.com>, Jorge Guerra <jorgeguerra@fb.com>
+To: linux-xfs@vger.kernel.org
 
-On 5/15/19 11:15 AM, Jorge Guerra wrote:
-> Thanks Dave,
-> 
-> I appreciate you taking the time to review and comment.
-> 
-> On Tue, May 14, 2019 at 4:31 PM Dave Chinner <david@fromorbit.com> wrote:
->>
->> On Tue, May 14, 2019 at 11:50:26AM -0700, Jorge Guerra wrote:
->>> From: Jorge Guerra <jorgeguerra@fb.com>
->>>
->>> In this change we add two feature to the xfs_db 'frag' command:
->>>
->>> 1) Extent count histogram [-e]: This option enables tracking the
->>>    number of extents per inode (file) as the we traverse the file
->>>    system.  The end result is a histogram of the number of extents per
->>>    file in power of 2 buckets.
->>>
->>> 2) File size histogram and file system internal fragmentation stats
->>>    [-s]: This option enables tracking file sizes both in terms of what
->>>    has been physically allocated and how much has been written to the
->>>    file.  In addition, we track the amount of internal fragmentation
->>>    seen per file.  This is particularly useful in the case of real
->>>    time devices where space is allocated in units of fixed sized
->>>    extents.
->>
->> I can see the usefulness of having such information, but xfs_db is
->> the wrong tool/interface for generating such usage reports.
->>
->>> The man page for xfs_db has been updated to reflect these new command
->>> line arguments.
->>>
->>> Tests:
->>>
->>> We tested this change on several XFS file systems with different
->>> configurations:
->>>
->>> 1) regular XFS:
->>>
->>> [root@m1 ~]# xfs_info /mnt/d0
->>> meta-data=/dev/sdb1              isize=256    agcount=10, agsize=268435455 blks
->>>          =                       sectsz=4096  attr=2, projid32bit=1
->>>          =                       crc=0        finobt=0, sparse=0, rmapbt=0
->>>          =                       reflink=0
->>> data     =                       bsize=4096   blocks=2441608704, imaxpct=100
->>>          =                       sunit=0      swidth=0 blks
->>> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
->>> log      =internal log           bsize=4096   blocks=521728, version=2
->>>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
->>> realtime =none                   extsz=4096   blocks=0, rtextents=0
->>> [root@m1 ~]# echo "frag -e -s" | xfs_db -r /dev/sdb1
->>> xfs_db> actual 494393, ideal 489246, fragmentation factor 1.04%
->>
->> For example, xfs_db is not the right tool for probing online, active
->> filesystems. It is not coherent with the active kernel filesystem,
->> and is quite capable of walking off into la-la land as a result of
->> mis-parsing the inconsistent filesystem that is on disk underneath
->> active mounted filesystems. This does not make for a robust, usable
->> tool, let alone one that can make use of things like rmap for
->> querying usage and ownership information really quickly.
-> 
-> I see your point, that the FS is constantly changing and that we might
-> see an inconsistent view.  But if we are generating bucketed
-> histograms we are anyways approximating the stats.
+Keep all rmap item related code together in one file.
 
-I think that Dave's "inconsistency" concern is literal - if the on-disk
-metadata is not consistent, you may wander into what looks like corruption
-if you try to traverse every inode while mounted.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/Makefile         |   3 +-
+ fs/xfs/xfs_rmap_item.c  | 229 ++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_trans.h      |  11 --
+ fs/xfs/xfs_trans_rmap.c | 245 ----------------------------------------
+ 4 files changed, 229 insertions(+), 259 deletions(-)
+ delete mode 100644 fs/xfs/xfs_trans_rmap.c
+
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 26f8c51d8803..1730664770c5 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -106,8 +106,7 @@ xfs-y				+= xfs_log.o \
+ 				   xfs_trans_ail.o \
+ 				   xfs_trans_bmap.o \
+ 				   xfs_trans_buf.o \
+-				   xfs_trans_inode.o \
+-				   xfs_trans_rmap.o \
++				   xfs_trans_inode.o
  
-It's pretty much never valid for userspace to try to traverse or read
-the filesystem while mounted.
-
->> To solve this problem, we now have the xfs_spaceman tool and the
->> GETFSMAP ioctl for running usage queries on mounted filesystems.
->> That avoids all the coherency and crash problems, and for rmap
->> enabled filesystems it does not require scanning the entire
->> filesystem to work out this information (i.e. it can all be derived
->> from the contents of the rmap tree).
->>
->> So I'd much prefer that new online filesystem queries go into
->> xfs-spaceman and use GETFSMAP so they can be accelerated on rmap
->> configured filesystems rather than hoping xfs_db will parse the
->> entire mounted filesystem correctly while it is being actively
->> changed...
-> 
-> Good to know, I wasn't aware of this tool.  However I seems like I
-> don't have that ioctl in my systems yet :(
-
-It was added in 2017, in kernel-4.12 I believe.
-What kernel did you test?
-
--Eric
+ # optional features
+ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index 5f11e6d43484..6da664ae97e2 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -238,7 +238,7 @@ static const struct xfs_item_ops xfs_rud_item_ops = {
+ 	.iop_release	= xfs_rud_item_release,
+ };
+ 
+-struct xfs_rud_log_item *
++static struct xfs_rud_log_item *
+ xfs_trans_get_rud(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_rui_log_item		*ruip)
+@@ -255,6 +255,233 @@ xfs_trans_get_rud(
+ 	return rudp;
+ }
+ 
++/* Set the map extent flags for this reverse mapping. */
++static void
++xfs_trans_set_rmap_flags(
++	struct xfs_map_extent		*rmap,
++	enum xfs_rmap_intent_type	type,
++	int				whichfork,
++	xfs_exntst_t			state)
++{
++	rmap->me_flags = 0;
++	if (state == XFS_EXT_UNWRITTEN)
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNWRITTEN;
++	if (whichfork == XFS_ATTR_FORK)
++		rmap->me_flags |= XFS_RMAP_EXTENT_ATTR_FORK;
++	switch (type) {
++	case XFS_RMAP_MAP:
++		rmap->me_flags |= XFS_RMAP_EXTENT_MAP;
++		break;
++	case XFS_RMAP_MAP_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_MAP_SHARED;
++		break;
++	case XFS_RMAP_UNMAP:
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP;
++		break;
++	case XFS_RMAP_UNMAP_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP_SHARED;
++		break;
++	case XFS_RMAP_CONVERT:
++		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT;
++		break;
++	case XFS_RMAP_CONVERT_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT_SHARED;
++		break;
++	case XFS_RMAP_ALLOC:
++		rmap->me_flags |= XFS_RMAP_EXTENT_ALLOC;
++		break;
++	case XFS_RMAP_FREE:
++		rmap->me_flags |= XFS_RMAP_EXTENT_FREE;
++		break;
++	default:
++		ASSERT(0);
++	}
++}
++
++/*
++ * Finish an rmap update and log it to the RUD. Note that the transaction is
++ * marked dirty regardless of whether the rmap update succeeds or fails to
++ * support the RUI/RUD lifecycle rules.
++ */
++static int
++xfs_trans_log_finish_rmap_update(
++	struct xfs_trans		*tp,
++	struct xfs_rud_log_item		*rudp,
++	enum xfs_rmap_intent_type	type,
++	uint64_t			owner,
++	int				whichfork,
++	xfs_fileoff_t			startoff,
++	xfs_fsblock_t			startblock,
++	xfs_filblks_t			blockcount,
++	xfs_exntst_t			state,
++	struct xfs_btree_cur		**pcur)
++{
++	int				error;
++
++	error = xfs_rmap_finish_one(tp, type, owner, whichfork, startoff,
++			startblock, blockcount, state, pcur);
++
++	/*
++	 * Mark the transaction dirty, even on error. This ensures the
++	 * transaction is aborted, which:
++	 *
++	 * 1.) releases the RUI and frees the RUD
++	 * 2.) shuts down the filesystem
++	 */
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	set_bit(XFS_LI_DIRTY, &rudp->rud_item.li_flags);
++
++	return error;
++}
++
++/* Sort rmap intents by AG. */
++static int
++xfs_rmap_update_diff_items(
++	void				*priv,
++	struct list_head		*a,
++	struct list_head		*b)
++{
++	struct xfs_mount		*mp = priv;
++	struct xfs_rmap_intent		*ra;
++	struct xfs_rmap_intent		*rb;
++
++	ra = container_of(a, struct xfs_rmap_intent, ri_list);
++	rb = container_of(b, struct xfs_rmap_intent, ri_list);
++	return  XFS_FSB_TO_AGNO(mp, ra->ri_bmap.br_startblock) -
++		XFS_FSB_TO_AGNO(mp, rb->ri_bmap.br_startblock);
++}
++
++/* Get an RUI. */
++STATIC void *
++xfs_rmap_update_create_intent(
++	struct xfs_trans		*tp,
++	unsigned int			count)
++{
++	struct xfs_rui_log_item		*ruip;
++
++	ASSERT(tp != NULL);
++	ASSERT(count > 0);
++
++	ruip = xfs_rui_init(tp->t_mountp, count);
++	ASSERT(ruip != NULL);
++
++	/*
++	 * Get a log_item_desc to point at the new item.
++	 */
++	xfs_trans_add_item(tp, &ruip->rui_item);
++	return ruip;
++}
++
++/* Log rmap updates in the intent item. */
++STATIC void
++xfs_rmap_update_log_item(
++	struct xfs_trans		*tp,
++	void				*intent,
++	struct list_head		*item)
++{
++	struct xfs_rui_log_item		*ruip = intent;
++	struct xfs_rmap_intent		*rmap;
++	uint				next_extent;
++	struct xfs_map_extent		*map;
++
++	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
++
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	set_bit(XFS_LI_DIRTY, &ruip->rui_item.li_flags);
++
++	/*
++	 * atomic_inc_return gives us the value after the increment;
++	 * we want to use it as an array index so we need to subtract 1 from
++	 * it.
++	 */
++	next_extent = atomic_inc_return(&ruip->rui_next_extent) - 1;
++	ASSERT(next_extent < ruip->rui_format.rui_nextents);
++	map = &ruip->rui_format.rui_extents[next_extent];
++	map->me_owner = rmap->ri_owner;
++	map->me_startblock = rmap->ri_bmap.br_startblock;
++	map->me_startoff = rmap->ri_bmap.br_startoff;
++	map->me_len = rmap->ri_bmap.br_blockcount;
++	xfs_trans_set_rmap_flags(map, rmap->ri_type, rmap->ri_whichfork,
++			rmap->ri_bmap.br_state);
++}
++
++/* Get an RUD so we can process all the deferred rmap updates. */
++STATIC void *
++xfs_rmap_update_create_done(
++	struct xfs_trans		*tp,
++	void				*intent,
++	unsigned int			count)
++{
++	return xfs_trans_get_rud(tp, intent);
++}
++
++/* Process a deferred rmap update. */
++STATIC int
++xfs_rmap_update_finish_item(
++	struct xfs_trans		*tp,
++	struct list_head		*item,
++	void				*done_item,
++	void				**state)
++{
++	struct xfs_rmap_intent		*rmap;
++	int				error;
++
++	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
++	error = xfs_trans_log_finish_rmap_update(tp, done_item,
++			rmap->ri_type,
++			rmap->ri_owner, rmap->ri_whichfork,
++			rmap->ri_bmap.br_startoff,
++			rmap->ri_bmap.br_startblock,
++			rmap->ri_bmap.br_blockcount,
++			rmap->ri_bmap.br_state,
++			(struct xfs_btree_cur **)state);
++	kmem_free(rmap);
++	return error;
++}
++
++/* Clean up after processing deferred rmaps. */
++STATIC void
++xfs_rmap_update_finish_cleanup(
++	struct xfs_trans	*tp,
++	void			*state,
++	int			error)
++{
++	struct xfs_btree_cur	*rcur = state;
++
++	xfs_rmap_finish_one_cleanup(tp, rcur, error);
++}
++
++/* Abort all pending RUIs. */
++STATIC void
++xfs_rmap_update_abort_intent(
++	void				*intent)
++{
++	xfs_rui_release(intent);
++}
++
++/* Cancel a deferred rmap update. */
++STATIC void
++xfs_rmap_update_cancel_item(
++	struct list_head		*item)
++{
++	struct xfs_rmap_intent		*rmap;
++
++	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
++	kmem_free(rmap);
++}
++
++const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
++	.max_items	= XFS_RUI_MAX_FAST_EXTENTS,
++	.diff_items	= xfs_rmap_update_diff_items,
++	.create_intent	= xfs_rmap_update_create_intent,
++	.abort_intent	= xfs_rmap_update_abort_intent,
++	.log_item	= xfs_rmap_update_log_item,
++	.create_done	= xfs_rmap_update_create_done,
++	.finish_item	= xfs_rmap_update_finish_item,
++	.finish_cleanup = xfs_rmap_update_finish_cleanup,
++	.cancel_item	= xfs_rmap_update_cancel_item,
++};
++
+ /*
+  * Process an rmap update intent item that was recovered from the log.
+  * We need to update the rmapbt.
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 1fe910d6da82..bb411d8c41cf 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -244,17 +244,6 @@ void		xfs_trans_buf_copy_type(struct xfs_buf *dst_bp,
+ 
+ extern kmem_zone_t	*xfs_trans_zone;
+ 
+-/* rmap updates */
+-enum xfs_rmap_intent_type;
+-
+-struct xfs_rud_log_item *xfs_trans_get_rud(struct xfs_trans *tp,
+-		struct xfs_rui_log_item *ruip);
+-int xfs_trans_log_finish_rmap_update(struct xfs_trans *tp,
+-		struct xfs_rud_log_item *rudp, enum xfs_rmap_intent_type type,
+-		uint64_t owner, int whichfork, xfs_fileoff_t startoff,
+-		xfs_fsblock_t startblock, xfs_filblks_t blockcount,
+-		xfs_exntst_t state, struct xfs_btree_cur **pcur);
+-
+ /* mapping updates */
+ enum xfs_bmap_intent_type;
+ 
+diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
+deleted file mode 100644
+index 863e3281daaa..000000000000
+--- a/fs/xfs/xfs_trans_rmap.c
++++ /dev/null
+@@ -1,245 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0+
+-/*
+- * Copyright (C) 2016 Oracle.  All Rights Reserved.
+- * Author: Darrick J. Wong <darrick.wong@oracle.com>
+- */
+-#include "xfs.h"
+-#include "xfs_fs.h"
+-#include "xfs_shared.h"
+-#include "xfs_format.h"
+-#include "xfs_log_format.h"
+-#include "xfs_trans_resv.h"
+-#include "xfs_mount.h"
+-#include "xfs_defer.h"
+-#include "xfs_trans.h"
+-#include "xfs_trans_priv.h"
+-#include "xfs_rmap_item.h"
+-#include "xfs_alloc.h"
+-#include "xfs_rmap.h"
+-
+-/* Set the map extent flags for this reverse mapping. */
+-static void
+-xfs_trans_set_rmap_flags(
+-	struct xfs_map_extent		*rmap,
+-	enum xfs_rmap_intent_type	type,
+-	int				whichfork,
+-	xfs_exntst_t			state)
+-{
+-	rmap->me_flags = 0;
+-	if (state == XFS_EXT_UNWRITTEN)
+-		rmap->me_flags |= XFS_RMAP_EXTENT_UNWRITTEN;
+-	if (whichfork == XFS_ATTR_FORK)
+-		rmap->me_flags |= XFS_RMAP_EXTENT_ATTR_FORK;
+-	switch (type) {
+-	case XFS_RMAP_MAP:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_MAP;
+-		break;
+-	case XFS_RMAP_MAP_SHARED:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_MAP_SHARED;
+-		break;
+-	case XFS_RMAP_UNMAP:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP;
+-		break;
+-	case XFS_RMAP_UNMAP_SHARED:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP_SHARED;
+-		break;
+-	case XFS_RMAP_CONVERT:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT;
+-		break;
+-	case XFS_RMAP_CONVERT_SHARED:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT_SHARED;
+-		break;
+-	case XFS_RMAP_ALLOC:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_ALLOC;
+-		break;
+-	case XFS_RMAP_FREE:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_FREE;
+-		break;
+-	default:
+-		ASSERT(0);
+-	}
+-}
+-
+-/*
+- * Finish an rmap update and log it to the RUD. Note that the transaction is
+- * marked dirty regardless of whether the rmap update succeeds or fails to
+- * support the RUI/RUD lifecycle rules.
+- */
+-int
+-xfs_trans_log_finish_rmap_update(
+-	struct xfs_trans		*tp,
+-	struct xfs_rud_log_item		*rudp,
+-	enum xfs_rmap_intent_type	type,
+-	uint64_t			owner,
+-	int				whichfork,
+-	xfs_fileoff_t			startoff,
+-	xfs_fsblock_t			startblock,
+-	xfs_filblks_t			blockcount,
+-	xfs_exntst_t			state,
+-	struct xfs_btree_cur		**pcur)
+-{
+-	int				error;
+-
+-	error = xfs_rmap_finish_one(tp, type, owner, whichfork, startoff,
+-			startblock, blockcount, state, pcur);
+-
+-	/*
+-	 * Mark the transaction dirty, even on error. This ensures the
+-	 * transaction is aborted, which:
+-	 *
+-	 * 1.) releases the RUI and frees the RUD
+-	 * 2.) shuts down the filesystem
+-	 */
+-	tp->t_flags |= XFS_TRANS_DIRTY;
+-	set_bit(XFS_LI_DIRTY, &rudp->rud_item.li_flags);
+-
+-	return error;
+-}
+-
+-/* Sort rmap intents by AG. */
+-static int
+-xfs_rmap_update_diff_items(
+-	void				*priv,
+-	struct list_head		*a,
+-	struct list_head		*b)
+-{
+-	struct xfs_mount		*mp = priv;
+-	struct xfs_rmap_intent		*ra;
+-	struct xfs_rmap_intent		*rb;
+-
+-	ra = container_of(a, struct xfs_rmap_intent, ri_list);
+-	rb = container_of(b, struct xfs_rmap_intent, ri_list);
+-	return  XFS_FSB_TO_AGNO(mp, ra->ri_bmap.br_startblock) -
+-		XFS_FSB_TO_AGNO(mp, rb->ri_bmap.br_startblock);
+-}
+-
+-/* Get an RUI. */
+-STATIC void *
+-xfs_rmap_update_create_intent(
+-	struct xfs_trans		*tp,
+-	unsigned int			count)
+-{
+-	struct xfs_rui_log_item		*ruip;
+-
+-	ASSERT(tp != NULL);
+-	ASSERT(count > 0);
+-
+-	ruip = xfs_rui_init(tp->t_mountp, count);
+-	ASSERT(ruip != NULL);
+-
+-	/*
+-	 * Get a log_item_desc to point at the new item.
+-	 */
+-	xfs_trans_add_item(tp, &ruip->rui_item);
+-	return ruip;
+-}
+-
+-/* Log rmap updates in the intent item. */
+-STATIC void
+-xfs_rmap_update_log_item(
+-	struct xfs_trans		*tp,
+-	void				*intent,
+-	struct list_head		*item)
+-{
+-	struct xfs_rui_log_item		*ruip = intent;
+-	struct xfs_rmap_intent		*rmap;
+-	uint				next_extent;
+-	struct xfs_map_extent		*map;
+-
+-	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
+-
+-	tp->t_flags |= XFS_TRANS_DIRTY;
+-	set_bit(XFS_LI_DIRTY, &ruip->rui_item.li_flags);
+-
+-	/*
+-	 * atomic_inc_return gives us the value after the increment;
+-	 * we want to use it as an array index so we need to subtract 1 from
+-	 * it.
+-	 */
+-	next_extent = atomic_inc_return(&ruip->rui_next_extent) - 1;
+-	ASSERT(next_extent < ruip->rui_format.rui_nextents);
+-	map = &ruip->rui_format.rui_extents[next_extent];
+-	map->me_owner = rmap->ri_owner;
+-	map->me_startblock = rmap->ri_bmap.br_startblock;
+-	map->me_startoff = rmap->ri_bmap.br_startoff;
+-	map->me_len = rmap->ri_bmap.br_blockcount;
+-	xfs_trans_set_rmap_flags(map, rmap->ri_type, rmap->ri_whichfork,
+-			rmap->ri_bmap.br_state);
+-}
+-
+-/* Get an RUD so we can process all the deferred rmap updates. */
+-STATIC void *
+-xfs_rmap_update_create_done(
+-	struct xfs_trans		*tp,
+-	void				*intent,
+-	unsigned int			count)
+-{
+-	return xfs_trans_get_rud(tp, intent);
+-}
+-
+-/* Process a deferred rmap update. */
+-STATIC int
+-xfs_rmap_update_finish_item(
+-	struct xfs_trans		*tp,
+-	struct list_head		*item,
+-	void				*done_item,
+-	void				**state)
+-{
+-	struct xfs_rmap_intent		*rmap;
+-	int				error;
+-
+-	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
+-	error = xfs_trans_log_finish_rmap_update(tp, done_item,
+-			rmap->ri_type,
+-			rmap->ri_owner, rmap->ri_whichfork,
+-			rmap->ri_bmap.br_startoff,
+-			rmap->ri_bmap.br_startblock,
+-			rmap->ri_bmap.br_blockcount,
+-			rmap->ri_bmap.br_state,
+-			(struct xfs_btree_cur **)state);
+-	kmem_free(rmap);
+-	return error;
+-}
+-
+-/* Clean up after processing deferred rmaps. */
+-STATIC void
+-xfs_rmap_update_finish_cleanup(
+-	struct xfs_trans	*tp,
+-	void			*state,
+-	int			error)
+-{
+-	struct xfs_btree_cur	*rcur = state;
+-
+-	xfs_rmap_finish_one_cleanup(tp, rcur, error);
+-}
+-
+-/* Abort all pending RUIs. */
+-STATIC void
+-xfs_rmap_update_abort_intent(
+-	void				*intent)
+-{
+-	xfs_rui_release(intent);
+-}
+-
+-/* Cancel a deferred rmap update. */
+-STATIC void
+-xfs_rmap_update_cancel_item(
+-	struct list_head		*item)
+-{
+-	struct xfs_rmap_intent		*rmap;
+-
+-	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
+-	kmem_free(rmap);
+-}
+-
+-const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
+-	.max_items	= XFS_RUI_MAX_FAST_EXTENTS,
+-	.diff_items	= xfs_rmap_update_diff_items,
+-	.create_intent	= xfs_rmap_update_create_intent,
+-	.abort_intent	= xfs_rmap_update_abort_intent,
+-	.log_item	= xfs_rmap_update_log_item,
+-	.create_done	= xfs_rmap_update_create_done,
+-	.finish_item	= xfs_rmap_update_finish_item,
+-	.finish_cleanup = xfs_rmap_update_finish_cleanup,
+-	.cancel_item	= xfs_rmap_update_cancel_item,
+-};
+-- 
+2.20.1
