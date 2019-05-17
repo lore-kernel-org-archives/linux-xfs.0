@@ -1,134 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:55564 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726519AbfEQW4m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 18:56:42 -0400
-Subject: Re: [PATCH 6/3] libxfs: factor common xfs_trans_bjoin code
-References: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
- <3a54f934-5651-d709-1503-b583f9e044e9@redhat.com>
-From: Allison Collins <allison.henderson@oracle.com>
-Message-ID: <99ee81de-e180-8565-5b45-de4a98b86b19@oracle.com>
-Date: Fri, 17 May 2019 15:56:11 -0700
+Received: from szxga07-in.huawei.com ([45.249.212.35]:44632 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728374AbfEQM6f (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 May 2019 08:58:35 -0400
+Subject: Re: Question about commit b450672fb66b ("iomap: sub-block dio needs
+ to zeroout beyond EOF")
+References: <8b1ba3a1-7ecc-6e1f-c944-26a51baa9747@huawei.com>
+ <20190517065943.GC29573@dread.disaster.area>
+From: Hou Tao <houtao1@huawei.com>
+Message-ID: <e754939d-5ed7-b7b8-e3b7-c34b80f64b60@huawei.com>
+Date: Fri, 17 May 2019 20:56:35 +0800
 MIME-Version: 1.0
-In-Reply-To: <3a54f934-5651-d709-1503-b583f9e044e9@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20190517065943.GC29573@dread.disaster.area>
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On 5/16/19 1:39 PM, Eric Sandeen wrote:
-> Most of xfs_trans_bjoin is duplicated in xfs_trans_get_buf_map,
-> xfs_trans_getsb and xfs_trans_read_buf_map.  Add a new
-> _xfs_trans_bjoin which can be called by all three functions.
-> 
-> Source kernel commit: d7e84f413726876c0ec66bbf90770f69841f7663
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Alex Elder <aelder@sgi.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Hi,
 
-Looks ok to me
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
-
-> ---
->   libxfs/trans.c | 53 +++++++++++++++++++++++++++++++++++++-------------
->   1 file changed, 39 insertions(+), 14 deletions(-)
+On 2019/5/17 14:59, Dave Chinner wrote:
+> On Fri, May 17, 2019 at 10:41:44AM +0800, Hou Tao wrote:
+>> Hi,
+>>
+>> I don't understand why the commit b450672fb66b ("iomap: sub-block dio needs to zeroout beyond EOF") is needed here:
+>>
+>> diff --git a/fs/iomap.c b/fs/iomap.c
+>> index 72f3864a2e6b..77c214194edf 100644
+>> --- a/fs/iomap.c
+>> +++ b/fs/iomap.c
+>> @@ -1677,7 +1677,14 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+>>                 dio->submit.cookie = submit_bio(bio);
+>>         } while (nr_pages);
+>>
+>> -       if (need_zeroout) {
+>> +       /*
+>> +        * We need to zeroout the tail of a sub-block write if the extent type
+>> +        * requires zeroing or the write extends beyond EOF. If we don't zero
+>> +        * the block tail in the latter case, we can expose stale data via mmap
+>> +        * reads of the EOF block.
+>> +        */
+>> +       if (need_zeroout ||
+>> +           ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
+>>                 /* zero out from the end of the write to the end of the block */
+>>                 pad = pos & (fs_block_size - 1);
+>>                 if (pad)
+>>
+>> If need_zeroout is false, it means the block neither is a unwritten block nor
+>> a newly-mapped block, but that also means the block must had been a unwritten block
+>> or a newly-mapped block before this write, so the block must have been zeroed, correct ?
 > 
-> diff --git a/libxfs/trans.c b/libxfs/trans.c
-> index f3c28fa7..f78222fd 100644
-> --- a/libxfs/trans.c
-> +++ b/libxfs/trans.c
-> @@ -537,19 +537,50 @@ xfs_trans_binval(
->   	tp->t_flags |= XFS_TRANS_DIRTY;
->   }
->   
-> -void
-> -xfs_trans_bjoin(
-> -	xfs_trans_t		*tp,
-> -	xfs_buf_t		*bp)
-> +/*
-> + * Add the locked buffer to the transaction.
-> + *
-> + * The buffer must be locked, and it cannot be associated with any
-> + * transaction.
-> + *
-> + * If the buffer does not yet have a buf log item associated with it,
-> + * then allocate one for it.  Then add the buf item to the transaction.
-> + */
-> +STATIC void
-> +_xfs_trans_bjoin(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_buf		*bp,
-> +	int			reset_recur)
->   {
-> -	xfs_buf_log_item_t	*bip;
-> +	struct xfs_buf_log_item	*bip;
->   
->   	ASSERT(bp->b_transp == NULL);
->   
-> +        /*
-> +	 * The xfs_buf_log_item pointer is stored in b_log_item.  If
-> +	 * it doesn't have one yet, then allocate one and initialize it.
-> +	 * The checks to see if one is there are in xfs_buf_item_init().
-> +	 */
->   	xfs_buf_item_init(bp, tp->t_mountp);
->   	bip = bp->b_log_item;
-> +	if (reset_recur)
-> +		bip->bli_recur = 0;
-> +
-> +	/*
-> +	 * Attach the item to the transaction so we can find it in
-> +	 * xfs_trans_get_buf() and friends.
-> +	 */
->   	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
->   	bp->b_transp = tp;
-> +
-> +}
-> +
-> +void
-> +xfs_trans_bjoin(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_buf		*bp)
-> +{
-> +	_xfs_trans_bjoin(tp, bp, 0);
->   	trace_xfs_trans_bjoin(bp->b_log_item);
->   }
->   
-> @@ -594,9 +625,7 @@ xfs_trans_get_buf_map(
->   	if (bp == NULL)
->   		return NULL;
->   
-> -	xfs_trans_bjoin(tp, bp);
-> -	bip = bp->b_log_item;
-> -	bip->bli_recur = 0;
-> +	_xfs_trans_bjoin(tp, bp, 1);
->   	trace_xfs_trans_get_buf(bp->b_log_item);
->   	return bp;
->   }
-> @@ -626,9 +655,7 @@ xfs_trans_getsb(
->   
->   	bp = xfs_getsb(mp);
->   
-> -	xfs_trans_bjoin(tp, bp);
-> -	bip = bp->b_log_item;
-> -	bip->bli_recur = 0;
-> +	_xfs_trans_bjoin(tp, bp, 1);
->   	trace_xfs_trans_getsb(bp->b_log_item);
->   	return bp;
->   }
-> @@ -677,9 +704,7 @@ xfs_trans_read_buf_map(
->   	if (bp->b_error)
->   		goto out_relse;
->   
-> -	xfs_trans_bjoin(tp, bp);
-> -	bip = bp->b_log_item;
-> -	bip->bli_recur = 0;
-> +	_xfs_trans_bjoin(tp, bp, 1);
->   done:
->   	trace_xfs_trans_read_buf(bp->b_log_item);
->   	*bpp = bp;
+> No. One the contrary, it's a direct IO write to beyond the end of
+> the file which means the block has not been zeroed at all. If it is
+> an unwritten extent, it most definitely does not contain zeroes
+> (unwritten extents are a flag in the extent metadata, not zeroed
+> disk space) and so it doesn't matter it is written or unwritten we
+> must zero it before we update the file size.
+> 
+Ah, I still can not understand the reason why "the block has not been zeroed at all".
+Do you mean the scenario in which the past-EOF write tries to write an already mapped
+block and the past-EOF part of this block has not been zeroed ?
+
+Because if the past-EOF write tries to write to a new allocated block, then IOMAP_F_NEW
+must have been set in iomap->flags and need_zeroout will be true. If it tries to write
+to an unwritten block, need_zeroout will also be true.
+
+If it tries to write a block in which the past-EOF part has not been zeroed, even without
+the past-EOF direct write, the data exposure is still possible, right ?
+If not, could you please give a specific example on how this happens ? Thanks.
+
+Regards,
+Tao
+
+> Why? Because if we then mmap the page that spans EOF, whatever is on
+> disk beyond EOF is exposed to the user process. Hence if we don't
+> zero the tail of the block beyond EOF during DIO writes then we can
+> leak stale information to unprivileged users....
+> 
+> Cheers,
+> 
+> Dave.
 > 
