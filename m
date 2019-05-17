@@ -1,164 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37800 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:31525 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726985AbfEOUxJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 May 2019 16:53:09 -0400
-Subject: Re: [PATCH v9 2/7] virtio-pmem: Add virtio pmem driver
-From: David Hildenbrand <david@redhat.com>
-References: <20190514145422.16923-1-pagupta@redhat.com>
- <20190514145422.16923-3-pagupta@redhat.com>
- <9f6b1d8e-ef90-7d8b-56da-61a426953ba3@redhat.com>
-Message-ID: <1d6f6964-4653-ebf3-554f-666fda3779f1@redhat.com>
-Date: Wed, 15 May 2019 22:52:53 +0200
+        id S1728402AbfEQOG4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 May 2019 10:06:56 -0400
+Date: Fri, 17 May 2019 10:06:54 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 03/20] xfs: don't require log items to implement optional
+ methods
+Message-ID: <20190517140654.GC7888@bfoster>
+References: <20190517073119.30178-1-hch@lst.de>
+ <20190517073119.30178-4-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <9f6b1d8e-ef90-7d8b-56da-61a426953ba3@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190517073119.30178-4-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, mst@redhat.com
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, jstaron@google.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On 15.05.19 22:46, David Hildenbrand wrote:
->> +	vpmem->vdev = vdev;
->> +	vdev->priv = vpmem;
->> +	err = init_vq(vpmem);
->> +	if (err) {
->> +		dev_err(&vdev->dev, "failed to initialize virtio pmem vq's\n");
->> +		goto out_err;
->> +	}
->> +
->> +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
->> +			start, &vpmem->start);
->> +	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
->> +			size, &vpmem->size);
->> +
->> +	res.start = vpmem->start;
->> +	res.end   = vpmem->start + vpmem->size-1;
+On Fri, May 17, 2019 at 09:31:02AM +0200, Christoph Hellwig wrote:
+> Just check if they are present first.
 > 
-> nit: " - 1;"
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_bmap_item.c     | 104 -------------------------------------
+>  fs/xfs/xfs_buf_item.c      |   8 ---
+>  fs/xfs/xfs_dquot_item.c    |  98 ----------------------------------
+>  fs/xfs/xfs_extfree_item.c  | 104 -------------------------------------
+>  fs/xfs/xfs_icreate_item.c  |  28 ----------
+>  fs/xfs/xfs_log_cil.c       |   3 +-
+>  fs/xfs/xfs_refcount_item.c | 104 -------------------------------------
+>  fs/xfs/xfs_rmap_item.c     | 104 -------------------------------------
+>  fs/xfs/xfs_trans.c         |  21 +++++---
+>  fs/xfs/xfs_trans_ail.c     |   2 +
+>  10 files changed, 19 insertions(+), 557 deletions(-)
 > 
->> +	vpmem->nd_desc.provider_name = "virtio-pmem";
->> +	vpmem->nd_desc.module = THIS_MODULE;
->> +
->> +	vpmem->nvdimm_bus = nvdimm_bus_register(&vdev->dev,
->> +						&vpmem->nd_desc);
->> +	if (!vpmem->nvdimm_bus) {
->> +		dev_err(&vdev->dev, "failed to register device with nvdimm_bus\n");
->> +		err = -ENXIO;
->> +		goto out_vq;
->> +	}
->> +
->> +	dev_set_drvdata(&vdev->dev, vpmem->nvdimm_bus);
->> +
->> +	ndr_desc.res = &res;
->> +	ndr_desc.numa_node = nid;
->> +	ndr_desc.flush = async_pmem_flush;
->> +	set_bit(ND_REGION_PAGEMAP, &ndr_desc.flags);
->> +	set_bit(ND_REGION_ASYNC, &ndr_desc.flags);
->> +	nd_region = nvdimm_pmem_region_create(vpmem->nvdimm_bus, &ndr_desc);
->> +	if (!nd_region) {
->> +		dev_err(&vdev->dev, "failed to create nvdimm region\n");
->> +		err = -ENXIO;
->> +		goto out_nd;
->> +	}
->> +	nd_region->provider_data = dev_to_virtio(nd_region->dev.parent->parent);
->> +	return 0;
->> +out_nd:
->> +	nvdimm_bus_unregister(vpmem->nvdimm_bus);
->> +out_vq:
->> +	vdev->config->del_vqs(vdev);
->> +out_err:
->> +	return err;
->> +}
->> +
->> +static void virtio_pmem_remove(struct virtio_device *vdev)
->> +{
->> +	struct nvdimm_bus *nvdimm_bus = dev_get_drvdata(&vdev->dev);
->> +
->> +	nvdimm_bus_unregister(nvdimm_bus);
->> +	vdev->config->del_vqs(vdev);
->> +	vdev->config->reset(vdev);
->> +}
->> +
->> +static struct virtio_driver virtio_pmem_driver = {
->> +	.driver.name		= KBUILD_MODNAME,
->> +	.driver.owner		= THIS_MODULE,
->> +	.id_table		= id_table,
->> +	.probe			= virtio_pmem_probe,
->> +	.remove			= virtio_pmem_remove,
->> +};
->> +
->> +module_virtio_driver(virtio_pmem_driver);
->> +MODULE_DEVICE_TABLE(virtio, id_table);
->> +MODULE_DESCRIPTION("Virtio pmem driver");
->> +MODULE_LICENSE("GPL");
->> diff --git a/drivers/nvdimm/virtio_pmem.h b/drivers/nvdimm/virtio_pmem.h
->> new file mode 100644
->> index 000000000000..ab1da877575d
->> --- /dev/null
->> +++ b/drivers/nvdimm/virtio_pmem.h
->> @@ -0,0 +1,60 @@
->> +/* SPDX-License-Identifier: GPL-2.0 */
->> +/*
->> + * virtio_pmem.h: virtio pmem Driver
->> + *
->> + * Discovers persistent memory range information
->> + * from host and provides a virtio based flushing
->> + * interface.
->> + **/
->> +
->> +#ifndef _LINUX_VIRTIO_PMEM_H
->> +#define _LINUX_VIRTIO_PMEM_H
->> +
->> +#include <linux/virtio_ids.h>
->> +#include <linux/module.h>
->> +#include <linux/virtio_config.h>
->> +#include <uapi/linux/virtio_pmem.h>
->> +#include <linux/libnvdimm.h>
->> +#include <linux/spinlock.h>
->> +
->> +struct virtio_pmem_request {
->> +	/* Host return status corresponding to flush request */
->> +	int ret;
->> +
->> +	/* command name*/
->> +	char name[16];
-> 
-> So ... why are we sending string commands and expect native-endianess
-> integers and don't define a proper request/response structure + request
-> types in include/uapi/linux/virtio_pmem.h like
-> 
-> struct virtio_pmem_resp {
-> 	__virtio32 ret;
-> }
+> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> index ce45f066995e..8e57df6d5581 100644
+> --- a/fs/xfs/xfs_bmap_item.c
+> +++ b/fs/xfs/xfs_bmap_item.c
+...
+> @@ -122,21 +113,6 @@ xfs_bui_item_unpin(
+>  	xfs_bui_release(buip);
+>  }
+>  
+> -/*
+> - * BUI items have no locking or pushing.  However, since BUIs are pulled from
+> - * the AIL when their corresponding BUDs are committed to disk, their situation
+> - * is very similar to being pinned.  Return XFS_ITEM_PINNED so that the caller
+> - * will eventually flush the log.  This should help in getting the BUI out of
+> - * the AIL.
+> - */
+> -STATIC uint
+> -xfs_bui_item_push(
+> -	struct xfs_log_item	*lip,
+> -	struct list_head	*buffer_list)
+> -{
+> -	return XFS_ITEM_PINNED;
+> -}
+> -
 
-FWIW, I wonder if we should even properly translate return values and
-define types like
+Nice cleanup overall. This removes a ton of duplicated and boilerplate
+code. One thing I don't like is the loss of information around the use
+of XFS_ITEM_PINNED in all these ->iop_push() calls associated with
+intents. I'd almost rather see a generic xfs_intent_item_push() defined
+somewhere and wire that up to these various calls. Short of that, could
+we at least move some of the information from these comments to the push
+call in xfsaild_push_item()? For example....
 
-VIRTIO_PMEM_RESP_TYPE_OK	0
-VIRTIO_PMEM_RESP_TYPE_EIO	1
+>  /*
+>   * The BUI has been either committed or aborted if the transaction has been
+>   * cancelled. If the transaction was cancelled, an BUD isn't going to be
+...
+> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> index d3a4e89bf4a0..8509c4b59760 100644
+> --- a/fs/xfs/xfs_trans_ail.c
+> +++ b/fs/xfs/xfs_trans_ail.c
+> @@ -347,6 +347,8 @@ xfsaild_push_item(
+>  	if (XFS_TEST_ERROR(false, ailp->ail_mount, XFS_ERRTAG_LOG_ITEM_PIN))
+>  		return XFS_ITEM_PINNED;
+>  
 
-..
+/*
+ * Consider the item pinned if a push callback is not defined so the
+ * caller will force the log. This should only happen for intent items
+ * as they are unpinned once the associated done item is committed to
+ * the on-disk log.
+ */
 
+Otherwise this looks fine.
+
+Brian
+
+> +	if (!lip->li_ops->iop_push)
+> +		return XFS_ITEM_PINNED;
+>  	return lip->li_ops->iop_push(lip, &ailp->ail_buf_list);
+>  }
+>  
+> -- 
+> 2.20.1
 > 
-> #define VIRTIO_PMEM_REQ_TYPE_FLUSH	1
-> struct virtio_pmem_req {
-> 	__virtio16 type;
-> }
-> 
-> ... and this way we also define a proper endianess format for exchange
-> and keep it extensible
-> 
-> @MST, what's your take on this?
-> 
-> 
-
-
--- 
-
-Thanks,
-
-David / dhildenb
