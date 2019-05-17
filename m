@@ -1,38 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37760 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726336AbfEPRmq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 May 2019 13:42:46 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 41ADD83F3D
-        for <linux-xfs@vger.kernel.org>; Thu, 16 May 2019 17:42:46 +0000 (UTC)
-Received: from Liberator-6.local (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 037E65D6A9
-        for <linux-xfs@vger.kernel.org>; Thu, 16 May 2019 17:42:45 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 0/3] xfsprogs: more libxfs/ spring cleaning
-Message-ID: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
-Date: Thu, 16 May 2019 12:42:45 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:44094 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728143AbfEQHcc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:32 -0400
+Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hRXLz-0000le-00
+        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:31 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 09/20] xfs: don't cast inode_log_items to get the log_item
+Date: Fri, 17 May 2019 09:31:08 +0200
+Message-Id: <20190517073119.30178-10-hch@lst.de>
+In-Reply-To: <20190517073119.30178-1-hch@lst.de>
+References: <20190517073119.30178-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-It wasn't super clear before - my goal here is to keep reducing
-cosmetic differences between kernelspace & userspace libxfs/*
-files and functions.
+The cast is not type safe, and we can just dereference the first
+member instead to start with.
 
-To that end, 3 more patches ... the first one may requires someone
-who groks the libxfs_* API namespace picture (looking at you, Dave!)
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_inode.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-(this abandons the "make new files" patches I sent before, at least
-for now, I'll heed dave's advice to minimize moves...)
-
-Thanks,
--Eric
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 71d216cf6f87..419eae485ff3 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -485,7 +485,7 @@ xfs_lock_inodes(
+ 		 */
+ 		if (!try_lock) {
+ 			for (j = (i - 1); j >= 0 && !try_lock; j--) {
+-				lp = (xfs_log_item_t *)ips[j]->i_itemp;
++				lp = &ips[j]->i_itemp->ili_item;
+ 				if (lp && test_bit(XFS_LI_IN_AIL, &lp->li_flags))
+ 					try_lock++;
+ 			}
+@@ -585,7 +585,7 @@ xfs_lock_two_inodes(
+ 	 * the second lock. If we can't get it, we must release the first one
+ 	 * and try again.
+ 	 */
+-	lp = (xfs_log_item_t *)ip0->i_itemp;
++	lp = &ip0->i_itemp->ili_item;
+ 	if (lp && test_bit(XFS_LI_IN_AIL, &lp->li_flags)) {
+ 		if (!xfs_ilock_nowait(ip1, xfs_lock_inumorder(ip1_mode, 1))) {
+ 			xfs_iunlock(ip0, ip0_mode);
+-- 
+2.20.1
