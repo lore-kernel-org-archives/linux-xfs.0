@@ -1,152 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47592 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725810AbfETWIx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 18:08:53 -0400
-Date: Mon, 20 May 2019 15:08:44 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/20] xfs: stop using XFS_LI_ABORTED as a parameter flag
-Message-ID: <20190520220844.GD5335@magnolia>
-References: <20190517073119.30178-1-hch@lst.de>
- <20190517073119.30178-3-hch@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:41532 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726200AbfEQXvI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 19:51:08 -0400
+Subject: Re: [PATCH 8/3] xfs: factor log item initialisation
+References: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
+ <31991357-c836-6a50-4203-dae25c051def@redhat.com>
+From: Allison Collins <allison.henderson@oracle.com>
+Message-ID: <d1ea0ec3-cf18-9f68-c5ab-e575e2cac914@oracle.com>
+Date: Fri, 17 May 2019 16:50:48 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190517073119.30178-3-hch@lst.de>
+In-Reply-To: <31991357-c836-6a50-4203-dae25c051def@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, May 17, 2019 at 09:31:01AM +0200, Christoph Hellwig wrote:
-> Just pass a straight bool aborted instead of abusing XFS_LI_ABORTED as a
-> flag in function parameters.
+On 5/16/19 1:41 PM, Eric Sandeen wrote:
+> Each log item type does manual initialisation of the log item.
+> Delayed logging introduces new fields that need initialisation, so
+> factor all the open coded initialisation into a common function
+> first.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Source kernel commit: 43f5efc5b59db1b66e39fe9fdfc4ba6a27152afa
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+Looks good to me.
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+
 > ---
->  fs/xfs/xfs_log.c     | 25 +++++++++++--------------
->  fs/xfs/xfs_log.h     |  2 +-
->  fs/xfs/xfs_log_cil.c |  4 ++--
->  3 files changed, 14 insertions(+), 17 deletions(-)
+>   libxfs/libxfs_priv.h |  1 +
+>   libxfs/logitem.c     |  8 ++------
+>   libxfs/util.c        | 12 ++++++++++++
+>   3 files changed, 15 insertions(+), 6 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 457ced3ee3e1..1eb0938165fc 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -54,12 +54,9 @@ xlog_dealloc_log(
->  	struct xlog		*log);
->  
->  /* local state machine functions */
-> -STATIC void xlog_state_done_syncing(xlog_in_core_t *iclog, int);
-> -STATIC void
-> -xlog_state_do_callback(
-> -	struct xlog		*log,
-> -	int			aborted,
-> -	struct xlog_in_core	*iclog);
-> +STATIC void xlog_state_done_syncing(
-> +	struct xlog_in_core	*iclog,
-> +	bool			aborted);
-
-I totally mistook this for a function definition. :/
-
-STATIC void xlog_state_done_syncing(struct xlog_in_core *iclog, bool aborted);
-
-...seems to fit on one line, right?
-
---D
-
->  STATIC int
->  xlog_state_get_iclog_space(
->  	struct xlog		*log,
-> @@ -1255,7 +1252,7 @@ xlog_iodone(xfs_buf_t *bp)
->  {
->  	struct xlog_in_core	*iclog = bp->b_log_item;
->  	struct xlog		*l = iclog->ic_log;
-> -	int			aborted = 0;
-> +	bool			aborted = false;
->  
->  	/*
->  	 * Race to shutdown the filesystem if we see an error or the iclog is in
-> @@ -1275,9 +1272,9 @@ xlog_iodone(xfs_buf_t *bp)
->  		 * callback routines to let them know that the log-commit
->  		 * didn't succeed.
->  		 */
-> -		aborted = XFS_LI_ABORTED;
-> +		aborted = true;
->  	} else if (iclog->ic_state & XLOG_STATE_IOERROR) {
-> -		aborted = XFS_LI_ABORTED;
-> +		aborted = true;
->  	}
->  
->  	/* log I/O is always issued ASYNC */
-> @@ -2697,7 +2694,7 @@ xlog_get_lowest_lsn(
->  STATIC void
->  xlog_state_do_callback(
->  	struct xlog		*log,
-> -	int			aborted,
-> +	bool			aborted,
->  	struct xlog_in_core	*ciclog)
->  {
->  	xlog_in_core_t	   *iclog;
-> @@ -2936,10 +2933,10 @@ xlog_state_do_callback(
->   */
->  STATIC void
->  xlog_state_done_syncing(
-> -	xlog_in_core_t	*iclog,
-> -	int		aborted)
-> +	struct xlog_in_core	*iclog,
-> +	bool			aborted)
->  {
-> -	struct xlog	   *log = iclog->ic_log;
-> +	struct xlog		*log = iclog->ic_log;
->  
->  	spin_lock(&log->l_icloglock);
->  
-> @@ -4026,7 +4023,7 @@ xfs_log_force_umount(
->  	 * avoid races.
->  	 */
->  	wake_up_all(&log->l_cilp->xc_commit_wait);
-> -	xlog_state_do_callback(log, XFS_LI_ABORTED, NULL);
-> +	xlog_state_do_callback(log, true, NULL);
->  
->  #ifdef XFSERRORDEBUG
->  	{
-> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-> index 73a64bf32f6f..4450a2a26a1a 100644
-> --- a/fs/xfs/xfs_log.h
-> +++ b/fs/xfs/xfs_log.h
-> @@ -77,7 +77,7 @@ xlog_copy_iovec(struct xfs_log_vec *lv, struct xfs_log_iovec **vecp,
->   */
->  typedef struct xfs_log_callback {
->  	struct xfs_log_callback	*cb_next;
-> -	void			(*cb_func)(void *, int);
-> +	void			(*cb_func)(void *, bool);
->  	void			*cb_arg;
->  } xfs_log_callback_t;
->  
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 5e595948bc5a..1b54002d3874 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -577,7 +577,7 @@ xlog_discard_busy_extents(
->  static void
->  xlog_cil_committed(
->  	void	*args,
-> -	int	abort)
-> +	bool	abort)
->  {
->  	struct xfs_cil_ctx	*ctx = args;
->  	struct xfs_mount	*mp = ctx->cil->xc_log->l_mp;
-> @@ -864,7 +864,7 @@ xlog_cil_push(
->  out_abort_free_ticket:
->  	xfs_log_ticket_put(tic);
->  out_abort:
-> -	xlog_cil_committed(ctx, XFS_LI_ABORTED);
-> +	xlog_cil_committed(ctx, true);
->  	return -EIO;
->  }
->  
-> -- 
-> 2.20.1
+> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+> index 157a99d6..7551ed65 100644
+> --- a/libxfs/libxfs_priv.h
+> +++ b/libxfs/libxfs_priv.h
+> @@ -564,6 +564,7 @@ int xfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
+>   
+>   
+>   bool xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
+> +void xfs_log_item_init(struct xfs_mount *, struct xfs_log_item *, int);
+>   #define xfs_log_in_recovery(mp)	(false)
+>   
+>   /* xfs_icache.c */
+> diff --git a/libxfs/logitem.c b/libxfs/logitem.c
+> index e862ab4f..14c62f67 100644
+> --- a/libxfs/logitem.c
+> +++ b/libxfs/logitem.c
+> @@ -103,9 +103,7 @@ xfs_buf_item_init(
+>   	fprintf(stderr, "adding buf item %p for not-logged buffer %p\n",
+>   		bip, bp);
+>   #endif
+> -	bip->bli_item.li_type = XFS_LI_BUF;
+> -	bip->bli_item.li_mountp = mp;
+> -	INIT_LIST_HEAD(&bip->bli_item.li_trans);
+> +	xfs_log_item_init(mp, &bip->bli_item, XFS_LI_BUF);
+>   	bip->bli_buf = bp;
+>   	bip->__bli_format.blf_type = XFS_LI_BUF;
+>   	bip->__bli_format.blf_blkno = (int64_t)XFS_BUF_ADDR(bp);
+> @@ -149,8 +147,6 @@ xfs_inode_item_init(
+>   		ip->i_ino, iip);
+>   #endif
+>   
+> -	iip->ili_item.li_type = XFS_LI_INODE;
+> -	iip->ili_item.li_mountp = mp;
+> -	INIT_LIST_HEAD(&iip->ili_item.li_trans);
+> +	xfs_log_item_init(mp, &iip->ili_item, XFS_LI_INODE);
+>   	iip->ili_inode = ip;
+>   }
+> diff --git a/libxfs/util.c b/libxfs/util.c
+> index 4901123a..aff91080 100644
+> --- a/libxfs/util.c
+> +++ b/libxfs/util.c
+> @@ -691,6 +691,18 @@ xfs_log_check_lsn(
+>   	return true;
+>   }
+>   
+> +void
+> +xfs_log_item_init(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_log_item	*item,
+> +	int			type)
+> +{
+> +	item->li_mountp = mp;
+> +	item->li_type = type;
+> +
+> +	INIT_LIST_HEAD(&item->li_trans);
+> +}
+> +
+>   static struct xfs_buftarg *
+>   xfs_find_bdev_for_inode(
+>   	struct xfs_inode	*ip)
 > 
