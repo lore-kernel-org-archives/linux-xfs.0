@@ -1,150 +1,333 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59828 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729043AbfEQOI4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 May 2019 10:08:56 -0400
-Date: Fri, 17 May 2019 10:08:53 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 06/20] xfs: don't use xfs_trans_free_items in the commit
- path
-Message-ID: <20190517140853.GF7888@bfoster>
-References: <20190517073119.30178-1-hch@lst.de>
- <20190517073119.30178-7-hch@lst.de>
+Received: from aserp2130.oracle.com ([141.146.126.79]:35942 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726960AbfEQVhP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 17:37:15 -0400
+Subject: Re: [PATCH 4/3] libxfs: Remove XACT_DEBUG #ifdefs
+References: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
+ <0266b879-a0a6-2788-72c2-d3fd94e755e1@redhat.com>
+From: Allison Collins <allison.henderson@oracle.com>
+Message-ID: <0b4b7122-82fd-d2e6-c4b2-4d920a653c5d@oracle.com>
+Date: Fri, 17 May 2019 14:36:49 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190517073119.30178-7-hch@lst.de>
+In-Reply-To: <0266b879-a0a6-2788-72c2-d3fd94e755e1@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, May 17, 2019 at 09:31:05AM +0200, Christoph Hellwig wrote:
-> While commiting items looks very similar to freeing them on error it is
-> a different operation, and they will diverge a bit soon.
+On 5/16/19 1:38 PM, Eric Sandeen wrote:
+> Remove XACT_DEBUG #ifdefs to reduce more cosmetic differences
+> between userspace & kernelspace libxfs.  Add in some corresponding
+> (stubbed-out) tracepoint calls.
 > 
-> Split out the commit case from xfs_trans_free_items, inline it into
-> xfs_log_commit_cil and give it a separate trace point.
+> If these are felt to be particularly useful, the tracepoint calls
+> could be fleshed out to provide similar information.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+Looks ok.  It seems a shame to loose the extra tracing, but I confess 
+most of the time when I'm chasing a particular bug I end up adding my 
+own temporary traces anyway.  So I think trying to synchronize the code 
+spaces is more important.  Do you think the stubs might be something to 
+add to the kernel space side too?
+
+Allison
+
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_log_cil.c    | 13 ++++++++++---
->  fs/xfs/xfs_trace.h      |  1 +
->  fs/xfs/xfs_trans.c      | 10 +++-------
->  fs/xfs/xfs_trans_priv.h |  2 --
->  4 files changed, 14 insertions(+), 12 deletions(-)
+>   include/xfs_trace.h | 13 +++++++
+>   libxfs/trans.c      | 85 ++++++++++++---------------------------------
+>   2 files changed, 35 insertions(+), 63 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 49f37905c7a7..c856bfce5bf2 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -985,6 +985,7 @@ xfs_log_commit_cil(
->  {
->  	struct xlog		*log = mp->m_log;
->  	struct xfs_cil		*cil = log->l_cilp;
-> +	struct xfs_log_item	*lip, *next;
->  	xfs_lsn_t		xc_commit_lsn;
->  
->  	/*
-> @@ -1009,7 +1010,7 @@ xfs_log_commit_cil(
->  
->  	/*
->  	 * Once all the items of the transaction have been copied to the CIL,
-> -	 * the items can be unlocked and freed.
-> +	 * the items can be unlocked and possibly freed.
->  	 *
->  	 * This needs to be done before we drop the CIL context lock because we
->  	 * have to update state in the log items and unlock them before they go
-> @@ -1018,8 +1019,14 @@ xfs_log_commit_cil(
->  	 * the log items. This affects (at least) processing of stale buffers,
->  	 * inodes and EFIs.
->  	 */
-> -	xfs_trans_free_items(tp, xc_commit_lsn, false);
+> diff --git a/include/xfs_trace.h b/include/xfs_trace.h
+> index 793ac56e..43720040 100644
+> --- a/include/xfs_trace.h
+> +++ b/include/xfs_trace.h
+> @@ -161,6 +161,19 @@
+>   #define trace_xfs_perag_get_tag(a,b,c,d) ((c) = (c))
+>   #define trace_xfs_perag_put(a,b,c,d)	((c) = (c))
+>   
+> +#define trace_xfs_trans_alloc(a,b)		((void) 0)
+> +#define trace_xfs_trans_cancel(a,b)		((void) 0)
+> +#define trace_xfs_trans_brelse(a)		((void) 0)
+> +#define trace_xfs_trans_binval(a)		((void) 0)
+> +#define trace_xfs_trans_bjoin(a)		((void) 0)
+> +#define trace_xfs_trans_bhold(a)		((void) 0)
+> +#define trace_xfs_trans_get_buf(a)		((void) 0)
+> +#define trace_xfs_trans_getsb_recur(a)		((void) 0)
+> +#define trace_xfs_trans_getsb(a)		((void) 0)
+> +#define trace_xfs_trans_read_buf_recur(a)	((void) 0)
+> +#define trace_xfs_trans_read_buf(a)		((void) 0)
+> +#define trace_xfs_trans_commit(a,b)		((void) 0)
+> +
+>   #define trace_xfs_defer_cancel(a,b)		((void) 0)
+>   #define trace_xfs_defer_pending_commit(a,b)	((void) 0)
+>   #define trace_xfs_defer_pending_abort(a,b)	((void) 0)
+> diff --git a/libxfs/trans.c b/libxfs/trans.c
+> index 9e49def0..6967a1de 100644
+> --- a/libxfs/trans.c
+> +++ b/libxfs/trans.c
+> @@ -18,6 +18,7 @@
+>   #include "xfs_trans.h"
+>   #include "xfs_sb.h"
+>   #include "xfs_defer.h"
+> +#include "xfs_trace.h"
+>   
+>   static void xfs_trans_free_items(struct xfs_trans *tp);
+>   STATIC struct xfs_trans *xfs_trans_dup(struct xfs_trans *tp);
+> @@ -269,9 +270,9 @@ xfs_trans_alloc(
+>   		xfs_trans_cancel(tp);
+>   		return error;
+>   	}
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "allocated new transaction %p\n", tp);
+> -#endif
+> +
+> +	trace_xfs_trans_alloc(tp, _RET_IP_);
+> +
+>   	*tpp = tp;
+>   	return 0;
+>   }
+> @@ -317,23 +318,16 @@ void
+>   xfs_trans_cancel(
+>   	struct xfs_trans	*tp)
+>   {
+> -#ifdef XACT_DEBUG
+> -	struct xfs_trans	*otp = tp;
+> -#endif
+> +	trace_xfs_trans_cancel(tp, _RET_IP_);
+> +
+>   	if (tp == NULL)
+> -		goto out;
+> +		return;
+>   
+>   	if (tp->t_flags & XFS_TRANS_PERM_LOG_RES)
+>   		xfs_defer_cancel(tp);
+>   
+>   	xfs_trans_free_items(tp);
+>   	xfs_trans_free(tp);
 > -
-> +	trace_xfs_trans_commit_items(tp, _RET_IP_);
-> +	list_for_each_entry_safe(lip, next, &tp->t_items, li_trans) {
-> +		xfs_trans_del_item(lip);
-> +		if (lip->li_ops->iop_committing)
-> +			lip->li_ops->iop_committing(lip, xc_commit_lsn);
-> +		if (lip->li_ops->iop_unlock)
-> +			lip->li_ops->iop_unlock(lip);
-> +	}
->  	xlog_cil_push_background(log);
->  
->  	up_read(&cil->xc_ctx_lock);
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 2464ea351f83..195a9cdb954e 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3360,6 +3360,7 @@ DEFINE_TRANS_EVENT(xfs_trans_dup);
->  DEFINE_TRANS_EVENT(xfs_trans_free);
->  DEFINE_TRANS_EVENT(xfs_trans_roll);
->  DEFINE_TRANS_EVENT(xfs_trans_add_item);
-> +DEFINE_TRANS_EVENT(xfs_trans_commit_items);
->  DEFINE_TRANS_EVENT(xfs_trans_free_items);
->  
->  TRACE_EVENT(xfs_iunlink_update_bucket,
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index ed7547b9f66b..4ed5d032b26f 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -767,10 +767,9 @@ xfs_trans_del_item(
->  }
->  
->  /* Detach and unlock all of the items in a transaction */
-> -void
-> +static void
->  xfs_trans_free_items(
->  	struct xfs_trans	*tp,
-> -	xfs_lsn_t		commit_lsn,
->  	bool			abort)
->  {
->  	struct xfs_log_item	*lip, *next;
-> @@ -779,9 +778,6 @@ xfs_trans_free_items(
->  
->  	list_for_each_entry_safe(lip, next, &tp->t_items, li_trans) {
->  		xfs_trans_del_item(lip);
-> -		if (commit_lsn != NULLCOMMITLSN &&
-> -		    lip->li_ops->iop_committing)
-> -			lip->li_ops->iop_committing(lip, commit_lsn);
->  		if (abort)
->  			set_bit(XFS_LI_ABORTED, &lip->li_flags);
->  
-> @@ -1007,7 +1003,7 @@ __xfs_trans_commit(
->  		tp->t_ticket = NULL;
->  	}
->  	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
-> -	xfs_trans_free_items(tp, NULLCOMMITLSN, !!error);
-> +	xfs_trans_free_items(tp, !!error);
->  	xfs_trans_free(tp);
->  
->  	XFS_STATS_INC(mp, xs_trans_empty);
-> @@ -1069,7 +1065,7 @@ xfs_trans_cancel(
->  	/* mark this thread as no longer being in a transaction */
->  	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
->  
-> -	xfs_trans_free_items(tp, NULLCOMMITLSN, dirty);
-> +	xfs_trans_free_items(tp, dirty);
->  	xfs_trans_free(tp);
->  }
->  
-> diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-> index 091eae9f4e74..bef1ebf933ed 100644
-> --- a/fs/xfs/xfs_trans_priv.h
-> +++ b/fs/xfs/xfs_trans_priv.h
-> @@ -16,8 +16,6 @@ struct xfs_log_vec;
->  void	xfs_trans_init(struct xfs_mount *);
->  void	xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
->  void	xfs_trans_del_item(struct xfs_log_item *);
-> -void	xfs_trans_free_items(struct xfs_trans *tp, xfs_lsn_t commit_lsn,
-> -				bool abort);
->  void	xfs_trans_unreserve_and_mod_sb(struct xfs_trans *tp);
->  
->  void	xfs_trans_committed_bulk(struct xfs_ail *ailp, struct xfs_log_vec *lv,
-> -- 
-> 2.20.1
+> -out:
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "## cancelled transaction %p\n", otp);
+> -#endif
+> -	return;
+>   }
+>   
+>   void
+> @@ -353,10 +347,6 @@ xfs_trans_ijoin(
+>   	iip->ili_lock_flags = lock_flags;
+>   
+>   	xfs_trans_add_item(tp, (xfs_log_item_t *)(iip));
+> -
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "ijoin'd inode %llu, transaction %p\n", ip->i_ino, tp);
+> -#endif
+>   }
+>   
+>   void
+> @@ -388,9 +378,6 @@ xfs_trans_log_inode(
+>   	uint			flags)
+>   {
+>   	ASSERT(ip->i_itemp != NULL);
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "dirtied inode %llu, transaction %p\n", ip->i_ino, tp);
+> -#endif
+>   
+>   	tp->t_flags |= XFS_TRANS_DIRTY;
+>   	set_bit(XFS_LI_DIRTY, &ip->i_itemp->ili_item.li_flags);
+> @@ -434,9 +421,6 @@ xfs_trans_dirty_buf(
+>   	ASSERT(bp->b_transp == tp);
+>   	ASSERT(bip != NULL);
+>   
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "dirtied buffer %p, transaction %p\n", bp, tp);
+> -#endif
+>   	tp->t_flags |= XFS_TRANS_DIRTY;
+>   	set_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
+>   }
+> @@ -501,15 +485,14 @@ xfs_trans_brelse(
+>   	xfs_buf_t		*bp)
+>   {
+>   	xfs_buf_log_item_t	*bip;
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "released buffer %p, transaction %p\n", bp, tp);
+> -#endif
+>   
+>   	if (tp == NULL) {
+>   		ASSERT(bp->b_transp == NULL);
+>   		libxfs_putbuf(bp);
+>   		return;
+>   	}
+> +
+> +	trace_xfs_trans_brelse(bip);
+>   	ASSERT(bp->b_transp == tp);
+>   	bip = bp->b_log_item;
+>   	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
+> @@ -536,13 +519,12 @@ xfs_trans_binval(
+>   	xfs_buf_t		*bp)
+>   {
+>   	xfs_buf_log_item_t	*bip = bp->b_log_item;
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "binval'd buffer %p, transaction %p\n", bp, tp);
+> -#endif
+>   
+>   	ASSERT(bp->b_transp == tp);
+>   	ASSERT(bip != NULL);
+>   
+> +	trace_xfs_trans_binval(bip);
+> +
+>   	if (bip->bli_flags & XFS_BLI_STALE)
+>   		return;
+>   	XFS_BUF_UNDELAYWRITE(bp);
+> @@ -563,14 +545,12 @@ xfs_trans_bjoin(
+>   	xfs_buf_log_item_t	*bip;
+>   
+>   	ASSERT(bp->b_transp == NULL);
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "bjoin'd buffer %p, transaction %p\n", bp, tp);
+> -#endif
+>   
+>   	xfs_buf_item_init(bp, tp->t_mountp);
+>   	bip = bp->b_log_item;
+>   	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
+>   	bp->b_transp = tp;
+> +	trace_xfs_trans_bjoin(bp->b_log_item);
+>   }
+>   
+>   void
+> @@ -582,11 +562,9 @@ xfs_trans_bhold(
+>   
+>   	ASSERT(bp->b_transp == tp);
+>   	ASSERT(bip != NULL);
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "bhold'd buffer %p, transaction %p\n", bp, tp);
+> -#endif
+>   
+>   	bip->bli_flags |= XFS_BLI_HOLD;
+> +	trace_xfs_trans_bhold(bip);
+>   }
+>   
+>   xfs_buf_t *
+> @@ -615,13 +593,11 @@ xfs_trans_get_buf_map(
+>   	bp = libxfs_getbuf_map(btp, map, nmaps, 0);
+>   	if (bp == NULL)
+>   		return NULL;
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "trans_get_buf buffer %p, transaction %p\n", bp, tp);
+> -#endif
+>   
+>   	xfs_trans_bjoin(tp, bp);
+>   	bip = bp->b_log_item;
+>   	bip->bli_recur = 0;
+> +	trace_xfs_trans_get_buf(bp->b_log_item);
+>   	return bp;
+>   }
+>   
+> @@ -644,17 +620,16 @@ xfs_trans_getsb(
+>   		bip = bp->b_log_item;
+>   		ASSERT(bip != NULL);
+>   		bip->bli_recur++;
+> +		trace_xfs_trans_getsb_recur(bip);
+>   		return bp;
+>   	}
+>   
+>   	bp = xfs_getsb(mp);
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "trans_get_sb buffer %p, transaction %p\n", bp, tp);
+> -#endif
+>   
+>   	xfs_trans_bjoin(tp, bp);
+>   	bip = bp->b_log_item;
+>   	bip->bli_recur = 0;
+> +	trace_xfs_trans_getsb(bp->b_log_item);
+>   	return bp;
+>   }
+>   
+> @@ -691,6 +666,7 @@ xfs_trans_read_buf_map(
+>   		ASSERT(bp->b_log_item != NULL);
+>   		bip = bp->b_log_item;
+>   		bip->bli_recur++;
+> +		trace_xfs_trans_read_buf_recur(bip);
+>   		goto done;
+>   	}
+>   
+> @@ -701,14 +677,11 @@ xfs_trans_read_buf_map(
+>   	if (bp->b_error)
+>   		goto out_relse;
+>   
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "trans_read_buf buffer %p, transaction %p\n", bp, tp);
+> -#endif
+> -
+>   	xfs_trans_bjoin(tp, bp);
+>   	bip = bp->b_log_item;
+>   	bip->bli_recur = 0;
+>   done:
+> +	trace_xfs_trans_read_buf(bp->b_log_item);
+>   	*bpp = bp;
+>   	return 0;
+>   out_relse:
+> @@ -824,10 +797,6 @@ inode_item_done(
+>   	}
+>   
+>   	libxfs_writebuf(bp, 0);
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "flushing dirty inode %llu, buffer %p\n",
+> -			ip->i_ino, bp);
+> -#endif
+>   free:
+>   	xfs_inode_item_put(iip);
+>   }
+> @@ -845,13 +814,8 @@ buf_item_done(
+>   	bp->b_transp = NULL;			/* remove xact ptr */
+>   
+>   	hold = (bip->bli_flags & XFS_BLI_HOLD);
+> -	if (bip->bli_flags & XFS_BLI_DIRTY) {
+> -#ifdef XACT_DEBUG
+> -		fprintf(stderr, "flushing/staling buffer %p (hold=%d)\n",
+> -			bp, hold);
+> -#endif
+> +	if (bip->bli_flags & XFS_BLI_DIRTY)
+>   		libxfs_writebuf_int(bp, 0);
+> -	}
+>   
+>   	bip->bli_flags &= ~XFS_BLI_HOLD;
+>   	xfs_buf_item_put(bip);
+> @@ -937,6 +901,8 @@ __xfs_trans_commit(
+>   	struct xfs_sb		*sbp;
+>   	int			error = 0;
+>   
+> +	trace_xfs_trans_commit(tp, _RET_IP_);
+> +
+>   	if (tp == NULL)
+>   		return 0;
+>   
+> @@ -952,12 +918,8 @@ __xfs_trans_commit(
+>   			goto out_unreserve;
+>   	}
+>   
+> -	if (!(tp->t_flags & XFS_TRANS_DIRTY)) {
+> -#ifdef XACT_DEBUG
+> -		fprintf(stderr, "committed clean transaction %p\n", tp);
+> -#endif
+> +	if (!(tp->t_flags & XFS_TRANS_DIRTY))
+>   		goto out_unreserve;
+> -	}
+>   
+>   	if (tp->t_flags & XFS_TRANS_SB_DIRTY) {
+>   		sbp = &(tp->t_mountp->m_sb);
+> @@ -972,9 +934,6 @@ __xfs_trans_commit(
+>   		xfs_log_sb(tp);
+>   	}
+>   
+> -#ifdef XACT_DEBUG
+> -	fprintf(stderr, "committing dirty transaction %p\n", tp);
+> -#endif
+>   	trans_committed(tp);
+>   
+>   	/* That's it for the transaction structure.  Free it. */
 > 
