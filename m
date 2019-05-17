@@ -1,70 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:43967 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727412AbfEQARt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 May 2019 20:17:49 -0400
-Received: by mail-pg1-f195.google.com with SMTP id t22so2347240pgi.10
-        for <linux-xfs@vger.kernel.org>; Thu, 16 May 2019 17:17:49 -0700 (PDT)
-Subject: Re: [PATCH v9 2/7] virtio-pmem: Add virtio pmem driver
-References: <20190514145422.16923-1-pagupta@redhat.com>
- <20190514145422.16923-3-pagupta@redhat.com>
-From: =?UTF-8?Q?Jakub_Staro=c5=84?= <jstaron@google.com>
-Message-ID: <c06514fd-8675-ba74-4b7b-ff0eb4a91605@google.com>
-Date: Thu, 16 May 2019 17:12:36 -0700
+Received: from szxga05-in.huawei.com ([45.249.212.191]:8202 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725933AbfEQCnf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 May 2019 22:43:35 -0400
+From: Hou Tao <houtao1@huawei.com>
+Subject: Question about commit b450672fb66b ("iomap: sub-block dio needs to
+ zeroout beyond EOF")
+Message-ID: <8b1ba3a1-7ecc-6e1f-c944-26a51baa9747@huawei.com>
+Date: Fri, 17 May 2019 10:41:44 +0800
 MIME-Version: 1.0
-In-Reply-To: <20190514145422.16923-3-pagupta@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, smbarber@google.com
+To: linux-xfs@vger.kernel.org, david@fromorbit.com
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On 5/14/19 7:54 AM, Pankaj Gupta wrote:
-> +		if (!list_empty(&vpmem->req_list)) {
-> +			req_buf = list_first_entry(&vpmem->req_list,
-> +					struct virtio_pmem_request, list);
-> +			req_buf->wq_buf_avail = true;
-> +			wake_up(&req_buf->wq_buf);
-> +			list_del(&req_buf->list);
-Yes, this change is the right one, thank you!
+Hi,
 
-> +	 /*
-> +	  * If virtqueue_add_sgs returns -ENOSPC then req_vq virtual
-> +	  * queue does not have free descriptor. We add the request
-> +	  * to req_list and wait for host_ack to wake us up when free
-> +	  * slots are available.
-> +	  */
-> +	while ((err = virtqueue_add_sgs(vpmem->req_vq, sgs, 1, 1, req,
-> +					GFP_ATOMIC)) == -ENOSPC) {
-> +
-> +		dev_err(&vdev->dev, "failed to send command to virtio pmem" \
-> +			"device, no free slots in the virtqueue\n");
-> +		req->wq_buf_avail = false;
-> +		list_add_tail(&req->list, &vpmem->req_list);
-> +		spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
-> +
-> +		/* A host response results in "host_ack" getting called */
-> +		wait_event(req->wq_buf, req->wq_buf_avail);
-> +		spin_lock_irqsave(&vpmem->pmem_lock, flags);
-> +	}
-> +	err1 = virtqueue_kick(vpmem->req_vq);
-> +	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
-> +
-> +	/*
-> +	 * virtqueue_add_sgs failed with error different than -ENOSPC, we can't
-> +	 * do anything about that.
-> +	 */
-> +	if (err || !err1) {
-> +		dev_info(&vdev->dev, "failed to send command to virtio pmem device\n");
-> +		err = -EIO;
-> +	} else {
-> +		/* A host repsonse results in "host_ack" getting called */
-> +		wait_event(req->host_acked, req->done);
-> +		err = req->ret;
-> +I confirm that the failures I was facing with the `-ENOSPC` error path are not present in v9.
+I don't understand why the commit b450672fb66b ("iomap: sub-block dio needs to zeroout beyond EOF") is needed here:
 
-Best,
-Jakub Staron
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 72f3864a2e6b..77c214194edf 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1677,7 +1677,14 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+                dio->submit.cookie = submit_bio(bio);
+        } while (nr_pages);
+
+-       if (need_zeroout) {
++       /*
++        * We need to zeroout the tail of a sub-block write if the extent type
++        * requires zeroing or the write extends beyond EOF. If we don't zero
++        * the block tail in the latter case, we can expose stale data via mmap
++        * reads of the EOF block.
++        */
++       if (need_zeroout ||
++           ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
+                /* zero out from the end of the write to the end of the block */
+                pad = pos & (fs_block_size - 1);
+                if (pad)
+
+If need_zeroout is false, it means the block neither is a unwritten block nor
+a newly-mapped block, but that also means the block must had been a unwritten block
+or a newly-mapped block before this write, so the block must have been zeroed, correct ?
+
+It also introduces unnecessary sub-block zeroing if we repeat the same sub-block write.
+
+I also have tried to reproduce the problem by using fsx as noted in the commit message,
+but cann't reproduce it. Maybe I do it in the wrong way:
+
+$ ./ltp/fsx -d -g H -H -z -C -I -w 1024 -F -r 1024 -t 4096 -Z /tmp/xfs/fsx
+
+The XFS related with /tmp/xfs is formatted with "-b size=4096". I also try "-b size=1024",
+but still no luck.
+
+Could someone explain the scenario in which the extra block zeroing is needed ? Thanks.
+
+Regards,
+Tao
