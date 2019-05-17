@@ -1,137 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52848 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726449AbfEPUjv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 May 2019 16:39:51 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id F34D230832DE
-        for <linux-xfs@vger.kernel.org>; Thu, 16 May 2019 20:39:50 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C72CB79411
-        for <linux-xfs@vger.kernel.org>; Thu, 16 May 2019 20:39:50 +0000 (UTC)
-Subject: [PATCH 6/3] libxfs: factor common xfs_trans_bjoin code
-References: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <3a54f934-5651-d709-1503-b583f9e044e9@redhat.com>
-Date: Thu, 16 May 2019 15:39:49 -0500
+Received: from mx2.suse.de ([195.135.220.15]:48272 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727386AbfEQIQz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 May 2019 04:16:55 -0400
+Subject: Re: [PATCH 13/20] xfs: merge xfs_efd_init into xfs_trans_get_efd
+References: <20190517073119.30178-1-hch@lst.de>
+ <20190517073119.30178-14-hch@lst.de>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <790a6cfb-7fb9-db50-05c4-ba91fb7628b0@suse.com>
+Date: Fri, 17 May 2019 11:16:52 +0300
 MIME-Version: 1.0
-In-Reply-To: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
+In-Reply-To: <20190517073119.30178-14-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-Most of xfs_trans_bjoin is duplicated in xfs_trans_get_buf_map,
-xfs_trans_getsb and xfs_trans_read_buf_map.  Add a new
-_xfs_trans_bjoin which can be called by all three functions.
 
-Source kernel commit: d7e84f413726876c0ec66bbf90770f69841f7663
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Alex Elder <aelder@sgi.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- libxfs/trans.c | 53 +++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 39 insertions(+), 14 deletions(-)
+On 17.05.19 г. 10:31 ч., Christoph Hellwig wrote:
+> There is no good reason to keep these two functions separate.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_extfree_item.c  | 27 +++++++++++++++------------
+>  fs/xfs/xfs_extfree_item.h  |  2 --
+>  fs/xfs/xfs_trans_extfree.c | 26 --------------------------
+>  3 files changed, 15 insertions(+), 40 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+> index bb0b1e942d00..ccf95cb8234c 100644
+> --- a/fs/xfs/xfs_extfree_item.c
+> +++ b/fs/xfs/xfs_extfree_item.c
+> @@ -312,32 +312,35 @@ static const struct xfs_item_ops xfs_efd_item_ops = {
+>  };
+>  
+>  /*
+> - * Allocate and initialize an efd item with the given number of extents.
+> + * Allocate an "extent free done" log item that will hold nextents worth of
+> + * extents.  The caller must use all nextents extents, because we are not
+> + * flexible about this at all.
+>   */
+>  struct xfs_efd_log_item *
+> -xfs_efd_init(
+> -	struct xfs_mount	*mp,
+> -	struct xfs_efi_log_item	*efip,
+> -	uint			nextents)
+> -
+> +xfs_trans_get_efd(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_efi_log_item		*efip,
+> +	unsigned int			nextents)
+>  {
+> -	struct xfs_efd_log_item	*efdp;
+> -	uint			size;
+> +	struct xfs_efd_log_item		*efdp;
+>  
+>  	ASSERT(nextents > 0);
+> +
+>  	if (nextents > XFS_EFD_MAX_FAST_EXTENTS) {
+> -		size = (uint)(sizeof(xfs_efd_log_item_t) +
+> -			((nextents - 1) * sizeof(xfs_extent_t)));
+> -		efdp = kmem_zalloc(size, KM_SLEEP);
+> +		efdp = kmem_zalloc(sizeof(struct xfs_efd_log_item) +
+> +				(nextents - 1) * sizeof(struct xfs_extent),
+> +				KM_SLEEP);
 
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index f3c28fa7..f78222fd 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -537,19 +537,50 @@ xfs_trans_binval(
- 	tp->t_flags |= XFS_TRANS_DIRTY;
- }
- 
--void
--xfs_trans_bjoin(
--	xfs_trans_t		*tp,
--	xfs_buf_t		*bp)
-+/*
-+ * Add the locked buffer to the transaction.
-+ *
-+ * The buffer must be locked, and it cannot be associated with any
-+ * transaction.
-+ *
-+ * If the buffer does not yet have a buf log item associated with it,
-+ * then allocate one for it.  Then add the buf item to the transaction.
-+ */
-+STATIC void
-+_xfs_trans_bjoin(
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*bp,
-+	int			reset_recur)
- {
--	xfs_buf_log_item_t	*bip;
-+	struct xfs_buf_log_item	*bip;
- 
- 	ASSERT(bp->b_transp == NULL);
- 
-+        /*
-+	 * The xfs_buf_log_item pointer is stored in b_log_item.  If
-+	 * it doesn't have one yet, then allocate one and initialize it.
-+	 * The checks to see if one is there are in xfs_buf_item_init().
-+	 */
- 	xfs_buf_item_init(bp, tp->t_mountp);
- 	bip = bp->b_log_item;
-+	if (reset_recur)
-+		bip->bli_recur = 0;
-+
-+	/*
-+	 * Attach the item to the transaction so we can find it in
-+	 * xfs_trans_get_buf() and friends.
-+	 */
- 	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
- 	bp->b_transp = tp;
-+
-+}
-+
-+void
-+xfs_trans_bjoin(
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*bp)
-+{
-+	_xfs_trans_bjoin(tp, bp, 0);
- 	trace_xfs_trans_bjoin(bp->b_log_item);
- }
- 
-@@ -594,9 +625,7 @@ xfs_trans_get_buf_map(
- 	if (bp == NULL)
- 		return NULL;
- 
--	xfs_trans_bjoin(tp, bp);
--	bip = bp->b_log_item;
--	bip->bli_recur = 0;
-+	_xfs_trans_bjoin(tp, bp, 1);
- 	trace_xfs_trans_get_buf(bp->b_log_item);
- 	return bp;
- }
-@@ -626,9 +655,7 @@ xfs_trans_getsb(
- 
- 	bp = xfs_getsb(mp);
- 
--	xfs_trans_bjoin(tp, bp);
--	bip = bp->b_log_item;
--	bip->bli_recur = 0;
-+	_xfs_trans_bjoin(tp, bp, 1);
- 	trace_xfs_trans_getsb(bp->b_log_item);
- 	return bp;
- }
-@@ -677,9 +704,7 @@ xfs_trans_read_buf_map(
- 	if (bp->b_error)
- 		goto out_relse;
- 
--	xfs_trans_bjoin(tp, bp);
--	bip = bp->b_log_item;
--	bip->bli_recur = 0;
-+	_xfs_trans_bjoin(tp, bp, 1);
- done:
- 	trace_xfs_trans_read_buf(bp->b_log_item);
- 	*bpp = bp;
--- 
-2.17.0
+xfs_efd_log is really a struct which ends with an array. I think it will
+make it slightly more obvious if you use the newly introduced
+struct_size like so:
+
+kmem_zalloc(struct_size(efdp, efd_format.efd_extents, nextents -1),
+KM_SLEEP)
+
+
+<snip>
