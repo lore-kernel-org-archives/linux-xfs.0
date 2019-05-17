@@ -1,64 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53362 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728103AbfEQOHI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 May 2019 10:07:08 -0400
-Date: Fri, 17 May 2019 10:07:05 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 04/20] xfs: remove the dummy iop_push implementation for
- inode creation items
-Message-ID: <20190517140705.GD7888@bfoster>
+Received: from bombadil.infradead.org ([198.137.202.133]:45110 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728365AbfEQHcu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:50 -0400
+Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hRXMH-0000vS-7Z
+        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:49 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 16/20] xfs: merge xfs_bud_init into xfs_trans_get_bud
+Date: Fri, 17 May 2019 09:31:15 +0200
+Message-Id: <20190517073119.30178-17-hch@lst.de>
+In-Reply-To: <20190517073119.30178-1-hch@lst.de>
 References: <20190517073119.30178-1-hch@lst.de>
- <20190517073119.30178-5-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190517073119.30178-5-hch@lst.de>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, May 17, 2019 at 09:31:03AM +0200, Christoph Hellwig wrote:
-> This method should never be called, so don't waste code on it.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+There is no good reason to keep these two functions separate.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_bmap_item.c  | 14 ++++++--------
+ fs/xfs/xfs_bmap_item.h  |  2 --
+ fs/xfs/xfs_trans_bmap.c | 16 ----------------
+ 3 files changed, 6 insertions(+), 26 deletions(-)
 
->  fs/xfs/xfs_icreate_item.c | 11 -----------
->  1 file changed, 11 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
-> index 03c174ff1ab3..cbaabc55f0c9 100644
-> --- a/fs/xfs/xfs_icreate_item.c
-> +++ b/fs/xfs/xfs_icreate_item.c
-> @@ -83,23 +83,12 @@ xfs_icreate_item_committed(
->  	return (xfs_lsn_t)-1;
->  }
->  
-> -/* item can never get into the AIL */
-> -STATIC uint
-> -xfs_icreate_item_push(
-> -	struct xfs_log_item	*lip,
-> -	struct list_head	*buffer_list)
-> -{
-> -	ASSERT(0);
-> -	return XFS_ITEM_SUCCESS;
-> -}
-> -
->  /*
->   * This is the ops vector shared by all buf log items.
->   */
->  static const struct xfs_item_ops xfs_icreate_item_ops = {
->  	.iop_size	= xfs_icreate_item_size,
->  	.iop_format	= xfs_icreate_item_format,
-> -	.iop_push	= xfs_icreate_item_push,
->  	.iop_unlock	= xfs_icreate_item_unlock,
->  	.iop_committed	= xfs_icreate_item_committed,
->  };
-> -- 
-> 2.20.1
-> 
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 46dcadf790c2..40385c8b752a 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -212,22 +212,20 @@ static const struct xfs_item_ops xfs_bud_item_ops = {
+ 	.iop_release	= xfs_bud_item_release,
+ };
+ 
+-/*
+- * Allocate and initialize an bud item with the given number of extents.
+- */
+ struct xfs_bud_log_item *
+-xfs_bud_init(
+-	struct xfs_mount		*mp,
++xfs_trans_get_bud(
++	struct xfs_trans		*tp,
+ 	struct xfs_bui_log_item		*buip)
+-
+ {
+-	struct xfs_bud_log_item	*budp;
++	struct xfs_bud_log_item		*budp;
+ 
+ 	budp = kmem_zone_zalloc(xfs_bud_zone, KM_SLEEP);
+-	xfs_log_item_init(mp, &budp->bud_item, XFS_LI_BUD, &xfs_bud_item_ops);
++	xfs_log_item_init(tp->t_mountp, &budp->bud_item, XFS_LI_BUD,
++			  &xfs_bud_item_ops);
+ 	budp->bud_buip = buip;
+ 	budp->bud_format.bud_bui_id = buip->bui_format.bui_id;
+ 
++	xfs_trans_add_item(tp, &budp->bud_item);
+ 	return budp;
+ }
+ 
+diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
+index 89e043a88bb8..ad479cc73de8 100644
+--- a/fs/xfs/xfs_bmap_item.h
++++ b/fs/xfs/xfs_bmap_item.h
+@@ -75,8 +75,6 @@ extern struct kmem_zone	*xfs_bui_zone;
+ extern struct kmem_zone	*xfs_bud_zone;
+ 
+ struct xfs_bui_log_item *xfs_bui_init(struct xfs_mount *);
+-struct xfs_bud_log_item *xfs_bud_init(struct xfs_mount *,
+-		struct xfs_bui_log_item *);
+ void xfs_bui_item_free(struct xfs_bui_log_item *);
+ void xfs_bui_release(struct xfs_bui_log_item *);
+ int xfs_bui_recover(struct xfs_trans *parent_tp, struct xfs_bui_log_item *buip);
+diff --git a/fs/xfs/xfs_trans_bmap.c b/fs/xfs/xfs_trans_bmap.c
+index e1c7d55b32c3..c6f5b217d17c 100644
+--- a/fs/xfs/xfs_trans_bmap.c
++++ b/fs/xfs/xfs_trans_bmap.c
+@@ -18,22 +18,6 @@
+ #include "xfs_bmap.h"
+ #include "xfs_inode.h"
+ 
+-/*
+- * This routine is called to allocate a "bmap update done"
+- * log item.
+- */
+-struct xfs_bud_log_item *
+-xfs_trans_get_bud(
+-	struct xfs_trans		*tp,
+-	struct xfs_bui_log_item		*buip)
+-{
+-	struct xfs_bud_log_item		*budp;
+-
+-	budp = xfs_bud_init(tp->t_mountp, buip);
+-	xfs_trans_add_item(tp, &budp->bud_item);
+-	return budp;
+-}
+-
+ /*
+  * Finish an bmap update and log it to the BUD. Note that the
+  * transaction is marked dirty regardless of whether the bmap update
+-- 
+2.20.1
