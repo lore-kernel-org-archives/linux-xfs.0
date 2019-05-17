@@ -1,198 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44114 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728365AbfEQHcj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:39 -0400
-Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hRXM6-0000n4-Mo
-        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:39 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/20] xfs: remove a pointless comment duplicated above all xfs_item_ops instances
-Date: Fri, 17 May 2019 09:31:11 +0200
-Message-Id: <20190517073119.30178-13-hch@lst.de>
-In-Reply-To: <20190517073119.30178-1-hch@lst.de>
-References: <20190517073119.30178-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:39422 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726851AbfEQTqH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 May 2019 15:46:07 -0400
+Subject: [PATCH 9/3] libxfs: create current_time helper and sync
+ xfs_trans_ichgtime
+References: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <70781913-e46c-783e-789d-ce0e6af65549@sandeen.net>
+Date: Fri, 17 May 2019 14:46:05 -0500
 MIME-Version: 1.0
+In-Reply-To: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Make xfs_trans_ichgtime() almost match kernelspace by creating a
+new current_time() helper to match the kernel utility.
+
+This reduces still more cosmetic change.  We may want to sync the
+creation flag over to the kernel even though it's not used today.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_bmap_item.c     | 6 ------
- fs/xfs/xfs_buf_item.c      | 3 ---
- fs/xfs/xfs_dquot_item.c    | 6 ------
- fs/xfs/xfs_extfree_item.c  | 6 ------
- fs/xfs/xfs_icreate_item.c  | 3 ---
- fs/xfs/xfs_inode_item.c    | 3 ---
- fs/xfs/xfs_refcount_item.c | 6 ------
- fs/xfs/xfs_rmap_item.c     | 6 ------
- 8 files changed, 39 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index d7ceb2d1ae82..46dcadf790c2 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -125,9 +125,6 @@ xfs_bui_item_release(
- 	xfs_bui_release(BUI_ITEM(lip));
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 3e7e80ea..289d1774 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -16,6 +16,16 @@ struct xfs_mount;
+ struct xfs_inode_log_item;
+ struct xfs_dir_ops;
+ 
++/*
++ * These are not actually used, they are only for userspace build
++ * compatibility in code that looks at i_state
++ */
++#define I_DIRTY_TIME		0
++#define I_DIRTY_TIME_EXPIRED	0
++
++#define IS_I_VERSION(inode)			(0)
++#define inode_maybe_inc_iversion(inode,flags)	(0)
++
+ /*
+  * Inode interface. This fakes up a "VFS inode" to make the xfs_inode appear
+  * similar to the kernel which now is used tohold certain parts of the on-disk
+@@ -25,6 +35,7 @@ struct inode {
+ 	mode_t		i_mode;
+ 	uint32_t	i_nlink;
+ 	xfs_dev_t	i_rdev;		/* This actually holds xfs_dev_t */
++	unsigned long	i_state;	/* Not actually used in userspace */
+ 	uint32_t	i_generation;
+ 	uint64_t	i_version;
+ 	struct timespec	i_atime;
+@@ -149,6 +160,9 @@ extern void	xfs_trans_ichgtime(struct xfs_trans *,
+ 				struct xfs_inode *, int);
+ extern int	xfs_iflush_int (struct xfs_inode *, struct xfs_buf *);
+ 
++#define timespec64 timespec
++extern struct timespec64 current_time(struct inode *inode);
++
+ /* Inode Cache Interfaces */
+ extern bool	xfs_inode_verify_forks(struct xfs_inode *ip);
+ extern int	xfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
+diff --git a/libxfs/util.c b/libxfs/util.c
+index aff91080..1734ae9a 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -136,11 +136,21 @@ xfs_log_calc_unit_res(
+ 	return unit_bytes;
  }
  
--/*
-- * This is the ops vector shared by all bui log items.
-- */
- static const struct xfs_item_ops xfs_bui_item_ops = {
- 	.iop_size	= xfs_bui_item_size,
- 	.iop_format	= xfs_bui_item_format,
-@@ -208,9 +205,6 @@ xfs_bud_item_release(
- 	kmem_zone_free(xfs_bud_zone, budp);
- }
++struct timespec64
++current_time(struct inode *inode)
++{
++	struct timespec64	tv;
++	struct timeval		stv;
++
++	gettimeofday(&stv, (struct timezone *)0);
++	tv.tv_sec = stv.tv_sec;
++	tv.tv_nsec = stv.tv_usec * 1000;
++
++	return tv;
++}
++
+ /*
+  * Change the requested timestamp in the given inode.
+- *
+- * This was once shared with the kernel, but has diverged to the point
+- * where it's no longer worth the hassle of maintaining common code.
+  */
+ void
+ xfs_trans_ichgtime(
+@@ -148,12 +158,14 @@ xfs_trans_ichgtime(
+ 	struct xfs_inode	*ip,
+ 	int			flags)
+ {
+-	struct timespec tv;
+-	struct timeval	stv;
++	struct inode		*inode = VFS_I(ip);
++	struct timespec64	tv;
++
++	ASSERT(tp);
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++
++	tv = current_time(inode);
  
--/*
-- * This is the ops vector shared by all bud log items.
-- */
- static const struct xfs_item_ops xfs_bud_item_ops = {
- 	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
- 	.iop_size	= xfs_bud_item_size,
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 05eefc677cd8..2c7aef61ea92 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -679,9 +679,6 @@ xfs_buf_item_committed(
- 	return lsn;
- }
- 
--/*
-- * This is the ops vector shared by all buf log items.
-- */
- static const struct xfs_item_ops xfs_buf_item_ops = {
- 	.iop_size	= xfs_buf_item_size,
- 	.iop_format	= xfs_buf_item_format,
-diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-index b8fd81641dfc..ade4520d3fdf 100644
---- a/fs/xfs/xfs_dquot_item.c
-+++ b/fs/xfs/xfs_dquot_item.c
-@@ -222,9 +222,6 @@ xfs_qm_dquot_logitem_committing(
- 	return xfs_qm_dquot_logitem_release(lip);
- }
- 
--/*
-- * This is the ops vector for dquots
-- */
- static const struct xfs_item_ops xfs_dquot_item_ops = {
- 	.iop_size	= xfs_qm_dquot_logitem_size,
- 	.iop_format	= xfs_qm_dquot_logitem_format,
-@@ -320,9 +317,6 @@ static const struct xfs_item_ops xfs_qm_qoffend_logitem_ops = {
- 	.iop_committed	= xfs_qm_qoffend_logitem_committed,
- };
- 
--/*
-- * This is the ops vector shared by all quotaoff-start log items.
-- */
- static const struct xfs_item_ops xfs_qm_qoff_logitem_ops = {
- 	.iop_size	= xfs_qm_qoff_logitem_size,
- 	.iop_format	= xfs_qm_qoff_logitem_format,
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 762eb288dfe8..bb0b1e942d00 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -135,9 +135,6 @@ xfs_efi_item_release(
- 	xfs_efi_release(EFI_ITEM(lip));
- }
- 
--/*
-- * This is the ops vector shared by all efi log items.
-- */
- static const struct xfs_item_ops xfs_efi_item_ops = {
- 	.iop_size	= xfs_efi_item_size,
- 	.iop_format	= xfs_efi_item_format,
-@@ -307,9 +304,6 @@ xfs_efd_item_release(
- 	xfs_efd_item_free(efdp);
- }
- 
--/*
-- * This is the ops vector shared by all efd log items.
-- */
- static const struct xfs_item_ops xfs_efd_item_ops = {
- 	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
- 	.iop_size	= xfs_efd_item_size,
-diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
-index eb9cb04635be..4f1ce50ce323 100644
---- a/fs/xfs/xfs_icreate_item.c
-+++ b/fs/xfs/xfs_icreate_item.c
-@@ -63,9 +63,6 @@ xfs_icreate_item_release(
- 	kmem_zone_free(xfs_icreate_zone, ICR_ITEM(lip));
- }
- 
--/*
-- * This is the ops vector shared by all buf log items.
-- */
- static const struct xfs_item_ops xfs_icreate_item_ops = {
- 	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
- 	.iop_size	= xfs_icreate_item_size,
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index a00f0b6aecc7..62847e95b399 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -627,9 +627,6 @@ xfs_inode_item_committing(
- 	return xfs_inode_item_release(lip);
- }
- 
--/*
-- * This is the ops vector shared by all buf log items.
-- */
- static const struct xfs_item_ops xfs_inode_item_ops = {
- 	.iop_size	= xfs_inode_item_size,
- 	.iop_format	= xfs_inode_item_format,
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index b4ab71ce39fc..2b2f6e7ad867 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -124,9 +124,6 @@ xfs_cui_item_release(
- 	xfs_cui_release(CUI_ITEM(lip));
- }
- 
--/*
-- * This is the ops vector shared by all cui log items.
-- */
- static const struct xfs_item_ops xfs_cui_item_ops = {
- 	.iop_size	= xfs_cui_item_size,
- 	.iop_format	= xfs_cui_item_format,
-@@ -213,9 +210,6 @@ xfs_cud_item_release(
- 	kmem_zone_free(xfs_cud_zone, cudp);
- }
- 
--/*
-- * This is the ops vector shared by all cud log items.
-- */
- static const struct xfs_item_ops xfs_cud_item_ops = {
- 	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
- 	.iop_size	= xfs_cud_item_size,
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 1b35b3d38708..dce1357aef88 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -123,9 +123,6 @@ xfs_rui_item_release(
- 	xfs_rui_release(RUI_ITEM(lip));
- }
- 
--/*
-- * This is the ops vector shared by all rui log items.
-- */
- static const struct xfs_item_ops xfs_rui_item_ops = {
- 	.iop_size	= xfs_rui_item_size,
- 	.iop_format	= xfs_rui_item_format,
-@@ -234,9 +231,6 @@ xfs_rud_item_release(
- 	kmem_zone_free(xfs_rud_zone, rudp);
- }
- 
--/*
-- * This is the ops vector shared by all rud log items.
-- */
- static const struct xfs_item_ops xfs_rud_item_ops = {
- 	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
- 	.iop_size	= xfs_rud_item_size,
--- 
-2.20.1
+-	gettimeofday(&stv, (struct timezone *)0);
+-	tv.tv_sec = stv.tv_sec;
+-	tv.tv_nsec = stv.tv_usec * 1000;
+ 	if (flags & XFS_ICHGTIME_MOD)
+ 		VFS_I(ip)->i_mtime = tv;
+ 	if (flags & XFS_ICHGTIME_CHG)
