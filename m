@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44094 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:44848 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728143AbfEQHcc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:32 -0400
+        with ESMTP id S1728365AbfEQHcs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:48 -0400
 Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hRXLz-0000le-00
-        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:31 +0000
+        id 1hRXME-0000rf-H4
+        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:46 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/20] xfs: don't cast inode_log_items to get the log_item
-Date: Fri, 17 May 2019 09:31:08 +0200
-Message-Id: <20190517073119.30178-10-hch@lst.de>
+Subject: [PATCH 15/20] xfs: merge xfs_rud_init into xfs_trans_get_rud
+Date: Fri, 17 May 2019 09:31:14 +0200
+Message-Id: <20190517073119.30178-16-hch@lst.de>
 In-Reply-To: <20190517073119.30178-1-hch@lst.de>
 References: <20190517073119.30178-1-hch@lst.de>
 MIME-Version: 1.0
@@ -20,35 +20,83 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-The cast is not type safe, and we can just dereference the first
-member instead to start with.
+There is no good reason to keep these two functions separate.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_inode.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_rmap_item.c  | 14 ++++++--------
+ fs/xfs/xfs_rmap_item.h  |  2 --
+ fs/xfs/xfs_trans_rmap.c | 12 ------------
+ 3 files changed, 6 insertions(+), 22 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 71d216cf6f87..419eae485ff3 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -485,7 +485,7 @@ xfs_lock_inodes(
- 		 */
- 		if (!try_lock) {
- 			for (j = (i - 1); j >= 0 && !try_lock; j--) {
--				lp = (xfs_log_item_t *)ips[j]->i_itemp;
-+				lp = &ips[j]->i_itemp->ili_item;
- 				if (lp && test_bit(XFS_LI_IN_AIL, &lp->li_flags))
- 					try_lock++;
- 			}
-@@ -585,7 +585,7 @@ xfs_lock_two_inodes(
- 	 * the second lock. If we can't get it, we must release the first one
- 	 * and try again.
- 	 */
--	lp = (xfs_log_item_t *)ip0->i_itemp;
-+	lp = &ip0->i_itemp->ili_item;
- 	if (lp && test_bit(XFS_LI_IN_AIL, &lp->li_flags)) {
- 		if (!xfs_ilock_nowait(ip1, xfs_lock_inumorder(ip1_mode, 1))) {
- 			xfs_iunlock(ip0, ip0_mode);
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index dce1357aef88..5f11e6d43484 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -238,22 +238,20 @@ static const struct xfs_item_ops xfs_rud_item_ops = {
+ 	.iop_release	= xfs_rud_item_release,
+ };
+ 
+-/*
+- * Allocate and initialize an rud item with the given number of extents.
+- */
+ struct xfs_rud_log_item *
+-xfs_rud_init(
+-	struct xfs_mount		*mp,
++xfs_trans_get_rud(
++	struct xfs_trans		*tp,
+ 	struct xfs_rui_log_item		*ruip)
+-
+ {
+-	struct xfs_rud_log_item	*rudp;
++	struct xfs_rud_log_item		*rudp;
+ 
+ 	rudp = kmem_zone_zalloc(xfs_rud_zone, KM_SLEEP);
+-	xfs_log_item_init(mp, &rudp->rud_item, XFS_LI_RUD, &xfs_rud_item_ops);
++	xfs_log_item_init(tp->t_mountp, &rudp->rud_item, XFS_LI_RUD,
++			  &xfs_rud_item_ops);
+ 	rudp->rud_ruip = ruip;
+ 	rudp->rud_format.rud_rui_id = ruip->rui_format.rui_id;
+ 
++	xfs_trans_add_item(tp, &rudp->rud_item);
+ 	return rudp;
+ }
+ 
+diff --git a/fs/xfs/xfs_rmap_item.h b/fs/xfs/xfs_rmap_item.h
+index 7e482baa27f5..8708e4a5aa5c 100644
+--- a/fs/xfs/xfs_rmap_item.h
++++ b/fs/xfs/xfs_rmap_item.h
+@@ -78,8 +78,6 @@ extern struct kmem_zone	*xfs_rui_zone;
+ extern struct kmem_zone	*xfs_rud_zone;
+ 
+ struct xfs_rui_log_item *xfs_rui_init(struct xfs_mount *, uint);
+-struct xfs_rud_log_item *xfs_rud_init(struct xfs_mount *,
+-		struct xfs_rui_log_item *);
+ int xfs_rui_copy_format(struct xfs_log_iovec *buf,
+ 		struct xfs_rui_log_format *dst_rui_fmt);
+ void xfs_rui_item_free(struct xfs_rui_log_item *);
+diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
+index 5c7936b1be13..863e3281daaa 100644
+--- a/fs/xfs/xfs_trans_rmap.c
++++ b/fs/xfs/xfs_trans_rmap.c
+@@ -60,18 +60,6 @@ xfs_trans_set_rmap_flags(
+ 	}
+ }
+ 
+-struct xfs_rud_log_item *
+-xfs_trans_get_rud(
+-	struct xfs_trans		*tp,
+-	struct xfs_rui_log_item		*ruip)
+-{
+-	struct xfs_rud_log_item		*rudp;
+-
+-	rudp = xfs_rud_init(tp->t_mountp, ruip);
+-	xfs_trans_add_item(tp, &rudp->rud_item);
+-	return rudp;
+-}
+-
+ /*
+  * Finish an rmap update and log it to the RUD. Note that the transaction is
+  * marked dirty regardless of whether the rmap update succeeds or fails to
 -- 
 2.20.1
