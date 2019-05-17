@@ -1,55 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49624 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726475AbfEOUvI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 May 2019 16:51:08 -0400
-Subject: Re: xfsdump confused by ino's < root ino
-References: <20190515204732.GA4466@vader>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f37ae69d-39a6-b2d0-1cc9-806d1d597086@sandeen.net>
-Date: Wed, 15 May 2019 15:51:07 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:44064 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728207AbfEQHcV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:21 -0400
+Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hRXLp-0000jl-21
+        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:21 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 05/20] xfs: remove the iop_push implementation for quota off items
+Date: Fri, 17 May 2019 09:31:04 +0200
+Message-Id: <20190517073119.30178-6-hch@lst.de>
+In-Reply-To: <20190517073119.30178-1-hch@lst.de>
+References: <20190517073119.30178-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20190515204732.GA4466@vader>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Omar Sandoval <osandov@osandov.com>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-On 5/15/19 3:47 PM, Omar Sandoval wrote:
-> Hi,
-> 
-> We use xfsdump and xfsrestore (v3.1.7) to back up one of our storage
-> systems, and we ran into an issue where xfsdump prints the following for
-> a mount which isn't a bind mount:
-> 
-> /sbin/xfsdump: NOTE: root ino 136 differs from mount dir ino 256, bind mount?
-> 
-> Which also results in a crash from xfsrestore:
-> 
-> xfsrestore: tree.c:757: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth' failed.
-> 
-> Looking at [1], xfsdump uses bulkstat to get the minimum inode number on
-> the filesystem. But, at least one of our filesystems has a root inode
-> number of 256 and uses inode numbers 136-199, which tricks xfsdump into
-> thinking that the filesystem is bind mounted. Is this an invalid
-> assumption in xfsdump, or is it filesystem corruption?
-> 
-> Thanks!
-> 
-> 1: https://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git/commit/?id=25195ebf107dc81b1b7cea1476764950e1d6cc9d
+If we want to push the log to make progress on the items we'd need to
+return XFS_ITEM_PINNED instead of XFS_ITEM_LOCKED.  Removing the
+method will do exactly that.
 
-Yep, this is that heuristic going wrong.  We (I) didn't realize that we could ever
-get inode numbers allocated which were less than the root inode, but alas.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_dquot_item.c | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-It's an invalid assumption in xfsdump.  I guess we need to find a way
-out of this ... the goal was to detect bind mounts, but apparently
-the situation you have is more common than expected (well, we expected
-it to not exist ...)
-
-For now just using an older version of xfsdump should be a workaround,
-sorry about that.
-
--Eric
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index 486eea151fdb..a61a8a770d7f 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -288,18 +288,6 @@ xfs_qm_qoff_logitem_format(
+ 	xlog_finish_iovec(lv, vecp, sizeof(struct xfs_qoff_logitem));
+ }
+ 
+-/*
+- * There isn't much you can do to push a quotaoff item.  It is simply
+- * stuck waiting for the log to be flushed to disk.
+- */
+-STATIC uint
+-xfs_qm_qoff_logitem_push(
+-	struct xfs_log_item	*lip,
+-	struct list_head	*buffer_list)
+-{
+-	return XFS_ITEM_LOCKED;
+-}
+-
+ STATIC xfs_lsn_t
+ xfs_qm_qoffend_logitem_committed(
+ 	struct xfs_log_item	*lip,
+@@ -327,7 +315,6 @@ static const struct xfs_item_ops xfs_qm_qoffend_logitem_ops = {
+ 	.iop_size	= xfs_qm_qoff_logitem_size,
+ 	.iop_format	= xfs_qm_qoff_logitem_format,
+ 	.iop_committed	= xfs_qm_qoffend_logitem_committed,
+-	.iop_push	= xfs_qm_qoff_logitem_push,
+ };
+ 
+ /*
+@@ -336,7 +323,6 @@ static const struct xfs_item_ops xfs_qm_qoffend_logitem_ops = {
+ static const struct xfs_item_ops xfs_qm_qoff_logitem_ops = {
+ 	.iop_size	= xfs_qm_qoff_logitem_size,
+ 	.iop_format	= xfs_qm_qoff_logitem_format,
+-	.iop_push	= xfs_qm_qoff_logitem_push,
+ };
+ 
+ /*
+-- 
+2.20.1
