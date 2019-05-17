@@ -1,40 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f176.google.com ([209.85.214.176]:41243 "EHLO
-        mail-pl1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726290AbfEOUrf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 May 2019 16:47:35 -0400
-Received: by mail-pl1-f176.google.com with SMTP id f12so431796plt.8
-        for <linux-xfs@vger.kernel.org>; Wed, 15 May 2019 13:47:35 -0700 (PDT)
-Date: Wed, 15 May 2019 13:47:32 -0700
-From: Omar Sandoval <osandov@osandov.com>
-Subject: xfsdump confused by ino's < root ino
-Message-ID: <20190515204732.GA4466@vader>
+Received: from bombadil.infradead.org ([198.137.202.133]:44026 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727361AbfEQHcI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 03:32:08 -0400
+Received: from 089144210233.atnat0019.highway.a1.net ([89.144.210.233] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hRXLc-0000ht-3L
+        for linux-xfs@vger.kernel.org; Fri, 17 May 2019 07:32:08 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: misc log item related cleanups
+Date: Fri, 17 May 2019 09:30:59 +0200
+Message-Id: <20190517073119.30178-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-Hi,
+Hi all,
 
-We use xfsdump and xfsrestore (v3.1.7) to back up one of our storage
-systems, and we ran into an issue where xfsdump prints the following for
-a mount which isn't a bind mount:
+I've recently been trying to debug issue related to latencies related to
+locked buffers and went all over our log item lifecycles for that.
 
-/sbin/xfsdump: NOTE: root ino 136 differs from mount dir ino 256, bind mount?
-
-Which also results in a crash from xfsrestore:
-
-xfsrestore: tree.c:757: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth' failed.
-
-Looking at [1], xfsdump uses bulkstat to get the minimum inode number on
-the filesystem. But, at least one of our filesystems has a root inode
-number of 256 and uses inode numbers 136-199, which tricks xfsdump into
-thinking that the filesystem is bind mounted. Is this an invalid
-assumption in xfsdump, or is it filesystem corruption?
-
-Thanks!
-
-1: https://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git/commit/?id=25195ebf107dc81b1b7cea1476764950e1d6cc9d
+It turns out a lot of code in that area is rather obsfucated and
+redundant.  This series is almost entirely cleanups, but there are lots
+of it.  The only exception is a fix for systematic memory leaks which
+appears entirely theoretical.
