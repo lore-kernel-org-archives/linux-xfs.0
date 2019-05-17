@@ -1,230 +1,361 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58950 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56166 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725901AbfENOzK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 May 2019 10:55:10 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v9 0/7] virtio pmem driver 
-Date: Tue, 14 May 2019 20:24:15 +0530
-Message-Id: <20190514145422.16923-1-pagupta@redhat.com>
+        id S1725932AbfEQRuq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 May 2019 13:50:46 -0400
+Date: Fri, 17 May 2019 13:50:43 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 10/20] xfs: remove the xfs_log_item_t typedef
+Message-ID: <20190517175043.GJ7888@bfoster>
+References: <20190517073119.30178-1-hch@lst.de>
+ <20190517073119.30178-11-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190517073119.30178-11-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, kilobyte@angband.pl, yuval.shaia@oracle.com, jstaron@google.com, pagupta@redhat.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
- Hi Dan,
+On Fri, May 17, 2019 at 09:31:09AM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
- Proposing the patch series to be merged via nvdimm tree
- as kindly agreed by you. We have ack/review on XFS, EXT4 &
- VIRTIO patches. 
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
- Incorporated all the changes suggested in v8. This version
- added a new patch 4 for dax for device mapper change and some
- minor style changes in patch 2. Kept all the reviews. Request
- to please merge the series.
-
- ---
-
- This patch series has implementation for "virtio pmem". 
- "virtio pmem" is fake persistent memory(nvdimm) in guest 
- which allows to bypass the guest page cache. This also
- implements a VIRTIO based asynchronous flush mechanism.  
- 
- Sharing guest kernel driver in this patchset with the 
- changes suggested in v4. Tested with Qemu side device 
- emulation [6] for virtio-pmem. Documented the impact of
- possible page cache side channel attacks with suggested
- countermeasures.
-
- Details of project idea for 'virtio pmem' flushing interface 
- is shared [3] & [4].
-
- Implementation is divided into two parts:
- New virtio pmem guest driver and qemu code changes for new 
- virtio pmem paravirtualized device.
-
-1. Guest virtio-pmem kernel driver
----------------------------------
-   - Reads persistent memory range from paravirt device and 
-     registers with 'nvdimm_bus'.  
-   - 'nvdimm/pmem' driver uses this information to allocate 
-     persistent memory region and setup filesystem operations 
-     to the allocated memory. 
-   - virtio pmem driver implements asynchronous flushing 
-     interface to flush from guest to host.
-
-2. Qemu virtio-pmem device
----------------------------------
-   - Creates virtio pmem device and exposes a memory range to 
-     KVM guest. 
-   - At host side this is file backed memory which acts as 
-     persistent memory. 
-   - Qemu side flush uses aio thread pool API's and virtio 
-     for asynchronous guest multi request handling. 
-
-   David Hildenbrand CCed also posted a modified version[7] of 
-   qemu virtio-pmem code based on updated Qemu memory device API. 
-
- Virtio-pmem security implications and countermeasures:
- -----------------------------------------------------
-
- In previous posting of kernel driver, there was discussion [9]
- on possible implications of page cache side channel attacks with 
- virtio pmem. After thorough analysis of details of known side 
- channel attacks, below are the suggestions:
-
- - Depends entirely on how host backing image file is mapped 
-   into guest address space. 
-
- - virtio-pmem device emulation, by default shared mapping is used
-   to map host backing file. It is recommended to use separate
-   backing file at host side for every guest. This will prevent
-   any possibility of executing common code from multiple guests
-   and any chance of inferring guest local data based based on 
-   execution time.
-
- - If backing file is required to be shared among multiple guests 
-   it is recommended to don't support host page cache eviction 
-   commands from the guest driver. This will avoid any possibility
-   of inferring guest local data or host data from another guest. 
-
- - Proposed device specification [8] for virtio-pmem device with 
-   details of possible security implications and suggested 
-   countermeasures for device emulation.
-
- Virtio-pmem errors handling:
- ----------------------------------------
-  Checked behaviour of virtio-pmem for below types of errors
-  Need suggestions on expected behaviour for handling these errors?
-
-  - Hardware Errors: Uncorrectable recoverable Errors: 
-  a] virtio-pmem: 
-    - As per current logic if error page belongs to Qemu process, 
-      host MCE handler isolates(hwpoison) that page and send SIGBUS. 
-      Qemu SIGBUS handler injects exception to KVM guest. 
-    - KVM guest then isolates the page and send SIGBUS to guest 
-      userspace process which has mapped the page. 
-  
-  b] Existing implementation for ACPI pmem driver: 
-    - Handles such errors with MCE notifier and creates a list 
-      of bad blocks. Read/direct access DAX operation return EIO 
-      if accessed memory page fall in bad block list.
-    - It also starts backgound scrubbing.  
-    - Similar functionality can be reused in virtio-pmem with MCE 
-      notifier but without scrubbing(no ACPI/ARS)? Need inputs to 
-      confirm if this behaviour is ok or needs any change?
-
-Changes from PATCH v8: [1] 
- - Set device mapper synchronous if all target devices support - Dan
- - Move virtio_pmem.h to nvdimm directory  - Dan
- - Style, indentation & better error messages in patch 2 - DavidH
- - Added MST's ack in patch 2.
-
-Changes from PATCH v7: [2]
- - Corrected pending request queue logic (patch 2) - Jakub Staroń
- - Used unsigned long flags for passing DAXDEV_F_SYNC (patch 3) - Dan
- - Fixed typo =>  vma 'flag' to 'vm_flag' (patch 4)
- - Added rob in patch 6 & patch 2
-
-Changes from PATCH v6: 
- - Corrected comment format in patch 5 & patch 6. [Dave]
- - Changed variable declaration indentation in patch 6 [Darrick]
- - Add Reviewed-by tag by 'Jan Kara' in patch 4 & patch 5
-
-Changes from PATCH v5: 
-  Changes suggested in by - [Cornelia, Yuval]
-- Remove assignment chaining in virtio driver
-- Better error message and remove not required free
-- Check nd_region before use
-
-  Changes suggested by - [Jan Kara]
-- dax_synchronous() for !CONFIG_DAX
-- Correct 'daxdev_mapping_supported' comment and non-dax implementation
-
-  Changes suggested by - [Dan Williams]
-- Pass meaningful flag 'DAXDEV_F_SYNC' to alloc_dax
-- Gate nvdimm_flush instead of additional async parameter
-- Move block chaining logic to flush callback than common nvdimm_flush
-- Use NULL flush callback for generic flush for better readability [Dan, Jan]
-
-- Use virtio device id 27 from 25(already used) - [MST]
-
-Changes from PATCH v4:
-- Factor out MAP_SYNC supported functionality to a common helper
-				[Dave, Darrick, Jan]
-- Comment, indentation and virtqueue_kick failure handle - Yuval Shaia
-
-Changes from PATCH v3: 
-- Use generic dax_synchronous() helper to check for DAXDEV_SYNC 
-  flag - [Dan, Darrick, Jan]
-- Add 'is_nvdimm_async' function
-- Document page cache side channel attacks implications & 
-  countermeasures - [Dave Chinner, Michael]
-
-Changes from PATCH v2: 
-- Disable MAP_SYNC for ext4 & XFS filesystems - [Dan] 
-- Use name 'virtio pmem' in place of 'fake dax' 
-
-Changes from PATCH v1: 
-- 0-day build test for build dependency on libnvdimm 
-
- Changes suggested by - [Dan Williams]
-- Split the driver into two parts virtio & pmem  
-- Move queuing of async block request to block layer
-- Add "sync" parameter in nvdimm_flush function
-- Use indirect call for nvdimm_flush
-- Don’t move declarations to common global header e.g nd.h
-- nvdimm_flush() return 0 or -EIO if it fails
-- Teach nsio_rw_bytes() that the flush can fail
-- Rename nvdimm_flush() to generic_nvdimm_flush()
-- Use 'nd_region->provider_data' for long dereferencing
-- Remove virtio_pmem_freeze/restore functions
-- Remove BSD license text with SPDX license text
-
-- Add might_sleep() in virtio_pmem_flush - [Luiz]
-- Make spin_lock_irqsave() narrow
-
-Pankaj Gupta (7):
-   libnvdimm: nd_region flush callback support
-   virtio-pmem: Add virtio-pmem guest driver
-   libnvdimm: add nd_region buffered dax_dev flag
-   dax: check synchronous mapping is supported
-   dm: dm: Enable synchronous dax
-   ext4: disable map_sync for virtio pmem
-   xfs: disable map_sync for virtio pmem
-
-[1] https://lkml.org/lkml/2019/5/10/447
-[2] https://lkml.org/lkml/2019/4/26/36
-[3] https://www.spinics.net/lists/kvm/msg149761.html
-[4] https://www.spinics.net/lists/kvm/msg153095.html  
-[5] https://lkml.org/lkml/2018/8/31/413
-[6] https://marc.info/?l=linux-kernel&m=153572228719237&w=2 
-[7] https://marc.info/?l=qemu-devel&m=153555721901824&w=2
-[8] https://lists.oasis-open.org/archives/virtio-dev/201903/msg00083.html
-[9] https://lkml.org/lkml/2019/1/9/1191
-
- drivers/acpi/nfit/core.c         |    4 -
- drivers/dax/bus.c                |    2 
- drivers/dax/super.c              |   19 +++++
- drivers/md/dm-table.c            |   14 ++++
- drivers/md/dm.c                  |    3 
- drivers/nvdimm/Makefile          |    1 
- drivers/nvdimm/claim.c           |    6 +
- drivers/nvdimm/nd.h              |    1 
- drivers/nvdimm/nd_virtio.c       |  126 +++++++++++++++++++++++++++++++++++++++
- drivers/nvdimm/pmem.c            |   18 +++--
- drivers/nvdimm/region_devs.c     |   33 +++++++++-
- drivers/nvdimm/virtio_pmem.c     |  122 +++++++++++++++++++++++++++++++++++++
- drivers/nvdimm/virtio_pmem.h     |   60 ++++++++++++++++++
- drivers/virtio/Kconfig           |   11 +++
- fs/ext4/file.c                   |   10 +--
- fs/xfs/xfs_file.c                |    9 +-
- include/linux/dax.h              |   26 +++++++-
- include/linux/libnvdimm.h        |    9 ++
- include/uapi/linux/virtio_ids.h  |    1 
- include/uapi/linux/virtio_pmem.h |   10 +++
- 20 files changed, 460 insertions(+), 25 deletions(-)
+>  fs/xfs/xfs_buf_item.c     |  6 +++---
+>  fs/xfs/xfs_buf_item.h     |  6 +++---
+>  fs/xfs/xfs_dquot_item.h   |  4 ++--
+>  fs/xfs/xfs_extfree_item.h |  4 ++--
+>  fs/xfs/xfs_inode.c        | 12 +++++------
+>  fs/xfs/xfs_inode_item.h   |  2 +-
+>  fs/xfs/xfs_log_recover.c  |  2 +-
+>  fs/xfs/xfs_trans.h        | 16 +++++++-------
+>  fs/xfs/xfs_trans_ail.c    | 44 +++++++++++++++++++--------------------
+>  9 files changed, 48 insertions(+), 48 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 7193ee9ca5b8..05eefc677cd8 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -981,9 +981,9 @@ xfs_buf_item_relse(
+>   */
+>  void
+>  xfs_buf_attach_iodone(
+> -	xfs_buf_t	*bp,
+> -	void		(*cb)(xfs_buf_t *, xfs_log_item_t *),
+> -	xfs_log_item_t	*lip)
+> +	struct xfs_buf		*bp,
+> +	void			(*cb)(struct xfs_buf *, struct xfs_log_item *),
+> +	struct xfs_log_item	*lip)
+>  {
+>  	ASSERT(xfs_buf_islocked(bp));
+>  
+> diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+> index 90f65f891fab..4a054b11011a 100644
+> --- a/fs/xfs/xfs_buf_item.h
+> +++ b/fs/xfs/xfs_buf_item.h
+> @@ -39,7 +39,7 @@ struct xfs_buf_log_item;
+>   * locked, and which 128 byte chunks of the buffer are dirty.
+>   */
+>  struct xfs_buf_log_item {
+> -	xfs_log_item_t		bli_item;	/* common item structure */
+> +	struct xfs_log_item	bli_item;	/* common item structure */
+>  	struct xfs_buf		*bli_buf;	/* real buffer pointer */
+>  	unsigned int		bli_flags;	/* misc flags */
+>  	unsigned int		bli_recur;	/* lock recursion count */
+> @@ -55,8 +55,8 @@ bool	xfs_buf_item_put(struct xfs_buf_log_item *);
+>  void	xfs_buf_item_log(struct xfs_buf_log_item *, uint, uint);
+>  bool	xfs_buf_item_dirty_format(struct xfs_buf_log_item *);
+>  void	xfs_buf_attach_iodone(struct xfs_buf *,
+> -			      void(*)(struct xfs_buf *, xfs_log_item_t *),
+> -			      xfs_log_item_t *);
+> +			      void(*)(struct xfs_buf *, struct xfs_log_item *),
+> +			      struct xfs_log_item *);
+>  void	xfs_buf_iodone_callbacks(struct xfs_buf *);
+>  void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
+>  bool	xfs_buf_resubmit_failed_buffers(struct xfs_buf *,
+> diff --git a/fs/xfs/xfs_dquot_item.h b/fs/xfs/xfs_dquot_item.h
+> index db9df710a308..1aed34ccdabc 100644
+> --- a/fs/xfs/xfs_dquot_item.h
+> +++ b/fs/xfs/xfs_dquot_item.h
+> @@ -12,13 +12,13 @@ struct xfs_mount;
+>  struct xfs_qoff_logitem;
+>  
+>  typedef struct xfs_dq_logitem {
+> -	xfs_log_item_t		 qli_item;	   /* common portion */
+> +	struct xfs_log_item	 qli_item;	   /* common portion */
+>  	struct xfs_dquot	*qli_dquot;	   /* dquot ptr */
+>  	xfs_lsn_t		 qli_flush_lsn;	   /* lsn at last flush */
+>  } xfs_dq_logitem_t;
+>  
+>  typedef struct xfs_qoff_logitem {
+> -	xfs_log_item_t		 qql_item;	/* common portion */
+> +	struct xfs_log_item	 qql_item;	/* common portion */
+>  	struct xfs_qoff_logitem *qql_start_lip; /* qoff-start logitem, if any */
+>  	unsigned int		qql_flags;
+>  } xfs_qoff_logitem_t;
+> diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
+> index 2a6a895ca73e..b0dc4ebe8892 100644
+> --- a/fs/xfs/xfs_extfree_item.h
+> +++ b/fs/xfs/xfs_extfree_item.h
+> @@ -51,7 +51,7 @@ struct kmem_zone;
+>   * AIL, so at this point both the EFI and EFD are freed.
+>   */
+>  typedef struct xfs_efi_log_item {
+> -	xfs_log_item_t		efi_item;
+> +	struct xfs_log_item	efi_item;
+>  	atomic_t		efi_refcount;
+>  	atomic_t		efi_next_extent;
+>  	unsigned long		efi_flags;	/* misc flags */
+> @@ -64,7 +64,7 @@ typedef struct xfs_efi_log_item {
+>   * have been freed.
+>   */
+>  typedef struct xfs_efd_log_item {
+> -	xfs_log_item_t		efd_item;
+> +	struct xfs_log_item	efd_item;
+>  	xfs_efi_log_item_t	*efd_efip;
+>  	uint			efd_next_extent;
+>  	xfs_efd_log_format_t	efd_format;
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 419eae485ff3..6076bae6eb21 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -441,12 +441,12 @@ xfs_lock_inumorder(int lock_mode, int subclass)
+>   */
+>  static void
+>  xfs_lock_inodes(
+> -	xfs_inode_t	**ips,
+> -	int		inodes,
+> -	uint		lock_mode)
+> +	struct xfs_inode	**ips,
+> +	int			inodes,
+> +	uint			lock_mode)
+>  {
+> -	int		attempts = 0, i, j, try_lock;
+> -	xfs_log_item_t	*lp;
+> +	int			attempts = 0, i, j, try_lock;
+> +	struct xfs_log_item	*lp;
+>  
+>  	/*
+>  	 * Currently supports between 2 and 5 inodes with exclusive locking.  We
+> @@ -551,7 +551,7 @@ xfs_lock_two_inodes(
+>  	struct xfs_inode	*temp;
+>  	uint			mode_temp;
+>  	int			attempts = 0;
+> -	xfs_log_item_t		*lp;
+> +	struct xfs_log_item	*lp;
+>  
+>  	ASSERT(hweight32(ip0_mode) == 1);
+>  	ASSERT(hweight32(ip1_mode) == 1);
+> diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
+> index 27081eba220c..07a60e74c39c 100644
+> --- a/fs/xfs/xfs_inode_item.h
+> +++ b/fs/xfs/xfs_inode_item.h
+> @@ -14,7 +14,7 @@ struct xfs_inode;
+>  struct xfs_mount;
+>  
+>  typedef struct xfs_inode_log_item {
+> -	xfs_log_item_t		ili_item;	   /* common portion */
+> +	struct xfs_log_item	ili_item;	   /* common portion */
+>  	struct xfs_inode	*ili_inode;	   /* inode ptr */
+>  	xfs_lsn_t		ili_flush_lsn;	   /* lsn at last flush */
+>  	xfs_lsn_t		ili_last_lsn;	   /* lsn at last transaction */
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 9329f5adbfbe..76023ea49356 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -3463,7 +3463,7 @@ xlog_recover_efd_pass2(
+>  {
+>  	xfs_efd_log_format_t	*efd_formatp;
+>  	xfs_efi_log_item_t	*efip = NULL;
+> -	xfs_log_item_t		*lip;
+> +	struct xfs_log_item	*lip;
+>  	uint64_t		efi_id;
+>  	struct xfs_ail_cursor	cur;
+>  	struct xfs_ail		*ailp = log->l_ailp;
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index a38af44344bf..7a6ee0c2ce20 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -27,7 +27,7 @@ struct xfs_cud_log_item;
+>  struct xfs_bui_log_item;
+>  struct xfs_bud_log_item;
+>  
+> -typedef struct xfs_log_item {
+> +struct xfs_log_item {
+>  	struct list_head		li_ail;		/* AIL pointers */
+>  	struct list_head		li_trans;	/* transaction list */
+>  	xfs_lsn_t			li_lsn;		/* last on-disk lsn */
+> @@ -48,7 +48,7 @@ typedef struct xfs_log_item {
+>  	struct xfs_log_vec		*li_lv;		/* active log vector */
+>  	struct xfs_log_vec		*li_lv_shadow;	/* standby vector */
+>  	xfs_lsn_t			li_seq;		/* CIL commit seq */
+> -} xfs_log_item_t;
+> +};
+>  
+>  /*
+>   * li_flags use the (set/test/clear)_bit atomic interfaces because updates can
+> @@ -68,15 +68,15 @@ typedef struct xfs_log_item {
+>  
+>  struct xfs_item_ops {
+>  	unsigned flags;
+> -	void (*iop_size)(xfs_log_item_t *, int *, int *);
+> -	void (*iop_format)(xfs_log_item_t *, struct xfs_log_vec *);
+> -	void (*iop_pin)(xfs_log_item_t *);
+> -	void (*iop_unpin)(xfs_log_item_t *, int remove);
+> +	void (*iop_size)(struct xfs_log_item *, int *, int *);
+> +	void (*iop_format)(struct xfs_log_item *, struct xfs_log_vec *);
+> +	void (*iop_pin)(struct xfs_log_item *);
+> +	void (*iop_unpin)(struct xfs_log_item *, int remove);
+>  	uint (*iop_push)(struct xfs_log_item *, struct list_head *);
+>  	void (*iop_committing)(struct xfs_log_item *, xfs_lsn_t commit_lsn);
+>  	void (*iop_release)(struct xfs_log_item *);
+> -	xfs_lsn_t (*iop_committed)(xfs_log_item_t *, xfs_lsn_t);
+> -	void (*iop_error)(xfs_log_item_t *, xfs_buf_t *);
+> +	xfs_lsn_t (*iop_committed)(struct xfs_log_item *, xfs_lsn_t);
+> +	void (*iop_error)(struct xfs_log_item *, xfs_buf_t *);
+>  };
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> index 8509c4b59760..f239344fda1a 100644
+> --- a/fs/xfs/xfs_trans_ail.c
+> +++ b/fs/xfs/xfs_trans_ail.c
+> @@ -74,29 +74,29 @@ xfs_ail_check(
+>   * Return a pointer to the last item in the AIL.  If the AIL is empty, then
+>   * return NULL.
+>   */
+> -static xfs_log_item_t *
+> +static struct xfs_log_item *
+>  xfs_ail_max(
+>  	struct xfs_ail  *ailp)
+>  {
+>  	if (list_empty(&ailp->ail_head))
+>  		return NULL;
+>  
+> -	return list_entry(ailp->ail_head.prev, xfs_log_item_t, li_ail);
+> +	return list_entry(ailp->ail_head.prev, struct xfs_log_item, li_ail);
+>  }
+>  
+>  /*
+>   * Return a pointer to the item which follows the given item in the AIL.  If
+>   * the given item is the last item in the list, then return NULL.
+>   */
+> -static xfs_log_item_t *
+> +static struct xfs_log_item *
+>  xfs_ail_next(
+> -	struct xfs_ail  *ailp,
+> -	xfs_log_item_t  *lip)
+> +	struct xfs_ail		*ailp,
+> +	struct xfs_log_item	*lip)
+>  {
+>  	if (lip->li_ail.next == &ailp->ail_head)
+>  		return NULL;
+>  
+> -	return list_first_entry(&lip->li_ail, xfs_log_item_t, li_ail);
+> +	return list_first_entry(&lip->li_ail, struct xfs_log_item, li_ail);
+>  }
+>  
+>  /*
+> @@ -109,10 +109,10 @@ xfs_ail_next(
+>   */
+>  xfs_lsn_t
+>  xfs_ail_min_lsn(
+> -	struct xfs_ail	*ailp)
+> +	struct xfs_ail		*ailp)
+>  {
+> -	xfs_lsn_t	lsn = 0;
+> -	xfs_log_item_t	*lip;
+> +	xfs_lsn_t		lsn = 0;
+> +	struct xfs_log_item	*lip;
+>  
+>  	spin_lock(&ailp->ail_lock);
+>  	lip = xfs_ail_min(ailp);
+> @@ -128,10 +128,10 @@ xfs_ail_min_lsn(
+>   */
+>  static xfs_lsn_t
+>  xfs_ail_max_lsn(
+> -	struct xfs_ail  *ailp)
+> +	struct xfs_ail		*ailp)
+>  {
+> -	xfs_lsn_t       lsn = 0;
+> -	xfs_log_item_t  *lip;
+> +	xfs_lsn_t       	lsn = 0;
+> +	struct xfs_log_item	*lip;
+>  
+>  	spin_lock(&ailp->ail_lock);
+>  	lip = xfs_ail_max(ailp);
+> @@ -216,13 +216,13 @@ xfs_trans_ail_cursor_clear(
+>   * ascending traversal.  Pass a @lsn of zero to initialise the cursor to the
+>   * first item in the AIL. Returns NULL if the list is empty.
+>   */
+> -xfs_log_item_t *
+> +struct xfs_log_item *
+>  xfs_trans_ail_cursor_first(
+>  	struct xfs_ail		*ailp,
+>  	struct xfs_ail_cursor	*cur,
+>  	xfs_lsn_t		lsn)
+>  {
+> -	xfs_log_item_t		*lip;
+> +	struct xfs_log_item	*lip;
+>  
+>  	xfs_trans_ail_cursor_init(ailp, cur);
+>  
+> @@ -248,7 +248,7 @@ __xfs_trans_ail_cursor_last(
+>  	struct xfs_ail		*ailp,
+>  	xfs_lsn_t		lsn)
+>  {
+> -	xfs_log_item_t		*lip;
+> +	struct xfs_log_item	*lip;
+>  
+>  	list_for_each_entry_reverse(lip, &ailp->ail_head, li_ail) {
+>  		if (XFS_LSN_CMP(lip->li_lsn, lsn) <= 0)
+> @@ -327,8 +327,8 @@ xfs_ail_splice(
+>   */
+>  static void
+>  xfs_ail_delete(
+> -	struct xfs_ail  *ailp,
+> -	xfs_log_item_t  *lip)
+> +	struct xfs_ail		*ailp,
+> +	struct xfs_log_item	*lip)
+>  {
+>  	xfs_ail_check(ailp, lip);
+>  	list_del(&lip->li_ail);
+> @@ -358,7 +358,7 @@ xfsaild_push(
+>  {
+>  	xfs_mount_t		*mp = ailp->ail_mount;
+>  	struct xfs_ail_cursor	cur;
+> -	xfs_log_item_t		*lip;
+> +	struct xfs_log_item	*lip;
+>  	xfs_lsn_t		lsn;
+>  	xfs_lsn_t		target;
+>  	long			tout;
+> @@ -613,10 +613,10 @@ xfsaild(
+>   */
+>  void
+>  xfs_ail_push(
+> -	struct xfs_ail	*ailp,
+> -	xfs_lsn_t	threshold_lsn)
+> +	struct xfs_ail		*ailp,
+> +	xfs_lsn_t		threshold_lsn)
+>  {
+> -	xfs_log_item_t	*lip;
+> +	struct xfs_log_item	*lip;
+>  
+>  	lip = xfs_ail_min(ailp);
+>  	if (!lip || XFS_FORCED_SHUTDOWN(ailp->ail_mount) ||
+> @@ -701,7 +701,7 @@ xfs_trans_ail_update_bulk(
+>  	int			nr_items,
+>  	xfs_lsn_t		lsn) __releases(ailp->ail_lock)
+>  {
+> -	xfs_log_item_t		*mlip;
+> +	struct xfs_log_item	*mlip;
+>  	int			mlip_changed = 0;
+>  	int			i;
+>  	LIST_HEAD(tmp);
+> -- 
+> 2.20.1
+> 
