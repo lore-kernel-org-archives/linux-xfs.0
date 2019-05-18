@@ -1,86 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:35104 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726808AbfEQXmJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 19:42:09 -0400
-Subject: Re: [PATCH 5/3] libxfs: rename bli_format to avoid confusion with
- bli_formats
-References: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
- <d8f37464-9d76-2b09-f458-e236ef9afd95@redhat.com>
- <aa0a48c4-2f75-7f83-eeda-f55855994bd5@oracle.com>
- <1717fd26-ba67-e5c0-c906-0b84c1970250@sandeen.net>
-From: Allison Collins <allison.henderson@oracle.com>
-Message-ID: <cb536d8f-16d1-e456-9566-19894fb12158@oracle.com>
-Date: Fri, 17 May 2019 16:41:59 -0700
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:36210 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727260AbfERDKj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 23:10:39 -0400
+Date: Sat, 18 May 2019 13:10:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Question about commit b450672fb66b ("iomap: sub-block dio needs
+ to zeroout beyond EOF")
+Message-ID: <20190518031034.GD29573@dread.disaster.area>
+References: <8b1ba3a1-7ecc-6e1f-c944-26a51baa9747@huawei.com>
+ <20190517065943.GC29573@dread.disaster.area>
+ <e754939d-5ed7-b7b8-e3b7-c34b80f64b60@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1717fd26-ba67-e5c0-c906-0b84c1970250@sandeen.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e754939d-5ed7-b7b8-e3b7-c34b80f64b60@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Hou Tao <houtao1@huawei.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-
-
-On 5/17/19 4:01 PM, Eric Sandeen wrote:
-> On 5/17/19 5:29 PM, Allison Collins wrote:
->> On 5/16/19 1:39 PM, Eric Sandeen wrote:
->>> Rename the bli_format structure to __bli_format to avoid
->>> accidently confusing them with the bli_formats pointer.
->>>
->>> (nb: userspace currently has no bli_formats pointer)
->>>
->>> Source kernel commit: b94381737e9c4d014a4003e8ece9ba88670a2dd4
->>>
->>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->>> ---
->>>    include/xfs_trans.h | 2 +-
->>>    libxfs/logitem.c    | 6 +++---
->>>    libxfs/trans.c      | 4 ++--
->>>    3 files changed, 6 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/include/xfs_trans.h b/include/xfs_trans.h
->>> index 953da5d1..fe03ba64 100644
->>> --- a/include/xfs_trans.h
->>> +++ b/include/xfs_trans.h
->>> @@ -39,7 +39,7 @@ typedef struct xfs_buf_log_item {
->>>        struct xfs_buf        *bli_buf;    /* real buffer pointer */
->>>        unsigned int        bli_flags;    /* misc flags */
->>>        unsigned int        bli_recur;    /* recursion count */
->>> -    xfs_buf_log_format_t    bli_format;    /* in-log header */
->>> +    xfs_buf_log_format_t    __bli_format;    /* in-log header */
->>>    } xfs_buf_log_item_t;
->>>      #define XFS_BLI_DIRTY            (1<<0)
->>> diff --git a/libxfs/logitem.c b/libxfs/logitem.c
->>> index 4da9bc1b..e862ab4f 100644
->>> --- a/libxfs/logitem.c
->>> +++ b/libxfs/logitem.c
->>> @@ -107,9 +107,9 @@ xfs_buf_item_init(
->>>        bip->bli_item.li_mountp = mp;
->>>        INIT_LIST_HEAD(&bip->bli_item.li_trans);
->>>        bip->bli_buf = bp;
->>> -    bip->bli_format.blf_type = XFS_LI_BUF;
->>> -    bip->bli_format.blf_blkno = (int64_t)XFS_BUF_ADDR(bp);
->>> -    bip->bli_format.blf_len = (unsigned short)BTOBB(bp->b_bcount);
->>> +    bip->__bli_format.blf_type = XFS_LI_BUF;
->>> +    bip->__bli_format.blf_blkno = (int64_t)XFS_BUF_ADDR(bp);
->>> +    bip->__bli_format.blf_len = (unsigned short)BTOBB(bp->b_bcount);
->>>        bp->b_log_item = bip;
->>
->> I had a look around this area of code, and I see where the bli_format is getting referenced, but I don't see a bli_formats.  So I feel like I'm missing the motivation for the change.  Did I miss the bli_formats somewhere?  Thanks!
+On Fri, May 17, 2019 at 08:56:35PM +0800, Hou Tao wrote:
+> Hi,
 > 
-> see above :)
-> 
->> (nb: userspace currently has no bli_formats pointer)
-> 
-> (I guess copying the kernel commit log added confusion even w/ the note)
-> 
-> -Eric
+> On 2019/5/17 14:59, Dave Chinner wrote:
+> > On Fri, May 17, 2019 at 10:41:44AM +0800, Hou Tao wrote:
+> >> Hi,
+> >>
+> >> I don't understand why the commit b450672fb66b ("iomap: sub-block dio needs to zeroout beyond EOF") is needed here:
+> >>
+> >> diff --git a/fs/iomap.c b/fs/iomap.c
+> >> index 72f3864a2e6b..77c214194edf 100644
+> >> --- a/fs/iomap.c
+> >> +++ b/fs/iomap.c
+> >> @@ -1677,7 +1677,14 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+> >>                 dio->submit.cookie = submit_bio(bio);
+> >>         } while (nr_pages);
+> >>
+> >> -       if (need_zeroout) {
+> >> +       /*
+> >> +        * We need to zeroout the tail of a sub-block write if the extent type
+> >> +        * requires zeroing or the write extends beyond EOF. If we don't zero
+> >> +        * the block tail in the latter case, we can expose stale data via mmap
+> >> +        * reads of the EOF block.
+> >> +        */
+> >> +       if (need_zeroout ||
+> >> +           ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode))) {
+> >>                 /* zero out from the end of the write to the end of the block */
+> >>                 pad = pos & (fs_block_size - 1);
+> >>                 if (pad)
+> >>
+> >> If need_zeroout is false, it means the block neither is a unwritten block nor
+> >> a newly-mapped block, but that also means the block must had been a unwritten block
+> >> or a newly-mapped block before this write, so the block must have been zeroed, correct ?
+> > 
+> > No. One the contrary, it's a direct IO write to beyond the end of
+> > the file which means the block has not been zeroed at all. If it is
+> > an unwritten extent, it most definitely does not contain zeroes
+> > (unwritten extents are a flag in the extent metadata, not zeroed
+> > disk space) and so it doesn't matter it is written or unwritten we
+> > must zero it before we update the file size.
+> > 
+> Ah, I still can not understand the reason why "the block has not been zeroed at all".
+> Do you mean the scenario in which the past-EOF write tries to write an already mapped
+> block and the past-EOF part of this block has not been zeroed ?
 
-Oh I see.  No I think it's ok, I overlooked it.  You can add my review  :-)
+Yup. Speculative delayed allocation beyond EOF triggered by mmap()
+or buffered writes() that has then been allocated by writeback, then
+we do a dio that extends EOF into that space.
 
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+> Because if the past-EOF write tries to write to a new allocated block, then IOMAP_F_NEW
+> must have been set in iomap->flags and need_zeroout will be true. If it tries to write
+> to an unwritten block, need_zeroout will also be true.
 
+But if it tries to write to an already allocated, written block,
+need_zeroout is not true and it will need to zero.
 > 
+> If it tries to write a block in which the past-EOF part has not been zeroed, even without
+> the past-EOF direct write, the data exposure is still possible, right ?
+
+Not if we zero both sides of the dio correctly before we extend the
+file size on disk.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
