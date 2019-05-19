@@ -1,241 +1,321 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58808 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726088AbfETWbq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 18:31:46 -0400
-Subject: [PATCH ] xfs: basic testing of new xfs_spaceman health command
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 20 May 2019 15:31:41 -0700
-Message-ID: <155839150130.62876.6329606122510578337.stgit@magnolia>
-In-Reply-To: <155839149301.62876.7233006456381129816.stgit@magnolia>
-References: <155839149301.62876.7233006456381129816.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:51116 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725769AbfESRaU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 19 May 2019 13:30:20 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C1059C058CBA
+        for <linux-xfs@vger.kernel.org>; Sun, 19 May 2019 15:00:33 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-12-76.pek2.redhat.com [10.72.12.76])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B6DDE174BA
+        for <linux-xfs@vger.kernel.org>; Sun, 19 May 2019 15:00:32 +0000 (UTC)
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH v2] xfs_io: support splice data between two files
+Date: Sun, 19 May 2019 23:00:26 +0800
+Message-Id: <20190519150026.24626-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Add splice command into xfs_io, by calling splice(2) system call.
 
-Basic tests to make sure xfs_spaceman health command works properly.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Zorro Lang <zlang@redhat.com>
 ---
- common/xfs        |    7 ++++
- tests/xfs/742     |   52 +++++++++++++++++++++++++++++++++
- tests/xfs/742.out |    2 +
- tests/xfs/743     |   84 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/743.out |    4 +++
- tests/xfs/group   |    2 +
- 6 files changed, 151 insertions(+)
- create mode 100755 tests/xfs/742
- create mode 100644 tests/xfs/742.out
- create mode 100755 tests/xfs/743
- create mode 100644 tests/xfs/743.out
 
+Hi,
 
-diff --git a/common/xfs b/common/xfs
-index 42f02ff7..f8dafc6c 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -773,7 +773,12 @@ _require_xfs_spaceman_command()
- 	_require_command "$XFS_SPACEMAN_PROG" "xfs_spaceman"
+Thanks the reviewing from Eric.
+
+If 'length' or 'soffset' or 'length + soffset' out of source file
+range, splice hanging there. V2 fix this issue.
+
+Thanks,
+Zorro
+
+ io/Makefile       |   2 +-
+ io/init.c         |   1 +
+ io/io.h           |   1 +
+ io/splice.c       | 194 ++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_io.8 |  26 +++++++
+ 5 files changed, 223 insertions(+), 1 deletion(-)
+ create mode 100644 io/splice.c
+
+diff --git a/io/Makefile b/io/Makefile
+index 484e2b5a..06d21dd5 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -12,7 +12,7 @@ CFILES = init.c \
+ 	attr.c bmap.c crc32cselftest.c cowextsize.c encrypt.c file.c freeze.c \
+ 	fsync.c getrusage.c imap.c inject.c label.c link.c mmap.c open.c \
+ 	parent.c pread.c prealloc.c pwrite.c reflink.c resblks.c scrub.c \
+-	seek.c shutdown.c stat.c swapext.c sync.c truncate.c utimes.c
++	seek.c shutdown.c splice.c stat.c swapext.c sync.c truncate.c utimes.c
  
- 	testfile=$TEST_DIR/$$.xfs_spaceman
-+	touch $testfile
- 	case $command in
-+	"health")
-+		testio=`$XFS_SPACEMAN_PROG -c "health $param" $TEST_DIR 2>&1`
-+		param_checked=1
-+		;;
- 	*)
- 		testio=`$XFS_SPACEMAN_PROG -c "help $command" $TEST_DIR 2>&1`
- 	esac
-@@ -787,6 +792,8 @@ _require_xfs_spaceman_command()
- 		_notrun "xfs_spaceman $command failed (old kernel/wrong fs/bad args?)"
- 	echo $testio | grep -q "foreign file active" && \
- 		_notrun "xfs_spaceman $command not supported on $FSTYP"
-+	echo $testio | grep -q "Inappropriate ioctl for device" && \
-+		_notrun "xfs_spaceman $command support is missing (missing ioctl?)"
- 	echo $testio | grep -q "Function not implemented" && \
- 		_notrun "xfs_spaceman $command support is missing (missing syscall?)"
- 
-diff --git a/tests/xfs/742 b/tests/xfs/742
-new file mode 100755
-index 00000000..2529c40a
---- /dev/null
-+++ b/tests/xfs/742
-@@ -0,0 +1,52 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0+
-+# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# FS QA Test No. 742
-+#
-+# Ensure all xfs_spaceman commands are documented.
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -rf $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+_require_command "$XFS_SPACEMAN_PROG" "xfs_spaceman"
-+_require_command "$MAN_PROG" man
-+
-+echo "Silence is golden"
-+
-+MANPAGE=$($MAN_PROG --path xfs_spaceman)
-+
-+case "$MANPAGE" in
-+*.gz|*.z\|*.Z)	CAT=zcat;;
-+*.bz2)		CAT=bzcat;;
-+*.xz)		CAT=xzcat;;
-+*)		CAT=cat;;
-+esac
-+_require_command `which $CAT` $CAT
-+
-+for COMMAND in `$XFS_SPACEMAN_PROG -c help $TEST_DIR | awk '{print $1}' | grep -v "^Use"`; do
-+  $CAT "$MANPAGE" | egrep -q "^\.B.*$COMMAND" || \
-+	echo "$COMMAND not documented in the xfs_spaceman manpage"
-+done
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/742.out b/tests/xfs/742.out
+ LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG)
+diff --git a/io/init.c b/io/init.c
+index 83f08f2d..fc191aa7 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -79,6 +79,7 @@ init_commands(void)
+ 	seek_init();
+ 	sendfile_init();
+ 	shutdown_init();
++	splice_init();
+ 	stat_init();
+ 	swapext_init();
+ 	sync_init();
+diff --git a/io/io.h b/io/io.h
+index 6469179e..9a0b71f0 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -110,6 +110,7 @@ extern void		quit_init(void);
+ extern void		resblks_init(void);
+ extern void		seek_init(void);
+ extern void		shutdown_init(void);
++extern void		splice_init(void);
+ extern void		stat_init(void);
+ extern void		swapext_init(void);
+ extern void		sync_init(void);
+diff --git a/io/splice.c b/io/splice.c
 new file mode 100644
-index 00000000..ef4f23cd
+index 00000000..3c6f55e6
 --- /dev/null
-+++ b/tests/xfs/742.out
-@@ -0,0 +1,2 @@
-+QA output created by 742
-+Silence is golden
-diff --git a/tests/xfs/743 b/tests/xfs/743
-new file mode 100755
-index 00000000..d0b7b3b0
---- /dev/null
-+++ b/tests/xfs/743
-@@ -0,0 +1,84 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0+
-+# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# FS QA Test No. 743
-+#
-+# Basic tests of the xfs_spaceman health command.
++++ b/io/splice.c
+@@ -0,0 +1,194 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2019 Red Hat, Inc.
++ * All Rights Reserved.
++ */
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
++#include "command.h"
++#include "input.h"
++#include <fcntl.h>
++#include "init.h"
++#include "io.h"
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
++static cmdinfo_t splice_cmd;
 +
-+_cleanup()
++static void
++splice_help(void)
 +{
-+	cd /
-+	rm -rf $tmp.*
++	printf(_(
++"\n"
++" Splice a range of bytes from the given offset between files through pipe\n"
++"\n"
++" Example:\n"
++" 'splice filename 0 4096 32768' - splice 32768 bytes from filename at offset\n"
++"                                  0 into the open file at position 4096\n"
++" 'splice filename' - splice all bytes from filename into the open file at\n"
++" '                   position 0\n"
++"\n"
++" Copies data between one file and another.  Because this copying is done\n"
++" within the kernel, sendfile does not need to transfer data to and from user\n"
++" space.\n"
++" -m -- SPLICE_F_MOVE flag, attempt to move pages instead of copying.\n"
++" Offset and length in the source/destination file can be optionally specified.\n"
++"\n"));
 +}
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/fuzzy
-+. ./common/filter
++static uint64_t
++splice_file(
++	int		fd,
++	off64_t		soffset,
++	off64_t		doffset,
++	size_t		length,
++	unsigned int	flag,
++	int		*ops)
++{
++	off64_t		soff = soffset;
++	off64_t		doff = doffset;
++	ssize_t		rc = 0;
++	size_t		len = length;
++	uint64_t	total = 0;
++	int		filedes[2];
 +
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+_require_scratch_nocheck
-+_require_scrub
-+_require_xfs_spaceman_command "health"
++	if (pipe(filedes) < 0) {
++		perror("pipe");
++		return -1;
++	}
 +
-+rm -f $seqres.full
++	*ops = 0;
++	while (len > 0 || !*ops) {
++		/* move to pipe buffer */
++		rc = splice(fd, &soff, filedes[1], NULL, len, flag);
++		if (rc < 0) {
++			perror("splice to pipe");
++			goto out_close;
++		}
++		/* move from pipe buffer to dst file */
++		rc = splice(filedes[0], NULL, file->fd, &doff, len, flag);
++		if (rc < 0) {
++			perror("splice from pipe");
++			goto out_close;
++		}
++		(*ops)++;
++		len -= rc;
++		total += rc;
++	}
 +
-+_scratch_mkfs > $tmp.mkfs
-+_scratch_mount
-+
-+# Haven't checked anything, it should tell us to run scrub
-+$XFS_SPACEMAN_PROG -c "health" $SCRATCH_MNT
-+
-+echo "Silence is golden"
-+
-+# Run scrub to collect health info.
-+_scratch_scrub -n >> $seqres.full
-+
-+query() {
-+	$XFS_SPACEMAN_PROG -c "$@" $SCRATCH_MNT | tee -a $seqres.full
++out_close:
++	close(filedes[0]);
++	close(filedes[1]);
++	return total;
 +}
 +
-+query_health() {
-+	query "$@" | grep -q ": ok$"
++static int
++splice_f(
++	int		argc,
++	char		**argv)
++{
++	off64_t		soffset, doffset;
++	long long	count, total;
++	size_t		blocksize, sectsize;
++	struct timeval	t1, t2;
++	char		*infile = NULL;
++	int		Cflag, qflag;
++	int		splice_flag = 0;
++	int		c, fd = -1;
++	int		ops = 0;
++	struct stat	stat;
++
++	Cflag = qflag = 0;
++	soffset = doffset=0;
++	init_cvtnum(&blocksize, &sectsize);
++
++	while ((c = getopt(argc, argv, "Cqm")) != EOF) {
++		switch (c) {
++		case 'C':
++			Cflag = 1;
++			break;
++		case 'q':
++			qflag = 1;
++			break;
++		case 'm':
++			splice_flag |= SPLICE_F_MOVE;
++			break;
++		default:
++			return command_usage(&splice_cmd);
++		}
++	}
++
++	if (optind != argc - 4 && optind != argc - 1)
++		return command_usage(&splice_cmd);
++
++	infile = argv[optind];
++	if ((fd = openfile(infile, NULL, IO_READONLY, 0, NULL)) < 0)
++		return 0;
++	optind++;
++
++	if (fstat(fd, &stat) < 0) {
++		perror("fstat");
++		goto done;
++	}
++
++	if (optind == argc - 3) {
++		soffset = cvtnum(blocksize, sectsize, argv[optind]);
++		if (soffset < 0 || soffset > stat.st_size) {
++			printf(_("invalid src offset argument -- %s\n"), \
++			       argv[optind]);
++			return 0;
++		}
++		optind++;
++		doffset = cvtnum(blocksize, sectsize, argv[optind]);
++		if (doffset < 0) {
++			printf(_("invalid dest offset argument -- %s\n"), \
++			       argv[optind]);
++			return 0;
++		}
++		optind++;
++		count = cvtnum(blocksize, sectsize, argv[optind]);
++		if (count < 0 || (soffset + count) > stat.st_size) {
++			printf(_("invalid length argument -- %s\n"), \
++			       argv[optind]);
++			return 0;
++		}
++	} else {
++		/*
++		 * splice whole file to another, if doesn't specify src and dst
++		 * offset and length
++		 */
++		count = stat.st_size;
++		soffset = 0;
++		doffset = 0;
++	}
++
++	gettimeofday(&t1, NULL);
++	total = splice_file(fd, soffset, doffset, count, splice_flag, &ops);
++	if (ops == 0 || qflag)
++		goto done;
++	gettimeofday(&t2, NULL);
++	t2 = tsub(t2, t1);
++
++	report_io_times("spliced", &t2, (long long)doffset, count, total, ops, \
++	                Cflag);
++
++done:
++	if (infile)
++		close(fd);
++	return 0;
 +}
 +
-+query_sick() {
-+	query "$@" | grep -q ": unhealthy$"
++void
++splice_init(void)
++{
++	splice_cmd.name = "splice";
++	splice_cmd.altname = "spl";
++	splice_cmd.cfunc = splice_f;
++	splice_cmd.argmin = 1;
++	splice_cmd.argmax = -1;
++	splice_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK | CMD_FLAG_ONESHOT;;
++	splice_cmd.args =
++		_("[-m] infile [src_off dst_off len]");
++	splice_cmd.oneline =
++		_("Splice an entire file, or a number of bytes at a specified offset");
++	splice_cmd.help = splice_help;
++
++	add_command(&splice_cmd);
 +}
-+
-+# Let's see if we get at least one healthy rating for each health reporting
-+# group.
-+query_health "health -f" || \
-+	echo "Didn't see a single healthy fs metadata?"
-+
-+query_health "health -a 0" || \
-+	echo "Didn't see a single healthy ag metadata?"
-+
-+query_health "health $SCRATCH_MNT" || \
-+	echo "Didn't see a single healthy file metadata?"
-+
-+# Unmount, corrupt filesystem
-+_scratch_unmount
-+_scratch_xfs_db -x -c 'sb 1' -c 'fuzz -d magicnum random' >> $seqres.full
-+
-+# Now let's see what the AG report says
-+_scratch_mount
-+_scratch_scrub -n >> $seqres.full 2>&1
-+query_sick "health -a 1" || \
-+	echo "Didn't see the expected unhealthy metadata?"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/743.out b/tests/xfs/743.out
-new file mode 100644
-index 00000000..85232e52
---- /dev/null
-+++ b/tests/xfs/743.out
-@@ -0,0 +1,4 @@
-+QA output created by 743
-+Health status has not been collected for this filesystem.
-+Please run xfs_scrub(8) to remedy this situation.
-+Silence is golden
-diff --git a/tests/xfs/group b/tests/xfs/group
-index c8620d72..5a4ef4bf 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -502,3 +502,5 @@
- 502 auto quick unlink
- 503 auto copy metadump
- 739 auto quick mkfs label
-+742 auto quick spaceman
-+743 auto quick health
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 980dcfd3..066a72e7 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -830,6 +830,32 @@ verbose output will be printed.
+ .RE
+ .PD
+ .TP
++.BI "splice  [ \-C ] [ \-q ] [\-m] infile [src_offset dst_offset length]"
++On filesystems that support the
++.BR splice (2)
++system call, splice data from the
++.I infile
++into the open file. If
++.IR src_offset ,
++.IR dst_offset ,
++and
++.I length
++are omitted the contents of infile will be copied to the beginning of the
++open file, overwriting any data already there.
++.RS 1.0i
++.PD 0
++.TP 0.4i
++.B \-C
++Print timing statistics in a condensed format.
++.TP
++.B \-q
++Do not print timing statistics at all.
++.TP
++.B \-m
++Enable SPLICE_F_MOVE flag, attempt to move pages instead of copying.
++.RE
++.PD
++.TP
+ .BI utimes " atime_sec atime_nsec mtime_sec mtime_nsec"
+ The utimes command changes the atime and mtime of the current file.
+ sec uses UNIX timestamp notation and is the seconds elapsed since
+-- 
+2.17.2
