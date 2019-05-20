@@ -1,38 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58750 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726088AbfETWbk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 18:31:40 -0400
-Subject: [PATCH 0/1] xfs: health tracking tests
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 20 May 2019 15:31:33 -0700
-Message-ID: <155839149301.62876.7233006456381129816.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:35640 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387964AbfETQOq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 12:14:46 -0400
+Received: from 089144206147.atnat0015.highway.bob.at ([89.144.206.147] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hSkvz-0005Ku-Jd
+        for linux-xfs@vger.kernel.org; Mon, 20 May 2019 16:14:44 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/17] xfs: remove the no-op spinlock_destroy stub
+Date: Mon, 20 May 2019 18:13:31 +0200
+Message-Id: <20190520161347.3044-2-hch@lst.de>
+In-Reply-To: <20190520161347.3044-1-hch@lst.de>
+References: <20190520161347.3044-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Hi all,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_linux.h | 2 --
+ fs/xfs/xfs_log.c   | 2 --
+ 2 files changed, 4 deletions(-)
 
-Tests for the new XFS online health reporting patches.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=health-tracking
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-tracking
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=health-tracking
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index edbd5a210df2..b78287666309 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -110,8 +110,6 @@ typedef __u32			xfs_nlink_t;
+ #define current_restore_flags_nested(sp, f)	\
+ 		(current->flags = ((current->flags & ~(f)) | (*(sp) & (f))))
+ 
+-#define spinlock_destroy(lock)
+-
+ #define NBBY		8		/* number of bits per byte */
+ 
+ /*
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 0d6fb374dbe8..242ab5e8aaea 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1551,7 +1551,6 @@ xlog_alloc_log(
+ 			xfs_buf_free(iclog->ic_bp);
+ 		kmem_free(iclog);
+ 	}
+-	spinlock_destroy(&log->l_icloglock);
+ 	xfs_buf_free(log->l_xbuf);
+ out_free_log:
+ 	kmem_free(log);
+@@ -1998,7 +1997,6 @@ xlog_dealloc_log(
+ 		kmem_free(iclog);
+ 		iclog = next_iclog;
+ 	}
+-	spinlock_destroy(&log->l_icloglock);
+ 
+ 	log->l_mp->m_log = NULL;
+ 	kmem_free(log);
+-- 
+2.20.1
