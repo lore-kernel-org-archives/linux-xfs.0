@@ -1,203 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34858 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730513AbfETNMq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 May 2019 09:12:46 -0400
-Date: Mon, 20 May 2019 09:12:43 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 12/20] xfs: remove a pointless comment duplicated above
- all xfs_item_ops instances
-Message-ID: <20190520131243.GC31317@bfoster>
-References: <20190517073119.30178-1-hch@lst.de>
- <20190517073119.30178-13-hch@lst.de>
+Received: from mail-vs1-f66.google.com ([209.85.217.66]:38687 "EHLO
+        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730513AbfETNMt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 09:12:49 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190517073119.30178-13-hch@lst.de>
+References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-2-david@fromorbit.com>
+ <CAOQ4uxhOQY8M5rbgHKREN5qpeDGHv0-xK3r37Lj6XfqFoE4qjg@mail.gmail.com>
+ <20181204151332.GA32245@infradead.org> <20181204212948.GO6311@dastard>
+ <CAN-5tyGU=y5JO5UNcmn3rX1gRyK_UxjQvQ+kCsP34_NT2-mQ_A@mail.gmail.com>
+ <20181204223102.GR6311@dastard> <CAOQ4uxhPoJ2vOwGN7PFWkD6+_zdTeMAhT4KphnyktaQ23zqvBw@mail.gmail.com>
+In-Reply-To: <CAOQ4uxhPoJ2vOwGN7PFWkD6+_zdTeMAhT4KphnyktaQ23zqvBw@mail.gmail.com>
+From: Olga Kornievskaia <olga.kornievskaia@gmail.com>
+Date: Mon, 20 May 2019 09:12:36 -0400
+Message-ID: <CAN-5tyGN8LPAxxjApBifbs6+eAgOVE8G1x3vawSMfT2Ufo7Bpw@mail.gmail.com>
+Subject: Re: [PATCH 01/11] vfs: copy_file_range source range over EOF should fail
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nfs <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, CIFS <linux-cifs@vger.kernel.org>
 
-On Fri, May 17, 2019 at 09:31:11AM +0200, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+On Mon, May 20, 2019 at 5:10 AM Amir Goldstein <amir73il@gmail.com> wrote:
+>
+> On Wed, Dec 5, 2018 at 12:31 AM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Tue, Dec 04, 2018 at 04:47:18PM -0500, Olga Kornievskaia wrote:
+> > > On Tue, Dec 4, 2018 at 4:35 PM Dave Chinner <david@fromorbit.com> wrote:
+> > > >
+> > > > On Tue, Dec 04, 2018 at 07:13:32AM -0800, Christoph Hellwig wrote:
+> > > > > On Mon, Dec 03, 2018 at 02:46:20PM +0200, Amir Goldstein wrote:
+> > > > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > > >
+> > > > > > > The man page says:
+> > > > > > >
+> > > > > > > EINVAL Requested range extends beyond the end of the source file
+> > > > > > >
+> > > > > > > But the current behaviour is that copy_file_range does a short
+> > > > > > > copy up to the source file EOF. Fix the kernel behaviour to match
+> > > > > > > the behaviour described in the man page.
+> > > > >
+> > > > > I think the behavior implemented is a lot more useful than the one
+> > > > > documented..
+> > > >
+> > > > The current behaviour is really nasty. Because copy_file_range() can
+> > > > return short copies, the caller has to implement a loop to ensure
+> > > > the range hey want get copied.  When the source range you are
+> > > > trying to copy overlaps source EOF, this loop:
+> > > >
+> > > >         while (len > 0) {
+> > > >                 ret = copy_file_range(... len ...)
+> > > >                 ...
+> > > >                 off_in += ret;
+> > > >                 off_out += ret;
+> > > >                 len -= ret;
+> > > >         }
+> > > >
+> > > > Currently the fallback code copies up to the end of the source file
+> > > > on the first copy and then fails the second copy with EINVAL because
+> > > > the source range is now completely beyond EOF.
+> > > >
+> > > > So, from an application perspective, did the copy succeed or did it
+> > > > fail?
+> > > >
+> > > > Existing tools that exercise copy_file_range (like xfs_io) consider
+> > > > this a failure, because the second copy_file_range() call returns
+> > > > EINVAL and not some "there is no more to copy" marker like read()
+> > > > returning 0 bytes when attempting to read beyond EOF.
+> > > >
+> > > > IOWs, we cannot tell the difference between a real error and a short
+> > > > copy because the input range spans EOF and it was silently
+> > > > shortened. That's the API problem we need to fix here - the existing
+> > > > behaviour is really crappy for applications. Erroring out
+> > > > immmediately is one solution, and it's what the man page says should
+> > > > happen so that is what I implemented.
+> > > >
+> > > > Realistically, though, I think an attempt to read beyond EOF for the
+> > > > copy should result in behaviour like read() (i.e. return 0 bytes),
+> > > > not EINVAL. The existing behaviour needs to change, though.
+> > >
+> > > There are two checks to consider
+> > > 1. pos_in >= EOF should return EINVAL
+> > > 2. however what's perhaps should be relaxed is pos_in+len >= EOF
+> > > should return a short copy.
+> > >
+> > > Having check#1 enforced allows to us to differentiate between a real
+> > > error and a short copy.
+> >
+> > That's what the code does right now and *exactly what I'm trying to
+> > fix* because it EINVAL is ambiguous and not an indicator that we've
+> > reached the end of the source file. EINVAL can indicate several
+> > different errors, so it really has to be treated as a "copy failed"
+> > error by applications.
+> >
+> > Have a look at read/pread() - they return 0 in this case to indicate
+> > a short read, and the value of zero is explicitly defined as meaning
+> > "read position is beyond EOF".  Applications know straight away that
+> > there is no more data to be read and there was no error, so can
+> > terminate on a successful short read.
+> >
+> > We need to allow applications to terminate copy loops on a
+> > successful short copy. IOWs, applications need to either:
+> >
+> >         - get an immediate error saying the range is invalid rather
+> >           than doing a short copy (as per the man page); or
+> >         - have an explicit marker to say "no more data to be copied"
+> >
+> > Applications need the "no more data to copy" case to be explicit and
+> > unambiguous so they can make sane decisions about whether a short
+> > copy was successful because the file was shorter than expected or
+> > whether a short copy was a result of a real error being encountered.
+> > The current behaviour is largely unusable for applications because
+> > they have to guess at the reason for EINVAL part way through a
+> > copy....
+> >
+>
+> Dave,
+>
+> I went a head and implemented the desired behavior.
+> However, while testing I observed that the desired behavior is already
+> the existing behavior. For example, trying to copy 10 bytes from a 2 bytes file,
+> xfs_io copy loop ends as expected:
+> copy_file_range(4, [0], 3, [0], 10, 0)  = 2
+> copy_file_range(4, [2], 3, [2], 8, 0)   = 0
+>
+> This was tested on ext4 and xfs with reflink on recent kernel as well as on
+> v4.20-rc1 (era of original patch set).
+>
+> Where and how did you observe the EINVAL behavior described above?
+> (besides man page that is). There are even xfstests (which you modified)
+> that verify the return 0 for past EOF behavior.
+>
+> For now, I am just dropping this patch from the patch series.
+> Let me know if I am missing something.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+The was fixing inconsistency in what the man page specified (ie., it
+must fail with EINVAL if offsets are out of range) which was never
+enforced by the code. The patch then could be to fix the existing
+semantics (man page) of the system call.
 
->  fs/xfs/xfs_bmap_item.c     | 6 ------
->  fs/xfs/xfs_buf_item.c      | 3 ---
->  fs/xfs/xfs_dquot_item.c    | 6 ------
->  fs/xfs/xfs_extfree_item.c  | 6 ------
->  fs/xfs/xfs_icreate_item.c  | 3 ---
->  fs/xfs/xfs_inode_item.c    | 3 ---
->  fs/xfs/xfs_refcount_item.c | 6 ------
->  fs/xfs/xfs_rmap_item.c     | 6 ------
->  8 files changed, 39 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index d7ceb2d1ae82..46dcadf790c2 100644
-> --- a/fs/xfs/xfs_bmap_item.c
-> +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -125,9 +125,6 @@ xfs_bui_item_release(
->  	xfs_bui_release(BUI_ITEM(lip));
->  }
->  
-> -/*
-> - * This is the ops vector shared by all bui log items.
-> - */
->  static const struct xfs_item_ops xfs_bui_item_ops = {
->  	.iop_size	= xfs_bui_item_size,
->  	.iop_format	= xfs_bui_item_format,
-> @@ -208,9 +205,6 @@ xfs_bud_item_release(
->  	kmem_zone_free(xfs_bud_zone, budp);
->  }
->  
-> -/*
-> - * This is the ops vector shared by all bud log items.
-> - */
->  static const struct xfs_item_ops xfs_bud_item_ops = {
->  	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
->  	.iop_size	= xfs_bud_item_size,
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 05eefc677cd8..2c7aef61ea92 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -679,9 +679,6 @@ xfs_buf_item_committed(
->  	return lsn;
->  }
->  
-> -/*
-> - * This is the ops vector shared by all buf log items.
-> - */
->  static const struct xfs_item_ops xfs_buf_item_ops = {
->  	.iop_size	= xfs_buf_item_size,
->  	.iop_format	= xfs_buf_item_format,
-> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> index b8fd81641dfc..ade4520d3fdf 100644
-> --- a/fs/xfs/xfs_dquot_item.c
-> +++ b/fs/xfs/xfs_dquot_item.c
-> @@ -222,9 +222,6 @@ xfs_qm_dquot_logitem_committing(
->  	return xfs_qm_dquot_logitem_release(lip);
->  }
->  
-> -/*
-> - * This is the ops vector for dquots
-> - */
->  static const struct xfs_item_ops xfs_dquot_item_ops = {
->  	.iop_size	= xfs_qm_dquot_logitem_size,
->  	.iop_format	= xfs_qm_dquot_logitem_format,
-> @@ -320,9 +317,6 @@ static const struct xfs_item_ops xfs_qm_qoffend_logitem_ops = {
->  	.iop_committed	= xfs_qm_qoffend_logitem_committed,
->  };
->  
-> -/*
-> - * This is the ops vector shared by all quotaoff-start log items.
-> - */
->  static const struct xfs_item_ops xfs_qm_qoff_logitem_ops = {
->  	.iop_size	= xfs_qm_qoff_logitem_size,
->  	.iop_format	= xfs_qm_qoff_logitem_format,
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index 762eb288dfe8..bb0b1e942d00 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -135,9 +135,6 @@ xfs_efi_item_release(
->  	xfs_efi_release(EFI_ITEM(lip));
->  }
->  
-> -/*
-> - * This is the ops vector shared by all efi log items.
-> - */
->  static const struct xfs_item_ops xfs_efi_item_ops = {
->  	.iop_size	= xfs_efi_item_size,
->  	.iop_format	= xfs_efi_item_format,
-> @@ -307,9 +304,6 @@ xfs_efd_item_release(
->  	xfs_efd_item_free(efdp);
->  }
->  
-> -/*
-> - * This is the ops vector shared by all efd log items.
-> - */
->  static const struct xfs_item_ops xfs_efd_item_ops = {
->  	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
->  	.iop_size	= xfs_efd_item_size,
-> diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
-> index eb9cb04635be..4f1ce50ce323 100644
-> --- a/fs/xfs/xfs_icreate_item.c
-> +++ b/fs/xfs/xfs_icreate_item.c
-> @@ -63,9 +63,6 @@ xfs_icreate_item_release(
->  	kmem_zone_free(xfs_icreate_zone, ICR_ITEM(lip));
->  }
->  
-> -/*
-> - * This is the ops vector shared by all buf log items.
-> - */
->  static const struct xfs_item_ops xfs_icreate_item_ops = {
->  	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
->  	.iop_size	= xfs_icreate_item_size,
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index a00f0b6aecc7..62847e95b399 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -627,9 +627,6 @@ xfs_inode_item_committing(
->  	return xfs_inode_item_release(lip);
->  }
->  
-> -/*
-> - * This is the ops vector shared by all buf log items.
-> - */
->  static const struct xfs_item_ops xfs_inode_item_ops = {
->  	.iop_size	= xfs_inode_item_size,
->  	.iop_format	= xfs_inode_item_format,
-> diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> index b4ab71ce39fc..2b2f6e7ad867 100644
-> --- a/fs/xfs/xfs_refcount_item.c
-> +++ b/fs/xfs/xfs_refcount_item.c
-> @@ -124,9 +124,6 @@ xfs_cui_item_release(
->  	xfs_cui_release(CUI_ITEM(lip));
->  }
->  
-> -/*
-> - * This is the ops vector shared by all cui log items.
-> - */
->  static const struct xfs_item_ops xfs_cui_item_ops = {
->  	.iop_size	= xfs_cui_item_size,
->  	.iop_format	= xfs_cui_item_format,
-> @@ -213,9 +210,6 @@ xfs_cud_item_release(
->  	kmem_zone_free(xfs_cud_zone, cudp);
->  }
->  
-> -/*
-> - * This is the ops vector shared by all cud log items.
-> - */
->  static const struct xfs_item_ops xfs_cud_item_ops = {
->  	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
->  	.iop_size	= xfs_cud_item_size,
-> diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-> index 1b35b3d38708..dce1357aef88 100644
-> --- a/fs/xfs/xfs_rmap_item.c
-> +++ b/fs/xfs/xfs_rmap_item.c
-> @@ -123,9 +123,6 @@ xfs_rui_item_release(
->  	xfs_rui_release(RUI_ITEM(lip));
->  }
->  
-> -/*
-> - * This is the ops vector shared by all rui log items.
-> - */
->  static const struct xfs_item_ops xfs_rui_item_ops = {
->  	.iop_size	= xfs_rui_item_size,
->  	.iop_format	= xfs_rui_item_format,
-> @@ -234,9 +231,6 @@ xfs_rud_item_release(
->  	kmem_zone_free(xfs_rud_zone, rudp);
->  }
->  
-> -/*
-> - * This is the ops vector shared by all rud log items.
-> - */
->  static const struct xfs_item_ops xfs_rud_item_ops = {
->  	.flags		= XFS_ITEM_RELEASE_ON_COMMIT,
->  	.iop_size	= xfs_rud_item_size,
-> -- 
-> 2.20.1
-> 
+Copy file range range is not only read and write but rather
+lseek+read+write and if somebody specifies an incorrect offset to the
+lseek the system call should fail. Thus I still think that copy file
+range should enforce that specifying a source offset beyond the end of
+the file should fail with EINVAL.
+
+If the copy file range returned 0 bytes does it mean it's a stopping
+condition, not according to the current semantics.
