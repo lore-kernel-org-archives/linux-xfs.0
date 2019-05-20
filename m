@@ -1,51 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:32830 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725941AbfETXKz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:10:55 -0400
-Date: Mon, 20 May 2019 16:10:42 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/3] xfsprogs: more libxfs/ spring cleaning
-Message-ID: <20190520231042.GJ5335@magnolia>
-References: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
- <20190520230311.GI5335@magnolia>
+Received: from mail-oi1-f169.google.com ([209.85.167.169]:37941 "EHLO
+        mail-oi1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725681AbfETXgs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:36:48 -0400
+Received: by mail-oi1-f169.google.com with SMTP id u199so11372461oie.5
+        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2019 16:36:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190520230311.GI5335@magnolia>
+References: <CAHgs-5XkA5xFgxgSaX9m70gduuO1beq6fiY7UEGv1ad6bd19Hw@mail.gmail.com>
+ <20190513140943.GC61135@bfoster>
+In-Reply-To: <20190513140943.GC61135@bfoster>
+From: Tim Smith <tim.smith@vaultcloud.com.au>
+Date: Tue, 21 May 2019 09:36:37 +1000
+Message-ID: <CAHgs-5VCjUhk=ijgUmcMPJ7Gd44yH1yExGZnA5xZv4tfFBQQwQ@mail.gmail.com>
+Subject: Re: xfs filesystem reports negative usage - reoccurring problem
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 20, 2019 at 04:03:11PM -0700, Darrick J. Wong wrote:
-> On Thu, May 16, 2019 at 12:42:45PM -0500, Eric Sandeen wrote:
-> > It wasn't super clear before - my goal here is to keep reducing
-> > cosmetic differences between kernelspace & userspace libxfs/*
-> > files and functions.
-> > 
-> > To that end, 3 more patches ... the first one may requires someone
-> > who groks the libxfs_* API namespace picture (looking at you, Dave!)
-> > 
-> > (this abandons the "make new files" patches I sent before, at least
-> > for now, I'll heed dave's advice to minimize moves...)
-> 
-> Er, can you turn on diffstat for each patch that gets sent?  That'll
-> make it much easier for me to figure out if any of these patches have to
-> go in the kernel first.
-> 
-> I /think/ the answer is 'no'....?
+On Tue, May 14, 2019 at 12:09 AM Brian Foster <bfoster@redhat.com> wrote:
+> Could you also include xfs_info and mount params of the filesystem(s) in
+> question?
 
-Yes, this is purely userspace stuff, no kernel patches required.
+$ sudo mount | grep sdad
+/dev/sdad on /srv/node/sdad type xfs
+(rw,noatime,nodiratime,attr2,inode64,logbufs=8,noquota)
 
-For the whole series (modulo everyone else's comments),
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+$ sudo xfs_info /srv/node/sdad
+meta-data=/dev/sdad              isize=512    agcount=10, agsize=268435455 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0
+data     =                       bsize=4096   blocks=2441609216, imaxpct=5
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=521728, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
---D
+$ sudo xfs_info /srv/node/sdac
+meta-data=/dev/sdac              isize=512    agcount=10, agsize=268435455 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0
+data     =                       bsize=4096   blocks=2441609216, imaxpct=5
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=521728, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
+> Also, is this negative blocks used state persistent for any of these
+> filesystems? IOW, if you unmount/mount, are you right back into this
+> state, or does accounting start off sane and fall into this bogus state
+> after a period of runtime or due to some unknown operation?
 
-> --D
-> 
-> > Thanks,
-> > -Eric
+It's persistent. After umount/remount, it's still in the same state.
+It seems to happen after some time...
