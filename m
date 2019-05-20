@@ -1,89 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39834 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728858AbfEUQYk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 May 2019 12:24:40 -0400
-Date: Tue, 21 May 2019 12:24:14 -0400 (EDT)
-From: Pankaj Gupta <pagupta@redhat.com>
-Message-ID: <176786650.30122184.1558455854322.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20190521094543-mutt-send-email-mst@kernel.org>
-References: <20190521133713.31653-1-pagupta@redhat.com> <20190521133713.31653-3-pagupta@redhat.com> <20190521094543-mutt-send-email-mst@kernel.org>
-Subject: Re: [Qemu-devel] [PATCH v10 2/7] virtio-pmem: Add virtio pmem
- driver
+Received: from aserp2130.oracle.com ([141.146.126.79]:37692 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726384AbfETXSH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:18:07 -0400
+Subject: [PATCH 12/12] mkfs: enable reflink by default
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 20 May 2019 16:18:00 -0700
+Message-ID: <155839428076.68606.9379127257564633311.stgit@magnolia>
+In-Reply-To: <155839420081.68606.4573219764134939943.stgit@magnolia>
+References: <155839420081.68606.4573219764134939943.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: cohuck@redhat.com, jack@suse.cz, kvm@vger.kernel.org, david@redhat.com, jasowang@redhat.com, david@fromorbit.com, qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org, dm-devel@redhat.com, adilger kernel <adilger.kernel@dilger.ca>, zwisler@kernel.org, aarcange@redhat.com, dave jiang <dave.jiang@intel.com>, jstaron@google.com, linux-nvdimm@lists.01.org, vishal l verma <vishal.l.verma@intel.com>, willy@infradead.org, hch@infradead.org, linux-acpi@vger.kernel.org, jmoyer@redhat.com, linux-ext4@vger.kernel.org, lenb@kernel.org, kilobyte@angband.pl, rdunlap@infradead.org, riel@surriel.com, yuval shaia <yuval.shaia@oracle.com>, stefanha@redhat.com, pbonzini@redhat.com, dan j williams <dan.j.williams@intel.com>, lcapitulino@redhat.com, kwolf@redhat.com, nilal@redhat.com, tytso@mit.edu, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, snitzer@redhat.com, darrick wong <darrick.wong@oracle.com>, rjw@rjwysocki.net, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, imammedo@redhat.com
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
+
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+Data block sharing (a.k.a. reflink) has been stable for a while, so turn
+it on by default.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ mkfs/xfs_mkfs.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-> > diff --git a/include/uapi/linux/virtio_pmem.h
-> > b/include/uapi/linux/virtio_pmem.h
-> > new file mode 100644
-> > index 000000000000..7a3e2fe52415
-> > --- /dev/null
-> > +++ b/include/uapi/linux/virtio_pmem.h
-> > @@ -0,0 +1,35 @@
-> > +/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
-> > +/*
-> > + * Definitions for virtio-pmem devices.
-> > + *
-> > + * Copyright (C) 2019 Red Hat, Inc.
-> > + *
-> > + * Author(s): Pankaj Gupta <pagupta@redhat.com>
-> > + */
-> > +
-> > +#ifndef _UAPI_LINUX_VIRTIO_PMEM_H
-> > +#define _UAPI_LINUX_VIRTIO_PMEM_H
-> > +
-> > +#include <linux/types.h>
-> > +#include <linux/virtio_types.h>
-> > +#include <linux/virtio_ids.h>
-> > +#include <linux/virtio_config.h>
-> > +
-> > +struct virtio_pmem_config {
-> > +	__le64 start;
-> > +	__le64 size;
-> > +};
-> > +
-> 
-> config generally should be __u64.
-> Are you sure sparse does not complain?
-
-I used this because VIRTIO 1.1 spec says: 
-"The device configuration space uses the little-endian format for multi-byte fields. "
-
-and __le64 looks ok to me. Also, its used in other driver config as welle.g virtio-vsock
-
-> 
-> 
-> > +#define VIRTIO_PMEM_REQ_TYPE_FLUSH      0
-> > +
-> > +struct virtio_pmem_resp {
-> > +	/* Host return status corresponding to flush request */
-> > +	__virtio32 ret;
-> > +};
-> > +
-> > +struct virtio_pmem_req {
-> > +	/* command type */
-> > +	__virtio32 type;
-> > +};
-> > +
-> > +#endif
-> > --
-> > 2.20.1
-> 
-> Sorry why are these __virtio32 not __le32?
-
-I used __virtio32 for data fields for guest and host supporting different endianess.
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 8f84536e..afed46d0 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2015,7 +2015,7 @@ _("rmapbt not supported without CRC support\n"));
+ 		}
+ 		cli->sb_feat.rmapbt = false;
  
-Thanks,
-Pankaj
-> 
-> --
-> MST
-> 
-> 
+-		if (cli->sb_feat.reflink) {
++		if (cli->sb_feat.reflink && cli_opt_set(&mopts, M_REFLINK)) {
+ 			fprintf(stderr,
+ _("reflink not supported without CRC support\n"));
+ 			usage();
+@@ -3900,7 +3900,7 @@ main(
+ 			.finobt = true,
+ 			.spinodes = true,
+ 			.rmapbt = false,
+-			.reflink = false,
++			.reflink = true,
+ 			.parent_pointers = false,
+ 			.nodalign = false,
+ 			.nortalign = false,
