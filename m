@@ -1,66 +1,200 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60550 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728053AbfEUNmg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 May 2019 09:42:36 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v10 4/7] dm: enable synchronous dax
-Date: Tue, 21 May 2019 19:07:10 +0530
-Message-Id: <20190521133713.31653-5-pagupta@redhat.com>
-In-Reply-To: <20190521133713.31653-1-pagupta@redhat.com>
-References: <20190521133713.31653-1-pagupta@redhat.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:37032 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726584AbfETXRY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:17:24 -0400
+Subject: [PATCH 06/12] misc: remove all use of xfs_fsop_geom_t
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 20 May 2019 16:17:19 -0700
+Message-ID: <155839423901.68606.18360420363137361199.stgit@magnolia>
+In-Reply-To: <155839420081.68606.4573219764134939943.stgit@magnolia>
+References: <155839420081.68606.4573219764134939943.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dm-devel@redhat.com
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org, snitzer@redhat.com
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
- This patch sets dax device 'DAXDEV_SYNC' flag if all the target
- devices of device mapper support synchrononous DAX. If device
- mapper consists of both synchronous and asynchronous dax devices,
- we don't set 'DAXDEV_SYNC' flag. 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+Remove all the uses of the old xfs_fsop_geom_t typedef.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- drivers/md/dm-table.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ growfs/xfs_growfs.c |    4 ++--
+ io/init.c           |    2 +-
+ io/io.h             |    6 +++---
+ io/open.c           |    6 +++---
+ man/man3/xfsctl.3   |    2 +-
+ spaceman/file.c     |    4 ++--
+ spaceman/init.c     |    2 +-
+ spaceman/space.h    |    6 +++---
+ 8 files changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index cde3b49b2a91..1cce626ff576 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -886,10 +886,17 @@ static int device_supports_dax(struct dm_target *ti, struct dm_dev *dev,
- 	return bdev_dax_supported(dev->bdev, PAGE_SIZE);
- }
+
+diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+index 392e4a00..ffd82f95 100644
+--- a/growfs/xfs_growfs.c
++++ b/growfs/xfs_growfs.c
+@@ -44,7 +44,7 @@ main(int argc, char **argv)
+ 	int			error;	/* we have hit an error */
+ 	long			esize;	/* new rt extent size */
+ 	int			ffd;	/* mount point file descriptor */
+-	xfs_fsop_geom_t		geo;	/* current fs geometry */
++	struct xfs_fsop_geom	geo;	/* current fs geometry */
+ 	int			iflag;	/* -i flag */
+ 	int			isint;	/* log is currently internal */
+ 	int			lflag;	/* -l flag */
+@@ -52,7 +52,7 @@ main(int argc, char **argv)
+ 	int			maxpct;	/* -m flag value */
+ 	int			mflag;	/* -m flag */
+ 	int			nflag;	/* -n flag */
+-	xfs_fsop_geom_t		ngeo;	/* new fs geometry */
++	struct xfs_fsop_geom	ngeo;	/* new fs geometry */
+ 	int			rflag;	/* -r flag */
+ 	long long		rsize;	/* new rt size in fs blocks */
+ 	int			xflag;	/* -x flag */
+diff --git a/io/init.c b/io/init.c
+index 83f08f2d..7025aea5 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -133,7 +133,7 @@ init(
+ 	int		c, flags = 0;
+ 	char		*sp;
+ 	mode_t		mode = 0600;
+-	xfs_fsop_geom_t	geometry = { 0 };
++	struct xfs_fsop_geom geometry = { 0 };
+ 	struct fs_path	fsp;
  
-+static int device_synchronous(struct dm_target *ti, struct dm_dev *dev,
-+			       sector_t start, sector_t len, void *data)
-+{
-+	return dax_synchronous(dev->dax_dev);
-+}
-+
- static bool dm_table_supports_dax(struct dm_table *t)
+ 	progname = basename(argv[0]);
+diff --git a/io/io.h b/io/io.h
+index 6469179e..0848ab98 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -38,7 +38,7 @@ typedef struct fileio {
+ 	int		fd;		/* open file descriptor */
+ 	int		flags;		/* flags describing file state */
+ 	char		*name;		/* file name at time of open */
+-	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
++	struct xfs_fsop_geom geom;	/* XFS filesystem geometry */
+ 	struct fs_path	fs_path;	/* XFS path information */
+ } fileio_t;
+ 
+@@ -70,9 +70,9 @@ extern void *check_mapping_range(mmap_region_t *, off64_t, size_t, int);
+  */
+ 
+ extern off64_t		filesize(void);
+-extern int		openfile(char *, xfs_fsop_geom_t *, int, mode_t,
++extern int		openfile(char *, struct xfs_fsop_geom *, int, mode_t,
+ 				 struct fs_path *);
+-extern int		addfile(char *, int , xfs_fsop_geom_t *, int,
++extern int		addfile(char *, int , struct xfs_fsop_geom *, int,
+ 				struct fs_path *);
+ extern void		printxattr(uint, int, int, const char *, int, int);
+ 
+diff --git a/io/open.c b/io/open.c
+index 11805cd7..ce7a5362 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -51,7 +51,7 @@ static long extsize;
+ int
+ openfile(
+ 	char		*path,
+-	xfs_fsop_geom_t	*geom,
++	struct xfs_fsop_geom *geom,
+ 	int		flags,
+ 	mode_t		mode,
+ 	struct fs_path	*fs_path)
+@@ -156,7 +156,7 @@ int
+ addfile(
+ 	char		*name,
+ 	int		fd,
+-	xfs_fsop_geom_t	*geometry,
++	struct xfs_fsop_geom *geometry,
+ 	int		flags,
+ 	struct fs_path	*fs_path)
  {
- 	struct dm_target *ti;
- 	unsigned i;
-+	bool dax_sync = true;
+@@ -229,7 +229,7 @@ open_f(
+ 	int		c, fd, flags = 0;
+ 	char		*sp;
+ 	mode_t		mode = 0600;
+-	xfs_fsop_geom_t	geometry = { 0 };
++	struct xfs_fsop_geom geometry = { 0 };
+ 	struct fs_path	fsp;
  
- 	/* Ensure that all targets support DAX. */
- 	for (i = 0; i < dm_table_get_num_targets(t); i++) {
-@@ -901,7 +908,14 @@ static bool dm_table_supports_dax(struct dm_table *t)
- 		if (!ti->type->iterate_devices ||
- 		    !ti->type->iterate_devices(ti, device_supports_dax, NULL))
- 			return false;
-+
-+		/* Check devices support synchronous DAX */
-+		if (dax_sync &&
-+		    !ti->type->iterate_devices(ti, device_synchronous, NULL))
-+			dax_sync = false;
- 	}
-+	if (dax_sync)
-+		set_dax_synchronous(t->md->dax_dev);
+ 	if (argc == 1) {
+diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
+index 6e5027c4..462ccbd8 100644
+--- a/man/man3/xfsctl.3
++++ b/man/man3/xfsctl.3
+@@ -640,7 +640,7 @@ operations on XFS filesystems.
+ For
+ .B XFS_IOC_FSGEOMETRY
+ (get filesystem mkfs time information), the output structure is of type
+-.BR xfs_fsop_geom_t .
++.BR struct xfs_fsop_geom .
+ For
+ .B XFS_FS_COUNTS
+ (get filesystem dynamic global information), the output structure is of type
+diff --git a/spaceman/file.c b/spaceman/file.c
+index d2acf5db..a9b8461f 100644
+--- a/spaceman/file.c
++++ b/spaceman/file.c
+@@ -44,7 +44,7 @@ print_f(
+ int
+ openfile(
+ 	char		*path,
+-	xfs_fsop_geom_t	*geom,
++	struct xfs_fsop_geom *geom,
+ 	struct fs_path	*fs_path)
+ {
+ 	struct fs_path	*fsp;
+@@ -84,7 +84,7 @@ int
+ addfile(
+ 	char		*name,
+ 	int		fd,
+-	xfs_fsop_geom_t	*geometry,
++	struct xfs_fsop_geom *geometry,
+ 	struct fs_path	*fs_path)
+ {
+ 	char		*filename;
+diff --git a/spaceman/init.c b/spaceman/init.c
+index 181a3446..c845f920 100644
+--- a/spaceman/init.c
++++ b/spaceman/init.c
+@@ -60,7 +60,7 @@ init(
+ 	char		**argv)
+ {
+ 	int		c;
+-	xfs_fsop_geom_t	geometry = { 0 };
++	struct xfs_fsop_geom geometry = { 0 };
+ 	struct fs_path	fsp;
  
- 	return true;
- }
--- 
-2.20.1
+ 	progname = basename(argv[0]);
+diff --git a/spaceman/space.h b/spaceman/space.h
+index bf9cc2bf..b246f602 100644
+--- a/spaceman/space.h
++++ b/spaceman/space.h
+@@ -7,7 +7,7 @@
+ #define XFS_SPACEMAN_SPACE_H_
+ 
+ typedef struct fileio {
+-	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
++	struct xfs_fsop_geom geom;		/* XFS filesystem geometry */
+ 	struct fs_path	fs_path;	/* XFS path information */
+ 	char		*name;		/* file name at time of open */
+ 	int		fd;		/* open file descriptor */
+@@ -17,8 +17,8 @@ extern fileio_t		*filetable;	/* open file table */
+ extern int		filecount;	/* number of open files */
+ extern fileio_t		*file;		/* active file in file table */
+ 
+-extern int	openfile(char *, xfs_fsop_geom_t *, struct fs_path *);
+-extern int	addfile(char *, int , xfs_fsop_geom_t *, struct fs_path *);
++extern int	openfile(char *, struct xfs_fsop_geom *, struct fs_path *);
++extern int	addfile(char *, int , struct xfs_fsop_geom *, struct fs_path *);
+ 
+ extern void	print_init(void);
+ extern void	help_init(void);
