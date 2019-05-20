@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38342 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726584AbfETXRS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:17:18 -0400
-Subject: [PATCH 05/12] libxfs: refactor open-coded INUMBERS calls
+Received: from userp2130.oracle.com ([156.151.31.86]:47224 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727069AbfETXSZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:18:25 -0400
+Subject: [PATCH 2/8] libxfs: break out the fsop geometry manpage
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 20 May 2019 16:17:12 -0700
-Message-ID: <155839423260.68606.10599769594679056156.stgit@magnolia>
-In-Reply-To: <155839420081.68606.4573219764134939943.stgit@magnolia>
-References: <155839420081.68606.4573219764134939943.stgit@magnolia>
+Date: Mon, 20 May 2019 16:18:19 -0700
+Message-ID: <155839429960.68923.5927727531720951676.stgit@magnolia>
+In-Reply-To: <155839428721.68923.11962490742479847985.stgit@magnolia>
+References: <155839428721.68923.11962490742479847985.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -20,258 +20,262 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor all the INUMBERS ioctl callsites into helper functions.
+Break out the fs geometry ioctl into a separate manpage so that we can
+document how it works.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/linux.h    |    4 ++++
- io/imap.c          |   30 +++++++++++++-----------------
- io/open.c          |   19 +++++++------------
- libhandle/ioctl.c  |   18 ++++++++++++++++++
- scrub/fscounters.c |   17 ++++++-----------
- scrub/inodes.c     |   21 +++++++--------------
- 6 files changed, 55 insertions(+), 54 deletions(-)
+ man/man2/ioctl_xfs_fsop_geometry.2 |  214 ++++++++++++++++++++++++++++++++++++
+ man/man3/xfsctl.3                  |   10 +-
+ 2 files changed, 220 insertions(+), 4 deletions(-)
+ create mode 100644 man/man2/ioctl_xfs_fsop_geometry.2
 
 
-diff --git a/include/linux.h b/include/linux.h
-index 98750e18..39190e11 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -333,4 +333,8 @@ int xfs_bulkstat_single(int fd, uint64_t ino, struct xfs_bstat *ubuffer);
- int xfs_bulkstat(int fd, uint64_t *lastino, uint32_t icount,
- 		struct xfs_bstat *ubuffer, uint32_t *ocount);
- 
-+struct xfs_inogrp;
-+int xfs_inumbers(int fd, uint64_t *lastino, uint32_t icount,
-+		struct xfs_inogrp *ubuffer, uint32_t *ocount);
+diff --git a/man/man2/ioctl_xfs_fsop_geometry.2 b/man/man2/ioctl_xfs_fsop_geometry.2
+new file mode 100644
+index 00000000..4045e03b
+--- /dev/null
++++ b/man/man2/ioctl_xfs_fsop_geometry.2
+@@ -0,0 +1,214 @@
++.\" Copyright (c) 2019, Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" SPDX-License-Identifier: GPL-2.0+
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-FSOP-GEOMETRY 2 2019-04-11 "XFS"
++.SH NAME
++ioctl_xfs_fsop_geometry \- report XFS filesystem shape
++.SH SYNOPSIS
++.br
++.B #include <xfs/xfs_fs.h>
++.PP
++.BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY, struct xfs_fsop_geometry *" arg );
++.PP
++.BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY_V1, struct xfs_fsop_geometry_v1 *" arg );
++.SH DESCRIPTION
++Report the storage space parameters that influence allocation decisions in
++this XFS filesystem.
++This information is conveyed in a structure of the following form:
++.PP
++.in +4n
++.nf
++struct xfs_fsop_geom {
++	__u32         blocksize;
++	__u32         rtextsize;
++	__u32         agblocks;
++	__u32         agcount;
++	__u32         logblocks;
++	__u32         sectsize;
++	__u32         inodesize;
++	__u32         imaxpct;
++	__u64         datablocks;
++	__u64         rtblocks;
++	__u64         rtextents;
++	__u64         logstart;
++	unsigned char uuid[16];
++	__u32         sunit;
++	__u32         swidth;
++	__s32         version;
++	__u32         flags;
++	__u32         logsectsize;
++	__u32         rtsectsize;
++	__u32         dirblocksize;
++	/* struct xfs_fsop_geom_v1 stops here. */
 +
- #endif	/* __XFS_LINUX_H__ */
-diff --git a/io/imap.c b/io/imap.c
-index fbc8e9e1..49917545 100644
---- a/io/imap.c
-+++ b/io/imap.c
-@@ -14,12 +14,12 @@ static cmdinfo_t imap_cmd;
- static int
- imap_f(int argc, char **argv)
- {
--	int		count;
--	int		nent;
--	int		i;
--	__u64		last = 0;
--	xfs_inogrp_t	*t;
--	xfs_fsop_bulkreq_t bulkreq;
-+	struct xfs_inogrp	*t;
-+	uint64_t		last = 0;
-+	uint32_t		count;
-+	uint32_t		nent;
-+	int			i;
-+	int			error;
- 
- 	if (argc != 2)
- 		nent = 1;
-@@ -30,14 +30,8 @@ imap_f(int argc, char **argv)
- 	if (!t)
- 		return 0;
- 
--	bulkreq.lastip  = &last;
--	bulkreq.icount  = nent;
--	bulkreq.ubuffer = (void *)t;
--	bulkreq.ocount  = &count;
--
--	while (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
--		if (count == 0)
--			goto out_free;
-+	while ((error = xfs_inumbers(file->fd, &last, nent, t, &count)) == 0 &&
-+	       count > 0) {
- 		for (i = 0; i < count; i++) {
- 			printf(_("ino %10llu count %2d mask %016llx\n"),
- 				(unsigned long long)t[i].xi_startino,
-@@ -45,9 +39,11 @@ imap_f(int argc, char **argv)
- 				(unsigned long long)t[i].xi_allocmask);
- 		}
- 	}
--	perror("xfsctl(XFS_IOC_FSINUMBERS)");
--	exitcode = 1;
--out_free:
++	__u32         logsunit;
++};
++.fi
++.in
++.PP
++.I blocksize
++is the size of a fundamental filesystem block, in bytes.
++.PP
++.I rtextsize
++is the size of an extent on the realtime volume, in bytes.
++.PP
++.I agblocks
++is the size of an allocation group, in units of filesystem blocks.
++.PP
++.I agcount
++is the number of allocation groups in the filesystem.
++.PP
++.I logblocks
++is the size of the log, in units of filesystem blocks.
++.PP
++.I sectsize
++is the smallest amount of data that can be written to the data device
++atomically, in bytes.
++.PP
++.I inodesize
++is the size of an inode record, in bytes.
++.PP
++.I imaxpct
++is the maximum percentage of the filesystem that can be allocated to inode
++record blocks.
++.PP
++.I datablocks
++is the size of the data device, in units of filesystem blocks.
++.PP
++.I rtblocks
++is the size of the realtime device, in units of filesystem blocks.
++.PP
++.I rtextents
++is the number of extents that can be allocated on the realtime device.
++This ought to be
++.RB "( " rtblocks " * " blocksize " ) / " rtextsize .
++.PP
++.I logstart
++tells the start of the log, in units of filesystem blocks.
++If the filesystem has an external log, this will be zero.
++.PP
++.I uuid
++is the universal unique identifier of the filesystem.
++.PP
++.I sunit
++is what the filesystem has been told is the size of a RAID stripe unit on the
++underlying data device, in filesystem blocks.
++.PP
++.I swidth
++is what the filesystem has been told is the width of a RAID stripe on the
++underlying data device, in units of RAID stripe units.
++.PP
++.I version
++is the version of this structure.
++This value will be XFS_FSOP_GEOM_VERSION.
++.PP
++.I flags
++tell us what features are enabled on the filesystem.
++This field can be any combination of the following:
++.RS 0.4i
++.TP
++.B XFS_FSOP_GEOM_FLAGS_ATTR
++Extended attributes are present.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_NLINK
++This filesystem supports up to 2^32 links.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_QUOTA
++Quotas are enabled.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_IALIGN
++Inodes are aligned for better performance.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_DALIGN
++Data blocks are aligned for better performance.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_SHARED
++Unused.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_EXTFLG
++Filesystem supports unwritten extents.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_DIRV2
++Directories maintain free space data for better performance.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_LOGV2
++Log uses the V2 format.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_SECTOR
++The log device has a sector size larger than 512 bytes.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_ATTR2
++Filesystem contains V2 extended attributes.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_PROJID32
++Project IDs can be as large as 2^32.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_DIRV2CI
++Case-insensitive lookups are supported on directories.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_LAZYSB
++On-disk superblock counters are updated only at unmount time.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_V5SB
++Metadata blocks are self describing and contain checksums.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_FTYPE
++Directories cache inode types in directory entries.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_FINOBT
++Filesystem maintains an index of free inodes.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_SPINODES
++Filesystem tries harder to allocate inodes when free space is fragmented.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_RMAPBT
++Filesystem stores reverse mappings of blocks to owners.
++.TP
++.B XFS_FSOP_GEOM_FLAGS_REFLINK
++Filesystem supports sharing blocks.
++.RE
 +
-+	if (error) {
-+		perror("xfsctl(XFS_IOC_FSINUMBERS)");
-+		exitcode = 1;
-+	}
- 	free(t);
- 	return 0;
- }
-diff --git a/io/open.c b/io/open.c
-index 6ceff18d..11805cd7 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -668,24 +668,19 @@ inode_help(void)
- "\n"));
- }
++.PD 1
++.PP
++.I logsectsize
++is the smallest amount of data that can be written to the log device atomically,
++in bytes.
++.PP
++.I rtsectsize
++is the smallest amount of data that can be written to the realtime device
++atomically, in bytes.
++.PP
++.I dirblocksize
++is the size of directory blocks, in bytes.
++.PP
++.I logsunit
++is what the filesystem has been told is the size of a RAID stripe unit on the
++underlying log device, in filesystem blocks.
++This field is meaningful only if the flag
++.B  XFS_FSOP_GEOM_FLAGS_LOGV2
++is set.
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B EFAULT
++The kernel was not able to copy into the userspace buffer.
++.TP
++.B EFSBADCRC
++Metadata checksum validation failed while performing the query.
++.TP
++.B EFSCORRUPTED
++Metadata corruption was encountered while performing the query.
++.TP
++.B EIO
++An I/O error was encountered while performing the query.
++.SH CONFORMING TO
++This API is specific to XFS filesystem on the Linux kernel.
++.SH SEE ALSO
++.BR ioctl (2)
+diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
+index 4d7e2f68..46d8afe8 100644
+--- a/man/man3/xfsctl.3
++++ b/man/man3/xfsctl.3
+@@ -479,6 +479,12 @@ the kernel, except no output count parameter is used (should
+ be initialized to zero).
+ An error is returned if the inode number is invalid.
  
-+#define IGROUP_NR	(1024)
- static __u64
- get_last_inode(void)
- {
--	__u64			lastip = 0;
--	__u64			lastgrp = 0;
--	__s32			ocount = 0;
-+	uint64_t		lastip = 0;
-+	uint32_t		lastgrp = 0;
-+	uint32_t		ocount = 0;
- 	__u64			last_ino;
--	struct xfs_inogrp	igroup[1024];
--	struct xfs_fsop_bulkreq	bulkreq;
--
--	bulkreq.lastip = &lastip;
--	bulkreq.ubuffer = &igroup;
--	bulkreq.icount = sizeof(igroup) / sizeof(struct xfs_inogrp);
--	bulkreq.ocount = &ocount;
-+	struct xfs_inogrp	igroup[IGROUP_NR];
- 
- 	for (;;) {
--		if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
--				&bulkreq)) {
-+		if (xfs_inumbers(file->fd, &lastip, IGROUP_NR, igroup,
-+					&ocount)) {
- 			perror("XFS_IOC_FSINUMBERS");
- 			return 0;
- 		}
-diff --git a/libhandle/ioctl.c b/libhandle/ioctl.c
-index a4676fea..599fdf3e 100644
---- a/libhandle/ioctl.c
-+++ b/libhandle/ioctl.c
-@@ -62,3 +62,21 @@ xfs_bulkstat(
- 	return ioctl(fd, XFS_IOC_FSBULKSTAT, &bulkreq);
- }
- 
-+/* Query inode allocation bitmask information. */
-+int
-+xfs_inumbers(
-+	int			fd,
-+	uint64_t		*lastino,
-+	uint32_t		icount,
-+	struct xfs_inogrp	*ubuffer,
-+	uint32_t		*ocount)
-+{
-+	struct xfs_fsop_bulkreq	bulkreq = {
-+		.lastip		= (__u64 *)lastino,
-+		.icount		= icount,
-+		.ubuffer	= ubuffer,
-+		.ocount		= (__s32 *)ocount,
-+	};
++.TP
++.B XFS_IOC_FSGEOMETRY
++See
++.BR ioctl_xfs_fsop_geometry (2)
++for more information.
 +
-+	return ioctl(fd, XFS_IOC_FSINUMBERS, &bulkreq);
-+}
-diff --git a/scrub/fscounters.c b/scrub/fscounters.c
-index 9e93e2a6..13f46e17 100644
---- a/scrub/fscounters.c
-+++ b/scrub/fscounters.c
-@@ -41,26 +41,21 @@ xfs_count_inodes_range(
- 	uint64_t		last_ino,
- 	uint64_t		*count)
- {
--	struct xfs_fsop_bulkreq	igrpreq = {NULL};
- 	struct xfs_inogrp	inogrp;
--	__u64			igrp_ino;
-+	uint64_t		igrp_ino;
- 	uint64_t		nr = 0;
--	__s32			igrplen = 0;
-+	uint32_t		igrplen = 0;
- 	int			error;
- 
- 	ASSERT(!(first_ino & (XFS_INODES_PER_CHUNK - 1)));
- 	ASSERT((last_ino & (XFS_INODES_PER_CHUNK - 1)));
- 
--	igrpreq.lastip  = &igrp_ino;
--	igrpreq.icount  = 1;
--	igrpreq.ubuffer = &inogrp;
--	igrpreq.ocount  = &igrplen;
--
- 	igrp_ino = first_ino;
--	error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
--	while (!error && igrplen && inogrp.xi_startino < last_ino) {
-+	while ((error = xfs_inumbers(ctx->mnt_fd, &igrp_ino, 1, &inogrp,
-+					&igrplen)) == 0 &&
-+	       igrplen > 0 &&
-+	       inogrp.xi_startino < last_ino) {
- 		nr += inogrp.xi_alloccount;
--		error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
- 	}
- 
- 	if (error) {
-diff --git a/scrub/inodes.c b/scrub/inodes.c
-index 702b7d50..b27edef7 100644
---- a/scrub/inodes.c
-+++ b/scrub/inodes.c
-@@ -89,17 +89,16 @@ xfs_iterate_inodes_range(
- 	xfs_inode_iter_fn	fn,
- 	void			*arg)
- {
--	struct xfs_fsop_bulkreq	igrpreq = {NULL};
- 	struct xfs_handle	handle;
- 	struct xfs_inogrp	inogrp;
- 	struct xfs_bstat	bstat[XFS_INODES_PER_CHUNK];
- 	char			idescr[DESCR_BUFSZ];
- 	char			buf[DESCR_BUFSZ];
- 	struct xfs_bstat	*bs;
--	__u64			igrp_ino;
-+	uint64_t		igrp_ino;
- 	uint64_t		ino;
- 	uint32_t		bulklen = 0;
--	__s32			igrplen = 0;
-+	uint32_t		igrplen = 0;
- 	bool			moveon = true;
- 	int			i;
- 	int			error;
-@@ -108,11 +107,6 @@ xfs_iterate_inodes_range(
- 
- 	memset(bstat, 0, XFS_INODES_PER_CHUNK * sizeof(struct xfs_bstat));
- 
--	igrpreq.lastip  = &igrp_ino;
--	igrpreq.icount  = 1;
--	igrpreq.ubuffer = &inogrp;
--	igrpreq.ocount  = &igrplen;
--
- 	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
- 	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
- 			sizeof(handle.ha_fid.fid_len);
-@@ -120,8 +114,9 @@ xfs_iterate_inodes_range(
- 
- 	/* Find the inode chunk & alloc mask */
- 	igrp_ino = first_ino;
--	error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
--	while (!error && igrplen) {
-+	while ((error = xfs_inumbers(ctx->mnt_fd, &igrp_ino, 1, &inogrp,
-+					&igrplen)) == 0 &&
-+	       igrplen > 0) {
- 		/* Load the inodes. */
- 		ino = inogrp.xi_startino - 1;
- 
-@@ -130,7 +125,7 @@ xfs_iterate_inodes_range(
- 		 * there are more than 64 inodes per block.  Skip these.
- 		 */
- 		if (inogrp.xi_alloccount == 0)
--			goto igrp_retry;
-+			continue;
- 		error = xfs_bulkstat(ctx->mnt_fd, &ino, inogrp.xi_alloccount,
- 				bstat, &bulklen);
- 		if (error)
-@@ -154,7 +149,7 @@ xfs_iterate_inodes_range(
- 				stale_count++;
- 				if (stale_count < 30) {
- 					igrp_ino = inogrp.xi_startino;
--					goto igrp_retry;
-+					continue;
- 				}
- 				snprintf(idescr, DESCR_BUFSZ, "inode %"PRIu64,
- 						(uint64_t)bs->bs_ino);
-@@ -176,8 +171,6 @@ _("Changed too many times during scan; giving up."));
- 		}
- 
- 		stale_count = 0;
--igrp_retry:
--		error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
- 	}
- 
- err:
+ .PP
+ .nf
+ .B XFS_IOC_THAW
+@@ -494,10 +500,6 @@ An error is returned if the inode number is invalid.
+ These interfaces are used to implement various filesystem internal
+ operations on XFS filesystems.
+ For
+-.B XFS_IOC_FSGEOMETRY
+-(get filesystem mkfs time information), the output structure is of type
+-.BR struct xfs_fsop_geom .
+-For
+ .B XFS_FS_COUNTS
+ (get filesystem dynamic global information), the output structure is of type
+ .BR xfs_fsop_counts_t .
