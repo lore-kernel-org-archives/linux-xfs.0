@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:37128 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:37168 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389045AbfETQPF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 12:15:05 -0400
+        with ESMTP id S2388341AbfETQPO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 12:15:14 -0400
 Received: from 089144206147.atnat0015.highway.bob.at ([89.144.206.147] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hSkwK-0005nA-Fq
-        for linux-xfs@vger.kernel.org; Mon, 20 May 2019 16:15:04 +0000
+        id 1hSkwT-0006vO-Mp
+        for linux-xfs@vger.kernel.org; Mon, 20 May 2019 16:15:14 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/17] xfs: split iclog size calculation out of xlog_sync
-Date: Mon, 20 May 2019 18:13:38 +0200
-Message-Id: <20190520161347.3044-9-hch@lst.de>
+Subject: [PATCH 11/17] xfs: make use of the l_targ field in struct xlog
+Date: Mon, 20 May 2019 18:13:41 +0200
+Message-Id: <20190520161347.3044-12-hch@lst.de>
 In-Reply-To: <20190520161347.3044-1-hch@lst.de>
 References: <20190520161347.3044-1-hch@lst.de>
 MIME-Version: 1.0
@@ -20,105 +20,67 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Split out another selfcountained bit of code from xlog_sync.
+Use the slightly shorter way to get at the buftarg for the log device
+wherever we can in the log and log recovery code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log.c | 64 ++++++++++++++++++++++++++++--------------------
- 1 file changed, 38 insertions(+), 26 deletions(-)
+ fs/xfs/xfs_log.c         | 6 +++---
+ fs/xfs/xfs_log_recover.c | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index acfa1b1a85c2..9950b1bb77a9 100644
+index 6eb0b3a6f0d1..42ac2201691c 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -1801,6 +1801,36 @@ xlog_split_iclog(
- 	return split_offset;
- }
+@@ -898,7 +898,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ 	 * Or, if we are doing a forced umount (typically because of IO errors).
+ 	 */
+ 	if (mp->m_flags & XFS_MOUNT_NORECOVERY ||
+-	    xfs_readonly_buftarg(log->l_mp->m_logdev_targp)) {
++	    xfs_readonly_buftarg(log->l_targ)) {
+ 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+ 		return 0;
+ 	}
+@@ -1452,7 +1452,7 @@ xlog_alloc_log(
+ 	 * having set it up properly.
+ 	 */
+ 	error = -ENOMEM;
+-	bp = xfs_buf_alloc(mp->m_logdev_targp, XFS_BUF_DADDR_NULL,
++	bp = xfs_buf_alloc(log->l_targ, XFS_BUF_DADDR_NULL,
+ 			   BTOBB(log->l_iclog_size), XBF_NO_IOACCT);
+ 	if (!bp)
+ 		goto out_free_log;
+@@ -1917,7 +1917,7 @@ xlog_sync(
+ 	 * synchronously here; for an internal log we can simply use the block
+ 	 * layer state machine for preflushes.
+ 	 */
+-	if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp || split) {
++	if (log->l_targ != log->l_mp->m_ddev_targp || split) {
+ 		xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
+ 		flush = false;
+ 	}
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 76023ea49356..39e4f774d355 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -134,7 +134,7 @@ xlog_get_bp(
+ 		nbblks += log->l_sectBBsize;
+ 	nbblks = round_up(nbblks, log->l_sectBBsize);
  
-+static int
-+xlog_calc_iclog_size(
-+	struct xlog		*log,
-+	struct xlog_in_core	*iclog,
-+	uint32_t		*roundoff)
-+{
-+	bool			v2 = xfs_sb_version_haslogv2(&log->l_mp->m_sb);
-+	uint32_t		count_init, count;
-+
-+	/* Add for LR header */
-+	count_init = log->l_iclog_hsize + iclog->ic_offset;
-+
-+	/* Round out the log write size */
-+	if (v2 && log->l_mp->m_sb.sb_logsunit > 1) {
-+		/* we have a v2 stripe unit to use */
-+		count = XLOG_LSUNITTOB(log, XLOG_BTOLSUNIT(log, count_init));
-+	} else {
-+		count = BBTOB(BTOBB(count_init));
-+	}
-+
-+	ASSERT(count >= count_init);
-+	*roundoff = count - count_init;
-+
-+	if (v2 && log->l_mp->m_sb.sb_logsunit > 1)
-+		ASSERT(*roundoff < log->l_mp->m_sb.sb_logsunit);
-+	else
-+		ASSERT(*roundoff < BBTOB(1));
-+	return count;
-+}
-+
- /*
-  * Flush out the in-core log (iclog) to the on-disk log in an asynchronous 
-  * fashion.  Previously, we should have moved the current iclog
-@@ -1829,35 +1859,17 @@ xlog_sync(
- 	struct xlog		*log,
- 	struct xlog_in_core	*iclog)
- {
--	uint		count;		/* byte count of bwrite */
--	uint		count_init;	/* initial count before roundup */
--	int		roundoff;       /* roundoff to BB or stripe */
--	int		v2 = xfs_sb_version_haslogv2(&log->l_mp->m_sb);
--	uint64_t	bno;
--	unsigned int	split = 0;
--	int		size;
--	bool		flush = true;
-+	unsigned int		count;		/* byte count of bwrite */
-+	unsigned int		roundoff;       /* roundoff to BB or stripe */
-+	uint64_t		bno;
-+	unsigned int		split = 0;
-+	unsigned int		size;
-+	bool			flush = true;
+-	bp = xfs_buf_get_uncached(log->l_mp->m_logdev_targp, nbblks, 0);
++	bp = xfs_buf_get_uncached(log->l_targ, nbblks, 0);
+ 	if (bp)
+ 		xfs_buf_unlock(bp);
+ 	return bp;
+@@ -1505,7 +1505,7 @@ xlog_find_tail(
+ 	 * But... if the -device- itself is readonly, just skip this.
+ 	 * We can't recover this device anyway, so it won't matter.
+ 	 */
+-	if (!xfs_readonly_buftarg(log->l_mp->m_logdev_targp))
++	if (!xfs_readonly_buftarg(log->l_targ))
+ 		error = xlog_clear_stale_blocks(log, tail_lsn);
  
- 	XFS_STATS_INC(log->l_mp, xs_log_writes);
- 	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
- 
--	/* Add for LR header */
--	count_init = log->l_iclog_hsize + iclog->ic_offset;
--
--	/* Round out the log write size */
--	if (v2 && log->l_mp->m_sb.sb_logsunit > 1) {
--		/* we have a v2 stripe unit to use */
--		count = XLOG_LSUNITTOB(log, XLOG_BTOLSUNIT(log, count_init));
--	} else {
--		count = BBTOB(BTOBB(count_init));
--	}
--	roundoff = count - count_init;
--	ASSERT(roundoff >= 0);
--	ASSERT((v2 && log->l_mp->m_sb.sb_logsunit > 1 && 
--                roundoff < log->l_mp->m_sb.sb_logsunit)
--		|| 
--		(log->l_mp->m_sb.sb_logsunit <= 1 && 
--		 roundoff < BBTOB(1)));
-+	count = xlog_calc_iclog_size(log, iclog, &roundoff);
- 
- 	/* move grant heads by roundoff in sync */
- 	xlog_grant_add_space(log, &log->l_reserve_head.grant, roundoff);
-@@ -1868,7 +1880,7 @@ xlog_sync(
- 
- 	/* real byte length */
- 	size = iclog->ic_offset;
--	if (v2)
-+	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb))
- 		size += roundoff;
- 	iclog->ic_header.h_len = cpu_to_be32(size);
- 
+ done:
 -- 
 2.20.1
