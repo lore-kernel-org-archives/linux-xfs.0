@@ -1,58 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:45676 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725810AbfETVl5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 17:41:57 -0400
-Date: Mon, 20 May 2019 14:41:14 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove unused flag arguments
-Message-ID: <20190520214114.GN5352@magnolia>
-References: <ed89244f-cc3a-6bcf-316c-68edc8aee4cc@redhat.com>
- <20190520212139.GC5335@magnolia>
- <a0756ae7-eb4d-c25a-a567-d8d27301d12b@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:36408 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387964AbfETQOv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 12:14:51 -0400
+Received: from 089144206147.atnat0015.highway.bob.at ([89.144.206.147] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hSkw5-0005UX-NO
+        for linux-xfs@vger.kernel.org; Mon, 20 May 2019 16:14:50 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/17] xfs: renumber XBF_WRITE_FAIL
+Date: Mon, 20 May 2019 18:13:33 +0200
+Message-Id: <20190520161347.3044-4-hch@lst.de>
+In-Reply-To: <20190520161347.3044-1-hch@lst.de>
+References: <20190520161347.3044-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a0756ae7-eb4d-c25a-a567-d8d27301d12b@redhat.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Mon, May 20, 2019 at 04:31:08PM -0500, Eric Sandeen wrote:
-> On 5/20/19 4:21 PM, Darrick J. Wong wrote:
-> > On Wed, May 15, 2019 at 01:37:32PM -0500, Eric Sandeen wrote:
-> >> There are several functions which take a flag argument that is
-> >> only ever passed as "0," so remove these arguments.
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> ---
-> >>
-> >> (motivated by simplifying userspace libxfs, TBH)
-> >>
-> >>  libxfs/xfs_ag.c          |    8 ++++----
-> >>  libxfs/xfs_alloc.c       |    4 ++--
-> >>  libxfs/xfs_attr_remote.c |    2 +-
-> >>  libxfs/xfs_bmap.c        |   14 +++++++-------
-> >>  libxfs/xfs_btree.c       |   30 +++++++++++-------------------
-> >>  libxfs/xfs_btree.h       |   10 +++-------
-> >>  libxfs/xfs_sb.c          |    2 +-
-> >>  scrub/repair.c           |    2 +-
-> >>  xfs_bmap_util.c          |    6 +++---
-> >>  xfs_buf.h                |    5 ++---
-> > 
-> > Do you have an accompanying xfsprogs patch up your sleeve somewhere too?
-> > :)
-> 
-> yeah it's on the list, trying to decide if I want to wait and
-> libxfs-merge this or just do it since IIRC it's kind of in the way
-> of my other xfsprogs patches...
+Assining a numerical value that is not close to the flags
+defined near by is just asking for conflicts later on.
 
-I'd prefer you wait so that we don't have xfsprogs out of sync with
-kernel for a release.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_buf.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---D
-
-> -Eric
-> 
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index f67024c1deaa..61691d9a5bc9 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -28,7 +28,7 @@
+ #define XBF_ASYNC	 (1 << 4) /* initiator will not wait for completion */
+ #define XBF_DONE	 (1 << 5) /* all pages in the buffer uptodate */
+ #define XBF_STALE	 (1 << 6) /* buffer has been staled, do not find it */
+-#define XBF_WRITE_FAIL	 (1 << 24)/* async writes have failed on this buffer */
++#define XBF_WRITE_FAIL	 (1 << 7) /* async writes have failed on this buffer */
+ 
+ /* I/O hints for the BIO layer */
+ #define XBF_SYNCIO	 (1 << 10)/* treat this buffer as synchronous I/O */
+-- 
+2.20.1
