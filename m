@@ -1,41 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:59693 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726133AbfEAXtn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 May 2019 19:49:43 -0400
-Date: Thu, 2 May 2019 09:49:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2] xfs: change some error-less functions to void types
-Message-ID: <20190501234939.GK29573@dread.disaster.area>
-References: <a8eec37c-0cb1-0dc6-aa65-7248e367fc08@redhat.com>
- <2a52ea5e-e056-244b-4d9b-04ed15d996fd@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:56980 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726061AbfETVbP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 May 2019 17:31:15 -0400
+Subject: Re: [PATCH] xfs: remove unused flag arguments
+References: <ed89244f-cc3a-6bcf-316c-68edc8aee4cc@redhat.com>
+ <20190520212139.GC5335@magnolia>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <a0756ae7-eb4d-c25a-a567-d8d27301d12b@redhat.com>
+Date: Mon, 20 May 2019 16:31:08 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2a52ea5e-e056-244b-4d9b-04ed15d996fd@sandeen.net>
+In-Reply-To: <20190520212139.GC5335@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, May 01, 2019 at 05:20:52PM -0500, Eric Sandeen wrote:
-> There are several functions which have no opportunity to retun
-							   return
-
-> an error, and don't contain any ASSERTs which could be argued
-> to be better constructed as error cases.  So, make them voids
-> to simplify the callers.
-
-Does it make the code smaller? :)
-
+On 5/20/19 4:21 PM, Darrick J. Wong wrote:
+> On Wed, May 15, 2019 at 01:37:32PM -0500, Eric Sandeen wrote:
+>> There are several functions which take a flag argument that is
+>> only ever passed as "0," so remove these arguments.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> (motivated by simplifying userspace libxfs, TBH)
+>>
+>>  libxfs/xfs_ag.c          |    8 ++++----
+>>  libxfs/xfs_alloc.c       |    4 ++--
+>>  libxfs/xfs_attr_remote.c |    2 +-
+>>  libxfs/xfs_bmap.c        |   14 +++++++-------
+>>  libxfs/xfs_btree.c       |   30 +++++++++++-------------------
+>>  libxfs/xfs_btree.h       |   10 +++-------
+>>  libxfs/xfs_sb.c          |    2 +-
+>>  scrub/repair.c           |    2 +-
+>>  xfs_bmap_util.c          |    6 +++---
+>>  xfs_buf.h                |    5 ++---
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Do you have an accompanying xfsprogs patch up your sleeve somewhere too?
+> :)
 
-LGTM.
+yeah it's on the list, trying to decide if I want to wait and
+libxfs-merge this or just do it since IIRC it's kind of in the way
+of my other xfsprogs patches...
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+-Eric
