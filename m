@@ -1,149 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vs1-f66.google.com ([209.85.217.66]:38687 "EHLO
-        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730513AbfETNMt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 09:12:49 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:42084 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730458AbfETNM6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 May 2019 09:12:58 -0400
+Date: Mon, 20 May 2019 09:12:56 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 13/20] xfs: merge xfs_efd_init into xfs_trans_get_efd
+Message-ID: <20190520131255.GD31317@bfoster>
+References: <20190517073119.30178-1-hch@lst.de>
+ <20190517073119.30178-14-hch@lst.de>
 MIME-Version: 1.0
-References: <20181203083416.28978-1-david@fromorbit.com> <20181203083416.28978-2-david@fromorbit.com>
- <CAOQ4uxhOQY8M5rbgHKREN5qpeDGHv0-xK3r37Lj6XfqFoE4qjg@mail.gmail.com>
- <20181204151332.GA32245@infradead.org> <20181204212948.GO6311@dastard>
- <CAN-5tyGU=y5JO5UNcmn3rX1gRyK_UxjQvQ+kCsP34_NT2-mQ_A@mail.gmail.com>
- <20181204223102.GR6311@dastard> <CAOQ4uxhPoJ2vOwGN7PFWkD6+_zdTeMAhT4KphnyktaQ23zqvBw@mail.gmail.com>
-In-Reply-To: <CAOQ4uxhPoJ2vOwGN7PFWkD6+_zdTeMAhT4KphnyktaQ23zqvBw@mail.gmail.com>
-From: Olga Kornievskaia <olga.kornievskaia@gmail.com>
-Date: Mon, 20 May 2019 09:12:36 -0400
-Message-ID: <CAN-5tyGN8LPAxxjApBifbs6+eAgOVE8G1x3vawSMfT2Ufo7Bpw@mail.gmail.com>
-Subject: Re: [PATCH 01/11] vfs: copy_file_range source range over EOF should fail
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190517073119.30178-14-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-nfs <linux-nfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, ceph-devel@vger.kernel.org, CIFS <linux-cifs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 20, 2019 at 5:10 AM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> On Wed, Dec 5, 2018 at 12:31 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > On Tue, Dec 04, 2018 at 04:47:18PM -0500, Olga Kornievskaia wrote:
-> > > On Tue, Dec 4, 2018 at 4:35 PM Dave Chinner <david@fromorbit.com> wrote:
-> > > >
-> > > > On Tue, Dec 04, 2018 at 07:13:32AM -0800, Christoph Hellwig wrote:
-> > > > > On Mon, Dec 03, 2018 at 02:46:20PM +0200, Amir Goldstein wrote:
-> > > > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > > >
-> > > > > > > The man page says:
-> > > > > > >
-> > > > > > > EINVAL Requested range extends beyond the end of the source file
-> > > > > > >
-> > > > > > > But the current behaviour is that copy_file_range does a short
-> > > > > > > copy up to the source file EOF. Fix the kernel behaviour to match
-> > > > > > > the behaviour described in the man page.
-> > > > >
-> > > > > I think the behavior implemented is a lot more useful than the one
-> > > > > documented..
-> > > >
-> > > > The current behaviour is really nasty. Because copy_file_range() can
-> > > > return short copies, the caller has to implement a loop to ensure
-> > > > the range hey want get copied.  When the source range you are
-> > > > trying to copy overlaps source EOF, this loop:
-> > > >
-> > > >         while (len > 0) {
-> > > >                 ret = copy_file_range(... len ...)
-> > > >                 ...
-> > > >                 off_in += ret;
-> > > >                 off_out += ret;
-> > > >                 len -= ret;
-> > > >         }
-> > > >
-> > > > Currently the fallback code copies up to the end of the source file
-> > > > on the first copy and then fails the second copy with EINVAL because
-> > > > the source range is now completely beyond EOF.
-> > > >
-> > > > So, from an application perspective, did the copy succeed or did it
-> > > > fail?
-> > > >
-> > > > Existing tools that exercise copy_file_range (like xfs_io) consider
-> > > > this a failure, because the second copy_file_range() call returns
-> > > > EINVAL and not some "there is no more to copy" marker like read()
-> > > > returning 0 bytes when attempting to read beyond EOF.
-> > > >
-> > > > IOWs, we cannot tell the difference between a real error and a short
-> > > > copy because the input range spans EOF and it was silently
-> > > > shortened. That's the API problem we need to fix here - the existing
-> > > > behaviour is really crappy for applications. Erroring out
-> > > > immmediately is one solution, and it's what the man page says should
-> > > > happen so that is what I implemented.
-> > > >
-> > > > Realistically, though, I think an attempt to read beyond EOF for the
-> > > > copy should result in behaviour like read() (i.e. return 0 bytes),
-> > > > not EINVAL. The existing behaviour needs to change, though.
-> > >
-> > > There are two checks to consider
-> > > 1. pos_in >= EOF should return EINVAL
-> > > 2. however what's perhaps should be relaxed is pos_in+len >= EOF
-> > > should return a short copy.
-> > >
-> > > Having check#1 enforced allows to us to differentiate between a real
-> > > error and a short copy.
-> >
-> > That's what the code does right now and *exactly what I'm trying to
-> > fix* because it EINVAL is ambiguous and not an indicator that we've
-> > reached the end of the source file. EINVAL can indicate several
-> > different errors, so it really has to be treated as a "copy failed"
-> > error by applications.
-> >
-> > Have a look at read/pread() - they return 0 in this case to indicate
-> > a short read, and the value of zero is explicitly defined as meaning
-> > "read position is beyond EOF".  Applications know straight away that
-> > there is no more data to be read and there was no error, so can
-> > terminate on a successful short read.
-> >
-> > We need to allow applications to terminate copy loops on a
-> > successful short copy. IOWs, applications need to either:
-> >
-> >         - get an immediate error saying the range is invalid rather
-> >           than doing a short copy (as per the man page); or
-> >         - have an explicit marker to say "no more data to be copied"
-> >
-> > Applications need the "no more data to copy" case to be explicit and
-> > unambiguous so they can make sane decisions about whether a short
-> > copy was successful because the file was shorter than expected or
-> > whether a short copy was a result of a real error being encountered.
-> > The current behaviour is largely unusable for applications because
-> > they have to guess at the reason for EINVAL part way through a
-> > copy....
-> >
->
-> Dave,
->
-> I went a head and implemented the desired behavior.
-> However, while testing I observed that the desired behavior is already
-> the existing behavior. For example, trying to copy 10 bytes from a 2 bytes file,
-> xfs_io copy loop ends as expected:
-> copy_file_range(4, [0], 3, [0], 10, 0)  = 2
-> copy_file_range(4, [2], 3, [2], 8, 0)   = 0
->
-> This was tested on ext4 and xfs with reflink on recent kernel as well as on
-> v4.20-rc1 (era of original patch set).
->
-> Where and how did you observe the EINVAL behavior described above?
-> (besides man page that is). There are even xfstests (which you modified)
-> that verify the return 0 for past EOF behavior.
->
-> For now, I am just dropping this patch from the patch series.
-> Let me know if I am missing something.
+On Fri, May 17, 2019 at 09:31:12AM +0200, Christoph Hellwig wrote:
+> There is no good reason to keep these two functions separate.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-The was fixing inconsistency in what the man page specified (ie., it
-must fail with EINVAL if offsets are out of range) which was never
-enforced by the code. The patch then could be to fix the existing
-semantics (man page) of the system call.
+Looks good, and there's only one more user of the xfs_efd_log_item_t
+typedef. ;)
 
-Copy file range range is not only read and write but rather
-lseek+read+write and if somebody specifies an incorrect offset to the
-lseek the system call should fail. Thus I still think that copy file
-range should enforce that specifying a source offset beyond the end of
-the file should fail with EINVAL.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-If the copy file range returned 0 bytes does it mean it's a stopping
-condition, not according to the current semantics.
+>  fs/xfs/xfs_extfree_item.c  | 27 +++++++++++++++------------
+>  fs/xfs/xfs_extfree_item.h  |  2 --
+>  fs/xfs/xfs_trans_extfree.c | 26 --------------------------
+>  3 files changed, 15 insertions(+), 40 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+> index bb0b1e942d00..ccf95cb8234c 100644
+> --- a/fs/xfs/xfs_extfree_item.c
+> +++ b/fs/xfs/xfs_extfree_item.c
+> @@ -312,32 +312,35 @@ static const struct xfs_item_ops xfs_efd_item_ops = {
+>  };
+>  
+>  /*
+> - * Allocate and initialize an efd item with the given number of extents.
+> + * Allocate an "extent free done" log item that will hold nextents worth of
+> + * extents.  The caller must use all nextents extents, because we are not
+> + * flexible about this at all.
+>   */
+>  struct xfs_efd_log_item *
+> -xfs_efd_init(
+> -	struct xfs_mount	*mp,
+> -	struct xfs_efi_log_item	*efip,
+> -	uint			nextents)
+> -
+> +xfs_trans_get_efd(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_efi_log_item		*efip,
+> +	unsigned int			nextents)
+>  {
+> -	struct xfs_efd_log_item	*efdp;
+> -	uint			size;
+> +	struct xfs_efd_log_item		*efdp;
+>  
+>  	ASSERT(nextents > 0);
+> +
+>  	if (nextents > XFS_EFD_MAX_FAST_EXTENTS) {
+> -		size = (uint)(sizeof(xfs_efd_log_item_t) +
+> -			((nextents - 1) * sizeof(xfs_extent_t)));
+> -		efdp = kmem_zalloc(size, KM_SLEEP);
+> +		efdp = kmem_zalloc(sizeof(struct xfs_efd_log_item) +
+> +				(nextents - 1) * sizeof(struct xfs_extent),
+> +				KM_SLEEP);
+>  	} else {
+>  		efdp = kmem_zone_zalloc(xfs_efd_zone, KM_SLEEP);
+>  	}
+>  
+> -	xfs_log_item_init(mp, &efdp->efd_item, XFS_LI_EFD, &xfs_efd_item_ops);
+> +	xfs_log_item_init(tp->t_mountp, &efdp->efd_item, XFS_LI_EFD,
+> +			  &xfs_efd_item_ops);
+>  	efdp->efd_efip = efip;
+>  	efdp->efd_format.efd_nextents = nextents;
+>  	efdp->efd_format.efd_efi_id = efip->efi_format.efi_id;
+>  
+> +	xfs_trans_add_item(tp, &efdp->efd_item);
+>  	return efdp;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
+> index b0dc4ebe8892..16aaab06d4ec 100644
+> --- a/fs/xfs/xfs_extfree_item.h
+> +++ b/fs/xfs/xfs_extfree_item.h
+> @@ -79,8 +79,6 @@ extern struct kmem_zone	*xfs_efi_zone;
+>  extern struct kmem_zone	*xfs_efd_zone;
+>  
+>  xfs_efi_log_item_t	*xfs_efi_init(struct xfs_mount *, uint);
+> -xfs_efd_log_item_t	*xfs_efd_init(struct xfs_mount *, xfs_efi_log_item_t *,
+> -				      uint);
+>  int			xfs_efi_copy_format(xfs_log_iovec_t *buf,
+>  					    xfs_efi_log_format_t *dst_efi_fmt);
+>  void			xfs_efi_item_free(xfs_efi_log_item_t *);
+> diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
+> index 8ee7a3f8bb20..20ab1c9d758f 100644
+> --- a/fs/xfs/xfs_trans_extfree.c
+> +++ b/fs/xfs/xfs_trans_extfree.c
+> @@ -19,32 +19,6 @@
+>  #include "xfs_bmap.h"
+>  #include "xfs_trace.h"
+>  
+> -/*
+> - * This routine is called to allocate an "extent free done"
+> - * log item that will hold nextents worth of extents.  The
+> - * caller must use all nextents extents, because we are not
+> - * flexible about this at all.
+> - */
+> -struct xfs_efd_log_item *
+> -xfs_trans_get_efd(struct xfs_trans		*tp,
+> -		  struct xfs_efi_log_item	*efip,
+> -		  uint				nextents)
+> -{
+> -	struct xfs_efd_log_item			*efdp;
+> -
+> -	ASSERT(tp != NULL);
+> -	ASSERT(nextents > 0);
+> -
+> -	efdp = xfs_efd_init(tp->t_mountp, efip, nextents);
+> -	ASSERT(efdp != NULL);
+> -
+> -	/*
+> -	 * Get a log_item_desc to point at the new item.
+> -	 */
+> -	xfs_trans_add_item(tp, &efdp->efd_item);
+> -	return efdp;
+> -}
+> -
+>  /*
+>   * Free an extent and log it to the EFD. Note that the transaction is marked
+>   * dirty regardless of whether the extent free succeeds or fails to support the
+> -- 
+> 2.20.1
+> 
