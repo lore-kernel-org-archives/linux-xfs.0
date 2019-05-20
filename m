@@ -1,213 +1,347 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43432 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726419AbfEUTQL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 May 2019 15:16:11 -0400
-Subject: Re: [PATCH 08/12] xfs_repair: refactor namecheck functions
-References: <155839420081.68606.4573219764134939943.stgit@magnolia>
- <155839425128.68606.14448412166622032502.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <17704dc3-09a8-6013-7cbb-bb1b0be6911b@sandeen.net>
-Date: Tue, 21 May 2019 14:16:09 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:39422 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727069AbfETXSb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:18:31 -0400
+Subject: [PATCH 3/8] libxfs: break out the bulkstat manpage
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 20 May 2019 16:18:27 -0700
+Message-ID: <155839430718.68923.7305466535658899269.stgit@magnolia>
+In-Reply-To: <155839428721.68923.11962490742479847985.stgit@magnolia>
+References: <155839428721.68923.11962490742479847985.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <155839425128.68606.14448412166622032502.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: sandeen@sandeen.net, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On 5/20/19 6:17 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Now that we have name check functions in libxfs, use them instead of our
-> custom versions.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I dig it.
+Break out the bulkstat ioctl into a separate manpage so that we can
+document how it works.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ man/man2/ioctl_xfs_fsbulkstat.2 |  205 +++++++++++++++++++++++++++++++++++++++
+ man/man3/xfsctl.3               |   86 +---------------
+ 2 files changed, 211 insertions(+), 80 deletions(-)
+ create mode 100644 man/man2/ioctl_xfs_fsbulkstat.2
 
-> ---
->  libxfs/libxfs_api_defs.h |    2 ++
->  repair/attr_repair.c     |   32 +++++++++++++-------------------
->  repair/da_util.c         |   27 ---------------------------
->  repair/da_util.h         |    6 ------
->  repair/dir2.c            |   12 ++----------
->  5 files changed, 17 insertions(+), 62 deletions(-)
-> 
-> 
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index 34bb552d..71a7ef53 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -143,6 +143,8 @@
->  #define xfs_default_ifork_ops		libxfs_default_ifork_ops
->  #define xfs_fs_geometry			libxfs_fs_geometry
->  #define xfs_init_local_fork		libxfs_init_local_fork
-> +#define xfs_dir2_namecheck		libxfs_dir2_namecheck
-> +#define xfs_attr_namecheck		libxfs_attr_namecheck
->  
->  #define LIBXFS_ATTR_ROOT		ATTR_ROOT
->  #define LIBXFS_ATTR_SECURE		ATTR_SECURE
-> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-> index 5ad81c09..9a44f610 100644
-> --- a/repair/attr_repair.c
-> +++ b/repair/attr_repair.c
-> @@ -122,14 +122,6 @@ set_da_freemap(xfs_mount_t *mp, da_freemap_t *map, int start, int stop)
->   * fork being emptied and put in shortform format.
->   */
->  
-> -static int
-> -attr_namecheck(
-> -	uint8_t	*name,
-> -	int	length)
-> -{
-> -	return namecheck((char *)name, length, false);
-> -}
-> -
->  /*
->   * This routine just checks what security needs are for attribute values
->   * only called when root flag is set, otherwise these names could exist in
-> @@ -301,8 +293,8 @@ process_shortform_attr(
->  		}
->  
->  		/* namecheck checks for null chars in attr names. */
-> -		if (attr_namecheck(currententry->nameval,
-> -						currententry->namelen)) {
-> +		if (!libxfs_attr_namecheck(currententry->nameval,
-> +					   currententry->namelen)) {
->  			do_warn(
->  	_("entry contains illegal character in shortform attribute name\n"));
->  			junkit = 1;
-> @@ -464,8 +456,9 @@ process_leaf_attr_local(
->  	xfs_attr_leaf_name_local_t *local;
->  
->  	local = xfs_attr3_leaf_name_local(leaf, i);
-> -	if (local->namelen == 0 || attr_namecheck(local->nameval,
-> -							local->namelen)) {
-> +	if (local->namelen == 0 ||
-> +	    !libxfs_attr_namecheck(local->nameval,
-> +				   local->namelen)) {
->  		do_warn(
->  	_("attribute entry %d in attr block %u, inode %" PRIu64 " has bad name (namelen = %d)\n"),
->  			i, da_bno, ino, local->namelen);
-> @@ -519,13 +512,14 @@ process_leaf_attr_remote(
->  
->  	remotep = xfs_attr3_leaf_name_remote(leaf, i);
->  
-> -	if (remotep->namelen == 0 || attr_namecheck(remotep->name,
-> -						remotep->namelen) ||
-> -			be32_to_cpu(entry->hashval) !=
-> -				libxfs_da_hashname((unsigned char *)&remotep->name[0],
-> -						remotep->namelen) ||
-> -			be32_to_cpu(entry->hashval) < last_hashval ||
-> -			be32_to_cpu(remotep->valueblk) == 0) {
-> +	if (remotep->namelen == 0 ||
-> +	    !libxfs_attr_namecheck(remotep->name,
-> +				   remotep->namelen) ||
-> +	    be32_to_cpu(entry->hashval) !=
-> +			libxfs_da_hashname((unsigned char *)&remotep->name[0],
-> +					   remotep->namelen) ||
-> +	    be32_to_cpu(entry->hashval) < last_hashval ||
-> +	    be32_to_cpu(remotep->valueblk) == 0) {
->  		do_warn(
->  	_("inconsistent remote attribute entry %d in attr block %u, ino %" PRIu64 "\n"), i, da_bno, ino);
->  		return -1;
-> diff --git a/repair/da_util.c b/repair/da_util.c
-> index 4a258e58..8c818ea1 100644
-> --- a/repair/da_util.c
-> +++ b/repair/da_util.c
-> @@ -12,33 +12,6 @@
->  #include "bmap.h"
->  #include "da_util.h"
->  
-> -/*
-> - * Takes a name and length (name need not be null-terminated) and whether
-> - * we are checking a dir (as opposed to an attr).
-> - * Returns 1 if the name contains a NUL or if a directory entry contains a '/'.
-> - * Returns 0 if the name checks out.
-> - */
-> -int
-> -namecheck(
-> -	char	*name,
-> -	int	length,
-> -	bool	isadir)
-> -{
-> -	char	*c;
-> -	int	i;
-> -
-> -	ASSERT(length < MAXNAMELEN);
-> -
-> -	for (c = name, i = 0; i < length; i++, c++) {
-> -		if (isadir && *c == '/')
-> -			return 1;
-> -		if (*c == '\0')
-> -			return 1;
-> -	}
-> -
-> -	return 0;
-> -}
-> -
->  /*
->   * the cursor gets passed up and down the da btree processing
->   * routines.  The interior block processing routines use the
-> diff --git a/repair/da_util.h b/repair/da_util.h
-> index 041dff74..90fec00c 100644
-> --- a/repair/da_util.h
-> +++ b/repair/da_util.h
-> @@ -24,12 +24,6 @@ typedef struct da_bt_cursor {
->  	struct blkmap		*blkmap;
->  } da_bt_cursor_t;
->  
-> -int
-> -namecheck(
-> -	char		*name,
-> -	int		length,
-> -	bool		isadir);
-> -
->  struct xfs_buf *
->  da_read_buf(
->  	xfs_mount_t	*mp,
-> diff --git a/repair/dir2.c b/repair/dir2.c
-> index 094ecb3d..4ac0084e 100644
-> --- a/repair/dir2.c
-> +++ b/repair/dir2.c
-> @@ -44,14 +44,6 @@ _("malloc failed (%zu bytes) dir2_add_badlist:ino %" PRIu64 "\n"),
->  	l->ino = ino;
->  }
->  
-> -static int
-> -dir_namecheck(
-> -	uint8_t	*name,
-> -	int	length)
-> -{
-> -	return namecheck((char *)name, length, true);
-> -}
-> -
->  int
->  dir2_is_badino(
->  	xfs_ino_t	ino)
-> @@ -318,7 +310,7 @@ _("entry #%d %s in shortform dir %" PRIu64),
->  		 * the length value is stored in a byte
->  		 * so it can't be too big, it can only wrap
->  		 */
-> -		if (dir_namecheck(sfep->name, namelen)) {
-> +		if (!libxfs_dir2_namecheck(sfep->name, namelen)) {
->  			/*
->  			 * junk entry
->  			 */
-> @@ -789,7 +781,7 @@ _("\twould clear inode number in entry at offset %" PRIdPTR "...\n"),
->  		 * during phase 4.
->  		 */
->  		junkit = dep->name[0] == '/';
-> -		nm_illegal = dir_namecheck(dep->name, dep->namelen);
-> +		nm_illegal = !libxfs_dir2_namecheck(dep->name, dep->namelen);
->  		if (ino_discovery && nm_illegal) {
->  			do_warn(
->  _("entry at block %u offset %" PRIdPTR " in directory inode %" PRIu64 " has illegal name \"%*.*s\": "),
-> 
+
+diff --git a/man/man2/ioctl_xfs_fsbulkstat.2 b/man/man2/ioctl_xfs_fsbulkstat.2
+new file mode 100644
+index 00000000..965a5344
+--- /dev/null
++++ b/man/man2/ioctl_xfs_fsbulkstat.2
+@@ -0,0 +1,205 @@
++.\" Copyright (c) 2019, Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" SPDX-License-Identifier: GPL-2.0+
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-FSBULKSTAT 2 2019-04-11 "XFS"
++.SH NAME
++ioctl_xfs_fsbulkstat \- query information for a batch of XFS inodes
++.SH SYNOPSIS
++.br
++.B #include <xfs/xfs_fs.h>
++.PP
++.BI "int ioctl(int " fd ", XFS_IOC_FSBULKSTAT, struct xfs_fsop_bulkreq *" arg );
++.PP
++.BI "int ioctl(int " fd ", XFS_IOC_FSBULKSTAT_SINGLE, struct xfs_fsop_bulkreq *" arg );
++.SH DESCRIPTION
++Query stat information for a bunch of XFS inodes.
++These ioctls use
++.B struct xfs_fsop_bulkreq
++to set up a bulk transfer with the kernel:
++.PP
++.in +4n
++.nf
++struct xfs_fsop_bulkreq {
++	__u64             *lastip;
++	__s32             count;
++	void              *ubuffer;
++	__s32             *ocount;
++};
++.fi
++.in
++.PP
++.I lastip
++points to a value that will receive the number of the "last inode".
++Prior to the call, this value should be set to one less than the number of the
++first inode for which the caller wants information.
++After the call, this value will be set to the number of the last inode for
++which information is supplied.
++This field will not be updated if
++.I ocount
++is NULL.
++.PP
++.I count
++is the number of inodes to examine.
++This value must be set to 1 for
++.BR XFS_IOC_FSBULKSTAT_SINGLE .
++.PP
++.I ocount
++points to a value that will receive the number of records returned.
++If this value is NULL, then neither
++.I ocount
++nor
++.I lastip
++will be updated.
++.PP
++.I ubuffer
++points to a memory buffer where information will be copied.
++This buffer must be an array of
++.B struct xfs_bstat
++which is described below.
++The array must have at least
++.I count
++elements.
++.PP
++.in +4n
++.nf
++struct xfs_bstat {
++	__u64             bs_ino;
++	__u16             bs_mode;
++	__u16             bs_nlink;
++	__u32             bs_uid;
++	__u32             bs_gid;
++	__u32             bs_rdev;
++	__s32             bs_blksize;
++	__s64             bs_size;
++	struct xfs_bstime bs_atime;
++	struct xfs_bstime bs_mtime;
++	struct xfs_bstime bs_ctime;
++	int64_t           bs_blocks;
++	__u32             bs_xflags;
++	__s32             bs_extsize;
++	__s32             bs_extents;
++	__u32             bs_gen;
++	__u16             bs_projid_lo;
++	__u16             bs_forkoff;
++	__u16             bs_projid_hi;
++	unsigned char     bs_pad[6];
++	__u32             bs_cowextsize;
++	__u32             bs_dmevmask;
++	__u16             bs_dmstate;
++	__u16             bs_aextents;
++};
++.fi
++.in
++.PP
++.I bs_ino
++is the number of this inode record.
++.PP
++.I bs_mode
++is the file type and mode.
++.PP
++.I bs_nlink
++is the number of hard links to this inode.
++.PP
++.I bs_uid
++is the user id.
++.PP
++.I bs_gid
++is the group id.
++.PP
++.I bs_rdev
++is the encoded device id if this is a special file.
++.PP
++.I bs_blksize
++is the size of a data block for this file, in units of bytes.
++.PP
++.I bs_size
++is the size of the file, in bytes.
++.PP
++.I bs_atime
++is the last time this file was accessed.
++.PP
++.I bs_mtime
++is the last time the contents of this file were modified.
++.PP
++.I bs_ctime
++is the last time this inode record was modified.
++.PP
++.I bs_blocks
++is the number of filesystem blocks allocated to this file, including metadata.
++.PP
++.I bs_xflags
++tell us what extended flags are set this inode.
++These flags are the same values as those set in the
++.I fsx_xflags
++field of
++.BR "struct fsxattr" ;
++please see the
++.BR ioctl_fsgetxattr (2)
++manpage for more information.
++
++.PD 1
++.PP
++.I bs_extsize
++is the extent size hint for this file, in bytes.
++.PP
++.I bs_extents
++is the number of storage space extents associated with this file's data.
++.PP
++.I bs_gen
++is the generation number of the inode record.
++.PP
++.I bs_projid_lo
++is the lower 16-bits of the project id.
++.PP
++.I bs_forkoff
++is the offset of the attribute fork in the inode record, in bytes.
++.PP
++.I bs_projid_hi
++is the upper 16-bits of the project id.
++.PP
++.I bs_pad[6]
++is zeroed.
++.PP
++.I bs_cowextsize
++is the Copy on Write extent size hint for this file, in bytes.
++.PP
++.I bs_dmevmask
++is unused on Linux.
++.PP
++.I bs_dmstate
++is unused on Linux.
++.PP
++.I bs_aextents
++is the number of storage space extents associated with this file's extended
++attributes.
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B EFAULT
++The kernel was not able to copy into the userspace buffer.
++.TP
++.B EFSBADCRC
++Metadata checksum validation failed while performing the query.
++.TP
++.B EFSCORRUPTED
++Metadata corruption was encountered while performing the query.
++.TP
++.B EINVAL
++One of the arguments was not valid.
++.TP
++.B EIO
++An I/O error was encountered while performing the query.
++.TP
++.B ENOMEM
++There was insufficient memory to perform the query.
++.SH CONFORMING TO
++This API is specific to XFS filesystem on the Linux kernel.
++.SH SEE ALSO
++.BR ioctl (2)
+diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
+index 46d8afe8..7437246a 100644
+--- a/man/man3/xfsctl.3
++++ b/man/man3/xfsctl.3
+@@ -399,92 +399,18 @@ An output
+ .B ocount
+ value of zero means that the inode table has been exhausted.
+ 
+-.TP
+-.B XFS_IOC_FSBULKSTAT
+-This interface is used to extract inode information (stat
+-information) "in bulk" from a filesystem.  It is intended to
+-be called iteratively, to obtain information about the entire
+-set of inodes in a filesystem.
+-The information is passed in and out via a structure of type
+-.B xfs_fsop_bulkreq_t
+-pointed to by the final argument.
+-.B lastip
+-is a pointer to a variable containing the last inode number returned,
+-initially it should be zero.
+-.B icount
+-indicates the size of the array of structures specified by
+-.B ubuffer.
+-.B ubuffer
+-is the address of an array of structures of type
+-.BR xfs_bstat_t .
+-Many of the elements in the structure are the same as for the stat
+-structure.
+-The structure has the following elements:
+-.B bs_ino
+-(inode number),
+-.B bs_mode
+-(type and mode),
+-.B bs_nlink
+-(number of links),
+-.B bs_uid
+-(user id),
+-.B bs_gid
+-(group id),
+-.B bs_rdev
+-(device value),
+-.B bs_blksize
+-(block size of the filesystem),
+-.B bs_size
+-(file size in bytes),
+-.B bs_atime
+-(access time),
+-.B bs_mtime
+-(modify time),
+-.B bs_ctime
+-(inode change time),
+-.B bs_blocks
+-(number of blocks used by the file),
+-.B bs_xflags
+-(extended flags),
+-.B bs_extsize
+-(extent size),
+-.B bs_extents
+-(number of extents),
+-.B bs_gen
+-(generation count),
+-.B bs_projid_lo
+-(project id - low word),
+-.B bs_projid_hi
+-(project id - high word, used when projid32bit feature is enabled),
+-.B bs_dmevmask
+-(DMIG event mask),
+-.B bs_dmstate
+-(DMIG state information), and
+-.B bs_aextents
+-(attribute extent count).
+-.B ocount
+-is a pointer to a count of returned values, filled in by the call.
+-An output
+-.B ocount
+-value of zero means that the inode table has been exhausted.
+-
+-.TP
+-.B XFS_IOC_FSBULKSTAT_SINGLE
+-This interface is a variant of the
+-.B XFS_IOC_FSBULKSTAT
+-interface, used to obtain information about a single inode.
+-for an open file in the filesystem of interest.
+-The same structure is used to pass information in and out of
+-the kernel, except no output count parameter is used (should
+-be initialized to zero).
+-An error is returned if the inode number is invalid.
+-
+ .TP
+ .B XFS_IOC_FSGEOMETRY
+ See
+ .BR ioctl_xfs_fsop_geometry (2)
+ for more information.
+ 
++.TP
++.BR XFS_IOC_FSBULKSTAT " or " XFS_IOC_FSBULKSTAT_SINGLE
++See
++.BR ioctl_xfs_fsbulkstat (2)
++for more information.
++
+ .PP
+ .nf
+ .B XFS_IOC_THAW
