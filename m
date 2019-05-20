@@ -1,61 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37328 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726519AbfEQW5u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 May 2019 18:57:50 -0400
-Subject: Re: [PATCH 7/3] libxfs: fix argument to xfs_trans_add_item
-References: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
- <1bd8bba2-b884-02f6-8e49-eb2374481888@redhat.com>
-From: Allison Collins <allison.henderson@oracle.com>
-Message-ID: <e473e37d-433f-9437-2dcd-b7760c70f00c@oracle.com>
-Date: Fri, 17 May 2019 15:57:35 -0700
+Received: from bombadil.infradead.org ([198.137.202.133]:37224 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732368AbfETQP3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 12:15:29 -0400
+Received: from 089144206147.atnat0015.highway.bob.at ([89.144.206.147] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hSkwi-0006wz-Rz
+        for linux-xfs@vger.kernel.org; Mon, 20 May 2019 16:15:29 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 16/17] xfs: properly type the b_log_item field in struct xfs_buf
+Date: Mon, 20 May 2019 18:13:46 +0200
+Message-Id: <20190520161347.3044-17-hch@lst.de>
+In-Reply-To: <20190520161347.3044-1-hch@lst.de>
+References: <20190520161347.3044-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <1bd8bba2-b884-02f6-8e49-eb2374481888@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On 5/16/19 1:40 PM, Eric Sandeen wrote:
-> The hack of casting an inode_log_item or buf_log_item to a
-> xfs_log_item_t is pretty gross; yes it's the first member in the
-> structure, but yuk.  Pass in the correct structure member.
-> 
-> This was fixed in the kernel with commit e98c414f9
-> ("xfs: simplify log item descriptor tracking")
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Now that the log code doesn't abuse this field any more we can
+declare it as a struct xfs_buf_log_item pointer.
 
-Looks good.
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_buf.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> ---
->   libxfs/trans.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/libxfs/trans.c b/libxfs/trans.c
-> index f78222fd..6ef4841f 100644
-> --- a/libxfs/trans.c
-> +++ b/libxfs/trans.c
-> @@ -346,7 +346,7 @@ xfs_trans_ijoin(
->   	ASSERT(iip->ili_lock_flags == 0);
->   	iip->ili_lock_flags = lock_flags;
->   
-> -	xfs_trans_add_item(tp, (xfs_log_item_t *)(iip));
-> +	xfs_trans_add_item(tp, &iip->ili_item);
->   }
->   
->   void
-> @@ -570,7 +570,7 @@ _xfs_trans_bjoin(
->   	 * Attach the item to the transaction so we can find it in
->   	 * xfs_trans_get_buf() and friends.
->   	 */
-> -	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
-> +	xfs_trans_add_item(tp, &bip->bli_item);
->   	bp->b_transp = tp;
->   
->   }
-> 
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 2440c3ab85a8..27f05db07214 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -150,7 +150,7 @@ typedef struct xfs_buf {
+ 	struct work_struct	b_ioend_work;
+ 	xfs_buf_iodone_t	b_iodone;	/* I/O completion function */
+ 	struct completion	b_iowait;	/* queue for I/O waiters */
+-	void			*b_log_item;
++	struct xfs_buf_log_item	*b_log_item;
+ 	struct list_head	b_li_list;	/* Log items list head */
+ 	struct xfs_trans	*b_transp;
+ 	struct page		**b_pages;	/* array of page pointers */
+-- 
+2.20.1
