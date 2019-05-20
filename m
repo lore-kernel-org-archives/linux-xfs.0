@@ -1,65 +1,291 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:43263 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729963AbfETN1u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 09:27:50 -0400
-Received: by mail-wr1-f67.google.com with SMTP id r4so14583875wro.10
-        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2019 06:27:48 -0700 (PDT)
+Received: from userp2130.oracle.com ([156.151.31.86]:47840 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725763AbfETVF0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 17:05:26 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x4KL3oo5046431
+        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2019 21:05:24 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2sj9ft9k6b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2019 21:05:24 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x4KL4Bxh080257
+        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2019 21:05:23 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2sm046knap-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2019 21:05:23 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x4KL5LI8027860
+        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2019 21:05:22 GMT
+Date: Mon, 20 May 2019 14:05:20 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/4] xfs_restore: refactor open-coded file creation code
+Message-ID: <20190520210520.GB5335@magnolia>
+References: <155085403848.5141.1866278990901950186.stgit@magnolia>
+ <155085404462.5141.11851529133557195388.stgit@magnolia>
+ <463f5d1d-a13f-c489-1474-c0b8b3097a71@oracle.com>
 MIME-Version: 1.0
-References: <20190517073119.30178-1-hch@lst.de> <20190517073119.30178-12-hch@lst.de>
- <20190520131232.GB31317@bfoster> <20190520131946.GA8717@lst.de>
-In-Reply-To: <20190520131946.GA8717@lst.de>
-From: Bryan Gurney <bgurney@redhat.com>
-Date: Mon, 20 May 2019 09:27:37 -0400
-Message-ID: <CAHhmqcQaFiQjyfFq0yQQTHrEAMJ68JBN4dZfD6nXZ6DfKPtDiQ@mail.gmail.com>
-Subject: Re: [PATCH 11/20] xfs: use a list_head for iclog callbacks
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <463f5d1d-a13f-c489-1474-c0b8b3097a71@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Allison Collins <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 20, 2019 at 9:20 AM Christoph Hellwig <hch@lst.de> wrote:
->
-> On Mon, May 20, 2019 at 09:12:33AM -0400, Brian Foster wrote:
-> > > +                           spin_unlock(&iclog->ic_callback_lock);
-> > > +                           xlog_cil_process_commited(&tmp, aborted);
-> >
-> > s/commited/committed/ please.
->
-> Ok.
->
-> > > +   while ((ctx = list_first_entry_or_null(list,
-> >
-> > Are double braces necessary here?
->
-> Without them gcc is unhappy:
->
-> fs/xfs/xfs_log_cil.c: In function ‘xlog_cil_process_commited’:
-> fs/xfs/xfs_log_cil.c:624:9: warning: suggest parentheses around assignment used as truth value [-Wparentheses]
->   while (ctx = list_first_entry_or_null(list,
->
+On Mon, May 06, 2019 at 05:11:23PM -0700, Allison Collins wrote:
+> On 2/22/19 9:47 AM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create a helper to unlink, recreate, and reserve space in a file so that
+> > we don't have two open-coded versions.  We lose the broken ALLOCSP code
+> > since it never worked anyway.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >   restore/dirattr.c |   97 ++++++++++++++++++-----------------------------------
+> >   restore/dirattr.h |    2 +
+> >   restore/namreg.c  |   70 +++-----------------------------------
+> >   3 files changed, 41 insertions(+), 128 deletions(-)
+> > 
+> > 
+> > diff --git a/restore/dirattr.c b/restore/dirattr.c
+> > index 5368664..0fb2877 100644
+> > --- a/restore/dirattr.c
+> > +++ b/restore/dirattr.c
+> > @@ -55,6 +55,37 @@
+> >   #include "openutil.h"
+> >   #include "mmap.h"
+> > +/* Create a file, try to reserve space for it, and return the fd. */
+> > +int
+> > +create_filled_file(
+> > +	const char	*pathname,
+> > +	off64_t		size)
+> > +{
+> > +	struct flock64	fl = {
+> > +		.l_len = size,
+> > +	};
+> > +	int		fd;
+> > +	int		ret;
+> > +
+> > +	(void)unlink(pathname);
+> > +
+> > +	fd = open(pathname, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+> > +	if (fd < 0)
+> > +		return fd;
+> 
+> Just a nit: I think if you goto done here instead of return, you can remove
+> the extra goto below since it's not having much effect.  I sort of figured
+> people like gotos because they like having one exit point to the function.
+> Alternatively, if you don't mind having multiple exit points, you can simply
+> return early in patch 4, and avoid the goto all together.
 
-It's probably to guard against an assignment in a while / if / etc. statement.
+Hmm, you're right, let's just return fd directly instead of all this
+goto nonsense.
 
-In other words: Are you sure you didn't intend the following?
+--D
 
-     while (ctx == list_first_entry_or_null(list,
-                     struct xfs_cil_ctx, iclog_entry)) {
-
-(I've stumbled on a bug like this before, so I figured I'd ask, just
-to be certain.)
-
-
-Thanks,
-
-Bryan
-
-> > >     /* attach all the transactions w/ busy extents to iclog */
-> >
-> > Any idea what this ^ comment means? ISTM it's misplaced or stale. If so,
-> > we might as well toss/replace it.
->
-> No idea.  We can probbaly remove it.
+> Allison
+> 
+> > +
+> > +	ret = ioctl(fd, XFS_IOC_RESVSP64, &fl);
+> > +	if (ret && errno != ENOTTY)
+> > +		mlog(MLOG_VERBOSE | MLOG_NOTE,
+> > +_("attempt to reserve %lld bytes for %s using %s failed: %s (%d)\n"),
+> > +				size, pathname, "XFS_IOC_RESVSP64",
+> > +				strerror(errno), errno);
+> > +	if (ret == 0)
+> > +		goto done;
+> > +
+> > +done:
+> > +	return fd;
+> > +}
+> > +
+> >   /* structure definitions used locally ****************************************/
+> >   /* node handle limits
+> > @@ -238,13 +269,8 @@ dirattr_init(char *hkdir, bool_t resume, uint64_t dircnt)
+> >   			return BOOL_FALSE;
+> >   		}
+> >   	} else {
+> > -		/* create the dirattr file, first unlinking any older version
+> > -		 * laying around
+> > -		 */
+> > -		(void)unlink(dtp->dt_pathname);
+> > -		dtp->dt_fd = open(dtp->dt_pathname,
+> > -				   O_RDWR | O_CREAT | O_EXCL,
+> > -				   S_IRUSR | S_IWUSR);
+> > +		dtp->dt_fd = create_filled_file(dtp->dt_pathname,
+> > +			DIRATTR_PERS_SZ + (dircnt * sizeof(struct dirattr)));
+> >   		if (dtp->dt_fd < 0) {
+> >   			mlog(MLOG_NORMAL | MLOG_ERROR, _(
+> >   			      "could not create directory attributes file %s: "
+> > @@ -253,63 +279,6 @@ dirattr_init(char *hkdir, bool_t resume, uint64_t dircnt)
+> >   			      strerror(errno));
+> >   			return BOOL_FALSE;
+> >   		}
+> > -
+> > -		/* reserve space for the backing store. try to use RESVSP64.
+> > -		 * if doesn't work, try ALLOCSP64. the former is faster, as
+> > -		 * it does not zero the space.
+> > -		 */
+> > -		{
+> > -		bool_t successpr;
+> > -		unsigned int ioctlcmd;
+> > -		int loglevel;
+> > -		size_t trycnt;
+> > -
+> > -		for (trycnt = 0,
+> > -		      successpr = BOOL_FALSE,
+> > -		      ioctlcmd = XFS_IOC_RESVSP64,
+> > -		      loglevel = MLOG_VERBOSE
+> > -		      ;
+> > -		      ! successpr && trycnt < 2
+> > -		      ;
+> > -		      trycnt++,
+> > -		      ioctlcmd = XFS_IOC_ALLOCSP64,
+> > -		      loglevel = max(MLOG_NORMAL, loglevel - 1)) {
+> > -			off64_t initsz;
+> > -			struct flock64 flock64;
+> > -			int rval;
+> > -
+> > -			if (! ioctlcmd) {
+> > -				continue;
+> > -			}
+> > -
+> > -			initsz = (off64_t)DIRATTR_PERS_SZ
+> > -				 +
+> > -				 ((off64_t)dircnt * sizeof(dirattr_t));
+> > -			flock64.l_whence = 0;
+> > -			flock64.l_start = 0;
+> > -			flock64.l_len = initsz;
+> > -			rval = ioctl(dtp->dt_fd, ioctlcmd, &flock64);
+> > -			if (rval) {
+> > -				if (errno != ENOTTY) {
+> > -					mlog(loglevel | MLOG_NOTE, _(
+> > -					      "attempt to reserve %lld bytes for %s "
+> > -					      "using %s "
+> > -					      "failed: %s (%d)\n"),
+> > -					      initsz,
+> > -					      dtp->dt_pathname,
+> > -					      ioctlcmd == XFS_IOC_RESVSP64
+> > -					      ?
+> > -					      "XFS_IOC_RESVSP64"
+> > -					      :
+> > -					      "XFS_IOC_ALLOCSP64",
+> > -					      strerror(errno),
+> > -					      errno);
+> > -				}
+> > -			} else {
+> > -				successpr = BOOL_TRUE;
+> > -			}
+> > -		}
+> > -		}
+> >   	}
+> >   	/* mmap the persistent descriptor
+> > diff --git a/restore/dirattr.h b/restore/dirattr.h
+> > index dd37a98..e81e69c 100644
+> > --- a/restore/dirattr.h
+> > +++ b/restore/dirattr.h
+> > @@ -88,4 +88,6 @@ extern bool_t dirattr_cb_extattr(dah_t dah,
+> >   				  extattrhdr_t *ahdrp,
+> >   				  void *ctxp);
+> > +int create_filled_file(const char *pathname, off64_t size);
+> > +
+> >   #endif /* DIRATTR_H */
+> > diff --git a/restore/namreg.c b/restore/namreg.c
+> > index 89fa5ef..d0d5e89 100644
+> > --- a/restore/namreg.c
+> > +++ b/restore/namreg.c
+> > @@ -37,6 +37,10 @@
+> >   #include "namreg.h"
+> >   #include "openutil.h"
+> >   #include "mmap.h"
+> > +#include "global.h"
+> > +#include "content.h"
+> > +#include "content_inode.h"
+> > +#include "dirattr.h"
+> >   /* structure definitions used locally ****************************************/
+> > @@ -153,13 +157,8 @@ namreg_init(char *hkdir, bool_t resume, uint64_t inocnt)
+> >   			return BOOL_FALSE;
+> >   		}
+> >   	} else {
+> > -		/* create the namreg file, first unlinking any older version
+> > -		 * laying around
+> > -		 */
+> > -		(void)unlink(ntp->nt_pathname);
+> > -		ntp->nt_fd = open(ntp->nt_pathname,
+> > -				   O_RDWR | O_CREAT | O_EXCL,
+> > -				   S_IRUSR | S_IWUSR);
+> > +		ntp->nt_fd = create_filled_file(ntp->nt_pathname,
+> > +			NAMREG_PERS_SZ + (inocnt * NAMREG_AVGLEN));
+> >   		if (ntp->nt_fd < 0) {
+> >   			mlog(MLOG_NORMAL | MLOG_ERROR, _(
+> >   			      "could not create name registry file %s: "
+> > @@ -168,63 +167,6 @@ namreg_init(char *hkdir, bool_t resume, uint64_t inocnt)
+> >   			      strerror(errno));
+> >   			return BOOL_FALSE;
+> >   		}
+> > -
+> > -		/* reserve space for the backing store. try to use RESVSP64.
+> > -		 * if doesn't work, try ALLOCSP64. the former is faster, as
+> > -		 * it does not zero the space.
+> > -		 */
+> > -		{
+> > -		bool_t successpr;
+> > -		unsigned int ioctlcmd;
+> > -		int loglevel;
+> > -		size_t trycnt;
+> > -
+> > -		for (trycnt = 0,
+> > -		      successpr = BOOL_FALSE,
+> > -		      ioctlcmd = XFS_IOC_RESVSP64,
+> > -		      loglevel = MLOG_VERBOSE
+> > -		      ;
+> > -		      ! successpr && trycnt < 2
+> > -		      ;
+> > -		      trycnt++,
+> > -		      ioctlcmd = XFS_IOC_ALLOCSP64,
+> > -		      loglevel = max(MLOG_NORMAL, loglevel - 1)) {
+> > -			off64_t initsz;
+> > -			struct flock64 flock64;
+> > -			int rval;
+> > -
+> > -			if (! ioctlcmd) {
+> > -				continue;
+> > -			}
+> > -
+> > -			initsz = (off64_t)NAMREG_PERS_SZ
+> > -				 +
+> > -				 ((off64_t)inocnt * NAMREG_AVGLEN);
+> > -			flock64.l_whence = 0;
+> > -			flock64.l_start = 0;
+> > -			flock64.l_len = initsz;
+> > -			rval = ioctl(ntp->nt_fd, ioctlcmd, &flock64);
+> > -			if (rval) {
+> > -				if (errno != ENOTTY) {
+> > -					mlog(loglevel | MLOG_NOTE, _(
+> > -					      "attempt to reserve %lld bytes for %s "
+> > -					      "using %s "
+> > -					      "failed: %s (%d)\n"),
+> > -					      initsz,
+> > -					      ntp->nt_pathname,
+> > -					      ioctlcmd == XFS_IOC_RESVSP64
+> > -					      ?
+> > -					      "XFS_IOC_RESVSP64"
+> > -					      :
+> > -					      "XFS_IOC_ALLOCSP64",
+> > -					      strerror(errno),
+> > -					      errno);
+> > -				}
+> > -			} else {
+> > -				successpr = BOOL_TRUE;
+> > -			}
+> > -		}
+> > -		}
+> >   	}
+> >   	/* mmap the persistent descriptor
+> > 
