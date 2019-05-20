@@ -1,122 +1,250 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58446 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726164AbfETWbT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 18:31:19 -0400
-Subject: [PATCH 3/3] generic,
- xfs: use _scratch_shutdown instead of calling src/godown
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 20 May 2019 15:31:10 -0700
-Message-ID: <155839147057.62682.15559355049172171217.stgit@magnolia>
-In-Reply-To: <155839145160.62682.10916303376882370723.stgit@magnolia>
-References: <155839145160.62682.10916303376882370723.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:37030 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733050AbfETQO7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 12:14:59 -0400
+Received: from 089144206147.atnat0015.highway.bob.at ([89.144.206.147] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hSkwE-0005fj-OW
+        for linux-xfs@vger.kernel.org; Mon, 20 May 2019 16:14:59 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/17] xfs: factor out log buffer writing
+Date: Mon, 20 May 2019 18:13:36 +0200
+Message-Id: <20190520161347.3044-7-hch@lst.de>
+In-Reply-To: <20190520161347.3044-1-hch@lst.de>
+References: <20190520161347.3044-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, jefflexu@linux.alibaba.com, amir73il@gmail.com, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Replace the not very useful xlog_bdstrat wrapper with a new version that
+that takes care of all the common logic for writing log buffers.  Use
+the opportunity to avoid overloading the buffer address with the log
+relative address, and to shed the unused return value.
 
-Overlayfs introduces some complexity with regards to what path we have
-to use to shut down the scratch filesystem: it's SCRATCH_MNT for regular
-filesystems, but it's OVL_BASE_SCRATCH_MNT (i.e. the lower mount of the
-overlay) if overlayfs is enabled.  The helper works through all that, so
-we might as well use it.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- tests/generic/050 |    2 +-
- tests/xfs/051     |    2 +-
- tests/xfs/079     |    2 +-
- tests/xfs/121     |    4 ++--
- tests/xfs/181     |    4 ++--
- 5 files changed, 7 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_log.c | 125 +++++++++++++++++------------------------------
+ 1 file changed, 45 insertions(+), 80 deletions(-)
 
-
-diff --git a/tests/generic/050 b/tests/generic/050
-index 9a327165..91632d2d 100755
---- a/tests/generic/050
-+++ b/tests/generic/050
-@@ -92,7 +92,7 @@ echo "touch files"
- touch $SCRATCH_MNT/{0,1,2,3,4,5,6,7,8,9}{0,1,2,3,4,5,6,7,8,9}
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 1374f5d6c372..16159532825a 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -45,10 +45,6 @@ STATIC int
+ xlog_space_left(
+ 	struct xlog		*log,
+ 	atomic64_t		*head);
+-STATIC int
+-xlog_sync(
+-	struct xlog		*log,
+-	struct xlog_in_core	*iclog);
+ STATIC void
+ xlog_dealloc_log(
+ 	struct xlog		*log);
+@@ -1736,28 +1732,34 @@ xlog_cksum(
+ 	return xfs_end_cksum(crc);
+ }
  
- echo "going down:"
--src/godown -f $SCRATCH_MNT
-+_scratch_shutdown -f
+-/*
+- * The bdstrat callback function for log bufs. This gives us a central
+- * place to trap bufs in case we get hit by a log I/O error and need to
+- * shutdown. Actually, in practice, even when we didn't get a log error,
+- * we transition the iclogs to IOERROR state *after* flushing all existing
+- * iclogs to disk. This is because we don't want anymore new transactions to be
+- * started or completed afterwards.
+- *
+- * We lock the iclogbufs here so that we can serialise against IO completion
+- * during unmount. We might be processing a shutdown triggered during unmount,
+- * and that can occur asynchronously to the unmount thread, and hence we need to
+- * ensure that completes before tearing down the iclogbufs. Hence we need to
+- * hold the buffer lock across the log IO to acheive that.
+- */
+-STATIC int
+-xlog_bdstrat(
+-	struct xfs_buf		*bp)
++STATIC void
++xlog_write_iclog(
++	struct xlog		*log,
++	struct xlog_in_core	*iclog,
++	struct xfs_buf		*bp,
++	uint64_t		bno,
++	bool			flush)
+ {
+-	struct xlog_in_core	*iclog = bp->b_log_item;
++	ASSERT(bno < log->l_logBBsize);
++	ASSERT(bno + bp->b_io_length <= log->l_logBBsize);
  
- echo "unmounting shutdown filesystem:"
- _scratch_unmount 2>&1 | _filter_scratch
-diff --git a/tests/xfs/051 b/tests/xfs/051
-index bcc824f8..105fa9ff 100755
---- a/tests/xfs/051
-+++ b/tests/xfs/051
-@@ -47,7 +47,7 @@ _scratch_mount
- # recovery.
- $FSSTRESS_PROG -n 9999 -p 2 -w -d $SCRATCH_MNT > /dev/null 2>&1 &
- sleep 5
--src/godown -f $SCRATCH_MNT
-+_scratch_shutdown -f
- $KILLALL_PROG -q $FSSTRESS_PROG
- wait
- _scratch_unmount
-diff --git a/tests/xfs/079 b/tests/xfs/079
-index bf965a7f..67250495 100755
---- a/tests/xfs/079
-+++ b/tests/xfs/079
-@@ -56,7 +56,7 @@ _scratch_mount "-o logbsize=32k"
- # Run a workload to dirty the log, wait a bit and shutdown the fs.
- $FSSTRESS_PROG -d $SCRATCH_MNT -p 4 -n 99999999 >> $seqres.full 2>&1 &
- sleep 10
--./src/godown -f $SCRATCH_MNT
-+_scratch_shutdown -f
- wait
++	bp->b_maps[0].bm_bn = log->l_logBBstart + bno;
++	bp->b_log_item = iclog;
++	bp->b_flags &= ~XBF_FLUSH;
++	bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE | XBF_FUA);
++	if (flush)
++		bp->b_flags |= XBF_FLUSH;
++
++	/*
++	 * We lock the iclogbufs here so that we can serialise against I/O
++	 * completion during unmount.  We might be processing a shutdown
++	 * triggered during unmount, and that can occur asynchronously to the
++	 * unmount thread, and hence we need to ensure that completes before
++	 * tearing down the iclogbufs.  Hence we need to hold the buffer lock
++	 * across the log IO to archive that.
++	 */
+ 	xfs_buf_lock(bp);
+-	if (iclog->ic_state & XLOG_STATE_IOERROR) {
++	if (unlikely(iclog->ic_state & XLOG_STATE_IOERROR)) {
+ 		xfs_buf_ioerror(bp, -EIO);
+ 		xfs_buf_stale(bp);
+ 		xfs_buf_ioend(bp);
+@@ -1767,11 +1769,10 @@ xlog_bdstrat(
+ 		 * doing it here. Similarly, IO completion will unlock the
+ 		 * buffer, so we don't do it here.
+ 		 */
+-		return 0;
++		return;
+ 	}
  
- # Remount with a different log buffer size. Going from 32k to 64k increases the
-diff --git a/tests/xfs/121 b/tests/xfs/121
-index d82a367f..2e3914b7 100755
---- a/tests/xfs/121
-+++ b/tests/xfs/121
-@@ -52,7 +52,7 @@ src/multi_open_unlink -f $SCRATCH_MNT/test_file -n $num_files -s $delay &
- sleep 3
+ 	xfs_buf_submit(bp);
+-	return 0;
+ }
  
- echo "godown"
--src/godown -v -f $SCRATCH_MNT >> $seqres.full
-+_scratch_shutdown -v -f >> $seqres.full
+ /*
+@@ -1794,25 +1795,23 @@ xlog_bdstrat(
+  * log will require grabbing the lock though.
+  *
+  * The entire log manager uses a logical block numbering scheme.  Only
+- * log_sync (and then only bwrite()) know about the fact that the log may
+- * not start with block zero on a given device.  The log block start offset
+- * is added immediately before calling bwrite().
++ * xlog_write_iclog knows about the fact that the log may not start with
++ * block zero on a given device.
+  */
+-
+-STATIC int
++STATIC void
+ xlog_sync(
+ 	struct xlog		*log,
+ 	struct xlog_in_core	*iclog)
+ {
+-	xfs_buf_t	*bp;
+ 	int		i;
+ 	uint		count;		/* byte count of bwrite */
+ 	uint		count_init;	/* initial count before roundup */
+ 	int		roundoff;       /* roundoff to BB or stripe */
+ 	int		split = 0;	/* split write into two regions */
+-	int		error;
+ 	int		v2 = xfs_sb_version_haslogv2(&log->l_mp->m_sb);
++	uint64_t	bno;
+ 	int		size;
++	bool		flush = true;
  
- # time for multi_open_unlink to exit out after its delay
- # so we have no references and can unmount
-@@ -69,7 +69,7 @@ _try_scratch_mount $mnt >>$seqres.full 2>&1 \
-     || _fail "mount failed: $mnt $MOUNT_OPTIONS"
+ 	XFS_STATS_INC(log->l_mp, xs_log_writes);
+ 	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
+@@ -1848,17 +1847,16 @@ xlog_sync(
+ 		size += roundoff;
+ 	iclog->ic_header.h_len = cpu_to_be32(size);
  
- echo "godown"
--src/godown -v -f $SCRATCH_MNT >> $seqres.full
-+_scratch_shutdown -v -f >> $seqres.full
+-	bp = iclog->ic_bp;
+-	XFS_BUF_SET_ADDR(bp, BLOCK_LSN(be64_to_cpu(iclog->ic_header.h_lsn)));
+-
+ 	XFS_STATS_ADD(log->l_mp, xs_log_blocks, BTOBB(count));
  
- echo "unmount"
- _scratch_unmount
-diff --git a/tests/xfs/181 b/tests/xfs/181
-index 882a974b..dba69a70 100755
---- a/tests/xfs/181
-+++ b/tests/xfs/181
-@@ -65,7 +65,7 @@ pid=$!
- sleep 10
++	bno = BLOCK_LSN(be64_to_cpu(iclog->ic_header.h_lsn));
++
+ 	/* Do we need to split this write into 2 parts? */
+-	if (XFS_BUF_ADDR(bp) + BTOBB(count) > log->l_logBBsize) {
++	if (bno + BTOBB(count) > log->l_logBBsize) {
+ 		char		*dptr;
  
- echo "godown"
--src/godown -v -f $SCRATCH_MNT >> $seqres.full
-+_scratch_shutdown -v -f >> $seqres.full
+-		split = count - (BBTOB(log->l_logBBsize - XFS_BUF_ADDR(bp)));
+-		count = BBTOB(log->l_logBBsize - XFS_BUF_ADDR(bp));
++		split = count - (BBTOB(log->l_logBBsize - bno));
++		count = BBTOB(log->l_logBBsize - bno);
+ 		iclog->ic_bwritecnt = 2;
  
- # kill the multi_open_unlink
- kill $pid 2>/dev/null
-@@ -83,7 +83,7 @@ _scratch_mount $mnt >>$seqres.full 2>&1 \
-     || _fail "mount failed: $mnt $MOUNT_OPTIONS"
+ 		/*
+@@ -1899,11 +1897,6 @@ xlog_sync(
+ 			 be64_to_cpu(iclog->ic_header.h_lsn));
+ 	}
  
- echo "godown"
--src/godown -v -f $SCRATCH_MNT >> $seqres.full
-+_scratch_shutdown -v -f >> $seqres.full
+-	bp->b_io_length = BTOBB(count);
+-	bp->b_log_item = iclog;
+-	bp->b_flags &= ~XBF_FLUSH;
+-	bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE | XBF_FUA);
+-
+ 	/*
+ 	 * Flush the data device before flushing the log to make sure all meta
+ 	 * data written back from the AIL actually made it to disk before
+@@ -1912,50 +1905,22 @@ xlog_sync(
+ 	 * synchronously here; for an internal log we can simply use the block
+ 	 * layer state machine for preflushes.
+ 	 */
+-	if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp || split)
++	if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp || split) {
+ 		xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
+-	else
+-		bp->b_flags |= XBF_FLUSH;
++		flush = false;
++	}
  
- echo "unmount"
- _scratch_unmount
+-	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
+-	ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
++	iclog->ic_bp->b_io_length = BTOBB(count);
+ 
+ 	xlog_verify_iclog(log, iclog, count, true);
++	xlog_write_iclog(log, iclog, iclog->ic_bp, bno, flush);
+ 
+-	/* account for log which doesn't start at block #0 */
+-	XFS_BUF_SET_ADDR(bp, XFS_BUF_ADDR(bp) + log->l_logBBstart);
+-
+-	/*
+-	 * Don't call xfs_bwrite here. We do log-syncs even when the filesystem
+-	 * is shutting down.
+-	 */
+-	error = xlog_bdstrat(bp);
+-	if (error) {
+-		xfs_buf_ioerror_alert(bp, "xlog_sync");
+-		return error;
+-	}
+ 	if (split) {
+-		bp = iclog->ic_log->l_xbuf;
+-		XFS_BUF_SET_ADDR(bp, 0);	     /* logical 0 */
+-		xfs_buf_associate_memory(bp,
++		xfs_buf_associate_memory(iclog->ic_log->l_xbuf,
+ 				(char *)&iclog->ic_header + count, split);
+-		bp->b_log_item = iclog;
+-		bp->b_flags &= ~XBF_FLUSH;
+-		bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE | XBF_FUA);
+-
+-		ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
+-		ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
+-
+-		/* account for internal log which doesn't start at block #0 */
+-		XFS_BUF_SET_ADDR(bp, XFS_BUF_ADDR(bp) + log->l_logBBstart);
+-		error = xlog_bdstrat(bp);
+-		if (error) {
+-			xfs_buf_ioerror_alert(bp, "xlog_sync (split)");
+-			return error;
+-		}
++		xlog_write_iclog(log, iclog, iclog->ic_log->l_xbuf, 0, false);
+ 	}
+-	return 0;
+-}	/* xlog_sync */
++}
+ 
+ /*
+  * Deallocate a log structure
+@@ -3188,7 +3153,7 @@ xlog_state_release_iclog(
+ 	 * flags after this point.
+ 	 */
+ 	if (sync)
+-		return xlog_sync(log, iclog);
++		xlog_sync(log, iclog);
+ 	return 0;
+ }	/* xlog_state_release_iclog */
+ 
+-- 
+2.20.1
