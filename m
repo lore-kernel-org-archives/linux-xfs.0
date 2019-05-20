@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:37088 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:37162 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392549AbfETQPC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 12:15:02 -0400
+        with ESMTP id S2388341AbfETQPL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 12:15:11 -0400
 Received: from 089144206147.atnat0015.highway.bob.at ([89.144.206.147] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hSkwH-0005gl-Gu
-        for linux-xfs@vger.kernel.org; Mon, 20 May 2019 16:15:02 +0000
+        id 1hSkwQ-0006nh-OD
+        for linux-xfs@vger.kernel.org; Mon, 20 May 2019 16:15:11 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/17] xfs: factor out splitting of an iclog from xlog_sync
-Date: Mon, 20 May 2019 18:13:37 +0200
-Message-Id: <20190520161347.3044-8-hch@lst.de>
+Subject: [PATCH 10/17] xfs: remove the syncing argument from xlog_verify_iclog
+Date: Mon, 20 May 2019 18:13:40 +0200
+Message-Id: <20190520161347.3044-11-hch@lst.de>
 In-Reply-To: <20190520161347.3044-1-hch@lst.de>
 References: <20190520161347.3044-1-hch@lst.de>
 MIME-Version: 1.0
@@ -20,125 +20,72 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Split out a self-contained chunk of code from xlog_sync that calculates
-the split offset for an iclog that wraps the log end and bumps the
-cycles for the second half.
-
-Use the chance to bring some sanity to the variables used to track the
-split in xlog_sync by not changing the count variable, and instead use
-split as the offset for the split and use those to calculate the
-sizes and offsets for the two write buffers.
+The only caller unconditionally passes true here.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log.c | 63 +++++++++++++++++++++++++-----------------------
- 1 file changed, 33 insertions(+), 30 deletions(-)
+ fs/xfs/xfs_log.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 16159532825a..acfa1b1a85c2 100644
+index c5a78bc9f99b..6eb0b3a6f0d1 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -1775,6 +1775,32 @@ xlog_write_iclog(
- 	xfs_buf_submit(bp);
- }
- 
-+/*
-+ * Bump the cycle numbers at the start of each block in the part of the iclog
-+ * that ends up in the buffer that gets written to the start of the log.
-+ *
-+ * Watch out for the header magic number case, though.
-+ */
-+static unsigned int
-+xlog_split_iclog(
-+	struct xlog		*log,
-+	void			*data,
-+	uint64_t		bno,
-+	unsigned int		count)
-+{
-+	unsigned int		split_offset = BBTOB(log->l_logBBsize - bno), i;
-+
-+	for (i = split_offset; i < count; i += BBSIZE) {
-+		uint32_t cycle = get_unaligned_be32(data + i);
-+
-+		if (++cycle == XLOG_HEADER_MAGIC_NUM)
-+			cycle++;
-+		put_unaligned_be32(cycle, data + i);
-+	}
-+
-+	return split_offset;
-+}
-+
- /*
-  * Flush out the in-core log (iclog) to the on-disk log in an asynchronous 
-  * fashion.  Previously, we should have moved the current iclog
-@@ -1803,13 +1829,12 @@ xlog_sync(
+@@ -100,8 +100,7 @@ STATIC void
+ xlog_verify_iclog(
  	struct xlog		*log,
- 	struct xlog_in_core	*iclog)
- {
--	int		i;
- 	uint		count;		/* byte count of bwrite */
- 	uint		count_init;	/* initial count before roundup */
- 	int		roundoff;       /* roundoff to BB or stripe */
--	int		split = 0;	/* split write into two regions */
- 	int		v2 = xfs_sb_version_haslogv2(&log->l_mp->m_sb);
- 	uint64_t	bno;
-+	unsigned int	split = 0;
- 	int		size;
- 	bool		flush = true;
+ 	struct xlog_in_core	*iclog,
+-	int			count,
+-	bool                    syncing);
++	int			count);
+ STATIC void
+ xlog_verify_tail_lsn(
+ 	struct xlog		*log,
+@@ -110,7 +109,7 @@ xlog_verify_tail_lsn(
+ #else
+ #define xlog_verify_dest_ptr(a,b)
+ #define xlog_verify_grant_tail(a)
+-#define xlog_verify_iclog(a,b,c,d)
++#define xlog_verify_iclog(a,b,c)
+ #define xlog_verify_tail_lsn(a,b,c)
+ #endif
  
-@@ -1852,32 +1877,8 @@ xlog_sync(
- 	bno = BLOCK_LSN(be64_to_cpu(iclog->ic_header.h_lsn));
+@@ -1926,7 +1925,7 @@ xlog_sync(
+ 	iclog->ic_bp->b_io_length = BTOBB(split ? split : count);
+ 	iclog->ic_bwritecnt = split ? 2 : 1;
  
- 	/* Do we need to split this write into 2 parts? */
--	if (bno + BTOBB(count) > log->l_logBBsize) {
--		char		*dptr;
--
--		split = count - (BBTOB(log->l_logBBsize - bno));
--		count = BBTOB(log->l_logBBsize - bno);
--		iclog->ic_bwritecnt = 2;
--
--		/*
--		 * Bump the cycle numbers at the start of each block in the
--		 * part of the iclog that ends up in the buffer that gets
--		 * written to the start of the log.
--		 *
--		 * Watch out for the header magic number case, though.
--		 */
--		dptr = (char *)&iclog->ic_header + count;
--		for (i = 0; i < split; i += BBSIZE) {
--			uint32_t cycle = be32_to_cpu(*(__be32 *)dptr);
--			if (++cycle == XLOG_HEADER_MAGIC_NUM)
--				cycle++;
--			*(__be32 *)dptr = cpu_to_be32(cycle);
--
--			dptr += BBSIZE;
--		}
--	} else {
--		iclog->ic_bwritecnt = 1;
--	}
-+	if (bno + BTOBB(count) > log->l_logBBsize)
-+		split = xlog_split_iclog(log, &iclog->ic_header, bno, count);
- 
- 	/* calculcate the checksum */
- 	iclog->ic_header.h_crc = xlog_cksum(log, &iclog->ic_header,
-@@ -1910,14 +1911,16 @@ xlog_sync(
- 		flush = false;
- 	}
- 
--	iclog->ic_bp->b_io_length = BTOBB(count);
-+	iclog->ic_bp->b_io_length = BTOBB(split ? split : count);
-+	iclog->ic_bwritecnt = split ? 2 : 1;
- 
- 	xlog_verify_iclog(log, iclog, count, true);
+-	xlog_verify_iclog(log, iclog, count, true);
++	xlog_verify_iclog(log, iclog, count);
  	xlog_write_iclog(log, iclog, iclog->ic_bp, bno, flush);
  
  	if (split) {
- 		xfs_buf_associate_memory(iclog->ic_log->l_xbuf,
--				(char *)&iclog->ic_header + count, split);
-+				(char *)&iclog->ic_header + split,
-+				count - split);
- 		xlog_write_iclog(log, iclog, iclog->ic_log->l_xbuf, 0, false);
- 	}
- }
+@@ -3759,8 +3758,7 @@ STATIC void
+ xlog_verify_iclog(
+ 	struct xlog		*log,
+ 	struct xlog_in_core	*iclog,
+-	int			count,
+-	bool                    syncing)
++	int			count)
+ {
+ 	xlog_op_header_t	*ophead;
+ 	xlog_in_core_t		*icptr;
+@@ -3804,7 +3802,7 @@ xlog_verify_iclog(
+ 		/* clientid is only 1 byte */
+ 		p = &ophead->oh_clientid;
+ 		field_offset = p - base_ptr;
+-		if (!syncing || (field_offset & 0x1ff)) {
++		if (field_offset & 0x1ff) {
+ 			clientid = ophead->oh_clientid;
+ 		} else {
+ 			idx = BTOBBT((char *)&ophead->oh_clientid - iclog->ic_datap);
+@@ -3827,7 +3825,7 @@ xlog_verify_iclog(
+ 		/* check length */
+ 		p = &ophead->oh_len;
+ 		field_offset = p - base_ptr;
+-		if (!syncing || (field_offset & 0x1ff)) {
++		if (field_offset & 0x1ff) {
+ 			op_len = be32_to_cpu(ophead->oh_len);
+ 		} else {
+ 			idx = BTOBBT((uintptr_t)&ophead->oh_len -
 -- 
 2.20.1
