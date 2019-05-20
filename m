@@ -1,67 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49890 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:37908 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730690AbfETGLg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 May 2019 02:11:36 -0400
-Date: Mon, 20 May 2019 08:11:15 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 08/20] xfs: add a flag to release log items on commit
-Message-ID: <20190520061115.GH31977@lst.de>
-References: <20190517073119.30178-1-hch@lst.de> <20190517073119.30178-9-hch@lst.de> <20190517175025.GH7888@bfoster>
+        id S1733241AbfETLiQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 May 2019 07:38:16 -0400
+Date: Mon, 20 May 2019 07:38:14 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 07/20] xfs: split iop_unlock
+Message-ID: <20190520113811.GA31317@bfoster>
+References: <20190517073119.30178-1-hch@lst.de>
+ <20190517073119.30178-8-hch@lst.de>
+ <20190517174915.GG7888@bfoster>
+ <20190520061043.GG31977@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190517175025.GH7888@bfoster>
+In-Reply-To: <20190520061043.GG31977@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, May 17, 2019 at 01:50:25PM -0400, Brian Foster wrote:
-> On Fri, May 17, 2019 at 09:31:07AM +0200, Christoph Hellwig wrote:
-> > We have various items that are released from ->iop_comitting.  Add a
-> > flag to just call ->iop_release from the commit path to avoid tons
-> > of boilerplate code.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
+On Mon, May 20, 2019 at 08:10:43AM +0200, Christoph Hellwig wrote:
+> On Fri, May 17, 2019 at 01:49:16PM -0400, Brian Foster wrote:
+> > Refactoring aside, I see that the majority of this patch is focused on
+> > intent log item implementations. I don't think an item leak is possible
+> > here because we intentionally dirty transactions when either an intent
+> > or done item is logged. See xfs_extent_free_log_item() and
+> > xfs_trans_free_extent() for examples associated with the EFI/EFD items.
 > 
-> Seems reasonable, but the naming is getting a little confusing. Your
-> commit log refers to ->iop_committing() and the patch modifies
-> ->iop_committed(). Both the committing and committed callbacks still
-> exist, while the flag is called *_RELEASE_ON_COMMIT and thus doesn't
-> indicate which event it actually refers to. Can we fix this up? Maybe
-> just call it *_RELEASE_ON_COMMITTED?
-
-Sounds fine. 
-
+> That's why I said theoretical.
 > 
-> >  fs/xfs/xfs_bmap_item.c     | 27 +--------------------------
-> >  fs/xfs/xfs_extfree_item.c  | 27 +--------------------------
-> >  fs/xfs/xfs_icreate_item.c  | 18 +-----------------
-> >  fs/xfs/xfs_refcount_item.c | 27 +--------------------------
-> >  fs/xfs/xfs_rmap_item.c     | 27 +--------------------------
-> >  fs/xfs/xfs_trans.c         |  5 +++++
-> >  fs/xfs/xfs_trans.h         |  7 +++++++
-> >  7 files changed, 17 insertions(+), 121 deletions(-)
-> > 
-> ...
-> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > index 45a39de65997..52a8a8ff2ae9 100644
-> > --- a/fs/xfs/xfs_trans.c
-> > +++ b/fs/xfs/xfs_trans.c
-> > @@ -849,6 +849,11 @@ xfs_trans_committed_bulk(
-> >  		struct xfs_log_item	*lip = lv->lv_item;
-> >  		xfs_lsn_t		item_lsn;
-> >  
-> > +		if (lip->li_ops->flags & XFS_ITEM_RELEASE_ON_COMMIT) {
-> > +			lip->li_ops->iop_release(lip);
-> > +			continue;
-> > +		}
-> 
-> It might be appropriate to set the aborted flag before the callback.
-> Even though none of the current users happen to care, it's a more
-> consistent semantic with the other direct caller of ->iop_release().
 
-Ok.
+The current commit log says it's either rare or doesn't occur in
+practice, which leaves the question open. I'm pointing out that for the
+codepaths affected by this patch, I don't think it can occur.
+
+I agree that it's still a theoretical possibility based on the current
+log item interface and intent item implementations...
+
+> > On one hand this logic supports the current item reference counting
+> > logic (for example, so we know whether to drop the log's reference to an
+> > EFI on transaction abort or wait until physical log commit time). On the
+> > other hand, the items themselves must be logged to disk so we have to
+> > mark them dirty (along with the transaction on behalf of the item) for
+> > that reason as well. FWIW, I do think the current approach of adding the
+> > intent item and dirtying it separately is slightly confusing,
+> > particularly since I'm not sure we have any valid use case to have a
+> > clean intent/done item in a transaction.
+> 
+> Indeed.  I think there is plenty of opportunity for futher wok here.
+> 
+> > I suppose this kind of refactoring might still make sense on its own if
+> > the resulting code is more clear or streamlined. I.e., perhaps there's
+> > no need for the separate ->iop_committing() and ->iop_unlock() callbacks
+> > invoked one after the other. That said, I think the commit log should
+> > probably be updated to focus on that (unless I'm missing something about
+> > the potential leak). Hm?
+> 
+> The streamlining was the the point.  I just noticed that if we were
+> every to about a clean intent item we'd leak it while doing that.
+
+Ok, then I'd just suggest to update the commit log. I guess it's easier
+for me to just suggest one, so for example (feel free to use, modify or
+replace):
+
+---
+
+iop_unlock() is called when comitting or cancelling a transaction. In
+the latter case, the transaction may or may not be aborted. While there
+is no known problem with the current code in practice, this
+implementation is limited in that any log item implementation that might
+want to differentiate between a commit and a cancel must rely on the
+aborted state. The aborted bit is only set when the cancelled
+transaction is dirty, however. This means that there is no way to
+distinguish between a commit and a clean transaction cancel.
+
+For example, intent log items currently rely on this distinction. The
+log item is either transferred to the CIL on commit or released on
+transaction cancel. There is currently no possibility for a clean intent
+log item in a transaction, but if that state is ever introduced a cancel
+of such a transaction will immediately result in memory leaks of the
+associated log item(s). This is an interface deficiency and landmine.
+
+To clean this up, replace ->iop_unlock() with an ->iop_release()
+callback that is specific to transaction cancel. The existing
+->iop_committing() callback occurs at the same time as ->iop_unlock() in
+the commit path and there is no need for two separate callbacks here.
+Overload ->iop_committing() with the current commit time ->iop_unlock()
+implementations to eliminate the need for the latter and further
+simplify the interface.
+
+---
+
+I'll try to get through the rest of this series today..
+
+Brian
