@@ -1,63 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:35640 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387964AbfETQOq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 12:14:46 -0400
-Received: from 089144206147.atnat0015.highway.bob.at ([89.144.206.147] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hSkvz-0005Ku-Jd
-        for linux-xfs@vger.kernel.org; Mon, 20 May 2019 16:14:44 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/17] xfs: remove the no-op spinlock_destroy stub
-Date: Mon, 20 May 2019 18:13:31 +0200
-Message-Id: <20190520161347.3044-2-hch@lst.de>
-In-Reply-To: <20190520161347.3044-1-hch@lst.de>
-References: <20190520161347.3044-1-hch@lst.de>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:44144 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1733161AbfETQMF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 12:12:05 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 2E9D828917
+        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2019 16:12:05 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 203655] XFS: Assertion failed: 0, xfs_log_recover.c, line: 551
+Date: Mon, 20 May 2019 16:12:04 +0000
+Message-ID: <bug-203655-201763-21ISRoNsQn@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-203655-201763@https.bugzilla.kernel.org/>
+References: <bug-203655-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_linux.h | 2 --
- fs/xfs/xfs_log.c   | 2 --
- 2 files changed, 4 deletions(-)
+https://bugzilla.kernel.org/show_bug.cgi?id=203655
 
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index edbd5a210df2..b78287666309 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -110,8 +110,6 @@ typedef __u32			xfs_nlink_t;
- #define current_restore_flags_nested(sp, f)	\
- 		(current->flags = ((current->flags & ~(f)) | (*(sp) & (f))))
- 
--#define spinlock_destroy(lock)
--
- #define NBBY		8		/* number of bits per byte */
- 
- /*
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 0d6fb374dbe8..242ab5e8aaea 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1551,7 +1551,6 @@ xlog_alloc_log(
- 			xfs_buf_free(iclog->ic_bp);
- 		kmem_free(iclog);
- 	}
--	spinlock_destroy(&log->l_icloglock);
- 	xfs_buf_free(log->l_xbuf);
- out_free_log:
- 	kmem_free(log);
-@@ -1998,7 +1997,6 @@ xlog_dealloc_log(
- 		kmem_free(iclog);
- 		iclog = next_iclog;
- 	}
--	spinlock_destroy(&log->l_icloglock);
- 
- 	log->l_mp->m_log = NULL;
- 	kmem_free(log);
+--- Comment #3 from bfoster@redhat.com ---
+On Mon, May 20, 2019 at 04:02:06PM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=203655
+> 
+> Eric Sandeen (sandeen@sandeen.net) changed:
+> 
+>            What    |Removed                     |Added
+> ----------------------------------------------------------------------------
+>                  CC|                            |sandeen@sandeen.net
+> 
+> --- Comment #2 from Eric Sandeen (sandeen@sandeen.net) ---
+> I think the question here is whether the ASSERT() is valid - we don't ever
+> want
+> to assert on disk corruption, it should only be for "this should never happen
+> in the code" scenarios.
+> 
+
+Makes sense. It's not clear to me whether that's the intent of the bug,
+but regardless I think it would be reasonable to kill off that
+particular assert. We already warn and return an error.
+
+Brian
+
+> -- 
+> You are receiving this mail because:
+> You are watching the assignee of the bug.
+
 -- 
-2.20.1
+You are receiving this mail because:
+You are watching the assignee of the bug.
