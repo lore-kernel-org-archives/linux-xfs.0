@@ -1,41 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:57296 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725804AbfEUFKG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 May 2019 01:10:06 -0400
-Date: Tue, 21 May 2019 07:09:43 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 14/17] xfs: use bios directly to read and write the log
- recovery buffers
-Message-ID: <20190521050943.GA29120@lst.de>
-References: <20190520161347.3044-1-hch@lst.de> <20190520161347.3044-15-hch@lst.de> <20190520233233.GF29573@dread.disaster.area>
+Received: from userp2120.oracle.com ([156.151.31.85]:37968 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726584AbfETXQw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:16:52 -0400
+Subject: [PATCH 01/12] libxfs: fix attr include mess
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 20 May 2019 16:16:47 -0700
+Message-ID: <155839420721.68606.5873005194118073203.stgit@magnolia>
+In-Reply-To: <155839420081.68606.4573219764134939943.stgit@magnolia>
+References: <155839420081.68606.4573219764134939943.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190520233233.GF29573@dread.disaster.area>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 21, 2019 at 09:32:33AM +1000, Dave Chinner wrote:
-> So while it's easy to drop the uncached buffer API from the kernel
-> side, it leaves me with the question of what API do we use in
-> userspace to provide this same functionality? I suspect that we
-> probably need to separate all this log-to-bio code out into a
-> separate file (e.g. xfs_log_io.[ch]) to leave a set of API stubs
-> that we can reimplement in userspace to pread/pwrite directly to
-> the log buftarg device fd as I've done already for the buffer
-> code...
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-For one we still keep the uncached buffers in xfs_buf.c as we have users
-of that outside of the log code, but I guess that is not what you mean.
+Remove all the userspace xfs_attr shim cruft so that we have one
+definition of ATTR_* macros so that we can actually use xfs_attr.c
+routines and include xfs_attr.h without problems.
 
-I can split the log recovery code into a separate file, as you said
-it should just be malloc + pread/pwrite in userspace, so implementing
-it should be trivial.  The xlog_sync case is pretty different in the
-kernel as it isn't synchonous, and it also doesn't currently exist in
-userspace.  I'd rather keep that as-is unless you have plans to port
-the logging code to userspace?  Even in that case we'll probably want
-a different abstraction that maps to aio.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ include/libxfs.h         |   10 +---------
+ libxfs/libxfs_api_defs.h |    5 +++++
+ libxfs/libxfs_priv.h     |    8 --------
+ libxfs/xfs_attr.c        |    1 +
+ libxfs/xfs_attr_leaf.c   |    1 +
+ 5 files changed, 8 insertions(+), 17 deletions(-)
+
+
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 230bc3e8..dd5fe542 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -211,14 +211,6 @@ libxfs_bmbt_disk_get_all(
+ int libxfs_rtfree_extent(struct xfs_trans *, xfs_rtblock_t, xfs_extlen_t);
+ bool libxfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
+ 
+-/* XXX: need parts of xfs_attr.h in userspace */
+-#define LIBXFS_ATTR_ROOT	0x0002	/* use attrs in root namespace */
+-#define LIBXFS_ATTR_SECURE	0x0008	/* use attrs in security namespace */
+-#define LIBXFS_ATTR_CREATE	0x0010	/* create, but fail if attr exists */
+-#define LIBXFS_ATTR_REPLACE	0x0020	/* set, but fail if attr not exists */
+-
+-int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+-int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+-		 unsigned char *value, int valuelen, int flags);
++#include "xfs_attr.h"
+ 
+ #endif	/* __LIBXFS_H__ */
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 1150ec93..34bb552d 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -144,4 +144,9 @@
+ #define xfs_fs_geometry			libxfs_fs_geometry
+ #define xfs_init_local_fork		libxfs_init_local_fork
+ 
++#define LIBXFS_ATTR_ROOT		ATTR_ROOT
++#define LIBXFS_ATTR_SECURE		ATTR_SECURE
++#define LIBXFS_ATTR_CREATE		ATTR_CREATE
++#define LIBXFS_ATTR_REPLACE		ATTR_REPLACE
++
+ #endif /* __LIBXFS_API_DEFS_H__ */
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index d668a157..f60bff06 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -104,14 +104,6 @@ extern char    *progname;
+  */
+ #define PTR_FMT "%p"
+ 
+-/* XXX: need to push these out to make LIBXFS_ATTR defines */
+-#define ATTR_ROOT			0x0002
+-#define ATTR_SECURE			0x0008
+-#define ATTR_CREATE			0x0010
+-#define ATTR_REPLACE			0x0020
+-#define ATTR_KERNOTIME			0
+-#define ATTR_KERNOVAL			0
+-
+ #define XFS_IGET_CREATE			0x1
+ #define XFS_IGET_UNTRUSTED		0x2
+ 
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index b8838302..170e64cf 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -20,6 +20,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_bmap.h"
+ #include "xfs_bmap_btree.h"
++#include "xfs_attr.h"
+ #include "xfs_attr_leaf.h"
+ #include "xfs_attr_remote.h"
+ #include "xfs_trans_space.h"
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 679c7d0d..1027ca01 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -21,6 +21,7 @@
+ #include "xfs_bmap.h"
+ #include "xfs_attr_sf.h"
+ #include "xfs_attr_remote.h"
++#include "xfs_attr.h"
+ #include "xfs_attr_leaf.h"
+ #include "xfs_trace.h"
+ #include "xfs_cksum.h"
