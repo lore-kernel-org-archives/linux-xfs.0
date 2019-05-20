@@ -1,77 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:36013 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727347AbfEUBnl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 21:43:41 -0400
-Date: Tue, 21 May 2019 11:43:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs filesystem reports negative usage - reoccurring problem
-Message-ID: <20190521014336.GG29573@dread.disaster.area>
-References: <CAHgs-5XkA5xFgxgSaX9m70gduuO1beq6fiY7UEGv1ad6bd19Hw@mail.gmail.com>
- <20190513140943.GC61135@bfoster>
- <683a9b7b-ad5c-5e91-893e-daaa68a853c9@sandeen.net>
- <CAHgs-5Vybp+diCoecfEWbHLRScNnsHKW7-4rwhXH3H+hfcfoLg@mail.gmail.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:38854 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726584AbfETXRx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:17:53 -0400
+Subject: [PATCH 10/12] mkfs: allow setting dax flag on root directory
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 20 May 2019 16:17:48 -0700
+Message-ID: <155839426866.68606.8424427245250373556.stgit@magnolia>
+In-Reply-To: <155839420081.68606.4573219764134939943.stgit@magnolia>
+References: <155839420081.68606.4573219764134939943.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHgs-5Vybp+diCoecfEWbHLRScNnsHKW7-4rwhXH3H+hfcfoLg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Tim Smith <tim.smith@vaultcloud.com.au>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 21, 2019 at 09:39:02AM +1000, Tim Smith wrote:
-> On Tue, May 14, 2019 at 1:06 AM Eric Sandeen <sandeen@sandeen.net> wrote:
-> > I'm kind of interested in what xfs_repair finds in this case.
-> 
-> $ sudo xfs_repair -m 4096 -v /dev/sdad
-> Phase 1 - find and verify superblock...
->         - block cache size set to 342176 entries
-> Phase 2 - using internal log
->         - zero log...
-> zero_log: head block 159752 tail block 159752
->         - scan filesystem freespace and inode maps...
-> sb_fdblocks 4725279343, counted 430312047
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-$ printf %x 4725279343
-119a60a6f
-$ printf %x 430312047
- 19a60a6f
+Teach mkfs to set the DAX flag on the root directory so that all new
+files can be created in dax mode.  This is a complement to removing the
+mount option.
 
-You definitely have uncorrected single bit errors occuring 
-on your systems.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ man/man8/mkfs.xfs.8 |   11 +++++++++++
+ mkfs/xfs_mkfs.c     |   11 +++++++++++
+ 2 files changed, 22 insertions(+)
 
-If the filesystem was writing this bad fdblock count to disk, then
-xfs_validate_sb_write() would be firing this warning:
 
-	xfs_warn(mp, "SB summary counter sanity check failed");
-
-when the superblock is written back on unmount. That write would
-then fail, and that would leave the log dirty. Then after log
-recovery we'd rebuild the counters from the AGFs because it wasn't a
-clean unmount, and the problem would go away. If the log was clean,
-then we'd see that the fdblocks count was invalid, and we'd rebuild
-the counters from the AGFs and the problem would go away.
-
-But you are saying that unmount/mount doesn't fix it, which means
-you must be running a sufficiently old kernel that it doesn't detect
-these conditions, issue warnings and automatically repair itself.
-Yup:
-
-8756a5af1819 ("libxfs: add more bounds checking to sb sanity checks")
-2e9e6481e2a7 ("xfs: detect and fix bad summary counts at mount")
-
-were both merged in 4.19. Well, that would explain why you aren't
-seeing warnings or having it fixed automatically on detection.
-
-IOWs, whatever the cause of your single bit error is, I don't know,
-but it would seem that recent kernels will detect the condition and
-automatically fix themselves at mount time.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 4b8c78c3..0137f164 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -391,6 +391,17 @@ All inodes created by
+ will have this extent size hint applied.
+ The value must be provided in units of filesystem blocks.
+ Directories will pass on this hint to newly created children.
++.TP
++.BI dax= value
++All inodes created by
++.B mkfs.xfs
++will have the DAX flag set.
++This means that directories will pass the flag on to newly created files
++and files will use the DAX IO paths when possible.
++This value is either 1 to enable the use or 0 to disable.
++By default,
++.B mkfs.xfs
++will not enable DAX mode.
+ .RE
+ .TP
+ .B \-f
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 09106648..5b66074d 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -59,6 +59,7 @@ enum {
+ 	D_PROJINHERIT,
+ 	D_EXTSZINHERIT,
+ 	D_COWEXTSIZE,
++	D_DAX,
+ 	D_MAX_OPTS,
+ };
+ 
+@@ -253,6 +254,7 @@ static struct opt_params dopts = {
+ 		[D_PROJINHERIT] = "projinherit",
+ 		[D_EXTSZINHERIT] = "extszinherit",
+ 		[D_COWEXTSIZE] = "cowextsize",
++		[D_DAX] = "dax",
+ 	},
+ 	.subopt_params = {
+ 		{ .index = D_AGCOUNT,
+@@ -368,6 +370,12 @@ static struct opt_params dopts = {
+ 		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
++		{ .index = D_DAX,
++		  .conflicts = { { NULL, LAST_CONFLICT } },
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
++		},
+ 	},
+ };
+ 
+@@ -1465,6 +1473,9 @@ data_opts_parser(
+ 		cli->fsx.fsx_cowextsize = getnum(value, opts, subopt);
+ 		cli->fsx.fsx_xflags |= FS_XFLAG_COWEXTSIZE;
+ 		break;
++	case D_DAX:
++		cli->fsx.fsx_xflags |= FS_XFLAG_DAX;
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
