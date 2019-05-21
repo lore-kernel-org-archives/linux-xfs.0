@@ -1,103 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44656 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:56366 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727492AbfEUTa6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 May 2019 15:30:58 -0400
-Subject: [PATCH 12/12 V2] mkfs: enable reflink by default
-References: <155839420081.68606.4573219764134939943.stgit@magnolia>
- <155839428076.68606.9379127257564633311.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <1f5f641c-b6f8-2067-8224-7350f0f51034@sandeen.net>
-Date: Tue, 21 May 2019 14:30:57 -0500
-MIME-Version: 1.0
-In-Reply-To: <155839428076.68606.9379127257564633311.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1726348AbfEUDrM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 May 2019 23:47:12 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 3/7] libxfs: factor common xfs_trans_bjoin code
+Date: Mon, 20 May 2019 22:47:03 -0500
+Message-Id: <1558410427-1837-4-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1558410427-1837-1-git-send-email-sandeen@redhat.com>
+References: <1558410427-1837-1-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Christoph Hellwig <hch@lst.de>
 
-Data block sharing (a.k.a. reflink) has been stable for a while, so turn
-it on by default.
+Most of xfs_trans_bjoin is duplicated in xfs_trans_get_buf_map,
+xfs_trans_getsb and xfs_trans_read_buf_map.  Add a new
+_xfs_trans_bjoin which can be called by all three functions.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-[sandeen: update comments & man page]
+Source kernel commit: d7e84f413726876c0ec66bbf90770f69841f7663
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Alex Elder <aelder@sgi.com>
+[sandeen: merge to userspace]
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
+ libxfs/trans.c | 53 +++++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 39 insertions(+), 14 deletions(-)
 
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index 4b8c78c..78b1501 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -231,7 +231,7 @@ available for the data forks of regular files.
- .IP
- By default,
- .B mkfs.xfs
--will not create reference count btrees and therefore will not enable the
-+will create reference count btrees and therefore will enable the
- reflink feature.  This feature is only available for filesystems created with
- the (default)
- .B \-m crc=1
-@@ -239,6 +239,13 @@ option set. When the option
- .B \-m crc=0
- is used, the reference count btree feature is not supported and reflink is
- disabled.
-+.IP
-+Note: the filesystem DAX mount option (
-+.B \-o dax
-+) is incompatible with
-+reflink-enabled XFS filesystems.  To use filesystem DAX with XFS, specify the
-+.B \-m reflink=0
-+option to mkfs.xfs to disable the reflink feature.
- .RE
- .TP
- .BI \-d " data_section_options"
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 0910664..ddb25ec 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1973,15 +1973,15 @@ _("Directory ftype field always enabled on CRC enabled filesystems\n"));
- 			usage();
- 		}
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 763daa0..dc924fa 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -537,19 +537,50 @@ libxfs_trans_binval(
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ }
  
--	} else {
-+	} else {	/* !crcs_enabled */
- 		/*
--		 * The kernel doesn't currently support crc=0,finobt=1
--		 * filesystems. If crcs are not enabled and the user has not
--		 * explicitly turned finobt on, then silently turn it off to
--		 * avoid an unnecessary warning.
-+		 * The kernel doesn't support crc=0,finobt=1 filesystems.
-+		 * If crcs are not enabled and the user has not explicitly
-+		 * turned finobt on, then silently turn it off to avoid an
-+		 * unnecessary warning.
- 		 * If the user explicitly tried to use crc=0,finobt=1,
- 		 * then issue an error.
--		 * The same is also for sparse inodes.
-+		 * The same is also true for sparse inodes and reflink.
- 		 */
- 		if (cli->sb_feat.finobt && cli_opt_set(&mopts, M_FINOBT)) {
- 			fprintf(stderr,
-@@ -2004,7 +2004,7 @@ _("rmapbt not supported without CRC support\n"));
- 		}
- 		cli->sb_feat.rmapbt = false;
+-void
+-libxfs_trans_bjoin(
+-	xfs_trans_t		*tp,
+-	xfs_buf_t		*bp)
++/*
++ * Add the locked buffer to the transaction.
++ *
++ * The buffer must be locked, and it cannot be associated with any
++ * transaction.
++ *
++ * If the buffer does not yet have a buf log item associated with it,
++ * then allocate one for it.  Then add the buf item to the transaction.
++ */
++STATIC void
++_libxfs_trans_bjoin(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	int			reset_recur)
+ {
+-	xfs_buf_log_item_t	*bip;
++	struct xfs_buf_log_item	*bip;
  
--		if (cli->sb_feat.reflink) {
-+		if (cli->sb_feat.reflink && cli_opt_set(&mopts, M_REFLINK)) {
- 			fprintf(stderr,
- _("reflink not supported without CRC support\n"));
- 			usage();
-@@ -3876,7 +3876,7 @@ main(
- 			.finobt = true,
- 			.spinodes = true,
- 			.rmapbt = false,
--			.reflink = false,
-+			.reflink = true,
- 			.parent_pointers = false,
- 			.nodalign = false,
- 			.nortalign = false,
+ 	ASSERT(bp->b_transp == NULL);
+ 
++        /*
++	 * The xfs_buf_log_item pointer is stored in b_log_item.  If
++	 * it doesn't have one yet, then allocate one and initialize it.
++	 * The checks to see if one is there are in xfs_buf_item_init().
++	 */
+ 	xfs_buf_item_init(bp, tp->t_mountp);
+ 	bip = bp->b_log_item;
++	if (reset_recur)
++		bip->bli_recur = 0;
++
++	/*
++	 * Attach the item to the transaction so we can find it in
++	 * xfs_trans_get_buf() and friends.
++	 */
+ 	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
+ 	bp->b_transp = tp;
++
++}
++
++void
++libxfs_trans_bjoin(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp)
++{
++	_libxfs_trans_bjoin(tp, bp, 0);
+ 	trace_xfs_trans_bjoin(bp->b_log_item);
+ }
+ 
+@@ -594,9 +625,7 @@ libxfs_trans_get_buf_map(
+ 	if (bp == NULL)
+ 		return NULL;
+ 
+-	libxfs_trans_bjoin(tp, bp);
+-	bip = bp->b_log_item;
+-	bip->bli_recur = 0;
++	_libxfs_trans_bjoin(tp, bp, 1);
+ 	trace_xfs_trans_get_buf(bp->b_log_item);
+ 	return bp;
+ }
+@@ -627,9 +656,7 @@ libxfs_trans_getsb(
+ 
+ 	bp = libxfs_getsb(mp, flags);
+ 
+-	libxfs_trans_bjoin(tp, bp);
+-	bip = bp->b_log_item;
+-	bip->bli_recur = 0;
++	_libxfs_trans_bjoin(tp, bp, 1);
+ 	trace_xfs_trans_getsb(bp->b_log_item);
+ 	return bp;
+ }
+@@ -678,9 +705,7 @@ libxfs_trans_read_buf_map(
+ 	if (bp->b_error)
+ 		goto out_relse;
+ 
+-	xfs_trans_bjoin(tp, bp);
+-	bip = bp->b_log_item;
+-	bip->bli_recur = 0;
++	_libxfs_trans_bjoin(tp, bp, 1);
+ done:
+ 	trace_xfs_trans_read_buf(bp->b_log_item);
+ 	*bpp = bp;
+-- 
+1.8.3.1
