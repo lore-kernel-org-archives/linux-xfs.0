@@ -1,209 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59806 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727946AbfEUQnp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 May 2019 12:43:45 -0400
-Subject: Re: [PATCH 06/12] misc: remove all use of xfs_fsop_geom_t
-References: <155839420081.68606.4573219764134939943.stgit@magnolia>
- <155839423901.68606.18360420363137361199.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <210bdf1c-646c-96dd-287d-929178a62b7d@sandeen.net>
-Date: Tue, 21 May 2019 11:43:43 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60638 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725797AbfEUWYj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 May 2019 18:24:39 -0400
+Date: Wed, 22 May 2019 08:24:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 14/17] xfs: use bios directly to read and write the log
+ recovery buffers
+Message-ID: <20190521222434.GH29573@dread.disaster.area>
+References: <20190520161347.3044-1-hch@lst.de>
+ <20190520161347.3044-15-hch@lst.de>
+ <20190520233233.GF29573@dread.disaster.area>
+ <20190521050943.GA29120@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <155839423901.68606.18360420363137361199.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190521050943.GA29120@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On 5/20/19 6:17 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, May 21, 2019 at 07:09:43AM +0200, Christoph Hellwig wrote:
+> On Tue, May 21, 2019 at 09:32:33AM +1000, Dave Chinner wrote:
+> > So while it's easy to drop the uncached buffer API from the kernel
+> > side, it leaves me with the question of what API do we use in
+> > userspace to provide this same functionality? I suspect that we
+> > probably need to separate all this log-to-bio code out into a
+> > separate file (e.g. xfs_log_io.[ch]) to leave a set of API stubs
+> > that we can reimplement in userspace to pread/pwrite directly to
+> > the log buftarg device fd as I've done already for the buffer
+> > code...
 > 
-> Remove all the uses of the old xfs_fsop_geom_t typedef.
+> For one we still keep the uncached buffers in xfs_buf.c as we have users
+> of that outside of the log code, but I guess that is not what you mean.
+> 
+> I can split the log recovery code into a separate file, as you said
+> it should just be malloc + pread/pwrite in userspace, so implementing
+> it should be trivial.
 
-Ok.  Any complaint if I tab stuff out to line up again when I commit
-it, assuming it doesn't cause 80char problems?
+Yeah, the log recovery code should probably be split in three - the
+kernel specific IO code/API, the log parsing code (the bit that
+finds head/tail and parses it into transactions for recovery) and
+then the bit that actually does the recovery. THe logprint code in
+userspace uses the parsing code, so that's the bit we need to share
+with userspace...
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> The xlog_sync case is pretty different in the
+> kernel as it isn't synchonous, and it also doesn't currently exist in
+> userspace.  I'd rather keep that as-is unless you have plans to port
+> the logging code to userspace?
 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  growfs/xfs_growfs.c |    4 ++--
->  io/init.c           |    2 +-
->  io/io.h             |    6 +++---
->  io/open.c           |    6 +++---
->  man/man3/xfsctl.3   |    2 +-
->  spaceman/file.c     |    4 ++--
->  spaceman/init.c     |    2 +-
->  spaceman/space.h    |    6 +++---
->  8 files changed, 16 insertions(+), 16 deletions(-)
-> 
-> 
-> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-> index 392e4a00..ffd82f95 100644
-> --- a/growfs/xfs_growfs.c
-> +++ b/growfs/xfs_growfs.c
-> @@ -44,7 +44,7 @@ main(int argc, char **argv)
->  	int			error;	/* we have hit an error */
->  	long			esize;	/* new rt extent size */
->  	int			ffd;	/* mount point file descriptor */
-> -	xfs_fsop_geom_t		geo;	/* current fs geometry */
-> +	struct xfs_fsop_geom	geo;	/* current fs geometry */
->  	int			iflag;	/* -i flag */
->  	int			isint;	/* log is currently internal */
->  	int			lflag;	/* -l flag */
-> @@ -52,7 +52,7 @@ main(int argc, char **argv)
->  	int			maxpct;	/* -m flag value */
->  	int			mflag;	/* -m flag */
->  	int			nflag;	/* -n flag */
-> -	xfs_fsop_geom_t		ngeo;	/* new fs geometry */
-> +	struct xfs_fsop_geom	ngeo;	/* new fs geometry */
->  	int			rflag;	/* -r flag */
->  	long long		rsize;	/* new rt size in fs blocks */
->  	int			xflag;	/* -x flag */
-> diff --git a/io/init.c b/io/init.c
-> index 83f08f2d..7025aea5 100644
-> --- a/io/init.c
-> +++ b/io/init.c
-> @@ -133,7 +133,7 @@ init(
->  	int		c, flags = 0;
->  	char		*sp;
->  	mode_t		mode = 0600;
-> -	xfs_fsop_geom_t	geometry = { 0 };
-> +	struct xfs_fsop_geom geometry = { 0 };
->  	struct fs_path	fsp;
->  
->  	progname = basename(argv[0]);
-> diff --git a/io/io.h b/io/io.h
-> index 6469179e..0848ab98 100644
-> --- a/io/io.h
-> +++ b/io/io.h
-> @@ -38,7 +38,7 @@ typedef struct fileio {
->  	int		fd;		/* open file descriptor */
->  	int		flags;		/* flags describing file state */
->  	char		*name;		/* file name at time of open */
-> -	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
-> +	struct xfs_fsop_geom geom;	/* XFS filesystem geometry */
->  	struct fs_path	fs_path;	/* XFS path information */
->  } fileio_t;
->  
-> @@ -70,9 +70,9 @@ extern void *check_mapping_range(mmap_region_t *, off64_t, size_t, int);
->   */
->  
->  extern off64_t		filesize(void);
-> -extern int		openfile(char *, xfs_fsop_geom_t *, int, mode_t,
-> +extern int		openfile(char *, struct xfs_fsop_geom *, int, mode_t,
->  				 struct fs_path *);
-> -extern int		addfile(char *, int , xfs_fsop_geom_t *, int,
-> +extern int		addfile(char *, int , struct xfs_fsop_geom *, int,
->  				struct fs_path *);
->  extern void		printxattr(uint, int, int, const char *, int, int);
->  
-> diff --git a/io/open.c b/io/open.c
-> index 11805cd7..ce7a5362 100644
-> --- a/io/open.c
-> +++ b/io/open.c
-> @@ -51,7 +51,7 @@ static long extsize;
->  int
->  openfile(
->  	char		*path,
-> -	xfs_fsop_geom_t	*geom,
-> +	struct xfs_fsop_geom *geom,
->  	int		flags,
->  	mode_t		mode,
->  	struct fs_path	*fs_path)
-> @@ -156,7 +156,7 @@ int
->  addfile(
->  	char		*name,
->  	int		fd,
-> -	xfs_fsop_geom_t	*geometry,
-> +	struct xfs_fsop_geom *geometry,
->  	int		flags,
->  	struct fs_path	*fs_path)
->  {
-> @@ -229,7 +229,7 @@ open_f(
->  	int		c, fd, flags = 0;
->  	char		*sp;
->  	mode_t		mode = 0600;
-> -	xfs_fsop_geom_t	geometry = { 0 };
-> +	struct xfs_fsop_geom geometry = { 0 };
->  	struct fs_path	fsp;
->  
->  	if (argc == 1) {
-> diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-> index 6e5027c4..462ccbd8 100644
-> --- a/man/man3/xfsctl.3
-> +++ b/man/man3/xfsctl.3
-> @@ -640,7 +640,7 @@ operations on XFS filesystems.
->  For
->  .B XFS_IOC_FSGEOMETRY
->  (get filesystem mkfs time information), the output structure is of type
-> -.BR xfs_fsop_geom_t .
-> +.BR struct xfs_fsop_geom .
->  For
->  .B XFS_FS_COUNTS
->  (get filesystem dynamic global information), the output structure is of type
-> diff --git a/spaceman/file.c b/spaceman/file.c
-> index d2acf5db..a9b8461f 100644
-> --- a/spaceman/file.c
-> +++ b/spaceman/file.c
-> @@ -44,7 +44,7 @@ print_f(
->  int
->  openfile(
->  	char		*path,
-> -	xfs_fsop_geom_t	*geom,
-> +	struct xfs_fsop_geom *geom,
->  	struct fs_path	*fs_path)
->  {
->  	struct fs_path	*fsp;
-> @@ -84,7 +84,7 @@ int
->  addfile(
->  	char		*name,
->  	int		fd,
-> -	xfs_fsop_geom_t	*geometry,
-> +	struct xfs_fsop_geom *geometry,
->  	struct fs_path	*fs_path)
->  {
->  	char		*filename;
-> diff --git a/spaceman/init.c b/spaceman/init.c
-> index 181a3446..c845f920 100644
-> --- a/spaceman/init.c
-> +++ b/spaceman/init.c
-> @@ -60,7 +60,7 @@ init(
->  	char		**argv)
->  {
->  	int		c;
-> -	xfs_fsop_geom_t	geometry = { 0 };
-> +	struct xfs_fsop_geom geometry = { 0 };
->  	struct fs_path	fsp;
->  
->  	progname = basename(argv[0]);
-> diff --git a/spaceman/space.h b/spaceman/space.h
-> index bf9cc2bf..b246f602 100644
-> --- a/spaceman/space.h
-> +++ b/spaceman/space.h
-> @@ -7,7 +7,7 @@
->  #define XFS_SPACEMAN_SPACE_H_
->  
->  typedef struct fileio {
-> -	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
-> +	struct xfs_fsop_geom geom;		/* XFS filesystem geometry */
->  	struct fs_path	fs_path;	/* XFS path information */
->  	char		*name;		/* file name at time of open */
->  	int		fd;		/* open file descriptor */
-> @@ -17,8 +17,8 @@ extern fileio_t		*filetable;	/* open file table */
->  extern int		filecount;	/* number of open files */
->  extern fileio_t		*file;		/* active file in file table */
->  
-> -extern int	openfile(char *, xfs_fsop_geom_t *, struct fs_path *);
-> -extern int	addfile(char *, int , xfs_fsop_geom_t *, struct fs_path *);
-> +extern int	openfile(char *, struct xfs_fsop_geom *, struct fs_path *);
-> +extern int	addfile(char *, int , struct xfs_fsop_geom *, struct fs_path *);
->  
->  extern void	print_init(void);
->  extern void	help_init(void);
-> 
+That's fine, I have no plans to pull the full logging code into
+userspace right now.
+
+> Even in that case we'll probably want
+> a different abstraction that maps to aio.
+
+I've got a rough AIO implementation backing the xfs_buf.c code in
+userspace already. It works just fine and is massively faster than
+the existing code on SSDs, so I don't see a problem with porting IO
+code that assumes an AIO model anymore. i.e. Re-using the kernel AIO
+model for all the buffer code in userspace is one of the reasons I'm
+porting xfs-buf.c to userspace.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
