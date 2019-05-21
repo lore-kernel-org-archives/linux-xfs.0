@@ -1,281 +1,213 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47224 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727069AbfETXSZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:18:25 -0400
-Subject: [PATCH 2/8] libxfs: break out the fsop geometry manpage
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 20 May 2019 16:18:19 -0700
-Message-ID: <155839429960.68923.5927727531720951676.stgit@magnolia>
-In-Reply-To: <155839428721.68923.11962490742479847985.stgit@magnolia>
-References: <155839428721.68923.11962490742479847985.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:43432 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726419AbfEUTQL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 May 2019 15:16:11 -0400
+Subject: Re: [PATCH 08/12] xfs_repair: refactor namecheck functions
+References: <155839420081.68606.4573219764134939943.stgit@magnolia>
+ <155839425128.68606.14448412166622032502.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <17704dc3-09a8-6013-7cbb-bb1b0be6911b@sandeen.net>
+Date: Tue, 21 May 2019 14:16:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <155839425128.68606.14448412166622032502.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 5/20/19 6:17 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Now that we have name check functions in libxfs, use them instead of our
+> custom versions.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Break out the fs geometry ioctl into a separate manpage so that we can
-document how it works.
+I dig it.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- man/man2/ioctl_xfs_fsop_geometry.2 |  214 ++++++++++++++++++++++++++++++++++++
- man/man3/xfsctl.3                  |   10 +-
- 2 files changed, 220 insertions(+), 4 deletions(-)
- create mode 100644 man/man2/ioctl_xfs_fsop_geometry.2
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-
-diff --git a/man/man2/ioctl_xfs_fsop_geometry.2 b/man/man2/ioctl_xfs_fsop_geometry.2
-new file mode 100644
-index 00000000..4045e03b
---- /dev/null
-+++ b/man/man2/ioctl_xfs_fsop_geometry.2
-@@ -0,0 +1,214 @@
-+.\" Copyright (c) 2019, Oracle.  All rights reserved.
-+.\"
-+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-+.\" SPDX-License-Identifier: GPL-2.0+
-+.\" %%%LICENSE_END
-+.TH IOCTL-XFS-FSOP-GEOMETRY 2 2019-04-11 "XFS"
-+.SH NAME
-+ioctl_xfs_fsop_geometry \- report XFS filesystem shape
-+.SH SYNOPSIS
-+.br
-+.B #include <xfs/xfs_fs.h>
-+.PP
-+.BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY, struct xfs_fsop_geometry *" arg );
-+.PP
-+.BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY_V1, struct xfs_fsop_geometry_v1 *" arg );
-+.SH DESCRIPTION
-+Report the storage space parameters that influence allocation decisions in
-+this XFS filesystem.
-+This information is conveyed in a structure of the following form:
-+.PP
-+.in +4n
-+.nf
-+struct xfs_fsop_geom {
-+	__u32         blocksize;
-+	__u32         rtextsize;
-+	__u32         agblocks;
-+	__u32         agcount;
-+	__u32         logblocks;
-+	__u32         sectsize;
-+	__u32         inodesize;
-+	__u32         imaxpct;
-+	__u64         datablocks;
-+	__u64         rtblocks;
-+	__u64         rtextents;
-+	__u64         logstart;
-+	unsigned char uuid[16];
-+	__u32         sunit;
-+	__u32         swidth;
-+	__s32         version;
-+	__u32         flags;
-+	__u32         logsectsize;
-+	__u32         rtsectsize;
-+	__u32         dirblocksize;
-+	/* struct xfs_fsop_geom_v1 stops here. */
-+
-+	__u32         logsunit;
-+};
-+.fi
-+.in
-+.PP
-+.I blocksize
-+is the size of a fundamental filesystem block, in bytes.
-+.PP
-+.I rtextsize
-+is the size of an extent on the realtime volume, in bytes.
-+.PP
-+.I agblocks
-+is the size of an allocation group, in units of filesystem blocks.
-+.PP
-+.I agcount
-+is the number of allocation groups in the filesystem.
-+.PP
-+.I logblocks
-+is the size of the log, in units of filesystem blocks.
-+.PP
-+.I sectsize
-+is the smallest amount of data that can be written to the data device
-+atomically, in bytes.
-+.PP
-+.I inodesize
-+is the size of an inode record, in bytes.
-+.PP
-+.I imaxpct
-+is the maximum percentage of the filesystem that can be allocated to inode
-+record blocks.
-+.PP
-+.I datablocks
-+is the size of the data device, in units of filesystem blocks.
-+.PP
-+.I rtblocks
-+is the size of the realtime device, in units of filesystem blocks.
-+.PP
-+.I rtextents
-+is the number of extents that can be allocated on the realtime device.
-+This ought to be
-+.RB "( " rtblocks " * " blocksize " ) / " rtextsize .
-+.PP
-+.I logstart
-+tells the start of the log, in units of filesystem blocks.
-+If the filesystem has an external log, this will be zero.
-+.PP
-+.I uuid
-+is the universal unique identifier of the filesystem.
-+.PP
-+.I sunit
-+is what the filesystem has been told is the size of a RAID stripe unit on the
-+underlying data device, in filesystem blocks.
-+.PP
-+.I swidth
-+is what the filesystem has been told is the width of a RAID stripe on the
-+underlying data device, in units of RAID stripe units.
-+.PP
-+.I version
-+is the version of this structure.
-+This value will be XFS_FSOP_GEOM_VERSION.
-+.PP
-+.I flags
-+tell us what features are enabled on the filesystem.
-+This field can be any combination of the following:
-+.RS 0.4i
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_ATTR
-+Extended attributes are present.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_NLINK
-+This filesystem supports up to 2^32 links.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_QUOTA
-+Quotas are enabled.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_IALIGN
-+Inodes are aligned for better performance.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_DALIGN
-+Data blocks are aligned for better performance.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_SHARED
-+Unused.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_EXTFLG
-+Filesystem supports unwritten extents.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_DIRV2
-+Directories maintain free space data for better performance.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_LOGV2
-+Log uses the V2 format.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_SECTOR
-+The log device has a sector size larger than 512 bytes.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_ATTR2
-+Filesystem contains V2 extended attributes.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_PROJID32
-+Project IDs can be as large as 2^32.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_DIRV2CI
-+Case-insensitive lookups are supported on directories.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_LAZYSB
-+On-disk superblock counters are updated only at unmount time.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_V5SB
-+Metadata blocks are self describing and contain checksums.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_FTYPE
-+Directories cache inode types in directory entries.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_FINOBT
-+Filesystem maintains an index of free inodes.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_SPINODES
-+Filesystem tries harder to allocate inodes when free space is fragmented.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_RMAPBT
-+Filesystem stores reverse mappings of blocks to owners.
-+.TP
-+.B XFS_FSOP_GEOM_FLAGS_REFLINK
-+Filesystem supports sharing blocks.
-+.RE
-+
-+.PD 1
-+.PP
-+.I logsectsize
-+is the smallest amount of data that can be written to the log device atomically,
-+in bytes.
-+.PP
-+.I rtsectsize
-+is the smallest amount of data that can be written to the realtime device
-+atomically, in bytes.
-+.PP
-+.I dirblocksize
-+is the size of directory blocks, in bytes.
-+.PP
-+.I logsunit
-+is what the filesystem has been told is the size of a RAID stripe unit on the
-+underlying log device, in filesystem blocks.
-+This field is meaningful only if the flag
-+.B  XFS_FSOP_GEOM_FLAGS_LOGV2
-+is set.
-+.SH RETURN VALUE
-+On error, \-1 is returned, and
-+.I errno
-+is set to indicate the error.
-+.PP
-+.SH ERRORS
-+Error codes can be one of, but are not limited to, the following:
-+.TP
-+.B EFAULT
-+The kernel was not able to copy into the userspace buffer.
-+.TP
-+.B EFSBADCRC
-+Metadata checksum validation failed while performing the query.
-+.TP
-+.B EFSCORRUPTED
-+Metadata corruption was encountered while performing the query.
-+.TP
-+.B EIO
-+An I/O error was encountered while performing the query.
-+.SH CONFORMING TO
-+This API is specific to XFS filesystem on the Linux kernel.
-+.SH SEE ALSO
-+.BR ioctl (2)
-diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-index 4d7e2f68..46d8afe8 100644
---- a/man/man3/xfsctl.3
-+++ b/man/man3/xfsctl.3
-@@ -479,6 +479,12 @@ the kernel, except no output count parameter is used (should
- be initialized to zero).
- An error is returned if the inode number is invalid.
- 
-+.TP
-+.B XFS_IOC_FSGEOMETRY
-+See
-+.BR ioctl_xfs_fsop_geometry (2)
-+for more information.
-+
- .PP
- .nf
- .B XFS_IOC_THAW
-@@ -494,10 +500,6 @@ An error is returned if the inode number is invalid.
- These interfaces are used to implement various filesystem internal
- operations on XFS filesystems.
- For
--.B XFS_IOC_FSGEOMETRY
--(get filesystem mkfs time information), the output structure is of type
--.BR struct xfs_fsop_geom .
--For
- .B XFS_FS_COUNTS
- (get filesystem dynamic global information), the output structure is of type
- .BR xfs_fsop_counts_t .
+> ---
+>  libxfs/libxfs_api_defs.h |    2 ++
+>  repair/attr_repair.c     |   32 +++++++++++++-------------------
+>  repair/da_util.c         |   27 ---------------------------
+>  repair/da_util.h         |    6 ------
+>  repair/dir2.c            |   12 ++----------
+>  5 files changed, 17 insertions(+), 62 deletions(-)
+> 
+> 
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index 34bb552d..71a7ef53 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -143,6 +143,8 @@
+>  #define xfs_default_ifork_ops		libxfs_default_ifork_ops
+>  #define xfs_fs_geometry			libxfs_fs_geometry
+>  #define xfs_init_local_fork		libxfs_init_local_fork
+> +#define xfs_dir2_namecheck		libxfs_dir2_namecheck
+> +#define xfs_attr_namecheck		libxfs_attr_namecheck
+>  
+>  #define LIBXFS_ATTR_ROOT		ATTR_ROOT
+>  #define LIBXFS_ATTR_SECURE		ATTR_SECURE
+> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+> index 5ad81c09..9a44f610 100644
+> --- a/repair/attr_repair.c
+> +++ b/repair/attr_repair.c
+> @@ -122,14 +122,6 @@ set_da_freemap(xfs_mount_t *mp, da_freemap_t *map, int start, int stop)
+>   * fork being emptied and put in shortform format.
+>   */
+>  
+> -static int
+> -attr_namecheck(
+> -	uint8_t	*name,
+> -	int	length)
+> -{
+> -	return namecheck((char *)name, length, false);
+> -}
+> -
+>  /*
+>   * This routine just checks what security needs are for attribute values
+>   * only called when root flag is set, otherwise these names could exist in
+> @@ -301,8 +293,8 @@ process_shortform_attr(
+>  		}
+>  
+>  		/* namecheck checks for null chars in attr names. */
+> -		if (attr_namecheck(currententry->nameval,
+> -						currententry->namelen)) {
+> +		if (!libxfs_attr_namecheck(currententry->nameval,
+> +					   currententry->namelen)) {
+>  			do_warn(
+>  	_("entry contains illegal character in shortform attribute name\n"));
+>  			junkit = 1;
+> @@ -464,8 +456,9 @@ process_leaf_attr_local(
+>  	xfs_attr_leaf_name_local_t *local;
+>  
+>  	local = xfs_attr3_leaf_name_local(leaf, i);
+> -	if (local->namelen == 0 || attr_namecheck(local->nameval,
+> -							local->namelen)) {
+> +	if (local->namelen == 0 ||
+> +	    !libxfs_attr_namecheck(local->nameval,
+> +				   local->namelen)) {
+>  		do_warn(
+>  	_("attribute entry %d in attr block %u, inode %" PRIu64 " has bad name (namelen = %d)\n"),
+>  			i, da_bno, ino, local->namelen);
+> @@ -519,13 +512,14 @@ process_leaf_attr_remote(
+>  
+>  	remotep = xfs_attr3_leaf_name_remote(leaf, i);
+>  
+> -	if (remotep->namelen == 0 || attr_namecheck(remotep->name,
+> -						remotep->namelen) ||
+> -			be32_to_cpu(entry->hashval) !=
+> -				libxfs_da_hashname((unsigned char *)&remotep->name[0],
+> -						remotep->namelen) ||
+> -			be32_to_cpu(entry->hashval) < last_hashval ||
+> -			be32_to_cpu(remotep->valueblk) == 0) {
+> +	if (remotep->namelen == 0 ||
+> +	    !libxfs_attr_namecheck(remotep->name,
+> +				   remotep->namelen) ||
+> +	    be32_to_cpu(entry->hashval) !=
+> +			libxfs_da_hashname((unsigned char *)&remotep->name[0],
+> +					   remotep->namelen) ||
+> +	    be32_to_cpu(entry->hashval) < last_hashval ||
+> +	    be32_to_cpu(remotep->valueblk) == 0) {
+>  		do_warn(
+>  	_("inconsistent remote attribute entry %d in attr block %u, ino %" PRIu64 "\n"), i, da_bno, ino);
+>  		return -1;
+> diff --git a/repair/da_util.c b/repair/da_util.c
+> index 4a258e58..8c818ea1 100644
+> --- a/repair/da_util.c
+> +++ b/repair/da_util.c
+> @@ -12,33 +12,6 @@
+>  #include "bmap.h"
+>  #include "da_util.h"
+>  
+> -/*
+> - * Takes a name and length (name need not be null-terminated) and whether
+> - * we are checking a dir (as opposed to an attr).
+> - * Returns 1 if the name contains a NUL or if a directory entry contains a '/'.
+> - * Returns 0 if the name checks out.
+> - */
+> -int
+> -namecheck(
+> -	char	*name,
+> -	int	length,
+> -	bool	isadir)
+> -{
+> -	char	*c;
+> -	int	i;
+> -
+> -	ASSERT(length < MAXNAMELEN);
+> -
+> -	for (c = name, i = 0; i < length; i++, c++) {
+> -		if (isadir && *c == '/')
+> -			return 1;
+> -		if (*c == '\0')
+> -			return 1;
+> -	}
+> -
+> -	return 0;
+> -}
+> -
+>  /*
+>   * the cursor gets passed up and down the da btree processing
+>   * routines.  The interior block processing routines use the
+> diff --git a/repair/da_util.h b/repair/da_util.h
+> index 041dff74..90fec00c 100644
+> --- a/repair/da_util.h
+> +++ b/repair/da_util.h
+> @@ -24,12 +24,6 @@ typedef struct da_bt_cursor {
+>  	struct blkmap		*blkmap;
+>  } da_bt_cursor_t;
+>  
+> -int
+> -namecheck(
+> -	char		*name,
+> -	int		length,
+> -	bool		isadir);
+> -
+>  struct xfs_buf *
+>  da_read_buf(
+>  	xfs_mount_t	*mp,
+> diff --git a/repair/dir2.c b/repair/dir2.c
+> index 094ecb3d..4ac0084e 100644
+> --- a/repair/dir2.c
+> +++ b/repair/dir2.c
+> @@ -44,14 +44,6 @@ _("malloc failed (%zu bytes) dir2_add_badlist:ino %" PRIu64 "\n"),
+>  	l->ino = ino;
+>  }
+>  
+> -static int
+> -dir_namecheck(
+> -	uint8_t	*name,
+> -	int	length)
+> -{
+> -	return namecheck((char *)name, length, true);
+> -}
+> -
+>  int
+>  dir2_is_badino(
+>  	xfs_ino_t	ino)
+> @@ -318,7 +310,7 @@ _("entry #%d %s in shortform dir %" PRIu64),
+>  		 * the length value is stored in a byte
+>  		 * so it can't be too big, it can only wrap
+>  		 */
+> -		if (dir_namecheck(sfep->name, namelen)) {
+> +		if (!libxfs_dir2_namecheck(sfep->name, namelen)) {
+>  			/*
+>  			 * junk entry
+>  			 */
+> @@ -789,7 +781,7 @@ _("\twould clear inode number in entry at offset %" PRIdPTR "...\n"),
+>  		 * during phase 4.
+>  		 */
+>  		junkit = dep->name[0] == '/';
+> -		nm_illegal = dir_namecheck(dep->name, dep->namelen);
+> +		nm_illegal = !libxfs_dir2_namecheck(dep->name, dep->namelen);
+>  		if (ino_discovery && nm_illegal) {
+>  			do_warn(
+>  _("entry at block %u offset %" PRIdPTR " in directory inode %" PRIu64 " has illegal name \"%*.*s\": "),
+> 
