@@ -1,113 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37968 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726584AbfETXQw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:16:52 -0400
-Subject: [PATCH 01/12] libxfs: fix attr include mess
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 20 May 2019 16:16:47 -0700
-Message-ID: <155839420721.68606.5873005194118073203.stgit@magnolia>
-In-Reply-To: <155839420081.68606.4573219764134939943.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:43846 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726525AbfEUTUw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 May 2019 15:20:52 -0400
+Subject: Re: [PATCH 07/12] libfrog: fix bitmap return values
 References: <155839420081.68606.4573219764134939943.stgit@magnolia>
+ <155839424514.68606.14562327454853103352.stgit@magnolia>
+ <5caa6c9e-3a42-6c8e-101b-c198af77e765@sandeen.net>
+ <20190521170103.GD5141@magnolia>
+ <c281d3c3-5385-90a3-125a-8a620944c971@sandeen.net>
+ <20190521191946.GA5657@infradead.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d3a556b7-95ad-9fc9-1867-cd71d43f00e8@sandeen.net>
+Date: Tue, 21 May 2019 14:20:51 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20190521191946.GA5657@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
-
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Remove all the userspace xfs_attr shim cruft so that we have one
-definition of ATTR_* macros so that we can actually use xfs_attr.c
-routines and include xfs_attr.h without problems.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- include/libxfs.h         |   10 +---------
- libxfs/libxfs_api_defs.h |    5 +++++
- libxfs/libxfs_priv.h     |    8 --------
- libxfs/xfs_attr.c        |    1 +
- libxfs/xfs_attr_leaf.c   |    1 +
- 5 files changed, 8 insertions(+), 17 deletions(-)
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 230bc3e8..dd5fe542 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -211,14 +211,6 @@ libxfs_bmbt_disk_get_all(
- int libxfs_rtfree_extent(struct xfs_trans *, xfs_rtblock_t, xfs_extlen_t);
- bool libxfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
- 
--/* XXX: need parts of xfs_attr.h in userspace */
--#define LIBXFS_ATTR_ROOT	0x0002	/* use attrs in root namespace */
--#define LIBXFS_ATTR_SECURE	0x0008	/* use attrs in security namespace */
--#define LIBXFS_ATTR_CREATE	0x0010	/* create, but fail if attr exists */
--#define LIBXFS_ATTR_REPLACE	0x0020	/* set, but fail if attr not exists */
--
--int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
--int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
--		 unsigned char *value, int valuelen, int flags);
-+#include "xfs_attr.h"
- 
- #endif	/* __LIBXFS_H__ */
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 1150ec93..34bb552d 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -144,4 +144,9 @@
- #define xfs_fs_geometry			libxfs_fs_geometry
- #define xfs_init_local_fork		libxfs_init_local_fork
- 
-+#define LIBXFS_ATTR_ROOT		ATTR_ROOT
-+#define LIBXFS_ATTR_SECURE		ATTR_SECURE
-+#define LIBXFS_ATTR_CREATE		ATTR_CREATE
-+#define LIBXFS_ATTR_REPLACE		ATTR_REPLACE
-+
- #endif /* __LIBXFS_API_DEFS_H__ */
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index d668a157..f60bff06 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -104,14 +104,6 @@ extern char    *progname;
-  */
- #define PTR_FMT "%p"
- 
--/* XXX: need to push these out to make LIBXFS_ATTR defines */
--#define ATTR_ROOT			0x0002
--#define ATTR_SECURE			0x0008
--#define ATTR_CREATE			0x0010
--#define ATTR_REPLACE			0x0020
--#define ATTR_KERNOTIME			0
--#define ATTR_KERNOVAL			0
--
- #define XFS_IGET_CREATE			0x1
- #define XFS_IGET_UNTRUSTED		0x2
- 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index b8838302..170e64cf 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -20,6 +20,7 @@
- #include "xfs_trans.h"
- #include "xfs_bmap.h"
- #include "xfs_bmap_btree.h"
-+#include "xfs_attr.h"
- #include "xfs_attr_leaf.h"
- #include "xfs_attr_remote.h"
- #include "xfs_trans_space.h"
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index 679c7d0d..1027ca01 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -21,6 +21,7 @@
- #include "xfs_bmap.h"
- #include "xfs_attr_sf.h"
- #include "xfs_attr_remote.h"
-+#include "xfs_attr.h"
- #include "xfs_attr_leaf.h"
- #include "xfs_trace.h"
- #include "xfs_cksum.h"
+
+On 5/21/19 2:19 PM, Christoph Hellwig wrote:
+> On Tue, May 21, 2019 at 01:59:58PM -0500, Eric Sandeen wrote:
+>> So yeah I'm of the opinion that unless it's kernel(-ish?) code it should be
+>> positive, and I can send a patch to clean up stuff that's not.
+>>
+>> I can be swayed by counterarguments if you have them.  :)
+> 
+> What speaks against everything is negative?  It isn't like returning
+> positive errors really is a traditional userspace convention, as that
+> is return -1 (negative!) and look at errno..
+
+Sorry, I wasn't clear - I meant returning negative errnos.  That's
+the part that's not consistent.
+
+-Eric
