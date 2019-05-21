@@ -1,43 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43846 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:39834 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726525AbfEUTUw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 May 2019 15:20:52 -0400
-Subject: Re: [PATCH 07/12] libfrog: fix bitmap return values
-References: <155839420081.68606.4573219764134939943.stgit@magnolia>
- <155839424514.68606.14562327454853103352.stgit@magnolia>
- <5caa6c9e-3a42-6c8e-101b-c198af77e765@sandeen.net>
- <20190521170103.GD5141@magnolia>
- <c281d3c3-5385-90a3-125a-8a620944c971@sandeen.net>
- <20190521191946.GA5657@infradead.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d3a556b7-95ad-9fc9-1867-cd71d43f00e8@sandeen.net>
-Date: Tue, 21 May 2019 14:20:51 -0500
+        id S1728858AbfEUQYk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 May 2019 12:24:40 -0400
+Date: Tue, 21 May 2019 12:24:14 -0400 (EDT)
+From: Pankaj Gupta <pagupta@redhat.com>
+Message-ID: <176786650.30122184.1558455854322.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20190521094543-mutt-send-email-mst@kernel.org>
+References: <20190521133713.31653-1-pagupta@redhat.com> <20190521133713.31653-3-pagupta@redhat.com> <20190521094543-mutt-send-email-mst@kernel.org>
+Subject: Re: [Qemu-devel] [PATCH v10 2/7] virtio-pmem: Add virtio pmem
+ driver
 MIME-Version: 1.0
-In-Reply-To: <20190521191946.GA5657@infradead.org>
 Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: cohuck@redhat.com, jack@suse.cz, kvm@vger.kernel.org, david@redhat.com, jasowang@redhat.com, david@fromorbit.com, qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org, dm-devel@redhat.com, adilger kernel <adilger.kernel@dilger.ca>, zwisler@kernel.org, aarcange@redhat.com, dave jiang <dave.jiang@intel.com>, jstaron@google.com, linux-nvdimm@lists.01.org, vishal l verma <vishal.l.verma@intel.com>, willy@infradead.org, hch@infradead.org, linux-acpi@vger.kernel.org, jmoyer@redhat.com, linux-ext4@vger.kernel.org, lenb@kernel.org, kilobyte@angband.pl, rdunlap@infradead.org, riel@surriel.com, yuval shaia <yuval.shaia@oracle.com>, stefanha@redhat.com, pbonzini@redhat.com, dan j williams <dan.j.williams@intel.com>, lcapitulino@redhat.com, kwolf@redhat.com, nilal@redhat.com, tytso@mit.edu, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, snitzer@redhat.com, darrick wong <darrick.wong@oracle.com>, rjw@rjwysocki.net, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, imammedo@redhat.com
 
 
-
-On 5/21/19 2:19 PM, Christoph Hellwig wrote:
-> On Tue, May 21, 2019 at 01:59:58PM -0500, Eric Sandeen wrote:
->> So yeah I'm of the opinion that unless it's kernel(-ish?) code it should be
->> positive, and I can send a patch to clean up stuff that's not.
->>
->> I can be swayed by counterarguments if you have them.  :)
+> > diff --git a/include/uapi/linux/virtio_pmem.h
+> > b/include/uapi/linux/virtio_pmem.h
+> > new file mode 100644
+> > index 000000000000..7a3e2fe52415
+> > --- /dev/null
+> > +++ b/include/uapi/linux/virtio_pmem.h
+> > @@ -0,0 +1,35 @@
+> > +/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+> > +/*
+> > + * Definitions for virtio-pmem devices.
+> > + *
+> > + * Copyright (C) 2019 Red Hat, Inc.
+> > + *
+> > + * Author(s): Pankaj Gupta <pagupta@redhat.com>
+> > + */
+> > +
+> > +#ifndef _UAPI_LINUX_VIRTIO_PMEM_H
+> > +#define _UAPI_LINUX_VIRTIO_PMEM_H
+> > +
+> > +#include <linux/types.h>
+> > +#include <linux/virtio_types.h>
+> > +#include <linux/virtio_ids.h>
+> > +#include <linux/virtio_config.h>
+> > +
+> > +struct virtio_pmem_config {
+> > +	__le64 start;
+> > +	__le64 size;
+> > +};
+> > +
 > 
-> What speaks against everything is negative?  It isn't like returning
-> positive errors really is a traditional userspace convention, as that
-> is return -1 (negative!) and look at errno..
+> config generally should be __u64.
+> Are you sure sparse does not complain?
 
-Sorry, I wasn't clear - I meant returning negative errnos.  That's
-the part that's not consistent.
+I used this because VIRTIO 1.1 spec says: 
+"The device configuration space uses the little-endian format for multi-byte fields. "
 
--Eric
+and __le64 looks ok to me. Also, its used in other driver config as welle.g virtio-vsock
+
+> 
+> 
+> > +#define VIRTIO_PMEM_REQ_TYPE_FLUSH      0
+> > +
+> > +struct virtio_pmem_resp {
+> > +	/* Host return status corresponding to flush request */
+> > +	__virtio32 ret;
+> > +};
+> > +
+> > +struct virtio_pmem_req {
+> > +	/* command type */
+> > +	__virtio32 type;
+> > +};
+> > +
+> > +#endif
+> > --
+> > 2.20.1
+> 
+> Sorry why are these __virtio32 not __le32?
+
+I used __virtio32 for data fields for guest and host supporting different endianess.
+ 
+Thanks,
+Pankaj
+> 
+> --
+> MST
+> 
+> 
