@@ -1,80 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44158 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:60550 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726771AbfEUTYm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 May 2019 15:24:42 -0400
-Subject: Re: [PATCH 11/12] mkfs: validate start and end of aligned logs
-References: <155839420081.68606.4573219764134939943.stgit@magnolia>
- <155839427473.68606.3900005341580158051.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <03cd588a-f4b0-0c79-4862-31ae0e5cd3dd@sandeen.net>
-Date: Tue, 21 May 2019 14:24:40 -0500
-MIME-Version: 1.0
-In-Reply-To: <155839427473.68606.3900005341580158051.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1728053AbfEUNmg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 May 2019 09:42:36 -0400
+From: Pankaj Gupta <pagupta@redhat.com>
+Subject: [PATCH v10 4/7] dm: enable synchronous dax
+Date: Tue, 21 May 2019 19:07:10 +0530
+Message-Id: <20190521133713.31653-5-pagupta@redhat.com>
+In-Reply-To: <20190521133713.31653-1-pagupta@redhat.com>
+References: <20190521133713.31653-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dm-devel@redhat.com
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org, snitzer@redhat.com
 
-On 5/20/19 6:17 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Validate that the start and end of the log stay within a single AG if
-> we adjust either end to align to stripe units.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  mkfs/xfs_mkfs.c |   15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 5b66074d..8f84536e 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3044,15 +3044,28 @@ align_internal_log(
->  	struct xfs_mount	*mp,
->  	int			sunit)
->  {
-> +	uint64_t		logend;
-> +
->  	/* round up log start if necessary */
->  	if ((cfg->logstart % sunit) != 0)
->  		cfg->logstart = ((cfg->logstart + (sunit - 1)) / sunit) * sunit;
->  
-> +	/* if our log start rounds into the next AG we're done */
+ This patch sets dax device 'DAXDEV_SYNC' flag if all the target
+ devices of device mapper support synchrononous DAX. If device
+ mapper consists of both synchronous and asynchronous dax devices,
+ we don't set 'DAXDEV_SYNC' flag. 
 
-/* If our log start overlaps the next AG's metadata, fail */
+Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+---
+ drivers/md/dm-table.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-> +	if (!xfs_verify_fsbno(mp, cfg->logstart)) {
-> +			fprintf(stderr,
-> +_("Due to stripe alignment, the internal log start (%lld) cannot be aligned\n"
-> +  "within an allocation group.\n"),
-> +			(long long) cfg->logstart);
-
-Hm, should it suggest what should be modified to try again ...?
-
-> +		usage();
-> +	}
-> +
->  	/* round up/down the log size now */
->  	align_log_size(cfg, sunit);
->  
->  	/* check the aligned log still fits in an AG. */
-> -	if (cfg->logblocks > cfg->agsize - XFS_FSB_TO_AGBNO(mp, cfg->logstart)) {
-> +	logend = cfg->logstart + cfg->logblocks - 1;
-> +	if (XFS_FSB_TO_AGNO(mp, cfg->logstart) != XFS_FSB_TO_AGNO(mp, logend) ||
-> +	    !xfs_verify_fsbno(mp, logend)) {
-
-this xfs_verify_fsbno is probably redundant but can't hurt?
-
--Eric
-
->  		fprintf(stderr,
->  _("Due to stripe alignment, the internal log size (%lld) is too large.\n"
->    "Must fit within an allocation group.\n"),
-> 
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index cde3b49b2a91..1cce626ff576 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -886,10 +886,17 @@ static int device_supports_dax(struct dm_target *ti, struct dm_dev *dev,
+ 	return bdev_dax_supported(dev->bdev, PAGE_SIZE);
+ }
+ 
++static int device_synchronous(struct dm_target *ti, struct dm_dev *dev,
++			       sector_t start, sector_t len, void *data)
++{
++	return dax_synchronous(dev->dax_dev);
++}
++
+ static bool dm_table_supports_dax(struct dm_table *t)
+ {
+ 	struct dm_target *ti;
+ 	unsigned i;
++	bool dax_sync = true;
+ 
+ 	/* Ensure that all targets support DAX. */
+ 	for (i = 0; i < dm_table_get_num_targets(t); i++) {
+@@ -901,7 +908,14 @@ static bool dm_table_supports_dax(struct dm_table *t)
+ 		if (!ti->type->iterate_devices ||
+ 		    !ti->type->iterate_devices(ti, device_supports_dax, NULL))
+ 			return false;
++
++		/* Check devices support synchronous DAX */
++		if (dax_sync &&
++		    !ti->type->iterate_devices(ti, device_synchronous, NULL))
++			dax_sync = false;
+ 	}
++	if (dax_sync)
++		set_dax_synchronous(t->md->dax_dev);
+ 
+ 	return true;
+ }
+-- 
+2.20.1
