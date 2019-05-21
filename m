@@ -1,77 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt1-f194.google.com ([209.85.160.194]:46705 "EHLO
-        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727941AbfEUNvj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 May 2019 09:51:39 -0400
-Received: by mail-qt1-f194.google.com with SMTP id z19so20457681qtz.13
-        for <linux-xfs@vger.kernel.org>; Tue, 21 May 2019 06:51:39 -0700 (PDT)
-Date: Tue, 21 May 2019 09:51:35 -0400
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH v10 2/7] virtio-pmem: Add virtio pmem driver
-Message-ID: <20190521094543-mutt-send-email-mst@kernel.org>
-References: <20190521133713.31653-1-pagupta@redhat.com>
- <20190521133713.31653-3-pagupta@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:44656 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727492AbfEUTa6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 May 2019 15:30:58 -0400
+Subject: [PATCH 12/12 V2] mkfs: enable reflink by default
+References: <155839420081.68606.4573219764134939943.stgit@magnolia>
+ <155839428076.68606.9379127257564633311.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1f5f641c-b6f8-2067-8224-7350f0f51034@sandeen.net>
+Date: Tue, 21 May 2019 14:30:57 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190521133713.31653-3-pagupta@redhat.com>
+In-Reply-To: <155839428076.68606.9379127257564633311.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>
-Cc: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dm-devel@redhat.com, dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org, snitzer@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 21, 2019 at 07:07:08PM +0530, Pankaj Gupta wrote:
-> diff --git a/include/uapi/linux/virtio_pmem.h b/include/uapi/linux/virtio_pmem.h
-> new file mode 100644
-> index 000000000000..7a3e2fe52415
-> --- /dev/null
-> +++ b/include/uapi/linux/virtio_pmem.h
-> @@ -0,0 +1,35 @@
-> +/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
-> +/*
-> + * Definitions for virtio-pmem devices.
-> + *
-> + * Copyright (C) 2019 Red Hat, Inc.
-> + *
-> + * Author(s): Pankaj Gupta <pagupta@redhat.com>
-> + */
-> +
-> +#ifndef _UAPI_LINUX_VIRTIO_PMEM_H
-> +#define _UAPI_LINUX_VIRTIO_PMEM_H
-> +
-> +#include <linux/types.h>
-> +#include <linux/virtio_types.h>
-> +#include <linux/virtio_ids.h>
-> +#include <linux/virtio_config.h>
-> +
-> +struct virtio_pmem_config {
-> +	__le64 start;
-> +	__le64 size;
-> +};
-> +
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-config generally should be __u64.
-Are you sure sparse does not complain?
+Data block sharing (a.k.a. reflink) has been stable for a while, so turn
+it on by default.
 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[sandeen: update comments & man page]
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> +#define VIRTIO_PMEM_REQ_TYPE_FLUSH      0
-> +
-> +struct virtio_pmem_resp {
-> +	/* Host return status corresponding to flush request */
-> +	__virtio32 ret;
-> +};
-> +
-> +struct virtio_pmem_req {
-> +	/* command type */
-> +	__virtio32 type;
-> +};
-> +
-> +#endif
-> -- 
-> 2.20.1
-
-Sorry why are these __virtio32 not __le32?
-
--- 
-MST
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 4b8c78c..78b1501 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -231,7 +231,7 @@ available for the data forks of regular files.
+ .IP
+ By default,
+ .B mkfs.xfs
+-will not create reference count btrees and therefore will not enable the
++will create reference count btrees and therefore will enable the
+ reflink feature.  This feature is only available for filesystems created with
+ the (default)
+ .B \-m crc=1
+@@ -239,6 +239,13 @@ option set. When the option
+ .B \-m crc=0
+ is used, the reference count btree feature is not supported and reflink is
+ disabled.
++.IP
++Note: the filesystem DAX mount option (
++.B \-o dax
++) is incompatible with
++reflink-enabled XFS filesystems.  To use filesystem DAX with XFS, specify the
++.B \-m reflink=0
++option to mkfs.xfs to disable the reflink feature.
+ .RE
+ .TP
+ .BI \-d " data_section_options"
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 0910664..ddb25ec 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1973,15 +1973,15 @@ _("Directory ftype field always enabled on CRC enabled filesystems\n"));
+ 			usage();
+ 		}
+ 
+-	} else {
++	} else {	/* !crcs_enabled */
+ 		/*
+-		 * The kernel doesn't currently support crc=0,finobt=1
+-		 * filesystems. If crcs are not enabled and the user has not
+-		 * explicitly turned finobt on, then silently turn it off to
+-		 * avoid an unnecessary warning.
++		 * The kernel doesn't support crc=0,finobt=1 filesystems.
++		 * If crcs are not enabled and the user has not explicitly
++		 * turned finobt on, then silently turn it off to avoid an
++		 * unnecessary warning.
+ 		 * If the user explicitly tried to use crc=0,finobt=1,
+ 		 * then issue an error.
+-		 * The same is also for sparse inodes.
++		 * The same is also true for sparse inodes and reflink.
+ 		 */
+ 		if (cli->sb_feat.finobt && cli_opt_set(&mopts, M_FINOBT)) {
+ 			fprintf(stderr,
+@@ -2004,7 +2004,7 @@ _("rmapbt not supported without CRC support\n"));
+ 		}
+ 		cli->sb_feat.rmapbt = false;
+ 
+-		if (cli->sb_feat.reflink) {
++		if (cli->sb_feat.reflink && cli_opt_set(&mopts, M_REFLINK)) {
+ 			fprintf(stderr,
+ _("reflink not supported without CRC support\n"));
+ 			usage();
+@@ -3876,7 +3876,7 @@ main(
+ 			.finobt = true,
+ 			.spinodes = true,
+ 			.rmapbt = false,
+-			.reflink = false,
++			.reflink = true,
+ 			.parent_pointers = false,
+ 			.nodalign = false,
+ 			.nortalign = false,
