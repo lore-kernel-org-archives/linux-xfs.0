@@ -1,154 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36938 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725978AbfETW6g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 May 2019 18:58:36 -0400
-Subject: Re: [PATCH 6/3] libxfs: factor common xfs_trans_bjoin code
-References: <8fc2eb9e-78c4-df39-3b8f-9109720ab680@redhat.com>
- <3a54f934-5651-d709-1503-b583f9e044e9@redhat.com>
- <20190520225620.GG5335@magnolia>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <467b059a-e99c-a2dc-5c63-606212e5505f@redhat.com>
-Date: Mon, 20 May 2019 17:58:29 -0500
+Received: from mail-yb1-f194.google.com ([209.85.219.194]:41523 "EHLO
+        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725793AbfEUFMy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 May 2019 01:12:54 -0400
 MIME-Version: 1.0
-In-Reply-To: <20190520225620.GG5335@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <155839145160.62682.10916303376882370723.stgit@magnolia> <155839146420.62682.1995545484813176181.stgit@magnolia>
+In-Reply-To: <155839146420.62682.1995545484813176181.stgit@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 21 May 2019 08:12:41 +0300
+Message-ID: <CAOQ4uxjj6HtEOk7FWkabZn1x34+gEUVLqqiU0JkcEtddQf0j_g@mail.gmail.com>
+Subject: Re: [PATCH 2/3] generic/530, xfs/501: pass fs shutdown handle to t_open_tmpfiles
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Eryu Guan <guaneryu@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jeffle Xu <jefflexu@linux.alibaba.com>, fstests <fstests@vger.kernel.org>
 
-On 5/20/19 5:56 PM, Darrick J. Wong wrote:
-> On Thu, May 16, 2019 at 03:39:49PM -0500, Eric Sandeen wrote:
->> Most of xfs_trans_bjoin is duplicated in xfs_trans_get_buf_map,
->> xfs_trans_getsb and xfs_trans_read_buf_map.  Add a new
->> _xfs_trans_bjoin which can be called by all three functions.
->>
->> Source kernel commit: d7e84f413726876c0ec66bbf90770f69841f7663
->>
->> Signed-off-by: Christoph Hellwig <hch@lst.de>
->> Reviewed-by: Dave Chinner <david@fromorbit.com>
->> Signed-off-by: Alex Elder <aelder@sgi.com>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>  libxfs/trans.c | 53 +++++++++++++++++++++++++++++++++++++-------------
->>  1 file changed, 39 insertions(+), 14 deletions(-)
->>
->> diff --git a/libxfs/trans.c b/libxfs/trans.c
->> index f3c28fa7..f78222fd 100644
->> --- a/libxfs/trans.c
->> +++ b/libxfs/trans.c
->> @@ -537,19 +537,50 @@ xfs_trans_binval(
->>  	tp->t_flags |= XFS_TRANS_DIRTY;
->>  }
->>  
->> -void
->> -xfs_trans_bjoin(
->> -	xfs_trans_t		*tp,
->> -	xfs_buf_t		*bp)
->> +/*
->> + * Add the locked buffer to the transaction.
->> + *
->> + * The buffer must be locked, and it cannot be associated with any
->> + * transaction.
->> + *
->> + * If the buffer does not yet have a buf log item associated with it,
->> + * then allocate one for it.  Then add the buf item to the transaction.
->> + */
->> +STATIC void
->> +_xfs_trans_bjoin(
->> +	struct xfs_trans	*tp,
->> +	struct xfs_buf		*bp,
->> +	int			reset_recur)
-> 
-> bool?
+On Tue, May 21, 2019 at 1:33 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> So it turns out that overlayfs can't pass FS_IOC_SHUTDOWN to the lower
+> filesystems and so xfstests works around this by creating shutdown
+> helpers for the scratch fs to direct the shutdown ioctl to wherever it
+> needs to go to shut down the filesystem -- SCRATCH_MNT on normal
+> filesystems and OVL_BASE_SCRATCH_MNT when -overlay is enabled.  This
+> means that t_open_tmpfiles cannot simply use one of the open tempfiles
+> to shut down the filesystem.
+>
+> Commit f8f57747222 tried to "fix" this by ripping the shutdown code out,
+> but this made the tests useless.  Fix this instead by creating a
+> xfstests helper to return a path that can be used to shut down the
+> filesystem and then pass that path to t_open_tmpfiles so that we can
+> shut down the filesystem when overlayfs is enabled.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-If you fix it in the kernel I'll merge it to xfsprogs ;)
+Thanks for sorting that out.
 
->>  {
->> -	xfs_buf_log_item_t	*bip;
->> +	struct xfs_buf_log_item	*bip;
->>  
->>  	ASSERT(bp->b_transp == NULL);
->>  
->> +        /*
->> +	 * The xfs_buf_log_item pointer is stored in b_log_item.  If
->> +	 * it doesn't have one yet, then allocate one and initialize it.
->> +	 * The checks to see if one is there are in xfs_buf_item_init().
->> +	 */
->>  	xfs_buf_item_init(bp, tp->t_mountp);
->>  	bip = bp->b_log_item;
->> +	if (reset_recur)
->> +		bip->bli_recur = 0;
->> +
->> +	/*
->> +	 * Attach the item to the transaction so we can find it in
->> +	 * xfs_trans_get_buf() and friends.
->> +	 */
->>  	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
-> 
-> Kill typedef here               ^^^^^^?
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
-ditto.
-
-Point of all this is to match the kernel for easier future syncups.
-
-(oh wait, actually, this is fixed in a later patch, getting rid of the dumb
-cast altogether)
-
--Eric
-
-> --D
-> 
->>  	bp->b_transp = tp;
->> +
->> +}
->> +
->> +void
->> +xfs_trans_bjoin(
->> +	struct xfs_trans	*tp,
->> +	struct xfs_buf		*bp)
->> +{
->> +	_xfs_trans_bjoin(tp, bp, 0);
->>  	trace_xfs_trans_bjoin(bp->b_log_item);
->>  }
->>  
->> @@ -594,9 +625,7 @@ xfs_trans_get_buf_map(
->>  	if (bp == NULL)
->>  		return NULL;
->>  
->> -	xfs_trans_bjoin(tp, bp);
->> -	bip = bp->b_log_item;
->> -	bip->bli_recur = 0;
->> +	_xfs_trans_bjoin(tp, bp, 1);
->>  	trace_xfs_trans_get_buf(bp->b_log_item);
->>  	return bp;
->>  }
->> @@ -626,9 +655,7 @@ xfs_trans_getsb(
->>  
->>  	bp = xfs_getsb(mp);
->>  
->> -	xfs_trans_bjoin(tp, bp);
->> -	bip = bp->b_log_item;
->> -	bip->bli_recur = 0;
->> +	_xfs_trans_bjoin(tp, bp, 1);
->>  	trace_xfs_trans_getsb(bp->b_log_item);
->>  	return bp;
->>  }
->> @@ -677,9 +704,7 @@ xfs_trans_read_buf_map(
->>  	if (bp->b_error)
->>  		goto out_relse;
->>  
->> -	xfs_trans_bjoin(tp, bp);
->> -	bip = bp->b_log_item;
->> -	bip->bli_recur = 0;
->> +	_xfs_trans_bjoin(tp, bp, 1);
->>  done:
->>  	trace_xfs_trans_read_buf(bp->b_log_item);
->>  	*bpp = bp;
->> -- 
->> 2.17.0
->>
+> ---
+>  common/rc             |   11 +++++++++++
+>  src/t_open_tmpfiles.c |   20 +++++++++++++-------
+>  tests/generic/530     |    2 +-
+>  tests/xfs/501         |    2 +-
+>  4 files changed, 26 insertions(+), 9 deletions(-)
+>
+>
+> diff --git a/common/rc b/common/rc
+> index 27c8bb7a..f577e5e3 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -393,6 +393,17 @@ _scratch_shutdown()
+>         fi
+>  }
+>
+> +# Return a file path that can be used to shut down the scratch filesystem.
+> +# Caller should _require_scratch_shutdown before using this.
+> +_scratch_shutdown_handle()
+> +{
+> +       if [ $FSTYP = "overlay" ]; then
+> +               echo $OVL_BASE_SCRATCH_MNT
+> +       else
+> +               echo $SCRATCH_MNT
+> +       fi
+> +}
+> +
+>  _test_mount()
+>  {
+>      if [ "$FSTYP" == "overlay" ]; then
+> diff --git a/src/t_open_tmpfiles.c b/src/t_open_tmpfiles.c
+> index da9390fd..258b0c95 100644
+> --- a/src/t_open_tmpfiles.c
+> +++ b/src/t_open_tmpfiles.c
+> @@ -24,7 +24,7 @@ static int min_fd = -1;
+>  static int max_fd = -1;
+>  static unsigned int nr_opened = 0;
+>  static float start_time;
+> -static int shutdown_fs = 0;
+> +static int shutdown_fd = -1;
+>
+>  void clock_time(float *time)
+>  {
+> @@ -69,7 +69,7 @@ void die(void)
+>                                 end_time - start_time);
+>                 fflush(stdout);
+>
+> -               if (shutdown_fs) {
+> +               if (shutdown_fd >= 0) {
+>                         /*
+>                          * Flush the log so that we have to process the
+>                          * unlinked inodes the next time we mount.
+> @@ -77,7 +77,7 @@ void die(void)
+>                         int flag = XFS_FSOP_GOING_FLAGS_LOGFLUSH;
+>                         int ret;
+>
+> -                       ret = ioctl(min_fd, XFS_IOC_GOINGDOWN, &flag);
+> +                       ret = ioctl(shutdown_fd, XFS_IOC_GOINGDOWN, &flag);
+>                         if (ret) {
+>                                 perror("shutdown");
+>                                 exit(2);
+> @@ -148,8 +148,9 @@ void leak_tmpfile(void)
+>
+>  /*
+>   * Try to put as many files on the unlinked list and then kill them.
+> - * The first argument is a directory to chdir into; passing any second arg
+> - * will shut down the fs instead of closing files.
+> + * The first argument is a directory to chdir into; the second argumennt (if
+> + * provided) is a file path that will be opened and then used to shut down the
+> + * fs before the program exits.
+>   */
+>  int main(int argc, char *argv[])
+>  {
+> @@ -160,8 +161,13 @@ int main(int argc, char *argv[])
+>                 if (ret)
+>                         perror(argv[1]);
+>         }
+> -       if (argc > 2 && !strcmp(argv[2], "shutdown"))
+> -               shutdown_fs = 1;
+> +       if (argc > 2) {
+> +               shutdown_fd = open(argv[2], O_RDONLY);
+> +               if (shutdown_fd < 0) {
+> +                       perror(argv[2]);
+> +                       return 1;
+> +               }
+> +       }
+>
+>         clock_time(&start_time);
+>         while (1)
+> diff --git a/tests/generic/530 b/tests/generic/530
+> index b0d188b1..cb874ace 100755
+> --- a/tests/generic/530
+> +++ b/tests/generic/530
+> @@ -49,7 +49,7 @@ ulimit -n $max_files
+>
+>  # Open a lot of unlinked files
+>  echo create >> $seqres.full
+> -$here/src/t_open_tmpfiles $SCRATCH_MNT shutdown >> $seqres.full
+> +$here/src/t_open_tmpfiles $SCRATCH_MNT $(_scratch_shutdown_handle) >> $seqres.full
+>
+>  # Unmount to prove that we can clean it all
+>  echo umount >> $seqres.full
+> diff --git a/tests/xfs/501 b/tests/xfs/501
+> index 974f3414..4be03b31 100755
+> --- a/tests/xfs/501
+> +++ b/tests/xfs/501
+> @@ -54,7 +54,7 @@ ulimit -n $max_files
+>
+>  # Open a lot of unlinked files
+>  echo create >> $seqres.full
+> -$here/src/t_open_tmpfiles $SCRATCH_MNT shutdown >> $seqres.full
+> +$here/src/t_open_tmpfiles $SCRATCH_MNT $(_scratch_shutdown_handle) >> $seqres.full
+>
+>  # Unmount to prove that we can clean it all
+>  echo umount >> $seqres.full
+>
