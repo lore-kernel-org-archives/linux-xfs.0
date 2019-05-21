@@ -1,62 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:56905 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726424AbfETXch (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:32:37 -0400
-Date: Tue, 21 May 2019 09:32:33 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 14/17] xfs: use bios directly to read and write the log
- recovery buffers
-Message-ID: <20190520233233.GF29573@dread.disaster.area>
-References: <20190520161347.3044-1-hch@lst.de>
- <20190520161347.3044-15-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:42124 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728283AbfEUTAA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 May 2019 15:00:00 -0400
+Subject: Re: [PATCH 07/12] libfrog: fix bitmap return values
+References: <155839420081.68606.4573219764134939943.stgit@magnolia>
+ <155839424514.68606.14562327454853103352.stgit@magnolia>
+ <5caa6c9e-3a42-6c8e-101b-c198af77e765@sandeen.net>
+ <20190521170103.GD5141@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c281d3c3-5385-90a3-125a-8a620944c971@sandeen.net>
+Date: Tue, 21 May 2019 13:59:58 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190520161347.3044-15-hch@lst.de>
+In-Reply-To: <20190521170103.GD5141@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 20, 2019 at 06:13:44PM +0200, Christoph Hellwig wrote:
-> The xfs_buf structure is basically used as a glorified container for
-> a vmalloc allocation in the log recovery code.  Replace it with a
-> real vmalloc implementation and just build bios directly as needed
-> to read into or write from it to simplify things a bit.
+On 5/21/19 12:01 PM, Darrick J. Wong wrote:
+> On Tue, May 21, 2019 at 11:54:18AM -0500, Eric Sandeen wrote:
+>> On 5/20/19 6:17 PM, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>
+>>> Fix the return types of non-predicate bitmap functions to return the
+>>> usual negative error codes instead of the "moveon" boolean.
+>>
+>> This seems much better, though how did you decide on negative
+>> error codes?  They are usual for the kernel, but in userspace
+>> we have kind of a mishmash, even in libfrog.
+>>
+>>   File                 Function                 Line
+>> 0 libfrog/paths.c      fs_table_insert          176 error = ENOMEM;
+>> 1 libfrog/paths.c      fs_extract_mount_options 354 return ENOMEM;
+>> 2 libfrog/radix-tree.c radix_tree_extend        135 return -ENOMEM;
+>> 3 libfrog/radix-tree.c radix_tree_insert        188 return -ENOMEM;
+>> 4 libfrog/workqueue.c  workqueue_add            110 return ENOMEM;
+>>
+>> 3 libfrog/paths.c         fs_table_initialise_mounts         384 return ENOENT;
+>> 4 libfrog/paths.c         fs_table_initialise_projects       489 error = ENOENT;
+>> 5 libfrog/paths.c         fs_table_insert_project_path       560 error = ENOENT;
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Blindly copying libxfs style. :)
+> 
+> I see your point about being consistent within libfrog but OTOH it's
+> messy that we're not consistent across the various xfsprogs libraries.
+> 
+> Uhm.... I'll change it if you want.
 
-I like the way the series runs in general, and the end result is a
-fair bit neater, but I'm struggling to work out how we translate
-this to the userspace code that uses uncached/raw buffer IO.
+If I were king (am I king?) I'd say that kernel code does negative values,
+userspace does positive, and we handle differences at the interface.
 
-i.e. I'm in the process of porting the xfs_buf.c code to userspace,
-and was using the uncached buffer API to provide the bits the
-log code and other raw IO users (xfs_db, repair prefetch) with this
-functionality through the API this patchset removes.
+Mostly I just want it to be predictable and consistent...
 
-I wrote the patches a couple of days ago to move all this uncached
-IO and kernel memory and device specific stuff to a xfs_buftarg.[ch]
-files. This leaves xfs_buf.c as purely cached buffer management
-code, has no bio stuff in it, no memory allocation, no shrinkers,
-LRUs, etc).
+AFAICT everything in libfrog is positive except for the radix-tree stuff,
+which is nominally kernel-ish ...?
 
-So while it's easy to drop the uncached buffer API from the kernel
-side, it leaves me with the question of what API do we use in
-userspace to provide this same functionality? I suspect that we
-probably need to separate all this log-to-bio code out into a
-separate file (e.g. xfs_log_io.[ch]) to leave a set of API stubs
-that we can reimplement in userspace to pread/pwrite directly to
-the log buftarg device fd as I've done already for the buffer
-code...
+Userspace clearly needs some cleanups; mkfs parsers return negative, everything
+else seems positive; a couple metadump functions return negative, the rest is
+positive; most userspace callers of libxfs negate the negative error return...
 
-Thoughts?
+So yeah I'm of the opinion that unless it's kernel(-ish?) code it should be
+positive, and I can send a patch to clean up stuff that's not.
 
-Cheers,
+I can be swayed by counterarguments if you have them.  :)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
