@@ -1,98 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38854 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726584AbfETXRx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:17:53 -0400
-Subject: [PATCH 10/12] mkfs: allow setting dax flag on root directory
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 20 May 2019 16:17:48 -0700
-Message-ID: <155839426866.68606.8424427245250373556.stgit@magnolia>
-In-Reply-To: <155839420081.68606.4573219764134939943.stgit@magnolia>
-References: <155839420081.68606.4573219764134939943.stgit@magnolia>
+Received: from mail-ot1-f45.google.com ([209.85.210.45]:41814 "EHLO
+        mail-ot1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726325AbfEUCKU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 22:10:20 -0400
+Received: by mail-ot1-f45.google.com with SMTP id l25so6533281otp.8
+        for <linux-xfs@vger.kernel.org>; Mon, 20 May 2019 19:10:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <CAHgs-5XkA5xFgxgSaX9m70gduuO1beq6fiY7UEGv1ad6bd19Hw@mail.gmail.com>
+ <20190513140943.GC61135@bfoster> <683a9b7b-ad5c-5e91-893e-daaa68a853c9@sandeen.net>
+ <CAHgs-5Vybp+diCoecfEWbHLRScNnsHKW7-4rwhXH3H+hfcfoLg@mail.gmail.com> <20190521014336.GG29573@dread.disaster.area>
+In-Reply-To: <20190521014336.GG29573@dread.disaster.area>
+From: Tim Smith <tim.smith@vaultcloud.com.au>
+Date: Tue, 21 May 2019 12:10:09 +1000
+Message-ID: <CAHgs-5V1v976so3BF7OhbSk0KypqSVwE5b4c0jWgRBCRvuaSPA@mail.gmail.com>
+Subject: Re: xfs filesystem reports negative usage - reoccurring problem
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, May 21, 2019 at 11:43 AM Dave Chinner <david@fromorbit.com> wrote:
+> 8756a5af1819 ("libxfs: add more bounds checking to sb sanity checks")
+> 2e9e6481e2a7 ("xfs: detect and fix bad summary counts at mount")
+>
+> were both merged in 4.19. Well, that would explain why you aren't
+> seeing warnings or having it fixed automatically on detection.
+>
+> IOWs, whatever the cause of your single bit error is, I don't know,
+> but it would seem that recent kernels will detect the condition and
+> automatically fix themselves at mount time.
 
-Teach mkfs to set the DAX flag on the root directory so that all new
-files can be created in dax mode.  This is a complement to removing the
-mount option.
+This kit is in a legacy environment to be (eventually) decommissioned,
+so I'll patch the kernel to work around the issue until we can put the
+hardware to bed.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- man/man8/mkfs.xfs.8 |   11 +++++++++++
- mkfs/xfs_mkfs.c     |   11 +++++++++++
- 2 files changed, 22 insertions(+)
-
-
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index 4b8c78c3..0137f164 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -391,6 +391,17 @@ All inodes created by
- will have this extent size hint applied.
- The value must be provided in units of filesystem blocks.
- Directories will pass on this hint to newly created children.
-+.TP
-+.BI dax= value
-+All inodes created by
-+.B mkfs.xfs
-+will have the DAX flag set.
-+This means that directories will pass the flag on to newly created files
-+and files will use the DAX IO paths when possible.
-+This value is either 1 to enable the use or 0 to disable.
-+By default,
-+.B mkfs.xfs
-+will not enable DAX mode.
- .RE
- .TP
- .B \-f
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 09106648..5b66074d 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -59,6 +59,7 @@ enum {
- 	D_PROJINHERIT,
- 	D_EXTSZINHERIT,
- 	D_COWEXTSIZE,
-+	D_DAX,
- 	D_MAX_OPTS,
- };
- 
-@@ -253,6 +254,7 @@ static struct opt_params dopts = {
- 		[D_PROJINHERIT] = "projinherit",
- 		[D_EXTSZINHERIT] = "extszinherit",
- 		[D_COWEXTSIZE] = "cowextsize",
-+		[D_DAX] = "dax",
- 	},
- 	.subopt_params = {
- 		{ .index = D_AGCOUNT,
-@@ -368,6 +370,12 @@ static struct opt_params dopts = {
- 		  .maxval = UINT_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
-+		{ .index = D_DAX,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .minval = 0,
-+		  .maxval = 1,
-+		  .defaultval = 1,
-+		},
- 	},
- };
- 
-@@ -1465,6 +1473,9 @@ data_opts_parser(
- 		cli->fsx.fsx_cowextsize = getnum(value, opts, subopt);
- 		cli->fsx.fsx_xflags |= FS_XFLAG_COWEXTSIZE;
- 		break;
-+	case D_DAX:
-+		cli->fsx.fsx_xflags |= FS_XFLAG_DAX;
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
+Absolute legend! Thank you for all your help!
