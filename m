@@ -1,18 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56374 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:56806 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727026AbfEUDrN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 May 2019 23:47:13 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 7/7] libxfs: share kernel's xfs_trans_inode.c
-Date: Mon, 20 May 2019 22:47:07 -0500
-Message-Id: <1558410427-1837-8-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1558410427-1837-1-git-send-email-sandeen@redhat.com>
+        id S1726265AbfEUDw5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 May 2019 23:52:57 -0400
+Subject: [PATCH 7/7 V2] libxfs: share kernel's xfs_trans_inode.c
 References: <1558410427-1837-1-git-send-email-sandeen@redhat.com>
+ <1558410427-1837-8-git-send-email-sandeen@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <79484f9f-42e3-29bc-9d84-897e0191ede2@sandeen.net>
+Date: Mon, 20 May 2019 22:52:56 -0500
+MIME-Version: 1.0
+In-Reply-To: <1558410427-1837-8-git-send-email-sandeen@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
 
 Now that the majority of cosmetic changes and compat shims
 are in place, we can directly share kernelspace's
@@ -25,15 +30,17 @@ In addition to the file move,
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
- include/xfs_trans.h  |  3 ++-
- libxfs/Makefile      |  1 +
- libxfs/libxfs_priv.h |  9 ++++++++
- libxfs/trans.c       | 65 ----------------------------------------------------
- libxfs/util.c        | 27 ----------------------
- 5 files changed, 12 insertions(+), 93 deletions(-)
+
+V2: good grief, get the new file in the patch
+
+ include/xfs_trans.h      |    3 
+ libxfs/Makefile          |    1 
+ libxfs/libxfs_priv.h     |    9 ++
+ libxfs/trans.c           |   65 -------------------
+ libxfs/util.c            |   27 --------
+ libxfs/xfs_trans_inode.c |  155 +++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 167 insertions(+), 93 deletions(-)
 
 diff --git a/include/xfs_trans.h b/include/xfs_trans.h
 index 118fa0b..60e1dbd 100644
@@ -203,5 +210,164 @@ index 2ba9dc2..171a172 100644
  STATIC uint16_t
  xfs_flags2diflags(
  	struct xfs_inode	*ip,
--- 
-1.8.3.1
+diff --git a/libxfs/xfs_trans_inode.c b/libxfs/xfs_trans_inode.c
+new file mode 100644
+index 0000000..87e6335
+--- /dev/null
++++ b/libxfs/xfs_trans_inode.c
+@@ -0,0 +1,155 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2000,2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ */
++#include "libxfs_priv.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_inode.h"
++#include "xfs_trans.h"
++#include "xfs_trace.h"
++
++/*
++ * Add a locked inode to the transaction.
++ *
++ * The inode must be locked, and it cannot be associated with any transaction.
++ * If lock_flags is non-zero the inode will be unlocked on transaction commit.
++ */
++void
++xfs_trans_ijoin(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	uint			lock_flags)
++{
++	xfs_inode_log_item_t	*iip;
++
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	if (ip->i_itemp == NULL)
++		xfs_inode_item_init(ip, ip->i_mount);
++	iip = ip->i_itemp;
++
++	ASSERT(iip->ili_lock_flags == 0);
++	iip->ili_lock_flags = lock_flags;
++
++	/*
++	 * Get a log_item_desc to point at the new item.
++	 */
++	xfs_trans_add_item(tp, &iip->ili_item);
++}
++
++/*
++ * Transactional inode timestamp update. Requires the inode to be locked and
++ * joined to the transaction supplied. Relies on the transaction subsystem to
++ * track dirty state and update/writeback the inode accordingly.
++ */
++void
++xfs_trans_ichgtime(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	int			flags)
++{
++	struct inode		*inode = VFS_I(ip);
++	struct timespec64 tv;
++
++	ASSERT(tp);
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++
++	tv = current_time(inode);
++
++	if (flags & XFS_ICHGTIME_MOD)
++		inode->i_mtime = tv;
++	if (flags & XFS_ICHGTIME_CHG)
++		inode->i_ctime = tv;
++	if (flags & XFS_ICHGTIME_CREATE) {
++		ip->i_d.di_crtime.t_sec = (int32_t)tv.tv_sec;
++		ip->i_d.di_crtime.t_nsec = (int32_t)tv.tv_nsec;
++	}
++}
++
++/*
++ * This is called to mark the fields indicated in fieldmask as needing
++ * to be logged when the transaction is committed.  The inode must
++ * already be associated with the given transaction.
++ *
++ * The values for fieldmask are defined in xfs_inode_item.h.  We always
++ * log all of the core inode if any of it has changed, and we always log
++ * all of the inline data/extents/b-tree root if any of them has changed.
++ */
++void
++xfs_trans_log_inode(
++	xfs_trans_t	*tp,
++	xfs_inode_t	*ip,
++	uint		flags)
++{
++	struct inode	*inode = VFS_I(ip);
++
++	ASSERT(ip->i_itemp != NULL);
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++
++	/*
++	 * Don't bother with i_lock for the I_DIRTY_TIME check here, as races
++	 * don't matter - we either will need an extra transaction in 24 hours
++	 * to log the timestamps, or will clear already cleared fields in the
++	 * worst case.
++	 */
++	if (inode->i_state & (I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED)) {
++		spin_lock(&inode->i_lock);
++		inode->i_state &= ~(I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED);
++		spin_unlock(&inode->i_lock);
++	}
++
++	/*
++	 * Record the specific change for fdatasync optimisation. This
++	 * allows fdatasync to skip log forces for inodes that are only
++	 * timestamp dirty. We do this before the change count so that
++	 * the core being logged in this case does not impact on fdatasync
++	 * behaviour.
++	 */
++	ip->i_itemp->ili_fsync_fields |= flags;
++
++	/*
++	 * First time we log the inode in a transaction, bump the inode change
++	 * counter if it is configured for this to occur. While we have the
++	 * inode locked exclusively for metadata modification, we can usually
++	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
++	 * the last time it was incremented. If we have XFS_ILOG_CORE already
++	 * set however, then go ahead and bump the i_version counter
++	 * unconditionally.
++	 */
++	if (!test_and_set_bit(XFS_LI_DIRTY, &ip->i_itemp->ili_item.li_flags) &&
++	    IS_I_VERSION(VFS_I(ip))) {
++		if (inode_maybe_inc_iversion(VFS_I(ip), flags & XFS_ILOG_CORE))
++			flags |= XFS_ILOG_CORE;
++	}
++
++	tp->t_flags |= XFS_TRANS_DIRTY;
++
++	/*
++	 * Always OR in the bits from the ili_last_fields field.
++	 * This is to coordinate with the xfs_iflush() and xfs_iflush_done()
++	 * routines in the eventual clearing of the ili_fields bits.
++	 * See the big comment in xfs_iflush() for an explanation of
++	 * this coordination mechanism.
++	 */
++	flags |= ip->i_itemp->ili_last_fields;
++	ip->i_itemp->ili_fields |= flags;
++}
++
++int
++xfs_trans_roll_inode(
++	struct xfs_trans	**tpp,
++	struct xfs_inode	*ip)
++{
++	int			error;
++
++	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
++	error = xfs_trans_roll(tpp);
++	if (!error)
++		xfs_trans_ijoin(*tpp, ip, 0);
++	return error;
++}
