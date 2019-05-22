@@ -1,34 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:39108 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727069AbfETXSL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 May 2019 19:18:11 -0400
-Subject: [PATCH 0/8] xfsprogs: document the ioctls scrub uses
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 20 May 2019 16:18:07 -0700
-Message-ID: <155839428721.68923.11962490742479847985.stgit@magnolia>
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:51861 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726553AbfEVX3D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 May 2019 19:29:03 -0400
+Date: Thu, 23 May 2019 09:28:59 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 14/17] xfs: use bios directly to read and write the log
+ recovery buffers
+Message-ID: <20190522232859.GK29573@dread.disaster.area>
+References: <20190520161347.3044-1-hch@lst.de>
+ <20190520161347.3044-15-hch@lst.de>
+ <20190520233233.GF29573@dread.disaster.area>
+ <20190521050943.GA29120@lst.de>
+ <20190521222434.GH29573@dread.disaster.area>
+ <20190522051214.GA19467@lst.de>
+ <20190522061919.GJ29573@dread.disaster.area>
+ <20190522173132.GA31394@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190522173132.GA31394@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+On Wed, May 22, 2019 at 07:31:32PM +0200, Christoph Hellwig wrote:
+> Does this look fine to you?
+> 
+> http://git.infradead.org/users/hch/xfs.git/commitdiff/8d9600456c6674453dddd5bf36512658c39d7207
 
-Add documentation for all the ioctls that xfs_scrub uses, so that we
-finally have some literature about how those interfaces are supposed to
-work.
+Yeah, that'll make it heaps easier to deal with. I'd rename "bp" in
+that patch to something like "bufp" so it's not easily confused with
+a xfs_buf bp, but otherwise it looks good.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+Cheers,
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=document-ioctls
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
