@@ -1,34 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44378 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726771AbfEUT1d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 May 2019 15:27:33 -0400
-Subject: Re: [PATCH 12/12] mkfs: enable reflink by default
-References: <155839420081.68606.4573219764134939943.stgit@magnolia>
- <155839428076.68606.9379127257564633311.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <738a7959-fb8b-a365-d7fa-01e17a6a9c4b@sandeen.net>
-Date: Tue, 21 May 2019 14:27:32 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:59134 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388297AbfEWWcC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 May 2019 18:32:02 -0400
+Date: Fri, 24 May 2019 08:31:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 02/20] xfs: remove the never used _XBF_COMPOUND flag
+Message-ID: <20190523223158.GO29573@dread.disaster.area>
+References: <20190523173742.15551-1-hch@lst.de>
+ <20190523173742.15551-3-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <155839428076.68606.9379127257564633311.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190523173742.15551-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On 5/20/19 6:18 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, May 23, 2019 at 07:37:24PM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_buf.h | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
 > 
-> Data block sharing (a.k.a. reflink) has been stable for a while, so turn
-> it on by default.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index d0b96e071cec..4f2c2bc43003 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -49,7 +49,6 @@ typedef enum {
+>  #define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
+>  #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
+>  #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
+> -#define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
+>  
+>  typedef unsigned int xfs_buf_flags_t;
+>  
+> @@ -69,8 +68,7 @@ typedef unsigned int xfs_buf_flags_t;
+>  	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
+>  	{ _XBF_PAGES,		"PAGES" }, \
+>  	{ _XBF_KMEM,		"KMEM" }, \
+> -	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
+> -	{ _XBF_COMPOUND,	"COMPOUND" }
+> +	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
 
-I'm cool with this.  :)  But I think we need a manpage update too.
-I also had some comment updates - I'll send a reply as a patch.
+Guess I forgot to remove that long ago....
 
--Eric
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
