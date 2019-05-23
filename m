@@ -1,24 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:40768 "EHLO newverein.lst.de"
+Received: from mail.kernel.org ([198.145.29.99]:33770 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727984AbfEVRby (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 May 2019 13:31:54 -0400
-Date: Wed, 22 May 2019 19:31:32 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 14/17] xfs: use bios directly to read and write the log
- recovery buffers
-Message-ID: <20190522173132.GA31394@lst.de>
-References: <20190520161347.3044-1-hch@lst.de> <20190520161347.3044-15-hch@lst.de> <20190520233233.GF29573@dread.disaster.area> <20190521050943.GA29120@lst.de> <20190521222434.GH29573@dread.disaster.area> <20190522051214.GA19467@lst.de> <20190522061919.GJ29573@dread.disaster.area>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190522061919.GJ29573@dread.disaster.area>
+        id S1731237AbfEWSZS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 23 May 2019 14:25:18 -0400
+Subject: Re: [GIT PULL] xfs: fixes for 5.2
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20190523153346.GG5141@magnolia>
+References: <20190523153346.GG5141@magnolia>
+Message-Id: <155863591788.31149.9259350999930839889.pr-tracker-bot@kernel.org>
+Date: Thu, 23 May 2019 18:25:17 +0000
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: torvalds@linux-foundation.org, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
 
-Does this look fine to you?
+The pull request you sent on Thu, 23 May 2019 08:33:46 -0700:
 
-http://git.infradead.org/users/hch/xfs.git/commitdiff/8d9600456c6674453dddd5bf36512658c39d7207
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.2-fixes-1
+
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/4dde821e4296e156d133b98ddc4c45861935a4fb
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
