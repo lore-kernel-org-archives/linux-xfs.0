@@ -1,78 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:44052 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730790AbfEWQCY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 May 2019 12:02:24 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x4NFsN2Q100412
-        for <linux-xfs@vger.kernel.org>; Thu, 23 May 2019 16:02:22 GMT
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 2smsk5kdg1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 23 May 2019 16:02:22 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x4NG1kV8082924
-        for <linux-xfs@vger.kernel.org>; Thu, 23 May 2019 16:02:21 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2smsgvk0kt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 23 May 2019 16:02:21 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x4NG2Kxh010766
-        for <linux-xfs@vger.kernel.org>; Thu, 23 May 2019 16:02:20 GMT
-Date: Thu, 23 May 2019 09:02:19 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: fix broken log reservation debugging
-Message-ID: <20190523160219.GH5141@magnolia>
+Received: from mail-lj1-f194.google.com ([209.85.208.194]:35136 "EHLO
+        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730867AbfEWQ56 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 May 2019 12:57:58 -0400
+Received: by mail-lj1-f194.google.com with SMTP id h11so6175000ljb.2
+        for <linux-xfs@vger.kernel.org>; Thu, 23 May 2019 09:57:57 -0700 (PDT)
+Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com. [209.85.167.51])
+        by smtp.gmail.com with ESMTPSA id h25sm769lja.41.2019.05.23.09.51.46
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 23 May 2019 09:51:46 -0700 (PDT)
+Received: by mail-lf1-f51.google.com with SMTP id u27so4907273lfg.10
+        for <linux-xfs@vger.kernel.org>; Thu, 23 May 2019 09:51:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20190523100013.52a8d2a6@gandalf.local.home> <CAHk-=wg5HqJ2Kfgpub+tCWQ2_FiFwEW9H1Rm+an-BLGaGvDDXw@mail.gmail.com>
+ <20190523112740.7167aba4@gandalf.local.home>
+In-Reply-To: <20190523112740.7167aba4@gandalf.local.home>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 23 May 2019 09:51:29 -0700
+Message-ID: <CAHk-=whFJqTOk0mSxJGeh38ZxDksgRaMrNV8hqTngiuokyJzew@mail.gmail.com>
+Subject: Re: [RFC][PATCH] kernel.h: Add generic roundup_64() macro
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Ben Skeggs <bskeggs@redhat.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Leon Romanovsky <leon@kernel.org>, Doug Ledford <dledford@redhat.com>, Jason Gunthorpe <jgg@ziepe.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, dri-devel <dri-devel@lists.freedesktop.org>, nouveau@lists.freedesktop.org, linux-rdma <linux-rdma@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, May 23, 2019 at 8:27 AM Steven Rostedt <rostedt@goodmis.org> wrote:
+>
+> I haven't yet tested this, but what about something like the following:
 
-xlog_print_tic_res() is supposed to print a human readable string for
-each element of the log ticket reservation array.  Unfortunately, I
-forgot to update the string array when we added rmap & reflink support,
-so the debug message prints "region[3]: (null) - 352 bytes" which isn't
-useful at all.  Add the missing elements and add a build check so that
-we don't forget again to add a string when adding a new XLOG_REG_TYPE.
+So that at least handles the constant case that the normal "roundup()"
+case also handles.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_log.c |   11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+At the same time, in the case you are talking about, I really do
+suspect that we have a (non-constant) power of two, and that you
+should have just used "round_up()" which works fine regardless of
+size, and is always efficient.
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 457ced3ee3e1..2466b0f5b6c4 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -2069,7 +2069,7 @@ xlog_print_tic_res(
- 
- 	/* match with XLOG_REG_TYPE_* in xfs_log.h */
- #define REG_TYPE_STR(type, str)	[XLOG_REG_TYPE_##type] = str
--	static char *res_type_str[XLOG_REG_TYPE_MAX + 1] = {
-+	static char *res_type_str[] = {
- 	    REG_TYPE_STR(BFORMAT, "bformat"),
- 	    REG_TYPE_STR(BCHUNK, "bchunk"),
- 	    REG_TYPE_STR(EFI_FORMAT, "efi_format"),
-@@ -2089,8 +2089,15 @@ xlog_print_tic_res(
- 	    REG_TYPE_STR(UNMOUNT, "unmount"),
- 	    REG_TYPE_STR(COMMIT, "commit"),
- 	    REG_TYPE_STR(TRANSHDR, "trans header"),
--	    REG_TYPE_STR(ICREATE, "inode create")
-+	    REG_TYPE_STR(ICREATE, "inode create"),
-+	    REG_TYPE_STR(RUI_FORMAT, "rui_format"),
-+	    REG_TYPE_STR(RUD_FORMAT, "rud_format"),
-+	    REG_TYPE_STR(CUI_FORMAT, "cui_format"),
-+	    REG_TYPE_STR(CUD_FORMAT, "cud_format"),
-+	    REG_TYPE_STR(BUI_FORMAT, "bui_format"),
-+	    REG_TYPE_STR(BUD_FORMAT, "bud_format"),
- 	};
-+	BUILD_BUG_ON(ARRAY_SIZE(res_type_str) != XLOG_REG_TYPE_MAX + 1);
- #undef REG_TYPE_STR
- 
- 	xfs_warn(mp, "ticket reservation summary:");
+On a slight tangent.. Maybe we should have something like this:
+
+#define size_fn(x, prefix, ...) ({                      \
+        typeof(x) __ret;                                \
+        switch (sizeof(x)) {                            \
+        case 1: __ret = prefix##8(__VA_ARGS__); break;  \
+        case 2: __ret = prefix##16(__VA_ARGS__); break; \
+        case 4: __ret = prefix##32(__VA_ARGS__); break; \
+        case 8: __ret = prefix##64(__VA_ARGS__); break; \
+        default: __ret = prefix##bad(__VA_ARGS__);      \
+        } __ret; })
+
+#define type_fn(x, prefix, ...) ({                              \
+        typeof(x) __ret;                                        \
+        if ((typeof(x))-1 > 1)                                  \
+                __ret = size_fn(x, prefix##_u, __VA_ARGS__);    \
+        else                                                    \
+                __ret = size_fn(x, prefix##_s, __VA_ARGS__);    \
+        __ret; })
+
+which would allow typed integer functions like this. So you could do
+something like
+
+     #define round_up(x, y) size_fn(x, round_up_size, x, y)
+
+and then you define functions for round_up_size8/16/32/64 (and you
+have toi declare - but not define - round_up_sizebad()).
+
+Of course, you probably want the usual "at least use 'int'" semantics,
+in which case the "type" should be "(x)+0":
+
+     #define round_up(x, y) size_fn((x)+0, round_up_size, x, y)
+
+ and the 8-bit and 16-bit cases will never be used.
+
+We have a lot of cases where we end up using "type overloading" by
+size. The most explicit case is perhaps "get_user()" and "put_user()",
+but this whole round_up thing is another example.
+
+Maybe we never really care about "char" and "short", and always want
+just the "int-vs-long-vs-longlong"? That would make the cases simpler
+(32 and 64). And maybe we never care about sign. But we could try to
+have some unified helper model like the above..
+
+                  Linus
