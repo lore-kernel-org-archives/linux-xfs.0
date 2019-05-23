@@ -1,16 +1,18 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:55920 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:56036 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731037AbfEWRh4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 May 2019 13:37:56 -0400
+        with ESMTP id S1731037AbfEWRiG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 May 2019 13:38:06 -0400
 Received: from 213-225-10-46.nat.highway.a1.net ([213.225.10.46] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hTrf9-0000Re-N8
-        for linux-xfs@vger.kernel.org; Thu, 23 May 2019 17:37:56 +0000
+        id 1hTrfI-0000SG-AE
+        for linux-xfs@vger.kernel.org; Thu, 23 May 2019 17:38:06 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: use bios directly in the log code v2
-Date: Thu, 23 May 2019 19:37:22 +0200
-Message-Id: <20190523173742.15551-1-hch@lst.de>
+Subject: [PATCH 01/20] xfs: remove the no-op spinlock_destroy stub
+Date: Thu, 23 May 2019 19:37:23 +0200
+Message-Id: <20190523173742.15551-2-hch@lst.de>
+In-Reply-To: <20190523173742.15551-1-hch@lst.de>
+References: <20190523173742.15551-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,23 +20,44 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Hi all,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_linux.h | 2 --
+ fs/xfs/xfs_log.c   | 2 --
+ 2 files changed, 4 deletions(-)
 
-this series switches the log writing and log recovery code to use bios
-directly, and remove various special cases from the buffer cache code.
-Note that I have developed it on top of the previous series of log item
-related cleanups, so if you don't have that applied there is a small
-conflict.  To make life easier I have pushed out a git branche here:
-
-    git://git.infradead.org/users/hch/xfs.git xfs-log-bio
-
-Gitweb:
-
-    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-log-bio
-
-Changes since v1:
- - rebased to not required the log item series first
- - split the bio-related code out of xfs_log_recover.c into a new file
-   to ease using xfs_log_recover.c in xfsprogs
- - use kmem_alloc_large instead of vmalloc to allocate the buffer
- - additional minor cleanups
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index edbd5a210df2..b78287666309 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -110,8 +110,6 @@ typedef __u32			xfs_nlink_t;
+ #define current_restore_flags_nested(sp, f)	\
+ 		(current->flags = ((current->flags & ~(f)) | (*(sp) & (f))))
+ 
+-#define spinlock_destroy(lock)
+-
+ #define NBBY		8		/* number of bits per byte */
+ 
+ /*
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 457ced3ee3e1..a2048e46be4e 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1580,7 +1580,6 @@ xlog_alloc_log(
+ 			xfs_buf_free(iclog->ic_bp);
+ 		kmem_free(iclog);
+ 	}
+-	spinlock_destroy(&log->l_icloglock);
+ 	xfs_buf_free(log->l_xbuf);
+ out_free_log:
+ 	kmem_free(log);
+@@ -2027,7 +2026,6 @@ xlog_dealloc_log(
+ 		kmem_free(iclog);
+ 		iclog = next_iclog;
+ 	}
+-	spinlock_destroy(&log->l_icloglock);
+ 
+ 	log->l_mp->m_log = NULL;
+ 	kmem_free(log);
+-- 
+2.20.1
