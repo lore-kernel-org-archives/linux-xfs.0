@@ -1,45 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:56384 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731195AbfEWRmJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 May 2019 13:42:09 -0400
-Received: from 213-225-10-46.nat.highway.a1.net ([213.225.10.46] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hTrjE-0002Tr-NT
-        for linux-xfs@vger.kernel.org; Thu, 23 May 2019 17:42:09 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/20] xfs: properly type the b_log_item field in struct xfs_buf
-Date: Thu, 23 May 2019 19:37:41 +0200
-Message-Id: <20190523173742.15551-20-hch@lst.de>
-In-Reply-To: <20190523173742.15551-1-hch@lst.de>
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:56166 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388618AbfEWWb2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 May 2019 18:31:28 -0400
+Date: Fri, 24 May 2019 08:31:24 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/20] xfs: remove the no-op spinlock_destroy stub
+Message-ID: <20190523223124.GN29573@dread.disaster.area>
 References: <20190523173742.15551-1-hch@lst.de>
+ <20190523173742.15551-2-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190523173742.15551-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-Now that the log code doesn't abuse this field any more we can
-declare it as a struct xfs_buf_log_item pointer.
+On Thu, May 23, 2019 at 07:37:23PM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_linux.h | 2 --
+>  fs/xfs/xfs_log.c   | 2 --
+>  2 files changed, 4 deletions(-)
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_buf.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Simple enough :)
 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index c1965c7e76bb..2abd2435d6aa 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -156,7 +156,7 @@ typedef struct xfs_buf {
- 	struct work_struct	b_ioend_work;
- 	xfs_buf_iodone_t	b_iodone;	/* I/O completion function */
- 	struct completion	b_iowait;	/* queue for I/O waiters */
--	void			*b_log_item;
-+	struct xfs_buf_log_item	*b_log_item;
- 	struct list_head	b_li_list;	/* Log items list head */
- 	struct xfs_trans	*b_transp;
- 	struct page		**b_pages;	/* array of page pointers */
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 -- 
-2.20.1
+Dave Chinner
+david@fromorbit.com
