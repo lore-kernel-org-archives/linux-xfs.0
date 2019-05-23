@@ -1,67 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:47250 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726538AbfEaX26 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 May 2019 19:28:58 -0400
-Date: Sat, 1 Jun 2019 09:28:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
-Message-ID: <20190531232852.GG29573@dread.disaster.area>
-References: <20190527172655.9287-1-amir73il@gmail.com>
- <20190528202659.GA12412@mit.edu>
- <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
- <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
- <20190531164136.GA3066@mit.edu>
- <20190531224549.GF29573@dread.disaster.area>
+Received: from mail.kernel.org ([198.145.29.99]:39152 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730752AbfEWPdr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 23 May 2019 11:33:47 -0400
+Date: Thu, 23 May 2019 08:33:46 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: fixes for 5.2
+Message-ID: <20190523153346.GG5141@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190531224549.GF29573@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
+To: torvalds@linux-foundation.org
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
 
-On Sat, Jun 01, 2019 at 08:45:49AM +1000, Dave Chinner wrote:
-> Given that we can already use AIO to provide this sort of ordering,
-> and AIO is vastly faster than synchronous IO, I don't see any point
-> in adding complex barrier interfaces that can be /easily implemented
-> in userspace/ using existing AIO primitives. You should start
-> thinking about expanding libaio with stuff like
-> "link_after_fdatasync()" and suddenly the whole problem of
-> filesystem data vs metadata ordering goes away because the
-> application directly controls all ordering without blocking and
-> doesn't need to care what the filesystem under it does....
+Hi Linus,
 
-And let me point out that this is also how userspace can do an
-efficient atomic rename - rename_after_fdatasync(). i.e. on
-completion of the AIO_FSYNC, run the rename. This guarantees that
-the application will see either the old file of the complete new
-file, and it *doesn't have to wait for the operation to complete*.
-Once it is in flight, the file will contain the old data until some
-point in the near future when will it contain the new data....
+Here's a bug fix for a minor accounting problem reported by a user.
+It's survived a few days of fstests and merges cleanly with upstream as
+of a few minutes ago.  Let me know if there are problems.
 
-Seriously, sit down and work out all the "atomic" data vs metadata
-behaviours you want, and then tell me how many of them cannot be
-implemented as "AIO_FSYNC w/ completion callback function" in
-userspace. This mechanism /guarantees ordering/ at the application
-level, the application does not block waiting for these data
-integrity operations to complete, and you don't need any new kernel
-side functionality to implement this.
+(Urgh, I just noticed that the tag message lists the wrong version.  If
+that's going to be a problem I can retag and resend...)
 
-Fundamentally, the assertion that disk cache flushes are not what
-causes fsync "to be slow" is incorrect. It's the synchronous
-"waiting for IO completion" that makes fsync "slow". AIO_FSYNC
-avoids needing to wait for IO completion, allowing the application
-to do useful work (like issue more DI ops) while data integrity
-operations are in flight. At this point, fsync is no longer a "slow"
-operation - it's just another background async data flush operation
-like the BDI flusher thread...
+--D
 
-Cheers,
+The following changes since commit a188339ca5a396acc588e5851ed7e19f66b0ebd9:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+  Linux 5.2-rc1 (2019-05-19 15:47:09 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.2-fixes-1
+
+for you to fetch changes up to 5cd213b0fec640a46adc5e6e4dfc7763aa54b3b2:
+
+  xfs: don't reserve per-AG space for an internal log (2019-05-20 11:25:39 -0700)
+
+----------------------------------------------------------------
+Fixes for 5.1:
+- Fix an accounting mistake where we included the log space when
+  calculating the reserve space for metadata expansion.
+
+----------------------------------------------------------------
+Darrick J. Wong (1):
+      xfs: don't reserve per-AG space for an internal log
+
+ fs/xfs/libxfs/xfs_ialloc_btree.c   | 9 +++++++++
+ fs/xfs/libxfs/xfs_refcount_btree.c | 9 +++++++++
+ fs/xfs/libxfs/xfs_rmap_btree.c     | 9 +++++++++
+ 3 files changed, 27 insertions(+)
