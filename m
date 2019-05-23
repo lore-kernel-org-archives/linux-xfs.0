@@ -1,99 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52550 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730323AbfEWOAQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 23 May 2019 10:00:16 -0400
-Date: Thu, 23 May 2019 10:00:13 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: [RFC][PATCH] kernel.h: Add generic roundup_64() macro
-Message-ID: <20190523100013.52a8d2a6@gandalf.local.home>
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:37605 "EHLO
+        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731168AbfEWPSm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 May 2019 11:18:42 -0400
+Received: by mail-lj1-f196.google.com with SMTP id h19so374195ljj.4
+        for <linux-xfs@vger.kernel.org>; Thu, 23 May 2019 08:18:41 -0700 (PDT)
+Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com. [209.85.208.181])
+        by smtp.gmail.com with ESMTPSA id b28sm6136370lfj.37.2019.05.23.08.18.40
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 23 May 2019 08:18:40 -0700 (PDT)
+Received: by mail-lj1-f181.google.com with SMTP id w1so5882563ljw.0
+        for <linux-xfs@vger.kernel.org>; Thu, 23 May 2019 08:18:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20190523100013.52a8d2a6@gandalf.local.home>
+In-Reply-To: <20190523100013.52a8d2a6@gandalf.local.home>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 23 May 2019 08:10:44 -0700
+Message-ID: <CAHk-=wg5HqJ2Kfgpub+tCWQ2_FiFwEW9H1Rm+an-BLGaGvDDXw@mail.gmail.com>
+Subject: Re: [RFC][PATCH] kernel.h: Add generic roundup_64() macro
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Ben Skeggs <bskeggs@redhat.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Leon Romanovsky <leon@kernel.org>, Doug Ledford <dledford@redhat.com>, Jason Gunthorpe <jgg@ziepe.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org, linux-rdma@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Ben Skeggs <bskeggs@redhat.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Leon Romanovsky <leon@kernel.org>, Doug Ledford <dledford@redhat.com>, Jason Gunthorpe <jgg@ziepe.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, dri-devel <dri-devel@lists.freedesktop.org>, nouveau@lists.freedesktop.org, linux-rdma <linux-rdma@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
+On Thu, May 23, 2019 at 7:00 AM Steven Rostedt <rostedt@goodmis.org> wrote:
+>
+> +# define roundup_64(x, y) (                            \
+> +{                                                      \
+> +       typeof(y) __y = y;                              \
+> +       typeof(x) __x = (x) + (__y - 1);                \
+> +       do_div(__x, __y);                               \
+> +       __x * __y;                                      \
+> +}                                                      \
 
-From: Steven Rostedt (VMware) <rostedt@goodmis.org>
+The thing about this is that it absolutely sucks for power-of-two arguments.
 
-In discussing a build failure on x86_32 due to the use of roundup() on
-a 64 bit number, I realized that there's no generic equivalent
-roundup_64(). It is implemented in two separate places in the kernel,
-but there really should be just one that all can use.
+The regular roundup() that uses division has the compiler at least
+optimize them to shifts - at least for constant cases. But do_div() is
+meant for "we already know it's not a power of two", and the compiler
+doesn't have any understanding of the internals.
 
-Although the other implementations are a static inline function, this
-implementation is a macro to allow the use of typeof(x) to denote the
-type that is being used. If the build is on a 64 bit machine, then the
-roundup_64() macro will just default back to roundup(). But for 32 bit
-machines, it will use the version that is will not cause issues with
-dividing a 64 bit number on a 32 bit machine.
+And it looks to me like the use case you want this for is very much
+probably a power of two. In which case division is all kinds of just
+stupid.
 
-Link: http://lkml.kernel.org/r/20190522145450.25ff483d@gandalf.local.home
+And we already have a power-of-two round up function that works on
+u64. It's called "round_up()".
 
-Signed-off-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
----
-diff --git a/drivers/gpu/drm/nouveau/nouveau_bo.c b/drivers/gpu/drm/nouveau/nouveau_bo.c
-index 34a998012bf6..cdacfe1f732c 100644
---- a/drivers/gpu/drm/nouveau/nouveau_bo.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_bo.c
-@@ -143,14 +143,6 @@ nouveau_bo_del_ttm(struct ttm_buffer_object *bo)
- 	kfree(nvbo);
- }
- 
--static inline u64
--roundup_64(u64 x, u32 y)
--{
--	x += y - 1;
--	do_div(x, y);
--	return x * y;
--}
--
- static void
- nouveau_bo_fixup_align(struct nouveau_bo *nvbo, u32 flags,
- 		       int *align, u64 *size)
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index edbd5a210df2..13de9d49bd52 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -207,13 +207,6 @@ static inline xfs_dev_t linux_to_xfs_dev_t(dev_t dev)
- #define xfs_sort(a,n,s,fn)	sort(a,n,s,fn,NULL)
- #define xfs_stack_trace()	dump_stack()
- 
--static inline uint64_t roundup_64(uint64_t x, uint32_t y)
--{
--	x += y - 1;
--	do_div(x, y);
--	return x * y;
--}
--
- static inline uint64_t howmany_64(uint64_t x, uint32_t y)
- {
- 	x += y - 1;
-diff --git a/include/linux/kernel.h b/include/linux/kernel.h
-index 74b1ee9027f5..cd0063629357 100644
---- a/include/linux/kernel.h
-+++ b/include/linux/kernel.h
-@@ -115,6 +115,20 @@
- 	(((x) + (__y - 1)) / __y) * __y;		\
- }							\
- )
-+
-+#if BITS_PER_LONG == 32
-+# define roundup_64(x, y) (				\
-+{							\
-+	typeof(y) __y = y;				\
-+	typeof(x) __x = (x) + (__y - 1);		\
-+	do_div(__x, __y);				\
-+	__x * __y;					\
-+}							\
-+)
-+#else
-+# define roundup_64(x, y)	roundup(x, y)
-+#endif
-+
- /**
-  * rounddown - round down to next specified multiple
-  * @x: the value to round
+I wish we had a better visual warning about the differences between
+"round_up()" (limited to powers-of-two, but efficient, and works with
+any size) and "roundup()" (generic, potentially horribly slow, and
+doesn't work for 64-bit on 32-bit).
+
+Side note: "round_up()" has the problem that it uses "x" twice.
+
+End result: somebody should look at this, but I really don't like the
+"force division" case that is likely horribly slow and nasty.
+
+                  Linus
