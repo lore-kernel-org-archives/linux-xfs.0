@@ -1,35 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:55931 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388339AbfEWWeW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 May 2019 18:34:22 -0400
-Date: Fri, 24 May 2019 08:34:18 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/20] xfs: reformat xlog_get_lowest_lsn
-Message-ID: <20190523223418.GR29573@dread.disaster.area>
-References: <20190523173742.15551-1-hch@lst.de>
- <20190523173742.15551-6-hch@lst.de>
+Received: from c.mx.filmlight.ltd.uk ([54.76.112.217]:35009 "EHLO
+        c.mx.filmlight.ltd.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389428AbfEXPUL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 May 2019 11:20:11 -0400
+Subject: Re: [RFC][PATCH] kernel.h: Add generic roundup_64() macro
+References: <20190523100013.52a8d2a6@gandalf.local.home>
+ <CAHk-=wg5HqJ2Kfgpub+tCWQ2_FiFwEW9H1Rm+an-BLGaGvDDXw@mail.gmail.com>
+ <20190523112740.7167aba4@gandalf.local.home>
+From: Roger Willcocks <roger@filmlight.ltd.uk>
+Message-ID: <e4e875f0-2aa5-89f4-f462-78bedb9c5cde@filmlight.ltd.uk>
+Date: Fri, 24 May 2019 16:11:14 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190523173742.15551-6-hch@lst.de>
+In-Reply-To: <20190523112740.7167aba4@gandalf.local.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Steven Rostedt <rostedt@goodmis.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: roger@filmlight.ltd.uk, LKML <linux-kernel@vger.kernel.org>, Ben Skeggs <bskeggs@redhat.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Leon Romanovsky <leon@kernel.org>, Doug Ledford <dledford@redhat.com>, Jason Gunthorpe <jgg@ziepe.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, dri-devel <dri-devel@lists.freedesktop.org>, nouveau@lists.freedesktop.org, linux-rdma <linux-rdma@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, May 23, 2019 at 07:37:27PM +0200, Christoph Hellwig wrote:
-> Reformat xlog_get_lowest_lsn to our usual style.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_log.c | 24 ++++++++++--------------
->  1 file changed, 10 insertions(+), 14 deletions(-)
 
-Looks good.
+On 23/05/2019 16:27, Steven Rostedt wrote:
+>
+> I haven't yet tested this, but what about something like the following:
+>
+> ...perhaps forget about the constant check, and just force
+> the power of two check:
+>
+> 							\
+> 	if (!(__y & (__y >> 1))) {			\
+> 		__x =3D round_up(x, y);			\
+> 	} else {					\
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+You probably want
+
+ =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!(__y &=
+ (__y - 1))
+
+--
+
+Roger
