@@ -1,53 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:59134 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388297AbfEWWcC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 May 2019 18:32:02 -0400
-Date: Fri, 24 May 2019 08:31:58 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/20] xfs: remove the never used _XBF_COMPOUND flag
-Message-ID: <20190523223158.GO29573@dread.disaster.area>
-References: <20190523173742.15551-1-hch@lst.de>
- <20190523173742.15551-3-hch@lst.de>
+Received: from verein.lst.de ([213.95.11.211]:51565 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387936AbfEXGRN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 May 2019 02:17:13 -0400
+Date: Fri, 24 May 2019 08:16:50 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 08/20] xfs: factor out splitting of an iclog from
+ xlog_sync
+Message-ID: <20190524061650.GB2235@lst.de>
+References: <20190523173742.15551-1-hch@lst.de> <20190523173742.15551-9-hch@lst.de> <20190523231726.GU29573@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190523173742.15551-3-hch@lst.de>
+In-Reply-To: <20190523231726.GU29573@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Thu, May 23, 2019 at 07:37:24PM +0200, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_buf.h | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+On Fri, May 24, 2019 at 09:17:26AM +1000, Dave Chinner wrote:
+> > +/*
+> > + * Bump the cycle numbers at the start of each block in the part of the iclog
+> > + * that ends up in the buffer that gets written to the start of the log.
+> > + *
+> > + * Watch out for the header magic number case, though.
 > 
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index d0b96e071cec..4f2c2bc43003 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -49,7 +49,6 @@ typedef enum {
->  #define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
->  #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
->  #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
-> -#define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
->  
->  typedef unsigned int xfs_buf_flags_t;
->  
-> @@ -69,8 +68,7 @@ typedef unsigned int xfs_buf_flags_t;
->  	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
->  	{ _XBF_PAGES,		"PAGES" }, \
->  	{ _XBF_KMEM,		"KMEM" }, \
-> -	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
-> -	{ _XBF_COMPOUND,	"COMPOUND" }
-> +	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
+> Can we update this comment to be easier to parse?
+> 
+> /*
+>  * We need to bump cycle number for the part of the iclog that is
+>  * written to the start of the log. Watch out for the header magic
+>  * number case, though.
+>  */
 
-Guess I forgot to remove that long ago....
+Sure.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+> > +	for (i = split_offset; i < count; i += BBSIZE) {
+> > +		uint32_t cycle = get_unaligned_be32(data + i);
+> > +
+> > +		if (++cycle == XLOG_HEADER_MAGIC_NUM)
+> > +			cycle++;
+> > +		put_unaligned_be32(cycle, data + i);
+> 
+> Is the location we read from/write to ever unaligned? The cycle
+> should always be 512 byte aligned to the start of the iclog data
+> buffer, which should always be at least 4 byte aligned in memory...
+
+I don't think it is unaligned, but the get_unaligned_* and
+put_unaligned_* helpers are just really nice ways to read big/little
+endian fields from arbitrary char pointers, which is what we do here.
