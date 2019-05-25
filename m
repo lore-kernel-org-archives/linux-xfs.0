@@ -1,80 +1,185 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f195.google.com ([209.85.219.195]:41714 "EHLO
-        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725917AbfE2TYA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 15:24:00 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:37212 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726899AbfEYWnX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 May 2019 18:43:23 -0400
+Date: Sun, 26 May 2019 08:43:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 00/11] xfs: rework extent allocation
+Message-ID: <20190525224317.GZ29573@dread.disaster.area>
+References: <20190522180546.17063-1-bfoster@redhat.com>
+ <20190523015659.GL29573@dread.disaster.area>
+ <20190523125535.GA20099@bfoster>
+ <20190523221552.GM29573@dread.disaster.area>
+ <20190524120015.GA32730@bfoster>
 MIME-Version: 1.0
-References: <20190529174318.22424-1-amir73il@gmail.com> <20190529174318.22424-7-amir73il@gmail.com>
- <20190529182748.GF5231@magnolia> <CAOQ4uxgsMLTPtYaQwwNHo3NrzXz9u=YGc2v6Pg8TSo7-xFrqQQ@mail.gmail.com>
-In-Reply-To: <CAOQ4uxgsMLTPtYaQwwNHo3NrzXz9u=YGc2v6Pg8TSo7-xFrqQQ@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 29 May 2019 22:23:46 +0300
-Message-ID: <CAOQ4uxjbcSWX1hUcuXbn8hFH3QYB+5bAC9Z1yCwJdR=T-GGtCg@mail.gmail.com>
-Subject: Re: [PATCH v3 06/13] vfs: introduce file_modified() helper
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190524120015.GA32730@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 29, 2019 at 10:08 PM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> On Wed, May 29, 2019 at 9:27 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > On Wed, May 29, 2019 at 08:43:10PM +0300, Amir Goldstein wrote:
-> > > The combination of file_remove_privs() and file_update_mtime() is
-> > > quite common in filesystem ->write_iter() methods.
-> > >
-> > > Modelled after the helper file_accessed(), introduce file_modified()
-> > > and use it from generic_remap_file_range_prep().
-> > >
-> > > Note that the order of calling file_remove_privs() before
-> > > file_update_mtime() in the helper was matched to the more common order by
-> > > filesystems and not the current order in generic_remap_file_range_prep().
-> > >
-> > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > > ---
-> > >  fs/inode.c         | 20 ++++++++++++++++++++
-> > >  fs/read_write.c    | 21 +++------------------
-> > >  include/linux/fs.h |  2 ++
-> > >  3 files changed, 25 insertions(+), 18 deletions(-)
-> > >
-> > > diff --git a/fs/inode.c b/fs/inode.c
-> > > index df6542ec3b88..2885f2f2c7a5 100644
-> > > --- a/fs/inode.c
-> > > +++ b/fs/inode.c
-> > > @@ -1899,6 +1899,26 @@ int file_update_time(struct file *file)
-> > >  }
-> > >  EXPORT_SYMBOL(file_update_time);
-> > >
-> > > +/* Caller must hold the file's inode lock */
-> > > +int file_modified(struct file *file)
-> > > +{
-> > > +     int err;
-> > > +
-> > > +     /*
-> > > +      * Clear the security bits if the process is not being run by root.
-> > > +      * This keeps people from modifying setuid and setgid binaries.
-> > > +      */
-> > > +     err = file_remove_privs(file);
-> > > +     if (err)
-> > > +             return err;
-> > > +
-> > > +     if (likely(file->f_mode & FMODE_NOCMTIME))
-> >
-> > I would not have thought NOCMTIME is likely?
-> >
-> > Maybe it is for io requests coming from overlayfs, but for regular uses
-> > I don't think that's true.
->
-> Nope that's a typo. Good spotting.
-> Overlayfs doesn't set FMODE_NOCMTIME (yet). Only xfs does from
-> XFS_IOC_OPEN_BY_HANDLE, but I think Dave said that is a deprecated
-> API. so should have been very_unlikely().
->
+On Fri, May 24, 2019 at 08:00:18AM -0400, Brian Foster wrote:
+> On Fri, May 24, 2019 at 08:15:52AM +1000, Dave Chinner wrote:
+> > On Thu, May 23, 2019 at 08:55:35AM -0400, Brian Foster wrote:
+> > > Hmmm.. I suppose if I had a script that
+> > > just dumped every applicable stride/delta value for an inode, I could
+> > > dump all of those numbers into a file and we can process it from there..
+> > 
+> > See how the freesp commands work in xfs_db - they just generate a
+> > set of {offset, size} tuples that are then bucketted appropriately.
+> > This is probably the best way to do this at the moment - have xfs_db
+> > walk the inode BMBTs outputting something like {extent size,
+> > distance to next extent} tuples and everything else falls out from
+> > how we bucket that information.
+> > 
+> 
+> That sounds plausible. A bit more involved than what I'm currently
+> working with, but we do already have a blueprint for the scanning
+> implementation required to collect this data via the frag command.
+> Perhaps some of this code between the frag/freesp can be generalized and
+> reused. I'll take a closer look at it.
+> 
+> My only concern is I'd prefer to only go down this path as long as we
+> plan to land the associated command in xfs_db. So this approach suggests
+> to me that we add a "locality" command similar to frag/freesp that
+> presents the locality state of the fs. For now I'm only really concerned
+> with the data associated with known near mode allocations (i.e., such as
+> the extent size:distance relationship you've outlined above) so we can
+> evaluate these algorithmic changes, but this would be for fs devs only
+> so we could always expand on it down the road if we want to assess
+> different allocations. Hm?
 
-Is that an ACK with likely converted to unlikely?
+Yup, I'm needing to do similar analysis myself to determine how
+quickly I'm aging the filesystem, so having the tool in xfs_db or
+xfs_spaceman would be very useful.
 
-Thanks,
-Amir.
+FWIW, the tool I've just started writing will just use fallocate and
+truncate to hammer the allocation code as hard and as quickly as
+possible - I want to do accelerated aging of the filesystem, and so
+being able to run tens to hundreds of thousands of free space
+manipulations a second is the goal here....
+
+> > > > (*) Which, in reality, we really should reset because once we jump
+> > > > AG we have no locality target and so should allow the full AG to be
+> > > > considered. This "didn't reset target" issue is something I suspect
+> > > > leads to the infamous "backwards allocation for sequential writes"
+> > > > problems...
+> > > 
+> > > I think this is something that's handled at a higher level. In the
+> > > nullfb case at least, we use the XFS_ALLOCTYPE_START_BNO allocation mode
+> > > which is what allows us to iterate AGs.
+> > 
+> > The nullfb case isn't the problem here - I think the problem comes
+> > when we fail the THIS_BNO/NEAR_BNO allocation attempts in
+> > xfs_bmap_btalloc() and then fall back to XFS_ALLOCTYPE_START_BNO
+> > with the same fsbno target.
+> > 
+> 
+> Ok, that's the retry where we restore minlen from maxlen back to 1. Note
+> that still depends on nullfb, but that's just context. I think the
+> majority of the time data allocations come into the allocator as the
+> first allocation in the transaction.
+> 
+> That aside, I've also seen that this particular retry is hotter than
+> you'd think just by glancing at the code due to the whole minlen =
+> maxlen thing in xfs_bmap_select_minlen() combined with potential size of
+> delalloc extents. See the patches I posted a couple weeks ago in this
+> area for example:
+> 
+>   https://marc.info/?l=linux-xfs&m=155671950608062&w=2
+> 
+> ... though I don't think they relate to the issue you're tracking here.
+> 
+> > > We start with a near mode
+> > > allocation in the target AG. If that fails, xfs_alloc_vextent() switches
+> > > over to XFS_ALLOCTYPE_THIS_AG for the remaining AGs. This lands in
+> > > xfs_alloc_ag_vextent_size() which ignores args.agbno even if it's set.
+> > 
+> > Hmmm. I think you just pointed out a bug in this code. The initial
+> > NEARBNO alloc sets ->min_agbno and ->max_agbno based on the
+> > args->agbno, which xfs_alloc_compute_aligned then uses to determine
+> > if the found free extent can be used. When we immediately fall back
+> > to XFS_ALLOCTYPE_THIS_AG allocation, we don't reset
+> > min_agbno/max_agbno, and so even though we ignore the args->agbno
+> > target that is set when selecting a free extent, we still call
+> > xfs_alloc_compute_aligned() to determine if it is appropriate to
+> > use.
+> > 
+> 
+> I don't see where the near mode alloc assigns ->[min|max]_agbno. The
+> only place I see ->min_agbno used is for sparse inode chunk allocation.
+> ->max_agbno is assigned in the near mode alloc when min == 0, but it's
+> set to agsize so I'm guessing that this is just an initialization so the
+> checking logic works with zeroed out values from the caller.
+
+I did say:
+
+> > Of course, I could be missing something obvious (still haven't
+> > finished my morning coffee!), so it's worth checking I read the code
+> > properly....
+
+And that's clearly the case here - I read the code that clamps agbno
+to min/max backwards....
+
+> Just to clarify.. what exactly is the reverse allocation problem you're
+> thinking about here? Logically increasing writes resulting in physically
+> decreasing allocations? If so, have we confirmed that writes are indeed
+> sequential when this occurs (obvious I guess, but worth asking).
+
+Precisely this. And, yes, I've confirmed many times that it is
+sequential writes that display it. It happens when the closest nearest free
+extent is below the current target. i.e.:
+
+
++FFFFFFFFFFFFF+aaaaaaaT+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb+FFFFF+
+
+We just allocated "a" so the next allocation target is T, but "b" is
+already allocated there. The freespace before "a" is larger than
+the free space after "b" (which may be less than maxlen), and so the
+"nearest best free space" is below the target. If "b" is large
+enough, we end up with file allocation that looks like (where n =
+relative file offset for the given allocation)
+
+     +10+9+8+7+6+5+4+1+2+3+
+
+i.e. allocation starts forward, uses the remaining ascending free
+space in the extent, then starts allocating backwards as it takes
+the nearest free space and trims off the top of the free extent for
+the allocation.
+
+> I'm not really familiar with this problem so I've not thought about it,
+> but one random thought comes to mind: is there any chance of allocation
+> interlocking behind extent frees contributing to this behavior? We do
+> truncate files in reverse order an extent at a time and immediately
+> finish the dfops (to free the extent and busy it) before we unmap the
+> next piece.
+
+Unlikely, because such extents are not immediately avaiable for
+allocation (they are busy). And I've seen it on pure contended
+sequential write workloads, too...
+
+> If allocations could interlock with such frees (or busy
+> clearing), I could see in theory how that might result in backwards
+> allocations, but I'm just handwaving and not sure that's possible in
+> practice.
+
+Most of the cases I've seen have had the same symptom - "skip to
+next AG, allocate at same high-up-in AGBNO target as the previous AG
+wanted, then allocate backwards in the same AG until freespace
+extent is exhausted. It then skips to some other freespace extent,
+and depending on whether it's a forwards or backwards skip the
+problem either goes away or continues. This is not a new behaviour,
+I first saw it some 15 years ago, but I've never been able to
+provoke it reliably enough with test code to get to the root
+cause...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
