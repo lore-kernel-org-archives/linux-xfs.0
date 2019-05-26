@@ -1,69 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:34933 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725999AbfEZG2d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 02:28:33 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:38570 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727546AbfEZIpo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 04:45:44 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH] ovl: support the FS_IOC_FS[SG]ETXATTR ioctls
-Date: Sun, 26 May 2019 09:28:25 +0300
-Message-Id: <20190526062825.23059-1-amir73il@gmail.com>
+Subject: [PATCH v2 0/5] fstests: copy_file_range() tests
+Date: Sun, 26 May 2019 11:45:30 +0300
+Message-Id: <20190526084535.999-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Miklos Szeredi <miklos@szeredi.hu>
-Cc: Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-They are the extended version of FS_IOC_FS[SG]ETFLAGS ioctls.
-xfs_io -c "chattr <flags>" uses the new ioctls for setting flags.
+Eryu,
 
-This used to work in kernel pre v4.19, before stacked file ops
-introduced the ovl_ioctl whitelist.
+This is a re-work of Dave Chinner's copy_file_range() tests which
+I used to verify the kernel fixes of the syscall [1].
 
-Reported-by: Dave Chinner <david@fromorbit.com>
-Fixes: d1d04ef8572b ("ovl: stack file ops")
-Cc: <stable@vger.kernel.org> # v4.19
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/overlayfs/file.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+I split out the single bounds test by Dave to 4 tests.
+immutable and swap file copy have specific requiremenet which many
+filesystems do not meet (e.g. cifs,nfs,ceph,overlayfs), so those
+test cases were split to individual test to allow better bounds test
+converage for all filesystems.
 
-diff --git a/fs/overlayfs/file.c b/fs/overlayfs/file.c
-index 540a8b845145..340a6ad45914 100644
---- a/fs/overlayfs/file.c
-+++ b/fs/overlayfs/file.c
-@@ -426,7 +426,8 @@ static unsigned int ovl_get_inode_flags(struct inode *inode)
- 	return ovl_iflags;
- }
- 
--static long ovl_ioctl_set_flags(struct file *file, unsigned long arg)
-+static long ovl_ioctl_set_flags(struct file *file, unsigned int cmd,
-+				unsigned long arg)
- {
- 	long ret;
- 	struct inode *inode = file_inode(file);
-@@ -456,7 +457,7 @@ static long ovl_ioctl_set_flags(struct file *file, unsigned long arg)
- 	if (ret)
- 		goto unlock;
- 
--	ret = ovl_real_ioctl(file, FS_IOC_SETFLAGS, arg);
-+	ret = ovl_real_ioctl(file, cmd, arg);
- 
- 	ovl_copyflags(ovl_inode_real(inode), inode);
- unlock:
-@@ -474,11 +475,13 @@ static long ovl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- 
- 	switch (cmd) {
- 	case FS_IOC_GETFLAGS:
-+	case FS_IOC_FSGETXATTR:
- 		ret = ovl_real_ioctl(file, cmd, arg);
- 		break;
- 
- 	case FS_IOC_SETFLAGS:
--		ret = ovl_ioctl_set_flags(file, arg);
-+	case FS_IOC_FSSETXATTR:
-+		ret = ovl_ioctl_set_flags(file, cmd, arg);
- 		break;
- 
- 	default:
+The 3 first tests fix bugs in the interface, so they are appropriate
+for merge IMO. The last test (cross-device copy) tests a new
+functionality, so you may want to wait with merge till after the work
+is merged upstream.
+
+NOTE that the bounds check test depend on changes that have been merged
+to xfsprogs v4.20. Without those changes the test will hang!
+I used an artificial requirement _require_xfs_io_command "chmod" to
+skip the test with old xfs_io. I welcome suggestions for better way to
+handle this issue.
+
+Thanks,
+Amir.
+
+Changes from v1:
+- Remove patch to test EINVAL behavior instead of short copy
+- Remove 'chmod -r' permission drop test case
+- Split out test for swap/immutable file copy
+- Split of cross-device copy test
+
+[1] https://lore.kernel.org/linux-fsdevel/20190526061100.21761-1-amir73il@gmail.com/
+
+Amir Goldstein (5):
+  generic: create copy_range group
+  generic: copy_file_range immutable file test
+  generic: copy_file_range swapfile test
+  generic: copy_file_range bounds test
+  generic: cross-device copy_file_range test
+
+ tests/generic/434     |   2 +
+ tests/generic/988     |  59 ++++++++++++++++++++
+ tests/generic/988.out |   5 ++
+ tests/generic/989     |  56 +++++++++++++++++++
+ tests/generic/989.out |   4 ++
+ tests/generic/990     | 123 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/990.out |  37 +++++++++++++
+ tests/generic/991     |  56 +++++++++++++++++++
+ tests/generic/991.out |   4 ++
+ tests/generic/group   |  14 +++--
+ 10 files changed, 355 insertions(+), 5 deletions(-)
+ create mode 100755 tests/generic/988
+ create mode 100644 tests/generic/988.out
+ create mode 100755 tests/generic/989
+ create mode 100644 tests/generic/989.out
+ create mode 100755 tests/generic/990
+ create mode 100644 tests/generic/990.out
+ create mode 100755 tests/generic/991
+ create mode 100644 tests/generic/991.out
+
 -- 
 2.17.1
