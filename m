@@ -1,45 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:44092 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727570AbfEZIps (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 04:45:48 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:33071 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727546AbfEZIpt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 04:45:49 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v2 3/5] generic: copy_file_range swapfile test
-Date: Sun, 26 May 2019 11:45:33 +0300
-Message-Id: <20190526084535.999-4-amir73il@gmail.com>
+Subject: [PATCH v2 4/5] generic: copy_file_range bounds test
+Date: Sun, 26 May 2019 11:45:34 +0300
+Message-Id: <20190526084535.999-5-amir73il@gmail.com>
 In-Reply-To: <20190526084535.999-1-amir73il@gmail.com>
 References: <20190526084535.999-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eryu Guan <guaneryu@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-This test case was split out of Dave Chinner's copy_file_range bounds
-check test to reduce the requirements for running the bounds check.
+Test that copy_file_range will return the correct errors for various
+error conditions and boundary constraints.
 
+[Amir] Split out cross-device copy_range test and use only scratch dev.
+Split out immutable/swapfile test cases to reduce the requirements to
+run the bounds check to minimum and get coverage for more filesystems.
+Remove the tests for read past EOF and write after chmod -r,
+because we decided to stick with read(2)/write(2) semantics.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- tests/generic/989     | 56 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/989.out |  4 ++++
- tests/generic/group   |  1 +
- 3 files changed, 61 insertions(+)
- create mode 100755 tests/generic/989
- create mode 100644 tests/generic/989.out
+ tests/generic/990     | 123 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/990.out |  37 +++++++++++++
+ tests/generic/group   |   1 +
+ 3 files changed, 161 insertions(+)
+ create mode 100755 tests/generic/990
+ create mode 100644 tests/generic/990.out
 
-diff --git a/tests/generic/989 b/tests/generic/989
+diff --git a/tests/generic/990 b/tests/generic/990
 new file mode 100755
-index 00000000..27c10296
+index 00000000..5e2421b6
 --- /dev/null
-+++ b/tests/generic/989
-@@ -0,0 +1,56 @@
++++ b/tests/generic/990
+@@ -0,0 +1,123 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
 +#
-+# FS QA Test No. 989
++# FS QA Test No. 990
 +#
-+# Check that we cannot copy_file_range() to/from a swapfile
++# Exercise copy_file_range() syscall error conditions.
 +#
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
@@ -66,47 +73,147 @@ index 00000000..27c10296
 +
 +rm -f $seqres.full
 +
-+_require_scratch
++_require_test
 +_require_xfs_io_command "copy_range"
-+_require_scratch_swapfile
++#
++# This test effectively requires xfs_io v4.20 with the commits
++#  2a42470b xfs_io: copy_file_range length is a size_t
++#  1a05efba io: open pipes in non-blocking mode
++#
++# The same xfs_io release also included the new 'chmod' command.
++# Use this fake requirement to prevent the test case of copy_range with fifo
++# from hanging the test with old xfs_io.
++#
++_require_xfs_io_command "chmod"
 +
-+_scratch_mkfs 2>&1 >> $seqres.full
-+_scratch_mount
-+
-+testdir=$SCRATCH_MNT
++testdir="$TEST_DIR/test-$seq"
++rm -rf $testdir
++mkdir $testdir
 +
 +rm -f $seqres.full
 +
 +$XFS_IO_PROG -f -c "pwrite -S 0x61 0 128k" $testdir/file >> $seqres.full 2>&1
 +
-+echo swap files return ETXTBUSY
-+_format_swapfile $testdir/swapfile 16m
-+swapon $testdir/swapfile
-+$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/file" $testdir/swapfile
-+$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/swapfile" $testdir/copy
-+swapoff $testdir/swapfile
++echo source range overlaps destination range in same file returns EINVAL
++$XFS_IO_PROG -f -c "copy_range -s 32k -d 48k -l 32k $testdir/file" $testdir/file
++
++echo
++echo destination file O_RDONLY returns EBADF
++$XFS_IO_PROG -f -r -c "copy_range -l 32k $testdir/file" $testdir/copy
++
++echo
++echo destination file O_APPEND returns EBADF
++$XFS_IO_PROG -f -a -c "copy_range -l 32k $testdir/file" $testdir/copy
++
++echo
++echo source/destination as directory returns EISDIR
++$XFS_IO_PROG -c "copy_range -l 32k $testdir/file" $testdir
++$XFS_IO_PROG -f -c "copy_range -l 32k $testdir" $testdir/copy
++
++echo
++echo source/destination as blkdev returns EINVAL
++mknod $testdir/dev1 b 1 3
++$XFS_IO_PROG -c "copy_range -l 32k $testdir/file" $testdir/dev1
++$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/dev1" $testdir/copy
++
++echo
++echo source/destination as chardev returns EINVAL
++mknod $testdir/dev2 c 1 3
++$XFS_IO_PROG -c "copy_range -l 32k $testdir/file" $testdir/dev2
++$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/dev2" $testdir/copy
++
++echo
++echo source/destination as FIFO returns EINVAL
++mkfifo $testdir/fifo
++$XFS_IO_PROG -c "copy_range -l 32k $testdir/file" $testdir/fifo
++$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/fifo" $testdir/copy
++
++max_off=$((8 * 2**60 - 65536 - 1))
++min_off=65537
++
++echo
++echo length beyond 8EiB wraps around 0 returns EOVERFLOW
++$XFS_IO_PROG -f -c "copy_range -l 10e -s $max_off $testdir/file" $testdir/copy
++$XFS_IO_PROG -f -c "copy_range -l 10e -d $max_off $testdir/file" $testdir/copy
++
++echo
++echo source range beyond 8TiB returns 0
++$XFS_IO_PROG -c "copy_range -s $max_off -l $min_off -d 0 $testdir/file" $testdir/copy
++
++echo
++echo destination range beyond 8TiB returns EFBIG
++$XFS_IO_PROG -c "copy_range -l $min_off -s 0 -d $max_off $testdir/file" $testdir/copy
++
++echo
++echo destination larger than rlimit returns EFBIG
++rm -f $testdir/copy
++$XFS_IO_PROG -c "truncate 128k" $testdir/file
++
++# need a wrapper so the "File size limit exceeded" error can be filtered
++do_rlimit_copy()
++{
++	$XFS_IO_PROG -f -c "copy_range -l 32k -s 0 -d 16m $testdir/file" $testdir/copy
++}
++
++ulimit -f $((8 * 1024))
++ulimit -c 0
++do_rlimit_copy 2>&1 | grep -o "File size limit exceeded"
++ulimit -f unlimited
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/989.out b/tests/generic/989.out
+diff --git a/tests/generic/990.out b/tests/generic/990.out
 new file mode 100644
-index 00000000..32da0ce9
+index 00000000..05d137de
 --- /dev/null
-+++ b/tests/generic/989.out
-@@ -0,0 +1,4 @@
-+QA output created by 989
-+swap files return ETXTBUSY
-+copy_range: Text file busy
-+copy_range: Text file busy
++++ b/tests/generic/990.out
+@@ -0,0 +1,37 @@
++QA output created by 990
++source range overlaps destination range in same file returns EINVAL
++copy_range: Invalid argument
++
++destination file O_RDONLY returns EBADF
++copy_range: Bad file descriptor
++
++destination file O_APPEND returns EBADF
++copy_range: Bad file descriptor
++
++source/destination as directory returns EISDIR
++copy_range: Is a directory
++copy_range: Is a directory
++
++source/destination as blkdev returns EINVAL
++copy_range: Invalid argument
++copy_range: Invalid argument
++
++source/destination as chardev returns EINVAL
++copy_range: Invalid argument
++copy_range: Invalid argument
++
++source/destination as FIFO returns EINVAL
++copy_range: Invalid argument
++copy_range: Invalid argument
++
++length beyond 8EiB wraps around 0 returns EOVERFLOW
++copy_range: Value too large for defined data type
++copy_range: Value too large for defined data type
++
++source range beyond 8TiB returns 0
++
++destination range beyond 8TiB returns EFBIG
++copy_range: File too large
++
++destination larger than rlimit returns EFBIG
++File size limit exceeded
 diff --git a/tests/generic/group b/tests/generic/group
-index 20b95c14..4c100781 100644
+index 4c100781..86802d54 100644
 --- a/tests/generic/group
 +++ b/tests/generic/group
-@@ -551,3 +551,4 @@
- 546 auto quick clone enospc log
+@@ -552,3 +552,4 @@
  547 auto quick log
  988 auto quick copy_range
-+989 auto quick copy_range swap
+ 989 auto quick copy_range swap
++990 auto quick copy_range
 -- 
 2.17.1
