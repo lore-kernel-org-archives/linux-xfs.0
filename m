@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:43010 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727717AbfEZGLb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 02:11:31 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:42593 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726131AbfEZGLW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 02:11:22 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v2 9/8] man-pages: copy_file_range updates
-Date: Sun, 26 May 2019 09:11:00 +0300
-Message-Id: <20190526061100.21761-10-amir73il@gmail.com>
+Subject: [PATCH v2 4/8] vfs: add missing checks to copy_file_range
+Date: Sun, 26 May 2019 09:10:55 +0300
+Message-Id: <20190526061100.21761-5-amir73il@gmail.com>
 In-Reply-To: <20190526061100.21761-1-amir73il@gmail.com>
 References: <20190526061100.21761-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,184 +15,115 @@ List-Id: xfs
 To: "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-Update with all the missing errors the syscall can return, the
-behaviour the syscall should have w.r.t. to copies within single
-files, etc.
+Like the clone and dedupe interfaces we've recently fixed, the
+copy_file_range() implementation is missing basic sanity, limits and
+boundary condition tests on the parameters that are passed to it
+from userspace. Create a new "generic_copy_file_checks()" function
+modelled on the generic_remap_checks() function to provide this
+missing functionality.
 
-[Amir] Copying beyond EOF returns zero.
+[Amir] Shorten copy length instead of checking pos_in limits
+because input file size already abides by the limits.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- man2/copy_file_range.2 | 93 ++++++++++++++++++++++++++++++++++--------
- 1 file changed, 77 insertions(+), 16 deletions(-)
+ fs/read_write.c    |  3 ++-
+ include/linux/fs.h |  3 +++
+ mm/filemap.c       | 53 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 58 insertions(+), 1 deletion(-)
 
-diff --git a/man2/copy_file_range.2 b/man2/copy_file_range.2
-index 2438b63c8..fab11f977 100644
---- a/man2/copy_file_range.2
-+++ b/man2/copy_file_range.2
-@@ -42,9 +42,9 @@ without the additional cost of transferring data from the kernel to user space
- and then back into the kernel.
- It copies up to
- .I len
--bytes of data from file descriptor
-+bytes of data from the source file descriptor
- .I fd_in
--to file descriptor
-+to target file descriptor
- .IR fd_out ,
- overwriting any data that exists within the requested range of the target file.
- .PP
-@@ -74,6 +74,11 @@ is not changed, but
- .I off_in
- is adjusted appropriately.
- .PP
-+.I fd_in
-+and
-+.I fd_out
-+can refer to the same file. If they refer to the same file, then the source and
-+target ranges are not allowed to overlap.
- .PP
- The
- .I flags
-@@ -84,6 +89,11 @@ Upon successful completion,
- .BR copy_file_range ()
- will return the number of bytes copied between files.
- This could be less than the length originally requested.
-+If the file offset of
-+.I fd_in
-+is at or past the end of file, no bytes are copied, and
-+.BR copy_file_range ()
-+returns zero.
- .PP
- On error,
- .BR copy_file_range ()
-@@ -93,12 +103,16 @@ is set to indicate the error.
- .SH ERRORS
- .TP
- .B EBADF
--One or more file descriptors are not valid; or
-+One or more file descriptors are not valid.
-+.TP
-+.B EBADF
- .I fd_in
- is not open for reading; or
- .I fd_out
--is not open for writing; or
--the
-+is not open for writing.
-+.TP
-+.B EBADF
-+The
- .B O_APPEND
- flag is set for the open file description (see
- .BR open (2))
-@@ -106,17 +120,36 @@ referred to by the file descriptor
- .IR fd_out .
- .TP
- .B EFBIG
--An attempt was made to write a file that exceeds the implementation-defined
--maximum file size or the process's file size limit,
--or to write at a position past the maximum allowed offset.
-+An attempt was made to write at a position past the maximum file offset the
-+kernel supports.
-+.TP
-+.B EFBIG
-+An attempt was made to write a range that exceeds the allowed maximum file size.
-+The maximum file size differs between filesystem implemenations and can be
-+different to the maximum allowed file offset.
-+.TP
-+.B EFBIG
-+An attempt was made to write beyond the process's file size resource
-+limit. This may also result in the process receiving a
-+.I SIGXFSZ
-+signal.
- .TP
- .B EINVAL
--Requested range extends beyond the end of the source file; or the
-+The
- .I flags
- argument is not 0.
- .TP
--.B EIO
--A low-level I/O error occurred while copying.
-+.B EINVAL
-+.I fd_in
-+and
-+.I fd_out
-+refer to the same file and the source and target ranges overlap.
-+.TP
-+.B EINVAL
-+.I fd_in
-+or
-+.I fd_out
-+is not a regular file.
- .TP
- .B EISDIR
- .I fd_in
-@@ -124,22 +157,50 @@ or
- .I fd_out
- refers to a directory.
- .TP
-+.B EOVERFLOW
-+The requested source or destination range is too large to represent in the
-+specified data types.
-+.TP
-+.B EIO
-+A low-level I/O error occurred while copying.
-+.TP
- .B ENOMEM
- Out of memory.
- .TP
--.B ENOSPC
--There is not enough space on the target filesystem to complete the copy.
--.TP
- .B EXDEV
- The files referred to by
- .IR file_in " and " file_out
--are not on the same mounted filesystem.
-+are not on the same mounted filesystem (pre Linux 5.3).
-+.TP
-+.B ENOSPC
-+There is not enough space on the target filesystem to complete the copy.
-+.TP
-+.B TXTBSY
-+.I fd_in
-+or
-+.I fd_out
-+refers to an active swap file.
-+.TP
-+.B EPERM
-+.I fd_out
-+refers to an immutable file.
-+.TP
-+.B EACCES
-+The user does not have write permissions for the destination file.
- .SH VERSIONS
- The
- .BR copy_file_range ()
- system call first appeared in Linux 4.5, but glibc 2.27 provides a user-space
- emulation when it is not available.
- .\" https://sourceware.org/git/?p=glibc.git;a=commit;f=posix/unistd.h;h=bad7a0c81f501fbbcc79af9eaa4b8254441c4a1f
-+.PP
-+A major rework of the kernel implementation occurred in 5.3. Areas of the API
-+that weren't clearly defined were clarified and the API bounds are much more
-+strictly checked than on earlier kernels. Applications should target the
-+behaviour and requirements of 5.3 kernels.
-+.PP
-+First support for cross-filesystem copies was introduced in Linux 5.3. Older
-+kernels will return -EXDEV when cross-filesystem copies are attempted.
- .SH CONFORMING TO
- The
- .BR copy_file_range ()
-@@ -224,7 +285,7 @@ main(int argc, char **argv)
-         }
+diff --git a/fs/read_write.c b/fs/read_write.c
+index f1900bdb3127..b0fb1176b628 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1626,7 +1626,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+ 	if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
+ 		return -EXDEV;
  
-         len \-= ret;
--    } while (len > 0);
-+    } while (len > 0 && ret > 0);
+-	ret = generic_file_rw_checks(file_in, file_out);
++	ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
++				       flags);
+ 	if (unlikely(ret))
+ 		return ret;
  
-     close(fd_in);
-     close(fd_out);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 89b9b73eb581..e4d382c4342a 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -3050,6 +3050,9 @@ extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 				struct file *file_out, loff_t pos_out,
+ 				loff_t *count, unsigned int remap_flags);
+ extern int generic_file_rw_checks(struct file *file_in, struct file *file_out);
++extern int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
++				    struct file *file_out, loff_t pos_out,
++				    size_t *count, unsigned int flags);
+ extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
+ extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
+ extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 798aac92cd76..1852fbf08eeb 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -3064,6 +3064,59 @@ int generic_file_rw_checks(struct file *file_in, struct file *file_out)
+ 	return 0;
+ }
+ 
++/*
++ * Performs necessary checks before doing a file copy
++ *
++ * Can adjust amount of bytes to copy
++ * Returns appropriate error code that caller should return or
++ * zero in case the copy should be allowed.
++ */
++int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
++			     struct file *file_out, loff_t pos_out,
++			     size_t *req_count, unsigned int flags)
++{
++	struct inode *inode_in = file_inode(file_in);
++	struct inode *inode_out = file_inode(file_out);
++	uint64_t count = *req_count;
++	loff_t size_in;
++	int ret;
++
++	ret = generic_file_rw_checks(file_in, file_out);
++	if (ret)
++		return ret;
++
++	/* Don't touch certain kinds of inodes */
++	if (IS_IMMUTABLE(inode_out))
++		return -EPERM;
++
++	if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
++		return -ETXTBSY;
++
++	/* Ensure offsets don't wrap. */
++	if (pos_in + count < pos_in || pos_out + count < pos_out)
++		return -EOVERFLOW;
++
++	/* Shorten the copy to EOF */
++	size_in = i_size_read(inode_in);
++	if (pos_in >= size_in)
++		count = 0;
++	else
++		count = min(count, size_in - (uint64_t)pos_in);
++
++	ret = generic_write_check_limits(file_out, pos_out, &count);
++	if (ret)
++		return ret;
++
++	/* Don't allow overlapped copying within the same file. */
++	if (inode_in == inode_out &&
++	    pos_out + count > pos_in &&
++	    pos_out < pos_in + count)
++		return -EINVAL;
++
++	*req_count = count;
++	return 0;
++}
++
+ int pagecache_write_begin(struct file *file, struct address_space *mapping,
+ 				loff_t pos, unsigned len, unsigned flags,
+ 				struct page **pagep, void **fsdata)
 -- 
 2.17.1
