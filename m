@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:36544 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727546AbfEZIpq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 04:45:46 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:44092 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727570AbfEZIps (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 04:45:48 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v2 2/5] generic: copy_file_range immutable file test
-Date: Sun, 26 May 2019 11:45:32 +0300
-Message-Id: <20190526084535.999-3-amir73il@gmail.com>
+Subject: [PATCH v2 3/5] generic: copy_file_range swapfile test
+Date: Sun, 26 May 2019 11:45:33 +0300
+Message-Id: <20190526084535.999-4-amir73il@gmail.com>
 In-Reply-To: <20190526084535.999-1-amir73il@gmail.com>
 References: <20190526084535.999-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -20,26 +20,26 @@ check test to reduce the requirements for running the bounds check.
 
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- tests/generic/988     | 59 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/988.out |  5 ++++
+ tests/generic/989     | 56 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/989.out |  4 ++++
  tests/generic/group   |  1 +
- 3 files changed, 65 insertions(+)
- create mode 100755 tests/generic/988
- create mode 100644 tests/generic/988.out
+ 3 files changed, 61 insertions(+)
+ create mode 100755 tests/generic/989
+ create mode 100644 tests/generic/989.out
 
-diff --git a/tests/generic/988 b/tests/generic/988
+diff --git a/tests/generic/989 b/tests/generic/989
 new file mode 100755
-index 00000000..0f4ee4ea
+index 00000000..27c10296
 --- /dev/null
-+++ b/tests/generic/988
-@@ -0,0 +1,59 @@
++++ b/tests/generic/989
+@@ -0,0 +1,56 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
 +#
-+# FS QA Test No. 988
++# FS QA Test No. 989
 +#
-+# Check that we cannot copy_file_range() to/from an immutable file
++# Check that we cannot copy_file_range() to/from a swapfile
 +#
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
@@ -52,7 +52,6 @@ index 00000000..0f4ee4ea
 +
 +_cleanup()
 +{
-+	$CHATTR_PROG -i $testdir/immutable > /dev/null 2>&1
 +	cd /
 +	rm -rf $tmp.*
 +}
@@ -67,50 +66,47 @@ index 00000000..0f4ee4ea
 +
 +rm -f $seqres.full
 +
-+_require_test
-+_require_chattr i
++_require_scratch
 +_require_xfs_io_command "copy_range"
-+_require_xfs_io_command "chattr"
++_require_scratch_swapfile
 +
-+testdir="$TEST_DIR/test-$seq"
-+rm -rf $testdir
-+mkdir $testdir
++_scratch_mkfs 2>&1 >> $seqres.full
++_scratch_mount
++
++testdir=$SCRATCH_MNT
 +
 +rm -f $seqres.full
 +
 +$XFS_IO_PROG -f -c "pwrite -S 0x61 0 128k" $testdir/file >> $seqres.full 2>&1
 +
-+# we have to open the file to be immutable rw and hold it open over the
-+# chattr command to set it immutable, otherwise we won't be able to open it for
-+# writing after it's been made immutable. (i.e. would exercise file mode checks,
-+# not immutable inode flag checks).
-+echo immutable file returns EPERM
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 64k" -c fsync $testdir/immutable | _filter_xfs_io
-+$XFS_IO_PROG -f -c "chattr +i" -c "copy_range -l 32k $testdir/file" $testdir/immutable
-+$XFS_IO_PROG -f -r -c "chattr -i" $testdir/immutable
++echo swap files return ETXTBUSY
++_format_swapfile $testdir/swapfile 16m
++swapon $testdir/swapfile
++$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/file" $testdir/swapfile
++$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/swapfile" $testdir/copy
++swapoff $testdir/swapfile
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/988.out b/tests/generic/988.out
+diff --git a/tests/generic/989.out b/tests/generic/989.out
 new file mode 100644
-index 00000000..e74a96bf
+index 00000000..32da0ce9
 --- /dev/null
-+++ b/tests/generic/988.out
-@@ -0,0 +1,5 @@
-+QA output created by 988
-+immutable file returns EPERM
-+wrote 65536/65536 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+copy_range: Operation not permitted
++++ b/tests/generic/989.out
+@@ -0,0 +1,4 @@
++QA output created by 989
++swap files return ETXTBUSY
++copy_range: Text file busy
++copy_range: Text file busy
 diff --git a/tests/generic/group b/tests/generic/group
-index b498eb56..20b95c14 100644
+index 20b95c14..4c100781 100644
 --- a/tests/generic/group
 +++ b/tests/generic/group
-@@ -550,3 +550,4 @@
- 545 auto quick cap
+@@ -551,3 +551,4 @@
  546 auto quick clone enospc log
  547 auto quick log
-+988 auto quick copy_range
+ 988 auto quick copy_range
++989 auto quick copy_range swap
 -- 
 2.17.1
