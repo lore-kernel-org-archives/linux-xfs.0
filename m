@@ -1,129 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:42593 "EHLO
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:34933 "EHLO
         mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726131AbfEZGLW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 02:11:22 -0400
+        with ESMTP id S1725999AbfEZG2d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 02:28:33 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v2 4/8] vfs: add missing checks to copy_file_range
-Date: Sun, 26 May 2019 09:10:55 +0300
-Message-Id: <20190526061100.21761-5-amir73il@gmail.com>
-In-Reply-To: <20190526061100.21761-1-amir73il@gmail.com>
-References: <20190526061100.21761-1-amir73il@gmail.com>
+Subject: [PATCH] ovl: support the FS_IOC_FS[SG]ETXATTR ioctls
+Date: Sun, 26 May 2019 09:28:25 +0300
+Message-Id: <20190526062825.23059-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Like the clone and dedupe interfaces we've recently fixed, the
-copy_file_range() implementation is missing basic sanity, limits and
-boundary condition tests on the parameters that are passed to it
-from userspace. Create a new "generic_copy_file_checks()" function
-modelled on the generic_remap_checks() function to provide this
-missing functionality.
+They are the extended version of FS_IOC_FS[SG]ETFLAGS ioctls.
+xfs_io -c "chattr <flags>" uses the new ioctls for setting flags.
 
-[Amir] Shorten copy length instead of checking pos_in limits
-because input file size already abides by the limits.
+This used to work in kernel pre v4.19, before stacked file ops
+introduced the ovl_ioctl whitelist.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reported-by: Dave Chinner <david@fromorbit.com>
+Fixes: d1d04ef8572b ("ovl: stack file ops")
+Cc: <stable@vger.kernel.org> # v4.19
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/read_write.c    |  3 ++-
- include/linux/fs.h |  3 +++
- mm/filemap.c       | 53 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 58 insertions(+), 1 deletion(-)
+ fs/overlayfs/file.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index f1900bdb3127..b0fb1176b628 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1626,7 +1626,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
- 	if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
- 		return -EXDEV;
- 
--	ret = generic_file_rw_checks(file_in, file_out);
-+	ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
-+				       flags);
- 	if (unlikely(ret))
- 		return ret;
- 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 89b9b73eb581..e4d382c4342a 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -3050,6 +3050,9 @@ extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
- 				struct file *file_out, loff_t pos_out,
- 				loff_t *count, unsigned int remap_flags);
- extern int generic_file_rw_checks(struct file *file_in, struct file *file_out);
-+extern int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
-+				    struct file *file_out, loff_t pos_out,
-+				    size_t *count, unsigned int flags);
- extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
- extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
- extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 798aac92cd76..1852fbf08eeb 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -3064,6 +3064,59 @@ int generic_file_rw_checks(struct file *file_in, struct file *file_out)
- 	return 0;
+diff --git a/fs/overlayfs/file.c b/fs/overlayfs/file.c
+index 540a8b845145..340a6ad45914 100644
+--- a/fs/overlayfs/file.c
++++ b/fs/overlayfs/file.c
+@@ -426,7 +426,8 @@ static unsigned int ovl_get_inode_flags(struct inode *inode)
+ 	return ovl_iflags;
  }
  
-+/*
-+ * Performs necessary checks before doing a file copy
-+ *
-+ * Can adjust amount of bytes to copy
-+ * Returns appropriate error code that caller should return or
-+ * zero in case the copy should be allowed.
-+ */
-+int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
-+			     struct file *file_out, loff_t pos_out,
-+			     size_t *req_count, unsigned int flags)
-+{
-+	struct inode *inode_in = file_inode(file_in);
-+	struct inode *inode_out = file_inode(file_out);
-+	uint64_t count = *req_count;
-+	loff_t size_in;
-+	int ret;
-+
-+	ret = generic_file_rw_checks(file_in, file_out);
-+	if (ret)
-+		return ret;
-+
-+	/* Don't touch certain kinds of inodes */
-+	if (IS_IMMUTABLE(inode_out))
-+		return -EPERM;
-+
-+	if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
-+		return -ETXTBSY;
-+
-+	/* Ensure offsets don't wrap. */
-+	if (pos_in + count < pos_in || pos_out + count < pos_out)
-+		return -EOVERFLOW;
-+
-+	/* Shorten the copy to EOF */
-+	size_in = i_size_read(inode_in);
-+	if (pos_in >= size_in)
-+		count = 0;
-+	else
-+		count = min(count, size_in - (uint64_t)pos_in);
-+
-+	ret = generic_write_check_limits(file_out, pos_out, &count);
-+	if (ret)
-+		return ret;
-+
-+	/* Don't allow overlapped copying within the same file. */
-+	if (inode_in == inode_out &&
-+	    pos_out + count > pos_in &&
-+	    pos_out < pos_in + count)
-+		return -EINVAL;
-+
-+	*req_count = count;
-+	return 0;
-+}
-+
- int pagecache_write_begin(struct file *file, struct address_space *mapping,
- 				loff_t pos, unsigned len, unsigned flags,
- 				struct page **pagep, void **fsdata)
+-static long ovl_ioctl_set_flags(struct file *file, unsigned long arg)
++static long ovl_ioctl_set_flags(struct file *file, unsigned int cmd,
++				unsigned long arg)
+ {
+ 	long ret;
+ 	struct inode *inode = file_inode(file);
+@@ -456,7 +457,7 @@ static long ovl_ioctl_set_flags(struct file *file, unsigned long arg)
+ 	if (ret)
+ 		goto unlock;
+ 
+-	ret = ovl_real_ioctl(file, FS_IOC_SETFLAGS, arg);
++	ret = ovl_real_ioctl(file, cmd, arg);
+ 
+ 	ovl_copyflags(ovl_inode_real(inode), inode);
+ unlock:
+@@ -474,11 +475,13 @@ static long ovl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 
+ 	switch (cmd) {
+ 	case FS_IOC_GETFLAGS:
++	case FS_IOC_FSGETXATTR:
+ 		ret = ovl_real_ioctl(file, cmd, arg);
+ 		break;
+ 
+ 	case FS_IOC_SETFLAGS:
+-		ret = ovl_ioctl_set_flags(file, arg);
++	case FS_IOC_FSSETXATTR:
++		ret = ovl_ioctl_set_flags(file, cmd, arg);
+ 		break;
+ 
+ 	default:
 -- 
 2.17.1
