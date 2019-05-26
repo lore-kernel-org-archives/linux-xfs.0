@@ -1,185 +1,219 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:37212 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726899AbfEYWnX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 May 2019 18:43:23 -0400
-Date: Sun, 26 May 2019 08:43:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 00/11] xfs: rework extent allocation
-Message-ID: <20190525224317.GZ29573@dread.disaster.area>
-References: <20190522180546.17063-1-bfoster@redhat.com>
- <20190523015659.GL29573@dread.disaster.area>
- <20190523125535.GA20099@bfoster>
- <20190523221552.GM29573@dread.disaster.area>
- <20190524120015.GA32730@bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190524120015.GA32730@bfoster>
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:39172 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726131AbfEZGLS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 02:11:18 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v2 2/8] vfs: no fallback for ->copy_file_range
+Date: Sun, 26 May 2019 09:10:53 +0300
+Message-Id: <20190526061100.21761-3-amir73il@gmail.com>
+In-Reply-To: <20190526061100.21761-1-amir73il@gmail.com>
+References: <20190526061100.21761-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Fri, May 24, 2019 at 08:00:18AM -0400, Brian Foster wrote:
-> On Fri, May 24, 2019 at 08:15:52AM +1000, Dave Chinner wrote:
-> > On Thu, May 23, 2019 at 08:55:35AM -0400, Brian Foster wrote:
-> > > Hmmm.. I suppose if I had a script that
-> > > just dumped every applicable stride/delta value for an inode, I could
-> > > dump all of those numbers into a file and we can process it from there..
-> > 
-> > See how the freesp commands work in xfs_db - they just generate a
-> > set of {offset, size} tuples that are then bucketted appropriately.
-> > This is probably the best way to do this at the moment - have xfs_db
-> > walk the inode BMBTs outputting something like {extent size,
-> > distance to next extent} tuples and everything else falls out from
-> > how we bucket that information.
-> > 
-> 
-> That sounds plausible. A bit more involved than what I'm currently
-> working with, but we do already have a blueprint for the scanning
-> implementation required to collect this data via the frag command.
-> Perhaps some of this code between the frag/freesp can be generalized and
-> reused. I'll take a closer look at it.
-> 
-> My only concern is I'd prefer to only go down this path as long as we
-> plan to land the associated command in xfs_db. So this approach suggests
-> to me that we add a "locality" command similar to frag/freesp that
-> presents the locality state of the fs. For now I'm only really concerned
-> with the data associated with known near mode allocations (i.e., such as
-> the extent size:distance relationship you've outlined above) so we can
-> evaluate these algorithmic changes, but this would be for fs devs only
-> so we could always expand on it down the road if we want to assess
-> different allocations. Hm?
+From: Dave Chinner <dchinner@redhat.com>
 
-Yup, I'm needing to do similar analysis myself to determine how
-quickly I'm aging the filesystem, so having the tool in xfs_db or
-xfs_spaceman would be very useful.
+Now that we have generic_copy_file_range(), remove it as a fallback
+case when offloads fail. This puts the responsibility for executing
+fallbacks on the filesystems that implement ->copy_file_range and
+allows us to add operational validity checks to
+generic_copy_file_range().
 
-FWIW, the tool I've just started writing will just use fallocate and
-truncate to hammer the allocation code as hard and as quickly as
-possible - I want to do accelerated aging of the filesystem, and so
-being able to run tens to hundreds of thousands of free space
-manipulations a second is the goal here....
+Rework vfs_copy_file_range() to call a new do_copy_file_range()
+helper to exceute the copying callout, and move calls to
+generic_file_copy_range() into filesystem methods where they
+currently return failures.
 
-> > > > (*) Which, in reality, we really should reset because once we jump
-> > > > AG we have no locality target and so should allow the full AG to be
-> > > > considered. This "didn't reset target" issue is something I suspect
-> > > > leads to the infamous "backwards allocation for sequential writes"
-> > > > problems...
-> > > 
-> > > I think this is something that's handled at a higher level. In the
-> > > nullfb case at least, we use the XFS_ALLOCTYPE_START_BNO allocation mode
-> > > which is what allows us to iterate AGs.
-> > 
-> > The nullfb case isn't the problem here - I think the problem comes
-> > when we fail the THIS_BNO/NEAR_BNO allocation attempts in
-> > xfs_bmap_btalloc() and then fall back to XFS_ALLOCTYPE_START_BNO
-> > with the same fsbno target.
-> > 
-> 
-> Ok, that's the retry where we restore minlen from maxlen back to 1. Note
-> that still depends on nullfb, but that's just context. I think the
-> majority of the time data allocations come into the allocator as the
-> first allocation in the transaction.
-> 
-> That aside, I've also seen that this particular retry is hotter than
-> you'd think just by glancing at the code due to the whole minlen =
-> maxlen thing in xfs_bmap_select_minlen() combined with potential size of
-> delalloc extents. See the patches I posted a couple weeks ago in this
-> area for example:
-> 
->   https://marc.info/?l=linux-xfs&m=155671950608062&w=2
-> 
-> ... though I don't think they relate to the issue you're tracking here.
-> 
-> > > We start with a near mode
-> > > allocation in the target AG. If that fails, xfs_alloc_vextent() switches
-> > > over to XFS_ALLOCTYPE_THIS_AG for the remaining AGs. This lands in
-> > > xfs_alloc_ag_vextent_size() which ignores args.agbno even if it's set.
-> > 
-> > Hmmm. I think you just pointed out a bug in this code. The initial
-> > NEARBNO alloc sets ->min_agbno and ->max_agbno based on the
-> > args->agbno, which xfs_alloc_compute_aligned then uses to determine
-> > if the found free extent can be used. When we immediately fall back
-> > to XFS_ALLOCTYPE_THIS_AG allocation, we don't reset
-> > min_agbno/max_agbno, and so even though we ignore the args->agbno
-> > target that is set when selecting a free extent, we still call
-> > xfs_alloc_compute_aligned() to determine if it is appropriate to
-> > use.
-> > 
-> 
-> I don't see where the near mode alloc assigns ->[min|max]_agbno. The
-> only place I see ->min_agbno used is for sparse inode chunk allocation.
-> ->max_agbno is assigned in the near mode alloc when min == 0, but it's
-> set to agsize so I'm guessing that this is just an initialization so the
-> checking logic works with zeroed out values from the caller.
+[Amir] overlayfs is not responsible of executing the fallback.
+It is the responsibility of the underlying filesystem.
 
-I did say:
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/ceph/file.c    | 21 ++++++++++++++++++---
+ fs/cifs/cifsfs.c  |  4 ++++
+ fs/fuse/file.c    | 21 ++++++++++++++++++---
+ fs/nfs/nfs4file.c | 20 +++++++++++++++++---
+ fs/read_write.c   | 25 ++++++++++++++++---------
+ 5 files changed, 73 insertions(+), 18 deletions(-)
 
-> > Of course, I could be missing something obvious (still haven't
-> > finished my morning coffee!), so it's worth checking I read the code
-> > properly....
-
-And that's clearly the case here - I read the code that clamps agbno
-to min/max backwards....
-
-> Just to clarify.. what exactly is the reverse allocation problem you're
-> thinking about here? Logically increasing writes resulting in physically
-> decreasing allocations? If so, have we confirmed that writes are indeed
-> sequential when this occurs (obvious I guess, but worth asking).
-
-Precisely this. And, yes, I've confirmed many times that it is
-sequential writes that display it. It happens when the closest nearest free
-extent is below the current target. i.e.:
-
-
-+FFFFFFFFFFFFF+aaaaaaaT+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb+FFFFF+
-
-We just allocated "a" so the next allocation target is T, but "b" is
-already allocated there. The freespace before "a" is larger than
-the free space after "b" (which may be less than maxlen), and so the
-"nearest best free space" is below the target. If "b" is large
-enough, we end up with file allocation that looks like (where n =
-relative file offset for the given allocation)
-
-     +10+9+8+7+6+5+4+1+2+3+
-
-i.e. allocation starts forward, uses the remaining ascending free
-space in the extent, then starts allocating backwards as it takes
-the nearest free space and trims off the top of the free extent for
-the allocation.
-
-> I'm not really familiar with this problem so I've not thought about it,
-> but one random thought comes to mind: is there any chance of allocation
-> interlocking behind extent frees contributing to this behavior? We do
-> truncate files in reverse order an extent at a time and immediately
-> finish the dfops (to free the extent and busy it) before we unmap the
-> next piece.
-
-Unlikely, because such extents are not immediately avaiable for
-allocation (they are busy). And I've seen it on pure contended
-sequential write workloads, too...
-
-> If allocations could interlock with such frees (or busy
-> clearing), I could see in theory how that might result in backwards
-> allocations, but I'm just handwaving and not sure that's possible in
-> practice.
-
-Most of the cases I've seen have had the same symptom - "skip to
-next AG, allocate at same high-up-in AGBNO target as the previous AG
-wanted, then allocate backwards in the same AG until freespace
-extent is exhausted. It then skips to some other freespace extent,
-and depending on whether it's a forwards or backwards skip the
-problem either goes away or continues. This is not a new behaviour,
-I first saw it some 15 years ago, but I've never been able to
-provoke it reliably enough with test code to get to the root
-cause...
-
-Cheers,
-
-Dave.
+diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+index 305daf043eb0..e87f7b2023af 100644
+--- a/fs/ceph/file.c
++++ b/fs/ceph/file.c
+@@ -1889,9 +1889,9 @@ static int is_file_size_ok(struct inode *src_inode, struct inode *dst_inode,
+ 	return 0;
+ }
+ 
+-static ssize_t ceph_copy_file_range(struct file *src_file, loff_t src_off,
+-				    struct file *dst_file, loff_t dst_off,
+-				    size_t len, unsigned int flags)
++static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
++				      struct file *dst_file, loff_t dst_off,
++				      size_t len, unsigned int flags)
+ {
+ 	struct inode *src_inode = file_inode(src_file);
+ 	struct inode *dst_inode = file_inode(dst_file);
+@@ -2100,6 +2100,21 @@ static ssize_t ceph_copy_file_range(struct file *src_file, loff_t src_off,
+ 	return ret;
+ }
+ 
++static ssize_t ceph_copy_file_range(struct file *src_file, loff_t src_off,
++				    struct file *dst_file, loff_t dst_off,
++				    size_t len, unsigned int flags)
++{
++	ssize_t ret;
++
++	ret = __ceph_copy_file_range(src_file, src_off, dst_file, dst_off,
++				     len, flags);
++
++	if (ret == -EOPNOTSUPP)
++		ret = generic_copy_file_range(src_file, src_off, dst_file,
++					      dst_off, len, flags);
++	return ret;
++}
++
+ const struct file_operations ceph_file_fops = {
+ 	.open = ceph_open,
+ 	.release = ceph_release,
+diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
+index f5fcd6360056..c65823270313 100644
+--- a/fs/cifs/cifsfs.c
++++ b/fs/cifs/cifsfs.c
+@@ -1148,6 +1148,10 @@ static ssize_t cifs_copy_file_range(struct file *src_file, loff_t off,
+ 	rc = cifs_file_copychunk_range(xid, src_file, off, dst_file, destoff,
+ 					len, flags);
+ 	free_xid(xid);
++
++	if (rc == -EOPNOTSUPP)
++		rc = generic_copy_file_range(src_file, off, dst_file,
++					     destoff, len, flags);
+ 	return rc;
+ }
+ 
+diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+index 3959f08279e6..e03901ae729b 100644
+--- a/fs/fuse/file.c
++++ b/fs/fuse/file.c
+@@ -3097,9 +3097,9 @@ static long fuse_file_fallocate(struct file *file, int mode, loff_t offset,
+ 	return err;
+ }
+ 
+-static ssize_t fuse_copy_file_range(struct file *file_in, loff_t pos_in,
+-				    struct file *file_out, loff_t pos_out,
+-				    size_t len, unsigned int flags)
++static ssize_t __fuse_copy_file_range(struct file *file_in, loff_t pos_in,
++				      struct file *file_out, loff_t pos_out,
++				      size_t len, unsigned int flags)
+ {
+ 	struct fuse_file *ff_in = file_in->private_data;
+ 	struct fuse_file *ff_out = file_out->private_data;
+@@ -3173,6 +3173,21 @@ static ssize_t fuse_copy_file_range(struct file *file_in, loff_t pos_in,
+ 	return err;
+ }
+ 
++static ssize_t fuse_copy_file_range(struct file *src_file, loff_t src_off,
++				    struct file *dst_file, loff_t dst_off,
++				    size_t len, unsigned int flags)
++{
++	ssize_t ret;
++
++	ret = __fuse_copy_file_range(src_file, src_off, dst_file, dst_off,
++				     len, flags);
++
++	if (ret == -EOPNOTSUPP)
++		ret = generic_copy_file_range(src_file, src_off, dst_file,
++					      dst_off, len, flags);
++	return ret;
++}
++
+ static const struct file_operations fuse_file_operations = {
+ 	.llseek		= fuse_file_llseek,
+ 	.read_iter	= fuse_file_read_iter,
+diff --git a/fs/nfs/nfs4file.c b/fs/nfs/nfs4file.c
+index cf42a8b939e3..4842f3ab3161 100644
+--- a/fs/nfs/nfs4file.c
++++ b/fs/nfs/nfs4file.c
+@@ -129,9 +129,9 @@ nfs4_file_flush(struct file *file, fl_owner_t id)
+ }
+ 
+ #ifdef CONFIG_NFS_V4_2
+-static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
+-				    struct file *file_out, loff_t pos_out,
+-				    size_t count, unsigned int flags)
++static ssize_t __nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
++				      struct file *file_out, loff_t pos_out,
++				      size_t count, unsigned int flags)
+ {
+ 	if (!nfs_server_capable(file_inode(file_out), NFS_CAP_COPY))
+ 		return -EOPNOTSUPP;
+@@ -140,6 +140,20 @@ static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
+ 	return nfs42_proc_copy(file_in, pos_in, file_out, pos_out, count);
+ }
+ 
++static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
++				    struct file *file_out, loff_t pos_out,
++				    size_t count, unsigned int flags)
++{
++	ssize_t ret;
++
++	ret = __nfs4_copy_file_range(file_in, pos_in, file_out, pos_out, count,
++				     flags);
++	if (ret == -EOPNOTSUPP)
++		ret = generic_copy_file_range(file_in, pos_in, file_out,
++					      pos_out, count, flags);
++	return ret;
++}
++
+ static loff_t nfs4_file_llseek(struct file *filep, loff_t offset, int whence)
+ {
+ 	loff_t ret;
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 676b02fae589..b63dcb4e4fe9 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1595,6 +1595,19 @@ ssize_t generic_copy_file_range(struct file *file_in, loff_t pos_in,
+ }
+ EXPORT_SYMBOL(generic_copy_file_range);
+ 
++static ssize_t do_copy_file_range(struct file *file_in, loff_t pos_in,
++				  struct file *file_out, loff_t pos_out,
++				  size_t len, unsigned int flags)
++{
++	if (file_out->f_op->copy_file_range)
++		return file_out->f_op->copy_file_range(file_in, pos_in,
++						       file_out, pos_out,
++						       len, flags);
++
++	return generic_copy_file_range(file_in, pos_in, file_out, pos_out, len,
++				       flags);
++}
++
+ /*
+  * copy_file_range() differs from regular file read and write in that it
+  * specifically allows return partial success.  When it does so is up to
+@@ -1655,15 +1668,9 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+ 		}
+ 	}
+ 
+-	if (file_out->f_op->copy_file_range) {
+-		ret = file_out->f_op->copy_file_range(file_in, pos_in, file_out,
+-						      pos_out, len, flags);
+-		if (ret != -EOPNOTSUPP)
+-			goto done;
+-	}
+-
+-	ret = generic_copy_file_range(file_in, pos_in, file_out, pos_out, len,
+-				      flags);
++	ret = do_copy_file_range(file_in, pos_in, file_out, pos_out, len,
++				flags);
++	WARN_ON_ONCE(ret == -EOPNOTSUPP);
+ done:
+ 	if (ret > 0) {
+ 		fsnotify_access(file_in);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.17.1
