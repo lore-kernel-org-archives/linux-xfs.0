@@ -1,114 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57346 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728933AbfEUQLh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 May 2019 12:11:37 -0400
-Received: from Liberator-6.local (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 0BDED325F
-        for <linux-xfs@vger.kernel.org>; Tue, 21 May 2019 11:11:32 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 5539639
-Message-ID: <47a8553f-576b-a45b-18b8-be600e0e6c5f@sandeen.net>
-Date: Tue, 21 May 2019 11:11:35 -0500
+Received: from mx2.suse.de ([195.135.220.15]:43340 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726209AbfE0Ofm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 May 2019 10:35:42 -0400
+Date: Mon, 27 May 2019 15:35:39 +0100
+From: Luis Henriques <lhenriques@suse.com>
+Subject: Re: [PATCH v2 6/8] vfs: copy_file_range should update file timestamps
+Message-ID: <20190527143539.GA14980@hermes.olymp>
+References: <20190526061100.21761-1-amir73il@gmail.com>
+ <20190526061100.21761-7-amir73il@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="POoZA4fFMmLiCDa4EqY8tZwfzG3qZhsDq"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190526061100.21761-7-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---POoZA4fFMmLiCDa4EqY8tZwfzG3qZhsDq
-Content-Type: multipart/mixed; boundary="w4Tw49lgYRsQU628B0gg5si52F0utWIIg";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <47a8553f-576b-a45b-18b8-be600e0e6c5f@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 5539639
+On Sun, May 26, 2019 at 09:10:57AM +0300, Amir Goldstein wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Timestamps are not updated right now, so programs looking for
+> timestamp updates for file modifications (like rsync) will not
+> detect that files have changed. We are also accessing the source
+> data when doing a copy (but not when cloning) so we need to update
+> atime on the source file as well.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  fs/read_write.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index e16bcafc0da2..4b23a86aacd9 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1576,6 +1576,16 @@ int generic_copy_file_range_prep(struct file *file_in, struct file *file_out)
+>  
+>  	WARN_ON_ONCE(!inode_is_locked(file_inode(file_out)));
+>  
+> +	/* Update source timestamps, because we are accessing file data */
+> +	file_accessed(file_in);
+> +
+> +	/* Update destination timestamps, since we can alter file contents. */
+> +	if (!(file_out->f_mode & FMODE_NOCMTIME)) {
+> +		ret = file_update_time(file_out);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
 
---w4Tw49lgYRsQU628B0gg5si52F0utWIIg
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Is this the right place for updating the timestamps?  I see that in same
+cases we may be updating the timestamp even if there was an error and no
+copy was performed.  For example, if file_remove_privs fails.
 
-Hi folks,
+(btw, I've re-tested everything on ceph and everything seems to be
+working fine.)
 
-The for-next branch of the xfsprogs repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-5539639 libxfs: share kernel's xfs_trans_inode.c
-
-New Commits:
-
-Christoph Hellwig (1):
-      [15b8fe6] libxfs: factor common xfs_trans_bjoin code
-
-Dave Chinner (1):
-      [fb34b2d] xfs: factor log item initialisation
-
-Eric Sandeen (5):
-      [bc603ef] libxfs: Remove XACT_DEBUG #ifdefs
-      [cebe02e] libxfs: rename bli_format to avoid confusion with bli_for=
-mats
-      [31355f9] libxfs: fix argument to xfs_trans_add_item
-      [b192e77] libxfs: create current_time helper and sync xfs_trans_ich=
-gtime
-      [5539639] libxfs: share kernel's xfs_trans_inode.c
+Cheers,
+--
+Luís
 
 
-Code Diffstat:
-
- include/xfs_inode.h      |  14 ++++
- include/xfs_trace.h      |  13 +++
- include/xfs_trans.h      |   5 +-
- libxfs/Makefile          |   1 +
- libxfs/libxfs_priv.h     |  10 +++
- libxfs/logitem.c         |  14 ++--
- libxfs/trans.c           | 209 +++++++++++++++--------------------------=
-------
- libxfs/util.c            |  39 ++++-----
- libxfs/xfs_trans_inode.c | 155 +++++++++++++++++++++++++++++++++++
- 9 files changed, 283 insertions(+), 177 deletions(-)
- create mode 100644 libxfs/xfs_trans_inode.c
-
-
---w4Tw49lgYRsQU628B0gg5si52F0utWIIg--
-
---POoZA4fFMmLiCDa4EqY8tZwfzG3qZhsDq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlzkIzcACgkQIK4WkuE9
-3uAPZg/+NUF+c9saNklPkmiU9U1oNpvkirpQSMtiRB24Nh6u0u3Q7xSj7JnVDvLC
-DerYrbYeZbOv802LzSiI1XRFBROo83AjWhq6EcYyfBpplk3ubYUQQRFZVJNieIlt
-9Zq1PDaFct3DCvmjlEoi6tpXyxi5rd/YVyUSgzwjilOXkEawkh58reDZuopcCM8L
-9u0h4c+CT5279IWJS+SN9A+WKB+1BJHSx9aopv3xgCxIDof8E+y/s+U5+G+JvqkH
-fWjhwpNqib+3vUkMMDswjlrZcpQVecq7WqNVfFgXixyTKjS4EB7+jOWqldnlSVGQ
-4tnbpEBpE+45wP5UL9o//Rcard6wmUIzWnCJ5JbvPWEMXNvhNp2cSm1bvJkWQ2kc
-MIIeRjLx+aP4QNjUlHehq7mYnnknprfxCiqS/fZ7NXv/B7CMnBULgNnnL3XbpIGV
-dt5NpE3jvD6LK5IawXjnsZIMZxdoH4CEHmlY/2xOvKhk58AYibQiEQ4R4COQz/4s
-wcMCuYRPGFP8sJk60Irjow+VyuA85AfeNd987008W+dw4/A4Ph6Xr1WfQoAkHTem
-NFZe7bDMWzzmJouIsrArI6qnC9qwuaCbrx+Hpqd+xEBBw+3A3ogZgKvpQ852DADf
-OJiGfc13ntAHxBYDbwZXcN5/XmLVjAlKPpxF0e767ErERthfzAs=
-=8x76
------END PGP SIGNATURE-----
-
---POoZA4fFMmLiCDa4EqY8tZwfzG3qZhsDq--
+>  	/*
+>  	 * Clear the security bits if the process is not being run by root.
+>  	 * This keeps people from modifying setuid and setgid binaries.
+> -- 
+> 2.17.1
+> 
+> 
