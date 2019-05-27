@@ -1,118 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:33496 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726457AbfE0R1G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 May 2019 13:27:06 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
-Date: Mon, 27 May 2019 20:26:55 +0300
-Message-Id: <20190527172655.9287-1-amir73il@gmail.com>
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:53551 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727217AbfE0WFV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 May 2019 18:05:21 -0400
+Date: Tue, 28 May 2019 08:05:13 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 6/8] vfs: copy_file_range should update file timestamps
+Message-ID: <20190527220513.GB29573@dread.disaster.area>
+References: <20190526061100.21761-1-amir73il@gmail.com>
+ <20190526061100.21761-7-amir73il@gmail.com>
+ <20190527143539.GA14980@hermes.olymp>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190527143539.GA14980@hermes.olymp>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-api@vger.kernel.org
+To: Luis Henriques <lhenriques@suse.com>
+Cc: Amir Goldstein <amir73il@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-New link flags to request "atomic" link.
+On Mon, May 27, 2019 at 03:35:39PM +0100, Luis Henriques wrote:
+> On Sun, May 26, 2019 at 09:10:57AM +0300, Amir Goldstein wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Timestamps are not updated right now, so programs looking for
+> > timestamp updates for file modifications (like rsync) will not
+> > detect that files have changed. We are also accessing the source
+> > data when doing a copy (but not when cloning) so we need to update
+> > atime on the source file as well.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> > ---
+> >  fs/read_write.c | 10 ++++++++++
+> >  1 file changed, 10 insertions(+)
+> > 
+> > diff --git a/fs/read_write.c b/fs/read_write.c
+> > index e16bcafc0da2..4b23a86aacd9 100644
+> > --- a/fs/read_write.c
+> > +++ b/fs/read_write.c
+> > @@ -1576,6 +1576,16 @@ int generic_copy_file_range_prep(struct file *file_in, struct file *file_out)
+> >  
+> >  	WARN_ON_ONCE(!inode_is_locked(file_inode(file_out)));
+> >  
+> > +	/* Update source timestamps, because we are accessing file data */
+> > +	file_accessed(file_in);
+> > +
+> > +	/* Update destination timestamps, since we can alter file contents. */
+> > +	if (!(file_out->f_mode & FMODE_NOCMTIME)) {
+> > +		ret = file_update_time(file_out);
+> > +		if (ret)
+> > +			return ret;
+> > +	}
+> > +
+> 
+> Is this the right place for updating the timestamps?  I see that in same
+> cases we may be updating the timestamp even if there was an error and no
+> copy was performed.  For example, if file_remove_privs fails.
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
+It's the same place we do it for read - file_accessed() is called
+before we do the IO - and the same place for write -
+file_update_time() is called before we copy data into the pagecache
+or do direct IO. As such, it really doesn't matter if it is before
+or after file_remove_privs() - the IO can still fail for many
+reasons after we've updated the timestamps and in some of the
+failure cases (e.g. we failed the sync at the end of an O_DSYNC
+buffered write) we still want the timestamps to be modified because
+the data and/or user visible metadata /may/ have been changed.
 
-Hi Guys,
+cfr operates under the same constraints as read() and write(), so we
+need to update the timestamps up front regardless of whether the
+copy ends up succeeding or not....
 
-Following our discussions on LSF/MM and beyond [1][2], here is
-an RFC documentation patch.
+Cheers,
 
-Ted, I know we discussed limiting the API for linking an O_TMPFILE
-to avert the hardlinks issue, but I decided it would be better to
-document the hardlinks non-guaranty instead. This will allow me to
-replicate the same semantics and documentation to renameat(2).
-Let me know how that works out for you.
-
-I also decided to try out two separate flags for data and metadata.
-I do not find any of those flags very useful without the other, but
-documenting them seprately was easier, because of the fsync/fdatasync
-reference.  In the end, we are trying to solve a social engineering
-problem, so this is the least confusing way I could think of to describe
-the new API.
-
-First implementation of AT_ATOMIC_METADATA is expected to be
-noop for xfs/ext4 and probably fsync for btrfs.
-
-First implementation of AT_ATOMIC_DATA is expected to be
-filemap_write_and_wait() for xfs/ext4 and probably fdatasync for btrfs.
-
-Thoughts?
-
-Amir.
-
-[1] https://lwn.net/Articles/789038/
-[2] https://lore.kernel.org/linux-fsdevel/CAOQ4uxjZm6E2TmCv8JOyQr7f-2VB0uFRy7XEp8HBHQmMdQg+6w@mail.gmail.com/
-
- man2/link.2 | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
-
-diff --git a/man2/link.2 b/man2/link.2
-index 649ba00c7..15c24703e 100644
---- a/man2/link.2
-+++ b/man2/link.2
-@@ -184,6 +184,57 @@ See
- .BR openat (2)
- for an explanation of the need for
- .BR linkat ().
-+.TP
-+.BR AT_ATOMIC_METADATA " (since Linux 5.x)"
-+By default, a link operation followed by a system crash, may result in the
-+new file name being linked with old inode metadata, such as out dated time
-+stamps or missing extended attributes.
-+One way to prevent this is to call
-+.BR fsync (2)
-+before linking the inode, but that involves flushing of volatile disk caches.
-+
-+A filesystem that accepts this flag will guaranty, that old inode metadata
-+will not be exposed in the new linked name.
-+Some filesystems may internally perform
-+.BR fsync (2)
-+before linking the inode to provide this guaranty,
-+but often, filesystems will have a more efficient method to provide this
-+guaranty without flushing volatile disk caches.
-+
-+A filesystem that accepts this flag does
-+.BR NOT
-+guaranty that the new file name will exist after a system crash, nor that the
-+current inode metadata is persisted to disk.
-+Specifically, if a file has hardlinks, the existance of the linked name after
-+a system crash does
-+.BR NOT
-+guaranty that any of the other file names exist, nor that the last observed
-+value of
-+.I st_nlink
-+(see
-+.BR stat (2))
-+has persisted.
-+.TP
-+.BR AT_ATOMIC_DATA " (since Linux 5.x)"
-+By default, a link operation followed by a system crash, may result in the
-+new file name being linked with old data or missing data.
-+One way to prevent this is to call
-+.BR fdatasync (2)
-+before linking the inode, but that involves flushing of volatile disk caches.
-+
-+A filesystem that accepts this flag will guaranty, that old data
-+will not be exposed in the new linked name.
-+Some filesystems may internally perform
-+.BR fsync (2)
-+before linking the inode to provide this guaranty,
-+but often, filesystems will have a more efficient method to provide this
-+guaranty without flushing volatile disk caches.
-+
-+A filesystem that accepts this flag does
-+.BR NOT
-+guaranty that the new file name will exist after a system crash, nor that the
-+current inode data is persisted to disk.
-+.TP
- .SH RETURN VALUE
- On success, zero is returned.
- On error, \-1 is returned, and
+Dave.
 -- 
-2.17.1
+Dave Chinner
+david@fromorbit.com
