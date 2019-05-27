@@ -1,253 +1,233 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:43546 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727778AbfEZOuI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 10:50:08 -0400
-Date: Sun, 26 May 2019 22:49:58 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH ] xfs: basic testing of new xfs_spaceman health command
-Message-ID: <20190526144958.GQ15846@desktop>
-References: <155839149301.62876.7233006456381129816.stgit@magnolia>
- <155839150130.62876.6329606122510578337.stgit@magnolia>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:43732 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725973AbfE0Dcq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 May 2019 23:32:46 -0400
+Date: Mon, 27 May 2019 13:32:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Recurring hand in XFS inode reclaim on 4.10
+Message-ID: <20190527033240.GA29573@dread.disaster.area>
+References: <CAMCX63xyxZwiPd0602im0M0m4jzSNfB3DcF1RekQ6A-03vXTmg@mail.gmail.com>
+ <20190521224904.GI29573@dread.disaster.area>
+ <CAMCX63zNvLCDE5ZmY-rUuF7JfL9Uauq4jvzPZuDecovUSnCLNQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155839150130.62876.6329606122510578337.stgit@magnolia>
+In-Reply-To: <CAMCX63zNvLCDE5ZmY-rUuF7JfL9Uauq4jvzPZuDecovUSnCLNQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Jeffrey Baker <jwbaker@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 20, 2019 at 03:31:41PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, May 24, 2019 at 01:34:58PM -0700, Jeffrey Baker wrote:
+> On Tue, May 21, 2019 at 3:49 PM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Tue, May 21, 2019 at 09:21:10AM -0700, Jeffrey Baker wrote:
+> > > I have a problem of recurring hangs on machines where I get hung task
+> > > warnings for kswapd and many user threads stuck in lstat. At the time,
+> > > I/O grinds to a halt, although not quite to zero. These hangs happen
+> > > 1-2 times per day on a fleet of several thousand machines. We'd like
+> > > to understand the root cause, if it is already known, so we can figure
+> > > out the minimum kernel to which we might want to update.
+> > >
+> > > These are the hung task stacks:
+> > >
+> > > kswapd0         D    0   279      2 0x00000000
+> > > Call Trace:
+> > >  __schedule+0x232/0x700
+> > >  schedule+0x36/0x80
+> > >  schedule_preempt_disabled+0xe/0x10
+> > >  __mutex_lock_slowpath+0x193/0x290
+> > >  mutex_lock+0x2f/0x40
+> > >  xfs_reclaim_inodes_ag+0x288/0x330 [xfs]
+> >
+> > You're basically running the machine out of memory and there
+> > are so many direct reclaimers that all the inode reclaim parallelism in
+> > the filesystem has been exhausted and it's blocking waiting for
+> > other reclaim to complete.
 > 
-> Basic tests to make sure xfs_spaceman health command works properly.
+> Sort of.  "Out of memory" here means > 2GB free, admittedly that's
+> less than 1% of the machine.
+
+By "out of memory" I meant that your machine appears to have been at
+or below the memory reclaim watermarks for an extended period of
+time, not that there is no free memory at all.
+
+> > > kswapd1         D    0   280      2 0x00000000
+> > > Call Trace:
+> > >  __schedule+0x232/0x700
+> > >  schedule+0x36/0x80
+> > >  schedule_timeout+0x235/0x3f0
+> > >  ? blk_finish_plug+0x2c/0x40
+> > >  ? _xfs_buf_ioapply+0x334/0x460 [xfs]
+> > >  wait_for_completion+0xb4/0x140
+> > >  ? wake_up_q+0x70/0x70
+> > >  ? xfs_bwrite+0x24/0x60 [xfs]
+> > >  xfs_buf_submit_wait+0x7f/0x210 [xfs]
+> > >  xfs_bwrite+0x24/0x60 [xfs]
+> > >  xfs_reclaim_inode+0x313/0x340 [xfs]
+> > >  xfs_reclaim_inodes_ag+0x208/0x330 [xfs]
+> >
+> > Yup, memory reclaim is pushing so hard it is doing direct writeback
+> > of dirty inodes.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  common/xfs        |    7 ++++
->  tests/xfs/742     |   52 +++++++++++++++++++++++++++++++++
->  tests/xfs/742.out |    2 +
->  tests/xfs/743     |   84 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/743.out |    4 +++
->  tests/xfs/group   |    2 +
->  6 files changed, 151 insertions(+)
->  create mode 100755 tests/xfs/742
->  create mode 100644 tests/xfs/742.out
->  create mode 100755 tests/xfs/743
->  create mode 100644 tests/xfs/743.out
+> OK.  Is that reflected in vmstat somewhere?  I see
+> "nr_vmscan_immediate_reclaim" but it's not obvious to me what that is,
+> and it wasn't increasing at the moment of this event.
+
+Nope, not for low level filesystem inode reclaim like this. Getting
+the filesystem to do writeback from the inode shrinker is relatively
+uncommon.
+
+> > > All other hung threads are stuck in the third stack.
+> > >
+> > > We are using the Ubuntu 16.04 kernel, 4.10.0-40-generic
+> > > #44~16.04.1-Ubuntu. The machines involved have 20-core / 40-thread
+> > > Intel CPUs, 384 GiB of main memory, and four nvme devices in an md
+> > > RAID 0.  The filesystem info is:
+> > >
+> > > # xfs_info /dev/md0
+> > > meta-data=/dev/md0               isize=256    agcount=6, agsize=268435455 blks
+> > >          =                       sectsz=512   attr=2, projid32bit=0
+> > >          =                       crc=0        finobt=0 spinodes=0
+> > > data     =                       bsize=4096   blocks=1562366976, imaxpct=5
+> > >          =                       sunit=0      swidth=0 blks
+
+FWIW, I just noticed you don't have a sunit/swidth set for you
+md RAID 0, which means you only have 6 AGs rather than 32. So
+there's a lot less allocation and reclaim concurrency in this
+filesystem that we'd normally see for a 4x RAID0 stripe....
+
+> > This looks to me like something below the filesystem choking up and
+> > grinding to a halt. What are all the nvme drives doing over this
+> > period?
 > 
+> Write rates on the nvme drives are all exactly the md0 rates / 4, so
+> that seems normal.
+
+Write rates aren't that important - what do the io latencies, queue
+depths and device utilisation figures look like?
+
+> > Hard to know what is going on at this point, though, but nothing
+> > at the filesystem or memory reclaim level should be stuck on IO for
+> > long periods of time on nvme SSDs...
+> >
+> > /me wonders if 4.10 had the block layer writeback throttle code in
+> > it, and if it does whether that is what has gone haywire here.
 > 
-> diff --git a/common/xfs b/common/xfs
-> index 42f02ff7..f8dafc6c 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -773,7 +773,12 @@ _require_xfs_spaceman_command()
->  	_require_command "$XFS_SPACEMAN_PROG" "xfs_spaceman"
->  
->  	testfile=$TEST_DIR/$$.xfs_spaceman
-> +	touch $testfile
->  	case $command in
-> +	"health")
-> +		testio=`$XFS_SPACEMAN_PROG -c "health $param" $TEST_DIR 2>&1`
-> +		param_checked=1
-> +		;;
->  	*)
->  		testio=`$XFS_SPACEMAN_PROG -c "help $command" $TEST_DIR 2>&1`
->  	esac
-> @@ -787,6 +792,8 @@ _require_xfs_spaceman_command()
->  		_notrun "xfs_spaceman $command failed (old kernel/wrong fs/bad args?)"
->  	echo $testio | grep -q "foreign file active" && \
->  		_notrun "xfs_spaceman $command not supported on $FSTYP"
-> +	echo $testio | grep -q "Inappropriate ioctl for device" && \
-> +		_notrun "xfs_spaceman $command support is missing (missing ioctl?)"
->  	echo $testio | grep -q "Function not implemented" && \
->  		_notrun "xfs_spaceman $command support is missing (missing syscall?)"
->  
-> diff --git a/tests/xfs/742 b/tests/xfs/742
-> new file mode 100755
-> index 00000000..2529c40a
-> --- /dev/null
-> +++ b/tests/xfs/742
-> @@ -0,0 +1,52 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0+
-> +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 742
-> +#
-> +# Ensure all xfs_spaceman commands are documented.
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -rf $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_command "$XFS_SPACEMAN_PROG" "xfs_spaceman"
-> +_require_command "$MAN_PROG" man
-> +
-> +echo "Silence is golden"
-> +
-> +MANPAGE=$($MAN_PROG --path xfs_spaceman)
-> +
-> +case "$MANPAGE" in
-> +*.gz|*.z\|*.Z)	CAT=zcat;;
-> +*.bz2)		CAT=bzcat;;
-> +*.xz)		CAT=xzcat;;
-> +*)		CAT=cat;;
-> +esac
-> +_require_command `which $CAT` $CAT
-> +
-> +for COMMAND in `$XFS_SPACEMAN_PROG -c help $TEST_DIR | awk '{print $1}' | grep -v "^Use"`; do
-> +  $CAT "$MANPAGE" | egrep -q "^\.B.*$COMMAND" || \
-> +	echo "$COMMAND not documented in the xfs_spaceman manpage"
-> +done
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/742.out b/tests/xfs/742.out
-> new file mode 100644
-> index 00000000..ef4f23cd
-> --- /dev/null
-> +++ b/tests/xfs/742.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 742
-> +Silence is golden
-> diff --git a/tests/xfs/743 b/tests/xfs/743
-> new file mode 100755
-> index 00000000..d0b7b3b0
-> --- /dev/null
-> +++ b/tests/xfs/743
-> @@ -0,0 +1,84 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0+
-> +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 743
-> +#
-> +# Basic tests of the xfs_spaceman health command.
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -rf $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/fuzzy
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch_nocheck
-> +_require_scrub
-> +_require_xfs_spaceman_command "health"
-> +
-> +rm -f $seqres.full
-> +
-> +_scratch_mkfs > $tmp.mkfs
-
-I redirected both stdout and stderr to $seqres.full.
-
-> +_scratch_mount
-> +
-> +# Haven't checked anything, it should tell us to run scrub
-> +$XFS_SPACEMAN_PROG -c "health" $SCRATCH_MNT
-> +
-> +echo "Silence is golden"
-
-This test doesn't need it, I updated the .out file as well.
-
-Thanks,
-Eryu
-
-> +
-> +# Run scrub to collect health info.
-> +_scratch_scrub -n >> $seqres.full
-> +
-> +query() {
-> +	$XFS_SPACEMAN_PROG -c "$@" $SCRATCH_MNT | tee -a $seqres.full
-> +}
-> +
-> +query_health() {
-> +	query "$@" | grep -q ": ok$"
-> +}
-> +
-> +query_sick() {
-> +	query "$@" | grep -q ": unhealthy$"
-> +}
-> +
-> +# Let's see if we get at least one healthy rating for each health reporting
-> +# group.
-> +query_health "health -f" || \
-> +	echo "Didn't see a single healthy fs metadata?"
-> +
-> +query_health "health -a 0" || \
-> +	echo "Didn't see a single healthy ag metadata?"
-> +
-> +query_health "health $SCRATCH_MNT" || \
-> +	echo "Didn't see a single healthy file metadata?"
-> +
-> +# Unmount, corrupt filesystem
-> +_scratch_unmount
-> +_scratch_xfs_db -x -c 'sb 1' -c 'fuzz -d magicnum random' >> $seqres.full
-> +
-> +# Now let's see what the AG report says
-> +_scratch_mount
-> +_scratch_scrub -n >> $seqres.full 2>&1
-> +query_sick "health -a 1" || \
-> +	echo "Didn't see the expected unhealthy metadata?"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/743.out b/tests/xfs/743.out
-> new file mode 100644
-> index 00000000..85232e52
-> --- /dev/null
-> +++ b/tests/xfs/743.out
-> @@ -0,0 +1,4 @@
-> +QA output created by 743
-> +Health status has not been collected for this filesystem.
-> +Please run xfs_scrub(8) to remedy this situation.
-> +Silence is golden
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index c8620d72..5a4ef4bf 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -502,3 +502,5 @@
->  502 auto quick unlink
->  503 auto copy metadump
->  739 auto quick mkfs label
-> +742 auto quick spaceman
-> +743 auto quick health
+> That is an interesting point.  I do see this on a different, healthy box
 > 
+> # cat /sys/kernel/debug/bdi/9\:0/stats
+> BdiWriteback:             4320 kB
+> BdiReclaimable:           2304 kB
+> BdiDirtyThresh:        4834552 kB
+> DirtyThresh:           4834552 kB
+> BackgroundThresh:      2414324 kB
+> BdiDirtied:         5316993504 kB
+> BdiWritten:         4732763040 kB
+> BdiWriteBandwidth:        6060 kBps
+
+That's the currently used write bandwidth of the backing device. The
+block layer writeback throttle is below this. i.e. This simply
+reflects the rate at which data is currently being written to the
+block device.
+
+> One hopes that no throttling is based on this estimate of 6MB/s since
+> this array is capable of more like 10000MB/s. At this time we're
+> focusing on system tunables that might prevent the machine from
+> getting into serious trouble with dirty pages or reclaim or whatever.
+> I know XFS has only a handful of tunables. Do you think it's
+> recommendable to lower the xfssynd timer from 30s to something else?
+> Our workload _is_ metadata-heavy; I see about 100 create/remove ops
+> per second
+
+FWIW, that's not what I'd call metadata heavy. XFS on a 4-SSD array with
+20 CPU cores can sustain somewhere around 300,000 create/removes a
+second before it runs out of CPU. 100/s is barely a blip above
+idle....
+
+> and the log stats are rapidly increasing. By contrast we're
+> not really pushing the extent allocator at all.
+> 
+> extent_alloc 10755989 500829395 3030459 4148636182
+> abt 0 0 0 0
+> blk_map 3012410686 1743133993 196385287 18176676 100618849 659563291 0
+> bmbt 0 0 0 0
+> dir 112134 99359626 99358346 49393915
+
+Ok, so 100M files created and removed since boot.
+
+> trans 98 4036033830 0
+
+All async transactions.
+
+> ig 99320520 98796299 5890 524221 0 523020 140279
+> log 1339041912 2184819896 0 1341870387 1341704946
+      writes     blocks     |   forces   force_waits
+                         noiclogs
+
+Ok, so why are the so many log forces (1.34 /billion/)? There's
+roughly a log force in every 3rd transaction, but they aren't from
+the transaction commit (because they are async transactions).
+
+> push_ail 4109383649 0 37995385 2614017 0 136962 25152 3301200 0 47933
+         try_logspace | pushes   success | pinned   |  flushing | flush
+               sleep_logspace		pushbuf   locked     restarts
+
+They aren't coming from the metadata writeback code (pinned count),
+and the log is not blocking on free space. i.e. there's no metadata
+writeback bottleneck occurring.
+
+> xstrat 589377 0
+> rw 3561425929 1342108567
+
+Oh, 1.34 billion writes. You're doing O_DSYNC writes, yes? And lots
+of them to every file that is created?
+
+> attr 3297942617 0 0 0
+> icluster 1452111 945722 3364798
+> vnodes 1201 0 0 0 99307909 99307909 99307909 0
+> buf 779252853 2349573 776924344 978078 41302 2328509 0 2491287 1090
+> abtb2 13886237 90593055 270338 266221 17 15 4555 1481 1188 2529 30 22
+> 47 37 93926009
+> abtc2 28760802 203677378 13739372 13735284 45 43 3270 1292 1935 1691
+> 57 50 102 93 1413028741
+> bmbt2 14355745 140867292 7158285 7115081 8 2 4074 4122 25396 4074 230
+> 48 238 50 6974741
+> ibt2 397071627 776203283 67846 67820 0 0 0 0 0 0 0 0 0 0 413
+
+For 100M files created/removed, to only see ~68000 inode btree
+record inserts and removes implies that the filesystem is
+efficiently reusing the freed inodes. i.e. there's pretty much a
+steady state of inodes in use in the workload....
+
+> fibt2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+> rmapbt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+> refcntbt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+> qm 0 0 0 0 0 0 0 0
+> xpc 17666569097216 111928912437311 80399355018480
+                       write_bytes    read_bytes
+
+Assuming this is the only substantially active XFS filesystem on the
+system, that's 101TiB written to those drives, in 1.34 billion writes,
+which is an average of 82KiB per write. Assuming that the 32 bit
+write counter has not wrapped. Given that the transaction counter is
+nearly at the wrap point, and the read counter is at 3.5B for ~75TiB
+(average 22KiB), let's assume that the write counter has wrapped
+and we have ~5.5 billion writes. That gives an average write of just
+on 20KiB which kinda matches the read....
+
+So the drives look like they are being constantly hammered with
+small, synchronous IOs. This means write amplification is likely to
+be a substantial problem for them. They've had a /lot/ of data
+written to them and are under constant load so there's no time for
+idle cleanup, so is it possible that the drives themselves are
+having internal garbage collection related slowdowns?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
