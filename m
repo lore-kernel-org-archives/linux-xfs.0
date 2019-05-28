@@ -1,65 +1,234 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f194.google.com ([209.85.219.194]:37754 "EHLO
-        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725956AbfE2TfK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 15:35:10 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:47054 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726362AbfE1QK1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 12:10:27 -0400
+Date: Tue, 28 May 2019 09:09:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 2/8] vfs: no fallback for ->copy_file_range
+Message-ID: <20190528160930.GA5221@magnolia>
+References: <20190526061100.21761-1-amir73il@gmail.com>
+ <20190526061100.21761-3-amir73il@gmail.com>
 MIME-Version: 1.0
-References: <20190529174318.22424-1-amir73il@gmail.com> <20190529174318.22424-13-amir73il@gmail.com>
-In-Reply-To: <20190529174318.22424-13-amir73il@gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 29 May 2019 22:34:58 +0300
-Message-ID: <CAOQ4uxgYM_eM==uqGQuKiGb+f08qs53=E+DONMMzW=N-Ab5YZA@mail.gmail.com>
-Subject: Re: [PATCH v3 12/13] nfs: copy_file_range needs to strip setuid bits
- and update timestamps
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190526061100.21761-3-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Olga Kornievskaia <olga.kornievskaia@gmail.com>, Anna Schumaker <Anna.Schumaker@netapp.com>, Trond Myklebust <trond.myklebust@hammerspace.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-Hi Olga,Anna,Trond
+On Sun, May 26, 2019 at 09:10:53AM +0300, Amir Goldstein wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Now that we have generic_copy_file_range(), remove it as a fallback
+> case when offloads fail. This puts the responsibility for executing
+> fallbacks on the filesystems that implement ->copy_file_range and
+> allows us to add operational validity checks to
+> generic_copy_file_range().
+> 
+> Rework vfs_copy_file_range() to call a new do_copy_file_range()
+> helper to exceute the copying callout, and move calls to
 
-Could we get an ACK on this patch.
-It is a prerequisite for merging the cross-device copy_file_range work.
+    execute ^^^^^^^
 
-It depends on a new helper introduced here:
-https://lore.kernel.org/linux-fsdevel/CAOQ4uxjbcSWX1hUcuXbn8hFH3QYB+5bAC9Z1yCwJdR=T-GGtCg@mail.gmail.com/T/#m1569878c41f39fac3aadb3832a30659c323b582a
-
-Thanks,
-Amir,
-
-On Wed, May 29, 2019 at 8:43 PM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> Like ->write_iter(), we update mtime and strip setuid of dst file before
-> copy and like ->read_iter(), we update atime of src file after copy.
->
+> generic_file_copy_range() into filesystem methods where they
+> currently return failures.
+> 
+> [Amir] overlayfs is not responsible of executing the fallback.
+> It is the responsibility of the underlying filesystem.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+
+Seems fine to me otherwise...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
 > ---
->  fs/nfs/nfs42proc.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
->
-> diff --git a/fs/nfs/nfs42proc.c b/fs/nfs/nfs42proc.c
-> index 5196bfa7894d..c37a8e5116c6 100644
-> --- a/fs/nfs/nfs42proc.c
-> +++ b/fs/nfs/nfs42proc.c
-> @@ -345,10 +345,13 @@ ssize_t nfs42_proc_copy(struct file *src, loff_t pos_src,
->
->         do {
->                 inode_lock(file_inode(dst));
-> -               err = _nfs42_proc_copy(src, src_lock,
-> -                               dst, dst_lock,
-> -                               &args, &res);
-> +               err = file_modified(dst);
-> +               if (!err)
-> +                       err = _nfs42_proc_copy(src, src_lock,
-> +                                              dst, dst_lock,
-> +                                              &args, &res);
->                 inode_unlock(file_inode(dst));
-> +               file_accessed(src);
->
->                 if (err >= 0)
->                         break;
-> --
+>  fs/ceph/file.c    | 21 ++++++++++++++++++---
+>  fs/cifs/cifsfs.c  |  4 ++++
+>  fs/fuse/file.c    | 21 ++++++++++++++++++---
+>  fs/nfs/nfs4file.c | 20 +++++++++++++++++---
+>  fs/read_write.c   | 25 ++++++++++++++++---------
+>  5 files changed, 73 insertions(+), 18 deletions(-)
+> 
+> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+> index 305daf043eb0..e87f7b2023af 100644
+> --- a/fs/ceph/file.c
+> +++ b/fs/ceph/file.c
+> @@ -1889,9 +1889,9 @@ static int is_file_size_ok(struct inode *src_inode, struct inode *dst_inode,
+>  	return 0;
+>  }
+>  
+> -static ssize_t ceph_copy_file_range(struct file *src_file, loff_t src_off,
+> -				    struct file *dst_file, loff_t dst_off,
+> -				    size_t len, unsigned int flags)
+> +static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
+> +				      struct file *dst_file, loff_t dst_off,
+> +				      size_t len, unsigned int flags)
+>  {
+>  	struct inode *src_inode = file_inode(src_file);
+>  	struct inode *dst_inode = file_inode(dst_file);
+> @@ -2100,6 +2100,21 @@ static ssize_t ceph_copy_file_range(struct file *src_file, loff_t src_off,
+>  	return ret;
+>  }
+>  
+> +static ssize_t ceph_copy_file_range(struct file *src_file, loff_t src_off,
+> +				    struct file *dst_file, loff_t dst_off,
+> +				    size_t len, unsigned int flags)
+> +{
+> +	ssize_t ret;
+> +
+> +	ret = __ceph_copy_file_range(src_file, src_off, dst_file, dst_off,
+> +				     len, flags);
+> +
+> +	if (ret == -EOPNOTSUPP)
+> +		ret = generic_copy_file_range(src_file, src_off, dst_file,
+> +					      dst_off, len, flags);
+> +	return ret;
+> +}
+> +
+>  const struct file_operations ceph_file_fops = {
+>  	.open = ceph_open,
+>  	.release = ceph_release,
+> diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
+> index f5fcd6360056..c65823270313 100644
+> --- a/fs/cifs/cifsfs.c
+> +++ b/fs/cifs/cifsfs.c
+> @@ -1148,6 +1148,10 @@ static ssize_t cifs_copy_file_range(struct file *src_file, loff_t off,
+>  	rc = cifs_file_copychunk_range(xid, src_file, off, dst_file, destoff,
+>  					len, flags);
+>  	free_xid(xid);
+> +
+> +	if (rc == -EOPNOTSUPP)
+> +		rc = generic_copy_file_range(src_file, off, dst_file,
+> +					     destoff, len, flags);
+>  	return rc;
+>  }
+>  
+> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+> index 3959f08279e6..e03901ae729b 100644
+> --- a/fs/fuse/file.c
+> +++ b/fs/fuse/file.c
+> @@ -3097,9 +3097,9 @@ static long fuse_file_fallocate(struct file *file, int mode, loff_t offset,
+>  	return err;
+>  }
+>  
+> -static ssize_t fuse_copy_file_range(struct file *file_in, loff_t pos_in,
+> -				    struct file *file_out, loff_t pos_out,
+> -				    size_t len, unsigned int flags)
+> +static ssize_t __fuse_copy_file_range(struct file *file_in, loff_t pos_in,
+> +				      struct file *file_out, loff_t pos_out,
+> +				      size_t len, unsigned int flags)
+>  {
+>  	struct fuse_file *ff_in = file_in->private_data;
+>  	struct fuse_file *ff_out = file_out->private_data;
+> @@ -3173,6 +3173,21 @@ static ssize_t fuse_copy_file_range(struct file *file_in, loff_t pos_in,
+>  	return err;
+>  }
+>  
+> +static ssize_t fuse_copy_file_range(struct file *src_file, loff_t src_off,
+> +				    struct file *dst_file, loff_t dst_off,
+> +				    size_t len, unsigned int flags)
+> +{
+> +	ssize_t ret;
+> +
+> +	ret = __fuse_copy_file_range(src_file, src_off, dst_file, dst_off,
+> +				     len, flags);
+> +
+> +	if (ret == -EOPNOTSUPP)
+> +		ret = generic_copy_file_range(src_file, src_off, dst_file,
+> +					      dst_off, len, flags);
+> +	return ret;
+> +}
+> +
+>  static const struct file_operations fuse_file_operations = {
+>  	.llseek		= fuse_file_llseek,
+>  	.read_iter	= fuse_file_read_iter,
+> diff --git a/fs/nfs/nfs4file.c b/fs/nfs/nfs4file.c
+> index cf42a8b939e3..4842f3ab3161 100644
+> --- a/fs/nfs/nfs4file.c
+> +++ b/fs/nfs/nfs4file.c
+> @@ -129,9 +129,9 @@ nfs4_file_flush(struct file *file, fl_owner_t id)
+>  }
+>  
+>  #ifdef CONFIG_NFS_V4_2
+> -static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
+> -				    struct file *file_out, loff_t pos_out,
+> -				    size_t count, unsigned int flags)
+> +static ssize_t __nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
+> +				      struct file *file_out, loff_t pos_out,
+> +				      size_t count, unsigned int flags)
+>  {
+>  	if (!nfs_server_capable(file_inode(file_out), NFS_CAP_COPY))
+>  		return -EOPNOTSUPP;
+> @@ -140,6 +140,20 @@ static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
+>  	return nfs42_proc_copy(file_in, pos_in, file_out, pos_out, count);
+>  }
+>  
+> +static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
+> +				    struct file *file_out, loff_t pos_out,
+> +				    size_t count, unsigned int flags)
+> +{
+> +	ssize_t ret;
+> +
+> +	ret = __nfs4_copy_file_range(file_in, pos_in, file_out, pos_out, count,
+> +				     flags);
+> +	if (ret == -EOPNOTSUPP)
+> +		ret = generic_copy_file_range(file_in, pos_in, file_out,
+> +					      pos_out, count, flags);
+> +	return ret;
+> +}
+> +
+>  static loff_t nfs4_file_llseek(struct file *filep, loff_t offset, int whence)
+>  {
+>  	loff_t ret;
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index 676b02fae589..b63dcb4e4fe9 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1595,6 +1595,19 @@ ssize_t generic_copy_file_range(struct file *file_in, loff_t pos_in,
+>  }
+>  EXPORT_SYMBOL(generic_copy_file_range);
+>  
+> +static ssize_t do_copy_file_range(struct file *file_in, loff_t pos_in,
+> +				  struct file *file_out, loff_t pos_out,
+> +				  size_t len, unsigned int flags)
+> +{
+> +	if (file_out->f_op->copy_file_range)
+> +		return file_out->f_op->copy_file_range(file_in, pos_in,
+> +						       file_out, pos_out,
+> +						       len, flags);
+> +
+> +	return generic_copy_file_range(file_in, pos_in, file_out, pos_out, len,
+> +				       flags);
+> +}
+> +
+>  /*
+>   * copy_file_range() differs from regular file read and write in that it
+>   * specifically allows return partial success.  When it does so is up to
+> @@ -1655,15 +1668,9 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+>  		}
+>  	}
+>  
+> -	if (file_out->f_op->copy_file_range) {
+> -		ret = file_out->f_op->copy_file_range(file_in, pos_in, file_out,
+> -						      pos_out, len, flags);
+> -		if (ret != -EOPNOTSUPP)
+> -			goto done;
+> -	}
+> -
+> -	ret = generic_copy_file_range(file_in, pos_in, file_out, pos_out, len,
+> -				      flags);
+> +	ret = do_copy_file_range(file_in, pos_in, file_out, pos_out, len,
+> +				flags);
+> +	WARN_ON_ONCE(ret == -EOPNOTSUPP);
+>  done:
+>  	if (ret > 0) {
+>  		fsnotify_access(file_in);
+> -- 
 > 2.17.1
->
+> 
