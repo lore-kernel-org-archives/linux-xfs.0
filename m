@@ -1,247 +1,303 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59336 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726576AbfE1QtT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 12:49:19 -0400
-Date: Tue, 28 May 2019 09:48:44 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:60888 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726964AbfE1RDj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 13:03:39 -0400
+Date: Tue, 28 May 2019 10:01:32 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 9/8] man-pages: copy_file_range updates
-Message-ID: <20190528164844.GJ5221@magnolia>
-References: <20190526061100.21761-1-amir73il@gmail.com>
- <20190526061100.21761-10-amir73il@gmail.com>
+Subject: Re: [PATCH ] xfs: check for COW overflows in i_delayed_blks
+Message-ID: <20190528170132.GA5231@magnolia>
+References: <155839150599.62947.16097306072591964009.stgit@magnolia>
+ <155839151219.62947.9627045046429149685.stgit@magnolia>
+ <20190526142735.GP15846@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190526061100.21761-10-amir73il@gmail.com>
+In-Reply-To: <20190526142735.GP15846@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Sun, May 26, 2019 at 09:11:00AM +0300, Amir Goldstein wrote:
-> Update with all the missing errors the syscall can return, the
-> behaviour the syscall should have w.r.t. to copies within single
-> files, etc.
+On Sun, May 26, 2019 at 10:27:35PM +0800, Eryu Guan wrote:
+> On Mon, May 20, 2019 at 03:31:52PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > With the new copy on write functionality it's possible to reserve so
+> > much COW space for a file that we end up overflowing i_delayed_blks.
+> > The only user-visible effect of this is to cause totally wrong i_blocks
+> > output in stat, so check for that.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> [Amir] Copying beyond EOF returns zero.
+> I hit xfs_db killed by OOM killer (2 vcpu, 8G memory kvm guest) when
+> trying this test and the test takes too long time (I changed the fs size
+> from 300T to 300G and tried a test run), perhaps that's why you don't
+> put it in auto group?
+
+Oh.  Right.  I forget that I patched out xfs_db from
+check_xfs_filesystem on my dev tree years ago.
+
+Um... do we want to remove xfs_db from the check function?  Or just open
+code a call to xfs_repair $SCRATCH_MNT/a.img at the end of the test?
+
+As for the 300T size, the reason I picked that is to force the
+filesystem to have large enough AGs to support the maximum cowextsize
+hint.  I'll see if it still works with a 4TB filesystem.
+
+> > ---
+> >  tests/xfs/907     |  180 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/907.out |    8 ++
+> >  tests/xfs/group   |    1 
+> >  3 files changed, 189 insertions(+)
+> >  create mode 100755 tests/xfs/907
+> >  create mode 100644 tests/xfs/907.out
+> > 
+> > 
+> > diff --git a/tests/xfs/907 b/tests/xfs/907
+> > new file mode 100755
+> > index 00000000..2c21ac8e
+> > --- /dev/null
+> > +++ b/tests/xfs/907
+> > @@ -0,0 +1,180 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0+
+> > +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 907
+> > +#
+> > +# Try to overflow i_delayed_blks by setting the largest cowextsize hint
+> > +# possible, creating a sparse file with a single byte every cowextsize bytes,
+> > +# reflinking it, and retouching every written byte to see if we can create
+> > +# enough speculative COW reservations to overflow i_delayed_blks.
+> > +#
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->  man2/copy_file_range.2 | 93 ++++++++++++++++++++++++++++++++++--------
->  1 file changed, 77 insertions(+), 16 deletions(-)
+> Need to '_destroy_loop_device $loop_dev' too
 > 
-> diff --git a/man2/copy_file_range.2 b/man2/copy_file_range.2
-> index 2438b63c8..fab11f977 100644
-> --- a/man2/copy_file_range.2
-> +++ b/man2/copy_file_range.2
-> @@ -42,9 +42,9 @@ without the additional cost of transferring data from the kernel to user space
->  and then back into the kernel.
->  It copies up to
->  .I len
-> -bytes of data from file descriptor
-> +bytes of data from the source file descriptor
->  .I fd_in
-> -to file descriptor
-> +to target file descriptor
+> > +	umount $loop_mount > /dev/null 2>&1
+> 
+> $UMOUNT_PROG
+> 
+> > +	rm -rf $tmp.*
+> > +}
+> 
+> And loop_dev and loop_mount should be defined before _cleanup()?
 
-"to the target file descriptor"
+Fixed all three.
 
->  .IR fd_out ,
->  overwriting any data that exists within the requested range of the target file.
->  .PP
-> @@ -74,6 +74,11 @@ is not changed, but
->  .I off_in
->  is adjusted appropriately.
->  .PP
-> +.I fd_in
-> +and
-> +.I fd_out
-> +can refer to the same file. If they refer to the same file, then the source and
-> +target ranges are not allowed to overlap.
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/reflink
+> > +. ./common/filter
+> > +
+> > +# real QA test starts here
+> > +_supported_os Linux
+> > +_supported_fs xfs
+> > +_require_scratch_reflink
+> > +_require_loop
+> > +_require_xfs_debug	# needed for xfs_bmap -c
+> 
+> _require_cp_reflink
 
-Please start each sentence on a new line, per mkerrisk rules.
+...all four.
 
->  .PP
->  The
->  .I flags
-> @@ -84,6 +89,11 @@ Upon successful completion,
->  .BR copy_file_range ()
->  will return the number of bytes copied between files.
->  This could be less than the length originally requested.
-> +If the file offset of
-> +.I fd_in
-> +is at or past the end of file, no bytes are copied, and
-> +.BR copy_file_range ()
-> +returns zero.
->  .PP
->  On error,
->  .BR copy_file_range ()
-> @@ -93,12 +103,16 @@ is set to indicate the error.
->  .SH ERRORS
->  .TP
->  .B EBADF
-> -One or more file descriptors are not valid; or
-> +One or more file descriptors are not valid.
-> +.TP
-> +.B EBADF
->  .I fd_in
->  is not open for reading; or
->  .I fd_out
-> -is not open for writing; or
-> -the
-> +is not open for writing.
-> +.TP
-> +.B EBADF
-> +The
->  .B O_APPEND
->  flag is set for the open file description (see
->  .BR open (2))
-> @@ -106,17 +120,36 @@ referred to by the file descriptor
->  .IR fd_out .
->  .TP
->  .B EFBIG
-> -An attempt was made to write a file that exceeds the implementation-defined
-> -maximum file size or the process's file size limit,
-> -or to write at a position past the maximum allowed offset.
-> +An attempt was made to write at a position past the maximum file offset the
-> +kernel supports.
-> +.TP
-> +.B EFBIG
-> +An attempt was made to write a range that exceeds the allowed maximum file size.
-> +The maximum file size differs between filesystem implemenations and can be
+> 
+> > +
+> > +MAXEXTLEN=2097151	# cowextsize can't be more than MAXEXTLEN
+> > +
+> > +# Create a huge sparse filesystem on the scratch device because that's what
+> > +# we're going to need to guarantee that we have enough blocks to overflow in
+> > +# the first place.  In the worst case we have a 64k-block filesystem in which
+> > +# we have to be able to reserve 2^32 blocks.  Adding in 20% overhead and a
+> > +# 128M log, we get about 300T.
+> > +echo "Format and mount"
+> > +_scratch_mkfs > "$seqres.full" 2>&1
+> > +_scratch_mount
+> > +_require_fs_space $SCRATCH_MNT 200000	# 300T fs requires ~200MB of space
+> 
+> I noticed the 'a.img' file consumed more than 5G space, is 200MB
+> enough?
 
-"implementations"
+Hmm, I tried it on a 64k block filesystem and evidently now we need a
+~200M log to satisfy minimum log size requirements, and the filesystem
+image needs ~660MB of space on the scratch fs.
 
-> +different to the maximum allowed file offset.
+> > +
+> > +loop_file=$SCRATCH_MNT/a.img
+> > +loop_mount=$SCRATCH_MNT/a
+> > +truncate -s 300T $loop_file
+> 
+> $XFS_IO_PROG -fc "truncate 300T" $loop_file
+> 
+> > +loop_dev=$(_create_loop_device $loop_file)
+> > +
+> > +# Now we have to create the source file.  The goal is to overflow a 32-bit
+> > +# i_delayed_blks, which means that we have to create at least that many delayed
+> > +# allocation block reservations.  Take advantage of the fact that a cowextsize
+> > +# hint causes creation of large speculative delalloc reservations in the cow
+> > +# fork to reduce the amount of work we have to do.
+> > +#
+> > +# The maximum cowextsize is going to be MAXEXTLEN fs blocks on a 100T
+> > +# filesystem, so start by setting up the hint.  Note that the current fsxattr
+> > +# interface specifies its u32 cowextsize hint in units of bytes and therefore
+> > +# can't handle MAXEXTLEN * blksz on most filesystems, so we set it via mkfs
+> > +# because mkfs takes units of fs blocks, not bytes.
+> > +
+> > +_mkfs_dev -d cowextsize=$MAXEXTLEN -l size=128m $loop_dev >> $seqres.full
+> > +mkdir $loop_mount
+> > +mount -t xfs $loop_dev $loop_mount
+> 
+> _mount $loop_dev $loop_mount
+> 
+> > +
+> > +echo "Create crazy huge file"
+> > +huge_file="$loop_mount/a"
+> > +touch "$huge_file"
+> > +blksz=$(_get_file_block_size "$loop_mount")
+> > +extsize_bytes="$(( MAXEXTLEN * blksz ))"
+> > +
+> > +# Make sure it actually set a hint.
+> > +curr_cowextsize_str="$($XFS_IO_PROG -c 'cowextsize' "$huge_file")"
+> > +echo "$curr_cowextsize_str" >> $seqres.full
+> > +cowextsize_bytes="$(echo "$curr_cowextsize_str" | sed -e 's/^.\([0-9]*\).*$/\1/g')"
+> > +test "$cowextsize_bytes" -eq 0 && echo "could not set cowextsize?"
+> > +
+> > +# Now we have to seed the file with sparse contents.  Remember, the goal is to
+> > +# create a little more than 2^32 delayed allocation blocks in the COW fork with
+> > +# as little effort as possible.  We know that speculative COW preallocation
+> > +# will create MAXEXTLEN-length reservations for us, so that means we should
+> > +# be able to get away with touching a single byte every extsize_bytes.  We
+> > +# do this backwards to avoid having to move EOF.
+> > +nr="$(( ((2 ** 32) / MAXEXTLEN) + 100 ))"
+> > +seq $nr -1 0 | while read n; do
+> > +	off="$((n * extsize_bytes))"
+> > +	$XFS_IO_PROG -c "pwrite $off 1" "$huge_file" > /dev/null
+> > +done
+> > +
+> > +echo "Reflink crazy huge file"
+> > +_cp_reflink "$huge_file" "$huge_file.b"
+> > +
+> > +# Now that we've shared all the blocks in the file, we touch them all again
+> > +# to create speculative COW preallocations.
+> > +echo "COW crazy huge file"
+> > +seq $nr -1 0 | while read n; do
+> > +	off="$((n * extsize_bytes))"
+> > +	$XFS_IO_PROG -c "pwrite $off 1" "$huge_file" > /dev/null
+> > +done
+> > +
+> > +# Compare the number of blocks allocated to this file (as reported by stat)
+> > +# against the number of blocks that are in the COW fork.  If either one is
+> > +# less than 2^32 then we have evidence of an overflow problem.
+> > +echo "Check crazy huge file"
+> > +allocated_stat_blocks="$(stat -c %b "$huge_file")"
+> > +stat_blksz="$(stat -c %B "$huge_file")"
+> > +allocated_fsblocks=$(( allocated_stat_blocks * stat_blksz / blksz ))
+> > +
+> > +# Make sure we got enough COW reservations to overflow a 32-bit counter.
+> > +
+> > +# Return the number of delalloc & real blocks given bmap output for a fork of a
+> > +# file.  Output is in units of 512-byte blocks.
+> > +count_fork_blocks() {
+> > +	awk "
+> 
+> $AWK_PROG
+> 
+> > +{
+> > +	if (\$3 == \"delalloc\") {
+> > +		x += \$4;
+> > +	} else if (\$3 == \"hole\") {
+> > +		;
+> > +	} else {
+> > +		x += \$6;
+> > +	}
+> > +}
+> > +END {
+> > +	print(x);
+> > +}
+> > +"
+> > +}
+> > +
+> > +# Count the number of blocks allocated to a file based on the xfs_bmap output.
+> > +# Output is in units of filesystem blocks.
+> > +count_file_fork_blocks() {
+> > +	local tag="$1"
+> > +	local file="$2"
+> > +	local args="$3"
+> > +
+> > +	$XFS_IO_PROG -c "bmap $args -l -p -v" "$huge_file" > $tmp.extents
+> > +	echo "$tag fork map" >> $seqres.full
+> > +	cat $tmp.extents >> $seqres.full
+> > +	local sectors="$(count_fork_blocks < $tmp.extents)"
+> > +	echo "$(( sectors / (blksz / 512) ))"
+> > +}
+> > +
+> > +cowblocks=$(count_file_fork_blocks cow "$huge_file" "-c")
+> > +attrblocks=$(count_file_fork_blocks attr "$huge_file" "-a")
+> > +datablocks=$(count_file_fork_blocks data "$huge_file" "")
+> > +
+> > +# Did we create more than 2^32 blocks in the cow fork?
+> > +echo "datablocks is $datablocks" >> $seqres.full
+> > +echo "attrblocks is $attrblocks" >> $seqres.full
+> > +echo "cowblocks is $cowblocks" >> $seqres.full
+> > +test "$cowblocks" -lt $((2 ** 32)) && \
+> > +	echo "cowblocks (${cowblocks}) should be more than 2^32!"
+> > +
+> > +# Does stat's block allocation count exceed 2^32?
+> > +echo "stat blocks is $allocated_fsblocks" >> $seqres.full
+> > +test "$allocated_fsblocks" -lt $((2 ** 32)) && \
+> > +	echo "stat blocks (${allocated_fsblocks}) should be more than 2^32!"
+> > +
+> > +# Finally, does st_blocks match what we computed from the forks?
+> > +expected_allocated_fsblocks=$((datablocks + cowblocks + attrblocks))
+> > +echo "expected stat blocks is $expected_allocated_fsblocks" >> $seqres.full
+> > +
+> > +_within_tolerance "st_blocks" $allocated_fsblocks $expected_allocated_fsblocks 2% -v
+> > +
+> > +echo "Test done"
+> > +_check_xfs_filesystem $loop_dev none none
+> > +umount $loop_mount
+> 
+> $UMOUNT_PROG
 
-"...different from the maximum..."
-
-> +.TP
-> +.B EFBIG
-> +An attempt was made to write beyond the process's file size resource
-> +limit. This may also result in the process receiving a
-> +.I SIGXFSZ
-> +signal.
-
-Start new sentences on a new line, please.
-
->  .TP
->  .B EINVAL
-> -Requested range extends beyond the end of the source file; or the
-> +The
->  .I flags
->  argument is not 0.
->  .TP
-> -.B EIO
-> -A low-level I/O error occurred while copying.
-> +.B EINVAL
-> +.I fd_in
-> +and
-> +.I fd_out
-> +refer to the same file and the source and target ranges overlap.
-> +.TP
-> +.B EINVAL
-> +.I fd_in
-> +or
-> +.I fd_out
-> +is not a regular file.
-
-Adding the word "either" at the beginning of the sentence (e.g.  "Either
-fd_in or fd_out is not a regular file.") would help this flow better.
-
->  .TP
->  .B EISDIR
->  .I fd_in
-> @@ -124,22 +157,50 @@ or
->  .I fd_out
->  refers to a directory.
->  .TP
-> +.B EOVERFLOW
-> +The requested source or destination range is too large to represent in the
-> +specified data types.
-> +.TP
-> +.B EIO
-> +A low-level I/O error occurred while copying.
-> +.TP
->  .B ENOMEM
->  Out of memory.
->  .TP
-> -.B ENOSPC
-> -There is not enough space on the target filesystem to complete the copy.
-> -.TP
->  .B EXDEV
->  The files referred to by
->  .IR file_in " and " file_out
-> -are not on the same mounted filesystem.
-> +are not on the same mounted filesystem (pre Linux 5.3).
-> +.TP
-> +.B ENOSPC
-> +There is not enough space on the target filesystem to complete the copy.
-
-Why move this?
-
-> +.TP
-> +.B TXTBSY
-> +.I fd_in
-> +or
-> +.I fd_out
-> +refers to an active swap file.
-
-"Either fd_in or fd_out refers to..."
-
-> +.TP
-> +.B EPERM
-> +.I fd_out
-> +refers to an immutable file.
-> +.TP
-> +.B EACCES
-> +The user does not have write permissions for the destination file.
->  .SH VERSIONS
->  The
->  .BR copy_file_range ()
->  system call first appeared in Linux 4.5, but glibc 2.27 provides a user-space
->  emulation when it is not available.
->  .\" https://sourceware.org/git/?p=glibc.git;a=commit;f=posix/unistd.h;h=bad7a0c81f501fbbcc79af9eaa4b8254441c4a1f
-> +.PP
-> +A major rework of the kernel implementation occurred in 5.3. Areas of the API
-> +that weren't clearly defined were clarified and the API bounds are much more
-> +strictly checked than on earlier kernels. Applications should target the
-> +behaviour and requirements of 5.3 kernels.
-
-Are there any weird cases where a program targetting 5.3 behavior would
-fail or get stuck in an infinite loop on a 5.2 kernel?
-
-Particularly since glibc spat out a copy_file_range fallback for 2.29
-that tries to emulate the kernel behavior 100%.  It even refuses
-cross-filesystem copies (because hey, we documented that :() even though
-that's perfectly fine for a userspace implementation.
-
-TBH I suspect that we ought to get the glibc developers to remove the
-"no cross device copies" code from their implementation and then update
-the manpage to say that cross device copies are supposed to be
-supported all the time, at least as of glibc 2.(futureversion).
-
-Anyways, thanks for taking on the c_f_r cleanup! :)
+Fixed all the minor changes.
 
 --D
 
-> +.PP
-> +First support for cross-filesystem copies was introduced in Linux 5.3. Older
-> +kernels will return -EXDEV when cross-filesystem copies are attempted.
->  .SH CONFORMING TO
->  The
->  .BR copy_file_range ()
-> @@ -224,7 +285,7 @@ main(int argc, char **argv)
->          }
->  
->          len \-= ret;
-> -    } while (len > 0);
-> +    } while (len > 0 && ret > 0);
->  
->      close(fd_in);
->      close(fd_out);
-> -- 
-> 2.17.1
 > 
+> Thanks,
+> Eryu
+> 
+> > +_destroy_loop_device $loop_dev
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/907.out b/tests/xfs/907.out
+> > new file mode 100644
+> > index 00000000..cc07d659
+> > --- /dev/null
+> > +++ b/tests/xfs/907.out
+> > @@ -0,0 +1,8 @@
+> > +QA output created by 907
+> > +Format and mount
+> > +Create crazy huge file
+> > +Reflink crazy huge file
+> > +COW crazy huge file
+> > +Check crazy huge file
+> > +st_blocks is in range
+> > +Test done
+> > 
