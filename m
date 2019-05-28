@@ -1,63 +1,247 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49688 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:59336 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726600AbfE1Qjd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 12:39:33 -0400
-Date: Tue, 28 May 2019 09:37:18 -0700
+        with ESMTP id S1726576AbfE1QtT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 12:49:19 -0400
+Date: Tue, 28 May 2019 09:48:44 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 8/8] vfs: remove redundant checks from
- generic_remap_checks()
-Message-ID: <20190528163718.GI5221@magnolia>
+Subject: Re: [PATCH v2 9/8] man-pages: copy_file_range updates
+Message-ID: <20190528164844.GJ5221@magnolia>
 References: <20190526061100.21761-1-amir73il@gmail.com>
- <20190526061100.21761-9-amir73il@gmail.com>
+ <20190526061100.21761-10-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190526061100.21761-9-amir73il@gmail.com>
+In-Reply-To: <20190526061100.21761-10-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Sun, May 26, 2019 at 09:10:59AM +0300, Amir Goldstein wrote:
-> The access limit checks on input file range in generic_remap_checks()
-> are redundant because the input file size is guarantied to be within
-
-                                    guaranteed ^^^^^^^^^^
-
-> limits and pos+len are already checked to be within input file size.
+On Sun, May 26, 2019 at 09:11:00AM +0300, Amir Goldstein wrote:
+> Update with all the missing errors the syscall can return, the
+> behaviour the syscall should have w.r.t. to copies within single
+> files, etc.
 > 
-> Beyond the fact that the check cannot fail, if it would have failed,
-> it could return -EFBIG for input file range error. There is no precedent
-> for that. -EFBIG is returned in syscalls that would change file length.
+> [Amir] Copying beyond EOF returns zero.
 > 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 > ---
->  mm/filemap.c | 4 ----
->  1 file changed, 4 deletions(-)
+>  man2/copy_file_range.2 | 93 ++++++++++++++++++++++++++++++++++--------
+>  1 file changed, 77 insertions(+), 16 deletions(-)
 > 
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 1852fbf08eeb..7e1aa36d57a2 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -3000,10 +3000,6 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
->  		return -EINVAL;
->  	count = min(count, size_in - (uint64_t)pos_in);
->  
-> -	ret = generic_access_check_limits(file_in, pos_in, &count);
+> diff --git a/man2/copy_file_range.2 b/man2/copy_file_range.2
+> index 2438b63c8..fab11f977 100644
+> --- a/man2/copy_file_range.2
+> +++ b/man2/copy_file_range.2
+> @@ -42,9 +42,9 @@ without the additional cost of transferring data from the kernel to user space
+>  and then back into the kernel.
+>  It copies up to
+>  .I len
+> -bytes of data from file descriptor
+> +bytes of data from the source file descriptor
+>  .I fd_in
+> -to file descriptor
+> +to target file descriptor
 
-I suspect you could fold generic_access_check_limits into its only
-caller, then...
+"to the target file descriptor"
+
+>  .IR fd_out ,
+>  overwriting any data that exists within the requested range of the target file.
+>  .PP
+> @@ -74,6 +74,11 @@ is not changed, but
+>  .I off_in
+>  is adjusted appropriately.
+>  .PP
+> +.I fd_in
+> +and
+> +.I fd_out
+> +can refer to the same file. If they refer to the same file, then the source and
+> +target ranges are not allowed to overlap.
+
+Please start each sentence on a new line, per mkerrisk rules.
+
+>  .PP
+>  The
+>  .I flags
+> @@ -84,6 +89,11 @@ Upon successful completion,
+>  .BR copy_file_range ()
+>  will return the number of bytes copied between files.
+>  This could be less than the length originally requested.
+> +If the file offset of
+> +.I fd_in
+> +is at or past the end of file, no bytes are copied, and
+> +.BR copy_file_range ()
+> +returns zero.
+>  .PP
+>  On error,
+>  .BR copy_file_range ()
+> @@ -93,12 +103,16 @@ is set to indicate the error.
+>  .SH ERRORS
+>  .TP
+>  .B EBADF
+> -One or more file descriptors are not valid; or
+> +One or more file descriptors are not valid.
+> +.TP
+> +.B EBADF
+>  .I fd_in
+>  is not open for reading; or
+>  .I fd_out
+> -is not open for writing; or
+> -the
+> +is not open for writing.
+> +.TP
+> +.B EBADF
+> +The
+>  .B O_APPEND
+>  flag is set for the open file description (see
+>  .BR open (2))
+> @@ -106,17 +120,36 @@ referred to by the file descriptor
+>  .IR fd_out .
+>  .TP
+>  .B EFBIG
+> -An attempt was made to write a file that exceeds the implementation-defined
+> -maximum file size or the process's file size limit,
+> -or to write at a position past the maximum allowed offset.
+> +An attempt was made to write at a position past the maximum file offset the
+> +kernel supports.
+> +.TP
+> +.B EFBIG
+> +An attempt was made to write a range that exceeds the allowed maximum file size.
+> +The maximum file size differs between filesystem implemenations and can be
+
+"implementations"
+
+> +different to the maximum allowed file offset.
+
+"...different from the maximum..."
+
+> +.TP
+> +.B EFBIG
+> +An attempt was made to write beyond the process's file size resource
+> +limit. This may also result in the process receiving a
+> +.I SIGXFSZ
+> +signal.
+
+Start new sentences on a new line, please.
+
+>  .TP
+>  .B EINVAL
+> -Requested range extends beyond the end of the source file; or the
+> +The
+>  .I flags
+>  argument is not 0.
+>  .TP
+> -.B EIO
+> -A low-level I/O error occurred while copying.
+> +.B EINVAL
+> +.I fd_in
+> +and
+> +.I fd_out
+> +refer to the same file and the source and target ranges overlap.
+> +.TP
+> +.B EINVAL
+> +.I fd_in
+> +or
+> +.I fd_out
+> +is not a regular file.
+
+Adding the word "either" at the beginning of the sentence (e.g.  "Either
+fd_in or fd_out is not a regular file.") would help this flow better.
+
+>  .TP
+>  .B EISDIR
+>  .I fd_in
+> @@ -124,22 +157,50 @@ or
+>  .I fd_out
+>  refers to a directory.
+>  .TP
+> +.B EOVERFLOW
+> +The requested source or destination range is too large to represent in the
+> +specified data types.
+> +.TP
+> +.B EIO
+> +A low-level I/O error occurred while copying.
+> +.TP
+>  .B ENOMEM
+>  Out of memory.
+>  .TP
+> -.B ENOSPC
+> -There is not enough space on the target filesystem to complete the copy.
+> -.TP
+>  .B EXDEV
+>  The files referred to by
+>  .IR file_in " and " file_out
+> -are not on the same mounted filesystem.
+> +are not on the same mounted filesystem (pre Linux 5.3).
+> +.TP
+> +.B ENOSPC
+> +There is not enough space on the target filesystem to complete the copy.
+
+Why move this?
+
+> +.TP
+> +.B TXTBSY
+> +.I fd_in
+> +or
+> +.I fd_out
+> +refers to an active swap file.
+
+"Either fd_in or fd_out refers to..."
+
+> +.TP
+> +.B EPERM
+> +.I fd_out
+> +refers to an immutable file.
+> +.TP
+> +.B EACCES
+> +The user does not have write permissions for the destination file.
+>  .SH VERSIONS
+>  The
+>  .BR copy_file_range ()
+>  system call first appeared in Linux 4.5, but glibc 2.27 provides a user-space
+>  emulation when it is not available.
+>  .\" https://sourceware.org/git/?p=glibc.git;a=commit;f=posix/unistd.h;h=bad7a0c81f501fbbcc79af9eaa4b8254441c4a1f
+> +.PP
+> +A major rework of the kernel implementation occurred in 5.3. Areas of the API
+> +that weren't clearly defined were clarified and the API bounds are much more
+> +strictly checked than on earlier kernels. Applications should target the
+> +behaviour and requirements of 5.3 kernels.
+
+Are there any weird cases where a program targetting 5.3 behavior would
+fail or get stuck in an infinite loop on a 5.2 kernel?
+
+Particularly since glibc spat out a copy_file_range fallback for 2.29
+that tries to emulate the kernel behavior 100%.  It even refuses
+cross-filesystem copies (because hey, we documented that :() even though
+that's perfectly fine for a userspace implementation.
+
+TBH I suspect that we ought to get the glibc developers to remove the
+"no cross device copies" code from their implementation and then update
+the manpage to say that cross device copies are supposed to be
+supported all the time, at least as of glibc 2.(futureversion).
+
+Anyways, thanks for taking on the c_f_r cleanup! :)
 
 --D
 
-> -	if (ret)
-> -		return ret;
-> -
->  	ret = generic_write_check_limits(file_out, pos_out, &count);
->  	if (ret)
->  		return ret;
+> +.PP
+> +First support for cross-filesystem copies was introduced in Linux 5.3. Older
+> +kernels will return -EXDEV when cross-filesystem copies are attempted.
+>  .SH CONFORMING TO
+>  The
+>  .BR copy_file_range ()
+> @@ -224,7 +285,7 @@ main(int argc, char **argv)
+>          }
+>  
+>          len \-= ret;
+> -    } while (len > 0);
+> +    } while (len > 0 && ret > 0);
+>  
+>      close(fd_in);
+>      close(fd_out);
 > -- 
 > 2.17.1
 > 
