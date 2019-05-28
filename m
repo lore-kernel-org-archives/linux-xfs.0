@@ -1,16 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f195.google.com ([209.85.219.195]:36348 "EHLO
-        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726362AbfE1QhH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 12:37:07 -0400
+Received: from mail-yw1-f65.google.com ([209.85.161.65]:38766 "EHLO
+        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726600AbfE1QjW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 12:39:22 -0400
 MIME-Version: 1.0
-References: <20190526061100.21761-1-amir73il@gmail.com> <20190526061100.21761-7-amir73il@gmail.com>
- <20190528163020.GF5221@magnolia>
-In-Reply-To: <20190528163020.GF5221@magnolia>
+References: <20190526061100.21761-1-amir73il@gmail.com> <20190526061100.21761-5-amir73il@gmail.com>
+ <20190528161829.GD5221@magnolia> <CAOQ4uxjRJmiwM4L9ZFHi8rfjX87-xJ=+9HSeTgUyRyTUnkF6PA@mail.gmail.com>
+ <20190528163110.GG5221@magnolia>
+In-Reply-To: <20190528163110.GG5221@magnolia>
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 28 May 2019 19:36:55 +0300
-Message-ID: <CAOQ4uxh1Tk+ZN+hiEJLsSFP8Q=RNPEaJ_FDG_XkzkrtBXBL65A@mail.gmail.com>
-Subject: Re: [PATCH v2 6/8] vfs: copy_file_range should update file timestamps
+Date: Tue, 28 May 2019 19:39:10 +0300
+Message-ID: <CAOQ4uxg4JEyzKCd-OGiox-mLth2At7hFM-WDGfqdVc2WTBr3cA@mail.gmail.com>
+Subject: Re: [PATCH v2 4/8] vfs: add missing checks to copy_file_range
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
@@ -18,51 +19,78 @@ List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Tue, May 28, 2019 at 7:30 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+On Tue, May 28, 2019 at 7:31 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
 >
-> On Sun, May 26, 2019 at 09:10:57AM +0300, Amir Goldstein wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+> On Tue, May 28, 2019 at 07:26:29PM +0300, Amir Goldstein wrote:
+> > On Tue, May 28, 2019 at 7:18 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > >
+> > > On Sun, May 26, 2019 at 09:10:55AM +0300, Amir Goldstein wrote:
+> > > > Like the clone and dedupe interfaces we've recently fixed, the
+> > > > copy_file_range() implementation is missing basic sanity, limits and
+> > > > boundary condition tests on the parameters that are passed to it
+> > > > from userspace. Create a new "generic_copy_file_checks()" function
+> > > > modelled on the generic_remap_checks() function to provide this
+> > > > missing functionality.
+> > > >
+> > > > [Amir] Shorten copy length instead of checking pos_in limits
+> > > > because input file size already abides by the limits.
+> > > >
+> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> > > > ---
+> > > >  fs/read_write.c    |  3 ++-
+> > > >  include/linux/fs.h |  3 +++
+> > > >  mm/filemap.c       | 53 ++++++++++++++++++++++++++++++++++++++++++++++
+> > > >  3 files changed, 58 insertions(+), 1 deletion(-)
+> > > >
+> > > > diff --git a/fs/read_write.c b/fs/read_write.c
+> > > > index f1900bdb3127..b0fb1176b628 100644
+> > > > --- a/fs/read_write.c
+> > > > +++ b/fs/read_write.c
+> > > > @@ -1626,7 +1626,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+> > > >       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
+> > > >               return -EXDEV;
+> > > >
+> > > > -     ret = generic_file_rw_checks(file_in, file_out);
+> > > > +     ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
+> > > > +                                    flags);
+> > > >       if (unlikely(ret))
+> > > >               return ret;
+> > > >
+> > > > diff --git a/include/linux/fs.h b/include/linux/fs.h
+> > > > index 89b9b73eb581..e4d382c4342a 100644
+> > > > --- a/include/linux/fs.h
+> > > > +++ b/include/linux/fs.h
+> > > > @@ -3050,6 +3050,9 @@ extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
+> > > >                               struct file *file_out, loff_t pos_out,
+> > > >                               loff_t *count, unsigned int remap_flags);
+> > > >  extern int generic_file_rw_checks(struct file *file_in, struct file *file_out);
+> > > > +extern int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
+> > > > +                                 struct file *file_out, loff_t pos_out,
+> > > > +                                 size_t *count, unsigned int flags);
+> > > >  extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
+> > > >  extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
+> > > >  extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
+> > > > diff --git a/mm/filemap.c b/mm/filemap.c
+> > > > index 798aac92cd76..1852fbf08eeb 100644
+> > > > --- a/mm/filemap.c
+> > > > +++ b/mm/filemap.c
+> > > > @@ -3064,6 +3064,59 @@ int generic_file_rw_checks(struct file *file_in, struct file *file_out)
+> > > >       return 0;
+> > > >  }
+> > > >
+> > > > +/*
+> > > > + * Performs necessary checks before doing a file copy
+> > > > + *
+> > > > + * Can adjust amount of bytes to copy
+> > >
+> > > That's the @req_count parameter, correct?
 > >
-> > Timestamps are not updated right now, so programs looking for
-> > timestamp updates for file modifications (like rsync) will not
-> > detect that files have changed. We are also accessing the source
-> > data when doing a copy (but not when cloning) so we need to update
-> > atime on the source file as well.
-> >
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > ---
-> >  fs/read_write.c | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> >
-> > diff --git a/fs/read_write.c b/fs/read_write.c
-> > index e16bcafc0da2..4b23a86aacd9 100644
-> > --- a/fs/read_write.c
-> > +++ b/fs/read_write.c
-> > @@ -1576,6 +1576,16 @@ int generic_copy_file_range_prep(struct file *file_in, struct file *file_out)
-> >
-> >       WARN_ON_ONCE(!inode_is_locked(file_inode(file_out)));
-> >
-> > +     /* Update source timestamps, because we are accessing file data */
-> > +     file_accessed(file_in);
-> > +
-> > +     /* Update destination timestamps, since we can alter file contents. */
-> > +     if (!(file_out->f_mode & FMODE_NOCMTIME)) {
-> > +             ret = file_update_time(file_out);
-> > +             if (ret)
-> > +                     return ret;
-> > +     }
-> > +
-> >       /*
-> >        * Clear the security bits if the process is not being run by root.
-> >        * This keeps people from modifying setuid and setgid binaries.
+> > Correct. Same as generic_remap_checks()
 >
-> Should the file_update_time and file_remove_privs calls be factored into
-> a separate small function to be called by generic_{copy,remap}_range_prep?
+> Ok.  Would you mind updating the comment?
 >
-
-Ok. same helper could be called also after copy when inode is not locked
-throughout the copy.
+OK.
 
 Thanks,
 Amir.
