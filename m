@@ -1,54 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39152 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730752AbfEWPdr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 23 May 2019 11:33:47 -0400
-Date: Thu, 23 May 2019 08:33:46 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: fixes for 5.2
-Message-ID: <20190523153346.GG5141@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:55630 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726812AbfE1UHS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 16:07:18 -0400
+Date: Tue, 28 May 2019 13:06:59 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
+Message-ID: <20190528200659.GK5221@magnolia>
+References: <20190527172655.9287-1-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190527172655.9287-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-api@vger.kernel.org
 
-Hi Linus,
+On Mon, May 27, 2019 at 08:26:55PM +0300, Amir Goldstein wrote:
+> New link flags to request "atomic" link.
+> 
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+> 
+> Hi Guys,
+> 
+> Following our discussions on LSF/MM and beyond [1][2], here is
+> an RFC documentation patch.
+> 
+> Ted, I know we discussed limiting the API for linking an O_TMPFILE
+> to avert the hardlinks issue, but I decided it would be better to
+> document the hardlinks non-guaranty instead. This will allow me to
+> replicate the same semantics and documentation to renameat(2).
+> Let me know how that works out for you.
+> 
+> I also decided to try out two separate flags for data and metadata.
+> I do not find any of those flags very useful without the other, but
+> documenting them seprately was easier, because of the fsync/fdatasync
+> reference.  In the end, we are trying to solve a social engineering
+> problem, so this is the least confusing way I could think of to describe
+> the new API.
+> 
+> First implementation of AT_ATOMIC_METADATA is expected to be
+> noop for xfs/ext4 and probably fsync for btrfs.
+> 
+> First implementation of AT_ATOMIC_DATA is expected to be
+> filemap_write_and_wait() for xfs/ext4 and probably fdatasync for btrfs.
+> 
+> Thoughts?
+> 
+> Amir.
+> 
+> [1] https://lwn.net/Articles/789038/
+> [2] https://lore.kernel.org/linux-fsdevel/CAOQ4uxjZm6E2TmCv8JOyQr7f-2VB0uFRy7XEp8HBHQmMdQg+6w@mail.gmail.com/
+> 
+>  man2/link.2 | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 51 insertions(+)
+> 
+> diff --git a/man2/link.2 b/man2/link.2
+> index 649ba00c7..15c24703e 100644
+> --- a/man2/link.2
+> +++ b/man2/link.2
+> @@ -184,6 +184,57 @@ See
+>  .BR openat (2)
+>  for an explanation of the need for
+>  .BR linkat ().
+> +.TP
+> +.BR AT_ATOMIC_METADATA " (since Linux 5.x)"
+> +By default, a link operation followed by a system crash, may result in the
+> +new file name being linked with old inode metadata, such as out dated time
+> +stamps or missing extended attributes.
+> +.BR fsync (2)
+> +before linking the inode, but that involves flushing of volatile disk caches.
+> +
+> +A filesystem that accepts this flag will guaranty, that old inode metadata
+> +will not be exposed in the new linked name.
+> +Some filesystems may internally perform
+> +.BR fsync (2)
+> +before linking the inode to provide this guaranty,
+> +but often, filesystems will have a more efficient method to provide this
+> +guaranty without flushing volatile disk caches.
+> +
+> +A filesystem that accepts this flag does
+> +.BR NOT
+> +guaranty that the new file name will exist after a system crash, nor that the
+> +current inode metadata is persisted to disk.
 
-Here's a bug fix for a minor accounting problem reported by a user.
-It's survived a few days of fstests and merges cleanly with upstream as
-of a few minutes ago.  Let me know if there are problems.
+Hmmm.  I think it would be much clearer to state the two expectations in
+the same place, e.g.:
 
-(Urgh, I just noticed that the tag message lists the wrong version.  If
-that's going to be a problem I can retag and resend...)
+"A filesystem that accepts this flag guarantees that after a successful
+call completion, the filesystem will return either (a) the version of
+the metadata that was on disk at the time the call completed; (b) a
+newer version of that metadata; or (c) -ENOENT.  In other words, a
+subsequent access of the file path will never return metadata that was
+obsolete at the time that the call completed, even if the system crashes
+immediately afterwards."
+
+Did I get that right?  I /think/ this means that one could implement Ye
+Olde Write And Rename as:
+
+fd = open(".", O_TMPFILE...);
+write(fd);
+fsync(fd);
+snprintf(path, PATH_MAX, "/proc/self/fd/%d", fd);
+linkat(AT_FDCWD, path, AT_FDCWD, "file.txt",
+	AT_EMPTY_PATH | AT_ATOMIC_DATA | AT_ATOMIC_METADATA);
+
+(Still struggling to figure out what userspace programs would use this
+for...)
 
 --D
 
-The following changes since commit a188339ca5a396acc588e5851ed7e19f66b0ebd9:
-
-  Linux 5.2-rc1 (2019-05-19 15:47:09 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.2-fixes-1
-
-for you to fetch changes up to 5cd213b0fec640a46adc5e6e4dfc7763aa54b3b2:
-
-  xfs: don't reserve per-AG space for an internal log (2019-05-20 11:25:39 -0700)
-
-----------------------------------------------------------------
-Fixes for 5.1:
-- Fix an accounting mistake where we included the log space when
-  calculating the reserve space for metadata expansion.
-
-----------------------------------------------------------------
-Darrick J. Wong (1):
-      xfs: don't reserve per-AG space for an internal log
-
- fs/xfs/libxfs/xfs_ialloc_btree.c   | 9 +++++++++
- fs/xfs/libxfs/xfs_refcount_btree.c | 9 +++++++++
- fs/xfs/libxfs/xfs_rmap_btree.c     | 9 +++++++++
- 3 files changed, 27 insertions(+)
+> +Specifically, if a file has hardlinks, the existance of the linked name after
+> +a system crash does
+> +.BR NOT
+> +guaranty that any of the other file names exist, nor that the last observed
+> +value of
+> +.I st_nlink
+> +(see
+> +.BR stat (2))
+> +has persisted.
+> +.TP
+> +.BR AT_ATOMIC_DATA " (since Linux 5.x)"
+> +By default, a link operation followed by a system crash, may result in the
+> +new file name being linked with old data or missing data.
+> +One way to prevent this is to call
+> +.BR fdatasync (2)
+> +before linking the inode, but that involves flushing of volatile disk caches.
+> +
+> +A filesystem that accepts this flag will guaranty, that old data
+> +will not be exposed in the new linked name.
+> +Some filesystems may internally perform
+> +.BR fsync (2)
+> +before linking the inode to provide this guaranty,
+> +but often, filesystems will have a more efficient method to provide this
+> +guaranty without flushing volatile disk caches.
+> +
+> +A filesystem that accepts this flag does
+> +.BR NOT
+> +guaranty that the new file name will exist after a system crash, nor that the
+> +current inode data is persisted to disk.
+> +.TP
+>  .SH RETURN VALUE
+>  On success, zero is returned.
+>  On error, \-1 is returned, and
+> -- 
+> 2.17.1
+> 
