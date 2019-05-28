@@ -1,67 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-eopbgr740114.outbound.protection.outlook.com ([40.107.74.114]:40592
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725956AbfE2UDj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 May 2019 16:03:39 -0400
-From: Trond Myklebust <trondmy@hammerspace.com>
-Subject: Re: [PATCH v3 12/13] nfs: copy_file_range needs to strip setuid bits
- and update timestamps
-Date: Wed, 29 May 2019 20:02:54 +0000
-Message-ID: <c32af433639b451419d36382a05edabfcb742294.camel@hammerspace.com>
-References: <20190529174318.22424-1-amir73il@gmail.com>
-         <20190529174318.22424-13-amir73il@gmail.com>
-         <CAOQ4uxgYM_eM==uqGQuKiGb+f08qs53=E+DONMMzW=N-Ab5YZA@mail.gmail.com>
-In-Reply-To: <CAOQ4uxgYM_eM==uqGQuKiGb+f08qs53=E+DONMMzW=N-Ab5YZA@mail.gmail.com>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <005480E3B17E7241ABE3D1CD6DA0576F@namprd13.prod.outlook.com>
-Content-Transfer-Encoding: base64
+Received: from mail-yw1-f65.google.com ([209.85.161.65]:46829 "EHLO
+        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726313AbfE1Q0m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 12:26:42 -0400
 MIME-Version: 1.0
+References: <20190526061100.21761-1-amir73il@gmail.com> <20190526061100.21761-5-amir73il@gmail.com>
+ <20190528161829.GD5221@magnolia>
+In-Reply-To: <20190528161829.GD5221@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 28 May 2019 19:26:29 +0300
+Message-ID: <CAOQ4uxjRJmiwM4L9ZFHi8rfjX87-xJ=+9HSeTgUyRyTUnkF6PA@mail.gmail.com>
+Subject: Re: [PATCH v2 4/8] vfs: add missing checks to copy_file_range
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Anna.Schumaker@netapp.com" <Anna.Schumaker@netapp.com>, "amir73il@gmail.com" <amir73il@gmail.com>, "olga.kornievskaia@gmail.com" <olga.kornievskaia@gmail.com>
-Cc: "hch@lst.de" <hch@lst.de>, "linux-cifs@vger.kernel.org" <linux-cifs@vger.kernel.org>, "david@fromorbit.com" <david@fromorbit.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "lhenriques@suse.com" <lhenriques@suse.com>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-T24gV2VkLCAyMDE5LTA1LTI5IGF0IDIyOjM0ICswMzAwLCBBbWlyIEdvbGRzdGVpbiB3cm90ZToN
-Cj4gSGkgT2xnYSxBbm5hLFRyb25kDQo+IA0KPiBDb3VsZCB3ZSBnZXQgYW4gQUNLIG9uIHRoaXMg
-cGF0Y2guDQo+IEl0IGlzIGEgcHJlcmVxdWlzaXRlIGZvciBtZXJnaW5nIHRoZSBjcm9zcy1kZXZp
-Y2UgY29weV9maWxlX3JhbmdlDQo+IHdvcmsuDQo+IA0KPiBJdCBkZXBlbmRzIG9uIGEgbmV3IGhl
-bHBlciBpbnRyb2R1Y2VkIGhlcmU6DQo+IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LWZz
-ZGV2ZWwvQ0FPUTR1eGpiY1NXWDFoVWN1WGJuOGhGSDNRWUIrNWJBQzlaMXlDd0pkUj1ULUdHdENn
-QG1haWwuZ21haWwuY29tL1QvI20xNTY5ODc4YzQxZjM5ZmFjM2FhZGIzODMyYTMwNjU5YzMyM2I1
-ODJhDQo+IA0KPiBUaGFua3MsDQo+IEFtaXIsDQo+IA0KPiBPbiBXZWQsIE1heSAyOSwgMjAxOSBh
-dCA4OjQzIFBNIEFtaXIgR29sZHN0ZWluIDxhbWlyNzNpbEBnbWFpbC5jb20+DQo+IHdyb3RlOg0K
-PiA+IExpa2UgLT53cml0ZV9pdGVyKCksIHdlIHVwZGF0ZSBtdGltZSBhbmQgc3RyaXAgc2V0dWlk
-IG9mIGRzdCBmaWxlDQo+ID4gYmVmb3JlDQo+ID4gY29weSBhbmQgbGlrZSAtPnJlYWRfaXRlcigp
-LCB3ZSB1cGRhdGUgYXRpbWUgb2Ygc3JjIGZpbGUgYWZ0ZXINCj4gPiBjb3B5Lg0KPiA+IA0KPiA+
-IFNpZ25lZC1vZmYtYnk6IEFtaXIgR29sZHN0ZWluIDxhbWlyNzNpbEBnbWFpbC5jb20+DQo+ID4g
-LS0tDQo+ID4gIGZzL25mcy9uZnM0MnByb2MuYyB8IDkgKysrKysrLS0tDQo+ID4gIDEgZmlsZSBj
-aGFuZ2VkLCA2IGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pDQo+ID4gDQo+ID4gZGlmZiAt
-LWdpdCBhL2ZzL25mcy9uZnM0MnByb2MuYyBiL2ZzL25mcy9uZnM0MnByb2MuYw0KPiA+IGluZGV4
-IDUxOTZiZmE3ODk0ZC4uYzM3YThlNTExNmM2IDEwMDY0NA0KPiA+IC0tLSBhL2ZzL25mcy9uZnM0
-MnByb2MuYw0KPiA+ICsrKyBiL2ZzL25mcy9uZnM0MnByb2MuYw0KPiA+IEBAIC0zNDUsMTAgKzM0
-NSwxMyBAQCBzc2l6ZV90IG5mczQyX3Byb2NfY29weShzdHJ1Y3QgZmlsZSAqc3JjLA0KPiA+IGxv
-ZmZfdCBwb3Nfc3JjLA0KPiA+IA0KPiA+ICAgICAgICAgZG8gew0KPiA+ICAgICAgICAgICAgICAg
-ICBpbm9kZV9sb2NrKGZpbGVfaW5vZGUoZHN0KSk7DQo+ID4gLSAgICAgICAgICAgICAgIGVyciA9
-IF9uZnM0Ml9wcm9jX2NvcHkoc3JjLCBzcmNfbG9jaywNCj4gPiAtICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIGRzdCwgZHN0X2xvY2ssDQo+ID4gLSAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAmYXJncywgJnJlcyk7DQo+ID4gKyAgICAgICAgICAgICAgIGVyciA9IGZpbGVfbW9k
-aWZpZWQoZHN0KTsNCj4gPiArICAgICAgICAgICAgICAgaWYgKCFlcnIpDQo+ID4gKyAgICAgICAg
-ICAgICAgICAgICAgICAgZXJyID0gX25mczQyX3Byb2NfY29weShzcmMsIHNyY19sb2NrLA0KPiA+
-ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZHN0LCBkc3Rf
-bG9jaywNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICZhcmdzLCAmcmVzKTsNCj4gPiAgICAgICAgICAgICAgICAgaW5vZGVfdW5sb2NrKGZpbGVfaW5v
-ZGUoZHN0KSk7DQo+ID4gKyAgICAgICAgICAgICAgIGZpbGVfYWNjZXNzZWQoc3JjKTsNCj4gPiAN
-Cj4gPiAgICAgICAgICAgICAgICAgaWYgKGVyciA+PSAwKQ0KPiA+ICAgICAgICAgICAgICAgICAg
-ICAgICAgIGJyZWFrOw0KPiA+IC0tDQo+ID4gMi4xNy4xDQo+ID4gDQoNClBsZWFzZSBkcm9wIHRo
-aXMgcGF0Y2guIEluIHRoZSBORlMgcHJvdG9jb2wsIHRoZSBjbGllbnQgaXMgbm90IGV4cGVjdGVk
-DQp0byBtZXNzIHdpdGggYXRpbWUgb3IgbXRpbWUgb3RoZXIgdGhhbiB3aGVuIHRoZSB1c2VyIGV4
-cGxpY2l0bHkgc2V0cyBpdA0KdGhyb3VnaCBhIGNhbGwgdG8gdXRpbWVuc2F0KCkgb3Igc2ltaWxh
-ci4gVGhlIHNlcnZlciB0YWtlcyBjYXJlIG9mIGFueQ0KYS9tdGltZSB1cGRhdGVzIGFzIGFuZCB3
-aGVuIHRoZSBmaWxlIGlzIHJlYWQvd3JpdHRlbiB0by4gDQoNCkRpdHRvIGZvciBzdWlkL3NnaWQg
-Y2xlYXJpbmcuDQoNCk1vdHRvOiAiTm8gZmlsZV9hY2Nlc3NlZCgpIG9yIGZpbGVfcmVtb3ZlX3By
-aXZzKCkgY2FsbHMsIHBsZWFzZS4gV2UncmUNCk5GUy4iDQoNCi0tIA0KVHJvbmQgTXlrbGVidXN0
-DQpMaW51eCBORlMgY2xpZW50IG1haW50YWluZXIsIEhhbW1lcnNwYWNlDQp0cm9uZC5teWtsZWJ1
-c3RAaGFtbWVyc3BhY2UuY29tDQoNCg0K
+On Tue, May 28, 2019 at 7:18 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Sun, May 26, 2019 at 09:10:55AM +0300, Amir Goldstein wrote:
+> > Like the clone and dedupe interfaces we've recently fixed, the
+> > copy_file_range() implementation is missing basic sanity, limits and
+> > boundary condition tests on the parameters that are passed to it
+> > from userspace. Create a new "generic_copy_file_checks()" function
+> > modelled on the generic_remap_checks() function to provide this
+> > missing functionality.
+> >
+> > [Amir] Shorten copy length instead of checking pos_in limits
+> > because input file size already abides by the limits.
+> >
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> > ---
+> >  fs/read_write.c    |  3 ++-
+> >  include/linux/fs.h |  3 +++
+> >  mm/filemap.c       | 53 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  3 files changed, 58 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/fs/read_write.c b/fs/read_write.c
+> > index f1900bdb3127..b0fb1176b628 100644
+> > --- a/fs/read_write.c
+> > +++ b/fs/read_write.c
+> > @@ -1626,7 +1626,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+> >       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
+> >               return -EXDEV;
+> >
+> > -     ret = generic_file_rw_checks(file_in, file_out);
+> > +     ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
+> > +                                    flags);
+> >       if (unlikely(ret))
+> >               return ret;
+> >
+> > diff --git a/include/linux/fs.h b/include/linux/fs.h
+> > index 89b9b73eb581..e4d382c4342a 100644
+> > --- a/include/linux/fs.h
+> > +++ b/include/linux/fs.h
+> > @@ -3050,6 +3050,9 @@ extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
+> >                               struct file *file_out, loff_t pos_out,
+> >                               loff_t *count, unsigned int remap_flags);
+> >  extern int generic_file_rw_checks(struct file *file_in, struct file *file_out);
+> > +extern int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
+> > +                                 struct file *file_out, loff_t pos_out,
+> > +                                 size_t *count, unsigned int flags);
+> >  extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
+> >  extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
+> >  extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
+> > diff --git a/mm/filemap.c b/mm/filemap.c
+> > index 798aac92cd76..1852fbf08eeb 100644
+> > --- a/mm/filemap.c
+> > +++ b/mm/filemap.c
+> > @@ -3064,6 +3064,59 @@ int generic_file_rw_checks(struct file *file_in, struct file *file_out)
+> >       return 0;
+> >  }
+> >
+> > +/*
+> > + * Performs necessary checks before doing a file copy
+> > + *
+> > + * Can adjust amount of bytes to copy
+>
+> That's the @req_count parameter, correct?
+
+Correct. Same as generic_remap_checks()
+
+>
+> > + * Returns appropriate error code that caller should return or
+> > + * zero in case the copy should be allowed.
+> > + */
+> > +int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
+> > +                          struct file *file_out, loff_t pos_out,
+> > +                          size_t *req_count, unsigned int flags)
+> > +{
+> > +     struct inode *inode_in = file_inode(file_in);
+> > +     struct inode *inode_out = file_inode(file_out);
+> > +     uint64_t count = *req_count;
+> > +     loff_t size_in;
+> > +     int ret;
+> > +
+> > +     ret = generic_file_rw_checks(file_in, file_out);
+> > +     if (ret)
+> > +             return ret;
+> > +
+> > +     /* Don't touch certain kinds of inodes */
+> > +     if (IS_IMMUTABLE(inode_out))
+> > +             return -EPERM;
+> > +
+> > +     if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
+> > +             return -ETXTBSY;
+> > +
+> > +     /* Ensure offsets don't wrap. */
+> > +     if (pos_in + count < pos_in || pos_out + count < pos_out)
+> > +             return -EOVERFLOW;
+> > +
+> > +     /* Shorten the copy to EOF */
+> > +     size_in = i_size_read(inode_in);
+> > +     if (pos_in >= size_in)
+> > +             count = 0;
+> > +     else
+> > +             count = min(count, size_in - (uint64_t)pos_in);
+>
+> Do we need a call to generic_access_check_limits(file_in...) here to
+> prevent copies from ranges that the page cache doesn't support?
+
+No. Because i_size cannot be of an illegal size and we cap
+the read to i_size.
+I also removed generic_access_check_limits() from generic_remap_checks()
+for a similar reason in patch #8.
+
+Thanks,
+Amir.
