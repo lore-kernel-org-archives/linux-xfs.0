@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:36412 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727400AbfE2Rns (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 13:43:48 -0400
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:51785 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727345AbfE2Rnu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 13:43:50 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v3 09/13] ceph: copy_file_range needs to strip setuid bits and update timestamps
-Date: Wed, 29 May 2019 20:43:13 +0300
-Message-Id: <20190529174318.22424-10-amir73il@gmail.com>
+Subject: [PATCH v3 10/13] cifs: copy_file_range needs to strip setuid bits and update timestamps
+Date: Wed, 29 May 2019 20:43:14 +0300
+Message-Id: <20190529174318.22424-11-amir73il@gmail.com>
 In-Reply-To: <20190529174318.22424-1-amir73il@gmail.com>
 References: <20190529174318.22424-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,52 +15,46 @@ List-Id: xfs
 To: "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org
 
-Because ceph doesn't hold destination inode lock throughout the copy,
-strip setuid bits before and after copy.
-
-The destination inode mtime is updated before and after the copy and the
-source inode atime is updated after the copy, similar to the filesystem
-->read_iter() implementation.
+cifs has both source and destination inodes locked throughout the copy.
+Like ->write_iter(), we update mtime and strip setuid bits of destination
+file before copy and like ->read_iter(), we update atime of source file
+after copy.
 
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/ceph/file.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ fs/cifs/cifsfs.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-index e87f7b2023af..8a70708e1aca 100644
---- a/fs/ceph/file.c
-+++ b/fs/ceph/file.c
-@@ -1947,6 +1947,15 @@ static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
+diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
+index c65823270313..ab6c5c24146d 100644
+--- a/fs/cifs/cifsfs.c
++++ b/fs/cifs/cifsfs.c
+@@ -1096,6 +1096,10 @@ ssize_t cifs_file_copychunk_range(unsigned int xid,
  		goto out;
  	}
  
-+	/* Should dst_inode lock be held throughout the copy operation? */
-+	inode_lock(dst_inode);
-+	ret = file_modified(dst_file);
-+	inode_unlock(dst_inode);
-+	if (ret < 0) {
-+		dout("failed to modify dst file before copy (%zd)\n", ret);
++	rc = -EOPNOTSUPP;
++	if (!target_tcon->ses->server->ops->copychunk_range)
 +		goto out;
-+	}
 +
  	/*
- 	 * We need FILE_WR caps for dst_ci and FILE_RD for src_ci as other
- 	 * clients may have dirty data in their caches.  And OSDs know nothing
-@@ -2097,6 +2106,14 @@ static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
- out:
- 	ceph_free_cap_flush(prealloc_cf);
+ 	 * Note: cifs case is easier than btrfs since server responsible for
+ 	 * checks for proper open modes and file type and if it wants
+@@ -1107,11 +1111,12 @@ ssize_t cifs_file_copychunk_range(unsigned int xid,
+ 	/* should we flush first and last page first */
+ 	truncate_inode_pages(&target_inode->i_data, 0);
  
-+	file_accessed(src_file);
-+	/* To be on the safe side, remove privs also after copy */
-+	inode_lock(dst_inode);
-+	err = file_modified(dst_file);
-+	inode_unlock(dst_inode);
-+	if (err < 0)
-+		dout("failed to modify dst file after copy (%zd)\n", err);
+-	if (target_tcon->ses->server->ops->copychunk_range)
++	rc = file_modified(dst_file);
++	if (!rc)
+ 		rc = target_tcon->ses->server->ops->copychunk_range(xid,
+ 			smb_file_src, smb_file_target, off, len, destoff);
+-	else
+-		rc = -EOPNOTSUPP;
 +
- 	return ret;
- }
++	file_accessed(src_file);
  
+ 	/* force revalidate of size and timestamps of target file now
+ 	 * that target is updated on the server
 -- 
 2.17.1
