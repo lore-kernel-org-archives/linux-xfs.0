@@ -1,77 +1,230 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:34760 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726481AbfE1U1V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 16:27:21 -0400
-Date: Tue, 28 May 2019 16:26:59 -0400
-From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
-Message-ID: <20190528202659.GA12412@mit.edu>
-References: <20190527172655.9287-1-amir73il@gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:46578 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725816AbfE2CQz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 22:16:55 -0400
+Date: Tue, 28 May 2019 19:16:36 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 4/5] generic: copy_file_range bounds test
+Message-ID: <20190529021636.GB5244@magnolia>
+References: <20190526084535.999-1-amir73il@gmail.com>
+ <20190526084535.999-5-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190527172655.9287-1-amir73il@gmail.com>
+In-Reply-To: <20190526084535.999-5-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Amir Goldstein <amir73il@gmail.com>
-Cc: Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-api@vger.kernel.org
+Cc: Eryu Guan <guaneryu@gmail.com>, Dave Chinner <david@fromorbit.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Mon, May 27, 2019 at 08:26:55PM +0300, Amir Goldstein wrote:
+On Sun, May 26, 2019 at 11:45:34AM +0300, Amir Goldstein wrote:
+> Test that copy_file_range will return the correct errors for various
+> error conditions and boundary constraints.
 > 
-> Following our discussions on LSF/MM and beyond [1][2], here is
-> an RFC documentation patch.
+> [Amir] Split out cross-device copy_range test and use only scratch dev.
+> Split out immutable/swapfile test cases to reduce the requirements to
+> run the bounds check to minimum and get coverage for more filesystems.
+> Remove the tests for read past EOF and write after chmod -r,
+> because we decided to stick with read(2)/write(2) semantics.
 > 
-> Ted, I know we discussed limiting the API for linking an O_TMPFILE
-> to avert the hardlinks issue, but I decided it would be better to
-> document the hardlinks non-guaranty instead. This will allow me to
-> replicate the same semantics and documentation to renameat(2).
-> Let me know how that works out for you.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  tests/generic/990     | 123 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/990.out |  37 +++++++++++++
+>  tests/generic/group   |   1 +
+>  3 files changed, 161 insertions(+)
+>  create mode 100755 tests/generic/990
+>  create mode 100644 tests/generic/990.out
 > 
-> I also decided to try out two separate flags for data and metadata.
-> I do not find any of those flags very useful without the other, but
-> documenting them seprately was easier, because of the fsync/fdatasync
-> reference.  In the end, we are trying to solve a social engineering
-> problem, so this is the least confusing way I could think of to describe
-> the new API.
+> diff --git a/tests/generic/990 b/tests/generic/990
+> new file mode 100755
+> index 00000000..5e2421b6
+> --- /dev/null
+> +++ b/tests/generic/990
+> @@ -0,0 +1,123 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 990
+> +#
+> +# Exercise copy_file_range() syscall error conditions.
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -rf $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_os Linux
+> +_supported_fs generic
+> +
+> +rm -f $seqres.full
+> +
+> +_require_test
+> +_require_xfs_io_command "copy_range"
+> +#
+> +# This test effectively requires xfs_io v4.20 with the commits
+> +#  2a42470b xfs_io: copy_file_range length is a size_t
+> +#  1a05efba io: open pipes in non-blocking mode
 
-The way you have stated thigs is very confusing, and prone to be
-misunderstood.  I think it would be helpful to state things in the
-positive, instead of the negative.
+So, uh, is this going to cause test hangs on xfsprogs < 4.20?
 
-Let's review what you had wanted:
+--D
 
-	*If* the filename is visible in the directory after the crash,
-	*then* all of the metadata/data that had been written to the file
-	before the linkat(2) would be visible.
-
-	HOWEVER, you did not want to necessarily force an fsync(2) in
-	order to provide that guarantee.  That is, the filename would
-	not necessarily be guaranteed to be visible after a crash when
-	linkat(2) returns, but if the existence of the filename is
-	persisted, then the data would be too.
-
-	Also, at least initially we talked about this only making
-	sense for O_TMPFILE file desacriptors.  I believe you were
-	trying to generalize things so it wouldn't necessarily have to
-	be a file created using O_TMPFILE.  Is that correct?
-
-So instead of saying "A filesystem that accepts this flag will
-guaranty, that old inode data will not be exposed in the new linked
-name."  It's much clearer to state this in the affirmative:
-
-	A filesystem which accepts this flag will guarantee that if
-	the new pathname exists after a crash, all of the data written
-	to the file at the time of the linkat(2) call will be visible.
-
-I would think it's much simpler to say what *will* happen, instead of
-what will not be visible.  (After all, technically speaking, returning
-all zeros or random garbage data fufills the requirement "old data
-will not be exposed", but that's probably not what you had in mind.  :-)
-
-Also please note that it's spelled "guarantee".
-
-Cheers,
-
-						- Ted
+> +#
+> +# The same xfs_io release also included the new 'chmod' command.
+> +# Use this fake requirement to prevent the test case of copy_range with fifo
+> +# from hanging the test with old xfs_io.
+> +#
+> +_require_xfs_io_command "chmod"
+> +
+> +testdir="$TEST_DIR/test-$seq"
+> +rm -rf $testdir
+> +mkdir $testdir
+> +
+> +rm -f $seqres.full
+> +
+> +$XFS_IO_PROG -f -c "pwrite -S 0x61 0 128k" $testdir/file >> $seqres.full 2>&1
+> +
+> +echo source range overlaps destination range in same file returns EINVAL
+> +$XFS_IO_PROG -f -c "copy_range -s 32k -d 48k -l 32k $testdir/file" $testdir/file
+> +
+> +echo
+> +echo destination file O_RDONLY returns EBADF
+> +$XFS_IO_PROG -f -r -c "copy_range -l 32k $testdir/file" $testdir/copy
+> +
+> +echo
+> +echo destination file O_APPEND returns EBADF
+> +$XFS_IO_PROG -f -a -c "copy_range -l 32k $testdir/file" $testdir/copy
+> +
+> +echo
+> +echo source/destination as directory returns EISDIR
+> +$XFS_IO_PROG -c "copy_range -l 32k $testdir/file" $testdir
+> +$XFS_IO_PROG -f -c "copy_range -l 32k $testdir" $testdir/copy
+> +
+> +echo
+> +echo source/destination as blkdev returns EINVAL
+> +mknod $testdir/dev1 b 1 3
+> +$XFS_IO_PROG -c "copy_range -l 32k $testdir/file" $testdir/dev1
+> +$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/dev1" $testdir/copy
+> +
+> +echo
+> +echo source/destination as chardev returns EINVAL
+> +mknod $testdir/dev2 c 1 3
+> +$XFS_IO_PROG -c "copy_range -l 32k $testdir/file" $testdir/dev2
+> +$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/dev2" $testdir/copy
+> +
+> +echo
+> +echo source/destination as FIFO returns EINVAL
+> +mkfifo $testdir/fifo
+> +$XFS_IO_PROG -c "copy_range -l 32k $testdir/file" $testdir/fifo
+> +$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/fifo" $testdir/copy
+> +
+> +max_off=$((8 * 2**60 - 65536 - 1))
+> +min_off=65537
+> +
+> +echo
+> +echo length beyond 8EiB wraps around 0 returns EOVERFLOW
+> +$XFS_IO_PROG -f -c "copy_range -l 10e -s $max_off $testdir/file" $testdir/copy
+> +$XFS_IO_PROG -f -c "copy_range -l 10e -d $max_off $testdir/file" $testdir/copy
+> +
+> +echo
+> +echo source range beyond 8TiB returns 0
+> +$XFS_IO_PROG -c "copy_range -s $max_off -l $min_off -d 0 $testdir/file" $testdir/copy
+> +
+> +echo
+> +echo destination range beyond 8TiB returns EFBIG
+> +$XFS_IO_PROG -c "copy_range -l $min_off -s 0 -d $max_off $testdir/file" $testdir/copy
+> +
+> +echo
+> +echo destination larger than rlimit returns EFBIG
+> +rm -f $testdir/copy
+> +$XFS_IO_PROG -c "truncate 128k" $testdir/file
+> +
+> +# need a wrapper so the "File size limit exceeded" error can be filtered
+> +do_rlimit_copy()
+> +{
+> +	$XFS_IO_PROG -f -c "copy_range -l 32k -s 0 -d 16m $testdir/file" $testdir/copy
+> +}
+> +
+> +ulimit -f $((8 * 1024))
+> +ulimit -c 0
+> +do_rlimit_copy 2>&1 | grep -o "File size limit exceeded"
+> +ulimit -f unlimited
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/990.out b/tests/generic/990.out
+> new file mode 100644
+> index 00000000..05d137de
+> --- /dev/null
+> +++ b/tests/generic/990.out
+> @@ -0,0 +1,37 @@
+> +QA output created by 990
+> +source range overlaps destination range in same file returns EINVAL
+> +copy_range: Invalid argument
+> +
+> +destination file O_RDONLY returns EBADF
+> +copy_range: Bad file descriptor
+> +
+> +destination file O_APPEND returns EBADF
+> +copy_range: Bad file descriptor
+> +
+> +source/destination as directory returns EISDIR
+> +copy_range: Is a directory
+> +copy_range: Is a directory
+> +
+> +source/destination as blkdev returns EINVAL
+> +copy_range: Invalid argument
+> +copy_range: Invalid argument
+> +
+> +source/destination as chardev returns EINVAL
+> +copy_range: Invalid argument
+> +copy_range: Invalid argument
+> +
+> +source/destination as FIFO returns EINVAL
+> +copy_range: Invalid argument
+> +copy_range: Invalid argument
+> +
+> +length beyond 8EiB wraps around 0 returns EOVERFLOW
+> +copy_range: Value too large for defined data type
+> +copy_range: Value too large for defined data type
+> +
+> +source range beyond 8TiB returns 0
+> +
+> +destination range beyond 8TiB returns EFBIG
+> +copy_range: File too large
+> +
+> +destination larger than rlimit returns EFBIG
+> +File size limit exceeded
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 4c100781..86802d54 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -552,3 +552,4 @@
+>  547 auto quick log
+>  988 auto quick copy_range
+>  989 auto quick copy_range swap
+> +990 auto quick copy_range
+> -- 
+> 2.17.1
+> 
