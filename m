@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:42154 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727421AbfE2Rnv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 13:43:51 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:35474 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726205AbfE2Rnl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 13:43:41 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v3 11/13] fuse: copy_file_range needs to strip setuid bits and update timestamps
-Date: Wed, 29 May 2019 20:43:15 +0300
-Message-Id: <20190529174318.22424-12-amir73il@gmail.com>
+Subject: [PATCH v3 06/13] vfs: introduce file_modified() helper
+Date: Wed, 29 May 2019 20:43:10 +0300
+Message-Id: <20190529174318.22424-7-amir73il@gmail.com>
 In-Reply-To: <20190529174318.22424-1-amir73il@gmail.com>
 References: <20190529174318.22424-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,36 +15,99 @@ List-Id: xfs
 To: "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org
 
-Like ->write_iter(), we update mtime and strip setuid of dst file before
-copy and like ->read_iter(), we update atime of src file after copy.
+The combination of file_remove_privs() and file_update_mtime() is
+quite common in filesystem ->write_iter() methods.
+
+Modelled after the helper file_accessed(), introduce file_modified()
+and use it from generic_remap_file_range_prep().
+
+Note that the order of calling file_remove_privs() before
+file_update_mtime() in the helper was matched to the more common order by
+filesystems and not the current order in generic_remap_file_range_prep().
 
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/fuse/file.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ fs/inode.c         | 20 ++++++++++++++++++++
+ fs/read_write.c    | 21 +++------------------
+ include/linux/fs.h |  2 ++
+ 3 files changed, 25 insertions(+), 18 deletions(-)
 
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index e03901ae729b..7f33d68f66d9 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -3128,6 +3128,10 @@ static ssize_t __fuse_copy_file_range(struct file *file_in, loff_t pos_in,
- 
- 	inode_lock(inode_out);
- 
-+	err = file_modified(file_out);
-+	if (err)
-+		goto out;
-+
- 	if (fc->writeback_cache) {
- 		err = filemap_write_and_wait_range(inode_out->i_mapping,
- 						   pos_out, pos_out + len);
-@@ -3169,6 +3173,7 @@ static ssize_t __fuse_copy_file_range(struct file *file_in, loff_t pos_in,
- 		clear_bit(FUSE_I_SIZE_UNSTABLE, &fi_out->state);
- 
- 	inode_unlock(inode_out);
-+	file_accessed(file_in);
- 
- 	return err;
+diff --git a/fs/inode.c b/fs/inode.c
+index df6542ec3b88..2885f2f2c7a5 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -1899,6 +1899,26 @@ int file_update_time(struct file *file)
  }
+ EXPORT_SYMBOL(file_update_time);
+ 
++/* Caller must hold the file's inode lock */
++int file_modified(struct file *file)
++{
++	int err;
++
++	/*
++	 * Clear the security bits if the process is not being run by root.
++	 * This keeps people from modifying setuid and setgid binaries.
++	 */
++	err = file_remove_privs(file);
++	if (err)
++		return err;
++
++	if (likely(file->f_mode & FMODE_NOCMTIME))
++		return 0;
++
++	return file_update_time(file);
++}
++EXPORT_SYMBOL(file_modified);
++
+ int inode_needs_sync(struct inode *inode)
+ {
+ 	if (IS_SYNC(inode))
+diff --git a/fs/read_write.c b/fs/read_write.c
+index b0fb1176b628..cec7e7b1f693 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1980,25 +1980,10 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ 		return ret;
+ 
+ 	/* If can't alter the file contents, we're done. */
+-	if (!(remap_flags & REMAP_FILE_DEDUP)) {
+-		/* Update the timestamps, since we can alter file contents. */
+-		if (!(file_out->f_mode & FMODE_NOCMTIME)) {
+-			ret = file_update_time(file_out);
+-			if (ret)
+-				return ret;
+-		}
++	if (!(remap_flags & REMAP_FILE_DEDUP))
++		ret = file_modified(file_out);
+ 
+-		/*
+-		 * Clear the security bits if the process is not being run by
+-		 * root.  This keeps people from modifying setuid and setgid
+-		 * binaries.
+-		 */
+-		ret = file_remove_privs(file_out);
+-		if (ret)
+-			return ret;
+-	}
+-
+-	return 0;
++	return ret;
+ }
+ EXPORT_SYMBOL(generic_remap_file_range_prep);
+ 
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index e4d382c4342a..79ffa2958bd8 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2177,6 +2177,8 @@ static inline void file_accessed(struct file *file)
+ 		touch_atime(&file->f_path);
+ }
+ 
++extern int file_modified(struct file *file);
++
+ int sync_inode(struct inode *inode, struct writeback_control *wbc);
+ int sync_inode_metadata(struct inode *inode, int wait);
+ 
 -- 
 2.17.1
