@@ -1,57 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f68.google.com ([209.85.161.68]:42244 "EHLO
-        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726162AbfE2QUi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 12:20:38 -0400
-MIME-Version: 1.0
-References: <20190526061100.21761-1-amir73il@gmail.com> <20190526061100.21761-10-amir73il@gmail.com>
- <20190528164844.GJ5221@magnolia>
-In-Reply-To: <20190528164844.GJ5221@magnolia>
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:33882 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726205AbfE2Rnc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 13:43:32 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 29 May 2019 19:20:21 +0300
-Message-ID: <CAOQ4uxiWxkmvtK6qX6T5cOAFeTb3Oo9xocG+yY24RaMftnJ2tQ@mail.gmail.com>
-Subject: Re: [PATCH v2 9/8] man-pages: copy_file_range updates
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH v3 01/13] vfs: introduce generic_copy_file_range()
+Date: Wed, 29 May 2019 20:43:05 +0300
+Message-Id: <20190529174318.22424-2-amir73il@gmail.com>
+In-Reply-To: <20190529174318.22424-1-amir73il@gmail.com>
+References: <20190529174318.22424-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-> > +A major rework of the kernel implementation occurred in 5.3. Areas of the API
-> > +that weren't clearly defined were clarified and the API bounds are much more
-> > +strictly checked than on earlier kernels. Applications should target the
-> > +behaviour and requirements of 5.3 kernels.
->
-> Are there any weird cases where a program targetting 5.3 behavior would
-> fail or get stuck in an infinite loop on a 5.2 kernel?
+From: Dave Chinner <dchinner@redhat.com>
 
-I don't think so. When Dave wrote this paragraph the behavior was changed
-from short copy to EINVAL. That would have been a problem to maintain
-old vs. new copy loops, but now the behavior  did not change in that respect.
+Right now if vfs_copy_file_range() does not use any offload
+mechanism, it falls back to calling do_splice_direct(). This fails
+to do basic sanity checks on the files being copied. Before we
+start adding this necessarily functionality to the fallback path,
+separate it out into generic_copy_file_range().
 
->
-> Particularly since glibc spat out a copy_file_range fallback for 2.29
-> that tries to emulate the kernel behavior 100%.  It even refuses
-> cross-filesystem copies (because hey, we documented that :() even though
-> that's perfectly fine for a userspace implementation.
->
-> TBH I suspect that we ought to get the glibc developers to remove the
-> "no cross device copies" code from their implementation and then update
-> the manpage to say that cross device copies are supposed to be
-> supported all the time, at least as of glibc 2.(futureversion).
+generic_copy_file_range() has the same prototype as
+->copy_file_range() so that filesystems can use it in their custom
+->copy_file_range() method if they so choose.
 
-I don't see a problem with copy_file_range() returning EXDEV.
-That is why I left EXDEV in the man page.
-Tools should know how to deal with EXDEV by now.
-If you are running on a new kernel, you get better likelihood
-for copy_file_range() to do clone or in-kernel copy for you.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/read_write.c    | 35 ++++++++++++++++++++++++++++++++---
+ include/linux/fs.h |  3 +++
+ 2 files changed, 35 insertions(+), 3 deletions(-)
 
->
-> Anyways, thanks for taking on the c_f_r cleanup! :)
->
-
-Sure, get ready for another round ;-)
-
-Thanks for the review!
-Amir.
+diff --git a/fs/read_write.c b/fs/read_write.c
+index c543d965e288..676b02fae589 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1565,6 +1565,36 @@ COMPAT_SYSCALL_DEFINE4(sendfile64, int, out_fd, int, in_fd,
+ }
+ #endif
+ 
++/**
++ * generic_copy_file_range - copy data between two files
++ * @file_in:	file structure to read from
++ * @pos_in:	file offset to read from
++ * @file_out:	file structure to write data to
++ * @pos_out:	file offset to write data to
++ * @len:	amount of data to copy
++ * @flags:	copy flags
++ *
++ * This is a generic filesystem helper to copy data from one file to another.
++ * It has no constraints on the source or destination file owners - the files
++ * can belong to different superblocks and different filesystem types. Short
++ * copies are allowed.
++ *
++ * This should be called from the @file_out filesystem, as per the
++ * ->copy_file_range() method.
++ *
++ * Returns the number of bytes copied or a negative error indicating the
++ * failure.
++ */
++
++ssize_t generic_copy_file_range(struct file *file_in, loff_t pos_in,
++				struct file *file_out, loff_t pos_out,
++				size_t len, unsigned int flags)
++{
++	return do_splice_direct(file_in, &pos_in, file_out, &pos_out,
++				len > MAX_RW_COUNT ? MAX_RW_COUNT : len, 0);
++}
++EXPORT_SYMBOL(generic_copy_file_range);
++
+ /*
+  * copy_file_range() differs from regular file read and write in that it
+  * specifically allows return partial success.  When it does so is up to
+@@ -1632,9 +1662,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+ 			goto done;
+ 	}
+ 
+-	ret = do_splice_direct(file_in, &pos_in, file_out, &pos_out,
+-			len > MAX_RW_COUNT ? MAX_RW_COUNT : len, 0);
+-
++	ret = generic_copy_file_range(file_in, pos_in, file_out, pos_out, len,
++				      flags);
+ done:
+ 	if (ret > 0) {
+ 		fsnotify_access(file_in);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index f7fdfe93e25d..ea17858310ff 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1889,6 +1889,9 @@ extern ssize_t vfs_readv(struct file *, const struct iovec __user *,
+ 		unsigned long, loff_t *, rwf_t);
+ extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
+ 				   loff_t, size_t, unsigned int);
++extern ssize_t generic_copy_file_range(struct file *file_in, loff_t pos_in,
++				       struct file *file_out, loff_t pos_out,
++				       size_t len, unsigned int flags);
+ extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ 					 struct file *file_out, loff_t pos_out,
+ 					 loff_t *count,
+-- 
+2.17.1
