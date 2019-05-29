@@ -1,29 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43196 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:43290 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726515AbfE2W1l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 18:27:41 -0400
+        with ESMTP id S1726515AbfE2W1q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 18:27:46 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x4TM54w6024216
-        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:27:39 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2spw4tmtfg-1
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x4TM4cnk023996
+        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:27:45 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2spw4tmtg4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:27:39 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x4TMRNXZ099494
-        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:27:39 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2ss1fnqr17-1
+        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:27:45 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x4TMQEf2164682
+        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:27:45 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2sr31vh911-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:27:39 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x4TMRcke023261
-        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:27:38 GMT
-Subject: [PATCH 1/9] xfs: remove various bulk request typedef usage
+        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:27:45 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x4TMRiFS014239
+        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:27:44 GMT
+Subject: [PATCH 2/9] xfs: rename bulkstat functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 29 May 2019 15:27:37 -0700
-Message-ID: <155916885724.758159.12960870951306142249.stgit@magnolia>
+Date: Wed, 29 May 2019 15:27:43 -0700
+Message-ID: <155916886337.758159.1536999475082923389.stgit@magnolia>
 In-Reply-To: <155916885106.758159.3471602893858635007.stgit@magnolia>
 References: <155916885106.758159.3471602893858635007.stgit@magnolia>
 MIME-Version: 1.0
@@ -37,180 +37,160 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Remove xfs_bstat_t, xfs_fsop_bulkreq_t, xfs_inogrp_t, and similarly
-named compat typedefs.
+Rename the bulkstat functions to 'fsbulkstat' so that they match the
+ioctl names.  We will be introducing a new set of bulkstat/inumbers
+ioctls soon, and it will be important to keep the names straight.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h |   16 ++++++++--------
- fs/xfs/xfs_ioctl.c     |    2 +-
- fs/xfs/xfs_ioctl32.c   |   11 +++++++----
- fs/xfs/xfs_ioctl32.h   |   14 +++++++-------
- 4 files changed, 23 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_ioctl.c   |   14 +++++++-------
+ fs/xfs/xfs_ioctl.h   |    5 +++--
+ fs/xfs/xfs_ioctl32.c |   18 +++++++++---------
+ 3 files changed, 19 insertions(+), 18 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index e7382c780ed7..ef0dce229fa4 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -97,7 +97,7 @@ struct getbmapx {
-  * For use by backup and restore programs to set the XFS on-disk inode
-  * fields di_dmevmask and di_dmstate.  These must be set to exactly and
-  * only values previously obtained via xfs_bulkstat!  (Specifically the
-- * xfs_bstat_t fields bs_dmevmask and bs_dmstate.)
-+ * struct xfs_bstat fields bs_dmevmask and bs_dmstate.)
-  */
- #ifndef HAVE_FSDMIDATA
- struct fsdmidata {
-@@ -328,7 +328,7 @@ typedef struct xfs_bstime {
- 	__s32		tv_nsec;	/* and nanoseconds	*/
- } xfs_bstime_t;
- 
--typedef struct xfs_bstat {
-+struct xfs_bstat {
- 	__u64		bs_ino;		/* inode number			*/
- 	__u16		bs_mode;	/* type and mode		*/
- 	__u16		bs_nlink;	/* number of links		*/
-@@ -356,7 +356,7 @@ typedef struct xfs_bstat {
- 	__u32		bs_dmevmask;	/* DMIG event mask		*/
- 	__u16		bs_dmstate;	/* DMIG state info		*/
- 	__u16		bs_aextents;	/* attribute number of extents	*/
--} xfs_bstat_t;
-+};
- 
- /* bs_sick flags */
- #define XFS_BS_SICK_INODE	(1 << 0)  /* inode core */
-@@ -382,22 +382,22 @@ bstat_get_projid(struct xfs_bstat *bs)
- /*
-  * The user-level BulkStat Request interface structure.
-  */
--typedef struct xfs_fsop_bulkreq {
-+struct xfs_fsop_bulkreq {
- 	__u64		__user *lastip;	/* last inode # pointer		*/
- 	__s32		icount;		/* count of entries in buffer	*/
- 	void		__user *ubuffer;/* user buffer for inode desc.	*/
- 	__s32		__user *ocount;	/* output count pointer		*/
--} xfs_fsop_bulkreq_t;
-+};
- 
- 
- /*
-  * Structures returned from xfs_inumbers routine (XFS_IOC_FSINUMBERS).
-  */
--typedef struct xfs_inogrp {
-+struct xfs_inogrp {
- 	__u64		xi_startino;	/* starting inode number	*/
- 	__s32		xi_alloccount;	/* # bits set in allocmask	*/
- 	__u64		xi_allocmask;	/* mask of allocated inodes	*/
--} xfs_inogrp_t;
-+};
- 
- 
- /*
-@@ -529,7 +529,7 @@ typedef struct xfs_swapext
- 	xfs_off_t	sx_offset;	/* offset into file */
- 	xfs_off_t	sx_length;	/* leng from offset */
- 	char		sx_pad[16];	/* pad space, unused */
--	xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
-+	struct xfs_bstat sx_stat;	/* stat of target b4 copy */
- } xfs_swapext_t;
- 
- /*
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 4fa9a2c8b029..456a0e132d6d 100644
+index 456a0e132d6d..f02a9bd757ad 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -764,7 +764,7 @@ xfs_ioc_bulkstat(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
+@@ -723,7 +723,7 @@ xfs_ioc_space(
  
--	if (copy_from_user(&bulkreq, arg, sizeof(xfs_fsop_bulkreq_t)))
-+	if (copy_from_user(&bulkreq, arg, sizeof(struct xfs_fsop_bulkreq)))
- 		return -EFAULT;
- 
- 	if (copy_from_user(&lastino, bulkreq.lastip, sizeof(__s64)))
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index dd53a9692e68..8dcb7046ed15 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -116,11 +116,14 @@ xfs_ioctl32_bstime_copyin(
- 	return 0;
+ /* Return 0 on success or positive error */
+ int
+-xfs_bulkstat_one_fmt(
++xfs_fsbulkstat_one_fmt(
+ 	struct xfs_ibulk	*breq,
+ 	const struct xfs_bstat	*bstat)
+ {
+@@ -733,7 +733,7 @@ xfs_bulkstat_one_fmt(
  }
  
--/* xfs_bstat_t has differing alignment on intel, & bstime_t sizes everywhere */
-+/*
-+ * struct xfs_bstat has differing alignment on intel, & bstime_t sizes
-+ * everywhere
-+ */
- STATIC int
- xfs_ioctl32_bstat_copyin(
--	xfs_bstat_t		*bstat,
--	compat_xfs_bstat_t	__user *bstat32)
-+	struct xfs_bstat		*bstat,
-+	struct compat_xfs_bstat	__user	*bstat32)
+ int
+-xfs_inumbers_fmt(
++xfs_fsinumbers_fmt(
+ 	struct xfs_ibulk	*breq,
+ 	const struct xfs_inogrp	*igrp)
  {
- 	if (get_user(bstat->bs_ino,	&bstat32->bs_ino)	||
- 	    get_user(bstat->bs_mode,	&bstat32->bs_mode)	||
-@@ -204,7 +207,7 @@ STATIC int
- xfs_compat_ioc_bulkstat(
+@@ -743,7 +743,7 @@ xfs_inumbers_fmt(
+ }
+ 
+ STATIC int
+-xfs_ioc_bulkstat(
++xfs_ioc_fsbulkstat(
+ 	xfs_mount_t		*mp,
+ 	unsigned int		cmd,
+ 	void			__user *arg)
+@@ -790,15 +790,15 @@ xfs_ioc_bulkstat(
+ 	 */
+ 	if (cmd == XFS_IOC_FSINUMBERS) {
+ 		breq.startino = lastino + 1;
+-		error = xfs_inumbers(&breq, xfs_inumbers_fmt);
++		error = xfs_inumbers(&breq, xfs_fsinumbers_fmt);
+ 		lastino = breq.startino - 1;
+ 	} else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE) {
+ 		breq.startino = lastino;
+-		error = xfs_bulkstat_one(&breq, xfs_bulkstat_one_fmt);
++		error = xfs_bulkstat_one(&breq, xfs_fsbulkstat_one_fmt);
+ 		lastino = breq.startino;
+ 	} else {	/* XFS_IOC_FSBULKSTAT */
+ 		breq.startino = lastino + 1;
+-		error = xfs_bulkstat(&breq, xfs_bulkstat_one_fmt);
++		error = xfs_bulkstat(&breq, xfs_fsbulkstat_one_fmt);
+ 		lastino = breq.startino - 1;
+ 	}
+ 
+@@ -1978,7 +1978,7 @@ xfs_file_ioctl(
+ 	case XFS_IOC_FSBULKSTAT_SINGLE:
+ 	case XFS_IOC_FSBULKSTAT:
+ 	case XFS_IOC_FSINUMBERS:
+-		return xfs_ioc_bulkstat(mp, cmd, arg);
++		return xfs_ioc_fsbulkstat(mp, cmd, arg);
+ 
+ 	case XFS_IOC_FSGEOMETRY_V1:
+ 		return xfs_ioc_fsgeometry(mp, arg, 3);
+diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+index fb303eaa8863..cb34bc821201 100644
+--- a/fs/xfs/xfs_ioctl.h
++++ b/fs/xfs/xfs_ioctl.h
+@@ -81,7 +81,8 @@ struct xfs_ibulk;
+ struct xfs_bstat;
+ struct xfs_inogrp;
+ 
+-int xfs_bulkstat_one_fmt(struct xfs_ibulk *breq, const struct xfs_bstat *bstat);
+-int xfs_inumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
++int xfs_fsbulkstat_one_fmt(struct xfs_ibulk *breq,
++			   const struct xfs_bstat *bstat);
++int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
+ 
+ #endif
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 8dcb7046ed15..af753f2708e8 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -84,7 +84,7 @@ xfs_compat_growfs_rt_copyin(
+ }
+ 
+ STATIC int
+-xfs_inumbers_fmt_compat(
++xfs_fsinumbers_fmt_compat(
+ 	struct xfs_ibulk	*breq,
+ 	const struct xfs_inogrp	*igrp)
+ {
+@@ -99,7 +99,7 @@ xfs_inumbers_fmt_compat(
+ }
+ 
+ #else
+-#define xfs_inumbers_fmt_compat xfs_inumbers_fmt
++#define xfs_fsinumbers_fmt_compat xfs_fsinumbers_fmt
+ #endif	/* BROKEN_X86_ALIGNMENT */
+ 
+ STATIC int
+@@ -169,7 +169,7 @@ xfs_bstime_store_compat(
+ 
+ /* Return 0 on success or positive error (to xfs_bulkstat()) */
+ STATIC int
+-xfs_bulkstat_one_fmt_compat(
++xfs_fsbulkstat_one_fmt_compat(
+ 	struct xfs_ibulk	*breq,
+ 	const struct xfs_bstat	*buffer)
+ {
+@@ -204,7 +204,7 @@ xfs_bulkstat_one_fmt_compat(
+ 
+ /* copied from xfs_ioctl.c */
+ STATIC int
+-xfs_compat_ioc_bulkstat(
++xfs_compat_ioc_fsbulkstat(
  	xfs_mount_t		  *mp,
  	unsigned int		  cmd,
--	compat_xfs_fsop_bulkreq_t __user *p32)
-+	struct compat_xfs_fsop_bulkreq __user *p32)
- {
- 	u32			addr;
- 	struct xfs_fsop_bulkreq	bulkreq;
-diff --git a/fs/xfs/xfs_ioctl32.h b/fs/xfs/xfs_ioctl32.h
-index d28fa824284a..7985344d3aa6 100644
---- a/fs/xfs/xfs_ioctl32.h
-+++ b/fs/xfs/xfs_ioctl32.h
-@@ -36,7 +36,7 @@ typedef struct compat_xfs_bstime {
- 	__s32		tv_nsec;	/* and nanoseconds	*/
- } compat_xfs_bstime_t;
+ 	struct compat_xfs_fsop_bulkreq __user *p32)
+@@ -223,8 +223,8 @@ xfs_compat_ioc_bulkstat(
+ 	 * to userpace memory via bulkreq.ubuffer.  Normally the compat
+ 	 * functions and structure size are the correct ones to use ...
+ 	 */
+-	inumbers_fmt_pf		inumbers_func = xfs_inumbers_fmt_compat;
+-	bulkstat_one_fmt_pf	bs_one_func = xfs_bulkstat_one_fmt_compat;
++	inumbers_fmt_pf		inumbers_func = xfs_fsinumbers_fmt_compat;
++	bulkstat_one_fmt_pf	bs_one_func = xfs_fsbulkstat_one_fmt_compat;
  
--typedef struct compat_xfs_bstat {
-+struct compat_xfs_bstat {
- 	__u64		bs_ino;		/* inode number			*/
- 	__u16		bs_mode;	/* type and mode		*/
- 	__u16		bs_nlink;	/* number of links		*/
-@@ -61,14 +61,14 @@ typedef struct compat_xfs_bstat {
- 	__u32		bs_dmevmask;	/* DMIG event mask		*/
- 	__u16		bs_dmstate;	/* DMIG state info		*/
- 	__u16		bs_aextents;	/* attribute number of extents	*/
--} __compat_packed compat_xfs_bstat_t;
-+} __compat_packed;
+ #ifdef CONFIG_X86_X32
+ 	if (in_x32_syscall()) {
+@@ -236,8 +236,8 @@ xfs_compat_ioc_bulkstat(
+ 		 * the data written out in compat layout will not match what
+ 		 * x32 userspace expects.
+ 		 */
+-		inumbers_func = xfs_inumbers_fmt;
+-		bs_one_func = xfs_bulkstat_one_fmt;
++		inumbers_func = xfs_fsinumbers_fmt;
++		bs_one_func = xfs_fsbulkstat_one_fmt;
+ 	}
+ #endif
  
--typedef struct compat_xfs_fsop_bulkreq {
-+struct compat_xfs_fsop_bulkreq {
- 	compat_uptr_t	lastip;		/* last inode # pointer		*/
- 	__s32		icount;		/* count of entries in buffer	*/
- 	compat_uptr_t	ubuffer;	/* user buffer for inode desc.	*/
- 	compat_uptr_t	ocount;		/* output count pointer		*/
--} compat_xfs_fsop_bulkreq_t;
-+};
- 
- #define XFS_IOC_FSBULKSTAT_32 \
- 	_IOWR('X', 101, struct compat_xfs_fsop_bulkreq)
-@@ -106,7 +106,7 @@ typedef struct compat_xfs_swapext {
- 	xfs_off_t		sx_offset;	/* offset into file */
- 	xfs_off_t		sx_length;	/* leng from offset */
- 	char			sx_pad[16];	/* pad space, unused */
--	compat_xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
-+	struct compat_xfs_bstat	sx_stat;	/* stat of target b4 copy */
- } __compat_packed compat_xfs_swapext_t;
- 
- #define XFS_IOC_SWAPEXT_32	_IOWR('X', 109, struct compat_xfs_swapext)
-@@ -201,11 +201,11 @@ typedef struct compat_xfs_fsop_geom_v1 {
- #define XFS_IOC_FSGEOMETRY_V1_32  \
- 	_IOR('X', 100, struct compat_xfs_fsop_geom_v1)
- 
--typedef struct compat_xfs_inogrp {
-+struct compat_xfs_inogrp {
- 	__u64		xi_startino;	/* starting inode number	*/
- 	__s32		xi_alloccount;	/* # bits set in allocmask	*/
- 	__u64		xi_allocmask;	/* mask of allocated inodes	*/
--} __attribute__((packed)) compat_xfs_inogrp_t;
-+} __attribute__((packed));
- 
- /* These growfs input structures have padding on the end, so must translate */
- typedef struct compat_xfs_growfs_data {
+@@ -665,7 +665,7 @@ xfs_file_compat_ioctl(
+ 	case XFS_IOC_FSBULKSTAT_32:
+ 	case XFS_IOC_FSBULKSTAT_SINGLE_32:
+ 	case XFS_IOC_FSINUMBERS_32:
+-		return xfs_compat_ioc_bulkstat(mp, cmd, arg);
++		return xfs_compat_ioc_fsbulkstat(mp, cmd, arg);
+ 	case XFS_IOC_FD_TO_HANDLE_32:
+ 	case XFS_IOC_PATH_TO_HANDLE_32:
+ 	case XFS_IOC_PATH_TO_FSHANDLE_32: {
