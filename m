@@ -1,84 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42388 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726649AbfE1IxY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 May 2019 04:53:24 -0400
-From: Luis Henriques <lhenriques@suse.com>
-Subject: Re: [PATCH v2 6/8] vfs: copy_file_range should update file timestamps
-References: <20190526061100.21761-1-amir73il@gmail.com>
-        <20190526061100.21761-7-amir73il@gmail.com>
-        <20190527143539.GA14980@hermes.olymp>
-        <20190527220513.GB29573@dread.disaster.area>
-Date: Tue, 28 May 2019 09:53:20 +0100
-In-Reply-To: <20190527220513.GB29573@dread.disaster.area> (Dave Chinner's
-        message of "Tue, 28 May 2019 08:05:13 +1000")
-Message-ID: <875zpvrmdb.fsf@suse.com>
+Received: from mail-yb1-f194.google.com ([209.85.219.194]:37754 "EHLO
+        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725956AbfE2TfK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 15:35:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20190529174318.22424-1-amir73il@gmail.com> <20190529174318.22424-13-amir73il@gmail.com>
+In-Reply-To: <20190529174318.22424-13-amir73il@gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 29 May 2019 22:34:58 +0300
+Message-ID: <CAOQ4uxgYM_eM==uqGQuKiGb+f08qs53=E+DONMMzW=N-Ab5YZA@mail.gmail.com>
+Subject: Re: [PATCH v3 12/13] nfs: copy_file_range needs to strip setuid bits
+ and update timestamps
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Olga Kornievskaia <olga.kornievskaia@gmail.com>, Anna Schumaker <Anna.Schumaker@netapp.com>, Trond Myklebust <trond.myklebust@hammerspace.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-Dave Chinner <david@fromorbit.com> writes:
+Hi Olga,Anna,Trond
 
-> On Mon, May 27, 2019 at 03:35:39PM +0100, Luis Henriques wrote:
->> On Sun, May 26, 2019 at 09:10:57AM +0300, Amir Goldstein wrote:
->> > From: Dave Chinner <dchinner@redhat.com>
->> > 
->> > Timestamps are not updated right now, so programs looking for
->> > timestamp updates for file modifications (like rsync) will not
->> > detect that files have changed. We are also accessing the source
->> > data when doing a copy (but not when cloning) so we need to update
->> > atime on the source file as well.
->> > 
->> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
->> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->> > ---
->> >  fs/read_write.c | 10 ++++++++++
->> >  1 file changed, 10 insertions(+)
->> > 
->> > diff --git a/fs/read_write.c b/fs/read_write.c
->> > index e16bcafc0da2..4b23a86aacd9 100644
->> > --- a/fs/read_write.c
->> > +++ b/fs/read_write.c
->> > @@ -1576,6 +1576,16 @@ int generic_copy_file_range_prep(struct file *file_in, struct file *file_out)
->> >  
->> >  	WARN_ON_ONCE(!inode_is_locked(file_inode(file_out)));
->> >  
->> > +	/* Update source timestamps, because we are accessing file data */
->> > +	file_accessed(file_in);
->> > +
->> > +	/* Update destination timestamps, since we can alter file contents. */
->> > +	if (!(file_out->f_mode & FMODE_NOCMTIME)) {
->> > +		ret = file_update_time(file_out);
->> > +		if (ret)
->> > +			return ret;
->> > +	}
->> > +
->> 
->> Is this the right place for updating the timestamps?  I see that in same
->> cases we may be updating the timestamp even if there was an error and no
->> copy was performed.  For example, if file_remove_privs fails.
+Could we get an ACK on this patch.
+It is a prerequisite for merging the cross-device copy_file_range work.
+
+It depends on a new helper introduced here:
+https://lore.kernel.org/linux-fsdevel/CAOQ4uxjbcSWX1hUcuXbn8hFH3QYB+5bAC9Z1yCwJdR=T-GGtCg@mail.gmail.com/T/#m1569878c41f39fac3aadb3832a30659c323b582a
+
+Thanks,
+Amir,
+
+On Wed, May 29, 2019 at 8:43 PM Amir Goldstein <amir73il@gmail.com> wrote:
 >
-> It's the same place we do it for read - file_accessed() is called
-> before we do the IO - and the same place for write -
-> file_update_time() is called before we copy data into the pagecache
-> or do direct IO. As such, it really doesn't matter if it is before
-> or after file_remove_privs() - the IO can still fail for many
-> reasons after we've updated the timestamps and in some of the
-> failure cases (e.g. we failed the sync at the end of an O_DSYNC
-> buffered write) we still want the timestamps to be modified because
-> the data and/or user visible metadata /may/ have been changed.
+> Like ->write_iter(), we update mtime and strip setuid of dst file before
+> copy and like ->read_iter(), we update atime of src file after copy.
 >
-> cfr operates under the same constraints as read() and write(), so we
-> need to update the timestamps up front regardless of whether the
-> copy ends up succeeding or not....
-
-Great, thanks for explaining it.  It now makes sense, even for
-consistency, to have this operation here.
-
-Cheers,
--- 
-Luis
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  fs/nfs/nfs42proc.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
+>
+> diff --git a/fs/nfs/nfs42proc.c b/fs/nfs/nfs42proc.c
+> index 5196bfa7894d..c37a8e5116c6 100644
+> --- a/fs/nfs/nfs42proc.c
+> +++ b/fs/nfs/nfs42proc.c
+> @@ -345,10 +345,13 @@ ssize_t nfs42_proc_copy(struct file *src, loff_t pos_src,
+>
+>         do {
+>                 inode_lock(file_inode(dst));
+> -               err = _nfs42_proc_copy(src, src_lock,
+> -                               dst, dst_lock,
+> -                               &args, &res);
+> +               err = file_modified(dst);
+> +               if (!err)
+> +                       err = _nfs42_proc_copy(src, src_lock,
+> +                                              dst, dst_lock,
+> +                                              &args, &res);
+>                 inode_unlock(file_inode(dst));
+> +               file_accessed(src);
+>
+>                 if (err >= 0)
+>                         break;
+> --
+> 2.17.1
+>
