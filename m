@@ -1,171 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:40874 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727226AbfE1QPD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 12:15:03 -0400
-Date: Tue, 28 May 2019 09:14:49 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 3/8] vfs: introduce generic_file_rw_checks()
-Message-ID: <20190528161449.GC5221@magnolia>
-References: <20190526061100.21761-1-amir73il@gmail.com>
- <20190526061100.21761-4-amir73il@gmail.com>
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:46277 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725956AbfE2Tnh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 15:43:37 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190526061100.21761-4-amir73il@gmail.com>
+References: <20190529174318.22424-1-amir73il@gmail.com> <20190529174318.22424-10-amir73il@gmail.com>
+In-Reply-To: <20190529174318.22424-10-amir73il@gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 29 May 2019 22:43:25 +0300
+Message-ID: <CAOQ4uxiGqiFuz+H8YQgU_2JnVWve+NVcY4Gxi_+ym-Gq6G9xAQ@mail.gmail.com>
+Subject: Re: [PATCH v3 09/13] ceph: copy_file_range needs to strip setuid bits
+ and update timestamps
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org
+To: "Yan, Zheng" <zyan@redhat.com>, Ilya Dryomov <idryomov@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-On Sun, May 26, 2019 at 09:10:54AM +0300, Amir Goldstein wrote:
-> Factor out helper with some checks on in/out file that are
-> common to clone_file_range and copy_file_range.
-> 
-> Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
+Hi Zheng and Ilya,
+
+Could we help us get an ACK on this patch.
+It is a prerequisite for merging the cross-device copy_file_range work.
+
+It depends on a new helper introduced here:
+https://lore.kernel.org/linux-fsdevel/CAOQ4uxjbcSWX1hUcuXbn8hFH3QYB+5bAC9Z1yCwJdR=T-GGtCg@mail.gmail.com/T/#m1569878c41f39fac3aadb3832a30659c323b582a
+
+Luis Henriques has tested (the previous revision of) this work on ceph.
+
+Thanks,
+Amir,
+
+On Wed, May 29, 2019 at 8:43 PM Amir Goldstein <amir73il@gmail.com> wrote:
+>
+> Because ceph doesn't hold destination inode lock throughout the copy,
+> strip setuid bits before and after copy.
+>
+> The destination inode mtime is updated before and after the copy and the
+> source inode atime is updated after the copy, similar to the filesystem
+> ->read_iter() implementation.
+>
 > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 > ---
->  fs/read_write.c    | 38 +++++++++++---------------------------
->  include/linux/fs.h |  1 +
->  mm/filemap.c       | 24 ++++++++++++++++++++++++
->  3 files changed, 36 insertions(+), 27 deletions(-)
-> 
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index b63dcb4e4fe9..f1900bdb3127 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -1617,17 +1617,18 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
->  			    struct file *file_out, loff_t pos_out,
->  			    size_t len, unsigned int flags)
->  {
-> -	struct inode *inode_in = file_inode(file_in);
-> -	struct inode *inode_out = file_inode(file_out);
->  	ssize_t ret;
->  
->  	if (flags != 0)
->  		return -EINVAL;
->  
-> -	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
-> -		return -EISDIR;
-> -	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-> -		return -EINVAL;
-> +	/* this could be relaxed once a method supports cross-fs copies */
-> +	if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
-> +		return -EXDEV;
+>  fs/ceph/file.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+>
+> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+> index e87f7b2023af..8a70708e1aca 100644
+> --- a/fs/ceph/file.c
+> +++ b/fs/ceph/file.c
+> @@ -1947,6 +1947,15 @@ static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
+>                 goto out;
+>         }
+>
+> +       /* Should dst_inode lock be held throughout the copy operation? */
+> +       inode_lock(dst_inode);
+> +       ret = file_modified(dst_file);
+> +       inode_unlock(dst_inode);
+> +       if (ret < 0) {
+> +               dout("failed to modify dst file before copy (%zd)\n", ret);
+> +               goto out;
+> +       }
 > +
-> +	ret = generic_file_rw_checks(file_in, file_out);
-> +	if (unlikely(ret))
-> +		return ret;
->  
->  	ret = rw_verify_area(READ, file_in, &pos_in, len);
->  	if (unlikely(ret))
-> @@ -1637,15 +1638,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
->  	if (unlikely(ret))
->  		return ret;
->  
-> -	if (!(file_in->f_mode & FMODE_READ) ||
-> -	    !(file_out->f_mode & FMODE_WRITE) ||
-> -	    (file_out->f_flags & O_APPEND))
-> -		return -EBADF;
-> -
-> -	/* this could be relaxed once a method supports cross-fs copies */
-> -	if (inode_in->i_sb != inode_out->i_sb)
-> -		return -EXDEV;
-> -
->  	if (len == 0)
->  		return 0;
->  
-> @@ -2013,29 +2005,21 @@ loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
->  			   struct file *file_out, loff_t pos_out,
->  			   loff_t len, unsigned int remap_flags)
->  {
-> -	struct inode *inode_in = file_inode(file_in);
-> -	struct inode *inode_out = file_inode(file_out);
->  	loff_t ret;
->  
->  	WARN_ON_ONCE(remap_flags & REMAP_FILE_DEDUP);
->  
-> -	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
-> -		return -EISDIR;
-> -	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-> -		return -EINVAL;
-> -
->  	/*
->  	 * FICLONE/FICLONERANGE ioctls enforce that src and dest files are on
->  	 * the same mount. Practically, they only need to be on the same file
->  	 * system.
->  	 */
-> -	if (inode_in->i_sb != inode_out->i_sb)
-> +	if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
->  		return -EXDEV;
->  
-> -	if (!(file_in->f_mode & FMODE_READ) ||
-> -	    !(file_out->f_mode & FMODE_WRITE) ||
-> -	    (file_out->f_flags & O_APPEND))
-> -		return -EBADF;
-> +	ret = generic_file_rw_checks(file_in, file_out);
-> +	if (ret < 0)
-> +		return ret;
->  
->  	if (!file_in->f_op->remap_file_range)
->  		return -EOPNOTSUPP;
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index ea17858310ff..89b9b73eb581 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -3049,6 +3049,7 @@ extern ssize_t generic_write_checks(struct kiocb *, struct iov_iter *);
->  extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
->  				struct file *file_out, loff_t pos_out,
->  				loff_t *count, unsigned int remap_flags);
-> +extern int generic_file_rw_checks(struct file *file_in, struct file *file_out);
->  extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
->  extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
->  extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index c5af80c43d36..798aac92cd76 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -3040,6 +3040,30 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
->  	return 0;
+>         /*
+>          * We need FILE_WR caps for dst_ci and FILE_RD for src_ci as other
+>          * clients may have dirty data in their caches.  And OSDs know nothing
+> @@ -2097,6 +2106,14 @@ static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
+>  out:
+>         ceph_free_cap_flush(prealloc_cf);
+>
+> +       file_accessed(src_file);
+> +       /* To be on the safe side, remove privs also after copy */
+> +       inode_lock(dst_inode);
+> +       err = file_modified(dst_file);
+> +       inode_unlock(dst_inode);
+> +       if (err < 0)
+> +               dout("failed to modify dst file after copy (%zd)\n", err);
+> +
+>         return ret;
 >  }
->  
-> +
-> +/*
-> + * Performs common checks before doing a file copy/clone
-> + * from @file_in to @file_out.
-> + */
-> +int generic_file_rw_checks(struct file *file_in, struct file *file_out)
-> +{
-> +	struct inode *inode_in = file_inode(file_in);
-> +	struct inode *inode_out = file_inode(file_out);
-> +
-> +	/* Don't copy dirs, pipes, sockets... */
-> +	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
-> +		return -EISDIR;
-> +	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-> +		return -EINVAL;
-> +
-> +	if (!(file_in->f_mode & FMODE_READ) ||
-> +	    !(file_out->f_mode & FMODE_WRITE) ||
-> +	    (file_out->f_flags & O_APPEND))
-> +		return -EBADF;
-> +
-> +	return 0;
-> +}
-
-/me wishes all these generic vfs io check helpers weren't all being
-stuffed into mm/ but that's a refactoring for a different patchset...
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> +
->  int pagecache_write_begin(struct file *file, struct address_space *mapping,
->  				loff_t pos, unsigned len, unsigned flags,
->  				struct page **pagep, void **fsdata)
-> -- 
+>
+> --
 > 2.17.1
-> 
+>
