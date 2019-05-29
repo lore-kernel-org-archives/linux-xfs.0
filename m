@@ -1,113 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:35474 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726205AbfE2Rnl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 13:43:41 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v3 06/13] vfs: introduce file_modified() helper
-Date: Wed, 29 May 2019 20:43:10 +0300
-Message-Id: <20190529174318.22424-7-amir73il@gmail.com>
-In-Reply-To: <20190529174318.22424-1-amir73il@gmail.com>
-References: <20190529174318.22424-1-amir73il@gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:49098 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725917AbfE2SWL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 14:22:11 -0400
+Date: Wed, 29 May 2019 11:21:11 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: How to package e2scrub
+Message-ID: <20190529182111.GA5220@magnolia>
+References: <20190529120603.xuet53xgs6ahfvpl@work>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190529120603.xuet53xgs6ahfvpl@work>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-ext4@vger.kernel.org, Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-The combination of file_remove_privs() and file_update_mtime() is
-quite common in filesystem ->write_iter() methods.
+On Wed, May 29, 2019 at 02:06:03PM +0200, Lukas Czerner wrote:
+> Hi guys,
+> 
+> I am about to release 1.45.2 for Fedora rawhide, but I was thinking
+> about how to package the e2scrub cron job/systemd service.
 
-Modelled after the helper file_accessed(), introduce file_modified()
-and use it from generic_remap_file_range_prep().
+Funny, xfs has the same conundrum.  Adding Eric & xfs list to cc...
 
-Note that the order of calling file_remove_privs() before
-file_update_mtime() in the helper was matched to the more common order by
-filesystems and not the current order in generic_remap_file_range_prep().
+> I really do not like the idea of installing cron job and/or the service as
+> a part of regular e2fsprogs package. This can potentially really surprise
+> people in a bad way.
+>
+> Note that I've already heard some complaints from debian users about the
+> systemd service being installed on their system after the e2fsprogs
+> update.
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/inode.c         | 20 ++++++++++++++++++++
- fs/read_write.c    | 21 +++------------------
- include/linux/fs.h |  2 ++
- 3 files changed, 25 insertions(+), 18 deletions(-)
+Yeah, e2scrub is bitrotting rather faster than I had thought it
+would... but it's only available in Debian unstable.
 
-diff --git a/fs/inode.c b/fs/inode.c
-index df6542ec3b88..2885f2f2c7a5 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -1899,6 +1899,26 @@ int file_update_time(struct file *file)
- }
- EXPORT_SYMBOL(file_update_time);
- 
-+/* Caller must hold the file's inode lock */
-+int file_modified(struct file *file)
-+{
-+	int err;
-+
-+	/*
-+	 * Clear the security bits if the process is not being run by root.
-+	 * This keeps people from modifying setuid and setgid binaries.
-+	 */
-+	err = file_remove_privs(file);
-+	if (err)
-+		return err;
-+
-+	if (likely(file->f_mode & FMODE_NOCMTIME))
-+		return 0;
-+
-+	return file_update_time(file);
-+}
-+EXPORT_SYMBOL(file_modified);
-+
- int inode_needs_sync(struct inode *inode)
- {
- 	if (IS_SYNC(inode))
-diff --git a/fs/read_write.c b/fs/read_write.c
-index b0fb1176b628..cec7e7b1f693 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1980,25 +1980,10 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 		return ret;
- 
- 	/* If can't alter the file contents, we're done. */
--	if (!(remap_flags & REMAP_FILE_DEDUP)) {
--		/* Update the timestamps, since we can alter file contents. */
--		if (!(file_out->f_mode & FMODE_NOCMTIME)) {
--			ret = file_update_time(file_out);
--			if (ret)
--				return ret;
--		}
-+	if (!(remap_flags & REMAP_FILE_DEDUP))
-+		ret = file_modified(file_out);
- 
--		/*
--		 * Clear the security bits if the process is not being run by
--		 * root.  This keeps people from modifying setuid and setgid
--		 * binaries.
--		 */
--		ret = file_remove_privs(file_out);
--		if (ret)
--			return ret;
--	}
--
--	return 0;
-+	return ret;
- }
- EXPORT_SYMBOL(generic_remap_file_range_prep);
- 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index e4d382c4342a..79ffa2958bd8 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2177,6 +2177,8 @@ static inline void file_accessed(struct file *file)
- 		touch_atime(&file->f_path);
- }
- 
-+extern int file_modified(struct file *file);
-+
- int sync_inode(struct inode *inode, struct writeback_control *wbc);
- int sync_inode_metadata(struct inode *inode, int wait);
- 
--- 
-2.17.1
+> What I am going to do is to split the systemd service into a separate
+> package and I'd like to come to some agreement about the name of the
+> package so that we can have the same name across distributions (at least
+> Fedora/Debian/Suse).
+
+Indeed.  Eric picked "xfsprogs-xfs_scrub" for Rawhide, though I find
+that name to be very clunky and would have preferred "xfs_scrub".
+
+> I was thinking about e2scrub-service for systemd service or e2scrub-cron
+> for the cron job. What do you think ?
+
+In /theory/ the cronjob support in e2scrub (and xfs_scrub) were designed
+to step out of the way if systemd is running, so at least in theory (on
+Debian anyway) the two can be in the same package with the end result
+being that e2scrub runs weekly in the background.  I've not tried in
+rhel/suse environments, however.
+
+I also don't see the point of supporting cron *while* systemd is active.
+That increases the amount of corner-case testing we have to do, for
+little gain.  It's enough work to maintain the systemd-with-timers and
+sysvinit-with-cron scenarios.
+
+If you're worried about the stability of systemd timer code, systemd's
+timer support has been stable enough to run e2scrub_all/xfs_scrub_all on
+my systems since late 2015, and I have no interest in supporting either
+on a pre-2016 distro.  Practically speaking, I guess that RHEL8, SLES16,
+and Ubuntu 20.04 will be the first LTS distros to support e2scrub at
+all.
+
+(As for xfs_scrub, it'll barely achieve alpha status in Linux 5.2...)
+
+> Also I decided not to package the cron job for now. But if I decide to
+> package it in the future I'd like to change the e2scrub cron
+> configuration so that it can run on the systems with systemd but make
+> the package conflict with the e2scrub-service so that users are free to
+> decide how they want to use it.
+
+If you do end up creating two packages I'd name the systemd one
+e2scrub-systemd over e2scrub-service.
+
+--D
+
+> Thoughts ?
+> 
+> Thanks!
+> -Lukas
