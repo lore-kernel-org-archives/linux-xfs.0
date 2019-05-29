@@ -1,97 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:39086 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725816AbfE2DAN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 23:00:13 -0400
-Date: Tue, 28 May 2019 20:00:01 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 0/5] fstests: copy_file_range() tests
-Message-ID: <20190529030001.GC5244@magnolia>
-References: <20190526084535.999-1-amir73il@gmail.com>
+Received: from mail-yb1-f195.google.com ([209.85.219.195]:45716 "EHLO
+        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725880AbfE2FjB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 01:39:01 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190526084535.999-1-amir73il@gmail.com>
+References: <20190527172655.9287-1-amir73il@gmail.com> <20190528202659.GA12412@mit.edu>
+In-Reply-To: <20190528202659.GA12412@mit.edu>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 29 May 2019 08:38:49 +0300
+Message-ID: <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
+Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Eryu Guan <guaneryu@gmail.com>, Dave Chinner <david@fromorbit.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-api@vger.kernel.org
 
-On Sun, May 26, 2019 at 11:45:30AM +0300, Amir Goldstein wrote:
-> Eryu,
-> 
-> This is a re-work of Dave Chinner's copy_file_range() tests which
-> I used to verify the kernel fixes of the syscall [1].
-> 
-> I split out the single bounds test by Dave to 4 tests.
-> immutable and swap file copy have specific requiremenet which many
-> filesystems do not meet (e.g. cifs,nfs,ceph,overlayfs), so those
-> test cases were split to individual test to allow better bounds test
-> converage for all filesystems.
-> 
-> The 3 first tests fix bugs in the interface, so they are appropriate
-> for merge IMO. The last test (cross-device copy) tests a new
-> functionality, so you may want to wait with merge till after the work
-> is merged upstream.
+On Tue, May 28, 2019 at 11:27 PM Theodore Ts'o <tytso@mit.edu> wrote:
+>
+> On Mon, May 27, 2019 at 08:26:55PM +0300, Amir Goldstein wrote:
+> >
+> > Following our discussions on LSF/MM and beyond [1][2], here is
+> > an RFC documentation patch.
+> >
+> > Ted, I know we discussed limiting the API for linking an O_TMPFILE
+> > to avert the hardlinks issue, but I decided it would be better to
+> > document the hardlinks non-guaranty instead. This will allow me to
+> > replicate the same semantics and documentation to renameat(2).
+> > Let me know how that works out for you.
+> >
+> > I also decided to try out two separate flags for data and metadata.
+> > I do not find any of those flags very useful without the other, but
+> > documenting them seprately was easier, because of the fsync/fdatasync
+> > reference.  In the end, we are trying to solve a social engineering
+> > problem, so this is the least confusing way I could think of to describe
+> > the new API.
+>
+> The way you have stated thigs is very confusing, and prone to be
+> misunderstood.  I think it would be helpful to state things in the
+> positive, instead of the negative.
+>
+> Let's review what you had wanted:
+>
+>         *If* the filename is visible in the directory after the crash,
+>         *then* all of the metadata/data that had been written to the file
+>         before the linkat(2) would be visible.
+>
+>         HOWEVER, you did not want to necessarily force an fsync(2) in
+>         order to provide that guarantee.  That is, the filename would
+>         not necessarily be guaranteed to be visible after a crash when
+>         linkat(2) returns, but if the existence of the filename is
+>         persisted, then the data would be too.
+>
+>         Also, at least initially we talked about this only making
+>         sense for O_TMPFILE file desacriptors.  I believe you were
+>         trying to generalize things so it wouldn't necessarily have to
+>         be a file created using O_TMPFILE.  Is that correct?
 
-The tests mostly look ok to me...
+That is correct. I felt we were limiting ourselves only to avert the
+hardlinks issue, so decided its better to explain that "nlink is not
+part of the inode metadata" that this guarantee refers to.
+I would be happy to get your feedback about the hardlink disclaimer
+since you brought up the concern. It the disclaimer enough?
+Not needed at all?
 
-> NOTE that the bounds check test depend on changes that have been merged
-> to xfsprogs v4.20. Without those changes the test will hang!
+>
+> So instead of saying "A filesystem that accepts this flag will
+> guaranty, that old inode data will not be exposed in the new linked
+> name."  It's much clearer to state this in the affirmative:
+>
+>         A filesystem which accepts this flag will guarantee that if
+>         the new pathname exists after a crash, all of the data written
+>         to the file at the time of the linkat(2) call will be visible.
+>
 
-Is that the requirement for opening pipes in nonblocking mode?
+Sounds good to me. I will take a swing at another patch.
 
-If so... that ought to be a separate test (or at least a separate part
-of the test) that can be skipped if we detect an old xfs_io.
-
-> I used an artificial requirement _require_xfs_io_command "chmod" to
-> skip the test with old xfs_io. I welcome suggestions for better way to
-> handle this issue.
-
-Grepping manpages? :D
-
---D
-
-> 
-> Thanks,
-> Amir.
-> 
-> Changes from v1:
-> - Remove patch to test EINVAL behavior instead of short copy
-> - Remove 'chmod -r' permission drop test case
-> - Split out test for swap/immutable file copy
-> - Split of cross-device copy test
-> 
-> [1] https://lore.kernel.org/linux-fsdevel/20190526061100.21761-1-amir73il@gmail.com/
-> 
-> Amir Goldstein (5):
->   generic: create copy_range group
->   generic: copy_file_range immutable file test
->   generic: copy_file_range swapfile test
->   generic: copy_file_range bounds test
->   generic: cross-device copy_file_range test
-> 
->  tests/generic/434     |   2 +
->  tests/generic/988     |  59 ++++++++++++++++++++
->  tests/generic/988.out |   5 ++
->  tests/generic/989     |  56 +++++++++++++++++++
->  tests/generic/989.out |   4 ++
->  tests/generic/990     | 123 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/990.out |  37 +++++++++++++
->  tests/generic/991     |  56 +++++++++++++++++++
->  tests/generic/991.out |   4 ++
->  tests/generic/group   |  14 +++--
->  10 files changed, 355 insertions(+), 5 deletions(-)
->  create mode 100755 tests/generic/988
->  create mode 100644 tests/generic/988.out
->  create mode 100755 tests/generic/989
->  create mode 100644 tests/generic/989.out
->  create mode 100755 tests/generic/990
->  create mode 100644 tests/generic/990.out
->  create mode 100755 tests/generic/991
->  create mode 100644 tests/generic/991.out
-> 
-> -- 
-> 2.17.1
-> 
+Thanks for the review!
+Amir.
