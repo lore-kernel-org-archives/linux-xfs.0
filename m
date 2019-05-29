@@ -1,81 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f195.google.com ([209.85.219.195]:45716 "EHLO
-        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725880AbfE2FjB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 01:39:01 -0400
-MIME-Version: 1.0
-References: <20190527172655.9287-1-amir73il@gmail.com> <20190528202659.GA12412@mit.edu>
-In-Reply-To: <20190528202659.GA12412@mit.edu>
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:54008 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726024AbfE2KNj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 06:13:39 -0400
+Received: by mail-wm1-f68.google.com with SMTP id d17so1238019wmb.3
+        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 03:13:37 -0700 (PDT)
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 29 May 2019 08:38:49 +0300
-Message-ID: <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
-Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH] xfs_io: allow passing an open file to copy_range
+Date: Wed, 29 May 2019 13:13:30 +0300
+Message-Id: <20190529101330.29470-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-api@vger.kernel.org
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Tue, May 28, 2019 at 11:27 PM Theodore Ts'o <tytso@mit.edu> wrote:
->
-> On Mon, May 27, 2019 at 08:26:55PM +0300, Amir Goldstein wrote:
-> >
-> > Following our discussions on LSF/MM and beyond [1][2], here is
-> > an RFC documentation patch.
-> >
-> > Ted, I know we discussed limiting the API for linking an O_TMPFILE
-> > to avert the hardlinks issue, but I decided it would be better to
-> > document the hardlinks non-guaranty instead. This will allow me to
-> > replicate the same semantics and documentation to renameat(2).
-> > Let me know how that works out for you.
-> >
-> > I also decided to try out two separate flags for data and metadata.
-> > I do not find any of those flags very useful without the other, but
-> > documenting them seprately was easier, because of the fsync/fdatasync
-> > reference.  In the end, we are trying to solve a social engineering
-> > problem, so this is the least confusing way I could think of to describe
-> > the new API.
->
-> The way you have stated thigs is very confusing, and prone to be
-> misunderstood.  I think it would be helpful to state things in the
-> positive, instead of the negative.
->
-> Let's review what you had wanted:
->
->         *If* the filename is visible in the directory after the crash,
->         *then* all of the metadata/data that had been written to the file
->         before the linkat(2) would be visible.
->
->         HOWEVER, you did not want to necessarily force an fsync(2) in
->         order to provide that guarantee.  That is, the filename would
->         not necessarily be guaranteed to be visible after a crash when
->         linkat(2) returns, but if the existence of the filename is
->         persisted, then the data would be too.
->
->         Also, at least initially we talked about this only making
->         sense for O_TMPFILE file desacriptors.  I believe you were
->         trying to generalize things so it wouldn't necessarily have to
->         be a file created using O_TMPFILE.  Is that correct?
+Commit 1a05efba ("io: open pipes in non-blocking mode")
+addressed a specific copy_range issue with pipes by always opening
+pipes in non-blocking mode.
 
-That is correct. I felt we were limiting ourselves only to avert the
-hardlinks issue, so decided its better to explain that "nlink is not
-part of the inode metadata" that this guarantee refers to.
-I would be happy to get your feedback about the hardlink disclaimer
-since you brought up the concern. It the disclaimer enough?
-Not needed at all?
+This change takes a different approach and allows passing any
+open file as the source file to copy_range.  Besides providing
+more flexibility to the copy_range command, this allows xfstests
+to check if xfs_io supports passing an open file to copy_range.
 
->
-> So instead of saying "A filesystem that accepts this flag will
-> guaranty, that old inode data will not be exposed in the new linked
-> name."  It's much clearer to state this in the affirmative:
->
->         A filesystem which accepts this flag will guarantee that if
->         the new pathname exists after a crash, all of the data written
->         to the file at the time of the linkat(2) call will be visible.
->
+The intended usage is:
+$ mkfifo fifo
+$ xfs_io -f -n -r -c "open -f dst" -C "copy_range -f 0" fifo
 
-Sounds good to me. I will take a swing at another patch.
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
 
-Thanks for the review!
+Darrick,
+
+Folowing our discussion on the copy_range bounds test [1],
+what do you think about using copy_range -f in the copy_range
+fifo test with a fifo that was explicitly opened non-blocking,
+instead of trying to figure out if copy_range is going to hang
+or not?
+
+This option is already available with sendfile command and
+we can make it available for reflink and dedupe commands if
+we want to. Too bad that these 4 commands have 3 different
+usage patterns to begin with...
+
+Thanks,
 Amir.
+
+[1] https://marc.info/?l=fstests&m=155910786017989&w=2
+
+ io/copy_file_range.c | 30 ++++++++++++++++++++++++------
+ man/man8/xfs_io.8    | 10 +++++++---
+ 2 files changed, 31 insertions(+), 9 deletions(-)
+
+diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+index d069e5bb..1f0d2713 100644
+--- a/io/copy_file_range.c
++++ b/io/copy_file_range.c
+@@ -26,6 +26,8 @@ copy_range_help(void)
+ 					       file at offset 200\n\
+  'copy_range some_file' - copies all bytes from some_file into the open file\n\
+                           at position 0\n\
++ 'copy_range -f 2' - copies all bytes from open file 2 into the current open file\n\
++                          at position 0\n\
+ "));
+ }
+ 
+@@ -82,11 +84,12 @@ copy_range_f(int argc, char **argv)
+ 	int opt;
+ 	int ret;
+ 	int fd;
++	int src_file_arg = 1;
+ 	size_t fsblocksize, fssectsize;
+ 
+ 	init_cvtnum(&fsblocksize, &fssectsize);
+ 
+-	while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
++	while ((opt = getopt(argc, argv, "s:d:l:f:")) != -1) {
+ 		switch (opt) {
+ 		case 's':
+ 			src = cvtnum(fsblocksize, fssectsize, optarg);
+@@ -109,15 +112,30 @@ copy_range_f(int argc, char **argv)
+ 				return 0;
+ 			}
+ 			break;
++		case 'f':
++			fd = atoi(argv[1]);
++			if (fd < 0 || fd >= filecount) {
++				printf(_("value %d is out of range (0-%d)\n"),
++					fd, filecount-1);
++				return 0;
++			}
++			fd = filetable[fd].fd;
++			/* Expect no src_file arg */
++			src_file_arg = 0;
++			break;
+ 		}
+ 	}
+ 
+-	if (optind != argc - 1)
++	if (optind != argc - src_file_arg) {
++		fprintf(stderr, "optind=%d, argc=%d, src_file_arg=%d\n", optind, argc, src_file_arg);
+ 		return command_usage(&copy_range_cmd);
++	}
+ 
+-	fd = openfile(argv[optind], NULL, IO_READONLY, 0, NULL);
+-	if (fd < 0)
+-		return 0;
++	if (src_file_arg) {
++		fd = openfile(argv[optind], NULL, IO_READONLY, 0, NULL);
++		if (fd < 0)
++			return 0;
++	}
+ 
+ 	if (src == 0 && dst == 0 && len == 0) {
+ 		off64_t	sz;
+@@ -150,7 +168,7 @@ copy_range_init(void)
+ 	copy_range_cmd.argmin = 1;
+ 	copy_range_cmd.argmax = 7;
+ 	copy_range_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	copy_range_cmd.args = _("[-s src_off] [-d dst_off] [-l len] src_file");
++	copy_range_cmd.args = _("[-s src_off] [-d dst_off] [-l len] src_file | -f N");
+ 	copy_range_cmd.oneline = _("Copy a range of data between two files");
+ 	copy_range_cmd.help = copy_range_help;
+ 
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 980dcfd3..6e064bdd 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -660,12 +660,16 @@ Do not print timing statistics at all.
+ .RE
+ .PD
+ .TP
+-.BI "copy_range [ -s " src_offset " ] [ -d " dst_offset " ] [ -l " length " ] src_file"
++.BI "copy_range [ -s " src_offset " ] [ -d " dst_offset " ] [ -l " length " ] src_file | \-f " N
+ On filesystems that support the
+ .BR copy_file_range (2)
+-system call, copies data from the
++system call, copies data from the source file into the current open file.
++The source must be specified either by path
++.RB ( src_file )
++or as another open file
++.RB ( \-f ).
++If
+ .I src_file
+-into the open file.  If
+ .IR src_offset ,
+ .IR dst_offset ,
+ and
+-- 
+2.17.1
