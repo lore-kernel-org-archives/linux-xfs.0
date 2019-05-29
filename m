@@ -1,142 +1,174 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f66.google.com ([209.85.161.66]:38715 "EHLO
-        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726120AbfE2F6V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 01:58:21 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:40582 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726068AbfE2Oqc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 10:46:32 -0400
+Date: Wed, 29 May 2019 07:46:04 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_io: allow passing an open file to copy_range
+Message-ID: <20190529144604.GC5231@magnolia>
+References: <20190529101330.29470-1-amir73il@gmail.com>
 MIME-Version: 1.0
-References: <20190527172655.9287-1-amir73il@gmail.com> <20190528200659.GK5221@magnolia>
-In-Reply-To: <20190528200659.GK5221@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 29 May 2019 08:58:09 +0300
-Message-ID: <CAOQ4uxgq-A7qpi8Mj-N2f2TC1fCHZ45yBc0_KfA9CygwqLMNHw@mail.gmail.com>
-Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190529101330.29470-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-api@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Tue, May 28, 2019 at 11:07 PM Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
->
-> On Mon, May 27, 2019 at 08:26:55PM +0300, Amir Goldstein wrote:
-> > New link flags to request "atomic" link.
-> >
-> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > ---
-> >
-> > Hi Guys,
-> >
-> > Following our discussions on LSF/MM and beyond [1][2], here is
-> > an RFC documentation patch.
-> >
-> > Ted, I know we discussed limiting the API for linking an O_TMPFILE
-> > to avert the hardlinks issue, but I decided it would be better to
-> > document the hardlinks non-guaranty instead. This will allow me to
-> > replicate the same semantics and documentation to renameat(2).
-> > Let me know how that works out for you.
-> >
-> > I also decided to try out two separate flags for data and metadata.
-> > I do not find any of those flags very useful without the other, but
-> > documenting them seprately was easier, because of the fsync/fdatasync
-> > reference.  In the end, we are trying to solve a social engineering
-> > problem, so this is the least confusing way I could think of to describe
-> > the new API.
-> >
-> > First implementation of AT_ATOMIC_METADATA is expected to be
-> > noop for xfs/ext4 and probably fsync for btrfs.
-> >
-> > First implementation of AT_ATOMIC_DATA is expected to be
-> > filemap_write_and_wait() for xfs/ext4 and probably fdatasync for btrfs.
-> >
-> > Thoughts?
-> >
-> > Amir.
-> >
-> > [1] https://lwn.net/Articles/789038/
-> > [2] https://lore.kernel.org/linux-fsdevel/CAOQ4uxjZm6E2TmCv8JOyQr7f-2VB0uFRy7XEp8HBHQmMdQg+6w@mail.gmail.com/
-> >
-> >  man2/link.2 | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 51 insertions(+)
-> >
-> > diff --git a/man2/link.2 b/man2/link.2
-> > index 649ba00c7..15c24703e 100644
-> > --- a/man2/link.2
-> > +++ b/man2/link.2
-> > @@ -184,6 +184,57 @@ See
-> >  .BR openat (2)
-> >  for an explanation of the need for
-> >  .BR linkat ().
-> > +.TP
-> > +.BR AT_ATOMIC_METADATA " (since Linux 5.x)"
-> > +By default, a link operation followed by a system crash, may result in the
-> > +new file name being linked with old inode metadata, such as out dated time
-> > +stamps or missing extended attributes.
-> > +.BR fsync (2)
-> > +before linking the inode, but that involves flushing of volatile disk caches.
-> > +
-> > +A filesystem that accepts this flag will guaranty, that old inode metadata
-> > +will not be exposed in the new linked name.
-> > +Some filesystems may internally perform
-> > +.BR fsync (2)
-> > +before linking the inode to provide this guaranty,
-> > +but often, filesystems will have a more efficient method to provide this
-> > +guaranty without flushing volatile disk caches.
-> > +
-> > +A filesystem that accepts this flag does
-> > +.BR NOT
-> > +guaranty that the new file name will exist after a system crash, nor that the
-> > +current inode metadata is persisted to disk.
->
-> Hmmm.  I think it would be much clearer to state the two expectations in
-> the same place, e.g.:
->
-> "A filesystem that accepts this flag guarantees that after a successful
-> call completion, the filesystem will return either (a) the version of
-> the metadata that was on disk at the time the call completed; (b) a
-> newer version of that metadata; or (c) -ENOENT.  In other words, a
-> subsequent access of the file path will never return metadata that was
-> obsolete at the time that the call completed, even if the system crashes
-> immediately afterwards."
+On Wed, May 29, 2019 at 01:13:30PM +0300, Amir Goldstein wrote:
+> Commit 1a05efba ("io: open pipes in non-blocking mode")
+> addressed a specific copy_range issue with pipes by always opening
+> pipes in non-blocking mode.
+> 
+> This change takes a different approach and allows passing any
+> open file as the source file to copy_range.  Besides providing
+> more flexibility to the copy_range command, this allows xfstests
+> to check if xfs_io supports passing an open file to copy_range.
+> 
+> The intended usage is:
+> $ mkfifo fifo
+> $ xfs_io -f -n -r -c "open -f dst" -C "copy_range -f 0" fifo
+> 
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+> 
+> Darrick,
+> 
+> Folowing our discussion on the copy_range bounds test [1],
+> what do you think about using copy_range -f in the copy_range
+> fifo test with a fifo that was explicitly opened non-blocking,
+> instead of trying to figure out if copy_range is going to hang
+> or not?
+> 
+> This option is already available with sendfile command and
+> we can make it available for reflink and dedupe commands if
+> we want to. Too bad that these 4 commands have 3 different
+> usage patterns to begin with...
 
-Your feedback is along the same line as Ted's feedback.
-I will try out the phrasing that Ted proposed, will see how that goes...
+I wonder if there's any sane way to overload the src_file argument such
+that we can pass filetable[] offsets without having to burn more getopt
+flags...?
 
->
-> Did I get that right?  I /think/ this means that one could implement Ye
-> Olde Write And Rename as:
->
-> fd = open(".", O_TMPFILE...);
-> write(fd);
-> fsync(fd);
+(Oh wait, I bet you're using the '-f' flag to figure out if xfs_io is
+new enough not to block on fifos, right? :))
 
-Certainly not fsync(), that what my "counter-fsync()" phrasing was trying to
-convey. The flags are meant as a "cheaper" replacement for that fsync().
+But otherwise this seems like a reasonable approach.
 
-> snprintf(path, PATH_MAX, "/proc/self/fd/%d", fd);
-> linkat(AT_FDCWD, path, AT_FDCWD, "file.txt",
->         AT_EMPTY_PATH | AT_ATOMIC_DATA | AT_ATOMIC_METADATA);
->
-> (Still struggling to figure out what userspace programs would use this
-> for...)
->
+> Thanks,
+> Amir.
+> 
+> [1] https://marc.info/?l=fstests&m=155910786017989&w=2
+> 
+>  io/copy_file_range.c | 30 ++++++++++++++++++++++++------
+>  man/man8/xfs_io.8    | 10 +++++++---
+>  2 files changed, 31 insertions(+), 9 deletions(-)
+> 
+> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> index d069e5bb..1f0d2713 100644
+> --- a/io/copy_file_range.c
+> +++ b/io/copy_file_range.c
+> @@ -26,6 +26,8 @@ copy_range_help(void)
+>  					       file at offset 200\n\
+>   'copy_range some_file' - copies all bytes from some_file into the open file\n\
+>                            at position 0\n\
+> + 'copy_range -f 2' - copies all bytes from open file 2 into the current open file\n\
+> +                          at position 0\n\
+>  "));
+>  }
+>  
+> @@ -82,11 +84,12 @@ copy_range_f(int argc, char **argv)
+>  	int opt;
+>  	int ret;
+>  	int fd;
+> +	int src_file_arg = 1;
+>  	size_t fsblocksize, fssectsize;
+>  
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+>  
+> -	while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
+> +	while ((opt = getopt(argc, argv, "s:d:l:f:")) != -1) {
+>  		switch (opt) {
+>  		case 's':
+>  			src = cvtnum(fsblocksize, fssectsize, optarg);
+> @@ -109,15 +112,30 @@ copy_range_f(int argc, char **argv)
+>  				return 0;
+>  			}
+>  			break;
+> +		case 'f':
+> +			fd = atoi(argv[1]);
+> +			if (fd < 0 || fd >= filecount) {
+> +				printf(_("value %d is out of range (0-%d)\n"),
+> +					fd, filecount-1);
+> +				return 0;
+> +			}
+> +			fd = filetable[fd].fd;
+> +			/* Expect no src_file arg */
+> +			src_file_arg = 0;
+> +			break;
+>  		}
+>  	}
+>  
+> -	if (optind != argc - 1)
+> +	if (optind != argc - src_file_arg) {
+> +		fprintf(stderr, "optind=%d, argc=%d, src_file_arg=%d\n", optind, argc, src_file_arg);
+>  		return command_usage(&copy_range_cmd);
+> +	}
+>  
+> -	fd = openfile(argv[optind], NULL, IO_READONLY, 0, NULL);
+> -	if (fd < 0)
+> -		return 0;
+> +	if (src_file_arg) {
 
-There are generally two use cases:
+I wonder if it would be easier to declare "int fd = -1" and the only do
+the openfile here if fd < 0?
 
-1. Flushing volatile disk caches is very expensive.
-In this case sync_file_range(SYNC_FILE_RANGE_WRITE_AND_WAIT)
-is cheaper than fdatasync() for a preallocated file and obviously a noop
-for AT_ATOMIC_METADATA in "S.O.M.C" filesystem is cheaper than
-a journal commit.
+Otherwise it seems fine to me...
 
-2. Highly concurrent metadata workloads
-Many users running  AT_ATOMIC_METADATA concurrently are much
-less likely to interfere each other than many users running fsync concurrently.
+--D
 
-IWO, when I'm using fsync() to provide the AT_ATOMIC_METADATA guarantee
-on a single journal fs, other users pay the penalty for a guaranty that I didn't
-ask for (i.e. persistency).
-
-Thanks,
-Amir.
+> +		fd = openfile(argv[optind], NULL, IO_READONLY, 0, NULL);
+> +		if (fd < 0)
+> +			return 0;
+> +	}
+>  
+>  	if (src == 0 && dst == 0 && len == 0) {
+>  		off64_t	sz;
+> @@ -150,7 +168,7 @@ copy_range_init(void)
+>  	copy_range_cmd.argmin = 1;
+>  	copy_range_cmd.argmax = 7;
+>  	copy_range_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+> -	copy_range_cmd.args = _("[-s src_off] [-d dst_off] [-l len] src_file");
+> +	copy_range_cmd.args = _("[-s src_off] [-d dst_off] [-l len] src_file | -f N");
+>  	copy_range_cmd.oneline = _("Copy a range of data between two files");
+>  	copy_range_cmd.help = copy_range_help;
+>  
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 980dcfd3..6e064bdd 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -660,12 +660,16 @@ Do not print timing statistics at all.
+>  .RE
+>  .PD
+>  .TP
+> -.BI "copy_range [ -s " src_offset " ] [ -d " dst_offset " ] [ -l " length " ] src_file"
+> +.BI "copy_range [ -s " src_offset " ] [ -d " dst_offset " ] [ -l " length " ] src_file | \-f " N
+>  On filesystems that support the
+>  .BR copy_file_range (2)
+> -system call, copies data from the
+> +system call, copies data from the source file into the current open file.
+> +The source must be specified either by path
+> +.RB ( src_file )
+> +or as another open file
+> +.RB ( \-f ).
+> +If
+>  .I src_file
+> -into the open file.  If
+>  .IR src_offset ,
+>  .IR dst_offset ,
+>  and
+> -- 
+> 2.17.1
+> 
