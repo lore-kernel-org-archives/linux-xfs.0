@@ -1,51 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:35189 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726018AbfE2WUI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 18:20:08 -0400
-Date: Thu, 30 May 2019 08:20:04 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Recurring hand in XFS inode reclaim on 4.10
-Message-ID: <20190529222004.GD29573@dread.disaster.area>
-References: <CAMCX63xyxZwiPd0602im0M0m4jzSNfB3DcF1RekQ6A-03vXTmg@mail.gmail.com>
- <20190521224904.GI29573@dread.disaster.area>
- <CAMCX63zNvLCDE5ZmY-rUuF7JfL9Uauq4jvzPZuDecovUSnCLNQ@mail.gmail.com>
- <20190527033240.GA29573@dread.disaster.area>
- <CAMCX63wUkBh==QFoeRSTxFKGdoo5iDLS6hM5xcVLK8_LfVdhwg@mail.gmail.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:54854 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726189AbfE2W0T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 18:26:19 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x4TM3iXK030392
+        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:26:17 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2spxbqcp3f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:26:17 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x4TMOOpB168870
+        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:26:17 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2sqh73yknq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:26:16 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x4TMQFUV013505
+        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 22:26:16 GMT
+Subject: [PATCH 00/11] xfs: refactor and improve inode iteration
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 29 May 2019 15:26:13 -0700
+Message-ID: <155916877311.757870.11060347556535201032.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAMCX63wUkBh==QFoeRSTxFKGdoo5iDLS6hM5xcVLK8_LfVdhwg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeffrey Baker <jwbaker@gmail.com>
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 28, 2019 at 10:16:39AM -0700, Jeffrey Baker wrote:
-> On Sun, May 26, 2019 at 8:32 PM Dave Chinner <david@fromorbit.com> wrote:
-> > On Fri, May 24, 2019 at 01:34:58PM -0700, Jeffrey Baker wrote:
-> > > Write rates on the nvme drives are all exactly the md0 rates / 4, so
-> > > that seems normal.
-> >
-> > Write rates aren't that important - what do the io latencies, queue
-> > depths and device utilisation figures look like?
-> 
-> 10s of microseconds, ~zero, and ~zero respectively.
+Hi all,
 
-So it sounds like the devices aren't showing signs of slowness, but
-the filesystem and memory reclaim is sitting there twiddling it's
-thumbs waiting for IO to complete?
+This series refactors all the inode walking code in XFS into a single
+set of helper functions.  The goal is to separate the mechanics of
+iterating a subset of inode in the filesystem from bulkstat.
 
-Perhaps it might be worthwhile running a latency trace (e.g. with
-ftrace or one of the newfangled bpf tools) to find out where
-everything is blocking and how long they are waiting for things to
-occur. That might give some more insight into what resource we are
-waiting to be released to make progress...
+Next we introduce a parallel inode walk feature to speed up quotacheck
+on large filesystems.  Finally, we port the existing bulkstat and
+inumbers ioctls in preparation for the next series.
 
-Cheers,
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=parallel-iwalk
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=parallel-iwalk
