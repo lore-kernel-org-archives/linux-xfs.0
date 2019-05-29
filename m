@@ -1,140 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f67.google.com ([209.85.161.67]:41270 "EHLO
-        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725936AbfE2PoW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 11:44:22 -0400
-Received: by mail-yw1-f67.google.com with SMTP id t140so1255062ywe.8
-        for <linux-xfs@vger.kernel.org>; Wed, 29 May 2019 08:44:21 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190529101330.29470-1-amir73il@gmail.com> <20190529144604.GC5231@magnolia>
-In-Reply-To: <20190529144604.GC5231@magnolia>
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:38020 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725917AbfE2Rna (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 13:43:30 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 29 May 2019 18:44:09 +0300
-Message-ID: <CAOQ4uxgxiLGwvbeoKx3P+nvakTA75dh8hsyH4+gv2G=e5T3M=w@mail.gmail.com>
-Subject: Re: [PATCH] xfs_io: allow passing an open file to copy_range
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH v3 00/13] Fixes for major copy_file_range() issues
+Date: Wed, 29 May 2019 20:43:04 +0300
+Message-Id: <20190529174318.22424-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Wed, May 29, 2019 at 5:46 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> On Wed, May 29, 2019 at 01:13:30PM +0300, Amir Goldstein wrote:
-> > Commit 1a05efba ("io: open pipes in non-blocking mode")
-> > addressed a specific copy_range issue with pipes by always opening
-> > pipes in non-blocking mode.
-> >
-> > This change takes a different approach and allows passing any
-> > open file as the source file to copy_range.  Besides providing
-> > more flexibility to the copy_range command, this allows xfstests
-> > to check if xfs_io supports passing an open file to copy_range.
-> >
-> > The intended usage is:
-> > $ mkfifo fifo
-> > $ xfs_io -f -n -r -c "open -f dst" -C "copy_range -f 0" fifo
-> >
-> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > ---
-> >
-> > Darrick,
-> >
-> > Folowing our discussion on the copy_range bounds test [1],
-> > what do you think about using copy_range -f in the copy_range
-> > fifo test with a fifo that was explicitly opened non-blocking,
-> > instead of trying to figure out if copy_range is going to hang
-> > or not?
-> >
-> > This option is already available with sendfile command and
-> > we can make it available for reflink and dedupe commands if
-> > we want to. Too bad that these 4 commands have 3 different
-> > usage patterns to begin with...
->
-> I wonder if there's any sane way to overload the src_file argument such
-> that we can pass filetable[] offsets without having to burn more getopt
-> flags...?
->
-> (Oh wait, I bet you're using the '-f' flag to figure out if xfs_io is
-> new enough not to block on fifos, right? :))
+Hi Darrick,
 
-Yes, but this time it is not a hack its a feature..
+Following is a re-work of Dave Chinner's copy_file_range() patches.
+This v3 patch set is based on your feedback to v2 [1].
 
->
-> But otherwise this seems like a reasonable approach.
->
-> > Thanks,
-> > Amir.
-> >
-> > [1] https://marc.info/?l=fstests&m=155910786017989&w=2
-> >
-> >  io/copy_file_range.c | 30 ++++++++++++++++++++++++------
-> >  man/man8/xfs_io.8    | 10 +++++++---
-> >  2 files changed, 31 insertions(+), 9 deletions(-)
-> >
-> > diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-> > index d069e5bb..1f0d2713 100644
-> > --- a/io/copy_file_range.c
-> > +++ b/io/copy_file_range.c
-> > @@ -26,6 +26,8 @@ copy_range_help(void)
-> >                                              file at offset 200\n\
-> >   'copy_range some_file' - copies all bytes from some_file into the open file\n\
-> >                            at position 0\n\
-> > + 'copy_range -f 2' - copies all bytes from open file 2 into the current open file\n\
-> > +                          at position 0\n\
-> >  "));
-> >  }
-> >
-> > @@ -82,11 +84,12 @@ copy_range_f(int argc, char **argv)
-> >       int opt;
-> >       int ret;
-> >       int fd;
-> > +     int src_file_arg = 1;
-> >       size_t fsblocksize, fssectsize;
-> >
-> >       init_cvtnum(&fsblocksize, &fssectsize);
-> >
-> > -     while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
-> > +     while ((opt = getopt(argc, argv, "s:d:l:f:")) != -1) {
-> >               switch (opt) {
-> >               case 's':
-> >                       src = cvtnum(fsblocksize, fssectsize, optarg);
-> > @@ -109,15 +112,30 @@ copy_range_f(int argc, char **argv)
-> >                               return 0;
-> >                       }
-> >                       break;
-> > +             case 'f':
-> > +                     fd = atoi(argv[1]);
-> > +                     if (fd < 0 || fd >= filecount) {
-> > +                             printf(_("value %d is out of range (0-%d)\n"),
-> > +                                     fd, filecount-1);
-> > +                             return 0;
-> > +                     }
-> > +                     fd = filetable[fd].fd;
-> > +                     /* Expect no src_file arg */
-> > +                     src_file_arg = 0;
-> > +                     break;
-> >               }
-> >       }
-> >
-> > -     if (optind != argc - 1)
-> > +     if (optind != argc - src_file_arg) {
-> > +             fprintf(stderr, "optind=%d, argc=%d, src_file_arg=%d\n", optind, argc, src_file_arg);
-> >               return command_usage(&copy_range_cmd);
-> > +     }
-> >
-> > -     fd = openfile(argv[optind], NULL, IO_READONLY, 0, NULL);
-> > -     if (fd < 0)
-> > -             return 0;
-> > +     if (src_file_arg) {
->
-> I wonder if it would be easier to declare "int fd = -1" and the only do
-> the openfile here if fd < 0?
->
+NOTE that this work changes user visible behavior of copy_file_range(2)!
+It introduces new errors for cases that were not checked before and it
+allows cross-device copy by default. After this work, cifs copy offload
+should be possible between two shares on the same server, but I did not
+check this functionality.
 
-I started out with if (fd == -1), but I changed to src_file_arg to
-unify the condition for (optind != argc - src_file_arg)
-and avoid another condition (i.e. argc - (fd == -1 ? 1 : 0))
+Patches 1-3 have your Reviewed-by.
+Patches 4-5 have been slightly amended to address your comments.
+Patch 6 adds the new helper you requested dubbed file_modified().
+Patch 7 uses the helper in xfs - unrelated to copy_file_range().
+Patches 8-12 use the helper for various fs's ->copy_file_range().
+Patch 13 (unmodified) has your Reviewed-by, because the bits that
+you approved are those that matter to most filesystems (i.e. the
+fallback logic).
+
+The man page update patch (again, mostly Dave's work) is appended
+to the series with fixes to your review comments.
 
 Thanks,
 Amir.
+
+[1] https://lore.kernel.org/linux-fsdevel/20190526061100.21761-1-amir73il@gmail.com/
+
+Changes since v2:
+- Re-order generic_remap_checks() fix patch before
+  forking generic_copy_file_checks()
+- Document @req_count helper argument (Darrick)
+- Fold generic_access_check_limits() (Darrick)
+- Added file_modified() helper (Darrick)
+- Added xfs patch to use file_modified() helper
+- Drop generic_copy_file_range_prep() helper
+- Per filesystem patch for file_modified()/file_accessed()
+- Post copy file_remove_privs() for ceph/generic (Darrick)
+
+Changes since v1:
+- Short read instead of EINVAL (Christoph)
+- generic_file_rw_checks() helper (Darrick)
+- generic_copy_file_range_prep() helper (Christoph)
+- Not calling ->remap_file_range() with different sb
+- Not calling ->copy_file_range() with different fs type
+- Remove changes to overlayfs
+- Extra fix to clone/dedupe checks
+
+Amir Goldstein (11):
+  vfs: introduce generic_file_rw_checks()
+  vfs: remove redundant checks from generic_remap_checks()
+  vfs: add missing checks to copy_file_range
+  vfs: introduce file_modified() helper
+  xfs: use file_modified() helper
+  vfs: copy_file_range needs to strip setuid bits and update timestamps
+  ceph: copy_file_range needs to strip setuid bits and update timestamps
+  cifs: copy_file_range needs to strip setuid bits and update timestamps
+  fuse: copy_file_range needs to strip setuid bits and update timestamps
+  nfs: copy_file_range needs to strip setuid bits and update timestamps
+  vfs: allow copy_file_range to copy across devices
+
+Dave Chinner (2):
+  vfs: introduce generic_copy_file_range()
+  vfs: no fallback for ->copy_file_range
+
+ fs/ceph/file.c     |  40 ++++++++++++-
+ fs/cifs/cifsfs.c   |  15 ++++-
+ fs/fuse/file.c     |  29 ++++++++-
+ fs/inode.c         |  20 +++++++
+ fs/nfs/nfs42proc.c |   9 ++-
+ fs/nfs/nfs4file.c  |  23 ++++++-
+ fs/read_write.c    | 145 ++++++++++++++++++++++++++++-----------------
+ fs/xfs/xfs_file.c  |  15 +----
+ include/linux/fs.h |   9 +++
+ mm/filemap.c       | 110 +++++++++++++++++++++++++++-------
+ 10 files changed, 309 insertions(+), 106 deletions(-)
+
+-- 
+2.17.1
