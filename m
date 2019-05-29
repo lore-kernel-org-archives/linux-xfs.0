@@ -1,96 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f65.google.com ([209.85.161.65]:38766 "EHLO
-        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726600AbfE1QjW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 May 2019 12:39:22 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:35380 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726015AbfE2TQP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 15:16:15 -0400
+Date: Wed, 29 May 2019 12:13:59 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 07/13] xfs: use file_modified() helper
+Message-ID: <20190529191359.GI5231@magnolia>
+References: <20190529174318.22424-1-amir73il@gmail.com>
+ <20190529174318.22424-8-amir73il@gmail.com>
+ <20190529183149.GG5231@magnolia>
+ <CAOQ4uxg0Z8Ne8kadPzsushW43t3Sijy+9WQbGRRO=CtmMAbtuA@mail.gmail.com>
 MIME-Version: 1.0
-References: <20190526061100.21761-1-amir73il@gmail.com> <20190526061100.21761-5-amir73il@gmail.com>
- <20190528161829.GD5221@magnolia> <CAOQ4uxjRJmiwM4L9ZFHi8rfjX87-xJ=+9HSeTgUyRyTUnkF6PA@mail.gmail.com>
- <20190528163110.GG5221@magnolia>
-In-Reply-To: <20190528163110.GG5221@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 28 May 2019 19:39:10 +0300
-Message-ID: <CAOQ4uxg4JEyzKCd-OGiox-mLth2At7hFM-WDGfqdVc2WTBr3cA@mail.gmail.com>
-Subject: Re: [PATCH v2 4/8] vfs: add missing checks to copy_file_range
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxg0Z8Ne8kadPzsushW43t3Sijy+9WQbGRRO=CtmMAbtuA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>
 
-On Tue, May 28, 2019 at 7:31 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> On Tue, May 28, 2019 at 07:26:29PM +0300, Amir Goldstein wrote:
-> > On Tue, May 28, 2019 at 7:18 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > >
-> > > On Sun, May 26, 2019 at 09:10:55AM +0300, Amir Goldstein wrote:
-> > > > Like the clone and dedupe interfaces we've recently fixed, the
-> > > > copy_file_range() implementation is missing basic sanity, limits and
-> > > > boundary condition tests on the parameters that are passed to it
-> > > > from userspace. Create a new "generic_copy_file_checks()" function
-> > > > modelled on the generic_remap_checks() function to provide this
-> > > > missing functionality.
-> > > >
-> > > > [Amir] Shorten copy length instead of checking pos_in limits
-> > > > because input file size already abides by the limits.
-> > > >
-> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > > > ---
-> > > >  fs/read_write.c    |  3 ++-
-> > > >  include/linux/fs.h |  3 +++
-> > > >  mm/filemap.c       | 53 ++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  3 files changed, 58 insertions(+), 1 deletion(-)
-> > > >
-> > > > diff --git a/fs/read_write.c b/fs/read_write.c
-> > > > index f1900bdb3127..b0fb1176b628 100644
-> > > > --- a/fs/read_write.c
-> > > > +++ b/fs/read_write.c
-> > > > @@ -1626,7 +1626,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
-> > > >       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
-> > > >               return -EXDEV;
-> > > >
-> > > > -     ret = generic_file_rw_checks(file_in, file_out);
-> > > > +     ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
-> > > > +                                    flags);
-> > > >       if (unlikely(ret))
-> > > >               return ret;
-> > > >
-> > > > diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > > > index 89b9b73eb581..e4d382c4342a 100644
-> > > > --- a/include/linux/fs.h
-> > > > +++ b/include/linux/fs.h
-> > > > @@ -3050,6 +3050,9 @@ extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
-> > > >                               struct file *file_out, loff_t pos_out,
-> > > >                               loff_t *count, unsigned int remap_flags);
-> > > >  extern int generic_file_rw_checks(struct file *file_in, struct file *file_out);
-> > > > +extern int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
-> > > > +                                 struct file *file_out, loff_t pos_out,
-> > > > +                                 size_t *count, unsigned int flags);
-> > > >  extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
-> > > >  extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
-> > > >  extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
-> > > > diff --git a/mm/filemap.c b/mm/filemap.c
-> > > > index 798aac92cd76..1852fbf08eeb 100644
-> > > > --- a/mm/filemap.c
-> > > > +++ b/mm/filemap.c
-> > > > @@ -3064,6 +3064,59 @@ int generic_file_rw_checks(struct file *file_in, struct file *file_out)
-> > > >       return 0;
-> > > >  }
-> > > >
-> > > > +/*
-> > > > + * Performs necessary checks before doing a file copy
-> > > > + *
-> > > > + * Can adjust amount of bytes to copy
-> > >
-> > > That's the @req_count parameter, correct?
+On Wed, May 29, 2019 at 10:10:37PM +0300, Amir Goldstein wrote:
+> On Wed, May 29, 2019 at 9:31 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
 > >
-> > Correct. Same as generic_remap_checks()
->
-> Ok.  Would you mind updating the comment?
->
-OK.
+> > On Wed, May 29, 2019 at 08:43:11PM +0300, Amir Goldstein wrote:
+> > > Note that by using the helper, the order of calling file_remove_privs()
+> > > after file_update_mtime() in xfs_file_aio_write_checks() has changed.
+> > >
+> > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> > > ---
+> > >  fs/xfs/xfs_file.c | 15 +--------------
+> > >  1 file changed, 1 insertion(+), 14 deletions(-)
+> > >
+> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > index 76748255f843..916a35cae5e9 100644
+> > > --- a/fs/xfs/xfs_file.c
+> > > +++ b/fs/xfs/xfs_file.c
+> > > @@ -367,20 +367,7 @@ xfs_file_aio_write_checks(
+> > >        * lock above.  Eventually we should look into a way to avoid
+> > >        * the pointless lock roundtrip.
+> > >        */
+> > > -     if (likely(!(file->f_mode & FMODE_NOCMTIME))) {
+> >
+> > ...especially since here we think NOCMTIME is likely /not/ to be set.
+> >
+> > > -             error = file_update_time(file);
+> > > -             if (error)
+> > > -                     return error;
+> > > -     }
+> > > -
+> > > -     /*
+> > > -      * If we're writing the file then make sure to clear the setuid and
+> > > -      * setgid bits if the process is not being run by root.  This keeps
+> > > -      * people from modifying setuid and setgid binaries.
+> > > -      */
+> > > -     if (!IS_NOSEC(inode))
+> > > -             return file_remove_privs(file);
+> >
+> > Hm, file_modified doesn't have the !IS_NOSEC check guarding
+> > file_remove_privs, are you sure it's ok to remove the suid bits
+> > unconditionally?  Even if SB_NOSEC (and therefore S_NOSEC) are set?
+> >
+> 
+> file_remove_privs() has its own IS_NOSEC() check.
 
-Thanks,
-Amir.
+Ah, ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> Thanks,
+> Amir.
