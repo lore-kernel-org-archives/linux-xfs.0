@@ -1,141 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:43174 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:50020 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725917AbfE2SZd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 14:25:33 -0400
-Date: Wed, 29 May 2019 11:24:47 -0700
+        with ESMTP id S1725917AbfE2Sc2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 May 2019 14:32:28 -0400
+Date: Wed, 29 May 2019 11:31:49 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 05/13] vfs: add missing checks to copy_file_range
-Message-ID: <20190529182447.GE5231@magnolia>
+Subject: Re: [PATCH v3 07/13] xfs: use file_modified() helper
+Message-ID: <20190529183149.GG5231@magnolia>
 References: <20190529174318.22424-1-amir73il@gmail.com>
- <20190529174318.22424-6-amir73il@gmail.com>
+ <20190529174318.22424-8-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190529174318.22424-6-amir73il@gmail.com>
+In-Reply-To: <20190529174318.22424-8-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Wed, May 29, 2019 at 08:43:09PM +0300, Amir Goldstein wrote:
-> Like the clone and dedupe interfaces we've recently fixed, the
-> copy_file_range() implementation is missing basic sanity, limits and
-> boundary condition tests on the parameters that are passed to it
-> from userspace. Create a new "generic_copy_file_checks()" function
-> modelled on the generic_remap_checks() function to provide this
-> missing functionality.
+On Wed, May 29, 2019 at 08:43:11PM +0300, Amir Goldstein wrote:
+> Note that by using the helper, the order of calling file_remove_privs()
+> after file_update_mtime() in xfs_file_aio_write_checks() has changed.
 > 
-> [Amir] Shorten copy length instead of checking pos_in limits
-> because input file size already abides by the limits.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  fs/xfs/xfs_file.c | 15 +--------------
+>  1 file changed, 1 insertion(+), 14 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 76748255f843..916a35cae5e9 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -367,20 +367,7 @@ xfs_file_aio_write_checks(
+>  	 * lock above.  Eventually we should look into a way to avoid
+>  	 * the pointless lock roundtrip.
+>  	 */
+> -	if (likely(!(file->f_mode & FMODE_NOCMTIME))) {
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+...especially since here we think NOCMTIME is likely /not/ to be set.
+
+> -		error = file_update_time(file);
+> -		if (error)
+> -			return error;
+> -	}
+> -
+> -	/*
+> -	 * If we're writing the file then make sure to clear the setuid and
+> -	 * setgid bits if the process is not being run by root.  This keeps
+> -	 * people from modifying setuid and setgid binaries.
+> -	 */
+> -	if (!IS_NOSEC(inode))
+> -		return file_remove_privs(file);
+
+Hm, file_modified doesn't have the !IS_NOSEC check guarding
+file_remove_privs, are you sure it's ok to remove the suid bits
+unconditionally?  Even if SB_NOSEC (and therefore S_NOSEC) are set?
 
 --D
 
-> ---
->  fs/read_write.c    |  3 ++-
->  include/linux/fs.h |  3 +++
->  mm/filemap.c       | 53 ++++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 58 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index f1900bdb3127..b0fb1176b628 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -1626,7 +1626,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
->  	if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
->  		return -EXDEV;
->  
-> -	ret = generic_file_rw_checks(file_in, file_out);
-> +	ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
-> +				       flags);
->  	if (unlikely(ret))
->  		return ret;
->  
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 89b9b73eb581..e4d382c4342a 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -3050,6 +3050,9 @@ extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
->  				struct file *file_out, loff_t pos_out,
->  				loff_t *count, unsigned int remap_flags);
->  extern int generic_file_rw_checks(struct file *file_in, struct file *file_out);
-> +extern int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
-> +				    struct file *file_out, loff_t pos_out,
-> +				    size_t *count, unsigned int flags);
->  extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
->  extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
->  extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 44361928bbb0..aac71aef4c61 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -3056,6 +3056,59 @@ int generic_file_rw_checks(struct file *file_in, struct file *file_out)
->  	return 0;
+> -	return 0;
+> +	return file_modified(file);
 >  }
 >  
-> +/*
-> + * Performs necessary checks before doing a file copy
-> + *
-> + * Can adjust amount of bytes to copy via @req_count argument.
-> + * Returns appropriate error code that caller should return or
-> + * zero in case the copy should be allowed.
-> + */
-> +int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
-> +			     struct file *file_out, loff_t pos_out,
-> +			     size_t *req_count, unsigned int flags)
-> +{
-> +	struct inode *inode_in = file_inode(file_in);
-> +	struct inode *inode_out = file_inode(file_out);
-> +	uint64_t count = *req_count;
-> +	loff_t size_in;
-> +	int ret;
-> +
-> +	ret = generic_file_rw_checks(file_in, file_out);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* Don't touch certain kinds of inodes */
-> +	if (IS_IMMUTABLE(inode_out))
-> +		return -EPERM;
-> +
-> +	if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
-> +		return -ETXTBSY;
-> +
-> +	/* Ensure offsets don't wrap. */
-> +	if (pos_in + count < pos_in || pos_out + count < pos_out)
-> +		return -EOVERFLOW;
-> +
-> +	/* Shorten the copy to EOF */
-> +	size_in = i_size_read(inode_in);
-> +	if (pos_in >= size_in)
-> +		count = 0;
-> +	else
-> +		count = min(count, size_in - (uint64_t)pos_in);
-> +
-> +	ret = generic_write_check_limits(file_out, pos_out, &count);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* Don't allow overlapped copying within the same file. */
-> +	if (inode_in == inode_out &&
-> +	    pos_out + count > pos_in &&
-> +	    pos_out < pos_in + count)
-> +		return -EINVAL;
-> +
-> +	*req_count = count;
-> +	return 0;
-> +}
-> +
->  int pagecache_write_begin(struct file *file, struct address_space *mapping,
->  				loff_t pos, unsigned len, unsigned flags,
->  				struct page **pagep, void **fsdata)
+>  static int
 > -- 
 > 2.17.1
 > 
