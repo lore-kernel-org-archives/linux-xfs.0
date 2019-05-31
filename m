@@ -1,56 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:43915 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726531AbfEaQlv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 May 2019 12:41:51 -0400
-Date: Fri, 31 May 2019 12:41:36 -0400
-From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
-Message-ID: <20190531164136.GA3066@mit.edu>
-References: <20190527172655.9287-1-amir73il@gmail.com>
- <20190528202659.GA12412@mit.edu>
- <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
- <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:33894 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726550AbfEaQrL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 May 2019 12:47:11 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v4 0/9] Fixes for major copy_file_range() issues
+Date: Fri, 31 May 2019 19:46:52 +0300
+Message-Id: <20190531164701.15112-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Fri, May 31, 2019 at 06:21:45PM +0300, Amir Goldstein wrote:
-> What do you think of:
-> 
-> "AT_ATOMIC_DATA (since Linux 5.x)
-> A filesystem which accepts this flag will guarantee that if the linked file
-> name exists after a system crash, then all of the data written to the file
-> and all of the file's metadata at the time of the linkat(2) call will be
-> visible.
+Hi Darrick,
 
-".... will be visible after the the file system is remounted".  (Never
-hurts to be explicit.)
+Following is a re-work of Dave Chinner's copy_file_range() patches.
+This v4 patch set includes review tags and excludes the individual
+filesystem fixes that are not related to cross-device copy.
+Those patches will be sent to maintainers seperately once the
+dependency patch is made available on a public branch.
 
-> The way to achieve this guarantee on old kernels is to call fsync (2)
-> before linking the file, but doing so will also results in flushing of
-> volatile disk caches.
->
-> A filesystem which accepts this flag does NOT
-> guarantee that any of the file hardlinks will exist after a system crash,
-> nor that the last observed value of st_nlink (see stat (2)) will persist."
-> 
+I did include the FUSE patch in this posting since we got an ACK
+from Miklos. You may take it or leave it.
 
-This is I think more precise:
+Thanks,
+Amir.
 
-    This guarantee can be achieved by calling fsync(2) before linking
-    the file, but there may be more performant ways to provide these
-    semantics.  In particular, note that the use of the AT_ATOMIC_DATA
-    flag does *not* guarantee that the new link created by linkat(2)
-    will be persisted after a crash.
+Changes since v3:
+- Drop per filesystem patch for file_modified()/file_accessed()
+- Fix wrong likely()
+- Add Reviewed-by tags
 
-We should also document that a file system which does not implement
-this flag MUST return EINVAL if it is passed this flag to linkat(2).
+Changes since v2:
+- Re-order generic_remap_checks() fix patch before
+  forking generic_copy_file_checks()
+- Document @req_count helper argument (Darrick)
+- Fold generic_access_check_limits() (Darrick)
+- Added file_modified() helper (Darrick)
+- Added xfs patch to use file_modified() helper
+- Drop generic_copy_file_range_prep() helper
+- Per filesystem patch for file_modified()/file_accessed()
+- Post copy file_remove_privs() for ceph/generic (Darrick)
 
-     	       	      	     	      - Ted
+Changes since v1:
+- Short read instead of EINVAL (Christoph)
+- generic_file_rw_checks() helper (Darrick)
+- generic_copy_file_range_prep() helper (Christoph)
+- Not calling ->remap_file_range() with different sb
+- Not calling ->copy_file_range() with different fs type
+- Remove changes to overlayfs
+- Extra fix to clone/dedupe checks
+
+Amir Goldstein (7):
+  vfs: introduce generic_file_rw_checks()
+  vfs: remove redundant checks from generic_remap_checks()
+  vfs: add missing checks to copy_file_range
+  vfs: introduce file_modified() helper
+  xfs: use file_modified() helper
+  vfs: allow copy_file_range to copy across devices
+  fuse: copy_file_range needs to strip setuid bits and update timestamps
+
+Dave Chinner (2):
+  vfs: introduce generic_copy_file_range()
+  vfs: no fallback for ->copy_file_range
+
+ fs/ceph/file.c     |  23 +++++++--
+ fs/cifs/cifsfs.c   |   4 ++
+ fs/fuse/file.c     |  29 +++++++++--
+ fs/inode.c         |  20 +++++++
+ fs/nfs/nfs4file.c  |  23 +++++++--
+ fs/read_write.c    | 126 +++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_file.c  |  15 +-----
+ include/linux/fs.h |   9 ++++
+ mm/filemap.c       | 110 +++++++++++++++++++++++++++++++--------
+ 9 files changed, 259 insertions(+), 100 deletions(-)
+
+-- 
+2.17.1
