@@ -1,130 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:40685 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727090AbfEaQrW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 May 2019 12:47:22 -0400
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:36176 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726791AbfEaQrX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 May 2019 12:47:23 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v4 5/9] vfs: add missing checks to copy_file_range
-Date: Fri, 31 May 2019 19:46:57 +0300
-Message-Id: <20190531164701.15112-6-amir73il@gmail.com>
+Subject: [PATCH v4 6/9] vfs: introduce file_modified() helper
+Date: Fri, 31 May 2019 19:46:58 +0300
+Message-Id: <20190531164701.15112-7-amir73il@gmail.com>
 In-Reply-To: <20190531164701.15112-1-amir73il@gmail.com>
 References: <20190531164701.15112-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org
 
-Like the clone and dedupe interfaces we've recently fixed, the
-copy_file_range() implementation is missing basic sanity, limits and
-boundary condition tests on the parameters that are passed to it
-from userspace. Create a new "generic_copy_file_checks()" function
-modelled on the generic_remap_checks() function to provide this
-missing functionality.
+The combination of file_remove_privs() and file_update_mtime() is
+quite common in filesystem ->write_iter() methods.
 
-[Amir] Shorten copy length instead of checking pos_in limits
-because input file size already abides by the limits.
+Modelled after the helper file_accessed(), introduce file_modified()
+and use it from generic_remap_file_range_prep().
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Note that the order of calling file_remove_privs() before
+file_update_mtime() in the helper was matched to the more common order by
+filesystems and not the current order in generic_remap_file_range_prep().
+
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/read_write.c    |  3 ++-
- include/linux/fs.h |  3 +++
- mm/filemap.c       | 53 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 58 insertions(+), 1 deletion(-)
+ fs/inode.c         | 20 ++++++++++++++++++++
+ fs/read_write.c    | 21 +++------------------
+ include/linux/fs.h |  2 ++
+ 3 files changed, 25 insertions(+), 18 deletions(-)
 
+diff --git a/fs/inode.c b/fs/inode.c
+index df6542ec3b88..4348cfb14562 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -1899,6 +1899,26 @@ int file_update_time(struct file *file)
+ }
+ EXPORT_SYMBOL(file_update_time);
+ 
++/* Caller must hold the file's inode lock */
++int file_modified(struct file *file)
++{
++	int err;
++
++	/*
++	 * Clear the security bits if the process is not being run by root.
++	 * This keeps people from modifying setuid and setgid binaries.
++	 */
++	err = file_remove_privs(file);
++	if (err)
++		return err;
++
++	if (unlikely(file->f_mode & FMODE_NOCMTIME))
++		return 0;
++
++	return file_update_time(file);
++}
++EXPORT_SYMBOL(file_modified);
++
+ int inode_needs_sync(struct inode *inode)
+ {
+ 	if (IS_SYNC(inode))
 diff --git a/fs/read_write.c b/fs/read_write.c
-index f1900bdb3127..b0fb1176b628 100644
+index b0fb1176b628..cec7e7b1f693 100644
 --- a/fs/read_write.c
 +++ b/fs/read_write.c
-@@ -1626,7 +1626,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
- 	if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
- 		return -EXDEV;
- 
--	ret = generic_file_rw_checks(file_in, file_out);
-+	ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
-+				       flags);
- 	if (unlikely(ret))
+@@ -1980,25 +1980,10 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
  		return ret;
  
+ 	/* If can't alter the file contents, we're done. */
+-	if (!(remap_flags & REMAP_FILE_DEDUP)) {
+-		/* Update the timestamps, since we can alter file contents. */
+-		if (!(file_out->f_mode & FMODE_NOCMTIME)) {
+-			ret = file_update_time(file_out);
+-			if (ret)
+-				return ret;
+-		}
++	if (!(remap_flags & REMAP_FILE_DEDUP))
++		ret = file_modified(file_out);
+ 
+-		/*
+-		 * Clear the security bits if the process is not being run by
+-		 * root.  This keeps people from modifying setuid and setgid
+-		 * binaries.
+-		 */
+-		ret = file_remove_privs(file_out);
+-		if (ret)
+-			return ret;
+-	}
+-
+-	return 0;
++	return ret;
+ }
+ EXPORT_SYMBOL(generic_remap_file_range_prep);
+ 
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 89b9b73eb581..e4d382c4342a 100644
+index e4d382c4342a..79ffa2958bd8 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -3050,6 +3050,9 @@ extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
- 				struct file *file_out, loff_t pos_out,
- 				loff_t *count, unsigned int remap_flags);
- extern int generic_file_rw_checks(struct file *file_in, struct file *file_out);
-+extern int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
-+				    struct file *file_out, loff_t pos_out,
-+				    size_t *count, unsigned int flags);
- extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
- extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
- extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 44361928bbb0..aac71aef4c61 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -3056,6 +3056,59 @@ int generic_file_rw_checks(struct file *file_in, struct file *file_out)
- 	return 0;
+@@ -2177,6 +2177,8 @@ static inline void file_accessed(struct file *file)
+ 		touch_atime(&file->f_path);
  }
  
-+/*
-+ * Performs necessary checks before doing a file copy
-+ *
-+ * Can adjust amount of bytes to copy via @req_count argument.
-+ * Returns appropriate error code that caller should return or
-+ * zero in case the copy should be allowed.
-+ */
-+int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
-+			     struct file *file_out, loff_t pos_out,
-+			     size_t *req_count, unsigned int flags)
-+{
-+	struct inode *inode_in = file_inode(file_in);
-+	struct inode *inode_out = file_inode(file_out);
-+	uint64_t count = *req_count;
-+	loff_t size_in;
-+	int ret;
++extern int file_modified(struct file *file);
 +
-+	ret = generic_file_rw_checks(file_in, file_out);
-+	if (ret)
-+		return ret;
-+
-+	/* Don't touch certain kinds of inodes */
-+	if (IS_IMMUTABLE(inode_out))
-+		return -EPERM;
-+
-+	if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
-+		return -ETXTBSY;
-+
-+	/* Ensure offsets don't wrap. */
-+	if (pos_in + count < pos_in || pos_out + count < pos_out)
-+		return -EOVERFLOW;
-+
-+	/* Shorten the copy to EOF */
-+	size_in = i_size_read(inode_in);
-+	if (pos_in >= size_in)
-+		count = 0;
-+	else
-+		count = min(count, size_in - (uint64_t)pos_in);
-+
-+	ret = generic_write_check_limits(file_out, pos_out, &count);
-+	if (ret)
-+		return ret;
-+
-+	/* Don't allow overlapped copying within the same file. */
-+	if (inode_in == inode_out &&
-+	    pos_out + count > pos_in &&
-+	    pos_out < pos_in + count)
-+		return -EINVAL;
-+
-+	*req_count = count;
-+	return 0;
-+}
-+
- int pagecache_write_begin(struct file *file, struct address_space *mapping,
- 				loff_t pos, unsigned len, unsigned flags,
- 				struct page **pagep, void **fsdata)
+ int sync_inode(struct inode *inode, struct writeback_control *wbc);
+ int sync_inode_metadata(struct inode *inode, int wait);
+ 
 -- 
 2.17.1
