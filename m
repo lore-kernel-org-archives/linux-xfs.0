@@ -1,66 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f194.google.com ([209.85.219.194]:46243 "EHLO
-        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726518AbfEaRWT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 May 2019 13:22:19 -0400
-MIME-Version: 1.0
-References: <20190527172655.9287-1-amir73il@gmail.com> <20190528202659.GA12412@mit.edu>
- <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
- <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com> <20190531164136.GA3066@mit.edu>
-In-Reply-To: <20190531164136.GA3066@mit.edu>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 31 May 2019 20:22:06 +0300
-Message-ID: <CAOQ4uxjp5psDBLXBu+26xRLpV50txqksVFe6ZhUo0io8kgoH4A@mail.gmail.com>
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:53601 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726808AbfEaTVd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 May 2019 15:21:33 -0400
+Date: Fri, 31 May 2019 15:21:19 -0400
+From: "Theodore Ts'o" <tytso@mit.edu>
 Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
-Content-Type: text/plain; charset="UTF-8"
+Message-ID: <20190531192119.GB3066@mit.edu>
+References: <20190527172655.9287-1-amir73il@gmail.com>
+ <20190528202659.GA12412@mit.edu>
+ <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
+ <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
+ <20190531164136.GA3066@mit.edu>
+ <CAOQ4uxjp5psDBLXBu+26xRLpV50txqksVFe6ZhUo0io8kgoH4A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxjp5psDBLXBu+26xRLpV50txqksVFe6ZhUo0io8kgoH4A@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
+To: Amir Goldstein <amir73il@gmail.com>
 Cc: Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
 
-On Fri, May 31, 2019 at 7:41 PM Theodore Ts'o <tytso@mit.edu> wrote:
->
-> On Fri, May 31, 2019 at 06:21:45PM +0300, Amir Goldstein wrote:
-> > What do you think of:
+On Fri, May 31, 2019 at 08:22:06PM +0300, Amir Goldstein wrote:
 > >
-> > "AT_ATOMIC_DATA (since Linux 5.x)
-> > A filesystem which accepts this flag will guarantee that if the linked file
-> > name exists after a system crash, then all of the data written to the file
-> > and all of the file's metadata at the time of the linkat(2) call will be
-> > visible.
->
-> ".... will be visible after the the file system is remounted".  (Never
-> hurts to be explicit.)
->
-> > The way to achieve this guarantee on old kernels is to call fsync (2)
-> > before linking the file, but doing so will also results in flushing of
-> > volatile disk caches.
+> > This is I think more precise:
 > >
-> > A filesystem which accepts this flag does NOT
-> > guarantee that any of the file hardlinks will exist after a system crash,
-> > nor that the last observed value of st_nlink (see stat (2)) will persist."
-> >
->
-> This is I think more precise:
->
->     This guarantee can be achieved by calling fsync(2) before linking
->     the file, but there may be more performant ways to provide these
->     semantics.  In particular, note that the use of the AT_ATOMIC_DATA
->     flag does *not* guarantee that the new link created by linkat(2)
->     will be persisted after a crash.
+> >     This guarantee can be achieved by calling fsync(2) before linking
+> >     the file, but there may be more performant ways to provide these
+> >     semantics.  In particular, note that the use of the AT_ATOMIC_DATA
+> >     flag does *not* guarantee that the new link created by linkat(2)
+> >     will be persisted after a crash.
+> 
+> OK. Just to be clear, mentioning hardlinks and st_link is not needed
+> in your opinion?
 
-OK. Just to be clear, mentioning hardlinks and st_link is not needed
-in your opinion?
+Your previous text stated that it was undefined what would happen to
+all hardlinks belonging to the file, and that would imply that if a
+file had N hard links, some in the directory which we are modifying,
+and some in other directories, that somehow any of them might not be
+present after the crash.  And that's not the case.  Suppose the file
+currently has hardlinks test1/foo, test1/quux, and test2/baz --- and
+we've called syncfs(2) on the file system so everything is persisted,
+and then linkat(2) is used to create a new hardlink, test1/bar.
 
->
-> We should also document that a file system which does not implement
-> this flag MUST return EINVAL if it is passed this flag to linkat(2).
->
+After a crash, the existence of test1/foo, test1/quux, and test2/baz
+are not in question.  It's only unclear whether or not test1/bar
+exists after the crash.
 
-OK. I think this part can be documented as possible reason for EINVAL
-As in renameat(2) man page:
-       EINVAL The filesystem does not support one of the flags in flags.
+As far as st_nlink is concerned, the presumption is that the file
+system itself will be consistent after the crash.  So if the hard link
+has been persisted, then st_nlink will be incremented, if it has not,
+it won't be.
 
-Thanks,
-Amir.
+Finally, one thing which gets hard about trying to state these sorts
+of things as guarantees.  Sometimes, the file system won't *know*
+whether or not it can make these guarantees.  For example what should
+we do if the file system is mounted with nobarrier?  If the overall
+hardware design includes UPS's or some other kind of battery backup,
+the guarantee may very well exist.  But the file system code can't
+know whether or not that is the case.  So my inclination is to allow
+the file system to accept the flag even if the mount option nobarrier
+is in play --- but in that case, the guarantee is only if the rest of
+the system is designed appropriately.
+
+(For that matter, it used to be that there existed hard drives that
+lied about whether they had a writeback cache, and/or made the CACHE
+FLUSH a no-op so they could win the Winbench benchmarketing wars,
+which was worth millions and millions of dollars in sales.  So we can
+only assume that the hardware isn't lying to us when we use words like
+"guarantee".)
+
+						- Ted
