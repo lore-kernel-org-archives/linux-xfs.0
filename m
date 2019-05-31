@@ -1,207 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:42478 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727199AbfEaTeY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 31 May 2019 15:34:24 -0400
-Date: Fri, 31 May 2019 15:34:23 -0400
-Subject: Re: [PATCH v2 5/8] vfs: copy_file_range needs to strip setuid bits
-Message-ID: <20190531193423.GA3812@fieldses.org>
-References: <20190526061100.21761-1-amir73il@gmail.com>
- <20190526061100.21761-6-amir73il@gmail.com>
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:51380 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726450AbfEaWp4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 May 2019 18:45:56 -0400
+Date: Sat, 1 Jun 2019 08:45:49 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
+Message-ID: <20190531224549.GF29573@dread.disaster.area>
+References: <20190527172655.9287-1-amir73il@gmail.com>
+ <20190528202659.GA12412@mit.edu>
+ <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
+ <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
+ <20190531164136.GA3066@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190526061100.21761-6-amir73il@gmail.com>
-From: bfields@fieldses.org (J. Bruce Fields)
+In-Reply-To: <20190531164136.GA3066@mit.edu>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-api@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
 
-On Sun, May 26, 2019 at 09:10:56AM +0300, Amir Goldstein wrote:
-> The file we are copying data into needs to have its setuid bit
-> stripped before we start the data copy so that unprivileged users
-> can't copy data into executables that are run with root privs.
+On Fri, May 31, 2019 at 12:41:36PM -0400, Theodore Ts'o wrote:
+> On Fri, May 31, 2019 at 06:21:45PM +0300, Amir Goldstein wrote:
+> > What do you think of:
+> > 
+> > "AT_ATOMIC_DATA (since Linux 5.x)
+> > A filesystem which accepts this flag will guarantee that if the linked file
+> > name exists after a system crash, then all of the data written to the file
+> > and all of the file's metadata at the time of the linkat(2) call will be
+> > visible.
 > 
-> [Amir] Introduce the helper generic_copy_file_range_prep() modelled
-> after generic_remap_file_range_prep(). Helper is called by filesystem
-> before the copy_file_range operation and with output inode locked.
+> ".... will be visible after the the file system is remounted".  (Never
+> hurts to be explicit.)
 > 
-> For ceph and for default generic_copy_file_range() implementation there
-> is no inode lock held throughout the copy operation, so we do best
-> effort and remove setuid bit before copy starts. This does not protect
-> suid file from changing if suid bit is set after copy started.
-
-I'm not sure what it would accomplish to make setuid-clearing atomic
-with the write.
-
-If an attacker could write concurrently with your setting the setuid
-bit, then they could probably also perform the write just before you set
-the setuid bit.
-
-I think clearing it at the start is all that's necessary, unless I'm
-missing something.
-
---b.
-
-
+> > The way to achieve this guarantee on old kernels is to call fsync (2)
+> > before linking the file, but doing so will also results in flushing of
+> > volatile disk caches.
+> >
+> > A filesystem which accepts this flag does NOT
+> > guarantee that any of the file hardlinks will exist after a system crash,
+> > nor that the last observed value of st_nlink (see stat (2)) will persist."
+> > 
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->  fs/ceph/file.c     |  9 +++++++++
->  fs/cifs/cifsfs.c   |  9 ++++++---
->  fs/fuse/file.c     |  4 ++++
->  fs/nfs/nfs42proc.c |  8 +++++---
->  fs/read_write.c    | 31 +++++++++++++++++++++++++++++++
->  include/linux/fs.h |  2 ++
->  6 files changed, 57 insertions(+), 6 deletions(-)
+> This is I think more precise:
 > 
-> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-> index e87f7b2023af..54cfc877a6ef 100644
-> --- a/fs/ceph/file.c
-> +++ b/fs/ceph/file.c
-> @@ -1947,6 +1947,15 @@ static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
->  		goto out;
->  	}
->  
-> +	/* Should inode lock be held throughout the copy operation? */
-> +	inode_lock(dst_inode);
-> +	ret = generic_copy_file_range_prep(src_file, dst_file);
-> +	inode_unlock(dst_inode);
-> +	if (ret < 0) {
-> +		dout("failed to copy from src to dst file (%zd)\n", ret);
-> +		goto out;
-> +	}
-> +
->  	/*
->  	 * We need FILE_WR caps for dst_ci and FILE_RD for src_ci as other
->  	 * clients may have dirty data in their caches.  And OSDs know nothing
-> diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
-> index c65823270313..e103b499aaa8 100644
-> --- a/fs/cifs/cifsfs.c
-> +++ b/fs/cifs/cifsfs.c
-> @@ -1096,6 +1096,10 @@ ssize_t cifs_file_copychunk_range(unsigned int xid,
->  		goto out;
->  	}
->  
-> +	rc = -EOPNOTSUPP;
-> +	if (!target_tcon->ses->server->ops->copychunk_range)
-> +		goto out;
-> +
->  	/*
->  	 * Note: cifs case is easier than btrfs since server responsible for
->  	 * checks for proper open modes and file type and if it wants
-> @@ -1107,11 +1111,10 @@ ssize_t cifs_file_copychunk_range(unsigned int xid,
->  	/* should we flush first and last page first */
->  	truncate_inode_pages(&target_inode->i_data, 0);
->  
-> -	if (target_tcon->ses->server->ops->copychunk_range)
-> +	rc = generic_copy_file_range_prep(src_file, dst_file);
-> +	if (!rc)
->  		rc = target_tcon->ses->server->ops->copychunk_range(xid,
->  			smb_file_src, smb_file_target, off, len, destoff);
-> -	else
-> -		rc = -EOPNOTSUPP;
->  
->  	/* force revalidate of size and timestamps of target file now
->  	 * that target is updated on the server
-> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-> index e03901ae729b..3531d4a3d9ec 100644
-> --- a/fs/fuse/file.c
-> +++ b/fs/fuse/file.c
-> @@ -3128,6 +3128,10 @@ static ssize_t __fuse_copy_file_range(struct file *file_in, loff_t pos_in,
->  
->  	inode_lock(inode_out);
->  
-> +	err = generic_copy_file_range_prep(file_in, file_out);
-> +	if (err)
-> +		goto out;
-> +
->  	if (fc->writeback_cache) {
->  		err = filemap_write_and_wait_range(inode_out->i_mapping,
->  						   pos_out, pos_out + len);
-> diff --git a/fs/nfs/nfs42proc.c b/fs/nfs/nfs42proc.c
-> index 5196bfa7894d..b387951e1d86 100644
-> --- a/fs/nfs/nfs42proc.c
-> +++ b/fs/nfs/nfs42proc.c
-> @@ -345,9 +345,11 @@ ssize_t nfs42_proc_copy(struct file *src, loff_t pos_src,
->  
->  	do {
->  		inode_lock(file_inode(dst));
-> -		err = _nfs42_proc_copy(src, src_lock,
-> -				dst, dst_lock,
-> -				&args, &res);
-> +		err = generic_copy_file_range_prep(src, dst);
-> +		if (!err)
-> +			err = _nfs42_proc_copy(src, src_lock,
-> +					       dst, dst_lock,
-> +					       &args, &res);
->  		inode_unlock(file_inode(dst));
->  
->  		if (err >= 0)
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index b0fb1176b628..e16bcafc0da2 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -1565,6 +1565,28 @@ COMPAT_SYSCALL_DEFINE4(sendfile64, int, out_fd, int, in_fd,
->  }
->  #endif
->  
-> +/*
-> + * Prepare inodes for copy from @file_in to @file_out.
-> + *
-> + * Caller must hold output inode lock.
-> + */
-> +int generic_copy_file_range_prep(struct file *file_in, struct file *file_out)
-> +{
-> +	int ret;
-> +
-> +	WARN_ON_ONCE(!inode_is_locked(file_inode(file_out)));
-> +
-> +	/*
-> +	 * Clear the security bits if the process is not being run by root.
-> +	 * This keeps people from modifying setuid and setgid binaries.
-> +	 */
-> +	ret = file_remove_privs(file_out);
-> +
-> +	return ret;
-> +
-> +}
-> +EXPORT_SYMBOL(generic_copy_file_range_prep);
-> +
->  /**
->   * generic_copy_file_range - copy data between two files
->   * @file_in:	file structure to read from
-> @@ -1590,6 +1612,15 @@ ssize_t generic_copy_file_range(struct file *file_in, loff_t pos_in,
->  				struct file *file_out, loff_t pos_out,
->  				size_t len, unsigned int flags)
->  {
-> +	int ret;
-> +
-> +	/* Should inode lock be held throughout the copy operation? */
-> +	inode_lock(file_inode(file_out));
-> +	ret = generic_copy_file_range_prep(file_in, file_out);
-> +	inode_unlock(file_inode(file_out));
-> +	if (ret)
-> +		return ret;
-> +
->  	return do_splice_direct(file_in, &pos_in, file_out, &pos_out,
->  				len > MAX_RW_COUNT ? MAX_RW_COUNT : len, 0);
->  }
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index e4d382c4342a..3e03a96d9ab6 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1889,6 +1889,8 @@ extern ssize_t vfs_readv(struct file *, const struct iovec __user *,
->  		unsigned long, loff_t *, rwf_t);
->  extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
->  				   loff_t, size_t, unsigned int);
-> +extern int generic_copy_file_range_prep(struct file *file_in,
-> +					struct file *file_out);
->  extern ssize_t generic_copy_file_range(struct file *file_in, loff_t pos_in,
->  				       struct file *file_out, loff_t pos_out,
->  				       size_t len, unsigned int flags);
-> -- 
-> 2.17.1
+>     This guarantee can be achieved by calling fsync(2) before linking
+>     the file, but there may be more performant ways to provide these
+>     semantics.  In particular, note that the use of the AT_ATOMIC_DATA
+>     flag does *not* guarantee that the new link created by linkat(2)
+>     will be persisted after a crash.
+
+So here's the *implementation* problem I see with this definition of
+AT_ATOMIC_DATA. After linkat(dirfd, name, AT_ATOMIC_DATA), there is
+no guarantee that the data is on disk or that the link is present.
+
+However:
+
+	linkat(dirfd, name, AT_ATOMIC_DATA);
+	fsync(dirfd);
+
+Suddenly changes all that.
+
+i.e. when we fsync(dirfd) we guarantee that "name" is present in the
+directory and because we used AT_ATOMIC_DATA it implies that the
+data pointed to by "name" must be present on disk. IOWs, what was
+once a pure directory sync operation now *must* fsync all the child
+inodes that have been linkat(AT_ATOMIC_DATA) since the last time the
+direct has been made stable. 
+
+IOWs, the described AT_ATOMIC_DATA "we don't have to write the data
+during linkat() go-fast-get-out-of-gaol-free" behaviour isn't worth
+the pixels it is written on - it just moves all the complexity to
+directory fsync, and that's /already/ a behavioural minefield.
+
+IMO, the "work-around" of forcing filesystems to write back
+destination inodes during a link() operation is just nasty and will
+just end up with really weird performance anomalies occurring in
+production systems. That's not really a solution, either, especially
+as it is far, far faster for applications to use AIO_FSYNC and then
+on the completion callback run a normal linkat() operation...
+
+Hence, if I've understood these correctly, then I'll be recommending
+that XFS follows this:
+
+> We should also document that a file system which does not implement
+> this flag MUST return EINVAL if it is passed this flag to linkat(2).
+
+and returns -EINVAL to these flags because we do not have the change
+tracking infrastructure to handle these directory fsync semantics.
+I also suspect that, even if we could track this efficiently, we
+can't do the flushing atomically because of locking order
+constraints between directories, regular files, pages in the page
+cache, etc.
+
+Given that we can already use AIO to provide this sort of ordering,
+and AIO is vastly faster than synchronous IO, I don't see any point
+in adding complex barrier interfaces that can be /easily implemented
+in userspace/ using existing AIO primitives. You should start
+thinking about expanding libaio with stuff like
+"link_after_fdatasync()" and suddenly the whole problem of
+filesystem data vs metadata ordering goes away because the
+application directly controls all ordering without blocking and
+doesn't need to care what the filesystem under it does....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
