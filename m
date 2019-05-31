@@ -1,153 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:53348 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726518AbfEaPtF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 May 2019 11:49:05 -0400
-Date: Fri, 31 May 2019 08:48:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_io: allow passing an open file to copy_range
-Message-ID: <20190531154829.GC5398@magnolia>
-References: <20190529101330.29470-1-amir73il@gmail.com>
- <20190529144604.GC5231@magnolia>
- <CAOQ4uxgxiLGwvbeoKx3P+nvakTA75dh8hsyH4+gv2G=e5T3M=w@mail.gmail.com>
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:43915 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726531AbfEaQlv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 May 2019 12:41:51 -0400
+Date: Fri, 31 May 2019 12:41:36 -0400
+From: "Theodore Ts'o" <tytso@mit.edu>
+Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
+Message-ID: <20190531164136.GA3066@mit.edu>
+References: <20190527172655.9287-1-amir73il@gmail.com>
+ <20190528202659.GA12412@mit.edu>
+ <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
+ <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgxiLGwvbeoKx3P+nvakTA75dh8hsyH4+gv2G=e5T3M=w@mail.gmail.com>
+In-Reply-To: <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Amir Goldstein <amir73il@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
 
-On Wed, May 29, 2019 at 06:44:09PM +0300, Amir Goldstein wrote:
-> On Wed, May 29, 2019 at 5:46 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > On Wed, May 29, 2019 at 01:13:30PM +0300, Amir Goldstein wrote:
-> > > Commit 1a05efba ("io: open pipes in non-blocking mode")
-> > > addressed a specific copy_range issue with pipes by always opening
-> > > pipes in non-blocking mode.
-> > >
-> > > This change takes a different approach and allows passing any
-> > > open file as the source file to copy_range.  Besides providing
-> > > more flexibility to the copy_range command, this allows xfstests
-> > > to check if xfs_io supports passing an open file to copy_range.
-> > >
-> > > The intended usage is:
-> > > $ mkfifo fifo
-> > > $ xfs_io -f -n -r -c "open -f dst" -C "copy_range -f 0" fifo
-> > >
-> > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > > ---
-> > >
-> > > Darrick,
-> > >
-> > > Folowing our discussion on the copy_range bounds test [1],
-> > > what do you think about using copy_range -f in the copy_range
-> > > fifo test with a fifo that was explicitly opened non-blocking,
-> > > instead of trying to figure out if copy_range is going to hang
-> > > or not?
-> > >
-> > > This option is already available with sendfile command and
-> > > we can make it available for reflink and dedupe commands if
-> > > we want to. Too bad that these 4 commands have 3 different
-> > > usage patterns to begin with...
-> >
-> > I wonder if there's any sane way to overload the src_file argument such
-> > that we can pass filetable[] offsets without having to burn more getopt
-> > flags...?
-> >
-> > (Oh wait, I bet you're using the '-f' flag to figure out if xfs_io is
-> > new enough not to block on fifos, right? :))
+On Fri, May 31, 2019 at 06:21:45PM +0300, Amir Goldstein wrote:
+> What do you think of:
 > 
-> Yes, but this time it is not a hack its a feature..
+> "AT_ATOMIC_DATA (since Linux 5.x)
+> A filesystem which accepts this flag will guarantee that if the linked file
+> name exists after a system crash, then all of the data written to the file
+> and all of the file's metadata at the time of the linkat(2) call will be
+> visible.
 
-Heh, ok. :)
+".... will be visible after the the file system is remounted".  (Never
+hurts to be explicit.)
 
-> > But otherwise this seems like a reasonable approach.
-> >
-> > > Thanks,
-> > > Amir.
-> > >
-> > > [1] https://marc.info/?l=fstests&m=155910786017989&w=2
-> > >
-> > >  io/copy_file_range.c | 30 ++++++++++++++++++++++++------
-> > >  man/man8/xfs_io.8    | 10 +++++++---
-> > >  2 files changed, 31 insertions(+), 9 deletions(-)
-> > >
-> > > diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-> > > index d069e5bb..1f0d2713 100644
-> > > --- a/io/copy_file_range.c
-> > > +++ b/io/copy_file_range.c
-> > > @@ -26,6 +26,8 @@ copy_range_help(void)
-> > >                                              file at offset 200\n\
-> > >   'copy_range some_file' - copies all bytes from some_file into the open file\n\
-> > >                            at position 0\n\
-> > > + 'copy_range -f 2' - copies all bytes from open file 2 into the current open file\n\
-> > > +                          at position 0\n\
-> > >  "));
-> > >  }
-> > >
-> > > @@ -82,11 +84,12 @@ copy_range_f(int argc, char **argv)
-> > >       int opt;
-> > >       int ret;
-> > >       int fd;
-> > > +     int src_file_arg = 1;
-> > >       size_t fsblocksize, fssectsize;
-> > >
-> > >       init_cvtnum(&fsblocksize, &fssectsize);
-> > >
-> > > -     while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
-> > > +     while ((opt = getopt(argc, argv, "s:d:l:f:")) != -1) {
-> > >               switch (opt) {
-> > >               case 's':
-> > >                       src = cvtnum(fsblocksize, fssectsize, optarg);
-> > > @@ -109,15 +112,30 @@ copy_range_f(int argc, char **argv)
-> > >                               return 0;
-> > >                       }
-> > >                       break;
-> > > +             case 'f':
-> > > +                     fd = atoi(argv[1]);
-> > > +                     if (fd < 0 || fd >= filecount) {
-> > > +                             printf(_("value %d is out of range (0-%d)\n"),
-> > > +                                     fd, filecount-1);
-> > > +                             return 0;
-> > > +                     }
-> > > +                     fd = filetable[fd].fd;
-> > > +                     /* Expect no src_file arg */
-> > > +                     src_file_arg = 0;
-> > > +                     break;
-> > >               }
-> > >       }
-> > >
-> > > -     if (optind != argc - 1)
-> > > +     if (optind != argc - src_file_arg) {
-> > > +             fprintf(stderr, "optind=%d, argc=%d, src_file_arg=%d\n", optind, argc, src_file_arg);
-> > >               return command_usage(&copy_range_cmd);
-> > > +     }
-> > >
-> > > -     fd = openfile(argv[optind], NULL, IO_READONLY, 0, NULL);
-> > > -     if (fd < 0)
-> > > -             return 0;
-> > > +     if (src_file_arg) {
-> >
-> > I wonder if it would be easier to declare "int fd = -1" and the only do
-> > the openfile here if fd < 0?
-> >
+> The way to achieve this guarantee on old kernels is to call fsync (2)
+> before linking the file, but doing so will also results in flushing of
+> volatile disk caches.
+>
+> A filesystem which accepts this flag does NOT
+> guarantee that any of the file hardlinks will exist after a system crash,
+> nor that the last observed value of st_nlink (see stat (2)) will persist."
 > 
-> I started out with if (fd == -1), but I changed to src_file_arg to
-> unify the condition for (optind != argc - src_file_arg)
-> and avoid another condition (i.e. argc - (fd == -1 ? 1 : 0))
 
-<nod>
+This is I think more precise:
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+    This guarantee can be achieved by calling fsync(2) before linking
+    the file, but there may be more performant ways to provide these
+    semantics.  In particular, note that the use of the AT_ATOMIC_DATA
+    flag does *not* guarantee that the new link created by linkat(2)
+    will be persisted after a crash.
 
---D
+We should also document that a file system which does not implement
+this flag MUST return EINVAL if it is passed this flag to linkat(2).
 
-
---D
-
-> Thanks,
-> Amir.
+     	       	      	     	      - Ted
