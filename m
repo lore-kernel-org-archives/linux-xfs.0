@@ -1,101 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46702 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726137AbfFCMjP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Jun 2019 08:39:15 -0400
-Date: Mon, 3 Jun 2019 14:39:00 +0200
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: How to package e2scrub
-Message-ID: <20190603123900.gzwwltgt2bj7gyfa@work>
-References: <20190529120603.xuet53xgs6ahfvpl@work>
- <20190529182111.GA5220@magnolia>
+Received: from mail-yb1-f194.google.com ([209.85.219.194]:45805 "EHLO
+        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726013AbfFAIBz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Jun 2019 04:01:55 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190529182111.GA5220@magnolia>
+References: <20190527172655.9287-1-amir73il@gmail.com> <20190528202659.GA12412@mit.edu>
+ <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
+ <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
+ <20190531164136.GA3066@mit.edu> <20190531224549.GF29573@dread.disaster.area> <20190531232852.GG29573@dread.disaster.area>
+In-Reply-To: <20190531232852.GG29573@dread.disaster.area>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sat, 1 Jun 2019 11:01:42 +0300
+Message-ID: <CAOQ4uxi99NDYMrz-Q7xKta4beQiYFX3-MipZ_RxFNktFTA=vMA@mail.gmail.com>
+Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-ext4@vger.kernel.org, Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
 
-On Wed, May 29, 2019 at 11:21:11AM -0700, Darrick J. Wong wrote:
-> On Wed, May 29, 2019 at 02:06:03PM +0200, Lukas Czerner wrote:
-> > Hi guys,
-> > 
-> > I am about to release 1.45.2 for Fedora rawhide, but I was thinking
-> > about how to package the e2scrub cron job/systemd service.
-> 
-> Funny, xfs has the same conundrum.  Adding Eric & xfs list to cc...
-> 
-> > I really do not like the idea of installing cron job and/or the service as
-> > a part of regular e2fsprogs package. This can potentially really surprise
-> > people in a bad way.
-> >
-> > Note that I've already heard some complaints from debian users about the
-> > systemd service being installed on their system after the e2fsprogs
-> > update.
-> 
-> Yeah, e2scrub is bitrotting rather faster than I had thought it
-> would... but it's only available in Debian unstable.
-> 
-> > What I am going to do is to split the systemd service into a separate
-> > package and I'd like to come to some agreement about the name of the
-> > package so that we can have the same name across distributions (at least
-> > Fedora/Debian/Suse).
-> 
-> Indeed.  Eric picked "xfsprogs-xfs_scrub" for Rawhide, though I find
-> that name to be very clunky and would have preferred "xfs_scrub".
-> 
-> > I was thinking about e2scrub-service for systemd service or e2scrub-cron
-> > for the cron job. What do you think ?
-> 
-> In /theory/ the cronjob support in e2scrub (and xfs_scrub) were designed
-> to step out of the way if systemd is running, so at least in theory (on
-> Debian anyway) the two can be in the same package with the end result
-> being that e2scrub runs weekly in the background.  I've not tried in
-> rhel/suse environments, however.
-> 
-> I also don't see the point of supporting cron *while* systemd is active.
-> That increases the amount of corner-case testing we have to do, for
-> little gain.  It's enough work to maintain the systemd-with-timers and
-> sysvinit-with-cron scenarios.
+On Sat, Jun 1, 2019 at 2:28 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Sat, Jun 01, 2019 at 08:45:49AM +1000, Dave Chinner wrote:
+> > Given that we can already use AIO to provide this sort of ordering,
+> > and AIO is vastly faster than synchronous IO, I don't see any point
+> > in adding complex barrier interfaces that can be /easily implemented
+> > in userspace/ using existing AIO primitives. You should start
+> > thinking about expanding libaio with stuff like
+> > "link_after_fdatasync()" and suddenly the whole problem of
+> > filesystem data vs metadata ordering goes away because the
+> > application directly controls all ordering without blocking and
+> > doesn't need to care what the filesystem under it does....
+>
+> And let me point out that this is also how userspace can do an
+> efficient atomic rename - rename_after_fdatasync(). i.e. on
+> completion of the AIO_FSYNC, run the rename. This guarantees that
+> the application will see either the old file of the complete new
+> file, and it *doesn't have to wait for the operation to complete*.
+> Once it is in flight, the file will contain the old data until some
+> point in the near future when will it contain the new data....
 
-Yeah, you're probably right. I just wanted to give people some options
-if they do not want (for whatever reason) to use systemd. Container
-environment might be a good example of that, but I am not at all sure
-how well is lvm2 supported in containers.
+What I am looking for is a way to isolate the effects of "atomic rename/link"
+from the rest of the users. Sure there is I/O bandwidth and queued
+bios, but at least isolate other threads working on other files or metadata
+from contending with the "atomic rename" thread of journal flushes and
+the like. Actually, one of my use cases is "atomic rename" of files with
+no data (looking for atomicity w.r.t xattr and mtime), so this "atomic rename"
+thread should not be interfering with other workloads at all.
 
-> 
-> If you're worried about the stability of systemd timer code, systemd's
-> timer support has been stable enough to run e2scrub_all/xfs_scrub_all on
-> my systems since late 2015, and I have no interest in supporting either
-> on a pre-2016 distro.  Practically speaking, I guess that RHEL8, SLES16,
-> and Ubuntu 20.04 will be the first LTS distros to support e2scrub at
-> all.
-> 
-> (As for xfs_scrub, it'll barely achieve alpha status in Linux 5.2...)
-> 
-> > Also I decided not to package the cron job for now. But if I decide to
-> > package it in the future I'd like to change the e2scrub cron
-> > configuration so that it can run on the systems with systemd but make
-> > the package conflict with the e2scrub-service so that users are free to
-> > decide how they want to use it.
-> 
-> If you do end up creating two packages I'd name the systemd one
-> e2scrub-systemd over e2scrub-service.
+>
+> Seriously, sit down and work out all the "atomic" data vs metadata
+> behaviours you want, and then tell me how many of them cannot be
+> implemented as "AIO_FSYNC w/ completion callback function" in
+> userspace. This mechanism /guarantees ordering/ at the application
+> level, the application does not block waiting for these data
+> integrity operations to complete, and you don't need any new kernel
+> side functionality to implement this.
 
-Ok, thanks for suggestion. Andreas was suggesting naming it as part of
-e2fsprogs, that is - e2fsprogs-scrub but then it would be
-e2fsprogs-scrub-systemd and that sounds a bit convoluted to me.
+So I think what I could have used is AIO_BATCH_FSYNC, an interface
+that was proposed by Ric Wheeler and discussed on LSF:
+https://lwn.net/Articles/789024/
+Ric was looking for a way to efficiently fsync a "bunch of files".
+Submitting several AIO_FSYNC calls is not the efficient way of doing that.
+So it is either a new AIO_BATCH_FSYNC and a kernel implementation
+that flushes the inodes and then calls ->sync_fs(), or a new AIO operation
+that just does the ->sync_fs() bit and using sync_file_range() for the inodes.
 
-Thanks!
--Lukas
+To be more accurate, the AIO operation that would emulate my
+proposed API more closely is AIO_WAIT_FOR_SYNCFS, as I do not wish
+to impose excessive journal flushes, I just need a completion callback
+when they happened to perform the rename/link.
 
-> 
-> --D
-> 
-> > Thoughts ?
-> > 
-> > Thanks!
-> > -Lukas
+>
+> Fundamentally, the assertion that disk cache flushes are not what
+> causes fsync "to be slow" is incorrect. It's the synchronous
+
+Too many double negatives. I am not sure I parsed this correctly.
+But I think by now you understand that I don't care that fsync is "slow".
+I care about frequent fsyncs making the entire system slow down.
+
+Heck, xfs even has a mitigation in place to improve performance
+of too frequent fsyncs, but that mitigation is partly gone since
+47c7d0b19502 xfs: fix incorrect log_flushed on fsync
+
+The situation with frequent fsync on ext4 at the moment is probably
+worse.
+
+I am trying to reduce the number of fsyncs from applications
+and converting fsync to AIO_FSYNC is not going to help with that.
+
+Thanks,
+Amir.
