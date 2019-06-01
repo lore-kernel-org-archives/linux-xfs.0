@@ -1,291 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:38552 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726293AbfFDVuE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jun 2019 17:50:04 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x54LnkRu073488
-        for <linux-xfs@vger.kernel.org>; Tue, 4 Jun 2019 21:50:02 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 2suevdfw90-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Jun 2019 21:50:02 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x54Lnqac044847
-        for <linux-xfs@vger.kernel.org>; Tue, 4 Jun 2019 21:50:02 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2swnghkjjv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Jun 2019 21:50:02 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x54Lo1f2011694
-        for <linux-xfs@vger.kernel.org>; Tue, 4 Jun 2019 21:50:01 GMT
-Subject: [PATCH 05/10] xfs: move bulkstat ichunk helpers to iwalk code
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 04 Jun 2019 14:49:59 -0700
-Message-ID: <155968499971.1657646.988325107267126890.stgit@magnolia>
-In-Reply-To: <155968496814.1657646.13743491598480818627.stgit@magnolia>
-References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
+Received: from mail-yb1-f195.google.com ([209.85.219.195]:36677 "EHLO
+        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726013AbfFAHWD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Jun 2019 03:22:03 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <20190527172655.9287-1-amir73il@gmail.com> <20190528202659.GA12412@mit.edu>
+ <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
+ <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
+ <20190531164136.GA3066@mit.edu> <20190531224549.GF29573@dread.disaster.area>
+In-Reply-To: <20190531224549.GF29573@dread.disaster.area>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sat, 1 Jun 2019 10:21:49 +0300
+Message-ID: <CAOQ4uxjeGxNsjT9N_X6W+mVbvn2kTaoeLE-tXVYq0-3MwC_+Xg@mail.gmail.com>
+Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, Ric Wheeler <rwheeler@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, Jun 1, 2019 at 1:46 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Fri, May 31, 2019 at 12:41:36PM -0400, Theodore Ts'o wrote:
+> > On Fri, May 31, 2019 at 06:21:45PM +0300, Amir Goldstein wrote:
+> > > What do you think of:
+> > >
+> > > "AT_ATOMIC_DATA (since Linux 5.x)
+> > > A filesystem which accepts this flag will guarantee that if the linked file
+> > > name exists after a system crash, then all of the data written to the file
+> > > and all of the file's metadata at the time of the linkat(2) call will be
+> > > visible.
+> >
+> > ".... will be visible after the the file system is remounted".  (Never
+> > hurts to be explicit.)
+> >
+> > > The way to achieve this guarantee on old kernels is to call fsync (2)
+> > > before linking the file, but doing so will also results in flushing of
+> > > volatile disk caches.
+> > >
+> > > A filesystem which accepts this flag does NOT
+> > > guarantee that any of the file hardlinks will exist after a system crash,
+> > > nor that the last observed value of st_nlink (see stat (2)) will persist."
+> > >
+> >
+> > This is I think more precise:
+> >
+> >     This guarantee can be achieved by calling fsync(2) before linking
+> >     the file, but there may be more performant ways to provide these
+> >     semantics.  In particular, note that the use of the AT_ATOMIC_DATA
+> >     flag does *not* guarantee that the new link created by linkat(2)
+> >     will be persisted after a crash.
+>
+> So here's the *implementation* problem I see with this definition of
+> AT_ATOMIC_DATA. After linkat(dirfd, name, AT_ATOMIC_DATA), there is
+> no guarantee that the data is on disk or that the link is present.
+>
+> However:
+>
+>         linkat(dirfd, name, AT_ATOMIC_DATA);
+>         fsync(dirfd);
+>
+> Suddenly changes all that.
+>
+> i.e. when we fsync(dirfd) we guarantee that "name" is present in the
+> directory and because we used AT_ATOMIC_DATA it implies that the
+> data pointed to by "name" must be present on disk. IOWs, what was
+> once a pure directory sync operation now *must* fsync all the child
+> inodes that have been linkat(AT_ATOMIC_DATA) since the last time the
+> direct has been made stable.
+>
+> IOWs, the described AT_ATOMIC_DATA "we don't have to write the data
+> during linkat() go-fast-get-out-of-gaol-free" behaviour isn't worth
+> the pixels it is written on - it just moves all the complexity to
+> directory fsync, and that's /already/ a behavioural minefield.
 
-Now that we've reworked the bulkstat code to use iwalk, we can move the
-old bulkstat ichunk helpers to xfs_iwalk.c.  No functional changes here.
+Where does it say we don't have to write the data during linkat()?
+I was only talking about avoid FLUSH/FUA caused by fsync().
+I wrote in commit message:
+"First implementation of AT_ATOMIC_DATA is expected to be
+filemap_write_and_wait() for xfs/ext4 and probably fdatasync for btrfs."
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_itable.c |   93 --------------------------------------------------
- fs/xfs/xfs_itable.h |    8 ----
- fs/xfs/xfs_iwalk.c  |   95 ++++++++++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 93 insertions(+), 103 deletions(-)
+I failed to convey the reasoning for this flag to you.
+It is *not* about the latency of the "atomic link" for the calling thread
+It is about not interfering with other workloads running at the same time.
 
+>
+> IMO, the "work-around" of forcing filesystems to write back
+> destination inodes during a link() operation is just nasty and will
+> just end up with really weird performance anomalies occurring in
+> production systems. That's not really a solution, either, especially
+> as it is far, far faster for applications to use AIO_FSYNC and then
+> on the completion callback run a normal linkat() operation...
+>
+> Hence, if I've understood these correctly, then I'll be recommending
+> that XFS follows this:
+>
+> > We should also document that a file system which does not implement
+> > this flag MUST return EINVAL if it is passed this flag to linkat(2).
+>
+> and returns -EINVAL to these flags because we do not have the change
+> tracking infrastructure to handle these directory fsync semantics.
+> I also suspect that, even if we could track this efficiently, we
+> can't do the flushing atomically because of locking order
+> constraints between directories, regular files, pages in the page
+> cache, etc.
 
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 87c597ea1df7..06abe5c9c0ee 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -186,99 +186,6 @@ xfs_bulkstat_one(
- 	return error;
- }
- 
--/*
-- * Loop over all clusters in a chunk for a given incore inode allocation btree
-- * record.  Do a readahead if there are any allocated inodes in that cluster.
-- */
--void
--xfs_bulkstat_ichunk_ra(
--	struct xfs_mount		*mp,
--	xfs_agnumber_t			agno,
--	struct xfs_inobt_rec_incore	*irec)
--{
--	struct xfs_ino_geometry		*igeo = M_IGEO(mp);
--	xfs_agblock_t			agbno;
--	struct blk_plug			plug;
--	int				i;	/* inode chunk index */
--
--	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
--
--	blk_start_plug(&plug);
--	for (i = 0;
--	     i < XFS_INODES_PER_CHUNK;
--	     i += igeo->inodes_per_cluster,
--			agbno += igeo->blocks_per_cluster) {
--		if (xfs_inobt_maskn(i, igeo->inodes_per_cluster) &
--		    ~irec->ir_free) {
--			xfs_btree_reada_bufs(mp, agno, agbno,
--					igeo->blocks_per_cluster,
--					&xfs_inode_buf_ops);
--		}
--	}
--	blk_finish_plug(&plug);
--}
--
--/*
-- * Lookup the inode chunk that the given inode lives in and then get the record
-- * if we found the chunk.  If the inode was not the last in the chunk and there
-- * are some left allocated, update the data for the pointed-to record as well as
-- * return the count of grabbed inodes.
-- */
--int
--xfs_bulkstat_grab_ichunk(
--	struct xfs_btree_cur		*cur,	/* btree cursor */
--	xfs_agino_t			agino,	/* starting inode of chunk */
--	int				*icount,/* return # of inodes grabbed */
--	struct xfs_inobt_rec_incore	*irec)	/* btree record */
--{
--	int				idx;	/* index into inode chunk */
--	int				stat;
--	int				error = 0;
--
--	/* Lookup the inode chunk that this inode lives in */
--	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &stat);
--	if (error)
--		return error;
--	if (!stat) {
--		*icount = 0;
--		return error;
--	}
--
--	/* Get the record, should always work */
--	error = xfs_inobt_get_rec(cur, irec, &stat);
--	if (error)
--		return error;
--	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, stat == 1);
--
--	/* Check if the record contains the inode in request */
--	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino) {
--		*icount = 0;
--		return 0;
--	}
--
--	idx = agino - irec->ir_startino + 1;
--	if (idx < XFS_INODES_PER_CHUNK &&
--	    (xfs_inobt_maskn(idx, XFS_INODES_PER_CHUNK - idx) & ~irec->ir_free)) {
--		int	i;
--
--		/* We got a right chunk with some left inodes allocated at it.
--		 * Grab the chunk record.  Mark all the uninteresting inodes
--		 * free -- because they're before our start point.
--		 */
--		for (i = 0; i < idx; i++) {
--			if (XFS_INOBT_MASK(i) & ~irec->ir_free)
--				irec->ir_freecount++;
--		}
--
--		irec->ir_free |= xfs_inobt_maskn(0, idx);
--		*icount = irec->ir_count - irec->ir_freecount;
--	}
--
--	return 0;
--}
--
--#define XFS_BULKSTAT_UBLEFT(ubleft)	((ubleft) >= statstruct_size)
--
- static int
- xfs_bulkstat_iwalk(
- 	struct xfs_mount	*mp,
-diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-index 366d391eb11f..a2562fe8d282 100644
---- a/fs/xfs/xfs_itable.h
-+++ b/fs/xfs/xfs_itable.h
-@@ -67,12 +67,4 @@ xfs_inumbers(
- 	void			__user *buffer, /* buffer with inode info */
- 	inumbers_fmt_pf		formatter);
- 
--/* Temporarily needed while we refactor functions. */
--struct xfs_btree_cur;
--struct xfs_inobt_rec_incore;
--void xfs_bulkstat_ichunk_ra(struct xfs_mount *mp, xfs_agnumber_t agno,
--		struct xfs_inobt_rec_incore *irec);
--int xfs_bulkstat_grab_ichunk(struct xfs_btree_cur *cur, xfs_agino_t agino,
--		int *icount, struct xfs_inobt_rec_incore *irec);
--
- #endif	/* __XFS_ITABLE_H__ */
-diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-index 3e6c06e69c75..bef0c4907781 100644
---- a/fs/xfs/xfs_iwalk.c
-+++ b/fs/xfs/xfs_iwalk.c
-@@ -66,6 +66,97 @@ struct xfs_iwalk_ag {
- 	void				*data;
- };
- 
-+/*
-+ * Loop over all clusters in a chunk for a given incore inode allocation btree
-+ * record.  Do a readahead if there are any allocated inodes in that cluster.
-+ */
-+STATIC void
-+xfs_iwalk_ichunk_ra(
-+	struct xfs_mount		*mp,
-+	xfs_agnumber_t			agno,
-+	struct xfs_inobt_rec_incore	*irec)
-+{
-+	struct xfs_ino_geometry		*igeo = M_IGEO(mp);
-+	xfs_agblock_t			agbno;
-+	struct blk_plug			plug;
-+	int				i;	/* inode chunk index */
-+
-+	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
-+
-+	blk_start_plug(&plug);
-+	for (i = 0;
-+	     i < XFS_INODES_PER_CHUNK;
-+	     i += igeo->inodes_per_cluster,
-+			agbno += igeo->blocks_per_cluster) {
-+		if (xfs_inobt_maskn(i, igeo->inodes_per_cluster) &
-+		    ~irec->ir_free) {
-+			xfs_btree_reada_bufs(mp, agno, agbno,
-+					igeo->blocks_per_cluster,
-+					&xfs_inode_buf_ops);
-+		}
-+	}
-+	blk_finish_plug(&plug);
-+}
-+
-+/*
-+ * Lookup the inode chunk that the given inode lives in and then get the record
-+ * if we found the chunk.  If the inode was not the last in the chunk and there
-+ * are some left allocated, update the data for the pointed-to record as well as
-+ * return the count of grabbed inodes.
-+ */
-+STATIC int
-+xfs_iwalk_grab_ichunk(
-+	struct xfs_btree_cur		*cur,	/* btree cursor */
-+	xfs_agino_t			agino,	/* starting inode of chunk */
-+	int				*icount,/* return # of inodes grabbed */
-+	struct xfs_inobt_rec_incore	*irec)	/* btree record */
-+{
-+	int				idx;	/* index into inode chunk */
-+	int				stat;
-+	int				error = 0;
-+
-+	/* Lookup the inode chunk that this inode lives in */
-+	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &stat);
-+	if (error)
-+		return error;
-+	if (!stat) {
-+		*icount = 0;
-+		return error;
-+	}
-+
-+	/* Get the record, should always work */
-+	error = xfs_inobt_get_rec(cur, irec, &stat);
-+	if (error)
-+		return error;
-+	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, stat == 1);
-+
-+	/* Check if the record contains the inode in request */
-+	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino) {
-+		*icount = 0;
-+		return 0;
-+	}
-+
-+	idx = agino - irec->ir_startino + 1;
-+	if (idx < XFS_INODES_PER_CHUNK &&
-+	    (xfs_inobt_maskn(idx, XFS_INODES_PER_CHUNK - idx) & ~irec->ir_free)) {
-+		int	i;
-+
-+		/* We got a right chunk with some left inodes allocated at it.
-+		 * Grab the chunk record.  Mark all the uninteresting inodes
-+		 * free -- because they're before our start point.
-+		 */
-+		for (i = 0; i < idx; i++) {
-+			if (XFS_INOBT_MASK(i) & ~irec->ir_free)
-+				irec->ir_freecount++;
-+		}
-+
-+		irec->ir_free |= xfs_inobt_maskn(0, idx);
-+		*icount = irec->ir_count - irec->ir_freecount;
-+	}
-+
-+	return 0;
-+}
-+
- /* Allocate memory for a walk. */
- STATIC int
- xfs_iwalk_alloc(
-@@ -190,7 +281,7 @@ xfs_iwalk_ag_start(
- 	 * We require a lookup cache of at least two elements so that we don't
- 	 * have to deal with tearing down the cursor to walk the records.
- 	 */
--	error = xfs_bulkstat_grab_ichunk(*curpp, agino - 1, &icount,
-+	error = xfs_iwalk_grab_ichunk(*curpp, agino - 1, &icount,
- 			&iwag->recs[iwag->nr_recs]);
- 	if (error)
- 		return error;
-@@ -295,7 +386,7 @@ xfs_iwalk_ag(
- 		 * Start readahead for this inode chunk in anticipation of
- 		 * walking the inodes.
- 		 */
--		xfs_bulkstat_ichunk_ra(mp, agno, irec);
-+		xfs_iwalk_ichunk_ra(mp, agno, irec);
- 
- 		/*
- 		 * If there's space in the buffer for more records, increment
+That is not at all what I had in mind for XFS with the flag.
+
+>
+> Given that we can already use AIO to provide this sort of ordering,
+> and AIO is vastly faster than synchronous IO, I don't see any point
+> in adding complex barrier interfaces that can be /easily implemented
+> in userspace/ using existing AIO primitives. You should start
+> thinking about expanding libaio with stuff like
+> "link_after_fdatasync()" and suddenly the whole problem of
+> filesystem data vs metadata ordering goes away because the
+> application directly controls all ordering without blocking and
+> doesn't need to care what the filesystem under it does....
+>
+
+OK. I can work with that. It's not that simple, but I will reply on
+your next email, where you wrote more about this alternative.
+
+Thanks,
+Amir.
