@@ -1,61 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out30-132.freemail.mail.aliyun.com ([115.124.30.132]:58540 "EHLO
-        out30-132.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731018AbfFLGYl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 02:24:41 -0400
-From: Alvin@linux.alibaba.com
-Subject: [PATCH] Fix the inconsistency between the code and the manual page of mkfs.xfs
-Date: Wed, 12 Jun 2019 14:23:29 +0800
-Message-Id: <1560320609-6336-1-git-send-email-Alvin@linux.alibaba.com>
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:44718 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726485AbfFBMlb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Jun 2019 08:41:31 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v3 6/6] generic: cross-device copy_file_range test
+Date: Sun,  2 Jun 2019 15:41:14 +0300
+Message-Id: <20190602124114.26810-7-amir73il@gmail.com>
+In-Reply-To: <20190602124114.26810-1-amir73il@gmail.com>
+References: <20190602124114.26810-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: caspar@linux.alibaba.com, Alvin Zheng <Alvin@linux.alibaba.com>
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-From: Alvin Zheng <Alvin@linux.alibaba.com>
+Old kernels do not support cross-device copy_file_range.
+A new patch set is aimed at allowing cross-device copy_file_range
+using the default in-kernel copy implementation.
 
-Signed-off-by: Alvin Zheng <Alvin@linux.alibaba.com>
+[Amir] Split out cross-device copy_range test to a new test.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- man/man8/mkfs.xfs.8 | 12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
+ tests/generic/991     | 56 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/991.out |  4 ++++
+ tests/generic/group   |  1 +
+ 3 files changed, 61 insertions(+)
+ create mode 100755 tests/generic/991
+ create mode 100644 tests/generic/991.out
 
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index 4b8c78c..45d7a84 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -115,9 +115,7 @@ When specifying parameters in units of sectors or filesystem blocks, the
- .B \-s
- option or the
- .B \-b
--option first needs to be added to the command line.
--Failure to specify the size of the units will result in illegal value errors
--when parameters are quantified in those units.
-+option can be used to specify the size of the sector or block. If the size of the block or sector is not specified, the default size (block: 4KiB, sector: 512B) will be used.
- .PP
- Many feature options allow an optional argument of 0 or 1, to explicitly
- disable or enable the functionality.
-@@ -136,10 +134,6 @@ The filesystem block size is specified with a
- in bytes. The default value is 4096 bytes (4 KiB), the minimum is 512, and the
- maximum is 65536 (64 KiB).
- .IP
--To specify any options on the command line in units of filesystem blocks, this
--option must be specified first so that the filesystem block size is
--applied consistently to all options.
--.IP
- Although
- .B mkfs.xfs
- will accept any of these values and create a valid filesystem,
-@@ -894,10 +888,6 @@ is 512 bytes. The minimum value for sector size is
- .I sector_size
- must be a power of 2 size and cannot be made larger than the
- filesystem block size.
--.IP
--To specify any options on the command line in units of sectors, this
--option must be specified first so that the sector size is
--applied consistently to all options.
- .RE
- .TP
- .BI \-L " label"
+diff --git a/tests/generic/991 b/tests/generic/991
+new file mode 100755
+index 00000000..94266e89
+--- /dev/null
++++ b/tests/generic/991
+@@ -0,0 +1,56 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 991
++#
++# Exercise copy_file_range() across devices
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs generic
++
++rm -f $seqres.full
++
++_require_test
++_require_scratch
++_require_xfs_io_command "copy_range"
++
++_scratch_mkfs 2>&1 >> $seqres.full
++_scratch_mount
++
++
++testdir=$TEST_DIR/test-$seq
++rm -rf $testdir
++mkdir $testdir
++rm -f $seqres.full
++
++$XFS_IO_PROG -f -c "pwrite -S 0x61 0 128k" $testdir/file >> $seqres.full 2>&1
++
++$XFS_IO_PROG -f -c "copy_range -l 128k $testdir/file" $SCRATCH_MNT/copy
++cmp $testdir/file $SCRATCH_MNT/copy
++echo "md5sums after xdev copy:"
++md5sum $testdir/file $SCRATCH_MNT/copy | _filter_test_dir | _filter_scratch
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/991.out b/tests/generic/991.out
+new file mode 100644
+index 00000000..19c22dfe
+--- /dev/null
++++ b/tests/generic/991.out
+@@ -0,0 +1,4 @@
++QA output created by 991
++md5sums after xdev copy:
++81615449a98aaaad8dc179b3bec87f38  TEST_DIR/test-991/file
++81615449a98aaaad8dc179b3bec87f38  SCRATCH_MNT/copy
+diff --git a/tests/generic/group b/tests/generic/group
+index 86802d54..bc5dac3b 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -553,3 +553,4 @@
+ 988 auto quick copy_range
+ 989 auto quick copy_range swap
+ 990 auto quick copy_range
++991 auto quick copy_range
 -- 
-1.8.3.1
+2.17.1
