@@ -1,67 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:35829 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726013AbfFAG3I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Jun 2019 02:29:08 -0400
-Received: by mail-ot1-f66.google.com with SMTP id n14so11424050otk.2
-        for <linux-xfs@vger.kernel.org>; Fri, 31 May 2019 23:29:07 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190521133713.31653-1-pagupta@redhat.com> <20190521133713.31653-5-pagupta@redhat.com>
-In-Reply-To: <20190521133713.31653-5-pagupta@redhat.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 31 May 2019 23:28:56 -0700
-Message-ID: <CAPcyv4iW-UeHBs+qSii2Pk7Q2Nki6imGBTEORuxEAWgEMMp=nA@mail.gmail.com>
-Subject: Re: [PATCH v10 4/7] dm: enable synchronous dax
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:38934 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725966AbfFBMlX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Jun 2019 08:41:23 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v3 0/6] fstests: copy_file_range() tests
+Date: Sun,  2 Jun 2019 15:41:08 +0300
+Message-Id: <20190602124114.26810-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, virtualization@lists.linux-foundation.org, KVM list <kvm@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Qemu Developers <qemu-devel@nongnu.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Ross Zwisler <zwisler@kernel.org>, Vishal L Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, Matthew Wilcox <willy@infradead.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Christoph Hellwig <hch@infradead.org>, Len Brown <lenb@kernel.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "Darrick J. Wong" <darrick.wong@oracle.com>, lcapitulino@redhat.com, Kevin Wolf <kwolf@redhat.com>, Igor Mammedov <imammedo@redhat.com>, jmoyer <jmoyer@redhat.com>, Nitesh Narayan Lal <nilal@redhat.com>, Rik van Riel <riel@surriel.com>, Stefan Hajnoczi <stefanha@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Hildenbrand <david@redhat.com>, david <david@fromorbit.com>, cohuck@redhat.com, Xiao Guangrong <xiaoguangrong.eric@gmail.com>, Paolo Bonzini <pbonzini@redhat.com>, yuval shaia <yuval.shaia@oracle.com>, Adam Borowski <kilobyte@angband.pl>, jstaron@google.com, Randy Dunlap <rdunlap@infradead.org>, Mike Snitzer <snitzer@redhat.com>
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, May 21, 2019 at 6:43 AM Pankaj Gupta <pagupta@redhat.com> wrote:
->
->  This patch sets dax device 'DAXDEV_SYNC' flag if all the target
->  devices of device mapper support synchrononous DAX. If device
->  mapper consists of both synchronous and asynchronous dax devices,
->  we don't set 'DAXDEV_SYNC' flag.
->
-> Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
-> ---
->  drivers/md/dm-table.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
->
-> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-> index cde3b49b2a91..1cce626ff576 100644
-> --- a/drivers/md/dm-table.c
-> +++ b/drivers/md/dm-table.c
-> @@ -886,10 +886,17 @@ static int device_supports_dax(struct dm_target *ti, struct dm_dev *dev,
->         return bdev_dax_supported(dev->bdev, PAGE_SIZE);
->  }
->
-> +static int device_synchronous(struct dm_target *ti, struct dm_dev *dev,
-> +                              sector_t start, sector_t len, void *data)
-> +{
-> +       return dax_synchronous(dev->dax_dev);
-> +}
-> +
->  static bool dm_table_supports_dax(struct dm_table *t)
->  {
->         struct dm_target *ti;
->         unsigned i;
-> +       bool dax_sync = true;
->
->         /* Ensure that all targets support DAX. */
->         for (i = 0; i < dm_table_get_num_targets(t); i++) {
-> @@ -901,7 +908,14 @@ static bool dm_table_supports_dax(struct dm_table *t)
->                 if (!ti->type->iterate_devices ||
->                     !ti->type->iterate_devices(ti, device_supports_dax, NULL))
->                         return false;
-> +
-> +               /* Check devices support synchronous DAX */
-> +               if (dax_sync &&
-> +                   !ti->type->iterate_devices(ti, device_synchronous, NULL))
-> +                       dax_sync = false;
+Eryu,
 
-Looks like this needs to be rebased on the current state of v5.2-rc,
-and then we can nudge Mike for an ack.
+This is a re-work of Dave Chinner's copy_file_range() tests which
+I used to verify the kernel fixes of the syscall [1].
+
+The 2 first tests fix bugs in the interface, so they are appropriate
+for merge IMO.
+
+The cross-device copy test checks a new functionality, so you may
+want to wait with merging it till after the work is merged upstream.
+
+The bounds check test depend on a change that was only posted to
+xfsprogs [2]. Without two changes that were merge to xfsprogs v4.20,
+the original test (v1, v2) would hang. Requiring the new copy_range
+flag (copy_range -f) mitigates this problem.
+
+You may want to wait until the xfs_io change is merged before merging
+the check for the new flag.
+
+Thanks,
+Amir.
+
+[1] https://lore.kernel.org/linux-fsdevel/20190531164701.15112-1-amir73il@gmail.com/
+[2] https://marc.info/?l=linux-xfs&m=155912482124038&w=2
+
+Changes from v2:
+- Change blockdev in test to loop and _require_loop (Olga)
+- Implement and use _require_xfs_io_command copy_range -f
+
+Changes from v1:
+- Remove patch to test EINVAL behavior instead of short copy
+- Remove 'chmod -r' permission drop test case
+- Split out test for swap/immutable file copy
+- Split of cross-device copy test
+
+
+Amir Goldstein (6):
+  generic: create copy_range group
+  generic: copy_file_range immutable file test
+  generic: copy_file_range swapfile test
+  common/rc: check support for xfs_io copy_range -f N
+  generic: copy_file_range bounds test
+  generic: cross-device copy_file_range test
+
+ common/rc             |   9 ++-
+ tests/generic/434     |   2 +
+ tests/generic/988     |  59 +++++++++++++++++++
+ tests/generic/988.out |   5 ++
+ tests/generic/989     |  56 ++++++++++++++++++
+ tests/generic/989.out |   4 ++
+ tests/generic/990     | 132 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/990.out |  37 ++++++++++++
+ tests/generic/991     |  56 ++++++++++++++++++
+ tests/generic/991.out |   4 ++
+ tests/generic/group   |  14 +++--
+ 11 files changed, 372 insertions(+), 6 deletions(-)
+ create mode 100755 tests/generic/988
+ create mode 100644 tests/generic/988.out
+ create mode 100755 tests/generic/989
+ create mode 100644 tests/generic/989.out
+ create mode 100755 tests/generic/990
+ create mode 100644 tests/generic/990.out
+ create mode 100755 tests/generic/991
+ create mode 100644 tests/generic/991.out
+
+-- 
+2.17.1
