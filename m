@@ -1,94 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f194.google.com ([209.85.219.194]:45805 "EHLO
-        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726013AbfFAIBz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Jun 2019 04:01:55 -0400
-MIME-Version: 1.0
-References: <20190527172655.9287-1-amir73il@gmail.com> <20190528202659.GA12412@mit.edu>
- <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
- <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
- <20190531164136.GA3066@mit.edu> <20190531224549.GF29573@dread.disaster.area> <20190531232852.GG29573@dread.disaster.area>
-In-Reply-To: <20190531232852.GG29573@dread.disaster.area>
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:37776 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726084AbfFBMlZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Jun 2019 08:41:25 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Sat, 1 Jun 2019 11:01:42 +0300
-Message-ID: <CAOQ4uxi99NDYMrz-Q7xKta4beQiYFX3-MipZ_RxFNktFTA=vMA@mail.gmail.com>
-Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH v3 1/6] generic: create copy_range group
+Date: Sun,  2 Jun 2019 15:41:09 +0300
+Message-Id: <20190602124114.26810-2-amir73il@gmail.com>
+In-Reply-To: <20190602124114.26810-1-amir73il@gmail.com>
+References: <20190602124114.26810-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Sat, Jun 1, 2019 at 2:28 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Sat, Jun 01, 2019 at 08:45:49AM +1000, Dave Chinner wrote:
-> > Given that we can already use AIO to provide this sort of ordering,
-> > and AIO is vastly faster than synchronous IO, I don't see any point
-> > in adding complex barrier interfaces that can be /easily implemented
-> > in userspace/ using existing AIO primitives. You should start
-> > thinking about expanding libaio with stuff like
-> > "link_after_fdatasync()" and suddenly the whole problem of
-> > filesystem data vs metadata ordering goes away because the
-> > application directly controls all ordering without blocking and
-> > doesn't need to care what the filesystem under it does....
->
-> And let me point out that this is also how userspace can do an
-> efficient atomic rename - rename_after_fdatasync(). i.e. on
-> completion of the AIO_FSYNC, run the rename. This guarantees that
-> the application will see either the old file of the complete new
-> file, and it *doesn't have to wait for the operation to complete*.
-> Once it is in flight, the file will contain the old data until some
-> point in the near future when will it contain the new data....
+Move some tests to the copy_range group so they are distinct
+from the copy group which refers to xfs_copy tests.
 
-What I am looking for is a way to isolate the effects of "atomic rename/link"
-from the rest of the users. Sure there is I/O bandwidth and queued
-bios, but at least isolate other threads working on other files or metadata
-from contending with the "atomic rename" thread of journal flushes and
-the like. Actually, one of my use cases is "atomic rename" of files with
-no data (looking for atomicity w.r.t xattr and mtime), so this "atomic rename"
-thread should not be interfering with other workloads at all.
+[Amir] Revert copy past EOF behavior change
 
->
-> Seriously, sit down and work out all the "atomic" data vs metadata
-> behaviours you want, and then tell me how many of them cannot be
-> implemented as "AIO_FSYNC w/ completion callback function" in
-> userspace. This mechanism /guarantees ordering/ at the application
-> level, the application does not block waiting for these data
-> integrity operations to complete, and you don't need any new kernel
-> side functionality to implement this.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ tests/generic/434   |  2 ++
+ tests/generic/group | 10 +++++-----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-So I think what I could have used is AIO_BATCH_FSYNC, an interface
-that was proposed by Ric Wheeler and discussed on LSF:
-https://lwn.net/Articles/789024/
-Ric was looking for a way to efficiently fsync a "bunch of files".
-Submitting several AIO_FSYNC calls is not the efficient way of doing that.
-So it is either a new AIO_BATCH_FSYNC and a kernel implementation
-that flushes the inodes and then calls ->sync_fs(), or a new AIO operation
-that just does the ->sync_fs() bit and using sync_file_range() for the inodes.
-
-To be more accurate, the AIO operation that would emulate my
-proposed API more closely is AIO_WAIT_FOR_SYNCFS, as I do not wish
-to impose excessive journal flushes, I just need a completion callback
-when they happened to perform the rename/link.
-
->
-> Fundamentally, the assertion that disk cache flushes are not what
-> causes fsync "to be slow" is incorrect. It's the synchronous
-
-Too many double negatives. I am not sure I parsed this correctly.
-But I think by now you understand that I don't care that fsync is "slow".
-I care about frequent fsyncs making the entire system slow down.
-
-Heck, xfs even has a mitigation in place to improve performance
-of too frequent fsyncs, but that mitigation is partly gone since
-47c7d0b19502 xfs: fix incorrect log_flushed on fsync
-
-The situation with frequent fsync on ext4 at the moment is probably
-worse.
-
-I am trying to reduce the number of fsyncs from applications
-and converting fsync to AIO_FSYNC is not going to help with that.
-
-Thanks,
-Amir.
+diff --git a/tests/generic/434 b/tests/generic/434
+index 032f933d..edbf49d3 100755
+--- a/tests/generic/434
++++ b/tests/generic/434
+@@ -46,10 +46,12 @@ $XFS_IO_PROG -f -c "copy_range -s 1000 -l 100 $testdir/file" "$testdir/copy"
+ md5sum $testdir/copy | _filter_test_dir
+ 
+ echo "Try to copy to a read-only file"
++rm -f $testdir/copy
+ $XFS_IO_PROG -r -f -c "copy_range -s 0 -l 100 $testdir/file" "$testdir/copy"
+ md5sum $testdir/copy | _filter_test_dir
+ 
+ echo "Try to copy to an append-only file"
++rm -f $testdir/copy
+ $XFS_IO_PROG -a -f -c "copy_range -s 0 -l 100 $testdir/file" "$testdir/copy"
+ md5sum $testdir/copy | _filter_test_dir
+ 
+diff --git a/tests/generic/group b/tests/generic/group
+index 49639fc9..b498eb56 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -432,11 +432,11 @@
+ 427 auto quick aio rw
+ 428 auto quick dax
+ 429 auto encrypt
+-430 auto quick copy
+-431 auto quick copy
+-432 auto quick copy
+-433 auto quick copy
+-434 auto quick copy
++430 auto quick copy_range
++431 auto quick copy_range
++432 auto quick copy_range
++433 auto quick copy_range
++434 auto quick copy_range
+ 435 auto encrypt
+ 436 auto quick rw seek prealloc
+ 437 auto quick dax
+-- 
+2.17.1
