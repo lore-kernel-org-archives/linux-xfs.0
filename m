@@ -1,51 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:34737 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725966AbfFBMl2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Jun 2019 08:41:28 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v3 4/6] common/rc: check support for xfs_io copy_range -f N
-Date: Sun,  2 Jun 2019 15:41:12 +0300
-Message-Id: <20190602124114.26810-5-amir73il@gmail.com>
-In-Reply-To: <20190602124114.26810-1-amir73il@gmail.com>
-References: <20190602124114.26810-1-amir73il@gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:53564 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727754AbfFCRaB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:30:01 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 05/20] xfs: reformat xlog_get_lowest_lsn
+Date: Mon,  3 Jun 2019 19:29:30 +0200
+Message-Id: <20190603172945.13819-6-hch@lst.de>
+In-Reply-To: <20190603172945.13819-1-hch@lst.de>
+References: <20190603172945.13819-1-hch@lst.de>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Dave Chinner <dchinner@redhat.com>
 
-Implement "_require_xfs_io_command copy_range -f" to check for
-the option added by following xfsprogs commit:
+Reformat xlog_get_lowest_lsn to our usual style.
 
-  xfs_io: allow passing an open file to copy_range
-
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- common/rc | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_log.c | 24 ++++++++++--------------
+ 1 file changed, 10 insertions(+), 14 deletions(-)
 
-diff --git a/common/rc b/common/rc
-index 17b89d5d..0d26b0fc 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2086,9 +2086,16 @@ _require_xfs_io_command()
- 		;;
- 	"copy_range")
- 		local testcopy=$TEST_DIR/$$.copy.xfs_io
-+		local copy_opts=$testfile
-+		if [ "$param" == "-f" ]; then
-+			# source file is the open destination file
-+			testcopy=$testfile
-+			copy_opts="0 -d 4k"
-+		fi
- 		$XFS_IO_PROG -F -f -c "pwrite 0 4k" $testfile > /dev/null 2>&1
--		testio=`$XFS_IO_PROG -F -f -c "copy_range $testfile" $testcopy 2>&1`
-+		testio=`$XFS_IO_PROG -F -f -c "copy_range $param $copy_opts" $testcopy 2>&1`
- 		rm -f $testcopy > /dev/null 2>&1
-+		param_checked=1
- 		;;
- 	"falloc" )
- 		testio=`$XFS_IO_PROG -F -f -c "falloc $param 0 1m" $testfile 2>&1`
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index a2048e46be4e..3b82ca8ac9c8 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -2671,27 +2671,23 @@ xlog_state_clean_log(
+ 
+ STATIC xfs_lsn_t
+ xlog_get_lowest_lsn(
+-	struct xlog	*log)
++	struct xlog		*log)
+ {
+-	xlog_in_core_t  *lsn_log;
+-	xfs_lsn_t	lowest_lsn, lsn;
++	struct xlog_in_core	*iclog = log->l_iclog;
++	xfs_lsn_t		lowest_lsn = 0, lsn;
+ 
+-	lsn_log = log->l_iclog;
+-	lowest_lsn = 0;
+ 	do {
+-	    if (!(lsn_log->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_DIRTY))) {
+-		lsn = be64_to_cpu(lsn_log->ic_header.h_lsn);
+-		if ((lsn && !lowest_lsn) ||
+-		    (XFS_LSN_CMP(lsn, lowest_lsn) < 0)) {
++		if (iclog->ic_state & (XLOG_STATE_ACTIVE | XLOG_STATE_DIRTY))
++			continue;
++
++		lsn = be64_to_cpu(iclog->ic_header.h_lsn);
++		if ((lsn && !lowest_lsn) || XFS_LSN_CMP(lsn, lowest_lsn) < 0)
+ 			lowest_lsn = lsn;
+-		}
+-	    }
+-	    lsn_log = lsn_log->ic_next;
+-	} while (lsn_log != log->l_iclog);
++	} while ((iclog = iclog->ic_next) != log->l_iclog);
++
+ 	return lowest_lsn;
+ }
+ 
+-
+ STATIC void
+ xlog_state_do_callback(
+ 	struct xlog		*log,
 -- 
-2.17.1
+2.20.1
