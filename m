@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53508 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:53552 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726784AbfFCR3v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:29:51 -0400
+        with ESMTP id S1726784AbfFCR37 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:29:59 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/20] xfs: remove the no-op spinlock_destroy stub
-Date: Mon,  3 Jun 2019 19:29:26 +0200
-Message-Id: <20190603172945.13819-2-hch@lst.de>
+Subject: [PATCH 04/20] xfs: make mem_to_page available outside of xfs_buf.c
+Date: Mon,  3 Jun 2019 19:29:29 +0200
+Message-Id: <20190603172945.13819-5-hch@lst.de>
 In-Reply-To: <20190603172945.13819-1-hch@lst.de>
 References: <20190603172945.13819-1-hch@lst.de>
 MIME-Version: 1.0
@@ -17,45 +17,64 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Dave Chinner <dchinner@redhat.com>
 
+Rename the function to kmem_to_page and move it to kmem.h together
+with our kmem_large allocator that may either return kmalloced or
+vmalloc pages.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_linux.h | 2 --
- fs/xfs/xfs_log.c   | 2 --
- 2 files changed, 4 deletions(-)
+ fs/xfs/kmem.h    |  8 ++++++++
+ fs/xfs/xfs_buf.c | 13 +------------
+ 2 files changed, 9 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index edbd5a210df2..b78287666309 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -110,8 +110,6 @@ typedef __u32			xfs_nlink_t;
- #define current_restore_flags_nested(sp, f)	\
- 		(current->flags = ((current->flags & ~(f)) | (*(sp) & (f))))
+diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+index 8e6b3ba81c03..267655acd426 100644
+--- a/fs/xfs/kmem.h
++++ b/fs/xfs/kmem.h
+@@ -124,4 +124,12 @@ kmem_zone_zalloc(kmem_zone_t *zone, xfs_km_flags_t flags)
+ 	return kmem_zone_alloc(zone, flags | KM_ZERO);
+ }
  
--#define spinlock_destroy(lock)
++static inline struct page *
++kmem_to_page(void *addr)
++{
++	if (is_vmalloc_addr(addr))
++		return vmalloc_to_page(addr);
++	return virt_to_page(addr);
++}
++
+ #endif /* __XFS_SUPPORT_KMEM_H__ */
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 548344e25128..ade6ec28e1c9 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -933,17 +933,6 @@ xfs_buf_set_empty(
+ 	bp->b_maps[0].bm_len = bp->b_length;
+ }
+ 
+-static inline struct page *
+-mem_to_page(
+-	void			*addr)
+-{
+-	if ((!is_vmalloc_addr(addr))) {
+-		return virt_to_page(addr);
+-	} else {
+-		return vmalloc_to_page(addr);
+-	}
+-}
 -
- #define NBBY		8		/* number of bits per byte */
+ int
+ xfs_buf_associate_memory(
+ 	xfs_buf_t		*bp,
+@@ -976,7 +965,7 @@ xfs_buf_associate_memory(
+ 	bp->b_offset = offset;
  
- /*
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 457ced3ee3e1..a2048e46be4e 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1580,7 +1580,6 @@ xlog_alloc_log(
- 			xfs_buf_free(iclog->ic_bp);
- 		kmem_free(iclog);
+ 	for (i = 0; i < bp->b_page_count; i++) {
+-		bp->b_pages[i] = mem_to_page((void *)pageaddr);
++		bp->b_pages[i] = kmem_to_page((void *)pageaddr);
+ 		pageaddr += PAGE_SIZE;
  	}
--	spinlock_destroy(&log->l_icloglock);
- 	xfs_buf_free(log->l_xbuf);
- out_free_log:
- 	kmem_free(log);
-@@ -2027,7 +2026,6 @@ xlog_dealloc_log(
- 		kmem_free(iclog);
- 		iclog = next_iclog;
- 	}
--	spinlock_destroy(&log->l_icloglock);
  
- 	log->l_mp->m_log = NULL;
- 	kmem_free(log);
 -- 
 2.20.1
