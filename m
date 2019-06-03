@@ -1,12 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53564 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:53604 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727754AbfFCRaB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:30:01 -0400
+        with ESMTP id S1728164AbfFCRaL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:30:11 -0400
+Received: from 089144193064.atnat0002.highway.a1.net ([89.144.193.64] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hXqmg-0003gV-SU
+        for linux-xfs@vger.kernel.org; Mon, 03 Jun 2019 17:30:11 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/20] xfs: reformat xlog_get_lowest_lsn
-Date: Mon,  3 Jun 2019 19:29:30 +0200
-Message-Id: <20190603172945.13819-6-hch@lst.de>
+Subject: [PATCH 09/20] xfs: factor out iclog size calculation from xlog_sync
+Date: Mon,  3 Jun 2019 19:29:34 +0200
+Message-Id: <20190603172945.13819-10-hch@lst.de>
 In-Reply-To: <20190603172945.13819-1-hch@lst.de>
 References: <20190603172945.13819-1-hch@lst.de>
 MIME-Version: 1.0
@@ -15,57 +19,109 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Dave Chinner <dchinner@redhat.com>
 
-Reformat xlog_get_lowest_lsn to our usual style.
+Split out another self-contained bit of code from xlog_sync.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c | 24 ++++++++++--------------
- 1 file changed, 10 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_log.c | 67 +++++++++++++++++++++++++++++-------------------
+ 1 file changed, 41 insertions(+), 26 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index a2048e46be4e..3b82ca8ac9c8 100644
+index 0d8805c9570a..02e9ab3af5ee 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -2671,27 +2671,23 @@ xlog_state_clean_log(
- 
- STATIC xfs_lsn_t
- xlog_get_lowest_lsn(
--	struct xlog	*log)
-+	struct xlog		*log)
- {
--	xlog_in_core_t  *lsn_log;
--	xfs_lsn_t	lowest_lsn, lsn;
-+	struct xlog_in_core	*iclog = log->l_iclog;
-+	xfs_lsn_t		lowest_lsn = 0, lsn;
- 
--	lsn_log = log->l_iclog;
--	lowest_lsn = 0;
- 	do {
--	    if (!(lsn_log->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_DIRTY))) {
--		lsn = be64_to_cpu(lsn_log->ic_header.h_lsn);
--		if ((lsn && !lowest_lsn) ||
--		    (XFS_LSN_CMP(lsn, lowest_lsn) < 0)) {
-+		if (iclog->ic_state & (XLOG_STATE_ACTIVE | XLOG_STATE_DIRTY))
-+			continue;
-+
-+		lsn = be64_to_cpu(iclog->ic_header.h_lsn);
-+		if ((lsn && !lowest_lsn) || XFS_LSN_CMP(lsn, lowest_lsn) < 0)
- 			lowest_lsn = lsn;
--		}
--	    }
--	    lsn_log = lsn_log->ic_next;
--	} while (lsn_log != log->l_iclog);
-+	} while ((iclog = iclog->ic_next) != log->l_iclog);
-+
- 	return lowest_lsn;
+@@ -1830,6 +1830,39 @@ xlog_split_iclog(
+ 	return split_offset;
  }
  
--
- STATIC void
- xlog_state_do_callback(
++static int
++xlog_calc_iclog_size(
++	struct xlog		*log,
++	struct xlog_in_core	*iclog,
++	uint32_t		*roundoff)
++{
++	uint32_t		count_init, count;
++	bool			use_lsunit;
++
++	use_lsunit = xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
++			log->l_mp->m_sb.sb_logsunit > 1;
++
++	/* Add for LR header */
++	count_init = log->l_iclog_hsize + iclog->ic_offset;
++
++	/* Round out the log write size */
++	if (use_lsunit) {
++		/* we have a v2 stripe unit to use */
++		count = XLOG_LSUNITTOB(log, XLOG_BTOLSUNIT(log, count_init));
++	} else {
++		count = BBTOB(BTOBB(count_init));
++	}
++
++	ASSERT(count >= count_init);
++	*roundoff = count - count_init;
++
++	if (use_lsunit)
++		ASSERT(*roundoff < log->l_mp->m_sb.sb_logsunit);
++	else
++		ASSERT(*roundoff < BBTOB(1));
++	return count;
++}
++
+ /*
+  * Flush out the in-core log (iclog) to the on-disk log in an asynchronous 
+  * fashion.  Previously, we should have moved the current iclog
+@@ -1858,35 +1891,17 @@ xlog_sync(
  	struct xlog		*log,
+ 	struct xlog_in_core	*iclog)
+ {
+-	uint		count;		/* byte count of bwrite */
+-	uint		count_init;	/* initial count before roundup */
+-	int		roundoff;       /* roundoff to BB or stripe */
+-	int		v2 = xfs_sb_version_haslogv2(&log->l_mp->m_sb);
+-	uint64_t	bno;
+-	unsigned int	split = 0;
+-	int		size;
+-	bool		need_flush = true;
++	unsigned int		count;		/* byte count of bwrite */
++	unsigned int		roundoff;       /* roundoff to BB or stripe */
++	uint64_t		bno;
++	unsigned int		split = 0;
++	unsigned int		size;
++	bool			need_flush = true;
+ 
+ 	XFS_STATS_INC(log->l_mp, xs_log_writes);
+ 	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
+ 
+-	/* Add for LR header */
+-	count_init = log->l_iclog_hsize + iclog->ic_offset;
+-
+-	/* Round out the log write size */
+-	if (v2 && log->l_mp->m_sb.sb_logsunit > 1) {
+-		/* we have a v2 stripe unit to use */
+-		count = XLOG_LSUNITTOB(log, XLOG_BTOLSUNIT(log, count_init));
+-	} else {
+-		count = BBTOB(BTOBB(count_init));
+-	}
+-	roundoff = count - count_init;
+-	ASSERT(roundoff >= 0);
+-	ASSERT((v2 && log->l_mp->m_sb.sb_logsunit > 1 && 
+-                roundoff < log->l_mp->m_sb.sb_logsunit)
+-		|| 
+-		(log->l_mp->m_sb.sb_logsunit <= 1 && 
+-		 roundoff < BBTOB(1)));
++	count = xlog_calc_iclog_size(log, iclog, &roundoff);
+ 
+ 	/* move grant heads by roundoff in sync */
+ 	xlog_grant_add_space(log, &log->l_reserve_head.grant, roundoff);
+@@ -1897,7 +1912,7 @@ xlog_sync(
+ 
+ 	/* real byte length */
+ 	size = iclog->ic_offset;
+-	if (v2)
++	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb))
+ 		size += roundoff;
+ 	iclog->ic_header.h_len = cpu_to_be32(size);
+ 
 -- 
 2.20.1
