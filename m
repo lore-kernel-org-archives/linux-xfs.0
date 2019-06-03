@@ -1,98 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f194.google.com ([209.85.219.194]:40913 "EHLO
-        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726314AbfFCGRb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 02:17:31 -0400
+Received: from mail1.g1.pair.com ([66.39.3.162]:60306 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727853AbfFCL0e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Jun 2019 07:26:34 -0400
+Date: Mon, 3 Jun 2019 13:19:46 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: How to package e2scrub
+Message-ID: <20190603131946.03930c0e@harpe.intellique.com>
+In-Reply-To: <20190530152855.GA5390@magnolia>
+References: <20190529120603.xuet53xgs6ahfvpl@work>
+        <20190529182111.GA5220@magnolia>
+        <20190530060426.GA30438@infradead.org>
+        <20190530152855.GA5390@magnolia>
 MIME-Version: 1.0
-References: <20190527172655.9287-1-amir73il@gmail.com> <20190528202659.GA12412@mit.edu>
- <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
- <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
- <20190531164136.GA3066@mit.edu> <20190531224549.GF29573@dread.disaster.area>
- <20190531232852.GG29573@dread.disaster.area> <CAOQ4uxi99NDYMrz-Q7xKta4beQiYFX3-MipZ_RxFNktFTA=vMA@mail.gmail.com>
- <20190603042540.GH29573@dread.disaster.area>
-In-Reply-To: <20190603042540.GH29573@dread.disaster.area>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 3 Jun 2019 09:17:19 +0300
-Message-ID: <CAOQ4uxhqJJvr=uHmn_vPPPwZDCQoL2GFug30quFScNORT5Fw=w@mail.gmail.com>
-Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/H5b_76QovpEvKn1OoeJIwpz"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-> > Actually, one of my use cases is "atomic rename" of files with
-> > no data (looking for atomicity w.r.t xattr and mtime), so this "atomic rename"
-> > thread should not be interfering with other workloads at all.
->
-> Which should already guaranteed because a) rename is supposed to be
-> atomic, and b) metadata ordering requirements in journalled
-> filesystems. If they lose xattrs across rename, there's something
-> seriously wrong with the filesystem implementation.  I'm really not
-> sure what you think filesystems are actually doing with metadata
-> across rename operations....
->
+--Sig_/H5b_76QovpEvKn1OoeJIwpz
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Dave,
+Le Thu, 30 May 2019 08:28:55 -0700
+"Darrick J. Wong" <darrick.wong@oracle.com> =C3=A9crivait:
 
-We are going in circles so much that my head is spinning.
-I don't blame anyone for having a hard time to keep up with the plot, because
-it spans many threads and subjects, so let me re-iterate:
+> On Wed, May 29, 2019 at 11:04:26PM -0700, Christoph Hellwig wrote:
+> > On Wed, May 29, 2019 at 11:21:11AM -0700, Darrick J. Wong wrote: =20
+> > > Indeed.  Eric picked "xfsprogs-xfs_scrub" for Rawhide, though I
+> > > find that name to be very clunky and would have preferred
+> > > "xfs_scrub". =20
+> >=20
+> > Why not just xfs-scrub? =20
+>=20
+> Slight preference for the package sharing a name with its key
+> ingredient:
+>=20
+> # xfs_scrub /home
+> Bad command or file name
+> # apt install xfs_scrub
+> <stuff>
+> # xfs_scrub /home
+> WARNING: ALL DATA ON NON-REMOVABLE DISK
+> DRIVE C: WILL BE LOST!
+> Proceed with Format (Y/N)?
+>=20
+> --D
 
-- I *do* know that rename provides me the needed "metadata barrier"
-  w.r.t. xattr on xfs/ext4 today.
-- I *do* know the sync_file_range()+rename() callback provides the
-"data barrier"
-  I need on xfs/ext4 today.
-- I *do* use this internal fs knowledge in my applications
-- I even fixed up sync_file_range() per your suggestion, so I won't need to use
-  the FIEMAP_FLAG_SYNC hack
-- At attempt from CrashMonkey developers to document this behavior was
-  "shot down" for many justified reasons
-- Without any documentation nor explicit API with a clean guarantee, users
-  cannot write efficient applications without being aware of the filesystem
-  underneath and follow that filesystem development to make sure behavior
-  has not changed
-- The most recent proposal I have made in LSF, based on Jan's suggestion is
-  to change nothing in filesystem implementation, but use a new *explicit* verb
-  to communicate the expectation of the application, so that
-filesystems are free
-  the change behavior in the future in the absence of the new verb
+Debian packages always replace _ with - in the package name itself
+because the _ is used to separate the package name proper from the
+version and architecture : package_version_arch.deb.
 
-Once again, ATOMIC_METADATA is a noop in preset xfs/ext4.
-ATOMIC_DATA is sync_file_range() in present xfs/ext4.
-The APIs I *need* from the kernel *do* exist, but the filesystem developers
-(except xfs) are not willing to document the guarantee that the existing
-interfaces provide in the present.
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
-[...]
-> So, in the interests of /informed debate/, please implement what you
-> want using batched AIO_FSYNC + rename/linkat completion callback and
-> measure what it acheives. Then implement a sync_file_range/linkat
-> thread pool that provides the same functionality to the application
-> (i.e. writeback concurrency in userspace) and measure it. Then we
-> can discuss what the relative overhead is with numbers and can
-> perform analysis to determine what the cause of the performance
-> differential actually is.
->
+--Sig_/H5b_76QovpEvKn1OoeJIwpz
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
 
-Fare enough.
+-----BEGIN PGP SIGNATURE-----
 
-> Neither of these things require kernel modifications, but you need
-> to provide the evidence that existing APIs are insufficient.
+iEYEARECAAYFAlz1AlMACgkQX3jQXNUicVZz+ACg0oITUTx4DoH6CgqJ4DaYTL3c
+A7EAoP0uRe2hI334k1c4/XNS/1PBnfUr
+=7WXO
+-----END PGP SIGNATURE-----
 
-APIs are sufficient if I know which filesystem I am running on.
-btrfs needs a different set of syscalls to get the same thing done.
-
-> Indeed, we now have the new async ioring stuff that can run async
-> sync_file_range calls, so you probably need to benchmark replacing
-> AIO_FSYNC with that interface as well. This new API likely does
-> exactly what you want without the journal/device cache flush
-> overhead of AIO_FSYNC....
->
-
-Indeed, I am keeping a close watch on io_uring.
-
-Thanks,
-Amir.
+--Sig_/H5b_76QovpEvKn1OoeJIwpz--
