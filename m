@@ -1,40 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:43536 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728483AbfFEPKT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Jun 2019 11:10:19 -0400
-Date: Wed, 5 Jun 2019 17:09:53 +0200
+Received: from bombadil.infradead.org ([198.137.202.133]:53498 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726784AbfFCR3t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:29:49 -0400
+Received: from 089144193064.atnat0002.highway.a1.net ([89.144.193.64] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hXqmK-0002Mq-QZ
+        for linux-xfs@vger.kernel.org; Mon, 03 Jun 2019 17:29:49 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 16/20] xfs: use bios directly to read and write the log
- recovery buffers
-Message-ID: <20190605150953.GA14846@lst.de>
-References: <20190603172945.13819-1-hch@lst.de> <20190603172945.13819-17-hch@lst.de> <20190604061322.GQ29573@dread.disaster.area>
+Subject: use bios directly in the log code v2
+Date: Mon,  3 Jun 2019 19:29:25 +0200
+Message-Id: <20190603172945.13819-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190604061322.GQ29573@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-> > +
-> > +	if (is_vmalloc && op == REQ_OP_READ)
-> > +		flush_kernel_vmap_range(data, count);
-> 
-> That should be REQ_OP_WRITE. i.e. the data the CPU has written to
-> the aliased vmap address has to be flushed back to the physical page
-> before the DMA from the physical page to the storage device occurs.
+Hi all,
 
-Actually it probably should be unconditional, so that we have a
-clean cache to start with.  That also matches what xfs_buf.c does.
+this series switches the log writing and log recovery code to use bios
+directly, and remove various special cases from the buffer cache code.
+Note that I have developed it on top of the previous series of log item
+related cleanups, so if you don't have that applied there is a small
+conflict.  To make life easier I have pushed out a git branche here:
 
-> > +	if (is_vmalloc && op == REQ_OP_WRITE)
-> > +		invalidate_kernel_vmap_range(data, count);
-> 
-> And this should be REQ_OP_READ - to invalidate anything aliased in
-> the CPU cache before the higher layers try to read the new data in
-> the physical page...
+    git://git.infradead.org/users/hch/xfs.git xfs-log-bio
 
-Fixed.
+Gitweb:
+
+    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-log-bio
+
+Changes since v2:
+ - rename the 'flush' flag to 'need_flush'
+ - spelling fixes
+ - minor cleanups
+
+Changes since v1:
+ - rebased to not required the log item series first
+ - split the bio-related code out of xfs_log_recover.c into a new file
+   to ease using xfs_log_recover.c in xfsprogs
+ - use kmem_alloc_large instead of vmalloc to allocate the buffer
+ - additional minor cleanups
