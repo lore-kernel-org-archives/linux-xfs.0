@@ -1,140 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53648 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727754AbfFCRaX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:30:23 -0400
-Received: from 089144193064.atnat0002.highway.a1.net ([89.144.193.64] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hXqmt-0003iX-AN
-        for linux-xfs@vger.kernel.org; Mon, 03 Jun 2019 17:30:23 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/20] xfs: move the log ioend workqueue to struct xlog
-Date: Mon,  3 Jun 2019 19:29:39 +0200
-Message-Id: <20190603172945.13819-15-hch@lst.de>
-In-Reply-To: <20190603172945.13819-1-hch@lst.de>
-References: <20190603172945.13819-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:46702 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726137AbfFCMjP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Jun 2019 08:39:15 -0400
+Date: Mon, 3 Jun 2019 14:39:00 +0200
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: Re: How to package e2scrub
+Message-ID: <20190603123900.gzwwltgt2bj7gyfa@work>
+References: <20190529120603.xuet53xgs6ahfvpl@work>
+ <20190529182111.GA5220@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190529182111.GA5220@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-ext4@vger.kernel.org, Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-Move the workqueue used for log I/O completions from struct xfs_mount
-to struct xlog to keep it self contained in the log code.
+On Wed, May 29, 2019 at 11:21:11AM -0700, Darrick J. Wong wrote:
+> On Wed, May 29, 2019 at 02:06:03PM +0200, Lukas Czerner wrote:
+> > Hi guys,
+> > 
+> > I am about to release 1.45.2 for Fedora rawhide, but I was thinking
+> > about how to package the e2scrub cron job/systemd service.
+> 
+> Funny, xfs has the same conundrum.  Adding Eric & xfs list to cc...
+> 
+> > I really do not like the idea of installing cron job and/or the service as
+> > a part of regular e2fsprogs package. This can potentially really surprise
+> > people in a bad way.
+> >
+> > Note that I've already heard some complaints from debian users about the
+> > systemd service being installed on their system after the e2fsprogs
+> > update.
+> 
+> Yeah, e2scrub is bitrotting rather faster than I had thought it
+> would... but it's only available in Debian unstable.
+> 
+> > What I am going to do is to split the systemd service into a separate
+> > package and I'd like to come to some agreement about the name of the
+> > package so that we can have the same name across distributions (at least
+> > Fedora/Debian/Suse).
+> 
+> Indeed.  Eric picked "xfsprogs-xfs_scrub" for Rawhide, though I find
+> that name to be very clunky and would have preferred "xfs_scrub".
+> 
+> > I was thinking about e2scrub-service for systemd service or e2scrub-cron
+> > for the cron job. What do you think ?
+> 
+> In /theory/ the cronjob support in e2scrub (and xfs_scrub) were designed
+> to step out of the way if systemd is running, so at least in theory (on
+> Debian anyway) the two can be in the same package with the end result
+> being that e2scrub runs weekly in the background.  I've not tried in
+> rhel/suse environments, however.
+> 
+> I also don't see the point of supporting cron *while* systemd is active.
+> That increases the amount of corner-case testing we have to do, for
+> little gain.  It's enough work to maintain the systemd-with-timers and
+> sysvinit-with-cron scenarios.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_log.c      | 13 +++++++++++--
- fs/xfs/xfs_log_priv.h |  1 +
- fs/xfs/xfs_mount.h    |  1 -
- fs/xfs/xfs_super.c    | 11 +----------
- 4 files changed, 13 insertions(+), 13 deletions(-)
+Yeah, you're probably right. I just wanted to give people some options
+if they do not want (for whatever reason) to use systemd. Container
+environment might be a good example of that, but I am not at all sure
+how well is lvm2 supported in containers.
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 1d4480ea1725..0082a181bea7 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1531,11 +1531,19 @@ xlog_alloc_log(
- 	*iclogp = log->l_iclog;			/* complete ring */
- 	log->l_iclog->ic_prev = prev_iclog;	/* re-write 1st prev ptr */
- 
-+	log->l_ioend_workqueue = alloc_workqueue("xfs-log/%s",
-+			WQ_MEM_RECLAIM | WQ_FREEZABLE | WQ_HIGHPRI, 0,
-+			mp->m_fsname);
-+	if (!log->l_ioend_workqueue)
-+		goto out_free_iclog;
-+
- 	error = xlog_cil_init(log);
- 	if (error)
--		goto out_free_iclog;
-+		goto out_destroy_workqueue;
- 	return log;
- 
-+out_destroy_workqueue:
-+	destroy_workqueue(log->l_ioend_workqueue);
- out_free_iclog:
- 	for (iclog = log->l_iclog; iclog; iclog = prev_iclog) {
- 		prev_iclog = iclog->ic_next;
-@@ -1732,7 +1740,7 @@ xlog_bio_end_io(
- {
- 	struct xlog_in_core	*iclog = bio->bi_private;
- 
--	queue_work(iclog->ic_log->l_mp->m_log_workqueue,
-+	queue_work(iclog->ic_log->l_ioend_workqueue,
- 		   &iclog->ic_end_io_work);
- }
- 
-@@ -1984,6 +1992,7 @@ xlog_dealloc_log(
- 	int		i;
- 
- 	xlog_cil_destroy(log);
-+	destroy_workqueue(log->l_ioend_workqueue);
- 
- 	/*
- 	 * Cycle all the iclogbuf locks to make sure all log IO completion
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 062ee9c13039..e8acd4818539 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -354,6 +354,7 @@ struct xlog {
- 	struct xfs_ail		*l_ailp;	/* AIL log is working with */
- 	struct xfs_cil		*l_cilp;	/* CIL log is working with */
- 	struct xfs_buftarg	*l_targ;        /* buftarg of log */
-+	struct workqueue_struct	*l_ioend_workqueue; /* for I/O completions */
- 	struct delayed_work	l_work;		/* background flush work */
- 	uint			l_flags;
- 	uint			l_quotaoffs_flag; /* XFS_DQ_*, for QUOTAOFFs */
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index c81a5cd7c228..8d188155dca3 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -198,7 +198,6 @@ typedef struct xfs_mount {
- 	struct workqueue_struct	*m_unwritten_workqueue;
- 	struct workqueue_struct	*m_cil_workqueue;
- 	struct workqueue_struct	*m_reclaim_workqueue;
--	struct workqueue_struct	*m_log_workqueue;
- 	struct workqueue_struct *m_eofblocks_workqueue;
- 	struct workqueue_struct	*m_sync_workqueue;
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index a14d11d78bd8..7cb0d2a01c41 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -840,16 +840,10 @@ xfs_init_mount_workqueues(
- 	if (!mp->m_reclaim_workqueue)
- 		goto out_destroy_cil;
- 
--	mp->m_log_workqueue = alloc_workqueue("xfs-log/%s",
--			WQ_MEM_RECLAIM|WQ_FREEZABLE|WQ_HIGHPRI, 0,
--			mp->m_fsname);
--	if (!mp->m_log_workqueue)
--		goto out_destroy_reclaim;
--
- 	mp->m_eofblocks_workqueue = alloc_workqueue("xfs-eofblocks/%s",
- 			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
- 	if (!mp->m_eofblocks_workqueue)
--		goto out_destroy_log;
-+		goto out_destroy_reclaim;
- 
- 	mp->m_sync_workqueue = alloc_workqueue("xfs-sync/%s", WQ_FREEZABLE, 0,
- 					       mp->m_fsname);
-@@ -860,8 +854,6 @@ xfs_init_mount_workqueues(
- 
- out_destroy_eofb:
- 	destroy_workqueue(mp->m_eofblocks_workqueue);
--out_destroy_log:
--	destroy_workqueue(mp->m_log_workqueue);
- out_destroy_reclaim:
- 	destroy_workqueue(mp->m_reclaim_workqueue);
- out_destroy_cil:
-@@ -880,7 +872,6 @@ xfs_destroy_mount_workqueues(
- {
- 	destroy_workqueue(mp->m_sync_workqueue);
- 	destroy_workqueue(mp->m_eofblocks_workqueue);
--	destroy_workqueue(mp->m_log_workqueue);
- 	destroy_workqueue(mp->m_reclaim_workqueue);
- 	destroy_workqueue(mp->m_cil_workqueue);
- 	destroy_workqueue(mp->m_unwritten_workqueue);
--- 
-2.20.1
+> 
+> If you're worried about the stability of systemd timer code, systemd's
+> timer support has been stable enough to run e2scrub_all/xfs_scrub_all on
+> my systems since late 2015, and I have no interest in supporting either
+> on a pre-2016 distro.  Practically speaking, I guess that RHEL8, SLES16,
+> and Ubuntu 20.04 will be the first LTS distros to support e2scrub at
+> all.
+> 
+> (As for xfs_scrub, it'll barely achieve alpha status in Linux 5.2...)
+> 
+> > Also I decided not to package the cron job for now. But if I decide to
+> > package it in the future I'd like to change the e2scrub cron
+> > configuration so that it can run on the systems with systemd but make
+> > the package conflict with the e2scrub-service so that users are free to
+> > decide how they want to use it.
+> 
+> If you do end up creating two packages I'd name the systemd one
+> e2scrub-systemd over e2scrub-service.
+
+Ok, thanks for suggestion. Andreas was suggesting naming it as part of
+e2fsprogs, that is - e2fsprogs-scrub but then it would be
+e2fsprogs-scrub-systemd and that sounds a bit convoluted to me.
+
+Thanks!
+-Lukas
+
+> 
+> --D
+> 
+> > Thoughts ?
+> > 
+> > Thanks!
+> > -Lukas
