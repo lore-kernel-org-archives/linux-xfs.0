@@ -1,148 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47714 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726257AbfFCEZu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 00:25:50 -0400
-Date: Mon, 3 Jun 2019 14:25:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
-Message-ID: <20190603042540.GH29573@dread.disaster.area>
-References: <20190527172655.9287-1-amir73il@gmail.com>
- <20190528202659.GA12412@mit.edu>
- <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
- <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
- <20190531164136.GA3066@mit.edu>
- <20190531224549.GF29573@dread.disaster.area>
- <20190531232852.GG29573@dread.disaster.area>
- <CAOQ4uxi99NDYMrz-Q7xKta4beQiYFX3-MipZ_RxFNktFTA=vMA@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45892 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726270AbfFCMcU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Jun 2019 08:32:20 -0400
+Date: Mon, 3 Jun 2019 08:32:17 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: inode btree scrubber should calculate im_boffset
+ correctly
+Message-ID: <20190603123216.GA38223@bfoster>
+References: <20190529002545.GB5231@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxi99NDYMrz-Q7xKta4beQiYFX3-MipZ_RxFNktFTA=vMA@mail.gmail.com>
+In-Reply-To: <20190529002545.GB5231@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Sat, Jun 01, 2019 at 11:01:42AM +0300, Amir Goldstein wrote:
-> On Sat, Jun 1, 2019 at 2:28 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > On Sat, Jun 01, 2019 at 08:45:49AM +1000, Dave Chinner wrote:
-> > > Given that we can already use AIO to provide this sort of ordering,
-> > > and AIO is vastly faster than synchronous IO, I don't see any point
-> > > in adding complex barrier interfaces that can be /easily implemented
-> > > in userspace/ using existing AIO primitives. You should start
-> > > thinking about expanding libaio with stuff like
-> > > "link_after_fdatasync()" and suddenly the whole problem of
-> > > filesystem data vs metadata ordering goes away because the
-> > > application directly controls all ordering without blocking and
-> > > doesn't need to care what the filesystem under it does....
-> >
-> > And let me point out that this is also how userspace can do an
-> > efficient atomic rename - rename_after_fdatasync(). i.e. on
-> > completion of the AIO_FSYNC, run the rename. This guarantees that
-> > the application will see either the old file of the complete new
-> > file, and it *doesn't have to wait for the operation to complete*.
-> > Once it is in flight, the file will contain the old data until some
-> > point in the near future when will it contain the new data....
+On Tue, May 28, 2019 at 05:25:45PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> What I am looking for is a way to isolate the effects of "atomic rename/link"
-> from the rest of the users.  Sure there is I/O bandwidth and queued
-> bios, but at least isolate other threads working on other files or metadata
-> from contending with the "atomic rename" thread of journal flushes and
-> the like.
-
-That's not a function of the kernel API. That's a function of the
-implementation behind the kernel API. i.e. The API requires data to
-be written before the rename/link is committed, how that is achieved
-is up to the filesystem. And some filesystems will not be able to
-isolate the API behavioural requirement from other users....
-
-> Actually, one of my use cases is "atomic rename" of files with
-> no data (looking for atomicity w.r.t xattr and mtime), so this "atomic rename"
-> thread should not be interfering with other workloads at all.
-
-Which should already guaranteed because a) rename is supposed to be
-atomic, and b) metadata ordering requirements in journalled
-filesystems. If they lose xattrs across rename, there's something
-seriously wrong with the filesystem implementation.  I'm really not
-sure what you think filesystems are actually doing with metadata
-across rename operations....
-
-> > Seriously, sit down and work out all the "atomic" data vs metadata
-> > behaviours you want, and then tell me how many of them cannot be
-> > implemented as "AIO_FSYNC w/ completion callback function" in
-> > userspace. This mechanism /guarantees ordering/ at the application
-> > level, the application does not block waiting for these data
-> > integrity operations to complete, and you don't need any new kernel
-> > side functionality to implement this.
+> The im_boffset field is in units of bytes, whereas XFS_INO_OFFSET
+> returns a value in units of inodes.  Convert the units so that scrub on
+> a 64k-block filesystem works correctly.
 > 
-> So I think what I could have used is AIO_BATCH_FSYNC, an interface
-> that was proposed by Ric Wheeler and discussed on LSF:
-> https://lwn.net/Articles/789024/
-> Ric was looking for a way to efficiently fsync a "bunch of files".
-> Submitting several AIO_FSYNC calls is not the efficient way of doing that.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-/me sighs.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-That's not what I just suggested, and I've already addressed this
-"AIO_FSYNC sucks" FUD in multiple separate threads.  You do realise
-you can submit multiple AIO operations with a single io_submit()
-call, right?
-
-	struct iocb	ioc[10];
-	struct io_event ev[10];
-
-	for (i = 0; i < 10; i++) {
-		io_prep_fsync(&ioc[i], fd[i]);
-		ioc[i]->data = callback_arg[i];
-	}
-
-	io_submit(aio_ctx, 10, &ioc);
-	io_getevents(aio_ctx, 10, 10, ev, NULL);
-
-	for (i = 0; i < 10; i++)
-		post_fsync_callback(&ev[i]);
-
-
-There's your single syscall AIO_BATCH_FSYNC functionality, and it
-implements a per-fd post-fsync callback function. This isn't rocket
-science....
-
-[snip]
-
-> I am trying to reduce the number of fsyncs from applications
-> and converting fsync to AIO_FSYNC is not going to help with that.
-
-Your whole argument is "fsync is inefficient because cache flushes,
-therefore AIO_FSYNC must be inefficient." IOWs, you've already
-decided what is wrong, how it can and can't be fixed and the
-solution you want regardless of whether your assertions are correct
-or not. You haven't provided any evidence that a new kernel API is
-the only viable solution, nor that the existing ones cannot provide
-the functionality you require.
-
-So, in the interests of /informed debate/, please implement what you
-want using batched AIO_FSYNC + rename/linkat completion callback and
-measure what it acheives. Then implement a sync_file_range/linkat
-thread pool that provides the same functionality to the application
-(i.e. writeback concurrency in userspace) and measure it. Then we
-can discuss what the relative overhead is with numbers and can
-perform analysis to determine what the cause of the performance
-differential actually is.
-
-Neither of these things require kernel modifications, but you need
-to provide the evidence that existing APIs are insufficient.
-Indeed, we now have the new async ioring stuff that can run async
-sync_file_range calls, so you probably need to benchmark replacing
-AIO_FSYNC with that interface as well. This new API likely does
-exactly what you want without the journal/device cache flush
-overhead of AIO_FSYNC....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  fs/xfs/scrub/ialloc.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> index 693eb51f5efb..9b47117180cb 100644
+> --- a/fs/xfs/scrub/ialloc.c
+> +++ b/fs/xfs/scrub/ialloc.c
+> @@ -252,7 +252,8 @@ xchk_iallocbt_check_cluster(
+>  	ir_holemask = (irec->ir_holemask & cluster_mask);
+>  	imap.im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
+>  	imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
+> -	imap.im_boffset = XFS_INO_TO_OFFSET(mp, irec->ir_startino);
+> +	imap.im_boffset = XFS_INO_TO_OFFSET(mp, irec->ir_startino) <<
+> +			mp->m_sb.sb_inodelog;
+>  
+>  	if (imap.im_boffset != 0 && cluster_base != 0) {
+>  		ASSERT(imap.im_boffset == 0 || cluster_base == 0);
