@@ -1,229 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:34906 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725966AbfFBMlb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Jun 2019 08:41:31 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v3 5/6] generic: copy_file_range bounds test
-Date: Sun,  2 Jun 2019 15:41:13 +0300
-Message-Id: <20190602124114.26810-6-amir73il@gmail.com>
-In-Reply-To: <20190602124114.26810-1-amir73il@gmail.com>
-References: <20190602124114.26810-1-amir73il@gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:53544 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727769AbfFCR34 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:29:56 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/20] xfs: renumber XBF_WRITE_FAIL
+Date: Mon,  3 Jun 2019 19:29:28 +0200
+Message-Id: <20190603172945.13819-4-hch@lst.de>
+In-Reply-To: <20190603172945.13819-1-hch@lst.de>
+References: <20190603172945.13819-1-hch@lst.de>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: Dave Chinner <dchinner@redhat.com>
 
-Test that copy_file_range will return the correct errors for various
-error conditions and boundary constraints.
+Assining a numerical value that is not close to the flags
+defined near by is just asking for conflicts later on.
 
-[Amir] Split out cross-device copy_range test and use only scratch dev.
-Split out immutable/swapfile test cases to reduce the requirements to
-run the bounds check to minimum and get coverage for more filesystems.
-Remove the tests for read past EOF and write after chmod -r,
-because we decided to stick with read(2)/write(2) semantics.
-Add requirements needed for large size copy tests and fifo test.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- tests/generic/990     | 132 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/990.out |  37 ++++++++++++
- tests/generic/group   |   1 +
- 3 files changed, 170 insertions(+)
- create mode 100755 tests/generic/990
- create mode 100644 tests/generic/990.out
+ fs/xfs/xfs_buf.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/tests/generic/990 b/tests/generic/990
-new file mode 100755
-index 00000000..821aa10b
---- /dev/null
-+++ b/tests/generic/990
-@@ -0,0 +1,132 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 990
-+#
-+# Exercise copy_file_range() syscall error conditions.
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -rf $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs generic
-+
-+rm -f $seqres.full
-+
-+_require_test
-+# For blockdev copy test case
-+_require_loop
-+#
-+# This test effectively requires xfs_io with these commits
-+#  2a42470b xfs_io: copy_file_range length is a size_t
-+#  1a05efba io: open pipes in non-blocking mode
-+#
-+# Without those commits test will hang on old kernel when copying
-+# very large size and when copying from a pipe.
-+#
-+# We require a new xfs_io feature of passing an open file as the
-+# copy source, as an indication that the test can run without hanging
-+# with large size argument and to avoid opening pipe in blocking mode.
-+#
-+_require_xfs_io_command "copy_range" "-f"
-+
-+testdir="$TEST_DIR/test-$seq"
-+rm -rf $testdir
-+mkdir $testdir
-+
-+rm -f $seqres.full
-+
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 0 128k" $testdir/file >> $seqres.full 2>&1
-+
-+echo source range overlaps destination range in same file returns EINVAL
-+$XFS_IO_PROG -f -c "copy_range -s 32k -d 48k -l 32k $testdir/file" $testdir/file
-+
-+echo
-+echo destination file O_RDONLY returns EBADF
-+$XFS_IO_PROG -f -r -c "copy_range -l 32k $testdir/file" $testdir/copy
-+
-+echo
-+echo destination file O_APPEND returns EBADF
-+$XFS_IO_PROG -f -a -c "copy_range -l 32k $testdir/file" $testdir/copy
-+
-+echo
-+echo source/destination as directory returns EISDIR
-+$XFS_IO_PROG -c "copy_range -l 32k $testdir/file" $testdir
-+$XFS_IO_PROG -f -c "copy_range -l 32k $testdir" $testdir/copy
-+
-+echo
-+echo source/destination as blkdev returns EINVAL
-+# We need to use an existing major number otherwise we get ENXIO
-+# so we _require_loop and use a loop device major number.
-+# We are not going to do I/O so minor number doesn't matter.
-+mknod $testdir/dev1 b 7 123
-+$XFS_IO_PROG -c "copy_range -l 32k $testdir/file" $testdir/dev1
-+$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/dev1" $testdir/copy
-+
-+echo
-+echo source/destination as chardev returns EINVAL
-+mknod $testdir/dev2 c 1 3
-+$XFS_IO_PROG -c "copy_range -l 32k $testdir/file" $testdir/dev2
-+$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/dev2" $testdir/copy
-+
-+echo
-+echo source/destination as FIFO returns EINVAL
-+mkfifo $testdir/fifo
-+$XFS_IO_PROG -c "copy_range -l 32k $testdir/file" $testdir/fifo
-+# Pass input pipe as non-blocking open file to avoid old xfs_io (<4.20)
-+# opening the pipe in blocking mode and causing the test to hang
-+$XFS_IO_PROG -r -n -f -c "open $testdir/copy" -C "copy_range -l 32k -f 0" $testdir/fifo
-+
-+max_off=$((8 * 2**60 - 65536 - 1))
-+min_off=65537
-+
-+echo
-+echo length beyond 8EiB wraps around 0 returns EOVERFLOW
-+$XFS_IO_PROG -f -c "copy_range -l 10e -s $max_off $testdir/file" $testdir/copy
-+$XFS_IO_PROG -f -c "copy_range -l 10e -d $max_off $testdir/file" $testdir/copy
-+
-+echo
-+echo source range beyond 8TiB returns 0
-+$XFS_IO_PROG -c "copy_range -s $max_off -l $min_off -d 0 $testdir/file" $testdir/copy
-+
-+echo
-+echo destination range beyond 8TiB returns EFBIG
-+$XFS_IO_PROG -c "copy_range -l $min_off -s 0 -d $max_off $testdir/file" $testdir/copy
-+
-+echo
-+echo destination larger than rlimit returns EFBIG
-+rm -f $testdir/copy
-+$XFS_IO_PROG -c "truncate 128k" $testdir/file
-+
-+# need a wrapper so the "File size limit exceeded" error can be filtered
-+do_rlimit_copy()
-+{
-+	$XFS_IO_PROG -f -c "copy_range -l 32k -s 0 -d 16m $testdir/file" $testdir/copy
-+}
-+
-+ulimit -f $((8 * 1024))
-+ulimit -c 0
-+do_rlimit_copy 2>&1 | grep -o "File size limit exceeded"
-+ulimit -f unlimited
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/990.out b/tests/generic/990.out
-new file mode 100644
-index 00000000..05d137de
---- /dev/null
-+++ b/tests/generic/990.out
-@@ -0,0 +1,37 @@
-+QA output created by 990
-+source range overlaps destination range in same file returns EINVAL
-+copy_range: Invalid argument
-+
-+destination file O_RDONLY returns EBADF
-+copy_range: Bad file descriptor
-+
-+destination file O_APPEND returns EBADF
-+copy_range: Bad file descriptor
-+
-+source/destination as directory returns EISDIR
-+copy_range: Is a directory
-+copy_range: Is a directory
-+
-+source/destination as blkdev returns EINVAL
-+copy_range: Invalid argument
-+copy_range: Invalid argument
-+
-+source/destination as chardev returns EINVAL
-+copy_range: Invalid argument
-+copy_range: Invalid argument
-+
-+source/destination as FIFO returns EINVAL
-+copy_range: Invalid argument
-+copy_range: Invalid argument
-+
-+length beyond 8EiB wraps around 0 returns EOVERFLOW
-+copy_range: Value too large for defined data type
-+copy_range: Value too large for defined data type
-+
-+source range beyond 8TiB returns 0
-+
-+destination range beyond 8TiB returns EFBIG
-+copy_range: File too large
-+
-+destination larger than rlimit returns EFBIG
-+File size limit exceeded
-diff --git a/tests/generic/group b/tests/generic/group
-index 4c100781..86802d54 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -552,3 +552,4 @@
- 547 auto quick log
- 988 auto quick copy_range
- 989 auto quick copy_range swap
-+990 auto quick copy_range
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 4f2c2bc43003..15f6ce3974ac 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -34,7 +34,7 @@ typedef enum {
+ #define XBF_ASYNC	 (1 << 4) /* initiator will not wait for completion */
+ #define XBF_DONE	 (1 << 5) /* all pages in the buffer uptodate */
+ #define XBF_STALE	 (1 << 6) /* buffer has been staled, do not find it */
+-#define XBF_WRITE_FAIL	 (1 << 24)/* async writes have failed on this buffer */
++#define XBF_WRITE_FAIL	 (1 << 7) /* async writes have failed on this buffer */
+ 
+ /* I/O hints for the BIO layer */
+ #define XBF_SYNCIO	 (1 << 10)/* treat this buffer as synchronous I/O */
 -- 
-2.17.1
+2.20.1
