@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53578 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:53612 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727754AbfFCRaE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:30:04 -0400
+        with ESMTP id S1727754AbfFCRaO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:30:14 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/20] xfs: don't use REQ_PREFLUSH for split log writes
-Date: Mon,  3 Jun 2019 19:29:31 +0200
-Message-Id: <20190603172945.13819-7-hch@lst.de>
+Subject: [PATCH 10/20] xfs: update both stat counters together in xlog_sync
+Date: Mon,  3 Jun 2019 19:29:35 +0200
+Message-Id: <20190603172945.13819-11-hch@lst.de>
 In-Reply-To: <20190603172945.13819-1-hch@lst.de>
 References: <20190603172945.13819-1-hch@lst.de>
 MIME-Version: 1.0
@@ -17,11 +17,7 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Dave Chinner <dchinner@redhat.com>
 
-If we have to split a log write because it wraps the end of the log we
-can't just use REQ_PREFLUSH to flush before the first log write,
-as the writes might get reordered somewhere in the I/O stack.  Issue
-a manual flush in that case so that the ordering of the two log I/Os
-doesn't matter.
+Just a small bit of code tidying up.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
@@ -30,17 +26,24 @@ Reviewed-by: Dave Chinner <dchinner@redhat.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 3b82ca8ac9c8..646a190e5730 100644
+index 02e9ab3af5ee..fa0414b8b111 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -1941,7 +1941,7 @@ xlog_sync(
- 	 * synchronously here; for an internal log we can simply use the block
- 	 * layer state machine for preflushes.
- 	 */
--	if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp)
-+	if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp || split)
- 		xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
- 	else
- 		bp->b_flags |= XBF_FLUSH;
+@@ -1898,7 +1898,6 @@ xlog_sync(
+ 	unsigned int		size;
+ 	bool			need_flush = true;
+ 
+-	XFS_STATS_INC(log->l_mp, xs_log_writes);
+ 	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
+ 
+ 	count = xlog_calc_iclog_size(log, iclog, &roundoff);
+@@ -1916,6 +1915,7 @@ xlog_sync(
+ 		size += roundoff;
+ 	iclog->ic_header.h_len = cpu_to_be32(size);
+ 
++	XFS_STATS_INC(log->l_mp, xs_log_writes);
+ 	XFS_STATS_ADD(log->l_mp, xs_log_blocks, BTOBB(count));
+ 
+ 	bno = BLOCK_LSN(be64_to_cpu(iclog->ic_header.h_lsn));
 -- 
 2.20.1
