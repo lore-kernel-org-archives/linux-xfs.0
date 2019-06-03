@@ -1,76 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:60306 "EHLO mail1.g1.pair.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727853AbfFCL0e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Jun 2019 07:26:34 -0400
-Date: Mon, 3 Jun 2019 13:19:46 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: How to package e2scrub
-Message-ID: <20190603131946.03930c0e@harpe.intellique.com>
-In-Reply-To: <20190530152855.GA5390@magnolia>
-References: <20190529120603.xuet53xgs6ahfvpl@work>
-        <20190529182111.GA5220@magnolia>
-        <20190530060426.GA30438@infradead.org>
-        <20190530152855.GA5390@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:53508 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726784AbfFCR3v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:29:51 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/20] xfs: remove the no-op spinlock_destroy stub
+Date: Mon,  3 Jun 2019 19:29:26 +0200
+Message-Id: <20190603172945.13819-2-hch@lst.de>
+In-Reply-To: <20190603172945.13819-1-hch@lst.de>
+References: <20190603172945.13819-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/H5b_76QovpEvKn1OoeJIwpz"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: Dave Chinner <dchinner@redhat.com>
 
---Sig_/H5b_76QovpEvKn1OoeJIwpz
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_linux.h | 2 --
+ fs/xfs/xfs_log.c   | 2 --
+ 2 files changed, 4 deletions(-)
 
-Le Thu, 30 May 2019 08:28:55 -0700
-"Darrick J. Wong" <darrick.wong@oracle.com> =C3=A9crivait:
-
-> On Wed, May 29, 2019 at 11:04:26PM -0700, Christoph Hellwig wrote:
-> > On Wed, May 29, 2019 at 11:21:11AM -0700, Darrick J. Wong wrote: =20
-> > > Indeed.  Eric picked "xfsprogs-xfs_scrub" for Rawhide, though I
-> > > find that name to be very clunky and would have preferred
-> > > "xfs_scrub". =20
-> >=20
-> > Why not just xfs-scrub? =20
->=20
-> Slight preference for the package sharing a name with its key
-> ingredient:
->=20
-> # xfs_scrub /home
-> Bad command or file name
-> # apt install xfs_scrub
-> <stuff>
-> # xfs_scrub /home
-> WARNING: ALL DATA ON NON-REMOVABLE DISK
-> DRIVE C: WILL BE LOST!
-> Proceed with Format (Y/N)?
->=20
-> --D
-
-Debian packages always replace _ with - in the package name itself
-because the _ is used to separate the package name proper from the
-version and architecture : package_version_arch.deb.
-
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
---Sig_/H5b_76QovpEvKn1OoeJIwpz
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
-
------BEGIN PGP SIGNATURE-----
-
-iEYEARECAAYFAlz1AlMACgkQX3jQXNUicVZz+ACg0oITUTx4DoH6CgqJ4DaYTL3c
-A7EAoP0uRe2hI334k1c4/XNS/1PBnfUr
-=7WXO
------END PGP SIGNATURE-----
-
---Sig_/H5b_76QovpEvKn1OoeJIwpz--
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index edbd5a210df2..b78287666309 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -110,8 +110,6 @@ typedef __u32			xfs_nlink_t;
+ #define current_restore_flags_nested(sp, f)	\
+ 		(current->flags = ((current->flags & ~(f)) | (*(sp) & (f))))
+ 
+-#define spinlock_destroy(lock)
+-
+ #define NBBY		8		/* number of bits per byte */
+ 
+ /*
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 457ced3ee3e1..a2048e46be4e 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1580,7 +1580,6 @@ xlog_alloc_log(
+ 			xfs_buf_free(iclog->ic_bp);
+ 		kmem_free(iclog);
+ 	}
+-	spinlock_destroy(&log->l_icloglock);
+ 	xfs_buf_free(log->l_xbuf);
+ out_free_log:
+ 	kmem_free(log);
+@@ -2027,7 +2026,6 @@ xlog_dealloc_log(
+ 		kmem_free(iclog);
+ 		iclog = next_iclog;
+ 	}
+-	spinlock_destroy(&log->l_icloglock);
+ 
+ 	log->l_mp->m_log = NULL;
+ 	kmem_free(log);
+-- 
+2.20.1
