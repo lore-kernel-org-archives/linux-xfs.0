@@ -1,50 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45892 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726270AbfFCMcU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Jun 2019 08:32:20 -0400
-Date: Mon, 3 Jun 2019 08:32:17 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: inode btree scrubber should calculate im_boffset
- correctly
-Message-ID: <20190603123216.GA38223@bfoster>
-References: <20190529002545.GB5231@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:53536 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726784AbfFCR3y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:29:54 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 02/20] xfs: remove the never used _XBF_COMPOUND flag
+Date: Mon,  3 Jun 2019 19:29:27 +0200
+Message-Id: <20190603172945.13819-3-hch@lst.de>
+In-Reply-To: <20190603172945.13819-1-hch@lst.de>
+References: <20190603172945.13819-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190529002545.GB5231@magnolia>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Dave Chinner <dchinner@redhat.com>
 
-On Tue, May 28, 2019 at 05:25:45PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> The im_boffset field is in units of bytes, whereas XFS_INO_OFFSET
-> returns a value in units of inodes.  Convert the units so that scrub on
-> a 64k-block filesystem works correctly.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_buf.h | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/scrub/ialloc.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> index 693eb51f5efb..9b47117180cb 100644
-> --- a/fs/xfs/scrub/ialloc.c
-> +++ b/fs/xfs/scrub/ialloc.c
-> @@ -252,7 +252,8 @@ xchk_iallocbt_check_cluster(
->  	ir_holemask = (irec->ir_holemask & cluster_mask);
->  	imap.im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
->  	imap.im_len = XFS_FSB_TO_BB(mp, mp->m_blocks_per_cluster);
-> -	imap.im_boffset = XFS_INO_TO_OFFSET(mp, irec->ir_startino);
-> +	imap.im_boffset = XFS_INO_TO_OFFSET(mp, irec->ir_startino) <<
-> +			mp->m_sb.sb_inodelog;
->  
->  	if (imap.im_boffset != 0 && cluster_base != 0) {
->  		ASSERT(imap.im_boffset == 0 || cluster_base == 0);
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index d0b96e071cec..4f2c2bc43003 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -49,7 +49,6 @@ typedef enum {
+ #define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
+ #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
+ #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
+-#define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
+ 
+ typedef unsigned int xfs_buf_flags_t;
+ 
+@@ -69,8 +68,7 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
+ 	{ _XBF_PAGES,		"PAGES" }, \
+ 	{ _XBF_KMEM,		"KMEM" }, \
+-	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
+-	{ _XBF_COMPOUND,	"COMPOUND" }
++	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
+ 
+ 
+ /*
+-- 
+2.20.1
