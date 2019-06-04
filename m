@@ -1,161 +1,193 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:36091 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727033AbfFDNq2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jun 2019 09:46:28 -0400
-Subject: Re: understanding xfs vs. ext4 log performance
-References: <7a642f570980609ccff126a78f1546265ba913e2.camel@lynxeye.de>
-From: Alan Jenkins <alan.christopher.jenkins@gmail.com>
-Message-ID: <e3721341-2ea0-f13f-ae42-890209736eaa@gmail.com>
-Date: Tue, 4 Jun 2019 14:46:24 +0100
+Received: from mail-vs1-f66.google.com ([209.85.217.66]:37007 "EHLO
+        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726535AbfFDUme (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jun 2019 16:42:34 -0400
 MIME-Version: 1.0
-In-Reply-To: <7a642f570980609ccff126a78f1546265ba913e2.camel@lynxeye.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-GB
+References: <20190604135632.1487-1-amir73il@gmail.com>
+In-Reply-To: <20190604135632.1487-1-amir73il@gmail.com>
+From: Olga Kornievskaia <olga.kornievskaia@gmail.com>
+Date: Tue, 4 Jun 2019 16:42:21 -0400
+Message-ID: <CAN-5tyFBd4mJ84C2J9dwG_iYeEDN0tX86DjW4oaV7yscj4VR7g@mail.gmail.com>
+Subject: Re: [PATCH v5 8/9] vfs: allow copy_file_range to copy across devices
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Lucas Stach <dev@lynxeye.de>, linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, Steve French <stfrench@microsoft.com>, Dave Chinner <dchinner@redhat.com>
 
-On 04/06/2019 10:21, Lucas Stach wrote:
-> Hi all,
+On Tue, Jun 4, 2019 at 9:56 AM Amir Goldstein <amir73il@gmail.com> wrote:
 >
-> this question is more out of curiosity and because I want to take the
-> chance to learn something.
+> We want to enable cross-filesystem copy_file_range functionality
+> where possible, so push the "same superblock only" checks down to
+> the individual filesystem callouts so they can make their own
+> decisions about cross-superblock copy offload and fallack to
+> generic_copy_file_range() for cross-superblock copy.
 >
-> At work we've stumbled over a workload that seems to hit pathological
-> performance on XFS. Basically the critical part of the workload is a
-> "rm -rf" of a pretty large directory tree, filled with files of mixed
-> size ranging from a few KB to a few MB. The filesystem resides on quite
-> slow spinning rust disks, directly attached to the host, so no
-> controller with a BBU or something like that involved.
+> [Amir] We do not call ->remap_file_range() in case the files are not
+> on the same sb and do not call ->copy_file_range() in case the files
+> do not belong to the same filesystem driver.
 >
-> We've tested the workload with both xfs and ext4, and while the numbers
-> aren't completely accurate due to other factors playing into the
-> runtime, performance difference between XFS and ext4 seems to be an
-> order of magnitude. (Ballpark runtime XFS is 30 mins, while ext4
-> handles the remove in ~3 mins).
+> This changes behavior of the copy_file_range(2) syscall, which will
+> now allow cross filesystem in-kernel copy.  CIFS already supports
+> cross-superblock copy, between two shares to the same server. This
+> functionality will now be available via the copy_file_range(2) syscall.
 >
-> The XFS performance seems to be completly dominated by log buffer
-> writes, which happen with both REQ_PREFLUSH and REQ_FUA set. It's
-> pretty obvious why this kills performance on slow spinning rust.
+> Cc: Steve French <stfrench@microsoft.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
 >
-> Now the thing I wonder about is why ext4 seems to get a away without
-> those costly flags for its log writes. At least blktrace shows almost
-> zero PREFLUSH or FUA requests. Is there some fundamental difference in
-> how ext4 handles its logging to avoid the need for this ordering and
-> forced access, or is it ext just living more dangerously with regard to
-> reordered writes?
+> Darrick,
 >
-> Does XFS really require such a strong ordering on the log buffer
-> writes? I don't understand enough of the XFS transaction code and
-> wonder if it would be possible to do the strongly ordered writes only
-> on transaction commit.
+> Per feedback from Olga, I am sending a modified version of this patch
+> to address cross file_system_type copy issue in nfs.
 >
-> Regards,
-> Lucas
 
-Your immediate question sounds like an artefact.  I think both XFS and 
-ext4 flush the cache when writing to the log.  The difference I see is 
-that xlog_sync() writes the log in one IO.  By contrast, 
-jbd2_journal_commit_transaction() has several steps that submit IO. The 
-last IO is a "commit descriptor", and that IO is strictly ordered 
-(PREFLUSH+FUA).
+Thanks Amir, this works for NFS with referrals.
 
-Unless you have enabled `journal_async_commit` in ext4.  But I think you 
-would know if you had.  I am not sure whether that feature is now 
-considered mature, but it is not compatible with the default option 
-`data=ordered`.  And this fact is still not in the documentation, so I 
-think it is at least not used very widely :-). 
-https://unix.stackexchange.com/questions/520379/
-
-Maybe XFS is generating much more log IO.  Alternatively, something that 
-you do not expect might be causing calls to xfs_log_force_lsn() / 
-xfs_log_force().
-
-In future, it would be helpful to include details such as the kernel 
-version you tested :-).
-
-Regards
-Alan
-
-
-Google pointed me to xfs_log.c.  There is only one place that submits 
-IO: xlog_sync().  As you observe, this write uses PREFLUSH+FUA.  But I 
-think this is the *only* time we write to the journal.
-
-/*
-* Flush out the in-core log (iclog) to the on-disk log in an asynchronous
-* fashion. ... bp->b_io_length = BTOBB(count); bp->b_log_item = iclog; 
-bp->b_flags &= ~XBF_FLUSH; bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | 
-XBF_WRITE | XBF_FUA); /* * Flush the data device before flushing the log 
-to make sure all meta * data written back from the AIL actually made it 
-to disk before * stamping the new log tail LSN into the log buffer. For 
-an external * log we need to issue the flush explicitly, and 
-unfortunately * synchronously here; for an internal log we can simply 
-use the block * layer state machine for preflushes. */ if 
-(log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp) 
-xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp); else bp->b_flags |= 
-XBF_FLUSH; ... error = xlog_bdstrat(bp);
-
-
-Whereas I see at least three steps in 
-jbd2_journal_commit_transaction().  Step 1,  write all the data to the 
-journal without flushes:
-
-	while (commit_transaction->t_buffers) {
-
-		/* Find the next buffer to be journaled... */
-
-                 ...
-
-		/* If there's no more to do, or if the descriptor is full,
-		   let the IO rip! */
-
-		if (bufs == journal->j_wbufsize ||
-		    commit_transaction->t_buffers == NULL ||
-		    space_left < tag_bytes + 16 + csum_size) {
-
-                         ...
-
-			for (i = 0; i < bufs; i++) {
-
-                                 ...
-
-				bh->b_end_io = journal_end_buffer_io_sync;
-				submit_bh(REQ_OP_WRITE, REQ_SYNC, bh);
-			}
-
-Step 2:
-
-	err = journal_finish_inode_data_buffers(journal, commit_transaction);
-	if (err) {
-		printk(KERN_WARNING
-			"JBD2: Detected IO errors while flushing file data "
-		       "on %s\n", journal->j_devname);
-
-Step 3, commit:
-
-	if (!jbd2_has_feature_async_commit(journal)) {
-		err = journal_submit_commit_record(journal, commit_transaction,
-						&cbh, crc32_sum);
-		if (err)
-			__jbd2_journal_abort_hard(journal);
-	}
-	if (cbh)
-		err = journal_wait_on_commit_record(journal, cbh);
-
-
-static int journal_submit_commit_record(journal_t *journal,
-					transaction_t *commit_transaction,
-					struct buffer_head **cbh,
-					__u32 crc32_sum)
-{
-...
-
-	if (journal->j_flags & JBD2_BARRIER &&
-	    !jbd2_has_feature_async_commit(journal))
-		ret = submit_bh(REQ_OP_WRITE,
-			REQ_SYNC | REQ_PREFLUSH | REQ_FUA, bh);
+> For the sake of global warming I am not re-posting the entire patch set.
+> I removed your RVB because of the change.
+>
+> Thanks,
+> Amir.
+>
+> Changes since v4:
+> - Check "same filesystem driver" by comapring ->copy_file_range()
+>   function pointer
+>
+>  fs/ceph/file.c    |  4 +++-
+>  fs/cifs/cifsfs.c  |  2 +-
+>  fs/fuse/file.c    |  5 ++++-
+>  fs/nfs/nfs4file.c |  5 ++++-
+>  fs/read_write.c   | 18 ++++++++++++------
+>  5 files changed, 24 insertions(+), 10 deletions(-)
+>
+> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+> index e87f7b2023af..4cd41ed5cc53 100644
+> --- a/fs/ceph/file.c
+> +++ b/fs/ceph/file.c
+> @@ -1909,6 +1909,8 @@ static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
+>
+>         if (src_inode == dst_inode)
+>                 return -EINVAL;
+> +       if (src_inode->i_sb != dst_inode->i_sb)
+> +               return -EXDEV;
+>         if (ceph_snap(dst_inode) != CEPH_NOSNAP)
+>                 return -EROFS;
+>
+> @@ -2109,7 +2111,7 @@ static ssize_t ceph_copy_file_range(struct file *src_file, loff_t src_off,
+>         ret = __ceph_copy_file_range(src_file, src_off, dst_file, dst_off,
+>                                      len, flags);
+>
+> -       if (ret == -EOPNOTSUPP)
+> +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
+>                 ret = generic_copy_file_range(src_file, src_off, dst_file,
+>                                               dst_off, len, flags);
+>         return ret;
+> diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
+> index c65823270313..f11eea6125c1 100644
+> --- a/fs/cifs/cifsfs.c
+> +++ b/fs/cifs/cifsfs.c
+> @@ -1149,7 +1149,7 @@ static ssize_t cifs_copy_file_range(struct file *src_file, loff_t off,
+>                                         len, flags);
+>         free_xid(xid);
+>
+> -       if (rc == -EOPNOTSUPP)
+> +       if (rc == -EOPNOTSUPP || rc == -EXDEV)
+>                 rc = generic_copy_file_range(src_file, off, dst_file,
+>                                              destoff, len, flags);
+>         return rc;
+> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+> index e03901ae729b..569baf286835 100644
+> --- a/fs/fuse/file.c
+> +++ b/fs/fuse/file.c
+> @@ -3126,6 +3126,9 @@ static ssize_t __fuse_copy_file_range(struct file *file_in, loff_t pos_in,
+>         if (fc->no_copy_file_range)
+>                 return -EOPNOTSUPP;
+>
+> +       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
+> +               return -EXDEV;
+> +
+>         inode_lock(inode_out);
+>
+>         if (fc->writeback_cache) {
+> @@ -3182,7 +3185,7 @@ static ssize_t fuse_copy_file_range(struct file *src_file, loff_t src_off,
+>         ret = __fuse_copy_file_range(src_file, src_off, dst_file, dst_off,
+>                                      len, flags);
+>
+> -       if (ret == -EOPNOTSUPP)
+> +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
+>                 ret = generic_copy_file_range(src_file, src_off, dst_file,
+>                                               dst_off, len, flags);
+>         return ret;
+> diff --git a/fs/nfs/nfs4file.c b/fs/nfs/nfs4file.c
+> index 4842f3ab3161..f4157eb1f69d 100644
+> --- a/fs/nfs/nfs4file.c
+> +++ b/fs/nfs/nfs4file.c
+> @@ -133,6 +133,9 @@ static ssize_t __nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
+>                                       struct file *file_out, loff_t pos_out,
+>                                       size_t count, unsigned int flags)
+>  {
+> +       /* Only offload copy if superblock is the same */
+> +       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
+> +               return -EXDEV;
+>         if (!nfs_server_capable(file_inode(file_out), NFS_CAP_COPY))
+>                 return -EOPNOTSUPP;
+>         if (file_inode(file_in) == file_inode(file_out))
+> @@ -148,7 +151,7 @@ static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
+>
+>         ret = __nfs4_copy_file_range(file_in, pos_in, file_out, pos_out, count,
+>                                      flags);
+> -       if (ret == -EOPNOTSUPP)
+> +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
+>                 ret = generic_copy_file_range(file_in, pos_in, file_out,
+>                                               pos_out, count, flags);
+>         return ret;
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index cec7e7b1f693..bb594c8f4404 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1599,7 +1599,16 @@ static ssize_t do_copy_file_range(struct file *file_in, loff_t pos_in,
+>                                   struct file *file_out, loff_t pos_out,
+>                                   size_t len, unsigned int flags)
+>  {
+> -       if (file_out->f_op->copy_file_range)
+> +       /*
+> +        * Although we now allow filesystems to handle cross sb copy, passing
+> +        * a file of the wrong filesystem type to filesystem driver can result
+> +        * in an attempt to dereference the wrong type of ->private_data, so
+> +        * avoid doing that until we really have a good reason.
+> +        * NFS has several different file_system_type's, but they all end up
+> +        * using the same ->copy_file_range() function pointer.
+> +        */
+> +       if (file_out->f_op->copy_file_range &&
+> +           file_out->f_op->copy_file_range == file_in->f_op->copy_file_range)
+>                 return file_out->f_op->copy_file_range(file_in, pos_in,
+>                                                        file_out, pos_out,
+>                                                        len, flags);
+> @@ -1622,10 +1631,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+>         if (flags != 0)
+>                 return -EINVAL;
+>
+> -       /* this could be relaxed once a method supports cross-fs copies */
+> -       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
+> -               return -EXDEV;
+> -
+>         ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
+>                                        flags);
+>         if (unlikely(ret))
+> @@ -1648,7 +1653,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+>          * Try cloning first, this is supported by more file systems, and
+>          * more efficient if both clone and copy are supported (e.g. NFS).
+>          */
+> -       if (file_in->f_op->remap_file_range) {
+> +       if (file_in->f_op->remap_file_range &&
+> +           file_inode(file_in)->i_sb == file_inode(file_out)->i_sb) {
+>                 loff_t cloned;
+>
+>                 cloned = file_in->f_op->remap_file_range(file_in, pos_in,
+> --
+> 2.17.1
+>
