@@ -1,242 +1,229 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f196.google.com ([209.85.219.196]:41950 "EHLO
-        mail-yb1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725267AbfFDELy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jun 2019 00:11:54 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:38352 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726410AbfFDFyQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jun 2019 01:54:16 -0400
+Date: Tue, 4 Jun 2019 15:54:08 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 13/20] xfs: use bios directly to write log buffers
+Message-ID: <20190604055408.GP29573@dread.disaster.area>
+References: <20190603172945.13819-1-hch@lst.de>
+ <20190603172945.13819-14-hch@lst.de>
 MIME-Version: 1.0
-References: <20190529174318.22424-1-amir73il@gmail.com> <20190529174318.22424-14-amir73il@gmail.com>
- <CAN-5tyF9OnRsF_dgtx8aUGFB5tUUs=JK1wzXvRGo3za8jfpJdQ@mail.gmail.com>
- <CAOQ4uxh_0RVus56Ao_tFXCHdM6dsTrk=MsSBs1p7NjX4eJZkbg@mail.gmail.com> <CAN-5tyFMOxjUrzBFf3OE+5P8pnh0Q-ngUWCmU2eFB1WKFyGPQw@mail.gmail.com>
-In-Reply-To: <CAN-5tyFMOxjUrzBFf3OE+5P8pnh0Q-ngUWCmU2eFB1WKFyGPQw@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 4 Jun 2019 07:11:39 +0300
-Message-ID: <CAOQ4uxg4f2+xb-_xyCV4RYS_1Gyht9W2dWoLgHoWJMxU7B8wHw@mail.gmail.com>
-Subject: Re: [PATCH v3 13/13] vfs: allow copy_file_range to copy across devices
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190603172945.13819-14-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Olga Kornievskaia <olga.kornievskaia@gmail.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, Steve French <stfrench@microsoft.com>, Dave Chinner <dchinner@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 3, 2019 at 11:39 PM Olga Kornievskaia
-<olga.kornievskaia@gmail.com> wrote:
->
-> On Wed, May 29, 2019 at 5:03 PM Amir Goldstein <amir73il@gmail.com> wrote:
-> >
-> > On Wed, May 29, 2019 at 11:09 PM Olga Kornievskaia
-> > <olga.kornievskaia@gmail.com> wrote:
-> > >
-> > > On Wed, May 29, 2019 at 1:43 PM Amir Goldstein <amir73il@gmail.com> wrote:
-> > > >
-> > > > We want to enable cross-filesystem copy_file_range functionality
-> > > > where possible, so push the "same superblock only" checks down to
-> > > > the individual filesystem callouts so they can make their own
-> > > > decisions about cross-superblock copy offload and fallack to
-> > > > generic_copy_file_range() for cross-superblock copy.
-> > > >
-> > > > [Amir] We do not call ->remap_file_range() in case the inodes are not
-> > > > on the same sb and do not call ->copy_file_range() in case the inodes
-> > > > are not on the same filesystem type.
-> > > >
-> > > > This changes behavior of the copy_file_range(2) syscall, which will
-> > > > now allow cross filesystem in-kernel copy.  CIFS already supports
-> > > > cross-superblock copy, between two shares to the same server. This
-> > > > functionality will now be available via the copy_file_range(2) syscall.
-> > > >
-> > > > Cc: Steve French <stfrench@microsoft.com>
-> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  fs/ceph/file.c    |  4 +++-
-> > > >  fs/cifs/cifsfs.c  |  2 +-
-> > > >  fs/fuse/file.c    |  5 ++++-
-> > > >  fs/nfs/nfs4file.c |  5 ++++-
-> > > >  fs/read_write.c   | 20 ++++++++++++++------
-> > > >  5 files changed, 26 insertions(+), 10 deletions(-)
-> > > >
-> > > > diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-> > > > index 8a70708e1aca..e9614d686301 100644
-> > > > --- a/fs/ceph/file.c
-> > > > +++ b/fs/ceph/file.c
-> > > > @@ -1909,6 +1909,8 @@ static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
-> > > >
-> > > >         if (src_inode == dst_inode)
-> > > >                 return -EINVAL;
-> > > > +       if (src_inode->i_sb != dst_inode->i_sb)
-> > > > +               return -EXDEV;
-> > > >         if (ceph_snap(dst_inode) != CEPH_NOSNAP)
-> > > >                 return -EROFS;
-> > > >
-> > > > @@ -2126,7 +2128,7 @@ static ssize_t ceph_copy_file_range(struct file *src_file, loff_t src_off,
-> > > >         ret = __ceph_copy_file_range(src_file, src_off, dst_file, dst_off,
-> > > >                                      len, flags);
-> > > >
-> > > > -       if (ret == -EOPNOTSUPP)
-> > > > +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
-> > > >                 ret = generic_copy_file_range(src_file, src_off, dst_file,
-> > > >                                               dst_off, len, flags);
-> > > >         return ret;
-> > > > diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
-> > > > index ab6c5c24146d..83956452c108 100644
-> > > > --- a/fs/cifs/cifsfs.c
-> > > > +++ b/fs/cifs/cifsfs.c
-> > > > @@ -1154,7 +1154,7 @@ static ssize_t cifs_copy_file_range(struct file *src_file, loff_t off,
-> > > >                                         len, flags);
-> > > >         free_xid(xid);
-> > > >
-> > > > -       if (rc == -EOPNOTSUPP)
-> > > > +       if (rc == -EOPNOTSUPP || rc == -EXDEV)
-> > > >                 rc = generic_copy_file_range(src_file, off, dst_file,
-> > > >                                              destoff, len, flags);
-> > > >         return rc;
-> > > > diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-> > > > index 7f33d68f66d9..eab00cd089e8 100644
-> > > > --- a/fs/fuse/file.c
-> > > > +++ b/fs/fuse/file.c
-> > > > @@ -3126,6 +3126,9 @@ static ssize_t __fuse_copy_file_range(struct file *file_in, loff_t pos_in,
-> > > >         if (fc->no_copy_file_range)
-> > > >                 return -EOPNOTSUPP;
-> > > >
-> > > > +       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
-> > > > +               return -EXDEV;
-> > > > +
-> > > >         inode_lock(inode_out);
-> > > >
-> > > >         err = file_modified(file_out);
-> > > > @@ -3187,7 +3190,7 @@ static ssize_t fuse_copy_file_range(struct file *src_file, loff_t src_off,
-> > > >         ret = __fuse_copy_file_range(src_file, src_off, dst_file, dst_off,
-> > > >                                      len, flags);
-> > > >
-> > > > -       if (ret == -EOPNOTSUPP)
-> > > > +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
-> > > >                 ret = generic_copy_file_range(src_file, src_off, dst_file,
-> > > >                                               dst_off, len, flags);
-> > > >         return ret;
-> > > > diff --git a/fs/nfs/nfs4file.c b/fs/nfs/nfs4file.c
-> > > > index 4842f3ab3161..f4157eb1f69d 100644
-> > > > --- a/fs/nfs/nfs4file.c
-> > > > +++ b/fs/nfs/nfs4file.c
-> > > > @@ -133,6 +133,9 @@ static ssize_t __nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
-> > > >                                       struct file *file_out, loff_t pos_out,
-> > > >                                       size_t count, unsigned int flags)
-> > > >  {
-> > > > +       /* Only offload copy if superblock is the same */
-> > > > +       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
-> > > > +               return -EXDEV;
-> > > >         if (!nfs_server_capable(file_inode(file_out), NFS_CAP_COPY))
-> > > >                 return -EOPNOTSUPP;
-> > > >         if (file_inode(file_in) == file_inode(file_out))
-> > > > @@ -148,7 +151,7 @@ static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
-> > > >
-> > > >         ret = __nfs4_copy_file_range(file_in, pos_in, file_out, pos_out, count,
-> > > >                                      flags);
-> > > > -       if (ret == -EOPNOTSUPP)
-> > > > +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
-> > > >                 ret = generic_copy_file_range(file_in, pos_in, file_out,
-> > > >                                               pos_out, count, flags);
-> > > >         return ret;
-> > > > diff --git a/fs/read_write.c b/fs/read_write.c
-> > > > index 706ea5f276a7..d8930bb735cb 100644
-> > > > --- a/fs/read_write.c
-> > > > +++ b/fs/read_write.c
-> > > > @@ -1618,7 +1618,18 @@ static ssize_t do_copy_file_range(struct file *file_in, loff_t pos_in,
-> > > >                                   struct file *file_out, loff_t pos_out,
-> > > >                                   size_t len, unsigned int flags)
-> > > >  {
-> > > > -       if (file_out->f_op->copy_file_range)
-> > > > +       /*
-> > > > +        * Although we now allow filesystems to handle cross sb copy, passing
-> > > > +        * an inode of the wrong filesystem type to filesystem operation can
-> > > > +        * often result in an attempt to dereference the wrong concrete inode
-> > > > +        * struct, so avoid doing that until we really have a good reason.
-> > > > +        * The incentive for passing inode from different sb to filesystem is
-> > > > +        * NFS cross server copy and for that use case, enforcing same
-> > > > +        * filesystem type is acceptable.
-> > > > +        */
-> > > > +       if (file_out->f_op->copy_file_range &&
-> > > > +           file_inode(file_in)->i_sb->s_type ==
-> > > > +           file_inode(file_out)->i_sb->s_type)
+On Mon, Jun 03, 2019 at 07:29:38PM +0200, Christoph Hellwig wrote:
+> Currently the XFS logging code uses the xfs_buf structure and
+> associated APIs to write the log buffers to disk.  This requires
+> various special cases in the log code and is generally not very
+> optimal.
+> 
+> Instead of using a buffer just allocate a kmem_alloc_larger region for
+> each log buffer, and use a bio and bio_vec array embedded in the iclog
+> structure to write the buffer to disk.  This also allows for using
+> the bio split and chaining case to deal with the case of a log
+> buffer wrapping around the end of the log.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I can change that to:
+Overall a good cleanup, comments inline.
 
-+       if (file_out->f_op->copy_file_range &&
-+           file_out->f_op->copy_file_range ==
-+           file_in->f_op->copy_file_range)
+FWIW, what does ic_sema protect?  It looks to me like it just
+replaces the xfs_buf_lock(), and the only reason we were using that
+is to allow unmount to wait for iclogbuf IO completion. Can we just
+use a completion for this now?
 
-That should be fine for nfs that uses same copy_file_range()
-method for all different s_type.
+> ---
+>  fs/xfs/xfs_log.c      | 220 ++++++++++++++++++++----------------------
+>  fs/xfs/xfs_log_priv.h |  15 +--
+>  2 files changed, 112 insertions(+), 123 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 358a19789402..1d4480ea1725 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1239,32 +1239,32 @@ xlog_space_left(
+>  }
+>  
+>  
+> -/*
+> - * Log function which is called when an io completes.
+> - *
+> - * The log manager needs its own routine, in order to control what
+> - * happens with the buffer after the write completes.
+> - */
+>  static void
+> -xlog_iodone(xfs_buf_t *bp)
+> +xlog_ioend_work(
+> +	struct work_struct	*work)
+>  {
+> -	struct xlog_in_core	*iclog = bp->b_log_item;
+> -	struct xlog		*l = iclog->ic_log;
+> +	struct xlog_in_core     *iclog =
+> +		container_of(work, struct xlog_in_core, ic_end_io_work);
+> +	struct xlog		*log = iclog->ic_log;
+>  	int			aborted = 0;
+> +	int			error;
+> +
+> +	if (is_vmalloc_addr(iclog->ic_data))
+> +		invalidate_kernel_vmap_range(iclog->ic_data, iclog->ic_io_size);
 
-> > >
-> > > While I'm not sure how much I care (vs wanting at least this much of
-> > > cross device copy available) but in NFS there are several NFS
-> > > file_system_type defined which would disallow a copy between them
-> > > (like nfs4_remote_fs_type, nfs4_remote_referral_fs_type, and good old
-> > > nfs4_fs_type).
-> > >
-> > > One idea would be to push the check into the filesystems themselves.
-> > >
-> >
-> > That will require more delicate patches to filesystems.
-> > Are you saying there is a *good* reason to do that now?
-> > Is nfs copy offload expected to be between different types of nfs
-> > file_system_type?
->
-> So I had to setup a test case to perhaps give you a good reason. An
-> NFS server might have an export that's a referral to another server.
-> In this case the NFS client gets an ERR_MOVED and would mount the 2nd
-> server. It shows up as a submount and it would have a different file
-> system type. Having that check would prevent the NFS client from doing
-> an NFS copy_file_range between those 2 servers and instead VFS would
-> fallback to the generic_copy_file_range.
->
-> So why is hard(er) to push the check that ->s_types are the same for
-> the input and output files into the filesystems like it's done in this
-> patch with the ->i_sb checks?
+Do we need to invalidate here for write only operation?  It's only
+when we are bringing new data into memory we have to invalidate the
+range, right?  e.g. xfs_buf_bio_end_io() only does invalidation on
+read IO. 
 
-It's not harder, its fragile.
-See, in vfs, file_in and file_out are abstract file objects and only generic
-file interface are used. This is no longer the case inside filesystem code.
+> @@ -1475,30 +1473,6 @@ xlog_alloc_log(
+>  
+>  	xlog_get_iclog_buffer_size(mp, log);
+>  
+> -	/*
+> -	 * Use a NULL block for the extra log buffer used during splits so that
+> -	 * it will trigger errors if we ever try to do IO on it without first
+> -	 * having set it up properly.
+> -	 */
+> -	error = -ENOMEM;
+> -	bp = xfs_buf_alloc(log->l_targ, XFS_BUF_DADDR_NULL,
+> -			   BTOBB(log->l_iclog_size), XBF_NO_IOACCT);
+> -	if (!bp)
+> -		goto out_free_log;
+> -
+> -	/*
+> -	 * The iclogbuf buffer locks are held over IO but we are not going to do
+> -	 * IO yet.  Hence unlock the buffer so that the log IO path can grab it
+> -	 * when appropriately.
+> -	 */
+> -	ASSERT(xfs_buf_islocked(bp));
+> -	xfs_buf_unlock(bp);
+> -
+> -	/* use high priority wq for log I/O completion */
+> -	bp->b_ioend_wq = mp->m_log_workqueue;
+> -	bp->b_iodone = xlog_iodone;
+> -	log->l_xbuf = bp;
+> -
+>  	spin_lock_init(&log->l_icloglock);
+>  	init_waitqueue_head(&log->l_flush_wait);
+>  
+> @@ -1512,7 +1486,9 @@ xlog_alloc_log(
+>  	 */
+>  	ASSERT(log->l_iclog_size >= 4096);
+>  	for (i=0; i < log->l_iclog_bufs; i++) {
 
-If passed a file object of different fs, almost all the filesystem in question
-will barf (as you noticed yourself), because they try to access nfs specific
-file object fields:
+Fix the whitespace while you are touching this code?
 
-ssize_t nfs42_proc_copy(struct file *src, loff_t pos_src,
-                        struct file *dst, loff_t pos_dst,
-                        size_t count)
-{
-        struct nfs_server *server = NFS_SERVER(file_inode(dst));
+> -		*iclogp = kmem_zalloc(sizeof(xlog_in_core_t), KM_MAYFAIL);
+> +		*iclogp = kmem_zalloc(struct_size(*iclogp, ic_bvec,
+> +				howmany(log->l_iclog_size, PAGE_SIZE)),
+> +				KM_MAYFAIL);
 
-ssize_t cifs_file_copychunk_range(unsigned int xid,
-                                struct file *src_file, loff_t off,
-                                struct file *dst_file, loff_t destoff,
-                                size_t len, unsigned int flags)
-{
-        struct inode *src_inode = file_inode(src_file);
-...
-       if (!src_file->private_data || !dst_file->private_data) {
-                rc = -EBADF;
-                cifs_dbg(VFS, "missing cifsFileInfo on copy range src file\n");
-                goto out;
-        }
-...
-       smb_file_src = src_file->private_data;
-        src_tcon = tlink_tcon(smb_file_src->tlink);
+That's a bit of a mess - hard to read. It's times like this that I
+think generic helpers make the code worse rather than bettter.
+Perhaps some slightly different indenting to indicate that the
+howmany() function is actually a parameter of the struct_size()
+macro?
 
-So first of all, all the present filesystems that support copy_file_range
-will have no be sanitized to verify file_in is an object of their own type
-before dereferencing private fields. That's doable, but it still leaves
-future filesystems volnurable to making this mistake. It is also quite
-fragile to test, because file objects coming from most fs will have NULL
-private_data, so it may take a very specific type of input file to reveal
-bugs in implementations.
+		*iclogp = kmem_zalloc(struct_size(*iclogp, ic_bvec,
+					howmany(log->l_iclog_size, PAGE_SIZE)),
+				      KM_MAYFAIL);
 
-All in all, I prefer to keep it safe. As long as we don't really need
-filesystems
-to handle copy of file_in from a different fs, let's keep it simple and resolve
-the specific nfs issue by testing for same ->copy_file_range pointer.
+> +static void
+> +xlog_bio_end_io(
+> +	struct bio		*bio)
+> +{
+> +	struct xlog_in_core	*iclog = bio->bi_private;
+> +
+> +	queue_work(iclog->ic_log->l_mp->m_log_workqueue,
+> +		   &iclog->ic_end_io_work);
+> +}
 
-Thanks,
-Amir.
+Can we just put a pointer to the wq in the iclog? It only needs to
+be set up at init time, then this only needs to be
+
+	queue_work(iclog->ic_wq, &iclog->ic_end_io_work);
+
+> +
+> +static void
+> +xlog_map_iclog_data(
+> +	struct bio		*bio,
+> +	void			*data,
+> +	size_t			count)
+> +{
+> +	do {
+> +		struct page	*page = kmem_to_page(data);
+> +		unsigned int	off = offset_in_page(data);
+> +		size_t		len = min_t(size_t, count, PAGE_SIZE - off);
+> +
+> +		WARN_ON_ONCE(bio_add_page(bio, page, len, off) != len);
+> +
+> +		data += len;
+> +		count -= len;
+> +	} while (count);
+> +}
+
+Aren't we're always going to be mapping the same pages to the same
+bio at the same offsets. The only thing that changes is the length
+of the bio and the sector it is addressed to. It seems kind of odd
+to have an inline data buffer, bio and biovec all pre-allocated, but
+then have to map them into exactly the same state for every IO we do
+with them...
+
+> @@ -1786,11 +1772,10 @@ xlog_write_iclog(
+>  	 * tearing down the iclogbufs.  Hence we need to hold the buffer lock
+>  	 * across the log IO to archieve that.
+>  	 */
+> -	xfs_buf_lock(bp);
+> +	down(&iclog->ic_sema);
+>  	if (unlikely(iclog->ic_state & XLOG_STATE_IOERROR)) {
+> -		xfs_buf_ioerror(bp, -EIO);
+> -		xfs_buf_stale(bp);
+> -		xfs_buf_ioend(bp);
+> +		xlog_state_done_syncing(iclog, XFS_LI_ABORTED);
+> +		up(&iclog->ic_sema);
+
+Hmmm - this open codes the end io error completion. Might be wroth a
+comment indicating that this needs to be kept in sync with the io
+completion processing?
+
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index b5f82cb36202..062ee9c13039 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -179,7 +179,6 @@ typedef struct xlog_ticket {
+>   *	the iclog.
+>   * - ic_forcewait is used to implement synchronous forcing of the iclog to disk.
+>   * - ic_next is the pointer to the next iclog in the ring.
+> - * - ic_bp is a pointer to the buffer used to write this incore log to disk.
+>   * - ic_log is a pointer back to the global log structure.
+>   * - ic_callback is a linked list of callback function/argument pairs to be
+>   *	called after an iclog finishes writing.
+> @@ -206,11 +205,10 @@ typedef struct xlog_in_core {
+>  	wait_queue_head_t	ic_write_wait;
+>  	struct xlog_in_core	*ic_next;
+>  	struct xlog_in_core	*ic_prev;
+> -	struct xfs_buf		*ic_bp;
+>  	struct xlog		*ic_log;
+> -	int			ic_size;
+> -	int			ic_offset;
+> -	int			ic_bwritecnt;
+> +	u32			ic_size;
+> +	u32			ic_io_size;
+> +	u32			ic_offset;
+
+Can we get a couple of comments here describing the difference
+between ic_size, ic_io_size and log->l_iclog_size so I don't have to
+go read all the code to find out what they are again in 6 months
+time?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
