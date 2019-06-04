@@ -1,74 +1,183 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45482 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727607AbfFEMmb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Jun 2019 08:42:31 -0400
-Date: Wed, 5 Jun 2019 14:42:27 +0200
-From: gregkh <gregkh@linuxfoundation.org>
-Subject: Re: [bug report][stable] xfstests:generic/538 failed on xfs
-Message-ID: <20190605124227.GC17558@kroah.com>
-References: <f9a7b0c4-178a-4a7c-8ac6-aec79b06b810.Alvin@linux.alibaba.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f9a7b0c4-178a-4a7c-8ac6-aec79b06b810.Alvin@linux.alibaba.com>
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:37157 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727149AbfFDN4o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jun 2019 09:56:44 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v5 8/9] vfs: allow copy_file_range to copy across devices
+Date: Tue,  4 Jun 2019 16:56:32 +0300
+Message-Id: <20190604135632.1487-1-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alvin Zheng <Alvin@linux.alibaba.com>
-Cc: "darrick.wong" <darrick.wong@oracle.com>, axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, caspar <caspar@linux.alibaba.com>, "joseph.qi" <joseph.qi@linux.alibaba.com>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Steve French <stfrench@microsoft.com>, Dave Chinner <dchinner@redhat.com>
 
-On Wed, Jun 05, 2019 at 08:21:44PM +0800, Alvin Zheng wrote:
-> Hi,
->   I was using kernel v4.19.48 and found that it cannot pass the generic/538 on xfs. The error output is as follows:
+We want to enable cross-filesystem copy_file_range functionality
+where possible, so push the "same superblock only" checks down to
+the individual filesystem callouts so they can make their own
+decisions about cross-superblock copy offload and fallack to
+generic_copy_file_range() for cross-superblock copy.
 
-Has 4.19 ever been able to pass that test?  If not, I wouldn't worry
-about it :)
+[Amir] We do not call ->remap_file_range() in case the files are not
+on the same sb and do not call ->copy_file_range() in case the files
+do not belong to the same filesystem driver.
 
-> 
->   FSTYP         -- xfs (non-debug)
->   PLATFORM      -- Linux/x86_64 alinux2-6 4.19.48
->   MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdc
->   MOUNT_OPTIONS -- /dev/vdc /mnt/testarea/scra
->   generic/538 0s ... - output mismatch (see /root/usr/local/src/xfstests/results//generic/538.out.bad)
->       --- tests/generic/538.out   2019-05-27 13:57:06.505666465 +0800
->       +++ /root/usr/local/src/xfstests/results//generic/538.out.bad       2019-06-05 16:43:14.702002326 +0800
->       @@ -1,2 +1,10 @@
->        QA output created by 538
->       +Data verification fails
->       +Find corruption
->       +00000000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->       +*
->       +00000200  5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a  ZZZZZZZZZZZZZZZZ
->       +00002000
->       ...
->       (Run 'diff -u /root/usr/local/src/xfstests/tests/generic/538.out /root/usr/local/src/xfstests/results//generic/538.out.bad'  to see the entire diff)
->   Ran: generic/538
->   Failures: generic/538
->   Failed 1 of 1 tests
->   
-> I also found that the latest kernel (v5.2.0-rc2) of upstream can pass the generic/538 test. Therefore, I bisected and found the first good commit is 3110fc79606. This commit adds the hardware queue into the sort function. Besides, the sort function returns a negative value when the offset and queue (software and hardware) of two I/O requests are same. I think the second part of the change make senses. The kernel should not change the relative position of two I/O requests when their offset and queue are same. So I made the following changes and merged it into the kernel 4.19.48. After the modification, we can pass the generic/538 test on xfs. The same case can be passed on ext4, since ext4 has corresponding fix 0db24122bd7f ("ext4: fix data corruption caused by overlapping unaligned and aligned IO"). Though I think xfs should be responsible for this issue, the block layer code below is also problematic. Any ideas?
-> 
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index 4e563ee..a7309cd 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -1610,7 +1610,7 @@ static int plug_ctx_cmp(void *priv, struct list_head *a, struct list_head *b)
-> 
->         return !(rqa->mq_ctx < rqb->mq_ctx ||
->                  (rqa->mq_ctx == rqb->mq_ctx &&
-> -                 blk_rq_pos(rqa) < blk_rq_pos(rqb)));
-> +                 blk_rq_pos(rqa) <= blk_rq_pos(rqb)));
->  }
-> 
->  void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
+This changes behavior of the copy_file_range(2) syscall, which will
+now allow cross filesystem in-kernel copy.  CIFS already supports
+cross-superblock copy, between two shares to the same server. This
+functionality will now be available via the copy_file_range(2) syscall.
 
-I would not like to take a patch that is not upstream, but rather take
-the original commit.
+Cc: Steve French <stfrench@microsoft.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
 
-Can 3110fc79606f ("blk-mq: improve plug list sorting") on its own
-resolve this issue for 4.19.y?
+Darrick,
 
-thanks,
+Per feedback from Olga, I am sending a modified version of this patch
+to address cross file_system_type copy issue in nfs.
 
-greg k-h
+For the sake of global warming I am not re-posting the entire patch set.
+I removed your RVB because of the change.
+
+Thanks,
+Amir.
+
+Changes since v4:
+- Check "same filesystem driver" by comapring ->copy_file_range()
+  function pointer
+
+ fs/ceph/file.c    |  4 +++-
+ fs/cifs/cifsfs.c  |  2 +-
+ fs/fuse/file.c    |  5 ++++-
+ fs/nfs/nfs4file.c |  5 ++++-
+ fs/read_write.c   | 18 ++++++++++++------
+ 5 files changed, 24 insertions(+), 10 deletions(-)
+
+diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+index e87f7b2023af..4cd41ed5cc53 100644
+--- a/fs/ceph/file.c
++++ b/fs/ceph/file.c
+@@ -1909,6 +1909,8 @@ static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
+ 
+ 	if (src_inode == dst_inode)
+ 		return -EINVAL;
++	if (src_inode->i_sb != dst_inode->i_sb)
++		return -EXDEV;
+ 	if (ceph_snap(dst_inode) != CEPH_NOSNAP)
+ 		return -EROFS;
+ 
+@@ -2109,7 +2111,7 @@ static ssize_t ceph_copy_file_range(struct file *src_file, loff_t src_off,
+ 	ret = __ceph_copy_file_range(src_file, src_off, dst_file, dst_off,
+ 				     len, flags);
+ 
+-	if (ret == -EOPNOTSUPP)
++	if (ret == -EOPNOTSUPP || ret == -EXDEV)
+ 		ret = generic_copy_file_range(src_file, src_off, dst_file,
+ 					      dst_off, len, flags);
+ 	return ret;
+diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
+index c65823270313..f11eea6125c1 100644
+--- a/fs/cifs/cifsfs.c
++++ b/fs/cifs/cifsfs.c
+@@ -1149,7 +1149,7 @@ static ssize_t cifs_copy_file_range(struct file *src_file, loff_t off,
+ 					len, flags);
+ 	free_xid(xid);
+ 
+-	if (rc == -EOPNOTSUPP)
++	if (rc == -EOPNOTSUPP || rc == -EXDEV)
+ 		rc = generic_copy_file_range(src_file, off, dst_file,
+ 					     destoff, len, flags);
+ 	return rc;
+diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+index e03901ae729b..569baf286835 100644
+--- a/fs/fuse/file.c
++++ b/fs/fuse/file.c
+@@ -3126,6 +3126,9 @@ static ssize_t __fuse_copy_file_range(struct file *file_in, loff_t pos_in,
+ 	if (fc->no_copy_file_range)
+ 		return -EOPNOTSUPP;
+ 
++	if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
++		return -EXDEV;
++
+ 	inode_lock(inode_out);
+ 
+ 	if (fc->writeback_cache) {
+@@ -3182,7 +3185,7 @@ static ssize_t fuse_copy_file_range(struct file *src_file, loff_t src_off,
+ 	ret = __fuse_copy_file_range(src_file, src_off, dst_file, dst_off,
+ 				     len, flags);
+ 
+-	if (ret == -EOPNOTSUPP)
++	if (ret == -EOPNOTSUPP || ret == -EXDEV)
+ 		ret = generic_copy_file_range(src_file, src_off, dst_file,
+ 					      dst_off, len, flags);
+ 	return ret;
+diff --git a/fs/nfs/nfs4file.c b/fs/nfs/nfs4file.c
+index 4842f3ab3161..f4157eb1f69d 100644
+--- a/fs/nfs/nfs4file.c
++++ b/fs/nfs/nfs4file.c
+@@ -133,6 +133,9 @@ static ssize_t __nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
+ 				      struct file *file_out, loff_t pos_out,
+ 				      size_t count, unsigned int flags)
+ {
++	/* Only offload copy if superblock is the same */
++	if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
++		return -EXDEV;
+ 	if (!nfs_server_capable(file_inode(file_out), NFS_CAP_COPY))
+ 		return -EOPNOTSUPP;
+ 	if (file_inode(file_in) == file_inode(file_out))
+@@ -148,7 +151,7 @@ static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
+ 
+ 	ret = __nfs4_copy_file_range(file_in, pos_in, file_out, pos_out, count,
+ 				     flags);
+-	if (ret == -EOPNOTSUPP)
++	if (ret == -EOPNOTSUPP || ret == -EXDEV)
+ 		ret = generic_copy_file_range(file_in, pos_in, file_out,
+ 					      pos_out, count, flags);
+ 	return ret;
+diff --git a/fs/read_write.c b/fs/read_write.c
+index cec7e7b1f693..bb594c8f4404 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1599,7 +1599,16 @@ static ssize_t do_copy_file_range(struct file *file_in, loff_t pos_in,
+ 				  struct file *file_out, loff_t pos_out,
+ 				  size_t len, unsigned int flags)
+ {
+-	if (file_out->f_op->copy_file_range)
++	/*
++	 * Although we now allow filesystems to handle cross sb copy, passing
++	 * a file of the wrong filesystem type to filesystem driver can result
++	 * in an attempt to dereference the wrong type of ->private_data, so
++	 * avoid doing that until we really have a good reason.
++	 * NFS has several different file_system_type's, but they all end up
++	 * using the same ->copy_file_range() function pointer.
++	 */
++	if (file_out->f_op->copy_file_range &&
++	    file_out->f_op->copy_file_range == file_in->f_op->copy_file_range)
+ 		return file_out->f_op->copy_file_range(file_in, pos_in,
+ 						       file_out, pos_out,
+ 						       len, flags);
+@@ -1622,10 +1631,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+ 	if (flags != 0)
+ 		return -EINVAL;
+ 
+-	/* this could be relaxed once a method supports cross-fs copies */
+-	if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
+-		return -EXDEV;
+-
+ 	ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
+ 				       flags);
+ 	if (unlikely(ret))
+@@ -1648,7 +1653,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+ 	 * Try cloning first, this is supported by more file systems, and
+ 	 * more efficient if both clone and copy are supported (e.g. NFS).
+ 	 */
+-	if (file_in->f_op->remap_file_range) {
++	if (file_in->f_op->remap_file_range &&
++	    file_inode(file_in)->i_sb == file_inode(file_out)->i_sb) {
+ 		loff_t cloned;
+ 
+ 		cloned = file_in->f_op->remap_file_range(file_in, pos_in,
+-- 
+2.17.1
