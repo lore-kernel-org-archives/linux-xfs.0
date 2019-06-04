@@ -1,122 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:33287 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726410AbfFDGLM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Jun 2019 02:11:12 -0400
-Date: Tue, 4 Jun 2019 08:10:44 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 13/20] xfs: use bios directly to write log buffers
-Message-ID: <20190604061044.GB14536@lst.de>
-References: <20190603172945.13819-1-hch@lst.de> <20190603172945.13819-14-hch@lst.de> <20190604055408.GP29573@dread.disaster.area>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:59184 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726488AbfFDGN3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jun 2019 02:13:29 -0400
+Date: Tue, 4 Jun 2019 16:13:22 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 16/20] xfs: use bios directly to read and write the log
+ recovery buffers
+Message-ID: <20190604061322.GQ29573@dread.disaster.area>
+References: <20190603172945.13819-1-hch@lst.de>
+ <20190603172945.13819-17-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190604055408.GP29573@dread.disaster.area>
+In-Reply-To: <20190603172945.13819-17-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 04, 2019 at 03:54:08PM +1000, Dave Chinner wrote:
-> FWIW, what does ic_sema protect?  It looks to me like it just
-> replaces the xfs_buf_lock(), and the only reason we were using that
-> is to allow unmount to wait for iclogbuf IO completion. Can we just
-> use a completion for this now?
-
-We could, I just didn't want to change it cosmetically as that whole
-pattern looks a little odd, and I'd like to spend some more time figuring
-out what we could do better at a higher level.
-
-> > -	struct xlog_in_core	*iclog = bp->b_log_item;
-> > -	struct xlog		*l = iclog->ic_log;
-> > +	struct xlog_in_core     *iclog =
-> > +		container_of(work, struct xlog_in_core, ic_end_io_work);
-> > +	struct xlog		*log = iclog->ic_log;
-> >  	int			aborted = 0;
-> > +	int			error;
-> > +
-> > +	if (is_vmalloc_addr(iclog->ic_data))
-> > +		invalidate_kernel_vmap_range(iclog->ic_data, iclog->ic_io_size);
+On Mon, Jun 03, 2019 at 07:29:41PM +0200, Christoph Hellwig wrote:
+> The xfs_buf structure is basically used as a glorified container for
+> a memory allocation in the log recovery code.  Replace it with a
+> call to kmem_alloc_large and a simple abstraction to read into or
+> write from it synchronously using chained bios.
 > 
-> Do we need to invalidate here for write only operation?  It's only
-> when we are bringing new data into memory we have to invalidate the
-> range, right?  e.g. xfs_buf_bio_end_io() only does invalidation on
-> read IO. 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+....
+> +int
+> +xfs_rw_bdev(
+> +	struct block_device	*bdev,
+> +	sector_t		sector,
+> +	unsigned int		count,
+> +	char			*data,
+> +	unsigned int		op)
+> +
+> +{
+> +	unsigned int		is_vmalloc = is_vmalloc_addr(data);
+> +	unsigned int		left = count;
+> +	int			error;
+> +	struct bio		*bio;
+> +
+> +	if (is_vmalloc && op == REQ_OP_READ)
+> +		flush_kernel_vmap_range(data, count);
 
-True, we shouldn't eed this one.
+That should be REQ_OP_WRITE. i.e. the data the CPU has written to
+the aliased vmap address has to be flushed back to the physical page
+before the DMA from the physical page to the storage device occurs.
 
-> >  	for (i=0; i < log->l_iclog_bufs; i++) {
-> 
-> Fix the whitespace while you are touching this code?
+> +	bio = bio_alloc(GFP_KERNEL, bio_max_vecs(left));
+> +	bio_set_dev(bio, bdev);
+> +	bio->bi_iter.bi_sector = sector;
+> +	bio->bi_opf = op | REQ_META | REQ_SYNC;
+> +
+> +	do {
+> +		struct page	*page = kmem_to_page(data);
+> +		unsigned int	off = offset_in_page(data);
+> +		unsigned int	len = min_t(unsigned, left, PAGE_SIZE - off);
+> +
+> +		while (bio_add_page(bio, page, len, off) != len) {
+> +			struct bio	*prev = bio;
+> +
+> +			bio = bio_alloc(GFP_KERNEL, bio_max_vecs(left));
+> +			bio_copy_dev(bio, prev);
+> +			bio->bi_iter.bi_sector = bio_end_sector(prev);
+> +			bio->bi_opf = prev->bi_opf;
+> +			bio_chain(bio, prev);
+> +
+> +			submit_bio(prev);
+> +		}
+> +
+> +		data += len;
+> +		left -= len;
+> +	} while (left > 0);
+> +
+> +	error = submit_bio_wait(bio);
+> +	bio_put(bio);
+> +
+> +	if (is_vmalloc && op == REQ_OP_WRITE)
+> +		invalidate_kernel_vmap_range(data, count);
 
-Well, I usually do for everything I touch, but this line isn't
-touched.  But I can do that anyway.
+And this should be REQ_OP_READ - to invalidate anything aliased in
+the CPU cache before the higher layers try to read the new data in
+the physical page...
 
-> > -		*iclogp = kmem_zalloc(sizeof(xlog_in_core_t), KM_MAYFAIL);
-> > +		*iclogp = kmem_zalloc(struct_size(*iclogp, ic_bvec,
-> > +				howmany(log->l_iclog_size, PAGE_SIZE)),
-> > +				KM_MAYFAIL);
-> 
-> That's a bit of a mess - hard to read. It's times like this that I
-> think generic helpers make the code worse rather than bettter.
-> Perhaps some slightly different indenting to indicate that the
-> howmany() function is actually a parameter of the struct_size()
-> macro?
-> 
-> 		*iclogp = kmem_zalloc(struct_size(*iclogp, ic_bvec,
-> 					howmany(log->l_iclog_size, PAGE_SIZE)),
-> 				      KM_MAYFAIL);
+Otherwise looks good.
 
-I don't really find this any better.  Then again switching to make this
-line based on iclog and only assigning iclogp later might be nicer.
+Cheers,
 
-> > +static void
-> > +xlog_bio_end_io(
-> > +	struct bio		*bio)
-> > +{
-> > +	struct xlog_in_core	*iclog = bio->bi_private;
-> > +
-> > +	queue_work(iclog->ic_log->l_mp->m_log_workqueue,
-> > +		   &iclog->ic_end_io_work);
-> > +}
-> 
-> Can we just put a pointer to the wq in the iclog? It only needs to
-> be set up at init time, then this only needs to be
-> 
-> 	queue_work(iclog->ic_wq, &iclog->ic_end_io_work);
-
-The workqueue pointer is moving to the xlog later in the series.
-I don't really see any point to bloat every iclog with an extra
-pointer.
-
-> Aren't we're always going to be mapping the same pages to the same
-> bio at the same offsets. The only thing that changes is the length
-> of the bio and the sector it is addressed to. It seems kind of odd
-> to have an inline data buffer, bio and biovec all pre-allocated, but
-> then have to map them into exactly the same state for every IO we do
-> with them...
-
-We are, sort of.  The length of the actual data is different each
-time, so we might not build up all bvecs, and the last one might
-not be filled entirely.
-
-> > +		xlog_state_done_syncing(iclog, XFS_LI_ABORTED);
-> > +		up(&iclog->ic_sema);
-> 
-> Hmmm - this open codes the end io error completion. Might be wroth a
-> comment indicating that this needs to be kept in sync with the io
-> completion processing?
-
-Ok.
-
-> > +	u32			ic_size;
-> > +	u32			ic_io_size;
-> > +	u32			ic_offset;
-> 
-> Can we get a couple of comments here describing the difference
-> between ic_size, ic_io_size and log->l_iclog_size so I don't have to
-> go read all the code to find out what they are again in 6 months
-> time?
-
-Ok.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
