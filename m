@@ -1,293 +1,291 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54400 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729625AbfFGT2l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jun 2019 15:28:41 -0400
-Subject: [PATCH 3/6] libxfs: refactor open-coded INUMBERS calls
+Received: from aserp2130.oracle.com ([141.146.126.79]:38552 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726293AbfFDVuE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jun 2019 17:50:04 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x54LnkRu073488
+        for <linux-xfs@vger.kernel.org>; Tue, 4 Jun 2019 21:50:02 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 2suevdfw90-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Jun 2019 21:50:02 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x54Lnqac044847
+        for <linux-xfs@vger.kernel.org>; Tue, 4 Jun 2019 21:50:02 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2swnghkjjv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Jun 2019 21:50:02 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x54Lo1f2011694
+        for <linux-xfs@vger.kernel.org>; Tue, 4 Jun 2019 21:50:01 GMT
+Subject: [PATCH 05/10] xfs: move bulkstat ichunk helpers to iwalk code
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 07 Jun 2019 12:28:34 -0700
-Message-ID: <155993571460.2343365.17053963096831775316.stgit@magnolia>
-In-Reply-To: <155993569512.2343365.15510991248022865602.stgit@magnolia>
-References: <155993569512.2343365.15510991248022865602.stgit@magnolia>
+Date: Tue, 04 Jun 2019 14:49:59 -0700
+Message-ID: <155968499971.1657646.988325107267126890.stgit@magnolia>
+In-Reply-To: <155968496814.1657646.13743491598480818627.stgit@magnolia>
+References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor all the INUMBERS ioctl callsites into helper functions.
+Now that we've reworked the bulkstat code to use iwalk, we can move the
+old bulkstat ichunk helpers to xfs_iwalk.c.  No functional changes here.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/xfrog.h    |    4 ++++
- io/imap.c          |   31 ++++++++++++++-----------------
- io/open.c          |   19 +++++++------------
- libfrog/bulkstat.c |   19 +++++++++++++++++++
- scrub/fscounters.c |   18 +++++++-----------
- scrub/inodes.c     |   21 +++++++--------------
- 6 files changed, 58 insertions(+), 54 deletions(-)
+ fs/xfs/xfs_itable.c |   93 --------------------------------------------------
+ fs/xfs/xfs_itable.h |    8 ----
+ fs/xfs/xfs_iwalk.c  |   95 ++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 93 insertions(+), 103 deletions(-)
 
 
-diff --git a/include/xfrog.h b/include/xfrog.h
-index 4b4e0adc..8456d55e 100644
---- a/include/xfrog.h
-+++ b/include/xfrog.h
-@@ -24,4 +24,8 @@ int xfrog_bulkstat_single(int fd, uint64_t ino, struct xfs_bstat *ubuffer);
- int xfrog_bulkstat(int fd, uint64_t *lastino, uint32_t icount,
- 		struct xfs_bstat *ubuffer, uint32_t *ocount);
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 87c597ea1df7..06abe5c9c0ee 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -186,99 +186,6 @@ xfs_bulkstat_one(
+ 	return error;
+ }
  
-+struct xfs_inogrp;
-+int xfrog_inumbers(int fd, uint64_t *lastino, uint32_t icount,
-+		struct xfs_inogrp *ubuffer, uint32_t *ocount);
-+
- #endif	/* __XFROG_H__ */
-diff --git a/io/imap.c b/io/imap.c
-index fbc8e9e1..69027693 100644
---- a/io/imap.c
-+++ b/io/imap.c
-@@ -8,18 +8,19 @@
- #include "input.h"
- #include "init.h"
- #include "io.h"
-+#include "xfrog.h"
- 
- static cmdinfo_t imap_cmd;
- 
+-/*
+- * Loop over all clusters in a chunk for a given incore inode allocation btree
+- * record.  Do a readahead if there are any allocated inodes in that cluster.
+- */
+-void
+-xfs_bulkstat_ichunk_ra(
+-	struct xfs_mount		*mp,
+-	xfs_agnumber_t			agno,
+-	struct xfs_inobt_rec_incore	*irec)
+-{
+-	struct xfs_ino_geometry		*igeo = M_IGEO(mp);
+-	xfs_agblock_t			agbno;
+-	struct blk_plug			plug;
+-	int				i;	/* inode chunk index */
+-
+-	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
+-
+-	blk_start_plug(&plug);
+-	for (i = 0;
+-	     i < XFS_INODES_PER_CHUNK;
+-	     i += igeo->inodes_per_cluster,
+-			agbno += igeo->blocks_per_cluster) {
+-		if (xfs_inobt_maskn(i, igeo->inodes_per_cluster) &
+-		    ~irec->ir_free) {
+-			xfs_btree_reada_bufs(mp, agno, agbno,
+-					igeo->blocks_per_cluster,
+-					&xfs_inode_buf_ops);
+-		}
+-	}
+-	blk_finish_plug(&plug);
+-}
+-
+-/*
+- * Lookup the inode chunk that the given inode lives in and then get the record
+- * if we found the chunk.  If the inode was not the last in the chunk and there
+- * are some left allocated, update the data for the pointed-to record as well as
+- * return the count of grabbed inodes.
+- */
+-int
+-xfs_bulkstat_grab_ichunk(
+-	struct xfs_btree_cur		*cur,	/* btree cursor */
+-	xfs_agino_t			agino,	/* starting inode of chunk */
+-	int				*icount,/* return # of inodes grabbed */
+-	struct xfs_inobt_rec_incore	*irec)	/* btree record */
+-{
+-	int				idx;	/* index into inode chunk */
+-	int				stat;
+-	int				error = 0;
+-
+-	/* Lookup the inode chunk that this inode lives in */
+-	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &stat);
+-	if (error)
+-		return error;
+-	if (!stat) {
+-		*icount = 0;
+-		return error;
+-	}
+-
+-	/* Get the record, should always work */
+-	error = xfs_inobt_get_rec(cur, irec, &stat);
+-	if (error)
+-		return error;
+-	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, stat == 1);
+-
+-	/* Check if the record contains the inode in request */
+-	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino) {
+-		*icount = 0;
+-		return 0;
+-	}
+-
+-	idx = agino - irec->ir_startino + 1;
+-	if (idx < XFS_INODES_PER_CHUNK &&
+-	    (xfs_inobt_maskn(idx, XFS_INODES_PER_CHUNK - idx) & ~irec->ir_free)) {
+-		int	i;
+-
+-		/* We got a right chunk with some left inodes allocated at it.
+-		 * Grab the chunk record.  Mark all the uninteresting inodes
+-		 * free -- because they're before our start point.
+-		 */
+-		for (i = 0; i < idx; i++) {
+-			if (XFS_INOBT_MASK(i) & ~irec->ir_free)
+-				irec->ir_freecount++;
+-		}
+-
+-		irec->ir_free |= xfs_inobt_maskn(0, idx);
+-		*icount = irec->ir_count - irec->ir_freecount;
+-	}
+-
+-	return 0;
+-}
+-
+-#define XFS_BULKSTAT_UBLEFT(ubleft)	((ubleft) >= statstruct_size)
+-
  static int
- imap_f(int argc, char **argv)
- {
--	int		count;
--	int		nent;
--	int		i;
--	__u64		last = 0;
--	xfs_inogrp_t	*t;
--	xfs_fsop_bulkreq_t bulkreq;
-+	struct xfs_inogrp	*t;
-+	uint64_t		last = 0;
-+	uint32_t		count;
-+	uint32_t		nent;
-+	int			i;
-+	int			error;
+ xfs_bulkstat_iwalk(
+ 	struct xfs_mount	*mp,
+diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
+index 366d391eb11f..a2562fe8d282 100644
+--- a/fs/xfs/xfs_itable.h
++++ b/fs/xfs/xfs_itable.h
+@@ -67,12 +67,4 @@ xfs_inumbers(
+ 	void			__user *buffer, /* buffer with inode info */
+ 	inumbers_fmt_pf		formatter);
  
- 	if (argc != 2)
- 		nent = 1;
-@@ -30,14 +31,8 @@ imap_f(int argc, char **argv)
- 	if (!t)
- 		return 0;
- 
--	bulkreq.lastip  = &last;
--	bulkreq.icount  = nent;
--	bulkreq.ubuffer = (void *)t;
--	bulkreq.ocount  = &count;
+-/* Temporarily needed while we refactor functions. */
+-struct xfs_btree_cur;
+-struct xfs_inobt_rec_incore;
+-void xfs_bulkstat_ichunk_ra(struct xfs_mount *mp, xfs_agnumber_t agno,
+-		struct xfs_inobt_rec_incore *irec);
+-int xfs_bulkstat_grab_ichunk(struct xfs_btree_cur *cur, xfs_agino_t agino,
+-		int *icount, struct xfs_inobt_rec_incore *irec);
 -
--	while (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
--		if (count == 0)
--			goto out_free;
-+	while ((error = xfrog_inumbers(file->fd, &last, nent, t, &count)) == 0 &&
-+	       count > 0) {
- 		for (i = 0; i < count; i++) {
- 			printf(_("ino %10llu count %2d mask %016llx\n"),
- 				(unsigned long long)t[i].xi_startino,
-@@ -45,9 +40,11 @@ imap_f(int argc, char **argv)
- 				(unsigned long long)t[i].xi_allocmask);
- 		}
- 	}
--	perror("xfsctl(XFS_IOC_FSINUMBERS)");
--	exitcode = 1;
--out_free:
-+
-+	if (error) {
-+		perror("xfsctl(XFS_IOC_FSINUMBERS)");
-+		exitcode = 1;
-+	}
- 	free(t);
- 	return 0;
- }
-diff --git a/io/open.c b/io/open.c
-index d97903e9..7bc5a2f3 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -669,24 +669,19 @@ inode_help(void)
- "\n"));
- }
+ #endif	/* __XFS_ITABLE_H__ */
+diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+index 3e6c06e69c75..bef0c4907781 100644
+--- a/fs/xfs/xfs_iwalk.c
++++ b/fs/xfs/xfs_iwalk.c
+@@ -66,6 +66,97 @@ struct xfs_iwalk_ag {
+ 	void				*data;
+ };
  
-+#define IGROUP_NR	(1024)
- static __u64
- get_last_inode(void)
- {
--	__u64			lastip = 0;
--	__u64			lastgrp = 0;
--	__s32			ocount = 0;
-+	uint64_t		lastip = 0;
-+	uint32_t		lastgrp = 0;
-+	uint32_t		ocount = 0;
- 	__u64			last_ino;
--	struct xfs_inogrp	igroup[1024];
--	struct xfs_fsop_bulkreq	bulkreq;
--
--	bulkreq.lastip = &lastip;
--	bulkreq.ubuffer = &igroup;
--	bulkreq.icount = sizeof(igroup) / sizeof(struct xfs_inogrp);
--	bulkreq.ocount = &ocount;
-+	struct xfs_inogrp	igroup[IGROUP_NR];
- 
- 	for (;;) {
--		if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
--				&bulkreq)) {
-+		if (xfrog_inumbers(file->fd, &lastip, IGROUP_NR, igroup,
-+					&ocount)) {
- 			perror("XFS_IOC_FSINUMBERS");
- 			return 0;
- 		}
-diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
-index c0d3b627..1b08bbbd 100644
---- a/libfrog/bulkstat.c
-+++ b/libfrog/bulkstat.c
-@@ -41,3 +41,22 @@ xfrog_bulkstat(
- 
- 	return ioctl(fd, XFS_IOC_FSBULKSTAT, &bulkreq);
- }
-+
-+/* Query inode allocation bitmask information. */
-+int
-+xfrog_inumbers(
-+	int			fd,
-+	uint64_t		*lastino,
-+	uint32_t		icount,
-+	struct xfs_inogrp	*ubuffer,
-+	uint32_t		*ocount)
++/*
++ * Loop over all clusters in a chunk for a given incore inode allocation btree
++ * record.  Do a readahead if there are any allocated inodes in that cluster.
++ */
++STATIC void
++xfs_iwalk_ichunk_ra(
++	struct xfs_mount		*mp,
++	xfs_agnumber_t			agno,
++	struct xfs_inobt_rec_incore	*irec)
 +{
-+	struct xfs_fsop_bulkreq	bulkreq = {
-+		.lastip		= (__u64 *)lastino,
-+		.icount		= icount,
-+		.ubuffer	= ubuffer,
-+		.ocount		= (__s32 *)ocount,
-+	};
++	struct xfs_ino_geometry		*igeo = M_IGEO(mp);
++	xfs_agblock_t			agbno;
++	struct blk_plug			plug;
++	int				i;	/* inode chunk index */
 +
-+	return ioctl(fd, XFS_IOC_FSINUMBERS, &bulkreq);
++	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
++
++	blk_start_plug(&plug);
++	for (i = 0;
++	     i < XFS_INODES_PER_CHUNK;
++	     i += igeo->inodes_per_cluster,
++			agbno += igeo->blocks_per_cluster) {
++		if (xfs_inobt_maskn(i, igeo->inodes_per_cluster) &
++		    ~irec->ir_free) {
++			xfs_btree_reada_bufs(mp, agno, agbno,
++					igeo->blocks_per_cluster,
++					&xfs_inode_buf_ops);
++		}
++	}
++	blk_finish_plug(&plug);
 +}
-diff --git a/scrub/fscounters.c b/scrub/fscounters.c
-index 9e93e2a6..492a06c7 100644
---- a/scrub/fscounters.c
-+++ b/scrub/fscounters.c
-@@ -15,6 +15,7 @@
- #include "xfs_scrub.h"
- #include "common.h"
- #include "fscounters.h"
-+#include "xfrog.h"
- 
- /*
-  * Filesystem counter collection routines.  We can count the number of
-@@ -41,26 +42,21 @@ xfs_count_inodes_range(
- 	uint64_t		last_ino,
- 	uint64_t		*count)
- {
--	struct xfs_fsop_bulkreq	igrpreq = {NULL};
- 	struct xfs_inogrp	inogrp;
--	__u64			igrp_ino;
-+	uint64_t		igrp_ino;
- 	uint64_t		nr = 0;
--	__s32			igrplen = 0;
-+	uint32_t		igrplen = 0;
- 	int			error;
- 
- 	ASSERT(!(first_ino & (XFS_INODES_PER_CHUNK - 1)));
- 	ASSERT((last_ino & (XFS_INODES_PER_CHUNK - 1)));
- 
--	igrpreq.lastip  = &igrp_ino;
--	igrpreq.icount  = 1;
--	igrpreq.ubuffer = &inogrp;
--	igrpreq.ocount  = &igrplen;
--
- 	igrp_ino = first_ino;
--	error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
--	while (!error && igrplen && inogrp.xi_startino < last_ino) {
-+	while ((error = xfrog_inumbers(ctx->mnt_fd, &igrp_ino, 1, &inogrp,
-+					&igrplen)) == 0 &&
-+	       igrplen > 0 &&
-+	       inogrp.xi_startino < last_ino) {
- 		nr += inogrp.xi_alloccount;
--		error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
- 	}
- 
- 	if (error) {
-diff --git a/scrub/inodes.c b/scrub/inodes.c
-index 7950208d..0db16916 100644
---- a/scrub/inodes.c
-+++ b/scrub/inodes.c
-@@ -90,17 +90,16 @@ xfs_iterate_inodes_range(
- 	xfs_inode_iter_fn	fn,
- 	void			*arg)
- {
--	struct xfs_fsop_bulkreq	igrpreq = {NULL};
- 	struct xfs_handle	handle;
- 	struct xfs_inogrp	inogrp;
- 	struct xfs_bstat	bstat[XFS_INODES_PER_CHUNK];
- 	char			idescr[DESCR_BUFSZ];
- 	char			buf[DESCR_BUFSZ];
- 	struct xfs_bstat	*bs;
--	__u64			igrp_ino;
-+	uint64_t		igrp_ino;
- 	uint64_t		ino;
- 	uint32_t		bulklen = 0;
--	__s32			igrplen = 0;
-+	uint32_t		igrplen = 0;
- 	bool			moveon = true;
- 	int			i;
- 	int			error;
-@@ -109,11 +108,6 @@ xfs_iterate_inodes_range(
- 
- 	memset(bstat, 0, XFS_INODES_PER_CHUNK * sizeof(struct xfs_bstat));
- 
--	igrpreq.lastip  = &igrp_ino;
--	igrpreq.icount  = 1;
--	igrpreq.ubuffer = &inogrp;
--	igrpreq.ocount  = &igrplen;
--
- 	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
- 	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
- 			sizeof(handle.ha_fid.fid_len);
-@@ -121,8 +115,9 @@ xfs_iterate_inodes_range(
- 
- 	/* Find the inode chunk & alloc mask */
- 	igrp_ino = first_ino;
--	error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
--	while (!error && igrplen) {
-+	while ((error = xfrog_inumbers(ctx->mnt_fd, &igrp_ino, 1, &inogrp,
-+					&igrplen)) == 0 &&
-+	       igrplen > 0) {
- 		/* Load the inodes. */
- 		ino = inogrp.xi_startino - 1;
- 
-@@ -131,7 +126,7 @@ xfs_iterate_inodes_range(
- 		 * there are more than 64 inodes per block.  Skip these.
++
++/*
++ * Lookup the inode chunk that the given inode lives in and then get the record
++ * if we found the chunk.  If the inode was not the last in the chunk and there
++ * are some left allocated, update the data for the pointed-to record as well as
++ * return the count of grabbed inodes.
++ */
++STATIC int
++xfs_iwalk_grab_ichunk(
++	struct xfs_btree_cur		*cur,	/* btree cursor */
++	xfs_agino_t			agino,	/* starting inode of chunk */
++	int				*icount,/* return # of inodes grabbed */
++	struct xfs_inobt_rec_incore	*irec)	/* btree record */
++{
++	int				idx;	/* index into inode chunk */
++	int				stat;
++	int				error = 0;
++
++	/* Lookup the inode chunk that this inode lives in */
++	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &stat);
++	if (error)
++		return error;
++	if (!stat) {
++		*icount = 0;
++		return error;
++	}
++
++	/* Get the record, should always work */
++	error = xfs_inobt_get_rec(cur, irec, &stat);
++	if (error)
++		return error;
++	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, stat == 1);
++
++	/* Check if the record contains the inode in request */
++	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino) {
++		*icount = 0;
++		return 0;
++	}
++
++	idx = agino - irec->ir_startino + 1;
++	if (idx < XFS_INODES_PER_CHUNK &&
++	    (xfs_inobt_maskn(idx, XFS_INODES_PER_CHUNK - idx) & ~irec->ir_free)) {
++		int	i;
++
++		/* We got a right chunk with some left inodes allocated at it.
++		 * Grab the chunk record.  Mark all the uninteresting inodes
++		 * free -- because they're before our start point.
++		 */
++		for (i = 0; i < idx; i++) {
++			if (XFS_INOBT_MASK(i) & ~irec->ir_free)
++				irec->ir_freecount++;
++		}
++
++		irec->ir_free |= xfs_inobt_maskn(0, idx);
++		*icount = irec->ir_count - irec->ir_freecount;
++	}
++
++	return 0;
++}
++
+ /* Allocate memory for a walk. */
+ STATIC int
+ xfs_iwalk_alloc(
+@@ -190,7 +281,7 @@ xfs_iwalk_ag_start(
+ 	 * We require a lookup cache of at least two elements so that we don't
+ 	 * have to deal with tearing down the cursor to walk the records.
+ 	 */
+-	error = xfs_bulkstat_grab_ichunk(*curpp, agino - 1, &icount,
++	error = xfs_iwalk_grab_ichunk(*curpp, agino - 1, &icount,
+ 			&iwag->recs[iwag->nr_recs]);
+ 	if (error)
+ 		return error;
+@@ -295,7 +386,7 @@ xfs_iwalk_ag(
+ 		 * Start readahead for this inode chunk in anticipation of
+ 		 * walking the inodes.
  		 */
- 		if (inogrp.xi_alloccount == 0)
--			goto igrp_retry;
-+			continue;
- 		error = xfrog_bulkstat(ctx->mnt_fd, &ino, inogrp.xi_alloccount,
- 				bstat, &bulklen);
- 		if (error)
-@@ -155,7 +150,7 @@ xfs_iterate_inodes_range(
- 				stale_count++;
- 				if (stale_count < 30) {
- 					igrp_ino = inogrp.xi_startino;
--					goto igrp_retry;
-+					continue;
- 				}
- 				snprintf(idescr, DESCR_BUFSZ, "inode %"PRIu64,
- 						(uint64_t)bs->bs_ino);
-@@ -177,8 +172,6 @@ _("Changed too many times during scan; giving up."));
- 		}
+-		xfs_bulkstat_ichunk_ra(mp, agno, irec);
++		xfs_iwalk_ichunk_ra(mp, agno, irec);
  
- 		stale_count = 0;
--igrp_retry:
--		error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
- 	}
- 
- err:
+ 		/*
+ 		 * If there's space in the buffer for more records, increment
