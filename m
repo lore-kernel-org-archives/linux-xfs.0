@@ -1,116 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53947 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726179AbfFDWpu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jun 2019 18:45:50 -0400
-Date: Wed, 5 Jun 2019 08:45:44 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 06/20] xfs: don't use REQ_PREFLUSH for split log writes
-Message-ID: <20190604224544.GB29573@dread.disaster.area>
-References: <20190603172945.13819-1-hch@lst.de>
- <20190603172945.13819-7-hch@lst.de>
- <20190604161240.GA44563@bfoster>
+Received: from mail.kernel.org ([198.145.29.99]:45482 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727607AbfFEMmb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Jun 2019 08:42:31 -0400
+Date: Wed, 5 Jun 2019 14:42:27 +0200
+From: gregkh <gregkh@linuxfoundation.org>
+Subject: Re: [bug report][stable] xfstests:generic/538 failed on xfs
+Message-ID: <20190605124227.GC17558@kroah.com>
+References: <f9a7b0c4-178a-4a7c-8ac6-aec79b06b810.Alvin@linux.alibaba.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190604161240.GA44563@bfoster>
+In-Reply-To: <f9a7b0c4-178a-4a7c-8ac6-aec79b06b810.Alvin@linux.alibaba.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Alvin Zheng <Alvin@linux.alibaba.com>
+Cc: "darrick.wong" <darrick.wong@oracle.com>, axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, caspar <caspar@linux.alibaba.com>, "joseph.qi" <joseph.qi@linux.alibaba.com>
 
-On Tue, Jun 04, 2019 at 12:12:40PM -0400, Brian Foster wrote:
-> On Mon, Jun 03, 2019 at 07:29:31PM +0200, Christoph Hellwig wrote:
-> > If we have to split a log write because it wraps the end of the log we
-> > can't just use REQ_PREFLUSH to flush before the first log write,
-> > as the writes might get reordered somewhere in the I/O stack.  Issue
-> > a manual flush in that case so that the ordering of the two log I/Os
-> > doesn't matter.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_log.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > index 3b82ca8ac9c8..646a190e5730 100644
-> > --- a/fs/xfs/xfs_log.c
-> > +++ b/fs/xfs/xfs_log.c
-> > @@ -1941,7 +1941,7 @@ xlog_sync(
-> >  	 * synchronously here; for an internal log we can simply use the block
-> >  	 * layer state machine for preflushes.
-> >  	 */
-> > -	if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp)
-> > +	if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp || split)
-> >  		xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
+On Wed, Jun 05, 2019 at 08:21:44PM +0800, Alvin Zheng wrote:
+> Hi,
+>   I was using kernel v4.19.48 and found that it cannot pass the generic/538 on xfs. The error output is as follows:
+
+Has 4.19 ever been able to pass that test?  If not, I wouldn't worry
+about it :)
+
 > 
-> I'm curious if this is really necessary. The log record isn't
-> recoverable until it's complete on disk (and thus the tail LSN stamped
-> in the record header not relevant). As long as the cache flushes before
-> the record is completely written, what difference does it make if it was
-> made up of two out of order I/Os?
+>   FSTYP         -- xfs (non-debug)
+>   PLATFORM      -- Linux/x86_64 alinux2-6 4.19.48
+>   MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdc
+>   MOUNT_OPTIONS -- /dev/vdc /mnt/testarea/scra
+>   generic/538 0s ... - output mismatch (see /root/usr/local/src/xfstests/results//generic/538.out.bad)
+>       --- tests/generic/538.out   2019-05-27 13:57:06.505666465 +0800
+>       +++ /root/usr/local/src/xfstests/results//generic/538.out.bad       2019-06-05 16:43:14.702002326 +0800
+>       @@ -1,2 +1,10 @@
+>        QA output created by 538
+>       +Data verification fails
+>       +Find corruption
+>       +00000000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>       +*
+>       +00000200  5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a  ZZZZZZZZZZZZZZZZ
+>       +00002000
+>       ...
+>       (Run 'diff -u /root/usr/local/src/xfstests/tests/generic/538.out /root/usr/local/src/xfstests/results//generic/538.out.bad'  to see the entire diff)
+>   Ran: generic/538
+>   Failures: generic/538
+>   Failed 1 of 1 tests
+>   
+> I also found that the latest kernel (v5.2.0-rc2) of upstream can pass the generic/538 test. Therefore, I bisected and found the first good commit is 3110fc79606. This commit adds the hardware queue into the sort function. Besides, the sort function returns a negative value when the offset and queue (software and hardware) of two I/O requests are same. I think the second part of the change make senses. The kernel should not change the relative position of two I/O requests when their offset and queue are same. So I made the following changes and merged it into the kernel 4.19.48. After the modification, we can pass the generic/538 test on xfs. The same case can be passed on ext4, since ext4 has corresponding fix 0db24122bd7f ("ext4: fix data corruption caused by overlapping unaligned and aligned IO"). Though I think xfs should be responsible for this issue, the block layer code below is also problematic. Any ideas?
+> 
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index 4e563ee..a7309cd 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -1610,7 +1610,7 @@ static int plug_ctx_cmp(void *priv, struct list_head *a, struct list_head *b)
+> 
+>         return !(rqa->mq_ctx < rqb->mq_ctx ||
+>                  (rqa->mq_ctx == rqb->mq_ctx &&
+> -                 blk_rq_pos(rqa) < blk_rq_pos(rqb)));
+> +                 blk_rq_pos(rqa) <= blk_rq_pos(rqb)));
+>  }
+> 
+>  void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
 
-The problem is not whether the log write is recoverable, it's
-whether what it overwrites is already on stable storage. i.e.  the
-tail of the log can be overwritten by the split write to the start
-of the log before the cache flush in the first iclog IO makes the
-metadata it is overwriting stable. i.e:
+I would not like to take a patch that is not upstream, but rather take
+the original commit.
 
+Can 3110fc79606f ("blk-mq: improve plug list sorting") on its own
+resolve this issue for 4.19.y?
 
-	metadata write		-> volatile disk cache
-	move log tail forwards	-> tail wraps back to start
-<...>
-	log write wrapping tail
-	  iclog split
-	   iclog write to end /w PREFLUSH + FUA
-	   			-> queued in request queue
-	   iclog write to start /w FUA
-	   			-> queued in request queue
-<....>
-	request queue gets processed
-	  dispatches write to start w/ FUA
-				-> overwrites tail of log
-<....>
-	  dispatches write to end w/ PREFLUSH + FUA
-	  			-> flushes metadata @ tail of log
+thanks,
 
-If we have a power loss incident after the first FUA write to the
-start of the log but before the second write issues/completes the
-PREFLUSH, we have a situation on disk where the log tail has been
-overwritten but the metadata that it overwrote had not yet been
-committed to stable storage. That will result in either a corrupt
-log (can't find tail) or a corrupt fielsystem because metadata in
-some structure was not recovered.
-
-> Granted log wrapping is not a frequent operation, but the explicit flush
-> is a synchronous operation in the log force path whereas the flush flag
-> isn't.
-
-We have the options of:
-
-	1) issuing a synchronous flush before both writes and then
-	doing them w/ FUA only; or
-	2) issuing both log writes with PREFLUSH+FUA.
-
-In the first case, the fact the cache flush is done synchronously
-really doesn't affect anything - it's done in the CIL push kworker
-context, so blocking here doesn't really add any extra latency to
-anything except synchronous log force waiters. Hence, typically,
-there is nothing waiting on the log being flushed so it what extra
-latency there is mostly won't matter.
-
-In the second case, one of the cache flushes is superfluous and for
-busy filesytems with small logs where we frequently hit the wrap
-case this may add up to quite a bit of avoidable IO overhead....
-
-Either way works, it's not clear to me that one is always superior
-to the other, so we just have to chose one....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+greg k-h
