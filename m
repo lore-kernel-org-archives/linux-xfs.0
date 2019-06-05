@@ -1,12 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:59658 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:59672 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725950AbfFETP0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jun 2019 15:15:26 -0400
+        with ESMTP id S1725950AbfFETP3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jun 2019 15:15:29 -0400
+Received: from 089144193064.atnat0002.highway.a1.net ([89.144.193.64] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hYbNg-0002Br-Hw
+        for linux-xfs@vger.kernel.org; Wed, 05 Jun 2019 19:15:29 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/24] xfs: make mem_to_page available outside of xfs_buf.c
-Date: Wed,  5 Jun 2019 21:14:51 +0200
-Message-Id: <20190605191511.32695-5-hch@lst.de>
+Subject: [PATCH 05/24] xfs: remove the l_iclog_size_log field from strut xlog
+Date: Wed,  5 Jun 2019 21:14:52 +0200
+Message-Id: <20190605191511.32695-6-hch@lst.de>
 In-Reply-To: <20190605191511.32695-1-hch@lst.de>
 References: <20190605191511.32695-1-hch@lst.de>
 MIME-Version: 1.0
@@ -15,66 +19,60 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Dave Chinner <dchinner@redhat.com>
 
-Rename the function to kmem_to_page and move it to kmem.h together
-with our kmem_large allocator that may either return kmalloced or
-vmalloc pages.
+This field is never used, so we can simply kill it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/kmem.h    |  8 ++++++++
- fs/xfs/xfs_buf.c | 13 +------------
- 2 files changed, 9 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_log.c      | 9 ---------
+ fs/xfs/xfs_log_priv.h | 1 -
+ 2 files changed, 10 deletions(-)
 
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 8e6b3ba81c03..267655acd426 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -124,4 +124,12 @@ kmem_zone_zalloc(kmem_zone_t *zone, xfs_km_flags_t flags)
- 	return kmem_zone_alloc(zone, flags | KM_ZERO);
- }
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index a2048e46be4e..8033b64092bb 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1307,7 +1307,6 @@ xlog_get_iclog_buffer_size(
+ 	struct xfs_mount	*mp,
+ 	struct xlog		*log)
+ {
+-	int size;
+ 	int xhdrs;
  
-+static inline struct page *
-+kmem_to_page(void *addr)
-+{
-+	if (is_vmalloc_addr(addr))
-+		return vmalloc_to_page(addr);
-+	return virt_to_page(addr);
-+}
-+
- #endif /* __XFS_SUPPORT_KMEM_H__ */
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 548344e25128..ade6ec28e1c9 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -933,17 +933,6 @@ xfs_buf_set_empty(
- 	bp->b_maps[0].bm_len = bp->b_length;
- }
- 
--static inline struct page *
--mem_to_page(
--	void			*addr)
--{
--	if ((!is_vmalloc_addr(addr))) {
--		return virt_to_page(addr);
--	} else {
--		return vmalloc_to_page(addr);
--	}
--}
+ 	if (mp->m_logbufs <= 0)
+@@ -1319,13 +1318,6 @@ xlog_get_iclog_buffer_size(
+ 	 * Buffer size passed in from mount system call.
+ 	 */
+ 	if (mp->m_logbsize > 0) {
+-		size = log->l_iclog_size = mp->m_logbsize;
+-		log->l_iclog_size_log = 0;
+-		while (size != 1) {
+-			log->l_iclog_size_log++;
+-			size >>= 1;
+-		}
 -
- int
- xfs_buf_associate_memory(
- 	xfs_buf_t		*bp,
-@@ -976,7 +965,7 @@ xfs_buf_associate_memory(
- 	bp->b_offset = offset;
+ 		if (xfs_sb_version_haslogv2(&mp->m_sb)) {
+ 			/* # headers = size / 32k
+ 			 * one header holds cycles from 32k of data
+@@ -1346,7 +1338,6 @@ xlog_get_iclog_buffer_size(
  
- 	for (i = 0; i < bp->b_page_count; i++) {
--		bp->b_pages[i] = mem_to_page((void *)pageaddr);
-+		bp->b_pages[i] = kmem_to_page((void *)pageaddr);
- 		pageaddr += PAGE_SIZE;
- 	}
+ 	/* All machines use 32kB buffers by default. */
+ 	log->l_iclog_size = XLOG_BIG_RECORD_BSIZE;
+-	log->l_iclog_size_log = XLOG_BIG_RECORD_BSHIFT;
  
+ 	/* the default log size is 16k or 32k which is one header sector */
+ 	log->l_iclog_hsize = BBSIZE;
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index b5f82cb36202..78a2abeba895 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -361,7 +361,6 @@ struct xlog {
+ 	int			l_iclog_heads;  /* # of iclog header sectors */
+ 	uint			l_sectBBsize;   /* sector size in BBs (2^n) */
+ 	int			l_iclog_size;	/* size of log in bytes */
+-	int			l_iclog_size_log; /* log power size of log */
+ 	int			l_iclog_bufs;	/* number of iclog buffers */
+ 	xfs_daddr_t		l_logBBstart;   /* start block of log */
+ 	int			l_logsize;      /* size of log in bytes */
 -- 
 2.20.1
