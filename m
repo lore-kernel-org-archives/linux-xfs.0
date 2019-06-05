@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:59706 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:59712 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725950AbfFETPp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jun 2019 15:15:45 -0400
+        with ESMTP id S1725950AbfFETPs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jun 2019 15:15:48 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/24] xfs: factor out log buffer writing from xlog_sync
-Date: Wed,  5 Jun 2019 21:14:57 +0200
-Message-Id: <20190605191511.32695-11-hch@lst.de>
+Subject: [PATCH 11/24] xfs: factor out splitting of an iclog from xlog_sync
+Date: Wed,  5 Jun 2019 21:14:58 +0200
+Message-Id: <20190605191511.32695-12-hch@lst.de>
 In-Reply-To: <20190605191511.32695-1-hch@lst.de>
 References: <20190605191511.32695-1-hch@lst.de>
 MIME-Version: 1.0
@@ -17,232 +17,126 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Dave Chinner <dchinner@redhat.com>
 
-Replace the not very useful xlog_bdstrat wrapper with a new version that
-that takes care of all the common logic for writing log buffers.  Use
-the opportunity to avoid overloading the buffer address with the log
-relative address, and to shed the unused return value.
+Split out a self-contained chunk of code from xlog_sync that calculates
+the split offset for an iclog that wraps the log end and bumps the
+cycles for the second half.
+
+Use the chance to bring some sanity to the variables used to track the
+split in xlog_sync by not changing the count variable, and instead use
+split as the offset for the split and use those to calculate the
+sizes and offsets for the two write buffers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c | 125 +++++++++++++++++------------------------------
- 1 file changed, 45 insertions(+), 80 deletions(-)
+ fs/xfs/xfs_log.c | 63 +++++++++++++++++++++++++-----------------------
+ 1 file changed, 33 insertions(+), 30 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 5c48b7de5033..7b4a11c1ff08 100644
+index 7b4a11c1ff08..2138bc8cc6e8 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -45,10 +45,6 @@ STATIC int
- xlog_space_left(
- 	struct xlog		*log,
- 	atomic64_t		*head);
--STATIC int
--xlog_sync(
--	struct xlog		*log,
--	struct xlog_in_core	*iclog);
- STATIC void
- xlog_dealloc_log(
- 	struct xlog		*log);
-@@ -1726,28 +1722,34 @@ xlog_cksum(
- 	return xfs_end_cksum(crc);
- }
- 
--/*
-- * The bdstrat callback function for log bufs. This gives us a central
-- * place to trap bufs in case we get hit by a log I/O error and need to
-- * shutdown. Actually, in practice, even when we didn't get a log error,
-- * we transition the iclogs to IOERROR state *after* flushing all existing
-- * iclogs to disk. This is because we don't want anymore new transactions to be
-- * started or completed afterwards.
-- *
-- * We lock the iclogbufs here so that we can serialise against IO completion
-- * during unmount. We might be processing a shutdown triggered during unmount,
-- * and that can occur asynchronously to the unmount thread, and hence we need to
-- * ensure that completes before tearing down the iclogbufs. Hence we need to
-- * hold the buffer lock across the log IO to acheive that.
-- */
--STATIC int
--xlog_bdstrat(
--	struct xfs_buf		*bp)
-+STATIC void
-+xlog_write_iclog(
-+	struct xlog		*log,
-+	struct xlog_in_core	*iclog,
-+	struct xfs_buf		*bp,
-+	uint64_t		bno,
-+	bool			need_flush)
- {
--	struct xlog_in_core	*iclog = bp->b_log_item;
-+	ASSERT(bno < log->l_logBBsize);
-+	ASSERT(bno + bp->b_io_length <= log->l_logBBsize);
- 
-+	bp->b_maps[0].bm_bn = log->l_logBBstart + bno;
-+	bp->b_log_item = iclog;
-+	bp->b_flags &= ~XBF_FLUSH;
-+	bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE | XBF_FUA);
-+	if (need_flush)
-+		bp->b_flags |= XBF_FLUSH;
-+
-+	/*
-+	 * We lock the iclogbufs here so that we can serialise against I/O
-+	 * completion during unmount.  We might be processing a shutdown
-+	 * triggered during unmount, and that can occur asynchronously to the
-+	 * unmount thread, and hence we need to ensure that completes before
-+	 * tearing down the iclogbufs.  Hence we need to hold the buffer lock
-+	 * across the log IO to archieve that.
-+	 */
- 	xfs_buf_lock(bp);
--	if (iclog->ic_state & XLOG_STATE_IOERROR) {
-+	if (unlikely(iclog->ic_state & XLOG_STATE_IOERROR)) {
- 		xfs_buf_ioerror(bp, -EIO);
- 		xfs_buf_stale(bp);
- 		xfs_buf_ioend(bp);
-@@ -1757,11 +1759,10 @@ xlog_bdstrat(
- 		 * doing it here. Similarly, IO completion will unlock the
- 		 * buffer, so we don't do it here.
- 		 */
--		return 0;
-+		return;
- 	}
- 
+@@ -1765,6 +1765,32 @@ xlog_write_iclog(
  	xfs_buf_submit(bp);
--	return 0;
  }
  
++/*
++ * We need to bump cycle number for the part of the iclog that is
++ * written to the start of the log. Watch out for the header magic
++ * number case, though.
++ */
++static unsigned int
++xlog_split_iclog(
++	struct xlog		*log,
++	void			*data,
++	uint64_t		bno,
++	unsigned int		count)
++{
++	unsigned int		split_offset = BBTOB(log->l_logBBsize - bno);
++	unsigned int		i;
++
++	for (i = split_offset; i < count; i += BBSIZE) {
++		uint32_t cycle = get_unaligned_be32(data + i);
++
++		if (++cycle == XLOG_HEADER_MAGIC_NUM)
++			cycle++;
++		put_unaligned_be32(cycle, data + i);
++	}
++
++	return split_offset;
++}
++
  /*
-@@ -1784,25 +1785,23 @@ xlog_bdstrat(
-  * log will require grabbing the lock though.
-  *
-  * The entire log manager uses a logical block numbering scheme.  Only
-- * log_sync (and then only bwrite()) know about the fact that the log may
-- * not start with block zero on a given device.  The log block start offset
-- * is added immediately before calling bwrite().
-+ * xlog_write_iclog knows about the fact that the log may not start with
-+ * block zero on a given device.
-  */
--
--STATIC int
-+STATIC void
- xlog_sync(
+  * Flush out the in-core log (iclog) to the on-disk log in an asynchronous 
+  * fashion.  Previously, we should have moved the current iclog
+@@ -1793,13 +1819,12 @@ xlog_sync(
  	struct xlog		*log,
  	struct xlog_in_core	*iclog)
  {
--	xfs_buf_t	*bp;
- 	int		i;
+-	int		i;
  	uint		count;		/* byte count of bwrite */
  	uint		count_init;	/* initial count before roundup */
  	int		roundoff;       /* roundoff to BB or stripe */
- 	int		split = 0;	/* split write into two regions */
--	int		error;
+-	int		split = 0;	/* split write into two regions */
  	int		v2 = xfs_sb_version_haslogv2(&log->l_mp->m_sb);
-+	uint64_t	bno;
+ 	uint64_t	bno;
++	unsigned int	split = 0;
  	int		size;
-+	bool		need_flush = true;
+ 	bool		need_flush = true;
  
- 	XFS_STATS_INC(log->l_mp, xs_log_writes);
- 	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
-@@ -1838,17 +1837,16 @@ xlog_sync(
- 		size += roundoff;
- 	iclog->ic_header.h_len = cpu_to_be32(size);
+@@ -1842,32 +1867,8 @@ xlog_sync(
+ 	bno = BLOCK_LSN(be64_to_cpu(iclog->ic_header.h_lsn));
  
--	bp = iclog->ic_bp;
--	XFS_BUF_SET_ADDR(bp, BLOCK_LSN(be64_to_cpu(iclog->ic_header.h_lsn)));
--
- 	XFS_STATS_ADD(log->l_mp, xs_log_blocks, BTOBB(count));
- 
-+	bno = BLOCK_LSN(be64_to_cpu(iclog->ic_header.h_lsn));
-+
  	/* Do we need to split this write into 2 parts? */
--	if (XFS_BUF_ADDR(bp) + BTOBB(count) > log->l_logBBsize) {
-+	if (bno + BTOBB(count) > log->l_logBBsize) {
- 		char		*dptr;
- 
--		split = count - (BBTOB(log->l_logBBsize - XFS_BUF_ADDR(bp)));
--		count = BBTOB(log->l_logBBsize - XFS_BUF_ADDR(bp));
-+		split = count - (BBTOB(log->l_logBBsize - bno));
-+		count = BBTOB(log->l_logBBsize - bno);
- 		iclog->ic_bwritecnt = 2;
- 
- 		/*
-@@ -1891,11 +1889,6 @@ xlog_sync(
- 	}
- #endif
- 
--	bp->b_io_length = BTOBB(count);
--	bp->b_log_item = iclog;
--	bp->b_flags &= ~XBF_FLUSH;
--	bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE | XBF_FUA);
+-	if (bno + BTOBB(count) > log->l_logBBsize) {
+-		char		*dptr;
 -
- 	/*
- 	 * Flush the data device before flushing the log to make sure all meta
- 	 * data written back from the AIL actually made it to disk before
-@@ -1904,50 +1897,22 @@ xlog_sync(
- 	 * synchronously here; for an internal log we can simply use the block
- 	 * layer state machine for preflushes.
- 	 */
--	if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp || split)
-+	if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp || split) {
- 		xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
--	else
--		bp->b_flags |= XBF_FLUSH;
-+		need_flush = false;
-+	}
+-		split = count - (BBTOB(log->l_logBBsize - bno));
+-		count = BBTOB(log->l_logBBsize - bno);
+-		iclog->ic_bwritecnt = 2;
+-
+-		/*
+-		 * Bump the cycle numbers at the start of each block in the
+-		 * part of the iclog that ends up in the buffer that gets
+-		 * written to the start of the log.
+-		 *
+-		 * Watch out for the header magic number case, though.
+-		 */
+-		dptr = (char *)&iclog->ic_header + count;
+-		for (i = 0; i < split; i += BBSIZE) {
+-			uint32_t cycle = be32_to_cpu(*(__be32 *)dptr);
+-			if (++cycle == XLOG_HEADER_MAGIC_NUM)
+-				cycle++;
+-			*(__be32 *)dptr = cpu_to_be32(cycle);
+-
+-			dptr += BBSIZE;
+-		}
+-	} else {
+-		iclog->ic_bwritecnt = 1;
+-	}
++	if (bno + BTOBB(count) > log->l_logBBsize)
++		split = xlog_split_iclog(log, &iclog->ic_header, bno, count);
  
--	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
--	ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
-+	iclog->ic_bp->b_io_length = BTOBB(count);
+ 	/* calculcate the checksum */
+ 	iclog->ic_header.h_crc = xlog_cksum(log, &iclog->ic_header,
+@@ -1902,14 +1903,16 @@ xlog_sync(
+ 		need_flush = false;
+ 	}
+ 
+-	iclog->ic_bp->b_io_length = BTOBB(count);
++	iclog->ic_bp->b_io_length = BTOBB(split ? split : count);
++	iclog->ic_bwritecnt = split ? 2 : 1;
  
  	xlog_verify_iclog(log, iclog, count, true);
-+	xlog_write_iclog(log, iclog, iclog->ic_bp, bno, need_flush);
+ 	xlog_write_iclog(log, iclog, iclog->ic_bp, bno, need_flush);
  
--	/* account for log which doesn't start at block #0 */
--	XFS_BUF_SET_ADDR(bp, XFS_BUF_ADDR(bp) + log->l_logBBstart);
--
--	/*
--	 * Don't call xfs_bwrite here. We do log-syncs even when the filesystem
--	 * is shutting down.
--	 */
--	error = xlog_bdstrat(bp);
--	if (error) {
--		xfs_buf_ioerror_alert(bp, "xlog_sync");
--		return error;
--	}
  	if (split) {
--		bp = iclog->ic_log->l_xbuf;
--		XFS_BUF_SET_ADDR(bp, 0);	     /* logical 0 */
--		xfs_buf_associate_memory(bp,
-+		xfs_buf_associate_memory(iclog->ic_log->l_xbuf,
- 				(char *)&iclog->ic_header + count, split);
--		bp->b_log_item = iclog;
--		bp->b_flags &= ~XBF_FLUSH;
--		bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE | XBF_FUA);
--
--		ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
--		ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
--
--		/* account for internal log which doesn't start at block #0 */
--		XFS_BUF_SET_ADDR(bp, XFS_BUF_ADDR(bp) + log->l_logBBstart);
--		error = xlog_bdstrat(bp);
--		if (error) {
--			xfs_buf_ioerror_alert(bp, "xlog_sync (split)");
--			return error;
--		}
-+		xlog_write_iclog(log, iclog, iclog->ic_log->l_xbuf, 0, false);
+ 		xfs_buf_associate_memory(iclog->ic_log->l_xbuf,
+-				(char *)&iclog->ic_header + count, split);
++				(char *)&iclog->ic_header + split,
++				count - split);
+ 		xlog_write_iclog(log, iclog, iclog->ic_log->l_xbuf, 0, false);
  	}
--	return 0;
--}	/* xlog_sync */
-+}
- 
- /*
-  * Deallocate a log structure
-@@ -3187,7 +3152,7 @@ xlog_state_release_iclog(
- 	 * flags after this point.
- 	 */
- 	if (sync)
--		return xlog_sync(log, iclog);
-+		xlog_sync(log, iclog);
- 	return 0;
- }	/* xlog_state_release_iclog */
- 
+ }
 -- 
 2.20.1
