@@ -1,73 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:38050 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726269AbfFDVQ5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jun 2019 17:16:57 -0400
-Subject: [PATCH 1/3] check: try to insulate the test framework from oom
- killer
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 04 Jun 2019 14:16:49 -0700
-Message-ID: <155968300919.1646947.15217696927864278918.stgit@magnolia>
-In-Reply-To: <155968300283.1646947.2586545304045786757.stgit@magnolia>
-References: <155968300283.1646947.2586545304045786757.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:36258 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727992AbfFEN6O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Jun 2019 09:58:14 -0400
+Date: Wed, 5 Jun 2019 09:57:59 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [bug report][stable] xfstests:generic/538 failed on xfs
+Message-ID: <20190605135756.GA15671@bfoster>
+References: <f9a7b0c4-178a-4a7c-8ac6-aec79b06b810.Alvin@linux.alibaba.com>
+ <20190605124227.GC17558@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190605124227.GC17558@kroah.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: gregkh <gregkh@linuxfoundation.org>
+Cc: Alvin Zheng <Alvin@linux.alibaba.com>, "darrick.wong" <darrick.wong@oracle.com>, axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, caspar <caspar@linux.alibaba.com>, "joseph.qi" <joseph.qi@linux.alibaba.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jun 05, 2019 at 02:42:27PM +0200, gregkh wrote:
+> On Wed, Jun 05, 2019 at 08:21:44PM +0800, Alvin Zheng wrote:
+> > Hi,
+> >   I was using kernel v4.19.48 and found that it cannot pass the generic/538 on xfs. The error output is as follows:
+> 
+> Has 4.19 ever been able to pass that test?  If not, I wouldn't worry
+> about it :)
+> 
 
-Some of the tests in xfstests (e.g. generic/224 with 512M of memory)
-consume a lot of memory, and when this happens the OOM killer will run
-around stomping on processes.  Sometimes it kills the ./check process
-before it kills the actual test, which means that the test run doesn't
-complete.  Therefore, make the ./check process OOM-proof while bumping
-up the attractiveness of the test itself, in the hopes that even if the
-test OOMs we'll still be able to continue on our way.
+FWIW, the fstests commit references the following kernel patches for
+fixes in XFS and ext4:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- check |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+  xfs: serialize unaligned dio writes against all other dio writes
+  ext4: fix data corruption caused by unaligned direct AIO
 
+It looks like both of those patches landed in 5.1.
 
-diff --git a/check b/check
-index 8677141b..08419811 100755
---- a/check
-+++ b/check
-@@ -499,6 +499,17 @@ _expunge_test()
- 	return 0
- }
- 
-+# Make the check script unattractive to the OOM killer...
-+OOM_SCORE_ADJ="/proc/self/oom_score_adj"
-+test -w ${OOM_SCORE_ADJ} && echo -1000 > ${OOM_SCORE_ADJ}
-+
-+# ...and make the tests themselves somewhat more attractive to it, so that if
-+# the system runs out of memory it'll be the test that gets killed and not the
-+# test framework.
-+_run_seq() {
-+	bash -c "test -w ${OOM_SCORE_ADJ} && echo 250 > ${OOM_SCORE_ADJ}; exec ./$seq"
-+}
-+
- _detect_kmemleak
- _prepare_test_list
- 
-@@ -740,11 +751,11 @@ for section in $HOST_OPTIONS_SECTIONS; do
- 		fi
- 		_try_wipe_scratch_devs > /dev/null 2>&1
- 		if [ "$DUMP_OUTPUT" = true ]; then
--			./$seq 2>&1 | tee $tmp.out
-+			_run_seq 2>&1 | tee $tmp.out
- 			# Because $? would get tee's return code
- 			sts=${PIPESTATUS[0]}
- 		else
--			./$seq >$tmp.out 2>&1
-+			_run_seq >$tmp.out 2>&1
- 			sts=$?
- 		fi
- 
+Brian
+
+> > 
+> >   FSTYP         -- xfs (non-debug)
+> >   PLATFORM      -- Linux/x86_64 alinux2-6 4.19.48
+> >   MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdc
+> >   MOUNT_OPTIONS -- /dev/vdc /mnt/testarea/scra
+> >   generic/538 0s ... - output mismatch (see /root/usr/local/src/xfstests/results//generic/538.out.bad)
+> >       --- tests/generic/538.out   2019-05-27 13:57:06.505666465 +0800
+> >       +++ /root/usr/local/src/xfstests/results//generic/538.out.bad       2019-06-05 16:43:14.702002326 +0800
+> >       @@ -1,2 +1,10 @@
+> >        QA output created by 538
+> >       +Data verification fails
+> >       +Find corruption
+> >       +00000000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> >       +*
+> >       +00000200  5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a  ZZZZZZZZZZZZZZZZ
+> >       +00002000
+> >       ...
+> >       (Run 'diff -u /root/usr/local/src/xfstests/tests/generic/538.out /root/usr/local/src/xfstests/results//generic/538.out.bad'  to see the entire diff)
+> >   Ran: generic/538
+> >   Failures: generic/538
+> >   Failed 1 of 1 tests
+> >   
+> > I also found that the latest kernel (v5.2.0-rc2) of upstream can pass the generic/538 test. Therefore, I bisected and found the first good commit is 3110fc79606. This commit adds the hardware queue into the sort function. Besides, the sort function returns a negative value when the offset and queue (software and hardware) of two I/O requests are same. I think the second part of the change make senses. The kernel should not change the relative position of two I/O requests when their offset and queue are same. So I made the following changes and merged it into the kernel 4.19.48. After the modification, we can pass the generic/538 test on xfs. The same case can be passed on ext4, since ext4 has corresponding fix 0db24122bd7f ("ext4: fix data corruption caused by overlapping unaligned and aligned IO"). Though I think xfs should be responsible for this issue, the block layer code below is also problematic. Any ideas?
+> > 
+> > diff --git a/block/blk-mq.c b/block/blk-mq.c
+> > index 4e563ee..a7309cd 100644
+> > --- a/block/blk-mq.c
+> > +++ b/block/blk-mq.c
+> > @@ -1610,7 +1610,7 @@ static int plug_ctx_cmp(void *priv, struct list_head *a, struct list_head *b)
+> > 
+> >         return !(rqa->mq_ctx < rqb->mq_ctx ||
+> >                  (rqa->mq_ctx == rqb->mq_ctx &&
+> > -                 blk_rq_pos(rqa) < blk_rq_pos(rqb)));
+> > +                 blk_rq_pos(rqa) <= blk_rq_pos(rqb)));
+> >  }
+> > 
+> >  void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
+> 
+> I would not like to take a patch that is not upstream, but rather take
+> the original commit.
+> 
+> Can 3110fc79606f ("blk-mq: improve plug list sorting") on its own
+> resolve this issue for 4.19.y?
+> 
+> thanks,
+> 
+> greg k-h
